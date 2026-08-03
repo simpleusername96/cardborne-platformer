@@ -42,7 +42,7 @@ func _initialize() -> void:
 			)
 			state_count += 1
 	_expect(state_count == 83, "upgrade presentation covers all 83 level states")
-	for id in Catalog.SECONDARY_FAMILY_IDS:
+	for id in Catalog.OPTIONAL_SECONDARY_FAMILY_IDS:
 		var definition := catalog.get_definition(id)
 		_expect(definition != null and definition.max_level == 3 and definition.family == &"secondary", "%s is a three-level secondary" % id)
 	var build := RunBuild.new(catalog)

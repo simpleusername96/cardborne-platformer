@@ -174,13 +174,19 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 			% family
 		)
 		_expect(
-			Vector2(contract["body_art_size"]) == Vector2(64.0, 64.0)
+			Vector2(contract["body_art_size"]) == Vector2(88.0, 88.0)
 				and StringName(contract["body_art_asset_id"])
-					== StringName("hud/upgrade_%s" % family)
+					== UpgradeGlyphRenderer.asset_id(family)
 				and Array(contract["body_order"]) == [
-					"family", "level", "title", "summary", "art", "effects", "behavior",
-				],
-			"%s uses the compact lower semantic artwork contract" % family
+					"family",
+					"title",
+					"dossier:art/divider/level/effects",
+					"description",
+					"behavior",
+				]
+				and bool(contract["dossier_split"])
+				and int(contract["body_divider_count"]) == 1,
+			"%s uses the compact split-dossier artwork contract" % family
 		)
 		var geometry := card.debug_geometry_contract()
 		var glyph := Dictionary(geometry["glyph"])
@@ -369,8 +375,8 @@ func _validate_panel(
 	var surface := PanelContainer.new()
 	surface.theme_type_variation = &"ModalSurface"
 	surface.custom_minimum_size = Vector2(
-		minf(1000.0, float(viewport.x) - 48.0),
-		minf(480.0, float(viewport.y) - 24.0)
+		minf(1160.0, float(viewport.x) - 48.0),
+		minf(580.0, float(viewport.y) - 24.0)
 	)
 	center.add_child(surface)
 	var panel := UpgradeChoicePanel.new()
@@ -386,11 +392,11 @@ func _validate_panel(
 	var surface_rect := surface.get_global_rect().grow(0.75)
 	_expect(surface_rect.encloses(panel_rect), "%s panel stays inside its surface" % context)
 	var expected_size := (
-		Vector2(244.0, 286.0)
+		Vector2(280.0, 378.0)
 		if compact
-		else Vector2(304.0, 330.0)
+		else Vector2(352.0, 432.0)
 	)
-	var expected_gap := 12.0 if compact else 18.0
+	var expected_gap := 12.0 if compact else 20.0
 	var prior_card := Rect2()
 	var card_count := 0
 	for card_variant in geometry["cards"]:
@@ -436,9 +442,9 @@ func _validate_panel(
 				and int(card_contract["body_art_count"]) == 1
 				and int(card_contract["family_badge_count"]) == 0
 				and Vector2(card_contract["body_art_size"]) == (
-					Vector2(64.0, 64.0)
+					Vector2(88.0, 88.0)
 					if compact
-					else Vector2(88.0, 88.0)
+					else Vector2(120.0, 120.0)
 				),
 			"%s card keeps one correctly sized lower artwork" % context
 		)

@@ -110,15 +110,15 @@ func _initialize() -> void:
 		_expect(int(upgrade_contract["card_count"]) == 3, "upgrade choice keeps exactly three card slots at %d" % width)
 		_expect(
 			Vector2(upgrade_contract["confirm_size"]) == (
-				Vector2(260.0, 44.0) if width < 1100.0 else Vector2(300.0, 48.0)
+				Vector2(300.0, 48.0) if width < 1100.0 else Vector2(360.0, 56.0)
 			),
 			"upgrade confirmation uses the supported command contract at %d" % width
 		)
 		_expect(
 			String(upgrade_contract["row_type"]) == "HFlowContainer"
 				and int(upgrade_contract["row_separation"]) == (
-				12 if width < 1100.0 else 18
-			),
+					12 if width < 1100.0 else 20
+				),
 			"upgrade cards use the approved responsive flow and gap at %d" % width
 		)
 		var panel_type_sizes := Dictionary(upgrade_contract["type_sizes"])
@@ -142,9 +142,9 @@ func _initialize() -> void:
 			var card_size := Vector2(card["minimum_size"])
 			_expect(
 				(
-					card_size == Vector2(244.0, 286.0)
+					card_size == Vector2(280.0, 378.0)
 					if width < 1100.0
-					else card_size == Vector2(304.0, 330.0)
+					else card_size == Vector2(352.0, 432.0)
 				),
 				"upgrade cards use the supported hierarchy at %d" % width
 			)
@@ -152,18 +152,18 @@ func _initialize() -> void:
 				Dictionary(card["type_sizes"]) == (
 					{
 						"family":13,
-						"level":13,
+						"level":15,
 						"title":22,
-						"summary":15,
-						"behavior":15,
+						"summary":14,
+						"behavior":13,
 					}
 					if width < 1100.0
 					else {
-						"family":14,
-						"level":14,
-						"title":24,
+						"family":16,
+						"level":18,
+						"title":28,
 						"summary":16,
-						"behavior":16,
+						"behavior":15,
 					}
 				),
 				"upgrade card uses the approved responsive type scale at %d"
@@ -180,6 +180,11 @@ func _initialize() -> void:
 				% width
 			)
 			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
+			_expect(
+				bool(card["dossier_split"])
+					and int(card["body_divider_count"]) == 1,
+				"upgrade card uses one split dossier and one body divider"
+			)
 			_expect(
 				bool(card["level_visible"])
 					and int(card["current_level"]) < int(card["next_level"])
@@ -301,7 +306,7 @@ func _initialize() -> void:
 				"deployment uses the approved broad 1280x720 composition"
 			)
 			var modal_minimums := Dictionary(contract["modal_minimums"])
-			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(1000.0, 480.0), "upgrade modal fits one wide card flow without obsolete header height")
+			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(1160.0, 580.0), "upgrade modal fits the selected wide dossier card flow without a header")
 			_expect(Vector2(modal_minimums["pause"]) == Vector2(520.0, 430.0), "pause modal uses the compact vertical-stack contract")
 			_expect(Vector2(modal_minimums["settings"]) == Vector2(920.0, 570.0), "settings modal keeps approved scale")
 			_expect(Vector2(modal_minimums["guidebook"]) == Vector2(1160.0, 636.0), "guidebook modal keeps approved scale")
@@ -330,8 +335,8 @@ func _initialize() -> void:
 	ui.update_hud({
 		"dash_available":false,
 		"dash_ratio":0.75,
-		"passive_available":false,
-		"passive_ratio":0.5,
+		"seeker_available":false,
+		"seeker_ratio":0.5,
 		"skill_available":false,
 		"skill_ratio":1.0,
 	})
@@ -367,8 +372,8 @@ func _initialize() -> void:
 	ui.update_hud({
 		"dash_available":true,
 		"dash_ratio":0.0,
-		"passive_available":true,
-		"passive_ratio":0.0,
+		"seeker_available":true,
+		"seeker_ratio":0.0,
 		"skill_available":true,
 		"skill_ratio":0.0,
 	})
@@ -718,8 +723,8 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	)
 	for card_variant in upgrade["cards"]:
 		_expect(
-			int(Dictionary(card_variant)["type_sizes"]["title"]) == 48
-				and int(Dictionary(card_variant)["type_sizes"]["level"]) == 28,
+			int(Dictionary(card_variant)["type_sizes"]["title"]) == 56
+				and int(Dictionary(card_variant)["type_sizes"]["level"]) == 36,
 			"200%% probe doubles dynamically created card typography; got %s"
 			% Dictionary(card_variant)["type_sizes"]
 		)
@@ -843,12 +848,12 @@ func _expect_upgrade_geometry(
 		var card := Dictionary(card_variant)
 		var card_rect := Rect2(card["rect"])
 		var expected_card_size := (
-			Vector2(356.0, 520.0)
-			if card_rect.size.x > 330.0
+			Vector2(520.0, 920.0)
+			if card_rect.size.x > 400.0
 			else (
-				Vector2(244.0, 286.0)
-				if card_rect.size.x < 270.0
-				else Vector2(304.0, 330.0)
+				Vector2(280.0, 378.0)
+				if card_rect.size.x < 300.0
+				else Vector2(352.0, 432.0)
 			)
 		)
 		_expect(

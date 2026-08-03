@@ -2333,6 +2333,17 @@ Do not mark a phase or this plan complete while a stop condition remains.
   console warnings or errors. Final evidence is recorded in
   `.agents/semantic-v2-runtime-acceptance-evidence.md`; the completed corrective
   ExecPlan was retired, and this plan may resume at Phase 6.
+- 2026-08-03: A user-selected code-native upgrade-card follow-up supersedes the
+  earlier Phase 5 runtime geometry: compact cards are `280×378`, wide cards are
+  `352×432`, and 200% cards are `520×920`, using one split equipment-dossier
+  body and no screen header. Product and runtime vocabulary now treats
+  `Secondary Weapons` as the umbrella and `Seeker` as its always-equipped base
+  family; the former upgrade family ID `passive` is now `seeker`, and its card
+  reuses `hud/action_seeker`. The existing workbench path
+  `hud/upgrade_passive` is retained only as unretired legacy inventory because
+  this follow-up authorized no destructive asset action. Phase 6 must not
+  promote or add a new runtime dependency on that legacy asset without a new
+  exact inventory decision.
 
 ## Execution Handoff
 

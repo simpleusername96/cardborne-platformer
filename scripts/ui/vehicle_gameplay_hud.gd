@@ -469,7 +469,7 @@ var _target_name: Label
 var _target_bar: ProgressBar
 var _target_state: Label
 var _dash_slot: ActionRailSlot
-var _passive_slot: ActionRailSlot
+var _seeker_slot: ActionRailSlot
 var _skill_slot: ActionRailSlot
 var _buff_label: Label
 var _minimap: StageMinimap
@@ -626,7 +626,7 @@ func _build() -> void:
 	dock.add_theme_constant_override("separation", 8)
 	dock.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_dock_panel.add_child(dock)
-	_passive_slot = _action_slot(dock, &"seeker", Art.SUPPORT)
+	_seeker_slot = _action_slot(dock, &"seeker", Art.SUPPORT)
 	_dash_slot = _action_slot(dock, &"dash", Art.SYSTEM)
 	_skill_slot = _action_slot(dock, &"emp", Art.BOSS_COMMAND)
 
@@ -684,9 +684,9 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			bool(snapshot["dash_available"]),
 			float(snapshot.get("dash_ratio", 0.0))
 		)
-		_passive_slot.set_state(
-			bool(snapshot.get("passive_available", false)),
-			float(snapshot.get("passive_ratio", 0.0))
+		_seeker_slot.set_state(
+			bool(snapshot.get("seeker_available", false)),
+			float(snapshot.get("seeker_ratio", 0.0))
 		)
 		_skill_slot.set_state(
 			bool(snapshot.get("skill_available", false)),
@@ -814,7 +814,7 @@ func hide_stage_transition() -> void:
 
 func refresh_localized_content() -> void:
 	_transition_banner.refresh_localized_content()
-	_passive_slot.queue_redraw()
+	_seeker_slot.queue_redraw()
 	_dash_slot.queue_redraw()
 	_skill_slot.queue_redraw()
 
@@ -923,7 +923,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"action_slot_count":3,
 		"shows_primary_slot":false,
 		"action_slot_contracts":[
-			_passive_slot.debug_contract(),
+			_seeker_slot.debug_contract(),
 			_dash_slot.debug_contract(),
 			_skill_slot.debug_contract(),
 		],

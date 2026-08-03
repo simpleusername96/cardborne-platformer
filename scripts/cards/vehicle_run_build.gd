@@ -30,7 +30,7 @@ func total_levels() -> int:
 
 func active_optional_secondaries() -> int:
 	var count := 0
-	for upgrade_id in VehicleUpgradeCatalog.SECONDARY_FAMILY_IDS:
+	for upgrade_id in VehicleUpgradeCatalog.OPTIONAL_SECONDARY_FAMILY_IDS:
 		if has(upgrade_id):
 			count += 1
 	return count

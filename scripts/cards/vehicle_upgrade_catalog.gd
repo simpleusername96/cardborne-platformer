@@ -3,7 +3,12 @@ extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
 const EXPECTED_COUNT := 41
-const SECONDARY_FAMILY_IDS: Array[StringName] = [&"ion_field", &"orbit_blades", &"wake_mines", &"escort_drone"]
+const OPTIONAL_SECONDARY_FAMILY_IDS: Array[StringName] = [
+	&"ion_field",
+	&"orbit_blades",
+	&"wake_mines",
+	&"escort_drone",
+]
 const OPTIONAL_SECONDARY_SLOTS := 2
 const ELEMENT_BRANCHES: Array = [
 	[&"incendiary_core", &"thermal_compound"],
@@ -71,7 +76,11 @@ func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) ->
 		return false
 	if definition.requirement != &"" and build.level_of(definition.requirement) <= 0:
 		return false
-	if definition.id in SECONDARY_FAMILY_IDS and build.level_of(definition.id) == 0 and build.active_optional_secondaries() >= OPTIONAL_SECONDARY_SLOTS:
+	if (
+		definition.id in OPTIONAL_SECONDARY_FAMILY_IDS
+		and build.level_of(definition.id) == 0
+		and build.active_optional_secondaries() >= OPTIONAL_SECONDARY_SLOTS
+	):
 		return false
 	return true
 
@@ -109,7 +118,7 @@ func offer(
 	if source_id == &"level_up" and stage_index == 0 and build.levels.is_empty():
 		_append_first_family(result, available, [&"primary"])
 		_append_first_family(result, available, [&"element"])
-		_append_first_family(result, available, [&"passive", &"mobility"])
+		_append_first_family(result, available, [&"seeker", &"mobility"])
 	else:
 		if source_id == &"level_up":
 			var branch_child := _eligible_branch_child(build, available)

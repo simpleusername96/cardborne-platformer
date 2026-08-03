@@ -67,7 +67,7 @@ func activate(run: Node) -> void:
 	run.player_barrier_strength = 1.0e9
 	run.player_barrier_timer = 1.0e9
 	# Synthetic projectile pressure already owns the exact workload count.
-	run.player_passive_cooldown = 1.0e9
+	run.player_seeker_cooldown = 1.0e9
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")
 	run.experience_runtime.clear_shards()

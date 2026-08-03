@@ -364,8 +364,10 @@ hint appears once and the same hint cannot repeat within two seconds.
   consuming one another. Contagion spreads poison to at most eight nearby
   targets in deterministic distance order. World arcs and Korean/English
   target text expose active stack counts.
-- The ship always has Seeker support. Up to two additional optional secondary
-  families may be active, for three total:
+- **Secondary Weapons** is the umbrella system for five automatic weapon
+  families. **Seeker** is its always-equipped base family; up to two of the
+  other four optional families may be active, for three total. Seeker remains
+  inside this umbrella category and does not consume an optional slot:
 
 | Secondary | Combat role |
 | --- | --- |

@@ -133,14 +133,18 @@ func _run() -> void:
 		var card := Dictionary(card_variant)
 		card_contracts_valid = (
 			card_contracts_valid
-			and int(card["value_rows"]) == 1
+			and int(card["effect_rows"]) == 1
+			and bool(card["level_visible"])
+			and int(card["value_rows"]) >= 2
+			and bool(card["dossier_split"])
+			and int(card["body_divider_count"]) == 1
 			and int(card["pip_slots"]) == 0
 			and int(card["stage_pip_count"]) == 0
 			and bool(card["mouse_passthrough"])
 		)
 	_expect(
 		card_contracts_valid,
-		"every card exposes one numeric delta, no stage pips, and parent-owned pointer input"
+		"every card exposes level plus one numeric delta in the dossier, no stage pips, and parent-owned pointer input"
 	)
 	_expect((panel.get("_confirm") as Button).disabled, "upgrade confirm begins disabled")
 	panel.call("_process", 0.36)

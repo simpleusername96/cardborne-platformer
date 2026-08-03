@@ -5,7 +5,7 @@ extends RefCounted
 
 const OUTGOING: Dictionary = {
 	&"primary": "REPORT_SOURCE_PRIMARY",
-	&"passive_seeker": "REPORT_SOURCE_SEEKER",
+	&"seeker": "REPORT_SOURCE_SEEKER",
 	&"ion_field": "REPORT_SOURCE_ION_FIELD",
 	&"orbit_blades": "REPORT_SOURCE_ORBIT_BLADES",
 	&"wake_mine": "REPORT_SOURCE_WAKE_MINE",
@@ -39,8 +39,8 @@ static func outgoing_id(source: String) -> StringName:
 	match normalized:
 		"player_primary":
 			return &"primary"
-		"passive_seeker":
-			return &"passive_seeker"
+		"seeker":
+			return &"seeker"
 		"ion field":
 			return &"ion_field"
 		"orbit blades":
@@ -66,7 +66,7 @@ static func outgoing_id(source: String) -> StringName:
 		"ram pulse":
 			return &"ram_pulse"
 		"seeker burst":
-			return &"passive_seeker"
+			return &"seeker"
 	return &"other"
 
 

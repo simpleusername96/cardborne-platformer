@@ -11,6 +11,10 @@ const UpgradeGlyphRenderer = preload(
 	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
 )
 
+const WIDE_SIZE := Vector2(352.0, 432.0)
+const COMPACT_SIZE := Vector2(280.0, 378.0)
+const ACCESSIBILITY_SIZE := Vector2(520.0, 920.0)
+
 
 var _offer: Dictionary = {}
 var _selected := false
@@ -19,24 +23,32 @@ var _accessibility_mode := false
 var _content_margin: MarginContainer
 var _content_box: VBoxContainer
 var _family: Label
-var _level: Label
 var _title: Label
-var _summary: Label
+var _dossier: HBoxContainer
 var _art_lane: CenterContainer
 var _glyph: VehicleUpgradeGlyphRenderer
+var _body_divider: VSeparator
+var _change_lane: VBoxContainer
+var _level: Label
+var _change_rule: HSeparator
 var _effects: VBoxContainer
+var _comparison_fallback: Label
+var _footer_rule: HSeparator
+var _footer_box: VBoxContainer
+var _summary: Label
 var _behavior: Label
 
 
 func _ready() -> void:
 	text = ""
 	clip_contents = true
-	custom_minimum_size = Vector2(304.0, 330.0)
+	custom_minimum_size = WIDE_SIZE
 	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	focus_mode = Control.FOCUS_ALL
 	theme_type_variation = &"SelectableButton"
 	_build()
+	_apply_layout_profile()
 	if not _offer.is_empty():
 		_refresh()
 
@@ -59,40 +71,18 @@ func set_selected_state(value: bool) -> void:
 
 func set_compact_mode(value: bool) -> void:
 	_compact = value
-	custom_minimum_size = Vector2(244.0, 286.0) if value else Vector2(304.0, 330.0)
 	if not is_node_ready():
+		custom_minimum_size = COMPACT_SIZE if value else WIDE_SIZE
 		return
-	var horizontal_margin := 10 if value else 14
-	var vertical_margin := 5 if value else 6
-	for side in ["margin_left", "margin_right"]:
-		_content_margin.add_theme_constant_override(side, horizontal_margin)
-	for side in ["margin_top", "margin_bottom"]:
-		_content_margin.add_theme_constant_override(side, vertical_margin)
-	_content_box.add_theme_constant_override("separation", 2 if value else 3)
-	_glyph.custom_minimum_size = (
-		Vector2(64.0, 64.0) if value else Vector2(88.0, 88.0)
-	)
-	Factory.apply_font_size(_family, 13 if value else 14)
-	Factory.apply_font_size(_level, 13 if value else 14)
-	Factory.apply_font_size(_title, 22 if value else 24)
-	_title.custom_minimum_size.y = 48.0 if value else 52.0
-	Factory.apply_font_size(_summary, 15 if value else 16)
-	_summary.custom_minimum_size.y = 54.0 if value else 60.0
-	Factory.apply_font_size(_behavior, 15 if value else 16)
-	_behavior.custom_minimum_size.y = 28.0 if value else 32.0
+	_apply_layout_profile()
 	_refresh()
 
 
 func set_accessibility_mode(enabled: bool) -> void:
 	_accessibility_mode = enabled
-	if not enabled:
-		set_compact_mode(_compact)
+	if not is_node_ready():
 		return
-	custom_minimum_size = Vector2(356.0, 520.0)
-	_title.custom_minimum_size.y = 104.0
-	_summary.custom_minimum_size.y = 120.0
-	_behavior.custom_minimum_size.y = 80.0
-	_glyph.custom_minimum_size = Vector2(112.0, 112.0)
+	_apply_layout_profile()
 	_refresh()
 
 
@@ -110,6 +100,7 @@ func debug_contract() -> Dictionary:
 		"actual_size":size,
 		"value_rows":(
 			(_effects.get_child_count() if is_instance_valid(_effects) else 0)
+			+ (1 if is_instance_valid(_comparison_fallback) and _comparison_fallback.visible else 0)
 			+ (1 if is_instance_valid(_behavior) and _behavior.visible else 0)
 			+ (1 if is_instance_valid(_level) and _level.visible else 0)
 		),
@@ -119,6 +110,11 @@ func debug_contract() -> Dictionary:
 		"stage_pip_count":0,
 		"selected":_selected,
 		"compact":_compact,
+		"accessibility_mode":_accessibility_mode,
+		"dossier_split":true,
+		"body_divider_count":1,
+		"description_in_comparison":_comparison_fallback.visible,
+		"footer_visible":_footer_box.visible,
 		"type_sizes":{
 			"family":_family.get_theme_font_size("font_size"),
 			"level":_level.get_theme_font_size("font_size"),
@@ -127,6 +123,7 @@ func debug_contract() -> Dictionary:
 			"behavior":_behavior.get_theme_font_size("font_size"),
 		},
 		"summary_max_lines":_summary.max_lines_visible,
+		"comparison_max_lines":_comparison_fallback.max_lines_visible,
 		"header_art_count":0,
 		"body_art_count":1 if is_instance_valid(_glyph) else 0,
 		"family_badge_count":0,
@@ -138,7 +135,11 @@ func debug_contract() -> Dictionary:
 		"body_art_size":_glyph.custom_minimum_size,
 		"body_art_asset_id":glyph_contract["asset_id"],
 		"body_order":[
-			"family", "level", "title", "summary", "art", "effects", "behavior",
+			"family",
+			"title",
+			"dossier:art/divider/level/effects",
+			"description",
+			"behavior",
 		],
 		"state_cues":{
 			"normal_flat":normal_style is StyleBoxFlat,
@@ -165,6 +166,11 @@ func debug_geometry_contract() -> Dictionary:
 	return {
 		"rect":get_global_rect(),
 		"content_rect":_content_box.get_global_rect(),
+		"dossier_rect":_dossier.get_global_rect(),
+		"art_lane_rect":_art_lane.get_global_rect(),
+		"change_lane_rect":_change_lane.get_global_rect(),
+		"body_divider_rect":_body_divider.get_global_rect(),
+		"footer_rect":_footer_box.get_global_rect() if _footer_box.visible else Rect2(),
 		"labels":labels,
 		"glyph":_glyph.debug_contract(),
 		"selected":_selected,
@@ -176,111 +182,279 @@ func debug_geometry_contract() -> Dictionary:
 func _build() -> void:
 	_content_margin = MarginContainer.new()
 	_content_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_content_margin.add_theme_constant_override("margin_left", 14)
-	_content_margin.add_theme_constant_override("margin_top", 6)
-	_content_margin.add_theme_constant_override("margin_right", 14)
-	_content_margin.add_theme_constant_override("margin_bottom", 6)
 	_content_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_content_margin)
 
 	_content_box = VBoxContainer.new()
-	_content_box.add_theme_constant_override("separation", 3)
 	_content_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content_margin.add_child(_content_box)
 
-	var meta_row := HBoxContainer.new()
-	meta_row.add_theme_constant_override("separation", 8)
-	meta_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content_box.add_child(meta_row)
-	_family = _label(14, Art.TEXT_PRIMARY)
+	_family = _label(16, Art.SYSTEM)
 	_family.name = "FamilyLabel"
 	_family.theme_type_variation = &"MetricLabel"
-	_family.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_family.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_family.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	meta_row.add_child(_family)
-	_level = _label(14, Art.SYSTEM)
-	_level.name = "LevelLabel"
-	_level.theme_type_variation = &"MetricLabel"
-	_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_level.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	meta_row.add_child(_level)
-	_title = _label(24, Art.TEXT_PRIMARY)
+	_content_box.add_child(_family)
+
+	_title = _label(28, Art.TEXT_PRIMARY)
 	_title.name = "TitleLabel"
 	_title.theme_type_variation = &"TitleLabel"
-	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_title.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.max_lines_visible = 2
-	_title.custom_minimum_size.y = 52.0
 	_content_box.add_child(_title)
-	_summary = _label(16, Art.TEXT_PRIMARY)
-	_summary.name = "SummaryLabel"
-	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_summary.max_lines_visible = 3
-	_summary.custom_minimum_size.y = 60.0
-	_content_box.add_child(_summary)
+
+	_dossier = HBoxContainer.new()
+	_dossier.name = "DossierBody"
+	_dossier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dossier.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_dossier.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content_box.add_child(_dossier)
+
 	_art_lane = CenterContainer.new()
+	_art_lane.name = "ArtworkLane"
+	_art_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_art_lane.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_art_lane.size_flags_stretch_ratio = 0.95
 	_art_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content_box.add_child(_art_lane)
+	_dossier.add_child(_art_lane)
 	_glyph = UpgradeGlyphRenderer.new()
 	_glyph.name = "UpgradeBodyArtwork"
-	_glyph.custom_minimum_size = Vector2(88.0, 88.0)
 	_art_lane.add_child(_glyph)
+
+	_body_divider = VSeparator.new()
+	_body_divider.name = "DossierDivider"
+	_body_divider.custom_minimum_size.x = 1.0
+	_body_divider.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body_divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dossier.add_child(_body_divider)
+
+	_change_lane = VBoxContainer.new()
+	_change_lane.name = "ChangeLane"
+	_change_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_change_lane.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_change_lane.size_flags_stretch_ratio = 1.05
+	_change_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dossier.add_child(_change_lane)
+
+	_level = _label(18, Art.SYSTEM)
+	_level.name = "LevelLabel"
+	_level.theme_type_variation = &"MetricLabel"
+	_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_level.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_change_lane.add_child(_level)
+
+	_change_rule = HSeparator.new()
+	_change_rule.name = "ChangeRule"
+	_change_rule.custom_minimum_size.y = 1.0
+	_change_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_change_lane.add_child(_change_rule)
+
 	_effects = VBoxContainer.new()
-	_effects.add_theme_constant_override("separation", 4)
+	_effects.name = "EffectRows"
+	_effects.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_effects.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content_box.add_child(_effects)
-	_behavior = _label(16, Art.SUPPORT)
+	_change_lane.add_child(_effects)
+
+	_comparison_fallback = _label(16, Art.TEXT_PRIMARY)
+	_comparison_fallback.name = "ComparisonDescriptionLabel"
+	_comparison_fallback.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_comparison_fallback.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_comparison_fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_comparison_fallback.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_comparison_fallback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_comparison_fallback.visible = false
+	_change_lane.add_child(_comparison_fallback)
+
+	_footer_rule = HSeparator.new()
+	_footer_rule.name = "DescriptionRule"
+	_footer_rule.custom_minimum_size.y = 1.0
+	_footer_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content_box.add_child(_footer_rule)
+
+	_footer_box = VBoxContainer.new()
+	_footer_box.name = "DescriptionFooter"
+	_footer_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content_box.add_child(_footer_box)
+
+	_summary = _label(16, Art.TEXT_PRIMARY)
+	_summary.name = "SummaryLabel"
+	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_summary.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_summary.size_flags_stretch_ratio = 2.0
+	_footer_box.add_child(_summary)
+
+	_behavior = _label(15, Art.SUPPORT)
 	_behavior.name = "BehaviorLabel"
-	_behavior.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_behavior.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_behavior.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_behavior.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_behavior.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_behavior.max_lines_visible = 2
-	_behavior.custom_minimum_size.y = 32.0
+	_behavior.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_behavior.visible = false
-	_content_box.add_child(_behavior)
+	_footer_box.add_child(_behavior)
+
+
+func _apply_layout_profile() -> void:
+	var horizontal_margin := 24
+	var vertical_margin := 20
+	var content_gap := 8
+	var body_gap := 12
+	var change_gap := 6
+	var effect_gap := 6
+	var footer_gap := 6
+	var family_size := 16
+	var title_size := 28
+	var level_size := 18
+	var summary_size := 16
+	var behavior_size := 15
+	var dossier_height := 174.0
+	var glyph_size := Vector2(120.0, 120.0)
+	var art_lane_width := 120.0
+	var change_lane_width := 132.0
+	var family_height := 20.0
+	var title_height := 54.0
+	var footer_height := 88.0
+	var summary_height := 52.0
+	var behavior_height := 28.0
+	if _accessibility_mode:
+		custom_minimum_size = ACCESSIBILITY_SIZE
+		horizontal_margin = 20
+		vertical_margin = 16
+		content_gap = 10
+		body_gap = 16
+		change_gap = 10
+		effect_gap = 12
+		footer_gap = 8
+		dossier_height = 340.0
+		glyph_size = Vector2(176.0, 176.0)
+		art_lane_width = 176.0
+		change_lane_width = 268.0
+		family_height = 44.0
+		title_height = 144.0
+		footer_height = 290.0
+		summary_height = 200.0
+		behavior_height = 82.0
+	elif _compact:
+		custom_minimum_size = COMPACT_SIZE
+		horizontal_margin = 14
+		vertical_margin = 10
+		content_gap = 6
+		body_gap = 8
+		change_gap = 5
+		effect_gap = 5
+		footer_gap = 4
+		family_size = 13
+		title_size = 22
+		level_size = 15
+		summary_size = 14
+		behavior_size = 13
+		dossier_height = 182.0
+		glyph_size = Vector2(88.0, 88.0)
+		art_lane_width = 88.0
+		change_lane_width = 140.0
+		family_height = 18.0
+		title_height = 48.0
+		footer_height = 72.0
+		summary_height = 42.0
+		behavior_height = 24.0
+	else:
+		custom_minimum_size = WIDE_SIZE
+
+	for side in ["margin_left", "margin_right"]:
+		_content_margin.add_theme_constant_override(side, horizontal_margin)
+	for side in ["margin_top", "margin_bottom"]:
+		_content_margin.add_theme_constant_override(side, vertical_margin)
+	_content_box.add_theme_constant_override("separation", content_gap)
+	_dossier.add_theme_constant_override("separation", body_gap)
+	_change_lane.add_theme_constant_override("separation", change_gap)
+	_effects.add_theme_constant_override("separation", effect_gap)
+	_footer_box.add_theme_constant_override("separation", footer_gap)
+	_family.custom_minimum_size.y = family_height
+	_title.custom_minimum_size.y = title_height
+	_dossier.custom_minimum_size.y = dossier_height
+	_art_lane.custom_minimum_size.x = art_lane_width
+	_change_lane.custom_minimum_size.x = change_lane_width
+	_glyph.custom_minimum_size = glyph_size
+	_footer_box.custom_minimum_size.y = footer_height
+	_summary.custom_minimum_size.y = summary_height
+	_behavior.custom_minimum_size.y = behavior_height
+	Factory.apply_font_size(_family, family_size)
+	Factory.apply_font_size(_title, title_size)
+	Factory.apply_font_size(_level, level_size)
+	Factory.apply_font_size(_comparison_fallback, summary_size)
+	Factory.apply_font_size(_summary, summary_size)
+	Factory.apply_font_size(_behavior, behavior_size)
+	_refresh_text_budgets()
 
 
 func _refresh() -> void:
+	if _offer.is_empty():
+		return
 	_family.text = tr(String(_offer.get("family_key", "")))
 	_level.text = _level_transition_text()
 	_title.text = tr(String(_offer.get("title_key", "")))
 	_summary.text = tr(String(_offer.get("summary_key", "")))
+	_comparison_fallback.text = _summary.text
 	_refresh_family_glyph()
 	_clear(_effects)
 	var accessible_values := PackedStringArray()
 	var previews: Array = _offer.get("effect_rows", [])
 	for preview_variant in previews.slice(0, 2):
 		var preview := Dictionary(preview_variant)
-		var row := HBoxContainer.new()
-		row.custom_minimum_size.y = 18.0 if _compact else 20.0
-		row.add_theme_constant_override("separation", 8)
+		var row_number := _effects.get_child_count() + 1
+		var row := VBoxContainer.new()
+		row.name = "EffectRow%d" % row_number
+		row.add_theme_constant_override("separation", 2 if _compact else 4)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var stat := _label(13 if _compact else 14, Art.TEXT_MUTED)
-		stat.name = "StatLabel%d" % (_effects.get_child_count() + 1)
+		var stat := _label(_effect_stat_size(), Art.TEXT_PRIMARY)
+		stat.name = "StatLabel%d" % row_number
 		stat.text = tr(String(preview.get("stat_key", "")))
-		stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		stat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		stat.max_lines_visible = 2 if _compact or _accessibility_mode else 1
 		row.add_child(stat)
-		var delta := _label(13 if _compact else 14, Art.TEXT_PRIMARY)
-		delta.name = "DeltaLabel%d" % (_effects.get_child_count() + 1)
-		delta.text = _preview_value(preview)
-		delta.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(delta)
+		var delta_row := HBoxContainer.new()
+		delta_row.name = "DeltaRow%d" % row_number
+		delta_row.add_theme_constant_override("separation", 4)
+		delta_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var parts := _preview_value_parts(preview)
+		var current := _label(_effect_value_size(), Art.TEXT_PRIMARY)
+		current.name = "CurrentValueLabel%d" % row_number
+		current.text = String(parts[0])
+		delta_row.add_child(current)
+		var arrow := _label(_effect_value_size(), Art.TEXT_MUTED)
+		arrow.name = "ValueArrowLabel%d" % row_number
+		arrow.text = "→"
+		delta_row.add_child(arrow)
+		var next := _label(_effect_value_size(), Art.SYSTEM)
+		next.name = "NextValueLabel%d" % row_number
+		next.text = String(parts[1])
+		delta_row.add_child(next)
+		row.add_child(delta_row)
 		_effects.add_child(row)
-		accessible_values.append("%s %s" % [stat.text, delta.text])
+		accessible_values.append("%s %s" % [stat.text, _preview_value(preview)])
+	_effects.visible = _effects.get_child_count() > 0
+	_comparison_fallback.visible = not _effects.visible
+	_summary.visible = _effects.visible and not _summary.text.is_empty()
 	var behavior_key := String(_offer.get("behavior_change_key", ""))
 	_behavior.text = tr(behavior_key) if not behavior_key.is_empty() else ""
-	_behavior.visible = not _behavior.text.is_empty()
-	_refresh_summary_budget()
+	_behavior.visible = (
+		not _behavior.text.is_empty()
+		and _behavior.text != _summary.text
+	)
+	_footer_box.visible = _summary.visible or _behavior.visible
+	_footer_rule.visible = _footer_box.visible
+	_refresh_text_budgets()
 	var accessibility_parts := PackedStringArray([
 		_family.text,
-		_level.text,
 		_title.text,
-		_summary.text,
+		_level.text,
 		"; ".join(accessible_values),
+		_summary.text,
 		_behavior.text,
 	])
 	var non_empty_parts := PackedStringArray()
@@ -290,25 +464,36 @@ func _refresh() -> void:
 	accessibility_name = " · ".join(non_empty_parts)
 
 
-func _refresh_summary_budget() -> void:
+func _refresh_text_budgets() -> void:
 	if _accessibility_mode:
+		_comparison_fallback.max_lines_visible = 6
 		_summary.max_lines_visible = 5
-		_summary.custom_minimum_size.y = 152.0
+		_behavior.max_lines_visible = 2
 		return
-	var sparse_compact := (
-		_compact
-		and _effects.get_child_count() == 0
-		and not _behavior.visible
-	)
-	_summary.max_lines_visible = 4 if sparse_compact else 3
-	_summary.custom_minimum_size.y = (
-		64.0
-		if sparse_compact
-		else (54.0 if _compact else 60.0)
-	)
+	if _compact:
+		_comparison_fallback.max_lines_visible = 7
+		_summary.max_lines_visible = 3
+		_behavior.max_lines_visible = 2
+		return
+	_comparison_fallback.max_lines_visible = 6
+	_summary.max_lines_visible = 3
+	_behavior.max_lines_visible = 2
+
+
+func _effect_stat_size() -> int:
+	return 14 if _compact and not _accessibility_mode else 16
+
+
+func _effect_value_size() -> int:
+	return 15 if _compact and not _accessibility_mode else 16
 
 
 func _preview_value(preview: Dictionary) -> String:
+	var parts := _preview_value_parts(preview)
+	return "%s → %s" % [parts[0], parts[1]]
+
+
+func _preview_value_parts(preview: Dictionary) -> PackedStringArray:
 	var operation := String(preview.get("operation", "add"))
 	var current := float(preview.get("current", 0.0))
 	var next := float(preview.get("next", 0.0))
@@ -322,7 +507,7 @@ func _preview_value(preview: Dictionary) -> String:
 		if operation == "multiply"
 		else "%+.0f" % next
 	)
-	return "%s → %s" % [current_text, next_text]
+	return PackedStringArray([current_text, next_text])
 
 
 func _level_transition_text() -> String:
@@ -331,11 +516,10 @@ func _level_transition_text() -> String:
 		"%level%",
 		str(int(_offer.get("current_level", 0)))
 	)
-	var next_text := template.replace(
-		"%level%",
-		str(int(_offer.get("next_level", 1)))
-	)
-	return "%s → %s" % [current_text, next_text]
+	return "%s → %d" % [
+		current_text,
+		int(_offer.get("next_level", 1)),
+	]
 
 
 func _refresh_family_glyph() -> void:

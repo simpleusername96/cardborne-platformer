@@ -987,7 +987,7 @@ func _sync_projectiles(
 			continue
 		var visual_id := (
 			&"seeker"
-			if projectile.homing or projectile.owner == "passive_seeker"
+			if projectile.homing or projectile.owner == "seeker"
 			else (&"opening_breach" if projectile.wall_piercing else &"primary")
 		)
 		var visual_radius := radius * (

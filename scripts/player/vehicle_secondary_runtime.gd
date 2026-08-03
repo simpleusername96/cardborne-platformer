@@ -1,8 +1,8 @@
 class_name VehicleSecondaryRuntime
 extends RefCounted
 
-## Bounded simulation for automatic secondary families other than the existing
-## seeker projectile. It emits damage intents; VehicleRun remains damage owner.
+## Bounded simulation for optional automatic secondary families. Seeker appears
+## in the equipment snapshot, while VehicleRun retains its projectile simulation.
 
 const DEFINITION_PATH := "res://data/weapons/vehicle/secondary"
 const ION_TICK := 0.25

@@ -100,7 +100,7 @@ var runtime_slot := -1
 # cell entries after swap retirement or pooled actor reuse.
 var spatial_slot := -1
 var runtime_generation := 0
-var passive_score := 0.0
+var target_score := 0.0
 var decision_elapsed := 0.0
 var motion_elapsed := 0.0
 
@@ -109,6 +109,6 @@ func reset_runtime_collections() -> void:
 	statuses.clear()
 	lane_centers.clear()
 	attack_telegraphs.clear()
-	passive_score = 0.0
+	target_score = 0.0
 	decision_elapsed = 0.0
 	motion_elapsed = 0.0

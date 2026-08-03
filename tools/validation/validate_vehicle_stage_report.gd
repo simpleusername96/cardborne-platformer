@@ -11,7 +11,7 @@ func _init() -> void:
 	var telemetry := {
 		"outgoing":{
 			&"primary":41.0,
-			&"passive_seeker":17.0,
+			&"seeker":17.0,
 			&"emp":9.0,
 		},
 		"attributes":{

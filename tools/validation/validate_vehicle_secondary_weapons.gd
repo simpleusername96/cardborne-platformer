@@ -33,7 +33,7 @@ func _initialize() -> void:
 		if build.active_optional_secondaries() >= 2:
 			break
 	_expect(build.active_optional_secondaries() == 2, "two optional families fill the three-family total cap")
-	var blocked := Catalog.SECONDARY_FAMILY_IDS.filter(func(id: StringName) -> bool: return not build.has(id))
+	var blocked := Catalog.OPTIONAL_SECONDARY_FAMILY_IDS.filter(func(id: StringName) -> bool: return not build.has(id))
 	for upgrade_id in blocked:
 		_expect(not catalog.compatible(catalog.get_definition(upgrade_id), build), "fourth family is incompatible")
 	var state := runtime.snapshot(build)
@@ -54,7 +54,7 @@ func _initialize() -> void:
 		enemies,
 		Callable(self, "_los")
 	)
-	_expect(Array(result["damage"]).size() >= 1, "equipped passive simulation emits bounded damage intent")
+	_expect(Array(result["damage"]).size() >= 1, "equipped optional secondary emits bounded damage intent")
 	_validate_mine_direction(catalog)
 	_validate_drone_target_direction(catalog)
 	_finish()

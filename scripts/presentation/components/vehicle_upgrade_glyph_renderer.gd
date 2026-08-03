@@ -10,7 +10,7 @@ const SemanticAssets = preload(
 
 const FAMILY_IDS: Array[StringName] = [
 	&"primary",
-	&"passive",
+	&"seeker",
 	&"secondary",
 	&"defense",
 	&"dash",
@@ -60,7 +60,7 @@ const FAMILY_RECIPES := {
 			},
 		],
 	},
-	&"passive":{
+	&"seeker":{
 		"shape":&"triple_core",
 		"color":&"support",
 		"commands":[
@@ -395,12 +395,10 @@ func configure(family: StringName, palette: Dictionary) -> void:
 
 
 func _draw() -> void:
-	var texture := SemanticAssets.texture(
-		StringName("hud/upgrade_%s" % _family)
-	)
+	var texture := SemanticAssets.texture(asset_id(_family))
 	if texture == null:
 		return
-	var extent := minf(size.x, size.y) * 0.92
+	var extent := minf(size.x, size.y)
 	var image_size := Vector2.ONE * extent
 	draw_texture_rect(
 		texture,
@@ -411,26 +409,33 @@ func _draw() -> void:
 
 
 func local_content_bounds() -> Rect2:
-	var extent := minf(size.x, size.y) * 0.92
+	var extent := minf(size.x, size.y)
 	return Rect2(size * 0.5 - Vector2.ONE * extent * 0.5, Vector2.ONE * extent)
 
 
 func debug_contract() -> Dictionary:
 	var local_bounds := local_content_bounds()
-	var asset_id := StringName("hud/upgrade_%s" % _family)
+	var semantic_asset_id := asset_id(_family)
 	return {
 		"family":_family,
-		"asset_id":asset_id,
+		"asset_id":semantic_asset_id,
 		"control_rect":get_global_rect(),
 		"content_rect":Rect2(global_position + local_bounds.position, local_bounds.size),
 		"command_count":Array(recipe(_family).get("commands", [])).size(),
-		"semantic_asset":SemanticAssets.has_asset(asset_id),
-		"texture_count":1 if SemanticAssets.has_asset(asset_id) else 0,
+		"semantic_asset":SemanticAssets.has_asset(semantic_asset_id),
+		"texture_count":1 if SemanticAssets.has_asset(semantic_asset_id) else 0,
 	}
 
 
 static func family_ids() -> Array[StringName]:
 	return FAMILY_IDS.duplicate()
+
+
+static func asset_id(family: StringName) -> StringName:
+	var normalized := family if family in FAMILY_IDS else &"secondary"
+	if normalized == &"seeker":
+		return &"hud/action_seeker"
+	return StringName("hud/upgrade_%s" % normalized)
 
 
 static func recipe(family: StringName) -> Dictionary:

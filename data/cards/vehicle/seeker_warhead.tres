@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="Modifier_1"]
 script = ExtResource("2_mod")
-stat_id = &"passive_damage_multiplier"
+stat_id = &"seeker_damage_multiplier"
 operation = "multiply"
 values_by_level = Array[float]([1.2, 1.44, 1.728])
 
@@ -15,7 +15,7 @@ id = &"seeker_warhead"
 title_key = "UPGRADE_SEEKER_WARHEAD_TITLE"
 description_key = "UPGRADE_SEEKER_WARHEAD_DESC"
 summary_keys = Array[String](["UPGRADE_SEEKER_WARHEAD_DESC", "UPGRADE_SEEKER_WARHEAD_DESC", "UPGRADE_SEEKER_WARHEAD_DESC"])
-family = &"passive"
+family = &"seeker"
 max_level = 3
 source_tags = Array[StringName]([&"level_up", &"boss"])
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1")])

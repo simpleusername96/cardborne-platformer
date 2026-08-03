@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="Modifier_1"]
 script = ExtResource("2_mod")
-stat_id = &"passive_interval"
+stat_id = &"seeker_interval"
 operation = "multiply"
 values_by_level = Array[float]([0.88, 0.7744, 0.681472])
 
@@ -15,7 +15,7 @@ id = &"seeker_cycle"
 title_key = "UPGRADE_SEEKER_CYCLE_TITLE"
 description_key = "UPGRADE_SEEKER_CYCLE_DESC"
 summary_keys = Array[String](["UPGRADE_SEEKER_CYCLE_DESC", "UPGRADE_SEEKER_CYCLE_DESC", "UPGRADE_SEEKER_CYCLE_DESC"])
-family = &"passive"
+family = &"seeker"
 max_level = 3
 source_tags = Array[StringName]([&"level_up", &"boss"])
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1")])

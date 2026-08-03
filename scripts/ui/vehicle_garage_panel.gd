@@ -16,7 +16,7 @@ var _sections: HBoxContainer
 var _loadout: VBoxContainer
 var _recovery: VBoxContainer
 var _primary_value: Label
-var _passive_value: Label
+var _secondaries_value: Label
 var _active_value: Label
 var _unlock_value: Label
 var _build_value: Label
@@ -61,7 +61,11 @@ func _build() -> void:
 	_loadout.size_flags_stretch_ratio = 1.0
 	_sections.add_child(_loadout)
 	_primary_value = _add_row(_loadout, "GARAGE_PRIMARY", Art.TEXT_PRIMARY)
-	_passive_value = _add_row(_loadout, "GARAGE_PASSIVE", Art.SYSTEM)
+	_secondaries_value = _add_row(
+		_loadout,
+		"GARAGE_SECONDARY_WEAPONS",
+		Art.SYSTEM
+	)
 	_active_value = _add_row(_loadout, "GARAGE_ACTIVE", Art.BOSS_MAGENTA)
 
 	_sections.add_child(VSeparator.new())
@@ -106,7 +110,7 @@ func refresh_localized_content() -> void:
 			tr(String(family["name_key"])),
 			int(family["level"]),
 		])
-	_passive_value.text = (
+	_secondaries_value.text = (
 		tr("SHIP_STATUS_NONE")
 		if secondary_names.is_empty()
 		else ", ".join(secondary_names)

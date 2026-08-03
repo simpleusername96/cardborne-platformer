@@ -303,16 +303,19 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 
 - layout breakpoint는 width `1100`, guide/report three-column breakpoint는
   `1180`이다.
-- upgrade card는 compact에서 `224–244×286`, gap `12`, wide에서
-  `304×330`, gap `18`을 사용한다. card 순서는 family와 실제 current → next
-  level, title, summary, 관련 family artwork 한 개, effect row 최대 2개,
-  behavior다. 수치 modifier가 있는 card는 실제 current → next stat도 함께
-  표시한다. artwork는
-  compact `64×64`, wide `88×88`이며 title 위에는 image, icon 또는 badge를
-  두지 않는다. level text와 중복되는 단계 pip는 사용하지 않는다.
+- upgrade card는 compact에서 `280×378`, gap `12`, wide에서 `352×432`,
+  gap `20`을 사용한다. 순서는 family, 큰 좌정렬 title, split dossier,
+  description footer다. dossier는 compact `88×88`/wide `120×120` family
+  artwork를 왼쪽에, `Lv.<current> → <next>`와 effect row 최대 2개를 오른쪽에
+  두며 하나의 vertical divider만 사용한다. 수치가 없는 behavior card는
+  description을 오른쪽 comparison lane에 배치해 빈 column을 만들지 않는다.
+  footer는 description과 별도 behavior 문장이 실제로 있을 때만 나타난다.
+  title 위 image, icon, badge와 level text를 반복하는 단계 pip는 사용하지
+  않는다. Seeker와 선택형 secondary upgrade는 같은 `보조 무기 / Secondary
+  Weapons` family label을 사용하고 title이 실제 subtype을 식별한다.
 - upgrade card 자체는 scroll을 사용하지 않는다. 200% text scale에서만 세
   card를 담는 offer body가 하나의 outer vertical scroll을 가질 수 있으며,
-  세 card와 Equip primary action은 각각 non-scrolling과 fixed 상태를 유지한다.
+  card는 `520×920`을 사용하고 Equip primary action은 fixed 상태를 유지한다.
   settings, guidebook, report는 지정 content region만 scroll하고 primary
   action은 고정한다.
 - `clip_contents`는 safety guard일 뿐 layout 해결책이 아니다.
@@ -323,7 +326,7 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 
 - top-left는 hull/experience, top-center는 objective와 conditional boss,
   top-right는 `176×108` minimap과 conditional target을 소유한다.
-- bottom-center에는 dash, passive/secondary와 EMP의 compact 세 slot action
+- bottom-center에는 dash, 보조 무기 aggregate와 EMP의 compact 세 slot action
   strip만 둔다. primary fire는 별도 slot을 만들지 않는다.
 - 각 zone은 최대 한 subtle Surface만 사용한다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는

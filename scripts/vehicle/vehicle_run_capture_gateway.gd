@@ -67,12 +67,12 @@ func set_player_fixture(fixture: Dictionary) -> void:
 	match StringName(fixture.get("kind", &"")):
 		&"cooldowns":
 			_run.player_dash_cooldown = _run._dash_cooldown_max() * 0.75
-			_run.player_passive_cooldown = _run.PASSIVE_COOLDOWN * 0.5
+			_run.player_seeker_cooldown = _run.SEEKER_COOLDOWN * 0.5
 			_run.player_emp_cooldown = _run._emp_cooldown_max()
 			_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 		&"cooldowns_clear":
 			_run.player_dash_cooldown = 0.0
-			_run.player_passive_cooldown = 0.0
+			_run.player_seeker_cooldown = 0.0
 			_run.player_emp_cooldown = 0.0
 			_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 
@@ -178,6 +178,9 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 				"relay_module_unlocked":true,
 				"field_module_unlocked":true,
 				"build_summary":_run._run_build_summary(),
+				"secondaries":_run.secondary_runtime.equipped_families(
+					_run.run_build
+				),
 			})
 
 
@@ -262,7 +265,7 @@ func _show_stage_report(failed: bool) -> void:
 	if _report_fixture == null:
 		_report_fixture = StageTelemetry.new()
 		_report_fixture.record_outgoing(&"primary", &"kinetic", 418.0)
-		_report_fixture.record_outgoing(&"passive_seeker", &"kinetic", 126.0)
+		_report_fixture.record_outgoing(&"seeker", &"kinetic", 126.0)
 		_report_fixture.record_outgoing(&"elemental_status", &"thermal", 44.0)
 		_report_fixture.record_status_application(&"burn")
 		_report_fixture.record_status_application(&"chill")

@@ -89,8 +89,8 @@ const DASH_DURATION := 0.20
 const DASH_SPEED := 1220.0
 const DASH_COOLDOWN := 1.25
 const MAX_DASH_AFTERIMAGES := 5
-const PASSIVE_RANGE := 560.0
-const PASSIVE_COOLDOWN := 1.35
+const SEEKER_RANGE := 560.0
+const SEEKER_COOLDOWN := 1.35
 const EMP_COOLDOWN := 13.0
 const EMP_STARTUP := 0.42
 const EMP_RADIUS := 285.0
@@ -166,7 +166,7 @@ var player_dash_cooldown := 0.0
 var player_dash_timer := 0.0
 var player_dash_direction := Vector2.RIGHT
 var player_dash_trail_timer := 0.0
-var player_passive_cooldown := 0.0
+var player_seeker_cooldown := 0.0
 var player_emp_cooldown := 0.0
 var player_emp_startup := 0.0
 var player_barrier_strength := 0.0
@@ -629,7 +629,7 @@ func _reset_run(
 	_primary_shot_serial = 0
 	player_dash_cooldown = 0.0
 	player_dash_timer = 0.0
-	player_passive_cooldown = 0.0
+	player_seeker_cooldown = 0.0
 	player_emp_cooldown = 0.0
 	player_emp_startup = 0.0
 	player_barrier_strength = 0.0
@@ -739,7 +739,7 @@ func _reset_run(
 	if persistent_relay_module:
 		player_emp_cooldown = 0.0
 	if persistent_field_module:
-		player_passive_cooldown = 0.0
+		player_seeker_cooldown = 0.0
 	enemy_grid.configure(Rules.world_rect(current_stage_id), SpatialGrid.DEFAULT_CELL_SIZE)
 	enemy_grid.rebuild(enemies)
 
@@ -1193,7 +1193,7 @@ func _update_player(delta: float) -> void:
 	var primary_held := Input.is_action_pressed("primary_fire")
 	player_primary_weapon.tick(delta, primary_held)
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
-	player_passive_cooldown = maxf(0.0, player_passive_cooldown - delta)
+	player_seeker_cooldown = maxf(0.0, player_seeker_cooldown - delta)
 	player_emp_cooldown = maxf(0.0, player_emp_cooldown - delta)
 	player_barrier_timer = maxf(0.0, player_barrier_timer - delta)
 	coolant_surge_timer = maxf(0.0, coolant_surge_timer - delta)
@@ -1235,7 +1235,7 @@ func _update_player(delta: float) -> void:
 	_mark_visited()
 	_apply_dash_collision()
 	player_velocity = (player_position - previous_position) / maxf(delta, 0.0001)
-	_update_passive_secondary(delta, player_velocity)
+	_update_secondary_weapons(delta, player_velocity)
 
 	if tutorial_move and tutorial_aim and tutorial_fire and tutorial_dash and not tutorial_announced:
 		tutorial_announced = true
@@ -1673,14 +1673,14 @@ func _spawn_player_projectile(
 	})
 
 
-func _update_passive_secondary(delta: float, movement: Vector2) -> void:
-	if player_passive_cooldown <= 0.0 and player_emp_startup <= 0.0:
-		var targets := _find_passive_targets(1 + run_build.level_of(&"twin_seekers"))
+func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
+	if player_seeker_cooldown <= 0.0 and player_emp_startup <= 0.0:
+		var targets := _find_seeker_targets(1 + run_build.level_of(&"twin_seekers"))
 		if not targets.is_empty():
-			var cooldown := maxf(PASSIVE_COOLDOWN * 0.60, run_build.stat(&"passive_interval", PASSIVE_COOLDOWN))
+			var cooldown := maxf(SEEKER_COOLDOWN * 0.60, run_build.stat(&"seeker_interval", SEEKER_COOLDOWN))
 			if persistent_field_module:
 				cooldown *= 0.85
-			player_passive_cooldown = cooldown
+			player_seeker_cooldown = cooldown
 			for target in targets:
 				var enemy: EnemyState = target
 				var direction := (enemy.pos - player_position).normalized()
@@ -1690,8 +1690,8 @@ func _update_passive_secondary(delta: float, movement: Vector2) -> void:
 				projectile_store.add_player({
 					"pos": player_position + direction * 33.0, "velocity":direction * 490.0,
 					"radius":8.0,
-					"damage":25.0 * run_build.stat(&"passive_damage_multiplier", 1.0) * seeker_scale * marked_multiplier,
-					"life":1.8, "color":Art.MINT, "owner":"passive_seeker",
+					"damage":25.0 * run_build.stat(&"seeker_damage_multiplier", 1.0) * seeker_scale * marked_multiplier,
+					"life":1.8, "color":Art.MINT, "owner":"seeker",
 					"pierce":run_build.level_of(&"phase_seeker"), "bounces":0, "homing":true,
 					"target_id":enemy.id, "explosive":applied_upgrades.has(&"hunter_firmware"),
 					"structure_damage":25.0, "status_profile":null,
@@ -1737,14 +1737,14 @@ func _update_passive_secondary(delta: float, movement: Vector2) -> void:
 		)
 
 
-func _find_passive_targets(max_targets: int) -> Array[EnemyState]:
+func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:
 	var candidates: Array[EnemyState] = []
-	enemy_grid.query_radius_into(player_position, PASSIVE_RANGE, enemies, _enemy_query_buffer)
+	enemy_grid.query_radius_into(player_position, SEEKER_RANGE, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
 		if not _is_player_targetable_enemy(enemy):
 			continue
 		var distance := player_position.distance_to(enemy.pos)
-		if distance > PASSIVE_RANGE:
+		if distance > SEEKER_RANGE:
 			continue
 		if not _runtime_has_line_of_sight(player_position, enemy.pos, 6.0):
 			continue
@@ -1757,10 +1757,10 @@ func _find_passive_targets(max_targets: int) -> Array[EnemyState]:
 				priority -= 500.0
 		elif role in [&"chaser", &"shooter", &"controller"]:
 			priority -= 60.0
-		enemy.passive_score = priority + distance
+		enemy.target_score = priority + distance
 		candidates.append(enemy)
 	candidates.sort_custom(func(a: EnemyState, b: EnemyState) -> bool:
-		return a.passive_score < b.passive_score
+		return a.target_score < b.target_score
 	)
 	if candidates.size() > max_targets:
 		candidates.resize(max_targets)
@@ -3288,7 +3288,7 @@ func _update_projectile_buffer(
 					&"projectile_reflected"
 					if projectile.reflected
 					else &"secondary_seeker_impact"
-					if projectile.owner == "passive_seeker"
+					if projectile.owner == "seeker"
 					else &"projectile_damage_impact"
 				)
 				_add_effect(
@@ -4213,12 +4213,12 @@ func _update_aim_target() -> void:
 		var projection := (enemy_position - player_position).dot(player_aim_direction)
 		if projection < 0.0 or projection > 900.0:
 			continue
-		enemy.passive_score = projection
+		enemy.target_score = projection
 		_enemy_query_buffer[candidate_count] = enemy
 		candidate_count += 1
 	_enemy_query_buffer.resize(candidate_count)
 	_enemy_query_buffer.sort_custom(func(a: EnemyState, b: EnemyState) -> bool:
-		return a.passive_score < b.passive_score
+		return a.target_score < b.target_score
 	)
 	# Projection order preserves exact target priority while avoiding repeated
 	# terrain line tests behind the first visible target.
@@ -4284,7 +4284,7 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 	var definition := upgrade_catalog.get_definition(upgrade_id)
 	selected_upgrade_title_key = definition.title_key
 	if upgrade_id == &"twin_seekers":
-		player_passive_cooldown = 0.0
+		player_seeker_cooldown = 0.0
 	if upgrade_id == &"reinforced_hull":
 		player_health = minf(_player_max_health(), player_health + 15.0)
 	_status_profile = StatusProfile.from_build(run_build)
@@ -5192,8 +5192,8 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 		"stage_title": tr(String(stage_profile["title_key"])),
 		"dash_available":player_dash_cooldown <= 0.0,
 		"dash_ratio": clampf(player_dash_cooldown / _dash_cooldown_max(), 0.0, 1.0),
-		"passive_available":player_passive_cooldown <= 0.0,
-		"passive_ratio": clampf(player_passive_cooldown / PASSIVE_COOLDOWN, 0.0, 1.0),
+		"seeker_available":player_seeker_cooldown <= 0.0,
+		"seeker_ratio": clampf(player_seeker_cooldown / SEEKER_COOLDOWN, 0.0, 1.0),
 		"skill_available":player_emp_startup <= 0.0 and player_emp_cooldown <= 0.0,
 		"skill_ratio": clampf(player_emp_cooldown / _emp_cooldown_max(), 0.0, 1.0),
 		"buff_text": "",
