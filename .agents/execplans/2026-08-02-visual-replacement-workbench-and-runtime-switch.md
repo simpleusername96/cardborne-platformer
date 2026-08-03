@@ -1227,7 +1227,7 @@ attachment textures.
 - [x] Remove the three approved retired files after all references are gone.
 - [x] Run the player through deployment, live combat, pause, guidebook, report,
   and stage transition in Korean and English.
-- [ ] Record the applied commit and rendered evidence, then baseline-promote
+- [x] Record the applied commit and rendered evidence, then baseline-promote
   the unit.
 
 Accept: Exactly one player craft-body instance renders; zero fixed player
@@ -1852,7 +1852,7 @@ before execution continues.
 - [x] Phase 1: establish the three canonical locations.
 - [x] Phase 2: rebuild the current-only replacement workbench.
 - [x] Phase 3: normalize the current production contract.
-- [ ] Phase 4: complete the player vertical slice.
+- [x] Phase 4: complete the player vertical slice.
 - [ ] Phase 5: replace the UI component system.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
@@ -1863,12 +1863,11 @@ before execution continues.
 
 ## Next Steps
 
-1. Display the exact Phase 4 player-craft hashes and six retirement paths and
-   obtain BK's separate switch approval.
-2. After exact approval, promote the two approved byte sequences and land the
-   atomic player structural switch plus its immediate application ledger.
-3. Continue later switch units in order, preserving their independent
-   exact-hash and exact-retirement-path approval gates.
+1. Prepare the Phase 5 UI component families in the specified dependency order.
+2. Display each complete family's exact target/hash map and any retirement
+   paths before its independent approval gate.
+3. Continue later switch units in order without extending the completed
+   player_craft approval to another unit.
 
 ## Completion Criteria
 
@@ -1883,8 +1882,8 @@ before execution continues.
 - [x] Every TO-BE deliverable is an exact target file, never a sheet.
 - [ ] Every production media file has exactly one switch unit and at least one
   runtime consumer.
-- [ ] Player uses one craft body and no fixed engine/aim-mount asset.
-- [ ] Manual aim, dash, collision, and all player flows remain correct.
+- [x] Player uses one craft body and no fixed engine/aim-mount asset.
+- [x] Manual aim, dash, collision, and all player flows remain correct.
 - [ ] Boss presentation uses five bodies and three shared node states, with
   zero boss-specific module assets.
 - [ ] Procedural floor/wall truth remains unchanged and eight staged rasters
@@ -2049,6 +2048,20 @@ Do not mark a phase or this plan complete while a stop condition remains.
   e8fa4ac0f9e2a6faaf4a013fd86b44857a2142ce3fe814f7c7accd46ba5f6602, and
   exactly the three legacy player PNGs plus their three tracked import
   sidecars. No broader deletion or later-unit approval is inferred.
+- 2026-08-03: Phase 4 production switch commit
+  9f1f8d1972df6cb488f70ccf0e09e88d78924c4c promotes the two approved bytes,
+  replaces three fixed attachments and renderer batches with one craft body,
+  removes exactly the six approved legacy paths, and preserves independent
+  aim and transient rear-anchor dash feedback. Ledger commit
+  9071ada261b40b748336dd8072c454ba2f46770d records that application. Focused
+  player, actor, renderer, weapon, HUD, localization, layout, pause,
+  transition, provider, coverage, workbench, authority, import, and Web-export
+  checks pass. Native Korean full evidence and English core evidence are under
+  build/evidence/phase4-player-craft; built Web deployment and combat smoke
+  passed on codex lane port 13029 with seven successful requests and zero
+  console warnings or errors. Baseline promotion makes the approved production
+  bytes the current AS-IS, clears transitional ledger fields, and removes the
+  two duplicate TO-BE files plus the completed comparison preview.
 
 ## Execution Handoff
 

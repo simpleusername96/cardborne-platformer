@@ -43,7 +43,7 @@
       "title_ko": "플레이어 기체",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/gameplay/actors/player/actor_player_craft_body.png",
         "art/visuals/production/gameplay/hud/minimap_marker_player.png"
@@ -57,52 +57,11 @@
         "attachment/player_craft_body",
         "hud/minimap_marker_player"
       ],
-      "direction_en": "Consolidate the fixed hull, engine housing, and weapon housing into one craft body while preserving independent aim cues.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/gameplay/actors/player/actor_player_craft_body.png",
-          "width": 160,
-          "height": 128,
-          "pivot": [
-            88,
-            64
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/gameplay/hud/minimap_marker_player.png",
-          "width": 48,
-          "height": 48,
-          "pivot": [
-            24,
-            24
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/player_craft/player_craft-runtime-comparison.png"
-      ],
-      "retire_paths": [
-        "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png",
-        "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png.import",
-        "art/visuals/production/gameplay/actors/player/actor_player_engine.png",
-        "art/visuals/production/gameplay/actors/player/actor_player_engine.png.import",
-        "art/visuals/production/gameplay/actors/player/actor_player_hull_base.png",
-        "art/visuals/production/gameplay/actors/player/actor_player_hull_base.png.import"
-      ],
-      "runtime_change_paths": [
-        "art/visuals/production/gameplay/asset-manifest.json",
-        "scripts/presentation/vehicle_combat_renderer.gd",
-        "scripts/presentation/components/vehicle_actor_visual_catalog.gd",
-        "scripts/presentation/components/vehicle_actor_mesh_recipes.gd",
-        "scripts/presentation/vehicle_combat_visual_library.gd",
-        "scripts/vehicle/vehicle_run.gd",
-        "tools/validation/validate_vehicle_actor_visuals.gd",
-        "tools/validation/validate_vehicle_combat_renderer.gd",
-        "tools/validation/validate_vehicle_player_presentation.gd",
-        "tools/validation/validate_vehicle_semantic_asset_provider.gd",
-        "tools/validation/validate_vehicle_visual_asset_coverage.gd",
-        "tools/validation/validate_visual_replacement_workbench.ps1"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
+      "retire_paths": [],
+      "runtime_change_paths": [],
       "acceptance_commands": [
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_actor_visuals.gd",
@@ -113,44 +72,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
         ".\\tools\\export_web.ps1"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T12:25:27+09:00",
-        "baseline_commit": "bcab35399d4cc797a046de0246097f819c68f8fa",
-        "deliverable_sha256": {
-          "art/visuals/production/gameplay/actors/player/actor_player_craft_body.png": "5c0343fa6840aa7f68fd367b5b636cd84a8bcf0011d45b2758a3f4fe18846a4c",
-          "art/visuals/production/gameplay/hud/minimap_marker_player.png": "e8fa4ac0f9e2a6faaf4a013fd86b44857a2142ce3fe814f7c7accd46ba5f6602"
-        },
-        "retire_paths": [
-          "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png",
-          "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png.import",
-          "art/visuals/production/gameplay/actors/player/actor_player_engine.png",
-          "art/visuals/production/gameplay/actors/player/actor_player_engine.png.import",
-          "art/visuals/production/gameplay/actors/player/actor_player_hull_base.png",
-          "art/visuals/production/gameplay/actors/player/actor_player_hull_base.png.import"
-        ]
-      },
-      "application": {
-        "commit": "9f1f8d1972df6cb488f70ccf0e09e88d78924c4c",
-        "applied_at": "2026-08-03T12:46:11+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_actor_visuals.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_player_presentation.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_combat_renderer.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_transition.gd",
-          "build/evidence/phase4-player-craft/ko-1280x720",
-          "build/evidence/phase4-player-craft/en-1280x720",
-          ".\\tools\\export_web.ps1",
-          "built Web smoke at http://127.0.0.1:13029/ on the codex lane"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "primary_weapon",
