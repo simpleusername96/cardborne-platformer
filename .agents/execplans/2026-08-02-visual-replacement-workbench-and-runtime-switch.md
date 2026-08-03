@@ -16,6 +16,7 @@ related:
   - ../../art/visuals/production/README.md
   - ../semantic-v2-runtime-acceptance-evidence.md
   - ./2026-08-02-pre-asset-code-stabilization.md
+  - ./2026-08-03-ui-system-reconstruction.md
 ---
 
 # Visual Replacement Workbench and Runtime Switch Plan
@@ -26,6 +27,25 @@ production root, and applies approved replacements as atomic switch units.
 The art direction is already fixed. Execution therefore starts from the
 canonical visual contract and produces deployable files, not additional style
 exploration or contact-sheet-only proposals.
+
+## Active UI Reconstruction Amendment
+
+BK's 2026-08-03 UI review established that the completed Phase 5 raster-state
+switch is a historical baseline, not the final UI target. The active execution
+contract is now
+`.agents/execplans/2026-08-03-ui-system-reconstruction.md`. Complete that
+contract before starting this plan's Phase 6.
+
+That contract replaces this document's earlier UI-only assumptions as follows:
+
+- production UI chrome is one code-native Theme and shared component factory,
+  not thirteen raster families;
+- the final UI chrome count is zero PNGs, with no UI manifest or UI asset
+  provider; the production Theme, Noto Sans KR font, and font license remain;
+- the existing 54-state counts, image-state matrices, and Phase 5 generation
+  protocol below remain historical execution evidence only;
+- the broader gameplay visual switch-unit order in Phases 6 through 11 remains
+  unchanged after the UI reconstruction gate passes.
 
 ## Purpose
 
@@ -661,7 +681,8 @@ promote_visual_replacement_unit.ps1 must:
 index.html must expose:
 
 - a current production summary derived from disk and manifests, with the final
-  normalized target shown as 211 gameplay PNGs, 54 UI PNGs, and one font;
+  normalized target shown as 211 gameplay PNGs, zero UI chrome PNGs, one UI
+  Theme, and one font after the corrective UI reconstruction contract;
 - counts for each actual status: keep_current, target_required, switch_ready,
   approved_for_switch, applied, and retired;
 - a separate retire-only count and filter derived from switch_kind=retire, never
@@ -726,24 +747,14 @@ are removed separately.
 
 ### UI media count
 
-The final UI manifest count is exactly 54:
-
-| Component | State count | Atomic state set |
-| --- | ---: | --- |
-| modal_master | 2 | normal, compact_safe |
-| content_plate | 3 | normal, inset, summary |
-| hud_plate | 5 | health_resource, objective_boss, minimap_target, action_rail, toast |
-| upgrade_card | 6 | normal, hover, pressed, focus, selected, disabled |
-| button_primary | 5 | normal, hover, pressed, focus, disabled |
-| button_secondary | 5 | normal, hover, pressed, focus, disabled |
-| button_danger | 5 | normal, hover, pressed, focus, disabled |
-| tab_option | 5 | normal, hover, selected, focus, disabled |
-| toggle | 3 | off, on, focus |
-| slider | 3 | lane, fill, grabber |
-| meter | 6 | background, health, boss, resource, cooldown, support |
-| preview | 3 | normal, locked, focused |
-| small_state | 3 | pip_available, pip_filled, disabled |
-| Total | 54 | Every state has a Theme or concrete code consumer |
+The final production UI-chrome PNG count is zero after
+`.agents/execplans/2026-08-03-ui-system-reconstruction.md` completes. One
+code-native `vehicle_stage_theme.tres` and the shared component factory own
+surface, command, selectable, meter, preview, typography, focus, and state
+presentation. The UI manifest and UI asset provider are absent. Noto Sans KR
+and its license remain. Meaningful HUD, upgrade, craft, enemy, boss, object,
+and minimap imagery remains under the gameplay semantic manifest and is not
+counted as UI chrome.
 
 ### Fixed output metadata
 
@@ -1488,7 +1499,8 @@ future target_required or switch_ready work and no completed binary duplicate.
   one applied or keep-current switch unit.
 - [ ] Require exactly 101 production effect frames and zero effect atlases.
 - [ ] Require exactly 211 provider-indexed gameplay PNGs.
-- [ ] Require exactly 54 UI manifest PNGs.
+- [ ] Require zero production UI chrome PNGs, zero UI manifest, and zero UI
+  asset-provider dependency after the corrective UI reconstruction contract.
 - [ ] Require exactly one production font and its license.
 - [ ] Require zero staged production media and zero declared media without a
   consumer.
@@ -1882,6 +1894,7 @@ before execution continues.
     per-family contact sheets and one shared runtime-size matrix; both units
     are switch_ready.
   - [x] Obtain exact hash-bound approval and apply preview and small_state.
+- [ ] Complete the corrective shared-UI reconstruction contract before Phase 6.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
 - [ ] Phase 8: replace ordinary enemies, hostile attacks, and cues.
@@ -1891,12 +1904,12 @@ before execution continues.
 
 ## Next Steps
 
-1. Enumerate the complete primary_weapon package, including static files,
-   animation frames, icons, exact targets, consumers, and runtime invariants.
-2. Create direct deployable primary_weapon deliverables and validate cadence,
-   pivots, gameplay scale, grayscale readability, pressure, and batching.
-3. Display the clean package's exact target/hash map and request one
-   hash-bound approval without extending authority to dash or later units.
+1. Execute `.agents/execplans/2026-08-03-ui-system-reconstruction.md` from its
+   Task 1.1 and keep this plan's Phase 6 paused.
+2. After that contract completes, verify its zero-raster UI amendment is
+   reflected in this plan's counts, workbench ledger, and durable specs.
+3. Resume here by enumerating the complete `primary_weapon` package for
+   Phase 6.
 
 ## Completion Criteria
 
@@ -1921,7 +1934,9 @@ before execution continues.
   runtime rectangles.
 - [ ] Effects use exactly 101 frames and zero atlases.
 - [ ] Gameplay provider indexes exactly 211 PNGs.
-- [ ] UI manifest declares exactly 54 connected PNG states.
+- [ ] UI uses one code-native Theme with zero raster chrome PNGs, zero UI
+  manifest, and zero UI asset-provider dependency after the corrective UI
+  reconstruction contract completes.
 - [ ] All applied production hashes match exact BK-approved hashes.
 - [ ] All retired paths have zero references.
 - [x] The generated index works from a file URL in Korean and English with
@@ -2310,7 +2325,9 @@ Do not mark a phase or this plan complete while a stop condition remains.
 
 ## Execution Handoff
 
-Start by reading this complete plan, root AGENTS.md, .agents/AGENTS.md,
+Before resuming Phase 6, complete
+`.agents/execplans/2026-08-03-ui-system-reconstruction.md`. Then start by
+reading this complete plan, root AGENTS.md, .agents/AGENTS.md,
 .agents/PLANS.md, the active product spec, the active visual spec, and the
 pre-asset stabilization plan. Run Phase 0 exactly. If the interlock is open,
 execute one checkbox and one coherent switch unit at a time, update Progress
