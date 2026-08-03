@@ -2163,6 +2163,13 @@ Do not mark a phase or this plan complete while a stop condition remains.
   pause, settings, guidebook, deployment/reward, report, and HUD checks pass.
   All three button units are switch_ready with null approval/application,
   empty retire_paths and runtime_change_paths, and unchanged production bytes.
+- 2026-08-03: BK explicitly approved the Phase 5 button_primary,
+  button_secondary, and button_danger switch at baseline
+  5fc5a41ab294d8fc703fd283e4273ec34d4f2c50 using the fifteen exact
+  target/hash mappings displayed from that clean commit. The three approval
+  records bind those bytes at 2026-08-03T14:27:41+09:00. retire_paths and
+  runtime_change_paths remain empty for every unit. This approval grants no
+  deletion, runtime-code change, or authority for later Phase 5 families.
 
 ## Execution Handoff
 
