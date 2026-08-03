@@ -3,7 +3,9 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-02
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
+execution_state: frozen
+superseded_by: ./2026-08-04-complete-remaining-visual-replacements.md
 topic: Production-ready visual replacement workbench and runtime asset/UI switch
 scope: Current AS-IS visual roots, one TO-BE workbench, deployable replacement units, runtime promotion, validation, and retirement
 related:
@@ -19,6 +21,17 @@ related:
 ---
 
 # Visual Replacement Workbench and Runtime Switch Plan
+
+## Lifecycle Notice
+
+This document is retained temporarily, with `execution_state: frozen`, as the
+completed execution record for Phases 0 through 5. The repository forbids a
+retired lifecycle status inside the active ExecPlan tree, so its frontmatter
+remains `status: active` until final approved deletion; that status does not
+grant execution authority. Its unchecked Phase 6 through Phase 11 sections are
+historical and must not be executed. The corrected remaining-work contract,
+current counts, approval boundaries, and canonical progress now live in
+`.agents/execplans/2026-08-04-complete-remaining-visual-replacements.md`.
 
 This plan turns the current restored review report into one current-only,
 production-ready AS-IS/TO-BE workbench, consolidates visual files under one
