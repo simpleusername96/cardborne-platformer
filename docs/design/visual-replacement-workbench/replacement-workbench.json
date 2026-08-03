@@ -4479,7 +4479,7 @@
       "title_ko": "슬라이더",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/ui/controls/slider_lane.png",
         "art/visuals/production/ui/controls/slider_fill.png",
@@ -4554,7 +4554,17 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-03T15:42:00+09:00",
+        "baseline_commit": "5e2cfc3454458dec1d614b3dd94f7530c13f4c44",
+        "deliverable_sha256": {
+          "art/visuals/production/ui/controls/slider_lane.png": "7d1dc96cb72192a4760f51272241f66ab8d2ec33cf94ac0af9658fda889d5f63",
+          "art/visuals/production/ui/controls/slider_fill.png": "76eadd34e39626ec1f7727e5f70f882aebb46bd8b679a1808f05d8be3ea4f19e",
+          "art/visuals/production/ui/controls/slider_grabber.png": "52f0b00315d975197e6211ea0e78e4e6ff169f4c95e6b9bcd28a878254fda8ba"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {
@@ -4565,7 +4575,7 @@
       "title_ko": "미터",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/ui/controls/meter_background.png",
         "art/visuals/production/ui/controls/meter_health.png",
@@ -4682,7 +4692,20 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-03T15:42:00+09:00",
+        "baseline_commit": "5e2cfc3454458dec1d614b3dd94f7530c13f4c44",
+        "deliverable_sha256": {
+          "art/visuals/production/ui/controls/meter_background.png": "99695ab19e7fe72f4e3c147bc2b83aff5de4a2095fa320126a6e1b985bdadff3",
+          "art/visuals/production/ui/controls/meter_health.png": "e2162cdf1b092bedbaeb4f50b4a10ad2b0fb0e150817d6ee591cdf3f742f0f71",
+          "art/visuals/production/ui/controls/meter_boss.png": "63bd11543791d3523d2634d6c1d5dc154696514f98a0bc9164394be508a9c175",
+          "art/visuals/production/ui/controls/meter_resource.png": "d8e4b28ddc559277fa6d73ed89c9a338c2b2d9f6df661740b2fedfae6690f6bc",
+          "art/visuals/production/ui/controls/meter_cooldown.png": "0fc58356b93e573cb4eedf0e30036f657e89b7b782e4d667e4b5975a8e47a363",
+          "art/visuals/production/ui/controls/meter_support.png": "eedee7735ad18768fe258a4b5063740c1024d4396409f5e6cdd369972dbe3e00"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {

@@ -2240,6 +2240,12 @@ Do not mark a phase or this plan complete while a stop condition remains.
   surface validator now covers eleven families and 48 states. Both units are
   switch_ready with null approval/application, empty retire and runtime paths,
   and unchanged production pending exact hash-bound approval.
+- 2026-08-03: BK explicitly approved the Phase 5 slider and meter switch at
+  baseline 5e2cfc3454458dec1d614b3dd94f7530c13f4c44 using the nine exact
+  target/hash mappings displayed from that clean commit. Both approval records
+  bind those bytes at 2026-08-03T15:42:00+09:00. retire_paths and
+  runtime_change_paths remain empty for both units. This approval grants no deletion, runtime-code
+  change, or authority for preview, small_state, or any later Phase 5 family.
 
 ## Execution Handoff
 
