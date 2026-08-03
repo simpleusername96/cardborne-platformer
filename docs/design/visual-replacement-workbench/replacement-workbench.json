@@ -43,7 +43,7 @@
       "title_ko": "플레이어 기체",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/actors/player/actor_player_craft_body.png",
         "art/visuals/production/gameplay/hud/minimap_marker_player.png"
@@ -130,7 +130,27 @@
           "art/visuals/production/gameplay/actors/player/actor_player_hull_base.png.import"
         ]
       },
-      "application": null
+      "application": {
+        "commit": "9f1f8d1972df6cb488f70ccf0e09e88d78924c4c",
+        "applied_at": "2026-08-03T12:46:11+09:00",
+        "validation_evidence": [
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_actor_visuals.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_player_presentation.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_transition.gd",
+          "build/evidence/phase4-player-craft/ko-1280x720",
+          "build/evidence/phase4-player-craft/en-1280x720",
+          ".\\tools\\export_web.ps1",
+          "built Web smoke at http://127.0.0.1:13029/ on the codex lane"
+        ]
+      }
     },
     {
       "id": "primary_weapon",
