@@ -2367,7 +2367,7 @@
       "title_ko": "효과 아틀라스 폐기",
       "owner": "gameplay_manifest",
       "switch_kind": "retire",
-      "status": "approved_for_switch",
+      "status": "retired",
       "current_paths": [
         "art/visuals/production/gameplay/effects/atlases/fx_barrier_contact.png",
         "art/visuals/production/gameplay/effects/atlases/fx_boss_module_disabled.png",
@@ -2532,7 +2532,19 @@
           "art/visuals/production/gameplay/effects/atlases/fx_wake_mine_detonation.png.import"
         ]
       },
-      "application": null
+      "application": {
+        "commit": "8c6a97a077a09cdbf667aa392276fad0e0cb6e41",
+        "applied_at": "2026-08-03T11:55:33+09:00",
+        "validation_evidence": [
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
+          ".\\tools\\export_web.ps1"
+        ]
+      }
     },
     {
       "id": "boss_body_family",
@@ -2884,7 +2896,7 @@
       "title_ko": "절차형 바닥과 벽",
       "owner": "procedural_presentation",
       "switch_kind": "retire",
-      "status": "approved_for_switch",
+      "status": "retired",
       "current_paths": [
         "art/visuals/production/gameplay/world/world_shared_floor_00.png",
         "art/visuals/production/gameplay/world/world_shared_floor_01.png",
@@ -2962,7 +2974,19 @@
           "art/visuals/production/gameplay/world/world_wall_t_junction.png.import"
         ]
       },
-      "application": null
+      "application": {
+        "commit": "8c6a97a077a09cdbf667aa392276fad0e0cb6e41",
+        "applied_at": "2026-08-03T11:55:33+09:00",
+        "validation_evidence": [
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
+          ".\\tools\\export_web.ps1"
+        ]
+      }
     },
     {
       "id": "wear_tile_family",
@@ -5232,7 +5256,7 @@
       "title_ko": "미사용 UI 상태 폐기",
       "owner": "ui_manifest",
       "switch_kind": "retire",
-      "status": "approved_for_switch",
+      "status": "retired",
       "current_paths": [
         "art/visuals/production/ui/glyphs/small_state_pip_empty.png",
         "art/visuals/production/ui/glyphs/small_state_selection_rail.png",
@@ -5283,7 +5307,19 @@
           "art/visuals/production/ui/glyphs/small_state_warning.png.import"
         ]
       },
-      "application": null
+      "application": {
+        "commit": "8c6a97a077a09cdbf667aa392276fad0e0cb6e41",
+        "applied_at": "2026-08-03T11:55:33+09:00",
+        "validation_evidence": [
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
+          ".\\tools\\export_web.ps1"
+        ]
+      }
     },
     {
       "id": "ui_font",

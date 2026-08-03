@@ -1165,11 +1165,11 @@ unused production media is absent.
   record the same set in the three approval records.
 - [x] Stop Phase 3 before any deletion or commit if approval is absent or
   narrower than the displayed set; retain the prepared task-owned worktree.
-- [ ] After exact approval, delete the 33 PNGs and 33 sidecars, run the focused
+- [x] After exact approval, delete the 33 PNGs and 33 sidecars, run the focused
   acceptance commands, and create one atomic Phase 3 production switch commit.
-- [ ] Immediately create the ledger-only commit that records that production
+- [x] Immediately create the ledger-only commit that records that production
   switch commit and marks all three units retired.
-- [ ] Rebuild the workbench and require no staged or orphan production row.
+- [x] Rebuild the workbench and require no staged or orphan production row.
 
 Accept: Gameplay provider count is 217 at this intermediate state; UI state
 count is 54; every declared media file is runtime-connected; no atlas or staged
@@ -1851,7 +1851,7 @@ before execution continues.
   2026-08-03 BK amendment recorded below.
 - [x] Phase 1: establish the three canonical locations.
 - [x] Phase 2: rebuild the current-only replacement workbench.
-- [ ] Phase 3: normalize the current production contract.
+- [x] Phase 3: normalize the current production contract.
 - [ ] Phase 4: complete the player vertical slice.
 - [ ] Phase 5: replace the UI component system.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
@@ -1863,14 +1863,12 @@ before execution continues.
 
 ## Next Steps
 
-1. Prepare the Phase 3 runtime normalization diff without deleting any staged
-   or unused production media.
-2. Display the exact 33-PNG plus 33-sidecar Phase 3 retirement set and obtain
-   BK's separate explicit approval before removing any file or committing the
-   prepared runtime change.
-3. Complete Phase 3 validation and cleanup in one accepted commit.
-4. Continue later switch units in order, preserving their independent exact-hash
-   and exact-retirement-path approval gates.
+1. Produce the Phase 4 player craft body and minimap marker as exact
+   production-ready TO-BE files without changing runtime behavior.
+2. Rebuild and validate the workbench, then display the exact Phase 4 hashes
+   and retirement paths for BK's separate switch approval.
+3. Continue later switch units in order, preserving their independent
+   exact-hash and exact-retirement-path approval gates.
 
 ## Completion Criteria
 
@@ -2022,6 +2020,13 @@ Do not mark a phase or this plan complete while a stop condition remains.
   import sidecars. Gameplay coverage is 217, UI coverage is 54, all 101 effect
   frames remain, the five focused Godot validators pass, the workbench build
   and deterministic check pass at 272 production media, and Web export passes.
+- 2026-08-03: Phase 3 production switch commit
+  8c6a97a077a09cdbf667aa392276fad0e0cb6e41 contains the runtime normalization
+  and exactly the approved 66 deletions. The immediate follow-up ledger records
+  that full commit hash on all three retire-only units at
+  2026-08-03T11:55:33+09:00 and marks them retired. The rebuilt current-only
+  workbench contains 217 gameplay PNGs, 54 UI PNGs, one font, and zero staged
+  or orphan production rows.
 
 ## Execution Handoff
 
