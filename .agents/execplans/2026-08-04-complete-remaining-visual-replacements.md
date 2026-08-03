@@ -262,10 +262,11 @@ exactly **68 PNGs** before wear tiles and actor-family replacements.
 - [x] Create and validate one review-only 512 x 512 EMP PNG candidate.
 - [x] Correct `VISUAL_SYSTEM.md`, production ownership guidance, workbench
   guidance, evidence, and this plan.
-- [ ] Require a clean worktree and record the post-correction HEAD as the Phase 6
-  execution baseline.
-- [ ] Run `./tools/godot.ps1 --version` and require Godot 4.7 stable before runtime
-  edits begin.
+- [x] Require a clean worktree and record the post-correction HEAD as the Phase 6
+  execution baseline. Baseline: clean `master` at
+  `6dbfd7c33d312418094e2cac95988a84515af8ec`.
+- [x] Run `./tools/godot.ps1 --version` and require Godot 4.7 stable before runtime
+  edits begin. Observed: `4.7.1.stable.official.a13da4feb`.
 
 Acceptance: all active guidance agrees on 64 final PNGs and no runtime switch has
 been implied by source import or candidate generation.
@@ -688,14 +689,15 @@ a proposal, not a preapproved production switch.
 - [x] Stored a visual contact sheet and one validated EMP review PNG.
 - [x] Revised the rationalization evidence, visual spec, workbench guidance,
   production ownership guidance, and this active plan.
+- [x] Froze clean Phase 6 baseline
+  `6dbfd7c33d312418094e2cac95988a84515af8ec` and confirmed Godot
+  `4.7.1.stable.official.a13da4feb`.
 - [ ] Runtime/workbench execution has not begun under the corrected boundary.
 
 ## Next Steps
 
-1. Start Phase 6 at Task 6.0 by recording the current clean preproduction commit
-   as the execution baseline and confirming Godot 4.7.
-2. Execute Task 6.1 and rebuild the workbench to the exact 215-to-64 partition.
-3. Begin authored production with the nine-projectile unit; do not switch or
+1. Execute Task 6.1 and rebuild the workbench to the exact 215-to-64 partition.
+2. Begin authored production with the nine-projectile unit; do not switch or
    retire any production file before its exact report is approved.
 
 ## Completion and Stop Conditions
