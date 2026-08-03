@@ -141,13 +141,20 @@ function Get-VisualReplacementProjection {
         if ([string]$unit.owner -notin $script:Owners) { $failures.Add("invalid owner for ${id}: $($unit.owner)") }
         if ([string]$unit.switch_kind -notin $script:SwitchKinds) { $failures.Add("invalid switch_kind for ${id}: $($unit.switch_kind)") }
         if ([string]$unit.status -notin $script:Statuses) { $failures.Add("invalid status for ${id}: $($unit.status)") }
+        $allowsRetiredPathsMissing = (
+            [string]$unit.status -in @('approved_for_switch','applied','retired') -and
+            $null -ne $unit.approval
+        )
 
         $currentRecords = [Collections.Generic.List[object]]::new()
         foreach ($pathValue in @($unit.current_paths)) {
             if ($null -eq $pathValue -or [string]::IsNullOrWhiteSpace([string]$pathValue)) { continue }
             $path = ConvertTo-NormalizedVisualPath ([string]$pathValue)
             try { $absolute = Resolve-VisualRepositoryPath $RepoRoot $path } catch { $failures.Add($_.Exception.Message); continue }
-            if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) { $failures.Add("missing current path: $id -> $path"); continue }
+            if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) {
+                if (-not $allowsRetiredPathsMissing) { $failures.Add("missing current path: $id -> $path") }
+                continue
+            }
             if ([IO.Path]::GetExtension($path).ToLowerInvariant() -in @('.png','.ttf')) {
                 if ($coveredMedia.ContainsKey($path)) { $failures.Add("production media assigned twice: $path") }
                 $coveredMedia[$path] = $id
@@ -159,7 +166,10 @@ function Get-VisualReplacementProjection {
             if ($null -eq $pathValue -or [string]::IsNullOrWhiteSpace([string]$pathValue)) { continue }
             $path = ConvertTo-NormalizedVisualPath ([string]$pathValue)
             try { $absolute = Resolve-VisualRepositoryPath $RepoRoot $path } catch { $failures.Add($_.Exception.Message); continue }
-            if (-not (Test-Path -LiteralPath $absolute)) { $failures.Add("missing declared path: $id -> $path") }
+            if (-not (Test-Path -LiteralPath $absolute)) {
+                $isRetirePath = $path -in @($unit.retire_paths)
+                if (-not ($allowsRetiredPathsMissing -and $isRetirePath)) { $failures.Add("missing declared path: $id -> $path") }
+            }
             if ($path -in @($unit.preview_paths) -and -not $path.StartsWith("$script:WorkbenchRoot/previews/")) { $failures.Add("preview escapes preview root: $id -> $path") }
         }
 
@@ -190,11 +200,22 @@ function Get-VisualReplacementProjection {
         }
         if ([string]$unit.status -in @('switch_ready','approved_for_switch','applied') -and @($deliverableRecords | Where-Object { $null -eq $_.observed_sha256 }).Count -gt 0) { $failures.Add("ready unit has missing deliverable: $id") }
         if ($null -ne $unit.approval) {
+            Test-VisualObjectFields $unit.approval @('approved_by','approved_at','baseline_commit','deliverable_sha256','retire_paths') "approval $id" $failures
+            if ([string]$unit.approval.approved_by -cne 'BK') { $failures.Add("invalid approval owner: $id") }
+            $approvalTime = if ($unit.approval.approved_at -is [datetime]) { $unit.approval.approved_at.ToString('yyyy-MM-ddTHH:mm:sszzz') } else { [string]$unit.approval.approved_at }
+            if ($approvalTime -notmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?\+09:00$') { $failures.Add("invalid approval time: $id") }
+            if ([string]$unit.approval.baseline_commit -notmatch '^[0-9a-f]{40}$') { $failures.Add("invalid approval baseline commit: $id") }
             foreach ($record in $deliverableRecords) {
                 $approved = $unit.approval.deliverable_sha256.PSObject.Properties[$record.target_path]
                 if ($null -eq $approved -or [string]$approved.Value -cne [string]$record.observed_sha256) { $failures.Add("approval hash mismatch: $id -> $($record.target_path)") }
             }
             if ((Get-VisualCanonicalJson @($unit.approval.retire_paths)) -cne (Get-VisualCanonicalJson @($unit.retire_paths))) { $failures.Add("approval retire_paths mismatch: $id") }
+        }
+        if ($null -ne $unit.application) {
+            Test-VisualObjectFields $unit.application @('commit','applied_at','validation_evidence') "application $id" $failures
+            if ([string]$unit.application.commit -notmatch '^[0-9a-f]{40}$') { $failures.Add("invalid application commit: $id") }
+            $applicationTime = if ($unit.application.applied_at -is [datetime]) { $unit.application.applied_at.ToString('yyyy-MM-ddTHH:mm:sszzz') } else { [string]$unit.application.applied_at }
+            if ($applicationTime -notmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?\+09:00$') { $failures.Add("invalid application time: $id") }
         }
         $consumerPaths = @($unit.consumer_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $consumerIds = @($unit.consumer_asset_ids | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })

@@ -24,12 +24,38 @@ try {
     $inventoryText=(Get-Content $inventoryPath -Raw).Replace("`r`n","`n").TrimEnd("`n")
     $actual=$inventoryText|ConvertFrom-Json -Depth 100
     Expect ((Get-VisualCanonicalJson $expected) -ceq (Get-VisualCanonicalJson $actual)) 'inventory.json projection mismatch'
-    Expect ($actual.summary.gameplay_png -eq 247) 'Phase 2 gameplay PNG count must be 247'
-    Expect ($actual.summary.ui_png -eq 57) 'Phase 2 UI PNG count must be 57'
     Expect ($actual.summary.font -eq 1) 'production font count must be 1'
     Expect ($actual.summary.units -eq 48) 'switch unit count must be 48'
     Expect ($actual.summary.retire_only -eq 3) 'retire-only count must be 3'
-    Expect (@($actual.units|Where-Object status -notin @('keep_current','target_required')).Count -eq 0) 'Phase 2 source contains a premature workflow state'
+    $phase3ReadyIds=@('effect_atlas_retirement','orphan_ui_state_retirement','procedural_floor_and_walls')
+    $phase3Units=@($actual.units|Where-Object id -in $phase3ReadyIds)
+    Expect ($phase3Units.Count -eq 3) 'Phase 3 retirement unit set is incomplete'
+    $phase3States=@($phase3Units.status|Sort-Object -Unique)
+    Expect ($phase3States.Count -eq 1) 'Phase 3 retirement units must advance atomically'
+    $phase3State=if($phase3States.Count -eq 1){[string]$phase3States[0]}else{''}
+    Expect ($phase3State -in @('switch_ready','approved_for_switch','retired')) 'Phase 3 retirement units have an invalid transition state'
+    $unexpectedStates=@($actual.units|Where-Object { $_.id -notin $phase3ReadyIds -and $_.status -notin @('keep_current','target_required') })
+    Expect ($unexpectedStates.Count -eq 0) 'non-Phase 3 unit contains a premature workflow state'
+    $retirementApplied=$phase3State -in @('approved_for_switch','retired')
+    Expect ($actual.summary.gameplay_png -eq $(if($retirementApplied){217}else{247})) 'gameplay PNG count does not match the Phase 3 state'
+    Expect ($actual.summary.ui_png -eq $(if($retirementApplied){54}else{57})) 'UI PNG count does not match the Phase 3 state'
+    foreach($phase3Unit in $phase3Units){
+        Expect ([string]$phase3Unit.switch_kind -ceq 'retire') "Phase 3 unit is not retire-only: $($phase3Unit.id)"
+        Expect (@($phase3Unit.deliverables).Count -eq 0) "retire-only unit has deliverables: $($phase3Unit.id)"
+        foreach($retirePath in @($phase3Unit.retire_paths)){
+            $exists=Test-Path -LiteralPath (Join-Path $repoRoot ([string]$retirePath)) -PathType Leaf
+            Expect ($exists -eq (-not $retirementApplied)) "retirement file presence disagrees with state: $($phase3Unit.id) -> $retirePath"
+        }
+        if($phase3State -eq 'switch_ready'){
+            Expect ($null -eq $phase3Unit.approval) "switch-ready unit has approval data: $($phase3Unit.id)"
+            Expect ($null -eq $phase3Unit.application) "switch-ready unit has application data: $($phase3Unit.id)"
+        }else{
+            Expect ($null -ne $phase3Unit.approval) "approved retirement unit lacks approval data: $($phase3Unit.id)"
+            Expect (@($phase3Unit.approval.deliverable_sha256.PSObject.Properties).Count -eq 0) "retire-only approval hash map is not empty: $($phase3Unit.id)"
+            if($phase3State -eq 'approved_for_switch'){Expect ($null -eq $phase3Unit.application) "production-switch unit has premature application data: $($phase3Unit.id)"}
+            if($phase3State -eq 'retired'){Expect ($null -ne $phase3Unit.application) "retired unit lacks application data: $($phase3Unit.id)"}
+        }
+    }
     foreach($unit in $actual.units){
         Expect (-not [string]::IsNullOrWhiteSpace([string]$unit.title_en)) "missing English title: $($unit.id)"
         Expect ([string]$unit.title_ko -match '[가-힣]') "missing Korean title: $($unit.id)"
@@ -48,4 +74,5 @@ $prohibitedTokens=@('fetch(','XMLHttpRequest',('9b30'+'9ce'),('semantic-v3-'+'ap
 foreach($prohibited in $prohibitedTokens){Expect (-not ($index.Contains($prohibited))) "index contains prohibited token: $prohibited"}
 
 if($failures.Count){$failures|ForEach-Object{Write-Error $_};exit 1}
-Write-Host "VISUAL_REPLACEMENT_WORKBENCH_VALIDATION_OK units=$($actual.summary.units) media=$($actual.summary.gameplay_png + $actual.summary.ui_png + $actual.summary.font) statuses=$($actual.summary.statuses.keep_current)/$($actual.summary.statuses.target_required)"
+$statusSummary=@($actual.summary.statuses.PSObject.Properties|Where-Object{[int]$_.Value -gt 0}|ForEach-Object{"$($_.Name)=$($_.Value)"}) -join ','
+Write-Host "VISUAL_REPLACEMENT_WORKBENCH_VALIDATION_OK units=$($actual.summary.units) media=$($actual.summary.gameplay_png + $actual.summary.ui_png + $actual.summary.font) statuses=$statusSummary"

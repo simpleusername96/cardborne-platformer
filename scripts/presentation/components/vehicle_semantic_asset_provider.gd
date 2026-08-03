@@ -8,11 +8,6 @@ extends RefCounted
 const MANIFEST_PATH := "res://art/visuals/production/gameplay/asset-manifest.json"
 const PACK_ROOT := "res://art/visuals/production/gameplay"
 
-const MAP_SURFACE_PREFIXES: Array[String] = [
-	"world_shared_floor_",
-	"world_wall_",
-]
-
 static var _manifest: Dictionary = {}
 static var _assets: Dictionary = {}
 static var _textures: Dictionary = {}
@@ -234,8 +229,6 @@ static func _index_asset_sets() -> void:
 			&"world":
 				for file_variant in Array(asset_set.get("files", [])):
 					var file := String(file_variant)
-					if _is_map_surface_file(file):
-						continue
 					_add_asset(
 						StringName("world/%s" % file.get_basename()),
 						"%s/%s" % [root, file],
@@ -270,12 +263,6 @@ static func _index_animations() -> void:
 		var animation_id := StringName(animation_variant)
 		var source := Dictionary(
 			Dictionary(_manifest["animations"])[animation_variant]
-		)
-		_add_asset(
-			StringName("effect_atlas/%s" % animation_id),
-			String(source["atlas"]),
-			{},
-			&"effect_atlas"
 		)
 		var frame_pattern := String(source["frames"])
 		var frame_count := int(source["frame_count"])
@@ -329,10 +316,3 @@ static func _vector2i(value: Variant) -> Vector2i:
 	if value is Array and Array(value).size() >= 2:
 		return Vector2i(int(Array(value)[0]), int(Array(value)[1]))
 	return Vector2i.ZERO
-
-
-static func _is_map_surface_file(file: String) -> bool:
-	for prefix in MAP_SURFACE_PREFIXES:
-		if file.begins_with(prefix):
-			return true
-	return false

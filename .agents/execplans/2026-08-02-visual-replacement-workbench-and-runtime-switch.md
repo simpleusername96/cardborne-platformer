@@ -1081,7 +1081,7 @@ states without consumers; three valid UI states are not bound.
 TO-BE: Every declared current file has a consumer, and generated review-only or
 unused production media is absent.
 
-- [ ] Resolve and print this exact Phase 3 retirement set after the Phase 1
+- [x] Resolve and print this exact Phase 3 retirement set after the Phase 1
   move. Each PNG includes its tracked .png.import sidecar in the same approval:
   - art/visuals/production/gameplay/world/world_shared_floor_00.png;
   - art/visuals/production/gameplay/world/world_shared_floor_01.png;
@@ -1116,12 +1116,12 @@ unused production media is absent.
   - art/visuals/production/ui/glyphs/small_state_pip_empty.png;
   - art/visuals/production/ui/glyphs/small_state_warning.png;
   - art/visuals/production/ui/glyphs/small_state_selection_rail.png.
-- [ ] Assign the set to exactly three retire-only units:
+- [x] Assign the set to exactly three retire-only units:
   procedural_floor_and_walls owns the eight world PNGs,
   effect_atlas_retirement owns the 22 atlas PNGs, and
   orphan_ui_state_retirement owns the three UI PNGs. Include every paired
   tracked import sidecar in that unit's retire_paths.
-- [ ] In the task-owned structural worktree, remove the exact manifest entries
+- [x] In the task-owned structural worktree, remove the exact manifest entries
   for these eight staged world files but keep the PNGs and sidecars until the
   approval gate:
   - world_shared_floor_00.png;
@@ -1132,38 +1132,38 @@ unused production media is absent.
   - world_wall_end_cap.png;
   - world_wall_t_junction.png;
   - world_wall_cross_junction.png.
-- [ ] Remove MAP_SURFACE_PREFIXES and any skip logic that existed only to hide
+- [x] Remove MAP_SURFACE_PREFIXES and any skip logic that existed only to hide
   those files from the semantic provider.
-- [ ] Keep all 22 effect atlas PNGs and sidecars in place while removing atlas,
+- [x] Keep all 22 effect atlas PNGs and sidecars in place while removing atlas,
   grid, and gutter from every animation manifest entry.
-- [ ] Remove effect_atlas indexing from the semantic provider.
-- [ ] Preserve all 101 numbered frames and their frame_count, frame_size,
+- [x] Remove effect_atlas indexing from the semantic provider.
+- [x] Preserve all 101 numbered frames and their frame_count, frame_size,
   pivot, fps, loop, blend, note, and event mappings.
-- [ ] Add TabContainer/styles/tab_disabled and
+- [x] Add TabContainer/styles/tab_disabled and
   TabBar/styles/tab_disabled using tab_option/disabled.
-- [ ] Add CheckButton/styles/focus using toggle/focus.
-- [ ] Add ModalSurfaceCompact as a PanelContainer Theme variation using
+- [x] Add CheckButton/styles/focus using toggle/focus.
+- [x] Add ModalSurfaceCompact as a PanelContainer Theme variation using
   modal_master/compact_safe.
-- [ ] In VehicleModalHost._apply_viewport, derive the existing compact boolean
+- [x] In VehicleModalHost._apply_viewport, derive the existing compact boolean
   once, apply it to content, and select ModalSurfaceCompact or ModalSurface
   from the same boolean.
-- [ ] Remove small_state/pip_empty, small_state/warning, and
+- [x] Remove small_state/pip_empty, small_state/warning, and
   small_state/selection_rail from the UI manifest, but keep the three PNGs and
   sidecars in place until the approval gate.
-- [ ] Preserve small_state/pip_available, pip_filled, and disabled consumers.
-- [ ] Update the UI provider and replacement-coverage validator so all 54
+- [x] Preserve small_state/pip_available, pip_filled, and disabled consumers.
+- [x] Update the UI provider and replacement-coverage validator so all 54
   declared UI states have a Theme or concrete consumer.
-- [ ] Update gameplay coverage from 239 to 217 after atlas removal, before the
+- [x] Update gameplay coverage from 239 to 217 after atlas removal, before the
   player, boss-node, and wear structural units are applied.
-- [ ] With only the declared runtime_change_paths modified, run the workbench
+- [x] With only the declared runtime_change_paths modified, run the workbench
   zero-reference validator and require no live reference to any of the 33 PNGs
   outside replacement-workbench.json and the files themselves.
-- [ ] Set all three retire-only units to switch_ready and display the exact
+- [x] Set all three retire-only units to switch_ready and display the exact
   runtime-change diff, 33 PNG paths, 33 sidecar paths, and empty deliverable
   hash maps.
-- [ ] Request BK's explicit approval to delete exactly that displayed set and
+- [x] Request BK's explicit approval to delete exactly that displayed set and
   record the same set in the three approval records.
-- [ ] Stop Phase 3 before any deletion or commit if approval is absent or
+- [x] Stop Phase 3 before any deletion or commit if approval is absent or
   narrower than the displayed set; retain the prepared task-owned worktree.
 - [ ] After exact approval, delete the 33 PNGs and 33 sidecars, run the focused
   acceptance commands, and create one atomic Phase 3 production switch commit.
@@ -2004,6 +2004,24 @@ Do not mark a phase or this plan complete while a stop condition remains.
   files. The replacement builder, deterministic check, workbench validator,
   document-authority validator, live historical-token scan, and repository
   old-root scan all passed; Git history remains the recovery mechanism.
+- 2026-08-03: Phase 3 preparation began from clean full HEAD
+  1accd5b34edc3e301088bb8e5bc21b2259d27367. The task-owned runtime diff now
+  removes eight staged world declarations, 22 atlas declarations and provider
+  indexes, and three orphan UI declarations while preserving every retirement
+  file. It binds modal compact, tab disabled, and toggle focus states; keeps all
+  101 effect frames and 54 connected UI states; and updates gameplay coverage
+  to 217. The three retire-only units are switch_ready with empty deliverable
+  hash maps. All 33 PNGs and 33 sidecars remain present and tracked, zero live
+  runtime references remain, focused Godot and deterministic workbench checks
+  pass, and the separate exact Phase 3 deletion approval remains absent.
+- 2026-08-03: BK explicitly instructed, "Approve deletion of the exact
+  displayed 33 PNG and 33 sidecar Phase 3 set." The three retire-only approval
+  records bind the previously displayed 66 paths, empty deliverable hash maps,
+  baseline commit 1accd5b34edc3e301088bb8e5bc21b2259d27367, and approval time
+  2026-08-03T11:46:48+09:00. Git removed exactly those 33 PNGs and 33 tracked
+  import sidecars. Gameplay coverage is 217, UI coverage is 54, all 101 effect
+  frames remain, the five focused Godot validators pass, the workbench build
+  and deterministic check pass at 272 production media, and Web export passes.
 
 ## Execution Handoff
 

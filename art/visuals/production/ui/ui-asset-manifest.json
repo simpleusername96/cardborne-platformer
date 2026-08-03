@@ -246,12 +246,9 @@
         6
       ],
       "states": {
-        "pip_empty": "glyphs/small_state_pip_empty.png",
         "pip_available": "glyphs/small_state_pip_available.png",
         "pip_filled": "glyphs/small_state_pip_filled.png",
-        "warning": "glyphs/small_state_warning.png",
-        "disabled": "glyphs/small_state_disabled.png",
-        "selection_rail": "glyphs/small_state_selection_rail.png"
+        "disabled": "glyphs/small_state_disabled.png"
       }
     }
   }

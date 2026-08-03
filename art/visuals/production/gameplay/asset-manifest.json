@@ -477,14 +477,6 @@
         288
       ],
       "files": [
-        "world_shared_floor_00.png",
-        "world_shared_floor_01.png",
-        "world_wall_straight.png",
-        "world_wall_convex_corner.png",
-        "world_wall_concave_corner.png",
-        "world_wall_end_cap.png",
-        "world_wall_t_junction.png",
-        "world_wall_cross_junction.png",
         "world_bulkhead_intact.png",
         "world_bulkhead_damaged.png",
         "facility_repair_pad.png",
@@ -778,18 +770,12 @@
   ],
   "animations": {
     "muzzle_player_primary": {
-      "atlas": "effects/atlases/fx_muzzle_player_primary.png",
       "frames": "effects/frames/fx_muzzle_player_primary/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         48,
         48
       ],
-      "gutter": 2,
       "pivot": [
         4,
         24
@@ -799,18 +785,12 @@
       "blend": "alpha; additive only for tiny core"
     },
     "dash_start": {
-      "atlas": "effects/atlases/fx_dash_start.png",
       "frames": "effects/frames/fx_dash_start/frame_{index:02}.png",
       "frame_count": 3,
-      "grid": [
-        3,
-        1
-      ],
       "frame_size": [
         96,
         48
       ],
-      "gutter": 2,
       "pivot": [
         48,
         24
@@ -820,18 +800,12 @@
       "note": "Use with procedural afterimages; never draw the removed red circle."
     },
     "emp_release": {
-      "atlas": "effects/atlases/fx_emp_release.png",
       "frames": "effects/frames/fx_emp_release/frame_{index:02}.png",
       "frame_count": 6,
-      "grid": [
-        3,
-        2
-      ],
       "frame_size": [
         512,
         512
       ],
-      "gutter": 2,
       "pivot": [
         256,
         256
@@ -841,18 +815,12 @@
       "scale_from_gameplay_radius": true
     },
     "wake_mine_detonation": {
-      "atlas": "effects/atlases/fx_wake_mine_detonation.png",
       "frames": "effects/frames/fx_wake_mine_detonation/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [
-        5,
-        1
-      ],
       "frame_size": [
         256,
         256
       ],
-      "gutter": 2,
       "pivot": [
         128,
         128
@@ -861,18 +829,12 @@
       "loop": false
     },
     "boss_module_disabled": {
-      "atlas": "effects/atlases/fx_boss_module_disabled.png",
       "frames": "effects/frames/fx_boss_module_disabled/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         128,
         128
       ],
-      "gutter": 2,
       "pivot": [
         64,
         64
@@ -881,18 +843,12 @@
       "loop": false
     },
     "hostile_summon_arrival": {
-      "atlas": "effects/atlases/fx_hostile_summon_arrival.png",
       "frames": "effects/frames/fx_hostile_summon_arrival/frame_{index:02}.png",
       "frame_count": 6,
-      "grid": [
-        3,
-        2
-      ],
       "frame_size": [
         192,
         192
       ],
-      "gutter": 2,
       "pivot": [
         96,
         96
@@ -901,18 +857,12 @@
       "loop": false
     },
     "bulkhead_destroy": {
-      "atlas": "effects/atlases/fx_bulkhead_destroy.png",
       "frames": "effects/frames/fx_bulkhead_destroy/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [
-        5,
-        1
-      ],
       "frame_size": [
         256,
         256
       ],
-      "gutter": 2,
       "pivot": [
         128,
         128
@@ -921,18 +871,12 @@
       "loop": false
     },
     "reflect_deflection": {
-      "atlas": "effects/atlases/fx_reflect_deflection.png",
       "frames": "effects/frames/fx_reflect_deflection/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [
-        5,
-        1
-      ],
       "frame_size": [
         96,
         96
       ],
-      "gutter": 2,
       "pivot": [
         48,
         48
@@ -941,18 +885,12 @@
       "loop": false
     },
     "barrier_contact": {
-      "atlas": "effects/atlases/fx_barrier_contact.png",
       "frames": "effects/frames/fx_barrier_contact/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [
-        5,
-        1
-      ],
       "frame_size": [
         128,
         128
       ],
-      "gutter": 2,
       "pivot": [
         64,
         64
@@ -961,18 +899,12 @@
       "loop": false
     },
     "hull_hit": {
-      "atlas": "effects/atlases/fx_hull_hit.png",
       "frames": "effects/frames/fx_hull_hit/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         96,
         96
       ],
-      "gutter": 2,
       "pivot": [
         48,
         48
@@ -981,18 +913,12 @@
       "loop": false
     },
     "seeker_impact": {
-      "atlas": "effects/atlases/fx_seeker_impact.png",
       "frames": "effects/frames/fx_seeker_impact/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         96,
         96
       ],
-      "gutter": 2,
       "pivot": [
         48,
         48
@@ -1001,18 +927,12 @@
       "loop": false
     },
     "escort_drone_impact": {
-      "atlas": "effects/atlases/fx_escort_drone_impact.png",
       "frames": "effects/frames/fx_escort_drone_impact/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         96,
         96
       ],
-      "gutter": 2,
       "pivot": [
         48,
         48
@@ -1021,18 +941,12 @@
       "loop": false
     },
     "orbit_blade_impact": {
-      "atlas": "effects/atlases/fx_orbit_blade_impact.png",
       "frames": "effects/frames/fx_orbit_blade_impact/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         96,
         96
       ],
-      "gutter": 2,
       "pivot": [
         48,
         48
@@ -1041,18 +955,12 @@
       "loop": false
     },
     "enemy_destroy_light": {
-      "atlas": "effects/atlases/fx_enemy_destroy_light.png",
       "frames": "effects/frames/fx_enemy_destroy_light/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [
-        5,
-        1
-      ],
       "frame_size": [
         160,
         160
       ],
-      "gutter": 2,
       "pivot": [
         80,
         80
@@ -1061,18 +969,12 @@
       "loop": false
     },
     "enemy_destroy_heavy": {
-      "atlas": "effects/atlases/fx_enemy_destroy_heavy.png",
       "frames": "effects/frames/fx_enemy_destroy_heavy/frame_{index:02}.png",
       "frame_count": 6,
-      "grid": [
-        6,
-        1
-      ],
       "frame_size": [
         192,
         192
       ],
-      "gutter": 2,
       "pivot": [
         96,
         96
@@ -1081,18 +983,12 @@
       "loop": false
     },
     "crate_destroy": {
-      "atlas": "effects/atlases/fx_crate_destroy.png",
       "frames": "effects/frames/fx_crate_destroy/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [
-        5,
-        1
-      ],
       "frame_size": [
         128,
         128
       ],
-      "gutter": 2,
       "pivot": [
         64,
         64
@@ -1101,18 +997,12 @@
       "loop": false
     },
     "pickup_intake": {
-      "atlas": "effects/atlases/fx_pickup_intake.png",
       "frames": "effects/frames/fx_pickup_intake/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         96,
         96
       ],
-      "gutter": 2,
       "pivot": [
         48,
         48
@@ -1121,18 +1011,12 @@
       "loop": false
     },
     "support_heal": {
-      "atlas": "effects/atlases/fx_support_heal.png",
       "frames": "effects/frames/fx_support_heal/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         128,
         128
       ],
-      "gutter": 2,
       "pivot": [
         64,
         64
@@ -1141,18 +1025,12 @@
       "loop": false
     },
     "lifesteal_pulse": {
-      "atlas": "effects/atlases/fx_lifesteal_pulse.png",
       "frames": "effects/frames/fx_lifesteal_pulse/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         64,
         64
       ],
-      "gutter": 2,
       "pivot": [
         32,
         32
@@ -1161,18 +1039,12 @@
       "loop": false
     },
     "transit_shift": {
-      "atlas": "effects/atlases/fx_transit_shift.png",
       "frames": "effects/frames/fx_transit_shift/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [
-        5,
-        1
-      ],
       "frame_size": [
         160,
         96
       ],
-      "gutter": 2,
       "pivot": [
         80,
         48
@@ -1181,18 +1053,12 @@
       "loop": false
     },
     "boss_reduced_hit": {
-      "atlas": "effects/atlases/fx_boss_reduced_hit.png",
       "frames": "effects/frames/fx_boss_reduced_hit/frame_{index:02}.png",
       "frame_count": 4,
-      "grid": [
-        4,
-        1
-      ],
       "frame_size": [
         96,
         96
       ],
-      "gutter": 2,
       "pivot": [
         48,
         48
@@ -1201,18 +1067,12 @@
       "loop": false
     },
     "impact_damage": {
-      "atlas": "effects/atlases/fx_impact_damage.png",
       "frames": "effects/frames/fx_impact_damage/frame_{index:02}.png",
       "frame_count": 5,
-      "grid": [
-        5,
-        1
-      ],
       "frame_size": [
         64,
         64
       ],
-      "gutter": 2,
       "pivot": [
         32,
         32

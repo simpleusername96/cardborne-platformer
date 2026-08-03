@@ -26,6 +26,17 @@ const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
 const EventCaptureFixture = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_capture_fixture.gd"
 )
+const EXPECTED_UI_STATE_COUNT := 54
+const DIRECT_UI_STATE_CONSUMERS := {
+	"res://scripts/ui/vehicle_gameplay_hud.gd": [
+		'&"small_state"',
+		'&"pip_available" if available else &"disabled"',
+	],
+	"res://scripts/ui/vehicle_status_orbit.gd": [
+		'&"small_state"',
+		'&"pip_filled" if active else &"pip_available"',
+	],
+}
 
 const EXPECTED_ANIMATIONS := [
 	"muzzle_player_primary",
@@ -131,12 +142,9 @@ const EXPECTED_UI_COMPONENT_STATES := {
 	],
 	"preview": ["normal", "locked", "focused"],
 	"small_state": [
-		"pip_empty",
 		"pip_available",
 		"pip_filled",
-		"warning",
 		"disabled",
-		"selection_rail",
 	],
 }
 
@@ -203,6 +211,12 @@ func _validate_animation(animation_id: String, animation: Dictionary) -> void:
 
 func _validate_ui_manifest(manifest: Dictionary) -> void:
 	var components := Dictionary(manifest.get("components", {}))
+	_expect(
+		components.size() == EXPECTED_UI_COMPONENT_STATES.size(),
+		"UI manifest declares %d components, expected %d"
+		% [components.size(), EXPECTED_UI_COMPONENT_STATES.size()]
+	)
+	var state_count := 0
 	for component_id in EXPECTED_UI_COMPONENT_STATES:
 		var required_states := Array(EXPECTED_UI_COMPONENT_STATES[component_id])
 		if not components.has(component_id):
@@ -210,6 +224,7 @@ func _validate_ui_manifest(manifest: Dictionary) -> void:
 			continue
 		var component := Dictionary(components[component_id])
 		var states := Dictionary(component.get("states", {}))
+		state_count += states.size()
 		_expect(
 			_vector2i(component.get("canvas", [])) != Vector2i.ZERO,
 			"%s has no canvas metadata" % component_id
@@ -234,6 +249,11 @@ func _validate_ui_manifest(manifest: Dictionary) -> void:
 				"missing UI state image: %s/%s -> %s"
 				% [component_id, state_id, path]
 			)
+	_expect(
+		state_count == EXPECTED_UI_STATE_COUNT,
+		"UI manifest declares %d states, expected %d"
+		% [state_count, EXPECTED_UI_STATE_COUNT]
+	)
 
 
 func _validate_event_catalog(animations: Dictionary) -> void:
@@ -334,13 +354,25 @@ func _validate_ui_runtime_contract() -> void:
 		'HudToast/styles/panel',
 		'PreviewFrame/styles/panel',
 		'CheckButton/icons/checked',
+		'CheckButton/styles/focus',
 		'HSlider/icons/grabber',
+		'TabContainer/styles/tab_disabled',
+		'TabBar/styles/tab_disabled',
+		'ModalSurfaceCompact/styles/panel',
 	]:
 		_expect(
 			theme_source.contains(required_reference),
 			"production UI theme is missing image-backed contract: %s"
 			% required_reference
 		)
+	for source_path in DIRECT_UI_STATE_CONSUMERS:
+		var source := FileAccess.get_file_as_string(source_path)
+		for state_reference in DIRECT_UI_STATE_CONSUMERS[source_path]:
+			_expect(
+				source.contains(state_reference),
+				"UI consumer is missing state reference: %s -> %s"
+				% [source_path, state_reference]
+			)
 	for source_path in [
 		"res://scripts/ui/vehicle_modal_surface.gd",
 		"res://scripts/ui/vehicle_upgrade_choice_card.gd",

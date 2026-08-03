@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=105 format=3]
+[gd_resource type="Theme" load_steps=111 format=3]
 
 [ext_resource type="FontFile" path="res://art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf" id="1_font"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/button_danger_disabled.png" id="ui_button_danger_disabled"]
@@ -31,12 +31,14 @@
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/meter_resource.png" id="ui_meter_resource"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/meter_support.png" id="ui_meter_support"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/surfaces/modal_master_normal.png" id="ui_modal_master_normal"]
+[ext_resource type="Texture2D" path="res://art/visuals/production/ui/surfaces/modal_master_compact_safe.png" id="ui_modal_master_compact_safe"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/glyphs/preview_focused.png" id="ui_preview_focused"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/glyphs/preview_locked.png" id="ui_preview_locked"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/glyphs/preview_normal.png" id="ui_preview_normal"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/slider_fill.png" id="ui_slider_fill"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/slider_lane.png" id="ui_slider_lane"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/tab_option_focus.png" id="ui_tab_option_focus"]
+[ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/tab_option_disabled.png" id="ui_tab_option_disabled"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/tab_option_hover.png" id="ui_tab_option_hover"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/tab_option_normal.png" id="ui_tab_option_normal"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/tab_option_selected.png" id="ui_tab_option_selected"]
@@ -49,6 +51,7 @@
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/slider_grabber.png" id="ui_slider_grabber"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/toggle_off.png" id="ui_toggle_off"]
 [ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/toggle_on.png" id="ui_toggle_on"]
+[ext_resource type="Texture2D" path="res://art/visuals/production/ui/controls/toggle_focus.png" id="ui_toggle_focus"]
 
 [sub_resource type="FontVariation" id="FontBody"]
 base_font = ExtResource("1_font")
@@ -66,6 +69,16 @@ variation_opentype = {
 
 [sub_resource type="StyleBoxTexture" id="Modal"]
 texture = ExtResource("ui_modal_master_normal")
+texture_margin_left = 32.0
+texture_margin_top = 32.0
+texture_margin_right = 32.0
+texture_margin_bottom = 32.0
+content_margin_left = 24.0
+content_margin_top = 22.0
+content_margin_right = 24.0
+content_margin_bottom = 22.0
+[sub_resource type="StyleBoxTexture" id="ModalCompact"]
+texture = ExtResource("ui_modal_master_compact_safe")
 texture_margin_left = 32.0
 texture_margin_top = 32.0
 texture_margin_right = 32.0
@@ -415,6 +428,22 @@ texture_margin_left = 16.0
 texture_margin_top = 16.0
 texture_margin_right = 16.0
 texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxTexture" id="TabDisabled"]
+texture = ExtResource("ui_tab_option_disabled")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+[sub_resource type="StyleBoxTexture" id="ToggleFocus"]
+texture = ExtResource("ui_toggle_focus")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
 [sub_resource type="StyleBoxTexture" id="ContentInset"]
 texture = ExtResource("ui_content_plate_inset")
 texture_margin_left = 16.0
@@ -528,6 +557,7 @@ TabContainer/styles/tab_unselected = SubResource("TabUnselected")
 TabContainer/styles/tab_hovered = SubResource("TabHovered")
 TabContainer/styles/tab_selected = SubResource("TabSelected")
 TabContainer/styles/tab_focus = SubResource("TabFocus")
+TabContainer/styles/tab_disabled = SubResource("TabDisabled")
 TabBar/colors/font_unselected_color = Color(0.619608, 0.678431, 0.737255, 1)
 TabBar/colors/font_hovered_color = Color(0.933333, 0.952941, 0.968627, 1)
 TabBar/colors/font_selected_color = Color(0.933333, 0.952941, 0.968627, 1)
@@ -537,6 +567,7 @@ TabBar/styles/tab_unselected = SubResource("TabUnselected")
 TabBar/styles/tab_hovered = SubResource("TabHovered")
 TabBar/styles/tab_selected = SubResource("TabSelected")
 TabBar/styles/tab_focus = SubResource("TabFocus")
+TabBar/styles/tab_disabled = SubResource("TabDisabled")
 OptionButton/colors/font_color = Color(0.933333, 0.952941, 0.968627, 1)
 OptionButton/colors/font_hover_color = Color(0.933333, 0.952941, 0.968627, 1)
 OptionButton/colors/font_pressed_color = Color(0.933333, 0.952941, 0.968627, 1)
@@ -549,6 +580,7 @@ CheckButton/colors/font_hover_color = Color(0.933333, 0.952941, 0.968627, 1)
 CheckButton/font_sizes/font_size = 15
 CheckButton/icons/unchecked = ExtResource("ui_toggle_off")
 CheckButton/icons/checked = ExtResource("ui_toggle_on")
+CheckButton/styles/focus = SubResource("ToggleFocus")
 PrimaryButton/base_type = &"Button"
 PrimaryButton/colors/font_color = Color(0.027451, 0.0431373, 0.0666667, 1)
 PrimaryButton/colors/font_hover_color = Color(0.027451, 0.0431373, 0.0666667, 1)
@@ -623,6 +655,8 @@ FlatPanel/base_type = &"PanelContainer"
 FlatPanel/styles/panel = SubResource("Plate")
 ModalSurface/base_type = &"PanelContainer"
 ModalSurface/styles/panel = SubResource("Modal")
+ModalSurfaceCompact/base_type = &"PanelContainer"
+ModalSurfaceCompact/styles/panel = SubResource("ModalCompact")
 HudStatusGroup/base_type = &"PanelContainer"
 HudStatusGroup/styles/panel = SubResource("Hud")
 HUDTransparent/base_type = &"PanelContainer"

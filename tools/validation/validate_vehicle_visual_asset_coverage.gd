@@ -16,7 +16,6 @@ const EXPECTED_CATEGORY_COUNTS := {
 	&"world_feature":10,
 	&"hud":21,
 	&"combat_cue":22,
-	&"effect_atlas":22,
 	&"effect_frame":101,
 }
 const LIVE_CONSUMER_PATHS := [
@@ -37,11 +36,6 @@ func _initialize() -> void:
 		var descriptor := AssetProvider.descriptor(asset_id)
 		var category := StringName(descriptor.get("category", &""))
 		category_counts[category] = int(category_counts.get(category, 0)) + 1
-		_expect(
-			not String(asset_id).contains("world_shared_floor")
-				and not String(asset_id).contains("world_wall_"),
-			"%s does not connect a deferred map-surface asset" % asset_id
-		)
 	for category in EXPECTED_CATEGORY_COUNTS:
 		_expect(
 			int(category_counts.get(category, 0))
@@ -54,8 +48,8 @@ func _initialize() -> void:
 			]
 		)
 	_expect(
-		AssetProvider.asset_ids().size() == 239,
-		"semantic-v2 production coverage totals 239 non-map runtime images"
+		AssetProvider.asset_ids().size() == 217,
+		"semantic-v2 production coverage totals 217 runtime images"
 	)
 	for path in LIVE_CONSUMER_PATHS:
 		var source := FileAccess.get_file_as_string(path)

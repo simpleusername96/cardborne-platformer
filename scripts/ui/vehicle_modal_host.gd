@@ -70,8 +70,12 @@ func _apply_viewport() -> void:
 		minf(preferred_size.x, available.x),
 		minf(preferred_size.y, available.y)
 	)
+	var compact := size.x < 1100.0 or size.y < 650.0
+	surface.theme_type_variation = (
+		&"ModalSurfaceCompact" if compact else &"ModalSurface"
+	)
 	if content != null and content.has_method("set_compact_mode"):
-		content.call("set_compact_mode", size.x < 1100.0 or size.y < 650.0)
+		content.call("set_compact_mode", compact)
 
 
 func surface_rect() -> Rect2:
