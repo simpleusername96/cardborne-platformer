@@ -4233,7 +4233,7 @@
       "title_ko": "주요 버튼",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/controls/button_primary_normal.png",
         "art/visuals/production/ui/controls/button_primary_hover.png",
@@ -4253,73 +4253,9 @@
         "button_primary/normal",
         "button_primary/pressed"
       ],
-      "direction_en": "Replace the current button primary files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/controls/button_primary_normal.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_primary_hover.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_primary_pressed.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_primary_focus.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_primary_disabled.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/button_primary/button_primary-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/button_families/button-families-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4336,37 +4272,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T14:27:41+09:00",
-        "baseline_commit": "5fc5a41ab294d8fc703fd283e4273ec34d4f2c50",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/controls/button_primary_normal.png": "17f6f4a562fc75d2a8b993e298304fd4c4000243463c053d87ce0b6cd423a215",
-          "art/visuals/production/ui/controls/button_primary_hover.png": "9fdbfd7961ae02a3eda3a90d84914d840c01ee9a7a09218068ec0c5c8d8be2cc",
-          "art/visuals/production/ui/controls/button_primary_pressed.png": "89e0ad2135fb15f2fbaf161afcbbe8865bdd5304fdc6dd08613ba168973958fb",
-          "art/visuals/production/ui/controls/button_primary_focus.png": "577b7c4f18858916b4c0f25bd9f7fc0aaf40bc2d636a8d0201c06a2c7c06bb59",
-          "art/visuals/production/ui/controls/button_primary_disabled.png": "1fabab5f44c5adbaccc26757b0dbc29162efdc4fef449d3ad13fb9c2b7552a45"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "226975d6988ef2565a23a6af7ea62f84d5052281",
-        "applied_at": "2026-08-03T14:31:41+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "button_secondary",
@@ -4376,7 +4283,7 @@
       "title_ko": "보조 버튼",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/controls/button_secondary_normal.png",
         "art/visuals/production/ui/controls/button_secondary_hover.png",
@@ -4396,73 +4303,9 @@
         "button_secondary/normal",
         "button_secondary/pressed"
       ],
-      "direction_en": "Replace the current button secondary files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/controls/button_secondary_normal.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_secondary_hover.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_secondary_pressed.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_secondary_focus.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_secondary_disabled.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/button_secondary/button_secondary-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/button_families/button-families-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4479,37 +4322,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T14:27:41+09:00",
-        "baseline_commit": "5fc5a41ab294d8fc703fd283e4273ec34d4f2c50",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/controls/button_secondary_normal.png": "7335007969f26c0f2eec014a7a74a9f8f6a6e1d70d8b6effe76d9a461e2e1d01",
-          "art/visuals/production/ui/controls/button_secondary_hover.png": "d924fe028d00c1516a9472e70ae308050ab3ae423b7438b0ee5f55d90d83fc3b",
-          "art/visuals/production/ui/controls/button_secondary_pressed.png": "fdb939aa5df0285bebb4333972f23639459d81dba26d1646f216ca56f283679d",
-          "art/visuals/production/ui/controls/button_secondary_focus.png": "778b5a7d377a415e0ceb3bdc634ecea1f9a70441b8fb7d67b5f4cf1493c28e68",
-          "art/visuals/production/ui/controls/button_secondary_disabled.png": "1fabab5f44c5adbaccc26757b0dbc29162efdc4fef449d3ad13fb9c2b7552a45"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "2a854e3e4cd054b87ab28a7f53d94a216ecd4517",
-        "applied_at": "2026-08-03T14:34:22+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "button_danger",
@@ -4519,7 +4333,7 @@
       "title_ko": "위험 버튼",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/controls/button_danger_normal.png",
         "art/visuals/production/ui/controls/button_danger_hover.png",
@@ -4539,73 +4353,9 @@
         "button_danger/normal",
         "button_danger/pressed"
       ],
-      "direction_en": "Replace the current button danger files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/controls/button_danger_normal.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_danger_hover.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_danger_pressed.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_danger_focus.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/controls/button_danger_disabled.png",
-          "width": 96,
-          "height": 64,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            16,
-            20,
-            16
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/button_danger/button_danger-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/button_families/button-families-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4622,37 +4372,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T14:27:41+09:00",
-        "baseline_commit": "5fc5a41ab294d8fc703fd283e4273ec34d4f2c50",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/controls/button_danger_normal.png": "4104100dcd658159ba1901413cb8a03b5f67fb882031e63b966f02f649ec8d9a",
-          "art/visuals/production/ui/controls/button_danger_hover.png": "afc4e5045248f9bbc9ed6eb5a08cf0d724a1cf096e96e5f234969aa13300adf1",
-          "art/visuals/production/ui/controls/button_danger_pressed.png": "9175a2cdfc265fcfe51da92244c91f5d0e73686db7ac68341b5ff6b82a19b442",
-          "art/visuals/production/ui/controls/button_danger_focus.png": "3a4bee52e2b210e4b77f25fb16d5f26cc95a4cacda3b1657052f21f8b58192e7",
-          "art/visuals/production/ui/controls/button_danger_disabled.png": "1fabab5f44c5adbaccc26757b0dbc29162efdc4fef449d3ad13fb9c2b7552a45"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "03ac1edef5dfabb178fae5964e08fa2ad7757dd0",
-        "applied_at": "2026-08-03T14:37:18+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "tab_option",

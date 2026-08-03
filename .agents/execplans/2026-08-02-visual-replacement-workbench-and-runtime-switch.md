@@ -1866,7 +1866,7 @@ before execution continues.
   - [x] Prepare button_primary, button_secondary, and button_danger as fifteen
     exact deployable state PNGs with per-family contact sheets and one shared
     runtime nine-slice matrix; all three units are switch_ready.
-  - [ ] Obtain exact hash-bound approval and apply the three button families
+  - [x] Obtain exact hash-bound approval and apply the three button families
     without extending that approval to later Phase 5 component families.
   - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
@@ -1878,11 +1878,10 @@ before execution continues.
 
 ## Next Steps
 
-1. Display the three button families' exact fifteen-entry target/hash map from
-   a clean preparation commit.
-2. Request hash-bound approval for only those three independently promotable
-   units, with empty retire_paths and runtime_change_paths.
-3. Promote, validate, commit, and baseline-clean only exact approved families.
+1. Prepare tab_option and toggle in Phase 5 dependency order as independently
+   deployable state families with exact runtime-size and localization evidence.
+2. Display their exact target/hash map from a clean preparation commit.
+3. Request hash-bound approval only for those prepared units before promotion.
 
 ## Completion Criteria
 
@@ -2170,6 +2169,21 @@ Do not mark a phase or this plan complete while a stop condition remains.
   records bind those bytes at 2026-08-03T14:27:41+09:00. retire_paths and
   runtime_change_paths remain empty for every unit. This approval grants no
   deletion, runtime-code change, or authority for later Phase 5 families.
+- 2026-08-03: The three approved button families were promoted as independent
+  atomic units. button_primary switch 226975d6988ef2565a23a6af7ea62f84d5052281
+  and ledger 2d680c9 replaced five states; button_secondary switch
+  2a854e3e4cd054b87ab28a7f53d94a216ecd4517 and ledger 13c7887 replaced five;
+  button_danger switch 03ac1edef5dfabb178fae5964e08fa2ad7757dd0 and
+  ledger ee9c608 replaced five. Every unit passed all twelve declared checks.
+  The combined Web export succeeded, and built-PCK capture produced 77 Korean
+  and 30 English reference frames at 1280 by 720. Built-Web QA on the reserved
+  codex port 13029 covered deployment, settings, keyboard focus, hover, active
+  gameplay, and the pause-screen danger action. All eight network requests
+  returned 200 and the console contained only three Godot information logs.
+  The exact task-owned listener was stopped and the port was confirmed clean.
+  The fifteen promoted bytes are now current AS-IS; only their duplicate TO-BE
+  bytes and four completed preview artifacts are removed during baseline
+  cleanup, without changing any approved retire or runtime path.
 
 ## Execution Handoff
 
