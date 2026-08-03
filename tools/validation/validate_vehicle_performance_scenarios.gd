@@ -48,6 +48,16 @@ func _run() -> void:
 				scenario.after_physics(run)
 		scenario.after_physics(run)
 		var snapshot := scenario.validation_snapshot(run)
+		if scenario_id == &"production_replay" and not bool(snapshot["valid"]):
+			print(
+				"PRODUCTION_REPLAY_DIAGNOSTIC ",
+				JSON.stringify({
+					"scheduler":snapshot.get("scheduler", {}),
+					"qualification":snapshot.get("production_qualification", {}),
+					"enemies":snapshot.get("enemies", {}),
+					"projectiles":snapshot.get("projectiles", {}),
+				})
+			)
 		_expect(bool(snapshot["valid"]), "%s reaches every declared workload count" % String(scenario_id))
 		var expected_by_scenario := {
 			&"production_replay":-1,

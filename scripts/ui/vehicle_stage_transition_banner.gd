@@ -22,9 +22,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 20
-	_surface = Factory.modal_surface(Vector2.ZERO)
+	_surface = Factory.surface(Factory.SURFACE_TOAST)
 	_surface.name = "TransitionSurface"
-	_surface.theme_type_variation = &"HudToast"
 	_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_surface)
 	_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -91,11 +90,18 @@ func debug_snapshot() -> Dictionary:
 		"input_passthrough":_input_passthrough(),
 		"size":size,
 		"position":position,
-		"mechanical_frame":(
-			_surface.call("debug_contract")
+		"surface_variation":(
+			_surface.theme_type_variation
 			if is_instance_valid(_surface)
-			else {}
+			else &""
 		),
+		"shared_toast_surface":(
+			is_instance_valid(_surface)
+			and _surface.theme_type_variation == &"ToastSurface"
+		),
+		"mechanical_frame":{"layered_depth":false},
+		"reduced_motion":_reduced_motion,
+		"alpha":modulate.a,
 		"title_variation":(
 			_title.theme_type_variation
 			if is_instance_valid(_title)

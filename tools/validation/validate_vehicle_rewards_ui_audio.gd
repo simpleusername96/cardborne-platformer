@@ -187,7 +187,7 @@ func _run() -> void:
 	var stage_ui: CanvasLayer = stage.get("_ui")
 	stage_ui.call("show_deployment", &"pulse_cannon")
 	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)
-	_expect(Vector2(ui_contract["action_rail_size"]) == Vector2(148.0, 44.0), "action rail uses the bottom-center auxiliary-action contract")
+	_expect(Vector2(ui_contract["action_rail_size"]) == Vector2(168.0, 60.0), "action rail contains three 44 px actions inside one shared bottom-center surface")
 	_expect(Vector2(ui_contract["health_cluster_size"]) == Vector2(216.0, 74.0), "health and XP share the readable hull cluster")
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
 	_expect(not bool(ui_contract["deployment_has_difficulty_ui"]), "deployment exposes no difficulty choice")
@@ -197,6 +197,33 @@ func _run() -> void:
 	_expect(not bool(settings_contract["difficulty_copy_visible"]), "in-run settings contain no obsolete difficulty copy")
 	var orbit_contract: Dictionary = stage_ui.call("debug_status_orbit_contract")
 	_expect(int(orbit_contract["maximum_badges"]) == 2, "status orbit exposes only the two retained cycle badges")
+	_expect(
+		not bool(orbit_contract["image_coded"])
+			and bool(orbit_contract["code_native_frame"])
+			and StringName(orbit_contract["available_cue"]) == &"outline"
+			and StringName(orbit_contract["active_cue"]) == &"solid"
+			and bool(orbit_contract["grayscale_distinguishable"])
+			and bool(orbit_contract["semantic_icons"]),
+		"status orbit keeps semantic icons inside code-native non-color state cues"
+	)
+	stage_ui.call("clear_notifications")
+	for message in ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"]:
+		stage_ui.call("notify", message, 2.4, Color.WHITE)
+	var notification_contract := Dictionary(stage_ui.call("debug_notification_contract"))
+	_expect(
+		bool(notification_contract["active"])
+			and String(notification_contract["active_message"]) == "first"
+			and int(notification_contract["queue_cap"]) == 5
+			and int(notification_contract["queue_size"]) == 5
+			and Array(notification_contract["queued_messages"]) == [
+				"third", "fourth", "fifth", "sixth", "seventh",
+			]
+			and StringName(notification_contract["surface_variation"])
+				== &"ToastSurface"
+			and bool(notification_contract["input_passthrough"]),
+		"notification queue preserves order and cap on one input-transparent Toast surface"
+	)
+	stage_ui.call("clear_notifications")
 	experience_runtime.set("pending_level_ups", 1)
 	var stage_rewards: RefCounted = stage.get("reward_runtime")
 	stage_rewards.call("enqueue", &"boss")

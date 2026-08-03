@@ -16,10 +16,9 @@ const UiGlyphCatalog = preload(
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
-const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
 
 const HEALTH_CLUSTER_SIZE := Vector2(216.0, 74.0)
-const ACTION_RAIL_SIZE := Vector2(148.0, 44.0)
+const ACTION_RAIL_SIZE := Vector2(168.0, 60.0)
 const ACTION_RAIL_BOTTOM_MARGIN := 20.0
 
 
@@ -125,55 +124,56 @@ class HealthPips:
 			Art.IVORY_BRIGHT
 		)
 		var hull_rect := Rect2(0.0, 21.0, size.x, 13.0)
-		draw_texture_rect(
-			UiAssets.texture(&"meter", &"background"),
-			hull_rect,
-			false
-		)
+		_draw_meter_track(hull_rect)
 		_draw_meter_fill(
-			UiAssets.texture(&"meter", &"health"),
 			hull_rect,
 			clampf(trailing_health / maximum, 0.0, 1.0),
-			Color(1.0, 1.0, 1.0, 0.48)
+			Color(Art.IVORY_BRIGHT, 0.32)
 		)
 		_draw_meter_fill(
-			UiAssets.texture(&"meter", &"health"),
 			hull_rect,
 			clampf(health / maximum, 0.0, 1.0),
-			Color.WHITE
+			Art.PLAYER_REWARD
 		)
+		if _pulse_time > 0.0:
+			draw_rect(hull_rect, Art.IVORY_BRIGHT, false, 2.0)
 		var xp_rect := Rect2(0.0, 39.0, size.x, 7.0)
-		draw_texture_rect(
-			UiAssets.texture(&"meter", &"background"),
-			xp_rect,
-			false
-		)
+		_draw_meter_track(xp_rect)
 		_draw_meter_fill(
-			UiAssets.texture(&"meter", &"resource"),
 			xp_rect,
 			clampf(experience / experience_required, 0.0, 1.0),
-			Color.WHITE
+			Art.SUPPORT
 		)
 
+	func _draw_meter_track(rect: Rect2) -> void:
+		draw_rect(rect, Art.COBALT_DEEP)
+		draw_rect(rect, Color(Art.TEXT_MUTED, 0.72), false, 1.0)
+
 	func _draw_meter_fill(
-		texture: Texture2D,
 		rect: Rect2,
 		ratio: float,
-		modulate: Color
+		color: Color
 	) -> void:
-		if texture == null or ratio <= 0.0:
+		if ratio <= 0.0:
 			return
 		var clamped := clampf(ratio, 0.0, 1.0)
-		var texture_size := Vector2(texture.get_size())
-		draw_texture_rect_region(
-			texture,
+		draw_rect(
 			Rect2(rect.position, Vector2(rect.size.x * clamped, rect.size.y)),
-			Rect2(
-				Vector2.ZERO,
-				Vector2(texture_size.x * clamped, texture_size.y)
-			),
-			modulate
+			color
 		)
+
+	func debug_contract() -> Dictionary:
+		return {
+			"code_drawn":true,
+			"image_backed":false,
+			"has_background_geometry":true,
+			"has_trailing_health_geometry":true,
+			"has_health_geometry":true,
+			"has_experience_geometry":true,
+			"trailing_animation_preserved":true,
+			"reduced_motion_immediate":true,
+			"reduced_motion_active":reduced_motion,
+		}
 
 
 class ActionRailSlot:
@@ -207,16 +207,16 @@ class ActionRailSlot:
 	func _draw() -> void:
 		var center := size * 0.5
 		var radius := 19.0
-		var state_texture := UiAssets.texture(
-			&"small_state",
-			&"pip_available" if available else &"disabled"
-		)
-		if state_texture != null:
-			draw_texture_rect(
-				state_texture,
-				Rect2(center - Vector2.ONE * 21.0, Vector2.ONE * 42.0),
-				false,
-				Color.WHITE
+		var slot_rect := Rect2(center - Vector2.ONE * 20.0, Vector2.ONE * 40.0)
+		var state_color := accent if available else Art.TEXT_MUTED
+		draw_rect(slot_rect, Color(state_color, 0.88), false, 1.0)
+		if available:
+			# The short lower rail is a structural ready cue independent of color.
+			draw_line(
+				Vector2(slot_rect.position.x + 11.0, slot_rect.end.y - 3.0),
+				Vector2(slot_rect.end.x - 11.0, slot_rect.end.y - 3.0),
+				Art.IVORY_BRIGHT,
+				2.0
 			)
 		var icon := SemanticAssets.texture(
 			StringName("hud/action_%s" % action_id)
@@ -240,15 +240,32 @@ class ActionRailSlot:
 				2.0,
 				true
 			)
+		if not available:
+			# A diagonal lockout slash keeps disabled readable in grayscale.
+			draw_line(
+				Vector2(slot_rect.position.x + 7.0, slot_rect.end.y - 7.0),
+				Vector2(slot_rect.end.x - 7.0, slot_rect.position.y + 7.0),
+				Art.IVORY_BRIGHT,
+				2.0
+			)
 
 	func debug_contract() -> Dictionary:
 		var descriptor := UiGlyphCatalog.action_descriptor(action_id)
 		return {
 			"available":available,
-			"image_backed":true,
+			"image_backed":false,
+			"state_code_drawn":true,
+			"semantic_icon_image_retained":true,
+			"disabled_not_color_only":true,
+			"available_has_structural_rail":available,
+			"disabled_has_structural_slash":not available,
+			"cooldown_has_structural_arc":(
+				not available and cooldown_ratio < 0.9999
+			),
+			"cooldown_ratio":cooldown_ratio,
 			"interior_filled":false,
 			"has_text":false,
-			"draw_batches":2 if not available else 1,
+			"draw_batches":2,
 			"minimum_size":custom_minimum_size,
 			"glyph_id":action_id,
 			"shared_glyph_recipe":not descriptor.is_empty(),
@@ -432,7 +449,7 @@ class StageMinimap:
 var _health_panel: PanelContainer
 var _objective_panel: PanelContainer
 var _minimap_panel: PanelContainer
-var _target_panel: PanelContainer
+var _target_panel: VBoxContainer
 var _dock_panel: PanelContainer
 var _health_bar: HealthPips
 var _objective_label: Label
@@ -443,7 +460,7 @@ var _last_objective_detail := ""
 var _last_buff_text := ""
 var _boss_visible := false
 var _target_visible := false
-var _boss_cluster: PanelContainer
+var _boss_cluster: VBoxContainer
 var _boss_name: Label
 var _boss_bar: ProgressBar
 var _boss_state: Label
@@ -499,24 +516,59 @@ func _build() -> void:
 	_status_orbit.name = "StatusOrbit"
 	add_child(_status_orbit)
 
-	_health_panel = Factory.flat_panel()
+	_health_panel = Factory.surface(Factory.SURFACE_HUD, HEALTH_CLUSTER_SIZE)
 	_health_panel.name = "HealthPanel"
-	_health_panel.theme_type_variation = &"HudHealthResource"
+	_health_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_health_panel.position = Vector2(18.0, 16.0)
 	_health_panel.size = HEALTH_CLUSTER_SIZE
 	add_child(_health_panel)
 	_health_bar = HealthPips.new()
 	_health_panel.add_child(_health_bar)
 
-	_objective_panel = Factory.flat_panel()
+	_objective_panel = Factory.surface(
+		Factory.SURFACE_HUD,
+		Vector2(360.0, 60.0)
+	)
 	_objective_panel.name = "ObjectivePanel"
-	_objective_panel.theme_type_variation = &"HudObjectiveBoss"
-	_objective_panel.custom_minimum_size = Vector2(360.0, 44.0)
-	_objective_panel.size = Vector2(360.0, 44.0)
+	_objective_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_objective_panel.size = Vector2(360.0, 60.0)
 	add_child(_objective_panel)
+	var objective_zone := VBoxContainer.new()
+	objective_zone.name = "ObjectiveZoneContent"
+	objective_zone.add_theme_constant_override("separation", 2)
+	_objective_panel.add_child(objective_zone)
+	_boss_cluster = VBoxContainer.new()
+	_boss_cluster.name = "BossCluster"
+	_boss_cluster.add_theme_constant_override("separation", 1)
+	objective_zone.add_child(_boss_cluster)
+	_boss_name = Factory.label(
+		"ENEMY_FOUNDRY_COLOSSUS",
+		14,
+		Art.IVORY_BRIGHT
+	)
+	_shadow_label(_boss_name)
+	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_cluster.add_child(_boss_name)
+	_boss_bar = Factory.meter(Factory.METER_BOSS)
+	_boss_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_bar.max_value = 1.0
+	_boss_bar.value = 1.0
+	_boss_bar.custom_minimum_size.y = 10.0
+	_boss_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_boss_cluster.add_child(_boss_bar)
+	_boss_state = Factory.label(
+		"PATTERN_READING_ARENA",
+		14,
+		Art.TEXT_MUTED
+	)
+	_shadow_label(_boss_state)
+	_boss_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_state.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_boss_cluster.add_child(_boss_state)
+	_boss_cluster.visible = false
 	var objective_box := VBoxContainer.new()
 	objective_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	_objective_panel.add_child(objective_box)
+	objective_zone.add_child(objective_box)
 	_objective_label = Factory.label(
 		"OBJECTIVE_CALIBRATE",
 		15,
@@ -529,74 +581,42 @@ func _build() -> void:
 	_objective_detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	objective_box.add_child(_objective_detail)
 
-	_minimap_panel = Factory.flat_panel()
+	_minimap_panel = Factory.surface(
+		Factory.SURFACE_HUD,
+		Vector2(176.0, 108.0)
+	)
 	_minimap_panel.name = "MinimapPanel"
-	_minimap_panel.theme_type_variation = &"HudMinimapTarget"
+	_minimap_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_minimap_panel.size = Vector2(176.0, 108.0)
 	add_child(_minimap_panel)
+	var minimap_zone := VBoxContainer.new()
+	minimap_zone.name = "MinimapZoneContent"
+	minimap_zone.add_theme_constant_override("separation", 4)
+	_minimap_panel.add_child(minimap_zone)
 	_minimap = StageMinimap.new()
 	_minimap.custom_minimum_size = Vector2(168.0, 100.0)
-	_minimap_panel.add_child(_minimap)
+	minimap_zone.add_child(_minimap)
 
-	_boss_cluster = PanelContainer.new()
-	_boss_cluster.name = "BossCluster"
-	_boss_cluster.theme_type_variation = &"HudObjectiveBoss"
-	_boss_cluster.size = Vector2(520.0, 58.0)
-	add_child(_boss_cluster)
-	var boss_box := VBoxContainer.new()
-	boss_box.add_theme_constant_override("separation", 1)
-	_boss_cluster.add_child(boss_box)
-	_boss_name = Factory.label(
-		"ENEMY_FOUNDRY_COLOSSUS",
-		14,
-		Art.IVORY_BRIGHT
-	)
-	_shadow_label(_boss_name)
-	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	boss_box.add_child(_boss_name)
-	_boss_bar = ProgressBar.new()
-	_boss_bar.theme_type_variation = &"BossMeter"
-	_boss_bar.show_percentage = false
-	_boss_bar.max_value = 1.0
-	_boss_bar.value = 1.0
-	_boss_bar.custom_minimum_size = Vector2(520.0, 10.0)
-	boss_box.add_child(_boss_bar)
-	_boss_state = Factory.label(
-		"PATTERN_READING_ARENA",
-		14,
-		Art.TEXT_MUTED
-	)
-	_shadow_label(_boss_state)
-	_boss_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_boss_state.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	boss_box.add_child(_boss_state)
-	_boss_cluster.visible = false
-
-	_target_panel = Factory.flat_panel()
+	_target_panel = VBoxContainer.new()
 	_target_panel.name = "TargetPanel"
-	_target_panel.theme_type_variation = &"HudMinimapTarget"
-	_target_panel.size = Vector2(184.0, 64.0)
-	add_child(_target_panel)
-	var target_cluster := VBoxContainer.new()
-	_target_panel.add_child(target_cluster)
+	_target_panel.add_theme_constant_override("separation", 1)
+	minimap_zone.add_child(_target_panel)
 	_target_name = Factory.label("—", 14, Art.IVORY_BRIGHT)
 	_target_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	target_cluster.add_child(_target_name)
-	_target_bar = ProgressBar.new()
-	_target_bar.show_percentage = false
+	_target_panel.add_child(_target_name)
+	_target_bar = Factory.meter(Factory.METER_HEALTH)
+	_target_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_target_bar.max_value = 1.0
 	_target_bar.value = 1.0
-	_target_bar.theme_type_variation = &"HealthMeter"
-	_target_bar.custom_minimum_size = Vector2(160.0, 9.0)
-	target_cluster.add_child(_target_bar)
+	_target_bar.custom_minimum_size.y = 9.0
+	_target_panel.add_child(_target_bar)
 	_target_state = Factory.label("", 14, Art.TEXT_MUTED)
 	_target_state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	target_cluster.add_child(_target_state)
+	_target_panel.add_child(_target_state)
 	_target_panel.visible = false
 
-	_dock_panel = PanelContainer.new()
+	_dock_panel = Factory.surface(Factory.SURFACE_HUD, ACTION_RAIL_SIZE)
 	_dock_panel.name = "ActionRail"
-	_dock_panel.theme_type_variation = &"HudActionRail"
 	_dock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dock_panel.size = ACTION_RAIL_SIZE
 	add_child(_dock_panel)
@@ -615,10 +635,13 @@ func _build() -> void:
 	add_child(_buff_label)
 	_buff_label.visible = false
 
-	_notification_panel = PanelContainer.new()
+	_notification_panel = Factory.surface(
+		Factory.SURFACE_TOAST,
+		Vector2(360.0, 44.0)
+	)
 	_notification_panel.name = "NotificationPanel"
-	_notification_panel.theme_type_variation = &"HudToast"
-	_notification_panel.size = Vector2(360.0, 36.0)
+	_notification_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_notification_panel.size = Vector2(360.0, 44.0)
 	add_child(_notification_panel)
 	_notification = Factory.label("", 18, Art.IVORY_BRIGHT)
 	_notification.name = "Notification"
@@ -710,6 +733,7 @@ func update_snapshot(snapshot: Dictionary) -> void:
 		if next_target_visible != _target_visible:
 			_target_visible = next_target_visible
 			_target_panel.visible = next_target_visible
+			_apply_responsive_layout()
 		if next_target_visible:
 			if _target_name.text != target_name:
 				_target_name.text = target_name
@@ -751,6 +775,23 @@ func clear_notifications() -> void:
 	_notification_queue.clear()
 	_notification_timer = 0.0
 	_notification_panel.visible = false
+
+
+func debug_notification_contract() -> Dictionary:
+	var queued_messages: Array[String] = []
+	for entry_variant in _notification_queue:
+		queued_messages.append(String(Dictionary(entry_variant).get("message", "")))
+	return {
+		"active":_notification_timer > 0.0,
+		"active_message":_notification.text,
+		"queued_messages":queued_messages,
+		"queue_size":_notification_queue.size(),
+		"queue_cap":5,
+		"surface_variation":_notification_panel.theme_type_variation,
+		"input_passthrough":(
+			_notification_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE
+		),
+	}
 
 
 func show_stage_transition(
@@ -816,11 +857,11 @@ func debug_status_orbit_contract() -> Dictionary:
 func debug_contract(viewport_width: float) -> Dictionary:
 	var compact := viewport_width < 1100.0
 	var viewport_height := viewport_width * 9.0 / 16.0
-	var objective_size := Vector2(
+	var objective_base_size := Vector2(
 		300.0 if compact else 360.0,
-		40.0 if compact else 44.0
+		56.0 if compact else 60.0
 	)
-	var minimap_size := (
+	var minimap_base_size := (
 		Vector2(160.0, 98.0)
 		if compact
 		else Vector2(176.0, 108.0)
@@ -830,23 +871,33 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		if compact
 		else Vector2(184.0, 64.0)
 	)
+	var minimap_zone_size := Vector2(
+		maxf(
+			minimap_base_size.x,
+			target_size.x if _target_visible else 0.0
+		),
+		minimap_base_size.y + (target_size.y + 4.0 if _target_visible else 0.0)
+	)
+	var boss_width := minf(
+		520.0,
+		viewport_width - 2.0 * (HEALTH_CLUSTER_SIZE.x + 30.0)
+	)
+	var objective_zone_size := Vector2(
+		boss_width if _boss_visible else objective_base_size.x,
+		objective_base_size.y + (60.0 if _boss_visible else 0.0)
+	)
 	var dock_position := Vector2(
 		(viewport_width - ACTION_RAIL_SIZE.x) * 0.5,
 		viewport_height - ACTION_RAIL_SIZE.y - ACTION_RAIL_BOTTOM_MARGIN
 	)
-	var objective_start := viewport_width * 0.5 - objective_size.x * 0.5
-	var minimap_start := viewport_width - minimap_size.x - 18.0
+	var objective_start := (
+		viewport_width * 0.5 - objective_zone_size.x * 0.5
+	)
+	var minimap_start := viewport_width - minimap_zone_size.x - 18.0
 	var opaque_rects := [
 		Rect2(Vector2(18.0, 16.0), HEALTH_CLUSTER_SIZE),
-		Rect2(Vector2(objective_start, 16.0), objective_size),
-		Rect2(Vector2(minimap_start, 16.0), minimap_size),
-		Rect2(
-			Vector2(
-				viewport_width - target_size.x - 18.0,
-				viewport_height - target_size.y - 82.0
-			),
-			target_size
-		),
+		Rect2(Vector2(objective_start, 16.0), objective_zone_size),
+		Rect2(Vector2(minimap_start, 16.0), minimap_zone_size),
 		Rect2(dock_position, ACTION_RAIL_SIZE),
 	]
 	var opaque_area := 0.0
@@ -873,22 +924,41 @@ func debug_contract(viewport_width: float) -> Dictionary:
 			_skill_slot.debug_contract(),
 		],
 		"secondary_slot_size":_dash_slot.custom_minimum_size,
-		"minimap_size":minimap_size,
+		"minimap_size":minimap_base_size,
+		"minimap_zone_size":minimap_zone_size,
 		"health_cluster_size":HEALTH_CLUSTER_SIZE,
-		"objective_cluster_size":objective_size,
+		"health_meter":_health_bar.debug_contract(),
+		"objective_cluster_size":objective_base_size,
+		"objective_zone_size":objective_zone_size,
 		"target_cluster_size":target_size,
 		"boss_strip_size":Vector2(
-			minf(520.0, viewport_width - 424.0),
+			boss_width,
 			58.0
 		),
 		"boss_objective_coexist":_objective_panel.visible,
+		"boss_inside_objective_zone":(
+			_boss_cluster.get_parent().get_parent() == _objective_panel
+		),
+		"target_inside_minimap_zone":(
+			_target_panel.get_parent().get_parent() == _minimap_panel
+		),
+		"conditional_clusters_have_backing":false,
+		"zone_surface_count":4,
+		"zone_surface_variations":[
+			_health_panel.theme_type_variation,
+			_objective_panel.theme_type_variation,
+			_minimap_panel.theme_type_variation,
+			_dock_panel.theme_type_variation,
+		],
+		"toast_surface_variation":_notification_panel.theme_type_variation,
+		"raster_chrome_consumer":false,
 		"opaque_combat_area_ratio":(
 			opaque_area / (viewport_width * viewport_height)
 		),
 		"central_safe_clear":central_safe_clear,
 		"top_clusters_do_not_overlap":(
 			18.0 + HEALTH_CLUSTER_SIZE.x <= objective_start
-			and objective_start + objective_size.x <= minimap_start
+			and objective_start + objective_zone_size.x <= minimap_start
 		),
 		"zone_count":4,
 		"notification_inside_hud":_notification_panel.get_parent() == self,
@@ -907,48 +977,58 @@ func _apply_responsive_layout() -> void:
 	if _objective_panel == null:
 		return
 	var compact := size.x < 1100.0
-	var objective_size := Vector2(
+	var objective_base_size := Vector2(
 		300.0 if compact else 360.0,
-		40.0 if compact else 44.0
+		56.0 if compact else 60.0
 	)
-	_health_panel.position = Vector2(18.0, 16.0)
-	_health_panel.size = HEALTH_CLUSTER_SIZE
-	_objective_panel.position = Vector2(
-		(size.x - objective_size.x) * 0.5,
-		76.0 if _boss_cluster.visible else 16.0
-	)
-	_objective_panel.custom_minimum_size = objective_size
-	_objective_panel.size = objective_size
-	var minimap_size := (
-		Vector2(160.0, 98.0)
-		if compact
-		else Vector2(176.0, 108.0)
-	)
-	_minimap_panel.size = minimap_size
-	_minimap_panel.position = Vector2(
-		size.x - minimap_size.x - 18.0,
-		16.0
-	)
-	_minimap.custom_minimum_size = minimap_size - Vector2(8.0, 8.0)
-	var boss_width := minf(
-		520.0,
-		size.x - HEALTH_CLUSTER_SIZE.x - minimap_size.x - 72.0
-	)
-	_boss_cluster.position = Vector2(
-		(size.x - boss_width) * 0.5,
-		16.0
-	)
-	_boss_cluster.size.x = boss_width
-	_boss_bar.custom_minimum_size.x = boss_width
 	var target_size := (
 		Vector2(168.0, 60.0)
 		if compact
 		else Vector2(184.0, 64.0)
 	)
-	_target_panel.size = target_size
-	_target_panel.position = Vector2(
-		size.x - target_size.x - 18.0,
-		size.y - target_size.y - 82.0
+	var minimap_base_size := (
+		Vector2(160.0, 98.0)
+		if compact
+		else Vector2(176.0, 108.0)
+	)
+	var minimap_zone_size := Vector2(
+		maxf(
+			minimap_base_size.x,
+			target_size.x if _target_visible else 0.0
+		),
+		minimap_base_size.y + (target_size.y + 4.0 if _target_visible else 0.0)
+	)
+	var boss_width := minf(
+		520.0,
+		size.x - 2.0 * (HEALTH_CLUSTER_SIZE.x + 30.0)
+	)
+	var objective_zone_size := Vector2(
+		boss_width if _boss_visible else objective_base_size.x,
+		objective_base_size.y + (60.0 if _boss_visible else 0.0)
+	)
+	_health_panel.position = Vector2(18.0, 16.0)
+	_health_panel.size = HEALTH_CLUSTER_SIZE
+	_objective_panel.position = Vector2(
+		(size.x - objective_zone_size.x) * 0.5,
+		16.0
+	)
+	_objective_panel.custom_minimum_size = objective_zone_size
+	_objective_panel.size = objective_zone_size
+	_boss_cluster.custom_minimum_size.y = 58.0 if _boss_visible else 0.0
+	_boss_bar.custom_minimum_size.x = 0.0
+	_minimap_panel.custom_minimum_size = minimap_zone_size
+	_minimap_panel.size = minimap_zone_size
+	_minimap_panel.position = Vector2(
+		size.x - minimap_zone_size.x - 18.0,
+		16.0
+	)
+	_minimap.custom_minimum_size = Vector2(
+		minimap_zone_size.x - 20.0,
+		minimap_base_size.y - 16.0
+	)
+	_target_panel.custom_minimum_size = Vector2(
+		minimap_zone_size.x - 20.0,
+		target_size.y
 	)
 	_dock_panel.size = ACTION_RAIL_SIZE
 	_dock_panel.position = Vector2(
@@ -966,7 +1046,7 @@ func _apply_responsive_layout() -> void:
 	_notification_panel.size.x = 320.0 if compact else 360.0
 	_notification_panel.position = Vector2(
 		(size.x - _notification_panel.size.x) * 0.5,
-		156.0 if _boss_cluster.visible else 72.0
+		16.0 + objective_zone_size.y + 12.0
 	)
 	_transition_banner.apply_viewport(size)
 

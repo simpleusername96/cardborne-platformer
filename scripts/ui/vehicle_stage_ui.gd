@@ -329,6 +329,10 @@ func clear_notifications() -> void:
 	_hud.clear_notifications()
 
 
+func debug_notification_contract() -> Dictionary:
+	return _hud.debug_notification_contract()
+
+
 func set_hud_visible(next_visible: bool) -> void:
 	_hud.visible = next_visible
 

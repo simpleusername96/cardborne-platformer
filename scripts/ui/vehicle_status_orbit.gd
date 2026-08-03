@@ -7,8 +7,8 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
-const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
 const BADGE_RADIUS := 12.0
+const FRAME_RADIUS := BADGE_RADIUS + 5.0
 const ORBIT_RADIUS := 62.0
 const ANGLES := [-2.05, -1.10]
 
@@ -43,19 +43,32 @@ func _draw_badge(center: Vector2, state: Dictionary) -> void:
 	var active := bool(state.get("active", false))
 	var progress := clampf(float(state.get("progress", 0.0)), 0.0, 1.0)
 	var color := Art.MINT if upgrade_id == &"aegis_cycle" else (Art.CORAL if upgrade_id == &"overclock_cycle" else Art.MUSTARD)
-	var frame := UiAssets.texture(
-		&"small_state",
-		&"pip_filled" if active else &"pip_available"
+	# Outline-only available and solid active frames stay distinct in grayscale.
+	draw_circle(
+		center,
+		BADGE_RADIUS + 2.0,
+		color.darkened(0.58) if active else Art.SPACE_BLACK
 	)
-	if frame != null:
-		var frame_size := Vector2.ONE * (BADGE_RADIUS + 5.0) * 2.0
-		draw_texture_rect(
-			frame,
-			Rect2(center - frame_size * 0.5, frame_size),
-			false,
-			Color.WHITE
-		)
-	draw_arc(center, BADGE_RADIUS + 2.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 20, color, 3.5, true)
+	draw_arc(
+		center,
+		FRAME_RADIUS,
+		0.0,
+		TAU,
+		24,
+		Art.TEXT_PRIMARY if active else Art.LINE,
+		3.0 if active else 1.5,
+		true
+	)
+	draw_arc(
+		center,
+		BADGE_RADIUS + 2.0,
+		-PI * 0.5,
+		-PI * 0.5 + TAU * progress,
+		20,
+		color,
+		3.5,
+		true
+	)
 	var icon := SemanticAssets.texture(
 		&"hud/upgrade_defense"
 		if upgrade_id == &"aegis_cycle"
@@ -76,5 +89,10 @@ func debug_contract() -> Dictionary:
 		"maximum_badges":2,
 		"badge_diameter":24.0,
 		"orbit_radius":ORBIT_RADIUS,
-		"image_coded":true,
+		"image_coded":false,
+		"code_native_frame":true,
+		"available_cue":&"outline",
+		"active_cue":&"solid",
+		"grayscale_distinguishable":true,
+		"semantic_icons":true,
 	}

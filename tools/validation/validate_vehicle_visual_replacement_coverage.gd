@@ -27,16 +27,10 @@ const EventCaptureFixture = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_capture_fixture.gd"
 )
 const EXPECTED_UI_STATE_COUNT := 54
-const DIRECT_UI_STATE_CONSUMERS := {
-	"res://scripts/ui/vehicle_gameplay_hud.gd": [
-		'&"small_state"',
-		'&"pip_available" if available else &"disabled"',
-	],
-	"res://scripts/ui/vehicle_status_orbit.gd": [
-		'&"small_state"',
-		'&"pip_filled" if active else &"pip_available"',
-	],
-}
+const CODE_NATIVE_UI_STATE_OWNERS := [
+	"res://scripts/ui/vehicle_gameplay_hud.gd",
+	"res://scripts/ui/vehicle_status_orbit.gd",
+]
 
 const EXPECTED_ANIMATIONS := [
 	"muzzle_player_primary",
@@ -372,13 +366,19 @@ func _validate_ui_runtime_contract() -> void:
 			"production UI theme is missing shared contract: %s"
 			% required_reference
 		)
-	for source_path in DIRECT_UI_STATE_CONSUMERS:
+	for source_path in CODE_NATIVE_UI_STATE_OWNERS:
 		var source := FileAccess.get_file_as_string(source_path)
-		for state_reference in DIRECT_UI_STATE_CONSUMERS[source_path]:
+		for forbidden_reference in [
+			"VehicleUiAssetProvider",
+			"UiAssets.texture",
+			'&"small_state"',
+			'&"pip_available"',
+			'&"pip_filled"',
+		]:
 			_expect(
-				source.contains(state_reference),
-				"UI consumer is missing state reference: %s -> %s"
-				% [source_path, state_reference]
+				not source.contains(forbidden_reference),
+				"code-native UI state owner still references raster chrome: %s -> %s"
+				% [source_path, forbidden_reference]
 			)
 	for source_path in [
 		"res://scripts/ui/vehicle_modal_surface.gd",

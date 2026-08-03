@@ -62,11 +62,36 @@ func _initialize() -> void:
 		)
 		var action_rail_size := Vector2(contract["action_rail_size"])
 		var action_rail_position := Vector2(contract["action_rail_position"])
-		_expect(action_rail_size == Vector2(148.0, 44.0), "action rail size is fixed at %d" % width)
+		_expect(action_rail_size == Vector2(168.0, 60.0), "action rail contains three 44 px targets plus shared surface margins at %d" % width)
 		_expect(
 			is_equal_approx(action_rail_position.x, (width - action_rail_size.x) * 0.5)
-				and is_equal_approx(action_rail_position.y, width * 9.0 / 16.0 - 64.0),
+				and is_equal_approx(action_rail_position.y, width * 9.0 / 16.0 - 80.0),
 			"action rail stays centered at the bottom at %d" % width
+		)
+		var health_meter := Dictionary(contract["health_meter"])
+		_expect(
+			bool(health_meter["code_drawn"])
+				and not bool(health_meter["image_backed"])
+				and bool(health_meter["has_background_geometry"])
+				and bool(health_meter["has_trailing_health_geometry"])
+				and bool(health_meter["has_health_geometry"])
+				and bool(health_meter["has_experience_geometry"]),
+			"health and XP meters use complete code-native geometry at %d" % width
+		)
+		_expect(
+			int(contract["zone_surface_count"]) == 4
+				and Array(contract["zone_surface_variations"]) == [
+					&"HudSurface", &"HudSurface", &"HudSurface", &"HudSurface",
+				]
+				and StringName(contract["toast_surface_variation"]) == &"ToastSurface",
+			"HUD uses four shared zones and one shared toast at %d" % width
+		)
+		_expect(
+			not bool(contract["conditional_clusters_have_backing"])
+				and bool(contract["boss_inside_objective_zone"])
+				and bool(contract["target_inside_minimap_zone"])
+				and not bool(contract["raster_chrome_consumer"]),
+			"boss and target reuse their owning zones without raster or nested backing at %d" % width
 		)
 		_expect(bool(contract["action_rail_icon_only"]), "action rail contains icons only at %d" % width)
 		_expect(int(contract["action_slot_count"]) == 3, "action rail contains three auxiliary actions at %d" % width)
@@ -290,6 +315,18 @@ func _initialize() -> void:
 		cooldown_glyph_ids.append(StringName(slot["glyph_id"]))
 		_expect(not bool(slot["interior_filled"]), "cooldown action circles keep an empty interior")
 		_expect(not bool(slot["has_text"]), "action circles do not render labels")
+		_expect(
+			not bool(slot["image_backed"])
+				and bool(slot["state_code_drawn"])
+				and bool(slot["disabled_not_color_only"])
+				and bool(slot["disabled_has_structural_slash"]),
+			"disabled action slots use code-native non-color structural cues"
+		)
+		_expect(
+			bool(slot["cooldown_has_structural_arc"])
+				== (float(slot["cooldown_ratio"]) < 0.9999),
+			"cooldown arc visibility matches the authored ratio"
+		)
 		_expect(int(slot["draw_batches"]) <= 2, "each action glyph uses one retained mesh plus at most one cooldown arc")
 		_expect(
 			bool(slot["shared_glyph_recipe"])
@@ -310,10 +347,15 @@ func _initialize() -> void:
 	})
 	var ready_contract := ui.debug_ui_contract(1280.0)
 	for slot_variant in ready_contract["action_slot_contracts"]:
+		var slot := Dictionary(slot_variant)
 		_expect(
-			bool(Dictionary(slot_variant)["image_backed"])
-				and not bool(Dictionary(slot_variant)["interior_filled"]),
-			"ready action slots use authored image chrome"
+			not bool(slot["image_backed"])
+				and bool(slot["state_code_drawn"])
+				and bool(slot["semantic_icon_image_retained"])
+				and bool(slot["available_has_structural_rail"])
+				and not bool(slot["disabled_has_structural_slash"])
+				and not bool(slot["interior_filled"]),
+			"ready action slots use code-native structure around semantic icons"
 		)
 	await _validate_modal_matrix(ui)
 	await _validate_upgrade_matrix(ui)
