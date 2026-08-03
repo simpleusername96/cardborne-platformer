@@ -1876,7 +1876,9 @@ before execution continues.
   - [x] Prepare slider and meter as nine exact deployable state PNGs with
     per-family contact sheets and one shared runtime-size matrix; both units
     are switch_ready.
-  - [ ] Complete the remaining Phase 5 component families in dependency order.
+  - [x] Obtain exact hash-bound approval and apply slider and meter without
+    extending that approval to preview, small_state, or later families.
+  - [ ] Prepare and apply preview and small_state in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
 - [ ] Phase 8: replace ordinary enemies, hostile attacks, and cues.
@@ -1886,11 +1888,11 @@ before execution continues.
 
 ## Next Steps
 
-1. Display slider and meter's exact nine-entry target/hash map from a clean
-   preparation commit.
-2. Request hash-bound approval only for those two independently promotable
-   units, with empty retire_paths and runtime_change_paths.
-3. Promote and baseline-clean only exact approved units.
+1. Prepare preview and small_state as exact direct deployable files.
+2. Run their contact-sheet, runtime-size, localization, focus, and interaction
+   evidence checks.
+3. Display only those units' exact target/hash map from a clean preparation
+   commit and request their separate hash-bound approval.
 
 ## Completion Criteria
 
@@ -2244,8 +2246,25 @@ Do not mark a phase or this plan complete while a stop condition remains.
   baseline 5e2cfc3454458dec1d614b3dd94f7530c13f4c44 using the nine exact
   target/hash mappings displayed from that clean commit. Both approval records
   bind those bytes at 2026-08-03T15:42:00+09:00. retire_paths and
-  runtime_change_paths remain empty for both units. This approval grants no deletion, runtime-code
-  change, or authority for preview, small_state, or any later Phase 5 family.
+  runtime_change_paths remain empty for both units. This approval grants no
+  deletion, runtime-code change, or authority for preview, small_state, or any
+  later Phase 5 family.
+- 2026-08-03: The approved slider and meter families were promoted as two
+  independent atomic units. slider switch commit
+  4c8fe8b538aee2cdde558904bd5f462c324ac169 and ledger
+  6204a9cce59fd27c7cbc4b433ffcbf9b24b93e97 replace three parts; meter
+  switch commit 782380211d401c04f701271784942ec882950967 and ledger
+  d2f5a91c329ce81613c65df6dca04b4a029eb875 replace six semantic states.
+  Both units passed all twelve declared checks. The combined Web export
+  succeeded, and built-PCK capture produced 77 Korean and 30 English reference
+  frames at 1280 by 720. Built-Web QA on codex port 13029 covered 1280 and 960
+  widths, mouse and keyboard slider adjustment, and in-game HUD meters.
+  All eight network requests returned 200 and the console contained only three
+  Godot information logs. The exact task-owned listener was stopped and the
+  port was confirmed clean. The nine promoted bytes are now current AS-IS;
+  only their duplicate TO-BE bytes and three completed previews are removed
+  during baseline cleanup, without changing any approved retire or runtime
+  path.
 
 ## Execution Handoff
 
