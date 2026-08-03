@@ -1,6 +1,7 @@
 ---
 type: plan
-status: active
+status: superseded
+superseded_by: ./2026-08-04-complete-remaining-visual-replacements.md
 owner: BK
 created: 2026-08-02
 last_reviewed: 2026-08-04

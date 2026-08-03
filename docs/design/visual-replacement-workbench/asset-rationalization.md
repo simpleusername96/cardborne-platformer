@@ -4,12 +4,13 @@ status: active
 owner: BK
 created: 2026-08-04
 last_reviewed: 2026-08-04
-topic: Gameplay visual asset rationalization before Phase 6 implementation
-scope: Classification of all 215 production gameplay PNGs, reusable code-native visual owners, and deferred effect polish
-source: Local manifest, runtime consumer, filesystem, visual-system, workbench, and rendered-contact-sheet audit on 2026-08-04
+topic: Gameplay visual asset rationalization and external-source intake before Phase 6 implementation
+scope: Classification of all 215 production gameplay PNGs, the 64-PNG target boundary, external source candidates, and deferred small-effect polish
+source: Local manifest, runtime consumer, filesystem, Git history, visual-system, workbench, rendered-contact-sheet, and official-license audit on 2026-08-04
 related:
   - ../VISUAL_SYSTEM.md
   - ./README.md
+  - ./external-candidates/README.md
   - ./replacement-workbench.json
   - ../../../art/visuals/production/gameplay/asset-manifest.json
   - ../../../.agents/execplans/2026-08-04-complete-remaining-visual-replacements.md
@@ -19,33 +20,30 @@ related:
 
 ## Purpose
 
-This document records the preimplementation evidence used to reduce the visual
-replacement program before any production image is generated, switched, or
-deleted. It accounts for every current gameplay PNG, separates semantic identity
-from file count, identifies reusable code-native geometry, and preserves a future
-polish record for raster effects that should leave the shipping pack now.
+This document records the preimplementation evidence used to reduce and regroup
+the remaining visual replacement program before production images are switched
+or deleted. It accounts for every current gameplay PNG, fixes the former
+over-conversion to code-native graphics, records the external-source search, and
+defines a verifiable final media count.
 
-This is evidence, not the executable switch-state authority. The durable media
-boundary belongs to [`VISUAL_SYSTEM.md`](../VISUAL_SYSTEM.md), and the ordered
-work belongs to the active ExecPlan. `replacement-workbench.json` remains the
-only hand-authored unit, approval, and application-state source.
-
-No production deletion or runtime switch is authorized by this audit alone.
+This is evidence, not switch authorization. The durable media boundary belongs
+to [`VISUAL_SYSTEM.md`](../VISUAL_SYSTEM.md), the ordered work belongs to the
+active ExecPlan, and `replacement-workbench.json` remains the only hand-authored
+unit, approval, and application-state source. No production deletion or runtime
+switch is authorized by this audit alone.
 
 ## Sources
 
-- `art/visuals/production/gameplay/asset-manifest.json`, including all
-  attachments, ten static asset sets, and 22 animation identities.
-- All 215 production gameplay PNG files and their import sidecars.
-- `replacement-workbench.json`, generated `inventory.json`, and the current
-  AS-IS/TO-BE directory contents.
-- Direct runtime and guidebook consumers in `scripts/presentation/`,
-  `scripts/ui/`, and the focused validators under `tools/validation/`.
-- Existing shared geometry owners, especially projectile, reward/facility,
-  action-glyph, upgrade-glyph, minimap, actor, and effect recipe catalogs.
-- Rendered contact sheets for actors, weapons, states, pickups, world objects,
-  HUD symbols, and effect frames at the 2026-08-04 repository state.
-- `docs/product/vehicle_game_spec.md` and the current visual-system constraints.
+- `art/visuals/production/gameplay/asset-manifest.json`, including all static
+  asset sets and 22 animation identities.
+- All 215 current production gameplay PNG files and their import sidecars.
+- Direct runtime and guidebook consumers under `scripts/` and focused validators
+  under `tools/validation/`.
+- Current workbench units, generated inventory, AS-IS media, and review sheets.
+- `docs/product/vehicle_game_spec.md` and the active visual-system contract.
+- Git history for the semantic-v2 generation and import commits.
+- Official Kenney, Quaternius, and KayKit source pages and included license files.
+- The curated source files and contact sheet under `external-candidates/`.
 
 ## Findings
 
@@ -53,227 +51,245 @@ No production deletion or runtime switch is authorized by this audit alone.
 
 - Production contains exactly **215 gameplay PNGs**: 114 static images and 101
   animation-frame images.
-- The folder counts are actors 35, weapons 13, states 7, pickups 6, world 10,
+- Folder counts are actors 35, weapons 13, states 7, pickups 6, world 10,
   HUD/combat cues 43, and effect frames 101.
-- Every PNG is indexed exactly once by the manifest. There are no missing
-  manifest files, unindexed production PNGs, duplicate semantic IDs, duplicate
-  paths, or byte-identical PNG pairs.
-- There are **zero deployable TO-BE gameplay assets**. Both TO-BE asset roots are
-  empty. The 12 PNGs outside production in the workbench are two AS-IS UI sheets
-  and ten screen-direction/review images; none is a promotable gameplay asset.
-- Reference sheets and screen mockups may guide proportion, density, hierarchy,
-  and layout only. They may not be cropped, traced, or promoted as runtime art.
-- The 101 effect frames are live presentation dependencies today, but none owns
-  collision, damage, targeting, timing, status, rewards, or encounter truth.
-- Existing code already contains reusable geometry for all nine projectile
-  identities, all six pickup identities, five facility/bulkhead identities,
-  three live action glyphs, eight upgrade-family glyphs, retained minimap meshes,
-  and several readability-critical effects.
+- Every current PNG is indexed once by the manifest. There are no missing files,
+  unindexed production PNGs, duplicate semantic IDs, duplicate paths, or
+  byte-identical PNG pairs.
+- There are still zero approved, directly promotable TO-BE gameplay PNGs. Review
+  sheets, mockups, external sources, and the EMP review candidate are not TO-BE
+  deliverables.
+- Project history contains no prior third-party gameplay/UI art-pack evaluation
+  or import. The semantic-v2 pack was generated from project-approved sheets and
+  prompts. Noto Sans KR is the only pre-existing external production visual
+  dependency and is already covered by its SIL OFL license.
+- The former 36-PNG target incorrectly treated projectiles, defense/status,
+  pickups, crates, facilities, and bulkheads as code-native symbols. That target
+  is withdrawn. These are independently readable game-world objects and must be
+  complete authored PNGs.
 
 ### Classification vocabulary
 
-Every current family receives one of these dispositions:
-
 | Disposition | Meaning |
 | --- | --- |
-| `KEEP DISTINCT` | Preserve the semantic identity because gameplay readability depends on it. This does not automatically preserve the current bytes. |
-| `REUSE EXISTING` | Keep the current production bytes because they are sufficiently compatible with the approved style and runtime contract. |
-| `SHARE MASTER` | Replace multiple authored files with one shared family or parameterized state set. |
-| `CODE-NATIVE` | Preserve semantic IDs, but render them from one shared geometry/catalog owner instead of one PNG per identity or state. |
-| `RETIRE NOW` | Remove the production file after all consumers, manifest entries, validators, and approvals have been migrated. |
-| `FUTURE BACKLOG` | Preserve the semantic polish intent in this document, not as an unused production file or current implementation task. |
+| `REUSE EXISTING` | Keep current production bytes because they already satisfy the approved contract. |
+| `REPLACE PNG` | Preserve the semantic identity and target path, but replace the current bytes with one complete authored PNG. |
+| `SHARE MASTER PNG` | Consolidate multiple files into one authored PNG that runtime may scale or select by state. |
+| `ADD PNG` | Add a missing authored world object, state, or the one approved large effect. |
+| `CODE-NATIVE` | Preserve the semantic role through shared geometry because it is a HUD/minimap/cue or live dynamic boundary, not a world object. |
+| `SUPPRESS NOW` | Keep the gameplay event but ship no dedicated cosmetic image or frame sequence for it. |
+| `RETIRE AFTER SWITCH` | Delete exact current files and sidecars only after their replacement or absence has been applied and explicitly approved. |
+| `FUTURE POLISH` | Preserve only the event-level intent in documentation; do not keep dormant production files. |
 
-### Final media boundary
+### Correct final media boundary
 
-Authored raster files are reserved for persistent, silhouette-rich objects whose
-identity benefits from deliberate authored shape: actor bodies, boss bodies,
-secondary-weapon bodies, three shared boss-node states, solid cover, and three
-wear-tile states. Symbolic, collision-normalized, state-parametric, or transient
-visuals use shared code-native geometry.
+All independently readable actors, projectiles, defenses/status displays,
+pickups, crates, facilities, bulkheads, and world-state surfaces are authored
+PNG assets. HUD/minimap/combat symbols and live attack boundaries remain
+code-native. EMP is the only retained large raster effect; all other small
+effect-frame art is suppressed for the current pass.
 
-This reduces the intended shipping gameplay pack from 215 to **36 PNGs**:
+The final target is exactly **64 gameplay PNGs**:
 
-| Change | PNG delta | Running total |
-| --- | ---: | ---: |
-| Current production pack | — | 215 |
-| Retire all raster effect frames | -101 | 114 |
-| Migrate all HUD, minimap, upgrade, action, and combat-cue symbols | -43 | 71 |
-| Migrate all projectile forms to the shared projectile mesh catalog | -9 | 62 |
-| Migrate all defense and persistent-status forms to one shared state catalog | -7 | 55 |
-| Migrate all pickups to the shared reward recipe catalog | -6 | 49 |
-| Migrate seven facility/bulkhead images to shared world recipes | -7 | 42 |
-| Retire two unused world images | -2 | 40 |
-| Consolidate ten boss-module files into three shared node states | -7 net | 33 |
-| Add three required wear-tile state images | +3 | **36** |
-
-The final 36 are:
-
-| Authored raster family | Final PNGs | Current-byte action |
+| Final family | PNGs | Required action |
 | --- | ---: | --- |
-| Player craft | 1 | `REUSE EXISTING` |
-| Ordinary enemy bodies | 19 | `KEEP DISTINCT`; replace current over-detailed bytes in place |
-| Stage-boss bodies | 5 | `KEEP DISTINCT`; replace current over-detailed bytes in place |
-| Shared boss nodes | 3 | `SHARE MASTER`; add `active`, `damaged`, and `resolved` |
-| Secondary-weapon bodies | 4 | `KEEP DISTINCT`; replace current over-detailed bytes in place |
-| Solid cover block | 1 | `REUSE EXISTING` unless final gameplay-scale evidence exposes a readability failure |
-| Wear Collapse Tile states | 3 | Add `intact`, `cracked`, and `collapsed` |
-| **Total** | **36** | 2 reused current PNGs, 28 in-place replacements, 6 new paths |
+| Player craft | 1 | Reuse current bytes. |
+| Ordinary enemy bodies | 19 | Replace in place. |
+| Stage-boss bodies | 5 | Replace in place. |
+| Shared boss-node states | 3 | Replace ten boss-specific module variants with `active`, `damaged`, and `resolved`. |
+| Secondary-weapon bodies | 4 | Replace in place. |
+| Projectiles | 9 | Replace in place with complete core-and-tail PNGs. |
+| Defense and persistent status | 7 | Replace in place. |
+| Pickups and reward crate | 4 | Consolidate three XP sizes to one master; keep crate, repair, and recall distinct. |
+| World and functional facilities | 11 | Keep functional states as PNGs, consolidate repair pad/core, and add required states. |
+| EMP | 1 | Add one transparent 512 x 512 authored pulse image. |
+| HUD/minimap/combat cues | 0 | Use shared code-native symbols or verified absence. |
+| Other small effects | 0 | Suppress now; document future event-level polish only. |
+| **Total** | **64** | |
 
-The result is **34 new authored raster outputs**, not 200-plus image fixes.
-Code-native migrations remain real implementation work, but they are shared
-component work rather than a separate art-generation task for every symbol or
-frame.
+Exact reconciliation:
 
-### Complete static inventory classification
+```text
+215 current PNGs
+- 43 HUD/minimap/combat-cue PNGs
+- 101 current effect-frame PNGs, including the six old EMP frames
+- 10 boss-specific module PNGs
+- 3 old XP-size PNGs
+- 1 repair-pad-core PNG
+- 2 unused world PNGs
++ 3 shared boss-node state PNGs
++ 1 shared XP-master PNG
++ 1 bulkhead-open PNG
++ 3 Wear Collapse Tile PNGs
++ 1 EMP PNG
+= 64 final PNGs
+```
 
-The following tables account for all 114 current static PNGs.
+Current-file disposition is also exact:
+
+- **Reuse unchanged: 2** — player craft and solid cover.
+- **Replace in place: 53** — 19 enemies, five bosses, four secondaries, nine
+  projectiles, seven defense/status images, three non-XP pickups, two current
+  bulkhead states, repair pad, and three functional facilities.
+- **Retire after approved switches: 160** — 43 HUD/cues, 101 effect frames, ten
+  boss modules, three XP variants, repair-pad core, and two unused world files.
+- **Add: 9** — three boss nodes, XP master, bulkhead open, three wear tiles, and
+  one EMP image.
+
+The result requires **62 newly authored or adapted PNG outputs**: 53 in-place
+replacements plus nine additions. It does not require 200 independent redesigns.
+
+### Complete static-family classification
 
 #### Actors: 35 current PNGs
 
-| Current identities | Count | Disposition | Target |
+| Current family | Count | Disposition | Target |
 | --- | ---: | --- | --- |
-| `attachment/player_craft_body` | 1 | `REUSE EXISTING` | Keep the approved one-body craft unchanged. |
-| `scrap_drone`, `needle_drone`, `spark_minelet`, `chaser`, `rammer`, `bulkhead_guard`, `shooter`, `turret`, `mine`, `artillery_spotter`, `controller`, `generator`, `shield_escort`, `repair_tender`, `drone_carrier`, `splitter_barge`, `interceptor_tower`, `beam_sentinel`, `boss_pylon` | 19 | `KEEP DISTINCT` | Keep all role identities and paths; replace their greeble-heavy bytes with 3–5-plane silhouettes. |
-| `colossus`, `leviathan`, `titan`, `behemoth`, `crown` | 5 | `KEEP DISTINCT` | Keep all five boss identities and paths; replace with 4–6 large-plane bodies. |
-| `forge_plate_active`, `forge_plate_disabled`, `segment_lock_active`, `segment_lock_disabled`, `relay_positive`, `relay_negative`, `route_switch`, `armor_car`, `crown_lattice`, `crown_pylon` | 10 | `SHARE MASTER` then `RETIRE NOW` | Replace all ten presentation variants with `boss_node_active`, `boss_node_damaged`, and `boss_node_resolved`; preserve module kind/index in gameplay code only. |
+| Player craft | 1 | `REUSE EXISTING` | Keep the approved one-body craft. |
+| Ordinary enemies | 19 | `REPLACE PNG` | Preserve every role/path; simplify to one dominant silhouette, at most two functional modules, and 3-5 large planes. |
+| Stage bosses | 5 | `REPLACE PNG` | Preserve every boss identity/path; use 4-6 large planes without nested outlines or greeble. |
+| Boss-specific modules | 10 | `RETIRE AFTER SWITCH` | Replace with three shared boss-node state PNGs while gameplay retains module kind/index. |
 
 #### Weapons: 13 current PNGs
 
-| Current identities | Count | Disposition | Target |
+| Current family | Count | Disposition | Target |
 | --- | ---: | --- | --- |
-| `secondary_seeker`, `secondary_escort_drone`, `secondary_orbit_blade`, `secondary_wake_mine` | 4 | `KEEP DISTINCT` | Four authored bodies remain because homing, escort, orbit, and stationary-mine motion roles need different silhouettes. Replace current detailed bytes in place. |
-| `projectile_player_primary`, `projectile_player_opening_breach`, `projectile_player_seeker`, `projectile_hostile_kinetic`, `projectile_hostile_thermal`, `projectile_hostile_toxin`, `projectile_hostile_cryo`, `projectile_hostile_arc`, `projectile_hostile_hybrid` | 9 | `CODE-NATIVE` then `RETIRE NOW` | Reuse the nine existing collision-normalized projectile recipes and render them through shared batched meshes. Preserve all nine semantic IDs. |
+| Seeker, escort drone, orbit blade, wake mine | 4 | `REPLACE PNG` | Keep four motion-role silhouettes as complete bodies. |
+| Player and hostile projectile identities | 9 | `REPLACE PNG` | One finished PNG per semantic projectile; opaque damaging core aligns with collision and the same canvas may contain a restrained non-damaging tail. |
 
 #### Defense and status: 7 current PNGs
 
-| Current identities | Count | Disposition | Target |
+| Current family | Count | Disposition | Target |
 | --- | ---: | --- | --- |
-| `player_barrier_plate`, `player_ion_emitter`, `enemy_generator_shield_source`, `enemy_shield_escort_plate` | 4 | `CODE-NATIVE` then `RETIRE NOW` | One defense catalog with four topology recipes: segmented plate, emitter, source nodes, and forward slab. |
-| `status_burn`, `status_poison`, `status_chill` | 3 | `CODE-NATIVE` then `RETIRE NOW` | One persistent-status renderer with three shape-coded arc recipes; never distinguish them by hue alone. |
+| Barrier plate, ion emitter, generator shield source, escort shield plate | 4 | `REPLACE PNG` | Keep all four world-state devices as authored PNGs. |
+| Burn, poison, chill | 3 | `REPLACE PNG` | Keep three persistent-status silhouettes; shape, not hue alone, distinguishes them. |
 
 #### Pickups: 6 current PNGs
 
-| Current identities | Count | Disposition | Target |
+| Current family | Count | Disposition | Target |
 | --- | ---: | --- | --- |
-| `pickup_experience_small`, `pickup_experience_medium`, `pickup_experience_large` | 3 | `SHARE MASTER` + `CODE-NATIVE` | One XP-shard recipe; gameplay value selects scale/emphasis without owning three files. |
-| `pickup_reward_crate`, `pickup_repair`, `pickup_experience_recall` | 3 | `CODE-NATIVE` | Reuse the existing reward recipe owner; retain three semantic identities. |
+| XP small/medium/large | 3 | `SHARE MASTER PNG` then retire old files | Add one authored XP master; gameplay value selects scale/emphasis. |
+| Reward crate, repair pickup, experience recall | 3 | `REPLACE PNG` | Keep each distinct because collection meaning and silhouette differ. |
 
 #### World and facilities: 10 current PNGs
 
 | Current identity | Disposition | Target |
 | --- | --- | --- |
-| `world_bulkhead_intact`, `world_bulkhead_damaged` | `CODE-NATIVE` | One breakable-bulkhead recipe parameterized by gameplay state. |
-| `facility_repair_pad`, `facility_repair_pad_core` | `SHARE MASTER` + `CODE-NATIVE` | One repair-field recipe; the inset/core is part of the shared recipe, not a second authored file. |
-| `facility_overdrive_lane`, `facility_arc_surge_strip`, `facility_transit_gate` | `CODE-NATIVE` | Reuse the existing three facility recipes and live gameplay footprint inputs. |
-| `terrain_solid_cover_block` | `REUSE EXISTING` | Keep the current independent cover silhouette. |
-| `terrain_breakable_cover_slab`, `terrain_hazard_power_relay` | `RETIRE NOW` | No direct runtime or guidebook consumer exists. Preserve no dormant production art; reintroduce only with a future product requirement. |
+| Bulkhead intact/damaged | `REPLACE PNG` | Keep both paths and add authored `open`. |
+| Repair pad + repair-pad core | `SHARE MASTER PNG` | One complete repair-pad PNG owns its inset/core. |
+| Overdrive lane, Arc Surge strip, transit gate | `REPLACE PNG` | Complete authored facility images; live footprint/radius remains code-owned and visibly aligned. |
+| Solid cover | `REUSE EXISTING` | Keep current independent-cover silhouette. |
+| Breakable cover slab, hazard power relay | `RETIRE AFTER SWITCH` | No live consumer; do not preserve dormant production art. |
 
-Add three authored world-state images after the migration:
-
-- `world/wear_tile_intact.png`
-- `world/wear_tile_cracked.png`
-- `world/wear_tile_collapsed.png`
+Add `wear_tile_intact`, `wear_tile_cracked`, and `wear_tile_collapsed` as three
+authored 240 x 160 state PNGs.
 
 #### HUD, minimap, upgrade, action, and combat cues: 43 current PNGs
 
-All 43 leave the raster pack. None must remain a PNG.
+All 43 leave the raster pack after their exact consumers are migrated or proven
+absent. They become shared code-native glyphs/markers/cues or deliberate absence.
+This boundary does not include projectiles, pickups, world facilities, status
+devices, or EMP.
 
-| Disposition | Exact identities | Count |
-| --- | --- | ---: |
-| Existing code-native recipe | `action_seeker`, `action_dash`, `action_emp`, `upgrade_primary`, `upgrade_secondary`, `upgrade_defense`, `upgrade_dash`, `upgrade_skill`, `upgrade_element`, `upgrade_mobility` | 10 |
-| Add one shared semantic recipe owner | `minimap_marker_player`, `minimap_marker_hostile`, `minimap_marker_elite`, `minimap_marker_boss`, `minimap_marker_objective_active`, `minimap_marker_objective_locked`, `upgrade_support`, `cue_target_bracket_corner`, `cue_priority_target`, `cue_ranged_startup`, `cue_collective_gather`, `cue_collective_lock`, `cue_collective_execute`, `cue_collective_break`, `cue_elite_armored`, `cue_elite_overclocked`, `cue_elite_heavy`, `cue_boss_core_sealed`, `cue_boss_core_open`, `cue_boss_core_stable`, `cue_objective_active`, `cue_objective_resolved`, `cue_commit_locked`, `cue_commit_autonomous` | 24 |
-| Direct orphan; retire without replacement | `action_primary`, `action_barrier`, `action_ion_field`, `upgrade_passive`, `cue_guide_ship`, `cue_guide_mobile`, `cue_guide_stationary`, `cue_guide_bosses`, `cue_guide_objects` | 9 |
-| Must remain raster | none | 0 |
+### Effect classification: one authored EMP, 21 suppressed small effects
 
-The action rail still contains only Seeker, Dash, and EMP. Primary fire does not
-gain a slot. Upgrade-family and Seeker terminology remain governed by the
-product specification and card data, not by icon filenames.
+The 22 current event identities account for all 101 frame PNGs. All old frame
+files retire. EMP receives one new authored PNG; the other 21 events use existing
+direct gameplay feedback or are visually suppressed for now.
 
-### Complete transient-effect inventory and future-polish register
-
-The 22 identities below account for all 101 current raster frames. Their event
-IDs remain valid. Their frame files do not.
-
-| Event identity | Frames | Immediate code-native readability substitute | Future polish record |
+| Event identity | Current frames | Current-pass result | Future-polish note |
 | --- | ---: | --- | --- |
-| `muzzle_player_primary` | 4 | Directional muzzle tick anchored to the live aim/muzzle transform | Optional 40–80 ms hard flash; never a detached radial burst. |
-| `dash_start` | 3 | Existing hull afterimage and rear engine flare | Refine elongated geometry/timing only; no danger circle. |
-| `emp_release` | 6 | Radius-scaled live EMP ring/disc from gameplay range | Refine edge breakup and release timing without adding decorative pulses. |
-| `wake_mine_detonation` | 5 | Live mine boundary plus one impact ring | Add one concise directional breakup only if pressure tests need it. |
-| `boss_module_disabled` | 4 | Shared node changes to damaged/resolved topology | Optional short rail-break motion tied to the state transition. |
-| `hostile_summon_arrival` | 6 | Existing arrival footprint/telegraph | Add a single inward collapse keyed to actual activation time. |
-| `bulkhead_destroy` | 5 | Intact/damaged/open state change and reward reveal | Optional brief structural breakup, never five authored frame files. |
-| `reflect_deflection` | 5 | Directional contact line at the reflected trajectory | Optional one-frame hard spark aligned to the new vector. |
-| `barrier_contact` | 5 | Barrier topology plus localized contact arc | Refine contact falloff while preserving the exact hit location. |
-| `hull_hit` | 4 | Hull hit tint/flash | Optional directional notch; do not obscure aim or threats. |
-| `seeker_impact` | 4 | Projectile removal and target hit flash | Add a small support-colored impact only if hit ownership is unclear. |
-| `escort_drone_impact` | 4 | Projectile removal and target hit flash | Same shared impact grammar, parameterized by source role. |
-| `orbit_blade_impact` | 4 | Blade contact and target hit flash | Same shared impact grammar, shaped along blade travel. |
-| `enemy_destroy_light` | 5 | Body removal and reward/state transition | Optional minimal mass-collapse recipe for light enemies. |
-| `enemy_destroy_heavy` | 6 | Body removal and reward/state transition | Optional heavier version of the same collapse recipe. |
-| `crate_destroy` | 5 | Crate state removal and reward spawn | Optional latch/open snap, not a standalone frame animation. |
-| `pickup_intake` | 4 | Pickup removal and immediate XP/reward UI change | Optional short travel tick only when collection ownership is unclear. |
-| `support_heal` | 4 | Live support footprint and hull-meter increase | Optional inward support tick at the affected craft. |
-| `lifesteal_pulse` | 4 | Existing directed transfer beam and hull gain | Refine transfer timing only; no ambient orbit. |
-| `transit_shift` | 5 | Gate footprint, dwell state, and position transition | Optional one-way stretch aligned to travel direction. |
-| `boss_reduced_hit` | 4 | Boss tint/guard feedback and health/guard state | Optional restrained armored deflection shared with guard feedback. |
-| `impact_damage` | 5 | Target hit tint and damage feedback | One shared minimal impact recipe if later readability evidence requires it. |
-| **Total** | **101** | Gameplay truth remains in existing owners | No raster-frame backlog is recreated by default. |
+| `emp_release` | 6 | Add one 512 x 512 authored PNG; scale/fade to live radius. | Keep one strong ring/pulse; no sprite sequence. |
+| `muzzle_player_primary` | 4 | Suppress cosmetic frames; projectile spawn preserves direction. | Optional short hard flash only if aim ownership is unclear. |
+| `dash_start` | 3 | Use existing hull afterimage/rear flare only. | No radial ring. |
+| `wake_mine_detonation` | 5 | Use mine boundary/removal and damage feedback. | Revisit only after pressure testing. |
+| `boss_module_disabled` | 4 | Use boss-node state swap. | Optional rail-break motion later. |
+| `hostile_summon_arrival` | 6 | Suppress frame art; keep authored encounter timing. | Add a dedicated telegraph only if fairness evidence fails. |
+| `bulkhead_destroy` | 5 | Use intact/damaged/open swap and reward reveal. | Optional brief structural breakup later. |
+| `reflect_deflection` | 5 | Use trajectory change and direct hit feedback. | Optional one-frame directional spark later. |
+| `barrier_contact` | 5 | Use barrier PNG and localized direct response. | No five-frame contact pack. |
+| `hull_hit` | 4 | Use hull hit tint/flash. | Optional directional notch later. |
+| `seeker_impact` | 4 | Use projectile removal and target hit feedback. | Shared minimal impact only if needed. |
+| `escort_drone_impact` | 4 | Same direct feedback rule. | Shared minimal impact only if needed. |
+| `orbit_blade_impact` | 4 | Same direct feedback rule. | Align later polish to blade travel. |
+| `enemy_destroy_light` | 5 | Use body removal/reward transition. | Optional shared mass collapse later. |
+| `enemy_destroy_heavy` | 6 | Use body removal/reward transition. | Optional heavier shared collapse later. |
+| `crate_destroy` | 5 | Use crate removal and reward spawn. | Optional latch/open snap later. |
+| `pickup_intake` | 4 | Use pickup removal and immediate UI/value change. | Optional travel tick later. |
+| `support_heal` | 4 | Use live support footprint and hull-meter change. | Optional inward support tick later. |
+| `lifesteal_pulse` | 4 | Use existing directed transfer and hull gain. | No ambient orbit. |
+| `transit_shift` | 5 | Use gate footprint, dwell, and position transition. | Optional one-way stretch later. |
+| `boss_reduced_hit` | 4 | Use boss guard/tint and state UI. | Optional shared armored deflection later. |
+| `impact_damage` | 5 | Use target hit tint and damage feedback. | Shared minimal impact only if readability fails. |
+| **Total** | **101** | One new EMP PNG; no other effect images. | No dormant frame backlog. |
 
-Every future effect must still satisfy four rules:
+### External-source history and intake result
 
-1. The gameplay event, timer, collision, damage, or state remains authoritative.
-2. The effect explains movement, state change, impact, or objective only.
-3. The implementation reuses shared code-native geometry and does not restore a
-   one-file-per-frame production pack.
-4. Future polish is scheduled only after gameplay-scale evidence identifies a
-   readability deficiency; cosmetic completeness alone is not sufficient.
+No external gameplay pack had been evaluated or imported before this audit. Four
+official CC0 Kenney archives were inspected locally; two contributed six curated
+source PNGs, while Particle Pack and Sci-Fi RTS were rejected in full.
 
-### Required consumer migrations before any deletion
+| Pack | Archive SHA-256 | Result |
+| --- | --- | --- |
+| Kenney Space Shooter Remastered | `0edbe0ab5cda6c44901d8c42f150268fdfa0c8d48492098669f37e9c296929b5` | Three 2D silhouette sources retained for projectile, XP, and crate adaptation. |
+| Kenney Space Kit | `d5d7cdf2635ed5a43a9187deaf409b6f47484e402321128341d3c3698e9ef4d9` | Three side-render sources retained for bulkhead and facility adaptation. |
+| Kenney Particle Pack | `b631d4b07f7002549fdcf155f01141ad482f79f3440e4e301eed49ce5f1d8958` | Rejected: soft glow, blur, swirl, and generic particle language conflict with the hard-edged EMP contract. |
+| Kenney Sci-Fi RTS | `093cb6adbd5aa3ae49da1c91ca3045251656df254c11903b3bfa8594a7a160ea` | Rejected: isometric/pixel treatment and theme-specific vegetation/terrain do not fit the top-down general-SF target. |
 
-- `VehicleCombatRenderer` must stop creating texture-backed projectile,
-  experience, status, facility, cue, and animation-frame draws for the migrated
-  families.
-- `VehicleVisualEventCatalog` must classify each event as code-native retained,
-  deliberately suppressed, or future-polish deferred instead of resolving an
-  animation identity unconditionally.
-- `VehicleUpgradeGlyphRenderer._draw()` and the action-rail slot must draw their
-  existing recipes rather than fetching semantic PNG textures.
-- Gameplay HUD, minimap, guidebook preview, and status orbit must use the same
-  shared symbol catalogs.
-- Reward, facility, projectile, defense, status, and cue descriptors must remain
-  available without being falsely indexed as raster assets.
-- The manifest, semantic provider, workbench, and validators must distinguish
-  authored-raster IDs from code-native semantic IDs.
-- Deletion happens only after a rendered actual-scale comparison and an exact
-  approval report listing every PNG and `.png.import` sidecar.
+The six retained files are source material, not runtime-ready assets. Every one
+must be redrawn or re-rendered into the exact Cardborne canvas, pivot, camera,
+palette, outline, and detail contract. The contact sheet and exact file hashes are
+recorded in [`external-candidates/README.md`](./external-candidates/README.md).
+
+Quaternius Ultimate Space Kit, Quaternius Sci-Fi Essentials Kit, and KayKit Space
+Base Bits remain optional future 3D silhouette sources. They were not imported
+because the current pass can proceed with the six curated PNG references and
+project-authored shapes; importing entire 3D packs would add noise rather than a
+direct production deliverable.
+
+The EMP review candidate is project-generated, not derived from Particle Pack.
+It remains review-only until it is compared at actual gameplay scale and copied
+to the exact TO-BE target with a recorded hash.
+
+### Required migrations before any retirement
+
+- Workbench units must partition all 215 current PNGs exactly once and forecast
+  the 64-PNG target without fake paths for code-native HUD/cue identities.
+- Runtime, guidebook, preview, report, manifest, provider, and validators must
+  resolve every retained world-object identity to its authored PNG.
+- XP values must share one authored master without merging reward crate, repair,
+  or recall semantics.
+- Repair-pad core must be absorbed into the one repair-pad PNG without changing
+  live repair radius or behavior.
+- Old EMP frames must stop resolving before the new one-image EMP path becomes
+  authoritative. The gameplay timer/radius remains the source of truth.
+- Every small effect event must be explicitly mapped to existing direct feedback,
+  `suppressed`, or a documented future-polish note.
+- Deletion occurs only after actual-scale evidence and an exact approval report
+  listing every PNG and `.png.import` sidecar.
 
 ## Recommendations
 
-- Rebuild Phase 6 around shared code-native owner migration before producing any
-  new raster art.
-- Treat the 34 authored outputs as five reviewable families: ordinary enemies,
-  secondary bodies, boss bodies, shared boss nodes, and wear tiles.
-- Keep current player-craft and solid-cover bytes unless final rendered evidence
-  reveals a concrete contract failure.
-- Do not generate replacements for retired effects, HUD symbols, projectiles,
-  states, pickups, or facilities as individual PNGs.
-- Generate exact deletion reports from the revised workbench; do not turn this
-  evidence document into a second approval ledger.
-- Run cheap deterministic build/schema/syntax checks during migration, but run
-  the complete native/Web visual and release suite once after all switches and
-  asset changes are complete.
+- Rebuild Phase 6 around the authored world-object boundary, not around what can
+  technically be drawn with code.
+- Use the six curated CC0 PNGs only as silhouette seeds. Never copy their palette,
+  shading, isometric camera, or pack branding into production.
+- Produce and review assets by coherent families: projectiles, defense/status,
+  pickups/rewards, facilities/world states, EMP, secondaries/wear tiles, ordinary
+  enemies, then bosses/shared nodes.
+- Keep HUD/minimap/combat symbols as the sole raster-to-code-native migration.
+- Run cheap deterministic/schema/import checks after each family, but run the one
+  full native/Web visual, workflow, performance, and release validation only
+  after every approved visual switch is complete.
 
 ## Limitations
 
-- This audit does not implement any renderer, catalog, manifest, validator, or
-  production-file change.
-- Existing code-native recipes are reusable implementation inputs, not approved
-  runtime appearance. They still require actual-scale rendered evidence.
-- The four defense topologies and three persistent-status shapes need a complete
-  shared mesh recipe implementation; their current catalog still names raster
-  assets.
-- Current counts must be re-audited if production files, the manifest, or live
-  consumers change after this document's repository baseline.
-- Final removal is destructive and requires new exact-path approval. Earlier
-  Phase approvals do not authorize the rationalized retirement sets.
+- This audit does not switch runtime assets, edit the gameplay manifest, or
+  authorize deletion.
+- External source suitability was judged as adaptation material, not as proof of
+  final in-game appearance.
+- The current EMP candidate is a visual proposal and has not passed gameplay-scale
+  review or exact switch approval.
+- Counts must be re-audited if production files, the manifest, or live consumers
+  change after the recorded baseline.
+- Earlier Phase approvals do not authorize the corrected 160-file retirement set.

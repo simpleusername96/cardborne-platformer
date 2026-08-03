@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-04
 last_reviewed: 2026-08-04
-scope: Rationalized Phase 6-11 visual ownership migration, authored replacement production, exact retirement, reconciliation, and final release validation
+scope: Corrected Phase 6-11 program for external-source-assisted authored PNG production, HUD/cue migration, exact retirement, reconciliation, and one final release validation
 supersedes: ./2026-08-02-visual-replacement-workbench-and-runtime-switch.md
 related:
   - ../../AGENTS.md
@@ -14,725 +14,704 @@ related:
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/visual-replacement-workbench/README.md
   - ../../docs/design/visual-replacement-workbench/asset-rationalization.md
+  - ../../docs/design/visual-replacement-workbench/external-candidates/README.md
   - ../../art/visuals/production/README.md
   - ../semantic-v2-runtime-acceptance-evidence.md
 ---
 
-# Finish the Rationalized Visual Replacement Program - Execution Contract
-
-## Why / Context
-
-Phases 0 through 5 established one production root, one-body player craft,
-code-native UI chrome, the current UI layouts, and an exact-hash replacement
-workbench. The former Phase 6-11 contract then treated nearly every remaining
-symbol and animation frame as a separate replacement image. That would have
-created more than 200 apparent art tasks and preserved the fragmentation the UI
-work had just removed.
-
-The 2026-08-04 preimplementation audit changed the remaining program:
-
-- production contains 215 gameplay PNGs: 114 static and 101 effect frames;
-- every file is accounted for, but there are no deployable TO-BE gameplay files;
-- all 101 raster effect frames can leave the pack after event routing changes;
-- all 43 HUD/action/upgrade/minimap/combat-cue PNGs can become shared code-native
-  symbols or be retired as unused;
-- projectiles, defense/status, pickups, and functional facilities are better
-  owned by shared code-native recipes than one raster per identity;
-- ordinary enemies, bosses, secondary bodies, shared boss nodes, solid cover,
-  and wear-tile states remain authored raster because silhouette is their main
-  readability channel.
-
-The complete evidence and file-family accounting is in
-[`asset-rationalization.md`](../../docs/design/visual-replacement-workbench/asset-rationalization.md).
-This plan is now the sole executable Phase 6-11 contract.
+# Finish the 64-PNG Visual Replacement Program
 
 ## Purpose
 
-Complete the remaining visual work with the smallest coherent ownership model:
+Complete the remaining Cardborne visual replacement work with one unambiguous
+media rule: every independently readable game-world object is a finished PNG;
+only HUD/minimap/combat symbols and live dynamic boundaries are code-native.
 
-- exactly **36 gameplay PNGs** at final reconciliation;
-- 34 new authored raster outputs: 28 in-place authored-body replacements and six new
-  shared/state files;
-- zero raster HUD/action/upgrade/minimap/combat-cue files;
-- zero raster effect frames and zero manifest animation identities;
-- shared cached geometry for projectiles, defense/status, rewards/facilities,
-  symbolic UI, combat cues, and readability-critical effects;
-- unchanged gameplay rules, collision, timings, targeting, values, encounters,
-  controls, localization, and save behavior;
-- one complete native/Web release validation only after every visual switch and
-  production-file change is finished.
+The completed program must produce:
 
-## Scope and Non-scope
+- exactly **64 production gameplay PNGs**;
+- finished PNGs for actors, projectiles, defense/status objects, pickups, the
+  reward crate, functional facilities, bulkhead states, wear tiles, and EMP;
+- one shared XP-master PNG instead of three size files;
+- one shared repair-pad PNG instead of a body/core pair;
+- three shared boss-node state PNGs instead of ten boss-specific module files;
+- one transparent 512 x 512 EMP PNG instead of six animation frames;
+- zero HUD/minimap/combat-cue PNGs;
+- zero other raster effect frames;
+- complete license and provenance records for every external source used;
+- one full native/Web release validation after every visual switch is complete.
+
+## Why / Context
+
+Phases 1-5 established the flat-color general-SF style, simplified the UI, and
+created an exact-hash workbench. The first extracted Phase 6-11 plan then moved
+too many meaningful world objects to code-native geometry. That reduced the
+forecast to 36 PNGs, but it violated the user's product rule and would have made
+bullets, pickups, crates, status devices, and facilities feel like fragmented
+UI primitives instead of complete game assets.
+
+The corrected audit establishes these facts:
+
+- current production contains 215 gameplay PNGs: 114 static images and 101
+  effect-frame images;
+- no third-party gameplay/UI pack was evaluated or imported before this audit;
+- six CC0 Kenney PNGs are now retained as review-only silhouette sources;
+- Particle Pack and Sci-Fi RTS were inspected and rejected for style mismatch;
+- the project-generated EMP review candidate is a single clean 512 x 512 PNG;
+- the correct final target is 64 PNGs, not 36;
+- 62 authored outputs remain: 53 in-place replacements and nine additions;
+- 160 current PNGs retire only after exact consumer migration and approval.
+
+This document is the sole executable Phase 6-11 contract. The former 36-PNG
+boundary is withdrawn wherever it conflicts with this plan, the rationalization
+evidence, or `VISUAL_SYSTEM.md`.
+
+## Scope and Non-Scope
 
 ### In scope
 
-- Rebuild the workbench schema and units around authored-raster, code-native,
-  and absent result media.
-- Migrate 175 current PNGs to shared code-native ownership or verified absence:
-  101 effects, 43 HUD/cues, nine projectiles, seven defense/status files, six
-  pickups, seven active facility/bulkhead files, and two unused world files.
-- Replace 19 ordinary enemy bodies, four secondary bodies, and five boss bodies
-  in place.
-- Consolidate ten boss-module PNGs into three shared node-state PNGs.
-- Add three Wear Collapse Tile state PNGs.
-- Preserve current player-craft and solid-cover PNG bytes unless final rendered
-  evidence proves a specific contract failure.
-- Update the manifest, semantic provider, catalogs, renderers, guidebook/HUD
-  consumers, validators, workbench, and durable documentation together.
-- Produce exact approval reports, apply only approved mappings and retirements,
-  reconcile the final pack, and run final release validation.
+- Rebuild the workbench units around the corrected authored-PNG boundary.
+- Preserve exact current AS-IS paths and add exact final TO-BE target paths.
+- Use curated external source files only as silhouette and proportion references.
+- Produce complete PNG families for projectiles, defense/status, pickups/rewards,
+  facilities/world states, secondaries, enemies, bosses, boss nodes, wear tiles,
+  and EMP.
+- Reuse the current player craft and solid-cover bytes unless actual-scale
+  evidence exposes a concrete contract failure.
+- Migrate 43 HUD/minimap/combat-cue images to shared code-native symbols or
+  verified absence.
+- Retire 101 current effect frames, replace the six EMP frames with one PNG, and
+  suppress the other 21 small effect families for now.
+- Update runtime consumers, guidebook/report previews, manifests, providers,
+  validators, and evidence for every approved unit.
+- Retire exact legacy paths and `.png.import` sidecars only after explicit
+  exact-report approval.
+- Run the complete release validation once at the end.
 
 ### Out of scope
 
-- Gameplay balance, weapon behavior, enemy AI, boss rules, encounter schedules,
-  difficulty selection, stage content, save schema, localization copy, audio, or
-  input changes.
-- Another UI layout redesign. Phase 6 changes symbol ownership and drawing only.
-- A new art direction, named material/cultural theme, or photoreal rendering.
-- Recreating removed effects as spritesheets, atlases, or one file per frame.
-- Keeping unused images for hypothetical future features.
-- Adding or upgrading production dependencies.
-- Cropping, tracing, or promoting reference sheets and screen mockups.
+- Gameplay rules, collision truth, damage, range, targeting, movement, encounter
+  timing, drop values, facility behavior, or save compatibility changes.
+- Another UI layout redesign. This plan changes only remaining visual ownership
+  and asset presentation.
+- Direct runtime use of external pack files, pack palettes, pack branding,
+  isometric camera angles, or unadapted 3D models.
+- Importing complete external packs into production.
+- Restoring a one-file-per-frame effect pack or adding new small cosmetic effects.
+- Merging semantic roles merely because two assets can share a drawing recipe.
+- Re-running the complete release suite after each family.
 
 ## Assumptions
 
-- Godot 4.7 stable and the current GDScript architecture remain authoritative.
-- `docs/product/vehicle_game_spec.md` owns gameplay behavior;
-  `docs/design/VISUAL_SYSTEM.md` owns visual behavior.
-- `replacement-workbench.json` remains the only hand-authored unit, approval,
-  and application-state source. `inventory.json` and `index.html` remain
-  deterministic generated outputs.
-- The current 215-file inventory and consumer audit remain valid until Task 6.0
-  records the execution baseline. If files or consumers changed, Task 6.0
-  re-audits and amends this plan before any switch.
-- Prior exact approvals applied to prior sets only. They do not authorize any
-  newly rationalized code-native or retirement unit.
-- Production deletion always requires the exact displayed PNG and `.png.import`
-  sidecar paths. Broad directory deletion is never inferred.
-- Cheap deterministic schema/build/syntax checks may run during implementation.
-  The full validator, native/Web visual, interaction, responsive, and
-  performance suite runs once in Phase 11.
+- Godot 4.7 stable and the existing GDScript architecture remain fixed.
+- Korean and English user-facing content remain complete.
+- Current gameplay geometry and state owners remain authoritative.
+- The current player craft and solid cover remain acceptable unless rendered
+  evidence proves otherwise.
+- Every world-object PNG keeps a stable canvas and pivot. Runtime may rotate,
+  scale, tint, fade, or select a state, but may not assemble a supposedly complete
+  object from user-visible decorative parts.
+- External source licenses and hashes are evidence, not approval to promote a
+  visual.
+- Cheap structural checks during Phases 6-10 prevent mechanical corruption; they
+  are not substitutes for the one complete Phase 11 validation.
+- No existing deletion approval covers the corrected 160-file retirement set.
 
 ## Proposed Design
 
 ### Final ownership model
 
-| Visual family | Semantic identities | Final medium | Final PNGs |
-| --- | ---: | --- | ---: |
-| Player craft | 1 | Authored raster, current bytes | 1 |
-| Ordinary enemies | 19 | Authored raster, replaced in place | 19 |
-| Stage bosses | 5 | Authored raster, replaced in place | 5 |
-| Shared boss node | 3 states | Authored raster shared by all bosses | 3 |
-| Secondary weapons | 4 | Authored raster, replaced in place | 4 |
-| Solid cover | 1 | Authored raster, current bytes | 1 |
-| Wear Collapse Tile | 3 states | Authored raster | 3 |
-| Projectiles | 9 | Shared cached code-native meshes | 0 |
-| Defense/status | 7 | Shared cached code-native meshes | 0 |
-| Pickups/rewards | 6 | Shared cached code-native recipes | 0 |
-| Facilities/bulkhead | 7 current files | Shared cached code-native recipes and state parameters | 0 |
-| HUD/action/upgrade/minimap/cues | 43 | Shared code-native glyph/marker/cue recipes or absence | 0 |
-| Transient effects | 22 event identities / 101 frames | Shared code-native event modes or deliberate suppression | 0 |
-| **Total** | — | — | **36** |
+| Family | Final PNGs | Owner and rule |
+| --- | ---: | --- |
+| Player craft | 1 | Authored raster; reuse current bytes. |
+| Ordinary enemies | 19 | Authored raster; one complete body per gameplay role. |
+| Stage bosses | 5 | Authored raster; one complete body per boss. |
+| Shared boss nodes | 3 | Authored raster; shared `active`, `damaged`, `resolved`. |
+| Secondary weapons | 4 | Authored raster; seeker, escort drone, orbit blade, wake mine. |
+| Projectiles | 9 | Authored raster; complete core-and-tail image per semantic projectile. |
+| Defense/status | 7 | Authored raster; four defense devices and three persistent statuses. |
+| Pickups/rewards | 4 | Authored raster; XP master, crate, repair, recall. |
+| World/facilities | 11 | Authored raster; bulkheads, repair/overdrive/arc/transit, cover, wear states. |
+| EMP | 1 | Authored raster; one 512 x 512 transparent pulse. |
+| HUD/minimap/combat cues | 0 | Shared code-native symbols or verified absence. |
+| Other small effects | 0 | Suppressed for this pass; event intent documented only. |
+| **Total** | **64** | |
 
-Semantic identity does not imply a file. Gameplay and UI may still request
-`projectile/hostile_arc`, `status/chill`, `pickup/repair`, or
-`cue/objective_active`, but the responsible catalog returns a descriptor/recipe
-rather than a raster path.
+### Exact reconciliation
+
+```text
+215 current
+-43 HUD/minimap/combat-cue PNGs
+-101 current effect-frame PNGs
+-10 boss-specific module PNGs
+-3 XP-size PNGs
+-1 repair-pad-core PNG
+-2 unused world PNGs
++3 shared boss-node PNGs
++1 XP-master PNG
++1 bulkhead-open PNG
++3 wear-tile PNGs
++1 EMP PNG
+=64 final
+```
+
+### Authored PNG contract
+
+- Each image has one dominant silhouette that communicates role at 1x gameplay
+  scale and in grayscale.
+- Ordinary assets use 3-5 large filled planes; bosses use 4-6.
+- A functional object may have at most two visually necessary modules.
+- Dark perimeter/separation, matte main mass, one light plane, one shadow plane,
+  and one semantic accent are sufficient. Do not add rivets, random seams,
+  repeated lights, nested outlines, ornamental dots, or greeble.
+- Projectiles are complete PNGs. Their opaque damaging core matches collision;
+  a restrained tail in the same canvas may communicate direction without damage.
+- Facility art shows the object body; live radius, curtain, dwell, beam, or
+  collision boundaries remain code-owned and must align visibly with the PNG.
+- XP values share one master PNG and differ through gameplay-owned scale/emphasis.
+- Repair-pad inset/core belongs inside the one pad PNG.
+- Bulkhead and wear-tile states are separate authored state PNGs because their
+  world-state transitions must remain visible.
+- EMP is one hard-edged ring/pulse with a transparent background. Runtime ties
+  its scale and fade to the real EMP radius and timing.
+
+### External-source adaptation contract
+
+- Only the six files registered under `external-candidates/sources/` are current
+  retained external source candidates.
+- Every derivative records official page, license, archive hash, selected-source
+  hash, final prompt/brief, TO-BE hash, and target mapping.
+- Source files remain review evidence. They never occupy production target paths.
+- Redraw or re-render the selected silhouette into Cardborne's top-down camera,
+  exact canvas/pivot, palette, perimeter, plane count, and semantic role.
+- Reject a source when its lore, camera, texture, or detail density would require
+  more correction than drawing the target directly.
+- Add no further external file until a named target lacks a usable shape after
+  project-authored design and the current curated sources are exhausted.
+
+### Code-native boundary
+
+- Shared code-native output is limited to HUD action/upgrade glyphs, minimap
+  markers, combat cues, target brackets, off-screen vectors, live telegraph/
+  beam/radius boundaries, progress/fuse ratios, text, focus, and debug overlays.
+- A code-native renderer may not replace a persistent projectile, pickup, crate,
+  defense/status device, facility, bulkhead, or EMP image.
+- Shared cached geometry must have one catalog owner. Screen scripts own layout,
+  copy, signals, and state only.
 
 ### Workbench result model
 
-Task 6.1 extends the workbench deliberately rather than overloading old status
-names:
+The rebuilt workbench must partition all 215 current PNGs exactly once:
 
-- `result_medium` is required and is one of `authored_raster`, `code_native`, or
-  `absent`.
-- `switch_kind` adds `code_native` beside `replace`, `add`, `consolidate`, and
-  `retire`.
-- final `status` adds `code_native` for an applied semantic unit whose legacy
-  raster paths are absent and whose live owner is a code recipe.
-- code-native units use existing `consumer_asset_ids`, `consumer_paths`,
-  `runtime_change_paths`, and `retire_paths`; they have no fake PNG deliverable.
-- the generated index presents result medium, live semantic owner, runtime
-  changes, rendered evidence, and retirements explicitly.
-- final inventory counts are derived from the manifest/filesystem, never stored
-  as an unverified fixed discovery constant.
+| Unit family | Current PNGs | Final PNGs | Result type |
+| --- | ---: | ---: | --- |
+| Player craft | 1 | 1 | Reuse raster |
+| HUD/minimap/combat cues | 43 | 0 | Code-native or absent |
+| Small effects excluding EMP | 95 | 0 | Suppressed/direct feedback |
+| EMP | 6 | 1 | Authored raster replacement |
+| Projectiles | 9 | 9 | Authored raster replacement |
+| Defense/status | 7 | 7 | Authored raster replacement |
+| Pickups/rewards | 6 | 4 | Authored raster consolidation/replacement |
+| World/facilities excluding wear | 10 | 8 | Reuse, authored replacement/addition, retirement |
+| Secondary weapons | 4 | 4 | Authored raster replacement |
+| Ordinary enemies | 19 | 19 | Authored raster replacement |
+| Boss bodies/modules | 15 | 8 | Authored raster replacement/consolidation |
+| Wear tiles | 0 | 3 | Authored raster addition |
+| **Total** | **215** | **64** | |
 
-The revised active units must partition all 215 current PNGs exactly once:
-
-| Unit | Current PNGs | Result |
-| --- | ---: | --- |
-| `player_craft` | 1 | keep authored raster |
-| `ordinary_enemy_family` | 19 | replace authored raster in place |
-| `boss_body_family` | 5 | replace authored raster in place |
-| `shared_boss_node` | 10 | consolidate to three authored raster states |
-| `secondary_body_family` | 4 | replace authored raster in place |
-| `solid_cover` | 1 | keep authored raster |
-| `code_native_projectiles` | 9 | code-native |
-| `code_native_defense_status` | 7 | code-native |
-| `code_native_reward_facility` | 13 | code-native |
-| `code_native_hud_symbols` | 43 | code-native or absent within one audited symbol program |
-| `code_native_effects` | 101 | code-native or deliberately suppressed by event mapping |
-| `unused_world_retirement` | 2 | absent |
-| **Current coverage** | **215** | exact, non-overlapping |
-| `wear_tile_family` | 0 current / 3 target | add authored raster |
-
-Previously applied retirement ledgers and `ui_font` remain historical/current
-workbench records without reclaiming any of the 215 gameplay PNGs above.
-
-### Code-native rendering contract
-
-- Reuse immutable recipe data and cached `ArrayMesh`/`MultiMesh` batches. Do not
-  triangulate or rebuild geometry per actor, projectile, pickup, or frame.
-- Projectiles preserve nine semantic forms, collision-normalized damaging cores,
-  non-damaging tails, owner, delivery, threat tier, and affinity distinctions.
-- Defense/status preserves four defense topologies and three shape-coded status
-  arcs. Hue alone may not carry state identity.
-- XP small/medium/large uses one shard recipe; gameplay value selects scale and
-  emphasis. Reward crate, repair, and recall remain distinct descriptors.
-- Facilities reuse repair, overdrive, arc-surge, transit, and bulkhead recipes.
-  Bulkhead recipes must expose intact, damaged, and opened/broken presentation
-  states before the two current textures retire.
-- Action, upgrade, minimap, support, and combat-cue shapes have one shared owner
-  per semantic family and render identically in runtime, guidebook, status orbit,
-  upgrade cards, and evidence sheets.
-- Each effect event is explicitly `geometry`, `state_only`, or `suppressed`.
-  `geometry` must name one shared recipe; `state_only` relies on an already
-  visible gameplay state change; `suppressed` is cosmetic-only. No route resolves
-  an animation frame after the switch.
-
-### Authored-raster contract
-
-- Every body uses one dominant silhouette, at most two functional secondary
-  modules, 3-5 large planes for ordinary bodies and 4-6 for bosses, one dark
-  perimeter, and one restrained state accent.
-- No rivets, repeated lamps, decorative seams, nested outlines, concentric
-  ornaments, random scratches, or unexplained greebles.
-- All 19 enemy role IDs remain distinct at gameplay scale and grayscale.
-- Secondary seeker, escort drone, orbit blade, and wake mine remain distinct by
-  motion role and negative space, not by label or color alone.
-- Boss bodies own boss identity. The same three boss-node files serve every
-  external shield objective.
-- Wear tiles use exact `240x160` canvases and pivots `120,80`; art never owns
-  wear, occupancy, collision, damage, or persistence.
+Every unit records current paths, final target mappings, runtime-change paths,
+retirement paths, exact SHA-256 values, rendered evidence, status, and approval.
+An external source or preview cannot satisfy a TO-BE deliverable.
 
 ### Approval and application protocol
 
-For every switch unit:
+For each switch unit:
 
-1. Record the clean full repository baseline before candidate work.
-2. Generate deterministic current-path, target/hash, runtime-change, semantic-ID,
-   retirement-path, and rendered-evidence reports.
-3. Display the exact baseline and report hashes to the user. Code-native units
-   display exact runtime-change paths and all PNG/sidecar retirements even though
-   there are no target PNG hashes.
-4. Receive explicit approval for that exact report. A different baseline, byte,
-   mapping, runtime path, or retirement path invalidates approval.
-5. Preview the switch without production writes when the helper supports it.
-6. Apply atomically: runtime/descriptor/manifest/validator changes first within
-   the same scoped change, target promotion second, exact approved retirement
-   last.
-7. Rebuild deterministic workbench outputs, record application hashes, and make
-   one coherent task-owned commit.
-8. Promote `applied` raster units to `keep_current`, code-native units to
-   `code_native`, and absence-only units to `retired` only after their local
-   structural checks pass.
+1. Freeze and record a clean baseline commit.
+2. Generate or adapt the exact TO-BE files outside production.
+3. Build deterministic actual-scale AS-IS/TO-BE evidence.
+4. Run only structural/schema/import checks needed to trust the report.
+5. Display the baseline hash, target mappings, TO-BE hashes,
+   `runtime_change_paths`, and exact sorted `retire_paths`.
+6. Obtain explicit approval for that exact report.
+7. Preview the promotion command without writes.
+8. Apply only the approved target copies, runtime changes, manifest/provider
+   changes, and retirements.
+9. Rebuild deterministic workbench evidence and create one scoped commit.
+10. Record the applied commit and resulting hashes before starting another unit.
 
-No approval is inferred from a family name, an older approval, a directory, a
-preview, a plan, or this audit.
-
-## Execution Prerequisites
-
-- Worktree is clean or unrelated user changes are identified and untouched.
-- Root and nearest `AGENTS.md`, `.agents/PLANS.md`, product spec, visual spec,
-  workbench spec, production README, rationalization evidence, and current
-  manifest/workbench are read at execution time.
-- `./tools/godot.ps1 --version` reports Godot 4.7 stable.
-- Production discovery still reports 215 PNGs in the audited 35/13/7/6/10/43/101
-  family split and zero deployable TO-BE assets.
-- Every current PNG belongs to exactly one proposed revised unit.
-- No runtime server is started outside the `$npjt-port-guard` codex lane.
-
-If any prerequisite differs, stop before changing production bytes, record the
-actual evidence, and amend this plan rather than forcing old counts.
+Any changed baseline, target hash, target mapping, runtime path, or retirement
+path invalidates approval. A rejected candidate remains outside production.
 
 ## Milestones and Tasks
 
-### Phase 6 - Rebuild ownership and switch shared code-native families
+### Phase 6 - Correct ownership and complete world-object foundations
 
-Outcome: all symbolic, state-parametric, collision-normalized, and transient
-families use shared code-native owners. Production temporarily contains 40 PNGs:
-35 actors, four secondary bodies, and one solid-cover image.
+Outcome: all non-actor foundational world objects use finished PNGs, HUD/cues are
+code-native, small effects are suppressed, EMP is one PNG, and production reaches
+exactly **68 PNGs** before wear tiles and actor-family replacements.
 
-#### 6.0 Freeze and revalidate the execution baseline
+#### 6.0 Freeze the corrected authority and execution baseline
 
-- [ ] Record clean full HEAD, workbench source hash, manifest hash, production
-  PNG/path/hash inventory, import-sidecar inventory, and zero-TO-BE result.
-- [ ] Re-run the non-mutating consumer audit for all 215 paths.
-- [ ] Confirm the rationalization arithmetic and exact unit partition.
-- [ ] Append the baseline and any freshness correction to Progress before edits.
+- [x] Withdraw the former 36-PNG target.
+- [x] Record the exact 64-PNG arithmetic and all current-file dispositions.
+- [x] Audit prior external-asset history and confirm there was no earlier pack
+  import or evaluation.
+- [x] Curate six CC0 source PNGs with official URLs, licenses, archive hashes,
+  source hashes, adaptation roles, and rejection reasons.
+- [x] Create and validate one review-only 512 x 512 EMP PNG candidate.
+- [x] Correct `VISUAL_SYSTEM.md`, production ownership guidance, workbench
+  guidance, evidence, and this plan.
+- [ ] Require a clean worktree and record the post-correction HEAD as the Phase 6
+  execution baseline.
+- [ ] Run `./tools/godot.ps1 --version` and require Godot 4.7 stable before runtime
+  edits begin.
 
-Acceptance: the audit matches the plan or the plan is amended before Task 6.1.
+Acceptance: all active guidance agrees on 64 final PNGs and no runtime switch has
+been implied by source import or candidate generation.
 
 #### 6.1 Rebuild the workbench control plane
 
-- [ ] Add `result_medium`, `switch_kind=code_native`, and final
-  `status=code_native` support to the source, builder, index template, promotion
-  helper, and validator.
-- [ ] Replace the old 30 one-for-one target units with the exact unit partition
-  in Proposed Design while retaining completed historical ledgers.
-- [ ] Remove fixed assertions for 215 discovery files, 210 final files, 22
-  animations, and 101 final frames; derive current/final counts instead.
-- [ ] Generate `inventory.json` and `index.html`; verify deterministic rebuild.
-- [ ] Verify every current PNG and every target path has exactly one unit owner.
+- [ ] Replace the old 36-PNG unit forecast with the exact partition in this plan.
+- [ ] Add authored-raster units for projectiles, defense/status, pickup/reward,
+  world/facility, EMP, secondaries/wear, enemies, and bosses/shared nodes.
+- [ ] Keep one code-native unit for all 43 HUD/minimap/combat-cue paths.
+- [ ] Keep one explicit suppression/retirement unit for the 95 non-EMP effect
+  frames and one authored replacement unit for the six EMP frames.
+- [ ] Model reuse, in-place replacement, consolidation, addition, runtime change,
+  and exact retirement without fake PNG paths.
+- [ ] Make generator and validators require license/provenance records whenever a
+  TO-BE brief uses an external source.
+- [ ] Rebuild `inventory.json` and `index.html` deterministically.
 
-Acceptance: the workbench represents code-native outcomes without fake image
-deliverables, partitions 215 current PNGs once, and forecasts 36 final PNGs.
+Acceptance: every current PNG belongs to one unit, every final target belongs to
+one unit, and the generated forecast is exactly 64.
 
-#### 6.2 Consolidate HUD, action, upgrade, minimap, support, and combat cues
+#### 6.2 Produce the nine projectile PNGs
 
-- [ ] Change action rail and upgrade glyph drawing to use existing normalized
-  recipes for Seeker, Dash, EMP, and eight upgrade families.
-- [ ] Add the missing Support recipe to the shared glyph owner.
-- [ ] Centralize six minimap marker shapes and use them in gameplay HUD and
-  guidebook preview; preserve player/hostile/elite/boss/active/locked identity.
-- [ ] Add one responsibility-shaped combat-cue recipe catalog for the 17 live
-  cue identities; switch `VehicleCombatRenderer` away from semantic textures.
-- [ ] Remove all consumers of the nine verified orphan HUD/cue IDs from the
-  exact audit register: `action_primary`, `action_barrier`, `action_ion_field`,
-  `upgrade_passive`, `cue_guide_ship`, `cue_guide_mobile`,
-  `cue_guide_stationary`, `cue_guide_bosses`, and `cue_guide_objects`.
-- [ ] Preserve layout, localization, focus, input, information, and slot count.
+- [ ] Preserve all nine semantic projectile identities and current target paths.
+- [ ] Author complete core-and-tail PNGs at the existing canvas sizes and pivots.
+- [ ] Use `laserBlue07.png` only as an optional silhouette seed for light/standard
+  bolt proportion; do not reuse its pixels or palette directly.
+- [ ] Differentiate faction, delivery, threat tier, and power by silhouette/core
+  proportion before affinity hue.
+- [ ] Render collision overlay comparisons for every projectile at 1x scale.
+- [ ] Verify manual aim, muzzle origin, rotation, high-count batching, and
+  non-damaging tail boundaries remain unchanged.
 
-Acceptance: all 43 former HUD/cue paths have a code-native or absent result and
-no runtime, guidebook, or validator code requests their textures.
+Acceptance: nine complete PNGs are ready for exact approval and no projectile is
+assembled from visible runtime parts.
 
-#### 6.3 Retire raster effect-frame routing
+#### 6.3 Produce the seven defense/status PNGs
 
-- [ ] Convert all 39 presentation event routes to explicit `geometry`,
-  `state_only`, or `suppressed` modes using the 22-identity future-polish register.
-- [ ] Reuse existing dash, EMP, barrier/contact, arrival, directed-transfer,
-  ring, beam, hull-hit, transit, pickup/repair, and telegraph geometry where
-  readability requires it.
-- [ ] Remove unconditional `animation_frame_asset()` resolution from
-  `_sync_effects()`.
-- [ ] Preserve event IDs, transforms, timings, reduced-motion behavior, and all
-  gameplay owners.
-- [ ] Remove animation/frame declarations from the raster manifest and update
-  coverage validators to validate event modes instead.
+- [ ] Replace barrier plate, ion emitter, generator shield source, and escort
+  shield plate with four complete role-readable PNGs.
+- [ ] Replace burn, poison, and chill with three persistent-status PNGs that remain
+  distinct in grayscale.
+- [ ] Keep protection, timer, damage, attachment, and status-stacking logic in
+  existing owners.
+- [ ] Render attachment, orbit, overlap, grayscale, and maximum-pressure evidence.
 
-Acceptance: no live code resolves a raster effect frame; every one of the 39
-routes resolves to a valid explicit presentation mode, every `geometry` route
-resolves a valid shared recipe, and future intent remains documented.
+Acceptance: all seven identities remain PNG-owned and no state is distinguished
+by color alone.
 
-#### 6.4 Switch all projectile rendering to cached code-native meshes
+#### 6.4 Consolidate pickups and rewards into four PNGs
 
-- [ ] Use the existing nine projectile descriptors and mesh recipes for player
-  primary, opening breach, Seeker, and six hostile affinities.
-- [ ] Replace texture-backed projectile batches with cached mesh/MultiMesh
-  batches without per-frame triangulation.
-- [ ] Preserve pivots, facing, damaging-core/collision comparison, tails,
-  affinity, owner, threat tier, delivery, and performance capacity.
-- [ ] Update report/guide/evidence consumers that still resolve projectile PNGs.
+- [ ] Add one exact XP-master target and map small/medium/large values to its
+  gameplay-owned scale/emphasis.
+- [ ] Replace reward crate, repair pickup, and experience recall at their current
+  semantic targets.
+- [ ] Use `bolt_gold.png` and `powerupYellow.png` only as optional silhouette seeds.
+- [ ] Preserve drop tables, values, collection radius, recall behavior, and reward
+  timing.
+- [ ] Build an exact retirement report for the three old XP-size PNGs and sidecars.
 
-Acceptance: all nine semantic projectile IDs render from one recipe system and
-no code or validator requires projectile PNG paths.
+Acceptance: four finished pickup/reward PNGs preserve four distinct meanings;
+the three old XP files have no live consumer before retirement.
 
-#### 6.5 Switch defense and status rendering to shared topology recipes
+#### 6.5 Consolidate world and facilities into eight pre-wear PNGs
 
-- [ ] Implement cached recipes for barrier plates, ion emitter, generator shield
-  source, and shield-escort forward plate.
-- [ ] Implement separate burn, poison, and chill arc shapes using the existing
-  status topology semantics; do not reuse one shape with three hues.
-- [ ] Replace texture-backed status batches and defense semantic draws.
-- [ ] Preserve protection, damage, timers, attachment transforms, and visibility.
+- [ ] Replace bulkhead `intact` and `damaged`; add `open` with one shared footprint.
+- [ ] Replace the repair pad with one complete PNG and remove the separate core
+  dependency.
+- [ ] Replace overdrive lane, Arc Surge strip, and transit gate with complete PNGs
+  aligned to their live footprints.
+- [ ] Keep current solid-cover bytes.
+- [ ] Use the three Space Kit source PNGs only for bulkhead/pylon/recessed-core
+  proportion; rebuild all camera, palette, state, and semantic details.
+- [ ] Preserve radius, curtain, dwell, cooldown, collision, topology, and map
+  fingerprint ownership.
+- [ ] Build exact retirement reports for repair-pad core, breakable cover slab,
+  and hazard power relay.
 
-Acceptance: seven semantic identities remain shape-distinct and no consumer
-requires the seven state PNGs.
+Acceptance: the pre-wear world/facility family contains exactly eight PNGs and
+every visible effect footprint agrees with gameplay geometry.
 
-#### 6.6 Switch pickups, rewards, facilities, and bulkheads to shared recipes
+#### 6.6 Replace EMP and suppress the other small effects
 
-- [ ] Route all six pickup/reward identities through the existing reward recipe
-  owner; use one XP shard geometry with value-driven scale/emphasis.
-- [ ] Route repair, overdrive, arc surge, transit, and breakable bulkhead through
-  shared facility recipes in runtime and guidebook.
-- [ ] Add explicit intact, damaged, and opened/broken bulkhead recipe states.
-- [ ] Merge repair-pad core/inset into the repair recipe.
-- [ ] Preserve live footprint, radius, state, value, drop, collection, dwell,
-  cooldown, collision, and reward ownership.
-- [ ] Mark unused breakable-cover-slab and hazard-power-relay images absent.
+- [ ] Review the project-generated EMP candidate at actual gameplay radius against
+  the current six-frame AS-IS sequence.
+- [ ] If accepted, adapt or copy it to the exact TO-BE target
+  `effects/fx_emp_release.png`; otherwise generate one revised single-image
+  candidate under the same contract.
+- [ ] Bind one 512 x 512 texture to the existing EMP timer/radius with only
+  scale/fade; do not add a sprite sequence or decorative particles.
+- [ ] Map all 21 non-EMP effect identities to existing direct feedback or explicit
+  `suppressed` state.
+- [ ] Remove unconditional frame-path resolution from runtime, guidebook, manifest,
+  provider, and validators.
+- [ ] Produce exact retirement records for all 101 current effect PNGs and
+  sidecars, including the six old EMP frames.
 
-Acceptance: all 13 pickup/facility PNGs and both unused world PNGs have no live
-texture consumer; semantic behavior and state remain unchanged.
+Acceptance: EMP has one authored PNG; all other small effect events remain
+behaviorally intact without dedicated raster art.
 
-#### 6.7 Produce actual-scale Phase 6 review evidence
+#### 6.7 Migrate the 43 HUD/minimap/combat-cue PNGs
 
-- [ ] Build one deterministic system sheet showing each code-native family at
-  runtime scale, grayscale, and representative semantic colors.
-- [ ] Capture the HUD action strip, minimap, upgrade card, guidebook markers,
-  combat cues, maximum projectile pressure, all defense/status forms, pickups,
-  facilities, bulkhead states, and each retained effect mode.
-- [ ] Compare against the visual-system detail, state, collision, and hierarchy
-  rules. Fix only the shared recipe owner when a family fails.
-- [ ] Generate exact per-unit runtime-change and PNG/sidecar retirement reports.
+- [ ] Reuse shared action/upgrade glyph recipes for Seeker, Dash, EMP, and eight
+  upgrade families.
+- [ ] Add or consolidate one shared owner for minimap markers, target/priority,
+  collective, elite, boss-core, objective, and commitment cues.
+- [ ] Prove nine direct-orphan HUD/cue files have no live consumer before marking
+  them absent.
+- [ ] Preserve layout, slot count, localization, focus, accessibility, input, and
+  information content.
+- [ ] Render KO/EN actual-size evidence at supported viewports without running the
+  complete final responsive suite.
 
-Acceptance: evidence is readable at gameplay scale and every proposed deletion
-has a verified replacement owner or verified absence.
+Acceptance: all 43 paths have one code-native/absent result and no meaningful
+world object was included in this migration.
 
-#### 6.8 Approve, apply, and record Phase 6 switches
+#### 6.8 Approve and apply Phase 6 units
 
-- [ ] Obtain explicit exact-report approval for every Phase 6 code-native and
-  absence unit. Prior approvals do not satisfy this task.
-- [ ] Apply runtime/catalog/manifest/provider/validator changes and only the exact
-  approved retirements atomically.
-- [ ] Rebuild the workbench, record application hashes, and create coherent
-  scoped commits.
-- [ ] Run deterministic workbench/schema/source-format/import checks only; defer
-  the complete runtime/Web validation suite to Phase 11.
+- [ ] Produce separate exact reports for projectiles, defense/status,
+  pickups/rewards, world/facilities, EMP/effects, and HUD/cues.
+- [ ] Obtain explicit approval for each exact baseline, hash map, target mapping,
+  runtime path set, and retirement set.
+- [ ] Apply each approved unit in one scoped commit without staging unrelated work.
+- [ ] Rebuild workbench outputs and run deterministic/schema/import guards after
+  each unit.
+- [ ] Record applied commits and confirm production contains exactly 68 PNGs.
 
-Phase gate: production has exactly 40 PNGs, zero HUD/cue PNGs, zero effect-frame
-PNGs, zero manifest animations, and no duplicate medium owner.
+Phase gate: 68 production PNGs, no stale HUD/cue or old effect-frame dependency,
+and no gameplay behavior change.
 
-### Phase 7 - Produce secondary bodies and Wear Collapse Tiles
+### Phase 7 - Replace secondaries and add Wear Collapse Tiles
 
-Outcome: four simplified secondary bodies replace current bytes and three wear
-states are added. Production contains 43 PNGs.
+Outcome: four secondary bodies are simplified and three authored wear states are
+added. Production temporarily reaches **71 PNGs**.
 
-#### 7.1 Replace the four secondary bodies
+#### 7.1 Replace four secondary bodies
 
-- [ ] Produce Seeker, escort drone, orbit blade, and wake mine at their existing
-  canvases/pivots and target paths.
-- [ ] Use four unmistakable motion-role silhouettes: forward homing body,
-  escorting drone, orbiting blade, and stationary mine.
-- [ ] Limit each to one dominant body, at most two functional parts, 3-5 planes,
-  and one semantic accent; remove current lamps, seams, glow, and greebles.
-- [ ] Render them in live motion and in the upgrade/guidebook contexts that show
-  secondary identity.
+- [ ] Replace seeker, escort drone, orbit blade, and wake mine at existing paths,
+  canvases, pivots, and anchors.
+- [ ] Give each one dominant motion-role silhouette and no more than two functional
+  modules.
+- [ ] Preserve homing, escort, orbit, stationary-mine behavior, cadence, damage,
+  and upgrade-family naming.
+- [ ] Render runtime, upgrade-card, guidebook, and maximum-pressure comparisons.
 
-#### 7.2 Add the three wear-tile states
+#### 7.2 Add three wear-tile states
 
-- [ ] Produce `wear_tile_intact`, `wear_tile_cracked`, and
-  `wear_tile_collapsed` as `240x160` authored states with pivot `120,80`.
-- [ ] Keep footprint and outer mass stable; use topology, not color alone, to
-  distinguish state.
-- [ ] Confirm gameplay continues to own wear, occupancy, collision, damage, and
-  persistence.
+- [ ] Add `world/wear_tile_intact.png`, `world/wear_tile_cracked.png`, and
+  `world/wear_tile_collapsed.png` at 240 x 160 with pivot 120,80.
+- [ ] Preserve exact runtime rect, wear timing, collision, persistence, occupancy,
+  and deterministic layout fingerprint.
+- [ ] Verify state progression without decorative cracks or micro-debris.
 
-#### 7.3 Approve and switch Phase 7
+#### 7.3 Approve and apply Phase 7
 
-- [ ] Generate actual-scale AS-IS/TO-BE, hash, mapping, runtime-path, and import
-  reports for the four replacements and three additions.
-- [ ] Obtain exact approval, promote atomically, baseline-promote the units, and
-  commit the scoped changes.
-- [ ] Run only deterministic workbench/import/format checks.
+- [ ] Produce and approve exact secondary and wear-tile reports.
+- [ ] Apply only approved targets and runtime/manifest/provider changes.
+- [ ] Commit the two coherent units and confirm exactly 71 production PNGs.
 
-Phase gate: seven targets are current production, no layout/gameplay behavior
-changed, and production contains 43 PNGs.
+Phase gate: four distinct secondary roles and three readable wear states with no
+gameplay-rule changes.
 
 ### Phase 8 - Replace the 19 ordinary enemy bodies
 
-Outcome: every ordinary role remains semantically distinct while sharing the
-approved simple general-SF construction language.
+Outcome: every ordinary enemy keeps its gameplay role but uses the simplified
+shared visual grammar. Production remains at 71 PNGs.
 
 #### 8.1 Produce the complete enemy family
 
-- [ ] Produce exact replacements for `scrap_drone`, `needle_drone`,
-  `spark_minelet`, `chaser`, `rammer`, `bulkhead_guard`, `shooter`, `turret`,
-  `mine`, `artillery_spotter`, `controller`, `generator`, `shield_escort`,
-  `repair_tender`, `drone_carrier`, `splitter_barge`, `interceptor_tower`,
-  `beam_sentinel`, and `boss_pylon`.
-- [ ] Preserve every existing path, canvas, pivot, anchor, role, and runtime
-  mapping.
-- [ ] Build identity from silhouette, front/rear cut, negative space, and at most
-  two functional modules; never from color alone.
-- [ ] Parallel generation may be delegated by bounded role group, but one owner
-  must normalize palette, outline, scale, plane count, naming, and pivots before
-  publication.
+- [ ] Preserve all 19 existing semantic IDs, paths, canvases, pivots, anchors, and
+  runtime roles.
+- [ ] Group production briefs by movement/attack function to reuse proportions and
+  modules without merging identities.
+- [ ] Use one dominant silhouette, at most two functional modules, 3-5 large
+  planes, one perimeter, and one restrained role accent per enemy.
+- [ ] Keep ordinary, elite, command, and boss hierarchy readable without relying
+  on color alone.
+- [ ] Do not introduce any unapproved external source or named theme.
 
-#### 8.2 Review the family under gameplay pressure
+#### 8.2 Review under gameplay pressure
 
-- [ ] Render all 19 at 1x gameplay scale, grayscale, mixed-role pressure, target
-  priority, shield/support, stationary/mobile, and guidebook scale.
-- [ ] Reject same-silhouette recolors, boss-like ordinary bodies, greeble-based
-  rank, ambiguous facing, and any role pair that collapses at grayscale.
-- [ ] Produce one complete family approval report; do not approve incomplete
-  subsets that would leave the family in mixed visual grammar.
+- [ ] Render one actual-scale family sheet plus crowded-combat views.
+- [ ] Verify role identification, facing, target priority, overlap, grayscale,
+  damage state, and maximum-pressure readability.
+- [ ] Compare against the approved simple UI/world direction rather than
+  presentation-sheet decoration.
 
-#### 8.3 Approve and switch Phase 8
+#### 8.3 Approve and apply Phase 8
 
-- [ ] Obtain exact 19-file hash/mapping approval, replace in place atomically,
-  rebuild/baseline-promote the workbench, and commit.
-- [ ] Run only deterministic workbench/import/format checks.
+- [ ] Produce one exact 19-target report, or smaller coherent role-group reports
+  if review requires iteration.
+- [ ] Obtain exact approval, apply only approved paths, rebuild evidence, and
+  commit the family.
 
-Phase gate: all 19 paths contain the approved family and production remains at
-43 PNGs.
+Phase gate: all 19 enemy PNGs are approved, applied, and role-readable.
 
 ### Phase 9 - Replace bosses and consolidate shared boss nodes
 
-Outcome: five boss bodies own boss identity; all external shield objectives use
-the same three-state node family. Production reaches the final 36 PNGs.
+Outcome: five boss bodies own boss identity and all external shield objectives
+reuse three shared state images. Production reaches the final **64 PNGs**.
 
-#### 9.1 Produce five boss bodies
+#### 9.1 Replace five boss bodies
 
-- [ ] Produce `colossus`, `leviathan`, `titan`, `behemoth`, and `crown` at the
-  existing `352x352` canvases and `176,176` pivots.
-- [ ] Give each a unique dominant mass ratio and silhouette using 4-6 large
-  planes and one outline; do not use repeated lamps, panels, nested frames, or
-  small modules to imply scale.
-- [ ] Preserve stage identity, attack anchors, health/guard presentation,
-  guidebook, report, minimap, and debug practice mappings.
+- [ ] Preserve existing IDs, paths, canvases, pivots, attack anchors, health/guard
+  presentation, and stage behavior.
+- [ ] Build each boss from one dominant silhouette and 4-6 large filled planes.
+- [ ] Express scale and hierarchy through mass proportion, not rivets, lamps,
+  nested frames, or boss-specific objective decoration.
+- [ ] Render same-scale comparison against player, ordinary enemies, and shared
+  node states.
 
-#### 9.2 Produce and map the three shared node states
+#### 9.2 Add three shared boss-node states
 
-- [ ] Produce `boss_node_active`, `boss_node_damaged`, and
-  `boss_node_resolved` at `160x160`, pivot `80,80`.
-- [ ] Use the same housing and scale across all states; distinguish complete
-  rail, broken rail, and open housing structurally.
-- [ ] Map every current boss-module kind/index to one of the three presentation
-  states while preserving kind/index, objective copy, target selection, and
-  gameplay resolution.
-- [ ] Remove the former disabled-frame dependency; the state transition itself
-  is the primary readability cue.
+- [ ] Add `active`, `damaged`, and `resolved` node PNGs at one common canvas,
+  pivot, and footprint.
+- [ ] Distinguish states structurally with complete rail, broken rail, and opened
+  housing rather than hue alone.
+- [ ] Keep module kind/index, shield logic, sequence, and objective behavior in
+  existing gameplay owners.
+- [ ] Prove all ten boss-specific module paths have no live consumer.
 
-#### 9.3 Review, approve, and switch Phase 9
+#### 9.3 Approve and apply Phase 9
 
-- [ ] Render all five bosses with all three shared states at gameplay,
-  guidebook, minimap/objective, report, and debug-practice scale.
-- [ ] Generate exact hashes/mappings for eight targets and exact retirement
-  paths for ten legacy boss-module PNGs and sidecars.
-- [ ] Obtain exact approval, switch atomically, rebuild/baseline-promote the
-  workbench, and commit.
-- [ ] Run only deterministic workbench/import/format checks.
+- [ ] Produce exact reports for five boss replacements, three node additions, and
+  ten module retirements.
+- [ ] Obtain explicit approval, apply exact paths, rebuild evidence, and commit.
+- [ ] Confirm production contains exactly 64 PNGs.
 
-Phase gate: no boss-specific node art remains, all 20 legacy module paths are
-absent, and production contains exactly 36 PNGs.
+Phase gate: five boss bodies, three shared node states, zero boss-specific module
+art, and exact final media count.
 
-### Phase 10 - Reconcile production and freeze the release candidate
+### Phase 10 - Reconcile and freeze the release candidate
 
-Outcome: source, generated workbench, manifest, provider, catalogs, consumers,
-and filesystem agree before the one full release test.
+Outcome: the final visual pack, consumers, workbench, documentation, and clean
+Git state agree before the one complete validation run.
 
 #### 10.1 Reconcile exact ownership
 
-- [ ] Require exactly 36 production gameplay PNGs: player 1, ordinary enemies
-  19, bosses 5, shared nodes 3, secondaries 4, solid cover 1, wear tiles 3.
-- [ ] Require zero production PNGs under HUD, projectile, state, pickup,
-  facility/bulkhead legacy, or effect-frame families.
-- [ ] Require zero raster animation declarations and zero unresolved raster
-  semantic IDs.
-- [ ] Require exactly one owner for every live semantic identity and no runtime
-  consumer that falls back to a removed texture.
-- [ ] Require every code-native recipe to be cached/batched according to its
-  renderer contract.
+- [ ] Require the exact final family split: 1 player, 19 ordinary enemies, five
+  bosses, three shared boss nodes, four secondaries, nine projectiles, seven
+  defense/status, four pickups/rewards, 11 world/facility, and one EMP.
+- [ ] Require zero HUD/minimap/combat-cue PNGs and zero non-EMP effect frames.
+- [ ] Require every live semantic ID to have exactly one raster or code-native
+  owner, never both.
+- [ ] Require every production PNG to be indexed once with correct canvas, pivot,
+  import, provider, consumer, and validator coverage.
+- [ ] Require complete source/license/hash records for every external-source
+  derivative.
 
-#### 10.2 Clean the workbench without creating an archive
+#### 10.2 Clean the active workbench
 
-- [ ] Remove completed TO-BE duplicates and generated per-unit contact sheets
-  only after their bytes are current production and application evidence exists.
-- [ ] Preserve current AS-IS references, screen-direction evidence, exact
-  application records, and previously applied negative-inventory ledgers.
-- [ ] Rebuild `inventory.json` and `index.html` and require deterministic check
-  equality.
-- [ ] Update rationalization evidence with actual final counts and any approved
-  deviation.
+- [ ] Require no stale TO-BE deliverable after successful promotion.
+- [ ] Preserve current AS-IS references, generated review UI, the curated external
+  source register, and exact approval/application records.
+- [ ] Remove obsolete generated previews only when they are task-owned and no
+  active evidence or approval links to them.
+- [ ] Run deterministic workbench build/check and path/hash validation.
 
-#### 10.3 Freeze a clean release-candidate commit
+#### 10.3 Audit code quality and freeze HEAD
 
-- [ ] Review the complete task diff for unrelated changes, duplicate owners,
-  responsibility creep, dead compatibility paths, and stale comments/docs.
-- [ ] Run the repo-required cross-module code-quality audit and apply only small,
-  safe, task-scoped corrections.
-- [ ] Commit the complete reconciled candidate and record its full HEAD.
-- [ ] Do not change visual bytes or mappings after this point without returning
-  to the affected phase and invalidating its evidence/approval.
+- [ ] Run `$codebase-quality-auditor` over shared catalogs, providers, renderers,
+  manifests, generators, and validators changed by Phases 6-9.
+- [ ] Correct only small task-scoped ownership or contract defects found by the
+  audit.
+- [ ] Require a clean worktree and record the exact release-candidate commit.
+- [ ] Freeze visual assets and runtime paths during Phase 11 except for fixes
+  required by failed final validation.
 
-Phase gate: clean HEAD, deterministic workbench, exact 36-file ownership, and no
-known unresolved visual migration.
+Phase gate: clean release-candidate HEAD, deterministic workbench, exact 64-file
+ownership, and no unresolved source/license or consumer ambiguity.
 
-### Phase 11 - Run the one complete release validation and retire the plan
+### Phase 11 - Run one complete validation and close the plan
 
-Outcome: the final, already-complete visual candidate passes native and built-Web
-release evidence without a mid-program full-suite run.
+Outcome: the already-complete candidate passes the full release gate once.
 
 #### 11.1 Run structural and focused validators
 
-- [ ] Run every repository `validate_*.gd` script dynamically through
-  `./tools/godot.ps1`; do not rely on a stale hard-coded validator count.
-- [ ] Run workbench, manifest/provider, visual separation, component ownership,
-  actor, projectile, reward/facility, defense/status, UI layout, localization,
-  accessibility, combat renderer, world, boss, and lifecycle validators.
-- [ ] Require zero missing IDs, duplicate owners, stale texture paths, import
-  failures, parse errors, warnings promoted by project policy, and deterministic
-  mismatches.
+- [ ] Enumerate and run the complete current validator corpus under
+  `tools/validation/` through `./tools/godot.ps1`; do not rely on a stale hard-coded
+  validator count.
+- [ ] Require visual asset coverage, semantic provider/separation, actor,
+  projectile, reward/facility, defense/status, world/wear, HUD/UI, localization,
+  upgrade, pause, guidebook, boss, encounter, attack, and run validators to pass.
+- [ ] Run deterministic workbench validation and final Git/path/hash reconciliation.
 
 #### 11.2 Build and test native and production Web paths
 
-- [ ] Run the native production-style start path and complete deployment,
-  combat, upgrade choice, pause, settings, guidebook, report, garage, stage
-  transition, and full five-stage run smoke.
-- [ ] Run `./tools/export_web.ps1`, start the built export through the canonical
-  fastrun codex lane, and repeat the relevant interaction/navigation smoke.
-- [ ] Verify KO/EN at 960x540, 1280x720, and 1920x1080 plus the required 200%
-  text-scale surfaces: no clipping, overlap, overflow, or information loss.
-- [ ] Verify player/aim/muzzle/projectile alignment, all 19 enemies, all bosses
-  and node states, secondaries, projectiles, status/defense, rewards/facilities,
-  minimap/cues, effects, reduced motion, and controller/keyboard focus.
+- [ ] Run a production-style native import/start and smoke deployment, combat,
+  upgrade, pause/settings, guidebook, stage transition, report/result, and the
+  connected five-stage run.
+- [ ] Run `./tools/export_web.ps1`.
+- [ ] Load `$npjt-port-guard`, start the built Web export through the canonical
+  fastrun `codex` lane, and repeat relevant navigation/interaction smoke.
+- [ ] Verify player/aim/muzzle/projectile alignment, all actor families, statuses,
+  pickups, crates, facilities, bulkhead/wear states, HUD/cues, one-image EMP,
+  reduced motion, and keyboard/controller focus.
 
-#### 11.3 Run performance and stability evidence
+#### 11.3 Run visual, responsive, performance, and stability evidence
 
-- [ ] Run the existing native/Web pressure scenarios and lifecycle soak from a
-  clean release candidate, using current repository thresholds without waiver.
-- [ ] Require the existing combat/world batch, draw-call, frame, physics, memory,
-  and lifecycle thresholds.
-- [ ] Save large logs/captures under the existing evidence location and summarize
-  only decisive results in the plan/evidence docs.
+- [ ] Capture KO/EN at 960 x 540, 1280 x 720, and 1920 x 1080 plus 200% text
+  scale; require zero clipping, overlap, or information loss.
+- [ ] Capture grayscale and maximum-pressure evidence.
+- [ ] Run existing native/Web pressure scenarios and lifecycle soak from the
+  frozen candidate.
+- [ ] Require existing performance, draw-call, memory, and stability thresholds.
 
 #### 11.4 Close the program
 
-- [ ] Fix only task-scoped failures and rerun the smallest failed check plus the
-  final affected gate; any visual-byte change invalidates the affected approval
-  and returns to its phase.
-- [ ] Record final HEAD, commands, results, counts, evidence paths, and residual
-  limitations.
-- [ ] Promote accepted durable decisions into active specs and operating docs.
-- [ ] After completion and explicit authority for document deletion, remove this
-  completed ExecPlan and the frozen predecessor as required by `.agents/PLANS.md`.
-- [ ] Make the final scoped commit and confirm a clean worktree.
+- [ ] Fix any final-gate failure in a scoped commit, re-freeze HEAD, and rerun the
+  affected check plus the complete gate when the failure could invalidate other
+  results.
+- [ ] Record final commands, hashes, screenshots, performance data, and commit in
+  durable acceptance evidence.
+- [ ] Incorporate any new durable behavior into the active product/design specs.
+- [ ] Mark this plan done only after every task and release criterion passes; then
+  delete it according to `.agents/PLANS.md` once durable decisions are preserved.
 
-Phase gate: all required validation, native/Web visual and interaction smoke,
-responsive/localized evidence, and performance/stability thresholds pass.
-
-## Progress and Next Steps
-
-- [x] 2026-08-04: audited all 215 production gameplay PNGs against the manifest,
-  filesystem, direct consumers, workbench, and visual-system rules.
-- [x] 2026-08-04: proved there are zero deployable TO-BE gameplay files and 12
-  review-only workbench PNGs.
-- [x] 2026-08-04: classified every static family and all 22/101 effect identities;
-  recorded the future-effect polish register.
-- [x] 2026-08-04: confirmed the 36-PNG boundary is technically feasible; the only
-  incomplete shared geometry is the finite defense/status and bulkhead-state
-  recipe work already specified in Phase 6.
-- [x] 2026-08-04: updated the active visual-system/workbench contracts and rewrote
-  Phase 6-11 around shared ownership instead of one-file replacement.
-- [ ] Execution has not begun. Next task: Phase 6, Task 6.0.
-
-Canonical progress is this checklist. Check a task only when its acceptance
-evidence exists. Do not repeat completed discovery unless Task 6.0 finds a
-freshness-changing repository difference.
+Phase gate: all required validators, native/Web smoke, responsive/localized
+evidence, performance, and stability checks pass from the final clean HEAD.
 
 ## Test Plan
 
 ### During Phases 6-10
 
-Run only checks needed to prevent mechanical corruption while continuing the
-program:
+Run only guards needed to keep the long replacement program mechanically sound:
 
 - deterministic workbench build/check;
 - JSON/schema/path/hash validation;
-- GDScript formatting/parse/import checks for touched sources;
-- exact target canvas/pivot/import checks;
-- rendered actual-scale approval evidence;
-- focused non-release diagnostics when a candidate cannot be judged otherwise.
+- GDScript parse/import checks for touched sources;
+- target canvas, pivot, alpha, and import checks;
+- actual-scale rendered approval evidence;
+- focused diagnostics only when a candidate cannot otherwise be judged.
 
-Do not run or claim the complete release suite, full native/Web interaction
-matrix, responsive/localized matrix, or authoritative performance matrix during
-these phases.
+Do not run or claim the complete release suite, native/Web workflow matrix,
+responsive/localized matrix, or authoritative performance matrix during these
+phases.
 
 ### Phase 11 only
 
 Run the complete validator corpus, native production smoke, built-Web smoke,
-KO/EN responsive and 200% evidence, controller/keyboard interaction, maximum
+KO/EN responsive and 200% evidence, keyboard/controller interaction, maximum
 pressure, performance, memory, and lifecycle soak against the final reconciled
 HEAD.
 
-Success requires the final 36-file pack, zero stale raster dependency, one
-medium owner per semantic identity, no gameplay regression, no information
-loss, and all existing release thresholds.
+Success requires the exact 64-file pack, zero stale raster dependency, one owner
+per semantic identity, complete license/provenance records, no gameplay
+regression, no information loss, and all existing release thresholds.
 
 ## Rollback and Safety
 
-- Record full HEAD before Task 6.0 and every approved application.
-- Keep each unit or coherent family in a scoped commit containing only task-owned
-  changes. Never stage or rewrite unrelated user work.
+- Record full HEAD before Phase 6 execution and before every approved application.
+- Keep every unit or coherent family in a scoped commit containing only
+  task-owned changes.
+- Never stage, rewrite, clean, or revert unrelated user work.
 - Never use hard reset, broad checkout, recursive cleanup, or directory-wide
   deletion to roll back.
-- Before retirement, resolve and verify every absolute target under the intended
-  production/workbench roots and delete only exact approved paths.
-- A failed candidate remains unpromoted. A failed applied unit is corrected by a
-  scoped forward fix or explicit commit revert, preserving evidence and user
-  work.
-- Gameplay state, collision, timing, values, and save data are never rollback
-  levers for a presentation failure.
-- Generated ignored audit media may be removed only after confirming it is
-  task-owned and outside production/source authority.
+- Resolve and verify every retirement path under the intended repository root;
+  delete only exact approved paths and sidecars.
+- Preserve external license/source records even though attribution is not
+  required.
+- A failed candidate remains unpromoted. Correct an applied unit with a forward
+  scoped commit or revert only the exact task-owned commit when safe.
+- If production, manifest, or consumer state changes outside this plan, stop the
+  affected unit, rebuild its report, and obtain new approval.
 
 ## Risks
 
-- **Renderer migration risk:** code-native conversion touches shared renderer,
-  manifest, provider, and validator boundaries. Mitigation: migrate one semantic
-  family at a time, cache geometry, require actual-scale evidence, and switch
-  atomically.
-- **Performance regression:** naive per-frame polygon construction could erase
-  sprite-batch gains. Mitigation: immutable recipes and cached
-  `ArrayMesh`/`MultiMesh` batches are mandatory.
-- **State ambiguity:** one generic shape could collapse defense/status/bulkhead
-  states. Mitigation: topology-distinct recipes and grayscale/state sheets.
-- **Over-suppressed feedback:** deleting effects without a readability substitute
-  could hide ownership or timing. Mitigation: explicit event modes and the future
-  register; keep only evidence-backed semantic geometry.
-- **Visual sameness:** aggressive simplification could make 19 enemies or five
-  bosses indistinguishable. Mitigation: silhouette/negative-space family review
-  at gameplay scale and grayscale.
-- **Approval drift:** code and retirement paths can change after a report.
-  Mitigation: baseline and exact report hashes invalidate automatically on any
-  changed input.
-- **Workbench dual authority:** an evidence document could be mistaken for switch
-  state. Mitigation: only `replacement-workbench.json` records unit status,
-  approval, and application.
-- **Future content growth:** 36 is the current-run reconciliation count, not a ban
-  on future product assets. New content must follow the same medium-boundary and
-  no-unused-production rules.
-
-## Completion and Stop Conditions
-
-Complete only when:
-
-- every Phase 6-9 unit has exact approval and application evidence;
-- production contains exactly 36 indexed gameplay PNGs with the specified
-  family split and zero raster HUD/effect/projectile/state/pickup/facility files;
-- every live semantic identity has exactly one authored-raster or code-native
-  owner and no removed-texture fallback;
-- the complete Phase 11 validator/native/Web/responsive/interaction/performance
-  gate passes at the clean final HEAD;
-- durable specs/evidence reflect the actual result and completed plans are
-  retired under the required authority.
-
-Stop without claiming completion when an exact switch/deletion approval is
-missing, baseline evidence changed, an unrelated user change overlaps a target,
-gameplay behavior would need to change, a required source is unavailable, or a
-release threshold still fails after safe task-scoped correction attempts.
-Preserve exact evidence and resume from the named unchecked task.
+- **Art throughput:** 62 authored outputs remain. Mitigation: produce coherent
+  families in parallel from one strict brief and reuse role grammar without
+  merging semantic identities.
+- **External-style contamination:** source palettes, gradients, cameras, and lore
+  can leak into production. Mitigation: keep source files outside TO-BE and require
+  full Cardborne normalization plus actual-scale review.
+- **Projectile/collision mismatch:** decorative tails can imply damage. Mitigation:
+  render collision overlays and keep the damaging opaque core normalized.
+- **Facility-footprint mismatch:** a body image may understate a live radius or
+  curtain. Mitigation: validate the PNG beside the exact dynamic boundary.
+- **Suppressed-effect readability:** removing small effects may hide event
+  ownership or fairness. Mitigation: preserve direct state/tint/trajectory
+  feedback and reopen a named effect only from concrete gameplay evidence.
+- **Workbench drift:** a wrong unit count could authorize incomplete retirement.
+  Mitigation: partition all 215 current paths once and require a 64-target forecast.
+- **Delayed full testing:** batching validation can accumulate regressions.
+  Mitigation: run parse/schema/import guards per unit and reserve the authoritative
+  end-to-end gate for Phase 11 as explicitly requested.
+- **Approval drift:** any changed hash/path invalidates prior approval. Mitigation:
+  regenerate and redisplay the complete exact report.
 
 ## Open Questions
 
-None. The media boundary, current/final counts, family dispositions, validation
-cadence, and approval protocol are decided. Exact switch approvals and measured
-release outcomes are execution gates, not design questions.
+No architectural question blocks execution. Each visual still requires the
+defined actual-scale review and exact-hash approval. The current EMP candidate is
+a proposal, not a preapproved production switch.
 
 ## Decision Notes
 
-- 2026-08-04: rejected the former 210-PNG final target because it preserved 101
-  transient frames and dozens of symbolic raster files as separate art tasks.
-- 2026-08-04: adopted 36 final gameplay PNGs: 33 persistent authored bodies/
-  objects/states plus three Wear Collapse Tile images.
-- 2026-08-04: adopted 34 authored outputs: 28 replacements and six additions.
-  Player craft and solid cover reuse current bytes.
-- 2026-08-04: preserved all semantic gameplay identities while separating them
-  from file identity; code-native does not mean gameplay removal.
-- 2026-08-04: no current TO-BE image is reusable because no deployable TO-BE file
-  exists. Existing code-native recipes are implementation inputs, not preapproved
-  runtime appearance.
-- 2026-08-04: future small-effect polish remains a documented semantic backlog
-  and may not restore a frame-file production pack by default.
-- 2026-08-04: full validation remains final-only; deterministic structural checks
-  and rendered approval evidence continue during implementation.
+- 2026-08-04: preserved the user's rule that bullets, pickups, crates,
+  facilities, and every other independently readable world target are complete
+  PNG assets.
+- 2026-08-04: withdrew the 36-PNG forecast and adopted the exact 64-PNG boundary.
+- 2026-08-04: retained code-native ownership only for HUD/minimap/combat symbols
+  and live dynamic truth.
+- 2026-08-04: consolidated three XP files to one authored master and repair
+  pad/core to one authored pad without merging gameplay semantics.
+- 2026-08-04: kept EMP as the only large raster effect, represented by one
+  512 x 512 image; suppressed the other 21 small effect families for now.
+- 2026-08-04: confirmed no earlier external gameplay asset-pack intake existed.
+- 2026-08-04: imported only six CC0 PNG sources plus license/provenance evidence;
+  rejected full-pack production imports and direct runtime reuse.
+- 2026-08-04: generated one non-derivative review-only EMP candidate; it still
+  requires gameplay-scale review and switch approval.
+- 2026-08-04: retained one complete final validation after all approved asset and
+  runtime changes, with only mechanical guards during production phases.
+
+## Progress
+
+- [x] Corrected the governing media boundary and final count.
+- [x] Completed current-file, consumer, and external-history audits.
+- [x] Curated and stored six external source PNGs with two included CC0 licenses.
+- [x] Stored a visual contact sheet and one validated EMP review PNG.
+- [x] Revised the rationalization evidence, visual spec, workbench guidance,
+  production ownership guidance, and this active plan.
+- [ ] Runtime/workbench execution has not begun under the corrected boundary.
+
+## Next Steps
+
+1. Start Phase 6 at Task 6.0 by recording the current clean preproduction commit
+   as the execution baseline and confirming Godot 4.7.
+2. Execute Task 6.1 and rebuild the workbench to the exact 215-to-64 partition.
+3. Begin authored production with the nine-projectile unit; do not switch or
+   retire any production file before its exact report is approved.
+
+## Completion and Stop Conditions
+
+Mark this plan complete only when:
+
+- every Phase 6-9 unit has exact approval and application evidence;
+- production contains exactly 64 indexed gameplay PNGs in the specified split;
+- HUD/minimap/combat-cue PNGs and all non-EMP effect frames are absent;
+- every live semantic identity has exactly one visual owner;
+- external-source derivatives have complete provenance and license records;
+- gameplay rules and collision truth remain unchanged;
+- the complete Phase 11 native/Web/responsive/interaction/performance gate passes;
+- final evidence and durable specs are current; and
+- no task, risk remediation, or required follow-up remains.
+
+If a blocking condition repeats for three consecutive goal turns and no safe
+in-scope progress remains, record exact evidence and report the blocker. Otherwise
+preserve the current clean baseline and continue from the named unchecked task.

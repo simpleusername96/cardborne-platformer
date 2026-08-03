@@ -8,6 +8,7 @@ scope: Current AS-IS references, authored-raster and code-native targets, previe
 related:
   - ../VISUAL_SYSTEM.md
   - ./asset-rationalization.md
+  - ./external-candidates/README.md
   - ../../product/vehicle_game_spec.md
   - ../../../art/visuals/production/README.md
 ---
@@ -27,6 +28,9 @@ production, runtime-change, and retirement targets.
 - `inventory.json` and `index.html` are deterministic generated outputs.
 - `index-template.html` owns the read-only bilingual file-URL interface.
 - `previews/` contains review-only comparisons and contact sheets.
+- `external-candidates/` contains a curated, license-recorded subset of external
+  source material and review-only derivative candidates. It is never a TO-BE or
+  production root.
 - `to-be/assets/` may contain only directly promotable production files whose
   suffix exactly mirrors their production target path.
 - [`asset-rationalization.md`](./asset-rationalization.md) records the audited
@@ -41,6 +45,9 @@ product specification and [`VISUAL_SYSTEM.md`](../VISUAL_SYSTEM.md).
 - AS-IS media is referenced from `art/visuals/production`; it is not copied
   into this folder.
 - A preview never satisfies a deliverable or approval requirement.
+- An external candidate never satisfies a deliverable or approval requirement.
+  It must first be adapted to the Cardborne camera, palette, silhouette, canvas,
+  pivot, and detail contract and saved under the exact `to-be/assets/` target.
 - A code-native switch may have no TO-BE PNG. Its unit must instead enumerate
   the exact runtime-change paths, semantic IDs, rendered comparison evidence,
   and exact raster/sidecar retirement paths.
