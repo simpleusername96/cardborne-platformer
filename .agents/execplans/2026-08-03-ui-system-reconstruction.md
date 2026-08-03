@@ -869,14 +869,14 @@ the active visual-replacement plan.
     exactly 36 units, four retire-only units, 215 gameplay PNGs, 54 UI PNGs, one
     font, and statuses `keep_current=2`, `target_required=30`,
     `switch_ready=1`, `retired=3`.
-- [ ] **8.3 Display and obtain the exact destructive approval**
+- [x] **8.3 Display and obtain the exact destructive approval**
   - Change: print baseline commit, sorted retirement paths, PNG sizes and
     SHA-256 values, plus the empty runtime-reference result. Ask BK to approve
     that exact displayed set.
   - Accept: approval text binds the exact baseline and paths. Stop only this
     retirement branch if approval is absent or differs; the migrated runtime
     remains usable with unreferenced files still present.
-- [ ] **8.4 Delete only the approved paths and update coverage**
+- [x] **8.4 Delete only the approved paths and update coverage**
   - Change: after exact approval, remove only the approved files using literal
     repository-contained paths. Retain `vehicle_stage_theme.tres`, the font and
     license, and every gameplay semantic image. Remove raster count/provider
@@ -885,7 +885,7 @@ the active visual-replacement plan.
   - Accept: Godot import reports no missing resource; zero files remain under
     UI `controls`, `surfaces`, or `glyphs`; the UI production root contains the
     Theme and font family only; all focused validators pass.
-- [ ] **8.5 Record application and reconcile generated workbench output**
+- [x] **8.5 Record application and reconcile generated workbench output**
   - Change: set `ui_chrome_retirement` to `retired`, record its exact
     approval/application evidence, rebuild `inventory.json` and `index.html`,
     and amend the broader visual plan's expected UI PNG/manifest count from 54
@@ -1244,21 +1244,21 @@ retirement, and validation decisions are locked above.
 ## Progress
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 8 — prepare the exact legacy raster retirement set.
-- Last completed gate: Phase 8 non-destructive preparation; runtime and Theme
-  scans report zero legacy chrome references, focused Godot validators pass,
-  and the workbench projects 36 units with one 113-path UI retirement unit.
+- Current phase: Phase 9 — run final native, capture, and built-Web evidence.
+- Last completed gate: Phase 8 retirement gate; exactly 113 approved paths are
+  absent, import and focused UI coverage pass, and the deterministic workbench
+  projects 215 gameplay PNGs, zero UI PNGs, one font, and four retired units.
 - Last green implementation commit:
-  `61c59d9a364f28ae1d807571b31cb25c2d62c0e7`.
+  `97ce9a195a82911cc9ba1913e4380494e5fbef3e`.
 - Update rule: after a checkpoint passes, record concise evidence, check the
   task, update the last green commit, and advance this pointer in the same edit.
 
 ## Next Steps
 
-1. Display the exact baseline, paths, sizes, and hashes for BK approval before
-   deleting any file.
-2. After exact approval, delete only those literal paths and update coverage.
-3. Record application evidence, reconcile generated output, then run Phase 9.
+1. Run the complete deterministic validator and import gate once.
+2. Capture and review the KO/EN viewport and 200% text matrix.
+3. Export and smoke the built Web artifact, then record durable evidence and
+   retire this temporary contract.
 
 ## Completion and Stop Conditions
 
@@ -1329,6 +1329,14 @@ Do not replan or stop for:
   literal retirement paths. The obsolete non-runtime raster conversion helper
   remains outside production and outside the exact retirement set so the
   approved 113-path boundary is not expanded implicitly.
+- 2026-08-03: BK approved the exact Phase 8 UI chrome retirement at baseline
+  `107bcfc345fb524c2e83c1c94dd083777589e4d3` using the displayed 113 sorted
+  paths and 54 PNG byte/SHA-256 records with no runtime change paths. Commit
+  `97ce9a195a82911cc9ba1913e4380494e5fbef3e` deletes exactly that set and
+  updates coverage to the code-native contract. The application ledger records
+  that commit; the rebuilt workbench contains 36 units, 215 gameplay PNGs,
+  zero UI PNGs, one font, and statuses `keep_current=2`,
+  `target_required=30`, `retired=4`.
 - 2026-08-03: BK accepted the simplified UI direction while explicitly
   preserving information rather than reducing it.
 - 2026-08-03: BK required deletion of the small top image on upgrade cards,

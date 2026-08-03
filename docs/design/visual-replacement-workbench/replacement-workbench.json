@@ -4041,7 +4041,7 @@
       "title_ko": "레거시 UI 크롬 폐기",
       "owner": "ui_theme",
       "switch_kind": "retire",
-      "status": "approved_for_switch",
+      "status": "retired",
       "current_paths": [
         "art/visuals/production/ui/controls/button_danger_disabled.png",
         "art/visuals/production/ui/controls/button_danger_focus.png",
@@ -4349,7 +4349,19 @@
           "tools/validation/validate_visual_replacement_ui_surface_targets.gd.uid"
         ]
       },
-      "application": null
+      "application": {
+        "commit": "97ce9a195a82911cc9ba1913e4380494e5fbef3e",
+        "applied_at": "2026-08-03T20:54:51+09:00",
+        "validation_evidence": [
+          ".\\tools\\godot.ps1 --path . --headless --import",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_ui_components.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          "git diff --check"
+        ]
+      }
     },
     {
       "id": "orphan_ui_state_retirement",
@@ -4366,9 +4378,7 @@
         "art/visuals/production/ui/glyphs/small_state_warning.png"
       ],
       "consumer_paths": [
-        "art/visuals/production/ui/ui-asset-manifest.json",
-        "art/visuals/production/ui/vehicle_stage_theme.tres",
-        "scripts/ui/vehicle_ui_asset_provider.gd"
+        "art/visuals/production/ui/vehicle_stage_theme.tres"
       ],
       "consumer_asset_ids": [
         "small_state/pip_empty",
@@ -4387,7 +4397,6 @@
         "art/visuals/production/ui/glyphs/small_state_warning.png.import"
       ],
       "runtime_change_paths": [
-        "art/visuals/production/ui/ui-asset-manifest.json",
         "art/visuals/production/ui/vehicle_stage_theme.tres",
         "scripts/ui/vehicle_modal_host.gd",
         "tools/validation/validate_vehicle_visual_replacement_coverage.gd"

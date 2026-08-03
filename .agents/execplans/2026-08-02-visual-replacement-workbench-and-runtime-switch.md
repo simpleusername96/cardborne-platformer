@@ -1894,7 +1894,7 @@ before execution continues.
     per-family contact sheets and one shared runtime-size matrix; both units
     are switch_ready.
   - [x] Obtain exact hash-bound approval and apply preview and small_state.
-- [ ] Complete the corrective shared-UI reconstruction contract before Phase 6.
+- [x] Complete the corrective shared-UI reconstruction contract before Phase 6.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
 - [ ] Phase 8: replace ordinary enemies, hostile attacks, and cues.
@@ -1904,12 +1904,10 @@ before execution continues.
 
 ## Next Steps
 
-1. Execute `.agents/execplans/2026-08-03-ui-system-reconstruction.md` from its
-   Task 1.1 and keep this plan's Phase 6 paused.
-2. After that contract completes, verify its zero-raster UI amendment is
-   reflected in this plan's counts, workbench ledger, and durable specs.
-3. Resume here by enumerating the complete `primary_weapon` package for
-   Phase 6.
+1. Resume by enumerating the complete `primary_weapon` package for Phase 6.
+2. Preserve the completed zero-raster shared UI contract while switching only
+   the gameplay visual families owned by Phase 6.
+3. Keep the workbench at zero UI chrome PNGs and one code-native Theme owner.
 
 ## Completion Criteria
 
@@ -1934,7 +1932,7 @@ before execution continues.
   runtime rectangles.
 - [ ] Effects use exactly 101 frames and zero atlases.
 - [ ] Gameplay provider indexes exactly 211 PNGs.
-- [ ] UI uses one code-native Theme with zero raster chrome PNGs, zero UI
+- [x] UI uses one code-native Theme with zero raster chrome PNGs, zero UI
   manifest, and zero UI asset-provider dependency after the corrective UI
   reconstruction contract completes.
 - [ ] All applied production hashes match exact BK-approved hashes.
@@ -1999,7 +1997,7 @@ Do not mark a phase or this plan complete while a stop condition remains.
   state textures for the current product feature.
 - 2026-08-02: Removed atlas-only effect duplication and UI states without
   consumers; bound all valid UI states.
-- 2026-08-02: Locked final normalized counts at 211 gameplay PNGs, 54 UI PNGs,
+- 2026-08-02: Locked final normalized counts at 211 gameplay PNGs, zero UI PNGs,
   and one font.
 - 2026-08-02: Preserved the active pre-asset plan as a hard interlock. This plan
   does not authorize runtime switching until that interlock is durably cleared.
@@ -2322,12 +2320,20 @@ Do not mark a phase or this plan complete while a stop condition remains.
   promoted bytes are now current AS-IS; only their duplicate TO-BE bytes and
   three completed previews are removed during baseline cleanup. No approved
   retire path, runtime path, or Phase 6 visual family was changed.
+- 2026-08-03: The corrective shared-UI reconstruction completed its exact
+  retirement switch at approved baseline
+  `107bcfc345fb524c2e83c1c94dd083777589e4d3`. Commit
+  `97ce9a195a82911cc9ba1913e4380494e5fbef3e` removes exactly the approved 113
+  paths: 54 UI chrome PNGs, their 54 import sidecars, and the five obsolete
+  manifest/provider/raster-validator files. The current workbench contains 215
+  gameplay PNGs, zero UI PNGs, one font, 36 units, and four retired units. UI
+  chrome is owned by the code-native Theme and shared component factory, and
+  this plan may resume at Phase 6 after the corrective contract's final release
+  evidence is recorded.
 
 ## Execution Handoff
 
-Before resuming Phase 6, complete
-`.agents/execplans/2026-08-03-ui-system-reconstruction.md`. Then start by
-reading this complete plan, root AGENTS.md, .agents/AGENTS.md,
+Resume Phase 6 by reading this complete plan, root AGENTS.md, .agents/AGENTS.md,
 .agents/PLANS.md, the active product spec, the active visual spec, and the
 pre-asset stabilization plan. Run Phase 0 exactly. If the interlock is open,
 execute one checkbox and one coherent switch unit at a time, update Progress
