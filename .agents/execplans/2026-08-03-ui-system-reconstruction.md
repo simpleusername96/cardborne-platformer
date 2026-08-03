@@ -770,7 +770,7 @@ Source owners: `vehicle_gameplay_hud.gd`, `vehicle_hud_presenter.gd`,
 `vehicle_threat_radar.gd`, retained minimap components, UI glyph catalog, and
 HUD/layout/reward validators.
 
-- [ ] **7.1 Collapse HUD backing into four shared zones**
+- [x] **7.1 Collapse HUD backing into four shared zones**
   - Change: replace health, objective/boss, minimap/target, action, and toast
     screen-specific plate variations with `HudSurface`/`ToastSurface`; keep a
     surface only when contrast against the world requires containment; move or
@@ -779,7 +779,7 @@ HUD/layout/reward validators.
   - Accept: top-left, top-center, top-right, and bottom-center zones match the
     locked screen contract; no zone gains nested backing; the world, player,
     crosshair, target, and threat cues remain unobscured.
-- [ ] **7.2 Remove raster meter and small-state consumers**
+- [x] **7.2 Remove raster meter and small-state consumers**
   - Change: remove `UiAssets` use from `HealthPips` and `ActionRailSlot`; render
     live ratios and cooldown/availability through the shared Meter/state
     geometry and existing semantic icons. Replace status-orbit
@@ -789,13 +789,13 @@ HUD/layout/reward validators.
   - Accept: `rg -n "VehicleUiAssetProvider|UiAssets\.texture" scripts` returns
     no production consumer; health/resource/boss/cooldown/support states remain
     readable in color and grayscale; ready versus disabled is not color-only.
-- [ ] **7.3 Simplify transition and notification surfaces**
+- [x] **7.3 Simplify transition and notification surfaces**
   - Change: make the transition banner and notification queue consume
     `ToastSurface` and shared label spacing; preserve timing, queue cap, message
     color role, localization, and objective/crosshair avoidance.
   - Accept: banners never create modal dimming, duplicate borders, or blocked
     input; all queued messages still appear in order.
-- [ ] **7.4 Validate live, boss, pressure, and reduced-motion states**
+- [x] **7.4 Validate live, boss, pressure, and reduced-motion states**
   - Change: update HUD presenter, layout, rewards/audio, capture driver, and
     structural component assertions. Capture ordinary live play, cooldowns,
     boss objective/target, peak horde, collective states, Pause overlay, and
@@ -1244,22 +1244,22 @@ retirement, and validation decisions are locked above.
 ## Progress
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 7 — migrate the live HUD and transient UI.
-- Last completed gate: combined Phase 5/6 modal gate; shared components,
-  Settings, Guidebook, debug Practice, reports, final result, stage layout, and
-  KO/EN localization passed with Godot error-log enforcement.
+- Current phase: Phase 8 — prepare the exact legacy raster retirement set.
+- Last completed gate: Phase 7 HUD gate; presenter, rewards/audio, layout,
+  transition, combat renderer, performance scenarios, and visual coverage
+  passed with no production raster-chrome consumer.
 - Last green implementation commit:
-  `26bc57d4769a7ad2c6b1db3fd194e02899ff9206`.
+  `58ad8186e8621467cff8dcd629ce5300168a8850`.
 - Update rule: after a checkpoint passes, record concise evidence, check the
   task, update the last green commit, and advance this pointer in the same edit.
 
 ## Next Steps
 
-1. Collapse gameplay HUD backing into the four shared zones.
-2. Remove the remaining raster meter/small-state provider consumers and move
-   transition/notification chrome to the shared Toast surface.
-3. Pass the Phase 7 live HUD, combat renderer, and performance gates before
-   preparing the exact retirement approval set.
+1. Prove zero production dependency on the 54-file legacy UI chrome pack.
+2. Consolidate the workbench into one deterministic 113-path retirement unit
+   and commit the non-destructive approval preparation.
+3. Display the exact baseline, paths, sizes, and hashes for BK approval before
+   deleting any file.
 
 ## Completion and Stop Conditions
 
@@ -1317,6 +1317,12 @@ Do not replan or stop for:
   `26bc57d4769a7ad2c6b1db3fd194e02899ff9206`; reports and final result retain
   every telemetry/action value while replacing framed metrics with shared
   TextRows and unboxed sections.
+- 2026-08-03: Phase 7 completed in
+  `58ad8186e8621467cff8dcd629ce5300168a8850`; the live HUD now owns four shared
+  surfaces, code-native health/action/status state, shared Toast transients,
+  and zero production raster-chrome consumer. The production replay missed its
+  peak window on the first gate attempt and passed unchanged when rerun alone;
+  failure snapshot diagnostics remain in its validator for final-gate evidence.
 - 2026-08-03: BK accepted the simplified UI direction while explicitly
   preserving information rather than reducing it.
 - 2026-08-03: BK required deletion of the small top image on upgrade cards,
