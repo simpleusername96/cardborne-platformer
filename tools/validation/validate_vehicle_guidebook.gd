@@ -31,7 +31,20 @@ func _run() -> void:
 	store.discover(&"stationary_mine")
 	store.discover(&"boss_stage_2")
 	store.discover(&"object_transit_gate")
-	var visual := store.snapshot({})
+	var active_ship := {
+		"active":true,
+		"run_state":{
+			"level":3,
+			"health":88.0,
+			"max_health":120.0,
+			"experience":4,
+			"experience_required":12,
+		},
+		"stats":[],
+		"secondaries":[],
+		"upgrades":[],
+	}
+	var visual := store.snapshot(active_ship)
 	for category in [&"stationary", &"bosses", &"objects"]:
 		var unlocked: Array = visual["categories"][category].filter(
 			func(entry: Dictionary) -> bool: return not bool(entry["locked"])
@@ -53,16 +66,84 @@ func _run() -> void:
 	_expect(loaded.known.has(&"mobile_chaser") and loaded.known.size() == 4, "discovery save round-trips sanitized IDs")
 	var panel := GuidePanel.new()
 	get_root().add_child(panel)
+	await process_frame
 	panel.open(visual)
+	await process_frame
 	var contract := panel.debug_contract()
-	_expect(int(contract["categories"]) == 5 and int(contract["command_height"]) >= 44, "guide modal has five accessible categories")
+	_expect(
+		int(contract["categories"]) == 5
+			and Array(contract["category_order"]) == [
+				&"ship", &"mobile", &"stationary", &"bosses", &"objects",
+			]
+			and int(contract["command_height"]) >= 44
+			and bool(contract["category_has_focus"]),
+		"guide modal preserves five accessible categories in product order"
+	)
 	_expect(bool(contract["ship_entry_column_hidden"]), "Current Ship removes the redundant entry column")
-	_expect(bool(contract["structured_counterplay"]), "discovered detail owns structured movement, attack, and counter rows")
+	_expect(
+		bool(contract["ship_detail_full_width"])
+			and StringName(contract["preview_shell_variation"]) == &"PreviewFrame"
+			and bool(Dictionary(contract["preview"])["ship_nose_up"]),
+		"Current Ship uses a full-width shared PreviewWell with nose-up craft asset"
+	)
+	var build_contract := Dictionary(contract["build_summary"])
+	_expect(
+		bool(build_contract["active"])
+			and int(build_contract["summary_panel_count"]) == 0
+			and int(build_contract["text_row_count"]) >= 5,
+		"active ship summary uses shared rows without a summary panel"
+	)
 	_expect(panel.debug_select_entry(&"bosses", &"boss_stage_2"), "discovered boss detail is selectable")
 	contract = panel.debug_contract()
-	_expect(bool(contract["entry_column_visible"]), "non-ship categories restore the entry column")
+	_expect(
+		bool(contract["entry_column_visible"])
+			and bool(contract["structured_counterplay"])
+			and int(contract["counterplay_rows"]) == 3
+			and int(contract["row_panel_count"]) == 0
+			and bool(Dictionary(contract["preview"])["semantic_provider"]),
+		"discovered detail restores the list and three unboxed counterplay rows"
+	)
+	var locked_id := &""
+	for category in [&"mobile", &"stationary", &"bosses", &"objects"]:
+		for entry_variant in Array(visual["categories"][category]):
+			var entry := Dictionary(entry_variant)
+			if bool(entry.get("locked", false)):
+				locked_id = StringName(entry["id"])
+				_expect(panel.debug_select_entry(category, locked_id), "locked entry remains selectable without disclosure")
+				contract = panel.debug_contract()
+				_expect(
+					Array(Dictionary(contract["preview"])["asset_ids"])
+						== [&"hud/minimap_marker_objective_locked"],
+					"locked detail exposes only the approved locked silhouette"
+				)
+				break
+		if not locked_id.is_empty():
+			break
+	_expect(not locked_id.is_empty(), "guide fixture includes a locked confidentiality state")
+	panel.set_compact_mode(true)
+	panel.open(visual)
+	await process_frame
+	_expect(panel.debug_select_entry(&"mobile", &"mobile_chaser"), "compact list selects a discovered mobile entry")
+	contract = panel.debug_contract()
+	var ratios := Array(contract["entry_detail_ratios"])
+	_expect(
+		bool(contract["compact_selector_visible"])
+			and not bool(contract["wide_rail_visible"])
+			and int(contract["compact_selector_count"]) == 5
+			and bool(contract["category_has_focus"])
+			and int(contract["entry_focusables"]) > 0
+			and is_equal_approx(float(ratios[0]), 0.34)
+			and is_equal_approx(float(ratios[1]), 0.66)
+			and bool(contract["independent_scroll"]),
+		"compact guide uses one five-option selector and independent 34/66 scroll panes"
+	)
 	panel.call("_select_category", &"ship")
-	_expect(bool(panel.debug_contract()["ship_entry_column_hidden"]), "Ship layout restores after repeated category changes")
+	contract = panel.debug_contract()
+	_expect(
+		bool(contract["ship_entry_column_hidden"])
+			and bool(contract["ship_detail_full_width"]),
+		"Ship full-width detail restores after repeated compact category changes"
+	)
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		panel.open(visual)

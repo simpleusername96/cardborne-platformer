@@ -1,5 +1,5 @@
 class_name VehicleGuidebookPreview
-extends PanelContainer
+extends Control
 
 ## Displays guide entries through the approved semantic-v2 runtime provider.
 ## Preview geometry stays presentation-only and never substitutes for collision.
@@ -9,11 +9,11 @@ const SemanticAssets = preload(
 )
 var _textures: Array[TextureRect] = []
 var _asset_ids: Array[StringName] = []
+var _rotations: Array[float] = []
 
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(220.0, 150.0)
-	theme_type_variation = &"PreviewFrame"
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	resized.connect(_layout_textures)
@@ -28,6 +28,14 @@ func show_preview(preview: Dictionary) -> void:
 	var kind := StringName(preview.get("kind", &"enemy"))
 	var preview_id := StringName(preview.get("id", &"chaser"))
 	match kind:
+		&"ship":
+			_add_asset(
+				&"attachment/player_craft_body",
+				126.0,
+				Vector2.ZERO,
+				Color.WHITE,
+				-PI / 2.0
+			)
 		&"locked":
 			_add_asset(&"hud/minimap_marker_objective_locked", 54.0)
 		&"boss":
@@ -55,6 +63,12 @@ func debug_contract() -> Dictionary:
 		"semantic_provider":true,
 		"asset_ids":_asset_ids.duplicate(),
 		"texture_count":_textures.size(),
+		"rotations":_rotations.duplicate(),
+		"ship_nose_up":(
+			_asset_ids == [&"attachment/player_craft_body"]
+			and _rotations.size() == 1
+			and is_equal_approx(_rotations[0], -PI / 2.0)
+		),
 	}
 
 
@@ -93,7 +107,8 @@ func _add_asset(
 	asset_id: StringName,
 	extent: float,
 	offset: Vector2 = Vector2.ZERO,
-	modulate: Color = Color.WHITE
+	modulate: Color = Color.WHITE,
+	rotation_radians: float = 0.0
 ) -> TextureRect:
 	var texture := SemanticAssets.texture(asset_id)
 	if texture == null:
@@ -105,10 +120,13 @@ func _add_asset(
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	view.modulate = modulate
 	view.size = Vector2.ONE * extent
+	view.pivot_offset = view.size * 0.5
+	view.rotation = rotation_radians
 	view.set_meta("preview_offset", offset)
 	add_child(view)
 	_textures.append(view)
 	_asset_ids.append(asset_id)
+	_rotations.append(rotation_radians)
 	return view
 
 
@@ -123,3 +141,4 @@ func _clear_textures() -> void:
 		view.queue_free()
 	_textures.clear()
 	_asset_ids.clear()
+	_rotations.clear()

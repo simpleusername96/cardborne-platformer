@@ -1,30 +1,46 @@
 class_name VehicleSettingsPanel
 extends VBoxContainer
 
-## Shared, scroll-safe settings surface used from deployment, pause, and garage.
-## It owns presentation and input capture only; SettingsStore remains persistence
-## truth and GameRoot applies the resulting InputMap.
+## Shared, scroll-safe settings surface. It owns presentation/input capture;
+## SettingsStore remains persistence truth and GameRoot applies InputMap state.
 
 signal close_requested
 signal guide_requested
 
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const BuildSummaryPanel = preload("res://scripts/ui/vehicle_build_summary_panel.gd")
 
+const CATEGORY_IDS: Array[StringName] = [
+	&"ship", &"audio", &"controls", &"gameplay", &"language",
+]
+const CATEGORY_KEYS := {
+	&"ship":"SHIP_STATUS_TAB",
+	&"audio":"SETTINGS_AUDIO_TAB",
+	&"controls":"SETTINGS_CONTROLS_TAB",
+	&"gameplay":"SETTINGS_GAMEPLAY_TAB",
+	&"language":"SETTINGS_LANGUAGE_TAB",
+}
 const ACTION_TITLE_KEYS := {
-	&"primary_fire": "ACTION_PRIMARY",
-	&"dash": "ACTION_DASH",
-	&"active_skill": "ACTION_EMP",
-	&"move_left": "SETTINGS_MOVEMENT_RESERVED",
-	&"move_right": "SETTINGS_MOVEMENT_RESERVED",
-	&"move_up": "SETTINGS_MOVEMENT_RESERVED",
-	&"move_down": "SETTINGS_MOVEMENT_RESERVED",
-	&"pause": "SETTINGS_PAUSE_RESERVED",
+	&"primary_fire":"ACTION_PRIMARY",
+	&"dash":"ACTION_DASH",
+	&"active_skill":"ACTION_EMP",
+	&"move_left":"SETTINGS_MOVEMENT_RESERVED",
+	&"move_right":"SETTINGS_MOVEMENT_RESERVED",
+	&"move_up":"SETTINGS_MOVEMENT_RESERVED",
+	&"move_down":"SETTINGS_MOVEMENT_RESERVED",
+	&"pause":"SETTINGS_PAUSE_RESERVED",
 }
 
-var _tabs: TabContainer
+var _title_label: Label
+var _guide_button: Button
 var _close_button: Button
+var _category_rail: VBoxContainer
+var _category_buttons: Dictionary = {}
+var _pages: Dictionary = {}
+var _content_scroll: ScrollContainer
+var _active_category := &"ship"
 var _binding_buttons: Dictionary = {}
 var _master_slider: HSlider
 var _sfx_slider: HSlider
@@ -34,6 +50,7 @@ var _status_label: Label
 var _build_summary: VehicleBuildSummaryPanel
 var _build_snapshot: Dictionary = {}
 var _capturing_action: StringName = &""
+var _text_rows: Array[HBoxContainer] = []
 
 
 func _ready() -> void:
@@ -51,20 +68,17 @@ func open() -> void:
 	visible = true
 	_cancel_capture(false)
 	refresh_from_store()
-	_tabs.current_tab = 0
+	_select_category(&"ship")
 	_build_summary.set_snapshot(_build_snapshot)
-	if is_instance_valid(_close_button):
-		_close_button.grab_focus()
+	_close_button.grab_focus()
 
 
 func set_compact_mode(compact: bool) -> void:
-	custom_minimum_size = (
-		Vector2(820.0, 456.0)
-		if compact
-		else Vector2(856.0, 500.0)
-	)
-	if is_instance_valid(_tabs):
-		_tabs.custom_minimum_size.y = 376.0 if compact else 420.0
+	custom_minimum_size = Vector2(820.0, 456.0) if compact else Vector2(856.0, 500.0)
+	_category_rail.custom_minimum_size.x = 150.0 if compact else 176.0
+	add_theme_constant_override("separation", 8 if compact else 12)
+	for row in _text_rows:
+		(row.get_child(0) as Label).custom_minimum_size.x = 136.0 if compact else 168.0
 
 
 func set_build_snapshot(snapshot: Dictionary) -> void:
@@ -83,7 +97,7 @@ func is_capturing_binding() -> bool:
 
 func refresh_from_store() -> void:
 	var settings := _settings_store()
-	if settings == null or not is_instance_valid(_tabs):
+	if settings == null or not is_instance_valid(_content_scroll):
 		return
 	_master_slider.set_value_no_signal(settings.master_volume)
 	_sfx_slider.set_value_no_signal(settings.sfx_volume)
@@ -97,22 +111,28 @@ func refresh_from_store() -> void:
 
 func debug_contract() -> Dictionary:
 	return {
-		"tabs": _tabs.get_tab_count() if is_instance_valid(_tabs) else 0,
-		"binding_controls": _binding_buttons.size(),
-		"minimum_size": custom_minimum_size,
-		"focusables": find_children("*", "Control", true, false).filter(
-			func(control: Control) -> bool: return control.focus_mode != Control.FOCUS_NONE
+		"tabs":CATEGORY_IDS.size(),
+		"category_order":CATEGORY_IDS.duplicate(),
+		"active_category":_active_category,
+		"category_selectables":_category_buttons.size(),
+		"single_scroll_region":find_children("*", "ScrollContainer", true, false).size() == 1,
+		"text_rows":_text_rows.size(),
+		"row_panel_count":0,
+		"binding_controls":_binding_buttons.size(),
+		"minimum_size":custom_minimum_size,
+		"focusables":find_children("*", "Control", true, false).filter(
+			func(control: Control) -> bool: return control.focus_mode != Control.FOCUS_NONE and control.is_visible_in_tree()
 		).size(),
-		"capturing": is_capturing_binding(),
-		"reduced_motion_control": is_instance_valid(_reduced_motion_toggle) and _reduced_motion_toggle.custom_minimum_size.y >= 44.0,
-		"difficulty_controls": find_children("*", "OptionButton", true, false).size(),
+		"capturing":is_capturing_binding(),
+		"reduced_motion_control":is_instance_valid(_reduced_motion_toggle) and _reduced_motion_toggle.custom_minimum_size.y >= 44.0,
+		"difficulty_controls":0,
 		"difficulty_copy_visible":false,
 		"ship_status":_build_summary.debug_contract() if is_instance_valid(_build_summary) else {},
 	}
 
 
 func debug_show_gameplay_page() -> void:
-	_tabs.current_tab = 3
+	_select_category(&"gameplay")
 
 
 func _input(event: InputEvent) -> void:
@@ -127,7 +147,7 @@ func _input(event: InputEvent) -> void:
 		if not descriptor.is_empty():
 			_commit_captured_binding(descriptor)
 			get_viewport().set_input_as_handled()
-		return
+			return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		close_requested.emit()
 		get_viewport().set_input_as_handled()
@@ -136,172 +156,158 @@ func _input(event: InputEvent) -> void:
 func _build() -> void:
 	custom_minimum_size = Vector2(856.0, 500.0)
 	add_theme_constant_override("separation", 12)
-
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
 	add_child(header)
-	var title := _label("SETTINGS_TITLE", 40, Art.IVORY_BRIGHT)
-	title.theme_type_variation = &"TitleLabel"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-	var guide := _button("?", &"SecondaryButton")
-	guide.tooltip_text = tr("GUIDE_TITLE")
-	guide.accessibility_name = tr("GUIDE_TITLE")
-	guide.custom_minimum_size = Vector2(44.0, 44.0)
-	guide.pressed.connect(func() -> void: guide_requested.emit())
-	header.add_child(guide)
-	_close_button = _button("SETTINGS_CLOSE", &"SecondaryButton")
+	_title_label = Factory.label("SETTINGS_TITLE", 40, Art.TEXT_PRIMARY)
+	_title_label.theme_type_variation = &"TitleLabel"
+	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(_title_label)
+	_guide_button = Factory.command_button("?", Factory.COMMAND_SECONDARY)
+	_guide_button.tooltip_text = tr("GUIDE_TITLE")
+	_guide_button.accessibility_name = tr("GUIDE_TITLE")
+	_guide_button.custom_minimum_size = Vector2(44.0, 44.0)
+	_guide_button.pressed.connect(func() -> void: guide_requested.emit())
+	header.add_child(_guide_button)
+	_close_button = Factory.command_button("SETTINGS_CLOSE", Factory.COMMAND_SECONDARY)
 	_close_button.custom_minimum_size.x = 112.0
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
 	header.add_child(_close_button)
 
-	_status_label = _label("", 14, Art.MINT_SOFT)
+	_status_label = Factory.label("", 14, Art.MINT_SOFT)
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status_label.visible = false
 	add_child(_status_label)
 
-	_tabs = TabContainer.new()
-	_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tabs.custom_minimum_size.y = 420.0
-	_tabs.focus_mode = Control.FOCUS_ALL
-	add_child(_tabs)
-	_style_tab_bar()
+	var workspace := HBoxContainer.new()
+	workspace.add_theme_constant_override("separation", 16)
+	workspace.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	workspace.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(workspace)
+	_category_rail = VBoxContainer.new()
+	_category_rail.custom_minimum_size.x = 176.0
+	_category_rail.add_theme_constant_override("separation", 4)
+	workspace.add_child(_category_rail)
+	for category_id in CATEGORY_IDS:
+		var button := _selectable(String(CATEGORY_KEYS[category_id]))
+		button.toggle_mode = false
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.custom_minimum_size.y = 48.0
+		button.pressed.connect(_select_category.bind(category_id))
+		_category_rail.add_child(button)
+		_category_buttons[category_id] = button
+	workspace.add_child(VSeparator.new())
+	_content_scroll = ScrollContainer.new()
+	_content_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_content_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_content_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	workspace.add_child(_content_scroll)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_top", 4)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content_scroll.add_child(margin)
+	var page_root := VBoxContainer.new()
+	page_root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_child(page_root)
+	for category_id in CATEGORY_IDS:
+		var page := VBoxContainer.new()
+		page.add_theme_constant_override("separation", 12)
+		page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		page.visible = category_id == &"ship"
+		page_root.add_child(page)
+		_pages[category_id] = page
 	_build_ship_status_page()
 	_build_audio_page()
 	_build_controls_page()
 	_build_gameplay_page()
 	_build_language_page()
+	_select_category(&"ship")
 
 
 func _build_ship_status_page() -> void:
-	var box := _page("ShipStatus")
+	var page := _page(&"ship")
+	page.add_child(Factory.section_heading("SHIP_STATUS_HEADING"))
 	_build_summary = BuildSummaryPanel.new()
-	box.add_child(_build_summary)
+	page.add_child(_build_summary)
 
 
 func _build_audio_page() -> void:
-	var box := _page("Audio")
-	box.add_child(_section_title("SETTINGS_AUDIO_HEADING"))
-	box.add_child(_label("PAUSE_MASTER_VOLUME", 15, Art.IVORY_BRIGHT))
+	var page := _page(&"audio")
+	page.add_child(Factory.section_heading("SETTINGS_AUDIO_HEADING"))
 	_master_slider = _slider()
 	_master_slider.value_changed.connect(_on_master_volume_changed)
-	box.add_child(_master_slider)
-	box.add_child(_label("PAUSE_EFFECTS_VOLUME", 15, Art.IVORY_BRIGHT))
+	page.add_child(_control_row("PAUSE_MASTER_VOLUME", _master_slider))
 	_sfx_slider = _slider()
 	_sfx_slider.value_changed.connect(_on_sfx_volume_changed)
-	box.add_child(_sfx_slider)
+	page.add_child(_control_row("PAUSE_EFFECTS_VOLUME", _sfx_slider))
 
 
 func _build_controls_page() -> void:
-	var box := _page("Controls")
-	box.add_child(_section_title("SETTINGS_CONTROLS_HEADING"))
-	var help := _label("SETTINGS_CONTROLS_HELP", 14, Art.MINT_SOFT)
+	var page := _page(&"controls")
+	page.add_child(Factory.section_heading("SETTINGS_CONTROLS_HEADING"))
+	var help := Factory.label("SETTINGS_CONTROLS_HELP", 14, Art.MINT_SOFT)
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(help)
+	page.add_child(help)
 	for action in InputProfile.REMAPPABLE_ACTIONS:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
-		var action_label := _label(String(ACTION_TITLE_KEYS[action]), 16, Art.IVORY_BRIGHT)
-		action_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		action_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		row.add_child(action_label)
-		var binding_button := _button("INPUT_UNBOUND", &"SecondaryButton")
-		binding_button.custom_minimum_size.x = 220.0
-		binding_button.pressed.connect(_begin_capture.bind(action))
-		row.add_child(binding_button)
-		_binding_buttons[action] = binding_button
-		box.add_child(row)
-	var reset := _button("SETTINGS_RESET_BINDINGS", &"SecondaryButton")
+		var button := Factory.command_button("INPUT_UNBOUND", Factory.COMMAND_SECONDARY)
+		button.custom_minimum_size.x = 220.0
+		button.pressed.connect(_begin_capture.bind(action))
+		_binding_buttons[action] = button
+		page.add_child(_control_row(String(ACTION_TITLE_KEYS[action]), button))
+	var reset := Factory.command_button("SETTINGS_RESET_BINDINGS", Factory.COMMAND_SECONDARY)
 	reset.custom_minimum_size.x = 260.0
 	reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	reset.pressed.connect(_reset_bindings)
-	box.add_child(reset)
+	page.add_child(reset)
 
 
 func _build_gameplay_page() -> void:
-	var box := _page("Gameplay")
-	box.add_child(_section_title("SETTINGS_GAMEPLAY_HEADING"))
+	var page := _page(&"gameplay")
+	page.add_child(Factory.section_heading("SETTINGS_GAMEPLAY_HEADING"))
 	_reduced_motion_toggle = CheckButton.new()
-	_reduced_motion_toggle.text = tr("SETTINGS_REDUCED_MOTION")
-	_reduced_motion_toggle.custom_minimum_size.y = 44.0
+	_reduced_motion_toggle.text = ""
+	_reduced_motion_toggle.accessibility_name = tr("SETTINGS_REDUCED_MOTION")
+	_reduced_motion_toggle.custom_minimum_size = Vector2(220.0, 44.0)
 	_reduced_motion_toggle.focus_mode = Control.FOCUS_ALL
 	_reduced_motion_toggle.toggled.connect(_on_reduced_motion_toggled)
-	box.add_child(_reduced_motion_toggle)
+	page.add_child(_control_row("SETTINGS_REDUCED_MOTION", _reduced_motion_toggle))
 
 
 func _build_language_page() -> void:
-	var box := _page("Language")
-	box.add_child(_section_title("SETTINGS_LANGUAGE_HEADING"))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	box.add_child(row)
+	var page := _page(&"language")
+	page.add_child(Factory.section_heading("SETTINGS_LANGUAGE_HEADING"))
+	var choices := HBoxContainer.new()
+	choices.add_theme_constant_override("separation", 8)
 	for locale in ["ko", "en"]:
-		var button := _button("LANGUAGE_KO" if locale == "ko" else "LANGUAGE_EN", &"SecondaryButton")
-		button.custom_minimum_size.x = 220.0
+		var button := _selectable("LANGUAGE_KO" if locale == "ko" else "LANGUAGE_EN")
+		button.custom_minimum_size = Vector2(120.0, 44.0)
 		button.pressed.connect(_on_locale_selected.bind(locale))
-		row.add_child(button)
+		choices.add_child(button)
 		_language_buttons[locale] = button
+	page.add_child(_control_row("LANGUAGE_LABEL", choices))
 
 
-func _page(page_name: String) -> VBoxContainer:
-	var scroll := ScrollContainer.new()
-	scroll.name = page_name
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tabs.add_child(scroll)
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_top", 18)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_bottom", 18)
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(margin)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_child(box)
-	return box
+func _page(category: StringName) -> VBoxContainer:
+	return _pages[category] as VBoxContainer
 
 
-func _section_title(key: String) -> Label:
-	var label := _label(key, 22, Art.MUSTARD)
-	label.theme_type_variation = &"SectionLabel"
-	return label
-
-
-func _style_tab_bar() -> void:
-	_tabs.add_theme_font_override("font", get_theme_default_font())
-	_tabs.add_theme_font_size_override("font_size", 18)
-	_tabs.add_theme_color_override("font_unselected_color", Art.IVORY_BRIGHT)
-	_tabs.add_theme_color_override("font_hovered_color", Art.IVORY_BRIGHT)
-	_tabs.add_theme_color_override("font_selected_color", Art.IVORY_BRIGHT)
-	var tab_bar := _tabs.get_tab_bar()
-	tab_bar.add_theme_font_override("font", get_theme_default_font())
-	tab_bar.add_theme_font_size_override("font_size", 18)
-	tab_bar.add_theme_color_override("font_unselected_color", Art.IVORY_BRIGHT)
-	tab_bar.add_theme_color_override("font_hovered_color", Art.IVORY_BRIGHT)
-	tab_bar.add_theme_color_override("font_selected_color", Art.IVORY_BRIGHT)
-
-
-func _label(text: String, font_size: int, color: Color) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return label
-
-
-func _button(text: String, variation: StringName) -> Button:
-	var button := Button.new()
-	button.text = text
-	button.theme_type_variation = variation
-	button.custom_minimum_size.y = 44.0
-	button.focus_mode = Control.FOCUS_ALL
-	return button
+func _control_row(label_key: String, control: Control) -> HBoxContainer:
+	var row := Factory.text_row(label_key, "", {
+		"label_min_width":168.0,
+		"label_size":16,
+		"value_size":16,
+	})
+	var placeholder := row.get_child(1)
+	row.remove_child(placeholder)
+	placeholder.queue_free()
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(control)
+	_text_rows.append(row)
+	return row
 
 
 func _slider() -> HSlider:
@@ -309,10 +315,27 @@ func _slider() -> HSlider:
 	slider.min_value = 0.0
 	slider.max_value = 1.0
 	slider.step = 0.05
-	slider.custom_minimum_size = Vector2(480.0, 44.0)
-	slider.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	slider.custom_minimum_size = Vector2(360.0, 44.0)
 	slider.focus_mode = Control.FOCUS_ALL
 	return slider
+
+
+func _selectable(text: String) -> Button:
+	return Factory.selectable_button(text)
+
+
+func _select_category(category: StringName) -> void:
+	if category not in CATEGORY_IDS:
+		return
+	_active_category = category
+	for category_id in CATEGORY_IDS:
+		(_pages[category_id] as Control).visible = category_id == category
+		var button := _category_buttons[category_id] as Button
+		button.button_pressed = category_id == category
+		button.theme_type_variation = (
+			&"SelectedSelectableButton" if category_id == category else &"SelectableButton"
+		)
+	_content_scroll.scroll_vertical = 0
 
 
 func _settings_store() -> Node:
@@ -421,20 +444,19 @@ func _on_locale_changed(_locale: String) -> void:
 
 
 func _refresh_localized_content() -> void:
-	if not is_instance_valid(_tabs):
+	if not is_instance_valid(_title_label):
 		return
-	var tab_keys := [
-		"SHIP_STATUS_TAB",
-		"SETTINGS_AUDIO_TAB",
-		"SETTINGS_CONTROLS_TAB",
-		"SETTINGS_GAMEPLAY_TAB",
-		"SETTINGS_LANGUAGE_TAB",
-	]
-	for index in mini(_tabs.get_tab_count(), tab_keys.size()):
-		_tabs.set_tab_title(index, tr(tab_keys[index]))
-	_reduced_motion_toggle.text = tr("SETTINGS_REDUCED_MOTION")
+	_title_label.text = tr("SETTINGS_TITLE")
+	_guide_button.tooltip_text = tr("GUIDE_TITLE")
+	_guide_button.accessibility_name = tr("GUIDE_TITLE")
+	_close_button.text = tr("SETTINGS_CLOSE")
+	for category_id in CATEGORY_IDS:
+		(_category_buttons[category_id] as Button).text = tr(String(CATEGORY_KEYS[category_id]))
+	_reduced_motion_toggle.accessibility_name = tr("SETTINGS_REDUCED_MOTION")
 	var settings := _settings_store()
 	if settings != null:
 		for locale in _language_buttons:
 			var button := _language_buttons[locale] as Button
-			button.theme_type_variation = &"SelectedChoiceButton" if locale == settings.ui_locale else &"SecondaryButton"
+			var selected: bool = String(locale) == String(settings.ui_locale)
+			button.button_pressed = selected
+			button.theme_type_variation = &"SelectedSelectableButton" if selected else &"SelectableButton"

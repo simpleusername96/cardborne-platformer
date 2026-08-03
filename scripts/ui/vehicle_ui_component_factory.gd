@@ -50,6 +50,8 @@ const COMMAND_VARIATIONS := {
 	&"PrimaryButton": &"PrimaryButton",
 	&"SecondaryButton": &"SecondaryButton",
 	&"DangerButton": &"DangerButton",
+	&"SelectableButton": &"SelectableButton",
+	&"SelectedSelectableButton": &"SelectedSelectableButton",
 	&"TertiaryDangerButton": &"DangerButton",
 	&"ChoiceButton": &"SelectableButton",
 	&"SelectedChoiceButton": &"SelectedSelectableButton",

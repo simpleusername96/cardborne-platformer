@@ -19,8 +19,10 @@ var _phase: OptionButton
 var _pattern: OptionButton
 var _invulnerable: CheckBox
 var _start: Button
+var _back: Button
 var _form: VBoxContainer
 var _form_scroll: ScrollContainer
+var _form_rows: Array[HBoxContainer] = []
 
 
 func _ready() -> void:
@@ -52,18 +54,22 @@ func _build() -> void:
 	_phase = _option("BOSS_PRACTICE_PHASE")
 	_pattern = _option("BOSS_PRACTICE_MODE")
 	_invulnerable = CheckBox.new()
-	_invulnerable.text = "BOSS_PRACTICE_INVULNERABLE"
-	_invulnerable.add_theme_font_size_override("font_size", 16)
-	_form.add_child(_invulnerable)
+	_invulnerable.custom_minimum_size.y = 44.0
+	_invulnerable.focus_mode = Control.FOCUS_ALL
+	_form.add_child(_control_row("BOSS_PRACTICE_INVULNERABLE", _invulnerable))
 	_start = Factory.command_button(
 		"BOSS_PRACTICE_START",
-		&"PrimaryButton"
+		Factory.COMMAND_PRIMARY
 	)
 	_start.pressed.connect(_emit_request)
-	add_child(_start)
-	var back := Factory.command_button("COMMON_BACK", &"SecondaryButton")
-	back.pressed.connect(func() -> void: back_requested.emit())
-	add_child(back)
+	var commands := HBoxContainer.new()
+	commands.alignment = BoxContainer.ALIGNMENT_CENTER
+	commands.add_theme_constant_override("separation", 10)
+	add_child(commands)
+	commands.add_child(_start)
+	_back = Factory.command_button("COMMON_BACK", Factory.COMMAND_SECONDARY)
+	_back.pressed.connect(func() -> void: back_requested.emit())
+	commands.add_child(_back)
 
 
 func open() -> void:
@@ -96,7 +102,7 @@ func refresh_localized_content() -> void:
 		)
 		_phase.set_item_metadata(_phase.item_count - 1, phase_value)
 	_phase.select(mini(phase_selection, _phase.item_count - 1))
-	_invulnerable.text = tr("BOSS_PRACTICE_INVULNERABLE")
+	_invulnerable.accessibility_name = tr("BOSS_PRACTICE_INVULNERABLE")
 	_refresh_patterns()
 
 
@@ -107,7 +113,7 @@ func set_compact_mode(compact: bool) -> void:
 	if is_instance_valid(_form_scroll):
 		_form_scroll.custom_minimum_size.y = 180.0 if compact else 260.0
 	for option in [_stage, _field, _phase, _pattern]:
-		option.custom_minimum_size.y = 40.0 if compact else 46.0
+		option.custom_minimum_size.y = 44.0 if compact else 46.0
 
 
 func debug_option_texts() -> PackedStringArray:
@@ -117,14 +123,50 @@ func debug_option_texts() -> PackedStringArray:
 	return result
 
 
+func debug_contract() -> Dictionary:
+	return {
+		"form_rows":_form_rows.size(),
+		"option_controls":4,
+		"toggle_controls":1,
+		"command_count":2,
+		"row_panel_count":0,
+		"scroll_region_count":1,
+		"start_role":_start.theme_type_variation,
+		"back_role":_back.theme_type_variation,
+		"minimum_target_height":_minimum_target_height(),
+	}
+
+
 func _option(label_key: String) -> OptionButton:
-	_form.add_child(Factory.label(label_key, 15, Art.MINT_SOFT))
 	var option := OptionButton.new()
 	option.fit_to_longest_item = false
 	option.custom_minimum_size.y = 46.0
 	option.add_theme_font_size_override("font_size", 16)
-	_form.add_child(option)
+	option.focus_mode = Control.FOCUS_ALL
+	_form.add_child(_control_row(label_key, option))
 	return option
+
+
+func _control_row(label_key: String, control: Control) -> HBoxContainer:
+	var row := Factory.text_row(label_key, "", {
+		"label_min_width":168.0,
+		"label_size":15,
+		"value_size":16,
+	})
+	var placeholder := row.get_child(1)
+	row.remove_child(placeholder)
+	placeholder.queue_free()
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(control)
+	_form_rows.append(row)
+	return row
+
+
+func _minimum_target_height() -> float:
+	var minimum := INF
+	for control in [_stage, _field, _phase, _pattern, _invulnerable, _start, _back]:
+		minimum = minf(minimum, control.custom_minimum_size.y)
+	return 0.0 if is_inf(minimum) else minimum
 
 
 func _refresh_patterns() -> void:
