@@ -2283,6 +2283,12 @@ Do not mark a phase or this plan complete while a stop condition remains.
   Both units passed all twelve declared checks and are switch_ready with null
   approval/application plus empty retire_paths and runtime_change_paths;
   production remains unchanged pending exact hash-bound approval.
+- 2026-08-03: BK explicitly approved the Phase 5 preview and small_state
+  switch at baseline 00787af65d9351de322c2bec4bc905f990084244 using the six
+  exact target/hash mappings displayed from that clean commit. Both approval
+  records bind those bytes at 2026-08-03T16:06:26+09:00. retire_paths and
+  runtime_change_paths remain empty for both units. This approval grants no
+  deletion, runtime-code change, or authority for any Phase 6 visual family.
 
 ## Execution Handoff
 

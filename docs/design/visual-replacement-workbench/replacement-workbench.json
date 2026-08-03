@@ -4577,7 +4577,7 @@
       "title_ko": "미리보기",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/ui/glyphs/preview_normal.png",
         "art/visuals/production/ui/glyphs/preview_locked.png",
@@ -4652,7 +4652,17 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-03T16:06:26+09:00",
+        "baseline_commit": "00787af65d9351de322c2bec4bc905f990084244",
+        "deliverable_sha256": {
+          "art/visuals/production/ui/glyphs/preview_normal.png": "8636d4f2ac3010709ad29ef70bb5259f5d942f095fc03b50afeee0de63a7c9cf",
+          "art/visuals/production/ui/glyphs/preview_locked.png": "5a22a841d456f51ce6091ee6ca9c8381dd07b86bc6807d6fee598faaf145cd47",
+          "art/visuals/production/ui/glyphs/preview_focused.png": "3dfeed2985b085e2dd682f979fe187570f7be56047c5b80e62afca3ba65dacd7"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {
@@ -4663,7 +4673,7 @@
       "title_ko": "소형 상태",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/ui/glyphs/small_state_pip_available.png",
         "art/visuals/production/ui/glyphs/small_state_pip_filled.png",
@@ -4738,7 +4748,17 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-03T16:06:26+09:00",
+        "baseline_commit": "00787af65d9351de322c2bec4bc905f990084244",
+        "deliverable_sha256": {
+          "art/visuals/production/ui/glyphs/small_state_pip_available.png": "cb725c7adbb71cd582c0c80aacba3ea718910c129f4e2371c12c121d20bed013",
+          "art/visuals/production/ui/glyphs/small_state_pip_filled.png": "2a8960da4e0e1c349008cedcaf3e33b2207c1e8dd13099b457976f4a78c851fa",
+          "art/visuals/production/ui/glyphs/small_state_disabled.png": "1fe63ebe72d61d1a7ff5356b7c0eee64e0c192500726819c257b4ba84cf35857"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {
