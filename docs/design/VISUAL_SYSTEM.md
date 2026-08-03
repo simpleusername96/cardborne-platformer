@@ -308,8 +308,11 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
   관련 family artwork 한 개, effect row 최대 2개, behavior다. artwork는
   compact `64×64`, wide `88×88`이며 title 위에는 image, icon 또는 badge를
   두지 않는다. level text와 중복되는 단계 pip는 사용하지 않는다.
-- upgrade card는 scroll을 사용하지 않는다. settings, guidebook, report는
-  지정 content region만 scroll하고 primary action은 고정한다.
+- upgrade card 자체는 scroll을 사용하지 않는다. 200% text scale에서만 세
+  card를 담는 offer body가 하나의 outer vertical scroll을 가질 수 있으며,
+  세 card와 Equip primary action은 각각 non-scrolling과 fixed 상태를 유지한다.
+  settings, guidebook, report는 지정 content region만 scroll하고 primary
+  action은 고정한다.
 - `clip_contents`는 safety guard일 뿐 layout 해결책이 아니다.
 - Korean과 English의 title, body, dynamic value, control label은 지원
   viewport에서 겹치거나 잘리거나 container 밖으로 나갈 수 없다.
@@ -396,8 +399,6 @@ Web export만으로 interactive built-Web smoke나 release performance를
   시각 면적이 일치하지 않는다.
 - projectile/telegraph path는 모든 ordinary/elite/boss tier와 authored pattern
   geometry를 presentation까지 완전히 전달하지 않는다.
-- upgrade card는 지원 viewport/locale의 overflow와 family art hierarchy를
-  아직 최종 acceptance하지 못했다.
 - one-body player craft와 전용 minimap marker는 Phase 4의 exact-hash 승인을
   거쳐 현재 runtime 표현이 되었다. 수동 조준은 cursor, muzzle, projectile,
   hit feedback으로 유지하고 rear anchor는 transient dash feedback에만 쓴다.

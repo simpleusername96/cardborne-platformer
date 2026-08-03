@@ -421,6 +421,9 @@ hint appears once and the same hint cannot repeat within two seconds.
   UI refreshes never reroll an open offer. Authored reward enclosures remain
   optional to open, but an opened reward transaction has no Leave, Exit, Skip,
   or decline action.
+- Upgrade cards never scroll independently. At 200% text scale only, the offer
+  body may provide one outer vertical scroll while all three cards remain
+  non-scrolling and the Equip action remains fixed.
 - Deployment presents loadout and complete control information with one Deploy
   primary action. Every deployment starts the fixed Hard run and exposes no
   difficulty choice.

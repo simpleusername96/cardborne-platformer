@@ -16,7 +16,6 @@ related:
   - ../../art/visuals/production/README.md
   - ../semantic-v2-runtime-acceptance-evidence.md
   - ./2026-08-02-pre-asset-code-stabilization.md
-  - ./2026-08-03-ui-system-reconstruction.md
 ---
 
 # Visual Replacement Workbench and Runtime Switch Plan
@@ -28,13 +27,13 @@ The art direction is already fixed. Execution therefore starts from the
 canonical visual contract and produces deployable files, not additional style
 exploration or contact-sheet-only proposals.
 
-## Active UI Reconstruction Amendment
+## Completed UI Reconstruction Amendment
 
 BK's 2026-08-03 UI review established that the completed Phase 5 raster-state
-switch is a historical baseline, not the final UI target. The active execution
-contract is now
-`.agents/execplans/2026-08-03-ui-system-reconstruction.md`. Complete that
-contract before starting this plan's Phase 6.
+switch was a historical baseline, not the final UI target. The corrective UI
+reconstruction contract is complete and retired. Its durable product and visual
+decisions now live in the active specifications, and its release result lives
+in `.agents/semantic-v2-runtime-acceptance-evidence.md`. Phase 6 may proceed.
 
 That contract replaces this document's earlier UI-only assumptions as follows:
 
@@ -747,9 +746,8 @@ are removed separately.
 
 ### UI media count
 
-The final production UI-chrome PNG count is zero after
-`.agents/execplans/2026-08-03-ui-system-reconstruction.md` completes. One
-code-native `vehicle_stage_theme.tres` and the shared component factory own
+The current production UI-chrome PNG count is zero. One code-native
+`vehicle_stage_theme.tres` and the shared component factory own
 surface, command, selectable, meter, preview, typography, focus, and state
 presentation. The UI manifest and UI asset provider are absent. Noto Sans KR
 and its license remain. Meaningful HUD, upgrade, craft, enemy, boss, object,
@@ -2327,9 +2325,14 @@ Do not mark a phase or this plan complete while a stop condition remains.
   paths: 54 UI chrome PNGs, their 54 import sidecars, and the five obsolete
   manifest/provider/raster-validator files. The current workbench contains 215
   gameplay PNGs, zero UI PNGs, one font, 36 units, and four retired units. UI
-  chrome is owned by the code-native Theme and shared component factory, and
-  this plan may resume at Phase 6 after the corrective contract's final release
-  evidence is recorded.
+  chrome is owned by the code-native Theme and shared component factory.
+  Implementation commit `c72984ec8494ba224a6ed2924035dea600660719` passed the
+  complete 58-validator gate, Godot
+  import, workbench checks, Web export, the eight-directory KO/EN responsive
+  capture matrix, the Level 4 review, and built-Web interaction smoke with no
+  console warnings or errors. Final evidence is recorded in
+  `.agents/semantic-v2-runtime-acceptance-evidence.md`; the completed corrective
+  ExecPlan was retired, and this plan may resume at Phase 6.
 
 ## Execution Handoff
 

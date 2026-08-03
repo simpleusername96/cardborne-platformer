@@ -257,3 +257,54 @@ Web export 자체는 성공했다. 남은 격차는 현재 plan의 허용된 GDS
 - Earlier occurrences of the former path in this append-only evidence remain
   historical. The move changes no recorded acceptance verdict or failed release
   threshold.
+
+## 2026-08-03 Shared UI reconstruction acceptance
+
+Corrective implementation commit
+`c72984ec8494ba224a6ed2924035dea600660719` completes the shared UI reconstruction
+on Godot `4.7.1.stable.official.a13da4feb`. UI chrome now has one code-native
+Theme and shared component factory, while meaningful craft,
+upgrade, enemy, boss, object, minimap, and action imagery remains gameplay
+content. Deployment has no difficulty choice and always starts the fixed Hard
+profile. Upgrade offers have three mandatory selectable cards, one relevant
+image per card, no exit or decline action, and a fixed Equip action. Pause is an
+equal-width vertical stack.
+
+### Deterministic and rendered evidence
+
+- The pre-retirement document-authority gate passed with `markdown=15`; after
+  deleting the completed ExecPlan it passed again with `markdown=14`. All 58
+  sorted Godot validators passed. Godot import, `git diff --check`, Web export,
+  workbench check, and workbench validation also exited zero.
+- The final workbench contains 36 units and 216 media records: 215 gameplay
+  PNGs and one font. It contains zero production UI chrome PNGs and four retired
+  units. Status totals are `keep_current=2`, `target_required=30`, and
+  `retired=4`.
+- Complete manifests and captures are under
+  `build/ui-reconstruction-final/{ko,en}-{960x540,1280x720,1920x1080}` and
+  `build/ui-reconstruction-final/{ko,en}-1280x720-text2`. Each capture manifest
+  records the requested logical viewport and the PNG dimensions match it.
+- Level 4 review found no missing information, overlap, clipping, decorative
+  chrome regression, difficulty control, or inaccessible primary action. At
+  200% text scale, upgrade cards remain non-scrolling inside one outer offer
+  body scroll with fixed Equip. Failure report likewise uses one outer body
+  scroll with a fixed action. HUD objective, boss, notification, and transition
+  regions do not overlap.
+- Final logs are retained under `build/ui-reconstruction-final/logs`. The only
+  validator warnings are intentional malformed-data fixtures that prove
+  `SettingsStore` fallback behavior; they are not runtime warnings.
+
+### Production Web smoke
+
+`tools/export_web.ps1` produced `build/web/index.html` and the complete four-file
+Web artifact. The built artifact was served on the fastrun-manager Codex lane at
+port `13029`. Chrome interaction covered Deployment, live HUD, Pause, Settings,
+Guidebook and back navigation, resume, Korean/English switching, mouse,
+keyboard/Escape focus behavior, visible focus states, and the compact 960x540
+viewport. The browser console contained no UI warnings or errors. The exact
+task-owned server PID `23816` was stopped and the port was confirmed clean.
+
+Upgrade, report, result, and Garage were not naturally triggered during the
+built-Web interaction path. Their production scene behavior is covered by the
+complete deterministic capture matrix and focused validators rather than an
+interactive Web claim.
