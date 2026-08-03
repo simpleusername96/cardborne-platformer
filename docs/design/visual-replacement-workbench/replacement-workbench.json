@@ -4181,7 +4181,7 @@
       "title_ko": "업그레이드 카드",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/surfaces/upgrade_card_normal.png",
         "art/visuals/production/ui/surfaces/upgrade_card_hover.png",
@@ -4203,85 +4203,9 @@
         "upgrade_card/pressed",
         "upgrade_card/selected"
       ],
-      "direction_en": "Replace the current upgrade card files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/surfaces/upgrade_card_normal.png",
-          "width": 128,
-          "height": 128,
-          "patch_margin": 20,
-          "safe_inset": [
-            24,
-            22,
-            22,
-            22
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/upgrade_card_hover.png",
-          "width": 128,
-          "height": 128,
-          "patch_margin": 20,
-          "safe_inset": [
-            24,
-            22,
-            22,
-            22
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/upgrade_card_pressed.png",
-          "width": 128,
-          "height": 128,
-          "patch_margin": 20,
-          "safe_inset": [
-            24,
-            22,
-            22,
-            22
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/upgrade_card_focus.png",
-          "width": 128,
-          "height": 128,
-          "patch_margin": 20,
-          "safe_inset": [
-            24,
-            22,
-            22,
-            22
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/upgrade_card_selected.png",
-          "width": 128,
-          "height": 128,
-          "patch_margin": 20,
-          "safe_inset": [
-            24,
-            22,
-            22,
-            22
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/upgrade_card_disabled.png",
-          "width": 128,
-          "height": 128,
-          "patch_margin": 20,
-          "safe_inset": [
-            24,
-            22,
-            22,
-            22
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/upgrade_card/upgrade_card-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/upgrade_card/upgrade_card-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4298,38 +4222,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T13:46:25+09:00",
-        "baseline_commit": "14dd6ef39424d4e11e0cd0ba8fbdabeb8294a1b3",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/surfaces/upgrade_card_normal.png": "9f529402b50e127e8c22a3707a616682bae1f3042924c552c378d074c16258a7",
-          "art/visuals/production/ui/surfaces/upgrade_card_hover.png": "7d7793bf0ac070ddd2da93b540f537b87876d227a5212cf46e8758be94dec8f1",
-          "art/visuals/production/ui/surfaces/upgrade_card_pressed.png": "87e2a3806dd746d7ec582171d43bcc77e439a3bf1988caffe580e946ee9f6723",
-          "art/visuals/production/ui/surfaces/upgrade_card_focus.png": "27c542b2b43570957cc6a003c7e66b1323877b6dde79d4fed0756c7968351b17",
-          "art/visuals/production/ui/surfaces/upgrade_card_selected.png": "991a00c91230ea4cf3a96c6b2789c1ba8cb4ab39d3610e52c1154c904bafb65c",
-          "art/visuals/production/ui/surfaces/upgrade_card_disabled.png": "5f710a0fe73db17f4f06167821f175a009f276cd8bcae63bff8adb48bc3016e3"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "9ff8b987ba879e126da31f58aef1b0f7439a5d60",
-        "applied_at": "2026-08-03T13:50:18+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "button_primary",

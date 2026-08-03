@@ -1861,7 +1861,7 @@ before execution continues.
     surface families without extending that approval to another UI family.
   - [x] Prepare all six upgrade_card states as exact deployable PNGs with
     contact-sheet and runtime-size evidence; upgrade_card is switch_ready.
-  - [ ] Obtain exact hash-bound approval and apply upgrade_card without
+  - [x] Obtain exact hash-bound approval and apply upgrade_card without
     extending that approval to button families.
   - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
@@ -1873,12 +1873,11 @@ before execution continues.
 
 ## Next Steps
 
-1. Display upgrade_card's exact six-entry target/hash map and request its
-   independent approval.
-2. Promote, validate, commit, and baseline-clean only upgrade_card after that
-   exact approval.
-3. Continue with the three button families without extending upgrade_card's
-   approval.
+1. Prepare button_primary, button_secondary, and button_danger as independent
+   direct-deployable state families with exact rendered evidence.
+2. Display each button family's exact target/hash map and request independent
+   approval without extending upgrade_card's completed authority.
+3. Promote, validate, commit, and baseline-clean only exact approved families.
 
 ## Completion Criteria
 
@@ -2127,6 +2126,22 @@ Do not mark a phase or this plan complete while a stop condition remains.
   binds those bytes at 2026-08-03T13:46:25+09:00 with empty retire_paths and
   runtime_change_paths. This approval grants no deletion, runtime-code change,
   or authority for the subsequent button families.
+- 2026-08-03: The upgrade_card production switch commit
+  9ff8b987ba879e126da31f58aef1b0f7439a5d60 promoted all six approved hashes,
+  and ledger commit 8c3fbba1ed0f0e38cddf38dc495a31e95f53f7a1 recorded the application after
+  all twelve declared acceptance commands passed. Web export then exposed a
+  pre-existing release-only resource-discovery defect: exported .tres.remap
+  entries were filtered out, leaving real level-up offers empty. Corrective
+  commit 1cd32bcb81b7ec4794220de7481985f6576c8d91 restores source-path loading
+  for both the 41-card catalog and secondary definitions. Upgrade-system,
+  secondary, upgrade-UI, and visual-coverage validators pass; the rebuilt Web
+  PCK completes deterministic Korean and English capture manifests, including
+  normal, selected, confirmed, and longest localization card states. Chrome
+  built-Web smoke returned eight successful requests and zero console warnings
+  or errors on codex port 13029, and the task-owned server was stopped. The six
+  production bytes are now current AS-IS; the duplicate TO-BE files and two
+  completed previews are removed, and transitional approval/application fields
+  are cleared without extending authority to any button family.
 
 ## Execution Handoff
 
