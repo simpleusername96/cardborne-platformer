@@ -841,7 +841,7 @@ Source owners: UI manifest/provider/media folders, Theme and factory,
 `inventory.json` and `index.html`, visual-replacement coverage validators, and
 the active visual-replacement plan.
 
-- [ ] **8.1 Prove zero production dependency on the legacy pack**
+- [x] **8.1 Prove zero production dependency on the legacy pack**
   - Change: scan project files, Theme, project settings, workbench consumers,
     validators, and runtime code for `ui-asset-manifest`,
     `VehicleUiAssetProvider`, `StyleBoxTexture`, every old Theme variation, and
@@ -852,7 +852,7 @@ the active visual-replacement plan.
     retirement ledger, active plan history, and explicit retirement validation
     may name the old files. The Theme exposes no compatibility alias and the
     factory contains no legacy-role map.
-- [ ] **8.2 Consolidate the exact retirement unit**
+- [x] **8.2 Consolidate the exact retirement unit**
   - Change: replace the thirteen current `ui_manifest` workbench units with one
     `ui_chrome_retirement` retire-only unit whose `current_paths` are exactly
     the 54 current PNGs and whose `retire_paths` are those PNGs, their 54
@@ -1245,21 +1245,20 @@ retirement, and validation decisions are locked above.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 8 — prepare the exact legacy raster retirement set.
-- Last completed gate: Phase 7 HUD gate; presenter, rewards/audio, layout,
-  transition, combat renderer, performance scenarios, and visual coverage
-  passed with no production raster-chrome consumer.
+- Last completed gate: Phase 8 non-destructive preparation; runtime and Theme
+  scans report zero legacy chrome references, focused Godot validators pass,
+  and the workbench projects 36 units with one 113-path UI retirement unit.
 - Last green implementation commit:
-  `58ad8186e8621467cff8dcd629ce5300168a8850`.
+  `61c59d9a364f28ae1d807571b31cb25c2d62c0e7`.
 - Update rule: after a checkpoint passes, record concise evidence, check the
   task, update the last green commit, and advance this pointer in the same edit.
 
 ## Next Steps
 
-1. Prove zero production dependency on the 54-file legacy UI chrome pack.
-2. Consolidate the workbench into one deterministic 113-path retirement unit
-   and commit the non-destructive approval preparation.
-3. Display the exact baseline, paths, sizes, and hashes for BK approval before
+1. Display the exact baseline, paths, sizes, and hashes for BK approval before
    deleting any file.
+2. After exact approval, delete only those literal paths and update coverage.
+3. Record application evidence, reconcile generated output, then run Phase 9.
 
 ## Completion and Stop Conditions
 
@@ -1323,6 +1322,13 @@ Do not replan or stop for:
   and zero production raster-chrome consumer. The production replay missed its
   peak window on the first gate attempt and passed unchanged when rerun alone;
   failure snapshot diagnostics remain in its validator for final-gate evidence.
+- 2026-08-03: Phase 8 Tasks 8.1 and 8.2 completed in
+  `61c59d9a364f28ae1d807571b31cb25c2d62c0e7`; production runtime and Theme
+  have zero legacy chrome references, compatibility aliases are removed, and
+  one deterministic `ui_chrome_retirement` unit owns 54 current PNGs and 113
+  literal retirement paths. The obsolete non-runtime raster conversion helper
+  remains outside production and outside the exact retirement set so the
+  approved 113-path boundary is not expanded implicitly.
 - 2026-08-03: BK accepted the simplified UI direction while explicitly
   preserving information rather than reducing it.
 - 2026-08-03: BK required deletion of the small top image on upgrade cards,
