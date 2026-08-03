@@ -28,33 +28,38 @@ func _initialize() -> void:
 		await process_frame
 		var contract := ui.debug_ui_contract(width)
 		var foundation := Dictionary(contract["ui_foundation"])
-		_expect(bool(foundation["loaded"]), "image UI foundation loads at %d" % width)
+		_expect(bool(foundation["loaded"]), "shared UI foundation loads at %d" % width)
 		_expect(
 			int(foundation["modal_surface_count"]) >= 8,
-			"all modals use the shared image-backed surface at %d" % width
+			"all modals use the shared root surface at %d" % width
 		)
 		var modal_frame := Dictionary(foundation["modal_frame"])
 		_expect(
-			bool(modal_frame.get("layered_depth", false))
-				and bool(modal_frame.get("image_backed", false))
+			not bool(modal_frame.get("layered_depth", true))
+				and not bool(modal_frame.get("image_backed", true))
 				and is_equal_approx(
 					float(modal_frame.get("corner_cut", 0.0)),
-					12.0
-				),
-			"modal surfaces keep the approved layered mechanical frame at %d"
+					3.0
+				)
+				and int(modal_frame.get("root_surface_count", 0)) == 1,
+			"modal surfaces keep one simple code-native frame at %d"
 			% width
 		)
 		_expect(
 			int(foundation["texture_filter"]) == CanvasItem.TEXTURE_FILTER_LINEAR,
 			"UI foundation uses antialiased linear filtering at %d" % width
 		)
-		var image_styles := Dictionary(contract["image_style_foundation"])
+		var shared_styles := Dictionary(contract["shared_style_foundation"])
 		for surface in ["modal", "hud", "button", "upgrade_card", "tab"]:
 			_expect(
-				bool(image_styles[surface]),
-				"%s uses image-backed chrome at %d"
+				bool(shared_styles[surface]),
+				"%s uses shared code-native chrome at %d"
 				% [surface, width]
 			)
+		_expect(
+			int(shared_styles["raster_style_count"]) == 0,
+			"shared Theme has no raster StyleBox at %d" % width
+		)
 		var action_rail_size := Vector2(contract["action_rail_size"])
 		var action_rail_position := Vector2(contract["action_rail_position"])
 		_expect(action_rail_size == Vector2(148.0, 44.0), "action rail size is fixed at %d" % width)
@@ -144,12 +149,12 @@ func _initialize() -> void:
 			)
 			var state_cues := Dictionary(card["state_cues"])
 			_expect(
-				bool(state_cues["normal_image"])
-					and bool(state_cues["focus_image"])
+				not bool(state_cues["normal_image"])
+					and not bool(state_cues["focus_image"])
 					and bool(state_cues["selected_corner"])
 					and bool(state_cues["focus_corner"])
 					and bool(state_cues["disabled_corner"]),
-				"upgrade card states do not depend on color alone at %d"
+				"upgrade card aliases use code-native non-color states at %d"
 				% width
 			)
 			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
@@ -175,13 +180,28 @@ func _initialize() -> void:
 			)
 			var modal_minimums := Dictionary(contract["modal_minimums"])
 			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(960.0, 626.0), "upgrade modal keeps approved scale")
-			_expect(Vector2(modal_minimums["pause"]) == Vector2(640.0, 380.0), "pause modal avoids the old empty panel")
+			_expect(Vector2(modal_minimums["pause"]) == Vector2(520.0, 430.0), "pause modal uses the compact vertical-stack contract")
 			_expect(Vector2(modal_minimums["settings"]) == Vector2(920.0, 570.0), "settings modal keeps approved scale")
 			_expect(Vector2(modal_minimums["guidebook"]) == Vector2(1160.0, 636.0), "guidebook modal keeps approved scale")
 		_expect(
-			StringName(contract["pause_abort_variation"]) == &"TertiaryDangerButton",
-			"pause abort remains a restrained tertiary action at %d" % width
+			StringName(contract["pause_abort_variation"]) == &"DangerButton",
+			"pause abort uses the shared restrained danger role at %d" % width
 		)
+		_expect(
+			String(contract["pause_command_stack_type"]) == "VBoxContainer"
+				and Array(contract["pause_command_order"]) == [
+					"PAUSE_RESUME",
+					"PAUSE_RESTART",
+					"PAUSE_SETTINGS",
+					"PAUSE_ABORT",
+				],
+			"pause commands keep the required vertical order at %d" % width
+		)
+		for command_width in Array(contract["pause_command_widths"]):
+			_expect(
+				is_equal_approx(float(command_width), 360.0),
+				"pause commands share one width at %d" % width
+			)
 		var minimap_size := Vector2(contract["minimap_size"])
 		_expect(minimap_size.x >= 160.0 and minimap_size.y >= 98.0, "minimap keeps tactical area at %d" % width)
 	ui.update_hud({

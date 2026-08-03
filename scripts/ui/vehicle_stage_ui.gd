@@ -47,7 +47,7 @@ const RunDifficulty = preload(
 const MODAL_MINIMUMS := {
 	"deployment":Vector2(1176.0, 636.0),
 	"upgrade":Vector2(960.0, 626.0),
-	"pause":Vector2(640.0, 380.0),
+	"pause":Vector2(520.0, 430.0),
 	"result":Vector2(900.0, 560.0),
 	"report":Vector2(1120.0, 600.0),
 	"garage":Vector2(960.0, 560.0),
@@ -436,37 +436,38 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 			),
 			"texture_filter":_root.texture_filter,
 		},
-		"image_style_foundation":{
+		"shared_style_foundation":{
 			"modal":(
 				_root.theme.get_stylebox(
 					&"panel",
 					&"ModalSurface"
-				) is StyleBoxTexture
+				) is StyleBoxFlat
 			),
 			"hud":(
 				_root.theme.get_stylebox(
 					&"panel",
-					&"HudStatusGroup"
-				) is StyleBoxTexture
+					&"HudSurface"
+				) is StyleBoxFlat
 			),
 			"button":(
 				_root.theme.get_stylebox(
 					&"normal",
 					&"Button"
-				) is StyleBoxTexture
+				) is StyleBoxFlat
 			),
 			"upgrade_card":(
 				_root.theme.get_stylebox(
 					&"normal",
-					&"UpgradeChoiceCard"
-				) is StyleBoxTexture
+					&"SelectableButton"
+				) is StyleBoxFlat
 			),
 			"tab":(
 				_root.theme.get_stylebox(
 					&"tab_selected",
 					&"TabBar"
-				) is StyleBoxTexture
+				) is StyleBoxFlat
 			),
+			"raster_style_count":_theme_stylebox_texture_count(),
 		},
 		"command_min_height":pause_contract["command_min_height"],
 		"body_font_weight":body_font_weight,
@@ -507,6 +508,9 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		),
 		"pause_focusables":pause_contract["focusables"],
 		"pause_abort_variation":pause_contract["abort_variation"],
+		"pause_command_stack_type":pause_contract["command_stack_type"],
+		"pause_command_order":pause_contract["command_order"],
+		"pause_command_widths":pause_contract["command_widths"],
 		"result_focusables":result_contract["focusables"],
 		"garage_focusables":garage_contract["focusables"],
 		"locale":TranslationServer.get_locale().left(2),
@@ -526,6 +530,15 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	}
 	contract.merge(hud_contract, true)
 	return contract
+
+
+func _theme_stylebox_texture_count() -> int:
+	var count := 0
+	for theme_type in _root.theme.get_type_list():
+		for style_name in _root.theme.get_stylebox_list(theme_type):
+			if _root.theme.get_stylebox(style_name, theme_type) is StyleBoxTexture:
+				count += 1
+	return count
 
 
 func debug_set_text_scale(scale: float) -> void:

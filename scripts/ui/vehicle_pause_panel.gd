@@ -14,6 +14,7 @@ const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 
 var first_button: Button
 var abort_button: Button
+var _command_stack: VBoxContainer
 
 
 func _ready() -> void:
@@ -38,45 +39,44 @@ func _build() -> void:
 	guide.custom_minimum_size = Vector2(48.0, 48.0)
 	guide.pressed.connect(func() -> void: guide_requested.emit())
 	header.add_child(guide)
-	add_child(HSeparator.new())
-	var resume_lane := CenterContainer.new()
-	resume_lane.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(resume_lane)
+	var command_center := CenterContainer.new()
+	command_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	command_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(command_center)
+	_command_stack = VBoxContainer.new()
+	_command_stack.name = "CommandStack"
+	_command_stack.custom_minimum_size.x = 360.0
+	_command_stack.add_theme_constant_override("separation", 12)
+	command_center.add_child(_command_stack)
 	first_button = Factory.command_button(
 		"PAUSE_RESUME",
-		&"PrimaryButton"
+		Factory.COMMAND_PRIMARY
 	)
-	first_button.custom_minimum_size = Vector2(300.0, 48.0)
+	first_button.custom_minimum_size = Vector2(360.0, 48.0)
 	first_button.add_theme_font_size_override("font_size", 22)
 	first_button.pressed.connect(func() -> void: resume_requested.emit())
-	resume_lane.add_child(first_button)
-	var secondary_row := HBoxContainer.new()
-	secondary_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	secondary_row.add_theme_constant_override("separation", 14)
-	add_child(secondary_row)
+	_command_stack.add_child(first_button)
 	var restart := Factory.command_button(
 		"PAUSE_RESTART",
-		&"SecondaryButton"
+		Factory.COMMAND_SECONDARY
 	)
-	restart.custom_minimum_size.x = 220.0
+	restart.custom_minimum_size = Vector2(360.0, 48.0)
 	restart.pressed.connect(func() -> void: restart_requested.emit())
-	secondary_row.add_child(restart)
+	_command_stack.add_child(restart)
 	var settings := Factory.command_button(
 		"PAUSE_SETTINGS",
-		&"SecondaryButton"
+		Factory.COMMAND_SECONDARY
 	)
-	settings.custom_minimum_size.x = 220.0
+	settings.custom_minimum_size = Vector2(360.0, 48.0)
 	settings.pressed.connect(func() -> void: settings_requested.emit())
-	secondary_row.add_child(settings)
-	var abort_lane := CenterContainer.new()
-	add_child(abort_lane)
+	_command_stack.add_child(settings)
 	abort_button = Factory.command_button(
 		"PAUSE_ABORT",
-		&"TertiaryDangerButton"
+		Factory.COMMAND_DANGER
 	)
-	abort_button.custom_minimum_size.x = 240.0
+	abort_button.custom_minimum_size = Vector2(360.0, 48.0)
 	abort_button.pressed.connect(func() -> void: garage_requested.emit())
-	abort_lane.add_child(abort_button)
+	_command_stack.add_child(abort_button)
 
 
 func open() -> void:
@@ -85,6 +85,11 @@ func open() -> void:
 
 func set_compact_mode(compact: bool) -> void:
 	add_theme_constant_override("separation", 10 if compact else 16)
+	if _command_stack != null:
+		_command_stack.add_theme_constant_override(
+			"separation",
+			8 if compact else 12
+		)
 
 
 func debug_contract() -> Dictionary:
@@ -92,6 +97,13 @@ func debug_contract() -> Dictionary:
 		"focusables":_focusable_count(),
 		"abort_variation":abort_button.theme_type_variation,
 		"command_min_height":first_button.custom_minimum_size.y,
+		"command_stack_type":_command_stack.get_class(),
+		"command_order":_command_stack.get_children().map(
+			func(control: Control) -> String: return String(control.text)
+		),
+		"command_widths":_command_stack.get_children().map(
+			func(control: Control) -> float: return control.custom_minimum_size.x
+		),
 	}
 
 

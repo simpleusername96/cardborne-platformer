@@ -99,41 +99,35 @@ func _validate_theme_contract() -> void:
 	var normal := _theme.get_stylebox(
 		&"normal",
 		&"UpgradeChoiceCard"
-	) as StyleBoxTexture
+	) as StyleBoxFlat
 	var focus := _theme.get_stylebox(
 		&"focus",
 		&"UpgradeChoiceCard"
-	) as StyleBoxTexture
+	) as StyleBoxFlat
 	var selected := _theme.get_stylebox(
 		&"normal",
 		&"SelectedUpgradeChoiceCard"
-	) as StyleBoxTexture
+	) as StyleBoxFlat
 	_expect(
-		normal != null
-			and normal.texture.resource_path.ends_with(
-				"upgrade_card_normal.png"
-			),
-		"normal upgrade card uses its authored image state"
+		normal != null and normal == _theme.get_stylebox(
+			&"normal",
+			&"SelectableButton"
+		),
+		"normal upgrade-card alias uses the shared Selectable state"
 	)
 	_expect(
-		normal != null
-			and normal.texture_margin_left == 20.0
-			and normal.texture_margin_top == 20.0,
-		"upgrade card uses the manifest 9-slice margin"
+		focus != null and focus == _theme.get_stylebox(
+			&"focus",
+			&"SelectableButton"
+		),
+		"focused upgrade-card alias uses the shared focus outline"
 	)
 	_expect(
-		focus != null
-			and focus.texture.resource_path.ends_with(
-				"upgrade_card_focus.png"
-			),
-		"focused upgrade card uses its authored image state"
-	)
-	_expect(
-		selected != null
-			and selected.texture.resource_path.ends_with(
-				"upgrade_card_selected.png"
-			),
-		"selected upgrade card uses its authored image state"
+		selected != null and selected == _theme.get_stylebox(
+			&"normal",
+			&"SelectedSelectableButton"
+		),
+		"selected upgrade-card alias uses the shared selected rail"
 	)
 
 
@@ -174,8 +168,8 @@ func _validate_family_badges(catalog: VehicleUpgradeCatalog) -> void:
 		var contract := card.debug_contract()
 		var badge := Dictionary(contract["family_badge"])
 		_expect(
-			bool(badge["image_backed"]),
-			"%s family badge uses image-backed chrome" % family
+			not bool(badge["image_backed"]),
+			"%s temporary family badge uses code-native shared chrome" % family
 		)
 		_expect(
 			StringName(badge["semantic_accent_owner"]) == &"family_glyph"
@@ -384,13 +378,10 @@ func _validate_panel(
 	var modal_style := _theme.get_stylebox(
 		&"panel",
 		&"ModalSurface"
-	) as StyleBoxTexture
+	) as StyleBoxFlat
 	_expect(
-		modal_style != null
-			and modal_style.texture.resource_path.ends_with(
-				"modal_master_normal.png"
-			),
-		"%s warning/message uses the authored modal image surface"
+		modal_style != null,
+		"%s warning/message uses the shared code-native modal surface"
 		% context
 	)
 	_expect(

@@ -1,8 +1,8 @@
 extends SceneTree
 
-## Completeness gate for the image-backed visual replacement. It follows
-## producer event -> catalog -> animation/frame and UI component -> state file,
-## rather than treating source image counts as runtime acceptance.
+## Completeness gate for gameplay visual replacement and the temporary UI
+## rollback pack. Runtime UI chrome is code-native while the 54-file pack stays
+## catalogued until its separately approved retirement.
 
 const GAMEPLAY_MANIFEST_PATH := (
 	"res://art/visuals/production/gameplay/asset-manifest.json"
@@ -342,27 +342,34 @@ func _validate_event_producers() -> void:
 func _validate_ui_runtime_contract() -> void:
 	var theme_source := FileAccess.get_file_as_string(THEME_PATH)
 	_expect(
-		not theme_source.contains("StyleBoxFlat"),
-		"production UI theme still contains StyleBoxFlat"
+		theme_source.contains("StyleBoxFlat")
+			and not theme_source.contains("StyleBoxTexture")
+			and not theme_source.contains("res://art/visuals/production/ui/controls/")
+			and not theme_source.contains("res://art/visuals/production/ui/surfaces/")
+			and not theme_source.contains("res://art/visuals/production/ui/glyphs/"),
+		"production UI theme uses only code-native chrome"
 	)
 	for required_reference in [
-		'[sub_resource type="StyleBoxTexture"',
+		'[sub_resource type="StyleBoxFlat"',
+		'ContentSurface/styles/panel',
+		'HudSurface/styles/panel',
+		'ToastSurface/styles/panel',
+		'SelectableButton/styles/normal',
+		'SelectedSelectableButton/styles/normal',
 		'HudHealthResource/styles/panel',
 		'HudObjectiveBoss/styles/panel',
 		'HudMinimapTarget/styles/panel',
 		'HudActionRail/styles/panel',
 		'HudToast/styles/panel',
 		'PreviewFrame/styles/panel',
-		'CheckButton/icons/checked',
 		'CheckButton/styles/focus',
-		'HSlider/icons/grabber',
 		'TabContainer/styles/tab_disabled',
 		'TabBar/styles/tab_disabled',
 		'ModalSurfaceCompact/styles/panel',
 	]:
 		_expect(
 			theme_source.contains(required_reference),
-			"production UI theme is missing image-backed contract: %s"
+			"production UI theme is missing shared contract: %s"
 			% required_reference
 		)
 	for source_path in DIRECT_UI_STATE_CONSUMERS:
