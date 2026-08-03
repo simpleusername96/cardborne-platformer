@@ -103,10 +103,59 @@ function Get-VisualReplacementProjection {
         [Parameter(Mandatory)]$Source
     )
     $failures = [Collections.Generic.List[string]]::new()
-    Test-VisualObjectFields $Source @('schema_version','production_root','style_authority','categories','units') 'source' $failures
-    if ($Source.schema_version -ne 1) { $failures.Add('schema_version must be 1') }
+    Test-VisualObjectFields $Source @('schema_version','production_root','style_authority','external_sources','categories','units') 'source' $failures
+    if ($Source.schema_version -ne 2) { $failures.Add('schema_version must be 2') }
     if ($Source.production_root -cne $script:ProductionRoot) { $failures.Add('production_root is not canonical') }
     if ($Source.style_authority -cne 'docs/design/VISUAL_SYSTEM.md') { $failures.Add('style_authority is not canonical') }
+
+    $externalSourceIds = @{}
+    $referencedExternalSourceIds = @{}
+    $projectedExternalSources = [Collections.Generic.List[object]]::new()
+    foreach ($externalSource in @($Source.external_sources)) {
+        $sourceId = [string]$externalSource.id
+        Test-VisualObjectFields $externalSource @(
+            'id','source_path','official_url','license_name','license_path',
+            'archive_sha256','source_sha256','adaptation_scope_en'
+        ) "external source $sourceId" $failures
+        if ($sourceId -notmatch '^[a-z][a-z0-9_]*$') { $failures.Add("invalid external source id: $sourceId") }
+        if ($externalSourceIds.ContainsKey($sourceId)) { $failures.Add("duplicate external source id: $sourceId") }
+        $externalSourceIds[$sourceId] = $true
+        $sourcePath = ConvertTo-NormalizedVisualPath ([string]$externalSource.source_path)
+        $licensePath = ConvertTo-NormalizedVisualPath ([string]$externalSource.license_path)
+        if (-not $sourcePath.StartsWith("$script:WorkbenchRoot/external-candidates/sources/")) {
+            $failures.Add("external source path escapes curated source root: $sourceId -> $sourcePath")
+        }
+        if (-not $licensePath.StartsWith("$script:WorkbenchRoot/external-candidates/licenses/")) {
+            $failures.Add("external license path escapes curated license root: $sourceId -> $licensePath")
+        }
+        $absoluteSource = $null
+        $absoluteLicense = $null
+        try { $absoluteSource = Resolve-VisualRepositoryPath $RepoRoot $sourcePath } catch { $failures.Add($_.Exception.Message) }
+        try { $absoluteLicense = Resolve-VisualRepositoryPath $RepoRoot $licensePath } catch { $failures.Add($_.Exception.Message) }
+        if ($null -ne $absoluteSource -and -not (Test-Path -LiteralPath $absoluteSource -PathType Leaf)) {
+            $failures.Add("missing external source file: $sourceId -> $sourcePath")
+        }
+        if ($null -ne $absoluteLicense -and -not (Test-Path -LiteralPath $absoluteLicense -PathType Leaf)) {
+            $failures.Add("missing external license file: $sourceId -> $licensePath")
+        }
+        if ([string]$externalSource.official_url -notmatch '^https://[^\s]+$') { $failures.Add("invalid external source URL: $sourceId") }
+        if ([string]::IsNullOrWhiteSpace([string]$externalSource.license_name)) { $failures.Add("missing external source license: $sourceId") }
+        if ([string]$externalSource.archive_sha256 -notmatch '^[0-9a-f]{64}$') { $failures.Add("invalid external archive hash: $sourceId") }
+        if ([string]$externalSource.source_sha256 -notmatch '^[0-9a-f]{64}$') { $failures.Add("invalid selected-source hash: $sourceId") }
+        if ([string]::IsNullOrWhiteSpace([string]$externalSource.adaptation_scope_en)) { $failures.Add("missing external adaptation scope: $sourceId") }
+        if ($null -ne $absoluteSource -and (Test-Path -LiteralPath $absoluteSource -PathType Leaf)) {
+            $observedSourceHash = Get-VisualSha256 $absoluteSource
+            if ($observedSourceHash -cne [string]$externalSource.source_sha256) {
+                $failures.Add("selected-source hash mismatch: $sourceId -> $sourcePath")
+            }
+        }
+        $projectedExternalSources.Add([ordered]@{
+            id=$sourceId;source_path=$sourcePath;official_url=[string]$externalSource.official_url;
+            license_name=[string]$externalSource.license_name;license_path=$licensePath;
+            archive_sha256=[string]$externalSource.archive_sha256;source_sha256=[string]$externalSource.source_sha256;
+            adaptation_scope_en=[string]$externalSource.adaptation_scope_en
+        })
+    }
 
     $categoryIds = @{}
     $categoryOrders = @{}
@@ -122,6 +171,9 @@ function Get-VisualReplacementProjection {
     $unitIds = @{}
     $unitOrders = @{}
     $targetPaths = @{}
+    $finalPaths = @{}
+    $reusePaths = @{}
+    $retirePathOwners = @{}
     $coveredMedia = @{}
     $projectedUnits = [Collections.Generic.List[object]]::new()
     foreach ($unit in @($Source.units)) {
@@ -129,7 +181,8 @@ function Get-VisualReplacementProjection {
         Test-VisualObjectFields $unit @(
             'id','category_id','order','title_en','title_ko','owner','switch_kind','status',
             'current_paths','consumer_paths','consumer_asset_ids','direction_en','deliverables',
-            'preview_paths','retire_paths','runtime_change_paths','acceptance_commands','approval','application'
+            'final_paths','reuse_paths','preview_paths','retire_paths','runtime_change_paths',
+            'acceptance_commands','approval','application'
         ) "unit $id" $failures
         if ($id -notmatch '^[a-z][a-z0-9_]*$') { $failures.Add("invalid unit id: $id") }
         if ($unitIds.ContainsKey($id)) { $failures.Add("duplicate unit id: $id") }
@@ -147,9 +200,12 @@ function Get-VisualReplacementProjection {
         )
 
         $currentRecords = [Collections.Generic.List[object]]::new()
+        $unitCurrentPaths = @{}
         foreach ($pathValue in @($unit.current_paths)) {
             if ($null -eq $pathValue -or [string]::IsNullOrWhiteSpace([string]$pathValue)) { continue }
             $path = ConvertTo-NormalizedVisualPath ([string]$pathValue)
+            if ($unitCurrentPaths.ContainsKey($path)) { $failures.Add("duplicate current path in unit: $id -> $path") }
+            $unitCurrentPaths[$path] = $true
             try { $absolute = Resolve-VisualRepositoryPath $RepoRoot $path } catch { $failures.Add($_.Exception.Message); continue }
             if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) {
                 if (-not $allowsRetiredPathsMissing) { $failures.Add("missing current path: $id -> $path") }
@@ -173,14 +229,55 @@ function Get-VisualReplacementProjection {
             if ($path -in @($unit.preview_paths) -and -not $path.StartsWith("$script:WorkbenchRoot/previews/")) { $failures.Add("preview escapes preview root: $id -> $path") }
         }
 
+        $unitFinalPaths = [Collections.Generic.List[string]]::new()
+        foreach ($pathValue in @($unit.final_paths)) {
+            if ($null -eq $pathValue -or [string]::IsNullOrWhiteSpace([string]$pathValue)) { continue }
+            $path = ConvertTo-NormalizedVisualPath ([string]$pathValue)
+            try { Resolve-VisualRepositoryPath $RepoRoot $path | Out-Null } catch { $failures.Add($_.Exception.Message); continue }
+            if (-not $path.StartsWith("$script:ProductionRoot/")) { $failures.Add("final path escapes production root: $id -> $path") }
+            if ([IO.Path]::GetExtension($path).ToLowerInvariant() -notin @('.png','.ttf')) { $failures.Add("final path is not PNG or font: $id -> $path") }
+            if ($finalPaths.ContainsKey($path)) { $failures.Add("final path assigned twice: $path") }
+            $finalPaths[$path] = $id
+            $unitFinalPaths.Add($path)
+        }
+        if (@($unitFinalPaths | Sort-Object -Unique).Count -ne $unitFinalPaths.Count) { $failures.Add("duplicate final path in unit: $id") }
+
+        $unitReusePaths = [Collections.Generic.List[string]]::new()
+        foreach ($pathValue in @($unit.reuse_paths)) {
+            if ($null -eq $pathValue -or [string]::IsNullOrWhiteSpace([string]$pathValue)) { continue }
+            $path = ConvertTo-NormalizedVisualPath ([string]$pathValue)
+            if ($path -notin $unitFinalPaths) { $failures.Add("reuse path is not a final path: $id -> $path") }
+            if (-not $unitCurrentPaths.ContainsKey($path)) { $failures.Add("reuse path is not a current path: $id -> $path") }
+            try { $absoluteReuse = Resolve-VisualRepositoryPath $RepoRoot $path } catch { $failures.Add($_.Exception.Message); continue }
+            if (-not (Test-Path -LiteralPath $absoluteReuse -PathType Leaf)) { $failures.Add("missing reuse path: $id -> $path") }
+            if ($reusePaths.ContainsKey($path)) { $failures.Add("reuse path assigned twice: $path") }
+            $reusePaths[$path] = $id
+            $unitReusePaths.Add($path)
+        }
+        if (@($unitReusePaths | Sort-Object -Unique).Count -ne $unitReusePaths.Count) { $failures.Add("duplicate reuse path in unit: $id") }
+
         $deliverableRecords = [Collections.Generic.List[object]]::new()
         foreach ($deliverable in @($unit.deliverables)) {
-            Test-VisualObjectFields $deliverable @('target_path','width','height','pivot','patch_margin','safe_inset','frame_count','fps','loop','blend') "deliverable $id" $failures
+            Test-VisualObjectFields $deliverable @(
+                'target_path','width','height','pivot','patch_margin','safe_inset','frame_count',
+                'fps','loop','blend','brief_en','external_source_ids'
+            ) "deliverable $id" $failures
             $target = ConvertTo-NormalizedVisualPath ([string]$deliverable.target_path)
             if (-not $target.StartsWith("$script:ProductionRoot/")) { $failures.Add("target escapes production root: $id -> $target") }
             if ($targetPaths.ContainsKey($target)) { $failures.Add("duplicate target path: $target") }
             $targetPaths[$target] = $id
+            if ($target -notin $unitFinalPaths) { $failures.Add("deliverable is not a final path: $id -> $target") }
+            if ($target -in $unitReusePaths) { $failures.Add("deliverable is also marked for reuse: $id -> $target") }
             if ([int]$deliverable.width -le 0 -or [int]$deliverable.height -le 0) { $failures.Add("invalid dimensions: $id -> $target") }
+            $brief = [string]$deliverable.brief_en
+            if ([string]::IsNullOrWhiteSpace($brief)) { $failures.Add("missing final brief: $id -> $target") }
+            $deliverableSourceIds = @($deliverable.external_source_ids | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
+            if (@($deliverableSourceIds | Sort-Object -Unique).Count -ne $deliverableSourceIds.Count) { $failures.Add("duplicate external source reference: $id -> $target") }
+            foreach ($sourceIdValue in $deliverableSourceIds) {
+                $sourceId = [string]$sourceIdValue
+                if (-not $externalSourceIds.ContainsKey($sourceId)) { $failures.Add("unknown external source reference: $id -> $target -> $sourceId") }
+                $referencedExternalSourceIds[$sourceId] = $true
+            }
             $toBePath = "$script:WorkbenchRoot/to-be/assets/$target"
             $absoluteToBe = Resolve-VisualRepositoryPath $RepoRoot $toBePath
             $exists = Test-Path -LiteralPath $absoluteToBe -PathType Leaf
@@ -196,7 +293,12 @@ function Get-VisualReplacementProjection {
                 $optional[$field] = if ($null -ne $property) { $property.Value } else { $null }
             }
             $observedBytes = if ($exists) { (Get-Item -LiteralPath $absoluteToBe).Length } else { $null }
-            $deliverableRecords.Add([ordered]@{target_path=$target;workbench_path=$toBePath;width=[int]$deliverable.width;height=[int]$deliverable.height;pivot=$optional.pivot;patch_margin=$optional.patch_margin;safe_inset=$optional.safe_inset;frame_count=$optional.frame_count;fps=$optional.fps;loop=$optional.loop;blend=$optional.blend;observed_sha256=$hash;bytes=$observedBytes})
+            $deliverableRecords.Add([ordered]@{target_path=$target;workbench_path=$toBePath;width=[int]$deliverable.width;height=[int]$deliverable.height;pivot=$optional.pivot;patch_margin=$optional.patch_margin;safe_inset=$optional.safe_inset;frame_count=$optional.frame_count;fps=$optional.fps;loop=$optional.loop;blend=$optional.blend;brief_en=$brief;external_source_ids=$deliverableSourceIds;observed_sha256=$hash;bytes=$observedBytes})
+        }
+        $expectedDeliverableTargets = @($unitFinalPaths | Where-Object { $_ -notin $unitReusePaths } | Sort-Object)
+        $actualDeliverableTargets = @($deliverableRecords | ForEach-Object { $_.target_path } | Sort-Object)
+        if ((Get-VisualCanonicalJson $expectedDeliverableTargets) -cne (Get-VisualCanonicalJson $actualDeliverableTargets)) {
+            $failures.Add("final paths do not equal deliverables plus reuse paths: $id")
         }
         if ([string]$unit.status -in @('switch_ready','approved_for_switch','applied') -and @($deliverableRecords | Where-Object { $null -eq $_.observed_sha256 }).Count -gt 0) { $failures.Add("ready unit has missing deliverable: $id") }
         if ($null -ne $unit.approval) {
@@ -223,9 +325,15 @@ function Get-VisualReplacementProjection {
         $retirePaths = @($unit.retire_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $runtimePaths = @($unit.runtime_change_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $commands = @($unit.acceptance_commands | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
+        foreach ($retirePathValue in $retirePaths) {
+            $retirePath = ConvertTo-NormalizedVisualPath ([string]$retirePathValue)
+            if ($retirePathOwners.ContainsKey($retirePath)) { $failures.Add("retire path assigned twice: $retirePath") }
+            $retirePathOwners[$retirePath] = $id
+            if ($retirePath -in $unitFinalPaths) { $failures.Add("path is both final and retired: $id -> $retirePath") }
+        }
         if ([string]$unit.switch_kind -ceq 'retire') {
             $status = [string]$unit.status
-            if ($status -notin @('switch_ready','approved_for_switch','retired')) {
+            if ($status -notin @('target_required','switch_ready','approved_for_switch','retired')) {
                 $failures.Add("retire-only unit has invalid status: $id -> $status")
             }
             if ($deliverableRecords.Count -ne 0) { $failures.Add("retire-only unit has deliverables: $id") }
@@ -244,7 +352,7 @@ function Get-VisualReplacementProjection {
                 $normalizedCurrent = ConvertTo-NormalizedVisualPath ([string]$currentPath)
                 if ($normalizedCurrent -notin $retirePaths) { $failures.Add("retire-only current path is not retired: $id -> $normalizedCurrent") }
             }
-            if ($status -eq 'switch_ready') {
+            if ($status -in @('target_required','switch_ready')) {
                 if ($null -ne $unit.approval -or $null -ne $unit.application) { $failures.Add("switch-ready retirement contains workflow ledger data: $id") }
                 foreach ($retirePath in $retirePaths) {
                     $absoluteRetirePath = Resolve-VisualRepositoryPath $RepoRoot ([string]$retirePath)
@@ -264,13 +372,25 @@ function Get-VisualReplacementProjection {
             id=$id;category_id=[string]$unit.category_id;order=[int]$unit.order;title_en=[string]$unit.title_en;title_ko=[string]$unit.title_ko;
             owner=[string]$unit.owner;switch_kind=[string]$unit.switch_kind;status=[string]$unit.status;direction_en=[string]$unit.direction_en;
             current_files=@($currentRecords);consumer_paths=$consumerPaths;consumer_asset_ids=$consumerIds;
-            deliverables=@($deliverableRecords);preview_paths=$previewPaths;retire_paths=$retirePaths;runtime_change_paths=$runtimePaths;
+            deliverables=@($deliverableRecords);final_paths=@($unitFinalPaths);reuse_paths=@($unitReusePaths);
+            preview_paths=$previewPaths;retire_paths=$retirePaths;runtime_change_paths=$runtimePaths;
             acceptance_commands=$commands;approval=$unit.approval;application=$unit.application
         })
+    }
+    foreach ($sourceId in $externalSourceIds.Keys) {
+        if (-not $referencedExternalSourceIds.ContainsKey($sourceId)) { $failures.Add("unreferenced external source record: $sourceId") }
     }
     $productionMedia = Get-VisualProductionMediaPaths $RepoRoot
     foreach ($path in $productionMedia) { if (-not $coveredMedia.ContainsKey($path)) { $failures.Add("unassigned production media: $path") } }
     foreach ($path in $coveredMedia.Keys) { if ($path -notin $productionMedia) { $failures.Add("assigned non-production media: $path") } }
+    $currentGameplayPng = @($productionMedia | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') })
+    foreach ($path in $currentGameplayPng) {
+        $isFinal = $finalPaths.ContainsKey($path)
+        $isRetired = $retirePathOwners.ContainsKey($path)
+        if ($isFinal -eq $isRetired) { $failures.Add("current gameplay PNG needs exactly one final disposition: $path") }
+        if ($isFinal -and [string]$finalPaths[$path] -cne [string]$coveredMedia[$path]) { $failures.Add("current/final unit mismatch: $path") }
+        if ($isRetired -and [string]$retirePathOwners[$path] -cne [string]$coveredMedia[$path]) { $failures.Add("current/retirement unit mismatch: $path") }
+    }
     if ($failures.Count -gt 0) { throw ($failures -join "`n") }
 
     $orderedCategories = @($Source.categories | Sort-Object order)
@@ -278,9 +398,19 @@ function Get-VisualReplacementProjection {
     $statusCounts = [ordered]@{}
     foreach ($status in $script:Statuses) { $statusCounts[$status] = @($orderedUnits | Where-Object status -eq $status).Count }
     return [ordered]@{
-        schema_version=1;production_root=$script:ProductionRoot;style_authority='docs/design/VISUAL_SYSTEM.md';
-        summary=[ordered]@{gameplay_png=@($productionMedia | Where-Object {$_ -like 'art/visuals/production/gameplay/*.png' -or $_ -like 'art/visuals/production/gameplay/**/*.png'}).Count;ui_png=@($productionMedia | Where-Object {$_ -like 'art/visuals/production/ui/*.png' -or $_ -like 'art/visuals/production/ui/**/*.png'}).Count;font=@($productionMedia | Where-Object {$_.EndsWith('.ttf')}).Count;units=$orderedUnits.Count;retire_only=@($orderedUnits | Where-Object switch_kind -eq 'retire').Count;statuses=$statusCounts};
-        categories=$orderedCategories;units=$orderedUnits
+        schema_version=2;production_root=$script:ProductionRoot;style_authority='docs/design/VISUAL_SYSTEM.md';
+        summary=[ordered]@{
+            gameplay_png=$currentGameplayPng.Count;
+            final_gameplay_png=@($finalPaths.Keys | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') }).Count;
+            authored_gameplay_png=@($targetPaths.Keys | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') }).Count;
+            reused_gameplay_png=@($reusePaths.Keys | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') }).Count;
+            retired_gameplay_png=@($currentGameplayPng | Where-Object { $retirePathOwners.ContainsKey($_) }).Count;
+            ui_png=@($productionMedia | Where-Object {$_.StartsWith("$script:ProductionRoot/ui/") -and $_.EndsWith('.png')}).Count;
+            font=@($productionMedia | Where-Object {$_.EndsWith('.ttf')}).Count;
+            units=$orderedUnits.Count;retire_only=@($orderedUnits | Where-Object switch_kind -eq 'retire').Count;
+            external_sources=$projectedExternalSources.Count;statuses=$statusCounts
+        };
+        external_sources=@($projectedExternalSources | Sort-Object id);categories=$orderedCategories;units=$orderedUnits
     }
 }
 

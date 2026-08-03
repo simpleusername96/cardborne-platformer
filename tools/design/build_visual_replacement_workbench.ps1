@@ -54,10 +54,10 @@ if ($Check) {
     if (-not (Test-Path $inventoryPath -PathType Leaf) -or (Get-Content $inventoryPath -Raw).Replace("`r`n","`n").TrimEnd("`n") -cne $inventoryText) { $failures += 'inventory.json differs from deterministic output' }
     if (-not (Test-Path $indexPath -PathType Leaf) -or (Get-Content $indexPath -Raw).Replace("`r`n","`n").TrimEnd("`n") -cne $indexText.TrimEnd("`n")) { $failures += 'index.html differs from deterministic output' }
     if ($failures.Count) { throw ($failures -join "`n") }
-    Write-Host "VISUAL_REPLACEMENT_WORKBENCH_CHECK_OK units=$($projection.summary.units) media=$($projection.summary.gameplay_png + $projection.summary.ui_png + $projection.summary.font)"
+    Write-Host "VISUAL_REPLACEMENT_WORKBENCH_CHECK_OK units=$($projection.summary.units) current=$($projection.summary.gameplay_png) final=$($projection.summary.final_gameplay_png) authored=$($projection.summary.authored_gameplay_png)"
     exit 0
 }
 
 Write-VisualUtf8Lf -LiteralPath $inventoryPath -Text $inventoryText
 Write-VisualUtf8Lf -LiteralPath $indexPath -Text $indexText
-Write-Host "VISUAL_REPLACEMENT_WORKBENCH_BUILD_OK units=$($projection.summary.units) gameplay=$($projection.summary.gameplay_png) ui=$($projection.summary.ui_png) font=$($projection.summary.font)"
+Write-Host "VISUAL_REPLACEMENT_WORKBENCH_BUILD_OK units=$($projection.summary.units) current=$($projection.summary.gameplay_png) final=$($projection.summary.final_gameplay_png) authored=$($projection.summary.authored_gameplay_png) ui=$($projection.summary.ui_png) font=$($projection.summary.font)"

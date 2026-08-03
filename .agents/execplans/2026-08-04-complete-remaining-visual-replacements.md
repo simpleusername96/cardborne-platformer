@@ -273,17 +273,17 @@ been implied by source import or candidate generation.
 
 #### 6.1 Rebuild the workbench control plane
 
-- [ ] Replace the old 36-PNG unit forecast with the exact partition in this plan.
-- [ ] Add authored-raster units for projectiles, defense/status, pickup/reward,
+- [x] Replace the old 36-PNG unit forecast with the exact partition in this plan.
+- [x] Add authored-raster units for projectiles, defense/status, pickup/reward,
   world/facility, EMP, secondaries/wear, enemies, and bosses/shared nodes.
-- [ ] Keep one code-native unit for all 43 HUD/minimap/combat-cue paths.
-- [ ] Keep one explicit suppression/retirement unit for the 95 non-EMP effect
+- [x] Keep one code-native unit for all 43 HUD/minimap/combat-cue paths.
+- [x] Keep one explicit suppression/retirement unit for the 95 non-EMP effect
   frames and one authored replacement unit for the six EMP frames.
-- [ ] Model reuse, in-place replacement, consolidation, addition, runtime change,
+- [x] Model reuse, in-place replacement, consolidation, addition, runtime change,
   and exact retirement without fake PNG paths.
-- [ ] Make generator and validators require license/provenance records whenever a
+- [x] Make generator and validators require license/provenance records whenever a
   TO-BE brief uses an external source.
-- [ ] Rebuild `inventory.json` and `index.html` deterministically.
+- [x] Rebuild `inventory.json` and `index.html` deterministically.
 
 Acceptance: every current PNG belongs to one unit, every final target belongs to
 one unit, and the generated forecast is exactly 64.
@@ -680,6 +680,10 @@ a proposal, not a preapproved production switch.
   requires gameplay-scale review and switch approval.
 - 2026-08-04: retained one complete final validation after all approved asset and
   runtime changes, with only mechanical guards during production phases.
+- 2026-08-04: rebuilt the workbench as 16 responsibility-shaped units with an
+  exact 215-current / 64-final / 62-authored / 2-reused / 160-retired forecast;
+  schema guards now reject duplicate disposition, missing provenance, and hash
+  drift.
 
 ## Progress
 
@@ -692,13 +696,16 @@ a proposal, not a preapproved production switch.
 - [x] Froze clean Phase 6 baseline
   `6dbfd7c33d312418094e2cac95988a84515af8ec` and confirmed Godot
   `4.7.1.stable.official.a13da4feb`.
-- [ ] Runtime/workbench execution has not begun under the corrected boundary.
+- [x] Rebuilt and mechanically validated the Phase 6 workbench control plane.
+- [ ] Projectile candidates are being prepared outside production for exact-hash
+  approval; no runtime switch or retirement has occurred.
 
 ## Next Steps
 
-1. Execute Task 6.1 and rebuild the workbench to the exact 215-to-64 partition.
-2. Begin authored production with the nine-projectile unit; do not switch or
-   retire any production file before its exact report is approved.
+1. Complete Task 6.2 actual-scale evidence and publish the exact nine-projectile
+   approval report.
+2. Do not switch or retire any production file before that exact report is
+   approved.
 
 ## Completion and Stop Conditions
 
