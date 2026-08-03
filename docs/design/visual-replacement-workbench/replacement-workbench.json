@@ -4577,7 +4577,7 @@
       "title_ko": "미리보기",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/glyphs/preview_normal.png",
         "art/visuals/production/ui/glyphs/preview_locked.png",
@@ -4593,49 +4593,9 @@
         "preview/locked",
         "preview/normal"
       ],
-      "direction_en": "Replace the current preview files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/glyphs/preview_normal.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            18,
-            18,
-            18,
-            18
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/glyphs/preview_locked.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            18,
-            18,
-            18,
-            18
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/glyphs/preview_focused.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            18,
-            18,
-            18,
-            18
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/preview/preview-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/preview_small_state/preview-small-state-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4652,35 +4612,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T16:06:26+09:00",
-        "baseline_commit": "00787af65d9351de322c2bec4bc905f990084244",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/glyphs/preview_normal.png": "8636d4f2ac3010709ad29ef70bb5259f5d942f095fc03b50afeee0de63a7c9cf",
-          "art/visuals/production/ui/glyphs/preview_locked.png": "5a22a841d456f51ce6091ee6ca9c8381dd07b86bc6807d6fee598faaf145cd47",
-          "art/visuals/production/ui/glyphs/preview_focused.png": "3dfeed2985b085e2dd682f979fe187570f7be56047c5b80e62afca3ba65dacd7"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "d6ee0196b89726b83a9e5fa7ccc470ef5795b9a7",
-        "applied_at": "2026-08-03T16:08:48+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "small_state",
@@ -4690,7 +4623,7 @@
       "title_ko": "소형 상태",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/glyphs/small_state_pip_available.png",
         "art/visuals/production/ui/glyphs/small_state_pip_filled.png",
@@ -4706,49 +4639,9 @@
         "small_state/pip_available",
         "small_state/pip_filled"
       ],
-      "direction_en": "Replace the current small state files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/glyphs/small_state_pip_available.png",
-          "width": 32,
-          "height": 32,
-          "patch_margin": 6,
-          "safe_inset": [
-            6,
-            6,
-            6,
-            6
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/glyphs/small_state_pip_filled.png",
-          "width": 32,
-          "height": 32,
-          "patch_margin": 6,
-          "safe_inset": [
-            6,
-            6,
-            6,
-            6
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/glyphs/small_state_disabled.png",
-          "width": 32,
-          "height": 32,
-          "patch_margin": 6,
-          "safe_inset": [
-            6,
-            6,
-            6,
-            6
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/small_state/small-state-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/preview_small_state/preview-small-state-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4765,35 +4658,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T16:06:26+09:00",
-        "baseline_commit": "00787af65d9351de322c2bec4bc905f990084244",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/glyphs/small_state_pip_available.png": "cb725c7adbb71cd582c0c80aacba3ea718910c129f4e2371c12c121d20bed013",
-          "art/visuals/production/ui/glyphs/small_state_pip_filled.png": "2a8960da4e0e1c349008cedcaf3e33b2207c1e8dd13099b457976f4a78c851fa",
-          "art/visuals/production/ui/glyphs/small_state_disabled.png": "1fe63ebe72d61d1a7ff5356b7c0eee64e0c192500726819c257b4ba84cf35857"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "5127580cc9479794b9c834e2943b11410a60c6f4",
-        "applied_at": "2026-08-03T16:10:55+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "orphan_ui_state_retirement",

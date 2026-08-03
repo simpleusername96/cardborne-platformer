@@ -1853,7 +1853,7 @@ before execution continues.
 - [x] Phase 2: rebuild the current-only replacement workbench.
 - [x] Phase 3: normalize the current production contract.
 - [x] Phase 4: complete the player vertical slice.
-- [ ] Phase 5: replace the UI component system.
+- [x] Phase 5: replace the UI component system.
   - [x] Prepare modal_master, content_plate, and hud_plate as ten exact,
     independently deployable state PNGs with three family contact sheets and
     one shared runtime-size matrix; all three units are switch_ready.
@@ -1881,7 +1881,7 @@ before execution continues.
   - [x] Prepare preview and small_state as six exact deployable PNGs with
     per-family contact sheets and one shared runtime-size matrix; both units
     are switch_ready.
-  - [ ] Obtain exact hash-bound approval and apply preview and small_state.
+  - [x] Obtain exact hash-bound approval and apply preview and small_state.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
 - [ ] Phase 8: replace ordinary enemies, hostile attacks, and cues.
@@ -1891,11 +1891,12 @@ before execution continues.
 
 ## Next Steps
 
-1. Display preview and small_state's exact six-entry target/hash map from a
-   clean preparation commit.
-2. Request hash-bound approval only for those two independently promotable
-   units, with empty retire_paths and runtime_change_paths.
-3. Promote and baseline-clean only exact approved units.
+1. Enumerate the complete primary_weapon package, including static files,
+   animation frames, icons, exact targets, consumers, and runtime invariants.
+2. Create direct deployable primary_weapon deliverables and validate cadence,
+   pivots, gameplay scale, grayscale readability, pressure, and batching.
+3. Display the clean package's exact target/hash map and request one
+   hash-bound approval without extending authority to dash or later units.
 
 ## Completion Criteria
 
@@ -2289,6 +2290,23 @@ Do not mark a phase or this plan complete while a stop condition remains.
   records bind those bytes at 2026-08-03T16:06:26+09:00. retire_paths and
   runtime_change_paths remain empty for both units. This approval grants no
   deletion, runtime-code change, or authority for any Phase 6 visual family.
+- 2026-08-03: The approved preview and small_state families were promoted as
+  two independent atomic units. preview switch commit
+  d6ee0196b89726b83a9e5fa7ccc470ef5795b9a7 and ledger
+  a79a5b44421792de85d721e4f7f5356044538f93 replace normal, locked, and
+  focused states; small_state switch commit
+  5127580cc9479794b9c834e2943b11410a60c6f4 and ledger
+  76d715c68e60132d767e710ed7f8ce1afd386bb5 replace available, filled, and
+  disabled states. Both units passed all twelve declared checks. The combined
+  Web export succeeded, and built-PCK capture produced 77 Korean and 30
+  English reference frames at 1280 by 720, including normal, locked, focused,
+  and upgrade-choice states. Built-Web QA on codex port 13029 covered 1280 and
+  960 widths plus active gameplay. All eight network requests returned 200,
+  and the console contained only three Godot information logs. The exact
+  task-owned listener was stopped and the port was confirmed clean. The six
+  promoted bytes are now current AS-IS; only their duplicate TO-BE bytes and
+  three completed previews are removed during baseline cleanup. No approved
+  retire path, runtime path, or Phase 6 visual family was changed.
 
 ## Execution Handoff
 
