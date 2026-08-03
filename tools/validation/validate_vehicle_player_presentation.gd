@@ -19,17 +19,23 @@ func _initialize() -> void:
 	var player := ActorCatalog.descriptor(&"player")
 	_expect(not player.is_empty(), "player descriptor exists")
 	_expect(
-		Array(player.get("rear_sockets", [])).size() == 1,
-		"player descriptor owns one rigid centered rear engine socket"
+		Array(player.get("rear_anchors", [])).size() == 1,
+		"player descriptor owns one rear anchor for transient dash feedback"
 	)
-	var rear_sockets := Array(player.get("rear_sockets", []))
+	var rear_anchors := Array(player.get("rear_anchors", []))
 	_expect(
-		Vector2(rear_sockets[0]).x < 0.0
-			and is_zero_approx(Vector2(rear_sockets[0]).y),
-		"player recipe keeps the engine centered on the rear plane"
+		Vector2(rear_anchors[0]).x < 0.0
+			and is_zero_approx(Vector2(rear_anchors[0]).y),
+		"player recipe keeps the dash anchor centered on the rear plane"
 	)
 	var player_components := Dictionary(player.get("components", {}))
-	for component_id in [&"hull", &"engine", &"engine_flare", &"aim_mount"]:
+	_expect(
+		player_components.size() == 2
+			and player_components.has(&"body")
+			and player_components.has(&"engine_flare"),
+		"player recipe exposes one fixed body and one transient flare"
+	)
+	for component_id in [&"body", &"engine_flare"]:
 		var recipe_id := StringName(player_components.get(component_id, &""))
 		_expect(
 			recipe_id in ActorRecipes.PLAYER_COMPONENT_RECIPES
@@ -39,32 +45,30 @@ func _initialize() -> void:
 	_expect(
 		ActorRecipes.plane_count(
 			ActorRecipes.player_component_layers(
-				StringName(player_components.get(&"hull", &""))
+				StringName(player_components.get(&"body", &""))
 			)
 		) == 5,
-		"player hull keeps the approved five-plane mechanical hierarchy"
+		"player craft fallback keeps the approved five-plane mechanical hierarchy"
 	)
 	for degrees in range(0, 360, 5):
 		var angle := deg_to_rad(float(degrees))
 		var direction := Vector2.RIGHT.rotated(angle)
 		var origin := Vector2(940.0, 520.0)
-		var sockets := Renderer.player_engine_sockets(origin, direction)
-		for socket_index in sockets.size():
-			var local_socket := (sockets[socket_index] - origin).rotated(-angle)
+		var anchors := Renderer.player_rear_anchors(origin, direction)
+		for anchor_index in anchors.size():
+			var local_anchor := (anchors[anchor_index] - origin).rotated(-angle)
 			var expected := (
-				Vector2(Array(player["rear_sockets"])[socket_index])
-				* Art.PLAYER_VISUAL_RADIUS
+				Vector2(Array(player["rear_anchors"])[anchor_index])
+					* Art.PLAYER_VISUAL_RADIUS
 			)
 			_expect(
-				local_socket.distance_to(expected) <= 1.0,
-				"engine socket %d stays rigid at %d degrees"
-				% [socket_index, degrees]
+				local_anchor.distance_to(expected) <= 1.0,
+				"rear anchor %d stays rigid at %d degrees"
+				% [anchor_index, degrees]
 			)
 	for mesh in [
-		Visuals.player_hull_mesh(),
-		Visuals.player_engine_mesh(),
+		Visuals.player_craft_body_mesh(),
 		Visuals.player_engine_flare_mesh(),
-		Visuals.player_primary_mesh(),
 	]:
 		_expect(mesh.get_surface_count() == 1, "player component mesh has one retained surface")
 	for visual_id in ProjectileCatalog.descriptor_ids():
@@ -238,6 +242,18 @@ func _initialize() -> void:
 		),
 		"generic invulnerability no longer draws a player danger ring"
 	)
+	for legacy_token in [
+		"attachment/player_hull",
+		"attachment/player_engine",
+		"attachment/player_aim_mount",
+		"Player_hull",
+		"Player_engine",
+		"Player_primary_mount",
+	]:
+		_expect(
+			not renderer_source.contains(legacy_token),
+			"renderer omits legacy fixed player part: %s" % legacy_token
+		)
 	run.free()
 	_finish()
 

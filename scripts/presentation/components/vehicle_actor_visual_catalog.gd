@@ -7,15 +7,12 @@ extends RefCounted
 const DESCRIPTORS := {
 	&"player": {
 		"role": &"player",
-		"recipe": &"player_hull_layered",
+		"recipe": &"player_craft_body",
 		"color": &"player_reward",
-		"rear_sockets": [Vector2(-0.84, 0.0)],
-		"aim_socket": Vector2(0.04, 0.0),
+		"rear_anchors": [Vector2(-0.84, 0.0)],
 		"components": {
-			&"hull": &"player_hull_layered",
-			&"engine": &"player_engine_module",
+			&"body": &"player_craft_body",
 			&"engine_flare": &"player_engine_flare",
-			&"aim_mount": &"player_aim_mount",
 		},
 		"states": [&"base", &"hit", &"dash"],
 	},

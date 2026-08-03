@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bw346bgon6foo"
-path="res://.godot/imported/actor_player_engine.png-f054fc7cfbb496e0c4d5f288185938ca.ctex"
+uid="uid://decmhksbnuo3h"
+path="res://.godot/imported/actor_player_craft_body.png-3fbabaae78689f1d413a3561fd2f97c1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/visuals/production/gameplay/actors/player/actor_player_engine.png"
-dest_files=["res://.godot/imported/actor_player_engine.png-f054fc7cfbb496e0c4d5f288185938ca.ctex"]
+source_file="res://art/visuals/production/gameplay/actors/player/actor_player_craft_body.png"
+dest_files=["res://.godot/imported/actor_player_craft_body.png-3fbabaae78689f1d413a3561fd2f97c1.ctex"]
 
 [params]
 

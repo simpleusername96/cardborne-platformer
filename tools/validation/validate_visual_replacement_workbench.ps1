@@ -37,7 +37,12 @@ try {
     $unexpectedRetiredStates=@($actual.units|Where-Object { $_.id -notin $phase3ReadyIds -and $_.status -eq 'retired' })
     Expect ($unexpectedRetiredStates.Count -eq 0) 'non-retirement unit uses the retired workflow state'
     $retirementApplied=$phase3State -in @('approved_for_switch','retired')
-    Expect ($actual.summary.gameplay_png -eq $(if($retirementApplied){217}else{247})) 'gameplay PNG count does not match the Phase 3 state'
+    $expectedGameplayPng=if($retirementApplied){217}else{247}
+    if(Test-Path -LiteralPath (Join-Path $repoRoot 'art/visuals/production/gameplay/actors/player/actor_player_craft_body.png')){$expectedGameplayPng++}
+    foreach($legacyPlayerPng in @('actor_player_aim_mount.png','actor_player_engine.png','actor_player_hull_base.png')){
+        if(-not (Test-Path -LiteralPath (Join-Path $repoRoot "art/visuals/production/gameplay/actors/player/$legacyPlayerPng"))){$expectedGameplayPng--}
+    }
+    Expect ($actual.summary.gameplay_png -eq $expectedGameplayPng) 'gameplay PNG count does not match the applied retirement and player-craft transition state'
     Expect ($actual.summary.ui_png -eq $(if($retirementApplied){54}else{57})) 'UI PNG count does not match the Phase 3 state'
     foreach($phase3Unit in $phase3Units){
         Expect ([string]$phase3Unit.switch_kind -ceq 'retire') "Phase 3 unit is not retire-only: $($phase3Unit.id)"

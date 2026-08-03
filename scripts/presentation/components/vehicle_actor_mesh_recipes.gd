@@ -21,10 +21,8 @@ const ORDINARY_GRAMMARS: Array[StringName] = [
 ]
 
 const PLAYER_COMPONENT_RECIPES: Array[StringName] = [
-	&"player_hull_layered",
-	&"player_engine_module",
+	&"player_craft_body",
 	&"player_engine_flare",
-	&"player_aim_mount",
 ]
 
 const ORDINARY_RECIPES: Array[StringName] = [
@@ -70,7 +68,7 @@ const BOSS_MODULE_RECIPES: Array[StringName] = [
 
 static func player_component_layers(recipe_id: StringName) -> Array[Dictionary]:
 	match recipe_id:
-		&"player_hull_layered":
+		&"player_craft_body":
 			var outer := player_signature()
 			return [
 				_layer(outer, Art.INK, &"perimeter"),
@@ -122,30 +120,6 @@ static func player_component_layers(recipe_id: StringName) -> Array[Dictionary]:
 					&"rear_socket"
 				),
 			]
-		&"player_engine_module":
-			var engine := PackedVector2Array([
-				Vector2(0.62, -0.48),
-				Vector2(0.82, -0.22),
-				Vector2(0.82, 0.22),
-				Vector2(0.62, 0.48),
-				Vector2(-0.70, 0.42),
-				Vector2(-0.94, 0.18),
-				Vector2(-0.94, -0.18),
-				Vector2(-0.70, -0.42),
-			])
-			return [
-				_layer(engine, Art.INK, &"perimeter"),
-				_layer(
-					Components.scaled_points(engine, Vector2(0.86, 0.78)),
-					Color.WHITE,
-					&"main_mass"
-				),
-				_layer(
-					Components.rect_points(Vector2(-0.48, 0.0), Vector2(0.22, 0.19)),
-					Art.WORLD_CANVAS,
-					&"engine_socket"
-				),
-			]
 		&"player_engine_flare":
 			return [
 				_layer(
@@ -169,28 +143,6 @@ static func player_component_layers(recipe_id: StringName) -> Array[Dictionary]:
 					]),
 					Art.TEXT_PRIMARY,
 					&"thrust_core"
-				),
-			]
-		&"player_aim_mount":
-			var mount := PackedVector2Array([
-				Vector2(-0.38, -0.26),
-				Vector2(0.72, -0.17),
-				Vector2(1.0, 0.0),
-				Vector2(0.72, 0.17),
-				Vector2(-0.38, 0.26),
-				Vector2(-0.58, 0.0),
-			])
-			return [
-				_layer(mount, Art.INK, &"perimeter"),
-				_layer(
-					Components.scaled_points(mount, Vector2(0.88, 0.76)),
-					Color.WHITE,
-					&"main_mass"
-				),
-				_layer(
-					Components.rect_points(Vector2(-0.30, 0.0), Vector2(0.18, 0.10)),
-					Art.WORLD_CANVAS,
-					&"aim_socket"
 				),
 			]
 	return []

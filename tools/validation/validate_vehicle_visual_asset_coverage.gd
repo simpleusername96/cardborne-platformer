@@ -5,7 +5,7 @@ const AssetProvider = preload(
 )
 
 const EXPECTED_CATEGORY_COUNTS := {
-	&"attachment":3,
+	&"attachment":1,
 	&"actor":19,
 	&"boss":5,
 	&"boss_module":10,
@@ -48,8 +48,8 @@ func _initialize() -> void:
 			]
 		)
 	_expect(
-		AssetProvider.asset_ids().size() == 217,
-		"semantic-v2 production coverage totals 217 runtime images"
+		AssetProvider.asset_ids().size() == 215,
+		"semantic-v2 production coverage totals 215 runtime images"
 	)
 	for path in LIVE_CONSUMER_PATHS:
 		var source := FileAccess.get_file_as_string(path)

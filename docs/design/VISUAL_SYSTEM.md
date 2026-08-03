@@ -386,10 +386,11 @@ Web export만으로 interactive built-Web smoke나 release performance를
   geometry를 presentation까지 완전히 전달하지 않는다.
 - upgrade card는 지원 viewport/locale의 overflow와 family art hierarchy를
   아직 최종 acceptance하지 못했다.
-- XP shard 단순화, one-body player replacement, 새 damage-feedback family와
-  visual candidate는 개별 asset으로 승인되지 않았다. inventory의 player
-  vehicle TO-BE guide도 비교용 미적용 후보이며 Phase 4의 exact hash approval
-  전에는 현재 runtime 표현을 유지한다.
+- one-body player craft와 전용 minimap marker는 Phase 4의 exact-hash 승인을
+  거쳐 현재 runtime 표현이 되었다. 수동 조준은 cursor, muzzle, projectile,
+  hit feedback으로 유지하고 rear anchor는 transient dash feedback에만 쓴다.
+  XP shard 단순화, 새 damage-feedback family와 그 밖의 visual candidate는
+  아직 개별 runtime asset으로 승인되지 않았다.
 - boss body와 공통 방어막 노드의 단순화 방향은 이 spec의 목표지만 생성된
   semantic-v3/v4/v5/v6 후보 파일 자체는 승인된 runtime asset이 아니다.
 

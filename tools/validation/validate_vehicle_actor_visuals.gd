@@ -46,44 +46,33 @@ func _initialize() -> void:
 func _validate_player_attachments() -> void:
 	var player := ActorCatalog.descriptor(&"player")
 	_expect(
-		Array(player.get("rear_sockets", [])).size() == 1
-			and Vector2(Array(player["rear_sockets"])[0])
+		Array(player.get("rear_anchors", [])).size() == 1
+			and Vector2(Array(player["rear_anchors"])[0])
 				.is_equal_approx(Vector2(-0.84, 0.0)),
-		"player owns one rigid centered engine socket at the manifest offset"
+		"player owns one centered rear anchor for transient dash feedback"
 	)
 	var manifest := AssetProvider.manifest()
 	var attachments := Dictionary(manifest.get("attachments", {}))
 	_expect(
-		String(Dictionary(attachments.get("player_engine", {})).get(
+		attachments.size() == 1
+			and String(Dictionary(attachments.get("player_craft_body", {})).get(
 			"rotation_driver",
 			""
 		)) == "hull",
-		"player engine rotation is driven only by the hull"
+		"one integrated player craft attachment is driven by the hull"
 	)
 	_expect(
-		not bool(Dictionary(attachments.get("player_engine", {})).get(
-			"deform_with_velocity",
-			true
-		)),
-		"player engine cannot deform with velocity"
+		not attachments.has("player_hull")
+			and not attachments.has("player_engine")
+			and not attachments.has("player_aim_mount"),
+		"legacy player part attachments are absent"
 	)
+	var asset_id := &"attachment/player_craft_body"
 	_expect(
-		String(Dictionary(attachments.get("player_aim_mount", {})).get(
-			"rotation_driver",
-			""
-		)) == "aim",
-		"player aim mount retains independent aim rotation"
+		AssetProvider.texture(asset_id) != null
+			and AssetProvider.normalized_mesh(asset_id) != null,
+		"integrated player craft resolves to a texture-capable runtime quad"
 	)
-	for asset_id in [
-		&"attachment/player_hull",
-		&"attachment/player_engine",
-		&"attachment/player_aim_mount",
-	]:
-		_expect(
-			AssetProvider.texture(asset_id) != null
-				and AssetProvider.normalized_mesh(asset_id) != null,
-			"%s resolves to a texture-capable runtime quad" % asset_id
-		)
 
 
 func _validate_actor_images() -> void:

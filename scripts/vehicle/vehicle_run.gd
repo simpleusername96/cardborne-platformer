@@ -5559,9 +5559,6 @@ func _combat_presentation_snapshot() -> Dictionary:
 		"barrier_strength": player_barrier_strength,
 		"reduced_motion": _reduced_motion_enabled(),
 		"run_time": run_time,
-		"hull_visual_tier":run_build.level_of(&"reinforced_hull"),
-		"engine_visual_count":run_build.level_of(&"tuned_thrusters"),
-		"primary_visual_tier":run_build.level_of(&"kinetic_rounds"),
 		"secondary_visual_tier":maxi(
 			run_build.level_of(&"seeker_warhead"),
 			run_build.level_of(&"escort_drone")

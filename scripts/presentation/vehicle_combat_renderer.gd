@@ -168,9 +168,7 @@ var _experience_batches: Dictionary = {}
 var _status_batches: Dictionary = {}
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
-var _player_hull_batch: BatchHandle
-var _player_engine_batch: BatchHandle
-var _player_primary_batch: BatchHandle
+var _player_craft_body_batch: BatchHandle
 var _last_health_bar_count := 0
 var _last_priority_marker_count := 0
 var _last_tactic_module_count := 0
@@ -182,7 +180,7 @@ var _floating_damage_draws: Array[FloatingDamageDraw] = []
 var _floating_damage_draw_count := 0
 var _secondary_asset_ids: Dictionary = {}
 var _defense_asset_ids: Dictionary = {}
-var _player_rear_socket := Vector2(-0.84, 0.0)
+var _player_rear_anchor := Vector2(-0.84, 0.0)
 var _health_overlay_candidates: Array[EnemyState] = []
 var _health_overlay_scores := PackedInt64Array()
 var _health_overlay_candidate_count := 0
@@ -243,7 +241,7 @@ func _draw() -> void:
 		_draw_floating_damage(_floating_damage_draws[index])
 
 
-static func player_engine_sockets(
+static func player_rear_anchors(
 	player_position: Vector2,
 	hull_direction: Vector2
 ) -> Array[Vector2]:
@@ -254,17 +252,17 @@ static func player_engine_sockets(
 	)
 	var lateral := normalized.rotated(PI * 0.5)
 	var descriptor := ActorCatalog.descriptor(&"player")
-	var normalized_sockets: Array = descriptor.get(
-		"rear_sockets",
+	var normalized_anchors: Array = descriptor.get(
+		"rear_anchors",
 		[Vector2(-0.84, 0.0)]
 	)
 	var result: Array[Vector2] = []
-	for socket_variant in normalized_sockets:
-		var socket := Vector2(socket_variant)
+	for anchor_variant in normalized_anchors:
+		var anchor := Vector2(anchor_variant)
 		result.append(
 			player_position
-			+ normalized * socket.x * Art.PLAYER_VISUAL_RADIUS
-			+ lateral * socket.y * Art.PLAYER_VISUAL_RADIUS
+			+ normalized * anchor.x * Art.PLAYER_VISUAL_RADIUS
+			+ lateral * anchor.y * Art.PLAYER_VISUAL_RADIUS
 		)
 	return result
 
@@ -277,7 +275,7 @@ static func radial_outward_direction(
 	return radial.normalized() if not radial.is_zero_approx() else Vector2.RIGHT
 
 
-func _player_engine_socket(
+func _player_rear_anchor_position(
 	player_position: Vector2,
 	hull_direction: Vector2
 ) -> Vector2:
@@ -289,8 +287,8 @@ func _player_engine_socket(
 	var lateral := normalized.rotated(PI * 0.5)
 	return (
 		player_position
-		+ normalized * _player_rear_socket.x * Art.PLAYER_VISUAL_RADIUS
-		+ lateral * _player_rear_socket.y * Art.PLAYER_VISUAL_RADIUS
+		+ normalized * _player_rear_anchor.x * Art.PLAYER_VISUAL_RADIUS
+		+ lateral * _player_rear_anchor.y * Art.PLAYER_VISUAL_RADIUS
 	)
 
 
@@ -436,30 +434,12 @@ func _build_batches() -> void:
 		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 640, 4, &"overlay_diamond",
 		48
 	)
-	_player_engine_batch = _create_asset_batch(
-		"Player_engine",
-		&"attachment/player_engine",
-		4,
-		4,
-		&"player_engine",
-		-1,
-		true
-	)
-	_player_hull_batch = _create_asset_batch(
-		"Player_hull",
-		&"attachment/player_hull",
+	_player_craft_body_batch = _create_asset_batch(
+		"Player_craft_body",
+		&"attachment/player_craft_body",
 		1,
 		5,
-		&"player_hull",
-		-1,
-		true
-	)
-	_player_primary_batch = _create_asset_batch(
-		"Player_primary_mount",
-		&"attachment/player_aim_mount",
-		1,
-		6,
-		&"player_primary_mount",
+		&"player_craft_body",
 		-1,
 		true
 	)
@@ -547,12 +527,12 @@ func _create_asset_batch(
 
 func _cache_catalog_asset_ids() -> void:
 	var player_descriptor := ActorCatalog.descriptor(&"player")
-	var sockets: Array = player_descriptor.get(
-		"rear_sockets",
-		[_player_rear_socket]
+	var anchors: Array = player_descriptor.get(
+		"rear_anchors",
+		[_player_rear_anchor]
 	)
-	if not sockets.is_empty():
-		_player_rear_socket = Vector2(sockets[0])
+	if not anchors.is_empty():
+		_player_rear_anchor = Vector2(anchors[0])
 	for visual_id in SecondaryCatalog.descriptor_ids():
 		_secondary_asset_ids[visual_id] = StringName(
 			SecondaryCatalog.descriptor(visual_id).get("asset", &"")
@@ -1341,7 +1321,7 @@ func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 			continue
 		if mode == &"hull_afterimage":
 			_queue_semantic_texture(
-				&"attachment/player_hull",
+				&"attachment/player_craft_body",
 				position,
 				angle,
 				Art.PLAYER_VISUAL_RADIUS,
@@ -1435,7 +1415,6 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var protection_sources: Dictionary = state.get("protection_sources", {})
 	var displayed_player_position := player_position
 	var hull_color := Color.WHITE
-	var primary_color := Color.WHITE
 	_sync_support_fields(Array(state.get("support_fields", [])))
 	var feedback_color := Color.TRANSPARENT
 	if hit_remaining > 0.0:
@@ -1450,42 +1429,26 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			displayed_player_position += jitter_direction * amplitude
 	if feedback_color.a > 0.0:
 		hull_color = feedback_color
-		primary_color = feedback_color
 	var hull_angle := hull_direction.angle()
 	var rear := -hull_direction.normalized()
 	var side := rear.rotated(PI * 0.5)
-	var engine_socket := _player_engine_socket(
+	var rear_anchor := _player_rear_anchor_position(
 		displayed_player_position,
 		hull_direction
 	)
 	if bool(state.get("dash_active", false)):
 		_write_beam(
-			engine_socket + rear * 8.0,
-			engine_socket + rear * 47.0,
+			rear_anchor + rear * 8.0,
+			rear_anchor + rear * 47.0,
 			7.0,
 			Color(Art.SYSTEM, 0.94)
 		)
 	_write_instance(
-		_player_engine_batch,
-		engine_socket,
-		hull_angle,
-		Vector2.ONE * 18.0,
-		Color.WHITE
-	)
-	_write_instance(
-		_player_hull_batch,
+		_player_craft_body_batch,
 		displayed_player_position,
 		hull_angle,
 		Vector2.ONE * Art.PLAYER_VISUAL_RADIUS,
 		hull_color
-	)
-	var primary_mount_position := displayed_player_position + aim_direction * 12.0
-	_write_instance(
-		_player_primary_batch,
-		primary_mount_position,
-		aim_direction.angle(),
-		Vector2.ONE * 25.0,
-		primary_color
 	)
 	if float(state.get("muzzle_flash", 0.0)) > 0.0:
 		_write_diamond(

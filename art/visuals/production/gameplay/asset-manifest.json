@@ -24,53 +24,17 @@
     "collision_rule": "Collision geometry and live telegraph footprints remain authoritative and independent from these textures."
   },
   "attachments": {
-    "player_hull": {
-      "path": "actors/player/actor_player_hull_base.png",
+    "player_craft_body": {
+      "path": "actors/player/actor_player_craft_body.png",
       "canvas": [
-        128,
+        160,
         128
       ],
       "pivot": [
-        64,
+        88,
         64
       ],
       "rotation_driver": "hull"
-    },
-    "player_engine": {
-      "path": "actors/player/actor_player_engine.png",
-      "canvas": [
-        64,
-        48
-      ],
-      "pivot": [
-        32,
-        24
-      ],
-      "parent": "player_hull",
-      "offset_world": [
-        -42,
-        0
-      ],
-      "rotation_driver": "hull",
-      "deform_with_velocity": false,
-      "note": "The engine is rigidly attached to the hull and must not bend or rotate independently while moving."
-    },
-    "player_aim_mount": {
-      "path": "actors/player/actor_player_aim_mount.png",
-      "canvas": [
-        80,
-        48
-      ],
-      "pivot": [
-        40,
-        24
-      ],
-      "parent": "player_hull",
-      "offset_world": [
-        0,
-        0
-      ],
-      "rotation_driver": "aim"
     }
   },
   "asset_sets": [

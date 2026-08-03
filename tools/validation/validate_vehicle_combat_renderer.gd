@@ -45,11 +45,12 @@ func _run() -> void:
 		"each player projectile identity owns a semantic texture batch"
 	)
 	_expect(
-		renderer.get_node_or_null("Player_hull") != null
-			and renderer.get_node_or_null("Player_engine") != null
+		renderer.get_node_or_null("Player_craft_body") != null
+			and renderer.get_node_or_null("Player_hull") == null
+			and renderer.get_node_or_null("Player_engine") == null
 			and renderer.get_node_or_null("Player_engine_flare") == null
-			and renderer.get_node_or_null("Player_primary_mount") != null,
-		"player hull, rigid engine and independent aim mount use semantic component batches while thrust reuses the overlay beam"
+			and renderer.get_node_or_null("Player_primary_mount") == null,
+		"one integrated player craft batch replaces fixed sub-parts while thrust reuses the overlay beam"
 	)
 	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
 		_expect(
@@ -236,33 +237,17 @@ func _run() -> void:
 		projectile_visual.texture != null,
 		"player projectile batch binds the approved raster image"
 	)
-	var player_hull := renderer.get_node("Player_hull") as MultiMeshInstance2D
-	var player_engine := renderer.get_node("Player_engine") as MultiMeshInstance2D
-	var player_primary := renderer.get_node("Player_primary_mount") as MultiMeshInstance2D
-	var hull_buffer := player_hull.multimesh.buffer
-	var engine_buffer := player_engine.multimesh.buffer
-	var primary_buffer := player_primary.multimesh.buffer
+	var player_craft := renderer.get_node("Player_craft_body") as MultiMeshInstance2D
+	var craft_buffer := player_craft.multimesh.buffer
 	_expect(
-		player_hull.multimesh.visible_instance_count == 1
-			and Vector2(hull_buffer[3], hull_buffer[7]).is_equal_approx(
+		player_craft.multimesh.visible_instance_count == 1
+			and Vector2(craft_buffer[3], craft_buffer[7]).is_equal_approx(
 				Vector2(260.0, 300.0)
-			),
-		"player hull uses one centered component instance"
-	)
-	_expect(
-		Vector2(engine_buffer[3], engine_buffer[7]).is_equal_approx(
-			Renderer.player_engine_sockets(
-				Vector2(260.0, 300.0),
-				Vector2.RIGHT
-			)[0]
-		),
-		"engine components stay on the first continuous rear socket"
-	)
-	_expect(
-		Vector2(primary_buffer[0], primary_buffer[4]).normalized().is_equal_approx(
-			Vector2.DOWN
-		),
-		"primary mount follows aim independently from the right-facing hull"
+			)
+			and Vector2(craft_buffer[0], craft_buffer[4]).normalized()
+				.is_equal_approx(Vector2.RIGHT)
+			and player_craft.texture != null,
+		"one authored craft body remains centered and follows the hull direction"
 	)
 	for status_id in [&"burn", &"poison", &"chill"]:
 		var status_batch := renderer.get_node(
@@ -530,9 +515,6 @@ func _player_presentation(
 		"barrier_strength":0.0,
 		"reduced_motion":false,
 		"run_time":1.0,
-		"hull_visual_tier":0,
-		"engine_visual_count":0,
-		"primary_visual_tier":0,
 		"secondary_visual_tier":0,
 		"support_fields":[],
 		"resolved_boss_modules":[],

@@ -1213,19 +1213,19 @@ attachment textures.
 - [x] Stop the structural switch before manifest edits, batch changes, or file
   deletion unless BK explicitly approves those exact deliverable hashes and
   six retirement paths.
-- [ ] Promote exact approved bytes.
-- [ ] Replace three manifest attachments with attachment/player_craft_body.
-- [ ] Replace three renderer batches with one craft-body batch.
-- [ ] Remove the fixed engine instance and fixed aim-mount instance.
-- [ ] Preserve a rear anchor calculation only where transient dash feedback
+- [x] Promote exact approved bytes.
+- [x] Replace three manifest attachments with attachment/player_craft_body.
+- [x] Replace three renderer batches with one craft-body batch.
+- [x] Remove the fixed engine instance and fixed aim-mount instance.
+- [x] Preserve a rear anchor calculation only where transient dash feedback
   needs it.
-- [ ] Remove unused hull_visual_tier, engine_visual_count, and
+- [x] Remove unused hull_visual_tier, engine_visual_count, and
   primary_visual_tier presentation snapshot fields if no other consumer
   exists.
-- [ ] Update ActorCatalog, procedural fallback recipes, provider, renderer,
+- [x] Update ActorCatalog, procedural fallback recipes, provider, renderer,
   guidebook preview, visual registry, and player validators.
-- [ ] Remove the three approved retired files after all references are gone.
-- [ ] Run the player through deployment, live combat, pause, guidebook, report,
+- [x] Remove the three approved retired files after all references are gone.
+- [x] Run the player through deployment, live combat, pause, guidebook, report,
   and stage transition in Korean and English.
 - [ ] Record the applied commit and rendered evidence, then baseline-promote
   the unit.

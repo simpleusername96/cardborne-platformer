@@ -5,9 +5,7 @@ const AssetProvider = preload(
 )
 
 const REQUIRED_RUNTIME_IDS: Array[StringName] = [
-	&"attachment/player_hull",
-	&"attachment/player_engine",
-	&"attachment/player_aim_mount",
+	&"attachment/player_craft_body",
 	&"actor/scrap_drone",
 	&"actor/mine",
 	&"actor/boss_pylon",
@@ -41,7 +39,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 217, "all 217 runtime PNGs are indexed")
+	_expect(ids.size() == 215, "all 215 runtime PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:

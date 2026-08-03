@@ -218,16 +218,8 @@ static func _player_component_mesh(component_id: StringName) -> ArrayMesh:
 	)
 
 
-static func player_hull_mesh() -> ArrayMesh:
-	return _player_component_mesh(&"hull")
-
-
-static func player_primary_mesh() -> ArrayMesh:
-	return _player_component_mesh(&"aim_mount")
-
-
-static func player_engine_mesh() -> ArrayMesh:
-	return _player_component_mesh(&"engine")
+static func player_craft_body_mesh() -> ArrayMesh:
+	return _player_component_mesh(&"body")
 
 
 static func player_engine_flare_mesh() -> ArrayMesh:
@@ -242,7 +234,7 @@ static func player_secondary_core_mesh() -> ArrayMesh:
 
 
 static func player_mesh() -> ArrayMesh:
-	return player_hull_mesh()
+	return player_craft_body_mesh()
 
 
 static func experience_mesh(kind: StringName) -> ArrayMesh:
