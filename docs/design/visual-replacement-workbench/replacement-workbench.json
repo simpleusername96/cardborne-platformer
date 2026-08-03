@@ -4519,7 +4519,7 @@
       "title_ko": "위험 버튼",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/ui/controls/button_danger_normal.png",
         "art/visuals/production/ui/controls/button_danger_hover.png",
@@ -4635,7 +4635,24 @@
         },
         "retire_paths": []
       },
-      "application": null
+      "application": {
+        "commit": "03ac1edef5dfabb178fae5964e08fa2ad7757dd0",
+        "applied_at": "2026-08-03T14:37:18+09:00",
+        "validation_evidence": [
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
+          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
+        ]
+      }
     },
     {
       "id": "tab_option",
