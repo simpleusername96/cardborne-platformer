@@ -1859,6 +1859,10 @@ before execution continues.
     one shared runtime-size matrix; all three units are switch_ready.
   - [x] Obtain exact hash-bound approval and apply the three foundational
     surface families without extending that approval to another UI family.
+  - [x] Prepare all six upgrade_card states as exact deployable PNGs with
+    contact-sheet and runtime-size evidence; upgrade_card is switch_ready.
+  - [ ] Obtain exact hash-bound approval and apply upgrade_card without
+    extending that approval to button families.
   - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
@@ -1869,9 +1873,12 @@ before execution continues.
 
 ## Next Steps
 
-1. Prepare upgrade_card as the next complete Phase 5 family.
-2. Display its exact target/hash map before requesting independent approval.
-3. Do not extend the completed foundational-surface approval to upgrade_card.
+1. Display upgrade_card's exact six-entry target/hash map and request its
+   independent approval.
+2. Promote, validate, commit, and baseline-clean only upgrade_card after that
+   exact approval.
+3. Continue with the three button families without extending upgrade_card's
+   approval.
 
 ## Completion Criteria
 
@@ -2101,6 +2108,19 @@ Do not mark a phase or this plan complete while a stop condition remains.
   server was stopped after evidence collection. Baseline cleanup now makes the
   ten production bytes current AS-IS and removes only their duplicate TO-BE and
   completed preview files.
+- 2026-08-03: Phase 5 upgrade_card preparation produced normal, hover, pressed,
+  focus, selected, and disabled as six direct 128 by 128 TO-BE PNGs with patch
+  margin 20 and safe inset 24,22,22,22. One built-in image-generation source
+  master was chroma-removed and deterministically reduced to the exact fixed
+  palette; state variants use different rail positions, corner brackets,
+  surface values, and disabled edge segmentation instead of color alone. The
+  contact sheet is built from exact deliverables, while the runtime matrix
+  checks 244 by 286 compact cards, 304 by 330 wide cards, 960/1280/1920
+  contexts, and long Korean and English samples. The expanded four-family
+  surface validator and all eleven UI/provider, layout, localization, upgrade,
+  pause, settings, guidebook, deployment/reward, report, and HUD checks pass.
+  upgrade_card is switch_ready with null approval/application, no retire paths,
+  no runtime-change paths, and unchanged production bytes.
 
 ## Execution Handoff
 

@@ -1,6 +1,6 @@
 extends SceneTree
 
-## Validates the Phase 5 foundational UI surface families against their locked
+## Validates Phase 5 image-backed UI surface families against their locked
 ## manifest geometry and palette before any TO-BE bytes reach production.
 
 const WORKBENCH_PATH := (
@@ -11,7 +11,9 @@ const TO_BE_PREFIX := (
 	"res://docs/design/visual-replacement-workbench/to-be/assets/"
 )
 const PRODUCTION_UI_PREFIX := "res://art/visuals/production/ui/"
-const SURFACE_UNIT_IDS := ["modal_master", "content_plate", "hud_plate"]
+const SURFACE_UNIT_IDS := [
+	"modal_master", "content_plate", "hud_plate", "upgrade_card",
+]
 const READY_STATES := ["switch_ready", "approved_for_switch"]
 const PRODUCTION_STATES := ["applied", "keep_current"]
 const APPROVED_PALETTE := [
@@ -37,6 +39,7 @@ const SEMANTIC_ACCENTS := [
 ]
 
 var _failures: Array[String] = []
+var _validated_state_count := 0
 
 
 func _initialize() -> void:
@@ -110,6 +113,7 @@ func _validate_family(
 		_validate_image(
 			unit_id, String(state_id), image_path, image, canvas, safe_inset
 		)
+		_validated_state_count += 1
 		var grayscale := image.duplicate()
 		grayscale.convert(Image.FORMAT_LA8)
 		var signature := _sha256(grayscale.get_data())
@@ -204,10 +208,11 @@ func _validate_image(
 			first_palette_violation.y,
 		]
 	)
-	_expect(
-		accent_count > 0,
-		"%s/%s lacks a semantic accent rail" % [unit_id, state_id]
-	)
+	if unit_id != "upgrade_card" or state_id != "disabled":
+		_expect(
+			accent_count > 0,
+			"%s/%s lacks a semantic accent rail" % [unit_id, state_id]
+		)
 	_expect(
 		unsafe_accent_count == 0,
 		"%s/%s places semantic accent pixels inside the content-safe area"
@@ -295,7 +300,10 @@ func _expect(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("VISUAL_REPLACEMENT_UI_SURFACE_TARGETS_OK families=3 states=10")
+		print(
+			"VISUAL_REPLACEMENT_UI_SURFACE_TARGETS_OK families=%d states=%d"
+			% [SURFACE_UNIT_IDS.size(), _validated_state_count]
+		)
 		quit(0)
 		return
 	for failure in _failures:
