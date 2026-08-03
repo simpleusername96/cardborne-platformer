@@ -1187,21 +1187,21 @@ TO-BE: One craft body and one scale-specific player minimap marker form the
 player_craft switch unit; manual aim and dash remain readable without fixed
 attachment textures.
 
-- [ ] Set player_craft to target_required.
-- [ ] Place the exact 160 by 128 craft-body deliverable at the mirrored TO-BE
+- [x] Set player_craft to target_required.
+- [x] Place the exact 160 by 128 craft-body deliverable at the mirrored TO-BE
   path for actor_player_craft_body.png.
-- [ ] Place the exact current-size player minimap marker deliverable at its
+- [x] Place the exact current-size player minimap marker deliverable at its
   mirrored TO-BE target path.
-- [ ] Generate one AS-IS/TO-BE runtime comparison under previews/to-be/player_craft
+- [x] Generate one AS-IS/TO-BE runtime comparison under previews/to-be/player_craft
   from exact runtime captures; do not use it as a deliverable.
-- [ ] Validate +X facing, 88,64 pivot, opaque bounds, contour, role color,
+- [x] Validate +X facing, 88,64 pivot, opaque bounds, contour, role color,
   grayscale direction readability, and eight hull directions.
-- [ ] Validate independent aim at eight aim directions for every fixed hull
+- [x] Validate independent aim at eight aim directions for every fixed hull
   direction using cursor, muzzle, projectile, and hit feedback.
-- [ ] Validate idle, movement, dash, hit, reduced-motion dash, barrier, EMP,
+- [x] Validate idle, movement, dash, hit, reduced-motion dash, barrier, EMP,
   and secondary-equipped states.
-- [ ] Validate the 14-pixel gameplay minimap marker at eight directions.
-- [ ] Mark switch_ready only after both exact deliverables pass.
+- [x] Validate the 14-pixel gameplay minimap marker at eight directions.
+- [x] Mark switch_ready only after both exact deliverables pass.
 - [ ] Obtain one hash-bound approval for both deliverables and the retirement
   of:
   - art/visuals/production/gameplay/actors/player/actor_player_hull_base.png and
@@ -1210,7 +1210,7 @@ attachment textures.
     tracked .png.import sidecar;
   - art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png and
     its tracked .png.import sidecar.
-- [ ] Stop the structural switch before manifest edits, batch changes, or file
+- [x] Stop the structural switch before manifest edits, batch changes, or file
   deletion unless BK explicitly approves those exact deliverable hashes and
   six retirement paths.
 - [ ] Promote exact approved bytes.
@@ -1863,10 +1863,10 @@ before execution continues.
 
 ## Next Steps
 
-1. Produce the Phase 4 player craft body and minimap marker as exact
-   production-ready TO-BE files without changing runtime behavior.
-2. Rebuild and validate the workbench, then display the exact Phase 4 hashes
-   and retirement paths for BK's separate switch approval.
+1. Display the exact Phase 4 player-craft hashes and six retirement paths and
+   obtain BK's separate switch approval.
+2. After exact approval, promote the two approved byte sequences and land the
+   atomic player structural switch plus its immediate application ledger.
 3. Continue later switch units in order, preserving their independent
    exact-hash and exact-retirement-path approval gates.
 
@@ -2027,6 +2027,19 @@ Do not mark a phase or this plan complete while a stop condition remains.
   2026-08-03T11:55:33+09:00 and marks them retired. The rebuilt current-only
   workbench contains 217 gameplay PNGs, 54 UI PNGs, one font, and zero staged
   or orphan production rows.
+- 2026-08-03: Phase 4 produced two direct, non-sheet TO-BE files with the
+  built-in image generation workflow and local chroma-key removal. The craft
+  body is 160 by 128 with pivot 88,64, alpha bounds 6,15 through 153,112, and
+  SHA-256 5c0343fa6840aa7f68fd367b5b636cd84a8bcf0011d45b2758a3f4fe18846a4c.
+  The player minimap marker is 48 by 48 with pivot 24,24, alpha bounds 4,5
+  through 43,42, and SHA-256
+  e8fa4ac0f9e2a6faaf4a013fd86b44857a2142ce3fe814f7c7accd46ba5f6602.
+  A Godot-generated exact-texture comparison covers eight hull directions,
+  the 8 by 8 independent hull/aim matrix, the eight required player states,
+  and the 14-pixel marker. The player, actor, renderer, primary, secondary,
+  HUD, replacement-coverage, deterministic builder, and workbench validators
+  pass. player_craft is switch_ready; its approval and application remain
+  null, and production runtime files remain unchanged.
 
 ## Execution Handoff
 

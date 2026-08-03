@@ -43,7 +43,7 @@
       "title_ko": "플레이어 기체",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "target_required",
+      "status": "switch_ready",
       "current_paths": [
         "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png",
         "art/visuals/production/gameplay/actors/player/actor_player_engine.png",
@@ -82,7 +82,9 @@
           ]
         }
       ],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/to-be/player_craft/player_craft-runtime-comparison.png"
+      ],
       "retire_paths": [
         "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png",
         "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png.import",

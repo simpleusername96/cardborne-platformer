@@ -34,8 +34,8 @@ try {
     Expect ($phase3States.Count -eq 1) 'Phase 3 retirement units must advance atomically'
     $phase3State=if($phase3States.Count -eq 1){[string]$phase3States[0]}else{''}
     Expect ($phase3State -in @('switch_ready','approved_for_switch','retired')) 'Phase 3 retirement units have an invalid transition state'
-    $unexpectedStates=@($actual.units|Where-Object { $_.id -notin $phase3ReadyIds -and $_.status -notin @('keep_current','target_required') })
-    Expect ($unexpectedStates.Count -eq 0) 'non-Phase 3 unit contains a premature workflow state'
+    $unexpectedRetiredStates=@($actual.units|Where-Object { $_.id -notin $phase3ReadyIds -and $_.status -eq 'retired' })
+    Expect ($unexpectedRetiredStates.Count -eq 0) 'non-retirement unit uses the retired workflow state'
     $retirementApplied=$phase3State -in @('approved_for_switch','retired')
     Expect ($actual.summary.gameplay_png -eq $(if($retirementApplied){217}else{247})) 'gameplay PNG count does not match the Phase 3 state'
     Expect ($actual.summary.ui_png -eq $(if($retirementApplied){54}else{57})) 'UI PNG count does not match the Phase 3 state'
@@ -59,6 +59,15 @@ try {
     foreach($unit in $actual.units){
         Expect (-not [string]::IsNullOrWhiteSpace([string]$unit.title_en)) "missing English title: $($unit.id)"
         Expect ([string]$unit.title_ko -match '[가-힣]') "missing Korean title: $($unit.id)"
+        if($unit.id -notin $phase3ReadyIds){
+            switch([string]$unit.status){
+                'keep_current' { Expect ($null -eq $unit.approval -and $null -eq $unit.application) "keep-current unit contains workflow ledger data: $($unit.id)" }
+                'target_required' { Expect ($null -eq $unit.approval -and $null -eq $unit.application) "target-required unit contains workflow ledger data: $($unit.id)" }
+                'switch_ready' { Expect ($null -eq $unit.approval -and $null -eq $unit.application) "switch-ready unit contains premature workflow ledger data: $($unit.id)" }
+                'approved_for_switch' { Expect ($null -ne $unit.approval -and $null -eq $unit.application) "approved unit has an invalid workflow ledger: $($unit.id)" }
+                'applied' { Expect ($null -ne $unit.approval -and $null -ne $unit.application) "applied unit has an incomplete workflow ledger: $($unit.id)" }
+            }
+        }
         foreach($file in $unit.current_files){Expect ([string]$file.path -like 'art/visuals/production/*') "AS-IS is not direct production media: $($unit.id) -> $($file.path)"}
         foreach($deliverable in $unit.deliverables){Expect (([string]$deliverable.workbench_path) -ceq "docs/design/visual-replacement-workbench/to-be/assets/$($deliverable.target_path)") "TO-BE mapping mismatch: $($unit.id) -> $($deliverable.target_path)"}
         foreach($preview in $unit.preview_paths){Expect ([string]$preview -like 'docs/design/visual-replacement-workbench/previews/*') "preview path is not isolated: $($unit.id) -> $preview";Expect ([string]$preview -notlike '*/to-be/assets/*') "preview appears under deliverables: $preview"}
