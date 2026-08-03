@@ -1871,6 +1871,8 @@ before execution continues.
   - [x] Prepare tab_option and toggle as eight exact deployable state PNGs
     with per-family contact sheets and one shared runtime-size matrix; both
     units are switch_ready.
+  - [x] Obtain exact hash-bound approval and apply tab_option and toggle
+    without extending that approval to slider, meter, or later families.
   - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
@@ -1881,11 +1883,10 @@ before execution continues.
 
 ## Next Steps
 
-1. Display tab_option and toggle's exact eight-entry target/hash map from a
-   clean preparation commit.
-2. Request hash-bound approval only for those two independently promotable
-   units, with empty retire_paths and runtime_change_paths.
-3. Promote, validate, commit, and baseline-clean only exact approved units.
+1. Prepare slider and meter in Phase 5 dependency order as independently
+   deployable state families with exact runtime-size evidence.
+2. Display their exact target/hash map from a clean preparation commit.
+3. Request hash-bound approval only for those prepared units before promotion.
 
 ## Completion Criteria
 
@@ -2211,6 +2212,21 @@ Do not mark a phase or this plan complete while a stop condition remains.
   runtime_change_paths remain empty for both units. This approval grants no
   deletion, runtime-code change, or authority for slider, meter, or any later
   Phase 5 family.
+- 2026-08-03: The approved tab_option and toggle families were promoted as two
+  atomic units. tab_option switch commit
+  439d3baac285b8c90b6b10cb5db0046abae35e23 and ledger
+  a02ff5bfcd60e873a7cb8b019ea1885262101682 replace five states; toggle switch
+  commit f2a91307e0db7d1fbe0e1f56b64e41f1bd4bf90a and ledger
+  8fad46c06ffeb0b9262292dea468566d994964ce replace three. Both units passed
+  all twelve declared checks. The combined Web export succeeded, and built-PCK
+  capture produced 77 Korean and 30 English reference frames at 1280 by 720.
+  Built-Web QA on codex port 13029 covered 1280 and 960 widths, Korean tabs,
+  selected and keyboard-focus states, plus toggle off-to-on activation. Seven
+  network requests returned 200 and the console contained only three Godot
+  information logs. The exact task-owned listener was stopped and the port was
+  confirmed clean. The eight promoted bytes are now current AS-IS; only their
+  duplicate TO-BE bytes and three completed previews are removed during
+  baseline cleanup, with no approved retire or runtime path changed.
 
 ## Execution Handoff
 
