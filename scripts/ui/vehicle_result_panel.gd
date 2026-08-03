@@ -13,9 +13,12 @@ const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 var _kicker: Label
 var _title: Label
 var _metric_labels: Array[Label] = []
+var _performance_title: Label
 var _performance_label: Label
+var _reward_title: Label
 var _reward_label: Label
 var _first_button: Button
+var _replay_button: Button
 var _summary: Dictionary = {}
 
 
@@ -28,31 +31,40 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	_kicker = Factory.label("RESULT_KICKER", 16, Art.MUSTARD)
+	_kicker = Factory.label("", 16, Art.MUSTARD)
 	_kicker.theme_type_variation = &"MetricLabel"
 	_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_kicker)
-	_title = Factory.label("RESULT_TITLE", 38, Art.IVORY_BRIGHT)
+	_title = Factory.label("", 38, Art.IVORY_BRIGHT)
 	_title.theme_type_variation = &"TitleLabel"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_title)
 	add_child(HSeparator.new())
-	var summary_band := PanelContainer.new()
-	summary_band.theme_type_variation = &"SummaryBand"
-	add_child(summary_band)
-	var summary_row := HBoxContainer.new()
-	summary_row.add_theme_constant_override("separation", 16)
-	summary_band.add_child(summary_row)
-	for index in 3:
-		if index > 0:
-			summary_row.add_child(VSeparator.new())
-		var metric := Factory.label("", 17, Art.IVORY_BRIGHT)
-		metric.theme_type_variation = &"MetricLabel"
-		metric.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		metric.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		metric.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		summary_row.add_child(metric)
-		_metric_labels.append(metric)
+	var summary_row := Factory.text_row("", "", {
+		"separation":16,
+		"label_min_width":0.0,
+		"label_size":17,
+		"value_size":17,
+		"label_color":Art.TEXT_PRIMARY,
+		"value_color":Art.TEXT_PRIMARY,
+	})
+	summary_row.name = "SummaryTextRow"
+	summary_row.set_meta("shared_component", "TextRow")
+	add_child(summary_row)
+	var left_metric := summary_row.get_child(0) as Label
+	var right_metric := summary_row.get_child(1) as Label
+	var center_metric := Factory.label("", 17, Art.TEXT_PRIMARY)
+	center_metric.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center_metric.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	center_metric.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	summary_row.add_child(center_metric)
+	summary_row.move_child(center_metric, 1)
+	left_metric.theme_type_variation = &"MetricLabel"
+	left_metric.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	right_metric.theme_type_variation = &"MetricLabel"
+	right_metric.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	center_metric.theme_type_variation = &"MetricLabel"
+	_metric_labels.assign([left_metric, center_metric, right_metric])
 	var detail_row := HBoxContainer.new()
 	detail_row.add_theme_constant_override("separation", 22)
 	detail_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -61,13 +73,13 @@ func _build() -> void:
 	performance_box.add_theme_constant_override("separation", 10)
 	performance_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_row.add_child(performance_box)
-	var performance_title := Factory.label(
-		"RESULT_PERFORMANCE",
+	_performance_title = Factory.label(
+		tr("RESULT_PERFORMANCE"),
 		20,
 		Art.MUSTARD
 	)
-	performance_title.theme_type_variation = &"SectionLabel"
-	performance_box.add_child(performance_title)
+	_performance_title.theme_type_variation = &"SectionLabel"
+	performance_box.add_child(_performance_title)
 	_performance_label = Factory.label("", 18, Art.IVORY_BRIGHT)
 	_performance_label.theme_type_variation = &"MetricLabel"
 	_performance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -77,9 +89,9 @@ func _build() -> void:
 	reward_box.add_theme_constant_override("separation", 10)
 	reward_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_row.add_child(reward_box)
-	var reward_title := Factory.label("RESULT_REWARD", 20, Art.MUSTARD)
-	reward_title.theme_type_variation = &"SectionLabel"
-	reward_box.add_child(reward_title)
+	_reward_title = Factory.label(tr("RESULT_REWARD"), 20, Art.MUSTARD)
+	_reward_title.theme_type_variation = &"SectionLabel"
+	reward_box.add_child(_reward_title)
 	_reward_label = Factory.label("", 18, Art.IVORY_BRIGHT)
 	_reward_label.theme_type_variation = &"MetricLabel"
 	_reward_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -89,20 +101,20 @@ func _build() -> void:
 	actions.add_theme_constant_override("separation", 14)
 	add_child(actions)
 	_first_button = Factory.command_button(
-		"RESULT_REVIEW_GARAGE",
-		&"PrimaryButton"
+		tr("RESULT_REVIEW_GARAGE"),
+		Factory.COMMAND_PRIMARY
 	)
 	_first_button.custom_minimum_size = Vector2(300.0, 48.0)
 	_first_button.add_theme_font_size_override("font_size", 22)
 	_first_button.pressed.connect(func() -> void: garage_requested.emit())
 	actions.add_child(_first_button)
-	var replay := Factory.command_button(
-		"RESULT_REPLAY",
-		&"SecondaryButton"
+	_replay_button = Factory.command_button(
+		tr("RESULT_REPLAY"),
+		Factory.COMMAND_SECONDARY
 	)
-	replay.custom_minimum_size.x = 210.0
-	replay.pressed.connect(func() -> void: replay_requested.emit())
-	actions.add_child(replay)
+	_replay_button.custom_minimum_size.x = 210.0
+	_replay_button.pressed.connect(func() -> void: replay_requested.emit())
+	actions.add_child(_replay_button)
 
 
 func open(summary: Dictionary) -> bool:
@@ -131,6 +143,10 @@ func refresh_localized_content() -> void:
 		if has_next
 		else "RESULT_TITLE_FINAL"
 	)
+	_performance_title.text = tr("RESULT_PERFORMANCE")
+	_reward_title.text = tr("RESULT_REWARD")
+	_first_button.text = tr("RESULT_REVIEW_GARAGE")
+	_replay_button.text = tr("RESULT_REPLAY")
 	_metric_labels[0].text = tr("RESULT_CLEAR_TIME") % String(
 		_summary.get("time", "0:00")
 	)
@@ -164,7 +180,23 @@ func kicker_text() -> String:
 
 
 func debug_contract() -> Dictionary:
+	var summary_texts: Array[String] = []
+	for label in _metric_labels:
+		summary_texts.append(label.text)
 	return {
 		"focusables":find_children("*", "Button", true, false).size(),
 		"primary_size":_first_button.custom_minimum_size,
+		"summary_text_rows":find_children("SummaryTextRow", "HBoxContainer", true, false).size(),
+		"summary_surfaces":find_children("*", "PanelContainer", true, false).size(),
+		"summary_values":_metric_labels.size(),
+		"performance_visible":not _performance_label.text.is_empty(),
+		"reward_visible":not _reward_label.text.is_empty(),
+		"initial_focus_is_garage":_first_button.has_focus(),
+		"summary_texts":summary_texts,
+		"performance_text":_performance_label.text,
+		"reward_text":_reward_label.text,
+		"primary_action":_first_button.text,
+		"secondary_action":_replay_button.text,
+		"primary_variation":_first_button.theme_type_variation,
+		"secondary_variation":_replay_button.theme_type_variation,
 	}

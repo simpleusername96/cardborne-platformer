@@ -7,6 +7,7 @@ signal garage_requested
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const DamageSources = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const CombatMeshIcon = preload("res://scripts/ui/vehicle_combat_mesh_icon.gd")
+const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
@@ -133,11 +134,11 @@ func _build() -> void:
 	_defeat_box = _scroll_column("REPORT_DEFEATS")
 	_damage_box = _scroll_column("REPORT_OUTGOING")
 	_attribute_box = _scroll_column("REPORT_ATTRIBUTES")
-	_content.add_child(_wrap_panel(_defeat_box))
+	_content.add_child(_scroll_view(_defeat_box))
 	_content.add_child(VSeparator.new())
-	_content.add_child(_wrap_panel(_damage_box))
+	_content.add_child(_scroll_view(_damage_box))
 	_content.add_child(VSeparator.new())
-	_content.add_child(_wrap_panel(_attribute_box))
+	_content.add_child(_scroll_view(_attribute_box))
 	_tabs = TabContainer.new()
 	_tabs.focus_mode = Control.FOCUS_ALL
 	_tabs.custom_minimum_size.y = 220.0
@@ -146,9 +147,9 @@ func _build() -> void:
 	var compact_defeats := _scroll_column("REPORT_DEFEATS")
 	var compact_damage := _scroll_column("REPORT_OUTGOING")
 	var compact_attributes := _scroll_column("REPORT_ATTRIBUTES")
-	_tabs.add_child(_wrap_panel(compact_defeats, "Defeats"))
-	_tabs.add_child(_wrap_panel(compact_damage, "Damage"))
-	_tabs.add_child(_wrap_panel(compact_attributes, "Attributes"))
+	_tabs.add_child(_scroll_view(compact_defeats, "Defeats"))
+	_tabs.add_child(_scroll_view(compact_damage, "Damage"))
+	_tabs.add_child(_scroll_view(compact_attributes, "Attributes"))
 	_tabs.set_meta("defeats", compact_defeats)
 	_tabs.set_meta("damage", compact_damage)
 	_tabs.set_meta("attributes", compact_attributes)
@@ -157,8 +158,7 @@ func _build() -> void:
 	add_child(_incoming_box)
 	var continue_lane := CenterContainer.new()
 	add_child(continue_lane)
-	_continue_button = Button.new()
-	_continue_button.theme_type_variation = &"PrimaryButton"
+	_continue_button = Factory.command_button("", Factory.COMMAND_PRIMARY)
 	_continue_button.custom_minimum_size = Vector2(300.0, 48.0)
 	_continue_button.add_theme_font_size_override("font_size", 22)
 	_continue_button.focus_mode = Control.FOCUS_ALL
@@ -211,27 +211,22 @@ func _fill_defeats(box: VBoxContainer) -> void:
 		var name_box := VBoxContainer.new()
 		name_box.add_theme_constant_override("separation", 1)
 		name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var label := _label("", 17, Art.IVORY_BRIGHT)
-		label.theme_type_variation = &"MetricLabel"
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.text = tr(String(data["name_key"]))
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		name_box.add_child(label)
+		var defeat_row := _metric_row(
+			tr(String(data["name_key"])),
+			"×%d" % int(data["count"]),
+			"",
+			Art.IVORY_BRIGHT
+		)
+		name_box.add_child(defeat_row)
 		var elite_count := int(data.get("elite_count", 0))
 		if elite_count > 0:
 			var elite := _label("", 14, Art.BOSS_MAGENTA)
 			elite.text = tr("REPORT_ELITE_COUNT").replace(
 				"%count%", str(elite_count)
 			)
+			elite.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			name_box.add_child(elite)
 		row_box.add_child(name_box)
-		var count := _label("", 17, Art.IVORY_BRIGHT)
-		count.theme_type_variation = &"MetricLabel"
-		count.text = "×%d" % int(data["count"])
-		count.custom_minimum_size.x = 48.0
-		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		row_box.add_child(count)
 		box.add_child(row_box)
 
 
@@ -299,24 +294,22 @@ func _metric_row(
 	percentage: String,
 	color: Color
 ) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	var row := Factory.text_row(title, value, {
+		"separation":8,
+		"label_min_width":0.0,
+		"label_size":17,
+		"value_size":17,
+		"label_color":color,
+		"value_color":color,
+	})
+	row.set_meta("shared_component", "TextRow")
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var title_label := _label("", 17, color)
-	title_label.text = title
-	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(title_label)
-	var value_label := _label("", 17, color)
+	var value_label := row.get_child(1) as Label
 	value_label.theme_type_variation = &"MetricLabel"
-	value_label.text = value
 	value_label.custom_minimum_size.x = 72.0
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	row.add_child(value_label)
 	if not percentage.is_empty():
-		var percentage_label := _label("", 17, color)
+		var percentage_label := Factory.label(percentage, 17, color)
 		percentage_label.theme_type_variation = &"MetricLabel"
-		percentage_label.text = percentage
 		percentage_label.custom_minimum_size.x = 68.0
 		percentage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(percentage_label)
@@ -332,7 +325,7 @@ func _scroll_column(title_key: String) -> VBoxContainer:
 	return box
 
 
-func _wrap_panel(box: VBoxContainer, node_name: String = "") -> ScrollContainer:
+func _scroll_view(box: VBoxContainer, node_name: String = "") -> ScrollContainer:
 	var scroll := ScrollContainer.new()
 	if not node_name.is_empty():
 		scroll.name = node_name
@@ -364,16 +357,11 @@ func _clear(node: Node) -> void:
 
 
 func _section(key: String) -> Label:
-	var label := _label(key, 22, Art.MUSTARD)
-	label.theme_type_variation = &"SectionLabel"
-	return label
+	return Factory.section_heading(tr(key))
 
 
 func _label(key: String, size: int, color: Color) -> Label:
-	var label := Label.new()
-	label.text = tr(key)
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
+	var label := Factory.label(tr(key), size, color)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
 
@@ -396,4 +384,50 @@ func debug_contract() -> Dictionary:
 		"failure":bool(_snapshot.get("failure", false)),
 		"continue_size":_continue_button.custom_minimum_size,
 		"wide_dividers":_content.find_children("*", "VSeparator", true, false).size(),
+		"wide_columns":_count_children_of_type(_content, "ScrollContainer"),
+		"compact_tabs":_tabs.get_tab_count(),
+		"scroll_views":find_children("*", "ScrollContainer", true, false).size(),
+		"incoming_visible":_incoming_box.visible,
+		"incoming_rows":_snapshot.get("incoming", []).size(),
+		"last_hit_present":not StringName(_snapshot.get("last_incoming_source", &"")).is_empty(),
+		"fixed_actions":find_children("*", "Button", true, false).size(),
+		"semantic_icons":_count_semantic_icons(self),
+		"shared_text_rows":_count_shared_text_rows(self),
+		"decorated_metric_rows":_count_decorated_metric_rows(self),
 	}
+
+
+func _count_shared_text_rows(node: Node) -> int:
+	var count := (
+		1
+		if node.has_meta("shared_component")
+		and node.get_meta("shared_component") == "TextRow"
+		else 0
+	)
+	for child in node.get_children():
+		count += _count_shared_text_rows(child)
+	return count
+
+
+func _count_children_of_type(node: Node, type_name: String) -> int:
+	var count := 0
+	for child in node.get_children():
+		if child.is_class(type_name):
+			count += 1
+	return count
+
+
+func _count_semantic_icons(node: Node) -> int:
+	var count := 1 if node is CombatMeshIcon or node is AttributeIcon else 0
+	for child in node.get_children():
+		count += _count_semantic_icons(child)
+	return count
+
+
+func _count_decorated_metric_rows(node: Node) -> int:
+	var count := 0
+	if node.has_meta("shared_component") and node.get_meta("shared_component") == "TextRow":
+		count += node.find_children("*", "PanelContainer", true, false).size()
+	for child in node.get_children():
+		count += _count_decorated_metric_rows(child)
+	return count
