@@ -455,7 +455,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 					&"TabBar"
 				) is StyleBoxFlat
 			),
-			"raster_style_count":_theme_stylebox_texture_count(),
+			"non_code_native_style_count":_theme_non_code_native_style_count(),
 		},
 		"command_min_height":pause_contract["command_min_height"],
 		"body_font_weight":body_font_weight,
@@ -483,17 +483,17 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 			false
 		).size(),
 		"upgrade_choice":_upgrade_panel.debug_contract(),
-		"has_upgrade_card_theme":(
+		"has_selectable_theme":(
 			_root.theme.get_type_variation_base(
-				&"UpgradeChoiceCard"
+				&"SelectableButton"
 			) == &"Button"
 			and _root.theme.get_type_variation_base(
-				&"SelectedUpgradeChoiceCard"
+				&"SelectedSelectableButton"
 			) == &"Button"
 		),
-		"has_tertiary_danger_theme":(
+		"has_danger_theme":(
 			_root.theme.get_type_variation_base(
-				&"TertiaryDangerButton"
+				&"DangerButton"
 			) == &"Button"
 		),
 		"pause_focusables":pause_contract["focusables"],
@@ -527,11 +527,12 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	return contract
 
 
-func _theme_stylebox_texture_count() -> int:
+func _theme_non_code_native_style_count() -> int:
 	var count := 0
 	for theme_type in _root.theme.get_type_list():
 		for style_name in _root.theme.get_stylebox_list(theme_type):
-			if _root.theme.get_stylebox(style_name, theme_type) is StyleBoxTexture:
+			var style := _root.theme.get_stylebox(style_name, theme_type)
+			if not (style is StyleBoxFlat or style is StyleBoxLine or style is StyleBoxEmpty):
 				count += 1
 	return count
 

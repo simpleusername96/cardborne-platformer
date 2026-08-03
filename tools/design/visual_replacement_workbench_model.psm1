@@ -223,6 +223,43 @@ function Get-VisualReplacementProjection {
         $retirePaths = @($unit.retire_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $runtimePaths = @($unit.runtime_change_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $commands = @($unit.acceptance_commands | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
+        if ([string]$unit.switch_kind -ceq 'retire') {
+            $status = [string]$unit.status
+            if ($status -notin @('switch_ready','approved_for_switch','retired')) {
+                $failures.Add("retire-only unit has invalid status: $id -> $status")
+            }
+            if ($deliverableRecords.Count -ne 0) { $failures.Add("retire-only unit has deliverables: $id") }
+            if ($retirePaths.Count -eq 0) { $failures.Add("retire-only unit has no retire paths: $id") }
+            if ($null -ne $unit.approval -and @($unit.approval.deliverable_sha256.PSObject.Properties).Count -ne 0) {
+                $failures.Add("retire-only approval hash map is not empty: $id")
+            }
+            if (@($retirePaths | Sort-Object -Unique).Count -ne $retirePaths.Count) { $failures.Add("retire-only paths are not unique: $id") }
+            if ((Get-VisualCanonicalJson @($retirePaths)) -cne (Get-VisualCanonicalJson @($retirePaths | Sort-Object))) {
+                $failures.Add("retire-only paths are not sorted: $id")
+            }
+            foreach ($retirePath in $retirePaths) {
+                if ([string]$retirePath -match '[*?\[]') { $failures.Add("retire-only path contains a wildcard: $id -> $retirePath") }
+            }
+            foreach ($currentPath in @($unit.current_paths)) {
+                $normalizedCurrent = ConvertTo-NormalizedVisualPath ([string]$currentPath)
+                if ($normalizedCurrent -notin $retirePaths) { $failures.Add("retire-only current path is not retired: $id -> $normalizedCurrent") }
+            }
+            if ($status -eq 'switch_ready') {
+                if ($null -ne $unit.approval -or $null -ne $unit.application) { $failures.Add("switch-ready retirement contains workflow ledger data: $id") }
+                foreach ($retirePath in $retirePaths) {
+                    $absoluteRetirePath = Resolve-VisualRepositoryPath $RepoRoot ([string]$retirePath)
+                    if (-not (Test-Path -LiteralPath $absoluteRetirePath -PathType Leaf)) { $failures.Add("switch-ready retirement path is missing: $id -> $retirePath") }
+                }
+            } elseif ($status -eq 'approved_for_switch') {
+                if ($null -eq $unit.approval -or $null -ne $unit.application) { $failures.Add("approved retirement has an invalid workflow ledger: $id") }
+            } elseif ($status -eq 'retired') {
+                if ($null -eq $unit.approval -or $null -eq $unit.application) { $failures.Add("retired unit has an incomplete workflow ledger: $id") }
+                foreach ($retirePath in $retirePaths) {
+                    $absoluteRetirePath = Resolve-VisualRepositoryPath $RepoRoot ([string]$retirePath)
+                    if (Test-Path -LiteralPath $absoluteRetirePath) { $failures.Add("retired path still exists: $id -> $retirePath") }
+                }
+            }
+        }
         $projectedUnits.Add([ordered]@{
             id=$id;category_id=[string]$unit.category_id;order=[int]$unit.order;title_en=[string]$unit.title_en;title_ko=[string]$unit.title_ko;
             owner=[string]$unit.owner;switch_kind=[string]$unit.switch_kind;status=[string]$unit.status;direction_en=[string]$unit.direction_en;

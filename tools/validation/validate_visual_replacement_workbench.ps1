@@ -25,46 +25,54 @@ try {
     $actual=$inventoryText|ConvertFrom-Json -Depth 100
     Expect ((Get-VisualCanonicalJson $expected) -ceq (Get-VisualCanonicalJson $actual)) 'inventory.json projection mismatch'
     Expect ($actual.summary.font -eq 1) 'production font count must be 1'
-    Expect ($actual.summary.units -eq 48) 'switch unit count must be 48'
-    Expect ($actual.summary.retire_only -eq 3) 'retire-only count must be 3'
-    $phase3ReadyIds=@('effect_atlas_retirement','orphan_ui_state_retirement','procedural_floor_and_walls')
-    $phase3Units=@($actual.units|Where-Object id -in $phase3ReadyIds)
-    Expect ($phase3Units.Count -eq 3) 'Phase 3 retirement unit set is incomplete'
-    $phase3States=@($phase3Units.status|Sort-Object -Unique)
-    Expect ($phase3States.Count -eq 1) 'Phase 3 retirement units must advance atomically'
-    $phase3State=if($phase3States.Count -eq 1){[string]$phase3States[0]}else{''}
-    Expect ($phase3State -in @('switch_ready','approved_for_switch','retired')) 'Phase 3 retirement units have an invalid transition state'
-    $unexpectedRetiredStates=@($actual.units|Where-Object { $_.id -notin $phase3ReadyIds -and $_.status -eq 'retired' })
-    Expect ($unexpectedRetiredStates.Count -eq 0) 'non-retirement unit uses the retired workflow state'
-    $retirementApplied=$phase3State -in @('approved_for_switch','retired')
-    $expectedGameplayPng=if($retirementApplied){217}else{247}
-    if(Test-Path -LiteralPath (Join-Path $repoRoot 'art/visuals/production/gameplay/actors/player/actor_player_craft_body.png')){$expectedGameplayPng++}
-    foreach($legacyPlayerPng in @('actor_player_aim_mount.png','actor_player_engine.png','actor_player_hull_base.png')){
-        if(-not (Test-Path -LiteralPath (Join-Path $repoRoot "art/visuals/production/gameplay/actors/player/$legacyPlayerPng"))){$expectedGameplayPng--}
-    }
-    Expect ($actual.summary.gameplay_png -eq $expectedGameplayPng) 'gameplay PNG count does not match the applied retirement and player-craft transition state'
-    Expect ($actual.summary.ui_png -eq $(if($retirementApplied){54}else{57})) 'UI PNG count does not match the Phase 3 state'
-    foreach($phase3Unit in $phase3Units){
-        Expect ([string]$phase3Unit.switch_kind -ceq 'retire') "Phase 3 unit is not retire-only: $($phase3Unit.id)"
-        Expect (@($phase3Unit.deliverables).Count -eq 0) "retire-only unit has deliverables: $($phase3Unit.id)"
-        foreach($retirePath in @($phase3Unit.retire_paths)){
+    Expect ($actual.summary.units -eq 36) 'switch unit count must be 36'
+    Expect ($actual.summary.retire_only -eq 4) 'retire-only count must be 4'
+    Expect ($actual.summary.gameplay_png -eq 215) 'production gameplay PNG count must be 215'
+    $historicRetirementIds=@('effect_atlas_retirement','orphan_ui_state_retirement','procedural_floor_and_walls')
+    $historicRetirements=@($actual.units|Where-Object id -in $historicRetirementIds)
+    Expect ($historicRetirements.Count -eq 3) 'historic retirement unit set is incomplete'
+    foreach($historicUnit in $historicRetirements){Expect ([string]$historicUnit.status -ceq 'retired') "historic retirement unit changed state: $($historicUnit.id)"}
+    $uiRetirements=@($actual.units|Where-Object id -eq 'ui_chrome_retirement')
+    Expect ($uiRetirements.Count -eq 1) 'UI chrome retirement unit must exist exactly once'
+    $uiRetirement=if($uiRetirements.Count -eq 1){$uiRetirements[0]}else{$null}
+    $uiRetirementState=if($null -ne $uiRetirement){[string]$uiRetirement.status}else{''}
+    Expect ($uiRetirementState -in @('switch_ready','approved_for_switch','retired')) 'UI chrome retirement has an invalid state'
+    $expectedUiPng=if($uiRetirementState -eq 'retired'){0}else{54}
+    Expect ($actual.summary.ui_png -eq $expectedUiPng) 'UI PNG count does not match the UI chrome retirement state'
+    $expectedStatuses=[ordered]@{keep_current=2;target_required=30;switch_ready=0;approved_for_switch=0;applied=0;retired=3}
+    if($uiRetirementState -in @('switch_ready','approved_for_switch','retired')){$expectedStatuses[$uiRetirementState]++}
+    foreach($status in $expectedStatuses.Keys){Expect ([int]$actual.summary.statuses.$status -eq [int]$expectedStatuses[$status]) "status count mismatch: $status"}
+    if($null -ne $uiRetirement){
+        Expect ([string]$uiRetirement.switch_kind -ceq 'retire') 'UI chrome retirement is not retire-only'
+        Expect ([string]$uiRetirement.owner -ceq 'ui_theme') 'UI chrome retirement owner must be ui_theme'
+        Expect (@($uiRetirement.current_files).Count -eq $(if($uiRetirementState -eq 'retired'){0}else{54})) 'UI chrome current-file count is invalid'
+        Expect (@($uiRetirement.deliverables).Count -eq 0) 'UI chrome retirement has deliverables'
+        Expect (@($uiRetirement.consumer_paths).Count -eq 0) 'UI chrome retirement has runtime consumers'
+        Expect (@($uiRetirement.consumer_asset_ids).Count -eq 0) 'UI chrome retirement has consumer asset ids'
+        Expect (@($uiRetirement.runtime_change_paths).Count -eq 0) 'UI chrome retirement has runtime change paths'
+        Expect (@($uiRetirement.retire_paths).Count -eq 113) 'UI chrome retirement path count must be 113'
+        Expect ((Get-VisualCanonicalJson @($uiRetirement.retire_paths)) -ceq (Get-VisualCanonicalJson @($uiRetirement.retire_paths|Sort-Object))) 'UI chrome retirement paths must be sorted'
+        Expect (@($uiRetirement.retire_paths|Sort-Object -Unique).Count -eq 113) 'UI chrome retirement paths must be unique'
+        Expect (@($uiRetirement.retire_paths|Where-Object{[string]$_ -match '[*?\[]'}).Count -eq 0) 'UI chrome retirement paths contain a wildcard'
+        foreach($requiredPath in @(
+            'art/visuals/production/ui/ui-asset-manifest.json',
+            'scripts/ui/vehicle_ui_asset_provider.gd',
+            'scripts/ui/vehicle_ui_asset_provider.gd.uid',
+            'tools/validation/validate_visual_replacement_ui_surface_targets.gd',
+            'tools/validation/validate_visual_replacement_ui_surface_targets.gd.uid'
+        )){Expect ([string]$requiredPath -in @($uiRetirement.retire_paths)) "UI chrome retirement omits required path: $requiredPath"}
+        foreach($retirePath in @($uiRetirement.retire_paths)){
             $exists=Test-Path -LiteralPath (Join-Path $repoRoot ([string]$retirePath)) -PathType Leaf
-            Expect ($exists -eq (-not $retirementApplied)) "retirement file presence disagrees with state: $($phase3Unit.id) -> $retirePath"
-        }
-        if($phase3State -eq 'switch_ready'){
-            Expect ($null -eq $phase3Unit.approval) "switch-ready unit has approval data: $($phase3Unit.id)"
-            Expect ($null -eq $phase3Unit.application) "switch-ready unit has application data: $($phase3Unit.id)"
-        }else{
-            Expect ($null -ne $phase3Unit.approval) "approved retirement unit lacks approval data: $($phase3Unit.id)"
-            Expect (@($phase3Unit.approval.deliverable_sha256.PSObject.Properties).Count -eq 0) "retire-only approval hash map is not empty: $($phase3Unit.id)"
-            if($phase3State -eq 'approved_for_switch'){Expect ($null -eq $phase3Unit.application) "production-switch unit has premature application data: $($phase3Unit.id)"}
-            if($phase3State -eq 'retired'){Expect ($null -ne $phase3Unit.application) "retired unit lacks application data: $($phase3Unit.id)"}
+            Expect ($exists -eq ($uiRetirementState -ne 'retired')) "UI chrome retirement file presence disagrees with state: $retirePath"
         }
     }
+    $retirementIds=@($historicRetirementIds)+@('ui_chrome_retirement')
+    $unexpectedRetiredStates=@($actual.units|Where-Object{$_.id -notin $retirementIds -and $_.status -eq 'retired'})
+    Expect ($unexpectedRetiredStates.Count -eq 0) 'non-retirement unit uses the retired workflow state'
     foreach($unit in $actual.units){
         Expect (-not [string]::IsNullOrWhiteSpace([string]$unit.title_en)) "missing English title: $($unit.id)"
         Expect ([string]$unit.title_ko -match '[가-힣]') "missing Korean title: $($unit.id)"
-        if($unit.id -notin $phase3ReadyIds){
+        if($unit.id -notin $retirementIds){
             switch([string]$unit.status){
                 'keep_current' { Expect ($null -eq $unit.approval -and $null -eq $unit.application) "keep-current unit contains workflow ledger data: $($unit.id)" }
                 'target_required' { Expect ($null -eq $unit.approval -and $null -eq $unit.application) "target-required unit contains workflow ledger data: $($unit.id)" }

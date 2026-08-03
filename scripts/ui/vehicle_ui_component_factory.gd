@@ -14,6 +14,8 @@ const SURFACE_TOAST := &"toast"
 const COMMAND_PRIMARY := &"primary"
 const COMMAND_SECONDARY := &"secondary"
 const COMMAND_DANGER := &"danger"
+const COMMAND_SELECTABLE := &"selectable"
+const COMMAND_SELECTED_SELECTABLE := &"selected_selectable"
 const METER_HEALTH := &"health"
 const METER_RESOURCE := &"resource"
 const METER_BOSS := &"boss"
@@ -25,39 +27,14 @@ const SURFACE_VARIATIONS := {
 	SURFACE_CONTENT: &"ContentSurface",
 	SURFACE_HUD: &"HudSurface",
 	SURFACE_TOAST: &"ToastSurface",
-	&"ModalSurface": &"ModalSurface",
-	&"ModalSurfaceCompact": &"ModalSurfaceCompact",
-	&"ContentSurface": &"ContentSurface",
-	&"HudSurface": &"HudSurface",
-	&"ToastSurface": &"ToastSurface",
-	&"FlatPanel": &"ContentSurface",
-	&"HudStatusGroup": &"HudSurface",
-	&"HudHealthResource": &"HudSurface",
-	&"HudObjectiveBoss": &"HudSurface",
-	&"HudMinimapTarget": &"HudSurface",
-	&"HudActionRail": &"HudSurface",
-	&"HudToast": &"ToastSurface",
-	&"FamilyBadge": &"ContentSurface",
-	&"SummaryBand": &"ContentSurface",
-	&"ContentInset": &"ContentSurface",
-	&"ContentSummary": &"ContentSurface",
 }
 
 const COMMAND_VARIATIONS := {
 	COMMAND_PRIMARY: &"PrimaryButton",
 	COMMAND_SECONDARY: &"SecondaryButton",
 	COMMAND_DANGER: &"DangerButton",
-	&"PrimaryButton": &"PrimaryButton",
-	&"SecondaryButton": &"SecondaryButton",
-	&"DangerButton": &"DangerButton",
-	&"SelectableButton": &"SelectableButton",
-	&"SelectedSelectableButton": &"SelectedSelectableButton",
-	&"TertiaryDangerButton": &"DangerButton",
-	&"ChoiceButton": &"SelectableButton",
-	&"SelectedChoiceButton": &"SelectedSelectableButton",
-	&"SelectedRailButton": &"SelectedSelectableButton",
-	&"UpgradeChoiceCard": &"SelectableButton",
-	&"SelectedUpgradeChoiceCard": &"SelectedSelectableButton",
+	COMMAND_SELECTABLE: &"SelectableButton",
+	COMMAND_SELECTED_SELECTABLE: &"SelectedSelectableButton",
 }
 
 const METER_VARIATIONS := {
@@ -66,11 +43,6 @@ const METER_VARIATIONS := {
 	METER_BOSS: &"BossMeter",
 	METER_COOLDOWN: &"CooldownMeter",
 	METER_SUPPORT: &"SupportMeter",
-	&"HealthMeter": &"HealthMeter",
-	&"ResourceMeter": &"ResourceMeter",
-	&"BossMeter": &"BossMeter",
-	&"CooldownMeter": &"CooldownMeter",
-	&"SupportMeter": &"SupportMeter",
 }
 
 
@@ -94,11 +66,6 @@ static func modal_surface(minimum_size: Vector2) -> PanelContainer:
 	panel.theme_type_variation = &"ModalSurface"
 	panel.custom_minimum_size = minimum_size
 	return panel
-
-
-static func flat_panel() -> PanelContainer:
-	# Temporary compatibility entry. HUD migration removes its final consumers.
-	return surface(SURFACE_HUD)
 
 
 static func label(
@@ -131,7 +98,7 @@ static func command_button(text: String, role: StringName) -> Button:
 static func selectable_button(text: String, selected := false) -> Button:
 	var button := command_button(
 		text,
-		&"SelectedSelectableButton" if selected else &"SelectableButton"
+		COMMAND_SELECTED_SELECTABLE if selected else COMMAND_SELECTABLE
 	)
 	button.toggle_mode = true
 	button.button_pressed = selected

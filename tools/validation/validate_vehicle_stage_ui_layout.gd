@@ -57,8 +57,8 @@ func _initialize() -> void:
 				% [surface, width]
 			)
 		_expect(
-			int(shared_styles["raster_style_count"]) == 0,
-			"shared Theme has no raster StyleBox at %d" % width
+			int(shared_styles["non_code_native_style_count"]) == 0,
+			"shared Theme uses only code-native StyleBox types at %d" % width
 		)
 		var action_rail_size := Vector2(contract["action_rail_size"])
 		var action_rail_position := Vector2(contract["action_rail_position"])
@@ -174,18 +174,18 @@ func _initialize() -> void:
 			)
 			var state_cues := Dictionary(card["state_cues"])
 			_expect(
-				not bool(state_cues["normal_image"])
-					and not bool(state_cues["focus_image"])
+				bool(state_cues["normal_flat"])
+					and bool(state_cues["focus_flat"])
 					and bool(state_cues["selected_corner"])
 					and bool(state_cues["focus_corner"])
 					and bool(state_cues["disabled_corner"]),
-				"upgrade card aliases use code-native non-color states at %d"
+				"upgrade card uses shared code-native non-color states at %d"
 				% width
 			)
 			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
 			_expect(not bool(card["has_scroll"]), "upgrade card never scrolls")
-		_expect(bool(contract["has_upgrade_card_theme"]), "upgrade cards use dedicated shared theme states at %d" % width)
-		_expect(bool(contract["has_tertiary_danger_theme"]), "tertiary danger uses a shared theme state at %d" % width)
+		_expect(bool(contract["has_selectable_theme"]), "upgrade cards use the public shared Selectable states at %d" % width)
+		_expect(bool(contract["has_danger_theme"]), "garage exit uses the public shared danger state at %d" % width)
 		_expect(
 			is_equal_approx(float(contract["body_font_weight"]), 650.0),
 			"shared UI body typography uses weight 650 at %d" % width

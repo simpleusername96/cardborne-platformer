@@ -16,7 +16,6 @@ foreach ($required in @(
     $sourcePath,
     $templatePath,
     (Join-Path $repoRoot 'art\visuals\production\gameplay\asset-manifest.json'),
-    (Join-Path $repoRoot 'art\visuals\production\ui\ui-asset-manifest.json'),
     (Join-Path $repoRoot 'art\visuals\production\ui\vehicle_stage_theme.tres')
 )) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) { throw "missing builder input: $required" }
@@ -34,6 +33,12 @@ foreach ($needle in $prohibited) {
     if ($sourceText.Contains($needle)) { throw "active workbench source contains prohibited historical token: $needle" }
 }
 $source = $sourceText | ConvertFrom-Json -Depth 100
+$uiRetirement = @($source.units | Where-Object { [string]$_.id -ceq 'ui_chrome_retirement' })
+$uiManifestRequired = $uiRetirement.Count -eq 0 -or [string]$uiRetirement[0].status -eq 'switch_ready'
+$uiManifestPath = Join-Path $repoRoot 'art\visuals\production\ui\ui-asset-manifest.json'
+if ($uiManifestRequired -and -not (Test-Path -LiteralPath $uiManifestPath -PathType Leaf)) {
+    throw "missing builder input: $uiManifestPath"
+}
 $projection = Get-VisualReplacementProjection -RepoRoot $repoRoot -Source $source
 $inventoryText = Get-VisualCanonicalJson $projection
 $templateText = (Get-Content -LiteralPath $templatePath -Raw).Replace("`r`n","`n").Replace("`r","`n")

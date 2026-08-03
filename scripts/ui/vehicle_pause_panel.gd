@@ -33,7 +33,7 @@ func _build() -> void:
 	title.theme_type_variation = &"TitleLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
-	var guide := Factory.command_button("?", &"SecondaryButton")
+	var guide := Factory.command_button("?", Factory.COMMAND_SECONDARY)
 	guide.tooltip_text = tr("GUIDE_TITLE")
 	guide.accessibility_name = tr("GUIDE_TITLE")
 	guide.custom_minimum_size = Vector2(48.0, 48.0)

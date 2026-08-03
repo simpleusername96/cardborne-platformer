@@ -32,28 +32,27 @@ const REQUIRED_VARIATIONS := {
 	&"MetricLabel": &"Label",
 }
 
-const BUTTON_ALIASES := {
-	&"ChoiceButton": &"SelectableButton",
-	&"SelectedChoiceButton": &"SelectedSelectableButton",
-	&"SelectedRailButton": &"SelectedSelectableButton",
-	&"UpgradeChoiceCard": &"SelectableButton",
-	&"SelectedUpgradeChoiceCard": &"SelectedSelectableButton",
-	&"TertiaryDangerButton": &"DangerButton",
-}
-
-const SURFACE_ALIASES := {
-	&"FlatPanel": &"ContentSurface",
-	&"FamilyBadge": &"ContentSurface",
-	&"SummaryBand": &"ContentSurface",
-	&"ContentInset": &"ContentSurface",
-	&"ContentSummary": &"ContentSurface",
-	&"HudStatusGroup": &"HudSurface",
-	&"HudHealthResource": &"HudSurface",
-	&"HudObjectiveBoss": &"HudSurface",
-	&"HudMinimapTarget": &"HudSurface",
-	&"HudActionRail": &"HudSurface",
-	&"HudToast": &"ToastSurface",
-}
+const RETIRED_VARIATIONS := [
+	&"Surface",
+	&"ChoiceButton",
+	&"SelectedChoiceButton",
+	&"SelectedRailButton",
+	&"UpgradeChoiceCard",
+	&"SelectedUpgradeChoiceCard",
+	&"TertiaryDangerButton",
+	&"FlatPanel",
+	&"HudStatusGroup",
+	&"HUDTransparent",
+	&"FamilyBadge",
+	&"SummaryBand",
+	&"ContentInset",
+	&"ContentSummary",
+	&"HudHealthResource",
+	&"HudObjectiveBoss",
+	&"HudMinimapTarget",
+	&"HudActionRail",
+	&"HudToast",
+]
 
 var failures: Array[String] = []
 var _theme: Theme
@@ -80,23 +79,11 @@ func _validate_theme() -> void:
 			_theme.get_type_variation_base(variation) == REQUIRED_VARIATIONS[variation],
 			"required Theme variation exists: %s" % variation
 		)
-	for alias in BUTTON_ALIASES:
-		var canonical: StringName = BUTTON_ALIASES[alias]
+	for retired in RETIRED_VARIATIONS:
 		_expect(
-			_theme.get_type_variation_base(alias) == &"Button",
-			"button compatibility alias exists: %s" % alias
-		)
-		for state in [&"normal", &"hover", &"pressed", &"focus", &"disabled"]:
-			_expect(
-				_theme.get_stylebox(state, alias) == _theme.get_stylebox(state, canonical),
-				"%s/%s is identical to %s" % [alias, state, canonical]
-			)
-	for alias in SURFACE_ALIASES:
-		var canonical: StringName = SURFACE_ALIASES[alias]
-		_expect(
-			_theme.get_stylebox(&"panel", alias)
-				== _theme.get_stylebox(&"panel", canonical),
-			"%s surface alias is identical to %s" % [alias, canonical]
+			_theme.get_type_variation_base(retired).is_empty()
+				and not source.contains("\n%s/base_type" % retired),
+			"retired Theme compatibility variation is absent: %s" % retired
 		)
 	var focus := _theme.get_stylebox(&"focus", &"Button") as StyleBoxFlat
 	var selected := _theme.get_stylebox(
@@ -137,8 +124,14 @@ func _validate_factory() -> void:
 		source.contains("SURFACE_VARIATIONS")
 			and source.contains("COMMAND_VARIATIONS")
 			and source.contains("Unknown shared UI"),
-		"factory owns one explicit compatibility map with an unknown-role error"
+		"factory owns explicit semantic role maps with an unknown-role error"
 	)
+	for retired in RETIRED_VARIATIONS:
+		_expect(
+			not source.contains('&"%s"' % retired),
+			"factory contains no retired compatibility role: %s" % retired
+		)
+	_expect(not source.contains("static func flat_panel("), "factory removes the temporary flat_panel compatibility entry")
 	var command := Factory.command_button("TEST", Factory.COMMAND_PRIMARY)
 	_expect(
 		command.custom_minimum_size.y >= 44.0
@@ -146,6 +139,14 @@ func _validate_factory() -> void:
 		"shared Command keeps its minimum target and focus contract"
 	)
 	command.free()
+	var selectable := Factory.selectable_button("TEST", true)
+	_expect(
+		selectable.theme_type_variation == &"SelectedSelectableButton"
+			and selectable.toggle_mode
+			and selectable.button_pressed,
+		"shared Selectable maps semantic selected state directly"
+	)
+	selectable.free()
 
 
 func _validate_pause() -> void:

@@ -117,8 +117,8 @@ func debug_contract() -> Dictionary:
 			"family", "title", "summary", "art", "effects", "behavior",
 		],
 		"state_cues":{
-			"normal_image":normal_style is StyleBoxTexture,
-			"focus_image":focus_style is StyleBoxTexture,
+			"normal_flat":normal_style is StyleBoxFlat,
+			"focus_flat":focus_style is StyleBoxFlat,
 			"selected_corner":true,
 			"focus_corner":true,
 			"disabled_corner":true,
