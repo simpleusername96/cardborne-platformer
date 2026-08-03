@@ -654,7 +654,7 @@ Source owners: `vehicle_settings_panel.gd`, `vehicle_guidebook_panel.gd`,
 `vehicle_boss_practice_panel.gd`, Settings and Guidebook stores, localization,
 and their focused validators.
 
-- [ ] **5.1 Recompose Settings**
+- [x] **5.1 Recompose Settings**
   - Change: retain the five categories in their current order; style the
     category control as one borderless Selectable rail; use TextRows for status,
     audio, bindings, reduced motion, and language; replace private `_button()`
@@ -663,7 +663,7 @@ and their focused validators.
   - Accept: active/empty Ship Status, sliders, binding capture/conflict/reset,
     reduced motion, KO/EN switch, Guide, Back, and return-surface behavior all
     work; no setting row has its own decorative panel.
-- [ ] **5.2 Recompose Guidebook and shared build summary**
+- [x] **5.2 Recompose Guidebook and shared build summary**
   - Change: keep the current category/list/detail state model, semantic preview
     provider, and locked-entry rules; replace framed rows and summary bands with
     TextRows and simple section spacing; map the preview shell to PreviewWell;
@@ -677,12 +677,12 @@ and their focused validators.
     intentionally skips an empty entry pane; discovered and locked entries are
     correct; the category selector and entry/detail focus order work by keyboard
     and controller; long KO/EN descriptions scroll only in the detail region.
-- [ ] **5.3 Migrate debug Boss Practice without adding production UI**
+- [x] **5.3 Migrate debug Boss Practice without adding production UI**
   - Change: rebuild its form from TextRows, Selectables, Toggle, and Commands;
     retain debug-only mounting, options, validation, Start, and Back.
   - Accept: release builds still omit the surface; debug capture remains
     operable and uses no legacy Theme variation.
-- [ ] **5.4 Update focused contracts and capture fixtures**
+- [x] **5.4 Update focused contracts and capture fixtures**
   - Change: update Settings/Guidebook/UI layout/localization/capture validators
     for shared primitives, screen state, focus order, and no nested row chrome.
   - Accept: active-run and no-run Settings, current ship, discovered boss,
@@ -721,7 +721,7 @@ Source owners: `vehicle_stage_report_panel.gd`, `vehicle_result_panel.gd`,
 `vehicle_combat_mesh_icon.gd`, damage-source catalog, localization, stage-report
 and UI-layout validators.
 
-- [ ] **6.1 Recompose stage and failure reports**
+- [x] **6.1 Recompose stage and failure reports**
   - Change: replace `_metric_row()` and `_damage_row()` panel treatment with
     shared TextRows; preserve semantic enemy/attribute icons only where they
     identify the source; keep wide three-column and compact tab behavior,
@@ -729,13 +729,13 @@ and UI-layout validators.
   - Accept: outgoing source and affinity partitions still agree within 0.01;
     failure last-hit/top-three data remains; no metric row has a decorative
     shell; no Stage 1-4 success modal is introduced.
-- [ ] **6.2 Recompose final result**
+- [x] **6.2 Recompose final result**
   - Change: replace summary band and boxed columns with one three-value TextRow
     summary plus Performance and Reward sections; use shared Commands for
     Garage primary and Replay secondary.
   - Accept: every current summary, performance, reward, and action value remains
     visible; the correct initial focus and signals remain.
-- [ ] **6.3 Update report/result contracts and capture fixtures**
+- [x] **6.3 Update report/result contracts and capture fixtures**
   - Change: update `validate_vehicle_stage_report.gd`, layout/localization
     assertions, and final/failure capture fixtures for the shared row system.
   - Accept: KO/EN at 960/1280/1920 show no overlap, clipping, raw keys, incorrect
@@ -1244,24 +1244,22 @@ retirement, and validation decisions are locked above.
 ## Progress
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phases 5 and 6 — migrate supporting modals and reports in
-  parallel on the frozen shared component API.
-- Last completed gate: Phase 4 mandatory-Upgrade gate; reward transactions,
-  one-art cards, select-then-Equip behavior, stage layout, and KO/EN
-  localization validators passed after a clean Godot import.
+- Current phase: Phase 7 — migrate the live HUD and transient UI.
+- Last completed gate: combined Phase 5/6 modal gate; shared components,
+  Settings, Guidebook, debug Practice, reports, final result, stage layout, and
+  KO/EN localization passed with Godot error-log enforcement.
 - Last green implementation commit:
-  `bf2a1578df17f90feff9f791a83108826bbf23f1`.
+  `26bc57d4769a7ad2c6b1db3fd194e02899ff9206`.
 - Update rule: after a checkpoint passes, record concise evidence, check the
   task, update the last green commit, and advance this pointer in the same edit.
 
 ## Next Steps
 
-1. Recompose Settings, Guidebook, build summary, and debug Practice in the
-   Phase 5 lane.
-2. Recompose stage/failure reports and final result in the disjoint Phase 6
-   lane.
-3. Integrate shared layout/localization contracts and pass both gates before
-   beginning the live HUD migration.
+1. Collapse gameplay HUD backing into the four shared zones.
+2. Remove the remaining raster meter/small-state provider consumers and move
+   transition/notification chrome to the shared Toast surface.
+3. Pass the Phase 7 live HUD, combat renderer, and performance gates before
+   preparing the exact retirement approval set.
 
 ## Completion and Stop Conditions
 
@@ -1311,6 +1309,14 @@ Do not replan or stop for:
   `bf2a1578df17f90feff9f791a83108826bbf23f1`; reward transactions are mandatory
   and claim-only, each Upgrade card has one lower semantic artwork, and the
   screen exposes one select-then-Equip command with no exit path.
+- 2026-08-03: Phase 5 completed in
+  `3e4743d0f659b370f78ff557ef24b2e57a745d2c`; Settings, Guidebook, shared build
+  summary, and debug Practice now consume the shared row, selectable, preview,
+  and command system without changing their stores or state ownership.
+- 2026-08-03: Phase 6 completed in
+  `26bc57d4769a7ad2c6b1db3fd194e02899ff9206`; reports and final result retain
+  every telemetry/action value while replacing framed metrics with shared
+  TextRows and unboxed sections.
 - 2026-08-03: BK accepted the simplified UI direction while explicitly
   preserving information rather than reducing it.
 - 2026-08-03: BK required deletion of the small top image on upgrade cards,
