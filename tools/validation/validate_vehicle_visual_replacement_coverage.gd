@@ -1,14 +1,9 @@
 extends SceneTree
 
-## Completeness gate for gameplay visual replacement and the temporary UI
-## rollback pack. Runtime UI chrome is code-native while the 54-file pack stays
-## catalogued until its separately approved retirement.
+## Completeness gate for gameplay visual replacement and code-native UI chrome.
 
 const GAMEPLAY_MANIFEST_PATH := (
 	"res://art/visuals/production/gameplay/asset-manifest.json"
-)
-const UI_MANIFEST_PATH := (
-	"res://art/visuals/production/ui/ui-asset-manifest.json"
 )
 const EVENT_CATALOG_PATH := (
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
@@ -22,11 +17,9 @@ const RENDERER_PATH := (
 const VisualEventCatalog = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
 )
-const UiAssets = preload("res://scripts/ui/vehicle_ui_asset_provider.gd")
 const EventCaptureFixture = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_capture_fixture.gd"
 )
-const EXPECTED_UI_STATE_COUNT := 54
 const CODE_NATIVE_UI_STATE_OWNERS := [
 	"res://scripts/ui/vehicle_gameplay_hud.gd",
 	"res://scripts/ui/vehicle_status_orbit.gd",
@@ -99,49 +92,6 @@ const EXPECTED_EVENT_IDS := [
 	"group_clear",
 ]
 
-const EXPECTED_UI_COMPONENT_STATES := {
-	"modal_master": ["normal", "compact_safe"],
-	"content_plate": ["normal", "inset", "summary"],
-	"hud_plate": [
-		"health_resource",
-		"objective_boss",
-		"minimap_target",
-		"action_rail",
-		"toast",
-	],
-	"upgrade_card": [
-		"normal",
-		"hover",
-		"pressed",
-		"focus",
-		"selected",
-		"disabled",
-	],
-	"button_primary": [
-		"normal", "hover", "pressed", "focus", "disabled",
-	],
-	"button_secondary": [
-		"normal", "hover", "pressed", "focus", "disabled",
-	],
-	"button_danger": [
-		"normal", "hover", "pressed", "focus", "disabled",
-	],
-	"tab_option": [
-		"normal", "hover", "selected", "focus", "disabled",
-	],
-	"toggle": ["off", "on", "focus"],
-	"slider": ["lane", "fill", "grabber"],
-	"meter": [
-		"background", "health", "boss", "resource", "cooldown", "support",
-	],
-	"preview": ["normal", "locked", "focused"],
-	"small_state": [
-		"pip_available",
-		"pip_filled",
-		"disabled",
-	],
-}
-
 var _failures: Array[String] = []
 
 
@@ -167,12 +117,6 @@ func _initialize() -> void:
 		for error in EventCaptureFixture.validate():
 			_failures.append(String(error))
 
-	if not FileAccess.file_exists(UI_MANIFEST_PATH):
-		_failures.append("missing UI asset manifest: %s" % UI_MANIFEST_PATH)
-	else:
-		_validate_ui_manifest(_read_json(UI_MANIFEST_PATH))
-		for error in UiAssets.validate_pack():
-			_failures.append(String(error))
 	_validate_ui_runtime_contract()
 	_finish()
 
@@ -201,53 +145,6 @@ func _validate_animation(animation_id: String, animation: Dictionary) -> void:
 			FileAccess.file_exists(path),
 			"missing %s frame: %s" % [animation_id, path]
 		)
-
-
-func _validate_ui_manifest(manifest: Dictionary) -> void:
-	var components := Dictionary(manifest.get("components", {}))
-	_expect(
-		components.size() == EXPECTED_UI_COMPONENT_STATES.size(),
-		"UI manifest declares %d components, expected %d"
-		% [components.size(), EXPECTED_UI_COMPONENT_STATES.size()]
-	)
-	var state_count := 0
-	for component_id in EXPECTED_UI_COMPONENT_STATES:
-		var required_states := Array(EXPECTED_UI_COMPONENT_STATES[component_id])
-		if not components.has(component_id):
-			_failures.append("missing UI component: %s" % component_id)
-			continue
-		var component := Dictionary(components[component_id])
-		var states := Dictionary(component.get("states", {}))
-		state_count += states.size()
-		_expect(
-			_vector2i(component.get("canvas", [])) != Vector2i.ZERO,
-			"%s has no canvas metadata" % component_id
-		)
-		_expect(
-			int(component.get("patch_margin", 0)) > 0,
-			"%s has no 9-slice patch margin" % component_id
-		)
-		var safe_inset := Array(component.get("safe_inset", []))
-		_expect(safe_inset.size() == 4, "%s has no text-safe inset" % component_id)
-		for state_id in required_states:
-			if not states.has(state_id):
-				_failures.append(
-					"missing UI state: %s/%s" % [component_id, state_id]
-				)
-				continue
-			var path := String(states[state_id])
-			if not path.begins_with("res://"):
-				path = "res://art/visuals/production/ui/%s" % path
-			_expect(
-				FileAccess.file_exists(path),
-				"missing UI state image: %s/%s -> %s"
-				% [component_id, state_id, path]
-			)
-	_expect(
-		state_count == EXPECTED_UI_STATE_COUNT,
-		"UI manifest declares %d states, expected %d"
-		% [state_count, EXPECTED_UI_STATE_COUNT]
-	)
 
 
 func _validate_event_catalog(animations: Dictionary) -> void:
@@ -398,16 +295,6 @@ func _read_json(path: String) -> Dictionary:
 	if error != OK or not parser.data is Dictionary:
 		return {}
 	return Dictionary(parser.data)
-
-
-func _vector2i(value: Variant) -> Vector2i:
-	if value is Vector2i:
-		return value
-	if value is Vector2:
-		return Vector2i(value)
-	if value is Array and Array(value).size() >= 2:
-		return Vector2i(int(Array(value)[0]), int(Array(value)[1]))
-	return Vector2i.ZERO
 
 
 func _expect(condition: bool, message: String) -> void:
