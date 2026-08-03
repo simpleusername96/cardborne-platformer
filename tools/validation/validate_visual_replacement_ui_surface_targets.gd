@@ -14,6 +14,7 @@ const PRODUCTION_UI_PREFIX := "res://art/visuals/production/ui/"
 const SURFACE_UNIT_IDS := [
 	"modal_master", "content_plate", "hud_plate", "upgrade_card",
 	"button_primary", "button_secondary", "button_danger",
+	"tab_option", "toggle",
 ]
 const READY_STATES := ["switch_ready", "approved_for_switch"]
 const PRODUCTION_STATES := ["applied", "keep_current"]
@@ -214,11 +215,12 @@ func _validate_image(
 			accent_count > 0,
 			"%s/%s lacks a semantic accent rail" % [unit_id, state_id]
 		)
-	_expect(
-		unsafe_accent_count == 0,
-		"%s/%s places semantic accent pixels inside the content-safe area"
-		% [unit_id, state_id]
-	)
+	if unit_id != "toggle":
+		_expect(
+			unsafe_accent_count == 0,
+			"%s/%s places semantic accent pixels inside the content-safe area"
+			% [unit_id, state_id]
+		)
 
 
 func _palette_contains(color: Color, palette: Array) -> bool:

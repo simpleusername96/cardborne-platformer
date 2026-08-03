@@ -1868,6 +1868,9 @@ before execution continues.
     runtime nine-slice matrix; all three units are switch_ready.
   - [x] Obtain exact hash-bound approval and apply the three button families
     without extending that approval to later Phase 5 component families.
+  - [x] Prepare tab_option and toggle as eight exact deployable state PNGs
+    with per-family contact sheets and one shared runtime-size matrix; both
+    units are switch_ready.
   - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
@@ -1878,10 +1881,11 @@ before execution continues.
 
 ## Next Steps
 
-1. Prepare tab_option and toggle in Phase 5 dependency order as independently
-   deployable state families with exact runtime-size and localization evidence.
-2. Display their exact target/hash map from a clean preparation commit.
-3. Request hash-bound approval only for those prepared units before promotion.
+1. Display tab_option and toggle's exact eight-entry target/hash map from a
+   clean preparation commit.
+2. Request hash-bound approval only for those two independently promotable
+   units, with empty retire_paths and runtime_change_paths.
+3. Promote, validate, commit, and baseline-clean only exact approved units.
 
 ## Completion Criteria
 
@@ -2184,6 +2188,22 @@ Do not mark a phase or this plan complete while a stop condition remains.
   The fifteen promoted bytes are now current AS-IS; only their duplicate TO-BE
   bytes and four completed preview artifacts are removed during baseline
   cleanup, without changing any approved retire or runtime path.
+- 2026-08-03: Phase 5 tab_option and toggle preparation used one built-in
+  image-generation source board at
+  C:/Users/BK/.codex/generated_images/019fc2a8-d5ad-7321-b0c6-961caed3c4ed/exec-e941b9a2-f83b-4028-ae5a-77ab145e662f.png.
+  The source board established the shared low-profile tab frame and square
+  toggle grammar; deterministic project-local construction then produced five
+  direct 96 by 48 tab states and three direct 64 by 64 toggle states using only
+  the fixed visual-system palette. The outputs preserve manifest patch margins
+  and safe insets, transparent exterior corners, blank runtime-owned tab text,
+  geometric off/on distinction, and focus visibility independent of hover.
+  Per-family contact sheets are built from exact deliverables, and the shared
+  matrix covers 960 compact, 1280 standard, and 1920 wide contexts with long
+  Korean and English labels. The surface validator now covers nine families
+  and treats the toggle's semantic center glyph as icon content rather than a
+  StyleBox text-safe region. Both units are switch_ready with null approval and
+  application plus empty retire_paths and runtime_change_paths; production is
+  unchanged pending exact hash-bound approval.
 
 ## Execution Handoff
 
