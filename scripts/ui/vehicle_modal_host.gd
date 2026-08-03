@@ -10,6 +10,7 @@ var preferred_size := Vector2.ZERO
 var surface: PanelContainer
 var content: Control
 var _layout_refresh_frames := 0
+var _accessibility_compact := false
 
 
 func configure(next_content: Control, minimum_size: Vector2) -> void:
@@ -66,16 +67,35 @@ func _apply_viewport() -> void:
 		maxf(320.0, size.x - 48.0),
 		maxf(260.0, size.y - 24.0)
 	)
+	var target_size := preferred_size
+	if (
+		_accessibility_compact
+		and content != null
+		and content.has_method("accessibility_preferred_size")
+	):
+		target_size = Vector2(content.call("accessibility_preferred_size"))
 	surface.custom_minimum_size = Vector2(
-		minf(preferred_size.x, available.x),
-		minf(preferred_size.y, available.y)
+		minf(target_size.x, available.x),
+		minf(target_size.y, available.y)
 	)
-	var compact := size.x < 1100.0 or size.y < 650.0
+	var responsive_compact := size.x < 1100.0 or size.y < 650.0
+	var compact := responsive_compact or _accessibility_compact
 	surface.theme_type_variation = (
 		&"ModalSurfaceCompact" if compact else &"ModalSurface"
 	)
 	if content != null and content.has_method("set_compact_mode"):
 		content.call("set_compact_mode", compact)
+	if content != null and content.has_method("set_accessibility_mode"):
+		content.call("set_accessibility_mode", _accessibility_compact)
+
+
+func set_accessibility_compact(enabled: bool) -> void:
+	if _accessibility_compact == enabled:
+		_apply_viewport()
+		return
+	_accessibility_compact = enabled
+	_apply_viewport()
+	refresh_layout()
 
 
 func surface_rect() -> Rect2:

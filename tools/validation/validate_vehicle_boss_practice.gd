@@ -62,9 +62,11 @@ func _run() -> void:
 	_expect(
 		not source.contains("PanelContainer.new")
 			and not source.contains("SummaryBand")
-			and source.contains("Factory.text_row")
+			and source.contains("func _control_row")
+			and source.contains("VBoxContainer.new")
+			and source.contains("Factory.label")
 			and source.contains("Factory.command_button"),
-		"practice UI uses shared rows/commands without legacy row chrome"
+		"practice UI uses vertical shared label/control rows and commands without legacy chrome"
 	)
 	panel.queue_free()
 	await process_frame

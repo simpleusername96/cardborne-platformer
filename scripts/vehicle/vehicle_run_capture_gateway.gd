@@ -42,6 +42,7 @@ var _baseline: Dictionary
 var _runtime_baseline: Dictionary = {}
 var _report_fixture: VehicleStageTelemetry
 var _restored := false
+var _capture_text_scale := 1.0
 
 
 func _init(run: Node) -> void:
@@ -49,6 +50,7 @@ func _init(run: Node) -> void:
 	var settings := _run.get_node_or_null("/root/SettingsStore")
 	_baseline = {
 		"window_size":_run.get_window().size,
+		"content_scale_size":_run.get_window().content_scale_size,
 		"transparent_bg":_run.get_viewport().transparent_bg,
 		"reduced_motion":bool(settings.reduced_motion) if settings != null else false,
 		"layout_seed_override":_run._layout_seed_override,
@@ -196,6 +198,10 @@ func snapshot(kind: StringName) -> Variant:
 	return null
 
 
+func refresh_capture_text_scale() -> void:
+	_run._ui.debug_set_text_scale(_capture_text_scale)
+
+
 func set_debug_overlay(kind: StringName, enabled: bool) -> void:
 	if kind == &"collision":
 		_run._debug_collision_overlay = enabled
@@ -209,6 +215,7 @@ func restore_baseline() -> void:
 	if settings != null:
 		settings.reduced_motion = bool(_baseline["reduced_motion"])
 	_run.get_viewport().transparent_bg = bool(_baseline["transparent_bg"])
+	_run.get_window().content_scale_size = Vector2i(_baseline["content_scale_size"])
 	_run.get_window().size = Vector2i(_baseline["window_size"])
 	_run._layout_seed_override = int(_baseline["layout_seed_override"])
 	_run._has_layout_seed_override = bool(_baseline["has_layout_seed_override"])
@@ -244,9 +251,11 @@ func _apply_capture_environment(fixture: Dictionary) -> void:
 	_run.get_viewport().transparent_bg = false
 	var viewport_size := Vector2i(fixture.get("viewport_size", Vector2i.ZERO))
 	if viewport_size.x > 0 and viewport_size.y > 0:
+		_run.get_window().content_scale_size = viewport_size
 		_run.get_window().size = viewport_size
 	_run._camera.position_smoothing_enabled = false
-	_run._ui.debug_set_text_scale(float(fixture.get("text_scale", 1.0)))
+	_capture_text_scale = float(fixture.get("text_scale", 1.0))
+	refresh_capture_text_scale()
 
 
 func _show_stage_report(failed: bool) -> void:
@@ -295,11 +304,17 @@ func _capture_pressure_evidence() -> void:
 	var production_roles: Array[StringName] = scenario._production_pressure_roles(
 		PressureFixture.CAPACITY_ORDINARY_COUNT
 	)
+	# The pressure scenario is canonical gameplay evidence, not a function of
+	# the UI matrix viewport. A fixed world window keeps its sectors feasible.
+	var pressure_visible_world := Rect2(
+		_run.player_position - Vector2(640.0, 360.0),
+		Vector2(1280.0, 720.0)
+	)
 	var fixture := PressureFixture.build(
 		&"peak",
 		_run.current_stage_id,
 		_run.player_position,
-		_run._visible_world_rect(0.0),
+		pressure_visible_world,
 		_run._active_tactical_layout.ordinary_spawn_anchors,
 		production_roles
 	)
@@ -334,7 +349,7 @@ func _capture_pressure_evidence() -> void:
 		_run.experience_runtime.spawn_shard(shard_position, 1 + int(index % 11 == 0) * 3)
 	_run._update_threat_contacts(0.2)
 	var qualification := PressureFixture.qualification(
-		Array(fixture["descriptors"]), _run.player_position, _run._visible_world_rect(0.0)
+		Array(fixture["descriptors"]), _run.player_position, pressure_visible_world
 	)
 	print(JSON.stringify({
 		"capture":"03-peak-horde.png",

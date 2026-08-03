@@ -22,6 +22,7 @@ var _compact := false
 var _kicker: Label
 var _title: Label
 var _detail: Label
+var _row_scroll: ScrollContainer
 var _row: HBoxContainer
 var _message: Label
 var _command_lane: CenterContainer
@@ -51,13 +52,18 @@ func _build() -> void:
 	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_detail)
 
+	_row_scroll = ScrollContainer.new()
+	_row_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_row_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_row_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_row_scroll)
 	_row = HBoxContainer.new()
 	_row.name = "UpgradeButtons"
 	_row.add_theme_constant_override("separation", 18)
 	_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_row.custom_minimum_size.y = 330.0
 	_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_row)
+	_row_scroll.add_child(_row)
 	for index in 3:
 		var button := UpgradeChoiceCard.new()
 		button.name = "UpgradeCard%d" % (index + 1)
@@ -73,7 +79,7 @@ func _build() -> void:
 	add_child(_command_lane)
 	_confirm = Factory.command_button("UPGRADE_EQUIP", Factory.COMMAND_PRIMARY)
 	_confirm.custom_minimum_size = Vector2(300.0, 48.0)
-	_confirm.add_theme_font_size_override("font_size", 24)
+	Factory.apply_font_size(_confirm, 24)
 	_confirm.pressed.connect(_confirm_selected)
 	_command_lane.add_child(_confirm)
 
@@ -83,35 +89,47 @@ func set_compact_mode(value: bool) -> void:
 	add_theme_constant_override("separation", 5 if value else 8)
 	if not is_node_ready():
 		return
-	_kicker.add_theme_font_size_override(
-		"font_size",
+	Factory.apply_font_size(
+		_kicker,
 		int(Art.TYPE_SCALE_COMPACT[1] if value else Art.TYPE_SCALE_WIDE[1])
 	)
 	_title.custom_minimum_size.x = 0.0 if value else 900.0
-	_title.add_theme_font_size_override(
-		"font_size",
+	Factory.apply_font_size(
+		_title,
 		int(Art.TYPE_SCALE_COMPACT[4] if value else Art.TYPE_SCALE_WIDE[5])
 	)
 	_detail.custom_minimum_size.x = 0.0 if value else 900.0
 	_detail.custom_minimum_size.y = 30.0 if value else 34.0
-	_detail.add_theme_font_size_override(
-		"font_size",
+	Factory.apply_font_size(
+		_detail,
 		int(Art.TYPE_SCALE_COMPACT[1] if value else Art.TYPE_SCALE_WIDE[2])
 	)
 	_row.add_theme_constant_override("separation", 12 if value else 18)
 	_row.custom_minimum_size.y = 286.0 if value else 330.0
 	_message.custom_minimum_size.y = 20.0 if value else 22.0
-	_message.add_theme_font_size_override(
-		"font_size",
+	Factory.apply_font_size(
+		_message,
 		int(Art.TYPE_SCALE_COMPACT[1] if value else Art.TYPE_SCALE_WIDE[1])
 	)
 	_confirm.custom_minimum_size = Vector2(260.0, 44.0) if value else Vector2(300.0, 48.0)
-	_confirm.add_theme_font_size_override(
-		"font_size",
+	Factory.apply_font_size(
+		_confirm,
 		int(Art.TYPE_SCALE_COMPACT[3] if value else Art.TYPE_SCALE_WIDE[3])
 	)
 	for button in _buttons:
 		(button as VehicleUpgradeChoiceCard).set_compact_mode(value)
+
+
+func set_accessibility_mode(enabled: bool) -> void:
+	if enabled:
+		set_compact_mode(false)
+	for button in _buttons:
+		(button as VehicleUpgradeChoiceCard).set_accessibility_mode(enabled)
+	_row.custom_minimum_size.y = 520.0 if enabled else (286.0 if _compact else 330.0)
+
+
+func accessibility_preferred_size() -> Vector2:
+	return Vector2(1200.0, 680.0)
 
 
 func open(cards: Array[Dictionary]) -> void:
@@ -268,6 +286,6 @@ func _label(key: String, size: int, color: Color) -> Label:
 	var label := Label.new()
 	label.text = tr(key) if not key.is_empty() else ""
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.add_theme_font_size_override("font_size", size)
+	Factory.apply_font_size(label, size)
 	label.add_theme_color_override("font_color", color)
 	return label

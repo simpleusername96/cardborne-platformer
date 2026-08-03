@@ -147,7 +147,7 @@ func _build_footer() -> void:
 	add_child(deploy_lane)
 	_command = Factory.command_button("DEPLOY_COMMAND", Factory.COMMAND_PRIMARY)
 	_command.custom_minimum_size = Vector2(300.0, 48.0)
-	_command.add_theme_font_size_override("font_size", 22)
+	Factory.apply_font_size(_command, 22)
 	_command.pressed.connect(
 		func() -> void: deploy_requested.emit(&"pulse_cannon")
 	)
@@ -188,8 +188,8 @@ func set_compact_mode(compact: bool) -> void:
 	_body.add_theme_constant_override("separation", 14 if compact else 24)
 	_identity_box.add_theme_constant_override("separation", 5 if compact else 8)
 	_controls_box.add_theme_constant_override("separation", 6 if compact else 10)
-	_title.add_theme_font_size_override("font_size", 30 if compact else 42)
-	_field_label.add_theme_font_size_override("font_size", 14 if compact else 16)
+	Factory.apply_font_size(_title, 30 if compact else 42)
+	Factory.apply_font_size(_field_label, 14 if compact else 16)
 	_craft_preview.custom_minimum_size = (
 		Vector2(104.0, 104.0) if compact else Vector2(150.0, 150.0)
 	)

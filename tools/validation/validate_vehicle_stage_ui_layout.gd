@@ -279,6 +279,7 @@ func _initialize() -> void:
 			_expect(Vector2(modal_minimums["pause"]) == Vector2(520.0, 430.0), "pause modal uses the compact vertical-stack contract")
 			_expect(Vector2(modal_minimums["settings"]) == Vector2(920.0, 570.0), "settings modal keeps approved scale")
 			_expect(Vector2(modal_minimums["guidebook"]) == Vector2(1160.0, 636.0), "guidebook modal keeps approved scale")
+			_expect(Vector2(modal_minimums["report"]) == Vector2(1200.0, 640.0), "report modal keeps all three metric columns visible")
 		_expect(
 			StringName(contract["pause_abort_variation"]) == &"DangerButton",
 			"pause abort uses the shared restrained danger role at %d" % width
@@ -359,6 +360,7 @@ func _initialize() -> void:
 		)
 	await _validate_modal_matrix(ui)
 	await _validate_upgrade_matrix(ui)
+	await _validate_text_scale_probe(ui)
 	_validate_owner_boundaries()
 	var tactical_mesh := MinimapMeshBuilder.build({
 		"cols":13,
@@ -664,6 +666,36 @@ func _validate_modal_matrix(ui: VehicleStageUI) -> void:
 func _settle_ui() -> void:
 	for _frame in 3:
 		await process_frame
+
+
+func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
+	get_root().content_scale_size = Vector2i(1280, 720)
+	get_root().size = Vector2i(1280, 720)
+	await _settle_ui()
+	ui.debug_modal_contract("upgrade")
+	await _settle_ui()
+	ui.debug_set_text_scale(2.0)
+	await _settle_ui()
+	var contract := ui.debug_ui_contract(1280.0)
+	for status_name in Dictionary(contract["status_font_sizes"]):
+		_expect(
+			int(contract["status_font_sizes"][status_name]) >= 28,
+			"200%% probe doubles local HUD typography for %s" % status_name
+		)
+	var upgrade := Dictionary(contract["upgrade_choice"])
+	_expect(
+		int(Dictionary(upgrade["type_sizes"])["title"]) == 80,
+		"200%% probe doubles screen-local upgrade title typography; got %s"
+		% upgrade["type_sizes"]
+	)
+	for card_variant in upgrade["cards"]:
+		_expect(
+			int(Dictionary(card_variant)["type_sizes"]["title"]) == 48,
+			"200%% probe doubles dynamically created card typography; got %s"
+			% Dictionary(card_variant)["type_sizes"]
+		)
+	ui.debug_set_text_scale(1.0)
+	await _settle_ui()
 
 
 func _validate_owner_boundaries() -> void:

@@ -44,7 +44,7 @@ const MODAL_MINIMUMS := {
 	"upgrade":Vector2(960.0, 626.0),
 	"pause":Vector2(520.0, 430.0),
 	"result":Vector2(900.0, 560.0),
-	"report":Vector2(1120.0, 600.0),
+	"report":Vector2(1200.0, 640.0),
 	"garage":Vector2(960.0, 560.0),
 	"settings":Vector2(920.0, 570.0),
 	"guidebook":Vector2(1160.0, 636.0),
@@ -514,6 +514,7 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 			"hud":_hud.get_script().resource_path,
 			"deployment":_deployment_panel.get_script().resource_path,
 			"pause":_pause_panel.get_script().resource_path,
+			"guidebook":_guide_panel.get_script().resource_path,
 			"result":_result_panel.get_script().resource_path,
 			"garage":_garage_panel.get_script().resource_path,
 			"practice":(
@@ -541,6 +542,7 @@ func debug_set_text_scale(scale: float) -> void:
 	# Capture-only accessibility probe: image chrome remains unchanged while
 	# the localized dynamic text layer is magnified.
 	var clamped := clampf(scale, 1.0, 2.0)
+	VehicleUiComponentFactory.set_debug_text_scale(clamped)
 	var scaled_theme := VEHICLE_THEME.duplicate(true) as Theme
 	scaled_theme.default_font_size = maxi(
 		1,
@@ -558,6 +560,27 @@ func debug_set_text_scale(scale: float) -> void:
 				maxi(1, roundi(float(base_size) * clamped))
 			)
 	_root.theme = scaled_theme
+	for host_variant in _hosts.values():
+		(host_variant as VehicleModalHost).set_accessibility_compact(clamped > 1.0)
+	_hud.set_accessibility_text_scale(clamped)
+	_scale_local_font_overrides(_root, clamped)
+
+
+func _scale_local_font_overrides(node: Node, scale: float) -> void:
+	if node is Control:
+		var control := node as Control
+		if control.has_theme_font_size_override(&"font_size"):
+			var current := control.get_theme_font_size(&"font_size")
+			var base := int(control.get_meta(&"capture_base_font_size", current))
+			var applied := int(control.get_meta(&"capture_applied_font_size", current))
+			if current != applied:
+				base = current
+			var scaled := maxi(1, roundi(float(base) * scale))
+			control.set_meta(&"capture_base_font_size", base)
+			control.set_meta(&"capture_applied_font_size", scaled)
+			control.add_theme_font_size_override(&"font_size", scaled)
+	for child in node.get_children():
+		_scale_local_font_overrides(child, scale)
 
 
 func debug_modal_contract(

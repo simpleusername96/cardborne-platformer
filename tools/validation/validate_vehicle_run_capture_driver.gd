@@ -32,6 +32,8 @@ func _initialize() -> void:
 		"--capture-size=",
 		"DirAccess.make_dir_recursive_absolute",
 		"save_png(",
+		"capture-manifest.json",
+		"_write_manifest(gateway)",
 		"FULL_CAPTURE_FILES",
 		"VEHICLE_STAGE_CAPTURE_COMPLETE",
 	]:
@@ -45,6 +47,7 @@ func _initialize() -> void:
 		"set_world_fixture",
 		"show_ui_fixture",
 		"snapshot",
+		"refresh_capture_text_scale",
 		"set_debug_overlay",
 		"restore_baseline",
 	]:
@@ -52,6 +55,18 @@ func _initialize() -> void:
 			gateway_source.contains("func %s(" % gateway_api),
 			"capture gateway exposes %s" % gateway_api
 		)
+	_expect(
+		gateway_source.contains("\"content_scale_size\":_run.get_window().content_scale_size"),
+		"capture gateway preserves logical viewport baseline"
+	)
+	_expect(
+		gateway_source.contains("_run.get_window().content_scale_size = viewport_size"),
+		"capture gateway applies requested logical viewport"
+	)
+	_expect(
+		driver_source.contains("Capture logical viewport mismatch"),
+		"capture driver rejects incorrectly scaled evidence"
+	)
 	_expect(
 		driver_source.contains("finish_capture(gateway, 1)"),
 		"capture failures share terminal cleanup path"

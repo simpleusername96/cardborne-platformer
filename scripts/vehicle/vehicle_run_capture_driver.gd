@@ -291,6 +291,8 @@ func finish_capture(gateway: RefCounted, exit_code: int) -> void:
 		return
 	if exit_code == 0 and not failed and not _validate_manifest(gateway):
 		exit_code = 1
+	if exit_code == 0 and not failed and not _write_manifest(gateway):
+		exit_code = 1
 	TranslationServer.set_locale(_original_locale)
 	gateway.restore_baseline()
 	_finished = true
@@ -330,7 +332,19 @@ func _capture_viewport(
 ) -> bool:
 	for frame in settle_frames:
 		await (gateway.snapshot(&"tree") as SceneTree).process_frame
+	gateway.refresh_capture_text_scale()
+	for frame in 2:
+		await (gateway.snapshot(&"tree") as SceneTree).process_frame
 	var viewport := gateway.snapshot(&"viewport") as Viewport
+	var logical_size := Vector2i(viewport.get_visible_rect().size)
+	if viewport_size != Vector2i.ZERO and logical_size != viewport_size:
+		failed = true
+		push_error(
+			"Capture logical viewport mismatch: requested=%s actual=%s"
+			% [viewport_size, logical_size]
+		)
+		finish_capture(gateway, 1)
+		return false
 	if not save_viewport(viewport, file_name):
 		finish_capture(gateway, 1)
 		return false
@@ -373,3 +387,30 @@ func _validate_manifest(gateway: RefCounted) -> bool:
 		push_error("Capture manifest filename set mismatch")
 		failed = true
 	return not failed
+
+
+func _write_manifest(gateway: RefCounted) -> bool:
+	var full_evidence := is_full_evidence(gateway.snapshot(&"viewport"))
+	var files: Array = FULL_CAPTURE_FILES if full_evidence else CORE_CAPTURE_FILES
+	var manifest := {
+		"schema_version":1,
+		"locale":locale,
+		"viewport_size":[viewport_size.x, viewport_size.y],
+		"text_scale":text_scale,
+		"evidence_mode":"full" if full_evidence else "core",
+		"files":files.duplicate(),
+	}
+	var path := directory.path_join("capture-manifest.json")
+	var output := FileAccess.open(path, FileAccess.WRITE)
+	if output == null:
+		failed = true
+		push_error("Could not write capture manifest: %s" % path)
+		return false
+	output.store_string(JSON.stringify(manifest, "\t", true) + "\n")
+	output.close()
+	if not FileAccess.file_exists(path) or FileAccess.get_file_as_bytes(path).is_empty():
+		failed = true
+		push_error("Capture manifest is missing or empty after write: %s" % path)
+		return false
+	print("CAPTURE_MANIFEST_SAVED %s" % path)
+	return true

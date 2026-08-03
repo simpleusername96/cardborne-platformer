@@ -53,7 +53,7 @@ func _build() -> void:
 		Factory.COMMAND_PRIMARY
 	)
 	first_button.custom_minimum_size = Vector2(360.0, 48.0)
-	first_button.add_theme_font_size_override("font_size", 22)
+	Factory.apply_font_size(first_button, 22)
 	first_button.pressed.connect(func() -> void: resume_requested.emit())
 	_command_stack.add_child(first_button)
 	var restart := Factory.command_button(

@@ -47,6 +47,8 @@ var _snapshot: Dictionary = {}
 var _title: Label
 var _kicker: Label
 var _summary: Label
+var _body_scroll: ScrollContainer
+var _body_stack: VBoxContainer
 var _content: HBoxContainer
 var _tabs: TabContainer
 var _defeat_box: VBoxContainer
@@ -54,7 +56,9 @@ var _damage_box: VBoxContainer
 var _attribute_box: VBoxContainer
 var _incoming_box: VBoxContainer
 var _continue_button: Button
+var _metric_scrolls: Array[ScrollContainer] = []
 var _guard := 0.0
+var _force_compact := false
 
 
 func _ready() -> void:
@@ -111,9 +115,23 @@ func _notification(what: int) -> void:
 
 
 func _apply_responsive_layout() -> void:
-	var compact := get_window().size.x < 1180
+	var compact := _force_compact or get_window().size.x < 1180
 	_tabs.visible = compact
 	_content.visible = not compact
+
+
+func set_compact_mode(compact: bool) -> void:
+	_force_compact = compact
+	_apply_responsive_layout()
+
+
+func set_accessibility_mode(enabled: bool) -> void:
+	for scroll in _metric_scrolls:
+		scroll.vertical_scroll_mode = (
+			ScrollContainer.SCROLL_MODE_DISABLED
+			if enabled
+			else ScrollContainer.SCROLL_MODE_AUTO
+		)
 
 
 func _build() -> void:
@@ -126,11 +144,21 @@ func _build() -> void:
 	_summary = _label("", 17, Art.MINT_SOFT)
 	add_child(_summary)
 	add_child(HSeparator.new())
+	_body_scroll = ScrollContainer.new()
+	_body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_body_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_body_scroll)
+	_body_stack = VBoxContainer.new()
+	_body_stack.add_theme_constant_override("separation", 10)
+	_body_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body_scroll.add_child(_body_stack)
 	_content = HBoxContainer.new()
 	_content.focus_mode = Control.FOCUS_ALL
 	_content.add_theme_constant_override("separation", 18)
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_content)
+	_content.custom_minimum_size.y = 220.0
+	_body_stack.add_child(_content)
 	_defeat_box = _scroll_column("REPORT_DEFEATS")
 	_damage_box = _scroll_column("REPORT_OUTGOING")
 	_attribute_box = _scroll_column("REPORT_ATTRIBUTES")
@@ -143,7 +171,7 @@ func _build() -> void:
 	_tabs.focus_mode = Control.FOCUS_ALL
 	_tabs.custom_minimum_size.y = 220.0
 	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_tabs)
+	_body_stack.add_child(_tabs)
 	var compact_defeats := _scroll_column("REPORT_DEFEATS")
 	var compact_damage := _scroll_column("REPORT_OUTGOING")
 	var compact_attributes := _scroll_column("REPORT_ATTRIBUTES")
@@ -155,12 +183,12 @@ func _build() -> void:
 	_tabs.set_meta("attributes", compact_attributes)
 	_incoming_box = VBoxContainer.new()
 	_incoming_box.add_theme_constant_override("separation", 5)
-	add_child(_incoming_box)
+	_body_stack.add_child(_incoming_box)
 	var continue_lane := CenterContainer.new()
 	add_child(continue_lane)
 	_continue_button = Factory.command_button("", Factory.COMMAND_PRIMARY)
 	_continue_button.custom_minimum_size = Vector2(300.0, 48.0)
-	_continue_button.add_theme_font_size_override("font_size", 22)
+	Factory.apply_font_size(_continue_button, 22)
 	_continue_button.focus_mode = Control.FOCUS_ALL
 	_continue_button.pressed.connect(_on_continue)
 	continue_lane.add_child(_continue_button)
@@ -327,6 +355,7 @@ func _scroll_column(title_key: String) -> VBoxContainer:
 
 func _scroll_view(box: VBoxContainer, node_name: String = "") -> ScrollContainer:
 	var scroll := ScrollContainer.new()
+	_metric_scrolls.append(scroll)
 	if not node_name.is_empty():
 		scroll.name = node_name
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

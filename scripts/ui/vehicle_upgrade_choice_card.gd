@@ -6,6 +6,7 @@ extends Button
 ## gameplay progression layer.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const UpgradeGlyphRenderer = preload(
 	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
 )
@@ -69,13 +70,24 @@ func set_compact_mode(value: bool) -> void:
 	_glyph.custom_minimum_size = (
 		Vector2(64.0, 64.0) if value else Vector2(88.0, 88.0)
 	)
-	_family.add_theme_font_size_override("font_size", 13 if value else 14)
-	_title.add_theme_font_size_override("font_size", 22 if value else 24)
+	Factory.apply_font_size(_family, 13 if value else 14)
+	Factory.apply_font_size(_title, 22 if value else 24)
 	_title.custom_minimum_size.y = 48.0 if value else 52.0
-	_summary.add_theme_font_size_override("font_size", 15 if value else 16)
+	Factory.apply_font_size(_summary, 15 if value else 16)
 	_summary.custom_minimum_size.y = 54.0 if value else 60.0
-	_behavior.add_theme_font_size_override("font_size", 15 if value else 16)
+	Factory.apply_font_size(_behavior, 15 if value else 16)
 	_behavior.custom_minimum_size.y = 28.0 if value else 32.0
+	_refresh()
+
+
+func set_accessibility_mode(enabled: bool) -> void:
+	if not enabled:
+		return
+	custom_minimum_size = Vector2(356.0, 520.0)
+	_title.custom_minimum_size.y = 104.0
+	_summary.custom_minimum_size.y = 120.0
+	_behavior.custom_minimum_size.y = 64.0
+	_glyph.custom_minimum_size = Vector2(112.0, 112.0)
 	_refresh()
 
 
@@ -345,7 +357,7 @@ func _label_geometry(label: Label) -> Dictionary:
 
 func _label(font_size: int, color: Color) -> Label:
 	var label := Label.new()
-	label.add_theme_font_size_override("font_size", font_size)
+	Factory.apply_font_size(label, font_size)
 	label.add_theme_color_override("font_color", color)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label

@@ -62,7 +62,14 @@ func _run() -> void:
 		var hud: Dictionary = run.call("_build_hud_snapshot")
 		_expect(hud["minimap"]["cols"] == 20 and hud["guidebook"].has("categories"), "HUD exposes minimap and guide snapshots")
 		var ui = run.get_node_or_null("VehicleStageUI")
-		_expect(ui != null and ui._guide_panel.debug_contract()["categories"] == 5, "guidebook modal is connected")
+		var ui_contract: Dictionary = ui.debug_ui_contract() if ui != null else {}
+		var component_owners := Dictionary(ui_contract.get("component_owners", {}))
+		_expect(
+			ui == run._ui
+				and String(component_owners.get("guidebook", ""))
+					== "res://scripts/ui/vehicle_guidebook_panel.gd",
+			"guidebook modal is connected through the shared Stage UI owner"
+		)
 		_check_simulation_lod_contract(run)
 		_check_boss_progression_gate(run)
 		_check_boss_damage_and_guidance(run, ui)

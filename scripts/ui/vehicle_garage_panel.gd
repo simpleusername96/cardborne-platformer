@@ -11,6 +11,7 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 
 var _summary_label: Label
+var _sections_scroll: ScrollContainer
 var _sections: HBoxContainer
 var _loadout: VBoxContainer
 var _recovery: VBoxContainer
@@ -45,11 +46,16 @@ func _build() -> void:
 	_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_summary_label)
 
+	_sections_scroll = ScrollContainer.new()
+	_sections_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_sections_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sections_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_sections_scroll)
 	_sections = HBoxContainer.new()
 	_sections.add_theme_constant_override("separation", 28)
 	_sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sections.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_sections)
+	_sections_scroll.add_child(_sections)
 
 	_loadout = _section("GARAGE_LOADOUT")
 	_loadout.size_flags_stretch_ratio = 1.0
@@ -74,7 +80,7 @@ func _build() -> void:
 		Factory.COMMAND_PRIMARY
 	)
 	_first_button.custom_minimum_size = Vector2(300.0, 48.0)
-	_first_button.add_theme_font_size_override("font_size", 22)
+	Factory.apply_font_size(_first_button, 22)
 	_first_button.pressed.connect(func() -> void: replay_requested.emit())
 	footer.add_child(_first_button)
 	_settings_button = Factory.command_button(

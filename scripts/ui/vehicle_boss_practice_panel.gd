@@ -22,7 +22,7 @@ var _start: Button
 var _back: Button
 var _form: VBoxContainer
 var _form_scroll: ScrollContainer
-var _form_rows: Array[HBoxContainer] = []
+var _form_rows: Array[VBoxContainer] = []
 
 
 func _ready() -> void:
@@ -141,21 +141,18 @@ func _option(label_key: String) -> OptionButton:
 	var option := OptionButton.new()
 	option.fit_to_longest_item = false
 	option.custom_minimum_size.y = 46.0
-	option.add_theme_font_size_override("font_size", 16)
+	Factory.apply_font_size(option, 16)
 	option.focus_mode = Control.FOCUS_ALL
 	_form.add_child(_control_row(label_key, option))
 	return option
 
 
-func _control_row(label_key: String, control: Control) -> HBoxContainer:
-	var row := Factory.text_row(label_key, "", {
-		"label_min_width":168.0,
-		"label_size":15,
-		"value_size":16,
-	})
-	var placeholder := row.get_child(1)
-	row.remove_child(placeholder)
-	placeholder.queue_free()
+func _control_row(label_key: String, control: Control) -> VBoxContainer:
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	var label := Factory.label(label_key, 15, Art.TEXT_MUTED)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(label)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(control)
 	_form_rows.append(row)

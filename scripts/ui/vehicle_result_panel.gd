@@ -105,7 +105,7 @@ func _build() -> void:
 		Factory.COMMAND_PRIMARY
 	)
 	_first_button.custom_minimum_size = Vector2(300.0, 48.0)
-	_first_button.add_theme_font_size_override("font_size", 22)
+	Factory.apply_font_size(_first_button, 22)
 	_first_button.pressed.connect(func() -> void: garage_requested.emit())
 	actions.add_child(_first_button)
 	_replay_button = Factory.command_button(
@@ -171,7 +171,7 @@ func refresh_localized_content() -> void:
 
 func set_compact_mode(compact: bool) -> void:
 	add_theme_constant_override("separation", 9 if compact else 14)
-	_title.add_theme_font_size_override("font_size", 30 if compact else 40)
+	Factory.apply_font_size(_title, 30 if compact else 40)
 	_first_button.custom_minimum_size.y = 44.0 if compact else 48.0
 
 

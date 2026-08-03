@@ -112,7 +112,7 @@ func _init() -> void:
 	_expect(int(contract["wide_dividers"]) == 2, "wide report keeps two restrained column dividers")
 	_expect(int(contract["wide_columns"]) == 3, "wide report preserves three independently scrollable columns")
 	_expect(int(contract["compact_tabs"]) == 3, "compact report preserves three category tabs")
-	_expect(int(contract["scroll_views"]) == 6, "wide and compact report paths each own three scroll views")
+	_expect(int(contract["scroll_views"]) == 7, "report owns one body scroll plus three wide and three compact metric views")
 	_expect(int(contract["shared_text_rows"]) > 0, "report metrics use shared TextRows")
 	_expect(int(contract["decorated_metric_rows"]) == 0, "report metrics have no decorative panel shell")
 	_expect(int(contract["semantic_icons"]) > 0, "report preserves semantic enemy and affinity icons")

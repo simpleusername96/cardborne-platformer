@@ -73,7 +73,7 @@ func set_compact_mode(compact: bool) -> void:
 	_entry_scroll.size_flags_stretch_ratio = 0.34 if compact else 0.0
 	_detail_scroll.size_flags_stretch_ratio = 0.66 if compact else 1.0
 	_preview_well.custom_minimum_size.y = 150.0 if compact else 210.0
-	_title_label.add_theme_font_size_override("font_size", 32 if compact else 40)
+	Factory.apply_font_size(_title_label, 32 if compact else 40)
 	_apply_category_layout()
 
 

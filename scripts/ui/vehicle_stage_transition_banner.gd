@@ -74,10 +74,18 @@ func hide_banner() -> void:
 	set_process(false)
 
 
-func apply_viewport(viewport_size: Vector2) -> void:
-	var width := minf(520.0, viewport_size.x - 48.0)
-	size = Vector2(width, 76.0)
-	position = Vector2((viewport_size.x - width) * 0.5, 126.0)
+func apply_viewport(
+	viewport_size: Vector2,
+	text_scale: float = 1.0,
+	top_offset: float = 126.0
+) -> void:
+	var accessibility := text_scale > 1.0
+	var width := minf(
+		720.0 if accessibility else 520.0,
+		viewport_size.x - 48.0
+	)
+	size = Vector2(width, 128.0 if accessibility else 76.0)
+	position = Vector2((viewport_size.x - width) * 0.5, top_offset)
 
 
 func debug_snapshot() -> Dictionary:

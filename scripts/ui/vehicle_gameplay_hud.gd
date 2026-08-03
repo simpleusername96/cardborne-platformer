@@ -457,6 +457,7 @@ var _objective_detail: Label
 var _objective_detail_timer := 0.0
 var _last_objective_text := ""
 var _last_objective_detail := ""
+var _accessibility_text_scale := 1.0
 var _last_buff_text := ""
 var _boss_visible := false
 var _target_visible := false
@@ -527,11 +528,11 @@ func _build() -> void:
 
 	_objective_panel = Factory.surface(
 		Factory.SURFACE_HUD,
-		Vector2(360.0, 60.0)
+		Vector2(480.0, 60.0)
 	)
 	_objective_panel.name = "ObjectivePanel"
 	_objective_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_objective_panel.size = Vector2(360.0, 60.0)
+	_objective_panel.size = Vector2(480.0, 60.0)
 	add_child(_objective_panel)
 	var objective_zone := VBoxContainer.new()
 	objective_zone.name = "ObjectiveZoneContent"
@@ -579,6 +580,7 @@ func _build() -> void:
 	_objective_detail = Factory.label("DEPLOY_CONTROLS", 14, Art.TEXT_MUTED)
 	_objective_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_objective_detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_objective_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	objective_box.add_child(_objective_detail)
 
 	_minimap_panel = Factory.surface(
@@ -857,9 +859,10 @@ func debug_status_orbit_contract() -> Dictionary:
 func debug_contract(viewport_width: float) -> Dictionary:
 	var compact := viewport_width < 1100.0
 	var viewport_height := viewport_width * 9.0 / 16.0
+	var accessibility := _accessibility_text_scale > 1.0
 	var objective_base_size := Vector2(
-		300.0 if compact else 360.0,
-		56.0 if compact else 60.0
+		720.0 if accessibility else (300.0 if compact else 480.0),
+		160.0 if accessibility else (56.0 if compact else 60.0)
 	)
 	var minimap_base_size := (
 		Vector2(160.0, 98.0)
@@ -879,12 +882,13 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		minimap_base_size.y + (target_size.y + 4.0 if _target_visible else 0.0)
 	)
 	var boss_width := minf(
-		520.0,
+		720.0 if accessibility else 520.0,
 		viewport_width - 2.0 * (HEALTH_CLUSTER_SIZE.x + 30.0)
 	)
 	var objective_zone_size := Vector2(
 		boss_width if _boss_visible else objective_base_size.x,
-		objective_base_size.y + (60.0 if _boss_visible else 0.0)
+		objective_base_size.y
+		+ ((112.0 if accessibility else 60.0) if _boss_visible else 0.0)
 	)
 	var dock_position := Vector2(
 		(viewport_width - ACTION_RAIL_SIZE.x) * 0.5,
@@ -977,9 +981,10 @@ func _apply_responsive_layout() -> void:
 	if _objective_panel == null:
 		return
 	var compact := size.x < 1100.0
+	var accessibility := _accessibility_text_scale > 1.0
 	var objective_base_size := Vector2(
-		300.0 if compact else 360.0,
-		56.0 if compact else 60.0
+		720.0 if accessibility else (300.0 if compact else 480.0),
+		160.0 if accessibility else (56.0 if compact else 60.0)
 	)
 	var target_size := (
 		Vector2(168.0, 60.0)
@@ -999,12 +1004,13 @@ func _apply_responsive_layout() -> void:
 		minimap_base_size.y + (target_size.y + 4.0 if _target_visible else 0.0)
 	)
 	var boss_width := minf(
-		520.0,
+		720.0 if accessibility else 520.0,
 		size.x - 2.0 * (HEALTH_CLUSTER_SIZE.x + 30.0)
 	)
 	var objective_zone_size := Vector2(
 		boss_width if _boss_visible else objective_base_size.x,
-		objective_base_size.y + (60.0 if _boss_visible else 0.0)
+		objective_base_size.y
+		+ ((112.0 if accessibility else 60.0) if _boss_visible else 0.0)
 	)
 	_health_panel.position = Vector2(18.0, 16.0)
 	_health_panel.size = HEALTH_CLUSTER_SIZE
@@ -1014,7 +1020,9 @@ func _apply_responsive_layout() -> void:
 	)
 	_objective_panel.custom_minimum_size = objective_zone_size
 	_objective_panel.size = objective_zone_size
-	_boss_cluster.custom_minimum_size.y = 58.0 if _boss_visible else 0.0
+	_boss_cluster.custom_minimum_size.y = (
+		112.0 if accessibility else 58.0
+	) if _boss_visible else 0.0
 	_boss_bar.custom_minimum_size.x = 0.0
 	_minimap_panel.custom_minimum_size = minimap_zone_size
 	_minimap_panel.size = minimap_zone_size
@@ -1039,16 +1047,30 @@ func _apply_responsive_layout() -> void:
 		(size.x - _buff_label.size.x) * 0.5,
 		size.y - 124.0
 	)
-	_objective_detail.add_theme_font_size_override(
-		"font_size",
-		14
+	Factory.apply_font_size(_objective_detail, 14)
+	_notification_panel.size = Vector2(
+		720.0 if accessibility else (320.0 if compact else 360.0),
+		80.0 if accessibility else 44.0
 	)
-	_notification_panel.size.x = 320.0 if compact else 360.0
 	_notification_panel.position = Vector2(
 		(size.x - _notification_panel.size.x) * 0.5,
 		16.0 + objective_zone_size.y + 12.0
 	)
-	_transition_banner.apply_viewport(size)
+	_transition_banner.apply_viewport(
+		size,
+		_accessibility_text_scale,
+		16.0 + objective_zone_size.y + 12.0 if accessibility else 126.0
+	)
+
+
+func set_accessibility_text_scale(scale: float) -> void:
+	_accessibility_text_scale = clampf(scale, 1.0, 2.0)
+	_objective_detail.text_overrun_behavior = (
+		TextServer.OVERRUN_NO_TRIMMING
+		if _accessibility_text_scale > 1.0
+		else TextServer.OVERRUN_TRIM_ELLIPSIS
+	)
+	_apply_responsive_layout()
 
 
 func _show_next_notification() -> void:

@@ -45,6 +45,24 @@ const METER_VARIATIONS := {
 	METER_SUPPORT: &"SupportMeter",
 }
 
+static var _debug_text_scale := 1.0
+
+
+static func set_debug_text_scale(scale: float) -> void:
+	_debug_text_scale = clampf(scale, 1.0, 2.0)
+
+
+static func scaled_font_size(base_size: int) -> int:
+	return maxi(1, roundi(float(base_size) * _debug_text_scale))
+
+
+static func apply_font_size(control: Control, base_size: int) -> void:
+	var scaled := scaled_font_size(base_size)
+	if _debug_text_scale > 1.0 or control.has_meta(&"capture_base_font_size"):
+		control.set_meta(&"capture_base_font_size", base_size)
+		control.set_meta(&"capture_applied_font_size", scaled)
+	control.add_theme_font_size_override(&"font_size", scaled)
+
 
 static func surface(
 	role: StringName,
@@ -75,7 +93,7 @@ static func label(
 ) -> Label:
 	var control := Label.new()
 	control.text = text
-	control.add_theme_font_size_override("font_size", font_size)
+	apply_font_size(control, font_size)
 	control.add_theme_color_override("font_color", color)
 	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return control
