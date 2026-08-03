@@ -358,7 +358,7 @@ Preconditions:
 Source owners: `docs/product/vehicle_game_spec.md`,
 `docs/design/VISUAL_SYSTEM.md`, the related active ExecPlan, and the UI gallery.
 
-- [ ] **1.1 Lock fixed-Hard and mandatory reward behavior in the product spec**
+- [x] **1.1 Lock fixed-Hard and mandatory reward behavior in the product spec**
   - Change: replace the three-profile player choice with one fixed Hard run;
     remove next-run difficulty persistence and selector acceptance; state that
     every level and boss reward requires one selected card and Equip; remove
@@ -368,7 +368,7 @@ Source owners: `docs/product/vehicle_game_spec.md`,
   - Accept: the spec contains no active Easy/Normal selector, preference, or
     decline contract; all current Hard numbers and the connected five-stage
     flow remain unchanged.
-- [ ] **1.2 Replace the image-backed UI-chrome contract in the visual spec**
+- [x] **1.2 Replace the image-backed UI-chrome contract in the visual spec**
   - Change: authorize the six code-native primitives, `StyleBoxFlat`/line-based
     Theme chrome, semantic gameplay imagery, the screen table above, the
     upgrade and Pause corrections, fixed-Hard deployment, and the rule against
@@ -377,14 +377,14 @@ Source owners: `docs/product/vehicle_game_spec.md`,
   - Accept: the visual spec has one unambiguous UI foundation, no second style
     document, no screen-specific raster requirement, and no loss of typography,
     spacing, focus, grayscale, or responsive requirements.
-- [ ] **1.3 Make this contract the UI execution pointer**
+- [x] **1.3 Make this contract the UI execution pointer**
   - Change: add this file to the related active visual-replacement plan; record
     that its Phase 5 is historical baseline only; block that plan's Phase 6
     until this contract completes; replace its UI count assumptions with the
     post-retirement code-native contract.
   - Accept: a fresh agent reading either plan reaches this contract before
     producing more assets or continuing gameplay visual work.
-- [ ] **1.4 Correct the review-gallery interpretation without generating new art**
+- [x] **1.4 Correct the review-gallery interpretation without generating new art**
   - Change: add a visible bilingual note to the UI gallery that the upgrade
     top image and Leave button are removed, Pause is a vertical stack, and
     runtime captures—not the PNGs—will be final evidence.
@@ -1244,20 +1244,22 @@ retirement, and validation decisions are locked above.
 ## Progress
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1 — amend durable contracts and freeze the old UI lane.
-- Last completed gate: Discovery Closure Gate on clean baseline `2935d08`.
-- Last green implementation commit: `2935d08`.
+- Current phase: Phase 2 — build the shared Theme foundation and prove it
+  through Pause.
+- Last completed gate: Phase 1 contract gate; document authority, deterministic
+  workbench check/validation, and `git diff --check` passed.
+- Last green implementation commit:
+  `01dd966ab3ac63bcce11fa768834a4cd87b56c99`.
 - Update rule: after a checkpoint passes, record concise evidence, check the
   task, update the last green commit, and advance this pointer in the same edit.
 
 ## Next Steps
 
-1. Start Task 1.1 and lock fixed-Hard and mandatory reward behavior in the
-   product specification.
-2. Complete the remainder of Phase 1 and pass its documentation gate before
-   changing runtime UI code.
-3. Continue phase by phase from this document; never skip a batch gate or the
-   exact Phase 8 deletion approval.
+1. Start Task 2.1 and rebuild `vehicle_stage_theme.tres` around the locked
+   code-native roles plus exact compatibility aliases.
+2. Complete the shared factory/host work and use Pause as the first migrated
+   vertical slice.
+3. Pass the Phase 2 component gate before changing the fixed-Hard entry flow.
 
 ## Completion and Stop Conditions
 
@@ -1288,6 +1290,13 @@ Do not replan or stop for:
 
 ## Decision Notes
 
+- 2026-08-03T18:55:34+09:00: Execution started on branch `master` at clean
+  baseline `d7ac985d614532049e04be16edb26854f735cf66` with Godot
+  `4.7.1.stable.official.a13da4feb`.
+- 2026-08-03: Phase 1 completed in
+  `01dd966ab3ac63bcce11fa768834a4cd87b56c99`; product and visual specs now own
+  fixed Hard, mandatory upgrade confirmation, shared code-native UI chrome, and
+  the corrected gallery interpretation.
 - 2026-08-03: BK accepted the simplified UI direction while explicitly
   preserving information rather than reducing it.
 - 2026-08-03: BK required deletion of the small top image on upgrade cards,
