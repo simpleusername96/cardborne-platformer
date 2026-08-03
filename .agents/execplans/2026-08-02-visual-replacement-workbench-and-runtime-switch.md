@@ -1857,7 +1857,7 @@ before execution continues.
   - [x] Prepare modal_master, content_plate, and hud_plate as ten exact,
     independently deployable state PNGs with three family contact sheets and
     one shared runtime-size matrix; all three units are switch_ready.
-  - [ ] Obtain exact hash-bound approval and apply the three foundational
+  - [x] Obtain exact hash-bound approval and apply the three foundational
     surface families without extending that approval to another UI family.
   - [ ] Complete the remaining Phase 5 component families in dependency order.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
@@ -1869,11 +1869,9 @@ before execution continues.
 
 ## Next Steps
 
-1. Display the exact target/hash maps for modal_master, content_plate, and
-   hud_plate and obtain independent approval for those three complete families.
-2. Promote, validate, commit, and baseline-clean only the approved families.
-3. Continue with upgrade_card without extending the foundational-surface
-   approval to another UI family.
+1. Prepare upgrade_card as the next complete Phase 5 family.
+2. Display its exact target/hash map before requesting independent approval.
+3. Do not extend the completed foundational-surface approval to upgrade_card.
 
 ## Completion Criteria
 
@@ -2088,6 +2086,21 @@ Do not mark a phase or this plan complete while a stop condition remains.
   displayed from that clean commit. All three approval records bind those bytes
   at 2026-08-03T13:15:48+09:00 with empty retire_paths. The approval grants no
   runtime-change path, deletion, or authority for any later UI family.
+- 2026-08-03: The approved Phase 5 foundational UI bytes were promoted as
+  three atomic units. modal_master switch commit
+  15ce50877615ff840f9c9363e8e34bebbeae481b and ledger d7795c9 replace two
+  states; content_plate switch commit d36b2eb96c34b10e480797d50f32ef24b0ac9480
+  and ledger db9d05f replace three; hud_plate switch commit
+  562f5dd041616304da70d215670d8e3ec08fc996 and ledger 5388687 replace five.
+  Every unit passed its twelve declared workbench, surface, provider, layout,
+  localization, upgrade, pause, settings, guidebook, deployment/reward,
+  report, and HUD checks. The combined Web export passed. Built-Web rendering
+  on codex port 13029 covered 960, 1280, and 1920 widths, Korean and English,
+  compact settings, keyboard focus, and language activation with seven
+  successful requests and zero console warnings or errors. The task-owned
+  server was stopped after evidence collection. Baseline cleanup now makes the
+  ten production bytes current AS-IS and removes only their duplicate TO-BE and
+  completed preview files.
 
 ## Execution Handoff
 

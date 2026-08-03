@@ -4041,7 +4041,7 @@
       "title_ko": "모달 셸",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/surfaces/modal_master_normal.png",
         "art/visuals/production/ui/surfaces/modal_master_compact_safe.png"
@@ -4055,37 +4055,9 @@
         "modal_master/compact_safe",
         "modal_master/normal"
       ],
-      "direction_en": "Replace the current modal master files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/surfaces/modal_master_normal.png",
-          "width": 192,
-          "height": 192,
-          "patch_margin": 32,
-          "safe_inset": [
-            36,
-            32,
-            32,
-            32
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/modal_master_compact_safe.png",
-          "width": 192,
-          "height": 192,
-          "patch_margin": 32,
-          "safe_inset": [
-            36,
-            32,
-            32,
-            32
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/modal_master/modal_master-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/ui-shell-foundation/phase5-ui-shell-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4102,34 +4074,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T13:15:48+09:00",
-        "baseline_commit": "c596880961d066dbc1291dbf220f984095cf072c",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/surfaces/modal_master_normal.png": "26ec69e2a8ce7f3744a1c66580bad2032fd20d92ab16fcc55e9682533689c9ac",
-          "art/visuals/production/ui/surfaces/modal_master_compact_safe.png": "c5671929bf5b344a96efa6b0d909a65e0791dca8c979167a5b4ea4315fddde69"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "15ce50877615ff840f9c9363e8e34bebbeae481b",
-        "applied_at": "2026-08-03T13:19:44+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "content_plate",
@@ -4139,7 +4085,7 @@
       "title_ko": "콘텐츠 패널",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/surfaces/content_plate_normal.png",
         "art/visuals/production/ui/surfaces/content_plate_inset.png",
@@ -4155,49 +4101,9 @@
         "content_plate/normal",
         "content_plate/summary"
       ],
-      "direction_en": "Replace the current content plate files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/surfaces/content_plate_normal.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            18,
-            18,
-            18
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/content_plate_inset.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            18,
-            18,
-            18
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/content_plate_summary.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            20,
-            18,
-            18,
-            18
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/content_plate/content_plate-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/ui-shell-foundation/phase5-ui-shell-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4214,35 +4120,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T13:15:48+09:00",
-        "baseline_commit": "c596880961d066dbc1291dbf220f984095cf072c",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/surfaces/content_plate_normal.png": "57ce8c66a7440315e85f009b1dbad289bc46d9de96c9587e6afbe256d1fa278c",
-          "art/visuals/production/ui/surfaces/content_plate_inset.png": "1751915dce2606b3716183d6d4180cd06102786678b97f82c8b93b070803b968",
-          "art/visuals/production/ui/surfaces/content_plate_summary.png": "18763646ea2f363f908e6cde61cc28eef96f1c1b7d0bde51ec8123f163fdb7dc"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "d36b2eb96c34b10e480797d50f32ef24b0ac9480",
-        "applied_at": "2026-08-03T13:22:12+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "hud_plate",
@@ -4252,7 +4131,7 @@
       "title_ko": "HUD 패널",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "applied",
+      "status": "keep_current",
       "current_paths": [
         "art/visuals/production/ui/surfaces/hud_plate_health_resource.png",
         "art/visuals/production/ui/surfaces/hud_plate_objective_boss.png",
@@ -4272,73 +4151,9 @@
         "hud_plate/objective_boss",
         "hud_plate/toast"
       ],
-      "direction_en": "Replace the current hud plate files as one atomic family while preserving their existing runtime semantics and the canonical visual contract.",
-      "deliverables": [
-        {
-          "target_path": "art/visuals/production/ui/surfaces/hud_plate_health_resource.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            18,
-            16,
-            18,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/hud_plate_objective_boss.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            18,
-            16,
-            18,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/hud_plate_minimap_target.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            18,
-            16,
-            18,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/hud_plate_action_rail.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            18,
-            16,
-            18,
-            16
-          ]
-        },
-        {
-          "target_path": "art/visuals/production/ui/surfaces/hud_plate_toast.png",
-          "width": 96,
-          "height": 96,
-          "patch_margin": 16,
-          "safe_inset": [
-            18,
-            16,
-            18,
-            16
-          ]
-        }
-      ],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/to-be/hud_plate/hud_plate-contact-sheet.png",
-        "docs/design/visual-replacement-workbench/previews/to-be/ui-shell-foundation/phase5-ui-shell-runtime-matrix.png"
-      ],
+      "direction_en": "No replacement is currently approved.",
+      "deliverables": [],
+      "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
@@ -4355,37 +4170,8 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": {
-        "approved_by": "BK",
-        "approved_at": "2026-08-03T13:15:48+09:00",
-        "baseline_commit": "c596880961d066dbc1291dbf220f984095cf072c",
-        "deliverable_sha256": {
-          "art/visuals/production/ui/surfaces/hud_plate_health_resource.png": "c99dd815a65125ef89b1177b37ba0ec8fa34b1c76e6014f9c07d5ad486b7e73b",
-          "art/visuals/production/ui/surfaces/hud_plate_objective_boss.png": "20ca2dcdec6b129c6e9d434b1ef3e7aa900b2799e08090fd2ac5b36c220815bb",
-          "art/visuals/production/ui/surfaces/hud_plate_minimap_target.png": "0dce2943462cfcc4365c062c17b2d26e158e287d5ba8c43c20cb1899fd0a8e09",
-          "art/visuals/production/ui/surfaces/hud_plate_action_rail.png": "a04eceebdd9da07f05fee98ca9f96fe1cfbcaa2e66f7581a0efa40b81add5bed",
-          "art/visuals/production/ui/surfaces/hud_plate_toast.png": "315d2f8d75f66e2d219c5a9a3dbb9107ab9d9470542b72ff396c45b2e6fe9b62"
-        },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "562f5dd041616304da70d215670d8e3ec08fc996",
-        "applied_at": "2026-08-03T13:24:35+09:00",
-        "validation_evidence": [
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
-          ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
-        ]
-      }
+      "approval": null,
+      "application": null
     },
     {
       "id": "upgrade_card",
