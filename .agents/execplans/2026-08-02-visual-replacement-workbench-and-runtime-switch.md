@@ -1878,7 +1878,10 @@ before execution continues.
     are switch_ready.
   - [x] Obtain exact hash-bound approval and apply slider and meter without
     extending that approval to preview, small_state, or later families.
-  - [ ] Prepare and apply preview and small_state in dependency order.
+  - [x] Prepare preview and small_state as six exact deployable PNGs with
+    per-family contact sheets and one shared runtime-size matrix; both units
+    are switch_ready.
+  - [ ] Obtain exact hash-bound approval and apply preview and small_state.
 - [ ] Phase 6: replace player-action, HUD, and secondary packages.
 - [ ] Phase 7: replace world, facility, and reward packages.
 - [ ] Phase 8: replace ordinary enemies, hostile attacks, and cues.
@@ -1888,11 +1891,11 @@ before execution continues.
 
 ## Next Steps
 
-1. Prepare preview and small_state as exact direct deployable files.
-2. Run their contact-sheet, runtime-size, localization, focus, and interaction
-   evidence checks.
-3. Display only those units' exact target/hash map from a clean preparation
-   commit and request their separate hash-bound approval.
+1. Display preview and small_state's exact six-entry target/hash map from a
+   clean preparation commit.
+2. Request hash-bound approval only for those two independently promotable
+   units, with empty retire_paths and runtime_change_paths.
+3. Promote and baseline-clean only exact approved units.
 
 ## Completion Criteria
 
@@ -2265,6 +2268,21 @@ Do not mark a phase or this plan complete while a stop condition remains.
   only their duplicate TO-BE bytes and three completed previews are removed
   during baseline cleanup, without changing any approved retire or runtime
   path.
+- 2026-08-03: Phase 5 preview and small_state preparation used one built-in
+  image-generation source board at
+  C:/Users/BK/.codex/generated_images/019fc2a8-d5ad-7321-b0c6-961caed3c4ed/exec-a1d25cfe-149b-446a-9931-6454c2bc9198.png
+  to establish the square viewport-frame and compact state-pip grammar.
+  Deterministic project-local construction then produced three direct 96 by 96
+  preview glyphs and three direct 32 by 32 small-state glyphs using only the
+  fixed visual-system palette. Normal, locked, focused, available, filled, and
+  disabled states remain structurally distinct in grayscale; focus uses cyan
+  corner brackets, locked uses a diagonal interruption plus red rail, and
+  disabled uses segmented diagonal bars. Exact-deliverable contact sheets and
+  one shared 960/1280/1920 runtime matrix contain no baked runtime text. The
+  surface validator now covers all thirteen UI families and all 54 states.
+  Both units passed all twelve declared checks and are switch_ready with null
+  approval/application plus empty retire_paths and runtime_change_paths;
+  production remains unchanged pending exact hash-bound approval.
 
 ## Execution Handoff
 

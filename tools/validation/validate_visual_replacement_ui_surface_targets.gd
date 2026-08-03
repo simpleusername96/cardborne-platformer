@@ -15,7 +15,7 @@ const SURFACE_UNIT_IDS := [
 	"modal_master", "content_plate", "hud_plate", "upgrade_card",
 	"button_primary", "button_secondary", "button_danger",
 	"tab_option", "toggle",
-	"slider", "meter",
+	"slider", "meter", "preview", "small_state",
 ]
 const READY_STATES := ["switch_ready", "approved_for_switch"]
 const PRODUCTION_STATES := ["applied", "keep_current"]
@@ -216,7 +216,7 @@ func _validate_image(
 			accent_count > 0,
 			"%s/%s lacks a semantic accent rail" % [unit_id, state_id]
 		)
-	if unit_id not in ["toggle", "slider", "meter"]:
+	if unit_id not in ["toggle", "slider", "meter", "small_state"]:
 		_expect(
 			unsafe_accent_count == 0,
 			"%s/%s places semantic accent pixels inside the content-safe area"

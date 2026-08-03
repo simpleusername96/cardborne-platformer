@@ -4577,7 +4577,7 @@
       "title_ko": "미리보기",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "target_required",
+      "status": "switch_ready",
       "current_paths": [
         "art/visuals/production/ui/glyphs/preview_normal.png",
         "art/visuals/production/ui/glyphs/preview_locked.png",
@@ -4633,13 +4633,24 @@
         }
       ],
       "preview_paths": [
-        null
+        "docs/design/visual-replacement-workbench/previews/to-be/preview/preview-contact-sheet.png",
+        "docs/design/visual-replacement-workbench/previews/to-be/preview_small_state/preview-small-state-runtime-matrix.png"
       ],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd"
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
       "approval": null,
       "application": null
@@ -4652,7 +4663,7 @@
       "title_ko": "소형 상태",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "target_required",
+      "status": "switch_ready",
       "current_paths": [
         "art/visuals/production/ui/glyphs/small_state_pip_available.png",
         "art/visuals/production/ui/glyphs/small_state_pip_filled.png",
@@ -4708,13 +4719,24 @@
         }
       ],
       "preview_paths": [
-        null
+        "docs/design/visual-replacement-workbench/previews/to-be/small_state/small-state-contact-sheet.png",
+        "docs/design/visual-replacement-workbench/previews/to-be/preview_small_state/preview-small-state-runtime-matrix.png"
       ],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd"
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_visual_replacement_ui_surface_targets.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_ui_layout.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_ui_localization.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_pause.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_settings_store.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_rewards_ui_audio.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
+        ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
       "approval": null,
       "application": null
