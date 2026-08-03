@@ -4181,7 +4181,7 @@
       "title_ko": "업그레이드 카드",
       "owner": "ui_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/ui/surfaces/upgrade_card_normal.png",
         "art/visuals/production/ui/surfaces/upgrade_card_hover.png",
@@ -4298,7 +4298,20 @@
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_stage_report.gd",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_hud_presenter.gd"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-03T13:46:25+09:00",
+        "baseline_commit": "14dd6ef39424d4e11e0cd0ba8fbdabeb8294a1b3",
+        "deliverable_sha256": {
+          "art/visuals/production/ui/surfaces/upgrade_card_normal.png": "9f529402b50e127e8c22a3707a616682bae1f3042924c552c378d074c16258a7",
+          "art/visuals/production/ui/surfaces/upgrade_card_hover.png": "7d7793bf0ac070ddd2da93b540f537b87876d227a5212cf46e8758be94dec8f1",
+          "art/visuals/production/ui/surfaces/upgrade_card_pressed.png": "87e2a3806dd746d7ec582171d43bcc77e439a3bf1988caffe580e946ee9f6723",
+          "art/visuals/production/ui/surfaces/upgrade_card_focus.png": "27c542b2b43570957cc6a003c7e66b1323877b6dde79d4fed0756c7968351b17",
+          "art/visuals/production/ui/surfaces/upgrade_card_selected.png": "991a00c91230ea4cf3a96c6b2789c1ba8cb4ab39d3610e52c1154c904bafb65c",
+          "art/visuals/production/ui/surfaces/upgrade_card_disabled.png": "5f710a0fe73db17f4f06167821f175a009f276cd8bcae63bff8adb48bc3016e3"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {

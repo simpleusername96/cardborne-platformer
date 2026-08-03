@@ -2121,6 +2121,12 @@ Do not mark a phase or this plan complete while a stop condition remains.
   pause, settings, guidebook, deployment/reward, report, and HUD checks pass.
   upgrade_card is switch_ready with null approval/application, no retire paths,
   no runtime-change paths, and unchanged production bytes.
+- 2026-08-03: BK explicitly approved the Phase 5 upgrade_card switch at
+  baseline 14dd6ef39424d4e11e0cd0ba8fbdabeb8294a1b3 using the six exact
+  target/hash mappings displayed from that clean commit. The approval record
+  binds those bytes at 2026-08-03T13:46:25+09:00 with empty retire_paths and
+  runtime_change_paths. This approval grants no deletion, runtime-code change,
+  or authority for the subsequent button families.
 
 ## Execution Handoff
 
