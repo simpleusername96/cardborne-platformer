@@ -52,7 +52,7 @@ func _initialize() -> void:
 	_validate_glyph_recipes()
 	var catalog := Catalog.new()
 	await _validate_intent_contract(catalog)
-	await _validate_family_badges(catalog)
+	await _validate_family_body_art(catalog)
 	await _validate_triplet_matrix(catalog)
 	_finish()
 
@@ -98,36 +98,35 @@ func _validate_theme_contract() -> void:
 		)
 	var normal := _theme.get_stylebox(
 		&"normal",
-		&"UpgradeChoiceCard"
+		&"SelectableButton"
 	) as StyleBoxFlat
 	var focus := _theme.get_stylebox(
 		&"focus",
-		&"UpgradeChoiceCard"
+		&"SelectableButton"
 	) as StyleBoxFlat
 	var selected := _theme.get_stylebox(
 		&"normal",
-		&"SelectedUpgradeChoiceCard"
+		&"SelectedSelectableButton"
+	) as StyleBoxFlat
+	var disabled := _theme.get_stylebox(
+		&"disabled",
+		&"SelectableButton"
 	) as StyleBoxFlat
 	_expect(
-		normal != null and normal == _theme.get_stylebox(
-			&"normal",
-			&"SelectableButton"
-		),
-		"normal upgrade-card alias uses the shared Selectable state"
+		normal != null,
+		"normal upgrade card uses the shared code-native Selectable state"
 	)
 	_expect(
-		focus != null and focus == _theme.get_stylebox(
-			&"focus",
-			&"SelectableButton"
-		),
-		"focused upgrade-card alias uses the shared focus outline"
+		focus != null and focus != normal,
+		"focused upgrade card uses the shared code-native focus outline"
 	)
 	_expect(
-		selected != null and selected == _theme.get_stylebox(
-			&"normal",
-			&"SelectedSelectableButton"
-		),
-		"selected upgrade-card alias uses the shared selected rail"
+		selected != null and selected != normal,
+		"selected upgrade card uses the shared code-native selected rail"
+	)
+	_expect(
+		disabled != null and disabled != normal,
+		"disabled/pending upgrade card uses a distinct non-color shared state"
 	)
 
 
@@ -151,7 +150,7 @@ func _validate_glyph_recipes() -> void:
 	_expect(seen.size() == 8, "upgrade glyph family IDs are unique")
 
 
-func _validate_family_badges(catalog: VehicleUpgradeCatalog) -> void:
+func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 	var card := UpgradeChoiceCard.new()
 	card.theme = _theme
 	get_root().add_child(card)
@@ -166,24 +165,33 @@ func _validate_family_badges(catalog: VehicleUpgradeCatalog) -> void:
 		card.set_offer(OfferPresenter.snapshot(definition, 0))
 		await process_frame
 		var contract := card.debug_contract()
-		var badge := Dictionary(contract["family_badge"])
 		_expect(
-			not bool(badge["image_backed"]),
-			"%s temporary family badge uses code-native shared chrome" % family
-		)
-		_expect(
-			StringName(badge["semantic_accent_owner"]) == &"family_glyph"
-				and bool(Dictionary(
-					card.debug_geometry_contract()["glyph"]
-				)["semantic_asset"]),
-			"%s family badge keeps its semantic accent in the image glyph"
+			int(contract["header_art_count"]) == 0
+				and int(contract["body_art_count"]) == 1
+				and int(contract["family_badge_count"]) == 0
+				and int(contract["stage_pip_count"]) == 0,
+			"%s renders exactly one lower artwork and no header art/badge"
 			% family
 		)
+		_expect(
+			Vector2(contract["body_art_size"]) == Vector2(64.0, 64.0)
+				and StringName(contract["body_art_asset_id"])
+					== StringName("hud/upgrade_%s" % family)
+				and Array(contract["body_order"]) == [
+					"family", "title", "summary", "art", "effects", "behavior",
+				],
+			"%s uses the compact lower semantic artwork contract" % family
+		)
 		var geometry := card.debug_geometry_contract()
+		var glyph := Dictionary(geometry["glyph"])
+		_expect(
+			bool(glyph["semantic_asset"]) and int(glyph["texture_count"]) == 1,
+			"%s body art resolves exactly one semantic texture" % family
+		)
 		_expect_glyph_geometry(
-			Dictionary(geometry["glyph"]),
+			glyph,
 			card.get_global_rect(),
-			"%s family badge" % family
+			"%s body artwork" % family
 		)
 	card.queue_free()
 	await process_frame
@@ -200,7 +208,6 @@ func _validate_intent_contract(catalog: VehicleUpgradeCatalog) -> void:
 	await process_frame
 	var selected_ids: Array[StringName] = []
 	var confirmed_ids: Array[StringName] = []
-	var decline_events: Array[bool] = []
 	panel.selected.connect(
 		func(upgrade_id: StringName) -> void:
 			selected_ids.append(upgrade_id)
@@ -209,28 +216,63 @@ func _validate_intent_contract(catalog: VehicleUpgradeCatalog) -> void:
 		func(upgrade_id: StringName) -> void:
 			confirmed_ids.append(upgrade_id)
 	)
-	panel.declined.connect(func() -> void: decline_events.append(true))
-	panel.open(offers, false)
+	panel.open(offers)
+	var initial_contract := panel.debug_contract()
+	_expect(
+		bool(initial_contract["confirm_disabled"])
+			and int(initial_contract["command_count"]) == 1
+			and int(initial_contract["exit_action_count"]) == 0,
+		"mandatory upgrade opens with one disabled Equip command and no exit"
+	)
 	panel.call("_select", 0)
 	_expect(
 		selected_ids.is_empty(),
 		"upgrade input guard rejects carried selection"
 	)
 	panel.call("_process", 0.36)
+	_expect(
+		panel.buttons()[0].has_focus(),
+		"first visible card receives focus after the input guard"
+	)
 	panel.call("_select", 0)
+	var selected_contract := panel.debug_contract()
+	_expect(
+		not bool(selected_contract["confirm_disabled"])
+			and StringName(panel.buttons()[0].theme_type_variation)
+				== &"SelectedSelectableButton",
+		"selection enables Equip and uses the shared selected state"
+	)
+	panel.call("_confirm_selected")
 	panel.call("_confirm_selected")
 	_expect(
 		selected_ids == [StringName(offers[0]["id"])]
 			and confirmed_ids == [StringName(offers[0]["id"])],
-		"upgrade panel emits selection and confirmation intent without applying"
+		"upgrade panel emits one selection and one confirmation intent"
+	)
+	var pending_contract := panel.debug_contract()
+	_expect(
+		bool(pending_contract["pending"])
+			and bool(pending_contract["confirm_disabled"])
+			and panel.buttons().all(func(button: Button) -> bool: return button.disabled),
+		"pending state disables cards and Equip against duplicate application"
 	)
 	panel.apply_failed("retry")
-	panel.open(offers, true)
-	panel.call("_process", 0.36)
-	panel.call("_request_decline")
-	_expect(decline_events.is_empty(), "optional decline keeps its confirmation guard")
-	panel.call("_request_decline")
-	_expect(decline_events.size() == 1, "optional decline emits intent after confirmation")
+	var failed_contract := panel.debug_contract()
+	_expect(
+		not bool(failed_contract["pending"])
+			and not bool(failed_contract["confirm_disabled"])
+			and String(failed_contract["message_text"]) == "retry",
+		"apply failure restores the selected Equip path and exposes its message"
+	)
+	var escape := InputEventKey.new()
+	escape.keycode = KEY_ESCAPE
+	escape.pressed = true
+	panel.call("_unhandled_input", escape)
+	_expect(
+		String(panel.debug_contract()["message_text"])
+			== TranslationServer.translate("UPGRADE_MANDATORY_NOTICE"),
+		"Escape shows only the mandatory-choice notice"
+	)
 	_expect(
 		is_equal_approx(
 			float(panel.debug_contract()["guard_seconds"]),
@@ -244,6 +286,22 @@ func _validate_intent_contract(catalog: VehicleUpgradeCatalog) -> void:
 	var card_source := FileAccess.get_file_as_string(
 		"res://scripts/ui/vehicle_upgrade_choice_card.gd"
 	)
+	for forbidden_panel_token in [
+		"signal declined",
+		"_decline",
+		"_request_decline",
+		"UPGRADE_LEAVE_REWARD",
+		"UPGRADE_OPTIONAL_NOTICE",
+	]:
+		_expect(
+			not panel_source.contains(forbidden_panel_token),
+			"mandatory upgrade panel removes %s" % forbidden_panel_token
+		)
+	for forbidden_card_token in ["_header", "_family_badge", "FamilyBadge"]:
+		_expect(
+			not card_source.contains(forbidden_card_token),
+			"upgrade card removes %s" % forbidden_card_token
+		)
 	for source_record in [
 		{"name":"panel", "source":panel_source},
 		{"name":"card", "source":card_source},
@@ -319,7 +377,7 @@ func _validate_panel(
 	await _settle_ui()
 	var compact := viewport.x < Art.BREAKPOINT_WIDE or viewport.y < 650
 	panel.set_compact_mode(compact)
-	panel.open(offers, false)
+	panel.open(offers)
 	await _settle_ui()
 	var geometry := panel.debug_geometry_contract()
 	var panel_rect := Rect2(geometry["rect"]).grow(0.75)
@@ -360,6 +418,29 @@ func _validate_panel(
 		"%s keeps every instruction line visible" % context
 	)
 	var contract := panel.debug_contract()
+	var unique_offer_ids := {}
+	for offer_id in Array(contract["offer_ids"]):
+		unique_offer_ids[StringName(offer_id)] = true
+	_expect(
+		int(contract["visible_card_count"]) == 3
+			and unique_offer_ids.size() == 3
+			and int(contract["command_count"]) == 1
+			and int(contract["exit_action_count"]) == 0,
+		"%s shows three unique frozen offers and one Equip command" % context
+	)
+	for card_contract_variant in Array(contract["cards"]):
+		var card_contract := Dictionary(card_contract_variant)
+		_expect(
+			int(card_contract["header_art_count"]) == 0
+				and int(card_contract["body_art_count"]) == 1
+				and int(card_contract["family_badge_count"]) == 0
+				and Vector2(card_contract["body_art_size"]) == (
+					Vector2(64.0, 64.0)
+					if compact
+					else Vector2(88.0, 88.0)
+				),
+			"%s card keeps one correctly sized lower artwork" % context
+		)
 	var expected_panel_scale := (
 		{"kicker":15, "title":30, "detail":15, "message":15, "confirm":22}
 		if compact

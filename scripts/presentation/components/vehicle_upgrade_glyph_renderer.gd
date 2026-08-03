@@ -417,14 +417,15 @@ func local_content_bounds() -> Rect2:
 
 func debug_contract() -> Dictionary:
 	var local_bounds := local_content_bounds()
+	var asset_id := StringName("hud/upgrade_%s" % _family)
 	return {
 		"family":_family,
+		"asset_id":asset_id,
 		"control_rect":get_global_rect(),
 		"content_rect":Rect2(global_position + local_bounds.position, local_bounds.size),
 		"command_count":Array(recipe(_family).get("commands", [])).size(),
-		"semantic_asset":SemanticAssets.has_asset(
-			StringName("hud/upgrade_%s" % _family)
-		),
+		"semantic_asset":SemanticAssets.has_asset(asset_id),
+		"texture_count":1 if SemanticAssets.has_asset(asset_id) else 0,
 	}
 
 

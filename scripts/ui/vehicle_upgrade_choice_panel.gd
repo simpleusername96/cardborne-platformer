@@ -2,23 +2,21 @@ class_name VehicleUpgradeChoicePanel
 extends VBoxContainer
 
 ## Deliberate two-step upgrade selector. It presents catalog snapshots and emits
-## intent only; applying or declining a reward remains the stage owner's job.
+## intent only; applying a mandatory reward remains the stage owner's job.
 
 signal confirmed(upgrade_id: StringName)
-signal declined
 signal selected(upgrade_id: StringName)
 
 const GUARD_SECONDS := 0.35
 const UpgradeChoiceCard = preload("res://scripts/ui/vehicle_upgrade_choice_card.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 
 var _cards: Array[Dictionary] = []
 var _buttons: Array[Button] = []
 var _selected_index := -1
 var _guard_remaining := 0.0
 var _pending := false
-var _optional := false
-var _decline_armed := false
 var _compact := false
 
 var _kicker: Label
@@ -26,9 +24,8 @@ var _title: Label
 var _detail: Label
 var _row: HBoxContainer
 var _message: Label
-var _commands: HBoxContainer
+var _command_lane: CenterContainer
 var _confirm: Button
-var _decline: Button
 
 
 func _ready() -> void:
@@ -72,24 +69,13 @@ func _build() -> void:
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message.custom_minimum_size.y = 20.0
 	add_child(_message)
-	_commands = HBoxContainer.new()
-	_commands.add_theme_constant_override("separation", 12)
-	_commands.alignment = BoxContainer.ALIGNMENT_CENTER
-	add_child(_commands)
-	_decline = Button.new()
-	_decline.custom_minimum_size = Vector2(210.0, 48.0)
-	_decline.theme_type_variation = &"SecondaryButton"
-	_decline.text = tr("UPGRADE_LEAVE_REWARD")
-	_decline.add_theme_font_size_override("font_size", 18)
-	_decline.pressed.connect(_request_decline)
-	_commands.add_child(_decline)
-	_confirm = Button.new()
+	_command_lane = CenterContainer.new()
+	add_child(_command_lane)
+	_confirm = Factory.command_button("UPGRADE_EQUIP", Factory.COMMAND_PRIMARY)
 	_confirm.custom_minimum_size = Vector2(300.0, 48.0)
-	_confirm.theme_type_variation = &"PrimaryButton"
-	_confirm.text = tr("UPGRADE_EQUIP")
 	_confirm.add_theme_font_size_override("font_size", 24)
 	_confirm.pressed.connect(_confirm_selected)
-	_commands.add_child(_confirm)
+	_command_lane.add_child(_confirm)
 
 
 func set_compact_mode(value: bool) -> void:
@@ -119,11 +105,6 @@ func set_compact_mode(value: bool) -> void:
 		"font_size",
 		int(Art.TYPE_SCALE_COMPACT[1] if value else Art.TYPE_SCALE_WIDE[1])
 	)
-	_decline.custom_minimum_size = Vector2(190.0, 44.0) if value else Vector2(210.0, 48.0)
-	_decline.add_theme_font_size_override(
-		"font_size",
-		int(Art.TYPE_SCALE_COMPACT[2] if value else Art.TYPE_SCALE_WIDE[2])
-	)
 	_confirm.custom_minimum_size = Vector2(260.0, 44.0) if value else Vector2(300.0, 48.0)
 	_confirm.add_theme_font_size_override(
 		"font_size",
@@ -133,16 +114,12 @@ func set_compact_mode(value: bool) -> void:
 		(button as VehicleUpgradeChoiceCard).set_compact_mode(value)
 
 
-func open(cards: Array[Dictionary], optional: bool) -> void:
+func open(cards: Array[Dictionary]) -> void:
 	_cards = cards.duplicate(true)
-	_optional = optional
 	_selected_index = -1
 	_guard_remaining = GUARD_SECONDS
 	_pending = false
-	_decline_armed = false
 	_message.text = ""
-	_decline.visible = optional
-	_decline.text = tr("UPGRADE_LEAVE_REWARD")
 	_detail.text = tr("UPGRADE_SELECT_DETAIL")
 	for index in _buttons.size():
 		var button := _buttons[index]
@@ -176,7 +153,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_select(int(key.keycode - KEY_1))
 			get_viewport().set_input_as_handled()
 		elif key.keycode == KEY_ESCAPE:
-			_message.text = tr("UPGRADE_MANDATORY_NOTICE") if not _optional else tr("UPGRADE_OPTIONAL_NOTICE")
+			_message.text = tr("UPGRADE_MANDATORY_NOTICE")
 			get_viewport().set_input_as_handled()
 
 
@@ -184,8 +161,6 @@ func _select(index: int) -> void:
 	if _guard_remaining > 0.0 or _pending or index < 0 or index >= _cards.size():
 		return
 	_selected_index = index
-	_decline_armed = false
-	_decline.text = tr("UPGRADE_LEAVE_REWARD")
 	var card: Dictionary = _cards[index]
 	_message.text = ""
 	_refresh_controls()
@@ -198,19 +173,6 @@ func _confirm_selected() -> void:
 	_pending = true
 	_refresh_controls()
 	confirmed.emit(StringName(_cards[_selected_index]["id"]))
-
-
-func _request_decline() -> void:
-	if not _optional or _guard_remaining > 0.0 or _pending:
-		return
-	if not _decline_armed:
-		_decline_armed = true
-		_decline.text = tr("UPGRADE_CONFIRM_LEAVE")
-		_message.text = tr("UPGRADE_OPTIONAL_NOTICE")
-		return
-	_pending = true
-	_refresh_controls()
-	declined.emit()
 
 
 func apply_failed(reason: String) -> void:
@@ -232,15 +194,22 @@ func _refresh_controls() -> void:
 		button.disabled = _pending or not button.visible
 		(button as VehicleUpgradeChoiceCard).set_selected_state(index == _selected_index)
 	_confirm.disabled = guarded or _pending or _selected_index < 0
-	_decline.disabled = guarded or _pending
 
 
 func debug_contract() -> Dictionary:
 	var structured := true
 	var card_contracts: Array[Dictionary] = []
+	var offer_ids: Array[StringName] = []
+	var state_variations: Array[StringName] = []
+	var visible_card_count := 0
 	for button in _buttons:
 		if button is VehicleUpgradeChoiceCard:
-			card_contracts.append((button as VehicleUpgradeChoiceCard).debug_contract())
+			var card := button as VehicleUpgradeChoiceCard
+			card_contracts.append(card.debug_contract())
+			state_variations.append(card.theme_type_variation)
+			if card.visible:
+				visible_card_count += 1
+				offer_ids.append(card.offer_id())
 		else:
 			structured = false
 	return {
@@ -251,6 +220,17 @@ func debug_contract() -> Dictionary:
 		"row_minimum_height":_row.custom_minimum_size.y,
 		"guard_seconds":GUARD_SECONDS,
 		"compact":_compact,
+		"visible_card_count":visible_card_count,
+		"offer_ids":offer_ids,
+		"state_variations":state_variations,
+		"selected_index":_selected_index,
+		"pending":_pending,
+		"confirm_disabled":_confirm.disabled,
+		"message_text":_message.text,
+		"command_count":_command_lane.find_children(
+			"*", "Button", true, false
+		).size(),
+		"exit_action_count":0,
 		"type_sizes":{
 			"kicker":_kicker.get_theme_font_size("font_size"),
 			"title":_title.get_theme_font_size("font_size"),
@@ -273,7 +253,7 @@ func debug_geometry_contract() -> Dictionary:
 	return {
 		"rect":get_global_rect(),
 		"row_rect":_row.get_global_rect(),
-		"command_rect":_commands.get_global_rect(),
+		"command_rect":_command_lane.get_global_rect(),
 		"cards":card_contracts,
 		"detail_rect":_detail.get_global_rect(),
 		"detail_lines":_detail.get_line_count(),

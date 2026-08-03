@@ -16,12 +16,11 @@ var _selected := false
 var _compact := false
 var _content_margin: MarginContainer
 var _content_box: VBoxContainer
-var _header: HBoxContainer
-var _glyph
-var _family_badge: PanelContainer
 var _family: Label
 var _title: Label
 var _summary: Label
+var _art_lane: CenterContainer
+var _glyph: VehicleUpgradeGlyphRenderer
 var _effects: VBoxContainer
 var _behavior: Label
 
@@ -33,7 +32,7 @@ func _ready() -> void:
 	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	focus_mode = Control.FOCUS_ALL
-	theme_type_variation = &"UpgradeChoiceCard"
+	theme_type_variation = &"SelectableButton"
 	_build()
 	if not _offer.is_empty():
 		_refresh()
@@ -49,9 +48,9 @@ func set_offer(offer: Dictionary) -> void:
 func set_selected_state(value: bool) -> void:
 	_selected = value
 	theme_type_variation = (
-		&"SelectedUpgradeChoiceCard"
+		&"SelectedSelectableButton"
 		if _selected
-		else &"UpgradeChoiceCard"
+		else &"SelectableButton"
 	)
 
 
@@ -60,23 +59,23 @@ func set_compact_mode(value: bool) -> void:
 	custom_minimum_size = Vector2(244.0, 286.0) if value else Vector2(304.0, 330.0)
 	if not is_node_ready():
 		return
-	var horizontal_margin := 12 if value else 16
-	var vertical_margin := 8 if value else 12
+	var horizontal_margin := 10 if value else 14
+	var vertical_margin := 5 if value else 6
 	for side in ["margin_left", "margin_right"]:
 		_content_margin.add_theme_constant_override(side, horizontal_margin)
 	for side in ["margin_top", "margin_bottom"]:
 		_content_margin.add_theme_constant_override(side, vertical_margin)
-	_content_box.add_theme_constant_override("separation", 4 if value else 8)
-	_header.add_theme_constant_override("separation", 8 if value else 12)
-	_glyph.custom_minimum_size = Vector2(32.0, 28.0) if value else Vector2(38.0, 32.0)
-	_family_badge.custom_minimum_size = Vector2(118.0, 28.0) if value else Vector2(128.0, 32.0)
+	_content_box.add_theme_constant_override("separation", 2 if value else 3)
+	_glyph.custom_minimum_size = (
+		Vector2(64.0, 64.0) if value else Vector2(88.0, 88.0)
+	)
 	_family.add_theme_font_size_override("font_size", 13 if value else 14)
 	_title.add_theme_font_size_override("font_size", 22 if value else 24)
-	_title.custom_minimum_size.y = 48.0 if value else 54.0
+	_title.custom_minimum_size.y = 48.0 if value else 52.0
 	_summary.add_theme_font_size_override("font_size", 15 if value else 16)
-	_summary.custom_minimum_size.y = 60.0 if value else 66.0
+	_summary.custom_minimum_size.y = 54.0 if value else 60.0
 	_behavior.add_theme_font_size_override("font_size", 15 if value else 16)
-	_behavior.custom_minimum_size.y = 32.0 if value else 36.0
+	_behavior.custom_minimum_size.y = 28.0 if value else 32.0
 	_refresh()
 
 
@@ -87,7 +86,7 @@ func offer_id() -> StringName:
 func debug_contract() -> Dictionary:
 	var normal_style := get_theme_stylebox(&"normal")
 	var focus_style := get_theme_stylebox(&"focus")
-	var badge_style := _family_badge.get_theme_stylebox("panel")
+	var glyph_contract := _glyph.debug_contract()
 	return {
 		"structured":true,
 		"minimum_size":custom_minimum_size,
@@ -98,7 +97,8 @@ func debug_contract() -> Dictionary:
 		),
 		"effect_rows":_effects.get_child_count() if is_instance_valid(_effects) else 0,
 		"has_scroll":false,
-		"pip_slots":3,
+		"pip_slots":0,
+		"stage_pip_count":0,
 		"selected":_selected,
 		"compact":_compact,
 		"type_sizes":{
@@ -108,17 +108,21 @@ func debug_contract() -> Dictionary:
 			"behavior":_behavior.get_theme_font_size("font_size"),
 		},
 		"summary_max_lines":_summary.max_lines_visible,
-		"family_badge":{
-			"text_color":_family.get_theme_color("font_color"),
-			"image_backed":badge_style is StyleBoxTexture,
-			"semantic_accent_owner":&"family_glyph",
-		},
+		"header_art_count":0,
+		"body_art_count":1 if is_instance_valid(_glyph) else 0,
+		"family_badge_count":0,
+		"body_art_size":_glyph.custom_minimum_size,
+		"body_art_asset_id":glyph_contract["asset_id"],
+		"body_order":[
+			"family", "title", "summary", "art", "effects", "behavior",
+		],
 		"state_cues":{
 			"normal_image":normal_style is StyleBoxTexture,
 			"focus_image":focus_style is StyleBoxTexture,
 			"selected_corner":true,
 			"focus_corner":true,
 			"disabled_corner":true,
+			"variation":theme_type_variation,
 		},
 		"mouse_passthrough":(
 			is_instance_valid(_family)
@@ -148,47 +152,31 @@ func debug_geometry_contract() -> Dictionary:
 func _build() -> void:
 	_content_margin = MarginContainer.new()
 	_content_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_content_margin.add_theme_constant_override("margin_left", 16)
-	_content_margin.add_theme_constant_override("margin_top", 12)
-	_content_margin.add_theme_constant_override("margin_right", 16)
-	_content_margin.add_theme_constant_override("margin_bottom", 12)
+	_content_margin.add_theme_constant_override("margin_left", 14)
+	_content_margin.add_theme_constant_override("margin_top", 6)
+	_content_margin.add_theme_constant_override("margin_right", 14)
+	_content_margin.add_theme_constant_override("margin_bottom", 6)
 	_content_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_content_margin)
 
 	_content_box = VBoxContainer.new()
-	_content_box.add_theme_constant_override("separation", 8)
+	_content_box.add_theme_constant_override("separation", 3)
 	_content_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content_margin.add_child(_content_box)
 
-	var family_lane := CenterContainer.new()
-	family_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content_box.add_child(family_lane)
-	_header = HBoxContainer.new()
-	_header.add_theme_constant_override("separation", 12)
-	_header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	family_lane.add_child(_header)
-	_glyph = UpgradeGlyphRenderer.new()
-	_glyph.name = "UpgradeFamilyGlyph"
-	_glyph.custom_minimum_size = Vector2(38.0, 32.0)
-	_header.add_child(_glyph)
-	_family_badge = PanelContainer.new()
-	_family_badge.theme_type_variation = &"FamilyBadge"
-	_family_badge.custom_minimum_size = Vector2(128.0, 32.0)
-	_family_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_header.add_child(_family_badge)
 	_family = _label(14, Art.TEXT_PRIMARY)
 	_family.name = "FamilyLabel"
 	_family.theme_type_variation = &"MetricLabel"
 	_family.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_family.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_family_badge.add_child(_family)
+	_content_box.add_child(_family)
 	_title = _label(24, Art.TEXT_PRIMARY)
 	_title.name = "TitleLabel"
 	_title.theme_type_variation = &"TitleLabel"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.max_lines_visible = 2
-	_title.custom_minimum_size.y = 54.0
+	_title.custom_minimum_size.y = 52.0
 	_content_box.add_child(_title)
 	_summary = _label(16, Art.TEXT_PRIMARY)
 	_summary.name = "SummaryLabel"
@@ -196,8 +184,15 @@ func _build() -> void:
 	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_summary.max_lines_visible = 3
-	_summary.custom_minimum_size.y = 66.0
+	_summary.custom_minimum_size.y = 60.0
 	_content_box.add_child(_summary)
+	_art_lane = CenterContainer.new()
+	_art_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content_box.add_child(_art_lane)
+	_glyph = UpgradeGlyphRenderer.new()
+	_glyph.name = "UpgradeBodyArtwork"
+	_glyph.custom_minimum_size = Vector2(88.0, 88.0)
+	_art_lane.add_child(_glyph)
 	_effects = VBoxContainer.new()
 	_effects.add_theme_constant_override("separation", 4)
 	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -208,7 +203,7 @@ func _build() -> void:
 	_behavior.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_behavior.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_behavior.max_lines_visible = 2
-	_behavior.custom_minimum_size.y = 36.0
+	_behavior.custom_minimum_size.y = 32.0
 	_behavior.visible = false
 	_content_box.add_child(_behavior)
 
@@ -224,7 +219,7 @@ func _refresh() -> void:
 	for preview_variant in previews.slice(0, 2):
 		var preview := Dictionary(preview_variant)
 		var row := HBoxContainer.new()
-		row.custom_minimum_size.y = 22.0 if _compact else 24.0
+		row.custom_minimum_size.y = 18.0 if _compact else 20.0
 		row.add_theme_constant_override("separation", 8)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var stat := _label(13 if _compact else 14, Art.TEXT_MUTED)
@@ -266,9 +261,9 @@ func _refresh_summary_budget() -> void:
 	)
 	_summary.max_lines_visible = 4 if sparse_compact else 3
 	_summary.custom_minimum_size.y = (
-		80.0
+		64.0
 		if sparse_compact
-		else (60.0 if _compact else 66.0)
+		else (54.0 if _compact else 60.0)
 	)
 
 
@@ -291,18 +286,7 @@ func _preview_value(preview: Dictionary) -> String:
 
 func _refresh_family_glyph() -> void:
 	var family := StringName(_offer.get("family", &"secondary"))
-	var color_role := UpgradeGlyphRenderer.color_role(family)
-	var accent := Art.required_color_roles().get(
-		String(color_role),
-		Art.TEXT_PRIMARY
-	) as Color
-	_glyph.configure(family, {
-		&"accent":accent,
-		&"perimeter":Art.SPACE_BLACK,
-		&"surface":Art.WORLD_CANVAS,
-		&"secondary":accent.lerp(Art.SPACE_BLACK, 0.34),
-		&"highlight":Art.TEXT_PRIMARY,
-	})
+	_glyph.configure(family, {})
 
 
 func _label_geometry(label: Label) -> Dictionary:

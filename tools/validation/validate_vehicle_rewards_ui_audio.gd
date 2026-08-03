@@ -32,18 +32,21 @@ func _validate_reward_runtime() -> void:
 	_expect(rewards.pop_pending() == &"boss", "reward queue preserves its source identity")
 	_expect(not rewards.has_pending(), "popping the only source empties the reward queue")
 
-	_expect(rewards.begin(&"stage_1", &"boss", false) == 0, "first reward offer uses serial zero")
+	_expect(rewards.begin(&"stage_1", &"boss") == 0, "first mandatory reward offer uses serial zero")
 	_expect(not rewards.enqueue(&"boss"), "active reward sources cannot be queued again")
+	_expect(rewards.begin(&"stage_1", &"field_boss") == -1, "an active offer cannot be replaced or rerolled")
 	_expect(rewards.claim(&"stage_1") == &"boss", "claim resolves the active reward")
+	_expect(rewards.claim(&"stage_1").is_empty(), "one reward transaction can be claimed exactly once")
 	_expect(rewards.has_claimed(&"stage_1", &"boss"), "claimed rewards retain a stage-scoped terminal outcome")
-	_expect(rewards.begin(&"stage_1", &"boss", false) == -1, "resolved rewards cannot reopen")
+	_expect(rewards.outcome(&"stage_1", &"boss") == &"claimed", "claimed is the only terminal reward outcome")
+	_expect(rewards.begin(&"stage_1", &"boss") == -1, "resolved rewards cannot reopen")
 
-	_expect(rewards.begin(&"stage_1", &"field_boss", true) == 1, "offer serials advance across reward sources")
-	_expect(rewards.decline(&"stage_1"), "optional rewards can be declined")
+	_expect(rewards.begin(&"stage_1", &"field_boss") == 1, "offer serials advance across mandatory reward sources")
+	_expect(rewards.claim(&"stage_1") == &"field_boss", "every authored reward completes through claim")
 	_expect(
-		rewards.outcome(&"stage_1", &"field_boss") == &"declined"
-			and not rewards.has_claimed(&"stage_1", &"field_boss"),
-		"declined and claimed outcomes remain distinct"
+		rewards.outcome(&"stage_1", &"field_boss") == &"claimed"
+			and rewards.has_claimed(&"stage_1", &"field_boss"),
+		"authored rewards have one claimed terminal outcome"
 	)
 	_expect(rewards.enqueue(&"queued_reward"), "stage reset fixture queues a reward")
 	rewards.reset_stage()
@@ -52,12 +55,13 @@ func _validate_reward_runtime() -> void:
 		"stage reset clears active and pending reward state"
 	)
 	_expect(
-		rewards.has_claimed(&"stage_1", &"boss"),
+		rewards.has_claimed(&"stage_1", &"boss")
+			and rewards.has_claimed(&"stage_1", &"field_boss"),
 		"stage reset preserves run-scoped terminal outcomes"
 	)
-	_expect(rewards.begin(&"stage_2", &"boss", false) == 2, "stage reset preserves the offer serial")
+	_expect(rewards.begin(&"stage_2", &"boss") == 2, "stage reset preserves the offer serial")
 	rewards.reset_stage()
-	_expect(rewards.begin(&"stage_3", &"boss", false) == 3, "stage reset clears an active transaction")
+	_expect(rewards.begin(&"stage_3", &"boss") == 3, "stage reset clears an active transaction")
 
 	rewards.reset_run()
 	_expect(
@@ -67,10 +71,11 @@ func _validate_reward_runtime() -> void:
 		"run reset clears all reward transaction state"
 	)
 	_expect(
-		rewards.begin(&"stage_1", RewardRuntime.LEVEL_UP_SOURCE, false) == 0,
+		rewards.begin(&"stage_1", RewardRuntime.LEVEL_UP_SOURCE) == 0,
 		"run reset restarts the deterministic offer serial"
 	)
-	rewards.claim(&"stage_1")
+	_expect(rewards.claim(&"stage_1") == RewardRuntime.LEVEL_UP_SOURCE, "level-up reward completes through claim")
+	_expect(rewards.claim(&"stage_1").is_empty(), "level-up reward also claims exactly once")
 	_expect(
 		not rewards.is_resolved(&"stage_1", RewardRuntime.LEVEL_UP_SOURCE),
 		"level-up transactions do not create stage terminal outcomes"
@@ -120,7 +125,7 @@ func _run() -> void:
 			"behavior_change_key":"",
 		})
 	panel.confirmed.connect(func(_id: StringName) -> void: confirmed_count += 1)
-	panel.open(cards, false)
+	panel.open(cards)
 	var choice_contract := panel.debug_contract()
 	_expect(bool(choice_contract["structured_cards"]), "upgrade offers render through structured card components")
 	var card_contracts_valid := true
@@ -129,12 +134,13 @@ func _run() -> void:
 		card_contracts_valid = (
 			card_contracts_valid
 			and int(card["value_rows"]) == 1
-			and int(card["pip_slots"]) == 3
+			and int(card["pip_slots"]) == 0
+			and int(card["stage_pip_count"]) == 0
 			and bool(card["mouse_passthrough"])
 		)
 	_expect(
 		card_contracts_valid,
-		"every card exposes one numeric delta, three pips, and parent-owned pointer input"
+		"every card exposes one numeric delta, no stage pips, and parent-owned pointer input"
 	)
 	_expect((panel.get("_confirm") as Button).disabled, "upgrade confirm begins disabled")
 	panel.call("_process", 0.36)

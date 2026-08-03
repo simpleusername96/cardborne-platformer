@@ -6,7 +6,6 @@ extends RefCounted
 const LEVEL_UP_SOURCE: StringName = &"level_up"
 
 var _current_source: StringName = &""
-var _current_optional := false
 var _offer_serial := 0
 var _terminal_outcomes: Dictionary = {}
 var _pending_sources: Array[StringName] = []
@@ -41,7 +40,7 @@ func pop_pending() -> StringName:
 	return StringName(_pending_sources.pop_front())
 
 
-func begin(stage_id: StringName, source_id: StringName, optional: bool) -> int:
+func begin(stage_id: StringName, source_id: StringName) -> int:
 	if source_id.is_empty() or not is_idle():
 		return -1
 	if source_id != LEVEL_UP_SOURCE and is_resolved(stage_id, source_id):
@@ -50,7 +49,6 @@ func begin(stage_id: StringName, source_id: StringName, optional: bool) -> int:
 	var serial := _offer_serial
 	_offer_serial += 1
 	_current_source = source_id
-	_current_optional = optional
 	return serial
 
 
@@ -62,14 +60,6 @@ func claim(stage_id: StringName) -> StringName:
 		_terminal_outcomes[_transaction_id(stage_id, source_id)] = &"claimed"
 	_clear_active()
 	return source_id
-
-
-func decline(stage_id: StringName) -> bool:
-	if _current_source.is_empty() or not _current_optional or _current_source == LEVEL_UP_SOURCE:
-		return false
-	_terminal_outcomes[_transaction_id(stage_id, _current_source)] = &"declined"
-	_clear_active()
-	return true
 
 
 func has_claimed(stage_id: StringName, source_id: StringName) -> bool:
@@ -88,17 +78,12 @@ func current_source() -> StringName:
 	return _current_source
 
 
-func is_current_optional() -> bool:
-	return _current_optional
-
-
 func is_idle() -> bool:
 	return _current_source.is_empty()
 
 
 func _clear_active() -> void:
 	_current_source = &""
-	_current_optional = false
 
 
 func _transaction_id(stage_id: StringName, source_id: StringName) -> StringName:

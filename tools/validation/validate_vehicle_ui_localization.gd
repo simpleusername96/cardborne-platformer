@@ -130,6 +130,10 @@ func _initialize() -> void:
 		"DEPLOY_DIFFICULTY_EASY_DETAIL",
 		"DEPLOY_DIFFICULTY_NORMAL_DETAIL",
 		"DEPLOY_DIFFICULTY_HARD_DETAIL",
+		"UPGRADE_LEAVE_REWARD",
+		"UPGRADE_CONFIRM_LEAVE",
+		"UPGRADE_OPTIONAL_NOTICE",
+		"NOTIFY_REWARD_DECLINED",
 	]:
 		_expect(
 			not localization_source.contains("\n%s," % removed_key),

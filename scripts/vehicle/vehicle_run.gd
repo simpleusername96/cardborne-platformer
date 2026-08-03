@@ -566,7 +566,6 @@ func _build_ui() -> void:
 	if _ui.has_signal("boss_practice_selected"):
 		_ui.boss_practice_selected.connect(_on_boss_practice_selected)
 	_ui.upgrade_selected.connect(_on_upgrade_selected)
-	_ui.upgrade_declined.connect(_on_upgrade_declined)
 	_ui.upgrade_previewed.connect(func(_upgrade_id: StringName) -> void: _play_sound(&"upgrade_select"))
 	_ui.pause_requested.connect(_pause_run)
 	_ui.resume_requested.connect(_resume_run)
@@ -1089,17 +1088,6 @@ func _on_upgrade_selected(upgrade_id: StringName) -> void:
 	_ui.show_gameplay()
 	_ui.notify(tr("NOTIFY_MODULE_ONLINE") % tr(selected_upgrade_title_key), 3.0, Rules.AMBER)
 	_play_sound(&"card", 1.0)
-	_set_mouse_for_mode()
-	_advance_reward_queue()
-
-
-func _on_upgrade_declined() -> void:
-	if mode != RunMode.UPGRADE or not reward_runtime.is_current_optional():
-		return
-	_resolve_reward_transaction(&"declined")
-	mode = RunMode.PLAYING
-	_ui.show_gameplay()
-	_ui.notify(tr("NOTIFY_REWARD_DECLINED"), 2.2, Rules.MUTED)
 	_set_mouse_for_mode()
 	_advance_reward_queue()
 
@@ -4266,15 +4254,15 @@ func _trigger_contains(trigger: Variant, point: Vector2) -> bool:
 	return false
 
 
-func _open_upgrade_reward(source_id: StringName, optional: bool) -> void:
+func _open_upgrade_reward(source_id: StringName) -> void:
 	if mode != RunMode.PLAYING:
 		return
-	var offer_serial := reward_runtime.begin(current_stage_id, source_id, optional)
+	var offer_serial := reward_runtime.begin(current_stage_id, source_id)
 	if offer_serial < 0:
 		return
 	mode = RunMode.UPGRADE
 	current_card_offer = _build_card_offer(source_id, offer_serial)
-	_ui.show_upgrade(current_card_offer, optional)
+	_ui.show_upgrade(current_card_offer)
 	_play_sound(&"card", 0.9)
 	_set_mouse_for_mode()
 
@@ -4305,18 +4293,14 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 	return true
 
 
-func _resolve_reward_transaction(outcome: StringName = &"claimed") -> void:
+func _resolve_reward_transaction() -> void:
 	var source_id := reward_runtime.current_source()
 	if source_id.is_empty():
 		return
-	if outcome == &"declined":
-		if not reward_runtime.decline(current_stage_id):
-			return
-	else:
-		if reward_runtime.claim(current_stage_id).is_empty():
-			return
-		if source_id == RewardRuntime.LEVEL_UP_SOURCE:
-			experience_runtime.consume_pending_level()
+	if reward_runtime.claim(current_stage_id).is_empty():
+		return
+	if source_id == RewardRuntime.LEVEL_UP_SOURCE:
+		experience_runtime.consume_pending_level()
 	encounter_runtime.record_reward()
 	current_card_offer.clear()
 
@@ -4333,11 +4317,11 @@ func _advance_reward_queue() -> void:
 	):
 		return
 	if experience_runtime.pending_level_ups > 0:
-		_open_upgrade_reward(RewardRuntime.LEVEL_UP_SOURCE, false)
+		_open_upgrade_reward(RewardRuntime.LEVEL_UP_SOURCE)
 		return
 	if reward_runtime.has_pending():
 		var source := reward_runtime.pop_pending()
-		_open_upgrade_reward(source, false)
+		_open_upgrade_reward(source)
 		return
 	if (
 		pending_stage_completion

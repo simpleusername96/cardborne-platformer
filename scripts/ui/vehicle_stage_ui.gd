@@ -7,7 +7,6 @@ extends CanvasLayer
 signal deployment_selected(primary_id: StringName)
 signal boss_practice_selected(request: Dictionary)
 signal upgrade_selected(upgrade_id: StringName)
-signal upgrade_declined
 signal upgrade_previewed(upgrade_id: StringName)
 signal pause_requested
 signal resume_requested
@@ -74,7 +73,6 @@ var _guide_return_surface := "pause"
 var _latest_guidebook_snapshot: Dictionary = {}
 var _latest_build_snapshot: Dictionary = {}
 var _latest_upgrade_cards: Array[Dictionary] = []
-var _latest_upgrade_optional := false
 var _latest_garage_data: Dictionary = {}
 
 
@@ -138,9 +136,6 @@ func _install_components() -> void:
 	_upgrade_panel.confirmed.connect(
 		func(upgrade_id: StringName) -> void:
 			upgrade_selected.emit(upgrade_id)
-	)
-	_upgrade_panel.declined.connect(
-		func() -> void: upgrade_declined.emit()
 	)
 	_upgrade_panel.selected.connect(
 		func(upgrade_id: StringName) -> void:
@@ -241,14 +236,10 @@ func show_deployment(
 	_show_modal("deployment")
 
 
-func show_upgrade(
-	cards: Array[Dictionary],
-	optional: bool = false
-) -> void:
+func show_upgrade(cards: Array[Dictionary]) -> void:
 	hide_all_modals()
 	_latest_upgrade_cards = cards.duplicate(true)
-	_latest_upgrade_optional = optional
-	_upgrade_panel.open(cards, optional)
+	_upgrade_panel.open(cards)
 	_show_modal("upgrade")
 
 
@@ -731,10 +722,7 @@ func _refresh_localized_content() -> void:
 	if _practice_panel != null:
 		_practice_panel.refresh_localized_content()
 	if not _latest_upgrade_cards.is_empty() and _host_visible("upgrade"):
-		_upgrade_panel.open(
-			_latest_upgrade_cards,
-			_latest_upgrade_optional
-		)
+		_upgrade_panel.open(_latest_upgrade_cards)
 
 
 func _on_controls_changed(_action: StringName) -> void:
