@@ -9,6 +9,18 @@ var failures: Array[String] = []
 
 
 func _initialize() -> void:
+	_expect(
+		Runtime._source_resource_name("example.tres.remap") == "example.tres",
+		"exported secondary remaps resolve to source resource paths"
+	)
+	_expect(
+		Runtime._source_resource_name("example.tres") == "example.tres",
+		"source-tree secondary resources remain unchanged"
+	)
+	_expect(
+		Runtime._source_resource_name("example.png").is_empty(),
+		"unrelated secondary files remain excluded"
+	)
 	var catalog := Catalog.new()
 	var build := RunBuild.new(catalog)
 	var runtime := Runtime.new()

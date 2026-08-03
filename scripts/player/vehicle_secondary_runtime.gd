@@ -28,10 +28,19 @@ var _result: Dictionary = {}
 func _init() -> void:
 	_result = {"damage":_damage_output, "effects":_effects_output}
 	for file_name in DirAccess.get_files_at(DEFINITION_PATH):
-		if file_name.ends_with(".tres"):
-			var definition := load(DEFINITION_PATH.path_join(file_name)) as VehicleSecondaryDefinition
-			if definition != null:
-				definitions[definition.id] = definition
+		var resource_name := _source_resource_name(file_name)
+		if resource_name.is_empty():
+			continue
+		var definition := load(DEFINITION_PATH.path_join(resource_name)) as VehicleSecondaryDefinition
+		if definition != null:
+			definitions[definition.id] = definition
+
+
+static func _source_resource_name(file_name: String) -> String:
+	# Keep dynamic resource discovery identical in source trees and exported packs.
+	if file_name.ends_with(".tres.remap"):
+		return file_name.trim_suffix(".remap")
+	return file_name if file_name.ends_with(".tres") else ""
 
 
 func reset(player_position: Vector2) -> void:

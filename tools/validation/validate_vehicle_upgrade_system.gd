@@ -8,6 +8,18 @@ var failures: Array[String] = []
 
 
 func _initialize() -> void:
+	_expect(
+		Catalog._source_resource_name("example.tres.remap") == "example.tres",
+		"exported remap entries resolve to source resource paths"
+	)
+	_expect(
+		Catalog._source_resource_name("example.tres") == "example.tres",
+		"source-tree resource entries remain unchanged"
+	)
+	_expect(
+		Catalog._source_resource_name("example.png").is_empty(),
+		"unrelated catalog files remain excluded"
+	)
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract(): failures.append(error)
 	_expect(catalog.definitions.size() == 41, "catalog contains exactly 41 upgrades")

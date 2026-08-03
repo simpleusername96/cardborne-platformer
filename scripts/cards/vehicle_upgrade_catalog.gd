@@ -23,11 +23,20 @@ func _load_definitions() -> void:
 	var files := DirAccess.get_files_at(CARD_PATH)
 	files.sort()
 	for file_name in files:
-		if not file_name.ends_with(".tres"):
+		var resource_name := _source_resource_name(file_name)
+		if resource_name.is_empty():
 			continue
-		var definition := load(CARD_PATH.path_join(file_name)) as VehicleUpgradeDefinition
+		var definition := load(CARD_PATH.path_join(resource_name)) as VehicleUpgradeDefinition
 		if definition != null:
 			definitions[definition.id] = definition
+
+
+static func _source_resource_name(file_name: String) -> String:
+	# Exported packs expose dynamically enumerated resources through .remap
+	# entries; loading the original resource path lets ResourceLoader resolve it.
+	if file_name.ends_with(".tres.remap"):
+		return file_name.trim_suffix(".remap")
+	return file_name if file_name.ends_with(".tres") else ""
 
 
 func get_definition(upgrade_id: StringName) -> VehicleUpgradeDefinition:
