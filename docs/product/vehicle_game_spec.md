@@ -66,33 +66,22 @@ five-stage run.
 - Dash is a fast defensive repositioning action. EMP is the sole explicit skill
   button. Secondary weapons operate automatically.
 - Primary fire, dash, and EMP are rebindable. Conflicting bindings are rejected.
-- Korean is the default locale. Korean and English, audio, reduced motion, input,
-  and the preferred next-run difficulty persist.
+- Korean is the default locale. Korean and English, audio, reduced motion, and
+  input settings persist.
 
-### Fixed run difficulty
+### Fixed Hard run difficulty
 
-- Deployment exposes exactly three run difficulties: Easy, Normal, and Hard.
-  Hard is the default and reproduces the combat balance that existed before this
-  selector.
-- Confirming deployment snapshots the selected difficulty for the complete
-  five-stage run. Stage transitions and stage restarts preserve that snapshot.
-  Pause/settings has no difficulty control, and another run always returns to
-  deployment before combat begins.
-- The saved value is only the preference shown on the next deployment. Changing
-  saved settings cannot mutate an active run.
-- Run difficulty composes with the shallow stage curve. It does not alter attack
-  cadence, telegraph duration, hostile projectile speed, threat budgets, drops,
-  experience value, or reward quality.
+- Every run uses the existing Hard combat profile. Deployment exposes no
+  difficulty selector, description, lock explanation, or saved preference.
+- Confirming deployment starts the complete five-stage run with that fixed
+  profile. Stage transitions and stage restarts preserve it internally.
+- The fixed profile composes with the shallow stage curve. It does not alter
+  attack cadence, telegraph duration, hostile projectile speed, threat budgets,
+  drops, experience value, or reward quality.
 
 | Mode | Quota | Active cap | Ordinary health | Boss health | Damage | Movement speed | Approximate simultaneous pressure |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Easy | 0.81 | 0.8836 | 0.9216 | 0.81 | 0.9216 | 0.9604 | 0.72 |
-| Normal | 0.90 | 0.94 | 0.96 | 0.90 | 0.96 | 0.98 | 0.85 |
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
-
-The factors are deliberately distributed. Normal is approximately 15% below
-Hard in combined simultaneous pressure, and Easy applies the same reduction a
-second time; no individual stat is described as exactly 15% lower.
 
 ### Damage readability and hostile projectiles
 
@@ -279,13 +268,12 @@ second time; no individual stat is described as exactly 15% lower.
    Projectile-firing mobile roles remain at or below 15% of authored mobile
    population; only three ranged attackers and two denial attackers may commit
    at once. Ordinary hostile fire cannot consume the 24-shot boss reserve.
-   Hard active ordinary caps progress through `1/124/172/224/276`; Normal and
-   Easy scale those caps through the existing difficulty profile. Excess
-   enemies remain in the deterministic scheduler queue. Player-centered 600
+   Fixed-Hard active ordinary caps progress through `1/124/172/224/276`.
+   Excess enemies remain in the deterministic scheduler queue. Player-centered 600
    and 900 pixel occupancy are observation telemetry only and never impose a
    local admission cap, hold band, lateral detour, or despawn rule.
 4. Ordinary mobile movement applies one 1.40 multiplier after role base speed
-   and before the existing difficulty, stage, and elite factors. Boss,
+   and before the fixed Hard profile, stage, and elite factors. Boss,
    committed charge, and projectile speeds are unchanged. After birth, each
    mobile follows its role pursuit/range/support behavior toward the player;
    logical squad anchors and centroid cohesion do not steer ordinary movement.
@@ -314,18 +302,18 @@ second time; no individual stat is described as exactly 15% lower.
 8. Boss defeat recalls all live experience within 0.65 seconds and resolves the
    mandatory reward choice. Stages 1–4 then full-heal the ship, grant 1.2
    seconds of transition protection, preserve position, facing, aim, build,
-   difficulty, exploration, cover, and persistent terrain state, and show a
+   fixed Hard state, exploration, cover, and persistent terrain state, and show a
    non-modal 1.6-second stage banner while the next encounter begins. No success
    report or continue input interrupts the run. Stage 5 opens the final result;
    failures still open the failure report.
 
-| Stage | Hard quota | Normal quota | Easy quota | Authored mobile population | Boss |
-| ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | 125 | 113 | 101 | 520 | Foundry Colossus |
-| 2 | 166 | 149 | 134 | 660 | Archive Leviathan |
-| 3 | 208 | 187 | 168 | 816 | Drydock Titan |
-| 4 | 250 | 225 | 203 | 1026 | Switchyard Behemoth |
-| 5 | 291 | 262 | 236 | 1260 | Crown Engine |
+| Stage | Fixed Hard quota | Authored mobile population | Boss |
+| ---: | ---: | ---: | --- |
+| 1 | 125 | 520 | Foundry Colossus |
+| 2 | 166 | 660 | Archive Leviathan |
+| 3 | 208 | 816 | Drydock Titan |
+| 4 | 250 | 1026 | Switchyard Behemoth |
+| 5 | 291 | 1260 | Crown Engine |
 
 Four stationary threats are added per stage. Ordinary hostile projectiles stop
 at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
@@ -390,18 +378,22 @@ hint appears once and the same hint cannot repeat within two seconds.
 ### UI, guidebook, and persistence
 
 - Every player-facing world, actor, projectile, reward, effect, HUD, modal,
-  minimap, and preview uses the shared image-backed general-SF component system
-  defined by `VISUAL_SYSTEM.md`. Role color is always paired with a
-  silhouette, notch, rail, or glyph cue.
+  minimap, and preview uses the shared general-SF visual system defined by
+  `VISUAL_SYSTEM.md`. UI chrome comes from one code-native Theme and shared
+  component factory; meaningful craft, upgrade, enemy, boss, object, minimap,
+  and action imagery remains semantic gameplay content. Role color is always
+  paired with a silhouette, notch, rail, or glyph cue.
 - The ship uses one authored craft body containing its fixed hull, engine
   housing, and weapon housing. The body follows movement/hull rotation only;
   manual aim remains independent through cursor, muzzle, projectile, and hit
   cues. Dash feedback uses a directional afterimage and rear-anchor flare,
   never a danger ring or radial burst.
 - The live HUD prioritizes hull/experience, stage quota, dash, EMP, active
-  secondary families, minimap, boss health, and exceptional timed effects. Its
-  154x34 icon-only action rail sits below hull/experience; no bottom-center dock
-  covers the field.
+  secondary families, minimap, boss health, target state, and exceptional timed
+  effects. It uses four restrained zones: top-left hull/experience, top-center
+  objective and conditional boss state, top-right minimap and conditional
+  target, and one compact bottom-center action strip. No ornamental full-width
+  dock covers the field.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, stationary enemies, bosses, and objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered
@@ -425,10 +417,13 @@ hint appears once and the same hint cannot repeat within two seconds.
   diversity rules may prefer families or unlocked branches but never duplicate
   a card within the same three-card choice. Each newly opened reward
   transaction advances a run-scoped constrained draw, while the cards remain
-  frozen for that transaction until the player confirms or declines it; UI
-  refreshes never reroll an open offer.
-  Deployment includes three clearly selected, keyboard-focusable difficulty
-  choices with concise Korean and English pressure descriptions.
+  frozen for that transaction until the player selects one and confirms Equip;
+  UI refreshes never reroll an open offer. Authored reward enclosures remain
+  optional to open, but an opened reward transaction has no Leave, Exit, Skip,
+  or decline action.
+- Deployment presents loadout and complete control information with one Deploy
+  primary action. Every deployment starts the fixed Hard run and exposes no
+  difficulty choice.
 
 ### Runtime capacity and performance
 
@@ -474,9 +469,8 @@ hint appears once and the same hint cannot repeat within two seconds.
   growth, arrival fairness, spawn stop, 1.5-second boss warning, roaming boss,
   preserved build/exploration, automatic stages 1–4 transition, and stage 5
   result pass focused tests.
-- Hard preserves the previous baseline, Normal and Easy use the specified profile
-  factors, the active run keeps its deployment snapshot, and no pause/settings
-  control can change difficulty.
+- Fixed Hard preserves the previous baseline factors, every run uses that same
+  profile, and no UI or saved preference can change difficulty.
 - Tuned Thrusters has the exact three values, the five secondary families load,
   no more than three are active, and their bounded simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
@@ -507,9 +501,8 @@ hint appears once and the same hint cannot repeat within two seconds.
   base, or exploration puzzles in this run.
 - Alternative growth systems beyond the current 41-card and five-secondary
   contract are inactive and require an explicit product-spec revision.
-- The current Easy/Normal/Hard selector remains the complete difficulty model.
-  Meta-progression, adaptive difficulty, or another difficulty model is not
-  selected and requires an explicit product-spec revision.
+- A selectable, adaptive, or meta-progression difficulty model is inactive and
+  requires an explicit product-spec revision.
 - Additional map-generation systems, coordinated-enemy tactics, or new boss
   pattern families require both an explicit product-spec revision and a
   separate ExecPlan before implementation.

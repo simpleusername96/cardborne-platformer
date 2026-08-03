@@ -18,8 +18,9 @@ related:
 이 문서는 Cardborne의 모든 player-facing surface에 적용되는 정본 visual
 contract다. 실제 runtime truth는
 `scripts/vehicle/vehicle_stage_visual_profile.gd`, 책임별 component catalog와
-Godot Theme가 소유한다. 실제 provider에서 생성한 system sheet는 이 runtime
-truth와 승인 시안의 충실도를 검증하는 publication artifact다.
+하나의 code-native Godot Theme가 소유한다. 실제 provider에서 생성한 system
+sheet는 gameplay imagery의 runtime truth와 승인 시안의 충실도를 검증하는
+publication artifact다.
 
 승인된 general-SF 방향에서 추출한 silhouette, proportion, mechanical
 layering와 contrast hierarchy는 아래 요구사항에 직접 포함되어 있다. 과거
@@ -261,29 +262,36 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - surface에는 한 border와 한 semantic accent rail만 허용한다. 장식용
   corner와 중첩 frame을 반복하지 않는다.
 
-### Image-backed UI composition
+### Shared code-native UI composition
 
-- production HUD, modal, card, button, tab, option, toggle, slider, meter와
-  preview chrome은 승인된 raster component image를 사용한다.
-- panel/frame/background image가 시각 shell을 소유하고 localized text,
-  gameplay icon, dynamic value, focus target과 accessibility state는 그 위의
-  Godot `Control` child가 소유한다. text, gameplay icon 또는 임의 숫자를
-  background image에 굽지 않는다.
-- 늘어나는 shell은 `StyleBoxTexture` 9-slice로 구성한다. 각 texture는
-  manifest에 canvas, patch margin과 text-safe inset을 기록하며 corner,
-  rail과 notch는 지원 viewport에서 늘어나거나 잘리지 않는다.
-- normal, hover, pressed, focus, selected와 disabled는 color뿐 아니라
-  rail, notch 또는 pattern이 다른 독립 image state를 사용한다.
-- `StyleBoxFlat`과 `_draw()`로 production chrome을 새로 만들거나 raster
-  shell 위에 같은 perimeter, rail 또는 decorative corner를 다시 그리지
-  않는다.
-- procedural 표현은 다음 동적 truth에만 허용한다.
+- production UI chrome은 하나의 `vehicle_stage_theme.tres`와
+  `VehicleUiComponentFactory`가 소유한다. 화면 script는 hierarchy, copy,
+  signal과 state만 소유하며 local `StyleBox`나 screen-specific chrome을
+  만들지 않는다.
+- 공용 primitive는 Surface, TextRow, Command, Selectable, Meter와 PreviewWell
+  여섯 개다. 같은 역할은 모든 HUD와 modal에서 같은 geometry, spacing과
+  state skeleton을 재사용한다.
+- surface는 한 flat fill, 최대 한 1 px boundary와 필요한 경우 한 semantic
+  rail만 사용한다. command, selectable, meter와 preview state는
+  `StyleBoxFlat`, `StyleBoxLine`, `StyleBoxEmpty`, typography와 spacing resource로
+  구성한다.
+- normal, hover, pressed, focus, selected와 disabled는 color뿐 아니라 2 px
+  focus outline, 3 px selected rail, boundary 또는 구조 변화로 구분한다.
+- craft, upgrade family, enemy, boss, object, minimap과 action imagery는
+  gameplay semantic provider의 의미 있는 content로 유지한다. UI chrome PNG,
+  UI image-state manifest와 별도 UI image provider는 사용하지 않는다.
+- localized text, gameplay icon, dynamic value, focus target과 accessibility
+  state는 Godot `Control` child가 소유한다. text, icon 또는 임의 숫자를
+  background나 preview image에 굽지 않는다.
+- procedural 표현은 다음 동적 truth와 단순한 code-native UI chrome에
+  허용한다.
   - collision과 일치하는 attack radius, beam/charge corridor, mine boundary
   - HP, cooldown, progress와 fuse의 실제 ratio 또는 clip
   - target/off-screen vector와 floating/localized text
   - screen dim, invisible layout container와 debug collision overlay
-- 위 목록에 없는 non-spatial state, panel decoration, badge, pip와
-  selection ornament는 authored image component를 사용한다.
+- 의미 없는 panel seam, dot, lamp, corner, badge, pip, nested frame과 selection
+  ornament를 추가하지 않는다. 이미 spacing, fill 또는 rail로 구분한 영역을
+  다시 decorative line으로 감싸지 않는다.
 
 ### Responsive geometry
 
@@ -296,9 +304,10 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - layout breakpoint는 width `1100`, guide/report three-column breakpoint는
   `1180`이다.
 - upgrade card는 compact에서 `224–244×286`, gap `12`, wide에서
-  `304×330`, gap `18`을 사용한다. 상단 약 1/3은 upgrade image가 차지하고,
-  그 아래 title과 현재 level, summary 최대 3줄, effect row 최대 2개를 한
-  화면에 표시한다. level text와 중복되는 단계 pip는 사용하지 않는다.
+  `304×330`, gap `18`을 사용한다. card 순서는 family text, title, summary,
+  관련 family artwork 한 개, effect row 최대 2개, behavior다. artwork는
+  compact `64×64`, wide `88×88`이며 title 위에는 image, icon 또는 badge를
+  두지 않는다. level text와 중복되는 단계 pip는 사용하지 않는다.
 - upgrade card는 scroll을 사용하지 않는다. settings, guidebook, report는
   지정 content region만 scroll하고 primary action은 고정한다.
 - `clip_contents`는 safety guard일 뿐 layout 해결책이 아니다.
@@ -307,15 +316,15 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 
 ### HUD
 
-- top-left는 hull/experience와 `148×44` action rail을 묶는다. primary fire는
-  rail에 넣지 않는다.
-- top-center boss strip은 최대 `520×58`이며 boss name, health와 core
-  damage state를 표시한다. active boss objective는 그 아래 최대
-  `440×48` tracker로 함께 남아 현재 파괴 대상이 숨지 않는다.
-- top-right minimap은 `176×108`, conditional target panel은 그 아래
-  `176×60`이다.
-- notification과 transition은 objective 아래 한 줄에 나타나며 crosshair를
-  가리지 않는다.
+- top-left는 hull/experience, top-center는 objective와 conditional boss,
+  top-right는 `176×108` minimap과 conditional target을 소유한다.
+- bottom-center에는 dash, passive/secondary와 EMP의 compact 세 slot action
+  strip만 둔다. primary fire는 별도 slot을 만들지 않는다.
+- 각 zone은 최대 한 subtle Surface만 사용한다. full-width dock,
+  ornamental edge frame과 서로 다른 screen-specific panel silhouette는
+  사용하지 않는다.
+- notification과 transition은 objective 아래 한 줄 ToastSurface에 나타나며
+  crosshair를 가리지 않는다.
 - off-screen threat, status orbit, crosshair, minimap marker와 support timer는
   shape-coded retained mesh를 사용한다.
 
@@ -323,12 +332,14 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 
 - 모든 modal은 live HUD와 gameplay input을 차단하고 title, content,
   primary action 순서가 한 번에 읽혀야 한다.
-- Deployment는 loadout/control과 difficulty/lock explanation의 two-column
-  body, 한 개의 Deploy primary action을 사용한다.
-- Upgrade는 세 structured card, explicit selection, Equip confirm과 optional
-  decline을 사용한다. 상단과 card 안에 같은 detail을 중복하지 않는다.
-- Pause는 Resume만 filled primary다. Restart/Settings는 secondary, Garage는
-  restrained tertiary danger다.
+- Deployment는 loadout/ship preview와 complete control information의
+  two-column body, 한 개의 Deploy primary action을 사용한다. difficulty
+  selector나 lock explanation은 없다.
+- Upgrade는 세 structured Selectable card와 explicit selection, Equip confirm을
+  사용한다. 각 card는 title 아래 관련 artwork 한 개만 가지며 Leave, Exit,
+  Skip 또는 decline action은 없다.
+- Pause는 Resume, Restart, Settings, Garage의 equal-width vertical stack을
+  사용한다. Resume만 filled primary이고 Garage는 restrained danger다.
 - Settings는 category rail + content이며 Ship Status, audio, controls,
   motion, language 순서를 유지한다.
 - Guidebook은 wide에서 category/list/detail 세 column, compact에서 category
@@ -359,7 +370,8 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - approved reference와 runtime actor를 같은 scale로 비교한 sheet에서
   player, 8 role grammar와 boss proportion hierarchy가 같은 family로 판독
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
-- 8개 upgrade family glyph의 card/sheet empty slot 0
+- 8개 upgrade family semantic artwork의 missing slot 0, card별 title 위 image 0,
+  body artwork 정확히 1개
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
   active/damaged/resolved 상태만 사용됨
