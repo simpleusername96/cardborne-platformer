@@ -582,7 +582,7 @@ Source owners: `scripts/rewards/vehicle_reward_runtime.gd`,
 `scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd`,
 localization and upgrade/reward validators.
 
-- [ ] **4.1 Remove the unused optional reward/decline path end to end**
+- [x] **4.1 Remove the unused optional reward/decline path end to end**
   - Change: remove `_current_optional`, `decline()`, and
     `is_current_optional()` from `VehicleRewardRuntime`; remove the `optional`
     argument from `begin()`, `_open_upgrade_reward()`, `show_upgrade()`, and
@@ -593,7 +593,7 @@ localization and upgrade/reward validators.
   - Accept: every current reward source remains claimable exactly once; offers
     remain frozen; Escape cannot leave or reroll; no declined terminal outcome
     or UI signal remains.
-- [ ] **4.2 Rebuild each card around one body artwork**
+- [x] **4.2 Rebuild each card around one body artwork**
   - Change: remove `_header`, the small `_glyph` placement,
     `_family_badge`, and the `FamilyBadge` contract. Keep the family label as
     unboxed text, followed by title and summary; place one lower
@@ -605,7 +605,7 @@ localization and upgrade/reward validators.
     every visible card has exactly one artwork; selected, focus, disabled, and
     pending states remain distinguishable without color; no card-inside-card or
     family badge remains.
-- [ ] **4.3 Rebuild the panel around one Equip command**
+- [x] **4.3 Rebuild the panel around one Equip command**
   - Change: delete `_decline`, `_decline_armed`, `_request_decline()`, and the
     two-button command row; center one shared primary Equip command. Keep input
     guard, numeric shortcuts, first-card focus, selection preview, failure
@@ -613,7 +613,7 @@ localization and upgrade/reward validators.
   - Accept: three unique frozen cards appear; Equip is disabled until one is
     selected; one confirmation applies exactly one card; Escape shows only the
     mandatory notice; there is no Leave/Exit/Skip control or focus stop.
-- [ ] **4.4 Replace raster/card assertions with behavioral and layout assertions**
+- [x] **4.4 Replace raster/card assertions with behavioral and layout assertions**
   - Change: rewrite `validate_vehicle_upgrade_ui.gd` to test one artwork,
     absence of top artwork/badge/decline, three Selectables, selection and
     focus cues, card geometry, both locales, all supported viewports, pending
@@ -1244,21 +1244,24 @@ retirement, and validation decisions are locked above.
 ## Progress
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4 — rebuild Upgrade as mandatory Selectable cards.
-- Last completed gate: Phase 3 entry-flow gate; settings migration, fixed-Hard,
-  encounter pacing, damage feedback, stage-layout, and KO/EN localization
-  validators passed after a clean Godot import.
+- Current phase: Phases 5 and 6 — migrate supporting modals and reports in
+  parallel on the frozen shared component API.
+- Last completed gate: Phase 4 mandatory-Upgrade gate; reward transactions,
+  one-art cards, select-then-Equip behavior, stage layout, and KO/EN
+  localization validators passed after a clean Godot import.
 - Last green implementation commit:
-  `06f8e2b23f85630d8494aa6aeca3ff4409b87f2d`.
+  `bf2a1578df17f90feff9f791a83108826bbf23f1`.
 - Update rule: after a checkpoint passes, record concise evidence, check the
   task, update the last green commit, and advance this pointer in the same edit.
 
 ## Next Steps
 
-1. Remove the optional reward/decline path from runtime and UI.
-2. Recompose Upgrade cards around one lower semantic artwork and one Equip
-   command.
-3. Pass the Phase 4 reward and Upgrade gate before parallel Phase 5/6 work.
+1. Recompose Settings, Guidebook, build summary, and debug Practice in the
+   Phase 5 lane.
+2. Recompose stage/failure reports and final result in the disjoint Phase 6
+   lane.
+3. Integrate shared layout/localization contracts and pass both gates before
+   beginning the live HUD migration.
 
 ## Completion and Stop Conditions
 
@@ -1304,6 +1307,10 @@ Do not replan or stop for:
   `06f8e2b23f85630d8494aa6aeca3ff4409b87f2d`; every run now uses the unchanged
   Hard profile, obsolete saved difficulty is retired on normal save, and
   Deployment/Garage use the shared two-column composition without a selector.
+- 2026-08-03: Phase 4 completed in
+  `bf2a1578df17f90feff9f791a83108826bbf23f1`; reward transactions are mandatory
+  and claim-only, each Upgrade card has one lower semantic artwork, and the
+  screen exposes one select-then-Equip command with no exit path.
 - 2026-08-03: BK accepted the simplified UI direction while explicitly
   preserving information rather than reducing it.
 - 2026-08-03: BK required deletion of the small top image on upgrade cards,
