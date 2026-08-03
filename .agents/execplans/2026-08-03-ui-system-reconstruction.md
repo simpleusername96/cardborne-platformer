@@ -504,7 +504,7 @@ Source owners: `scripts/vehicle/vehicle_run_difficulty.gd`,
 `scripts/encounters/vehicle_encounter_runtime.gd`, localization and difficulty
 validators.
 
-- [ ] **3.1 Collapse the selectable difficulty contract to Hard-only**
+- [x] **3.1 Collapse the selectable difficulty contract to Hard-only**
   - Change: keep `VehicleRunDifficulty` only as a compatibility owner with
     `HARD`, `DEFAULT`, `IDS=[HARD]`, and one all-1.0 profile; remove Easy and
     Normal constants/profiles. Remove `SettingsStore.run_difficulty`, its
@@ -518,7 +518,7 @@ validators.
     previous Hard values; restart and stage transition preserve that baseline.
   - Guard: retain the internal Hard profile and telemetry field during this
     plan so UI reconstruction does not broaden into combat-math rewrites.
-- [ ] **3.2 Recompose Deployment from the accepted direction**
+- [x] **3.2 Recompose Deployment from the accepted direction**
   - Change: remove `_difficulty_box`, buttons, detail, selection helpers, and
     difficulty parameters. Build the locked wide and compact two-column layout;
     show one existing `attachment/player_craft_body` semantic asset in a
@@ -530,7 +530,7 @@ validators.
   - Accept: one primary Deploy action emits `pulse_cannon`; no difficulty word
     or selector appears; every control and weapon fact remains; KO/EN fit all
     supported viewports; debug Practice remains absent in release builds.
-- [ ] **3.3 Recompose Garage and remove obsolete difficulty copy**
+- [x] **3.3 Recompose Garage and remove obsolete difficulty copy**
   - Change: rebuild Garage as the locked two-column TextRow layout; retain all
     loadout, module, empty, and current-run-build states; change
     `GARAGE_LAUNCH` to Deployment Setup and `GARAGE_SETTINGS` to Settings in
@@ -539,7 +539,7 @@ validators.
   - Accept: Garage exposes exactly Deployment Setup primary and Settings
     secondary; it never promises a difficulty choice; every current data field
     remains visible.
-- [ ] **3.4 Rewrite difficulty and settings validation around fixed Hard**
+- [x] **3.4 Rewrite difficulty and settings validation around fixed Hard**
   - Change: update `validate_vehicle_run_difficulty.gd`,
     `validate_settings_store.gd`, deployment assertions in
     `validate_vehicle_stage_ui_layout.gd`, capture fixtures, encounter pacing,
@@ -1244,21 +1244,21 @@ retirement, and validation decisions are locked above.
 ## Progress
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3 — make Deployment and Garage the fixed-Hard entry flow.
-- Last completed gate: Phase 2 component gate; Godot import, shared-component,
-  Pause, stage-layout, Upgrade, replacement-coverage, and physical rollback-pack
-  validators passed.
+- Current phase: Phase 4 — rebuild Upgrade as mandatory Selectable cards.
+- Last completed gate: Phase 3 entry-flow gate; settings migration, fixed-Hard,
+  encounter pacing, damage feedback, stage-layout, and KO/EN localization
+  validators passed after a clean Godot import.
 - Last green implementation commit:
-  `52cdce9c38566793802a7faa8b0045667b653da6`.
+  `06f8e2b23f85630d8494aa6aeca3ff4409b87f2d`.
 - Update rule: after a checkpoint passes, record concise evidence, check the
   task, update the last green commit, and advance this pointer in the same edit.
 
 ## Next Steps
 
-1. Start Task 3.1 and collapse runtime/settings difficulty to the fixed Hard
-   compatibility profile.
-2. Recompose Deployment and Garage on the frozen shared component API.
-3. Pass the Phase 3 entry-flow gate before changing Upgrade transactions.
+1. Remove the optional reward/decline path from runtime and UI.
+2. Recompose Upgrade cards around one lower semantic artwork and one Equip
+   command.
+3. Pass the Phase 4 reward and Upgrade gate before parallel Phase 5/6 work.
 
 ## Completion and Stop Conditions
 
@@ -1300,6 +1300,10 @@ Do not replan or stop for:
   `52cdce9c38566793802a7faa8b0045667b653da6`; the Theme now contains zero raster
   StyleBoxes, the factory owns the six shared primitives and compatibility map,
   and Pause is the first vertical-stack reference screen.
+- 2026-08-03: Phase 3 completed in
+  `06f8e2b23f85630d8494aa6aeca3ff4409b87f2d`; every run now uses the unchanged
+  Hard profile, obsolete saved difficulty is retired on normal save, and
+  Deployment/Garage use the shared two-column composition without a selector.
 - 2026-08-03: BK accepted the simplified UI direction while explicitly
   preserving information rather than reducing it.
 - 2026-08-03: BK required deletion of the small top image on upgrade cards,
