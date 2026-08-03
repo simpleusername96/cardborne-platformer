@@ -304,8 +304,10 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - layout breakpoint는 width `1100`, guide/report three-column breakpoint는
   `1180`이다.
 - upgrade card는 compact에서 `224–244×286`, gap `12`, wide에서
-  `304×330`, gap `18`을 사용한다. card 순서는 family text, title, summary,
-  관련 family artwork 한 개, effect row 최대 2개, behavior다. artwork는
+  `304×330`, gap `18`을 사용한다. card 순서는 family와 실제 current → next
+  level, title, summary, 관련 family artwork 한 개, effect row 최대 2개,
+  behavior다. 수치 modifier가 있는 card는 실제 current → next stat도 함께
+  표시한다. artwork는
   compact `64×64`, wide `88×88`이며 title 위에는 image, icon 또는 badge를
   두지 않는다. level text와 중복되는 단계 pip는 사용하지 않는다.
 - upgrade card 자체는 scroll을 사용하지 않는다. 200% text scale에서만 세
@@ -336,11 +338,13 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - 모든 modal은 live HUD와 gameplay input을 차단하고 title, content,
   primary action 순서가 한 번에 읽혀야 한다.
 - Deployment는 loadout/ship preview와 complete control information의
-  two-column body, 한 개의 Deploy primary action을 사용한다. difficulty
-  selector나 lock explanation은 없다.
-- Upgrade는 세 structured Selectable card와 explicit selection, Equip confirm을
-  사용한다. 각 card는 title 아래 관련 artwork 한 개만 가지며 Leave, Exit,
-  Skip 또는 decline action은 없다.
+  two-column body를 사용한다. Deploy primary, Settings secondary와 debug-only
+  Boss Practice secondary는 한 개의 flat horizontal action row에 놓는다.
+  difficulty selector나 lock explanation은 없다.
+- Upgrade는 별도 kicker, screen title 또는 instruction header 없이 세
+  structured Selectable card와 explicit selection, Equip confirm만 사용한다.
+  각 card는 title 아래 관련 artwork 한 개만 가지며 Leave, Exit, Skip 또는
+  decline action은 없다.
 - Pause는 Resume, Restart, Settings, Garage의 equal-width vertical stack을
   사용한다. Resume만 filled primary이고 Garage는 restrained danger다.
 - Settings는 category rail + content이며 Ship Status, audio, controls,

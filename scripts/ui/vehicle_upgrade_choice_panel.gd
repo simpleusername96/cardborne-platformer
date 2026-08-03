@@ -19,11 +19,8 @@ var _guard_remaining := 0.0
 var _pending := false
 var _compact := false
 
-var _kicker: Label
-var _title: Label
-var _detail: Label
 var _row_scroll: ScrollContainer
-var _row: HBoxContainer
+var _row: HFlowContainer
 var _message: Label
 var _command_lane: CenterContainer
 var _confirm: Button
@@ -36,31 +33,19 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	_kicker = _label("UPGRADE_KICKER", 16, Art.MUSTARD)
-	_kicker.theme_type_variation = &"MetricLabel"
-	_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_kicker)
-	_title = _label("UPGRADE_TITLE", 40, Art.IVORY_BRIGHT)
-	_title.theme_type_variation = &"DisplayLabel"
-	_title.custom_minimum_size.x = 900.0
-	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_title)
-	_detail = _label("UPGRADE_SELECT_DETAIL", 18, Art.MINT_SOFT)
-	_detail.custom_minimum_size.x = 900.0
-	_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_detail.custom_minimum_size.y = 34.0
-	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(_detail)
-
 	_row_scroll = ScrollContainer.new()
 	_row_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_row_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_row_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_row_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(_row_scroll)
-	_row = HBoxContainer.new()
+	_row = HFlowContainer.new()
 	_row.name = "UpgradeButtons"
-	_row.add_theme_constant_override("separation", 18)
-	_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_row.add_theme_constant_override("h_separation", 18)
+	_row.add_theme_constant_override("v_separation", 18)
+	_row.alignment = FlowContainer.ALIGNMENT_CENTER
+	_row.last_wrap_alignment = FlowContainer.LAST_WRAP_ALIGNMENT_CENTER
+	_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_row.custom_minimum_size.y = 330.0
 	_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_row_scroll.add_child(_row)
@@ -89,22 +74,8 @@ func set_compact_mode(value: bool) -> void:
 	add_theme_constant_override("separation", 5 if value else 8)
 	if not is_node_ready():
 		return
-	Factory.apply_font_size(
-		_kicker,
-		int(Art.TYPE_SCALE_COMPACT[1] if value else Art.TYPE_SCALE_WIDE[1])
-	)
-	_title.custom_minimum_size.x = 0.0 if value else 900.0
-	Factory.apply_font_size(
-		_title,
-		int(Art.TYPE_SCALE_COMPACT[4] if value else Art.TYPE_SCALE_WIDE[5])
-	)
-	_detail.custom_minimum_size.x = 0.0 if value else 900.0
-	_detail.custom_minimum_size.y = 30.0 if value else 34.0
-	Factory.apply_font_size(
-		_detail,
-		int(Art.TYPE_SCALE_COMPACT[1] if value else Art.TYPE_SCALE_WIDE[2])
-	)
-	_row.add_theme_constant_override("separation", 12 if value else 18)
+	_row.add_theme_constant_override("h_separation", 12 if value else 18)
+	_row.add_theme_constant_override("v_separation", 12 if value else 18)
 	_row.custom_minimum_size.y = 286.0 if value else 330.0
 	_message.custom_minimum_size.y = 20.0 if value else 22.0
 	Factory.apply_font_size(
@@ -121,6 +92,11 @@ func set_compact_mode(value: bool) -> void:
 
 
 func set_accessibility_mode(enabled: bool) -> void:
+	_row_scroll.vertical_scroll_mode = (
+		ScrollContainer.SCROLL_MODE_AUTO
+		if enabled
+		else ScrollContainer.SCROLL_MODE_DISABLED
+	)
 	if enabled:
 		set_compact_mode(false)
 	for button in _buttons:
@@ -138,7 +114,6 @@ func open(cards: Array[Dictionary]) -> void:
 	_guard_remaining = GUARD_SECONDS
 	_pending = false
 	_message.text = ""
-	_detail.text = tr("UPGRADE_SELECT_DETAIL")
 	for index in _buttons.size():
 		var button := _buttons[index]
 		button.visible = index < _cards.size()
@@ -234,7 +209,8 @@ func debug_contract() -> Dictionary:
 		"structured_cards":structured,
 		"card_count":_buttons.size(),
 		"confirm_size":_confirm.custom_minimum_size,
-		"row_separation":_row.get_theme_constant("separation"),
+		"row_separation":_row.get_theme_constant("h_separation"),
+		"row_type":_row.get_class(),
 		"row_minimum_height":_row.custom_minimum_size.y,
 		"guard_seconds":GUARD_SECONDS,
 		"compact":_compact,
@@ -249,10 +225,8 @@ func debug_contract() -> Dictionary:
 			"*", "Button", true, false
 		).size(),
 		"exit_action_count":0,
+		"header_text_count":0,
 		"type_sizes":{
-			"kicker":_kicker.get_theme_font_size("font_size"),
-			"title":_title.get_theme_font_size("font_size"),
-			"detail":_detail.get_theme_font_size("font_size"),
 			"message":_message.get_theme_font_size("font_size"),
 			"confirm":_confirm.get_theme_font_size("font_size"),
 		},
@@ -271,11 +245,11 @@ func debug_geometry_contract() -> Dictionary:
 	return {
 		"rect":get_global_rect(),
 		"row_rect":_row.get_global_rect(),
+		"row_scroll_rect":_row_scroll.get_global_rect(),
+		"horizontal_scroll_visible":_row_scroll.get_h_scroll_bar().visible,
+		"vertical_scroll_visible":_row_scroll.get_v_scroll_bar().visible,
 		"command_rect":_command_lane.get_global_rect(),
 		"cards":card_contracts,
-		"detail_rect":_detail.get_global_rect(),
-		"detail_lines":_detail.get_line_count(),
-		"detail_visible_lines":_detail.get_visible_line_count(),
 		"message_rect":_message.get_global_rect(),
 		"message_lines":_message.get_line_count(),
 		"message_visible_lines":_message.get_visible_line_count(),

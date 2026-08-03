@@ -115,26 +115,21 @@ func _initialize() -> void:
 			"upgrade confirmation uses the supported command contract at %d" % width
 		)
 		_expect(
-			int(upgrade_contract["row_separation"]) == (
+			String(upgrade_contract["row_type"]) == "HFlowContainer"
+				and int(upgrade_contract["row_separation"]) == (
 				12 if width < 1100.0 else 18
 			),
-			"upgrade cards use the approved responsive gap at %d" % width
+			"upgrade cards use the approved responsive flow and gap at %d" % width
 		)
 		var panel_type_sizes := Dictionary(upgrade_contract["type_sizes"])
 		_expect(
 			panel_type_sizes == (
 				{
-					"kicker":15,
-					"title":30,
-					"detail":15,
 					"message":15,
 					"confirm":22,
 				}
 				if width < 1100.0
 				else {
-					"kicker":16,
-					"title":40,
-					"detail":18,
 					"message":16,
 					"confirm":24,
 				}
@@ -157,6 +152,7 @@ func _initialize() -> void:
 				Dictionary(card["type_sizes"]) == (
 					{
 						"family":13,
+						"level":13,
 						"title":22,
 						"summary":15,
 						"behavior":15,
@@ -164,6 +160,7 @@ func _initialize() -> void:
 					if width < 1100.0
 					else {
 						"family":14,
+						"level":14,
 						"title":24,
 						"summary":16,
 						"behavior":16,
@@ -183,6 +180,13 @@ func _initialize() -> void:
 				% width
 			)
 			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
+			_expect(
+				bool(card["level_visible"])
+					and int(card["current_level"]) < int(card["next_level"])
+					and int(card["next_level"]) <= int(card["max_level"])
+					and int(card["value_rows"]) >= 1,
+				"upgrade card always shows a real current-to-next level at %d" % width
+			)
 			_expect(not bool(card["has_scroll"]), "upgrade card never scrolls")
 		_expect(bool(contract["has_selectable_theme"]), "upgrade cards use the public shared Selectable states at %d" % width)
 		_expect(bool(contract["has_danger_theme"]), "garage exit uses the public shared danger state at %d" % width)
@@ -251,6 +255,28 @@ func _initialize() -> void:
 				contract["deployment_compact"],
 			]
 		)
+		var deployment_action_order := Array(contract["deployment_action_order"])
+		var deployment_action_variations := Array(
+			contract["deployment_action_variations"]
+		)
+		var expected_deployment_actions := ["DeployButton", "SettingsButton"]
+		if OS.is_debug_build():
+			expected_deployment_actions.append("BossPracticeButton")
+		var secondary_roles_only := true
+		for variation in deployment_action_variations.slice(1):
+			secondary_roles_only = (
+				secondary_roles_only and String(variation) == "SecondaryButton"
+			)
+		_expect(
+			String(contract["deployment_action_row_type"]) == "HBoxContainer"
+				and int(contract["deployment_action_count"])
+					== expected_deployment_actions.size()
+				and deployment_action_order == expected_deployment_actions
+				and deployment_action_variations[0] == "PrimaryButton"
+				and secondary_roles_only,
+			"deployment flattens all visible actions into one ordered row at %d"
+			% width
+		)
 		_expect(
 			int(contract["garage_columns"]) == 2
 				and int(contract["garage_rows"]) == 5
@@ -275,7 +301,7 @@ func _initialize() -> void:
 				"deployment uses the approved broad 1280x720 composition"
 			)
 			var modal_minimums := Dictionary(contract["modal_minimums"])
-			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(960.0, 626.0), "upgrade modal keeps approved scale")
+			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(1000.0, 480.0), "upgrade modal fits one wide card flow without obsolete header height")
 			_expect(Vector2(modal_minimums["pause"]) == Vector2(520.0, 430.0), "pause modal uses the compact vertical-stack contract")
 			_expect(Vector2(modal_minimums["settings"]) == Vector2(920.0, 570.0), "settings modal keeps approved scale")
 			_expect(Vector2(modal_minimums["guidebook"]) == Vector2(1160.0, 636.0), "guidebook modal keeps approved scale")
@@ -684,16 +710,36 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 		)
 	var upgrade := Dictionary(contract["upgrade_choice"])
 	_expect(
-		int(Dictionary(upgrade["type_sizes"])["title"]) == 80,
-		"200%% probe doubles screen-local upgrade title typography; got %s"
+		int(upgrade["header_text_count"]) == 0
+			and Dictionary(upgrade["type_sizes"])
+				== {"message":32, "confirm":48},
+		"200%% probe keeps the upgrade screen header-free; got %s"
 		% upgrade["type_sizes"]
 	)
 	for card_variant in upgrade["cards"]:
 		_expect(
-			int(Dictionary(card_variant)["type_sizes"]["title"]) == 48,
+			int(Dictionary(card_variant)["type_sizes"]["title"]) == 48
+				and int(Dictionary(card_variant)["type_sizes"]["level"]) == 28,
 			"200%% probe doubles dynamically created card typography; got %s"
 			% Dictionary(card_variant)["type_sizes"]
 		)
+	_expect_upgrade_geometry(
+		ui.debug_upgrade_geometry(),
+		"ko 1280x720 200% text"
+	)
+	ui.debug_set_text_scale(1.0)
+	await _settle_ui()
+	get_root().content_scale_size = Vector2i(960, 540)
+	get_root().size = Vector2i(960, 540)
+	ui.debug_modal_contract("upgrade")
+	await _settle_ui()
+	ui.debug_set_text_scale(2.0)
+	await _settle_ui()
+	_expect_upgrade_geometry(
+		ui.debug_upgrade_geometry(),
+		"ko 960x540 200% text",
+		true
+	)
 	ui.debug_set_text_scale(1.0)
 	await _settle_ui()
 
@@ -767,28 +813,56 @@ func _validate_upgrade_matrix(ui: VehicleStageUI) -> void:
 	TranslationServer.set_locale(original_locale)
 
 
-func _expect_upgrade_geometry(contract: Dictionary, context: String) -> void:
+func _expect_upgrade_geometry(
+	contract: Dictionary,
+	context: String,
+	allow_vertical_scroll := false
+) -> void:
 	var viewport_rect := Rect2(contract["viewport_rect"]).grow(0.5)
 	var surface_rect := Rect2(contract["surface_rect"])
 	_expect(viewport_rect.encloses(surface_rect), "%s modal stays inside viewport" % context)
 	var panel := Dictionary(contract["panel"])
 	var panel_rect := Rect2(panel["rect"]).grow(0.5)
 	_expect(surface_rect.grow(0.5).encloses(panel_rect), "%s content stays inside modal" % context)
-	_expect(
-		int(panel["detail_visible_lines"]) == int(panel["detail_lines"]),
-		"%s selected detail keeps every wrapped line visible" % context
-	)
+	var row_rect := Rect2(panel["row_rect"]).grow(0.5)
+	var row_scroll_rect := Rect2(panel["row_scroll_rect"]).grow(0.5)
+	if allow_vertical_scroll:
+		_expect(
+			not bool(panel["horizontal_scroll_visible"])
+				and bool(panel["vertical_scroll_visible"]),
+			"%s uses only the outer vertical card-flow scroll" % context
+		)
+		_expect(
+			panel_rect.encloses(row_scroll_rect)
+				and panel_rect.encloses(Rect2(panel["command_rect"])),
+			"%s keeps the card viewport and Equip action inside the modal"
+			% context
+		)
 	var prior_card := Rect2()
 	for card_variant in panel["cards"]:
 		var card := Dictionary(card_variant)
 		var card_rect := Rect2(card["rect"])
-		_expect(panel_rect.encloses(card_rect), "%s card stays inside panel" % context)
-		_expect(
-			card_rect.size.is_equal_approx(
+		var expected_card_size := (
+			Vector2(356.0, 520.0)
+			if card_rect.size.x > 330.0
+			else (
 				Vector2(244.0, 286.0)
 				if card_rect.size.x < 270.0
 				else Vector2(304.0, 330.0)
-			),
+			)
+		)
+		_expect(
+			(
+				row_rect.encloses(card_rect)
+					and card_rect.position.x >= row_scroll_rect.position.x
+					and card_rect.end.x <= row_scroll_rect.end.x
+			)
+			if allow_vertical_scroll
+			else panel_rect.encloses(card_rect),
+			"%s card stays inside its available flow bounds" % context
+		)
+		_expect(
+			card_rect.size.is_equal_approx(expected_card_size),
 			"%s card uses approved compact/wide geometry: %s"
 			% [context, card_rect.size]
 		)

@@ -41,7 +41,7 @@ const StageReportPanel = preload(
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const MODAL_MINIMUMS := {
 	"deployment":Vector2(1176.0, 636.0),
-	"upgrade":Vector2(960.0, 626.0),
+	"upgrade":Vector2(1000.0, 480.0),
 	"pause":Vector2(520.0, 430.0),
 	"result":Vector2(900.0, 560.0),
 	"report":Vector2(1200.0, 640.0),
@@ -468,6 +468,10 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		"deployment_body_ratios":deployment_contract["body_ratios"],
 		"deployment_fixed_header":deployment_contract["fixed_header"],
 		"deployment_fixed_footer":deployment_contract["fixed_footer"],
+		"deployment_action_row_type":deployment_contract["action_row_type"],
+		"deployment_action_count":deployment_contract["action_count"],
+		"deployment_action_order":deployment_contract["action_order"],
+		"deployment_action_variations":deployment_contract["action_variations"],
 		"deployment_compact":deployment_contract["compact"],
 		"deployment_primary_size":deployment_contract["primary_size"],
 		"deployment_surface_size":deployment_surface_size,

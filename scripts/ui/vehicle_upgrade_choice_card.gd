@@ -15,9 +15,11 @@ const UpgradeGlyphRenderer = preload(
 var _offer: Dictionary = {}
 var _selected := false
 var _compact := false
+var _accessibility_mode := false
 var _content_margin: MarginContainer
 var _content_box: VBoxContainer
 var _family: Label
+var _level: Label
 var _title: Label
 var _summary: Label
 var _art_lane: CenterContainer
@@ -71,6 +73,7 @@ func set_compact_mode(value: bool) -> void:
 		Vector2(64.0, 64.0) if value else Vector2(88.0, 88.0)
 	)
 	Factory.apply_font_size(_family, 13 if value else 14)
+	Factory.apply_font_size(_level, 13 if value else 14)
 	Factory.apply_font_size(_title, 22 if value else 24)
 	_title.custom_minimum_size.y = 48.0 if value else 52.0
 	Factory.apply_font_size(_summary, 15 if value else 16)
@@ -81,12 +84,14 @@ func set_compact_mode(value: bool) -> void:
 
 
 func set_accessibility_mode(enabled: bool) -> void:
+	_accessibility_mode = enabled
 	if not enabled:
+		set_compact_mode(_compact)
 		return
 	custom_minimum_size = Vector2(356.0, 520.0)
 	_title.custom_minimum_size.y = 104.0
 	_summary.custom_minimum_size.y = 120.0
-	_behavior.custom_minimum_size.y = 64.0
+	_behavior.custom_minimum_size.y = 80.0
 	_glyph.custom_minimum_size = Vector2(112.0, 112.0)
 	_refresh()
 
@@ -106,6 +111,7 @@ func debug_contract() -> Dictionary:
 		"value_rows":(
 			(_effects.get_child_count() if is_instance_valid(_effects) else 0)
 			+ (1 if is_instance_valid(_behavior) and _behavior.visible else 0)
+			+ (1 if is_instance_valid(_level) and _level.visible else 0)
 		),
 		"effect_rows":_effects.get_child_count() if is_instance_valid(_effects) else 0,
 		"has_scroll":false,
@@ -115,6 +121,7 @@ func debug_contract() -> Dictionary:
 		"compact":_compact,
 		"type_sizes":{
 			"family":_family.get_theme_font_size("font_size"),
+			"level":_level.get_theme_font_size("font_size"),
 			"title":_title.get_theme_font_size("font_size"),
 			"summary":_summary.get_theme_font_size("font_size"),
 			"behavior":_behavior.get_theme_font_size("font_size"),
@@ -123,10 +130,15 @@ func debug_contract() -> Dictionary:
 		"header_art_count":0,
 		"body_art_count":1 if is_instance_valid(_glyph) else 0,
 		"family_badge_count":0,
+		"level_visible":_level.visible,
+		"level_text":_level.text,
+		"current_level":int(_offer.get("current_level", 0)),
+		"next_level":int(_offer.get("next_level", 1)),
+		"max_level":int(_offer.get("max_level", 1)),
 		"body_art_size":_glyph.custom_minimum_size,
 		"body_art_asset_id":glyph_contract["asset_id"],
 		"body_order":[
-			"family", "title", "summary", "art", "effects", "behavior",
+			"family", "level", "title", "summary", "art", "effects", "behavior",
 		],
 		"state_cues":{
 			"normal_flat":normal_style is StyleBoxFlat,
@@ -176,12 +188,23 @@ func _build() -> void:
 	_content_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content_margin.add_child(_content_box)
 
+	var meta_row := HBoxContainer.new()
+	meta_row.add_theme_constant_override("separation", 8)
+	meta_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content_box.add_child(meta_row)
 	_family = _label(14, Art.TEXT_PRIMARY)
 	_family.name = "FamilyLabel"
 	_family.theme_type_variation = &"MetricLabel"
-	_family.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_family.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_family.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_family.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_content_box.add_child(_family)
+	meta_row.add_child(_family)
+	_level = _label(14, Art.SYSTEM)
+	_level.name = "LevelLabel"
+	_level.theme_type_variation = &"MetricLabel"
+	_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_level.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	meta_row.add_child(_level)
 	_title = _label(24, Art.TEXT_PRIMARY)
 	_title.name = "TitleLabel"
 	_title.theme_type_variation = &"TitleLabel"
@@ -222,6 +245,7 @@ func _build() -> void:
 
 func _refresh() -> void:
 	_family.text = tr(String(_offer.get("family_key", "")))
+	_level.text = _level_transition_text()
 	_title.text = tr(String(_offer.get("title_key", "")))
 	_summary.text = tr(String(_offer.get("summary_key", "")))
 	_refresh_family_glyph()
@@ -253,6 +277,7 @@ func _refresh() -> void:
 	_refresh_summary_budget()
 	var accessibility_parts := PackedStringArray([
 		_family.text,
+		_level.text,
 		_title.text,
 		_summary.text,
 		"; ".join(accessible_values),
@@ -266,6 +291,10 @@ func _refresh() -> void:
 
 
 func _refresh_summary_budget() -> void:
+	if _accessibility_mode:
+		_summary.max_lines_visible = 5
+		_summary.custom_minimum_size.y = 152.0
+		return
 	var sparse_compact := (
 		_compact
 		and _effects.get_child_count() == 0
@@ -292,6 +321,19 @@ func _preview_value(preview: Dictionary) -> String:
 		"×%.2f" % next
 		if operation == "multiply"
 		else "%+.0f" % next
+	)
+	return "%s → %s" % [current_text, next_text]
+
+
+func _level_transition_text() -> String:
+	var template := tr("UPGRADE_CARD_LEVEL_VALUE")
+	var current_text := template.replace(
+		"%level%",
+		str(int(_offer.get("current_level", 0)))
+	)
+	var next_text := template.replace(
+		"%level%",
+		str(int(_offer.get("next_level", 1)))
 	)
 	return "%s → %s" % [current_text, next_text]
 

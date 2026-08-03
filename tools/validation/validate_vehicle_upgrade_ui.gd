@@ -178,7 +178,7 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 				and StringName(contract["body_art_asset_id"])
 					== StringName("hud/upgrade_%s" % family)
 				and Array(contract["body_order"]) == [
-					"family", "title", "summary", "art", "effects", "behavior",
+					"family", "level", "title", "summary", "art", "effects", "behavior",
 				],
 			"%s uses the compact lower semantic artwork contract" % family
 		)
@@ -221,8 +221,9 @@ func _validate_intent_contract(catalog: VehicleUpgradeCatalog) -> void:
 	_expect(
 		bool(initial_contract["confirm_disabled"])
 			and int(initial_contract["command_count"]) == 1
-			and int(initial_contract["exit_action_count"]) == 0,
-		"mandatory upgrade opens with one disabled Equip command and no exit"
+			and int(initial_contract["exit_action_count"]) == 0
+			and int(initial_contract["header_text_count"]) == 0,
+		"mandatory upgrade opens directly on cards with one disabled Equip command"
 	)
 	panel.call("_select", 0)
 	_expect(
@@ -368,8 +369,8 @@ func _validate_panel(
 	var surface := PanelContainer.new()
 	surface.theme_type_variation = &"ModalSurface"
 	surface.custom_minimum_size = Vector2(
-		minf(960.0, float(viewport.x) - 48.0),
-		minf(626.0, float(viewport.y) - 24.0)
+		minf(1000.0, float(viewport.x) - 48.0),
+		minf(480.0, float(viewport.y) - 24.0)
 	)
 	center.add_child(surface)
 	var panel := UpgradeChoicePanel.new()
@@ -413,10 +414,6 @@ func _validate_panel(
 		card_count += 1
 		_expect_card_geometry(card, context)
 	_expect(card_count == 3, "%s renders exactly three complete cards" % context)
-	_expect(
-		int(geometry["detail_visible_lines"]) == int(geometry["detail_lines"]),
-		"%s keeps every instruction line visible" % context
-	)
 	var contract := panel.debug_contract()
 	var unique_offer_ids := {}
 	for offer_id in Array(contract["offer_ids"]):
@@ -427,6 +424,10 @@ func _validate_panel(
 			and int(contract["command_count"]) == 1
 			and int(contract["exit_action_count"]) == 0,
 		"%s shows three unique frozen offers and one Equip command" % context
+	)
+	_expect(
+		String(contract["row_type"]) == "HFlowContainer",
+		"%s uses one responsive non-scrolling card flow" % context
 	)
 	for card_contract_variant in Array(contract["cards"]):
 		var card_contract := Dictionary(card_contract_variant)
@@ -441,10 +442,20 @@ func _validate_panel(
 				),
 			"%s card keeps one correctly sized lower artwork" % context
 		)
+		_expect(
+			bool(card_contract["level_visible"])
+				and int(card_contract["current_level"])
+					< int(card_contract["next_level"])
+				and int(card_contract["next_level"])
+					<= int(card_contract["max_level"])
+				and String(card_contract["level_text"]).contains("→")
+				and int(card_contract["value_rows"]) >= 1,
+			"%s card always exposes its real current-to-next level" % context
+		)
 	var expected_panel_scale := (
-		{"kicker":15, "title":30, "detail":15, "message":15, "confirm":22}
+		{"message":15, "confirm":22}
 		if compact
-		else {"kicker":16, "title":40, "detail":18, "message":16, "confirm":24}
+		else {"message":16, "confirm":24}
 	)
 	_expect(
 		Dictionary(contract["type_sizes"]) == expected_panel_scale,

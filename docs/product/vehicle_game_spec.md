@@ -421,12 +421,17 @@ hint appears once and the same hint cannot repeat within two seconds.
   UI refreshes never reroll an open offer. Authored reward enclosures remain
   optional to open, but an opened reward transaction has no Leave, Exit, Skip,
   or decline action.
+- The upgrade modal starts directly with the three cards: it has no separate
+  kicker, screen title, or instruction header. Every card shows its real current
+  and next level; cards backed by numeric stat modifiers also show the real
+  current-to-next stat value.
 - Upgrade cards never scroll independently. At 200% text scale only, the offer
   body may provide one outer vertical scroll while all three cards remain
   non-scrolling and the Equip action remains fixed.
 - Deployment presents loadout and complete control information with one Deploy
-  primary action. Every deployment starts the fixed Hard run and exposes no
-  difficulty choice.
+  primary action. Deploy, Settings, and the debug-only Boss Practice action share
+  one horizontal action row while retaining their primary/secondary roles.
+  Every deployment starts the fixed Hard run and exposes no difficulty choice.
 
 ### Runtime capacity and performance
 

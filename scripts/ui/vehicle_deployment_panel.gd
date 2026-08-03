@@ -30,7 +30,7 @@ var _weapon_summary: Label
 var _control_rows: Array[HBoxContainer] = []
 var _binding_labels: Dictionary = {}
 var _command: Button
-var _secondary_actions: HBoxContainer
+var _actions: HBoxContainer
 var _field_name_key := "FIELD_DROWNED_RUIN"
 var _bindings: Dictionary = {}
 var _compact := false
@@ -143,35 +143,36 @@ func _build_craft_preview() -> void:
 
 
 func _build_footer() -> void:
-	var deploy_lane := CenterContainer.new()
-	add_child(deploy_lane)
+	_actions = HBoxContainer.new()
+	_actions.name = "DeploymentActions"
+	_actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	_actions.add_theme_constant_override("separation", 14)
+	add_child(_actions)
 	_command = Factory.command_button("DEPLOY_COMMAND", Factory.COMMAND_PRIMARY)
+	_command.name = "DeployButton"
 	_command.custom_minimum_size = Vector2(300.0, 48.0)
 	Factory.apply_font_size(_command, 22)
 	_command.pressed.connect(
 		func() -> void: deploy_requested.emit(&"pulse_cannon")
 	)
-	deploy_lane.add_child(_command)
-
-	_secondary_actions = HBoxContainer.new()
-	_secondary_actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	_secondary_actions.add_theme_constant_override("separation", 14)
-	add_child(_secondary_actions)
+	_actions.add_child(_command)
 	var settings := Factory.command_button(
 		"SETTINGS_OPEN",
 		Factory.COMMAND_SECONDARY
 	)
+	settings.name = "SettingsButton"
 	settings.custom_minimum_size.x = 140.0
 	settings.pressed.connect(func() -> void: settings_requested.emit())
-	_secondary_actions.add_child(settings)
+	_actions.add_child(settings)
 	if OS.is_debug_build():
 		var practice := Factory.command_button(
 			"BOSS_PRACTICE_OPEN",
 			Factory.COMMAND_SECONDARY
 		)
+		practice.name = "BossPracticeButton"
 		practice.custom_minimum_size.x = 180.0
 		practice.pressed.connect(func() -> void: practice_requested.emit())
-		_secondary_actions.add_child(practice)
+		_actions.add_child(practice)
 
 
 func open(field_name_key: String) -> void:
@@ -210,7 +211,7 @@ func set_compact_mode(compact: bool) -> void:
 	_command.custom_minimum_size = (
 		Vector2(260.0, 44.0) if compact else Vector2(300.0, 48.0)
 	)
-	_secondary_actions.add_theme_constant_override(
+	_actions.add_theme_constant_override(
 		"separation",
 		10 if compact else 14
 	)
@@ -248,6 +249,13 @@ func refresh_input_bindings(bindings: Dictionary) -> void:
 
 
 func debug_contract() -> Dictionary:
+	var action_order := PackedStringArray()
+	var action_variations := PackedStringArray()
+	for child in _actions.get_children():
+		if child is Button:
+			var button := child as Button
+			action_order.append(button.name)
+			action_variations.append(String(button.theme_type_variation))
 	return {
 		"focusables":find_children("*", "Button", true, false).size(),
 		"has_difficulty_ui":false,
@@ -260,8 +268,12 @@ func debug_contract() -> Dictionary:
 			_controls_box.size_flags_stretch_ratio,
 		],
 		"fixed_header":_field_label.get_parent() == self,
-		"fixed_footer":_command.get_parent().get_parent() == self,
+		"fixed_footer":_actions.get_parent() == self,
 		"primary_size":_command.custom_minimum_size,
+		"action_row_type":_actions.get_class(),
+		"action_count":_actions.get_child_count(),
+		"action_order":action_order,
+		"action_variations":action_variations,
 		"compact":_compact,
 	}
 
