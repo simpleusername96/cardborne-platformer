@@ -1202,7 +1202,7 @@ attachment textures.
   and secondary-equipped states.
 - [x] Validate the 14-pixel gameplay minimap marker at eight directions.
 - [x] Mark switch_ready only after both exact deliverables pass.
-- [ ] Obtain one hash-bound approval for both deliverables and the retirement
+- [x] Obtain one hash-bound approval for both deliverables and the retirement
   of:
   - art/visuals/production/gameplay/actors/player/actor_player_hull_base.png and
     its tracked .png.import sidecar;
@@ -2040,6 +2040,15 @@ Do not mark a phase or this plan complete while a stop condition remains.
   HUD, replacement-coverage, deterministic builder, and workbench validators
   pass. player_craft is switch_ready; its approval and application remain
   null, and production runtime files remain unchanged.
+- 2026-08-03: BK explicitly instructed, "Approve the Phase 4 switch at
+  baseline bcab35399d4cc797a046de0246097f819c68f8fa using the two exact
+  displayed hashes and retirement of the exact displayed six paths." The
+  player_craft approval record binds that baseline, the craft-body SHA-256
+  5c0343fa6840aa7f68fd367b5b636cd84a8bcf0011d45b2758a3f4fe18846a4c, the
+  minimap-marker SHA-256
+  e8fa4ac0f9e2a6faaf4a013fd86b44857a2142ce3fe814f7c7accd46ba5f6602, and
+  exactly the three legacy player PNGs plus their three tracked import
+  sidecars. No broader deletion or later-unit approval is inferred.
 
 ## Execution Handoff
 

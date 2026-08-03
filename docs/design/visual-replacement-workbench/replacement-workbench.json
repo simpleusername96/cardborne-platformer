@@ -43,7 +43,7 @@
       "title_ko": "플레이어 기체",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png",
         "art/visuals/production/gameplay/actors/player/actor_player_engine.png",
@@ -104,7 +104,23 @@
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
         ".\\tools\\godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-03T12:25:27+09:00",
+        "baseline_commit": "bcab35399d4cc797a046de0246097f819c68f8fa",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/actors/player/actor_player_craft_body.png": "5c0343fa6840aa7f68fd367b5b636cd84a8bcf0011d45b2758a3f4fe18846a4c",
+          "art/visuals/production/gameplay/hud/minimap_marker_player.png": "e8fa4ac0f9e2a6faaf4a013fd86b44857a2142ce3fe814f7c7accd46ba5f6602"
+        },
+        "retire_paths": [
+          "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png",
+          "art/visuals/production/gameplay/actors/player/actor_player_aim_mount.png.import",
+          "art/visuals/production/gameplay/actors/player/actor_player_engine.png",
+          "art/visuals/production/gameplay/actors/player/actor_player_engine.png.import",
+          "art/visuals/production/gameplay/actors/player/actor_player_hull_base.png",
+          "art/visuals/production/gameplay/actors/player/actor_player_hull_base.png.import"
+        ]
+      },
       "application": null
     },
     {
