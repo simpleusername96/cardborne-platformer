@@ -279,12 +279,18 @@ static func validate_recipes() -> PackedStringArray:
 			errors.append("%s has no perimeter silhouette signature" % recipe_id)
 		else:
 			var signature_key := var_to_str(recipe_signature)
-			if seen_signatures.has(signature_key):
+			var matching_id := StringName(seen_signatures.get(signature_key, &""))
+			var shared_pad_footprint := (
+				recipe_id in [&"repair_field", &"overdrive_field"]
+				and matching_id in [&"repair_field", &"overdrive_field"]
+			)
+			if matching_id != &"" and not shared_pad_footprint:
 				errors.append(
 					"%s duplicates the silhouette signature of %s"
-					% [recipe_id, seen_signatures[signature_key]]
+					% [recipe_id, matching_id]
 				)
-			seen_signatures[signature_key] = recipe_id
+			if matching_id == &"":
+				seen_signatures[signature_key] = recipe_id
 	if not recipe(&"missing_recipe").is_empty():
 		errors.append("unknown reward/facility IDs must not use a fallback recipe")
 	return errors

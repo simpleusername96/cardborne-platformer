@@ -163,7 +163,7 @@ class FloatingDamageDraw:
 var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
 var _projectile_batch: BatchHandle
-var _experience_batches: Dictionary = {}
+var _experience_batch: BatchHandle
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _player_craft_body_batch: BatchHandle
@@ -367,16 +367,14 @@ func _build_batches() -> void:
 		&"projectile_shared_energy_teardrop",
 		PROJECTILE_BATCH_INITIAL_CAPACITY
 	)
-	for kind in [&"small", &"medium", &"large"]:
-		var family := StringName("experience_%s" % String(kind))
-		_experience_batches[kind] = _create_asset_batch(
-			"Experience_%s" % String(kind),
-			StringName("pickup/%s" % family),
-			EXPERIENCE_CAPACITY,
-			-1,
-			family,
-			EXPERIENCE_BATCH_INITIAL_CAPACITY
-		)
+	_experience_batch = _create_asset_batch(
+		"Experience_master",
+		&"pickup/experience_master",
+		EXPERIENCE_CAPACITY,
+		-1,
+		&"experience_master",
+		EXPERIENCE_BATCH_INITIAL_CAPACITY
+	)
 	_overlay_batches[&"health"] = _create_batch(
 		"Overlay_health",
 		Visuals.health_bar_mesh(),
@@ -1165,8 +1163,13 @@ func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> v
 		var radius := float(Art.EXPERIENCE_RADII[kind])
 		if not visible_world.grow(radius).has_point(position):
 			continue
-		var batch: BatchHandle = _experience_batches[kind]
-		_write_instance(batch, position, 0.0, Vector2.ONE * radius, Color.WHITE)
+		_write_instance(
+			_experience_batch,
+			position,
+			0.0,
+			Vector2.ONE * radius,
+			Art.PLAYER_REWARD
+		)
 
 
 func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:

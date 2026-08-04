@@ -169,12 +169,18 @@ func _validate_approved_grammars() -> void:
 		)
 	for pad_id in [&"repair_field", &"overdrive_field"]:
 		var bounds := Recipes.normalized_bounds(pad_id)
+		var footprint := Recipes.signature(pad_id)
 		_expect(
 			String(Recipes.shape_id(pad_id)).begins_with("circular_floor_pad_")
-				and Recipes.signature(pad_id).size() == 48
+				and footprint.size() == 1
+				and PackedVector2Array(footprint[0]).size() == 48
 				and is_equal_approx(bounds.size.x, bounds.size.y),
 			"%s uses one complete circular floor-pad footprint" % pad_id
 		)
+	_expect(
+		Recipes.shape_id(&"repair_field") != Recipes.shape_id(&"overdrive_field"),
+		"shared circular pads retain distinct function insets"
+	)
 	for recipe_id in Recipes.recipe_ids():
 		var roles := Recipes.plane_roles(recipe_id)
 		_expect(
