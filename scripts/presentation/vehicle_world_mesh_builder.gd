@@ -3,7 +3,7 @@ extends Node2D
 
 ## Geometry-fed flat world presentation. Stage data remains authoritative for
 ## walkability, cover, navigation, sockets, and terrain behavior; this node
-## compiles only immutable vertex-colored presentation batches.
+## batches shared authored textures inside that geometry-owned truth.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
@@ -15,6 +15,9 @@ const WorldCatalog = preload(
 const SurfacePatternCompiler = preload(
 	"res://scripts/presentation/vehicle_field_surface_pattern_compiler.gd"
 )
+const AssetProvider = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 
 const MAX_VISUAL_BATCHES := 12
 const DECORATION_BUDGET := SurfacePatternCompiler.MAX_SERVICE_RAILS
@@ -23,6 +26,7 @@ var _stage_id: StringName = &""
 var _field_id: StringName = &""
 var _layout_fingerprint := -1
 var _batch_count := 0
+var _texture_batches: Dictionary = {}
 var _decoration_count := 0
 var _geometry_fingerprint := ""
 var _surface_pattern_contract: Dictionary = {}
@@ -99,80 +103,36 @@ func _rebuild(layout: Object) -> void:
 		remove_child(child)
 		child.queue_free()
 	_batch_count = 0
+	_texture_batches.clear()
 	_decoration_count = 0
 	_surface_pattern_contract.clear()
 	var snapshot: Object = layout.geometry_snapshot if layout != null else null
-	var walkable_polygons: Array[PackedVector2Array] = []
-	for region in Rules.get_floor_regions(_stage_id):
-		walkable_polygons.append(PackedVector2Array(region["polygon"]))
-	_add_batch(
-		"FloorMass",
-		_layers_for_polygons(walkable_polygons, Art.SURFACE),
-		0
-	)
-	var void_polygons: Array[PackedVector2Array] = []
-	for void_rect in Rules.get_void_rects(_stage_id):
-		void_polygons.append(
-			PackedVector2Array(StageGeometry.rect_polygon(void_rect))
-		)
-	_add_batch(
-		"VoidMass",
-		_layers_for_polygons(void_polygons, Art.SPACE_BLACK),
-		1
-	)
+	# The backdrop owns the single void fill. Fixed world identities below are
+	# texture-backed; geometry still supplies their exact placement and clipping.
 	var cover_polygons: Array[PackedVector2Array] = []
 	for polygon in Rules.get_cover_polygons(false, _stage_id):
 		cover_polygons.append(PackedVector2Array(polygon))
 	if layout != null:
 		for rectangle in layout.cover_rects:
 			cover_polygons.append(_rect_points(Rect2(rectangle)))
-	_add_batch(
-		"CoverShadow",
-		_offset_layers(cover_polygons, Art.WALL_SHADOW_OFFSET, Art.WALL_SHADOW),
-		2
-	)
-	_add_batch(
-		"CoverMass",
-		_layers_for_polygons(cover_polygons, Art.WALL_FILL),
-		3
-	)
-	_add_batch(
-		"CoverRails",
-		_cover_rail_layers(cover_polygons),
-		4
-	)
-	if snapshot != null:
-		var wall_segments := PackedVector2Array(snapshot.get("wall_segments"))
-		_add_batch(
-			"BoundaryShadow",
-			_segment_layers(
-				wall_segments,
-				Art.WALL_RAIL_WIDTH + 18.0,
-				Art.WALL_SHADOW_OFFSET,
-				Art.WALL_SHADOW
-			),
-			2
-		)
-		_add_batch(
-			"BoundaryRail",
-			_segment_layers(
-				wall_segments,
-				Art.WALL_RAIL_WIDTH,
-				Vector2.ZERO,
-				Art.RAISED
-			),
+	for cover_index in cover_polygons.size():
+		_add_texture_rect(
+			"Cover_%d" % cover_index,
+			&"world/terrain_solid_cover_block",
+			_polygon_bounds(cover_polygons[cover_index]),
 			3
 		)
-		_add_batch(
-			"BoundaryEdge",
-			_segment_layers(
-				wall_segments,
-				6.0,
-				Vector2.ZERO,
-				Art.LINE
-			),
-			4
-		)
+	if snapshot != null:
+		var wall_segments := PackedVector2Array(snapshot.get("wall_segments"))
+		for segment_index in wall_segments.size() / 2:
+			_add_texture_segment(
+				"Boundary_%d" % segment_index,
+				&"world/wall_segment_9",
+				wall_segments[segment_index * 2],
+				wall_segments[segment_index * 2 + 1],
+				Art.WALL_RAIL_WIDTH + 18.0,
+				3
+			)
 		var surface_pattern := SurfacePatternCompiler.compile(
 			_field_id,
 			_layout_fingerprint,
@@ -185,14 +145,38 @@ func _rebuild(layout: Object) -> void:
 			),
 			Vector2(snapshot.get("player_start"))
 		)
-		var surface_layers: Array[Dictionary] = []
-		surface_layers.assign(
-			Array(surface_pattern.get("layers", []))
-		)
+		for module_index in Array(surface_pattern.get("modules", [])).size():
+			var module := Dictionary(Array(surface_pattern["modules"])[module_index])
+			for fragment_variant in Array(module.get("fragments", [])):
+				_add_texture_rect(
+					"Surface_%d" % module_index,
+					&"world/surface_panel_9",
+					Rect2(fragment_variant),
+					1
+				)
+			if bool(module.get("has_service_rail", false)):
+				var panel_rect := Rect2(module.get("panel_rect", Rect2()))
+				var horizontal := panel_rect.size.x >= panel_rect.size.y
+				var rail_rect := Rect2(
+					panel_rect.get_center() - Vector2(
+						panel_rect.size.x * 0.34 if horizontal else 24.0,
+						24.0 if horizontal else panel_rect.size.y * 0.34
+					),
+					Vector2(
+						panel_rect.size.x * 0.68 if horizontal else 48.0,
+						48.0 if horizontal else panel_rect.size.y * 0.68
+					)
+				)
+				_add_texture_rect(
+					"ServiceRail_%d" % module_index,
+					&"world/service_rail_tile",
+					rail_rect,
+					2,
+					PI * 0.5 if not horizontal else 0.0
+				)
 		_decoration_count = int(
 			surface_pattern.get("service_rail_count", 0)
 		)
-		_add_batch("SurfacePattern", surface_layers, 1)
 		_surface_pattern_contract = {
 			"presentation_only": surface_pattern.get(
 				"presentation_only",
@@ -228,127 +212,111 @@ func _rebuild(layout: Object) -> void:
 	)
 
 
-func _add_batch(name: String, layers: Array[Dictionary], child_z: int) -> void:
-	var mesh := _polygon_mesh(layers)
-	if mesh == null:
+func _add_texture_rect(
+	_name: String,
+	asset_id: StringName,
+	rect: Rect2,
+	child_z: int,
+	rotation: float = 0.0
+) -> void:
+	if not rect.has_area():
 		return
-	var instance := MeshInstance2D.new()
-	instance.name = name
-	instance.mesh = mesh
-	instance.z_index = child_z
-	add_child(instance)
-	_batch_count += 1
+	var canvas := _asset_canvas(asset_id)
+	if canvas == Vector2.ZERO:
+		return
+	var local_size := (
+		Vector2(rect.size.y, rect.size.x)
+		if not is_zero_approx(rotation)
+		else rect.size
+	)
+	_append_texture_instance(
+		asset_id,
+		child_z,
+		rect.get_center(),
+		rotation,
+		_scale_for_canvas(local_size, canvas)
+	)
 
 
-func _cover_rail_layers(polygons: Array[PackedVector2Array]) -> Array[Dictionary]:
-	var layers: Array[Dictionary] = []
-	for polygon in polygons:
-		if polygon.size() < 3:
-			continue
-		var bounds := _polygon_bounds(polygon).grow(-18.0)
-		if not bounds.has_area():
-			continue
-		var horizontal := bounds.size.x >= bounds.size.y
-		var from := (
-			Vector2(bounds.position.x, bounds.get_center().y)
-			if horizontal
-			else Vector2(bounds.get_center().x, bounds.position.y)
-		)
-		var to := (
-			Vector2(bounds.end.x, bounds.get_center().y)
-			if horizontal
-			else Vector2(bounds.get_center().x, bounds.end.y)
-		)
-		layers.append({
-			"points": _line_quad(from, to, 5.0),
-			"color": Art.LINE,
-		})
-	return layers
-
-
-func _segment_layers(
-	segments: PackedVector2Array,
+func _add_texture_segment(
+	name: String,
+	asset_id: StringName,
+	from: Vector2,
+	to: Vector2,
 	width: float,
-	offset: Vector2,
-	color: Color
-) -> Array[Dictionary]:
-	var layers: Array[Dictionary] = []
-	for index in segments.size() / 2:
-		layers.append({
-			"points": _line_quad(
-				segments[index * 2] + offset,
-				segments[index * 2 + 1] + offset,
-				width
-			),
-			"color": color,
-		})
-	return layers
-
-
-func _layers_for_polygons(
-	polygons: Array[PackedVector2Array],
-	color: Color
-) -> Array[Dictionary]:
-	var layers: Array[Dictionary] = []
-	for polygon in polygons:
-		layers.append({"points": polygon, "color": color})
-	return layers
-
-
-func _offset_layers(
-	polygons: Array[PackedVector2Array],
-	offset: Vector2,
-	color: Color
-) -> Array[Dictionary]:
-	var shifted: Array[PackedVector2Array] = []
-	for polygon in polygons:
-		var points := PackedVector2Array()
-		for point in polygon:
-			points.append(point + offset)
-		shifted.append(points)
-	return _layers_for_polygons(shifted, color)
-
-
-func _polygon_mesh(layers: Array[Dictionary]) -> ArrayMesh:
-	var vertices := PackedVector3Array()
-	var colors := PackedColorArray()
-	var indices := PackedInt32Array()
-	for layer in layers:
-		var points := PackedVector2Array(layer.get("points", PackedVector2Array()))
-		if points.size() < 3:
-			continue
-		var triangles := Geometry2D.triangulate_polygon(points)
-		if triangles.is_empty():
-			continue
-		var offset := vertices.size()
-		for point in points:
-			vertices.append(Vector3(point.x, point.y, 0.0))
-			colors.append(Color(layer.get("color", Color.WHITE)))
-		for index in triangles:
-			indices.append(offset + index)
-	if indices.is_empty():
-		return null
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = vertices
-	arrays[Mesh.ARRAY_COLOR] = colors
-	arrays[Mesh.ARRAY_INDEX] = indices
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
-
-
-func _line_quad(from: Vector2, to: Vector2, width: float) -> PackedVector2Array:
+	child_z: int
+) -> void:
 	var vector := to - from
-	if vector.is_zero_approx():
-		return PackedVector2Array()
-	var side := vector.normalized().rotated(PI * 0.5) * width * 0.5
-	return PackedVector2Array([
-		from - side,
-		to - side,
-		to + side,
-		from + side,
-	])
+	if vector.is_zero_approx() or width <= 0.0:
+		return
+	var canvas := _asset_canvas(asset_id)
+	if canvas == Vector2.ZERO:
+		return
+	_append_texture_instance(
+		asset_id,
+		child_z,
+		from + vector * 0.5,
+		vector.angle(),
+		_scale_for_canvas(Vector2(vector.length(), width), canvas)
+	)
+
+
+func _asset_canvas(asset_id: StringName) -> Vector2:
+	var texture := AssetProvider.texture(asset_id)
+	var descriptor := AssetProvider.descriptor(asset_id)
+	if texture == null or descriptor.is_empty():
+		return Vector2.ZERO
+	return Vector2(descriptor.get("canvas", texture.get_size()))
+
+
+func _scale_for_canvas(target_size: Vector2, canvas: Vector2) -> Vector2:
+	var unit_radius := maxf(canvas.x, canvas.y) * 0.5
+	return Vector2(
+		target_size.x * unit_radius / canvas.x,
+		target_size.y * unit_radius / canvas.y
+	)
+
+
+func _append_texture_instance(
+	asset_id: StringName,
+	child_z: int,
+	position: Vector2,
+	rotation: float,
+	scale: Vector2
+) -> void:
+	var batch_key := "%s:%d" % [String(asset_id), child_z]
+	var record := Dictionary(_texture_batches.get(batch_key, {}))
+	var multi_mesh: MultiMesh
+	if record.is_empty():
+		var mesh := AssetProvider.normalized_mesh(asset_id)
+		var texture := AssetProvider.texture(asset_id)
+		if mesh == null or texture == null:
+			return
+		multi_mesh = MultiMesh.new()
+		multi_mesh.transform_format = MultiMesh.TRANSFORM_2D
+		multi_mesh.instance_count = 0
+		multi_mesh.visible_instance_count = 0
+		multi_mesh.mesh = mesh
+		var instance := MultiMeshInstance2D.new()
+		instance.name = "Raster_%s" % String(asset_id).replace("/", "_")
+		instance.texture = texture
+		instance.multimesh = multi_mesh
+		instance.z_index = child_z
+		add_child(instance)
+		record = {"multi_mesh":multi_mesh, "count":0}
+		_texture_batches[batch_key] = record
+		_batch_count += 1
+	else:
+		multi_mesh = record["multi_mesh"] as MultiMesh
+	var count := int(record["count"])
+	multi_mesh.instance_count = count + 1
+	multi_mesh.set_instance_transform_2d(
+		count,
+		Transform2D(rotation, position).scaled_local(scale)
+	)
+	multi_mesh.visible_instance_count = count + 1
+	record["count"] = count + 1
+	_texture_batches[batch_key] = record
 
 
 func _rect_points(rect: Rect2) -> PackedVector2Array:

@@ -377,38 +377,33 @@ func _validate_field(field_id: StringName) -> void:
 		"%s presentation preserves selected cover geometry" % field_id
 	)
 
-	var mesh_count := 0
+	var texture_batch_count := 0
+	var has_surface_panel := false
 	var collision_count := 0
 	var child_names := PackedStringArray()
 	for child in world.get_children():
 		child_names.append(String(child.name))
-		if child is MeshInstance2D:
-			mesh_count += 1
-			var mesh := (child as MeshInstance2D).mesh
-			var arrays := mesh.surface_get_arrays(0) if mesh != null else []
-			var texture_uvs = (
-				arrays[Mesh.ARRAY_TEX_UV]
-				if arrays.size() == Mesh.ARRAY_MAX
-				else null
-			)
+		if String(child.name) == "Raster_world_surface_panel_9":
+			has_surface_panel = true
+		if child is MultiMeshInstance2D:
+			texture_batch_count += 1
 			_expect(
-				mesh != null
-				and (
-					texture_uvs == null
-					or (texture_uvs is PackedVector2Array and texture_uvs.is_empty())
-				),
-				"%s mesh batches are vertex-colored" % field_id
+				(child as MultiMeshInstance2D).texture != null
+				and (child as MultiMeshInstance2D).multimesh != null,
+				"%s world batch binds an authored raster" % field_id
 			)
 		if child is CollisionObject2D:
 			collision_count += 1
 	_expect(
-		mesh_count == int(contract.get("batch_count", -1)),
-		"%s retained batch accounting is exact" % field_id
+		texture_batch_count > 0
+			and texture_batch_count == int(contract.get("batch_count", -1))
+			and texture_batch_count <= int(contract.get("batch_budget", -1)),
+		"%s world compilation groups authored textures inside the retained batch budget" % field_id
 	)
 	_expect(collision_count == 0, "%s visual builder adds no collision objects" % field_id)
 	_expect(
-		child_names.count("SurfacePattern") == 1,
-		"%s surface modules occupy one retained mesh batch" % field_id
+		has_surface_panel,
+		"%s surface modules use authored panel textures" % field_id
 	)
 	_expect(
 		not child_names.has("FieldRhythm")

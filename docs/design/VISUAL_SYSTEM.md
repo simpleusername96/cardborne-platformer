@@ -168,24 +168,25 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 
 | owner | 책임 | 금지 |
 | --- | --- | --- |
-| component mesh library | immutable cached flat primitive | gameplay rule, collision |
+| gameplay cue catalog | reusable authored cue texture, pivot와 stretch/tint contract | gameplay rule, collision, live dimension |
 | actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
 | projectile catalog | 하나의 authored energy-teardrop master, pivot와 collision-normalized core | damage, range, hit rule, faction/affinity tint와 scale |
 | reward catalog | authored pickup, shard와 crate visual ID 및 value-scale mapping | spawn, value, collection |
-| effect catalog | one authored EMP image, code-native live boundary와 deliberate small-effect suppression | timer, damage, protection rule |
+| effect catalog | one authored EMP image, shared authored live-cue images와 deliberate small-effect suppression | timer, damage, protection rule |
 | world catalog | field surface, authored facility, bulkhead와 state-tile descriptor | topology, collision, schedule |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
-| defense catalog | code-native support ring, actor tint와 localized status text recipe | protection, damage, slow, stack, timer |
-| UI glyph catalog | code-native action, upgrade, minimap, preview, combat-cue glyph | layout, localization, focus |
-| semantic asset provider | approved persistent raster texture, pivot와 attachment | collision, behavior, map topology, code-native descriptor |
+| defense catalog | shared authored support-ring image, actor tint와 localized status text recipe | protection, damage, slow, stack, timer |
+| UI glyph catalog | code-native action, upgrade, minimap과 preview glyph | layout, localization, focus |
+| semantic asset provider | approved persistent and shared gameplay raster texture, pivot와 attachment | collision, behavior, map topology, live descriptor |
 
 runtime, guidebook, upgrade card와 system sheet는 같은 semantic descriptor를
 재사용한다. authored raster identity만
 `art/visuals/production/gameplay/asset-manifest.json`과 semantic asset provider에
-등록하고, code-native identity는 책임 catalog의 recipe가 소유한다. preview-only
+등록하고, retained UI identity는 책임 catalog의 code-native recipe가 소유한다. preview-only
 대체 art를 만들지 않는다. visual geometry는 collision truth와 분리하되
 projectile core boundary와 debug overlay로 그 차이를 검증한다. semantic-v2
-provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
+provider는 shared floor/wall presentation texture도 색인하지만 topology와
+collision은 계속 field geometry가 소유한다.
 
 #### Media ownership boundary
 
@@ -194,15 +195,16 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
   cover, wear tile처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된
   authored PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와
   state 선택만 소유한다.
-- HUD action/upgrade glyph, minimap marker, combat cue, target bracket,
-  telegraph boundary와 실시간 beam/radius corridor처럼 해상도 독립적인 동적
-  truth만 shared code-native geometry를 사용한다. code-native 가능성만으로
-  world object를 PNG 경계 밖으로 밀어내지 않는다.
+- HUD action/upgrade glyph와 minimap marker는 shared code-native UI geometry를
+  유지한다. 게임 월드에 그려지는 combat cue, target bracket, telegraph
+  boundary와 beam/radius corridor의 고정된 visual identity는 shared authored
+  PNG를 사용하고 runtime이 live position, length, width, radius, rotation,
+  tint, alpha와 readiness를 소유한다.
 - projectile은 독립된 world object이지만 visual family를 세분하지 않는다.
   모든 player/hostile projectile은 무꼬리 energy-teardrop master PNG 하나를
   공유하고 runtime이 facing, scale, faction/affinity tint를 적용한다.
 - barrier, ion, shield source와 burn/poison/chill은 별도 raster asset을 갖지
-  않는다. 보호와 범위는 기존 code-native ring/tint로, 지속 상태는 actor tint와
+  않는다. 보호와 범위는 shared authored ring과 runtime tint/scale로, 지속 상태는 actor tint와
   localized target-status text로 전달한다. cosmetic emitter, plate, orbit icon은
   gameplay truth가 아니므로 만들지 않는다.
 - 경험치 pickup의 small/medium/large는 하나의 authored XP master PNG를
@@ -327,9 +329,9 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - projectile startup은 muzzle/cadence cue와 최대 `0.4 s` short lead만
   표시한다. full committed path는 beam에만 사용하고 charge는 locked
   endpoint capsule을 사용한다.
-- beam은 gameplay corridor가 길이와 폭을 소유하는 live code-native boundary다.
-  projectile PNG를 corridor 길이로 늘이지 않으며, startup/end contact 같은 작은
-  cosmetic raster frame은 현재 만들지 않는다.
+- beam은 gameplay corridor가 길이와 폭을 소유하고 shared authored beam-strip
+  PNG를 그 live rectangle에 stretch한다. projectile PNG를 corridor 길이로
+  늘이지 않으며, startup/end contact 같은 작은 cosmetic frame은 만들지 않는다.
 - telegraph는 gameplay이 제공한 exact live geometry를 사용하고 readiness는
   단조롭게 증가한다. warning이 뜬 뒤 origin, direction과 target을 장식
   animation으로 바꾸지 않는다.
@@ -433,8 +435,9 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
   사용하지 않는다.
 - notification과 transition은 objective 아래 한 줄 ToastSurface에 나타나며
   crosshair를 가리지 않는다.
-- off-screen threat, crosshair, 네 종류 minimap marker와 필요한 support timer는
-  shape-coded retained mesh를 사용한다. persistent-status orbit은 사용하지 않는다.
+- HUD off-screen threat와 네 종류 minimap marker는 기존 code-native retained
+  mesh를 유지한다. world-space crosshair와 support timer는 shared authored PNG를
+  retained textured batch로 배치한다. persistent-status orbit은 사용하지 않는다.
 
 ### Modal
 
@@ -485,10 +488,9 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
   active/damaged/resolved 상태만 사용됨
-- final gameplay manifest가 정확히 49 PNG를 색인함: player 1, ordinary enemy
-  19, boss 5, shared boss node 3, secondary 4, shared projectile 1, defense/status 0,
-  pickup/reward 4, world/facility 11, EMP 1
-- HUD/minimap/combat-cue PNG와 EMP 이외의 raster effect frame이 0이며, 모든
+- final gameplay manifest가 정확히 59 PNG를 색인함: 기존 49 gameplay image,
+  shared world presentation 3, shared world-space combat cue 7
+- HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함
 - deterministic tile hash equality와 walkable/void containment
 - grayscale role/affinity/state 구분
@@ -505,10 +507,11 @@ Web export만으로 interactive built-Web smoke나 release performance를
 
 ### Current implementation notes
 
-- Field surface and wall truth remains code-native and collision-owned; no
-  decorative floor or wall raster is a second topology owner.
+- Field topology and wall collision remain code-owned; shared surface, rail,
+  and wall PNGs are stretched or tiled inside that truth and never become a
+  second topology owner.
 - Repair and overdrive pads render their authored circular surface at the live
-  gameplay radius, with the code-native boundary remaining authoritative.
+  gameplay radius, with the collision-owned boundary remaining authoritative.
 - Every non-beam projectile resolves `projectile/energy_teardrop`; runtime owns
   scale, rotation, faction/affinity tint, collision, speed, and homing.
 - The integrated player craft, XP master, four secondary bodies, shared

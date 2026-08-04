@@ -277,7 +277,7 @@ function Get-VisualReplacementProjection {
         Test-VisualObjectFields $unit @(
             'id','category_id','order','title_en','title_ko','owner','switch_kind','status',
             'current_paths','consumer_paths','consumer_asset_ids','direction_en','deliverables',
-            'final_paths','reuse_paths','preview_paths','retire_paths','runtime_change_paths',
+            'final_paths','reuse_paths','preview_paths','rendered_as_is_paths','retire_paths','runtime_change_paths',
             'acceptance_commands','visual_authority_evidence','approval','application'
         ) "unit $id" $failures
         if ($id -notmatch '^[a-z][a-z0-9_]*$') { $failures.Add("invalid unit id: $id") }
@@ -290,6 +290,8 @@ function Get-VisualReplacementProjection {
         if ([string]$unit.owner -notin $script:Owners) { $failures.Add("invalid owner for ${id}: $($unit.owner)") }
         if ([string]$unit.switch_kind -notin $script:SwitchKinds) { $failures.Add("invalid switch_kind for ${id}: $($unit.switch_kind)") }
         if ([string]$unit.status -notin $script:Statuses) { $failures.Add("invalid status for ${id}: $($unit.status)") }
+        $renderedAsIsProperty = $unit.PSObject.Properties['rendered_as_is_paths']
+        $renderedAsIsPathsRaw = if ($null -ne $renderedAsIsProperty) { @($renderedAsIsProperty.Value) } else { @() }
         $allowsRetiredPathsMissing = (
             [string]$unit.status -in @('approved_for_switch','applied','retired') -and
             $null -ne $unit.approval
@@ -318,7 +320,7 @@ function Get-VisualReplacementProjection {
             $dimensions = if ($path.EndsWith('.png')) { Get-VisualPngDimensions $absolute } else { @($null,$null) }
             $currentRecords.Add([ordered]@{path=$path;bytes=(Get-Item -LiteralPath $absolute).Length;width=$dimensions[0];height=$dimensions[1];sha256=(Get-VisualSha256 $absolute)})
         }
-        foreach ($pathValue in @($unit.consumer_paths) + @($unit.runtime_change_paths) + @($unit.preview_paths) + @($unit.retire_paths)) {
+        foreach ($pathValue in @($unit.consumer_paths) + @($unit.runtime_change_paths) + @($unit.preview_paths) + $renderedAsIsPathsRaw + @($unit.retire_paths)) {
             if ($null -eq $pathValue -or [string]::IsNullOrWhiteSpace([string]$pathValue)) { continue }
             $path = ConvertTo-NormalizedVisualPath ([string]$pathValue)
             try { $absolute = Resolve-VisualRepositoryPath $RepoRoot $path } catch { $failures.Add($_.Exception.Message); continue }
@@ -331,6 +333,7 @@ function Get-VisualReplacementProjection {
                 )) { $failures.Add("missing declared path: $id -> $path") }
             }
             if ($path -in @($unit.preview_paths) -and -not $path.StartsWith("$script:WorkbenchRoot/previews/")) { $failures.Add("preview escapes preview root: $id -> $path") }
+            if ($path -in $renderedAsIsPathsRaw -and -not $path.StartsWith("$script:WorkbenchRoot/previews/")) { $failures.Add("rendered AS-IS evidence escapes preview root: $id -> $path") }
         }
 
         $unitFinalPaths = [Collections.Generic.List[string]]::new()
@@ -528,6 +531,13 @@ function Get-VisualReplacementProjection {
         $consumerPaths = @($unit.consumer_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $consumerIds = @($unit.consumer_asset_ids | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $previewPaths = @($unit.preview_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
+        $renderedAsIsPaths = @($renderedAsIsPathsRaw | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
+        $renderedAsIsRecords = @($renderedAsIsPaths | ForEach-Object {
+            $path = ConvertTo-NormalizedVisualPath ([string]$_)
+            $absolute = Resolve-VisualRepositoryPath $RepoRoot $path
+            $dimensions = Get-VisualPngDimensions $absolute
+            [ordered]@{path=$path;bytes=(Get-Item -LiteralPath $absolute).Length;width=$dimensions[0];height=$dimensions[1];sha256=(Get-VisualSha256 $absolute)}
+        })
         $retirePaths = @($unit.retire_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $runtimePaths = @($unit.runtime_change_paths | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
         $commands = @($unit.acceptance_commands | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace([string]$_) })
@@ -577,7 +587,7 @@ function Get-VisualReplacementProjection {
         $projectedUnits.Add([ordered]@{
             id=$id;category_id=[string]$unit.category_id;order=[int]$unit.order;title_en=[string]$unit.title_en;title_ko=[string]$unit.title_ko;
             owner=[string]$unit.owner;switch_kind=[string]$unit.switch_kind;status=[string]$unit.status;direction_en=[string]$unit.direction_en;
-            current_files=@($currentRecords);consumer_paths=$consumerPaths;consumer_asset_ids=$consumerIds;
+            current_files=@($currentRecords);rendered_as_is_files=$renderedAsIsRecords;consumer_paths=$consumerPaths;consumer_asset_ids=$consumerIds;
             deliverables=@($deliverableRecords);final_paths=@($unitFinalPaths);reuse_paths=@($unitReusePaths);
             preview_paths=$previewPaths;retire_paths=$retirePaths;runtime_change_paths=$runtimePaths;
             acceptance_commands=$commands;visual_authority_evidence=$projectedVisualAuthorityEvidence;

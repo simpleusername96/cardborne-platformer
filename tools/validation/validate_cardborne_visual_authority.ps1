@@ -107,7 +107,7 @@ if (Test-Path -LiteralPath $designContextDirectory -PathType Container) {
 
 # This plan is intentionally transient under .agents/PLANS.md. Validate its
 # authority preflight while it is active without making future plan deletion fail.
-$activeVisualPlan = '.agents/execplans/2026-08-04-complete-remaining-visual-replacements.md'
+$activeVisualPlan = '.agents/execplans/2026-08-04-rasterize-code-native-visuals.md'
 $activeVisualPlanAbsolute = Get-RepoFile $activeVisualPlan
 if (Test-Path -LiteralPath $activeVisualPlanAbsolute -PathType Leaf) {
     $planText = Get-Content -LiteralPath $activeVisualPlanAbsolute -Raw

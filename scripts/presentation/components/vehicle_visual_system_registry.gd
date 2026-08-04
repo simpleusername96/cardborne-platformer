@@ -17,26 +17,11 @@ const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
 
-const COMPONENT_GEOMETRY_PATH := (
-	"res://scripts/presentation/components/vehicle_component_mesh_library.gd"
-)
-const ACTOR_RECIPE_PATH := (
-	"res://scripts/presentation/components/vehicle_actor_mesh_recipes.gd"
-)
 const UPGRADE_GLYPH_RECIPE_PATH := (
 	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
 )
 const ACTION_GLYPH_RECIPE_PATH := (
 	"res://scripts/presentation/components/vehicle_ui_action_glyph_renderer.gd"
-)
-const PROJECTILE_EFFECT_RECIPE_PATH := (
-	"res://scripts/presentation/components/vehicle_projectile_effect_mesh_recipes.gd"
-)
-const REWARD_FACILITY_RECIPE_PATH := (
-	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
-)
-const COMBAT_GEOMETRY_PATH := (
-	"res://scripts/presentation/vehicle_combat_visual_library.gd"
 )
 const COMBAT_RENDERER_PATH := (
 	"res://scripts/presentation/vehicle_combat_renderer.gd"
@@ -101,32 +86,12 @@ static func provider_fingerprint() -> String:
 		GlyphCatalog.UPGRADE_FAMILY_GLYPHS
 	)
 	records.append(
-		"component_geometry=%s"
-		% FileAccess.get_sha256(COMPONENT_GEOMETRY_PATH)
-	)
-	records.append(
-		"actor_recipes=%s"
-		% FileAccess.get_sha256(ACTOR_RECIPE_PATH)
-	)
-	records.append(
 		"upgrade_glyph_recipes=%s"
 		% FileAccess.get_sha256(UPGRADE_GLYPH_RECIPE_PATH)
 	)
 	records.append(
 		"action_glyph_recipes=%s"
 		% FileAccess.get_sha256(ACTION_GLYPH_RECIPE_PATH)
-	)
-	records.append(
-		"projectile_effect_recipes=%s"
-		% FileAccess.get_sha256(PROJECTILE_EFFECT_RECIPE_PATH)
-	)
-	records.append(
-		"reward_facility_recipes=%s"
-		% FileAccess.get_sha256(REWARD_FACILITY_RECIPE_PATH)
-	)
-	records.append(
-		"combat_geometry=%s"
-		% FileAccess.get_sha256(COMBAT_GEOMETRY_PATH)
 	)
 	records.append(
 		"combat_renderer=%s"

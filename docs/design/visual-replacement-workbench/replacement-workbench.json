@@ -3618,6 +3618,111 @@
           ".\\tools\\export_web.ps1"
         ]
       }
+    },
+    {
+      "id": "gameplay_code_asset_rasterization",
+      "category_id": "world",
+      "order": 95,
+      "title_en": "Code-drawn Gameplay Asset Rasterization",
+      "title_ko": "코드 드로잉 게임플레이 에셋 이미지화",
+      "owner": "gameplay_manifest",
+      "switch_kind": "consolidate",
+      "status": "switch_ready",
+      "current_paths": [
+        "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png",
+        "art/visuals/production/gameplay/effects/cues/cue_crosshair.png",
+        "art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png",
+        "art/visuals/production/gameplay/effects/cues/cue_disk_mask.png",
+        "art/visuals/production/gameplay/effects/cues/cue_health_bar_frame_9.png",
+        "art/visuals/production/gameplay/effects/cues/cue_ring.png",
+        "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png",
+        "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png",
+        "art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png",
+        "art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png"
+      ],
+      "consumer_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/presentation/vehicle_world_mesh_builder.gd",
+        "scripts/vehicle/vehicle_run.gd"
+      ],
+      "consumer_asset_ids": [
+        "cue/beam_strip_9",
+        "cue/crosshair",
+        "cue/diamond_marker",
+        "cue/disk_mask",
+        "cue/health_bar_frame_9",
+        "cue/ring",
+        "cue/support_timer_segment",
+        "world/service_rail_tile",
+        "world/surface_panel_9",
+        "world/wall_segment_9"
+      ],
+      "direction_en": "Replace reusable code-drawn gameplay world and world-space cue identities with ten shared flat authored PNGs. UI remains unchanged. Runtime retains topology, collision, position, live dimensions, tint, alpha, clipping, readiness, timing, and batching.",
+      "deliverables": [
+        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png","width":128,"height":32,"pivot":[64,16],"patch_margin":[16,0,16,0],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Flat high-contrast beam strip with one dark perimeter and one light core; no glow, gradient, particle, or detached cap.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_crosshair.png","width":96,"height":96,"pivot":[48,48],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Open four-bracket world-space crosshair with broad flat strokes, clear center, and no dots or ornament.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png","width":64,"height":64,"pivot":[32,32],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"One compact filled diamond marker with a dark perimeter and no detached detail.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_disk_mask.png","width":128,"height":128,"pivot":[64,64],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"One flat filled circular mask with a dark perimeter for runtime radius and alpha modulation.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_health_bar_frame_9.png","width":96,"height":16,"pivot":[48,8],"patch_margin":[8,0,8,0],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Minimal world-space actor health frame with one dark shell and empty center; ratio remains runtime-owned.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_ring.png","width":128,"height":128,"pivot":[64,64],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Single high-contrast flat ring for runtime support, danger, and area tint/scale; no nested rings or glow.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png","width":64,"height":64,"pivot":[32,32],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"One broad arc segment reused by runtime rotation and count; no ticks, dots, or glow.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png","width":288,"height":48,"pivot":[144,24],"patch_margin":[24,0,24,0],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Sparse flat service rail with one restrained cyan inset and no repeated lamps, seams, or noise.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png","width":288,"height":288,"pivot":[144,144],"patch_margin":[24,24,24,24],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Broad matte field surface panel with one dark perimeter and one restrained inset; no texture noise, dots, or greeble.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png","width":192,"height":96,"pivot":[96,48],"patch_margin":[24,12,24,12],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Flat structural wall segment with a large readable mass, one dark perimeter, and no micro-detail.","external_source_ids":[]}
+      ],
+      "final_paths": [
+        "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png",
+        "art/visuals/production/gameplay/effects/cues/cue_crosshair.png",
+        "art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png",
+        "art/visuals/production/gameplay/effects/cues/cue_disk_mask.png",
+        "art/visuals/production/gameplay/effects/cues/cue_health_bar_frame_9.png",
+        "art/visuals/production/gameplay/effects/cues/cue_ring.png",
+        "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png",
+        "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png",
+        "art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png",
+        "art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png"
+      ],
+      "reuse_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/gameplay-code-asset-rasterization.png",
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-final/07-stage-boss-startup.png",
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-final/09-effects-player.png",
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-final/10-field-drowned-ruin-field.png"
+      ],
+      "rendered_as_is_paths": [
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/07-stage-boss-startup.png",
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/09-effects-player.png",
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/10-field-drowned-ruin-field.png"
+      ],
+      "retire_paths": [],
+      "runtime_change_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/presentation/vehicle_world_mesh_builder.gd",
+        "scripts/vehicle/vehicle_run.gd",
+        "tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        "tools/validation/validate_vehicle_visual_asset_coverage.gd",
+        "tools/validation/validate_vehicle_world_visuals.gd"
+      ],
+      "acceptance_commands": [
+        ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_visuals.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd"
+      ],
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      },
+      "approval": null,
+      "application": null
     }
   ]
 }

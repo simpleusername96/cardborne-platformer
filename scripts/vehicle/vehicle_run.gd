@@ -5588,12 +5588,9 @@ func _draw_terrain() -> void:
 		match kind:
 			&"structural_wall":
 				var wall_rect := Rect2(feature["rect"])
-				draw_rect(
-					Rect2(wall_rect.position + Art.WALL_SHADOW_OFFSET, wall_rect.size),
-					Art.WALL_SHADOW
+				_draw_semantic_asset_fitted(
+					&"world/wall_segment_9", wall_rect, Color.WHITE
 				)
-				draw_rect(wall_rect, Art.RAISED)
-				draw_rect(wall_rect.grow(-10.0), Art.INK, false, 8.0)
 			&"wear_collapse_tile":
 				var wear_rect := Rect2(feature["rect"])
 				var wear_state := StringName(feature.get("state", &"intact"))
@@ -5608,8 +5605,11 @@ func _draw_terrain() -> void:
 				var rectangle := Rect2(feature["rect"])
 				var readiness := float(feature.get("readiness", 0.0))
 				var color := Art.ATTACK_ARC
-				draw_rect(rectangle, Color(color, 0.12 + readiness * 0.38))
-				draw_rect(rectangle, color, false, 12.0)
+				_draw_semantic_asset_fitted(
+					&"cue/beam_strip_9",
+					rectangle,
+					Color(color, 0.34 + readiness * 0.58)
+				)
 				var surge_state := (
 					&"active"
 					if readiness >= 0.82
@@ -5617,7 +5617,6 @@ func _draw_terrain() -> void:
 				)
 				var horizontal := rectangle.size.x >= rectangle.size.y
 				var axis := Vector2.RIGHT if horizontal else Vector2.DOWN
-				var side := axis.rotated(PI * 0.5)
 				var segment_extent := (
 					rectangle.size.x if horizontal else rectangle.size.y
 				)
@@ -5639,12 +5638,6 @@ func _draw_terrain() -> void:
 							else 0.92
 						)
 					)
-					draw_line(
-						center - side * 42.0,
-						center + side * 42.0,
-						Color(color, 0.24 + readiness * 0.40),
-						4.0
-					)
 				for index in 3:
 					_draw_semantic_asset(
 						&"world/facility_arc_surge_strip",
@@ -5664,13 +5657,6 @@ func _draw_terrain() -> void:
 						Color.WHITE
 					)
 					continue
-				draw_rect(
-					Rect2(
-						rectangle.position + Art.WALL_SHADOW_OFFSET,
-						rectangle.size
-					),
-					Art.WALL_SHADOW
-				)
 				var health_ratio := clampf(
 					feature_health
 					/ TerrainRuntime.BULKHEAD_HEALTH,
@@ -5693,8 +5679,9 @@ func _draw_terrain() -> void:
 				var cooldown := float(feature.get("cooldown", 0.0))
 				var available := cooldown <= 0.0
 				var gate_color := Art.SYSTEM if available else Art.TEXT_MUTED
-				draw_circle(center, TerrainRuntime.GATE_RADIUS, Color(gate_color, 0.24))
-				draw_arc(center, TerrainRuntime.GATE_RADIUS, 0.0, TAU, 40, gate_color, 12.0)
+				_draw_semantic_asset(
+					&"cue/ring", center, TerrainRuntime.GATE_RADIUS, gate_color
+				)
 				_draw_semantic_asset(
 					&"world/facility_transit_gate",
 					center,
@@ -5818,6 +5805,32 @@ func _draw_semantic_asset_fitted(
 	draw_texture_rect(texture, target, false, modulate)
 
 
+func _draw_semantic_asset_segment(
+	asset_id: StringName,
+	from: Vector2,
+	to: Vector2,
+	width: float,
+	modulate: Color = Color.WHITE
+) -> void:
+	var vector := to - from
+	var length := vector.length()
+	if length <= 0.001 or width <= 0.0:
+		return
+	var texture := SemanticAssets.texture(asset_id)
+	var descriptor := SemanticAssets.descriptor(asset_id)
+	if texture == null or descriptor.is_empty():
+		return
+	var canvas := Vector2(descriptor.get("canvas", texture.get_size()))
+	var pivot := Vector2(descriptor.get("pivot", canvas * 0.5))
+	draw_set_transform(
+		from + vector * 0.5,
+		vector.angle(),
+		Vector2(length / canvas.x, width / canvas.y)
+	)
+	draw_texture_rect(texture, Rect2(-pivot, canvas), false, modulate)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
 func _draw_enemies() -> void:
 	var visible_world := _visible_world_rect(180.0)
 	for enemy in enemies:
@@ -5835,22 +5848,29 @@ func _draw_enemy_overlay(enemy: EnemyState) -> void:
 	if role == &"repair_tender" and not enemy.repair_target_id.is_empty():
 		var repair_target := _find_enemy_by_id(String(enemy.repair_target_id))
 		if repair_target != null and repair_target.alive:
-			draw_line(position, repair_target.pos, Color(Art.MINT, 0.82), 14.0, true)
+			_draw_semantic_asset_segment(
+				&"cue/beam_strip_9",
+				position,
+				repair_target.pos,
+				14.0,
+				Color(Art.MINT, 0.82)
+			)
 		_draw_enemy_marks(enemy, position, visual_radius)
 	if enemy.vulnerable > 0.0:
-		var cue_radius := visual_radius + 8.0
-		for sign_value in [-1.0, 1.0]:
-			var anchor := position + Vector2(sign_value * cue_radius, 0.0)
-			var inward := Vector2(-sign_value * 7.0, 0.0)
-			draw_line(anchor + Vector2(0.0, -6.0), anchor + inward, Art.MUSTARD, 4.0, true)
-			draw_line(anchor + inward, anchor + Vector2(0.0, 6.0), Art.MUSTARD, 4.0, true)
+		_draw_semantic_asset(
+			&"cue/crosshair", position, visual_radius + 14.0, Art.MUSTARD
+		)
 
 
 func _draw_enemy_marks(enemy: EnemyState, position: Vector2, radius: float) -> void:
 	if enemy.marked_time > 0.0:
-		draw_arc(position, radius + 15.0, -PI * 0.3, PI * 1.3, 22, Art.MUSTARD, 6.0)
+		_draw_semantic_asset(
+			&"cue/ring", position, radius + 15.0, Art.MUSTARD
+		)
 	if enemy.shear_time > 0.0:
-		draw_arc(position, radius + 10.0, PI * 0.7, PI * 2.3, 22, Art.MINT, 6.0)
+		_draw_semantic_asset(
+			&"cue/ring", position, radius + 10.0, Art.MINT
+		)
 
 
 func _enemy_color(role: StringName) -> Color:

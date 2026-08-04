@@ -72,8 +72,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 49,
-		"gameplay manifest declares the final 49 authored rasters"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 59,
+		"gameplay manifest declares the final 59 authored rasters"
 	)
 	_expect(
 		not gameplay_manifest.has("animations"),

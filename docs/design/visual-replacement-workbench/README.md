@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-03
 last_reviewed: 2026-08-04
-scope: Current AS-IS references, authored-raster and code-native targets, previews, exact technical records, and generated review UI
+scope: Current AS-IS references, authored-raster targets, rendered legacy evidence, exact technical records, and generated review UI
 related:
   - ../VISUAL_SYSTEM.md
   - ../cardborne-universal-art-style-reference.png
@@ -66,9 +66,10 @@ Their canonical repository paths are `docs/design/VISUAL_SYSTEM.md` and
 - An external candidate never satisfies a deliverable or technical-readiness requirement.
   It must first be adapted to the Cardborne camera, palette, silhouette, canvas,
   pivot, and detail contract and saved under the exact `to-be/assets/` target.
-- A code-native switch may have no TO-BE PNG. Its unit must instead enumerate
-  the exact runtime-change paths, semantic IDs, rendered comparison evidence,
-  and exact raster/sidecar retirement paths.
+- A follow-up rasterization switch may declare `rendered_as_is_paths` so the
+  report preserves screenshots of the former code-drawn result after the new
+  PNG becomes current production. These paths are review evidence only and
+  must remain under `previews/`.
 - `approved_for_switch` is the retained internal name for an exact technical
   ledger, not a user approval or response gate. Historical `approved_by=BK`
   records remain valid; autonomous runs use `approved_by=autonomous-executor`.
@@ -105,8 +106,10 @@ Preview an exact technically ready unit without writing production files:
 - Every current, preview, consumer, runtime-change, and retirement path is
   repository-contained and resolves.
 - Every TO-BE target is unique and under the production visual root.
-- Every live semantic visual has exactly one medium owner: authored raster or
-  code-native recipe, never both after a switch is complete.
+- Every reusable fixed gameplay-asset identity in a rasterization unit has one
+  authored-raster owner. This does not change the separate code-native UI
+  contract. Runtime gameplay code retains live placement, transform, tint,
+  clip, value, topology, collision, and timing truth.
 - The generated review UI exposes the exact canonical specification and sheet,
   and every ready unit has schema-validated authority-pair provenance.
 - No historical snapshot or review-pipeline dependency appears in active

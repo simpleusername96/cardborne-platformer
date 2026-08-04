@@ -12,27 +12,27 @@ const FIELD_DESCRIPTORS := {
 
 const FACILITY_DESCRIPTORS := {
 	&"repair_field": {
-		"recipe": &"repair_field",
+		"asset": &"world/facility_repair_pad",
 		"shape": &"layered_repair_pad",
 		"color": &"support",
 	},
 	&"transit_gate": {
-		"recipe": &"transit_gate",
+		"asset": &"world/facility_transit_gate",
 		"shape": &"opposing_transit_chevrons",
 		"color": &"system",
 	},
 	&"overdrive_field": {
-		"recipe": &"overdrive_field",
+		"asset": &"world/facility_overdrive_pad",
 		"shape": &"stacked_forward_chevrons",
 		"color": &"player_reward",
 	},
 	&"arc_surge_strip": {
-		"recipe": &"arc_surge_strip",
+		"asset": &"world/facility_arc_surge_strip",
 		"shape": &"broken_bolt_rail",
 		"color": &"arc",
 	},
 	&"breakable_bulkhead": {
-		"recipe": &"breakable_bulkhead",
+		"asset_family": &"world/world_bulkhead",
 		"shape": &"fracture_split_bulkhead",
 		"color": &"raised",
 	},

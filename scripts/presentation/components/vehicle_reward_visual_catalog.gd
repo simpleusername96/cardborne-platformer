@@ -6,37 +6,37 @@ extends RefCounted
 
 const DESCRIPTORS := {
 	&"reward_crate": {
-		"recipe": &"reward_crate",
+		"asset": &"pickup/reward_crate",
 		"shape": &"stepped_mechanical_crate",
 		"glyph": &"crate",
 		"color": &"player_reward",
 	},
 	&"experience_small": {
-		"recipe": &"experience_small",
+		"asset": &"pickup/experience_master",
 		"shape": &"mechanical_shard_tier_1",
 		"glyph": &"experience",
 		"color": &"player_reward",
 	},
 	&"experience_medium": {
-		"recipe": &"experience_medium",
+		"asset": &"pickup/experience_master",
 		"shape": &"mechanical_shard_tier_2",
 		"glyph": &"experience",
 		"color": &"player_reward",
 	},
 	&"experience_large": {
-		"recipe": &"experience_large",
+		"asset": &"pickup/experience_master",
 		"shape": &"mechanical_shard_tier_3",
 		"glyph": &"experience",
 		"color": &"player_reward",
 	},
 	&"repair": {
-		"recipe": &"repair",
+		"asset": &"pickup/repair",
 		"shape": &"layered_repair_plus_cut",
 		"glyph": &"repair",
 		"color": &"support",
 	},
 	&"experience_recall": {
-		"recipe": &"experience_recall",
+		"asset": &"pickup/experience_recall",
 		"shape": &"three_way_inward_chevrons",
 		"glyph": &"recall",
 		"color": &"system",

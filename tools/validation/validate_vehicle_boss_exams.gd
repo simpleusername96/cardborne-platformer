@@ -2,8 +2,8 @@ extends SceneTree
 
 const Catalog = preload("res://scripts/bosses/vehicle_boss_exam_catalog.gd")
 const Runtime = preload("res://scripts/bosses/vehicle_boss_exam_runtime.gd")
-const Visuals = preload(
-	"res://scripts/presentation/vehicle_combat_visual_library.gd"
+const AssetProvider = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
 const PrimaryWeapon = preload("res://scripts/player/vehicle_primary_weapon.gd")
 
@@ -49,8 +49,10 @@ func _validate_catalog() -> void:
 		var variant := StringName(definition.get("variant", &""))
 		objectives[objective] = true
 		variants[variant] = true
-		var signature := var_to_str(
-			Visuals.debug_boss_signature(variant)
+		var signature := String(
+			AssetProvider.descriptor(StringName("boss/%s" % String(variant))).get(
+				"path", ""
+			)
 		)
 		_expect(
 			not signatures.has(signature),

@@ -1,7 +1,6 @@
 extends SceneTree
 
 const Renderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
-const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
@@ -70,8 +69,9 @@ func _run() -> void:
 		[&"turret", &"interceptor_tower"],
 	]:
 		_expect(
-			Visuals.debug_enemy_signature(pair[0]) != Visuals.debug_enemy_signature(pair[1]),
-			"%s and %s have distinct outer silhouettes" % pair
+			AssetProvider.texture(StringName("actor/%s" % String(pair[0])))
+				!= AssetProvider.texture(StringName("actor/%s" % String(pair[1]))),
+			"%s and %s bind distinct authored silhouette textures" % pair
 		)
 		_expect(
 			renderer.get_node_or_null("Enemy_%s" % String(pair[0])) != null

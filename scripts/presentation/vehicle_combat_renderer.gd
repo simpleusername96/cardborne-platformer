@@ -4,7 +4,6 @@ extends Node2D
 ## Retained MultiMesh presentation for combat silhouettes and repeated semantic
 ## overlays. VehicleRun supplies state; this node owns visible instances.
 
-const Visuals = preload("res://scripts/presentation/vehicle_combat_visual_library.gd")
 const ActorCatalog = preload(
 	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
 )
@@ -337,7 +336,7 @@ func debug_semantic_texture_draws(asset_id: StringName = &"") -> Array[Dictionar
 
 
 func _build_batches() -> void:
-	for archetype in Visuals.ENEMY_ARCHETYPES:
+	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
 		if archetype == &"stage_boss":
 			continue
 		_enemy_batches[archetype] = _create_asset_batch(
@@ -375,37 +374,25 @@ func _build_batches() -> void:
 		&"experience_master",
 		EXPERIENCE_BATCH_INITIAL_CAPACITY
 	)
-	_overlay_batches[&"health"] = _create_batch(
-		"Overlay_health",
-		Visuals.health_bar_mesh(),
-		ENEMY_CAPACITY * 2,
-		3,
-		&"overlay_health",
-		32
+	_overlay_batches[&"health"] = _create_asset_batch(
+		"Overlay_health", &"cue/health_bar_frame_9", ENEMY_CAPACITY * 2, 3,
+		&"overlay_health", 32
 	)
-	_overlay_batches[&"ring"] = _create_batch(
-		"Overlay_ring", Visuals.effect_mesh(&"ring"), 1024, 3, &"overlay_ring",
-		64
+	_overlay_batches[&"ring"] = _create_asset_batch(
+		"Overlay_ring", &"cue/ring", 1024, 3, &"overlay_ring", 64
 	)
 	_overlay_batches[&"shield"] = _overlay_batches[&"ring"]
-	_overlay_batches[&"danger_ring"] = _create_batch(
-		"Overlay_danger_ring",
-		Visuals.annulus_mesh(48, 0.975),
-		256,
-		3,
-		&"overlay_danger_ring",
-		32
+	_overlay_batches[&"danger_ring"] = _create_asset_batch(
+		"Overlay_danger_ring", &"cue/ring", 256, 3, &"overlay_danger_ring", 32
 	)
-	_overlay_batches[&"beam"] = _create_batch(
-		"Overlay_beam", Visuals.effect_mesh(&"beam"), 1024, 3, &"overlay_beam",
-		128
+	_overlay_batches[&"beam"] = _create_asset_batch(
+		"Overlay_beam", &"cue/beam_strip_9", 1024, 3, &"overlay_beam", 128
 	)
-	_overlay_batches[&"disk"] = _create_batch(
-		"Overlay_disk", Visuals.disk_mesh(), 96, 1, &"overlay_disk"
+	_overlay_batches[&"disk"] = _create_asset_batch(
+		"Overlay_disk", &"cue/disk_mask", 96, 1, &"overlay_disk"
 	)
-	_overlay_batches[&"diamond"] = _create_batch(
-		"Overlay_diamond", Visuals.effect_mesh(&"diamond"), 640, 4, &"overlay_diamond",
-		48
+	_overlay_batches[&"diamond"] = _create_asset_batch(
+		"Overlay_diamond", &"cue/diamond_marker", 640, 4, &"overlay_diamond", 48
 	)
 	_player_craft_body_batch = _create_asset_batch(
 		"Player_craft_body",
@@ -416,13 +403,9 @@ func _build_batches() -> void:
 		-1,
 		true
 	)
-	_overlay_batches[&"support_timer_segment"] = _create_batch(
-		"Overlay_support_timer_segment",
-		Visuals.support_timer_segment_mesh(),
-		96,
-		3,
-		&"overlay_support_timer_segment",
-		64
+	_overlay_batches[&"support_timer_segment"] = _create_asset_batch(
+		"Overlay_support_timer_segment", &"cue/support_timer_segment", 96, 3,
+		&"overlay_support_timer_segment", 64
 	)
 	_reset_counts()
 	_apply_visible_counts()

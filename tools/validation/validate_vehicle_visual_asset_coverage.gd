@@ -12,8 +12,9 @@ const EXPECTED_CATEGORY_COUNTS := {
 	&"secondary":4,
 	&"projectile":1,
 	&"pickup":4,
-	&"world":11,
+	&"world":14,
 	&"effect":1,
+	&"cue":7,
 }
 
 var _failures: Array[String] = []
@@ -37,8 +38,8 @@ func _initialize() -> void:
 			]
 		)
 	_expect(
-		AssetProvider.asset_ids().size() == 49,
-		"final production coverage totals 49 authored gameplay images"
+		AssetProvider.asset_ids().size() == 59,
+		"final production coverage totals 59 authored gameplay images"
 	)
 	var unique_paths := {}
 	for asset_id in AssetProvider.asset_ids():

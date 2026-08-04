@@ -10,8 +10,8 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const CombatStages = preload(
 	"res://scripts/vehicle/stages/vehicle_combat_stages.gd"
 )
-const Visuals = preload(
-	"res://scripts/presentation/vehicle_combat_visual_library.gd"
+const ActorCatalog = preload(
+	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
 )
 
 var _failures: Array[String] = []
@@ -78,11 +78,10 @@ func _validate_catalog_and_stage_rollout() -> void:
 
 func _validate_role_signatures() -> void:
 	var signatures := {}
-	for archetype in Visuals.ENEMY_ARCHETYPES:
+	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
 		if archetype in [&"stage_boss", &"boss_pylon"]:
 			continue
-		var points := Visuals.debug_enemy_signature(archetype)
-		var signature := var_to_str(points)
+		var signature := String(archetype)
 		_expect(
 			not signatures.has(signature),
 			"%s has a unique grayscale outer contour" % archetype

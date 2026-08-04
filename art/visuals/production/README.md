@@ -10,10 +10,9 @@ style reference only, never asset approval.
 
 ## Ownership
 
-- `gameplay/asset-manifest.json` explicitly indexes the final 49 gameplay PNGs:
-  player 1, ordinary enemies 19, bosses 5, shared boss-node states 3,
-  secondaries 4, shared projectile 1, pickups/rewards 4, world/facilities 11,
-  and EMP 1.
+- `gameplay/asset-manifest.json` explicitly indexes 59 gameplay PNGs: the
+  approved 49 persistent images plus 3 shared world-presentation textures and
+  7 shared world-space combat-cue textures.
 - All non-beam projectiles reuse `projectile/energy_teardrop`. Runtime owns
   rotation, scale, faction or affinity tint, collision, cadence, range, homing,
   and damage.
@@ -25,14 +24,15 @@ style reference only, never asset approval.
   live radii, and presentation scales the pad to the live footprint.
 - `effect/emp_release` is the only authored raster effect. Runtime owns its
   live-radius scale and short fade.
-- HUD, minimap, combat cues, defense feedback, status feedback, telegraphs,
-  beams, and live radius boundaries are code-native and have no manifest entry.
+- HUD and minimap UI remain code-native. World-space combat cues, telegraphs,
+  beams, and live-radius presentation reuse shared authored PNGs while runtime
+  retains their position, dimensions, tint, alpha, readiness, and batching.
 - `ui/` owns the shared code-native Theme, font, and font license. It contains
   no UI chrome PNG, UI image manifest, or UI image provider.
 - Collision, navigation, damage, targeting, encounters, values, and state
   transitions remain in their existing gameplay owners.
-- Gameplay floor and wall surfaces remain procedural and are not indexed as
-  deferred raster alternatives.
+- Gameplay floor topology and wall collision remain procedural; their visible
+  surface, rail, and wall-segment patterns use three shared raster assets.
 
 Historical generation sources, review sheets, and prompts are not runtime
 contracts. Recover obsolete sources from Git history when needed instead of

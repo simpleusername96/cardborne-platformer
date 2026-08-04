@@ -25,13 +25,19 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"world/facility_overdrive_pad",
 	&"world/wear_tile_collapsed",
 	&"effect/emp_release",
+	&"cue/health_bar_frame_9",
+	&"cue/ring",
+	&"cue/beam_strip_9",
+	&"cue/diamond_marker",
+	&"cue/support_timer_segment",
+	&"cue/disk_mask",
+	&"cue/crosshair",
 ]
 
 const FORBIDDEN_ID_PREFIXES := [
 	"boss_module/",
 	"state/",
 	"hud/",
-	"cue/",
 ]
 
 var _failures: Array[String] = []
@@ -39,7 +45,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 49, "all 49 final gameplay PNGs are indexed")
+	_expect(ids.size() == 59, "all 59 final gameplay PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
@@ -64,9 +70,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 49
+		int(manifest.get("final_asset_count", 0)) == 59
 			and not manifest.has("animations"),
-		"manifest declares 49 static authored rasters and no frame animations"
+		"manifest declares 59 static authored rasters and no frame animations"
 	)
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)

@@ -1,7 +1,7 @@
 class_name VehicleEffectVisualCatalog
 extends RefCounted
 
-## Geometry recipe lookup for the retained dash afterimage batch. Visual event
+## Authored-image lookup for the retained dash afterimage batch. Visual event
 ## feedback, including the authored EMP, is owned by VehicleVisualEventCatalog.
 
 const DESCRIPTORS := {
@@ -11,7 +11,6 @@ const DESCRIPTORS := {
 		"shape": &"elongated_hull",
 		"color": &"system",
 		"radial": false,
-		"recipe": &"dash_player_hull_afterimage",
 	},
 }
 
