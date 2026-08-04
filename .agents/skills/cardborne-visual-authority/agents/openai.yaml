@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cardborne Visual Authority"
+  short_description: "Enforce Cardborne canonical visual authority pair"
+  default_prompt: "Use $cardborne-visual-authority to create or review this Cardborne visual task against the canonical document and style sheet."

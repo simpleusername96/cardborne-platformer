@@ -2,6 +2,11 @@ Set-StrictMode -Version Latest
 
 $script:ProductionRoot = 'art/visuals/production'
 $script:WorkbenchRoot = 'docs/design/visual-replacement-workbench'
+$script:StyleAuthorityPath = 'docs/design/VISUAL_SYSTEM.md'
+$script:StyleReferenceSheetPath = 'docs/design/cardborne-universal-art-style-reference.png'
+$script:StyleReferenceSheetSha256 = '96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889'
+$script:StyleReferenceSheetWidth = 1448
+$script:StyleReferenceSheetHeight = 1086
 $script:Statuses = @(
     'keep_current', 'target_required', 'switch_ready',
     'approved_for_switch', 'applied', 'retired'
@@ -14,7 +19,11 @@ $script:SwitchKinds = @('replace', 'add', 'consolidate', 'retire')
 
 function ConvertTo-NormalizedVisualPath {
     param([Parameter(Mandatory)][string]$Path)
-    return $Path.Replace('\', '/').TrimStart('./')
+    $normalized = $Path.Replace('\', '/')
+    while ($normalized.StartsWith('./', [StringComparison]::Ordinal)) {
+        $normalized = $normalized.Substring(2)
+    }
+    return $normalized
 }
 
 function Resolve-VisualRepositoryPath {
@@ -46,10 +55,18 @@ function Get-VisualPngDimensions {
             $header[2] -ne 78 -or $header[3] -ne 71) {
             throw "invalid PNG header: $LiteralPath"
         }
-        $width = [uint32]($header[16] -shl 24) -bor [uint32]($header[17] -shl 16) -bor
-            [uint32]($header[18] -shl 8) -bor [uint32]$header[19]
-        $height = [uint32]($header[20] -shl 24) -bor [uint32]($header[21] -shl 16) -bor
-            [uint32]($header[22] -shl 8) -bor [uint32]$header[23]
+        $width = (
+            ([int64]$header[16] * 16777216) +
+            ([int64]$header[17] * 65536) +
+            ([int64]$header[18] * 256) +
+            [int64]$header[19]
+        )
+        $height = (
+            ([int64]$header[20] * 16777216) +
+            ([int64]$header[21] * 65536) +
+            ([int64]$header[22] * 256) +
+            [int64]$header[23]
+        )
         return @([int]$width, [int]$height)
     }
     finally {
@@ -103,10 +120,88 @@ function Get-VisualReplacementProjection {
         [Parameter(Mandatory)]$Source
     )
     $failures = [Collections.Generic.List[string]]::new()
-    Test-VisualObjectFields $Source @('schema_version','production_root','style_authority','external_sources','categories','units') 'source' $failures
+    Test-VisualObjectFields $Source @('schema_version','production_root','style_authority','style_reference_sheet','external_sources','categories','units') 'source' $failures
     if ($Source.schema_version -ne 2) { $failures.Add('schema_version must be 2') }
     if ($Source.production_root -cne $script:ProductionRoot) { $failures.Add('production_root is not canonical') }
-    if ($Source.style_authority -cne 'docs/design/VISUAL_SYSTEM.md') { $failures.Add('style_authority is not canonical') }
+    $styleAuthorityProperty = $Source.PSObject.Properties['style_authority']
+    $styleAuthorityPath = if ($null -ne $styleAuthorityProperty) { [string]$styleAuthorityProperty.Value } else { '' }
+    if ([string]::IsNullOrWhiteSpace($styleAuthorityPath)) {
+        $failures.Add('missing style_authority')
+    } elseif ($styleAuthorityPath -cne $script:StyleAuthorityPath) {
+        $failures.Add('style_authority is not canonical')
+    }
+    if (-not [string]::IsNullOrWhiteSpace($styleAuthorityPath)) {
+        $absoluteStyleAuthority = $null
+        try { $absoluteStyleAuthority = Resolve-VisualRepositoryPath $RepoRoot $styleAuthorityPath } catch { $failures.Add($_.Exception.Message) }
+        if ($null -ne $absoluteStyleAuthority -and -not (Test-Path -LiteralPath $absoluteStyleAuthority -PathType Leaf)) {
+            $failures.Add("missing style authority document: $styleAuthorityPath")
+        }
+    }
+
+    $styleReferenceSheetProperty = $Source.PSObject.Properties['style_reference_sheet']
+    $styleReferenceSheet = if ($null -ne $styleReferenceSheetProperty) { $styleReferenceSheetProperty.Value } else { $null }
+    $styleReferencePath = ''
+    if ($null -eq $styleReferenceSheet) {
+        $failures.Add('missing style_reference_sheet object')
+    } elseif ($styleReferenceSheet -isnot [pscustomobject]) {
+        $failures.Add('style_reference_sheet must be an object')
+    } else {
+        $requiredStyleReferenceFields = @('path','sha256','width','height')
+        Test-VisualObjectFields $styleReferenceSheet $requiredStyleReferenceFields 'style_reference_sheet' $failures
+        foreach ($field in $requiredStyleReferenceFields) {
+            if ($null -eq $styleReferenceSheet.PSObject.Properties[$field]) {
+                $failures.Add("missing field in style_reference_sheet: $field")
+            }
+        }
+
+        $pathProperty = $styleReferenceSheet.PSObject.Properties['path']
+        if ($null -ne $pathProperty) {
+            $styleReferencePath = [string]$pathProperty.Value
+            if ($styleReferencePath -cne $script:StyleReferenceSheetPath) {
+                $failures.Add('style_reference_sheet.path is not canonical')
+            }
+        }
+        $hashProperty = $styleReferenceSheet.PSObject.Properties['sha256']
+        if ($null -ne $hashProperty -and [string]$hashProperty.Value -cne $script:StyleReferenceSheetSha256) {
+            $failures.Add('style_reference_sheet.sha256 is not canonical')
+        }
+        foreach ($dimension in @(
+            @('width', $script:StyleReferenceSheetWidth),
+            @('height', $script:StyleReferenceSheetHeight)
+        )) {
+            $dimensionProperty = $styleReferenceSheet.PSObject.Properties[[string]$dimension[0]]
+            if ($null -ne $dimensionProperty) {
+                if ($dimensionProperty.Value -isnot [int] -and $dimensionProperty.Value -isnot [long]) {
+                    $failures.Add("style_reference_sheet.$($dimension[0]) must be an integer")
+                } elseif ([int64]$dimensionProperty.Value -ne [int64]$dimension[1]) {
+                    $failures.Add("style_reference_sheet.$($dimension[0]) is not canonical")
+                }
+            }
+        }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($styleReferencePath)) {
+        $absoluteStyleReference = $null
+        try { $absoluteStyleReference = Resolve-VisualRepositoryPath $RepoRoot $styleReferencePath } catch { $failures.Add($_.Exception.Message) }
+        if ($null -ne $absoluteStyleReference) {
+            if (-not (Test-Path -LiteralPath $absoluteStyleReference -PathType Leaf)) {
+                $failures.Add("missing style reference sheet: $styleReferencePath")
+            } else {
+                if ((Get-VisualSha256 $absoluteStyleReference) -cne $script:StyleReferenceSheetSha256) {
+                    $failures.Add("style reference sheet hash mismatch: $styleReferencePath")
+                }
+                try {
+                    $observedStyleReferenceDimensions = Get-VisualPngDimensions $absoluteStyleReference
+                    if ($observedStyleReferenceDimensions[0] -ne $script:StyleReferenceSheetWidth -or
+                        $observedStyleReferenceDimensions[1] -ne $script:StyleReferenceSheetHeight) {
+                        $failures.Add("style reference sheet dimension mismatch: $styleReferencePath")
+                    }
+                } catch {
+                    $failures.Add($_.Exception.Message)
+                }
+            }
+        }
+    }
 
     $externalSourceIds = @{}
     $referencedExternalSourceIds = @{}
@@ -182,7 +277,7 @@ function Get-VisualReplacementProjection {
             'id','category_id','order','title_en','title_ko','owner','switch_kind','status',
             'current_paths','consumer_paths','consumer_asset_ids','direction_en','deliverables',
             'final_paths','reuse_paths','preview_paths','retire_paths','runtime_change_paths',
-            'acceptance_commands','approval','application'
+            'acceptance_commands','visual_authority_evidence','approval','application'
         ) "unit $id" $failures
         if ($id -notmatch '^[a-z][a-z0-9_]*$') { $failures.Add("invalid unit id: $id") }
         if ($unitIds.ContainsKey($id)) { $failures.Add("duplicate unit id: $id") }
@@ -300,6 +395,79 @@ function Get-VisualReplacementProjection {
         if ((Get-VisualCanonicalJson $expectedDeliverableTargets) -cne (Get-VisualCanonicalJson $actualDeliverableTargets)) {
             $failures.Add("final paths do not equal deliverables plus reuse paths: $id")
         }
+
+        $visualAuthorityEvidenceProperty = $unit.PSObject.Properties['visual_authority_evidence']
+        $visualAuthorityEvidence = if ($null -ne $visualAuthorityEvidenceProperty) { $visualAuthorityEvidenceProperty.Value } else { $null }
+        $projectedVisualAuthorityEvidence = $null
+        if ($null -ne $visualAuthorityEvidence) {
+            if ($visualAuthorityEvidence -isnot [pscustomobject]) {
+                $failures.Add("visual_authority_evidence must be an object: $id")
+            } else {
+                $authorityEvidenceFields = @(
+                    'spec_path','sheet_path','sheet_sha256','document_read_complete',
+                    'sheet_inspected_original','actual_image_reference_used','reference_input_method'
+                )
+                Test-VisualObjectFields $visualAuthorityEvidence $authorityEvidenceFields "visual authority evidence $id" $failures
+                foreach ($field in $authorityEvidenceFields) {
+                    if ($null -eq $visualAuthorityEvidence.PSObject.Properties[$field]) {
+                        $failures.Add("missing visual authority evidence field: $id -> $field")
+                    }
+                }
+
+                $specPath = if ($null -ne $visualAuthorityEvidence.PSObject.Properties['spec_path']) { [string]$visualAuthorityEvidence.spec_path } else { '' }
+                $sheetPath = if ($null -ne $visualAuthorityEvidence.PSObject.Properties['sheet_path']) { [string]$visualAuthorityEvidence.sheet_path } else { '' }
+                $sheetSha256 = if ($null -ne $visualAuthorityEvidence.PSObject.Properties['sheet_sha256']) { [string]$visualAuthorityEvidence.sheet_sha256 } else { '' }
+                if ($specPath -cne $script:StyleAuthorityPath) { $failures.Add("visual authority evidence has wrong spec path: $id") }
+                if ($sheetPath -cne $script:StyleReferenceSheetPath) { $failures.Add("visual authority evidence has wrong sheet path: $id") }
+                if ($sheetSha256 -cne $script:StyleReferenceSheetSha256) { $failures.Add("visual authority evidence has wrong sheet hash: $id") }
+
+                foreach ($field in @('document_read_complete','sheet_inspected_original','actual_image_reference_used')) {
+                    $property = $visualAuthorityEvidence.PSObject.Properties[$field]
+                    if ($null -ne $property -and $property.Value -isnot [bool]) {
+                        $failures.Add("visual authority evidence field must be boolean: $id -> $field")
+                    }
+                }
+                $documentReadComplete = if ($null -ne $visualAuthorityEvidence.PSObject.Properties['document_read_complete']) { $visualAuthorityEvidence.document_read_complete } else { $null }
+                $sheetInspectedOriginal = if ($null -ne $visualAuthorityEvidence.PSObject.Properties['sheet_inspected_original']) { $visualAuthorityEvidence.sheet_inspected_original } else { $null }
+                $actualImageReferenceUsed = if ($null -ne $visualAuthorityEvidence.PSObject.Properties['actual_image_reference_used']) { $visualAuthorityEvidence.actual_image_reference_used } else { $null }
+                if ($documentReadComplete -isnot [bool] -or -not [bool]$documentReadComplete) {
+                    $failures.Add("visual authority document was not read completely: $id")
+                }
+                if ($sheetInspectedOriginal -isnot [bool] -or -not [bool]$sheetInspectedOriginal) {
+                    $failures.Add("visual authority sheet was not inspected at original detail: $id")
+                }
+
+                $hasRasterDeliverable = @($deliverableRecords | Where-Object { [string]$_.target_path -like '*.png' }).Count -gt 0
+                $referenceInputMethod = if ($null -ne $visualAuthorityEvidence.PSObject.Properties['reference_input_method']) { [string]$visualAuthorityEvidence.reference_input_method } else { '' }
+                if ($hasRasterDeliverable) {
+                    if ($actualImageReferenceUsed -isnot [bool] -or -not [bool]$actualImageReferenceUsed) {
+                        $failures.Add("raster unit lacks actual sheet-reference evidence: $id")
+                    }
+                    if ([string]::IsNullOrWhiteSpace($referenceInputMethod) -or $referenceInputMethod -ceq 'not_applicable') {
+                        $failures.Add("raster unit lacks reference input method: $id")
+                    }
+                } else {
+                    if ($actualImageReferenceUsed -isnot [bool] -or [bool]$actualImageReferenceUsed) {
+                        $failures.Add("non-raster unit must mark actual image reference as not used: $id")
+                    }
+                    if ($referenceInputMethod -cne 'not_applicable') {
+                        $failures.Add("non-raster unit must use not_applicable reference input method: $id")
+                    }
+                }
+
+                $projectedVisualAuthorityEvidence = [ordered]@{
+                    spec_path=$script:StyleAuthorityPath;sheet_path=$script:StyleReferenceSheetPath;
+                    sheet_sha256=$script:StyleReferenceSheetSha256;
+                    document_read_complete=[bool]$documentReadComplete;
+                    sheet_inspected_original=[bool]$sheetInspectedOriginal;
+                    actual_image_reference_used=[bool]$actualImageReferenceUsed;
+                    reference_input_method=$referenceInputMethod
+                }
+            }
+        }
+        if ([string]$unit.status -in @('switch_ready','approved_for_switch','applied') -and $null -eq $projectedVisualAuthorityEvidence) {
+            $failures.Add("ready unit lacks visual authority evidence: $id")
+        }
         if ([string]$unit.status -in @('switch_ready','approved_for_switch','applied') -and @($deliverableRecords | Where-Object { $null -eq $_.observed_sha256 }).Count -gt 0) { $failures.Add("ready unit has missing deliverable: $id") }
         if ($null -ne $unit.approval) {
             Test-VisualObjectFields $unit.approval @('approved_by','approved_at','baseline_commit','deliverable_sha256','retire_paths') "approval $id" $failures
@@ -374,7 +542,8 @@ function Get-VisualReplacementProjection {
             current_files=@($currentRecords);consumer_paths=$consumerPaths;consumer_asset_ids=$consumerIds;
             deliverables=@($deliverableRecords);final_paths=@($unitFinalPaths);reuse_paths=@($unitReusePaths);
             preview_paths=$previewPaths;retire_paths=$retirePaths;runtime_change_paths=$runtimePaths;
-            acceptance_commands=$commands;approval=$unit.approval;application=$unit.application
+            acceptance_commands=$commands;visual_authority_evidence=$projectedVisualAuthorityEvidence;
+            approval=$unit.approval;application=$unit.application
         })
     }
     foreach ($sourceId in $externalSourceIds.Keys) {
@@ -398,7 +567,11 @@ function Get-VisualReplacementProjection {
     $statusCounts = [ordered]@{}
     foreach ($status in $script:Statuses) { $statusCounts[$status] = @($orderedUnits | Where-Object status -eq $status).Count }
     return [ordered]@{
-        schema_version=2;production_root=$script:ProductionRoot;style_authority='docs/design/VISUAL_SYSTEM.md';
+        schema_version=2;production_root=$script:ProductionRoot;style_authority=$script:StyleAuthorityPath;
+        style_reference_sheet=[ordered]@{
+            path=$script:StyleReferenceSheetPath;sha256=$script:StyleReferenceSheetSha256;
+            width=$script:StyleReferenceSheetWidth;height=$script:StyleReferenceSheetHeight
+        };
         summary=[ordered]@{
             gameplay_png=$currentGameplayPng.Count;
             final_gameplay_png=@($finalPaths.Keys | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') }).Count;

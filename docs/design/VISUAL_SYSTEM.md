@@ -8,6 +8,7 @@ canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
   - ../product/vehicle_game_spec.md
+  - ./cardborne-universal-art-style-reference.png
   - ./visual-replacement-workbench/asset-rationalization.md
   - ./visual-replacement-workbench/external-candidates/README.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
@@ -20,13 +21,46 @@ related:
 이 문서는 Cardborne의 모든 player-facing surface에 적용되는 정본 visual
 contract다. 실제 runtime truth는
 `scripts/vehicle/vehicle_stage_visual_profile.gd`, 책임별 component catalog와
-하나의 code-native Godot Theme가 소유한다. 실제 provider에서 생성한 system
-sheet는 gameplay imagery의 runtime truth와 승인 시안의 충실도를 검증하는
-publication artifact다.
+하나의 code-native Godot Theme가 소유한다. Provider-generated component and
+system sheets are publication evidence for runtime coverage only; they do not own
+art direction and cannot replace the authority pair below.
 
-승인된 general-SF 방향에서 추출한 silhouette, proportion, mechanical
-layering와 contrast hierarchy는 아래 요구사항에 직접 포함되어 있다. 과거
-approval sheet는 runtime owner나 별도 binding contract가 아니다.
+The mandatory visual authority is this complete text specification together with
+`docs/design/cardborne-universal-art-style-reference.png`. The document owns the
+binding rules; the sheet calibrates their visual application. Neither replaces
+per-asset AS-IS/TO-BE review or exact approval.
+
+## Mandatory Visual Authority Pair
+
+Every task that creates, edits, generates, adapts, reviews, approves, promotes, or
+switches a player-facing visual must use both of these sources before any visual
+action:
+
+1. Read this document completely in its current form.
+2. Inspect `docs/design/cardborne-universal-art-style-reference.png` at its
+   original `1448 x 1086` detail and verify SHA-256
+   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+
+This preflight applies to assets, UI, HUD, world art, actors, projectiles, effects,
+themes, layouts, mockups, screenshots, component/system sheets, ImageGen prompts
+and outputs, workbench candidates, previews, reviews, approvals, and runtime
+integration. For raster creation, editing, adaptation, or ImageGen, the canonical
+PNG must be supplied to the tool as an actual image reference. A filename, text
+description, palette transcription, previous inspection, or recovered copy is not
+a substitute.
+
+The sheet is **style reference only, never asset approval**. Do not crop, trace,
+extract, copy, or inherit its specific objects, silhouettes, modules, glyphs, UI
+shells, or layouts. In particular, its player example does not override the long,
+sleek player proportions defined below. When a depicted example conflicts with
+this document, the current text contract controls. Historical component sheets,
+`system-v1` publications, generated previews, runtime captures, and recovered
+resources are evidence at most and cannot replace either authority source.
+
+Missing files, a sheet hash mismatch, absent visual inspection, or missing actual
+image-reference evidence invalidates visual-compliance and asset-approval claims.
+Record the authority paths, observed sheet hash, task-specific constraints, and
+actual-reference use in the existing workbench, plan, approval, or handoff owner.
 
 ## Scope
 
@@ -85,11 +119,11 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
 mass를 분리하거나 실제 상태를 표시할 때만 사용하며, 이미 색면으로 구분된
 영역을 다시 장식선으로 감싸지 않는다.
 
-style/reference sheet는 비례, 색면 수, edge 처리, detail 밀도와 대비 원칙을
-검토하는 증거다. sheet 안의 개별 silhouette, module, glyph, icon, 장식이나
-layout을 잘라 쓰거나 trace하거나 승인 asset으로 간주하지 않는다. **아트
-스타일 승인은 개별 asset 승인이 아니다.** runtime 교체는 asset별 AS-IS/TO-BE
-비교와 별도 승인을 받은 뒤에만 진행한다.
+The canonical style-reference sheet is required evidence for proportion, plane
+count, edge treatment, detail density, and contrast. Its individual silhouette,
+module, glyph, icon, ornament, and layout remain non-binding examples. **Art-style
+alignment is not individual asset approval.** Runtime replacement still requires
+an asset-specific AS-IS/TO-BE comparison and separate exact approval.
 
 플레이어 기체는 같은 문법 안에서도 별도 비례 규칙을 가진다. 폭보다 길고,
 전방으로 수렴하며, swept-back edge와 negative space로 낮고 민첩한 인상을

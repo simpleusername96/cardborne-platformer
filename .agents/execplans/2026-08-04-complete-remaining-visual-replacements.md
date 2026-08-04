@@ -12,6 +12,7 @@ related:
   - ../PLANS.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
+  - ../../docs/design/cardborne-universal-art-style-reference.png
   - ../../docs/design/visual-replacement-workbench/README.md
   - ../../docs/design/visual-replacement-workbench/asset-rationalization.md
   - ../../docs/design/visual-replacement-workbench/external-candidates/README.md
@@ -225,6 +226,23 @@ An external source or preview cannot satisfy a TO-BE deliverable.
 
 ### Approval and application protocol
 
+Every visual unit first runs the repository `$cardborne-visual-authority`
+preflight. The operator must read `docs/design/VISUAL_SYSTEM.md` completely,
+inspect `docs/design/cardborne-universal-art-style-reference.png` at original
+detail, verify SHA-256
+`96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`, and
+extract the unit-specific constraints. Raster/ImageGen work must supply that exact
+PNG as an actual image reference and record the evidence. A candidate made without
+this pair is unverified, cannot become `switch_ready`, and must be reworked before
+review.
+
+Before a unit enters `switch_ready`, its workbench record must contain
+`visual_authority_evidence` with the canonical spec path, sheet path and hash,
+`document_read_complete=true`, and `sheet_inspected_original=true`. Raster units
+also require `actual_image_reference_used=true` and the concrete tool input method;
+non-raster units record `false` and `not_applicable`. The workbench model rejects a
+ready, approved, or applied unit when this evidence is absent or inconsistent.
+
 For each switch unit:
 
 1. Freeze and record a clean baseline commit.
@@ -267,6 +285,11 @@ exactly **68 PNGs** before wear tiles and actor-family replacements.
   `6dbfd7c33d312418094e2cac95988a84515af8ec`.
 - [x] Run `./tools/godot.ps1 --version` and require Godot 4.7 stable before runtime
   edits begin. Observed: `4.7.1.stable.official.a13da4feb`.
+- [x] Preserve the user-approved universal style sheet in the repository and bind
+  it with `VISUAL_SYSTEM.md` as the mandatory authority pair for every visual task.
+- [x] Add repository workflow and deterministic validation that stop visual work
+  on a missing sheet, hash mismatch, skipped inspection, or absent raster
+  reference evidence.
 
 Acceptance: all active guidance agrees on 64 final PNGs and no runtime switch has
 been implied by source import or candidate generation.
@@ -594,6 +617,7 @@ evidence, performance, and stability checks pass from the final clean HEAD.
 Run only guards needed to keep the long replacement program mechanically sound:
 
 - deterministic workbench build/check;
+- canonical visual-authority path, SHA-256, dimension, and workflow validation;
 - JSON/schema/path/hash validation;
 - GDScript parse/import checks for touched sources;
 - target canvas, pivot, alpha, and import checks;
@@ -684,6 +708,14 @@ a proposal, not a preapproved production switch.
   exact 215-current / 64-final / 62-authored / 2-reused / 160-retired forecast;
   schema guards now reject duplicate disposition, missing provenance, and hash
   drift.
+- 2026-08-04: invalidated the first nine projectile candidates because they were
+  generated without the mandatory user-approved style sheet as an actual visual
+  reference. No production switch occurred. The nine candidates and two preview
+  sheets were removed from active TO-BE paths and retained locally under
+  `build/rejected-phase6-projectiles/` only for recovery; Task 6.2 is reopened.
+- 2026-08-04: made `VISUAL_SYSTEM.md` plus the hash-pinned universal style sheet
+  the repository-wide visual authority pair. Historical sheets and workbench
+  previews cannot substitute for it or confer asset approval.
 
 ## Progress
 
@@ -697,15 +729,21 @@ a proposal, not a preapproved production switch.
   `6dbfd7c33d312418094e2cac95988a84515af8ec` and confirmed Godot
   `4.7.1.stable.official.a13da4feb`.
 - [x] Rebuilt and mechanically validated the Phase 6 workbench control plane.
-- [ ] Projectile candidates are being prepared outside production for exact-hash
-  approval; no runtime switch or retirement has occurred.
+- [x] Bound every visual workflow to the canonical specification-and-sheet pair
+  and rejected the ungrounded projectile candidate batch without touching runtime.
+- [ ] Regenerate all nine projectile candidates under the mandatory pair, then
+  rebuild actual-scale evidence and a deterministic exact-hash report.
+- [ ] Projectile production switch remains unapproved; no runtime switch or
+  retirement has occurred.
 
 ## Next Steps
 
-1. Complete Task 6.2 actual-scale evidence and publish the exact nine-projectile
-   approval report.
-2. Do not switch or retire any production file before that exact report is
-   approved.
+1. Re-run Task 6.2 with the canonical sheet supplied as an actual image reference
+   for every raster generation/edit and record authority evidence.
+2. Rebuild 1x collision comparisons and publish the new exact baseline, target
+   map, hashes, runtime-change paths, and retirement paths.
+3. Obtain explicit approval before any promotion, then apply only the approved
+   in-place copy set and begin Task 6.3.
 
 ## Completion and Stop Conditions
 

@@ -2,6 +2,12 @@
   "schema_version": 2,
   "production_root": "art/visuals/production",
   "style_authority": "docs/design/VISUAL_SYSTEM.md",
+  "style_reference_sheet": {
+    "path": "docs/design/cardborne-universal-art-style-reference.png",
+    "sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "width": 1448,
+    "height": 1086
+  },
   "external_sources": [
     {
       "id": "kenney_laser_blue_07",

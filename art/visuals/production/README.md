@@ -2,9 +2,13 @@
 
 이 디렉터리는 Cardborne의 현재 gameplay visual pack과 code-native UI 시각
 기반을 소유한다.
-art direction과 state grammar의 정본은
-[`docs/design/VISUAL_SYSTEM.md`](../../../docs/design/VISUAL_SYSTEM.md)이며, 이
-README는 production 파일의 ownership과 integration 계약만 설명한다.
+The mandatory art-direction authority is the pair of
+[`docs/design/VISUAL_SYSTEM.md`](../../../docs/design/VISUAL_SYSTEM.md) and
+[`docs/design/cardborne-universal-art-style-reference.png`](../../../docs/design/cardborne-universal-art-style-reference.png).
+Read the complete specification and inspect the sheet at original detail before
+creating, reviewing, approving, or integrating production visuals. The sheet is
+style reference only, never asset approval. This README owns only production-file
+ownership and integration rules.
 
 ## Ownership
 
@@ -44,6 +48,9 @@ palette/camera/pivot/detail contract로 정규화한 승인 PNG만 이 productio
   component factory와 UI component validator를 함께 갱신한다.
 - production 파일을 preview, sheet, prompt 또는 unapproved TO-BE output으로
   사용하지 않는다.
+- Do not accept a raster into this tree without evidence that the canonical sheet
+  was supplied as an actual image reference and the separate AS-IS/TO-BE approval
+  contract was satisfied.
 
 ## Validation
 

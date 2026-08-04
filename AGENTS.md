@@ -5,7 +5,9 @@
 - The current product is the connected five-stage run defined in `docs/product/vehicle_game_spec.md`.
 - Preserve manual aim, uniform held primary fire, dash, passive seekers, EMP, authored encounters, map pickups, card upgrades, and quota-gated stage bosses.
 - Korean is the default language; Korean and English must remain complete on every user-facing surface.
-- Preserve the flat-color, role-readable general-SF visual contract in `docs/design/VISUAL_SYSTEM.md`.
+- For every Cardborne visual task, use `$cardborne-visual-authority` before creating, editing, generating, reviewing, approving, promoting, or switching any asset, UI, HUD, world visual, actor, projectile, effect, mockup, sheet, or workbench candidate. Read `docs/design/VISUAL_SYSTEM.md` completely and inspect
+  `docs/design/cardborne-universal-art-style-reference.png` at original detail;
+  the sheet is a mandatory style reference, never asset approval.
 - Treat familiar science fiction as the visual baseline. Do not introduce a named material, cultural, marine, or ritual theme without explicit user approval.
 - Prioritize first-clear readability, fair pressure, responsive control, target priority, and reliable performance before adding content breadth.
 
@@ -15,6 +17,7 @@
 - Keep stage definitions, enemy roles, encounter coordination, card data, combat state, UI, settings, and audio in their existing responsibility owners.
 - Keep card behavior out of UI code and keep visual geometry independent from collision truth.
 - Run the focused validators under `tools/validation/` after relevant changes. Run the Web export before handing off broad runtime changes.
+- Run `./tools/validation/validate_cardborne_visual_authority.ps1` whenever the visual authority pair, its workflow, or an active visual plan/workbench surface changes.
 
 ## Living Guidance
 - This file is project-specific operating guidance.
@@ -62,6 +65,7 @@
 ## Local Skills
 - Repo-local skills live under `.agents/skills/`, where Codex can discover them natively.
 - Use them when the task matches their workflow boundary.
+- `$cardborne-visual-authority` governs every player-facing visual task. It enforces the canonical document-and-sheet preflight, raster/ImageGen reference input, provenance evidence, and rejection of ungrounded visual output.
 - If the repo actually has stable local skills worth surfacing repeatedly, record:
   - the skill name
   - what workflow it governs

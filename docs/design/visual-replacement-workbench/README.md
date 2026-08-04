@@ -7,6 +7,7 @@ last_reviewed: 2026-08-04
 scope: Current AS-IS references, authored-raster and code-native targets, previews, approval records, and generated review UI
 related:
   - ../VISUAL_SYSTEM.md
+  - ../cardborne-universal-art-style-reference.png
   - ./asset-rationalization.md
   - ./external-candidates/README.md
   - ../../product/vehicle_game_spec.md
@@ -38,12 +39,29 @@ production, runtime-change, and retirement targets.
   approval, or application-state authority.
 
 The workbench never owns gameplay rules or art direction. Those remain in the
-product specification and [`VISUAL_SYSTEM.md`](../VISUAL_SYSTEM.md).
+product specification and the mandatory visual authority pair:
+[`VISUAL_SYSTEM.md`](../VISUAL_SYSTEM.md) plus
+[`cardborne-universal-art-style-reference.png`](../cardborne-universal-art-style-reference.png).
+Their canonical repository paths are `docs/design/VISUAL_SYSTEM.md` and
+`docs/design/cardborne-universal-art-style-reference.png`.
 
 ## Requirements
 
 - AS-IS media is referenced from `art/visuals/production`; it is not copied
   into this folder.
+- Before candidate creation, review, approval, or promotion, read the complete
+  visual specification and inspect the canonical reference sheet at original
+  detail with its recorded SHA-256. Raster and ImageGen candidates must record
+  that the canonical sheet was supplied as an actual image reference.
+- A candidate created without the authority pair cannot become `switch_ready`,
+  receive approval, or enter production. Keep it outside active TO-BE paths until
+  it is regenerated or reworked under the pair.
+- Before any unit becomes `switch_ready`, record `visual_authority_evidence` in
+  that unit with the exact canonical spec path, sheet path, sheet SHA-256,
+  `document_read_complete=true`, and `sheet_inspected_original=true`. A unit with
+  raster PNG deliverables also requires `actual_image_reference_used=true` and a
+  concrete `reference_input_method` such as `image_gen.referenced_image_paths`;
+  non-raster units use `false` and `not_applicable`.
 - A preview never satisfies a deliverable or approval requirement.
 - An external candidate never satisfies a deliverable or approval requirement.
   It must first be adapted to the Cardborne camera, palette, silhouette, canvas,
@@ -64,6 +82,7 @@ Build and verify with:
 ```powershell
 .\tools\design\build_visual_replacement_workbench.ps1
 .\tools\design\build_visual_replacement_workbench.ps1 -Check
+.\tools\validation\validate_cardborne_visual_authority.ps1
 .\tools\validation\validate_visual_replacement_workbench.ps1
 ```
 
@@ -82,5 +101,7 @@ Preview an already approved unit without writing production files:
 - Every TO-BE target is unique and under the production visual root.
 - Every live semantic visual has exactly one medium owner: authored raster or
   code-native recipe, never both after a switch is complete.
+- The generated review UI exposes the exact canonical specification and sheet,
+  and every ready unit has schema-validated authority-pair provenance.
 - No historical snapshot or review-pipeline dependency appears in active
   workbench inputs or generated output.

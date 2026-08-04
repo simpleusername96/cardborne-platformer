@@ -11,8 +11,29 @@ $sourcePath = Join-Path $workbenchRoot 'replacement-workbench.json'
 $inventoryPath = Join-Path $workbenchRoot 'inventory.json'
 $indexPath = Join-Path $workbenchRoot 'index.html'
 $templatePath = Join-Path $workbenchRoot 'index-template.html'
+$canonicalStyleAuthorityPath = 'docs/design/VISUAL_SYSTEM.md'
+$canonicalStyleReferenceSheet = [ordered]@{
+    path = 'docs/design/cardborne-universal-art-style-reference.png'
+    sha256 = '96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889'
+    width = 1448
+    height = 1086
+}
 $failures = [Collections.Generic.List[string]]::new()
 function Expect([bool]$Condition,[string]$Message){if(-not $Condition){$failures.Add($Message)}}
+function New-AuthorityEvidence([bool]$Raster,[string]$Method){
+    return [pscustomobject]@{
+        spec_path=$canonicalStyleAuthorityPath;sheet_path=$canonicalStyleReferenceSheet.path;
+        sheet_sha256=$canonicalStyleReferenceSheet.sha256;document_read_complete=$true;
+        sheet_inspected_original=$true;actual_image_reference_used=$Raster;
+        reference_input_method=$Method
+    }
+}
+function Expect-ProjectionRejected($Candidate,[string]$Expected,[string]$Context){
+    $message=$null
+    try { Get-VisualReplacementProjection -RepoRoot $repoRoot -Source $Candidate | Out-Null } catch { $message=$_.Exception.Message }
+    Expect ($null -ne $message) "workbench model accepted invalid authority evidence: $Context"
+    if($null -ne $message){Expect ($message.Contains($Expected)) "workbench model rejected $Context for the wrong reason"}
+}
 
 try { & (Join-Path $designRoot 'build_visual_replacement_workbench.ps1') -Check } catch { $failures.Add($_.Exception.Message) }
 foreach($path in @($sourcePath,$inventoryPath,$indexPath,$templatePath)){Expect (Test-Path -LiteralPath $path -PathType Leaf) "missing workbench file: $path"}
@@ -24,6 +45,22 @@ try {
     $inventoryText=(Get-Content $inventoryPath -Raw).Replace("`r`n","`n").TrimEnd("`n")
     $actual=$inventoryText|ConvertFrom-Json -Depth 100
     Expect ((Get-VisualCanonicalJson $expected) -ceq (Get-VisualCanonicalJson $actual)) 'inventory.json projection mismatch'
+    Expect ([string]$actual.style_authority -ceq $canonicalStyleAuthorityPath) 'projected style authority path is not canonical'
+    $expectedStyleReference=$expected.style_reference_sheet
+    $actualStyleReference=$actual.style_reference_sheet
+    Expect ($null -ne $expectedStyleReference) 'projection omits style_reference_sheet'
+    Expect ($null -ne $actualStyleReference) 'inventory omits style_reference_sheet'
+    if($null -ne $expectedStyleReference){Expect ((Get-VisualCanonicalJson $expectedStyleReference) -ceq (Get-VisualCanonicalJson $canonicalStyleReferenceSheet)) 'projected style reference sheet contract is not canonical'}
+    if($null -ne $actualStyleReference){Expect ((Get-VisualCanonicalJson $actualStyleReference) -ceq (Get-VisualCanonicalJson $canonicalStyleReferenceSheet)) 'inventory style reference sheet contract is not canonical'}
+    $styleAuthorityFile=Resolve-VisualRepositoryPath -RepoRoot $repoRoot -Path $canonicalStyleAuthorityPath
+    $styleReferenceFile=Resolve-VisualRepositoryPath -RepoRoot $repoRoot -Path $canonicalStyleReferenceSheet.path
+    Expect (Test-Path -LiteralPath $styleAuthorityFile -PathType Leaf) 'canonical style authority document is missing'
+    Expect (Test-Path -LiteralPath $styleReferenceFile -PathType Leaf) 'canonical style reference sheet is missing'
+    if(Test-Path -LiteralPath $styleReferenceFile -PathType Leaf){
+        Expect ((Get-VisualSha256 $styleReferenceFile) -ceq $canonicalStyleReferenceSheet.sha256) 'canonical style reference sheet hash mismatch'
+        $styleReferenceDimensions=Get-VisualPngDimensions $styleReferenceFile
+        Expect ($styleReferenceDimensions[0] -eq $canonicalStyleReferenceSheet.width -and $styleReferenceDimensions[1] -eq $canonicalStyleReferenceSheet.height) 'canonical style reference sheet dimension mismatch'
+    }
     Expect ($actual.summary.font -eq 1) 'production font count must be 1'
     Expect ($actual.summary.units -eq 16) 'switch unit count must be 16'
     Expect ($actual.summary.retire_only -eq 5) 'retire-only count must be 5'
@@ -34,6 +71,24 @@ try {
     Expect ($actual.summary.retired_gameplay_png -eq 160) 'retired gameplay PNG count must be 160'
     Expect ($actual.summary.external_sources -eq 6) 'curated external source count must be 6'
     Expect (@($actual.external_sources).Count -eq 6) 'external source registry must contain six records'
+
+    $missingEvidenceSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
+    ($missingEvidenceSource.units|Where-Object id -ceq 'hud_minimap_combat_cues_code_native').status='switch_ready'
+    Expect-ProjectionRejected $missingEvidenceSource 'ready unit lacks visual authority evidence' 'ready unit without evidence'
+
+    $validNonRasterSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
+    $validNonRasterUnit=$validNonRasterSource.units|Where-Object id -ceq 'hud_minimap_combat_cues_code_native'
+    $validNonRasterUnit.status='switch_ready'
+    $validNonRasterUnit|Add-Member -NotePropertyName visual_authority_evidence -NotePropertyValue (New-AuthorityEvidence $false 'not_applicable')
+    try {
+        $validNonRasterProjection=Get-VisualReplacementProjection -RepoRoot $repoRoot -Source $validNonRasterSource
+        Expect (($validNonRasterProjection.units|Where-Object id -ceq 'hud_minimap_combat_cues_code_native').status -ceq 'switch_ready') 'valid non-raster authority evidence was not projected'
+    } catch {$failures.Add("valid non-raster authority evidence was rejected: $($_.Exception.Message)")}
+
+    $invalidRasterSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
+    $invalidRasterUnit=$invalidRasterSource.units|Where-Object id -ceq 'projectile_family'
+    $invalidRasterUnit|Add-Member -NotePropertyName visual_authority_evidence -NotePropertyValue (New-AuthorityEvidence $false 'not_applicable')
+    Expect-ProjectionRejected $invalidRasterSource 'raster unit lacks actual sheet-reference evidence' 'raster unit without actual reference input'
 
     $expectedGameplayUnits=[ordered]@{
         player_craft=@(1,1)
@@ -100,6 +155,18 @@ try {
     foreach($unit in $actual.units){
         Expect (-not [string]::IsNullOrWhiteSpace([string]$unit.title_en)) "missing English title: $($unit.id)"
         Expect ([string]$unit.title_ko -match '[가-힣]') "missing Korean title: $($unit.id)"
+        $authorityEvidence=$unit.visual_authority_evidence
+        if([string]$unit.status -in @('switch_ready','approved_for_switch','applied')){Expect ($null -ne $authorityEvidence) "ready unit lacks visual authority evidence: $($unit.id)"}
+        if($null -ne $authorityEvidence){
+            Expect ([string]$authorityEvidence.spec_path -ceq $canonicalStyleAuthorityPath) "unit authority evidence has wrong spec path: $($unit.id)"
+            Expect ([string]$authorityEvidence.sheet_path -ceq $canonicalStyleReferenceSheet.path) "unit authority evidence has wrong sheet path: $($unit.id)"
+            Expect ([string]$authorityEvidence.sheet_sha256 -ceq $canonicalStyleReferenceSheet.sha256) "unit authority evidence has wrong sheet hash: $($unit.id)"
+            Expect ([bool]$authorityEvidence.document_read_complete) "unit authority document was not read completely: $($unit.id)"
+            Expect ([bool]$authorityEvidence.sheet_inspected_original) "unit authority sheet was not inspected at original detail: $($unit.id)"
+            $hasRasterDeliverable=@($unit.deliverables|Where-Object{[string]$_.target_path -like '*.png'}).Count -gt 0
+            Expect ([bool]$authorityEvidence.actual_image_reference_used -eq $hasRasterDeliverable) "unit actual-reference evidence disagrees with media type: $($unit.id)"
+            Expect (([string]$authorityEvidence.reference_input_method -cne 'not_applicable') -eq $hasRasterDeliverable) "unit reference input method disagrees with media type: $($unit.id)"
+        }
         switch([string]$unit.status){
             'keep_current' { Expect ($null -eq $unit.approval -and $null -eq $unit.application) "keep-current unit contains workflow ledger data: $($unit.id)" }
             'target_required' { Expect ($null -eq $unit.approval -and $null -eq $unit.application) "target-required unit contains workflow ledger data: $($unit.id)" }
@@ -118,11 +185,26 @@ try {
     }
 } catch {$failures.Add($_.Exception.Message)}
 
+$template=Get-Content $templatePath -Raw
 $index=Get-Content $indexPath -Raw
 $match=[regex]::Match($index,'(?s)<script id="inventory-data" type="application/json">(.*?)</script>')
 Expect $match.Success 'index lacks embedded inventory data'
 if($match.Success){try{$embedded=$match.Groups[1].Value|ConvertFrom-Json -Depth 100;Expect ((Get-VisualCanonicalJson $embedded) -ceq (Get-VisualCanonicalJson $actual)) 'embedded inventory differs'}catch{$failures.Add("invalid embedded inventory: $($_.Exception.Message)")}}
-foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','promote_visual_replacement_unit.ps1','"final_gameplay_png":64','"external_sources"')){Expect ($index.Contains($required)) "index contract missing: $required"}
+foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','promote_visual_replacement_unit.ps1','"final_gameplay_png":64','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
+$authorityUiMarkers=@(
+    'id="visual-authority-pair"',
+    'id="style-authority-link"',
+    'href="../VISUAL_SYSTEM.md"',
+    'id="style-reference-trigger"',
+    'docs/design/VISUAL_SYSTEM.md',
+    'docs/design/cardborne-universal-art-style-reference.png',
+    'Mandatory visual authority pair',
+    '필수 비주얼 정본 쌍',
+    'The sheet is a style reference only; it is not approval of any depicted asset.',
+    '이 시트는 스타일 참조일 뿐이며, 개별 에셋 승인이 아닙니다.',
+    'data.style_reference_sheet'
+)
+foreach($marker in $authorityUiMarkers){Expect ($template.Contains($marker)) "template authority UI missing: $marker";Expect ($index.Contains($marker)) "index authority UI missing: $marker"}
 $prohibitedTokens=@('fetch(','XMLHttpRequest',('9b30'+'9ce'),('semantic-v3-'+'approval'),('current-review-'+'overrides'),('review-'+'images'),('restore_visual_asset_'+'inventory'))
 foreach($prohibited in $prohibitedTokens){Expect (-not ($index.Contains($prohibited))) "index contains prohibited token: $prohibited"}
 
