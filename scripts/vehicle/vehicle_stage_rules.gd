@@ -214,12 +214,17 @@ static func move_circle_with_extra_safe(
 	radius: float,
 	stage_id: StringName,
 	extra_cover: Array,
-	known_fast_motion_clear: bool
+	known_fast_motion_clear: bool,
+	known_static_cover_clear: bool = false
 ) -> Vector2:
 	## Reuses a caller's exact safe-cell result; all non-safe paths keep the
-	## original solver and candidate ordering.
+	## original solver and candidate ordering. A caller that has already queried
+	## the swept static-cover broadphase may skip the redundant full cover scan,
+	## while floor/void and dynamic-cover truth remain exact.
 	if extra_cover.is_empty() and known_fast_motion_clear:
 		return position + motion
+	if extra_cover.is_empty() and known_static_cover_clear:
+		return _move_circle_without_static_cover(position, motion, radius, stage_id)
 	return _move_circle_with_extra_exact(position, motion, radius, stage_id, extra_cover)
 
 
@@ -243,6 +248,29 @@ static func _move_circle_with_extra_exact(
 		clampf(position.y + motion.y, bounds.position.y + radius, bounds.end.y - radius)
 	)
 	if _position_clear_with_extra(attempt_y, radius, stage_id, extra_cover):
+		result.y = attempt_y.y
+	return result
+
+
+static func _move_circle_without_static_cover(
+	position: Vector2,
+	motion: Vector2,
+	radius: float,
+	stage_id: StringName
+) -> Vector2:
+	var bounds := world_rect(stage_id)
+	var result := position
+	var attempt_x := Vector2(
+		clampf(position.x + motion.x, bounds.position.x + radius, bounds.end.x - radius),
+		position.y
+	)
+	if Catalog.position_is_walkable(stage_id, attempt_x, radius):
+		result.x = attempt_x.x
+	var attempt_y := Vector2(
+		result.x,
+		clampf(position.y + motion.y, bounds.position.y + radius, bounds.end.y - radius)
+	)
+	if Catalog.position_is_walkable(stage_id, attempt_y, radius):
 		result.y = attempt_y.y
 	return result
 

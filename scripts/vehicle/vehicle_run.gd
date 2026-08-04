@@ -154,6 +154,7 @@ var _runtime_blockers: Array[Rect2] = []
 var _runtime_bulkheads: Array[Rect2] = []
 var _runtime_structural_walls: Array[Rect2] = []
 var _motion_cover_static_safe := false
+var _motion_cover_static_cover_clear := false
 
 var player_position := Vector2.ZERO
 var player_velocity := Vector2.ZERO
@@ -1525,6 +1526,7 @@ func _runtime_motion_cover_rects(
 	radius: float
 ) -> Array[Rect2]:
 	_motion_cover_query.clear()
+	_motion_cover_static_cover_clear = false
 	_motion_cover_static_safe = StageCatalog.is_fast_motion_clear(
 		current_stage_id, from, to, radius
 	)
@@ -1532,6 +1534,7 @@ func _runtime_motion_cover_rects(
 		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _motion_cover_query
 		)
+		_motion_cover_static_cover_clear = _motion_cover_query.is_empty()
 	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
 	for wall in _runtime_structural_walls:
 		if swept.intersects(wall.grow(radius), true):
@@ -1983,6 +1986,10 @@ func _update_enemies(delta: float) -> void:
 	_enemy_decision_bucket = (_enemy_decision_bucket + 1) % ORDINARY_DECISION_BUCKET_COUNT
 	if decision_bucket == 0:
 		_enemy_decision_cycle_epoch += 1
+	# Rebuild on every physics tick so motion-only buckets are published at
+	# 30/20 Hz and each decision bucket gets its own 10 Hz opportunity. The
+	# scheduler accumulators are lane-owned; rebuilding only on bucket zero
+	# would discard five-sixths of decision/motion cadence.
 	_enemy_update_schedule.rebuild(
 		enemies, delta, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
 		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket,
@@ -3206,7 +3213,8 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 			radius,
 			current_stage_id,
 			extra_cover,
-			_motion_cover_static_safe
+			_motion_cover_static_safe,
+			_motion_cover_static_cover_clear
 		)
 	if _live_crate_count <= 0:
 		return result
