@@ -1524,7 +1524,10 @@ func _runtime_motion_cover_rects(
 	radius: float
 ) -> Array[Rect2]:
 	_motion_cover_query.clear()
-	if field_layout != null:
+	var static_safe := StageCatalog.is_fast_motion_clear(
+		current_stage_id, from, to, radius
+	)
+	if field_layout != null and not static_safe:
 		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _motion_cover_query
 		)
