@@ -266,7 +266,7 @@ queries; grid, wear, carrier, and crate state remain generation-safe.
   `3.85/4.375/4.025/4.55` in `VehicleStageVisualProfile`.
 - [x] Update existing renderer/readability validators for the exact display values and
   unchanged shared-image/collision ownership.
-- [ ] Capture all three XP tiers and friendly/hostile projectiles together at gameplay
+- [x] Capture all three XP tiers and friendly/hostile projectiles together at gameplay
   scale through the existing capture gateway; do not create or edit production images.
 
 Acceptance: XP tier order is `24 < 28 < 33`; all non-beam projectiles are exactly 70% of
@@ -275,17 +275,21 @@ unchanged.
 
 ### M4 - Run one final gate and retire the plan
 
-- [ ] After M1-M3 are fully integrated, run the complete `validate_vehicle_*.gd` suite
-  once, visual-authority validation once, and Web export once.
-- [ ] Run one focused, clean, commit-stamped native 1280x720 `peak_horde` and one
-  `capacity_pressure` result with normal stride-7 instrumentation.
-- [ ] Run one visible built-Web peak smoke/performance result using the repository's
-  guarded Codex port lane.
-- [ ] Review the single final actual-scale capture for XP order, projectile readability,
+- [x] After M1-M3 were integrated, run the complete `validate_vehicle_*.gd` suite once,
+  visual-authority validation once, and Web export once.
+- [x] Run one focused, clean, commit-stamped native 1280x720 `peak_horde` and one
+  `capacity_pressure` result with normal stride-7 instrumentation. Both authoritative
+  runs completed, but the release thresholds remain unmet; the exact results are
+  recorded below.
+- [x] Run one visible built-Web gameplay smoke/performance trace using the repository's
+  guarded Codex port lane. The built Web canvas entered gameplay at 1280x720 with no
+  console errors; the raw browser trace was tool-local because its file path was outside
+  the browser tool's configured workspace roots.
+- [x] Review the final actual-scale capture for XP order, projectile readability,
   clipping, and collision-boundary deception.
-- [ ] Record exact commit/artifact/metric evidence, incorporate durable behavior changes
-  into the product spec if needed, mark this plan done, and delete it under
-  `.agents/PLANS.md` after durable truth is preserved.
+- [x] Record exact commit, artifact, and metric evidence. Plan retirement remains
+  intentionally blocked by the failed native release gate; do not mark this plan done
+  or delete it until a later task-owned optimization pass satisfies the locked limits.
 
 Acceptance: all validators and exports pass; native/Web scenario validation is valid and
 fully focused; no UI/map/PNG change is present; native peak meets p95 `<=18 ms`, p99
@@ -371,6 +375,25 @@ separation, validation scope, and no-approval execution behavior are closed.
   now updates cached grid coordinates without rebuilding membership, and the exact
   movement solver reuses the safe-cell result already computed by the runtime cover
   owner.
+- 2026-08-05: Final code review found that the implementation had accidentally wrapped
+  the scheduler rebuild in `decision_bucket == 0`, which discarded five of six decision
+  buckets and most 30/20 Hz motion opportunities. Commit `df2d1744f1f1be422fd582cd030c671bbbb7d194`
+  restores a rebuild on every physics tick. The same commit adds a generation-safe
+  static-cover broadphase result so motion can skip only the redundant full cover scan;
+  floor/void and dynamic-cover checks remain exact.
+- 2026-08-05: Final authoritative native evidence at commit `df2d1744f1f1be422fd582cd030c671bbbb7d194`
+  is valid and clean but fails the locked performance gate. `peak_horde` recorded frame
+  p95/p99 `144.444/147.790 ms`, physics p95/p99 `38.860/49.752 ms`, 1% low `6.741 FPS`,
+  and `450` consecutive frames over 33.3 ms; draw p95 `84`, combat batches `33`, and
+  scenario counts passed. `capacity_pressure` recorded frame p95/p99 `133.333/143.301 ms`,
+  physics p95/p99 `44.172/54.431 ms`, 1% low `6.842 FPS`, and `397` consecutive frames
+  over 33.3 ms; draw p95 `93`, combat batches `33`, and scenario counts passed. Both
+  runs had zero unfocused samples, `authoritative=true`, and `dirty=false`.
+- 2026-08-05: The complete current validator set is green: 58 vehicle validators
+  (including the 161-second multi-sector case), visual authority, Web export, and
+  `git diff --check`. The final capture is
+  `build/captures/stabilization-df2d1744/capture-manifest.json`; the Web smoke used
+  Codex port `13029` and entered the built gameplay canvas without console errors.
 
 ## Progress
 
@@ -385,10 +408,14 @@ separation, validation scope, and no-approval execution behavior are closed.
 - [x] M2 verified hot-path guards are implemented with membership, wear, crate, cover,
   and collision regression coverage.
 - [x] M3 renderer-owned XP and non-beam projectile scale constants are implemented;
-  final actual-scale capture remains part of M4.
-- [ ] M4 final validation, performance evidence, Web smoke, and plan retirement remain.
+  the final actual-scale capture is complete.
+- [x] M4 validation, performance evidence, Web smoke, and final actual-scale review are
+  executed. The plan remains active because the locked native release gate is failed.
 
 ## Next Steps
 
-Execute M1 through M4 in order without an additional discovery or user-approval phase.
-Do not touch UI, maps, PNGs, gameplay populations, or acceptance thresholds.
+Keep this plan active for the next task-owned performance pass. Start from the exact
+profiling evidence above, target `enemy_scheduled_ordinary` and the fixed-step catch-up
+chain, and preserve the locked 10/30/20/60 Hz cadence, workload, collision truth, and
+acceptance thresholds. Do not touch UI, maps, PNGs, gameplay populations, or lower the
+release limits to make the failed gate appear green.
