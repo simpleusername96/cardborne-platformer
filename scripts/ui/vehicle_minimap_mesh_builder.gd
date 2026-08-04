@@ -4,18 +4,6 @@ extends RefCounted
 ## Compiles one bounded minimap snapshot into a single vertex-colored draw mesh.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
-const ActorCatalog = preload(
-	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
-)
-const ActorRecipes = preload(
-	"res://scripts/presentation/components/vehicle_actor_mesh_recipes.gd"
-)
-const RewardCatalog = preload(
-	"res://scripts/presentation/components/vehicle_reward_visual_catalog.gd"
-)
-const RewardFacilityRecipes = preload(
-	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
-)
 
 
 static func build(snapshot: Dictionary, canvas_size: Vector2) -> ArrayMesh:
@@ -56,13 +44,10 @@ static func dynamic_colors() -> Array[Color]:
 	return [
 		Color(Art.SPACE_BLACK, 0.82),
 		Art.SPACE_BLACK,
-		Art.TEXT_PRIMARY,
-		Art.TEXT_MUTED,
 		Art.PLAYER_REWARD,
+		Art.SUPPORT,
 		Art.DANGER,
 		Art.BOSS_COMMAND,
-		Art.SUPPORT,
-		Art.SYSTEM,
 	]
 
 
@@ -81,8 +66,6 @@ static func _build_geometry(
 	world_size.y = maxf(1.0, world_size.y)
 	_append_concealment(vertices, colors, indices, snapshot, cols, rows, cell_size)
 	_append_markers(vertices, colors, indices, snapshot, world_size, canvas_size)
-	_append_clusters(vertices, colors, indices, snapshot, cell_size)
-	_append_support_fields(vertices, colors, indices, snapshot, world_size, canvas_size)
 	_append_player(vertices, colors, indices, snapshot, world_size, canvas_size)
 	return {
 		"vertices":vertices,
@@ -140,185 +123,14 @@ static func _append_markers(
 		if not bool(marker.get("discovered", false)):
 			continue
 		var point := _map_point(Vector2(marker.get("position", Vector2.ZERO)), world_size, canvas_size)
-		var marker_color: Color = marker.get("color", Art.PLAYER_REWARD)
-		var kind := String(marker.get("kind", "point"))
-		if (
-			bool(snapshot.get("semantic_markers", false))
-			and kind in ["boss", "objective", "elite", "stationary"]
-		):
-			continue
+		var kind := StringName(marker.get("kind", &""))
 		match kind:
-			"boss":
-				_append_boss(vertices, colors, indices, point, marker_color, StringName(marker.get("variant", &"colossus")))
-			"objective":
-				_append_rect(vertices, colors, indices, Rect2(point - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), marker_color)
-			"reward":
-				_append_recipe_signature(
-					vertices,
-					colors,
-					indices,
-					RewardFacilityRecipes.signature(&"reward_crate"),
-					point,
-					6.5,
-					0.0,
-					marker_color
-				)
-			"elite":
-				_append_actor_marker(
-					vertices,
-					colors,
-					indices,
-					StringName(marker.get("variant", &"chaser")),
-					point,
-					7.0,
-					marker_color
-				)
-			"stationary":
-				_append_actor_marker(
-					vertices,
-					colors,
-					indices,
-					StringName(marker.get("variant", &"turret")),
-					point,
-					6.5,
-					marker_color
-				)
-			"crate":
-				_append_recipe_signature(
-					vertices,
-					colors,
-					indices,
-					RewardFacilityRecipes.signature(&"reward_crate"),
-					point,
-					6.5,
-					0.0,
-					Art.PLAYER_REWARD
-				)
-			"pickup":
-				var pickup_id := StringName(
-					marker.get("variant", &"repair")
-				)
-				var reward_recipe := StringName(
-					RewardCatalog.descriptor(pickup_id).get(
-						"recipe",
-						&"repair"
-					)
-				)
-				_append_recipe_signature(
-					vertices,
-					colors,
-					indices,
-					RewardFacilityRecipes.signature(reward_recipe),
-					point,
-					6.5,
-					0.0,
-					marker_color
-				)
-			"mechanic":
-				var direction := Vector2.RIGHT.rotated(float(int(marker.get("orientation", 0))) * PI * 0.5)
-				_append_circle(vertices, colors, indices, point, 5.0, marker_color)
-				_append_line(vertices, colors, indices, point - direction * 6.0, point + direction * 6.0, 2.5, Art.TEXT_PRIMARY)
-			"blocker":
-				_append_rect(vertices, colors, indices, Rect2(point - Vector2(5.0, 2.5), Vector2(10.0, 5.0)), marker_color)
-			_:
-				_append_circle(vertices, colors, indices, point, 4.0, marker_color)
-
-
-static func _append_boss(
-	vertices: Array[Vector3],
-	colors: Array[Color],
-	indices: Array[int],
-	point: Vector2,
-	color: Color,
-	variant: StringName
-) -> void:
-	var recipe_id := StringName(
-		ActorCatalog.descriptor(variant).get("recipe", &"")
-	)
-	_append_recipe_signature(
-		vertices,
-		colors,
-		indices,
-		[ActorRecipes.boss_signature(recipe_id)],
-		point,
-		7.0,
-		0.0,
-		color
-	)
-
-
-static func _append_actor_marker(
-	vertices: Array[Vector3],
-	colors: Array[Color],
-	indices: Array[int],
-	actor_id: StringName,
-	point: Vector2,
-	scale: float,
-	color: Color
-) -> void:
-	var recipe_id := StringName(
-		ActorCatalog.descriptor(actor_id).get("recipe", &"")
-	)
-	_append_recipe_signature(
-		vertices,
-		colors,
-		indices,
-		[ActorRecipes.enemy_signature(recipe_id)],
-		point,
-		scale,
-		0.0,
-		color
-	)
-
-
-static func _append_clusters(
-	vertices: Array[Vector3],
-	colors: Array[Color],
-	indices: Array[int],
-	snapshot: Dictionary,
-	cell_size: Vector2
-) -> void:
-	if bool(snapshot.get("semantic_markers", false)):
-		return
-	for cluster_variant in snapshot.get("enemy_clusters", []):
-		var cluster: Dictionary = cluster_variant
-		var point := (Vector2(Vector2i(cluster["cell"])) + Vector2(0.5, 0.5)) * cell_size
-		var count := int(cluster["count"])
-		var radius := 3.0 if count == 1 else (5.0 if count <= 4 else 7.0)
-		_append_circle(vertices, colors, indices, point, radius, Art.DANGER)
-		var average_velocity := Vector2(cluster.get("average_velocity", Vector2.ZERO))
-		if average_velocity.length_squared() > 1.0:
-			var tick := average_velocity.normalized() * clampf(average_velocity.length() / 42.0, 4.0, 7.0)
-			_append_line(vertices, colors, indices, point, point + tick, 1.5, Art.TEXT_PRIMARY)
-
-
-static func _append_support_fields(
-	vertices: Array[Vector3],
-	colors: Array[Color],
-	indices: Array[int],
-	snapshot: Dictionary,
-	world_size: Vector2,
-	canvas_size: Vector2
-) -> void:
-	for support_variant in snapshot.get("support_fields", []):
-		var support: Dictionary = support_variant
-		var state := StringName(support["state"])
-		if state in [&"initial_delay", &"depleted"]:
-			continue
-		var point := _map_point(Vector2(support["position"]), world_size, canvas_size)
-		var kind := StringName(support["kind"])
-		var color := Art.SUPPORT if kind == &"repair" else Art.PLAYER_REWARD
-		var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
-		_append_arc(
-			vertices, colors, indices, point, 7.0,
-			-PI * 0.5, -PI * 0.5 + TAU * (1.0 - progress), 2.0, color
-		)
-		if kind == &"repair":
-			_append_line(vertices, colors, indices, point - Vector2(3.0, 0.0), point + Vector2(3.0, 0.0), 2.0, Art.TEXT_PRIMARY)
-			_append_line(vertices, colors, indices, point - Vector2(0.0, 3.0), point + Vector2(0.0, 3.0), 2.0, Art.TEXT_PRIMARY)
-		else:
-			_append_line(vertices, colors, indices, point + Vector2(-3.0, 2.0), point + Vector2(0.0, -2.0), 2.0, Art.TEXT_PRIMARY)
-			_append_line(vertices, colors, indices, point + Vector2(0.0, -2.0), point + Vector2(3.0, 2.0), 2.0, Art.TEXT_PRIMARY)
+			&"item":
+				_append_diamond_marker(vertices, colors, indices, point)
+			&"enemy":
+				_append_round_marker(vertices, colors, indices, point)
+			&"boss":
+				_append_boss_marker(vertices, colors, indices, point)
 
 
 static func _append_player(
@@ -329,43 +141,80 @@ static func _append_player(
 	world_size: Vector2,
 	canvas_size: Vector2
 ) -> void:
-	if bool(snapshot.get("semantic_markers", false)):
-		return
 	var point := _map_point(Vector2(snapshot.get("player", Vector2.ZERO)), world_size, canvas_size)
 	var facing := Vector2(snapshot.get("player_facing", Vector2.UP)).normalized()
 	if facing.is_zero_approx():
 		facing = Vector2.UP
-	_append_line(vertices, colors, indices, point, point + facing * 11.0, 2.5, Art.PLAYER_REWARD)
-	_append_recipe_signature(
-		vertices,
-		colors,
-		indices,
-		[ActorRecipes.player_signature()],
-		point,
-		8.0,
-		facing.angle(),
-		Art.PLAYER_REWARD
-	)
+	var side := facing.rotated(PI * 0.5)
+	var outer := PackedVector2Array([
+		point + facing * 7.0,
+		point - facing * 5.0 + side * 5.0,
+		point - facing * 2.0,
+		point - facing * 5.0 - side * 5.0,
+	])
+	var inner := PackedVector2Array()
+	for outer_point in outer:
+		inner.append(point + (outer_point - point) * 0.72)
+	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
+	_append_polygon(vertices, colors, indices, inner, Art.PLAYER_REWARD)
 
 
-static func _append_recipe_signature(
+static func _append_diamond_marker(
 	vertices: Array[Vector3],
 	colors: Array[Color],
 	indices: Array[int],
-	signature: Array,
+	center: Vector2
+) -> void:
+	_append_regular_polygon(
+		vertices, colors, indices, center, 6.0, 4, PI * 0.25, Art.SPACE_BLACK
+	)
+	_append_regular_polygon(
+		vertices, colors, indices, center, 4.2, 4, PI * 0.25, Art.SUPPORT
+	)
+
+
+static func _append_round_marker(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	center: Vector2
+) -> void:
+	_append_circle(vertices, colors, indices, center, 5.5, Art.SPACE_BLACK, 10)
+	_append_circle(vertices, colors, indices, center, 4.0, Art.DANGER, 10)
+
+
+static func _append_boss_marker(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	center: Vector2
+) -> void:
+	_append_regular_polygon(
+		vertices, colors, indices, center, 7.0, 6, 0.0, Art.SPACE_BLACK
+	)
+	_append_regular_polygon(
+		vertices, colors, indices, center, 5.2, 6, 0.0, Art.BOSS_COMMAND
+	)
+
+
+static func _append_regular_polygon(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
 	center: Vector2,
-	scale: float,
-	angle: float,
+	radius: float,
+	segments: int,
+	angle_offset: float,
 	color: Color
 ) -> void:
-	for polygon_variant in signature:
-		var source := PackedVector2Array(polygon_variant)
-		if source.size() < 3:
-			continue
-		var transformed := PackedVector2Array()
-		for point in source:
-			transformed.append(center + point.rotated(angle) * scale)
-		_append_polygon(vertices, colors, indices, transformed, color)
+	var points := PackedVector2Array()
+	for index in segments:
+		points.append(
+			center + Vector2.RIGHT.rotated(
+				angle_offset + TAU * float(index) / float(segments)
+			) * radius
+		)
+	_append_polygon(vertices, colors, indices, points, color)
 
 
 static func _append_circle(
@@ -379,55 +228,12 @@ static func _append_circle(
 ) -> void:
 	var points := PackedVector2Array()
 	for index in segments:
-		points.append(center + Vector2.RIGHT.rotated(TAU * float(index) / float(segments)) * radius)
+		points.append(
+			center
+			+ Vector2.RIGHT.rotated(TAU * float(index) / float(segments))
+			* radius
+		)
 	_append_polygon(vertices, colors, indices, points, color)
-
-
-static func _append_arc(
-	vertices: Array[Vector3],
-	colors: Array[Color],
-	indices: Array[int],
-	center: Vector2,
-	radius: float,
-	start_angle: float,
-	end_angle: float,
-	width: float,
-	color: Color
-) -> void:
-	var sweep := end_angle - start_angle
-	if absf(sweep) <= 0.001:
-		return
-	var segments := maxi(2, ceili(absf(sweep) / TAU * 18.0))
-	var half_width := width * 0.5
-	for index in segments:
-		var angle_a := lerpf(start_angle, end_angle, float(index) / float(segments))
-		var angle_b := lerpf(start_angle, end_angle, float(index + 1) / float(segments))
-		var radial_a := Vector2.RIGHT.rotated(angle_a)
-		var radial_b := Vector2.RIGHT.rotated(angle_b)
-		_append_polygon(vertices, colors, indices, PackedVector2Array([
-			center + radial_a * (radius - half_width),
-			center + radial_b * (radius - half_width),
-			center + radial_b * (radius + half_width),
-			center + radial_a * (radius + half_width),
-		]), color)
-
-
-static func _append_line(
-	vertices: Array[Vector3],
-	colors: Array[Color],
-	indices: Array[int],
-	from: Vector2,
-	to: Vector2,
-	width: float,
-	color: Color
-) -> void:
-	var direction := to - from
-	if direction.is_zero_approx():
-		return
-	var side := direction.normalized().rotated(PI * 0.5) * width * 0.5
-	_append_polygon(vertices, colors, indices, PackedVector2Array([
-		from - side, to - side, to + side, from + side,
-	]), color)
 
 
 static func _append_rect(

@@ -5379,114 +5379,49 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 	for cell in visited_cells.keys():
 		visited.append(cell)
 	var markers: Array[Dictionary] = []
-	var enemy_cluster_cells := {}
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
 		markers.append({
-			"kind":"boss", "position":boss_arrival_position,
-			"color":Art.BOSS_COMMAND, "discovered":true,
-			"variant":[&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"][current_stage_index],
+			"kind":&"boss",
+			"position":boss_arrival_position,
+			"discovered":true,
 		})
 	var stage_boss := _find_enemy_by_id("stage_boss")
 	if stage_boss != null and stage_boss.alive:
 		markers.append({
-			"kind":"boss", "position":stage_boss.pos, "color":Art.BOSS_COMMAND,
-			"discovered":true, "variant":stage_boss.boss_variant,
+			"kind":&"boss",
+			"position":stage_boss.pos,
+			"discovered":true,
 		})
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active or enemy.role == &"stage_boss":
 			continue
-		if (
-			enemy.role == &"boss_pylon"
-			and not enemy.boss_objective_id.is_empty()
-		):
-			var module_state := boss_exam_runtime.module_state(enemy.id)
-			markers.append({
-				"kind":"objective",
-				"id":enemy.id,
-				"objective_id":enemy.boss_objective_id,
-				"state":module_state,
-				"locked":module_state != &"active",
-				"health":enemy.health,
-				"max_health":enemy.max_health,
-				"position":enemy.pos,
-				"color":Art.MUSTARD,
-				"discovered":true,
-			})
-			continue
-		var stationary := enemy.role in [
-			&"turret", &"generator", &"interceptor_tower", &"beam_sentinel"
-		] or (enemy.role == &"mine" and enemy.archetype != &"spark_minelet")
-		if stationary:
-			markers.append({
-				"kind":"stationary",
-				"position":enemy.pos,
-				"color":Rules.CORAL,
-				"variant":enemy.role,
-				"discovered":true,
-			})
-		elif not enemy.elite_trait.is_empty() or enemy.health_class == &"priority":
-			markers.append({
-				"kind":"elite",
-				"position":enemy.pos,
-				"color":Rules.CORAL,
-				"variant":enemy.role,
-				"discovered":true,
-			})
-		else:
-			var stage_world := Rules.world_rect(current_stage_id)
-			var cell := Vector2i(
-				clampi(floori(enemy.pos.x / stage_world.size.x * MINIMAP_COLS), 0, MINIMAP_COLS - 1),
-				clampi(floori(enemy.pos.y / stage_world.size.y * MINIMAP_ROWS), 0, MINIMAP_ROWS - 1)
-			)
-			var cluster: Dictionary = enemy_cluster_cells.get(
-				cell, {"cell":cell, "count":0, "velocity_sum":Vector2.ZERO}
-			)
-			cluster["count"] = int(cluster["count"]) + 1
-			cluster["velocity_sum"] = Vector2(cluster["velocity_sum"]) + enemy.velocity
-			enemy_cluster_cells[cell] = cluster
+		markers.append({
+			"kind":&"enemy",
+			"position":enemy.pos,
+			"discovered":true,
+		})
 	for pickup in pickups:
 		if bool(pickup["active"]):
 			markers.append({
-				"kind": "pickup",
-				"position": Vector2(pickup["pos"]),
-				"color": _pickup_color(StringName(pickup["kind"])),
-				"variant":StringName(pickup["kind"]),
-				"discovered": true,
+				"kind":&"item",
+				"position":Vector2(pickup["pos"]),
+				"discovered":true,
 			})
 	for crate in crates:
 		if bool(crate["alive"]):
 			markers.append({
-				"kind":"crate",
+				"kind":&"item",
 				"position":Vector2(crate["pos"]),
-				"color":Art.INK_MUTED,
 				"discovered":true,
 			})
-	var enemy_clusters: Array[Dictionary] = []
-	for cluster_value in enemy_cluster_cells.values():
-		var cluster := Dictionary(cluster_value)
-		var count := maxi(1, int(cluster["count"]))
-		enemy_clusters.append({
-			"cell":Vector2i(cluster["cell"]),
-			"count":count,
-			"average_velocity":Vector2(cluster["velocity_sum"]) / float(count),
-		})
-	enemy_clusters.sort_custom(
-		func(a: Dictionary, b: Dictionary) -> bool:
-			var a_cell := Vector2i(a["cell"])
-			var b_cell := Vector2i(b["cell"])
-			return a_cell.y < b_cell.y or (a_cell.y == b_cell.y and a_cell.x < b_cell.x)
-	)
 	var snapshot := {
 		"cols": MINIMAP_COLS,
 		"rows": MINIMAP_ROWS,
 		"visited": visited,
 		"player": player_position,
-		"player_facing": player_aim_direction,
-		"semantic_markers": true,
+		"player_facing": player_hull_direction,
 		"world_size": Rules.world_rect(current_stage_id).size,
 		"markers": markers,
-		"enemy_clusters":enemy_clusters,
-		"support_fields":terrain_runtime.support_snapshot(),
 	}
 	if include_static_geometry:
 		var blocker_polygons: Array = Rules.get_cover_polygons(false, current_stage_id).duplicate()
@@ -5674,26 +5609,13 @@ func _draw_terrain() -> void:
 			&"wear_collapse_tile":
 				var wear_rect := Rect2(feature["rect"])
 				var wear_state := StringName(feature.get("state", &"intact"))
-				var fill := Art.RAISED
-				if wear_state == &"cracked":
-					fill = Color(Art.MUSTARD, 0.32)
-				elif wear_state == &"collapsed":
-					fill = Color(Art.CORAL, 0.34)
-				draw_rect(wear_rect, fill)
-				draw_rect(
-					wear_rect.grow(-6.0),
-					Art.CORAL if wear_state == &"collapsed" else Art.TEXT_MUTED,
-					false,
-					6.0
+				if wear_state not in [&"intact", &"cracked", &"collapsed"]:
+					wear_state = &"intact"
+				_draw_semantic_asset_fitted(
+					StringName("world/wear_tile_%s" % String(wear_state)),
+					wear_rect,
+					Color.WHITE
 				)
-				if wear_state != &"intact":
-					draw_line(wear_rect.position, wear_rect.end, Art.INK, 5.0)
-					draw_line(
-						Vector2(wear_rect.end.x, wear_rect.position.y),
-						Vector2(wear_rect.position.x, wear_rect.end.y),
-						Art.INK,
-						5.0
-					)
 			&"arc_surge":
 				var rectangle := Rect2(feature["rect"])
 				var readiness := float(feature.get("readiness", 0.0))
@@ -5748,31 +5670,11 @@ func _draw_terrain() -> void:
 				var rectangle := Rect2(feature["rect"])
 				var feature_health := float(feature.get("health", 0.0))
 				if feature_health <= 0.0:
-					var broken_center := rectangle.get_center()
-					var horizontal_break := rectangle.size.x >= rectangle.size.y
-					var long_axis := Vector2.RIGHT if horizontal_break else Vector2.DOWN
-					var short_axis := long_axis.rotated(PI * 0.5)
-					for direction: float in [-1.0, 1.0]:
-						var chunk_center: Vector2 = (
-							broken_center
-							+ long_axis * direction * 46.0
-							+ short_axis * direction * 14.0
-						)
-						var chunk_size := (
-							Vector2(62.0, 28.0)
-							if horizontal_break
-							else Vector2(28.0, 62.0)
-						)
-						draw_rect(
-							Rect2(chunk_center - chunk_size * 0.5, chunk_size),
-							Art.RAISED
-						)
-						draw_line(
-							chunk_center - short_axis * 12.0,
-							chunk_center + short_axis * 12.0,
-							Art.DANGER,
-							5.0
-						)
+					_draw_semantic_asset_fitted(
+						&"world/world_bulkhead_open",
+						rectangle,
+						Color.WHITE
+					)
 					continue
 				draw_rect(
 					Rect2(
@@ -5846,11 +5748,25 @@ func _draw_pickups_and_crates() -> void:
 		var kind := StringName(pickup["kind"])
 		var bob := 0.0 if _reduced_motion_enabled() else sin(float(pickup["pulse"])) * 3.0
 		position.y += bob
+		var is_experience := kind in [
+			&"experience_small", &"experience_medium", &"experience_large"
+		]
+		var visual_radius := Art.PICKUP_PLINTH_RADIUS
+		if kind == &"experience_small":
+			visual_radius *= 0.72
+		elif kind == &"experience_medium":
+			visual_radius *= 0.90
+		elif kind == &"experience_large":
+			visual_radius *= 1.12
 		_draw_semantic_asset(
-			StringName("pickup/%s" % kind),
+			(
+				&"pickup/experience_master"
+				if is_experience
+				else StringName("pickup/%s" % kind)
+			),
 			position,
-			Art.PICKUP_PLINTH_RADIUS,
-			Color.WHITE
+			visual_radius,
+			Art.PLAYER_REWARD if is_experience else Color.WHITE
 		)
 	for crate in crates:
 		if not bool(crate["alive"]):

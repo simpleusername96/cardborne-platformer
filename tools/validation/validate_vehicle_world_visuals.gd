@@ -620,37 +620,41 @@ func _validate_minimap_tokens() -> void:
 		"player_facing": Vector2.RIGHT,
 		"world_size": Vector2(7200.0, 4320.0),
 		"markers": [
-			{"kind":"boss", "position":Vector2(800,800), "color":Art.BOSS_COMMAND, "discovered":true},
-			{"kind":"pickup", "position":Vector2(1600,800), "color":Art.SUPPORT, "discovered":true},
-			{"kind":"crate", "position":Vector2(2400,800), "color":Art.PLAYER_REWARD, "discovered":true},
-			{"kind":"mechanic", "position":Vector2(3200,800), "color":Art.SYSTEM, "discovered":true},
-			{"kind":"blocker", "position":Vector2(4000,800), "color":Art.RAISED, "discovered":true},
-		],
-		"enemy_clusters": [
-			{"cell":Vector2i(3,2), "count":5, "average_velocity":Vector2.RIGHT * 60.0},
-		],
-		"support_fields": [
-			{"state":&"active", "position":Vector2(4800,800), "kind":&"repair", "phase_progress":0.25},
-			{"state":&"warning", "position":Vector2(5600,800), "kind":&"overdrive", "phase_progress":0.50},
+			{"kind":&"boss", "position":Vector2(800,800), "discovered":true},
+			{"kind":&"item", "position":Vector2(1600,800), "discovered":true},
+			{"kind":&"enemy", "position":Vector2(2400,800), "discovered":true},
+			{
+				"kind":&"objective",
+				"position":Vector2(3200,800),
+				"color":Color(0.123, 0.456, 0.789),
+				"discovered":true,
+			},
 		],
 	}
 	var mesh := MinimapBuilder.build(snapshot, Vector2(260.0, 120.0))
-	_expect(mesh != null, "minimap compiles semantic world and facility markers")
+	_expect(mesh != null, "minimap compiles the four semantic marker roles")
 	if mesh == null:
 		return
 	_expect(mesh.get_surface_count() == 1, "minimap stays in one vertex-colored batch")
 	var arrays := mesh.surface_get_arrays(0)
 	_expect(
 		(PackedVector3Array(arrays[Mesh.ARRAY_VERTEX])).size() > 24,
-		"minimap exposes distinct marker geometry"
+		"minimap exposes shape-distinct role geometry"
 	)
+	var colors := PackedColorArray(arrays[Mesh.ARRAY_COLOR])
 	_expect(
-		(PackedColorArray(arrays[Mesh.ARRAY_COLOR])).has(Art.BOSS_COMMAND),
+		colors.has(Art.BOSS_COMMAND),
 		"minimap preserves the boss semantic color"
 	)
 	_expect(
-		(PackedColorArray(arrays[Mesh.ARRAY_COLOR])).has(Art.PLAYER_REWARD),
-		"minimap preserves player/reward emphasis"
+		colors.has(Art.PLAYER_REWARD)
+			and colors.has(Art.SUPPORT)
+			and colors.has(Art.DANGER),
+		"minimap preserves player, item, and enemy semantic colors"
+	)
+	_expect(
+		not colors.has(Color(0.123, 0.456, 0.789)),
+		"minimap suppresses legacy objective and subtype marker channels"
 	)
 
 

@@ -11,10 +11,13 @@ const ActionGlyphRenderer = preload(
 	"res://scripts/presentation/components/vehicle_ui_action_glyph_renderer.gd"
 )
 
+const MINIMAP_GLYPHS: Array[StringName] = [
+	&"player", &"item", &"enemy", &"boss",
+]
 const CORE_GLYPHS: Array[StringName] = [
 	&"primary", &"seeker", &"dash", &"emp", &"secondary", &"breach_ready",
-	&"player", &"enemy", &"elite", &"boss", &"stationary", &"pickup",
-	&"crate", &"repair", &"recall", &"target", &"locked_silhouette",
+	&"player", &"item", &"enemy", &"boss", &"repair", &"recall", &"target",
+	&"locked_silhouette",
 ]
 
 # Compatibility surface for current registry/sheet callers. The renderer is the
@@ -25,6 +28,10 @@ const ACTION_GLYPHS := ActionGlyphRenderer.ACTION_RECIPES
 
 static func descriptor_ids() -> Array[StringName]:
 	return CORE_GLYPHS.duplicate()
+
+
+static func minimap_ids() -> Array[StringName]:
+	return MINIMAP_GLYPHS.duplicate()
 
 
 static func action_ids() -> Array[StringName]:

@@ -5,6 +5,7 @@ const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builde
 const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const VehicleRun = preload("res://scripts/vehicle/vehicle_run.gd")
+const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const UiGlyphCatalog = preload(
@@ -401,20 +402,10 @@ func _initialize() -> void:
 		"player":Vector2(2600.0, 1100.0),
 		"player_facing":Vector2.RIGHT,
 		"markers":[
-			{"kind":"elite", "position":Vector2(2300.0, 1000.0), "discovered":true, "color":Color.RED},
-			{"kind":"pickup", "position":Vector2(2800.0, 1200.0), "discovered":true, "color":Color.GREEN},
+			{"kind":&"item", "position":Vector2(2300.0, 1000.0), "discovered":true},
+			{"kind":&"enemy", "position":Vector2(2800.0, 1200.0), "discovered":true},
+			{"kind":&"boss", "position":Vector2(3300.0, 900.0), "discovered":true},
 		],
-		"enemy_clusters":[{
-			"cell":Vector2i(5, 3),
-			"count":5,
-			"average_velocity":Vector2(100.0, 0.0),
-		}],
-		"support_fields":[{
-			"state":&"active",
-			"position":Vector2(3000.0, 1000.0),
-			"kind":&"repair",
-			"phase_progress":0.5,
-		}],
 	}, Vector2(176.0, 108.0))
 	_expect(tactical_mesh != null, "tactical minimap compiles a dynamic marker mesh")
 	_expect(
@@ -422,14 +413,10 @@ func _initialize() -> void:
 		"tactical minimap publishes all dynamic markers through one mesh surface"
 	)
 	var minimap_palette := MinimapMeshBuilder.dynamic_colors()
-	var palette_markers: Array[Dictionary] = []
-	for index in minimap_palette.size():
-		palette_markers.append({
-			"kind":"point",
-			"position":Vector2(400.0 + index * 420.0, 900.0),
-			"discovered":true,
-			"color":minimap_palette[index],
-		})
+	_expect(
+		UiGlyphCatalog.minimap_ids() == [&"player", &"item", &"enemy", &"boss"],
+		"minimap exposes exactly four semantic marker roles"
+	)
 	var retained_snapshot := {
 		"cols":13,
 		"rows":6,
@@ -437,9 +424,11 @@ func _initialize() -> void:
 		"world_size":Vector2(5200.0, 2200.0),
 		"player":Vector2(2600.0, 1100.0),
 		"player_facing":Vector2.RIGHT,
-		"markers":palette_markers,
-		"enemy_clusters":[],
-		"support_fields":[],
+		"markers":[
+			{"kind":&"item", "position":Vector2(1800.0, 900.0), "discovered":true},
+			{"kind":&"enemy", "position":Vector2(2600.0, 900.0), "discovered":true},
+			{"kind":&"boss", "position":Vector2(3400.0, 900.0), "discovered":true},
+		],
 	}
 	var retained_map := RetainedMinimapMesh.new(Vector2(176.0, 108.0))
 	var retained_mesh_id := retained_map.mesh.get_instance_id()
@@ -458,25 +447,25 @@ func _initialize() -> void:
 		retained_map.debug_snapshot()["visible_vertices_by_color"]
 	)
 	_expect(
-		int(cleared_counts.get(minimap_palette[5].to_rgba32(), 0)) == 0,
+		int(cleared_counts.get(Art.DANGER.to_rgba32(), 0)) == 0
+			and int(cleared_counts.get(Art.SUPPORT.to_rgba32(), 0)) == 0
+			and int(cleared_counts.get(Art.BOSS_COMMAND.to_rgba32(), 0)) == 0,
 		"retained minimap clears channels that leave the snapshot"
 	)
 	var pressure_markers: Array[Dictionary] = []
 	for index in EnemyStore.MAX_LIVE_HOSTILES:
 		pressure_markers.append({
-			"kind":"elite",
+			"kind":&"enemy",
 			"position":Vector2(
 				300.0 + float(index % 32) * 140.0,
 				300.0 + float(index / 32) * 140.0
 			),
 			"discovered":true,
-			"color":minimap_palette[5],
 		})
 	retained_snapshot["cols"] = VehicleRun.MINIMAP_COLS
 	retained_snapshot["rows"] = VehicleRun.MINIMAP_ROWS
 	retained_snapshot["markers"] = pressure_markers
-	retained_snapshot["enemy_clusters"] = []
-	var danger_key := minimap_palette[5].to_rgba32()
+	var danger_key := Art.DANGER.to_rgba32()
 	var all_marker_channels := MinimapMeshBuilder.build_triangle_channels(
 		retained_snapshot,
 		Vector2(176.0, 108.0)
@@ -498,48 +487,6 @@ func _initialize() -> void:
 				<= int(all_marker_contract["vertices_per_color"])
 			and all_marker_retained == all_marker_compiled.size(),
 		"retained minimap preserves every marker at the 320-hostile capacity"
-	)
-	var pressure_clusters: Array[Dictionary] = []
-	for row in VehicleRun.MINIMAP_ROWS:
-		for column in VehicleRun.MINIMAP_COLS:
-			pressure_clusters.append({
-				"cell":Vector2i(column, row),
-				"count":1,
-				"average_velocity":Vector2(100.0, 0.0),
-			})
-	var mixed_marker_count := (
-		EnemyStore.MAX_LIVE_HOSTILES - pressure_clusters.size()
-	)
-	var mixed_pressure_markers: Array[Dictionary] = []
-	mixed_pressure_markers.assign(
-		pressure_markers.slice(0, mixed_marker_count)
-	)
-	retained_snapshot["markers"] = mixed_pressure_markers
-	retained_snapshot["enemy_clusters"] = pressure_clusters
-	var mixed_channels := MinimapMeshBuilder.build_triangle_channels(
-		retained_snapshot,
-		Vector2(176.0, 108.0)
-	)
-	var mixed_compiled: PackedVector3Array = mixed_channels.get(
-		danger_key,
-		PackedVector3Array()
-	)
-	retained_map.update(retained_snapshot)
-	var mixed_contract := retained_map.debug_snapshot()
-	var mixed_counts := Dictionary(
-		mixed_contract["visible_vertices_by_color"]
-	)
-	var mixed_retained := int(mixed_counts.get(danger_key, 0))
-	_expect(
-		pressure_clusters.size()
-				== VehicleRun.MINIMAP_COLS * VehicleRun.MINIMAP_ROWS
-			and mixed_pressure_markers.size() + pressure_clusters.size()
-				== EnemyStore.MAX_LIVE_HOSTILES
-			and mixed_compiled.size() > 3500
-			and mixed_compiled.size()
-				<= int(mixed_contract["vertices_per_color"])
-			and mixed_retained == mixed_compiled.size(),
-		"retained minimap preserves a full 20x12 cluster grid inside 320 hostile slots"
 	)
 	retained_snapshot["player"] = Vector2(2800.0, 1200.0)
 	retained_map.update(retained_snapshot)

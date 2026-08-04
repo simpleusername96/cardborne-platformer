@@ -214,22 +214,28 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 		"boss strip consumes the sealed state and active module health snapshot"
 	)
 	var active := Dictionary(active_modules[0])
-	var objective_markers := Array(hud["minimap"]["markers"]).filter(
+	var minimap_markers := Array(hud["minimap"]["markers"])
+	var active_module_markers := minimap_markers.filter(
 		func(marker_variant) -> bool:
 			var marker := Dictionary(marker_variant)
 			return (
-				StringName(marker.get("kind", &"")) == &"objective"
-				and String(marker.get("id", "")) == String(active["id"])
-				and StringName(marker.get("state", &"")) == &"active"
-				and is_equal_approx(
-					float(marker.get("health", -1.0)),
-					float(active["health"])
+				StringName(marker.get("kind", &"")) == &"enemy"
+				and Vector2(marker.get("position", Vector2.ZERO)).is_equal_approx(
+					Vector2(active["position"])
 				)
 			)
 	)
+	var only_shared_minimap_roles := true
+	for marker_variant in minimap_markers:
+		if StringName(Dictionary(marker_variant).get("kind", &"")) not in [
+			&"item", &"enemy", &"boss",
+		]:
+			only_shared_minimap_roles = false
+			break
 	_expect(
-		not objective_markers.is_empty(),
-		"minimap consumes the same active objective id, state, and health"
+		not active_module_markers.is_empty()
+			and only_shared_minimap_roles,
+		"minimap folds objective modules into the shared enemy role"
 	)
 	var all_modules := Array(objective["modules"])
 	var locked_modules := all_modules.filter(
