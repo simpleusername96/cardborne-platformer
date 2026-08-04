@@ -9,10 +9,6 @@ const RewardCatalog = preload(
 const WorldCatalog = preload(
 	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
 )
-const Visuals = preload(
-	"res://scripts/presentation/vehicle_combat_visual_library.gd"
-)
-
 const EXPECTED_REWARDS: Array[StringName] = [
 	&"reward_crate",
 	&"experience_small",
@@ -79,15 +75,6 @@ func _validate_catalog_adapters() -> void:
 				and Recipes.has_recipe(facility_id),
 			"%s facility descriptor resolves to its shared recipe" % facility_id
 		)
-	for tier in [&"small", &"medium", &"large"]:
-		var mesh := Visuals.experience_mesh(tier)
-		_expect(
-			mesh.get_surface_count() == 1,
-			"%s experience runtime mesh compiles its recipe into one surface"
-			% tier
-		)
-
-
 func _validate_adapter_commands() -> void:
 	var palette := {
 		&"accent":Color(0.70, 0.42, 0.18, 1.0),

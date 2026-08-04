@@ -7,6 +7,9 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
+const AssetProvider = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 
 var failures: Array[String] = []
 
@@ -150,6 +153,23 @@ func _run() -> void:
 		}
 	)
 	snapshot = renderer.debug_snapshot()
+	var experience_batch := renderer.get_node_or_null(
+		"Experience_master"
+	) as MultiMeshInstance2D
+	_expect(
+		experience_batch != null
+			and experience_batch.texture == AssetProvider.texture(
+				&"pickup/experience_master"
+			)
+			and experience_batch.multimesh.visible_instance_count == 1,
+		"all experience values share one authored master batch"
+	)
+	_expect(
+		renderer.get_node_or_null("Experience_small") == null
+			and renderer.get_node_or_null("Experience_medium") == null
+			and renderer.get_node_or_null("Experience_large") == null,
+		"legacy tier-specific experience batches stay retired"
+	)
 	_expect(int(snapshot["visible_instances"]) >= 10, "renderer publishes bodies and semantic overlays as retained instances")
 	_expect(
 		int(snapshot["semantic_texture_draw_count"])

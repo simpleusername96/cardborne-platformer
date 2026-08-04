@@ -17,6 +17,9 @@ const SurfacePatternCompiler = preload(
 const MinimapBuilder = preload(
 	"res://scripts/ui/vehicle_minimap_mesh_builder.gd"
 )
+const AssetProvider = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
+)
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const FIXED_SEED := 0xC4A2B0
@@ -78,6 +81,36 @@ func _validate_catalog() -> void:
 	_expect(
 		facility_shapes.size() == 5,
 		"facility roles remain shape-distinct without color"
+	)
+	_validate_circular_runtime_pad(&"world/facility_repair_pad")
+	_validate_circular_runtime_pad(&"world/facility_overdrive_pad")
+
+
+func _validate_circular_runtime_pad(asset_id: StringName) -> void:
+	var descriptor := AssetProvider.descriptor(asset_id)
+	var path := String(descriptor.get("path", ""))
+	_expect(not path.is_empty(), "%s has a runtime image path" % asset_id)
+	if path.is_empty():
+		return
+	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
+	_expect(image != null and not image.is_empty(), "%s loads as an image" % asset_id)
+	if image == null or image.is_empty():
+		return
+	var used := image.get_used_rect()
+	_expect(
+		abs(used.size.x - used.size.y) <= 2,
+		"%s keeps a square circular-pad footprint" % asset_id
+	)
+	var opaque_pixels := 0
+	for y in range(used.position.y, used.end.y):
+		for x in range(used.position.x, used.end.x):
+			if image.get_pixel(x, y).a >= 0.12:
+				opaque_pixels += 1
+	var used_area := maxi(1, used.size.x * used.size.y)
+	var fill_ratio := float(opaque_pixels) / float(used_area)
+	_expect(
+		fill_ratio >= 0.68 and fill_ratio <= 0.86,
+		"%s keeps a filled circular alpha footprint" % asset_id
 	)
 
 

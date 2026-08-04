@@ -11,11 +11,7 @@ const ActorRecipes = preload("res://scripts/presentation/components/vehicle_acto
 const ProjectileEffectRecipes = preload(
 	"res://scripts/presentation/components/vehicle_projectile_effect_mesh_recipes.gd"
 )
-const RewardCatalog = preload("res://scripts/presentation/components/vehicle_reward_visual_catalog.gd")
 const EffectCatalog = preload("res://scripts/presentation/components/vehicle_effect_visual_catalog.gd")
-const RewardFacilityRecipes = preload(
-	"res://scripts/presentation/components/vehicle_reward_facility_visual_recipes.gd"
-)
 const Components = preload("res://scripts/presentation/components/vehicle_component_mesh_library.gd")
 
 const ENEMY_ARCHETYPES: Array[StringName] = [
@@ -136,16 +132,6 @@ static func player_mesh() -> ArrayMesh:
 	return player_craft_body_mesh()
 
 
-static func experience_mesh(kind: StringName) -> ArrayMesh:
-	var visual_id := StringName("experience_%s" % String(kind))
-	var descriptor := RewardCatalog.descriptor(visual_id)
-	var recipe_id := StringName(descriptor.get("recipe", visual_id))
-	return Components.polygon_mesh(
-		StringName("reward_%s" % String(recipe_id)),
-		_reward_facility_layers(recipe_id)
-	)
-
-
 static func effect_mesh(kind: StringName) -> ArrayMesh:
 	match kind:
 		&"diamond":
@@ -187,22 +173,6 @@ static func enemy_color(role: StringName) -> Color:
 		&"controller", &"drone_carrier", &"stage_boss", &"boss_pylon":
 			return Art.BOSS_COMMAND
 	return Art.DANGER
-
-
-static func _reward_facility_layers(recipe_id: StringName) -> Array[Dictionary]:
-	return RewardFacilityRecipes.resolved_polygon_commands(
-		recipe_id,
-		Vector2.ZERO,
-		1.0,
-		{
-			&"accent":Color.WHITE,
-			&"perimeter":Art.INK,
-			&"main_mass":Color.WHITE,
-			&"secondary_mass":Color(0.68, 0.68, 0.68, 1.0),
-			&"function_inset":Art.WORLD_CANVAS,
-			&"hard_highlight":Art.IVORY_BRIGHT,
-		}
-	)
 
 
 static func polygon_mesh(polygons: Array[Dictionary]) -> ArrayMesh:
