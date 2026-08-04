@@ -2183,6 +2183,9 @@ func _update_scheduled_ordinary_enemy(
 	var motion_due := critical_delta >= 0.0 or _enemy_update_schedule.motion_due(enemy)
 	if not motion_due and not decision_due:
 		return
+	if motion_due and not decision_due:
+		_update_motion_only_ordinary_enemy(enemy, motion_delta)
+		return
 	var previous_position := enemy.pos
 	var previous_alive := enemy.alive
 	var previous_active := enemy.active
@@ -2205,6 +2208,64 @@ func _update_scheduled_ordinary_enemy(
 	if (
 		enemy.pos != previous_position
 		or enemy.alive != previous_alive
+		or enemy.active != previous_active
+	):
+		enemy_grid.update_actor(enemy)
+	if enemy.alive and enemy.pos != previous_position:
+		_wear_motion_candidates.append(enemy)
+
+
+func _update_motion_only_ordinary_enemy(
+	enemy: EnemyState,
+	motion_delta: float
+) -> void:
+	## Motion-only ticks consume cached intent and never perform decision queries.
+	var previous_position := enemy.pos
+	var previous_active := enemy.active
+	if _update_collective_enemy(enemy, motion_delta):
+		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+		return
+	var leash := enemy.leash_rect
+	if leash.has_area() and not leash.has_point(player_position):
+		enemy.phase = &"move"
+		enemy.attack_cooldown = maxf(enemy.attack_cooldown, 0.35)
+		var to_home := enemy.home - enemy.pos
+		if to_home.length() <= 18.0:
+			enemy.pos = enemy.home
+			enemy.active = false
+		else:
+			_move_enemy_with_recovery(enemy, to_home.normalized() * enemy.speed, motion_delta)
+		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+		return
+	if enemy.role in [
+		&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
+		&"boss_pylon",
+	]:
+		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+		return
+	if enemy.role == &"mine":
+		if enemy.archetype == &"spark_minelet" and enemy.phase != &"mine_armed":
+			_move_cached_enemy_role(enemy, motion_delta)
+		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+		return
+	if enemy.phase == &"move" or enemy.role in [&"repair_tender", &"bulkhead_guard", &"splitter_barge"]:
+		_move_cached_enemy_role(enemy, motion_delta)
+	_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+
+
+func _move_cached_enemy_role(enemy: EnemyState, delta: float) -> void:
+	if delta <= 0.0 or enemy.desired_velocity.is_zero_approx():
+		return
+	_move_enemy_with_recovery(enemy, enemy.desired_velocity, delta)
+
+
+func _record_motion_only_enemy_change(
+	enemy: EnemyState,
+	previous_position: Vector2,
+	previous_active: bool
+) -> void:
+	if (
+		enemy.pos != previous_position
 		or enemy.active != previous_active
 	):
 		enemy_grid.update_actor(enemy)
