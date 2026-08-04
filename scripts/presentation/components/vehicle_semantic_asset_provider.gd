@@ -1,8 +1,8 @@
 class_name VehicleSemanticAssetProvider
 extends RefCounted
 
-## Runtime adapter for the approved semantic-v2 raster pack. This provider
-## resolves image presentation only; collision, radii, timing, and behavior
+## Runtime adapter for the final authored-raster pack. This provider resolves
+## presentation metadata only; collision, radii, timing, value, and behavior
 ## remain in their gameplay owners.
 
 const MANIFEST_PATH := "res://art/visuals/production/gameplay/asset-manifest.json"
@@ -10,6 +10,7 @@ const PACK_ROOT := "res://art/visuals/production/gameplay"
 
 static var _manifest: Dictionary = {}
 static var _assets: Dictionary = {}
+static var _asset_paths: Dictionary = {}
 static var _textures: Dictionary = {}
 static var _meshes: Dictionary = {}
 static var _load_errors := PackedStringArray()
@@ -78,32 +79,15 @@ static func normalized_mesh(asset_id: StringName) -> QuadMesh:
 	return mesh
 
 
-static func animation_frame_asset(
-	animation_id: StringName,
-	normalized_progress: float
-) -> StringName:
-	_ensure_loaded()
-	var source := Dictionary(
-		Dictionary(_manifest.get("animations", {})).get(
-			String(animation_id),
-			{}
-		)
-	)
-	var frame_count := int(source.get("frame_count", 0))
-	if frame_count <= 0:
-		return &""
-	var index := clampi(
-		floori(clampf(normalized_progress, 0.0, 0.9999) * frame_count),
-		0,
-		frame_count - 1
-	)
-	return StringName("effect/%s/%02d" % [animation_id, index])
-
-
 static func validate_pack() -> PackedStringArray:
 	_ensure_loaded()
 	var errors := _load_errors.duplicate()
-	var seen_paths := {}
+	var expected_count := int(_manifest.get("final_asset_count", -1))
+	if expected_count != _assets.size():
+		errors.append(
+			"semantic asset count mismatch: expected %d got %d"
+			% [expected_count, _assets.size()]
+		)
 	for asset_id_variant in _assets:
 		var asset_id := StringName(asset_id_variant)
 		var entry := Dictionary(_assets[asset_id])
@@ -111,12 +95,6 @@ static func validate_pack() -> PackedStringArray:
 		if path.is_empty() or not FileAccess.file_exists(path):
 			errors.append("semantic asset file missing: %s -> %s" % [asset_id, path])
 			continue
-		if seen_paths.has(path):
-			errors.append(
-				"semantic asset path reused: %s and %s"
-				% [seen_paths[path], asset_id]
-			)
-		seen_paths[path] = asset_id
 		var image := texture(asset_id)
 		if image == null:
 			errors.append("semantic texture failed to load: %s" % asset_id)
@@ -145,138 +123,39 @@ static func _ensure_loaded() -> void:
 			% [parser.get_error_line(), parser.get_error_message()]
 		)
 		return
+	if not parser.data is Dictionary:
+		_load_errors.append("semantic asset manifest root must be a dictionary")
+		return
 	_manifest = Dictionary(parser.data)
 	_index_attachments()
-	_index_asset_sets()
-	_index_animations()
+	_index_assets()
 
 
 static func _index_attachments() -> void:
 	for id_variant in Dictionary(_manifest.get("attachments", {})):
-		var attachment_id := StringName(id_variant)
 		var source := Dictionary(
 			Dictionary(_manifest["attachments"])[id_variant]
 		)
+		var asset_id := StringName(
+			source.get("semantic_id", "attachment/%s" % id_variant)
+		)
 		_add_asset(
-			StringName("attachment/%s" % attachment_id),
-			String(source["path"]),
+			asset_id,
+			String(source.get("path", "")),
 			source,
-			&"attachment"
+			StringName(source.get("category", &"attachment"))
 		)
 
 
-static func _index_asset_sets() -> void:
-	for set_variant in Array(_manifest.get("asset_sets", [])):
-		var asset_set := Dictionary(set_variant)
-		var set_id := StringName(asset_set.get("id", &""))
-		var root := String(asset_set.get("root", ""))
-		match set_id:
-			&"ordinary_enemies":
-				var canvas_by_role := Dictionary(
-					asset_set.get("canvas_by_role", {})
-				)
-				for role_variant in Array(asset_set.get("roles", [])):
-					var role := StringName(role_variant)
-					var canvas: Variant = canvas_by_role.get(
-						String(role),
-						canvas_by_role.get("default", [112, 112])
-					)
-					_add_asset(
-						StringName("actor/%s" % role),
-						"%s/actor_enemy_%s_base.png" % [root, role],
-						{"canvas":canvas, "pivot":&"center"},
-						&"actor"
-					)
-			&"bosses":
-				for boss_variant in Array(asset_set.get("roles", [])):
-					var boss := StringName(boss_variant)
-					_add_asset(
-						StringName("boss/%s" % boss),
-						"%s/actor_boss_%s_base.png" % [root, boss],
-						asset_set,
-						&"boss"
-					)
-			&"boss_modules":
-				for file_variant in Array(asset_set.get("files", [])):
-					var file := String(file_variant)
-					var module_id := file.get_basename().trim_prefix(
-						"actor_boss_module_"
-					)
-					_add_asset(
-						StringName("boss_module/%s" % module_id),
-						"%s/%s" % [root, file],
-						asset_set,
-						&"boss_module"
-					)
-			&"secondaries", &"projectiles", &"states", &"pickups":
-				var namespace_prefix: String = String({
-					&"secondaries": "secondary",
-					&"projectiles": "projectile",
-					&"states": "state",
-					&"pickups": "pickup",
-				}.get(set_id, ""))
-				for id_variant in Dictionary(asset_set.get("files", {})):
-					var asset_name := StringName(id_variant)
-					var source := Dictionary(
-						Dictionary(asset_set["files"])[id_variant]
-					)
-					_add_asset(
-						StringName("%s/%s" % [namespace_prefix, asset_name]),
-						"%s/%s" % [root, String(source["path"])],
-						source,
-						set_id
-					)
-			&"world":
-				for file_variant in Array(asset_set.get("files", [])):
-					var file := String(file_variant)
-					_add_asset(
-						StringName("world/%s" % file.get_basename()),
-						"%s/%s" % [root, file],
-						{},
-						&"world_feature"
-					)
-			&"hud":
-				for file_variant in Array(asset_set.get("files", [])):
-					var file := String(file_variant)
-					_add_asset(
-						StringName("hud/%s" % file.get_basename()),
-						"%s/%s" % [root, file],
-						{},
-						&"hud"
-					)
-			&"combat_cues":
-				for id_variant in Dictionary(asset_set.get("files", {})):
-					var cue_id := StringName(id_variant)
-					var source := Dictionary(
-						Dictionary(asset_set["files"])[id_variant]
-					)
-					_add_asset(
-						StringName("cue/%s" % cue_id),
-						"%s/%s" % [root, String(source["path"])],
-						source,
-						&"combat_cue"
-					)
-
-
-static func _index_animations() -> void:
-	for animation_variant in Dictionary(_manifest.get("animations", {})):
-		var animation_id := StringName(animation_variant)
-		var source := Dictionary(
-			Dictionary(_manifest["animations"])[animation_variant]
+static func _index_assets() -> void:
+	for asset_variant in Array(_manifest.get("assets", [])):
+		var source := Dictionary(asset_variant)
+		_add_asset(
+			StringName(source.get("id", &"")),
+			String(source.get("path", "")),
+			source,
+			StringName(source.get("category", &""))
 		)
-		var frame_pattern := String(source["frames"])
-		var frame_count := int(source["frame_count"])
-		for index in frame_count:
-			var relative_path := frame_pattern.replace(
-				"{index:02}",
-				"%02d" % index
-			)
-			_add_asset(
-				StringName("effect/%s/%02d" % [animation_id, index]),
-				relative_path,
-				{"canvas":source["frame_size"], "pivot":source["pivot"]},
-				&"effect_frame"
-			)
 
 
 static func _add_asset(
@@ -285,27 +164,51 @@ static func _add_asset(
 	source: Dictionary,
 	category: StringName
 ) -> void:
+	if asset_id == &"":
+		_load_errors.append("semantic asset id is empty")
+		return
 	if _assets.has(asset_id):
 		_load_errors.append("semantic asset id duplicated: %s" % asset_id)
+		return
+	if relative_path.is_empty():
+		_load_errors.append("semantic asset path is empty: %s" % asset_id)
+		return
+	if category == &"":
+		_load_errors.append("semantic asset category is empty: %s" % asset_id)
 		return
 	var path := (
 		relative_path
 		if relative_path.begins_with("res://")
 		else "%s/%s" % [PACK_ROOT, relative_path]
 	)
+	if _asset_paths.has(path):
+		_load_errors.append(
+			"semantic asset path duplicated: %s and %s -> %s"
+			% [_asset_paths[path], asset_id, path]
+		)
+		return
 	var canvas := _vector2i(source.get("canvas", Vector2i.ZERO))
+	if canvas.x <= 0 or canvas.y <= 0:
+		_load_errors.append("semantic asset canvas is invalid: %s" % asset_id)
+		return
 	var pivot_variant: Variant = source.get("pivot", &"center")
 	var pivot := (
 		Vector2(canvas) * 0.5
 		if pivot_variant is String or pivot_variant is StringName
 		else Vector2(_vector2i(pivot_variant))
 	)
-	_assets[asset_id] = {
-		"path":path,
-		"canvas":canvas,
-		"pivot":pivot,
-		"category":category,
-	}
+	if pivot.x < 0.0 or pivot.y < 0.0 or pivot.x > canvas.x or pivot.y > canvas.y:
+		_load_errors.append("semantic asset pivot is outside its canvas: %s" % asset_id)
+		return
+	var descriptor_source := source.duplicate(true)
+	descriptor_source.erase("id")
+	descriptor_source.erase("semantic_id")
+	descriptor_source["path"] = path
+	descriptor_source["canvas"] = canvas
+	descriptor_source["pivot"] = pivot
+	descriptor_source["category"] = category
+	_assets[asset_id] = descriptor_source
+	_asset_paths[path] = asset_id
 
 
 static func _vector2i(value: Variant) -> Vector2i:

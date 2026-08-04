@@ -25,31 +25,6 @@ const CODE_NATIVE_UI_STATE_OWNERS := [
 	"res://scripts/ui/vehicle_status_orbit.gd",
 ]
 
-const EXPECTED_ANIMATIONS := [
-	"muzzle_player_primary",
-	"dash_start",
-	"emp_release",
-	"wake_mine_detonation",
-	"boss_module_disabled",
-	"hostile_summon_arrival",
-	"bulkhead_destroy",
-	"impact_damage",
-	"reflect_deflection",
-	"barrier_contact",
-	"hull_hit",
-	"seeker_impact",
-	"escort_drone_impact",
-	"orbit_blade_impact",
-	"enemy_destroy_light",
-	"enemy_destroy_heavy",
-	"crate_destroy",
-	"pickup_intake",
-	"support_heal",
-	"lifesteal_pulse",
-	"transit_shift",
-	"boss_reduced_hit",
-]
-
 const EXPECTED_EVENT_IDS := [
 	"player_primary_muzzle",
 	"player_dash_start",
@@ -97,12 +72,25 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
-	var animations := Dictionary(gameplay_manifest.get("animations", {}))
-	for animation_id in EXPECTED_ANIMATIONS:
-		if not animations.has(animation_id):
-			_failures.append("missing gameplay animation: %s" % animation_id)
-			continue
-		_validate_animation(animation_id, Dictionary(animations[animation_id]))
+	_expect(
+		int(gameplay_manifest.get("final_asset_count", 0)) == 49,
+		"gameplay manifest declares the final 49 authored rasters"
+	)
+	_expect(
+		not gameplay_manifest.has("animations"),
+		"gameplay manifest contains no raster frame animations"
+	)
+	var authored_effects := []
+	for asset_variant in Array(gameplay_manifest.get("assets", [])):
+		var asset := Dictionary(asset_variant)
+		if StringName(asset.get("category", &"")) == &"effect":
+			authored_effects.append(asset)
+	_expect(
+		authored_effects.size() == 1
+			and StringName(Dictionary(authored_effects[0]).get("id", &""))
+				== &"effect/emp_release",
+		"EMP is the only authored raster effect"
+	)
 
 	if not FileAccess.file_exists(EVENT_CATALOG_PATH):
 		_failures.append("missing visual event catalog: %s" % EVENT_CATALOG_PATH)
@@ -112,7 +100,7 @@ func _initialize() -> void:
 				VisualEventCatalog.has_event(StringName(event_id)),
 				"missing visual event mapping: %s" % event_id
 			)
-		_validate_event_catalog(animations)
+		_validate_event_catalog()
 		_validate_event_producers()
 		for error in EventCaptureFixture.validate():
 			_failures.append(String(error))
@@ -121,63 +109,53 @@ func _initialize() -> void:
 	_finish()
 
 
-func _validate_animation(animation_id: String, animation: Dictionary) -> void:
-	var frame_count := int(animation.get("frame_count", 0))
-	var frame_pattern := String(animation.get("frames", ""))
-	_expect(frame_count > 0, "%s has no animation frames" % animation_id)
-	_expect(
-		not frame_pattern.is_empty(),
-		"%s has no animation frame path" % animation_id
-	)
-	_expect(
-		int(animation.get("fps", 0)) > 0,
-		"%s has no animation FPS" % animation_id
-	)
-	_expect(
-		not bool(animation.get("loop", true)),
-		"%s must be a non-looping semantic effect" % animation_id
-	)
-	for index in frame_count:
-		var path := frame_pattern.replace("{index:02}", "%02d" % index)
-		if not path.begins_with("res://"):
-			path = "res://art/visuals/production/gameplay/%s" % path
-		_expect(
-			FileAccess.file_exists(path),
-			"missing %s frame: %s" % [animation_id, path]
-		)
-
-
-func _validate_event_catalog(animations: Dictionary) -> void:
+func _validate_event_catalog() -> void:
 	var catalog_ids := VisualEventCatalog.event_ids()
+	var expected_mode_counts := {
+		&"direct_feedback":17,
+		&"suppressed":16,
+		&"hull_afterimage":1,
+		&"live_emp_radius":1,
+		&"authored_emp":1,
+		&"floating_damage":1,
+		&"directed_transfer":1,
+		&"hud_only":1,
+	}
+	var mode_counts := {}
 	_expect(
 		catalog_ids.size() == EXPECTED_EVENT_IDS.size(),
 		"event catalog and reviewed production event inventory must stay in sync"
 	)
 	for event_id in catalog_ids:
 		var event := VisualEventCatalog.descriptor(event_id)
-		var mode := StringName(event.get("mode", &"animation"))
-		var animation_id := StringName(event.get("animation", &""))
+		var mode := StringName(event.get("mode", &""))
+		mode_counts[mode] = int(mode_counts.get(mode, 0)) + 1
 		_expect(
-			mode in [
-				&"animation",
-				&"hull_afterimage",
-				&"live_emp_radius",
-				&"pickup_intake",
-				&"directed_transfer",
-				&"hud_only",
-			],
+			expected_mode_counts.has(mode),
 			"unsupported visual event mode: %s -> %s" % [event_id, mode]
 		)
-		if animation_id != &"":
+		_expect(
+			not event.has("animation"),
+			"event no longer references raster animation frames: %s" % event_id
+		)
+		if mode == &"authored_emp":
 			_expect(
-				animations.has(String(animation_id)),
-				"event references missing animation: %s -> %s"
-				% [event_id, animation_id]
+				event_id == &"player_emp_release"
+					and StringName(event.get("asset", &""))
+						== &"effect/emp_release",
+				"only EMP release requests the authored EMP raster"
 			)
-		elif mode == &"animation":
-			_failures.append(
-				"animation event has no animation: %s" % event_id
+		else:
+			_expect(
+				not event.has("asset"),
+				"non-EMP event does not request an authored raster: %s" % event_id
 			)
+	for mode in expected_mode_counts:
+		_expect(
+			int(mode_counts.get(mode, 0)) == int(expected_mode_counts[mode]),
+			"%s event coverage is %d, expected %d"
+			% [mode, int(mode_counts.get(mode, 0)), int(expected_mode_counts[mode])]
+		)
 
 
 func _validate_event_producers() -> void:
@@ -222,6 +200,7 @@ func _validate_event_producers() -> void:
 		"_effect_batches",
 		"impact_reflect",
 		'family := &"ring"',
+		"animation_frame_asset",
 	]:
 		_expect(
 			not renderer_source.contains(obsolete_path),

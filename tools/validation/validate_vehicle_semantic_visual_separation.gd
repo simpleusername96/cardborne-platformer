@@ -5,39 +5,38 @@ const AssetProvider = preload(
 )
 
 const DISTINCT_GROUPS := {
-	"defense_and_field":[
-		&"state/player_barrier_plate",
-		&"state/player_ion_emitter",
-		&"state/enemy_generator_shield_source",
-		&"state/enemy_shield_escort_plate",
-		&"world/facility_repair_pad",
-	],
 	"secondaries":[
 		&"secondary/seeker",
 		&"secondary/escort_drone",
 		&"secondary/orbit_blade",
 		&"secondary/wake_mine",
 	],
-	"statuses":[
-		&"state/burn",
-		&"state/poison",
-		&"state/chill",
+	"pickups_and_rewards":[
+		&"pickup/experience_master",
+		&"pickup/reward_crate",
+		&"pickup/repair",
+		&"pickup/experience_recall",
 	],
-	"hostile_affinities":[
-		&"projectile/hostile_kinetic",
-		&"projectile/hostile_thermal",
-		&"projectile/hostile_toxin",
-		&"projectile/hostile_cryo",
-		&"projectile/hostile_arc",
-		&"projectile/hostile_hybrid",
+	"shared_boss_node_states":[
+		&"boss/node_active",
+		&"boss/node_damaged",
+		&"boss/node_resolved",
 	],
-	"combat_events":[
-		&"effect/muzzle_player_primary/02",
-		&"effect/impact_damage/02",
-		&"effect/reflect_deflection/02",
-		&"effect/barrier_contact/02",
-		&"hud/minimap_marker_objective_active",
-		&"pickup/experience_medium",
+	"functional_facilities":[
+		&"world/facility_repair_pad",
+		&"world/facility_overdrive_pad",
+		&"world/facility_arc_surge_strip",
+		&"world/facility_transit_gate",
+	],
+	"bulkhead_states":[
+		&"world/world_bulkhead_intact",
+		&"world/world_bulkhead_damaged",
+		&"world/world_bulkhead_open",
+	],
+	"wear_states":[
+		&"world/wear_tile_intact",
+		&"world/wear_tile_cracked",
+		&"world/wear_tile_collapsed",
 	],
 }
 

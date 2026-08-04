@@ -11,27 +11,27 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"actor/boss_pylon",
 	&"boss/colossus",
 	&"boss/crown",
-	&"boss_module/route_switch",
+	&"boss/node_active",
+	&"boss/node_damaged",
+	&"boss/node_resolved",
 	&"secondary/seeker",
 	&"secondary/escort_drone",
 	&"secondary/orbit_blade",
 	&"secondary/wake_mine",
-	&"projectile/player_primary",
-	&"projectile/player_opening_breach",
-	&"projectile/player_seeker",
-	&"state/player_barrier_plate",
-	&"state/player_ion_emitter",
-	&"pickup/experience_small",
+	&"projectile/energy_teardrop",
+	&"pickup/experience_master",
 	&"pickup/reward_crate",
 	&"world/facility_repair_pad",
-	&"hud/action_primary",
-	&"hud/minimap_marker_objective_active",
-	&"effect/dash_start/00",
-	&"effect/barrier_contact/00",
-	&"effect/boss_reduced_hit/00",
-	&"cue/priority_target",
-	&"cue/boss_core_open",
-	&"cue/guide_objects",
+	&"world/facility_overdrive_pad",
+	&"world/wear_tile_collapsed",
+	&"effect/emp_release",
+]
+
+const FORBIDDEN_ID_PREFIXES := [
+	"boss_module/",
+	"state/",
+	"hud/",
+	"cue/",
 ]
 
 var _failures: Array[String] = []
@@ -39,15 +39,35 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 215, "all 215 runtime PNGs are indexed")
+	_expect(ids.size() == 49, "all 49 final gameplay PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
+		var id_text := String(asset_id)
 		_expect(
-			not String(asset_id).contains("world_shared_floor")
-				and not String(asset_id).contains("world_wall_"),
+			not id_text.contains("world_shared_floor")
+				and not id_text.contains("world_wall_"),
 			"%s is not a deferred map-surface asset" % asset_id
 		)
+		for forbidden_prefix in FORBIDDEN_ID_PREFIXES:
+			_expect(
+				not id_text.begins_with(forbidden_prefix),
+				"%s is not an authored %s identity" % [asset_id, forbidden_prefix]
+			)
+	_expect(
+		not AssetProvider.has_asset(&"projectile/player_primary")
+			and not AssetProvider.has_asset(&"projectile/hostile_kinetic")
+			and not AssetProvider.has_asset(&"pickup/experience_small")
+			and not AssetProvider.has_asset(&"world/facility_repair_pad_core")
+			and not AssetProvider.has_asset(&"world/facility_overdrive_lane"),
+		"consolidated raster aliases are absent"
+	)
+	var manifest := AssetProvider.manifest()
+	_expect(
+		int(manifest.get("final_asset_count", 0)) == 49
+			and not manifest.has("animations"),
+		"manifest declares 49 static authored rasters and no frame animations"
+	)
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)
 	_finish()

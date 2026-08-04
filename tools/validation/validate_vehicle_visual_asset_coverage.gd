@@ -8,24 +8,13 @@ const EXPECTED_CATEGORY_COUNTS := {
 	&"attachment":1,
 	&"actor":19,
 	&"boss":5,
-	&"boss_module":10,
-	&"secondaries":4,
-	&"projectiles":9,
-	&"states":7,
-	&"pickups":6,
-	&"world_feature":10,
-	&"hud":21,
-	&"combat_cue":22,
-	&"effect_frame":101,
+	&"boss_node":3,
+	&"secondary":4,
+	&"projectile":1,
+	&"pickup":4,
+	&"world":11,
+	&"effect":1,
 }
-const LIVE_CONSUMER_PATHS := [
-	"res://scripts/presentation/vehicle_combat_renderer.gd",
-	"res://scripts/vehicle/vehicle_run.gd",
-	"res://scripts/ui/vehicle_gameplay_hud.gd",
-	"res://scripts/ui/vehicle_guidebook_preview.gd",
-	"res://scripts/ui/vehicle_combat_mesh_icon.gd",
-	"res://scripts/ui/vehicle_stage_report_panel.gd",
-]
 
 var _failures: Array[String] = []
 
@@ -48,23 +37,19 @@ func _initialize() -> void:
 			]
 		)
 	_expect(
-		AssetProvider.asset_ids().size() == 215,
-		"semantic-v2 production coverage totals 215 runtime images"
+		AssetProvider.asset_ids().size() == 49,
+		"final production coverage totals 49 authored gameplay images"
 	)
-	for path in LIVE_CONSUMER_PATHS:
-		var source := FileAccess.get_file_as_string(path)
+	var unique_paths := {}
+	for asset_id in AssetProvider.asset_ids():
+		var path := String(AssetProvider.descriptor(asset_id).get("path", ""))
+		_expect(not path.is_empty(), "%s has one production path" % asset_id)
 		_expect(
-			source.contains("vehicle_semantic_asset_provider.gd"),
-			"%s consumes the semantic-v2 provider" % path
+			not unique_paths.has(path),
+			"%s does not reuse the path owned by %s"
+			% [asset_id, unique_paths.get(path, &"")]
 		)
-		if path.ends_with("vehicle_guidebook_preview.gd") or path.ends_with(
-			"vehicle_combat_mesh_icon.gd"
-		):
-			_expect(
-				not source.contains("vehicle_combat_visual_library.gd"),
-				"%s no longer consumes the superseded procedural actor provider"
-				% path
-			)
+		unique_paths[path] = asset_id
 	_finish()
 
 

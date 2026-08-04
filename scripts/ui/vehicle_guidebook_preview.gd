@@ -1,7 +1,7 @@
 class_name VehicleGuidebookPreview
 extends Control
 
-## Displays guide entries through the approved semantic-v2 runtime provider.
+## Displays guide entries through the final authored-raster provider.
 ## Preview geometry stays presentation-only and never substitutes for collision.
 
 const SemanticAssets = preload(
@@ -37,7 +37,12 @@ func show_preview(preview: Dictionary) -> void:
 				-PI / 2.0
 			)
 		&"locked":
-			_add_asset(&"hud/minimap_marker_objective_locked", 54.0)
+			_add_asset(
+				&"actor/chaser",
+				72.0,
+				Vector2.ZERO,
+				Color(0.58, 0.64, 0.70, 0.62)
+			)
 		&"boss":
 			_add_asset(StringName("boss/%s" % preview_id), 220.0)
 		&"terrain":
@@ -45,12 +50,7 @@ func show_preview(preview: Dictionary) -> void:
 		&"facility":
 			_add_facility(preview_id)
 		&"elite":
-			_add_asset(&"actor/chaser", 92.0)
-			_add_asset(
-				&"hud/minimap_marker_elite",
-				34.0,
-				Vector2(44.0, -38.0)
-			)
+			_add_asset(&"actor/chaser", 106.0)
 		&"pickup":
 			_add_pickup(preview_id)
 		_:
@@ -85,21 +85,20 @@ func _add_facility(facility_id: StringName) -> void:
 		&"transit_gate":
 			_add_asset(&"world/facility_transit_gate", 126.0)
 		&"repair_basin":
-			_add_asset(&"world/facility_repair_pad", 116.0)
-			_add_asset(&"world/facility_repair_pad_core", 48.0)
+			_add_asset(&"world/facility_repair_pad", 126.0)
 		&"overdrive_field":
-			_add_asset(&"world/facility_overdrive_lane", 116.0)
+			_add_asset(&"world/facility_overdrive_pad", 126.0)
 		_:
 			_add_asset(&"world/terrain_solid_cover_block", 96.0)
 
 
 func _add_pickup(pickup_id: StringName) -> void:
 	var asset_id := StringName({
-		&"experience":&"pickup/experience_large",
+		&"experience":&"pickup/experience_master",
 		&"repair":&"pickup/repair",
 		&"experience_recall":&"pickup/experience_recall",
 		&"reward_crate":&"pickup/reward_crate",
-	}.get(pickup_id, &"pickup/experience_large"))
+	}.get(pickup_id, &"pickup/experience_master"))
 	_add_asset(asset_id, 72.0)
 
 
