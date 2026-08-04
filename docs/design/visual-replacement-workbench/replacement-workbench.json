@@ -139,7 +139,7 @@
       "title_ko": "공용 에너지 탄환",
       "owner": "gameplay_manifest",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_arc.png",
         "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_cryo.png",
@@ -256,7 +256,16 @@
           "art/visuals/production/gameplay/weapons/projectiles/projectile_player_seeker.png.import"
         ]
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -275,7 +284,7 @@
       "title_ko": "삭제할 방어·상태 오버레이",
       "owner": "gameplay_manifest",
       "switch_kind": "retire",
-      "status": "approved_for_switch",
+      "status": "retired",
       "current_paths": [
         "art/visuals/production/gameplay/states/enemy_generator_shield_source.png",
         "art/visuals/production/gameplay/states/enemy_shield_escort_plate.png",
@@ -358,7 +367,16 @@
           "art/visuals/production/gameplay/states/status_poison.png.import"
         ]
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -377,7 +395,7 @@
       "title_ko": "보조 무기 및 월드 마모 타일",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/weapons/secondaries/secondary_escort_drone.png",
         "art/visuals/production/gameplay/weapons/secondaries/secondary_orbit_blade.png",
@@ -560,7 +578,16 @@
         },
         "retire_paths": []
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -579,7 +606,7 @@
       "title_ko": "일반 적 패밀리",
       "owner": "gameplay_manifest",
       "switch_kind": "replace",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png",
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png",
@@ -1011,7 +1038,16 @@
         },
         "retire_paths": []
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -1030,7 +1066,7 @@
       "title_ko": "EMP 단일 이미지 교체",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png",
         "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png",
@@ -1129,7 +1165,16 @@
           "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png.import"
         ]
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -1148,7 +1193,7 @@
       "title_ko": "비EMP 효과 억제",
       "owner": "composite",
       "switch_kind": "retire",
-      "status": "approved_for_switch",
+      "status": "retired",
       "current_paths": [
         "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_00.png",
         "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_01.png",
@@ -1756,7 +1801,16 @@
           "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_04.png.import"
         ]
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -1964,7 +2018,7 @@
       "title_ko": "보스 본체 및 공통 노드",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png",
         "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png",
@@ -2231,7 +2285,16 @@
           "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_segment_lock_disabled.png.import"
         ]
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -2250,7 +2313,7 @@
       "title_ko": "픽업 및 보상",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/pickups/pickup_experience_large.png",
         "art/visuals/production/gameplay/pickups/pickup_experience_medium.png",
@@ -2404,7 +2467,16 @@
           "art/visuals/production/gameplay/pickups/pickup_experience_small.png.import"
         ]
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -2423,7 +2495,7 @@
       "title_ko": "월드 표면 및 기능 장판",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/world/facility_arc_surge_strip.png",
         "art/visuals/production/gameplay/world/facility_overdrive_lane.png",
@@ -2650,7 +2722,16 @@
           "art/visuals/production/gameplay/world/terrain_hazard_power_relay.png.import"
         ]
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
@@ -2771,7 +2852,7 @@
       "title_ko": "코드 기반 HUD 및 전투 신호",
       "owner": "procedural_presentation",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/hud/action_barrier.png",
         "art/visuals/production/gameplay/hud/action_dash.png",
@@ -3076,7 +3157,16 @@
           "art/visuals/production/gameplay/hud/upgrade_support.png.import"
         ]
       },
-      "application": null,
+      "application": {
+        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+        "applied_at": "2026-08-04T14:25:31+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+          "production gameplay PNG reconciliation: exactly 49",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",

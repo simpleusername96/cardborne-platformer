@@ -294,6 +294,10 @@ function Get-VisualReplacementProjection {
             [string]$unit.status -in @('approved_for_switch','applied','retired') -and
             $null -ne $unit.approval
         )
+        $allowsAppliedRuntimePathMissing = (
+            [string]$unit.status -in @('applied','retired') -and
+            $null -ne $unit.application
+        )
 
         $currentRecords = [Collections.Generic.List[object]]::new()
         $unitCurrentPaths = @{}
@@ -320,7 +324,11 @@ function Get-VisualReplacementProjection {
             try { $absolute = Resolve-VisualRepositoryPath $RepoRoot $path } catch { $failures.Add($_.Exception.Message); continue }
             if (-not (Test-Path -LiteralPath $absolute)) {
                 $isRetirePath = $path -in @($unit.retire_paths)
-                if (-not ($allowsRetiredPathsMissing -and $isRetirePath)) { $failures.Add("missing declared path: $id -> $path") }
+                $isAppliedRuntimePath = $path -in @($unit.runtime_change_paths)
+                if (-not (
+                    ($allowsRetiredPathsMissing -and $isRetirePath) -or
+                    ($allowsAppliedRuntimePathMissing -and $isAppliedRuntimePath)
+                )) { $failures.Add("missing declared path: $id -> $path") }
             }
             if ($path -in @($unit.preview_paths) -and -not $path.StartsWith("$script:WorkbenchRoot/previews/")) { $failures.Add("preview escapes preview root: $id -> $path") }
         }
@@ -337,6 +345,30 @@ function Get-VisualReplacementProjection {
             $unitFinalPaths.Add($path)
         }
         if (@($unitFinalPaths | Sort-Object -Unique).Count -ne $unitFinalPaths.Count) { $failures.Add("duplicate final path in unit: $id") }
+
+        # Once a replacement unit is applied, its final production files become
+        # the current files shown by the report. Historical current_paths remain
+        # as the AS-IS record but may have been retired from disk.
+        if ([string]$unit.status -ceq 'applied') {
+            foreach ($path in $unitFinalPaths) {
+                if ($unitCurrentPaths.ContainsKey($path)) { continue }
+                $absolute = Resolve-VisualRepositoryPath $RepoRoot $path
+                if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) {
+                    $failures.Add("missing applied final path: $id -> $path")
+                    continue
+                }
+                $unitCurrentPaths[$path] = $true
+                if ([IO.Path]::GetExtension($path).ToLowerInvariant() -in @('.png','.ttf')) {
+                    if ($coveredMedia.ContainsKey($path)) { $failures.Add("production media assigned twice: $path") }
+                    $coveredMedia[$path] = $id
+                }
+                $dimensions = if ($path.EndsWith('.png')) { Get-VisualPngDimensions $absolute } else { @($null,$null) }
+                $currentRecords.Add([ordered]@{
+                    path=$path;bytes=(Get-Item -LiteralPath $absolute).Length;
+                    width=$dimensions[0];height=$dimensions[1];sha256=(Get-VisualSha256 $absolute)
+                })
+            }
+        }
 
         $unitReusePaths = [Collections.Generic.List[string]]::new()
         foreach ($pathValue in @($unit.reuse_paths)) {

@@ -503,22 +503,20 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 Web export만으로 interactive built-Web smoke나 release performance를
 통과한 것으로 간주하지 않는다.
 
-### Known implementation gaps
+### Current implementation notes
 
-- semantic-v2 floor/wall PNG는 존재하지만 현재 provider가 map surface에
-  연결하지 않는다. current procedural surface/wall이 runtime truth다.
-- 일부 기능 지형 body art는 실제 rect/radius보다 작아 live footprint와
-  시각 면적이 일치하지 않는다. 최종 facility PNG는 visual body와 live
-  code-native footprint boundary를 함께 검증해야 한다.
-- projectile runtime은 아직 shared energy-teardrop master와 code-owned tint/scale
-  contract로 전환되지 않았다.
-- one-body player craft와 전용 minimap marker는 Phase 4의 exact-hash 승인을
-  거쳐 현재 runtime 표현이 되었다. 수동 조준은 cursor, muzzle, projectile,
-  hit feedback으로 유지하고 rear anchor는 transient dash feedback에만 쓴다.
-  XP master 단순화, shared projectile/pickup/facility replacement, 새 EMP와 그
-  밖의 visual candidate는 아직 개별 runtime asset으로 승인되지 않았다.
-- boss body와 공통 방어막 노드의 단순화 방향은 이 spec의 목표지만 생성된
-  semantic-v3/v4/v5/v6 후보 파일 자체는 승인된 runtime asset이 아니다.
+- Field surface and wall truth remains code-native and collision-owned; no
+  decorative floor or wall raster is a second topology owner.
+- Repair and overdrive pads render their authored circular surface at the live
+  gameplay radius, with the code-native boundary remaining authoritative.
+- Every non-beam projectile resolves `projectile/energy_teardrop`; runtime owns
+  scale, rotation, faction/affinity tint, collision, speed, and homing.
+- The integrated player craft, XP master, four secondary bodies, shared
+  projectile, pickups, facilities, wear/bulkhead states, five bosses, three
+  shared boss-node states, and EMP image are the applied runtime asset set.
+- Manual aim remains readable through independent cursor, muzzle, projectile,
+  and hit feedback. The player rear anchor is used only by transient dash
+  feedback.
 
 ## Non-Goals
 
