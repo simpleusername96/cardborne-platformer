@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
 topic: Semantic-v2 runtime integration, UI acceptance, boss guidance, and final performance
 scope: Non-map semantic-v2 runtime switch and its post-acceptance validation
 related:
@@ -308,3 +308,71 @@ Upgrade, report, result, and Garage were not naturally triggered during the
 built-Web interaction path. Their production scene behavior is covered by the
 complete deterministic capture matrix and focused validators rather than an
 interactive Web claim.
+
+## 2026-08-04 Final 49-asset visual replacement acceptance
+
+The visual replacement program completed on clean runtime/art commit
+`138642ec7595d99c039513dd6dbe1b7d77dfb1d7`. This checkpoint supersedes older
+asset-count and remaining-switch statements in this append-only record.
+
+### Reconciled output
+
+- Production contains exactly 49 gameplay PNGs: 47 authored replacements and
+  two reused files. It contains zero authored HUD/cue PNGs and one authored
+  effect PNG, the EMP release.
+- The ten applied units and six keep/retire-only units reconcile with the
+  workbench. The exact 177 legacy PNGs and their 177 literal sidecars were
+  retired after a zero-consumer scan.
+- All projectile behavior resolves through `projectile/energy_teardrop`; all
+  experience values use `pickup/experience_master` with runtime scale; repair
+  and overdrive use complete circular-pad PNGs with distinct function glyphs.
+- Minimap semantics are exactly player, item, enemy, and boss. Defense/status
+  raster overlays and non-EMP effect frames remain absent.
+- Gameplay manifest SHA-256:
+  `0105d9f1675aa61bf4506ed706f9cde052d539828239a04af2bb097f41858816`.
+- Workbench inventory SHA-256:
+  `b3351015b9759c81e2f4d79c651a1143102e0ff9f6010e7da77381a03996a30e`.
+- Comparison report SHA-256:
+  `6fbcae00006abd6bac93bd964912f958d2c0ae26967f9d16e839d7d243cd9794`.
+- Canonical style-reference SHA-256:
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+
+### Structural and rendered evidence
+
+- Workbench build/check, visual-authority validation, workbench validation,
+  Godot import, `git diff --check`, and all 20 focused visual/runtime validators
+  passed. The final workbench result is `units=16`, `current=49`, `final=49`,
+  `authored=47`, `retired=0`, with statuses `keep_current=2`, `applied=8`, and
+  `retired=6`.
+- Capture root: `build/captures/visual-final/`. Korean 1280x720 contains the
+  complete 77-capture set. Korean/English 960x540, 1280x720, and 1920x1080 plus
+  Korean/English 960x540 at 200% text each contain the expected 30 core
+  captures and a matching manifest.
+- Manual review covered deployment, upgrade cards, pause, peak horde, pickups,
+  EMP, boss/node states, HUD, four-role minimap, Korean/English, and 200% text.
+  Scrollable compact content remained reachable, fixed actions remained visible,
+  and no unintended overflow or missing raster was found.
+- `tools/export_web.ps1` passed. The built game was served through the Codex
+  lane on `127.0.0.1:13029`; Chrome loaded every core Web resource with HTTP
+  200, reached deployment and live gameplay, and reported no console warning or
+  error. The exact task-owned server was then stopped and the port verified
+  clean.
+- The HTTP-served workbench loaded all 104 non-empty image sources with no
+  broken source, reported 49 gameplay PNGs and zero UI PNGs, and had no
+  horizontal overflow at the checked 960px viewport. No optional anomaly was
+  recorded.
+
+### Visual performance and separate release gap
+
+`build/performance/visual-final/peak-horde.json` is an authoritative clean run
+for commit `138642ec7595d99c039513dd6dbe1b7d77dfb1d7`. Visual thresholds passed:
+draw-call p95 was `122 <= 200`, and retained combat batches were `34 <= 50`.
+The payload's overall release result remains false because frame p95 was
+`140.476 ms` and physics p95 was `21.32 ms`. That previously recorded
+frame/physics gap is owned by the separate pre-asset stabilization plan and does
+not invalidate this visual replacement acceptance.
+
+Task-scoped quality review found and closed the final competing effect/status
+catalog ownership, stale tier-specific XP batch, missing circular-pad raster
+assertion, and missing shared-XP-batch assertion. No remaining task-scoped
+quality finding was accepted as open.

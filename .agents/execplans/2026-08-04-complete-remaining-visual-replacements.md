@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-04
 last_reviewed: 2026-08-04
@@ -201,34 +201,34 @@ forecasts 49 production PNGs, and is ready for optional user anomaly marking.
 
 ### Phase 9 - Apply the batch and retire legacy paths
 
-- [ ] **9.1 Switch exact candidate hashes and migrate consumers.** Update only
+- [x] **9.1 Switch exact candidate hashes and migrate consumers.** Update only
   existing manifest/provider/catalog/preview/EMP/effect-suppression and
   code-native HUD/minimap/combat-cue and defense/status owners. Require one live
   owner per semantic ID. All projectile consumers resolve one shared raster ID.
-- [ ] **9.2 Prove zero consumers, then retire.** Scan runtime, resources, manifest,
+- [x] **9.2 Prove zero consumers, then retire.** Scan runtime, resources, manifest,
   provider, guidebook, and validators for every planned path; remove only the 177
   listed PNGs and 177 exact sidecars. No live reference or unlisted deletion.
-- [ ] **9.3 Rebuild evidence and make responsibility-shaped commits.** Production,
+- [x] **9.3 Rebuild evidence and make responsibility-shaped commits.** Production,
   workbench, application ledgers, and Git history must describe the same batch.
 
 ### Phase 10 - Reconcile and freeze
 
-- [ ] **10.1 Reconcile exactly 49 final PNGs** against the fixed family split;
+- [x] **10.1 Reconcile exactly 49 final PNGs** against the fixed family split;
   authored HUD/cue PNGs and non-EMP effect frames remain zero.
-- [ ] **10.2 Run `codebase-quality-auditor`** over changed shared owners. Fix
+- [x] **10.2 Run `codebase-quality-auditor`** over changed shared owners. Fix
   task-scoped competing ownership, catch-all rendering, or gameplay leakage.
-- [ ] **10.3 Rebuild the deterministic report and freeze clean final HEAD.** Any
+- [x] **10.3 Rebuild the deterministic report and freeze clean final HEAD.** Any
   later correction creates and records a new final HEAD before Phase 11 reruns.
 
 ### Phase 11 - Run one final relevant gate and close
 
-- [ ] **11.1 Structural/runtime gate.** Run the commands and focused validators
+- [x] **11.1 Structural/runtime gate.** Run the commands and focused validators
   named below once from frozen HEAD.
-- [ ] **11.2 Rendered gate.** Capture KO/EN at 960x540, 1280x720, and 1920x1080,
+- [x] **11.2 Rendered gate.** Capture KO/EN at 960x540, 1280x720, and 1920x1080,
   plus KO/EN 960x540 at 200% text; build Web, serve it through the
   `npjt-port-guard` Codex lane, and inspect changed actors, HUD, projectiles,
   facilities, states, focus, clipping, and EMP.
-- [ ] **11.3 Visual performance and closure.** Run one peak-horde diagnostic;
+- [x] **11.3 Visual performance and closure.** Run one peak-horde diagnostic;
   require draw-call p95 <= 200 and combat batches <= 50. Record commands, hashes,
   captures, metrics, commits, and anomaly dispositions. Incorporate any changed
   durable behavior into its active spec/guidance, mark this plan `done`, then
@@ -315,11 +315,11 @@ validation decision remains unresolved.
   source curation, and rejection of ungrounded projectile drafts.
 - Completed: Phases 6-8 produced the initial report; its 64-PNG media split was
   superseded before any production switch.
-- Completed: Phase 8.4 revised the batch to 49 final PNGs and republished the only
-  AS-IS/TO-BE report with fresh exact-hash technical records. The user-directed
-  stop boundary is active: production and runtime consumers remain unchanged.
-  Next if resumed: 9.1.
-- Advance only when the named acceptance condition passes.
+- Completed: Phases 9-11 applied the 49-file batch, migrated runtime owners,
+  retired the exact 354-path legacy set, reconciled the report and ledgers,
+  passed all visual structural/rendered gates, and met draw-call and combat-batch
+  limits. The separately owned frame/physics release gap remains recorded and
+  does not block this completed visual plan.
 
 ## Completion and Stop Conditions
 
