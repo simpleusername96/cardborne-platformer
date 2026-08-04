@@ -3,237 +3,285 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cardborne Map Asset Audit &amp; Direction Study</title>
+  <title>Cardborne Gray Hangar Map Study</title>
   <style>
     :root {
       color-scheme: dark;
-      --void: #070b11;
+      --space: #070b11;
       --canvas: #101923;
       --surface: #182431;
       --raised: #243445;
       --line: #465a6e;
       --text: #eef3f7;
       --muted: #9eadbc;
-      --reward: #f2b735;
-      --danger: #f05a5f;
+      --amber: #f2b735;
       --support: #72d6c4;
-      --system: #58bfea;
-      --replace: #f47a3c;
+      --warning: #f47a3c;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      background: var(--void);
+      background: var(--space);
       color: var(--text);
       font-family: "Noto Sans KR", "Segoe UI", sans-serif;
       font-size: 15px;
       line-height: 1.55;
     }
-    a { color: var(--system); }
+    a { color: inherit; }
     code { font-family: "Cascadia Mono", Consolas, monospace; overflow-wrap: anywhere; }
-    .page { width: min(1480px, calc(100% - 48px)); margin: 0 auto; padding: 48px 0 80px; }
-    header { border-bottom: 1px solid var(--line); padding-bottom: 28px; }
-    .eyebrow { color: var(--support); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-    h1 { margin: 8px 0 12px; font-size: clamp(32px, 5vw, 58px); line-height: 1.05; }
-    h2 { margin: 52px 0 16px; font-size: 28px; }
-    h3 { margin: 0 0 10px; font-size: 19px; }
-    p { max-width: 88ch; }
+    .page { width: min(1420px, calc(100% - 48px)); margin: 0 auto; padding: 44px 0 72px; }
+    header { padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+    .eyebrow { color: var(--support); font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { max-width: 900px; margin: 8px 0 12px; font-size: clamp(34px, 5vw, 58px); line-height: 1.08; }
+    h2 { margin: 50px 0 14px; font-size: 28px; }
+    h3 { margin: 0; font-size: 23px; }
+    p { max-width: 92ch; }
     .lede { color: var(--muted); font-size: 18px; }
     .meta { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
-    nav { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 22px; }
-    nav a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 3px; }
-    .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 28px; }
-    .metric { background: var(--canvas); padding: 18px; }
-    .metric strong { display: block; font-size: 30px; color: var(--reward); }
-    .metric span { color: var(--muted); }
-    .notice { margin: 24px 0; padding: 16px 18px; border-left: 4px solid var(--replace); background: #1b222b; }
+    nav { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 22px; }
+    nav a { text-decoration: none; border-bottom: 1px solid var(--line); }
+    .scope {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: 26px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+    .scope div { padding: 16px; background: var(--canvas); }
+    .scope strong { display: block; color: var(--amber); font-size: 20px; }
+    .notice { margin: 22px 0; padding: 16px 18px; border-left: 4px solid var(--warning); background: #1b222b; }
     .notice strong { color: #ffb084; }
-    figure { margin: 0; }
-    .runtime img, .concept img { display: block; width: 100%; height: auto; background: var(--canvas); }
-    figcaption { color: var(--muted); margin-top: 8px; font-size: 13px; }
-    .runtime { border: 1px solid var(--line); background: var(--canvas); padding: 12px; }
-    .table-wrap { overflow-x: auto; border: 1px solid var(--line); }
-    table { width: 100%; border-collapse: collapse; min-width: 1120px; }
-    th, td { padding: 13px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid #344759; }
-    th { position: sticky; top: 0; background: #111d28; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-    tr:last-child td { border-bottom: 0; }
-    tbody tr:hover { background: #14212d; }
-    .thumb { width: 96px; height: 72px; object-fit: contain; display: block; background-color: #0c141d; background-image: linear-gradient(45deg, #15212d 25%, transparent 25%), linear-gradient(-45deg, #15212d 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #15212d 75%), linear-gradient(-45deg, transparent 75%, #15212d 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
-    .id { min-width: 220px; }
-    .id code { color: var(--text); font-weight: 700; }
-    .path, .hash { display: block; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
-    .badge { display: inline-block; padding: 3px 8px; border: 1px solid currentColor; font-weight: 800; font-size: 11px; letter-spacing: .06em; white-space: nowrap; }
-    .keep { color: var(--support); }
-    .replace { color: var(--replace); }
-    .refine { color: var(--system); }
-    .layer-list { display: grid; grid-template-columns: 160px 1fr 1.4fr; border: 1px solid var(--line); }
-    .layer-list > div { padding: 14px; border-bottom: 1px solid #344759; }
-    .layer-list > div:nth-last-child(-n + 3) { border-bottom: 0; }
-    .layer-head { color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: #111d28; }
-    .concepts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-    .concept { border-top: 3px solid var(--line); padding-top: 14px; }
-    .concept.recommended { border-top-color: var(--reward); }
-    .concept img { aspect-ratio: 16 / 9; object-fit: cover; border: 1px solid var(--line); }
-    .concept ul { margin: 10px 0 0; padding-left: 19px; color: var(--muted); }
-    .artifact { color: #ffb084; font-size: 13px; }
-    .decision { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 18px; }
-    .decision > div { background: var(--canvas); padding: 18px; }
-    .decision strong { color: var(--reward); }
-    ol { max-width: 90ch; }
-    li + li { margin-top: 8px; }
-    details { border-top: 1px solid var(--line); padding: 14px 0; }
-    summary { cursor: pointer; font-weight: 800; }
-    .id-cloud { color: var(--muted); font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
-    footer { margin-top: 58px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); }
+    .current-assets, .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+    .current-assets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .asset-cell { min-width: 0; padding: 16px; background: var(--canvas); }
+    .asset-cell img {
+      display: block;
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      background-color: #0c141d;
+      background-image:
+        linear-gradient(45deg, #15212d 25%, transparent 25%),
+        linear-gradient(-45deg, #15212d 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #15212d 75%),
+        linear-gradient(-45deg, transparent 75%, #15212d 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    }
+    .asset-cell strong { display: block; margin-top: 12px; }
+    .asset-cell span { display: block; color: var(--muted); font-size: 13px; }
+    .asset-cell a { text-decoration-color: var(--line); text-underline-offset: 3px; }
+    .mapping { margin-top: 14px; padding: 13px 0; border-top: 1px solid var(--line); color: var(--muted); }
+    .concept { padding-top: 20px; border-top: 3px solid var(--line); }
+    .concept + .concept { margin-top: 48px; }
+    .concept.recommended { border-top-color: var(--amber); }
+    .concept-head { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; margin-bottom: 14px; }
+    .concept-head p { margin: 0; color: var(--muted); }
+    .hangar-preview {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: var(--space);
+      border: 1px solid var(--line);
+    }
+    .deck {
+      position: absolute;
+      inset: 8%;
+      background-color: #7d858b;
+      background-image: var(--floor);
+      background-repeat: repeat;
+      background-size: 24% auto;
+      box-shadow: 0 0 0 1px rgba(7, 11, 17, .8);
+    }
+    .hangar-preview img { position: absolute; display: block; object-fit: fill; }
+    .outer { z-index: 3; }
+    .outer.top { left: 8%; top: 3%; width: 84%; height: 10%; }
+    .outer.bottom { left: 8%; bottom: 3%; width: 84%; height: 10%; transform: rotate(180deg); }
+    .outer.left { left: -15%; top: 45%; width: 42%; height: 9%; transform: rotate(-90deg); }
+    .outer.right { right: -15%; top: 45%; width: 42%; height: 9%; transform: rotate(90deg); }
+    .inner { z-index: 4; width: 26%; height: 9%; }
+    .inner.one { left: 24%; top: 33%; }
+    .inner.two { right: 24%; bottom: 33%; transform: rotate(180deg); }
+    .inner.three { left: 47%; top: 39%; width: 18%; transform: rotate(90deg); }
+    .obstacle { z-index: 5; width: 10%; height: auto; aspect-ratio: 1; object-fit: contain !important; }
+    .obstacle.a { left: 17%; top: 27%; }
+    .obstacle.b { right: 17%; top: 23%; }
+    .obstacle.c { left: 39%; bottom: 19%; }
+    .obstacle.d { right: 34%; top: 51%; }
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: 28px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+    .rules div { padding: 17px; background: var(--canvas); }
+    .rules strong { color: var(--amber); }
+    footer { margin-top: 54px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); }
     @media (max-width: 980px) {
-      .page { width: min(100% - 28px, 1480px); padding-top: 28px; }
-      .summary, .concepts, .decision { grid-template-columns: 1fr; }
-      .layer-list { grid-template-columns: 1fr; }
-      .layer-list > div { border-bottom: 1px solid #344759 !important; }
-      .layer-list > div:last-child { border-bottom: 0 !important; }
+      .page { width: min(100% - 28px, 1420px); padding-top: 28px; }
+      .scope, .asset-grid, .current-assets, .rules { grid-template-columns: 1fr; }
+      .asset-cell img { height: 190px; }
+      .concept-head { display: block; }
+      .concept-head p { margin-top: 6px; }
+      .hangar-preview { min-height: 250px; }
     }
   </style>
 </head>
 <body>
   <main class="page">
     <header>
-      <div class="eyebrow">Cardborne · Visual Replacement Workbench</div>
-      <h1>Map Asset Audit &amp; Direction Study</h1>
-      <p class="lede">A complete inventory of the image identities and code-owned layers that construct the current map, followed by three light-gray general-SF hangar directions. This report is review evidence only; none of the concepts are production-approved assets.</p>
-      <p class="meta">Prepared 2026-08-04 · Scope: environment, functional terrain, map loot, and terrain-owned shared cues · Runtime replacement: not started</p>
+      <div class="eyebrow">Cardborne · Corrected Map Scope</div>
+      <h1>Space-backed gray hangar study</h1>
+      <p class="lede">Three floor directions with one shared structural kit. Every preview below is assembled from the six linked TO-BE PNGs—not from an unrelated generated scene.</p>
+      <p class="meta">Prepared 2026-08-04 · Candidate review only · Runtime and production manifest unchanged</p>
       <nav aria-label="Report sections">
-        <a href="#current">Current runtime</a>
-        <a href="#inventory">19-image inventory</a>
-        <a href="#layers">Code layers</a>
-        <a href="#directions">Three directions</a>
-        <a href="#recommendation">Recommended change set</a>
-        <a href="#boundary">Scope boundary</a>
+        <a href="#scope">Scope correction</a>
+        <a href="#current">AS-IS</a>
+        <a href="#quiet">Quiet Grid</a>
+        <a href="#wide">Wide Slabs</a>
+        <a href="#solid">Near-Solid Deck</a>
       </nav>
-      <div class="summary" aria-label="Scope summary">
-        <div class="metric"><strong>13</strong><span>world PNG identities</span></div>
-        <div class="metric"><strong>4</strong><span>map-loot PNG identities</span></div>
-        <div class="metric"><strong>2</strong><span>terrain-used shared cues</span></div>
-        <div class="metric"><strong>6 / 10 / 3</strong><span>replace / retain / simplify</span></div>
+      <div class="scope" id="scope">
+        <div><strong>288×288</strong>Floor surface</div>
+        <div><strong>192×96</strong>Outer wall</div>
+        <div><strong>192×96</strong>In-game wall</div>
+        <div><strong>192×192</strong>Terrain obstacle</div>
       </div>
     </header>
 
     <section id="current">
-      <h2>Current runtime</h2>
-      <div class="notice"><strong>Primary failure:</strong> the floor is a dark framed square that is repeatedly and non-uniformly fitted to 1×1, 2×1, 1×2, and 2×2 geometry. The result reads as a dense UI-card grid rather than one coherent hangar deck. The last pass repaired edges and wall batching, but did not redesign this visual system.</div>
-      <figure class="runtime">
-        <img src="candidates/world-map-minimal-v3/runtime-drowned-ruin.png" alt="Current Drowned Ruin runtime map with a dense dark framed floor grid">
-        <figcaption>AS-IS capture: the floor frame repeats at every module, covers use a visually unrelated textured block, and functional terrain competes with the surface pattern.</figcaption>
-      </figure>
-    </section>
-
-    <section id="inventory">
-      <h2>Complete map image inventory</h2>
-      <p>The first thirteen entries are environment and functional-terrain images. The next four are reward objects placed in the world. The final two are shared cue images consumed directly by terrain rendering. Canvas values are manifest truth; alpha bounds and color counts are measured from the current PNGs.</p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Preview</th><th>Semantic ID / file</th><th>Canvas · alpha · colors</th><th>Runtime role and owner</th><th>Diagnosis</th><th>Decision</th></tr></thead>
-          <tbody>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png" alt="Current surface panel"></td><td class="id"><code>world/surface_panel_9</code><span class="path">world/presentation/world_surface_panel_9.png</span><span class="hash">SHA b76dfeb2af4d…</span></td><td>288×288<br>288×288<br>4 colors</td><td>Walkable floor<br><code>VehicleWorldMeshBuilder</code></td><td>Dark UI-card frame; repeated and stretched across unlike module sizes.</td><td><span class="badge replace">Replace</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png" alt="Current wall segment"></td><td class="id"><code>world/wall_segment_9</code><span class="path">world/presentation/world_wall_segment_9.png</span><span class="hash">SHA 3e14f4d5505a…</span></td><td>192×96<br>192×96<br>4 colors</td><td>Boundary + structural walls<br><code>VehicleWorldMeshBuilder</code></td><td>User-selected TO-BE is acceptable; long segments must repeat at fixed scale instead of stretching.</td><td><span class="badge keep">Retain</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/terrain_solid_cover_block.png" alt="Current solid cover block"></td><td class="id"><code>world/terrain_solid_cover_block</code><span class="path">world/terrain_solid_cover_block.png</span><span class="hash">SHA 741946693b29…</span></td><td>192×192<br>160×176<br>6,199 colors</td><td>Generated isolated cover rects<br><code>VehicleWorldMeshBuilder</code></td><td>Noisy pseudo-material, excess edge parts, and non-uniform stretching make blockers hard to read.</td><td><span class="badge replace">Replace</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/world_bulkhead_intact.png" alt="Intact bulkhead"></td><td class="id"><code>world/world_bulkhead_intact</code><span class="path">world/world_bulkhead_intact.png</span><span class="hash">SHA d1911187be70…</span></td><td>192×192<br>176×65<br>2,781 colors</td><td>Closed breakable barrier<br><code>VehicleRun._draw_terrain</code></td><td>State silhouette is useful and compatible with the retained pale wall.</td><td><span class="badge keep">Retain / edge clean</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/world_bulkhead_damaged.png" alt="Damaged bulkhead"></td><td class="id"><code>world/world_bulkhead_damaged</code><span class="path">world/world_bulkhead_damaged.png</span><span class="hash">SHA c4a3471e4539…</span></td><td>192×192<br>176×65<br>3,367 colors</td><td>Damaged barrier state<br><code>VehicleRun._draw_terrain</code></td><td>Large crack provides clear non-color state separation.</td><td><span class="badge keep">Retain / edge clean</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/world_bulkhead_open.png" alt="Open bulkhead"></td><td class="id"><code>world/world_bulkhead_open</code><span class="path">world/world_bulkhead_open.png</span><span class="hash">SHA fa635dfb7868…</span></td><td>192×192<br>176×65<br>3,448 colors</td><td>Breached barrier state<br><code>VehicleRun._draw_terrain</code></td><td>Open center is a strong resolved-state silhouette.</td><td><span class="badge keep">Retain / edge clean</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/facility_repair_pad.png" alt="Repair pad"></td><td class="id"><code>world/facility_repair_pad</code><span class="path">world/facility_repair_pad.png</span><span class="hash">SHA c6b915a9cee5…</span></td><td>192×192<br>176×176<br>430 colors</td><td>Live circular repair field<br><code>VehicleCombatRenderer</code></td><td>One complete circle and one large plus; already matches the simplified functional contract.</td><td><span class="badge keep">Retain</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/facility_overdrive_pad.png" alt="Overdrive pad"></td><td class="id"><code>world/facility_overdrive_pad</code><span class="path">world/facility_overdrive_pad.png</span><span class="hash">SHA 330b159fc6ec…</span></td><td>192×192<br>176×176<br>437 colors</td><td>Live circular overdrive field<br><code>VehicleCombatRenderer</code></td><td>One complete circle and one large chevron; role is immediately readable.</td><td><span class="badge keep">Retain</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/facility_transit_gate.png" alt="Transit gate"></td><td class="id"><code>world/facility_transit_gate</code><span class="path">world/facility_transit_gate.png</span><span class="hash">SHA 8cd361f68f95…</span></td><td>192×192<br>175×175<br>3,303 colors</td><td>Paired floor portal<br><code>VehicleRun._draw_terrain</code></td><td>The ring shape is valid, but runtime stacks another ring plus two code arcs over it.</td><td><span class="badge refine">Simplify integration</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/facility_arc_surge_strip.png" alt="Arc surge strip"></td><td class="id"><code>world/facility_arc_surge_strip</code><span class="path">world/facility_arc_surge_strip.png</span><span class="hash">SHA 2f9e921954e6…</span></td><td>192×192<br>49×176<br>1,322 colors</td><td>Arc Surge fixture<br><code>VehicleRun._draw_terrain</code></td><td>Runtime draws four small and three large copies over one beam corridor. The seven-copy composition is the failure.</td><td><span class="badge refine">Recompose once</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/wear_tile_intact.png" alt="Intact wear tile"></td><td class="id"><code>world/wear_tile_intact</code><span class="path">world/wear_tile_intact.png</span><span class="hash">SHA 54ca095c04f4…</span></td><td>240×160<br>231×146<br>766 colors</td><td>Stable collapse tile<br><code>VehicleRun._draw_terrain</code></td><td>Dark inset plate will look foreign on the new light-gray deck.</td><td><span class="badge replace">Replace family</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/wear_tile_cracked.png" alt="Cracked wear tile"></td><td class="id"><code>world/wear_tile_cracked</code><span class="path">world/wear_tile_cracked.png</span><span class="hash">SHA a7e36ffa32fd…</span></td><td>240×160<br>231×146<br>1,559 colors</td><td>Warning collapse state<br><code>VehicleRun._draw_terrain</code></td><td>State crack is useful; base plate must share the new floor family.</td><td><span class="badge replace">Replace family</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/world/wear_tile_collapsed.png" alt="Collapsed wear tile"></td><td class="id"><code>world/wear_tile_collapsed</code><span class="path">world/wear_tile_collapsed.png</span><span class="hash">SHA be2f0c1831b0…</span></td><td>240×160<br>231×146<br>2,864 colors</td><td>Open collapse state<br><code>VehicleRun._draw_terrain</code></td><td>Required open silhouette, but current edge/fringe and dark plate conflict with the new deck.</td><td><span class="badge replace">Replace family</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/pickups/pickup_experience_master.png" alt="Experience pickup master"></td><td class="id"><code>pickup/experience_master</code><span class="path">pickups/pickup_experience_master.png</span><span class="hash">SHA 88aec5b31fbd…</span></td><td>64×64<br>38×56<br>990 colors</td><td>XP shards + placed XP loot<br><code>VehicleCombatRenderer / VehicleRun</code></td><td>Centered, but small XP currently resolves to only about 14×21 world units.</td><td><span class="badge replace">Replace + enlarge</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/pickups/pickup_reward_crate.png" alt="Reward crate"></td><td class="id"><code>pickup/reward_crate</code><span class="path">pickups/pickup_reward_crate.png</span><span class="hash">SHA dad2d74d6dbf…</span></td><td>64×64<br>52×53<br>1,471 colors</td><td>Breakable map reward crate<br><code>VehicleRun._draw_pickups_and_crates</code></td><td>Large amber mass reads clearly against either light-gray floor direction.</td><td><span class="badge keep">Retain</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/pickups/pickup_repair.png" alt="Repair pickup"></td><td class="id"><code>pickup/repair</code><span class="path">pickups/pickup_repair.png</span><span class="hash">SHA 1c1db12888dc…</span></td><td>48×48<br>40×39<br>682 colors</td><td>Loose repair pickup<br><code>VehicleRun / guidebook</code></td><td>Distinct plus silhouette and support color are already sufficient.</td><td><span class="badge keep">Retain</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/pickups/pickup_experience_recall.png" alt="Experience recall pickup"></td><td class="id"><code>pickup/experience_recall</code><span class="path">pickups/pickup_experience_recall.png</span><span class="hash">SHA 1ab513abbfd6…</span></td><td>64×64<br>54×48<br>1,121 colors</td><td>Experience recall pickup<br><code>VehicleRun / guidebook</code></td><td>Three-way inward silhouette is unique and fills the canvas well.</td><td><span class="badge keep">Retain</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/effects/cues/cue_ring.png" alt="Shared ring cue"></td><td class="id"><code>cue/ring</code><span class="path">effects/cues/cue_ring.png</span><span class="hash">SHA 92bda7c417b6…</span></td><td>128×128<br>114×115<br>352 colors</td><td>Live radius / transit outer ring<br><code>VehicleRun / renderer</code></td><td>Valid for collision truth, but should not duplicate a complete transit-gate ring.</td><td><span class="badge refine">Restrict use</span></td></tr>
-            <tr><td><img class="thumb" src="../../../art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png" alt="Shared beam strip"></td><td class="id"><code>cue/beam_strip_9</code><span class="path">effects/cues/cue_beam_strip_9.png</span><span class="hash">SHA f30a3e2027de…</span></td><td>128×32<br>115×21<br>47 colors</td><td>Live Arc Surge corridor<br><code>VehicleRun._draw_terrain</code></td><td>Appropriate shared stretch texture for the dynamic corridor.</td><td><span class="badge keep">Retain</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="layers">
-      <h2>Code-owned map composition layers</h2>
-      <p>These are not additional art assets. They own placement, topology, collision truth, state, or dynamic dimensions. The fix should reduce their visual assembly responsibilities without moving gameplay truth into PNGs.</p>
-      <div class="layer-list" role="table" aria-label="Code-owned map layers">
-        <div class="layer-head">Layer</div><div class="layer-head">Current owner</div><div class="layer-head">Required change</div>
-        <div>Void / base fill</div><div><code>VehicleStageBackdrop</code> draws <code>WORLD_CANVAS</code>.</div><div>Keep one flat base fill. No decorative void texture.</div>
-        <div>Walkable floor placement</div><div><code>VehicleFieldSurfacePatternCompiler</code> produces 1×1, 2×1, 1×2, 2×2 fragments; <code>VehicleWorldMeshBuilder</code> fits one PNG into each.</div><div>Remove dead variant/inset presentation data. Repeat one floor image at fixed scale with world-locked UVs; never stretch its seams.</div>
-        <div>Walls</div><div>Field geometry supplies boundary segments and structural-wall rects; <code>VehicleWorldMeshBuilder</code> draws the retained wall PNG.</div><div>Keep topology. Repeat fixed-scale wall segments and assert one visible transform for every collision wall.</div>
-        <div>Generated cover</div><div>Layout-generated <code>cover_rects</code> use one solid-cover PNG.</div><div>Keep collision rectangles; use one simpler, brighter isolated-cover family that remains visible at map zoom.</div>
-        <div>Wear + bulkhead state</div><div><code>VehicleTerrainRuntime</code> owns state; <code>VehicleRun</code> selects a texture.</div><div>Keep the state machine and exact footprints. Replace only the Wear Tile artwork family; retain bulkhead silhouettes.</div>
-        <div>Arc Surge</div><div>One stretched beam cue plus seven repeated facility-strip images.</div><div>Use one beam corridor and at most two endpoint fixtures. Delete the seven-copy ornament assembly.</div>
-        <div>Transit gate</div><div>Complete gate PNG + shared ring PNG + progress arc + cooldown arc.</div><div>Use one complete portal image and one truthful progress treatment; remove duplicate ring hierarchy.</div>
-        <div>Repair / overdrive</div><div><code>VehicleCombatRenderer</code> scales one pad PNG to the live gameplay radius.</div><div>Keep. This is already the correct image-backed ownership model.</div>
-        <div>Debug collision overlay</div><div><code>VehicleRun</code> draws colored polygons and outlines when debug is enabled.</div><div>Keep debug-only and explicitly exclude it from production screenshots and asset counts.</div>
+      <h2>AS-IS: the actual problem</h2>
+      <div class="notice"><strong>Scope correction:</strong> pickups, reward crates, projectiles, facilities, pads, gates, bulkheads, and effects are unchanged and intentionally absent. The current outer boundary and in-game structural wall both use one stretched <code>world/wall_segment_9</code>; the proposals split those two visual roles.</div>
+      <div class="current-assets">
+        <div class="asset-cell">
+          <img src="../../../art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png" alt="Current floor surface">
+          <strong>Current floor</strong>
+          <span><code>world/surface_panel_9</code> · 288×288</span>
+          <span>Per-tile dark frame reads like repeated UI cards.</span>
+        </div>
+        <div class="asset-cell">
+          <img src="../../../art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png" alt="Current shared wall segment">
+          <strong>Current shared wall</strong>
+          <span><code>world/wall_segment_9</code> · 192×96</span>
+          <span>One asymmetric outer-space edge is also stretched across internal walls.</span>
+        </div>
+        <div class="asset-cell">
+          <img src="../../../art/visuals/production/gameplay/world/terrain_solid_cover_block.png" alt="Current terrain obstacle">
+          <strong>Current obstacle</strong>
+          <span><code>world/terrain_solid_cover_block</code> · 192×192</span>
+          <span>Too many seams and pseudo-material details for the simplified map.</span>
+        </div>
       </div>
     </section>
 
     <section id="directions">
-      <h2>Three light-gray hangar directions</h2>
-      <div class="notice"><strong>Concept status:</strong> ImageGen exploration only. Each image used the canonical style sheet as an actual reference together with the current runtime capture. The sheet supplied style grammar only; no depicted object or layout is approved or copied into production.</div>
-      <div class="concepts">
-        <article class="concept">
-          <h3>Quiet Grid</h3>
-          <figure><img src="candidates/map-asset-audit-v4/concept-quiet-grid.png" alt="Quiet Grid light-gray hangar map concept"><figcaption>Subtle fixed square plate rhythm.</figcaption></figure>
-          <ul><li>Closest to the current 288-unit grid.</li><li>Thin seams preserve orientation without making every tile a card.</li><li>Lowest implementation risk.</li></ul>
-          <p class="meta">1672×941 · SHA-256 396ab2e2519c654b110b5630a76a81e5a48a833eb7c7b2c9fd2e228a9333ca32</p>
-        </article>
-        <article class="concept">
-          <h3>Wide Slabs</h3>
-          <figure><img src="candidates/map-asset-audit-v4/concept-wide-slabs.png" alt="Wide Slabs light-gray hangar map concept"><figcaption>Large offset 2:1 deck slabs.</figcaption></figure>
-          <ul><li>Fewer repeated seams and broader movement lanes.</li><li>Strong industrial-hangar read without service rails.</li><li>Requires fixed-scale tiled UVs rather than fitting one square texture.</li></ul>
-          <p class="artifact">Concept artifact: the second overdrive pad and extra pad rings are not part of this direction.</p>
-          <p class="meta">1672×941 · SHA-256 7f9c77281324be2ce42c63762475f5574670c198c67f98c32fa0e5516a27576d</p>
-        </article>
-        <article class="concept recommended">
-          <h3>Near-Solid Bay · Recommended</h3>
-          <figure><img src="candidates/map-asset-audit-v4/concept-near-solid-bay.png" alt="Near-Solid Bay light-gray hangar map concept"><figcaption>Quiet continuous deck with sparse divisions.</figcaption></figure>
-          <ul><li>Maximum combat and pickup contrast.</li><li>Simplest visual hierarchy and lowest detail density.</li><li>Needs careful low-contrast plane variation to avoid looking unfinished.</li></ul>
-          <p class="artifact">Concept artifacts: remove the faint random scuff/seam marks and projectile trails from the production version.</p>
-          <p class="meta">1672×941 · SHA-256 05e727800d8baeaa9612a46c4e3d178e07440b2ae156efdc35a0f2429c84222a</p>
-        </article>
-      </div>
-      <div class="decision">
-        <div><strong>Shared constraints</strong><br>No cyan frame, service rail, decorative lane, nested outline, rivet field, random scratch, texture noise, or per-cell light.</div>
-        <div><strong>Retained identity</strong><br>The approved pale wall language, circular repair/overdrive pads, bulkhead state silhouettes, amber rewards, and dark exterior void remain.</div>
-        <div><strong>Visibility target</strong><br>Walls and cover must read in grayscale; projectiles and the smallest XP pickup must remain identifiable at the full-map camera scale.</div>
-      </div>
-      <p class="meta">The walls in these generated scenes show only the intended pale mass and contrast. They are not replacement wall assets; production retains <code>world_wall_segment_9.png</code> and corrects only its placement.</p>
+      <h2>Three floor directions, one shared structure kit</h2>
+      <p>Only the floor master changes between directions. The outer wall, in-game wall, and terrain obstacle are deliberately shared instead of generating three redundant copies. All use a near-black space exterior, a cool neutral-gray hangar deck, brighter pale-gray walls, dark separation, and isolated lower cover. There are no item, facility, rail, light, decal, or decorative-effect changes.</p>
+
+      <article class="concept" id="quiet">
+        <div class="concept-head">
+          <h3>01 · Quiet Grid</h3>
+          <p>Restrained square macro rhythm; closest to the existing 288-unit compiler.</p>
+        </div>
+        <div class="hangar-preview" style="--floor: url('candidates/map-asset-audit-v5/quiet-grid/floor_surface_288.png');" aria-label="Quiet Grid preview assembled from its TO-BE assets">
+          <div class="deck"></div>
+          <img class="outer top" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer bottom" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer left" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer right" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="inner one" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="inner two" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="inner three" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="obstacle a" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle b" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle c" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle d" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+        </div>
+        <div class="asset-grid">
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/quiet-grid/floor_surface_288.png"><img src="candidates/map-asset-audit-v5/quiet-grid/floor_surface_288.png" alt="Quiet Grid floor TO-BE"><strong>Floor surface</strong></a><span>288×288 · pivot 144,144 · opaque</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png"><img src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="Shared outer wall TO-BE"><strong>Outer wall · shared</strong></a><span>192×96 · pivot 96,48</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png"><img src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="Shared in-game wall TO-BE"><strong>In-game wall · shared</strong></a><span>192×96 · pivot 96,48</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png"><img src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="Shared obstacle TO-BE"><strong>Terrain obstacle · shared</strong></a><span>192×192 · pivot 96,96</span></div>
+        </div>
+      </article>
+
+      <article class="concept" id="wide">
+        <div class="concept-head">
+          <h3>02 · Wide Slabs</h3>
+          <p>Broad offset plates and elongated structural masses; lower seam density.</p>
+        </div>
+        <div class="hangar-preview" style="--floor: url('candidates/map-asset-audit-v5/wide-slabs/floor_surface_288.png');" aria-label="Wide Slabs preview assembled from its TO-BE assets">
+          <div class="deck"></div>
+          <img class="outer top" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer bottom" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer left" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer right" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="inner one" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="inner two" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="inner three" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="obstacle a" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle b" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle c" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle d" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+        </div>
+        <div class="asset-grid">
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/wide-slabs/floor_surface_288.png"><img src="candidates/map-asset-audit-v5/wide-slabs/floor_surface_288.png" alt="Wide Slabs floor TO-BE"><strong>Floor surface</strong></a><span>288×288 · pivot 144,144 · opaque</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png"><img src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="Shared outer wall TO-BE"><strong>Outer wall · shared</strong></a><span>192×96 · pivot 96,48</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png"><img src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="Shared in-game wall TO-BE"><strong>In-game wall · shared</strong></a><span>192×96 · pivot 96,48</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png"><img src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="Shared obstacle TO-BE"><strong>Terrain obstacle · shared</strong></a><span>192×192 · pivot 96,96</span></div>
+        </div>
+      </article>
+
+      <article class="concept recommended" id="solid">
+        <div class="concept-head">
+          <h3>03 · Near-Solid Deck · Recommended</h3>
+          <p>Almost continuous gray floor and the quietest combat backdrop.</p>
+        </div>
+        <div class="hangar-preview" style="--floor: url('candidates/map-asset-audit-v5/near-solid/floor_surface_288.png');" aria-label="Near-Solid Deck preview assembled from its TO-BE assets">
+          <div class="deck"></div>
+          <img class="outer top" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer bottom" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer left" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="outer right" src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="">
+          <img class="inner one" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="inner two" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="inner three" src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="">
+          <img class="obstacle a" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle b" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle c" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+          <img class="obstacle d" src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="">
+        </div>
+        <div class="asset-grid">
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/near-solid/floor_surface_288.png"><img src="candidates/map-asset-audit-v5/near-solid/floor_surface_288.png" alt="Near-Solid floor TO-BE"><strong>Floor surface</strong></a><span>288×288 · pivot 144,144 · opaque</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png"><img src="candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="Shared outer wall TO-BE"><strong>Outer wall · shared</strong></a><span>192×96 · pivot 96,48</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png"><img src="candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="Shared in-game wall TO-BE"><strong>In-game wall · shared</strong></a><span>192×96 · pivot 96,48</span></div>
+          <div class="asset-cell"><a href="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png"><img src="candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="Shared obstacle TO-BE"><strong>Terrain obstacle · shared</strong></a><span>192×192 · pivot 96,96</span></div>
+        </div>
+      </article>
     </section>
 
-    <section id="recommendation">
-      <h2>Recommended change set</h2>
-      <p><strong id="recommendation-name">Proceed with Near-Solid Bay as the target direction.</strong> It best matches the requested hierarchy: one quiet light-gray hangar deck, clearly visible pale walls, and gameplay objects carrying the color. Its generated scuffs, stray seams, and projectile trails are explicitly excluded from production.</p>
-      <ol>
-        <li>Update the visual contract before asset generation: replace the current “dark floor” requirement with the selected cool light-gray hangar direction while preserving sparse 3–5-plane geometry.</li>
-        <li>Generate one seamless floor master, one simplified isolated-cover master, and the three Wear Tile states in one authority-grounded batch. Keep wall, repair pad, overdrive pad, and bulkhead identities.</li>
-        <li>Simplify composition code: fixed-scale floor UVs, fixed-scale wall repetition, one Arc corridor with no seven-copy ornament, and one Transit progress treatment.</li>
-        <li>Re-author and enlarge the XP master in the same review batch; projectile enlargement remains a separate combat-visibility unit even though it is shown in the concepts.</li>
-        <li>Publish exact AS-IS/TO-BE comparisons at runtime scale, then switch only the selected direction. Run the full native/Web and collision-overlay validation after the complete visual batch.</li>
-      </ol>
-    </section>
-
-    <section id="boundary">
-      <h2>Scope boundary: world-visible but not map construction</h2>
-      <p>The production manifest contains 57 image identities in total: one attachment plus 56 regular asset entries. After the 19 direct map identities above, 38 additional identities can appear over the map but do not construct its floor, wall, terrain, facilities, or loot placement. They are listed here to make the boundary explicit rather than silently omitting them.</p>
-      <details><summary>Player attachment · 1</summary><p class="id-cloud">attachment/player_craft_body</p></details>
-      <details><summary>Ordinary enemy actors · 19</summary><p class="id-cloud">actor/scrap_drone, actor/needle_drone, actor/spark_minelet, actor/chaser, actor/rammer, actor/bulkhead_guard, actor/shooter, actor/turret, actor/mine, actor/artillery_spotter, actor/controller, actor/generator, actor/shield_escort, actor/repair_tender, actor/drone_carrier, actor/splitter_barge, actor/interceptor_tower, actor/beam_sentinel, actor/boss_pylon</p></details>
-      <details><summary>Boss bodies and shared nodes · 8</summary><p class="id-cloud">boss/colossus, boss/leviathan, boss/titan, boss/behemoth, boss/crown, boss/node_active, boss/node_damaged, boss/node_resolved</p></details>
-      <details><summary>Secondary bodies · 4</summary><p class="id-cloud">secondary/seeker, secondary/escort_drone, secondary/orbit_blade, secondary/wake_mine</p></details>
-      <details><summary>Projectile · 1</summary><p class="id-cloud">projectile/energy_teardrop</p></details>
-      <details><summary>EMP · 1</summary><p class="id-cloud">effect/emp_release</p></details>
-      <details><summary>Non-terrain shared cues · 4</summary><p class="id-cloud">cue/health_bar_frame_9, cue/diamond_marker, cue/disk_mask, cue/crosshair</p></details>
+    <section id="mapping">
+      <h2>Switch mapping after one direction is selected</h2>
+      <div class="rules">
+        <div><strong>Direct replacement</strong><br><code>floor_surface_288.png</code> → <code>world/surface_panel_9</code>; <code>terrain_obstacle_192.png</code> → <code>world/terrain_solid_cover_block</code>.</div>
+        <div><strong>Wall-role split</strong><br><code>outer_wall_192x96.png</code> stays on boundary segments. <code>inner_wall_192x96.png</code> receives a new structural-wall semantic ID instead of sharing the outer-space edge.</div>
+        <div><strong>No other switch</strong><br>Items, facilities, pickups, projectiles, bulkheads, wear states, cues, UI, and gameplay geometry remain byte-for-byte and behavior-for-behavior unchanged.</div>
+      </div>
     </section>
 
     <footer>
-      <strong>Visual authority evidence.</strong> Complete text contract read: <code>docs/design/VISUAL_SYSTEM.md</code>. Canonical reference inspected at original detail: <code>docs/design/cardborne-universal-art-style-reference.png</code>. Expected and observed SHA-256: <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>. Original provenance: <code>C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png</code>, 2026-08-02 12:13:44 KST. The three concept calls used the canonical PNG as an actual image reference and are unapproved design candidates.
+      <strong>Visual authority evidence.</strong> The complete active contract is <code>docs/design/VISUAL_SYSTEM.md</code>. The canonical style grammar reference is <code>docs/design/cardborne-universal-art-style-reference.png</code>, observed SHA-256 <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>. Every raster generation call used that canonical PNG as an actual image reference. These files remain unapproved candidates until a direction is selected; no production asset or runtime mapping has changed.
     </footer>
   </main>
 </body>

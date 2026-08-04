@@ -74,6 +74,11 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
 
 - 장르는 익숙한 top-down industrial/general SF다. 특정 문화, 재질, 해양,
   의례 motif를 제품 정체성으로 만들지 않는다.
+- 월드의 고정 배경과 건축 theme는 **near-black outer space 안의 cool
+  neutral-gray orbital hangar**다. 주 바닥, 외곽 경계벽, 내부 구조벽과 독립
+  엄폐물은 같은 회색 격납고 family를 사용하되 높이와 silhouette로 역할을
+  구분한다. 어두운 HUD panel, 해저 기지나 장식성 service lane처럼 보이게
+  만들지 않는다.
 - 형태는 큰 mechanical mass, 명확한 front/rear cut, 기능 module, sparse
   state accent 네 층으로 구성한다.
 - 모든 형태는 antialiased hard-edged geometry를 사용한다. 고정 raster 방향
@@ -247,7 +252,7 @@ collision은 계속 field geometry가 소유한다.
 
 | 표시 역할 | 시각 계약 | gameplay/collision owner |
 | --- | --- | --- |
-| 바닥 타일 | 어두운 저대비 산업 panel, 기능 없는 강조 문양 없음 | field geometry와 deterministic tile compiler |
+| 바닥 타일 | cool neutral-gray 격납고 surface, full-bleed 큰 색면, per-tile frame과 기능 없는 강조 문양 없음 | field geometry와 deterministic tile compiler |
 | 구조벽 | 바닥보다 밝은 pale-metal continuous mass와 dark contour | field topology와 collision |
 | 엄폐물 | 구조벽보다 작은 독립 silhouette, 연속 wall처럼 배치하지 않음 | tactical layout, collision와 LOS |
 | 파괴 장벽 | 같은 footprint의 sealed/damaged/open surface | bulkhead health와 reward access |
@@ -273,15 +278,20 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - floor는 field geometry와 layout fingerprint를 입력으로 하는 deterministic
   presentation tile compiler가 만든다. base grid는 `288×288` world unit이며
   `1×1`, `2×1`, `1×2`, `2×2` modular panel을 조합한다.
+- authored floor master는 exact `288×288` full-bleed opaque PNG다. 네 가장자리는
+  동일한 calm base tone을 유지하고, 큰 저대비 plane만 사용해 stretch 또는
+  반복 시 개별 tile이 UI card처럼 드러나지 않아야 한다.
 - tile은 walkable region에 clip되고 void에는 생성되지 않는다. variant는
   `field_id`, layout fingerprint와 cell coordinate만으로 결정하며 global
   RNG나 frame time을 사용하지 않는다.
 - 12-unit gutter, chamfer와 낮은 대비 inset은 허용한다. 별도 decorative rail,
   random scratch와 combat cue보다 강한 high-frequency detail은 금지한다.
 - void는 near-black mass와 sparse system edge만 가진다.
-- 구조벽은 맵 가장자리와 중앙 구역 모두 바닥보다 명백히 밝은 pale-metal
-  mass, dark contour와 짧은 outer shadow를 사용한다. 열린 공간의 독립
-  엄폐물은 구조벽처럼 일렬로 연결하지 않는다.
+- 외곽 경계벽은 space-black 바깥과 격납고 내부를 분리하는 가장 무거운
+  pale-gray mass다. 내부 구조벽은 같은 family를 재사용하되 space-black band가
+  없는 더 단순한 pale-gray mass로 읽힌다. 둘 다 바닥보다 명백히 밝고 dark
+  contour와 짧은 outer shadow를 사용한다. 열린 공간의 독립 엄폐물은 더 낮고
+  작은 silhouette이며 구조벽처럼 일렬로 연결하지 않는다.
 - presentation-only decoration은 retained descriptor instance로 그리며
   field당 최대 24개다.
 - facility는 장식보다 대비가 높고 shape가 고유하다.
