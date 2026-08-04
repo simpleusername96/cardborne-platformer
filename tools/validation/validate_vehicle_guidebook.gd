@@ -113,8 +113,8 @@ func _run() -> void:
 				contract = panel.debug_contract()
 				_expect(
 					Array(Dictionary(contract["preview"])["asset_ids"])
-						== [&"hud/minimap_marker_objective_locked"],
-					"locked detail exposes only the approved locked silhouette"
+						== [&"actor/chaser"],
+					"locked detail reuses one muted actor silhouette without a HUD raster"
 				)
 				break
 		if not locked_id.is_empty():

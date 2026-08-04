@@ -677,10 +677,6 @@ func debug_threat_radar_contract() -> Dictionary:
 	return _hud.debug_threat_radar_contract()
 
 
-func debug_status_orbit_contract() -> Dictionary:
-	return _hud.debug_status_orbit_contract()
-
-
 func _show_modal(surface: String) -> void:
 	_dim.visible = true
 	_hud.visible = false

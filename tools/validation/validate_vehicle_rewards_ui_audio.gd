@@ -199,13 +199,9 @@ func _run() -> void:
 	var settings_contract: Dictionary = stage_ui.call("debug_gameplay_settings_contract")
 	_expect(int(settings_contract["difficulty_controls"]) == 0, "in-run settings expose no difficulty selector")
 	_expect(not bool(settings_contract["difficulty_copy_visible"]), "in-run settings contain no obsolete difficulty copy")
-	var orbit_contract: Dictionary = stage_ui.call("debug_status_orbit_contract")
 	_expect(
-		not bool(orbit_contract["enabled"])
-			and int(orbit_contract["maximum_badges"]) == 0
-			and not bool(orbit_contract["image_coded"])
-			and not bool(orbit_contract["semantic_icons"]),
-		"persistent status orbit is retired from the gameplay HUD"
+		not stage_ui.has_method("debug_status_orbit_contract"),
+		"persistent status orbit and its debug compatibility surface are removed"
 	)
 	stage_ui.call("clear_notifications")
 	for message in ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"]:

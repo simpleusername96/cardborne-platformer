@@ -384,11 +384,13 @@ func _initialize() -> void:
 		_expect(
 			not bool(slot["image_backed"])
 				and bool(slot["state_code_drawn"])
-				and bool(slot["semantic_icon_image_retained"])
+				and not bool(slot["semantic_icon_image_retained"])
+				and bool(slot["code_native_glyph"])
+				and not bool(slot["semantic_texture"])
 				and bool(slot["available_has_structural_rail"])
 				and not bool(slot["disabled_has_structural_slash"])
 				and not bool(slot["interior_filled"]),
-			"ready action slots use code-native structure around semantic icons"
+			"ready action slots use shared code-native glyphs and state structure"
 		)
 	await _validate_modal_matrix(ui)
 	await _validate_upgrade_matrix(ui)

@@ -36,7 +36,6 @@ func advance(
 	fast_builder: Callable,
 	minimap_builder: Callable,
 	threat_builder: Callable,
-	status_builder: Callable,
 	guidebook_builder: Callable
 ) -> Dictionary:
 	var update := {}
@@ -53,7 +52,6 @@ func advance(
 		_world_phase_seeded = true
 		update["minimap"] = minimap_builder.call(_static_minimap_dirty)
 		update["threat_radar"] = threat_builder.call()
-		update["status_orbit"] = status_builder.call()
 		_static_minimap_dirty = false
 	if _guidebook_dirty:
 		update["guidebook"] = guidebook_builder.call()

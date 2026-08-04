@@ -62,6 +62,22 @@ static func append_action_mesh_geometry(
 	)
 
 
+static func draw_action_glyph(
+	canvas_item: CanvasItem,
+	action_id: StringName,
+	center: Vector2,
+	scale: float,
+	palette: Dictionary
+) -> int:
+	return ActionGlyphRenderer.draw_glyph(
+		canvas_item,
+		action_id,
+		center,
+		scale,
+		palette
+	)
+
+
 static func validate_action_recipes() -> PackedStringArray:
 	return ActionGlyphRenderer.validate_recipes()
 

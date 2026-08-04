@@ -22,7 +22,6 @@ const EventCaptureFixture = preload(
 )
 const CODE_NATIVE_UI_STATE_OWNERS := [
 	"res://scripts/ui/vehicle_gameplay_hud.gd",
-	"res://scripts/ui/vehicle_status_orbit.gd",
 ]
 
 const EXPECTED_EVENT_IDS := [

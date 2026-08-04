@@ -222,7 +222,6 @@ var _crate_hit_receipt: Dictionary = {"crate":null, "t":INF}
 var _build_fast_hud_snapshot_callable: Callable
 var _minimap_snapshot_callable: Callable
 var _threat_radar_snapshot_callable: Callable
-var _status_orbit_snapshot_callable: Callable
 var _guidebook_snapshot_callable: Callable
 var _runtime_line_of_sight_callable: Callable
 var _query_enemy_radius_callable: Callable
@@ -300,7 +299,6 @@ func _ready() -> void:
 	)
 	_minimap_snapshot_callable = Callable(self, "_minimap_snapshot")
 	_threat_radar_snapshot_callable = Callable(self, "_threat_radar_snapshot")
-	_status_orbit_snapshot_callable = Callable(self, "_status_orbit_snapshot")
 	_guidebook_snapshot_callable = Callable(self, "_guidebook_snapshot")
 	_runtime_line_of_sight_callable = Callable(
 		self, "_runtime_has_line_of_sight"
@@ -465,7 +463,6 @@ func _process(delta: float) -> void:
 			_build_fast_hud_snapshot_callable,
 			_minimap_snapshot_callable,
 			_threat_radar_snapshot_callable,
-			_status_orbit_snapshot_callable,
 			_guidebook_snapshot_callable
 		)
 		if not hud_update.is_empty():
@@ -5203,7 +5200,6 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 	if include_world_channels:
 		snapshot["minimap"] = _minimap_snapshot(true)
 		snapshot["threat_radar"] = _threat_radar_snapshot()
-		snapshot["status_orbit"] = _status_orbit_snapshot()
 	if include_guidebook:
 		var build_snapshot := _build_snapshot()
 		snapshot["build_snapshot"] = build_snapshot
@@ -5431,14 +5427,6 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		snapshot["void_polygons"] = StageCatalog.void_polygons(current_stage_id)
 		snapshot["blocker_polygons"] = blocker_polygons
 	return snapshot
-
-
-func _status_orbit_snapshot() -> Dictionary:
-	return {
-		"center": get_canvas_transform() * player_position,
-		"states": cycle_runtime.hud_states(),
-		"reduced_motion": _reduced_motion_enabled(),
-	}
 
 
 func _combat_presentation_snapshot() -> Dictionary:

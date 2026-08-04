@@ -7,14 +7,10 @@ extends Control
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
-const StatusOrbit = preload("res://scripts/ui/vehicle_status_orbit.gd")
 const StageTransitionBanner = preload("res://scripts/ui/vehicle_stage_transition_banner.gd")
 const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
 const UiGlyphCatalog = preload(
 	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
-)
-const SemanticAssets = preload(
-	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
 
 const HEALTH_CLUSTER_SIZE := Vector2(216.0, 74.0)
@@ -218,17 +214,17 @@ class ActionRailSlot:
 				Art.IVORY_BRIGHT,
 				2.0
 			)
-		var icon := SemanticAssets.texture(
-			StringName("hud/action_%s" % action_id)
+		UiGlyphCatalog.draw_action_glyph(
+			self,
+			action_id,
+			center,
+			13.0,
+			{
+				&"primary":Color(state_color, 1.0 if available else 0.42),
+				&"secondary":Color(state_color, 0.78 if available else 0.34),
+				&"highlight":Color(Art.IVORY_BRIGHT, 1.0 if available else 0.40),
+			}
 		)
-		if icon != null:
-			var icon_size := Vector2.ONE * 28.0
-			draw_texture_rect(
-				icon,
-				Rect2(center - icon_size * 0.5, icon_size),
-				false,
-				Color(1.0, 1.0, 1.0, 1.0 if available else 0.42)
-			)
 		if not available and cooldown_ratio < 0.9999:
 			draw_arc(
 				center,
@@ -255,7 +251,8 @@ class ActionRailSlot:
 			"available":available,
 			"image_backed":false,
 			"state_code_drawn":true,
-			"semantic_icon_image_retained":true,
+			"semantic_icon_image_retained":false,
+			"code_native_glyph":true,
 			"disabled_not_color_only":true,
 			"available_has_structural_rail":available,
 			"disabled_has_structural_slash":not available,
@@ -269,9 +266,7 @@ class ActionRailSlot:
 			"minimum_size":custom_minimum_size,
 			"glyph_id":action_id,
 			"shared_glyph_recipe":not descriptor.is_empty(),
-			"semantic_texture":SemanticAssets.has_asset(
-				StringName("hud/action_%s" % action_id)
-			),
+			"semantic_texture":false,
 			"glyph_command_count":Array(
 				descriptor.get("commands", [])
 			).size(),
@@ -405,7 +400,6 @@ var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
 var _transition_banner: VehicleStageTransitionBanner
 var _threat_radar: VehicleThreatRadar
-var _status_orbit: VehicleStatusOrbit
 
 
 func _ready() -> void:
@@ -439,9 +433,6 @@ func _build() -> void:
 	_threat_radar = ThreatRadar.new()
 	_threat_radar.name = "ThreatRadar"
 	add_child(_threat_radar)
-	_status_orbit = StatusOrbit.new()
-	_status_orbit.name = "StatusOrbit"
-	add_child(_status_orbit)
 
 	_health_panel = Factory.surface(Factory.SURFACE_HUD, HEALTH_CLUSTER_SIZE)
 	_health_panel.name = "HealthPanel"
@@ -681,8 +672,6 @@ func update_snapshot(snapshot: Dictionary) -> void:
 		_minimap.set_snapshot(snapshot["minimap"])
 	if snapshot.has("threat_radar"):
 		_threat_radar.set_snapshot(snapshot["threat_radar"])
-	if snapshot.has("status_orbit"):
-		_status_orbit.set_snapshot(snapshot["status_orbit"])
 
 
 func notify(
@@ -776,10 +765,6 @@ func debug_health_animation_contract() -> Dictionary:
 
 func debug_threat_radar_contract() -> Dictionary:
 	return _threat_radar.debug_contract()
-
-
-func debug_status_orbit_contract() -> Dictionary:
-	return _status_orbit.debug_contract()
 
 
 func debug_contract(viewport_width: float) -> Dictionary:

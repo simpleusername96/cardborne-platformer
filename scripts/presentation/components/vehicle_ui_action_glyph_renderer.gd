@@ -166,6 +166,30 @@ static func append_mesh_geometry(
 	return appended_commands
 
 
+## Draws the same shared recipe into low-count Control surfaces such as HUD slots.
+static func draw_glyph(
+	canvas_item: CanvasItem,
+	action_id: StringName,
+	center: Vector2,
+	scale: float,
+	palette: Dictionary
+) -> int:
+	var drawn_commands := 0
+	for command_variant in Array(recipe(action_id).get("commands", [])):
+		var command := Dictionary(command_variant)
+		var points := PackedVector2Array()
+		for point_variant in Array(command.get("points", [])):
+			points.append(center + Vector2(point_variant) * scale)
+		if points.size() < 3:
+			continue
+		canvas_item.draw_colored_polygon(
+			points,
+			_tone_color(StringName(command.get("tone", &"primary")), palette)
+		)
+		drawn_commands += 1
+	return drawn_commands
+
+
 static func normalized_bounds(action_id: StringName) -> Rect2:
 	var result := Rect2()
 	var has_result := false

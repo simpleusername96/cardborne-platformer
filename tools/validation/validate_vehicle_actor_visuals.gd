@@ -21,9 +21,9 @@ const BOSS_VARIANTS: Array[StringName] = [
 	&"colossus", &"leviathan", &"titan", &"behemoth", &"crown",
 ]
 const MODULE_ASSETS: Array[StringName] = [
-	&"boss_node/active",
-	&"boss_node/damaged",
-	&"boss_node/resolved",
+	&"boss/node_active",
+	&"boss/node_damaged",
+	&"boss/node_resolved",
 ]
 
 var _failures: Array[String] = []

@@ -12,21 +12,21 @@ var guide_calls := 0
 func _initialize() -> void:
 	var presenter := Presenter.new()
 	var first := presenter.advance(
-		0.0, _fast, _minimap, _threat, _status, _guide
+		0.0, _fast, _minimap, _threat, _guide
 	)
 	_expect(first.has("health") and first.has("minimap") and first.has("guidebook"), "initial publication includes all dirty channels")
 	_expect(fast_calls == 1 and minimap_calls == 1 and static_minimap_calls == 1 and guide_calls == 1, "initial channel builders run once")
-	var quiet := presenter.advance(0.01, _fast, _minimap, _threat, _status, _guide)
+	var quiet := presenter.advance(0.01, _fast, _minimap, _threat, _guide)
 	_expect(quiet.is_empty(), "no channel republishes before its cadence or invalidation")
-	presenter.advance(0.04, _fast, _minimap, _threat, _status, _guide)
+	presenter.advance(0.04, _fast, _minimap, _threat, _guide)
 	_expect(fast_calls == 2 and minimap_calls == 1, "action channel runs at 20 Hz without rebuilding world markers")
-	presenter.advance(0.076, _fast, _minimap, _threat, _status, _guide)
+	presenter.advance(0.076, _fast, _minimap, _threat, _guide)
 	_expect(
 		minimap_calls == 2 and static_minimap_calls == 1,
 		"world markers phase-stagger after first publication, then run at 10 Hz while static geometry remains one-shot"
 	)
 	presenter.mark_guidebook_dirty()
-	presenter.advance(0.0, _fast, _minimap, _threat, _status, _guide)
+	presenter.advance(0.0, _fast, _minimap, _threat, _guide)
 	_expect(guide_calls == 2, "guidebook rebuilds only after explicit invalidation")
 	_finish()
 
@@ -45,10 +45,6 @@ func _minimap(include_static: bool) -> Dictionary:
 
 func _threat() -> Dictionary:
 	return {"contacts":[]}
-
-
-func _status() -> Dictionary:
-	return {"states":[]}
 
 
 func _guide() -> Dictionary:
