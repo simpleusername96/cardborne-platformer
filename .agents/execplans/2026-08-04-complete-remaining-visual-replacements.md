@@ -179,18 +179,18 @@ none entered production.
 
 ### Phase 8.4 - Simplify the review batch and republish the report
 
-- [ ] **8.4.1 Revise the visual contract and workbench.** Limit the minimap to
+- [x] **8.4.1 Revise the visual contract and workbench.** Limit the minimap to
   player, item, enemy, and boss markers; remove all seven defense/status raster
   overlays; consolidate nine projectile identities into one tailless energy-
   teardrop master; make repair and overdrive complete circular floor pads; rename
   unclear report groups. Reconcile 49 final, 47 authored, two reused, and 177
   retiring PNGs before generation.
-- [ ] **8.4.2 Generate the complete changed image set in one stage.** Using the
+- [x] **8.4.2 Generate the complete changed image set in one stage.** Using the
   canonical sheet as the actual image reference, generate and normalize exactly
   the shared projectile, circular repair pad, and circular overdrive pad. Remove
   superseded projectile, defense/status, and overdrive-lane candidates from the
   active TO-BE tree. Preserve all unaffected approved candidates.
-- [ ] **8.4.3 Republish the single AS-IS/TO-BE report.** Add one code-native
+- [x] **8.4.3 Republish the single AS-IS/TO-BE report.** Add one code-native
   minimap diagram containing exactly four marker roles, rebuild comparison plates,
   inventory, and `index.html`, then record fresh exact-hash technical readiness.
   Validate only report/candidate contracts and rendered report layout. Stop at
@@ -315,9 +315,10 @@ validation decision remains unresolved.
   source curation, and rejection of ungrounded projectile drafts.
 - Completed: Phases 6-8 produced the initial report; its 64-PNG media split was
   superseded before any production switch.
-- Current: Phase 8.4 revises the batch to 49 final PNGs and republishes the only
-  AS-IS/TO-BE report. Stop at the completed report boundary. Production and
-  runtime consumers remain unchanged. Next if resumed: 9.1.
+- Completed: Phase 8.4 revised the batch to 49 final PNGs and republished the only
+  AS-IS/TO-BE report with fresh exact-hash technical records. The user-directed
+  stop boundary is active: production and runtime consumers remain unchanged.
+  Next if resumed: 9.1.
 - Advance only when the named acceptance condition passes.
 
 ## Completion and Stop Conditions
