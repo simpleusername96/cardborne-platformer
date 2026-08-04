@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne World Tile & Wall Rework v2</title>
+  <style>
+    :root { color-scheme: dark; --bg:#070b11; --surface:#101923; --raised:#182431; --line:#465a6e; --text:#eef3f7; --muted:#9eadbc; --system:#58bfea; --reward:#f2b735; --danger:#f05a5f; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 system-ui,"Noto Sans KR",sans-serif; }
+    main { width:min(1184px,calc(100% - 32px)); margin:32px auto 64px; }
+    header { border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:24px; }
+    h1 { margin:0 0 8px; font-size:30px; }
+    h2 { margin:32px 0 14px; font-size:22px; }
+    h3 { margin:0 0 6px; font-size:17px; }
+    p { margin:6px 0; color:var(--muted); }
+    code { color:var(--system); }
+    .status { display:inline-block; margin-top:10px; padding:6px 10px; border:1px solid var(--reward); color:var(--reward); }
+    .notice { padding:16px; background:var(--surface); border-left:4px solid var(--danger); }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+    .card { min-width:0; padding:16px; background:var(--surface); border:1px solid var(--line); }
+    .media { display:flex; align-items:center; justify-content:center; min-height:220px; margin-top:12px; padding:16px; overflow:auto; background:#0c141d; }
+    .media img { max-width:100%; height:auto; image-rendering:auto; }
+    .native img { max-width:none; }
+    .facts { margin:12px 0 0; padding-left:20px; color:var(--muted); }
+    .pass { color:#72d6c4; }
+    .fail { color:var(--danger); }
+    .wide { grid-column:1/-1; }
+    a { color:var(--system); }
+    @media (max-width:760px) { .grid { grid-template-columns:1fr; } .wide { grid-column:auto; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>World Tile & Wall Rework v2</h1>
+    <p>타일·벽·서비스 레일의 현재 문제와 새 edge-safe PNG 후보를 직접 비교하는 임시 검토 페이지입니다.</p>
+    <span class="status">CANDIDATES GENERATED · NOT APPLIED</span>
+  </header>
+
+  <div class="notice">
+    <strong>확인된 원인:</strong> 기존 PNG의 투명 여백과 누끼 잔여 픽셀을 임의 크기의 fragment에 늘렸고,
+    단일 2:1 벽 이미지를 가로·세로 구조물 모두에 비균일 fit했습니다. 따라서 이미지 교체와 runtime fitting 수정이 함께 필요합니다.
+  </div>
+
+  <h2>1. Floor tile</h2>
+  <section class="grid">
+    <article class="card native">
+      <h3>AS-IS — rejected</h3>
+      <p>투명 margin, 검은 speckle/fringe, fragment마다 반복되는 외곽 contour.</p>
+      <div class="media"><img src="../../../art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png" alt="Current floor tile"></div>
+      <ul class="facts"><li class="fail">경계 누끼 오염</li><li class="fail">stretch 시 gutter가 과장됨</li></ul>
+    </article>
+    <article class="card native">
+      <h3>TO-BE v2 — candidate</h3>
+      <p>288×288, 완전 불투명, 2색, 네 방향 edge delta 0. 외곽 장식 없이 한 개의 낮은 대비 seam만 유지.</p>
+      <div class="media"><img src="candidates/world-rework-v2/floor/floor-tile-candidate-v2.png" alt="New floor tile candidate"></div>
+      <ul class="facts"><li class="pass">누끼 및 alpha fringe 없음</li><li class="pass">edge-to-edge 배치 가능</li></ul>
+    </article>
+    <article class="card wide">
+      <h3>3×3 repeat test</h3>
+      <div class="media"><img src="candidates/world-rework-v2/floor/floor-tile-repeat-preview-v2.png" alt="Floor tile repeat test"></div>
+    </article>
+  </section>
+
+  <h2>2. Structural wall</h2>
+  <section class="grid">
+    <article class="card native">
+      <h3>AS-IS — rejected</h3>
+      <p>흰색 UI button처럼 보이며, 투명 cap과 내부 frame이 stretch될 때 벽 join을 끊습니다.</p>
+      <div class="media"><img src="../../../art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png" alt="Current wall segment"></div>
+      <ul class="facts"><li class="fail">월드 mass보다 UI control에 가까움</li><li class="fail">세로 rect 비균일 왜곡</li></ul>
+    </article>
+    <article class="card native">
+      <h3>TO-BE v2 — candidate</h3>
+      <p>192×96, 완전 불투명, 4색의 pale-metal mass. 좌우 full-bleed edge delta 0.</p>
+      <div class="media"><img src="candidates/world-rework-v2/wall/wall_segment_192x96_candidate_v2.png" alt="New wall segment candidate"></div>
+      <ul class="facts"><li class="pass">flat planes only</li><li class="pass">반복 cap gap 없음</li></ul>
+    </article>
+    <article class="card wide">
+      <h3>Five-segment repeat test</h3>
+      <div class="media"><img src="candidates/world-rework-v2/wall/wall_segment_repeat_x5_v2.png" alt="Wall repeat test"></div>
+    </article>
+  </section>
+
+  <h2>3. Service rail</h2>
+  <section class="grid">
+    <article class="card native">
+      <h3>AS-IS — rejected</h3>
+      <p>투명 여백과 edge residue가 확대·회전되면서 부유하는 선처럼 보입니다.</p>
+      <div class="media"><img src="../../../art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png" alt="Current service rail"></div>
+    </article>
+    <article class="card native">
+      <h3>TO-BE v2 — candidate</h3>
+      <p>288×48, 완전 불투명, 정확히 3색, 좌우 edge delta 0. end cap이나 장식이 없습니다.</p>
+      <div class="media"><img src="candidates/world-rework-v2/rail/service_rail_288x48.png" alt="New service rail candidate"></div>
+    </article>
+    <article class="card">
+      <h3>Horizontal repeat</h3>
+      <div class="media"><img src="candidates/world-rework-v2/rail/preview-repeated-horizontal.png" alt="Rail repeat test"></div>
+    </article>
+    <article class="card">
+      <h3>Rotation and stretch</h3>
+      <div class="media"><img src="candidates/world-rework-v2/rail/preview-rotated-elongated.png" alt="Rail rotation and stretch test"></div>
+    </article>
+  </section>
+
+  <h2>4. Separate facility-overlay defect</h2>
+  <section class="grid">
+    <article class="card">
+      <h3>Current runtime capture</h3>
+      <p>이 화면은 벽이 아니라 공격력 증폭 장판입니다. facility PNG 위에 disk, ring, timer segment 8개가 중첩되어 동심원처럼 보입니다.</p>
+      <div class="media"><img src="candidates/world-rework-v2/current-runtime-overdrive.png" alt="Current overdrive pad runtime capture"></div>
+    </article>
+    <article class="card">
+      <h3>Required runtime correction</h3>
+      <ul class="facts">
+        <li>facility PNG 하나와 필요할 때만 진행 boundary 하나를 사용</li>
+        <li><code>disk_mask + ring + 8 timer segments</code> 중첩 제거</li>
+        <li>벽은 방향에 맞춰 회전하고 비균일 fit 금지</li>
+        <li>월드 texture에 linear filtering 적용</li>
+        <li>topology, collision, navigation은 변경하지 않음</li>
+      </ul>
+    </article>
+  </section>
+
+  <h2>Authority and status</h2>
+  <p>Binding specification: <a href="../VISUAL_SYSTEM.md">VISUAL_SYSTEM.md</a></p>
+  <p>Style reference: <a href="../cardborne-universal-art-style-reference.png">cardborne-universal-art-style-reference.png</a>, SHA-256 <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>.</p>
+  <p>Canonical sheet was supplied as the actual image reference for all three candidate-generation tasks. These candidates are comparison evidence only and have not replaced production.</p>
+</main>
+</body>
+</html>
