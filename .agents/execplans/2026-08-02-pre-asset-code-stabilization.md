@@ -366,6 +366,11 @@ separation, validation scope, and no-approval execution behavior are closed.
   renderer interpolation or lower cadence.
 - 2026-08-05: Kept only one final broad gate; no milestone-by-milestone full validation
   remains.
+- 2026-08-05: Follow-up hot-path review confirmed the runtime schedule is rebuilt every
+  physics tick so due lanes are never replayed between buckets. Same-cell enemy motion
+  now updates cached grid coordinates without rebuilding membership, and the exact
+  movement solver reuses the safe-cell result already computed by the runtime cover
+  owner.
 
 ## Progress
 
