@@ -4,10 +4,6 @@ extends Control
 ## Shared, presentation-only upgrade-family glyph recipes. Upgrade cards and
 ## production evidence draw through the same normalized command data.
 
-const SemanticAssets = preload(
-	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
-)
-
 const FAMILY_IDS: Array[StringName] = [
 	&"primary",
 	&"seeker",
@@ -395,35 +391,24 @@ func configure(family: StringName, palette: Dictionary) -> void:
 
 
 func _draw() -> void:
-	var texture := SemanticAssets.texture(asset_id(_family))
-	if texture == null:
-		return
-	var extent := minf(size.x, size.y)
-	var image_size := Vector2.ONE * extent
-	draw_texture_rect(
-		texture,
-		Rect2(size * 0.5 - image_size * 0.5, image_size),
-		false,
-		Color.WHITE
-	)
+	draw_glyph(self, _family, size * 0.5, _draw_scale(), _palette)
 
 
 func local_content_bounds() -> Rect2:
-	var extent := minf(size.x, size.y)
-	return Rect2(size * 0.5 - Vector2.ONE * extent * 0.5, Vector2.ONE * extent)
+	return glyph_bounds(_family, size * 0.5, _draw_scale())
 
 
 func debug_contract() -> Dictionary:
 	var local_bounds := local_content_bounds()
-	var semantic_asset_id := asset_id(_family)
 	return {
 		"family":_family,
-		"asset_id":semantic_asset_id,
+		"asset_id":asset_id(_family),
 		"control_rect":get_global_rect(),
 		"content_rect":Rect2(global_position + local_bounds.position, local_bounds.size),
 		"command_count":Array(recipe(_family).get("commands", [])).size(),
-		"semantic_asset":SemanticAssets.has_asset(semantic_asset_id),
-		"texture_count":1 if SemanticAssets.has_asset(semantic_asset_id) else 0,
+		"semantic_asset":false,
+		"texture_count":0,
+		"code_native":true,
 	}
 
 
@@ -433,9 +418,7 @@ static func family_ids() -> Array[StringName]:
 
 static func asset_id(family: StringName) -> StringName:
 	var normalized := family if family in FAMILY_IDS else &"secondary"
-	if normalized == &"seeker":
-		return &"hud/action_seeker"
-	return StringName("hud/upgrade_%s" % normalized)
+	return StringName("code_native/upgrade_%s" % normalized)
 
 
 static func recipe(family: StringName) -> Dictionary:

@@ -191,8 +191,10 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 		var geometry := card.debug_geometry_contract()
 		var glyph := Dictionary(geometry["glyph"])
 		_expect(
-			bool(glyph["semantic_asset"]) and int(glyph["texture_count"]) == 1,
-			"%s body art resolves exactly one semantic texture" % family
+			bool(glyph["code_native"])
+				and not bool(glyph["semantic_asset"])
+				and int(glyph["texture_count"]) == 0,
+			"%s body art uses the shared code-native glyph recipe" % family
 		)
 		_expect_glyph_geometry(
 			glyph,

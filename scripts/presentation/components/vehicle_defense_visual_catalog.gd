@@ -1,28 +1,24 @@
 class_name VehicleDefenseVisualCatalog
 extends RefCounted
 
-## Defensive and area-effect identities are deliberately topology-distinct.
-## Protection and damage rules stay in their gameplay owners.
+## Code-native defensive feedback identities. Protection and damage rules stay
+## in gameplay owners; this catalog never points at authored raster assets.
 
 const DESCRIPTORS := {
 	&"barrier": {
-		"asset": &"state/player_barrier_plate",
-		"topology": &"segmented_forward_plates",
+		"topology": &"open_ring",
 		"function": &"defense",
 	},
 	&"ion_field": {
-		"asset": &"state/player_ion_emitter",
-		"topology": &"hex_lightning_emitter",
+		"topology": &"radius_ring",
 		"function": &"offense",
 	},
 	&"generator_shield": {
-		"asset": &"state/enemy_generator_shield_source",
-		"topology": &"radial_source_nodes",
+		"topology": &"source_tint",
 		"function": &"enemy_shield_source",
 	},
 	&"shield_escort": {
-		"asset": &"state/enemy_shield_escort_plate",
-		"topology": &"forward_slab",
+		"topology": &"source_tint",
 		"function": &"enemy_mobile_cover",
 	},
 }

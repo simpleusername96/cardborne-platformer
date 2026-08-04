@@ -8,9 +8,6 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const DamageSources = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const CombatMeshIcon = preload("res://scripts/ui/vehicle_combat_mesh_icon.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
-const SemanticAssets = preload(
-	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
-)
 
 const INPUT_GUARD_SECONDS := 0.35
 
@@ -29,18 +26,15 @@ class AttributeIcon:
 
 	func _draw() -> void:
 		var center := size * 0.5
-		var texture := SemanticAssets.texture(
-			StringName("projectile/hostile_%s" % attribute)
-		)
-		if texture == null:
-			return
-		var extent := Vector2.ONE * 28.0
-		draw_texture_rect(
-			texture,
-			Rect2(center - extent * 0.5, extent),
-			false,
-			Color.WHITE
-		)
+		var color := Art.attack_color(attribute)
+		var points := PackedVector2Array([
+			center + Vector2(12.0, 0.0),
+			center + Vector2(-5.0, -8.0),
+			center + Vector2(-11.0, 0.0),
+			center + Vector2(-5.0, 8.0),
+		])
+		draw_colored_polygon(points, color)
+		draw_polyline(PackedVector2Array([points[0], points[1], points[2], points[3], points[0]]), Art.INK, 2.0, true)
 
 
 var _snapshot: Dictionary = {}

@@ -7,7 +7,7 @@ extends RefCounted
 const DESCRIPTORS := {
 	&"seeker": {
 		"asset": &"secondary/seeker",
-		"projectile_asset": &"projectile/player_seeker",
+		"projectile_asset": &"projectile/energy_teardrop",
 		"silhouette": &"guided_forward_wedge",
 		"motion": &"homing",
 	},

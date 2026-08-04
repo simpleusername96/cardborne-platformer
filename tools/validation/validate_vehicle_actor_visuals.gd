@@ -21,16 +21,9 @@ const BOSS_VARIANTS: Array[StringName] = [
 	&"colossus", &"leviathan", &"titan", &"behemoth", &"crown",
 ]
 const MODULE_ASSETS: Array[StringName] = [
-	&"boss_module/forge_plate_active",
-	&"boss_module/forge_plate_disabled",
-	&"boss_module/segment_lock_active",
-	&"boss_module/segment_lock_disabled",
-	&"boss_module/relay_positive",
-	&"boss_module/relay_negative",
-	&"boss_module/route_switch",
-	&"boss_module/armor_car",
-	&"boss_module/crown_lattice",
-	&"boss_module/crown_pylon",
+	&"boss_node/active",
+	&"boss_node/damaged",
+	&"boss_node/resolved",
 ]
 
 var _failures: Array[String] = []
@@ -96,7 +89,7 @@ func _validate_actor_images() -> void:
 		_validate_unique_visual_signature(module_asset, signatures)
 	_expect(
 		signatures.size() == MODULE_ASSETS.size(),
-		"all objective module/state images remain distinct"
+		"the three shared objective node states remain distinct"
 	)
 
 
