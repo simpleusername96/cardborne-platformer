@@ -523,6 +523,18 @@ func _check_hot_path_guards(run) -> void:
 		open_cover
 	)
 	_expect(open_result == open_from + open_motion, "open-space motion takes the safe fast path")
+	var open_known_result: Vector2 = Rules.move_circle_with_extra_known_safe(
+		open_from,
+		open_motion,
+		12.0,
+		StringName(run.current_stage_id),
+		open_cover,
+		bool(run._motion_cover_static_safe)
+	)
+	_expect(
+		open_known_result == open_result,
+		"cached safe-cell motion preserves the exact open-space result"
+	)
 	if not run._active_tactical_layout.cover_rects.is_empty():
 		var cover := Rect2(run._active_tactical_layout.cover_rects[0])
 		var cover_from := cover.get_center() - Vector2(cover.size.x * 0.5 + 120.0, 0.0)

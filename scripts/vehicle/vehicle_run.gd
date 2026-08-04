@@ -153,6 +153,7 @@ var boss_practice := BossPracticeSession.new()
 var _runtime_blockers: Array[Rect2] = []
 var _runtime_bulkheads: Array[Rect2] = []
 var _runtime_structural_walls: Array[Rect2] = []
+var _motion_cover_static_safe := false
 
 var player_position := Vector2.ZERO
 var player_velocity := Vector2.ZERO
@@ -1524,10 +1525,10 @@ func _runtime_motion_cover_rects(
 	radius: float
 ) -> Array[Rect2]:
 	_motion_cover_query.clear()
-	var static_safe := StageCatalog.is_fast_motion_clear(
+	_motion_cover_static_safe = StageCatalog.is_fast_motion_clear(
 		current_stage_id, from, to, radius
 	)
-	if field_layout != null and not static_safe:
+	if field_layout != null and not _motion_cover_static_safe:
 		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _motion_cover_query
 		)
@@ -2210,7 +2211,10 @@ func _update_scheduled_ordinary_enemy(
 		or enemy.alive != previous_alive
 		or enemy.active != previous_active
 	):
-		enemy_grid.update_actor(enemy)
+		if enemy.alive and enemy.active and previous_alive and previous_active:
+			enemy_grid.update_actor_position(enemy)
+		else:
+			enemy_grid.update_actor(enemy)
 	if enemy.alive and enemy.pos != previous_position:
 		_wear_motion_candidates.append(enemy)
 
@@ -2268,7 +2272,10 @@ func _record_motion_only_enemy_change(
 		enemy.pos != previous_position
 		or enemy.active != previous_active
 	):
-		enemy_grid.update_actor(enemy)
+		if enemy.alive and enemy.active and previous_active:
+			enemy_grid.update_actor_position(enemy)
+		else:
+			enemy_grid.update_actor(enemy)
 	if enemy.alive and enemy.pos != previous_position:
 		_wear_motion_candidates.append(enemy)
 
@@ -3190,13 +3197,14 @@ func _enemy_contact_damage(enemy: EnemyState, base_damage: float) -> float:
 
 func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: bool) -> Vector2:
 	var destination := position + motion
-	var result := Rules.move_circle_with_extra(
+	var extra_cover := _runtime_motion_cover_rects(position, destination, radius)
+	var result := Rules.move_circle_with_extra_known_safe(
 		position,
 		motion,
 		radius,
-		false,
 		current_stage_id,
-		_runtime_motion_cover_rects(position, destination, radius)
+		extra_cover,
+		_motion_cover_static_safe
 	)
 	var clearance := radius + CRATE_COLLISION_RADIUS
 	if not _position_clear_of_crates(result, clearance):

@@ -205,6 +205,31 @@ static func move_circle(position: Vector2, motion: Vector2, radius: float, _unus
 static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: float, _unused_dynamic_blocker: bool, stage_id: StringName, extra_cover: Array) -> Vector2:
 	if extra_cover.is_empty() and Catalog.is_fast_motion_clear(stage_id, position, position + motion, radius):
 		return position + motion
+	return _move_circle_with_extra_exact(position, motion, radius, stage_id, extra_cover)
+
+
+static func move_circle_with_extra_known_safe(
+	position: Vector2,
+	motion: Vector2,
+	radius: float,
+	stage_id: StringName,
+	extra_cover: Array,
+	known_fast_motion_clear: bool
+) -> Vector2:
+	## Reuses a caller's exact safe-cell result; all non-safe paths keep the
+	## original solver and candidate ordering.
+	if extra_cover.is_empty() and known_fast_motion_clear:
+		return position + motion
+	return _move_circle_with_extra_exact(position, motion, radius, stage_id, extra_cover)
+
+
+static func _move_circle_with_extra_exact(
+	position: Vector2,
+	motion: Vector2,
+	radius: float,
+	stage_id: StringName,
+	extra_cover: Array
+) -> Vector2:
 	var bounds := world_rect(stage_id)
 	var result := position
 	var attempt_x := Vector2(
