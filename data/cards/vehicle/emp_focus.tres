@@ -22,6 +22,7 @@ title_key = "UPGRADE_EMP_FOCUS_TITLE"
 description_key = "UPGRADE_EMP_FOCUS_DESC"
 summary_keys = Array[String](["UPGRADE_EMP_FOCUS_DESC", "UPGRADE_EMP_FOCUS_DESC"])
 family = &"skill"
+artwork_asset_id = &"effect/emp_release"
 max_level = 2
 source_tags = Array[StringName]([&"level_up", &"boss"])
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1"), SubResource("Modifier_2")])

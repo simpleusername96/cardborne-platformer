@@ -14,8 +14,8 @@ const UpgradeChoiceCard = preload(
 const UpgradeChoicePanel = preload(
 	"res://scripts/ui/vehicle_upgrade_choice_panel.gd"
 )
-const UpgradeGlyphRenderer = preload(
-	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
@@ -49,7 +49,7 @@ var _theme: Theme
 func _initialize() -> void:
 	_theme = load(THEME_PATH) as Theme
 	_validate_theme_contract()
-	_validate_glyph_recipes()
+	_validate_authored_artwork()
 	var catalog := Catalog.new()
 	await _validate_intent_contract(catalog)
 	await _validate_family_body_art(catalog)
@@ -130,24 +130,21 @@ func _validate_theme_contract() -> void:
 	)
 
 
-func _validate_glyph_recipes() -> void:
-	for error in UpgradeGlyphRenderer.validate_recipes():
-		failures.append(error)
-	var ids := UpgradeGlyphRenderer.family_ids()
-	_expect(ids.size() == 8, "shared renderer exposes all eight upgrade families")
-	var seen := {}
-	for family in ids:
-		seen[family] = true
-		var bounds := UpgradeGlyphRenderer.glyph_bounds(family)
-		_expect(
-			bounds.has_area()
-				and bounds.position.x >= -1.1
-				and bounds.position.y >= -1.1
-				and bounds.end.x <= 1.1
-				and bounds.end.y <= 1.1,
-			"%s glyph commands stay inside normalized callable bounds" % family
-		)
-	_expect(seen.size() == 8, "upgrade glyph family IDs are unique")
+func _validate_authored_artwork() -> void:
+	for asset_id in [
+		&"upgrade/ion_field",
+		&"upgrade/element_thermal",
+		&"upgrade/element_toxin",
+		&"upgrade/element_cryo",
+		&"upgrade/dash_wake",
+		&"upgrade/defense_matrix",
+		&"upgrade/system_relay",
+		&"upgrade/mobility_thruster",
+		&"upgrade/pickup_magnet",
+		&"upgrade/hull_reinforcement",
+	]:
+		_expect(SemanticAssets.has_asset(asset_id), "%s authored upgrade art is indexed" % asset_id)
+		_expect(SemanticAssets.texture(asset_id) != null, "%s authored upgrade art loads" % asset_id)
 
 
 func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
@@ -157,8 +154,8 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 	await process_frame
 	card.set_compact_mode(true)
 	card.size = card.custom_minimum_size
-	for family in UpgradeGlyphRenderer.family_ids():
-		var definition := _first_family_definition(catalog, family)
+	for definition in catalog.all_definitions():
+		var family := definition.family
 		_expect(definition != null, "%s has a live upgrade card fixture" % family)
 		if definition == null:
 			continue
@@ -176,7 +173,7 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 		_expect(
 			Vector2(contract["body_art_size"]) == Vector2(88.0, 88.0)
 				and StringName(contract["body_art_asset_id"])
-					== UpgradeGlyphRenderer.asset_id(family)
+					!= &""
 				and Array(contract["body_order"]) == [
 					"family",
 					"title",
@@ -189,17 +186,11 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 			"%s uses the compact split-dossier artwork contract" % family
 		)
 		var geometry := card.debug_geometry_contract()
-		var glyph := Dictionary(geometry["glyph"])
+		var artwork := Dictionary(geometry["artwork"])
 		_expect(
-			bool(glyph["code_native"])
-				and not bool(glyph["semantic_asset"])
-				and int(glyph["texture_count"]) == 0,
-			"%s body art uses the shared code-native glyph recipe" % family
-		)
-		_expect_glyph_geometry(
-			glyph,
-			card.get_global_rect(),
-			"%s body artwork" % family
+			StringName(artwork["asset_id"]) != &""
+				and bool(artwork["texture_loaded"]),
+			"%s body art uses one authored semantic texture" % family
 		)
 	card.queue_free()
 	await process_frame
@@ -396,9 +387,9 @@ func _validate_panel(
 	var expected_size := (
 		Vector2(280.0, 378.0)
 		if compact
-		else Vector2(352.0, 432.0)
+		else Vector2(360.0, 456.0)
 	)
-	var expected_gap := 12.0 if compact else 20.0
+	var expected_gap := 12.0 if compact else 16.0
 	var prior_card := Rect2()
 	var card_count := 0
 	for card_variant in geometry["cards"]:
@@ -446,7 +437,7 @@ func _validate_panel(
 				and Vector2(card_contract["body_art_size"]) == (
 					Vector2(88.0, 88.0)
 					if compact
-					else Vector2(120.0, 120.0)
+					else Vector2(128.0, 128.0)
 				),
 			"%s card keeps one correctly sized lower artwork" % context
 		)
@@ -534,34 +525,6 @@ func _expect_card_geometry(card: Dictionary, context: String) -> void:
 					label["text"],
 				]
 			)
-	_expect_glyph_geometry(
-		Dictionary(card["glyph"]),
-		Rect2(card["rect"]),
-		context
-	)
-
-
-func _expect_glyph_geometry(
-	glyph: Dictionary,
-	card_rect: Rect2,
-	context: String
-) -> void:
-	var control_rect := Rect2(glyph["control_rect"]).grow(0.5)
-	var content_rect := Rect2(glyph["content_rect"])
-	_expect(
-		int(glyph["command_count"]) >= 3,
-		"%s glyph has a complete multi-plane recipe" % context
-	)
-	_expect(
-		control_rect.encloses(content_rect),
-		"%s glyph commands stay inside their control" % context
-	)
-	_expect(
-		card_rect.grow(0.5).encloses(content_rect),
-		"%s glyph commands stay inside the card" % context
-	)
-
-
 func _first_family_definition(
 	catalog: VehicleUpgradeCatalog,
 	family: StringName

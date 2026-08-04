@@ -9,6 +9,7 @@ title_key = "UPGRADE_RICOCHET_MATRIX_TITLE"
 description_key = "UPGRADE_RICOCHET_MATRIX_DESC"
 summary_keys = Array[String](["UPGRADE_RICOCHET_MATRIX_DESC"])
 family = &"primary"
+artwork_asset_id = &"projectile/energy_teardrop"
 max_level = 1
 source_tags = Array[StringName]([&"level_up", &"boss"])
 behavior_ids = Array[StringName]([&"ricochet_matrix"])

@@ -9,6 +9,7 @@ title_key = "UPGRADE_CONCENTRATED_TOXIN_TITLE"
 description_key = "UPGRADE_CONCENTRATED_TOXIN_DESC"
 summary_keys = Array[String](["UPGRADE_CONCENTRATED_TOXIN_DESC", "UPGRADE_CONCENTRATED_TOXIN_DESC"])
 family = &"element"
+artwork_asset_id = &"upgrade/element_toxin"
 max_level = 2
 requirement = &"toxin_core"
 source_tags = Array[StringName]([&"level_up", &"boss"])

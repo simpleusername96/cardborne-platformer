@@ -7,6 +7,7 @@ extends RefCounted
 const RESULT_PREFIX := "PERFORMANCE_RESULT "
 const FRAME_THRESHOLDS: Array[float] = [20.0, 25.0, 33.3, 50.0]
 const MONITOR_SAMPLE_INTERVAL := 0.1
+const FRAME_ATTRIBUTION_CAP := 64
 
 var scenario_id: StringName
 var output_path := ""
@@ -22,6 +23,10 @@ var _draw_calls: Array[float] = []
 var _process_ms: Array[float] = []
 var _engine_physics_ms: Array[float] = []
 var _subsystem_samples: Dictionary = {}
+var _frame_physics_ms := 0.0
+var _frame_subsystems: Dictionary = {}
+var _frame_serial := 0
+var _slow_frame_samples: Array[Dictionary] = []
 var _max_consecutive_over_33 := 0
 var _consecutive_over_33 := 0
 var _initial_static_memory := 0.0
@@ -44,12 +49,14 @@ func configure(id: StringName, path: String, warmup: float = 10.0, duration: flo
 func record_physics(total_ms: float, subsystem_ms: Dictionary) -> void:
 	if not _is_sampling():
 		return
+	_frame_physics_ms += total_ms
 	_physics_ms.append(total_ms)
 	for key in subsystem_ms:
 		if not _subsystem_samples.has(key):
 			_subsystem_samples[key] = []
 		var samples: Array = _subsystem_samples[key]
 		samples.append(float(subsystem_ms[key]))
+		_frame_subsystems[key] = float(_frame_subsystems.get(key, 0.0)) + float(subsystem_ms[key])
 
 
 func advance_frame(
@@ -61,6 +68,7 @@ func advance_frame(
 		return true
 	_elapsed += delta
 	if _is_sampling():
+		_frame_serial += 1
 		if not OS.has_feature("web"):
 			_native_focus_samples += 1
 			if not DisplayServer.window_is_focused():
@@ -69,6 +77,7 @@ func advance_frame(
 		_frame_ms.append(frame_ms)
 		_presentation_ms.append(presentation_ms)
 		_hud_ms.append(hud_ms)
+		_record_frame_attribution(frame_ms, presentation_ms, hud_ms)
 		if frame_ms > 33.3:
 			_consecutive_over_33 += 1
 			_max_consecutive_over_33 = maxi(_max_consecutive_over_33, _consecutive_over_33)
@@ -80,6 +89,9 @@ func advance_frame(
 			_draw_calls.append(float(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)))
 			_process_ms.append(float(Performance.get_monitor(Performance.TIME_PROCESS)) * 1000.0)
 			_engine_physics_ms.append(float(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0)
+	else:
+		_frame_physics_ms = 0.0
+		_frame_subsystems.clear()
 	return _elapsed >= warmup_seconds + sample_seconds
 
 
@@ -141,6 +153,11 @@ func finish(
 		"engine_process": _distribution(_process_ms),
 		"engine_physics": _distribution(_engine_physics_ms),
 		"draw_calls": _distribution(_draw_calls),
+		"frame_attribution": {
+			"sample_count": _slow_frame_samples.size(),
+			"slow_frame_samples": _slow_frame_samples.duplicate(true),
+			"p99_hitch": _p99_attribution(),
+		},
 		"subsystems": subsystem_stats,
 		"max_consecutive_frames_over_33_3_ms": _max_consecutive_over_33,
 		"counts": counts.duplicate(true),
@@ -169,6 +186,51 @@ func finish(
 		else:
 			file.store_string(JSON.stringify(result, "\t"))
 	return result
+
+
+func _record_frame_attribution(
+	frame_ms: float,
+	presentation_ms: float,
+	hud_ms: float
+) -> void:
+	var should_capture := _slow_frame_samples.size() < FRAME_ATTRIBUTION_CAP
+	if not should_capture and not _slow_frame_samples.is_empty():
+		should_capture = frame_ms > float(_slow_frame_samples[-1].get("frame_ms", 0.0))
+	if should_capture:
+		var engine_process_ms := float(Performance.get_monitor(Performance.TIME_PROCESS)) * 1000.0
+		var engine_physics_ms := float(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0
+		var attributed_ms := _frame_physics_ms + presentation_ms + hud_ms
+		var sample := {
+			"frame_serial": _frame_serial,
+			"frame_ms": frame_ms,
+			"physics_ms": _frame_physics_ms,
+			"presentation_ms": presentation_ms,
+			"hud_ms": hud_ms,
+			"engine_process_ms": engine_process_ms,
+			"engine_physics_ms": engine_physics_ms,
+			"render_cpu_ms": null,
+			"render_gpu_ms": null,
+			"wait_or_unattributed_ms": maxf(0.0, frame_ms - attributed_ms),
+			"subsystems": _frame_subsystems.duplicate(true),
+		}
+		if _slow_frame_samples.size() < FRAME_ATTRIBUTION_CAP:
+			_slow_frame_samples.append(sample)
+		else:
+			_slow_frame_samples[-1] = sample
+		_slow_frame_samples.sort_custom(_sort_frame_samples)
+	_frame_physics_ms = 0.0
+	_frame_subsystems.clear()
+
+
+static func _sort_frame_samples(a: Dictionary, b: Dictionary) -> bool:
+	return float(a.get("frame_ms", 0.0)) > float(b.get("frame_ms", 0.0))
+
+
+func _p99_attribution() -> Dictionary:
+	if _slow_frame_samples.is_empty():
+		return {}
+	var index := clampi(ceili(float(_frame_serial) * 0.01) - 1, 0, _slow_frame_samples.size() - 1)
+	return Dictionary(_slow_frame_samples[index]).duplicate(true)
 
 
 static func get_window_size(viewport: Viewport) -> Vector2i:

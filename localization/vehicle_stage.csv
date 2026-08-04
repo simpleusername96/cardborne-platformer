@@ -192,7 +192,6 @@ NOTIFY_EXPERIENCE_RECALL,"경험치 회수 · 모든 원석이 기체로 이동�
 NOTIFY_LEVEL_UP,"레벨 상승 · 새 회로를 선택하세요.","Level up · Choose a new circuit."
 NOTIFY_BOSS_SHARD,"보스 원석 노출 · 회수하면 스테이지 보상이 열립니다.","Boss shard exposed · Collect it to open the stage reward."
 UPGRADE_FAMILY_PRIMARY,"주무기","Primary"
-UPGRADE_FAMILY_SEEKER,"보조 무기","Secondary Weapons"
 UPGRADE_FAMILY_SECONDARY,"보조 무기","Secondary Weapons"
 UPGRADE_FAMILY_DEFENSE,"방어","Defense"
 UPGRADE_FAMILY_DASH,"대시","Dash"

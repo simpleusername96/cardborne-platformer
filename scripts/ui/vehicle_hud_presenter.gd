@@ -4,8 +4,11 @@ extends RefCounted
 ## Invalidates HUD channels independently so closed/static UI data does not
 ## allocate on the combat cooldown timer.
 
-const ACTION_INTERVAL := 0.05
-const WORLD_MARKER_INTERVAL := 0.10
+## HUD is presentation-only; ten hertz action state and five hertz world
+## markers are sufficient for readability while avoiding a rebuild on every
+## render frame under the peak-horde workload.
+const ACTION_INTERVAL := 0.10
+const WORLD_MARKER_INTERVAL := 0.20
 const INITIAL_WORLD_PHASE_OFFSET := ACTION_INTERVAL * 0.5
 
 var _action_timer := 0.0
@@ -13,6 +16,7 @@ var _world_timer := 0.0
 var _world_phase_seeded := false
 var _static_minimap_dirty := true
 var _guidebook_dirty := true
+var _last_fast_snapshot: Dictionary = {}
 
 
 func reset() -> void:
@@ -21,6 +25,7 @@ func reset() -> void:
 	_world_phase_seeded = false
 	_static_minimap_dirty = true
 	_guidebook_dirty = true
+	_last_fast_snapshot.clear()
 
 
 func mark_guidebook_dirty() -> void:
@@ -43,7 +48,17 @@ func advance(
 	_world_timer -= delta
 	if _action_timer <= 0.0:
 		_action_timer = ACTION_INTERVAL
-		update.merge(Dictionary(fast_builder.call()), true)
+		var fast_snapshot := Dictionary(fast_builder.call())
+		for key_variant in fast_snapshot:
+			var key := StringName(key_variant)
+			var value: Variant = fast_snapshot[key_variant]
+			if (
+				_last_fast_snapshot.has(key)
+				and _last_fast_snapshot[key] == value
+			):
+				continue
+			update[key] = value
+		_last_fast_snapshot = fast_snapshot
 	if _world_timer <= 0.0:
 		_world_timer = (
 			WORLD_MARKER_INTERVAL

@@ -18,12 +18,14 @@ func _initialize() -> void:
 	_expect(fast_calls == 1 and minimap_calls == 1 and static_minimap_calls == 1 and guide_calls == 1, "initial channel builders run once")
 	var quiet := presenter.advance(0.01, _fast, _minimap, _threat, _guide)
 	_expect(quiet.is_empty(), "no channel republishes before its cadence or invalidation")
-	presenter.advance(0.04, _fast, _minimap, _threat, _guide)
-	_expect(fast_calls == 2 and minimap_calls == 1, "action channel runs at 20 Hz without rebuilding world markers")
-	presenter.advance(0.076, _fast, _minimap, _threat, _guide)
+	presenter.advance(0.095, _fast, _minimap, _threat, _guide)
+	_expect(fast_calls == 2 and minimap_calls == 1, "action channel waits for its ten-hertz boundary without rebuilding world markers")
+	presenter.advance(0.02, _fast, _minimap, _threat, _guide)
+	_expect(fast_calls == 2 and minimap_calls == 1, "action channel runs at ten hertz without rebuilding world markers")
+	presenter.advance(0.14, _fast, _minimap, _threat, _guide)
 	_expect(
 		minimap_calls == 2 and static_minimap_calls == 1,
-		"world markers phase-stagger after first publication, then run at 10 Hz while static geometry remains one-shot"
+		"world markers phase-stagger after first publication, then run at five hertz while static geometry remains one-shot"
 	)
 	presenter.mark_guidebook_dirty()
 	presenter.advance(0.0, _fast, _minimap, _threat, _guide)

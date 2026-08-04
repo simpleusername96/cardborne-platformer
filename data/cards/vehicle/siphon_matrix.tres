@@ -9,6 +9,7 @@ title_key = "UPGRADE_SIPHON_MATRIX_TITLE"
 description_key = "UPGRADE_SIPHON_MATRIX_DESC"
 summary_keys = Array[String](["UPGRADE_SIPHON_MATRIX_DESC", "UPGRADE_SIPHON_MATRIX_DESC"])
 family = &"defense"
+artwork_asset_id = &"upgrade/defense_matrix"
 max_level = 2
 source_tags = Array[StringName]([&"level_up"])
 behavior_ids = Array[StringName]([&"siphon_matrix"])

@@ -367,9 +367,12 @@ hint appears once and the same hint cannot repeat within two seconds.
   consuming one another. Contagion spreads poison to at most eight nearby
   targets in deterministic distance order. World arcs and Korean/English
   target text expose active stack counts.
-- **Secondary Weapons** is the umbrella system for five automatic weapon
-  families. **Seeker** is its always-equipped base family; up to two of the
-  other four optional families may be active, for three total. Seeker remains
+- **Secondary Weapons** is the sole user-facing upgrade family and the umbrella
+  system for five automatic weapon families. **Seeker** is its always-equipped
+  built-in subtype; up to two of the other four optional subtypes may be active,
+  for three total. Data expresses this with `secondary_slot_kind` values
+  `built_in` and `optional`; offer eligibility counts only owned optional
+  definitions and never infers slot ownership from a card ID. Seeker remains
   inside this umbrella category and does not consume an optional slot:
 
 | Secondary | Combat role |
@@ -430,6 +433,11 @@ hint appears once and the same hint cannot repeat within two seconds.
   kicker, screen title, or instruction header. Every card shows its real current
   and next level; cards backed by numeric stat modifiers also show the real
   current-to-next stat value.
+- Each card follows one fixed information order: family, upgrade name, large
+  semantic artwork, `Lv.current → next`, up to two real current-to-next values,
+  then a concise description. Behavior-only cards use a localized “New behavior”
+  row rather than fabricated numbers. The card uses one shared artwork identity
+  per mechanic group; UI code does not draw upgrade-specific glyph geometry.
 - Upgrade cards never scroll independently. At 200% text scale only, the offer
   body may provide one outer vertical scroll while all three cards remain
   non-scrolling and the Equip action remains fixed.

@@ -173,25 +173,26 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 
 | owner | 책임 | 금지 |
 | --- | --- | --- |
-| gameplay cue catalog | reusable authored cue texture, pivot와 stretch/tint contract | gameplay rule, collision, live dimension |
+| gameplay cue catalog | reusable authored cue texture, pivot, and stretch/tint contract | gameplay rule, collision, live dimension |
 | actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
-| projectile catalog | 하나의 authored energy-teardrop master, pivot와 collision-normalized core | damage, range, hit rule, faction/affinity tint와 scale |
-| reward catalog | authored pickup, shard와 crate visual ID 및 value-scale mapping | spawn, value, collection |
-| effect catalog | one authored EMP image, shared authored live-cue images와 deliberate small-effect suppression | timer, damage, protection rule |
-| world catalog | field surface, authored facility, bulkhead와 state-tile descriptor | topology, collision, schedule |
+| projectile catalog | one authored energy-teardrop master, pivot, and collision-normalized core | damage, range, hit rule, faction/affinity tint, and scale |
+| reward catalog | authored pickup, shard, and crate visual ID plus value-scale mapping | spawn, value, collection |
+| effect catalog | one authored EMP image, shared authored live-cue images, and deliberate small-effect suppression | timer, damage, protection rule |
+| world catalog | field surface, authored facility, bulkhead, and state-tile descriptor | topology, collision, schedule |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
-| defense catalog | shared authored support-ring image, actor tint와 localized status text recipe | protection, damage, slow, stack, timer |
-| UI glyph catalog | code-native action, upgrade, minimap과 preview glyph | layout, localization, focus |
-| semantic asset provider | approved persistent and shared gameplay raster texture, pivot와 attachment | collision, behavior, map topology, live descriptor |
+| defense catalog | shared authored support-ring image, actor tint, and localized status text recipe | protection, damage, slow, stack, timer |
+| UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
+| semantic asset provider | approved persistent gameplay raster texture, including upgrade content art, pivot, and attachment | collision, behavior, map topology, live descriptor |
 
-runtime, guidebook, upgrade card와 system sheet는 같은 semantic descriptor를
-재사용한다. authored raster identity만
-`art/visuals/production/gameplay/asset-manifest.json`과 semantic asset provider에
-등록하고, retained UI identity는 책임 catalog의 code-native recipe가 소유한다. preview-only
-대체 art를 만들지 않는다. visual geometry는 collision truth와 분리하되
-projectile core boundary와 debug overlay로 그 차이를 검증한다. semantic-v2
-provider는 shared floor/wall presentation texture도 색인하지만 topology와
-collision은 계속 field geometry가 소유한다.
+Runtime, guidebook, upgrade card, and system sheet reuse the same semantic descriptor.
+Register authored raster identities only in
+`art/visuals/production/gameplay/asset-manifest.json` and the semantic asset provider.
+The responsible catalog owns retained UI action/minimap/preview code-native recipes,
+while upgrade content art reuses semantic PNGs. Do not create preview-only art.
+Keep visual geometry separate from collision truth and verify the difference with the
+projectile core boundary and debug overlay. The semantic-v2 provider also indexes shared
+floor/wall presentation textures, while field geometry continues to own topology and
+collision.
 
 #### Media ownership boundary
 
@@ -200,14 +201,16 @@ collision은 계속 field geometry가 소유한다.
   cover, wear tile처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된
   authored PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와
   state 선택만 소유한다.
-- HUD action/upgrade glyph와 minimap marker는 shared code-native UI geometry를
-  유지한다. 게임 월드에 그려지는 combat cue, target bracket, telegraph
-  boundary와 beam/radius corridor의 고정된 visual identity는 shared authored
-  PNG를 사용하고 runtime이 live position, length, width, radius, rotation,
-  tint, alpha와 readiness를 소유한다.
-- projectile은 독립된 world object이지만 visual family를 세분하지 않는다.
-  모든 player/hostile projectile은 무꼬리 energy-teardrop master PNG 하나를
-  공유하고 runtime이 facing, scale, faction/affinity tint를 적용한다.
+- Upgrade-card content artwork is also authored PNG content. It is one reusable
+  semantic identity per shared mechanic group and is rendered by the semantic
+  asset provider; the card never draws a mechanic glyph procedurally.
+- HUD action glyph, minimap marker, and preview marker remain shared code-native UI geometry.
+  Combat cues, target brackets, telegraph boundaries, and beam/radius corridor fixed
+  visual identities use shared authored PNGs; runtime owns live position, length, width,
+  radius, rotation, tint, alpha, and readiness.
+- A projectile is an independent world object, but its visual family is not subdivided.
+  Every player/hostile projectile shares one tailless energy-teardrop master PNG;
+  runtime applies facing, scale, and faction/affinity tint.
 - barrier, ion, shield source와 burn/poison/chill은 별도 raster asset을 갖지
   않는다. 보호와 범위는 shared authored ring과 runtime tint/scale로, 지속 상태는 actor tint와
   localized target-status text로 전달한다. cosmetic emitter, plate, orbit icon은
@@ -407,15 +410,17 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 | viewport | outer safe margin | modal content maximum | mode |
 | --- | ---: | ---: | --- |
 | 960×540 | 16 | 928×508 | compact |
-| 1280×720 | 24 | 1184×656 | wide |
-| 1920×1080 | 32 | 1184×720 | wide centered |
+| 1280×720 | 24 | 1184×656 | standard |
+| 1920×1080 | 32 | 1376×720 | large centered |
 
-- layout breakpoint는 width `1100`, guide/report three-column breakpoint는
-  `1180`이다.
-- upgrade card는 compact에서 `280×378`, gap `12`, wide에서 `352×432`,
-  gap `20`을 사용한다. 순서는 family, 큰 좌정렬 title, split dossier,
-  description footer다. dossier는 compact `88×88`/wide `120×120` family
-  artwork를 왼쪽에, `Lv.<current> → <next>`와 effect row 최대 2개를 오른쪽에
+- layout breakpoint는 width `1100`, large upgrade breakpoint는 `1600`,
+  guide/report three-column breakpoint는 `1180`이다.
+- upgrade card는 compact에서 `280×378`, gap `12`, standard에서 `360×456`,
+  gap `16`, large에서 `420×480`, gap `24`를 사용한다. 세 카드 container는
+  사용 가능한 공간에 맞춰 확장하며 standard에서 좁은 352px 카드를 유지하지
+  않는다. 순서는 family, 큰 좌정렬 title, split dossier, description footer다.
+  dossier uses compact `88×88`, standard `112×112`, and large `128×128` artwork
+  on the left, with `Lv.<current> → <next>` and at most two effect rows on the right.
   두며 하나의 vertical divider만 사용한다. 수치가 없는 behavior card는
   description을 오른쪽 comparison lane에 배치해 빈 column을 만들지 않는다.
   footer는 description과 별도 behavior 문장이 실제로 있을 때만 나타난다.
@@ -493,13 +498,13 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - approved reference와 runtime actor를 같은 scale로 비교한 sheet에서
   player, 8 role grammar와 boss proportion hierarchy가 같은 family로 판독
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
-- 8개 upgrade family semantic artwork의 missing slot 0, card별 title 위 image 0,
-  body artwork 정확히 1개
+- all 10 shared upgrade semantic artwork identities resolve with no missing slot,
+  no image appears above a card title, and every card body has exactly one artwork
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
   active/damaged/resolved 상태만 사용됨
-- final gameplay manifest가 정확히 57 PNG를 색인함: 기존 49 gameplay image,
-  shared world presentation 2, shared world-space combat cue 6
+- final gameplay manifest가 정확히 67 PNG를 색인함: 기존 gameplay image,
+  shared world presentation/cue와 10개의 shared upgrade content image
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함
 - deterministic tile hash equality와 walkable/void containment

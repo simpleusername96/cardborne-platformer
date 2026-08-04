@@ -18,6 +18,7 @@ var _selected_index := -1
 var _guard_remaining := 0.0
 var _pending := false
 var _compact := false
+var _large := false
 
 var _row_scroll: ScrollContainer
 var _row: HFlowContainer
@@ -41,12 +42,12 @@ func _build() -> void:
 	add_child(_row_scroll)
 	_row = HFlowContainer.new()
 	_row.name = "UpgradeButtons"
-	_row.add_theme_constant_override("h_separation", 20)
-	_row.add_theme_constant_override("v_separation", 20)
+	_row.add_theme_constant_override("h_separation", 16)
+	_row.add_theme_constant_override("v_separation", 16)
 	_row.alignment = FlowContainer.ALIGNMENT_CENTER
 	_row.last_wrap_alignment = FlowContainer.LAST_WRAP_ALIGNMENT_CENTER
 	_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_row.custom_minimum_size.y = 432.0
+	_row.custom_minimum_size.y = 456.0
 	_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_row_scroll.add_child(_row)
 	for index in 3:
@@ -71,12 +72,13 @@ func _build() -> void:
 
 func set_compact_mode(value: bool) -> void:
 	_compact = value
+	_large = false
 	add_theme_constant_override("separation", 6 if value else 10)
 	if not is_node_ready():
 		return
-	_row.add_theme_constant_override("h_separation", 12 if value else 20)
-	_row.add_theme_constant_override("v_separation", 12 if value else 20)
-	_row.custom_minimum_size.y = 378.0 if value else 432.0
+	_row.add_theme_constant_override("h_separation", 12 if value else 16)
+	_row.add_theme_constant_override("v_separation", 12 if value else 16)
+	_row.custom_minimum_size.y = 378.0 if value else 456.0
 	_message.custom_minimum_size.y = 20.0 if value else 22.0
 	Factory.apply_font_size(
 		_message,
@@ -93,6 +95,50 @@ func set_compact_mode(value: bool) -> void:
 	)
 	for button in _buttons:
 		(button as VehicleUpgradeChoiceCard).set_compact_mode(value)
+		(button as VehicleUpgradeChoiceCard).set_large_mode(_large)
+
+
+func set_large_mode(value: bool) -> void:
+	_large = value and not _compact
+	if not is_node_ready():
+		return
+	_row.add_theme_constant_override(
+		"h_separation",
+		24 if _large else (12 if _compact else 16)
+	)
+	_row.add_theme_constant_override(
+		"v_separation",
+		24 if _large else (12 if _compact else 16)
+	)
+	_row.custom_minimum_size.y = (
+		480.0 if _large else (378.0 if _compact else 456.0)
+	)
+	_message.custom_minimum_size.y = (
+		24.0 if _large else (20.0 if _compact else 22.0)
+	)
+	_confirm.custom_minimum_size = (
+		Vector2(420.0, 64.0)
+		if _large
+		else (
+			Vector2(300.0, 48.0)
+			if _compact
+			else Vector2(360.0, 56.0)
+		)
+	)
+	Factory.apply_font_size(
+		_message,
+		18
+		if _large
+		else int(Art.TYPE_SCALE_COMPACT[1] if _compact else Art.TYPE_SCALE_WIDE[1])
+	)
+	Factory.apply_font_size(
+		_confirm,
+		26
+		if _large
+		else int(Art.TYPE_SCALE_COMPACT[3] if _compact else Art.TYPE_SCALE_WIDE[3])
+	)
+	for button in _buttons:
+		(button as VehicleUpgradeChoiceCard).set_large_mode(_large)
 
 
 func set_accessibility_mode(enabled: bool) -> void:
@@ -105,10 +151,12 @@ func set_accessibility_mode(enabled: bool) -> void:
 		set_compact_mode(false)
 	for button in _buttons:
 		(button as VehicleUpgradeChoiceCard).set_accessibility_mode(enabled)
+		if enabled:
+			(button as VehicleUpgradeChoiceCard).set_large_mode(false)
 	_row.custom_minimum_size.y = (
 		920.0
 		if enabled
-		else (378.0 if _compact else 432.0)
+		else (378.0 if _compact else 456.0)
 	)
 
 

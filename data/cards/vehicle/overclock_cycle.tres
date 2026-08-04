@@ -9,6 +9,7 @@ title_key = "UPGRADE_OVERCLOCK_CYCLE_TITLE"
 description_key = "UPGRADE_OVERCLOCK_CYCLE_DESC"
 summary_keys = Array[String](["UPGRADE_OVERCLOCK_CYCLE_DESC", "UPGRADE_OVERCLOCK_CYCLE_DESC"])
 family = &"primary"
+artwork_asset_id = &"projectile/energy_teardrop"
 max_level = 2
 source_tags = Array[StringName]([&"level_up"])
 behavior_ids = Array[StringName]([&"overclock_cycle"])

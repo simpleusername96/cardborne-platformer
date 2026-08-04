@@ -132,6 +132,247 @@
       "application": null
     },
     {
+      "id": "upgrade_content_artwork",
+      "category_id": "combat",
+      "order": 7,
+      "title_en": "Shared Upgrade Content Artwork",
+      "title_ko": "공용 업그레이드 콘텐츠 아트워크",
+      "owner": "gameplay_manifest",
+      "switch_kind": "consolidate",
+      "status": "applied",
+      "current_paths": [],
+      "consumer_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/cards/vehicle_upgrade_offer_presenter.gd",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/ui/vehicle_upgrade_choice_card.gd",
+        "tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        "tools/validation/validate_vehicle_upgrade_ui.gd"
+      ],
+      "consumer_asset_ids": [
+        "upgrade/dash_wake",
+        "upgrade/defense_matrix",
+        "upgrade/element_cryo",
+        "upgrade/element_thermal",
+        "upgrade/element_toxin",
+        "upgrade/hull_reinforcement",
+        "upgrade/ion_field",
+        "upgrade/mobility_thruster",
+        "upgrade/pickup_magnet",
+        "upgrade/system_relay"
+      ],
+      "direction_en": "Add ten reusable authored upgrade identities for the card content layer. Keep card chrome, spacing, typography, level transitions, and selection behavior code-owned; each identity is a complete transparent PNG with one readable silhouette and no decorative micro-detail.",
+      "deliverables": [
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/dash_wake.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color cyan dash-wake identity with a compact directional silhouette, dark perimeter, transparent background, and no tail particles or micro-detail.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/defense_matrix.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color cyan defensive matrix identity formed from a single shield mass and dark perimeter, transparent background, without nested ornament.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/element_cryo.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color cyan cryo-core identity with a broad angular energy silhouette, dark perimeter, transparent background, and no glow or detached parts.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/element_thermal.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color amber thermal-core identity with a compact angular energy silhouette, dark perimeter, transparent background, and no flame particles.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/element_toxin.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color green toxin-core identity with a compact angular energy silhouette, dark perimeter, transparent background, and no droplets or fumes.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/hull_reinforcement.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color ivory hull reinforcement identity built from a single reinforced plate mass, dark perimeter, transparent background, and no bolts or texture noise.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/ion_field.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color mint ion-field identity with a compact circular energy mass, dark perimeter, transparent background, and no concentric ornament.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/mobility_thruster.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color cyan mobility-thruster identity with a compact directional engine silhouette, dark perimeter, transparent background, and no exhaust trail.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/pickup_magnet.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color cobalt pickup-magnet identity with a simple horseshoe field silhouette, dark perimeter, transparent background, and no detached sparks.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/upgrades/system_relay.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One flat-color amber system-relay identity with a single compact module silhouette, dark perimeter, transparent background, and no circuit decoration.",
+          "external_source_ids": []
+        }
+      ],
+      "final_paths": [
+        "art/visuals/production/gameplay/upgrades/dash_wake.png",
+        "art/visuals/production/gameplay/upgrades/defense_matrix.png",
+        "art/visuals/production/gameplay/upgrades/element_cryo.png",
+        "art/visuals/production/gameplay/upgrades/element_thermal.png",
+        "art/visuals/production/gameplay/upgrades/element_toxin.png",
+        "art/visuals/production/gameplay/upgrades/hull_reinforcement.png",
+        "art/visuals/production/gameplay/upgrades/ion_field.png",
+        "art/visuals/production/gameplay/upgrades/mobility_thruster.png",
+        "art/visuals/production/gameplay/upgrades/pickup_magnet.png",
+        "art/visuals/production/gameplay/upgrades/system_relay.png"
+      ],
+      "reuse_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/urgent-runtime-stabilization/index.html"
+      ],
+      "retire_paths": [],
+      "runtime_change_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/cards/vehicle_upgrade_offer_presenter.gd",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/ui/vehicle_upgrade_choice_card.gd",
+        "tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        "tools/validation/validate_vehicle_upgrade_ui.gd"
+      ],
+      "acceptance_commands": [
+        ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_ui.gd"
+      ],
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      },
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T19:00:00+09:00",
+        "baseline_commit": "9c66a8bfa303e7e90a61af04e18535f7c654ee8b",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/upgrades/dash_wake.png": "36f2c7b18c87327b7faebf01b1775e38bbbb4350450ddb4adddf5253b4ffa1b9",
+          "art/visuals/production/gameplay/upgrades/defense_matrix.png": "279212ad6d5292d2785feda4f5a884cb1bcb5edee4e78e21bb20850c063ec96d",
+          "art/visuals/production/gameplay/upgrades/element_cryo.png": "42b4ab4a5e33dc0dcd2802555ca2a74c66935dfcfdc265294af85c81c364c184",
+          "art/visuals/production/gameplay/upgrades/element_thermal.png": "82e2c65c512852ea9cb465938a8d9b771866aae9eebf30e3439d64a0ba2a3774",
+          "art/visuals/production/gameplay/upgrades/element_toxin.png": "902a5406a3fcfb8b2e86954dc65072bd092bfa5abf6c9928a5418ea90e9e3df5",
+          "art/visuals/production/gameplay/upgrades/hull_reinforcement.png": "5a36894ef1da2057b5575bbb291093ad4b3d1bec03e72840907e4a18eaef3988",
+          "art/visuals/production/gameplay/upgrades/ion_field.png": "d6e24f33c11bcd1220680f0bb75364ce4f097e23c3f937030a759ed57d2cc8fb",
+          "art/visuals/production/gameplay/upgrades/mobility_thruster.png": "9b3482fc9e10679814e771e033e18a64286a448dfcd2f6c1f507e9d584cc7453",
+          "art/visuals/production/gameplay/upgrades/pickup_magnet.png": "81a6d7f057f62906f5a0e582246f850a6eb5221e7e8f3f04e8681177f25a2782",
+          "art/visuals/production/gameplay/upgrades/system_relay.png": "18c9f8d63223f6b3a76a09b8771fde8ef9b77c58e03bb746a9e72019e722b4f3"
+        },
+        "retire_paths": []
+      },
+      "application": {
+        "commit": "9c66a8bfa303e7e90a61af04e18535f7c654ee8b",
+        "applied_at": "2026-08-04T19:00:00+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+          ".\\tools\\validation\\validate_vehicle_visual_replacement_coverage.gd",
+          "asset generation and alpha-bound report: docs/design/visual-replacement-workbench/previews/urgent-runtime-stabilization/index.html"
+        ]
+      }
+    },
+    {
       "id": "projectile_family",
       "category_id": "combat",
       "order": 1,

@@ -67,12 +67,12 @@ func set_player_fixture(fixture: Dictionary) -> void:
 	match StringName(fixture.get("kind", &"")):
 		&"cooldowns":
 			_run.player_dash_cooldown = _run._dash_cooldown_max() * 0.75
-			_run.player_seeker_cooldown = _run.SEEKER_COOLDOWN * 0.5
+			_run.secondary_runtime.seeker_cooldown = _run.SEEKER_COOLDOWN * 0.5
 			_run.player_emp_cooldown = _run._emp_cooldown_max()
 			_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 		&"cooldowns_clear":
 			_run.player_dash_cooldown = 0.0
-			_run.player_seeker_cooldown = 0.0
+			_run.secondary_runtime.seeker_cooldown = 0.0
 			_run.player_emp_cooldown = 0.0
 			_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 

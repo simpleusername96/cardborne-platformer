@@ -72,9 +72,11 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 57,
-		"gameplay manifest declares the final 57 authored rasters"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 67,
+		"gameplay manifest declares the final 67 authored rasters"
 	)
+	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
+	_expect(int(family_counts.get("upgrade", 0)) == 10, "gameplay manifest declares ten shared upgrade rasters")
 	_expect(
 		not gameplay_manifest.has("animations"),
 		"gameplay manifest contains no raster frame animations"

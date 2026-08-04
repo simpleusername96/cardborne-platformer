@@ -27,7 +27,7 @@
     "shared_world_cue_rule": "Fixed world surface, wall, health-frame, ring, beam, marker, disk, and crosshair identities are authored PNGs. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, and live timing remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 57,
+  "final_asset_count": 67,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -40,7 +40,8 @@
     "world_facility": 11,
     "world_presentation": 2,
     "cue": 6,
-    "emp": 1
+    "emp": 1,
+    "upgrade": 10
   },
   "attachments": {
     "player_craft_body": {
@@ -87,6 +88,17 @@
     {"id": "secondary/orbit_blade", "path": "weapons/secondaries/secondary_orbit_blade.png", "canvas": [64, 32], "pivot": [32, 16], "category": "secondary"},
     {"id": "secondary/wake_mine", "path": "weapons/secondaries/secondary_wake_mine.png", "canvas": [48, 48], "pivot": [24, 24], "category": "secondary"},
     {"id": "projectile/energy_teardrop", "path": "weapons/projectiles/projectile_energy_teardrop.png", "canvas": [64, 64], "pivot": [32, 32], "category": "projectile"},
+
+    {"id": "upgrade/ion_field", "path": "upgrades/ion_field.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/element_thermal", "path": "upgrades/element_thermal.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/element_toxin", "path": "upgrades/element_toxin.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/element_cryo", "path": "upgrades/element_cryo.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/dash_wake", "path": "upgrades/dash_wake.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/defense_matrix", "path": "upgrades/defense_matrix.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/system_relay", "path": "upgrades/system_relay.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/mobility_thruster", "path": "upgrades/mobility_thruster.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/pickup_magnet", "path": "upgrades/pickup_magnet.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/hull_reinforcement", "path": "upgrades/hull_reinforcement.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
 
     {"id": "pickup/experience_master", "path": "pickups/pickup_experience_master.png", "canvas": [64, 64], "pivot": [32, 32], "category": "pickup"},
     {"id": "pickup/reward_crate", "path": "pickups/pickup_reward_crate.png", "canvas": [64, 64], "pivot": [32, 32], "category": "pickup"},

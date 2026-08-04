@@ -30,8 +30,12 @@ func total_levels() -> int:
 
 func active_optional_secondaries() -> int:
 	var count := 0
-	for upgrade_id in VehicleUpgradeCatalog.OPTIONAL_SECONDARY_FAMILY_IDS:
-		if has(upgrade_id):
+	for definition in catalog.all_definitions():
+		if (
+			definition.family == &"secondary"
+			and definition.secondary_slot_kind == &"optional"
+			and has(definition.id)
+		):
 			count += 1
 	return count
 

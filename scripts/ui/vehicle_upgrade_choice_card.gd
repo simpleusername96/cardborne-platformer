@@ -7,18 +7,20 @@ extends Button
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
-const UpgradeGlyphRenderer = preload(
-	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
+const SemanticAssets = preload(
+	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
 
-const WIDE_SIZE := Vector2(352.0, 432.0)
+const WIDE_SIZE := Vector2(360.0, 456.0)
 const COMPACT_SIZE := Vector2(280.0, 378.0)
+const LARGE_SIZE := Vector2(420.0, 480.0)
 const ACCESSIBILITY_SIZE := Vector2(520.0, 920.0)
 
 
 var _offer: Dictionary = {}
 var _selected := false
 var _compact := false
+var _large := false
 var _accessibility_mode := false
 var _content_margin: MarginContainer
 var _content_box: VBoxContainer
@@ -26,7 +28,7 @@ var _family: Label
 var _title: Label
 var _dossier: HBoxContainer
 var _art_lane: CenterContainer
-var _glyph: VehicleUpgradeGlyphRenderer
+var _artwork: TextureRect
 var _body_divider: VSeparator
 var _change_lane: VBoxContainer
 var _level: Label
@@ -71,6 +73,7 @@ func set_selected_state(value: bool) -> void:
 
 func set_compact_mode(value: bool) -> void:
 	_compact = value
+	_large = false
 	if not is_node_ready():
 		custom_minimum_size = COMPACT_SIZE if value else WIDE_SIZE
 		return
@@ -78,8 +81,19 @@ func set_compact_mode(value: bool) -> void:
 	_refresh()
 
 
+func set_large_mode(value: bool) -> void:
+	_large = value and not _compact and not _accessibility_mode
+	if not is_node_ready():
+		custom_minimum_size = LARGE_SIZE if _large else (COMPACT_SIZE if _compact else WIDE_SIZE)
+		return
+	_apply_layout_profile()
+	_refresh()
+
+
 func set_accessibility_mode(enabled: bool) -> void:
 	_accessibility_mode = enabled
+	if enabled:
+		_large = false
 	if not is_node_ready():
 		return
 	_apply_layout_profile()
@@ -93,7 +107,7 @@ func offer_id() -> StringName:
 func debug_contract() -> Dictionary:
 	var normal_style := get_theme_stylebox(&"normal")
 	var focus_style := get_theme_stylebox(&"focus")
-	var glyph_contract := _glyph.debug_contract()
+	var artwork_asset_id := StringName(_offer.get("artwork_asset_id", &""))
 	return {
 		"structured":true,
 		"minimum_size":custom_minimum_size,
@@ -110,6 +124,7 @@ func debug_contract() -> Dictionary:
 		"stage_pip_count":0,
 		"selected":_selected,
 		"compact":_compact,
+		"large":_large,
 		"accessibility_mode":_accessibility_mode,
 		"dossier_split":true,
 		"body_divider_count":1,
@@ -125,15 +140,15 @@ func debug_contract() -> Dictionary:
 		"summary_max_lines":_summary.max_lines_visible,
 		"comparison_max_lines":_comparison_fallback.max_lines_visible,
 		"header_art_count":0,
-		"body_art_count":1 if is_instance_valid(_glyph) else 0,
+		"body_art_count":1 if is_instance_valid(_artwork) else 0,
 		"family_badge_count":0,
 		"level_visible":_level.visible,
 		"level_text":_level.text,
 		"current_level":int(_offer.get("current_level", 0)),
 		"next_level":int(_offer.get("next_level", 1)),
 		"max_level":int(_offer.get("max_level", 1)),
-		"body_art_size":_glyph.custom_minimum_size,
-		"body_art_asset_id":glyph_contract["asset_id"],
+		"body_art_size":_artwork.custom_minimum_size,
+		"body_art_asset_id":artwork_asset_id,
 		"body_order":[
 			"family",
 			"title",
@@ -158,6 +173,7 @@ func debug_contract() -> Dictionary:
 
 func debug_geometry_contract() -> Dictionary:
 	var labels: Array[Dictionary] = []
+	var artwork_asset_id := StringName(_offer.get("artwork_asset_id", &""))
 	for node in find_children("*", "Label", true, false):
 		var label := node as Label
 		if not label.visible:
@@ -172,7 +188,11 @@ func debug_geometry_contract() -> Dictionary:
 		"body_divider_rect":_body_divider.get_global_rect(),
 		"footer_rect":_footer_box.get_global_rect() if _footer_box.visible else Rect2(),
 		"labels":labels,
-		"glyph":_glyph.debug_contract(),
+		"artwork":{
+			"asset_id":artwork_asset_id,
+			"texture_loaded":_artwork.texture != null,
+			"rect":_artwork.get_global_rect(),
+		},
 		"selected":_selected,
 		"disabled":disabled,
 		"summary_max_lines":_summary.max_lines_visible,
@@ -219,9 +239,12 @@ func _build() -> void:
 	_art_lane.size_flags_stretch_ratio = 0.95
 	_art_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dossier.add_child(_art_lane)
-	_glyph = UpgradeGlyphRenderer.new()
-	_glyph.name = "UpgradeBodyArtwork"
-	_art_lane.add_child(_glyph)
+	_artwork = TextureRect.new()
+	_artwork.name = "UpgradeBodyArtwork"
+	_artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_artwork.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_art_lane.add_child(_artwork)
 
 	_body_divider = VSeparator.new()
 	_body_divider.name = "DossierDivider"
@@ -311,9 +334,9 @@ func _apply_layout_profile() -> void:
 	var level_size := 18
 	var summary_size := 16
 	var behavior_size := 15
-	var dossier_height := 174.0
-	var glyph_size := Vector2(120.0, 120.0)
-	var art_lane_width := 120.0
+	var dossier_height := 190.0
+	var glyph_size := Vector2(128.0, 128.0)
+	var art_lane_width := 128.0
 	var change_lane_width := 132.0
 	var family_height := 20.0
 	var title_height := 54.0
@@ -338,6 +361,29 @@ func _apply_layout_profile() -> void:
 		footer_height = 290.0
 		summary_height = 200.0
 		behavior_height = 82.0
+	elif _large:
+		custom_minimum_size = LARGE_SIZE
+		horizontal_margin = 28
+		vertical_margin = 22
+		content_gap = 10
+		body_gap = 14
+		change_gap = 8
+		effect_gap = 8
+		footer_gap = 8
+		family_size = 18
+		title_size = 32
+		level_size = 18
+		summary_size = 18
+		behavior_size = 16
+		dossier_height = 204.0
+		glyph_size = Vector2(128.0, 128.0)
+		art_lane_width = 148.0
+		change_lane_width = 168.0
+		family_height = 24.0
+		title_height = 62.0
+		footer_height = 94.0
+		summary_height = 56.0
+		behavior_height = 32.0
 	elif _compact:
 		custom_minimum_size = COMPACT_SIZE
 		horizontal_margin = 14
@@ -378,7 +424,8 @@ func _apply_layout_profile() -> void:
 	_dossier.custom_minimum_size.y = dossier_height
 	_art_lane.custom_minimum_size.x = art_lane_width
 	_change_lane.custom_minimum_size.x = change_lane_width
-	_glyph.custom_minimum_size = glyph_size
+	_artwork.custom_minimum_size = glyph_size
+	_artwork.size = glyph_size
 	_footer_box.custom_minimum_size.y = footer_height
 	_summary.custom_minimum_size.y = summary_height
 	_behavior.custom_minimum_size.y = behavior_height
@@ -399,7 +446,7 @@ func _refresh() -> void:
 	_title.text = tr(String(_offer.get("title_key", "")))
 	_summary.text = tr(String(_offer.get("summary_key", "")))
 	_comparison_fallback.text = _summary.text
-	_refresh_family_glyph()
+	_refresh_artwork()
 	_clear(_effects)
 	var accessible_values := PackedStringArray()
 	var previews: Array = _offer.get("effect_rows", [])
@@ -522,9 +569,9 @@ func _level_transition_text() -> String:
 	]
 
 
-func _refresh_family_glyph() -> void:
-	var family := StringName(_offer.get("family", &"secondary"))
-	_glyph.configure(family, {})
+func _refresh_artwork() -> void:
+	var asset_id := StringName(_offer.get("artwork_asset_id", &""))
+	_artwork.texture = SemanticAssets.texture(asset_id)
 
 
 func _label_geometry(label: Label) -> Dictionary:

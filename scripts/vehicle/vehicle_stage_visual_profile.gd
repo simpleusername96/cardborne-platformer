@@ -71,8 +71,12 @@ const EXPERIENCE_RADII := {
 	&"medium":16.0,
 	&"large":22.0,
 }
-const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 4.5
-const PLAYER_PRIMARY_PROJECTILE_SCALE := 1.25
+## Visual envelopes are intentionally larger than collision truth. They are
+## presentation-only and keep the shared teardrop readable at live speed.
+const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 5.50
+const PLAYER_PRIMARY_PROJECTILE_SCALE := 6.25
+const PLAYER_SEEKER_PROJECTILE_SCALE := 5.75
+const PLAYER_OPENING_BREACH_PROJECTILE_SCALE := 6.50
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
 const COVER_EDGE_OFFSET := Vector2(14.0, 18.0)
 const WALL_FILL := STRUCTURE_BASE
@@ -207,8 +211,12 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("stage boss visual radius must remain 146 px")
 	if EXPERIENCE_RADII != {&"small":12.0, &"medium":16.0, &"large":22.0}:
 		errors.append("experience visual radii must remain 12/16/22 px")
-	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 4.5):
-		errors.append("hostile projectile envelope must remain 4.5x collision radius")
-	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 1.25):
-		errors.append("player primary projectile visual must remain 1.25x")
+	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 5.50):
+		errors.append("hostile projectile envelope must remain 5.5x collision radius")
+	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 6.25):
+		errors.append("player primary projectile visual must remain 6.25x collision radius")
+	if not is_equal_approx(PLAYER_SEEKER_PROJECTILE_SCALE, 5.75):
+		errors.append("player seeker projectile visual must remain 5.75x collision radius")
+	if not is_equal_approx(PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 6.50):
+		errors.append("opening breach projectile visual must remain 6.5x collision radius")
 	return errors

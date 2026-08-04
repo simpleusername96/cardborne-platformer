@@ -99,7 +99,10 @@ const MINIMAP_ROWS := 12
 const THREAT_SCAN_DISTANCE := 1200.0
 const BOSS_ARRIVAL_MIN_DISTANCE := 1200.0
 const BOSS_ARRIVAL_PREFERRED_MAX_DISTANCE := 1500.0
-const THREAT_SAMPLE_INTERVAL := 0.10
+# Threat contacts feed the radar/world-marker channel, whose observable refresh
+# cadence is five hertz. Keep the cache on that same boundary so peak hordes do
+# not pay a duplicate full-enemy scan between HUD world updates.
+const THREAT_SAMPLE_INTERVAL := 0.20
 const LOW_COUNT_OVERLAY_INTERVAL := 0.05
 const ORDINARY_DECISION_BUCKET_COUNT := 6
 const FAR_SIMULATION_DISTANCE := 820.0
@@ -166,7 +169,6 @@ var player_dash_cooldown := 0.0
 var player_dash_timer := 0.0
 var player_dash_direction := Vector2.RIGHT
 var player_dash_trail_timer := 0.0
-var player_seeker_cooldown := 0.0
 var player_emp_cooldown := 0.0
 var player_emp_startup := 0.0
 var player_barrier_strength := 0.0
@@ -627,7 +629,6 @@ func _reset_run(
 	_primary_shot_serial = 0
 	player_dash_cooldown = 0.0
 	player_dash_timer = 0.0
-	player_seeker_cooldown = 0.0
 	player_emp_cooldown = 0.0
 	player_emp_startup = 0.0
 	player_barrier_strength = 0.0
@@ -737,7 +738,7 @@ func _reset_run(
 	if persistent_relay_module:
 		player_emp_cooldown = 0.0
 	if persistent_field_module:
-		player_seeker_cooldown = 0.0
+		secondary_runtime.seeker_cooldown = 0.0
 	enemy_grid.configure(Rules.world_rect(current_stage_id), SpatialGrid.DEFAULT_CELL_SIZE)
 	enemy_grid.rebuild(enemies)
 
@@ -1191,7 +1192,6 @@ func _update_player(delta: float) -> void:
 	var primary_held := Input.is_action_pressed("primary_fire")
 	player_primary_weapon.tick(delta, primary_held)
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
-	player_seeker_cooldown = maxf(0.0, player_seeker_cooldown - delta)
 	player_emp_cooldown = maxf(0.0, player_emp_cooldown - delta)
 	player_barrier_timer = maxf(0.0, player_barrier_timer - delta)
 	coolant_surge_timer = maxf(0.0, coolant_surge_timer - delta)
@@ -1672,30 +1672,6 @@ func _spawn_player_projectile(
 
 
 func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
-	if player_seeker_cooldown <= 0.0 and player_emp_startup <= 0.0:
-		var targets := _find_seeker_targets(1 + run_build.level_of(&"twin_seekers"))
-		if not targets.is_empty():
-			var cooldown := maxf(SEEKER_COOLDOWN * 0.60, run_build.stat(&"seeker_interval", SEEKER_COOLDOWN))
-			if persistent_field_module:
-				cooldown *= 0.85
-			player_seeker_cooldown = cooldown
-			for target in targets:
-				var enemy: EnemyState = target
-				var direction := (enemy.pos - player_position).normalized()
-				var seeker_count := 1 + run_build.level_of(&"twin_seekers")
-				var seeker_scale: float = [1.0, 0.85, 0.70][seeker_count - 1]
-				var marked_multiplier := 1.25 if enemy.marked_time > 0.0 else 1.0
-				projectile_store.add_player({
-					"pos": player_position + direction * 33.0, "velocity":direction * 490.0,
-					"radius":8.0,
-					"damage":25.0 * run_build.stat(&"seeker_damage_multiplier", 1.0) * seeker_scale * marked_multiplier,
-					"life":1.8, "color":Art.MINT, "owner":"seeker",
-					"pierce":run_build.level_of(&"phase_seeker"), "bounces":0, "homing":true,
-					"target_id":enemy.id, "explosive":applied_upgrades.has(&"hunter_firmware"),
-					"structure_damage":25.0, "status_profile":null,
-					"wall_piercing":false,
-				})
-			_play_sound(&"missile")
 	var secondary_result := secondary_runtime.update(
 		delta,
 		player_position,
@@ -1704,8 +1680,16 @@ func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
 		run_build,
 		enemies,
 		_runtime_line_of_sight_callable,
-		_query_enemy_radius_callable
+		_query_enemy_radius_callable,
+		_find_seeker_targets,
+		player_emp_startup > 0.0,
+		0.85 if persistent_field_module else 1.0
 	)
+	var emitted_projectiles: Array = secondary_result.get("projectiles", [])
+	if not emitted_projectiles.is_empty():
+		for projectile in emitted_projectiles:
+			projectile_store.add_player(projectile)
+		_play_sound(&"missile")
 	for intent in secondary_result["damage"]:
 		var target := intent.get("enemy") as EnemyState
 		if target == null:
@@ -2139,6 +2123,9 @@ func _update_scheduled_ordinary_enemy(
 	)
 	if motion_delta <= 0.0:
 		return
+	var previous_position := enemy.pos
+	var previous_alive := enemy.alive
+	var previous_active := enemy.active
 	var decision_due := _enemy_update_schedule.decision_due(enemy)
 	var can_commit := (
 		decision_due
@@ -2153,7 +2140,15 @@ func _update_scheduled_ordinary_enemy(
 		enemy, motion_delta, can_commit, decision_due, motion_delta
 	):
 		_enemy_update_schedule.note_commit(enemy)
-	enemy_grid.update_actor(enemy)
+	# The spatial grid is already correct when a scheduled tick only advances
+	# timers or attack state. Re-index only after a position/occupancy change;
+	# collision truth and the next exact query remain unchanged.
+	if (
+		enemy.pos != previous_position
+		or enemy.alive != previous_alive
+		or enemy.active != previous_active
+	):
+		enemy_grid.update_actor(enemy)
 
 
 func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
@@ -2817,11 +2812,24 @@ func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decisio
 	):
 		return
 	if decision_due or enemy.desired_velocity.is_zero_approx():
-		enemy.desired_velocity = _desired_enemy_velocity(enemy, recovering)
+		var refresh_overlap := (
+			decision_due
+			and (
+				enemy.runtime_slot < 0
+				or posmod(enemy.runtime_slot + _enemy_decision_bucket, 2) == 0
+			)
+		)
+		enemy.desired_velocity = _desired_enemy_velocity(
+			enemy, recovering, refresh_overlap
+		)
 	_move_enemy_with_recovery(enemy, enemy.desired_velocity, delta)
 
 
-func _desired_enemy_velocity(enemy: EnemyState, recovering: bool) -> Vector2:
+func _desired_enemy_velocity(
+	enemy: EnemyState,
+	recovering: bool,
+	refresh_overlap: bool = true
+) -> Vector2:
 	var role := enemy.role
 	var position := enemy.pos
 	var to_player := player_position - position
@@ -2879,7 +2887,7 @@ func _desired_enemy_velocity(enemy: EnemyState, recovering: bool) -> Vector2:
 		desired = (route_direction * 0.86 + desired * 0.14).normalized()
 	var role_velocity := desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
 	return _enemy_local_steering.adjusted_velocity(
-		enemy, role_velocity, enemy_grid, enemies
+		enemy, role_velocity, enemy_grid, enemies, refresh_overlap
 	)
 
 
@@ -4281,8 +4289,6 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 		return false
 	var definition := upgrade_catalog.get_definition(upgrade_id)
 	selected_upgrade_title_key = definition.title_key
-	if upgrade_id == &"twin_seekers":
-		player_seeker_cooldown = 0.0
 	if upgrade_id == &"reinforced_hull":
 		player_health = minf(_player_max_health(), player_health + 15.0)
 	_status_profile = StatusProfile.from_build(run_build)
@@ -5190,8 +5196,8 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 		"stage_title": tr(String(stage_profile["title_key"])),
 		"dash_available":player_dash_cooldown <= 0.0,
 		"dash_ratio": clampf(player_dash_cooldown / _dash_cooldown_max(), 0.0, 1.0),
-		"seeker_available":player_seeker_cooldown <= 0.0,
-		"seeker_ratio": clampf(player_seeker_cooldown / SEEKER_COOLDOWN, 0.0, 1.0),
+		"seeker_available":secondary_runtime.seeker_cooldown <= 0.0,
+		"seeker_ratio": clampf(secondary_runtime.seeker_cooldown / SEEKER_COOLDOWN, 0.0, 1.0),
 		"skill_available":player_emp_startup <= 0.0 and player_emp_cooldown <= 0.0,
 		"skill_ratio": clampf(player_emp_cooldown / _emp_cooldown_max(), 0.0, 1.0),
 		"buff_text": "",

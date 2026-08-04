@@ -6,6 +6,11 @@ extends Resource
 @export var description_key := ""
 @export var summary_keys: Array[String] = []
 @export var family: StringName
+## Canonical semantic artwork id resolved by the shared asset provider.
+@export var artwork_asset_id: StringName = &""
+## Optional weapon slot ownership. Built-in secondary upgrades never consume an
+## optional weapon slot; optional secondaries consume one slot per family.
+@export var secondary_slot_kind: StringName = &""
 @export var max_level := 1
 @export var requirement: StringName
 @export var exclusion_group: StringName
@@ -19,6 +24,7 @@ func validate() -> PackedStringArray:
 	if id == &"": errors.append("upgrade id is empty")
 	if title_key.is_empty() or description_key.is_empty(): errors.append("%s localization keys are incomplete" % id)
 	if family == &"": errors.append("%s family is empty" % id)
+	if artwork_asset_id == &"": errors.append("%s artwork asset id is empty" % id)
 	if max_level < 1: errors.append("%s max level is invalid" % id)
 	if not summary_keys.is_empty() and summary_keys.size() != max_level:
 		errors.append("%s summary key count must match max level" % id)

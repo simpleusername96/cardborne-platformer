@@ -5,6 +5,7 @@ const Recorder = preload("res://scripts/performance/vehicle_performance_recorder
 const PressureFixture = preload("res://scripts/performance/vehicle_pressure_fixture.gd")
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const RUN_SCENE := "res://scenes/run/VehicleRun.tscn"
 
 var failures: Array[String] = []
@@ -39,13 +40,25 @@ func _run() -> void:
 		print("Activated performance scenario: %s" % String(scenario_id))
 		if scenario_id == &"production_replay":
 			# This is a scheduler contract replay, not a frame benchmark. Ten-Hz
-			# steps preserve the production decision cadence and enough simulated
-			# time to reach the fenced peak beat plus its ten-second rolling window
-			# without spending test time on redundant per-frame telemetry.
-			for _step in 740:
+			# steps preserve the production decision cadence. Packet fences can defer
+			# a later authored beat while the preceding population enters in windows,
+			# so the replay runs until the peak beat is actually active and then keeps
+			# one full ten-second qualification window. The bound is derived from the
+			# authored trigger plus a bounded packet-drain allowance rather than a
+			# wall-clock benchmark duration.
+			var final_trigger := _final_authored_trigger_time(run.current_stage_id)
+			var replay_limit := ceili((final_trigger + 240.0) / 0.10)
+			var peak_window_steps := -1
+			for _step in replay_limit:
 				scenario.before_physics(run, 0.10)
 				run.call("_update_encounter", 0.10)
 				scenario.after_physics(run)
+				if peak_window_steps < 0 and run.encounter_runtime.current_beat >= 4:
+					peak_window_steps = 0
+				elif peak_window_steps >= 0:
+					peak_window_steps += 1
+					if peak_window_steps >= 120:
+						break
 		scenario.after_physics(run)
 		var snapshot := scenario.validation_snapshot(run)
 		if scenario_id == &"production_replay" and not bool(snapshot["valid"]):
@@ -185,6 +198,23 @@ func _run() -> void:
 	run.queue_free()
 	await process_frame
 	_finish()
+
+
+func _final_authored_trigger_time(stage_id: StringName) -> float:
+	var final_beat := 0
+	var trigger_time := 0.0
+	for packet in StageCatalog.packets(stage_id):
+		var beat := int(packet.get("beat", 0))
+		var trigger := Dictionary(packet.get("trigger", {}))
+		if StringName(trigger.get("kind", &"")) != &"time":
+			continue
+		var at := float(trigger.get("at", 0.0))
+		if beat > final_beat:
+			final_beat = beat
+			trigger_time = at
+		elif beat == final_beat:
+			trigger_time = minf(trigger_time, at)
+	return trigger_time
 
 
 func _validate_threshold_contract() -> void:

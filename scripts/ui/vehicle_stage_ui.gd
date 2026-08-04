@@ -41,7 +41,7 @@ const StageReportPanel = preload(
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const MODAL_MINIMUMS := {
 	"deployment":Vector2(1176.0, 636.0),
-	"upgrade":Vector2(1160.0, 580.0),
+	"upgrade":Vector2(1376.0, 616.0),
 	"pause":Vector2(520.0, 430.0),
 	"result":Vector2(900.0, 560.0),
 	"report":Vector2(1200.0, 640.0),

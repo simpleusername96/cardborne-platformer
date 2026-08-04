@@ -241,7 +241,7 @@ func _run() -> void:
 	)
 	_expect(
 		Vector2(projectile_buffer[0], projectile_buffer[4]).is_equal_approx(
-			projectile_direction * 28.0
+		projectile_direction * 5.0 * Art.PLAYER_PRIMARY_PROJECTILE_SCALE
 		),
 		"player primary image uses its authored long-form presentation scale"
 	)
@@ -270,7 +270,7 @@ func _run() -> void:
 		Vector2(projectile_buffer[12], projectile_buffer[16]).is_equal_approx(
 			Vector2.LEFT * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 		),
-		"hostile visual envelope is 4.5 times the collision radius"
+		"hostile visual envelope is owned by the visual profile"
 	)
 	_expect(
 		Vector2(projectile_buffer[15], projectile_buffer[19]).is_equal_approx(

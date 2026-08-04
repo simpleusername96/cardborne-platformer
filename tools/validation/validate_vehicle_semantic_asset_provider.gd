@@ -19,6 +19,16 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"secondary/orbit_blade",
 	&"secondary/wake_mine",
 	&"projectile/energy_teardrop",
+	&"upgrade/ion_field",
+	&"upgrade/element_thermal",
+	&"upgrade/element_toxin",
+	&"upgrade/element_cryo",
+	&"upgrade/dash_wake",
+	&"upgrade/defense_matrix",
+	&"upgrade/system_relay",
+	&"upgrade/mobility_thruster",
+	&"upgrade/pickup_magnet",
+	&"upgrade/hull_reinforcement",
 	&"pickup/experience_master",
 	&"pickup/reward_crate",
 	&"world/facility_repair_pad",
@@ -44,7 +54,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 57, "all 57 final gameplay PNGs are indexed")
+	_expect(ids.size() == 67, "all 67 final gameplay PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
@@ -74,12 +84,33 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 57
+		int(manifest.get("final_asset_count", 0)) == 67
 			and not manifest.has("animations"),
-		"manifest declares 57 static authored rasters and no frame animations"
+		"manifest declares 67 static authored rasters and no frame animations"
 	)
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)
+	for upgrade_id in [
+		&"upgrade/ion_field",
+		&"upgrade/element_thermal",
+		&"upgrade/element_toxin",
+		&"upgrade/element_cryo",
+		&"upgrade/dash_wake",
+		&"upgrade/defense_matrix",
+		&"upgrade/system_relay",
+		&"upgrade/mobility_thruster",
+		&"upgrade/pickup_magnet",
+		&"upgrade/hull_reinforcement",
+	]:
+		var texture := AssetProvider.texture(upgrade_id)
+		if texture == null:
+			continue
+		var image := texture.get_image()
+		_expect(
+			image.get_pixel(0, 0).a < 0.05
+				and image.get_pixel(image.get_width() - 1, image.get_height() - 1).a < 0.05,
+			"%s keeps a transparent raster exterior" % upgrade_id
+		)
 	_finish()
 
 

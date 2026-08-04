@@ -1,13 +1,16 @@
 class_name VehicleSecondaryRuntime
 extends RefCounted
 
-## Bounded simulation for optional automatic secondary families. Seeker appears
-## in the equipment snapshot, while VehicleRun retains its projectile simulation.
+## Bounded simulation for the canonical secondary-weapon family. The built-in
+## seeker and optional weapons share one runtime; VehicleRun remains the sole
+## projectile-store owner and consumes the borrowed projectile intents.
 
 const DEFINITION_PATH := "res://data/weapons/vehicle/secondary"
 const ION_TICK := 0.25
 const ORBIT_HIT_COOLDOWN := 0.55
 const MINE_LIFETIME := 8.0
+const SEEKER_RANGE := 560.0
+const SEEKER_COOLDOWN := 1.35
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 var definitions: Dictionary = {}
@@ -16,17 +19,19 @@ var orbit_angle := 0.0
 var orbit_target_cooldowns: Dictionary = {}
 var mines: Array[Dictionary] = []
 var drone_position := Vector2.ZERO
+var seeker_cooldown := 0.0
 var _candidate_buffer: Array[EnemyState] = []
 var _expired_cooldown_ids: Array[String] = []
 var _damage_output: Array[Dictionary] = []
 var _effects_output: Array[Dictionary] = []
+var _projectile_output: Array[Dictionary] = []
 var _damage_intent_pool: Array[Dictionary] = []
 var _damage_intent_count := 0
 var _result: Dictionary = {}
 
 
 func _init() -> void:
-	_result = {"damage":_damage_output, "effects":_effects_output}
+	_result = {"damage":_damage_output, "effects":_effects_output, "projectiles":_projectile_output}
 	for file_name in DirAccess.get_files_at(DEFINITION_PATH):
 		var resource_name := _source_resource_name(file_name)
 		if resource_name.is_empty():
@@ -49,6 +54,7 @@ func reset(player_position: Vector2) -> void:
 	mines.clear()
 	orbit_angle = 0.0
 	drone_position = player_position
+	seeker_cooldown = 0.0
 
 
 func update(
@@ -59,13 +65,27 @@ func update(
 	build: VehicleRunBuild,
 	enemies: Array[EnemyState],
 	line_of_sight: Callable,
-	query_radius: Callable = Callable()
+	query_radius: Callable = Callable(),
+	find_seeker_targets: Callable = Callable(),
+	seeker_blocked: bool = false,
+	seeker_cooldown_multiplier: float = 1.0
 ) -> Dictionary:
 	# The returned result and damage intents are borrowed scratch storage and
 	# remain valid only until the next update call.
 	_damage_output.clear()
 	_effects_output.clear()
+	_projectile_output.clear()
 	_damage_intent_count = 0
+	seeker_cooldown = maxf(0.0, seeker_cooldown - delta)
+	_update_seeker(
+		delta,
+		player_position,
+		build,
+		find_seeker_targets,
+		seeker_blocked,
+		_projectile_output,
+		seeker_cooldown_multiplier
+	)
 	orbit_angle = fmod(orbit_angle + delta * 2.45, TAU)
 	_expired_cooldown_ids.clear()
 	for enemy_id_variant in orbit_target_cooldowns:
@@ -119,19 +139,66 @@ func snapshot(build: VehicleRunBuild) -> Dictionary:
 		"orbit_angle":orbit_angle,
 		"mines":mines.duplicate(true),
 		"drone_position":drone_position,
+		"seeker_cooldown":seeker_cooldown,
 	}
 
 
 func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
-	var result: Array[Dictionary] = [{"id":&"seeker", "level":1, "name_key":"SECONDARY_SEEKER_NAME"}]
+	var result: Array[Dictionary] = [{"id":&"seeker", "level":1, "name_key":"SECONDARY_SEEKER_NAME", "slot_kind":&"built_in"}]
 	for secondary_id in [&"ion_field", &"orbit_blades", &"wake_mines", &"escort_drone"]:
 		var definition: VehicleSecondaryDefinition = definitions.get(secondary_id)
 		if definition == null:
 			continue
 		var level := build.level_of(definition.upgrade_id)
 		if level > 0:
-			result.append({"id":secondary_id, "level":level, "name_key":definition.name_key})
+			result.append({"id":secondary_id, "level":level, "name_key":definition.name_key, "slot_kind":&"optional"})
 	return result
+
+
+func _update_seeker(
+	delta: float,
+	origin: Vector2,
+	build: VehicleRunBuild,
+	find_targets: Callable,
+	blocked: bool,
+	output: Array[Dictionary],
+	cooldown_multiplier: float
+) -> void:
+	if blocked or seeker_cooldown > 0.0 or not find_targets.is_valid():
+		return
+	var seeker_count := 1 + build.level_of(&"twin_seekers")
+	var targets_variant: Variant = find_targets.call(seeker_count)
+	if not targets_variant is Array or targets_variant.is_empty():
+		return
+	var cooldown := maxf(
+		SEEKER_COOLDOWN * 0.60,
+		build.stat(&"seeker_interval", SEEKER_COOLDOWN)
+	)
+	cooldown *= cooldown_multiplier
+	seeker_cooldown = cooldown
+	var seeker_scale: float = [1.0, 0.85, 0.70][clampi(seeker_count - 1, 0, 2)]
+	for target_variant in targets_variant:
+		var target := target_variant as EnemyState
+		if target == null:
+			continue
+		var direction := (target.pos - origin).normalized()
+		output.append({
+			"pos": origin + direction * 33.0,
+			"velocity": direction * 490.0,
+			"radius": 8.0,
+			"damage": 25.0 * build.stat(&"seeker_damage_multiplier", 1.0) * seeker_scale * (1.25 if target.marked_time > 0.0 else 1.0),
+			"life": 1.8,
+			"color": Color("8ae9dc"),
+			"owner": "seeker",
+			"pierce": build.level_of(&"phase_seeker"),
+			"bounces": 0,
+			"homing": true,
+			"target_id": target.id,
+			"explosive": build.has(&"hunter_firmware"),
+			"structure_damage": 25.0,
+			"status_profile": null,
+			"wall_piercing": false,
+		})
 
 
 func _update_ion(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:

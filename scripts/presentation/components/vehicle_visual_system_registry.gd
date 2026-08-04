@@ -17,9 +17,6 @@ const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
 
-const UPGRADE_GLYPH_RECIPE_PATH := (
-	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
-)
 const ACTION_GLYPH_RECIPE_PATH := (
 	"res://scripts/presentation/components/vehicle_ui_action_glyph_renderer.gd"
 )
@@ -56,7 +53,6 @@ static func catalog_ids() -> Dictionary:
 		&"secondary": SecondaryCatalog.descriptor_ids(),
 		&"semantic_asset": AssetProvider.asset_ids(),
 		&"glyph_core": GlyphCatalog.descriptor_ids(),
-		&"glyph_upgrade": GlyphCatalog.upgrade_family_ids(),
 	}
 
 
@@ -80,15 +76,6 @@ static func provider_fingerprint() -> String:
 	)
 	_append_descriptor_records(records, "world_field", WorldCatalog.FIELD_DESCRIPTORS)
 	_append_descriptor_records(records, "world_facility", WorldCatalog.FACILITY_DESCRIPTORS)
-	_append_descriptor_records(
-		records,
-		"glyph_upgrade_family",
-		GlyphCatalog.UPGRADE_FAMILY_GLYPHS
-	)
-	records.append(
-		"upgrade_glyph_recipes=%s"
-		% FileAccess.get_sha256(UPGRADE_GLYPH_RECIPE_PATH)
-	)
 	records.append(
 		"action_glyph_recipes=%s"
 		% FileAccess.get_sha256(ACTION_GLYPH_RECIPE_PATH)

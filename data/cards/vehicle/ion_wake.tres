@@ -9,6 +9,7 @@ title_key = "UPGRADE_ION_WAKE_TITLE"
 description_key = "UPGRADE_ION_WAKE_DESC"
 summary_keys = Array[String](["UPGRADE_ION_WAKE_DESC"])
 family = &"dash"
+artwork_asset_id = &"upgrade/dash_wake"
 max_level = 1
 source_tags = Array[StringName]([&"level_up", &"boss"])
 behavior_ids = Array[StringName]([&"ion_wake"])

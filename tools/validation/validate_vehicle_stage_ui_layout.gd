@@ -111,14 +111,20 @@ func _initialize() -> void:
 		_expect(int(upgrade_contract["card_count"]) == 3, "upgrade choice keeps exactly three card slots at %d" % width)
 		_expect(
 			Vector2(upgrade_contract["confirm_size"]) == (
-				Vector2(300.0, 48.0) if width < 1100.0 else Vector2(360.0, 56.0)
+				Vector2(300.0, 48.0)
+				if width < 1100.0
+				else (
+					Vector2(360.0, 56.0)
+					if width < 1600.0
+					else Vector2(420.0, 64.0)
+				)
 			),
 			"upgrade confirmation uses the supported command contract at %d" % width
 		)
 		_expect(
 			String(upgrade_contract["row_type"]) == "HFlowContainer"
 				and int(upgrade_contract["row_separation"]) == (
-					12 if width < 1100.0 else 20
+					12 if width < 1100.0 else (16 if width < 1600.0 else 24)
 				),
 			"upgrade cards use the approved responsive flow and gap at %d" % width
 		)
@@ -130,10 +136,17 @@ func _initialize() -> void:
 					"confirm":22,
 				}
 				if width < 1100.0
-				else {
-					"message":16,
-					"confirm":24,
-				}
+				else (
+					{
+						"message":16,
+						"confirm":24,
+					}
+					if width < 1600.0
+					else {
+						"message":18,
+						"confirm":26,
+					}
+				)
 			),
 			"upgrade panel uses the approved responsive type scale at %d"
 			% width
@@ -145,7 +158,11 @@ func _initialize() -> void:
 				(
 					card_size == Vector2(280.0, 378.0)
 					if width < 1100.0
-					else card_size == Vector2(352.0, 432.0)
+					else (
+						card_size == Vector2(360.0, 456.0)
+						if width < 1600.0
+						else card_size == Vector2(420.0, 480.0)
+					)
 				),
 				"upgrade cards use the supported hierarchy at %d" % width
 			)
@@ -159,13 +176,23 @@ func _initialize() -> void:
 						"behavior":13,
 					}
 					if width < 1100.0
-					else {
-						"family":16,
-						"level":18,
-						"title":28,
-						"summary":16,
-						"behavior":15,
-					}
+					else (
+						{
+							"family":16,
+							"level":18,
+							"title":28,
+							"summary":16,
+							"behavior":15,
+						}
+						if width < 1600.0
+						else {
+							"family":18,
+							"level":18,
+							"title":32,
+							"summary":18,
+							"behavior":16,
+						}
+					)
 				),
 				"upgrade card uses the approved responsive type scale at %d"
 				% width
@@ -307,7 +334,7 @@ func _initialize() -> void:
 				"deployment uses the approved broad 1280x720 composition"
 			)
 			var modal_minimums := Dictionary(contract["modal_minimums"])
-			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(1160.0, 580.0), "upgrade modal fits the selected wide dossier card flow without a header")
+			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(1376.0, 616.0), "upgrade modal fits the responsive dossier card flow without a header")
 			_expect(Vector2(modal_minimums["pause"]) == Vector2(520.0, 430.0), "pause modal uses the compact vertical-stack contract")
 			_expect(Vector2(modal_minimums["settings"]) == Vector2(920.0, 570.0), "settings modal keeps approved scale")
 			_expect(Vector2(modal_minimums["guidebook"]) == Vector2(1160.0, 636.0), "guidebook modal keeps approved scale")
@@ -798,11 +825,15 @@ func _expect_upgrade_geometry(
 		var card_rect := Rect2(card["rect"])
 		var expected_card_size := (
 			Vector2(520.0, 920.0)
-			if card_rect.size.x > 400.0
+			if card_rect.size.x > 500.0
 			else (
 				Vector2(280.0, 378.0)
 				if card_rect.size.x < 300.0
-				else Vector2(352.0, 432.0)
+				else (
+					Vector2(420.0, 480.0)
+					if card_rect.size.x > 400.0
+					else Vector2(360.0, 456.0)
+				)
 			)
 		)
 		_expect(
@@ -823,14 +854,13 @@ func _expect_upgrade_geometry(
 		if prior_card.has_area():
 			_expect(not prior_card.intersects(card_rect), "%s cards do not overlap" % context)
 		prior_card = card_rect
-		var glyph := Dictionary(card["glyph"])
-		var glyph_control_rect := Rect2(glyph["control_rect"]).grow(0.5)
-		var glyph_content_rect := Rect2(glyph["content_rect"])
+		var artwork := Dictionary(card["artwork"])
+		var artwork_rect := Rect2(artwork["rect"])
 		_expect(
-			int(glyph["command_count"]) >= 3
-				and glyph_control_rect.encloses(glyph_content_rect)
-				and card_rect.grow(0.5).encloses(glyph_content_rect),
-			"%s card glyph has complete visible bounds" % context
+			StringName(artwork["asset_id"]) != &""
+				and bool(artwork["texture_loaded"])
+				and card_rect.grow(0.5).encloses(artwork_rect),
+			"%s card uses one resolved authored artwork texture inside its bounds" % context
 		)
 		for label_variant in card["labels"]:
 			var label := Dictionary(label_variant)

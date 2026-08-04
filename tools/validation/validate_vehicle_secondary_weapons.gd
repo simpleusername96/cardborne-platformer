@@ -33,7 +33,11 @@ func _initialize() -> void:
 		if build.active_optional_secondaries() >= 2:
 			break
 	_expect(build.active_optional_secondaries() == 2, "two optional families fill the three-family total cap")
-	var blocked := Catalog.OPTIONAL_SECONDARY_FAMILY_IDS.filter(func(id: StringName) -> bool: return not build.has(id))
+	var optional_ids: Array[StringName] = []
+	for definition in catalog.all_definitions():
+		if definition.family == &"secondary" and definition.secondary_slot_kind == &"optional":
+			optional_ids.append(definition.id)
+	var blocked := optional_ids.filter(func(id: StringName) -> bool: return not build.has(id))
 	for upgrade_id in blocked:
 		_expect(not catalog.compatible(catalog.get_definition(upgrade_id), build), "fourth family is incompatible")
 	var state := runtime.snapshot(build)

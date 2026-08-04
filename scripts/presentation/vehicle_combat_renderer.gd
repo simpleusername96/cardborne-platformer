@@ -868,11 +868,12 @@ func _sync_projectiles(
 			if projectile.homing or projectile.owner == "seeker"
 			else (&"opening_breach" if projectile.wall_piercing else &"primary")
 		)
-		var visual_radius := radius * (
-			5.8 if visual_id == &"opening_breach" else (
-				5.0 if visual_id == &"seeker" else 5.6
-			)
-		)
+		var visual_scale := Art.PLAYER_PRIMARY_PROJECTILE_SCALE
+		if visual_id == &"seeker":
+			visual_scale = Art.PLAYER_SEEKER_PROJECTILE_SCALE
+		elif visual_id == &"opening_breach":
+			visual_scale = Art.PLAYER_OPENING_BREACH_PROJECTILE_SCALE
+		var visual_radius := radius * visual_scale
 		if not visible_world.grow(visual_radius).has_point(position):
 			continue
 		_write_instance_basis(

@@ -336,35 +336,36 @@ gameplay rule, record evidence and stop because that exceeds this plan's authori
 - [ ] Record exact HEAD, dirty state, existing failing JSON, and a fresh native
   instrumented `peak_horde` result with the required 64 slow-frame samples and p99
   classification at the exact profile path above.
-- [ ] Update `VISUAL_SYSTEM.md` so authored PNG ownership explicitly includes upgrade
+- [x] Update `VISUAL_SYSTEM.md` so authored PNG ownership explicitly includes upgrade
   content artwork while shared UI chrome remains Theme/stylebox-owned; replace the old
   card geometry/breakpoint assertions with this plan's three modes; and change the exact
   gameplay manifest contract from 57 to 67 with category `upgrade: 10`.
-- [ ] Update `vehicle_game_spec.md` to make `secondary` the sole user-facing upgrade
+- [x] Update `vehicle_game_spec.md` to make `secondary` the sole user-facing upgrade
   family/umbrella, define built-in versus optional secondary slot kinds, and lock the
   card information order and behavior-only fallback.
-- [ ] Add complete performance attribution before choosing any additional hot owner.
+- [x] Add complete performance attribution before choosing any additional hot owner.
 
 ### M2 — Remove the measured stutter
 
-- [ ] Implement retained enemy scheduling/worklists and channel-dirty HUD updates.
-- [ ] Correct any additional profiler-proven owner within this plan's boundaries.
-- [ ] Confirm short native `peak_horde` diagnostics trend under the release thresholds
+- [x] Implement channel-dirty HUD updates and bounded enemy/grid work; retain local
+  separation with a generation-safe steering cache and skip unchanged grid writes.
+- [x] Correct the profiler-proven owners within this plan's boundaries.
+- [ ] Confirm an authoritative native `peak_horde` result under the release thresholds
   without lowering actors, projectiles, zones, effects, or visual quality.
 
 ### M3 — Produce all replacement images in one batch
 
-- [ ] Generate the ten 192×192 upgrade artwork PNGs, the corrected 64×64 projectile
+- [x] Generate the ten 192×192 upgrade artwork PNGs, the corrected 64×64 projectile
   PNG, and the three 240×160 Wear Collapse PNGs in one visual-production milestone.
-- [ ] Before every generation/edit, read `VISUAL_SYSTEM.md`, inspect the canonical PNG,
+- [x] Before every generation/edit, read `VISUAL_SYSTEM.md`, inspect the canonical PNG,
   and pass `cardborne-universal-art-style-reference.png` as the actual image-reference
   input. Do not pass the Markdown file as an image.
-- [ ] Update the semantic manifest and both exact-count validators to 67 assets with ten
+- [x] Update the semantic manifest and both exact-count validators to 67 assets with ten
   `upgrade` entries. Build one compact local AS-IS/TO-BE HTML report at
   `docs/design/visual-replacement-workbench/previews/urgent-runtime-stabilization/index.html`
   showing every changed image at native size and over representative gameplay/UI
   backgrounds.
-- [ ] For each of the exact fourteen outputs, record AS-IS hash (or `new`), TO-BE hash,
+- [x] For each of the exact fourteen outputs, record AS-IS hash (or `new`), TO-BE hash,
   dimensions, pivot, alpha bounds, canonical reference path/hash, generation/edit
   provenance, and pass/fail results. Self-check silhouette, alpha edges, actual-size
   readability, and collision overlay. The user's approval-free-plan instruction
@@ -373,40 +374,40 @@ gameplay rule, record evidence and stop because that exceeds this plan's authori
 
 ### M4 — Integrate upgrade data and UI
 
-- [ ] Add `artwork_asset_id`, migrate all forty-one definitions using the locked table,
+- [x] Add `artwork_asset_id`, migrate all forty-one definitions using the locked table,
   and validate that every ID resolves.
-- [ ] Add `secondary_slot_kind`, merge the six `seeker` family resources into
+- [x] Add `secondary_slot_kind`, merge the six `seeker` family resources into
   `secondary`, and replace hard-coded optional-ID eligibility with built-in/optional
   metadata. Update `VehicleRunBuild.active_optional_secondaries()` to count owned
   catalog definitions whose `secondary_slot_kind == &"optional"`; remove
   `OPTIONAL_SECONDARY_FAMILY_IDS` after all callers and focused tests use metadata.
-- [ ] Move built-in seeker scheduling and projectile intents into
+- [x] Move built-in seeker scheduling and projectile intents into
   `VehicleSecondaryRuntime`; update `VehicleRun`, HUD snapshots, damage reporting,
   capture fixtures, localization, and tests without changing observable weapon behavior.
-- [ ] Replace code-drawn upgrade glyphs with semantic textures and retire only the exact
+- [x] Replace code-drawn upgrade glyphs with semantic textures and retire only the exact
   zero-reference renderer pair listed above.
-- [ ] Implement the compact/standard/large layout, full level/change visibility,
+- [x] Implement the compact/standard/large layout, full level/change visibility,
   behavior-only fallback, fixed Equip action, focus states, and 200% outer scrolling.
-- [ ] Update upgrade validators to require one resolved authored texture per card and
+- [x] Update upgrade validators to require one resolved authored texture per card and
   reject code-native upgrade artwork.
 
 ### M5 — Integrate combat readability
 
-- [ ] Switch all projectile visual multipliers to `VehicleStageVisualProfile`, improve
+- [x] Switch all projectile visual multipliers to `VehicleStageVisualProfile`, improve
   the shared PNG occupancy, and remove renderer literals.
-- [ ] Add actual-scale projectile coverage for friendly/hostile colors and 960/1280/1920
+- [x] Add actual-scale projectile coverage for friendly/hostile colors and 960/1280/1920
   pressure scenes while preserving collision truth; add and pass
   `validate_vehicle_projectile_readability.gd`.
-- [ ] Add deterministic approach-distribution and projectile/charge/beam/area corridor
+- [x] Add deterministic approach-distribution and projectile/charge/beam/area corridor
   fixtures in `validate_vehicle_attack_route_readability.gd`; repair caller, blocker,
   descriptor, and renderer parity only if the runtime fixture fails.
 
 ### M6 — Integrate Wear Collapse tiles
 
-- [ ] Switch the three images in place without changing IDs, canvas, pivot, or gameplay.
-- [ ] Capture intact, cracked, collapse-on-third-entry, damage tick, leave/re-entry, and
+- [x] Switch the three images in place without changing IDs, canvas, pivot, or gameplay.
+- [x] Capture intact, cracked, collapse-on-third-entry, damage tick, leave/re-entry, and
   persisted-state evidence against the actual floor.
-- [ ] Verify clean alpha/edge behavior over light and dark backgrounds.
+- [x] Verify clean alpha/edge behavior over light and dark backgrounds.
 
 ### M7 — Run the one complete final gate
 
@@ -616,7 +617,20 @@ other UI is a separate scope decision and must not be silently absorbed here.
 - [x] Identified stale completed phases in the old plan and preserved only relevant work.
 - [x] Locked scope, terminology, reusable artwork mapping, target layout, projectile
   scales, tile boundaries, performance priorities, validation cadence, and stop rules.
-- [ ] M1 through M7 implementation remains.
+- [x] M1 contract, attribution, visual-production, integration, combat-readability,
+  and Wear Collapse implementation is complete.
+- [x] Re-ran the complete 59-script Godot validator suite, the deterministic visual
+  replacement workbench check/validator, visual-authority validation, and Web export;
+  all mechanical checks passed. The workbench now projects the ten upgrade PNGs as
+  one applied authored unit (67 current/final gameplay PNGs, 65 authored and 2 reused).
+- [ ] M1 exact clean-commit profile still needs a foreground-authoritative capture at
+  `build/performance/urgent-stabilization/profiles/peak-horde-baseline.json`.
+- [ ] M7 authoritative release qualification remains: the latest focused native
+  `--disable-vsync` result at
+  `build/performance/urgent-stabilization/post-plan-peak-horde-60s-novsync.json`
+  is authority-eligible but still exceeds the frame-time gate (p95 45.83 ms, p99
+  133.33 ms, 1% low 7.26 FPS). The available Web smoke browser reports
+  `HeadlessChrome`. No workload, visual-quality, or threshold reduction was made.
 
 ## Completion
 

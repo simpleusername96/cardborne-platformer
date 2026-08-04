@@ -22,6 +22,7 @@ title_key = "UPGRADE_STABILIZER_TITLE"
 description_key = "UPGRADE_STABILIZER_DESC"
 summary_keys = Array[String](["UPGRADE_STABILIZER_DESC", "UPGRADE_STABILIZER_DESC"])
 family = &"primary"
+artwork_asset_id = &"projectile/energy_teardrop"
 max_level = 2
 source_tags = Array[StringName]([&"level_up", &"boss"])
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1"), SubResource("Modifier_2")])

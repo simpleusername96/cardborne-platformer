@@ -79,12 +79,18 @@ func _apply_viewport() -> void:
 		minf(target_size.y, available.y)
 	)
 	var responsive_compact := size.x < 1100.0 or size.y < 650.0
+	var responsive_large := size.x >= 1600.0 and size.y >= 900.0
 	var compact := responsive_compact or _accessibility_compact
 	surface.theme_type_variation = (
 		&"ModalSurfaceCompact" if compact else &"ModalSurface"
 	)
 	if content != null and content.has_method("set_compact_mode"):
 		content.call("set_compact_mode", compact)
+	if content != null and content.has_method("set_large_mode"):
+		content.call(
+			"set_large_mode",
+			responsive_large and not compact and not _accessibility_compact
+		)
 	if content != null and content.has_method("set_accessibility_mode"):
 		content.call("set_accessibility_mode", _accessibility_compact)
 

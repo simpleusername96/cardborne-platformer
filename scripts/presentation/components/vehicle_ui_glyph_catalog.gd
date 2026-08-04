@@ -1,12 +1,9 @@
 class_name VehicleUiGlyphCatalog
 extends RefCounted
 
-## Action, minimap, and preview glyph catalog. Upgrade-family access remains a
-## compatibility route while VehicleUpgradeGlyphRenderer owns its geometry.
+## Action, minimap, and preview glyph catalog. Upgrade content is semantic
+## raster artwork and is intentionally not part of this UI-chrome catalog.
 
-const UpgradeGlyphRenderer = preload(
-	"res://scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd"
-)
 const ActionGlyphRenderer = preload(
 	"res://scripts/presentation/components/vehicle_ui_action_glyph_renderer.gd"
 )
@@ -20,9 +17,6 @@ const CORE_GLYPHS: Array[StringName] = [
 	&"locked_silhouette",
 ]
 
-# Compatibility surface for current registry/sheet callers. The renderer is the
-# single geometry recipe owner.
-const UPGRADE_FAMILY_GLYPHS := UpgradeGlyphRenderer.FAMILY_RECIPES
 const ACTION_GLYPHS := ActionGlyphRenderer.ACTION_RECIPES
 
 
@@ -80,11 +74,3 @@ static func draw_action_glyph(
 
 static func validate_action_recipes() -> PackedStringArray:
 	return ActionGlyphRenderer.validate_recipes()
-
-
-static func upgrade_family_ids() -> Array[StringName]:
-	return UpgradeGlyphRenderer.family_ids()
-
-
-static func upgrade_family_descriptor(family: StringName) -> Dictionary:
-	return UpgradeGlyphRenderer.recipe(family)
