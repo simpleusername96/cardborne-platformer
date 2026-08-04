@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-03
 last_reviewed: 2026-08-04
-scope: Current AS-IS references, authored-raster and code-native targets, previews, approval records, and generated review UI
+scope: Current AS-IS references, authored-raster and code-native targets, previews, exact technical records, and generated review UI
 related:
   - ../VISUAL_SYSTEM.md
   - ../cardborne-universal-art-style-reference.png
@@ -36,7 +36,7 @@ production, runtime-change, and retirement targets.
   suffix exactly mirrors their production target path.
 - [`asset-rationalization.md`](./asset-rationalization.md) records the audited
   evidence behind the pre-Phase-6 media boundary. It is not a second unit,
-  approval, or application-state authority.
+  technical-readiness, or application-state authority.
 
 The workbench never owns gameplay rules or art direction. Those remain in the
 product specification and the mandatory visual authority pair:
@@ -49,12 +49,12 @@ Their canonical repository paths are `docs/design/VISUAL_SYSTEM.md` and
 
 - AS-IS media is referenced from `art/visuals/production`; it is not copied
   into this folder.
-- Before candidate creation, review, approval, or promotion, read the complete
+- Before candidate creation, review, technical acceptance, or application, read the complete
   visual specification and inspect the canonical reference sheet at original
   detail with its recorded SHA-256. Raster and ImageGen candidates must record
   that the canonical sheet was supplied as an actual image reference.
 - A candidate created without the authority pair cannot become `switch_ready`,
-  receive approval, or enter production. Keep it outside active TO-BE paths until
+  receive a technical record, or enter production. Keep it outside active TO-BE paths until
   it is regenerated or reworked under the pair.
 - Before any unit becomes `switch_ready`, record `visual_authority_evidence` in
   that unit with the exact canonical spec path, sheet path, sheet SHA-256,
@@ -62,18 +62,24 @@ Their canonical repository paths are `docs/design/VISUAL_SYSTEM.md` and
   raster PNG deliverables also requires `actual_image_reference_used=true` and a
   concrete `reference_input_method` such as `image_gen.referenced_image_paths`;
   non-raster units use `false` and `not_applicable`.
-- A preview never satisfies a deliverable or approval requirement.
-- An external candidate never satisfies a deliverable or approval requirement.
+- A preview never satisfies a deliverable or technical-readiness requirement.
+- An external candidate never satisfies a deliverable or technical-readiness requirement.
   It must first be adapted to the Cardborne camera, palette, silhouette, canvas,
   pivot, and detail contract and saved under the exact `to-be/assets/` target.
 - A code-native switch may have no TO-BE PNG. Its unit must instead enumerate
   the exact runtime-change paths, semantic IDs, rendered comparison evidence,
   and exact raster/sidecar retirement paths.
-- Approval is valid only for the exact SHA-256 map and exact retirement paths
-  recorded for one switch unit.
+- `approved_for_switch` is the retained internal name for an exact technical
+  ledger, not a user approval or response gate. Historical `approved_by=BK`
+  records remain valid; autonomous runs use `approved_by=autonomous-executor`.
+- A technical ledger is valid only when its target-path set, SHA-256 map, and
+  ordered retirement paths exactly match one switch unit. Extra, missing, or
+  changed paths and hashes fail closed.
 - Raster deletion must follow, never precede, the consumer, descriptor,
   manifest, provider, and validator migration for that unit.
-- The browser UI is read-only and works without networking or a server.
+- The browser UI works without networking or a server. Its optional per-target
+  Needs attention flags and short notes stay in browser-local storage, never
+  change repository truth, and never pause autonomous execution.
 - Korean and English labels, keyboard operation, visible focus, responsive
   layout, image dialogs, and reduced-motion behavior remain complete.
 
@@ -86,7 +92,7 @@ Build and verify with:
 .\tools\validation\validate_visual_replacement_workbench.ps1
 ```
 
-Preview an already approved unit without writing production files:
+Preview an exact technically ready unit without writing production files:
 
 ```powershell
 .\tools\design\promote_visual_replacement_unit.ps1 -UnitId <unit_id>

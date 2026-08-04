@@ -149,7 +149,7 @@
       "title_ko": "투사체 패밀리",
       "owner": "gameplay_manifest",
       "switch_kind": "replace",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_arc.png",
         "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_cryo.png",
@@ -363,15 +363,42 @@
         "art/visuals/production/gameplay/weapons/projectiles/projectile_player_seeker.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/projectile_family.png"
+      ],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_arc.png": "d14d2a77674ac0c11632991cfd7f7f90d0aea824fd5b0abc045b6248e45d7133",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_cryo.png": "1fcdf6d3ce64b37781405fb8f04152a71488770446595cb1b96f0adbc995d68d",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_hybrid.png": "99d45ee67ea3e0c92785aa7597b8a8899ff348b7d4c26ec1f781236a26c9921e",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_kinetic.png": "626c140cd5d85c519e86d825bd4d252472d3f4ec2ebb55e30c050fbaa0be54cd",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_thermal.png": "4e023b22fbf4e34fd8d64229707501ca53a8afc85ca54c3e53938ceaf1c1c2a8",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_toxin.png": "0de17e444345807348eb4dddb4e9b61a6c1b4be9eaa2a53f407b9eef109c35c5",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_player_opening_breach.png": "1c8dd0100189dd6fe921f0404aac1fcbcbbbc28332fcebb89400f87a20adedca",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_player_primary.png": "06b9bf9391342131f2224c17a6557e3385eb3239701c713795a0e878e33ce4ed",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_player_seeker.png": "2b1fe79b2c4c1e6dafa5aaa0ce3276355518073960445d0a165feba01da6c91a"
+        },
+        "retire_paths": []
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
     },
     {
       "id": "defense_status_family",
@@ -381,7 +408,7 @@
       "title_ko": "방어 및 상태 패밀리",
       "owner": "gameplay_manifest",
       "switch_kind": "replace",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/states/enemy_generator_shield_source.png",
         "art/visuals/production/gameplay/states/enemy_shield_escort_plate.png",
@@ -537,15 +564,40 @@
         "art/visuals/production/gameplay/states/status_poison.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/defense_status_family.png"
+      ],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/states/enemy_generator_shield_source.png": "d10f0f0007812c81a7e9fdf77d246d4da7e80fd3bf9d7954a4c1ecd77ac738dc",
+          "art/visuals/production/gameplay/states/enemy_shield_escort_plate.png": "fde1c3292876a02aa42e411b18ae4ee7a38a9f156794f60a3490c8e7421b1a14",
+          "art/visuals/production/gameplay/states/player_barrier_plate.png": "b237feaae0c16339b68dfa2d61c7be2cce46c0dc5cdb8beb208e877e1c1472cf",
+          "art/visuals/production/gameplay/states/player_ion_emitter.png": "9cf38d49e1e535430c433ca2653497d700ad183e00e8dcde732e3371769dfa55",
+          "art/visuals/production/gameplay/states/status_burn.png": "1a7a2532c1d45b1ec353e7050194a4b725ea784fde5f7c5f40e380b031257bcb",
+          "art/visuals/production/gameplay/states/status_chill.png": "913196aa485083bf5bcb5a03b2e44d739508bd4c4b0e0d14d690810cad991ef1",
+          "art/visuals/production/gameplay/states/status_poison.png": "d16e80ea84933e18d04a8a5d7fdffeda5d377e34fc035ae5c47a79b3c261e40b"
+        },
+        "retire_paths": []
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
     },
     {
       "id": "secondary_and_wear_family",
@@ -555,7 +607,7 @@
       "title_ko": "보조 무기 및 마모 타일",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/weapons/secondaries/secondary_escort_drone.png",
         "art/visuals/production/gameplay/weapons/secondaries/secondary_orbit_blade.png",
@@ -708,7 +760,9 @@
         "art/visuals/production/gameplay/world/wear_tile_intact.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/secondary_and_wear_family.png"
+      ],
       "retire_paths": [],
       "runtime_change_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
@@ -721,8 +775,31 @@
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/weapons/secondaries/secondary_escort_drone.png": "ca62d2d77a4ecdd5f2183e3c3f031e6b0d547957976b5a9d2f1e0f260d1503d5",
+          "art/visuals/production/gameplay/weapons/secondaries/secondary_orbit_blade.png": "a5c705a743c768abf3f78809a513e555e36b247f2157915716ac5e5e4193b92a",
+          "art/visuals/production/gameplay/weapons/secondaries/secondary_seeker.png": "3f79aa12186e19d4a83be24757aa89eeb3ae48ef150f4c7c524848bf99d14ece",
+          "art/visuals/production/gameplay/weapons/secondaries/secondary_wake_mine.png": "2c615d039c00a45fb44ea4ff46df1fea433a2f849dc29ec6e50556dd84e2d4f3",
+          "art/visuals/production/gameplay/world/wear_tile_intact.png": "54ca095c04f48c96bc8dd2f809150b3cec8f46ccf8011faa14e62e1822576a9f",
+          "art/visuals/production/gameplay/world/wear_tile_cracked.png": "a7e36ffa32fdf5adc5e0c616159bd0fa46a5b5cb069fa8889e9e603ad53aacd6",
+          "art/visuals/production/gameplay/world/wear_tile_collapsed.png": "be2f0c1831b0636046dbfb6817ffc3eee30cc1d3c3e6f3913f1eedc47a3c7817"
+        },
+        "retire_paths": []
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
     },
     {
       "id": "ordinary_enemy_family",
@@ -732,7 +809,7 @@
       "title_ko": "일반 적 패밀리",
       "owner": "gameplay_manifest",
       "switch_kind": "replace",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png",
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png",
@@ -1128,15 +1205,52 @@
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_turret_base.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/ordinary_enemy_family.png"
+      ],
       "retire_paths": [],
       "runtime_change_paths": [],
       "acceptance_commands": [
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png": "4907d7488987ef30da64c97a0ad0077d734c2b07894149b0aa4189790e31e657",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png": "bf361c070bc71382415299b5fce6ff04eba8592d64fb49b06181f139927d6bb0",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_boss_pylon_base.png": "200b2ed9b2feb81a2451df6e682082a4c359a463dc238cf3b327178a3566b718",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_bulkhead_guard_base.png": "58a3077452305a75cb61baadcc9533ce28a2ead5270fc34c3fe2ddeb17625813",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_chaser_base.png": "c5eb6f0d0c476c7aecbe541d61295183d14c3fd9d68734de4e562d3297a7c3da",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_controller_base.png": "98c6a54dbd8377ee25167a7ad2b36664b75f3839d15d8f844e52b5496a1615ca",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_drone_carrier_base.png": "fd59cb348bcab022dd6f9b17e8c57856e9fe33c6d2ff358388b2687bbd1a1a86",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_generator_base.png": "2a0f568d80b2ca1fc3b746c5f86d792ad0c58269533cccd02f072f9a103f1b66",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_interceptor_tower_base.png": "d4bba20f218e63e47a8219ba6e69dcdfe9a6c05fbcfb688548109eecc7becc5c",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_mine_base.png": "053c14ba0f8bf38fba9a89c6cf052cda933238b5f581ce0a6e004034c1d2ff74",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_needle_drone_base.png": "9df3d090b32642ba0d2ffc32f48f797b6a90e4eb40795db59129d1f9fc7bbeea",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_rammer_base.png": "496d93c74193866f759335ce38085a95b296877d572bebdbaf8e53baae913431",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_repair_tender_base.png": "c999247de9c58b43a78c542f9e8c16966a393f31dcb5ded231b909de0eecbac5",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_scrap_drone_base.png": "8a0e4695206692562c6bd21e47d97b3bcb6fa1a58ac0d3c2f7213e17485289a4",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_shield_escort_base.png": "f02e139dade6e381692e536ccb91fad8a5568dff022bdaa4e8d700de51aa9281",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_shooter_base.png": "ecef1729e610420fab1ec59a4fe6a34f72460b11cf466bdd355173a2bee9e846",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_spark_minelet_base.png": "fb7eb852aede6b9d7aeffb89b54d9d0291e9663c355250df7afa7babbad0e1b7",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_splitter_barge_base.png": "cfabe57276bfcf27baf1f3dc7f274eb931a0e829ad357c962708c227ac8a873c",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_turret_base.png": "8a3c96214750a32326884ef817864f5bb6307def59e7da66c89b8ebbeeb02414"
+        },
+        "retire_paths": []
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
     },
     {
       "id": "emp_authored_replacement",
@@ -1146,7 +1260,7 @@
       "title_ko": "EMP 단일 이미지 교체",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png",
         "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png",
@@ -1193,7 +1307,9 @@
         "art/visuals/production/gameplay/effects/fx_emp_release.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/emp_authored_replacement.png"
+      ],
       "retire_paths": [
         "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png",
         "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png.import",
@@ -1221,8 +1337,38 @@
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/effects/fx_emp_release.png": "d47097896367a63ec87e1f022f0d57567c51d3873fa10caaaeea9a89055867c6"
+        },
+        "retire_paths": [
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png",
+          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png.import"
+        ]
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
     },
     {
       "id": "small_effect_suppression",
@@ -1232,7 +1378,7 @@
       "title_ko": "비EMP 효과 억제",
       "owner": "composite",
       "switch_kind": "retire",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_00.png",
         "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_01.png",
@@ -1642,8 +1788,214 @@
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {},
+        "retire_paths": [
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_barrier_contact/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_module_disabled/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_module_disabled/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_module_disabled/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_module_disabled/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_module_disabled/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_module_disabled/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_module_disabled/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_module_disabled/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_reduced_hit/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_reduced_hit/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_reduced_hit/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_reduced_hit/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_reduced_hit/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_reduced_hit/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_reduced_hit/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_boss_reduced_hit/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_bulkhead_destroy/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_crate_destroy/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_dash_start/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_dash_start/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_dash_start/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_dash_start/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_dash_start/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_dash_start/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_05.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_heavy/frame_05.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_enemy_destroy_light/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_escort_drone_impact/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_escort_drone_impact/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_escort_drone_impact/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_escort_drone_impact/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_escort_drone_impact/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_escort_drone_impact/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_escort_drone_impact/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_escort_drone_impact/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_05.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hostile_summon_arrival/frame_05.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hull_hit/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hull_hit/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hull_hit/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hull_hit/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hull_hit/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hull_hit/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_hull_hit/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_hull_hit/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_impact_damage/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_lifesteal_pulse/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_lifesteal_pulse/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_lifesteal_pulse/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_lifesteal_pulse/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_lifesteal_pulse/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_lifesteal_pulse/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_lifesteal_pulse/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_lifesteal_pulse/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_muzzle_player_primary/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_muzzle_player_primary/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_muzzle_player_primary/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_muzzle_player_primary/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_muzzle_player_primary/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_muzzle_player_primary/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_muzzle_player_primary/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_muzzle_player_primary/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_orbit_blade_impact/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_orbit_blade_impact/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_orbit_blade_impact/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_orbit_blade_impact/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_orbit_blade_impact/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_orbit_blade_impact/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_orbit_blade_impact/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_orbit_blade_impact/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_pickup_intake/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_pickup_intake/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_pickup_intake/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_pickup_intake/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_pickup_intake/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_pickup_intake/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_pickup_intake/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_pickup_intake/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_reflect_deflection/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_seeker_impact/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_seeker_impact/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_seeker_impact/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_seeker_impact/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_seeker_impact/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_seeker_impact/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_seeker_impact/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_seeker_impact/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_support_heal/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_support_heal/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_support_heal/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_support_heal/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_support_heal/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_support_heal/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_support_heal/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_support_heal/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_transit_shift/frame_04.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_00.png",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_00.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_01.png",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_01.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_02.png",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_02.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_03.png",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_03.png.import",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_04.png",
+          "art/visuals/production/gameplay/effects/frames/fx_wake_mine_detonation/frame_04.png.import"
+        ]
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": false,
+        "reference_input_method": "not_applicable"
+      }
     },
     {
       "id": "effect_atlas_retirement",
@@ -1842,7 +2194,7 @@
       "title_ko": "보스 본체 및 공통 노드",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png",
         "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png",
@@ -2035,7 +2387,9 @@
         "art/visuals/production/gameplay/actors/bosses/shared/boss_node_resolved.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/boss_and_shared_node_family.png"
+      ],
       "retire_paths": [
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png.import",
@@ -2070,8 +2424,53 @@
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png": "aa4fc967885a8cb4d34aefc2c5c24b37898f12a2ffabc19e8cb225b7240fa89b",
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png": "75d653ba6e31bb3485b8bd721689aacc79fec1c0abe91bad59d0bec8c551f6de",
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png": "8e830d6e1544e89b5d7b9fa292769dc0e63fd56b8a342827f24747bc0f49569e",
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png": "dea5e220c7308fab723f0efb7053293f86c2ec16121cb292f435905bcfa99ce9",
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png": "638999a200879dfabbc17718d1291dd86143ab1872c1ae9a2020d9e201bb5492",
+          "art/visuals/production/gameplay/actors/bosses/shared/boss_node_active.png": "fa0e1da4efa4b902f9a14ad744b94e7c974d3d22403c0699b0d974933e681240",
+          "art/visuals/production/gameplay/actors/bosses/shared/boss_node_damaged.png": "a170e9e5eaaac5f6113ec12ff1439acfecd09a0fefaf0e3699d0c3a11d2c8b76",
+          "art/visuals/production/gameplay/actors/bosses/shared/boss_node_resolved.png": "d1c28dbf68954d4051fa026495d6d7c6dffbb8f2bbfb02006b2c16c28c51c097"
+        },
+        "retire_paths": [
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_lattice.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_lattice.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_pylon.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_pylon.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_active.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_active.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_disabled.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_disabled.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_relay_negative.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_relay_negative.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_relay_positive.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_relay_positive.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_route_switch.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_route_switch.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_segment_lock_active.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_segment_lock_active.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_segment_lock_disabled.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_segment_lock_disabled.png.import"
+        ]
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
     },
     {
       "id": "pickup_reward_family",
@@ -2081,7 +2480,7 @@
       "title_ko": "픽업 및 보상",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/pickups/pickup_experience_large.png",
         "art/visuals/production/gameplay/pickups/pickup_experience_medium.png",
@@ -2190,7 +2589,9 @@
         "art/visuals/production/gameplay/pickups/pickup_reward_crate.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/pickup_reward_family.png"
+      ],
       "retire_paths": [
         "art/visuals/production/gameplay/pickups/pickup_experience_large.png",
         "art/visuals/production/gameplay/pickups/pickup_experience_large.png.import",
@@ -2214,8 +2615,35 @@
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/pickups/pickup_experience_recall.png": "1ab513abbfd609c8ab6983373dc980c08d0e49d6eb97429f298e606746611a76",
+          "art/visuals/production/gameplay/pickups/pickup_repair.png": "1c1db12888dcbec82a16136688c29061d4a5d14a23d14e7134b642f07743d241",
+          "art/visuals/production/gameplay/pickups/pickup_reward_crate.png": "dad2d74d6dbffa0a00f64400565d37f86b6945d9f3411ef483362573df031dcd",
+          "art/visuals/production/gameplay/pickups/pickup_experience_master.png": "88aec5b31fbd116fcf1ca697510091ce7fed94869c6c53ac2cd53d0b29d03d28"
+        },
+        "retire_paths": [
+          "art/visuals/production/gameplay/pickups/pickup_experience_large.png",
+          "art/visuals/production/gameplay/pickups/pickup_experience_large.png.import",
+          "art/visuals/production/gameplay/pickups/pickup_experience_medium.png",
+          "art/visuals/production/gameplay/pickups/pickup_experience_medium.png.import",
+          "art/visuals/production/gameplay/pickups/pickup_experience_small.png",
+          "art/visuals/production/gameplay/pickups/pickup_experience_small.png.import"
+        ]
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
     },
     {
       "id": "world_facility_family",
@@ -2225,7 +2653,7 @@
       "title_ko": "월드 및 시설",
       "owner": "composite",
       "switch_kind": "consolidate",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/world/facility_arc_surge_strip.png",
         "art/visuals/production/gameplay/world/facility_overdrive_lane.png",
@@ -2403,7 +2831,9 @@
       "reuse_paths": [
         "art/visuals/production/gameplay/world/terrain_solid_cover_block.png"
       ],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/final-batch/world_facility_family.png"
+      ],
       "retire_paths": [
         "art/visuals/production/gameplay/world/facility_repair_pad_core.png",
         "art/visuals/production/gameplay/world/facility_repair_pad_core.png.import",
@@ -2426,8 +2856,38 @@
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/world/facility_arc_surge_strip.png": "2f9e921954e6de056ec09eef32c3dadbdd7a3eb77f67a87dec0b82df27e9132d",
+          "art/visuals/production/gameplay/world/facility_overdrive_lane.png": "2e1d010db959c09d0c963d7ebe78eb6be265587c652e22990ca69256e6525fe2",
+          "art/visuals/production/gameplay/world/facility_repair_pad.png": "1743cf6cfb57c47be439f60dca4b1d55884a05d0e0bd9853947b6d5c5db85f1d",
+          "art/visuals/production/gameplay/world/facility_transit_gate.png": "8cd361f68f95802ca802d668f20dae9040e0ae2a534d893ac68c7e26961dd090",
+          "art/visuals/production/gameplay/world/world_bulkhead_damaged.png": "c4a3471e4539c9fa3acd06fd11c4ceac31ac7d6f422340d3dc91dc9a94e35c01",
+          "art/visuals/production/gameplay/world/world_bulkhead_intact.png": "d1911187be70c6bac940c70f12681c400d0a32ef4f02e138b09601d635452a17",
+          "art/visuals/production/gameplay/world/world_bulkhead_open.png": "fa635dfb78682728bc134fb77d6fc66aca769035338b595233d1a498bdf73e8b"
+        },
+        "retire_paths": [
+          "art/visuals/production/gameplay/world/facility_repair_pad_core.png",
+          "art/visuals/production/gameplay/world/facility_repair_pad_core.png.import",
+          "art/visuals/production/gameplay/world/terrain_breakable_cover_slab.png",
+          "art/visuals/production/gameplay/world/terrain_breakable_cover_slab.png.import",
+          "art/visuals/production/gameplay/world/terrain_hazard_power_relay.png",
+          "art/visuals/production/gameplay/world/terrain_hazard_power_relay.png.import"
+        ]
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
     },
     {
       "id": "procedural_floor_and_walls",
@@ -2539,7 +2999,7 @@
       "title_ko": "HUD, 미니맵 및 전투 신호",
       "owner": "procedural_presentation",
       "switch_kind": "consolidate",
-      "status": "target_required",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/hud/action_barrier.png",
         "art/visuals/production/gameplay/hud/action_dash.png",
@@ -2748,8 +3208,110 @@
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
         ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
-      "approval": null,
-      "application": null
+      "approval": {
+        "approved_by": "autonomous-executor",
+        "approved_at": "2026-08-04T12:57:58+09:00",
+        "baseline_commit": "6be7bbf23c320f0a2bb92f8d68bef10897e67110",
+        "deliverable_sha256": {},
+        "retire_paths": [
+          "art/visuals/production/gameplay/hud/action_barrier.png",
+          "art/visuals/production/gameplay/hud/action_barrier.png.import",
+          "art/visuals/production/gameplay/hud/action_dash.png",
+          "art/visuals/production/gameplay/hud/action_dash.png.import",
+          "art/visuals/production/gameplay/hud/action_emp.png",
+          "art/visuals/production/gameplay/hud/action_emp.png.import",
+          "art/visuals/production/gameplay/hud/action_ion_field.png",
+          "art/visuals/production/gameplay/hud/action_ion_field.png.import",
+          "art/visuals/production/gameplay/hud/action_primary.png",
+          "art/visuals/production/gameplay/hud/action_primary.png.import",
+          "art/visuals/production/gameplay/hud/action_seeker.png",
+          "art/visuals/production/gameplay/hud/action_seeker.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_boss_core_open.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_boss_core_open.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_boss_core_sealed.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_boss_core_sealed.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_boss_core_stable.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_boss_core_stable.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_collective_break.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_collective_break.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_collective_execute.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_collective_execute.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_collective_gather.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_collective_gather.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_collective_lock.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_collective_lock.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_commit_autonomous.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_commit_autonomous.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_commit_locked.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_commit_locked.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_elite_armored.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_elite_armored.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_elite_heavy.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_elite_heavy.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_elite_overclocked.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_elite_overclocked.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_bosses.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_bosses.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_mobile.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_mobile.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_objects.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_objects.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_ship.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_ship.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_stationary.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_guide_stationary.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_objective_active.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_objective_active.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_objective_resolved.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_objective_resolved.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_priority_target.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_priority_target.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_ranged_startup.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_ranged_startup.png.import",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_target_bracket_corner.png",
+          "art/visuals/production/gameplay/hud/combat-cues/cue_target_bracket_corner.png.import",
+          "art/visuals/production/gameplay/hud/minimap_marker_boss.png",
+          "art/visuals/production/gameplay/hud/minimap_marker_boss.png.import",
+          "art/visuals/production/gameplay/hud/minimap_marker_elite.png",
+          "art/visuals/production/gameplay/hud/minimap_marker_elite.png.import",
+          "art/visuals/production/gameplay/hud/minimap_marker_hostile.png",
+          "art/visuals/production/gameplay/hud/minimap_marker_hostile.png.import",
+          "art/visuals/production/gameplay/hud/minimap_marker_objective_active.png",
+          "art/visuals/production/gameplay/hud/minimap_marker_objective_active.png.import",
+          "art/visuals/production/gameplay/hud/minimap_marker_objective_locked.png",
+          "art/visuals/production/gameplay/hud/minimap_marker_objective_locked.png.import",
+          "art/visuals/production/gameplay/hud/minimap_marker_player.png",
+          "art/visuals/production/gameplay/hud/minimap_marker_player.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_dash.png",
+          "art/visuals/production/gameplay/hud/upgrade_dash.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_defense.png",
+          "art/visuals/production/gameplay/hud/upgrade_defense.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_element.png",
+          "art/visuals/production/gameplay/hud/upgrade_element.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_mobility.png",
+          "art/visuals/production/gameplay/hud/upgrade_mobility.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_passive.png",
+          "art/visuals/production/gameplay/hud/upgrade_passive.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_primary.png",
+          "art/visuals/production/gameplay/hud/upgrade_primary.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_secondary.png",
+          "art/visuals/production/gameplay/hud/upgrade_secondary.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_skill.png",
+          "art/visuals/production/gameplay/hud/upgrade_skill.png.import",
+          "art/visuals/production/gameplay/hud/upgrade_support.png",
+          "art/visuals/production/gameplay/hud/upgrade_support.png.import"
+        ]
+      },
+      "application": null,
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": false,
+        "reference_input_method": "not_applicable"
+      }
     },
     {
       "id": "ui_font",

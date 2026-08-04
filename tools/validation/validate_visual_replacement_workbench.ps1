@@ -73,13 +73,15 @@ try {
     Expect (@($actual.external_sources).Count -eq 6) 'external source registry must contain six records'
 
     $missingEvidenceSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
-    ($missingEvidenceSource.units|Where-Object id -ceq 'hud_minimap_combat_cues_code_native').status='switch_ready'
+    $missingEvidenceUnit=$missingEvidenceSource.units|Where-Object id -ceq 'hud_minimap_combat_cues_code_native'
+    $missingEvidenceUnit.status='switch_ready'
+    $missingEvidenceUnit.PSObject.Properties.Remove('visual_authority_evidence')
     Expect-ProjectionRejected $missingEvidenceSource 'ready unit lacks visual authority evidence' 'ready unit without evidence'
 
     $validNonRasterSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
     $validNonRasterUnit=$validNonRasterSource.units|Where-Object id -ceq 'hud_minimap_combat_cues_code_native'
     $validNonRasterUnit.status='switch_ready'
-    $validNonRasterUnit|Add-Member -NotePropertyName visual_authority_evidence -NotePropertyValue (New-AuthorityEvidence $false 'not_applicable')
+    $validNonRasterUnit|Add-Member -NotePropertyName visual_authority_evidence -NotePropertyValue (New-AuthorityEvidence $false 'not_applicable') -Force
     try {
         $validNonRasterProjection=Get-VisualReplacementProjection -RepoRoot $repoRoot -Source $validNonRasterSource
         Expect (($validNonRasterProjection.units|Where-Object id -ceq 'hud_minimap_combat_cues_code_native').status -ceq 'switch_ready') 'valid non-raster authority evidence was not projected'
@@ -87,8 +89,24 @@ try {
 
     $invalidRasterSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
     $invalidRasterUnit=$invalidRasterSource.units|Where-Object id -ceq 'projectile_family'
-    $invalidRasterUnit|Add-Member -NotePropertyName visual_authority_evidence -NotePropertyValue (New-AuthorityEvidence $false 'not_applicable')
+    $invalidRasterUnit|Add-Member -NotePropertyName visual_authority_evidence -NotePropertyValue (New-AuthorityEvidence $false 'not_applicable') -Force
     Expect-ProjectionRejected $invalidRasterSource 'raster unit lacks actual sheet-reference evidence' 'raster unit without actual reference input'
+
+    $autonomousRecordSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
+    ($autonomousRecordSource.units|Where-Object id -ceq 'effect_atlas_retirement').approval.approved_by='autonomous-executor'
+    try {
+        $autonomousProjection=Get-VisualReplacementProjection -RepoRoot $repoRoot -Source $autonomousRecordSource
+        Expect (($autonomousProjection.units|Where-Object id -ceq 'effect_atlas_retirement').approval.approved_by -ceq 'autonomous-executor') 'autonomous technical record owner was not projected'
+    } catch {$failures.Add("valid autonomous technical record was rejected: $($_.Exception.Message)")}
+
+    $invalidRecordOwnerSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
+    ($invalidRecordOwnerSource.units|Where-Object id -ceq 'effect_atlas_retirement').approval.approved_by='untrusted-executor'
+    Expect-ProjectionRejected $invalidRecordOwnerSource 'invalid technical record owner' 'untrusted technical record owner'
+
+    $extraRecordTargetSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
+    $extraRecordHashMap=($extraRecordTargetSource.units|Where-Object id -ceq 'effect_atlas_retirement').approval.deliverable_sha256
+    $extraRecordHashMap|Add-Member -NotePropertyName 'art/visuals/production/gameplay/unlisted.png' -NotePropertyValue ('0'*64)
+    Expect-ProjectionRejected $extraRecordTargetSource 'technical record target paths mismatch' 'technical record with an extra target path'
 
     $expectedGameplayUnits=[ordered]@{
         player_craft=@(1,1)
@@ -190,7 +208,7 @@ $index=Get-Content $indexPath -Raw
 $match=[regex]::Match($index,'(?s)<script id="inventory-data" type="application/json">(.*?)</script>')
 Expect $match.Success 'index lacks embedded inventory data'
 if($match.Success){try{$embedded=$match.Groups[1].Value|ConvertFrom-Json -Depth 100;Expect ((Get-VisualCanonicalJson $embedded) -ceq (Get-VisualCanonicalJson $actual)) 'embedded inventory differs'}catch{$failures.Add("invalid embedded inventory: $($_.Exception.Message)")}}
-foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','promote_visual_replacement_unit.ps1','"final_gameplay_png":64','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
+foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":64','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
 $authorityUiMarkers=@(
     'id="visual-authority-pair"',
     'id="style-authority-link"',
@@ -205,7 +223,7 @@ $authorityUiMarkers=@(
     'data.style_reference_sheet'
 )
 foreach($marker in $authorityUiMarkers){Expect ($template.Contains($marker)) "template authority UI missing: $marker";Expect ($index.Contains($marker)) "index authority UI missing: $marker"}
-$prohibitedTokens=@('fetch(','XMLHttpRequest',('9b30'+'9ce'),('semantic-v3-'+'approval'),('current-review-'+'overrides'),('review-'+'images'),('restore_visual_asset_'+'inventory'))
+$prohibitedTokens=@('fetch(','XMLHttpRequest','Validate and preview promotion','검증 및 전환 미리보기',('9b30'+'9ce'),('semantic-v3-'+'approval'),('current-review-'+'overrides'),('review-'+'images'),('restore_visual_asset_'+'inventory'))
 foreach($prohibited in $prohibitedTokens){Expect (-not ($index.Contains($prohibited))) "index contains prohibited token: $prohibited"}
 
 if($failures.Count){$failures|ForEach-Object{Write-Error $_};exit 1}

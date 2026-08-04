@@ -122,15 +122,15 @@ historical BK ledgers remain valid. New ledgers may use
 
 ### Phase 6 - Prepare autonomous batch execution
 
-- [ ] **6.1 Remove the response interlock.** Update the workbench model,
+- [x] **6.1 Remove the response interlock.** Update the workbench model,
   validator, promotion helper, data contract, and README to accept autonomous
   exact-hash ledgers while preserving historical BK records. Hash/path drift must
   still fail closed; no `target_required` unit may require a user response.
-- [ ] **6.2 Add optional anomaly controls.** Add Needs attention, note,
+- [x] **6.2 Add optional anomaly controls.** Add Needs attention, note,
   issue-only filter, and Copy/Download output to the existing static KO/EN report.
   Replace user-facing approval/promotion controls with read-only Technical status;
   preserve keyboard access, visible focus, responsiveness, and reduced motion.
-- [ ] **6.3 Freeze the mapping.** Rebuild and record HEAD, projection fingerprint,
+- [x] **6.3 Freeze the mapping.** Rebuild and record HEAD, projection fingerprint,
   and authority evidence. Require exact reconciliation: 215 current, 64 final,
   62 authored, two reused, 160 retiring PNGs, 320 literal retirement paths.
 
@@ -146,17 +146,17 @@ Every raster call uses image generation with the canonical sheet included in
 `referenced_image_paths`. Each subagent owns exact targets and evidence only;
 production/runtime writes are forbidden until the whole batch passes.
 
-- [ ] **7.1 Workstream A — 16 files.** Nine projectiles + seven defense/status.
+- [x] **7.1 Workstream A — 16 files.** Nine projectiles + seven defense/status.
   Check canvas, pivot, alpha, 1x collision/attachment, silhouette, and grayscale.
-- [ ] **7.2 Workstream B — 12 files.** Four pickups/rewards + seven pre-wear
+- [x] **7.2 Workstream B — 12 files.** Four pickups/rewards + seven pre-wear
   world/facility outputs + one 512x512 EMP; keep solid-cover bytes. Check value
   role, footprint/boundary, state, canvas, alpha, and grayscale.
-- [ ] **7.3 Workstream C — 19 files.** All ordinary enemy bodies as one family.
+- [x] **7.3 Workstream C — 19 files.** All ordinary enemy bodies as one family.
   Each role must read at 1x/grayscale using 3–5 large planes.
-- [ ] **7.4 Workstream D — 15 files.** Four secondaries + three wear states +
+- [x] **7.4 Workstream D — 15 files.** Four secondaries + three wear states +
   five bosses + three shared-node states. Preserve facing/state; bosses use 4–6
   planes; node states differ structurally, not only by color.
-- [ ] **7.5 Correct the batch.** Build actual-scale family sheets, grayscale
+- [x] **7.5 Correct the batch.** Build actual-scale family sheets, grayscale
   views, projectile collision overlays, facility footprint overlays, and
   persistent comparison plates under `previews/final-batch/`. Regenerate only
   failing targets until exactly 62 candidates and evidence records pass.
@@ -165,14 +165,14 @@ Phase gate: all 62 candidates exist under `to-be/assets`; none is in production.
 
 ### Phase 8 - Publish one report and continue automatically
 
-- [ ] **8.1 Build `inventory.json` and `index.html`.** Show all 16 units and every
+- [x] **8.1 Build `inventory.json` and `index.html`.** Show all 16 units and every
   current/final target exactly once with AS-IS/TO-BE imagery, comparison plates,
   hashes, provenance, consumers, runtime changes, and retirement paths. Missing,
   invalid, or authority-ungrounded candidates must be visibly flagged.
-- [ ] **8.2 Expose optional issue reporting, then keep working.** Share the local
+- [x] **8.2 Expose optional issue reporting, then keep working.** Share the local
   report path in a progress update but request no response and wait for none.
   A received valid flag reopens only that target; a late flag is fixed forward.
-- [ ] **8.3 Record technical readiness.** After automated checks and executor
+- [x] **8.3 Record technical readiness.** After automated checks and executor
   review, write exact autonomous ledgers for all ten target units.
 
 ### Phase 9 - Apply the batch and retire legacy paths
@@ -285,7 +285,11 @@ validation decision remains unresolved.
 - Canonical progress is the task list above; do not mirror it elsewhere.
 - Completed groundwork: corrected 215-to-64 model, authority binding, external
   source curation, and rejection of ungrounded projectile drafts.
-- Current: Phase 6. Next: 6.1 autonomous exact-hash acceptance.
+- Completed: Phases 6-8. The report contains all 16 units, 62 authored
+  candidates, eight final-batch comparison plates, and ten autonomous exact-hash
+  technical records.
+- Current: user-directed stop at the completed report boundary. Production,
+  runtime consumers, and retirement paths are unchanged. Next if resumed: 9.1.
 - Advance only when the named acceptance condition passes.
 
 ## Completion and Stop Conditions

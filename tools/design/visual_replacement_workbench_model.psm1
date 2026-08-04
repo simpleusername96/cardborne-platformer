@@ -16,6 +16,7 @@ $script:Owners = @(
     'procedural_presentation', 'composite'
 )
 $script:SwitchKinds = @('replace', 'add', 'consolidate', 'retire')
+$script:TechnicalRecordOwners = @('BK', 'autonomous-executor')
 
 function ConvertTo-NormalizedVisualPath {
     param([Parameter(Mandatory)][string]$Path)
@@ -471,15 +472,20 @@ function Get-VisualReplacementProjection {
         if ([string]$unit.status -in @('switch_ready','approved_for_switch','applied') -and @($deliverableRecords | Where-Object { $null -eq $_.observed_sha256 }).Count -gt 0) { $failures.Add("ready unit has missing deliverable: $id") }
         if ($null -ne $unit.approval) {
             Test-VisualObjectFields $unit.approval @('approved_by','approved_at','baseline_commit','deliverable_sha256','retire_paths') "approval $id" $failures
-            if ([string]$unit.approval.approved_by -cne 'BK') { $failures.Add("invalid approval owner: $id") }
+            if ([string]$unit.approval.approved_by -notin $script:TechnicalRecordOwners) { $failures.Add("invalid technical record owner: $id") }
             $approvalTime = if ($unit.approval.approved_at -is [datetime]) { $unit.approval.approved_at.ToString('yyyy-MM-ddTHH:mm:sszzz') } else { [string]$unit.approval.approved_at }
             if ($approvalTime -notmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?\+09:00$') { $failures.Add("invalid approval time: $id") }
             if ([string]$unit.approval.baseline_commit -notmatch '^[0-9a-f]{40}$') { $failures.Add("invalid approval baseline commit: $id") }
+            $recordedTargets = @($unit.approval.deliverable_sha256.PSObject.Properties | ForEach-Object { [string]$_.Name } | Sort-Object)
+            $observedTargets = @($deliverableRecords | ForEach-Object { [string]$_.target_path } | Sort-Object)
+            if ((Get-VisualCanonicalJson $recordedTargets) -cne (Get-VisualCanonicalJson $observedTargets)) {
+                $failures.Add("technical record target paths mismatch: $id")
+            }
             foreach ($record in $deliverableRecords) {
                 $approved = $unit.approval.deliverable_sha256.PSObject.Properties[$record.target_path]
-                if ($null -eq $approved -or [string]$approved.Value -cne [string]$record.observed_sha256) { $failures.Add("approval hash mismatch: $id -> $($record.target_path)") }
+                if ($null -eq $approved -or [string]$approved.Value -cne [string]$record.observed_sha256) { $failures.Add("technical record hash mismatch: $id -> $($record.target_path)") }
             }
-            if ((Get-VisualCanonicalJson @($unit.approval.retire_paths)) -cne (Get-VisualCanonicalJson @($unit.retire_paths))) { $failures.Add("approval retire_paths mismatch: $id") }
+            if ((Get-VisualCanonicalJson @($unit.approval.retire_paths)) -cne (Get-VisualCanonicalJson @($unit.retire_paths))) { $failures.Add("technical record retire_paths mismatch: $id") }
         }
         if ($null -ne $unit.application) {
             Test-VisualObjectFields $unit.application @('commit','applied_at','validation_evidence') "application $id" $failures

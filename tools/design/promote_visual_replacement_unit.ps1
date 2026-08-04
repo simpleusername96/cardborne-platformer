@@ -10,13 +10,16 @@ $source=Get-Content (Join-Path $repoRoot 'docs\design\visual-replacement-workben
 $projection=Get-VisualReplacementProjection -RepoRoot $repoRoot -Source $source
 $unit=@($projection.units|Where-Object id -ceq $UnitId)
 if($unit.Count -ne 1){throw "unit must exist exactly once: $UnitId"};$unit=$unit[0]
-if($unit.status -cne 'approved_for_switch'){throw "unit is not approved_for_switch: $UnitId -> $($unit.status)"}
+if($unit.status -cne 'approved_for_switch'){throw "unit is not technically ready: $UnitId -> $($unit.status)"}
+$baseline=[string]$unit.approval.baseline_commit
+git -C $repoRoot cat-file -e "$baseline^{commit}" 2>$null
+if($LASTEXITCODE -ne 0){throw "technical record baseline is not a local commit: $baseline"}
 $dirty=@(git -C $repoRoot status --porcelain=v1)
-if($dirty.Count){throw 'promotion requires a clean committed baseline'}
+if($dirty.Count){throw 'technical application requires a clean committed worktree'}
 foreach($deliverable in $unit.deliverables){
     if($null -eq $deliverable.observed_sha256){throw "missing deliverable: $($deliverable.workbench_path)"}
     $approved=$unit.approval.deliverable_sha256.PSObject.Properties[$deliverable.target_path]
-    if($null -eq $approved -or [string]$approved.Value -cne [string]$deliverable.observed_sha256){throw "approved hash mismatch: $($deliverable.target_path)"}
+    if($null -eq $approved -or [string]$approved.Value -cne [string]$deliverable.observed_sha256){throw "technical record hash mismatch: $($deliverable.target_path)"}
     $sourcePath=Resolve-VisualRepositoryPath $repoRoot $deliverable.workbench_path;$targetPath=Resolve-VisualRepositoryPath $repoRoot $deliverable.target_path
     if(-not $deliverable.workbench_path.StartsWith('docs/design/visual-replacement-workbench/to-be/assets/')){throw "promotion source escapes TO-BE root: $($deliverable.workbench_path)"}
     if(-not $deliverable.target_path.StartsWith('art/visuals/production/')){throw "promotion target escapes production root: $($deliverable.target_path)"}
@@ -24,4 +27,4 @@ foreach($deliverable in $unit.deliverables){
     if($Apply){[IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($targetPath))|Out-Null;Copy-Item -LiteralPath $sourcePath -Destination $targetPath -Force}
 }
 foreach($path in $unit.retire_paths){Write-Host "RETIRE_REVIEW_ONLY $path"}
-if($Apply){Write-Host "VISUAL_REPLACEMENT_PROMOTION_COPIED unit=$UnitId files=$(@($unit.deliverables).Count)"}else{Write-Host "VISUAL_REPLACEMENT_PROMOTION_PREVIEW_OK unit=$UnitId files=$(@($unit.deliverables).Count)"}
+if($Apply){Write-Host "VISUAL_REPLACEMENT_TECHNICAL_APPLICATION_COPIED unit=$UnitId files=$(@($unit.deliverables).Count)"}else{Write-Host "VISUAL_REPLACEMENT_TECHNICAL_PREVIEW_OK unit=$UnitId files=$(@($unit.deliverables).Count)"}
