@@ -5,7 +5,7 @@ owner: BK
 created: 2026-08-04
 last_reviewed: 2026-08-04
 topic: Gameplay visual asset rationalization and external-source intake before Phase 6 implementation
-scope: Classification of all 215 production gameplay PNGs, the 64-PNG target boundary, external source candidates, and deferred small-effect polish
+scope: Classification of all 215 production gameplay PNGs, the revised 49-PNG target boundary, external source candidates, and deferred small-effect polish
 source: Local manifest, runtime consumer, filesystem, Git history, visual-system, workbench, rendered-contact-sheet, and official-license audit on 2026-08-04
 related:
   - ../VISUAL_SYSTEM.md
@@ -63,10 +63,11 @@ switch is authorized by this audit alone.
   or import. The semantic-v2 pack was generated from project-approved sheets and
   prompts. Noto Sans KR is the only pre-existing external production visual
   dependency and is already covered by its SIL OFL license.
-- The former 36-PNG target incorrectly treated projectiles, defense/status,
-  pickups, crates, facilities, and bulkheads as code-native symbols. That target
-  is withdrawn. These are independently readable game-world objects and must be
-  complete authored PNGs.
+- The former 64-PNG target over-specified nine projectile identities and seven
+  presentation-only defense/status overlays. The current product needs one
+  shared authored projectile body, code-native protection feedback, and no
+  dedicated burn/poison/chill raster icons. Pickups, crates, facilities, and
+  bulkheads remain complete authored PNGs.
 
 ### Classification vocabulary
 
@@ -83,13 +84,13 @@ switch is authorized by this audit alone.
 
 ### Correct final media boundary
 
-All independently readable actors, projectiles, defenses/status displays,
-pickups, crates, facilities, bulkheads, and world-state surfaces are authored
-PNG assets. HUD/minimap/combat symbols and live attack boundaries remain
-code-native. EMP is the only retained large raster effect; all other small
-effect-frame art is suppressed for the current pass.
+All independently readable actors, the shared projectile body, pickups, crates,
+facilities, bulkheads, and world-state surfaces are authored PNG assets.
+HUD/minimap/combat symbols, defense/status feedback, and live attack boundaries
+remain code-native. EMP is the only retained large raster effect; all other
+small effect-frame art is suppressed for the current pass.
 
-The final target is exactly **64 gameplay PNGs**:
+The final target is exactly **49 gameplay PNGs**:
 
 | Final family | PNGs | Required action |
 | --- | ---: | --- |
@@ -98,14 +99,14 @@ The final target is exactly **64 gameplay PNGs**:
 | Stage-boss bodies | 5 | Replace in place. |
 | Shared boss-node states | 3 | Replace ten boss-specific module variants with `active`, `damaged`, and `resolved`. |
 | Secondary-weapon bodies | 4 | Replace in place. |
-| Projectiles | 9 | Replace in place with complete core-and-tail PNGs. |
-| Defense and persistent status | 7 | Replace in place. |
+| Shared projectile | 1 | Consolidate all nine identities into one tailless energy-teardrop master. |
+| Defense and persistent status | 0 | Preserve gameplay through existing code-native ring, tint, state, and text feedback. |
 | Pickups and reward crate | 4 | Consolidate three XP sizes to one master; keep crate, repair, and recall distinct. |
 | World and functional facilities | 11 | Keep functional states as PNGs, consolidate repair pad/core, and add required states. |
 | EMP | 1 | Add one transparent 512 x 512 authored pulse image. |
 | HUD/minimap/combat cues | 0 | Use shared code-native symbols or verified absence. |
 | Other small effects | 0 | Suppress now; document future event-level polish only. |
-| **Total** | **64** | |
+| **Total** | **49** | |
 
 Exact reconciliation:
 
@@ -117,27 +118,33 @@ Exact reconciliation:
 - 3 old XP-size PNGs
 - 1 repair-pad-core PNG
 - 2 unused world PNGs
+- 9 old projectile PNGs
+- 7 defense/status overlay PNGs
+- 1 old overdrive-lane PNG
 + 3 shared boss-node state PNGs
 + 1 shared XP-master PNG
 + 1 bulkhead-open PNG
 + 3 Wear Collapse Tile PNGs
 + 1 EMP PNG
-= 64 final PNGs
++ 1 shared energy-teardrop PNG
++ 1 circular overdrive-pad PNG
+= 49 final PNGs
 ```
 
 Current-file disposition is also exact:
 
 - **Reuse unchanged: 2** — player craft and solid cover.
-- **Replace in place: 53** — 19 enemies, five bosses, four secondaries, nine
-  projectiles, seven defense/status images, three non-XP pickups, two current
-  bulkhead states, repair pad, and three functional facilities.
-- **Retire after approved switches: 160** — 43 HUD/cues, 101 effect frames, ten
-  boss modules, three XP variants, repair-pad core, and two unused world files.
-- **Add: 9** — three boss nodes, XP master, bulkhead open, three wear tiles, and
-  one EMP image.
+- **Replace in place: 36** — 19 enemies, five bosses, four secondaries, three
+  non-XP pickups, two current bulkhead states, repair pad, Arc Surge, and transit.
+- **Retire after approved switches: 177** — 43 HUD/cues, 101 effect frames, ten
+  boss modules, three XP variants, nine projectiles, seven defense/status overlays,
+  repair-pad core, old overdrive lane, and two unused world files.
+- **Add: 11** — three boss nodes, XP master, bulkhead open, three wear tiles, one
+  EMP image, one shared energy-teardrop projectile, and one circular overdrive
+  pad that replaces the retired lane path.
 
-The result requires **62 newly authored or adapted PNG outputs**: 53 in-place
-replacements plus nine additions. It does not require 200 independent redesigns.
+The result requires **47 newly authored or adapted PNG outputs** plus two reused
+outputs. It does not require 200 independent redesigns.
 
 ### Complete static-family classification
 
@@ -155,14 +162,14 @@ replacements plus nine additions. It does not require 200 independent redesigns.
 | Current family | Count | Disposition | Target |
 | --- | ---: | --- | --- |
 | Seeker, escort drone, orbit blade, wake mine | 4 | `REPLACE PNG` | Keep four motion-role silhouettes as complete bodies. |
-| Player and hostile projectile identities | 9 | `REPLACE PNG` | One finished PNG per semantic projectile; opaque damaging core aligns with collision and the same canvas may contain a restrained non-damaging tail. |
+| Player and hostile projectile identities | 9 | `SHARE MASTER PNG` then retire old files | One right-facing energy-teardrop master with an opaque collision core and no tail; runtime owns rotation, scale, and faction/affinity tint. |
 
 #### Defense and status: 7 current PNGs
 
 | Current family | Count | Disposition | Target |
 | --- | ---: | --- | --- |
-| Barrier plate, ion emitter, generator shield source, escort shield plate | 4 | `REPLACE PNG` | Keep all four world-state devices as authored PNGs. |
-| Burn, poison, chill | 3 | `REPLACE PNG` | Keep three persistent-status silhouettes; shape, not hue alone, distinguishes them. |
+| Barrier plate, ion emitter, generator shield source, escort shield plate | 4 | `RETIRE AFTER SWITCH` | Preserve protection through existing code-native support ring and actor tint; no separate emitter or plate art. |
+| Burn, poison, chill | 3 | `RETIRE AFTER SWITCH` | Preserve status gameplay, stacks, damage, slow, tint, and localized status text; no orbit icon or raster overlay. |
 
 #### Pickups: 6 current PNGs
 
@@ -177,7 +184,8 @@ replacements plus nine additions. It does not require 200 independent redesigns.
 | --- | --- | --- |
 | Bulkhead intact/damaged | `REPLACE PNG` | Keep both paths and add authored `open`. |
 | Repair pad + repair-pad core | `SHARE MASTER PNG` | One complete repair-pad PNG owns its inset/core. |
-| Overdrive lane, Arc Surge strip, transit gate | `REPLACE PNG` | Complete authored facility images; live footprint/radius remains code-owned and visibly aligned. |
+| Overdrive lane | `RETIRE AFTER SWITCH` then `ADD PNG` | Replace the lane path with one circular overdrive-pad PNG; live radius remains code-owned and visibly aligned. |
+| Arc Surge strip, transit gate | `REPLACE PNG` | Complete authored facility images; live footprint/radius remains code-owned and visibly aligned. |
 | Solid cover | `REUSE EXISTING` | Keep current independent-cover silhouette. |
 | Breakable cover slab, hazard power relay | `RETIRE AFTER SWITCH` | No live consumer; do not preserve dormant production art. |
 
@@ -188,8 +196,9 @@ authored 240 x 160 state PNGs.
 
 All 43 leave the raster pack after their exact consumers are migrated or proven
 absent. They become shared code-native glyphs/markers/cues or deliberate absence.
-This boundary does not include projectiles, pickups, world facilities, status
-devices, or EMP.
+This boundary does not include the shared projectile, pickups, world facilities,
+or EMP. Defense/status overlays are deliberately included in code-native or
+verified-absence handling because they are presentation feedback, not world bodies.
 
 ### Effect classification: one authored EMP, 21 suppressed small effects
 
@@ -254,7 +263,7 @@ to the exact TO-BE target with a recorded hash.
 ### Required migrations before any retirement
 
 - Workbench units must partition all 215 current PNGs exactly once and forecast
-  the 64-PNG target without fake paths for code-native HUD/cue identities.
+  the 49-PNG target without fake paths for code-native HUD/cue or defense/status identities.
 - Runtime, guidebook, preview, report, manifest, provider, and validators must
   resolve every retained world-object identity to its authored PNG.
 - XP values must share one authored master without merging reward crate, repair,
@@ -292,4 +301,4 @@ to the exact TO-BE target with a recorded hash.
   review or exact switch approval.
 - Counts must be re-audited if production files, the manifest, or live consumers
   change after the recorded baseline.
-- Earlier Phase approvals do not authorize the corrected 160-file retirement set.
+- Earlier Phase approvals do not authorize the corrected 177-file retirement set.

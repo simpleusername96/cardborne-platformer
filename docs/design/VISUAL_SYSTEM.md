@@ -170,12 +170,12 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | --- | --- | --- |
 | component mesh library | immutable cached flat primitive | gameplay rule, collision |
 | actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
-| projectile catalog | authored projectile visual ID, pivot, collision-normalized core와 non-damaging tail descriptor | damage, range, hit rule |
+| projectile catalog | 하나의 authored energy-teardrop master, pivot와 collision-normalized core | damage, range, hit rule, faction/affinity tint와 scale |
 | reward catalog | authored pickup, shard와 crate visual ID 및 value-scale mapping | spawn, value, collection |
 | effect catalog | one authored EMP image, code-native live boundary와 deliberate small-effect suppression | timer, damage, protection rule |
 | world catalog | field surface, authored facility, bulkhead와 state-tile descriptor | topology, collision, schedule |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
-| defense catalog | authored barrier, emitter, shield source와 persistent-status visual descriptor | protection, damage, timer |
+| defense catalog | code-native support ring, actor tint와 localized status text recipe | protection, damage, slow, stack, timer |
 | UI glyph catalog | code-native action, upgrade, minimap, preview, combat-cue glyph | layout, localization, focus |
 | semantic asset provider | approved persistent raster texture, pivot와 attachment | collision, behavior, map topology, code-native descriptor |
 
@@ -189,7 +189,7 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 
 #### Media ownership boundary
 
-- player, ordinary enemy, boss, secondary body, projectile, defense/status,
+- player, ordinary enemy, boss, secondary body, shared projectile master,
   pickup, reward crate, functional facility, bulkhead, common boss node, solid
   cover, wear tile처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된
   authored PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와
@@ -198,11 +198,20 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
   telegraph boundary와 실시간 beam/radius corridor처럼 해상도 독립적인 동적
   truth만 shared code-native geometry를 사용한다. code-native 가능성만으로
   world object를 PNG 경계 밖으로 밀어내지 않는다.
+- projectile은 독립된 world object이지만 visual family를 세분하지 않는다.
+  모든 player/hostile projectile은 무꼬리 energy-teardrop master PNG 하나를
+  공유하고 runtime이 facing, scale, faction/affinity tint를 적용한다.
+- barrier, ion, shield source와 burn/poison/chill은 별도 raster asset을 갖지
+  않는다. 보호와 범위는 기존 code-native ring/tint로, 지속 상태는 actor tint와
+  localized target-status text로 전달한다. cosmetic emitter, plate, orbit icon은
+  gameplay truth가 아니므로 만들지 않는다.
 - 경험치 pickup의 small/medium/large는 하나의 authored XP master PNG를
   scale/value로 표현한다. reward crate, repair pickup과 experience recall은
   gameplay 역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
-- repair pad의 core/inset은 하나의 authored pad PNG에 포함하고 별도 texture로
-  분리하지 않는다. bulkhead는 `intact`, `damaged`, `open`, Wear Collapse Tile은
+- repair와 overdrive는 모두 실제 효과 범위와 중심이 일치하는 완전한 원형
+  floor pad다. repair의 plus와 overdrive의 forward chevron은 같은 원 안의 큰
+  negative-space 표식이며 core/inset을 별도 texture로 분리하지 않는다.
+  bulkhead는 `intact`, `damaged`, `open`, Wear Collapse Tile은
   `intact`, `cracked`, `collapsed`의 명시적 authored state를 가진다.
 - boss별 objective module art는 금지한다. 공통 node의 `active`, `damaged`,
   `resolved` authored 상태 세 개만 유지하고 module kind/index는 gameplay
@@ -241,7 +250,7 @@ provider는 floor/wall map surface를 현재 runtime에 연결하지 않는다.
 | 엄폐물 | 구조벽보다 작은 독립 silhouette, 연속 wall처럼 배치하지 않음 | tactical layout, collision와 LOS |
 | 파괴 장벽 | 같은 footprint의 sealed/damaged/open surface | bulkhead health와 reward access |
 | 통과형 에너지 장벽 | 양끝 장치 사이 전체 판정 폭을 채우는 curtain/rung | Arc Surge schedule, slow와 damage |
-| 회복·공격 증폭 장판 | 실제 효과 범위 전체와 일치하는 밝은 고유 surface | repair/overdrive radius와 effect |
+| 회복·공격 증폭 장판 | 실제 효과 범위 전체와 일치하는 완전한 원형 surface; plus/chevron만 역할을 구분 | repair/overdrive radius와 effect |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
 | 보상 상자 | amber body, lock seam과 파손 가능한 contour | crate health와 drop |
 | 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
@@ -274,9 +283,9 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - presentation-only decoration은 retained descriptor instance로 그리며
   field당 최대 24개다.
 - facility는 장식보다 대비가 높고 shape가 고유하다.
-  - repair: plus cut
+  - repair: complete circular floor pad with one large plus cut
   - transit: complete circular floor portal
-  - overdrive: stacked forward chevron
+  - overdrive: complete circular floor pad with one large forward chevron
   - arc surge: broad pass-through energy curtain between visible pylons
   - breakable bulkhead: bright sealed/damaged/breached loot barrier
 - 상자, loose pickup과 실제 효과가 있는 지형은 넓은 role-color 면과 dark
@@ -305,15 +314,16 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
   표현한다. barrier만 support ring을 사용할 수 있다.
 - ordinary enemy role은 외곽선과 negative space로 먼저 구분한다. command와
   boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
-- 각 projectile body는 하나의 완성 PNG다. damaging core의 불투명 mass는
-  collision boundary와 일치하고, 같은 canvas 안의 tail은 방향을 설명하는
-  non-damaging cue다. runtime은 별도 bullet part를 조립하지 않는다.
-- projectile presentation은 owner faction, bolt/missile/charge/beam/area
-  delivery, ordinary/elite/boss threat tier, light/standard/heavy power를
-  구분한다. affinity hue만 바꿔 서로 다른 delivery나 tier를 대신하지 않는다.
+- 모든 비-beam projectile은 오른쪽을 향한 하나의 완성된 energy-teardrop PNG를
+  공유한다. 불투명 core는 collision boundary와 일치하며 tail, rail, bead,
+  detached part 또는 별도 조립 파츠를 갖지 않는다.
+- runtime은 같은 master의 rotation, scale, faction/affinity tint로 owner와
+  필요한 gameplay 차이를 전달한다. ordinary/elite/boss tier나 개별 attack은
+  별도 projectile raster identity를 만들지 않으며 cadence, speed, homing,
+  collision과 damage 차이는 계속 gameplay code가 소유한다.
 - hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
-  않는 persistent condition을 약속하지 않는다. player condition projectile만
-  실제 burn/poison/chill payload를 보조 표식으로 표시할 수 있다.
+  않는 persistent condition을 약속하지 않는다. burn/poison/chill은 별도
+  projectile badge나 orbit icon 없이 실제 actor state feedback으로만 표시한다.
 - projectile startup은 muzzle/cadence cue와 최대 `0.4 s` short lead만
   표시한다. full committed path는 beam에만 사용하고 charge는 locked
   endpoint capsule을 사용한다.
@@ -413,6 +423,9 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 
 - top-left는 hull/experience, top-center는 objective와 conditional boss,
   top-right는 `176×108` minimap과 conditional target을 소유한다.
+- minimap의 dynamic marker는 player craft, item, enemy, boss 네 역할만 사용한다.
+  item/enemy/boss subtype, elite/stationary distinction, objective state와 support
+  field를 별도 marker로 표시하지 않는다. explored static geometry와 fog는 유지한다.
 - bottom-center에는 dash, 보조 무기 aggregate와 EMP의 compact 세 slot action
   strip만 둔다. primary fire는 별도 slot을 만들지 않는다.
 - 각 zone은 최대 한 subtle Surface만 사용한다. full-width dock,
@@ -420,8 +433,8 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
   사용하지 않는다.
 - notification과 transition은 objective 아래 한 줄 ToastSurface에 나타나며
   crosshair를 가리지 않는다.
-- off-screen threat, status orbit, crosshair, minimap marker와 support timer는
-  shape-coded retained mesh를 사용한다.
+- off-screen threat, crosshair, 네 종류 minimap marker와 필요한 support timer는
+  shape-coded retained mesh를 사용한다. persistent-status orbit은 사용하지 않는다.
 
 ### Modal
 
@@ -472,8 +485,8 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
   active/damaged/resolved 상태만 사용됨
-- final gameplay manifest가 정확히 64 PNG를 색인함: player 1, ordinary enemy
-  19, boss 5, shared boss node 3, secondary 4, projectile 9, defense/status 7,
+- final gameplay manifest가 정확히 49 PNG를 색인함: player 1, ordinary enemy
+  19, boss 5, shared boss node 3, secondary 4, shared projectile 1, defense/status 0,
   pickup/reward 4, world/facility 11, EMP 1
 - HUD/minimap/combat-cue PNG와 EMP 이외의 raster effect frame이 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함
@@ -497,12 +510,12 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - 일부 기능 지형 body art는 실제 rect/radius보다 작아 live footprint와
   시각 면적이 일치하지 않는다. 최종 facility PNG는 visual body와 live
   code-native footprint boundary를 함께 검증해야 한다.
-- projectile/telegraph path는 모든 ordinary/elite/boss tier와 authored pattern
-  geometry를 presentation까지 완전히 전달하지 않는다.
+- projectile runtime은 아직 shared energy-teardrop master와 code-owned tint/scale
+  contract로 전환되지 않았다.
 - one-body player craft와 전용 minimap marker는 Phase 4의 exact-hash 승인을
   거쳐 현재 runtime 표현이 되었다. 수동 조준은 cursor, muzzle, projectile,
   hit feedback으로 유지하고 rear anchor는 transient dash feedback에만 쓴다.
-  XP master 단순화, projectile/state/pickup/facility replacement, 새 EMP와 그
+  XP master 단순화, shared projectile/pickup/facility replacement, 새 EMP와 그
   밖의 visual candidate는 아직 개별 runtime asset으로 승인되지 않았다.
 - boss body와 공통 방어막 노드의 단순화 방향은 이 spec의 목표지만 생성된
   semantic-v3/v4/v5/v6 후보 파일 자체는 승인된 runtime asset이 아니다.

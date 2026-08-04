@@ -41,8 +41,6 @@ foreach ($unit in $targetUnits) {
             throw "comparison preview is missing: $($unit.id) -> $preview"
         }
         $unit.preview_paths = @($preview)
-    } else {
-        $unit.preview_paths = @()
     }
 
     $authority = [pscustomobject][ordered]@{

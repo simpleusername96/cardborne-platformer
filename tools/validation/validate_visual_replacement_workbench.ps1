@@ -63,14 +63,14 @@ try {
     }
     Expect ($actual.summary.font -eq 1) 'production font count must be 1'
     Expect ($actual.summary.units -eq 16) 'switch unit count must be 16'
-    Expect ($actual.summary.retire_only -eq 5) 'retire-only count must be 5'
+    Expect ($actual.summary.retire_only -eq 6) 'retire-only count must be 6'
     Expect ($actual.summary.gameplay_png -eq 215) 'production gameplay PNG count must be 215'
-    Expect ($actual.summary.final_gameplay_png -eq 64) 'final gameplay PNG forecast must be 64'
-    Expect ($actual.summary.authored_gameplay_png -eq 62) 'authored gameplay PNG output count must be 62'
+    Expect ($actual.summary.final_gameplay_png -eq 49) 'final gameplay PNG forecast must be 49'
+    Expect ($actual.summary.authored_gameplay_png -eq 47) 'authored gameplay PNG output count must be 47'
     Expect ($actual.summary.reused_gameplay_png -eq 2) 'reused gameplay PNG count must be 2'
-    Expect ($actual.summary.retired_gameplay_png -eq 160) 'retired gameplay PNG count must be 160'
-    Expect ($actual.summary.external_sources -eq 6) 'curated external source count must be 6'
-    Expect (@($actual.external_sources).Count -eq 6) 'external source registry must contain six records'
+    Expect ($actual.summary.retired_gameplay_png -eq 177) 'retired gameplay PNG count must be 177'
+    Expect ($actual.summary.external_sources -eq 5) 'curated external source count must be 5'
+    Expect (@($actual.external_sources).Count -eq 5) 'external source registry must contain five records'
 
     $missingEvidenceSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
     $missingEvidenceUnit=$missingEvidenceSource.units|Where-Object id -ceq 'hud_minimap_combat_cues_code_native'
@@ -113,8 +113,8 @@ try {
         hud_minimap_combat_cues_code_native=@(43,0)
         small_effect_suppression=@(95,0)
         emp_authored_replacement=@(6,1)
-        projectile_family=@(9,9)
-        defense_status_family=@(7,7)
+        projectile_family=@(9,1)
+        defense_status_family=@(7,0)
         pickup_reward_family=@(6,4)
         world_facility_family=@(10,8)
         secondary_and_wear_family=@(4,7)
@@ -208,7 +208,7 @@ $index=Get-Content $indexPath -Raw
 $match=[regex]::Match($index,'(?s)<script id="inventory-data" type="application/json">(.*?)</script>')
 Expect $match.Success 'index lacks embedded inventory data'
 if($match.Success){try{$embedded=$match.Groups[1].Value|ConvertFrom-Json -Depth 100;Expect ((Get-VisualCanonicalJson $embedded) -ceq (Get-VisualCanonicalJson $actual)) 'embedded inventory differs'}catch{$failures.Add("invalid embedded inventory: $($_.Exception.Message)")}}
-foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":64','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
+foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":49','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
 $authorityUiMarkers=@(
     'id="visual-authority-pair"',
     'id="style-authority-link"',

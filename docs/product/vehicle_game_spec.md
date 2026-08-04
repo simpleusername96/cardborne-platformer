@@ -190,10 +190,12 @@ five-stage run.
 - Capture, validation, and performance paths accept `--layout-seed=<integer>`
   and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
   debug/performance snapshots expose the selected field, seed, and fingerprint.
-- The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed,
-  while player facing, moving-enemy clusters, stationary threats, elites, boss
-  state, live pickups, unopened crates, and scheduled support fields remain
-  visible as tactical markers.
+- The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed.
+  Dynamic markers expose only four tactical roles: player craft, item, enemy,
+  and boss. All live pickups and unopened crates share the item marker; all
+  non-boss hostiles share the enemy marker; every boss uses the same boss marker.
+  Subtypes, elite/stationary distinctions, objective state, and scheduled support
+  fields are not separate minimap markers.
 
 ### Functional terrain, facilities, and sustained fire
 
@@ -214,8 +216,9 @@ five-stage run.
   set. Opening is optional and never gates stage or run progression; opened
   bulkheads persist for the rest of the run.
 - Arc Surge is a traversable energy barrier with no solid collision. Repair and
-  overdrive are beneficial fixed-area fields whose visible footprint follows
-  their exact effect area. Transit Gates are paired circular floor portals.
+  overdrive are beneficial fixed-area fields shown as circular floor pads whose
+  visible footprint follows their exact effect area. Transit Gates are paired
+  circular floor portals.
 - Every field authors four traversable Wear Collapse Tiles. A distinct player
   or enemy entry increments wear: the first entry changes `intact` to `cracked`,
   and the third changes it to `collapsed`. Projectiles do not create wear.

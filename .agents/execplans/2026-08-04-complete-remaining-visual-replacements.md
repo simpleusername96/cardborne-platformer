@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-04
 last_reviewed: 2026-08-04
-scope: Autonomous bulk generation, comparison reporting, application, retirement, and final validation for the remaining Cardborne visual replacement program
+scope: Autonomous consolidation, comparison reporting, application, retirement, and final validation for the remaining Cardborne visual replacement program
 supersedes: ./2026-08-02-visual-replacement-workbench-and-runtime-switch.md
 related:
   - ../../AGENTS.md
@@ -21,19 +21,19 @@ related:
   - ./2026-08-02-pre-asset-code-stabilization.md
 ---
 
-# Finish the 64-PNG Visual Replacement Program
+# Finish the 49-PNG Visual Replacement Program
 
 ## Purpose
 
 Finish the remaining visual replacement work as one autonomous pipeline:
-prepare the workbench, generate every image in one parallel production phase,
+prepare the workbench, generate every required image in one bounded production phase,
 publish one AS-IS/TO-BE report, apply the complete batch, retire exact legacy
 paths, and run one final relevant integration gate. No step waits for user
 approval. The user may optionally flag suspicious comparisons in the report.
 
-Completion means exactly 64 production gameplay PNGs: 62 authored outputs and
-two reused outputs. The switch must also remove 160 listed legacy PNGs and their
-160 literal `.png.import` sidecars without changing gameplay truth.
+Completion means exactly 49 production gameplay PNGs: 47 authored outputs and
+two reused outputs. The switch must also remove 177 listed legacy PNGs and their
+177 literal `.png.import` sidecars without changing gameplay truth.
 
 ## Why / Context
 
@@ -46,9 +46,9 @@ that serial process with complete-batch production and non-blocking review.
 In scope:
 
 - Make the existing workbench support autonomous exact-hash acceptance.
-- Generate all 62 authored PNGs under the existing TO-BE root in one phase.
+- Keep or generate all 47 authored PNGs under the existing TO-BE root in one phase.
 - Extend the existing bilingual HTML into the single complete comparison report.
-- Migrate live consumers, apply exact outputs, and retire 320 literal paths.
+- Migrate live consumers, apply exact outputs, and retire 354 literal paths.
 - Run structural guards only when their inputs change and one final integration
   gate after the complete switch.
 
@@ -78,7 +78,7 @@ Authorization and invariants:
 
 - Godot 4.7 stable, GDScript, existing responsibility owners, and the current
   product behavior remain fixed.
-- Workbench truth: 16 units = 10 `target_required`, two `keep_current`, four
+- Workbench truth: 16 units = 10 target units, two `keep_current`, four
   `retired`; current production = 215 gameplay PNGs.
 - Agent capacity may require bounded waves, but all images belong to one Phase 7
   batch and none enters production before the whole batch passes.
@@ -88,12 +88,12 @@ Authorization and invariants:
 | Closed question | Verified source | Locked answer |
 | --- | --- | --- |
 | Visual authority | Visual system, canonical sheet, local authority skill | Use the pair for every prompt, edit, review, and evidence record |
-| Final inventory | Workbench and rationalization report | Player 1; enemies 19; bosses 5; nodes 3; secondaries 4; projectiles 9; defense/status 7; pickups/rewards 4; world/facilities 11; EMP 1 |
-| Output work | Workbench deliverables | 53 in-place replacements + 9 additions + player/solid-cover reuse = 64 finals |
+| Final inventory | Workbench and rationalization report | Player 1; enemies 19; bosses 5; nodes 3; secondaries 4; shared projectile 1; defense/status 0; pickups/rewards 4; world/facilities 11; EMP 1 |
+| Output work | Workbench deliverables | 36 in-place replacements + 11 additions + player/solid-cover reuse = 49 finals |
 | Review surface | Existing template, inventory, and index | Extend it; do not create another report system |
 | Acceptance | Current user authorization and workbench model | Automated exact hashes and paths; never wait for a response |
 | Runtime ownership | Manifest, semantic provider, catalogs, renderers | One live owner per ID; world objects raster, dynamic HUD/cues code-native |
-| Retirement | Ten target units | Remove only 160 PNGs + 160 exact sidecars after zero-consumer proof |
+| Retirement | Ten target units | Remove only 177 PNGs + 177 exact sidecars after zero-consumer proof |
 | Verification | Repo guidance and focused tools | Candidate guards in production; one relevant final gate at the end |
 
 All product, UX, media, ownership, authorization, deletion, and validation
@@ -103,8 +103,8 @@ inside this plan.
 ## Proposed Design
 
 1. Make the current workbench autonomous and freeze its mapping.
-2. Give four bounded subagent workstreams the same actual reference sheet and
-   family-specific rules; produce all 62 files during one phase.
+2. Give bounded subagent workstreams the same actual reference sheet and
+   family-specific rules; produce all required raster files during one phase.
 3. Regenerate only failed targets until the complete batch passes.
 4. Publish all AS-IS/TO-BE evidence in the existing `index.html`. Each target
    shows files, images, actual-scale evidence, hashes, consumers, and retirements.
@@ -131,12 +131,12 @@ historical BK ledgers remain valid. New ledgers may use
   Replace user-facing approval/promotion controls with read-only Technical status;
   preserve keyboard access, visible focus, responsiveness, and reduced motion.
 - [x] **6.3 Freeze the mapping.** Rebuild and record HEAD, projection fingerprint,
-  and authority evidence. Require exact reconciliation: 215 current, 64 final,
-  62 authored, two reused, 160 retiring PNGs, 320 literal retirement paths.
+  and authority evidence. Require exact reconciliation: 215 current, 49 final,
+  47 authored, two reused, 177 retiring PNGs, 354 literal retirement paths.
 
 Phase gate: deterministic workbench; no candidate promoted.
 
-### Phase 7 - Generate all images in one parallel phase
+### Phase 7 - Generate the initial image batch
 
 Every workstream receives the full current visual system and canonical sheet as
 an actual image reference. Produce complete world-object PNGs, not user-assembled
@@ -146,8 +146,9 @@ Every raster call uses image generation with the canonical sheet included in
 `referenced_image_paths`. Each subagent owns exact targets and evidence only;
 production/runtime writes are forbidden until the whole batch passes.
 
-- [x] **7.1 Workstream A — 16 files.** Nine projectiles + seven defense/status.
-  Check canvas, pivot, alpha, 1x collision/attachment, silhouette, and grayscale.
+- [x] **7.1 Workstream A — initial 16 files.** Nine projectiles + seven
+  defense/status candidates were generated. This output was later rejected by
+  the user-directed simplification in Phase 8.4 and is not part of the final count.
 - [x] **7.2 Workstream B — 12 files.** Four pickups/rewards + seven pre-wear
   world/facility outputs + one 512x512 EMP; keep solid-cover bytes. Check value
   role, footprint/boundary, state, canvas, alpha, and grayscale.
@@ -161,7 +162,8 @@ production/runtime writes are forbidden until the whole batch passes.
   persistent comparison plates under `previews/final-batch/`. Regenerate only
   failing targets until exactly 62 candidates and evidence records pass.
 
-Phase gate: all 62 candidates exist under `to-be/assets`; none is in production.
+Historical phase gate: the initial 62 candidates existed under `to-be/assets`;
+none entered production.
 
 ### Phase 8 - Publish one report and continue automatically
 
@@ -175,20 +177,43 @@ Phase gate: all 62 candidates exist under `to-be/assets`; none is in production.
 - [x] **8.3 Record technical readiness.** After automated checks and executor
   review, write exact autonomous ledgers for all ten target units.
 
+### Phase 8.4 - Simplify the review batch and republish the report
+
+- [ ] **8.4.1 Revise the visual contract and workbench.** Limit the minimap to
+  player, item, enemy, and boss markers; remove all seven defense/status raster
+  overlays; consolidate nine projectile identities into one tailless energy-
+  teardrop master; make repair and overdrive complete circular floor pads; rename
+  unclear report groups. Reconcile 49 final, 47 authored, two reused, and 177
+  retiring PNGs before generation.
+- [ ] **8.4.2 Generate the complete changed image set in one stage.** Using the
+  canonical sheet as the actual image reference, generate and normalize exactly
+  the shared projectile, circular repair pad, and circular overdrive pad. Remove
+  superseded projectile, defense/status, and overdrive-lane candidates from the
+  active TO-BE tree. Preserve all unaffected approved candidates.
+- [ ] **8.4.3 Republish the single AS-IS/TO-BE report.** Add one code-native
+  minimap diagram containing exactly four marker roles, rebuild comparison plates,
+  inventory, and `index.html`, then record fresh exact-hash technical readiness.
+  Validate only report/candidate contracts and rendered report layout. Stop at
+  this report boundary; do not modify production assets or runtime consumers.
+
+Phase gate: the local report exposes every current/final target exactly once,
+forecasts 49 production PNGs, and is ready for optional user anomaly marking.
+
 ### Phase 9 - Apply the batch and retire legacy paths
 
 - [ ] **9.1 Switch exact candidate hashes and migrate consumers.** Update only
   existing manifest/provider/catalog/preview/EMP/effect-suppression and
-  code-native HUD/minimap/combat-cue owners. Require one live owner per semantic ID.
+  code-native HUD/minimap/combat-cue and defense/status owners. Require one live
+  owner per semantic ID. All projectile consumers resolve one shared raster ID.
 - [ ] **9.2 Prove zero consumers, then retire.** Scan runtime, resources, manifest,
-  provider, guidebook, and validators for every planned path; remove only the 160
-  listed PNGs and 160 exact sidecars. No live reference or unlisted deletion.
+  provider, guidebook, and validators for every planned path; remove only the 177
+  listed PNGs and 177 exact sidecars. No live reference or unlisted deletion.
 - [ ] **9.3 Rebuild evidence and make responsibility-shaped commits.** Production,
   workbench, application ledgers, and Git history must describe the same batch.
 
 ### Phase 10 - Reconcile and freeze
 
-- [ ] **10.1 Reconcile exactly 64 final PNGs** against the fixed family split;
+- [ ] **10.1 Reconcile exactly 49 final PNGs** against the fixed family split;
   authored HUD/cue PNGs and non-EMP effect frames remain zero.
 - [ ] **10.2 Run `codebase-quality-auditor`** over changed shared owners. Fix
   task-scoped competing ownership, catch-all rendering, or gameplay leakage.
@@ -215,7 +240,7 @@ Phase gate: all 62 candidates exist under `to-be/assets`; none is in production.
 | Cadence | Check | Trigger |
 | --- | --- | --- |
 | Candidate guard | Projection, authority evidence, PNG canvas/pivot/alpha/hash, role comparison | Candidate or authority input changes |
-| Retirement guard | Exact consumer scan for 320 literal paths | Consumer or retirement list changes |
+| Retirement guard | Exact consumer scan for 354 literal paths | Consumer or retirement list changes |
 | Final gate | Commands, focused Godot validators, capture matrix, built-Web smoke, one visual diagnostic | Frozen final HEAD changes |
 
 Final structural commands:
@@ -274,7 +299,10 @@ validation decision remains unresolved.
 
 ## Decision Notes
 
-- Generate all 62 raster deliverables in one parallel Phase 7.
+- Generate all changed raster deliverables in one bounded stage using delegated
+  asset workstreams and one canonical authority pair.
+- User-directed simplification supersedes the initial nine-projectile and seven-
+  defense/status candidate families before any production switch.
 - Use the existing HTML workbench as the only AS-IS/TO-BE report.
 - Treat user issue flags as optional feedback, never an approval interlock.
 - Automate exact technical ledgers and retirement safety.
@@ -285,16 +313,16 @@ validation decision remains unresolved.
 - Canonical progress is the task list above; do not mirror it elsewhere.
 - Completed groundwork: corrected 215-to-64 model, authority binding, external
   source curation, and rejection of ungrounded projectile drafts.
-- Completed: Phases 6-8. The report contains all 16 units, 62 authored
-  candidates, eight final-batch comparison plates, and ten autonomous exact-hash
-  technical records.
-- Current: user-directed stop at the completed report boundary. Production,
-  runtime consumers, and retirement paths are unchanged. Next if resumed: 9.1.
+- Completed: Phases 6-8 produced the initial report; its 64-PNG media split was
+  superseded before any production switch.
+- Current: Phase 8.4 revises the batch to 49 final PNGs and republishes the only
+  AS-IS/TO-BE report. Stop at the completed report boundary. Production and
+  runtime consumers remain unchanged. Next if resumed: 9.1.
 - Advance only when the named acceptance condition passes.
 
 ## Completion and Stop Conditions
 
-Complete when every task passes, the 64-file split and all owners/retirements
+Complete when every task passes, the 49-file split and all owners/retirements
 reconcile, the consolidated report records anomaly dispositions, the single final
 gate passes, changed durable decisions are incorporated, and this completed plan
 is retired under `.agents/PLANS.md`.
