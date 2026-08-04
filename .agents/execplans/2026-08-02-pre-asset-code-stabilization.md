@@ -3,458 +3,374 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-02
-last_reviewed: 2026-08-04
-topic: Urgent runtime readability and performance stabilization
-scope: Upgrade choice UI, projectile visibility, enemy approach and attack-route readability, Wear Collapse tiles, and severe frame stutter
+last_reviewed: 2026-08-05
+topic: Enemy motion, frame pacing, and combat-object scale stabilization
+scope: Ordinary-enemy motion continuity, measured frame-hitch repair, live XP shard sizing, and player/hostile projectile sizing
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
   - ../PLANS.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
+  - ../../docs/design/cardborne-universal-art-style-reference.png
   - ../semantic-v2-runtime-acceptance-evidence.md
 ---
 
-# Urgent Runtime Readability and Performance Stabilization
+# Enemy Motion, Frame Pacing, and Combat Scale Stabilization
 
-This is the single active execution plan for the urgent work. It replaces the
-obsolete pre-asset checklist in this file with a compact implementation contract.
-Completed historical phases are evidence, not work to repeat.
+## Purpose
 
-The outcome is a readable, responsive combat build in which the upgrade choice
-screen uses large authored artwork and complete progression data, every projectile
-is easy to see without changing its collision truth, enemy approaches and committed
-attack corridors are legible, Wear Collapse tiles communicate all three states, and
-the authoritative high-pressure performance gates pass.
+Finish the remaining runtime-stabilization work without reopening completed UI,
+asset-generation, map, or gameplay-content work. The completed upgrade, projectile
+asset, attack-route, Wear Collapse, and prior optimization work is the verified
+baseline at commit `a6d84b95f5379f57d5069fed5f4630ff35efc3fc`; it is not work to repeat.
 
-## Why / Context
+The required outcome is:
 
-The current build has five user-prioritized problems:
+- ordinary enemies move at the product contract's real 30 Hz near / 20 Hz far
+  cadence instead of visibly stepping because scheduled motion work is discarded;
+- frame hitches are attributed per contributing physics tick and repaired in the
+  measured owner without lowering workload, cadence, or release thresholds;
+- live XP shards become materially easier to see while retaining a readable
+  small/medium/large order;
+- every non-beam player and hostile projectile becomes exactly 30% smaller in
+  rendered linear size, with collision and combat behavior unchanged; and
+- the broad validation and release-style performance gate runs once, after all
+  implementation and measured optimization are complete.
 
-1. The upgrade cards are cramped, use small code-drawn glyphs, and do not always
-   make the level and current-to-next change obvious.
-2. Projectiles use one suitable teardrop image, but its opaque area is too small and
-   player scale is controlled by renderer literals instead of the visual profile.
-3. Enemy approach lanes and committed attack routes need to read clearly at live
-   speed and under pressure.
-4. Wear Collapse tiles look like isolated UI panels and the collapsed image has bad
-   edge treatment instead of belonging to the floor.
-5. The game has severe frame stutter. The latest authoritative `peak_horde` evidence
-   reports 115.974 ms median and 140.476 ms p95 frame time even though draw-call p95
-   (122) and combat batches (34) already pass. This is a CPU/frame-orchestration
-   problem until profiling proves otherwise.
+This document is the single active ExecPlan for this outcome. The earlier completed
+detail remains available in Git history at `9c66a8bf` and `a6d84b95`; keeping it in
+the active checklist would invite already-finished work to be repeated.
 
-The previous plan's completed movement, terrain logic, telegraph contract, and visual
-switch phases must not be reimplemented. Its only genuinely unfinished release item
-was performance qualification. Recent user feedback reopens only the four targeted
-readability surfaces above.
+## Why / Current State
 
-## Scope / Non-scope
+The user's report contains two distinct motion problems and one scale correction.
+They must not be treated as one vague rendering issue.
+
+| Concern | Verified current fact | Consequence |
+| --- | --- | --- |
+| Ordinary enemy cadence | `VehicleEnemyUpdateSchedule` computes 30/20 Hz `motion_now`, resets `motion_elapsed`, but appends an enemy to `ordinary_due` only when its 10 Hz `decision_now` is true. | Most motion-only ticks are discarded. Ordinary movement is effectively sparse and visibly stepped, and elapsed movement time can be lost. |
+| Enemy presentation | `VehicleCombatRenderer._sync_enemies()` writes `enemy.pos` directly to the retained batch. There is no presentation interpolation. | The scheduler defect is visible directly; frame hitches make the discontinuity worse. |
+| Steering cache | `refresh_overlap` combines a stable runtime slot with a stable decision bucket parity. | Roughly one deterministic half of ordinary actors can keep reusing an old overlap direction instead of alternating refresh work. |
+| Frame pacing | The newest focus-valid 60-second native evidence has 16.009 ms median, 45.833 ms p95, 133.333 ms p99, 7.26 FPS 1% low, and 67 consecutive frames over 33.3 ms. Draw p95 is 86 and combat batches are 33. | Steady render batching passes; tail latency and physics catch-up do not. |
+| Attribution quality | Detailed subsystem timing is sampled only every seventh physics tick, while a slow rendered frame may contain several physics ticks. | The artifact proves physics-associated hitching but cannot identify the full p99 owner safely. |
+| Current-HEAD diagnostic | A commit-stamped run for `a6d84b95` completed with the valid peak workload, but the game window was unfocused for all 1,348 samples. It produced 27.361 / 134.616 / 142.105 ms median/p95/p99 and is intentionally non-authoritative. | It confirms the symptom under the current commit but cannot be used as a release baseline. |
+| XP shards | One 64x64 `pickup/experience_master` image is rendered as value tiers `1`, `2-4`, and `>=5` with radii `12/16/22`. Collection uses the independent fixed radius `34`. | Scaling the renderer-owned radii is mechanically isolated; no new image or pickup rule is needed. |
+| Projectiles | All non-beam projectiles share one 64x64 `projectile/energy_teardrop`. Current visual multipliers are hostile `5.50`, primary `6.25`, seeker `5.75`, and opening breach `6.50`. | Four profile constants can implement one consistent 0.70 visual multiplier without changing collision. |
+
+The focused schedule, steering, renderer, projectile, XP, and performance-scenario
+validators all pass at plan time. That does not contradict the findings: the current
+schedule validator checks that deferred work eventually appears, but does not prove
+that motion-only due ticks are dispatched or that one second of accumulated movement
+is preserved.
+
+## Scope and Non-Goals
 
 ### In scope
 
-- Upgrade choice card layout, content artwork, progression copy, localization, and
-  the `seeker` versus `secondary` conflict across data, catalog, runtime, UI, and tests.
-- One shared non-beam projectile PNG, visual scale ownership, and live-size
-  readability. Collision radius, damage, cadence, and behavior remain unchanged.
-- Enemy approach distribution plus committed projectile, charge, beam, and area
-  attack corridor parity with simulation and blockers.
-- The three Wear Collapse tile images and their existing state transitions.
-- CPU/frame profiling, enemy scheduling, HUD work, and any other measured hot owner
-  required to pass the existing performance gates.
-- Focused checks during implementation and one complete release-validation pass after
-  all switches are integrated.
+- `VehicleEnemyUpdateSchedule` due-list and accumulated-delta correctness.
+- The narrow `VehicleRun` dispatch path that consumes scheduled ordinary work.
+- Generation-safe steering-cache refresh fairness.
+- Presentation-only smoothing only if correct 30/20 Hz truth still fails the locked
+  rendered-continuity criterion below.
+- Diagnostic-only, full per-physics-tick performance attribution.
+- Optimization of the measured dominant runtime owner within its existing module.
+- XP shard visual radii and all four non-beam projectile visual multipliers.
+- Focused regression checks during implementation and one final broad gate.
 
 ### Explicitly out of scope
 
-- Floor, outer wall, ordinary in-game wall, obstacle, service rail, world overlay, or
-  broader map redesign. Map work is deferred.
-- Pickups, experience shards, crates, facilities, player craft, enemy roster, boss
-  art, and unrelated effects.
-- Any UI outside the upgrade-choice flow. Existing deployment, pause, settings, HUD
-  layout, menus, and shared UI chrome are protected from visual redesign.
-- New gameplay content, map topology, enemy role ratios, boss patterns, difficulty,
-  collision sizes, combat values, capacity reductions, workload reductions, or lower
-  release thresholds.
-- New engine, production dependency, or native extension.
+- Any UI layout, UI chrome, upgrade-card content, menu, HUD layout, or localization
+  redesign.
+- Any PNG generation, editing, replacement, manifest change, catalog alias, or new
+  visual identity. Both requested size changes reuse the current approved masters.
+- Floor, wall, map, terrain-art, facility, item, player, enemy, boss, or effect art.
+- Enemy count, role mix, spawn rules, attack timing, damage, movement speed, collision,
+  target radius, projectile speed/range/lifetime, XP value, pickup radius, or magnet
+  behavior changes.
+- Capacity, fixture, visual-quality, update-cadence, or acceptance-threshold reductions.
+- A new engine, dependency, native extension, renderer, or graphics backend.
 
-## Verified Starting Evidence
+## Assumptions and Locked Decisions
 
-| Area | Current fact | Required correction |
+- Godot 4.7.1 stable and GL Compatibility remain the implementation baseline.
+- The product performance contract remains 60 Hz for player intent, committed states,
+  boss behavior, and visible combat windows; 10 Hz for ordinary decisions; 30 Hz for
+  near ordinary motion; and 20 Hz beyond 820 pixels.
+- A decision-only tick must never consume or reset accumulated motion time. A
+  motion-only tick must dispatch even when no decision is due.
+- Critical ordinary phases remain on their current 60 Hz lane.
+- XP sizing means linear rendered radius. The requested anchors produce small `24`
+  (`12 x 2.0`) and large `33` (`22 x 1.5`). Medium becomes `28`, the rounded geometric
+  midpoint, rather than staying at `16` and becoming smaller than the small tier.
+- “Player projectiles” includes primary, seeker, and opening-breach rounds. All three
+  plus hostile rounds use exact 0.70 multipliers:
+  - hostile `3.85`;
+  - primary `4.375`;
+  - seeker `4.025`;
+  - opening breach `4.55`.
+- Projectile telegraph geometry, beam width, collision radii `5/6/7`, player primary
+  base radius `7`, and every gameplay stat remain unchanged.
+- The canonical visual authority pair was checked on 2026-08-05:
+  `docs/design/VISUAL_SYSTEM.md` plus the inspected original `1448x1086`
+  `docs/design/cardborne-universal-art-style-reference.png`, SHA-256
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+  Task constraints are one shared tailless projectile, one XP master, clear actual-size
+  readability, and visual geometry independent from collision truth.
+- No raster tool or image-reference input is needed during execution because no image
+  bytes are created or edited.
+- No user approval interlock exists inside this plan. Execution stops only if the
+  evidence requires a dependency, engine replacement, gameplay-rule change, workload
+  reduction, threshold reduction, or destructive scope outside this contract.
+
+## Discovery Closure and Evidence Map
+
+| Question | Evidence owner | Closed decision |
 | --- | --- | --- |
-| Upgrade UI | `VehicleUpgradeChoiceCard` renders `VehicleUpgradeGlyphRenderer`; the validator requires code-native artwork with zero textures. | Upgrade content art becomes semantic authored PNG. UI chrome remains shared Theme/styleboxes. |
-| Upgrade data | Forty-one definitions use eight families. Six resources use `seeker`, while localization presents both `seeker` and `secondary` as “Secondary Weapons.” | `secondary` is the only upgrade family. `seeker` remains a weapon/behavior subtype. |
-| Upgrade values | The presenter emits real current and next levels and at most two modifier rows. | Every card visibly shows `Lv.current → next`; numeric upgrades show real deltas and behavior-only upgrades show a concise “new behavior” row. |
-| Projectile | `projectile_energy_teardrop.png` is 64×64, but its opaque body occupies roughly 36×17 pixels. Hostiles use profile scale 4.5; player projectiles use renderer literals 5.0/5.6/5.8. | Normalize the opaque body and move all visual scales into `VehicleStageVisualProfile`. |
-| Attack routes | Telegraph descriptors already use attack data and can clip through a blocker resolver. | Prove every caller uses live blocker truth and make approach/commit footprints readable at actual scale. |
-| Wear tiles | State logic already implements `intact → cracked → collapsed`, third-entry collapse, damage ticks, and persistence. | Replace only the three state images; preserve all behavior. |
-| Performance | Latest peak: 276 enemies, 212 projectiles, 659 visible instances, 34 batches; enemy/grid p95 13.720 ms, scheduled ordinary enemies p95 11.259 ms, HUD 11.248 ms, and about 85 ms median remains unattributed. | Attribute the whole frame, remove measured repeated work/allocations, then meet the existing gates without reducing workload. |
-
-## Assumptions
-
-- Godot 4.7.1 stable and GL Compatibility remain the runtime authority.
-- Korean and English remain complete on every touched user-facing string.
-- Existing save compatibility is preserved. Renaming the data family does not rename
-  card IDs, weapon IDs, or save keys.
-- The canonical visual authority is the pair:
-  `docs/design/VISUAL_SYSTEM.md` and
-  `docs/design/cardborne-universal-art-style-reference.png` (SHA-256
-  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`).
-- `docs/design/component-sheets/system-v1/07-projectile-telegraph-vfx.png` is a
-  rejected historical direction and must not be used as generation authority.
-- This plan contains no user-approval interlock. The executor proceeds through the
-  final gate. It stops only if work would require a new dependency, a gameplay rule
-  change, a workload/threshold reduction, or destructive scope outside this plan.
+| Why do ordinary enemies visibly step? | `vehicle_enemy_update_schedule.gd:124-154`, `vehicle_run.gd:2084-2142` | Repair the missing motion-only dispatch before considering visual interpolation. |
+| Is 30/20 Hz itself the current observed cadence? | The due-list code and incomplete cadence validator | No. The scheduler computes it but does not consistently dispatch it. Add exact 60-tick count and elapsed-time fixtures. |
+| Is the frame hitch a draw-call/GPU problem? | Latest focus-valid JSON: draw p95 86, 33 batches, approximately 1 ms terminal CPU/GPU render readings | Not supported. Complete physics attribution before selecting another optimization owner. |
+| Why is p99 ownership incomplete? | `PERFORMANCE_DETAIL_SAMPLE_STRIDE = 7` and frame-level accumulation in `VehiclePerformanceRecorder` | Add an explicit diagnostic full-attribution mode; leave ordinary/release instrumentation sampling unchanged. |
+| Can XP size change without mechanics? | `VehicleExperienceRuntime.BASE_PICKUP_RADIUS`, `VehicleCombatRenderer._sync_experience()` | Yes. Change only `VehicleStageVisualProfile.EXPERIENCE_RADII`. |
+| Can projectile size change without mechanics? | Profile-owned visual multipliers and collision-owned `ProjectileState.radius` | Yes. Change only the four profile constants and their visual assertions. |
+| Are new assets required? | Shared manifest/catalog/provider identities | No. No image, manifest, provider, catalog, or guidebook-preview change is authorized. |
+| How is the unknown hitch owner handled without guesswork? | Full-attribution output defined below | Select the dominant owner with a fixed quantitative rule, then modify only that owner's existing responsibility boundary. |
 
 ## Proposed Design
 
-### 1. Upgrade domain and artwork ownership
+### 1. Separate ordinary decision and motion truth
 
-`secondary` is the canonical umbrella family in product, data, UI, and runtime.
-The always-equipped seeker remains its built-in subtype and the other four weapons remain
-optional subtypes; seeker still consumes no optional slot. The six current seeker cards
-become `family = &"secondary"`. Add
-`secondary_slot_kind: StringName = &""` to `VehicleUpgradeDefinition`, with `built_in`
-on those six cards and `optional` on the four optional-weapon cards. Catalog eligibility
-and `VehicleRunBuild.active_optional_secondaries()` use this field instead of a duplicate
-family or hard-coded optional-ID list.
+Keep one bounded schedule and one deterministic enemy order, but treat the two due
+conditions independently:
 
-Move the built-in seeker cooldown, target selection, and projectile-intent production
-into `VehicleSecondaryRuntime`, which already owns the other automatic secondary
-families and already lists seeker in its snapshot. Its update result gains one bounded
-`projectiles` intent array; `VehicleRun` remains the owner that writes those intents to
-the projectile store. HUD cooldown/availability reads the secondary snapshot. Retire
-`VehicleRun.player_seeker_cooldown` and `_find_seeker_targets()` only after equivalent
-deterministic coverage passes. Damage-source ID `seeker`, gameplay asset ID
-`secondary/seeker`, card IDs, save keys, targeting, cadence, and combat values remain
-unchanged. Remove the obsolete `UPGRADE_FAMILY_SEEKER` localization row after all family
-references are gone.
+1. Accumulate `decision_elapsed` and `motion_elapsed` every physics tick.
+2. Set `decision_due` only when the stable 10 Hz bucket and interval are due.
+3. Set `motion_due` only when the near/far motion bucket and interval are due.
+4. Append the actor to the scheduled worklist when either condition is due.
+5. Reset `decision_elapsed` only for `decision_due`.
+6. Reset and publish `motion_elapsed` only for `motion_due`; publish `0.0` for a
+   decision-only tick without consuming accumulated motion.
+7. In `VehicleRun._update_scheduled_ordinary_enemy()`, return only when neither
+   decision nor motion is due. A decision-only call uses zero time: it may refresh
+   desired velocity or commit an eligible attack but cannot advance timers or move.
+8. A motion-only call advances timers and collision-resolved movement with the full
+   accumulated delta while reusing the last desired velocity.
 
-Add `@export var artwork_asset_id: StringName = &""` to
-`VehicleUpgradeDefinition`. Card data selects artwork; UI never infers mechanics from a
-family name. Register upgrade artwork in the existing gameplay semantic asset
-manifest/provider. These images are gameplay-content illustrations shown inside UI, not
-UI chrome.
+This restores time-correct 30/20 Hz motion and 10 Hz decisions without raising either
+cadence. It also avoids multiplying game speed when decision and motion happen on the
+same physics tick.
 
-Use at most sixteen reusable artwork identities for all forty-one cards:
+Replace the fixed-parity overlap refresh with a decision-epoch parity. Each stable
+actor refreshes its bounded overlap query on alternating decision epochs; all actors
+therefore refresh within 0.20 seconds, while average query volume remains unchanged.
+Generation changes invalidate cached values exactly as they do now.
 
-| Card group | Artwork asset ID | Source |
+Do not add interpolation in the first pass. Direct truth rendering is preferred because
+it cannot diverge from collision. The corrected rendered trace is acceptable when a
+continuously moving near actor has at most one unchanged 60 Hz render interval and a far
+actor at most two, while critical actors update every interval. Only if that exact trace
+fails may the executor add `vehicle_enemy_motion_interpolator.gd`: a fixed 320-slot,
+generation-keyed, presentation-only interpolator capped to one observed motion interval,
+with immediate snaps on generation, activation, critical phase, teleport, or a truth
+offset larger than one actor radius. It must never feed AI, grid, collision, targeting,
+telegraphs, or damage.
+
+### 2. Change scale at the existing visual owner
+
+Edit only `scripts/vehicle/vehicle_stage_visual_profile.gd` for runtime values:
+
+```text
+EXPERIENCE_RADII = small 24.0, medium 28.0, large 33.0
+HOSTILE_PROJECTILE_ENVELOPE_SCALE = 3.85
+PLAYER_PRIMARY_PROJECTILE_SCALE = 4.375
+PLAYER_SEEKER_PROJECTILE_SCALE = 4.025
+PLAYER_OPENING_BREACH_PROJECTILE_SCALE = 4.55
+```
+
+`VehicleCombatRenderer` already consumes these values and therefore needs no production
+logic change. Update exact validators so they prove the new profile values, shared-image
+reuse, and collision separation. The guidebook keeps its independent preview extent.
+
+### 3. Attribute every physics tick only in diagnostic mode
+
+Add `--performance-attribution=full` to the existing performance request. In that mode
+only:
+
+- time every top-level physics section on every tick instead of every seventh tick;
+- retain a bounded list of the physics ticks contributing to the current rendered frame;
+- attach that list only to the existing 64 retained slow-frame samples;
+- separate top-level totals from nested `enemy_*` detail so nested timings are never
+  double-counted;
+- record per-frame top-level coverage, residual physics overhead, dominant owner, VSync
+  mode, focus state, commit, and dirty state; and
+- mark a full-attribution sample valid only when at least 90% of aggregate physics time
+  in the representative p99 frame is assigned to top-level sections or explicit residual
+  overhead.
+
+Default performance and ordinary play keep the current stride and allocate no new sample
+arrays. The diagnostic flag changes measurement detail, not workload or game behavior.
+
+### 4. Repair only the measured dominant owner
+
+After the cadence and scale corrections, run the same full-attribution peak fixture.
+Across the slowest 1% of valid frames, rank non-overlapping top-level owners by aggregate
+self-time. An owner qualifies for code work only when it is the largest contributor and
+either exceeds 25% of aggregate physics time or 2.0 ms p95.
+
+Use this bounded routing table:
+
+| Dominant result | Allowed owner | Allowed correction |
 | --- | --- | --- |
-| All nine primary cards | `projectile/energy_teardrop` | Reuse improved world projectile |
-| Six seeker cards | `secondary/seeker` | Reuse existing gameplay asset |
-| `escort_drone` | `secondary/escort_drone` | Reuse existing gameplay asset |
-| `orbit_blades` | `secondary/orbit_blade` | Reuse existing gameplay asset |
-| `wake_mines` | `secondary/wake_mine` | Reuse existing gameplay asset |
-| `ion_field` | `upgrade/ion_field` | New shared artwork |
-| `incendiary_core`, `thermal_compound` | `upgrade/element_thermal` | New shared artwork |
-| `toxin_core`, `concentrated_toxin`, `contagion` | `upgrade/element_toxin` | New shared artwork |
-| `cryo_core`, `deep_freeze` | `upgrade/element_cryo` | New shared artwork |
-| All four dash cards | `upgrade/dash_wake` | New shared artwork |
-| `aegis_cycle`, `siphon_matrix`, `static_aegis` | `upgrade/defense_matrix` | New shared artwork |
-| `emp_aftershock`, `emp_capacitor`, `emp_focus` | `effect/emp_release` | Reuse existing gameplay asset |
-| `relay_overload` | `upgrade/system_relay` | New shared artwork |
-| `tuned_thrusters`, `dash_capacitor` | `upgrade/mobility_thruster` | New shared artwork |
-| `pickup_magnet` | `upgrade/pickup_magnet` | New shared artwork |
-| `reinforced_hull` | `upgrade/hull_reinforcement` | New shared artwork |
+| `enemies_and_grid` / `enemy_scheduled_ordinary` | schedule, `VehicleRun` ordinary update path, local steering, spatial grid | Remove repeated queries or unchanged work, reuse bounded buffers, and distribute existing work; preserve 10/30/20/60 Hz, order, collision, and counts. |
+| `enemy_budget_scan` | enemy schedule/store membership | Replace repeat derivation with generation-safe retained state updated on existing spawn/activation/retirement events; preserve deterministic list order and caps. |
+| `enemy_wear_terrain` | enemy motion result plus terrain runtime | Visit only actors that moved or remain tracked, using existing state; preserve every entry, occupancy, and damage deadline. |
+| `combat_and_effects` | projectile/effect stores and their existing run loops | Remove repeat allocation or duplicate traversal only; preserve all live counts, order, collision, and effect timing. |
+| `player_and_rewards` | player/pickup/experience existing owners | Remove repeat allocation or duplicate traversal only; preserve collection and recall behavior. |
+| presentation or HUD | renderer or HUD presenter, respectively | Skip unchanged writes or reuse existing buffers; preserve visible state and current refresh latency. |
+| engine/scheduler/residual | launch/focus/VSync environment and recorder evidence | Reproduce in a focused foreground run. Do not alter gameplay to hide an external scheduling failure. |
 
-The ten new images are transparent 192×192 PNGs with pivot `(96, 96)`. They use one
-large flat silhouette, broad matte planes, restrained charcoal separation, and role
-color. They contain no text, card frame, background panel, dots, greeble, glow cloud,
-or detached decorative parts.
+If a top-level owner qualifies but its nested owner is still ambiguous, add one temporary
+diagnostic split inside that owner and rerun a short diagnostic before editing behavior.
+Do not optimize a runner-up on speculation. Remove temporary splits that are not useful
+for the durable recorder output.
 
-Each new ID maps to
-`art/visuals/production/gameplay/upgrades/<ID leaf>.png`; for example,
-`upgrade/ion_field` maps to `upgrades/ion_field.png`. Add category `upgrade: 10`, change
-the manifest total from 57 to 67, and update
-`validate_vehicle_visual_asset_coverage.gd`,
-`validate_vehicle_semantic_asset_provider.gd`, and `VISUAL_SYSTEM.md` to require that
-exact distribution and all ten IDs. Existing categories and their counts do not change.
+## Tasks
 
-Replace the upgrade glyph draw control with a `TextureRect` backed by the semantic
-provider. Once zero references remain, retire exactly:
+### M1 - Make hitch attribution decision-grade
 
-- `scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd`
-- `scripts/presentation/components/vehicle_upgrade_glyph_renderer.gd.uid`
+- [ ] Extend `_parse_performance_request()` and recorder configuration with
+  `--performance-attribution=full`, including native and Web query parity where relevant.
+- [ ] Extend `VehiclePerformanceRecorder` with bounded contributing-physics-tick records,
+  non-overlapping top-level aggregation, coverage, focus/VSync, and commit provenance.
+- [ ] Extend `validate_vehicle_performance_scenarios.gd` to prove default sampling remains
+  unchanged, full mode is bounded, nested timing is not double-counted, and p99 selection
+  uses the correct retained frame.
+- [ ] Capture one focused, clean, commit-stamped 1280x720 native `peak_horde` diagnostic
+  with the exact current workload and full attribution. Reject and rerun any artifact
+  with unfocused samples, a mismatched commit, dirty state, invalid fixture, or coverage
+  below 90%.
 
-Do not remove or convert the separate action/minimap glyph systems.
+Acceptance: a valid JSON identifies all contributing physics ticks and one dominant
+top-level owner for the representative p99 hitch without changing scenario counts.
 
-### 2. Upgrade card layout
+### M2 - Restore smooth, time-correct enemy motion
 
-The prior
-`docs/design/visual-replacement-workbench/previews/ui-screen-direction/03b-upgrade-card-selected.png`
-is non-binding evidence of the user's chosen composition, not visual authority. M1 first
-writes the following decisions into `VISUAL_SYSTEM.md`; that updated text plus the
-canonical reference PNG then governs implementation. The information order is fixed:
+- [ ] Change `VehicleEnemyUpdateSchedule.rebuild()` so motion-only and decision-only due
+  states are both dispatched and reset only their own accumulators.
+- [ ] Change `_update_scheduled_ordinary_enemy()` to process decision-only work with zero
+  elapsed motion and motion-only work with the exact accumulated delta.
+- [ ] Add a decision epoch and alternate overlap-cache refresh per actor across epochs;
+  remove the current stable-parity expression.
+- [ ] Extend `validate_vehicle_enemy_update_schedule.gd` with bucket-aligned steady-state
+  60-tick near/far fixtures proving 10 decision events, 30/20 motion events, no consumed
+  decision-only motion, one second of accumulated motion, and unchanged critical 60 Hz
+  behavior.
+- [ ] Extend `validate_vehicle_enemy_local_steering.gd` with two-epoch refresh, overlap
+  enter/exit, and generation-reuse cases.
+- [ ] Extend `validate_vehicle_run.gd` with a collision-free one-second movement fixture
+  and a blocker-recovery fixture; assert time-correct distance and unchanged attack timing.
+- [ ] Capture one near/far/critical rendered motion trace. Add the bounded presentation
+  interpolator only if the locked unchanged-frame criterion fails after the schedule fix.
 
-1. family;
-2. upgrade name;
-3. large artwork on the left and level/change data on the right;
-4. short description;
-5. one fixed shared Equip action below the three cards.
+Acceptance: motion is time-correct, near/far/critical cadence matches 30/20/60 Hz,
+decisions remain 10 Hz, no actor has a permanent stale steering cache, and presentation
+does not diverge from collision unless the bounded fallback was objectively required.
 
-There is no modal title block, instructional paragraph, card-top thumbnail, or Leave
-button. Preserve one selection rail and keyboard/controller focus; do not add ornament.
+### M3 - Apply the requested combat-object scale corrections
 
-| Mode | Card size | Gap | Artwork | Type minimums |
-| --- | --- | --- | --- | --- |
-| Compact (960 wide) | 280×378 | 12 | 88×88 | family/body 14, title 24, value 16 |
-| Standard (1280 wide) | 360×456 | 16 | 112×112 | family/body 16, title 28, value 18 |
-| Large (1920 wide) | 420×480 | 24 | 128×128 | family/body 18, title 32, value 18 |
+- [ ] Set XP radii to `24/28/33` and the four projectile multipliers to
+  `3.85/4.375/4.025/4.55` in `VehicleStageVisualProfile`, including its self-validation.
+- [ ] Update `validate_vehicle_projectile_readability.gd` and
+  `validate_vehicle_combat_renderer.gd` for the exact new visual products and unchanged
+  shared master/collision ownership.
+- [ ] Extend `validate_vehicle_experience.gd` or the renderer validator to prove the
+  `1`, `2-4`, `>=5` mapping resolves to `24/28/33` while collection remains radius `34`.
+- [ ] Use the existing capture gateway to record small/medium/large XP together and
+  friendly/hostile projectile examples at actual gameplay scale; do not create new art.
 
-The three-card container grows up to 1,308 px; it does not keep narrow cards in unused
-space. Compact applies below 1,100 px, standard from 1,100 through 1,599 px, and large
-from 1,600 px. The 1920 modal content maximum becomes 1,376 px; the existing 960 and
-1280 safe margins remain. These values deliberately replace the current
-`352×432`/20-gap wide-only contract and its validator assertions. At 200% UI scale,
-cards may stack inside one outer scroll container, but card
-internals never create nested scrollbars and Equip remains reachable. Numeric cards
-show no more than two real `current → next` rows. Behavior-only cards use a localized
-“New behavior” label plus a concise data-owned summary instead of fake numbers or a
-long paragraph in the comparison lane.
+Acceptance: XP tier order is `24 < 28 < 33`, all non-beam projectile rendered radii are
+exactly 70% of the current baseline, and every collision/gameplay value is byte-for-byte
+unchanged in its owner.
 
-### 3. Projectile visibility and ownership
+### M4 - Remove the measured hitch
 
-Keep one 64×64 right-facing, tailless energy-teardrop PNG. Redraw it so the nontransparent
-body is centered on collision truth and fits an alpha bound between 46–52 px wide and
-24–30 px high. The bright collision core remains visually dominant; the outer soft
-silhouette may aid recognition but must not imply a larger damaging hitbox.
+- [ ] Run a full-attribution diagnostic after M2-M3 and select the owner with the locked
+  25% / 2.0 ms rule.
+- [ ] Implement one responsibility-local correction from the routing table; add only the
+  focused regression needed for the changed owner.
+- [ ] Use short peak diagnostics only to compare attribution and reject regressions. They
+  are measurements, not completion gates.
+- [ ] Repeat owner-local correction only while a valid artifact identifies a qualifying
+  dominant owner. Never lower workload, cadence, visual quality, or thresholds.
+- [ ] Produce one clean, focused, commit-stamped 60-second native `peak_horde` result
+  after the last correction.
 
-`VehicleStageVisualProfile` owns all multipliers:
+Acceptance: native peak workload is valid and passes p95, p99, median FPS, 1% low,
+consecutive-hitch, draw-call, and batch thresholds.
 
-- `HOSTILE_PROJECTILE_ENVELOPE_SCALE = 5.50`;
-- `PLAYER_PRIMARY_PROJECTILE_SCALE = 6.25`;
-- `PLAYER_SEEKER_PROJECTILE_SCALE = 5.75`;
-- `PLAYER_OPENING_BREACH_PROJECTILE_SCALE = 6.50`.
+### M5 - Run one final gate and retire the plan
 
-`VehicleCombatRenderer` consumes those constants and contains no projectile-scale
-literals. Rotation and faction/affinity tint remain runtime-owned. Collision radii,
-speed, lifetime, homing, damage, and capacity remain unchanged.
+- [ ] Run Godot import and the complete `validate_vehicle_*.gd` suite once.
+- [ ] Run `validate_cardborne_visual_authority.ps1`, Web export, one foreground native
+  smoke, and one visible built-Web smoke once.
+- [ ] Run final native `peak_horde` and `capacity_pressure`, then one visible built-Web
+  `peak_horde`. Do not run the 600-second lifecycle soak because this plan changes no
+  production pool, capacity, lifecycle, or unbounded allocation owner.
+- [ ] Review actual-scale XP/projectile captures and the near/far/critical motion trace for
+  clipping, deceptive hit boundaries, tier ambiguity, and visible stepping.
+- [ ] Update `.agents/semantic-v2-runtime-acceptance-evidence.md` with exact commits,
+  artifacts, workload counts, metrics, and any valid environmental limitation.
+- [ ] Incorporate any durable contract correction into its canonical spec, mark this plan
+  done, and retire it according to `.agents/PLANS.md`.
 
-Add `tools/validation/validate_vehicle_projectile_readability.gd`. It loads the source
-PNG as `Image`, asserts the alpha-used bound above, requires the `(32, 32)` pivot pixel
-and its 3×3 neighborhood to be opaque/bright, and renders debug projectiles to prove
-each of the four visual radii equals collision radius times the matching profile
-constant. The AS-IS/TO-BE report includes an actual-scale collision-circle overlay for
-human verification that the bright core, not the whole silhouette, communicates hit
-truth.
-
-### 4. Enemy approach and committed attack routes
-
-“Attack route” covers two existing contracts, not map pathfinding:
-
-- Approach: births remain distributed over the established eight sectors, enemies do
-  not overlap into a single spawn point or permanent single-file lane, local separation
-  remains active, and every mobile role still converges on the player.
-- Commit: startup cues for projectile, charge, beam, and area attacks show origin,
-  direction, width/radius, and collision-resolved endpoint before damage. The committed
-  origin/target does not drift, off-screen sources still show intersecting danger, and
-  active beams/areas remain visible for their damaging interval.
-
-Keep the existing exact spawn-allocation and local-steering validators as the approach
-fixture: every arrival window uses all eight sectors, sector counts differ by at most
-one, cue births use four sectors, births keep the 320 px separation floor, and overlap
-steering is deterministic and bounded to eight neighbors.
-
-Add `tools/validation/validate_vehicle_attack_route_readability.gd` for commit parity.
-Using fixed origin/direction/target values and one injected blocker, it exercises an
-ordinary and boss example for projectile, charge, beam, and area delivery through the
-runtime capture gateway. It asserts:
-
-- descriptor origin, direction, half-width/radius, lead/startup duration, and endpoint
-  equal the owning attack contract;
-- projectile and beam endpoints equal the live projectile-path resolver result;
-- charge endpoint equals the live movement/charge resolver result;
-- area center/radius equal the committed simulation values;
-- startup origin/target remain fixed through commit;
-- an off-screen source whose corridor intersects the viewport produces a nonzero
-  renderer cue; and
-- active beam/area presentation remains present for every damaging tick and disappears
-  after the active interval.
-
-The fixture captures the actual `VehicleRun` caller path, not only direct builder output.
-Current source inspection suggests that parity may already pass; if so, this phase adds
-the regression contract and changes no AI or route code. If it fails, fix the existing
-descriptor builder, caller, resolver, or renderer owner only. Do not add tails,
-decorative lane marks, new AI rules, or a navigation system.
-
-### 5. Wear Collapse tiles
-
-Replace only `world/wear_tile_intact`, `world/wear_tile_cracked`, and
-`world/wear_tile_collapsed`. Preserve the 240×160 canvas, `(120, 80)` pivot, placement,
-state machine, damage, occupancy reset, and persistence.
-
-All three states derive from one light-gray hangar-floor plate:
-
-- intact: quiet floor-integrated plate, no card-like frame;
-- cracked: the same plate with one unmistakable structural fracture;
-- collapsed: a clean dark opening with a readable hazardous footprint and no colored
-  fringe, dirty matte, halo, or cutout residue.
-
-Damageable bulkheads receive regression coverage only. Their behavior or artwork changes
-only if the focused fixture proves a current invisible/mismatched transition; this is
-not permission to resume the wider map redesign.
-
-### 6. Performance repair
-
-Use the current `peak_horde` workload as the first diagnostic target. Capture one clean
-foreground native 1280×720, 10-second warmup plus 60-second instrumented result at
-`build/performance/urgent-stabilization/profiles/peak-horde-baseline.json` on the exact
-starting commit. This is diagnosis, not an early release gate.
-
-Extend `VehiclePerformanceRecorder` in diagnostic-scenario mode with a bounded
-`slow_frame_samples` array containing the 64 slowest frames. Every sample records frame
-serial/time, frame delta, total physics, enemy/grid, scheduled ordinary enemy,
-projectile/effect, presentation, HUD build, HUD apply, engine process, engine physics,
-render CPU, render GPU, and derived wait/unattributed time. The result also identifies
-the sample nearest p99. The median frame and that representative p99 hitch must each be
-at least 90% classified as script owner, engine process/physics, render CPU/GPU, or
-scheduler/wait before M2 selects an additional hot owner. Periodic engine monitors are
-diagnostic overlap and are not added to script timers as if independent. Do not optimize
-from an unexplained 85 ms gap.
-
-Two current owners already justify direct work unless the fresh profile disproves them:
-
-- Replace `VehicleEnemyUpdateSchedule.rebuild()`'s per-physics clear/repopulate and
-  dynamic carrier/rammer dictionary work with retained, bounded membership/worklists
-  updated on spawn, activation, retirement, squad change, and cadence boundaries.
-  Preserve committed 60 Hz behavior, ordinary 10 Hz decisions, and 30/20 Hz movement.
-- Split HUD snapshot generation/application by owned channel and skip unchanged channel
-  builds and Control writes. Preserve the existing maximum 20 Hz fast and 10 Hz world
-  refresh cadence and current observable latency; do not invent a new event-bypass
-  contract during this optimization.
-
-After each correction, rerun only `peak_horde` as a short diagnostic. If a different
-owner is the largest self-time above 2 ms p95 or 25% of measured script CPU, correct
-that owner in its existing module. Do not create a catch-all optimizer. If the remaining
-dominant cost requires engine replacement, native code, lower workload, or a changed
-gameplay rule, record evidence and stop because that exceeds this plan's authority.
-
-## Milestones
-
-### M1 — Correct contracts and capture the performance baseline
-
-- [ ] Record exact HEAD, dirty state, existing failing JSON, and a fresh native
-  instrumented `peak_horde` result with the required 64 slow-frame samples and p99
-  classification at the exact profile path above.
-- [x] Update `VISUAL_SYSTEM.md` so authored PNG ownership explicitly includes upgrade
-  content artwork while shared UI chrome remains Theme/stylebox-owned; replace the old
-  card geometry/breakpoint assertions with this plan's three modes; and change the exact
-  gameplay manifest contract from 57 to 67 with category `upgrade: 10`.
-- [x] Update `vehicle_game_spec.md` to make `secondary` the sole user-facing upgrade
-  family/umbrella, define built-in versus optional secondary slot kinds, and lock the
-  card information order and behavior-only fallback.
-- [x] Add complete performance attribution before choosing any additional hot owner.
-
-### M2 — Remove the measured stutter
-
-- [x] Implement channel-dirty HUD updates and bounded enemy/grid work; retain local
-  separation with a generation-safe steering cache and skip unchanged grid writes.
-- [x] Correct the profiler-proven owners within this plan's boundaries.
-- [ ] Confirm an authoritative native `peak_horde` result under the release thresholds
-  without lowering actors, projectiles, zones, effects, or visual quality.
-
-### M3 — Produce all replacement images in one batch
-
-- [x] Generate the ten 192×192 upgrade artwork PNGs, the corrected 64×64 projectile
-  PNG, and the three 240×160 Wear Collapse PNGs in one visual-production milestone.
-- [x] Before every generation/edit, read `VISUAL_SYSTEM.md`, inspect the canonical PNG,
-  and pass `cardborne-universal-art-style-reference.png` as the actual image-reference
-  input. Do not pass the Markdown file as an image.
-- [x] Update the semantic manifest and both exact-count validators to 67 assets with ten
-  `upgrade` entries. Build one compact local AS-IS/TO-BE HTML report at
-  `docs/design/visual-replacement-workbench/previews/urgent-runtime-stabilization/index.html`
-  showing every changed image at native size and over representative gameplay/UI
-  backgrounds.
-- [x] For each of the exact fourteen outputs, record AS-IS hash (or `new`), TO-BE hash,
-  dimensions, pivot, alpha bounds, canonical reference path/hash, generation/edit
-  provenance, and pass/fail results. Self-check silhouette, alpha edges, actual-size
-  readability, and collision overlay. The user's approval-free-plan instruction
-  pre-authorizes only this exact fourteen-output set once all mechanical acceptance
-  checks pass; the report is evidence, not an approval stop.
-
-### M4 — Integrate upgrade data and UI
-
-- [x] Add `artwork_asset_id`, migrate all forty-one definitions using the locked table,
-  and validate that every ID resolves.
-- [x] Add `secondary_slot_kind`, merge the six `seeker` family resources into
-  `secondary`, and replace hard-coded optional-ID eligibility with built-in/optional
-  metadata. Update `VehicleRunBuild.active_optional_secondaries()` to count owned
-  catalog definitions whose `secondary_slot_kind == &"optional"`; remove
-  `OPTIONAL_SECONDARY_FAMILY_IDS` after all callers and focused tests use metadata.
-- [x] Move built-in seeker scheduling and projectile intents into
-  `VehicleSecondaryRuntime`; update `VehicleRun`, HUD snapshots, damage reporting,
-  capture fixtures, localization, and tests without changing observable weapon behavior.
-- [x] Replace code-drawn upgrade glyphs with semantic textures and retire only the exact
-  zero-reference renderer pair listed above.
-- [x] Implement the compact/standard/large layout, full level/change visibility,
-  behavior-only fallback, fixed Equip action, focus states, and 200% outer scrolling.
-- [x] Update upgrade validators to require one resolved authored texture per card and
-  reject code-native upgrade artwork.
-
-### M5 — Integrate combat readability
-
-- [x] Switch all projectile visual multipliers to `VehicleStageVisualProfile`, improve
-  the shared PNG occupancy, and remove renderer literals.
-- [x] Add actual-scale projectile coverage for friendly/hostile colors and 960/1280/1920
-  pressure scenes while preserving collision truth; add and pass
-  `validate_vehicle_projectile_readability.gd`.
-- [x] Add deterministic approach-distribution and projectile/charge/beam/area corridor
-  fixtures in `validate_vehicle_attack_route_readability.gd`; repair caller, blocker,
-  descriptor, and renderer parity only if the runtime fixture fails.
-
-### M6 — Integrate Wear Collapse tiles
-
-- [x] Switch the three images in place without changing IDs, canvas, pivot, or gameplay.
-- [x] Capture intact, cracked, collapse-on-third-entry, damage tick, leave/re-entry, and
-  persisted-state evidence against the actual floor.
-- [x] Verify clean alpha/edge behavior over light and dark backgrounds.
-
-### M7 — Run the one complete final gate
-
-- [ ] Run import, all focused validators, the complete `validate_vehicle_*.gd` suite,
-  `validate_cardborne_visual_authority.ps1`, Web release export, foreground native
-  runtime smoke, and visible built-Web smoke once after integration. No native export
-  preset exists, so the foreground Godot runtime is the strongest current native path.
-- [ ] Capture Korean and English upgrade UI at 960×540, 1280×720, 1920×1080, and 200%
-  UI scale; verify no clipping, overlap, tiny text, nested scroll, or unreachable Equip.
-- [ ] Capture projectile/attack-route/Wear Tile states at actual gameplay scale.
-- [ ] Run one authoritative native and visible Web result for `production_replay`,
-  `peak_horde`, `capacity_pressure`, and `boss_pressure`.
-- [ ] After capacity passes, run the one 600-second native `lifecycle_pressure` soak.
-- [ ] Update the evidence record, incorporate durable decisions, mark this plan done,
-  and retire it according to `.agents/PLANS.md`.
+Acceptance: all mechanical checks pass, native and Web peak gates pass, capacity physics
+passes, the worktree contains no out-of-scope visual/UI/map change, and evidence is tied
+to the exact clean commit.
 
 ## Test Plan
 
-### Focused checks during implementation
+### Focused implementation checks
 
-Run only the check owned by the changed milestone:
+Run the focused bundle once after M1-M3 code is integrated; during M4 add only the
+validator owned by the measured correction:
 
 ```powershell
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_system.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_secondary_weapons.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_ui.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_ui_localization.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_ui_layout.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_projectile_readability.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_attack_contract.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_attack_route_readability.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_spawn_allocation.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_enemy_local_steering.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_destructible_terrain_flow.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_wear_collapse_tiles.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_terrain_runtime.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_performance_scenarios.gd
-.\tools\validation\validate_cardborne_visual_authority.ps1
+$checks = @(
+  'validate_vehicle_enemy_update_schedule.gd',
+  'validate_vehicle_enemy_local_steering.gd',
+  'validate_vehicle_run.gd',
+  'validate_vehicle_combat_renderer.gd',
+  'validate_vehicle_projectile_readability.gd',
+  'validate_vehicle_experience.gd',
+  'validate_vehicle_performance_scenarios.gd'
+)
+foreach ($name in $checks) {
+  .\tools\godot.ps1 --path . --headless --script "res://tools/validation/$name"
+  if ($LASTEXITCODE -ne 0) { throw "validator failed: $name" }
+}
 ```
 
-`profile_vehicle_pressure.gd` is diagnostic only; it never counts as rendered release
-evidence.
+### Full-attribution diagnostic
 
-### Final gate
+```powershell
+$revision = (git rev-parse HEAD).Trim()
+if (git status --porcelain) { throw 'diagnostic commit must be clean' }
+$env:PERFORMANCE_COMMIT = $revision
+$env:PERFORMANCE_DIRTY = '0'
+$output = "build/performance/urgent-stabilization/profiles/$($revision.Substring(0, 8))-peak-horde-full-attribution-native-1280x720.json"
+.\tools\godot.ps1 --path . --rendering-method gl_compatibility --resolution 1280x720 --disable-vsync -- `
+  --performance-scenario=peak_horde `
+  "--performance-output=res://$output" `
+  --performance-warmup=10 --performance-duration=60 `
+  --performance-attribution=full
+if ($LASTEXITCODE -ne 0) { throw 'full-attribution diagnostic failed' }
+```
+
+The artifact is invalid if `git.commit` differs from `$revision`, `git.dirty` is true,
+the window has any unfocused sample, the scenario workload is invalid, or p99 top-level
+coverage is below 90%.
+
+### One final broad gate
 
 ```powershell
 .\tools\godot.ps1 --path . --headless --import
@@ -469,171 +385,149 @@ foreach ($validator in $validators) {
 .\tools\validation\validate_cardborne_visual_authority.ps1
 if ($LASTEXITCODE -ne 0) { throw 'visual authority validation failed' }
 .\tools\export_web.ps1
+if ($LASTEXITCODE -ne 0) { throw 'Web export failed' }
 git diff --check
 ```
 
-For each authoritative native scenario, use foreground 1280×720 GL Compatibility and
-preserve the JSON:
+### Final performance runs
+
+Run the native scenarios from the exact clean implementation commit. A result is invalid
+unless it is commit-matched, clean, fully focused, authority-eligible, fixture-valid, and
+passing:
 
 ```powershell
-foreach ($scenario in @('production_replay', 'peak_horde', 'capacity_pressure', 'boss_pressure')) {
-  $output = "build/performance/urgent-stabilization/native/$scenario.json"
-  .\tools\godot.ps1 --path . --rendering-method gl_compatibility --resolution 1280x720 -- `
+$revision = (git rev-parse HEAD).Trim()
+if (git status --porcelain) { throw 'final performance commit must be clean' }
+$env:PERFORMANCE_COMMIT = $revision
+$env:PERFORMANCE_DIRTY = '0'
+
+foreach ($scenario in @('peak_horde', 'capacity_pressure')) {
+  $output = "build/performance/urgent-stabilization/final/native-$scenario.json"
+  .\tools\godot.ps1 --path . --rendering-method gl_compatibility --resolution 1280x720 --disable-vsync -- `
     "--performance-scenario=$scenario" `
     "--performance-output=res://$output" `
     --performance-warmup=10 --performance-duration=60
   if ($LASTEXITCODE -ne 0) { throw "native performance failed: $scenario" }
   $result = Get-Content -LiteralPath $output -Raw | ConvertFrom-Json
-  if (-not $result.authoritative -or -not $result.scenario_validation.valid -or -not $result.thresholds.passed) {
-    throw "valid native performance gate failed: $scenario; fix before continuing"
-  }
-}
-
-# This runs only after the capacity result above is authoritative, valid, and passing.
-.\tools\godot.ps1 --path . --rendering-method gl_compatibility --resolution 1280x720 -- `
-  --performance-scenario=lifecycle_pressure `
-  --performance-output=res://build/performance/urgent-stabilization/native/lifecycle-pressure-600s.json `
-  --performance-warmup=10 --performance-duration=600
-if ($LASTEXITCODE -ne 0) { throw 'native lifecycle pressure failed' }
-$lifecycle = Get-Content -LiteralPath `
-  'build/performance/urgent-stabilization/native/lifecycle-pressure-600s.json' `
-  -Raw | ConvertFrom-Json
-if (-not $lifecycle.authoritative -or -not $lifecycle.scenario_validation.valid -or -not $lifecycle.thresholds.passed) {
-  throw 'valid native lifecycle gate failed'
+  if (
+    $result.git.commit -ne $revision -or $result.git.dirty -or
+    [int]$result.execution_environment.unfocused_samples -ne 0 -or
+    -not $result.authoritative -or
+    -not $result.execution_environment.authority_eligible -or
+    -not $result.scenario_validation.valid -or
+    -not $result.thresholds.passed
+  ) { throw "invalid or failing native result: $scenario" }
 }
 ```
 
-Before the Web run, resolve the fastrun manager's `codex` lane exactly:
+For Web, load `$npjt-port-guard`, resolve the fastrun manager's `codex` lane for this
+project, and inspect the listener before starting anything. Reuse a listener only when
+its PID, command line, project path, and served files prove that it owns this production
+export. Otherwise, if the port is free, start one task-owned hidden static server for
+`build/web` and retain its PID for cleanup; an unknown conflicting listener is a stop
+condition, not permission to kill it or select an ad hoc port.
 
-```powershell
-$codexPort = py -3.11 `
-  'C:\Users\BK\.codex\skills\npjt-port-guard\scripts\npjt_port_guard.py' `
-  --project 'D:\npjt\cardborne-platformer' --service web --print-port
-if ($LASTEXITCODE -ne 0 -or -not $codexPort) { throw 'codex web port unavailable' }
-```
-
-Inspect that port first. If it is unbound, start a task-owned hidden static server and
-retain its PID for cleanup. If it is bound, reuse it only when the PID, command line,
-project path, and served files prove it is this project's production export. A bound
-unknown or mismatched listener is a stop/report condition: do not kill it, reuse it,
-attempt a second bind, or choose a fallback port.
-
-```powershell
-$server = Start-Process -FilePath 'py' -ArgumentList @(
-  '-3.11', '-m', 'http.server', $codexPort,
-  '--bind', '127.0.0.1', '--directory', (Resolve-Path 'build/web').Path
-) -PassThru -WindowStyle Hidden
-```
-
-For each of `production_replay`, `peak_horde`, `capacity_pressure`, and `boss_pressure`,
-use Chrome DevTools MCP to open this exact visible tab URL:
+Use Chrome DevTools MCP to open the exact visible URL below at 1280x720:
 
 ```text
-http://127.0.0.1:<codexPort>/?performance_scenario=<scenario>&performance_warmup=10&performance_duration=60
+http://127.0.0.1:<codexPort>/?performance_scenario=peak_horde&performance_warmup=10&performance_duration=60
 ```
 
-Before waiting, evaluate `document.hasFocus()`, `document.visibilityState`, viewport
-`1280×720`, and `navigator.userAgent`; the tab must be focused/visible and the agent must
-not contain `HeadlessChrome`. Wait until `window.__cardbornePerformanceResultJson` is a
-nonempty string, evaluate it once, and save the exact parsed JSON as
-`build/performance/urgent-stabilization/web/<scenario>.json`. Require scenario match,
-`authoritative == true`, `execution_environment.authority_eligible == true`,
-`scenario_validation.valid == true`, and `thresholds.passed == true` before opening the
-next URL. An invalid environmental run may be discarded and rerun; a valid failure stops
-the gate and requires a fix. After the last result, stop only the retained task-owned
-server PID; leave a reused server running.
+Before waiting, require `document.hasFocus() == true`,
+`document.visibilityState == "visible"`, and a user agent without `HeadlessChrome`.
+Save the exact parsed `window.__cardbornePerformanceResultJson` as
+`build/performance/urgent-stabilization/final/web-peak_horde.json`; require scenario
+`peak_horde`, `authoritative == true`, `execution_environment.authority_eligible == true`,
+`scenario_validation.valid == true`, and `thresholds.passed == true`. Stop only the
+retained task-owned server PID; leave a proven reused server running.
 
-### Acceptance thresholds
+Final performance acceptance remains unchanged:
 
-- Native 1280×720: p95 ≤18 ms, p99 ≤25 ms, median ≥59 FPS, 1% low ≥55 FPS,
-  and at most one consecutive frame above 33.3 ms.
-- Visible Web: p95 ≤20 ms, p99 ≤33.3 ms, median ≥58 FPS, 1% low ≥50 FPS,
-  and at most two consecutive frames above 33.3 ms.
-- Capacity simulation: physics p95 ≤6 ms and p99 ≤8 ms.
-- Draw-call p95 ≤200 and combat batches ≤50.
-- Lifecycle: 600 measured seconds and static-memory growth below 8 MiB.
-- The gameplay manifest has exactly 67 PNGs with category `upgrade: 10`; all ten new
-  IDs resolve, and all previous category counts remain unchanged.
-- Forty-one upgrade definitions resolve artwork; zero definitions use family `seeker`;
-  all secondary cards declare `built_in` or `optional`; built-in seeker simulation is
-  owned by `VehicleSecondaryRuntime`; no upgrade code-draw renderer remains; and all
-  cards show a level transition plus real numeric changes or a localized new-behavior row.
-- Projectile alpha/pivot checks, four scale-consumption assertions, collision-overlay
-  evidence, and all attack-route fixtures pass while collision and combat values remain
-  unchanged in their owning gameplay resources/contracts.
-- Wear Tile state images have exact dimensions/pivots, clean edges, and unchanged state,
-  damage, and persistence behavior.
+- native 1280x720: p95 at most 18 ms, p99 at most 25 ms, median at least 59 FPS,
+  1% low at least 55 FPS, and at most one consecutive frame over 33.3 ms;
+- visible Web 1280x720: p95 at most 20 ms, p99 at most 33.3 ms, median at least
+  58 FPS, 1% low at least 50 FPS, and at most two consecutive frames over 33.3 ms;
+- capacity physics: p95 at most 6 ms and p99 at most 8 ms; and
+- draw-call p95 at most 200 and combat batches at most 50.
 
 ## Rollback / Safety
 
-- Work in milestone-scoped commits. Never mix deferred map changes into these commits.
-- Before asset replacement, record byte size and SHA-256 for every target. Git retains
-  the prior bytes; do not delete the AS-IS/TO-BE evidence report during execution.
-- Change resource schema additively first, migrate all resources, then make the field
-  required. This keeps intermediate imports recoverable.
-- Retire the upgrade glyph renderer only after `rg` and validators prove zero references.
-- Keep performance changes behind existing owners and stable public behavior. Revert an
-  optimization commit if it changes deterministic results, cadence, workload, or combat.
-- Do not reset, clean, or modify unrelated user work.
+- Commit M1 instrumentation separately from M2 behavior, M3 scale, and M4 optimization.
+- Do not reset, clean, stage, or rewrite unrelated user work.
+- If the schedule repair changes attack cadence, collision outcomes, or total one-second
+  movement, revert only that milestone and correct the split before continuing.
+- If an optimization changes fixture counts, deterministic ordering, gameplay cadence,
+  or collision truth, discard that optimization even if frame time improves.
+- Revert scale constants and their validator expectations together; no asset rollback is
+  necessary because no image bytes change.
+- Keep diagnostic arrays behind the explicit performance flag and bounded to current
+  frame plus 64 slow samples.
 
 ## Risks
 
-- Larger projectile art can overstate collision. Mitigation: preserve the collision-core
-  alignment and validate opaque core versus the real radius.
-- Merging upgrade families can accidentally alter offer composition. Mitigation: retain
-  card IDs and runtime weapon IDs; snapshot deterministic offer sets before/after.
-- A 200% card layout can create nested scrolling. Mitigation: one outer scroll owner and
-  fixed action reachability.
-- Enemy scheduling optimization can change cadence or ordering. Mitigation: deterministic
-  slot/generation fixtures and exact before/after decision/movement counts.
-- The unattributed frame gap may be outside the currently measured owners. Mitigation:
-  complete attribution before expanding implementation; do not guess or reduce workload.
+- Restoring previously discarded 30/20 Hz motion increases legitimate collision work.
+  Mitigation: measure the corrected workload and optimize its actual owner; do not keep
+  the bug as a performance shortcut.
+- Direct 30/20 Hz rendering may still show mild cadence at high refresh rates.
+  Mitigation: use the locked rendered-trace criterion and only then add the bounded,
+  presentation-only fallback.
+- Larger XP visuals can visually approach the 34-pixel collection radius.
+  Mitigation: large remains radius 33 and the validator keeps collection independent.
+- Smaller projectile silhouettes can under-communicate collision.
+  Mitigation: retain the bright core, actual-scale debug overlay, and exact collision
+  assertions; do not shrink the PNG itself.
+- Full attribution adds diagnostic overhead.
+  Mitigation: compare full mode only to full mode for ownership; use default mode for the
+  final release result.
+- Window focus or driver scheduling can invalidate native evidence.
+  Mitigation: reject unfocused runs explicitly and never compensate by changing gameplay.
 
 ## Open Questions
 
-None at plan start. “Attack route” is deliberately defined above as approach distribution
-plus committed attack-corridor parity, and “destructible tile” is the Wear Collapse family.
-Any later request to include navigation, ordinary walls, bulkhead redesign, pickups, or
-other UI is a separate scope decision and must not be silently absorbed here.
+None at plan start. The previously implicit medium XP tier is fixed at radius `28`, all
+three player projectile variants are included, the first enemy-motion correction is the
+confirmed scheduler defect, and any later performance edit is selected by the quantitative
+owner rule rather than another user approval.
 
 ## Decision Notes
 
-- 2026-08-04: Reused and rewrote the sole active ExecPlan instead of creating a second
-  competing plan.
-- 2026-08-04: Deferred the full map visual redesign and protected all non-upgrade UI.
-- 2026-08-04: Kept one shared projectile identity and made scale/occupancy the fix.
-- 2026-08-04: Chose sixteen maximum reusable upgrade artwork identities rather than one
-  image per card or one generic family glyph for every mechanic.
-- 2026-08-04: Made `secondary` canonical and retained `seeker` only as behavior/weapon
-  terminology.
-- 2026-08-04: Required one final comprehensive validation pass; milestone checks remain
-  narrow and local. Performance needs one diagnostic baseline before implementation.
-- 2026-08-04: Kept all existing performance thresholds, content counts, and cadences.
+- 2026-08-05: Reused the sole active runtime-stabilization ExecPlan instead of creating a
+  competing plan for the same outcome.
+- 2026-08-05: Removed completed UI/art-generation/history detail from the active checklist;
+  Git and the active product/visual specifications retain the durable result.
+- 2026-08-05: Identified discarded motion-only schedule work as the first enemy-stutter
+  defect; direct rendering alone was not treated as the root cause.
+- 2026-08-05: Chose `24/28/33` XP radii to honor the requested small/large multipliers
+  without reversing the medium tier.
+- 2026-08-05: Interpreted 30% smaller projectiles as exact linear scale `0.70` for hostile,
+  primary, seeker, and opening-breach visuals.
+- 2026-08-05: Kept one final broad validation pass; intermediate performance runs are
+  diagnostic measurements required to select and confirm the hot owner.
 
 ## Progress
 
-- [x] Re-audited prior user requests, current code owners, active/superseded plans,
-  current visual authority, runtime evidence, and recent Git history.
-- [x] Identified stale completed phases in the old plan and preserved only relevant work.
-- [x] Locked scope, terminology, reusable artwork mapping, target layout, projectile
-  scales, tile boundaries, performance priorities, validation cadence, and stop rules.
-- [x] M1 contract, attribution, visual-production, integration, combat-readability,
-  and Wear Collapse implementation is complete.
-- [x] Re-ran the complete 59-script Godot validator suite, the deterministic visual
-  replacement workbench check/validator, visual-authority validation, and Web export;
-  all mechanical checks passed. The workbench now projects the ten upgrade PNGs as
-  one applied authored unit (67 current/final gameplay PNGs, 65 authored and 2 reused).
-- [ ] M1 exact clean-commit profile still needs a foreground-authoritative capture at
-  `build/performance/urgent-stabilization/profiles/peak-horde-baseline.json`.
-- [ ] M7 authoritative release qualification remains: the latest focused native
-  `--disable-vsync` result at
-  `build/performance/urgent-stabilization/post-plan-peak-horde-60s-novsync.json`
-  is authority-eligible but still exceeds the frame-time gate (p95 45.83 ms, p99
-  133.33 ms, 1% low 7.26 FPS). The available Web smoke browser reports
-  `HeadlessChrome`. No workload, visual-quality, or threshold reduction was made.
+- [x] Read the current product spec, complete visual authority, design-source map, active
+  ExecPlan standard, current implementation owners, focused validators, and recent Git
+  history.
+- [x] Verified the canonical visual reference hash and original dimensions.
+- [x] Ran the six focused baseline validators; all passed and their missing cadence
+  coverage is documented above.
+- [x] Parsed the latest focus-valid performance evidence and captured a commit-stamped but
+  correctly rejected unfocused current-HEAD diagnostic.
+- [x] Closed the XP-tier, projectile-family, collision-separation, scheduler-cadence,
+  performance-attribution, and validation-scope decisions.
+- [ ] M1 is the next implementation milestone. No game code or visual asset has been
+  changed while writing this plan.
+
+## Next Steps
+
+Start at M1. Implement only diagnostic attribution, commit it independently, and capture
+the focused clean baseline before changing schedule behavior. Then execute M2 through M5
+without pausing for approval unless a stated stop condition is reached.
 
 ## Completion
 
-This plan is complete only when every M1–M7 item is checked, the final evidence satisfies
-all acceptance thresholds, no deferred map or unrelated UI work entered the diff, durable
-product/design contracts are updated, and the plan is retired under `.agents/PLANS.md`.
+This plan is complete only when M1-M5 are checked, motion and scale contracts pass,
+native/Web peak and native capacity evidence passes on the exact clean commit, the
+evidence record is updated, no out-of-scope UI/map/asset work entered the diff, and the
+plan is retired under `.agents/PLANS.md`.
