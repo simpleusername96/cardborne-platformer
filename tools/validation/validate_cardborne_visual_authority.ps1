@@ -57,8 +57,19 @@ if (Test-Path -LiteralPath $sheetAbsolute -PathType Leaf) {
     }
 }
 
+$designOwnerPaths = @(
+    'art/visuals/production/ui/vehicle_stage_theme.tres'
+    'scripts/ui/vehicle_ui_component_factory.gd'
+    'scripts/vehicle/vehicle_stage_visual_profile.gd'
+    'art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf'
+    'art/visuals/production/gameplay/asset-manifest.json'
+    'scripts/presentation/components/vehicle_semantic_asset_provider.gd'
+    'scripts/presentation/components/vehicle_ui_glyph_catalog.gd'
+)
+
 $requiredText = [ordered]@{
-    'AGENTS.md' = @('$cardborne-visual-authority', $specPath, $sheetPath, 'validate_cardborne_visual_authority.ps1')
+    'AGENTS.md' = @('$uiux-gate', '.agents/design/DESIGN.md', '$cardborne-visual-authority', $specPath, $sheetPath, 'validate_cardborne_visual_authority.ps1')
+    '.agents/design/DESIGN.md' = @('docs/product/vehicle_game_spec.md', $specPath, $sheetPath, '../skills/cardborne-visual-authority/SKILL.md', 'style reference only, never asset approval') + $designOwnerPaths
     $specPath = @('## Mandatory Visual Authority Pair', $sheetPath, $expectedHash, 'actual image reference')
     'docs/README.md' = @('$cardborne-visual-authority', $specPath, $sheetPath)
     'docs/design/visual-replacement-workbench/README.md' = @($specPath, $sheetPath, 'actual image reference', 'visual_authority_evidence')
@@ -75,6 +86,23 @@ foreach ($relativePath in $requiredText.Keys) {
         Expect ($text.Contains([string]$token)) "visual authority integration missing token: $relativePath -> $token"
     }
     Expect (-not $text.Contains('build/recovered-style-authority')) "active visual authority surface references recovered historical sheets: $relativePath"
+}
+
+foreach ($relativePath in $designOwnerPaths) {
+    Expect (Test-Path -LiteralPath (Get-RepoFile $relativePath) -PathType Leaf) "missing design-context runtime owner: $relativePath"
+}
+
+$designContextDirectory = Get-RepoFile '.agents/design'
+if (Test-Path -LiteralPath $designContextDirectory -PathType Container) {
+    $designContextFiles = @(Get-ChildItem -LiteralPath $designContextDirectory -Recurse -File)
+    $designContextRelativePaths = @($designContextFiles | ForEach-Object {
+        [IO.Path]::GetRelativePath($repoRoot, $_.FullName).Replace('\', '/')
+    })
+    $hasOnlyDesignContext = $designContextRelativePaths.Count -eq 1
+    if ($hasOnlyDesignContext) {
+        $hasOnlyDesignContext = $designContextRelativePaths[0] -ceq '.agents/design/DESIGN.md'
+    }
+    Expect $hasOnlyDesignContext '.agents/design must contain only DESIGN.md'
 }
 
 # This plan is intentionally transient under .agents/PLANS.md. Validate its

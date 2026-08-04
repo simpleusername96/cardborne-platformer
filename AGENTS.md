@@ -5,6 +5,7 @@
 - The current product is the connected five-stage run defined in `docs/product/vehicle_game_spec.md`.
 - Preserve manual aim, uniform held primary fire, dash, passive seekers, EMP, authored encounters, map pickups, card upgrades, and quota-gated stage bosses.
 - Korean is the default language; Korean and English must remain complete on every user-facing surface.
+- Before substantial user-facing interface work, load `$uiux-gate` and read `.agents/design/DESIGN.md` to resolve product intent, authority order, preserved experience contracts, and runtime owners.
 - For every Cardborne visual task, use `$cardborne-visual-authority` before creating, editing, generating, reviewing, approving, promoting, or switching any asset, UI, HUD, world visual, actor, projectile, effect, mockup, sheet, or workbench candidate. Read `docs/design/VISUAL_SYSTEM.md` completely and inspect
   `docs/design/cardborne-universal-art-style-reference.png` at original detail;
   the sheet is a mandatory style reference, never asset approval.
