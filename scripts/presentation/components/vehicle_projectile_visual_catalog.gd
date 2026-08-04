@@ -1,83 +1,30 @@
 class_name VehicleProjectileVisualCatalog
 extends RefCounted
 
-## Projectile core/tail descriptors normalized around collision radius. Damage,
-## range, cadence, hit rules, and live collision radii remain gameplay truth.
+## One authored projectile identity shared by every non-beam projectile. Runtime
+## still owns collision, damage, cadence, homing, facing, scale, and tint.
+
+const SHARED_VISUAL_ID := &"energy_teardrop"
+const SHARED_ASSET_ID := &"projectile/energy_teardrop"
 
 const DESCRIPTORS := {
-	&"player_primary": {
-		"owner": &"player",
-		"core": &"disk",
-		"tail": &"single_rail",
-		"color": &"player_reward",
-		"recipe": &"player_primary_capsule",
-	},
-	&"opening_breach": {
-		"owner": &"player",
-		"core": &"split_disk",
-		"tail": &"double_rail",
-		"color": &"player_reward",
-		"recipe": &"player_breach_split_capsule",
-	},
-	&"kinetic": {
-		"owner": &"hostile",
-		"core": &"disk",
-		"tail": &"single_rail",
-		"color": &"danger",
-		"recipe": &"hostile_kinetic_capsule",
-	},
-	&"thermal": {
-		"owner": &"hostile",
-		"core": &"ember",
-		"tail": &"flare",
-		"color": &"thermal",
-		"recipe": &"hostile_thermal_capsule",
-	},
-	&"toxin": {
-		"owner": &"hostile",
-		"core": &"drop",
-		"tail": &"beads",
-		"color": &"toxin",
-		"recipe": &"hostile_toxin_capsule",
-	},
-	&"cryo": {
-		"owner": &"hostile",
-		"core": &"shard",
-		"tail": &"twin_rail",
-		"color": &"cryo",
-		"recipe": &"hostile_cryo_capsule",
-	},
-	&"arc": {
-		"owner": &"hostile",
-		"core": &"bolt",
-		"tail": &"broken_rail",
-		"color": &"arc",
-		"recipe": &"hostile_arc_capsule",
-	},
-	&"hybrid": {
-		"owner": &"hostile",
-		"core": &"split_diamond",
-		"tail": &"split_rail",
-		"color": &"text_primary",
-		"recipe": &"hostile_hybrid_capsule",
-	},
-	&"seeker": {
-		"owner": &"player",
-		"core": &"forward_wedge",
-		"tail": &"single_rail",
-		"color": &"support",
-		"recipe": &"player_seeker_capsule",
+	SHARED_VISUAL_ID: {
+		"asset": SHARED_ASSET_ID,
+		"shape": &"energy_teardrop",
+		"facing": &"right",
+		"collision_centered": true,
+		"tail": false,
+		"runtime_tint": true,
+		"runtime_scale": true,
 	},
 }
 
 
 static func descriptor_ids() -> Array[StringName]:
-	var ids: Array[StringName] = []
-	for value in DESCRIPTORS:
-		ids.append(StringName(value))
-	ids.sort()
-	return ids
+	return [SHARED_VISUAL_ID]
 
 
-static func descriptor(visual_id: StringName) -> Dictionary:
-	return Dictionary(DESCRIPTORS.get(visual_id, {})).duplicate(true)
+static func descriptor(visual_id: StringName = SHARED_VISUAL_ID) -> Dictionary:
+	if visual_id != SHARED_VISUAL_ID:
+		return {}
+	return Dictionary(DESCRIPTORS[SHARED_VISUAL_ID]).duplicate(true)

@@ -21,7 +21,6 @@ func _run() -> void:
 	await process_frame
 	var snapshot: Dictionary = renderer.debug_snapshot()
 	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
-	_expect(int(snapshot["status_arc_capacity"]) == 960, "status overlays scale from shared enemy capacity")
 	_expect(
 		int(snapshot["batches"]) <= 50,
 		"combat presentation remains inside the retained fifty-batch ceiling (actual %d)"
@@ -39,10 +38,8 @@ func _run() -> void:
 		"hostile projectile collision radii remain 5/6/7 world units"
 	)
 	_expect(
-		renderer.get_node_or_null("Projectile_player_primary") != null
-			and renderer.get_node_or_null("Projectile_player_opening_breach") != null
-			and renderer.get_node_or_null("Projectile_player_seeker") != null,
-		"each player projectile identity owns a semantic texture batch"
+		renderer.get_node_or_null("Projectile_shared_energy_teardrop") != null,
+		"all non-beam projectile identities share one semantic texture batch"
 	)
 	_expect(
 		renderer.get_node_or_null("Player_craft_body") != null
@@ -57,22 +54,10 @@ func _run() -> void:
 			renderer.get_node_or_null("Boss_%s" % String(variant)) != null,
 			"%s boss owns a semantic texture batch" % variant
 		)
-	for affinity in AttackContract.AFFINITIES:
-		_expect(
-			absf(Visuals.debug_projectile_head_extent(affinity) - 1.0) <= 0.001,
-			"%s hostile head remains bounded by its collision radius" % affinity
-		)
-		if affinity == AttackContract.SUPPORT:
-			continue
-		_expect(
-			renderer.get_node_or_null(
-				"Projectile_enemy_%s" % String(affinity)
-			) != null,
-			"hostile %s affinity uses its semantic texture batch" % affinity
-		)
 	_expect(
-		renderer.get_node_or_null("Projectile_core_enemy") == null,
-		"hostile projectile identities no longer collapse onto one generic core"
+		renderer.get_node_or_null("Projectile_player_primary") == null
+			and renderer.get_node_or_null("Projectile_enemy_arc") == null,
+		"legacy player and affinity projectile batches are retired"
 	)
 	for pair in [
 		[&"shooter", &"artillery_spotter"],
@@ -185,6 +170,14 @@ func _run() -> void:
 			and int(snapshot["support_field_glyph_count"]) == 1,
 		"corridor warning adds no interior fill while the beneficial support field keeps one fill and one shared recipe glyph"
 	)
+	var repair_draws := renderer.debug_semantic_texture_draws(
+		&"world/facility_repair_pad"
+	)
+	_expect(
+		repair_draws.size() == 1
+			and is_equal_approx(float(repair_draws[0]["radius"]), 120.0),
+		"repair floor-pad raster scales to the live gameplay radius"
+	)
 	_expect(
 		Vector2(
 			corridor_boundary_buffer[3],
@@ -218,7 +211,7 @@ func _run() -> void:
 		"batched buffer preserves the selected enemy presentation scale"
 	)
 	var projectile_visual := renderer.get_node(
-		"Projectile_player_primary"
+		"Projectile_shared_energy_teardrop"
 	) as MultiMeshInstance2D
 	var projectile_buffer := projectile_visual.multimesh.buffer
 	_expect(
@@ -235,7 +228,7 @@ func _run() -> void:
 	)
 	_expect(
 		projectile_visual.texture != null,
-		"player projectile batch binds the approved raster image"
+		"shared projectile batch binds the approved raster image"
 	)
 	var player_craft := renderer.get_node("Player_craft_body") as MultiMeshInstance2D
 	var craft_buffer := player_craft.multimesh.buffer
@@ -250,41 +243,33 @@ func _run() -> void:
 		"one authored craft body remains centered and follows the hull direction"
 	)
 	for status_id in [&"burn", &"poison", &"chill"]:
-		var status_batch := renderer.get_node(
-			"Status_%s" % status_id
-		) as MultiMeshInstance2D
 		_expect(
-			status_batch.multimesh.instance_count == Renderer.ENEMY_CAPACITY
-				and status_batch.multimesh.visible_instance_count == 1
-				and status_batch.texture != null,
-			"%s renders in its own retained semantic-icon batch" % status_id
+			renderer.get_node_or_null("Status_%s" % status_id) == null,
+			"%s uses actor tint and text instead of a raster orbit icon" % status_id
 		)
-	var hostile_trail := renderer.get_node(
-		"Projectile_enemy_arc"
-	) as MultiMeshInstance2D
-	var hostile_trail_buffer := hostile_trail.multimesh.buffer
 	_expect(
-		Vector2(hostile_trail_buffer[0], hostile_trail_buffer[4]).is_equal_approx(
+		Vector2(projectile_buffer[12], projectile_buffer[16]).is_equal_approx(
 			Vector2.LEFT * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 		),
 		"hostile visual envelope is 4.5 times the collision radius"
 	)
 	_expect(
-		Vector2(hostile_trail_buffer[3], hostile_trail_buffer[7]).is_equal_approx(
+		Vector2(projectile_buffer[15], projectile_buffer[19]).is_equal_approx(
 			Vector2(390.0, 300.0)
 		),
-		"hostile affinity image remains centered on collision state"
+		"hostile projectile remains centered on collision state"
 	)
 	_expect(
-		Vector2(hostile_trail_buffer[1], hostile_trail_buffer[5]).is_equal_approx(
+		Vector2(projectile_buffer[13], projectile_buffer[17]).is_equal_approx(
 			Vector2.LEFT.rotated(PI * 0.5) * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 		),
 		"hostile visual envelope preserves uniform scaling"
 	)
 	_expect(
-		hostile_trail.texture != null
-			and hostile_trail.multimesh.mesh is QuadMesh,
-		"hostile affinity uses one texture-capable retained quad surface"
+		projectile_visual.texture != null
+			and projectile_visual.multimesh.mesh is QuadMesh
+			and projectile_visual.multimesh.visible_instance_count == 2,
+		"player and hostile projectiles share one texture-capable retained surface"
 	)
 	_validate_player_directional_cues(
 		renderer,

@@ -1,26 +1,53 @@
 class_name VehicleEffectVisualCatalog
 extends RefCounted
 
-## Transient semantic effect descriptors. Timers, damage, protection sources,
-## stack rules, and state transitions remain outside this catalog.
+## Presentation recipes only. Gameplay timers, damage, protection, and status
+## truth remain with their existing owners; EMP is the sole authored effect.
 
 const DESCRIPTORS := {
+	&"emp_release": {
+		"asset": &"effect/emp_release",
+		"media": &"authored_raster",
+		"shape": &"live_radius_pulse",
+		"color": &"system",
+	},
 	&"dash_afterimage": {
+		"asset": &"attachment/player_craft_body",
+		"media": &"authored_actor_reuse",
 		"shape": &"elongated_hull",
 		"color": &"system",
 		"radial": false,
 		"recipe": &"dash_player_hull_afterimage",
 	},
-	&"dash_engine_flare": {"shape": &"rear_flare", "color": &"system", "radial": false},
-	&"barrier": {"shape": &"open_ring", "color": &"support", "radial": true},
-	&"arrival": {"shape": &"corner_brackets", "color": &"system", "radial": false},
-	&"transit": {"shape": &"opposing_chevrons", "color": &"system", "radial": false},
-	&"hull_hit": {"shape": &"hull_flash", "color": &"danger", "radial": false},
-	&"telegraph": {"shape": &"live_footprint", "color": &"danger", "radial": false},
-	&"impact": {"shape": &"short_sparks", "color": &"text_primary", "radial": false},
-	&"condition_burn": {"shape": &"broken_arc", "color": &"thermal", "radial": true},
-	&"condition_poison": {"shape": &"dotted_arc", "color": &"toxin", "radial": true},
-	&"condition_chill": {"shape": &"split_arc", "color": &"cryo", "radial": true},
+	&"dash_engine_flare": {
+		"media": &"code_native",
+		"shape": &"rear_flare",
+		"color": &"system",
+		"radial": false,
+	},
+	&"barrier": {
+		"media": &"code_native",
+		"shape": &"support_ring",
+		"color": &"support",
+		"radial": true,
+	},
+	&"hull_hit": {
+		"media": &"code_native",
+		"shape": &"actor_tint",
+		"color": &"danger",
+		"radial": false,
+	},
+	&"telegraph": {
+		"media": &"code_native",
+		"shape": &"live_footprint",
+		"color": &"danger",
+		"radial": false,
+	},
+	&"minor_event": {
+		"media": &"suppressed",
+		"shape": &"none",
+		"radial": false,
+	},
 }
 
 

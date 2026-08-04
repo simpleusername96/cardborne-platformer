@@ -236,7 +236,7 @@ static func validate_recipes() -> PackedStringArray:
 		if color_role(recipe_id) == &"":
 			errors.append("%s is missing a caller-owned semantic color role" % recipe_id)
 		var shape := String(shape_id(recipe_id)).to_lower()
-		for forbidden in ["circle", "diamond", "star", "generic", "fallback"]:
+		for forbidden in ["diamond", "star", "generic", "fallback"]:
 			if forbidden in shape:
 				errors.append("%s uses forbidden generic identity: %s" % [recipe_id, shape])
 		if recipe_layers.size() < 3 or recipe_layers.size() > 5:
@@ -494,24 +494,19 @@ static func _experience_recall_recipe() -> Dictionary:
 
 
 static func _repair_field_recipe() -> Dictionary:
-	var outer := _plus_cut(Vector2.ZERO, 1.08, 0.46, 0.16)
+	var outer := _circle(Vector2.ZERO, 1.0)
 	return _make_recipe(
 		&"facility",
-		&"service_dock_plus_cut",
+		&"circular_floor_pad_plus_cut",
 		&"support",
 		[
 			_layer(&"perimeter", [outer]),
-			_layer(&"main_mass", [_scale_points(outer, Vector2(0.88, 0.88))]),
-			_layer(&"secondary_mass", [
-				_rect(Vector2(-0.78, 0.0), Vector2(0.20, 0.30)),
-				_rect(Vector2(0.78, 0.0), Vector2(0.20, 0.30)),
-				_rect(Vector2(0.0, 0.78), Vector2(0.30, 0.20)),
-			]),
+			_layer(&"main_mass", [_circle(Vector2.ZERO, 0.91)]),
 			_layer(&"function_inset", [
-				_plus_cut(Vector2.ZERO, 0.56, 0.20, 0.0),
+				_plus_cut(Vector2.ZERO, 0.54, 0.20, 0.06),
 			]),
 			_layer(&"hard_highlight", [
-				_rect(Vector2(0.0, -0.80), Vector2(0.28, 0.07)),
+				_rect(Vector2(0.0, -0.73), Vector2(0.24, 0.05)),
 			]),
 		]
 	)
@@ -550,31 +545,19 @@ static func _transit_gate_recipe() -> Dictionary:
 
 
 static func _overdrive_field_recipe() -> Dictionary:
-	var outer: Array[PackedVector2Array] = []
-	var main: Array[PackedVector2Array] = []
-	for center_x in [-0.60, 0.0, 0.60]:
-		var piece := _chevron(
-			Vector2(center_x, 0.0),
-			Vector2.RIGHT,
-			0.66,
-			0.84,
-			0.28
-		)
-		outer.append(piece)
-		main.append(_scale_about(piece, Vector2(center_x, 0.0), 0.70))
+	var outer := _circle(Vector2.ZERO, 1.0)
 	return _make_recipe(
 		&"facility",
-		&"stacked_forward_drive_chevrons",
+		&"circular_floor_pad_forward_chevron",
 		&"player_reward",
 		[
-			_layer(&"perimeter", outer),
-			_layer(&"main_mass", main),
-			_layer(&"secondary_mass", [
-				_rect(Vector2(-0.92, -0.54), Vector2(0.18, 0.07)),
-				_rect(Vector2(-0.92, 0.54), Vector2(0.18, 0.07)),
+			_layer(&"perimeter", [outer]),
+			_layer(&"main_mass", [_circle(Vector2.ZERO, 0.91)]),
+			_layer(&"function_inset", [
+				_chevron(Vector2.ZERO, Vector2.RIGHT, 1.12, 0.88, 0.38),
 			]),
 			_layer(&"hard_highlight", [
-				_rect(Vector2(0.12, -0.50), Vector2(0.46, 0.05)),
+				_rect(Vector2(0.0, -0.73), Vector2(0.24, 0.05)),
 			]),
 		]
 	)
@@ -768,6 +751,23 @@ static func _rect(center: Vector2, half_extent: Vector2) -> PackedVector2Array:
 		center + Vector2(half_extent.x, half_extent.y),
 		center + Vector2(-half_extent.x, half_extent.y),
 	])
+
+
+static func _circle(
+	center: Vector2,
+	radius: float,
+	segments: int = 48
+) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	var safe_segments := maxi(12, segments)
+	for index in safe_segments:
+		points.append(
+			center
+			+ Vector2.RIGHT.rotated(
+				TAU * float(index) / float(safe_segments)
+			) * radius
+		)
+	return points
 
 
 static func _scale_points(

@@ -71,97 +71,26 @@ func _initialize() -> void:
 		Visuals.player_engine_flare_mesh(),
 	]:
 		_expect(mesh.get_surface_count() == 1, "player component mesh has one retained surface")
-	for visual_id in ProjectileCatalog.descriptor_ids():
-		var projectile_descriptor := ProjectileCatalog.descriptor(visual_id)
-		var projectile_recipe_id := StringName(
-			projectile_descriptor.get("recipe", &"")
-		)
-		var head_layers := ProjectileEffectRecipes.projectile_head_layers(
-			projectile_recipe_id
-		)
-		_expect(
-			ProjectileEffectRecipes.has_projectile_recipe(projectile_recipe_id)
-				and not head_layers.is_empty(),
-			"projectile %s resolves through the recipe owner" % visual_id
-		)
-		_expect(
-			_layers_triangulate(head_layers),
-			"projectile %s head layers triangulate cleanly" % visual_id
-		)
-		_expect(
-			_mesh_vertex_count(Visuals.projectile_head_mesh(visual_id))
-				== _layer_vertex_count(head_layers),
-			"projectile %s catalog recipe is consumed by the runtime provider"
-			% visual_id
-		)
-	var hostile_signatures: Array[PackedVector2Array] = []
-	for affinity in [&"kinetic", &"thermal", &"toxin", &"cryo", &"arc", &"hybrid"]:
-		var descriptor := ProjectileCatalog.descriptor(affinity)
-		var recipe_id := StringName(descriptor.get("recipe", &""))
-		var signature := ProjectileEffectRecipes.projectile_head_signature(
-			recipe_id
-		)
-		var full_layers := ProjectileEffectRecipes.projectile_layers(recipe_id)
-		_expect(
-			not descriptor.is_empty(),
-			"projectile descriptor exists for %s" % affinity
-		)
-		_expect(
-			absf(Visuals.debug_projectile_head_extent(affinity) - 1.0) <= 0.001,
-			"projectile head exactly fills its collision-normalized extent for %s"
-			% affinity
-		)
-		for existing_signature in hostile_signatures:
-			_expect(
-				signature != existing_signature,
-				"hostile projectile %s keeps a shape-distinct affinity silhouette"
-				% affinity
-			)
-		hostile_signatures.append(signature)
-		_expect(
-			ProjectileEffectRecipes.plane_count(full_layers) >= 3
-				and ProjectileEffectRecipes.plane_count(full_layers) <= 5,
-			"hostile projectile %s keeps three to five readable planes" % affinity
-		)
-		_expect(
-			_layers_triangulate(full_layers),
-			"hostile projectile %s layered geometry triangulates cleanly"
-			% affinity
-		)
-		_expect(
-			_minimum_layer_x(full_layers) <= -6.49,
-			"hostile projectile %s keeps the approved long-tail extent" % affinity
-		)
-		var hostile_mesh := Visuals.hostile_projectile_envelope_mesh(affinity)
-		_expect(
-			hostile_mesh.get_surface_count() == 1
-				and _mesh_vertex_count(hostile_mesh)
-					== _layer_vertex_count(full_layers),
-			"hostile projectile %s recipe is one runtime batch surface"
-			% affinity
-		)
-	var primary_recipe_id := StringName(
-		ProjectileCatalog.descriptor(&"player_primary").get("recipe", &"")
+	var projectile_ids := ProjectileCatalog.descriptor_ids()
+	var projectile_descriptor := ProjectileCatalog.descriptor(
+		ProjectileCatalog.SHARED_VISUAL_ID
 	)
 	_expect(
-		_mesh_vertex_count(Visuals.player_projectile_head_mesh())
-			== _layer_vertex_count(
-				ProjectileEffectRecipes.projectile_head_layers(
-					primary_recipe_id,
-					Art.MUSTARD
-				)
-			),
-		"player projectile head consumes the primary capsule recipe"
+		projectile_ids == [ProjectileCatalog.SHARED_VISUAL_ID]
+			and StringName(projectile_descriptor.get("asset", &""))
+				== &"projectile/energy_teardrop",
+		"all non-beam projectiles share one authored energy-teardrop asset"
 	)
 	_expect(
-		Visuals.projectile_trail_mesh(&"kinetic").get_surface_count() == 1
-			and _mesh_vertex_count(Visuals.projectile_trail_mesh(&"kinetic"))
-				== _layer_vertex_count(
-					ProjectileEffectRecipes.player_trail_layers(
-						primary_recipe_id
-					)
-				),
-		"player projectile trail consumes the normalized long-tail recipe"
+		bool(projectile_descriptor.get("collision_centered", false))
+			and not bool(projectile_descriptor.get("tail", true))
+			and bool(projectile_descriptor.get("runtime_tint", false))
+			and bool(projectile_descriptor.get("runtime_scale", false)),
+		"shared projectile keeps collision-centered runtime tint and scale ownership"
+	)
+	_expect(
+		ProjectileCatalog.descriptor(&"kinetic").is_empty(),
+		"legacy affinity projectile identities are not catalog fallbacks"
 	)
 	var dash := EffectCatalog.descriptor(&"dash_afterimage")
 	var flare := EffectCatalog.descriptor(&"dash_engine_flare")

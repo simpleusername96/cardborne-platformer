@@ -8,7 +8,6 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const ActorCatalog = preload("res://scripts/presentation/components/vehicle_actor_visual_catalog.gd")
 const ActorRecipes = preload("res://scripts/presentation/components/vehicle_actor_mesh_recipes.gd")
-const ProjectileCatalog = preload("res://scripts/presentation/components/vehicle_projectile_visual_catalog.gd")
 const ProjectileEffectRecipes = preload(
 	"res://scripts/presentation/components/vehicle_projectile_effect_mesh_recipes.gd"
 )
@@ -72,76 +71,6 @@ static func boss_module_mesh(
 	)
 
 
-static func projectile_head_mesh(
-	affinity: StringName = AttackContract.KINETIC
-) -> ArrayMesh:
-	var recipe_id := _projectile_recipe_id(affinity)
-	return Components.polygon_mesh(
-		StringName("projectile_head_%s" % String(recipe_id)),
-		ProjectileEffectRecipes.projectile_head_layers(recipe_id)
-	)
-
-
-static func hostile_projectile_mesh(affinity: StringName) -> ArrayMesh:
-	var recipe_id := _projectile_recipe_id(affinity)
-	return Components.polygon_mesh(
-		StringName("projectile_hostile_%s" % String(recipe_id)),
-		ProjectileEffectRecipes.projectile_layers(recipe_id)
-	)
-
-
-static func player_projectile_head_mesh() -> ArrayMesh:
-	var recipe_id := _projectile_recipe_id(&"player_primary")
-	return Components.polygon_mesh(
-		StringName("projectile_player_head_%s" % String(recipe_id)),
-		ProjectileEffectRecipes.projectile_head_layers(recipe_id, Art.MUSTARD)
-	)
-
-
-static func hostile_projectile_core_mesh() -> ArrayMesh:
-	return polygon_mesh([
-		{
-			"points":_regular_polygon(Vector2.ZERO, 1.0, 20),
-			"color":Art.INK,
-		},
-		{
-			"points":_regular_polygon(Vector2.ZERO, 0.68, 16),
-			"color":Art.IVORY_BRIGHT,
-		},
-	])
-
-
-static func hostile_projectile_envelope_mesh(affinity: StringName) -> ArrayMesh:
-	return hostile_projectile_mesh(affinity)
-
-
-static func projectile_trail_mesh(_affinity: StringName) -> ArrayMesh:
-	var recipe_id := _projectile_recipe_id(&"player_primary")
-	return Components.polygon_mesh(
-		StringName("projectile_player_trail_%s" % String(recipe_id)),
-		ProjectileEffectRecipes.player_trail_layers(recipe_id)
-	)
-
-
-static func debug_projectile_head_extent(affinity: StringName) -> float:
-	var extent := 0.0
-	for point in ProjectileEffectRecipes.projectile_head_signature(
-		_projectile_recipe_id(affinity)
-	):
-		extent = maxf(extent, point.length())
-	return extent
-
-
-static func _projectile_recipe_id(visual_id: StringName) -> StringName:
-	var descriptor := ProjectileCatalog.descriptor(visual_id)
-	if descriptor.is_empty():
-		var normalized := AttackContract.normalize_affinity(visual_id)
-		descriptor = ProjectileCatalog.descriptor(
-			&"seeker" if normalized == AttackContract.SUPPORT else normalized
-		)
-	return StringName(descriptor.get("recipe", &""))
-
-
 static func debug_enemy_signature(archetype: StringName) -> PackedVector2Array:
 	var descriptor := ActorCatalog.descriptor(archetype)
 	return ActorRecipes.enemy_signature(
@@ -157,36 +86,6 @@ static func health_bar_mesh() -> ArrayMesh:
 		]),
 		"color": Color.WHITE,
 	}])
-
-
-static func status_arc_mesh() -> ArrayMesh:
-	var segments := 12
-	var start_angle := deg_to_rad(-55.0)
-	var sweep := deg_to_rad(110.0)
-	var vertices := PackedVector3Array()
-	var colors := PackedColorArray()
-	var indices := PackedInt32Array()
-	for index in segments:
-		var angle_a := start_angle + sweep * float(index) / float(segments)
-		var angle_b := start_angle + sweep * float(index + 1) / float(segments)
-		var outer_a := Vector2.RIGHT.rotated(angle_a)
-		var outer_b := Vector2.RIGHT.rotated(angle_b)
-		var inner_a := outer_a * 0.78
-		var inner_b := outer_b * 0.78
-		var offset := vertices.size()
-		for point in [outer_a, outer_b, inner_b, inner_a]:
-			vertices.append(Vector3(point.x, point.y, 0.0))
-			colors.append(Color.WHITE)
-		for local_index in [0, 1, 2, 0, 2, 3]:
-			indices.append(offset + local_index)
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = vertices
-	arrays[Mesh.ARRAY_COLOR] = colors
-	arrays[Mesh.ARRAY_INDEX] = indices
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
 
 
 static func disk_mesh(segments: int = 32) -> ArrayMesh:

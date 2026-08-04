@@ -1,8 +1,8 @@
 class_name VehicleVisualEventCaptureFixture
 extends RefCounted
 
-## Reviewed grouping for full runtime effect capture. HUD-only events are
-## intentionally absent because they do not create a world-space visual.
+## Reviewed grouping for runtime event coverage. Suppressed minor events remain
+## listed so gameplay producers stay intentional even when they draw no effect.
 
 const VisualEventCatalog = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
@@ -78,6 +78,7 @@ const GROUPS := [
 static func validate() -> PackedStringArray:
 	var errors := PackedStringArray()
 	var captured := {}
+	var authored_effects := 0
 	for group in GROUPS:
 		for event_variant in Array(group["events"]):
 			var event_id := StringName(event_variant)
@@ -87,14 +88,16 @@ static func validate() -> PackedStringArray:
 			if not VisualEventCatalog.has_event(event_id):
 				errors.append("capture fixture event is unmapped: %s" % event_id)
 	for event_id in VisualEventCatalog.event_ids():
-		var mode := StringName(
-			VisualEventCatalog.descriptor(event_id).get(
-				"mode",
-				&"animation"
-			)
-		)
+		var descriptor := VisualEventCatalog.descriptor(event_id)
+		var mode := StringName(descriptor.get("mode", &"suppressed"))
+		if mode == &"authored_emp":
+			authored_effects += 1
+			if StringName(descriptor.get("asset", &"")) != &"effect/emp_release":
+				errors.append("authored EMP event uses the wrong asset: %s" % event_id)
 		if mode == &"hud_only":
 			continue
 		if not captured.has(event_id):
 			errors.append("world event has no capture fixture: %s" % event_id)
+	if authored_effects != 1:
+		errors.append("exactly one event must request the authored EMP raster")
 	return errors

@@ -200,15 +200,12 @@ func _run() -> void:
 	_expect(int(settings_contract["difficulty_controls"]) == 0, "in-run settings expose no difficulty selector")
 	_expect(not bool(settings_contract["difficulty_copy_visible"]), "in-run settings contain no obsolete difficulty copy")
 	var orbit_contract: Dictionary = stage_ui.call("debug_status_orbit_contract")
-	_expect(int(orbit_contract["maximum_badges"]) == 2, "status orbit exposes only the two retained cycle badges")
 	_expect(
-		not bool(orbit_contract["image_coded"])
-			and bool(orbit_contract["code_native_frame"])
-			and StringName(orbit_contract["available_cue"]) == &"outline"
-			and StringName(orbit_contract["active_cue"]) == &"solid"
-			and bool(orbit_contract["grayscale_distinguishable"])
-			and bool(orbit_contract["semantic_icons"]),
-		"status orbit keeps semantic icons inside code-native non-color state cues"
+		not bool(orbit_contract["enabled"])
+			and int(orbit_contract["maximum_badges"]) == 0
+			and not bool(orbit_contract["image_coded"])
+			and not bool(orbit_contract["semantic_icons"]),
+		"persistent status orbit is retired from the gameplay HUD"
 	)
 	stage_ui.call("clear_notifications")
 	for message in ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"]:
