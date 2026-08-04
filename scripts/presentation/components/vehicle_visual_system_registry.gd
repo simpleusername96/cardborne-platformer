@@ -13,9 +13,6 @@ const GlyphCatalog = preload("res://scripts/presentation/components/vehicle_ui_g
 const SecondaryCatalog = preload(
 	"res://scripts/presentation/components/vehicle_secondary_visual_catalog.gd"
 )
-const DefenseCatalog = preload(
-	"res://scripts/presentation/components/vehicle_defense_visual_catalog.gd"
-)
 const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
@@ -72,7 +69,6 @@ static func catalog_ids() -> Dictionary:
 		&"effect": EffectCatalog.descriptor_ids(),
 		&"world": WorldCatalog.descriptor_ids(),
 		&"secondary": SecondaryCatalog.descriptor_ids(),
-		&"defense": DefenseCatalog.descriptor_ids(),
 		&"semantic_asset": AssetProvider.asset_ids(),
 		&"glyph_core": GlyphCatalog.descriptor_ids(),
 		&"glyph_upgrade": GlyphCatalog.upgrade_family_ids(),
@@ -97,7 +93,6 @@ static func provider_fingerprint() -> String:
 		"secondary",
 		SecondaryCatalog.DESCRIPTORS
 	)
-	_append_descriptor_records(records, "defense", DefenseCatalog.DESCRIPTORS)
 	_append_descriptor_records(records, "world_field", WorldCatalog.FIELD_DESCRIPTORS)
 	_append_descriptor_records(records, "world_facility", WorldCatalog.FACILITY_DESCRIPTORS)
 	_append_descriptor_records(

@@ -93,9 +93,11 @@ func _initialize() -> void:
 		"legacy affinity projectile identities are not catalog fallbacks"
 	)
 	var dash := EffectCatalog.descriptor(&"dash_afterimage")
-	var flare := EffectCatalog.descriptor(&"dash_engine_flare")
 	_expect(not bool(dash.get("radial", true)), "dash afterimage is not radial")
-	_expect(not bool(flare.get("radial", true)), "dash engine flare is not radial")
+	_expect(
+		EffectCatalog.descriptor_ids() == [&"dash_afterimage"],
+		"geometry catalog exposes no duplicate runtime feedback semantics"
+	)
 	var dash_recipe_id := StringName(dash.get("recipe", &""))
 	var dash_layers := ProjectileEffectRecipes.effect_layers(dash_recipe_id)
 	var dash_signature := ProjectileEffectRecipes.effect_signature(
