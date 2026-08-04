@@ -3027,7 +3027,14 @@ func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: floa
 		enemy.reposition_time = maxf(0.0, enemy.reposition_time - delta)
 		velocity = enemy.reposition_dir * enemy.speed
 	var before := enemy.pos
-	var attempt := _move_actor(before, velocity * delta, enemy.radius, false)
+	var requested_motion := velocity * delta
+	var requested_destination := before + requested_motion
+	var attempt := _move_actor(before, requested_motion, enemy.radius, false)
+	if attempt == requested_destination:
+		enemy.stuck_time = 0.0
+		enemy.pos = attempt
+		enemy.velocity = velocity
+		return
 	var moved_squared := before.distance_squared_to(attempt)
 	var velocity_squared := velocity.length_squared()
 	if moved_squared < 0.35 * 0.35 and velocity_squared > 1.0:
