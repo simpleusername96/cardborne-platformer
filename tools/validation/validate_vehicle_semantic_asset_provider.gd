@@ -29,7 +29,6 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"cue/ring",
 	&"cue/beam_strip_9",
 	&"cue/diamond_marker",
-	&"cue/support_timer_segment",
 	&"cue/disk_mask",
 	&"cue/crosshair",
 ]
@@ -45,7 +44,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 59, "all 59 final gameplay PNGs are indexed")
+	_expect(ids.size() == 57, "all 57 final gameplay PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
@@ -68,11 +67,16 @@ func _initialize() -> void:
 			and not AssetProvider.has_asset(&"world/facility_overdrive_lane"),
 		"consolidated raster aliases are absent"
 	)
+	_expect(
+		not AssetProvider.has_asset(&"world/service_rail_tile")
+			and not AssetProvider.has_asset(&"cue/support_timer_segment"),
+		"decorative rail and support timer rasters stay retired"
+	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 59
+		int(manifest.get("final_asset_count", 0)) == 57
 			and not manifest.has("animations"),
-		"manifest declares 59 static authored rasters and no frame animations"
+		"manifest declares 57 static authored rasters and no frame animations"
 	)
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)

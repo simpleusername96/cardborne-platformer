@@ -24,10 +24,10 @@
     "collision_rule": "Collision geometry, radii, live telegraphs, timing, damage, value, and state remain authoritative in gameplay code.",
     "projectile_rule": "Every non-beam projectile uses projectile/energy_teardrop; runtime owns rotation, scale, and faction or affinity tint.",
     "effect_rule": "effect/emp_release is the only authored raster effect; runtime owns live-radius scale and fade.",
-    "shared_world_cue_rule": "Fixed world surface, wall, rail, health-frame, ring, beam, marker, timer, disk, and crosshair identities are authored PNGs. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
+    "shared_world_cue_rule": "Fixed world surface, wall, health-frame, ring, beam, marker, disk, and crosshair identities are authored PNGs. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, and live timing remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 59,
+  "final_asset_count": 57,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -38,8 +38,8 @@
     "defense_status": 0,
     "pickup_reward": 4,
     "world_facility": 11,
-    "world_presentation": 3,
-    "cue": 7,
+    "world_presentation": 2,
+    "cue": 6,
     "emp": 1
   },
   "attachments": {
@@ -108,13 +108,11 @@
     {"id": "effect/emp_release", "path": "effects/fx_emp_release.png", "canvas": [512, 512], "pivot": [256, 256], "category": "effect", "scale_from_gameplay_radius": true},
 
     {"id": "world/surface_panel_9", "path": "world/presentation/world_surface_panel_9.png", "canvas": [288, 288], "pivot": [144, 144], "category": "world"},
-    {"id": "world/service_rail_tile", "path": "world/presentation/world_service_rail_tile.png", "canvas": [288, 48], "pivot": [144, 24], "category": "world"},
     {"id": "world/wall_segment_9", "path": "world/presentation/world_wall_segment_9.png", "canvas": [192, 96], "pivot": [96, 48], "category": "world"},
     {"id": "cue/health_bar_frame_9", "path": "effects/cues/cue_health_bar_frame_9.png", "canvas": [96, 16], "pivot": [48, 8], "category": "cue"},
     {"id": "cue/ring", "path": "effects/cues/cue_ring.png", "canvas": [128, 128], "pivot": [64, 64], "category": "cue"},
     {"id": "cue/beam_strip_9", "path": "effects/cues/cue_beam_strip_9.png", "canvas": [128, 32], "pivot": [64, 16], "category": "cue"},
     {"id": "cue/diamond_marker", "path": "effects/cues/cue_diamond_marker.png", "canvas": [64, 64], "pivot": [32, 32], "category": "cue"},
-    {"id": "cue/support_timer_segment", "path": "effects/cues/cue_support_timer_segment.png", "canvas": [64, 64], "pivot": [32, 32], "category": "cue"},
     {"id": "cue/disk_mask", "path": "effects/cues/cue_disk_mask.png", "canvas": [128, 128], "pivot": [64, 64], "category": "cue"},
     {"id": "cue/crosshair", "path": "effects/cues/cue_crosshair.png", "canvas": [96, 96], "pivot": [48, 48], "category": "cue"}
   ]

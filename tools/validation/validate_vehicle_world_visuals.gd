@@ -58,8 +58,8 @@ func _validate_catalog() -> void:
 		_expect(not rhythm.is_empty(), "%s has a surface rhythm" % field_id)
 		rhythms[rhythm] = true
 		_expect(
-			int(descriptor.get("decoration_budget", -1)) == 24,
-			"%s preserves the 24-decoration ceiling" % field_id
+			int(descriptor.get("decoration_budget", -1)) == 0,
+			"%s does not allocate presentation-only map decorations" % field_id
 		)
 	_expect(rhythms.size() == 3, "the three fields have distinct surface rhythms")
 
@@ -82,8 +82,40 @@ func _validate_catalog() -> void:
 		facility_shapes.size() == 5,
 		"facility roles remain shape-distinct without color"
 	)
+	_validate_surface_raster()
 	_validate_circular_runtime_pad(&"world/facility_repair_pad")
 	_validate_circular_runtime_pad(&"world/facility_overdrive_pad")
+
+
+func _validate_surface_raster() -> void:
+	var descriptor := AssetProvider.descriptor(&"world/surface_panel_9")
+	var path := String(descriptor.get("path", ""))
+	_expect(not path.is_empty(), "world/surface_panel_9 has a runtime image path")
+	if path.is_empty():
+		return
+	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
+	_expect(image != null and not image.is_empty(), "world/surface_panel_9 loads as an image")
+	if image == null or image.is_empty():
+		return
+	_expect(
+		image.get_size() == Vector2i(288, 288),
+		"world/surface_panel_9 keeps its exact 288x288 canvas"
+	)
+	var transparent_edge_pixels := 0
+	for x in image.get_width():
+		if image.get_pixel(x, 0).a < 0.999:
+			transparent_edge_pixels += 1
+		if image.get_pixel(x, image.get_height() - 1).a < 0.999:
+			transparent_edge_pixels += 1
+	for y in image.get_height():
+		if image.get_pixel(0, y).a < 0.999:
+			transparent_edge_pixels += 1
+		if image.get_pixel(image.get_width() - 1, y).a < 0.999:
+			transparent_edge_pixels += 1
+	_expect(
+		transparent_edge_pixels == 0,
+		"world/surface_panel_9 has a full-bleed opaque edge"
+	)
 
 
 func _validate_circular_runtime_pad(asset_id: StringName) -> void:
@@ -96,21 +128,53 @@ func _validate_circular_runtime_pad(asset_id: StringName) -> void:
 	_expect(image != null and not image.is_empty(), "%s loads as an image" % asset_id)
 	if image == null or image.is_empty():
 		return
+	_expect(
+		image.get_size() == Vector2i(192, 192),
+		"%s keeps its exact 192x192 canvas" % asset_id
+	)
+	var size := image.get_size()
+	var corners := [
+		image.get_pixel(0, 0),
+		image.get_pixel(size.x - 1, 0),
+		image.get_pixel(0, size.y - 1),
+		image.get_pixel(size.x - 1, size.y - 1),
+	]
+	for corner in corners:
+		_expect(corner.a <= 0.001, "%s keeps transparent corners" % asset_id)
 	var used := image.get_used_rect()
 	_expect(
 		abs(used.size.x - used.size.y) <= 2,
 		"%s keeps a square circular-pad footprint" % asset_id
 	)
 	var opaque_pixels := 0
+	var chroma_fringe_pixels := 0
 	for y in range(used.position.y, used.end.y):
 		for x in range(used.position.x, used.end.x):
-			if image.get_pixel(x, y).a >= 0.12:
+			var pixel := image.get_pixel(x, y)
+			if pixel.a >= 0.12:
 				opaque_pixels += 1
+			if pixel.a > 0.001 and pixel.a < 0.999:
+				var green_spill := (
+					pixel.g > 0.70
+					and pixel.g > pixel.r * 1.8
+					and pixel.g > pixel.b * 1.8
+				)
+				var magenta_spill := (
+					pixel.r > 0.70
+					and pixel.b > 0.70
+					and pixel.g < 0.25
+				)
+				if green_spill or magenta_spill:
+					chroma_fringe_pixels += 1
 	var used_area := maxi(1, used.size.x * used.size.y)
 	var fill_ratio := float(opaque_pixels) / float(used_area)
 	_expect(
 		fill_ratio >= 0.68 and fill_ratio <= 0.86,
 		"%s keeps a filled circular alpha footprint" % asset_id
+	)
+	_expect(
+		chroma_fringe_pixels == 0,
+		"%s has no green or magenta alpha-edge contamination" % asset_id
 	)
 
 
@@ -289,11 +353,11 @@ func _validate_field(field_id: StringName) -> void:
 	)
 	_expect(
 		bool(contract.get("decoration_budget_ok", false)),
-		"%s stays within 24 decorations" % field_id
+		"%s reports the zero-decoration contract" % field_id
 	)
 	_expect(
-		int(contract.get("decoration_count", 99)) <= 24,
-		"%s reports no more than 24 decorations" % field_id
+		int(contract.get("decoration_count", 99)) == 0,
+		"%s emits no presentation-only map decorations" % field_id
 	)
 	_expect(
 		int(contract.get("decoration_collision_nodes", -1)) == 0,
@@ -348,9 +412,9 @@ func _validate_field(field_id: StringName) -> void:
 		"%s world retains every compiled surface module" % field_id
 	)
 	_expect(
-		int(surface_contract.get("service_rail_count", -1))
-		== int(contract.get("decoration_count", -2)),
-		"%s decoration accounting matches sparse service rails" % field_id
+		not surface_contract.has("service_rail_count")
+			and not surface_contract.has("service_rail_budget"),
+		"%s surface contract has no decorative service-rail lane" % field_id
 	)
 	_expect(
 		tactical.fingerprint == before_fingerprint,
@@ -378,15 +442,23 @@ func _validate_field(field_id: StringName) -> void:
 	)
 
 	var texture_batch_count := 0
+	var texture_instance_count := 0
 	var has_surface_panel := false
+	var wall_instance_count := -1
 	var collision_count := 0
 	var child_names := PackedStringArray()
 	for child in world.get_children():
 		child_names.append(String(child.name))
 		if String(child.name) == "Raster_world_surface_panel_9":
 			has_surface_panel = true
+		if String(child.name) == "Raster_world_wall_segment_9":
+			var wall_multimesh := (child as MultiMeshInstance2D).multimesh
+			wall_instance_count = wall_multimesh.visible_instance_count
 		if child is MultiMeshInstance2D:
 			texture_batch_count += 1
+			texture_instance_count += (
+				(child as MultiMeshInstance2D).multimesh.visible_instance_count
+			)
 			_expect(
 				(child as MultiMeshInstance2D).texture != null
 				and (child as MultiMeshInstance2D).multimesh != null,
@@ -405,6 +477,34 @@ func _validate_field(field_id: StringName) -> void:
 		has_surface_panel,
 		"%s surface modules use authored panel textures" % field_id
 	)
+	var structural_wall_count := 0
+	var structural_wall_rects: Array[Rect2] = []
+	for feature_variant in geometry_snapshot.terrain_zones:
+		if StringName(Dictionary(feature_variant).get("kind", &"")) == &"structural_wall":
+			structural_wall_count += 1
+			structural_wall_rects.append(
+				Rect2(Dictionary(feature_variant).get("rect", Rect2()))
+			)
+	_expect(
+		wall_instance_count
+			== geometry_snapshot.wall_segments.size() / 2 + structural_wall_count,
+		"%s renders every boundary and structural collision wall" % field_id
+	)
+	_expect(
+		int(contract.get("flushed_wall_transform_count", -1))
+			== wall_instance_count,
+		"%s writes one retained transform for every wall" % field_id
+	)
+	_validate_structural_wall_transforms(
+		field_id,
+		structural_wall_rects,
+		Array(contract.get("wall_transforms", []))
+	)
+	_expect(
+		int(contract.get("flushed_transform_count", -1))
+			== texture_instance_count,
+		"%s flushes every queued raster transform exactly once" % field_id
+	)
 	_expect(
 		not child_names.has("FieldRhythm")
 		and not child_names.has("SparseServicePlates"),
@@ -422,6 +522,44 @@ func _validate_field(field_id: StringName) -> void:
 	)
 	world.queue_free()
 	replay.queue_free()
+
+
+func _validate_structural_wall_transforms(
+	field_id: StringName,
+	wall_rects: Array[Rect2],
+	wall_transforms: Array
+) -> void:
+	const WALL_CANVAS := Vector2(192.0, 96.0)
+	const UNIT_RADIUS := 96.0
+	var tall_wall_count := 0
+	for wall_rect in wall_rects:
+		var is_tall := wall_rect.size.y > wall_rect.size.x
+		if is_tall:
+			tall_wall_count += 1
+		var matched := false
+		for transform_variant in wall_transforms:
+			var wall_transform: Transform2D = transform_variant
+			if not wall_transform.origin.is_equal_approx(wall_rect.get_center()):
+				continue
+			var expected_rotation := PI * 0.5 if is_tall else 0.0
+			if not is_equal_approx(wall_transform.get_rotation(), expected_rotation):
+				continue
+			var local_size := Vector2(
+				wall_transform.x.length() * WALL_CANVAS.x / UNIT_RADIUS,
+				wall_transform.y.length() * WALL_CANVAS.y / UNIT_RADIUS
+			)
+			var rendered_size := (
+				Vector2(local_size.y, local_size.x) if is_tall else local_size
+			)
+			if rendered_size.is_equal_approx(wall_rect.size):
+				matched = true
+				break
+		_expect(
+			matched,
+			"%s fits structural wall %s with the correct center, rotation, and extent"
+			% [field_id, wall_rect]
+		)
+	_expect(tall_wall_count > 0, "%s exercises rotated structural walls" % field_id)
 
 
 func _validate_pattern_geometry(
@@ -464,9 +602,9 @@ func _validate_pattern_geometry(
 		"%s pattern module accounting is exact" % label
 	)
 	_expect(
-		int(pattern.get("service_rail_count", 99))
-		<= SurfacePatternCompiler.MAX_SERVICE_RAILS,
-		"%s pattern stays within 24 sparse service rails" % label
+		not pattern.has("service_rail_count")
+			and not pattern.has("service_rail_budget"),
+		"%s pattern contains no decorative service rails" % label
 	)
 	var claimed_cells := {}
 	for module_value in modules:
@@ -495,6 +633,10 @@ func _validate_pattern_geometry(
 				)
 				claimed_cells[occupied_cell] = true
 		var fragments := Array(module.get("fragments", []))
+		_expect(
+			not module.has("has_service_rail") and not module.has("rail_score"),
+			"%s module %s has no decorative-rail metadata" % [label, cell]
+		)
 		_expect(
 			not fragments.is_empty(),
 			"%s module %s retains clipped surface area" % [label, cell]

@@ -187,6 +187,7 @@ var _priority_overlay_candidate_count := 0
 
 func _ready() -> void:
 	z_index = -5
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	for _index in SEMANTIC_TEXTURE_DRAW_CAPACITY:
 		_semantic_texture_draws.append(SemanticTextureDraw.new())
 	for _index in FLOATING_DAMAGE_DRAW_CAPACITY:
@@ -402,10 +403,6 @@ func _build_batches() -> void:
 		&"player_craft_body",
 		-1,
 		true
-	)
-	_overlay_batches[&"support_timer_segment"] = _create_asset_batch(
-		"Overlay_support_timer_segment", &"cue/support_timer_segment", 96, 3,
-		&"overlay_support_timer_segment", 64
 	)
 	_reset_counts()
 	_apply_visible_counts()
@@ -1393,7 +1390,6 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 
 
 func _sync_support_fields(support_fields: Array) -> void:
-	const TIMER_SEGMENTS := 8
 	for support_variant in support_fields:
 		var support := Dictionary(support_variant)
 		var state := StringName(support.get("state", &"initial_delay"))
@@ -1402,25 +1398,7 @@ func _sync_support_fields(support_fields: Array) -> void:
 		var center := Vector2(support["position"])
 		var radius := float(support["radius"])
 		var kind := StringName(support["kind"])
-		var progress := clampf(float(support["phase_progress"]), 0.0, 1.0)
 		var active := bool(support["effect_active"])
-		var color := Art.SUPPORT if kind == &"repair" else Art.PLAYER_REWARD
-		if active:
-			_write_disk(center, radius, Color(color, 0.20))
-		_write_ring(center, radius, Color(color, 0.76))
-		var visible_segments := clampi(
-			ceili((1.0 - progress) * TIMER_SEGMENTS),
-			0,
-			TIMER_SEGMENTS
-		)
-		for segment in visible_segments:
-			_write_instance(
-				_overlay_batches[&"support_timer_segment"],
-				center,
-				-PI * 0.5 + TAU * float(segment) / float(TIMER_SEGMENTS),
-				Vector2.ONE * (radius - 12.0),
-				color
-			)
 		_queue_semantic_texture(
 			(
 				&"world/facility_repair_pad"
@@ -1430,7 +1408,7 @@ func _sync_support_fields(support_fields: Array) -> void:
 			center,
 			0.0,
 			radius,
-			Color.WHITE
+			Color(1.0, 1.0, 1.0, 1.0 if active else 0.72)
 		)
 		_support_field_asset_count += 1
 

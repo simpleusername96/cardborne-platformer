@@ -10,9 +10,9 @@ style reference only, never asset approval.
 
 ## Ownership
 
-- `gameplay/asset-manifest.json` explicitly indexes 59 gameplay PNGs: the
-  approved 49 persistent images plus 3 shared world-presentation textures and
-  7 shared world-space combat-cue textures.
+- `gameplay/asset-manifest.json` explicitly indexes 57 gameplay PNGs: the
+  approved 49 persistent images plus 2 shared world-presentation textures and
+  6 shared world-space combat-cue textures.
 - All non-beam projectiles reuse `projectile/energy_teardrop`. Runtime owns
   rotation, scale, faction or affinity tint, collision, cadence, range, homing,
   and damage.
@@ -32,7 +32,7 @@ style reference only, never asset approval.
 - Collision, navigation, damage, targeting, encounters, values, and state
   transitions remain in their existing gameplay owners.
 - Gameplay floor topology and wall collision remain procedural; their visible
-  surface, rail, and wall-segment patterns use three shared raster assets.
+  surface and wall-segment patterns use two shared raster assets.
 
 Historical generation sources, review sheets, and prompts are not runtime
 contracts. Recover obsolete sources from Git history when needed instead of

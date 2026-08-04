@@ -1,12 +1,18 @@
 ---
 type: evidence
-status: current
+status: archived
 owner: BK
 created: 2026-08-04
 last_reviewed: 2026-08-04
+related:
+  - docs/design/visual-replacement-workbench/world-map-minimal-v3.html
 ---
 
-# Gameplay Code-Asset Rasterization Record
+# Archived Gameplay Code-Asset Rasterization Record
+
+> Historical generation evidence only. The current map contract is documented
+> in `world-map-minimal-v3.html`; the service rail and support-timer segment
+> listed below were subsequently retired and are not production assets.
 
 ## Authority input
 
@@ -37,7 +43,7 @@ canvases with no more than four opaque RGB planes per exported PNG.
 | `world-combat-cue-source-flat-v2-alpha.png` | `7b663a1b69fd56e8278debc79d2bfbae02c21cf1024dd84c250e2b86cb2c4c9b` |
 | `world-combat-cue-normalized-preview.png` | `a01d40807ca794891d0b45d76e4a735d6da97f3b41cef09a45ce9d22146910f2` |
 
-## Production mappings
+## Production mappings at the time of generation
 
 | Semantic ID | Target | Canvas | SHA-256 |
 | --- | --- | ---: | --- |

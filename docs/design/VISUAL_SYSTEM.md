@@ -273,10 +273,10 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - floor는 field geometry와 layout fingerprint를 입력으로 하는 deterministic
   presentation tile compiler가 만든다. base grid는 `288×288` world unit이며
   `1×1`, `2×1`, `1×2`, `2×2` modular panel을 조합한다.
-- tile은 walkable region에 clip되고 void에는 생성되지 않는다. variant와
-  orientation은 `field_id`, layout fingerprint와 cell coordinate만으로
-  결정하며 global RNG나 frame time을 사용하지 않는다.
-- 12-unit gutter, chamfer, 낮은 대비 inset과 sparse service rail은 허용한다.
+- tile은 walkable region에 clip되고 void에는 생성되지 않는다. variant는
+  `field_id`, layout fingerprint와 cell coordinate만으로 결정하며 global
+  RNG나 frame time을 사용하지 않는다.
+- 12-unit gutter, chamfer와 낮은 대비 inset은 허용한다. 별도 decorative rail,
   random scratch와 combat cue보다 강한 high-frequency detail은 금지한다.
 - void는 near-black mass와 sparse system edge만 가진다.
 - 구조벽은 맵 가장자리와 중앙 구역 모두 바닥보다 명백히 밝은 pale-metal
@@ -436,8 +436,8 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - notification과 transition은 objective 아래 한 줄 ToastSurface에 나타나며
   crosshair를 가리지 않는다.
 - HUD off-screen threat와 네 종류 minimap marker는 기존 code-native retained
-  mesh를 유지한다. world-space crosshair와 support timer는 shared authored PNG를
-  retained textured batch로 배치한다. persistent-status orbit은 사용하지 않는다.
+  mesh를 유지한다. world-space crosshair는 shared authored PNG retained textured
+  batch로 배치한다. persistent-status orbit과 support timer는 사용하지 않는다.
 
 ### Modal
 
@@ -488,8 +488,8 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
   active/damaged/resolved 상태만 사용됨
-- final gameplay manifest가 정확히 59 PNG를 색인함: 기존 49 gameplay image,
-  shared world presentation 3, shared world-space combat cue 7
+- final gameplay manifest가 정확히 57 PNG를 색인함: 기존 49 gameplay image,
+  shared world presentation 2, shared world-space combat cue 6
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함
 - deterministic tile hash equality와 walkable/void containment
@@ -507,8 +507,8 @@ Web export만으로 interactive built-Web smoke나 release performance를
 
 ### Current implementation notes
 
-- Field topology and wall collision remain code-owned; shared surface, rail,
-  and wall PNGs are stretched or tiled inside that truth and never become a
+- Field topology and wall collision remain code-owned; shared surface and wall
+  PNGs are fitted inside that truth and never become a
   second topology owner.
 - Repair and overdrive pads render their authored circular surface at the live
   gameplay radius, with the collision-owned boundary remaining authoritative.

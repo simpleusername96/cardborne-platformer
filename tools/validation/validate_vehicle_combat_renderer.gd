@@ -176,19 +176,18 @@ func _run() -> void:
 			<= int(snapshot["semantic_texture_draw_capacity"]),
 		"semantic texture draws stay inside the preallocated record capacity"
 	)
-	var support_timer := renderer.get_node("Overlay_support_timer_segment") as MultiMeshInstance2D
 	_expect(
-		support_timer.multimesh.visible_instance_count == 4,
-		"support-field lifetime uses one retained eight-step timer batch"
+		renderer.get_node_or_null("Overlay_support_timer_segment") == null,
+		"support fields do not create a decorative timer-segment batch"
 	)
 	var corridor_caps := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var corridor_boundaries := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
 	var corridor_boundary_buffer := corridor_boundaries.multimesh.buffer
 	_expect(
-		corridor_caps.multimesh.visible_instance_count == 1
+		corridor_caps.multimesh.visible_instance_count == 0
 			and corridor_boundaries.multimesh.visible_instance_count == 2
 			and int(snapshot["support_field_glyph_count"]) == 1,
-		"corridor warning adds no interior fill while the beneficial support field keeps one fill and one shared recipe glyph"
+		"corridor and support fields avoid redundant fills while the support field keeps one authored pad"
 	)
 	var repair_draws := renderer.debug_semantic_texture_draws(
 		&"world/facility_repair_pad"

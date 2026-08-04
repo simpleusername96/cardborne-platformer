@@ -1,39 +1,39 @@
 class_name VehicleWorldVisualCatalog
 extends RefCounted
 
-## Field surface, facility, and decoration descriptors. Geometry, collision,
+## Field surface and facility descriptors. Geometry, collision,
 ## navigation, placement, schedules, and deterministic layout stay authoritative.
 
 const FIELD_DESCRIPTORS := {
-	&"drowned_ruin_field": {"rhythm": &"central_court_orthogonal_service", "decoration_budget": 24},
-	&"tidal_archive_field": {"rhythm": &"parallel_bay_lateral_rail", "decoration_budget": 24},
-	&"storm_drydock_field": {"rhythm": &"basin_diagonal_docking_guide", "decoration_budget": 24},
+	&"drowned_ruin_field": {"rhythm": &"central_court", "decoration_budget": 0},
+	&"tidal_archive_field": {"rhythm": &"parallel_bays", "decoration_budget": 0},
+	&"storm_drydock_field": {"rhythm": &"basin_modules", "decoration_budget": 0},
 }
 
 const FACILITY_DESCRIPTORS := {
 	&"repair_field": {
 		"asset": &"world/facility_repair_pad",
-		"shape": &"layered_repair_pad",
+		"shape": &"round_plus_pad",
 		"color": &"support",
 	},
 	&"transit_gate": {
 		"asset": &"world/facility_transit_gate",
-		"shape": &"opposing_transit_chevrons",
+		"shape": &"round_portal",
 		"color": &"system",
 	},
 	&"overdrive_field": {
 		"asset": &"world/facility_overdrive_pad",
-		"shape": &"stacked_forward_chevrons",
+		"shape": &"round_forward_pad",
 		"color": &"player_reward",
 	},
 	&"arc_surge_strip": {
 		"asset": &"world/facility_arc_surge_strip",
-		"shape": &"broken_bolt_rail",
+		"shape": &"arc_pylon",
 		"color": &"arc",
 	},
 	&"breakable_bulkhead": {
 		"asset_family": &"world/world_bulkhead",
-		"shape": &"fracture_split_bulkhead",
+		"shape": &"split_bulkhead",
 		"color": &"raised",
 	},
 }

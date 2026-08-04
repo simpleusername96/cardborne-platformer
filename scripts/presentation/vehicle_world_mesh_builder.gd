@@ -20,16 +20,21 @@ const AssetProvider = preload(
 )
 
 const MAX_VISUAL_BATCHES := 12
-const DECORATION_BUDGET := SurfacePatternCompiler.MAX_SERVICE_RAILS
+const DECORATION_BUDGET := 0
 
 var _stage_id: StringName = &""
 var _field_id: StringName = &""
 var _layout_fingerprint := -1
 var _batch_count := 0
 var _texture_batches: Dictionary = {}
-var _decoration_count := 0
+var _flushed_transform_count := 0
+var _flushed_wall_transform_count := 0
 var _geometry_fingerprint := ""
 var _surface_pattern_contract: Dictionary = {}
+
+
+func _init() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func configure(stage_id: StringName, layout: Object) -> void:
@@ -53,9 +58,14 @@ func debug_contract() -> Dictionary:
 		"batch_count": _batch_count,
 		"batch_budget": MAX_VISUAL_BATCHES,
 		"batch_budget_ok": _batch_count <= MAX_VISUAL_BATCHES,
-		"decoration_count": _decoration_count,
+		"flushed_transform_count": _flushed_transform_count,
+		"flushed_wall_transform_count": _flushed_wall_transform_count,
+		"wall_transforms": _debug_batch_transforms(
+			&"world/wall_segment_9", 3
+		),
+		"decoration_count": 0,
 		"decoration_budget": DECORATION_BUDGET,
-		"decoration_budget_ok": _decoration_count <= DECORATION_BUDGET,
+		"decoration_budget_ok": true,
 		"decoration_collision_nodes": 0,
 		"geometry_fed": true,
 		"collision_owner": "vehicle_stage_geometry",
@@ -88,12 +98,6 @@ func debug_contract() -> Dictionary:
 			"module_type_counts": Dictionary(
 				_surface_pattern_contract.get("module_type_counts", {})
 			).duplicate(),
-			"service_rail_count": int(
-				_surface_pattern_contract.get("service_rail_count", 0)
-			),
-			"service_rail_budget": int(
-				_surface_pattern_contract.get("service_rail_budget", 0)
-			),
 		},
 	}
 
@@ -104,7 +108,8 @@ func _rebuild(layout: Object) -> void:
 		child.queue_free()
 	_batch_count = 0
 	_texture_batches.clear()
-	_decoration_count = 0
+	_flushed_transform_count = 0
+	_flushed_wall_transform_count = 0
 	_surface_pattern_contract.clear()
 	var snapshot: Object = layout.geometry_snapshot if layout != null else null
 	# The backdrop owns the single void fill. Fixed world identities below are
@@ -133,6 +138,17 @@ func _rebuild(layout: Object) -> void:
 				Art.WALL_RAIL_WIDTH + 18.0,
 				3
 			)
+		for feature_variant in Array(snapshot.get("terrain_zones")):
+			var feature := Dictionary(feature_variant)
+			if StringName(feature.get("kind", &"")) != &"structural_wall":
+				continue
+			var wall_rect := Rect2(feature.get("rect", Rect2()))
+			_add_oriented_texture_rect(
+				"StructuralWall_%s" % String(feature.get("id", &"")),
+				&"world/wall_segment_9",
+				wall_rect,
+				3
+			)
 		var surface_pattern := SurfacePatternCompiler.compile(
 			_field_id,
 			_layout_fingerprint,
@@ -154,29 +170,6 @@ func _rebuild(layout: Object) -> void:
 					Rect2(fragment_variant),
 					1
 				)
-			if bool(module.get("has_service_rail", false)):
-				var panel_rect := Rect2(module.get("panel_rect", Rect2()))
-				var horizontal := panel_rect.size.x >= panel_rect.size.y
-				var rail_rect := Rect2(
-					panel_rect.get_center() - Vector2(
-						panel_rect.size.x * 0.34 if horizontal else 24.0,
-						24.0 if horizontal else panel_rect.size.y * 0.34
-					),
-					Vector2(
-						panel_rect.size.x * 0.68 if horizontal else 48.0,
-						48.0 if horizontal else panel_rect.size.y * 0.68
-					)
-				)
-				_add_texture_rect(
-					"ServiceRail_%d" % module_index,
-					&"world/service_rail_tile",
-					rail_rect,
-					2,
-					PI * 0.5 if not horizontal else 0.0
-				)
-		_decoration_count = int(
-			surface_pattern.get("service_rail_count", 0)
-		)
 		_surface_pattern_contract = {
 			"presentation_only": surface_pattern.get(
 				"presentation_only",
@@ -196,15 +189,8 @@ func _rebuild(layout: Object) -> void:
 			"module_type_counts": Dictionary(
 				surface_pattern.get("module_type_counts", {})
 			).duplicate(),
-			"service_rail_count": surface_pattern.get(
-				"service_rail_count",
-				0
-			),
-			"service_rail_budget": surface_pattern.get(
-				"service_rail_budget",
-				0
-			),
 		}
+	_flush_texture_batches()
 	_geometry_fingerprint = (
 		_compile_geometry_fingerprint(snapshot, layout)
 		if snapshot != null
@@ -235,6 +221,21 @@ func _add_texture_rect(
 		rect.get_center(),
 		rotation,
 		_scale_for_canvas(local_size, canvas)
+	)
+
+
+func _add_oriented_texture_rect(
+	name: String,
+	asset_id: StringName,
+	rect: Rect2,
+	child_z: int
+) -> void:
+	_add_texture_rect(
+		name,
+		asset_id,
+		rect,
+		child_z,
+		PI * 0.5 if rect.size.y > rect.size.x else 0.0
 	)
 
 
@@ -294,8 +295,6 @@ func _append_texture_instance(
 			return
 		multi_mesh = MultiMesh.new()
 		multi_mesh.transform_format = MultiMesh.TRANSFORM_2D
-		multi_mesh.instance_count = 0
-		multi_mesh.visible_instance_count = 0
 		multi_mesh.mesh = mesh
 		var instance := MultiMeshInstance2D.new()
 		instance.name = "Raster_%s" % String(asset_id).replace("/", "_")
@@ -303,20 +302,36 @@ func _append_texture_instance(
 		instance.multimesh = multi_mesh
 		instance.z_index = child_z
 		add_child(instance)
-		record = {"multi_mesh":multi_mesh, "count":0}
+		record = {"multi_mesh":multi_mesh, "transforms":[]}
 		_texture_batches[batch_key] = record
 		_batch_count += 1
 	else:
 		multi_mesh = record["multi_mesh"] as MultiMesh
-	var count := int(record["count"])
-	multi_mesh.instance_count = count + 1
-	multi_mesh.set_instance_transform_2d(
-		count,
-		Transform2D(rotation, position).scaled_local(scale)
-	)
-	multi_mesh.visible_instance_count = count + 1
-	record["count"] = count + 1
+	var transforms := Array(record["transforms"])
+	transforms.append(Transform2D(rotation, position).scaled_local(scale))
+	record["transforms"] = transforms
 	_texture_batches[batch_key] = record
+
+
+func _flush_texture_batches() -> void:
+	for batch_key in _texture_batches:
+		var record := Dictionary(_texture_batches[batch_key])
+		var multi_mesh := record["multi_mesh"] as MultiMesh
+		var transforms := Array(record["transforms"])
+		multi_mesh.instance_count = transforms.size()
+		for index in transforms.size():
+			var instance_transform: Transform2D = transforms[index]
+			multi_mesh.set_instance_transform_2d(index, instance_transform)
+		multi_mesh.visible_instance_count = transforms.size()
+		_flushed_transform_count += transforms.size()
+		if String(batch_key).begins_with("world/wall_segment_9:"):
+			_flushed_wall_transform_count += transforms.size()
+
+
+func _debug_batch_transforms(asset_id: StringName, child_z: int) -> Array:
+	var batch_key := "%s:%d" % [String(asset_id), child_z]
+	var record := Dictionary(_texture_batches.get(batch_key, {}))
+	return Array(record.get("transforms", [])).duplicate()
 
 
 func _rect_points(rect: Rect2) -> PackedVector2Array:

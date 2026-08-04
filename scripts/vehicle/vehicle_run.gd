@@ -294,6 +294,7 @@ var _pending_stage_report: Dictionary = {}
 
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_build_fast_hud_snapshot_callable = Callable(
 		self, "_build_fast_hud_snapshot"
 	)
@@ -5586,11 +5587,6 @@ func _draw_terrain() -> void:
 	for feature in Array(snapshot.get("features", [])):
 		var kind := StringName(feature["kind"])
 		match kind:
-			&"structural_wall":
-				var wall_rect := Rect2(feature["rect"])
-				_draw_semantic_asset_fitted(
-					&"world/wall_segment_9", wall_rect, Color.WHITE
-				)
 			&"wear_collapse_tile":
 				var wear_rect := Rect2(feature["rect"])
 				var wear_state := StringName(feature.get("state", &"intact"))

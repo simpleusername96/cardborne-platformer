@@ -2704,8 +2704,8 @@
         "baseline_commit": "d7ccf4646b99b4ce8d06ddd68600ec41c295c0b5",
         "deliverable_sha256": {
           "art/visuals/production/gameplay/world/facility_arc_surge_strip.png": "2f9e921954e6de056ec09eef32c3dadbdd7a3eb77f67a87dec0b82df27e9132d",
-          "art/visuals/production/gameplay/world/facility_overdrive_pad.png": "0fa1f3653af4cd7e87d5b5cdc84132d8b591ec8fd7ca3a7b30d13f7e12163be1",
-          "art/visuals/production/gameplay/world/facility_repair_pad.png": "5da0a8f5b67469ae8ab51e7fef7d4c711f2ccacb62425adac90348b5a0db0bcc",
+          "art/visuals/production/gameplay/world/facility_overdrive_pad.png": "330b159fc6ec54167a8a596a223c11812eb5dea85754c1256f10a845cb651a94",
+          "art/visuals/production/gameplay/world/facility_repair_pad.png": "c6b915a9cee54b1798958daaea2b4636414b87f81ec8bf69a23668303c2bbc5f",
           "art/visuals/production/gameplay/world/facility_transit_gate.png": "8cd361f68f95802ca802d668f20dae9040e0ae2a534d893ac68c7e26961dd090",
           "art/visuals/production/gameplay/world/world_bulkhead_damaged.png": "c4a3471e4539c9fa3acd06fd11c4ceac31ac7d6f422340d3dc91dc9a94e35c01",
           "art/visuals/production/gameplay/world/world_bulkhead_intact.png": "d1911187be70c6bac940c70f12681c400d0a32ef4f02e138b09601d635452a17",
@@ -3635,8 +3635,6 @@
         "art/visuals/production/gameplay/effects/cues/cue_disk_mask.png",
         "art/visuals/production/gameplay/effects/cues/cue_health_bar_frame_9.png",
         "art/visuals/production/gameplay/effects/cues/cue_ring.png",
-        "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png",
-        "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png",
         "art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png",
         "art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png"
       ],
@@ -3654,22 +3652,18 @@
         "cue/disk_mask",
         "cue/health_bar_frame_9",
         "cue/ring",
-        "cue/support_timer_segment",
-        "world/service_rail_tile",
         "world/surface_panel_9",
         "world/wall_segment_9"
       ],
-      "direction_en": "Replace reusable code-drawn gameplay world and world-space cue identities with ten shared flat authored PNGs. UI remains unchanged. Runtime retains topology, collision, position, live dimensions, tint, alpha, clipping, readiness, timing, and batching.",
+      "direction_en": "Use eight shared flat authored PNGs for reusable world-space cues, the field surface, and every static wall. Retire the decorative service rail and the redundant support-timer segment. UI remains unchanged; runtime retains topology, collision, position, live dimensions, tint, alpha, clipping, readiness, timing, and batching.",
       "deliverables": [
         {"target_path":"art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png","width":128,"height":32,"pivot":[64,16],"patch_margin":[16,0,16,0],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Flat high-contrast beam strip with one dark perimeter and one light core; no glow, gradient, particle, or detached cap.","external_source_ids":[]},
         {"target_path":"art/visuals/production/gameplay/effects/cues/cue_crosshair.png","width":96,"height":96,"pivot":[48,48],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Open four-bracket world-space crosshair with broad flat strokes, clear center, and no dots or ornament.","external_source_ids":[]},
         {"target_path":"art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png","width":64,"height":64,"pivot":[32,32],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"One compact filled diamond marker with a dark perimeter and no detached detail.","external_source_ids":[]},
         {"target_path":"art/visuals/production/gameplay/effects/cues/cue_disk_mask.png","width":128,"height":128,"pivot":[64,64],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"One flat filled circular mask with a dark perimeter for runtime radius and alpha modulation.","external_source_ids":[]},
         {"target_path":"art/visuals/production/gameplay/effects/cues/cue_health_bar_frame_9.png","width":96,"height":16,"pivot":[48,8],"patch_margin":[8,0,8,0],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Minimal world-space actor health frame with one dark shell and empty center; ratio remains runtime-owned.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_ring.png","width":128,"height":128,"pivot":[64,64],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Single high-contrast flat ring for runtime support, danger, and area tint/scale; no nested rings or glow.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png","width":64,"height":64,"pivot":[32,32],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"One broad arc segment reused by runtime rotation and count; no ticks, dots, or glow.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png","width":288,"height":48,"pivot":[144,24],"patch_margin":[24,0,24,0],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Sparse flat service rail with one restrained cyan inset and no repeated lamps, seams, or noise.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png","width":288,"height":288,"pivot":[144,144],"patch_margin":[24,24,24,24],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Broad matte field surface panel with one dark perimeter and one restrained inset; no texture noise, dots, or greeble.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_ring.png","width":128,"height":128,"pivot":[64,64],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Single high-contrast flat ring for runtime danger and area tint/scale; no nested rings or glow.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png","width":288,"height":288,"pivot":[144,144],"patch_margin":[24,24,24,24],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Preserve the approved broad matte field panel while repairing its alpha edge to a full-bleed, seamless four-color raster; no texture noise, dots, or greeble.","external_source_ids":[]},
         {"target_path":"art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png","width":192,"height":96,"pivot":[96,48],"patch_margin":[24,12,24,12],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Flat structural wall segment with a large readable mass, one dark perimeter, and no micro-detail.","external_source_ids":[]}
       ],
       "final_paths": [
@@ -3679,8 +3673,6 @@
         "art/visuals/production/gameplay/effects/cues/cue_disk_mask.png",
         "art/visuals/production/gameplay/effects/cues/cue_health_bar_frame_9.png",
         "art/visuals/production/gameplay/effects/cues/cue_ring.png",
-        "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png",
-        "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png",
         "art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png",
         "art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png"
       ],
@@ -3708,7 +3700,11 @@
         "scripts/presentation/vehicle_combat_visual_library.gd",
         "scripts/presentation/vehicle_combat_visual_library.gd.uid",
         "tools/validation/validate_vehicle_reward_facility_visual_recipes.gd",
-        "tools/validation/validate_vehicle_reward_facility_visual_recipes.gd.uid"
+        "tools/validation/validate_vehicle_reward_facility_visual_recipes.gd.uid",
+        "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png",
+        "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png.import",
+        "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png",
+        "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png.import"
       ],
       "runtime_change_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
@@ -3755,10 +3751,8 @@
           "art/visuals/production/gameplay/effects/cues/cue_disk_mask.png": "d3ca68bf46e4902fb1d93594a5af49a53c297968e0d99643ab3d9d641bdfa28e",
           "art/visuals/production/gameplay/effects/cues/cue_health_bar_frame_9.png": "8fbcb50c1ff30b048c724f5b21c8f4eb6a61cc2c8ca91b80adc31192de0322da",
           "art/visuals/production/gameplay/effects/cues/cue_ring.png": "92bda7c417b667cb9cf9ab0ef12edc08fcfc93836c3e706f137d884a42599b25",
-          "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png": "cdaa38973325df6f032c00b358c40bd3e485d8916864f993354560b55f9821ab",
-          "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png": "06aa310015c9c65cef04653e1997807dae80894b464b3e9f908be7a1e3949d65",
-          "art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png": "02c1c4befd38237889e8bb01cd94ad8ed47ed7287cc004a9215b3024d9eaab62",
-          "art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png": "3c7d076ae1b5b5252fbdd57d3b03929ceffb26ef3ceee49084baeeedc03c7aae"
+          "art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png": "b76dfeb2af4d5d3aceeeaaf542e276bbbf29d53f54236d5b5f052fc746b11b4b",
+          "art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png": "3e14f4d5505ac5bf22927c92eb1823baa637198a4c978a5b496356d4f6c98f38"
         },
         "retire_paths": [
           "scripts/presentation/components/vehicle_actor_mesh_recipes.gd",
@@ -3772,7 +3766,11 @@
           "scripts/presentation/vehicle_combat_visual_library.gd",
           "scripts/presentation/vehicle_combat_visual_library.gd.uid",
           "tools/validation/validate_vehicle_reward_facility_visual_recipes.gd",
-          "tools/validation/validate_vehicle_reward_facility_visual_recipes.gd.uid"
+          "tools/validation/validate_vehicle_reward_facility_visual_recipes.gd.uid",
+          "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png",
+          "art/visuals/production/gameplay/effects/cues/cue_support_timer_segment.png.import",
+          "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png",
+          "art/visuals/production/gameplay/world/presentation/world_service_rail_tile.png.import"
         ]
       },
       "application": {

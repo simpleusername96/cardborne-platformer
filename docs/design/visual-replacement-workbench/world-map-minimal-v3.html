@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne · Minimal World Map v3</title>
+  <style>
+    :root { color-scheme: dark; --bg:#08111a; --panel:#101c28; --line:#40566a; --text:#edf3f7; --muted:#9eb0bf; --cyan:#64d7df; --amber:#ffbd2e; --red:#ff6670; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 system-ui,"Noto Sans KR",sans-serif; }
+    main { width:min(1440px,94vw); margin:0 auto; padding:42px 0 80px; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { font-size:clamp(32px,5vw,64px); margin-bottom:8px; }
+    h2 { margin:48px 0 18px; font-size:28px; }
+    a { color:var(--cyan); }
+    .lede { max-width:900px; color:var(--muted); font-size:18px; }
+    .summary,.grid,.runtime { display:grid; gap:16px; }
+    .summary { grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:28px; }
+    .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .runtime { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .card { border:1px solid var(--line); background:var(--panel); padding:18px; border-radius:10px; }
+    .status { color:var(--cyan); font-weight:800; letter-spacing:.04em; }
+    .removed { color:var(--red); }
+    .kept { color:var(--amber); }
+    img { display:block; width:100%; height:auto; border:1px solid #26394b; background:#0c1620; image-rendering:auto; }
+    figure { margin:0; }
+    figcaption { color:var(--muted); margin-top:10px; }
+    table { width:100%; border-collapse:collapse; background:var(--panel); }
+    th,td { padding:12px 14px; border:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { color:var(--cyan); }
+    code { color:#d7e6ef; }
+    .note { border-left:4px solid var(--amber); padding:12px 16px; background:#171d20; }
+    @media (max-width:900px) { .summary,.runtime { grid-template-columns:1fr 1fr; } }
+    @media (max-width:620px) { .summary,.grid,.runtime { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <p><a href="index.html">← 전체 Visual Replacement Workbench</a></p>
+  <h1>Minimal World Map v3</h1>
+  <p class="lede">맵을 만드는 시각 요소를 최소한의 완성형 PNG로 정리한 최종 적용 보고서입니다. Floor는 기존 디자인을 유지했고, wall은 선택한 TO-BE를 적용했습니다. Service rail과 장판 위의 중복 코드 오버레이는 제거했습니다.</p>
+
+  <section class="summary">
+    <div class="card"><div class="status kept">FLOOR · KEPT</div><strong>AS-IS 디자인 유지</strong><br><span>투명·오염된 가장자리만 복구</span></div>
+    <div class="card"><div class="status">WALL · APPLIED</div><strong>TO-BE PNG 적용</strong><br><span>경계벽과 내부 구조벽 모두 재사용</span></div>
+    <div class="card"><div class="status removed">SERVICE RAIL · REMOVED</div><strong>에셋·코드 모두 폐기</strong><br><span>게임플레이 역할 없음</span></div>
+    <div class="card"><div class="status">FACILITY PAD · CLEAN</div><strong>원형 PNG 한 장만 표시</strong><br><span>링·원·타이머 조각 제거</span></div>
+  </section>
+
+  <h2>1. Floor — redesign 없이 edge만 수정</h2>
+  <div class="grid">
+    <figure class="card">
+      <img src="candidates/world-map-minimal-v3/floor/source/world_surface_panel_9-asis.png" alt="AS-IS floor with contaminated transparent perimeter">
+      <figcaption>AS-IS — 중앙·inset·색상은 맞지만 외곽 alpha가 깨져 있었습니다.</figcaption>
+    </figure>
+    <figure class="card">
+      <img src="candidates/world-map-minimal-v3/floor/world_surface_panel_9-edge-corrected-v2.png" alt="Applied floor with clean opaque perimeter">
+      <figcaption>APPLIED — 같은 4색 구성을 유지하고 288×288 외곽을 완전 불투명·seam-safe로 교정했습니다.</figcaption>
+    </figure>
+  </div>
+  <figure class="card" style="margin-top:16px">
+    <img src="candidates/world-map-minimal-v3/floor/world_surface_panel_9-edge-corrected-v2-repeat-3x3.png" alt="Three by three corrected floor repeat test">
+    <figcaption>3×3 반복 검사 — 랜덤 점, 투명 fringe, 잘린 외곽이 없습니다.</figcaption>
+  </figure>
+
+  <h2>2. Wall — 하나의 TO-BE를 모든 고정 벽에 재사용</h2>
+  <div class="grid">
+    <figure class="card">
+      <img src="candidates/world-rework-v2/wall/wall_segment_192x96_candidate_v2.png" alt="Applied minimal wall segment">
+      <figcaption>단일 wall master PNG — 가로벽은 그대로, 세로벽은 런타임에서 90° 회전합니다.</figcaption>
+    </figure>
+    <figure class="card">
+      <img src="candidates/world-rework-v2/wall/wall_segment_repeat_x5_v2.png" alt="Repeated wall segment test">
+      <figcaption>반복 검사 — 별도 corner, cap, rail asset 없이 같은 wall만 사용합니다.</figcaption>
+    </figure>
+  </div>
+  <p class="note">안 보이던 벽의 원인은 에셋 누락이 아니라 MultiMesh 배치를 늘릴 때 이전 transform이 초기화되던 코드였습니다. 모든 벽 transform을 먼저 모은 뒤 한 번만 배치를 생성하도록 수정했습니다.</p>
+
+  <h2>3. Facility pads — 완성형 원형 PNG만 표시</h2>
+  <figure class="card">
+    <img src="candidates/world-map-minimal-v3/support-pads/support_pads_as_is_to_be.png" alt="Repair and overdrive pads AS-IS and cleaned versions">
+    <figcaption>왼쪽부터 repair AS-IS → repair APPLIED → overdrive AS-IS → overdrive APPLIED. 정보와 glyph는 그대로이며 alpha edge 오염만 제거했습니다.</figcaption>
+  </figure>
+  <p>기존에 장판 위에 겹쳐 그리던 반투명 disk, ring, 8개 timer segment는 삭제했습니다. 이제 repair와 overdrive 모두 각각 하나의 완성형 이미지로만 표시됩니다.</p>
+
+  <h2>4. Runtime result</h2>
+  <div class="runtime">
+    <figure class="card"><img src="candidates/world-map-minimal-v3/runtime-drowned-ruin.png" alt="Drowned Ruin runtime"><figcaption>Drowned Ruin</figcaption></figure>
+    <figure class="card"><img src="candidates/world-map-minimal-v3/runtime-tidal-archive.png" alt="Tidal Archive runtime"><figcaption>Tidal Archive</figcaption></figure>
+    <figure class="card"><img src="candidates/world-map-minimal-v3/runtime-storm-drydock.png" alt="Storm Drydock runtime"><figcaption>Storm Drydock</figcaption></figure>
+  </div>
+  <figure class="card" style="margin-top:16px">
+    <img src="candidates/world-map-minimal-v3/runtime-wall-coverage.png" alt="Runtime collision overlay showing visible walls">
+    <figcaption>충돌 오버레이 검사 — 외곽 경계벽과 내부 구조벽이 모두 같은 wall PNG로 나타납니다.</figcaption>
+  </figure>
+
+  <h2>5. 최종 map image set — 13 identities</h2>
+  <table>
+    <thead><tr><th>그룹</th><th>남긴 이미지</th><th>정리 원칙</th></tr></thead>
+    <tbody>
+      <tr><td>Surface</td><td><code>surface_panel_9</code></td><td>Floor master 1개</td></tr>
+      <tr><td>Wall</td><td><code>wall_segment_9</code></td><td>경계·가로·세로 구조벽 공용 1개</td></tr>
+      <tr><td>Cover</td><td><code>terrain_solid_cover_block</code></td><td>고정 cover 1개</td></tr>
+      <tr><td>Bulkhead</td><td><code>intact</code>, <code>damaged</code>, <code>open</code></td><td>게임 상태가 달라 3개 유지</td></tr>
+      <tr><td>Wear terrain</td><td><code>intact</code>, <code>cracked</code>, <code>collapsed</code></td><td>충돌 상태 변화가 달라 3개 유지</td></tr>
+      <tr><td>Facilities</td><td><code>repair</code>, <code>overdrive</code>, <code>transit</code>, <code>arc surge</code></td><td>게임플레이 기능별 완성형 PNG 4개</td></tr>
+    </tbody>
+  </table>
+  <p>합계 13개. Service rail, support timer segment, 장식 전용 rail metadata는 최종 세트에 포함되지 않습니다.</p>
+</main>
+</body>
+</html>
