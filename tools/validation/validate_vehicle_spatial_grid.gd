@@ -50,6 +50,29 @@ func _initialize() -> void:
 		capacity_target in candidates,
 		"segment queries retain enemies in the final live-capacity slot"
 	)
+	var position_only_target := live[18]
+	position_only_target.active = true
+	position_only_target.pos = Vector2(2800.0, 1700.0)
+	position_only_target.radius = 4.0
+	position_only_target.projectile_hit_radius = 4.0
+	grid.rebuild(live)
+	var position_only_old := position_only_target.pos
+	position_only_target.pos = Vector2(2820.0, 1720.0)
+	grid.update_actor_position(position_only_target)
+	var position_only_probe := EnemyState.new()
+	position_only_probe.pos = position_only_target.pos
+	position_only_probe.radius = 4.0
+	grid.query_nearest_overlaps_into(position_only_probe, 8.0, live, 8, candidates)
+	_expect(
+		position_only_target in candidates,
+		"position-only updates expose an actor at its new coordinate"
+	)
+	position_only_probe.pos = position_only_old
+	grid.query_nearest_overlaps_into(position_only_probe, 8.0, live, 8, candidates)
+	_expect(
+		position_only_target not in candidates,
+		"position-only updates do not leave stale coordinates"
+	)
 	var interceptor := live[0]
 	interceptor.active = true
 	interceptor.role = &"interceptor_tower"

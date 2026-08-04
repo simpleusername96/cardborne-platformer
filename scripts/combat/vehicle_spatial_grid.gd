@@ -183,6 +183,45 @@ func update_actor(enemy: EnemyState) -> void:
 	_update_local_membership(slot, enemy)
 
 
+func update_actor_position(enemy: EnemyState) -> void:
+	## Updates cached coordinates without rebuilding membership when the actor
+	## remains in the same broadphase cell and retains its collision radius.
+	if _cells.is_empty() or enemy == null:
+		return
+	var slot := _stable_slot(enemy)
+	if slot < 0 or slot >= MAX_TRACKED_ACTORS:
+		return
+	var generation := maxi(1, enemy.runtime_generation)
+	var cached_radius := maxf(enemy.radius, enemy.projectile_hit_radius)
+	if enemy.role == &"interceptor_tower":
+		cached_radius = maxf(
+			cached_radius, AttackContract.INTERCEPTOR_PROJECTILE_RADIUS
+		)
+	if (
+		_actors[slot] != enemy
+		or _member_generations[slot] != generation
+		or _member_active[slot] == 0
+		or cached_radius != _radii[slot]
+		or not enemy.alive
+		or not enemy.active
+	):
+		update_actor(enemy)
+		return
+	var extent := Vector2(cached_radius, cached_radius)
+	var min_cell := _cell_for(enemy.pos - extent)
+	var max_cell := _cell_for(enemy.pos + extent)
+	if (
+		_member_min_x[slot] != min_cell.x
+		or _member_min_y[slot] != min_cell.y
+		or _member_max_x[slot] != max_cell.x
+		or _member_max_y[slot] != max_cell.y
+	):
+		update_actor(enemy)
+		return
+	_positions[slot] = enemy.pos
+	_update_local_membership(slot, enemy)
+
+
 func query_radius_into(center: Vector2, radius: float, live: Array[EnemyState], output: Array[EnemyState]) -> void:
 	output.clear()
 	if _cells.is_empty():
