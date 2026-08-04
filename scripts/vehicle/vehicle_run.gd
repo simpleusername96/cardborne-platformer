@@ -211,6 +211,7 @@ var hostile_projectiles: Array[ProjectileState] = projectile_store.hostile_live
 var pickups: Array[Dictionary] = []
 var crates: Array[Dictionary] = []
 var _crate_collision_cells: Dictionary = {}
+var _live_crate_count := 0
 var denied_zones: Array[Dictionary] = []
 var effects: Array[Dictionary] = []
 var resolved_boss_module_visuals: Array[Dictionary] = []
@@ -258,9 +259,13 @@ var _shielded_enemy_ids: Dictionary = {}
 var _pending_shielded_enemy_ids: Dictionary = {}
 var _shield_supports: Array[EnemyState] = []
 var _enemy_decision_bucket := 0
+var _enemy_decision_cycle_epoch := 0
 var _simulation_lod_bucket := 0
 var _far_enemy_simulation_bucket := 0
 var _enemy_coordination_initialized := false
+var _wear_motion_candidates: Array[EnemyState] = []
+var _wear_tracked_id_buffer: Array[String] = []
+var _wear_processed_ids: Dictionary = {}
 var _low_count_overlay_timer := 0.0
 var _physics_serial := 0
 var _presented_physics_serial := -1
@@ -722,6 +727,7 @@ func _reset_run(
 	_pending_shielded_enemy_ids.clear()
 	_shield_supports.clear()
 	_enemy_decision_bucket = 0
+	_enemy_decision_cycle_epoch = 0
 	_simulation_lod_bucket = 0
 	_far_enemy_simulation_bucket = 0
 	_enemy_coordination_initialized = false
@@ -1502,10 +1508,13 @@ func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) 
 		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _projectile_cover_query
 		)
+	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
 	for wall in _runtime_structural_walls:
-		_projectile_cover_query.append(wall)
+		if swept.intersects(wall.grow(radius), true):
+			_projectile_cover_query.append(wall)
 	for bulkhead in _runtime_bulkheads:
-		_projectile_cover_query.append(bulkhead)
+		if swept.intersects(bulkhead.grow(radius), true):
+			_projectile_cover_query.append(bulkhead)
 	return _projectile_cover_query
 
 
@@ -1540,12 +1549,17 @@ func _rebuild_runtime_blockers() -> void:
 
 
 func _runtime_first_cover_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
+	var runtime_cover := _runtime_projectile_cover_rects(from, to, padding)
+	if runtime_cover.is_empty() and StageCatalog.cover_rects(current_stage_id).is_empty():
+		_cover_hit_receipt["hit"] = false
+		_cover_hit_receipt["t"] = 2.0
+		return _cover_hit_receipt
 	return Rules.first_cover_hit_with_extra_into(
 		from,
 		to,
 		padding,
 		current_stage_id,
-		_runtime_projectile_cover_rects(from, to, padding),
+		runtime_cover,
 		_cover_hit_receipt,
 		_cover_hit_candidate
 	)
@@ -1958,24 +1972,29 @@ func _update_experience(delta: float) -> void:
 func _update_enemies(delta: float) -> void:
 	var performance_active := _performance_detail_sample_active
 	var section_started := Time.get_ticks_usec() if performance_active else 0
+	_wear_motion_candidates.clear()
+	_wear_tracked_id_buffer.clear()
+	_wear_processed_ids.clear()
 	var decision_bucket := _enemy_decision_bucket
 	_enemy_decision_bucket = (_enemy_decision_bucket + 1) % ORDINARY_DECISION_BUCKET_COUNT
+	if decision_bucket == 0:
+		_enemy_decision_cycle_epoch += 1
 	_enemy_update_schedule.rebuild(
 		enemies, delta, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
-		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket
+		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket,
+		enemy_store.membership_revision
 	)
 	var active_capped := _enemy_update_schedule.active_cap_count
 	if _enforce_active_enemy_cap(active_capped):
-		_enemy_update_schedule.rebuild(
-			enemies, 0.0, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
-			decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket
-		)
+		_enemy_update_schedule.prune_inactive()
 		active_capped = _enemy_update_schedule.active_cap_count
 	if performance_active:
 		_performance_enemy_sections["budget_scan"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
 
-	for enemy in _enemy_update_schedule.alive:
+	for enemy in enemies:
+		if not enemy.alive:
+			continue
 		var flash := enemy.flash
 		if flash > 0.0:
 			enemy.flash = maxf(0.0, flash - delta)
@@ -2070,6 +2089,8 @@ func _update_enemies(delta: float) -> void:
 		if role == &"stage_boss":
 			_update_stage_boss(enemy, delta)
 			enemy_grid.update_actor(enemy)
+			if enemy.pos != _enemy_update_schedule.motion_start(enemy):
+				_wear_motion_candidates.append(enemy)
 			continue
 		if role == &"generator":
 			_update_generator(enemy, delta)
@@ -2088,26 +2109,52 @@ func _update_enemies(delta: float) -> void:
 	if performance_active:
 		_performance_enemy_sections["scheduled_ordinary"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
-	for enemy in _enemy_update_schedule.active:
-		if not enemy.alive:
+	for enemy in _wear_motion_candidates:
+		var wear_identity := _wear_identity(enemy)
+		if not enemy.alive or _wear_processed_ids.has(wear_identity):
 			continue
-		var previous_position := _enemy_update_schedule.motion_start(enemy)
-		if (
-			previous_position == enemy.pos
-			and not terrain_runtime.is_wear_actor_tracked(enemy.id)
-		):
-			continue
+		_wear_processed_ids[wear_identity] = true
 		var wear_damage := terrain_runtime.wear_damage_for_actor(
 			enemy.id,
-			previous_position,
+			_enemy_update_schedule.motion_start(enemy),
 			enemy.pos,
 			enemy.radius,
 			delta
 		)
 		if wear_damage > 0.0:
 			_damage_enemy(enemy, wear_damage, "Wear Collapse", &"kinetic", false, true)
+	terrain_runtime.append_tracked_wear_actor_ids(_wear_tracked_id_buffer)
+	for actor_id in _wear_tracked_id_buffer:
+		var tracked_enemy := _find_enemy_by_id(actor_id)
+		if tracked_enemy == null or not tracked_enemy.alive:
+			terrain_runtime.forget_wear_actor(actor_id)
+			continue
+		var tracked_identity := _wear_identity(tracked_enemy)
+		if _wear_processed_ids.has(tracked_identity):
+			continue
+		_wear_processed_ids[tracked_identity] = true
+		var tracked_damage := terrain_runtime.wear_damage_for_actor(
+			actor_id,
+			tracked_enemy.pos,
+			tracked_enemy.pos,
+			tracked_enemy.radius,
+			delta
+		)
+		if tracked_damage > 0.0:
+			_damage_enemy(
+				tracked_enemy,
+				tracked_damage,
+				"Wear Collapse",
+				&"kinetic",
+				false,
+				true
+			)
 	if performance_active:
 		_performance_enemy_sections["wear_terrain"] = _elapsed_ms(section_started)
+
+
+func _wear_identity(enemy: EnemyState) -> int:
+	return (enemy.spatial_slot + 1) * 0x100000000 + enemy.runtime_generation
 
 
 func _update_scheduled_ordinary_enemy(
@@ -2121,12 +2168,21 @@ func _update_scheduled_ordinary_enemy(
 		if critical_delta >= 0.0
 		else _enemy_update_schedule.motion_delta(enemy)
 	)
-	if motion_delta <= 0.0:
+	var decision_delta := (
+		critical_delta
+		if critical_delta >= 0.0
+		else _enemy_update_schedule.decision_delta(enemy)
+	)
+	var decision_due := (
+		critical_delta < 0.0
+		and _enemy_update_schedule.decision_due(enemy)
+	)
+	var motion_due := critical_delta >= 0.0 or _enemy_update_schedule.motion_due(enemy)
+	if not motion_due and not decision_due:
 		return
 	var previous_position := enemy.pos
 	var previous_alive := enemy.alive
 	var previous_active := enemy.active
-	var decision_due := _enemy_update_schedule.decision_due(enemy)
 	var can_commit := (
 		decision_due
 		and _enemy_update_schedule.can_commit(
@@ -2137,7 +2193,7 @@ func _update_scheduled_ordinary_enemy(
 		)
 	)
 	if _update_ordinary_enemy(
-		enemy, motion_delta, can_commit, decision_due, motion_delta
+		enemy, decision_delta, can_commit, decision_due, motion_delta
 	):
 		_enemy_update_schedule.note_commit(enemy)
 	# The spatial grid is already correct when a scheduled tick only advances
@@ -2149,6 +2205,8 @@ func _update_scheduled_ordinary_enemy(
 		or enemy.active != previous_active
 	):
 		enemy_grid.update_actor(enemy)
+	if enemy.alive and enemy.pos != previous_position:
+		_wear_motion_candidates.append(enemy)
 
 
 func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
@@ -2382,6 +2440,8 @@ func _update_ordinary_enemy(
 	if enemy.role in [&"bulkhead_guard", &"splitter_barge"]:
 		_move_enemy_role(enemy, motion_delta, false, decision_due)
 		if (
+			motion_delta > 0.0
+			and
 			enemy.attack_cooldown <= 0.0
 			and enemy.pos.distance_to(player_position)
 				<= enemy.radius + Rules.PLAYER_RADIUS + 12.0
@@ -2812,11 +2872,16 @@ func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decisio
 	):
 		return
 	if decision_due or enemy.desired_velocity.is_zero_approx():
+		var steering_slot := (
+			enemy.spatial_slot
+			if enemy.spatial_slot >= 0
+			else enemy.runtime_slot
+		)
 		var refresh_overlap := (
 			decision_due
 			and (
-				enemy.runtime_slot < 0
-				or posmod(enemy.runtime_slot + _enemy_decision_bucket, 2) == 0
+				steering_slot < 0
+				or posmod(steering_slot + _enemy_decision_cycle_epoch, 2) == 0
 			)
 		)
 		enemy.desired_velocity = _desired_enemy_velocity(
@@ -2933,7 +2998,7 @@ func _update_mine(
 	if enemy.phase != &"mine_armed":
 		if mobile:
 			_move_enemy_role(enemy, motion_delta, false, decision_due)
-		if enemy.pos.distance_to(player_position) <= trigger_radius:
+		if decision_due and enemy.pos.distance_to(player_position) <= trigger_radius:
 			if mobile and _armed_minelet_count() >= 6:
 				return
 			_arm_mine(enemy, 1.0 if mobile else 1.25, true)
@@ -3076,6 +3141,8 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 
 
 func _position_clear_of_crates(position: Vector2, clearance: float) -> bool:
+	if _live_crate_count <= 0:
+		return true
 	var minimum := position - Vector2.ONE * clearance
 	var maximum := position + Vector2.ONE * clearance
 	var min_cell := Vector2i(
@@ -3460,6 +3527,8 @@ func _player_projectile_contact(
 
 
 func _segment_hits_live_crate(from: Vector2, to: Vector2, padding: float) -> bool:
+	if _live_crate_count <= 0:
+		return false
 	var clearance := CRATE_COLLISION_RADIUS + padding
 	var minimum := (
 		Vector2(minf(from.x, to.x), minf(from.y, to.y))
@@ -3498,6 +3567,10 @@ func _segment_hits_live_crate(from: Vector2, to: Vector2, padding: float) -> boo
 
 
 func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
+	if _live_crate_count <= 0:
+		_crate_hit_receipt["crate"] = null
+		_crate_hit_receipt["t"] = INF
+		return _crate_hit_receipt
 	var clearance := CRATE_COLLISION_RADIUS + padding
 	var minimum := Vector2(minf(from.x, to.x), minf(from.y, to.y)) - Vector2.ONE * clearance
 	var maximum := Vector2(maxf(from.x, to.x), maxf(from.y, to.y)) + Vector2.ONE * clearance
@@ -3556,7 +3629,10 @@ func _projectile_hits_crate(
 
 func _rebuild_crate_collision_cells() -> void:
 	_crate_collision_cells.clear()
+	_live_crate_count = 0
 	for crate in crates:
+		if bool(crate["alive"]):
+			_live_crate_count += 1
 		var position := Vector2(crate["pos"])
 		var cell := Vector2i(
 			floori(position.x / CRATE_COLLISION_CELL_SIZE),
@@ -3576,6 +3652,7 @@ func _damage_crate(crate: Dictionary, amount: float) -> void:
 	if float(crate["health"]) > 0.0:
 		return
 	crate["alive"] = false
+	_live_crate_count = maxi(0, _live_crate_count - 1)
 	pickups.append({
 		"id": "%s_drop" % String(crate["id"]),
 		"kind": StringName(crate["drop"]),

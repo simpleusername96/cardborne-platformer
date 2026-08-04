@@ -23,7 +23,6 @@ const SUPPORT_ROLES: Array[StringName] = [
 	&"generator", &"shield_escort",
 ]
 
-var alive: Array[EnemyState] = []
 var active: Array[EnemyState] = []
 var supports: Array[EnemyState] = []
 var critical: Array[EnemyState] = []
@@ -36,18 +35,24 @@ var committed_denial := 0
 var committed_rammers := 0
 
 var _decision_due := PackedByteArray()
+var _motion_due := PackedByteArray()
 var _critical_due := PackedByteArray()
+var _decision_delta := PackedFloat32Array()
 var _motion_delta := PackedFloat32Array()
 var _motion_starts := PackedVector2Array()
 var _due_stamps := PackedInt32Array()
 var _schedule_id := 0
+var _alive_count := 0
+var _carrier_membership_revision := -1
 var _rammers_by_squad: Dictionary = {}
 var _carrier_children: Dictionary = {}
 
 
 func _init() -> void:
 	_decision_due.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	_motion_due.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_critical_due.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	_decision_delta.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_motion_delta.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_motion_starts.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_due_stamps.resize(EnemyStore.MAX_LIVE_HOSTILES)
@@ -61,9 +66,9 @@ func rebuild(
 	far_distance_squared: float,
 	decision_bucket: int,
 	near_motion_bucket: int,
-	far_motion_bucket: int
+	far_motion_bucket: int,
+	membership_revision: int = -1
 ) -> void:
-	alive.clear()
 	active.clear()
 	supports.clear()
 	critical.clear()
@@ -73,18 +78,25 @@ func rebuild(
 		_due_stamps.fill(0)
 		_schedule_id = 1
 	_rammers_by_squad.clear()
-	_carrier_children.clear()
 	active_cap_count = 0
 	committed_points = 0.0
 	committed_ranged = 0
 	committed_denial = 0
 	committed_rammers = 0
+	_alive_count = 0
+	var rebuild_carrier_counts := (
+		membership_revision < 0
+		or membership_revision != _carrier_membership_revision
+	)
+	if rebuild_carrier_counts:
+		_carrier_children.clear()
+		_carrier_membership_revision = membership_revision
 
 	for enemy in enemies:
 		if enemy == null or not enemy.alive:
 			continue
-		alive.append(enemy)
-		if not enemy.carrier_id.is_empty():
+		_alive_count += 1
+		if rebuild_carrier_counts and not enemy.carrier_id.is_empty():
 			_carrier_children[enemy.carrier_id] = carrier_child_count(enemy.carrier_id) + 1
 		if not enemy.active:
 			continue
@@ -118,6 +130,8 @@ func rebuild(
 			_due_stamps[slot] = _schedule_id
 			_critical_due[slot] = 1
 			_decision_due[slot] = 0
+			_motion_due[slot] = 0
+			_decision_delta[slot] = 0.0
 			_motion_delta[slot] = 0.0
 			critical.append(enemy)
 			continue
@@ -142,16 +156,17 @@ func rebuild(
 		)
 		if not motion_now and not decision_now:
 			continue
-		_motion_delta[slot] = enemy.motion_elapsed
 		_due_stamps[slot] = _schedule_id
 		_critical_due[slot] = 0
-		enemy.motion_elapsed = 0.0
+		_decision_due[slot] = 1 if decision_now else 0
+		_motion_due[slot] = 1 if motion_now else 0
+		_decision_delta[slot] = enemy.decision_elapsed if decision_now else 0.0
+		_motion_delta[slot] = enemy.motion_elapsed if motion_now else 0.0
 		if decision_now:
-			_decision_due[slot] = 1
 			enemy.decision_elapsed = 0.0
-			ordinary_due.append(enemy)
-		else:
-			_decision_due[slot] = 0
+		if motion_now:
+			enemy.motion_elapsed = 0.0
+		ordinary_due.append(enemy)
 
 
 func decision_due(enemy: EnemyState) -> bool:
@@ -164,6 +179,16 @@ func decision_due(enemy: EnemyState) -> bool:
 	)
 
 
+func motion_due(enemy: EnemyState) -> bool:
+	var slot := enemy.runtime_slot
+	return (
+		slot >= 0
+		and slot < _motion_due.size()
+		and _due_stamps[slot] == _schedule_id
+		and _motion_due[slot] != 0
+	)
+
+
 func is_critical(enemy: EnemyState) -> bool:
 	var slot := enemy.runtime_slot
 	return (
@@ -171,6 +196,19 @@ func is_critical(enemy: EnemyState) -> bool:
 		and slot < _critical_due.size()
 		and _due_stamps[slot] == _schedule_id
 		and _critical_due[slot] != 0
+	)
+
+
+func decision_delta(enemy: EnemyState) -> float:
+	var slot := enemy.runtime_slot
+	return (
+		float(_decision_delta[slot])
+		if (
+			slot >= 0
+			and slot < _decision_delta.size()
+			and _due_stamps[slot] == _schedule_id
+		)
+		else 0.0
 	)
 
 
@@ -241,9 +279,35 @@ func note_carrier_child(carrier_id: String) -> void:
 	_carrier_children[carrier_id] = carrier_child_count(carrier_id) + 1
 
 
+func prune_inactive() -> void:
+	## Reconciles a cap decision without rebuilding or discarding due lanes.
+	_prune_worklist(active)
+	_prune_worklist(supports)
+	_prune_worklist(critical)
+	_prune_worklist(ordinary_due)
+	active_cap_count = 0
+	committed_points = 0.0
+	committed_ranged = 0
+	committed_denial = 0
+	committed_rammers = 0
+	_rammers_by_squad.clear()
+	for enemy in active:
+		if enemy.counts_active_cap:
+			active_cap_count += 1
+		if enemy.phase in [&"startup", &"active"] and enemy.role not in SPECIAL_ROLES:
+			committed_points += enemy.threat_cost
+			match enemy.threat_kind:
+				&"ranged":
+					committed_ranged += 1
+				&"denial":
+					committed_denial += 1
+			if enemy.role == &"rammer":
+				_note_rammer_commit(enemy)
+
+
 func debug_snapshot() -> Dictionary:
 	return {
-		"alive":alive.size(),
+		"alive":_alive_count,
 		"active":active.size(),
 		"supports":supports.size(),
 		"critical":critical.size(),
@@ -262,3 +326,10 @@ func _note_rammer_commit(enemy: EnemyState) -> void:
 	_rammers_by_squad[enemy.squad_id] = int(
 		_rammers_by_squad.get(enemy.squad_id, 0)
 	) + 1
+
+
+func _prune_worklist(worklist: Array[EnemyState]) -> void:
+	for index in range(worklist.size() - 1, -1, -1):
+		var enemy := worklist[index]
+		if enemy == null or not enemy.alive or not enemy.active:
+			worklist.remove_at(index)

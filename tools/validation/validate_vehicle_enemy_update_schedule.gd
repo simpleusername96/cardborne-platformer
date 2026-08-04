@@ -161,13 +161,120 @@ func _initialize() -> void:
 	)
 	for due in schedule.ordinary_due:
 		_expect(
-			schedule.motion_delta(due) > 0.0 and due not in schedule.critical,
-			"deferred ordinary work carries accumulated motion without overlap"
+			due not in schedule.critical
+			and (schedule.motion_due(due) or schedule.decision_due(due)),
+			"deferred ordinary work carries an independent due lane without overlap"
 		)
-	var previous_alive := schedule.alive.duplicate()
+	_check_warmed_cadence()
+	_check_membership_revision()
+	var previous_active := schedule.active.duplicate()
 	schedule.rebuild(store.live, 0.0, Vector2(2800.0, 1700.0), 820.0 * 820.0, 0, 0, 0)
-	_expect(schedule.alive == previous_alive, "zero-delta rebuild preserves deterministic worklist order")
+	_expect(schedule.active == previous_active, "zero-delta rebuild preserves deterministic worklist order")
 	_finish()
+
+
+func _check_warmed_cadence() -> void:
+	var near := EnemyState.new()
+	near.id = "cadence_near"
+	near.alive = true
+	near.active = true
+	near.runtime_slot = 0
+	near.decision_bucket = 1
+	near.pos = Vector2.ZERO
+	var far := EnemyState.new()
+	far.id = "cadence_far"
+	far.alive = true
+	far.active = true
+	far.runtime_slot = 3
+	far.decision_bucket = 1
+	far.pos = Vector2(1200.0, 0.0)
+	var fixtures: Array[EnemyState] = [near, far]
+	var schedule := Schedule.new()
+	var near_decisions := 0
+	var near_motions := 0
+	var near_decision_time := 0.0
+	var near_motion_time := 0.0
+	var far_decisions := 0
+	var far_motions := 0
+	var far_decision_time := 0.0
+	var far_motion_time := 0.0
+	var saw_decision_only := false
+	var saw_motion_only := false
+	for tick in 120:
+		schedule.rebuild(
+			fixtures,
+			1.0 / 60.0,
+			Vector2.ZERO,
+			820.0 * 820.0,
+			tick % 6,
+			tick % 2,
+			tick % 3
+		)
+		if tick < 60:
+			continue
+		var near_decision_due := schedule.decision_due(near)
+		var near_motion_due := schedule.motion_due(near)
+		var far_decision_due := schedule.decision_due(far)
+		var far_motion_due := schedule.motion_due(far)
+		if near_decision_due:
+			near_decisions += 1
+			near_decision_time += schedule.decision_delta(near)
+		if near_motion_due:
+			near_motions += 1
+			near_motion_time += schedule.motion_delta(near)
+		if far_decision_due:
+			far_decisions += 1
+			far_decision_time += schedule.decision_delta(far)
+		if far_motion_due:
+			far_motions += 1
+			far_motion_time += schedule.motion_delta(far)
+		if near_decision_due and not near_motion_due:
+			saw_decision_only = true
+		if near_motion_due and not near_decision_due:
+			saw_motion_only = true
+	_expect(near_decisions == 10, "near ordinary decisions remain at 10 Hz")
+	_expect(near_motions == 30, "near ordinary motion remains at 30 Hz")
+	_expect(far_decisions == 10, "far ordinary decisions remain at 10 Hz")
+	_expect(far_motions == 20, "far ordinary motion remains at 20 Hz")
+	_expect(is_equal_approx(near_decision_time, 1.0), "near decision delta totals one second")
+	_expect(is_equal_approx(near_motion_time, 1.0), "near motion delta totals one second")
+	_expect(is_equal_approx(far_decision_time, 1.0), "far decision delta totals one second")
+	_expect(is_equal_approx(far_motion_time, 1.0), "far motion delta totals one second")
+	_expect(saw_decision_only, "decision-only work does not consume motion time")
+	_expect(saw_motion_only, "motion-only work is dispatched without decision work")
+
+
+func _check_membership_revision() -> void:
+	var store := EnemyStore.new()
+	var carrier: EnemyState = store.acquire()
+	carrier.id = "revision_carrier"
+	carrier.alive = true
+	carrier.active = true
+	carrier.role = &"drone_carrier"
+	_expect(store.add(carrier), "revision fixture adds carrier")
+	var schedule := Schedule.new()
+	schedule.rebuild(
+		store.live, 0.0, Vector2.ZERO, 820.0 * 820.0, 0, 0, 0,
+		store.membership_revision
+	)
+	_expect(
+		schedule.carrier_child_count(carrier.id) == 0,
+		"revision fixture starts with no carrier children"
+	)
+	var child: EnemyState = store.acquire()
+	child.id = "revision_child"
+	child.alive = true
+	child.active = true
+	child.carrier_id = carrier.id
+	_expect(store.add(child), "revision fixture adds carrier child")
+	schedule.rebuild(
+		store.live, 0.0, Vector2.ZERO, 820.0 * 820.0, 0, 0, 0,
+		store.membership_revision
+	)
+	_expect(
+		schedule.carrier_child_count(carrier.id) == 1,
+		"membership revision invalidates cached carrier counts"
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -67,16 +67,16 @@ const INSTALLATION_RADIUS := 62.0
 const STAGE_BOSS_RADIUS := 146.0
 const PICKUP_PLINTH_RADIUS := 42.0
 const EXPERIENCE_RADII := {
-	&"small":12.0,
-	&"medium":16.0,
-	&"large":22.0,
+	&"small":24.0,
+	&"medium":28.0,
+	&"large":33.0,
 }
 ## Visual envelopes are intentionally larger than collision truth. They are
 ## presentation-only and keep the shared teardrop readable at live speed.
-const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 5.50
-const PLAYER_PRIMARY_PROJECTILE_SCALE := 6.25
-const PLAYER_SEEKER_PROJECTILE_SCALE := 5.75
-const PLAYER_OPENING_BREACH_PROJECTILE_SCALE := 6.50
+const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 3.85
+const PLAYER_PRIMARY_PROJECTILE_SCALE := 4.375
+const PLAYER_SEEKER_PROJECTILE_SCALE := 4.025
+const PLAYER_OPENING_BREACH_PROJECTILE_SCALE := 4.55
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
 const COVER_EDGE_OFFSET := Vector2(14.0, 18.0)
 const WALL_FILL := STRUCTURE_BASE
@@ -209,14 +209,14 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("pickup plinth radius must remain 42 px")
 	if not is_equal_approx(STAGE_BOSS_RADIUS, 146.0):
 		errors.append("stage boss visual radius must remain 146 px")
-	if EXPERIENCE_RADII != {&"small":12.0, &"medium":16.0, &"large":22.0}:
-		errors.append("experience visual radii must remain 12/16/22 px")
-	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 5.50):
-		errors.append("hostile projectile envelope must remain 5.5x collision radius")
-	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 6.25):
-		errors.append("player primary projectile visual must remain 6.25x collision radius")
-	if not is_equal_approx(PLAYER_SEEKER_PROJECTILE_SCALE, 5.75):
-		errors.append("player seeker projectile visual must remain 5.75x collision radius")
-	if not is_equal_approx(PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 6.50):
-		errors.append("opening breach projectile visual must remain 6.5x collision radius")
+	if EXPERIENCE_RADII != {&"small":24.0, &"medium":28.0, &"large":33.0}:
+		errors.append("experience visual radii must remain 24/28/33 px")
+	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 3.85):
+		errors.append("hostile projectile envelope must remain 3.85x collision radius")
+	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 4.375):
+		errors.append("player primary projectile visual must remain 4.375x collision radius")
+	if not is_equal_approx(PLAYER_SEEKER_PROJECTILE_SCALE, 4.025):
+		errors.append("player seeker projectile visual must remain 4.025x collision radius")
+	if not is_equal_approx(PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 4.55):
+		errors.append("opening breach projectile visual must remain 4.55x collision radius")
 	return errors

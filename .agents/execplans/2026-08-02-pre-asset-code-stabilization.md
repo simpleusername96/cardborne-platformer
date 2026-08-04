@@ -231,12 +231,12 @@ projectile collision continue to use their current independent gameplay values.
 
 ### M1 - Correct ordinary scheduling and motion
 
-- [ ] Add independent decision/motion due flags and accumulated deltas to
+- [x] Add independent decision/motion due flags and accumulated deltas to
   `VehicleEnemyUpdateSchedule`; keep a single union dispatch list.
-- [ ] Split ordinary decision/state work from cached-velocity locomotion in `VehicleRun`.
-- [ ] Preserve one move on coincident ticks and the existing 60 Hz critical lane.
-- [ ] Replace fixed steering parity with the generation-safe decision-cycle epoch.
-- [ ] Add exact cadence, elapsed-time, ordering, collision-distance, attack-timing, and
+- [x] Split ordinary decision/state work from cached-velocity locomotion in `VehicleRun`.
+- [x] Preserve one move on coincident ticks and the existing 60 Hz critical lane.
+- [x] Replace fixed steering parity with the generation-safe decision-cycle epoch.
+- [x] Add exact cadence, elapsed-time, ordering, collision-distance, attack-timing, and
   two-epoch steering regression cases.
 
 Acceptance: steady-state counts are decision `10`, near motion `30`, far motion `20`,
@@ -245,15 +245,15 @@ timing remain correct; no actor keeps a permanently stale steering cache.
 
 ### M2 - Remove the verified physics hot-path waste
 
-- [ ] Remove the copied scheduler `alive` list and cache carrier-child counts behind the
+- [x] Remove the copied scheduler `alive` list and cache carrier-child counts behind the
   store membership revision.
-- [ ] Replace the all-active wear pass with moved-plus-tracked, stable-slot-deduplicated
+- [x] Replace the all-active wear pass with moved-plus-tracked, stable-slot-deduplicated
   work while retaining 60 Hz stationary occupancy damage.
-- [ ] Add the live-crate count and apply its exact no-hit guard to movement, LOS, and
+- [x] Add the live-crate count and apply its exact no-hit guard to movement, LOS, and
   projectile queries.
-- [ ] Add the safe open-space motion fast path without bypassing any candidate cover.
-- [ ] Add the empty-cover projectile fast path without changing ordered collision.
-- [ ] Add regression cases for membership invalidation, final-crate transition,
+- [x] Add the safe open-space motion fast path without bypassing any candidate cover.
+- [x] Add the empty-cover projectile fast path without changing ordered collision.
+- [x] Add regression cases for membership invalidation, final-crate transition,
   stationary wear damage, open/candidate cover, wall piercing, and first actor hit.
 
 Acceptance: no gameplay population or cadence is reduced; every candidate-bearing path
@@ -262,9 +262,9 @@ queries; grid, wear, carrier, and crate state remain generation-safe.
 
 ### M3 - Apply the requested display-size corrections
 
-- [ ] Set XP radii to `24/28/33` and the four projectile multipliers to
+- [x] Set XP radii to `24/28/33` and the four projectile multipliers to
   `3.85/4.375/4.025/4.55` in `VehicleStageVisualProfile`.
-- [ ] Update existing renderer/readability validators for the exact display values and
+- [x] Update existing renderer/readability validators for the exact display values and
   unchanged shared-image/collision ownership.
 - [ ] Capture all three XP tiers and friendly/hostile projectiles together at gameplay
   scale through the existing capture gateway; do not create or edit production images.
@@ -375,8 +375,13 @@ separation, validation scope, and no-approval execution behavior are closed.
 - [x] Captured full per-tick ownership, proved catch-up, and restored diagnostic edits.
 - [x] Audited enemy, grid, terrain, projectile, crate, renderer, and recorder ownership.
 - [x] Closed the implementation design and final acceptance thresholds.
-- [ ] M1 is the next implementation milestone; no production game or visual code has
-  changed during this diagnosis-and-plan revision.
+- [x] M1 ordinary scheduling and motion separation is implemented with focused cadence
+  and steering coverage.
+- [x] M2 verified hot-path guards are implemented with membership, wear, crate, cover,
+  and collision regression coverage.
+- [x] M3 renderer-owned XP and non-beam projectile scale constants are implemented;
+  final actual-scale capture remains part of M4.
+- [ ] M4 final validation, performance evidence, Web smoke, and plan retirement remain.
 
 ## Next Steps
 

@@ -290,6 +290,12 @@ func forget_wear_actor(actor_id: String) -> void:
 	_wear_damage_deadlines.erase(actor_id)
 
 
+func append_tracked_wear_actor_ids(output: Array[String]) -> void:
+	## Appends only actors with active tile occupancy; callers reuse the output.
+	for actor_id in _wear_occupancy:
+		output.append(String(actor_id))
+
+
 func wear_runtime_snapshot() -> Dictionary:
 	return {
 		"occupancy_count":_nested_entry_count(_wear_occupancy),

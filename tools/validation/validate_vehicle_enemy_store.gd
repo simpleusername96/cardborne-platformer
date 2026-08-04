@@ -8,11 +8,13 @@ var failures: Array[String] = []
 
 func _initialize() -> void:
 	var store := EnemyStore.new()
+	var initial_revision := store.membership_revision
 	var original: Array[EnemyState] = []
 	for index in EnemyStore.MAX_LIVE_HOSTILES:
 		var enemy := _enemy(store, index)
 		original.append(enemy)
 		_expect(store.add(enemy), "store accepts live enemy %d" % index)
+	_expect(store.membership_revision > initial_revision, "membership revision advances on add")
 	_expect(store.rejected_capacity == 0, "store records no rejection before declared capacity")
 	_expect(store.acquire() == null, "store rejects enemy beyond capacity")
 	_expect(store.rejected_spawns == 1, "rejected spawn is observable")
@@ -26,6 +28,7 @@ func _initialize() -> void:
 		store.queue_defeat(original[index])
 	var removed := store.flush_defeated()
 	var retired_count := (original.size() + 1) / 2
+	_expect(store.membership_revision > initial_revision + EnemyStore.MAX_LIVE_HOSTILES, "membership revision advances on defeat flush")
 	_expect(
 		removed == retired_count and store.live_count() == EnemyStore.MAX_LIVE_HOSTILES - retired_count,
 		"flush removes all queued dead enemies"

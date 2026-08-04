@@ -8,6 +8,7 @@ const MAX_LIVE_HOSTILES := 320
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 var live: Array[EnemyState] = []
+var membership_revision := 0
 var rejected_spawns := 0
 var rejected_capacity := 0
 var rejected_invalid := 0
@@ -36,6 +37,7 @@ func clear() -> void:
 	_by_id.clear()
 	_pending_ids.clear()
 	_pending_set.clear()
+	membership_revision += 1
 	rejected_spawns = 0
 	rejected_capacity = 0
 	rejected_invalid = 0
@@ -69,6 +71,7 @@ func add(enemy: EnemyState) -> bool:
 	enemy.runtime_slot = live.size()
 	live.append(enemy)
 	_by_id[enemy.id] = enemy
+	membership_revision += 1
 	return true
 
 
@@ -118,6 +121,8 @@ func flush_defeated() -> int:
 		removed += 1
 	_pending_ids.clear()
 	_pending_set.clear()
+	if removed > 0:
+		membership_revision += 1
 	return removed
 
 

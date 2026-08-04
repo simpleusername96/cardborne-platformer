@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
@@ -79,6 +80,7 @@ func _run() -> void:
 		_check_enemy_expansion(run)
 		run.call("_reset_run", false, true, true)
 		_check_primary_collision_at_horde_capacity(run)
+		_check_hot_path_guards(run)
 	root.queue_free()
 	await process_frame
 	_finish()
@@ -492,6 +494,81 @@ func _check_primary_collision_at_horde_capacity(run) -> void:
 			and run.projectile_store.player_count() == 0,
 		"a non-piercing primary round stops at the first enemy"
 	)
+
+
+func _check_hot_path_guards(run) -> void:
+	var live_crates := 0
+	for crate in run.crates:
+		if bool(crate["alive"]):
+			live_crates += 1
+	_expect(
+		int(run._live_crate_count) == live_crates,
+		"live crate count mirrors the populated collision set"
+	)
+	var open_from: Vector2 = run.player_position
+	var open_motion := Vector2(1.0, 0.0)
+	var open_cover: Array = run.call(
+		"_runtime_motion_cover_rects",
+		open_from,
+		open_from + open_motion,
+		12.0
+	)
+	_expect(open_cover.is_empty(), "open-space motion has no runtime cover candidate")
+	var open_result: Vector2 = Rules.move_circle_with_extra(
+		open_from,
+		open_motion,
+		12.0,
+		false,
+		run.current_stage_id,
+		open_cover
+	)
+	_expect(open_result == open_from + open_motion, "open-space motion takes the safe fast path")
+	if not run._active_tactical_layout.cover_rects.is_empty():
+		var cover := Rect2(run._active_tactical_layout.cover_rects[0])
+		var cover_from := cover.get_center() - Vector2(cover.size.x * 0.5 + 120.0, 0.0)
+		var cover_to := cover.get_center() + Vector2(cover.size.x * 0.5 + 120.0, 0.0)
+		var cover_hit := Dictionary(run.call("_runtime_first_cover_hit", cover_from, cover_to, 7.0))
+		_expect(bool(cover_hit.get("hit", false)), "candidate-bearing projectile path keeps exact cover hit")
+	else:
+		_expect(false, "stage fixture exposes authored cover for candidate-path coverage")
+	for crate in run.crates:
+		if bool(crate["alive"]):
+			run.call("_damage_crate", crate, 9999.0)
+	_expect(int(run._live_crate_count) == 0, "destroying the final crate updates the live count")
+	_expect(
+		bool(run.call("_position_clear_of_crates", run.player_position, 31.0))
+			and not bool(run.call("_segment_hits_live_crate", run.player_position, run.player_position + Vector2.RIGHT * 100.0, 7.0))
+			and run.call("_first_live_crate_hit", run.player_position, run.player_position + Vector2.RIGHT * 100.0, 7.0)["crate"] == null,
+		"empty crate topology returns exact no-hit results"
+	)
+	run.call("_clear_enemies")
+	run.call("_clear_projectiles")
+	var piercing_path_start := cover_hit_start(run)
+	_expect(
+		run.projectile_store.add_player({
+			"pos":piercing_path_start,
+			"velocity":Vector2.RIGHT * 500.0,
+			"radius":run.PRIMARY_PROJECTILE_RADIUS,
+			"damage":18.0,
+			"structure_damage":18.0,
+			"life":1.0,
+			"owner":"validation_wall_piercing",
+			"wall_piercing":true,
+		}),
+		"wall-piercing fixture accepts a projectile"
+	)
+	run.call("_update_projectiles", 0.30)
+	_expect(
+		run.projectile_store.player_count() == 1,
+		"wall-piercing projectile bypasses cover collision while retaining its life"
+	)
+
+
+func cover_hit_start(run) -> Vector2:
+	if run._active_tactical_layout.cover_rects.is_empty():
+		return run.player_position
+	var cover := Rect2(run._active_tactical_layout.cover_rects[0])
+	return cover.get_center() - Vector2(cover.size.x * 0.5 + 120.0, 0.0)
 
 
 func _expect(condition: bool, message: String) -> void:

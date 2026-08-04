@@ -53,19 +53,19 @@ func _initialize() -> void:
 func _validate_scale_contract() -> void:
 	var collision_radius := AttackContract.hostile_projectile_radius(12.0)
 	_expect(
-		is_equal_approx(collision_radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE, 33.0),
+		is_equal_approx(collision_radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE, 23.1),
 		"hostile visual envelope uses the profile multiplier"
 	)
 	_expect(
-		is_equal_approx(collision_radius * Art.PLAYER_PRIMARY_PROJECTILE_SCALE, 37.5),
+		is_equal_approx(collision_radius * Art.PLAYER_PRIMARY_PROJECTILE_SCALE, 26.25),
 		"primary visual envelope uses the profile multiplier"
 	)
 	_expect(
-		is_equal_approx(collision_radius * Art.PLAYER_SEEKER_PROJECTILE_SCALE, 34.5),
+		is_equal_approx(collision_radius * Art.PLAYER_SEEKER_PROJECTILE_SCALE, 24.15),
 		"seeker visual envelope uses the profile multiplier"
 	)
 	_expect(
-		is_equal_approx(collision_radius * Art.PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 39.0),
+		is_equal_approx(collision_radius * Art.PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 27.3),
 		"opening-breach visual envelope uses the profile multiplier"
 	)
 	_expect(Art.attack_color(&"kinetic").a >= 1.0 and Art.attack_color(&"thermal").a >= 1.0, "friendly and hostile role colors remain opaque")
