@@ -523,7 +523,7 @@ func _check_hot_path_guards(run) -> void:
 		open_cover
 	)
 	_expect(open_result == open_from + open_motion, "open-space motion takes the safe fast path")
-	var open_known_result: Vector2 = Rules.move_circle_with_extra_known_safe(
+	var open_known_result: Vector2 = Rules.move_circle_with_extra_safe(
 		open_from,
 		open_motion,
 		12.0,

@@ -3198,14 +3198,18 @@ func _enemy_contact_damage(enemy: EnemyState, base_damage: float) -> float:
 func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: bool) -> Vector2:
 	var destination := position + motion
 	var extra_cover := _runtime_motion_cover_rects(position, destination, radius)
-	var result := Rules.move_circle_with_extra_known_safe(
-		position,
-		motion,
-		radius,
-		current_stage_id,
-		extra_cover,
-		_motion_cover_static_safe
-	)
+	var result := destination
+	if not (_motion_cover_static_safe and extra_cover.is_empty()):
+		result = Rules.move_circle_with_extra_safe(
+			position,
+			motion,
+			radius,
+			current_stage_id,
+			extra_cover,
+			_motion_cover_static_safe
+		)
+	if _live_crate_count <= 0:
+		return result
 	var clearance := radius + CRATE_COLLISION_RADIUS
 	if not _position_clear_of_crates(result, clearance):
 		var x_attempt := Vector2(result.x, position.y)

@@ -208,7 +208,7 @@ static func move_circle_with_extra(position: Vector2, motion: Vector2, radius: f
 	return _move_circle_with_extra_exact(position, motion, radius, stage_id, extra_cover)
 
 
-static func move_circle_with_extra_known_safe(
+static func move_circle_with_extra_safe(
 	position: Vector2,
 	motion: Vector2,
 	radius: float,
