@@ -18,16 +18,43 @@ func _initialize() -> void:
 		return
 	for stage_id in Catalog.STAGE_IDS:
 		var tactical = layout.tactical_layout(stage_id)
-		var packet: Dictionary = Catalog.packets(stage_id)[1]
+		var packets := Catalog.packets(stage_id)
+		var packet: Dictionary = packets[1]
 		var player_position: Vector2 = tactical.geometry_snapshot.player_start
 		var visible_world := Rect2(player_position - Vector2(640.0, 360.0), Vector2(1280.0, 720.0))
+		var direct_allocator := Allocator.new()
+		direct_allocator.configure(
+			tactical.encounter_seed,
+			tactical.ordinary_spawn_anchors,
+			tactical.geometry_snapshot
+		)
 		var allocator := Allocator.new()
-		allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors, tactical.geometry_snapshot)
-		var allocations := allocator.allocate(packet, player_position, visible_world)
-		var replay_allocator := Allocator.new()
-		replay_allocator.configure(tactical.encounter_seed, tactical.ordinary_spawn_anchors, tactical.geometry_snapshot)
-		var replay := replay_allocator.allocate(packet, player_position, visible_world)
-		_expect(var_to_str(allocations) == var_to_str(replay), "%s allocation replays from the same seed" % stage_id)
+		allocator.configure(
+			tactical.encounter_seed,
+			tactical.ordinary_spawn_anchors,
+			tactical.geometry_snapshot
+		)
+		allocator.prewarm_for_packets(packets)
+		var allocations: Array[Dictionary] = []
+		for packet_index in packets.size():
+			var comparison_packet: Dictionary = packets[packet_index]
+			var direct := direct_allocator.allocate(
+				comparison_packet,
+				player_position,
+				visible_world
+			)
+			var prewarmed := allocator.allocate(
+				comparison_packet,
+				player_position,
+				visible_world
+			)
+			_expect(
+				var_to_str(prewarmed) == var_to_str(direct),
+				"%s packet %d prewarmed allocation matches direct geometry truth"
+				% [stage_id, packet_index]
+			)
+			if packet_index == 1:
+				allocations = prewarmed
 		_validate_unit_allocation(allocations, packet, tactical.geometry_snapshot, player_position, visible_world, String(stage_id))
 		_validate_role_multiset(allocations, packet, String(stage_id))
 	_finish()

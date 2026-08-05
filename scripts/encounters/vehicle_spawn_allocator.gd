@@ -10,6 +10,7 @@ const MIN_PLAYER_DISTANCE := 900.0
 const MAX_PLAYER_DISTANCE := 2400.0
 const RELAXED_MAX_PLAYER_DISTANCE := 2800.0
 const OFFSCREEN_MARGIN := 220.0
+const CANDIDATE_PREFILTER_RADIUS := 32.0
 const TARGET_DISTANCES := [1200.0, 1650.0, 2100.0]
 const ARRIVAL_WINDOWS := 3
 const SQUADS_PER_WINDOW := 4
@@ -31,18 +32,40 @@ const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = EnemyArchetypes.PROJECTI
 var _seed := 0
 var _candidate_points: Array[Vector2] = []
 var _geometry_snapshot: Variant
+var _geometry_truth_by_radius: Dictionary = {}
 
 
 func configure(seed: int, authored_anchors: Array[Vector2], geometry_snapshot: Variant = null) -> void:
 	_seed = seed
 	_geometry_snapshot = geometry_snapshot
 	_candidate_points.clear()
+	_geometry_truth_by_radius.clear()
 	var seen := {}
 	if _geometry_snapshot != null and _geometry_snapshot.has_method("spawn_candidate_points"):
 		for point in _geometry_snapshot.spawn_candidate_points():
 			_append_candidate(Vector2(point), seen)
 	for point in authored_anchors:
 		_append_candidate(point, seen)
+
+
+func prewarm_for_packets(packets: Array[Dictionary]) -> void:
+	## Geometry is immutable for a configured stage, so exact per-radius truth
+	## can be compiled before play instead of recomputed inside an arrival frame.
+	if _geometry_snapshot == null or not _geometry_snapshot.has_method("is_spawnable_disc"):
+		return
+	var radii: Array[float] = [CANDIDATE_PREFILTER_RADIUS]
+	var roles := {}
+	for packet in packets:
+		for squad in Array(packet.get("squads", [])):
+			for role_value in Array(squad):
+				roles[StringName(role_value)] = true
+	for role in roles:
+		var radius := float(EnemyArchetypes.definition(StringName(role))["radius"])
+		if radius not in radii:
+			radii.append(radius)
+	radii.sort()
+	for radius in radii:
+		_cache_geometry_truth(radius)
 
 
 func allocate(
@@ -151,16 +174,37 @@ func _try_allocate_requests(
 		var desired_sector := int(sector_order[request_index % sector_order.size()])
 		var role := StringName(request["role"])
 		var radius := float(EnemyArchetypes.definition(role)["radius"])
+		var score_identity := _candidate_score_identity(
+			packet_id,
+			arrival_window,
+			request
+		)
+		var distance_lane := wrapi(
+			hash(score_identity + ":distance"),
+			0,
+			TARGET_DISTANCES.size()
+		)
 		var best := Vector2.INF
 		var best_score := INF
 		var best_clearance := INF
-		for candidate in candidates_by_sector[desired_sector]:
-			if not _candidate_allowed(candidate, radius, player_position, visible_world, tier):
+		for candidate_index_value in candidates_by_sector[desired_sector]:
+			var candidate_index := int(candidate_index_value)
+			var candidate := _candidate_points[candidate_index]
+			if not _geometry_allows(
+				candidate_index,
+				candidate,
+				radius
+			):
 				continue
 			var clearance := _minimum_clearance(candidate, selected)
 			if clearance + 0.001 < float(tier["clearance"]):
 				continue
-			var score := _candidate_score(candidate, player_position, packet_id, arrival_window, request)
+			var score := _candidate_score(
+				candidate,
+				player_position,
+				score_identity,
+				distance_lane
+			)
 			if score < best_score:
 				best = candidate
 				best_score = score
@@ -226,10 +270,18 @@ func _candidates_by_sector(
 	var result: Array[Array] = []
 	for _sector in SECTOR_COUNT:
 		result.append([])
-	for candidate in _candidate_points:
-		if not _candidate_allowed(candidate, 32.0, player_position, visible_world, tier):
+	for candidate_index in _candidate_points.size():
+		var candidate := _candidate_points[candidate_index]
+		if not _candidate_allowed(
+			candidate_index,
+			candidate,
+			CANDIDATE_PREFILTER_RADIUS,
+			player_position,
+			visible_world,
+			tier
+		):
 			continue
-		result[_sector_for(candidate - player_position)].append(candidate)
+		result[_sector_for(candidate - player_position)].append(candidate_index)
 	return result
 
 
@@ -273,6 +325,7 @@ func _maximally_spaced_sector_order(
 
 
 func _candidate_allowed(
+	candidate_index: int,
 	candidate: Vector2,
 	radius: float,
 	player_position: Vector2,
@@ -284,28 +337,59 @@ func _candidate_allowed(
 		return false
 	if visible_world.grow(OFFSCREEN_MARGIN).has_point(candidate):
 		return false
+	return _geometry_allows(candidate_index, candidate, radius)
+
+
+func _geometry_allows(candidate_index: int, candidate: Vector2, radius: float) -> bool:
 	if _geometry_snapshot != null and _geometry_snapshot.has_method("is_spawnable_disc"):
+		var truth: PackedByteArray = _geometry_truth_by_radius.get(radius, PackedByteArray())
+		if truth.size() == _candidate_points.size():
+			return (
+				candidate_index >= 0
+				and candidate_index < truth.size()
+				and truth[candidate_index] != 0
+			)
 		return bool(_geometry_snapshot.is_spawnable_disc(candidate, radius))
 	return true
+
+
+func _cache_geometry_truth(radius: float) -> void:
+	if _geometry_truth_by_radius.has(radius):
+		return
+	var truth := PackedByteArray()
+	truth.resize(_candidate_points.size())
+	for candidate_index in _candidate_points.size():
+		if bool(_geometry_snapshot.is_spawnable_disc(_candidate_points[candidate_index], radius)):
+			truth[candidate_index] = 1
+	_geometry_truth_by_radius[radius] = truth
 
 
 func _candidate_score(
 	candidate: Vector2,
 	player_position: Vector2,
+	identity: String,
+	distance_lane: int
+) -> float:
+	var candidate_identity := identity + ":%d:%d" % [
+		roundi(candidate.x),
+		roundi(candidate.y),
+	]
+	var tie_break := float(absi(hash(candidate_identity)) % 10000) / 10000.0
+	return absf(candidate.distance_to(player_position) - TARGET_DISTANCES[distance_lane]) + tie_break
+
+
+func _candidate_score_identity(
 	packet_id: String,
 	arrival_window: int,
 	request: Dictionary
-) -> float:
-	var identity := "%d:%s:%d:%d:%d" % [
+) -> String:
+	return "%d:%s:%d:%d:%d" % [
 		_seed,
 		packet_id,
 		arrival_window,
 		int(request["window_slot"]),
 		int(request["unit_index"]),
 	]
-	var distance_lane := wrapi(hash(identity + ":distance"), 0, TARGET_DISTANCES.size())
-	var tie_break := float(absi(hash(identity + ":%d:%d" % [roundi(candidate.x), roundi(candidate.y)])) % 10000) / 10000.0
-	return absf(candidate.distance_to(player_position) - TARGET_DISTANCES[distance_lane]) + tie_break
 
 
 func _minimum_clearance(candidate: Vector2, positions: Array[Vector2]) -> float:

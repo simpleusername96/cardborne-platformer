@@ -96,6 +96,7 @@ func configure(
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
 	_spawn_allocator.configure(encounter_seed, spawn_anchors, geometry_snapshot)
+	_spawn_allocator.prewarm_for_packets(_packets)
 
 
 func stop_spawning() -> void:
