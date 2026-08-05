@@ -53,6 +53,16 @@ func _run() -> void:
 	_expect(is_equal_approx(float(stage.get("player_health")), 120.0), "a fully absorbed barrier hit does not damage the hull")
 	_expect(is_zero_approx(float(stage.get("player_hit_flash"))), "a fully absorbed barrier hit does not start hull feedback")
 	_expect(is_zero_approx(float(stage.get("player_invulnerable"))), "a fully absorbed barrier hit does not start hull invulnerability")
+	stage.set("player_health", 120.0)
+	stage.set("player_invulnerable", 0.0)
+	stage.set("player_hit_flash", 0.0)
+	stage.set("player_barrier_strength", 100.0)
+	stage.set("player_barrier_timer", 1.0)
+	stage.call("_damage_player", 10.0, "validation unblockable", false, false)
+	_expect(is_equal_approx(float(stage.get("player_health")), 110.0), "unblockable damage bypasses the barrier and reaches the hull")
+	_expect(is_equal_approx(float(stage.get("player_barrier_strength")), 100.0), "unblockable damage leaves the barrier unchanged")
+	_expect(is_equal_approx(float(stage.get("player_hit_flash")), 0.20), "unblockable hull damage starts the hit signal")
+	_expect(is_equal_approx(float(stage.get("player_invulnerable")), 1.0), "unblockable hull damage starts the one-second invulnerability window")
 
 	if settings != null:
 		settings.reduced_motion = true

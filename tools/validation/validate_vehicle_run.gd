@@ -45,6 +45,7 @@ func _run() -> void:
 			"primary range covers the full visible field diagonal with margin"
 		)
 		_check_visual_collision_separation(run)
+		_check_critical_enemy_attack_progression(run)
 		var boss_arrival: Vector2 = run.call("_choose_boss_arrival_anchor")
 		_expect(
 			run.player_position.distance_to(boss_arrival)
@@ -166,6 +167,34 @@ func _check_simulation_lod_contract(run) -> void:
 		is_equal_approx(schedule.motion_delta(distant), 1.0 / 20.0),
 		"distant non-committed locomotion integrates on its 20 Hz slot"
 	)
+
+
+func _check_critical_enemy_attack_progression(run) -> void:
+	var projectile_store: RefCounted = run.get("projectile_store")
+	projectile_store.call("clear")
+	var shooter: EnemyState = run.call("_make_enemy", {
+		"id":"critical_attack_progression",
+		"role":&"shooter",
+		"pos":run.player_position + Vector2(-320.0, 0.0),
+		"active":true,
+	})
+	shooter.phase = &"startup"
+	shooter.phase_time = 0.0
+	shooter.committed_dir = Vector2.RIGHT
+	shooter.committed_target = run.player_position
+	var phase_time_before := shooter.phase_time
+	run.call("_update_scheduled_ordinary_enemy", shooter, 1.0 / 60.0)
+	_expect(
+		shooter.phase_time < phase_time_before
+			or shooter.phase in [&"recovery", &"active"],
+		"critical ordinary startup advances on the 60 Hz path"
+	)
+	_expect(
+		shooter.phase == &"recovery" and projectile_store.call("hostile_count") == 1,
+		"critical ordinary shooter reaches its real fire path instead of freezing"
+	)
+	projectile_store.call("clear")
+	run.enemy_store.release_untracked(shooter)
 
 
 func _check_boss_progression_gate(run) -> void:

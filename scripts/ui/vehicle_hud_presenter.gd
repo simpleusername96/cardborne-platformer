@@ -49,15 +49,13 @@ func advance(
 	if _action_timer <= 0.0:
 		_action_timer = ACTION_INTERVAL
 		var fast_snapshot := Dictionary(fast_builder.call())
-		for key_variant in fast_snapshot:
-			var key := StringName(key_variant)
-			var value: Variant = fast_snapshot[key_variant]
-			if (
-				_last_fast_snapshot.has(key)
-				and _last_fast_snapshot[key] == value
-			):
-				continue
-			update[key] = value
+		# Publish a coherent snapshot whenever any fast value changes.  Per-key
+		# diffs let consumers observe health without max_health (or another
+		# coupled value), which makes the HUD fall back to presentation defaults.
+		# The channel is still cadence-limited and unchanged snapshots are
+		# suppressed, so this does not restore per-frame UI work.
+		if _last_fast_snapshot != fast_snapshot:
+			update.merge(fast_snapshot, true)
 		_last_fast_snapshot = fast_snapshot
 	if _world_timer <= 0.0:
 		_world_timer = (

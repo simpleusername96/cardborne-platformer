@@ -1527,9 +1527,17 @@ func _runtime_motion_cover_rects(
 ) -> Array[Rect2]:
 	_motion_cover_query.clear()
 	_motion_cover_static_cover_clear = false
-	_motion_cover_static_safe = StageCatalog.is_fast_motion_clear(
+	var catalog_fast_safe := StageCatalog.is_fast_motion_clear(
 		current_stage_id, from, to, radius
 	)
+	var layout_fast_safe := (
+		_active_tactical_layout != null
+		and _active_tactical_layout.is_fast_motion_clear(from, to, radius)
+	)
+	# The catalog cache knows shared field geometry; the tactical layout cache
+	# additionally certifies this run's selected covers and functional terrain.
+	# Only their intersection may bypass the exact circle solver.
+	_motion_cover_static_safe = catalog_fast_safe and layout_fast_safe
 	if field_layout != null and not _motion_cover_static_safe:
 		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _motion_cover_query
@@ -2184,9 +2192,12 @@ func _update_scheduled_ordinary_enemy(
 		if critical_delta >= 0.0
 		else _enemy_update_schedule.decision_delta(enemy)
 	)
+	# Critical actors stay on the full update path so startup/active/recovery
+	# timers advance at 60 Hz. They are not granted a new commitment budget;
+	# `can_commit` remains false for this path below.
 	var decision_due := (
-		critical_delta < 0.0
-		and _enemy_update_schedule.decision_due(enemy)
+		critical_delta >= 0.0
+		or _enemy_update_schedule.decision_due(enemy)
 	)
 	var motion_due := critical_delta >= 0.0 or _enemy_update_schedule.motion_due(enemy)
 	if not motion_due and not decision_due:
@@ -2198,7 +2209,8 @@ func _update_scheduled_ordinary_enemy(
 	var previous_alive := enemy.alive
 	var previous_active := enemy.active
 	var can_commit := (
-		decision_due
+		critical_delta < 0.0
+		and decision_due
 		and _enemy_update_schedule.can_commit(
 			enemy,
 			encounter_runtime.threat_budget(),
@@ -4224,7 +4236,7 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 	if not _simulation_active() or player_invulnerable > 0.0 or stage_complete:
 		return
 	var remaining := _scaled_incoming_damage(amount, enemy_source, final_effective)
-	if player_barrier_strength > 0.0 and player_barrier_timer > 0.0:
+	if blockable and player_barrier_strength > 0.0 and player_barrier_timer > 0.0:
 		var absorbed := minf(player_barrier_strength, remaining)
 		player_barrier_strength -= absorbed
 		remaining -= absorbed
@@ -6220,6 +6232,13 @@ func _start_performance_scenario() -> void:
 	_performance_scenario = PerformanceScenario.new()
 	if not _performance_scenario.configure(StringName(_performance_request["scenario"])):
 		return
+	if (
+		not OS.has_feature("web")
+		and DisplayServer.has_method("window_move_to_foreground")
+	):
+		# Native performance samples must observe the visible game window, not a
+		# background editor/terminal surface whose compositor path is unfocused.
+		DisplayServer.window_move_to_foreground()
 	_performance_recorder = PerformanceRecorder.new()
 	_performance_recorder.configure(
 		StringName(_performance_request["scenario"]),

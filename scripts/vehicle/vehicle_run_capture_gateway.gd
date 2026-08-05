@@ -97,6 +97,10 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_stage_map_evidence()
 		&"visual_events":
 			await _capture_visual_event_evidence()
+		&"ordinary_projectile":
+			await _capture_ordinary_projectile_evidence()
+		&"arc_area_telegraphs":
+			await _capture_arc_area_telegraph_evidence()
 		&"damage_feedback":
 			await _capture_damage_feedback_evidence()
 		&"collision_overlays":
@@ -614,6 +618,85 @@ func _capture_visual_event_evidence() -> void:
 		_save_capture(
 			"09-effects-%s.png" % String(group["id"]).replace("_", "-")
 		)
+
+
+func _capture_ordinary_projectile_evidence() -> void:
+	## Drive an ordinary shooter through its authored startup, fire, flight,
+	## and collision path. This fixture must never call the spawn helper
+	## directly: the scheduling regression is what the capture is proving.
+	prepare_stage(0, true)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	_run.player_health = _run._player_max_health()
+	_run.player_invulnerable = 0.0
+	_run.player_hit_flash = 0.0
+	_run.player_barrier_strength = 0.0
+	_run.player_barrier_timer = 0.0
+	var shooter: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_ordinary_shooter",
+		"role":&"shooter",
+		"pos":_run.player_position + Vector2(-260.0, 0.0),
+		"active":true,
+	})
+	if shooter == null:
+		push_error("ordinary projectile capture fixture could not create shooter")
+		return
+	_run._append_enemy(shooter)
+	_run._start_enemy_attack(shooter)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("09-effects-projectile-hostile-startup.png")
+	_run.capture_set_mode(&"playing")
+	shooter.phase_time = 0.0
+	_run._update_scheduled_ordinary_enemy(shooter, 1.0 / 60.0)
+	if _run.projectile_store.hostile_count() != 1:
+		push_error("ordinary projectile capture fixture did not produce a scheduled hostile shot")
+	_run._update_projectiles(0.10)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("09-effects-projectile-hostile-flight.png")
+	_run.capture_set_mode(&"playing")
+	_run._update_projectiles(0.50)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("09-effects-projectile-hostile-hit.png")
+
+
+func _capture_arc_area_telegraph_evidence() -> void:
+	prepare_stage(0, true)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	_run.denied_zones.clear()
+	var mine: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_arc_mine",
+		"role":&"mine",
+		"pos":_run.player_position + Vector2(250.0, 0.0),
+		"active":true,
+	})
+	if mine != null:
+		_run._append_enemy(mine)
+		_run._start_enemy_attack(mine)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("09-effects-arc-mine-startup.png")
+	var boss := prepare_boss(0)
+	if boss == null:
+		push_error("arc area telegraph capture fixture could not create stage boss")
+		return
+	boss.phase = &"boss_startup"
+	boss.pattern = &"furnace_ring"
+	boss.phase_time = BossPatterns.startup_seconds("furnace_ring")
+	boss.committed_target = _run.player_position
+	boss.committed_dir = (_run.player_position - boss.pos).normalized()
+	AttackTelegraphs.refresh_boss(
+		boss,
+		"furnace_ring",
+		_run._runtime_attack_path_callable,
+		_run._runtime_charge_path_callable
+	)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("30-boss-01-stage-1-arc-area-startup.png")
 
 
 func _capture_collision_overlay_evidence() -> void:

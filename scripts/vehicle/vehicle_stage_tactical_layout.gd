@@ -5,6 +5,8 @@ extends RefCounted
 
 const BROADPHASE_CELL_SIZE := 320.0
 const BROADPHASE_MARGIN := 96.0
+const FAST_MOTION_CELL_SIZE := 80.0
+const FAST_MOTION_RADIUS := 36.0
 const GeometrySnapshot = preload("res://scripts/vehicle/vehicle_field_geometry_snapshot.gd")
 
 var stage_id: StringName = &""
@@ -23,6 +25,10 @@ var _cover_cells: Dictionary = {}
 var _cover_seen_serial := PackedInt32Array()
 var _cover_query_serial := 0
 var _empty_cover_indices: Array[int] = []
+var _safe_motion_cells_36: Dictionary = {}
+var _fast_motion_min_cell := Vector2i.ZERO
+var _fast_motion_width := 0
+var _fast_motion_height := 0
 
 
 func configure(
@@ -48,6 +54,7 @@ func configure(
 	used_fallback = fallback
 	geometry_snapshot = GeometrySnapshot.new()
 	geometry_snapshot.configure(field_definition, cover_rects)
+	_build_fast_motion_clearance_mask()
 	_build_cover_broadphase()
 	fingerprint = hash(var_to_str(canonical_blueprint()))
 
@@ -92,6 +99,24 @@ func covers_near_motion_into(
 	return result
 
 
+func is_fast_motion_clear(from: Vector2, to: Vector2, radius: float) -> bool:
+	## Returns true only for a same-cell sweep certified against this run's
+	## selected covers and functional terrain. Larger actors and cross-cell
+	## motion intentionally stay on the exact solver path.
+	if geometry_snapshot == null or radius > FAST_MOTION_RADIUS:
+		return false
+	var from_cell := _fast_motion_cell(from)
+	var to_cell := _fast_motion_cell(to)
+	if (
+		from_cell.x < _fast_motion_min_cell.x
+		or from_cell.y < _fast_motion_min_cell.y
+		or from_cell.x >= _fast_motion_min_cell.x + _fast_motion_width
+		or from_cell.y >= _fast_motion_min_cell.y + _fast_motion_height
+	):
+		return false
+	return from_cell == to_cell and bool(_safe_motion_cells_36.get(from_cell, false))
+
+
 func canonical_blueprint() -> Dictionary:
 	return {
 		"stage_id":String(stage_id),
@@ -119,6 +144,9 @@ func debug_snapshot() -> Dictionary:
 		"support_socket_count":support_sockets.size(),
 		"encounter_seed":encounter_seed,
 		"used_fallback":used_fallback,
+		"fast_motion_cell_size":FAST_MOTION_CELL_SIZE,
+		"fast_motion_radius":FAST_MOTION_RADIUS,
+		"fast_motion_safe_cell_count":_safe_motion_cells_36.size(),
 	}
 
 
@@ -153,6 +181,67 @@ func _build_cover_broadphase() -> void:
 				if not _cover_cells.has(cell):
 					_cover_cells[cell] = []
 				_cover_cells[cell].append(index)
+
+
+func _build_fast_motion_clearance_mask() -> void:
+	_safe_motion_cells_36.clear()
+	if geometry_snapshot == null:
+		_fast_motion_width = 0
+		_fast_motion_height = 0
+		return
+	var bounds := geometry_snapshot.world_rect
+	_fast_motion_min_cell = Vector2i(
+		floori(bounds.position.x / FAST_MOTION_CELL_SIZE),
+		floori(bounds.position.y / FAST_MOTION_CELL_SIZE)
+	)
+	var max_cell := Vector2i(
+		floori((bounds.end.x - 1.0) / FAST_MOTION_CELL_SIZE),
+		floori((bounds.end.y - 1.0) / FAST_MOTION_CELL_SIZE)
+	)
+	_fast_motion_width = max_cell.x - _fast_motion_min_cell.x + 1
+	_fast_motion_height = max_cell.y - _fast_motion_min_cell.y + 1
+	for cell_y in range(_fast_motion_min_cell.y, max_cell.y + 1):
+		for cell_x in range(_fast_motion_min_cell.x, max_cell.x + 1):
+			var cell := Vector2i(cell_x, cell_y)
+			var clearance_rect := Rect2(
+				Vector2(cell) * FAST_MOTION_CELL_SIZE,
+				Vector2.ONE * FAST_MOTION_CELL_SIZE
+			).grow(FAST_MOTION_RADIUS)
+			var inside_floor := false
+			for floor_rect in geometry_snapshot.walkable_rects:
+				if floor_rect.encloses(clearance_rect):
+					inside_floor = true
+					break
+			if not inside_floor:
+				continue
+			var blocked := false
+			for cover in geometry_snapshot.selected_cover_rects:
+				if clearance_rect.intersects(cover, true):
+					blocked = true
+					break
+			if blocked:
+				continue
+			for void_rect in geometry_snapshot.void_rects:
+				if clearance_rect.intersects(void_rect, true):
+					blocked = true
+					break
+			if blocked:
+				continue
+			for feature in geometry_snapshot.terrain_zones:
+				if StringName(feature.get("kind", &"")) not in [&"structural_wall", &"breakable_bulkhead"]:
+					continue
+				if clearance_rect.intersects(Rect2(feature.get("rect", Rect2())), true):
+					blocked = true
+					break
+			if not blocked:
+				_safe_motion_cells_36[cell] = true
+
+
+func _fast_motion_cell(position: Vector2) -> Vector2i:
+	return Vector2i(
+		floori(position.x / FAST_MOTION_CELL_SIZE),
+		floori(position.y / FAST_MOTION_CELL_SIZE)
+	)
 
 
 func _world_to_cell(position: Vector2) -> Vector2i:

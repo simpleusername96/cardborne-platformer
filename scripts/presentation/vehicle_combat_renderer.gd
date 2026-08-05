@@ -1096,8 +1096,6 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
 	var color := Art.attack_warning_color(affinity, readiness)
-	var damage := float(telegraph.get("damage", 0.0))
-	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_alpha := lerpf(0.38, 0.90, intensity)
 	var accent_alpha := lerpf(0.24, 0.66, intensity)
 	_write_danger_ring(center, radius, Color(color, boundary_alpha))
@@ -1110,18 +1108,10 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 		AttackContract.CRYO:
 			_write_diamond(center, maxf(11.0, radius * 0.12), Color(color, accent_alpha))
 		AttackContract.ARC:
-			_write_beam(
-				center - Vector2.RIGHT * radius * 0.68,
-				center + Vector2.RIGHT * radius * 0.68,
-				boundary_width,
-				Color(color, accent_alpha)
-			)
-			_write_beam(
-				center - Vector2.DOWN * radius * 0.68,
-				center + Vector2.DOWN * radius * 0.68,
-				boundary_width,
-				Color(color, accent_alpha)
-			)
+			# ARC uses the same clean circular danger language as every other
+			# area telegraph; the former beam crossbars read as black seams and
+			# competed with the boundary. Keep only one small readiness marker.
+			_write_diamond(center, maxf(10.0, radius * 0.09), Color(color, accent_alpha))
 		AttackContract.HYBRID:
 			_write_danger_ring(center, radius * 0.55, Color(color, accent_alpha))
 			_write_diamond(center, maxf(11.0, radius * 0.11), Color(color, accent_alpha))

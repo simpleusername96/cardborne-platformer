@@ -66,6 +66,10 @@ const FULL_CAPTURE_FILES := [
 	"09-effects-pickup-support.png",
 	"09-effects-player.png",
 	"09-effects-projectile-hostile.png",
+	"09-effects-projectile-hostile-startup.png",
+	"09-effects-projectile-hostile-flight.png",
+	"09-effects-projectile-hostile-hit.png",
+	"09-effects-arc-mine-startup.png",
 	"09-effects-secondary.png",
 	"10-field-drowned-ruin-field.png",
 	"10-field-storm-drydock-field.png",
@@ -85,6 +89,7 @@ const FULL_CAPTURE_FILES := [
 	"30-boss-01-stage-1-stable.png",
 	"30-boss-01-stage-1-startup-imminent.png",
 	"30-boss-01-stage-1-startup.png",
+	"30-boss-01-stage-1-arc-area-startup.png",
 	"30-boss-02-stage-2-active.png",
 	"30-boss-02-stage-2-phase-two.png",
 	"30-boss-02-stage-2-recovery.png",
@@ -228,6 +233,8 @@ func run(gateway: RefCounted) -> void:
 	if is_full_evidence(gateway.snapshot(&"viewport")):
 		for fixture_kind in [
 			&"visual_events",
+			&"ordinary_projectile",
+			&"arc_area_telegraphs",
 			&"damage_feedback",
 			&"collision_overlays",
 			&"all_bosses",

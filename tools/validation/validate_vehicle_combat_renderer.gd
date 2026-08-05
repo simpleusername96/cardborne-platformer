@@ -33,6 +33,7 @@ func _run() -> void:
 		"component batches reserve bounded working buffers and retain their full growth ceiling"
 	)
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
+	_validate_area_cue_asset()
 	_expect(
 		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
 			and AttackContract.STANDARD_PROJECTILE_RADIUS == 6.0
@@ -266,6 +267,16 @@ func _run() -> void:
 			renderer.get_node_or_null("Status_%s" % status_id) == null,
 			"%s uses actor tint and text instead of a raster orbit icon" % status_id
 		)
+	var renderer_source := FileAccess.get_file_as_string(
+		"res://scripts/presentation/vehicle_combat_renderer.gd"
+	)
+	var arc_area_section := renderer_source.get_slice(
+		"AttackContract.ARC:", 1
+	).get_slice("AttackContract.HYBRID:", 0)
+	_expect(
+		not arc_area_section.contains("_write_beam("),
+		"ARC area telegraphs use a single ring and marker without crossbars"
+	)
 	_expect(
 		Vector2(projectile_buffer[12], projectile_buffer[16]).is_equal_approx(
 			Vector2.LEFT * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
@@ -439,6 +450,30 @@ func _run() -> void:
 	renderer.queue_free()
 	await process_frame
 	_finish()
+
+
+func _validate_area_cue_asset() -> void:
+	var texture := AssetProvider.texture(&"cue/ring")
+	_expect(texture != null, "area telegraph ring texture resolves")
+	if texture == null:
+		return
+	var image := texture.get_image()
+	_expect(
+		Vector2i(image.get_size()) == Vector2i(128, 128),
+		"area telegraph ring keeps its 128x128 canvas"
+	)
+	var opaque_pixels := 0
+	var dark_pixels := 0
+	for y in image.get_height():
+		for x in image.get_width():
+			var pixel := image.get_pixel(x, y)
+			if pixel.a < 0.05:
+				continue
+			opaque_pixels += 1
+			if pixel.r < 0.90 or pixel.g < 0.90 or pixel.b < 0.90:
+				dark_pixels += 1
+	_expect(opaque_pixels > 4000, "area telegraph ring retains a readable annulus")
+	_expect(dark_pixels == 0, "area telegraph ring has no black RGB fringe")
 
 
 func _validate_player_directional_cues(

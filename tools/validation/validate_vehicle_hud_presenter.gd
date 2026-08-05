@@ -7,6 +7,8 @@ var fast_calls := 0
 var minimap_calls := 0
 var static_minimap_calls := 0
 var guide_calls := 0
+var fast_health := 120.0
+var fast_max_health := 120.0
 
 
 func _initialize() -> void:
@@ -30,12 +32,48 @@ func _initialize() -> void:
 	presenter.mark_guidebook_dirty()
 	presenter.advance(0.0, _fast, _minimap, _threat, _guide)
 	_expect(guide_calls == 2, "guidebook rebuilds only after explicit invalidation")
+	# Exercise coupled hull transitions on a fresh presenter so cadence assertions
+	# above remain independent of the state-transition coverage.
+	var state_presenter := Presenter.new()
+	state_presenter.advance(0.0, _fast, _minimap, _threat, _guide)
+	fast_health = 110.0
+	var damage_update := state_presenter.advance(0.10, _fast, _minimap, _threat, _guide)
+	_expect(
+		damage_update.get("health", -1.0) == 110.0
+		and damage_update.get("max_health", -1.0) == 120.0,
+		"health changes publish the coupled max_health value atomically"
+	)
+	fast_health = 120.0
+	var heal_update := state_presenter.advance(0.10, _fast, _minimap, _threat, _guide)
+	_expect(
+		heal_update.get("health", -1.0) == 120.0
+		and heal_update.get("max_health", -1.0) == 120.0,
+		"healing republishes the complete hull pair"
+	)
+	fast_max_health = 135.0
+	fast_health = 135.0
+	var max_hull_update := state_presenter.advance(0.10, _fast, _minimap, _threat, _guide)
+	_expect(
+		max_hull_update.get("health", -1.0) == 135.0
+		and max_hull_update.get("max_health", -1.0) == 135.0,
+		"max-hull changes publish current and maximum hull together"
+	)
 	_finish()
 
 
 func _fast() -> Dictionary:
 	fast_calls += 1
-	return {"health":120.0}
+	return {
+		"health":fast_health,
+		"max_health":fast_max_health,
+		"level":1,
+		"experience":0.0,
+		"experience_required":12.0,
+		"objective":"",
+		"objective_detail":"",
+		"dash_available":true,
+		"emp_available":true,
+	}
 
 
 func _minimap(include_static: bool) -> Dictionary:

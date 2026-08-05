@@ -14,6 +14,26 @@ func _initialize() -> void:
 	var pursuit := Pursuit.new()
 	for stage_id in Catalog.STAGE_IDS:
 		var tactical := layout.tactical_layout(stage_id)
+		var tactical_snapshot := tactical.debug_snapshot()
+		_expect(
+			is_equal_approx(float(tactical_snapshot["fast_motion_cell_size"]), 80.0)
+				and is_equal_approx(float(tactical_snapshot["fast_motion_radius"]), 36.0)
+				and int(tactical_snapshot["fast_motion_safe_cell_count"]) > 0,
+			"%s compiles a non-empty combined tactical fast-motion mask" % stage_id
+		)
+		var start := Vector2(tactical.geometry_snapshot.player_start)
+		_expect(
+			tactical.is_fast_motion_clear(start, start + Vector2(12.0, 0.0), 36.0),
+			"%s keeps the clear center on the certified fast path" % stage_id
+		)
+		_expect(
+			not tactical.is_fast_motion_clear(start, start + Vector2(80.0, 0.0), 36.0),
+			"%s sends cross-cell motion to the exact solver" % stage_id
+		)
+		_expect(
+			not tactical.is_fast_motion_clear(start, start + Vector2(12.0, 0.0), 76.0),
+			"%s keeps boss-radius motion off the fast path" % stage_id
+		)
 		pursuit.reset(stage_id, tactical.cover_rects)
 		for _step in 8:
 			pursuit.update(0.2, Catalog.player_start())
