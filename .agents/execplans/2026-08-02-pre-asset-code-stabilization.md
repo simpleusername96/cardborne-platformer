@@ -381,6 +381,14 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
     `thresholds.passed=true`; frame p95/p99 at most `18/25 ms`, median at least `59 FPS`,
     1% low at least `55 FPS`, at most one consecutive frame over `33.3 ms`; capacity
     physics p95/p99 at most `6/8 ms`; draw p95 at most 200 and batches at most 50.
+  - Current evidence: implementation commit `315f275a` and the marked-owner correction
+    commit `76989997` are clean and all focused checks pass. Four 60-second peak attempts
+    were rejected before qualification because unrelated Godot tests/captures overlapped
+    the sample. Their unchanged JSON files are retained under
+    `build/performance/frame-pacing/invalid-315f275a-*.json`; none is release evidence.
+    The recurring owner is a separate long-running `codex.exe resume` process (observed
+    PID 6124) launching Cardborne and paint-mountain children. Do not stop or suspend it
+    from this plan; resume only after a continuous quiet window.
 - [ ] **8.3 Run built-Web peak and close the plan**
   - Only after both native results pass, load `$npjt-port-guard`, serve the already-built
     export on the `codex` lane, use the visible Chrome DevTools path, save the returned
@@ -530,6 +538,10 @@ nonstandard detail stride.
   rows, while the first packed builder enumerated all nearby pairs before mask rejection.
   Corrected the builder to scan 3x3 buckets only for marked owners, preserving the same
   immutable snapshot, directed rows, exact predicates, and deterministic top-eight order.
+- 2026-08-05: Committed the marked-owner correction as `76989997`. Phase 8.2 remains
+  unchecked because four native peak attempts overlapped Godot work owned by another
+  Codex session. Internally plausible JSON is still invalid when external process
+  monitoring proves contention; capacity and Web qualification were not started.
 
 ## Progress
 
@@ -542,8 +554,9 @@ nonstandard detail stride.
 - [x] Complete Phase 7.
 - [ ] Complete Phase 8 and retire this plan.
 
-Current task: **Review and commit the Phase 5.1 marked-owner correction, then resume 8.2
-after the external Godot suite is quiescent.**
+Current task: **Resume Phase 8.2 from clean commit `76989997` after the external Godot
+suite is quiescent; first run the planned 15-second directional diagnostic, then the
+authoritative native pair only from an uncontaminated environment.**
 
 ## Open Questions
 
