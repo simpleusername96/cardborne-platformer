@@ -4,8 +4,8 @@ status: active
 owner: BK
 created: 2026-08-02
 last_reviewed: 2026-08-05
-topic: Enemy motion, frame pacing, and combat-object scale stabilization
-scope: Ordinary-enemy motion correctness, physics catch-up removal, live XP sizing, and non-beam projectile sizing
+topic: Combat correctness, telegraph cleanup, and frame-pacing stabilization
+scope: Ordinary attack delivery, player damage protection, hostile projectile readability, circular attack telegraphs, and remaining combat hot paths
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
@@ -13,409 +13,532 @@ related:
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/cardborne-universal-art-style-reference.png
+  - ../../docs/design/visual-replacement-workbench/README.md
   - ../semantic-v2-runtime-acceptance-evidence.md
 ---
 
-# Enemy Motion, Frame Pacing, and Combat Scale Stabilization
+# Combat Correctness and Frame Pacing - Execution Contract
+
+Verified baseline commit `448470dc` contains a confirmed ordinary-attack state regression: normal
+attackers enter `startup` but never advance to `active`, so they create no projectiles
+and deliver no ordinary damage. This contract restores that combat path first, removes
+the malformed black treatment from circular warnings, repairs an unsafe motion fast
+path, and then requalifies the corrected workload with one consolidated correctness,
+visual, export, and performance gate. It does not claim an unproven performance fix.
 
 ## Purpose
 
-Correct the two verified sources of visible stutter, then apply the requested XP and
-projectile display-size changes. This plan starts from commit `c3d56614`; completed UI,
-map, asset-generation, attack-route, Wear Collapse, and upgrade work must not be reopened.
+- Objective: restore normal enemy attacks and player damage while preserving fixed-Hard
+  behavior, make hostile shots and circular danger boundaries readable, correct the
+  unsafe collision shortcut, and measure frame pacing under the restored workload.
+- Deliverable: corrected scheduling/damage code, one normalized shared ring cue, focused
+  regression coverage, actual-scale combat captures, and commit-stamped performance
+  evidence.
+- Completion state for Phases 1-3: ordinary attacks progress and hit, circular warnings
+  contain no malformed black line, and collision remains exact. Full plan completion
+  additionally requires the existing release thresholds to pass under the restored
+  workload; a valid failure is recorded evidence, not permission to weaken the gate.
 
-The finished result must:
+## Scope and Boundaries
 
-- preserve 10 Hz ordinary decisions, restore real 30 Hz near / 20 Hz far ordinary
-  movement, and keep critical combat phases at 60 Hz;
-- prevent peak-load physics work from entering the fixed-step catch-up spiral;
-- render XP tiers at radii `24/28/33` without changing collection behavior;
-- render every non-beam player and hostile projectile at exactly 70% of its current
-  linear size without changing collision; and
-- pass one consolidated validation and release-performance gate after implementation.
+In scope:
 
-## Why / Verified Root Cause
+- Ordinary `startup`, `active`, and `interrupted_recovery` execution at 60 Hz.
+- Normal hostile projectile creation, collision delivery, and player hull damage.
+- The existing barrier `blockable` contract.
+- The shared `cue/ring` alpha/color mask and ARC circular-warning decoration.
+- The selected tactical-layout safe-motion proof and its exact fallback.
+- Focused validators, actual-scale captures, Web export/smoke, and native performance.
 
-Discovery is complete. There is no remaining “profile first and choose an owner later”
-step.
+Out of scope:
 
-### Enemy movement discontinuity
+- UI, HUD layout, upgrade cards, menus, localization, maps, floor/wall art, or items.
+- Enemy counts, attack rules, threat budgets, damage, speed, range, lifetime, projectile
+  collision radii, or fixed-Hard difficulty.
+- Player projectile scale or the previously requested XP sizes.
+- New dependencies, engine changes, native extensions, or reduced release thresholds.
 
-`VehicleEnemyUpdateSchedule.rebuild()` calculates both `decision_now` and `motion_now`,
-but appends an ordinary actor only when `decision_now` is true. A motion-only tick still
-resets `motion_elapsed`, so its elapsed movement is discarded. A 60-tick trace proved
-that ordinary actors move only 9–10 times per second and receive between 0.15 and 0.50
-seconds of movement time depending on bucket alignment, instead of the intended one
-second. `VehicleCombatRenderer` presents `enemy.pos` directly, so the defect is visible.
+Constraints and invariants:
 
-The same path has a second correctness bug: steering overlap refresh uses the parity of
-a stable runtime slot plus that actor's stable decision bucket. Roughly half the actors
-therefore never refresh their overlap cache.
+- Player intent, damage, committed attacks, and visible attack windows remain 60 Hz.
+- Ordinary decisions remain 10 Hz; non-committed motion remains 30 Hz near and 20 Hz
+  far. A motion-only event never runs decision work.
+- Hostile collision, cover, crate, spatial-grid, and first-hit truth stay exact.
+- The hostile projectile presentation multiplier remains `3.85`; the confirmed reason
+  shots disappear is failed creation, not renderer clipping. Reconsidering that earlier
+  user-requested 30% reduction is a separate visual decision after live shots exist.
+- `cue/ring` keeps its current ID, path, `128x128` canvas, and `64,64` pivot. This plan
+  normalizes a defective approved mask; it does not add, retire, or rename an asset.
+- The mandatory visual authority is `docs/design/VISUAL_SYSTEM.md` plus the inspected
+  `1448x1086` reference PNG at
+  `docs/design/cardborne-universal-art-style-reference.png`, with SHA-256
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
 
-### Frame and physics discontinuity
+Destructive or irreversible actions:
 
-The focused normal-instrumentation 60-second `peak_horde` run is CPU/physics-bound:
+- None. Every change is version-controlled and scoped to existing owners.
 
-| Measurement | Observed result |
-| --- | ---: |
-| Rendered frame median / p95 / p99 | `16.009 / 45.833 / 133.333 ms` |
-| 1% low | `7.26 FPS` |
-| Longest run above 33.3 ms | `67 frames` |
-| Physics tick median / p95 / p99 | `11.631 / 18.827 / 24.068 ms` |
-| Draw-call p95 / combat batches | `86 / 33` |
+Exact actions requiring owner or user approval:
 
-The 18.827 ms physics p95 exceeds the 16.67 ms budget. Once a tick falls behind, Godot
-runs multiple fixed ticks before rendering, producing the long visible stalls.
+- None inside this contract. A production dependency/native rewrite, gameplay workload
+  reduction, cadence change, or threshold change remains outside scope and requires a
+  separate explicit authorization.
 
-A separate focused 60-second diagnostic sampled every physics tick. It recorded 3,600
-physics ticks but only 797 rendered frames (`4.52` ticks per rendered frame). Its p99
-rendered frame accumulated `160.01 ms` of physics while the largest individual physics
-tick was only `49.06 ms`. This proves repeated overdue physics ticks and catch-up, not a
-single renderer stall.
+## Discovery Closure
 
-Across the diagnostic's 64 slowest frames, non-overlapping physics ownership was:
+| Requirement or concern | Verified current owner and behavior | Evidence | Locked decision | Task IDs |
+| --- | --- | --- | --- | --- |
+| Player appears invulnerable | Normal deployment clears protection and `_damage_player` reduces hull; three focused validators pass | `vehicle_run.gd::_reset_run_state`, `_damage_player`; `validate_vehicle_damage_feedback.gd` | Fix attack delivery, not base hull arithmetic | 1.1, 1.2 |
+| Ordinary projectiles are absent | Live probe: shooter/turret/interceptor enter startup at ticks `11/11/8`, remain there for 180 ticks, and create `0` shots | `_update_scheduled_ordinary_enemy`; temporary probe removed with clean worktree | Route critical entries through full critical-state work; reserve motion-only helper for noncritical motion-only entries | 1.1 |
+| Environmental damage can be wrongly absorbed | `_damage_player` accepts `blockable` but its barrier branch ignores it | `vehicle_run.gd:4223-4242` | Gate barrier absorption with `blockable` | 1.2 |
+| Hostile shots were intentionally reduced | `9a59d2d0` changed hostile scale `5.50 -> 3.85`; renderer layer and clipping are correct | `vehicle_stage_visual_profile.gd`, `_sync_projectiles` | Keep `3.85` while restoring actual live shots; capture it at gameplay scale | 1.3 |
+| Circular warnings show black lines | `cue_ring.png` contains 204 fully opaque black pixels; ARC areas also add two black-edged beam strips | `_sync_area_telegraph`, `_write_danger_ring`, manifest `cue/ring` | Normalize the ring into a tintable white-alpha mask and remove ARC cross-bars | 2.1, 2.2 |
+| Enemy movement can cross selected cover | Current fast path proves only static catalog clearance, then skips tactical-layout cover lookup | `_runtime_motion_cover_rects`, `StageCatalog.is_fast_motion_clear` | Replace it with one combined layout-owned safe-cell proof | 3.1 |
+| Stutter is physics catch-up | Diagnostic recorded 3,600 physics ticks but only 797 rendered frames; physics accumulated to `160.01 ms` at frame p99 and enemy/grid owned 58.6% of the 64 worst frames | `build/performance/root-cause/full-detail-current-60s.json` | Preserve workload, correct the unsafe shortcut, and remeasure only after attacks work | 3.1, 4.2 |
+| Primary remaining hot owners | Peak p95: scheduled ordinary `26.55 ms`; combat/effects `4.89 ms`; renderer is not the root | `build/performance/urgent-stabilization/final-df2d1744-focused-peak-horde-60s.json` | Do not add an unmeasured pooling rewrite or disguise the result with lower load; any further optimization needs new evidence | 4.2 |
 
-| Owner | Mean slow-frame time | Share |
-| --- | ---: | ---: |
-| `enemies_and_grid` | `99.55 ms` | `58.6%` |
-| `combat_and_effects` | `45.01 ms` | `26.5%` |
-| `player_and_rewards` | `14.16 ms` | `8.3%` |
-| `encounter_and_pursuit` | `10.96 ms` | `6.5%` |
+Readiness statement:
 
-`enemy_scheduled_ordinary` accounts for `67.79 ms`, or `68.1%`, of enemy time. Its
-current work combines ordinary movement/collision with decision work. The second owner
-is the per-tick traversal and collision testing of the peak projectile population.
-HUD and presentation average only `5.38 ms` and `6.54 ms` on those slow frames; draw and
-terminal CPU/GPU render readings are also within budget. They are contributors, not the
-root cause.
-
-The full-detail diagnostic intentionally added overhead—physics p95 rose from `18.827`
-to `33.166 ms`—so its absolute frame result is not a release gate. Its complete
-top-level coverage is sufficient to establish ownership. The temporary stride and
-foreground instrumentation used for this diagnosis has already been removed.
-
-## Scope and Non-Goals
-
-### In scope
-
-- Independent ordinary decision and motion scheduling.
-- Decision-only, motion-only, and coincident ordinary update behavior.
-- Steering-cache refresh fairness.
-- Removal of verified redundant enemy-list, carrier-count, wear, open-space collision,
-  and no-live-crate work.
-- Empty-topology fast paths in the existing projectile collision owner.
-- XP visual radii and the four existing non-beam projectile visual multipliers.
-- Focused regression coverage and one final broad validation/performance pass.
-
-### Out of scope
-
-- UI, HUD layout, menus, upgrade-card layout/content, or localization redesign.
-- PNG generation, editing, replacement, manifest/catalog/provider changes, or new art.
-- Map, floor, wall, terrain, facility, actor, boss, item, or effect art.
-- Enemy/projectile counts, spawn rules, role mix, attack timing, damage, speed, range,
-  lifetime, collision radii, XP values, collection radius, or pickup behavior.
-- Lower cadence, workload, quality, capacity, or acceptance thresholds.
-- New dependencies, engine changes, native extensions, or renderer changes.
+- Product behavior, ownership, visual authority, safety boundaries, implementation
+  order, and validation commands are closed.
+- No correctness or visual implementation task is an investigation placeholder.
+- Remaining uncertainty is only whether the authorized GDScript-safe changes meet the
+  existing performance gate; failure has the predetermined stop response below and
+  cannot authorize a native dependency or workload reduction by implication.
 
 ## Assumptions and Locked Decisions
 
-- Godot 4.7.1 stable and GL Compatibility remain the runtime baseline.
-- Decision and motion elapsed time have separate owners. A decision-only event cannot
-  consume motion time, and a motion-only event cannot run decision work.
-- A coincident event dispatches once, moves using the previously committed velocity,
-  then evaluates the new decision. This preserves the current move-before-attack order.
-- Motion keeps exact collision and spatial-grid truth. Renderer interpolation must not
-  be used to conceal a lower simulation cadence.
-- The active store remains the owner of live enemy membership. Cached derived counts
-  must be invalidated by a generation/revision, never by object identity alone.
-- The XP tier radii are `24`, `28`, and `33`. Medium is the rounded geometric bridge so
-  the tier order remains readable after small doubles and large grows by 1.5x.
-- Projectile visual multipliers become hostile `3.85`, primary `4.375`, seeker `4.025`,
-  and opening breach `4.55`. Gameplay and collision radii remain unchanged.
-- The visual authority remains `docs/design/VISUAL_SYSTEM.md` plus the inspected
-  `1448x1086` canonical reference, SHA-256
-  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
-- No approval pause exists inside this plan. Stop only for a dependency, engine change,
-  gameplay-rule change, workload/threshold reduction, destructive action, or scope
-  expansion not authorized above.
+- The attack-freeze regression introduced by `31f8cd55` is the common cause of ordinary
+  projectile absence and the apparent normal-enemy invulnerability.
+- Boss and environmental delivery remain separate; they are not rewritten to solve an
+  ordinary scheduling defect.
+- Critical actors are already committed. Their 60 Hz state advancement must not consume
+  another threat-budget slot or begin a second attack.
+- The ring remains one authored texture whose RGB is neutral and whose alpha supplies
+  the single boundary. Runtime continues to own center, radius, readiness, tint, and
+  alpha.
+- ARC affinity remains readable through tint and a restrained center marker; two full
+  diameter cross-bars are decorative duplication and are removed.
+- Performance is measured only after attack delivery is restored so the result includes
+  real hostile projectile and impact work.
 
 ## Proposed Design
 
-### 1. Separate decision and motion lanes
+### 1. Separate critical combat from motion-only dispatch
 
-`VehicleEnemyUpdateSchedule` keeps one union `ordinary_due` list so an actor is visited
-at most once per physics tick, but records independent per-slot state:
+Handle `critical_delta >= 0` before evaluating scheduled due flags. Advance a critical
+ordinary actor through `_update_ordinary_enemy` with the physics delta for state and
+motion, `decision_due=true` for phase logic, and `can_commit=false` because commitment
+already occurred. Keep position/grid/wear reconciliation identical to the existing full
+path. Only a noncritical scheduled entry with `motion_due=true` and
+`decision_due=false` may call `_update_motion_only_ordinary_enemy`.
 
-- `decision_due` and accumulated `decision_delta`;
-- `motion_due` and accumulated `motion_delta`; and
-- generation-safe due stamps.
+Barrier absorption becomes conditional on `blockable`. A barrier still absorbs normal
+hostile projectiles, contact, and mines; Arc Surge and Wear Collapse calls that already
+pass `false` reach hull and leave barrier strength unchanged.
 
-`rebuild()` appends an actor when either lane is due. It resets only the accumulator for
-the lane it publishes. Over a warmed steady-state second, each ordinary actor therefore
-receives 10 decisions totaling one second, while near/far actors receive 30/20 motion
-applications totaling one second.
+### 2. Normalize circular attack presentation
 
-Split the current conflated ordinary update in `VehicleRun` into responsibility-shaped
-paths:
+Normalize `cue_ring.png` as a neutral white RGB alpha mask: one connected antialiased
+annulus, transparent interior/exterior, no opaque black pixel or black RGB fringe. Keep
+the existing manifest identity and batch.
 
-- decision: cooldowns, phase transitions outside the critical lane, target/commit
-  eligibility, LOS, role intent, and cached desired velocity;
-- motion: cached-velocity integration, collision recovery, position change, and exact
-  spatial-grid update; and
-- critical: the existing 60 Hz startup/active/interrupted-recovery behavior.
+In `_sync_area_telegraph`, preserve the exact outer ring and readiness tint but remove
+the horizontal/vertical beam-strip pair for ARC. Use at most one small center marker;
+do not add another ring, bar, or decorative part. Corridor and active-beam rendering are
+unchanged.
 
-Motion-only work never recomputes LOS, pursuit, attack eligibility, support targets, or
-local steering. Decision-only work never moves or advances motion time.
+### 3. Make the motion shortcut provably safe
 
-Increment a decision-cycle epoch after each six-bucket cycle. Refresh local overlap on
-alternating `(spatial_slot + epoch)` parity, with immediate refresh for an empty or
-generation-invalid cache. Every actor then refreshes within 0.20 seconds without
-increasing average steering-query volume.
+`VehicleStageTacticalLayout.configure()` builds `_safe_motion_cells_36` plus
+`_fast_motion_min_cell`, `_fast_motion_width`, and `_fast_motion_height` once from
+`geometry_snapshot.world_rect`, and keeps them immutable for that layout fingerprint.
+The mask uses `80.0` world-unit cells to
+match `StageCatalog.COLLISION_CELL_SIZE`. A cell is marked safe only when its complete
+cell rectangle grown by `36.0` is enclosed by one walkable rectangle and is disjoint
+from every void, selected tactical cover, structural-wall footprint, and initial
+breakable-bulkhead footprint in `geometry_snapshot`. This conservative rule may reject
+open cells spanning two walkable rectangles; those cells use the exact solver.
 
-### 2. Remove the confirmed enemy hot-path waste
-
-Keep these changes inside the current store, scheduler, terrain, grid, and run-loop
-owners:
-
-1. Remove the scheduler's copied `alive` list. Iterate `VehicleEnemyStore.live` for the
-   status/activation pass and retain only lists that materially group later work.
-2. Add a live-membership revision to `VehicleEnemyStore`, incremented on add, clear, and
-   successful defeat flush. Rebuild carrier-child counts only when that revision changes;
-   same-tick child creation still updates the cached count immediately.
-3. Record actors whose position actually changed. Evaluate Wear Collapse for that set
-   plus the terrain runtime's already-tracked occupants, deduplicated by stable slot and
-   generation, instead of scanning every active actor again. Stationary tracked actors
-   continue receiving the exact 60 Hz damage deadline.
-4. Track the live-crate count from stage population through crate destruction. When it is
-   zero, bypass crate-clearance, projectile/crate, and LOS/crate cell queries with their
-   exact no-hit result.
-5. In open-space movement, use the existing safe-motion cell and tactical-cover
-   broadphase result before invoking exact rectangle collision. Direct integration is
-   allowed only when the safe cell is valid, the swept runtime-cover candidate list is
-   empty, and the live-crate guard is clear. All other paths retain the current exact
-   solver and retry behavior.
-
-These changes offset the legitimate increase from restoring 30/20 Hz movement. They do
-not defer grid position truth or reduce any simulation population.
-
-### 3. Remove the confirmed projectile hot-path waste
-
-Keep projectile pools, capacities, integration cadence, ordered enemy-grid traversal,
-and first-hit semantics unchanged.
-
-For each non-wall-piercing projectile, obtain the swept tactical/runtime cover candidate
-list once. If that list and static stage cover are both empty, return the reusable
-no-cover receipt without invoking the segment/rectangle solver. Otherwise execute the
-existing exact solver in the same cover-before-crate-before-actor order. Use the shared
-live-crate guard from Design 2 to skip crate queries only when no crate can exist.
-
-No effect, trail, zone, fire-rate, projectile-count, or collision reduction is authorized;
-their current loops are bounded and were not established as removable root work.
-
-### 4. Change only renderer-owned scale values
-
-Set the following constants in `vehicle_stage_visual_profile.gd`:
-
-```text
-EXPERIENCE_RADII = 24.0 / 28.0 / 33.0
-HOSTILE_PROJECTILE_ENVELOPE_SCALE = 3.85
-PLAYER_PRIMARY_PROJECTILE_SCALE = 4.375
-PLAYER_SEEKER_PROJECTILE_SCALE = 4.025
-PLAYER_OPENING_BREACH_PROJECTILE_SCALE = 4.55
-```
-
-The existing shared XP and energy-teardrop PNGs remain unchanged. Collection and
-projectile collision continue to use their current independent gameplay values.
+The exact public query is
+`is_fast_motion_clear(from: Vector2, to: Vector2, radius: float) -> bool`. It returns
+false when `geometry_snapshot` is absent, `radius > 36.0`, either point is outside the
+compiled bounds, the points are in different `80.0` cells, or that cell is not
+certified. `vehicle_run.gd` may bypass
+the exact stage solver only when both this query and
+`StageCatalog.is_fast_motion_clear()` return true and no current runtime structural wall
+or live bulkhead intersects the sweep. The radius-76 stage boss therefore always uses
+the exact path. Crate collision remains in the existing post-move exact check. The mask
+is rebuilt only by `configure()` when a new immutable layout/fingerprint is selected;
+opening a bulkhead can leave a cell conservatively unsafe but can never make it falsely
+safe.
 
 ## Tasks
 
-### M1 - Correct ordinary scheduling and motion
+### Phase 1 - Restore ordinary attacks and hull damage
 
-- [x] Add independent decision/motion due flags and accumulated deltas to
-  `VehicleEnemyUpdateSchedule`; keep a single union dispatch list.
-- [x] Split ordinary decision/state work from cached-velocity locomotion in `VehicleRun`.
-- [x] Preserve one move on coincident ticks and the existing 60 Hz critical lane.
-- [x] Replace fixed steering parity with the generation-safe decision-cycle epoch.
-- [x] Add exact cadence, elapsed-time, ordering, collision-distance, attack-timing, and
-  two-epoch steering regression cases.
+Goal: ordinary attackers complete their committed phases, create their attacks, and can
+damage the player under normal protection rules.
 
-Acceptance: steady-state counts are decision `10`, near motion `30`, far motion `20`,
-critical `60`; each elapsed lane totals one second; motion distance, collision, and attack
-timing remain correct; no actor keeps a permanently stale steering cache.
+Source owners: `scripts/vehicle/vehicle_run.gd`,
+`scripts/vehicle/vehicle_run_capture_gateway.gd`,
+`scripts/vehicle/vehicle_run_capture_driver.gd`,
+`tools/validation/validate_vehicle_run.gd`,
+`tools/validation/validate_vehicle_damage_feedback.gd`, and
+`tools/validation/validate_vehicle_run_capture_driver.gd`
 
-### M2 - Remove the verified physics hot-path waste
+- [ ] **1.1 Restore 60 Hz critical phase advancement**
+  - Change: add the explicit critical branch and keep motion-only dispatch exclusive to
+    noncritical motion-only schedule entries.
+  - Accept: shooter, turret, and interceptor fixtures each progress
+    `move -> startup -> active/recovery` and add a hostile projectile; a chaser/contact
+    fixture completes its damaging window; no second commitment is counted.
+- [ ] **1.2 Honor unblockable damage**
+  - Change: require `blockable` before barrier absorption.
+  - Accept: blockable hostile damage consumes barrier, unblockable terrain damage
+    reduces hull without consuming barrier, and accepted hull damage grants exactly one
+    second of post-hit protection.
+- [ ] **1.3 Lock live hostile-shot evidence**
+  - Change: add `ordinary_projectile` to the driver's full-evidence fixture sequence,
+    implement that fixture in `vehicle_run_capture_gateway.gd`, and extend the exact
+    file list. Create the shooter with `_make_enemy`/`_append_enemy`, advance its real
+    committed path with `_update_scheduled_ordinary_enemy`, and advance flight/hit with
+    `_update_projectiles`; never call `_spawn_hostile_projectile` directly. Save
+    `09-effects-projectile-hostile-startup.png`,
+    `09-effects-projectile-hostile-flight.png`, and
+    `09-effects-projectile-hostile-hit.png` under the requested capture directory.
+  - Accept: the current shared teardrop is visible at `3.85`, renders above actors, and
+    the accepted hit retires the projectile and changes hull immediately; the gateway
+    asserts startup/active transition, projectile count, and before/after hull instead
+    of manufacturing a projectile directly. The capture validator asserts the fixture
+    token and all three filenames.
 
-- [x] Remove the copied scheduler `alive` list and cache carrier-child counts behind the
-  store membership revision.
-- [x] Replace the all-active wear pass with moved-plus-tracked, stable-slot-deduplicated
-  work while retaining 60 Hz stationary occupancy damage.
-- [x] Add the live-crate count and apply its exact no-hit guard to movement, LOS, and
-  projectile queries.
-- [x] Add the safe open-space motion fast path without bypassing any candidate cover.
-- [x] Add the empty-cover projectile fast path without changing ordered collision.
-- [x] Add regression cases for membership invalidation, final-crate transition,
-  stationary wear damage, open/candidate cover, wall piercing, and first actor hit.
+### Phase 2 - Remove malformed circular-warning lines
 
-Acceptance: no gameplay population or cadence is reduced; every candidate-bearing path
-uses the existing exact collision result; empty topology avoids the proven redundant
-queries; grid, wear, carrier, and crate state remain generation-safe.
+Goal: circular attack boundaries remain exact and readable without black artifacts or
+full-diameter decorative bars.
 
-### M3 - Apply the requested display-size corrections
+Source owners: `docs/design/visual-replacement-workbench/replacement-workbench.json`,
+`docs/design/visual-replacement-workbench/to-be/assets/art/visuals/production/gameplay/effects/cues/cue_ring.png`,
+`art/visuals/production/gameplay/effects/cues/cue_ring.png`,
+`scripts/presentation/vehicle_combat_renderer.gd`,
+`scripts/vehicle/vehicle_run_capture_gateway.gd`, and
+`tools/validation/validate_vehicle_attack_route_readability.gd`
 
-- [x] Set XP radii to `24/28/33` and the four projectile multipliers to
-  `3.85/4.375/4.025/4.55` in `VehicleStageVisualProfile`.
-- [x] Update existing renderer/readability validators for the exact display values and
-  unchanged shared-image/collision ownership.
-- [x] Capture all three XP tiers and friendly/hostile projectiles together at gameplay
-  scale through the existing capture gateway; do not create or edit production images.
+- [ ] **2.1 Normalize the shared ring mask**
+  - Change: reopen the existing `gameplay_code_asset_rasterization` workbench unit and
+    replace only its mirrored `cue_ring.png` TO-BE bytes. Call ImageGen with
+    `referenced_image_paths` containing both exact paths
+    `docs/design/cardborne-universal-art-style-reference.png` and
+    `art/visuals/production/gameplay/effects/cues/cue_ring.png`; record
+    `image_gen.referenced_image_paths` and the canonical hash in
+    `visual_authority_evidence`. Rebuild
+    `docs/design/visual-replacement-workbench/index.html`; it must show the production
+    AS-IS and exact switch-ready TO-BE at native and mine/boss gameplay scales before
+    promotion, with no user response gate.
+  - Apply: set the unit to `approved_for_switch` against a clean candidate commit and
+    refresh its exact eight-file ledger. Require the other seven TO-BE hashes to equal
+    their current production hashes, run
+    `promote_visual_replacement_unit.ps1 -UnitId gameplay_code_asset_rasterization -Apply`,
+    then commit the changed production ring and return the unit to `applied` with that
+    exact applied commit. The tool copies all eight unit deliverables; the hash equality
+    check guarantees that only `cue_ring.png` changes bytes.
+  - Accept: canvas/pivot/manifest ID are unchanged; every nontransparent pixel has
+    neutral RGB, the alpha annulus is one connected boundary, and opaque black pixel
+    count is zero. The rebuilt workbench and visual-authority validators pass and the
+    unit's exact SHA-256 ledger matches promoted production bytes.
+- [ ] **2.2 Simplify ARC area decoration**
+  - Change: remove the two beam strips from ARC circular areas and retain at most one
+    restrained center marker. Add `arc_area_telegraphs` to the driver's full-evidence
+    fixture sequence, implement it in the gateway, and save
+    `09-effects-arc-mine-startup.png` and
+    `30-boss-01-stage-1-arc-area-startup.png` at real runtime scale.
+  - Accept: mine and boss ARC captures show the exact outer radius with no black line;
+    corridor/beam geometry and all attack timing/damage are byte-for-byte unaffected.
+    `FULL_CAPTURE_FILES` and its validator increase from `77` to exactly `82`, contain
+    all five new unique filenames, and assert both new fixture tokens.
 
-Acceptance: XP tier order is `24 < 28 < 33`; all non-beam projectiles are exactly 70% of
-the current rendered size; collision, collection, speed, damage, and image bytes are
-unchanged.
+### Phase 3 - Correct the motion-collision fast path
 
-### M4 - Run one final gate and retire the plan
+Goal: stop the shortcut from allowing actors through selected layout cover without
+lowering combat load or changing exact fallback behavior.
 
-- [x] After M1-M3 were integrated, run the complete `validate_vehicle_*.gd` suite once,
-  visual-authority validation once, and Web export once.
-- [x] Run one focused, clean, commit-stamped native 1280x720 `peak_horde` and one
-  `capacity_pressure` result with normal stride-7 instrumentation. Both authoritative
-  runs completed, but the release thresholds remain unmet; the exact results are
-  recorded below.
-- [x] Run one visible built-Web gameplay smoke/performance trace using the repository's
-  guarded Codex port lane. The built Web canvas entered gameplay at 1280x720 with no
-  console errors; the raw browser trace was tool-local because its file path was outside
-  the browser tool's configured workspace roots.
-- [x] Review the final actual-scale capture for XP order, projectile readability,
-  clipping, and collision-boundary deception.
-- [x] Record exact commit, artifact, and metric evidence. Plan retirement remains
-  intentionally blocked by the failed native release gate; do not mark this plan done
-  or delete it until a later task-owned optimization pass satisfies the locked limits.
+Source owners: `scripts/vehicle/vehicle_stage_tactical_layout.gd`,
+`scripts/vehicle/vehicle_run.gd`, relevant navigation/performance validators
 
-Acceptance: all validators and exports pass; native/Web scenario validation is valid and
-fully focused; no UI/map/PNG change is present; native peak meets p95 `<=18 ms`, p99
-`<=25 ms`, median `>=59 FPS`, 1% low `>=55 FPS`, and at most one consecutive frame over
-33.3 ms; capacity physics meets p95 `<=6 ms` and p99 `<=8 ms`; draw-call p95 remains
-`<=200` and combat batches `<=50`.
+- [ ] **3.1 Replace static-only motion clearance with combined clearance**
+  - Change: add `FAST_MOTION_CELL_SIZE := 80.0`,
+    `FAST_MOTION_RADIUS := 36.0`, `_safe_motion_cells_36`,
+    `_fast_motion_min_cell`, `_fast_motion_width`, `_fast_motion_height`, the
+    configure-time builder, and the exact `is_fast_motion_clear(...)` query described
+    above. Consume the logical AND of the layout and `StageCatalog` proofs from
+    `_runtime_motion_cover_rects`/`_move_actor`; otherwise collect selected covers and
+    current runtime blockers and call the existing exact solver.
+  - Accept: open same-cell motion reaches the identical destination; static edge,
+    selected tactical cover, structural wall, live bulkhead, and crate cases all retain
+    exact blocking; an opened bulkhead may remain on the exact fallback but never becomes
+    passable by a false positive; radius `> 36.0`, different-cell, and out-of-bounds
+    queries return false; 10/30/20/60 Hz counts and per-move grid truth are unchanged.
+
+### Phase 4 - Run one consolidated final gate
+
+Goal: prove the corrected workload is functional, visually clean, exportable, and
+measure whether it meets the unchanged frame-pacing gate.
+
+- [ ] **4.1 Run the focused correctness and visual batch once**
+  - Run the exact commands in the Test Plan after Phases 1-3 are complete.
+  - Accept: every named validator, authority check, import, Web export, and
+    `git diff --check` passes; actual-scale captures show attack progression, hull loss,
+    projectile continuity, and clean mine/boss ARC circles.
+- [ ] **4.2 Run authoritative performance once per scenario**
+  - Harness: at the start of `_start_performance_scenario()`, before warmup or recorder
+    sampling, call `DisplayServer.window_move_to_foreground()` only when not Web and
+    only when `DisplayServer.has_method("window_move_to_foreground")`. This path is
+    reachable only for an explicit performance request; normal gameplay never changes
+    window focus. Lock that guard in `validate_vehicle_performance_scenarios.gd`.
+  - Run clean commit-stamped `peak_horde` and `capacity_pressure` native scenarios with
+    normal stride-7 instrumentation, then the built-Web smoke/performance path only
+    after both native runs pass their validity and threshold checks.
+  - Pass: scenario counts/cadence are unchanged; peak frame p95/p99 are at most
+    `18/25 ms`, median at least `59 FPS`, 1% low at least `55 FPS`, and no more than one
+    consecutive frame exceeds `33.3 ms`; capacity physics p95/p99 are at most `6/8 ms`;
+    draw p95 remains at most `200` and combat batches at most `50`.
+  - Valid failure: save the unchanged-workload result, leave this plan active at 4.2,
+    and report that no further safe optimization has been proven. Do not mark the plan
+    done or infer authority for workload, cadence, threshold, engine, or dependency
+    changes.
 
 ## Test Plan
 
-Do not run broad checkpoints between milestones. Write the focused cases alongside the
-implementation, then execute one consolidated final batch after M1-M3:
+Do not run the broad suite between phases. Add focused assertions with their owning
+changes, then run this consolidated batch once after Phase 3:
 
 ```powershell
 .\tools\godot.ps1 --path . --headless --import
+if ($LASTEXITCODE -ne 0) { throw 'Godot import failed' }
 
-$validators = Get-ChildItem -LiteralPath 'tools/validation' -Filter 'validate_vehicle_*.gd' |
-  Sort-Object Name
+$validators = @(
+  'validate_vehicle_enemy_update_schedule.gd',
+  'validate_vehicle_run.gd',
+  'validate_vehicle_damage_feedback.gd',
+  'validate_vehicle_projectile_readability.gd',
+  'validate_vehicle_attack_route_readability.gd',
+  'validate_vehicle_field_layout_generation.gd',
+  'validate_vehicle_navigation_clearance.gd',
+  'validate_vehicle_performance_scenarios.gd',
+  'validate_vehicle_run_capture_driver.gd',
+  'validate_vehicle_visual_replacement_coverage.gd'
+)
 foreach ($validator in $validators) {
-  .\tools\godot.ps1 --path . --headless --script "res://tools/validation/$($validator.Name)"
-  if ($LASTEXITCODE -ne 0) { throw "validator failed: $($validator.Name)" }
+  .\tools\godot.ps1 --path . --headless --script "res://tools/validation/$validator"
+  if ($LASTEXITCODE -ne 0) { throw "validator failed: $validator" }
 }
 
 .\tools\validation\validate_cardborne_visual_authority.ps1
 if ($LASTEXITCODE -ne 0) { throw 'visual authority validation failed' }
+.\tools\design\build_visual_replacement_workbench.ps1 -Check
+if ($LASTEXITCODE -ne 0) { throw 'workbench generated outputs are stale' }
+.\tools\validation\validate_visual_replacement_workbench.ps1
+if ($LASTEXITCODE -ne 0) { throw 'workbench validation failed' }
 .\tools\export_web.ps1
 if ($LASTEXITCODE -ne 0) { throw 'Web export failed' }
 git diff --check
+if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
 ```
 
-Run native performance from the exact clean implementation commit with the current
-`peak_horde` and `capacity_pressure` fixtures, 10-second warmup, 60-second sample,
-1280x720, GL Compatibility, VSync disabled, commit/dirty environment fields set, and
-normal recorder stride. Reject a result with unfocused samples, dirty/mismatched commit,
-invalid scenario counts, or a failed threshold. Use `$npjt-port-guard` and the built Web
-export for the one visible Web run; stop only a positively task-owned server.
+After that batch, generate the exact capture evidence through the existing capture
+owner. The five new files named in Tasks 1.3 and 2.2 must exist and the capture manifest
+must record the requested `1280x720` viewport:
 
-A failed check is not a pause for user approval. Correct the task-owned defect, rerun the
-failed focused check, then rerun the final gate needed to establish a clean result.
+```powershell
+$short = (git rev-parse --short=8 HEAD).Trim()
+$captureDir = Join-Path (Resolve-Path .).Path "build\captures\combat-correctness-$short"
+$captureArgs = @(
+  '--path', (Resolve-Path .).Path,
+  '--rendering-method', 'gl_compatibility', '--',
+  "--capture-all=$captureDir", '--capture-locale=ko', '--capture-size=1280x720',
+  '--layout-seed=12886704'
+)
+.\tools\godot.ps1 @captureArgs
+if ($LASTEXITCODE -ne 0) { throw 'combat evidence capture failed' }
+```
+
+Review those five PNGs at original detail. Reject clipping, opaque black pixels/fringes,
+ARC cross-bars, a projectile hidden behind an actor, a manufactured projectile fixture,
+or a hit capture whose recorded hull did not decrease. The workbench report owns the
+ring AS-IS/TO-BE comparison; the capture directory owns post-switch runtime evidence.
+
+Commit the Phase 1-3 implementation and evidence-owned source changes before measuring.
+Run native performance from that exact clean tracked commit at `1280x720`, GL
+Compatibility, VSync disabled, 10-second warmup, 60-second sample, zero unfocused
+samples, matching commit metadata, and the normal stride-7 recorder:
+
+```powershell
+$trackedDirty = @(git status --porcelain --untracked-files=no)
+if ($trackedDirty.Count -ne 0) { throw 'performance requires a clean tracked commit' }
+$perfCommit = (git rev-parse HEAD).Trim()
+$short = $perfCommit.Substring(0, 8)
+New-Item -ItemType Directory -Force -Path 'build\performance\combat-correctness' | Out-Null
+$env:PERFORMANCE_COMMIT = $perfCommit
+$env:PERFORMANCE_DIRTY = '0'
+try {
+  foreach ($scenario in @('peak_horde', 'capacity_pressure')) {
+    $output = "res://build/performance/combat-correctness/final-$short-$scenario-60s.json"
+    .\tools\godot.ps1 --path . --rendering-method gl_compatibility `
+      --resolution 1280x720 --position 40,40 --disable-vsync -- `
+      "--performance-scenario=$scenario" "--performance-output=$output" `
+      '--performance-warmup=10' '--performance-duration=60'
+    if ($LASTEXITCODE -ne 0) { throw "performance scenario invalid: $scenario" }
+  }
+} finally {
+  Remove-Item Env:PERFORMANCE_COMMIT -ErrorAction SilentlyContinue
+  Remove-Item Env:PERFORMANCE_DIRTY -ErrorAction SilentlyContinue
+}
+```
+
+Both native JSON files must report the exact commit, `dirty=false`, supported viewport,
+zero unfocused samples, authoritative scenario counts, and `thresholds.passed=true`.
+If either file is invalid, correct only the environment and rerun that scenario. If it
+is valid but fails thresholds, record the failure and stop at Task 4.2 without running
+Web performance.
+
+Only after both native files pass, query the fastrun manager's `codex` lane, serve the
+already-built export, and use the Chrome DevTools browser in a visible foreground tab:
+
+```powershell
+$repo = (Resolve-Path .).Path
+$guard = 'C:\Users\BK\.codex\skills\npjt-port-guard\scripts\npjt_port_guard.py'
+$codexPort = py -3.11 $guard --project $repo --service web --print-port
+if ($LASTEXITCODE -ne 0 -or -not $codexPort) { throw 'codex port resolution failed' }
+$server = Start-Process -FilePath 'py' -ArgumentList @(
+  '-3.11', '-m', 'http.server', "$codexPort", '--bind', '127.0.0.1',
+  '--directory', (Join-Path $repo 'build\web')
+) -WindowStyle Hidden -PassThru
+```
+
+Open
+`http://127.0.0.1:<codexPort>/?performance_scenario=peak_horde&performance_warmup=10&performance_duration=60`,
+keep the tab visible, poll `window.__cardbornePerformanceResultJson`, parse the returned
+JSON string, and save it unchanged with `apply_patch` as
+`build/performance/combat-correctness/final-<shortcommit>-web-peak-horde-60s.json`.
+Require `execution_environment.authority_eligible=true`, visible/non-headless state,
+valid counts, and `thresholds.passed=true`. Before cleanup, read the server PID's command
+line and require it to contain the resolved port, `http.server`, and this repository's
+`build\web`; then stop only `$server.Id`. Never stop a server discovered only by port or
+process name.
+
+## Validation and Rework Controls
+
+| Cadence | Exact check | Run when | Do not rerun until |
+| --- | --- | --- | --- |
+| Task review | Static code/asset contract and newly added assertion review | Each task is implemented | Its owned input changes |
+| Final focused gate | The command batch above plus capture review | All Phase 1-3 tasks pass review | A covered source/asset changes |
+| Final performance gate | One valid peak and capacity run, then built Web | Focused gate passes on a clean commit | Runtime/performance input changes |
+
+Validation rules:
+
+- A failed check is rerun only after a relevant task-owned change.
+- Do not run the full 58-validator historical matrix again; the named focused set covers
+  the changed owners and Web export supplies the production build gate.
+- Diagnostic stride-1 profiling may explain ownership but cannot qualify release.
+- Do not accept a performance improvement produced by frozen attacks, missing
+  projectiles, reduced populations, lower cadence, or invalid focus/commit metadata.
+
+## Predetermined Contingencies and Change Control
+
+| Trigger | Required response | Boundary or escalation point |
+| --- | --- | --- |
+| A critical fixture progresses but creates no shot | Trace only the existing role eligibility, pool return, and spawn path; fix the task-owned defect without changing attack rules | Replan only if a product rule is contradictory |
+| Ring normalization changes canvas, pivot, ID, or radius | Reject the output and retain the existing production bytes | No new visual ID or manifest switch is authorized |
+| Combined safe cache disagrees with exact collision | Mark that cell unsafe and use the exact fallback | Never loosen collision to retain a fast path |
+| Native result is invalid or unfocused | Discard it and rerun once after correcting the environment | Do not tune gameplay against invalid evidence |
+| Valid final performance still misses the locked gate | Save the evidence and leave this plan active at 4.2; report the quantified gap | A native/dependency rewrite or workload/cadence change requires new explicit authority; do not choose one implicitly |
+| A material fact contradicts this contract | Stop only the affected branch and update this contract | Do not silently choose new product, architecture, visual, or safety behavior |
+
+Implementation-local discoveries may be handled without a user pause when they do not
+change visible behavior, ownership, architecture, dependencies, safety, or acceptance.
 
 ## Rollback / Safety
 
-- Commit scheduling, hot-path, scale, and final evidence as coherent task-owned commits.
+- Commit combat correctness, telegraph cleanup, collision-proof changes, and final evidence
+  as separate coherent task-owned commits.
 - Never reset, clean, stage, or rewrite unrelated user work.
-- If decision/motion separation changes attack timing, distance, collision, or critical
-  cadence, correct that milestone before continuing; do not retain the old discard bug.
-- If a fast path disagrees with the exact solver for any candidate-bearing case, remove
-  the fast path rather than weaken collision truth.
-- Revert scale constants and their validator expectations together. No asset rollback is
-  necessary because image bytes do not change.
+- Revert the critical dispatch and its assertions together if it changes attack timing;
+  do not restore the frozen path as an optimization.
+- Revert `cue_ring.png` and its renderer change together if its geometry no longer
+  matches the gameplay radius.
+- Remove a fast path that disagrees with the exact solver; preserve the solver.
 
 ## Risks
 
-- Restored 30/20 Hz movement increases legitimate collision applications. The plan pairs
-  the repair with decision/motion separation and verified empty-topology shortcuts; it
-  must not preserve dropped motion as an optimization.
-- Cached membership or topology can become stale after pool-slot reuse. Every cache is
-  revision/generation guarded and has reuse regression coverage.
-- Larger XP and smaller projectile visuals can obscure collision expectations. The final
-  actual-scale capture and independent collision assertions guard this without changing
-  mechanics.
-- OS focus can invalidate performance evidence. Any unfocused sample invalidates the
-  artifact; gameplay must not be changed to compensate for external scheduling.
+- Restoring ordinary attacks adds the projectile and impact work that the failed path
+  omitted. Performance must be judged only under that corrected load.
+- The current motion shortcut is faster partly because it can ignore selected cover.
+  Correcting it may expose more exact-solver work; performance cannot take precedence
+  over collision truth.
+- No allocation/GC rewrite is included because current evidence does not identify it as
+  a material hitch owner. The authorized correctness changes may still miss the release
+  gate, and this contract deliberately does not invent an optimization to promise a pass.
+- A clean ring alpha mask must not become a second radius owner; runtime scale remains
+  authoritative.
 
 ## Open Questions
 
-None. Motion and frame causes, implementation owners, scale interpretation, collision
-separation, validation scope, and no-approval execution behavior are closed.
+None inside the authorized scope. A native acceleration path or gameplay workload
+change is intentionally not selected without explicit user authority.
 
 ## Decision Notes
 
-- 2026-08-05: Rejected the earlier conditional profiling milestone because it left the
-  hitch owner unresolved inside an executable plan.
-- 2026-08-05: A temporary every-tick focused diagnostic established fixed-step catch-up,
-  `enemies_and_grid` as the primary owner, `enemy_scheduled_ordinary` as its dominant
-  child, and `combat_and_effects` as the secondary owner. Temporary source edits were
-  restored immediately after capture.
-- 2026-08-05: Chose independent decision/motion lanes and cached locomotion rather than
-  renderer interpolation or lower cadence.
-- 2026-08-05: Kept only one final broad gate; no milestone-by-milestone full validation
-  remains.
-- 2026-08-05: Follow-up hot-path review confirmed the runtime schedule is rebuilt every
-  physics tick so due lanes are never replayed between buckets. Same-cell enemy motion
-  now updates cached grid coordinates without rebuilding membership, and the exact
-  movement solver reuses the safe-cell result already computed by the runtime cover
-  owner.
-- 2026-08-05: Final code review found that the implementation had accidentally wrapped
-  the scheduler rebuild in `decision_bucket == 0`, which discarded five of six decision
-  buckets and most 30/20 Hz motion opportunities. Commit `df2d1744f1f1be422fd582cd030c671bbbb7d194`
-  restores a rebuild on every physics tick. The same commit adds a generation-safe
-  static-cover broadphase result so motion can skip only the redundant full cover scan;
-  floor/void and dynamic-cover checks remain exact.
-- 2026-08-05: Final authoritative native evidence at commit `df2d1744f1f1be422fd582cd030c671bbbb7d194`
-  is valid and clean but fails the locked performance gate. `peak_horde` recorded frame
-  p95/p99 `144.444/147.790 ms`, physics p95/p99 `38.860/49.752 ms`, 1% low `6.741 FPS`,
-  and `450` consecutive frames over 33.3 ms; draw p95 `84`, combat batches `33`, and
-  scenario counts passed. `capacity_pressure` recorded frame p95/p99 `133.333/143.301 ms`,
-  physics p95/p99 `44.172/54.431 ms`, 1% low `6.842 FPS`, and `397` consecutive frames
-  over 33.3 ms; draw p95 `93`, combat batches `33`, and scenario counts passed. Both
-  runs had zero unfocused samples, `authoritative=true`, and `dirty=false`.
-- 2026-08-05: The complete current validator set is green: 58 vehicle validators
-  (including the 161-second multi-sector case), visual authority, Web export, and
-  `git diff --check`. The final capture is
-  `build/captures/stabilization-df2d1744/capture-manifest.json`; the Web smoke used
-  Codex port `13029` and entered the built gameplay canvas without console errors.
+- 2026-08-05: Replaced the earlier mostly completed plan body with this compact remaining
+  execution contract rather than creating a competing active plan.
+- 2026-08-05: A live temporary probe proved the apparent player invulnerability and
+  absent ordinary shots share one critical-dispatch regression. The probe was removed;
+  the worktree returned clean.
+- 2026-08-05: Kept the user-requested hostile projectile scale reduction because shots
+  currently disappear before rendering. Scale is not used to conceal the spawn defect.
+- 2026-08-05: Visual-authority inspection locked one clean tintable ring and removal of
+  the ARC cross-bars; no UI or map visual is included.
+- 2026-08-05: Performance work remains behavior-preserving. No cadence, population,
+  collision, workload, or threshold reduction is authorized.
+- 2026-08-05: Removed the proposed effect-dictionary pool because no measurement tied it
+  to the observed hitch tail. Performance is now a truthful requalification boundary,
+  not an unproven implementation promise.
 
-## Progress
+## Progress and Next Steps
 
-- [x] Read the active product, visual, execution-plan, and repository guidance.
-- [x] Reproduced and quantified the normal focused release failure.
-- [x] Traced the scheduler for representative near/far buckets over 60 physics ticks.
-- [x] Captured full per-tick ownership, proved catch-up, and restored diagnostic edits.
-- [x] Audited enemy, grid, terrain, projectile, crate, renderer, and recorder ownership.
-- [x] Closed the implementation design and final acceptance thresholds.
-- [x] M1 ordinary scheduling and motion separation is implemented with focused cadence
-  and steering coverage.
-- [x] M2 verified hot-path guards are implemented with membership, wear, crate, cover,
-  and collision regression coverage.
-- [x] M3 renderer-owned XP and non-beam projectile scale constants are implemented;
-  the final actual-scale capture is complete.
-- [x] M4 validation, performance evidence, Web smoke, and final actual-scale review are
-  executed. The plan remains active because the locked native release gate is failed.
+- Canonical progress: the task checkboxes in this contract.
+- Completed baseline: prior scheduling/cadence separation, XP/projectile scale work,
+  diagnostic ownership capture, Web export/smoke, and failed release evidence through
+  commit `448470dc`.
+- Current phase: Phase 1.
+- Next task: 1.1 restore 60 Hz critical phase advancement.
+- Last completed gate: Discovery Closure Gate on 2026-08-05.
+- Update rule: check a task only with its concise evidence and advance this pointer in
+  the same plan edit.
 
-## Next Steps
+## Completion and Stop Conditions
 
-Keep this plan active for the next task-owned performance pass. Start from the exact
-profiling evidence above, target `enemy_scheduled_ordinary` and the fixed-step catch-up
-chain, and preserve the locked 10/30/20/60 Hz cadence, workload, collision truth, and
-acceptance thresholds. Do not touch UI, maps, PNGs, gameplay populations, or lower the
-release limits to make the failed gate appear green.
+Complete when:
+
+- Every task acceptance check passes.
+- The final focused, visual, export, native, and built-Web gates pass.
+- No attack is frozen, no ordinary delivery path is absent, and no performance result
+  relies on reduced workload or invalid evidence.
+- Any durable behavior change is incorporated into its owning product/design spec before
+  this plan is marked `done` and retired under `.agents/PLANS.md`.
+
+Replan when:
+
+- A verified material fact invalidates the locked design or an out-of-scope architecture
+  change becomes explicitly authorized.
+
+Remain active at Task 4.2 when:
+
+- Correctness, visuals, collision, export, and evidence pass but a valid unchanged-load
+  performance result misses the release thresholds. That state is a measured boundary,
+  not a completed plan and not an implicit request for a broader rewrite.
+
+Do not replan or stop for:
+
+- Implementation-local mechanics already contained by this contract.
+- A passing check whose relevant inputs have not changed.
