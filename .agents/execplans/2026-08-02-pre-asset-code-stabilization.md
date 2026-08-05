@@ -218,7 +218,7 @@ Source owners: `scripts/ui/vehicle_hud_presenter.gd`,
 `tools/validation/validate_vehicle_damage_feedback.gd`, and
 `tools/validation/validate_vehicle_run_capture_driver.gd`
 
-- [ ] **1.1 Publish fast-HUD values atomically**
+- [x] **1.1 Publish fast-HUD values atomically**
   - Change: in `VehicleHudPresenter.advance()`, retain `_last_fast_snapshot` but replace
     its per-key diff loop with whole-snapshot equality and a full `update.merge(...)`
     only when the snapshot changed. Do not change 10 Hz fast cadence, 5 Hz world cadence,
@@ -232,18 +232,18 @@ Source owners: `scripts/ui/vehicle_hud_presenter.gd`,
     damage delta, healing delta, and max-hull delta, and asserts the unchanged cadence
     call counts. The final standard-hit capture must display the same pair held by the
     simulation.
-- [ ] **1.2 Restore 60 Hz critical phase advancement**
+- [x] **1.2 Restore 60 Hz critical phase advancement**
   - Change: add the explicit critical branch and keep motion-only dispatch exclusive to
     noncritical motion-only schedule entries.
   - Accept: shooter, turret, and interceptor fixtures each progress
     `move -> startup -> active/recovery` and add a hostile projectile; a chaser/contact
     fixture completes its damaging window; no second commitment is counted.
-- [ ] **1.3 Honor unblockable damage**
+- [x] **1.3 Honor unblockable damage**
   - Change: require `blockable` before barrier absorption.
   - Accept: blockable hostile damage consumes barrier, unblockable terrain damage
     reduces hull without consuming barrier, and accepted hull damage grants exactly one
     second of post-hit protection.
-- [ ] **1.4 Lock live hostile-shot evidence**
+- [x] **1.4 Lock live hostile-shot evidence**
   - Change: add `ordinary_projectile` to the driver's full-evidence fixture sequence,
     implement that fixture in `vehicle_run_capture_gateway.gd`, and extend the exact
     file list. Create the shooter with `_make_enemy`/`_append_enemy`, advance its real
@@ -270,7 +270,7 @@ Source owners: `docs/design/visual-replacement-workbench/replacement-workbench.j
 `scripts/vehicle/vehicle_run_capture_gateway.gd`, and
 `tools/validation/validate_vehicle_attack_route_readability.gd`
 
-- [ ] **2.1 Normalize the shared ring mask**
+- [x] **2.1 Normalize the shared ring mask**
   - Change: reopen the existing `gameplay_code_asset_rasterization` workbench unit and
     replace only its mirrored `cue_ring.png` TO-BE bytes. Call ImageGen with
     `referenced_image_paths` containing both exact paths
@@ -292,7 +292,7 @@ Source owners: `docs/design/visual-replacement-workbench/replacement-workbench.j
     neutral RGB, the alpha annulus is one connected boundary, and opaque black pixel
     count is zero. The rebuilt workbench and visual-authority validators pass and the
     unit's exact SHA-256 ledger matches promoted production bytes.
-- [ ] **2.2 Simplify ARC area decoration**
+- [x] **2.2 Simplify ARC area decoration**
   - Change: remove the two beam strips from ARC circular areas and retain at most one
     restrained center marker. Add `arc_area_telegraphs` to the driver's full-evidence
     fixture sequence, implement it in the gateway, and save
@@ -311,7 +311,7 @@ lowering combat load or changing exact fallback behavior.
 Source owners: `scripts/vehicle/vehicle_stage_tactical_layout.gd`,
 `scripts/vehicle/vehicle_run.gd`, relevant navigation/performance validators
 
-- [ ] **3.1 Replace static-only motion clearance with combined clearance**
+- [x] **3.1 Replace static-only motion clearance with combined clearance**
   - Change: add `FAST_MOTION_CELL_SIZE := 80.0`,
     `FAST_MOTION_RADIUS := 36.0`, `_safe_motion_cells_36`,
     `_fast_motion_min_cell`, `_fast_motion_width`, `_fast_motion_height`, the
@@ -324,6 +324,15 @@ Source owners: `scripts/vehicle/vehicle_stage_tactical_layout.gd`,
     exact blocking; an opened bulkhead may remain on the exact fallback but never becomes
     passable by a false positive; radius `> 36.0`, different-cell, and out-of-bounds
     queries return false; 10/30/20/60 Hz counts and per-move grid truth are unchanged.
+
+Implementation evidence through Phase 3 (commit `e5c7c59f`): the HUD presenter now
+publishes complete changed snapshots; critical ordinary shooters advance and fire;
+unblockable damage bypasses barriers; the ring is a white-alpha mask with no dark
+RGB fringe; ARC areas have no cross-bars; the tactical layout owns a combined
+80-unit safe-cell proof; and the capture driver records five additional real-state
+combat images. Focused validators and the 1280x720 runtime capture completed before
+the final gate. Capture output is under
+`build/captures/combat-correctness-0ab1085b/` for the pre-commit evidence run.
 
 ### Phase 4 - Run one consolidated final gate
 
