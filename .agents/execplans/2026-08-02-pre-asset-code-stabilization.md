@@ -4,8 +4,8 @@ status: active
 owner: BK
 created: 2026-08-02
 last_reviewed: 2026-08-05
-topic: Combat correctness, telegraph cleanup, and frame-pacing stabilization
-scope: Ordinary attack delivery, player damage protection, hostile projectile readability, circular attack telegraphs, and remaining combat hot paths
+topic: Combat and hull-HUD correctness, telegraph cleanup, and frame-pacing stabilization
+scope: Atomic hull-HUD state, ordinary attack delivery, player damage protection, hostile projectile readability, circular attack telegraphs, and remaining combat hot paths
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
@@ -21,7 +21,10 @@ related:
 
 Verified baseline commit `448470dc` contains a confirmed ordinary-attack state regression: normal
 attackers enter `startup` but never advance to `active`, so they create no projectiles
-and deliver no ordinary damage. This contract restores that combat path first, removes
+and deliver no ordinary damage. A separate regression introduced by `a6d84b95` publishes
+per-key HUD deltas into a consumer that expects an atomic hull cluster, so a normal
+`110/120` damage state can render as `1/1` even though simulation health stays correct.
+This contract restores the atomic HUD contract and combat path first, removes
 the malformed black treatment from circular warnings, repairs an unsafe motion fast
 path, and then requalifies the corrected workload with one consolidated correctness,
 visual, export, and performance gate. It does not claim an unproven performance fix.
@@ -29,13 +32,15 @@ visual, export, and performance gate. It does not claim an unproven performance 
 ## Purpose
 
 - Objective: restore normal enemy attacks and player damage while preserving fixed-Hard
-  behavior, make hostile shots and circular danger boundaries readable, correct the
-  unsafe collision shortcut, and measure frame pacing under the restored workload.
-- Deliverable: corrected scheduling/damage code, one normalized shared ring cue, focused
-  regression coverage, actual-scale combat captures, and commit-stamped performance
-  evidence.
-- Completion state for Phases 1-3: ordinary attacks progress and hit, circular warnings
-  contain no malformed black line, and collision remains exact. Full plan completion
+  behavior, keep hull HUD values authoritative after damage/healing/upgrades, make
+  hostile shots and circular danger boundaries readable, correct the unsafe collision
+  shortcut, and measure frame pacing under the restored workload.
+- Deliverable: an atomic fast-HUD publication contract, corrected scheduling/damage
+  code, one normalized shared ring cue, focused regression coverage, actual-scale combat
+  captures, and commit-stamped performance evidence.
+- Completion state for Phases 1-3: the HUD never substitutes `1/1` for valid hull state,
+  ordinary attacks progress and hit, circular warnings contain no malformed black line,
+  and collision remains exact. Full plan completion
   additionally requires the existing release thresholds to pass under the restored
   workload; a valid failure is recorded evidence, not permission to weaken the gate.
 
@@ -43,6 +48,7 @@ visual, export, and performance gate. It does not claim an unproven performance 
 
 In scope:
 
+- Fast-HUD snapshot invalidation and the hull/level/experience value cluster.
 - Ordinary `startup`, `active`, and `interrupted_recovery` execution at 60 Hz.
 - Normal hostile projectile creation, collision delivery, and player hull damage.
 - The existing barrier `blockable` contract.
@@ -61,6 +67,8 @@ Out of scope:
 Constraints and invariants:
 
 - Player intent, damage, committed attacks, and visible attack windows remain 60 Hz.
+- Fast HUD remains 10 Hz and world markers remain 5 Hz. A changed fast snapshot is
+  published atomically; a completely unchanged fast snapshot publishes nothing.
 - Ordinary decisions remain 10 Hz; non-committed motion remains 30 Hz near and 20 Hz
   far. A motion-only event never runs decision work.
 - Hostile collision, cover, crate, spatial-grid, and first-hit truth stay exact.
@@ -88,10 +96,11 @@ Exact actions requiring owner or user approval:
 
 | Requirement or concern | Verified current owner and behavior | Evidence | Locked decision | Task IDs |
 | --- | --- | --- | --- | --- |
-| Player appears invulnerable | Normal deployment clears protection and `_damage_player` reduces hull; three focused validators pass | `vehicle_run.gd::_reset_run_state`, `_damage_player`; `validate_vehicle_damage_feedback.gd` | Fix attack delivery, not base hull arithmetic | 1.1, 1.2 |
-| Ordinary projectiles are absent | Live probe: shooter/turret/interceptor enter startup at ticks `11/11/8`, remain there for 180 ticks, and create `0` shots | `_update_scheduled_ordinary_enemy`; temporary probe removed with clean worktree | Route critical entries through full critical-state work; reserve motion-only helper for noncritical motion-only entries | 1.1 |
-| Environmental damage can be wrongly absorbed | `_damage_player` accepts `blockable` but its barrier branch ignores it | `vehicle_run.gd:4223-4242` | Gate barrier absorption with `blockable` | 1.2 |
-| Hostile shots were intentionally reduced | `9a59d2d0` changed hostile scale `5.50 -> 3.85`; renderer layer and clipping are correct | `vehicle_stage_visual_profile.gd`, `_sync_projectiles` | Keep `3.85` while restoring actual live shots; capture it at gameplay scale | 1.3 |
+| Hull HUD becomes `1/1` | `a6d84b95` changed the presenter to per-key deltas; after damage it emits `health` without stable `max_health`, and the HUD substitutes `1.0` then clamps both displayed values | `vehicle_hud_presenter.gd:51-61`; `vehicle_gameplay_hud.gd:50-52, 577-585`; runtime snapshot still supplies the correct pair at `vehicle_run.gd:5355-5358` | Keep simulation unchanged; publish the complete fast snapshot whenever any fast value changes | 1.1 |
+| Player appears invulnerable | Normal deployment clears protection and `_damage_player` reduces hull; three focused validators pass | `vehicle_run.gd::_reset_run_state`, `_damage_player`; `validate_vehicle_damage_feedback.gd` | Fix attack delivery, not base hull arithmetic | 1.2, 1.3 |
+| Ordinary projectiles are absent | Live probe: shooter/turret/interceptor enter startup at ticks `11/11/8`, remain there for 180 ticks, and create `0` shots | `_update_scheduled_ordinary_enemy`; temporary probe removed with clean worktree | Route critical entries through full critical-state work; reserve motion-only helper for noncritical motion-only entries | 1.2 |
+| Environmental damage can be wrongly absorbed | `_damage_player` accepts `blockable` but its barrier branch ignores it | `vehicle_run.gd:4223-4242` | Gate barrier absorption with `blockable` | 1.3 |
+| Hostile shots were intentionally reduced | `9a59d2d0` changed hostile scale `5.50 -> 3.85`; renderer layer and clipping are correct | `vehicle_stage_visual_profile.gd`, `_sync_projectiles` | Keep `3.85` while restoring actual live shots; capture it at gameplay scale | 1.4 |
 | Circular warnings show black lines | `cue_ring.png` contains 204 fully opaque black pixels; ARC areas also add two black-edged beam strips | `_sync_area_telegraph`, `_write_danger_ring`, manifest `cue/ring` | Normalize the ring into a tintable white-alpha mask and remove ARC cross-bars | 2.1, 2.2 |
 | Enemy movement can cross selected cover | Current fast path proves only static catalog clearance, then skips tactical-layout cover lookup | `_runtime_motion_cover_rects`, `StageCatalog.is_fast_motion_clear` | Replace it with one combined layout-owned safe-cell proof | 3.1 |
 | Stutter is physics catch-up | Diagnostic recorded 3,600 physics ticks but only 797 rendered frames; physics accumulated to `160.01 ms` at frame p99 and enemy/grid owned 58.6% of the 64 worst frames | `build/performance/root-cause/full-detail-current-60s.json` | Preserve workload, correct the unsafe shortcut, and remeasure only after attacks work | 3.1, 4.2 |
@@ -108,6 +117,14 @@ Readiness statement:
 
 ## Assumptions and Locked Decisions
 
+- Actual maximum hull cannot normally become `1`: its base is `120`, and the only
+  `max_health_bonus` card is additive `+15/+30/+45`. The boss-practice floor affects
+  current hull only. The fix therefore changes presentation publication, not gameplay
+  health values or card data.
+- The fast builder already creates the complete health, objective, action, target, and
+  boss snapshot. Preserve no-change suppression, but if any fast value differs from the
+  previous snapshot, merge the entire fast snapshot into the update. Do not maintain a
+  second partial-field state machine inside `VehicleGameplayHud`.
 - The attack-freeze regression introduced by `31f8cd55` is the common cause of ordinary
   projectile absence and the apparent normal-enemy invulnerability.
 - Boss and environmental delivery remain separate; they are not rewritten to solve an
@@ -124,7 +141,17 @@ Readiness statement:
 
 ## Proposed Design
 
-### 1. Separate critical combat from motion-only dispatch
+### 1. Preserve atomic fast-HUD state
+
+Keep `_last_fast_snapshot` and the 10 Hz cadence. Replace per-key publication with one
+whole-snapshot comparison: when the newly built fast snapshot equals the prior snapshot,
+publish nothing; when any key differs, merge the complete fast snapshot into the update
+and then retain it as the comparison baseline. This preserves the optimization that
+suppresses unchanged HUD work while honoring the existing consumer contract for coupled
+health, objective, and action values. World-marker and guidebook invalidation stay
+independent.
+
+### 2. Separate critical combat from motion-only dispatch
 
 Handle `critical_delta >= 0` before evaluating scheduled due flags. Advance a critical
 ordinary actor through `_update_ordinary_enemy` with the physics delta for state and
@@ -137,7 +164,7 @@ Barrier absorption becomes conditional on `blockable`. A barrier still absorbs n
 hostile projectiles, contact, and mines; Arc Surge and Wear Collapse calls that already
 pass `false` reach hull and leave barrier strength unchanged.
 
-### 2. Normalize circular attack presentation
+### 3. Normalize circular attack presentation
 
 Normalize `cue_ring.png` as a neutral white RGB alpha mask: one connected antialiased
 annulus, transparent interior/exterior, no opaque black pixel or black RGB fringe. Keep
@@ -148,7 +175,7 @@ the horizontal/vertical beam-strip pair for ARC. Use at most one small center ma
 do not add another ring, bar, or decorative part. Corridor and active-beam rendering are
 unchanged.
 
-### 3. Make the motion shortcut provably safe
+### 4. Make the motion shortcut provably safe
 
 `VehicleStageTacticalLayout.configure()` builds `_safe_motion_cells_36` plus
 `_fast_motion_min_cell`, `_fast_motion_width`, and `_fast_motion_height` once from
@@ -175,30 +202,48 @@ safe.
 
 ## Tasks
 
-### Phase 1 - Restore ordinary attacks and hull damage
+### Phase 1 - Restore authoritative hull presentation and ordinary attacks
 
-Goal: ordinary attackers complete their committed phases, create their attacks, and can
-damage the player under normal protection rules.
+Goal: hull UI remains synchronized with simulation, ordinary attackers complete their
+committed phases, create their attacks, and can damage the player under normal
+protection rules.
 
-Source owners: `scripts/vehicle/vehicle_run.gd`,
+Source owners: `scripts/ui/vehicle_hud_presenter.gd`,
+`scripts/ui/vehicle_gameplay_hud.gd`,
+`scripts/vehicle/vehicle_run.gd`,
 `scripts/vehicle/vehicle_run_capture_gateway.gd`,
 `scripts/vehicle/vehicle_run_capture_driver.gd`,
+`tools/validation/validate_vehicle_hud_presenter.gd`,
 `tools/validation/validate_vehicle_run.gd`,
 `tools/validation/validate_vehicle_damage_feedback.gd`, and
 `tools/validation/validate_vehicle_run_capture_driver.gd`
 
-- [ ] **1.1 Restore 60 Hz critical phase advancement**
+- [ ] **1.1 Publish fast-HUD values atomically**
+  - Change: in `VehicleHudPresenter.advance()`, retain `_last_fast_snapshot` but replace
+    its per-key diff loop with whole-snapshot equality and a full `update.merge(...)`
+    only when the snapshot changed. Do not change 10 Hz fast cadence, 5 Hz world cadence,
+    minimap/static invalidation, guidebook invalidation, or HUD layout/drawing.
+  - Accept: the presenter publishes a complete initial fast snapshot, publishes nothing
+    for an unchanged snapshot, and after `120/120 -> 110/120` publishes both `health=110`
+    and `max_health=120`. Applying that update to `VehicleGameplayHud` leaves its
+    `HealthPips` values at exactly `110/120`, never `1/1`; a max-hull upgrade publishes
+    current and maximum together as well.
+  - Guard: `validate_vehicle_hud_presenter.gd` reproduces the initial full publication,
+    damage delta, healing delta, and max-hull delta, and asserts the unchanged cadence
+    call counts. The final standard-hit capture must display the same pair held by the
+    simulation.
+- [ ] **1.2 Restore 60 Hz critical phase advancement**
   - Change: add the explicit critical branch and keep motion-only dispatch exclusive to
     noncritical motion-only schedule entries.
   - Accept: shooter, turret, and interceptor fixtures each progress
     `move -> startup -> active/recovery` and add a hostile projectile; a chaser/contact
     fixture completes its damaging window; no second commitment is counted.
-- [ ] **1.2 Honor unblockable damage**
+- [ ] **1.3 Honor unblockable damage**
   - Change: require `blockable` before barrier absorption.
   - Accept: blockable hostile damage consumes barrier, unblockable terrain damage
     reduces hull without consuming barrier, and accepted hull damage grants exactly one
     second of post-hit protection.
-- [ ] **1.3 Lock live hostile-shot evidence**
+- [ ] **1.4 Lock live hostile-shot evidence**
   - Change: add `ordinary_projectile` to the driver's full-evidence fixture sequence,
     implement that fixture in `vehicle_run_capture_gateway.gd`, and extend the exact
     file list. Create the shooter with `_make_enemy`/`_append_enemy`, advance its real
@@ -288,8 +333,9 @@ measure whether it meets the unchanged frame-pacing gate.
 - [ ] **4.1 Run the focused correctness and visual batch once**
   - Run the exact commands in the Test Plan after Phases 1-3 are complete.
   - Accept: every named validator, authority check, import, Web export, and
-    `git diff --check` passes; actual-scale captures show attack progression, hull loss,
-    projectile continuity, and clean mine/boss ARC circles.
+    `git diff --check` passes; actual-scale captures show authoritative hull values,
+    attack progression, hull loss, projectile continuity, and clean mine/boss ARC
+    circles.
 - [ ] **4.2 Run authoritative performance once per scenario**
   - Harness: at the start of `_start_performance_scenario()`, before warmup or recorder
     sampling, call `DisplayServer.window_move_to_foreground()` only when not Web and
@@ -318,6 +364,7 @@ changes, then run this consolidated batch once after Phase 3:
 if ($LASTEXITCODE -ne 0) { throw 'Godot import failed' }
 
 $validators = @(
+  'validate_vehicle_hud_presenter.gd',
   'validate_vehicle_enemy_update_schedule.gd',
   'validate_vehicle_run.gd',
   'validate_vehicle_damage_feedback.gd',
@@ -347,7 +394,7 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
 ```
 
 After that batch, generate the exact capture evidence through the existing capture
-owner. The five new files named in Tasks 1.3 and 2.2 must exist and the capture manifest
+owner. The five new files named in Tasks 1.4 and 2.2 must exist and the capture manifest
 must record the requested `1280x720` viewport:
 
 ```powershell
@@ -363,10 +410,13 @@ $captureArgs = @(
 if ($LASTEXITCODE -ne 0) { throw 'combat evidence capture failed' }
 ```
 
-Review those five PNGs at original detail. Reject clipping, opaque black pixels/fringes,
-ARC cross-bars, a projectile hidden behind an actor, a manufactured projectile fixture,
-or a hit capture whose recorded hull did not decrease. The workbench report owns the
-ring AS-IS/TO-BE comparison; the capture directory owns post-switch runtime evidence.
+Review those five PNGs plus the existing `08-player-hit-standard.png` at original
+detail. Reject clipping, opaque black pixels/fringes, ARC cross-bars, a projectile hidden
+behind an actor, a manufactured projectile fixture, a hit capture whose recorded hull
+did not decrease, or any HUD hull pair that differs from the simulation pair. The
+standard hit and hostile-projectile hit captures must never show `1/1` unless simulation
+itself is exactly `1/1`. The workbench report owns the ring AS-IS/TO-BE comparison; the
+capture directory owns post-switch runtime evidence.
 
 Commit the Phase 1-3 implementation and evidence-owned source changes before measuring.
 Run native performance from that exact clean tracked commit at `1280x720`, GL
@@ -471,6 +521,10 @@ change visible behavior, ownership, architecture, dependencies, safety, or accep
 
 ## Risks
 
+- The per-key delta optimization also made objective and action clusters vulnerable to
+  missing sibling defaults. Publishing the complete fast snapshot on any change repairs
+  the existing atomic consumer contract without adding another cached state owner. The
+  10 Hz cadence and unchanged-snapshot suppression remain intact.
 - Restoring ordinary attacks adds the projectile and impact work that the failed path
   omitted. Performance must be judged only under that corrected load.
 - The current motion shortcut is faster partly because it can ignore selected cover.
@@ -503,6 +557,9 @@ change is intentionally not selected without explicit user authority.
 - 2026-08-05: Removed the proposed effect-dictionary pool because no measurement tied it
   to the observed hitch tail. Performance is now a truthful requalification boundary,
   not an unproven implementation promise.
+- 2026-08-05: Traced the reported `1/1` hull display to the per-key HUD delta introduced
+  by `a6d84b95`. Locked whole-fast-snapshot publication on any change; actual simulation
+  health, card data, HUD layout, and cadence remain unchanged.
 
 ## Progress and Next Steps
 
@@ -511,7 +568,7 @@ change is intentionally not selected without explicit user authority.
   diagnostic ownership capture, Web export/smoke, and failed release evidence through
   commit `448470dc`.
 - Current phase: Phase 1.
-- Next task: 1.1 restore 60 Hz critical phase advancement.
+- Next task: 1.1 publish fast-HUD values atomically.
 - Last completed gate: Discovery Closure Gate on 2026-08-05.
 - Update rule: check a task only with its concise evidence and advance this pointer in
   the same plan edit.
@@ -524,6 +581,8 @@ Complete when:
 - The final focused, visual, export, native, and built-Web gates pass.
 - No attack is frozen, no ordinary delivery path is absent, and no performance result
   relies on reduced workload or invalid evidence.
+- No valid simulation hull pair is rendered as `1/1` or with a stale current/maximum
+  sibling after damage, healing, reset, or maximum-hull upgrade.
 - Any durable behavior change is incorporated into its owning product/design spec before
   this plan is marked `done` and retired under `.agents/PLANS.md`.
 
