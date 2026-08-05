@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cardborne Performance Guard"
+  short_description: "Attribute Cardborne stutter before changing runtime"
+  default_prompt: "Use $cardborne-performance-guard to diagnose this Cardborne performance change without mixing asset, rendering, and simulation causes."
