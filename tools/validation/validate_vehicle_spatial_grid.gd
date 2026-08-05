@@ -260,7 +260,58 @@ func _validate_local_overlap_cache() -> void:
 		int(grid.debug_snapshot()["local_overlap_capacity"]) == fixed_capacity,
 		"repeated saturated cache builds do not grow packed storage"
 	)
+	_validate_dense_partial_overlap_mask()
 	_validate_local_overlap_edges()
+
+
+func _validate_dense_partial_overlap_mask() -> void:
+	var live: Array[EnemyState] = []
+	for index in 24:
+		live.append(_local_enemy(
+			"dense_%02d" % index,
+			index,
+			Vector2(480.0, 480.0),
+			36.0
+		))
+	var grid := Grid.new()
+	grid.configure(Rect2(0.0, 0.0, 960.0, 960.0), 160.0)
+	grid.rebuild(live)
+	var mask := PackedByteArray()
+	mask.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	mask.fill(0)
+	var selected: Array[EnemyState] = [live[5], live[18]]
+	for owner in selected:
+		mask[owner.spatial_slot] = 1
+	grid.rebuild_local_overlap_cache(mask)
+	for owner in live:
+		if owner not in selected:
+			_expect(
+				grid.cached_local_overlap_count(owner) == 0
+				and grid.cached_local_overlap_slot(owner, 0) == -1,
+				"dense partial mask leaves unselected row %d invalid"
+				% owner.runtime_slot
+			)
+			continue
+		var oracle := _brute_local_overlaps(owner, live)
+		var actual_count := grid.cached_local_overlap_count(owner)
+		_expect(
+			actual_count == Grid.LOCAL_OVERLAP_LIMIT
+			and actual_count == oracle.size(),
+			"dense selected row %d matches brute-force count"
+			% owner.runtime_slot
+		)
+		for index in mini(actual_count, oracle.size()):
+			var expected: EnemyState = oracle[index]
+			var actual_slot := grid.cached_local_overlap_slot(owner, index)
+			_expect(
+				grid.cached_local_actor_id(actual_slot) == String(expected.id)
+				and is_equal_approx(
+					grid.cached_local_overlap_distance_squared(owner, index),
+					owner.pos.distance_squared_to(expected.pos)
+				),
+				"dense selected row %d index %d matches ordered brute force"
+				% [owner.runtime_slot, index]
+			)
 
 
 func _validate_local_overlap_edges() -> void:

@@ -178,11 +178,11 @@ Source tracing closes the mechanism:
 
 ## Selected Design
 
-### A. Grid-owned batched directed-overlap cache
+### A. Grid-owned marked-owner directed-overlap cache
 
 `VehicleSpatialGrid` owns a fixed-capacity cache. Add `LOCAL_OVERLAP_LIMIT := 8` and
 pre-size generation, validity, count, neighbor-slot, distance, actor-ID, body-radius,
-refresh-mask, and occupied-local-cell buffers for `MAX_TRACKED_ACTORS` and
+and immutable snapshot buffers for `MAX_TRACKED_ACTORS` and
 `MAX_TRACKED_ACTORS * LOCAL_OVERLAP_LIMIT`. Do not allocate or grow them during play.
 
 Add:
@@ -196,14 +196,14 @@ func cached_local_body_radius(slot: int) -> float
 func cached_local_actor_id(slot: int) -> String
 ```
 
-The rebuild runs once immediately before ordinary dispatch. It walks each occupied local
-cell's internal pairs and forward neighbor offsets `(1,-1)`, `(1,0)`, `(1,1)`, `(0,1)`;
-therefore every unordered nearby pair is examined once. It validates active/alive state
-and generation once, applies the exact current predicates
-`distance_squared <= 120^2` and
-`distance_squared < (radius_a + radius_b)^2`, then offers the pair to each direction
-whose owner mask requests refresh. Each fixed row retains the best eight ordered by
-`(distance_squared, actor_id)`.
+The rebuild runs once immediately before ordinary dispatch. It first captures one
+immutable 320-slot position/radius/ID/generation snapshot. It then iterates only marked,
+valid owner slots; each owner scans its own and adjacent 3x3 local-cell buckets and
+offers directed candidates to that owner row. Candidate validation applies the exact
+current predicates `distance_squared <= 120^2` and
+`distance_squared < (radius_a + radius_b)^2`. Each fixed row retains the best eight
+ordered by `(distance_squared, actor_id)`. No occupied-cell list, forward-pair walk,
+bidirectional pair helper, or per-candidate production instrumentation is retained.
 
 `VehicleRun` owns one pre-sized refresh mask. It marks exactly the critical or ordinary-
 due actors for which the existing decision/parity predicate would pass. Normal play
@@ -271,21 +271,23 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
 
 ### Phase 5 - Remove repeated dense-enemy work
 
-- [x] **5.1 Implement the packed batched local-overlap cache**
+- [x] **5.1 Implement the packed marked-owner local-overlap cache**
   - Owners: `scripts/combat/vehicle_spatial_grid.gd`,
     `scripts/enemies/vehicle_enemy_local_steering.gd`,
     `scripts/vehicle/vehicle_run.gd`, capture gateway only if its direct path requires
     cache preparation, and their focused validators.
   - Accept: randomized 320-slot fixtures match a brute-force oracle in count, ordered
-    IDs, distances, and adjusted velocity; cover same/cross cell, zero distance, exact
+    IDs, distances, and adjusted velocity; a dense 24-actor partial mask publishes exact
+    rows for only two selected owners; cover same/cross cell, zero distance, exact
     tangent, inactive/dead, boss/pylon exclusion, generation reuse, and more than eight
     equal-distance candidates. Refresh-mask membership matches the prior twelve-bucket,
     critical, and parity behavior. Saturated play performs no production per-owner
     nearest query and no cache growth.
   - Evidence: `validate_vehicle_spatial_grid.gd`,
     `validate_vehicle_enemy_local_steering.gd`, and
-    `validate_vehicle_enemy_update_schedule.gd` pass with randomized 320-slot oracle,
-    fixed-capacity, generation, edge, refresh-mask, and zero-legacy-query assertions.
+    `validate_vehicle_enemy_update_schedule.gd` pass with randomized 320-slot and dense
+    two-owner partial-mask oracles, fixed-capacity, generation, edge, refresh-mask, and
+    zero-legacy-query assertions.
 - [x] **5.2 Add the existing-certificate early return**
   - Owners: `scripts/vehicle/vehicle_run.gd` and navigation-clearance validators.
   - Accept: certified same-cell motion is identical; every uncertified/static edge,
@@ -366,8 +368,10 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
   - Evidence: before the ownership post-pass, the complete 14-validator named batch,
     Godot headless import, `tools/export_web.ps1` (`WEB_EXPORT_OK`, four files), and
     `git diff --check` passed. After moving EMP scheduling out of presentation state,
-    the four affected focused validators and `git diff --check` pass; import and Web
-    export were intentionally not repeated under the post-pass's focused-check scope.
+    the four affected focused validators passed. After the marked-owner cache correction,
+    spatial-grid, local-steering, enemy-update-schedule, Run, and performance-scenario
+    validators plus `git diff --check` pass. Import and Web export were intentionally not
+    repeated under the two post-passes' focused-check scope.
 - [ ] **8.2 Commit the implementation and run native release scenarios**
   - Measure from the exact clean implementation commit with normal stride-7
     instrumentation. Quote the window position as `'40,40'`; unquoted PowerShell input
@@ -475,7 +479,7 @@ nonstandard detail stride.
 
 | Trigger | Required response |
 | --- | --- |
-| Batched cache differs from brute-force semantics | Reject the cache result; fix pair enumeration, generation stamping, or top-eight ordering. Never relax the oracle. |
+| Directed cache differs from brute-force semantics | Reject the cache result; fix owner/candidate enumeration, generation stamping, or top-eight ordering. Never relax the oracle. |
 | Safe-motion early return disagrees with exact collision | Remove that early return and retain the exact solver. Do not broaden certification. |
 | Reused receipt is retained by a consumer | Convert that boundary to two alternating owned buffers; do not allocate per tick or mutate a published live frame. |
 | Pooled state changes order/timing/cap | Revert the store task and fix against the old-path oracle before continuing. |
@@ -522,6 +526,10 @@ nonstandard detail stride.
 - 2026-08-05: Moved EMP aftershock scheduling from the pooled presentation store to a
   Run-owned scalar timer. Focused validation now locks the strict presentation boundary,
   all five initial HUD clusters, and exact 96-state saturated performance accounting.
+- 2026-08-05: Source tracing showed the refresh schedule selects roughly `N/12` owner
+  rows, while the first packed builder enumerated all nearby pairs before mask rejection.
+  Corrected the builder to scan 3x3 buckets only for marked owners, preserving the same
+  immutable snapshot, directed rows, exact predicates, and deterministic top-eight order.
 
 ## Progress
 
@@ -534,7 +542,8 @@ nonstandard detail stride.
 - [x] Complete Phase 7.
 - [ ] Complete Phase 8 and retire this plan.
 
-Current task: **8.2 Commit the implementation and run native release scenarios.**
+Current task: **Review and commit the Phase 5.1 marked-owner correction, then resume 8.2
+after the external Godot suite is quiescent.**
 
 ## Open Questions
 

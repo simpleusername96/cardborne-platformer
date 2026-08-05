@@ -16,12 +16,6 @@ const LOCAL_OVERLAP_DISTANCE := 120.0
 const LOCAL_OVERLAP_DISTANCE_SQUARED := (
 	LOCAL_OVERLAP_DISTANCE * LOCAL_OVERLAP_DISTANCE
 )
-const LOCAL_FORWARD_NEIGHBOR_OFFSETS: Array[Vector2i] = [
-	Vector2i(1, -1),
-	Vector2i(1, 0),
-	Vector2i(1, 1),
-	Vector2i(0, 1),
-]
 const FLAG_ALIVE := 1
 const FLAG_ACTIVE := 2
 
@@ -49,10 +43,6 @@ var _member_positions := PackedInt32Array()
 var _local_member_active := PackedByteArray()
 var _local_member_cells := PackedInt32Array()
 var _local_member_positions := PackedInt32Array()
-var _occupied_local_cells := PackedInt32Array()
-var _occupied_local_cell_positions := PackedInt32Array()
-var _occupied_local_cell_flags := PackedByteArray()
-var _occupied_local_cell_count := 0
 var _seen_sync := PackedInt32Array()
 var _positions := PackedVector2Array()
 var _radii := PackedFloat32Array()
@@ -67,7 +57,6 @@ var _local_overlap_valid := PackedByteArray()
 var _local_overlap_counts := PackedByteArray()
 var _local_overlap_neighbor_slots := PackedInt32Array()
 var _local_overlap_distances := PackedFloat64Array()
-var _local_overlap_refresh_mask := PackedByteArray()
 var _local_snapshot_positions := PackedVector2Array()
 var _local_snapshot_body_radii := PackedFloat64Array()
 var _local_snapshot_actor_ids := PackedStringArray()
@@ -113,11 +102,6 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_local_member_active.fill(0)
 	_local_member_cells.resize(MAX_TRACKED_ACTORS)
 	_local_member_positions.resize(MAX_TRACKED_ACTORS)
-	_occupied_local_cells.resize(_local_cells.size())
-	_occupied_local_cell_positions.resize(_local_cells.size())
-	_occupied_local_cell_flags.resize(_local_cells.size())
-	_occupied_local_cell_flags.fill(0)
-	_occupied_local_cell_count = 0
 	_seen_sync.resize(MAX_TRACKED_ACTORS)
 	_seen_sync.fill(0)
 	_positions.resize(MAX_TRACKED_ACTORS)
@@ -139,8 +123,6 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_local_overlap_distances.resize(
 		MAX_TRACKED_ACTORS * LOCAL_OVERLAP_LIMIT
 	)
-	_local_overlap_refresh_mask.resize(MAX_TRACKED_ACTORS)
-	_local_overlap_refresh_mask.fill(0)
 	_local_snapshot_positions.resize(MAX_TRACKED_ACTORS)
 	_local_snapshot_body_radii.resize(MAX_TRACKED_ACTORS)
 	_local_snapshot_actor_ids.resize(MAX_TRACKED_ACTORS)
@@ -164,8 +146,6 @@ func rebuild(live: Array[EnemyState]) -> void:
 	_touched_cells.clear()
 	for bucket in _local_cells:
 		bucket.clear()
-	_occupied_local_cell_flags.fill(0)
-	_occupied_local_cell_count = 0
 	_member_active.fill(0)
 	_local_member_active.fill(0)
 	_member_generations.fill(0)
@@ -353,12 +333,11 @@ func query_nearest_overlaps_into(
 
 
 func rebuild_local_overlap_cache(refresh_slots: PackedByteArray) -> void:
-	## Captures one immutable boundary snapshot and examines every unordered
-	## local-cell pair once. Fixed rows retain the nearest eight directed results.
+	## Captures one immutable boundary snapshot, then rebuilds only marked owner
+	## rows from their 3x3 local-cell neighborhoods.
 	_local_overlap_builds += 1
 	_local_overlap_valid.fill(0)
 	_local_overlap_counts.fill(0)
-	_local_overlap_refresh_mask.fill(0)
 	_local_snapshot_valid.fill(0)
 	for slot in MAX_TRACKED_ACTORS:
 		var enemy: EnemyState = _actors[slot]
@@ -369,36 +348,29 @@ func rebuild_local_overlap_cache(refresh_slots: PackedByteArray) -> void:
 		_local_snapshot_body_radii[slot] = maxf(0.0, enemy.radius)
 		_local_snapshot_actor_ids[slot] = String(enemy.id)
 		_local_snapshot_generations[slot] = _member_generations[slot]
-		if slot < refresh_slots.size() and refresh_slots[slot] != 0:
-			_local_overlap_refresh_mask[slot] = 1
-			_local_overlap_valid[slot] = 1
-			_local_overlap_generations[slot] = _member_generations[slot]
-	for occupied_index in _occupied_local_cell_count:
-		var cell_index := _occupied_local_cells[occupied_index]
-		var cell_y := floori(float(cell_index) / float(_local_columns))
-		var cell_x := cell_index - cell_y * _local_columns
-		var bucket: Array = _local_cells[cell_index]
-		for first_index in bucket.size():
-			var first_slot := int(bucket[first_index])
-			for second_index in range(first_index + 1, bucket.size()):
-				_offer_local_overlap_pair(first_slot, int(bucket[second_index]))
-		for offset in LOCAL_FORWARD_NEIGHBOR_OFFSETS:
-			var neighbor_x := cell_x + offset.x
-			var neighbor_y := cell_y + offset.y
-			if (
-				neighbor_x < 0
-				or neighbor_x >= _local_columns
-				or neighbor_y < 0
-				or neighbor_y >= _local_rows
-			):
-				continue
-			var neighbor_bucket: Array = _local_cells[
-				neighbor_y * _local_columns + neighbor_x
-			]
-			for first_slot_value in bucket:
-				for second_slot_value in neighbor_bucket:
-					_offer_local_overlap_pair(
-						int(first_slot_value), int(second_slot_value)
+	var owner_limit := mini(refresh_slots.size(), MAX_TRACKED_ACTORS)
+	for owner_slot in owner_limit:
+		if refresh_slots[owner_slot] == 0 or _local_snapshot_valid[owner_slot] == 0:
+			continue
+		_local_overlap_valid[owner_slot] = 1
+		_local_overlap_generations[owner_slot] = _local_snapshot_generations[owner_slot]
+		var owner_cell_index := _local_member_cells[owner_slot]
+		var owner_cell_y := floori(
+			float(owner_cell_index) / float(_local_columns)
+		)
+		var owner_cell_x := owner_cell_index - owner_cell_y * _local_columns
+		var min_x := maxi(0, owner_cell_x - 1)
+		var max_x := mini(_local_columns - 1, owner_cell_x + 1)
+		var min_y := maxi(0, owner_cell_y - 1)
+		var max_y := mini(_local_rows - 1, owner_cell_y + 1)
+		for cell_y in range(min_y, max_y + 1):
+			for cell_x in range(min_x, max_x + 1):
+				var bucket: Array = _local_cells[
+					cell_y * _local_columns + cell_x
+				]
+				for candidate_slot_value in bucket:
+					_offer_local_overlap_candidate(
+						owner_slot, int(candidate_slot_value)
 					)
 
 
@@ -548,7 +520,6 @@ func debug_snapshot() -> Dictionary:
 		"local_overlap_capacity": _local_overlap_neighbor_slots.size(),
 		"local_overlap_builds": _local_overlap_builds,
 		"legacy_nearest_query_calls": _legacy_nearest_query_calls,
-		"occupied_local_cells": _occupied_local_cell_count,
 	}
 
 
@@ -701,37 +672,30 @@ func _local_overlap_owner_is_valid(owner: EnemyState, slot: int) -> bool:
 	)
 
 
-func _offer_local_overlap_pair(first_slot: int, second_slot: int) -> void:
+func _offer_local_overlap_candidate(owner_slot: int, candidate_slot: int) -> void:
 	if (
-		first_slot < 0
-		or first_slot >= MAX_TRACKED_ACTORS
-		or second_slot < 0
-		or second_slot >= MAX_TRACKED_ACTORS
-		or first_slot == second_slot
-		or _local_snapshot_valid[first_slot] == 0
-		or _local_snapshot_valid[second_slot] == 0
-		or (
-			_local_overlap_refresh_mask[first_slot] == 0
-			and _local_overlap_refresh_mask[second_slot] == 0
-		)
+		owner_slot < 0
+		or owner_slot >= MAX_TRACKED_ACTORS
+		or candidate_slot < 0
+		or candidate_slot >= MAX_TRACKED_ACTORS
+		or owner_slot == candidate_slot
+		or _local_snapshot_valid[owner_slot] == 0
+		or _local_snapshot_valid[candidate_slot] == 0
 	):
 		return
-	var distance_squared := _local_snapshot_positions[first_slot].distance_squared_to(
-		_local_snapshot_positions[second_slot]
+	var distance_squared := _local_snapshot_positions[owner_slot].distance_squared_to(
+		_local_snapshot_positions[candidate_slot]
 	)
 	var combined_radius := (
-		float(_local_snapshot_body_radii[first_slot])
-		+ float(_local_snapshot_body_radii[second_slot])
+		float(_local_snapshot_body_radii[owner_slot])
+		+ float(_local_snapshot_body_radii[candidate_slot])
 	)
 	if (
 		distance_squared > LOCAL_OVERLAP_DISTANCE_SQUARED
 		or distance_squared >= combined_radius * combined_radius
 	):
 		return
-	if _local_overlap_refresh_mask[first_slot] != 0:
-		_offer_local_overlap_result(first_slot, second_slot, distance_squared)
-	if _local_overlap_refresh_mask[second_slot] != 0:
-		_offer_local_overlap_result(second_slot, first_slot, distance_squared)
+	_offer_local_overlap_result(owner_slot, candidate_slot, distance_squared)
 
 
 func _offer_local_overlap_result(
@@ -849,8 +813,6 @@ func _update_local_membership(slot: int, enemy: EnemyState) -> void:
 	_local_member_active[slot] = 1
 	_local_member_cells[slot] = next_cell_index
 	var bucket: Array = _local_cells[next_cell_index]
-	if bucket.is_empty():
-		_add_occupied_local_cell(next_cell_index)
 	_local_member_positions[slot] = bucket.size()
 	bucket.append(slot)
 
@@ -868,32 +830,7 @@ func _remove_local_membership(slot: int) -> void:
 			bucket[position] = moved_slot
 			_local_member_positions[moved_slot] = position
 		bucket.pop_back()
-		if bucket.is_empty():
-			_remove_occupied_local_cell(cell_index)
 	_local_member_active[slot] = 0
-
-
-func _add_occupied_local_cell(cell_index: int) -> void:
-	if _occupied_local_cell_flags[cell_index] != 0:
-		return
-	assert(_occupied_local_cell_count < _occupied_local_cells.size())
-	_occupied_local_cell_flags[cell_index] = 1
-	_occupied_local_cell_positions[cell_index] = _occupied_local_cell_count
-	_occupied_local_cells[_occupied_local_cell_count] = cell_index
-	_occupied_local_cell_count += 1
-
-
-func _remove_occupied_local_cell(cell_index: int) -> void:
-	if _occupied_local_cell_flags[cell_index] == 0:
-		return
-	var position := _occupied_local_cell_positions[cell_index]
-	var last_position := _occupied_local_cell_count - 1
-	if position != last_position:
-		var moved_cell := _occupied_local_cells[last_position]
-		_occupied_local_cells[position] = moved_cell
-		_occupied_local_cell_positions[moved_cell] = position
-	_occupied_local_cell_count = last_position
-	_occupied_local_cell_flags[cell_index] = 0
 
 
 func _replace_member_position(
