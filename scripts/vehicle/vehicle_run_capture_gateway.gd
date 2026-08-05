@@ -658,7 +658,7 @@ func _capture_ordinary_projectile_evidence() -> void:
 	await _settle_capture()
 	_save_capture("09-effects-projectile-hostile-flight.png")
 	_run.capture_set_mode(&"playing")
-	var hull_before_hit := _run.player_health
+	var hull_before_hit: float = float(_run.player_health)
 	_run._update_projectiles(0.50)
 	if _run.player_health >= hull_before_hit:
 		push_error("ordinary projectile capture fixture did not deliver hull damage")
