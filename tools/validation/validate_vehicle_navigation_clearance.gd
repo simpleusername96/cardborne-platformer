@@ -23,7 +23,10 @@ func _initialize() -> void:
 		)
 		var start := Vector2(tactical.geometry_snapshot.player_start)
 		_expect(
-			tactical.is_fast_motion_clear(start, start + Vector2(12.0, 0.0), 36.0),
+			tactical.is_fast_motion_clear(start, start + Vector2(12.0, 0.0), 36.0)
+			and Catalog.is_fast_motion_clear(
+				stage_id, start, start + Vector2(12.0, 0.0), 36.0
+			),
 			"%s keeps the clear center on the certified fast path" % stage_id
 		)
 		_expect(
@@ -34,6 +37,35 @@ func _initialize() -> void:
 			not tactical.is_fast_motion_clear(start, start + Vector2(12.0, 0.0), 76.0),
 			"%s keeps boss-radius motion off the fast path" % stage_id
 		)
+		var outside := Rect2(layout.field_definition["world_rect"]).position - Vector2(8.0, 8.0)
+		_expect(
+			not tactical.is_fast_motion_clear(outside, outside + Vector2(4.0, 0.0), 24.0)
+			and not Catalog.is_fast_motion_clear(
+				stage_id, outside, outside + Vector2(4.0, 0.0), 24.0
+			),
+			"%s keeps out-of-bounds motion off the fast path" % stage_id
+		)
+		for cover in tactical.cover_rects:
+			var cover_center := cover.get_center()
+			_expect(
+				not tactical.is_fast_motion_clear(
+					cover_center, cover_center + Vector2(1.0, 0.0), 24.0
+				),
+				"%s selected cover cells remain uncertified" % stage_id
+			)
+		for feature_value in Array(layout.field_definition.get("features", [])):
+			var feature := Dictionary(feature_value)
+			if StringName(feature.get("kind", &"")) not in [
+				&"structural_wall", &"breakable_bulkhead",
+			]:
+				continue
+			var feature_center := Rect2(feature["rect"]).get_center()
+			_expect(
+				not tactical.is_fast_motion_clear(
+					feature_center, feature_center + Vector2(1.0, 0.0), 24.0
+				),
+				"%s static wall and bulkhead cells remain uncertified" % stage_id
+			)
 		pursuit.reset(stage_id, tactical.cover_rects)
 		for _step in 8:
 			pursuit.update(0.2, Catalog.player_start())

@@ -14,11 +14,18 @@ var pending_level_ups := 0
 var shards: Array[ExperienceShard] = []
 var _next_shard_id := 1
 var _pool: Array[ExperienceShard] = []
+var _advance_receipt: Dictionary = {}
+var _collected_sources: Array[StringName] = []
 
 
 func _init() -> void:
 	for _index in MAX_SHARDS:
 		_pool.append(ExperienceShard.new())
+	_advance_receipt = {
+		"experience":0,
+		"levels":0,
+		"reward_sources":_collected_sources,
+	}
 
 
 func reset() -> void:
@@ -77,7 +84,11 @@ func advance(
 	recall_remaining: float
 ) -> Dictionary:
 	var collected_xp := 0
-	var collected_sources: Array[StringName] = []
+	_collected_sources.clear()
+	_advance_receipt.clear()
+	_advance_receipt["experience"] = 0
+	_advance_receipt["levels"] = 0
+	_advance_receipt["reward_sources"] = _collected_sources
 	var attraction_radius_squared := attraction_radius * attraction_radius
 	var collection_radius_squared := BASE_PICKUP_RADIUS * BASE_PICKUP_RADIUS
 	var recall_active := recall_remaining > 0.0
@@ -102,11 +113,13 @@ func advance(
 			continue
 		collected_xp += shard.value
 		for source in shard.reward_sources:
-			if source not in collected_sources:
-				collected_sources.append(source)
+			if source not in _collected_sources:
+				_collected_sources.append(source)
 		_swap_remove(index)
 	var levels_gained := _award_experience(collected_xp)
-	return {"experience":collected_xp, "levels":levels_gained, "reward_sources":collected_sources}
+	_advance_receipt["experience"] = collected_xp
+	_advance_receipt["levels"] = levels_gained
+	return _advance_receipt
 
 
 func _swap_remove(index: int) -> void:

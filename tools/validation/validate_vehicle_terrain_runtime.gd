@@ -18,9 +18,33 @@ func _init() -> void:
 		{"id":&"gate_a_1", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(0, 800)},
 		{"id":&"gate_a_2", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(3200, 800)},
 	], persistent, false, sockets, 9981, &"stage_1")
+	var empty_events := runtime.advance(
+		0.0, Vector2(4000, 4000), 100.0, 100.0
+	)
+	var repeated_empty_events := runtime.advance(
+		0.0, Vector2(4000, 4000), 100.0, 100.0
+	)
+	_expect(
+		is_same(empty_events, repeated_empty_events)
+		and repeated_empty_events.is_empty(),
+		"empty terrain advances reuse one cleared event receipt"
+	)
 
 	_expect(runtime.support_fields.size() == 4, "four independent support slots exist")
 	var opening: Array = runtime.snapshot()["support_fields"]
+	var support_frame: Array[Dictionary] = []
+	var borrowed_support := runtime.fill_support_snapshot(support_frame)
+	var first_support_record := borrowed_support[0]
+	var repeated_support := runtime.fill_support_snapshot(support_frame)
+	_expect(
+		is_same(borrowed_support, repeated_support)
+			and is_same(first_support_record, repeated_support[0]),
+		"support presentation reuses the caller-owned array and nested records"
+	)
+	_expect(
+		borrowed_support == opening,
+		"borrowed support presentation matches the cold snapshot oracle"
+	)
 	_expect(StringName(opening[0]["state"]) == &"warning", "repair A starts with warning")
 	_expect(StringName(opening[1]["state"]) == &"initial_delay", "repair B keeps its initial offset")
 	_expect(StringName(opening[2]["state"]) == &"initial_delay", "overdrive A keeps its initial offset")
@@ -61,6 +85,36 @@ func _init() -> void:
 	for _step in 30:
 		runtime.advance(0.1, overdrive_position, 100.0, 100.0)
 	_expect(runtime.overdrive_active, "active overdrive uses exact player membership")
+
+	var ordered_runtime := TerrainRuntime.new()
+	ordered_runtime.configure([
+		{
+			"id":&"ordered_gate_a_1", "kind":&"transit_gate", "pair":&"a",
+			"pos":Vector2.ZERO,
+		},
+		{
+			"id":&"ordered_gate_a_2", "kind":&"transit_gate", "pair":&"a",
+			"pos":Vector2(1600.0, 0.0),
+		},
+	], {}, false, sockets, 2244, &"stage_1")
+	var ordered_empty := ordered_runtime.advance(
+		0.0, Vector2(4000.0, 4000.0), 50.0, 100.0
+	)
+	ordered_runtime.support_fields[0]["state"] = &"active"
+	ordered_runtime.support_fields[0]["position"] = Vector2.ZERO
+	ordered_runtime.support_fields[0]["time_remaining"] = 10.0
+	ordered_runtime.repair_dwell = TerrainRuntime.REPAIR_DWELL
+	ordered_runtime._gate_progress[&"a"] = TerrainRuntime.GATE_DWELL - 0.01
+	var ordered_events := ordered_runtime.advance(
+		0.02, Vector2.ZERO, 50.0, 100.0
+	)
+	_expect(
+		is_same(ordered_empty, ordered_events)
+		and ordered_events.size() == 2
+		and StringName(ordered_events[0]["kind"]) == &"heal"
+		and StringName(ordered_events[1]["kind"]) == &"transit",
+		"non-empty terrain advances reuse the receipt and preserve heal-before-transit order"
+	)
 
 	var before_pause := var_to_str(runtime.snapshot()["support_fields"])
 	var after_pause := var_to_str(runtime.snapshot()["support_fields"])

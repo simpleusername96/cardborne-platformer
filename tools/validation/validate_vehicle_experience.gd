@@ -51,6 +51,16 @@ func _validate_stage_items() -> void:
 
 func _validate_experience_runtime() -> void:
 	var runtime := ExperienceRuntime.new()
+	var empty_receipt := runtime.advance(0.0, Vector2.ZERO, 0.0, 0.0)
+	var source_buffer: Array = empty_receipt["reward_sources"]
+	var repeated_empty_receipt := runtime.advance(
+		0.0, Vector2.ZERO, 0.0, 0.0
+	)
+	_expect(
+		is_same(empty_receipt, repeated_empty_receipt)
+		and is_same(source_buffer, repeated_empty_receipt["reward_sources"]),
+		"empty XP advances reuse one borrowed receipt and source buffer"
+	)
 	for index in ExperienceRuntime.MAX_SHARDS + 20:
 		runtime.spawn_shard(Vector2(float(index), 0.0), 1)
 	_expect(runtime.shards.size() == ExperienceRuntime.MAX_SHARDS, "shard cap merges overflow")
@@ -64,6 +74,11 @@ func _validate_experience_runtime() -> void:
 	)
 	runtime.spawn_shard(Vector2.ZERO, 13, &"boss")
 	var result := runtime.advance(0.016, Vector2.ZERO, 100.0, 0.0)
+	_expect(
+		is_same(result, empty_receipt)
+		and is_same(result["reward_sources"], source_buffer),
+		"non-empty XP collection reuses the borrowed receipt identity"
+	)
 	_expect(runtime.run_level == 2 and runtime.experience == 1, "level threshold carries excess XP")
 	_expect(runtime.pending_level_ups == 1 and int(result["levels"]) == 1, "collected XP queues a level")
 	_expect(&"boss" in result["reward_sources"], "boss reward source survives shard collection")

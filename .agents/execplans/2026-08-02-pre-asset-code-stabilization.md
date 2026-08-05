@@ -237,11 +237,13 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
   an empty array every tick. Event order remains heal before transit.
 - `_update_pickups()` performs one swept-contact call. Add endpoint/dash equivalence
   coverage before deleting the redundant zero-length call.
-- Add a responsibility-shaped `VehicleEffectStore` with 96 preallocated effect states,
-  swap retirement, and the current eviction order. `VehicleRun` keeps the scheduled-
-  aftershock side effect; the store owns only bounded state and reuse. The renderer and
-  capture/performance fixtures consume the typed live list. Do not merge projectile or
-  denied-zone behavior into this store.
+- Add a responsibility-shaped `VehicleEffectStore` with 96 preallocated presentation
+  states, swap retirement, and deterministic first-entry swap eviction when saturated.
+  The store owns only bounded visual state and reuse. `VehicleRun` owns the EMP
+  aftershock's scalar 0.72-second schedule, advances it on the accumulated 30 Hz effect
+  boundary, and cancels it through the same reset helper that clears presentation state.
+  The renderer and capture/performance fixtures consume the typed live list. Do not
+  merge gameplay scheduling, projectile, or denied-zone behavior into this store.
 
 ### D. Reusable HUD and presentation staging
 
@@ -269,7 +271,7 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
 
 ### Phase 5 - Remove repeated dense-enemy work
 
-- [ ] **5.1 Implement the packed batched local-overlap cache**
+- [x] **5.1 Implement the packed batched local-overlap cache**
   - Owners: `scripts/combat/vehicle_spatial_grid.gd`,
     `scripts/enemies/vehicle_enemy_local_steering.gd`,
     `scripts/vehicle/vehicle_run.gd`, capture gateway only if its direct path requires
@@ -280,33 +282,52 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
     equal-distance candidates. Refresh-mask membership matches the prior twelve-bucket,
     critical, and parity behavior. Saturated play performs no production per-owner
     nearest query and no cache growth.
-- [ ] **5.2 Add the existing-certificate early return**
+  - Evidence: `validate_vehicle_spatial_grid.gd`,
+    `validate_vehicle_enemy_local_steering.gd`, and
+    `validate_vehicle_enemy_update_schedule.gd` pass with randomized 320-slot oracle,
+    fixed-capacity, generation, edge, refresh-mask, and zero-legacy-query assertions.
+- [x] **5.2 Add the existing-certificate early return**
   - Owners: `scripts/vehicle/vehicle_run.gd` and navigation-clearance validators.
   - Accept: certified same-cell motion is identical; every uncertified/static edge,
     selected cover, structural wall, live/opened bulkhead, radius-over-36, cross-cell,
     out-of-bounds, and crate fixture remains exact. Do not extend which cells qualify.
+  - Evidence: `validate_vehicle_navigation_clearance.gd` and
+    `validate_vehicle_run.gd` pass with combined-certificate, exact fallback, selected
+    cover, wall, live/opened bulkhead, radius, cross-cell, bounds, and crate fixtures.
 
 ### Phase 6 - Remove recurring secondary-physics allocations
 
-- [ ] **6.1 Reuse XP and terrain receipts and remove duplicate pickup contact**
+- [x] **6.1 Reuse XP and terrain receipts and remove duplicate pickup contact**
   - Owners: `scripts/progression/vehicle_experience_runtime.gd`,
     `scripts/vehicle/vehicle_terrain_runtime.gd`, `scripts/vehicle/vehicle_run.gd`, and
     focused XP/terrain/pickup validators.
   - Accept: repeated empty and non-empty calls return the same borrowed receipt identity;
     XP totals/sources/levels, heal/transit event order, pickup collection order, dash
     crossing, endpoint contact, and pool capacities match the old oracle.
-- [ ] **6.2 Pool transient effect state behind one store**
+  - Evidence: `validate_vehicle_experience.gd`,
+    `validate_vehicle_terrain_runtime.gd`, `validate_vehicle_pickup_contact.gd`, and
+    `validate_vehicle_run.gd` pass with borrowed-identity, XP, ordered-event,
+    randomized endpoint-equivalence, dash, and capacity assertions.
+- [x] **6.2 Pool transient effect state behind one store**
   - Owners: new responsibility-shaped files under `scripts/combat/`, the narrow effect
     boundary in `vehicle_run.gd`, `vehicle_combat_renderer.gd`, performance/capture
     fixtures, and focused validators.
-  - Accept: cap 96, non-aftershock eviction preference, swap order, time/duration,
-    target/direction/value/multiplier fields, aftershock release timing, rendered effect
-    count, reset, and pool accounting are exact. No effect dictionary is allocated after
-    store initialization during a saturated effect soak.
+  - Accept: cap 96, ordinary first-entry swap eviction, time/duration,
+    target/direction/value/multiplier fields, rendered effect count, reset, and pool
+    accounting are exact, and the store contains presentation state only. `VehicleRun`
+    owns exact 0.72-second EMP aftershock timing, boundary release, and reset
+    cancellation. No effect-state instance is allocated after store initialization
+    during a saturated effect soak.
+  - Evidence: `validate_vehicle_effect_store.gd`,
+    `validate_vehicle_combat_renderer.gd`, `validate_vehicle_run.gd`, and
+    `validate_vehicle_performance_scenarios.gd` pass with ordinary first-entry swap
+    eviction, typed rendering, Run-owned aftershock timing/reset, exact 96-state
+    creation, `validate_capacity()`, saturated live count, and sane live/pool accounting
+    assertions.
 
 ### Phase 7 - Remove HUD and presentation allocation tails
 
-- [ ] **7.1 Publish atomic HUD clusters and reuse world-channel frames**
+- [x] **7.1 Publish atomic HUD clusters and reuse world-channel frames**
   - Owners: `scripts/ui/vehicle_hud_presenter.gd`, `scripts/vehicle/vehicle_run.gd`, and
     HUD/minimap validators. `VehicleGameplayHud` may change only if required to consume
     the same snapshot schema without visual/layout changes.
@@ -315,7 +336,13 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
     cluster and never render `1/1` unless simulation is `1/1`; all action siblings stay
     atomic; world cadence is 5 Hz; two marker buffers alternate and neither mutates while
     retained; marker roles/order/count match the current oracle at 320 enemies.
-- [ ] **7.2 Reuse the synchronous combat-presentation frame**
+  - Evidence: `validate_vehicle_hud_presenter.gd` and `validate_vehicle_run.gd` pass
+    with every field asserted in all five initial clusters (hull/progression, objective,
+    action slots, target, and boss), atomic cluster omission/change coverage, no fallback
+    `1/1`, five-hertz world cadence, exact 320-hostile minimap oracle order, fixed
+    capacity, alternating identity, retained-frame immutability, and threat-wrapper
+    borrowing assertions.
+- [x] **7.2 Reuse the synchronous combat-presentation frame**
   - Owners: `scripts/vehicle/vehicle_run.gd`,
     `scripts/player/vehicle_secondary_runtime.gd`,
     `scripts/vehicle/vehicle_terrain_runtime.gd`,
@@ -324,12 +351,23 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
     renderer-visible fields equal the old snapshot oracle; all actor/projectile/shard/
     effect counts, support fields, mines, orbit blades, drone, protection, cursor, and
     damage overlays remain identical; render batches stay at or below 50.
+  - Evidence: `validate_vehicle_secondary_weapons.gd`,
+    `validate_vehicle_terrain_runtime.gd`, `validate_vehicle_combat_renderer.gd`,
+    `validate_vehicle_run.gd`, and `validate_vehicle_damage_feedback.gd` pass with
+    cold-oracle equality, borrowed protection/mine/live-list identity, 128-call
+    top-level/nested-buffer identity, 128-sync actor/projectile/shard/effect/support/
+    overlay count stability, current-value refresh, and the retained batch ceiling.
 
 ### Phase 8 - Consolidated qualification
 
-- [ ] **8.1 Run focused correctness checks and one production Web export**
+- [x] **8.1 Run focused correctness checks and one production Web export**
   - Run the Test Plan only after Phases 5-7 are implemented. Fix task-owned failures and
     rerun only affected checks. Then run the complete named batch once.
+  - Evidence: before the ownership post-pass, the complete 14-validator named batch,
+    Godot headless import, `tools/export_web.ps1` (`WEB_EXPORT_OK`, four files), and
+    `git diff --check` passed. After moving EMP scheduling out of presentation state,
+    the four affected focused validators and `git diff --check` pass; import and Web
+    export were intentionally not repeated under the post-pass's focused-check scope.
 - [ ] **8.2 Commit the implementation and run native release scenarios**
   - Measure from the exact clean implementation commit with normal stride-7
     instrumentation. Quote the window position as `'40,40'`; unquoted PowerShell input
@@ -362,6 +400,7 @@ $validators = @(
   'validate_vehicle_terrain_runtime.gd',
   'validate_vehicle_pickup_contact.gd',
   'validate_vehicle_projectile_store.gd',
+  'validate_vehicle_effect_store.gd',
   'validate_vehicle_hud_presenter.gd',
   'validate_vehicle_combat_renderer.gd',
   'validate_vehicle_stage_ui_layout.gd',
@@ -461,9 +500,9 @@ nonstandard detail stride.
   nearest-eight contract; randomized oracle tests lock that contract explicitly.
 - Reusing dictionaries is unsafe across retained UI frames. The plan therefore requires
   alternating minimap buffers and synchronous-only borrowing elsewhere.
-- Effect pooling crosses simulation and renderer ownership. A dedicated store prevents
-  `VehicleRun` or the renderer from becoming a catch-all, while `VehicleRun` retains the
-  gameplay side effect for scheduled aftershock.
+- Effect pooling crosses simulation and renderer ownership. The dedicated store owns
+  presentation records only; `VehicleRun` owns the scalar aftershock schedule and its
+  gameplay release, so neither the store nor renderer becomes a catch-all.
 - The current gate is demanding for GDScript. This plan does not promise a pass by hiding
   load; it exhausts the proven behavior-preserving owners before any broader architecture
   can be considered.
@@ -480,6 +519,9 @@ nonstandard detail stride.
   steering/motion ablation still misses frame and physics gates.
 - 2026-08-05: Kept projectile first-hit traversal and renderer batch geometry unchanged;
   neither has evidence sufficient to justify a higher-risk rewrite in this pass.
+- 2026-08-05: Moved EMP aftershock scheduling from the pooled presentation store to a
+  Run-owned scalar timer. Focused validation now locks the strict presentation boundary,
+  all five initial HUD clusters, and exact 96-state saturated performance accounting.
 
 ## Progress
 
@@ -487,12 +529,12 @@ nonstandard detail stride.
 - [x] Run current-source causal ablations for steering and static motion.
 - [x] Trace secondary physics, HUD, and presentation owners.
 - [x] Compare alternatives and lock the selected architecture.
-- [ ] Complete Phase 5.
-- [ ] Complete Phase 6.
-- [ ] Complete Phase 7.
+- [x] Complete Phase 5.
+- [x] Complete Phase 6.
+- [x] Complete Phase 7.
 - [ ] Complete Phase 8 and retire this plan.
 
-Current task: **5.1 Implement the packed batched local-overlap cache.**
+Current task: **8.2 Commit the implementation and run native release scenarios.**
 
 ## Open Questions
 

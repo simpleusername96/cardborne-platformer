@@ -6,6 +6,7 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
+const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
@@ -131,29 +132,59 @@ func _run() -> void:
 	var shard := ExperienceShard.new()
 	shard.configure(1, Vector2(340.0, 320.0), 1, &"")
 	var shards: Array[ExperienceShard] = [shard]
-	var effects: Array[Dictionary] = [{
-		"pos":Vector2(360.0,320.0), "duration":1.0, "time":0.5,
-		"radius":20.0, "kind":&"projectile_damage_impact",
-		"color":Color.WHITE, "dir":Vector2.RIGHT,
-	}]
+	var effect_store := EffectStore.new()
+	var rendered_effect = effect_store.add(
+		&"projectile_damage_impact",
+		Vector2(360.0, 320.0),
+		Color.WHITE,
+		1.0,
+		20.0,
+		Vector2.RIGHT
+	)
+	rendered_effect.time = 0.5
+	var presentation := {
+		"zones":[], "trails":[], "player_position":Vector2(260.0,300.0),
+		"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
+		"player_hit":false, "muzzle_flash":0.0, "barrier_strength":10.0,
+		"reduced_motion":true, "run_time":1.0, "ion_level":0,
+		"blade_level":0, "escort_drone":false, "secondary":{},
+		"support_fields":[{
+			"state":&"active", "position":Vector2(600.0, 300.0),
+			"radius":120.0, "kind":&"repair",
+			"phase_progress":0.5, "effect_active":true,
+		}],
+		"cursor_position":Vector2(460.0,300.0),
+	}
 	renderer.sync(
-		enemies, projectiles, hostile_projectiles, shards, effects, Rect2(0,0,1280,720),
+		enemies, projectiles, hostile_projectiles, shards, effect_store.live,
+		Rect2(0,0,1280,720),
 		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
-		{
-			"zones":[], "trails":[], "player_position":Vector2(260.0,300.0),
-			"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
-			"player_hit":false, "muzzle_flash":0.0, "barrier_strength":10.0,
-			"reduced_motion":true, "run_time":1.0, "ion_level":0,
-			"blade_level":0, "escort_drone":false, "secondary":{},
-			"support_fields":[{
-				"state":&"active", "position":Vector2(600.0, 300.0),
-				"radius":120.0, "kind":&"repair",
-				"phase_progress":0.5, "effect_active":true,
-			}],
-			"cursor_position":Vector2(460.0,300.0),
-		}
+		presentation
 	)
 	snapshot = renderer.debug_snapshot()
+	var repeated_counts_stable := true
+	for _sync_index in 128:
+		renderer.sync(
+			enemies, projectiles, hostile_projectiles, shards, effect_store.live,
+			Rect2(0,0,1280,720),
+			Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
+			presentation
+		)
+	var repeated_snapshot: Dictionary = renderer.debug_snapshot()
+	for key in [
+		"visible_instances", "batch_counts", "health_bar_count",
+		"priority_marker_count", "tactic_module_count",
+		"support_field_glyph_count", "semantic_texture_draw_count",
+		"floating_damage_draw_count",
+	]:
+		repeated_counts_stable = (
+			repeated_counts_stable and snapshot[key] == repeated_snapshot[key]
+		)
+	_expect(
+		repeated_counts_stable,
+		"128 borrowed-frame syncs preserve actor, projectile, shard, effect, support, and overlay counts"
+	)
+	snapshot = repeated_snapshot
 	var experience_batch := renderer.get_node_or_null(
 		"Experience_master"
 	) as MultiMeshInstance2D

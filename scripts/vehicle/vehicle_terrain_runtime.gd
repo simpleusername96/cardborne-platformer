@@ -45,6 +45,7 @@ var _relocation_cooldown := 0.0
 var _wear_tiles: Array[VehicleTerrainDefinition] = []
 var _wear_occupancy: Dictionary = {}
 var _wear_damage_deadlines: Dictionary = {}
+var _advance_events: Array[Dictionary] = []
 
 
 func configure(
@@ -106,7 +107,7 @@ func advance(
 	player_health: float,
 	player_max_health: float
 ) -> Array[Dictionary]:
-	var events: Array[Dictionary] = []
+	_advance_events.clear()
 	repair_pause = maxf(0.0, repair_pause - delta)
 	_relocation_cooldown = maxf(0.0, _relocation_cooldown - delta)
 	for pair in _gate_cooldowns:
@@ -124,9 +125,11 @@ func advance(
 	overdrive_active = _inside_active_support(
 		player_position, &"overdrive"
 	)
-	_advance_repair(delta, player_position, player_health, player_max_health, events)
-	_advance_transit(delta, player_position, events)
-	return events
+	_advance_repair(
+		delta, player_position, player_health, player_max_health, _advance_events
+	)
+	_advance_transit(delta, player_position, _advance_events)
+	return _advance_events
 
 
 func surge_damage_for(
@@ -333,9 +336,17 @@ func snapshot() -> Dictionary:
 
 func support_snapshot() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	for slot in support_fields:
-		result.append(_support_snapshot(slot))
-	return result
+	return fill_support_snapshot(result)
+
+
+func fill_support_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
+	## Reuses caller-owned records for the synchronous combat renderer boundary.
+	while output.size() < support_fields.size():
+		output.append({})
+	output.resize(support_fields.size())
+	for index in support_fields.size():
+		_fill_support_snapshot(support_fields[index], output[index])
+	return output
 
 
 func _advance_repair(
@@ -532,7 +543,7 @@ func _support_socket_available(
 	return true
 
 
-func _support_snapshot(slot: Dictionary) -> Dictionary:
+func _fill_support_snapshot(slot: Dictionary, output: Dictionary) -> void:
 	var state := StringName(slot["state"])
 	var duration := 0.0
 	match state:
@@ -545,18 +556,21 @@ func _support_snapshot(slot: Dictionary) -> Dictionary:
 		&"dormant_marker":
 			duration = float(slot["dormant_duration"])
 	var remaining := float(slot["time_remaining"])
-	return {
-		"slot_id":StringName(slot["slot_id"]),
-		"kind":StringName(slot["kind"]),
-		"state":state,
-		"position":Vector2(slot["position"]),
-		"radius":float(slot["radius"]),
-		"phase_progress":clampf(1.0 - remaining / maxf(duration, 0.001), 0.0, 1.0),
-		"remaining_seconds":remaining,
-		"effect_active":state == &"active",
-		"relocation_index":int(slot["relocation_index"]),
-		"repair_budget":repair_budget if StringName(slot["kind"]) == &"repair" else 0.0,
-	}
+	output.clear()
+	output["slot_id"] = StringName(slot["slot_id"])
+	output["kind"] = StringName(slot["kind"])
+	output["state"] = state
+	output["position"] = Vector2(slot["position"])
+	output["radius"] = float(slot["radius"])
+	output["phase_progress"] = clampf(
+		1.0 - remaining / maxf(duration, 0.001), 0.0, 1.0
+	)
+	output["remaining_seconds"] = remaining
+	output["effect_active"] = state == &"active"
+	output["relocation_index"] = int(slot["relocation_index"])
+	output["repair_budget"] = (
+		repair_budget if StringName(slot["kind"]) == &"repair" else 0.0
+	)
 
 
 func _arc_is_active(feature: VehicleTerrainDefinition) -> bool:

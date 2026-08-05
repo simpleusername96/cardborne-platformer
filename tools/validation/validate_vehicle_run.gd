@@ -80,8 +80,10 @@ func _run() -> void:
 		run.call("_reset_run", false, true, true)
 		_check_enemy_expansion(run)
 		run.call("_reset_run", false, true, true)
+		_check_combat_presentation_frame(run)
 		_check_primary_collision_at_horde_capacity(run)
 		_check_hot_path_guards(run)
+		_check_effect_store(run)
 	root.queue_free()
 	await process_frame
 	_finish()
@@ -231,8 +233,8 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	)
 	_expect(
 		not run.effects.is_empty()
-			and String(run.effects[-1]["kind"]) == "boss_core_reduced_hit"
-			and is_equal_approx(float(run.effects[-1]["value"]), 20.0),
+			and run.effects[-1].kind == &"boss_core_reduced_hit"
+			and is_equal_approx(run.effects[-1].value, 20.0),
 		"sealed hit feedback exposes the actual applied damage"
 	)
 	var hud := Dictionary(run.call("_build_hud_snapshot"))
@@ -499,6 +501,7 @@ func _check_primary_collision_at_horde_capacity(run) -> void:
 		"collision targets occupy the final two horde-capacity slots"
 	)
 	run.call("_rebuild_enemy_runtime_indexes")
+	_check_runtime_minimap_at_horde_capacity(run)
 	var first_health := first_target.health
 	var rear_health := rear_target.health
 	_expect(
@@ -525,6 +528,192 @@ func _check_primary_collision_at_horde_capacity(run) -> void:
 	)
 
 
+func _check_combat_presentation_frame(run) -> void:
+	var original_protection: Dictionary = (
+		run.player_protection_sources.duplicate()
+	)
+	var original_mines: Array = run.secondary_runtime.mines.duplicate(true)
+	var original_orbit_angle := float(run.secondary_runtime.orbit_angle)
+	var original_drone_position := Vector2(run.secondary_runtime.drone_position)
+	run.player_protection_sources.clear()
+	run.player_protection_sources[&"emp"] = 0.40
+	run.secondary_runtime.mines.clear()
+	run.secondary_runtime.mines.append({
+		"pos":run.player_position + Vector2(48.0, 0.0),
+		"life":3.25,
+	})
+	run.secondary_runtime.orbit_angle = 0.37
+	run.secondary_runtime.drone_position = (
+		run.player_position + Vector2(0.0, 92.0)
+	)
+	var oracle: Dictionary = run.call("_combat_presentation_snapshot")
+	var first: Dictionary = run.call("_runtime_combat_presentation_snapshot")
+	var secondary: Dictionary = first["secondary"]
+	var support_fields: Array = first["support_fields"]
+	_expect(
+		_presentation_snapshots_match(oracle, first),
+		"borrowed combat presentation matches every renderer-visible cold-oracle field"
+	)
+	_expect(
+		is_same(first["zones"], run.denied_zones)
+			and is_same(first["trails"], run.damaging_trails)
+			and is_same(first["protection_sources"], run.player_protection_sources)
+			and is_same(first["resolved_boss_modules"], run.resolved_boss_module_visuals)
+			and is_same(support_fields, run._runtime_support_field_frames)
+			and is_same(secondary, run._runtime_secondary_presentation_frame)
+			and is_same(secondary["mines"], run.secondary_runtime.mines),
+		"combat presentation borrows synchronous live collections without duplication"
+	)
+	_expect(
+		secondary.size() == 3
+			and not secondary.has("equipped")
+			and not secondary.has("seeker_cooldown"),
+		"runtime secondary state exposes only orbit, mines, and drone fields"
+	)
+	_expect(
+		not is_same(oracle["protection_sources"], run.player_protection_sources)
+			and not is_same(oracle["secondary"]["mines"], run.secondary_runtime.mines),
+		"cold combat snapshot remains independently owned for validators and capture"
+	)
+	var first_support_record: Dictionary = (
+		support_fields[0] if not support_fields.is_empty() else {}
+	)
+	var identities_stable := not support_fields.is_empty()
+	for _sync_index in 128:
+		var repeated: Dictionary = run.call(
+			"_runtime_combat_presentation_snapshot"
+		)
+		identities_stable = identities_stable and (
+			is_same(first, repeated)
+			and is_same(secondary, repeated["secondary"])
+			and is_same(support_fields, repeated["support_fields"])
+			and is_same(first_support_record, repeated["support_fields"][0])
+		)
+	_expect(
+		identities_stable,
+		"128 synchronous combat snapshots reuse top-level and nested bounded buffers"
+	)
+	run.player_protection_sources[&"emp"] = 0.20
+	run.secondary_runtime.orbit_angle = 0.81
+	run.secondary_runtime.mines[0]["life"] = 1.75
+	var changed: Dictionary = run.call("_runtime_combat_presentation_snapshot")
+	_expect(
+		is_same(first, changed)
+			and float(changed["protection_sources"][&"emp"]) == 0.20
+			and float(changed["secondary"]["orbit_angle"]) == 0.81
+			and float(changed["secondary"]["mines"][0]["life"]) == 1.75,
+		"reused combat presentation reflects current protection, orbit, and mine state"
+	)
+	run.player_protection_sources.clear()
+	run.player_protection_sources.merge(original_protection)
+	run.secondary_runtime.mines.clear()
+	run.secondary_runtime.mines.append_array(original_mines)
+	run.secondary_runtime.orbit_angle = original_orbit_angle
+	run.secondary_runtime.drone_position = original_drone_position
+
+
+func _presentation_snapshots_match(
+	expected: Dictionary,
+	actual: Dictionary
+) -> bool:
+	for key in [
+		"zones", "trails", "player_position", "hull_direction",
+		"aim_direction", "player_speed", "dash_active", "dash_progress",
+		"dash_direction", "player_hit", "player_hit_remaining",
+		"player_invulnerable_remaining", "protection_sources", "muzzle_flash",
+		"barrier_strength", "reduced_motion", "run_time",
+		"secondary_visual_tier", "support_fields", "resolved_boss_modules",
+		"ion_level", "blade_level", "escort_drone", "cursor_position",
+	]:
+		if expected.get(key) != actual.get(key):
+			return false
+	var expected_secondary := Dictionary(expected.get("secondary", {}))
+	var actual_secondary := Dictionary(actual.get("secondary", {}))
+	for key in ["orbit_angle", "mines", "drone_position"]:
+		if expected_secondary.get(key) != actual_secondary.get(key):
+			return false
+	return true
+
+
+func _check_runtime_minimap_at_horde_capacity(run) -> void:
+	var oracle: Dictionary = run.call("_minimap_snapshot", false)
+	var first: Dictionary = run.call("_runtime_minimap_snapshot", false)
+	var first_markers: Array = first["markers"]
+	var first_visited: Array = first["visited"]
+	_expect(
+		_minimap_snapshots_match(oracle, first),
+		"runtime minimap preserves cold-oracle marker count, order, roles, and values at 320 enemies"
+	)
+	_expect(
+		first_markers.size() >= EnemyStore.MAX_LIVE_HOSTILES
+			and first_markers.size() <= run.MINIMAP_MARKER_CAPACITY,
+		"runtime minimap publishes all 320 enemies within its fixed marker capacity"
+	)
+	_expect(
+		run._runtime_minimap_marker_pool.size()
+			== run.MINIMAP_FRAME_COUNT * run.MINIMAP_MARKER_CAPACITY,
+		"runtime minimap owns exactly two fixed-capacity marker pools"
+	)
+	var retained_player := Vector2(first["player"])
+	var retained_marker_position := Vector2(first_markers[0]["position"])
+	var retained_visited := first_visited.duplicate()
+	var original_player := Vector2(run.player_position)
+	var original_enemy_position := Vector2(run.enemies[0].pos)
+	run.player_position += Vector2(5.0, 0.0)
+	run.enemies[0].pos += Vector2(7.0, 0.0)
+	var second: Dictionary = run.call("_runtime_minimap_snapshot", false)
+	var second_markers: Array = second["markers"]
+	_expect(
+		not is_same(first, second)
+			and not is_same(first_markers, second_markers)
+			and not is_same(first_visited, second["visited"])
+			and not is_same(first_markers[0], second_markers[0]),
+		"alternating minimap frames do not alias retained dictionaries, arrays, or marker records"
+	)
+	_expect(
+		Vector2(first["player"]) == retained_player
+			and Vector2(first_markers[0]["position"]) == retained_marker_position
+			and first_visited == retained_visited,
+		"the next minimap publication does not mutate the immediately retained frame"
+	)
+	var third: Dictionary = run.call("_runtime_minimap_snapshot", false)
+	_expect(
+		is_same(first, third)
+			and is_same(first_markers, third["markers"])
+			and is_same(first_visited, third["visited"]),
+		"runtime minimap alternates back to the first preallocated frame"
+	)
+	run.player_position = original_player
+	run.enemies[0].pos = original_enemy_position
+	var threat_first: Dictionary = run.call("_runtime_threat_radar_snapshot")
+	var threat_second: Dictionary = run.call("_runtime_threat_radar_snapshot")
+	_expect(
+		is_same(threat_first, threat_second)
+			and is_same(threat_first["contacts"], run._threat_contact_cache),
+		"threat radar reuses its synchronous wrapper and borrowed contact cache"
+	)
+
+
+func _minimap_snapshots_match(expected: Dictionary, actual: Dictionary) -> bool:
+	for key in ["cols", "rows", "visited", "player", "player_facing", "world_size"]:
+		if expected.get(key) != actual.get(key):
+			return false
+	var expected_markers: Array = expected.get("markers", [])
+	var actual_markers: Array = actual.get("markers", [])
+	if expected_markers.size() != actual_markers.size():
+		return false
+	for index in expected_markers.size():
+		var expected_marker := Dictionary(expected_markers[index])
+		var actual_marker := Dictionary(actual_markers[index])
+		if (
+			expected_marker.get("kind") != actual_marker.get("kind")
+			or expected_marker.get("position") != actual_marker.get("position")
+			or expected_marker.get("discovered") != actual_marker.get("discovered")
+		):
+			return false
+	return true
+
+
 func _check_hot_path_guards(run) -> void:
 	var live_crates := 0
 	for crate in run.crates:
@@ -543,6 +732,11 @@ func _check_hot_path_guards(run) -> void:
 		12.0
 	)
 	_expect(open_cover.is_empty(), "open-space motion has no runtime cover candidate")
+	_expect(
+		bool(run._motion_cover_static_safe)
+		and bool(run._motion_cover_static_cover_clear),
+		"combined same-cell certificate returns before static blocker scanning"
+	)
 	var open_result: Vector2 = Rules.move_circle_with_extra(
 		open_from,
 		open_motion,
@@ -577,14 +771,106 @@ func _check_hot_path_guards(run) -> void:
 		open_cover_cached_result == open_result,
 		"cached empty static-cover broadphase preserves floor/void motion"
 	)
+	var cross_from: Vector2 = Vector2(run.player_position) + Vector2(1.0, 1.0)
+	var cross_to: Vector2 = cross_from + Vector2(80.0, 0.0)
+	run.call("_runtime_motion_cover_rects", cross_from, cross_to, 24.0)
+	_expect(
+		not bool(run._motion_cover_static_safe),
+		"cross-cell motion remains on the exact solver"
+	)
+	run.call(
+		"_runtime_motion_cover_rects",
+		run.player_position,
+		run.player_position + Vector2(8.0, 0.0),
+		76.0
+	)
+	_expect(
+		not bool(run._motion_cover_static_safe),
+		"radius-over-36 motion remains on the exact solver"
+	)
+	var outside := Catalog.world_rect(run.current_stage_id).position - Vector2(40.0, 40.0)
+	run.call("_runtime_motion_cover_rects", outside, outside + Vector2(4.0, 0.0), 24.0)
+	_expect(
+		not bool(run._motion_cover_static_safe),
+		"out-of-bounds motion remains on the exact solver"
+	)
 	if not run._active_tactical_layout.cover_rects.is_empty():
 		var cover := Rect2(run._active_tactical_layout.cover_rects[0])
 		var cover_from := cover.get_center() - Vector2(cover.size.x * 0.5 + 120.0, 0.0)
 		var cover_to := cover.get_center() + Vector2(cover.size.x * 0.5 + 120.0, 0.0)
+		var motion_cover: Array = run.call(
+			"_runtime_motion_cover_rects", cover_from, cover_to, 24.0
+		)
+		_expect(
+			cover in motion_cover and not bool(run._motion_cover_static_safe),
+			"selected cover remains an exact uncertified blocker"
+		)
 		var cover_hit := Dictionary(run.call("_runtime_first_cover_hit", cover_from, cover_to, 7.0))
 		_expect(bool(cover_hit.get("hit", false)), "candidate-bearing projectile path keeps exact cover hit")
 	else:
 		_expect(false, "stage fixture exposes authored cover for candidate-path coverage")
+	if not run._runtime_structural_walls.is_empty():
+		var wall := Rect2(run._runtime_structural_walls[0])
+		var wall_from := wall.get_center() - Vector2(wall.size.x * 0.5 + 80.0, 0.0)
+		var wall_to := wall.get_center() + Vector2(wall.size.x * 0.5 + 80.0, 0.0)
+		var wall_cover: Array = run.call(
+			"_runtime_motion_cover_rects", wall_from, wall_to, 24.0
+		)
+		_expect(
+			wall in wall_cover and not bool(run._motion_cover_static_safe),
+			"structural-wall motion retains exact blocker scanning"
+		)
+	else:
+		_expect(false, "stage fixture exposes a structural wall")
+	if not run._runtime_bulkheads.is_empty():
+		var bulkhead := Rect2(run._runtime_bulkheads[0])
+		var bulkhead_from := (
+			bulkhead.get_center() - Vector2(bulkhead.size.x * 0.5 + 80.0, 0.0)
+		)
+		var bulkhead_to := (
+			bulkhead.get_center() + Vector2(bulkhead.size.x * 0.5 + 80.0, 0.0)
+		)
+		var live_bulkhead_cover: Array = run.call(
+			"_runtime_motion_cover_rects", bulkhead_from, bulkhead_to, 24.0
+		)
+		_expect(
+			bulkhead in live_bulkhead_cover and not bool(run._motion_cover_static_safe),
+			"live bulkhead motion retains exact blocker scanning"
+		)
+		var bulkhead_id: StringName = run.terrain_runtime.bulkhead_id_for_rect(
+			bulkhead
+		)
+		_expect(
+			run.terrain_runtime.damage_bulkhead(bulkhead_id, 9999.0),
+			"bulkhead fixture opens through the authored damage owner"
+		)
+		run.call("_rebuild_runtime_blockers")
+		var opened_bulkhead_cover: Array = run.call(
+			"_runtime_motion_cover_rects", bulkhead_from, bulkhead_to, 24.0
+		)
+		_expect(
+			bulkhead not in opened_bulkhead_cover
+			and not bool(run._motion_cover_static_safe),
+			"opened bulkhead remains uncertified while exact blockers reflect removal"
+		)
+	else:
+		_expect(false, "stage fixture exposes a live breakable bulkhead")
+	var collision_crate: Dictionary = {}
+	for crate in run.crates:
+		if bool(crate["alive"]):
+			collision_crate = crate
+			break
+	if not collision_crate.is_empty():
+		var crate_position := Vector2(collision_crate["pos"])
+		var crate_from := crate_position - Vector2(90.0, 0.0)
+		var crate_motion := Vector2(90.0, 0.0)
+		_expect(
+			Vector2(run.call("_move_actor", crate_from, crate_motion, 24.0, false))
+				!= crate_from + crate_motion,
+			"live crate collision remains exact after static certification"
+		)
+	else:
+		_expect(false, "stage fixture exposes a live collision crate")
 	for crate in run.crates:
 		if bool(crate["alive"]):
 			run.call("_damage_crate", crate, 9999.0)
@@ -615,6 +901,68 @@ func _check_hot_path_guards(run) -> void:
 	_expect(
 		run.projectile_store.player_count() == 1,
 		"wall-piercing projectile bypasses cover collision while retaining its life"
+	)
+
+
+func _check_effect_store(run) -> void:
+	run.call("_clear_effects")
+	_expect(
+		run.run_build.has(&"emp_aftershock")
+			or bool(run.run_build.apply(&"emp_aftershock").get("applied", false)),
+		"aftershock timing fixture equips the gameplay upgrade"
+	)
+	run.call("_release_emp", false)
+	_expect(
+		is_equal_approx(run.EMP_AFTERSHOCK_DELAY, 0.72)
+		and is_equal_approx(
+			float(run._emp_aftershock_timer), run.EMP_AFTERSHOCK_DELAY
+		)
+		and run.effect_store.count_kind(&"scheduled_aftershock") == 0
+		and run.effect_store.count_kind(&"player_emp_aftershock") == 0,
+		"primary EMP arms a Run-owned 0.72-second timer without hidden store state"
+	)
+	run.call("_update_effects", 0.70)
+	_expect(
+		float(run._emp_aftershock_timer) > 0.0
+			and run.effect_store.count_kind(&"player_emp_aftershock") == 0,
+		"aftershock remains pending before its accumulated effect boundary"
+	)
+	run.call("_update_effects", 0.019)
+	_expect(
+		float(run._emp_aftershock_timer) > 0.0
+			and run.effect_store.count_kind(&"player_emp_aftershock") == 0,
+		"aftershock does not release before the exact 0.72-second delay"
+	)
+	run.call("_update_effects", 0.002)
+	_expect(
+		is_zero_approx(float(run._emp_aftershock_timer))
+			and run.effect_store.count_kind(&"player_emp_aftershock") == 1,
+		"timer crossing releases one actual aftershock visual and gameplay pulse"
+	)
+	run.call("_update_effects", 0.01)
+	_expect(
+		run.effect_store.count_kind(&"player_emp_aftershock") == 1,
+		"released aftershock is not dispatched twice"
+	)
+	_expect(
+		run.effect_store.validate_capacity()
+		and run.effects.size() <= run.effect_store.MAX_LIVE_EFFECTS
+		and int(run.effect_store.debug_snapshot()["state_instances_created"])
+			== run.effect_store.MAX_LIVE_EFFECTS,
+		"run effect boundary preserves exact pool accounting and cap"
+	)
+	run.call("_clear_effects")
+	run.call("_release_emp", false)
+	_expect(
+		float(run._emp_aftershock_timer) > 0.0,
+		"reset fixture begins with pending aftershock work"
+	)
+	run.call("_clear_effects")
+	run.call("_update_effects", 1.0)
+	_expect(
+		is_zero_approx(float(run._emp_aftershock_timer))
+			and run.effects.is_empty(),
+		"effect reset cancels pending gameplay work and returns every visual state"
 	)
 
 

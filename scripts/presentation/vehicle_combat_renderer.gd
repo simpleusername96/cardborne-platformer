@@ -25,6 +25,7 @@ const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
+const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 
 const ENEMY_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES
 const PROJECTILE_CAPACITY := 240
@@ -205,7 +206,7 @@ func sync(
 	player_projectiles: Array[ProjectileState],
 	hostile_projectiles: Array[ProjectileState],
 	shards: Array[ExperienceShard],
-	effects: Array[Dictionary],
+	effects: Array[EffectState],
 	visible_world: Rect2,
 	player_position: Vector2,
 	run_time: float,
@@ -213,6 +214,7 @@ func sync(
 	aim_target_id: String = "",
 	presentation: Dictionary = {}
 ) -> void:
+	# Presentation is synchronous borrowed scratch; never retain or mutate it.
 	_reset_counts()
 	_support_field_asset_count = 0
 	_semantic_texture_draw_count = 0
@@ -318,6 +320,7 @@ func debug_snapshot() -> Dictionary:
 		"support_field_glyph_count":_support_field_asset_count,
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
 		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
+		"floating_damage_draw_count":_floating_damage_draw_count,
 	}
 
 
@@ -1143,25 +1146,25 @@ func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> v
 		)
 
 
-func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
+func _sync_effects(effects: Array[EffectState], visible_world: Rect2) -> void:
 	for effect in effects:
-		var position := Vector2(effect["pos"])
-		var duration := maxf(0.001, float(effect["duration"]))
-		var progress := 1.0 - clampf(float(effect["time"]) / duration, 0.0, 1.0)
-		var radius := float(effect["radius"])
+		var position := effect.pos
+		var duration := maxf(0.001, effect.duration)
+		var progress := 1.0 - clampf(effect.time / duration, 0.0, 1.0)
+		var radius := effect.radius
 		if not visible_world.grow(radius).has_point(position):
 			continue
-		var event_id := StringName(effect["kind"])
+		var event_id := effect.kind
 		if not VisualEventCatalog.has_event(event_id):
 			continue
 		var event := VisualEventCatalog.descriptor(event_id)
 		var mode := StringName(event.get("mode", &"suppressed"))
-		var color := Color(effect["color"])
+		var color := effect.color
 		color.a *= 1.0 - progress
-		var direction := Vector2(effect.get("dir", Vector2.RIGHT)).normalized()
+		var direction := effect.direction.normalized()
 		if direction.is_zero_approx():
 			direction = Vector2.RIGHT
-		var target := Vector2(effect.get("target", position))
+		var target := effect.target
 		var angle := (
 			(target - position).angle()
 			if event.get("rotation", &"") == &"target"
@@ -1211,8 +1214,8 @@ func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 					-radius * 0.62 - progress * 22.0
 				),
 				"%d  ×%d%%" % [
-					maxi(1, roundi(float(effect.get("value", 0.0)))),
-					roundi(float(effect.get("multiplier", 1.0)) * 100.0),
+					maxi(1, roundi(effect.value)),
+					roundi(effect.multiplier * 100.0),
 				],
 				Color(color, 1.0 - progress)
 			)
@@ -1221,44 +1224,48 @@ func _sync_effects(effects: Array[Dictionary], visible_world: Rect2) -> void:
 func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	if state.is_empty():
 		return
-	for zone in Array(state.get("zones", [])):
-		var position := Vector2(zone["pos"])
-		var radius := float(zone["radius"])
-		if not visible_world.grow(radius).has_point(position):
-			continue
-		var affinity := AttackContract.normalize_affinity(
-			StringName(zone.get("affinity", AttackContract.KINETIC))
-		)
-		var damage := float(zone.get("damage", 0.0))
-		var descriptor := {
-			"center": position,
-			"radius": radius,
-			"damage": damage,
-			"affinity": affinity,
-			"readiness": 1.0,
-		}
-		var warning := float(zone["warning"])
-		if warning > 0.0:
-			var warning_total := maxf(
-				warning,
-				float(zone.get("warning_total", warning))
+	var zones_variant: Variant = state.get("zones")
+	if zones_variant is Array:
+		for zone_variant in zones_variant:
+			var zone: Dictionary = zone_variant
+			var position := Vector2(zone["pos"])
+			var radius := float(zone["radius"])
+			if not visible_world.grow(radius).has_point(position):
+				continue
+			var affinity := AttackContract.normalize_affinity(
+				StringName(zone.get("affinity", AttackContract.KINETIC))
 			)
-			descriptor["readiness"] = AttackContract.warning_readiness(
-				warning,
-				warning_total
-			)
+			var damage := float(zone.get("damage", 0.0))
+			var descriptor := {
+				"center": position,
+				"radius": radius,
+				"damage": damage,
+				"affinity": affinity,
+				"readiness": 1.0,
+			}
+			var warning := float(zone["warning"])
+			if warning > 0.0:
+				var warning_total := maxf(
+					warning,
+					float(zone.get("warning_total", warning))
+				)
+				descriptor["readiness"] = AttackContract.warning_readiness(
+					warning,
+					warning_total
+				)
 			_sync_area_telegraph(descriptor)
-		else:
-			_sync_area_telegraph(descriptor)
-	for trail in Array(state.get("trails", [])):
-		var position := Vector2(trail["pos"])
-		if visible_world.has_point(position):
-			var alpha := clampf(float(trail["time"]) / maxf(0.001, float(trail["duration"])), 0.0, 1.0)
-			_write_ring(
-				position,
-				float(trail["radius"]),
-				Color(Art.MUSTARD, alpha * 0.64)
-			)
+	var trails_variant: Variant = state.get("trails")
+	if trails_variant is Array:
+		for trail_variant in trails_variant:
+			var trail: Dictionary = trail_variant
+			var position := Vector2(trail["pos"])
+			if visible_world.has_point(position):
+				var alpha := clampf(float(trail["time"]) / maxf(0.001, float(trail["duration"])), 0.0, 1.0)
+				_write_ring(
+					position,
+					float(trail["radius"]),
+					Color(Art.MUSTARD, alpha * 0.64)
+				)
 	var player_position := Vector2(state["player_position"])
 	var hull_direction := Vector2(state["hull_direction"])
 	var aim_direction := Vector2(state["aim_direction"])
@@ -1267,7 +1274,9 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var protection_sources: Dictionary = state.get("protection_sources", {})
 	var displayed_player_position := player_position
 	var hull_color := Color.WHITE
-	_sync_support_fields(Array(state.get("support_fields", [])))
+	var support_fields_variant: Variant = state.get("support_fields")
+	if support_fields_variant is Array:
+		_sync_support_fields(support_fields_variant)
 	var feedback_color := Color.TRANSPARENT
 	if hit_remaining > 0.0:
 		var hit_progress := 1.0 - clampf(hit_remaining / 0.20, 0.0, 1.0)
@@ -1353,14 +1362,17 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				19.0,
 				Color.WHITE
 			)
-	for mine in Array(secondary.get("mines", [])):
-		_queue_semantic_texture(
-			StringName(_secondary_asset_ids.get(&"wake_mine", &"")),
-			Vector2(mine["pos"]),
-			0.0,
-			16.0,
-			Color.WHITE
-		)
+	var mines_variant: Variant = secondary.get("mines")
+	if mines_variant is Array:
+		for mine_variant in mines_variant:
+			var mine: Dictionary = mine_variant
+			_queue_semantic_texture(
+				StringName(_secondary_asset_ids.get(&"wake_mine", &"")),
+				Vector2(mine["pos"]),
+				0.0,
+				16.0,
+				Color.WHITE
+			)
 	if bool(state.get("escort_drone", false)):
 		var drone_position := Vector2(secondary.get("drone_position", player_position))
 		var drone_direction := radial_outward_direction(
@@ -1382,7 +1394,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 
 func _sync_support_fields(support_fields: Array) -> void:
 	for support_variant in support_fields:
-		var support := Dictionary(support_variant)
+		var support: Dictionary = support_variant
 		var state := StringName(support.get("state", &"initial_delay"))
 		if state in [&"initial_delay", &"depleted"]:
 			continue
@@ -1408,8 +1420,11 @@ func _sync_resolved_boss_modules(
 	state: Dictionary,
 	visible_world: Rect2
 ) -> void:
-	for module_variant in Array(state.get("resolved_boss_modules", [])):
-		var module := Dictionary(module_variant)
+	var modules_variant: Variant = state.get("resolved_boss_modules")
+	if not modules_variant is Array:
+		return
+	for module_variant in modules_variant:
+		var module: Dictionary = module_variant
 		var position := Vector2(module["position"])
 		var radius := float(module["radius"])
 		if not visible_world.grow(radius).has_point(position):

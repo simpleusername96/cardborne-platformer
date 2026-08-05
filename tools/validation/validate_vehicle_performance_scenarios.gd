@@ -72,6 +72,25 @@ func _run() -> void:
 				})
 			)
 		_expect(bool(snapshot["valid"]), "%s reaches every declared workload count" % String(scenario_id))
+		var effect_store_snapshot := Dictionary(snapshot["effect_store"])
+		_expect(
+			bool(effect_store_snapshot["valid"])
+				and int(effect_store_snapshot["capacity"]) == 96
+				and int(effect_store_snapshot["state_instances_created"]) == 96
+				and int(effect_store_snapshot["live"]) == int(snapshot["effects"])
+				and int(effect_store_snapshot["live"])
+					+ int(effect_store_snapshot["pool"]) == 96,
+			"%s runtime qualification proves fixed effect-store ownership and accounting"
+			% String(scenario_id)
+		)
+		if scenario_id in [&"capacity_pressure", &"lifecycle_pressure"]:
+			_expect(
+				int(snapshot["effects"]) == 96
+					and int(effect_store_snapshot["live"]) == 96
+					and int(effect_store_snapshot["pool"]) == 0,
+				"%s qualifies the fully saturated 96-state effect workload"
+				% String(scenario_id)
+			)
 		var expected_by_scenario := {
 			&"production_replay":-1,
 			&"peak_horde":Scenario.PEAK_HORDE_TARGET,
@@ -156,6 +175,26 @@ func _run() -> void:
 			_expect(
 				bool(snapshot["valid"]),
 				"terminal projectile retirement does not invalidate capacity load"
+			)
+			var effect_target := int(snapshot["effect_target"])
+			run.effect_store.remove_at_swap(run.effects.size() - 1)
+			var depleted_effect_count: int = run.effects.size()
+			snapshot = scenario.validation_snapshot(run)
+			_expect(
+				depleted_effect_count == effect_target - 1
+					and int(snapshot["effects"]) == depleted_effect_count
+					and run.effects.size() == depleted_effect_count,
+				"terminal effect qualification observes depletion without repairing it"
+			)
+			_expect(
+				not bool(snapshot["valid"]),
+				"terminal effect depletion invalidates the declared exact workload"
+			)
+			scenario.after_physics(run)
+			snapshot = scenario.validation_snapshot(run)
+			_expect(
+				int(snapshot["effects"]) == effect_target and bool(snapshot["valid"]),
+				"measured after-physics maintenance restores exact effect pressure"
 			)
 			run.denied_zones.append({
 				"source":"authored_fixture_probe",

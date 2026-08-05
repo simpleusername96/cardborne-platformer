@@ -32,6 +32,7 @@ func _initialize() -> void:
 		Grid.MAX_TRACKED_ACTORS == EnemyStore.MAX_LIVE_HOSTILES,
 		"grid preallocates stamps for the complete bounded enemy store"
 	)
+	_validate_local_overlap_cache()
 
 	var candidates: Array[EnemyState] = []
 	var capacity_target := live[-1]
@@ -185,6 +186,249 @@ func _initialize() -> void:
 		"incremental grid reports active membership"
 	)
 	_finish()
+
+
+func _validate_local_overlap_cache() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x0B471C
+	var live: Array[EnemyState] = []
+	for index in EnemyStore.MAX_LIVE_HOSTILES:
+		var enemy := EnemyState.new()
+		enemy.id = "overlap_%03d" % index
+		enemy.runtime_slot = index
+		enemy.spatial_slot = index
+		enemy.runtime_generation = 3
+		enemy.alive = true
+		enemy.active = true
+		enemy.role = &"chaser"
+		enemy.pos = Vector2(
+			rng.randf_range(320.0, 1280.0),
+			rng.randf_range(320.0, 1040.0)
+		)
+		enemy.radius = rng.randf_range(16.0, 42.0)
+		enemy.projectile_hit_radius = enemy.radius
+		live.append(enemy)
+	live[7].active = false
+	live[19].alive = false
+	live[33].role = &"stage_boss"
+	live[41].role = &"boss_pylon"
+	var grid := Grid.new()
+	grid.configure(Rect2(0.0, 0.0, 1600.0, 1280.0), 160.0)
+	grid.rebuild(live)
+	var refresh_mask := PackedByteArray()
+	refresh_mask.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	refresh_mask.fill(1)
+	grid.rebuild_local_overlap_cache(refresh_mask)
+	for owner in live:
+		var oracle := _brute_local_overlaps(owner, live)
+		var actual_count := grid.cached_local_overlap_count(owner)
+		_expect(
+			actual_count == oracle.size(),
+			"packed overlap row %d matches brute-force count" % owner.runtime_slot
+		)
+		for index in mini(actual_count, oracle.size()):
+			var expected: EnemyState = oracle[index]
+			var actual_slot := grid.cached_local_overlap_slot(owner, index)
+			_expect(
+				grid.cached_local_actor_id(actual_slot) == String(expected.id),
+				"packed overlap row %d index %d preserves ordered actor ID"
+				% [owner.runtime_slot, index]
+			)
+			_expect(
+				is_equal_approx(
+					grid.cached_local_overlap_distance_squared(owner, index),
+					owner.pos.distance_squared_to(expected.pos)
+				),
+				"packed overlap row %d index %d preserves distance"
+				% [owner.runtime_slot, index]
+			)
+	var snapshot := grid.debug_snapshot()
+	_expect(
+		int(snapshot["local_overlap_limit"]) == 8
+		and int(snapshot["local_overlap_capacity"])
+			== EnemyStore.MAX_LIVE_HOSTILES * 8,
+		"packed overlap storage is fixed at 320 rows of eight"
+	)
+	_expect(
+		int(snapshot["legacy_nearest_query_calls"]) == 0,
+		"batched cache construction performs no legacy per-owner query"
+	)
+	var fixed_capacity := int(snapshot["local_overlap_capacity"])
+	for _iteration in 8:
+		grid.rebuild_local_overlap_cache(refresh_mask)
+	_expect(
+		int(grid.debug_snapshot()["local_overlap_capacity"]) == fixed_capacity,
+		"repeated saturated cache builds do not grow packed storage"
+	)
+	_validate_local_overlap_edges()
+
+
+func _validate_local_overlap_edges() -> void:
+	var live: Array[EnemyState] = []
+	var cross_owner := _local_enemy("cross_owner", 0, Vector2(119.0, 119.0), 70.0)
+	var cross_neighbor := _local_enemy("cross_neighbor", 1, Vector2(121.0, 121.0), 70.0)
+	var search_edge := _local_enemy("search_edge", 2, Vector2(239.0, 119.0), 70.0)
+	var same_cell := _local_enemy("same_cell", 3, Vector2(110.0, 119.0), 20.0)
+	var tangent_owner := _local_enemy("tangent_owner", 4, Vector2(400.0, 400.0), 20.0)
+	var tangent_neighbor := _local_enemy("tangent_neighbor", 5, Vector2(440.0, 400.0), 20.0)
+	var zero_owner := _local_enemy("zero_owner", 6, Vector2(560.0, 560.0), 20.0)
+	var zero_neighbor := _local_enemy("zero_neighbor", 7, Vector2(560.0, 560.0), 20.0)
+	live.assign([
+		cross_owner, cross_neighbor, search_edge, same_cell,
+		tangent_owner, tangent_neighbor, zero_owner, zero_neighbor,
+	])
+	for index in 12:
+		live.append(_local_enemy(
+			"equal_%02d" % (11 - index),
+			8 + index,
+			Vector2(710.0, 700.0),
+			30.0
+		))
+	var equal_owner := _local_enemy("equal_owner", 20, Vector2(700.0, 700.0), 30.0)
+	live.append(equal_owner)
+	var inactive := _local_enemy("inactive", 21, Vector2(702.0, 700.0), 30.0)
+	inactive.active = false
+	live.append(inactive)
+	var dead := _local_enemy("dead", 22, Vector2(704.0, 700.0), 30.0)
+	dead.alive = false
+	live.append(dead)
+	var boss := _local_enemy("boss", 23, Vector2(706.0, 700.0), 30.0)
+	boss.role = &"stage_boss"
+	live.append(boss)
+	var pylon := _local_enemy("pylon", 24, Vector2(708.0, 700.0), 30.0)
+	pylon.role = &"boss_pylon"
+	live.append(pylon)
+	var grid := Grid.new()
+	grid.configure(Rect2(0.0, 0.0, 1000.0, 1000.0), 160.0)
+	grid.rebuild(live)
+	var mask := PackedByteArray()
+	mask.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	mask.fill(0)
+	for owner in [cross_owner, tangent_owner, zero_owner, equal_owner]:
+		mask[owner.spatial_slot] = 1
+	grid.rebuild_local_overlap_cache(mask)
+	var cross_ids := _cached_overlap_ids(grid, cross_owner)
+	_expect(
+		"cross_neighbor" in cross_ids
+		and "same_cell" in cross_ids
+		and "search_edge" in cross_ids,
+		"same-cell, cross-cell, and exact 120-unit candidates are cached"
+	)
+	_expect(
+		grid.cached_local_overlap_count(cross_neighbor) == 0,
+		"unmasked candidates do not receive a directed cache row"
+	)
+	_expect(
+		grid.cached_local_overlap_count(tangent_owner) == 0,
+		"exact body tangency is not treated as penetration"
+	)
+	_expect(
+		_cached_overlap_ids(grid, zero_owner) == ["zero_neighbor"],
+		"zero-distance overlap remains a valid deterministic neighbor"
+	)
+	var equal_ids := _cached_overlap_ids(grid, equal_owner)
+	_expect(equal_ids.size() == 8, "equal-distance rows retain only eight candidates")
+	var sorted_equal_ids := equal_ids.duplicate()
+	sorted_equal_ids.sort()
+	_expect(
+		equal_ids == sorted_equal_ids
+		and "inactive" not in equal_ids
+		and "dead" not in equal_ids
+		and "boss" not in equal_ids
+		and "pylon" not in equal_ids,
+		"equal-distance rows use actor ID order and exclude invalid special actors"
+	)
+	var captured_position := grid.cached_local_position(cross_neighbor.spatial_slot)
+	cross_neighbor.pos += Vector2(12.0, 0.0)
+	grid.update_actor_position(cross_neighbor)
+	_expect(
+		grid.cached_local_position(cross_neighbor.spatial_slot) == captured_position,
+		"published overlap positions remain immutable until the next batch"
+	)
+	var old_generation := cross_owner.runtime_generation
+	cross_owner.runtime_generation += 1
+	_expect(
+		grid.cached_local_overlap_count(cross_owner) == 0,
+		"owner generation reuse invalidates a previously published row"
+	)
+	cross_owner.runtime_generation = old_generation + 1
+	grid.update_actor(cross_owner)
+	grid.rebuild_local_overlap_cache(mask)
+	_expect(
+		grid.cached_local_overlap_count(cross_owner) > 0,
+		"generation reuse publishes only the replacement generation"
+	)
+
+
+func _local_enemy(
+	enemy_id: String,
+	slot: int,
+	position: Vector2,
+	radius: float
+) -> EnemyState:
+	var enemy := EnemyState.new()
+	enemy.id = enemy_id
+	enemy.runtime_slot = slot
+	enemy.spatial_slot = slot
+	enemy.runtime_generation = 1
+	enemy.alive = true
+	enemy.active = true
+	enemy.role = &"chaser"
+	enemy.pos = position
+	enemy.radius = radius
+	enemy.projectile_hit_radius = radius
+	return enemy
+
+
+func _cached_overlap_ids(grid: VehicleSpatialGrid, owner: EnemyState) -> Array[String]:
+	var ids: Array[String] = []
+	for index in grid.cached_local_overlap_count(owner):
+		ids.append(grid.cached_local_actor_id(
+			grid.cached_local_overlap_slot(owner, index)
+		))
+	return ids
+
+
+func _brute_local_overlaps(
+	owner: EnemyState,
+	live: Array[EnemyState]
+) -> Array[EnemyState]:
+	var result: Array[EnemyState] = []
+	if (
+		owner == null
+		or not owner.alive
+		or not owner.active
+		or owner.role in [&"stage_boss", &"boss_pylon"]
+	):
+		return result
+	for candidate in live:
+		if (
+			candidate == owner
+			or not candidate.alive
+			or not candidate.active
+			or candidate.role in [&"stage_boss", &"boss_pylon"]
+		):
+			continue
+		var distance_squared := owner.pos.distance_squared_to(candidate.pos)
+		var combined_radius := owner.radius + candidate.radius
+		if (
+			distance_squared <= Grid.LOCAL_OVERLAP_DISTANCE_SQUARED
+			and distance_squared < combined_radius * combined_radius
+		):
+			result.append(candidate)
+	result.sort_custom(
+		func(first: EnemyState, second: EnemyState) -> bool:
+			var first_distance := owner.pos.distance_squared_to(first.pos)
+			var second_distance := owner.pos.distance_squared_to(second.pos)
+			return (
+				String(first.id) < String(second.id)
+				if is_equal_approx(first_distance, second_distance)
+				else first_distance < second_distance
+			)
+	)
+	if result.size() > Grid.LOCAL_OVERLAP_LIMIT:
+		result.resize(Grid.LOCAL_OVERLAP_LIMIT)
+	return result
 
 
 func _expect_unique(candidates: Array[EnemyState], context: String) -> void:

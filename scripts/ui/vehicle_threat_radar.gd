@@ -25,8 +25,8 @@ func _ready() -> void:
 
 
 func set_snapshot(value: Dictionary) -> void:
-	# The stage creates a fresh snapshot and replaces contact arrays rather than
-	# mutating them, so the presentation layer can retain the reference safely.
+	# Run refreshes this borrowed wrapper only at the same five-hertz publication
+	# boundary; draw never observes it being mutated between publications.
 	snapshot = value
 	_mesh_dirty = true
 	queue_redraw()

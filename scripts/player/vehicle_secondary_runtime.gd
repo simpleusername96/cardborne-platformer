@@ -143,6 +143,15 @@ func snapshot(build: VehicleRunBuild) -> Dictionary:
 	}
 
 
+func fill_presentation_snapshot(output: Dictionary) -> Dictionary:
+	## Fills synchronous renderer scratch; mine state remains runtime-owned.
+	output.clear()
+	output["orbit_angle"] = orbit_angle
+	output["mines"] = mines
+	output["drone_position"] = drone_position
+	return output
+
+
 func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 	var result: Array[Dictionary] = [{"id":&"seeker", "level":1, "name_key":"SECONDARY_SEEKER_NAME", "slot_kind":&"built_in"}]
 	for secondary_id in [&"ion_field", &"orbit_blades", &"wake_mines", &"escort_drone"]:

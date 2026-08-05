@@ -59,6 +59,26 @@ func _initialize() -> void:
 		Callable(self, "_los")
 	)
 	_expect(Array(result["damage"]).size() >= 1, "equipped optional secondary emits bounded damage intent")
+	var oracle := runtime.snapshot(build)
+	var presentation_frame: Dictionary = {}
+	var presentation_first := runtime.fill_presentation_snapshot(
+		presentation_frame
+	)
+	var presentation_second := runtime.fill_presentation_snapshot(
+		presentation_frame
+	)
+	_expect(
+		is_same(presentation_first, presentation_second)
+			and presentation_first.size() == 3
+			and is_same(presentation_first["mines"], runtime.mines),
+		"secondary presentation reuses caller scratch and borrows live mine state"
+	)
+	_expect(
+		presentation_first["orbit_angle"] == oracle["orbit_angle"]
+			and presentation_first["mines"] == oracle["mines"]
+			and presentation_first["drone_position"] == oracle["drone_position"],
+		"secondary presentation exposes exactly the renderer-visible oracle fields"
+	)
 	_validate_mine_direction(catalog)
 	_validate_drone_target_direction(catalog)
 	_finish()

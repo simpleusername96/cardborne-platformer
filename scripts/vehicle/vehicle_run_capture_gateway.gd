@@ -586,7 +586,7 @@ func _capture_visual_event_evidence() -> void:
 		prepare_stage(0, true)
 		_run._clear_enemies()
 		_run._clear_projectiles()
-		_run.effects.clear()
+		_run.call("_clear_effects")
 		for index in event_ids.size():
 			var column := index % 4
 			var row := index / 4
@@ -597,18 +597,18 @@ func _capture_visual_event_evidence() -> void:
 			var direction := Vector2.RIGHT.rotated(
 				float(index) * TAU / maxf(1.0, float(event_ids.size()))
 			)
-			_run.effects.append({
-				"kind":StringName(event_ids[index]),
-				"pos":position,
-				"color":colors[index % colors.size()],
-				"time":0.52,
-				"duration":1.0,
-				"radius":54.0,
-				"dir":direction,
-				"target":position + direction * 86.0,
-				"value":18.0,
-				"multiplier":0.20,
-			})
+			_run._add_effect(
+				StringName(event_ids[index]),
+				position,
+				colors[index % colors.size()],
+				1.0,
+				54.0,
+				direction,
+				18.0,
+				0.20,
+				position + direction * 86.0
+			)
+			_run.effects[-1].time = 0.52
 		_run.capture_set_mode(&"paused")
 		print(JSON.stringify({
 			"capture_group":String(group["id"]),
@@ -736,7 +736,7 @@ func _capture_all_boss_evidence() -> void:
 			_run.capture_set_mode(&"paused")
 			await _settle_capture()
 			_save_capture("30-boss-01-stage-1-sealed-hit.png")
-			_run.effects.clear()
+			_run.call("_clear_effects")
 		_run._boss_select_pattern(boss)
 		_run.capture_set_mode(&"paused")
 		await _settle_capture()
@@ -760,7 +760,7 @@ func _capture_all_boss_evidence() -> void:
 		_run._clear_projectiles()
 		_run.denied_zones.clear()
 		resolve_boss_objective()
-		_run.effects.clear()
+		_run.call("_clear_effects")
 		boss.phase = "boss_recovery"
 		boss.phase_time = BossPatterns.recovery_seconds(String(boss.pattern))
 		boss.vulnerable = 1.55

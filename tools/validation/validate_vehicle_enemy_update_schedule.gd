@@ -3,6 +3,7 @@ extends SceneTree
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const Schedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
+const Run = preload("res://scripts/vehicle/vehicle_run.gd")
 
 var failures: Array[String] = []
 
@@ -167,6 +168,7 @@ func _initialize() -> void:
 		)
 	_check_warmed_cadence()
 	_check_membership_revision()
+	_check_overlap_refresh_mask()
 	var previous_active := schedule.active.duplicate()
 	schedule.rebuild(store.live, 0.0, Vector2(2800.0, 1700.0), 820.0 * 820.0, 0, 0, 0)
 	_expect(schedule.active == previous_active, "zero-delta rebuild preserves deterministic worklist order")
@@ -275,6 +277,72 @@ func _check_membership_revision() -> void:
 		schedule.carrier_child_count(carrier.id) == 1,
 		"membership revision invalidates cached carrier counts"
 	)
+
+
+func _check_overlap_refresh_mask() -> void:
+	var store := EnemyStore.new()
+	for index in 24:
+		var enemy: EnemyState = store.acquire()
+		enemy.id = "refresh_%02d" % index
+		enemy.alive = true
+		enemy.active = true
+		enemy.role = &"chaser"
+		enemy.pos = Vector2(400.0 + float(index % 8) * 6.0, 400.0)
+		enemy.radius = 20.0
+		enemy.projectile_hit_radius = 20.0
+		enemy.decision_bucket = index % 6
+		_expect(store.add(enemy), "refresh fixture adds state %d" % index)
+	store.live[0].phase = &"startup"
+	store.live[1].phase = &"active"
+	var schedule := Schedule.new()
+	var run := Run.new()
+	run._enemy_update_schedule = schedule
+	run.enemies = store.live
+	run.enemy_grid.configure(Rect2(0.0, 0.0, 1200.0, 800.0), 160.0)
+	run.enemy_grid.rebuild(store.live)
+	var epoch := 0
+	for tick in 24:
+		var decision_bucket := tick % 6
+		if decision_bucket == 0:
+			epoch += 1
+		schedule.rebuild(
+			store.live,
+			1.0 / 60.0,
+			Vector2(400.0, 400.0),
+			820.0 * 820.0,
+			decision_bucket,
+			tick % 2,
+			tick % 3,
+			store.membership_revision
+		)
+		run._enemy_decision_cycle_epoch = epoch
+		run._prepare_enemy_local_overlap_cache()
+		for enemy in store.live:
+			var slot := (
+				enemy.spatial_slot
+				if enemy.spatial_slot >= 0
+				else enemy.runtime_slot
+			)
+			var expected := (
+				(
+					enemy in schedule.critical
+					or (
+						enemy in schedule.ordinary_due
+						and schedule.decision_due(enemy)
+					)
+				)
+				and posmod(slot + epoch, 2) == 0
+			)
+			_expect(
+				(run._enemy_overlap_refresh_mask[slot] != 0) == expected,
+				"tick %d slot %d refresh mask matches critical/decision parity"
+				% [tick, slot]
+			)
+	_expect(
+		int(run.enemy_grid.debug_snapshot()["legacy_nearest_query_calls"]) == 0,
+		"twelve-bucket refresh preparation uses no per-owner nearest query"
+	)
+	run.free()
 
 
 func _expect(condition: bool, message: String) -> void:

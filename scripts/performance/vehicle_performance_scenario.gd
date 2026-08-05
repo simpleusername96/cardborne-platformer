@@ -10,6 +10,7 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
+const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
@@ -75,7 +76,7 @@ func activate(run: Node) -> void:
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")
 	run.experience_runtime.clear_shards()
-	run.effects.clear()
+	run.call("_clear_effects")
 	run.denied_zones.clear()
 	run.damaging_trails.clear()
 	run.encounter_runtime.current_beat = 4
@@ -103,7 +104,7 @@ func activate(run: Node) -> void:
 		_run_lifecycle_cycles(run, 300)
 	_fill_enemies(run)
 	_fill_experience(run, 96 if scenario_id in [&"peak_horde", &"boss_pressure"] else ExperienceRuntime.MAX_SHARDS)
-	_fill_effects(run, 48 if scenario_id in [&"peak_horde", &"boss_pressure"] else 96)
+	_fill_effects(run, _effect_target())
 	_fill_zones_and_trails(run, 8 if scenario_id in [&"peak_horde", &"boss_pressure"] else 16)
 	run.run_build.apply(&"ion_field")
 	run.run_build.apply(&"orbit_blades")
@@ -145,6 +146,7 @@ func after_physics(run: Node) -> void:
 	_maintain_enemy_pressure(run)
 	_maintain_zone_and_trail_pressure(run)
 	_fill_projectiles(run, false)
+	_maintain_effects(run)
 
 
 func validation_snapshot(run: Node) -> Dictionary:
@@ -157,10 +159,12 @@ func validation_snapshot(run: Node) -> Dictionary:
 	var expected_enemies := int(Array(_fixture["descriptors"]).size())
 	var player_target := 140 if scenario_id in [&"peak_horde", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
 	var hostile_target := 72 if scenario_id == &"peak_horde" else ProjectileStore.HOSTILE_CAPACITY
+	var effect_target := _effect_target()
 	if scenario_id == &"boss_pressure":
 		hostile_target = 100
 	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
 	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
+	var effect_store_snapshot := _effect_store_qualification(run)
 	var renderer_snapshot: Dictionary = run._combat_renderer.debug_snapshot()
 	var ordinary_count := 0
 	var auxiliary_count := 0
@@ -208,7 +212,8 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and run.projectile_store.validate_counts()
 		and run.experience_runtime.shards.size() <= ExperienceRuntime.MAX_SHARDS
 		and run.experience_runtime.validate_capacity()
-		and run.effects.size() <= 96
+		and run.effects.size() == effect_target
+		and bool(effect_store_snapshot["valid"])
 		and run.denied_zones.size() + run.damaging_trails.size() <= 16
 		and int(renderer_snapshot["batches"]) <= 50
 		and int(enemy_snapshot["rejected_capacity"]) == 0
@@ -234,6 +239,8 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"projectiles": projectile_snapshot,
 		"experience": run.experience_runtime.shards.size(),
 		"effects": run.effects.size(),
+		"effect_target":effect_target,
+		"effect_store":effect_store_snapshot,
 		"zones_and_trails": run.denied_zones.size() + run.damaging_trails.size(),
 		"lifecycle_cycles": lifecycle_cycles,
 		"boss_active": boss_valid,
@@ -455,13 +462,38 @@ func _fill_effects(run: Node, target: int) -> void:
 
 
 func _maintain_effects(run: Node) -> void:
-	var target := 48 if scenario_id in [&"peak_horde", &"boss_pressure"] else 96
-	var budget := 4
-	while run.effects.size() < target and budget > 0:
+	var target := _effect_target()
+	var remaining_adjustments := EffectStore.MAX_LIVE_EFFECTS
+	while run.effects.size() > target and remaining_adjustments > 0:
+		run.effect_store.remove_at_swap(run.effects.size() - 1)
+		remaining_adjustments -= 1
+	while run.effects.size() < target and remaining_adjustments > 0:
 		var index := _shot_serial % _spawn_points.size()
 		run.call("_add_effect", "shock", _spawn_points[index], Art.MINT, 2.0, 24.0)
 		_shot_serial += 1
-		budget -= 1
+		remaining_adjustments -= 1
+
+
+func _effect_target() -> int:
+	return 48 if scenario_id in [&"peak_horde", &"boss_pressure"] else EffectStore.MAX_LIVE_EFFECTS
+
+
+func _effect_store_qualification(run: Node) -> Dictionary:
+	var snapshot: Dictionary = run.effect_store.debug_snapshot()
+	var live := int(snapshot.get("live", -1))
+	var pool := int(snapshot.get("pool", -1))
+	var capacity := int(snapshot.get("capacity", -1))
+	snapshot["valid"] = (
+		run.effect_store.validate_capacity()
+		and capacity == EffectStore.MAX_LIVE_EFFECTS
+		and int(snapshot.get("state_instances_created", -1))
+			== EffectStore.MAX_LIVE_EFFECTS
+		and live == run.effects.size()
+		and live >= 0
+		and pool >= 0
+		and live + pool == capacity
+	)
+	return snapshot
 
 
 func _fill_zones_and_trails(run: Node, target: int) -> void:
@@ -629,6 +661,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 	var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
 	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
 	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
+	var effect_store_snapshot := _effect_store_qualification(run)
 	var renderer_snapshot: Dictionary = run._combat_renderer.debug_snapshot()
 	var scheduler_spawned := _scheduler_spawn_seen or not Dictionary(
 		scheduler.get("spawned_by_squad", {})
@@ -652,6 +685,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		and bool(scheduler.get("spawning_enabled", false))
 		and int(enemy_snapshot.get("rejected_capacity", 0)) == 0
 		and run.projectile_store.validate_counts()
+		and bool(effect_store_snapshot["valid"])
 		and int(renderer_snapshot["batches"]) <= 50
 		and scheduler_spawned
 		and pressure_qualified
@@ -673,6 +707,8 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		"projectiles":projectile_snapshot,
 		"experience":run.experience_runtime.shards.size(),
 		"effects":run.effects.size(),
+		"effect_target":-1,
+		"effect_store":effect_store_snapshot,
 		"zones_and_trails":run.denied_zones.size() + run.damaging_trails.size(),
 		"lifecycle_cycles":0,
 		"boss_active":false,

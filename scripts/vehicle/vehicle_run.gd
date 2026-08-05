@@ -54,6 +54,8 @@ const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_
 const EnemyLocalSteering = preload("res://scripts/enemies/vehicle_enemy_local_steering.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
+const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
+const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
@@ -94,8 +96,14 @@ const SEEKER_COOLDOWN := 1.35
 const EMP_COOLDOWN := 13.0
 const EMP_STARTUP := 0.42
 const EMP_RADIUS := 285.0
+const EMP_AFTERSHOCK_DELAY := 0.72
 const MINIMAP_COLS := 20
 const MINIMAP_ROWS := 12
+const MINIMAP_FRAME_COUNT := 2
+const MINIMAP_MARKER_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES + 15
+const MINIMAP_STATIC_KEYS: Array[StringName] = [
+	&"floor_polygons", &"void_polygons", &"blocker_polygons",
+]
 const THREAT_SCAN_DISTANCE := 1200.0
 const BOSS_ARRIVAL_MIN_DISTANCE := 1200.0
 const BOSS_ARRIVAL_PREFERRED_MAX_DISTANCE := 1500.0
@@ -173,6 +181,7 @@ var player_dash_direction := Vector2.RIGHT
 var player_dash_trail_timer := 0.0
 var player_emp_cooldown := 0.0
 var player_emp_startup := 0.0
+var _emp_aftershock_timer := 0.0
 var player_barrier_strength := 0.0
 var player_barrier_timer := 0.0
 var coolant_surge_timer := 0.0
@@ -215,7 +224,8 @@ var crates: Array[Dictionary] = []
 var _crate_collision_cells: Dictionary = {}
 var _live_crate_count := 0
 var denied_zones: Array[Dictionary] = []
-var effects: Array[Dictionary] = []
+var effect_store := EffectStore.new()
+var effects: Array[VehicleEffectState] = effect_store.live
 var resolved_boss_module_visuals: Array[Dictionary] = []
 var damaging_trails: Array[Dictionary] = []
 var _empty_cover_rects: Array[Rect2] = []
@@ -224,6 +234,18 @@ var _motion_cover_query: Array[Rect2] = []
 var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
 var _crate_hit_receipt: Dictionary = {"crate":null, "t":INF}
+var _runtime_fast_hud_frame: Dictionary = {}
+var _runtime_fast_target_frame: Dictionary = {}
+var _runtime_fast_boss_frame: Dictionary = {}
+var _runtime_minimap_frames: Array[Dictionary] = []
+var _runtime_minimap_visited_buffers: Array = []
+var _runtime_minimap_marker_buffers: Array = []
+var _runtime_minimap_marker_pool: Array[Dictionary] = []
+var _runtime_minimap_frame_index := -1
+var _runtime_threat_radar_frame: Dictionary = {}
+var _runtime_combat_presentation_frame: Dictionary = {}
+var _runtime_secondary_presentation_frame: Dictionary = {}
+var _runtime_support_field_frames: Array[Dictionary] = []
 var _build_fast_hud_snapshot_callable: Callable
 var _minimap_snapshot_callable: Callable
 var _threat_radar_snapshot_callable: Callable
@@ -257,6 +279,7 @@ var discovered_markers: Dictionary = {}
 var _threat_contact_cache: Array[Dictionary] = []
 var _threat_sample_timer := 0.0
 var _enemy_local_steering := EnemyLocalSteering.new()
+var _enemy_overlap_refresh_mask := PackedByteArray()
 var _shielded_enemy_ids: Dictionary = {}
 var _pending_shielded_enemy_ids: Dictionary = {}
 var _shield_supports: Array[EnemyState] = []
@@ -304,11 +327,14 @@ var _pending_stage_report: Dictionary = {}
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_initialize_hud_staging()
 	_build_fast_hud_snapshot_callable = Callable(
-		self, "_build_fast_hud_snapshot"
+		self, "_runtime_fast_hud_snapshot"
 	)
-	_minimap_snapshot_callable = Callable(self, "_minimap_snapshot")
-	_threat_radar_snapshot_callable = Callable(self, "_threat_radar_snapshot")
+	_minimap_snapshot_callable = Callable(self, "_runtime_minimap_snapshot")
+	_threat_radar_snapshot_callable = Callable(
+		self, "_runtime_threat_radar_snapshot"
+	)
 	_guidebook_snapshot_callable = Callable(self, "_guidebook_snapshot")
 	_runtime_line_of_sight_callable = Callable(
 		self, "_runtime_has_line_of_sight"
@@ -363,6 +389,41 @@ func _ready() -> void:
 		call_deferred("_start_boss_practice")
 	elif not _performance_request.is_empty():
 		call_deferred("_start_performance_scenario")
+
+
+func _initialize_hud_staging() -> void:
+	if not _runtime_minimap_frames.is_empty():
+		return
+	for frame_index in MINIMAP_FRAME_COUNT:
+		var visited: Array[Vector2i] = []
+		visited.resize(MINIMAP_COLS * MINIMAP_ROWS)
+		visited.clear()
+		var markers: Array[Dictionary] = []
+		markers.resize(MINIMAP_MARKER_CAPACITY)
+		markers.clear()
+		_runtime_minimap_visited_buffers.append(visited)
+		_runtime_minimap_marker_buffers.append(markers)
+		_runtime_minimap_frames.append({
+			"cols":MINIMAP_COLS,
+			"rows":MINIMAP_ROWS,
+			"visited":visited,
+			"player":Vector2.ZERO,
+			"player_facing":Vector2.RIGHT,
+			"world_size":Vector2.ZERO,
+			"markers":markers,
+		})
+		for _marker_index in MINIMAP_MARKER_CAPACITY:
+			_runtime_minimap_marker_pool.append({
+				"kind":&"enemy",
+				"position":Vector2.ZERO,
+				"discovered":true,
+			})
+	_runtime_threat_radar_frame = {
+		"visible":false,
+		"center":Vector2.ZERO,
+		"max_distance":THREAT_SCAN_DISTANCE,
+		"contacts":_threat_contact_cache,
+	}
 
 
 func _exit_tree() -> void:
@@ -508,7 +569,7 @@ func _process(delta: float) -> void:
 			run_time,
 			presentation_active,
 			_aim_target_id,
-			_combat_presentation_snapshot()
+			_runtime_combat_presentation_snapshot()
 		)
 		if performance_active:
 			presentation_ms = _elapsed_ms(presentation_started)
@@ -674,7 +735,7 @@ func _reset_run(
 	pickups.clear()
 	crates.clear()
 	denied_zones.clear()
-	effects.clear()
+	_clear_effects()
 	resolved_boss_module_visuals.clear()
 	damaging_trails.clear()
 	for spec in _active_tactical_layout.stationary_blueprint():
@@ -733,6 +794,8 @@ func _reset_run(
 	_simulation_lod_bucket = 0
 	_far_enemy_simulation_bucket = 0
 	_enemy_coordination_initialized = false
+	_enemy_overlap_refresh_mask.resize(SpatialGrid.MAX_TRACKED_ACTORS)
+	_enemy_overlap_refresh_mask.fill(0)
 	_presented_physics_serial = -1
 	_last_presentation_active = false
 	_hud_presenter.reset()
@@ -1403,11 +1466,7 @@ func _update_dash(delta: float) -> void:
 
 
 func _live_effect_count(kind: StringName) -> int:
-	var count := 0
-	for effect in effects:
-		if StringName(effect.get("kind", &"")) == kind:
-			count += 1
-	return count
+	return effect_store.count_kind(kind)
 
 
 func _apply_phase_shear(from: Vector2, to: Vector2) -> void:
@@ -1538,6 +1597,9 @@ func _runtime_motion_cover_rects(
 	# additionally certifies this run's selected covers and functional terrain.
 	# Only their intersection may bypass the exact circle solver.
 	_motion_cover_static_safe = catalog_fast_safe and layout_fast_safe
+	if _motion_cover_static_safe:
+		_motion_cover_static_cover_clear = true
+		return _motion_cover_query
 	if field_layout != null and not _motion_cover_static_safe:
 		_active_tactical_layout.covers_near_motion_into(
 			from, to, radius, _motion_cover_query
@@ -1836,15 +1898,7 @@ func _release_emp(is_aftershock: bool) -> void:
 	camera_shake = maxf(camera_shake, 11.0 if not is_aftershock else 6.0)
 	_play_sound(&"emp", 1.2 if is_aftershock else 1.0)
 	if not is_aftershock and applied_upgrades.has(&"emp_aftershock"):
-		effects.append({
-			"kind": "scheduled_aftershock",
-			"pos": player_position,
-			"color": Art.BOSS_MAGENTA,
-			"time": 0.72,
-			"duration": 0.72,
-			"radius": radius * 0.68,
-			"dir": Vector2.ZERO,
-		})
+		_emp_aftershock_timer = EMP_AFTERSHOCK_DELAY
 
 
 func _emp_cooldown_max() -> float:
@@ -1908,15 +1962,7 @@ func _update_pickups(motion_start: Vector2, motion_end: Vector2) -> void:
 			pickup_position,
 			PICKUP_BODY_RADIUS
 		)
-		var touches_current_endpoint := PickupContact.should_collect(
-			true,
-			player_position,
-			player_position,
-			Rules.PLAYER_RADIUS,
-			pickup_position,
-			PICKUP_BODY_RADIUS
-		)
-		if crossed_during_motion or touches_current_endpoint:
+		if crossed_during_motion:
 			_collect_pickup(pickup)
 
 
@@ -2121,6 +2167,7 @@ func _update_enemies(delta: float) -> void:
 	if performance_active:
 		_performance_enemy_sections["active_states"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
+	_prepare_enemy_local_overlap_cache()
 	for enemy in _enemy_update_schedule.critical:
 		_update_scheduled_ordinary_enemy(enemy, delta)
 	for enemy in _enemy_update_schedule.ordinary_due:
@@ -2170,6 +2217,28 @@ func _update_enemies(delta: float) -> void:
 			)
 	if performance_active:
 		_performance_enemy_sections["wear_terrain"] = _elapsed_ms(section_started)
+
+
+func _prepare_enemy_local_overlap_cache() -> void:
+	if _enemy_overlap_refresh_mask.size() != SpatialGrid.MAX_TRACKED_ACTORS:
+		_enemy_overlap_refresh_mask.resize(SpatialGrid.MAX_TRACKED_ACTORS)
+	_enemy_overlap_refresh_mask.fill(0)
+	for enemy in _enemy_update_schedule.critical:
+		_mark_enemy_overlap_refresh(enemy)
+	for enemy in _enemy_update_schedule.ordinary_due:
+		if _enemy_update_schedule.decision_due(enemy):
+			_mark_enemy_overlap_refresh(enemy)
+	enemy_grid.rebuild_local_overlap_cache(_enemy_overlap_refresh_mask)
+
+
+func _mark_enemy_overlap_refresh(enemy: EnemyState) -> void:
+	var slot := enemy.spatial_slot if enemy.spatial_slot >= 0 else enemy.runtime_slot
+	if (
+		slot >= 0
+		and slot < _enemy_overlap_refresh_mask.size()
+		and posmod(slot + _enemy_decision_cycle_epoch, 2) == 0
+	):
+		_enemy_overlap_refresh_mask[slot] = 1
 
 
 func _wear_identity(enemy: EnemyState) -> int:
@@ -3829,18 +3898,23 @@ func _update_trails(delta: float) -> void:
 
 
 func _update_effects(delta: float) -> void:
+	if _emp_aftershock_timer > 0.0:
+		_emp_aftershock_timer = maxf(0.0, _emp_aftershock_timer - delta)
+		if _emp_aftershock_timer <= 0.0:
+			_release_emp(true)
 	var index := 0
 	while index < effects.size():
-		var effect: Dictionary = effects[index]
-		effect["time"] = float(effect["time"]) - delta
-		if String(effect["kind"]) == "scheduled_aftershock" and float(effect["time"]) <= 0.0:
-			_swap_remove_dictionary(effects, index)
-			_release_emp(true)
-			continue
-		if float(effect["time"]) <= 0.0:
-			_swap_remove_dictionary(effects, index)
+		var effect: VehicleEffectState = effects[index]
+		effect.time -= delta
+		if effect.time <= 0.0:
+			effect_store.remove_at_swap(index)
 			continue
 		index += 1
+
+
+func _clear_effects() -> void:
+	effect_store.clear()
+	_emp_aftershock_timer = 0.0
 
 
 func _add_effect(
@@ -3854,32 +3928,17 @@ func _add_effect(
 	multiplier: float = 1.0,
 	target_position: Variant = null
 ) -> void:
-	if effects.size() >= EncounterDirector.EFFECT_CAP:
-		for index in effects.size():
-			if String(effects[index]["kind"]) != "scheduled_aftershock":
-				_swap_remove_dictionary(effects, index)
-				break
-	effects.append({
-		"kind": kind,
-		"pos": position,
-		"color": color,
-		"time": duration,
-		"duration": duration,
-		"radius": radius,
-		"dir": direction,
-		"target": target_position if target_position is Vector2 else position,
-		"value": value,
-		"multiplier": multiplier,
-	})
-
-
-func _swap_remove_dictionary(collection: Array[Dictionary], index: int) -> void:
-	var last_index := collection.size() - 1
-	if index < 0 or index > last_index:
-		return
-	if index != last_index:
-		collection[index] = collection[last_index]
-	collection.pop_back()
+	effect_store.add(
+		kind,
+		position,
+		color,
+		duration,
+		radius,
+		direction,
+		value,
+		multiplier,
+		target_position
+	)
 
 
 func _damage_enemy(
@@ -5177,7 +5236,7 @@ func _begin_stage_transition() -> void:
 	pickups.clear()
 	crates.clear()
 	denied_zones.clear()
-	effects.clear()
+	_clear_effects()
 	damaging_trails.clear()
 	for spec in _active_tactical_layout.stationary_blueprint():
 		_append_enemy(_make_enemy(spec))
@@ -5333,62 +5392,7 @@ func _update_camera(_delta: float) -> void:
 
 
 func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook: bool = true) -> Dictionary:
-	var objective := _objective_text()
-	var stage_profile := StageCatalog.profile(current_stage_id)
-	var experience_snapshot := experience_runtime.snapshot()
-
-	var target_snapshot := {"visible": false}
-	if not _aim_target_id.is_empty():
-		var target := _find_enemy_by_id(_aim_target_id)
-		var show_priority_target := (
-			target != null
-			and (
-				target.health_class == &"priority"
-				or (target.health_class == &"boss" and target.role != &"stage_boss")
-			)
-		)
-		if target != null and target.alive and show_priority_target:
-			target_snapshot = {
-				"visible": true,
-				"name": tr(String(target["name"])),
-				"health": float(target["health"]),
-				"max_health": float(target["max_health"]),
-				"state": _enemy_state_text(target),
-			}
-
-	var boss_snapshot := {"visible": false}
-	var boss := _find_enemy_by_id("stage_boss")
-	if boss != null and boss.alive:
-		var boss_objective := _boss_objective_snapshot()
-		boss_snapshot = {
-			"visible": true,
-			"name": tr("ENEMY_BOSS_PHASE") % [tr(String(boss.name)), int(boss.boss_phase)],
-			"health": float(boss.health),
-			"max_health": float(boss.max_health),
-			"state": _boss_state_text(boss),
-			"objective":boss_objective,
-		}
-
-	var snapshot := {
-		"health": player_health,
-		"max_health": _player_max_health(),
-		"level": int(experience_snapshot["level"]),
-		"experience": int(experience_snapshot["experience"]),
-		"experience_required": int(experience_snapshot["required"]),
-		"reduced_motion": _reduced_motion_enabled(),
-		"objective": "%s · %s" % [tr(String(stage_profile["title_key"])), objective[0]],
-		"objective_detail": objective[1],
-		"stage_title": tr(String(stage_profile["title_key"])),
-		"dash_available":player_dash_cooldown <= 0.0,
-		"dash_ratio": clampf(player_dash_cooldown / _dash_cooldown_max(), 0.0, 1.0),
-		"seeker_available":secondary_runtime.seeker_cooldown <= 0.0,
-		"seeker_ratio": clampf(secondary_runtime.seeker_cooldown / SEEKER_COOLDOWN, 0.0, 1.0),
-		"skill_available":player_emp_startup <= 0.0 and player_emp_cooldown <= 0.0,
-		"skill_ratio": clampf(player_emp_cooldown / _emp_cooldown_max(), 0.0, 1.0),
-		"buff_text": "",
-		"target": target_snapshot,
-		"boss": boss_snapshot,
-	}
+	var snapshot := _build_fast_hud_snapshot()
 	if include_world_channels:
 		snapshot["minimap"] = _minimap_snapshot(true)
 		snapshot["threat_radar"] = _threat_radar_snapshot()
@@ -5400,7 +5404,84 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 
 
 func _build_fast_hud_snapshot() -> Dictionary:
-	return _build_hud_snapshot(false, false)
+	return _fill_fast_hud_snapshot({}, {}, {})
+
+
+func _runtime_fast_hud_snapshot() -> Dictionary:
+	return _fill_fast_hud_snapshot(
+		_runtime_fast_hud_frame,
+		_runtime_fast_target_frame,
+		_runtime_fast_boss_frame
+	)
+
+
+func _fill_fast_hud_snapshot(
+	snapshot: Dictionary,
+	target_snapshot: Dictionary,
+	boss_snapshot: Dictionary
+) -> Dictionary:
+	snapshot.clear()
+	target_snapshot.clear()
+	boss_snapshot.clear()
+	var objective := _objective_text()
+	var stage_profile := StageCatalog.profile(current_stage_id)
+	target_snapshot["visible"] = false
+	if not _aim_target_id.is_empty():
+		var target := _find_enemy_by_id(_aim_target_id)
+		var show_priority_target := (
+			target != null
+			and (
+				target.health_class == &"priority"
+				or (target.health_class == &"boss" and target.role != &"stage_boss")
+			)
+		)
+		if target != null and target.alive and show_priority_target:
+			target_snapshot["visible"] = true
+			target_snapshot["name"] = tr(String(target.name))
+			target_snapshot["health"] = target.health
+			target_snapshot["max_health"] = target.max_health
+			target_snapshot["state"] = _enemy_state_text(target)
+
+	boss_snapshot["visible"] = false
+	var boss := _find_enemy_by_id("stage_boss")
+	if boss != null and boss.alive:
+		boss_snapshot["visible"] = true
+		boss_snapshot["name"] = tr("ENEMY_BOSS_PHASE") % [
+			tr(String(boss.name)), int(boss.boss_phase),
+		]
+		boss_snapshot["health"] = boss.health
+		boss_snapshot["max_health"] = boss.max_health
+		boss_snapshot["state"] = _boss_state_text(boss)
+		boss_snapshot["objective"] = _boss_objective_snapshot()
+
+	var stage_title := tr(String(stage_profile["title_key"]))
+	snapshot["health"] = player_health
+	snapshot["max_health"] = _player_max_health()
+	snapshot["level"] = experience_runtime.run_level
+	snapshot["experience"] = experience_runtime.experience
+	snapshot["experience_required"] = experience_runtime.required_experience()
+	snapshot["reduced_motion"] = _reduced_motion_enabled()
+	snapshot["objective"] = "%s · %s" % [stage_title, objective[0]]
+	snapshot["objective_detail"] = objective[1]
+	snapshot["stage_title"] = stage_title
+	snapshot["dash_available"] = player_dash_cooldown <= 0.0
+	snapshot["dash_ratio"] = clampf(
+		player_dash_cooldown / _dash_cooldown_max(), 0.0, 1.0
+	)
+	snapshot["seeker_available"] = secondary_runtime.seeker_cooldown <= 0.0
+	snapshot["seeker_ratio"] = clampf(
+		secondary_runtime.seeker_cooldown / SEEKER_COOLDOWN, 0.0, 1.0
+	)
+	snapshot["skill_available"] = (
+		player_emp_startup <= 0.0 and player_emp_cooldown <= 0.0
+	)
+	snapshot["skill_ratio"] = clampf(
+		player_emp_cooldown / _emp_cooldown_max(), 0.0, 1.0
+	)
+	snapshot["buff_text"] = ""
+	snapshot["target"] = target_snapshot
+	snapshot["boss"] = boss_snapshot
+	return snapshot
 
 
 func _guidebook_snapshot(build_snapshot: Dictionary = {}) -> Dictionary:
@@ -5564,8 +5645,8 @@ func _localized_status_parts(enemy: EnemyState) -> Array[String]:
 
 func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 	var visited: Array[Vector2i] = []
-	for cell in visited_cells.keys():
-		visited.append(cell)
+	for cell in visited_cells:
+		visited.append(Vector2i(cell))
 	var markers: Array[Dictionary] = []
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
 		markers.append({
@@ -5612,54 +5693,155 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		"markers": markers,
 	}
 	if include_static_geometry:
-		var blocker_polygons: Array = Rules.get_cover_polygons(false, current_stage_id).duplicate()
-		for rect in _runtime_cover_rects():
-			blocker_polygons.append(StageGeometry.rect_polygon(rect))
-		snapshot["floor_polygons"] = StageCatalog.floor_polygons(current_stage_id)
-		snapshot["void_polygons"] = StageCatalog.void_polygons(current_stage_id)
-		snapshot["blocker_polygons"] = blocker_polygons
+		_append_minimap_static_geometry(snapshot)
 	return snapshot
 
 
+func _runtime_minimap_snapshot(
+	include_static_geometry: bool = true
+) -> Dictionary:
+	_initialize_hud_staging()
+	_runtime_minimap_frame_index = (
+		(_runtime_minimap_frame_index + 1) % MINIMAP_FRAME_COUNT
+	)
+	var frame_index := _runtime_minimap_frame_index
+	var snapshot: Dictionary = _runtime_minimap_frames[frame_index]
+	var visited: Array[Vector2i] = _runtime_minimap_visited_buffers[frame_index]
+	var markers: Array[Dictionary] = _runtime_minimap_marker_buffers[frame_index]
+	visited.clear()
+	markers.clear()
+	for cell in visited_cells:
+		visited.append(Vector2i(cell))
+	if stage_flow.state == StageFlow.State.BOSS_WARNING:
+		_append_runtime_minimap_marker(
+			frame_index, markers, &"boss", boss_arrival_position
+		)
+	var stage_boss := _find_enemy_by_id("stage_boss")
+	if stage_boss != null and stage_boss.alive:
+		_append_runtime_minimap_marker(
+			frame_index, markers, &"boss", stage_boss.pos
+		)
+	for enemy in enemies:
+		if not enemy.alive or not enemy.active or enemy.role == &"stage_boss":
+			continue
+		_append_runtime_minimap_marker(
+			frame_index, markers, &"enemy", enemy.pos
+		)
+	for pickup in pickups:
+		if bool(pickup["active"]):
+			_append_runtime_minimap_marker(
+				frame_index, markers, &"item", Vector2(pickup["pos"])
+			)
+	for crate in crates:
+		if bool(crate["alive"]):
+			_append_runtime_minimap_marker(
+				frame_index, markers, &"item", Vector2(crate["pos"])
+			)
+	snapshot["player"] = player_position
+	snapshot["player_facing"] = player_hull_direction
+	snapshot["world_size"] = Rules.world_rect(current_stage_id).size
+	for static_key in MINIMAP_STATIC_KEYS:
+		snapshot.erase(static_key)
+	if include_static_geometry:
+		_append_minimap_static_geometry(snapshot)
+	return snapshot
+
+
+func _append_runtime_minimap_marker(
+	frame_index: int,
+	markers: Array[Dictionary],
+	kind: StringName,
+	position: Vector2
+) -> void:
+	var marker_index := markers.size()
+	if marker_index >= MINIMAP_MARKER_CAPACITY:
+		return
+	var marker := _runtime_minimap_marker_pool[
+		frame_index * MINIMAP_MARKER_CAPACITY + marker_index
+	]
+	marker["kind"] = kind
+	marker["position"] = position
+	marker["discovered"] = true
+	markers.append(marker)
+
+
+func _append_minimap_static_geometry(snapshot: Dictionary) -> void:
+	var blocker_polygons: Array = Rules.get_cover_polygons(
+		false, current_stage_id
+	).duplicate()
+	for rect in _runtime_cover_rects():
+		blocker_polygons.append(StageGeometry.rect_polygon(rect))
+	snapshot["floor_polygons"] = StageCatalog.floor_polygons(current_stage_id)
+	snapshot["void_polygons"] = StageCatalog.void_polygons(current_stage_id)
+	snapshot["blocker_polygons"] = blocker_polygons
+
+
 func _combat_presentation_snapshot() -> Dictionary:
+	return _fill_combat_presentation_snapshot(
+		{},
+		player_protection_sources.duplicate(),
+		terrain_runtime.support_snapshot(),
+		secondary_runtime.snapshot(run_build)
+	)
+
+
+func _runtime_combat_presentation_snapshot() -> Dictionary:
+	terrain_runtime.fill_support_snapshot(_runtime_support_field_frames)
+	secondary_runtime.fill_presentation_snapshot(
+		_runtime_secondary_presentation_frame
+	)
+	return _fill_combat_presentation_snapshot(
+		_runtime_combat_presentation_frame,
+		player_protection_sources,
+		_runtime_support_field_frames,
+		_runtime_secondary_presentation_frame
+	)
+
+
+func _fill_combat_presentation_snapshot(
+	snapshot: Dictionary,
+	protection_sources: Dictionary,
+	support_fields: Array[Dictionary],
+	secondary: Dictionary
+) -> Dictionary:
 	var cursor_position := player_position + player_aim_direction * 230.0
 	var mouse_direction := get_global_mouse_position() - player_position
 	if mouse_direction.length() > 8.0:
 		cursor_position = get_global_mouse_position()
-	return {
-		"zones": denied_zones,
-		"trails": damaging_trails,
-		"player_position": player_position,
-		"hull_direction": player_hull_direction,
-		"aim_direction": player_aim_direction,
-		"player_speed": player_velocity.length(),
-		"dash_active": player_dash_timer > 0.0,
-		"dash_progress": (
-			1.0 - clampf(player_dash_timer / DASH_DURATION, 0.0, 1.0)
-			if player_dash_timer > 0.0
-			else 0.0
-		),
-		"dash_direction": player_dash_direction,
-		"player_hit": player_hit_flash > 0.0,
-		"player_hit_remaining": player_hit_flash,
-		"player_invulnerable_remaining": player_invulnerable,
-		"protection_sources": player_protection_sources.duplicate(),
-		"muzzle_flash": player_muzzle_flash,
-		"barrier_strength": player_barrier_strength,
-		"reduced_motion": _reduced_motion_enabled(),
-		"run_time": run_time,
-		"secondary_visual_tier":maxi(
-			run_build.level_of(&"seeker_warhead"),
-			run_build.level_of(&"escort_drone")
-		),
-		"support_fields":terrain_runtime.support_snapshot(),
-		"resolved_boss_modules":resolved_boss_module_visuals,
-		"ion_level": run_build.level_of(&"ion_field"),
-		"blade_level": run_build.level_of(&"orbit_blades"),
-		"escort_drone": run_build.has(&"escort_drone"),
-		"secondary": secondary_runtime.snapshot(run_build),
-		"cursor_position": cursor_position,
-	}
+	snapshot.clear()
+	snapshot["zones"] = denied_zones
+	snapshot["trails"] = damaging_trails
+	snapshot["player_position"] = player_position
+	snapshot["hull_direction"] = player_hull_direction
+	snapshot["aim_direction"] = player_aim_direction
+	snapshot["player_speed"] = player_velocity.length()
+	snapshot["dash_active"] = player_dash_timer > 0.0
+	snapshot["dash_progress"] = (
+		1.0 - clampf(player_dash_timer / DASH_DURATION, 0.0, 1.0)
+		if player_dash_timer > 0.0
+		else 0.0
+	)
+	snapshot["dash_direction"] = player_dash_direction
+	snapshot["player_hit"] = player_hit_flash > 0.0
+	snapshot["player_hit_remaining"] = player_hit_flash
+	snapshot["player_invulnerable_remaining"] = player_invulnerable
+	snapshot["protection_sources"] = protection_sources
+	snapshot["muzzle_flash"] = player_muzzle_flash
+	snapshot["barrier_strength"] = player_barrier_strength
+	snapshot["reduced_motion"] = _reduced_motion_enabled()
+	snapshot["run_time"] = run_time
+	snapshot["secondary_visual_tier"] = maxi(
+		run_build.level_of(&"seeker_warhead"),
+		run_build.level_of(&"escort_drone")
+	)
+	snapshot["support_fields"] = support_fields
+	snapshot["resolved_boss_modules"] = resolved_boss_module_visuals
+	snapshot["ion_level"] = run_build.level_of(&"ion_field")
+	snapshot["blade_level"] = run_build.level_of(&"orbit_blades")
+	snapshot["escort_drone"] = run_build.has(&"escort_drone")
+	snapshot["secondary"] = secondary
+	snapshot["cursor_position"] = cursor_position
+	return snapshot
 
 
 func _is_world_position_visited(position: Vector2) -> bool:
@@ -5763,6 +5945,16 @@ func _threat_radar_snapshot() -> Dictionary:
 		"max_distance": THREAT_SCAN_DISTANCE,
 		"contacts": _threat_contact_cache,
 	}
+
+
+func _runtime_threat_radar_snapshot() -> Dictionary:
+	_runtime_threat_radar_frame["visible"] = _simulation_active()
+	_runtime_threat_radar_frame["center"] = (
+		get_canvas_transform() * player_position
+	)
+	_runtime_threat_radar_frame["max_distance"] = THREAT_SCAN_DISTANCE
+	_runtime_threat_radar_frame["contacts"] = _threat_contact_cache
+	return _runtime_threat_radar_frame
 
 
 func _draw() -> void:
@@ -6283,6 +6475,7 @@ func _performance_counts() -> Dictionary:
 		"projectiles": projectile_store.debug_snapshot(),
 		"experience": experience_runtime.shards.size(),
 		"effects": effects.size(),
+		"effect_store":effect_store.debug_snapshot(),
 		"zones": denied_zones.size(),
 		"trails": damaging_trails.size(),
 		"layout":field_layout.debug_snapshot(current_stage_id) if field_layout != null else {},

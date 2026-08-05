@@ -54,7 +54,50 @@ func _initialize() -> void:
 			),
 			"inactive %s pickup stays idempotent" % kind
 		)
+	_validate_endpoint_oracle()
 	_finish()
+
+
+func _validate_endpoint_oracle() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0xC011EC7
+	for index in 120:
+		var motion_start := Vector2(
+			rng.randf_range(-300.0, 300.0),
+			rng.randf_range(-300.0, 300.0)
+		)
+		var motion_end := Vector2(
+			rng.randf_range(-300.0, 300.0),
+			rng.randf_range(-300.0, 300.0)
+		)
+		var pickup_position := Vector2(
+			rng.randf_range(-300.0, 300.0),
+			rng.randf_range(-300.0, 300.0)
+		)
+		var swept := Contact.should_collect(
+			true,
+			motion_start,
+			motion_end,
+			PLAYER_RADIUS,
+			pickup_position,
+			PICKUP_RADIUS
+		)
+		var old_combined := (
+			swept
+			or Contact.should_collect(
+				true,
+				motion_end,
+				motion_end,
+				PLAYER_RADIUS,
+				pickup_position,
+				PICKUP_RADIUS
+			)
+		)
+		_expect(
+			swept == old_combined,
+			"random pickup path %d proves swept contact already includes its endpoint"
+			% index
+		)
 
 
 func _expect(condition: bool, message: String) -> void:
