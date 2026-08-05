@@ -3780,6 +3780,11 @@ func _find_enemy_by_id(enemy_id: String) -> EnemyState:
 
 func _update_denied_zones(delta: float) -> void:
 	for index in range(denied_zones.size() - 1, -1, -1):
+		# A lethal zone hit can transition the run and clear the array while this
+		# reverse pass is still unwinding. Treat that transition as terminal for
+		# this pass instead of indexing the cleared snapshot.
+		if index >= denied_zones.size():
+			continue
 		var zone: Dictionary = denied_zones[index]
 		if float(zone["warning"]) > 0.0:
 			zone["warning"] = maxf(0.0, float(zone["warning"]) - delta)

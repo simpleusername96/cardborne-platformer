@@ -63,6 +63,19 @@ func _run() -> void:
 	_expect(is_equal_approx(float(stage.get("player_barrier_strength")), 100.0), "unblockable damage leaves the barrier unchanged")
 	_expect(is_equal_approx(float(stage.get("player_hit_flash")), 0.20), "unblockable hull damage starts the hit signal")
 	_expect(is_equal_approx(float(stage.get("player_invulnerable")), 1.0), "unblockable hull damage starts the one-second invulnerability window")
+	stage.set("player_health", 1.0)
+	stage.set("player_invulnerable", 0.0)
+	stage.set("denied_zones", [{
+		"pos": Vector2.ZERO,
+		"warning": 0.0,
+		"duration": 1.0,
+		"tick": 0.0,
+		"damage": 10.0,
+		"radius": 500.0,
+		"source": "validation lethal zone",
+	}])
+	stage.call("_update_denied_zones", 0.1)
+	_expect(stage.get("denied_zones").is_empty(), "lethal zone transition clears safely without stale reverse-pass indexing")
 
 	if settings != null:
 		settings.reduced_motion = true
