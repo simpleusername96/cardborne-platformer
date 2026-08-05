@@ -662,21 +662,20 @@
   <header class="hero">
     <div class="hero-inner">
       <p class="eyebrow">Cardborne · Game Design Reset</p>
-      <h1>Two choices from you. The rest is delegated.</h1>
+      <h1>The core rules are locked. The limits are clear.</h1>
       <p class="hero-copy">
-        This brief puts the important rules first. It separates your direction, facts found in the current game,
-        and work I can decide without asking you.
+        G1 and G2 are approved. This brief records the result, the build limits, and the work I can finish without asking you about every value.
       </p>
       <div class="meta-row" aria-label="Report facts">
         <span class="meta">Updated: 6 August 2026</span>
-        <span class="meta">Code checked: <code>3a4306b9</code></span>
+        <span class="meta">Code checked: <code>0bda6904</code></span>
         <span class="meta">Primary decision brief</span>
-        <span class="meta">Two approvals only</span>
+        <span class="meta">G1 and G2 locked</span>
       </div>
       <div class="tag-row" aria-label="Evidence labels">
         <span class="tag fact">Locked · your rule</span>
         <span class="tag proposal">Delegated · I decide</span>
-        <span class="tag choice">Approval · needs you</span>
+        <span class="tag choice">Visual files · you review later</span>
       </div>
     </div>
   </header>
@@ -685,7 +684,7 @@
     <nav aria-label="Report sections">
       <strong>In this report</strong>
       <ol>
-        <li><a href="#start">Two approvals</a></li>
+        <li><a href="#start">Approved core</a></li>
         <li><a href="#locked-rules">Locked rules</a></li>
         <li><a href="#delegated">I decide</a></li>
         <li><a href="#delivery">Delivery order</a></li>
@@ -697,30 +696,59 @@
 
     <main id="main">
       <section id="start">
-        <p class="section-kicker">01 · Feedback needed</p>
-        <h2>I need two answers, not twenty.</h2>
-        <p class="lead">Approve these two product rules. I will handle the devices, items, cards, stages, values, and test details.</p>
+        <p class="section-kicker">01 · Approved core</p>
+        <h2>G1 and G2 are now fixed.</h2>
+        <p class="lead">No answer is needed here. I will use these rules for the later specification and game work.</p>
 
         <div class="ownership-list">
           <article class="ownership-row">
-            <div class="owner-label approval">G1 · Approval</div>
+            <div class="owner-label locked">G1 · Locked</div>
             <div>
-              <h3>Do world kills give normal progress?</h3>
-              <p><strong>Recommended: yes.</strong> If neutral terrain or a neutral device kills an enemy, it counts for the stage and drops normal experience. Smart field use should not slow the run.</p>
+              <h3>World kills give normal progress.</h3>
+              <p>If neutral terrain or a neutral device kills a stage enemy, the kill counts for the stage and the enemy drops normal experience. Smart field use must not slow the run. Boss rules stay separate.</p>
             </div>
           </article>
           <article class="ownership-row">
-            <div class="owner-label approval">G2 · Approval</div>
+            <div class="owner-label locked">G2 · Locked</div>
             <div>
-              <h3>Should a build have a clear main identity?</h3>
-              <p><strong>Recommended: yes.</strong> Pick one main gun style and one element root. Later cards improve or support those choices instead of stacking every path.</p>
+              <h3>Every build has hard limits.</h3>
+              <p>The player chooses a small set of clear systems. Later cards improve those systems. The run cannot collect every weapon form and every element.</p>
             </div>
           </article>
         </div>
 
-        <div class="reply-line">
-          <strong>Short reply format</strong>
-          <code>G1 approve / change · G2 approve / change</code>
+        <div class="grid-2">
+          <article class="card as-is">
+            <h3>AS-IS</h3>
+            <p>The current enemy defeat path already gives progress and experience after terrain damage. It also hides the two optional-weapon slots and allows fire, poison, and chill to stack together.</p>
+          </article>
+          <article class="card to-be">
+            <h3>TO-BE</h3>
+            <p>Keep normal progress after every stage-enemy world kill. Show every build limit before a choice. After one root is picked, remove other root cards from the offer.</p>
+          </article>
+        </div>
+
+        <h3>G2 build limits</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Build part</th><th>Maximum</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td>Main gun form</td><td>1</td><td>Choose one major shot form. General damage or speed support may improve it.</td></tr>
+              <tr><td>Element root</td><td>1</td><td>Choose fire, poison, or chill. Only that root can open its later cards.</td></tr>
+              <tr><td>Optional secondary weapons</td><td>2</td><td>Ion Field, Orbit Blades, Wake Mines, and Escort Drone use these two slots.</td></tr>
+              <tr><td>Built-in Seeker</td><td>Always on</td><td>It stays part of the ship and uses no optional slot.</td></tr>
+              <tr><td>Dash special effect</td><td>1</td><td>Choose one special result for dash. Do not stack every dash attack.</td></tr>
+              <tr><td>EMP special effect</td><td>1</td><td>Choose one special EMP result. Range-only cards do not become a build path.</td></tr>
+              <tr><td>Main defense</td><td>1</td><td>Choose one main defense loop, such as barrier or damage-based repair.</td></tr>
+              <tr><td>Levels per chosen module</td><td>3</td><td>Level 1 opens the behavior. Later levels must make that behavior clearly better. A module may stop before level 3.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">These are TO-BE design limits. The current game already limits optional secondary weapons to two, but it hides that limit. The current game still lets all three element roots stack.</p>
+
+        <div class="callout support">
+          <strong>One more fixed detail.</strong>
+          Breaking a neutral device does not count as an enemy kill. Only a stage enemy killed by that device gives stage progress and experience.
         </div>
       </section>
 
@@ -742,11 +770,11 @@
         <h2>I will decide these details.</h2>
         <p class="lead">You do not need to review each value, socket, item, device, or card.</p>
         <div class="ownership-list">
-          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Map generation</h3><p>Seed rules, safe gaps, sparse cover positions, spawn distance, and escape tests.</p></div></article>
-          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Terrain life</h3><p>Wear stays for the run. Arc is picked at a stage start and stays still. A meteor may move only with its full path shown.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Map generation</h3><p>Place cover and items randomly with safe space between them. Use the run seed so the same run can be tested again. Then test wide gaps and every escape side. Do not use a maze generator.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>What can change</h3><p>Outer walls, gates, and wear state stay for the run. Sparse cover, neutral devices, and one Arc area are picked at stage start. During combat, an unopened off-screen box may move to a new valid spot after a timer. A meteor may move with its full path shown.</p></div></article>
           <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>First neutral package</h3><p>Start with Gravity Core, Cryo Cell, and Meteor Patrol. Test later ideas only after these are clear.</p></div></article>
           <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Items and support pads</h3><p>Remove repair and attack pads from the first redesign. Keep instant movement-friendly items. This can be reversed after a playtest.</p></div></article>
-          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Upgrade cleanup</h3><p>Show extra-weapon slots, restore the missing behavior row, remove forced offer seats, and map old cards into the approved build rule.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Upgrade cleanup</h3><p>Enforce the limits above, show every used and free slot, restore the missing behavior row, remove forced offer seats, and explain why a card is locked.</p></div></article>
           <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Balance</h3><p>Counts, damage, range, warning time, cooldown, and stage mixes will come from focused tests.</p></div></article>
         </div>
       </section>
@@ -755,7 +783,7 @@
         <p class="section-kicker">04 · Work order</p>
         <h2>Rules first. Art last.</h2>
         <div class="phase-list">
-          <article class="phase-row"><div class="phase-number">1</div><div class="phase-owner">After G1–G2</div><div><h3>Lock the rules</h3><p>Update the product specification so old pads, fixed enemies, and old upgrade rules do not return later.</p></div></article>
+          <article class="phase-row"><div class="phase-number">1</div><div class="phase-owner">Codex</div><div><h3>Record the locked rules</h3><p>Update the product specification so old pads, fixed enemies, free element stacking, and hidden limits do not return later.</p></div></article>
           <article class="phase-row"><div class="phase-number">2</div><div class="phase-owner">Codex</div><div><h3>Build the playable base</h3><p>Open field, no dead ends, neutral target system, visible-enemy attack gate, terrain life, and safe item movement.</p></div></article>
           <article class="phase-row"><div class="phase-number">3</div><div class="phase-owner">Codex</div><div><h3>Add content and builds</h3><p>Three neutral tools, smaller enemy sets, behavior-first upgrades, and stronger boss phase combinations.</p></div></article>
           <article class="phase-row"><div class="phase-number">4</div><div class="phase-owner">Visual report</div><div><h3>Make art, UI, and balance passes</h3><p>Use the visual report for proof, final file review, integration, and balance checks.</p></div></article>
@@ -838,7 +866,7 @@
         <div class="callout danger">
           <strong>This proposal conflicts with the current product specification.</strong>
           The current specification requires repair fields, overdrive fields, four fixed hostile units per stage, and a 41-card upgrade catalog.
-          Approve the new rules and update that specification before implementation.
+          The new rules are approved. Update that specification before implementation.
         </div>
 
         <div class="grid-2">
@@ -1274,7 +1302,7 @@
         <h2>Change rules before art.</h2>
         <p class="lead">This order avoids making assets for systems that may be removed.</p>
 
-        <div class="step"><div class="step-code">P0</div><div><h3>Approve only G1 and G2</h3><p>World-kill progress and the main upgrade identity are the only open product rules. The short brief locks or delegates everything else.</p></div></div>
+        <div class="step"><div class="step-code">P0</div><div><h3>Record G1 and G2</h3><p>World-kill progress and the constrained build identity are locked. Put them in the product specification before implementation.</p></div></div>
         <div class="step"><div class="step-code">P1</div><div><h3>Update the product specification</h3><p>Make the new design the main rule source. The current specification still requires the old systems.</p></div></div>
         <div class="step"><div class="step-code">P2</div><div><h3>Remove the two support pad schedules</h3><p>Remove repair and overdrive fields, their guide entries, and their world art use. Keep repair pickup and build upgrades separate.</p></div></div>
         <div class="step"><div class="step-code">P3</div><div><h3>Create one neutral world system</h3><p>Give neutral terrain and devices the same basic target, warning, damage, score, life, and movement rules.</p></div></div>
@@ -1286,7 +1314,7 @@
         <h3>Old open questions — now resolved or moved</h3>
         <div class="grid-2">
           <article class="card choice-card"><h4>Gravity affects whom?</h4><p><strong>Delegated default:</strong> enemies only for the first test.</p></article>
-          <article class="card choice-card"><h4>Do environment kills drop experience?</h4><p><strong>Moved to G1:</strong> this is one of the two approvals at the top.</p></article>
+          <article class="card fact-card"><h4>Do environment kills drop experience?</h4><p><strong>Locked by G1:</strong> stage enemies still count and drop normal experience. Boss rules stay separate.</p></article>
           <article class="card choice-card"><h4>Can enemies use Transit Gates?</h4><p><strong>Delegated default:</strong> no. Keep the gate as a clear escape tool.</p></article>
           <article class="card choice-card"><h4>How many neutral devices per stage?</h4><p><strong>Delegated default:</strong> start small and add only clear roles.</p></article>
         </div>
