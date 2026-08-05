@@ -330,16 +330,31 @@ publishes complete changed snapshots; critical ordinary shooters advance and fir
 unblockable damage bypasses barriers; the ring is a white-alpha mask with no dark
 RGB fringe; ARC areas have no cross-bars; the tactical layout owns a combined
 80-unit safe-cell proof; and the capture driver records five additional real-state
-combat images. Focused validators and the 1280x720 runtime capture completed before
-the final gate. Capture output is under
-`build/captures/combat-correctness-0ab1085b/` for the pre-commit evidence run.
+combat images. A later task-local safety fix prevents a lethal zone transition from
+indexing a cleared reverse-pass array (`88267378`), and the performance fixture keeps
+the real damage path active without ending the soak before its declared workload
+sample (`b494d84f`).
+
+Final focused gate and runtime evidence (commit `b494d84f`): all named validators,
+visual-authority/workbench checks, Web export, and `git diff --check` passed. The
+full 1280x720 capture manifest contains exactly 82 files under
+`build/captures/combat-correctness-b494d84f/`; the standard-hit HUD shows `86 / 120`,
+the hostile projectile startup/flight/hit sequence is real and visible, and mine/boss
+ARC circles contain no decorative cross-bars. The native peak result is saved at
+`build/performance/combat-correctness/final-b494d84f-peak_horde-60s.json` with the
+exact commit, `dirty=false`, supported viewport, 450 focused and zero unfocused
+samples, valid counts of 276 enemies / 140 player projectiles / 72 hostile
+projectiles, and `thresholds.passed=false`: frame p95/p99 are `143.044/146.570 ms`,
+median is `7.5 FPS`, 1% low is `6.747 FPS`, and the longest over-33.3 ms run is
+`450` frames. This is a valid unchanged-load performance boundary; no Web run is
+authorized by the stop condition after a valid native threshold failure.
 
 ### Phase 4 - Run one consolidated final gate
 
 Goal: prove the corrected workload is functional, visually clean, exportable, and
 measure whether it meets the unchanged frame-pacing gate.
 
-- [ ] **4.1 Run the focused correctness and visual batch once**
+- [x] **4.1 Run the focused correctness and visual batch once**
   - Run the exact commands in the Test Plan after Phases 1-3 are complete.
   - Accept: every named validator, authority check, import, Web export, and
     `git diff --check` passes; actual-scale captures show authoritative hull values,
@@ -362,6 +377,9 @@ measure whether it meets the unchanged frame-pacing gate.
     and report that no further safe optimization has been proven. Do not mark the plan
     done or infer authority for workload, cadence, threshold, engine, or dependency
     changes.
+  - Recorded result: the authoritative native `peak_horde` run at commit `b494d84f`
+    is valid but misses the locked frame-pacing thresholds; the plan remains active at
+    this task and the built-Web run is intentionally not started.
 
 ## Test Plan
 
@@ -569,6 +587,13 @@ change is intentionally not selected without explicit user authority.
 - 2026-08-05: Traced the reported `1/1` hull display to the per-key HUD delta introduced
   by `a6d84b95`. Locked whole-fast-snapshot publication on any change; actual simulation
   health, card data, HUD layout, and cadence remain unchanged.
+- 2026-08-05: Guarded lethal denied-zone transitions so a run-state clear cannot leave
+  the reverse update pass indexing a stale zone array; the damage validator now covers
+  that transition.
+- 2026-08-05: Requalified the corrected workload at commit `b494d84f`. Native
+  `peak_horde` was authoritative with valid counts but missed the locked frame-pacing
+  gate by a wide margin; the predetermined 4.2 stop condition is active and no Web
+  performance run was started.
 
 ## Progress and Next Steps
 
@@ -576,9 +601,10 @@ change is intentionally not selected without explicit user authority.
 - Completed baseline: prior scheduling/cadence separation, XP/projectile scale work,
   diagnostic ownership capture, Web export/smoke, and failed release evidence through
   commit `448470dc`.
-- Current phase: Phase 1.
-- Next task: 1.1 publish fast-HUD values atomically.
-- Last completed gate: Discovery Closure Gate on 2026-08-05.
+- Current phase: Phase 4.
+- Next task: 4.2 remains active at the measured native performance boundary; a new
+  optimization or workload/threshold change requires explicit re-authorization.
+- Last completed gate: Final focused correctness/visual/export gate on 2026-08-05.
 - Update rule: check a task only with its concise evidence and advance this pointer in
   the same plan edit.
 
