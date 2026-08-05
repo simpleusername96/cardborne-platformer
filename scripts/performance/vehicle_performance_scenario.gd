@@ -66,6 +66,10 @@ func activate(run: Node) -> void:
 	run.encounter_runtime.stop_spawning()
 	run.player_barrier_strength = 1.0e9
 	run.player_barrier_timer = 1.0e9
+	# Restored unblockable attacks must still traverse their real damage path during
+	# a long soak, but the benchmark must not leave PLAYING merely because the
+	# synthetic target has a finite gameplay hull.
+	run.player_health = 1.0e9
 	# Synthetic projectile pressure already owns the exact workload count.
 	run.secondary_runtime.seeker_cooldown = 1.0e9
 	run.call("_clear_enemies")
