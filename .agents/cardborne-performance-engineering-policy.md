@@ -167,6 +167,28 @@ user decisions.
 - Stop and request a user decision when the remaining path requires a product tradeoff,
   weaker threshold, native/dependency work, or materially broader architecture.
 
+### 11. Correlate perceived stutter with normal play
+
+- When a synthetic fixture does not match the user's reported on-screen workload, run
+  `tools/run_manual_performance_trace.ps1` and reproduce the symptom through the normal
+  deployment flow. Close the game normally after the slow period so the trace is flushed.
+- The manual trace is debug-only, bounded, and diagnostic-only. It preserves persistence,
+  layout randomness, gameplay rules, counts, collision, cadence, and UI; it never produces
+  a release pass or fail result.
+- Read `ordinary_active` as map-wide simulated cap-counting ordinary enemies,
+  `ordinary_center_in_viewport` as the subset whose body center is inside the visible
+  world rectangle, and `ordinary_offscreen_active` as their difference. Do not equate any
+  of these with total live actors.
+- Use `physics_ticks` greater than one on a rendered frame as physics catch-up evidence.
+  Correlate slow frames and approximately one-second buckets with subsystem,
+  presentation, HUD, render, focus, projectile, effect, and pressure fields before
+  selecting a code or product owner.
+- Treat the trace as instrumented evidence: named timers, pressure copying, and viewport
+  render measurement add bounded diagnostic overhead. Confirm a selected owner with the
+  focused profiler or release fixture before making a final performance claim.
+- Keep the generated JSON under `build/performance/manual/`. It is local evidence ignored
+  by Git; summarize a durable finding in the active plan only after reviewing the trace.
+
 ## Prohibited Directions
 
 - Do not infer that differently sized PNG files require enemy AI changes.

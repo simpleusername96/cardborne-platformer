@@ -58,6 +58,7 @@ const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
+const ManualPerformanceTrace = preload("res://scripts/performance/vehicle_manual_performance_trace.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const StageTacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
@@ -320,6 +321,10 @@ var _performance_scenario: VehiclePerformanceScenario
 var _performance_finishing := false
 var _performance_enemy_sections: Dictionary = {}
 var _performance_detail_sample_active := false
+var _manual_performance_request: Dictionary = {}
+var _manual_performance_trace: ManualPerformanceTrace
+var _manual_performance_pressure: Dictionary = {}
+var _manual_performance_context: Dictionary = {}
 var _practice_request: Dictionary = {}
 var _practice_request_invalid := false
 var _pending_stage_report: Dictionary = {}
@@ -357,6 +362,7 @@ func _ready() -> void:
 		if _capture_driver.field_id_override != &"":
 			_field_id_override = _capture_driver.field_id_override
 	_performance_request = _parse_performance_request()
+	_manual_performance_request = _parse_manual_performance_request()
 	_practice_request = _parse_boss_practice_request()
 	if _practice_request_invalid and DisplayServer.get_name() == "headless":
 		get_tree().quit(2)
@@ -383,6 +389,7 @@ func _ready() -> void:
 	)
 	_set_mouse_for_mode()
 	queue_redraw()
+	_prepare_manual_performance_trace()
 	if _capture_mode:
 		call_deferred("_start_capture")
 	elif not _practice_request.is_empty():
@@ -427,6 +434,7 @@ func _initialize_hud_staging() -> void:
 
 
 func _exit_tree() -> void:
+	_finish_manual_performance_trace("normal_exit")
 	if _capture_driver != null and _capture_gateway != null:
 		_capture_driver.restore_on_exit(_capture_gateway)
 	if is_instance_valid(_performance_scenario):
@@ -453,11 +461,17 @@ func capture_set_mode(mode_name: StringName) -> void:
 
 func _physics_process(delta: float) -> void:
 	var performance_active := is_instance_valid(_performance_recorder)
+	var manual_trace_active := (
+		is_instance_valid(_manual_performance_trace)
+		and _manual_performance_trace.is_recording()
+		and _simulation_active()
+	)
+	var timing_active := performance_active or manual_trace_active
 	_performance_detail_sample_active = (
-		performance_active
+		timing_active
 		and _physics_serial % PERFORMANCE_DETAIL_SAMPLE_STRIDE == 0
 	)
-	var physics_started := Time.get_ticks_usec() if performance_active else 0
+	var physics_started := Time.get_ticks_usec() if timing_active else 0
 	var subsystem_ms := {}
 	if _performance_detail_sample_active:
 		_performance_enemy_sections.clear()
@@ -517,18 +531,34 @@ func _physics_process(delta: float) -> void:
 		_performance_scenario.after_physics(self)
 	if performance_active:
 		_performance_recorder.record_physics(_elapsed_ms(physics_started), subsystem_ms)
+	if manual_trace_active:
+		_manual_performance_trace.record_physics(
+			_elapsed_ms(physics_started), subsystem_ms
+		)
 	_physics_serial += 1
 
 
 func _process(delta: float) -> void:
 	var performance_active := is_instance_valid(_performance_recorder)
+	var manual_trace_recording := (
+		is_instance_valid(_manual_performance_trace)
+		and _manual_performance_trace.is_recording()
+	)
+	var manual_frame_active := (
+		manual_trace_recording
+		and (
+			_simulation_active()
+			or _manual_performance_trace.has_pending_physics()
+		)
+	)
+	var timing_active := performance_active or manual_frame_active
 	var hud_ms := 0.0
 	var presentation_ms := 0.0
 	player_hit_flash = maxf(0.0, player_hit_flash - delta)
 	player_muzzle_flash = maxf(0.0, player_muzzle_flash - delta)
 	camera_shake = maxf(0.0, camera_shake - delta * 18.0)
 	if is_instance_valid(_ui) and (_simulation_active() or _capture_mode):
-		var hud_started := Time.get_ticks_usec() if performance_active else 0
+		var hud_started := Time.get_ticks_usec() if timing_active else 0
 		var hud_update := _hud_presenter.advance(
 			delta,
 			_build_fast_hud_snapshot_callable,
@@ -538,7 +568,7 @@ func _process(delta: float) -> void:
 		)
 		if not hud_update.is_empty():
 			_ui.update_hud(hud_update)
-		if performance_active:
+		if timing_active:
 			hud_ms = _elapsed_ms(hud_started)
 	else:
 		_hud_presenter.reset()
@@ -557,7 +587,7 @@ func _process(delta: float) -> void:
 			or _last_presentation_active != presentation_active
 		)
 	):
-		var presentation_started := Time.get_ticks_usec() if performance_active else 0
+		var presentation_started := Time.get_ticks_usec() if timing_active else 0
 		_combat_renderer.sync(
 			enemies,
 			player_projectiles,
@@ -571,7 +601,7 @@ func _process(delta: float) -> void:
 			_aim_target_id,
 			_runtime_combat_presentation_snapshot()
 		)
-		if performance_active:
+		if timing_active:
 			presentation_ms = _elapsed_ms(presentation_started)
 		_presented_physics_serial = _physics_serial
 		_last_presentation_active = presentation_active
@@ -592,6 +622,22 @@ func _process(delta: float) -> void:
 		)
 	):
 		_finish_performance_scenario()
+	if manual_trace_recording:
+		var active_simulation := (
+			_simulation_active()
+			or _manual_performance_trace.has_pending_physics()
+		)
+		if active_simulation:
+			_fill_manual_performance_frame()
+		_manual_performance_trace.advance_frame(
+			delta,
+			presentation_ms,
+			hud_ms,
+			get_viewport(),
+			_manual_performance_pressure,
+			_manual_performance_context,
+			active_simulation
+		)
 
 
 func _build_camera() -> void:
@@ -1145,6 +1191,7 @@ func _start_deployed_run(primary_id: StringName) -> void:
 	_ui.notify(tr("NOTIFY_DEPLOYED"), 3.2, Rules.CYAN)
 	_play_sound(&"card", 1.15)
 	_set_mouse_for_mode()
+	_start_manual_performance_trace()
 
 
 func _on_upgrade_selected(upgrade_id: StringName) -> void:
@@ -6378,6 +6425,121 @@ func _start_boss_practice() -> void:
 	_begin_boss_exam_phase(boss, boss_practice.phase)
 	_ui.notify(tr("BOSS_PRACTICE_START"), 1.5, Art.MUSTARD)
 	_set_mouse_for_mode()
+
+
+func _parse_manual_performance_request() -> Dictionary:
+	var arguments := OS.get_cmdline_args()
+	arguments.append_array(OS.get_cmdline_user_args())
+	var request := _manual_performance_request_from_arguments(arguments)
+	if request.is_empty():
+		return {}
+	if not OS.is_debug_build() or OS.has_feature("web"):
+		push_error("Manual performance tracing is available only in native debug builds.")
+		return {}
+	return request
+
+
+static func _manual_performance_request_from_arguments(arguments: Array) -> Dictionary:
+	var output_path := ""
+	for argument in arguments:
+		if argument.begins_with("--manual-performance-output="):
+			output_path = argument.trim_prefix("--manual-performance-output=")
+	if output_path.is_empty():
+		return {}
+	if not ManualPerformanceTrace.is_safe_output_path(output_path):
+		push_error("Unsafe manual performance output path: %s" % output_path)
+		return {}
+	return {"output":output_path}
+
+
+func _prepare_manual_performance_trace() -> void:
+	if _manual_performance_request.is_empty():
+		return
+	if (
+		_capture_mode
+		or not _performance_request.is_empty()
+		or not _practice_request.is_empty()
+	):
+		push_warning(
+			"Manual performance tracing cannot be combined with capture, practice, "
+			+ "or synthetic performance modes."
+		)
+		_manual_performance_request.clear()
+		return
+	_manual_performance_trace = ManualPerformanceTrace.new()
+	if not _manual_performance_trace.configure(
+		String(_manual_performance_request["output"]),
+		PERFORMANCE_DETAIL_SAMPLE_STRIDE,
+		{
+			"gameplay_path":"normal_deployment",
+			"pressure_source":"existing_encounter_snapshot",
+			"render_measurement_requested":RenderingServer.has_method(
+				"viewport_set_measure_render_time"
+			),
+			"pressure_definitions":{
+				"ordinary_active":"Map-wide simulated cap-counting ordinary enemies.",
+				"ordinary_center_in_viewport":"Ordinary enemy bodies whose center is inside the visible world rectangle.",
+				"ordinary_offscreen_active":"ordinary_active minus ordinary_center_in_viewport.",
+			},
+		}
+	):
+		push_error("Could not configure manual performance tracing.")
+		_manual_performance_trace = null
+
+
+func _start_manual_performance_trace() -> void:
+	if not is_instance_valid(_manual_performance_trace):
+		return
+	if not _manual_performance_trace.start():
+		return
+	if RenderingServer.has_method("viewport_set_measure_render_time"):
+		RenderingServer.viewport_set_measure_render_time(
+			get_viewport().get_viewport_rid(), true
+		)
+	print(
+		"MANUAL_PERFORMANCE_TRACE_STARTED "
+		+ String(_manual_performance_request["output"])
+	)
+
+
+func _finish_manual_performance_trace(reason: String) -> void:
+	if not is_instance_valid(_manual_performance_trace):
+		return
+	_manual_performance_trace.finish(reason)
+	if RenderingServer.has_method("viewport_set_measure_render_time"):
+		RenderingServer.viewport_set_measure_render_time(
+			get_viewport().get_viewport_rid(), false
+		)
+
+
+func _fill_manual_performance_frame() -> void:
+	encounter_runtime.fill_current_pressure(_manual_performance_pressure)
+	_manual_performance_pressure["enemy_live"] = enemy_store.live_count()
+	_manual_performance_pressure["player_projectiles"] = (
+		projectile_store.player_count()
+	)
+	_manual_performance_pressure["hostile_projectiles"] = (
+		projectile_store.hostile_count()
+	)
+	_manual_performance_pressure["experience_shards"] = (
+		experience_runtime.shards.size()
+	)
+	_manual_performance_pressure["effects"] = effects.size()
+	_manual_performance_pressure["denied_zones"] = denied_zones.size()
+	_manual_performance_pressure["damaging_trails"] = damaging_trails.size()
+	_manual_performance_context.clear()
+	_manual_performance_context["stage_id"] = String(current_stage_id)
+	_manual_performance_context["stage_index"] = current_stage_index
+	_manual_performance_context["encounter_beat"] = encounter_runtime.current_beat
+	_manual_performance_context["run_time_seconds"] = run_time
+	_manual_performance_context["stage_time_seconds"] = maxf(
+		0.0, run_time - stage_started_at
+	)
+	_manual_performance_context["run_mode"] = (
+		"stage_transition"
+		if mode == RunMode.STAGE_TRANSITION
+		else "playing"
+	)
 
 
 func _parse_performance_request() -> Dictionary:

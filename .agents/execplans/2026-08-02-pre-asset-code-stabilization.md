@@ -5,7 +5,7 @@ owner: BK
 created: 2026-08-02
 last_reviewed: 2026-08-05
 topic: Behavior-preserving combat performance stabilization
-scope: Dense-enemy steering, conservative motion clearance, bounded simulation receipts, HUD staging, and combat presentation staging
+scope: Dense-enemy steering, conservative motion clearance, bounded simulation receipts, HUD staging, combat presentation staging, and real-play workload correlation
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
@@ -373,6 +373,20 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
     validators plus `git diff --check` pass. Import and Web export were intentionally not
     repeated under the two post-passes' focused-check scope.
 - [ ] **8.2 Commit the implementation and run native release scenarios**
+  - Before another release scenario, collect one user-controlled native play trace through
+    `tools/run_manual_performance_trace.ps1`. The debug-only trace must preserve normal
+    persistence, layout randomness, gameplay counts, AI, collision, cadence, and UI. It
+    records only active-simulation frames, retains bounded approximately one-second
+    buckets and the 64 slowest frames, and correlates those frames with the already-
+    computed encounter pressure snapshot. `ordinary_active` means map-wide simulated cap-counting enemies;
+    `ordinary_center_in_viewport` means those whose body center is inside the visible
+    world rectangle; `ordinary_offscreen_active` is their difference.
+  - The manual trace is diagnostic-only and can neither pass nor fail the release gate.
+    Analyze whether the reported hitch is continuous or intermittent and whether it
+    correlates with physics catch-up, presentation/HUD time, render time, active/visible/
+    offscreen enemies, projectiles, effects, or focus loss. Do not change encounter caps,
+    workload, cadence, visuals, or thresholds until that real-play evidence selects an
+    owner or exposes a product decision.
   - Measure from the exact clean implementation commit with normal stride-7
     instrumentation. Quote the window position as `'40,40'`; unquoted PowerShell input
     becomes invalid `40 40`.
@@ -389,6 +403,11 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
     The recurring owner is a separate long-running `codex.exe resume` process (observed
     PID 6124) launching Cardborne and paint-mountain children. Do not stop or suspend it
     from this plan; resume only after a continuous quiet window.
+  - Manual-trace implementation evidence: the bounded recorder, normal-path integration,
+    scan-free pressure fill, unique-output wrapper, focused manual/Run/encounter/synthetic
+    validators, headless import, and production Web export pass. The wrapper refuses to
+    start while another Godot process could contaminate the trace. BK's real-play JSON is
+    still required before selecting a measured owner or changing encounter density.
 - [ ] **8.3 Run built-Web peak and close the plan**
   - Only after both native results pass, load `$npjt-port-guard`, serve the already-built
     export on the `codex` lane, use the visible Chrome DevTools path, save the returned
@@ -416,6 +435,7 @@ $validators = @(
   'validate_vehicle_hud_presenter.gd',
   'validate_vehicle_combat_renderer.gd',
   'validate_vehicle_stage_ui_layout.gd',
+  'validate_vehicle_manual_play_trace.gd',
   'validate_vehicle_run.gd',
   'validate_vehicle_performance_scenarios.gd'
 )
@@ -542,6 +562,10 @@ nonstandard detail stride.
   unchecked because four native peak attempts overlapped Godot work owned by another
   Codex session. Internally plausible JSON is still invalid when external process
   monitoring proves contention; capacity and Web qualification were not started.
+- 2026-08-05: A source audit established that `249-276` came from the synthetic
+  `production_replay` route rather than a recorded manual session. Added a bounded,
+  debug-only manual-play correlation checkpoint before any encounter-density or further
+  release-qualification decision; it is evidence for diagnosis, never a release pass.
 
 ## Progress
 
@@ -554,12 +578,12 @@ nonstandard detail stride.
 - [x] Complete Phase 7.
 - [ ] Complete Phase 8 and retire this plan.
 
-Current task: **Resume Phase 8.2 from clean commit `76989997` after the external Godot
-suite is quiescent; first run the planned 15-second directional diagnostic, then the
-authoritative native pair only from an uncontaminated environment.**
+Current task: **Finish and validate the manual-play trace, have BK reproduce the perceived
+stutter through `tools/run_manual_performance_trace.ps1`, then analyze that JSON before
+changing workload or resuming the authoritative native pair.**
 
 ## Open Questions
 
-None inside the authorized scope. Implementation-local mechanics may be resolved without
-user interruption when they preserve the locked responsibilities, behavior, capacities,
-cadences, dependencies, and acceptance criteria above.
+- Does BK's perceived stutter correlate with map-wide ordinary simulation, visible
+  ordinary density, physics catch-up, presentation/HUD work, renderer time, or a
+  first-use/load event? The manual trace is the required evidence for this decision.

@@ -225,6 +225,22 @@ func debug_snapshot() -> Dictionary:
 	}
 
 
+func fill_current_pressure(output: Dictionary) -> void:
+	## Copies the already-computed pressure scalars into caller-owned diagnostic storage.
+	## This must stay scan-free so observing a slow frame does not add another enemy pass.
+	output.clear()
+	var active := int(_pressure_snapshot.get("active", 0))
+	var center_in_viewport := int(_pressure_snapshot.get("visible", 0))
+	output["ordinary_active"] = active
+	output["ordinary_active_cap"] = active_cap()
+	output["ordinary_center_in_viewport"] = center_in_viewport
+	output["ordinary_offscreen_active"] = maxi(0, active - center_in_viewport)
+	output["ordinary_near_600"] = int(_pressure_snapshot.get("near_600", 0))
+	output["ordinary_near_900"] = int(_pressure_snapshot.get("near_900", 0))
+	output["ranged_commits"] = int(_pressure_snapshot.get("ranged_commits", 0))
+	output["denial_commits"] = int(_pressure_snapshot.get("denial_commits", 0))
+
+
 static func build_pressure_snapshot(
 	active_mobile_count: int,
 	active_enemies: Array,

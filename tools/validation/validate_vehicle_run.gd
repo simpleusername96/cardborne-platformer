@@ -32,6 +32,24 @@ func _run() -> void:
 	_expect(run != null, "VehicleRun is active")
 	if run != null:
 		run.call("_reset_run", false)
+		_expect(
+			run._manual_performance_request.is_empty()
+				and run._manual_performance_trace == null,
+			"normal play does not allocate or activate manual performance tracing"
+		)
+		var pressure_probe := {}
+		run.encounter_runtime.fill_current_pressure(pressure_probe)
+		_expect(
+			pressure_probe.has("ordinary_active")
+				and pressure_probe.has("ordinary_center_in_viewport")
+				and int(pressure_probe["ordinary_offscreen_active"])
+					== maxi(
+						0,
+						int(pressure_probe["ordinary_active"])
+							- int(pressure_probe["ordinary_center_in_viewport"])
+					),
+			"manual diagnostics borrow a scan-free active/visible/offscreen pressure split"
+		)
 		_expect(run.current_stage_id == &"stage_1" and run.player_position == Vector2(3600,2160), "run begins at shared center")
 		_expect(run.PLAYER_BASE_SPEED == 280.0, "player base speed remains 280 px/s")
 		_expect(run.PICKUP_BODY_RADIUS == 42.0, "pickup body radius is 42 px")
