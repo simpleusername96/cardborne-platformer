@@ -1,0 +1,1302 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A source-backed audit of Cardborne map rules, effects, enemies, and bosses.">
+  <title>Cardborne In-Game System Audit</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --space: #070b11;
+      --canvas: #101923;
+      --surface: #182431;
+      --raised: #243445;
+      --line: #465a6e;
+      --text: #eef3f7;
+      --muted: #aebac6;
+      --amber: #f2b735;
+      --danger: #f05a5f;
+      --boss: #d43f8d;
+      --support: #72d6c4;
+      --system: #58bfea;
+      --max: 1460px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--space);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    a { color: #8edcff; }
+    a:hover { color: #c4efff; }
+    a:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--system);
+      outline-offset: 3px;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--canvas);
+    }
+
+    code {
+      color: #d9f5ff;
+      font-family: Consolas, "Courier New", monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 20;
+      left: 12px;
+      top: 12px;
+      padding: 10px 14px;
+      background: var(--system);
+      color: var(--space);
+      transform: translateY(-160%);
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .hero {
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, #0d1721 0%, #101923 58%, #151522 100%);
+    }
+
+    .hero-inner {
+      width: min(var(--max), calc(100% - 48px));
+      margin: 0 auto;
+      padding: 56px 0 44px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--system);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, h4 { line-height: 1.2; }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(36px, 6vw, 72px);
+      letter-spacing: -.035em;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -.02em;
+    }
+
+    h3 {
+      margin: 30px 0 12px;
+      font-size: 23px;
+    }
+
+    h4 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    p { max-width: 78ch; }
+
+    .hero-copy {
+      max-width: 860px;
+      margin: 20px 0 0;
+      color: #d7e0e8;
+      font-size: clamp(18px, 2.2vw, 24px);
+    }
+
+    .meta-row,
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .meta,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      background: rgba(7, 11, 17, .56);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .tag::before {
+      width: 9px;
+      height: 9px;
+      margin-right: 8px;
+      background: currentColor;
+      content: "";
+      transform: rotate(45deg);
+    }
+
+    .tag.fact { color: var(--support); }
+    .tag.inference { color: var(--system); }
+    .tag.direction { color: var(--amber); }
+    .tag.decision { color: #f2a3cd; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      gap: 32px;
+      width: min(var(--max), calc(100% - 48px));
+      margin: 0 auto;
+      padding: 32px 0 80px;
+    }
+
+    nav {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      padding: 16px;
+      background: var(--canvas);
+      border-left: 3px solid var(--system);
+    }
+
+    nav strong {
+      display: block;
+      margin: 0 0 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    nav ol {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    nav a {
+      display: block;
+      min-height: 44px;
+      padding: 9px 4px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    nav a:hover { color: var(--text); }
+
+    main { min-width: 0; }
+
+    section {
+      margin-bottom: 34px;
+      padding: clamp(22px, 4vw, 42px);
+      background: var(--canvas);
+      border-top: 1px solid var(--line);
+    }
+
+    section[id] { scroll-margin-top: 20px; }
+
+    .section-kicker {
+      margin: 0 0 5px;
+      color: var(--system);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .lead {
+      margin: 0 0 22px;
+      color: #d5dee6;
+      font-size: 19px;
+    }
+
+    .verdict-grid,
+    .pair,
+    .gallery,
+    .decision-grid,
+    .source-grid,
+    .pattern-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .verdict-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gallery.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .gallery.two,
+    .source-grid,
+    .decision-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pattern-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      min-width: 0;
+      padding: 18px;
+      background: var(--surface);
+    }
+
+    .card p:last-child,
+    .card ul:last-child { margin-bottom: 0; }
+
+    .verdict-card {
+      border-top: 4px solid var(--line);
+    }
+
+    .verdict-card.good { border-color: var(--support); }
+    .verdict-card.bad { border-color: var(--danger); }
+    .verdict-card.warn { border-color: var(--amber); }
+    .verdict-card.boss { border-color: var(--boss); }
+
+    .big-word {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .as-is { border-left: 4px solid var(--danger); }
+    .to-be { border-left: 4px solid var(--support); }
+
+    .as-is h3,
+    .to-be h3 { margin-top: 0; }
+
+    .callout {
+      margin: 22px 0;
+      padding: 18px 20px;
+      background: #111f2b;
+      border-left: 4px solid var(--amber);
+    }
+
+    .callout strong { color: var(--amber); }
+    .callout.danger { border-color: var(--danger); }
+    .callout.danger strong { color: #ff9da0; }
+    .callout.support { border-color: var(--support); }
+    .callout.support strong { color: var(--support); }
+
+    figure {
+      margin: 0;
+      min-width: 0;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    figure a { display: block; }
+
+    figcaption {
+      min-height: 76px;
+      padding: 12px 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .figure-label {
+      display: block;
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .table-wrap {
+      max-width: 100%;
+      margin: 18px 0;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 700px;
+      border-collapse: collapse;
+      background: var(--surface);
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      color: var(--text);
+      font-size: 14px;
+      letter-spacing: .03em;
+    }
+
+    td { color: #d6dfe7; }
+    tbody tr:last-child td { border-bottom: 0; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin: 22px 0;
+    }
+
+    .flow-step {
+      position: relative;
+      min-height: 116px;
+      padding: 16px;
+      background: var(--surface);
+      border-top: 4px solid var(--system);
+    }
+
+    .flow-step:not(:last-child)::after {
+      position: absolute;
+      z-index: 2;
+      right: -12px;
+      top: 46px;
+      color: var(--amber);
+      font-size: 24px;
+      content: "→";
+    }
+
+    .step-number {
+      display: block;
+      color: var(--system);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .bars { margin: 22px 0; }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr) 64px;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0;
+    }
+
+    .bar-track {
+      height: 22px;
+      background: #0b1219;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--danger);
+    }
+
+    .bar-limit {
+      border-right: 3px solid var(--support);
+    }
+
+    .tiny-note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .rule-list,
+    .plain-list {
+      padding-left: 22px;
+    }
+
+    .rule-list li,
+    .plain-list li { margin: 8px 0; }
+
+    .pattern-card {
+      padding: 16px;
+      background: var(--surface);
+      border-top: 3px solid var(--boss);
+    }
+
+    .pattern-card p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .pattern-number {
+      color: #f2a3cd;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    details {
+      margin-top: 18px;
+      background: var(--surface);
+    }
+
+    summary {
+      min-height: 48px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    details > div { padding: 0 16px 16px; }
+
+    .priority {
+      display: grid;
+      grid-template-columns: 84px minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .priority:last-child { border-bottom: 0; }
+
+    .priority-code {
+      align-self: start;
+      padding: 6px 8px;
+      background: var(--raised);
+      color: var(--amber);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .priority h3 { margin: 0 0 6px; }
+    .priority p { margin: 0; }
+
+    .status-line {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .status-mark {
+      flex: 0 0 12px;
+      width: 12px;
+      height: 12px;
+      margin-top: 7px;
+      background: var(--support);
+      transform: rotate(45deg);
+    }
+
+    .status-mark.bad { background: var(--danger); }
+    .status-mark.warn { background: var(--amber); }
+
+    footer {
+      padding: 26px 24px 52px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 1120px) {
+      .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pattern-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .gallery.three { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-step { min-height: auto; }
+      .flow-step:not(:last-child)::after {
+        right: 18px;
+        top: auto;
+        bottom: -21px;
+        content: "↓";
+      }
+    }
+
+    @media (max-width: 900px) {
+      .layout { display: block; }
+      nav {
+        position: static;
+        max-height: none;
+        margin-bottom: 24px;
+      }
+      nav ol {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 16px;
+      }
+      .pair,
+      .gallery.two,
+      .source-grid,
+      .decision-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      .hero-inner,
+      .layout { width: min(100% - 24px, var(--max)); }
+      .hero-inner { padding: 36px 0 30px; }
+      section { padding: 22px 16px; }
+      nav ol,
+      .verdict-grid,
+      .pattern-grid { grid-template-columns: 1fr; }
+      .priority { grid-template-columns: 62px minmax(0, 1fr); }
+      .bar-row { grid-template-columns: 62px minmax(0, 1fr) 46px; }
+      figcaption { min-height: auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the report</a>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Cardborne · In-Game System Audit</p>
+      <h1>The game has rules. The rules are hard to see.</h1>
+      <p class="hero-copy">
+        Your concerns are real. The map code is safer than it looks. But the map still feels repeated.
+        Effects share the wrong shapes. Normal enemies can start attacks outside the screen.
+        Late stages use too many enemy types. Boss phases add speed, but not enough new ideas.
+      </p>
+      <div class="meta-row" aria-label="Report facts">
+        <span class="meta">Audit date: 5 August 2026</span>
+        <span class="meta">Code: <code>f8d2fda9</code></span>
+        <span class="meta">Fresh capture: 1280 × 720, Korean</span>
+        <span class="meta">Output: analysis, not an implementation plan</span>
+      </div>
+      <div class="tag-row" aria-label="Evidence labels">
+        <span class="tag fact">Confirmed fact</span>
+        <span class="tag inference">Reasoned finding</span>
+        <span class="tag direction">Recommended direction</span>
+        <span class="tag decision">Human choice</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav aria-label="Report sections">
+      <strong>In this report</strong>
+      <ol>
+        <li><a href="#answer">Short answer</a></li>
+        <li><a href="#evidence">What I checked</a></li>
+        <li><a href="#map">Map and items</a></li>
+        <li><a href="#effects">Effects</a></li>
+        <li><a href="#enemies">Enemies</a></li>
+        <li><a href="#bosses">Bosses</a></li>
+        <li><a href="#other">Other problems</a></li>
+        <li><a href="#order">Fix order</a></li>
+        <li><a href="#sources">Sources</a></li>
+      </ol>
+    </nav>
+
+    <main id="main">
+      <section id="answer">
+        <p class="section-kicker">01 · Short answer</p>
+        <h2>Most of the report is confirmed.</h2>
+        <p class="lead">
+          One part needs a correction: map rules do exist. The real problem is that the player cannot read them,
+          and the rules do not create enough visible change.
+        </p>
+
+        <div class="verdict-grid">
+          <article class="card verdict-card warn">
+            <span class="big-word">Map</span>
+            <strong>Partly true.</strong>
+            <p>Safe, repeatable random placement exists. The large map shapes still look almost the same.</p>
+          </article>
+          <article class="card verdict-card bad">
+            <span class="big-word">Effects</span>
+            <strong>Confirmed.</strong>
+            <p>A shield and a damage aura both use the same mint ring. Many hit effects draw nothing.</p>
+          </article>
+          <article class="card verdict-card bad">
+            <span class="big-word">Enemies</span>
+            <strong>Confirmed.</strong>
+            <p>Normal attacks check range and clear sight. They do not check if the enemy is on screen.</p>
+          </article>
+          <article class="card verdict-card boss">
+            <span class="big-word">Bosses</span>
+            <strong>Confirmed.</strong>
+            <p>Each phase is faster, but it mostly changes the order of the same four attacks.</p>
+          </article>
+        </div>
+
+        <div class="callout danger">
+          <strong>The first blocker is a product rule conflict.</strong>
+          The current game document says no new map-generation system and no new boss-pattern family without a spec change.
+          The requested direction needs that document to change before code work starts.
+        </div>
+
+        <h3>What is true now</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Question</th>
+                <th scope="col">Current truth</th>
+                <th scope="col">Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Is the map random?</td>
+                <td>Yes, inside a fixed set of safe sockets and cover choices.</td>
+                <td>The system is not missing. It is too fixed and too similar.</td>
+              </tr>
+              <tr>
+                <td>Do support fields move?</td>
+                <td>Yes. Repair and overdrive pads already move after timed states.</td>
+                <td>This good rule is hard to notice in the current map language.</td>
+              </tr>
+              <tr>
+                <td>Do item boxes move?</td>
+                <td>No. Their position is chosen when the stage layout is built.</td>
+                <td>A new finite relocation rule is needed.</td>
+              </tr>
+              <tr>
+                <td>Do mobile enemies chase?</td>
+                <td>Yes. Mobile roles have pursuit movement. Fixed towers and mines do not move.</td>
+                <td>The bigger fairness problem is off-screen attack start.</td>
+              </tr>
+              <tr>
+                <td>Are bosses immune?</td>
+                <td>No. A sealed boss still takes 20% damage. The open window takes 155%.</td>
+                <td>The problem is repeated work, not full immunity.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="evidence">
+        <p class="section-kicker">02 · Evidence</p>
+        <h2>This report uses current code and fresh game screens.</h2>
+        <p class="lead">
+          I read the product and visual rules. I traced the current owners in code.
+          I then ran the built-in capture flow and saved 82 game states plus a manifest.
+        </p>
+
+        <div class="pair">
+          <article class="card">
+            <h3>Checked</h3>
+            <ul class="plain-list">
+              <li>Current product spec and visual rules.</li>
+              <li>Map builder, terrain timer, renderer, enemy attack gate, stage roster, and boss data.</li>
+              <li>Three full-field screens, effect fixtures, peak enemy load, and all five boss fixtures.</li>
+              <li>Existing external asset register and current external source pages.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Not claimed</h3>
+            <ul class="plain-list">
+              <li>This is not a balance playtest with many human players.</li>
+              <li>This is not final art approval.</li>
+              <li>This is not a frame-rate report.</li>
+              <li>This does not change the game.</li>
+            </ul>
+          </article>
+        </div>
+
+        <figure style="margin-top: 18px;">
+          <a href="../../design/cardborne-universal-art-style-reference.png" target="_blank" rel="noreferrer">
+            <img src="../../design/cardborne-universal-art-style-reference.png" alt="The full Cardborne universal art style reference sheet.">
+          </a>
+          <figcaption>
+            <span class="figure-label">Required style reference</span>
+            This sheet sets the shape language. It is not approval for any object shown in it.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="map">
+        <p class="section-kicker">03 · Map and items</p>
+        <h2>The map is safe, but it does not feel alive.</h2>
+        <p class="lead">
+          The code uses a seed. A seed is a number that can repeat the same random result.
+          It picks one field, eight cover blocks, enemy sockets, six loose items, and eight boxes.
+          It also checks walkable space and safe distance. This is good. The visible result is still too flat.
+        </p>
+
+        <div class="pair">
+          <article class="card as-is">
+            <h3>AS-IS</h3>
+            <p>The three fields use almost the same large frame and center pattern.</p>
+            <p>Outer walls and inner structural walls use the same wall image.</p>
+            <p>Floor panels look like many dark UI cards. They are stronger than some game objects.</p>
+            <p>Boxes stay where the stage put them.</p>
+          </article>
+          <article class="card to-be">
+            <h3>TO-BE</h3>
+            <p>Keep safe random rules and repeatable retries.</p>
+            <p>Build maps from a small set of authored route modules.</p>
+            <p>Give outer wall, inner wall, cover, and special terrain a different clear shape.</p>
+            <p>Move only unopened, off-screen boxes. Never create free extra rewards.</p>
+          </article>
+        </div>
+
+        <h3>Fresh full-field screens</h3>
+        <div class="gallery three">
+          <figure>
+            <a href="assets/runtime/10-field-drowned-ruin-field.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/10-field-drowned-ruin-field.png" alt="Full Drowned Ruin field capture.">
+            </a>
+            <figcaption><span class="figure-label">Drowned Ruin</span>Same outer frame. Two similar reward rooms. Strong repeated floor boxes.</figcaption>
+          </figure>
+          <figure>
+            <a href="assets/runtime/10-field-tidal-archive-field.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/10-field-tidal-archive-field.png" alt="Full Tidal Archive field capture.">
+            </a>
+            <figcaption><span class="figure-label">Tidal Archive</span>Panel direction changes, but the main route picture stays close to Field 1.</figcaption>
+          </figure>
+          <figure>
+            <a href="assets/runtime/10-field-storm-drydock-field.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/10-field-storm-drydock-field.png" alt="Full Storm Drydock field capture.">
+            </a>
+            <figcaption><span class="figure-label">Storm Drydock</span>Arc strips move, but the large map still reads like the same room.</figcaption>
+          </figure>
+        </div>
+
+        <div class="callout support">
+          <strong>Recommended choice: keep the mental map.</strong>
+          Keep the outer wall and the main inner walls for the full run. Do not turn a wall into a heal pad, attack pad, or portal.
+          Change small cover, enemies, boxes, and functional terrain at stage boundaries.
+        </div>
+
+        <h3>What should change, and when?</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Time</th>
+                <th scope="col">Keep</th>
+                <th scope="col">Change</th>
+                <th scope="col">Why</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Full run</td>
+                <td>Field identity, outer boundary, main route, main inner walls, opened bulkheads, worn tiles</td>
+                <td>Nothing here</td>
+                <td>The player can learn the place.</td>
+              </tr>
+              <tr>
+                <td>New stage</td>
+                <td>Safe routes and clear spawn space</td>
+                <td>Small cover set, fixed threats, loose items, normal boxes, terrain package</td>
+                <td>The same place gets a new fight.</td>
+              </tr>
+              <tr>
+                <td>Timed</td>
+                <td>Total reward budget</td>
+                <td>Repair and overdrive pads; one unopened box at a time</td>
+                <td>The player has a reason to move.</td>
+              </tr>
+              <tr>
+                <td>Never</td>
+                <td>One shape = one game meaning</td>
+                <td>Do not reuse one wall or ring for a different rule</td>
+                <td>The game stays readable.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>A better random map model</h3>
+        <p>Let code choose and test authored parts. Do not let code invent the art.</p>
+        <div class="flow" aria-label="Recommended map generation flow">
+          <div class="flow-step"><span class="step-number">STEP 1</span><strong>Run seed</strong><br>Pick one field family.</div>
+          <div class="flow-step"><span class="step-number">STEP 2</span><strong>Permanent shell</strong><br>Place boundary and main walls.</div>
+          <div class="flow-step"><span class="step-number">STEP 3</span><strong>Stage pack</strong><br>Pick cover, threats, items, and terrain.</div>
+          <div class="flow-step"><span class="step-number">STEP 4</span><strong>Safety test</strong><br>Check routes, distance, sight, and boss space.</div>
+          <div class="flow-step"><span class="step-number">STEP 5</span><strong>Timed moves</strong><br>Move only approved off-screen objects.</div>
+        </div>
+
+        <h3>Safe box relocation</h3>
+        <div class="gallery two">
+          <figure>
+            <a href="assets/runtime/05-two-field-items.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/05-two-field-items.png" alt="Current repair and recall item capture near the player craft.">
+            </a>
+            <figcaption><span class="figure-label">Current item family</span>The two loose item roles are readable. Their stage placement is fixed after creation.</figcaption>
+          </figure>
+          <article class="card">
+            <h4>Recommended box rule</h4>
+            <ol class="rule-list">
+              <li>Keep a fixed reward budget for the stage.</li>
+              <li>Every 50 seconds, select one unopened normal box.</li>
+              <li>Move it only if it is off-screen and far from the player.</li>
+              <li>Use a reachable socket that was not used recently.</li>
+              <li>Never move the two boxes inside reward rooms.</li>
+              <li>Do not replace a box after the player opens it.</li>
+            </ol>
+          </article>
+        </div>
+
+        <h3>Can Cardborne use external assets?</h3>
+        <p><strong>Yes.</strong> But a pack should be a source kit, not final art. The repository already has six audited Kenney source images and license copies. None is used directly in production.</p>
+
+        <div class="gallery two">
+          <figure>
+            <a href="../../design/visual-replacement-workbench/external-candidates/previews/curated-external-source-contact-sheet.png" target="_blank" rel="noreferrer">
+              <img src="../../design/visual-replacement-workbench/external-candidates/previews/curated-external-source-contact-sheet.png" alt="Existing contact sheet of six external source images used only for review.">
+            </a>
+            <figcaption><span class="figure-label">Already in the repository</span>Six legal source samples. Review only. Not final Cardborne art.</figcaption>
+          </figure>
+          <div class="card">
+            <h4>Use this intake rule</h4>
+            <ol class="rule-list">
+              <li>Save the official link and license.</li>
+              <li>Save the source file hash.</li>
+              <li>Select only the needed part.</li>
+              <li>Adapt camera, size, shape, color, and edge style.</li>
+              <li>Compare AS-IS and TO-BE at real game size.</li>
+              <li>Approve the exact final file before runtime use.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="source-grid" style="margin-top: 16px;">
+          <article class="card">
+            <h4>Best first test</h4>
+            <p><a href="https://dithart.itch.io/ditharts-free-sci-fi-tileset" target="_blank" rel="noreferrer">DithArt Free Sci-Fi Tileset</a></p>
+            <p>It has floors, walls, doors, shadows, and a Godot tile setup. Its pixel look must be adapted.</p>
+          </article>
+          <article class="card">
+            <h4>Low-risk reference</h4>
+            <p><a href="https://opengameart.org/content/warped-top-down-tech-lab-2" target="_blank" rel="noreferrer">Warped Top-Down Tech Lab 2</a></p>
+            <p>It is listed as CC0. It is useful for structure tests, not direct style replacement.</p>
+          </article>
+          <article class="card">
+            <h4>Already audited</h4>
+            <p><a href="https://kenney.nl/assets/space-kit" target="_blank" rel="noreferrer">Kenney Space Kit</a> and <a href="https://kenney.nl/assets/space-shooter-remastered" target="_blank" rel="noreferrer">Space Shooter Remastered</a></p>
+            <p>The repository has license files and source hashes for the selected samples.</p>
+          </article>
+          <article class="card">
+            <h4>Do not do this</h4>
+            <p>Do not copy a whole pack into production. Do not use a store preview as an asset. Do not use a pack with unclear or mixed license text.</p>
+          </article>
+        </div>
+
+        <h3>Wall roles need separate art</h3>
+        <div class="gallery three">
+          <figure>
+            <a href="../../design/visual-replacement-workbench/candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" target="_blank" rel="noreferrer">
+              <img src="../../design/visual-replacement-workbench/candidates/map-asset-audit-v5/shared/outer_wall_192x96.png" alt="Review-only outer wall candidate.">
+            </a>
+            <figcaption><span class="figure-label">Outer wall idea</span>Heavy edge and dark outside band. Review only.</figcaption>
+          </figure>
+          <figure>
+            <a href="../../design/visual-replacement-workbench/candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" target="_blank" rel="noreferrer">
+              <img src="../../design/visual-replacement-workbench/candidates/map-asset-audit-v5/shared/inner_wall_192x96.png" alt="Review-only inner wall candidate.">
+            </a>
+            <figcaption><span class="figure-label">Inner wall idea</span>Same family, simpler mass. Review only.</figcaption>
+          </figure>
+          <figure>
+            <a href="../../design/visual-replacement-workbench/candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" target="_blank" rel="noreferrer">
+              <img src="../../design/visual-replacement-workbench/candidates/map-asset-audit-v5/shared/terrain_obstacle_192.png" alt="Review-only independent cover candidate.">
+            </a>
+            <figcaption><span class="figure-label">Cover idea</span>Small, separate blocker. It must not look like a wall chain. Review only.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="effects">
+        <p class="section-kicker">04 · Effects</p>
+        <h2>Game meaning needs a small shape language.</h2>
+        <p class="lead">
+          The first goal is not beautiful effects. The first goal is complete and stable meaning.
+          One rule should always use one base shape. A different rule should use a different base shape.
+        </p>
+
+        <div class="pair">
+          <article class="card as-is">
+            <h3>AS-IS</h3>
+            <p>The barrier is a mint ring at radius 61.</p>
+            <p>Ion Field is also a mint ring, only larger.</p>
+            <p>Many projectile hits, weapon hits, enemy deaths, and pickups are set to “show nothing.”</p>
+            <p>The effect event does not carry a clear player or enemy owner field.</p>
+          </article>
+          <article class="card to-be">
+            <h3>TO-BE</h3>
+            <p>Use simple code shapes first.</p>
+            <p>Give every effect a base shape, owner sign, live size, and life phase.</p>
+            <p>Keep the base shape for the same effect.</p>
+            <p>Change both color and a small notch or direction mark for player and enemy ownership.</p>
+          </article>
+        </div>
+
+        <div class="gallery three" style="margin-top: 18px;">
+          <figure>
+            <a href="assets/runtime/09-effects-player.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/09-effects-player.png" alt="Current player effect fixture with simple rings and faint shapes.">
+            </a>
+            <figcaption><span class="figure-label">Player effect fixture</span>Several unrelated events become generic circles or very faint shapes.</figcaption>
+          </figure>
+          <figure>
+            <a href="assets/runtime/08-player-barrier-only.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/08-player-barrier-only.png" alt="Current barrier-only game capture.">
+            </a>
+            <figcaption><span class="figure-label">Barrier</span>A close mint ring. Ion Field uses the same ring rule at a larger radius.</figcaption>
+          </figure>
+          <figure>
+            <a href="assets/runtime/09-effects-secondary.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/09-effects-secondary.png" alt="Current secondary weapon effect fixture with almost no visible feedback.">
+            </a>
+            <figcaption><span class="figure-label">Secondary effect fixture</span>Most named impact events are intentionally hidden, so the screen is almost empty.</figcaption>
+          </figure>
+        </div>
+
+        <h3>Minimum effect set</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Game rule</th>
+                <th scope="col">Base shape</th>
+                <th scope="col">Player sign</th>
+                <th scope="col">Enemy sign</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Barrier</td><td>Tight broken ring that hugs the body</td><td>Amber outer notch</td><td>Coral inward notch</td></tr>
+              <tr><td>Damage aura</td><td>Large thin boundary with inward teeth</td><td>Amber source mark</td><td>Coral source mark</td></tr>
+              <tr><td>Hit</td><td>Short diamond at the contact point</td><td>Points away from the player shot</td><td>Points into the player body</td></tr>
+              <tr><td>Heal</td><td>Plus shape and one short rise</td><td>Teal plus</td><td>Not used unless an enemy truly heals</td></tr>
+              <tr><td>Teleport</td><td>Full floor circle with paired center mark</td><td>Cyan entry and exit pair</td><td>Not a normal enemy effect</td></tr>
+              <tr><td>Two-team hazard</td><td>Full live area with two-way teeth</td><td colspan="2">Neutral base plus danger edge; same damage rule for both teams</td></tr>
+              <tr><td>EMP</td><td>One broad broken pulse ring</td><td>Cyan system pulse</td><td>Enemy EMP would keep shape and add coral owner marks</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <strong>Phase 0 matches the requested direction.</strong>
+          Use basic shapes for every important effect. Do not polish them yet. First prove that players can name the rule and owner in one second.
+        </div>
+
+        <ol class="rule-list">
+          <li>Add four fields to the event data: effect type, owner, live size, and phase.</li>
+          <li>Map every important event to one basic shape. Stop hiding hit and kill feedback.</li>
+          <li>Use one owner mark for the player and one for enemies.</li>
+          <li>Capture all effects in one comparison sheet.</li>
+          <li>Test in grayscale and in a crowded fight.</li>
+          <li>Only then spend time on final authored art for the few large effects.</li>
+        </ol>
+      </section>
+
+      <section id="enemies">
+        <p class="section-kicker">05 · Enemies</p>
+        <h2>Normal enemies should enter the screen before they start an attack.</h2>
+        <p class="lead">
+          Current normal attacks use distance and clear sight. They do not require the enemy body to be visible.
+          Mobile pursuit already exists. The fix belongs in attack permission, not only in the renderer.
+        </p>
+
+        <div class="flow" aria-label="Recommended normal enemy attack rule">
+          <div class="flow-step"><span class="step-number">MOVE</span><strong>Off-screen</strong><br>Keep moving toward a valid range.</div>
+          <div class="flow-step"><span class="step-number">ENTER</span><strong>Body is visible</strong><br>Use a small edge margin.</div>
+          <div class="flow-step"><span class="step-number">CHECK</span><strong>Clear sight</strong><br>Wall or live box can block the shot.</div>
+          <div class="flow-step"><span class="step-number">WARN</span><strong>Lock the attack</strong><br>Show the real live area.</div>
+          <div class="flow-step"><span class="step-number">FINISH</span><strong>Stay committed</strong><br>Do not cancel when the body leaves view.</div>
+        </div>
+
+        <div class="callout support">
+          <strong>Off-screen warning exception:</strong>
+          allow it only for a boss or fixed facility. The attack area must cross the screen.
+          Show one clear edge arrow and the exact danger area. Normal enemies do not need attack-route UI.
+        </div>
+
+        <h3>Late stages use too many roles at once</h3>
+        <p>The number below includes unique mobile and fixed enemy roles in the stage data. The green line is the recommended cap of six total roles.</p>
+        <div class="bars" role="img" aria-label="Current unique enemy role counts are 6, 10, 10, 10, and 12 for stages 1 through 5. Recommended maximum is 6.">
+          <div class="bar-row"><strong>Stage 1</strong><div class="bar-track bar-limit"><div class="bar-fill" style="width:50%"></div></div><span>6</span></div>
+          <div class="bar-row"><strong>Stage 2</strong><div class="bar-track bar-limit"><div class="bar-fill" style="width:83.33%"></div></div><span>10</span></div>
+          <div class="bar-row"><strong>Stage 3</strong><div class="bar-track bar-limit"><div class="bar-fill" style="width:83.33%"></div></div><span>10</span></div>
+          <div class="bar-row"><strong>Stage 4</strong><div class="bar-track bar-limit"><div class="bar-fill" style="width:83.33%"></div></div><span>10</span></div>
+          <div class="bar-row"><strong>Stage 5</strong><div class="bar-track bar-limit"><div class="bar-fill" style="width:100%"></div></div><span>12</span></div>
+        </div>
+
+        <h3>Recommended stage palette</h3>
+        <p>Use three common mobile roles, at most one special mobile role, and at most two fixed roles. Keep two familiar roles. Add one new role. Retire one old role.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Stage</th>
+                <th scope="col">Example mobile set</th>
+                <th scope="col">Example fixed set</th>
+                <th scope="col">Learning step</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Scrap Drone, Chaser, Shooter</td><td>Turret</td><td>Move, aim, and read one ranged threat.</td></tr>
+              <tr><td>2</td><td>Chaser, Shooter, Shield Escort</td><td>Mine</td><td>Keep two. Add protection.</td></tr>
+              <tr><td>3</td><td>Shooter, Shield Escort, Rammer</td><td>Interceptor Tower</td><td>Add a committed charge.</td></tr>
+              <tr><td>4</td><td>Shield Escort, Rammer, Repair Tender</td><td>Beam Sentinel</td><td>Add target priority.</td></tr>
+              <tr><td>5</td><td>Rammer, Repair Tender, Splitter Barge</td><td>Beam Sentinel</td><td>Remix known rules under more pressure.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tiny-note">This table is a direction example. It is not final balance data.</p>
+      </section>
+
+      <section id="bosses">
+        <p class="section-kicker">06 · Bosses</p>
+        <h2>Bosses need new rules, not only a new attack order.</h2>
+        <p class="lead">
+          Every boss has four direct attacks and two timed background attacks.
+          Phase 2 and Phase 3 mostly reorder the same four direct attacks.
+          Every boss also creates two external objective objects at each phase.
+        </p>
+
+        <div class="pair">
+          <article class="card as-is">
+            <h3>AS-IS</h3>
+            <p>Later phases reduce the rest gap and run background attacks more often.</p>
+            <p>The direct attack set does not gain a new rule.</p>
+            <p>All five bosses repeat the “find and break two objects” structure.</p>
+            <p>The result can feel weak even when numbers go up.</p>
+          </article>
+          <article class="card to-be">
+            <h3>TO-BE</h3>
+            <p>Phase 1 teaches one boss idea.</p>
+            <p>Phase 2 adds one new rule.</p>
+            <p>Phase 3 combines two learned rules.</p>
+            <p>Use external objective objects for only one or two bosses.</p>
+          </article>
+        </div>
+
+        <div class="gallery three" style="margin-top: 18px;">
+          <figure>
+            <a href="assets/runtime/30-boss-01-stage-1-startup.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/30-boss-01-stage-1-startup.png" alt="Stage 1 boss startup capture.">
+            </a>
+            <figcaption><span class="figure-label">Stage 1 boss</span>Clear startup exists. The objective system begins immediately.</figcaption>
+          </figure>
+          <figure>
+            <a href="assets/runtime/30-boss-05-stage-5-phase-two.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/30-boss-05-stage-5-phase-two.png" alt="Stage 5 boss phase two capture.">
+            </a>
+            <figcaption><span class="figure-label">Stage 5, phase 2</span>More pressure, but the same external-object task still controls damage.</figcaption>
+          </figure>
+          <figure>
+            <a href="assets/runtime/30-boss-01-stage-1-offscreen-furnace-active.png" target="_blank" rel="noreferrer">
+              <img src="assets/runtime/30-boss-01-stage-1-offscreen-furnace-active.png" alt="Special off-screen boss attack capture.">
+            </a>
+            <figcaption><span class="figure-label">Good exception case</span>A special boss attack may come from outside the screen when its danger area is shown.</figcaption>
+          </figure>
+        </div>
+
+        <h3>Boss pattern library</h3>
+        <p>These are simple rule parts. They are not copied art. A boss should combine a small set and give each set a fair answer.</p>
+
+        <div class="pattern-grid">
+          <article class="pattern-card"><span class="pattern-number">01 · AIM</span><h4>Aimed stream</h4><p>One line follows the last player position. Move sideways after the lock.</p></article>
+          <article class="pattern-card"><span class="pattern-number">02 · AIM</span><h4>Aimed fan</h4><p>Three to seven shots make a cone. Move through the large gap.</p></article>
+          <article class="pattern-card"><span class="pattern-number">03 · SPACE</span><h4>Fixed fan</h4><p>Shots use fixed angles. Learn the safe lanes before the shot.</p></article>
+          <article class="pattern-card"><span class="pattern-number">04 · SPACE</span><h4>Ring burst</h4><p>Shots leave the boss in all directions. Stay back or find one gap.</p></article>
+          <article class="pattern-card"><span class="pattern-number">05 · SPACE</span><h4>Spiral</h4><p>The shot direction turns over time. Follow one safe lane slowly.</p></article>
+          <article class="pattern-card"><span class="pattern-number">06 · AIM</span><h4>Rotating turret</h4><p>A weapon turns, locks, then fires. Cross the line before the lock ends.</p></article>
+          <article class="pattern-card"><span class="pattern-number">07 · SPACE</span><h4>Sweeping beam</h4><p>A long beam moves across the field. Use the open end, cover, or one planned dash.</p></article>
+          <article class="pattern-card"><span class="pattern-number">08 · TIME</span><h4>Ground marker</h4><p>A circle or lane is marked, then hits. Leave early.</p></article>
+          <article class="pattern-card"><span class="pattern-number">09 · MOVE</span><h4>Charge</h4><p>The boss locks one direction and rushes. Step aside, then punish recovery.</p></article>
+          <article class="pattern-card"><span class="pattern-number">10 · MOVE</span><h4>Jump and slam</h4><p>The landing area is shown first. Leave it and attack after landing.</p></article>
+          <article class="pattern-card"><span class="pattern-number">11 · AIM</span><h4>Homing set</h4><p>Slow shots follow for a short time. Group them, then cut across.</p></article>
+          <article class="pattern-card"><span class="pattern-number">12 · SPACE</span><h4>Bouncing shot</h4><p>A shot hits a wall and returns. Read the next path, not only the first path.</p></article>
+          <article class="pattern-card"><span class="pattern-number">13 · SPACE</span><h4>Moving hazard lane</h4><p>A dangerous strip moves through the field. Choose the safe side early.</p></article>
+          <article class="pattern-card"><span class="pattern-number">14 · PRIORITY</span><h4>Limited summons</h4><p>A small support group arrives. Kill the key unit or survive its short timer.</p></article>
+          <article class="pattern-card"><span class="pattern-number">15 · CHOICE</span><h4>Breakable weapon</h4><p>Break one visible weapon to remove one attack. The choice is useful, not required travel.</p></article>
+          <article class="pattern-card"><span class="pattern-number">16 · TIME</span><h4>Open weak point</h4><p>The core opens for a short bonus. Normal damage still works when it is closed.</p></article>
+          <article class="pattern-card"><span class="pattern-number">17 · PHASE</span><h4>Phase handoff</h4><p>A health point adds one new rule. Show a clear change cue.</p></article>
+          <article class="pattern-card"><span class="pattern-number">18 · SPACE</span><h4>Arena squeeze</h4><p>Two slow dangers reduce safe space. Pick a lane and save dash for the exit.</p></article>
+        </div>
+
+        <h3>How to build one boss</h3>
+        <div class="flow" aria-label="Recommended boss design formula">
+          <div class="flow-step"><span class="step-number">1</span><strong>Core idea</strong><br>One sentence.</div>
+          <div class="flow-step"><span class="step-number">2</span><strong>Three patterns</strong><br>Teach safe answers.</div>
+          <div class="flow-step"><span class="step-number">3</span><strong>One weakness</strong><br>Position, timing, or target choice.</div>
+          <div class="flow-step"><span class="step-number">4</span><strong>One new phase rule</strong><br>Do not only reorder.</div>
+          <div class="flow-step"><span class="step-number">5</span><strong>Final remix</strong><br>Combine learned rules.</div>
+        </div>
+
+        <h3>Good weakness options</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Weakness</th><th scope="col">Player action</th><th scope="col">Why it is better</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Close-range bonus</td><td>Stay near a fast boss that keeps moving away.</td><td>The fight stays on the boss. No search task.</td></tr>
+              <tr><td>Rear or side opening</td><td>Flank after a committed charge.</td><td>Movement creates the damage chance.</td></tr>
+              <tr><td>Breakable weapon</td><td>Remove the attack that is hardest for this build.</td><td>The target choice changes the fight.</td></tr>
+              <tr><td>Interruptible charge</td><td>Deal enough damage during a clear charge state.</td><td>Skill creates a short open-core window.</td></tr>
+              <tr><td>Hazard interaction</td><td>Lead the boss into a two-team danger field.</td><td>The map becomes part of combat.</td></tr>
+              <tr><td>External nodes</td><td>Break nearby shared nodes for one or two selected bosses.</td><td>The current rule stays, but it is no longer every boss.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <strong>Do not fix “weak” only with health.</strong>
+          First add a better move, a better weakness, and a stronger phase mix. Then tune health and damage.
+        </div>
+
+        <p class="tiny-note">
+          Pattern references: <a href="https://shmups.wiki/library/Help%3ADodging_strategy" target="_blank" rel="noreferrer">dodging strategy</a>,
+          <a href="https://shmups.wiki/library/Battle_Garegga/Bosses" target="_blank" rel="noreferrer">Battle Garegga boss notes</a>, and
+          <a href="https://shmups.wiki/library/Ikaruga" target="_blank" rel="noreferrer">Ikaruga notes</a>.
+          The report uses only abstract rules, not copied art or exact boss designs.
+        </p>
+      </section>
+
+      <section id="other">
+        <p class="section-kicker">07 · Other problems</p>
+        <h2>Five more issues need attention.</h2>
+
+        <figure>
+          <a href="assets/runtime/03-peak-horde.png" target="_blank" rel="noreferrer">
+            <img src="assets/runtime/03-peak-horde.png" alt="Peak stage five enemy fixture with large overlapping red groups and many experience drops.">
+          </a>
+          <figcaption>
+            <span class="figure-label">Peak pressure fixture</span>
+            The capture has 276 active enemies and 124 near the player. Bodies and rewards become large solid groups.
+            This proves a readability risk. It is not a frame-rate claim.
+          </figcaption>
+        </figure>
+
+        <div style="margin-top: 20px;">
+          <div class="priority">
+            <div class="priority-code">A</div>
+            <div><h3>Crowd readability has no safe falloff.</h3><p>At high pressure, bodies overlap into one red mass. Important threats, drops, and warnings lose order. Add a crowd display rule: keep boss, target, committed danger, and player above all optional detail.</p></div>
+          </div>
+          <div class="priority">
+            <div class="priority-code">B</div>
+            <div><h3>Hit and kill confirmation is too quiet.</h3><p>Many impact, death, pickup, and secondary events are intentionally hidden. This makes different weapons feel closer than their rules.</p></div>
+          </div>
+          <div class="priority">
+            <div class="priority-code">C</div>
+            <div><h3>Tests prove safety, not fast human reading.</h3><p>Current checks cover collision, placement, timing, and exact replay. Add a short visual test: can a player name every blocker, live terrain effect, owner, and committed danger in one second?</p></div>
+          </div>
+          <div class="priority">
+            <div class="priority-code">D</div>
+            <div><h3>Review assets are not reaching runtime.</h3><p>The repository has wall candidates and external sources. Most are still review-only. The process needs one small approved family at a time, starting with outer wall, inner wall, cover, and floor.</p></div>
+          </div>
+          <div class="priority">
+            <div class="priority-code">E</div>
+            <div><h3>The product document no longer matches the requested game.</h3><p>The current document keeps one physical map and blocks extra map systems and new boss families. Change that owner first, or future work will keep pulling in two directions.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="order">
+        <p class="section-kicker">08 · Recommended order</p>
+        <h2>Fix meaning before polish.</h2>
+        <p class="lead">This order lowers rework. It is a direction, not a full execution plan.</p>
+
+        <div class="priority">
+          <div class="priority-code">P0</div>
+          <div><h3>Change the product decisions</h3><p>Lock the map lifetime table, box relocation rule, enemy visibility gate, stage palette cap, and boss objective policy in the product spec.</p></div>
+        </div>
+        <div class="priority">
+          <div class="priority-code">P1</div>
+          <div><h3>Make meaning clear</h3><p>Split wall roles. Add the basic effect shape set. Stop normal off-screen attack starts. Restore small hit and kill feedback.</p></div>
+        </div>
+        <div class="priority">
+          <div class="priority-code">P2</div>
+          <div><h3>Add controlled change</h3><p>Use stage tactical packages. Add safe box relocation. Keep major walls stable for the run.</p></div>
+        </div>
+        <div class="priority">
+          <div class="priority-code">P3</div>
+          <div><h3>Reduce learning load</h3><p>Cap the stage enemy palette. Keep two familiar roles and add one new role at a time.</p></div>
+        </div>
+        <div class="priority">
+          <div class="priority-code">P4</div>
+          <div><h3>Rebuild boss growth</h3><p>Use the pattern library. Add one rule per phase. Keep external nodes for only selected bosses.</p></div>
+        </div>
+        <div class="priority">
+          <div class="priority-code">P5</div>
+          <div><h3>Polish the proven shapes</h3><p>Adapt or author final art only after the simple version passes crowded-play and grayscale checks.</p></div>
+        </div>
+
+        <h3>Simple success rules</h3>
+        <ul class="rule-list">
+          <li>A player can tell outer wall, inner wall, cover, and special terrain in one second.</li>
+          <li>A shield can never look like a damage aura.</li>
+          <li>A normal enemy starts zero attacks while its body is off-screen.</li>
+          <li>A stage uses no more than six total enemy roles.</li>
+          <li>Each boss phase adds one rule or one real combination.</li>
+          <li>Box movement never increases the reward budget.</li>
+          <li>The same seed still makes the same safe result for a retry.</li>
+        </ul>
+
+        <h3>Recommended human choices</h3>
+        <div class="decision-grid">
+          <article class="card">
+            <div class="status-line"><span class="status-mark"></span><div><h4>Keep main walls for the full run</h4><p>Recommended. Let small tactical objects change at stage boundaries.</p></div></div>
+          </article>
+          <article class="card">
+            <div class="status-line"><span class="status-mark"></span><div><h4>Use external art as source material</h4><p>Recommended. Adapt it to Cardborne. Do not ship a pack unchanged.</p></div></div>
+          </article>
+          <article class="card">
+            <div class="status-line"><span class="status-mark"></span><div><h4>Move only unopened, unseen normal boxes</h4><p>Recommended. Keep a finite stage reward budget.</p></div></div>
+          </article>
+          <article class="card">
+            <div class="status-line"><span class="status-mark"></span><div><h4>Use external nodes on one or two bosses</h4><p>Recommended. Give other bosses a movement or timing weakness.</p></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="sources">
+        <p class="section-kicker">09 · Sources and audit trail</p>
+        <h2>Every main claim has a current owner.</h2>
+
+        <h3>Local source map</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Claim</th><th scope="col">Source</th></tr></thead>
+            <tbody>
+              <tr><td>Current map lifetime and product limits</td><td><a href="../../product/vehicle_game_spec.md"><code>docs/product/vehicle_game_spec.md:155–248, 514–528</code></a></td></tr>
+              <tr><td>Visual meaning, walls, floor, effects, and external intake</td><td><a href="../../design/VISUAL_SYSTEM.md"><code>docs/design/VISUAL_SYSTEM.md:238–359</code></a></td></tr>
+              <tr><td>Shared cover and stage object placement</td><td><a href="../../../scripts/vehicle/vehicle_field_layout_generator.gd"><code>scripts/vehicle/vehicle_field_layout_generator.gd:109–127, 229–365, 444–512</code></a></td></tr>
+              <tr><td>Support field relocation</td><td><a href="../../../scripts/vehicle/vehicle_terrain_runtime.gd"><code>scripts/vehicle/vehicle_terrain_runtime.gd:430–525</code></a></td></tr>
+              <tr><td>One image for outer and inner walls</td><td><a href="../../../scripts/presentation/vehicle_world_mesh_builder.gd"><code>scripts/presentation/vehicle_world_mesh_builder.gd:131–150</code></a></td></tr>
+              <tr><td>Barrier and Ion Field share a ring</td><td><a href="../../../scripts/presentation/vehicle_combat_renderer.gd"><code>scripts/presentation/vehicle_combat_renderer.gd:1340–1345</code></a></td></tr>
+              <tr><td>Hidden visual events</td><td><a href="../../../scripts/presentation/components/vehicle_visual_event_catalog.gd"><code>scripts/presentation/components/vehicle_visual_event_catalog.gd:7–55</code></a></td></tr>
+              <tr><td>Normal attack permission has no screen check</td><td><a href="../../../scripts/vehicle/vehicle_run.gd"><code>scripts/vehicle/vehicle_run.gd:2810–2830</code></a></td></tr>
+              <tr><td>Stage enemy role lists</td><td><a href="../../../scripts/vehicle/stages/vehicle_combat_stages.gd"><code>scripts/vehicle/stages/vehicle_combat_stages.gd:48–60</code></a></td></tr>
+              <tr><td>Four boss attacks, two background attacks, phase reorder</td><td><a href="../../../scripts/bosses/vehicle_boss_patterns.gd"><code>scripts/bosses/vehicle_boss_patterns.gd:15–65, 126–138</code></a></td></tr>
+              <tr><td>Two boss objects on every boss</td><td><a href="../../../scripts/bosses/vehicle_boss_exam_catalog.gd"><code>scripts/bosses/vehicle_boss_exam_catalog.gd:16–102</code></a></td></tr>
+              <tr><td>Fresh screenshot settings and the full 82-file run list</td><td><a href="assets/runtime/capture-manifest.json"><code>assets/runtime/capture-manifest.json</code></a> (this report stores only the selected screens)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Visual authority record</h3>
+        <div class="card">
+          <ul class="plain-list">
+            <li>Text authority read in full: <code>docs/design/VISUAL_SYSTEM.md</code>.</li>
+            <li>Image authority inspected at original 1448 × 1086 detail: <code>docs/design/cardborne-universal-art-style-reference.png</code>.</li>
+            <li>Expected and observed SHA-256: <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>.</li>
+            <li>Recorded original artifact: <code>C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png</code>, 2 August 2026, 12:13:44 KST.</li>
+            <li>No new raster art was generated for this report. The report uses fresh runtime captures and links to existing review-only images.</li>
+            <li>No candidate in this report receives asset approval.</li>
+          </ul>
+        </div>
+
+        <details>
+          <summary>External source notes</summary>
+          <div>
+            <p>Availability and license text can change. Check the downloaded license again before purchase or use.</p>
+            <ul class="plain-list">
+              <li><a href="https://dithart.itch.io/ditharts-free-sci-fi-tileset" target="_blank" rel="noreferrer">DithArt Free Sci-Fi Tileset</a>: the listing allows commercial use and changes.</li>
+              <li><a href="https://dithart.itch.io/sci-fi-tileset" target="_blank" rel="noreferrer">DithArt paid Sci-Fi Tileset</a>: broader pack; confirm the included license before use.</li>
+              <li><a href="https://opengameart.org/content/warped-top-down-tech-lab-2" target="_blank" rel="noreferrer">Warped Top-Down Tech Lab 2</a>: listed as CC0.</li>
+              <li><a href="https://opengameart.org/content/top-down-tileset-1" target="_blank" rel="noreferrer">Rawdanitsu Top-Down Tileset</a>: listed as CC0.</li>
+              <li><a href="https://opengameart.org/node/5571" target="_blank" rel="noreferrer">OpenGameArt license FAQ</a>: explains CC0 and other license duties.</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    Cardborne in-game system audit · Current-state evidence captured on 5 August 2026
+  </footer>
+</body>
+</html>
