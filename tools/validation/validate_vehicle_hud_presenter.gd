@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Presenter = preload("res://scripts/ui/vehicle_hud_presenter.gd")
+const GameplayHud = preload("res://scripts/ui/vehicle_gameplay_hud.gd")
 
 var failures: Array[String] = []
 var fast_calls := 0
@@ -57,6 +58,16 @@ func _initialize() -> void:
 		max_hull_update.get("health", -1.0) == 135.0
 		and max_hull_update.get("max_health", -1.0) == 135.0,
 		"max-hull changes publish current and maximum hull together"
+	)
+	var health_pips := GameplayHud.HealthPips.new()
+	health_pips.set_values(120.0, 120.0)
+	health_pips.set_values(
+		float(damage_update["health"]), float(damage_update["max_health"])
+	)
+	_expect(
+		is_equal_approx(health_pips.health, 110.0)
+			and is_equal_approx(health_pips.maximum, 120.0),
+		"HUD HealthPips consumes the atomic pair without falling back to 1/1"
 	)
 	_finish()
 

@@ -643,20 +643,25 @@ func _capture_ordinary_projectile_evidence() -> void:
 		return
 	_run._append_enemy(shooter)
 	_run._start_enemy_attack(shooter)
+	if shooter.phase != &"startup":
+		push_error("ordinary projectile capture fixture did not enter startup")
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("09-effects-projectile-hostile-startup.png")
 	_run.capture_set_mode(&"playing")
 	shooter.phase_time = 0.0
 	_run._update_scheduled_ordinary_enemy(shooter, 1.0 / 60.0)
-	if _run.projectile_store.hostile_count() != 1:
+	if shooter.phase != &"recovery" or _run.projectile_store.hostile_count() != 1:
 		push_error("ordinary projectile capture fixture did not produce a scheduled hostile shot")
 	_run._update_projectiles(0.10)
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("09-effects-projectile-hostile-flight.png")
 	_run.capture_set_mode(&"playing")
+	var hull_before_hit := _run.player_health
 	_run._update_projectiles(0.50)
+	if _run.player_health >= hull_before_hit:
+		push_error("ordinary projectile capture fixture did not deliver hull damage")
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("09-effects-projectile-hostile-hit.png")

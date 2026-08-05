@@ -107,12 +107,7 @@ func is_fast_motion_clear(from: Vector2, to: Vector2, radius: float) -> bool:
 		return false
 	var from_cell := _fast_motion_cell(from)
 	var to_cell := _fast_motion_cell(to)
-	if (
-		from_cell.x < _fast_motion_min_cell.x
-		or from_cell.y < _fast_motion_min_cell.y
-		or from_cell.x >= _fast_motion_min_cell.x + _fast_motion_width
-		or from_cell.y >= _fast_motion_min_cell.y + _fast_motion_height
-	):
+	if not _fast_motion_cell_in_bounds(from_cell) or not _fast_motion_cell_in_bounds(to_cell):
 		return false
 	return from_cell == to_cell and bool(_safe_motion_cells_36.get(from_cell, false))
 
@@ -241,6 +236,15 @@ func _fast_motion_cell(position: Vector2) -> Vector2i:
 	return Vector2i(
 		floori(position.x / FAST_MOTION_CELL_SIZE),
 		floori(position.y / FAST_MOTION_CELL_SIZE)
+	)
+
+
+func _fast_motion_cell_in_bounds(cell: Vector2i) -> bool:
+	return (
+		cell.x >= _fast_motion_min_cell.x
+		and cell.y >= _fast_motion_min_cell.y
+		and cell.x < _fast_motion_min_cell.x + _fast_motion_width
+		and cell.y < _fast_motion_min_cell.y + _fast_motion_height
 	)
 
 
