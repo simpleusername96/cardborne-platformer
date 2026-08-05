@@ -406,8 +406,20 @@ cross-cell, large-radius, selected-cover, and crate cases keep the exact existin
   - Manual-trace implementation evidence: the bounded recorder, normal-path integration,
     scan-free pressure fill, unique-output wrapper, focused manual/Run/encounter/synthetic
     validators, headless import, and production Web export pass. The wrapper refuses to
-    start while another Godot process could contaminate the trace. BK's real-play JSON is
-    still required before selecting a measured owner or changing encounter density.
+    start while another Godot process could contaminate the trace.
+  - BK's normal-exit 144.223-second trace at
+    `build/performance/manual/manual-4dec4734-20260805-191909.json` selected synchronous
+    spawn allocation as the first-use hitch owner. Render CPU, GPU, presentation, and HUD
+    stayed low while the 8-second Stage 1 surge produced an approximately 75 ms
+    `encounter_and_pursuit` spike with only one ordinary enemy active. A focused allocator
+    diagnostic then reproduced 52-74 ms arrival-window work without rendering.
+  - Commit `483cab1f` compiles immutable exact-radius candidate geometry during stage
+    setup and removes request-invariant scoring and admission checks from inner candidate
+    loops. The same Stage 1 fingerprints remain exact while the latest diagnostic reports
+    window median/p95 values of `9.616/10.590`, `4.279/5.062`, and `4.354/6.074` ms.
+    Prewarm cost was 41.474 ms outside active play. Spawn-allocation, multi-sector,
+    arrival-scheduler, encounter-pacing, and Run validators plus import and Web export
+    pass. These diagnostic timings are owner evidence, not release qualification.
 - [ ] **8.3 Run built-Web peak and close the plan**
   - Only after both native results pass, load `$npjt-port-guard`, serve the already-built
     export on the `codex` lane, use the visible Chrome DevTools path, save the returned
@@ -566,6 +578,13 @@ nonstandard detail stride.
   `production_replay` route rather than a recorded manual session. Added a bounded,
   debug-only manual-play correlation checkpoint before any encounter-density or further
   release-qualification decision; it is evidence for diagnosis, never a release pass.
+- 2026-08-05: BK's manual trace disproved asset rendering and current on-screen enemy
+  density as the main early-run hitch. The trace and a focused headless diagnostic both
+  selected synchronous spawn allocation, where immutable geometry was recomputed inside
+  an arrival frame.
+- 2026-08-05: Committed the exact-output spawn-geometry prewarm and inner-loop cleanup as
+  `483cab1f`. No enemy count, packet cadence, position, collision radius, asset, visual,
+  or release threshold changed.
 
 ## Progress
 
@@ -578,12 +597,13 @@ nonstandard detail stride.
 - [x] Complete Phase 7.
 - [ ] Complete Phase 8 and retire this plan.
 
-Current task: **Finish and validate the manual-play trace, have BK reproduce the perceived
-stutter through `tools/run_manual_performance_trace.ps1`, then analyze that JSON before
-changing workload or resuming the authoritative native pair.**
+Current task: **The manual trace has been consumed and its measured owner was corrected in
+`483cab1f`. In a dedicated uncontaminated qualification window, run the two unchanged-load
+native release scenarios; do not request another user play merely to select an owner.**
 
 ## Open Questions
 
-- Does BK's perceived stutter correlate with map-wide ordinary simulation, visible
-  ordinary density, physics catch-up, presentation/HUD work, renderer time, or a
-  first-use/load event? The manual trace is the required evidence for this decision.
+- The main early-run first-use hitch was synchronous spawn allocation. The pre-fix trace
+  also retained two isolated `combat_and_effects` spikes near 72 and 104 seconds; do not
+  change that owner unless later post-fix real-play evidence shows those spikes remain
+  perceptible and reproducible.
