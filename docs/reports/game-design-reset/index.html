@@ -85,7 +85,7 @@
     .hero-inner {
       width: min(var(--max), calc(100% - 48px));
       margin: 0 auto;
-      padding: 56px 0 44px;
+      padding: 34px 0 28px;
     }
 
     .eyebrow,
@@ -103,7 +103,7 @@
     h1 {
       max-width: 1040px;
       margin: 0;
-      font-size: clamp(38px, 6vw, 72px);
+      font-size: clamp(32px, 4.4vw, 52px);
       letter-spacing: -.035em;
     }
 
@@ -127,9 +127,9 @@
 
     .hero-copy {
       max-width: 900px;
-      margin: 20px 0 0;
+      margin: 14px 0 0;
       color: #d7e0e8;
-      font-size: clamp(18px, 2.2vw, 24px);
+      font-size: clamp(16px, 1.8vw, 20px);
     }
 
     .meta-row,
@@ -137,7 +137,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 24px;
+      margin-top: 16px;
     }
 
     .meta,
@@ -223,6 +223,140 @@
       margin: 0 0 22px;
       color: #d5dee6;
       font-size: 19px;
+    }
+
+    .ownership-list {
+      margin: 20px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .ownership-row {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 20px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ownership-row h3 {
+      margin: 0 0 5px;
+      font-size: 19px;
+    }
+
+    .ownership-row p { margin: 0; }
+
+    .owner-label {
+      align-self: start;
+      padding: 6px 9px;
+      background: var(--raised);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .owner-label.locked { color: var(--support); }
+    .owner-label.agent { color: var(--system); }
+    .owner-label.approval { color: #f2a3cd; }
+
+    .reply-line {
+      margin: 22px 0 0;
+      padding: 16px 18px;
+      background: var(--space);
+      border-left: 4px solid #f2a3cd;
+    }
+
+    .reply-line code {
+      display: block;
+      margin-top: 6px;
+      color: var(--text);
+    }
+
+    .phase-list { margin-top: 18px; }
+
+    .phase-row {
+      display: grid;
+      grid-template-columns: 64px 130px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .phase-row:last-child { border-bottom: 0; }
+
+    .phase-number {
+      padding: 7px 8px;
+      background: var(--raised);
+      color: var(--amber);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .phase-owner {
+      color: var(--system);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .phase-row h3 {
+      margin: 0 0 5px;
+      font-size: 19px;
+    }
+
+    .phase-row p { margin: 0; }
+
+    .origin-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 18px;
+      background: var(--surface);
+    }
+
+    .origin-block {
+      min-width: 0;
+      padding: 20px;
+    }
+
+    .origin-block + .origin-block { border-left: 1px solid var(--line); }
+
+    .origin-block h3 {
+      margin: 0 0 10px;
+      font-size: 19px;
+    }
+
+    .origin-block ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .origin-block li { margin: 7px 0; }
+
+    .deep-dive {
+      margin: 0 0 34px;
+      background: transparent;
+      border-top: 1px solid var(--line);
+    }
+
+    .deep-dive > summary {
+      min-height: 64px;
+      padding: 19px 22px;
+      background: var(--canvas);
+      color: var(--muted);
+    }
+
+    .deep-dive > .deep-body { padding: 0; }
+
+    .archive-note {
+      max-width: none;
+      margin: 0 0 18px;
+      padding: 16px 20px;
+      background: var(--surface);
+      color: var(--muted);
     }
 
     .grid-2,
@@ -465,23 +599,34 @@
       nav {
         position: static;
         max-height: none;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
+        padding: 10px 12px;
       }
       nav ol {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0 16px;
+        display: flex;
+        gap: 12px;
+        padding: 0;
+        overflow-x: auto;
+        list-style: none;
       }
+      nav li { flex: 0 0 auto; }
+      nav a { padding-right: 8px; white-space: nowrap; }
       .grid-2,
       .arena-grid { grid-template-columns: 1fr; }
+      .origin-grid { grid-template-columns: 1fr; }
+      .origin-block + .origin-block {
+        border-top: 1px solid var(--line);
+        border-left: 0;
+      }
     }
 
     @media (max-width: 620px) {
       .hero-inner,
       .layout { width: min(100% - 24px, var(--max)); }
-      .hero-inner { padding: 36px 0 30px; }
+      .hero-inner { padding: 28px 0 24px; }
+      .meta-row,
+      .tag-row { display: none; }
       section { padding: 22px 16px; }
-      nav ol,
       .grid-4,
       .asset-row { grid-template-columns: 1fr; }
       .asset-card {
@@ -498,6 +643,11 @@
       }
       .arena { min-height: 230px; }
       .step { grid-template-columns: 58px minmax(0, 1fr); }
+      .ownership-row { grid-template-columns: 1fr; gap: 10px; }
+      .owner-label { justify-self: start; }
+      .phase-row { grid-template-columns: 52px minmax(0, 1fr); }
+      .phase-owner { grid-column: 2; grid-row: 1; }
+      .phase-row > div:last-child { grid-column: 2; }
       figcaption { min-height: auto; }
     }
 
@@ -512,21 +662,21 @@
   <header class="hero">
     <div class="hero-inner">
       <p class="eyebrow">Cardborne · Game Design Reset</p>
-      <h1>Keep moving. Use cover. Turn the field against enemies.</h1>
+      <h1>Two choices from you. The rest is delegated.</h1>
       <p class="hero-copy">
-        This proposal starts from the real play style. The player moves fast, aims by hand, and fights a crowd.
-        The field should give short safety, clear risks, and tools that work while the player keeps moving.
+        This brief puts the important rules first. It separates your direction, facts found in the current game,
+        and work I can decide without asking you.
       </p>
       <div class="meta-row" aria-label="Report facts">
-        <span class="meta">Date: 6 August 2026</span>
+        <span class="meta">Updated: 6 August 2026</span>
         <span class="meta">Code checked: <code>3a4306b9</code></span>
-        <span class="meta">Status: design proposal only</span>
-        <span class="meta">Game code changed: no</span>
+        <span class="meta">Primary decision brief</span>
+        <span class="meta">Two approvals only</span>
       </div>
       <div class="tag-row" aria-label="Evidence labels">
-        <span class="tag fact">Current fact</span>
-        <span class="tag proposal">Recommended proposal</span>
-        <span class="tag choice">Needs your choice</span>
+        <span class="tag fact">Locked · your rule</span>
+        <span class="tag proposal">Delegated · I decide</span>
+        <span class="tag choice">Approval · needs you</span>
       </div>
     </div>
   </header>
@@ -535,21 +685,125 @@
     <nav aria-label="Report sections">
       <strong>In this report</strong>
       <ol>
-        <li><a href="#decision">Main decision</a></li>
-        <li><a href="#field">Open field and cover</a></li>
-        <li><a href="#lifetime">What changes when</a></li>
-        <li><a href="#neutral">Neutral terrain</a></li>
-        <li><a href="#fixed">Fixed enemies</a></li>
-        <li><a href="#ideas">New terrain ideas</a></li>
-        <li><a href="#items">Items and boxes</a></li>
-        <li><a href="#upgrades">Upgrade reset</a></li>
-        <li><a href="#stage">Stage example</a></li>
-        <li><a href="#order">Change order</a></li>
-        <li><a href="#sources">Sources</a></li>
+        <li><a href="#start">Two approvals</a></li>
+        <li><a href="#locked-rules">Locked rules</a></li>
+        <li><a href="#delegated">I decide</a></li>
+        <li><a href="#delivery">Delivery order</a></li>
+        <li><a href="#added-analysis">What I added</a></li>
+        <li><a href="#full-evidence">Full evidence</a></li>
+        <li><a href="../in-game-system-audit/index.html">Visual audit</a></li>
       </ol>
     </nav>
 
     <main id="main">
+      <section id="start">
+        <p class="section-kicker">01 · Feedback needed</p>
+        <h2>I need two answers, not twenty.</h2>
+        <p class="lead">Approve these two product rules. I will handle the devices, items, cards, stages, values, and test details.</p>
+
+        <div class="ownership-list">
+          <article class="ownership-row">
+            <div class="owner-label approval">G1 · Approval</div>
+            <div>
+              <h3>Do world kills give normal progress?</h3>
+              <p><strong>Recommended: yes.</strong> If neutral terrain or a neutral device kills an enemy, it counts for the stage and drops normal experience. Smart field use should not slow the run.</p>
+            </div>
+          </article>
+          <article class="ownership-row">
+            <div class="owner-label approval">G2 · Approval</div>
+            <div>
+              <h3>Should a build have a clear main identity?</h3>
+              <p><strong>Recommended: yes.</strong> Pick one main gun style and one element root. Later cards improve or support those choices instead of stacking every path.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="reply-line">
+          <strong>Short reply format</strong>
+          <code>G1 approve / change · G2 approve / change</code>
+        </div>
+      </section>
+
+      <section id="locked-rules">
+        <p class="section-kicker">02 · Already locked</p>
+        <h2>These rules come from your feedback.</h2>
+        <div class="ownership-list">
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Keep moving</h3><p>No world system should reward holding one small position.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Cover gives short safety</h3><p>It blocks fire and direct rushes. It does not make a travel route.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>No dead ends</h3><p>Open combat space must have more than one wide escape side.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Fixed hostiles become neutral devices</h3><p>They leave the enemy list and can hurt enemies as well as the player.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Keep movement tools</h3><p>Teleport gates and shared danger terrain stay because they change movement without asking the player to wait.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Upgrades must change play</h3><p>Do not keep a card only because it adds a small number or helps against one rare facility.</p></div></article>
+        </div>
+      </section>
+
+      <section id="delegated">
+        <p class="section-kicker">03 · Delegated to Codex</p>
+        <h2>I will decide these details.</h2>
+        <p class="lead">You do not need to review each value, socket, item, device, or card.</p>
+        <div class="ownership-list">
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Map generation</h3><p>Seed rules, safe gaps, sparse cover positions, spawn distance, and escape tests.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Terrain life</h3><p>Wear stays for the run. Arc is picked at a stage start and stays still. A meteor may move only with its full path shown.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>First neutral package</h3><p>Start with Gravity Core, Cryo Cell, and Meteor Patrol. Test later ideas only after these are clear.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Items and support pads</h3><p>Remove repair and attack pads from the first redesign. Keep instant movement-friendly items. This can be reversed after a playtest.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Upgrade cleanup</h3><p>Show extra-weapon slots, restore the missing behavior row, remove forced offer seats, and map old cards into the approved build rule.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Balance</h3><p>Counts, damage, range, warning time, cooldown, and stage mixes will come from focused tests.</p></div></article>
+        </div>
+      </section>
+
+      <section id="delivery">
+        <p class="section-kicker">04 · Work order</p>
+        <h2>Rules first. Art last.</h2>
+        <div class="phase-list">
+          <article class="phase-row"><div class="phase-number">1</div><div class="phase-owner">After G1–G2</div><div><h3>Lock the rules</h3><p>Update the product specification so old pads, fixed enemies, and old upgrade rules do not return later.</p></div></article>
+          <article class="phase-row"><div class="phase-number">2</div><div class="phase-owner">Codex</div><div><h3>Build the playable base</h3><p>Open field, no dead ends, neutral target system, visible-enemy attack gate, terrain life, and safe item movement.</p></div></article>
+          <article class="phase-row"><div class="phase-number">3</div><div class="phase-owner">Codex</div><div><h3>Add content and builds</h3><p>Three neutral tools, smaller enemy sets, behavior-first upgrades, and stronger boss phase combinations.</p></div></article>
+          <article class="phase-row"><div class="phase-number">4</div><div class="phase-owner">Visual report</div><div><h3>Make art, UI, and balance passes</h3><p>Use the visual report for proof, final file review, integration, and balance checks.</p></div></article>
+        </div>
+      </section>
+
+      <section id="added-analysis">
+        <p class="section-kicker">05 · Where the ideas came from</p>
+        <h2>This is not only a copy of your feedback.</h2>
+        <div class="origin-grid">
+          <div class="origin-block">
+            <h3>Your direction</h3>
+            <ul>
+              <li>Fast free movement.</li>
+              <li>Cover, not route walls.</li>
+              <li>No dead ends.</li>
+              <li>Fixed hostiles become neutral.</li>
+              <li>Current pads and upgrades do not fit.</li>
+            </ul>
+          </div>
+          <div class="origin-block">
+            <h3>Found in current code</h3>
+            <ul>
+              <li>Normal attacks can start off-screen.</li>
+              <li>Neutral shots need a new two-side target path.</li>
+              <li>Extra-weapon capacity is hidden.</li>
+              <li>The “New behavior” row receives no useful data.</li>
+              <li>Support pads already move, but still reward waiting.</li>
+              <li>The current product specification still requires old rules.</li>
+            </ul>
+          </div>
+          <div class="origin-block">
+            <h3>My design judgment</h3>
+            <ul>
+              <li>Retire support pads in the first prototype.</li>
+              <li>Give the two neutral terrains different lives.</li>
+              <li>Prototype Gravity, Cryo, and Meteor first.</li>
+              <li>Use 3–4 mobile enemy roles per stage.</li>
+              <li>I grouped 13 of 41 cards as number-only; this is an audit label, not code data.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <details class="deep-dive" id="full-evidence">
+        <summary>Open the full technical evidence and all examples</summary>
+        <div class="deep-body">
+          <p class="archive-note">Optional reading. The short rules above are the active decision brief. The sections below keep current facts, examples, alternatives, and source paths.</p>
       <section id="decision">
         <p class="section-kicker">01 · Main decision</p>
         <h2>The field must support motion, not waiting.</h2>
@@ -788,7 +1042,7 @@
         <div class="callout danger">
           <strong>This is not a color swap.</strong>
           Current projectiles are split into player and enemy paths. A true neutral shot or beam needs a new target system that can hit either side.
-          The conversion must also remove enemy kill-count, experience, minimap, guidebook, and installation-stat behavior.
+          The conversion needs a role-by-role audit of kill count, experience, minimap, guidebook, and installation statistics before those enemy links are removed.
           Boss objective pylons are not part of this conversion; they stay owned by the boss system.
         </div>
       </section>
@@ -901,7 +1155,7 @@
         </p>
 
         <div class="grid-4">
-          <article class="card warning-card"><span class="status remove">13 of 41</span><h3>Number-only cards</h3><p>They add no new interaction. A number can help balance, but it should not pretend to be a new build.</p></article>
+          <article class="card warning-card"><span class="status remove">Codex audit · 13 of 41</span><h3>Number-only cards</h3><p>This is a design classification, not a code label. These cards add no new interaction.</p></article>
           <article class="card warning-card"><span class="status remove">Hidden cost</span><h3>Two optional slots</h3><p>Four optional secondary weapons share only two slots. The card UI does not show used or free slots.</p></article>
           <article class="card warning-card"><span class="status remove">Missing UI</span><h3>Behavior row never appears</h3><p>The product rule asks for a “New behavior” row. Current offer data never gives the UI the difference needed to show it.</p></article>
           <article class="card warning-card"><span class="status remove">Weak identity</span><h3>No clear main build</h3><p>Elements and many other paths can all stack. The current rule meant to stop some combinations is not used.</p></article>
@@ -1020,7 +1274,7 @@
         <h2>Change rules before art.</h2>
         <p class="lead">This order avoids making assets for systems that may be removed.</p>
 
-        <div class="step"><div class="step-code">P0</div><div><h3>Approve the new product rules</h3><p>Decide support-pad removal, open-field rules, which system controls neutral devices, hazard life, box relocation, and the upgrade cut rule.</p></div></div>
+        <div class="step"><div class="step-code">P0</div><div><h3>Approve only G1 and G2</h3><p>World-kill progress and the main upgrade identity are the only open product rules. The short brief locks or delegates everything else.</p></div></div>
         <div class="step"><div class="step-code">P1</div><div><h3>Update the product specification</h3><p>Make the new design the main rule source. The current specification still requires the old systems.</p></div></div>
         <div class="step"><div class="step-code">P2</div><div><h3>Remove the two support pad schedules</h3><p>Remove repair and overdrive fields, their guide entries, and their world art use. Keep repair pickup and build upgrades separate.</p></div></div>
         <div class="step"><div class="step-code">P3</div><div><h3>Create one neutral world system</h3><p>Give neutral terrain and devices the same basic target, warning, damage, score, life, and movement rules.</p></div></div>
@@ -1029,12 +1283,12 @@
         <div class="step"><div class="step-code">P6</div><div><h3>Cut and rebuild upgrades</h3><p>Start with behavior-changing cards. Remove narrow and duplicate cards before tuning values.</p></div></div>
         <div class="step"><div class="step-code">P7</div><div><h3>Make new simple visual tests</h3><p>Show each approved role at real size and in real gameplay use. Do not return to the old isolated candidate-sheet method.</p></div></div>
 
-        <h3>Choices still needed</h3>
+        <h3>Old open questions — now resolved or moved</h3>
         <div class="grid-2">
-          <article class="card choice-card"><h4>Gravity affects whom?</h4><p><strong>Recommended first test:</strong> enemies only. A harder true-neutral version can pull the player too.</p></article>
-          <article class="card choice-card"><h4>Do environment kills drop experience?</h4><p><strong>Recommended:</strong> yes. The player should not lose progress for smart terrain use.</p></article>
-          <article class="card choice-card"><h4>Can enemies use Transit Gates?</h4><p><strong>Recommended first test:</strong> no. Keep the gate as a clear escape and reposition tool.</p></article>
-          <article class="card choice-card"><h4>How many neutral devices per stage?</h4><p><strong>Recommended:</strong> start small. Use only enough types that every warning is clear in a crowd.</p></article>
+          <article class="card choice-card"><h4>Gravity affects whom?</h4><p><strong>Delegated default:</strong> enemies only for the first test.</p></article>
+          <article class="card choice-card"><h4>Do environment kills drop experience?</h4><p><strong>Moved to G1:</strong> this is one of the two approvals at the top.</p></article>
+          <article class="card choice-card"><h4>Can enemies use Transit Gates?</h4><p><strong>Delegated default:</strong> no. Keep the gate as a clear escape tool.</p></article>
+          <article class="card choice-card"><h4>How many neutral devices per stage?</h4><p><strong>Delegated default:</strong> start small and add only clear roles.</p></article>
         </div>
       </section>
 
@@ -1084,6 +1338,8 @@
           </div>
         </details>
       </section>
+        </div>
+      </details>
     </main>
   </div>
 

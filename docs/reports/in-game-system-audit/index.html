@@ -86,7 +86,7 @@
     .hero-inner {
       width: min(var(--max), calc(100% - 48px));
       margin: 0 auto;
-      padding: 56px 0 44px;
+      padding: 34px 0 28px;
     }
 
     .eyebrow {
@@ -103,7 +103,7 @@
     h1 {
       max-width: 900px;
       margin: 0;
-      font-size: clamp(36px, 6vw, 72px);
+      font-size: clamp(32px, 4.4vw, 52px);
       letter-spacing: -.035em;
     }
 
@@ -127,9 +127,9 @@
 
     .hero-copy {
       max-width: 860px;
-      margin: 20px 0 0;
+      margin: 14px 0 0;
       color: #d7e0e8;
-      font-size: clamp(18px, 2.2vw, 24px);
+      font-size: clamp(16px, 1.8vw, 20px);
     }
 
     .meta-row,
@@ -137,7 +137,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 24px;
+      margin-top: 16px;
     }
 
     .meta,
@@ -233,6 +233,127 @@
       margin: 0 0 22px;
       color: #d5dee6;
       font-size: 19px;
+    }
+
+    .ownership-list {
+      margin: 20px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .ownership-row {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 20px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ownership-row h3 {
+      margin: 0 0 5px;
+      font-size: 19px;
+    }
+
+    .ownership-row p { margin: 0; }
+
+    .owner-label {
+      align-self: start;
+      padding: 6px 9px;
+      background: var(--raised);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .owner-label.locked { color: var(--support); }
+    .owner-label.agent { color: var(--system); }
+    .owner-label.approval { color: #f2a3cd; }
+
+    .phase-list { margin-top: 18px; }
+
+    .phase-row {
+      display: grid;
+      grid-template-columns: 64px 130px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .phase-row:last-child { border-bottom: 0; }
+
+    .phase-number {
+      padding: 7px 8px;
+      background: var(--raised);
+      color: var(--amber);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .phase-owner {
+      color: var(--system);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .phase-row h3 {
+      margin: 0 0 5px;
+      font-size: 19px;
+    }
+
+    .phase-row p { margin: 0; }
+
+    .origin-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 18px;
+      background: var(--surface);
+    }
+
+    .origin-block {
+      min-width: 0;
+      padding: 20px;
+    }
+
+    .origin-block + .origin-block { border-left: 1px solid var(--line); }
+
+    .origin-block h3 {
+      margin: 0 0 10px;
+      font-size: 19px;
+    }
+
+    .origin-block ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .origin-block li { margin: 7px 0; }
+
+    .deep-dive {
+      margin: 0 0 34px;
+      background: transparent;
+      border-top: 1px solid var(--line);
+    }
+
+    .deep-dive > summary {
+      min-height: 64px;
+      padding: 19px 22px;
+      background: var(--canvas);
+      color: var(--muted);
+    }
+
+    .deep-dive > .deep-body { padding: 0; }
+
+    .archive-note {
+      max-width: none;
+      margin: 0 0 18px;
+      padding: 16px 20px;
+      background: var(--surface);
+      color: var(--muted);
     }
 
     .verdict-grid,
@@ -518,29 +639,45 @@
       nav {
         position: static;
         max-height: none;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
+        padding: 10px 12px;
       }
       nav ol {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0 16px;
+        display: flex;
+        gap: 12px;
+        padding: 0;
+        overflow-x: auto;
+        list-style: none;
       }
+      nav li { flex: 0 0 auto; }
+      nav a { padding-right: 8px; white-space: nowrap; }
       .pair,
       .gallery.two,
       .source-grid,
       .decision-grid { grid-template-columns: 1fr; }
+      .origin-grid { grid-template-columns: 1fr; }
+      .origin-block + .origin-block {
+        border-top: 1px solid var(--line);
+        border-left: 0;
+      }
     }
 
     @media (max-width: 620px) {
       .hero-inner,
       .layout { width: min(100% - 24px, var(--max)); }
-      .hero-inner { padding: 36px 0 30px; }
+      .hero-inner { padding: 28px 0 24px; }
+      .meta-row,
+      .tag-row { display: none; }
       section { padding: 22px 16px; }
-      nav ol,
       .verdict-grid,
       .pattern-grid { grid-template-columns: 1fr; }
       .priority { grid-template-columns: 62px minmax(0, 1fr); }
       .bar-row { grid-template-columns: 62px minmax(0, 1fr) 46px; }
+      .ownership-row { grid-template-columns: 1fr; gap: 10px; }
+      .owner-label { justify-self: start; }
+      .phase-row { grid-template-columns: 52px minmax(0, 1fr); }
+      .phase-owner { grid-column: 2; grid-row: 1; }
+      .phase-row > div:last-child { grid-column: 2; }
       figcaption { min-height: auto; }
     }
 
@@ -555,24 +692,21 @@
   <header class="hero">
     <div class="hero-inner">
       <p class="eyebrow">Cardborne · In-Game System Audit</p>
-      <h1>The game has rules. The rules are hard to see.</h1>
+      <h1>Visual rules are locked. Asset choices come later.</h1>
       <p class="hero-copy">
-        Your concerns are real. The map code is safer than it looks, but several map rules fight the need to keep moving.
-        The first visual proposals were also too detailed and were shown without their real game size.
-        Effects share the wrong shapes. Normal enemies can start attacks outside the screen.
-        Late stages use too many enemy types. Boss phases add speed, but not enough new ideas.
+        This is the evidence and visual report. You do not need to review every screenshot, source, or old idea.
+        The short game design brief owns product choices. This page shows what I can handle and when exact asset approval is needed.
       </p>
       <div class="meta-row" aria-label="Report facts">
         <span class="meta">Updated: 6 August 2026</span>
         <span class="meta">Code checked: <code>3a4306b9</code></span>
-        <span class="meta">Fresh capture: 1280 × 720, Korean</span>
-        <span class="meta">Output: analysis + review-only visual choices</span>
+        <span class="meta">Evidence and visual audit</span>
+        <span class="meta">No asset choice needed now</span>
       </div>
       <div class="tag-row" aria-label="Evidence labels">
-        <span class="tag fact">Confirmed fact</span>
-        <span class="tag inference">Reasoned finding</span>
-        <span class="tag direction">Recommended direction</span>
-        <span class="tag decision">Human choice</span>
+        <span class="tag fact">Locked · visual rule</span>
+        <span class="tag direction">Delegated · I decide</span>
+        <span class="tag decision">Final file · you approve</span>
       </div>
     </div>
   </header>
@@ -581,21 +715,115 @@
     <nav aria-label="Report sections">
       <strong>In this report</strong>
       <ol>
-        <li><a href="#answer">Short answer</a></li>
-        <li><a href="#evidence">What I checked</a></li>
-        <li><a href="#map">Map and items</a></li>
-        <li><a href="#effects">Effects</a></li>
-        <li><a href="#visual-direction">UI and visual reset</a></li>
-        <li><a href="#visual-candidates">Paused visual sheets</a></li>
-        <li><a href="#enemies">Enemies</a></li>
-        <li><a href="#bosses">Bosses</a></li>
-        <li><a href="#other">Other problems</a></li>
-        <li><a href="#order">Fix order</a></li>
-        <li><a href="#sources">Sources</a></li>
+        <li><a href="#visual-start">What you review</a></li>
+        <li><a href="#visual-rules">Locked rules</a></li>
+        <li><a href="#visual-delegated">I decide</a></li>
+        <li><a href="#ui-brief">UI direction</a></li>
+        <li><a href="#visual-delivery">Delivery order</a></li>
+        <li><a href="#visual-analysis">What I added</a></li>
+        <li><a href="#visual-evidence">Full evidence</a></li>
+        <li><a href="../game-design-reset/index.html">Game brief</a></li>
       </ol>
     </nav>
 
     <main id="main">
+      <section id="visual-start">
+        <p class="section-kicker">01 · Review load</p>
+        <h2>No visual choice is needed today.</h2>
+        <p class="lead">First approve G1 and G2 in the <a href="../game-design-reset/index.html#start">short game design brief</a>. I will then make focused proof and bring back exact files in small batches.</p>
+        <div class="ownership-list">
+          <article class="ownership-row"><div class="owner-label locked">Now</div><div><h3>Old candidate sheets are rejected</h3><p>They are reference only. They do not match the simple game style or show real repeated and large use.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">Next · I decide</div><div><h3>I build proof at game size</h3><p>World, effect, and UI tests will show the player craft, real size, repetition, stretch, and full live area.</p></div></article>
+          <article class="ownership-row"><div class="owner-label approval">Later · You approve</div><div><h3>Exact final files</h3><p>You review small world, effect, and UI batches. You do not need to direct every shape, spacing value, or color plane.</p></div></article>
+        </div>
+      </section>
+
+      <section id="visual-rules">
+        <p class="section-kicker">02 · Already locked</p>
+        <h2>These rules control every new visual.</h2>
+        <div class="ownership-list">
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Match the simple game</h3><p>Use a few large geometric masses. Do not make detailed tile art beside simple craft and enemies.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Show real use</h3><p>A repeated tile is shown repeated. A large effect is shown at its full radius. A stretched asset is shown stretched.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>One effect means one visual family</h3><p>The same result keeps the same base shape. Different results do not share the same ring or burst.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Show who owns the effect</h3><p>Player and enemy versions use the same effect family, but change both color and one clear shape mark.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>Art follows game truth</h3><p>Visible size, warning area, collision, and effect area must agree. Art never creates a new wall or safe area.</p></div></article>
+          <article class="ownership-row"><div class="owner-label locked">Locked</div><div><h3>No decorative noise</h3><p>No tiny panels, repeated lamps, nested borders, rings, or detail that has no game meaning.</p></div></article>
+        </div>
+      </section>
+
+      <section id="visual-delegated">
+        <p class="section-kicker">03 · Delegated to Codex</p>
+        <h2>I will decide the visual details.</h2>
+        <div class="ownership-list">
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Asset form</h3><p>Image size, main shape, large color areas, placement point, spacing, stretch, and repeated layout.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Semantic color</h3><p>Use the existing Cardborne color roles. Add only the color and shape marks needed for state and ownership.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>External source use</h3><p>Use an outside asset only when it helps. Reduce and adapt it to Cardborne before it can become a final candidate.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">I decide</div><div><h3>Proof format</h3><p>Each batch includes AS-IS, TO-BE, actual game size, grayscale, repeated use, and the live warning or effect area.</p></div></article>
+        </div>
+      </section>
+
+      <section id="ui-brief">
+        <p class="section-kicker">04 · UI direction</p>
+        <h2>Show combat truth. Remove explanation noise.</h2>
+        <div class="ownership-list">
+          <article class="ownership-row"><div class="owner-label agent">HUD</div><div><h3>Keep it compact</h3><p>Show only live hull, progress, target, map, dash, secondary weapons, and EMP. Do not add a marker for every world device.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">Warnings</div><div><h3>Use long paths only when needed</h3><p>Show them for a boss, a large neutral event, or an off-screen fixed device. A normal visible enemy does not need attack-route UI.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">Upgrades</div><div><h3>Behavior first</h3><p>Show the new action or rule first, extra-weapon slot cost second, and at most two useful value changes.</p></div></article>
+          <article class="ownership-row"><div class="owner-label agent">Reports</div><div><h3>Decision first</h3><p>Keep rules and approvals visible. Keep screenshots, sources, alternatives, and technical notes closed until needed.</p></div></article>
+        </div>
+      </section>
+
+      <section id="visual-delivery">
+        <p class="section-kicker">05 · Work order</p>
+        <h2>Do not make more art before the rules are stable.</h2>
+        <div class="phase-list">
+          <article class="phase-row"><div class="phase-number">1</div><div class="phase-owner">Game brief</div><div><h3>Lock product rules</h3><p>Finish G1 and G2, terrain life, neutral targeting, item roles, and the upgrade guide.</p></div></article>
+          <article class="phase-row"><div class="phase-number">2</div><div class="phase-owner">Codex</div><div><h3>Make simple proof</h3><p>Test world surfaces, cover, neutral devices, effects, and upgrade cards at real game size.</p></div></article>
+          <article class="phase-row"><div class="phase-number">3</div><div class="phase-owner">Codex</div><div><h3>Check readability</h3><p>Run repetition, large-area, crowd, grayscale, warning, ownership, clipping, and mobile checks.</p></div></article>
+          <article class="phase-row"><div class="phase-number">4</div><div class="phase-owner">You + Codex</div><div><h3>Approve and integrate exact files</h3><p>You approve the final files. I handle manifests, code use, runtime checks, and cleanup.</p></div></article>
+        </div>
+      </section>
+
+      <section id="visual-analysis">
+        <p class="section-kicker">06 · Added analysis</p>
+        <h2>I found more than the issues you listed.</h2>
+        <div class="origin-grid">
+          <div class="origin-block">
+            <h3>Your direction</h3>
+            <ul>
+              <li>Simple geometry.</li>
+              <li>Repeated and large assets need real-use proof.</li>
+              <li>Same effects should match.</li>
+              <li>Player and enemy ownership must still be clear.</li>
+            </ul>
+          </div>
+          <div class="origin-block">
+            <h3>Found in current game</h3>
+            <ul>
+              <li>Barrier and damage aura share the same mint ring.</li>
+              <li>Effect events do not carry a clear owner field.</li>
+              <li>Normal attack start does not check the screen.</li>
+              <li>Extra-weapon slots are hidden on upgrade cards.</li>
+              <li>The behavior comparison row receives no useful difference.</li>
+            </ul>
+          </div>
+          <div class="origin-block">
+            <h3>My design judgment</h3>
+            <ul>
+              <li>The old sheets were too detailed.</li>
+              <li>Equal cells hid repeat, stretch, and large-area problems.</li>
+              <li>The old gallery looked important even after rejection.</li>
+              <li>Art must wait until game rules stop changing.</li>
+              <li>This report itself needed a shorter decision-first view.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <details class="deep-dive" id="visual-evidence">
+        <summary>Open all screenshots, boss patterns, source paths, and old explorations</summary>
+        <div class="deep-body">
+          <p class="archive-note">Optional reading. The short rules above are active. The sections below keep the full audit trail and rejected exploration for evidence only.</p>
       <section id="answer">
         <p class="section-kicker">01 · Short answer</p>
         <h2>The problems are real. Two earlier recommendations were wrong.</h2>
@@ -1277,7 +1505,7 @@
         <div class="callout support">
           <strong>This replaces the earlier fixed-enemy palette.</strong>
           Neutral Sentries, Trigger Mines, Sweep Emitters, and other fixed devices belong to the world set, not the enemy set.
-          See the <a href="../game-design-reset/index.html#stage">new stage example</a> for the latest proposal.
+          See the <a href="../game-design-reset/index.html#delivery">short delivery order</a> for the active proposal.
         </div>
       </section>
 
@@ -1437,7 +1665,7 @@
 
         <div class="priority">
           <div class="priority-code">P0</div>
-          <div><h3>Approve the game design reset</h3><p>Decide the open-field rule, remove or replace the two support pads, move fixed enemies into the neutral world system, and cut weak upgrade rules.</p></div>
+          <div><h3>Approve only G1 and G2</h3><p>The short game brief already locks or delegates the other rules.</p></div>
         </div>
         <div class="priority">
           <div class="priority-code">P1</div>
@@ -1472,19 +1700,19 @@
           <li>The same seed still makes the same safe result for a retry.</li>
         </ul>
 
-        <h3>Recommended human choices</h3>
+        <h3>Defaults already set</h3>
         <div class="decision-grid">
           <article class="card">
-            <div class="status-line"><span class="status-mark"></span><div><h4>Keep the field open</h4><p>Recommended. Use sparse cover islands. Remove dead-end reward rooms and corridor-like internal walls.</p></div></div>
+            <div class="status-line"><span class="status-mark"></span><div><h4>Keep the field open</h4><p>Locked by user feedback. Use sparse cover islands and remove dead-end reward rooms.</p></div></div>
           </article>
           <article class="card">
-            <div class="status-line"><span class="status-mark"></span><div><h4>Use simple geometry first</h4><p>Recommended. Use external art only when it can be reduced to the same simple style.</p></div></div>
+            <div class="status-line"><span class="status-mark"></span><div><h4>Use simple geometry first</h4><p>Locked by user feedback. External art must be reduced to the same simple style.</p></div></div>
           </article>
           <article class="card">
-            <div class="status-line"><span class="status-mark"></span><div><h4>Move only unopened, unseen normal boxes</h4><p>Recommended. Keep a finite stage reward budget.</p></div></div>
+            <div class="status-line"><span class="status-mark"></span><div><h4>Move only unopened, unseen normal boxes</h4><p>Delegated default. Keep a finite stage reward budget.</p></div></div>
           </article>
           <article class="card">
-            <div class="status-line"><span class="status-mark"></span><div><h4>Use external nodes on one or two bosses</h4><p>Recommended. Give other bosses a movement or timing weakness.</p></div></div>
+            <div class="status-line"><span class="status-mark"></span><div><h4>Use external nodes on one or two bosses</h4><p>Delegated default. Give other bosses a movement or timing weakness.</p></div></div>
           </article>
         </div>
       </section>
@@ -1545,6 +1773,8 @@
           </div>
         </details>
       </section>
+        </div>
+      </details>
     </main>
   </div>
 
