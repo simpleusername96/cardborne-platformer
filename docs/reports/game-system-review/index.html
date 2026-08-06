@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A short index for the Cardborne map, effects, upgrades, enemies, and boss design reports.">
+  <title>Cardborne Game System Review</title>
+  <link rel="stylesheet" href="report.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand-row">
+        <a href="index.html">Cardborne game review</a>
+        <span class="baseline">Runtime baseline 26169a92 · checked 6 Aug 2026</span>
+      </div>
+      <nav class="topic-nav" aria-label="Report topics">
+        <a href="index.html" aria-current="page">Overview</a>
+        <a href="map-world.html">Map &amp; world</a>
+        <a href="combat-effects.html">Effects</a>
+        <a href="upgrades-builds.html">Upgrades</a>
+        <a href="enemies-encounters.html">Enemies</a>
+        <a href="bosses.html">Bosses</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <header class="hero">
+      <p class="eyebrow">Decision-first report set</p>
+      <h1>Fix the rules first. Then fix the look.</h1>
+      <p class="lede">Each page now keeps game rules, assets, and UI together. You do not need to decide every small value. The report shows what is locked, what Codex can decide, and what still needs your choice.</p>
+      <div class="status-line" aria-label="Report status">
+        <span class="tag tag--current">Current fact</span>
+        <span class="tag tag--locked">Locked rule</span>
+        <span class="tag tag--direction">Approved direction</span>
+        <span class="tag tag--open">Open choice</span>
+      </div>
+    </header>
+
+    <aside class="notice" aria-label="Authority warning">
+      <strong>This is a design direction. It is not the current game.</strong>
+      <p>The current product spec and code still describe the game that runs now. They must be updated before the new rules are implemented.</p>
+    </aside>
+
+    <section class="report-section" aria-labelledby="start-title">
+      <h2 id="start-title">Work in this order</h2>
+      <p class="section-intro">Later art work will fail again if the gameplay rule under it is still moving.</p>
+      <ol class="priority-list">
+        <li><strong>Align the product spec.</strong> Record G1, G2, open movement, no dead ends, neutral devices, attack visibility, and the new boss rule.</li>
+        <li><strong>Prove one playable stage.</strong> Test cover, neutral hazards, moving boxes, a small enemy roster, and the new attack gate with simple current assets.</li>
+        <li><strong>Prove the build loop.</strong> Enforce G2 limits and replace weak number-only cards with choices that change play.</li>
+        <li><strong>Build boss growth.</strong> Give each boss one idea, one weakness, and new phase rules before raising health.</li>
+        <li><strong>Replace map and effect art.</strong> Review real-size PNG candidates only after gameplay size, repeat, state, and owner rules are stable.</li>
+      </ol>
+    </section>
+
+    <section class="report-section" aria-labelledby="reports-title">
+      <h2 id="reports-title">Five focused reports</h2>
+      <p class="section-intro">Open only the system you want to review. The detail stays on its owner page.</p>
+      <div class="grid grid--3">
+        <article class="topic-card">
+          <span class="kicker">Movement space</span>
+          <h3>Map &amp; world</h3>
+          <p>Open fields, cover, terrain life, neutral devices, items, map assets, minimap, and world warnings.</p>
+          <a class="topic-card__link" href="map-world.html">Open map report →</a>
+        </article>
+        <article class="topic-card">
+          <span class="kicker">Combat meaning</span>
+          <h3>Effects &amp; readability</h3>
+          <p>Effect families, ownership, live size, telegraphs, current assets, gaps, and combat HUD rules.</p>
+          <a class="topic-card__link" href="combat-effects.html">Open effects report →</a>
+        </article>
+        <article class="topic-card">
+          <span class="kicker">Build choices</span>
+          <h3>Upgrades &amp; builds</h3>
+          <p>G2 build limits, meaningful card rules, card UI, and the link from a choice to its live effect. The overview owns shared G1 scoring.</p>
+          <a class="topic-card__link" href="upgrades-builds.html">Open upgrade report →</a>
+        </article>
+        <article class="topic-card">
+          <span class="kicker">Fair pressure</span>
+          <h3>Enemies &amp; encounters</h3>
+          <p>Visible attack permission, pursuit, stage rosters, fixed-enemy conversion, crowd limits, and warning UI.</p>
+          <a class="topic-card__link" href="enemies-encounters.html">Open enemy report →</a>
+        </article>
+        <article class="topic-card">
+          <span class="kicker">Stage exams</span>
+          <h3>Bosses</h3>
+          <p>Strength, phase growth, weaknesses, objective rules, 18 reusable patterns, boss art, and off-screen warnings.</p>
+          <a class="topic-card__link" href="bosses.html">Open boss report →</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="report-section" aria-labelledby="decisions-title">
+      <h2 id="decisions-title">Who decides what</h2>
+      <div class="grid grid--3">
+        <article class="panel panel--locked">
+          <span class="kicker">Locked by you</span>
+          <h3>Core rules</h3>
+          <ul class="plain-list">
+            <li>G1: a neutral terrain or device kill gives stage progress and XP.</li>
+            <li>G2: hard caps for main gun, element, optional weapons, dash, EMP, and defense.</li>
+            <li>Fast movement and no dead ends.</li>
+            <li>Cover gives short safety.</li>
+            <li>Fixed hostiles become neutral.</li>
+            <li>No waiting support-pad loop.</li>
+            <li>No SVG/ImageMagick asset authoring.</li>
+          </ul>
+        </article>
+        <article class="panel panel--direction">
+          <span class="kicker">Codex can decide</span>
+          <h3>Safe first values</h3>
+          <ul class="plain-list">
+            <li>Seed and socket rules.</li>
+            <li>First timer and count values.</li>
+            <li>Stage enemy mixes inside the cap.</li>
+            <li>Neutral device placement.</li>
+            <li>Effect phase names and UI spacing.</li>
+            <li>Boss pattern combinations.</li>
+          </ul>
+        </article>
+        <article class="panel panel--open">
+          <span class="kicker">Ask you later</span>
+          <h3>Visible product choices</h3>
+          <ul class="plain-list">
+            <li>Final map asset direction.</li>
+            <li>Final effect family direction.</li>
+            <li>Any exception to G2.</li>
+            <li>Any exception to the “only 1–2 bosses use external objectives” rule.</li>
+            <li>Large changes to the five-stage run.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="report-section" aria-labelledby="contracts-title">
+      <h2 id="contracts-title">Rules shared by pages</h2>
+      <p class="section-intro">One page owns each rule. Other pages only use it.</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Rule</th><th>Main owner</th><th>Used by</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>G1 neutral-kill score and XP</td><td><a href="#decisions-title">Overview decision ledger</a></td><td>Map, enemies, upgrades</td></tr>
+            <tr><td>Open space, object life, and neutral placement</td><td><a href="map-world.html">Map &amp; world</a></td><td>Enemies, bosses, effects</td></tr>
+            <tr><td>Effect family, owner, phase, and live size</td><td><a href="combat-effects.html">Effects</a></td><td>Upgrades, enemies, bosses, map hazards</td></tr>
+            <tr><td>Build capacity and card choice</td><td><a href="upgrades-builds.html">Upgrades</a></td><td>Effects and HUD</td></tr>
+            <tr><td>Normal attack permission and roster size</td><td><a href="enemies-encounters.html">Enemies</a></td><td>Map pressure and effects</td></tr>
+            <tr><td>Boss phase, weakness, and objective</td><td><a href="bosses.html">Bosses</a></td><td>Map arena, warnings, effects</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="report-section" aria-labelledby="sources-title">
+      <h2 id="sources-title">Current truth and evidence</h2>
+      <div class="grid grid--2">
+        <article class="panel">
+          <h3>Current game rules</h3>
+          <p><a href="../../product/vehicle_game_spec.md">Current product spec</a> and current Godot code describe the game that runs now.</p>
+        </article>
+        <article class="panel">
+          <h3>Current visual rules</h3>
+          <p><a href="../../design/VISUAL_SYSTEM.md">Visual system</a> and the canonical style sheet define the present visual contract.</p>
+        </article>
+      </div>
+      <details>
+        <summary>How to read evidence</summary>
+        <div class="details-body">
+          <p>“Current” means the code, spec, production manifest, or runtime capture supports the claim. “Locked” means the user gave the rule. “Approved direction” means it should guide the redesign but is not live yet. “Open” means a visible product choice is still needed.</p>
+          <p>Old generated sheets remain rejected. They may show layout problems, but they are not asset candidates.</p>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>Cardborne system review · Topic index · Updated 6 Aug 2026</p>
+  </footer>
+</body>
+</html>
