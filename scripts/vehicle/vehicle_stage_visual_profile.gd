@@ -84,6 +84,12 @@ const WALL_SHADOW := COBALT_DEEP
 const WALL_RAIL_WIDTH := 48.0
 const WALL_SHADOW_OFFSET := Vector2(0.0, 12.0)
 
+# The flat map pass reuses established neutral tokens without changing shared
+# UI semantics. Geometry remains owned by the field snapshot.
+const MAP_SURFACE_FILL := TEXT_MUTED
+const MAP_OUTER_WALL_FILL := SPACE_BLACK
+const MAP_INNER_WALL_FILL := RAISED
+
 
 static func enemy_visual_radius(role: StringName) -> float:
 	match role:
@@ -211,6 +217,19 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("stage boss visual radius must remain 146 px")
 	if EXPERIENCE_RADII != {&"small":24.0, &"medium":28.0, &"large":33.0}:
 		errors.append("experience visual radii must remain 24/28/33 px")
+	if (
+		MAP_SURFACE_FILL == MAP_OUTER_WALL_FILL
+		or MAP_SURFACE_FILL == MAP_INNER_WALL_FILL
+		or MAP_OUTER_WALL_FILL == MAP_INNER_WALL_FILL
+	):
+		errors.append("map surface, outer wall, and inner wall fills must stay distinct")
+	for map_color in [
+		MAP_SURFACE_FILL,
+		MAP_OUTER_WALL_FILL,
+		MAP_INNER_WALL_FILL,
+	]:
+		if map_color.a < 1.0:
+			errors.append("flat map role colors must remain opaque")
 	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 3.85):
 		errors.append("hostile projectile envelope must remain 3.85x collision radius")
 	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 4.375):
