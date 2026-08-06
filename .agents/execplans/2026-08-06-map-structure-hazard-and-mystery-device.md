@@ -1,8 +1,9 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-06
+last_reviewed: 2026-08-07
 scope: Replace overlapping map blockers and stationary hazards with run-fixed inner walls, broad traversable hazard zones, and stage-scoped mystery devices
 related:
   - ../../docs/product/vehicle_game_spec.md
@@ -320,7 +321,7 @@ do not ship procedural world stand-ins.
   so the built artifact was served on the registered Codex port and all four resources
   were verified over HTTP instead.
 - [x] Run the task-scoped code-quality audit and correct small safe findings.
-- [ ] Commit only task-owned files in coherent commits.
+- [x] Commit only task-owned files in coherent commits.
 
 ## Milestones
 
@@ -488,14 +489,17 @@ Focused asset, separation, world, combat-renderer, run, layout, hazard, Mystery 
 terrain, map-integration, transition, and retirement-sentinel validators pass. Godot
 import passes. `tools/export_web.ps1` reports `WEB_EXPORT_OK`; the four built resources
 return HTTP 200 from the fastrun Codex lane. No browser backend was available for an
-interactive built-Web input smoke, and no release-performance claim is made. The visual
-replacement workbench ledger and scoped commits remain open.
+interactive built-Web input smoke, and no release-performance claim is made.
+
+The approved asset, runtime, and validator switch is recorded by application commit
+`13ed37989e73465457f89d2e4e114ad4b4ce2f10` against baseline
+`580cde2c67efbcf1ce15a2671ddca716a3eb92b1`. The visual replacement workbench now
+contains the four byte-identical deliverable mirrors and projects 19 units, 71 current
+gameplay PNGs, 71 final gameplay PNGs, and 69 authored gameplay PNGs. Its build check,
+ledger validator, and canonical visual-authority validator all pass.
 
 ## Next Steps
 
-1. Commit the approved asset/runtime/validator switch as one task-owned application
-   commit while preserving the unrelated `0.0001` file.
-2. Record that application commit in the visual replacement workbench, mirror the four
-   exact deliverables, rebuild its generated inventory/index, and validate the ledger.
-3. Update this plan with final ledger evidence and commit only task-owned files while
-   preserving the unrelated `0.0001` file.
+No required implementation step remains. Direct play QA may tune wall-group spacing,
+hazard pressure, device outcome balance, and item respawn cadence without reopening this
+structural plan unless the approved map-language contract changes.

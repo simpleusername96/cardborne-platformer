@@ -2988,6 +2988,178 @@
       }
     },
     {
+      "id": "hazard_and_mystery_device_family",
+      "category_id": "world",
+      "order": 3,
+      "title_en": "Map Hazards and Mystery Devices",
+      "title_ko": "맵 위험 지대 및 미확인 장치",
+      "owner": "composite",
+      "switch_kind": "consolidate",
+      "status": "applied",
+      "current_paths": [],
+      "consumer_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/components/vehicle_visual_system_registry.gd",
+        "scripts/presentation/components/vehicle_world_visual_catalog.gd",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/presentation/vehicle_world_mesh_builder.gd",
+        "scripts/vehicle/vehicle_run.gd"
+      ],
+      "consumer_asset_ids": [
+        "world/hazard_lava_pool",
+        "world/hazard_toxic_bog",
+        "world/mystery_device_intact",
+        "world/mystery_device_resolved"
+      ],
+      "direction_en": "Add two large persistent, passable damage-over-time ground hazards and one attack-triggered mystery device with intact and resolved states. Keep gameplay geometry, collision, and random effects code-owned; use the authored rasters only for readable world presentation.",
+      "deliverables": [
+        {
+          "target_path": "art/visuals/production/gameplay/world/hazard_lava_pool.png",
+          "width": 1024,
+          "height": 768,
+          "pivot": [
+            512,
+            384
+          ],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One broad top-down lava pool with a single readable amber thermal mass, restrained dark perimeter, transparent background, and no detached decoration.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/world/hazard_toxic_bog.png",
+          "width": 1024,
+          "height": 768,
+          "pivot": [
+            512,
+            383.5
+          ],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One broad top-down toxic bog with a single readable green hazard mass, restrained dark perimeter, transparent background, and no detached decoration.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/world/mystery_device_intact.png",
+          "width": 384,
+          "height": 384,
+          "pivot": [
+            192,
+            192
+          ],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One large neutral mechanical device in its intact attackable state, with a clear top-down silhouette, dark outer mass, restrained cyan system accent, and transparent background.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/world/mystery_device_resolved.png",
+          "width": 384,
+          "height": 384,
+          "pivot": [
+            192,
+            192
+          ],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "The same mystery-device footprint in a clearly spent and broken resolved state, with the active center removed, restrained debris, and transparent background.",
+          "external_source_ids": []
+        }
+      ],
+      "final_paths": [
+        "art/visuals/production/gameplay/world/hazard_lava_pool.png",
+        "art/visuals/production/gameplay/world/hazard_toxic_bog.png",
+        "art/visuals/production/gameplay/world/mystery_device_intact.png",
+        "art/visuals/production/gameplay/world/mystery_device_resolved.png"
+      ],
+      "reuse_paths": [],
+      "preview_paths": [],
+      "retire_paths": [],
+      "runtime_change_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/components/vehicle_visual_system_registry.gd",
+        "scripts/presentation/components/vehicle_world_visual_catalog.gd",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/presentation/vehicle_world_mesh_builder.gd",
+        "scripts/vehicle/vehicle_run.gd",
+        "tools/validation/validate_vehicle_combat_renderer.gd",
+        "tools/validation/validate_vehicle_run.gd",
+        "tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        "tools/validation/validate_vehicle_semantic_visual_separation.gd",
+        "tools/validation/validate_vehicle_visual_asset_coverage.gd",
+        "tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+        "tools/validation/validate_vehicle_world_visuals.gd"
+      ],
+      "acceptance_commands": [
+        ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+        ".\\tools\\validation\\validate_cardborne_visual_authority.ps1",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_visuals.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run.gd",
+        ".\\tools\\export_web.ps1"
+      ],
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-07T01:32:28+09:00",
+        "baseline_commit": "580cde2c67efbcf1ce15a2671ddca716a3eb92b1",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/world/hazard_lava_pool.png": "dd551c884139b1836f4c87d8f52309e1eaa7be8e6cfbab456adbc129ebd6a8f5",
+          "art/visuals/production/gameplay/world/hazard_toxic_bog.png": "06e91b352d1fceb7466c30795c4969a3816f21d761a4cb3ac86dfd7592e6e4aa",
+          "art/visuals/production/gameplay/world/mystery_device_intact.png": "cfbbc2b42a747c2e0859137c5a7230a7d812203f719e4e9ffeea033b98d5950c",
+          "art/visuals/production/gameplay/world/mystery_device_resolved.png": "551cc82e34d5caf244c02981906bd84234a8bd8762ce59ef0bca0dff7bf9825e"
+        },
+        "retire_paths": []
+      },
+      "application": {
+        "commit": "13ed37989e73465457f89d2e4e114ad4b4ce2f10",
+        "applied_at": "2026-08-07T01:32:28+09:00",
+        "validation_evidence": [
+          ".\\tools\\validation\\validate_cardborne_visual_authority.ps1",
+          ".\\tools\\godot.ps1 --path . --headless --import",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_visual_separation.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_visuals.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run.gd",
+          ".\\tools\\export_web.ps1",
+          "runtime capture matrix: build/captures/map-assets-qa-en-1280",
+          "resolved-state capture: build/captures/map-device-state-qa-v2-en-1280/05-two-field-items.png",
+          "built-Web resource smoke: http://127.0.0.1:13029/build/web/"
+        ]
+      },
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      }
+    },
+    {
       "id": "procedural_floor_and_walls",
       "category_id": "world",
       "order": 90,
