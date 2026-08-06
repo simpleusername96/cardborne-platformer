@@ -13,6 +13,9 @@ const AssetProvider = preload(
 const SecondaryCatalog = preload(
 	"res://scripts/presentation/components/vehicle_secondary_visual_catalog.gd"
 )
+const WorldCatalog = preload(
+	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
+)
 const ProjectileCatalog = preload(
 	"res://scripts/presentation/components/vehicle_projectile_visual_catalog.gd"
 )
@@ -38,6 +41,8 @@ const MAX_EXTRA_PRIORITY_MARKERS := 8
 const ENEMY_BATCH_INITIAL_CAPACITY := 64
 const PROJECTILE_BATCH_INITIAL_CAPACITY := 120
 const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
+const MYSTERY_DEVICE_CAPACITY := 3
+const MYSTERY_DEVICE_VISUAL_RADIUS := 96.0
 const SEMANTIC_TEXTURE_DRAW_CAPACITY := 512
 const FLOATING_DAMAGE_DRAW_CAPACITY := 32
 const CARDINAL_DIRECTIONS := [
@@ -164,13 +169,14 @@ var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
 var _projectile_batch: BatchHandle
 var _experience_batch: BatchHandle
+var _mystery_device_batches: Dictionary = {}
+var _mystery_effect_ring_batch: BatchHandle
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _player_craft_body_batch: BatchHandle
 var _last_health_bar_count := 0
 var _last_priority_marker_count := 0
 var _last_tactic_module_count := 0
-var _support_field_asset_count := 0
 var _semantic_texture_draws: Array[SemanticTextureDraw] = []
 var _semantic_texture_draw_count := 0
 var _semantic_texture_specs: Dictionary = {}
@@ -216,7 +222,6 @@ func sync(
 ) -> void:
 	# Presentation is synchronous borrowed scratch; never retain or mutate it.
 	_reset_counts()
-	_support_field_asset_count = 0
 	_semantic_texture_draw_count = 0
 	_floating_damage_draw_count = 0
 	if active:
@@ -228,6 +233,8 @@ func sync(
 		_sync_experience(shards, visible_world)
 		_sync_effects(effects, visible_world)
 		_sync_world_overlays(presentation, visible_world)
+		_sync_mystery_devices(presentation, visible_world)
+		_sync_mystery_effects(presentation, visible_world)
 		_sync_resolved_boss_modules(presentation, visible_world)
 	_apply_visible_counts()
 	queue_redraw()
@@ -317,7 +324,6 @@ func debug_snapshot() -> Dictionary:
 		"health_bar_count": _last_health_bar_count,
 		"priority_marker_count": _last_priority_marker_count,
 		"tactic_module_count": _last_tactic_module_count,
-		"support_field_glyph_count":_support_field_asset_count,
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
 		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
 		"floating_damage_draw_count":_floating_damage_draw_count,
@@ -377,6 +383,32 @@ func _build_batches() -> void:
 		-1,
 		&"experience_master",
 		EXPERIENCE_BATCH_INITIAL_CAPACITY
+	)
+	_mystery_device_batches[&"intact"] = _create_asset_batch(
+		"MysteryDevice_intact",
+		StringName(
+			WorldCatalog.world_object_descriptor(
+				&"mystery_device_intact"
+			).get("asset", &"")
+		),
+		MYSTERY_DEVICE_CAPACITY, 2, &"mystery_device_intact", MYSTERY_DEVICE_CAPACITY
+	)
+	_mystery_device_batches[&"resolved"] = _create_asset_batch(
+		"MysteryDevice_resolved",
+		StringName(
+			WorldCatalog.world_object_descriptor(
+				&"mystery_device_resolved"
+			).get("asset", &"")
+		),
+		MYSTERY_DEVICE_CAPACITY, 2, &"mystery_device_resolved", MYSTERY_DEVICE_CAPACITY
+	)
+	_mystery_effect_ring_batch = _create_asset_batch(
+		"MysteryEffect_ring",
+		&"cue/ring",
+		MYSTERY_DEVICE_CAPACITY,
+		-1,
+		&"mystery_effect_ring",
+		MYSTERY_DEVICE_CAPACITY
 	)
 	_overlay_batches[&"health"] = _create_asset_batch(
 		"Overlay_health", &"cue/health_bar_frame_9", ENEMY_CAPACITY * 2, 3,
@@ -1274,9 +1306,6 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var protection_sources: Dictionary = state.get("protection_sources", {})
 	var displayed_player_position := player_position
 	var hull_color := Color.WHITE
-	var support_fields_variant: Variant = state.get("support_fields")
-	if support_fields_variant is Array:
-		_sync_support_fields(support_fields_variant)
 	var feedback_color := Color.TRANSPARENT
 	if hit_remaining > 0.0:
 		var hit_progress := 1.0 - clampf(hit_remaining / 0.20, 0.0, 1.0)
@@ -1392,28 +1421,50 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	_write_diamond(cursor_position, 4.0, Art.IVORY_BRIGHT)
 
 
-func _sync_support_fields(support_fields: Array) -> void:
-	for support_variant in support_fields:
-		var support: Dictionary = support_variant
-		var state := StringName(support.get("state", &"initial_delay"))
-		if state in [&"initial_delay", &"depleted"]:
+func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
+	var devices_variant: Variant = state.get("mystery_devices")
+	if not devices_variant is Array:
+		return
+	for device_variant in devices_variant:
+		var device := Dictionary(device_variant)
+		if not bool(device.get("visible", false)):
 			continue
-		var center := Vector2(support["position"])
-		var radius := float(support["radius"])
-		var kind := StringName(support["kind"])
-		var active := bool(support["effect_active"])
-		_queue_semantic_texture(
-			(
-				&"world/facility_repair_pad"
-				if kind == &"repair"
-				else &"world/facility_overdrive_pad"
-			),
-			center,
+		var device_state := StringName(device.get("state", &""))
+		if device_state not in [&"intact", &"resolved"]:
+			continue
+		var position := Vector2(device.get("position", Vector2.ZERO))
+		if not visible_world.grow(MYSTERY_DEVICE_VISUAL_RADIUS).has_point(position):
+			continue
+		_write_instance(
+			_mystery_device_batches[device_state] as BatchHandle,
+			position,
 			0.0,
-			radius,
-			Color(1.0, 1.0, 1.0, 1.0 if active else 0.72)
+			Vector2.ONE * MYSTERY_DEVICE_VISUAL_RADIUS,
+			Color.WHITE
 		)
-		_support_field_asset_count += 1
+
+
+func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
+	var effects_variant: Variant = state.get("mystery_effects")
+	if not effects_variant is Array:
+		return
+	for effect_variant in effects_variant:
+		var effect := Dictionary(effect_variant)
+		var effect_id := StringName(effect.get("effect_id", &""))
+		if effect_id not in [&"gravity_pull", &"cryo_lock", &"decoy_signal"]:
+			continue
+		var position := Vector2(effect.get("position", Vector2.ZERO))
+		var radius := float(effect.get("radius", 0.0))
+		if radius <= 0.0 or not visible_world.grow(radius).has_point(position):
+			continue
+		var color := Art.CRYO if effect_id == &"cryo_lock" else Art.SYSTEM
+		_write_instance(
+			_mystery_effect_ring_batch,
+			position,
+			0.0,
+			Vector2.ONE * radius,
+			Color(color, 0.28)
+		)
 
 
 func _sync_resolved_boss_modules(

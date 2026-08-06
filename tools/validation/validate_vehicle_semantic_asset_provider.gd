@@ -31,9 +31,13 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"upgrade/hull_reinforcement",
 	&"pickup/experience_master",
 	&"pickup/reward_crate",
-	&"world/facility_repair_pad",
-	&"world/facility_overdrive_pad",
-	&"world/wear_tile_collapsed",
+	&"pickup/repair",
+	&"pickup/experience_recall",
+	&"world/facility_transit_gate",
+	&"world/hazard_toxic_bog",
+	&"world/hazard_lava_pool",
+	&"world/mystery_device_intact",
+	&"world/mystery_device_resolved",
 	&"effect/emp_release",
 	&"cue/health_bar_frame_9",
 	&"cue/ring",
@@ -54,7 +58,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 67, "all 67 final gameplay PNGs are indexed")
+	_expect(ids.size() == 71, "all 71 final gameplay PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
@@ -84,10 +88,11 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 67
+		int(manifest.get("final_asset_count", 0)) == 71
 			and not manifest.has("animations"),
-		"manifest declares 67 static authored rasters and no frame animations"
+		"manifest declares 71 static authored rasters and no frame animations"
 	)
+	_validate_map_object_content_rects()
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)
 	for upgrade_id in [
@@ -112,6 +117,54 @@ func _initialize() -> void:
 			"%s keeps a transparent raster exterior" % upgrade_id
 		)
 	_finish()
+
+
+func _validate_map_object_content_rects() -> void:
+	var expected := {
+		&"world/hazard_toxic_bog":Rect2i(12, 64, 1000, 639),
+		&"world/hazard_lava_pool":Rect2i(12, 54, 1000, 660),
+		&"world/mystery_device_intact":Rect2i(6, 5, 372, 374),
+		&"world/mystery_device_resolved":Rect2i(6, 5, 372, 374),
+	}
+	for asset_id in expected:
+		var descriptor := AssetProvider.descriptor(asset_id)
+		var expected_rect: Rect2i = expected[asset_id]
+		_expect(
+			Rect2i(descriptor.get("content_rect", Rect2i())) == expected_rect,
+			"%s preserves its approved alpha-content bounds" % asset_id
+		)
+		var texture := AssetProvider.texture(asset_id)
+		var image := texture.get_image() if texture != null else null
+		var expected_canvas := Vector2i(descriptor.get("canvas", Vector2i.ZERO))
+		_expect(
+			image != null and image.get_size() == expected_canvas,
+			"%s actual PNG canvas matches its semantic descriptor" % asset_id
+		)
+		if image != null:
+			_expect(
+				image.get_used_rect() == expected_rect,
+				"%s actual alpha content matches its approved content rect" % asset_id
+			)
+			for corner in [
+				Vector2i.ZERO,
+				Vector2i(image.get_width() - 1, 0),
+				Vector2i(0, image.get_height() - 1),
+				Vector2i(image.get_width() - 1, image.get_height() - 1),
+			]:
+				_expect(
+					image.get_pixelv(corner).a <= 0.001,
+					"%s keeps transparent canvas corners" % asset_id
+				)
+		var mesh := AssetProvider.normalized_mesh(asset_id)
+		var content_size: Vector2 = Vector2(expected_rect.size)
+		var canvas_size := Vector2(descriptor.get("canvas", Vector2i.ZERO))
+		var unit_radius := maxf(content_size.x, content_size.y) * 0.5
+		_expect(
+			mesh != null
+				and mesh.size.is_equal_approx(canvas_size / unit_radius),
+			"%s normalizes from visible content instead of transparent canvas padding"
+			% asset_id
+		)
 
 
 func _expect(condition: bool, message: String) -> void:

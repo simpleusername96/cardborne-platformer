@@ -148,11 +148,6 @@ func _run() -> void:
 		"player_hit":false, "muzzle_flash":0.0, "barrier_strength":10.0,
 		"reduced_motion":true, "run_time":1.0, "ion_level":0,
 		"blade_level":0, "escort_drone":false, "secondary":{},
-		"support_fields":[{
-			"state":&"active", "position":Vector2(600.0, 300.0),
-			"radius":120.0, "kind":&"repair",
-			"phase_progress":0.5, "effect_active":true,
-		}],
 		"cursor_position":Vector2(460.0,300.0),
 	}
 	renderer.sync(
@@ -174,7 +169,7 @@ func _run() -> void:
 	for key in [
 		"visible_instances", "batch_counts", "health_bar_count",
 		"priority_marker_count", "tactic_module_count",
-		"support_field_glyph_count", "semantic_texture_draw_count",
+		"semantic_texture_draw_count",
 		"floating_damage_draw_count",
 	]:
 		repeated_counts_stable = (
@@ -182,7 +177,7 @@ func _run() -> void:
 		)
 	_expect(
 		repeated_counts_stable,
-		"128 borrowed-frame syncs preserve actor, projectile, shard, effect, support, and overlay counts"
+		"128 borrowed-frame syncs preserve actor, projectile, shard, effect, and overlay counts"
 	)
 	snapshot = repeated_snapshot
 	var experience_batch := renderer.get_node_or_null(
@@ -208,26 +203,13 @@ func _run() -> void:
 			<= int(snapshot["semantic_texture_draw_capacity"]),
 		"semantic texture draws stay inside the preallocated record capacity"
 	)
-	_expect(
-		renderer.get_node_or_null("Overlay_support_timer_segment") == null,
-		"support fields do not create a decorative timer-segment batch"
-	)
 	var corridor_caps := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var corridor_boundaries := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
 	var corridor_boundary_buffer := corridor_boundaries.multimesh.buffer
 	_expect(
 		corridor_caps.multimesh.visible_instance_count == 0
-			and corridor_boundaries.multimesh.visible_instance_count == 2
-			and int(snapshot["support_field_glyph_count"]) == 1,
-		"corridor and support fields avoid redundant fills while the support field keeps one authored pad"
-	)
-	var repair_draws := renderer.debug_semantic_texture_draws(
-		&"world/facility_repair_pad"
-	)
-	_expect(
-		repair_draws.size() == 1
-			and is_equal_approx(float(repair_draws[0]["radius"]), 120.0),
-		"repair floor-pad raster scales to the live gameplay radius"
+			and corridor_boundaries.multimesh.visible_instance_count == 2,
+		"corridor warnings avoid redundant fill geometry"
 	)
 	_expect(
 		Vector2(
@@ -332,6 +314,7 @@ func _run() -> void:
 			and projectile_visual.multimesh.visible_instance_count == 2,
 		"player and hostile projectiles share one texture-capable retained surface"
 	)
+	_validate_mystery_device_presentation(renderer, no_enemies, no_projectiles, no_shards)
 	_validate_player_directional_cues(
 		renderer,
 		no_enemies,
@@ -474,8 +457,7 @@ func _run() -> void:
 	)
 	_expect(
 		int(snapshot["health_bar_count"]) == 0
-			and int(snapshot["priority_marker_count"]) == 0
-			and int(snapshot["support_field_glyph_count"]) == 0,
+			and int(snapshot["priority_marker_count"]) == 0,
 		"inactive presentation clears semantic overlay diagnostics"
 	)
 	renderer.queue_free()
@@ -505,6 +487,85 @@ func _validate_area_cue_asset() -> void:
 				dark_pixels += 1
 	_expect(opaque_pixels > 4000, "area telegraph ring retains a readable annulus")
 	_expect(dark_pixels == 0, "area telegraph ring has no black RGB fringe")
+
+
+func _validate_mystery_device_presentation(
+	renderer: Renderer,
+	no_enemies: Array[EnemyState],
+	no_projectiles: Array[ProjectileState],
+	no_shards: Array[ExperienceShard]
+) -> void:
+	var device_position := Vector2(420.0, 260.0)
+	var resolved_position := Vector2(620.0, 260.0)
+	var presentation := _player_presentation(Vector2(260.0, 300.0), false)
+	presentation["mystery_devices"] = [
+		{"state":&"intact", "visible":true, "position":device_position},
+		{"state":&"resolved", "visible":true, "position":resolved_position},
+		{"state":&"retired", "visible":true, "position":Vector2(760.0, 260.0)},
+	]
+	presentation["mystery_effects"] = [
+		{"effect_id":&"gravity_pull", "position":device_position, "radius":144.0},
+		{"effect_id":&"cryo_lock", "position":resolved_position, "radius":108.0},
+		{"effect_id":&"decoy_signal", "position":Vector2(760.0, 260.0), "radius":72.0},
+	]
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+	)
+	var intact := renderer.get_node("MysteryDevice_intact") as MultiMeshInstance2D
+	var resolved := renderer.get_node("MysteryDevice_resolved") as MultiMeshInstance2D
+	var rings := renderer.get_node("MysteryEffect_ring") as MultiMeshInstance2D
+	_expect(
+		intact.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
+			and resolved.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
+			and intact.multimesh.visible_instance_count == 1
+			and resolved.multimesh.visible_instance_count == 1,
+		"intact and resolved mystery devices use capacity-three retained batches while retired devices stay omitted"
+	)
+	var intact_buffer := intact.multimesh.buffer
+	var resolved_buffer := resolved.multimesh.buffer
+	_expect(
+		Vector2(intact_buffer[3], intact_buffer[7]).is_equal_approx(device_position)
+			and Vector2(intact_buffer[0], intact_buffer[4]).length() == Renderer.MYSTERY_DEVICE_VISUAL_RADIUS
+			and Vector2(resolved_buffer[3], resolved_buffer[7]).is_equal_approx(resolved_position)
+			and Vector2(resolved_buffer[0], resolved_buffer[4]).length() == Renderer.MYSTERY_DEVICE_VISUAL_RADIUS,
+		"mystery device batches preserve gameplay positions and the 96-unit visual scale"
+	)
+	_expect(
+		rings.z_index == -1
+			and rings.multimesh.visible_instance_count == 3,
+		"gravity, cryo, and decoy each publish one restrained ground-level retained ring"
+	)
+	var expected_radii := [144.0, 108.0, 72.0]
+	for index in expected_radii.size():
+		var offset := index * Renderer.BUFFER_FLOATS_PER_INSTANCE
+		_expect(
+			is_equal_approx(Vector2(rings.multimesh.buffer[offset], rings.multimesh.buffer[offset + 4]).length(), expected_radii[index]),
+			"mystery effect ring %d preserves its exact gameplay radius" % (index + 1)
+		)
+	var first := renderer.debug_snapshot()
+	for _sync_index in 16:
+		renderer.sync(
+			no_enemies, no_projectiles, no_projectiles, no_shards, [],
+			Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+		)
+	var repeated := renderer.debug_snapshot()
+	_expect(
+		first["batch_counts"] == repeated["batch_counts"],
+		"repeated mystery-device syncs keep retained batch counts stable"
+	)
+	presentation["mystery_devices"] = []
+	presentation["mystery_effects"] = []
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+	)
+	_expect(
+		intact.multimesh.visible_instance_count == 0
+			and resolved.multimesh.visible_instance_count == 0
+			and rings.multimesh.visible_instance_count == 0,
+		"inactive mystery device and timed-effect inputs clear their retained instances"
+	)
 
 
 func _validate_player_directional_cues(
@@ -586,7 +647,6 @@ func _player_presentation(
 		"reduced_motion":false,
 		"run_time":1.0,
 		"secondary_visual_tier":0,
-		"support_fields":[],
 		"resolved_boss_modules":[],
 		"ion_level":0,
 		"blade_level":1,

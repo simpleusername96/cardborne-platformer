@@ -75,7 +75,7 @@ static func provider_fingerprint() -> String:
 		SecondaryCatalog.DESCRIPTORS
 	)
 	_append_descriptor_records(records, "world_field", WorldCatalog.FIELD_DESCRIPTORS)
-	_append_descriptor_records(records, "world_facility", WorldCatalog.FACILITY_DESCRIPTORS)
+	_append_descriptor_records(records, "world_object", WorldCatalog.WORLD_OBJECT_DESCRIPTORS)
 	records.append(
 		"action_glyph_recipes=%s"
 		% FileAccess.get_sha256(ACTION_GLYPH_RECIPE_PATH)

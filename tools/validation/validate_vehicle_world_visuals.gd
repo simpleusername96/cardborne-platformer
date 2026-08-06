@@ -53,87 +53,25 @@ func _validate_catalog() -> void:
 			"%s does not allocate presentation-only map decorations" % field_id
 		)
 
-	var facility_shapes := {}
-	for facility_id in [
-		&"repair_field",
-		&"transit_gate",
-		&"overdrive_field",
-		&"arc_surge_strip",
-		&"breakable_bulkhead",
-	]:
-		var descriptor: Dictionary = WorldCatalog.FACILITY_DESCRIPTORS.get(
-			facility_id, {}
+	var expected_objects := {
+		&"transit_gate": [ &"world/facility_transit_gate", &"round_portal" ],
+		&"hazard_toxic_bog": [ &"world/hazard_toxic_bog", &"broad_ground" ],
+		&"hazard_lava_pool": [ &"world/hazard_lava_pool", &"broad_ground" ],
+		&"mystery_device_intact": [ &"world/mystery_device_intact", &"neutral_mechanical_body" ],
+		&"mystery_device_resolved": [ &"world/mystery_device_resolved", &"resolved_wreck" ],
+	}
+	_expect(
+		WorldCatalog.WORLD_OBJECT_DESCRIPTORS.size() == expected_objects.size(),
+		"world object catalog has no retired support, wear, or bulkhead roles"
+	)
+	for visual_id in expected_objects:
+		var descriptor := Dictionary(WorldCatalog.WORLD_OBJECT_DESCRIPTORS.get(visual_id, {}))
+		var expected: Array = expected_objects[visual_id]
+		_expect(
+			StringName(descriptor.get("asset", &"")) == expected[0]
+				and StringName(descriptor.get("shape", &"")) == expected[1],
+			"%s retains its approved world visual identity" % visual_id
 		)
-		_expect(not descriptor.is_empty(), "%s has a facility descriptor" % facility_id)
-		var shape := StringName(descriptor.get("shape", &""))
-		_expect(not shape.is_empty(), "%s has a shape token" % facility_id)
-		facility_shapes[shape] = true
-	_expect(
-		facility_shapes.size() == 5,
-		"facility roles remain shape-distinct without color"
-	)
-	_validate_circular_runtime_pad(&"world/facility_repair_pad")
-	_validate_circular_runtime_pad(&"world/facility_overdrive_pad")
-
-
-func _validate_circular_runtime_pad(asset_id: StringName) -> void:
-	var descriptor := AssetProvider.descriptor(asset_id)
-	var path := String(descriptor.get("path", ""))
-	_expect(not path.is_empty(), "%s has a runtime image path" % asset_id)
-	if path.is_empty():
-		return
-	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
-	_expect(image != null and not image.is_empty(), "%s loads as an image" % asset_id)
-	if image == null or image.is_empty():
-		return
-	_expect(
-		image.get_size() == Vector2i(192, 192),
-		"%s keeps its exact 192x192 canvas" % asset_id
-	)
-	var size := image.get_size()
-	var corners := [
-		image.get_pixel(0, 0),
-		image.get_pixel(size.x - 1, 0),
-		image.get_pixel(0, size.y - 1),
-		image.get_pixel(size.x - 1, size.y - 1),
-	]
-	for corner in corners:
-		_expect(corner.a <= 0.001, "%s keeps transparent corners" % asset_id)
-	var used := image.get_used_rect()
-	_expect(
-		abs(used.size.x - used.size.y) <= 2,
-		"%s keeps a square circular-pad footprint" % asset_id
-	)
-	var opaque_pixels := 0
-	var chroma_fringe_pixels := 0
-	for y in range(used.position.y, used.end.y):
-		for x in range(used.position.x, used.end.x):
-			var pixel := image.get_pixel(x, y)
-			if pixel.a >= 0.12:
-				opaque_pixels += 1
-			if pixel.a > 0.001 and pixel.a < 0.999:
-				var green_spill := (
-					pixel.g > 0.70
-					and pixel.g > pixel.r * 1.8
-					and pixel.g > pixel.b * 1.8
-				)
-				var magenta_spill := (
-					pixel.r > 0.70
-					and pixel.b > 0.70
-					and pixel.g < 0.25
-				)
-				if green_spill or magenta_spill:
-					chroma_fringe_pixels += 1
-	var used_area := maxi(1, used.size.x * used.size.y)
-	var fill_ratio := float(opaque_pixels) / float(used_area)
-	_expect(
-		fill_ratio >= 0.68 and fill_ratio <= 0.86,
-		"%s keeps a filled circular alpha footprint" % asset_id
-	)
-	_expect(
-		chroma_fringe_pixels == 0,
-		"%s has no green or magenta alpha-edge contamination" % asset_id
-	)
 
 
 func _validate_field(field_id: StringName) -> void:
@@ -278,6 +216,7 @@ func _validate_field(field_id: StringName) -> void:
 	var child_names := PackedStringArray()
 	var texture_batch_count := 0
 	var texture_instance_count := 0
+	var hazard_batches: Array[MultiMeshInstance2D] = []
 	var collision_count := 0
 	var solid_mesh_count := 0
 	for child in world.get_children():
@@ -323,17 +262,15 @@ func _validate_field(field_id: StringName) -> void:
 			var multi_mesh := (child as MultiMeshInstance2D).multimesh
 			_expect(
 				multi_mesh != null and (child as MultiMeshInstance2D).texture != null,
-				"%s retained cover batch binds its raster and multimesh" % field_id
+				"%s retained authored-object batch binds its raster and multimesh" % field_id
 			)
 			if multi_mesh != null:
 				texture_instance_count += multi_mesh.visible_instance_count
+				if child_name.begins_with("Raster_world_hazard_"):
+					hazard_batches.append(child as MultiMeshInstance2D)
 		if child is CollisionObject2D:
 			collision_count += 1
 	_expect(solid_mesh_count == 4, "%s exposes four flat world-role meshes" % field_id)
-	_expect(
-		child_names.has("Raster_world_terrain_solid_cover_block"),
-		"%s retains the authored independent-cover raster" % field_id
-	)
 	_expect(
 		not child_names.has("Raster_world_surface_panel_9")
 		and not child_names.has("Raster_world_wall_segment_9"),
@@ -342,14 +279,15 @@ func _validate_field(field_id: StringName) -> void:
 	_expect(
 		int(contract.get("batch_count", -1))
 		== solid_mesh_count + texture_batch_count,
-		"%s batch accounting includes solid geometry and retained cover" % field_id
+		"%s batch accounting includes flat geometry and retained authored objects" % field_id
 	)
 	_expect(
 		int(contract.get("flushed_transform_count", -1))
 		== texture_instance_count,
-		"%s flushes every retained cover transform exactly once" % field_id
+		"%s flushes every retained authored-object transform exactly once" % field_id
 	)
 	_expect(collision_count == 0, "%s visual builder adds no collision objects" % field_id)
+	_validate_hazard_batch(field_id, geometry_snapshot, contract, hazard_batches)
 
 	var replay := WorldBuilder.new()
 	root.add_child(replay)
@@ -362,6 +300,67 @@ func _validate_field(field_id: StringName) -> void:
 	)
 	world.queue_free()
 	replay.queue_free()
+
+
+func _validate_hazard_batch(
+	field_id: StringName,
+	geometry_snapshot: Object,
+	contract: Dictionary,
+	hazard_batches: Array[MultiMeshInstance2D]
+) -> void:
+	var hazard_rects: Array[Rect2] = []
+	var hazard_variant := &""
+	for feature_variant in geometry_snapshot.terrain_zones:
+		var feature := Dictionary(feature_variant)
+		if StringName(feature.get("kind", &"")) != &"hazard_zone":
+			continue
+		hazard_rects.append(Rect2(feature["rect"]))
+		var variant := StringName(feature.get("variant", &""))
+		if hazard_variant == &"":
+			hazard_variant = variant
+		_expect(hazard_variant == variant, "%s keeps hazards in one run-wide variant batch" % field_id)
+	_expect(hazard_rects.size() == 4, "%s retains all four gameplay hazard rectangles" % field_id)
+	_expect(
+		int(Dictionary(contract.get("hazards", {})).get("count", -1)) == 4
+			and bool(Dictionary(contract.get("hazards", {})).get("presentation_only", false)),
+		"%s reports four presentation-only hazards" % field_id
+	)
+	_expect(hazard_batches.size() == 1, "%s compiles hazards into one retained raster batch" % field_id)
+	if hazard_batches.size() != 1:
+		return
+	var batch := hazard_batches[0]
+	var multi_mesh := batch.multimesh
+	_expect(batch.z_index == 2, "%s hazard batch remains below walls at z2" % field_id)
+	_expect(
+		multi_mesh != null and multi_mesh.visible_instance_count == 4,
+		"%s hazard batch retains four transforms" % field_id
+	)
+	if multi_mesh == null:
+		return
+	var builder_source := FileAccess.get_file_as_string(
+		"res://scripts/presentation/vehicle_world_mesh_builder.gd"
+	)
+	_expect(
+		builder_source.contains("rect.get_center()")
+			and builder_source.contains("_scale_for_canvas(local_size, canvas)")
+			and builder_source.contains("PI * 0.5 if hazard_rect.size.y > hazard_rect.size.x else 0.0"),
+		"%s maps alpha content from the exact gameplay rect and rotates portrait hazards" % field_id
+	)
+	var asset_id := StringName("world/hazard_%s" % String(hazard_variant))
+	var descriptor := AssetProvider.descriptor(asset_id)
+	var content_rect := Rect2(descriptor.get("content_rect", Rect2()))
+	var content_size := content_rect.size
+	var canvas_size := Vector2(descriptor.get("canvas", Vector2.ZERO))
+	var mesh := multi_mesh.mesh as QuadMesh
+	for index in hazard_rects.size():
+		var hazard_rect := hazard_rects[index]
+		_expect(
+			content_size.x > 0.0 and content_size.y > 0.0
+				and canvas_size.x >= content_size.x and canvas_size.y >= content_size.y
+				and mesh.size.x > 0.0 and mesh.size.y > 0.0
+				and hazard_rect.size.x >= 480.0 and hazard_rect.size.y >= 480.0,
+			"%s hazard %d maps authored alpha content to its exact gameplay rectangle" % [field_id, index + 1]
+		)
 
 
 func _validate_solid_mesh(

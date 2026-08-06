@@ -3,6 +3,9 @@ extends SceneTree
 const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
+const WorldCatalog = preload(
+	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
+)
 
 const DISTINCT_GROUPS := {
 	"secondaries":[
@@ -22,21 +25,13 @@ const DISTINCT_GROUPS := {
 		&"boss/node_damaged",
 		&"boss/node_resolved",
 	],
-	"functional_facilities":[
-		&"world/facility_repair_pad",
-		&"world/facility_overdrive_pad",
-		&"world/facility_arc_surge_strip",
-		&"world/facility_transit_gate",
+	"hazard_variants":[
+		&"world/hazard_toxic_bog",
+		&"world/hazard_lava_pool",
 	],
-	"bulkhead_states":[
-		&"world/world_bulkhead_intact",
-		&"world/world_bulkhead_damaged",
-		&"world/world_bulkhead_open",
-	],
-	"wear_states":[
-		&"world/wear_tile_intact",
-		&"world/wear_tile_cracked",
-		&"world/wear_tile_collapsed",
+	"mystery_device_states":[
+		&"world/mystery_device_intact",
+		&"world/mystery_device_resolved",
 	],
 }
 
@@ -50,7 +45,26 @@ func _initialize() -> void:
 			Array(DISTINCT_GROUPS[group_name])
 		)
 	_validate_actor_perimeters()
+	_validate_active_world_roles()
 	_finish()
+
+
+func _validate_active_world_roles() -> void:
+	var expected := [
+		&"hazard_lava_pool",
+		&"hazard_toxic_bog",
+		&"mystery_device_intact",
+		&"mystery_device_resolved",
+		&"transit_gate",
+	]
+	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
+	var matches := active_ids.size() == expected.size()
+	for expected_id in expected:
+		matches = matches and active_ids.has(expected_id)
+	_expect(
+		matches,
+		"active world visual roles exclude retired support, wear, and bulkhead identities"
+	)
 
 
 func _validate_distinct_group(group_name: String, asset_ids: Array) -> void:

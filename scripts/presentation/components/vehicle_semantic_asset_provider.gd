@@ -66,9 +66,15 @@ static func normalized_mesh(asset_id: StringName) -> QuadMesh:
 	var canvas := Vector2(entry.get("canvas", image.get_size()))
 	if canvas.x <= 0.0 or canvas.y <= 0.0:
 		canvas = Vector2(image.get_size())
+	var content_rect := Rect2(entry.get("content_rect", Rect2(Vector2.ZERO, canvas)))
+	if content_rect.size.x <= 0.0 or content_rect.size.y <= 0.0:
+		content_rect = Rect2(Vector2.ZERO, canvas)
 	var pivot := Vector2(entry.get("pivot", canvas * 0.5))
-	var unit_radius := maxf(canvas.x, canvas.y) * 0.5
+	var unit_radius := maxf(content_rect.size.x, content_rect.size.y) * 0.5
 	var mesh := QuadMesh.new()
+	# Keep the full texture canvas on the quad so its UVs stay correct. Only the
+	# normalization radius comes from the visible alpha bounds; callers can then
+	# fit authored content to gameplay geometry without trimming approved bytes.
 	mesh.size = canvas / unit_radius
 	mesh.center_offset = Vector3(
 		(canvas.x * 0.5 - pivot.x) / unit_radius,
@@ -195,16 +201,28 @@ static func _add_asset(
 	var pivot := (
 		Vector2(canvas) * 0.5
 		if pivot_variant is String or pivot_variant is StringName
-		else Vector2(_vector2i(pivot_variant))
+		else _vector2(pivot_variant)
 	)
 	if pivot.x < 0.0 or pivot.y < 0.0 or pivot.x > canvas.x or pivot.y > canvas.y:
 		_load_errors.append("semantic asset pivot is outside its canvas: %s" % asset_id)
+		return
+	var content_rect := _rect2(source.get("content_rect", [0, 0, canvas.x, canvas.y]))
+	if (
+		content_rect.size.x <= 0.0
+		or content_rect.size.y <= 0.0
+		or content_rect.position.x < 0.0
+		or content_rect.position.y < 0.0
+		or content_rect.end.x > canvas.x
+		or content_rect.end.y > canvas.y
+	):
+		_load_errors.append("semantic asset content rect is outside its canvas: %s" % asset_id)
 		return
 	var descriptor_source := source.duplicate(true)
 	descriptor_source.erase("id")
 	descriptor_source.erase("semantic_id")
 	descriptor_source["path"] = path
 	descriptor_source["canvas"] = canvas
+	descriptor_source["content_rect"] = content_rect
 	descriptor_source["pivot"] = pivot
 	descriptor_source["category"] = category
 	_assets[asset_id] = descriptor_source
@@ -219,3 +237,29 @@ static func _vector2i(value: Variant) -> Vector2i:
 	if value is Array and Array(value).size() >= 2:
 		return Vector2i(int(Array(value)[0]), int(Array(value)[1]))
 	return Vector2i.ZERO
+
+
+static func _vector2(value: Variant) -> Vector2:
+	if value is Vector2:
+		return value
+	if value is Vector2i:
+		return Vector2(value)
+	if value is Array and Array(value).size() >= 2:
+		return Vector2(float(Array(value)[0]), float(Array(value)[1]))
+	return Vector2.ZERO
+
+
+static func _rect2(value: Variant) -> Rect2:
+	if value is Rect2:
+		return value
+	if value is Rect2i:
+		return Rect2(value)
+	if value is Array and Array(value).size() >= 4:
+		var values := Array(value)
+		return Rect2(
+			float(values[0]),
+			float(values[1]),
+			float(values[2]),
+			float(values[3])
+		)
+	return Rect2()

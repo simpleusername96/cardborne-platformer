@@ -3,7 +3,7 @@ extends Node2D
 
 ## Geometry-fed flat world presentation. Stage data remains authoritative for
 ## walkability, cover, navigation, sockets, and terrain behavior; this node
-## batches flat map-role colors and retained cover textures inside that truth.
+## batches flat map-role colors and retained authored textures inside that truth.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
@@ -28,6 +28,8 @@ var _flushed_transform_count := 0
 var _surface_rect_count := 0
 var _outer_wall_segment_count := 0
 var _inner_wall_rect_count := 0
+var _hazard_zone_count := 0
+var _hazard_variants: Dictionary = {}
 var _geometry_fingerprint := ""
 
 
@@ -75,6 +77,11 @@ func debug_contract() -> Dictionary:
 			"outer_wall_segment_count": _outer_wall_segment_count,
 			"inner_wall_rect_count": _inner_wall_rect_count,
 		},
+		"hazards": {
+			"count": _hazard_zone_count,
+			"variants": _hazard_variants.duplicate(),
+			"presentation_only": true,
+		},
 	}
 
 
@@ -88,6 +95,8 @@ func _rebuild(layout: Object) -> void:
 	_surface_rect_count = 0
 	_outer_wall_segment_count = 0
 	_inner_wall_rect_count = 0
+	_hazard_zone_count = 0
+	_hazard_variants.clear()
 	var snapshot: Object = layout.geometry_snapshot if layout != null else null
 	var walkable_polygons: Array[PackedVector2Array] = []
 	if snapshot != null:
@@ -158,7 +167,32 @@ func _rebuild(layout: Object) -> void:
 			),
 			3
 		)
-	_flush_texture_batches()
+		for feature_variant in Array(snapshot.get("terrain_zones")):
+			var feature := Dictionary(feature_variant)
+			if StringName(feature.get("kind", &"")) != &"hazard_zone":
+				continue
+			var variant := StringName(feature.get("variant", &""))
+			var object_id := StringName("hazard_%s" % String(variant))
+			var object_descriptor := WorldCatalog.world_object_descriptor(object_id)
+			var asset_id := StringName(object_descriptor.get("asset", &""))
+			var hazard_rect := Rect2(feature.get("rect", Rect2()))
+			if (
+				not hazard_rect.has_area()
+				or StringName(object_descriptor.get("kind", &"")) != &"hazard_zone"
+				or StringName(object_descriptor.get("variant", &"")) != variant
+				or not AssetProvider.has_asset(asset_id)
+			):
+				continue
+			_add_texture_rect(
+				"Hazard_%s" % String(variant),
+				asset_id,
+				hazard_rect,
+				2,
+				PI * 0.5 if hazard_rect.size.y > hazard_rect.size.x else 0.0
+			)
+			_hazard_zone_count += 1
+			_hazard_variants[variant] = int(_hazard_variants.get(variant, 0)) + 1
+		_flush_texture_batches()
 	_geometry_fingerprint = (
 		_compile_geometry_fingerprint(snapshot, layout)
 		if snapshot != null
@@ -259,7 +293,7 @@ func _add_texture_rect(
 ) -> void:
 	if not rect.has_area():
 		return
-	var canvas := _asset_canvas(asset_id)
+	var canvas := _asset_content_size(asset_id)
 	if canvas == Vector2.ZERO:
 		return
 	var local_size := (
@@ -275,12 +309,17 @@ func _add_texture_rect(
 		_scale_for_canvas(local_size, canvas)
 	)
 
-func _asset_canvas(asset_id: StringName) -> Vector2:
+func _asset_content_size(asset_id: StringName) -> Vector2:
 	var texture := AssetProvider.texture(asset_id)
 	var descriptor := AssetProvider.descriptor(asset_id)
 	if texture == null or descriptor.is_empty():
 		return Vector2.ZERO
-	return Vector2(descriptor.get("canvas", texture.get_size()))
+	var content_rect := Rect2(descriptor.get("content_rect", Rect2()))
+	return (
+		content_rect.size
+		if content_rect.has_area()
+		else Vector2(descriptor.get("canvas", texture.get_size()))
+	)
 
 
 func _scale_for_canvas(target_size: Vector2, canvas: Vector2) -> Vector2:

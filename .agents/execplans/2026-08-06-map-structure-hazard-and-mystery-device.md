@@ -312,11 +312,13 @@ do not ship procedural world stand-ins.
 - [x] Remove obsolete active systems and stale runtime/guidebook/localization branches.
 - [x] Update product and visual specs.
 - [x] Generate grounded raster candidates and request exact user approval.
-- [ ] Integrate only approved visual files and update the production manifest/catalogs.
+- [x] Integrate only approved visual files and update the production manifest/catalogs.
 - [x] Run focused headless validators and the editor parse/import check; report each pass
   with its precise label.
-- [ ] After visual approval, run intended-size/rendered QA, Web export, and
-  production-style smoke.
+- [x] After visual approval, run intended-size/rendered QA, Web export, and the
+  strongest available built-Web smoke. Interactive browser control was unavailable,
+  so the built artifact was served on the registered Codex port and all four resources
+  were verified over HTTP instead.
 - [x] Run the task-scoped code-quality audit and correct small safe findings.
 - [ ] Commit only task-owned files in coherent commits.
 
@@ -455,17 +457,45 @@ bilingual localization checks pass. Retired bulkhead/wear/support validators now
 compatibility sentinels for the replacement contract. The quality audit's minimap-oracle
 and fallback-seed findings are corrected.
 
-Four transparent, hashed raster candidates are prepared outside production and have
-been shown to the user. The runtime intentionally does not draw the new hazard/device
-rasters until the exact four files are approved. The production visual switch, rendered
-QA, Web export, production-style smoke, and scoped commits therefore remain open.
+The user approved the exact four transparent raster candidates on 2026-08-07 with
+`일단 진행`: toxic bog
+`06e91b352d1fceb7466c30795c4969a3816f21d761a4cb3ac86dfd7592e6e4aa`, lava
+pool `dd551c884139b1836f4c87d8f52309e1eaa7be8e6cfbab456adbc129ebd6a8f5`, Mystery
+Device intact `cfbbc2b42a747c2e0859137c5a7230a7d812203f719e4e9ffeea033b98d5950c`,
+and Mystery Device resolved
+`551cc82e34d5caf244c02981906bd84234a8bd8762ce59ef0bca0dff7bf9825e`.
+
+Each candidate was generated with `image_gen.referenced_image_paths` using the
+canonical repository sheet as the actual style-reference input. The authority pair
+was read and inspected at original detail before promotion: `docs/design/VISUAL_SYSTEM.md`
+and `docs/design/cardborne-universal-art-style-reference.png`, SHA-256
+`96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. The sheet's
+original provenance is
+`C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`
+at 2026-08-02 12:13:44 KST.
+
+The approved PNGs have been copied byte-for-byte into the production world path and
+registered with validated content rectangles. The semantic provider, world-object
+catalog, static hazard batch, retained Mystery Device state batches, and restrained
+ground-level outcome-radius batch are connected without changing gameplay or collision
+truth. Three 1280x720 field captures confirm four broad run-fixed hazards, five dark-gray
+inner-wall groups, three separated devices, and clear black outer walls. A targeted
+temporary capture confirmed intact/resolved device readability and exposed an overly
+dominant foreground ring; the final ring is now a lower-alpha ground batch that does not
+tint the device body. The temporary fixture was removed.
+
+Focused asset, separation, world, combat-renderer, run, layout, hazard, Mystery Device,
+terrain, map-integration, transition, and retirement-sentinel validators pass. Godot
+import passes. `tools/export_web.ps1` reports `WEB_EXPORT_OK`; the four built resources
+return HTTP 200 from the fastrun Codex lane. No browser backend was available for an
+interactive built-Web input smoke, and no release-performance claim is made. The visual
+replacement workbench ledger and scoped commits remain open.
 
 ## Next Steps
 
-1. Obtain explicit approval or rejection of the four exact hashed candidate files.
-2. If approved, copy them byte-for-byte into the production tree and register the four
-   semantic asset states without changing collision truth.
-3. Run intended-size and gameplay-frame visual QA, remaining focused validators, visual
-   authority validation, Web export, and production-style smoke.
-4. Update this plan with final rendered evidence and commit only task-owned files while
+1. Commit the approved asset/runtime/validator switch as one task-owned application
+   commit while preserving the unrelated `0.0001` file.
+2. Record that application commit in the visual replacement workbench, mirror the four
+   exact deliverables, rebuild its generated inventory/index, and validate the ledger.
+3. Update this plan with final ledger evidence and commit only task-owned files while
    preserving the unrelated `0.0001` file.

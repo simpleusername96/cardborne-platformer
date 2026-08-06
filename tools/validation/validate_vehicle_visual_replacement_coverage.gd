@@ -20,6 +20,9 @@ const VisualEventCatalog = preload(
 const EventCaptureFixture = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_capture_fixture.gd"
 )
+const WorldCatalog = preload(
+	"res://scripts/presentation/components/vehicle_world_visual_catalog.gd"
+)
 const CODE_NATIVE_UI_STATE_OWNERS := [
 	"res://scripts/ui/vehicle_gameplay_hud.gd",
 ]
@@ -72,11 +75,17 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 67,
-		"gameplay manifest declares the final 67 authored rasters"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 71,
+		"gameplay manifest declares the final 71 authored rasters"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(int(family_counts.get("upgrade", 0)) == 10, "gameplay manifest declares ten shared upgrade rasters")
+	var world_asset_count := 0
+	for asset_variant in Array(gameplay_manifest.get("assets", [])):
+		if StringName(Dictionary(asset_variant).get("category", &"")) == &"world":
+			world_asset_count += 1
+	_expect(world_asset_count == 17, "gameplay manifest declares seventeen world rasters")
+	_validate_active_world_catalog()
 	_expect(
 		not gameplay_manifest.has("animations"),
 		"gameplay manifest contains no raster frame animations"
@@ -108,6 +117,21 @@ func _initialize() -> void:
 
 	_validate_ui_runtime_contract()
 	_finish()
+
+
+func _validate_active_world_catalog() -> void:
+	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
+	var expected := [
+		&"hazard_lava_pool", &"hazard_toxic_bog", &"mystery_device_intact",
+		&"mystery_device_resolved", &"transit_gate",
+	]
+	var matches := active_ids.size() == expected.size()
+	for expected_id in expected:
+		matches = matches and active_ids.has(expected_id)
+	_expect(
+		matches,
+		"runtime world catalog switches only the transit gate, two hazards, and mystery states"
+	)
 
 
 func _validate_event_catalog() -> void:

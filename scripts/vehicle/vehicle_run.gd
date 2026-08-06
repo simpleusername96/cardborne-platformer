@@ -6064,10 +6064,14 @@ func _append_minimap_static_geometry(snapshot: Dictionary) -> void:
 
 
 func _combat_presentation_snapshot() -> Dictionary:
+	var mystery_devices: Array[Dictionary] = []
+	var mystery_effects: Array[Dictionary] = []
 	return _fill_combat_presentation_snapshot(
 		{},
 		player_protection_sources.duplicate(),
-		secondary_runtime.snapshot(run_build)
+		secondary_runtime.snapshot(run_build),
+		mystery_devices,
+		mystery_effects
 	)
 
 
@@ -6078,14 +6082,18 @@ func _runtime_combat_presentation_snapshot() -> Dictionary:
 	return _fill_combat_presentation_snapshot(
 		_runtime_combat_presentation_frame,
 		player_protection_sources,
-		_runtime_secondary_presentation_frame
+		_runtime_secondary_presentation_frame,
+		_mystery_device_snapshot_buffer,
+		_mystery_effect_snapshot_buffer
 	)
 
 
 func _fill_combat_presentation_snapshot(
 	snapshot: Dictionary,
 	protection_sources: Dictionary,
-	secondary: Dictionary
+	secondary: Dictionary,
+	mystery_devices: Array[Dictionary],
+	mystery_effects: Array[Dictionary]
 ) -> Dictionary:
 	var cursor_position := player_position + player_aim_direction * 230.0
 	var mouse_direction := get_global_mouse_position() - player_position
@@ -6122,6 +6130,10 @@ func _fill_combat_presentation_snapshot(
 	snapshot["blade_level"] = run_build.level_of(&"orbit_blades")
 	snapshot["escort_drone"] = run_build.has(&"escort_drone")
 	snapshot["secondary"] = secondary
+	mystery_device_runtime.fill_device_snapshot(mystery_devices)
+	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)
+	snapshot["mystery_devices"] = mystery_devices
+	snapshot["mystery_effects"] = mystery_effects
 	snapshot["cursor_position"] = cursor_position
 	return snapshot
 

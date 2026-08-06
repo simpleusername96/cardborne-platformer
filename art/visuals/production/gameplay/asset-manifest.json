@@ -27,7 +27,7 @@
     "shared_world_cue_rule": "Fixed world surface, wall, health-frame, ring, beam, marker, disk, and crosshair identities are authored PNGs. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, and live timing remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 67,
+  "final_asset_count": 71,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -37,7 +37,7 @@
     "shared_projectile": 1,
     "defense_status": 0,
     "pickup_reward": 4,
-    "world_facility": 11,
+    "world_facility": 15,
     "world_presentation": 2,
     "cue": 6,
     "emp": 1,
@@ -112,6 +112,10 @@
     {"id": "world/facility_overdrive_pad", "path": "world/facility_overdrive_pad.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
     {"id": "world/facility_arc_surge_strip", "path": "world/facility_arc_surge_strip.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
     {"id": "world/facility_transit_gate", "path": "world/facility_transit_gate.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
+    {"id": "world/hazard_toxic_bog", "path": "world/hazard_toxic_bog.png", "canvas": [1024, 768], "content_rect": [12, 64, 1000, 639], "pivot": [512, 383.5], "category": "world"},
+    {"id": "world/hazard_lava_pool", "path": "world/hazard_lava_pool.png", "canvas": [1024, 768], "content_rect": [12, 54, 1000, 660], "pivot": [512, 384], "category": "world"},
+    {"id": "world/mystery_device_intact", "path": "world/mystery_device_intact.png", "canvas": [384, 384], "content_rect": [6, 5, 372, 374], "pivot": [192, 192], "category": "world"},
+    {"id": "world/mystery_device_resolved", "path": "world/mystery_device_resolved.png", "canvas": [384, 384], "content_rect": [6, 5, 372, 374], "pivot": [192, 192], "category": "world"},
     {"id": "world/terrain_solid_cover_block", "path": "world/terrain_solid_cover_block.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
     {"id": "world/wear_tile_intact", "path": "world/wear_tile_intact.png", "canvas": [240, 160], "pivot": [120, 80], "category": "world"},
     {"id": "world/wear_tile_cracked", "path": "world/wear_tile_cracked.png", "canvas": [240, 160], "pivot": [120, 80], "category": "world"},
