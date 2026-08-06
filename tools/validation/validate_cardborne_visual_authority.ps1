@@ -10,6 +10,7 @@ $sheetPath = 'docs/design/cardborne-universal-art-style-reference.png'
 $expectedHash = '96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889'
 $expectedWidth = 1448
 $expectedHeight = 1086
+$authoringBanToken = 'SVG/ImageMagick geometric authoring is prohibited'
 $failures = [Collections.Generic.List[string]]::new()
 
 function Expect([bool]$Condition, [string]$Message) {
@@ -68,13 +69,13 @@ $designOwnerPaths = @(
 )
 
 $requiredText = [ordered]@{
-    'AGENTS.md' = @('$uiux-gate', '.agents/design/DESIGN.md', '$cardborne-visual-authority', $specPath, $sheetPath, 'validate_cardborne_visual_authority.ps1')
+    'AGENTS.md' = @('$uiux-gate', '.agents/design/DESIGN.md', '$cardborne-visual-authority', $specPath, $sheetPath, 'validate_cardborne_visual_authority.ps1', $authoringBanToken)
     '.agents/design/DESIGN.md' = @('docs/product/vehicle_game_spec.md', $specPath, $sheetPath, '../skills/cardborne-visual-authority/SKILL.md', 'style reference only, never asset approval') + $designOwnerPaths
-    $specPath = @('## Mandatory Visual Authority Pair', $sheetPath, $expectedHash, 'actual image reference')
+    $specPath = @('## Mandatory Visual Authority Pair', $sheetPath, $expectedHash, 'actual image reference', $authoringBanToken)
     'docs/README.md' = @('$cardborne-visual-authority', $specPath, $sheetPath)
     'docs/design/visual-replacement-workbench/README.md' = @($specPath, $sheetPath, 'actual image reference', 'visual_authority_evidence')
     'art/visuals/production/README.md' = @($specPath, $sheetPath, 'actual image reference')
-    '.agents/skills/cardborne-visual-authority/SKILL.md' = @($specPath, $sheetPath, $expectedHash, 'actual image reference', 'visual_authority_evidence')
+    '.agents/skills/cardborne-visual-authority/SKILL.md' = @($specPath, $sheetPath, $expectedHash, 'actual image reference', 'visual_authority_evidence', $authoringBanToken)
 }
 
 foreach ($relativePath in $requiredText.Keys) {

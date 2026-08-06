@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-06
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -61,6 +61,34 @@ Missing files, a sheet hash mismatch, absent visual inspection, or missing actua
 image-reference evidence invalidates visual-compliance and asset-approval claims.
 Record the authority paths, observed sheet hash, task-specific constraints, and
 actual-reference use in the existing workbench, plan, approval, or handoff owner.
+
+## Visual Authoring Prohibition
+
+**SVG/ImageMagick geometric authoring is prohibited.** SVG or ImageMagick may not
+draw, invent, reconstruct, repair, restyle, or complete any player-facing visual
+content or review candidate. This includes silhouettes, filled planes, walls,
+portal interiors, rings, arrows, markers, effect bodies, telegraphs, icons, UI
+chrome, highlights, shadows, and other authored visual geometry.
+
+ImageMagick is allowed only for mechanical operations that preserve existing
+visual authorship:
+
+- exact crop, resize, format conversion, and alpha handling of an already-authored
+  raster;
+- pixel comparison, dimension checks, hash verification, and other validation;
+- placement of already-authored raster images and plain evidence labels in a
+  contact sheet or report.
+
+These allowed operations must not add, replace, or repair visual content. SVG is
+not an accepted intermediate authoring surface or final player-facing candidate.
+Historical SVG or ImageMagick-authored evidence may remain only when it is clearly
+marked rejected or archived. A candidate made or repaired through the prohibited
+workflow cannot receive visual approval and must be re-authored through a permitted
+pipeline under the mandatory authority pair.
+
+Existing runtime-owned code-native dynamic truth and Theme primitives keep the
+ownership defined below. This prohibition does not authorize procedural world,
+effect, actor, icon, or asset stand-ins.
 
 ## Scope
 

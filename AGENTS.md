@@ -9,6 +9,7 @@
 - For every Cardborne visual task, use `$cardborne-visual-authority` before creating, editing, generating, reviewing, approving, promoting, or switching any asset, UI, HUD, world visual, actor, projectile, effect, mockup, sheet, or workbench candidate. Read `docs/design/VISUAL_SYSTEM.md` completely and inspect
   `docs/design/cardborne-universal-art-style-reference.png` at original detail;
   the sheet is a mandatory style reference, never asset approval.
+- SVG/ImageMagick geometric authoring is prohibited for player-facing visuals and their review artifacts. Do not draw or repair asset, effect, UI, or world geometry with SVG or ImageMagick. ImageMagick is limited to non-creative crop, resize, format conversion, alpha handling, pixel comparison, and placement of already-authored raster images or plain evidence labels.
 - Treat familiar science fiction as the visual baseline. Do not introduce a named material, cultural, marine, or ritual theme without explicit user approval.
 - Prioritize first-clear readability, fair pressure, responsive control, target priority, and reliable performance before adding content breadth.
 

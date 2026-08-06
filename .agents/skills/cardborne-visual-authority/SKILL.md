@@ -65,6 +65,27 @@ and surface the conflict when the document does not resolve it. Preserve the
 project's separate per-asset AS-IS/TO-BE comparison and approval process; style
 alignment alone never promotes an asset to runtime or production.
 
+## Enforce the authoring prohibition
+
+SVG/ImageMagick geometric authoring is prohibited. Do not use SVG primitives,
+SVG rasterization, ImageMagick drawing operations, generated fills, or similar
+vector-to-raster shortcuts to create, repair, restyle, or finish player-facing
+visual content. This applies to production assets, effects, world visuals, UI,
+mockups, sheets, previews, workbench candidates, and review artifacts.
+
+ImageMagick may only perform non-creative mechanical work on already-authored
+raster images: exact crop, resize, format conversion, alpha handling, contact-sheet
+placement, plain evidence labels, pixel comparison, dimension checks, and hash
+verification. Those operations must not add or repair silhouettes, planes, walls,
+portals, rings, arrows, markers, effect bodies, telegraphs, icons, chrome,
+highlights, shadows, or other visual geometry.
+
+Before visual work, inspect the planned tool operations. Stop if the requested
+pipeline depends on prohibited authoring. If a candidate already contains visual
+content made or repaired through that workflow, mark it rejected or archived and
+do not approve, promote, or integrate it. Re-author it through a permitted pipeline
+with the mandatory authority pair before reconsideration.
+
 ## Use the sheet in raster and ImageGen work
 
 For every raster creation, edit, adaptation, or ImageGen task, pass the canonical
