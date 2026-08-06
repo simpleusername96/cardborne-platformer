@@ -14,7 +14,6 @@ const GuidebookPreview = preload("res://scripts/ui/vehicle_guidebook_preview.gd"
 const CATEGORY_KEYS := {
 	&"ship":"GUIDE_CATEGORY_SHIP",
 	&"mobile":"GUIDE_CATEGORY_MOBILE",
-	&"stationary":"GUIDE_CATEGORY_STATIONARY",
 	&"bosses":"GUIDE_CATEGORY_BOSSES",
 	&"objects":"GUIDE_CATEGORY_OBJECTS",
 }

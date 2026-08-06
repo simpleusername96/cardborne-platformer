@@ -103,10 +103,11 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
 - 장르는 익숙한 top-down industrial/general SF다. 특정 문화, 재질, 해양,
   의례 motif를 제품 정체성으로 만들지 않는다.
 - 월드의 고정 배경과 건축 theme는 **near-black outer space 안의 cool
-  neutral-gray orbital hangar**다. 주 바닥, 외곽 경계벽, 내부 구조벽과 독립
-  엄폐물은 같은 회색 격납고 family를 사용하되 높이와 silhouette로 역할을
-  구분한다. 어두운 HUD panel, 해저 기지나 장식성 service lane처럼 보이게
-  만들지 않는다.
+  neutral-gray orbital hangar**다. 지도 기반은 장식 texture가 아니라 세 개의
+  단색 역할로 먼저 읽힌다: 이동 가능한 surface는 light gray, 외곽 경계벽은
+  black, 내부 구조벽은 dark gray다. 세 역할은 높이와 경계보다 색면 구분을
+  우선하며 patterned panel, 어두운 HUD panel, 해저 기지나 장식성 service
+  lane처럼 보이게 만들지 않는다.
 - 형태는 큰 mechanical mass, 명확한 front/rear cut, 기능 module, sparse
   state accent 네 층으로 구성한다.
 - 모든 형태는 antialiased hard-edged geometry를 사용한다. 고정 raster 방향
@@ -177,7 +178,7 @@ world, combat, minimap, Theme와 sheet는 literal role color를 다시 선언하
 | `space_black` | `#070B11` | exterior/absolute void |
 | `world_canvas` | `#101923` | walkable base |
 | `surface` | `#182431` | panel과 floor plate |
-| `raised` | `#243445` | cover, facility, raised UI |
+| `raised` | `#243445` | inner structure, facility, raised UI |
 | `line` | `#465A6E` | non-semantic boundary |
 | `text_primary` | `#EEF3F7` | primary text/live highlight |
 | `text_muted` | `#9EADBC` | secondary text |
@@ -190,6 +191,9 @@ world, combat, minimap, Theme와 sheet는 literal role color를 다시 선언하
 | `toxin` | `#91B44B` | toxin affinity |
 | `cryo` | `#55BFE9` | cryo affinity |
 | `arc` | `#AA6DE0` | arc affinity |
+| `map_surface_fill` | `#9EADBC` | walkable map surface flat fill |
+| `map_outer_wall_fill` | `#070B11` | outer boundary flat fill |
+| `map_inner_wall_fill` | `#243445` | run-selected inner-wall flat fill |
 
 색은 identity의 보조 수단이다. role, affinity, selected, locked와 support
 state는 silhouette, notch, rail pattern 또는 glyph 중 하나를 함께 사용한다.
@@ -206,7 +210,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | projectile catalog | one authored energy-teardrop master, pivot, and collision-normalized core | damage, range, hit rule, faction/affinity tint, and scale |
 | reward catalog | authored pickup, shard, and crate visual ID plus value-scale mapping | spawn, value, collection |
 | effect catalog | one authored EMP image, shared authored live-cue images, and deliberate small-effect suppression | timer, damage, protection rule |
-| world catalog | field surface, authored facility, bulkhead, and state-tile descriptor | topology, collision, schedule |
+| world catalog | authored hazard, Transit Gate, Mystery Device, and state descriptor | topology, collision, exposure, health, outcome |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
 | defense catalog | shared authored support-ring image, actor tint, and localized status text recipe | protection, damage, slow, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
@@ -225,10 +229,12 @@ collision.
 #### Media ownership boundary
 
 - player, ordinary enemy, boss, secondary body, shared projectile master,
-  pickup, reward crate, functional facility, bulkhead, common boss node, solid
-  cover, wear tile처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된
-  authored PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와
-  state 선택만 소유한다.
+  pickup, reward crate, Transit Gate, hazard ground, Mystery Device, common boss
+  node처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된 authored
+  PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와 state
+  선택만 소유한다. field topology와 정확히 같은 surface/outer-wall/inner-wall
+  단색 mesh는 독립 object가 아니라 geometry truth의 retained presentation이므로
+  이 raster 규칙의 예외다.
 - Upgrade-card content artwork is also authored PNG content. It is one reusable
   semantic identity per shared mechanic group and is rendered by the semantic
   asset provider; the card never draws a mechanic glyph procedurally.
@@ -246,11 +252,11 @@ collision.
 - 경험치 pickup의 small/medium/large는 하나의 authored XP master PNG를
   scale/value로 표현한다. reward crate, repair pickup과 experience recall은
   gameplay 역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
-- repair와 overdrive는 모두 실제 효과 범위와 중심이 일치하는 완전한 원형
-  floor pad다. repair의 plus와 overdrive의 forward chevron은 같은 원 안의 큰
-  negative-space 표식이며 core/inset을 별도 texture로 분리하지 않는다.
-  bulkhead는 `intact`, `damaged`, `open`, Wear Collapse Tile은
-  `intact`, `cracked`, `collapsed`의 명시적 authored state를 가진다.
+- toxic bog와 lava pool은 같은 hazard-ground footprint family다. 각각 toxin과
+  thermal 색을 넓은 바닥 면으로 사용하며 얇은 curtain, node, pylon 또는 벽처럼
+  세우지 않는다. Mystery Device는 crate보다 큰 `intact` body와 효과가 anchor를
+  필요로 할 때만 유지하는 `resolved` wreck state를 가진다. 결과 종류는 파괴
+  전 image, 색, lamp, glyph로 암시하지 않는다.
 - boss별 objective module art는 금지한다. 공통 node의 `active`, `damaged`,
   `resolved` authored 상태 세 개만 유지하고 module kind/index는 gameplay
   owner가 계속 보존한다.
@@ -283,62 +289,49 @@ collision.
 
 | 표시 역할 | 시각 계약 | gameplay/collision owner |
 | --- | --- | --- |
-| 바닥 타일 | cool neutral-gray 격납고 surface, full-bleed 큰 색면, per-tile frame과 기능 없는 강조 문양 없음 | field geometry와 deterministic tile compiler |
-| 구조벽 | 바닥보다 밝은 pale-metal continuous mass와 dark contour | field topology와 collision |
-| 엄폐물 | 구조벽보다 작은 독립 silhouette, 연속 wall처럼 배치하지 않음 | tactical layout, collision와 LOS |
-| 파괴 장벽 | 같은 footprint의 sealed/damaged/open surface | bulkhead health와 reward access |
-| 통과형 에너지 장벽 | 양끝 장치 사이 전체 판정 폭을 채우는 curtain/rung | Arc Surge schedule, slow와 damage |
-| 회복·공격 증폭 장판 | 실제 효과 범위 전체와 일치하는 완전한 원형 surface; plus/chevron만 역할을 구분 | repair/overdrive radius와 effect |
+| 이동 surface | `#9EADBC` 단색의 light-gray full-bleed 면, per-tile frame과 기능 없는 문양 없음 | field geometry |
+| 외곽 경계벽 | `#070B11` 단색 black mass | field boundary와 collision |
+| 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
+| 위험 지대 | 넓고 낮은 swamp/lava ground 면; exact effect rect를 채우며 벽·curtain·작은 node처럼 보이지 않음 | hazard exposure runtime |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
+| 미확인 장치 | 상자보다 큰 neutral mechanical body; 파괴 전 결과를 숨기고 파괴 후 resolved state만 표시 | device health와 hidden outcome |
 | 보상 상자 | amber body, lock seam과 파손 가능한 contour | crate health와 drop |
 | 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
 
-poison/lava hazard floor는 현재 product의 visual category나 asset requirement가
-아니다. Wear Collapse Tile은 현재 product feature이며 `intact`, `cracked`,
-`collapsed`의 세 상태를 가진다. 구조벽·엄폐물·파괴 장벽·에너지 장벽·기능
-장판·게이트·wear tile을 서로 바꿔 부르거나 같은 silhouette로 합치지 않는다.
+별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad,
+Breakable Bulkhead와 map-spawned stationary threat는 현재 product category가
+아니다. 내부 구조벽·위험 지대·게이트·미확인 장치·보상 상자·픽업을 서로
+바꿔 부르거나 같은 silhouette로 합치지 않는다.
 
 ### World
 
-- field geometry, collision, navigation, cover selection, terrain schedule와
-  deterministic fingerprint는 visual rework 때문에 바꾸지 않는다.
-- 각 field의 네 Wear Collapse Tile은 runtime이 소유한 exact `240×160` rect에
-  `intact`, `cracked`, `collapsed` texture를 표시한다. 세 texture의 canvas는
-  `240×160`, pivot은 `120,80`이며 image는 wear, damage, occupancy, collision
-  또는 persistence를 소유하지 않는다.
-- floor는 field geometry와 layout fingerprint를 입력으로 하는 deterministic
-  presentation tile compiler가 만든다. base grid는 `288×288` world unit이며
-  `1×1`, `2×1`, `1×2`, `2×2` modular panel을 조합한다.
-- authored floor master는 exact `288×288` full-bleed opaque PNG다. 네 가장자리는
-  동일한 calm base tone을 유지하고, 큰 저대비 plane만 사용해 stretch 또는
-  반복 시 개별 tile이 UI card처럼 드러나지 않아야 한다.
-- tile은 walkable region에 clip되고 void에는 생성되지 않는다. variant는
-  `field_id`, layout fingerprint와 cell coordinate만으로 결정하며 global
-  RNG나 frame time을 사용하지 않는다.
-- 12-unit gutter, chamfer와 낮은 대비 inset은 허용한다. 별도 decorative rail,
-  random scratch와 combat cue보다 강한 high-frequency detail은 금지한다.
-- void는 near-black mass와 sparse system edge만 가진다.
-- 외곽 경계벽은 space-black 바깥과 격납고 내부를 분리하는 가장 무거운
-  pale-gray mass다. 내부 구조벽은 같은 family를 재사용하되 space-black band가
-  없는 더 단순한 pale-gray mass로 읽힌다. 둘 다 바닥보다 명백히 밝고 dark
-  contour와 짧은 outer shadow를 사용한다. 열린 공간의 독립 엄폐물은 더 낮고
-  작은 silhouette이며 구조벽처럼 일렬로 연결하지 않는다.
-- presentation-only decoration은 retained descriptor instance로 그리며
-  field당 최대 24개다.
-- facility는 장식보다 대비가 높고 shape가 고유하다.
-  - repair: complete circular floor pad with one large plus cut
-  - transit: complete circular floor portal
-  - overdrive: complete circular floor pad with one large forward chevron
-  - arc surge: broad pass-through energy curtain between visible pylons
-  - breakable bulkhead: bright sealed/damaged/breached loot barrier
-- 상자, loose pickup과 실제 효과가 있는 지형은 넓은 role-color 면과 dark
-  contour를 사용해 바닥·무기 공격과 즉시 구분한다. 작은 accent color만으로
-  역할을 표시하지 않는다.
-- 세 field는 이름의 연상 소재가 아니라 gameplay topology에서 읽히는 panel
-  rhythm으로만 구분한다.
-  - Drowned Ruin: central court frame + orthogonal service plate
-  - Tidal Archive: parallel bay spine + lateral corridor rail
-  - Storm Drydock: basin frame + diagonal docking guide
+- field geometry, collision, reachability, inner-wall selection, hazard placement와
+  deterministic fingerprint는 같은 layout owner를 사용한다. presentation image는
+  topology, collision, exposure, health 또는 hidden outcome을 소유하지 않는다.
+- walkable polygon은 `map_surface_fill` 한 색면으로 채운다. tile grid, panel
+  variant, gutter, chamfer, inset, seam, scratch와 decorative rail을 표시하지 않는다.
+- outer boundary segment는 `map_outer_wall_fill`, run-selected inner-wall rectangle은
+  `map_inner_wall_fill`로 그린다. outline, bevel, shadow와 patterned raster를
+  덧붙이지 않는다. inner wall은 straight/L/T/step shape가 달라도 같은 단색
+  역할을 유지한다.
+- toxic bog와 lava pool은 exact gameplay rectangle을 채우는 authored full-bleed
+  ground PNG다. 네 구역의 폭은 모두 최소 480 world unit이며 얇은 beam, curtain,
+  fence, lane marker 또는 작은 node로 보일 수 없다. Bog는 toxin, lava는 thermal
+  large plane을 사용하지만 danger projectile보다 높은 밝기나 빠른 animation을
+  갖지 않는다.
+- Mystery Device는 reward crate보다 크고 neutral/dark mechanical mass가 지배하는
+  exact `192×192` authored body다. 한 개의 restrained system accent만 허용하며
+  파괴 전에는 네 결과의 색, glyph, 방향, animation을 노출하지 않는다. 파괴 후
+  anchor가 필요한 동안만 resolved wreck를 표시하고 결과 이름은 localized text가
+  전달한다.
+- Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
+  hazard는 damage ground, Mystery Device는 destructible interaction이므로 세
+  silhouette를 공유하지 않는다.
+- 상자, loose pickup, hazard와 Mystery Device는 넓은 role-color 면과 dark contour를
+  사용해 서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
+  표시하지 않는다.
+- 세 field의 시각 차이는 별도 floor pattern이 아니라 실제 walkable topology와
+  run-selected wall/hazard arrangement에서만 나온다.
 
 ### Actor, projectile 및 effect
 
@@ -531,11 +524,12 @@ poison/lava hazard floor는 현재 product의 visual category나 asset requireme
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
   active/damaged/resolved 상태만 사용됨
-- final gameplay manifest가 정확히 67 PNG를 색인함: 기존 gameplay image,
-  shared world presentation/cue와 10개의 shared upgrade content image
+- exact approval 뒤 final gameplay manifest가 정확히 71 PNG를 색인함: 기존
+  67개 gameplay image에 toxic bog, lava pool, Mystery Device intact/resolved
+  네 image를 추가함
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함
-- deterministic tile hash equality와 walkable/void containment
+- deterministic layout/presentation hash equality와 walkable/void containment
 - grayscale role/affinity/state 구분
 - 8 hull direction × 8 aim direction에서 craft-body transform drift 0,
   independent cursor/muzzle/projectile cue mismatch 0
@@ -553,13 +547,16 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - Field topology and wall collision remain code-owned; shared surface and wall
   PNGs are fitted inside that truth and never become a
   second topology owner.
-- Repair and overdrive pads render their authored circular surface at the live
-  gameplay radius, with the collision-owned boundary remaining authoritative.
+- Walkable surface, outer wall, and inner wall render as the three flat map-role
+  fills without legacy patterned floor or shared-wall rasters.
+- Hazard and Mystery Device gameplay may be integrated before their exact raster
+  switch, but unapproved candidates never enter the production manifest.
 - Every non-beam projectile resolves `projectile/energy_teardrop`; runtime owns
   scale, rotation, faction/affinity tint, collision, speed, and homing.
 - The integrated player craft, XP master, four secondary bodies, shared
-  projectile, pickups, facilities, wear/bulkhead states, five bosses, three
-  shared boss-node states, and EMP image are the applied runtime asset set.
+  projectile, pickups, current approved facilities, five bosses, three shared
+  boss-node states, and EMP image remain applied until the exact four map assets
+  complete approval and switching.
 - Manual aim remains readable through independent cursor, muzzle, projectile,
   and hit feedback. The player rear anchor is used only by transient dash
   feedback.

@@ -26,46 +26,6 @@ const BOSS_ARRIVAL_ANCHORS: Array[Vector2] = [
 	Vector2(2780,3720), Vector2(4420,3720), Vector2(5740,3800), Vector2(6640,3340),
 ]
 
-const COVER_CANDIDATES: Array[Dictionary] = [
-	{"id":&"nw_a", "sector":&"nw", "rect":Rect2(760,820,300,170)},
-	{"id":&"nw_b", "sector":&"nw", "rect":Rect2(1420,1100,340,180)},
-	{"id":&"nw_c", "sector":&"nw", "rect":Rect2(2040,800,280,180)},
-	{"id":&"nw_d", "sector":&"nw", "rect":Rect2(2240,1400,260,180)},
-	{"id":&"n_a", "sector":&"n", "rect":Rect2(2780,700,300,170)},
-	{"id":&"n_b", "sector":&"n", "rect":Rect2(3340,960,280,170)},
-	{"id":&"n_c", "sector":&"n", "rect":Rect2(3980,960,280,170)},
-	{"id":&"n_d", "sector":&"n", "rect":Rect2(4460,700,300,170)},
-	{"id":&"ne_a", "sector":&"ne", "rect":Rect2(6140,820,300,170)},
-	{"id":&"ne_b", "sector":&"ne", "rect":Rect2(5440,1100,340,180)},
-	{"id":&"ne_c", "sector":&"ne", "rect":Rect2(4880,800,280,180)},
-	{"id":&"ne_d", "sector":&"ne", "rect":Rect2(4700,1400,260,180)},
-	{"id":&"sw_a", "sector":&"sw", "rect":Rect2(760,3330,300,170)},
-	{"id":&"sw_b", "sector":&"sw", "rect":Rect2(1420,3040,340,180)},
-	{"id":&"sw_c", "sector":&"sw", "rect":Rect2(2040,3340,280,180)},
-	{"id":&"sw_d", "sector":&"sw", "rect":Rect2(2240,2740,260,180)},
-	{"id":&"s_a", "sector":&"s", "rect":Rect2(2780,3450,300,170)},
-	{"id":&"s_b", "sector":&"s", "rect":Rect2(3340,3190,280,170)},
-	{"id":&"s_c", "sector":&"s", "rect":Rect2(3980,3190,280,170)},
-	{"id":&"s_d", "sector":&"s", "rect":Rect2(4460,3450,300,170)},
-	{"id":&"se_a", "sector":&"se", "rect":Rect2(6140,3330,300,170)},
-	{"id":&"se_b", "sector":&"se", "rect":Rect2(5440,3040,340,180)},
-	{"id":&"se_c", "sector":&"se", "rect":Rect2(4880,3340,280,180)},
-	{"id":&"se_d", "sector":&"se", "rect":Rect2(4700,2740,260,180)},
-]
-
-const FALLBACK_COVER_IDS: Array[StringName] = [
-	&"n_a", &"n_d", &"ne_d", &"nw_c", &"s_c", &"s_d", &"se_d", &"sw_b",
-]
-
-const STATIONARY_CANDIDATES := {
-	&"nw":[Vector2(1180,1500), Vector2(1700,1260), Vector2(2240,1600)],
-	&"n":[Vector2(2920,1100), Vector2(3600,920), Vector2(4280,1100)],
-	&"ne":[Vector2(6020,1500), Vector2(5500,1260), Vector2(4960,1600)],
-	&"sw":[Vector2(1180,2820), Vector2(1700,3060), Vector2(2240,2720)],
-	&"s":[Vector2(2920,3220), Vector2(3600,3400), Vector2(4280,3220)],
-	&"se":[Vector2(6020,2820), Vector2(5500,3060), Vector2(4960,2720)],
-}
-
 const ITEM_SOCKET_CANDIDATES: Array[Vector2] = [
 	Vector2(900,1040), Vector2(1160,1740), Vector2(1160,2580), Vector2(900,3280),
 	Vector2(1720,900), Vector2(1940,1620), Vector2(1940,2700), Vector2(1720,3420),
@@ -87,9 +47,6 @@ static func definition() -> Dictionary:
 		"void_rects":_void_rects(),
 		"ordinary_spawn_anchors":ORDINARY_SPAWN_CANDIDATES.duplicate(),
 		"boss_arrival_anchors":BOSS_ARRIVAL_ANCHORS.duplicate(),
-		"cover_candidates":COVER_CANDIDATES.duplicate(true),
-		"fallback_cover_ids":FALLBACK_COVER_IDS.duplicate(),
-		"stationary_candidates":STATIONARY_CANDIDATES.duplicate(true),
 		"item_socket_candidates":ITEM_SOCKET_CANDIDATES.duplicate(),
 		"outer_courts":[Vector2(720,900), Vector2(6480,900), Vector2(720,3420), Vector2(6480,3420)],
 		"features":_features(),
@@ -131,20 +88,6 @@ static func _void_rects() -> Array[Rect2]:
 
 static func _features() -> Array[Dictionary]:
 	return [
-		{"id":&"surge_1", "kind":&"arc_surge", "rect":Rect2(1120,1980,760,360)},
-		{"id":&"surge_2", "kind":&"arc_surge", "rect":Rect2(6100,1980,760,360)},
-		{"id":&"wear_1", "kind":&"wear_collapse_tile", "rect":Rect2(3280,1400,240,160)},
-		{"id":&"wear_2", "kind":&"wear_collapse_tile", "rect":Rect2(3680,1400,240,160)},
-		{"id":&"wear_3", "kind":&"wear_collapse_tile", "rect":Rect2(3280,2760,240,160)},
-		{"id":&"wear_4", "kind":&"wear_collapse_tile", "rect":Rect2(3680,2760,240,160)},
-		{"id":&"bulkhead_1", "kind":&"breakable_bulkhead", "rect":Rect2(2100,2040,180,240), "reward_pos":Vector2(2410,2160)},
-		{"id":&"bulkhead_1_top", "kind":&"structural_wall", "rect":Rect2(2100,1840,640,200)},
-		{"id":&"bulkhead_1_end", "kind":&"structural_wall", "rect":Rect2(2540,2040,200,240)},
-		{"id":&"bulkhead_1_bottom", "kind":&"structural_wall", "rect":Rect2(2100,2280,640,200)},
-		{"id":&"bulkhead_2", "kind":&"breakable_bulkhead", "rect":Rect2(4920,2040,180,240), "reward_pos":Vector2(4790,2160)},
-		{"id":&"bulkhead_2_top", "kind":&"structural_wall", "rect":Rect2(4460,1840,640,200)},
-		{"id":&"bulkhead_2_end", "kind":&"structural_wall", "rect":Rect2(4460,2040,200,240)},
-		{"id":&"bulkhead_2_bottom", "kind":&"structural_wall", "rect":Rect2(4460,2280,640,200)},
 		{"id":&"gate_a_1", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(720,900)},
 		{"id":&"gate_a_2", "kind":&"transit_gate", "pair":&"a", "pos":Vector2(6480,3420)},
 		{"id":&"gate_b_1", "kind":&"transit_gate", "pair":&"b", "pos":Vector2(6480,900)},

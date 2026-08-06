@@ -12,7 +12,7 @@ const REQUIRED_FIELDS := [
 	"id", "field_id", "title_key", "number", "boss_name_key", "quota",
 	"world_rect", "player_start", "start_clearance", "walkable_regions",
 	"cover_rects", "void_rects", "ordinary_spawn_anchors",
-	"boss_arrival_anchors", "static_enemies", "packets",
+	"boss_arrival_anchors", "packets",
 ]
 
 static var _active_field_id: StringName = FieldRegistry.FIELD_IDS[0]
@@ -339,13 +339,6 @@ static func _circle_overlaps_any_rect(center: Vector2, radius: float, rectangles
 	return false
 
 
-static func static_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for spec in definition(stage_id)["static_enemies"]:
-		result.append(Dictionary(spec).duplicate(true))
-	return result
-
-
 static func packets(stage_id: StringName) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for packet in definition(stage_id)["packets"]:
@@ -371,9 +364,7 @@ static func packet_enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
 
 
 static func enemy_blueprint(stage_id: StringName) -> Array[Dictionary]:
-	var result := static_enemy_blueprint(stage_id)
-	result.append_array(packet_enemy_blueprint(stage_id))
-	return result
+	return packet_enemy_blueprint(stage_id)
 
 
 static func authored_population(stage_id: StringName) -> int:
@@ -383,8 +374,7 @@ static func authored_population(stage_id: StringName) -> int:
 static func geometry_fingerprint(_stage_id: StringName = &"stage_1") -> int:
 	return hash(var_to_str([
 		world_rect(), walkable_regions(), cover_rects(), void_rects(),
-		_active_field["cover_candidates"], ordinary_spawn_anchors(), boss_arrival_anchors(),
-		_active_field["stationary_candidates"], _active_field["item_socket_candidates"],
+		ordinary_spawn_anchors(), boss_arrival_anchors(), _active_field["item_socket_candidates"],
 	]))
 
 

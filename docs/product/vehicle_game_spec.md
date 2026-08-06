@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-06
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -19,10 +19,10 @@ Cardborne is a top-down vehicle action shooter about steering through one large
 run-selected field while manually aiming a held primary weapon, dashing through
 pressure, and building a compact set of automatic secondary weapons. A new run
 selects one of three registered macro fields plus five deterministic
-stage-tactical arrangements of large internal cover and content sockets. All
-five combat stages reuse that field's floor and boundary while each stage
-activates its own validated cover, stationary threats, items, crates, and
-support sockets.
+stage-tactical content arrangements. All five combat stages reuse that field's
+floor, boundary, five inner-wall groups, four broad hazard zones, and two
+Transit Gate routes. Each stage scatters its own three mystery devices, six
+loose pickups, and eight reward crates.
 
 This is the canonical product contract for the current executable.
 
@@ -141,12 +141,15 @@ five-stage run.
   attacks apply direct damage only; player primary rounds derive affinity from
   their actual stackable condition payload, with multi-condition rounds shown
   as hybrid.
-- Every projectile stops at the same static or run-selected cover that blocks
+- Every projectile stops at the same static or run-selected inner wall that blocks
   the ship. A live crate also blocks line of sight and both projectile teams;
   hostile fire is absorbed without destroying the reward crate, while player
   fire can break it. `wall_piercing` is an explicit projectile capability whose
   default is false. No current ordinary enemy, boss pattern, primary shot, or
   secondary shot receives that capability implicitly.
+- An intact Mystery Device blocks actors and player projectiles. Hostile
+  projectiles pass through it and enemy AI never targets it, so a neutral
+  interaction cannot become an unintended shield against enemy fire.
 - The unmodified Pulse Cannon has an authored 1600-pixel range. At runtime its
   effective range is never shorter than the current visible world rectangle's
   diagonal plus 80 pixels, so an unobstructed target visible from any
@@ -161,27 +164,32 @@ five-stage run.
   English rather than reusing another field's label.
 - Every registered field uses a `7200x4320` world rectangle and respawns the
   player at `(3600, 2160)`.
-- Functional-terrain footprints have no positive-area overlap and remain outside the
-  player-start clearance. The generator treats their exact rectangles or effect
-  radii as reserved space for random cover, stationary threats, crates, field
-  items, ordinary spawn anchors, and boss arrival anchors. Structural-wall and
-  bulkhead edges may meet to form one continuous authored boundary.
+- Run-fixed wall, hazard, and gate footprints have no forbidden overlap and
+  remain outside the player-start clearance. The generator treats their exact
+  rectangles or effect radii as reserved space for stage devices, crates,
+  pickups, ordinary spawn anchors, and boss arrival anchors.
 - The center has a 560-pixel safe clearance. The camera remains at zoom 1, so the
   field is larger than one screen and exploration state matters.
 - At least twenty broad walkable regions define each immutable floor. A run
-  selects eight large cover candidates from twenty-four candidates spread
-  across six sectors. The selected cover is validated for the ordinary
-  36-pixel and boss 76-pixel actor radii before play.
+  selects exactly five inner-wall templates without replacement from
+  `i_short`, `i_long`, `l_small`, `l_large`, `t_small`, and `step`. Each group
+  uses 192-pixel wall thickness, 96-pixel grid alignment, and 90-degree
+  rotation. The selected walls are validated for the ordinary 36-pixel and
+  boss 76-pixel actor radii before play.
+- The generator also places exactly four traversable hazard footprints:
+  `768x576`, `960x576`, `1152x480`, and `864x672`. A run selects one shared
+  hazard presentation, toxic bog or lava pool, while both use the same neutral
+  damage rule. The combined footprint is broad ground pressure, not a narrow
+  pass-through wall.
 - Rendering, movement, projectile collision, line of sight, pursuit, minimap,
   and validation consume the same active tactical layout. Exact retries
-  reproduce it, and the selected cover geometry remains fixed through all five
+  reproduce it, and the inner-wall and hazard geometry remains fixed through all five
   stages so a run reads as one continuous field rather than five reset maps.
-- Thirty-two ordinary arrival candidates, twelve boss arrival anchors, six
-  stationary candidate groups, and at least thirty-two item sockets are
-  reusable authored positions. Each stage selects four stationary threats, six pickups, and
-  eight crates. Six crates use ordinary valid sockets; two are relocated to the
-  field's authored optional reward enclosures without changing their drops or
-  the stage total. No stage owns a separate map, boss room,
+- Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
+  least thirty-two content candidates are reusable authored sources. Each
+  stage selects three Mystery Devices, six pickups, and eight crates with
+  explicit separation. Crates are never attached to one another or relocated
+  into guarded reward enclosures. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Pickup contact uses the swept player path with the 24-pixel player radius and
   42-pixel pickup body. Endpoint contact, tangent contact, and a complete dash
@@ -192,59 +200,56 @@ five-stage run.
   debug/performance snapshots expose the selected field, seed, and fingerprint.
 - The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed.
   Dynamic markers expose only four tactical roles: player craft, item, enemy,
-  and boss. All live pickups and unopened crates share the item marker; all
-  non-boss hostiles share the enemy marker; every boss uses the same boss marker.
-  Subtypes, elite/stationary distinctions, objective state, and scheduled support
-  fields are not separate minimap markers.
+  and boss. All live pickups, unopened crates, and intact Mystery Devices share
+  the item marker; all non-boss hostiles share the enemy marker; every boss uses
+  the same boss marker. Subtypes, elite distinctions, objective state, hazard
+  affinity, and mystery outcome are not separate minimap markers.
 
-### Functional terrain, facilities, and sustained fire
+### Inner walls, hazard zones, Transit Gates, and Mystery Devices
 
-- Every field authors Arc Surge Strips, two paired Transit Gate routes, and
-  persistent Breakable Bulkheads. Every stage schedules two repair fields and
-  two overdrive fields from validated tactical sockets.
-- A structural wall is continuous, impassable topology at a field boundary or
-  internal partition. Cover is a smaller independent blocker on open floor and
-  must not be chained into a substitute wall. A Breakable Bulkhead is a
-  destructible reward barrier with sealed, damaged, and open gameplay states;
-  it is neither ordinary cover nor a reward crate.
-- Every field authors exactly two small optional reward enclosures. Each uses
-  three indestructible structural-wall rectangles and one Breakable Bulkhead as
-  its only entrance. One of the stage's existing eight crates occupies each
-  authored `reward_pos`: it is unreachable while the bulkhead is sealed and is
-  reachable after that entrance opens. Movement, projectile collision, line of
-  sight, and pursuit consume the same structural-wall and live-bulkhead blocker
-  set. Opening is optional and never gates stage or run progression; opened
-  bulkheads persist for the rest of the run.
-- Arc Surge is a traversable energy barrier with no solid collision. Repair and
-  overdrive are beneficial fixed-area fields shown as circular floor pads whose
-  visible footprint follows their exact effect area. Transit Gates are paired
-  circular floor portals.
-- Every field authors four traversable Wear Collapse Tiles. A distinct player
-  or enemy entry increments wear: the first entry changes `intact` to `cracked`,
-  and the third changes it to `collapsed`. Projectiles do not create wear.
-  Collapsed footprints deal exactly 8 damage to the player, ordinary enemies,
-  and stage bosses on entry and every 0.75 seconds while overlap continues.
-  Leaving fully clears occupancy, so re-entry deals immediate damage again.
-  Tile `state` and `wear` persist across stages in the same run; actor occupancy
-  and damage deadlines reset at each stage transition. Poison, lava, or another
-  material affinity is not implied by this mechanic.
-- Arc Surge uses a continuous warning, hits
-  each actor at most once per active window, can damage either team, and keeps
-  stable damage attribution.
-- Transit Gates require a dwell, preserve aim, clear velocity, share a
-  ten-second pair cooldown, and move only the player. Both repair fields share
-  a 24-hull stage budget and pause after accepted damage. Overdrive applies a
-  non-stacking 1.20x player-damage multiplier only while the ship center
-  remains inside an active field. The four independent schedules use different
-  active/dormant durations and space relocation grants by at least three seconds.
+- An inner wall is run-fixed, impassable structure. It blocks movement,
+  projectiles, line of sight, and pursuit through the same tactical geometry.
+  It also provides the short attack break previously supplied by independent
+  cover, so there is no separate cover category. A wall group may compile to
+  two rectangles, but U, C, O, closed-room, and reward-pocket shapes are not
+  generated.
+- Exactly four hazard zones remain active for the entire run. They have no solid
+  collision and enemy AI does not globally avoid or intentionally attack them.
+  Entering or remaining inside a zone refreshes one non-stacking environmental
+  `field_exposure` to 2.5 seconds. Contact deals an immediate tick; further
+  ticks occur every 0.75 seconds, including after exit until exposure expires.
+  Tick damage is 5 to the player, 8 to ordinary/elite enemies, and 3 to the
+  stage boss.
+- Hazard damage is neutral. A hazard kill advances the ordinary quota and drops
+  the normal XP shard, but it never invokes player-owned kill effects. The
+  toxic-bog or lava-pool label changes affinity and ground presentation only;
+  both use the same neutral environment damage source and do not use or stack the player's burn/poison/chill
+  payload rules.
+- Two paired Transit Gate routes remain fixed through the run. Gates require a
+  dwell, preserve aim, clear velocity, share a ten-second pair cooldown, grant
+  the existing short transfer protection, and move only the player. They never
+  damage actors.
+- Every stage places exactly three Mystery Devices. Each is a neutral 192-pixel
+  body with an 84-pixel collision/target radius and 90 structure health, equal
+  to five unmodified 18-damage primary hits. Player direct and area damage may
+  break it; enemy AI and hostile attacks ignore it. It is not an enemy, never
+  counts toward quota, and drops no XP or item.
+- A stage assigns three different hidden outcomes from `gravity_pull`,
+  `cryo_lock`, `projectile_purge`, and `decoy_signal`. Breaking a device reveals
+  and applies one outcome. Pull affects non-boss enemies within 480 pixels for
+  1.2 seconds. Cryo lock stops non-boss movement and new attack starts within
+  360 pixels for 0.8 seconds but does not cancel a committed warned attack.
+  Projectile purge retires hostile projectiles within 420 pixels immediately.
+  Decoy signal redirects nearby enemy movement/aim toward the wreck within 900
+  pixels for 6 seconds without making the wreck an attack target.
 - Primary rounds apply the same per-shot structure damage at every point in the
-  firing cadence. At base values, four 18-damage hits destroy a full-health
-  Breakable Bulkhead, Bulkhead Guard plate, or armored-elite shell; structure
-  upgrades change that repeated-hit result without introducing a special shot.
-- Ordinary primary damage never cancels an enemy or boss startup and never
-  creates a separate exposure state. EMP stun remains the dedicated crowd
-  control behavior. Boss direct attacks are committed once warned, while
-  autonomous systems continue independently.
+  firing cadence. Structure upgrades change the repeated-hit result for Mystery
+  Devices, Bulkhead Guard plates, and armored-elite shells without introducing
+  a special first or charged shot.
+- Ordinary primary damage never cancels an enemy or boss startup. EMP remains
+  the dedicated player-controlled crowd-control skill; the mystery cryo outcome
+  is local, one-use, non-boss, and shorter than EMP. Boss direct attacks remain
+  committed once warned while autonomous systems continue independently.
 
 ### Encounter and stage flow
 
@@ -283,7 +288,7 @@ five-stage run.
    Bounded local separation runs only during actual body overlap, checks at
    most eight nearby actors within 120 pixels, blends role/separation velocity
    at 0.55/0.45, and never exceeds the role's original speed. With no overlap,
-   role velocity remains bit-for-bit unchanged. Cover recovery and committed
+   role velocity remains bit-for-bit unchanged. Inner-wall recovery and committed
    attack paths take priority. High density near the player is an allowed
    convergence result. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
@@ -305,7 +310,7 @@ five-stage run.
 8. Boss defeat recalls all live experience within 0.65 seconds and resolves the
    mandatory reward choice. Stages 1–4 then full-heal the ship, grant 1.2
    seconds of transition protection, preserve position, facing, aim, build,
-   fixed Hard state, exploration, cover, and persistent terrain state, and show a
+   fixed Hard state, exploration, inner walls, and hazard geometry, and show a
    non-modal 1.6-second stage banner while the next encounter begins. No success
    report or continue input interrupts the run. Stage 5 opens the final result;
    failures still open the failure report.
@@ -318,8 +323,8 @@ five-stage run.
 | 4 | 250 | 1026 | Switchyard Behemoth |
 | 5 | 291 | 1260 | Crown Engine |
 
-Four stationary threats are added per stage. Ordinary hostile projectiles stop
-at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
+No map-spawned stationary enemies are added per stage. Ordinary hostile projectiles
+stop at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
 health, damage, and movement rise only on a shallow stage curve; boss behavior
 changes through authored patterns rather than unchecked stat inflation. Each
 boss uses a distinct three-phase direct-pattern sequence plus independently
@@ -403,7 +408,7 @@ hint appears once and the same hint cannot repeat within two seconds.
   target, and one compact bottom-center action strip. No ornamental full-width
   dock covers the field.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
-  mobile enemies, stationary enemies, bosses, and objects categories.
+  mobile enemies, bosses, and field objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered
   entries persist across runs and reuse the same combat meshes for visual
   identification. Unseen entries show only `???` and one neutral silhouette;
@@ -416,7 +421,7 @@ hint appears once and the same hint cannot repeat within two seconds.
   modal report. Stage 5 result lists actual defeat counts and effective outgoing
   damage by stable source, plus a second partition by kinetic, thermal, toxin,
   cryo, or arc attribute. Both outgoing totals agree within 0.01 and
-  environmental Arc Surge is excluded. A failed attempt opens the report in
+  neutral hazard-zone damage is excluded. A failed attempt opens the report in
   failure mode with the last hit and the three largest incoming sources before
   Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
@@ -426,9 +431,8 @@ hint appears once and the same hint cannot repeat within two seconds.
   a card within the same three-card choice. Each newly opened reward
   transaction advances a run-scoped constrained draw, while the cards remain
   frozen for that transaction until the player selects one and confirms Equip;
-  UI refreshes never reroll an open offer. Authored reward enclosures remain
-  optional to open, but an opened reward transaction has no Leave, Exit, Skip,
-  or decline action.
+  UI refreshes never reroll an open offer. An opened reward transaction has no
+  Leave, Exit, Skip, or decline action.
 - The upgrade modal starts directly with the three cards: it has no separate
   kicker, screen title, or instruction header. Every card shows its real current
   and next level; cards backed by numeric stat modifiers also show the real
@@ -465,16 +469,16 @@ hint appears once and the same hint cannot repeat within two seconds.
   spatial-query path, presentation batch, retirement rule, and deterministic
   performance-scenario coverage before increasing runtime load.
 - Static minimap geometry and each bounded dynamic tactical snapshot use one
-  vertex-colored mesh surface. Scheduled support fields reuse retained world
-  batches and one shared eight-segment timer batch; neither system creates
-  per-actor canvas draws or per-field scene nodes.
-- Combat presentation coalesces mobile enemies, stationary enemies, bosses,
+  vertex-colored mesh surface. Four hazard footprints and at most three Mystery
+  Devices reuse retained world batches; neither system creates per-actor canvas
+  draws or per-field scene nodes.
+- Combat presentation coalesces mobile enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained
   batches. The hard ceiling remains 50 combat batches.
 - Dynamic enemy broadphase uses stable runtime slots, reuse generations and
   incremental membership updates. Ordered projectile traversal stops a
   non-piercing shot after its first contact; reusable query, support-assignment,
-  cover-hit and presentation buffers avoid per-frame full-grid rebuilds and
+  inner-wall-hit and presentation buffers avoid per-frame full-grid rebuilds and
   high-count temporary allocations.
 - Only rendered native/Web scenarios and the complete lifecycle soak can
   establish release performance. Headless subsystem microbenchmarks and short
@@ -495,7 +499,7 @@ hint appears once and the same hint cannot repeat within two seconds.
 - Tuned Thrusters has the exact three values, the five secondary families load,
   no more than three are active, and their bounded simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
-  default-cover collision, explicit wall-piercing, projectile-role share,
+  default-inner-wall collision, explicit wall-piercing, projectile-role share,
   status-stack, elemental-prerequisite, and XP-cadence contracts pass focused
   tests.
 - Held primary fire uses one uniform shot contract, reaches the complete

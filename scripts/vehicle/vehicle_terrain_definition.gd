@@ -2,24 +2,18 @@ class_name VehicleTerrainDefinition
 extends RefCounted
 
 ## Typed runtime form of an authored low-count field feature.
+##
+## Terrain visuals and collision remain owned by their callers.  This record
+## only carries the stable authored footprint and the gameplay metadata that
+## the terrain runtime needs for hazards and transit gates.
 
 var id: StringName
 var kind: StringName
 var rect := Rect2()
 var pos := Vector2.ZERO
-var reward_pos := Vector2.ZERO
-var vector := Vector2.ZERO
 var pair: StringName
-var time := 0.0
-
-
-static func support_schedule() -> Array[Dictionary]:
-	return [
-		{"slot_id":&"repair_a", "kind":&"repair", "radius":150.0, "warning":1.5, "active":18.0, "dormant":10.0, "initial":0.0},
-		{"slot_id":&"repair_b", "kind":&"repair", "radius":150.0, "warning":1.5, "active":23.0, "dormant":11.0, "initial":12.0},
-		{"slot_id":&"overdrive_a", "kind":&"overdrive", "radius":180.0, "warning":1.5, "active":12.0, "dormant":14.0, "initial":5.0},
-		{"slot_id":&"overdrive_b", "kind":&"overdrive", "radius":180.0, "warning":1.5, "active":15.0, "dormant":16.0, "initial":19.0},
-	]
+var variant: StringName
+var affinity: StringName
 
 
 static func from_blueprint(value: Dictionary) -> VehicleTerrainDefinition:
@@ -28,22 +22,28 @@ static func from_blueprint(value: Dictionary) -> VehicleTerrainDefinition:
 	result.kind = StringName(value.get("kind", &""))
 	result.rect = Rect2(value.get("rect", Rect2()))
 	result.pos = Vector2(value.get("pos", Vector2.ZERO))
-	result.reward_pos = Vector2(value.get("reward_pos", Vector2.ZERO))
-	result.vector = Vector2(value.get("vector", Vector2.ZERO))
 	result.pair = StringName(value.get("pair", &""))
+	result.variant = StringName(value.get("variant", &""))
+	result.affinity = StringName(value.get("affinity", &""))
+	if result.affinity.is_empty():
+		result.affinity = (
+			&"toxin" if result.variant == &"toxic_bog"
+			else &"thermal" if result.variant == &"lava_pool"
+			else &""
+		)
 	return result
 
 
 func snapshot() -> Dictionary:
-	var result := {"id":id, "kind":kind, "time":time}
+	var result := {"id":id, "kind":kind}
 	if rect.has_area():
 		result["rect"] = rect
 	if pos != Vector2.ZERO:
 		result["pos"] = pos
-	if reward_pos != Vector2.ZERO:
-		result["reward_pos"] = reward_pos
-	if vector != Vector2.ZERO:
-		result["vector"] = vector
 	if not pair.is_empty():
 		result["pair"] = pair
+	if not variant.is_empty():
+		result["variant"] = variant
+	if not affinity.is_empty():
+		result["affinity"] = affinity
 	return result

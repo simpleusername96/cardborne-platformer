@@ -15,7 +15,6 @@ var cover_ids: Array[StringName] = []
 var cover_rects: Array[Rect2] = []
 var ordinary_spawn_anchors: Array[Vector2] = []
 var boss_arrival_anchors: Array[Vector2] = []
-var support_sockets: Array[Vector2] = []
 var encounter_seed := 0
 var used_fallback := false
 var geometry_snapshot: VehicleFieldGeometrySnapshot
@@ -39,7 +38,6 @@ func configure(
 	ordinary_anchors: Array[Vector2],
 	boss_anchors: Array[Vector2],
 	objects: Dictionary,
-	selected_support_sockets: Array[Vector2],
 	selected_encounter_seed: int,
 	fallback: bool
 ) -> void:
@@ -49,7 +47,6 @@ func configure(
 	ordinary_spawn_anchors = ordinary_anchors.duplicate()
 	boss_arrival_anchors = boss_anchors.duplicate()
 	_objects = objects.duplicate(true)
-	support_sockets = selected_support_sockets.duplicate()
 	encounter_seed = selected_encounter_seed
 	used_fallback = fallback
 	geometry_snapshot = GeometrySnapshot.new()
@@ -59,16 +56,16 @@ func configure(
 	fingerprint = hash(var_to_str(canonical_blueprint()))
 
 
-func stationary_blueprint() -> Array[Dictionary]:
-	return _duplicate_specs("stationary")
-
-
 func pickup_blueprint() -> Array[Dictionary]:
 	return _duplicate_specs("pickups")
 
 
 func crate_blueprint() -> Array[Dictionary]:
 	return _duplicate_specs("crates")
+
+
+func mystery_device_blueprint() -> Array[Dictionary]:
+	return _duplicate_specs("mystery_devices")
 
 
 func covers_near_motion_into(
@@ -119,10 +116,9 @@ func canonical_blueprint() -> Dictionary:
 		"covers":Array(cover_rects),
 		"ordinary_anchors":Array(ordinary_spawn_anchors),
 		"boss_anchors":Array(boss_arrival_anchors),
-		"stationary":_canonical_specs("stationary"),
 		"pickups":_canonical_specs("pickups"),
 		"crates":_canonical_specs("crates"),
-		"support_sockets":Array(support_sockets),
+		"mystery_devices":_canonical_specs("mystery_devices"),
 		"encounter_seed":encounter_seed,
 		"used_fallback":used_fallback,
 	}
@@ -136,7 +132,6 @@ func debug_snapshot() -> Dictionary:
 		"cover_count":cover_rects.size(),
 		"ordinary_anchor_count":ordinary_spawn_anchors.size(),
 		"boss_anchor_count":boss_arrival_anchors.size(),
-		"support_socket_count":support_sockets.size(),
 		"encounter_seed":encounter_seed,
 		"used_fallback":used_fallback,
 		"fast_motion_cell_size":FAST_MOTION_CELL_SIZE,
@@ -223,7 +218,7 @@ func _build_fast_motion_clearance_mask() -> void:
 			if blocked:
 				continue
 			for feature in geometry_snapshot.terrain_zones:
-				if StringName(feature.get("kind", &"")) not in [&"structural_wall", &"breakable_bulkhead"]:
+				if StringName(feature.get("kind", &"")) != &"structural_wall":
 					continue
 				if clearance_rect.intersects(Rect2(feature.get("rect", Rect2())), true):
 					blocked = true

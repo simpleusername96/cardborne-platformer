@@ -1,308 +1,170 @@
 class_name VehicleTerrainRuntime
 extends RefCounted
 
-## Low-count functional terrain state for the run-selected field.
+## Owns low-count terrain state for the run-selected field.
+##
+## The active damage mechanic is a run-fixed, traversable hazard zone.  A
+## `field_exposure` record is deliberately kept private: callers submit one
+## actor sweep and receive due neutral damage, while snapshots expose only
+## stable feature data and aggregate counts.  Transit gates remain the only
+## active utility facility in this runtime.
 
 const TerrainDefinition = preload("res://scripts/vehicle/vehicle_terrain_definition.gd")
-const ARC_CYCLE := 5.2
-const ARC_WARNING := 1.4
-const ARC_ACTIVE := 0.8
+
 const GATE_RADIUS := 96.0
 const GATE_DWELL := 0.35
 const GATE_COOLDOWN := 10.0
 const GATE_INVULNERABILITY := 0.45
-const REPAIR_RADIUS := 150.0
-const REPAIR_DWELL := 0.50
-const REPAIR_RATE := 4.0
-const REPAIR_BUDGET := 24.0
-const REPAIR_HIT_PAUSE := 1.0
-const OVERDRIVE_RADIUS := 180.0
-const BULKHEAD_HEALTH := 72.0
-const WEAR_THRESHOLD := 3
-const WEAR_DAMAGE := 8.0
-const WEAR_DAMAGE_INTERVAL := 0.75
-const SUPPORT_RELOCATION_GAP := 3.0
-const SUPPORT_PLAYER_CLEARANCE := 420.0
-const SUPPORT_PAIR_CLEARANCE := 96.0
+
+const FIELD_EXPOSURE_DURATION := 2.5
+const FIELD_EXPOSURE_TICK_SECONDS := 0.75
+const HAZARD_PLAYER_DAMAGE := 5.0
+const HAZARD_ORDINARY_DAMAGE := 8.0
+const HAZARD_BOSS_DAMAGE := 3.0
+const MAX_HOSTILE_ACTORS := 320
+const MAX_TRACKED_ACTORS := MAX_HOSTILE_ACTORS + 1
+const MAX_CATCH_UP_TICKS := 8
+
+# Descriptive aliases keep the integration contract readable at call sites.
+const HAZARD_EXPOSURE_SECONDS := FIELD_EXPOSURE_DURATION
+const HAZARD_TICK_SECONDS := FIELD_EXPOSURE_TICK_SECONDS
 
 var features: Array[VehicleTerrainDefinition] = []
-var support_fields: Array[Dictionary] = []
-var bulkhead_health: Dictionary = {}
-var wear_tile_state: Dictionary = {}
-var repair_budget := REPAIR_BUDGET
-var repair_pause := 0.0
-var repair_dwell := 0.0
-var overdrive_active := false
 
+var _hazard_zones: Array[VehicleTerrainDefinition] = []
+var _field_exposure: Dictionary = {}
 var _gate_cooldowns: Dictionary = {}
 var _gate_progress: Dictionary = {}
-var _arc_hits: Dictionary = {}
-var _arc_epochs: Dictionary = {}
-var _support_sockets: Array[Vector2] = []
-var _layout_seed := 0
-var _stage_id: StringName = &""
-var _relocation_cooldown := 0.0
-var _wear_tiles: Array[VehicleTerrainDefinition] = []
-var _wear_occupancy: Dictionary = {}
-var _wear_damage_deadlines: Dictionary = {}
 var _advance_events: Array[Dictionary] = []
 
 
-func configure(
-	feature_blueprint: Array,
-	persistent_bulkhead_health: Dictionary,
-	preserve_persistent_state: bool,
-	support_sockets: Array[Vector2] = [],
-	layout_seed: int = 0,
-	stage_id: StringName = &"",
-	persistent_wear_tile_state: Dictionary = {}
-) -> void:
+func configure(feature_blueprint: Array) -> void:
+	## Rebuilds static features and clears all stage-local exposure records.
 	features.clear()
-	_wear_tiles.clear()
+	_hazard_zones.clear()
+	_field_exposure.clear()
+	_gate_cooldowns.clear()
+	_gate_progress.clear()
+	_advance_events.clear()
 	for value in feature_blueprint:
 		var feature := TerrainDefinition.from_blueprint(Dictionary(value))
 		features.append(feature)
-		if feature.kind == &"wear_collapse_tile":
-			_wear_tiles.append(feature)
-	bulkhead_health = persistent_bulkhead_health
-	if not preserve_persistent_state:
-		bulkhead_health.clear()
-	for feature in features:
-		if feature.kind == &"breakable_bulkhead":
-			var id := feature.id
-			if not bulkhead_health.has(id):
-				bulkhead_health[id] = BULKHEAD_HEALTH
-	wear_tile_state = persistent_wear_tile_state
-	if not preserve_persistent_state:
-		wear_tile_state.clear()
-	for feature in features:
-		if feature.kind != &"wear_collapse_tile":
-			continue
-		var existing := Dictionary(wear_tile_state.get(feature.id, {}))
-		var wear := clampi(int(existing.get("wear", 0)), 0, WEAR_THRESHOLD)
-		wear_tile_state[feature.id] = {
-			"state":_wear_state_for(wear),
-			"wear":wear,
-		}
-	_gate_cooldowns = {&"a":0.0, &"b":0.0}
-	_gate_progress = {&"a":0.0, &"b":0.0}
-	_arc_hits.clear()
-	_arc_epochs.clear()
-	repair_budget = REPAIR_BUDGET
-	repair_pause = 0.0
-	repair_dwell = 0.0
-	overdrive_active = false
-	_support_sockets = support_sockets.duplicate()
-	_layout_seed = layout_seed
-	_stage_id = stage_id
-	_relocation_cooldown = 0.0
-	_wear_occupancy.clear()
-	_wear_damage_deadlines.clear()
-	_configure_support_fields()
+		if feature.kind == &"hazard_zone" and feature.rect.has_area():
+			_hazard_zones.append(feature)
+		if feature.kind == &"transit_gate" and not feature.pair.is_empty():
+			if not _gate_cooldowns.has(feature.pair):
+				_gate_cooldowns[feature.pair] = 0.0
+				_gate_progress[feature.pair] = 0.0
 
 
 func advance(
 	delta: float,
-	player_position: Vector2,
-	player_health: float,
-	player_max_health: float
+	player_position: Vector2
 ) -> Array[Dictionary]:
+	## Advances only transit state and returns the caller-owned event receipt.
 	_advance_events.clear()
-	repair_pause = maxf(0.0, repair_pause - delta)
-	_relocation_cooldown = maxf(0.0, _relocation_cooldown - delta)
+	var safe_delta := maxf(0.0, delta)
 	for pair in _gate_cooldowns:
-		_gate_cooldowns[pair] = maxf(0.0, float(_gate_cooldowns[pair]) - delta)
-	for feature in features:
-		if feature.kind != &"arc_surge":
-			continue
-		var previous_time := feature.time
-		var next_time := fposmod(previous_time + delta, ARC_CYCLE)
-		feature.time = next_time
-		if next_time < previous_time:
-			var id := feature.id
-			_arc_epochs[id] = int(_arc_epochs.get(id, 0)) + 1
-	_advance_support_fields(delta, player_position)
-	overdrive_active = _inside_active_support(
-		player_position, &"overdrive"
-	)
-	_advance_repair(
-		delta, player_position, player_health, player_max_health, _advance_events
-	)
-	_advance_transit(delta, player_position, _advance_events)
+		_gate_cooldowns[pair] = maxf(
+			0.0, float(_gate_cooldowns[pair]) - safe_delta
+		)
+	_advance_transit(safe_delta, player_position, _advance_events)
 	return _advance_events
 
 
-func surge_damage_for(
-	actor_id: String,
-	position: Vector2,
-	actor_kind: StringName
-) -> float:
-	for feature in features:
-		if feature.kind != &"arc_surge" or not _arc_is_active(feature):
-			continue
-		if not feature.rect.has_point(position):
-			continue
-		var feature_id := feature.id
-		var epoch := int(_arc_epochs.get(feature_id, 0))
-		var hit_key := "%s:%d:%s" % [feature_id, epoch, actor_id]
-		if _arc_hits.has(hit_key):
-			continue
-		_arc_hits[hit_key] = true
-		match actor_kind:
-			&"player":
-				return 10.0
-			&"boss":
-				return 6.0
-			_:
-				return 18.0
-	return 0.0
-
-
-func has_active_arc_surge() -> bool:
-	for feature in features:
-		if feature.kind == &"arc_surge" and _arc_is_active(feature):
-			return true
-	return false
-
-
-func record_player_damage() -> void:
-	repair_pause = REPAIR_HIT_PAUSE
-	repair_dwell = 0.0
-
-
-func live_bulkhead_rects() -> Array[Rect2]:
-	var result: Array[Rect2] = []
-	for feature in features:
-		if (
-			feature.kind == &"breakable_bulkhead"
-			and float(bulkhead_health.get(feature.id, 0.0)) > 0.0
-		):
-			result.append(feature.rect)
-	return result
-
-
-func structural_wall_rects() -> Array[Rect2]:
-	var result: Array[Rect2] = []
-	for feature in features:
-		if feature.kind == &"structural_wall":
-			result.append(feature.rect)
-	return result
-
-
-func bulkhead_id_for_rect(rectangle: Rect2) -> StringName:
-	for feature in features:
-		if (
-			feature.kind == &"breakable_bulkhead"
-			and feature.rect == rectangle
-			and float(bulkhead_health.get(feature.id, 0.0)) > 0.0
-		):
-			return feature.id
-	return &""
-
-
-func damage_bulkhead(bulkhead_id: StringName, amount: float) -> bool:
-	if bulkhead_id.is_empty() or not bulkhead_health.has(bulkhead_id):
-		return false
-	var health := float(bulkhead_health[bulkhead_id])
-	if health <= 0.0:
-		return false
-	bulkhead_health[bulkhead_id] = maxf(0.0, health - maxf(0.0, amount))
-	return health > 0.0 and float(bulkhead_health[bulkhead_id]) <= 0.0
-
-
-func wear_damage_for_actor(
+func hazard_damage_for_actor(
 	actor_id: String,
 	previous_position: Vector2,
 	current_position: Vector2,
 	actor_radius: float,
+	actor_kind: StringName,
 	delta: float
 ) -> float:
-	## Records one wear event per distinct entry and returns at most one damage tick.
-	if _wear_tiles.is_empty():
+	## Returns all hazard damage due for one actor sweep.
+	##
+	## A first contact deals one immediate tick.  While the actor remains in a
+	## zone, contact refreshes the shared timer but never adds a second stack.
+	## Exiting keeps the timer alive, so the same actor can receive linger ticks
+	## without another spatial query from the caller.
+	if actor_id.is_empty() or _hazard_zones.is_empty():
 		return 0.0
-	if not _wear_occupancy.has(actor_id):
-		var crossing_possible := false
-		for feature in _wear_tiles:
-			if _segment_intersects_rect(
-				previous_position,
-				current_position,
-				feature.rect.grow(maxf(0.0, actor_radius))
-			):
-				crossing_possible = true
-				break
-		if not crossing_possible:
+	var previous_inside := _point_inside_hazard(previous_position, actor_radius)
+	var current_inside := _point_inside_hazard(current_position, actor_radius)
+	var crossed := _segment_crosses_hazard(
+		previous_position, current_position, actor_radius
+	)
+	var entered := not previous_inside and crossed
+	var touched := current_inside or entered
+	var has_exposure := _field_exposure.has(actor_id)
+	if not has_exposure:
+		if not touched or _field_exposure.size() >= MAX_TRACKED_ACTORS:
 			return 0.0
+		_field_exposure[actor_id] = {
+			"remaining":FIELD_EXPOSURE_DURATION,
+			"tick_remaining":FIELD_EXPOSURE_TICK_SECONDS,
+			"inside":current_inside,
+		}
+		return _damage_for_actor_kind(actor_kind)
+
+	var exposure: Dictionary = _field_exposure[actor_id]
+	var safe_delta := maxf(0.0, delta)
+	var prior_remaining := maxf(0.0, float(exposure.get("remaining", 0.0)))
+	# Outside a zone, only the part of this frame that occurs before exposure
+	# expiry may advance the damage interval. This preserves a tick that becomes
+	# due shortly before the 2.5-second linger ends.
+	var active_delta := safe_delta if touched else minf(safe_delta, prior_remaining)
+	var remaining := prior_remaining - safe_delta
+	var tick_remaining := float(
+		exposure.get("tick_remaining", FIELD_EXPOSURE_TICK_SECONDS)
+	) - active_delta
+	if touched:
+		# Re-entry refreshes the same exposure; it does not create a stack or
+		# grant another immediate tick while the prior exposure is still alive.
+		remaining = FIELD_EXPOSURE_DURATION
+		exposure["inside"] = current_inside
+	else:
+		exposure["inside"] = false
+
 	var damage := 0.0
-	var occupancy_variant: Variant = _wear_occupancy.get(actor_id, null)
-	var deadlines_variant: Variant = _wear_damage_deadlines.get(actor_id, null)
-	var actor_occupancy: Dictionary = (
-		Dictionary(occupancy_variant) if occupancy_variant != null else {}
-	)
-	var actor_deadlines: Dictionary = (
-		Dictionary(deadlines_variant) if deadlines_variant != null else {}
-	)
-	for feature in _wear_tiles:
-		var footprint := feature.rect.grow(maxf(0.0, actor_radius))
-		var tile_id := feature.id
-		var was_occupied := bool(actor_occupancy.get(tile_id, false))
-		var is_occupied := footprint.has_point(current_position)
-		var crossed := _segment_intersects_rect(previous_position, current_position, footprint)
-		var entered := not was_occupied and crossed
-		if not entered and not was_occupied:
-			continue
-		if was_occupied and not is_occupied:
-			actor_occupancy.erase(tile_id)
-			actor_deadlines.erase(tile_id)
-			continue
-		var state := Dictionary(wear_tile_state.get(tile_id, {}))
-		if entered and StringName(state.get("state", &"intact")) != &"collapsed":
-			var wear := mini(WEAR_THRESHOLD, int(state.get("wear", 0)) + 1)
-			state = {"state":_wear_state_for(wear), "wear":wear}
-			wear_tile_state[tile_id] = state
-		if StringName(state.get("state", &"intact")) == &"collapsed":
-			if entered:
-				damage = WEAR_DAMAGE
-				actor_deadlines[tile_id] = WEAR_DAMAGE_INTERVAL
-			elif is_occupied:
-				var remaining := float(
-					actor_deadlines.get(tile_id, WEAR_DAMAGE_INTERVAL)
-				) - maxf(0.0, delta)
-				if remaining <= 0.0001:
-					damage = WEAR_DAMAGE
-					remaining = WEAR_DAMAGE_INTERVAL
-				actor_deadlines[tile_id] = remaining
-		if is_occupied:
-			actor_occupancy[tile_id] = true
-	if actor_occupancy.is_empty():
-		_wear_occupancy.erase(actor_id)
-	else:
-		_wear_occupancy[actor_id] = actor_occupancy
-	if actor_deadlines.is_empty():
-		_wear_damage_deadlines.erase(actor_id)
-	else:
-		_wear_damage_deadlines[actor_id] = actor_deadlines
+	var catch_up_ticks := 0
+	while (
+		tick_remaining <= 0.0001
+		and (touched or active_delta > 0.0)
+		and catch_up_ticks < MAX_CATCH_UP_TICKS
+	):
+		damage += _damage_for_actor_kind(actor_kind)
+		tick_remaining += FIELD_EXPOSURE_TICK_SECONDS
+		catch_up_ticks += 1
+	if remaining <= 0.0:
+		_field_exposure.erase(actor_id)
+		return damage
+	exposure["remaining"] = remaining
+	exposure["tick_remaining"] = tick_remaining
+	_field_exposure[actor_id] = exposure
 	return damage
 
 
-func is_wear_actor_tracked(actor_id: String) -> bool:
-	return _wear_occupancy.has(actor_id)
-
-
-func forget_wear_actor(actor_id: String) -> void:
-	_wear_occupancy.erase(actor_id)
-	_wear_damage_deadlines.erase(actor_id)
-
-
-func append_tracked_wear_actor_ids(output: Array[String]) -> void:
-	## Appends only actors with active tile occupancy; callers reuse the output.
-	for actor_id in _wear_occupancy:
+func append_tracked_hazard_actor_ids(output: Array[String]) -> void:
+	## Appends exposed and lingering actor IDs into caller-owned storage.
+	## The dictionary is capped at player + 320 hostile actors.
+	for actor_id in _field_exposure:
 		output.append(String(actor_id))
 
 
-func wear_runtime_snapshot() -> Dictionary:
+func forget_hazard_actor(actor_id: String) -> void:
+	_field_exposure.erase(actor_id)
+
+
+func is_hazard_actor_tracked(actor_id: String) -> bool:
+	return _field_exposure.has(actor_id)
+
+
+func hazard_runtime_snapshot() -> Dictionary:
+	## Stable aggregate state; actor IDs and timers remain private.
 	return {
-		"occupancy_count":_nested_entry_count(_wear_occupancy),
-		"damage_deadline_count":_nested_entry_count(_wear_damage_deadlines),
+		"hazard_zone_count":_hazard_zones.size(),
+		"tracked_actor_count":_field_exposure.size(),
+		"max_tracked_actor_count":MAX_TRACKED_ACTORS,
 	}
 
 
@@ -310,68 +172,24 @@ func snapshot() -> Dictionary:
 	var feature_snapshots: Array[Dictionary] = []
 	for value in features:
 		var feature := value.snapshot()
-		var kind := value.kind
-		if kind == &"arc_surge":
-			feature["readiness"] = _arc_readiness(value)
-			feature["active"] = _arc_is_active(value)
-		elif kind == &"breakable_bulkhead":
-			feature["health"] = float(bulkhead_health.get(value.id, 0.0))
-		elif kind == &"wear_collapse_tile":
-			var state := Dictionary(wear_tile_state.get(value.id, {}))
-			feature["state"] = StringName(state.get("state", &"intact"))
-			feature["wear"] = int(state.get("wear", 0))
-			feature["threshold"] = WEAR_THRESHOLD
-		elif kind == &"transit_gate":
-			var pair := value.pair
-			feature["progress"] = float(_gate_progress.get(pair, 0.0)) / GATE_DWELL
-			feature["cooldown"] = float(_gate_cooldowns.get(pair, 0.0))
+		if value.kind == &"transit_gate":
+			feature["progress"] = float(
+				_gate_progress.get(value.pair, 0.0)
+			) / GATE_DWELL
+			feature["cooldown"] = float(_gate_cooldowns.get(value.pair, 0.0))
 		feature_snapshots.append(feature)
 	return {
 		"features":feature_snapshots,
-		"support_fields":support_snapshot(),
-		"overdrive_active":overdrive_active,
-		"repair_budget":repair_budget,
+		"hazard":hazard_runtime_snapshot(),
 	}
 
 
-func support_snapshot() -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	return fill_support_snapshot(result)
-
-
-func fill_support_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
-	## Reuses caller-owned records for the synchronous combat renderer boundary.
-	while output.size() < support_fields.size():
-		output.append({})
-	output.resize(support_fields.size())
-	for index in support_fields.size():
-		_fill_support_snapshot(support_fields[index], output[index])
-	return output
-
-
-func _advance_repair(
-	delta: float,
-	player_position: Vector2,
-	player_health: float,
-	player_max_health: float,
-	events: Array[Dictionary]
-) -> void:
-	var inside := _inside_active_support(player_position, &"repair")
-	if not inside:
-		repair_dwell = 0.0
-		return
-	repair_dwell = minf(REPAIR_DWELL, repair_dwell + delta)
-	if (
-		repair_dwell < REPAIR_DWELL
-		or repair_pause > 0.0
-		or repair_budget <= 0.0
-		or player_health >= player_max_health
-	):
-		return
-	var amount := minf(REPAIR_RATE * delta, minf(repair_budget, player_max_health - player_health))
-	if amount > 0.0:
-		repair_budget -= amount
-		events.append({"kind":&"heal", "amount":amount})
+func structural_wall_rects() -> Array[Rect2]:
+	var result: Array[Rect2] = []
+	for feature in features:
+		if feature.kind == &"structural_wall" and feature.rect.has_area():
+			result.append(feature.rect)
+	return result
 
 
 func _advance_transit(
@@ -392,9 +210,14 @@ func _advance_transit(
 	for pair in _gate_progress:
 		if pair != active_pair:
 			_gate_progress[pair] = 0.0
-	if active_pair.is_empty() or float(_gate_cooldowns.get(active_pair, 0.0)) > 0.0:
+	if (
+		active_pair.is_empty()
+		or float(_gate_cooldowns.get(active_pair, 0.0)) > 0.0
+	):
 		return
-	_gate_progress[active_pair] = float(_gate_progress.get(active_pair, 0.0)) + delta
+	_gate_progress[active_pair] = float(
+		_gate_progress.get(active_pair, 0.0)
+	) + delta
 	if float(_gate_progress[active_pair]) < GATE_DWELL:
 		return
 	for feature in features:
@@ -414,195 +237,43 @@ func _advance_transit(
 			return
 
 
-func _inside_active_support(position: Vector2, kind: StringName) -> bool:
-	for slot in support_fields:
-		if StringName(slot["kind"]) != kind or StringName(slot["state"]) != &"active":
-			continue
-		if Vector2(slot["position"]).distance_to(position) <= float(slot["radius"]):
+func _damage_for_actor_kind(actor_kind: StringName) -> float:
+	match actor_kind:
+		&"player":
+			return HAZARD_PLAYER_DAMAGE
+		&"boss", &"stage_boss":
+			return HAZARD_BOSS_DAMAGE
+		_:
+			return HAZARD_ORDINARY_DAMAGE
+
+
+func _point_inside_hazard(position: Vector2, actor_radius: float) -> bool:
+	var grown_radius := maxf(0.0, actor_radius)
+	for feature in _hazard_zones:
+		if feature.rect.grow(grown_radius).has_point(position):
 			return true
 	return false
 
 
-func _configure_support_fields() -> void:
-	support_fields.clear()
-	if _support_sockets.size() < 4:
-		return
-	var schedule := TerrainDefinition.support_schedule()
-	for index in schedule.size():
-		var definition := Dictionary(schedule[index])
-		var initial := float(definition["initial"])
-		support_fields.append({
-			"slot_id":StringName(definition["slot_id"]),
-			"kind":StringName(definition["kind"]),
-			"radius":float(definition["radius"]),
-			"warning_duration":float(definition["warning"]),
-			"active_duration":float(definition["active"]),
-			"dormant_duration":float(definition["dormant"]),
-			"initial_duration":initial,
-			"state":&"warning" if initial <= 0.0 else &"initial_delay",
-			"time_remaining":float(definition["warning"]) if initial <= 0.0 else initial,
-			"position":_support_sockets[index],
-			"relocation_index":0,
-			"history":[_support_sockets[index]],
-		})
-
-
-func _advance_support_fields(delta: float, player_position: Vector2) -> void:
-	for slot in support_fields:
-		var state := StringName(slot["state"])
-		if state in [&"relocation_pending", &"depleted"]:
-			continue
-		slot["time_remaining"] = maxf(0.0, float(slot["time_remaining"]) - delta)
-		if float(slot["time_remaining"]) > 0.0:
-			continue
-		match state:
-			&"initial_delay":
-				_set_support_state(slot, &"warning")
-			&"warning":
-				_set_support_state(slot, &"active")
-			&"active":
-				_set_support_state(slot, &"dormant_marker")
-			&"dormant_marker":
-				slot["state"] = &"relocation_pending"
-				slot["time_remaining"] = 0.0
-	if repair_budget <= 0.0:
-		for slot in support_fields:
-			if StringName(slot["kind"]) == &"repair":
-				slot["state"] = &"depleted"
-				slot["time_remaining"] = 0.0
-	if _relocation_cooldown > 0.0:
-		return
-	for slot in support_fields:
-		if StringName(slot["state"]) != &"relocation_pending":
-			continue
-		var next_position := _choose_support_socket(slot, player_position)
-		if next_position == Vector2.INF:
-			continue
-		slot["position"] = next_position
-		slot["relocation_index"] = int(slot["relocation_index"]) + 1
-		var history: Array = slot["history"]
-		history.append(next_position)
-		while history.size() > 3:
-			history.pop_front()
-		_set_support_state(slot, &"warning")
-		_relocation_cooldown = SUPPORT_RELOCATION_GAP
-		break
-
-
-func _set_support_state(slot: Dictionary, state: StringName) -> void:
-	slot["state"] = state
-	match state:
-		&"warning":
-			slot["time_remaining"] = float(slot["warning_duration"])
-		&"active":
-			slot["time_remaining"] = float(slot["active_duration"])
-		&"dormant_marker":
-			slot["time_remaining"] = float(slot["dormant_duration"])
-		_:
-			slot["time_remaining"] = 0.0
-
-
-func _choose_support_socket(slot: Dictionary, player_position: Vector2) -> Vector2:
-	var candidates := _support_sockets.duplicate()
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash("%d:%s:%s:%d:support-v2" % [
-		_layout_seed,
-		String(_stage_id),
-		String(slot["slot_id"]),
-		int(slot["relocation_index"]) + 1,
-	])
-	for index in range(candidates.size() - 1, 0, -1):
-		var swap_index := rng.randi_range(0, index)
-		var held: Vector2 = candidates[index]
-		candidates[index] = candidates[swap_index]
-		candidates[swap_index] = held
-	for candidate in candidates:
-		if _support_socket_available(Vector2(candidate), slot, player_position):
-			return Vector2(candidate)
-	return Vector2.INF
-
-
-func _support_socket_available(
-	candidate: Vector2,
-	slot: Dictionary,
-	player_position: Vector2
+func _segment_crosses_hazard(
+	from: Vector2,
+	to: Vector2,
+	actor_radius: float
 ) -> bool:
-	if candidate.distance_to(player_position) < SUPPORT_PLAYER_CLEARANCE:
-		return false
-	for previous in Array(slot["history"]):
-		if candidate.is_equal_approx(Vector2(previous)):
-			return false
-	for other in support_fields:
-		if other == slot or StringName(other["state"]) == &"depleted":
-			continue
-		if (
-			candidate.distance_to(Vector2(other["position"]))
-			< float(slot["radius"]) + float(other["radius"]) + SUPPORT_PAIR_CLEARANCE
+	var grown_radius := maxf(0.0, actor_radius)
+	for feature in _hazard_zones:
+		if _segment_intersects_rect(
+			from, to, feature.rect.grow(grown_radius)
 		):
-			return false
-	return true
+			return true
+	return false
 
 
-func _fill_support_snapshot(slot: Dictionary, output: Dictionary) -> void:
-	var state := StringName(slot["state"])
-	var duration := 0.0
-	match state:
-		&"initial_delay":
-			duration = float(slot["initial_duration"])
-		&"warning":
-			duration = float(slot["warning_duration"])
-		&"active":
-			duration = float(slot["active_duration"])
-		&"dormant_marker":
-			duration = float(slot["dormant_duration"])
-	var remaining := float(slot["time_remaining"])
-	output.clear()
-	output["slot_id"] = StringName(slot["slot_id"])
-	output["kind"] = StringName(slot["kind"])
-	output["state"] = state
-	output["position"] = Vector2(slot["position"])
-	output["radius"] = float(slot["radius"])
-	output["phase_progress"] = clampf(
-		1.0 - remaining / maxf(duration, 0.001), 0.0, 1.0
-	)
-	output["remaining_seconds"] = remaining
-	output["effect_active"] = state == &"active"
-	output["relocation_index"] = int(slot["relocation_index"])
-	output["repair_budget"] = (
-		repair_budget if StringName(slot["kind"]) == &"repair" else 0.0
-	)
-
-
-func _arc_is_active(feature: VehicleTerrainDefinition) -> bool:
-	return feature.time >= ARC_CYCLE - ARC_ACTIVE
-
-
-func _arc_readiness(feature: VehicleTerrainDefinition) -> float:
-	var time := feature.time
-	var warning_start := ARC_CYCLE - ARC_ACTIVE - ARC_WARNING
-	if time < warning_start:
-		return 0.0
-	if time >= ARC_CYCLE - ARC_ACTIVE:
-		return 1.0
-	return inverse_lerp(warning_start, ARC_CYCLE - ARC_ACTIVE, time)
-
-
-func _wear_state_for(wear: int) -> StringName:
-	if wear >= WEAR_THRESHOLD:
-		return &"collapsed"
-	if wear >= 1:
-		return &"cracked"
-	return &"intact"
-
-
-func _nested_entry_count(values: Dictionary) -> int:
-	var count := 0
-	for nested in values.values():
-		count += Dictionary(nested).size()
-	return count
-
-
-func _segment_intersects_rect(from: Vector2, to: Vector2, rectangle: Rect2) -> bool:
+func _segment_intersects_rect(
+	from: Vector2,
+	to: Vector2,
+	rectangle: Rect2
+) -> bool:
 	if rectangle.has_point(from) or rectangle.has_point(to):
 		return true
 	var direction := to - from

@@ -52,14 +52,6 @@ const MOBILE_ROLES := [
 	[&"chaser", &"rammer", &"bulkhead_guard", &"repair_tender", &"spark_minelet", &"needle_drone"],
 	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone"],
 ]
-const STATIONARY_ROLES := [
-	[&"turret", &"mine", &"turret", &"mine"],
-	[&"interceptor_tower", &"generator", &"turret", &"mine"],
-	[&"beam_sentinel", &"turret", &"interceptor_tower", &"mine"],
-	[&"generator", &"beam_sentinel", &"interceptor_tower", &"turret"],
-	[&"beam_sentinel", &"generator", &"interceptor_tower", &"turret"],
-]
-
 
 static func normalized_id(stage_id: StringName) -> StringName:
 	return stage_id if stage_id in STAGE_IDS else STAGE_IDS[0]
@@ -85,7 +77,6 @@ static func profile(stage_id: StringName, field_id: StringName = &"drowned_ruin_
 		"quota": QUOTAS[index],
 		"authored_count": AUTHORED_COUNTS[index],
 		"mobile_roles": MOBILE_ROLES[index].duplicate(),
-		"stationary_roles": STATIONARY_ROLES[index].duplicate(),
 	}
 
 
@@ -101,23 +92,7 @@ static func definition(
 	result["title_key"] = stage["title_key"]
 	result["boss_name_key"] = stage["boss_name_key"]
 	result["quota"] = stage["quota"]
-	result["static_enemies"] = _static_enemies(index_of(stage_id), field_definition)
 	result["packets"] = _packets(index_of(stage_id), field_definition)
-	return result
-
-
-static func _static_enemies(stage_index: int, field_definition: Dictionary) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	var sectors: Array[StringName] = [&"nw", &"n", &"ne", &"sw"]
-	var candidate_groups: Dictionary = field_definition["stationary_candidates"]
-	for index in sectors.size():
-		result.append({
-			"id":"stage_%d_stationary_%02d" % [stage_index + 1, index + 1],
-			"role":STATIONARY_ROLES[stage_index][index],
-			"pos":Vector2(candidate_groups[sectors[index]][0]),
-			"zone":"field",
-			"active":true,
-		})
 	return result
 
 

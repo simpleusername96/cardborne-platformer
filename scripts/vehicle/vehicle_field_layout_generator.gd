@@ -7,25 +7,23 @@ const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const Layout = preload("res://scripts/vehicle/vehicle_field_layout.gd")
 const TacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
-const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
 
-const MAX_ATTEMPTS := 32
 const GRID_SIZE := 96.0
 const ORDINARY_RADIUS := 36.0
 const BOSS_RADIUS := 76.0
-const COVER_CLEARANCE := 176.0
-const SOCKET_COVER_CLEARANCE := 64.0
-const ITEM_PAIR_CLEARANCE := 180.0
-const STATIONARY_ITEM_CLEARANCE := 120.0
-const RECALL_CLEARANCE := 1200.0
-const STATIONARY_FEATURE_RADIUS := 54.0
-const SOCKET_FEATURE_RADIUS := 54.0
-const SECTORS: Array[StringName] = [&"nw", &"n", &"ne", &"sw", &"s", &"se"]
+const INNER_WALL_GROUP_COUNT := 5
+const HAZARD_ZONE_COUNT := 4
+const MYSTERY_DEVICE_COUNT := 3
+const WALL_CLEARANCE := 384.0
+const HAZARD_CLEARANCE := 576.0
+const DEVICE_PAIR_CLEARANCE := 960.0
 
 static var _field: Dictionary = {}
 static var _walkable_rects_cache: Array[Rect2] = []
 static var _void_rects_cache: Array[Rect2] = []
 static var _grid_cache_by_radius: Dictionary = {}
+static var _reachable_cache_by_radius: Dictionary = {}
+static var _scatter_candidates_cache: Array[Vector2] = []
 
 
 static func generate(
@@ -38,7 +36,15 @@ static func generate(
 		if field_id_override.is_empty()
 		else FieldRegistry.normalized_id(field_id_override)
 	)
-	_configure_field(FieldRegistry.definition(field_id))
+	var base_definition := FieldRegistry.definition(field_id)
+	_configure_field(base_definition)
+	var generated_features := _build_run_features(layout_seed)
+	if generated_features.is_empty():
+		push_error("Field structure placement could not compile %s" % _field["id"])
+		return null
+	var combined_features: Array = Array(_field.get("features", [])).duplicate(true)
+	combined_features.append_array(generated_features)
+	_field["features"] = combined_features
 	var feature_errors := _validate_feature_contract()
 	if not feature_errors.is_empty():
 		push_error("Field features are invalid: %s" % "; ".join(feature_errors))
@@ -48,8 +54,31 @@ static func generate(
 		stage_ids
 	)
 	if layouts_by_stage.size() != stage_ids.size():
-		push_error("Field layout could not compile %s" % _field["id"])
-		return null
+		# A rejected seeded scatter falls back to the field's fixed, audited layout.
+		_configure_field(base_definition)
+		var fallback_features := _fallback_run_features(layout_seed)
+		if fallback_features.is_empty():
+			push_error("Field layout could not compile %s" % _field["id"])
+			return null
+		var fallback_combined: Array = Array(_field.get("features", [])).duplicate(true)
+		fallback_combined.append_array(fallback_features)
+		_field["features"] = fallback_combined
+		layouts_by_stage = _build_shared_stage_layouts(layout_seed, stage_ids)
+		if layouts_by_stage.size() != stage_ids.size():
+			# Preserve the previously audited completion guarantee if none of the
+			# seed-specific fallback candidates leaves enough stage-object space.
+			_configure_field(base_definition)
+			var canonical_features := _canonical_fallback_run_features()
+			if canonical_features.is_empty():
+				push_error("Field layout could not compile %s" % _field["id"])
+				return null
+			var canonical_combined: Array = Array(_field.get("features", [])).duplicate(true)
+			canonical_combined.append_array(canonical_features)
+			_field["features"] = canonical_combined
+			layouts_by_stage = _build_shared_stage_layouts(layout_seed, stage_ids)
+			if layouts_by_stage.size() != stage_ids.size():
+				push_error("Field layout could not compile %s" % _field["id"])
+				return null
 	var layout := Layout.new()
 	layout.configure(
 		layout_seed,
@@ -58,10 +87,6 @@ static func generate(
 		layouts_by_stage
 	)
 	return layout
-
-
-static func validate_cover_ids(cover_ids: Array[StringName]) -> PackedStringArray:
-	return _validate_cover_selection(_rects_for_ids(cover_ids))
 
 
 static func validate_feature_contract(definition: Dictionary) -> PackedStringArray:
@@ -90,58 +115,22 @@ static func feature_overlaps_rect(
 	return false
 
 
-static func cover_ids_for_mask(mask: Array[int]) -> Array[StringName]:
-	var result: Array[StringName] = []
-	if _field.is_empty():
-		_configure_field(FieldRegistry.definition(FieldRegistry.FIELD_IDS[0]))
-	for sector_index in SECTORS.size():
-		var candidates := _cover_candidates_for(SECTORS[sector_index])
-		var choice := mask[sector_index] if sector_index < mask.size() else 0
-		result.append(StringName(candidates[posmod(choice, candidates.size())]["id"]))
-	for sector_index in [0, 5]:
-		var candidates := _cover_candidates_for(SECTORS[sector_index])
-		var choice := mask[sector_index] if sector_index < mask.size() else 0
-		result.append(StringName(candidates[posmod(choice + 1, candidates.size())]["id"]))
-	result.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
-	return result
-
-
 static func _build_shared_stage_layouts(
 	layout_seed: int,
 	stage_ids: Array[StringName]
 ) -> Dictionary:
-	var cover_rng := _rng_for(layout_seed, "shared-cover:v3")
-	for _attempt in MAX_ATTEMPTS:
-		var selected_ids := _random_cover_ids(cover_rng)
-		var selected_rects := _rects_for_ids(selected_ids)
-		if _validate_cover_selection(selected_rects).is_empty():
-			var generated := _compile_stage_set(
-				layout_seed,
-				stage_ids,
-				selected_ids,
-				selected_rects,
-				false
-			)
-			if generated.size() == stage_ids.size():
-				return generated
-	return _enumerated_shared_fallback(layout_seed, stage_ids)
+	return _compile_stage_set(layout_seed, stage_ids)
 
 
 static func _compile_stage_set(
 	layout_seed: int,
-	stage_ids: Array[StringName],
-	cover_ids: Array[StringName],
-	cover_rects: Array[Rect2],
-	used_fallback: bool
+	stage_ids: Array[StringName]
 ) -> Dictionary:
 	var result := {}
 	for stage_id in stage_ids:
 		var tactical := _compile_stage_layout(
 			layout_seed,
-			stage_id,
-			cover_ids,
-			cover_rects,
-			used_fallback
+			stage_id
 		)
 		if tactical == null:
 			return {}
@@ -149,330 +138,332 @@ static func _compile_stage_set(
 	return result
 
 
-static func _enumerated_shared_fallback(
-	layout_seed: int,
-	stage_ids: Array[StringName]
-) -> Dictionary:
-	var candidate_counts: Array[int] = []
-	var combination_count := 1
-	for sector in SECTORS:
-		var count := _cover_candidates_for(sector).size()
-		if count <= 0:
-			return {}
-		candidate_counts.append(count)
-		combination_count *= count
-	var start := posmod(
-		_sub_seed(layout_seed, "shared-cover-fallback:v3"),
-		combination_count
-	)
-	for offset in combination_count:
-		var encoded := posmod(start + offset, combination_count)
-		var mask: Array[int] = []
-		for count in candidate_counts:
-			mask.append(encoded % count)
-			encoded = floori(float(encoded) / float(count))
-		var selected_ids := cover_ids_for_mask(mask)
-		var selected_rects := _rects_for_ids(selected_ids)
-		if not _validate_cover_selection(selected_rects).is_empty():
+static func _build_run_features(layout_seed: int) -> Array[Dictionary]:
+	for attempt in 1:
+		var result: Array[Dictionary] = []
+		result.assign(_try_build_run_features(_rng_for(layout_seed, "run-structure:%d" % attempt)))
+		if not result.is_empty():
+			return result
+	return _fallback_run_features(layout_seed)
+
+
+static func _try_build_run_features(rng: RandomNumberGenerator) -> Array[Dictionary]:
+	var candidates: Array = Array(_field["item_socket_candidates"]).duplicate()
+	_shuffle(candidates, rng)
+	var result: Array[Dictionary] = []
+	var group_centers: Array[Vector2] = []
+	var template_bag: Array[int] = [0, 1, 2, 3, 4, 5]
+	_shuffle(template_bag, rng)
+	for value in candidates:
+		if group_centers.size() == INNER_WALL_GROUP_COUNT:
+			break
+		var center := _snap_to_grid(Vector2(value))
+		var template := template_bag[group_centers.size() % template_bag.size()]
+		var rectangles := _wall_template(center, template, rng.randi_range(0, 3))
+		if not _wall_group_valid(rectangles, result, group_centers):
 			continue
-		var generated := _compile_stage_set(
-			layout_seed,
-			stage_ids,
-			selected_ids,
-			selected_rects,
-			true
-		)
-		if generated.size() == stage_ids.size():
-			return generated
-	return {}
+		for rect in rectangles:
+			result.append({
+				"id":"inner_wall_%02d_%02d" % [group_centers.size() + 1, result.size() + 1],
+				"kind":&"structural_wall", "group":group_centers.size() + 1,
+				"template":[&"i_short", &"i_long", &"l_small", &"l_large", &"t_small", &"step"][template], "rect":rect,
+			})
+		group_centers.append(center)
+	var hazard_count := 0
+	var hazard_sizes: Array[Vector2] = [
+		Vector2(768, 576), Vector2(960, 576), Vector2(1152, 480), Vector2(864, 672),
+	]
+	for value in candidates:
+		if hazard_count == HAZARD_ZONE_COUNT:
+			break
+		var center := _snap_to_grid(Vector2(value))
+		var size: Vector2 = hazard_sizes[hazard_count]
+		if rng.randi_range(0, 1) == 1:
+			size = Vector2(size.y, size.x)
+		var rect := Rect2(center - size * 0.5, size)
+		if not _hazard_valid(rect, result):
+			continue
+		result.append({
+			"id":"hazard_%02d" % (hazard_count + 1),
+			"kind":&"hazard_zone", "variant":&"", "rect":rect,
+		})
+		hazard_count += 1
+	var variant: StringName = &"toxic_bog" if rng.randi_range(0, 1) == 0 else &"lava_pool"
+	for feature in result:
+		if StringName(feature["kind"]) == &"hazard_zone": feature["variant"] = variant
+	if group_centers.size() != INNER_WALL_GROUP_COUNT or hazard_count != HAZARD_ZONE_COUNT:
+		return []
+	return result
+
+
+static func _fallback_run_features(layout_seed: int) -> Array[Dictionary]:
+	# Try seed-specific candidates first so ordinary fallback use does not collapse
+	# distinct runs onto one shared wall/hazard layout.
+	for attempt in 24:
+		var result: Array[Dictionary] = []
+		result.assign(_try_build_run_features(
+			_rng_for(layout_seed, "run-structure:fallback:%d" % attempt)
+		))
+		if not result.is_empty():
+			return result
+	return _canonical_fallback_run_features()
+
+
+static func _canonical_fallback_run_features() -> Array[Dictionary]:
+	# Last-resort completion fixture retained from the audited pre-seeded fallback.
+	for attempt in 24:
+		var result: Array[Dictionary] = []
+		result.assign(_try_build_run_features(
+			_rng_for(0xC4A2B0, "run-structure:%d" % attempt)
+		))
+		if not result.is_empty():
+			return result
+	return []
+
+
+static func _wall_template(center: Vector2, template: int, rotation: int) -> Array[Rect2]:
+	var local: Array[Rect2] = []
+	match template:
+		0: local = [Rect2(-384,-96,768,192)]
+		1: local = [Rect2(-576,-96,1152,192)]
+		2: local = [Rect2(-384,-288,768,192), Rect2(192,-288,192,576)]
+		3: local = [Rect2(-480,-384,960,192), Rect2(288,-384,192,768)]
+		4: local = [Rect2(-480,-288,960,192), Rect2(-96,-288,192,576)]
+		_: local = [Rect2(-480,-288,576,192), Rect2(-96,96,576,192)]
+	var result: Array[Rect2] = []
+	for rect in local:
+		var rotated := _rotate_rect_90(rect, rotation)
+		result.append(Rect2(rotated.position + center, rotated.size))
+	return result
+
+
+static func _rotate_rect_90(rect: Rect2, quarter_turns: int) -> Rect2:
+	var corners: Array[Vector2] = [rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)]
+	var rotated := Rect2()
+	for index in corners.size():
+		var point: Vector2 = corners[index].rotated(float(posmod(quarter_turns, 4)) * PI * 0.5)
+		if index == 0: rotated = Rect2(point, Vector2.ZERO)
+		else: rotated = rotated.expand(point)
+	return rotated
+
+
+static func _wall_group_valid(rectangles: Array[Rect2], features: Array[Dictionary], centers: Array[Vector2]) -> bool:
+	for rect in rectangles:
+		if not _rect_inside_floor_union(rect) or _circle_overlaps_rect(Vector2(_field["player_start"]), float(_field["start_clearance"]), rect):
+			return false
+		for feature in Array(_field.get("features", [])) + features:
+			if _single_feature_overlaps_rect(Dictionary(feature), rect):
+				return false
+	for feature in features:
+		if StringName(feature.get("kind", &"")) != &"structural_wall": continue
+		for rect in rectangles:
+			if _rect_distance(rect, Rect2(feature["rect"])) < WALL_CLEARANCE:
+				return false
+	return true
+
+
+static func _hazard_valid(rect: Rect2, features: Array[Dictionary]) -> bool:
+	if not _rect_inside_floor_union(rect) or _circle_overlaps_rect(Vector2(_field["player_start"]), float(_field["start_clearance"]), rect):
+		return false
+	for feature in Array(_field.get("features", [])) + features:
+		if _single_feature_overlaps_rect(Dictionary(feature), rect):
+			return false
+		if StringName(feature.get("kind", &"")) == &"structural_wall" and _rect_distance(Rect2(feature["rect"]), rect) < 192.0:
+			return false
+		if StringName(feature.get("kind", &"")) == &"hazard_zone" and _rect_distance(Rect2(feature["rect"]), rect) < HAZARD_CLEARANCE:
+			return false
+	return true
+
+
+static func _snap_to_grid(point: Vector2) -> Vector2:
+	return Vector2(roundi(point.x / GRID_SIZE) * GRID_SIZE, roundi(point.y / GRID_SIZE) * GRID_SIZE)
 
 
 static func _compile_stage_layout(
 	layout_seed: int,
-	stage_id: StringName,
-	cover_ids: Array[StringName],
-	cover_rects: Array[Rect2],
-	used_fallback: bool
+	stage_id: StringName
 ) -> TacticalLayout:
 	var ordinary := _valid_reachable_points(
-		_field["ordinary_spawn_anchors"], ORDINARY_RADIUS, cover_rects, true
+		_field["ordinary_spawn_anchors"], ORDINARY_RADIUS, true
 	)
 	var bosses := _valid_reachable_points(
-		_field["boss_arrival_anchors"], BOSS_RADIUS, cover_rects, false
+		_field["boss_arrival_anchors"], BOSS_RADIUS, false
 	)
 	if ordinary.size() < 20 or bosses.size() < 8:
 		return null
 	var stage_objects := _build_stage_objects(
-		layout_seed, stage_id, cover_rects
+		layout_seed, stage_id
 	)
 	if stage_objects.is_empty():
 		return null
-	var support_sockets: Array[Vector2] = []
-	support_sockets.assign(stage_objects.get("support_sockets", []))
-	stage_objects.erase("support_sockets")
 	var layout := TacticalLayout.new()
 	layout.configure(
 		stage_id,
 		_field,
-		cover_ids,
-		cover_rects,
+		[],
+		[],
 		ordinary,
 		bosses,
 		stage_objects,
-		support_sockets,
 		_sub_seed(layout_seed, "%s:encounter:v2" % String(stage_id)),
-		used_fallback
+		false
 	)
 	return layout
 
 
-static func _build_stage_objects(layout_seed: int, stage_id: StringName, covers: Array[Rect2]) -> Dictionary:
-	var stationary_rng := _rng_for(layout_seed, "%s:stationary:v1" % String(stage_id))
-	var ordinary_reachable := _reachable_cells(Vector2(_field["player_start"]), ORDINARY_RADIUS, covers)
-	var open_reachable := _reachable_cells(
-		Vector2(_field["player_start"]), ORDINARY_RADIUS, covers, false
+static func _build_stage_objects(layout_seed: int, stage_id: StringName) -> Dictionary:
+	for attempt in 2:
+		var generated := _try_build_stage_objects(
+			_rng_for(layout_seed, "%s:scatter:%d" % [String(stage_id), attempt]),
+			stage_id
+		)
+		if not generated.is_empty():
+			return generated
+	return _try_build_stage_objects(
+		_rng_for(layout_seed, "%s:scatter-fallback" % String(stage_id)),
+		stage_id
 	)
-	var guarded_rewards := _guarded_reward_specs()
-	if guarded_rewards.size() != 2:
-		push_warning("%s must author exactly two guarded rewards" % _field["id"])
-		return {}
-	for guarded in guarded_rewards:
-		var reward_position := Vector2(guarded["pos"])
-		if (
-			_reachable_has(ordinary_reachable, reward_position)
-			or not _reachable_has(open_reachable, reward_position)
-		):
-			push_warning("%s guarded reward is not sealed/open reachable" % guarded["guarded_by"])
-			return {}
-	var stationary_points: Array[Vector2] = []
-	var stationary_sectors: Array = Array(SECTORS).duplicate()
-	_shuffle(stationary_sectors, stationary_rng)
-	for sector_value in stationary_sectors.slice(0, 4):
-		var sector := StringName(sector_value)
-		var groups: Dictionary = _field["stationary_candidates"]
-		var candidates: Array = Array(groups[sector]).duplicate()
-		_shuffle(candidates, stationary_rng)
-		var selected := Vector2.INF
-		for value in candidates:
-			var candidate := Vector2(value)
-			if (
-				candidate.distance_to(Vector2(_field["player_start"])) >= float(_field["start_clearance"])
-				and _point_has_cover_clearance(candidate, SOCKET_COVER_CLEARANCE, covers)
-				and not feature_overlaps_circle(
-					_field, candidate, STATIONARY_FEATURE_RADIUS
-				)
-				and _is_walkable(candidate, ORDINARY_RADIUS, covers)
-				and _reachable_has(ordinary_reachable, candidate)
-			):
-				selected = candidate
-				break
-		if selected == Vector2.INF:
-			push_warning("layout stationary placement failed for %s/%s" % [_field["id"], stage_id])
-			return {}
-		stationary_points.append(selected)
-	var roles: Array = Array(CombatStages.profile(stage_id)["stationary_roles"]).duplicate()
-	_shuffle(roles, stationary_rng)
-	var stationary: Array[Dictionary] = []
-	for index in stationary_points.size():
-		stationary.append({
-			"id":"%s_stationary_%02d" % [String(stage_id), index + 1],
-			"role":StringName(roles[index]),
-			"pos":stationary_points[index],
-			"zone":"field",
-			"active":true,
-		})
 
-	var item_rng := _rng_for(layout_seed, "%s:items:v1" % String(stage_id))
-	var item_candidates: Array = Array(_field["item_socket_candidates"]).duplicate()
-	_shuffle(item_candidates, item_rng)
-	var sockets: Array[Vector2] = []
-	var occupied_item_sectors := {}
-	for value in item_candidates:
-		var candidate := Vector2(value)
-		if _near_guarded_reward(candidate, ITEM_PAIR_CLEARANCE):
-			continue
-		var sector := _item_sector(candidate)
-		if sockets.size() < 4 and occupied_item_sectors.has(sector):
-			continue
-		if not _is_valid_item_socket(
-			candidate, sockets, stationary_points, covers, ordinary_reachable
-		):
-			continue
-		sockets.append(candidate)
-		occupied_item_sectors[sector] = true
-		if sockets.size() == 14:
+
+static func _try_build_stage_objects(
+	rng: RandomNumberGenerator,
+	stage_id: StringName
+) -> Dictionary:
+	var reachable := _reachable_cells(Vector2(_field["player_start"]), ORDINARY_RADIUS)
+	var candidates: Array = _stage_scatter_candidates()
+	_shuffle(candidates, rng)
+	var devices: Array[Dictionary] = []
+	var crate_positions: Array[Vector2] = []
+	var pickup_positions: Array[Vector2] = []
+	for value in candidates:
+		if devices.size() == MYSTERY_DEVICE_COUNT:
 			break
-	if sockets.size() != 14 or occupied_item_sectors.size() < 4:
-		push_warning("layout item placement failed for %s/%s (%d sockets)" % [_field["id"], stage_id, sockets.size()])
-		return {}
-	var recall_pair := _farthest_pair(sockets)
-	if recall_pair.x < 0 or sockets[recall_pair.x].distance_to(sockets[recall_pair.y]) < RECALL_CLEARANCE:
-		push_warning("layout recall placement failed for %s/%s" % [_field["id"], stage_id])
-		return {}
-	var pickup_sockets: Array[Vector2] = []
-	pickup_sockets.append(sockets[recall_pair.x])
-	for index in sockets.size():
-		if index in [recall_pair.x, recall_pair.y]:
+		var point := _snap_to_grid(Vector2(value))
+		if not _stage_point_valid(point, reachable, devices, crate_positions, pickup_positions, &"mystery_device"):
 			continue
-		pickup_sockets.append(sockets[index])
-		if pickup_sockets.size() == 6:
+		devices.append({
+			"id":"%s_mystery_%02d" % [String(stage_id), devices.size() + 1],
+			"pos":point,
+		})
+	for value in candidates:
+		if crate_positions.size() == 8:
 			break
-	var crate_sockets: Array[Vector2] = [sockets[recall_pair.y]]
-	for socket in sockets:
-		if socket in pickup_sockets or socket == sockets[recall_pair.y]:
-			continue
-		crate_sockets.append(socket)
+		var point := _snap_to_grid(Vector2(value))
+		if _stage_point_valid(point, reachable, devices, crate_positions, pickup_positions, &"crate"):
+			crate_positions.append(point)
+	for value in candidates:
+		if pickup_positions.size() == 6:
+			break
+		var point := _snap_to_grid(Vector2(value))
+		if _stage_point_valid(point, reachable, devices, crate_positions, pickup_positions, &"pickup"):
+			pickup_positions.append(point)
+	if devices.size() != MYSTERY_DEVICE_COUNT or crate_positions.size() != 8 or pickup_positions.size() != 6:
+		return {}
+	_prioritize_separated_recalls(crate_positions, pickup_positions)
 	var pickups: Array[Dictionary] = []
-	for index in pickup_sockets.size():
-		var recall := index < 2
+	var crates: Array[Dictionary] = []
+	for index in 6:
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + 1],
-			"kind":&"experience_recall" if recall else &"repair",
-			"heal_amount":0.0 if recall else 25.0,
-			"pos":pickup_sockets[index],
+			"kind":&"experience_recall" if index < 2 else &"repair",
+			"heal_amount":0.0 if index < 2 else 25.0,
+			"pos":pickup_positions[index],
 		})
-	var crates: Array[Dictionary] = []
-	for index in crate_sockets.size():
+	for index in 8:
 		var recall := index < 2
 		crates.append({
 			"id":"%s_crate_%02d" % [String(stage_id), index + 1],
-			"pos":crate_sockets[index],
+			"pos":crate_positions[index],
 			"drop":&"experience_recall" if recall else &"repair",
-			"heal_amount":(
-				0.0
-				if recall
-				else (20.0 if index == crate_sockets.size() - 1 else 25.0)
-			),
+			"heal_amount":0.0 if recall else (20.0 if index == 7 else 25.0),
 		})
-	for index in guarded_rewards.size():
-		var crate_index := crates.size() - guarded_rewards.size() + index
-		crates[crate_index]["pos"] = Vector2(guarded_rewards[index]["pos"])
-		crates[crate_index]["guarded_by"] = StringName(
-			guarded_rewards[index]["guarded_by"]
-		)
-	var boss_reachable := _reachable_cells(
-		Vector2(_field["player_start"]), BOSS_RADIUS, covers
+	return {"mystery_devices":devices, "pickups":pickups, "crates":crates}
+
+
+static func _prioritize_separated_recalls(
+	crate_positions: Array[Vector2],
+	pickup_positions: Array[Vector2]
+) -> void:
+	var crate_index := 0
+	var pickup_index := 0
+	var greatest_distance := -1.0
+	for crate in crate_positions.size():
+		for pickup in pickup_positions.size():
+			var distance := crate_positions[crate].distance_squared_to(pickup_positions[pickup])
+			if distance > greatest_distance:
+				greatest_distance = distance
+				crate_index = crate
+				pickup_index = pickup
+	var crate_first := crate_positions[0]
+	crate_positions[0] = crate_positions[crate_index]
+	crate_positions[crate_index] = crate_first
+	var pickup_first := pickup_positions[0]
+	pickup_positions[0] = pickup_positions[pickup_index]
+	pickup_positions[pickup_index] = pickup_first
+
+
+static func _stage_scatter_candidates() -> Array:
+	if not _scatter_candidates_cache.is_empty():
+		return _scatter_candidates_cache.duplicate()
+	var seen := {}
+	for value in Array(_field["item_socket_candidates"]):
+		var point := _snap_to_grid(Vector2(value))
+		seen[point] = true
+	for y in range(576, 3840, 576):
+		for x in range(576, 6720, 576):
+			var point := Vector2(x, y)
+			if _circle_inside_floor_union(point, 54.0):
+				seen[point] = true
+	for value in seen:
+		_scatter_candidates_cache.append(Vector2(value))
+	_scatter_candidates_cache.sort_custom(
+		func(first: Vector2, second: Vector2) -> bool:
+			return first.x < second.x or (is_equal_approx(first.x, second.x) and first.y < second.y)
 	)
-	var support_sockets: Array[Vector2] = []
-	var support_candidates := item_candidates.duplicate()
-	support_candidates.append_array(Array(_field["ordinary_spawn_anchors"]))
-	_shuffle(
-		support_candidates,
-		_rng_for(layout_seed, "%s:support:v1" % String(stage_id))
-	)
-	for value in support_candidates:
-		var candidate := Vector2(value)
-		if candidate in sockets:
-			continue
-		if not _is_valid_support_socket(
-			candidate,
-			sockets,
-			stationary_points,
-			support_sockets,
-			covers,
-			ordinary_reachable,
-			boss_reachable
-		):
-			continue
-		support_sockets.append(candidate)
-		if support_sockets.size() == 12:
-			break
-	if support_sockets.size() != 12:
-		push_warning(
-			"layout support placement failed for %s/%s (%d sockets)" % [
-				_field["id"], stage_id, support_sockets.size()
-			]
-		)
-		return {}
-	return {
-		"stationary":stationary,
-		"pickups":pickups,
-		"crates":crates,
-		"support_sockets":support_sockets,
-	}
+	return _scatter_candidates_cache.duplicate()
 
 
-static func _item_sector(position: Vector2) -> int:
-	var offset := position - Vector2(_field["player_start"])
-	var raw := floori((offset.angle() + PI) / (TAU / 8.0))
-	return (raw % 8 + 8) % 8
-
-
-static func _random_cover_ids(rng: RandomNumberGenerator) -> Array[StringName]:
-	var result: Array[StringName] = []
-	var second_sectors: Array[StringName] = []
-	for sector in SECTORS:
-		if _cover_candidates_for(sector).size() > 1:
-			second_sectors.append(sector)
-	_shuffle(second_sectors, rng)
-	for sector in SECTORS:
-		var candidates := _cover_candidates_for(sector)
-		if candidates.is_empty():
-			return []
-		_shuffle(candidates, rng)
-		result.append(StringName(candidates[0]["id"]))
-		if sector in second_sectors.slice(0, 2):
-			result.append(StringName(candidates[1]["id"]))
-	result.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
-	return result
-
-
-static func _cover_candidates_for(sector: StringName) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for candidate in Array(_field["cover_candidates"]):
-		if StringName(candidate["sector"]) != sector:
-			continue
-		var typed := Dictionary(candidate)
-		if feature_overlaps_rect(_field, Rect2(typed["rect"])):
-			continue
-		result.append(typed)
-	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
-	return result
-
-
-static func _rects_for_ids(ids: Array[StringName]) -> Array[Rect2]:
-	var by_id := {}
-	for candidate in Array(_field["cover_candidates"]):
-		by_id[StringName(candidate["id"])] = Rect2(candidate["rect"])
-	var result: Array[Rect2] = []
-	for id in ids:
-		if by_id.has(id):
-			result.append(Rect2(by_id[id]))
-	return result
-
-
-static func _validate_cover_selection(covers: Array[Rect2]) -> PackedStringArray:
-	var errors := PackedStringArray()
-	if covers.size() != 8:
-		errors.append("cover selection must contain exactly eight rectangles")
-		return errors
-	for index in covers.size():
-		var cover := covers[index]
-		if not _rect_inside_floor_union(cover):
-			errors.append("cover %d leaves the walkable floor" % index)
-		if _circle_overlaps_rect(
-			Vector2(_field["player_start"]), float(_field["start_clearance"]), cover
-		):
-			errors.append("cover %d breaches center clearance" % index)
-		for void_rect in _void_rects():
-			if _rect_distance(cover, void_rect) < COVER_CLEARANCE:
-				errors.append("cover %d is too close to void" % index)
-		if feature_overlaps_rect(_field, cover):
-			errors.append("cover %d overlaps functional terrain" % index)
-		for other_index in range(index + 1, covers.size()):
-			if _rect_distance(cover, covers[other_index]) < COVER_CLEARANCE:
-				errors.append("covers %d and %d are too close" % [index, other_index])
-	return errors
+static func _stage_point_valid(
+	point: Vector2,
+	reachable: Dictionary,
+	devices: Array,
+	crate_positions: Array[Vector2],
+	pickup_positions: Array[Vector2],
+	kind: StringName
+) -> bool:
+	if not _is_walkable(point, 54.0) or not _reachable_has(reachable, point):
+		return false
+	if feature_overlaps_circle(_field, point, 54.0):
+		return false
+	for device in devices:
+		var device_clearance := DEVICE_PAIR_CLEARANCE if kind == &"mystery_device" else (576.0 if kind == &"crate" else 480.0)
+		if point.distance_to(Vector2(Dictionary(device)["pos"])) < device_clearance:
+			return false
+	for crate in crate_positions:
+		var crate_clearance := 672.0 if kind == &"crate" else 384.0
+		if point.distance_to(crate) < crate_clearance:
+			return false
+	for pickup in pickup_positions:
+		if point.distance_to(pickup) < 384.0:
+			return false
+	for feature_value in Array(_field.get("features", [])):
+		var feature := Dictionary(feature_value)
+		if feature.has("rect") and StringName(feature.get("kind", &"")) == &"hazard_zone":
+			var hazard_clearance := 576.0 if kind == &"mystery_device" else 384.0
+			if _rect_distance(Rect2(feature["rect"]), Rect2(point - Vector2.ONE * 54.0, Vector2.ONE * 108.0)) < hazard_clearance:
+				return false
+		if kind == &"mystery_device" and StringName(feature.get("kind", &"")) == &"transit_gate" and point.distance_to(Vector2(feature["pos"])) < 576.0:
+			return false
+	return true
 
 
 static func _valid_reachable_points(
 	candidates: Array[Vector2],
 	radius: float,
-	covers: Array[Rect2],
 	enforce_center_clearance: bool
 ) -> Array[Vector2]:
 	var result: Array[Vector2] = []
-	var reachable := _reachable_cells(Vector2(_field["player_start"]), radius, covers)
+	var reachable := _reachable_cells(Vector2(_field["player_start"]), radius)
 	for candidate in candidates:
 		if (
 			enforce_center_clearance
@@ -480,7 +471,7 @@ static func _valid_reachable_points(
 		):
 			continue
 		if (
-			_is_walkable(candidate, radius, covers)
+			_is_walkable(candidate, radius)
 			and not feature_overlaps_circle(_field, candidate, radius)
 			and _reachable_has(reachable, candidate)
 		):
@@ -488,118 +479,32 @@ static func _valid_reachable_points(
 	return result
 
 
-static func _is_valid_item_socket(
-	candidate: Vector2,
-	selected: Array[Vector2],
-	stationary: Array[Vector2],
-	covers: Array[Rect2],
-	reachable: Dictionary
-) -> bool:
-	if not _is_walkable(candidate, 24.0, covers):
-		return false
-	if not _point_has_cover_clearance(candidate, SOCKET_COVER_CLEARANCE, covers):
-		return false
-	if feature_overlaps_circle(_field, candidate, SOCKET_FEATURE_RADIUS):
-		return false
-	if not _reachable_has(reachable, candidate):
-		return false
-	for hostile in stationary:
-		if candidate.distance_to(hostile) < STATIONARY_ITEM_CLEARANCE:
-			return false
-	for other in selected:
-		if candidate.distance_to(other) < ITEM_PAIR_CLEARANCE:
-			return false
-	return true
-
-
-static func _is_valid_support_socket(
-	candidate: Vector2,
-	item_sockets: Array[Vector2],
-	stationary: Array[Vector2],
-	selected: Array[Vector2],
-	covers: Array[Rect2],
-	ordinary_reachable: Dictionary,
-	boss_reachable: Dictionary
-) -> bool:
-	if (
-		candidate.distance_to(Vector2(_field["player_start"]))
-		< float(_field["start_clearance"])
-	):
-		return false
-	if not _is_walkable(candidate, TerrainRuntime.OVERDRIVE_RADIUS, covers):
-		return false
-	if not _point_has_cover_clearance(
-		candidate,
-		TerrainRuntime.OVERDRIVE_RADIUS,
-		covers
-	):
-		return false
-	if feature_overlaps_circle(
-		_field, candidate, TerrainRuntime.OVERDRIVE_RADIUS
-	):
-		return false
-	if (
-		not _reachable_has(ordinary_reachable, candidate)
-		or not _reachable_has(boss_reachable, candidate)
-	):
-		return false
-	for hostile in stationary:
-		if candidate.distance_to(hostile) < TerrainRuntime.OVERDRIVE_RADIUS:
-			return false
-	for item in item_sockets:
-		if candidate.is_equal_approx(item):
-			return false
-	for other in selected:
-		if candidate.distance_to(other) < TerrainRuntime.OVERDRIVE_RADIUS:
-			return false
-	return true
-
-
-static func _farthest_pair(points: Array[Vector2]) -> Vector2i:
-	var result := Vector2i(-1, -1)
-	var best := -1.0
-	for first in points.size():
-		for second in range(first + 1, points.size()):
-			var distance := points[first].distance_squared_to(points[second])
-			if distance > best:
-				best = distance
-				result = Vector2i(first, second)
-	return result
-
-
-static func _is_walkable(position: Vector2, radius: float, covers: Array[Rect2]) -> bool:
+static func _is_walkable(position: Vector2, radius: float) -> bool:
 	if not _circle_inside_floor_union(position, radius):
 		return false
 	for void_rect in _void_rects():
 		if _circle_overlaps_rect(position, radius, void_rect):
-			return false
-	for cover in covers:
-		if _circle_overlaps_rect(position, radius, cover):
 			return false
 	return true
 
 
 static func _reachable_cells(
 	start: Vector2,
-	radius: float,
-	covers: Array[Rect2],
-	include_bulkheads: bool = true
+	radius: float
 ) -> Dictionary:
+	if _reachable_cache_by_radius.has(roundi(radius)):
+		return _reachable_cache_by_radius[roundi(radius)]
 	var contract := _grid_contract(radius)
 	var width := int(contract["width"])
 	var height := int(contract["height"])
 	var allowed: PackedByteArray = PackedByteArray(contract["walkable"]).duplicate()
-	var blockers := covers.duplicate()
-	blockers.append_array(_structural_wall_rects())
-	if include_bulkheads:
-		blockers.append_array(_intact_bulkhead_rects())
-	for cover in blockers:
-		var min_cell := _world_to_cell(cover.position - Vector2.ONE * radius)
-		var max_cell := _world_to_cell(cover.end + Vector2.ONE * radius)
+	for wall in _structural_wall_rects():
+		var min_cell := _world_to_cell(wall.position - Vector2.ONE * radius)
+		var max_cell := _world_to_cell(wall.end + Vector2.ONE * radius)
 		for y in range(maxi(0, min_cell.y), mini(height - 1, max_cell.y) + 1):
 			for x in range(maxi(0, min_cell.x), mini(width - 1, max_cell.x) + 1):
 				var index := y * width + x
-				if allowed[index] == 1 and _circle_overlaps_rect(_cell_center(Vector2i(x, y)), radius, cover):
+				if allowed[index] == 1 and _circle_overlaps_rect(_cell_center(Vector2i(x, y)), radius, wall):
 					allowed[index] = 0
 	var start_cell := _world_to_cell(start)
 	var start_index := _cell_index(start_cell, width, height)
@@ -629,18 +534,9 @@ static func _reachable_cells(
 			visited[next_index] = 1
 			queue[queue_size] = next_index
 			queue_size += 1
-	return {"width":width, "height":height, "visited":visited}
-
-
-static func _intact_bulkhead_rects() -> Array[Rect2]:
-	var result: Array[Rect2] = []
-	for value in Array(_field.get("features", [])):
-		var feature := Dictionary(value)
-		if StringName(feature.get("kind", &"")) == &"breakable_bulkhead":
-			result.append(Rect2(feature["rect"]))
+	var result := {"width":width, "height":height, "visited":visited}
+	_reachable_cache_by_radius[roundi(radius)] = result
 	return result
-
-
 static func _structural_wall_rects() -> Array[Rect2]:
 	var result: Array[Rect2] = []
 	for value in Array(_field.get("features", [])):
@@ -648,32 +544,6 @@ static func _structural_wall_rects() -> Array[Rect2]:
 		if StringName(feature.get("kind", &"")) == &"structural_wall":
 			result.append(Rect2(feature["rect"]))
 	return result
-
-
-static func _guarded_reward_specs() -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for value in Array(_field.get("features", [])):
-		var feature := Dictionary(value)
-		if (
-			StringName(feature.get("kind", &"")) == &"breakable_bulkhead"
-			and feature.has("reward_pos")
-		):
-			result.append({
-				"guarded_by":StringName(feature["id"]),
-				"pos":Vector2(feature["reward_pos"]),
-			})
-	result.sort_custom(
-		func(a: Dictionary, b: Dictionary) -> bool:
-			return String(a["guarded_by"]) < String(b["guarded_by"])
-	)
-	return result
-
-
-static func _near_guarded_reward(position: Vector2, clearance: float) -> bool:
-	for reward in _guarded_reward_specs():
-		if position.distance_to(Vector2(reward["pos"])) < clearance:
-			return true
-	return false
 
 
 static func _reachable_has(reachable: Dictionary, position: Vector2) -> bool:
@@ -757,13 +627,6 @@ static func _rect_inside_floor_union(rectangle: Rect2) -> bool:
 	return true
 
 
-static func _point_has_cover_clearance(point: Vector2, clearance: float, covers: Array[Rect2]) -> bool:
-	for cover in covers:
-		if _circle_overlaps_rect(point, clearance, cover):
-			return false
-	return true
-
-
 static func _validate_feature_contract() -> PackedStringArray:
 	var errors := PackedStringArray()
 	var features: Array = _field.get("features", [])
@@ -793,6 +656,12 @@ static func _validate_feature_contract() -> PackedStringArray:
 			errors.append("%s breaches player start clearance" % feature_id)
 		for other_index in range(index + 1, features.size()):
 			var other := Dictionary(features[other_index])
+			if (
+				StringName(feature.get("kind", &"")) == &"structural_wall"
+				and StringName(other.get("kind", &"")) == &"structural_wall"
+				and int(feature.get("group", -1)) == int(other.get("group", -2))
+			):
+				continue
 			if _features_overlap(feature, other):
 				errors.append(
 					"%s overlaps %s" % [
@@ -851,11 +720,7 @@ static func _feature_has_rect(feature: Dictionary) -> bool:
 static func _feature_radius(feature: Dictionary) -> float:
 	match StringName(feature.get("kind", &"")):
 		&"transit_gate":
-			return TerrainRuntime.GATE_RADIUS
-		&"repair_basin":
-			return TerrainRuntime.REPAIR_RADIUS
-		&"overdrive_field":
-			return TerrainRuntime.OVERDRIVE_RADIUS
+			return 96.0
 	return 0.0
 
 
@@ -874,10 +739,14 @@ static func _walkable_rects() -> Array[Rect2]:
 
 
 static func _configure_field(definition: Dictionary) -> void:
+	var geometry_changed := _field.is_empty() or StringName(_field.get("id", &"")) != StringName(definition.get("id", &""))
 	_field = definition.duplicate(true)
-	_walkable_rects_cache.clear()
-	_void_rects_cache.clear()
-	_grid_cache_by_radius.clear()
+	_reachable_cache_by_radius.clear()
+	if geometry_changed:
+		_walkable_rects_cache.clear()
+		_void_rects_cache.clear()
+		_grid_cache_by_radius.clear()
+		_scatter_candidates_cache.clear()
 
 
 static func _circle_overlaps_rect(center: Vector2, radius: float, rectangle: Rect2) -> bool:

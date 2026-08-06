@@ -323,11 +323,6 @@ func _maintain_enemy_pressure(run: Node) -> void:
 func _production_pressure_roles(target: int) -> Array[StringName]:
 	var result: Array[StringName] = []
 	var stage_id: StringName = StageCatalog.STAGE_IDS[-1]
-	var profile := StageCatalog.profile(stage_id)
-	for role in Array(profile["stationary_roles"]):
-		if result.size() >= target:
-			return result
-		result.append(StringName(role))
 	for packet in StageCatalog.packets(stage_id):
 		for squad in Array(packet["squads"]):
 			for role in Array(squad):
@@ -646,7 +641,7 @@ func _retire_production_batch(run: Node, budget: int) -> void:
 		if not enemy.alive or not enemy.active or not enemy.counts_active_cap:
 			continue
 		run.collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
-		run.terrain_runtime.forget_wear_actor(enemy.id)
+		run.terrain_runtime.forget_hazard_actor(enemy.id)
 		enemy.alive = false
 		enemy.active = false
 		run.enemy_grid.update_actor(enemy)

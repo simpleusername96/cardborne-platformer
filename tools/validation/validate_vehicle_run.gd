@@ -567,7 +567,6 @@ func _check_combat_presentation_frame(run) -> void:
 	var oracle: Dictionary = run.call("_combat_presentation_snapshot")
 	var first: Dictionary = run.call("_runtime_combat_presentation_snapshot")
 	var secondary: Dictionary = first["secondary"]
-	var support_fields: Array = first["support_fields"]
 	_expect(
 		_presentation_snapshots_match(oracle, first),
 		"borrowed combat presentation matches every renderer-visible cold-oracle field"
@@ -577,7 +576,6 @@ func _check_combat_presentation_frame(run) -> void:
 			and is_same(first["trails"], run.damaging_trails)
 			and is_same(first["protection_sources"], run.player_protection_sources)
 			and is_same(first["resolved_boss_modules"], run.resolved_boss_module_visuals)
-			and is_same(support_fields, run._runtime_support_field_frames)
 			and is_same(secondary, run._runtime_secondary_presentation_frame)
 			and is_same(secondary["mines"], run.secondary_runtime.mines),
 		"combat presentation borrows synchronous live collections without duplication"
@@ -593,10 +591,7 @@ func _check_combat_presentation_frame(run) -> void:
 			and not is_same(oracle["secondary"]["mines"], run.secondary_runtime.mines),
 		"cold combat snapshot remains independently owned for validators and capture"
 	)
-	var first_support_record: Dictionary = (
-		support_fields[0] if not support_fields.is_empty() else {}
-	)
-	var identities_stable := not support_fields.is_empty()
+	var identities_stable := true
 	for _sync_index in 128:
 		var repeated: Dictionary = run.call(
 			"_runtime_combat_presentation_snapshot"
@@ -604,8 +599,6 @@ func _check_combat_presentation_frame(run) -> void:
 		identities_stable = identities_stable and (
 			is_same(first, repeated)
 			and is_same(secondary, repeated["secondary"])
-			and is_same(support_fields, repeated["support_fields"])
-			and is_same(first_support_record, repeated["support_fields"][0])
 		)
 	_expect(
 		identities_stable,
@@ -640,7 +633,7 @@ func _presentation_snapshots_match(
 		"dash_direction", "player_hit", "player_hit_remaining",
 		"player_invulnerable_remaining", "protection_sources", "muzzle_flash",
 		"barrier_strength", "reduced_motion", "run_time",
-		"secondary_visual_tier", "support_fields", "resolved_boss_modules",
+		"secondary_visual_tier", "resolved_boss_modules",
 		"ion_level", "blade_level", "escort_drone", "cursor_position",
 	]:
 		if expected.get(key) != actual.get(key):
@@ -812,21 +805,10 @@ func _check_hot_path_guards(run) -> void:
 		not bool(run._motion_cover_static_safe),
 		"out-of-bounds motion remains on the exact solver"
 	)
-	if not run._active_tactical_layout.cover_rects.is_empty():
-		var cover := Rect2(run._active_tactical_layout.cover_rects[0])
-		var cover_from := cover.get_center() - Vector2(cover.size.x * 0.5 + 120.0, 0.0)
-		var cover_to := cover.get_center() + Vector2(cover.size.x * 0.5 + 120.0, 0.0)
-		var motion_cover: Array = run.call(
-			"_runtime_motion_cover_rects", cover_from, cover_to, 24.0
-		)
-		_expect(
-			cover in motion_cover and not bool(run._motion_cover_static_safe),
-			"selected cover remains an exact uncertified blocker"
-		)
-		var cover_hit := Dictionary(run.call("_runtime_first_cover_hit", cover_from, cover_to, 7.0))
-		_expect(bool(cover_hit.get("hit", false)), "candidate-bearing projectile path keeps exact cover hit")
-	else:
-		_expect(false, "stage fixture exposes authored cover for candidate-path coverage")
+	_expect(
+		run._active_tactical_layout.cover_rects.is_empty(),
+		"dedicated cover is retired in favor of inner walls"
+	)
 	if not run._runtime_structural_walls.is_empty():
 		var wall := Rect2(run._runtime_structural_walls[0])
 		var wall_from := wall.get_center() - Vector2(wall.size.x * 0.5 + 80.0, 0.0)
@@ -840,39 +822,16 @@ func _check_hot_path_guards(run) -> void:
 		)
 	else:
 		_expect(false, "stage fixture exposes a structural wall")
-	if not run._runtime_bulkheads.is_empty():
-		var bulkhead := Rect2(run._runtime_bulkheads[0])
-		var bulkhead_from := (
-			bulkhead.get_center() - Vector2(bulkhead.size.x * 0.5 + 80.0, 0.0)
-		)
-		var bulkhead_to := (
-			bulkhead.get_center() + Vector2(bulkhead.size.x * 0.5 + 80.0, 0.0)
-		)
-		var live_bulkhead_cover: Array = run.call(
-			"_runtime_motion_cover_rects", bulkhead_from, bulkhead_to, 24.0
-		)
-		_expect(
-			bulkhead in live_bulkhead_cover and not bool(run._motion_cover_static_safe),
-			"live bulkhead motion retains exact blocker scanning"
-		)
-		var bulkhead_id: StringName = run.terrain_runtime.bulkhead_id_for_rect(
-			bulkhead
-		)
-		_expect(
-			run.terrain_runtime.damage_bulkhead(bulkhead_id, 9999.0),
-			"bulkhead fixture opens through the authored damage owner"
-		)
-		run.call("_rebuild_runtime_blockers")
-		var opened_bulkhead_cover: Array = run.call(
-			"_runtime_motion_cover_rects", bulkhead_from, bulkhead_to, 24.0
-		)
-		_expect(
-			bulkhead not in opened_bulkhead_cover
-			and not bool(run._motion_cover_static_safe),
-			"opened bulkhead remains uncertified while exact blockers reflect removal"
-		)
-	else:
-		_expect(false, "stage fixture exposes a live breakable bulkhead")
+	var device_rows: Array = run.mystery_device_runtime.snapshot()["devices"]
+	_expect(
+		device_rows.size() == 3
+		and not bool(run.call(
+			"_position_clear_of_stage_objects",
+			Vector2(device_rows[0]["position"]),
+			24.0
+		)),
+		"three intact mystery devices participate in exact actor collision"
+	)
 	var collision_crate: Dictionary = {}
 	for crate in run.crates:
 		if bool(crate["alive"]):

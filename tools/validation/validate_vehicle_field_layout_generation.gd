@@ -12,6 +12,7 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	for field_id in Registry.FIELD_IDS:
 		_validate_field(field_id)
+	_validate_seeded_fallback_variation()
 	_finish()
 
 
@@ -23,21 +24,10 @@ func _validate_field(field_id: StringName) -> void:
 	_expect(Array(definition["walkable_regions"]).size() >= 20, "%s has twenty broad regions" % field_id)
 	_expect(Array(definition["ordinary_spawn_anchors"]).size() == 32, "%s has 32 ordinary anchors" % field_id)
 	_expect(Array(definition["boss_arrival_anchors"]).size() == 12, "%s has 12 boss anchors" % field_id)
-	_expect(Array(definition["cover_candidates"]).size() == 24, "%s has 24 cover candidates" % field_id)
 	_expect(Array(definition["item_socket_candidates"]).size() >= 32, "%s has at least 32 item sockets" % field_id)
-	_expect(Dictionary(definition["stationary_candidates"]).size() == 6, "%s has six stationary groups" % field_id)
 	_expect(
 		Generator.validate_feature_contract(definition).is_empty(),
 		"%s functional terrain has valid disjoint footprints" % field_id
-	)
-	var fallback_errors := Generator.validate_cover_ids(
-		Array(definition["fallback_cover_ids"])
-	)
-	_expect(
-		fallback_errors.is_empty(),
-		"%s fallback cover set avoids functional terrain: %s" % [
-			field_id, "; ".join(fallback_errors)
-		]
 	)
 
 	var fixed := Generator.generate(FIXED_SEED, Catalog.STAGE_IDS, field_id)
@@ -47,28 +37,26 @@ func _validate_field(field_id: StringName) -> void:
 		return
 	_expect(fixed.field_id == field_id, "%s layout retains field id" % field_id)
 	_expect(fixed.fingerprint == replay.fingerprint, "%s same seed reproduces layout" % field_id)
-	_validate_no_feature_overlaps(fixed, definition)
-	var shared_cover_ids: Array[StringName] = []
+	_validate_no_feature_overlaps(fixed, fixed.field_definition)
+	var fixed_features := fixed.run_feature_blueprint()
+	_expect(fixed_features.filter(func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"hazard_zone").size() == 4, "%s fixes four hazard zones" % field_id)
+	var wall_groups := {}
+	for feature in fixed_features:
+		if StringName(feature["kind"]) == &"structural_wall": wall_groups[int(feature.get("group", -1))] = true
+	_expect(wall_groups.size() == 5, "%s fixes five inner-wall groups" % field_id)
 	for stage_id in Catalog.STAGE_IDS:
 		var tactical := fixed.tactical_layout(stage_id)
 		_expect(tactical != null, "%s/%s has a tactical layout" % [field_id, stage_id])
 		if tactical == null:
 			continue
-		_expect(tactical.cover_rects.size() == 8, "%s/%s selects exactly eight covers" % [field_id, stage_id])
+		_expect(tactical.cover_rects.is_empty(), "%s/%s retires dedicated cover" % [field_id, stage_id])
 		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s/%s retains at least 20 ordinary anchors" % [field_id, stage_id])
 		_expect(tactical.boss_arrival_anchors.size() >= 8, "%s/%s retains at least eight boss anchors" % [field_id, stage_id])
-		_expect(tactical.support_sockets.size() >= 12, "%s/%s retains twelve support sockets" % [field_id, stage_id])
-		if shared_cover_ids.is_empty():
-			shared_cover_ids = tactical.cover_ids.duplicate()
-		else:
-			_expect(
-				tactical.cover_ids == shared_cover_ids,
-				"%s/%s preserves the run-scoped cover selection" % [field_id, stage_id]
-			)
-		_expect(fixed.stationary_blueprint(stage_id).size() == 4, "%s/%s has four stationary threats" % [field_id, stage_id])
+		_expect(fixed.mystery_device_blueprint(stage_id).size() == 3, "%s/%s has three mystery devices" % [field_id, stage_id])
 		_expect(fixed.pickup_blueprint(stage_id).size() == 6, "%s/%s has six loose pickups" % [field_id, stage_id])
 		_expect(fixed.crate_blueprint(stage_id).size() == 8, "%s/%s has eight crates" % [field_id, stage_id])
 		_validate_stage_objects(fixed, stage_id)
+		_validate_stage_spacing(fixed, stage_id)
 
 	var varied := 0
 	var previous_fingerprint := fixed.fingerprint
@@ -77,11 +65,24 @@ func _validate_field(field_id: StringName) -> void:
 		_expect(layout != null, "%s seed fixture %d generates" % [field_id, seed_offset])
 		if layout == null:
 			continue
-		_validate_no_feature_overlaps(layout, definition)
+		_validate_no_feature_overlaps(layout, layout.field_definition)
 		if layout.fingerprint != previous_fingerprint:
 			varied += 1
 		previous_fingerprint = layout.fingerprint
 	_expect(varied >= 42, "%s adjacent seed fixtures vary" % field_id)
+
+
+func _validate_seeded_fallback_variation() -> void:
+	# Exercise the defensive path directly so a later geometry edit cannot make
+	# every rejected run seed collapse onto one shared fallback structure.
+	var definition := Registry.definition(Registry.FIELD_IDS[0])
+	Generator.validate_feature_contract(definition)
+	var first: Array[Dictionary] = Generator._fallback_run_features(FIXED_SEED)
+	var replay: Array[Dictionary] = Generator._fallback_run_features(FIXED_SEED)
+	var varied: Array[Dictionary] = Generator._fallback_run_features(FIXED_SEED + 1)
+	_expect(not first.is_empty() and not varied.is_empty(), "seeded fallback compiles complete structures")
+	_expect(var_to_bytes(first) == var_to_bytes(replay), "same seed reproduces fallback structure")
+	_expect(var_to_bytes(first) != var_to_bytes(varied), "different seeds vary fallback structure")
 
 
 func _validate_no_feature_overlaps(
@@ -98,15 +99,6 @@ func _validate_no_feature_overlaps(
 			_expect(not Generator.feature_overlaps_circle(definition, anchor, 36.0), "%s/%s ordinary spawn avoids functional terrain" % [layout.field_id, stage_id])
 		for anchor in tactical.boss_arrival_anchors:
 			_expect(not Generator.feature_overlaps_circle(definition, anchor, 76.0), "%s/%s boss spawn avoids functional terrain" % [layout.field_id, stage_id])
-		for spec in layout.stationary_blueprint(stage_id):
-			_expect(
-				not Generator.feature_overlaps_circle(
-					definition, Vector2(spec["pos"]), 54.0
-				),
-				"%s/%s stationary threat avoids functional terrain" % [
-					layout.field_id, stage_id
-				]
-			)
 		for spec in layout.pickup_blueprint(stage_id):
 			_expect(
 				not Generator.feature_overlaps_circle(
@@ -182,6 +174,52 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 		recall_positions.size() == 4 and _maximum_pair_distance(recall_positions) >= 1200.0,
 		"%s four recall sources include a separated pair" % stage_id
 	)
+
+
+func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -> void:
+	var devices := layout.mystery_device_blueprint(stage_id)
+	var crates := layout.crate_blueprint(stage_id)
+	var pickups := layout.pickup_blueprint(stage_id)
+	var hazards: Array = layout.run_feature_blueprint().filter(
+		func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"hazard_zone"
+	)
+	var gates: Array = layout.run_feature_blueprint().filter(
+		func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"transit_gate"
+	)
+	for first in devices.size():
+		var device_pos := Vector2(devices[first]["pos"])
+		for second in range(first + 1, devices.size()):
+			_expect(device_pos.distance_to(Vector2(devices[second]["pos"])) >= 960.0, "%s devices keep 960 spacing" % stage_id)
+		for hazard in hazards:
+			_expect(_point_to_rect_distance(device_pos, Rect2(hazard["rect"])) >= 576.0, "%s device avoids hazard" % stage_id)
+		for gate in gates:
+			_expect(device_pos.distance_to(Vector2(gate["pos"])) >= 576.0, "%s device avoids gate" % stage_id)
+	for first in crates.size():
+		var crate_pos := Vector2(crates[first]["pos"])
+		for second in range(first + 1, crates.size()):
+			_expect(crate_pos.distance_to(Vector2(crates[second]["pos"])) >= 672.0, "%s crates keep 672 spacing" % stage_id)
+		for device in devices:
+			_expect(crate_pos.distance_to(Vector2(device["pos"])) >= 576.0, "%s crate avoids device" % stage_id)
+		for hazard in hazards:
+			_expect(_point_to_rect_distance(crate_pos, Rect2(hazard["rect"])) >= 384.0, "%s crate avoids hazard" % stage_id)
+	for first in pickups.size():
+		var pickup_pos := Vector2(pickups[first]["pos"])
+		for second in range(first + 1, pickups.size()):
+			_expect(pickup_pos.distance_to(Vector2(pickups[second]["pos"])) >= 384.0, "%s pickups keep 384 spacing" % stage_id)
+		for crate in crates:
+			_expect(pickup_pos.distance_to(Vector2(crate["pos"])) >= 384.0, "%s pickup avoids crate" % stage_id)
+		for device in devices:
+			_expect(pickup_pos.distance_to(Vector2(device["pos"])) >= 480.0, "%s pickup avoids device" % stage_id)
+		for hazard in hazards:
+			_expect(_point_to_rect_distance(pickup_pos, Rect2(hazard["rect"])) >= 384.0, "%s pickup avoids hazard" % stage_id)
+
+
+func _point_to_rect_distance(point: Vector2, rectangle: Rect2) -> float:
+	var nearest := Vector2(
+		clampf(point.x, rectangle.position.x, rectangle.end.x),
+		clampf(point.y, rectangle.position.y, rectangle.end.y)
+	)
+	return point.distance_to(nearest)
 
 
 func _item_sector(position: Vector2, center: Vector2) -> int:

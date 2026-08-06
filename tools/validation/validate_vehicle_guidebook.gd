@@ -21,16 +21,19 @@ func _run() -> void:
 	_expect(not store.discover(&"mobile_chaser"), "discovery is idempotent")
 	_expect(not store.discover(&"unknown_entry"), "unknown IDs are discarded")
 	_expect(Catalog.entry_id_for_enemy(&"spark_minelet", &"mine") == &"mobile_spark_minelet", "moving minelets stay in the mobile guide category")
-	_expect(Catalog.entry_id_for_enemy(&"mine", &"mine") == &"stationary_mine", "authored mines stay in the stationary guide category")
+	_expect(Catalog.entry_id_for_enemy(&"mine", &"mine").is_empty(), "retired map-stationary roles have no guide entry")
 	_expect(Catalog.valid_ids().has(&"mobile_bulkhead_guard"), "Bulkhead Guard has a stable guide entry")
 	_expect(Catalog.valid_ids().has(&"object_transit_gate"), "Transit Gate has a stable guide entry")
+	_expect(Catalog.valid_ids().has(&"object_hazard_zone"), "Hazard Zone has a stable guide entry")
+	_expect(Catalog.valid_ids().has(&"object_mystery_device"), "Mystery Device has a stable guide entry")
 	var locked := store.snapshot({"health":120.0})
 	var mobile: Array = locked["categories"][&"mobile"]
 	var hidden := mobile.filter(func(entry: Dictionary) -> bool: return bool(entry["locked"]))
 	_expect(hidden.all(func(entry: Dictionary) -> bool: return entry.keys().all(func(key): return key in ["id", "locked", "name", "description"]) and entry["name"] == "???" and entry["description"] == ""), "locked entries contain no hidden copy")
-	store.discover(&"stationary_mine")
 	store.discover(&"boss_stage_2")
 	store.discover(&"object_transit_gate")
+	store.discover(&"object_hazard_zone")
+	store.discover(&"object_mystery_device")
 	var active_ship := {
 		"active":true,
 		"run_state":{
@@ -45,7 +48,7 @@ func _run() -> void:
 		"upgrades":[],
 	}
 	var visual := store.snapshot(active_ship)
-	for category in [&"stationary", &"bosses", &"objects"]:
+	for category in [&"bosses"]:
 		var unlocked: Array = visual["categories"][category].filter(
 			func(entry: Dictionary) -> bool: return not bool(entry["locked"])
 		)
@@ -63,7 +66,7 @@ func _run() -> void:
 	var loaded := Store.new()
 	loaded.save_path = TEST_PATH
 	loaded.load_discovery()
-	_expect(loaded.known.has(&"mobile_chaser") and loaded.known.size() == 4, "discovery save round-trips sanitized IDs")
+	_expect(loaded.known.has(&"mobile_chaser") and loaded.known.size() == 5, "discovery save round-trips sanitized IDs")
 	var panel := GuidePanel.new()
 	get_root().add_child(panel)
 	await process_frame
@@ -71,13 +74,13 @@ func _run() -> void:
 	await process_frame
 	var contract := panel.debug_contract()
 	_expect(
-		int(contract["categories"]) == 5
+		int(contract["categories"]) == 4
 			and Array(contract["category_order"]) == [
-				&"ship", &"mobile", &"stationary", &"bosses", &"objects",
+				&"ship", &"mobile", &"bosses", &"objects",
 			]
 			and int(contract["command_height"]) >= 44
 			and bool(contract["category_has_focus"]),
-		"guide modal preserves five accessible categories in product order"
+		"guide modal preserves four accessible categories in product order"
 	)
 	_expect(bool(contract["ship_entry_column_hidden"]), "Current Ship removes the redundant entry column")
 	_expect(
@@ -104,7 +107,7 @@ func _run() -> void:
 		"discovered detail restores the list and three unboxed counterplay rows"
 	)
 	var locked_id := &""
-	for category in [&"mobile", &"stationary", &"bosses", &"objects"]:
+	for category in [&"mobile", &"bosses", &"objects"]:
 		for entry_variant in Array(visual["categories"][category]):
 			var entry := Dictionary(entry_variant)
 			if bool(entry.get("locked", false)):
@@ -129,13 +132,13 @@ func _run() -> void:
 	_expect(
 		bool(contract["compact_selector_visible"])
 			and not bool(contract["wide_rail_visible"])
-			and int(contract["compact_selector_count"]) == 5
+			and int(contract["compact_selector_count"]) == 4
 			and bool(contract["category_has_focus"])
 			and int(contract["entry_focusables"]) > 0
 			and is_equal_approx(float(ratios[0]), 0.34)
 			and is_equal_approx(float(ratios[1]), 0.66)
 			and bool(contract["independent_scroll"]),
-		"compact guide uses one five-option selector and independent 34/66 scroll panes"
+		"compact guide uses one four-option selector and independent 34/66 scroll panes"
 	)
 	panel.call("_select_category", &"ship")
 	contract = panel.debug_contract()

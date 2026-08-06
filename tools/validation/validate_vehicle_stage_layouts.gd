@@ -19,7 +19,7 @@ func _initialize() -> void:
 		_expect(Catalog.geometry_fingerprint(stage_id) == fingerprint, "%s shares immutable field" % stage_id)
 		_expect(Catalog.world_rect(stage_id) == Rect2(0,0,7200,4320), "%s world bounds" % stage_id)
 		_expect(Catalog.player_start(stage_id) == Vector2(3600,2160), "%s center spawn" % stage_id)
-		_expect(layout.stationary_blueprint(stage_id).size() == 4, "%s restocks four stationary threats" % stage_id)
+		_expect(layout.mystery_device_blueprint(stage_id).size() == 3, "%s scatters three mystery devices" % stage_id)
 		_expect(layout.pickup_blueprint(stage_id).size() == 6, "%s restocks six loose pickups" % stage_id)
 		_expect(layout.crate_blueprint(stage_id).size() == 8, "%s restocks eight crates" % stage_id)
 		_expect(Catalog.packets(stage_id).all(func(packet: Dictionary) -> bool: return StringName(packet["trigger"]["kind"]) == &"time"), "%s uses only timed arrivals" % stage_id)
@@ -32,15 +32,6 @@ func _initialize() -> void:
 			float(mobile_projectile_count) / float(maxi(1, mobile_blueprint.size())) <= 0.15,
 			"%s keeps projectile-firing mobile enemies at or below fifteen percent" % stage_id
 		)
-		var stationary_blueprint := layout.stationary_blueprint(stage_id)
-		var stationary_projectile_count := stationary_blueprint.filter(
-			func(spec: Dictionary) -> bool:
-				return EnemyArchetypes.fires_projectiles(StringName(spec["role"]))
-		).size()
-		_expect(
-			float(stationary_projectile_count) / float(maxi(1, stationary_blueprint.size())) <= 0.50,
-			"%s keeps projectile-firing stationary enemies at or below half" % stage_id
-		)
 	var center := Catalog.player_start()
 	_expect(Rules.is_position_walkable(center, Rules.PLAYER_RADIUS, &"stage_1"), "center is walkable")
 	for stage_id in Catalog.STAGE_IDS:
@@ -49,12 +40,30 @@ func _initialize() -> void:
 			_expect(not Rules.circle_overlaps_rect(center, 560.0, cover), "%s center clearance contains no cover" % stage_id)
 	for void_rect in Catalog.void_rects():
 		_expect(not Rules.circle_overlaps_rect(center, 560.0, void_rect), "center clearance contains no void")
-	for stage_id in Catalog.STAGE_IDS:
-		for spec in layout.stationary_blueprint(stage_id):
-			_expect(center.distance_to(Vector2(spec["pos"])) >= 560.0, "center clearance contains no stationary threat")
+	for feature in layout.run_feature_blueprint():
+		if Dictionary(feature).has("rect"):
+			_expect(not Rules.circle_overlaps_rect(center, 560.0, Rect2(feature["rect"])), "center clearance contains no fixed field feature")
 	_expect(Catalog.cover_rects().is_empty(), "static catalog owns no internal cover")
+	var walls := layout.run_feature_blueprint().filter(func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"structural_wall")
+	var groups := {}
+	var hazards := layout.run_feature_blueprint().filter(func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"hazard_zone")
+	for wall in walls:
+		groups[int(wall.get("group", -1))] = true
+	_expect(groups.size() == 5, "run fixes exactly five inner-wall groups")
+	_expect(hazards.size() == 4, "run fixes four broad hazard zones")
+	var templates := {}
+	for wall in walls: templates[StringName(wall.get("template", &""))] = true
+	_expect(templates.size() == 5, "wall groups use five unique templates")
+	var hazard_sizes := {}
+	var variants := {}
+	for hazard in hazards:
+		var rect := Rect2(hazard["rect"])
+		hazard_sizes[Vector2(maxf(rect.size.x, rect.size.y), minf(rect.size.x, rect.size.y))] = true
+		variants[StringName(hazard.get("variant", &""))] = true
+	_expect(hazard_sizes.size() == 4 and variants.size() == 1, "hazards use all four footprints and one run variant")
 	for stage_id in Catalog.STAGE_IDS:
-		_expect(layout.tactical_layout(stage_id).cover_rects.size() == 8, "%s runtime blocker count is exact" % stage_id)
+		for device in layout.mystery_device_blueprint(stage_id):
+			_expect(not device.has("effect"), "%s device blueprint hides outcome" % stage_id)
 	_expect(7200.0 / 1280.0 > 5.0 and 4320.0 / 720.0 >= 6.0, "field cannot fit in one gameplay viewport")
 	_finish()
 

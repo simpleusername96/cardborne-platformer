@@ -60,7 +60,7 @@ func is_spawnable_disc(position: Vector2, radius: float) -> bool:
 		if rectangle.grow(radius).has_point(position):
 			return false
 	for feature in terrain_zones:
-		if StringName(feature.get("kind", &"")) not in [&"structural_wall", &"breakable_bulkhead"]:
+		if StringName(feature.get("kind", &"")) != &"structural_wall":
 			continue
 		if Rect2(feature.get("rect", Rect2())).grow(radius).has_point(position):
 			return false

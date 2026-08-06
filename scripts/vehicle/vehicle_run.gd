@@ -62,6 +62,9 @@ const ManualPerformanceTrace = preload("res://scripts/performance/vehicle_manual
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const StageTacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
+const MysteryDeviceRuntime = preload(
+	"res://scripts/vehicle/vehicle_mystery_device_runtime.gd"
+)
 const DamageSourceCatalog = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
 const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
@@ -101,7 +104,7 @@ const EMP_AFTERSHOCK_DELAY := 0.72
 const MINIMAP_COLS := 20
 const MINIMAP_ROWS := 12
 const MINIMAP_FRAME_COUNT := 2
-const MINIMAP_MARKER_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES + 15
+const MINIMAP_MARKER_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES + 24
 const MINIMAP_STATIC_KEYS: Array[StringName] = [
 	&"floor_polygons", &"void_polygons", &"blocker_polygons",
 ]
@@ -120,6 +123,7 @@ const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
 const PICKUP_BODY_RADIUS := Art.PICKUP_PLINTH_RADIUS
 const CRATE_COLLISION_RADIUS := 31.0
 const CRATE_COLLISION_CELL_SIZE := 320.0
+const MYSTERY_GRAVITY_PULL_SPEED := 380.0
 const CHARGE_PATH_SAMPLE_STEP := 8.0
 const CHARGE_PATH_BINARY_STEPS := 8
 # Prime relative to the six-way enemy decision buckets so profiling eventually
@@ -155,12 +159,12 @@ var stage_flow := StageFlow.new()
 var pursuit_field := PursuitField.new()
 var secondary_runtime := SecondaryRuntime.new()
 var terrain_runtime := TerrainRuntime.new()
+var mystery_device_runtime := MysteryDeviceRuntime.new()
 var stage_telemetry := StageTelemetry.new()
 var boss_runtime := BossRuntime.new()
 var boss_exam_runtime := BossExamRuntime.new()
 var boss_practice := BossPracticeSession.new()
 var _runtime_blockers: Array[Rect2] = []
-var _runtime_bulkheads: Array[Rect2] = []
 var _runtime_structural_walls: Array[Rect2] = []
 var _motion_cover_static_safe := false
 var _motion_cover_static_cover_clear := false
@@ -235,6 +239,11 @@ var _motion_cover_query: Array[Rect2] = []
 var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
 var _crate_hit_receipt: Dictionary = {"crate":null, "t":INF}
+var _mystery_device_hit_receipt: Dictionary = {}
+var _mystery_device_snapshot_buffer: Array[Dictionary] = []
+var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
+var _mystery_retired_event_buffer: Array[Dictionary] = []
+var _mystery_decoy_targets: Dictionary = {}
 var _runtime_fast_hud_frame: Dictionary = {}
 var _runtime_fast_target_frame: Dictionary = {}
 var _runtime_fast_boss_frame: Dictionary = {}
@@ -246,7 +255,6 @@ var _runtime_minimap_frame_index := -1
 var _runtime_threat_radar_frame: Dictionary = {}
 var _runtime_combat_presentation_frame: Dictionary = {}
 var _runtime_secondary_presentation_frame: Dictionary = {}
-var _runtime_support_field_frames: Array[Dictionary] = []
 var _build_fast_hud_snapshot_callable: Callable
 var _minimap_snapshot_callable: Callable
 var _threat_radar_snapshot_callable: Callable
@@ -289,9 +297,9 @@ var _enemy_decision_cycle_epoch := 0
 var _simulation_lod_bucket := 0
 var _far_enemy_simulation_bucket := 0
 var _enemy_coordination_initialized := false
-var _wear_motion_candidates: Array[EnemyState] = []
-var _wear_tracked_id_buffer: Array[String] = []
-var _wear_processed_ids: Dictionary = {}
+var _hazard_motion_candidates: Array[EnemyState] = []
+var _hazard_tracked_id_buffer: Array[String] = []
+var _hazard_processed_ids: Dictionary = {}
 var _low_count_overlay_timer := 0.0
 var _physics_serial := 0
 var _presented_physics_serial := -1
@@ -704,7 +712,7 @@ func _reset_run(
 	increment_index: bool = true,
 	preserve_stage: bool = false,
 	preserve_upgrades: bool = false,
-	preserve_field_state: bool = false
+	_preserve_field_state: bool = false
 ) -> void:
 	if increment_index:
 		run_index += 1
@@ -784,8 +792,6 @@ func _reset_run(
 	_clear_effects()
 	resolved_boss_module_visuals.clear()
 	damaging_trails.clear()
-	for spec in _active_tactical_layout.stationary_blueprint():
-		_append_enemy(_make_enemy(spec))
 	encounter_runtime.configure(
 		current_stage_id,
 		StageCatalog.packets(current_stage_id),
@@ -798,15 +804,7 @@ func _reset_run(
 		current_stage_index,
 		RunDifficulty.scaled_quota(StageCatalog.quota(current_stage_id), selected_run_difficulty)
 	)
-	terrain_runtime.configure(
-		field_layout.field_definition.get("features", []),
-		field_layout.persistent_bulkhead_health,
-		preserve_field_state,
-		_active_tactical_layout.support_sockets,
-		field_layout.seed,
-		current_stage_id,
-		field_layout.persistent_wear_tile_state
-	)
+	_configure_stage_map_runtime()
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
 	_populate_stage_items()
@@ -875,6 +873,16 @@ func _generate_field_layout() -> void:
 	StageCatalog.activate_field(field_layout.field_id)
 
 
+func _configure_stage_map_runtime() -> void:
+	terrain_runtime.configure(field_layout.run_feature_blueprint())
+	mystery_device_runtime.configure(
+		_active_tactical_layout.mystery_device_blueprint(),
+		field_layout.seed,
+		current_stage_id
+	)
+	_mystery_decoy_targets.clear()
+
+
 func _populate_stage_items() -> void:
 	pickups.clear()
 	crates.clear()
@@ -893,7 +901,6 @@ func _populate_stage_items() -> void:
 			"pos": Vector2(spec["pos"]),
 			"drop": StringName(spec["drop"]),
 			"heal_amount": float(spec.get("heal_amount", 0.0)),
-			"guarded_by": StringName(spec.get("guarded_by", &"")),
 			"health": 24.0,
 			"max_health": 24.0,
 			"alive": true,
@@ -1382,18 +1389,13 @@ func _advance_player_protection_sources(delta: float) -> void:
 
 
 func _update_terrain(delta: float, previous_player_position: Vector2) -> void:
-	var events := terrain_runtime.advance(
-		delta, player_position, player_health, _player_max_health()
-	)
+	var hazard_motion_start := previous_player_position
+	var events := terrain_runtime.advance(delta, player_position)
 	for event in events:
 		match StringName(event["kind"]):
-			&"heal":
-				player_health = minf(
-					_player_max_health(),
-					player_health + float(event["amount"])
-				)
 			&"transit":
 				player_position = Vector2(event["destination"])
+				hazard_motion_start = player_position
 				player_velocity = Vector2.ZERO
 				_grant_player_protection(
 					float(event["invulnerability"]),
@@ -1408,20 +1410,25 @@ func _update_terrain(delta: float, previous_player_position: Vector2) -> void:
 					player_hull_direction
 				)
 				_play_sound(&"dash", 1.18)
-	var surge_damage := terrain_runtime.surge_damage_for(
-		"player", player_position, &"player"
-	)
-	if surge_damage > 0.0:
-		_damage_player(surge_damage, "Arc Surge", false, false, true)
-	var wear_damage := terrain_runtime.wear_damage_for_actor(
+	var hazard_damage := terrain_runtime.hazard_damage_for_actor(
 		"player",
-		previous_player_position,
+		hazard_motion_start,
 		player_position,
 		Rules.PLAYER_RADIUS,
+		&"player",
 		delta
 	)
-	if wear_damage > 0.0:
-		_damage_player(wear_damage, "Wear Collapse", false, false, true)
+	if hazard_damage > 0.0:
+		# Hazard ticks keep their authored 0.75-second cadence. They respect any
+		# existing protection but do not create the ordinary hit grace window.
+		_damage_player(
+			hazard_damage,
+			"Hazard Zone",
+			false,
+			false,
+			true,
+			false
+		)
 
 
 func _update_player_aim() -> void:
@@ -1620,9 +1627,6 @@ func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) 
 	for wall in _runtime_structural_walls:
 		if swept.intersects(wall.grow(radius), true):
 			_projectile_cover_query.append(wall)
-	for bulkhead in _runtime_bulkheads:
-		if swept.intersects(bulkhead.grow(radius), true):
-			_projectile_cover_query.append(bulkhead)
 	return _projectile_cover_query
 
 
@@ -1656,9 +1660,6 @@ func _runtime_motion_cover_rects(
 	for wall in _runtime_structural_walls:
 		if swept.intersects(wall.grow(radius), true):
 			_motion_cover_query.append(wall)
-	for bulkhead in _runtime_bulkheads:
-		if swept.intersects(bulkhead.grow(radius), true):
-			_motion_cover_query.append(bulkhead)
 	return _motion_cover_query
 
 
@@ -1668,8 +1669,6 @@ func _rebuild_runtime_blockers() -> void:
 		_runtime_blockers.append_array(_active_tactical_layout.cover_rects)
 	_runtime_structural_walls = terrain_runtime.structural_wall_rects()
 	_runtime_blockers.append_array(_runtime_structural_walls)
-	_runtime_bulkheads = terrain_runtime.live_bulkhead_rects()
-	_runtime_blockers.append_array(_runtime_bulkheads)
 
 
 func _runtime_first_cover_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
@@ -2080,9 +2079,10 @@ func _update_experience(delta: float) -> void:
 func _update_enemies(delta: float) -> void:
 	var performance_active := _performance_detail_sample_active
 	var section_started := Time.get_ticks_usec() if performance_active else 0
-	_wear_motion_candidates.clear()
-	_wear_tracked_id_buffer.clear()
-	_wear_processed_ids.clear()
+	_hazard_motion_candidates.clear()
+	_hazard_tracked_id_buffer.clear()
+	_hazard_processed_ids.clear()
+	_prepare_mystery_device_effects(delta)
 	var decision_bucket := _enemy_decision_bucket
 	_enemy_decision_bucket = (_enemy_decision_bucket + 1) % ORDINARY_DECISION_BUCKET_COUNT
 	if decision_bucket == 0:
@@ -2177,18 +2177,7 @@ func _update_enemies(delta: float) -> void:
 	if performance_active:
 		_performance_enemy_sections["coordination"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
-	var arc_surge_active := terrain_runtime.has_active_arc_surge()
 	for enemy in _enemy_update_schedule.active:
-		if arc_surge_active:
-			var terrain_damage := terrain_runtime.surge_damage_for(
-				enemy.id,
-				enemy.pos,
-				&"boss" if enemy.role == &"stage_boss" else &"ordinary"
-			)
-			if terrain_damage > 0.0:
-				_damage_enemy(enemy, terrain_damage, "Arc Surge", &"arc", false)
-				if not enemy.alive:
-					continue
 		if not enemy.statuses.is_empty():
 			var status_damage := StatusRuntime.tick(enemy, delta)
 			if float(status_damage["burn"]) > 0.0:
@@ -2202,7 +2191,7 @@ func _update_enemies(delta: float) -> void:
 			_update_stage_boss(enemy, delta)
 			enemy_grid.update_actor(enemy)
 			if enemy.pos != _enemy_update_schedule.motion_start(enemy):
-				_wear_motion_candidates.append(enemy)
+				_hazard_motion_candidates.append(enemy)
 			continue
 		if role == &"generator":
 			_update_generator(enemy, delta)
@@ -2219,51 +2208,123 @@ func _update_enemies(delta: float) -> void:
 		_update_scheduled_ordinary_enemy(enemy, delta)
 	for enemy in _enemy_update_schedule.ordinary_due:
 		_update_scheduled_ordinary_enemy(enemy)
+	_apply_mystery_device_forced_motion(delta)
 	if performance_active:
 		_performance_enemy_sections["scheduled_ordinary"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
-	for enemy in _wear_motion_candidates:
-		var wear_identity := _wear_identity(enemy)
-		if not enemy.alive or _wear_processed_ids.has(wear_identity):
+	for enemy in _hazard_motion_candidates:
+		var hazard_identity := _hazard_identity(enemy)
+		if not enemy.alive or _hazard_processed_ids.has(hazard_identity):
 			continue
-		_wear_processed_ids[wear_identity] = true
-		var wear_damage := terrain_runtime.wear_damage_for_actor(
-			enemy.id,
+		_hazard_processed_ids[hazard_identity] = true
+		_apply_hazard_damage_to_enemy(
+			enemy,
 			_enemy_update_schedule.motion_start(enemy),
 			enemy.pos,
-			enemy.radius,
 			delta
 		)
-		if wear_damage > 0.0:
-			_damage_enemy(enemy, wear_damage, "Wear Collapse", &"kinetic", false, true)
-	terrain_runtime.append_tracked_wear_actor_ids(_wear_tracked_id_buffer)
-	for actor_id in _wear_tracked_id_buffer:
+	terrain_runtime.append_tracked_hazard_actor_ids(_hazard_tracked_id_buffer)
+	for actor_id in _hazard_tracked_id_buffer:
+		if actor_id == "player":
+			continue
 		var tracked_enemy := _find_enemy_by_id(actor_id)
 		if tracked_enemy == null or not tracked_enemy.alive:
-			terrain_runtime.forget_wear_actor(actor_id)
+			terrain_runtime.forget_hazard_actor(actor_id)
 			continue
-		var tracked_identity := _wear_identity(tracked_enemy)
-		if _wear_processed_ids.has(tracked_identity):
+		var tracked_identity := _hazard_identity(tracked_enemy)
+		if _hazard_processed_ids.has(tracked_identity):
 			continue
-		_wear_processed_ids[tracked_identity] = true
-		var tracked_damage := terrain_runtime.wear_damage_for_actor(
-			actor_id,
+		_hazard_processed_ids[tracked_identity] = true
+		_apply_hazard_damage_to_enemy(
+			tracked_enemy,
 			tracked_enemy.pos,
 			tracked_enemy.pos,
-			tracked_enemy.radius,
 			delta
 		)
-		if tracked_damage > 0.0:
-			_damage_enemy(
-				tracked_enemy,
-				tracked_damage,
-				"Wear Collapse",
-				&"kinetic",
-				false,
-				true
-			)
 	if performance_active:
-		_performance_enemy_sections["wear_terrain"] = _elapsed_ms(section_started)
+		_performance_enemy_sections["hazard_terrain"] = _elapsed_ms(section_started)
+
+
+func _prepare_mystery_device_effects(delta: float) -> void:
+	## Advances effect lifetime and publishes control state before AI decisions.
+	mystery_device_runtime.advance_into(delta, _mystery_retired_event_buffer)
+	mystery_device_runtime.fill_active_effect_snapshot(
+		_mystery_effect_snapshot_buffer
+	)
+	_mystery_decoy_targets.clear()
+	for effect in _mystery_effect_snapshot_buffer:
+		var effect_id := StringName(effect["effect_id"])
+		if effect_id not in [&"cryo_lock", &"decoy_signal"]:
+			continue
+		var center := Vector2(effect["position"])
+		var radius := float(effect["radius"])
+		enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
+		for enemy in _enemy_query_buffer:
+			if (
+				not enemy.alive
+				or not enemy.active
+				or enemy.role == &"stage_boss"
+				or _is_fixed_structure_enemy(enemy)
+				or enemy.pos.distance_to(center) > radius + enemy.radius
+			):
+				continue
+			match effect_id:
+				&"cryo_lock":
+					# Warned startup/active attacks finish. Every other state is
+					# held long enough to prevent movement or a fresh commitment.
+					if enemy.phase not in [&"startup", &"active"]:
+						enemy.stun = maxf(enemy.stun, delta + 0.001)
+						enemy.velocity = Vector2.ZERO
+				&"decoy_signal":
+					if enemy.phase not in [&"startup", &"active"]:
+						_mystery_decoy_targets[enemy.id] = center
+
+
+func _apply_mystery_device_forced_motion(delta: float) -> void:
+	## Gravity is applied after scheduled AI motion so it is a readable force,
+	## not movement that the same frame's pursuit step immediately cancels.
+	for effect in _mystery_effect_snapshot_buffer:
+		if StringName(effect["effect_id"]) != &"gravity_pull":
+			continue
+		var center := Vector2(effect["position"])
+		var radius := float(effect["radius"])
+		enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
+		for enemy in _enemy_query_buffer:
+			if (
+				not enemy.alive
+				or not enemy.active
+				or enemy.role == &"stage_boss"
+				or _is_fixed_structure_enemy(enemy)
+				or enemy.pos.distance_to(center) > radius + enemy.radius
+			):
+				continue
+			_steer_enemy_toward_mystery_anchor(
+				enemy, center, MYSTERY_GRAVITY_PULL_SPEED, delta
+			)
+
+
+func _steer_enemy_toward_mystery_anchor(
+	enemy: EnemyState,
+	anchor: Vector2,
+	speed: float,
+	delta: float
+) -> void:
+	var offset := anchor - enemy.pos
+	if offset.length_squared() <= 1.0 or delta <= 0.0:
+		return
+	var previous_position := enemy.pos
+	var distance := offset.length()
+	var motion := offset / distance * minf(distance, speed * delta)
+	enemy.pos = _move_actor(enemy.pos, motion, enemy.radius, false)
+	if enemy.pos == previous_position:
+		return
+	enemy.velocity = (enemy.pos - previous_position) / delta
+	enemy_grid.update_actor_position(enemy)
+	# If forced movement enters a hazard, the hazard owns the neutral damage
+	# and any later quota/XP result. The regular tracked pass advances timers.
+	_apply_hazard_damage_to_enemy(
+		enemy, previous_position, enemy.pos, 0.0
+	)
 
 
 func _prepare_enemy_local_overlap_cache() -> void:
@@ -2288,8 +2349,45 @@ func _mark_enemy_overlap_refresh(enemy: EnemyState) -> void:
 		_enemy_overlap_refresh_mask[slot] = 1
 
 
-func _wear_identity(enemy: EnemyState) -> int:
+func _hazard_identity(enemy: EnemyState) -> int:
 	return (enemy.spatial_slot + 1) * 0x100000000 + enemy.runtime_generation
+
+
+func _apply_hazard_damage_to_enemy(
+	enemy: EnemyState,
+	previous_position: Vector2,
+	current_position: Vector2,
+	delta: float
+) -> void:
+	if enemy.role == &"boss_pylon":
+		terrain_runtime.forget_hazard_actor(enemy.id)
+		return
+	var actor_kind := &"boss" if enemy.role == &"stage_boss" else &"ordinary"
+	var damage := terrain_runtime.hazard_damage_for_actor(
+		enemy.id,
+		previous_position,
+		current_position,
+		enemy.radius,
+		actor_kind,
+		delta
+	)
+	if damage <= 0.0:
+		return
+	_damage_enemy(
+		enemy,
+		damage,
+		"Hazard Zone",
+		_active_hazard_affinity(),
+		false,
+		true
+	)
+
+
+func _active_hazard_affinity() -> StringName:
+	for feature in terrain_runtime.features:
+		if feature.kind == &"hazard_zone":
+			return AttackContract.normalize_affinity(feature.affinity)
+	return AttackContract.KINETIC
 
 
 func _update_scheduled_ordinary_enemy(
@@ -2351,7 +2449,7 @@ func _update_scheduled_ordinary_enemy(
 		else:
 			enemy_grid.update_actor(enemy)
 	if enemy.alive and enemy.pos != previous_position:
-		_wear_motion_candidates.append(enemy)
+		_hazard_motion_candidates.append(enemy)
 
 
 func _update_motion_only_ordinary_enemy(
@@ -2412,7 +2510,7 @@ func _record_motion_only_enemy_change(
 		else:
 			enemy_grid.update_actor(enemy)
 	if enemy.alive and enemy.pos != previous_position:
-		_wear_motion_candidates.append(enemy)
+		_hazard_motion_candidates.append(enemy)
 
 
 func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
@@ -2666,7 +2764,12 @@ func _update_ordinary_enemy(
 			enemy.attack_cooldown = _enemy_recovery_cooldown(enemy)
 		return false
 	if phase == &"startup":
-		if enemy.role == &"artillery_spotter" and not _runtime_has_line_of_sight(enemy.pos, player_position, 5.0):
+		if (
+			enemy.role == &"artillery_spotter"
+			and not _runtime_has_line_of_sight(
+				enemy.pos, enemy.committed_target, 5.0
+			)
+		):
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.65
 			return false
@@ -2809,24 +2912,25 @@ func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
 
 func _enemy_can_attack(enemy: EnemyState) -> bool:
 	var role := enemy.role
-	var distance := enemy.pos.distance_to(player_position)
+	var target := _mystery_enemy_target(enemy)
+	var distance := enemy.pos.distance_to(target)
 	match role:
 		&"chaser":
 			return distance <= 175.0
 		&"shooter":
-			return distance <= 620.0 and _runtime_has_line_of_sight(enemy.pos, player_position, 7.0)
+			return distance <= 620.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
 		&"controller":
-			return distance <= 590.0 and _runtime_has_line_of_sight(enemy.pos, player_position, 4.0)
+			return distance <= 590.0 and _runtime_has_line_of_sight(enemy.pos, target, 4.0)
 		&"turret":
-			return distance <= 760.0 and _runtime_has_line_of_sight(enemy.pos, player_position, 7.0)
+			return distance <= 760.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
 		&"mine":
 			return distance <= 190.0
 		&"artillery_spotter":
-			return distance <= 880.0 and distance >= 250.0 and _runtime_has_line_of_sight(enemy.pos, player_position, 5.0)
+			return distance <= 880.0 and distance >= 250.0 and _runtime_has_line_of_sight(enemy.pos, target, 5.0)
 		&"interceptor_tower":
-			return distance <= 700.0 and _runtime_has_line_of_sight(enemy.pos, player_position, 7.0)
+			return distance <= 700.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
 		&"rammer":
-			return distance <= 640.0 and distance >= 130.0 and _runtime_has_line_of_sight(enemy.pos, player_position, 12.0)
+			return distance <= 640.0 and distance >= 130.0 and _runtime_has_line_of_sight(enemy.pos, target, 12.0)
 		&"drone_carrier":
 			return (
 				distance <= 760.0
@@ -2834,16 +2938,17 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 					< SpecialistRuntime.CARRIER_CHILD_CAP
 			)
 		&"beam_sentinel":
-			return distance <= SpecialistRuntime.BEAM_RANGE and _runtime_has_line_of_sight(enemy.pos, player_position, 7.0)
+			return distance <= SpecialistRuntime.BEAM_RANGE and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
 	return false
 
 
 func _start_enemy_attack(enemy: EnemyState) -> void:
 	var role := enemy.role
+	var target := _mystery_enemy_target(enemy)
 	enemy.phase = &"startup"
 	enemy.hit_committed = false
-	enemy.committed_dir = (player_position - enemy.pos).normalized()
-	enemy.committed_target = player_position
+	enemy.committed_dir = (target - enemy.pos).normalized()
+	enemy.committed_target = target
 	var attack := AttackContract.ordinary_attack(role)
 	if not attack.is_empty():
 		enemy.phase_time = float(attack["startup"])
@@ -3103,58 +3208,63 @@ func _desired_enemy_velocity(
 ) -> Vector2:
 	var role := enemy.role
 	var position := enemy.pos
-	var to_player := player_position - position
-	var distance := maxf(1.0, to_player.length())
-	var direction_to_player := to_player / distance
+	var target := _mystery_enemy_target(enemy)
+	var to_target := target - position
+	var distance := maxf(1.0, to_target.length())
+	var direction_to_target := to_target / distance
 	var desired := Vector2.ZERO
 	match role:
 		&"chaser":
-			desired = direction_to_player
+			desired = direction_to_target
 			if recovering:
-				desired = -direction_to_player.rotated(enemy.strafe_sign * 0.35)
+				desired = -direction_to_target.rotated(enemy.strafe_sign * 0.35)
 		&"shooter":
 			if distance < 330.0:
-				desired = -direction_to_player
+				desired = -direction_to_target
 			elif distance > 500.0:
-				desired = direction_to_player
+				desired = direction_to_target
 			else:
-				desired = direction_to_player.rotated(enemy.strafe_sign * PI * 0.5)
+				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
 		&"controller":
 			if distance < 390.0:
-				desired = -direction_to_player
+				desired = -direction_to_target
 			elif distance > 540.0:
-				desired = direction_to_player
+				desired = direction_to_target
 			else:
-				desired = direction_to_player.rotated(enemy.strafe_sign * PI * 0.5)
+				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
 		&"shield_escort":
 			if distance < 300.0:
-				desired = -direction_to_player
+				desired = -direction_to_target
 			elif distance > 470.0:
-				desired = direction_to_player
+				desired = direction_to_target
 			else:
-				desired = direction_to_player.rotated(enemy.strafe_sign * PI * 0.5)
+				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
 		&"artillery_spotter":
 			if distance < 520.0:
-				desired = -direction_to_player
+				desired = -direction_to_target
 			elif distance > 760.0:
-				desired = direction_to_player
+				desired = direction_to_target
 			else:
-				desired = direction_to_player.rotated(enemy.strafe_sign * PI * 0.5)
+				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
 		&"rammer":
-			desired = direction_to_player if not recovering else -direction_to_player
+			desired = direction_to_target if not recovering else -direction_to_target
 		&"bulkhead_guard", &"splitter_barge":
-			desired = direction_to_player
+			desired = direction_to_target
 		&"mine":
-			desired = direction_to_player
+			desired = direction_to_target
 		&"repair_tender", &"drone_carrier":
 			if distance < 430.0:
-				desired = -direction_to_player
+				desired = -direction_to_target
 			elif distance > 620.0:
-				desired = direction_to_player
+				desired = direction_to_target
 			else:
-				desired = direction_to_player.rotated(enemy.strafe_sign * PI * 0.5)
-	var route_direction := pursuit_field.direction_at(position, enemy.radius)
-	if not route_direction.is_zero_approx() and (distance > 520.0 or not _runtime_has_line_of_sight(position, player_position, enemy.radius * 0.45)):
+				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
+	var route_direction := (
+		Vector2.ZERO
+		if _mystery_decoy_targets.has(enemy.id)
+		else pursuit_field.direction_at(position, enemy.radius)
+	)
+	if not route_direction.is_zero_approx() and (distance > 520.0 or not _runtime_has_line_of_sight(position, target, enemy.radius * 0.45)):
 		desired = (route_direction * 0.86 + desired * 0.14).normalized()
 	var role_velocity := desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
 	return _enemy_local_steering.adjusted_velocity(
@@ -3344,19 +3454,23 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 			_motion_cover_static_safe,
 			_motion_cover_static_cover_clear
 		)
-	if _live_crate_count <= 0:
+	if _position_clear_of_stage_objects(result, radius):
 		return result
-	var clearance := radius + CRATE_COLLISION_RADIUS
-	if not _position_clear_of_crates(result, clearance):
-		var x_attempt := Vector2(result.x, position.y)
-		var y_attempt := Vector2(position.x, result.y)
-		if _position_clear_of_crates(x_attempt, clearance):
-			result = x_attempt
-		elif _position_clear_of_crates(y_attempt, clearance):
-			result = y_attempt
-		else:
-			result = position
-	return result
+	var x_attempt := Vector2(result.x, position.y)
+	var y_attempt := Vector2(position.x, result.y)
+	if _position_clear_of_stage_objects(x_attempt, radius):
+		return x_attempt
+	if _position_clear_of_stage_objects(y_attempt, radius):
+		return y_attempt
+	return position
+
+
+func _position_clear_of_stage_objects(position: Vector2, actor_radius: float) -> bool:
+	if not mystery_device_runtime.is_position_clear(position, actor_radius):
+		return false
+	return _position_clear_of_crates(
+		position, actor_radius + CRATE_COLLISION_RADIUS
+	)
 
 
 func _position_clear_of_crates(position: Vector2, clearance: float) -> bool:
@@ -3462,18 +3576,43 @@ func _update_projectile_buffer(
 				projectile.velocity = steered * projectile.velocity.length()
 		var to := from + projectile.velocity * simulation_delta
 		var radius := projectile.radius
+		var mystery_hit := (
+			not hostile
+			and projectile.owner == "player_primary"
+			and mystery_device_runtime.first_intact_segment_hit(
+				from, to, radius, _mystery_device_hit_receipt
+			)
+		)
 		if not projectile.wall_piercing:
 			var cover_hit := _runtime_first_cover_hit(from, to, radius)
+			var mystery_before_crate := true
+			if mystery_hit:
+				var crate_receipt := _first_live_crate_hit(from, to, radius)
+				mystery_before_crate = (
+					float(_mystery_device_hit_receipt["t"])
+					< float(crate_receipt["t"])
+				)
+			if (
+				mystery_hit
+				and mystery_before_crate
+				and (
+					not bool(cover_hit.get("hit", false))
+					or float(_mystery_device_hit_receipt["t"])
+						< float(cover_hit.get("t", INF))
+				)
+			):
+				if _damage_mystery_device(
+					StringName(_mystery_device_hit_receipt["device_id"]),
+					projectile.structure_damage,
+					&"direct",
+					Vector2(_mystery_device_hit_receipt["position"]),
+					projectile.color,
+					projectile.velocity.normalized()
+				):
+					stats_primary_hits += 1
+				_remove_projectile_at(hostile, index)
+				continue
 			if bool(cover_hit.get("hit", false)):
-				if not hostile:
-					var hit_rect := Rect2(cover_hit.get("rect", Rect2()))
-					var bulkhead_id := terrain_runtime.bulkhead_id_for_rect(hit_rect)
-					if not bulkhead_id.is_empty():
-						if terrain_runtime.damage_bulkhead(
-							bulkhead_id,
-							projectile.structure_damage
-						):
-							_on_bulkhead_broken(Vector2(cover_hit["point"]))
 				if projectile.bounces > 0:
 					projectile.bounces -= 1
 					var normal: Vector2 = cover_hit["normal"]
@@ -3503,6 +3642,18 @@ func _update_projectile_buffer(
 			if _projectile_hits_crate(projectile, from, to, not hostile):
 				_remove_projectile_at(hostile, index)
 				continue
+		elif mystery_hit:
+			if _damage_mystery_device(
+				StringName(_mystery_device_hit_receipt["device_id"]),
+				projectile.structure_damage,
+				&"direct",
+				Vector2(_mystery_device_hit_receipt["position"]),
+				projectile.color,
+				projectile.velocity.normalized()
+			):
+				stats_primary_hits += 1
+			_remove_projectile_at(hostile, index)
+			continue
 
 		projectile.pos = to
 		if hostile:
@@ -3631,15 +3782,6 @@ func _try_absorb_protective_structure(
 		0.0, enemy.guard_plate_structure - projectile.structure_damage
 	)
 	return true
-
-
-func _on_bulkhead_broken(position: Vector2) -> void:
-	_rebuild_runtime_blockers()
-	pursuit_field.request_rebuild()
-	if is_instance_valid(_backdrop):
-		_backdrop.queue_redraw()
-	_add_effect(&"bulkhead_destroy", position, Art.MUSTARD, 0.24, 90.0)
-	_play_sound(&"destroy_priority", 0.92)
 
 
 func _remove_projectile_at(hostile: bool, index: int) -> void:
@@ -4013,13 +4155,6 @@ func _damage_enemy(
 			enemy.radius * 1.25
 		)
 		return 0.0
-	if (
-		not final_effective
-		and terrain_runtime.overdrive_active
-		and player_owned
-		and not _is_structure_role(role)
-	):
-		amount *= 1.20
 	if not final_effective and player_owned and cycle_runtime.is_active(&"overclock_cycle"):
 		amount *= 1.35 if cycle_runtime.level(&"overclock_cycle") >= 2 else 1.25
 	var multiplier := 1.0
@@ -4037,7 +4172,6 @@ func _damage_enemy(
 	if (
 		not final_effective
 		and role == &"mine"
-		and source != "Arc Surge"
 		and amount * multiplier >= health_before
 	):
 		var mine_applied := maxf(0.0, health_before - 1.0)
@@ -4106,11 +4240,21 @@ func _damage_enemy(
 	return applied_damage
 
 
-func _is_structure_role(role: StringName) -> bool:
-	return role in [
-		&"generator", &"turret", &"mine", &"boss_pylon",
-		&"interceptor_tower", &"beam_sentinel",
-	]
+func _mystery_enemy_target(enemy: EnemyState) -> Vector2:
+	return Vector2(_mystery_decoy_targets.get(enemy.id, player_position))
+
+
+func _is_fixed_structure_enemy(enemy: EnemyState) -> bool:
+	return (
+		enemy.role in [
+			&"generator", &"turret", &"boss_pylon",
+			&"interceptor_tower", &"beam_sentinel",
+		]
+		or (
+			enemy.role == &"mine"
+			and enemy.archetype != &"spark_minelet"
+		)
+	)
 
 
 func _telemetry_attribute_for_affinity(affinity: StringName) -> StringName:
@@ -4191,7 +4335,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
 	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
-	terrain_runtime.forget_wear_actor(enemy.id)
+	terrain_runtime.forget_hazard_actor(enemy.id)
 	var role := enemy.role
 	var module_result := {}
 	if role == &"boss_pylon" and not enemy.boss_objective_id.is_empty():
@@ -4343,7 +4487,14 @@ func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
 				denied_zones.remove_at(index)
 
 
-func _damage_player(amount: float, source: String, blockable: bool, enemy_source: bool = true, final_effective: bool = false) -> void:
+func _damage_player(
+	amount: float,
+	source: String,
+	blockable: bool,
+	enemy_source: bool = true,
+	final_effective: bool = false,
+	grant_hit_protection: bool = true
+) -> void:
 	if not _simulation_active() or player_invulnerable > 0.0 or stage_complete:
 		return
 	var remaining := _scaled_incoming_damage(amount, enemy_source, final_effective)
@@ -4363,7 +4514,6 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 			_ui.notify(tr("NOTIFY_BARRIER_DEPLETED"), 1.6, Rules.CORAL)
 	if remaining <= 0.0:
 		return
-	terrain_runtime.record_player_damage()
 	encounter_runtime.record_player_damage(_damage_source_family(source, enemy_source))
 	player_health = maxf(
 		1.0 if boss_practice.active and boss_practice.invulnerable else 0.0,
@@ -4384,7 +4534,8 @@ func _damage_player(amount: float, source: String, blockable: bool, enemy_source
 		46.0,
 		-player_hull_direction
 	)
-	_grant_player_protection(PLAYER_HIT_INVULNERABILITY, &"hit")
+	if grant_hit_protection:
+		_grant_player_protection(PLAYER_HIT_INVULNERABILITY, &"hit")
 	if not _reduced_motion_enabled():
 		camera_shake = maxf(camera_shake, 3.0)
 	_last_damage_source = source
@@ -4490,6 +4641,84 @@ func _damage_enemies_in_radius(
 			continue
 		if enemy.pos.distance_to(center) <= radius + enemy.radius:
 			_damage_enemy(enemy, damage, source, attribute, player_owned)
+	if player_owned:
+		_damage_mystery_devices_in_radius(center, radius, damage)
+
+
+func _damage_mystery_devices_in_radius(
+	center: Vector2,
+	radius: float,
+	damage: float
+) -> void:
+	mystery_device_runtime.fill_device_snapshot(
+		_mystery_device_snapshot_buffer
+	)
+	for device in _mystery_device_snapshot_buffer:
+		if StringName(device["state"]) != &"intact":
+			continue
+		var device_position := Vector2(device["position"])
+		if (
+			device_position.distance_to(center)
+			> radius + MysteryDeviceRuntime.DEVICE_RADIUS
+		):
+			continue
+		_damage_mystery_device(
+			StringName(device["id"]),
+			damage,
+			&"area",
+			device_position,
+			Art.SYSTEM,
+			(device_position - center).normalized()
+		)
+
+
+func _damage_mystery_device(
+	device_id: StringName,
+	damage: float,
+	attack_kind: StringName,
+	hit_position: Vector2,
+	color: Color,
+	direction: Vector2
+) -> bool:
+	var receipt := mystery_device_runtime.receive_damage(
+		device_id, damage, &"player", attack_kind
+	)
+	if not bool(receipt["accepted"]):
+		return false
+	_add_effect(
+		&"projectile_cover_impact",
+		hit_position,
+		color,
+		0.16,
+		26.0,
+		direction
+	)
+	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
+	if bool(receipt["broken"]):
+		_handle_mystery_device_break(Dictionary(receipt["break_event"]))
+	queue_redraw()
+	return true
+
+
+func _handle_mystery_device_break(event: Dictionary) -> void:
+	var effect_id := StringName(event["effect_id"])
+	if effect_id == &"projectile_purge":
+		_clear_hostile_projectiles(
+			Vector2(event["position"]), float(event["radius"])
+		)
+	var outcome_key := String({
+		&"gravity_pull":"MYSTERY_OUTCOME_GRAVITY_PULL",
+		&"cryo_lock":"MYSTERY_OUTCOME_CRYO_LOCK",
+		&"projectile_purge":"MYSTERY_OUTCOME_PROJECTILE_PURGE",
+		&"decoy_signal":"MYSTERY_OUTCOME_DECOY_SIGNAL",
+	}.get(effect_id, ""))
+	if not outcome_key.is_empty():
+		_ui.notify(
+			tr("NOTIFY_MYSTERY_DEVICE_RESULT") % tr(outcome_key),
+			2.4,
+			Art.SYSTEM
+		)
+	_play_sound(&"destroy_priority", 1.02)
 
 
 func _clear_hostile_projectiles(center: Vector2, radius: float) -> int:
@@ -5285,8 +5514,6 @@ func _begin_stage_transition() -> void:
 	denied_zones.clear()
 	_clear_effects()
 	damaging_trails.clear()
-	for spec in _active_tactical_layout.stationary_blueprint():
-		_append_enemy(_make_enemy(spec))
 	encounter_runtime.configure(
 		current_stage_id,
 		_transition_packets(current_stage_id),
@@ -5302,15 +5529,7 @@ func _begin_stage_transition() -> void:
 			selected_run_difficulty
 		)
 	)
-	terrain_runtime.configure(
-		field_layout.field_definition.get("features", []),
-		field_layout.persistent_bulkhead_health,
-		true,
-		_active_tactical_layout.support_sockets,
-		field_layout.seed,
-		current_stage_id,
-		field_layout.persistent_wear_tile_state
-	)
+	_configure_stage_map_runtime()
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
 	_populate_stage_items()
@@ -5730,6 +5949,16 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 				"position":Vector2(crate["pos"]),
 				"discovered":true,
 			})
+	mystery_device_runtime.fill_device_snapshot(
+		_mystery_device_snapshot_buffer
+	)
+	for device in _mystery_device_snapshot_buffer:
+		if StringName(device["state"]) == &"intact":
+			markers.append({
+				"kind":&"item",
+				"position":Vector2(device["position"]),
+				"discovered":true,
+			})
 	var snapshot := {
 		"cols": MINIMAP_COLS,
 		"rows": MINIMAP_ROWS,
@@ -5784,6 +6013,17 @@ func _runtime_minimap_snapshot(
 			_append_runtime_minimap_marker(
 				frame_index, markers, &"item", Vector2(crate["pos"])
 			)
+	mystery_device_runtime.fill_device_snapshot(
+		_mystery_device_snapshot_buffer
+	)
+	for device in _mystery_device_snapshot_buffer:
+		if StringName(device["state"]) == &"intact":
+			_append_runtime_minimap_marker(
+				frame_index,
+				markers,
+				&"item",
+				Vector2(device["position"])
+			)
 	snapshot["player"] = player_position
 	snapshot["player_facing"] = player_hull_direction
 	snapshot["world_size"] = Rules.world_rect(current_stage_id).size
@@ -5827,20 +6067,17 @@ func _combat_presentation_snapshot() -> Dictionary:
 	return _fill_combat_presentation_snapshot(
 		{},
 		player_protection_sources.duplicate(),
-		terrain_runtime.support_snapshot(),
 		secondary_runtime.snapshot(run_build)
 	)
 
 
 func _runtime_combat_presentation_snapshot() -> Dictionary:
-	terrain_runtime.fill_support_snapshot(_runtime_support_field_frames)
 	secondary_runtime.fill_presentation_snapshot(
 		_runtime_secondary_presentation_frame
 	)
 	return _fill_combat_presentation_snapshot(
 		_runtime_combat_presentation_frame,
 		player_protection_sources,
-		_runtime_support_field_frames,
 		_runtime_secondary_presentation_frame
 	)
 
@@ -5848,7 +6085,6 @@ func _runtime_combat_presentation_snapshot() -> Dictionary:
 func _fill_combat_presentation_snapshot(
 	snapshot: Dictionary,
 	protection_sources: Dictionary,
-	support_fields: Array[Dictionary],
 	secondary: Dictionary
 ) -> Dictionary:
 	var cursor_position := player_position + player_aim_direction * 230.0
@@ -5881,7 +6117,6 @@ func _fill_combat_presentation_snapshot(
 		run_build.level_of(&"seeker_warhead"),
 		run_build.level_of(&"escort_drone")
 	)
-	snapshot["support_fields"] = support_fields
 	snapshot["resolved_boss_modules"] = resolved_boss_module_visuals
 	snapshot["ion_level"] = run_build.level_of(&"ion_field")
 	snapshot["blade_level"] = run_build.level_of(&"orbit_blades")
@@ -5921,23 +6156,22 @@ func _update_threat_contacts(delta: float) -> void:
 		)
 		if safe_viewport.has_point(canvas_transform * feature_position):
 			var terrain_entry := StringName({
-				&"arc_surge":&"object_arc_surge",
-				&"breakable_bulkhead":&"object_breakable_bulkhead",
+				&"hazard_zone":&"object_hazard_zone",
 				&"transit_gate":&"object_transit_gate",
 			}.get(feature.kind, &""))
 			if terrain_entry != &"":
 				_discover_guide(terrain_entry)
-	for support in Array(terrain_runtime.snapshot().get("support_fields", [])):
-		var state := StringName(support["state"])
-		if state in [&"initial_delay", &"depleted"]:
-			continue
-		var support_position := Vector2(support["position"])
-		if safe_viewport.has_point(canvas_transform * support_position):
-			_discover_guide(
-				&"object_repair_basin"
-				if StringName(support["kind"]) == &"repair"
-				else &"object_overdrive_field"
+	mystery_device_runtime.fill_device_snapshot(
+		_mystery_device_snapshot_buffer
+	)
+	for device in _mystery_device_snapshot_buffer:
+		if (
+			bool(device["visible"])
+			and safe_viewport.has_point(
+				canvas_transform * Vector2(device["position"])
 			)
+		):
+			_discover_guide(&"object_mystery_device")
 	for enemy in enemies:
 		if not bool(enemy.alive) or not bool(enemy.active):
 			continue
@@ -6017,88 +6251,6 @@ func _draw_terrain() -> void:
 	for feature in Array(snapshot.get("features", [])):
 		var kind := StringName(feature["kind"])
 		match kind:
-			&"wear_collapse_tile":
-				var wear_rect := Rect2(feature["rect"])
-				var wear_state := StringName(feature.get("state", &"intact"))
-				if wear_state not in [&"intact", &"cracked", &"collapsed"]:
-					wear_state = &"intact"
-				_draw_semantic_asset_fitted(
-					StringName("world/wear_tile_%s" % String(wear_state)),
-					wear_rect,
-					Color.WHITE
-				)
-			&"arc_surge":
-				var rectangle := Rect2(feature["rect"])
-				var readiness := float(feature.get("readiness", 0.0))
-				var color := Art.ATTACK_ARC
-				_draw_semantic_asset_fitted(
-					&"cue/beam_strip_9",
-					rectangle,
-					Color(color, 0.34 + readiness * 0.58)
-				)
-				var surge_state := (
-					&"active"
-					if readiness >= 0.82
-					else (&"warning" if readiness > 0.05 else &"idle")
-				)
-				var horizontal := rectangle.size.x >= rectangle.size.y
-				var axis := Vector2.RIGHT if horizontal else Vector2.DOWN
-				var segment_extent := (
-					rectangle.size.x if horizontal else rectangle.size.y
-				)
-				for segment in 4:
-					var offset := lerpf(
-						-segment_extent * 0.34,
-						segment_extent * 0.34,
-						float(segment) / 3.0
-					)
-					var center := rectangle.get_center() + axis * offset
-					_draw_semantic_asset(
-						&"world/facility_arc_surge_strip",
-						center,
-						32.0 + readiness * 16.0,
-						Color(
-							color,
-							0.44
-							if surge_state == &"idle"
-							else 0.92
-						)
-					)
-				for index in 3:
-					_draw_semantic_asset(
-						&"world/facility_arc_surge_strip",
-						rectangle.position + rectangle.size * Vector2(
-							0.25 + float(index) * 0.25, 0.5
-						),
-						54.0,
-						Color(Art.IVORY_BRIGHT, 0.56 + readiness * 0.44)
-					)
-			&"breakable_bulkhead":
-				var rectangle := Rect2(feature["rect"])
-				var feature_health := float(feature.get("health", 0.0))
-				if feature_health <= 0.0:
-					_draw_semantic_asset_fitted(
-						&"world/world_bulkhead_open",
-						rectangle,
-						Color.WHITE
-					)
-					continue
-				var health_ratio := clampf(
-					feature_health
-					/ TerrainRuntime.BULKHEAD_HEALTH,
-					0.0,
-					1.0
-				)
-				var bulkhead_state := &"cracked" if health_ratio < 0.58 else &"intact"
-				_draw_semantic_asset_fitted(
-					(
-						&"world/world_bulkhead_damaged"
-						if bulkhead_state == &"cracked"
-						else &"world/world_bulkhead_intact"
-					),
-					rectangle,
-					Color.WHITE
-				)
 			&"transit_gate":
 				var center := Vector2(feature["pos"])
 				var progress := clampf(float(feature.get("progress", 0.0)), 0.0, 1.0)

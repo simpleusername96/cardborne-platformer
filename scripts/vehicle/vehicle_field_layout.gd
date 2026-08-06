@@ -9,8 +9,6 @@ var seed := 0
 var fingerprint := 0
 var field_id: StringName = &""
 var field_definition: Dictionary = {}
-var persistent_bulkhead_health: Dictionary = {}
-var persistent_wear_tile_state: Dictionary = {}
 
 var _tactical_layouts: Dictionary = {}
 
@@ -43,11 +41,6 @@ func stage_ids() -> Array[StringName]:
 	return result
 
 
-func stationary_blueprint(stage_id: StringName) -> Array[Dictionary]:
-	var layout := tactical_layout(stage_id)
-	return layout.stationary_blueprint() if layout != null else []
-
-
 func pickup_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var layout := tactical_layout(stage_id)
 	return layout.pickup_blueprint() if layout != null else []
@@ -56,6 +49,15 @@ func pickup_blueprint(stage_id: StringName) -> Array[Dictionary]:
 func crate_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var layout := tactical_layout(stage_id)
 	return layout.crate_blueprint() if layout != null else []
+
+
+func mystery_device_blueprint(stage_id: StringName) -> Array[Dictionary]:
+	var layout := tactical_layout(stage_id)
+	return layout.mystery_device_blueprint() if layout != null else []
+
+
+func run_feature_blueprint() -> Array[Dictionary]:
+	return Array(field_definition.get("features", [])).duplicate(true)
 
 
 func encounter_seed(stage_id: StringName) -> int:
@@ -72,6 +74,7 @@ func canonical_blueprint() -> Dictionary:
 	return {
 		"seed":seed,
 		"field_id":String(field_id),
+		"run_features":Array(field_definition.get("features", [])).duplicate(true),
 		"stages":stages,
 	}
 

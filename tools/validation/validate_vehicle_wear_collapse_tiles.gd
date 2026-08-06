@@ -1,137 +1,87 @@
 extends SceneTree
 
-const Registry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
+## Compatibility entrypoint for the retired wear-collapse-tile validator.
+## Broad, traversable hazard zones now own immediate, ticking, and linger damage.
+
+const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
+const Generator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
+
+const FIXED_SEED := 0xC4A2B0
 
 var failures: Array[String] = []
 
 
 func _initialize() -> void:
 	_validate_authored_fields()
-	_validate_crossing_damage_and_persistence()
+	_validate_crossing_damage_and_linger()
 	_finish()
 
 
 func _validate_authored_fields() -> void:
-	for field_id in Registry.FIELD_IDS:
-		var definition := Registry.definition(field_id)
-		var tiles: Array[Dictionary] = []
-		var walls: Array[Rect2] = []
-		for feature_variant in Array(definition["features"]):
-			var feature := Dictionary(feature_variant)
-			match StringName(feature["kind"]):
-				&"wear_collapse_tile":
-					tiles.append(feature)
-				&"structural_wall":
-					walls.append(Rect2(feature["rect"]))
-		_expect(tiles.size() == 4, "%s authors exactly four wear tiles" % field_id)
-		var runtime := TerrainRuntime.new()
-		var persistent := {}
-		runtime.configure(definition["features"], {}, false, [], 0, &"stage_1", persistent)
-		var snapshots: Array = runtime.snapshot()["features"]
-		for tile in tiles:
-			var tile_id := StringName(tile["id"])
-			var matching := snapshots.filter(
-				func(value: Dictionary) -> bool:
-					return StringName(value["id"]) == tile_id
-			)
-			_expect(matching.size() == 1, "%s/%s has one runtime snapshot" % [field_id, tile_id])
-			if matching.size() != 1:
+	for field_id in FieldRegistry.FIELD_IDS:
+		var layout := Generator.generate(FIXED_SEED, Catalog.STAGE_IDS, field_id)
+		_expect(layout != null, "%s compiles the hazard compatibility fixture" % field_id)
+		if layout == null:
+			continue
+		var hazards := 0
+		for value in layout.run_feature_blueprint():
+			var feature := Dictionary(value)
+			var kind := StringName(feature.get("kind", &""))
+			_expect(kind != &"wear_collapse_tile", "%s has no wear-collapse tile" % field_id)
+			if kind != &"hazard_zone":
 				continue
-			var snapshot := Dictionary(matching[0])
+			hazards += 1
+			var rect := Rect2(feature["rect"])
 			_expect(
-				Rect2(snapshot["rect"]) == Rect2(tile["rect"])
-				and StringName(snapshot["state"]) == &"intact"
-				and int(snapshot["wear"]) == 0
-				and int(snapshot["threshold"]) == 3,
-				"%s/%s publishes exact tile gameplay truth" % [field_id, tile_id]
+				rect.size.x >= 480.0 and rect.size.y >= 480.0,
+				"%s hazard zone is a broad area, not a thin pass-through wall" % field_id
 			)
+		_expect(hazards == Generator.HAZARD_ZONE_COUNT, "%s has four run-fixed hazard zones" % field_id)
+		var runtime := TerrainRuntime.new()
+		runtime.configure(layout.run_feature_blueprint())
+		var snapshot := runtime.snapshot()
 		_expect(
-			runtime.structural_wall_rects() == walls,
-			"%s keeps structural-wall rectangles separate from traversable wear tiles" % field_id
+			not snapshot.has("wear") and not snapshot.has("wear_runtime") and not snapshot.has("wear_tiles"),
+			"%s exposes no retired wear state" % field_id
 		)
 
 
-func _validate_crossing_damage_and_persistence() -> void:
-	var persistent := {}
-	var blueprint := [
-		{"id":&"wear", "kind":&"wear_collapse_tile", "rect":Rect2(100, 100, 200, 120)},
-	]
+func _validate_crossing_damage_and_linger() -> void:
 	var runtime := TerrainRuntime.new()
-	runtime.configure(blueprint, {}, false, [], 10, &"stage_1", persistent)
-
-	var damage := runtime.wear_damage_for_actor(
-		"player", Vector2(0, 160), Vector2(150, 160), 16.0, 0.10
-	)
-	_expect(damage == 0.0, "first player entry only cracks the tile")
-	_expect(_state(persistent) == &"cracked" and _wear(persistent) == 1, "first entry records cracked/1")
-	runtime.wear_damage_for_actor("player", Vector2(150, 160), Vector2(150, 160), 16.0, 1.0)
-	_expect(_wear(persistent) == 1, "stationary overlap never repeats wear")
-	runtime.wear_damage_for_actor("player", Vector2(150, 160), Vector2(0, 160), 16.0, 0.10)
-
-	damage = runtime.wear_damage_for_actor(
-		"ordinary", Vector2(0, 160), Vector2(400, 160), 18.0, 0.10
-	)
-	_expect(damage == 0.0 and _wear(persistent) == 2, "fast ordinary sweep records one distinct crossing")
-
-	damage = runtime.wear_damage_for_actor(
-		"boss", Vector2(400, 160), Vector2(200, 160), 76.0, 0.10
+	runtime.configure([{
+		"id":&"bog", "kind":&"hazard_zone", "variant":&"toxic_bog",
+		"affinity":&"toxin", "rect":Rect2(100, 100, 768, 576),
+	}])
+	_expect(
+		runtime.structural_wall_rects().is_empty(),
+		"hazard zones do not become movement blockers"
 	)
 	_expect(
-		damage == TerrainRuntime.WEAR_DAMAGE
-		and _state(persistent) == &"collapsed"
-		and _wear(persistent) == TerrainRuntime.WEAR_THRESHOLD,
-		"boss crossing that collapses the tile takes immediate exact damage"
+		runtime.hazard_damage_for_actor("player", Vector2(0, 200), Vector2(150, 200), 0.0, &"player", 0.1)
+		== TerrainRuntime.HAZARD_PLAYER_DAMAGE,
+		"hazard entry deals immediate player damage"
 	)
 	_expect(
-		runtime.wear_damage_for_actor("boss", Vector2(200, 160), Vector2(200, 160), 76.0, 0.74) == 0.0,
-		"continuous overlap waits for the 0.75 second deadline"
+		runtime.hazard_damage_for_actor("player", Vector2(150, 200), Vector2(150, 200), 0.0, &"player", 0.75)
+		== TerrainRuntime.HAZARD_PLAYER_DAMAGE,
+		"hazard contact deals its scheduled tick"
 	)
 	_expect(
-		runtime.wear_damage_for_actor("boss", Vector2(200, 160), Vector2(200, 160), 76.0, 0.01)
-		== TerrainRuntime.WEAR_DAMAGE,
-		"continuous boss overlap deals one exact damage tick at 0.75 seconds"
-	)
-	runtime.wear_damage_for_actor("boss", Vector2(200, 160), Vector2(500, 160), 76.0, 0.10)
-	_expect(
-		runtime.wear_damage_for_actor("boss", Vector2(500, 160), Vector2(200, 160), 76.0, 0.10)
-		== TerrainRuntime.WEAR_DAMAGE,
-		"full exit and re-entry deals immediate damage again"
-	)
-	runtime.forget_wear_actor("boss")
-	_expect(
-		int(runtime.wear_runtime_snapshot()["occupancy_count"]) == 0,
-		"retiring an actor clears stage-local wear occupancy"
-	)
-
-	var next_stage := TerrainRuntime.new()
-	next_stage.configure(blueprint, {}, true, [], 10, &"stage_2", persistent)
-	_expect(
-		_state(persistent) == &"collapsed" and _wear(persistent) == 3,
-		"state and wear persist across stage configure"
+		runtime.hazard_damage_for_actor("player", Vector2(150, 200), Vector2(1000, 200), 0.0, &"player", 0.75)
+		== TerrainRuntime.HAZARD_PLAYER_DAMAGE,
+		"hazard damage lingers after exit"
 	)
 	_expect(
-		int(next_stage.wear_runtime_snapshot()["occupancy_count"]) == 0
-		and int(next_stage.wear_runtime_snapshot()["damage_deadline_count"]) == 0,
-		"stage configure resets occupancy and damage deadlines"
+		runtime.hazard_damage_for_actor("ordinary", Vector2(0, 300), Vector2(150, 300), 0.0, &"ordinary", 0.1)
+		== TerrainRuntime.HAZARD_ORDINARY_DAMAGE,
+		"ordinary enemies receive neutral hazard damage"
 	)
-	_expect(
-		next_stage.wear_damage_for_actor("player", Vector2(200, 160), Vector2(200, 160), 16.0, 0.10)
-		== TerrainRuntime.WEAR_DAMAGE,
-		"first overlap with a persisted collapsed tile is a fresh immediate entry"
-	)
-
-
-func _state(persistent: Dictionary) -> StringName:
-	return StringName(Dictionary(persistent.get(&"wear", {})).get("state", &""))
-
-
-func _wear(persistent: Dictionary) -> int:
-	return int(Dictionary(persistent.get(&"wear", {})).get("wear", -1))
 
 
 func _expect(condition: bool, message: String) -> void:
-	if not condition:
+	if not condition and failures.size() < 64:
 		failures.append(message)
 
 

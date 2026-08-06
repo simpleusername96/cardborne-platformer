@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Stable guide metadata. Locked snapshots never include hidden copy.
 
-const CATEGORIES: Array[StringName] = [&"ship", &"mobile", &"stationary", &"bosses", &"objects"]
+const CATEGORIES: Array[StringName] = [&"ship", &"mobile", &"bosses", &"objects"]
 const ENTRIES: Array[Dictionary] = [
 	{"id":&"mobile_scrap_drone", "category":&"mobile", "name_key":"ENEMY_SCRAP_DRONE", "description_key":"GUIDE_MOBILE_SWARM_DESC", "preview":{"kind":&"enemy", "id":&"scrap_drone"}},
 	{"id":&"mobile_needle_drone", "category":&"mobile", "name_key":"ENEMY_NEEDLE_DRONE", "description_key":"GUIDE_MOBILE_RANGED_DESC", "preview":{"kind":&"enemy", "id":&"needle_drone"}},
@@ -18,11 +18,6 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"mobile_drone_carrier", "category":&"mobile", "name_key":"ENEMY_DRONE_CARRIER", "description_key":"GUIDE_MOBILE_CARRIER_DESC"},
 	{"id":&"mobile_bulkhead_guard", "category":&"mobile", "name_key":"ENEMY_BULKHEAD_GUARD", "description_key":"GUIDE_MOBILE_GUARD_DESC", "preview":{"kind":&"enemy", "id":&"bulkhead_guard"}},
 	{"id":&"mobile_splitter_barge", "category":&"mobile", "name_key":"ENEMY_SPLITTER_BARGE", "description_key":"GUIDE_MOBILE_SPLITTER_DESC", "preview":{"kind":&"enemy", "id":&"splitter_barge"}},
-	{"id":&"stationary_turret", "category":&"stationary", "name_key":"ENEMY_FOUNDRY_TURRET", "description_key":"GUIDE_STATIONARY_TURRET_DESC"},
-	{"id":&"stationary_mine", "category":&"stationary", "name_key":"ENEMY_ARC_MINE", "description_key":"GUIDE_STATIONARY_MINE_DESC", "preview":{"kind":&"enemy", "id":&"mine"}},
-	{"id":&"stationary_interceptor_tower", "category":&"stationary", "name_key":"ENEMY_INTERCEPTOR_TOWER", "description_key":"GUIDE_STATIONARY_INTERCEPTOR_DESC"},
-	{"id":&"stationary_beam_sentinel", "category":&"stationary", "name_key":"ENEMY_BEAM_SENTINEL", "description_key":"GUIDE_STATIONARY_BEAM_DESC"},
-	{"id":&"stationary_generator", "category":&"stationary", "name_key":"ENEMY_BARRIER_GENERATOR", "description_key":"GUIDE_STATIONARY_GENERATOR_DESC"},
 	{"id":&"boss_stage_1", "category":&"bosses", "name_key":"ENEMY_FOUNDRY_COLOSSUS", "description_key":"GUIDE_BOSS_1_DESC", "counter_key":"BOSS_EXAM_FOUNDRY_P1", "preview":{"kind":&"boss", "id":&"colossus"}},
 	{"id":&"boss_stage_2", "category":&"bosses", "name_key":"ENEMY_ARCHIVE_LEVIATHAN", "description_key":"GUIDE_BOSS_2_DESC", "counter_key":"BOSS_EXAM_LEVIATHAN_P1", "preview":{"kind":&"boss", "id":&"leviathan"}},
 	{"id":&"boss_stage_3", "category":&"bosses", "name_key":"ENEMY_DRYDOCK_TITAN", "description_key":"GUIDE_BOSS_3_DESC", "counter_key":"BOSS_EXAM_TITAN_P1", "preview":{"kind":&"boss", "id":&"titan"}},
@@ -32,11 +27,9 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"object_repair", "category":&"objects", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "description_key":"GUIDE_OBJECT_REPAIR_DESC", "preview":{"kind":&"pickup", "id":&"repair"}},
 	{"id":&"object_recall", "category":&"objects", "name_key":"GUIDE_OBJECT_RECALL_NAME", "description_key":"GUIDE_OBJECT_RECALL_DESC"},
 	{"id":&"object_crate", "category":&"objects", "name_key":"GUIDE_OBJECT_CRATE_NAME", "description_key":"GUIDE_OBJECT_CRATE_DESC"},
-	{"id":&"object_arc_surge", "category":&"objects", "name_key":"GUIDE_TERRAIN_SURGE_NAME", "description_key":"GUIDE_TERRAIN_SURGE_DESC", "preview":{"kind":&"terrain", "id":&"arc_surge"}},
-	{"id":&"object_breakable_bulkhead", "category":&"objects", "name_key":"GUIDE_TERRAIN_BULKHEAD_NAME", "description_key":"GUIDE_TERRAIN_BULKHEAD_DESC", "preview":{"kind":&"terrain", "id":&"breakable_bulkhead"}},
+	{"id":&"object_hazard_zone", "category":&"objects", "name_key":"GUIDE_TERRAIN_HAZARD_NAME", "description_key":"GUIDE_TERRAIN_HAZARD_DESC"},
+	{"id":&"object_mystery_device", "category":&"objects", "name_key":"GUIDE_OBJECT_MYSTERY_DEVICE_NAME", "description_key":"GUIDE_OBJECT_MYSTERY_DEVICE_DESC"},
 	{"id":&"object_transit_gate", "category":&"objects", "name_key":"GUIDE_FACILITY_GATE_NAME", "description_key":"GUIDE_FACILITY_GATE_DESC", "preview":{"kind":&"facility", "id":&"transit_gate"}},
-	{"id":&"object_repair_basin", "category":&"objects", "name_key":"GUIDE_FACILITY_REPAIR_NAME", "description_key":"GUIDE_FACILITY_REPAIR_DESC", "preview":{"kind":&"facility", "id":&"repair_basin"}},
-	{"id":&"object_overdrive_field", "category":&"objects", "name_key":"GUIDE_FACILITY_OVERDRIVE_NAME", "description_key":"GUIDE_FACILITY_OVERDRIVE_DESC", "preview":{"kind":&"facility", "id":&"overdrive_field"}},
 	{"id":&"object_elite_armored", "category":&"objects", "name_key":"ELITE_ARMORED", "description_key":"GUIDE_ELITE_ARMORED_DESC", "preview":{"kind":&"elite", "id":&"armored"}},
 	{"id":&"object_elite_overclocked", "category":&"objects", "name_key":"ELITE_OVERCLOCKED", "description_key":"GUIDE_ELITE_OVERCLOCKED_DESC", "preview":{"kind":&"elite", "id":&"overclocked"}},
 	{"id":&"object_elite_heavy", "category":&"objects", "name_key":"ELITE_HEAVY", "description_key":"GUIDE_ELITE_HEAVY_DESC", "preview":{"kind":&"elite", "id":&"heavy"}},
@@ -54,8 +47,9 @@ static func entry_id_for_enemy(archetype: StringName, behavior: StringName) -> S
 	var stationary_archetypes: Array[StringName] = [
 		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator", &"boss_pylon",
 	]
-	var stationary := archetype in stationary_archetypes
-	return StringName("%s_%s" % ["stationary" if stationary else "mobile", String(behavior if stationary else archetype)])
+	if archetype in stationary_archetypes:
+		return &""
+	return StringName("mobile_%s" % String(archetype))
 
 
 static func snapshot(known: Dictionary, ship: Dictionary) -> Dictionary:
@@ -85,10 +79,10 @@ static func _preview_for(entry: Dictionary) -> Dictionary:
 		return explicit.duplicate(true)
 	var category := StringName(entry["category"])
 	var entry_id := String(entry["id"])
-	if category in [&"mobile", &"stationary"]:
+	if category == &"mobile":
 		return {
 			"kind":&"enemy",
-			"id":StringName(entry_id.trim_prefix("mobile_").trim_prefix("stationary_")),
+			"id":StringName(entry_id.trim_prefix("mobile_")),
 		}
 	if entry_id == "object_recall":
 		return {"kind":&"pickup", "id":&"experience_recall"}
