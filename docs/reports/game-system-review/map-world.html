@@ -3,100 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Decision-first review of Cardborne map, world, pickup, and map UI rules.">
-  <title>Map &amp; World Review · Cardborne</title>
+  <meta name="description" content="Cardborne map problems, fixed rules, and visual candidates.">
+  <title>Cardborne · Map Decision</title>
   <link rel="stylesheet" href="report.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to report</a>
-  <header class="site-header">
-    <div class="site-header__inner">
-      <div class="brand-row"><a href="index.html">Cardborne game review</a><span class="baseline">Runtime baseline 26169a92 · checked 6 Aug 2026</span></div>
-      <nav class="topic-nav" aria-label="Review topics">
-        <a href="index.html">Overview</a><a href="map-world.html" aria-current="page">Map &amp; world</a><a href="combat-effects.html">Effects</a><a href="upgrades-builds.html">Upgrades</a><a href="enemies-encounters.html">Enemies</a><a href="bosses.html">Bosses</a>
-      </nav>
-    </div>
-  </header>
-  <main id="main">
-    <section class="hero">
-      <p class="eyebrow">Map &amp; world</p>
-      <h1>Keep the field open. Make every object clear.</h1>
-      <p class="lede">The player should keep moving, find short safety, and understand every map object without a new HUD marker.</p>
-      <div class="status-line"><span class="tag tag--current">17 current production PNGs</span><span class="tag tag--locked">Gameplay rules locked</span><span class="tag tag--direction">Approved direction</span><span class="tag">Not implemented</span></div>
-    </section>
-    <aside class="notice"><strong>Approved direction, not implemented.</strong><p>These are design and UI rules. They do not change the current map, assets, collision, or runtime. Rejected sheets are archival evidence only.</p></aside>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header"><div class="header-inner"><a class="brand" href="index.html">Cardborne · Decision Report</a><nav class="nav" aria-label="Report pages"><a href="index.html">Overview</a><a href="map-world.html" aria-current="page">Map</a><a href="combat-effects.html">Effects</a><a href="upgrades-builds.html">Upgrades</a><a href="enemies-encounters.html">Enemies</a><a href="bosses.html">Bosses</a></nav></div></header>
 
-    <section class="report-section" aria-labelledby="priorities"><h2 id="priorities">Three priorities</h2>
-      <ol class="priority-list"><li><strong>Open movement:</strong> no combat dead end; each pocket has more than one wide exit.</li><li><strong>Trusted safety:</strong> cover blocks fire and rushes for a short time. It never becomes a route wall.</li><li><strong>Clear world tools:</strong> neutral devices and pickup items create a quick choice while the player keeps moving.</li></ol>
+  <main id="main" class="shell">
+    <section class="intro">
+      <p class="eyebrow">Map</p>
+      <h1>Keep movement free. Make cover and danger clear.</h1>
+      <p class="lede">The map needs fewer visual parts, safer random placement, and no reason to stand still.</p>
     </section>
 
-    <section class="report-section" aria-labelledby="current-map"><h2 id="current-map">What the current generator does</h2><div class="grid grid--3">
-      <article class="panel panel--current"><span class="kicker">Seeded</span><h3>It is not pure noise</h3><p>The run seed selects the field and places 8 cover rectangles. Clearance and reach checks already exist.</p></article>
-      <article class="panel panel--current"><span class="kicker">Stage objects</span><h3>Many jobs share one layout</h3><p>The current stage plan includes 4 fixed hostile roles, 6 pickups, 8 crates, and 12 saved support positions.</p></article>
-      <article class="panel panel--current"><span class="kicker">Main failure</span><h3>Safe can still feel wrong</h3><p>Reward enclosures create closed pockets. Pads reward waiting. Crates stay where the stage placed them.</p></article>
-    </div></section>
+    <section class="decision-grid" aria-label="Map decision summary">
+      <article class="decision-card decision-card--problem"><p class="card-label">1 · Problem</p><h2>Busy and unclear</h2><ul class="short-list"><li>The floor repeats too loudly.</li><li>Outer wall and inner cover look too similar.</li><li>Closed pockets and standing pads fight fast movement.</li></ul></article>
+      <article class="decision-card decision-card--fix"><p class="card-label">2 · Fix</p><h2>Open rule-based maps</h2><ul class="short-list"><li>Use a quiet large surface.</li><li>Place a few isolated covers and reject blocked layouts.</li><li>Move normal boxes only to safe off-screen spots.</li></ul></article>
+      <article class="decision-card decision-card--decided"><p class="card-label">3 · Decided</p><h2>Rules stay fixed</h2><ul class="short-list"><li>No maze, dead end, or enclosed reward pocket.</li><li>Cover gives short safety. It does not form a route.</li><li>No heal or attack-boost pad. Gates and shared danger stay.</li><li>Fixed enemy objects become world objects that hurt both sides.</li></ul></article>
+      <article class="decision-card decision-card--choice"><p class="card-label">4 · Your choice</p><h2>Pick the look</h2><p class="muted">Choose each map part from A, B, or C below. Mixing is allowed.</p></article>
+    </section>
 
-    <section class="report-section" aria-labelledby="change"><h2 id="change">AS-IS → approved TO-BE</h2><div class="grid grid--2">
-      <article class="panel panel--current"><span class="kicker">AS-IS</span><h3>Current map</h3><p>Support pads are live circular areas. One wall PNG serves both outer and inner walls. Some layouts can form closed reward pockets.</p></article>
-      <article class="panel panel--direction"><span class="kicker">Approved TO-BE</span><h3>Movement first</h3><p>Use sparse cover, open escape sides, fixed trusted safety, neutral devices, and instant items. Retire repair and overdrive pads from the first redesign.</p></article>
-    </div></section>
+    <section class="section" aria-labelledby="current-title">
+      <div class="section-head"><div><p class="eyebrow">Current game</p><h2 id="current-title">Why it needs replacement</h2></div><p>The repeated floor blocks are louder than the ships and items. The inner shapes also make closed pockets.</p></div>
+      <figure class="current-card"><img src="../in-game-system-audit/assets/runtime/10-field-storm-drydock-field.png" alt="Current full map with a loud repeated floor grid and closed inner pockets."><figcaption>Current: a safe generator can still make a hard-to-read field.</figcaption></figure>
+    </section>
 
-    <section class="report-section" aria-labelledby="rules"><h2 id="rules">Locked rules</h2><div class="grid grid--3">
-      <article class="panel panel--locked"><h3>Cover is short safety</h3><p>It blocks fire and direct rushes. It does not draw a travel lane.</p></article>
-      <article class="panel panel--locked"><h3>Free movement stays free</h3><p>Do not make a maze, narrow trap, or dead end. A combat space needs more than one wide escape side.</p></article>
-      <article class="panel panel--locked"><h3>This page uses G1</h3><p><a href="index.html#decisions-title">The overview owns the G1 score rule.</a> Map sends an enemy defeat to that rule. Breaking the device itself sends no enemy defeat.</p></article>
-    </div></section>
+    <section id="candidates" class="section" aria-labelledby="candidate-title">
+      <div class="section-head"><div><p class="eyebrow">Review-only art</p><h2 id="candidate-title">Three map candidates</h2></div><p>Top: a full map. Bottom: floor repeat, outer wall, inner cover, box, gate, and shared-danger device.</p></div>
+      <div class="candidate-grid">
+        <figure class="candidate-card"><a href="assets/candidates/candidate-a-map.png"><img src="assets/candidates/candidate-a-map.png" alt="Candidate A map sheet with a whole field and separate map parts."></a><figcaption><h3>Candidate A <span class="tag">Not approved</span></h3><p>Calm blocks. The lowest detail and the quietest floor.</p><a class="full-image-link" href="assets/candidates/candidate-a-map.png">Open full image →</a></figcaption></figure>
+        <figure class="candidate-card"><a href="assets/candidates/candidate-b-map.png"><img src="assets/candidates/candidate-b-map.png" alt="Candidate B map sheet with a whole field and separate map parts."></a><figcaption><h3>Candidate B <span class="tag">Not approved</span></h3><p>Angled cuts. Simple shapes with a faster direction.</p><a class="full-image-link" href="assets/candidates/candidate-b-map.png">Open full image →</a></figcaption></figure>
+        <figure class="candidate-card"><a href="assets/candidates/candidate-c-map.png"><img src="assets/candidates/candidate-c-map.png" alt="Candidate C map sheet with a whole field and separate map parts."></a><figcaption><h3>Candidate C <span class="tag">Not approved</span></h3><p>Heavy contrast. Fewer shapes with stronger edges.</p><a class="full-image-link" href="assets/candidates/candidate-c-map.png">Open full image →</a></figcaption></figure>
+      </div>
+      <div class="reply-box"><p><strong>Reply in one line:</strong></p><p>Floor __ · Outer wall __ · Inner cover __ · Box __ · Gate __ · Shared-danger device __</p></div>
+    </section>
 
-    <section class="report-section" aria-labelledby="life"><h2 id="life">Lifetime rules</h2><div class="table-wrap"><table class="data-table"><thead><tr><th>When</th><th>Keep fixed</th><th>May change</th></tr></thead><tbody>
-      <tr><td>Full run</td><td>Outer boundary, large cover, Wear Collapse position</td><td>Nothing</td></tr>
-      <tr><td>Stage start</td><td>Transit pair, Arc strip, neutral device</td><td>Choose their safe stage position</td></tr>
-      <tr><td>During combat</td><td>Trusted cover and total reward budget</td><td>One unopened, off-screen normal box after a timer; a meteor only on its shown path</td></tr>
-    </tbody></table></div></section>
-
-    <section class="report-section" aria-labelledby="conflict"><h2 id="conflict">Support-pad rule conflict</h2><div class="grid grid--2">
-      <article class="panel panel--current"><span class="kicker">Current visual rules</span><h3>Pads are allowed</h3><p><code>VISUAL_SYSTEM.md</code> permits shared circular repair and overdrive pads at their live radius.</p></article>
-      <article class="panel panel--direction"><span class="kicker">Approved game direction</span><h3>Pads reward waiting</h3><p>Remove repair and overdrive pads from the first redesign. Keep movement-friendly pickups instead.</p></article>
-    </div><p class="section-intro">The contract must change before implementation. Do not silently keep shared rings or support pads because the current visual contract permits them.</p></section>
-
-    <section class="report-section" aria-labelledby="neutral"><h2 id="neutral">Neutral world package</h2><div class="grid grid--2">
-      <article class="panel panel--current"><span class="kicker">Keep two current mechanics separate</span><h3>Arc Surge and Wear Collapse</h3><p>They may share neutral targeting, warnings, and G1 score rules. They do not become one mechanic. Arc is a chosen stage danger. Wear changes state and stays changed through the run.</p></article>
-      <article class="panel panel--direction"><span class="kicker">First test package</span><h3>Three moving-combat choices</h3><ul class="plain-list"><li><strong>Gravity Core:</strong> break it to pull enemies for a short time.</li><li><strong>Cryo Cell:</strong> break it to freeze nearby enemies.</li><li><strong>Meteor Patrol:</strong> a neutral attack moves on a fully shown route.</li></ul></article>
-    </div><p class="section-intro">A neutral device is not an enemy type. Breaking it gives no kill and no XP. Its attack can hurt the player, enemies, and bosses.</p></section>
-
-    <section class="report-section" aria-labelledby="choices"><h2 id="choices">What Codex can decide</h2><div class="grid grid--2">
-      <article class="panel panel--direction"><h3>Safe first defaults</h3><ul class="plain-list"><li>Seeded, safe placement for sparse cover and items.</li><li>First counts, timers, and neutral-device mix.</li><li>Neutral body, danger edge, and no enemy marker.</li><li>Keep Repair and XP Recall; test Dash Cell and Decoy Charge.</li><li>Test Barrier Charge only if it does not copy a defense upgrade.</li></ul></article>
-      <article class="panel panel--open"><h3>Your later visual choice</h3><p>Choose the final map asset family after two or more real-size candidates show a whole field, each asset alone, repeat joins, long wall stretch, and all damage states. Parts may be mixed across candidates.</p><p>External assets are allowed only with a clear license, source URL, saved source proof, and approved PNG adaptation.</p></article>
-    </div></section>
-
-    <details><summary>Show later world ideas and clear rejects</summary><div class="details-body"><div class="grid grid--2"><article class="panel"><h3>Later tests</h3><p>Decoy Beacon pulls enemy attention. Volatile Battery makes a shared blast. Shock Link joins two devices with a dangerous line.</p></article><article class="panel"><h3>Do not build</h3><p>No more waiting pads. No second EMP-like device. No solid wall that moves during a fight.</p></article></div></div></details>
-
-    <section class="report-section" aria-labelledby="box"><h2 id="box">Box relocation</h2><ol class="plain-list"><li>Start with a fixed box count.</li><li>After a timer, choose one unopened normal box.</li><li>Move it only when off-screen and not being hit.</li><li>Use a reachable saved position far from the player and recent boxes.</li><li>Show a short arrival warning. Never create, refill, or move a reward-room box.</li></ol></section>
-
-    <section class="report-section" aria-labelledby="ui"><h2 id="ui">Map UI rules</h2><div class="grid grid--3"><article class="panel"><h3>World truth</h3><p>Show the exact live area before neutral damage. Show the full next path for a meteor. Use a short arrival cue for a moved box.</p></article><article class="panel"><h3>Map language</h3><p>Neutral devices are world objects, not red enemies. The minimap keeps only player, item, enemy, and boss marker roles.</p></article><article class="panel"><h3>Transit state</h3><p>The gate itself shows its pair, active state, and cooldown. Do not add another permanent HUD box.</p></article></div></section>
-
-    <section class="report-section" aria-labelledby="field-proof"><h2 id="field-proof">Current whole-field proof</h2><figure class="wide-figure"><img src="../in-game-system-audit/assets/runtime/10-field-storm-drydock-field.png" alt="Current full Storm Drydock field with floor, walls, cover, and placed objects."><figcaption>The current generator is safe and seeded, but the full field still reads as a repeated grid with closed reward pockets.</figcaption></figure><details><summary>Show two more current field captures</summary><div class="details-body"><div class="grid grid--2"><figure class="wide-figure"><img loading="lazy" src="../in-game-system-audit/assets/runtime/10-field-drowned-ruin-field.png" alt="Current full Drowned Ruin field."><figcaption>Drowned Ruin field.</figcaption></figure><figure class="wide-figure"><img loading="lazy" src="../in-game-system-audit/assets/runtime/10-field-tidal-archive-field.png" alt="Current full Tidal Archive field."><figcaption>Tidal Archive field.</figcaption></figure></div></div></details></section>
-
-    <section class="report-section" aria-labelledby="assets"><h2 id="assets">Current production assets · 17</h2><p class="section-intro">These real PNG thumbnails are AS-IS evidence. The current shared wall covers outer and inner roles; there is no separate inner-wall asset.</p><div class="table-wrap"><table class="data-table"><thead><tr><th>Group</th><th>Count</th><th>What is inside</th></tr></thead><tbody><tr><td>Surface and cover</td><td>3</td><td>Floor, shared wall, solid cover</td></tr><tr><td>Damage-state sets</td><td>6</td><td>3 bulkheads, 3 Wear tiles</td></tr><tr><td>Facilities</td><td>4</td><td>Repair, overdrive, Arc Surge, transit</td></tr><tr><td>Pickups and reward</td><td>4</td><td>XP, crate, repair, XP recall</td></tr></tbody></table></div><div class="asset-grid">
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/presentation/world_surface_panel_9.png" alt="Floor panel PNG"></div><div class="asset-card__body"><strong>Floor panel</strong><span>world/surface_panel_9 · 288×288</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png" alt="Shared wall PNG"></div><div class="asset-card__body"><strong>Shared wall</strong><span>world/wall_segment_9 · 192×96</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/terrain_solid_cover_block.png" alt="Solid cover PNG"></div><div class="asset-card__body"><strong>Solid cover</strong><span>world/terrain_solid_cover_block · 192×192</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/world_bulkhead_intact.png" alt="Intact bulkhead PNG"></div><div class="asset-card__body"><strong>Bulkhead · intact</strong><span>world/world_bulkhead_intact</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/world_bulkhead_damaged.png" alt="Damaged bulkhead PNG"></div><div class="asset-card__body"><strong>Bulkhead · damaged</strong><span>world/world_bulkhead_damaged</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/world_bulkhead_open.png" alt="Open bulkhead PNG"></div><div class="asset-card__body"><strong>Bulkhead · open</strong><span>world/world_bulkhead_open</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/wear_tile_intact.png" alt="Intact wear tile PNG"></div><div class="asset-card__body"><strong>Wear · intact</strong><span>world/wear_tile_intact · 240×160</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/wear_tile_cracked.png" alt="Cracked wear tile PNG"></div><div class="asset-card__body"><strong>Wear · cracked</strong><span>world/wear_tile_cracked · 240×160</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/wear_tile_collapsed.png" alt="Collapsed wear tile PNG"></div><div class="asset-card__body"><strong>Wear · collapsed</strong><span>world/wear_tile_collapsed · 240×160</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/facility_repair_pad.png" alt="Repair pad PNG"></div><div class="asset-card__body"><strong>Repair pad</strong><span>world/facility_repair_pad</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/facility_overdrive_pad.png" alt="Overdrive pad PNG"></div><div class="asset-card__body"><strong>Overdrive pad</strong><span>world/facility_overdrive_pad</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/facility_arc_surge_strip.png" alt="Arc Surge marker PNG"></div><div class="asset-card__body"><strong>Arc Surge</strong><span>world/facility_arc_surge_strip</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/world/facility_transit_gate.png" alt="Transit gate PNG"></div><div class="asset-card__body"><strong>Transit gate</strong><span>world/facility_transit_gate</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/pickups/pickup_experience_master.png" alt="Experience pickup PNG"></div><div class="asset-card__body"><strong>Experience</strong><span>pickup/experience_master · 64×64</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/pickups/pickup_reward_crate.png" alt="Reward crate PNG"></div><div class="asset-card__body"><strong>Reward crate</strong><span>pickup/reward_crate · 64×64</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/pickups/pickup_repair.png" alt="Repair pickup PNG"></div><div class="asset-card__body"><strong>Repair pickup</strong><span>pickup/repair · 48×48</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/pickups/pickup_experience_recall.png" alt="Experience recall PNG"></div><div class="asset-card__body"><strong>XP recall</strong><span>pickup/experience_recall · 64×64</span></div></article>
-    </div></section>
-    <details><summary>Evidence and sources</summary><div class="details-body"><p>Current rules: <a href="../../product/vehicle_game_spec.md">vehicle game spec</a>. Generator: <a href="../../../scripts/vehicle/vehicle_field_layout_generator.gd">vehicle_field_layout_generator.gd</a>. Terrain life: <a href="../../../scripts/vehicle/vehicle_terrain_runtime.gd">vehicle_terrain_runtime.gd</a>. Production list: <a href="../../../art/visuals/production/gameplay/asset-manifest.json">asset manifest</a>. Visual rules: <a href="../../design/VISUAL_SYSTEM.md">VISUAL_SYSTEM.md</a>.</p><p>The main style sheet was checked at its full size. SHA-256: <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>. No image was made or edited. An outside placement algorithm is allowed only when the same seed makes the same result, tests can check it, and its use is safe.</p></div></details>
+    <section class="section" aria-labelledby="life-title">
+      <div class="section-head"><div><p class="eyebrow">I will handle this</p><h2 id="life-title">What changes, and when</h2></div></div>
+      <ol class="timeline">
+        <li><div><strong>Stage start</strong><br><span class="muted">Create one valid open layout. Cover, gates, and normal ground danger stay in place for that stage.</span></div></li>
+        <li><div><strong>During the stage</strong><br><span class="muted">A normal unopened box may move to a safe off-screen spot. A meteor may travel only on a path shown before it hurts anything.</span></div></li>
+        <li><div><strong>Next stage</strong><br><span class="muted">Create a new layout and a new small mix of devices.</span></div></li>
+      </ol>
+      <div class="mini-grid">
+        <article class="text-card"><h3>Two ground dangers stay separate</h3><p class="muted">The fixed electric strip stays one danger. The floor that cracks and later hurts stays another. They share fair warnings, but they do not become one object and they do not move.</p></article>
+        <article class="text-card"><h3>First new world actions</h3><p class="muted">Break one device to pull enemies. Break another to freeze nearby enemies. A moving meteor attacks both sides on a fully shown path.</p></article>
+      </div>
+    </section>
   </main>
-  <footer class="page-footer"><p>AS-IS evidence uses production files only. Rejected sheets remain archival only.</p></footer>
+
+  <footer class="footer"><div class="shell"><a href="index.html">Back to overview</a></div></footer>
 </body>
 </html>

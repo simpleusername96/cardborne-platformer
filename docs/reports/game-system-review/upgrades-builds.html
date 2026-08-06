@@ -1,70 +1,35 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Decision-first review of Cardborne upgrade choices, build limits, and upgrade UI.">
-  <title>Upgrades &amp; Builds | Cardborne system review</title>
-  <link rel="stylesheet" href="report.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A short Cardborne upgrade decision report."><title>Cardborne · Upgrade Decision</title><link rel="stylesheet" href="report.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to report</a>
-  <header class="site-header"><div class="site-header__inner">
-    <div class="brand-row"><a href="index.html">Cardborne game review</a><span class="baseline">Runtime baseline 26169a92 · checked 6 Aug 2026</span></div>
-    <nav class="topic-nav" aria-label="Review topics"><a href="index.html">Overview</a><a href="map-world.html">Map &amp; world</a><a href="combat-effects.html">Effects</a><a href="upgrades-builds.html" aria-current="page">Upgrades</a><a href="enemies-encounters.html">Enemies</a><a href="bosses.html">Bosses</a></nav>
-  </div></header>
-  <main id="main">
-    <section class="hero">
-      <p class="eyebrow">Upgrade review</p><h1>Upgrades should make a clear build.</h1>
-      <p class="lede">The offer screen owns the choice and the behavior. The Effects page owns the live runtime look.</p>
-      <div class="status-line"><span class="tag tag--current">Current facts</span><span class="tag tag--locked">G1 and G2 locked</span><span class="tag tag--direction">Approved direction</span><span class="tag">Not implemented</span></div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header"><div class="header-inner"><a class="brand" href="index.html">Cardborne · Decision Report</a><nav class="nav" aria-label="Report pages"><a href="index.html">Overview</a><a href="map-world.html">Map</a><a href="combat-effects.html">Effects</a><a href="upgrades-builds.html" aria-current="page">Upgrades</a><a href="enemies-encounters.html">Enemies</a><a href="bosses.html">Bosses</a></nav></div></header>
+  <main id="main" class="shell">
+    <section class="intro"><p class="eyebrow">Upgrades</p><h1>Every choice should change how you play.</h1><p class="lede">Weak number changes and repeated jobs should be cut or merged.</p></section>
+
+    <section class="decision-grid" aria-label="Upgrade decision summary">
+      <article class="decision-card decision-card--problem"><p class="card-label">1 · Problem</p><h2>Many choices do not matter</h2><ul class="short-list"><li>“Attack a device first” is too narrow.</li><li>A wider stun area alone is not a build.</li><li>Some bonuses repeat items or other upgrades.</li></ul></article>
+      <article class="decision-card decision-card--fix"><p class="card-label">2 · Fix</p><h2>Change behavior</h2><ul class="short-list"><li>Change aim, movement, timing, target choice, or weapon form.</li><li>Merge repeated jobs.</li><li>Show each build limit on the choice card.</li></ul></article>
+      <article class="decision-card decision-card--decided"><p class="card-label">3 · Decided</p><h2>Two rules</h2><ul class="short-list"><li>If a world danger kills an enemy, it gives normal progress and experience points.</li><li>Each build group has a maximum count.</li><li>Cards must not copy a pickup or a standing pad.</li></ul></article>
+      <article class="decision-card decision-card--choice"><p class="card-label">4 · Your choice</p><h2>No choice now</h2><p class="muted">I can rewrite, merge, remove, and test the first set. Review it after it is playable.</p></article>
     </section>
-    <aside class="notice"><strong>Approved direction, not implemented.</strong><p>The current catalog enforces only the two optional-weapon slots. G1 needs a formal spec rule for neutral-device kills. The full G2 caps still need runtime enforcement before the UI can show them as truth.</p></aside>
 
-    <section class="report-section" aria-labelledby="upgrade-priority"><h2 id="upgrade-priority">Three priorities</h2><ol class="priority-list"><li><strong>State the behavior:</strong> make each card say what changes in play.</li><li><strong>Enforce the build:</strong> apply every G2 cap in data, then show it on the card.</li><li><strong>Separate the look:</strong> card art explains a choice; the Effects page owns the live result.</li></ol></section>
+    <section class="section" aria-labelledby="limits-title">
+      <div class="section-head"><div><p class="eyebrow">First values</p><h2 id="limits-title">Build limits I will start with</h2></div><p>These are test values, not permanent rules. I can tune them without asking about every number.</p></div>
+      <div class="mini-grid">
+        <article class="text-card"><h3>Weapon choices</h3><ul class="plain-list"><li>Main gun form: 1</li><li>Element: 1</li><li>Optional weapons: 2</li></ul></article>
+        <article class="text-card"><h3>Action choices</h3><ul class="plain-list"><li>Dash change: 1</li><li>Stun-wave change: 1</li><li>Defense: 1</li><li>Each chosen line: up to level 3</li></ul></article>
+      </div>
+    </section>
 
-    <section class="report-section"><h2>AS-IS and TO-BE</h2><div class="table-wrap"><table class="compare-table"><thead><tr><th>Area</th><th>AS-IS</th><th>TO-BE</th></tr></thead><tbody>
-      <tr><td>Card copy</td><td>41 cards exist. The audit classifies 13/41 as number-only. A behavior row exists, but current data often gives it no distinct copy.</td><td>Every card states the behavior change in plain words.</td></tr>
-      <tr><td>Build limits</td><td>Only the optional secondary cap exists now.</td><td>Show every approved cap while choosing.</td></tr>
-      <tr><td>Live look</td><td>Card art can be confused with an effect.</td><td>The upgrade screen explains the choice. Effects shows the live result.</td></tr>
-    </tbody></table></div></section>
-
-    <section class="report-section"><h2>Locked rules</h2><div class="grid grid--2">
-      <article class="panel panel--current"><span class="kicker">G1 · shared rule</span><h3>Builds do not own scoring</h3><p><a href="index.html#decisions-title">The overview owns G1.</a> Upgrade data must not change whether a neutral kill gives stage progress and XP.</p></article>
-      <article class="panel panel--locked"><span class="kicker">G2 · locked</span><h3>Build caps</h3><ul class="plain-list"><li>Main gun form: 1</li><li>Element root: 1</li><li>Optional weapons: 2</li><li>Seeker: built in; no slot</li><li>Dash effect: 1 · EMP effect: 1 · Defense: 1</li><li>Selected module: max level 3; it may stop earlier</li></ul></article>
-    </div></section>
-
-    <section class="report-section"><h2>Upgrade UI guidance</h2><div class="grid grid--3">
-      <article class="panel panel--direction"><h3>Card counter</h3><p>Show <code>Main 1 / 1</code>, <code>Element 1 / 1</code>, and <code>Optional 0 / 2</code>. Show level as <code>Lv. 2 → 3</code>.</p></article>
-      <article class="panel panel--direction"><h3>Choice first</h3><p>Keep the title, comparison, behavior sentence, and cap visible. Do not make the player infer behavior from art.</p></article>
-      <article class="panel panel--direction"><h3>One art role</h3><p>Use one related image below the card title. It is card art, not a live effect preview.</p></article>
-    </div></section>
-
-    <section class="report-section" aria-labelledby="choice-effect-map"><h2 id="choice-effect-map">Choice → live effect role</h2><p class="section-intro">Upgrade data chooses the behavior. <a href="combat-effects.html">Effects &amp; readability</a> owns how that behavior looks during play.</p><div class="table-wrap"><table class="data-table"><thead><tr><th>Build lane</th><th>Live result to show</th><th>Current visual input</th></tr></thead><tbody>
-      <tr><td>Main gun form</td><td>Shot count, spread, path, and hit</td><td><code>projectile/energy_teardrop</code>; code owns the exact path</td></tr>
-      <tr><td>One element root</td><td>Thermal, toxin, or cryo hit and actor state</td><td>No separate hit PNG today; actor and weapon feedback carry it</td></tr>
-      <tr><td>Seeker target rule</td><td>Passive seeker body and chosen-target mark</td><td><code>secondary/seeker</code> plus shared target cues</td></tr>
-      <tr><td>Dash form</td><td>Dash start, trail, and any wake result</td><td>Player body is reused for the current afterimage</td></tr>
-      <tr><td>EMP form</td><td>Charge, release, live area, and fade</td><td><code>effect/emp_release</code></td></tr>
-      <tr><td>Optional weapon</td><td>Its body, path, hit, and area result</td><td>Four secondary PNGs plus shared projectile and cues</td></tr>
-      <tr><td>Defense</td><td>Ready, hit, breaking, and gone</td><td><code>cue/ring</code> today; Barrier/Ion reuse must be split</td></tr>
-    </tbody></table></div></section>
-
-    <section class="report-section"><h2>Keep-or-cut test</h2><p class="section-intro">Codex can rewrite or remove a card without asking for every line. A card stays only when most answers are yes.</p><div class="grid grid--2"><article class="panel panel--direction"><h3>Player test</h3><ol class="plain-list"><li>Can the player feel it soon?</li><li>Does it matter in normal combat?</li><li>Does it change aim, movement, timing, or target choice?</li><li>Does it avoid copying an item, pad, or another card?</li></ol></article><article class="panel panel--direction"><h3>First behavior lanes</h3><p>Main-gun form, one element root, Seeker target rule, dash form, EMP form, optional weapon, and defense. Each lane needs a clear job.</p></article></div></section>
-
-    <section class="report-section"><h2>Delegated and open choices</h2><div class="grid grid--2">
-      <article class="panel panel--direction"><span class="kicker">Codex can decide</span><p>Upgrade data owns behavior, level, cap checks, and distinct behavior copy. UI only shows that truth. Weak number-only cards can be rewritten inside the locked lanes.</p></article>
-      <article class="panel panel--open"><span class="kicker">Ask you only for a rule change</span><p>A new weapon family, an exception to G2, or a major change to the five-stage build loop needs your approval.</p></article>
-    </div></section>
-
-    <section class="report-section"><h2>Art is evidence only</h2><p class="section-intro">These existing PNGs show current card content. They are not live effects or approval of a new asset.</p><div class="asset-grid">
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/upgrades/dash_wake.png" alt="Dash Wake upgrade art"></div><div class="asset-card__body"><strong>Dash Wake</strong><span>Card art evidence</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/upgrades/defense_matrix.png" alt="Defense Matrix upgrade art"></div><div class="asset-card__body"><strong>Defense Matrix</strong><span>Card art evidence</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/upgrades/ion_field.png" alt="Ion Field upgrade art"></div><div class="asset-card__body"><strong>Ion Field</strong><span>Card art evidence</span></div></article>
-      <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/effects/fx_emp_release.png" alt="EMP raster used as card art"></div><div class="asset-card__body"><strong>EMP</strong><span>The runtime EMP raster is reused as card art today.</span></div></article>
-    </div></section>
-    <details><summary>Named cards that need a rewrite check</summary><div class="details-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Current example</th><th>Why it is weak</th><th>First action</th></tr></thead><tbody><tr><td>Hunter Firmware</td><td>Facility-first targeting loses meaning when fixed hostiles become neutral.</td><td>Replace the target rule.</td></tr><tr><td>EMP Focus</td><td>A larger EMP area alone may not change a normal decision.</td><td>Give EMP a new action rule.</td></tr><tr><td>Relay Overload / Mass Driver</td><td>Structure-only value is too narrow after neutral conversion.</td><td>Rewrite or remove.</td></tr><tr><td>Accelerator Coil</td><td>The range promise can be unclear or false.</td><td>Make copy match runtime truth.</td></tr><tr><td>Pickup Magnet</td><td>Convenience may be too weak for a build choice.</td><td>Test as a base rule or stronger behavior.</td></tr><tr><td>Overclock Cycle / Aegis Cycle</td><td>Timed attack or shield boosts copy other systems.</td><td>Give them a new active choice or cut them.</td></tr></tbody></table></div></div></details>
-    <details><summary>Evidence and sources</summary><div class="details-body"><p>Cap logic: <a href="../../../scripts/cards/vehicle_upgrade_catalog.gd">vehicle_upgrade_catalog.gd</a>. Offer data: <a href="../../../scripts/cards/vehicle_upgrade_offer_presenter.gd">vehicle_upgrade_offer_presenter.gd</a>. Card UI: <a href="../../../scripts/ui/vehicle_upgrade_choice_card.gd">vehicle_upgrade_choice_card.gd</a>. Production art: <a href="../../../art/visuals/production/gameplay/asset-manifest.json">asset manifest</a>.</p><p>The current catalog has 41 card files. The audit calls 13 “number-only” because those files have no <code>behavior_ids</code>. This is an audit label, not a code rule and not a final removal list.</p><p>The current EMP PNG is also reused by several EMP cards. This is current evidence. It does not mean card art may own the shape or size of the live effect. See <a href="combat-effects.html">Effects &amp; readability</a>.</p></div></details>
+    <section class="section" aria-labelledby="test-title">
+      <div class="section-head"><div><p class="eyebrow">Keep or remove</p><h2 id="test-title">One simple test</h2></div></div>
+      <div class="text-card"><p>An upgrade stays only if the player can feel it soon and it changes aim, movement, timing, target choice, or weapon form. If it only adds a small number or repeats another reward, remove or merge it.</p></div>
+    </section>
   </main>
-  <footer class="page-footer"><p>Cardborne game-system review · concise working direction</p></footer>
-</body></html>
+  <footer class="footer"><div class="shell"><a href="index.html">Back to overview</a></div></footer>
+</body>
+</html>

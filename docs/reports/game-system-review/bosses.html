@@ -1,157 +1,44 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Cardborne boss system review: current state and approved design direction.">
-  <title>Bosses — Cardborne Game System Review</title>
-  <link rel="stylesheet" href="report.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A short Cardborne boss decision report."><title>Cardborne · Boss Decision</title><link rel="stylesheet" href="report.css">
 </head>
 <body>
-  <a class="skip-link" href="#main-content">Skip to main content</a>
-  <header class="site-header">
-    <div class="site-header__inner">
-      <div class="brand-row">
-        <a href="index.html">Cardborne game review</a>
-        <span class="baseline">Runtime baseline 26169a92 · checked 6 Aug 2026</span>
-      </div>
-      <nav class="topic-nav" aria-label="Review topics">
-        <a href="index.html">Overview</a>
-        <a href="map-world.html">Map &amp; world</a>
-        <a href="combat-effects.html">Effects</a>
-        <a href="upgrades-builds.html">Upgrades</a>
-        <a href="enemies-encounters.html">Enemies</a>
-        <a href="bosses.html" aria-current="page">Bosses</a>
-      </nav>
-    </div>
-  </header>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header"><div class="header-inner"><a class="brand" href="index.html">Cardborne · Decision Report</a><nav class="nav" aria-label="Report pages"><a href="index.html">Overview</a><a href="map-world.html">Map</a><a href="combat-effects.html">Effects</a><a href="upgrades-builds.html">Upgrades</a><a href="enemies-encounters.html">Enemies</a><a href="bosses.html" aria-current="page">Bosses</a></nav></div></header>
+  <main id="main" class="shell">
+    <section class="intro"><p class="eyebrow">Bosses</p><h1>Bosses need more rules, not only more health.</h1><p class="lede">Each boss needs a clear idea, fair openings, and stronger pattern mixes later in the run.</p></section>
 
-  <main id="main-content">
-    <section class="hero" aria-labelledby="page-title">
-      <p class="eyebrow">Topic 5 of 5 · Bosses</p>
-      <h1 id="page-title">Bosses need new rules, not only more health.</h1>
-      <p class="lede">Each phase should teach, add, then remix a clear fight idea. Normal damage must stay useful.</p>
-      <div class="status-line" aria-label="Review status">
-        <span class="tag tag--current">Current system checked</span>
-        <span class="tag tag--direction">Approved direction</span>
-        <span class="tag">Not implemented</span>
-      </div>
+    <section class="decision-grid" aria-label="Boss decision summary">
+      <article class="decision-card decision-card--problem"><p class="card-label">1 · Problem</p><h2>Weak and repeated</h2><ul class="short-list"><li>Patterns are too simple.</li><li>Bosses are too weak.</li><li>“Find and break outside objects” repeats too often.</li></ul></article>
+      <article class="decision-card decision-card--fix"><p class="card-label">2 · Fix</p><h2>Teach, add, combine</h2><ul class="short-list"><li>Phase 1 teaches the main rule.</li><li>Phase 2 adds a new answer.</li><li>Phase 3 combines learned rules with a fair opening.</li></ul></article>
+      <article class="decision-card decision-card--decided"><p class="card-label">3 · Decided</p><h2>Boss rules</h2><ul class="short-list"><li>Outside objects are used by only one or two bosses.</li><li>Normal damage is always useful.</li><li>A boss may reward close range but move away fast.</li><li>Later bosses use more and stronger patterns.</li></ul></article>
+      <article class="decision-card decision-card--choice"><p class="card-label">4 · Your choice</p><h2>No choice now</h2><p class="muted">I can design the first boss set and choose which one or two use outside objects. Review it after a playable pass.</p></article>
     </section>
 
-    <aside class="notice" aria-label="Authority warning">
-      <strong>Authority warning: this page is direction, not a game change.</strong>
-      <p>The product spec still requires the current boss objectives. Do not remove or change them from this page alone. Any implementation needs a scoped plan and product approval.</p>
-    </aside>
+    <section class="section" aria-labelledby="current-title">
+      <div class="section-head"><div><p class="eyebrow">Current game</p><h2 id="current-title">Why the fight feels flat</h2></div><p>The boss, outside objects, and attack path do not create enough different decisions over time.</p></div>
+      <figure class="current-card"><img src="../in-game-system-audit/assets/runtime/30-boss-05-stage-5-phase-two.png" alt="Current later boss fight with the boss and its attack area."><figcaption>Current: a later boss should ask for more than a stronger version of an early answer.</figcaption></figure>
+    </section>
 
-    <section class="report-section" aria-labelledby="priority-title">
-      <h2 id="priority-title">Priority: make each boss easy to read and fair to solve.</h2>
-      <ol class="priority-list">
-        <li><strong>Teach.</strong> Phase 1 shows one main idea and its safe answer.</li>
-        <li><strong>Add.</strong> Phase 2 adds one new rule. It does not only run faster.</li>
-        <li><strong>Remix.</strong> Phase 3 combines the learned rules with a clear damage chance.</li>
+    <section class="section" aria-labelledby="formula-title">
+      <div class="section-head"><div><p class="eyebrow">I will handle this</p><h2 id="formula-title">One simple boss formula</h2></div></div>
+      <ol class="timeline">
+        <li><div><strong>One clear idea</strong><br><span class="muted">Example: close attacks deal more damage, but the boss escapes often.</span></div></li>
+        <li><div><strong>Three fair patterns</strong><br><span class="muted">Each pattern has a warning, an answer, and a safe opening.</span></div></li>
+        <li><div><strong>One new rule per phase</strong><br><span class="muted">Do not use speed alone as the phase change.</span></div></li>
+        <li><div><strong>A final mix</strong><br><span class="muted">Combine learned patterns without removing every safe exit.</span></div></li>
       </ol>
     </section>
 
-    <section class="report-section" aria-labelledby="state-title">
-      <h2 id="state-title">Current state and approved direction</h2>
-      <div class="table-wrap">
-        <table class="compare-table">
-          <thead><tr><th scope="col">Topic</th><th scope="col">AS-IS</th><th scope="col">Approved TO-BE</th></tr></thead>
-          <tbody>
-            <tr><td>Attack set</td><td>All five bosses use 4 direct attacks and 2 timed background attacks.</td><td>Give each boss a small, named rule set with clear player answers.</td></tr>
-            <tr><td>Later phases</td><td>Phase 2 and 3 mostly reorder attacks and make them faster.</td><td>P1 teaches one idea. P2 adds one rule. P3 combines both.</td></tr>
-            <tr><td>Objectives</td><td>Every boss has 2 external objectives in every phase.</td><td>Use external objectives for only 1–2 bosses, if they improve that fight.</td></tr>
-            <tr><td>Damage</td><td>Sealed damage is 20%. Open damage is 155%.</td><td>Normal damage must stay useful. Opening is a bonus, not the only real play.</td></tr>
-            <tr><td>Tuning</td><td>More health can hide a weak fight rule.</td><td>Fix the move, weakness, and phase mix before health values.</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <section class="section" aria-labelledby="tools-title">
+      <details>
+        <summary id="tools-title">Optional: 12 pattern tools for implementation</summary>
+        <div class="details-body"><ol class="pattern-list"><li>Aimed burst</li><li>Wide shot fan</li><li>Rotating beam</li><li>Side-to-side beam</li><li>Fast charge pass</li><li>Jump and impact</li><li>Falling danger marks</li><li>Moving danger lane</li><li>Short enemy call</li><li>Breakable boss weapon</li><li>Smaller safe area</li><li>Attack that can be stopped</li></ol></div>
+      </details>
     </section>
-
-    <section class="report-section" aria-labelledby="current-curve-title">
-      <h2 id="current-curve-title">Current strength and pattern mix</h2>
-      <p class="section-intro">Health rises each stage, but later phases mostly reorder the same stage set.</p>
-      <div class="table-wrap"><table class="data-table"><thead><tr><th>Stage</th><th>Current boss</th><th>Base health</th><th>Current mix</th></tr></thead><tbody>
-        <tr><td>1</td><td>Foundry Colossus</td><td>1,250</td><td>Lanes, charge, fan, ring + 2 background areas</td></tr>
-        <tr><td>2</td><td>Archive Leviathan</td><td>1,350</td><td>Fan, charge, cross, area + lanes and depth charge</td></tr>
-        <tr><td>3</td><td>Drydock Titan</td><td>1,450</td><td>Lanes, area, fan, charge + area and summon</td></tr>
-        <tr><td>4</td><td>Switchyard Behemoth</td><td>1,550</td><td>Charge, fan, area, beam + mines and sweep</td></tr>
-        <tr><td>5</td><td>Crown Engine</td><td>1,650</td><td>Cross, summon, beam, fan + lanes and rings</td></tr>
-      </tbody></table></div>
-    </section>
-
-    <section class="report-section" aria-labelledby="boss-draft-title">
-      <h2 id="boss-draft-title">First five-boss identity draft</h2>
-      <p class="section-intro">Codex may revise these mixes after playtests. They show how later bosses gain rules, not only health.</p>
-      <div class="table-wrap"><table class="data-table"><thead><tr><th>Boss</th><th>Core idea</th><th>Three-pattern base</th><th>Main weakness</th></tr></thead><tbody>
-        <tr><td>Colossus</td><td>Learn the charge and punish its stop.</td><td>Charge, fixed fan, ground marker</td><td>Long recovery after a missed charge</td></tr>
-        <tr><td>Leviathan</td><td>Read gaps while the safe side changes.</td><td>Ring burst, aimed fan, homing set</td><td>Short side or rear opening</td></tr>
-        <tr><td>Titan</td><td>Choose which weapon to remove.</td><td>Rotating turret, sweeping beam, jump/slam</td><td>Break one boss-mounted weapon</td></tr>
-        <tr><td>Behemoth</td><td>Fight close for more damage while it keeps moving.</td><td>Charge, moving hazard lane, aimed stream</td><td>Close-range damage bonus</td></tr>
-        <tr><td>Crown</td><td>Remix learned rules with one final arena change.</td><td>Spiral, limited summons, arena squeeze</td><td>One clear weak-point window; one node phase may support it</td></tr>
-      </tbody></table></div>
-    </section>
-
-    <section class="report-section" aria-labelledby="choices-title">
-      <h2 id="choices-title">What is locked and what Codex can decide</h2>
-      <div class="grid grid--3">
-        <article class="panel panel--direction"><span class="kicker">Approved direction</span><h3>Phase shape</h3><p>Phase 1 teaches, phase 2 adds, and phase 3 remixes. A phase needs a new rule, not only speed.</p></article>
-        <article class="panel panel--direction"><span class="kicker">Approved direction</span><h3>Damage value</h3><p>Closed-state damage remains worth doing. Do not make 20% versus 155% the whole fight.</p></article>
-        <article class="panel panel--direction"><span class="kicker">Delegated</span><h3>Boss kits</h3><p>Combat design picks each boss idea, three patterns, weakness, and final remix.</p></article>
-        <article class="panel panel--direction"><span class="kicker">Delegated</span><h3>Objective use</h3><p>Encounter design selects at most 1–2 bosses where external objectives add a good choice.</p></article>
-        <article class="panel panel--direction"><span class="kicker">Delegated</span><h3>Exact values</h3><p>Codex can set first health, damage, timer, and opening values. Playtest evidence then changes them.</p></article>
-      </div>
-    </section>
-
-    <section class="report-section" aria-labelledby="ui-title">
-      <h2 id="ui-title">Boss UI and warning rules</h2>
-      <div class="grid grid--2">
-        <article class="panel"><h3>Always show</h3><ul class="plain-list"><li>Boss health and phase change.</li><li>What can take damage now.</li><li>Where the next danger will land or pass.</li><li>A clear cue when a weakness opens or closes.</li></ul></article>
-        <article class="panel"><h3>Use with care</h3><ul class="plain-list"><li>Long or offscreen attacks are allowed only when needed for the boss idea.</li><li>Show the danger area before it can hurt the player.</li><li>Keep the source, path, and safe exit easy to find.</li><li>Do not make the player search offscreen for required damage targets.</li></ul></article>
-      </div>
-    </section>
-
-    <section class="report-section" aria-labelledby="assets-title">
-      <h2 id="assets-title">Current boss assets</h2>
-      <p class="section-intro">These are existing runtime assets. They are evidence only; this page does not approve visual changes.</p>
-      <div class="asset-grid">
-        <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png" alt="Titan boss base asset."></div><div class="asset-card__body"><strong>Titan</strong><span>Current base</span></div></article>
-        <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png" alt="Leviathan boss base asset."></div><div class="asset-card__body"><strong>Leviathan</strong><span>Current base</span></div></article>
-        <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png" alt="Crown boss base asset."></div><div class="asset-card__body"><strong>Crown</strong><span>Current base</span></div></article>
-        <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png" alt="Colossus boss base asset."></div><div class="asset-card__body"><strong>Colossus</strong><span>Current base</span></div></article>
-        <article class="asset-card"><div class="asset-card__image"><img src="../../../art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png" alt="Behemoth boss base asset."></div><div class="asset-card__body"><strong>Behemoth</strong><span>Current base</span></div></article>
-        <article class="asset-card"><div class="asset-card__image"><img loading="lazy" src="../../../art/visuals/production/gameplay/actors/bosses/shared/boss_node_active.png" alt="Active boss node asset."></div><div class="asset-card__body"><strong>Boss node · active</strong><span>Current shared state</span></div></article>
-        <article class="asset-card"><div class="asset-card__image"><img loading="lazy" src="../../../art/visuals/production/gameplay/actors/bosses/shared/boss_node_damaged.png" alt="Damaged boss node asset."></div><div class="asset-card__body"><strong>Boss node · damaged</strong><span>Current shared state</span></div></article>
-        <article class="asset-card"><div class="asset-card__image"><img loading="lazy" src="../../../art/visuals/production/gameplay/actors/bosses/shared/boss_node_resolved.png" alt="Resolved boss node asset."></div><div class="asset-card__body"><strong>Boss node · resolved</strong><span>Current shared state</span></div></article>
-      </div>
-    </section>
-
-    <section class="report-section" aria-labelledby="captures-title">
-      <h2 id="captures-title">Existing runtime captures</h2>
-      <figure class="wide-figure"><img src="../in-game-system-audit/assets/runtime/30-boss-01-stage-1-startup.png" alt="Stage 1 boss startup capture."><figcaption>Stage 1 startup: the current objective system begins at the fight start.</figcaption></figure>
-      <figure class="wide-figure"><img src="../in-game-system-audit/assets/runtime/30-boss-05-stage-5-phase-two.png" alt="Stage 5 boss phase two capture."><figcaption>Stage 5 phase 2: pressure rises while the external-object task remains.</figcaption></figure>
-      <figure class="wide-figure"><img src="../in-game-system-audit/assets/runtime/30-boss-01-stage-1-offscreen-furnace-active.png" alt="Boss attack entering from offscreen with an active furnace warning."><figcaption>Offscreen attack exception: it can work when the danger area and safe answer are clearly shown.</figcaption></figure>
-    </section>
-
-    <section class="report-section" aria-labelledby="library-title">
-      <h2 id="library-title">18-pattern library</h2>
-      <p class="section-intro">Use a few patterns with clear answers. Do not turn one boss into every pattern at once.</p>
-      <div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Pattern</th><th scope="col">Simple player answer</th></tr></thead><tbody>
-        <tr><td>Aimed stream</td><td>Move sideways after the lock.</td></tr><tr><td>Aimed fan</td><td>Move through the large gap.</td></tr><tr><td>Fixed fan</td><td>Learn the safe lane.</td></tr><tr><td>Ring burst</td><td>Find one gap or stay back.</td></tr><tr><td>Spiral</td><td>Follow one safe lane slowly.</td></tr><tr><td>Rotating turret</td><td>Cross the line before it locks.</td></tr><tr><td>Sweeping beam</td><td>Use the open end, cover, or one dash.</td></tr><tr><td>Ground marker</td><td>Leave early.</td></tr><tr><td>Charge</td><td>Step aside, then punish recovery.</td></tr><tr><td>Jump/slam</td><td>Leave the landing area, then attack.</td></tr><tr><td>Homing set</td><td>Group shots, then cut across.</td></tr><tr><td>Bouncing shot</td><td>Read the next wall path.</td></tr><tr><td>Moving hazard lane</td><td>Choose the safe side early.</td></tr><tr><td>Limited summons</td><td>Kill the key unit or survive its short timer.</td></tr><tr><td>Breakable weapon</td><td>Remove the attack that hurts this build most.</td></tr><tr><td>Open weak point</td><td>Use the short bonus window; normal damage still works.</td></tr><tr><td>Phase handoff</td><td>Read the cue and learn one new rule.</td></tr><tr><td>Arena squeeze</td><td>Pick a lane and save dash for the exit.</td></tr>
-      </tbody></table></div>
-    </section>
-
-    <section class="report-section" aria-labelledby="formula-title">
-      <h2 id="formula-title">One-boss formula</h2>
-      <div class="grid grid--3">
-        <article class="panel"><span class="kicker">1</span><h3>Core idea</h3><p>Write one clear sentence.</p></article><article class="panel"><span class="kicker">2</span><h3>3 patterns</h3><p>Teach three fair player answers.</p></article><article class="panel"><span class="kicker">3</span><h3>Weakness</h3><p>Give a position, timing, or target choice.</p></article><article class="panel"><span class="kicker">4</span><h3>New phase rule</h3><p>Add a rule; do not only reorder.</p></article><article class="panel"><span class="kicker">5</span><h3>Final remix</h3><p>Combine learned rules and keep a fair opening.</p></article><article class="panel"><span class="kicker">Options</span><h3>Weakness ideas</h3><p>Close bonus, side opening, breakable weapon, interruptible charge, hazard use, or selected external nodes.</p></article>
-      </div>
-    </section>
-
-    <details><summary>Show three example pattern mixes</summary><div class="details-body"><div class="grid grid--3"><article class="panel"><h3>Fast close-range boss</h3><p>Charge + aimed fan + moving hazard lane. Close attacks get a bonus, but the boss moves away often.</p></article><article class="panel"><h3>Breakable-weapon boss</h3><p>Rotating turret + sweeping beam + ground marker. Break one weapon to remove the hardest pattern for this build.</p></article><article class="panel"><h3>Arena-control boss</h3><p>Ring burst + limited summons + arena squeeze. Use a neutral hazard to make a short damage opening.</p></article></div></div></details>
-
-    <details><summary>Evidence and sources</summary><div class="details-body"><p>Current pattern sequences: <a href="../../../scripts/bosses/vehicle_boss_patterns.gd">vehicle_boss_patterns.gd</a>. Current objective modules: <a href="../../../scripts/bosses/vehicle_boss_exam_catalog.gd">vehicle_boss_exam_catalog.gd</a>. Product authority: <a href="../../product/vehicle_game_spec.md">vehicle game spec</a>. Production art: <a href="../../../art/visuals/production/gameplay/asset-manifest.json">asset manifest</a>.</p><p>Earlier genre reading: <a href="https://shmups.wiki/library/Help%3ADodging_strategy" target="_blank" rel="noreferrer">dodging strategy</a>, <a href="https://shmups.wiki/library/Battle_Garegga/Bosses" target="_blank" rel="noreferrer">Battle Garegga boss notes</a>, and <a href="https://shmups.wiki/library/Ikaruga" target="_blank" rel="noreferrer">Ikaruga notes</a>. The 18 patterns keep only abstract combat rules. They do not copy art or exact attacks.</p></div></details>
   </main>
-  <footer class="page-footer"><p>Cardborne system review · Boss direction only · Current product specification remains authoritative.</p></footer>
+  <footer class="footer"><div class="shell"><a href="index.html">Back to overview</a></div></footer>
 </body>
 </html>
