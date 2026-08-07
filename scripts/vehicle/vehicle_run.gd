@@ -59,6 +59,9 @@ const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 const VisualEventCatalog = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
 )
+const CombatCuePolicy = preload(
+	"res://scripts/presentation/components/vehicle_combat_cue_policy.gd"
+)
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const ManualPerformanceTrace = preload("res://scripts/performance/vehicle_manual_performance_trace.gd")
@@ -5870,6 +5873,7 @@ func _update_threat_contacts(delta: float) -> void:
 	var viewport_size := get_viewport_rect().size
 	var safe_viewport := Rect2(Vector2(90.0, 90.0), viewport_size - Vector2(180.0, 220.0))
 	var canvas_transform := get_canvas_transform()
+	var visible_world := _visible_world_rect(0.0)
 	for feature in terrain_runtime.features:
 		var feature_position := (
 			feature.rect.get_center()
@@ -5922,22 +5926,36 @@ func _update_threat_contacts(delta: float) -> void:
 			continue
 		if safe_viewport.has_point(enemy_screen):
 			continue
-		var health_class := enemy.health_class
 		var radar_offset := offset
 		if objective_active and radar_offset.length() > THREAT_SCAN_DISTANCE:
 			radar_offset = radar_offset.normalized() * THREAT_SCAN_DISTANCE * 0.98
-		contacts.append({
-			"offset": radar_offset,
-			"priority": health_class in [&"priority", &"boss"] or objective_active,
-			"targeted": String(enemy.id) == _aim_target_id,
-			"objective":objective_active,
-			"objective_id":enemy.id if objective_active else "",
-			"objective_state":enemy.boss_module_state if objective_active else &"",
-			"health":enemy.health if objective_active else 0.0,
-			"max_health":enemy.max_health if objective_active else 0.0,
-		})
+		if objective_active:
+			contacts.append({
+				"offset":radar_offset,
+				"kind":CombatCuePolicy.CONTACT_BOSS_OBJECTIVE,
+				"objective_id":enemy.id,
+				"readiness":1.0,
+			})
+			continue
+		var readiness := CombatCuePolicy.unseen_projectile_attack_readiness(
+			enemy.pos,
+			enemy.visual_radius,
+			enemy.phase,
+			enemy.attack_telegraphs,
+			visible_world
+		)
+		if readiness >= 0.0:
+			contacts.append({
+				"offset":radar_offset,
+				"kind":CombatCuePolicy.CONTACT_INCOMING_ATTACK,
+				"readiness":readiness,
+			})
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
-		contacts.append({"offset":boss_arrival_position - player_position, "priority":true, "targeted":false})
+		contacts.append({
+			"offset":boss_arrival_position - player_position,
+			"kind":CombatCuePolicy.CONTACT_BOSS_ARRIVAL,
+			"readiness":1.0,
+		})
 	_threat_contact_cache = contacts
 
 

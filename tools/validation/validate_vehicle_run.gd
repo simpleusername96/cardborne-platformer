@@ -320,18 +320,13 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 		func(contact_variant) -> bool:
 			var contact := Dictionary(contact_variant)
 			return (
-				bool(contact.get("objective", false))
+				StringName(contact.get("kind", &"")) == &"boss_objective"
 				and String(contact.get("objective_id", "")) == String(active["id"])
-				and StringName(contact.get("objective_state", &"")) == &"active"
-				and is_equal_approx(
-					float(contact.get("health", -1.0)),
-					float(active["health"])
-				)
 			)
 	)
 	_expect(
 		not objective_contacts.is_empty(),
-		"off-screen radar consumes the same active objective id, state, and health"
+		"off-screen radar retains the active boss objective without duplicate state"
 	)
 	ui.update_hud(hud)
 	_expect(

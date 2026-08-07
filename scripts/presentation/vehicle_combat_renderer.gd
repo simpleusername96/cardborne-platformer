@@ -19,6 +19,9 @@ const WorldCatalog = preload(
 const ProjectileCatalog = preload(
 	"res://scripts/presentation/components/vehicle_projectile_visual_catalog.gd"
 )
+const CombatCuePolicy = preload(
+	"res://scripts/presentation/components/vehicle_combat_cue_policy.gd"
+)
 const VisualEventCatalog = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
 )
@@ -903,6 +906,9 @@ func _sync_projectiles(
 				radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 			)
 			if not visible_world.grow(hostile_visual_radius).has_point(position):
+				_sync_incoming_projectile_cue(
+					projectile, affinity, visible_world
+				)
 				continue
 			_write_instance_basis(
 				_projectile_batch,
@@ -938,79 +944,46 @@ func _sync_enemy_attack_telegraphs(
 	enemy: EnemyState,
 	visible_world: Rect2
 ) -> void:
-	var startup := enemy.phase in [&"startup", &"boss_startup"]
-	var active := enemy.phase in [&"active", &"boss_active"]
-	var commit_marker_drawn := false
 	for telegraph in enemy.attack_telegraphs:
-		if not _telegraph_intersects_view(telegraph, visible_world):
-			continue
-		var shape := StringName(telegraph.get("shape", &""))
-		if startup and shape == &"corridor":
-			match StringName(telegraph.get("delivery", &"")):
-				&"projectile":
-					_sync_projectile_telegraph(telegraph)
-				&"charge":
-					_sync_charge_telegraph(telegraph)
-				&"beam":
-					_sync_corridor_telegraph(telegraph)
-				_:
-					_sync_corridor_telegraph(telegraph)
-		elif startup and shape == &"area":
-			_sync_area_telegraph(telegraph)
-		elif startup and shape == &"support":
-			_sync_support_telegraph(telegraph)
-		elif (
-			enemy.phase == &"boss_active"
-			and shape == &"area"
+		match CombatCuePolicy.telegraph_mode(
+			enemy.pos,
+			enemy.visual_radius,
+			enemy.phase,
+			telegraph,
+			visible_world
 		):
-			# Boss area damage can remain live for its authored active window.
-			# Keep the committed footprint visible until it is no longer harmful.
-			_sync_area_telegraph(telegraph)
-		elif (
-			active
-			and shape == &"corridor"
-			and StringName(telegraph.get("delivery", &"beam")) == &"beam"
-			and float(telegraph.get("active_width", 0.0)) > 0.0
-		):
-			_sync_active_beam(telegraph)
-		if startup and not commit_marker_drawn:
-			_sync_commit_marker(telegraph)
-			commit_marker_drawn = true
+			CombatCuePolicy.MODE_PROJECTILE_ENTRY:
+				_sync_projectile_telegraph(telegraph)
+			CombatCuePolicy.MODE_CHARGE_FOOTPRINT:
+				_sync_charge_telegraph(telegraph)
+			CombatCuePolicy.MODE_BEAM_WARNING:
+				_sync_corridor_telegraph(telegraph)
+			CombatCuePolicy.MODE_ACTIVE_BEAM:
+				_sync_active_beam(telegraph)
+			CombatCuePolicy.MODE_AREA_FOOTPRINT:
+				_sync_area_telegraph(telegraph)
 
 
-func _sync_commit_marker(telegraph: Dictionary) -> void:
-	var commit_mode := StringName(telegraph.get("commit_mode", &""))
-	if commit_mode.is_empty():
-		return
-	var center := (
-		Vector2(telegraph.get("center", Vector2.ZERO))
-		if telegraph.has("center")
-		else Vector2(telegraph.get("from", Vector2.ZERO))
-	)
-	if commit_mode == &"committed":
-		_write_danger_ring(center, 18.0, Color(Art.DANGER, 0.82))
-	elif commit_mode == &"autonomous":
-		_write_diamond(center, 10.0, Art.DANGER)
-
-
-func _telegraph_intersects_view(
-	telegraph: Dictionary,
+func _sync_incoming_projectile_cue(
+	projectile: ProjectileState,
+	affinity: StringName,
 	visible_world: Rect2
-) -> bool:
-	var shape := StringName(telegraph.get("shape", &""))
-	if shape == &"corridor":
-		var from := Vector2(telegraph["from"])
-		var to := Vector2(telegraph["to"])
-		var half_width := maxf(0.0, float(telegraph.get("half_width", 0.0)))
-		return Rect2(from, to - from).abs().grow(half_width).intersects(
-			visible_world,
-			true
-		)
-	if shape in [&"area", &"support"]:
-		var center := Vector2(telegraph["center"])
-		var radius := maxf(0.0, float(telegraph.get("radius", 0.0)))
-		return visible_world.grow(radius).has_point(center)
-	return false
+) -> void:
+	if not CombatCuePolicy.projectile_will_enter_view(
+		projectile.pos,
+		projectile.velocity,
+		projectile.radius,
+		AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
+		visible_world
+	):
+		return
+	_write_beam(
+		projectile.pos,
+		projectile.pos
+			+ projectile.velocity * AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
+		3.0,
+		Color(Art.attack_warning_color(affinity, 1.0), 0.82)
+	)
 
 
 func _sync_projectile_telegraph(telegraph: Dictionary) -> void:
@@ -1020,8 +993,6 @@ func _sync_projectile_telegraph(telegraph: Dictionary) -> void:
 	var length := vector.length()
 	if length <= 0.001:
 		return
-	var direction := vector / length
-	var half_width := maxf(1.0, float(telegraph["half_width"]))
 	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
@@ -1029,13 +1000,9 @@ func _sync_projectile_telegraph(telegraph: Dictionary) -> void:
 	var damage := float(telegraph.get("damage", 0.0))
 	var line_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_alpha := lerpf(0.42, 0.94, intensity)
-	# A projectile startup is a short launch preview, not a full-lifetime lane.
+	# Only off-screen launch previews reach this path. The projectile itself owns
+	# visibility after spawn, so no marker or full-lifetime route is duplicated.
 	_write_beam(from, to, line_width, Color(color, boundary_alpha))
-	_write_diamond(
-		from + direction * minf(18.0, length * 0.18),
-		minf(16.0, maxf(11.0, half_width)),
-		Color(color, boundary_alpha)
-	)
 
 
 func _sync_charge_telegraph(telegraph: Dictionary) -> void:
@@ -1056,7 +1023,6 @@ func _sync_charge_telegraph(telegraph: Dictionary) -> void:
 	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
 	var boundary_alpha := lerpf(0.38, 0.92, intensity)
-	var accent_alpha := lerpf(0.30, 0.78, intensity)
 	_write_beam(
 		from + tangent * boundary_offset,
 		to + tangent * boundary_offset,
@@ -1070,14 +1036,6 @@ func _sync_charge_telegraph(telegraph: Dictionary) -> void:
 		Color(color, boundary_alpha)
 	)
 	_write_danger_ring(to, half_width, Color(color, boundary_alpha))
-	for offset in [-0.36, 0.0, 0.36]:
-		var endpoint := to + tangent * half_width * float(offset)
-		_write_beam(
-			endpoint - direction * minf(half_width * 0.46, 24.0),
-			endpoint,
-			3.0,
-			Color(color, accent_alpha)
-		)
 
 
 func _sync_corridor_telegraph(telegraph: Dictionary) -> void:
@@ -1098,32 +1056,12 @@ func _sync_corridor_telegraph(telegraph: Dictionary) -> void:
 	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
 	var boundary_alpha := lerpf(0.36, 0.88, intensity)
-	var accent_alpha := lerpf(0.24, 0.68, intensity)
-	# Exact capsule boundaries remain visible without accumulating interior fill.
+	# The exact capsule is the complete warning; affinity-specific interior marks
+	# duplicate the same truth and are intentionally omitted.
 	_write_beam(from + tangent * boundary_offset, to + tangent * boundary_offset, boundary_width, Color(color, boundary_alpha))
 	_write_beam(from - tangent * boundary_offset, to - tangent * boundary_offset, boundary_width, Color(color, boundary_alpha))
 	_write_danger_ring(from, half_width, Color(color, boundary_alpha))
 	_write_danger_ring(to, half_width, Color(color, boundary_alpha))
-	match affinity:
-		AttackContract.KINETIC:
-			_write_beam(from, to, 2.0, Color(color, accent_alpha))
-		AttackContract.THERMAL:
-			_write_beam(from, to, 2.5, Color(color, accent_alpha))
-		AttackContract.TOXIN:
-			for progress in [0.34, 0.68]:
-				_write_diamond(from.lerp(to, float(progress)), 9.0, Color(color, accent_alpha))
-		AttackContract.CRYO:
-			for offset in [-0.42, 0.42]:
-				_write_beam(
-					from,
-					to + tangent * half_width * float(offset),
-					2.0,
-					Color(color, accent_alpha)
-				)
-		AttackContract.ARC:
-			_write_diamond(to, 11.0, Color(color, accent_alpha))
-		AttackContract.HYBRID:
-			_write_diamond(from.lerp(to, 0.5), 12.0, Color(color, accent_alpha))
 
 
 func _sync_active_beam(telegraph: Dictionary) -> void:
@@ -1146,33 +1084,7 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var intensity := smoothstep(0.0, 1.0, readiness)
 	var color := Art.attack_warning_color(affinity, readiness)
 	var boundary_alpha := lerpf(0.38, 0.90, intensity)
-	var accent_alpha := lerpf(0.24, 0.66, intensity)
 	_write_danger_ring(center, radius, Color(color, boundary_alpha))
-	match affinity:
-		AttackContract.THERMAL:
-			_write_danger_ring(center, radius * 0.62, Color(color, accent_alpha))
-		AttackContract.TOXIN:
-			_write_danger_ring(center, radius * 0.70, Color(color, accent_alpha))
-			_write_diamond(center, maxf(11.0, radius * 0.10), Color(color, accent_alpha))
-		AttackContract.CRYO:
-			_write_diamond(center, maxf(11.0, radius * 0.12), Color(color, accent_alpha))
-		AttackContract.ARC:
-			# ARC uses the same clean circular danger language as every other
-			# area telegraph; the former beam crossbars read as black seams and
-			# competed with the boundary. Keep only one small readiness marker.
-			_write_diamond(center, maxf(10.0, radius * 0.09), Color(color, accent_alpha))
-		AttackContract.HYBRID:
-			_write_danger_ring(center, radius * 0.55, Color(color, accent_alpha))
-			_write_diamond(center, maxf(11.0, radius * 0.11), Color(color, accent_alpha))
-		_:
-			_write_diamond(center, maxf(10.0, radius * 0.09), Color(color, accent_alpha))
-
-
-func _sync_support_telegraph(telegraph: Dictionary) -> void:
-	var center := Vector2(telegraph["center"])
-	var radius := maxf(1.0, float(telegraph["radius"]))
-	_write_ring(center, radius, Color(Art.MINT, 0.88))
-	_write_diamond(center, maxf(13.0, radius * 0.14), Art.MINT)
 
 
 func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> void:

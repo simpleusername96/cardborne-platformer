@@ -6,6 +6,9 @@ extends SceneTree
 
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
+const CombatCuePolicy = preload(
+	"res://scripts/presentation/components/vehicle_combat_cue_policy.gd"
+)
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const RunScene = preload("res://scenes/run/VehicleRun.tscn")
@@ -98,10 +101,81 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 
 
 func _validate_offscreen_intersection() -> void:
-	var source := FileAccess.get_file_as_string("res://scripts/presentation/vehicle_combat_renderer.gd")
-	_expect(source.contains("_telegraph_intersects_view"), "renderer tests the complete corridor against the viewport")
-	_expect(source.contains("_sync_active_beam"), "active beams retain a damaging-interval presentation")
-	_expect(source.contains("_sync_area_telegraph"), "active boss areas retain a damaging-interval presentation")
+	var visible := Rect2(0.0, 0.0, 1280.0, 720.0)
+	var projectile := {
+		"shape":&"corridor",
+		"delivery":&"projectile",
+		"from":Vector2(-180.0, 360.0),
+		"to":Vector2(160.0, 360.0),
+		"half_width":28.0,
+		"damage":12.0,
+		"readiness":0.5,
+	}
+	_expect(
+		CombatCuePolicy.telegraph_mode(
+			Vector2(-180.0, 360.0), 26.0, &"startup", projectile, visible
+		) == CombatCuePolicy.MODE_PROJECTILE_ENTRY,
+		"off-screen projectile startup keeps only its entering short path"
+	)
+	_expect(
+		CombatCuePolicy.telegraph_mode(
+			Vector2(300.0, 360.0), 26.0, &"startup", projectile, visible
+		) == CombatCuePolicy.MODE_NONE,
+		"visible projectile source relies on its muzzle and projectile body"
+	)
+	var unseen_projectile := projectile.duplicate()
+	unseen_projectile["from"] = Vector2(-500.0, 360.0)
+	unseen_projectile["to"] = Vector2(-200.0, 360.0)
+	var unseen_descriptors: Array[Dictionary] = [unseen_projectile]
+	_expect(
+		is_equal_approx(
+			CombatCuePolicy.unseen_projectile_attack_readiness(
+				Vector2(-500.0, 360.0),
+				26.0,
+				&"startup",
+				unseen_descriptors,
+				visible
+			),
+			0.5
+		),
+		"radar owns only a committed projectile attack not yet visible in-world"
+	)
+	_expect(
+		CombatCuePolicy.projectile_will_enter_view(
+			Vector2(-120.0, 360.0),
+			Vector2.RIGHT * 500.0,
+			6.0,
+			AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
+			visible
+		),
+		"an unseen live projectile gets a cue only inside the reaction horizon"
+	)
+	_expect(
+		not CombatCuePolicy.projectile_will_enter_view(
+			Vector2(-120.0, 360.0),
+			Vector2.LEFT * 500.0,
+			6.0,
+			AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
+			visible
+		),
+		"a projectile moving away from the viewport gets no warning"
+	)
+	var renderer_source := FileAccess.get_file_as_string(
+		"res://scripts/presentation/vehicle_combat_renderer.gd"
+	)
+	_expect(
+		renderer_source.contains("_sync_active_beam"),
+		"active beams retain a damaging-interval presentation"
+	)
+	_expect(
+		renderer_source.contains("_sync_area_telegraph"),
+		"active boss areas retain a damaging-interval presentation"
+	)
+	_expect(
+		not renderer_source.contains("_sync_commit_marker")
+			and not renderer_source.contains("_sync_support_telegraph"),
+		"decorative commit markers and non-damaging support warnings stay retired"
+	)
 
 
 func _validate_live_caller_contract() -> void:

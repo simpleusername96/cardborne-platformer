@@ -103,6 +103,7 @@ func _run() -> void:
 	enemy.committed_target = Vector2(500.0, 300.0)
 	enemy.attack_telegraphs = [{
 		"shape":&"corridor",
+		"delivery":&"beam",
 		"from":Vector2(300.0, 300.0),
 		"to":Vector2(500.0, 300.0),
 		"half_width":31.0,
@@ -291,11 +292,12 @@ func _run() -> void:
 		"res://scripts/presentation/vehicle_combat_renderer.gd"
 	)
 	var arc_area_section := renderer_source.get_slice(
-		"AttackContract.ARC:", 1
-	).get_slice("AttackContract.HYBRID:", 0)
+		"func _sync_area_telegraph", 1
+	).get_slice("func _sync_experience", 0)
 	_expect(
-		not arc_area_section.contains("_write_beam("),
-		"ARC area telegraphs use a single ring and marker without crossbars"
+		arc_area_section.count("_write_danger_ring(") == 1
+			and not arc_area_section.contains("_write_diamond("),
+		"every damaging area uses one exact outer ring without affinity ornaments"
 	)
 	_expect(
 		Vector2(projectile_buffer[12], projectile_buffer[16]).is_equal_approx(
@@ -367,6 +369,62 @@ func _run() -> void:
 			and crowd_body.multimesh.instance_count >= 110,
 		"adaptive component buffers grow without hiding ordinary enemy bodies"
 	)
+	var projectile_attacker := EnemyState.new()
+	projectile_attacker.id = "projectile_attacker"
+	projectile_attacker.role = &"shooter"
+	projectile_attacker.archetype = &"shooter"
+	projectile_attacker.pos = Vector2(300.0, 360.0)
+	projectile_attacker.visual_radius = 26.0
+	projectile_attacker.alive = true
+	projectile_attacker.active = true
+	projectile_attacker.phase = &"startup"
+	projectile_attacker.attack_telegraphs = [{
+		"shape":&"corridor",
+		"delivery":&"projectile",
+		"from":Vector2(330.0, 360.0),
+		"to":Vector2(510.0, 360.0),
+		"half_width":28.0,
+		"damage":12.0,
+		"affinity":AttackContract.KINETIC,
+		"readiness":0.7,
+	}]
+	renderer.sync(
+		[projectile_attacker], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	var beam_batch := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 0,
+		"visible projectile attacks rely on muzzle direction and the projectile body"
+	)
+	projectile_attacker.pos = Vector2(-120.0, 360.0)
+	projectile_attacker.attack_telegraphs[0]["from"] = Vector2(-90.0, 360.0)
+	projectile_attacker.attack_telegraphs[0]["to"] = Vector2(90.0, 360.0)
+	renderer.sync(
+		[projectile_attacker], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 1,
+		"an off-screen projectile startup keeps one short entering route"
+	)
+	var incoming_projectile := ProjectileState.new()
+	incoming_projectile.configure({
+		"pos":Vector2(-120.0, 360.0),
+		"velocity":Vector2.RIGHT * 500.0,
+		"radius":6.0,
+		"damage":12.0,
+		"affinity":AttackContract.KINETIC,
+	}, &"enemy", 3)
+	var incoming_projectiles: Array[ProjectileState] = [incoming_projectile]
+	renderer.sync(
+		[], no_projectiles, incoming_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 1,
+		"an unseen live projectile keeps one reaction-horizon entry path"
+	)
 	var offscreen_enemy := EnemyState.new()
 	offscreen_enemy.id = "offscreen_attacker"
 	offscreen_enemy.role = &"controller"
@@ -398,7 +456,7 @@ func _run() -> void:
 	)
 	_expect(
 		area_disk.multimesh.visible_instance_count == 0
-			and area_ring.multimesh.visible_instance_count >= 2,
+			and area_ring.multimesh.visible_instance_count == 1,
 		"an on-screen outline-only danger footprint renders independently of its off-screen owner"
 	)
 	var early_area_buffer := area_ring.multimesh.buffer
@@ -433,13 +491,14 @@ func _run() -> void:
 	)
 	_expect(
 		area_disk.multimesh.visible_instance_count == 0
-			and area_ring.multimesh.visible_instance_count >= 2,
+			and area_ring.multimesh.visible_instance_count == 1,
 		"boss area outline stays visible for its complete damaging window"
 	)
 	offscreen_enemy.phase = &"active"
 	offscreen_enemy.role = &"controller"
 	offscreen_enemy.attack_telegraphs = [{
 		"shape":&"corridor",
+		"delivery":&"beam",
 		"from":Vector2(-120.0, 360.0),
 		"to":Vector2(900.0, 360.0),
 		"half_width":58.0,
@@ -451,7 +510,6 @@ func _run() -> void:
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
-	var beam_batch := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
 	_expect(
 		beam_batch.multimesh.visible_instance_count >= 4,
 		"active off-screen beam keeps its exact danger boundary and beam body visible"

@@ -439,9 +439,21 @@ func _capture_cycle_evidence() -> void:
 	_run.apply_upgrade(&"overclock_cycle")
 	_run.apply_upgrade(&"ion_field")
 	var threat_contacts: Array[Dictionary] = [
-		{"offset":Vector2(-760.0, -180.0), "priority":false, "targeted":false},
-		{"offset":Vector2(820.0, 120.0), "priority":true, "targeted":true},
-		{"offset":Vector2(120.0, -900.0), "priority":false, "targeted":false},
+		{
+			"offset":Vector2(-760.0, -180.0),
+			"kind":&"incoming_attack",
+			"readiness":0.35,
+		},
+		{
+			"offset":Vector2(820.0, 120.0),
+			"kind":&"boss_arrival",
+			"readiness":1.0,
+		},
+		{
+			"offset":Vector2(120.0, -900.0),
+			"kind":&"boss_objective",
+			"readiness":1.0,
+		},
 	]
 	_run._threat_contact_cache = threat_contacts
 	await _settle_capture()

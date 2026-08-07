@@ -6,6 +6,9 @@ extends Control
 ## them into short project-styled arcs around the projected player.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const CombatCuePolicy = preload(
+	"res://scripts/presentation/components/vehicle_combat_cue_policy.gd"
+)
 
 const DIAMETER := 208.0
 const OUTER_RADIUS := DIAMETER * 0.5
@@ -63,31 +66,25 @@ func _aggregate_contacts(contacts: Array, maximum_distance: float) -> Array[Dict
 		var angle := offset.angle()
 		var sector_index := posmod(floori((angle + PI) / TAU * float(SECTOR_COUNT)), SECTOR_COUNT)
 		var existing: Dictionary = buckets[sector_index]
+		var kind := StringName(contact.get(
+			"kind", CombatCuePolicy.CONTACT_INCOMING_ATTACK
+		))
+		var readiness := clampf(float(contact.get("readiness", 0.0)), 0.0, 1.0)
 		if existing.is_empty():
 			buckets[sector_index] = {
 				"angle": angle,
 				"distance": distance,
 				"count": 1,
-				"priority": bool(contact.get("priority", false)),
-				"targeted": bool(contact.get("targeted", false)),
-				"objective":bool(contact.get("objective", false)),
+				"kind":kind,
+				"readiness":readiness,
 				"objective_id":String(contact.get("objective_id", "")),
-				"objective_state":StringName(contact.get("objective_state", &"")),
-				"health":float(contact.get("health", 0.0)),
-				"max_health":float(contact.get("max_health", 0.0)),
 			}
 			continue
 		existing["count"] = int(existing["count"]) + 1
-		existing["priority"] = bool(existing["priority"]) or bool(contact.get("priority", false))
-		existing["targeted"] = bool(existing["targeted"]) or bool(contact.get("targeted", false))
-		if bool(contact.get("objective", false)):
-			existing["objective"] = true
+		existing["readiness"] = maxf(float(existing["readiness"]), readiness)
+		if _kind_priority(kind) > _kind_priority(StringName(existing["kind"])):
+			existing["kind"] = kind
 			existing["objective_id"] = String(contact.get("objective_id", ""))
-			existing["objective_state"] = StringName(
-				contact.get("objective_state", &"")
-			)
-			existing["health"] = float(contact.get("health", 0.0))
-			existing["max_health"] = float(contact.get("max_health", 0.0))
 		if distance < float(existing["distance"]):
 			existing["angle"] = angle
 			existing["distance"] = distance
@@ -109,19 +106,17 @@ func _build_threat_mesh(
 	var indices := PackedInt32Array()
 	for sector in sectors:
 		var angle := float(sector["angle"])
+		var kind := StringName(sector["kind"])
+		var readiness := clampf(float(sector["readiness"]), 0.0, 1.0)
 		var proximity := 1.0 - clampf(
 			float(sector["distance"]) / maxf(1.0, maximum_distance),
 			0.0,
 			1.0
 		)
 		var density := minf(1.0, float(int(sector["count"]) - 1) / 5.0)
-		var width := 5.0 + density * 6.0 + proximity * 2.0
-		var color := Art.MUSTARD if bool(sector["priority"]) else Art.CORAL
-		if bool(sector.get("objective", false)):
-			color = Art.PLAYER_REWARD
-		if bool(sector["targeted"]):
-			color = Art.IVORY_BRIGHT
-		var alpha := 0.58 + proximity * 0.30
+		var width := 5.0 + density * 5.0 + proximity * 2.0 + readiness * 2.0
+		var color := _kind_color(kind, readiness)
+		var alpha := 0.56 + proximity * 0.22 + readiness * 0.18
 		_append_arc_band(
 			vertices, colors, indices, center, ARC_RADIUS + 2.0,
 			angle - ARC_HALF_WIDTH, angle + ARC_HALF_WIDTH, width + 4.0,
@@ -135,7 +130,10 @@ func _build_threat_mesh(
 		var direction := Vector2.RIGHT.rotated(angle)
 		var tangent := direction.rotated(PI * 0.5)
 		var tip := center + direction * (ARC_RADIUS - 10.0)
-		if bool(sector["priority"]) or bool(sector["targeted"]):
+		if kind in [
+			CombatCuePolicy.CONTACT_INCOMING_ATTACK,
+			CombatCuePolicy.CONTACT_BOSS_ARRIVAL,
+		]:
 			_append_triangle(
 				vertices,
 				colors,
@@ -143,24 +141,7 @@ func _build_threat_mesh(
 				tip,
 				tip - direction * 13.0 + tangent * 8.0,
 				tip - direction * 13.0 - tangent * 8.0,
-				Art.MUSTARD if not bool(sector["targeted"]) else Art.IVORY_BRIGHT
-			)
-		if bool(sector["targeted"]):
-			_append_arc_band(
-				vertices, colors, indices, center, ARC_RADIUS + 9.0,
-				angle - ARC_HALF_WIDTH * 0.72, angle + ARC_HALF_WIDTH * 0.72,
-				3.0, Art.MUSTARD, 10
-			)
-		if bool(sector.get("objective", false)):
-			var outer_tip := center + direction * (ARC_RADIUS - 24.0)
-			_append_triangle(
-				vertices,
-				colors,
-				indices,
-				outer_tip,
-				outer_tip - direction * 10.0 + tangent * 6.0,
-				outer_tip - direction * 10.0 - tangent * 6.0,
-				Art.PLAYER_REWARD
+				color
 			)
 	if vertices.is_empty():
 		return null
@@ -172,6 +153,27 @@ func _build_threat_mesh(
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return mesh
+
+
+func _kind_priority(kind: StringName) -> int:
+	match kind:
+		CombatCuePolicy.CONTACT_INCOMING_ATTACK:
+			return 3
+		CombatCuePolicy.CONTACT_BOSS_ARRIVAL:
+			return 2
+		CombatCuePolicy.CONTACT_BOSS_OBJECTIVE:
+			return 1
+	return 0
+
+
+func _kind_color(kind: StringName, readiness: float) -> Color:
+	match kind:
+		CombatCuePolicy.CONTACT_BOSS_OBJECTIVE:
+			return Art.PLAYER_REWARD
+		CombatCuePolicy.CONTACT_BOSS_ARRIVAL:
+			return Art.BOSS_COMMAND
+		_:
+			return Art.DANGER.lerp(Art.IVORY_BRIGHT, readiness * 0.36)
 
 
 func _append_arc_band(
@@ -235,6 +237,7 @@ func debug_contract() -> Dictionary:
 		"maximum_markers": SECTOR_COUNT,
 		"offscreen_arcs": true,
 		"objective_channel":true,
+		"incoming_attack_only":true,
 		"batched_mesh": true,
 		"full_rect": is_zero_approx(anchor_left) and is_zero_approx(anchor_top) and is_equal_approx(anchor_right, 1.0) and is_equal_approx(anchor_bottom, 1.0),
 		"mouse_ignored": mouse_filter == Control.MOUSE_FILTER_IGNORE,
