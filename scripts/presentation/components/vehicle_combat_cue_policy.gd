@@ -5,7 +5,6 @@ extends RefCounted
 ## cue. Gameplay continues to own attack geometry, damage, collision, and time.
 
 const MODE_NONE: StringName = &"none"
-const MODE_PROJECTILE_ENTRY: StringName = &"projectile_entry"
 const MODE_CHARGE_FOOTPRINT: StringName = &"charge_footprint"
 const MODE_BEAM_WARNING: StringName = &"beam_warning"
 const MODE_ACTIVE_BEAM: StringName = &"active_beam"
@@ -17,8 +16,8 @@ const CONTACT_BOSS_ARRIVAL: StringName = &"boss_arrival"
 
 
 static func telegraph_mode(
-	source_position: Vector2,
-	source_radius: float,
+	_source_position: Vector2,
+	_source_radius: float,
 	phase: StringName,
 	telegraph: Dictionary,
 	visible_world: Rect2
@@ -35,13 +34,7 @@ static func telegraph_mode(
 	if startup and shape == &"corridor":
 		match delivery:
 			&"projectile":
-				return (
-					MODE_NONE
-					if source_is_visible(
-						source_position, source_radius, visible_world
-					)
-					else MODE_PROJECTILE_ENTRY
-				)
+				return MODE_NONE
 			&"charge":
 				return MODE_CHARGE_FOOTPRINT
 			&"beam":
@@ -75,30 +68,12 @@ static func unseen_projectile_attack_readiness(
 		if (
 			_is_damaging(telegraph)
 			and StringName(telegraph.get("delivery", &"")) == &"projectile"
-			and not telegraph_intersects_view(telegraph, visible_world)
 		):
 			result = maxf(
 				result,
 				clampf(float(telegraph.get("readiness", 0.0)), 0.0, 1.0)
 			)
 	return result
-
-
-static func projectile_will_enter_view(
-	position: Vector2,
-	velocity: Vector2,
-	radius: float,
-	lead_seconds: float,
-	visible_world: Rect2
-) -> bool:
-	var expanded := visible_world.grow(maxf(0.0, radius))
-	if expanded.has_point(position) or velocity.is_zero_approx():
-		return false
-	return _segment_intersects_rect(
-		position,
-		position + velocity * maxf(0.0, lead_seconds),
-		expanded
-	)
 
 
 static func telegraph_intersects_view(

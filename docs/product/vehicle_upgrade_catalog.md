@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-07
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-08
 canonical_for: Cardborne live vehicle upgrade categories, cards, levels, effects, and offer rules
 scope: Run-scoped vehicle upgrade catalog and secondary-slot ownership
 related:
@@ -168,7 +168,8 @@ Dash와 EMP는 기본 액션으로 유지하지만 관련 업그레이드 카드
 - 선택 보조 무기 ID는 `electric_field`, `orbiting_blades`, `drop_mines`이며 최대 두 개만 획득한다.
 - 합법 ID가 세 개 이상인 모든 선택 경로에서 서로 다른 합법 카드 세 장을 제안한다.
 - 모든 레벨의 한국어·영어 분류, 제목과 실제 수치 변화가 해석된다.
-- 카드 설명과 변화 문장은 숨기고, 첫 획득만 작은 공용 unlock icon으로 표시한다.
+- 각 카드는 실제 효과를 한국어 약 10자·영어 2–5단어의 한 줄로 요약한다.
+  변화 종류 문장은 숨기고, 첫 획득만 작은 공용 unlock icon으로 표시한다.
 - 가장 긴 카드 조합이 960×540, 1280×720, 1920×1080에서 잘리거나 넘치지 않는다.
 - 유효·미제안·중복·오래된 카드 적용 사례가 집중 검증을 통과한다.
 

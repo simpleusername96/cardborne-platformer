@@ -174,7 +174,7 @@ func _run() -> void:
 	var repeated_snapshot: Dictionary = renderer.debug_snapshot()
 	for key in [
 		"visible_instances", "batch_counts", "health_bar_count",
-		"priority_marker_count", "tactic_module_count",
+		"priority_marker_count",
 		"semantic_texture_draw_count",
 		"floating_damage_draw_count",
 	]:
@@ -417,8 +417,8 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count == 1,
-		"an off-screen projectile startup keeps one short entering route"
+		beam_batch.multimesh.visible_instance_count == 0,
+		"an off-screen projectile startup does not draw a predicted route"
 	)
 	var incoming_projectile := ProjectileState.new()
 	incoming_projectile.configure({
@@ -434,8 +434,52 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count == 1,
-		"an unseen live projectile keeps one reaction-horizon entry path"
+		beam_batch.multimesh.visible_instance_count == 0,
+		"an unseen live projectile does not draw an entry path"
+	)
+	var open_boss := EnemyState.new()
+	open_boss.id = "open_boss"
+	open_boss.role = &"stage_boss"
+	open_boss.archetype = &"stage_boss"
+	open_boss.boss_variant = &"colossus"
+	open_boss.boss_module_state = &"open"
+	open_boss.pos = Vector2(700.0, 360.0)
+	open_boss.visual_radius = Art.STAGE_BOSS_RADIUS
+	open_boss.alive = true
+	open_boss.active = true
+	var active_pylon := EnemyState.new()
+	active_pylon.id = "active_pylon"
+	active_pylon.role = &"boss_pylon"
+	active_pylon.archetype = &"boss_pylon"
+	active_pylon.boss_module_state = &"active"
+	active_pylon.pos = Vector2(920.0, 360.0)
+	active_pylon.visual_radius = 36.0
+	active_pylon.alive = true
+	active_pylon.active = true
+	renderer.sync(
+		[open_boss, active_pylon], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true, "open_boss"
+	)
+	var diamond_batch := renderer.get_node("Overlay_diamond") as MultiMeshInstance2D
+	_expect(
+		diamond_batch.multimesh.visible_instance_count == 0,
+		"boss and objective states do not add yellow target overlays"
+	)
+	var run_source := FileAccess.get_file_as_string(
+		"res://scripts/vehicle/vehicle_run.gd"
+	)
+	_expect(
+		not renderer_source.contains("_sync_projectile_telegraph")
+			and not renderer_source.contains("_sync_incoming_projectile_cue")
+			and not renderer_source.contains("_sync_collective_tactic_module"),
+		"decorative projectile-entry and collective route helpers stay removed"
+	)
+	_expect(
+		not run_source.contains('&"cue/crosshair", position')
+			and renderer_source.contains(
+				"cursor_position + direction * 18.0, 6.0, Art.SYSTEM"
+			),
+		"enemy vulnerability has no crosshair and the independent aim cursor is neutral"
 	)
 	var offscreen_enemy := EnemyState.new()
 	offscreen_enemy.id = "offscreen_attacker"

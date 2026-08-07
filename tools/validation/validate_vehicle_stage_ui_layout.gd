@@ -176,7 +176,7 @@ func _initialize() -> void:
 						"category":13,
 						"level":15,
 						"title":22,
-						"summary":0,
+						"summary":14,
 					}
 					if width < 1100.0
 					else (
@@ -184,14 +184,14 @@ func _initialize() -> void:
 							"category":16,
 							"level":18,
 							"title":28,
-							"summary":0,
+							"summary":14,
 						}
 						if width < 1600.0
 						else {
 							"category":18,
 							"level":18,
 							"title":32,
-							"summary":0,
+							"summary":16,
 						}
 					)
 				),
@@ -217,8 +217,10 @@ func _initialize() -> void:
 			)
 			_expect(
 				not bool(card["footer_visible"])
-					and not bool(card["description_in_comparison"]),
-				"upgrade card keeps description prose out of the visible layout"
+					and not bool(card["description_in_comparison"])
+					and bool(card["description_visible"])
+					and int(card["summary_max_lines"]) == 1,
+				"upgrade card shows one concise description outside stat comparison"
 			)
 			_expect(
 				bool(card["level_visible"])

@@ -114,8 +114,8 @@ func _validate_offscreen_intersection() -> void:
 	_expect(
 		CombatCuePolicy.telegraph_mode(
 			Vector2(-180.0, 360.0), 26.0, &"startup", projectile, visible
-		) == CombatCuePolicy.MODE_PROJECTILE_ENTRY,
-		"off-screen projectile startup keeps only its entering short path"
+		) == CombatCuePolicy.MODE_NONE,
+		"off-screen projectile startup does not expose a predicted path"
 	)
 	_expect(
 		CombatCuePolicy.telegraph_mode(
@@ -123,14 +123,11 @@ func _validate_offscreen_intersection() -> void:
 		) == CombatCuePolicy.MODE_NONE,
 		"visible projectile source relies on its muzzle and projectile body"
 	)
-	var unseen_projectile := projectile.duplicate()
-	unseen_projectile["from"] = Vector2(-500.0, 360.0)
-	unseen_projectile["to"] = Vector2(-200.0, 360.0)
-	var unseen_descriptors: Array[Dictionary] = [unseen_projectile]
+	var unseen_descriptors: Array[Dictionary] = [projectile]
 	_expect(
 		is_equal_approx(
 			CombatCuePolicy.unseen_projectile_attack_readiness(
-				Vector2(-500.0, 360.0),
+				Vector2(-180.0, 360.0),
 				26.0,
 				&"startup",
 				unseen_descriptors,
@@ -138,27 +135,7 @@ func _validate_offscreen_intersection() -> void:
 			),
 			0.5
 		),
-		"radar owns only a committed projectile attack not yet visible in-world"
-	)
-	_expect(
-		CombatCuePolicy.projectile_will_enter_view(
-			Vector2(-120.0, 360.0),
-			Vector2.RIGHT * 500.0,
-			6.0,
-			AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
-			visible
-		),
-		"an unseen live projectile gets a cue only inside the reaction horizon"
-	)
-	_expect(
-		not CombatCuePolicy.projectile_will_enter_view(
-			Vector2(-120.0, 360.0),
-			Vector2.LEFT * 500.0,
-			6.0,
-			AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
-			visible
-		),
-		"a projectile moving away from the viewport gets no warning"
+		"radar owns the off-screen projectile warning without a world route"
 	)
 	var renderer_source := FileAccess.get_file_as_string(
 		"res://scripts/presentation/vehicle_combat_renderer.gd"
@@ -172,9 +149,12 @@ func _validate_offscreen_intersection() -> void:
 		"active boss areas retain a damaging-interval presentation"
 	)
 	_expect(
-		not renderer_source.contains("_sync_commit_marker")
+		not renderer_source.contains("_sync_projectile_telegraph")
+			and not renderer_source.contains("_sync_incoming_projectile_cue")
+			and not renderer_source.contains("_sync_collective_tactic_module")
+			and not renderer_source.contains("_sync_commit_marker")
 			and not renderer_source.contains("_sync_support_telegraph"),
-		"decorative commit markers and non-damaging support warnings stay retired"
+		"decorative routes, commit markers, and support warnings stay retired"
 	)
 
 

@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-08
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -372,10 +372,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
   않는 persistent condition을 약속하지 않는다. burn/poison/chill은 별도
   projectile badge나 orbit icon 없이 실제 actor state feedback으로만 표시한다.
-- 화면 안에 발사원이 보이는 projectile startup은 muzzle/cadence와 실제
-  projectile만 표시하고 예측 경로를 그리지 않는다. 화면 밖 발사원의 short
-  lead가 현재 viewport에 들어올 때만 최대 `0.4 s` 경로를 표시하며, 이미
-  생성된 화면 밖 hostile projectile도 같은 진입 조건과 `0.36 s` 반응 구간만
+- projectile startup과 이미 생성된 projectile은 발사원 가시성과 관계없이
+  예측 경로 또는 진입선을 표시하지 않는다. 화면 밖 발사원의 공격은 threat
+  radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
   표시한다. full committed path는 beam에만 사용하고 charge는 locked endpoint
   cap만 사용한다. charge 이동 경로의 side boundary는 표시하지 않는다.
 - beam은 gameplay corridor가 길이와 폭을 소유하고 shared authored beam-strip
@@ -393,6 +392,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   같은 공격을 동시에 표시하지 않는다.
 - maximum pressure에서도 player, crosshair, committed threat, boss
   objective, pickup과 current target이 world decoration보다 먼저 읽혀야 한다.
+- 조준 대상, 피격 대상 또는 일시적 취약 상태라는 이유로 적 본체에 노란
+  bracket, crosshair, ring 또는 route overlay를 붙이지 않는다. manual-aim cursor는
+  적 상태와 독립된 system-color cue이며, 보스 OPEN 상태와 활성 objective도
+  authored body, HUD와 체력 정보로 전달하고 player-reward overlay를 사용하지 않는다.
 - boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 외부
   방어막 노드는 boss별 장식이 아니라 공통 gameplay 언어이므로 body와
   독립된 같은 크기·pivot·상태 family를 사용한다.
@@ -463,8 +466,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   사용 가능한 공간에 맞춰 확장하며 standard에서 좁은 352px 카드를 유지하지
   않는다. 순서는 centered family, title, artwork, level, 실제 effect row의
   vertical stack이다. dossier uses compact `88×88`, standard `112×112`, and large
-  `128×128` centered artwork. 설명, change-kind 문장, description footer와 split
-  column은 표시하지 않는다. 첫 획득만 작은 code-native unlock diamond로 표시한다.
+  `128×128` centered artwork. level 아래에는 실제 효과를 요약한 localized 한 줄
+  설명을 표시한다. 한국어는 공백 포함 약 10자, 영어는 2–5단어를 기준으로 하며
+  supported viewport에서 한 줄을 넘지 않는다. change-kind 문장, description
+  footer와 split column은 표시하지 않는다. 첫 획득만 작은 code-native unlock
+  diamond로 표시한다.
   title 위 반복 image, badge와 level text를 반복하는 단계 pip는 사용하지
   않는다. Seeker와 선택형 secondary upgrade는 같은 `보조 무기 / Secondary
   Weapons` family label을 사용하고 title이 실제 subtype을 식별한다.

@@ -6137,7 +6137,6 @@ func _draw_enemies() -> void:
 func _draw_enemy_overlay(enemy: EnemyState) -> void:
 	var role := StringName(enemy.role)
 	var position := Vector2(enemy.pos)
-	var visual_radius := enemy.visual_radius
 	if role == &"repair_tender" and not enemy.repair_target_id.is_empty():
 		var repair_target := _find_enemy_by_id(String(enemy.repair_target_id))
 		if repair_target != null and repair_target.alive:
@@ -6148,11 +6147,6 @@ func _draw_enemy_overlay(enemy: EnemyState) -> void:
 				14.0,
 				Color(Art.MINT, 0.82)
 			)
-	if enemy.vulnerable > 0.0:
-		_draw_semantic_asset(
-			&"cue/crosshair", position, visual_radius + 14.0, Art.MUSTARD
-		)
-
 func _enemy_color(role: StringName) -> Color:
 	match role:
 		&"chaser", &"shooter", &"mine", &"artillery_spotter", &"rammer":

@@ -55,7 +55,7 @@ func _initialize() -> void:
 			and AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS <= 0.4
 			and AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS
 				< AttackContract.HOSTILE_PROJECTILE_LIFETIME,
-		"projectile startup exposes a short lead of at most 0.4 seconds"
+		"projectile startup keeps a bounded radar-readiness horizon"
 	)
 	_expect(
 		is_zero_approx(AttackContract.warning_readiness(0.8, 0.8))

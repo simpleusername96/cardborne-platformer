@@ -170,7 +170,6 @@ var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _player_craft_body_batch: BatchHandle
 var _last_health_bar_count := 0
-var _last_tactic_module_count := 0
 var _semantic_texture_draws: Array[SemanticTextureDraw] = []
 var _semantic_texture_draw_count := 0
 var _semantic_texture_specs: Dictionary = {}
@@ -306,7 +305,6 @@ func debug_snapshot() -> Dictionary:
 		"enemy_capacity": ENEMY_CAPACITY,
 		"health_bar_count": _last_health_bar_count,
 		"priority_marker_count": 0,
-		"tactic_module_count": _last_tactic_module_count,
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
 		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
 		"floating_damage_draw_count":0,
@@ -606,17 +604,6 @@ func _sync_enemies(
 				_health_overlay_candidate_count,
 				MAX_ORDINARY_HEALTH_BARS
 			)
-		_sync_collective_tactic_module(enemy, position, radius)
-		if enemy.threat_kind == &"ranged" and enemy.phase == &"startup":
-			var attack_direction := enemy.committed_dir.normalized()
-			if attack_direction.is_zero_approx():
-				attack_direction = Vector2.RIGHT.rotated(angle)
-			_write_beam(
-				position + attack_direction * (radius + 6.0),
-				position + attack_direction * (radius + 24.0),
-				3.0,
-				Art.DANGER
-			)
 		if enemy.shielded:
 			_write_ring(position, radius + 7.0, Color(Art.MINT, 0.78))
 		_sync_enemy_semantic_overlays(
@@ -624,8 +611,7 @@ func _sync_enemies(
 			position,
 			radius,
 			angle,
-			player_position,
-			enemy.id == aim_target_id
+			player_position
 		)
 	for index in _health_overlay_candidate_count:
 		_sync_enemy_health_bar(_health_overlay_candidates[index])
@@ -640,28 +626,6 @@ func _enemy_body_modulate(enemy: EnemyState) -> Color:
 	if enemy.guard_plate_structure > 0.0:
 		return Color(0.82, 0.90, 1.0, 1.0)
 	return Color.WHITE
-
-
-func _sync_collective_tactic_module(
-	enemy: EnemyState,
-	position: Vector2,
-	radius: float
-) -> void:
-	var phase := enemy.collective_phase
-	if phase in [&"", &"dormant", &"cooldown"]:
-		return
-	var direction := enemy.collective_direction.normalized()
-	if direction.is_zero_approx():
-		direction = Vector2.RIGHT
-	var cue_position := position + direction.rotated(-PI * 0.5) * (radius + 15.0)
-	_write_diamond(cue_position, 8.0, Art.SYSTEM)
-	_write_beam(
-		cue_position,
-		cue_position + direction * 13.0,
-		2.0,
-		Art.SYSTEM
-	)
-	_last_tactic_module_count += 1
 
 
 func _enemy_overlay_score(
@@ -752,8 +716,7 @@ func _sync_enemy_semantic_overlays(
 	position: Vector2,
 	radius: float,
 	angle: float,
-	player_position: Vector2,
-	is_current_target: bool
+	player_position: Vector2
 ) -> void:
 	var forward := Vector2.RIGHT.rotated(angle)
 	if enemy.role == &"boss_pylon":
@@ -796,16 +759,13 @@ func _sync_enemy_semantic_overlays(
 			Vector2(7.0, 5.0),
 			Art.IVORY_BRIGHT
 		)
-	elif (
-		is_current_target
-		or player_position.distance_to(position) <= activation_radius * 1.20
-	):
+	elif player_position.distance_to(position) <= activation_radius * 1.20:
 		_write_instance(
-			_overlay_batches[&"ring"],
+			_overlay_batches[&"danger_ring"],
 			position,
 			0.0,
 			Vector2.ONE * activation_radius,
-			Color(Art.MUSTARD, 0.30)
+			Color(Art.DANGER, 0.30)
 		)
 
 
@@ -816,8 +776,8 @@ func _sync_boss_core_overlay(
 ) -> void:
 	var core_radius := radius * 0.25
 	if enemy.boss_module_state == &"open":
-		_write_diamond(position, core_radius, Art.PLAYER_REWARD)
-	elif enemy.boss_module_state == &"stable":
+		return
+	if enemy.boss_module_state == &"stable":
 		_write_ring(position, core_radius, Color(Art.BOSS_COMMAND, 0.72))
 	else:
 		_write_disk(position, core_radius, Color(Art.BOSS_COMMAND, 0.54))
@@ -830,8 +790,8 @@ func _sync_boss_module_overlay(
 ) -> void:
 	var cue_position := position - Vector2(0.0, radius + 14.0)
 	if enemy.boss_module_state == &"active":
-		_write_diamond(cue_position, 9.0, Art.PLAYER_REWARD)
-	elif enemy.boss_module_state in [&"resolved", &"disabled"]:
+		return
+	if enemy.boss_module_state in [&"resolved", &"disabled"]:
 		_write_ring(cue_position, 9.0, Color(Art.SUPPORT, 0.72))
 	else:
 		_write_ring(cue_position, 9.0, Color(Art.LINE, 0.72))
@@ -860,9 +820,6 @@ func _sync_projectiles(
 				radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 			)
 			if not visible_world.grow(hostile_visual_radius).has_point(position):
-				_sync_incoming_projectile_cue(
-					projectile, affinity, visible_world
-				)
 				continue
 			_write_instance_basis(
 				hostile_batch,
@@ -918,8 +875,6 @@ func _sync_enemy_attack_telegraphs(
 			telegraph,
 			visible_world
 		):
-			CombatCuePolicy.MODE_PROJECTILE_ENTRY:
-				_sync_projectile_telegraph(telegraph)
 			CombatCuePolicy.MODE_CHARGE_FOOTPRINT:
 				_sync_charge_telegraph(telegraph)
 			CombatCuePolicy.MODE_BEAM_WARNING:
@@ -928,47 +883,6 @@ func _sync_enemy_attack_telegraphs(
 				_sync_active_beam(telegraph)
 			CombatCuePolicy.MODE_AREA_FOOTPRINT:
 				_sync_area_telegraph(telegraph)
-
-
-func _sync_incoming_projectile_cue(
-	projectile: ProjectileState,
-	affinity: StringName,
-	visible_world: Rect2
-) -> void:
-	if not CombatCuePolicy.projectile_will_enter_view(
-		projectile.pos,
-		projectile.velocity,
-		projectile.radius,
-		AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
-		visible_world
-	):
-		return
-	_write_beam(
-		projectile.pos,
-		projectile.pos
-			+ projectile.velocity * AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
-		3.0,
-		Color(Art.attack_warning_color(affinity, 1.0), 0.82)
-	)
-
-
-func _sync_projectile_telegraph(telegraph: Dictionary) -> void:
-	var from := Vector2(telegraph["from"])
-	var to := Vector2(telegraph["to"])
-	var vector := to - from
-	var length := vector.length()
-	if length <= 0.001:
-		return
-	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
-	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
-	var intensity := smoothstep(0.0, 1.0, readiness)
-	var color := Art.attack_warning_color(affinity, readiness)
-	var damage := float(telegraph.get("damage", 0.0))
-	var line_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
-	var boundary_alpha := lerpf(0.42, 0.94, intensity)
-	# Only off-screen launch previews reach this path. The projectile itself owns
-	# visibility after spawn, so no marker or full-lifetime route is duplicated.
-	_write_beam(from, to, line_width, Color(color, boundary_alpha))
 
 
 func _sync_charge_telegraph(telegraph: Dictionary) -> void:
@@ -1245,7 +1159,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			)
 	var cursor_position := Vector2(state.get("cursor_position", player_position + aim_direction * 230.0))
 	for direction in CARDINAL_DIRECTIONS:
-		_write_diamond(cursor_position + direction * 18.0, 6.0, Art.MUSTARD)
+		_write_diamond(cursor_position + direction * 18.0, 6.0, Art.SYSTEM)
 	_write_diamond(cursor_position, 4.0, Art.IVORY_BRIGHT)
 
 
@@ -1570,7 +1484,6 @@ func _write_instance_basis(
 
 func _reset_counts() -> void:
 	_last_health_bar_count = 0
-	_last_tactic_module_count = 0
 	for batch in _batches:
 		batch.reset()
 

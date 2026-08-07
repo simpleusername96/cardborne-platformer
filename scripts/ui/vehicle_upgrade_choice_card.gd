@@ -53,6 +53,7 @@ var _body_divider: HSeparator
 var _change_lane: VBoxContainer
 var _level: Label
 var _change_rule: HSeparator
+var _summary: Label
 var _effects: VBoxContainer
 var _unlock_indicator: UnlockIndicator
 
@@ -145,15 +146,16 @@ func debug_contract() -> Dictionary:
 		"vertical_dossier":true,
 		"body_divider_count":1,
 		"description_in_comparison":false,
+		"description_visible":_summary.visible,
 		"footer_visible":false,
 		"unlock_icon_visible":_unlock_indicator.visible,
 		"type_sizes":{
 			"category":_category.get_theme_font_size("font_size"),
 			"level":_level.get_theme_font_size("font_size"),
 			"title":_title.get_theme_font_size("font_size"),
-			"summary":0,
+			"summary":_summary.get_theme_font_size("font_size"),
 		},
-		"summary_max_lines":0,
+		"summary_max_lines":1,
 		"comparison_max_lines":0,
 		"header_art_count":0,
 		"body_art_count":1 if is_instance_valid(_artwork) else 0,
@@ -168,7 +170,7 @@ func debug_contract() -> Dictionary:
 		"body_order":[
 			"category",
 			"title",
-			"dossier:art/divider/level/unlock-icon/effects",
+			"dossier:art/divider/level/unlock-icon/summary/effects",
 		],
 		"state_cues":{
 			"normal_flat":normal_style is StyleBoxFlat,
@@ -209,7 +211,7 @@ func debug_geometry_contract() -> Dictionary:
 		},
 		"selected":_selected,
 		"disabled":disabled,
-		"summary_max_lines":0,
+		"summary_max_lines":1,
 	}
 
 
@@ -295,6 +297,16 @@ func _build() -> void:
 	_unlock_indicator.name = "UnlockIndicator"
 	unlock_center.add_child(_unlock_indicator)
 
+	_summary = _label(14, Art.TEXT_MUTED)
+	_summary.name = "SummaryLabel"
+	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_summary.max_lines_visible = 1
+	_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_change_lane.add_child(_summary)
+
 	_effects = VBoxContainer.new()
 	_effects.name = "EffectRows"
 	_effects.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -312,6 +324,7 @@ func _apply_layout_profile() -> void:
 	var category_size := 16
 	var title_size := 28
 	var level_size := 18
+	var summary_size := 14
 	var dossier_height := 292.0
 	var glyph_size := Vector2(128.0, 128.0)
 	var category_height := 20.0
@@ -328,6 +341,7 @@ func _apply_layout_profile() -> void:
 		glyph_size = Vector2(176.0, 176.0)
 		category_height = 44.0
 		title_height = 144.0
+		summary_size = 16
 	elif _large:
 		custom_minimum_size = LARGE_SIZE
 		horizontal_margin = 28
@@ -339,6 +353,7 @@ func _apply_layout_profile() -> void:
 		category_size = 18
 		title_size = 32
 		level_size = 18
+		summary_size = 16
 		dossier_height = 316.0
 		glyph_size = Vector2(128.0, 128.0)
 		category_height = 24.0
@@ -354,6 +369,7 @@ func _apply_layout_profile() -> void:
 		category_size = 13
 		title_size = 22
 		level_size = 15
+		summary_size = 14
 		dossier_height = 250.0
 		glyph_size = Vector2(88.0, 88.0)
 		category_height = 18.0
@@ -378,6 +394,7 @@ func _apply_layout_profile() -> void:
 	Factory.apply_font_size(_category, category_size)
 	Factory.apply_font_size(_title, title_size)
 	Factory.apply_font_size(_level, level_size)
+	Factory.apply_font_size(_summary, summary_size)
 
 
 func _refresh() -> void:
@@ -387,6 +404,8 @@ func _refresh() -> void:
 	_level.text = _level_transition_text()
 	_title.text = tr(String(_offer.get("title_key", "")))
 	var description := tr(String(_offer.get("description_key", "")))
+	_summary.text = description.strip_edges()
+	_summary.visible = not _summary.text.is_empty()
 	_refresh_artwork()
 	_clear(_effects)
 	var accessible_values := PackedStringArray()

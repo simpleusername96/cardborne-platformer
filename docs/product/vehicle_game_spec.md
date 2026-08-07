@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-08
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -124,14 +124,12 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   live crate as collision. From the first visible startup frame, damaging boss
   attacks hold their warned origin, direction, and target through impact; only
   warning readiness changes.
-- A projectile whose source is visible uses its muzzle/cadence cue and actual
-  projectile instead of a predicted route. An off-screen source shows no more
-  than `0.4` seconds of predicted travel only when that short route enters the
-  viewport; the current contract uses `0.36 s`. A live hostile projectile that
-  remains off-screen uses the same reaction horizon and entry test. Beam is the
-  only delivery that warns its full committed corridor. Charge uses its locked
-  endpoint capsule. Non-damaging support descriptors do not create attack
-  warnings.
+- Projectile attacks use muzzle/cadence and the actual projectile without a
+  predicted route, including off-screen sources and live shots approaching the
+  viewport. The threat radar owns the directional warning for an off-screen
+  source. Beam is the only delivery that warns its full committed corridor.
+  Charge uses its locked endpoint capsule. Non-damaging support descriptors do
+  not create attack warnings.
 - Minimal damage footprints contain only their collision-relevant boundary:
   one danger-colored outer ring for every hostile area, the endpoint cap for charge,
   and two side boundaries plus endpoint caps for beam. Affinity-specific inner
@@ -468,11 +466,13 @@ hint appears once and the same hint cannot repeat within two seconds.
   and next level; cards backed by numeric stat modifiers also show the real
   current-to-next stat value.
 - Each card follows one centered vertical information order: category, upgrade
-  name, large semantic artwork, `Lv.current → next`, then up to two real
-  current-to-next values. Visible descriptions and change-kind text are omitted.
-  A first acquisition uses one small shared code-native unlock diamond; later
-  levels add no change-kind label. The card uses one shared artwork identity per
-  mechanic group; UI code does not draw mechanic-specific glyph geometry.
+  name, large semantic artwork, `Lv.current → next`, one short localized effect
+  summary, then up to two real current-to-next values. Korean summaries target
+  roughly ten characters and English summaries use two to five words. Visible
+  change-kind text remains omitted. A first acquisition uses one small shared
+  code-native unlock diamond; later levels add no change-kind label. The card uses
+  one shared artwork identity per mechanic group; UI code does not draw
+  mechanic-specific glyph geometry.
 - Upgrade cards never scroll independently. At 200% text scale only, the offer
   body may provide one outer vertical scroll while all three cards remain
   non-scrolling and the Equip action remains fixed.

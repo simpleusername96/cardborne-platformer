@@ -21,14 +21,14 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const WORST_TEXT_TRIPLETS := {
 	"ko":[
+		{"id":&"hull_integrity", "current_level":2},
 		{"id":&"cryo_slow", "current_level":2},
-		{"id":&"split_muzzle", "current_level":1},
-		{"id":&"drop_mines", "current_level":2},
+		{"id":&"orbiting_blades", "current_level":2},
 	],
 	"en":[
-		{"id":&"cryo_slow", "current_level":2},
+		{"id":&"orbiting_blades", "current_level":2},
 		{"id":&"homing_missiles", "current_level":1},
-		{"id":&"split_muzzle", "current_level":1},
+		{"id":&"hull_integrity", "current_level":2},
 	],
 }
 const DENSE_STAT_TRIPLET := [
@@ -51,10 +51,32 @@ func _initialize() -> void:
 	_validate_theme_contract()
 	_validate_authored_artwork()
 	var catalog := Catalog.new()
+	_validate_description_density(catalog)
 	await _validate_intent_contract(catalog)
 	await _validate_category_body_art(catalog)
 	await _validate_triplet_matrix(catalog)
 	_finish()
+
+
+func _validate_description_density(catalog: VehicleUpgradeCatalog) -> void:
+	var original_locale := TranslationServer.get_locale()
+	for definition in catalog.all_definitions():
+		TranslationServer.set_locale("ko")
+		var korean := tr(definition.description_key).strip_edges()
+		_expect(
+			korean.length() >= 7 and korean.length() <= 13,
+			"%s Korean summary stays near ten characters: %s"
+			% [definition.id, korean]
+		)
+		TranslationServer.set_locale("en")
+		var english := tr(definition.description_key).strip_edges()
+		var word_count := english.split(" ", false).size()
+		_expect(
+			word_count >= 2 and word_count <= 5 and english.length() <= 24,
+			"%s English summary stays within one compact phrase: %s"
+			% [definition.id, english]
+		)
+	TranslationServer.set_locale(original_locale)
 
 
 func _validate_theme_contract() -> void:
@@ -175,7 +197,7 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 				and Array(contract["body_order"]) == [
 					"category",
 					"title",
-					"dossier:art/divider/level/unlock-icon/effects",
+					"dossier:art/divider/level/unlock-icon/summary/effects",
 				]
 				and not bool(contract["dossier_split"])
 				and bool(contract["vertical_dossier"])
@@ -183,11 +205,13 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 			"%s uses the compact centered vertical artwork contract" % category
 		)
 		_expect(
-			int(Dictionary(contract["type_sizes"])["summary"]) == 0
+			int(Dictionary(contract["type_sizes"])["summary"]) == 14
 				and not bool(contract["footer_visible"])
 				and not bool(contract["description_in_comparison"])
+				and bool(contract["description_visible"])
+				and int(contract["summary_max_lines"]) == 1
 				and bool(contract["unlock_icon_visible"]) == expects_unlock_icon,
-			"%s removes visible prose and uses only the compact unlock icon when needed"
+			"%s shows one compact effect summary and only the unlock icon when needed"
 			% category
 		)
 		var geometry := card.debug_geometry_contract()

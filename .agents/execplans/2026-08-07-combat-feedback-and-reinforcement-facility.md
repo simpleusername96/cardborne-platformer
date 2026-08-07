@@ -1,9 +1,9 @@
 ---
 type: plan
-status: complete
+status: active
 owner: BK
 created: 2026-08-07
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-08
 topic: Combat readability feedback and reinforcement facility
 scope: Projectile and actor scale, combat feedback removal, exclusive elements, upgrade and EMP HUD layout, enemy rewards and balance, reinforcement facility, and final-run completion
 related:
@@ -37,8 +37,8 @@ rendered Korean/English UI evidence has no clipping at the supported viewports.
   markers, floating damage text, and charge-route lines are removed. Charge endpoints
   remain. All hostile circular bombardment telegraphs use the danger-coral family.
 - Upgrade cards use a centered vertical hierarchy: category/title, artwork, level,
-  compact unlock icon, then stat deltas. Visible change-kind and description prose is
-  removed; descriptive text remains available to assistive metadata.
+  compact unlock icon, one localized single-line summary, then stat deltas. Visible
+  change-kind phrases such as `새 행동` and `스탯 변화` remain removed.
 - The action rail becomes one panel-free, 88 px round EMP cooldown/ready indicator.
 - Thermal, toxin, and cryo are mutually exclusive. Before selection all three may be
   offered; after selection only the chosen element can reappear. Player primary color
@@ -76,6 +76,8 @@ rendered Korean/English UI evidence has no clipping at the supported viewports.
 - [x] 7. Run visual-authority and focused gameplay/UI validators, Web export, built-app
   smoke/visual QA, performance workload re-baseline where the new facility changes load,
   and a task-scoped quality audit. Commit coherent task-owned changes only.
+- [x] 8. Apply the 2026-08-08 follow-up: restore concise card summaries, remove residual
+  yellow enemy markers and decorative attack routes, then repeat focused and rendered QA.
 
 ## Validation contract
 
@@ -119,3 +121,12 @@ rendered Korean/English UI evidence has no clipping at the supported viewports.
   registered Codex lane with all seven requests returning 200, no console warnings or
   errors, and a correctly rendered deployment surface. The task-owned preview server and
   browser tab were then closed.
+- 2026-08-08: User review reopened the visual pass. The remaining enemy-attached yellow
+  vulnerability crosshair, boss/pylon reward-color markers, projectile entry previews,
+  ranged startup ticks, and collective direction indicators were removed. Upgrade card
+  descriptions were restored as one-line summaries with AGY-assisted Korean and English
+  copy. Focused validators, visual/document authority, Korean 1280x720 and English
+  960x540 at 200% captures, Web export, and built-Web smoke passed. The Web smoke loaded
+  one canvas, returned HTTP 200 for all seven requests, and emitted no console warnings
+  or errors. This plan remains active only through user review; once accepted, delete it
+  under the ExecPlan standard instead of inventing another terminal status.
