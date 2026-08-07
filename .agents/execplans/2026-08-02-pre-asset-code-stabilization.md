@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-02
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-07
 topic: Behavior-preserving combat performance stabilization
 scope: Dense-enemy steering, conservative motion clearance, bounded simulation receipts, HUD staging, combat presentation staging, and real-play workload correlation
 related:
@@ -585,6 +585,12 @@ nonstandard detail stride.
 - 2026-08-05: Committed the exact-output spawn-geometry prewarm and inner-loop cleanup as
   `483cab1f`. No enemy count, packet cadence, position, collision radius, asset, visual,
   or release threshold changed.
+- 2026-08-07: The separately authorized upgrade reduction removed Ion Wake and its
+  damaging-trail runtime. The synthetic performance fixture now measures 8/16 authored
+  damage zones instead of combined zones and trails. This changes workload composition,
+  so earlier performance JSON is historical evidence only and cannot qualify the new
+  catalog. Keep every threshold unchanged, but record a new clean native baseline before
+  resuming release qualification.
 
 ## Progress
 
@@ -597,9 +603,10 @@ nonstandard detail stride.
 - [x] Complete Phase 7.
 - [ ] Complete Phase 8 and retire this plan.
 
-Current task: **The manual trace has been consumed and its measured owner was corrected in
-`483cab1f`. In a dedicated uncontaminated qualification window, run the two unchanged-load
-native release scenarios; do not request another user play merely to select an owner.**
+Current task: **After the upgrade-reduction work is committed, record a new clean native
+baseline for the damage-zone-only workload. Then use that exact new workload for the two
+native release scenarios; do not compare it directly with the retired zones-and-trails
+evidence and do not change the existing thresholds.**
 
 ## Open Questions
 

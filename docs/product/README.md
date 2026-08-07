@@ -1,8 +1,9 @@
 # Product Documentation
 
-[`vehicle_game_spec.md`](./vehicle_game_spec.md) is the single active product
-contract. It describes the implemented five-stage vehicle campaign and the rules
-future changes must preserve.
+[`vehicle_game_spec.md`](./vehicle_game_spec.md) is the canonical five-stage run
+contract. [`vehicle_upgrade_catalog.md`](./vehicle_upgrade_catalog.md) is the
+scoped active specification for the exact live upgrade categories, cards,
+levels, effects, and offer rules.
 
-Do not create a second active product brief for the same runtime. Amend the
-canonical specification when the owner accepts a durable product change.
+These documents have separate owners within one product contract; they must link
+to each other and must not duplicate or contradict the same requirement.

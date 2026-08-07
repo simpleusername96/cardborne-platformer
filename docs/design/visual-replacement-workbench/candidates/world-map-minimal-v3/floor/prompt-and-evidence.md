@@ -4,7 +4,6 @@ status: active
 owner: BK
 created: 2026-08-04
 last_reviewed: 2026-08-04
-canonical_for: Candidate-only correction provenance for world_surface_panel_9
 ---
 
 # Minimal Floor Perimeter Repair

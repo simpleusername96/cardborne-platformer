@@ -3,11 +3,12 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-07
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
   - ../design/VISUAL_SYSTEM.md
+  - ./vehicle_upgrade_catalog.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
@@ -362,23 +363,19 @@ hint appears once and the same hint cannot repeat within two seconds.
   progression index. This makes early choices frequent while restoring a rising
   late-run requirement. Each level and boss reward opens a guarded three-card
   selection that requires an explicit choice and confirm.
-- `Tuned Thrusters` is the direct movement upgrade and changes base movement to
-  1.08x, 1.16x, then 1.24x. There is no recurring movement-speed cycle.
-- The live catalog contains 41 upgrades covering primary cadence, count,
-  damage, status payloads, dash, EMP, barrier, sustain, pickup reach, and
-  automatic secondaries. No upgrade changes the first round after a firing
-  pause.
-- Fire, poison, and chill roots are independent and may all coexist. Fire and
-  chill each use a root → intermediate chain; poison uses a root →
-  intermediate → Contagion chain. An owned branch guarantees one eligible
-  least-progressed child in a normal level-up offer when available. Burn,
-  poison, and chill accumulate bounded stacks rather than replacing or
-  consuming one another. Contagion spreads poison to at most eight nearby
-  targets in deterministic distance order. World arcs and Korean/English
-  target text expose active stack counts.
-- **Secondary Weapons** is the sole user-facing upgrade family and the umbrella
-  system for five automatic weapon families. **Seeker** is its always-equipped
-  built-in subtype; up to two of the other four optional subtypes may be active,
+- The live catalog is the 19-card, 39-level-state contract in
+  `vehicle_upgrade_catalog.md`. It uses six player-facing categories: Primary,
+  Secondary Weapons, Element, Dash, EMP, and Chassis. Category is separate from
+  change kind and optional weapon-slot ownership.
+- `Tuned Thrusters`, `Pickup Magnet`, and `Reinforced Hull` are the complete
+  Chassis category. Pickup Magnet remains a three-level collection upgrade.
+- Fire, poison, and chill roots are independent complete packages and may all
+  coexist. Burn, poison, and chill accumulate bounded stacks rather than
+  replacing or consuming one another. World arcs and Korean/English target text
+  expose active stack counts. There are no intermediate element branch cards.
+- **Secondary Weapons** is the umbrella category for four automatic weapon
+  types. **Seeker** is its always-equipped built-in subtype; up to two of the
+  other three optional subtypes may be active,
   for three total. Data expresses this with `secondary_slot_kind` values
   `built_in` and `optional`; offer eligibility counts only owned optional
   definitions and never infers slot ownership from a card ID. Seeker remains
@@ -390,7 +387,6 @@ hint appears once and the same hint cannot repeat within two seconds.
 | Ion Field | Damage over time near the ship |
 | Orbit Blades | Close orbiting contact damage |
 | Wake Mines | Timed mines dropped behind movement |
-| Escort Drone | Following drone with periodic targeted fire |
 
 ### UI, guidebook, and persistence
 
@@ -439,21 +435,23 @@ hint appears once and the same hint cannot repeat within two seconds.
   Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
-- One upgrade offer contains at most one instance of each card ID. Selection
-  diversity rules may prefer families or unlocked branches but never duplicate
-  a card within the same three-card choice. Each newly opened reward
+- One upgrade offer contains exactly three unique compatible card IDs. The
+  deterministic first pass prefers distinct categories, then fills from the
+  same legal pool; it never duplicates or fabricates a fallback. Each newly opened reward
   transaction advances a run-scoped constrained draw, while the cards remain
   frozen for that transaction until the player selects one and confirms Equip;
-  UI refreshes never reroll an open offer. An opened reward transaction has no
-  Leave, Exit, Skip, or decline action.
+  UI refreshes never reroll an open offer. The runtime rejects an unoffered,
+  stale, or double-submitted ID without mutating the build. An opened reward
+  transaction has no Leave, Exit, Skip, or decline action.
 - The upgrade modal starts directly with the three cards: it has no separate
   kicker, screen title, or instruction header. Every card shows its real current
   and next level; cards backed by numeric stat modifiers also show the real
   current-to-next stat value.
-- Each card follows one fixed information order: family, upgrade name, large
+- Each card follows one fixed information order: category, upgrade name, large
   semantic artwork, `Lv.current → next`, up to two real current-to-next values,
-  then a concise description. Behavior-only cards use a localized “New behavior”
-  row rather than fabricated numbers. The card uses one shared artwork identity
+  then a concise description. Behavior cards use localized “New behavior” for
+  their first level and “Behavior upgrade” for later levels rather than
+  fabricated numbers. The card uses one shared artwork identity
   per mechanic group; UI code does not draw upgrade-specific glyph geometry.
 - Upgrade cards never scroll independently. At 200% text scale only, the offer
   body may provide one outer vertical scroll while all three cards remain
@@ -509,11 +507,12 @@ hint appears once and the same hint cannot repeat within two seconds.
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same
   profile, and no UI or saved preference can change difficulty.
-- Tuned Thrusters has the exact three values, the five secondary families load,
-  no more than three are active, and their bounded simulations pass tests.
+- The exact 19-card and 39-state catalog loads, Pickup Magnet retains its three
+  values, the four secondary weapon types load, no more than three are active,
+  and their bounded simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
   default-inner-wall collision, explicit wall-piercing, projectile-role share,
-  status-stack, elemental-prerequisite, and XP-cadence contracts pass focused
+  status-stack, element coexistence, and XP-cadence contracts pass focused
   tests.
 - Held primary fire uses one uniform shot contract, reaches the complete
   unobstructed visible field, hits the enlarged visible enemy target through
@@ -537,8 +536,8 @@ hint appears once and the same hint cannot repeat within two seconds.
 - More than three simultaneous secondary families.
 - Unconstrained procedural topology, per-stage layout rerolls, a chore-filled
   base, or exploration puzzles in this run.
-- Alternative growth systems beyond the current 41-card and five-secondary
-  contract are inactive and require an explicit product-spec revision.
+- Alternative growth systems beyond the current 19-card catalog and four
+  secondary weapon types are inactive and require an explicit product-spec revision.
 - A selectable, adaptive, or meta-progression difficulty model is inactive and
   requires an explicit product-spec revision.
 - Additional map-generation systems, coordinated-enemy tactics, or new boss

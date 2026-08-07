@@ -1,14 +1,15 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-08-07
 last_reviewed: 2026-08-07
 topic: effects and upgrades AS-IS taxonomy
-scope: Current Cardborne runtime after the minimal-effect pass and current card data
+scope: Pre-reduction 41-card baseline after the minimal-effect pass
 source: Current repository implementation and canonical visual specification
 related:
   - ../../design/VISUAL_SYSTEM.md
+  - ../../product/vehicle_upgrade_catalog.md
   - ../../../.agents/execplans/2026-08-07-effects-and-upgrade-contracts.md
 ---
 
@@ -16,9 +17,9 @@ related:
 
 ## Purpose
 
-2026-08-07 현재 구현을 기준으로 **이펙트**와 **업그레이드**가 각각 무엇을
-소유하는지 구분한다. 이 문서는 현황을 설명하는 근거 자료이며, 수정 목표나
-실행 순서는 별도 계획서가 소유한다.
+2026-08-07의 41장 축소 전 구현을 기준으로 **이펙트**와 **업그레이드**가
+각각 무엇을 소유했는지 구분한다. 이 문서는 과거 기준선 근거이며 현재
+카탈로그 정본은 `docs/product/vehicle_upgrade_catalog.md`이다.
 
 ## Findings
 

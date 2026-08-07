@@ -9,7 +9,8 @@
 | ---: | --- | --- |
 | 1 | `../AGENTS.md` | Repository operating guidance. |
 | 2 | `product/vehicle_game_spec.md` | Canonical current gameplay contract. |
-| 3 | `docs/design/VISUAL_SYSTEM.md` + `docs/design/cardborne-universal-art-style-reference.png` | Mandatory visual authority pair: the binding text contract and its style-only visual reference. |
+| 3 | `product/vehicle_upgrade_catalog.md` | Canonical live upgrade catalog and effect values. |
+| 4 | `docs/design/VISUAL_SYSTEM.md` + `docs/design/cardborne-universal-art-style-reference.png` | Mandatory visual authority pair: the binding text contract and its style-only visual reference. |
 
 그 밖의 문서는 active game이나 presentation을 정의하지 않는다. broad
 governance 또는 multi-file planning 작업은 root `AGENTS.md`의 지시에 따라

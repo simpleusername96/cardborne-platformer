@@ -52,6 +52,7 @@ function Expect-Contract(
 Push-Location -LiteralPath $repoRoot
 try {
   Expect-Contract 'docs/product/vehicle_game_spec.md' 'gameplay|product'
+  Expect-Contract 'docs/product/vehicle_upgrade_catalog.md' 'upgrade|card'
   Expect-Contract 'docs/design/VISUAL_SYSTEM.md' 'visual|UI|art'
 
   $rootInstructions = Get-Content -Raw -LiteralPath 'AGENTS.md'
@@ -68,6 +69,7 @@ try {
   $docsIndex = Get-Content -Raw -LiteralPath 'docs/README.md'
   foreach ($required in @(
       'product/vehicle_game_spec.md',
+      'product/vehicle_upgrade_catalog.md',
       'design/VISUAL_SYSTEM.md'
     )) {
     if (-not $docsIndex.Contains($required)) {
@@ -77,7 +79,7 @@ try {
 
   $productSpec = Get-Content -Raw -LiteralPath 'docs/product/vehicle_game_spec.md'
   $visualSpec = Get-Content -Raw -LiteralPath 'docs/design/VISUAL_SYSTEM.md'
-  if (-not $productSpec.Contains('### Functional terrain, facilities, and sustained fire')) {
+  if (-not $productSpec.Contains('### Inner walls, hazard zones, Transit Gates, and Mystery Devices')) {
     Add-Failure 'Product spec is missing the gameplay/collision terrain owner section'
   }
   if (-not $visualSpec.Contains('### Semantic categories')) {
@@ -89,7 +91,10 @@ try {
   ) | Where-Object { $_ }
   $allowedCanonical = @(
     '.agents/PLANS.md',
+    '.agents/cardborne-performance-engineering-policy.md',
+    '.agents/design/DESIGN.md',
     'docs/product/vehicle_game_spec.md',
+    'docs/product/vehicle_upgrade_catalog.md',
     'docs/design/VISUAL_SYSTEM.md'
   )
   $allowedTypes = @('policy', 'spec', 'plan', 'handoff', 'evidence', 'record')
