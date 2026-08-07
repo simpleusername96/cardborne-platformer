@@ -5,7 +5,7 @@ owner: BK
 created: 2026-08-07
 last_reviewed: 2026-08-07
 topic: effects and upgrades AS-IS taxonomy
-scope: Current Cardborne runtime and card data at repository revision 697ecf84
+scope: Current Cardborne runtime after the minimal-effect pass and current card data
 source: Current repository implementation and canonical visual specification
 related:
   - ../../design/VISUAL_SYSTEM.md
@@ -39,58 +39,50 @@ related:
 
 ### 1. 이펙트 범주
 
-현재 이펙트는 단순한 폭발 이미지 목록이 아니다. 다음 세 층을 함께 포함한다.
+현재 이펙트는 **버퍼에 저장하는 순간 표현**과 **게임 상태에서 직접 그리는
+필수 전달**로 나뉜다. 둘을 모두 별도 이벤트로 만들지 않는다.
 
 #### 1.1 순간 전투 이벤트
 
-`VehicleVisualEventCatalog`에는 현재 39개 이벤트가 등록되어 있다.
+`VehicleVisualEventCatalog`에는 실제로 버퍼에 넣어 그리는 이벤트 네 개만
+등록되어 있다.
 
-| 의미 그룹 | 이벤트 수 | 대표 내용 |
-| --- | ---: | --- |
-| 플레이어 | 12 | 피격, 대시, EMP 충전·방출, 보호막 반응 |
-| 보조 무기 | 5 | 시커, 드론, 블레이드, 지뢰 관련 반응 |
-| 투사체·적 공격 | 9 | 일반 타격, 빔, 충전 공격, 적 투사체 반응 |
-| 파괴·보스·월드 | 7 | 적 파괴, 보스 단계, 오브젝트 파괴 |
-| 픽업·지원 | 5 | 회복, 경험치, 보상, 지원 전달 |
-| HUD 전용 | 1 | 그룹 처치 완료 표시 |
-| **합계** | **39** | |
+| 이벤트 | 표현 | 남긴 이유 |
+| --- | --- | --- |
+| `player_dash_afterimage` | 기체 잔상 한 개 | 대시 이동 방향과 순간 변위를 읽게 함 |
+| `player_emp_charge` | 실제 EMP 반경 링 | 발동 전에 영향 범위를 정확히 전달 |
+| `player_emp_release` | 승인된 EMP 이미지 | 유일한 대형 순간 효과이며 Aftershock도 재사용 |
+| `boss_core_reduced_hit` | 실제 피해량·배율 숫자 | 보스 코어 피해 감소라는 예외 규칙을 설명 |
+| **합계** | **4개** | |
 
 #### 1.2 이벤트 표현 방식
 
-39개 이벤트가 모두 독립된 스프라이트를 생성하지는 않는다.
+네 이벤트는 각각 실제 렌더 경로를 하나씩 가진다.
 
 | 현재 표현 모드 | 수 | 의미 |
 | --- | ---: | --- |
-| `direct_feedback` | 17 | 액터 색 변화, 상태 교체, 기존 타격 표시 등 직접 피드백이 표현을 소유 |
-| `suppressed` | 16 | 게임 사건은 유지하지만 별도 장식 VFX는 의도적으로 생성하지 않음 |
 | `hull_afterimage` | 1 | 대시 잔상 |
 | `live_emp_radius` | 1 | 실제 EMP 반경과 일치하는 실시간 범위 |
 | `authored_emp` | 1 | 승인된 대형 EMP 래스터 이미지 |
-| `floating_damage` | 1 | 떠오르는 피해 수치 |
-| `directed_transfer` | 1 | 방향성이 있는 전달 피드백 |
-| `hud_only` | 1 | 월드 이펙트 없이 HUD에서만 표시 |
-| **합계** | **39** | |
+| `floating_damage` | 1 | 보스의 실제 적용 피해와 감소율 |
+| **합계** | **4** | |
 
-`direct_feedback`은 “효과가 없다”는 뜻이 아니다. 별도 이펙트 객체 대신
-실제 피격 대상이나 상태 표현이 피드백을 담당한다는 뜻이다.
-
-`suppressed`도 게임 기능이 비활성이라는 뜻이 아니다. 사건과 판정은
-정상적으로 발생하지만, 현재 시각 체계가 불필요한 장식 효과를 만들지 않도록
-막고 있다는 뜻이다.
+기존 `direct_feedback`, `suppressed`, `directed_transfer`, `hud_only` 이벤트는
+카탈로그와 생성 경로에서 삭제했다. 필요한 정보는 원래 책임자가 직접 그린다.
 
 #### 1.3 지속 상태와 실시간 전투 기하
 
-다음 항목도 넓은 의미의 이펙트에 속하지만, 39개 순간 이벤트 카탈로그만으로
-전부 설명되지는 않는다.
+다음 항목은 플레이어에게 필요한 시각 피드백이지만 순간 이벤트 버퍼에 넣지
+않는다.
 
 - 공격 예고선과 목표 지점
 - 빔·충전 공격의 실제 통로
 - 지뢰 경계
-- 보호막과 Ion Field의 실제 반경
+- 방어막과 Ion Field의 실제 반경 및 방어막 피격 점멸
 - 화상·중독·빙결 같은 액터 색 변화와 현지화 상태 문구
 - Marked, Sheared 같은 전투 상태 표시
 - 보스 방어막 노드의 `active → damaged → resolved` 상태
-- 대시 플레어와 잔상
+- 대시 엔진 플레어
 
 이 항목은 대체로 **실시간 게임 기하** 또는 **액터 상태 피드백**이 소유한다.
 따라서 독립 애니메이션 파일 수만 세면 현재 이펙트 범위를 과소평가하게 된다.
@@ -98,7 +90,8 @@ related:
 #### 1.4 현재 미디어 경계
 
 - 대형 독립 이펙트 래스터는 EMP 한 종류만 유지한다.
-- 작은 효과는 직접 피드백, 공유 큐, 코드 기반 동적 표현, 또는 명시적 억제로 처리한다.
+- 작은 필수 피드백은 액터 상태, 공유 큐, 코드 기반 동적 표현으로 직접 처리한다.
+- 보이지 않거나 장식뿐인 사건은 빈 이벤트 ID로 남기지 않고 생성 자체를 하지 않는다.
 - 보호막·Ion Field는 별도 장식 이미지가 아니라 공유 링과 실제 반경으로 표시한다.
 - 투사체, 충전 통로, 빔, 텔레그래프의 위치·길이·폭·반경은 게임플레이가 소유한다.
 - 카드 그림은 월드 이펙트를 대신하지 않는다.
@@ -178,9 +171,9 @@ related:
 
 | 업그레이드가 소유하는 것 | 이펙트가 소유하는 것 |
 | --- | --- |
-| EMP Focus, EMP Capacitor, Aftershock의 성능·행동 변화 | EMP 충전·방출 범위와 후속 사건의 현재 억제 상태 |
+| EMP Focus, EMP Capacitor, Aftershock의 성능·행동 변화 | EMP 충전·방출 범위; Aftershock은 같은 방출 표현 재사용 |
 | Marked Salvo의 표식 연계 규칙 | 현재 표식 대상과 표식 상태 표시 |
-| Phase Shear, Ram Pulse의 행동 해금 | 관통·충돌 이벤트와 현재 `suppressed` 표현 상태 |
+| Phase Shear, Ram Pulse의 행동 해금 | 투사체·충돌·대상 상태가 직접 제공하는 판독 정보 |
 | Static Aegis, Aegis Cycle의 보호 규칙 | 보호막 링, 피격 반응, 활성 상태 표시 |
 | Ion Field 해금과 레벨별 성능 | 현재 활성화된 실제 피해 반경 |
 
@@ -196,7 +189,7 @@ related:
 - 카드 아트는 전장 이펙트가 아니며, 전장 이펙트는 카드의 레벨이나 빌드를
   소유하지 않는다.
 - 충돌과 실제 범위는 시각 이미지가 아니라 게임플레이 기하가 소유한다.
-- `suppressed` 이벤트를 누락된 업그레이드나 고장 난 전투 기능으로 보면 안 된다.
+- 별도 이벤트가 없다는 사실을 전투 기능이 없다는 뜻으로 보면 안 된다.
 
 ## Sources
 
@@ -212,7 +205,7 @@ related:
 
 ## Limitations
 
-- 이 문서는 저장소 revision `697ecf84`의 현재 구현을 설명한다. 이후 이벤트
+- 이 문서는 2026-08-07 최소 이펙트 정리 후 현재 구현을 설명한다. 이후 이벤트
   카탈로그나 카드 데이터가 바뀌면 수량과 분류를 다시 확인해야 한다.
 - 정본 제품 요구사항과 시각 규칙은 각각 `docs/product/vehicle_game_spec.md`와
   `docs/design/VISUAL_SYSTEM.md`가 소유한다. 이 문서는 두 정본을 대체하지 않는다.

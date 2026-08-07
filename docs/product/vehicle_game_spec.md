@@ -401,6 +401,11 @@ hint appears once and the same hint cannot repeat within two seconds.
   manual aim remains independent through cursor, muzzle, projectile, and hit
   cues. Dash feedback uses a directional afterimage and rear-anchor flare,
   never a danger ring or radial burst.
+- The transient effect buffer contains only dash afterimage, EMP charge and
+  release, and exceptional reduced-boss-damage text. Attack footprints,
+  projectiles, hits, arrivals, deaths, pickups, and persistent states render
+  from their gameplay, actor, world, HUD, or audio owners without cosmetic
+  event objects.
 - The live HUD prioritizes hull/experience, stage quota, dash, EMP, active
   secondary families, minimap, boss health, target state, and exceptional timed
   effects. It uses four restrained zones: top-left hull/experience, top-center

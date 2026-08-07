@@ -26,10 +26,12 @@ new visual direction, progression system, card count, or asset family.
 
 Complete the pass when all of the following are true:
 
-1. every emitted visual event has one explicit presentation owner and only
-   renderer-owned transient events enter the 96-state effect store;
-2. barrier-only hits, Marked Salvo, and Phase Shear are distinguishable at live
-   gameplay scale without new raster media or unrelated warning rings;
+1. the visual-event catalog contains only four actually rendered transient
+   contracts: dash afterimage, live EMP charge radius, authored EMP release, and
+   exceptional reduced-boss-damage overlay;
+2. attack footprints, projectiles, muzzle direction, hull/barrier hits, and
+   persistent combat states render directly from their gameplay-owned state
+   without cosmetic event objects;
 3. all 28 behavior-only upgrade definitions show a localized `New behavior` /
    `새 행동` comparison row without duplicating their description;
 4. every reachable reward transaction produces exactly three unique legal cards,
@@ -53,9 +55,17 @@ peak/capacity pair and built-Web peak measurements remain owned by
   41 upgrade definitions, offer flow, card UI, localization, and validators.
 - [x] 2026-08-07: removed stale decision pages and temporary visual artifacts
   from the active repository surface; updated the consolidated report.
-- [ ] Phase 1: encode event, behavior-card, offer, and application invariants in
+- [x] 2026-08-07: user approved deleting every nonessential visual event and
+  retaining only attack truth, projectiles, direct hit state, EMP/dash, and an
+  exceptional combat overlay.
+- [x] 2026-08-07: reduced the production visual-event catalog from 39 entries
+  to four rendered transients, deleted all other producers and payload fields,
+  and moved barrier, Marked, and Sheared feedback to direct state ownership.
+- [ ] Phase 1: encode the minimal transient contract plus behavior-card, offer,
+  and application invariants in
   focused validators.
-- [ ] Phase 2: repair effect routing and the three missing state-feedback paths.
+- [x] Phase 2: delete cosmetic/no-op effect production and complete the minimal
+  direct-state feedback paths.
 - [ ] Phase 3: repair upgrade presentation, catalog schema, offer, and apply
   boundaries.
 - [ ] Phase 4: perform representative native and built-Web acceptance, update
@@ -91,9 +101,10 @@ player-facing presentation change and at final acceptance.
 
 | Feedback or observed problem | Locked decision | Work item |
 | --- | --- | --- |
-| The same result needs the same visual family; different results and player/enemy ownership must stay distinct. | Every visual-event entry names its consuming owner. Shared cues are reused only for the same semantic result; ownership remains in state color, placement, projectile identity, or attached target cue. | EFX-01, EFX-02, EFX-05 |
-| Minor effect frames should be retired; EMP is the exceptional large effect. | Keep `effect/emp_release` as the only authored effect raster. Use current code-native batches, state tint, and existing semantic assets for all work in this plan. | EFX-02 through EFX-05 |
-| Generic rings should not represent unrelated jobs; live areas must match gameplay truth. | Keep rings for true live radii such as barrier and Ion Field. Marked uses amber four-corner target brackets. Sheared uses mint split side-bars. Neither is a warning area. | EFX-03, EFX-04 |
+| The same result needs the same visual family; different results and player/enemy ownership must stay distinct. | Attack truth, projectiles, actor feedback, transient EMP/dash, and combat text use separate direct owners. Do not create an event entry for a result already visible through state. | EFX-01 through EFX-04 |
+| Minor effect frames should be retired; EMP is the exceptional large effect. | Keep `effect/emp_release` as the only authored effect raster. Use current code-native batches, state tint, and existing semantic assets for all work in this plan. | EFX-02 through EFX-04 |
+| Generic rings should not represent unrelated jobs; live areas must match gameplay truth. | Keep rings only for true live radii such as barrier, Ion Field, mines, EMP, and damaging areas. Marked and Sheared remain compact target-state feedback, never attack rings. | EFX-03, EFX-04 |
+| The event inventory is too detailed for the game's needs. | Delete suppressed, HUD-only, directed-transfer, arrival, pickup, death, impact, heal, transit, and other no-op/cosmetic entries and their producers. Do not replace them with new particles. | EFX-01, EFX-02 |
 | Upgrade cards should show meaningful behavior and current-to-next progression. | Numeric cards keep up to two current-to-next rows. Behavior-only cards show one localized `New behavior` comparison row and their existing behavior sentence once. | UPG-01, UPG-02 |
 | Upgrade selection is mandatory. | Preserve three unique cards, no reroll, no decline, and the existing 0.35-second input guard. Never open a one- or two-card modal. | UPG-04, UPG-05 |
 | Card art must not replace in-world effect feedback. | No upgrade artwork changes are part of this plan. Runtime behavior and live feedback remain separate owners. | All |
@@ -108,7 +119,7 @@ questions that could otherwise force an executor to improvise:
 | Question | Evidence | Closed decision |
 | --- | --- | --- |
 | Is new effect art required? | The current manifest has 71 authored gameplay PNGs, one authored effect, and no raster animation; the visual specification prohibits restoring small effect frames. | No new raster, atlas, animation, dependency, or ImageGen work. |
-| Which event modes consume the transient store? | `VehicleCombatRenderer._sync_effects()` renders `hull_afterimage`, `live_emp_radius`, `authored_emp`, `floating_damage`, and `directed_transfer`; it skips `direct_feedback`, `suppressed`, and `hud_only`. | Add one catalog helper that is the sole buffer-eligibility authority and gate `VehicleRun._add_effect()` with it. |
+| Which event modes consume the transient store? | `VehicleCombatRenderer._sync_effects()` currently renders five modes but 34 of 39 catalog entries are skipped after production. | Retain only dash afterimage, live EMP radius, authored EMP, and reduced-damage overlay. Delete directed transfer and every skipped catalog entry and producer. |
 | Does every direct-feedback event already have a visible owner? | Catalog validators count modes but do not prove a consumer. Barrier-only damage lacks a distinct pulse. Marked and sheared cues are trapped inside the repair-tender overlay branch. | Add explicit consumer metadata and fix the three demonstrated gaps before peak-pressure QA. |
 | Are Marked and Sheared multi-target effects? | Applying either clears the previous target before setting the new one. | At most one marker of each kind is live. Reuse the renderer's small overlay batches; do not add a per-enemy node tree. |
 | Is behavior-card artwork missing? | All 41 definitions have explicit `artwork_asset_id`; the gap is text routing. | Do not change art. Route existing behavior text into a labeled comparison row. |
@@ -126,9 +137,10 @@ product specification before changing code.
 
 ### In scope
 
-- visual-event ownership metadata, producer coverage, and buffer eligibility;
-- the effect-store call boundary, without changing its 96-state capacity;
-- barrier-only hit feedback and existing audio routing;
+- a four-entry rendered transient catalog and exact producer coverage;
+- deletion of all non-rendered and cosmetic effect producers while preserving
+  the fixed 96-state reusable store capacity;
+- barrier-only hit feedback through the existing barrier ring and audio routing;
 - Marked and Sheared target-attached code-native cues;
 - removal of the orphan `bulkhead_destroy` event if the active product catalog
   still has no producer at implementation time;
@@ -155,7 +167,7 @@ product specification before changing code.
 
 The primary owners are:
 
-- event definition and routing contract:
+- minimal transient definition and routing contract:
   `scripts/presentation/components/vehicle_visual_event_catalog.gd`;
 - transient presentation storage: `scripts/combat/vehicle_effect_store.gd`;
 - gameplay producers and player presentation snapshot:
@@ -179,35 +191,28 @@ owns the new visual geometry.
 
 ## Phase 1 — Encode the Contracts First
 
-### EFX-01 — Make visual-event ownership executable
+### EFX-01 — Lock the four rendered transient contracts
 
-Change `VehicleVisualEventCatalog.EVENTS` so every entry has:
+Reduce `VehicleVisualEventCatalog.EVENTS` to exactly:
 
-- `mode`: current rendering strategy;
-- `consumer`: one of `renderer`, `player_state`, `enemy_state`, `world_state`,
-  `hud`, or `audio_state`;
-- `buffered`: `true` only for the five renderer-consumed mode families listed in
-  the Discovery Closure Gate.
+- `player_dash_afterimage` → `hull_afterimage`;
+- `player_emp_charge` → `live_emp_radius`;
+- `player_emp_release` → `authored_emp` using `effect/emp_release`;
+- `boss_core_reduced_hit` → `floating_damage`.
 
-Add `descriptor(kind)`, `is_known(kind)`, and `is_buffered(kind)` helpers. Keep
-the catalog as data; do not add drawing behavior to it.
-
-Update `validate_vehicle_visual_replacement_coverage.gd` and
-`vehicle_visual_event_capture_fixture.gd` to validate required keys rather than
-brittle total counts. Scan `_add_effect(&"...")` producers and fail when an
-emitted ID is absent. Fail when a non-HUD catalog entry has neither a producer
-nor an explicit state-owner exemption.
-
-Remove `bulkhead_destroy` from the catalog, fixture, and expected IDs if the
-active world catalog still has no breakable-bulkhead producer. Do not retain it
-as historical inventory.
+Delete every suppressed, direct-feedback, HUD-only, and directed-transfer entry.
+Update `vehicle_visual_event_capture_fixture.gd` and
+`validate_vehicle_visual_replacement_coverage.gd` to require exactly this set and
+reject unknown production producers. The catalog remains presentation-only and
+contains no consumer metadata for state that does not enter the store.
 
 Acceptance:
 
-- an unknown event fails validation with its ID;
-- every catalog event has exactly one allowed consumer;
-- `direct_feedback`, `suppressed`, and `hud_only` cannot be buffered;
-- the only authored-effect asset ID remains `effect/emp_release`.
+- the catalog has exactly four entries and four rendering modes;
+- `effect/emp_release` remains the only authored effect raster;
+- no production source emits a transient ID outside the four-entry set;
+- secondary simulation exposes damage/projectile results only, not cosmetic
+  effect dictionaries.
 
 ### UPG-01 — Add failing behavior-card and offer tests
 
@@ -243,23 +248,28 @@ Before changing production code, add assertions that:
 Stop Phase 1 when these new checks fail only for the known implementation gaps.
 Do not weaken assertions to make the baseline green.
 
-## Phase 2 — Repair Effect Routing and Feedback
+## Phase 2 — Delete Cosmetic Routing and Keep Direct Feedback
 
-### EFX-02 — Gate the effect store at one boundary
+### EFX-02 — Delete nonessential producers and payload fields
 
-Preload `VehicleVisualEventCatalog` in `vehicle_run.gd`. In `_add_effect()`, reject
-unknown IDs with an error visible to tests, return immediately for known
-non-buffered IDs, and call `effect_store.add()` only when `is_buffered(kind)` is
-true. Keep producers intact during this step so state feedback and event audit
-remain independently testable.
+Remove `_add_effect()` calls for muzzle, dash start, Ram Pulse, Phase Shear,
+secondary impacts, projectile impacts, reflection/interception, arrival/summon,
+pickup, heal, lifesteal, death, group clear, transit, crate, barrier, and hull
+events. Preserve their gameplay, audio, HUD, projectile, actor-state, and world
+state owners.
 
-Extend `validate_vehicle_effect_store.gd` with a mixed burst containing more than
-96 non-buffered events around one authored EMP and one dash afterimage. Assert
-that non-buffered events cause zero acquisitions or evictions and cannot retire
-the renderer-owned entries. Keep `MAX_LIVE_EFFECTS=96` and the pool allocation
-strategy unchanged.
+Remove the secondary runtime's cosmetic `effects` result and the transient
+state's directed-transfer target field. Gate `_add_effect()` so only the four
+catalog IDs can enter the reusable store. Keep `MAX_LIVE_EFFECTS=96`; this task
+does not change a performance workload or release threshold.
 
-### EFX-03 — Add barrier-only hit feedback
+Aftershock reuses `player_emp_release` with its actual smaller radius instead of
+creating a separate effect identity. Ordinary damage uses `enemy.flash` and
+`health_visible_timer`; muzzle feedback uses `player_muzzle_flash`; pickups,
+deaths, and group completion use their existing state, HUD, reward, and audio
+transactions.
+
+### EFX-03 — Keep barrier-only hit feedback state-owned
 
 Add `player_barrier_hit_flash` next to `player_hit_flash` in `vehicle_run.gd`.
 Set it whenever `absorbed > 0`, decay it in the existing presentation-timer
@@ -281,7 +291,7 @@ Extend `validate_vehicle_damage_feedback.gd` and
 `validate_vehicle_combat_renderer.gd` for partial absorption, full absorption,
 full depletion, and spill-through damage.
 
-### EFX-04 — Give Marked and Sheared distinct target cues
+### EFX-04 — Keep only decision-relevant target states
 
 Remove `_draw_enemy_marks()` from the `VehicleRun` overlay path after equivalent
 renderer ownership is in place. In `VehicleCombatRenderer`, consume
@@ -294,27 +304,16 @@ renderer ownership is in place. In `VehicleCombatRenderer`, consume
   made with the existing batched beam primitive; do not use a ring or diamond.
 
 Both cues follow the target, remain inside the enemy overlay budget, and use no
-new nodes per frame. Their maximum simultaneous count is one each under the
-current gameplay state contract.
+new nodes per frame. They are state feedback, not transient effects. Their
+maximum simultaneous count is one each under the current gameplay state
+contract.
 
 Extend `validate_vehicle_status_stacking.gd` and renderer snapshots to prove
 visibility, distinct batch output, expiry, target transfer, and coexistence.
 
-### EFX-05 — Verify the remaining direct-feedback owners
-
-Create one validator table covering all catalog entries whose consumer is not
-`renderer`. For each event, point to an observable state field, HUD transaction,
-audio state, projectile removal, actor tint, health change, or world-state
-transition. A comment is not sufficient evidence.
-
-Use the existing capture groups to inspect representative player, secondary,
-enemy, boss, pickup, and transit events at actual gameplay scale. If an event's
-result is already unambiguous through its owning state, keep it suppressed. If
-it is not, add the smallest code-native owner-specific cue and update the table;
-do not create a new asset or a generic burst.
-
-Commit Phase 2 only after all effect-focused validators pass. This is the first
-rollback point.
+Commit Phase 2 only after the four transient paths, attack geometry, projectiles,
+hull/barrier hits, boss reduced-damage overlay, and representative direct-state
+owners pass focused validators. This is the first rollback point.
 
 ## Phase 3 — Repair Upgrade Decisions and Boundaries
 
@@ -527,5 +526,17 @@ Before setting `status: done`:
 
 ### Implementation record
 
-Not started. Record phase commits, validation dates, rendered-evidence paths,
-and any plan amendments here during execution.
+2026-08-07 effect phase:
+
+- runtime and focused validation commit: `f3dbcc5b`;
+- the catalog was reduced from 39 entries to four rendered transients;
+- nonessential producers, secondary cosmetic output, and directed target
+  payload were deleted;
+- barrier, Marked, and Sheared feedback moved to direct state ownership;
+- native full capture passed at
+  `build/captures/effects-minimal-20260807/` with 78 files;
+- focused effect/runtime validators, editor import, visual-authority validation,
+  and production Web export passed;
+- `validate_vehicle_damage_feedback.gd` retained its pre-existing non-terminating
+  behavior and timed out at 180 seconds without an error;
+- upgrade phases remain open and this plan stays active.

@@ -208,7 +208,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
 | projectile catalog | one authored energy-teardrop master, pivot, and collision-normalized core | damage, range, hit rule, faction/affinity tint, and scale |
 | reward catalog | authored pickup, shard, and crate visual ID plus value-scale mapping | spawn, value, collection |
-| effect catalog | one authored EMP image, shared authored live-cue images, and deliberate small-effect suppression | timer, damage, protection rule |
+| effect catalog | four buffered transients only: dash afterimage, live EMP charge radius, authored EMP release, and reduced-boss-damage text | timer, damage, protection rule, direct actor/HUD/audio feedback |
 | world catalog | authored hazard, Transit Gate, Mystery Device, and state descriptor | topology, collision, exposure, health, outcome |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
 | defense catalog | shared authored support-ring image, actor tint, and localized status text recipe | protection, damage, slow, stack, timer |
@@ -263,7 +263,7 @@ collision.
   PNG 하나를 gameplay radius에 맞춰 scale/fade한다. 나머지 작은 effect image와
   raster frame animation은 현재 production visual owner가 아니다. 필수 hit/
   state truth는 actor tint, state swap, live boundary 같은 기존 직접 피드백으로
-  유지하고 cosmetic event는 명시적으로 suppress한다. 미래 polish도 별도
+  유지하고 별도의 suppressed cosmetic event ID도 보관하지 않는다. 미래 polish도 별도
   media-boundary 승인을 받지 않는 한 one-file-per-frame pack을 복원하지 않는다.
 - 실제 consumer가 없는 image는 미래 가능성만으로 production에 보관하지
   않는다. 필요가 제품 요구사항으로 생기면 semantic contract부터 다시
@@ -341,12 +341,13 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
   muzzle origin/flash, projectile와 hit feedback은 aim direction을 따른다.
   idle과 일반 이동에는 flame을 표시하지 않고 dash 동안에만 rear anchor에서
   flare를 표시한다.
-- dash는 0.20초 동안 최대 5개 directional afterimage와 engine flare를
+- dash는 0.20초 동안 directional afterimage 한 개와 engine flare를
   사용한다. danger color 원, radial ring과 circular burst는 사용하지 않는다.
-- reduced motion에서는 반복 afterimage 대신 0.12초 이하의 elongated
-  silhouette 한 개와 engine flash를 사용한다.
-- dash, hull hit, arrival, transit와 barrier를 서로 다른 semantic effect로
-  표현한다. barrier만 support ring을 사용할 수 있다.
+- reduced motion에서도 같은 한 개의 elongated silhouette와 engine flash만
+  사용하고 추가 반복 또는 폭발 장식을 만들지 않는다.
+- hull hit는 actor tint, barrier hit는 기존 support ring의 짧은 밝기 변화,
+  arrival과 transit는 actor/world state가 직접 표현한다. 이 항목을 transient
+  effect event로 복제하지 않는다.
 - ordinary enemy role은 외곽선과 negative space로 먼저 구분한다. command와
   boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
 - 모든 비-beam projectile은 오른쪽을 향한 하나의 완성된 energy-teardrop PNG를

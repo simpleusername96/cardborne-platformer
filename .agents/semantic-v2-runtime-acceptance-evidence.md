@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-07
 topic: Semantic-v2 runtime integration, UI acceptance, boss guidance, and final performance
 scope: Non-map semantic-v2 runtime switch and its post-acceptance validation
 related:
@@ -40,6 +40,35 @@ related:
 
 `build/` 아래 파일은 local ignored evidence다. 아래 표에 payload 이름과
 핵심 수치를 남겨 repository 문서만 읽어도 통과 여부를 알 수 있게 한다.
+
+## 2026-08-07 minimal transient checkpoint
+
+- Runtime and focused validation commit: `f3dbcc5b`.
+- Production `VehicleVisualEventCatalog` now contains exactly four buffered
+  transients: dash afterimage, EMP charge radius, EMP release, and reduced boss
+  damage text. The previous suppressed, direct-feedback, HUD-only, and directed
+  transfer entries and their producers are absent.
+- Attack geometry, projectiles, actor hit tint, barrier absorption, Marked,
+  Sheared, arrival, death, pickup, reward, HUD, and audio remain with their
+  direct runtime owners. Barrier absorption publishes a 0.16-second ring flash;
+  Marked and Sheared use four amber brackets and two mint side bars.
+- Native full capture completed at
+  `build/captures/effects-minimal-20260807/`: Korean 1280×720, 78 files, with
+  `09-effects-essential-transients.png` covering the four catalog IDs exactly
+  once. `08-player-barrier-only.png` confirms the direct barrier ring state.
+- The canonical authority pair was rechecked. The sheet remained
+  `docs/design/cardborne-universal-art-style-reference.png`, SHA-256
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`,
+  1448×1086. No raster was created or edited, so actual raster/ImageGen
+  reference input and new provenance are not applicable.
+- Focused validators passed for effect store, visual-event coverage, secondary
+  weapons, combat renderer, player presentation, status stacking, capture
+  manifest, and integrated VehicleRun. Godot editor import and production Web
+  export also passed; output is `build/web/index.html`.
+- `validate_vehicle_damage_feedback.gd` again produced no error but did not
+  terminate within 180 seconds, matching the pre-change timeout. This checkpoint
+  does not qualify release performance or claim that long-running validator as
+  passed.
 
 ## Complete visual replacement checkpoint
 
