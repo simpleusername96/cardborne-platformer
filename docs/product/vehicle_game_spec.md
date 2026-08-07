@@ -363,13 +363,15 @@ hint appears once and the same hint cannot repeat within two seconds.
   progression index. This makes early choices frequent while restoring a rising
   late-run requirement. Each level and boss reward opens a guarded three-card
   selection that requires an explicit choice and confirm.
-- The live catalog is the 19-card, 39-level-state contract in
-  `vehicle_upgrade_catalog.md`. It uses six player-facing categories: Primary,
-  Secondary Weapons, Element, Dash, EMP, and Chassis. Category is separate from
-  change kind and optional weapon-slot ownership.
-- `Tuned Thrusters`, `Pickup Magnet`, and `Reinforced Hull` are the complete
-  Chassis category. Pickup Magnet remains a three-level collection upgrade.
-- Fire, poison, and chill roots are independent complete packages and may all
+- The live catalog is the 12-card, 34-level-state contract in
+  `vehicle_upgrade_catalog.md`. It uses four player-facing categories: Primary
+  Weapon Mods, Secondary Weapon Systems, Attack Status Effects, and Chassis &
+  Support. Category is separate from change kind and optional weapon-slot
+  ownership. Dash and EMP remain base actions but have no upgrade cards.
+- `Movement Speed`, `Pickup Radius`, and `Hull Integrity` are the complete
+  Chassis & Support category. Pickup Radius preserves the former Pickup Magnet
+  card's three-level collection effect.
+- Thermal Burn, Bio Toxin, and Cryo Slow are independent complete packages and may all
   coexist. Burn, poison, and chill accumulate bounded stacks rather than
   replacing or consuming one another. World arcs and Korean/English target text
   expose active stack counts. There are no intermediate element branch cards.
@@ -383,10 +385,10 @@ hint appears once and the same hint cannot repeat within two seconds.
 
 | Secondary | Combat role |
 | --- | --- |
-| Seeker | Periodic targeted projectile |
-| Ion Field | Damage over time near the ship |
-| Orbit Blades | Close orbiting contact damage |
-| Wake Mines | Timed mines dropped behind movement |
+| Homing Missiles | Periodic targeted projectiles; upgrades increase count and damage |
+| Electric Field | Damage over time near the ship |
+| Orbiting Blades | Close orbiting contact damage |
+| Drop Mines | Timed mines dropped behind movement |
 
 ### UI, guidebook, and persistence
 
@@ -507,8 +509,8 @@ hint appears once and the same hint cannot repeat within two seconds.
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same
   profile, and no UI or saved preference can change difficulty.
-- The exact 19-card and 39-state catalog loads, Pickup Magnet retains its three
-  values, the four secondary weapon types load, no more than three are active,
+- The exact 12-card and 34-state catalog loads, Pickup Radius retains the former
+  Pickup Magnet card's three values, the four secondary weapon types load, no more than three are active,
   and their bounded simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
   default-inner-wall collision, explicit wall-piercing, projectile-role share,
@@ -536,7 +538,7 @@ hint appears once and the same hint cannot repeat within two seconds.
 - More than three simultaneous secondary families.
 - Unconstrained procedural topology, per-stage layout rerolls, a chore-filled
   base, or exploration puzzles in this run.
-- Alternative growth systems beyond the current 19-card catalog and four
+- Alternative growth systems beyond the current 12-card catalog and four
   secondary weapon types are inactive and require an explicit product-spec revision.
 - A selectable, adaptive, or meta-progression difficulty model is inactive and
   requires an explicit product-spec revision.

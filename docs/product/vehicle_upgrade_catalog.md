@@ -12,198 +12,177 @@ related:
   - ../reports/game-system-review/effects-upgrades-as-is.md
 ---
 
-# Vehicle Upgrade Catalog
+# 차량 업그레이드 카탈로그
 
-## Purpose
+## 목적과 범위
 
-Define the complete live Cardborne upgrade catalog in one place. This document
-owns card IDs, player-facing categories, level effects, secondary-slot rules,
-and reward-offer invariants. `vehicle_game_spec.md` continues to own the larger
-five-stage run.
+이 문서는 현재 런에서 등장하는 모든 업그레이드 카드의 분류, 이름,
+레벨별 효과, 보조 무기 슬롯 규칙과 보상 제약을 정의한다. 전체 런 구조는
+`vehicle_game_spec.md`가 소유한다.
 
-## Scope
+현재 카탈로그는 카드 12장, 선택 가능한 레벨 상태 34개로 구성된다.
+Dash와 EMP는 기본 액션으로 유지하지만 관련 업그레이드 카드는 없다.
+영구 성장, 적·보스 밸런스, 스테이지 보상량과 미술 방향은 이 문서의 범위가
+아니다.
 
-This specification covers the 19 run-scoped upgrade cards and 39 selectable
-level states loaded from `data/cards/vehicle/`. It does not define permanent
-progression, enemy balance, stage rewards, or visual art direction.
+## 구성 원칙
 
-## Requirements
+- 플레이어가 효과를 바로 예측할 수 있는 네 분류만 사용한다.
+- 비슷한 수치 조정, 간접 표식, 짧은 조건부 강화는 제거한다.
+- 한 카드는 하나의 전투 역할만 설명한다.
+- `코어`처럼 실제 효과를 설명하지 않는 이름은 사용하지 않는다.
+- 모든 카드에는 한국어·영어 이름과 설명, 하나의 의미 기반 이미지 ID가 있다.
+- 기존 `Pickup Magnet`의 수집 기능과 3레벨 수치는 유지하되, 카드 이름은
+  `수거 범위 / Pickup Radius`로 명확하게 바꾼다.
 
-- A run uses six player-facing upgrade categories.
-- Every card has one explicit semantic artwork ID and complete Korean/English
-  title and description text.
-- Numeric cards show the real current-to-next value.
-- A behavior card shows `New behavior` / `새 행동` at level 1 and
-  `Behavior upgrade` / `행동 강화` at later levels.
-- Built-in Seeker cards consume no optional weapon slot.
-- Ion Field, Orbit Blades, and Wake Mines each consume one optional slot on first
-  acquisition. A run may own at most two of those three weapons.
-- Every level-up and boss reward freezes exactly three unique legal cards. The
-  player must select one; there is no reroll, skip, decline, or fabricated card.
-- The runtime accepts only an ID from the exact frozen offer and rejects stale,
-  unoffered, or double-submitted IDs without changing the build.
+## 분류
 
-## Upgrade Classification
-
-`category` answers one question: which build lane does the player understand
-this card to belong to? It does not encode trigger ownership, weapon slots, or
-whether the next level unlocks a behavior.
-
-| Category ID | Korean / English label | Meaning | Cards |
+| 분류 ID | 한국어 / English | 판단 기준 | 카드 수 |
 | --- | --- | --- | ---: |
-| `primary` | 주무기 / Primary | Held-fire damage, cadence, or projectile form | 4 |
-| `secondary` | 보조 무기 / Secondary Weapons | Built-in Seeker behavior or an optional autonomous weapon | 5 |
-| `element` | 원소 / Element | One elemental status package applied by player attacks | 3 |
-| `dash` | 대시 / Dash | A new result caused by Dash | 2 |
-| `emp` | EMP / EMP | A new result caused by EMP | 2 |
-| `chassis` | 차체 / Chassis | Persistent movement, collection, or survivability stats | 3 |
+| `primary` | 주무기 개조 / Primary Weapon Mods | 기본 탄환의 형태와 충돌 규칙을 바꾼다 | 2 |
+| `secondary` | 보조 무기 체계 / Secondary Weapon Systems | 추적 미사일 또는 자율 보조 무기를 바꾼다 | 4 |
+| `element` | 공격 속성 부여 / Attack Status Effects | 적격 공격에 화염·독·냉기 상태를 부여한다 | 3 |
+| `chassis` | 차체 및 지원 / Chassis & Support | 이동·수거·내구 수치를 영구 변경한다 | 3 |
 
-Two separate axes complete the classification:
+`category`는 카드가 어느 성장 축에 속하는지만 나타낸다. 보조 무기 슬롯은
+`secondary_slot_kind`로 별도 관리한다. 추적 미사일은 `built_in`, 전기장·회전
+날개·후방 기뢰는 `optional`이다.
 
-- `change_kind`: `stats`, `unlock`, or `enhance` for the next level;
-- `secondary_slot_kind`: empty, `built_in`, or `optional`.
+## 공통 기준값
 
-This replaces the old `family` field, which mixed trigger, result, weapon type,
-and reward grouping in one label.
-
-## Shared Baselines
-
-These base values make multiplier and behavior cards unambiguous.
-
-| System | Live baseline |
+| 체계 | 기본값 |
 | --- | --- |
-| Pulse Cannon | 18 damage, 0.12-second interval, 1,120 px/s, radius 7; minimum interval 0.085 seconds |
-| Seeker Launcher | 25 damage, 1.35-second interval, 560 range; one built-in Seeker |
-| Dash | 0.20-second duration, 1,220 px/s, 1.25-second cooldown |
-| EMP | 62 damage, radius 285, 2.1-second stun, 0.42-second startup, 13-second cooldown |
-| Chassis | 120 maximum hull, 280 px/s movement |
-| Experience shard | 92 attraction radius and 34 collection radius |
+| 펄스 캐논 | 피해 18, 발사 간격 0.12초, 속도 1,120 px/s, 충돌 반지름 7 |
+| 추적 미사일 | 1발, 피해 25, 발사 간격 1.35초, 탐색 거리 560, 충돌 반지름 8 |
+| Dash | 지속 0.20초, 속도 1,220 px/s, 재사용 대기시간 1.25초 |
+| EMP | 피해 62, 반지름 285, 기절 2.1초, 준비 0.42초, 재사용 대기시간 13초 |
+| 차체 | 최대 내구도 120, 이동 속도 280 px/s |
+| 경험치 조각 | 끌어당김 반지름 92, 최종 수거 반지름 34 |
 
-## Complete Catalog
+## 전체 카드
 
-### Primary
+### 주무기 개조 / Primary Weapon Mods
 
-| ID | Korean / English | Levels | Exact level effect |
+| ID | 한국어 / English | 레벨 | 정확한 효과 |
 | --- | --- | ---: | --- |
-| `kinetic_rounds` | 운동탄 / Kinetic Rounds | 3 | L1: damage ×1.15 = 20.70. L2: ×1.3225 = 23.805. L3: ×1.520875 = 27.37575. |
-| `rapid_cycle` | 고속 순환 / Rapid Cycle | 3 | L1: interval ×0.90 = 0.108 s. L2: ×0.81 = 0.0972 s. L3: ×0.729 = 0.08748 s. The global 0.085-second minimum still applies. |
-| `forked_muzzle` | 분기 포구 / Forked Muzzle | 2 | L1 unlock: every shot adds one alternating side round at ±7°, dealing 40% primary damage. L2 enhance: two side rounds at −7° and +7°, each dealing 32.5%. The main round is unchanged. |
-| `phase_lance` | 위상 창 / Phase Lance | 2 | L1 unlock: each primary round can pass through one enemy. L2 enhance: each round can pass through two enemies. Solid cover still stops the shot. |
+| `split_muzzle` | 확산 총구 / Split Muzzle | 2 | L1: 매 발사마다 좌우를 번갈아 ±7° 측면탄 1발을 추가한다. 측면탄 피해는 주 탄환의 40%다. L2: −7°와 +7°에 측면탄 2발을 동시에 추가하며, 각각 32.5% 피해를 준다. 주 탄환은 변하지 않는다. |
+| `piercing_rounds` | 관통 탄환 / Piercing Rounds | 3 | L1/L2/L3: 주무기 탄환이 각각 적 1명/2명/3명을 관통한다. 단단한 엄폐물은 계속 탄환을 막는다. |
 
-### Secondary Weapons
+`운동탄 / Kinetic Rounds`은 벽에서 한 번 튕기는 카드가 아니라 단순 피해
+배율 카드였으므로 삭제했다. 현재 카탈로그에는 도탄 업그레이드가 없다.
 
-| ID | Korean / English | Slot | Levels | Exact level effect |
+### 보조 무기 체계 / Secondary Weapon Systems
+
+| ID | 한국어 / English | 슬롯 | 레벨 | 정확한 효과 |
 | --- | --- | --- | ---: | --- |
-| `twin_seekers` | 쌍둥이 추적탄 / Twin Seekers | Built-in | 2 | L1 unlock: fire two Seekers at distinct eligible targets; each deals 85% of base Seeker damage (21.25). L2 enhance: fire three; each deals 70% (17.5). |
-| `marked_salvo` | 표식 일제사 / Marked Salvo | Built-in | 1 | Primary hits mark one target for 2.5 seconds. Seekers prioritize it and deal 25% more damage. A new mark replaces the prior mark. |
-| `ion_field` | 이온 역장 / Ion Field | Optional | 3 | L1 unlock: 8 DPS in radius 120. L2 enhance: 12 DPS in radius 140. L3: 16 DPS in radius 160. Damage ticks every 0.25 seconds. |
-| `orbit_blades` | 궤도 칼날 / Orbit Blades | Optional | 3 | L1 unlock: 2 blades, 14 damage each. L2: 3 blades, 18 damage. L3: 4 blades, 22 damage. Orbit radius is 78; one blade has a 0.55-second per-target hit cooldown. |
-| `wake_mines` | 항적 기뢰 / Wake Mine Layer | Optional | 3 | L1 unlock: 48 damage, 3.2-second placement, cap 3, radius 96. L2: 60 damage, 2.8 seconds, cap 4, radius 108. L3: 72 damage, 2.4 seconds, cap 5, radius 120. Mines last 8 seconds and detect targets within 54. |
+| `homing_missiles` | 추적 미사일 / Homing Missiles | 기본 장착 | 2 | 기본은 1발·피해 25다. L1: 서로 다른 표적에 2발, 각 28 피해. L2: 서로 다른 표적에 3발, 각 32 피해. 가능한 표적이 부족하면 기존 표적을 다시 사용할 수 있다. |
+| `electric_field` | 전기장 / Electric Field | 선택 슬롯 | 3 | L1: 반지름 120, 8 DPS. L2: 반지름 140, 12 DPS. L3: 반지름 160, 16 DPS. 피해 판정 간격은 0.25초다. |
+| `orbiting_blades` | 회전 날개 / Orbiting Blades | 선택 슬롯 | 3 | L1: 날개 2개, 접촉 피해 14. L2: 3개, 피해 18. L3: 4개, 피해 22. 회전 반지름은 78이며, 날개 하나의 대상별 재타격 대기시간은 0.55초다. |
+| `drop_mines` | 후방 기뢰 / Drop Mines | 선택 슬롯 | 3 | L1: 피해 48, 3.2초마다 투하, 최대 3개, 폭발 반지름 96. L2: 피해 60, 2.8초, 최대 4개, 반지름 108. L3: 피해 72, 2.4초, 최대 5개, 반지름 120. 수명은 8초, 감지 반지름은 54다. |
 
-The Seeker is always equipped. The optional slot cap creates a choose-two
-decision among Ion Field, Orbit Blades, and Wake Mines.
+추적 미사일은 항상 장착되어 선택 슬롯을 쓰지 않는다. 나머지 보조 무기
+세 개 중 최대 두 개만 한 런에서 처음 획득할 수 있다. 이미 획득한 보조
+무기는 슬롯이 찬 뒤에도 다음 레벨을 선택할 수 있다.
 
-### Element
+시각 크기는 판정과 분리한다. 추적 미사일은 충돌 반지름 8을 유지하면서
+화면 표시 반지름을 40으로 키웠다. 후방 기뢰는 감지 반지름 54와 폭발
+반지름을 유지하면서 표시 반지름을 22로 키웠다.
 
-| ID | Korean / English | Levels | Exact level effect |
+### 공격 속성 부여 / Attack Status Effects
+
+| ID | 한국어 / English | 레벨 | 정확한 효과 |
 | --- | --- | ---: | --- |
-| `incendiary_core` | 소이 코어 / Incendiary Core | 1 | Primary hits apply Burn: 2 DPS per stack, 3-second duration, maximum 3 stacks. |
-| `toxin_core` | 독성 코어 / Toxin Core | 1 | Primary hits apply Poison: 2 DPS per stack, 5-second duration, maximum 3 stacks. |
-| `cryo_core` | 빙결 코어 / Cryo Core | 1 | Primary hits apply Chill: 6% movement/attack slow per stack, 2-second duration, maximum 3 stacks. Boss magnitude and duration are halved. |
+| `thermal_burn` | 화염 부여 / Thermal Burn | 3 | 적격 공격이 최대 3중첩의 화염을 부여한다. L1/L2/L3: 중첩당 2/3/4 DPS, 지속 3/4/5초. |
+| `bio_toxin` | 독 부여 / Bio Toxin | 3 | 적격 공격이 최대 3중첩의 독을 부여한다. L1/L2/L3: 중첩당 2/3/4 DPS, 지속 5/6/7초. |
+| `cryo_slow` | 냉기 부여 / Cryo Slow | 3 | 적격 공격이 최대 3중첩의 냉기를 부여한다. L1/L2/L3: 중첩당 이동·공격 속도 6%/8%/10% 감소, 지속 2/2.5/3초. 보스는 감속량과 지속 시간이 절반이다. |
 
-The three elemental roots can coexist and stack independently. There are no
-intermediate or capstone branch cards.
+세 속성은 서로 독립적으로 공존하고 중첩된다. `소이 코어`, `독성 코어`,
+`빙결 코어`처럼 불명확한 `코어` 명칭은 사용하지 않는다.
 
-### Dash
+### 차체 및 지원 / Chassis & Support
 
-| ID | Korean / English | Levels | Exact level effect |
+| ID | 한국어 / English | 레벨 | 정확한 효과 |
 | --- | --- | ---: | --- |
-| `coolant_wake` | 냉각 점화 / Coolant Surge | 1 | Completing Dash reduces the primary interval by 15% for 2 seconds. The 0.085-second global minimum still applies. |
-| `phase_shear` | 위상 절단 / Phase Shear | 1 | The first enemy crossed by Dash is marked for 3 seconds and takes 20% more damage. Crossing a new target transfers the mark. |
+| `chassis_speed` | 주행 속도 / Movement Speed | 3 | L1: ×1.08 = 302.4 px/s. L2: ×1.16 = 324.8 px/s. L3: ×1.24 = 347.2 px/s. |
+| `pickup_radius` | 수거 범위 / Pickup Radius | 3 | 기존 `Pickup Magnet` 효과를 유지한다. L1: +70 = 162. L2: +140 = 232. L3: +210 = 302. 최종 수거 반지름은 34로 유지한다. |
+| `hull_integrity` | 장갑 내구도 / Hull Integrity | 3 | L1: +15 = 최대 135. L2: +30 = 최대 150. L3: +45 = 최대 165. 획득할 때마다 새 최대치 안에서 내구도 15를 즉시 회복한다. |
 
-### EMP
+## 보상과 적용 규칙
 
-| ID | Korean / English | Levels | Exact level effect |
-| --- | --- | ---: | --- |
-| `emp_aftershock` | EMP 여진 / EMP Aftershock | 1 | 0.72 seconds after the main EMP, emit one pulse with 34 damage, 193.8 radius (68% of base), 1.25-second stun, and projectile clearing to radius +40. |
-| `static_aegis` | 정전기 방벽 / Static Aegis | 2 | L1 unlock: the main EMP grants 18 barrier for 10 seconds. L2 enhance: grant 24 barrier for 10 seconds. The aftershock does not grant barrier. |
+전체 카드에는 34개 레벨 상태가 있다. 선택 보조 무기 세 개 중 두 개만
+획득할 수 있으므로 한 런에서 접근 가능한 상태는 31개다. 현재 런은 레벨업
+20회와 보스 보상 5회로 총 25회 선택한다. 24회 선택한 뒤에도 최소 7개 상태,
+최소 3장의 카드가 합법적으로 남아 세 장 제안을 보장한다.
 
-### Chassis
+각 보상은 다음 순서로 처리한다.
 
-| ID | Korean / English | Levels | Exact level effect |
-| --- | --- | ---: | --- |
-| `tuned_thrusters` | 조율 추진기 / Tuned Thrusters | 3 | L1: movement ×1.08 = 302.4 px/s. L2: ×1.16 = 324.8 px/s. L3: ×1.24 = 347.2 px/s. |
-| `pickup_magnet` | 수집 자석 / Pickup Magnet | 3 | L1: +70 attraction radius = 162. L2: +140 = 232. L3: +210 = 302. The final collection radius remains 34. |
-| `reinforced_hull` | 강화 선체 / Reinforced Hull | 3 | L1: +15 maximum hull = 135. L2: +30 = 150. L3: +45 = 165. Every acquisition also restores 15 hull, capped by the new maximum. |
+1. 호환되며 최대 레벨이 아닌 카드를 모은다.
+2. 선택 보조 무기 두 개를 이미 획득했다면 세 번째 무기의 첫 획득만 막는다.
+3. 런 시드, 스테이지, 보상 출처와 일련번호로 결정론적으로 섞는다.
+4. 첫 패스에서 가능한 한 서로 다른 분류를 뽑는다.
+5. 같은 합법 카드 풀에서 남은 자리를 채워 정확히 세 장을 만든다.
+6. 플레이어가 제안된 ID 하나를 선택하고 장착할 때까지 제안을 고정한다.
+7. 제안되지 않았거나 오래됐거나 중복 제출된 ID는 빌드를 바꾸지 않고 거부한다.
 
-## Offer and Application Rules
+재추첨, 건너뛰기, 거절, 가짜 대체 카드는 없다.
 
-The live pool has 30 non-optional level states. A run can access six additional
-states from any two optional secondary weapons, so every build has at least 36
-reachable states. The current quota path produces 20 level-up choices and five
-boss rewards, for 25 mandatory selections.
+## 이번 정리에서 삭제한 카드
 
-For each reward transaction:
+| 삭제 카드 | 삭제 이유 |
+| --- | --- |
+| `kinetic_rounds` | 실제 효과가 벽 1회 도탄이 아니라 단순 주무기 피해 배율이었다. |
+| `rapid_cycle` | 발사 간격만 줄이는 범용 수치 카드로, 무기 형태를 만드는 선택보다 구분력이 낮았다. |
+| `marked_salvo` | 표식 유지, 추적 우선순위, 추가 피해라는 간접 예외를 만들었다. 추적 미사일 자체의 발수와 피해 증가로 통합했다. |
+| `coolant_wake`, `phase_shear` | Dash 기본 액션은 유지하되 Dash 업그레이드 계층 전체를 삭제했다. |
+| `emp_aftershock`, `static_aegis` | EMP 기본 액션은 유지하되 EMP 업그레이드 계층 전체를 삭제했다. |
 
-1. collect every compatible non-maxed definition;
-2. block only the first acquisition of a third optional secondary;
-3. deterministically shuffle with run seed, stage, reward source, and serial;
-4. take at most one card from each category in the first pass;
-5. fill remaining positions from the same shuffled legal pool;
-6. require exactly three unique cards before the modal opens;
-7. freeze those cards until one exact offered ID is applied and claimed.
+이전 19장 카탈로그의 나머지 카드는 삭제하지 않고 의미를 명확히 한 새 ID로
+교체했다.
 
-There is no forced first category, forced Tuned Thrusters offer, elemental
-branch priority, behavior priority, source-specific card pool, duplicate, or
-fallback card.
+| 이전 ID | 현재 ID |
+| --- | --- |
+| `forked_muzzle` | `split_muzzle` |
+| `phase_lance` | `piercing_rounds` |
+| `twin_seekers` | `homing_missiles` |
+| `ion_field` | `electric_field` |
+| `orbit_blades` | `orbiting_blades` |
+| `wake_mines` | `drop_mines` |
+| `incendiary_core` | `thermal_burn` |
+| `toxin_core` | `bio_toxin` |
+| `cryo_core` | `cryo_slow` |
+| `tuned_thrusters` | `chassis_speed` |
+| `pickup_magnet` | `pickup_radius` |
+| `reinforced_hull` | `hull_integrity` |
 
-## Retired Cards
+업그레이드는 런 한정 상태이며 영구 저장 ID 마이그레이션은 필요하지 않다.
 
-The following 22 cards are not part of the live catalog.
+## 완료 조건
 
-| Removed group | IDs | Reason |
-| --- | --- | --- |
-| Hidden or narrow primary stats | `accelerator_coil`, `mass_driver`, `stabilizer` | Projectile handling and structure-only values were weaker decisions than damage, cadence, and projectile form. |
-| Duplicate primary systems | `overclock_cycle`, `ricochet_matrix` | Removed the separate periodic cycle runtime and a third projectile-form branch. |
-| Redundant Seeker tuning | `hunter_firmware`, `phase_seeker`, `seeker_cycle`, `seeker_warhead` | Removed target-specific exceptions and pure Seeker stat layers; kept count and manual-mark synergy. |
-| Redundant optional weapon | `escort_drone` | Built-in Seeker already owns autonomous ranged fire; three optional choices are enough for the two-slot decision. |
-| Incremental element branches | `thermal_compound`, `concentrated_toxin`, `contagion`, `deep_freeze` | Each element is now one complete, independent status package. |
-| Redundant Dash layers | `dash_capacitor`, `ion_wake`, `ram_pulse` | Kept two clear Dash results and removed cooldown, trail, and arrival-pulse branches. |
-| EMP and defense duplication | `aegis_cycle`, `emp_capacitor`, `emp_focus`, `relay_overload`, `siphon_matrix` | Kept base EMP plus two readable skill results; removed cycles, narrow installation rules, pure EMP stats, and lifesteal. |
+- 카드 리소스가 정확히 12장, 레벨 상태가 정확히 34개다.
+- 분류별 카드 수는 주무기 2, 보조 무기 4, 공격 속성 3, 차체 및 지원 3이다.
+- `수거 범위 / Pickup Radius`가 기존 3레벨 수집 효과와 +210 최종 보너스를 유지한다.
+- 선택 보조 무기 ID는 `electric_field`, `orbiting_blades`, `drop_mines`이며 최대 두 개만 획득한다.
+- 모든 25회 선택 경로에서 서로 다른 합법 카드 세 장을 제안할 수 있다.
+- 모든 레벨의 한국어·영어 분류, 제목, 설명과 변화 표시가 해석된다.
+- 가장 긴 카드 조합이 960×540, 1280×720, 1920×1080에서 잘리거나 넘치지 않는다.
+- 유효·미제안·중복·오래된 카드 적용 사례가 집중 검증을 통과한다.
 
-## Acceptance Criteria
+## 제외 범위
 
-- Exactly 19 card resources and 39 level states load.
-- Category counts are Primary 4, Secondary 5, Element 3, Dash 2, EMP 2, and
-  Chassis 3.
-- `Pickup Magnet` has three levels and reaches +210 attraction radius.
-- Optional IDs are exactly `ion_field`, `orbit_blades`, and `wake_mines`; no
-  more than two can be acquired.
-- Every shipped 25-choice route fixture returns three unique compatible cards.
-- Korean and English category, title, description, stat, unlock, and enhancement
-  strings resolve for every level.
-- All 39 card states fit the 960×540, 1280×720, and 1920×1080 layout matrices
-  without clipped shaped text or overflow.
-- Valid, unoffered, double, and stale application cases pass focused runtime
-  validation.
+- 새 카드, 카드 이미지, 재추첨, 건너뛰기, 상점, 영구 성장 추가
+- 적, 보스, 스테이지, 기본 Dash, 기본 EMP, 보상량 밸런스 변경
+- 더 이상 카드가 사용하지 않는 공유 의미 이미지 삭제
+- 성능 기준 변경 또는 성능 인증 주장
 
-## Non-Goals
+## 구현 근거
 
-- New cards, card art, rerolls, skips, shops, reward sources, or permanent
-  progression.
-- Balance changes to enemies, bosses, stages, base Dash, base EMP, or rewards.
-- Deleting existing shared semantic artwork that no live card currently uses.
-- Changing performance thresholds or claiming performance qualification.
-
-## Sources
-
-- Card data: `data/cards/vehicle/`
-- Optional weapon data: `data/weapons/vehicle/secondary/`
-- Catalog and build rules: `scripts/cards/vehicle_upgrade_catalog.gd` and
+- 카드 데이터: `data/cards/vehicle/`
+- 보조 무기 데이터: `data/weapons/vehicle/secondary/`
+- 카탈로그와 빌드 규칙: `scripts/cards/vehicle_upgrade_catalog.gd`,
   `scripts/cards/vehicle_run_build.gd`
-- Live behavior: `scripts/vehicle/vehicle_run.gd`,
-  `scripts/player/vehicle_secondary_runtime.gd`, and
+- 실제 동작: `scripts/vehicle/vehicle_run.gd`,
+  `scripts/player/vehicle_secondary_runtime.gd`,
   `scripts/combat/vehicle_status_profile.gd`
-- Card presentation: `scripts/cards/vehicle_upgrade_offer_presenter.gd` and
+- 카드 표시: `scripts/cards/vehicle_upgrade_offer_presenter.gd`,
   `scripts/ui/vehicle_upgrade_choice_card.gd`
-- Bilingual copy: `localization/vehicle_stage.csv`
+- 한국어·영어 문구: `localization/vehicle_stage.csv`
