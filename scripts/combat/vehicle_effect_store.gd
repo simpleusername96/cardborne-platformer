@@ -30,8 +30,7 @@ func add(
 	radius: float,
 	direction: Vector2 = Vector2.ZERO,
 	value: float = 0.0,
-	multiplier: float = 1.0,
-	target_position: Variant = null
+	multiplier: float = 1.0
 ) -> VehicleEffectState:
 	if live.size() >= MAX_LIVE_EFFECTS:
 		remove_at_swap(0)
@@ -48,8 +47,7 @@ func add(
 		radius,
 		direction,
 		value,
-		multiplier,
-		target_position
+		multiplier
 	)
 	live.append(state)
 	_acquisitions += 1

@@ -28,45 +28,10 @@ const CODE_NATIVE_UI_STATE_OWNERS := [
 ]
 
 const EXPECTED_EVENT_IDS := [
-	"player_primary_muzzle",
-	"player_dash_start",
 	"player_dash_afterimage",
-	"player_hull_hit",
-	"player_barrier_hit",
-	"player_barrier_activate",
 	"player_emp_charge",
 	"player_emp_release",
-	"player_emp_aftershock",
-	"player_ram_pulse",
-	"player_phase_shear_hit",
-	"player_ram_impact",
-	"secondary_seeker_impact",
-	"secondary_seeker_burst",
-	"secondary_escort_impact",
-	"secondary_orbit_blade_impact",
-	"secondary_wake_mine_detonation",
-	"enemy_mine_detonation",
-	"hostile_projectile_impact",
-	"projectile_cover_impact",
-	"projectile_damage_impact",
-	"projectile_reflected",
-	"projectile_intercepted",
-	"enemy_barrier_hit",
-	"hostile_arrival",
-	"hostile_summon_arrival",
-	"enemy_destroy_light",
-	"enemy_destroy_heavy",
 	"boss_core_reduced_hit",
-	"boss_module_resolved",
-	"pickup_experience",
-	"pickup_repair",
-	"pickup_reward",
-	"support_heal",
-	"lifesteal_transfer",
-	"transit_complete",
-	"bulkhead_destroy",
-	"crate_destroy",
-	"group_clear",
 ]
 
 var _failures: Array[String] = []
@@ -137,14 +102,10 @@ func _validate_active_world_catalog() -> void:
 func _validate_event_catalog() -> void:
 	var catalog_ids := VisualEventCatalog.event_ids()
 	var expected_mode_counts := {
-		&"direct_feedback":17,
-		&"suppressed":16,
 		&"hull_afterimage":1,
 		&"live_emp_radius":1,
 		&"authored_emp":1,
 		&"floating_damage":1,
-		&"directed_transfer":1,
-		&"hud_only":1,
 	}
 	var mode_counts := {}
 	_expect(
@@ -187,45 +148,38 @@ func _validate_event_producers() -> void:
 	var run_source := FileAccess.get_file_as_string(RUN_PATH)
 	var direct_event_pattern := RegEx.new()
 	direct_event_pattern.compile('_add_effect\\(\\s*&"([^"]+)"')
+	var produced := {}
 	for result in direct_event_pattern.search_all(run_source):
 		var event_id := StringName(result.get_string(1))
+		produced[event_id] = true
 		_expect(
 			VisualEventCatalog.has_event(event_id),
 			"VehicleRun emits an unmapped visual event: %s" % event_id
 		)
-	for prohibited_id in [
-		"spawn",
-		"shock",
-		"secondary",
-		"destroy",
-		"support",
-		"impact",
-		"reflect",
-		"barrier_hit",
-		"afterimage",
-		"muzzle",
-	]:
+	for event_id in EXPECTED_EVENT_IDS:
 		_expect(
-			not run_source.contains(
-				'_add_effect(&"%s"' % prohibited_id
-			),
-			"VehicleRun still emits broad visual event: %s" % prohibited_id
+			produced.has(StringName(event_id)),
+			"VehicleRun does not emit required transient event: %s" % event_id
 		)
+	_expect(
+		produced.size() == EXPECTED_EVENT_IDS.size(),
+		"VehicleRun emits exactly the four reviewed transient event IDs"
+	)
 	var secondary_source := FileAccess.get_file_as_string(SECONDARY_PATH)
-	var secondary_event_pattern := RegEx.new()
-	secondary_event_pattern.compile('"event_id"\\s*:\\s*&"([^"]+)"')
-	for result in secondary_event_pattern.search_all(secondary_source):
-		var event_id := StringName(result.get_string(1))
-		_expect(
-			VisualEventCatalog.has_event(event_id),
-			"secondary runtime emits an unmapped visual event: %s" % event_id
-		)
+	_expect(
+		not secondary_source.contains("_effects_output")
+			and not secondary_source.contains('"effects"')
+			and not secondary_source.contains('"event_id"'),
+		"secondary runtime returns gameplay intents without cosmetic event payloads"
+	)
 	var renderer_source := FileAccess.get_file_as_string(RENDERER_PATH)
 	for obsolete_path in [
 		"_effect_batches",
 		"impact_reflect",
 		'family := &"ring"',
 		"animation_frame_asset",
+		"directed_transfer",
+		"effect.target",
 	]:
 		_expect(
 			not renderer_source.contains(obsolete_path),

@@ -28,8 +28,7 @@ func _initialize() -> void:
 		42.0,
 		Vector2.LEFT,
 		18.0,
-		0.20,
-		Vector2(90.0, 91.0)
+		0.20
 	)
 	_expect(
 		first != null
@@ -40,7 +39,6 @@ func _initialize() -> void:
 		and is_equal_approx(first.duration, 0.75)
 		and is_equal_approx(first.radius, 42.0)
 		and first.direction == Vector2.LEFT
-		and first.target == Vector2(90.0, 91.0)
 		and is_equal_approx(first.value, 18.0)
 		and is_equal_approx(first.multiplier, 0.20),
 		"effect state preserves every renderer-visible field"
@@ -52,7 +50,6 @@ func _initialize() -> void:
 	_expect(
 		is_same(first, reused)
 		and reused.kind == &"fixture_reused"
-		and reused.target == Vector2.ZERO
 		and is_equal_approx(reused.value, 0.0)
 		and is_equal_approx(reused.multiplier, 1.0),
 		"retired state is reset and reused without allocating a replacement"

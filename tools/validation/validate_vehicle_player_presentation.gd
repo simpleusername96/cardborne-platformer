@@ -34,7 +34,7 @@ func _initialize() -> void:
 		)
 	for asset_id in [&"cue/beam_strip_9", &"cue/diamond_marker", &"cue/ring", &"cue/crosshair"]:
 		_expect(AssetProvider.texture(asset_id) != null, "%s is an authored gameplay cue" % asset_id)
-	_expect(Run.MAX_DASH_AFTERIMAGES <= 5, "dash afterimage cap is at most five")
+	_expect(Run.MAX_DASH_AFTERIMAGES == 1, "dash uses exactly one transient afterimage")
 	_finish()
 
 

@@ -637,7 +637,8 @@ func _presentation_snapshots_match(
 		"zones", "trails", "player_position", "hull_direction",
 		"aim_direction", "player_speed", "dash_active", "dash_progress",
 		"dash_direction", "player_hit", "player_hit_remaining",
-		"player_invulnerable_remaining", "protection_sources", "muzzle_flash",
+		"player_barrier_hit_remaining", "player_invulnerable_remaining",
+		"protection_sources", "muzzle_flash",
 		"barrier_strength", "reduced_motion", "run_time",
 		"secondary_visual_tier", "resolved_boss_modules",
 		"ion_level", "blade_level", "escort_drone", "cursor_position",
@@ -900,31 +901,30 @@ func _check_effect_store(run) -> void:
 		and is_equal_approx(
 			float(run._emp_aftershock_timer), run.EMP_AFTERSHOCK_DELAY
 		)
-		and run.effect_store.count_kind(&"scheduled_aftershock") == 0
-		and run.effect_store.count_kind(&"player_emp_aftershock") == 0,
-		"primary EMP arms a Run-owned 0.72-second timer without hidden store state"
+		and run.effect_store.count_kind(&"player_emp_release") == 1,
+		"primary EMP arms a Run-owned timer and emits one release visual"
 	)
 	run.call("_update_effects", 0.70)
 	_expect(
 		float(run._emp_aftershock_timer) > 0.0
-			and run.effect_store.count_kind(&"player_emp_aftershock") == 0,
-		"aftershock remains pending before its accumulated effect boundary"
+			and run.effect_store.count_kind(&"player_emp_release") == 0,
+		"aftershock remains pending after the primary release visual expires"
 	)
 	run.call("_update_effects", 0.019)
 	_expect(
 		float(run._emp_aftershock_timer) > 0.0
-			and run.effect_store.count_kind(&"player_emp_aftershock") == 0,
+			and run.effect_store.count_kind(&"player_emp_release") == 0,
 		"aftershock does not release before the exact 0.72-second delay"
 	)
 	run.call("_update_effects", 0.002)
 	_expect(
 		is_zero_approx(float(run._emp_aftershock_timer))
-			and run.effect_store.count_kind(&"player_emp_aftershock") == 1,
-		"timer crossing releases one actual aftershock visual and gameplay pulse"
+			and run.effect_store.count_kind(&"player_emp_release") == 1,
+		"timer crossing reuses the EMP release visual for the aftershock pulse"
 	)
 	run.call("_update_effects", 0.01)
 	_expect(
-		run.effect_store.count_kind(&"player_emp_aftershock") == 1,
+		run.effect_store.count_kind(&"player_emp_release") == 1,
 		"released aftershock is not dispatched twice"
 	)
 	_expect(

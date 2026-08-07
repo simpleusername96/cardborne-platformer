@@ -788,6 +788,20 @@ func _sync_enemy_semantic_overlays(
 	is_current_target: bool
 ) -> void:
 	var forward := Vector2.RIGHT.rotated(angle)
+	if enemy.marked_time > 0.0:
+		_sync_status_brackets(position, radius + 13.0, Art.MUSTARD)
+	if enemy.shear_time > 0.0:
+		var lateral := forward.rotated(PI * 0.5)
+		for side in [-1.0, 1.0]:
+			var bar_center: Vector2 = (
+				position + lateral * (radius + 10.0) * float(side)
+			)
+			_write_beam(
+				bar_center - forward * 8.0,
+				bar_center + forward * 8.0,
+				3.0,
+				Art.MINT
+			)
 	if enemy.role == &"boss_pylon":
 		_sync_boss_module_overlay(enemy, position, radius)
 		return
@@ -1190,23 +1204,17 @@ func _sync_effects(effects: Array[EffectState], visible_world: Rect2) -> void:
 		if not VisualEventCatalog.has_event(event_id):
 			continue
 		var event := VisualEventCatalog.descriptor(event_id)
-		var mode := StringName(event.get("mode", &"suppressed"))
+		var mode := StringName(event.get("mode", &""))
 		var color := effect.color
 		color.a *= 1.0 - progress
 		var direction := effect.direction.normalized()
 		if direction.is_zero_approx():
 			direction = Vector2.RIGHT
-		var target := effect.target
 		var angle := (
-			(target - position).angle()
-			if event.get("rotation", &"") == &"target"
-			and not target.is_equal_approx(position)
-			else direction.angle()
+			direction.angle()
 			if event.get("rotation", &"") == &"direction"
 			else 0.0
 		)
-		if mode in [&"hud_only", &"suppressed", &"direct_feedback"]:
-			continue
 		if mode == &"live_emp_radius":
 			_write_ring(
 				position,
@@ -1232,13 +1240,6 @@ func _sync_effects(effects: Array[EffectState], visible_world: Rect2) -> void:
 				color
 			)
 			continue
-		if mode == &"directed_transfer" and not target.is_equal_approx(position):
-			_write_beam(
-				position,
-				target,
-				2.0,
-				Color(color, color.a * 0.34)
-			)
 		if bool(event.get("floating_damage", false)):
 			_queue_floating_damage(
 				position + Vector2(
@@ -1366,8 +1367,17 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			5.0,
 			Color(Art.MINT, 0.84)
 		)
-	if float(state.get("barrier_strength", 0.0)) > 0.0:
-		_write_ring(player_position, 61.0, Color(Art.MINT, 0.78))
+	var barrier_strength := float(state.get("barrier_strength", 0.0))
+	var barrier_hit_remaining := float(
+		state.get("player_barrier_hit_remaining", 0.0)
+	)
+	if barrier_strength > 0.0 or barrier_hit_remaining > 0.0:
+		var barrier_flash := clampf(barrier_hit_remaining / 0.16, 0.0, 1.0)
+		_write_ring(
+			player_position,
+			61.0 + barrier_flash * 3.0,
+			Color(Art.MINT, lerpf(0.78, 1.0, barrier_flash))
+		)
 	var ion_level := int(state.get("ion_level", 0))
 	if ion_level > 0:
 		var ion_radius: float = ION_RADII[ion_level - 1]
@@ -1612,6 +1622,15 @@ func _boss_module_asset_id(enemy: EnemyState) -> StringName:
 func _sync_target_brackets(position: Vector2, radius: float) -> void:
 	for direction in CARDINAL_DIRECTIONS:
 		_write_diamond(position + direction * (radius + 8.0), 5.0, Art.SYSTEM)
+
+
+func _sync_status_brackets(
+	position: Vector2,
+	radius: float,
+	color: Color
+) -> void:
+	for direction in CARDINAL_DIRECTIONS:
+		_write_diamond(position + direction * radius, 5.0, color)
 
 
 func _write_beam(from: Vector2, to: Vector2, width: float, color: Color) -> void:

@@ -56,6 +56,9 @@ const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.g
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
+const VisualEventCatalog = preload(
+	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
+)
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const ManualPerformanceTrace = preload("res://scripts/performance/vehicle_manual_performance_trace.gd")
@@ -94,7 +97,7 @@ const PRIMARY_PROJECTILE_RADIUS := 7.0
 const DASH_DURATION := 0.20
 const DASH_SPEED := 1220.0
 const DASH_COOLDOWN := 1.25
-const MAX_DASH_AFTERIMAGES := 5
+const MAX_DASH_AFTERIMAGES := 1
 const SEEKER_RANGE := 560.0
 const SEEKER_COOLDOWN := 1.35
 const EMP_COOLDOWN := 13.0
@@ -130,6 +133,7 @@ const CHARGE_PATH_BINARY_STEPS := 8
 # observes every scheduling phase without timing every physics tick.
 const PERFORMANCE_DETAIL_SAMPLE_STRIDE := 7
 const PLAYER_HIT_FLASH_DURATION := 0.20
+const PLAYER_BARRIER_HIT_FLASH_DURATION := 0.16
 const PLAYER_HIT_INVULNERABILITY := 1.0
 const STAGE_TRANSITION_SECONDS := 1.6
 const STAGE_TRANSITION_INVULNERABILITY := 1.2
@@ -177,6 +181,7 @@ var player_health := PLAYER_MAX_HEALTH
 var player_invulnerable := 0.0
 var player_protection_sources: Dictionary = {}
 var player_hit_flash := 0.0
+var player_barrier_hit_flash := 0.0
 var player_primary_weapon := PrimaryWeapon.new()
 var _primary_shot_serial := 0
 var player_muzzle_flash := 0.0
@@ -563,6 +568,7 @@ func _process(delta: float) -> void:
 	var hud_ms := 0.0
 	var presentation_ms := 0.0
 	player_hit_flash = maxf(0.0, player_hit_flash - delta)
+	player_barrier_hit_flash = maxf(0.0, player_barrier_hit_flash - delta)
 	player_muzzle_flash = maxf(0.0, player_muzzle_flash - delta)
 	camera_shake = maxf(0.0, camera_shake - delta * 18.0)
 	if is_instance_valid(_ui) and (_simulation_active() or _capture_mode):
@@ -747,6 +753,7 @@ func _reset_run(
 	player_invulnerable = 0.0
 	player_protection_sources.clear()
 	player_hit_flash = 0.0
+	player_barrier_hit_flash = 0.0
 	player_primary_weapon.reset()
 	_primary_shot_serial = 0
 	player_dash_cooldown = 0.0
@@ -1077,13 +1084,6 @@ func _update_encounter(delta: float) -> void:
 		projectile_store.hostile_count()
 	)
 	for cue in requests["cues"]:
-		_add_effect(
-			&"hostile_arrival",
-			Vector2(cue["anchor"]),
-			Art.MUSTARD,
-			float(cue.get("visual_duration", 0.9)),
-			126.0
-		)
 		_play_sound(&"boss", 0.72)
 		if int(cue["beat"]) == 0:
 			_ui.notify(tr("NOTIFY_CONTACT_INBOUND"), 1.2, Art.MUSTARD)
@@ -1091,14 +1091,7 @@ func _update_encounter(delta: float) -> void:
 		var bounded_spec := _bounded_spawn_spec(Dictionary(spawn_spec))
 		var enemy := _make_enemy(bounded_spec)
 		_apply_pending_elite(enemy)
-		if _append_enemy(enemy):
-			_add_effect(
-				&"hostile_arrival",
-				Vector2(enemy.pos),
-				Art.CORAL,
-				0.42,
-				68.0
-			)
+		_append_enemy(enemy)
 
 
 func _refresh_elite_reservations() -> void:
@@ -1401,14 +1394,6 @@ func _update_terrain(delta: float, previous_player_position: Vector2) -> void:
 					float(event["invulnerability"]),
 					&"transit"
 				)
-				_add_effect(
-					&"transit_complete",
-					player_position,
-					Art.MINT,
-					0.34,
-					96.0,
-					player_hull_direction
-				)
 				_play_sound(&"dash", 1.18)
 	var hazard_damage := terrain_runtime.hazard_damage_for_actor(
 		"player",
@@ -1460,14 +1445,6 @@ func _start_dash(move_input: Vector2) -> void:
 	tutorial_dash = true
 	camera_shake = maxf(camera_shake, 4.0)
 	_play_sound(&"dash")
-	_add_effect(
-		&"player_dash_start",
-		player_position,
-		Rules.CYAN,
-		0.22,
-		52.0,
-		player_dash_direction
-	)
 
 
 func _update_dash(delta: float) -> void:
@@ -1509,13 +1486,6 @@ func _update_dash(delta: float) -> void:
 				player_position, 145.0, 32.0, "Ram Pulse", &"kinetic", true
 			)
 			_clear_hostile_projectiles(player_position, 170.0)
-			_add_effect(
-				&"player_ram_pulse",
-				player_position,
-				Rules.AMBER,
-				0.38,
-				170.0
-			)
 			_play_sound(&"emp", 1.55)
 
 
@@ -1534,14 +1504,6 @@ func _apply_phase_shear(from: Vector2, to: Vector2) -> void:
 				previous.shear_time = 0.0
 		enemy.shear_time = 3.0
 		_sheared_enemy_id = enemy.id
-		_add_effect(
-			&"player_phase_shear_hit",
-			enemy.pos,
-			Art.MINT,
-			0.24,
-			48.0,
-			(to - from).normalized()
-		)
 		return
 
 
@@ -1578,16 +1540,6 @@ func _fire_primary() -> void:
 			_status_profile,
 			false
 		)
-	_add_effect(
-		&"player_primary_muzzle",
-		origin,
-		Art.MUSTARD,
-		0.09,
-		32.0,
-		player_aim_direction
-	)
-
-
 func _try_fire_primary() -> bool:
 	if not player_primary_weapon.can_fire(player_dash_timer <= 0.0):
 		return false
@@ -1840,22 +1792,6 @@ func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
 				&"arc" if secondary_source == "Ion Field" else &"kinetic",
 				true
 			)
-	for effect in secondary_result["effects"]:
-		var effect_position := Vector2(effect["pos"])
-		var effect_target := Vector2(effect.get("target", effect_position))
-		_add_effect(
-			StringName(effect["event_id"]),
-			effect_position,
-			Art.MINT,
-			0.24,
-			float(effect.get("radius", 24.0)),
-			(effect_target - effect_position).normalized(),
-			0.0,
-			1.0,
-			effect_target
-		)
-
-
 func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:
 	var candidates: Array[EnemyState] = []
 	enemy_grid.query_radius_into(player_position, SEEKER_RANGE, enemies, _enemy_query_buffer)
@@ -1935,7 +1871,7 @@ func _release_emp(is_aftershock: bool) -> void:
 				stun_duration += 2.5 * run_build.level_of(&"relay_overload")
 			enemy.stun = maxf(float(enemy.stun), stun_duration)
 	_add_effect(
-		&"player_emp_aftershock" if is_aftershock else &"player_emp_release",
+		&"player_emp_release",
 		player_position,
 		Art.BOSS_MAGENTA,
 		0.55,
@@ -1985,13 +1921,6 @@ func _activate_cycle(upgrade_id: StringName) -> void:
 	player_barrier_strength = maxf(player_barrier_strength, 28.0 if level >= 2 else 20.0)
 	player_barrier_timer = maxf(player_barrier_timer, 6.0 if level >= 2 else 5.0)
 	_clear_hostile_projectiles(player_position, 86.0)
-	_add_effect(
-		&"player_barrier_activate",
-		player_position,
-		Art.MINT,
-		0.22,
-		74.0
-	)
 
 
 func _update_pickups(motion_start: Vector2, motion_end: Vector2) -> void:
@@ -2027,34 +1956,7 @@ func _collect_pickup(pickup: Dictionary) -> void:
 			_discover_guide(&"object_recall")
 			experience_recall_timer = 0.65
 			_ui.notify(tr("NOTIFY_EXPERIENCE_RECALL"), 2.0, Rules.CYAN)
-	var pickup_event := (
-		&"pickup_repair"
-		if kind == &"repair"
-		else &"pickup_experience"
-		if kind == &"experience_recall"
-		else &"pickup_reward"
-	)
-	_add_effect(
-		pickup_event,
-		Vector2(pickup["pos"]),
-		_pickup_color(kind),
-		0.40,
-		65.0,
-		(player_position - Vector2(pickup["pos"])).normalized(),
-		0.0,
-		1.0,
-		player_position
-	)
 	_play_sound(&"pickup")
-
-
-func _pickup_color(kind: StringName) -> Color:
-	match kind:
-		&"repair":
-			return Art.MINT
-		&"experience_recall":
-			return Art.COBALT_ENERGY
-	return Art.IVORY_BRIGHT
 
 
 func _update_experience(delta: float) -> void:
@@ -2636,7 +2538,6 @@ func _update_generator(enemy: EnemyState, delta: float) -> void:
 			continue
 		if target.pos.distance_to(enemy.pos) <= 390.0:
 			target.health = minf(target.max_health, target.health + 4.0)
-	_add_effect(&"support_heal", enemy.pos, Rules.CYAN, 0.28, 105.0)
 
 
 func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool) -> void:
@@ -2665,7 +2566,6 @@ func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool
 	enemy.support_tick = maxf(0.0, enemy.support_tick - delta)
 	if enemy.support_tick <= 0.0:
 		enemy.support_tick = 0.32
-		_add_effect(&"support_heal", target.pos, Art.MINT, 0.24, 46.0)
 
 
 func _spawn_carrier_child(carrier: EnemyState) -> void:
@@ -2697,13 +2597,6 @@ func _spawn_carrier_child(carrier: EnemyState) -> void:
 	})
 	if _append_enemy(child):
 		_enemy_update_schedule.note_carrier_child(carrier.id)
-		_add_effect(
-			&"hostile_summon_arrival",
-			spawn_position,
-			Art.CORAL,
-			0.32,
-			44.0
-		)
 
 
 func _update_ordinary_enemy(
@@ -3013,13 +2906,6 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			)
 			if mine_damage > 0.0:
 				_damage_player(mine_damage, "Arc proximity burst", true)
-			_add_effect(
-				&"enemy_mine_detonation",
-				enemy.pos,
-				Art.attack_color(StringName(mine_attack["affinity"])),
-				0.36,
-				float(mine_attack["radius"])
-			)
 		&"artillery_spotter":
 			var artillery_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			denied_zones.append({
@@ -3403,13 +3289,6 @@ func _explode_mine(enemy: EnemyState) -> void:
 				enemy.mine_armed_by_player
 			)
 	_arm_chain_mines(enemy, origin, mobile)
-	_add_effect(
-		&"enemy_mine_detonation",
-		origin,
-		Art.ATTACK_ARC,
-		0.36,
-		radius
-	)
 	_defeat_enemy(enemy, source)
 
 
@@ -3618,24 +3497,8 @@ func _update_projectile_buffer(
 					var normal: Vector2 = cover_hit["normal"]
 					projectile.velocity = projectile.velocity.bounce(normal)
 					projectile.pos = Vector2(cover_hit["point"]) + normal * (radius + 2.0)
-					_add_effect(
-						&"projectile_reflected",
-						projectile.pos,
-						Rules.CYAN,
-						0.15,
-						18.0,
-						projectile.velocity.normalized()
-					)
 					index += 1
 					continue
-				_add_effect(
-					&"projectile_cover_impact",
-					Vector2(cover_hit["point"]),
-					projectile.color,
-					0.14,
-					20.0,
-					projectile.velocity.normalized()
-				)
 				_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 				_remove_projectile_at(hostile, index)
 				continue
@@ -3689,14 +3552,6 @@ func _update_projectile_buffer(
 				var hit_position := hit_enemy.pos
 				if _try_absorb_protective_structure(hit_enemy, projectile):
 					stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
-					_add_effect(
-						&"enemy_barrier_hit",
-						hit_position,
-						Art.IVORY_BRIGHT,
-						0.20,
-						hit_enemy.radius * 1.35,
-						projectile.velocity.normalized()
-					)
 					_play_sound(&"cover", 1.06)
 					if projectile.pierce > 0:
 						projectile.pierce -= 1
@@ -3727,34 +3582,11 @@ func _update_projectile_buffer(
 				StatusRuntime.apply(hit_enemy, projectile.status_profile)
 				_record_status_applications(projectile.status_profile)
 				stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
-				var impact_event := (
-					&"projectile_reflected"
-					if projectile.reflected
-					else &"secondary_seeker_impact"
-					if projectile.owner == "seeker"
-					else &"projectile_damage_impact"
-				)
-				_add_effect(
-					impact_event,
-					hit_position,
-					projectile.color,
-					0.18,
-					24.0,
-					projectile.velocity.normalized()
-				)
 				_play_sound(&"impact", _rng.randf_range(0.92, 1.08))
 				if projectile.explosive:
 					_damage_enemies_in_radius(
 						hit_position, 95.0, 12.0,
 						"Seeker burst", &"kinetic", true, hit_enemy.id
-					)
-					_add_effect(
-						&"secondary_seeker_burst",
-						hit_position,
-						Rules.MOSS,
-						0.28,
-						95.0,
-						projectile.velocity.normalized()
 					)
 				if projectile.pierce > 0:
 					projectile.pierce -= 1
@@ -3875,14 +3707,6 @@ func _player_projectile_contact(
 	if best_is_intercept and best != null:
 		best.intercept_charges -= 1
 		best.intercept_recharge = 4.0
-		_add_effect(
-			&"projectile_intercepted",
-			best.pos,
-			Rules.VIOLET,
-			0.24,
-			112.0,
-			projectile.velocity.normalized()
-		)
 		return true
 	return best
 
@@ -3971,19 +3795,8 @@ func _projectile_hits_crate(
 	var crate_hit: Variant = crate_receipt["crate"]
 	if crate_hit == null:
 		return false
-	var crate_position := Vector2(crate_hit["pos"])
-	var motion := to - from
-	var hit_t := float(crate_receipt["t"])
 	if damage_crate:
 		_damage_crate(crate_hit, projectile.structure_damage)
-	_add_effect(
-		&"projectile_cover_impact",
-		from + motion * hit_t if hit_t != INF else crate_position,
-		projectile.color,
-		0.16,
-		22.0,
-		projectile.velocity.normalized()
-	)
 	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 	return true
 
@@ -4022,13 +3835,6 @@ func _damage_crate(crate: Dictionary, amount: float) -> void:
 		"pulse": 0.0,
 		"heal_amount": float(crate.get("heal_amount", 0.0)),
 	})
-	_add_effect(
-		&"crate_destroy",
-		Vector2(crate["pos"]),
-		Rules.AMBER,
-		0.42,
-		58.0
-	)
 	_play_sound(&"destroy", 1.35)
 
 
@@ -4114,9 +3920,11 @@ func _add_effect(
 	radius: float,
 	direction: Vector2 = Vector2.ZERO,
 	value: float = 0.0,
-	multiplier: float = 1.0,
-	target_position: Variant = null
+	multiplier: float = 1.0
 ) -> void:
+	if not VisualEventCatalog.has_event(kind):
+		push_error("Unknown transient visual event: %s" % kind)
+		return
 	effect_store.add(
 		kind,
 		position,
@@ -4125,8 +3933,7 @@ func _add_effect(
 		radius,
 		direction,
 		value,
-		multiplier,
-		target_position
+		multiplier
 	)
 
 
@@ -4147,13 +3954,6 @@ func _damage_enemy(
 		and not boss_exam_runtime.can_damage_module(enemy.id)
 	):
 		enemy.health_visible_timer = 1.5
-		_add_effect(
-			&"enemy_barrier_hit",
-			enemy.pos,
-			Art.BOSS_COMMAND,
-			0.20,
-			enemy.radius * 1.25
-		)
 		return 0.0
 	if not final_effective and player_owned and cycle_runtime.is_active(&"overclock_cycle"):
 		amount *= 1.35 if cycle_runtime.level(&"overclock_cycle") >= 2 else 1.25
@@ -4286,7 +4086,7 @@ func _apply_lifesteal(
 	source: String,
 	_role: StringName,
 	player_owned: bool,
-	source_position: Vector2
+	_source_position: Vector2
 ) -> void:
 	if (
 		not player_owned
@@ -4303,32 +4103,6 @@ func _apply_lifesteal(
 		return
 	player_health += healing
 	lifesteal_budget -= healing
-	_add_effect(
-		&"lifesteal_transfer",
-		source_position,
-		Art.MINT,
-		0.30,
-		46.0,
-		(player_position - source_position).normalized(),
-		0.0,
-		1.0,
-		player_position
-	)
-
-
-func _enemy_destroy_event(enemy: EnemyState) -> StringName:
-	if (
-		enemy.role == &"boss_pylon"
-		and not enemy.boss_objective_id.is_empty()
-	):
-		return &"boss_module_resolved"
-	if (
-		enemy.role == &"stage_boss"
-		or enemy.health_class in [&"elite", &"priority", &"boss"]
-		or enemy.radius >= 30.0
-	):
-		return &"enemy_destroy_heavy"
-	return &"enemy_destroy_light"
 
 
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
@@ -4351,13 +4125,6 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		enemy.active = false
 		enemy_grid.update_actor(enemy)
 		enemy_store.queue_defeat(enemy)
-		_add_effect(
-			_enemy_destroy_event(enemy),
-			enemy.pos,
-			_enemy_color(enemy.role),
-			0.48,
-			enemy.radius * 1.8
-		)
 		_handle_boss_module_result(module_result)
 		return
 	var spreads_poison := StatusRuntime.contagion_enabled(enemy)
@@ -4414,13 +4181,6 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 				spread_count += 1
 				if spread_count >= 8:
 					break
-	_add_effect(
-		_enemy_destroy_event(enemy),
-		enemy.pos,
-		_enemy_color(role),
-		0.65 if role == &"stage_boss" else 0.42,
-		enemy.radius * 1.8
-	)
 	_play_sound(
 		&"destroy_priority"
 		if role in [&"stage_boss", &"generator", &"interceptor_tower", &"repair_tender", &"drone_carrier", &"beam_sentinel"]
@@ -4470,14 +4230,13 @@ func _is_countable_stage_enemy(enemy: EnemyState) -> bool:
 	return enemy.role not in [&"stage_boss", &"boss_pylon"]
 
 
-func _try_group_completion_reward(group_id: String, position: Vector2) -> void:
+func _try_group_completion_reward(group_id: String, _position: Vector2) -> void:
 	if completed_group_rewards.has(group_id):
 		return
 	for candidate in enemies:
 		if candidate.group_id == group_id and candidate.alive:
 			return
 	completed_group_rewards[group_id] = true
-	_add_effect(&"group_clear", position, Art.MINT, 0.28, 44.0)
 
 
 func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
@@ -4502,14 +4261,9 @@ func _damage_player(
 		var absorbed := minf(player_barrier_strength, remaining)
 		player_barrier_strength -= absorbed
 		remaining -= absorbed
-		_add_effect(
-			&"player_barrier_hit",
-			player_position,
-			Rules.CYAN,
-			0.20,
-			70.0,
-			-player_hull_direction
-		)
+		if absorbed > 0.0:
+			player_barrier_hit_flash = PLAYER_BARRIER_HIT_FLASH_DURATION
+			_play_sound(&"cover", 1.04)
 		if player_barrier_strength <= 0.0:
 			_ui.notify(tr("NOTIFY_BARRIER_DEPLETED"), 1.6, Rules.CORAL)
 	if remaining <= 0.0:
@@ -4526,14 +4280,6 @@ func _damage_player(
 			remaining
 		)
 	player_hit_flash = PLAYER_HIT_FLASH_DURATION
-	_add_effect(
-		&"player_hull_hit",
-		player_position,
-		Rules.CORAL,
-		0.20,
-		46.0,
-		-player_hull_direction
-	)
 	if grant_hit_protection:
 		_grant_player_protection(PLAYER_HIT_INVULNERABILITY, &"hit")
 	if not _reduced_motion_enabled():
@@ -4603,14 +4349,6 @@ func _apply_dash_collision() -> void:
 			var push := (enemy.pos - player_position).normalized()
 			enemy.pos = _move_actor(enemy.pos, push * 45.0, enemy.radius, false)
 			enemy_grid.update_actor(enemy)
-			_add_effect(
-				&"player_ram_impact",
-				enemy.pos,
-				Rules.AMBER,
-				0.20,
-				34.0,
-				push
-			)
 
 
 func _repel_nearby_enemies(radius: float) -> void:
@@ -4676,23 +4414,15 @@ func _damage_mystery_device(
 	device_id: StringName,
 	damage: float,
 	attack_kind: StringName,
-	hit_position: Vector2,
-	color: Color,
-	direction: Vector2
+	_hit_position: Vector2,
+	_color: Color,
+	_direction: Vector2
 ) -> bool:
 	var receipt := mystery_device_runtime.receive_damage(
 		device_id, damage, &"player", attack_kind
 	)
 	if not bool(receipt["accepted"]):
 		return false
-	_add_effect(
-		&"projectile_cover_impact",
-		hit_position,
-		color,
-		0.16,
-		26.0,
-		direction
-	)
 	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 	if bool(receipt["broken"]):
 		_handle_mystery_device_break(Dictionary(receipt["break_event"]))
@@ -5111,14 +4841,7 @@ func _execute_boss_autonomous(event: Dictionary) -> void:
 			"summoned":true,
 			"zone":"boss_system",
 		})
-		if _append_enemy(sentinel):
-			_add_effect(
-				&"hostile_summon_arrival",
-				sentinel.pos,
-				Art.ATTACK_ARC,
-				0.55,
-				76.0
-			)
+		_append_enemy(sentinel)
 		return
 	denied_zones.append({
 		"id":event["id"],
@@ -5227,14 +4950,7 @@ func _spawn_boss_objective_modules(
 		module.health = float(spec["health"])
 		module.max_health = module.health
 		module.active = true
-		if _append_enemy(module):
-			_add_effect(
-				&"hostile_arrival",
-				position,
-				Art.BOSS_COMMAND,
-				0.55,
-				78.0
-			)
+		_append_enemy(module)
 
 
 func _spawn_boss_exam_adds(
@@ -5278,13 +4994,6 @@ func _spawn_boss_exam_adds(
 		})
 		if add != null and _append_enemy(add):
 			spawned += 1
-			_add_effect(
-				&"hostile_summon_arrival",
-				position,
-				Art.DANGER,
-				0.42,
-				56.0
-			)
 	boss_exam_runtime.note_adds_spawned(
 		spawned,
 		live_before + spawned
@@ -6115,6 +5824,7 @@ func _fill_combat_presentation_snapshot(
 	snapshot["dash_direction"] = player_dash_direction
 	snapshot["player_hit"] = player_hit_flash > 0.0
 	snapshot["player_hit_remaining"] = player_hit_flash
+	snapshot["player_barrier_hit_remaining"] = player_barrier_hit_flash
 	snapshot["player_invulnerable_remaining"] = player_invulnerable
 	snapshot["protection_sources"] = protection_sources
 	snapshot["muzzle_flash"] = player_muzzle_flash
@@ -6445,23 +6155,10 @@ func _draw_enemy_overlay(enemy: EnemyState) -> void:
 				14.0,
 				Color(Art.MINT, 0.82)
 			)
-		_draw_enemy_marks(enemy, position, visual_radius)
 	if enemy.vulnerable > 0.0:
 		_draw_semantic_asset(
 			&"cue/crosshair", position, visual_radius + 14.0, Art.MUSTARD
 		)
-
-
-func _draw_enemy_marks(enemy: EnemyState, position: Vector2, radius: float) -> void:
-	if enemy.marked_time > 0.0:
-		_draw_semantic_asset(
-			&"cue/ring", position, radius + 15.0, Art.MUSTARD
-		)
-	if enemy.shear_time > 0.0:
-		_draw_semantic_asset(
-			&"cue/ring", position, radius + 10.0, Art.MINT
-		)
-
 
 func _enemy_color(role: StringName) -> Color:
 	match role:

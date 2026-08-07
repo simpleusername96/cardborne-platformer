@@ -80,7 +80,7 @@ func _initialize() -> void:
 		"secondary presentation exposes exactly the renderer-visible oracle fields"
 	)
 	_validate_mine_direction(catalog)
-	_validate_drone_target_direction(catalog)
+	_validate_drone_damage_contract(catalog)
 	_finish()
 
 
@@ -127,7 +127,7 @@ func _validate_mine_direction(catalog: Catalog) -> void:
 	)
 
 
-func _validate_drone_target_direction(catalog: Catalog) -> void:
+func _validate_drone_damage_contract(catalog: Catalog) -> void:
 	var build := RunBuild.new(catalog)
 	_expect(
 		bool(build.apply(&"escort_drone").get("applied", false)),
@@ -152,19 +152,12 @@ func _validate_drone_target_direction(catalog: Catalog) -> void:
 		enemies,
 		Callable(self, "_los")
 	)
-	var effects: Array = result["effects"]
-	_expect(effects.size() == 1, "escort drone emits one targeted impact event")
-	if effects.size() != 1:
-		return
-	var effect := Dictionary(effects[0])
-	var event_direction := (
-		Vector2(effect["target"]) - Vector2(effect["pos"])
-	).normalized()
-	var drone_position := Vector2(runtime.snapshot(build)["drone_position"])
-	var expected_direction := (target.pos - drone_position).normalized()
 	_expect(
-		event_direction.dot(expected_direction) >= 0.999,
-		"escort impact event follows the actual target vector"
+		not result.has("effects")
+			and Array(result["damage"]).size() == 1
+			and String(Dictionary(result["damage"][0])["enemy_id"])
+				== target.id,
+		"escort drone returns gameplay damage without a cosmetic event payload"
 	)
 
 

@@ -1,8 +1,7 @@
 class_name VehicleVisualEventCaptureFixture
 extends RefCounted
 
-## Reviewed grouping for runtime event coverage. Suppressed minor events remain
-## listed so gameplay producers stay intentional even when they draw no effect.
+## Reviewed coverage for the minimal transient presentation surface.
 
 const VisualEventCatalog = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_catalog.gd"
@@ -10,66 +9,12 @@ const VisualEventCatalog = preload(
 
 const GROUPS := [
 	{
-		"id": &"player",
+		"id": &"essential_transients",
 		"events": [
-			&"player_primary_muzzle",
-			&"player_dash_start",
 			&"player_dash_afterimage",
-			&"player_hull_hit",
-			&"player_barrier_hit",
-			&"player_barrier_activate",
 			&"player_emp_charge",
 			&"player_emp_release",
-			&"player_emp_aftershock",
-			&"player_ram_pulse",
-			&"player_phase_shear_hit",
-			&"player_ram_impact",
-		],
-	},
-	{
-		"id": &"secondary",
-		"events": [
-			&"secondary_seeker_impact",
-			&"secondary_seeker_burst",
-			&"secondary_escort_impact",
-			&"secondary_orbit_blade_impact",
-			&"secondary_wake_mine_detonation",
-			&"enemy_mine_detonation",
-		],
-	},
-	{
-		"id": &"projectile_hostile",
-		"events": [
-			&"hostile_projectile_impact",
-			&"projectile_cover_impact",
-			&"projectile_damage_impact",
-			&"projectile_reflected",
-			&"projectile_intercepted",
-			&"enemy_barrier_hit",
-			&"hostile_arrival",
-			&"hostile_summon_arrival",
-		],
-	},
-	{
-		"id": &"destroy_boss",
-		"events": [
-			&"enemy_destroy_light",
-			&"enemy_destroy_heavy",
 			&"boss_core_reduced_hit",
-			&"boss_module_resolved",
-			&"bulkhead_destroy",
-			&"crate_destroy",
-			&"transit_complete",
-		],
-	},
-	{
-		"id": &"pickup_support",
-		"events": [
-			&"pickup_experience",
-			&"pickup_repair",
-			&"pickup_reward",
-			&"support_heal",
-			&"lifesteal_transfer",
 		],
 	},
 ]
@@ -94,10 +39,8 @@ static func validate() -> PackedStringArray:
 			authored_effects += 1
 			if StringName(descriptor.get("asset", &"")) != &"effect/emp_release":
 				errors.append("authored EMP event uses the wrong asset: %s" % event_id)
-		if mode == &"hud_only":
-			continue
 		if not captured.has(event_id):
-			errors.append("world event has no capture fixture: %s" % event_id)
+			errors.append("transient event has no capture fixture: %s" % event_id)
 	if authored_effects != 1:
 		errors.append("exactly one event must request the authored EMP raster")
 	return errors

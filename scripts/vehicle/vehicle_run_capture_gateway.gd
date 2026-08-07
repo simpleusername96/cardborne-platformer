@@ -605,8 +605,7 @@ func _capture_visual_event_evidence() -> void:
 				54.0,
 				direction,
 				18.0,
-				0.20,
-				position + direction * 86.0
+				0.20
 			)
 			_run.effects[-1].time = 0.52
 		_run.capture_set_mode(&"paused")

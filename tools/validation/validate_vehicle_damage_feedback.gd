@@ -46,6 +46,7 @@ func _run() -> void:
 	stage.set("player_health", 120.0)
 	stage.set("player_invulnerable", 0.0)
 	stage.set("player_hit_flash", 0.0)
+	stage.set("player_barrier_hit_flash", 0.0)
 	stage.set("player_barrier_strength", 100.0)
 	stage.set("player_barrier_timer", 1.0)
 	stage.set("camera_shake", 0.0)
@@ -53,6 +54,14 @@ func _run() -> void:
 	_expect(is_equal_approx(float(stage.get("player_health")), 120.0), "a fully absorbed barrier hit does not damage the hull")
 	_expect(is_zero_approx(float(stage.get("player_hit_flash"))), "a fully absorbed barrier hit does not start hull feedback")
 	_expect(is_zero_approx(float(stage.get("player_invulnerable"))), "a fully absorbed barrier hit does not start hull invulnerability")
+	_expect(
+		is_equal_approx(float(stage.get("player_barrier_hit_flash")), 0.16)
+			and is_equal_approx(
+				float(stage.call("_combat_presentation_snapshot")["player_barrier_hit_remaining"]),
+				0.16
+			),
+		"absorbed damage publishes one short direct barrier-ring flash"
+	)
 	stage.set("player_health", 120.0)
 	stage.set("player_invulnerable", 0.0)
 	stage.set("player_hit_flash", 0.0)
