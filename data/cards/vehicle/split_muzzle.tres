@@ -1,12 +1,12 @@
-[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/cards/vehicle_upgrade_definition.gd" id="1_def"]
 
 [resource]
 script = ExtResource("1_def")
-id = &"forked_muzzle"
-title_key = "UPGRADE_FORKED_MUZZLE_TITLE"
-description_key = "UPGRADE_FORKED_MUZZLE_DESC"
+id = &"split_muzzle"
+title_key = "UPGRADE_SPLIT_MUZZLE_TITLE"
+description_key = "UPGRADE_SPLIT_MUZZLE_DESC"
 category = &"primary"
 artwork_asset_id = &"projectile/energy_teardrop"
 max_level = 2

@@ -146,7 +146,7 @@ func _init() -> void:
 		"has_next_stage":false,
 		"time":"4:18",
 		"health_ratio":0.72,
-		"upgrade":"UPGRADE_KINETIC_ROUNDS_TITLE",
+		"upgrade":"UPGRADE_SPLIT_MUZZLE_TITLE",
 		"primary_hits":41,
 		"dash_uses":7,
 		"installations":3,

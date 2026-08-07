@@ -13,22 +13,23 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	var catalog := Catalog.new()
 	var build := RunBuild.new(catalog)
-	for root_id in [&"incendiary_core", &"toxin_core", &"cryo_core"]:
+	for root_id in [&"thermal_burn", &"bio_toxin", &"cryo_slow"]:
 		_expect(bool(build.apply(root_id).get("applied", false)), "%s can coexist with other elemental roots" % root_id)
-	_expect(build.has(&"incendiary_core") and build.has(&"toxin_core") and build.has(&"cryo_core"), "one run owns all three elemental roots")
+	_expect(build.has(&"thermal_burn") and build.has(&"bio_toxin") and build.has(&"cryo_slow"), "one run owns all three elemental roots")
 	var profile := StatusProfile.from_build(build)
 	_expect(
 		profile.burn_enabled and profile.poison_enabled and profile.chill_enabled,
 		"one immutable profile carries all owned roots"
 	)
-	_expect(is_equal_approx(profile.burn_dps_per_stack, 2.0) and is_equal_approx(profile.burn_duration, 3.0), "Incendiary Core uses the exact base burn package")
-	_expect(is_equal_approx(profile.poison_dps_per_stack, 2.0) and profile.poison_max_stacks == 3, "Toxin Core uses the exact base poison package")
-	_expect(is_equal_approx(profile.chill_magnitude_per_stack, 0.06) and is_equal_approx(profile.chill_duration, 2.0), "Cryo Core uses the exact base chill package")
+	_expect(is_equal_approx(profile.burn_dps_per_stack, 2.0) and is_equal_approx(profile.burn_duration, 3.0), "Thermal Burn uses the exact level-one package")
+	_expect(is_equal_approx(profile.poison_dps_per_stack, 2.0) and profile.poison_max_stacks == 3, "Bio Toxin uses the exact level-one package")
+	_expect(is_equal_approx(profile.chill_magnitude_per_stack, 0.06) and is_equal_approx(profile.chill_duration, 2.0), "Cryo Slow uses the exact level-one package")
+	_validate_level_progression(catalog)
 
 	var projectile := ProjectileState.new()
 	projectile.configure({"status_profile":profile}, &"player", 1)
 	var later_build := RunBuild.new(catalog)
-	later_build.apply(&"incendiary_core")
+	later_build.apply(&"thermal_burn")
 	var later_profile := StatusProfile.from_build(later_build)
 	_expect(projectile.status_profile == profile and projectile.status_profile != later_profile, "an in-flight projectile retains its fired build profile")
 
@@ -56,6 +57,37 @@ func _initialize() -> void:
 	_expect(is_equal_approx(float(boss_chill["magnitude_per_stack"]), 0.03), "boss chill magnitude is halved")
 	_expect(is_equal_approx(float(boss_chill["time"]), 1.0), "boss chill duration is halved")
 	_finish()
+
+
+func _validate_level_progression(catalog: Catalog) -> void:
+	var burn_dps := [2.0, 3.0, 4.0]
+	var burn_duration := [3.0, 4.0, 5.0]
+	var poison_dps := [2.0, 3.0, 4.0]
+	var poison_duration := [5.0, 6.0, 7.0]
+	var chill_magnitude := [0.06, 0.08, 0.10]
+	var chill_duration := [2.0, 2.5, 3.0]
+	for level_index in 3:
+		var build := RunBuild.new(catalog)
+		for _level in level_index + 1:
+			build.apply(&"thermal_burn")
+			build.apply(&"bio_toxin")
+			build.apply(&"cryo_slow")
+		var profile := StatusProfile.from_build(build)
+		_expect(
+			is_equal_approx(profile.burn_dps_per_stack, burn_dps[level_index])
+				and is_equal_approx(profile.burn_duration, burn_duration[level_index]),
+			"Thermal Burn level %d has exact DPS and duration" % (level_index + 1)
+		)
+		_expect(
+			is_equal_approx(profile.poison_dps_per_stack, poison_dps[level_index])
+				and is_equal_approx(profile.poison_duration, poison_duration[level_index]),
+			"Bio Toxin level %d has exact DPS and duration" % (level_index + 1)
+		)
+		_expect(
+			is_equal_approx(profile.chill_magnitude_per_stack, chill_magnitude[level_index])
+				and is_equal_approx(profile.chill_duration, chill_duration[level_index]),
+			"Cryo Slow level %d has exact slow and duration" % (level_index + 1)
+		)
 
 
 func _expect(condition: bool, message: String) -> void:

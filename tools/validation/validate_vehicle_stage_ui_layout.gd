@@ -759,7 +759,7 @@ func _validate_upgrade_matrix(ui: VehicleStageUI) -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 39, "layout matrix contains all 39 card/level states")
+	_expect(snapshots.size() == 34, "layout matrix contains all 34 card/level states")
 	var safe_card := snapshots[0]
 	var original_locale := TranslationServer.get_locale()
 	for locale in ["ko", "en"]:

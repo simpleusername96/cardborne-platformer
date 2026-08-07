@@ -105,7 +105,6 @@ const SEEKER_COOLDOWN := 1.35
 const EMP_COOLDOWN := 13.0
 const EMP_STARTUP := 0.42
 const EMP_RADIUS := 285.0
-const EMP_AFTERSHOCK_DELAY := 0.72
 const MINIMAP_COLS := 20
 const MINIMAP_ROWS := 12
 const MINIMAP_FRAME_COUNT := 2
@@ -193,13 +192,9 @@ var player_dash_direction := Vector2.RIGHT
 var player_dash_trail_timer := 0.0
 var player_emp_cooldown := 0.0
 var player_emp_startup := 0.0
-var _emp_aftershock_timer := 0.0
 var player_barrier_strength := 0.0
 var player_barrier_timer := 0.0
-var coolant_surge_timer := 0.0
 var _aim_target_id := ""
-var _marked_enemy_id := ""
-var _sheared_enemy_id := ""
 var _last_damage_source := ""
 
 var selected_primary := &"pulse_cannon"
@@ -761,10 +756,7 @@ func _reset_run(
 	player_emp_startup = 0.0
 	player_barrier_strength = 0.0
 	player_barrier_timer = 0.0
-	coolant_surge_timer = 0.0
 	_aim_target_id = ""
-	_marked_enemy_id = ""
-	_sheared_enemy_id = ""
 	_last_damage_source = ""
 	_elite_pending = 0
 	_elite_spawned = 0
@@ -1008,8 +1000,6 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.child_serial = 0
 	enemy.carrier_wave_released = false
 	enemy.beam_end = position
-	enemy.marked_time = 0.0
-	enemy.shear_time = 0.0
 	enemy.leash_rect = Rect2(spec.get("leash_rect", Rect2()))
 	enemy.required = bool(spec.get("required", false))
 	enemy.optional = bool(spec.get("optional", false))
@@ -1308,7 +1298,6 @@ func _update_player(delta: float) -> void:
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
 	player_emp_cooldown = maxf(0.0, player_emp_cooldown - delta)
 	player_barrier_timer = maxf(0.0, player_barrier_timer - delta)
-	coolant_surge_timer = maxf(0.0, coolant_surge_timer - delta)
 	if player_barrier_timer <= 0.0:
 		player_barrier_strength = 0.0
 
@@ -1341,7 +1330,7 @@ func _update_player(delta: float) -> void:
 	if player_emp_startup > 0.0:
 		player_emp_startup = maxf(0.0, player_emp_startup - delta)
 		if player_emp_startup <= 0.0:
-			_release_emp(false)
+			_release_emp()
 
 	_update_aim_target()
 	_mark_visited()
@@ -1452,8 +1441,6 @@ func _update_dash(delta: float) -> void:
 		Rules.PLAYER_RADIUS,
 		true
 	)
-	if run_build.has(&"phase_shear"):
-		_apply_phase_shear(before, player_position)
 	player_dash_trail_timer -= delta
 	if player_dash_trail_timer <= 0.0:
 		player_dash_trail_timer = 0.035
@@ -1466,36 +1453,16 @@ func _update_dash(delta: float) -> void:
 				30.0,
 				player_dash_direction
 			)
-	if player_dash_timer <= 0.0:
-		if run_build.has(&"coolant_wake"):
-			coolant_surge_timer = 2.0
-
-
 func _live_effect_count(kind: StringName) -> int:
 	return effect_store.count_kind(kind)
-
-
-func _apply_phase_shear(from: Vector2, to: Vector2) -> void:
-	enemy_grid.query_segment_into(from, to, Rules.PLAYER_RADIUS, enemies, _enemy_query_buffer)
-	for enemy in _enemy_query_buffer:
-		if Rules.point_segment_distance(Vector2(enemy.pos), from, to) > float(enemy.radius) + Rules.PLAYER_RADIUS:
-			continue
-		if not _sheared_enemy_id.is_empty():
-			var previous := _find_enemy_by_id(_sheared_enemy_id)
-			if previous != null:
-				previous.shear_time = 0.0
-		enemy.shear_time = 3.0
-		_sheared_enemy_id = enemy.id
-		return
 
 
 func _fire_primary() -> void:
 	tutorial_fire = true
 	player_muzzle_flash = 0.075
 	_primary_shot_serial += 1
-	var primary_multiplier := run_build.stat(&"primary_damage_multiplier", 1.0)
 	var origin := player_position + player_aim_direction * 39.0
-	var fork_level := mini(2, run_build.level_of(&"forked_muzzle"))
+	var fork_level := mini(2, run_build.level_of(&"split_muzzle"))
 	var spread_step := deg_to_rad(7.0)
 	var projectile_range := _primary_projectile_range()
 	var projectile_specs: Array[Dictionary] = [{"angle":0.0, "scale":1.0}]
@@ -1510,9 +1477,9 @@ func _fire_primary() -> void:
 		_spawn_player_projectile(
 			origin,
 			player_aim_direction.rotated(float(spec["angle"])),
-			18.0 * primary_multiplier * scale,
+			18.0 * scale,
 			PRIMARY_PROJECTILE_SPEED,
-			run_build.level_of(&"phase_lance"),
+			run_build.level_of(&"piercing_rounds"),
 			PRIMARY_PROJECTILE_RADIUS,
 			18.0 * scale,
 			projectile_range,
@@ -1522,17 +1489,9 @@ func _fire_primary() -> void:
 func _try_fire_primary() -> bool:
 	if not player_primary_weapon.can_fire(player_dash_timer <= 0.0):
 		return false
-	var interval := _primary_fire_interval()
-	player_primary_weapon.consume_shot(interval)
+	player_primary_weapon.consume_shot()
 	_fire_primary()
 	return true
-
-
-func _primary_fire_interval() -> float:
-	var interval := maxf(PrimaryWeapon.MIN_INTERVAL, run_build.stat(&"primary_interval", PrimaryWeapon.BASE_INTERVAL))
-	if coolant_surge_timer > 0.0:
-		interval = maxf(PrimaryWeapon.MIN_INTERVAL, interval * 0.85)
-	return interval
 
 
 func _primary_projectile_range() -> float:
@@ -1767,7 +1726,7 @@ func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
 				target,
 				float(intent["damage"]),
 				secondary_source,
-				&"arc" if secondary_source == "Ion Field" else &"kinetic",
+				&"arc" if secondary_source == "Electric Field" else &"kinetic",
 				true
 			)
 func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:
@@ -1783,8 +1742,6 @@ func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:
 			continue
 		var priority := 0.0
 		var role := enemy.role
-		if enemy.marked_time > 0.0:
-			priority -= 900.0
 		if role in [&"chaser", &"shooter", &"controller"]:
 			priority -= 60.0
 		enemy.target_score = priority + distance
@@ -1822,27 +1779,21 @@ func _start_emp() -> void:
 	)
 
 
-func _release_emp(is_aftershock: bool) -> void:
-	var radius := _emp_radius() * (0.68 if is_aftershock else 1.0)
-	var damage := 34.0 if is_aftershock else 62.0
+func _release_emp() -> void:
+	var radius := _emp_radius()
 	_damage_enemies_in_radius(
 		player_position,
 		radius,
-		damage,
-		"EMP Aftershock" if is_aftershock else "EMP Nova",
+		62.0,
+		"EMP Nova",
 		&"arc",
 		true
 	)
 	_clear_hostile_projectiles(player_position, radius + 40.0)
-	if not is_aftershock and run_build.has(&"static_aegis"):
-		var barrier_strength := 24.0 if run_build.level_of(&"static_aegis") >= 2 else 18.0
-		player_barrier_strength = maxf(player_barrier_strength, barrier_strength)
-		player_barrier_timer = maxf(player_barrier_timer, 10.0)
 	enemy_grid.query_radius_into(player_position, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
 		if Vector2(enemy.pos).distance_to(player_position) <= radius:
-			var stun_duration := 1.25 if is_aftershock else 2.1
-			enemy.stun = maxf(float(enemy.stun), stun_duration)
+			enemy.stun = maxf(float(enemy.stun), 2.1)
 	_add_effect(
 		&"player_emp_release",
 		player_position,
@@ -1850,10 +1801,8 @@ func _release_emp(is_aftershock: bool) -> void:
 		0.55,
 		radius
 	)
-	camera_shake = maxf(camera_shake, 11.0 if not is_aftershock else 6.0)
-	_play_sound(&"emp", 1.2 if is_aftershock else 1.0)
-	if not is_aftershock and applied_upgrades.has(&"emp_aftershock"):
-		_emp_aftershock_timer = EMP_AFTERSHOCK_DELAY
+	camera_shake = maxf(camera_shake, 11.0)
+	_play_sound(&"emp")
 
 
 func _emp_cooldown_max() -> float:
@@ -1975,12 +1924,6 @@ func _update_enemies(delta: float) -> void:
 		var vulnerable := enemy.vulnerable
 		if vulnerable > 0.0:
 			enemy.vulnerable = maxf(0.0, vulnerable - delta)
-		var marked_time := enemy.marked_time
-		if marked_time > 0.0:
-			enemy.marked_time = maxf(0.0, marked_time - delta)
-		var shear_time := enemy.shear_time
-		if shear_time > 0.0:
-			enemy.shear_time = maxf(0.0, shear_time - delta)
 		var health_visible_timer := enemy.health_visible_timer
 		if health_visible_timer > 0.0:
 			enemy.health_visible_timer = maxf(0.0, health_visible_timer - delta)
@@ -3531,8 +3474,6 @@ func _update_projectile_buffer(
 					direct_attribute,
 					true
 				)
-				if projectile.owner == "player_primary" and run_build.has(&"marked_salvo"):
-					_mark_enemy(hit_enemy)
 				StatusRuntime.apply(hit_enemy, projectile.status_profile)
 				_record_status_applications(projectile.status_profile)
 				stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
@@ -3575,15 +3516,6 @@ func _remove_projectile_at(hostile: bool, index: int) -> void:
 		projectile_store.remove_hostile_at_swap(index)
 	else:
 		projectile_store.remove_player_at_swap(index)
-
-
-func _mark_enemy(target: EnemyState) -> void:
-	if not _marked_enemy_id.is_empty():
-		var previous := _find_enemy_by_id(_marked_enemy_id)
-		if previous != null and previous != target:
-			previous.marked_time = 0.0
-	target.marked_time = 2.5
-	_marked_enemy_id = target.id
 
 
 func _is_player_targetable_enemy(enemy: EnemyState) -> bool:
@@ -3830,10 +3762,6 @@ func _update_denied_zones(delta: float) -> void:
 
 
 func _update_effects(delta: float) -> void:
-	if _emp_aftershock_timer > 0.0:
-		_emp_aftershock_timer = maxf(0.0, _emp_aftershock_timer - delta)
-		if _emp_aftershock_timer <= 0.0:
-			_release_emp(true)
 	var index := 0
 	while index < effects.size():
 		var effect: VehicleEffectState = effects[index]
@@ -3846,7 +3774,6 @@ func _update_effects(delta: float) -> void:
 
 func _clear_effects() -> void:
 	effect_store.clear()
-	_emp_aftershock_timer = 0.0
 
 
 func _add_effect(
@@ -3895,8 +3822,6 @@ func _damage_enemy(
 	var multiplier := 1.0
 	if not final_effective and enemy.shielded:
 		multiplier *= 0.45
-	if not final_effective and enemy.shear_time > 0.0:
-		multiplier *= 1.20
 	if not final_effective and role == &"rammer" and enemy.vulnerable > 0.0:
 		multiplier *= 1.50
 	var boss_damage_multiplier := 1.0
@@ -4440,7 +4365,7 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 		return false
 	var definition := upgrade_catalog.get_definition(upgrade_id)
 	selected_upgrade_title_key = definition.title_key
-	if upgrade_id == &"reinforced_hull":
+	if upgrade_id == &"hull_integrity":
 		player_health = minf(_player_max_health(), player_health + 15.0)
 	_status_profile = StatusProfile.from_build(run_build)
 	_hud_presenter.mark_guidebook_dirty()
@@ -5167,8 +5092,6 @@ func _begin_stage_transition() -> void:
 	_shield_supports.clear()
 	_enemy_coordination_initialized = false
 	_aim_target_id = ""
-	_marked_enemy_id = ""
-	_sheared_enemy_id = ""
 	enemy_grid.configure(
 		Rules.world_rect(current_stage_id),
 		SpatialGrid.DEFAULT_CELL_SIZE
@@ -5377,15 +5300,11 @@ func _guidebook_snapshot(build_snapshot: Dictionary = {}) -> Dictionary:
 
 func _build_snapshot() -> Dictionary:
 	var experience := experience_runtime.snapshot()
-	var primary_interval := maxf(
-		PrimaryWeapon.MIN_INTERVAL,
-		run_build.stat(&"primary_interval", PrimaryWeapon.BASE_INTERVAL)
-	)
 	var effective_stats: Array[Dictionary] = [
 		{"id":&"hull", "label_key":"SHIP_STAT_HULL", "value":_player_max_health(), "decimals":0, "unit_key":"SHIP_UNIT_HP"},
 		{"id":&"speed", "label_key":"SHIP_STAT_SPEED", "value":_player_move_speed(), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
-		{"id":&"primary_damage", "label_key":"SHIP_STAT_PRIMARY_DAMAGE", "value":18.0 * run_build.stat(&"primary_damage_multiplier", 1.0), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
-		{"id":&"fire_rate", "label_key":"SHIP_STAT_FIRE_RATE", "value":1.0 / primary_interval, "decimals":2, "unit_key":"SHIP_UNIT_PER_SECOND"},
+		{"id":&"primary_damage", "label_key":"SHIP_STAT_PRIMARY_DAMAGE", "value":18.0, "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
+		{"id":&"fire_rate", "label_key":"SHIP_STAT_FIRE_RATE", "value":1.0 / PrimaryWeapon.BASE_INTERVAL, "decimals":2, "unit_key":"SHIP_UNIT_PER_SECOND"},
 		{"id":&"projectile_speed", "label_key":"SHIP_STAT_PROJECTILE_SPEED", "value":run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
 		{"id":&"dash_cooldown", "label_key":"SHIP_STAT_DASH_COOLDOWN", "value":_dash_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
 		{"id":&"emp_damage", "label_key":"SHIP_STAT_EMP_DAMAGE", "value":62.0 * run_build.stat(&"emp_damage_multiplier", 1.0), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
@@ -5739,8 +5658,8 @@ func _fill_combat_presentation_snapshot(
 	snapshot["run_time"] = run_time
 	snapshot["secondary_visual_tier"] = 0
 	snapshot["resolved_boss_modules"] = resolved_boss_module_visuals
-	snapshot["ion_level"] = run_build.level_of(&"ion_field")
-	snapshot["blade_level"] = run_build.level_of(&"orbit_blades")
+	snapshot["electric_field_level"] = run_build.level_of(&"electric_field")
+	snapshot["orbiting_blade_level"] = run_build.level_of(&"orbiting_blades")
 	snapshot["secondary"] = secondary
 	mystery_device_runtime.fill_device_snapshot(mystery_devices)
 	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)

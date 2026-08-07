@@ -4,13 +4,18 @@ const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 
-const DELETED_IDS: Array[StringName] = [
+const RETIRED_IDS: Array[StringName] = [
 	&"accelerator_coil", &"aegis_cycle", &"concentrated_toxin", &"contagion",
+	&"coolant_wake", &"cryo_core", &"emp_aftershock", &"forked_muzzle",
 	&"dash_capacitor", &"deep_freeze", &"emp_capacitor", &"emp_focus",
-	&"escort_drone", &"hunter_firmware", &"ion_wake", &"mass_driver",
-	&"overclock_cycle", &"phase_seeker", &"ram_pulse", &"relay_overload",
-	&"ricochet_matrix", &"seeker_cycle", &"seeker_warhead", &"siphon_matrix",
-	&"stabilizer", &"thermal_compound",
+	&"escort_drone", &"hunter_firmware", &"incendiary_core", &"ion_field",
+	&"ion_wake", &"kinetic_rounds", &"marked_salvo", &"mass_driver",
+	&"orbit_blades", &"overclock_cycle", &"phase_lance", &"phase_seeker",
+	&"phase_shear", &"pickup_magnet", &"ram_pulse", &"rapid_cycle",
+	&"reinforced_hull", &"relay_overload", &"ricochet_matrix", &"seeker_cycle",
+	&"seeker_warhead", &"siphon_matrix", &"stabilizer", &"static_aegis",
+	&"thermal_compound", &"toxin_core", &"tuned_thrusters", &"twin_seekers",
+	&"wake_mines",
 ]
 
 var failures: Array[String] = []
@@ -32,15 +37,15 @@ func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract():
 		failures.append(error)
-	_expect(catalog.definitions.size() == 19, "catalog contains exactly 19 upgrades")
+	_expect(catalog.definitions.size() == 12, "catalog contains exactly 12 upgrades")
 	_validate_presentation(catalog)
 	_validate_secondary_slots(catalog)
 	_validate_offers(catalog)
 	_validate_stats(catalog)
-	for deleted_id in DELETED_IDS:
+	for retired_id in RETIRED_IDS:
 		_expect(
-			catalog.get_definition(deleted_id) == null,
-			"%s is absent from the minimal catalog" % deleted_id
+			catalog.get_definition(retired_id) == null,
+			"%s is absent from the minimal catalog" % retired_id
 		)
 	_finish()
 
@@ -79,13 +84,12 @@ func _validate_presentation(catalog: Catalog) -> void:
 					"%s behavior level has a localized change label" % definition.id
 				)
 			state_count += 1
-	_expect(state_count == 39, "upgrade presentation covers all 39 level states")
+	_expect(state_count == 34, "upgrade presentation covers all 34 level states")
 	_expect(
 		category_counts == {
-			&"primary":4, &"secondary":5, &"element":3,
-			&"dash":2, &"emp":2, &"chassis":3,
+			&"primary":2, &"secondary":4, &"element":3, &"chassis":3,
 		},
-		"six player-facing categories own the exact minimal roster"
+		"four player-facing categories own the exact minimal roster"
 	)
 
 
@@ -102,25 +106,25 @@ func _validate_secondary_slots(catalog: Catalog) -> void:
 	optional_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	built_in_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	_expect(
-		_id_key(optional_ids) == "ion_field|orbit_blades|wake_mines",
+		_id_key(optional_ids) == "drop_mines|electric_field|orbiting_blades",
 		"three optional secondary identities support a choose-two decision: %s"
 		% _id_key(optional_ids)
 	)
 	_expect(
-		_id_key(built_in_ids) == "marked_salvo|twin_seekers",
-		"two built-in Seeker behavior cards do not consume slots: %s"
+		_id_key(built_in_ids) == "homing_missiles",
+		"one built-in homing behavior card does not consume a slot: %s"
 		% _id_key(built_in_ids)
 	)
 	var build := RunBuild.new(catalog)
-	build.apply(&"ion_field")
-	build.apply(&"orbit_blades")
+	build.apply(&"electric_field")
+	build.apply(&"orbiting_blades")
 	_expect(build.active_optional_secondaries() == 2, "two optional slots are occupied")
 	_expect(
-		not catalog.compatible(catalog.get_definition(&"wake_mines"), build),
+		not catalog.compatible(catalog.get_definition(&"drop_mines"), build),
 		"a third optional secondary is blocked"
 	)
 	_expect(
-		catalog.compatible(catalog.get_definition(&"ion_field"), build),
+		catalog.compatible(catalog.get_definition(&"electric_field"), build),
 		"an owned optional secondary remains levelable"
 	)
 
@@ -168,20 +172,20 @@ func _validate_stats(catalog: Catalog) -> void:
 		"base movement is 280"
 	)
 	for level in 3:
-		_expect(bool(build.apply(&"tuned_thrusters").get("applied", false)), "Tuned Thrusters level applies")
+		_expect(bool(build.apply(&"chassis_speed").get("applied", false)), "Movement Speed level applies")
 		_expect(
 			is_equal_approx(
 				build.stat(&"move_speed_multiplier", 280.0),
 				expected_speeds[level + 1]
 			),
-			"Tuned Thrusters uses its exact level speed"
+			"Movement Speed uses its exact level speed"
 		)
 	build.reset()
 	for _level in 3:
-		build.apply(&"pickup_magnet")
+		build.apply(&"pickup_radius")
 	_expect(
 		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 210.0),
-		"Pickup Magnet remains a three-level +210 collection upgrade"
+		"Pickup Radius preserves the three-level +210 collection behavior"
 	)
 
 

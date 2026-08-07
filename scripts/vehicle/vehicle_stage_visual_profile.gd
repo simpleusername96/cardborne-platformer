@@ -75,8 +75,9 @@ const EXPERIENCE_RADII := {
 ## presentation-only and keep the shared teardrop readable at live speed.
 const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 3.85
 const PLAYER_PRIMARY_PROJECTILE_SCALE := 4.375
-const PLAYER_SEEKER_PROJECTILE_SCALE := 4.025
+const PLAYER_SEEKER_PROJECTILE_SCALE := 5.0
 const PLAYER_OPENING_BREACH_PROJECTILE_SCALE := 4.55
+const PLAYER_DROP_MINE_HALF_SIZE := 22.0
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
 const COVER_EDGE_OFFSET := Vector2(14.0, 18.0)
 const WALL_FILL := STRUCTURE_BASE
@@ -234,8 +235,10 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("hostile projectile envelope must remain 3.85x collision radius")
 	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 4.375):
 		errors.append("player primary projectile visual must remain 4.375x collision radius")
-	if not is_equal_approx(PLAYER_SEEKER_PROJECTILE_SCALE, 4.025):
-		errors.append("player seeker projectile visual must remain 4.025x collision radius")
+	if not is_equal_approx(PLAYER_SEEKER_PROJECTILE_SCALE, 5.0):
+		errors.append("player seeker projectile visual must remain 5x collision radius")
 	if not is_equal_approx(PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 4.55):
 		errors.append("opening breach projectile visual must remain 4.55x collision radius")
+	if not is_equal_approx(PLAYER_DROP_MINE_HALF_SIZE, 22.0):
+		errors.append("player drop-mine visual half-size must remain 22 world units")
 	return errors

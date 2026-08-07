@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = &"orbit_blades"
-upgrade_id = &"orbit_blades"
-name_key = "SECONDARY_ORBIT_BLADES_NAME"
-description_key = "SECONDARY_ORBIT_BLADES_DESC"
+id = &"orbiting_blades"
+upgrade_id = &"orbiting_blades"
+name_key = "SECONDARY_ORBITING_BLADES_NAME"
+description_key = "SECONDARY_ORBITING_BLADES_DESC"
 behavior = &"orbit"
 values_by_level = Array[float]([14.0, 18.0, 22.0])
 auxiliary_by_level = Array[float]([78.0, 78.0, 78.0])

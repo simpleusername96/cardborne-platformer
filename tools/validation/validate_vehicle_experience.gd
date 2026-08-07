@@ -164,8 +164,8 @@ func _validate_level_up_cards() -> void:
 	_expect(offer.size() == 3, "level-up source produces three choices")
 	for _level in 3:
 		_expect(
-			bool(build.apply(&"pickup_magnet").get("applied", false)),
-			"Pickup Magnet remains available through three levels"
+			bool(build.apply(&"pickup_radius").get("applied", false)),
+			"Pickup Radius preserves three collection levels"
 		)
 	_expect(
 		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 210.0),

@@ -61,7 +61,7 @@ func _validate_scale_contract() -> void:
 		"primary visual envelope uses the profile multiplier"
 	)
 	_expect(
-		is_equal_approx(collision_radius * Art.PLAYER_SEEKER_PROJECTILE_SCALE, 24.15),
+		is_equal_approx(collision_radius * Art.PLAYER_SEEKER_PROJECTILE_SCALE, 30.0),
 		"seeker visual envelope uses the profile multiplier"
 	)
 	_expect(

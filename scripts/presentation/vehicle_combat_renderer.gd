@@ -54,7 +54,7 @@ const CARDINAL_DIRECTIONS := [
 	Vector2.UP,
 	Vector2.DOWN,
 ]
-const ION_RADII := [120.0, 140.0, 160.0]
+const ELECTRIC_FIELD_RADII := [120.0, 140.0, 160.0]
 class BatchBuffer:
 	var values := PackedFloat32Array()
 
@@ -791,20 +791,6 @@ func _sync_enemy_semantic_overlays(
 	is_current_target: bool
 ) -> void:
 	var forward := Vector2.RIGHT.rotated(angle)
-	if enemy.marked_time > 0.0:
-		_sync_status_brackets(position, radius + 13.0, Art.MUSTARD)
-	if enemy.shear_time > 0.0:
-		var lateral := forward.rotated(PI * 0.5)
-		for side in [-1.0, 1.0]:
-			var bar_center: Vector2 = (
-				position + lateral * (radius + 10.0) * float(side)
-			)
-			_write_beam(
-				bar_center - forward * 8.0,
-				bar_center + forward * 8.0,
-				3.0,
-				Art.MINT
-			)
 	if enemy.role == &"boss_pylon":
 		_sync_boss_module_overlay(enemy, position, radius)
 		return
@@ -1278,14 +1264,14 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			61.0 + barrier_flash * 3.0,
 			Color(Art.MINT, lerpf(0.78, 1.0, barrier_flash))
 		)
-	var ion_level := int(state.get("ion_level", 0))
-	if ion_level > 0:
-		var ion_radius: float = ION_RADII[ion_level - 1]
-		_write_ring(player_position, ion_radius, Color(Art.MINT, 0.48))
+	var electric_field_level := int(state.get("electric_field_level", 0))
+	if electric_field_level > 0:
+		var field_radius: float = ELECTRIC_FIELD_RADII[electric_field_level - 1]
+		_write_ring(player_position, field_radius, Color(Art.MINT, 0.48))
 	var secondary: Dictionary = state.get("secondary", {})
-	var blade_level := int(state.get("blade_level", 0))
-	if blade_level > 0:
-		var blade_count: int = [2, 3, 4][blade_level - 1]
+	var orbiting_blade_level := int(state.get("orbiting_blade_level", 0))
+	if orbiting_blade_level > 0:
+		var blade_count: int = [2, 3, 4][orbiting_blade_level - 1]
 		for blade_index in blade_count:
 			var blade_position := player_position + Vector2.RIGHT.rotated(
 				float(secondary.get("orbit_angle", 0.0)) + TAU * float(blade_index) / float(blade_count)
@@ -1309,7 +1295,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				StringName(_secondary_asset_ids.get(&"wake_mine", &"")),
 				Vector2(mine["pos"]),
 				0.0,
-				16.0,
+				Art.PLAYER_DROP_MINE_HALF_SIZE,
 				Color.WHITE
 			)
 	var cursor_position := Vector2(state.get("cursor_position", player_position + aim_direction * 230.0))

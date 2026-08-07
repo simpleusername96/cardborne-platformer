@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = &"seeker"
-name_key = "SECONDARY_SEEKER_NAME"
-description_key = "SECONDARY_SEEKER_DESC"
+name_key = "SECONDARY_HOMING_MISSILES_NAME"
+description_key = "SECONDARY_HOMING_MISSILES_DESC"
 behavior = &"projectile"
 values_by_level = Array[float]([25.0])
 auxiliary_by_level = Array[float]([1.35])

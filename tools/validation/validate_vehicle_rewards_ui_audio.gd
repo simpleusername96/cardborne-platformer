@@ -109,22 +109,22 @@ func _run() -> void:
 	for index in 3:
 		cards.append({
 			"id":StringName("card_%d" % index),
-			"title_key":"UPGRADE_KINETIC_ROUNDS_TITLE",
-			"description_key":"UPGRADE_KINETIC_ROUNDS_DESC",
-			"category_key":"UPGRADE_CATEGORY_PRIMARY",
-			"category":&"primary",
+			"title_key":"UPGRADE_CHASSIS_SPEED_TITLE",
+			"description_key":"UPGRADE_CHASSIS_SPEED_DESC",
+			"category_key":"UPGRADE_CATEGORY_CHASSIS",
+			"category":&"chassis",
 			"current_level":0,
 			"next_level":1,
 			"max_level":3,
 			"effect_rows":[{
-				"stat_key":"UPGRADE_STAT_PRIMARY_DAMAGE_MULTIPLIER",
+				"stat_key":"UPGRADE_STAT_MOVE_SPEED_MULTIPLIER",
 				"operation":"multiply",
 				"current":1.0,
-				"next":1.15,
+				"next":1.08,
 			}],
 			"change_kind":&"stats",
 			"change_label_key":"",
-			"artwork_asset_id":&"projectile/energy_teardrop",
+			"artwork_asset_id":&"upgrade/mobility_thruster",
 		})
 	panel.confirmed.connect(func(_id: StringName) -> void: confirmed_count += 1)
 	panel.open(cards)

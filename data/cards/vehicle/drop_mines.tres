@@ -4,9 +4,10 @@
 
 [resource]
 script = ExtResource("1_def")
-id = &"coolant_wake"
-title_key = "UPGRADE_COOLANT_WAKE_TITLE"
-description_key = "UPGRADE_COOLANT_WAKE_DESC"
-category = &"dash"
-artwork_asset_id = &"upgrade/dash_wake"
-max_level = 1
+id = &"drop_mines"
+title_key = "UPGRADE_DROP_MINES_TITLE"
+description_key = "UPGRADE_DROP_MINES_DESC"
+category = &"secondary"
+secondary_slot_kind = &"optional"
+artwork_asset_id = &"secondary/wake_mine"
+max_level = 3

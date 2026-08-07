@@ -21,20 +21,20 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const WORST_TEXT_TRIPLETS := {
 	"ko":[
-		{"id":&"twin_seekers", "current_level":1},
-		{"id":&"marked_salvo", "current_level":0},
-		{"id":&"static_aegis", "current_level":1},
+		{"id":&"cryo_slow", "current_level":2},
+		{"id":&"split_muzzle", "current_level":1},
+		{"id":&"drop_mines", "current_level":2},
 	],
 	"en":[
-		{"id":&"marked_salvo", "current_level":0},
-		{"id":&"twin_seekers", "current_level":1},
-		{"id":&"phase_lance", "current_level":1},
+		{"id":&"cryo_slow", "current_level":2},
+		{"id":&"homing_missiles", "current_level":1},
+		{"id":&"split_muzzle", "current_level":1},
 	],
 }
 const DENSE_STAT_TRIPLET := [
-	{"id":&"kinetic_rounds", "current_level":2},
-	{"id":&"pickup_magnet", "current_level":2},
-	{"id":&"reinforced_hull", "current_level":2},
+	{"id":&"chassis_speed", "current_level":2},
+	{"id":&"pickup_radius", "current_level":2},
+	{"id":&"hull_integrity", "current_level":2},
 ]
 const VIEWPORTS := [
 	Vector2i(960, 540),
@@ -136,9 +136,6 @@ func _validate_authored_artwork() -> void:
 		&"upgrade/element_thermal",
 		&"upgrade/element_toxin",
 		&"upgrade/element_cryo",
-		&"upgrade/dash_wake",
-		&"upgrade/defense_matrix",
-		&"upgrade/system_relay",
 		&"upgrade/mobility_thruster",
 		&"upgrade/pickup_magnet",
 		&"upgrade/hull_reinforcement",
@@ -326,7 +323,7 @@ func _validate_triplet_matrix(catalog: VehicleUpgradeCatalog) -> void:
 	var snapshot_count := 0
 	for definition in catalog.all_definitions():
 		snapshot_count += definition.max_level
-	_expect(snapshot_count == 39, "worst-case fixture is grounded in all 39 card states")
+	_expect(snapshot_count == 34, "worst-case fixture is grounded in all 34 card states")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		_validate_longest_fixture(catalog, locale)

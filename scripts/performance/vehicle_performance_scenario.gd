@@ -111,8 +111,8 @@ func activate(run: Node) -> void:
 	_fill_experience(run, 96 if scenario_id in [&"peak_horde", &"boss_pressure"] else ExperienceRuntime.MAX_SHARDS)
 	_fill_effects(run, _effect_target())
 	_fill_damage_zones(run, 8 if scenario_id in [&"peak_horde", &"boss_pressure"] else 16)
-	run.run_build.apply(&"ion_field")
-	run.run_build.apply(&"orbit_blades")
+	run.run_build.apply(&"electric_field")
+	run.run_build.apply(&"orbiting_blades")
 	run.call("_rebuild_enemy_runtime_indexes")
 	_fill_projectiles(run, true)
 

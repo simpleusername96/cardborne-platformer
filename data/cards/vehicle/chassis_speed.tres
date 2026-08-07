@@ -11,9 +11,9 @@ values_by_level = Array[float]([1.08, 1.16, 1.24])
 
 [resource]
 script = ExtResource("1_def")
-id = &"tuned_thrusters"
-title_key = "UPGRADE_TUNED_THRUSTERS_TITLE"
-description_key = "UPGRADE_TUNED_THRUSTERS_DESC"
+id = &"chassis_speed"
+title_key = "UPGRADE_CHASSIS_SPEED_TITLE"
+description_key = "UPGRADE_CHASSIS_SPEED_DESC"
 category = &"chassis"
 artwork_asset_id = &"upgrade/mobility_thruster"
 max_level = 3

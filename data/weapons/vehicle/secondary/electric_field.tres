@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = &"ion_field"
-upgrade_id = &"ion_field"
-name_key = "SECONDARY_ION_FIELD_NAME"
-description_key = "SECONDARY_ION_FIELD_DESC"
+id = &"electric_field"
+upgrade_id = &"electric_field"
+name_key = "SECONDARY_ELECTRIC_FIELD_NAME"
+description_key = "SECONDARY_ELECTRIC_FIELD_DESC"
 behavior = &"field"
 values_by_level = Array[float]([8.0, 12.0, 16.0])
 auxiliary_by_level = Array[float]([120.0, 140.0, 160.0])

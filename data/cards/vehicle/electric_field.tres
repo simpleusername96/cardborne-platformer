@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1_def")
-id = &"marked_salvo"
-title_key = "UPGRADE_MARKED_SALVO_TITLE"
-description_key = "UPGRADE_MARKED_SALVO_DESC"
+id = &"electric_field"
+title_key = "UPGRADE_ELECTRIC_FIELD_TITLE"
+description_key = "UPGRADE_ELECTRIC_FIELD_DESC"
 category = &"secondary"
-secondary_slot_kind = &"built_in"
-artwork_asset_id = &"secondary/seeker"
-max_level = 1
+secondary_slot_kind = &"optional"
+artwork_asset_id = &"upgrade/ion_field"
+max_level = 3

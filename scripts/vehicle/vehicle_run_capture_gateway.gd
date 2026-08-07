@@ -170,7 +170,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 				"next_stage_key":_stage_title_key(1),
 				"time":"4:18",
 				"health_ratio":0.76,
-				"upgrade":"UPGRADE_PICKUP_MAGNET_TITLE",
+				"upgrade":"UPGRADE_PICKUP_RADIUS_TITLE",
 				"primary_hits":42,
 				"dash_uses":11,
 				"installations":5,
@@ -435,9 +435,9 @@ func _capture_build_state_evidence() -> void:
 		enemy.health_visible_timer = 99.0
 		_run._append_enemy(enemy)
 	_run._aim_target_id = "capture_build_state_0"
-	_run.run_build.apply(&"static_aegis")
-	_run.run_build.apply(&"rapid_cycle")
-	_run.run_build.apply(&"ion_field")
+	_run.run_build.apply(&"hull_integrity")
+	_run.run_build.apply(&"chassis_speed")
+	_run.run_build.apply(&"electric_field")
 	var threat_contacts: Array[Dictionary] = [
 		{
 			"offset":Vector2(-760.0, -180.0),
@@ -492,9 +492,9 @@ func _capture_level_up_evidence() -> void:
 	_save_capture("06c-level-up-confirmed.png")
 	var localization_fixture: Array[Dictionary] = []
 	for upgrade_record in [
-		[&"pickup_magnet", 1],
-		[&"forked_muzzle", 1],
-		[&"marked_salvo", 0],
+		[&"pickup_radius", 1],
+		[&"split_muzzle", 1],
+		[&"homing_missiles", 1],
 	]:
 		var upgrade_id := StringName(upgrade_record[0])
 		var definition: VehicleUpgradeDefinition = (

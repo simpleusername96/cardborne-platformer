@@ -150,8 +150,8 @@ func _run() -> void:
 		"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
 		"player_hit":false, "muzzle_flash":0.0, "barrier_strength":10.0,
 		"player_barrier_hit_remaining":0.0,
-		"reduced_motion":true, "run_time":1.0, "ion_level":0,
-		"blade_level":0, "secondary":{},
+		"reduced_motion":true, "run_time":1.0, "electric_field_level":0,
+		"orbiting_blade_level":0, "secondary":{},
 		"cursor_position":Vector2(460.0,300.0),
 	}
 	renderer.sync(
@@ -689,41 +689,23 @@ func _validate_player_directional_cues(
 		ring_batch.multimesh.visible_instance_count == 1,
 		"absorbed barrier damage uses one direct player-state ring flash"
 	)
-	var status_enemy := EnemyState.new()
-	status_enemy.id = "status_fixture"
-	status_enemy.role = &"chaser"
-	status_enemy.archetype = &"chaser"
-	status_enemy.pos = player_position + Vector2.RIGHT * 180.0
-	status_enemy.alive = true
-	status_enemy.active = true
-	status_enemy.visual_radius = 26.0
-	status_enemy.health_class = &"swarm"
-	status_enemy.phase = &"idle"
-	status_enemy.marked_time = 1.0
-	status_enemy.shear_time = 1.0
-	var status_enemies: Array[EnemyState] = [status_enemy]
 	presentation["player_barrier_hit_remaining"] = 0.0
+	presentation["secondary"]["mines"] = [
+		{"pos":player_position + Vector2.RIGHT * 120.0, "life":4.0},
+	]
 	renderer.sync(
-		status_enemies, no_projectiles, no_projectiles, no_shards, [],
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "",
 		presentation
 	)
-	var status_diamonds := renderer.get_node("Overlay_diamond") as MultiMeshInstance2D
-	var active_status_diamonds := status_diamonds.multimesh.visible_instance_count
-	var active_status_beams := beam_batch.multimesh.visible_instance_count
-	status_enemy.marked_time = 0.0
-	status_enemy.shear_time = 0.0
-	renderer.sync(
-		status_enemies, no_projectiles, no_projectiles, no_shards, [],
-		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "",
-		presentation
-	)
-	var expired_status_diamonds := status_diamonds.multimesh.visible_instance_count
-	var expired_status_beams := beam_batch.multimesh.visible_instance_count
+	var mine_draws := renderer.debug_semantic_texture_draws(&"secondary/wake_mine")
 	_expect(
-		active_status_diamonds - expired_status_diamonds == 4
-			and active_status_beams - expired_status_beams == 2,
-		"marked/sheared add four amber brackets and two mint side bars, then expire"
+		mine_draws.size() == 1
+			and is_equal_approx(
+				float(mine_draws[0]["radius"]),
+				Art.PLAYER_DROP_MINE_HALF_SIZE
+			),
+		"drop mine uses the enlarged presentation-only half-size"
 	)
 	for asset_id in [&"secondary/orbit_blade"]:
 		var draws := renderer.debug_semantic_texture_draws(asset_id)
@@ -761,8 +743,8 @@ func _player_presentation(
 		"run_time":1.0,
 		"secondary_visual_tier":0,
 		"resolved_boss_modules":[],
-		"ion_level":0,
-		"blade_level":1,
+		"electric_field_level":0,
+		"orbiting_blade_level":1,
 		"secondary":{
 			"orbit_angle":0.37,
 			"mines":[],

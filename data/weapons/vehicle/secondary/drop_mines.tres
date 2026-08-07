@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = &"wake_mines"
-upgrade_id = &"wake_mines"
-name_key = "SECONDARY_WAKE_MINES_NAME"
-description_key = "SECONDARY_WAKE_MINES_DESC"
+id = &"drop_mines"
+upgrade_id = &"drop_mines"
+name_key = "SECONDARY_DROP_MINES_NAME"
+description_key = "SECONDARY_DROP_MINES_DESC"
 behavior = &"mine"
 values_by_level = Array[float]([48.0, 60.0, 72.0])
 auxiliary_by_level = Array[float]([3.2, 2.8, 2.4])

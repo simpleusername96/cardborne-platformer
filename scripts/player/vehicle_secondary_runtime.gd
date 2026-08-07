@@ -93,7 +93,15 @@ func update(
 			orbit_target_cooldowns[enemy_id] = remaining
 	for enemy_id in _expired_cooldown_ids:
 		orbit_target_cooldowns.erase(enemy_id)
-	_update_ion(delta, player_position, build, enemies, line_of_sight, query_radius, _damage_output)
+	_update_electric_field(
+		delta,
+		player_position,
+		build,
+		enemies,
+		line_of_sight,
+		query_radius,
+		_damage_output
+	)
 	_update_orbit(
 		player_position,
 		build,
@@ -144,8 +152,13 @@ func fill_presentation_snapshot(output: Dictionary) -> Dictionary:
 
 
 func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
-	var result: Array[Dictionary] = [{"id":&"seeker", "level":1, "name_key":"SECONDARY_SEEKER_NAME", "slot_kind":&"built_in"}]
-	for secondary_id in [&"ion_field", &"orbit_blades", &"wake_mines"]:
+	var result: Array[Dictionary] = [{
+		"id":&"seeker",
+		"level":1,
+		"name_key":"SECONDARY_HOMING_MISSILES_NAME",
+		"slot_kind":&"built_in",
+	}]
+	for secondary_id in [&"electric_field", &"orbiting_blades", &"drop_mines"]:
 		var definition: VehicleSecondaryDefinition = definitions.get(secondary_id)
 		if definition == null:
 			continue
@@ -166,12 +179,13 @@ func _update_seeker(
 ) -> void:
 	if blocked or seeker_cooldown > 0.0 or not find_targets.is_valid():
 		return
-	var seeker_count := 1 + build.level_of(&"twin_seekers")
+	var missile_level := clampi(build.level_of(&"homing_missiles"), 0, 2)
+	var seeker_count := 1 + missile_level
 	var targets_variant: Variant = find_targets.call(seeker_count)
 	if not targets_variant is Array or targets_variant.is_empty():
 		return
 	seeker_cooldown = SEEKER_COOLDOWN * cooldown_multiplier
-	var seeker_scale: float = [1.0, 0.85, 0.70][clampi(seeker_count - 1, 0, 2)]
+	var seeker_damage: float = [25.0, 28.0, 32.0][missile_level]
 	for target_variant in targets_variant:
 		var target := target_variant as EnemyState
 		if target == null:
@@ -181,7 +195,7 @@ func _update_seeker(
 			"pos": origin + direction * 33.0,
 			"velocity": direction * 490.0,
 			"radius": 8.0,
-			"damage": 25.0 * seeker_scale * (1.25 if target.marked_time > 0.0 else 1.0),
+			"damage": seeker_damage,
 			"life": 1.8,
 			"color": Color("8ae9dc"),
 			"owner": "seeker",
@@ -196,19 +210,19 @@ func _update_seeker(
 		})
 
 
-func _update_ion(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
-	var definition: VehicleSecondaryDefinition = definitions.get(&"ion_field")
+func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
+	var definition: VehicleSecondaryDefinition = definitions.get(&"electric_field")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		return
-	if not _timer_ready(&"ion_field", delta, ION_TICK):
+	if not _timer_ready(&"electric_field", delta, ION_TICK):
 		return
 	var radius := definition.auxiliary(level)
 	_query_candidates(origin, radius, enemies, query_radius)
 	for enemy in _candidate_buffer:
 		var contact_radius := radius + enemy.radius
 		if _eligible(enemy) and origin.distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(origin, enemy.pos, 3.0):
-			_append_damage_intent(output, enemy, definition.value(level) * ION_TICK, "Ion Field")
+			_append_damage_intent(output, enemy, definition.value(level) * ION_TICK, "Electric Field")
 
 
 func _update_orbit(
@@ -219,7 +233,7 @@ func _update_orbit(
 	query_radius: Callable,
 	output: Array[Dictionary]
 ) -> void:
-	var definition: VehicleSecondaryDefinition = definitions.get(&"orbit_blades")
+	var definition: VehicleSecondaryDefinition = definitions.get(&"orbiting_blades")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		return
@@ -234,16 +248,16 @@ func _update_orbit(
 			var contact_radius := 22.0 + enemy.radius
 			if blade_position.distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(blade_position, enemy.pos, 2.0):
 				orbit_target_cooldowns[enemy_id] = ORBIT_HIT_COOLDOWN
-				_append_damage_intent(output, enemy, definition.value(level), "Orbit Blades")
+				_append_damage_intent(output, enemy, definition.value(level), "Orbiting Blades")
 
 
 func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
-	var definition: VehicleSecondaryDefinition = definitions.get(&"wake_mines")
+	var definition: VehicleSecondaryDefinition = definitions.get(&"drop_mines")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		mines.clear()
 		return
-	if _timer_ready(&"wake_mines", delta, definition.auxiliary(level)):
+	if _timer_ready(&"drop_mines", delta, definition.auxiliary(level)):
 		mines.append({"pos":origin - direction.normalized() * 48.0, "life":MINE_LIFETIME})
 		while mines.size() > definition.cap(level):
 			mines.pop_front()
@@ -265,7 +279,7 @@ func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: Veh
 		for enemy in _candidate_buffer:
 			var contact_radius := radius + enemy.radius
 			if _eligible(enemy) and Vector2(mine["pos"]).distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(Vector2(mine["pos"]), enemy.pos, 3.0):
-				_append_damage_intent(output, enemy, definition.value(level), "Wake Mine")
+				_append_damage_intent(output, enemy, definition.value(level), "Drop Mine")
 		mines.remove_at(index)
 
 

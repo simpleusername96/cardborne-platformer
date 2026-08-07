@@ -73,13 +73,13 @@ func _run() -> void:
 			"boss arrival uses a reachable anchor beyond the documented minimum"
 		)
 		var initial_fingerprint := int(run.field_layout.fingerprint)
-		run.run_build.apply(&"tuned_thrusters")
+		run.run_build.apply(&"chassis_speed")
 		run.visited_cells[Vector2i(2,2)] = true
 		run.current_stage_index = 1
 		run.current_stage_id = Catalog.STAGE_IDS[1]
 		run.call("_reset_run", false, true, true)
 		_expect(int(run.field_layout.fingerprint) == initial_fingerprint, "stage transition preserves run-scoped field geometry")
-		_expect(run.run_build.has(&"tuned_thrusters") and run.visited_cells.has(Vector2i(2,2)), "stage transition preserves build and exploration")
+		_expect(run.run_build.has(&"chassis_speed") and run.visited_cells.has(Vector2i(2,2)), "stage transition preserves build and exploration")
 		_expect(run.player_position == Vector2(3600,2160), "stage transition respawns at center")
 		var hud: Dictionary = run.call("_build_hud_snapshot")
 		_expect(hud["minimap"]["cols"] == 20 and hud["guidebook"].has("categories"), "HUD exposes minimap and guide snapshots")
@@ -688,7 +688,7 @@ func _presentation_snapshots_match(
 		"protection_sources", "muzzle_flash",
 		"barrier_strength", "reduced_motion", "run_time",
 		"secondary_visual_tier", "resolved_boss_modules",
-		"ion_level", "blade_level", "cursor_position",
+		"electric_field_level", "orbiting_blade_level", "cursor_position",
 	]:
 		if expected.get(key) != actual.get(key):
 			return false
@@ -937,42 +937,15 @@ func _check_hot_path_guards(run) -> void:
 
 func _check_effect_store(run) -> void:
 	run.call("_clear_effects")
-	_expect(
-		run.run_build.has(&"emp_aftershock")
-			or bool(run.run_build.apply(&"emp_aftershock").get("applied", false)),
-		"aftershock timing fixture equips the gameplay upgrade"
-	)
-	run.call("_release_emp", false)
-	_expect(
-		is_equal_approx(run.EMP_AFTERSHOCK_DELAY, 0.72)
-		and is_equal_approx(
-			float(run._emp_aftershock_timer), run.EMP_AFTERSHOCK_DELAY
-		)
-		and run.effect_store.count_kind(&"player_emp_release") == 1,
-		"primary EMP arms a Run-owned timer and emits one release visual"
-	)
-	run.call("_update_effects", 0.70)
-	_expect(
-		float(run._emp_aftershock_timer) > 0.0
-			and run.effect_store.count_kind(&"player_emp_release") == 0,
-		"aftershock remains pending after the primary release visual expires"
-	)
-	run.call("_update_effects", 0.019)
-	_expect(
-		float(run._emp_aftershock_timer) > 0.0
-			and run.effect_store.count_kind(&"player_emp_release") == 0,
-		"aftershock does not release before the exact 0.72-second delay"
-	)
-	run.call("_update_effects", 0.002)
-	_expect(
-		is_zero_approx(float(run._emp_aftershock_timer))
-			and run.effect_store.count_kind(&"player_emp_release") == 1,
-		"timer crossing reuses the EMP release visual for the aftershock pulse"
-	)
-	run.call("_update_effects", 0.01)
+	run.call("_release_emp")
 	_expect(
 		run.effect_store.count_kind(&"player_emp_release") == 1,
-		"released aftershock is not dispatched twice"
+		"base EMP emits one release visual"
+	)
+	run.call("_update_effects", 0.56)
+	_expect(
+		run.effect_store.count_kind(&"player_emp_release") == 0,
+		"base EMP release visual retires after its bounded lifetime"
 	)
 	_expect(
 		run.effect_store.validate_capacity()
@@ -982,17 +955,10 @@ func _check_effect_store(run) -> void:
 		"run effect boundary preserves exact pool accounting and cap"
 	)
 	run.call("_clear_effects")
-	run.call("_release_emp", false)
-	_expect(
-		float(run._emp_aftershock_timer) > 0.0,
-		"reset fixture begins with pending aftershock work"
-	)
-	run.call("_clear_effects")
 	run.call("_update_effects", 1.0)
 	_expect(
-		is_zero_approx(float(run._emp_aftershock_timer))
-			and run.effects.is_empty(),
-		"effect reset cancels pending gameplay work and returns every visual state"
+		run.effects.is_empty(),
+		"effect reset returns every visual state"
 	)
 
 

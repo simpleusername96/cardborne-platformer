@@ -63,7 +63,7 @@ func _check_stage_one_to_three(run) -> void:
 	run.player_hull_direction = preserved_hull_direction
 	run.player_aim_direction = preserved_aim_direction
 	run.player_health = 17.0
-	run.run_build.apply(&"tuned_thrusters")
+	run.run_build.apply(&"chassis_speed")
 	run.visited_cells[explored_cell] = true
 	var field_fingerprint := int(run.field_layout.fingerprint)
 	var run_feature_fingerprint := hash(
@@ -101,7 +101,7 @@ func _check_stage_one_to_three(run) -> void:
 		"transition preserves hull facing and manual aim"
 	)
 	_expect(
-		run.run_build.has(&"tuned_thrusters")
+		run.run_build.has(&"chassis_speed")
 			and run.selected_run_difficulty == &"hard",
 		"transition preserves build and run difficulty"
 	)
@@ -215,7 +215,7 @@ func _check_stage_one_to_three(run) -> void:
 		"Stage 3 keeps the same run-fixed inner walls and hazards"
 	)
 	_expect(
-		run.run_build.has(&"tuned_thrusters")
+		run.run_build.has(&"chassis_speed")
 			and run.visited_cells.has(explored_cell)
 			and run.completed_stage_reports.size() == 2,
 		"Stage 2→3 preserves build, exploration, and both telemetry snapshots"

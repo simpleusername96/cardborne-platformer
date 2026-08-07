@@ -4,9 +4,10 @@
 
 [resource]
 script = ExtResource("1_def")
-id = &"static_aegis"
-title_key = "UPGRADE_STATIC_AEGIS_TITLE"
-description_key = "UPGRADE_STATIC_AEGIS_DESC"
-category = &"emp"
-artwork_asset_id = &"upgrade/defense_matrix"
+id = &"homing_missiles"
+title_key = "UPGRADE_HOMING_MISSILES_TITLE"
+description_key = "UPGRADE_HOMING_MISSILES_DESC"
+category = &"secondary"
+secondary_slot_kind = &"built_in"
+artwork_asset_id = &"secondary/seeker"
 max_level = 2

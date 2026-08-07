@@ -6,11 +6,10 @@ extends RefCounted
 const OUTGOING: Dictionary = {
 	&"primary": "REPORT_SOURCE_PRIMARY",
 	&"seeker": "REPORT_SOURCE_SEEKER",
-	&"ion_field": "REPORT_SOURCE_ION_FIELD",
-	&"orbit_blades": "REPORT_SOURCE_ORBIT_BLADES",
-	&"wake_mine": "REPORT_SOURCE_WAKE_MINE",
+	&"electric_field": "REPORT_SOURCE_ELECTRIC_FIELD",
+	&"orbiting_blades": "REPORT_SOURCE_ORBITING_BLADES",
+	&"drop_mine": "REPORT_SOURCE_DROP_MINE",
 	&"emp": "REPORT_SOURCE_EMP",
-	&"emp_aftershock": "REPORT_SOURCE_EMP_AFTERSHOCK",
 	&"dash_impact": "REPORT_SOURCE_DASH",
 	&"elemental_status": "REPORT_SOURCE_STATUS",
 	&"arc_mine": "REPORT_SOURCE_ARC_MINE",
@@ -37,16 +36,14 @@ static func outgoing_id(source: String) -> StringName:
 			return &"primary"
 		"seeker":
 			return &"seeker"
-		"ion field":
-			return &"ion_field"
-		"orbit blades":
-			return &"orbit_blades"
-		"wake mine":
-			return &"wake_mine"
+		"electric field":
+			return &"electric_field"
+		"orbiting blades":
+			return &"orbiting_blades"
+		"drop mine":
+			return &"drop_mine"
 		"emp nova":
 			return &"emp"
-		"emp aftershock":
-			return &"emp_aftershock"
 		"dash impact":
 			return &"dash_impact"
 		"status":

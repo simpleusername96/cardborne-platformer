@@ -15,7 +15,7 @@ func _initialize() -> void:
 func _run() -> void:
 	var catalog := Catalog.new()
 	var build := RunBuild.new(catalog)
-	_expect(bool(build.apply(&"tuned_thrusters").get("applied", false)), "fixture upgrade applies")
+	_expect(bool(build.apply(&"chassis_speed").get("applied", false)), "fixture upgrade applies")
 	var stats: Array[Dictionary] = [
 		{"id":&"speed", "label_key":"SHIP_STAT_SPEED", "value":build.stat(&"move_speed_multiplier", 280.0), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
 	]
@@ -23,14 +23,14 @@ func _run() -> void:
 		build,
 		catalog,
 		stats,
-		[{"id":&"seeker", "level":1, "name_key":"SECONDARY_SEEKER_NAME"}],
+		[{"id":&"seeker", "level":1, "name_key":"SECONDARY_HOMING_MISSILES_NAME"}],
 		{"health":100.0, "max_health":120.0, "level":2}
 	)
 	_expect(bool(snapshot["active"]), "build snapshot is explicitly active")
 	_expect(snapshot["stats"].size() == 1, "effective stats are preserved")
 	_expect(snapshot["upgrades"].size() == 1, "acquired upgrade appears once")
 	var upgrade := Dictionary(snapshot["upgrades"][0])
-	_expect(StringName(upgrade["id"]) == &"tuned_thrusters", "upgrade uses stable ID")
+	_expect(StringName(upgrade["id"]) == &"chassis_speed", "upgrade uses stable ID")
 	_expect(int(upgrade["level"]) == 1 and int(upgrade["max_level"]) >= 1, "upgrade level and maximum are present")
 	var original_value := float(snapshot["stats"][0]["value"])
 	stats[0]["value"] = 1.0

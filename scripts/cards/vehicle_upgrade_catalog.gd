@@ -2,27 +2,24 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 19
-const EXPECTED_LEVEL_STATES := 39
+const EXPECTED_COUNT := 12
+const EXPECTED_LEVEL_STATES := 34
 const OPTIONAL_SECONDARY_SLOTS := 2
 const CATEGORIES: Array[StringName] = [
-	&"primary", &"secondary", &"element", &"dash", &"emp", &"chassis",
+	&"primary", &"secondary", &"element", &"chassis",
 ]
 const SECONDARY_SLOT_KINDS: Array[StringName] = [&"", &"built_in", &"optional"]
 const MODIFIER_OPERATIONS: Array[String] = ["add", "multiply"]
 const STAT_IDS: Array[StringName] = [
-	&"primary_damage_multiplier",
-	&"primary_interval",
 	&"move_speed_multiplier",
 	&"pickup_radius_bonus",
 	&"max_health_bonus",
 ]
 const EXPECTED_IDS: Array[StringName] = [
-	&"coolant_wake", &"cryo_core", &"emp_aftershock", &"forked_muzzle",
-	&"incendiary_core", &"ion_field", &"kinetic_rounds", &"marked_salvo",
-	&"orbit_blades", &"phase_lance", &"phase_shear", &"pickup_magnet",
-	&"rapid_cycle", &"reinforced_hull", &"static_aegis", &"toxin_core",
-	&"tuned_thrusters", &"twin_seekers", &"wake_mines",
+	&"bio_toxin", &"chassis_speed", &"cryo_slow", &"drop_mines",
+	&"electric_field", &"homing_missiles", &"hull_integrity",
+	&"orbiting_blades", &"pickup_radius", &"piercing_rounds",
+	&"split_muzzle", &"thermal_burn",
 ]
 
 var definitions: Dictionary = {}

@@ -6,6 +6,8 @@ const Runtime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 var failures: Array[String] = []
+var _seeker_targets: Array[EnemyState] = []
+var _requested_seeker_count := 0
 
 
 func _initialize() -> void:
@@ -25,7 +27,7 @@ func _initialize() -> void:
 	var build := RunBuild.new(catalog)
 	var runtime := Runtime.new()
 	_expect(runtime.definitions.size() == 4, "built-in Seeker and three optional secondary definitions load")
-	for secondary_id in [&"ion_field", &"orbit_blades", &"wake_mines"]:
+	for secondary_id in [&"electric_field", &"orbiting_blades", &"drop_mines"]:
 		var definition = runtime.definitions.get(secondary_id)
 		_expect(definition != null and definition.values_by_level.size() == 3, "%s owns three bounded levels" % secondary_id)
 		for level in 3:
@@ -59,6 +61,7 @@ func _initialize() -> void:
 		Callable(self, "_los")
 	)
 	_expect(Array(result["damage"]).size() >= 1, "equipped optional secondary emits bounded damage intent")
+	_validate_homing_progression(catalog)
 	var oracle := runtime.snapshot(build)
 	var presentation_frame: Dictionary = {}
 	var presentation_first := runtime.fill_presentation_snapshot(
@@ -82,11 +85,62 @@ func _initialize() -> void:
 	_finish()
 
 
+func _validate_homing_progression(catalog: Catalog) -> void:
+	_seeker_targets.clear()
+	for index in 3:
+		var target := EnemyState.new()
+		target.id = "homing_target_%d" % index
+		target.alive = true
+		target.active = true
+		target.pos = Vector2(120.0 + float(index) * 40.0, 20.0 * float(index))
+		_seeker_targets.append(target)
+	var expected_damage := [25.0, 28.0, 32.0]
+	for upgrade_level in 3:
+		var build := RunBuild.new(catalog)
+		for _level in upgrade_level:
+			build.apply(&"homing_missiles")
+		var runtime := Runtime.new()
+		runtime.reset(Vector2.ZERO)
+		_requested_seeker_count = 0
+		var result := runtime.update(
+			0.1,
+			Vector2.ZERO,
+			Vector2.RIGHT,
+			Vector2.RIGHT,
+			build,
+			_seeker_targets,
+			Callable(self, "_los"),
+			Callable(),
+			Callable(self, "_find_seeker_targets")
+		)
+		var projectiles: Array = result["projectiles"]
+		_expect(
+			_requested_seeker_count == upgrade_level + 1
+				and projectiles.size() == upgrade_level + 1,
+			"homing level %d requests and fires exactly %d distinct missiles"
+			% [upgrade_level, upgrade_level + 1]
+		)
+		for projectile in projectiles:
+			_expect(
+				is_equal_approx(float(projectile["damage"]), expected_damage[upgrade_level]),
+				"homing level %d uses %.0f damage per missile"
+				% [upgrade_level, expected_damage[upgrade_level]]
+			)
+
+
+func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:
+	_requested_seeker_count = max_targets
+	var result: Array[EnemyState] = []
+	for index in mini(max_targets, _seeker_targets.size()):
+		result.append(_seeker_targets[index])
+	return result
+
+
 func _validate_mine_direction(catalog: Catalog) -> void:
 	var build := RunBuild.new(catalog)
 	_expect(
-		bool(build.apply(&"wake_mines").get("applied", false)),
-		"wake mine fixture equips its secondary family"
+		bool(build.apply(&"drop_mines").get("applied", false)),
+		"drop-mine fixture equips its secondary family"
 	)
 	var origin := Vector2(220.0, 180.0)
 	var runtime := Runtime.new()
@@ -105,7 +159,7 @@ func _validate_mine_direction(catalog: Catalog) -> void:
 	_expect(
 		mines.size() == 1
 			and Vector2(mines[0]["pos"]).distance_to(origin - Vector2.UP * 48.0) <= 0.001,
-		"wake mine uses actual movement direction before hull direction"
+		"drop mine uses actual movement direction before hull direction"
 	)
 	runtime.reset(origin)
 	runtime.update(
@@ -121,7 +175,7 @@ func _validate_mine_direction(catalog: Catalog) -> void:
 	_expect(
 		mines.size() == 1
 			and Vector2(mines[0]["pos"]).distance_to(origin - Vector2.LEFT * 48.0) <= 0.001,
-		"stationary wake mine falls back to hull direction"
+		"stationary drop mine falls back to hull direction"
 	)
 
 
