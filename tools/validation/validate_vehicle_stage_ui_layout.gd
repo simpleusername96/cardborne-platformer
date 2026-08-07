@@ -176,7 +176,7 @@ func _initialize() -> void:
 						"category":13,
 						"level":15,
 						"title":22,
-						"summary":14,
+						"summary":16,
 					}
 					if width < 1100.0
 					else (
@@ -184,14 +184,14 @@ func _initialize() -> void:
 							"category":16,
 							"level":18,
 							"title":28,
-							"summary":14,
+							"summary":17,
 						}
 						if width < 1600.0
 						else {
 							"category":18,
 							"level":18,
 							"title":32,
-							"summary":16,
+							"summary":18,
 						}
 					)
 				),
@@ -212,8 +212,8 @@ func _initialize() -> void:
 			_expect(
 				not bool(card["dossier_split"])
 					and bool(card["vertical_dossier"])
-					and int(card["body_divider_count"]) == 1,
-				"upgrade card uses one centered vertical dossier and one body divider"
+					and int(card["body_divider_count"]) == 0,
+				"upgrade card uses one centered vertical dossier without separator lines"
 			)
 			_expect(
 				not bool(card["footer_visible"])

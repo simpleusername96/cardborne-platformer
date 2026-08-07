@@ -8,6 +8,7 @@ const HEALTH := [1.0, 1.04, 1.08, 1.12, 1.16]
 const DAMAGE := [1.0, 1.03, 1.06, 1.09, 1.12]
 const SPEED := [1.0, 1.01, 1.02, 1.03, 1.04]
 const ORDINARY_HEALTH_MULTIPLIER := 1.30
+const BOSS_HEALTH_MULTIPLIER := 1.30
 
 
 static func multipliers(stage_index: int) -> Dictionary:
@@ -17,7 +18,7 @@ static func multipliers(stage_index: int) -> Dictionary:
 
 static func boss_health(stage_index: int) -> float:
 	var index := clampi(stage_index, 0, 4)
-	return [1250.0, 1350.0, 1450.0, 1550.0, 1650.0][index]
+	return [1250.0, 1350.0, 1450.0, 1550.0, 1650.0][index] * BOSS_HEALTH_MULTIPLIER
 
 
 static func debug_contract() -> Dictionary:
@@ -26,4 +27,5 @@ static func debug_contract() -> Dictionary:
 		"damage":DAMAGE.duplicate(),
 		"speed":SPEED.duplicate(),
 		"ordinary_health_multiplier":ORDINARY_HEALTH_MULTIPLIER,
+		"boss_health_multiplier":BOSS_HEALTH_MULTIPLIER,
 	}

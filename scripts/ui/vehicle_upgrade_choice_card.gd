@@ -49,10 +49,8 @@ var _title: Label
 var _dossier: VBoxContainer
 var _art_lane: CenterContainer
 var _artwork: TextureRect
-var _body_divider: HSeparator
 var _change_lane: VBoxContainer
 var _level: Label
-var _change_rule: HSeparator
 var _summary: Label
 var _effects: VBoxContainer
 var _unlock_indicator: UnlockIndicator
@@ -144,7 +142,7 @@ func debug_contract() -> Dictionary:
 		"accessibility_mode":_accessibility_mode,
 		"dossier_split":false,
 		"vertical_dossier":true,
-		"body_divider_count":1,
+		"body_divider_count":0,
 		"description_in_comparison":false,
 		"description_visible":_summary.visible,
 		"footer_visible":false,
@@ -170,7 +168,7 @@ func debug_contract() -> Dictionary:
 		"body_order":[
 			"category",
 			"title",
-			"dossier:art/divider/level/unlock-icon/summary/effects",
+			"dossier:art/level/unlock-icon/effects/summary",
 		],
 		"state_cues":{
 			"normal_flat":normal_style is StyleBoxFlat,
@@ -201,7 +199,7 @@ func debug_geometry_contract() -> Dictionary:
 		"dossier_rect":_dossier.get_global_rect(),
 		"art_lane_rect":_art_lane.get_global_rect(),
 		"change_lane_rect":_change_lane.get_global_rect(),
-		"body_divider_rect":_body_divider.get_global_rect(),
+		"body_divider_rect":Rect2(),
 		"footer_rect":Rect2(),
 		"labels":labels,
 		"artwork":{
@@ -261,13 +259,6 @@ func _build() -> void:
 	_artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_art_lane.add_child(_artwork)
 
-	_body_divider = HSeparator.new()
-	_body_divider.name = "DossierDivider"
-	_body_divider.custom_minimum_size.y = 1.0
-	_body_divider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_body_divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_dossier.add_child(_body_divider)
-
 	_change_lane = VBoxContainer.new()
 	_change_lane.name = "ChangeLane"
 	_change_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -283,11 +274,6 @@ func _build() -> void:
 	_level.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_change_lane.add_child(_level)
 
-	_change_rule = HSeparator.new()
-	_change_rule.name = "ChangeRule"
-	_change_rule.custom_minimum_size.y = 1.0
-	_change_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_change_lane.add_child(_change_rule)
 	var unlock_center := CenterContainer.new()
 	unlock_center.name = "UnlockIndicatorCenter"
 	unlock_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -297,7 +283,14 @@ func _build() -> void:
 	_unlock_indicator.name = "UnlockIndicator"
 	unlock_center.add_child(_unlock_indicator)
 
-	_summary = _label(14, Art.TEXT_MUTED)
+	_effects = VBoxContainer.new()
+	_effects.name = "EffectRows"
+	_effects.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_effects.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_change_lane.add_child(_effects)
+
+	_summary = _label(17, Art.TEXT_MUTED)
 	_summary.name = "SummaryLabel"
 	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -306,13 +299,6 @@ func _build() -> void:
 	_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_change_lane.add_child(_summary)
-
-	_effects = VBoxContainer.new()
-	_effects.name = "EffectRows"
-	_effects.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_effects.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_change_lane.add_child(_effects)
 
 func _apply_layout_profile() -> void:
 	var horizontal_margin := 24
@@ -324,7 +310,7 @@ func _apply_layout_profile() -> void:
 	var category_size := 16
 	var title_size := 28
 	var level_size := 18
-	var summary_size := 14
+	var summary_size := 17
 	var dossier_height := 292.0
 	var glyph_size := Vector2(128.0, 128.0)
 	var category_height := 20.0
@@ -341,7 +327,7 @@ func _apply_layout_profile() -> void:
 		glyph_size = Vector2(176.0, 176.0)
 		category_height = 44.0
 		title_height = 144.0
-		summary_size = 16
+		summary_size = 20
 	elif _large:
 		custom_minimum_size = LARGE_SIZE
 		horizontal_margin = 28
@@ -353,7 +339,7 @@ func _apply_layout_profile() -> void:
 		category_size = 18
 		title_size = 32
 		level_size = 18
-		summary_size = 16
+		summary_size = 18
 		dossier_height = 316.0
 		glyph_size = Vector2(128.0, 128.0)
 		category_height = 24.0
@@ -369,7 +355,7 @@ func _apply_layout_profile() -> void:
 		category_size = 13
 		title_size = 22
 		level_size = 15
-		summary_size = 14
+		summary_size = 16
 		dossier_height = 250.0
 		glyph_size = Vector2(88.0, 88.0)
 		category_height = 18.0

@@ -56,7 +56,18 @@ func _initialize() -> void:
 				Patterns.commit_mode(pattern) == &"autonomous",
 				"%s remains independent of boss-body state" % pattern
 			)
-		_expect(Difficulty.boss_health(stage_index) > 0.0, "%s has bounded boss health" % stage_id)
+		var base_health: float = [1250.0, 1350.0, 1450.0, 1550.0, 1650.0][stage_index]
+		_expect(
+			is_equal_approx(
+				Difficulty.boss_health(stage_index),
+				base_health * Difficulty.BOSS_HEALTH_MULTIPLIER
+			),
+			"%s applies the dedicated 30 percent boss-health increase" % stage_id
+		)
+	_expect(
+		is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIER, 1.30),
+		"boss health multiplier remains 1.30"
+	)
 	_expect(
 		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),
 		"boss prediction and projectile motion share the reduced hostile speed contract"

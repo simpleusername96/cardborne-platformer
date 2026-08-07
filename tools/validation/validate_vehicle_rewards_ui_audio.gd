@@ -143,7 +143,7 @@ func _run() -> void:
 			and not bool(card["footer_visible"])
 			and bool(card["description_visible"])
 			and int(card["summary_max_lines"]) == 1
-			and int(card["body_divider_count"]) == 1
+			and int(card["body_divider_count"]) == 0
 			and int(card["pip_slots"]) == 0
 			and int(card["stage_pip_count"]) == 0
 			and bool(card["mouse_passthrough"])

@@ -197,15 +197,15 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 				and Array(contract["body_order"]) == [
 					"category",
 					"title",
-					"dossier:art/divider/level/unlock-icon/summary/effects",
+					"dossier:art/level/unlock-icon/effects/summary",
 				]
 				and not bool(contract["dossier_split"])
 				and bool(contract["vertical_dossier"])
-				and int(contract["body_divider_count"]) == 1,
+				and int(contract["body_divider_count"]) == 0,
 			"%s uses the compact centered vertical artwork contract" % category
 		)
 		_expect(
-			int(Dictionary(contract["type_sizes"])["summary"]) == 14
+			int(Dictionary(contract["type_sizes"])["summary"]) == 16
 				and not bool(contract["footer_visible"])
 				and not bool(contract["description_in_comparison"])
 				and bool(contract["description_visible"])
