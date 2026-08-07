@@ -10,7 +10,6 @@ source: Current repository implementation and canonical visual specification
 related:
   - ../../design/VISUAL_SYSTEM.md
   - ../../product/vehicle_upgrade_catalog.md
-  - ../../../.agents/execplans/2026-08-07-effects-and-upgrade-contracts.md
 ---
 
 # Cardborne 이펙트와 업그레이드 AS-IS 구분
