@@ -4,9 +4,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")
-$runtimeRoot = Join-Path $repoRoot ".codex-runtime"
-$installDir = Join-Path $runtimeRoot "godot-$Version"
+$runtimeRoot = "D:\tools\Godot"
+$installDir = Join-Path $runtimeRoot $Version
 $downloadDir = Join-Path $runtimeRoot "downloads"
 $zipPath = Join-Path $downloadDir "Godot_v$Version`_win64.exe.zip"
 $templateZipPath = Join-Path $downloadDir "Godot_v$Version`_export_templates.zip"

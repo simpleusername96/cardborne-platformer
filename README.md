@@ -13,6 +13,11 @@ README intentionally does not duplicate them.
 
 ## Local Godot
 
+Godot 4.7.1 is shared with Paint Mountain from
+`D:\tools\Godot\4.7.1-stable`. The user-level `GODOT_BIN` points to the
+console executable there; do not create another project-local Godot copy.
+`setup-godot.ps1` provisions the shared versioned folder when it is missing.
+
 ```powershell
 .\tools\setup-godot.ps1
 .\tools\godot.ps1 --path . --editor

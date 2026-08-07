@@ -15,6 +15,7 @@
 
 ## Operating Model
 - Use Godot 4.7 stable and GDScript. Do not switch engines or add production dependencies without explicit user direction.
+- Use the shared Godot 4.7.1 runtime at `D:\tools\Godot\4.7.1-stable`; `GODOT_BIN` points to its console executable. Do not restore a project-local `.codex-runtime` Godot copy. Run project commands through `./tools/godot.ps1`.
 - Prefer `./tools/godot.ps1` for local Godot commands.
 - Keep stage definitions, enemy roles, encounter coordination, card data, combat state, UI, settings, and audio in their existing responsibility owners.
 - Keep card behavior out of UI code and keep visual geometry independent from collision truth.
