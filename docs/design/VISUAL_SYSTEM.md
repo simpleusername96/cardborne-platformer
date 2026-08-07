@@ -464,10 +464,12 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - upgrade card는 compact에서 `280×378`, gap `12`, standard에서 `360×456`,
   gap `16`, large에서 `420×480`, gap `24`를 사용한다. 세 카드 container는
   사용 가능한 공간에 맞춰 확장하며 standard에서 좁은 352px 카드를 유지하지
-  않는다. 순서는 centered family, title, artwork, level, 실제 effect row의
-  vertical stack이다. dossier uses compact `88×88`, standard `112×112`, and large
-  `128×128` centered artwork. level 아래에는 실제 효과를 요약한 localized 한 줄
-  설명을 표시한다. 한국어는 공백 포함 약 10자, 영어는 2–5단어를 기준으로 하며
+  않는다. 순서는 centered family, title, artwork, level, 실제 effect row,
+  localized 한 줄 설명의 vertical stack이다. 내부 가로 separator는 사용하지
+  않는다. dossier uses compact `88×88`, standard `112×112`, and large
+  `128×128` centered artwork. 설명은 항상 변화 수치 아래 마지막에 두고
+  compact/standard/large에서 각각 `16/17/18 px`을 사용한다. 한국어는 공백 포함
+  약 10자, 영어는 2–5단어를 기준으로 하며
   supported viewport에서 한 줄을 넘지 않는다. change-kind 문장, description
   footer와 split column은 표시하지 않는다. 첫 획득만 작은 code-native unlock
   diamond로 표시한다.
@@ -485,18 +487,28 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 
 ### HUD
 
-- top-left는 hull/experience, top-center는 objective와 conditional boss,
-  top-right는 `176×108` minimap과 conditional target을 소유한다.
+- top-left의 한 subtle Surface는 stage, objective/message, experience와
+  conditional boss summary를 소유한다. top-center는 panel 없는 긴 player hull
+  strip과 그 아래 acquired-only upgrade rail을 소유한다. top-right는 `176×108`
+  minimap과 conditional target을 소유한다.
+- live upgrade rail은 기존 semantic upgrade artwork와 작은 level numeral만
+  표시한다. 빈 slot, family label, 공통 배경 panel은 만들지 않는다. standard
+  icon은 `30 px`이며 12개까지 한 줄, 13–18개는 두 번째 centered row로 감싼다.
+  full name과 수치는 paused Ship Status가 계속 소유한다. build receipt가 바뀔
+  때만 rail을 다시 만들며 fast HUD cadence에서 rebuild하지 않는다.
 - minimap의 dynamic marker는 player craft, item, enemy, boss, reinforcement facility
   다섯 역할만 사용한다.
   item/enemy/boss subtype, elite/stationary distinction, objective state와 support
-  field를 별도 marker로 표시하지 않는다. explored static geometry와 fog는 유지한다.
+  field를 별도 marker로 표시하지 않는다. ordinary enemy outer/inner radius는
+  `4.0/2.6`, boss는 `10.0/7.6`을 사용하며 item/player/facility geometry는
+  유지한다. explored static geometry와 fog는 유지한다.
 - bottom-center에는 panel이 없는 확대 원형 EMP indicator 하나만 둔다. cooldown과
   enabled/disabled 상태만 표시하며 primary, dash, secondary slot은 만들지 않는다.
-- 각 zone은 최대 한 subtle Surface만 사용한다. full-width dock,
+- mission과 minimap zone만 각각 최대 한 subtle Surface를 사용한다. center hull과
+  acquired-upgrade rail은 panel-free다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는
   사용하지 않는다.
-- notification과 transition은 objective 아래 한 줄 ToastSurface에 나타나며
+- notification과 transition은 top status 영역 아래 한 줄 ToastSurface에 나타나며
   crosshair를 가리지 않는다.
 - HUD off-screen threat와 다섯 종류 minimap marker는 기존 code-native retained
   mesh를 유지한다. world-space crosshair는 shared authored PNG retained textured

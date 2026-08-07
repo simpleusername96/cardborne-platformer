@@ -31,6 +31,10 @@ func _run() -> void:
 	_expect(snapshot["upgrades"].size() == 1, "acquired upgrade appears once")
 	var upgrade := Dictionary(snapshot["upgrades"][0])
 	_expect(StringName(upgrade["id"]) == &"chassis_speed", "upgrade uses stable ID")
+	_expect(
+		StringName(upgrade["artwork_asset_id"]) != &"",
+		"live build receipt includes semantic upgrade artwork"
+	)
 	_expect(int(upgrade["level"]) == 1 and int(upgrade["max_level"]) >= 1, "upgrade level and maximum are present")
 	var original_value := float(snapshot["stats"][0]["value"])
 	stats[0]["value"] = 1.0

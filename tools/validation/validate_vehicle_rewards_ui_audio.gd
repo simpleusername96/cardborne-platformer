@@ -203,7 +203,12 @@ func _run() -> void:
 			and bool(ui_contract["action_rail_panel_free"]),
 		"bottom HUD uses one enlarged panel-free EMP indicator"
 	)
-	_expect(Vector2(ui_contract["health_cluster_size"]) == Vector2(216.0, 74.0), "health and XP share the readable hull cluster")
+	_expect(
+		Vector2(ui_contract["health_cluster_size"]) == Vector2(520.0, 24.0)
+			and bool(ui_contract["health_panel_free"])
+			and bool(ui_contract["mission_experience_meter"]),
+		"health is a centered panel-free strip while XP stays with the mission cluster"
+	)
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
 	_expect(not bool(ui_contract["deployment_has_difficulty_ui"]), "deployment exposes no difficulty choice")
 	_expect(int(ui_contract["deployment_control_rows"]) == 4, "deployment preserves four complete control rows")

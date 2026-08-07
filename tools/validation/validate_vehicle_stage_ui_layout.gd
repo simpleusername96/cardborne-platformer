@@ -76,20 +76,22 @@ func _initialize() -> void:
 				and bool(health_meter["has_background_geometry"])
 				and bool(health_meter["has_trailing_health_geometry"])
 				and bool(health_meter["has_health_geometry"])
-				and bool(health_meter["has_experience_geometry"]),
-			"health and XP meters use complete code-native geometry at %d" % width
+				and not bool(health_meter["has_experience_geometry"])
+				and bool(health_meter["panel_free"])
+				and bool(contract["mission_experience_meter"]),
+			"center health and top-left XP use separate code-native geometry at %d" % width
 		)
 		_expect(
-			int(contract["zone_surface_count"]) == 3
+			int(contract["zone_surface_count"]) == 2
 				and Array(contract["zone_surface_variations"]) == [
-					&"HudSurface", &"HudSurface", &"HudSurface",
+					&"HudSurface", &"HudSurface",
 				]
 				and StringName(contract["toast_surface_variation"]) == &"ToastSurface",
 			"HUD uses three backed zones, one panel-free EMP indicator, and one toast at %d" % width
 		)
 		_expect(
 			not bool(contract["conditional_clusters_have_backing"])
-				and bool(contract["boss_inside_objective_zone"])
+				and bool(contract["boss_inside_mission_zone"])
 				and bool(contract["target_inside_minimap_zone"])
 				and not bool(contract["raster_chrome_consumer"]),
 			"boss and target reuse their owning zones without raster or nested backing at %d" % width
@@ -444,6 +446,14 @@ func _initialize() -> void:
 		"tactical minimap publishes all dynamic markers through one mesh surface"
 	)
 	var minimap_palette := MinimapMeshBuilder.dynamic_colors()
+	var marker_sizes := MinimapMeshBuilder.marker_size_contract()
+	_expect(
+		is_equal_approx(float(marker_sizes["enemy_outer"]), 4.0)
+			and is_equal_approx(float(marker_sizes["enemy_inner"]), 2.6)
+			and is_equal_approx(float(marker_sizes["boss_outer"]), 10.0)
+			and is_equal_approx(float(marker_sizes["boss_inner"]), 7.6),
+		"minimap makes ordinary enemies smaller and the boss substantially larger"
+	)
 	_expect(
 		UiGlyphCatalog.minimap_ids() == [&"player", &"item", &"enemy", &"boss", &"facility"],
 		"minimap exposes five semantic marker roles including the reinforcement facility"

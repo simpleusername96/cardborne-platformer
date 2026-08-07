@@ -5,6 +5,11 @@ extends RefCounted
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
+const ENEMY_OUTER_RADIUS := 4.0
+const ENEMY_INNER_RADIUS := 2.6
+const BOSS_OUTER_RADIUS := 10.0
+const BOSS_INNER_RADIUS := 7.6
+
 
 static func build(snapshot: Dictionary, canvas_size: Vector2) -> ArrayMesh:
 	var geometry := _build_geometry(snapshot, canvas_size)
@@ -50,6 +55,15 @@ static func dynamic_colors() -> Array[Color]:
 		Art.BOSS_COMMAND,
 		Art.MUSTARD_DARK,
 	]
+
+
+static func marker_size_contract() -> Dictionary:
+	return {
+		"enemy_outer":ENEMY_OUTER_RADIUS,
+		"enemy_inner":ENEMY_INNER_RADIUS,
+		"boss_outer":BOSS_OUTER_RADIUS,
+		"boss_inner":BOSS_INNER_RADIUS,
+	}
 
 
 static func _build_geometry(
@@ -182,8 +196,12 @@ static func _append_round_marker(
 	indices: Array[int],
 	center: Vector2
 ) -> void:
-	_append_circle(vertices, colors, indices, center, 5.5, Art.SPACE_BLACK, 10)
-	_append_circle(vertices, colors, indices, center, 4.0, Art.DANGER, 10)
+	_append_circle(
+		vertices, colors, indices, center, ENEMY_OUTER_RADIUS, Art.SPACE_BLACK, 10
+	)
+	_append_circle(
+		vertices, colors, indices, center, ENEMY_INNER_RADIUS, Art.DANGER, 10
+	)
 
 
 static func _append_boss_marker(
@@ -193,10 +211,10 @@ static func _append_boss_marker(
 	center: Vector2
 ) -> void:
 	_append_regular_polygon(
-		vertices, colors, indices, center, 7.0, 6, 0.0, Art.SPACE_BLACK
+		vertices, colors, indices, center, BOSS_OUTER_RADIUS, 6, 0.0, Art.SPACE_BLACK
 	)
 	_append_regular_polygon(
-		vertices, colors, indices, center, 5.2, 6, 0.0, Art.BOSS_COMMAND
+		vertices, colors, indices, center, BOSS_INNER_RADIUS, 6, 0.0, Art.BOSS_COMMAND
 	)
 
 

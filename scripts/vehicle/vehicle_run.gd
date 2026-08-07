@@ -1259,6 +1259,7 @@ func _on_upgrade_selected(upgrade_id: StringName) -> void:
 	if not apply_upgrade(upgrade_id):
 		_ui.upgrade_apply_failed(tr("UPGRADE_APPLY_FAILED"))
 		return
+	_ui.update_hud({"build_snapshot":_build_snapshot()})
 	_resolve_reward_transaction()
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
@@ -5407,7 +5408,7 @@ func _fill_fast_hud_snapshot(
 	snapshot["experience"] = experience_runtime.experience
 	snapshot["experience_required"] = experience_runtime.required_experience()
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
-	snapshot["objective"] = "%s · %s" % [stage_title, objective[0]]
+	snapshot["objective"] = objective[0]
 	snapshot["objective_detail"] = objective[1]
 	snapshot["stage_title"] = stage_title
 	snapshot["dash_available"] = player_dash_cooldown <= 0.0
