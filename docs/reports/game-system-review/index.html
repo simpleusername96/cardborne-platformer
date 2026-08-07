@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Cardborne의 현재 구현 상태와 다음 개선 작업을 정리한 종합 보고서입니다.">
+  <meta name="description" content="Cardborne 이펙트와 업그레이드의 현재 문제, 결정, 실행 순서를 정리한 종합 보고서입니다.">
   <title>Cardborne · 개선 현황</title>
   <link rel="stylesheet" href="report.css">
 </head>
@@ -11,104 +11,117 @@
   <a class="skip-link" href="#main" data-ko="본문으로 건너뛰기" data-en="Skip to content">본문으로 건너뛰기</a>
   <header class="site-header">
     <div class="header-inner">
-      <a class="brand" href="index.html" data-ko="Cardborne · 개선 현황" data-en="Cardborne · Improvement Status">Cardborne · 개선 현황</a>
-      <nav class="nav" aria-label="보고서 페이지">
-        <a href="index.html" aria-current="page" data-ko="개요" data-en="Overview">개요</a>
-        <a href="map-world.html" data-ko="맵" data-en="Map">맵</a>
-        <a href="combat-effects.html" data-ko="이펙트" data-en="Effects">이펙트</a>
-        <a href="upgrades-builds.html" data-ko="업그레이드" data-en="Upgrades">업그레이드</a>
-        <a href="enemies-encounters.html" data-ko="적" data-en="Enemies">적</a>
-        <a href="bosses.html" data-ko="보스" data-en="Bosses">보스</a>
+      <a class="brand" href="#main" data-ko="Cardborne · 개선 현황" data-en="Cardborne · Improvement Status">Cardborne · 개선 현황</a>
+      <nav class="nav" aria-label="보고서 섹션">
+        <a href="#summary" aria-current="page" data-ko="요약" data-en="Summary">요약</a>
+        <a href="#effects" data-ko="이펙트" data-en="Effects">이펙트</a>
+        <a href="#upgrades" data-ko="업그레이드" data-en="Upgrades">업그레이드</a>
+        <a href="#execution" data-ko="실행 순서" data-en="Execution">실행 순서</a>
         <button class="language-toggle" id="language-toggle" type="button" aria-pressed="false">English</button>
       </nav>
     </div>
   </header>
 
   <main id="main" class="shell">
-    <section class="intro">
-      <p class="eyebrow" data-ko="2026-08-07 현재" data-en="CURRENT AS OF 2026-08-07">2026-08-07 현재</p>
-      <h1 data-ko="맵 작업은 끝났고, 다음은 이펙트와 업그레이드 플레이 QA입니다." data-en="Map work is complete. Effects and upgrade play QA are next.">맵 작업은 끝났고, 다음은 이펙트와 업그레이드 플레이 QA입니다.</h1>
-      <p class="lede" data-ko="맵 구조와 비주얼, EMP, 소형 이펙트 정리, 업그레이드 아트 10종과 카드 UI는 이미 런타임에 적용되었습니다." data-en="Map structure and visuals, EMP, small-effect cleanup, ten upgrade artworks, and the card UI are already integrated into the runtime.">맵 구조와 비주얼, EMP, 소형 이펙트 정리, 업그레이드 아트 10종과 카드 UI는 이미 런타임에 적용되었습니다.</p>
-      <p class="notice" data-ko="아래 주제 페이지는 2026-08-06의 결정 기록입니다. 현재 상태는 이 개요와 비주얼 교체 워크벤치가 우선하며, 과거 후보 시트는 에셋 승인이 아닙니다." data-en="The topic pages below are decision records from 2026-08-06. This overview and the visual replacement workbench own current status; historical candidate sheets are not asset approval.">아래 주제 페이지는 2026-08-06의 결정 기록입니다. 현재 상태는 이 개요와 비주얼 교체 워크벤치가 우선하며, 과거 후보 시트는 에셋 승인이 아닙니다.</p>
+    <section class="intro" id="summary">
+      <p class="eyebrow" data-ko="2026-08-07 분석 완료" data-en="ANALYZED 2026-08-07">2026-08-07 분석 완료</p>
+      <h1 data-ko="다음 작업은 새 그림 추가가 아니라, 전투 의미와 업그레이드 선택의 빈틈을 닫는 일입니다." data-en="The next work is to close gaps in combat meaning and upgrade choices, not add more artwork.">다음 작업은 새 그림 추가가 아니라, 전투 의미와 업그레이드 선택의 빈틈을 닫는 일입니다.</h1>
+      <p class="lede" data-ko="기존 피드백, 현재 39개 시각 이벤트, 41개 업그레이드와 83개 레벨 상태, 실제 렌더러·카드 UI·검증기를 함께 대조했습니다." data-en="Prior feedback was checked against the current 39 visual events, 41 upgrades and 83 level states, renderer, card UI, and validators.">기존 피드백, 현재 39개 시각 이벤트, 41개 업그레이드와 83개 레벨 상태, 실제 렌더러·카드 UI·검증기를 함께 대조했습니다.</p>
+      <p class="notice" data-ko="이 문서는 현재 상태와 확정한 수정 방향만 보여 줍니다. 상세 구현 계약은 아래 실행계획이 소유하며, 성능은 별도 최종 측정 전까지 통과로 간주하지 않습니다." data-en="This page shows current status and locked repair direction. The linked execution plan owns implementation detail, and performance remains unqualified until separate final measurements pass.">이 문서는 현재 상태와 확정한 수정 방향만 보여 줍니다. 상세 구현 계약은 아래 실행계획이 소유하며, 성능은 별도 최종 측정 전까지 통과로 간주하지 않습니다.</p>
     </section>
 
-    <section class="section" aria-labelledby="now-title">
+    <section class="section" aria-labelledby="principles-title">
       <div class="section-head">
         <div>
-          <p class="eyebrow" data-ko="다음 작업" data-en="NEXT WORK">다음 작업</p>
-          <h2 id="now-title" data-ko="새 아트 선택보다 실제 플레이 검증이 먼저입니다" data-en="Validate live play before choosing more art">새 아트 선택보다 실제 플레이 검증이 먼저입니다</h2>
+          <p class="eyebrow" data-ko="피드백에서 확정된 기준" data-en="LOCKED FROM FEEDBACK">피드백에서 확정된 기준</p>
+          <h2 id="principles-title" data-ko="무엇을 기준으로 고치는가" data-en="Rules for the repair">무엇을 기준으로 고치는가</h2>
         </div>
-        <p data-ko="현재 표현이 실제 행동과 전투 판단을 충분히 설명하는지 확인한 뒤, 부족한 부분만 좁게 고칩니다." data-en="First verify that current presentation explains real behavior and combat decisions, then fix only demonstrated gaps.">현재 표현이 실제 행동과 전투 판단을 충분히 설명하는지 확인한 뒤, 부족한 부분만 좁게 고칩니다.</p>
       </div>
-      <div class="mini-grid">
-        <article class="topic-card">
-          <span class="tag tag--choose" data-ko="다음 QA" data-en="NEXT QA">다음 QA</span>
-          <h3 data-ko="이펙트 의미와 전투 가독성" data-en="Effect meaning and combat readability">이펙트 의미와 전투 가독성</h3>
-          <p data-ko="EMP는 적용됐고 소형 장식 프레임은 정리됐습니다. 이제 실시간 경계, 소유자, 피격·상태 피드백이 최대 압박에서도 바로 읽히는지 확인합니다." data-en="EMP is integrated and small cosmetic frames are retired. Next verify that live boundaries, ownership, hit feedback, and status feedback stay readable at peak pressure.">EMP는 적용됐고 소형 장식 프레임은 정리됐습니다. 이제 실시간 경계, 소유자, 피격·상태 피드백이 최대 압박에서도 바로 읽히는지 확인합니다.</p>
-          <a href="combat-effects.html" data-ko="이전 이펙트 결정 기록 →" data-en="Open the earlier effect decision record →">이전 이펙트 결정 기록 →</a>
-        </article>
-        <article class="topic-card">
-          <span class="tag tag--choose" data-ko="다음 QA" data-en="NEXT QA">다음 QA</span>
-          <h3 data-ko="업그레이드 체감과 빌드 선택" data-en="Upgrade feel and build choices">업그레이드 체감과 빌드 선택</h3>
-          <p data-ko="아트와 카드 흐름은 완료됐습니다. 다음은 약한 숫자 선택, 중복 역할, 실제 빌드 상한을 플레이하면서 검증하고 행동 소유 코드에서 조정하는 일입니다." data-en="Artwork and card flow are complete. Next test weak numeric choices, duplicate roles, and real build caps in play, then adjust them in behavior-owning code.">아트와 카드 흐름은 완료됐습니다. 다음은 약한 숫자 선택, 중복 역할, 실제 빌드 상한을 플레이하면서 검증하고 행동 소유 코드에서 조정하는 일입니다.</p>
-          <a href="upgrades-builds.html" data-ko="이전 업그레이드 결정 기록 →" data-en="Open the earlier upgrade decision record →">이전 업그레이드 결정 기록 →</a>
-        </article>
+      <div class="decision-grid">
+        <article class="decision-card decision-card--decided"><p class="card-label" data-ko="일관성" data-en="CONSISTENCY">일관성</p><h3 data-ko="같은 결과는 같은 표현" data-en="Same result, same language">같은 결과는 같은 표현</h3><p data-ko="서로 다른 결과는 구분하고, 같은 효과라도 플레이어와 적의 소유권은 즉시 읽혀야 합니다." data-en="Different outcomes must remain distinct, and player versus enemy ownership must be immediately clear.">서로 다른 결과는 구분하고, 같은 효과라도 플레이어와 적의 소유권은 즉시 읽혀야 합니다.</p></article>
+        <article class="decision-card decision-card--decided"><p class="card-label" data-ko="경계" data-en="BOUNDARY">경계</p><h3 data-ko="범용 링을 남발하지 않음" data-en="No generic ring reuse">범용 링을 남발하지 않음</h3><p data-ko="실시간 공격 범위는 실제 판정과 맞추고, 경고는 보스·화면 밖 장치·대형 중립 사건에 한정합니다." data-en="Live attack areas match gameplay truth; warnings are reserved for bosses, off-screen devices, and large neutral events.">실시간 공격 범위는 실제 판정과 맞추고, 경고는 보스·화면 밖 장치·대형 중립 사건에 한정합니다.</p></article>
+        <article class="decision-card decision-card--decided"><p class="card-label" data-ko="업그레이드" data-en="UPGRADES">업그레이드</p><h3 data-ko="행동과 전후 차이를 먼저 표시" data-en="Show behavior and before-to-after change">행동과 전후 차이를 먼저 표시</h3><p data-ko="카드는 이름·계열·레벨·현재→다음 수치·설명·새 행동을 전달하고, 선택은 계속 필수입니다." data-en="Cards communicate name, family, level, current-to-next values, description, and new behavior. Selection remains mandatory.">카드는 이름·계열·레벨·현재→다음 수치·설명·새 행동을 전달하고, 선택은 계속 필수입니다.</p></article>
+        <article class="decision-card decision-card--decided"><p class="card-label" data-ko="소유권" data-en="OWNERSHIP">소유권</p><h3 data-ko="카드와 월드 이펙트를 분리" data-en="Keep cards separate from world effects">카드와 월드 이펙트를 분리</h3><p data-ko="업그레이드는 행동·강도·빈도를, 월드 표현은 전투 중 의미를 소유합니다. 카드 그림으로 전투 피드백을 대신하지 않습니다." data-en="Upgrades own behavior, strength, and frequency; world presentation owns live combat meaning. Card art never substitutes for combat feedback.">업그레이드는 행동·강도·빈도를, 월드 표현은 전투 중 의미를 소유합니다. 카드 그림으로 전투 피드백을 대신하지 않습니다.</p></article>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="applied-title">
+    <section class="section" id="effects" aria-labelledby="effects-title">
       <div class="section-head">
         <div>
-          <p class="eyebrow" data-ko="현재 런타임" data-en="CURRENT RUNTIME">현재 런타임</p>
-          <h2 id="applied-title" data-ko="이미 적용된 범위" data-en="Already integrated">이미 적용된 범위</h2>
+          <p class="eyebrow" data-ko="우선순위 1" data-en="PRIORITY 1">우선순위 1</p>
+          <h2 id="effects-title" data-ko="이펙트: 보이지 않는 이벤트와 빠진 상태 피드백 정리" data-en="Effects: remove invisible event traffic and restore missing state feedback">이펙트: 보이지 않는 이벤트와 빠진 상태 피드백 정리</h2>
         </div>
+        <p data-ko="새 래스터 에셋은 만들지 않습니다. EMP 한 장과 현재 코드 기반 도형·상태 표현 안에서 해결합니다." data-en="No new raster asset is needed. The repair stays within the single EMP image and current code-native geometry and state presentation.">새 래스터 에셋은 만들지 않습니다. EMP 한 장과 현재 코드 기반 도형·상태 표현 안에서 해결합니다.</p>
       </div>
       <div class="topic-grid">
-        <article class="topic-card">
-          <span class="tag tag--done" data-ko="적용 완료" data-en="APPLIED">적용 완료</span>
-          <h3 data-ko="맵 구조와 월드 오브젝트" data-en="Map structure and world objects">맵 구조와 월드 오브젝트</h3>
-          <p data-ko="한 런에서 내벽 5개, 넓은 위험 지대 4개, 게이트 2쌍을 유지하고 각 스테이지에 미확인 장치 3개를 배치합니다. 독성 늪·용암·장치 비주얼도 적용됐습니다." data-en="A run keeps five inner-wall groups, four broad hazard zones, and two gate routes, while each stage places three Mystery Devices. Bog, lava, and device visuals are integrated.">한 런에서 내벽 5개, 넓은 위험 지대 4개, 게이트 2쌍을 유지하고 각 스테이지에 미확인 장치 3개를 배치합니다. 독성 늪·용암·장치 비주얼도 적용됐습니다.</p>
-          <a href="map-world.html" data-ko="맵 결정 기록 →" data-en="Map decision record →">맵 결정 기록 →</a>
-        </article>
-        <article class="topic-card">
-          <span class="tag tag--done" data-ko="적용 완료" data-en="APPLIED">적용 완료</span>
-          <h3 data-ko="이펙트 미디어 경계" data-en="Effect media boundary">이펙트 미디어 경계</h3>
-          <p data-ko="대형 이펙트는 EMP PNG 하나만 유지합니다. 비 EMP 이벤트 21종의 전용 프레임 95개와 이펙트 아틀라스는 폐기됐고, 필수 의미는 직접 피드백과 공유 실시간 큐가 담당합니다." data-en="EMP is the only retained large-effect PNG. Ninety-five dedicated frames across 21 non-EMP events and the effect atlas are retired; direct feedback and shared live cues carry required meaning.">대형 이펙트는 EMP PNG 하나만 유지합니다. 비 EMP 이벤트 21종의 전용 프레임 95개와 이펙트 아틀라스는 폐기됐고, 필수 의미는 직접 피드백과 공유 실시간 큐가 담당합니다.</p>
-        </article>
-        <article class="topic-card">
-          <span class="tag tag--done" data-ko="적용 완료" data-en="APPLIED">적용 완료</span>
-          <h3 data-ko="업그레이드 표현" data-en="Upgrade presentation">업그레이드 표현</h3>
-          <p data-ko="공용 업그레이드 콘텐츠 아트워크 10종과 반응형 선택 카드가 적용됐습니다. 카드 모양·타이포·선택 상태는 UI가, 실제 수치와 행동은 카드·빌드 런타임이 소유합니다." data-en="Ten shared upgrade content artworks and responsive choice cards are integrated. UI owns card presentation and states; card and build runtimes own values and behavior.">공용 업그레이드 콘텐츠 아트워크 10종과 반응형 선택 카드가 적용됐습니다. 카드 모양·타이포·선택 상태는 UI가, 실제 수치와 행동은 카드·빌드 런타임이 소유합니다.</p>
-          <a href="upgrades-builds.html" data-ko="업그레이드 결정 기록 →" data-en="Upgrade decision record →">업그레이드 결정 기록 →</a>
-        </article>
+        <article class="topic-card"><span class="tag tag--choose" data-ko="높음" data-en="HIGH">높음</span><h3 data-ko="이벤트 저장 경계" data-en="Event storage boundary">이벤트 저장 경계</h3><p data-ko="렌더러는 direct feedback·suppressed·HUD-only 모드 34개를 그리지 않지만, 발생 시 96칸 효과 저장소를 사용할 수 있습니다. 실제 렌더 대상만 저장하고 나머지는 상태·HUD·오디오 소유자를 명시합니다." data-en="The renderer skips 34 direct-feedback, suppressed, or HUD-only modes, yet emitted events can still occupy the 96-slot effect store. Only renderer-owned events should be buffered; every other event must name its state, HUD, or audio owner.">렌더러는 direct feedback·suppressed·HUD-only 모드 34개를 그리지 않지만, 발생 시 96칸 효과 저장소를 사용할 수 있습니다. 실제 렌더 대상만 저장하고 나머지는 상태·HUD·오디오 소유자를 명시합니다.</p></article>
+        <article class="topic-card"><span class="tag tag--choose" data-ko="높음" data-en="HIGH">높음</span><h3 data-ko="방어막 피격" data-en="Barrier hit feedback">방어막 피격</h3><p data-ko="피해가 방어막에서 끝나면 별도 피격 펄스와 소리가 없습니다. 기존 방어막 윤곽을 짧게 밝히는 코드 기반 펄스를 추가하되 선체 흔들림·무적 시간은 만들지 않습니다." data-en="A fully absorbed hit has no distinct pulse or sound. Briefly brighten the existing barrier outline with a code-native pulse, without hull shake or hull invulnerability.">피해가 방어막에서 끝나면 별도 피격 펄스와 소리가 없습니다. 기존 방어막 윤곽을 짧게 밝히는 코드 기반 펄스를 추가하되 선체 흔들림·무적 시간은 만들지 않습니다.</p></article>
+        <article class="topic-card"><span class="tag tag--choose" data-ko="높음" data-en="HIGH">높음</span><h3 data-ko="표식과 절단 상태" data-en="Marked and sheared states">표식과 절단 상태</h3><p data-ko="현재 표식·절단 표시는 repair tender 적에게만 도달하는 분기 안에 있고 둘 다 링을 사용합니다. 모든 대상에 표시하고, 표식은 황색 네 모서리 브래킷, 절단은 민트색 양측 분리 바로 구분합니다." data-en="Marked and sheared cues currently sit inside a repair-tender-only branch and both use rings. Show them on every valid target: amber four-corner brackets for marked, mint split side-bars for sheared.">현재 표식·절단 표시는 repair tender 적에게만 도달하는 분기 안에 있고 둘 다 링을 사용합니다. 모든 대상에 표시하고, 표식은 황색 네 모서리 브래킷, 절단은 민트색 양측 분리 바로 구분합니다.</p></article>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="gate-title">
+    <section class="section" id="upgrades" aria-labelledby="upgrades-title">
       <div class="section-head">
         <div>
-          <p class="eyebrow" data-ko="별도 출시 게이트" data-en="SEPARATE RELEASE GATE">별도 출시 게이트</p>
-          <h2 id="gate-title" data-ko="성능 계획은 최종 측정만 남았습니다" data-en="The performance plan only needs final qualification">성능 계획은 최종 측정만 남았습니다</h2>
+          <p class="eyebrow" data-ko="우선순위 2" data-en="PRIORITY 2">우선순위 2</p>
+          <h2 id="upgrades-title" data-ko="업그레이드: 행동 카드와 세 장 선택 계약 보강" data-en="Upgrades: strengthen behavior cards and the three-choice contract">업그레이드: 행동 카드와 세 장 선택 계약 보강</h2>
+        </div>
+        <p data-ko="41개 카드와 현재 성장 구조는 유지합니다. 별도 성장 시스템이나 새 카드 수를 추가하지 않습니다." data-en="Keep the 41-card catalog and current growth structure. Do not add another progression system or increase the card count.">41개 카드와 현재 성장 구조는 유지합니다. 별도 성장 시스템이나 새 카드 수를 추가하지 않습니다.</p>
+      </div>
+      <div class="topic-grid">
+        <article class="topic-card"><span class="tag tag--choose" data-ko="가장 먼저" data-en="FIRST">가장 먼저</span><h3 data-ko="28개 행동 카드의 ‘새 행동’ 표시" data-en="New-behavior row for 28 cards">28개 행동 카드의 ‘새 행동’ 표시</h3><p data-ko="행동 카드 28개는 수치 행이 없고 요약과 설명 키가 같아 전용 행동 행이 비어 있습니다. 기존 문장을 중복하지 않고 비교 영역에 한국어·영어 ‘새 행동’ 라벨과 행동 설명을 표시합니다." data-en="Twenty-eight behavior cards have no numeric rows and use the same summary and description key, leaving the dedicated behavior row empty. Show a localized New behavior label and the behavior text in the comparison lane without duplicating the sentence.">행동 카드 28개는 수치 행이 없고 요약과 설명 키가 같아 전용 행동 행이 비어 있습니다. 기존 문장을 중복하지 않고 비교 영역에 한국어·영어 ‘새 행동’ 라벨과 행동 설명을 표시합니다.</p></article>
+        <article class="topic-card"><span class="tag tag--choose" data-ko="계약 보강" data-en="CONTRACT">계약 보강</span><h3 data-ko="항상 서로 다른 세 장" data-en="Always three unique choices">항상 서로 다른 세 장</h3><p data-ko="현재 제안기는 가능한 만큼 반환하므로 고갈 직전·제한 태그 조합에서 세 장을 보장하지 않습니다. 도달 가능한 모든 보상 상태를 검사하고, 세 장이 아니면 모달을 열지 않는 명시적 오류 경계로 실패시킵니다." data-en="The offer builder returns as many legal cards as it finds, so near-exhaustion and restricted-source states do not guarantee three. Test every reachable reward state and fail at an explicit transaction boundary instead of opening an incomplete modal.">현재 제안기는 가능한 만큼 반환하므로 고갈 직전·제한 태그 조합에서 세 장을 보장하지 않습니다. 도달 가능한 모든 보상 상태를 검사하고, 세 장이 아니면 모달을 열지 않는 명시적 오류 경계로 실패시킵니다.</p></article>
+        <article class="topic-card"><span class="tag" data-ko="정리" data-en="HARDEN">정리</span><h3 data-ko="카탈로그와 적용 경계" data-en="Catalog and apply boundary">카탈로그와 적용 경계</h3><p data-ko="중복 ID 덮어쓰기, 허용되지 않은 수치 연산·슬롯 종류, 제안되지 않은 카드 적용을 검증합니다. 모든 카드가 명시적 artwork ID를 가지므로 오래된 대체 매핑과 미사용 exclusion 필드는 제거합니다." data-en="Validate duplicate IDs, modifier operations, slot kinds, and application of cards that were not offered. Since every card has an explicit artwork ID, remove the obsolete fallback map and unused exclusion field.">중복 ID 덮어쓰기, 허용되지 않은 수치 연산·슬롯 종류, 제안되지 않은 카드 적용을 검증합니다. 모든 카드가 명시적 artwork ID를 가지므로 오래된 대체 매핑과 미사용 exclusion 필드는 제거합니다.</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="execution" aria-labelledby="execution-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow" data-ko="구현 순서" data-en="IMPLEMENTATION ORDER">구현 순서</p>
+          <h2 id="execution-title" data-ko="네 단계로 고치고 각 단계에서 되돌림 지점을 만듭니다" data-en="Repair in four stages with a rollback point after each stage">네 단계로 고치고 각 단계에서 되돌림 지점을 만듭니다</h2>
+        </div>
+      </div>
+      <ol class="timeline">
+        <li><div><h3 data-ko="계약 검증부터 추가" data-en="Add contract tests first">계약 검증부터 추가</h3><p data-ko="고아 이벤트, 저장 가능 모드, 28개 행동 카드, 세 장 제안, 제안 외 적용을 실패시키는 검증을 먼저 만듭니다." data-en="First add failing checks for orphan events, bufferable modes, all 28 behavior cards, three-card offers, and unoffered-card application.">고아 이벤트, 저장 가능 모드, 28개 행동 카드, 세 장 제안, 제안 외 적용을 실패시키는 검증을 먼저 만듭니다.</p></div></li>
+        <li><div><h3 data-ko="이펙트 경계와 상태 피드백 수정" data-en="Repair effect routing and state feedback">이펙트 경계와 상태 피드백 수정</h3><p data-ko="렌더 대상만 효과 저장소에 넣고, 방어막·표식·절단 피드백을 기존 코드 기반 렌더러 안에서 구현합니다." data-en="Buffer only renderer-owned effects, then implement barrier, marked, and sheared feedback inside the existing code-native renderer.">렌더 대상만 효과 저장소에 넣고, 방어막·표식·절단 피드백을 기존 코드 기반 렌더러 안에서 구현합니다.</p></div></li>
+        <li><div><h3 data-ko="업그레이드 표시와 거래 계약 수정" data-en="Repair upgrade presentation and transaction contracts">업그레이드 표시와 거래 계약 수정</h3><p data-ko="행동 카드 레이아웃, 세 장 불변식, 카탈로그 스키마, 현재 제안에 속한 카드만 적용하는 경계를 함께 고칩니다." data-en="Repair behavior-card layout, the three-choice invariant, catalog schema, and the boundary that accepts only cards from the active offer.">행동 카드 레이아웃, 세 장 불변식, 카탈로그 스키마, 현재 제안에 속한 카드만 적용하는 경계를 함께 고칩니다.</p></div></li>
+        <li><div><h3 data-ko="실전 압박 QA와 Web 확인" data-en="Peak-pressure QA and Web verification">실전 압박 QA와 Web 확인</h3><p data-ko="다섯 스테이지 대표 장면과 주요 빌드에서 소유권·경계·텍스트 넘침·행동 발동을 확인하고 Web 내보내기와 빌드 실행을 검증합니다. 성능 최종 판정은 별도 활성 계획에서 마칩니다." data-en="Check ownership, bounds, text overflow, and behavior triggers in representative five-stage scenes and build packages, then verify Web export and the built app. Final performance qualification remains in its separate active plan.">다섯 스테이지 대표 장면과 주요 빌드에서 소유권·경계·텍스트 넘침·행동 발동을 확인하고 Web 내보내기와 빌드 실행을 검증합니다. 성능 최종 판정은 별도 활성 계획에서 마칩니다.</p></div></li>
+      </ol>
+      <div class="reply-box">
+        <p><strong data-ko="상세 계획" data-en="Detailed plan">상세 계획</strong></p>
+        <p data-ko="파일별 수정 위치, 선행 조건, 검증 명령, 완료·중단 조건은 실행계획 문서에 고정했습니다." data-en="The execution plan locks file-level change locations, dependencies, validation commands, and completion and stop conditions.">파일별 수정 위치, 선행 조건, 검증 명령, 완료·중단 조건은 실행계획 문서에 고정했습니다.</p>
+        <a href="../../../.agents/execplans/2026-08-07-effects-and-upgrade-contracts.md" data-ko="상세 실행계획 열기 →" data-en="Open the detailed execution plan →">상세 실행계획 열기 →</a>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="cleanup-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow" data-ko="이번 정리" data-en="CLEANUP IN THIS PASS">이번 정리</p>
+          <h2 id="cleanup-title" data-ko="현재 사실과 충돌하는 자료는 작업공간에서 제거했습니다" data-en="Material that conflicted with current truth was removed from the workspace">현재 사실과 충돌하는 자료는 작업공간에서 제거했습니다</h2>
         </div>
       </div>
       <div class="text-card">
-        <p data-ko="집중 검증과 Web 내보내기는 통과했습니다. 현재 활성 계획에는 조용한 환경에서의 native peak·capacity 쌍과 built-Web peak가 남아 있습니다. 이 결과 전에는 전체 성능 통과라고 부르지 않습니다." data-en="Focused checks and Web export passed. The active plan still needs the native peak/capacity pair and built-Web peak in a quiet environment. Until then, do not call the project performance-qualified.">집중 검증과 Web 내보내기는 통과했습니다. 현재 활성 계획에는 조용한 환경에서의 native peak·capacity 쌍과 built-Web peak가 남아 있습니다. 이 결과 전에는 전체 성능 통과라고 부르지 않습니다.</p>
+        <ul class="short-list">
+          <li data-ko="과거 A/B/C 후보 보고서와 이미지, 이전 리디렉션 보고서" data-en="Historical A/B/C candidate reports and images, plus old redirect reports">과거 A/B/C 후보 보고서와 이미지, 이전 리디렉션 보고서</li>
+          <li data-ko="완료됐거나 대체된 실행계획과 현재 규격과 충돌하는 옛 QA·에셋 합리화 문서" data-en="Completed or superseded plans and stale QA or asset-rationalization documents that conflicted with current specifications">완료됐거나 대체된 실행계획과 현재 규격과 충돌하는 옛 QA·에셋 합리화 문서</li>
+          <li data-ko="금지된 SVG 시각 프리뷰, 고아 import, 0.0001, 임시 ImageGen 산출물" data-en="A prohibited SVG visual preview, an orphan import, 0.0001, and temporary ImageGen outputs">금지된 SVG 시각 프리뷰, 고아 import, 0.0001, 임시 ImageGen 산출물</li>
+        </ul>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="pages-title">
+    <section class="section" aria-labelledby="kept-title">
       <div class="section-head">
         <div>
-          <p class="eyebrow" data-ko="2026-08-06 결정 기록" data-en="2026-08-06 DECISION RECORDS">2026-08-06 결정 기록</p>
-          <h2 id="pages-title" data-ko="주제별 배경 보기" data-en="Open topic background">주제별 배경 보기</h2>
+          <p class="eyebrow" data-ko="유지하는 것" data-en="PRESERVED">유지하는 것</p>
+          <h2 id="kept-title" data-ko="현재 제품 계약과 승인 에셋은 바꾸지 않습니다" data-en="Current product contracts and approved assets remain unchanged">현재 제품 계약과 승인 에셋은 바꾸지 않습니다</h2>
         </div>
       </div>
       <div class="topic-grid">
-        <article class="topic-card"><span class="tag tag--done" data-ko="적용됨" data-en="APPLIED">적용됨</span><h3 data-ko="맵" data-en="Map">맵</h3><p data-ko="열린 필드, 내벽, 위험 지대, 게이트와 미확인 장치의 결정 배경입니다." data-en="Decision background for the open field, inner walls, hazards, gates, and Mystery Devices.">열린 필드, 내벽, 위험 지대, 게이트와 미확인 장치의 결정 배경입니다.</p><a href="map-world.html" data-ko="맵 기록 열기 →" data-en="Open map record →">맵 기록 열기 →</a></article>
-        <article class="topic-card"><span class="tag tag--choose" data-ko="QA 예정" data-en="QA NEXT">QA 예정</span><h3 data-ko="이펙트" data-en="Effects">이펙트</h3><p data-ko="A/B/C 후보는 과거 검토 자료이며 현재 승인이 아닙니다. 런타임 의미와 가독성 판단에만 참고합니다." data-en="The A/B/C candidates are historical review material, not current approval. Use them only as context for runtime meaning and readability.">A/B/C 후보는 과거 검토 자료이며 현재 승인이 아닙니다. 런타임 의미와 가독성 판단에만 참고합니다.</p><a href="combat-effects.html" data-ko="이펙트 기록 열기 →" data-en="Open effect record →">이펙트 기록 열기 →</a></article>
-        <article class="topic-card"><span class="tag tag--choose" data-ko="QA 예정" data-en="QA NEXT">QA 예정</span><h3 data-ko="업그레이드" data-en="Upgrades">업그레이드</h3><p data-ko="행동 변화, 중복 정리와 빌드 상한을 정한 배경입니다. 표현 구현은 완료됐습니다." data-en="Background for behavior changes, duplicate cleanup, and build caps. Presentation implementation is complete.">행동 변화, 중복 정리와 빌드 상한을 정한 배경입니다. 표현 구현은 완료됐습니다.</p><a href="upgrades-builds.html" data-ko="업그레이드 기록 열기 →" data-en="Open upgrade record →">업그레이드 기록 열기 →</a></article>
-        <article class="topic-card"><span class="tag" data-ko="현재 유지" data-en="KEEP CURRENT">현재 유지</span><h3 data-ko="적" data-en="Enemies">적</h3><p data-ko="현재 역할과 조우 규칙을 유지합니다. 지금 활성화된 별도 변경 작업은 없습니다." data-en="Current roles and encounter rules remain in place. No separate change task is active now.">현재 역할과 조우 규칙을 유지합니다. 지금 활성화된 별도 변경 작업은 없습니다.</p><a href="enemies-encounters.html" data-ko="적 기록 열기 →" data-en="Open enemy record →">적 기록 열기 →</a></article>
-        <article class="topic-card"><span class="tag" data-ko="현재 유지" data-en="KEEP CURRENT">현재 유지</span><h3 data-ko="보스" data-en="Bosses">보스</h3><p data-ko="다섯 스테이지의 보스 흐름과 공통 방어막 노드 계약을 유지합니다. 지금 활성화된 별도 변경 작업은 없습니다." data-en="The five-stage boss flow and shared shield-node contract remain in place. No separate change task is active now.">다섯 스테이지의 보스 흐름과 공통 방어막 노드 계약을 유지합니다. 지금 활성화된 별도 변경 작업은 없습니다.</p><a href="bosses.html" data-ko="보스 기록 열기 →" data-en="Open boss record →">보스 기록 열기 →</a></article>
+        <article class="topic-card"><span class="tag tag--done" data-ko="유지" data-en="KEEP">유지</span><h3 data-ko="41개 카드와 세 개 무기 계열 한도" data-en="41 cards and three weapon-family limit">41개 카드와 세 개 무기 계열 한도</h3><p data-ko="내장 Seeker와 선택 보조무기 두 칸, 다섯 보조무기 계열, 필수 세 장 선택 구조를 유지합니다." data-en="Keep the built-in Seeker, two optional secondary slots, five secondary families, and mandatory three-choice structure.">내장 Seeker와 선택 보조무기 두 칸, 다섯 보조무기 계열, 필수 세 장 선택 구조를 유지합니다.</p></article>
+        <article class="topic-card"><span class="tag tag--done" data-ko="유지" data-en="KEEP">유지</span><h3 data-ko="EMP 한 장과 코드 기반 소형 피드백" data-en="One EMP image and code-native small feedback">EMP 한 장과 코드 기반 소형 피드백</h3><p data-ko="전용 소형 프레임 애니메이션은 다시 만들지 않습니다. 실제 판정·소유권·상태 변화가 표현을 결정합니다." data-en="Do not restore dedicated small-frame animations. Gameplay bounds, ownership, and state changes determine presentation.">전용 소형 프레임 애니메이션은 다시 만들지 않습니다. 실제 판정·소유권·상태 변화가 표현을 결정합니다.</p></article>
+        <article class="topic-card"><span class="tag tag--choose" data-ko="별도 게이트" data-en="SEPARATE GATE">별도 게이트</span><h3 data-ko="성능 최종 측정" data-en="Final performance measurements">성능 최종 측정</h3><p data-ko="native peak·capacity와 built-Web peak 측정이 남아 있습니다. 이 계획의 기능 QA가 끝나도 그 측정 전에는 전체 성능 통과라고 부르지 않습니다." data-en="Native peak and capacity plus built-Web peak measurements remain. Completing this plan's functional QA does not qualify overall performance.">native peak·capacity와 built-Web peak 측정이 남아 있습니다. 이 계획의 기능 QA가 끝나도 그 측정 전에는 전체 성능 통과라고 부르지 않습니다.</p></article>
       </div>
     </section>
   </main>
@@ -135,9 +148,9 @@
       const english = language === "en";
       document.title = english ? "Cardborne · Improvement Status" : "Cardborne · 개선 현황";
       pageDescription.content = english
-        ? "A current overview of Cardborne implementation status and next improvement work."
-        : "Cardborne의 현재 구현 상태와 다음 개선 작업을 정리한 종합 보고서입니다.";
-      reportNav.setAttribute("aria-label", english ? "Report pages" : "보고서 페이지");
+        ? "A consolidated report of current Cardborne effect and upgrade gaps, decisions, and execution order."
+        : "Cardborne 이펙트와 업그레이드의 현재 문제, 결정, 실행 순서를 정리한 종합 보고서입니다.";
+      reportNav.setAttribute("aria-label", english ? "Report sections" : "보고서 섹션");
       languageToggle.textContent = english ? "한국어" : "English";
       languageToggle.setAttribute("aria-pressed", String(english));
       languageToggle.setAttribute("aria-label", english ? "한국어로 전환" : "Switch to English");

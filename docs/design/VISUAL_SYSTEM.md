@@ -3,13 +3,12 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-07
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
   - ../product/vehicle_game_spec.md
   - ./cardborne-universal-art-style-reference.png
-  - ./visual-replacement-workbench/asset-rationalization.md
   - ./visual-replacement-workbench/external-candidates/README.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
@@ -549,14 +548,14 @@ Web export만으로 interactive built-Web smoke나 release performance를
   second topology owner.
 - Walkable surface, outer wall, and inner wall render as the three flat map-role
   fills without legacy patterned floor or shared-wall rasters.
-- Hazard and Mystery Device gameplay may be integrated before their exact raster
-  switch, but unapproved candidates never enter the production manifest.
+- Hazard and Mystery Device gameplay and their four approved raster assets are
+  integrated. Candidate and intermediate files stay outside the production
+  manifest.
 - Every non-beam projectile resolves `projectile/energy_teardrop`; runtime owns
   scale, rotation, faction/affinity tint, collision, speed, and homing.
 - The integrated player craft, XP master, four secondary bodies, shared
   projectile, pickups, current approved facilities, five bosses, three shared
-  boss-node states, and EMP image remain applied until the exact four map assets
-  complete approval and switching.
+  boss-node states, EMP image, and four map assets remain the applied set.
 - Manual aim remains readable through independent cursor, muzzle, projectile,
   and hit feedback. The player rear anchor is used only by transient dash
   feedback.

@@ -3,12 +3,11 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-03
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-07
 scope: Current AS-IS references, authored-raster targets, rendered legacy evidence, exact technical records, and generated review UI
 related:
   - ../VISUAL_SYSTEM.md
   - ../cardborne-universal-art-style-reference.png
-  - ./asset-rationalization.md
   - ./external-candidates/README.md
   - ../../product/vehicle_game_spec.md
   - ../../../art/visuals/production/README.md
@@ -34,9 +33,6 @@ production, runtime-change, and retirement targets.
   production root.
 - `to-be/assets/` may contain only directly promotable production files whose
   suffix exactly mirrors their production target path.
-- [`asset-rationalization.md`](./asset-rationalization.md) records the audited
-  evidence behind the pre-Phase-6 media boundary. It is not a second unit,
-  technical-readiness, or application-state authority.
 
 The workbench never owns gameplay rules or art direction. Those remain in the
 product specification and the mandatory visual authority pair:

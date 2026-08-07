@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-08-04
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-07
 topic: Curated external visual sources and review-only EMP candidate
 scope: License, provenance, hashes, adaptation intent, rejection decisions, and review artifacts for external visual source intake
 source:
@@ -13,7 +13,6 @@ source:
   - https://kenney.nl/assets/sci-fi-rts
 related:
   - ../README.md
-  - ../asset-rationalization.md
   - ../../VISUAL_SYSTEM.md
 ---
 

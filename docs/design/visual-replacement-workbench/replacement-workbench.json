@@ -3369,9 +3369,7 @@
       "deliverables": [],
       "final_paths": [],
       "reuse_paths": [],
-      "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/final-batch/hud_minimap_combat_cues_code_native.svg"
-      ],
+      "preview_paths": [],
       "retire_paths": [
         "art/visuals/production/gameplay/hud/action_barrier.png",
         "art/visuals/production/gameplay/hud/action_barrier.png.import",
