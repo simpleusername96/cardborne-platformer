@@ -799,13 +799,13 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		minimap_base_size.y + (target_size.y + 4.0 if _target_visible else 0.0)
 	)
 	var rail_contract := _upgrade_rail.debug_contract()
-	var center_width := (
-		404.0 if accessibility else (356.0 if compact else 520.0)
-	)
+	var center_width := _center_width(viewport_width, accessibility)
 	var center_height := HEALTH_STRIP_SIZE.y
 	if int(rail_contract["acquired_count"]) > 0:
-		center_height += (
-			46.0 * float(int(rail_contract["row_count"])) + 2.0
+		var row_count := int(rail_contract["row_count"])
+		center_height += 2.0 + (
+			float(rail_contract["row_height"]) * float(row_count)
+			+ float(rail_contract["row_separation"]) * float(maxi(0, row_count - 1))
 		)
 	var center_zone_size := Vector2(center_width, center_height)
 	var boss_width := mission_base_size.x - 20.0
@@ -846,7 +846,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"secondary_slot_size":Vector2.ZERO,
 		"minimap_size":minimap_base_size,
 		"minimap_zone_size":minimap_zone_size,
-		"health_cluster_size":HEALTH_STRIP_SIZE,
+		"health_cluster_size":Vector2(center_width, HEALTH_STRIP_SIZE.y),
 		"mission_cluster_size":mission_base_size,
 		"health_panel_free":true,
 		"health_meter":_health_bar.debug_contract(),
@@ -906,6 +906,7 @@ func _apply_responsive_layout() -> void:
 		return
 	var compact := size.x < 1100.0
 	var accessibility := _accessibility_text_scale > 1.0
+	var large := size.x >= 1600.0 and not accessibility
 	var mission_size := Vector2(
 		MISSION_CLUSTER_SIZE.x,
 		MISSION_CLUSTER_SIZE.y
@@ -929,14 +930,16 @@ func _apply_responsive_layout() -> void:
 		),
 		minimap_base_size.y + (target_size.y + 4.0 if _target_visible else 0.0)
 	)
-	var center_width := (
-		404.0 if accessibility else (356.0 if compact else 520.0)
-	)
-	_upgrade_rail.set_layout_profile(compact, accessibility)
+	var center_width := _center_width(size.x, accessibility)
+	_upgrade_rail.set_layout_profile(compact, accessibility, large)
 	var rail_contract := _upgrade_rail.debug_contract()
 	var center_height := HEALTH_STRIP_SIZE.y
 	if int(rail_contract["acquired_count"]) > 0:
-		center_height += 46.0 * float(int(rail_contract["row_count"])) + 2.0
+		var row_count := int(rail_contract["row_count"])
+		center_height += 2.0 + (
+			float(rail_contract["row_height"]) * float(row_count)
+			+ float(rail_contract["row_separation"]) * float(maxi(0, row_count - 1))
+		)
 	var center_size := Vector2(center_width, center_height)
 	_mission_panel.position = Vector2(18.0, 16.0)
 	_mission_panel.custom_minimum_size = mission_size
@@ -987,6 +990,16 @@ func _apply_responsive_layout() -> void:
 		16.0 + maxf(mission_size.y, center_size.y) + 12.0
 			if accessibility else 126.0
 	)
+
+
+func _center_width(viewport_width: float, accessibility: bool) -> float:
+	if accessibility:
+		return 404.0
+	if viewport_width < 1100.0:
+		return 400.0
+	if viewport_width >= 1600.0:
+		return 640.0
+	return HEALTH_STRIP_SIZE.x
 
 
 func set_accessibility_text_scale(scale: float) -> void:

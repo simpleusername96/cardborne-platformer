@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-07
 last_reviewed: 2026-08-08
@@ -103,8 +103,9 @@ Out of scope:
   surface. The live rail is for fast build recognition, not full inspection.
 - The user selected Candidate A / Image 1 on 2026-08-08. Production uses one
   centered linear rail. Up to 12 icons remain on one row; 13-18 wrap into a
-  second centered row. Candidate B and Candidate C are rejected for this pass and
-  do not become runtime options.
+  second centered row. At 200% text, the accessibility icon profile wraps after
+  10 to stay inside the 404px center zone. Candidate B and Candidate C are
+  rejected for this pass and do not become runtime options.
 - Ordinary minimap enemy markers use outer/inner radii `4.0/2.6`; the boss uses
   outer/inner radii `10.0/7.6`. Item, player, and reinforcement-facility markers
   retain their current geometry.
@@ -268,7 +269,7 @@ Current follow-up, ordered from lower coupling to higher coupling:
   stage/message/XP/boss summary into the top-left mission surface, and deliver
   build changes to the HUD only on upgrade/reset. No alternative runtime branch
   is created.
-- [ ] 12. Apply the locked minimap marker radii and produce the complete selected-
+- [x] 12. Apply the locked minimap marker radii and produce the complete selected-
   HUD responsive/localized capture set, including ordinary and boss marker
   evidence.
 - [x] 13. Replace external boss modules with the boss-owned timed shield, apply
@@ -280,19 +281,24 @@ Current follow-up, ordered from lower coupling to higher coupling:
 - [x] 15. Update `vehicle_game_spec.md`, `VISUAL_SYSTEM.md`, and upgrade contracts
   to the approved HUD, card hierarchy, shield loop, health values, and attack
   grammar. Remove obsolete objective-module wording and exact asset-count claims.
-- [ ] 16. Run focused gameplay/UI/authority validation, deterministic Korean and
+- [x] 16. Run focused gameplay/UI/authority validation, deterministic Korean and
   English captures, Web export, built-Web smoke, and the task-scoped quality
   audit. Commit coherent task-owned slices only.
 
 ## Progress and next step
 
 - Canonical progress: the checkboxes above.
-- Current milestone: 16.
-- Next action: run the broad focused batch, deterministic visual comparison, Web
-  export, built-app smoke, and the task-scoped quality audit.
+- Current milestone: complete.
+- Next action: none. Later boss-health or shield-window tuning requires separate
+  playtest evidence.
 - Update rule: check a milestone only when its source change, focused validation,
   and named evidence are present. Do not reuse a historical pass after its owner
   changes.
+
+Completion evidence is recorded in `design-qa.md`. The final capture root contains
+Korean and English `960x540`, `1280x720`, and `1920x1080` sets, plus both languages
+at `960x540` with 200% text. Chrome loaded the built Web export, entered gameplay,
+returned HTTP 200 for all eight requests, and emitted no console warning or error.
 
 ## Test plan and acceptance criteria
 

@@ -437,9 +437,6 @@ func _capture_build_state_evidence() -> void:
 		enemy.health_visible_timer = 99.0
 		_run._append_enemy(enemy)
 	_run._aim_target_id = "capture_build_state_0"
-	_run.run_build.apply(&"hull_integrity")
-	_run.run_build.apply(&"chassis_speed")
-	_run.run_build.apply(&"electric_field")
 	var threat_contacts: Array[Dictionary] = [
 		{
 			"offset":Vector2(-760.0, -180.0),
@@ -453,8 +450,37 @@ func _capture_build_state_evidence() -> void:
 		},
 	]
 	_run._threat_contact_cache = threat_contacts
-	await _settle_capture()
-	_save_capture("04-build-state-threat-radar.png")
+	for count in [0, 6, 12, 18]:
+		_apply_upgrade_rail_capture_fixture(count)
+		await _settle_capture()
+		_save_capture("04-build-state-%02d-upgrades.png" % count)
+
+
+func _apply_upgrade_rail_capture_fixture(count: int) -> void:
+	_run.run_build.reset()
+	var definitions: Array[VehicleUpgradeDefinition] = (
+		_run.upgrade_catalog.all_definitions()
+	)
+	for index in mini(count, definitions.size()):
+		var definition := definitions[index]
+		_run.run_build.levels[definition.id] = 1
+	var build_snapshot: Dictionary = _run._build_snapshot()
+	var upgrades := Array(build_snapshot.get("upgrades", [])).duplicate(true)
+	# The live catalog currently has twelve unique upgrades. Capture-only future
+	# receipts exercise the locked two-row/18-slot bound without changing gameplay.
+	while upgrades.size() < count and not upgrades.is_empty():
+		var source := Dictionary(upgrades[upgrades.size() % definitions.size()]).duplicate(true)
+		source["id"] = StringName("capture_future_upgrade_%02d" % upgrades.size())
+		source["level"] = 1 + upgrades.size() % 3
+		upgrades.append(source)
+	build_snapshot["upgrades"] = upgrades.slice(0, count)
+	_run._ui.update_hud({
+		"build_snapshot":build_snapshot,
+		"health":_run.player_health,
+		"max_health":_run._player_max_health(),
+		"minimap":_run._minimap_snapshot(true),
+		"threat_radar":_run._threat_radar_snapshot(),
+	})
 
 
 func _capture_field_item_evidence() -> void:

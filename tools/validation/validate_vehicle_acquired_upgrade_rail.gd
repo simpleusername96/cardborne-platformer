@@ -40,6 +40,26 @@ func _run() -> void:
 			int(rail.debug_contract()["rebuild_count"]) == rebuilds_before,
 			"unchanged %d-upgrade receipts do not rebuild the live rail" % count
 		)
+	rail.set_layout_profile(false, true)
+	rail.set_build_snapshot({"upgrades":_fixture_upgrades(catalog, 12)})
+	await process_frame
+	var accessibility_contract := rail.debug_contract()
+	_expect(
+		int(accessibility_contract["maximum_per_row"]) == 10
+			and int(accessibility_contract["row_count"]) == 2
+			and is_equal_approx(float(accessibility_contract["icon_size"]), 34.0),
+		"200% text wraps twelve upgrades without crossing the center zone"
+	)
+	rail.set_layout_profile(false, false, true)
+	rail.set_build_snapshot({"upgrades":_fixture_upgrades(catalog, 12)})
+	await process_frame
+	var large_contract := rail.debug_contract()
+	_expect(
+		int(large_contract["maximum_per_row"]) == 12
+			and int(large_contract["row_count"]) == 1
+			and is_equal_approx(float(large_contract["icon_size"]), 40.0),
+		"large viewports enlarge the selected linear rail without adding a panel"
+	)
 	rail.queue_free()
 	await process_frame
 	_finish()

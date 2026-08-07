@@ -9,14 +9,18 @@ const SemanticAssets = preload(
 )
 
 const MAX_PER_ROW := 12
+const ACCESSIBILITY_MAX_PER_ROW := 10
 const MAX_VISIBLE := 18
 const STANDARD_ICON_SIZE := 30.0
 const COMPACT_ICON_SIZE := 26.0
+const LARGE_ICON_SIZE := 40.0
 const ACCESSIBILITY_ICON_SIZE := 34.0
 
 var _upgrades: Array[Dictionary] = []
 var _signature := ""
 var _icon_size := STANDARD_ICON_SIZE
+var _maximum_per_row := MAX_PER_ROW
+var _item_separation := 8
 var _rebuild_count := 0
 
 
@@ -41,15 +45,30 @@ func set_build_snapshot(snapshot: Dictionary) -> void:
 	_rebuild()
 
 
-func set_layout_profile(compact: bool, accessibility: bool) -> void:
+func set_layout_profile(
+	compact: bool,
+	accessibility: bool,
+	large: bool = false
+) -> void:
 	var next_size := (
 		ACCESSIBILITY_ICON_SIZE
-		if accessibility
-		else (COMPACT_ICON_SIZE if compact else STANDARD_ICON_SIZE)
+		if accessibility else (
+			COMPACT_ICON_SIZE if compact else (
+				LARGE_ICON_SIZE if large else STANDARD_ICON_SIZE
+			)
+		)
 	)
-	if is_equal_approx(next_size, _icon_size):
+	var next_maximum := ACCESSIBILITY_MAX_PER_ROW if accessibility else MAX_PER_ROW
+	var next_separation := 7 if accessibility else (6 if compact else (10 if large else 8))
+	if (
+		is_equal_approx(next_size, _icon_size)
+		and next_maximum == _maximum_per_row
+		and next_separation == _item_separation
+	):
 		return
 	_icon_size = next_size
+	_maximum_per_row = next_maximum
+	_item_separation = next_separation
 	_rebuild()
 
 
@@ -66,9 +85,12 @@ func debug_contract() -> Dictionary:
 	return {
 		"acquired_count":_upgrades.size(),
 		"row_count":get_child_count(),
-		"maximum_per_row":MAX_PER_ROW,
+		"maximum_per_row":_maximum_per_row,
 		"maximum_visible":MAX_VISIBLE,
 		"icon_size":_icon_size,
+		"row_height":_icon_size + 13.0,
+		"row_separation":get_theme_constant("separation"),
+		"item_separation":_item_separation,
 		"texture_count":texture_count,
 		"empty_slot_count":0,
 		"panel_free":true,
@@ -91,10 +113,10 @@ func _rebuild() -> void:
 		var row := HBoxContainer.new()
 		row.name = "UpgradeRow%d" % (get_child_count() + 1)
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
-		row.add_theme_constant_override("separation", 4)
+		row.add_theme_constant_override("separation", _item_separation)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(row)
-		var row_end := mini(row_start + MAX_PER_ROW, _upgrades.size())
+		var row_end := mini(row_start + _maximum_per_row, _upgrades.size())
 		for index in range(row_start, row_end):
 			row.add_child(_icon_cell(_upgrades[index]))
 		row_start = row_end

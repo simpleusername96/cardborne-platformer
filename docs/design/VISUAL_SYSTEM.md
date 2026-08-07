@@ -488,8 +488,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   strip과 그 아래 acquired-only upgrade rail을 소유한다. top-right는 `176×108`
   minimap과 conditional target을 소유한다.
 - live upgrade rail은 기존 semantic upgrade artwork와 작은 level numeral만
-  표시한다. 빈 slot, family label, 공통 배경 panel은 만들지 않는다. standard
-  icon은 `30 px`이며 12개까지 한 줄, 13–18개는 두 번째 centered row로 감싼다.
+  표시한다. 빈 slot, family label, 공통 배경 panel은 만들지 않는다. compact,
+  standard, large icon은 각각 `26/30/40 px`이며 기본 화면에서는 12개까지 한 줄,
+  13–18개는 두 번째 centered row로 감싼다. 200% text에서는 `34 px` icon을
+  10개 단위로 감싸 404px center zone 밖으로 나가지 않는다.
   full name과 수치는 paused Ship Status가 계속 소유한다. build receipt가 바뀔
   때만 rail을 다시 만들며 fast HUD cadence에서 rebuild하지 않는다.
 - minimap의 dynamic marker는 player craft, item, enemy, boss, reinforcement facility
