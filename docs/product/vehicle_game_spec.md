@@ -114,19 +114,23 @@ five-stage run.
   values. Its `danger footprint` is the exact set of player-center positions
   that can receive damage: projectile radius plus player radius, contact
   colliders plus padding, beam half-width plus player radius, or the authored
-  area radius. Swept projectile and charge corridors include their rounded
-  endpoint caps. A footprint is rendered whenever it intersects the viewer even
-  if its owner is off-screen. Projectile and beam corridors stop at the same
-  current wall or live crate as collision. From the first visible startup frame,
-  damaging boss attacks hold their warned origin, direction, and target through
-  impact; only warning readiness changes.
-- Projectile startup shows its muzzle/cadence cue and no more than `0.4`
-  seconds of predicted travel; the current contract uses `0.36 s`. Beam is the
+  area radius. Projectile and beam corridors stop at the same current wall or
+  live crate as collision. From the first visible startup frame, damaging boss
+  attacks hold their warned origin, direction, and target through impact; only
+  warning readiness changes.
+- A projectile whose source is visible uses its muzzle/cadence cue and actual
+  projectile instead of a predicted route. An off-screen source shows no more
+  than `0.4` seconds of predicted travel only when that short route enters the
+  viewport; the current contract uses `0.36 s`. A live hostile projectile that
+  remains off-screen uses the same reaction horizon and entry test. Beam is the
   only delivery that warns its full committed corridor. Charge uses its locked
-  endpoint capsule, and area/support warnings retain their own exact footprint
-  rather than inheriting projectile or beam geometry.
-- Boss charge, area, pylon, and damaging summon warnings include their aimed
-  three-shot burst as separate corridors. Active beams retain both their
+  endpoint capsule. Non-damaging support descriptors do not create attack
+  warnings.
+- Minimal damage footprints contain only their collision-relevant boundary:
+  one outer ring for area, two side boundaries and the endpoint cap for charge,
+  and two side boundaries plus endpoint caps for beam. Affinity-specific inner
+  rings, diamonds, center lines, tick bars, and commit markers are not rendered.
+  Active beams retain both their
   physical beam body and the expanded player-center danger boundary. Persistent
   damage zones and boss area attacks keep their exact outer boundary visible
   for the complete damaging window. Hostile circular damage falls linearly from
@@ -412,6 +416,10 @@ hint appears once and the same hint cannot repeat within two seconds.
   objective and conditional boss state, top-right minimap and conditional
   target, and one compact bottom-center action strip. No ornamental full-width
   dock covers the field.
+- The minimap owns general enemy presence. The threat radar is limited to an
+  unseen committed projectile attack that has no world cue yet, the active boss
+  objective, and boss arrival. A single attack never appears as both a world
+  route and a radar contact.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, bosses, and field objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered

@@ -360,15 +360,25 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
 - hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
   않는 persistent condition을 약속하지 않는다. burn/poison/chill은 별도
   projectile badge나 orbit icon 없이 실제 actor state feedback으로만 표시한다.
-- projectile startup은 muzzle/cadence cue와 최대 `0.4 s` short lead만
+- 화면 안에 발사원이 보이는 projectile startup은 muzzle/cadence와 실제
+  projectile만 표시하고 예측 경로를 그리지 않는다. 화면 밖 발사원의 short
+  lead가 현재 viewport에 들어올 때만 최대 `0.4 s` 경로를 표시하며, 이미
+  생성된 화면 밖 hostile projectile도 같은 진입 조건과 `0.36 s` 반응 구간만
   표시한다. full committed path는 beam에만 사용하고 charge는 locked
   endpoint capsule을 사용한다.
 - beam은 gameplay corridor가 길이와 폭을 소유하고 shared authored beam-strip
   PNG를 그 live rectangle에 stretch한다. projectile PNG를 corridor 길이로
   늘이지 않으며, startup/end contact 같은 작은 cosmetic frame은 만들지 않는다.
-- telegraph는 gameplay이 제공한 exact live geometry를 사용하고 readiness는
-  단조롭게 증가한다. warning이 뜬 뒤 origin, direction과 target을 장식
+- telegraph는 gameplay이 제공한 exact live geometry를 사용한다. area는
+  outer boundary 한 개, charge는 두 side boundary와 endpoint cap, beam은 두
+  corridor boundary와 endpoint cap만 유지한다. affinity별 inner ring, diamond,
+  center line, tick bar와 commit marker는 만들지 않는다. readiness는
+  단조롭게 증가하며 warning이 뜬 뒤 origin, direction과 target을 장식
   animation으로 바꾸지 않는다.
+- threat radar는 world cue로 아직 보이지 않는 committed projectile attack,
+  active boss objective와 boss arrival만 표시한다. 일반 off-screen enemy 위치는
+  minimap이 소유하며 radar에서 중복하지 않는다. world 경로와 radar contact는
+  같은 공격을 동시에 표시하지 않는다.
 - maximum pressure에서도 player, crosshair, committed threat, boss
   objective, pickup과 current target이 world decoration보다 먼저 읽혀야 한다.
 - boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 외부

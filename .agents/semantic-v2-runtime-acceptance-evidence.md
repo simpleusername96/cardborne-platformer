@@ -405,3 +405,29 @@ Task-scoped quality review found and closed the final competing effect/status
 catalog ownership, stale tier-specific XP batch, missing circular-pad raster
 assertion, and missing shared-XP-batch assertion. No remaining task-scoped
 quality finding was accepted as open.
+
+## 2026-08-07 minimal combat-cue checkpoint
+
+Commit `b9e66b86` centralized combat-cue visibility in one presentation-only
+policy without changing attack geometry, damage, collision, cadence, or
+encounter rules. Visible projectile sources now rely on muzzle feedback and the
+actual projectile. A short world path is limited to an off-screen startup or
+live hostile projectile entering the viewport. Area, charge, and beam warnings
+retain only their exact outer boundary family. The threat radar no longer
+duplicates general enemy presence from the minimap and contains only an unseen
+committed projectile attack, the active boss objective, or boss arrival.
+
+Focused attack-route, combat-renderer, run, attack-contract, HUD,
+capture-driver, and visual-authority validation passed under Godot 4.7.1. The
+full Korean 1280×720 capture set contains 78 files at
+`build/captures/combat-cues-minimal-20260807/`. Manual review covered threat
+radar, hostile projectile startup and flight, the exact area boundary, charge
+boundaries, and representative boss startup/active states. No missing essential
+cue or restored decorative path was found.
+
+Full import and `tools/export_web.ps1` passed. The built output loaded through
+the registered Codex Web lane at `127.0.0.1:13029`; its document, image,
+JavaScript, WASM, PCK, icon, and blob requests returned HTTP 200, the deployment
+screen rendered, and Chrome reported no warning or error. The exact task-owned
+server was stopped and port 13029 was verified clean. This checkpoint is
+functional and visual evidence only; it does not qualify performance.

@@ -61,6 +61,9 @@ peak/capacity pair and built-Web peak measurements remain owned by
 - [x] 2026-08-07: reduced the production visual-event catalog from 39 entries
   to four rendered transients, deleted all other producers and payload fields,
   and moved barrier, Marked, and Sheared feedback to direct state ownership.
+- [x] 2026-08-07: user approved retaining only exact damage footprints, actual
+  projectiles, and off-screen incoming-attack cues; redundant route ornaments
+  and general-enemy threat-radar contacts were removed.
 - [ ] Phase 1: encode the minimal transient contract plus behavior-card, offer,
   and application invariants in
   focused validators.
@@ -110,6 +113,7 @@ player-facing presentation change and at final acceptance.
 | Card art must not replace in-world effect feedback. | No upgrade artwork changes are part of this plan. Runtime behavior and live feedback remain separate owners. | All |
 | Historical A/B/C effect sheets were not approvals. | Do not recreate or promote those sheets. Git history is sufficient recovery for the deleted reports. | Non-goal |
 | Elaborate invented concepts such as an undefined overload/discharge taxonomy were unclear. | Add no new lore term or effect taxonomy. Catalog metadata describes implementation ownership only. | EFX-01 |
+| Visible projectile routes and general off-screen enemy radar contacts duplicate world and minimap information. | Visible sources rely on muzzle plus the actual projectile. A short route exists only for an off-screen attack entering the viewport; otherwise the radar shows only the unseen committed projectile attack. General enemy presence stays on the minimap. | EFX-05 |
 
 ## Discovery Closure Gate
 
@@ -310,6 +314,24 @@ contract.
 
 Extend `validate_vehicle_status_stacking.gd` and renderer snapshots to prove
 visibility, distinct batch output, expiry, target transfer, and coexistence.
+
+### EFX-05 — Centralize the minimal combat-cue policy
+
+Keep gameplay descriptors, collision geometry, damage, and cadence in their
+existing owners. Add one presentation-only policy that decides whether a
+descriptor becomes an area, charge, beam, off-screen projectile-entry, or no
+world cue. Visible projectile sources produce no path; an off-screen startup or
+live projectile receives only the bounded incoming path when it enters the
+viewport.
+
+Render one exact outer area ring, two charge sides plus endpoint, and two beam
+sides plus endpoints. Delete affinity-specific inner rings, diamonds, center
+lines, tick bars, commit markers, and non-damaging support telegraphs.
+
+Use the same policy for the threat radar. It contains only an unseen committed
+projectile attack not already represented by a world cue, the active boss
+objective, and boss arrival. The minimap remains the sole owner of general enemy
+presence. Do not change attack timing, collision, damage, or encounter rules.
 
 Commit Phase 2 only after the four transient paths, attack geometry, projectiles,
 hull/barrier hits, boss reduced-damage overlay, and representative direct-state
@@ -539,4 +561,21 @@ Before setting `status: done`:
   and production Web export passed;
 - `validate_vehicle_damage_feedback.gd` retained its pre-existing non-terminating
   behavior and timed out at 180 seconds without an error;
+- upgrade phases remain open and this plan stays active.
+
+2026-08-07 minimal combat-cue follow-up:
+
+- runtime and focused validation commit: `b9e66b86`;
+- one presentation-only policy now owns area, charge, beam, off-screen
+  projectile-entry, and threat-radar visibility decisions;
+- visible projectile routes, support telegraphs, commit markers, affinity inner
+  ornaments, and general-enemy radar contacts were removed;
+- native full capture passed at
+  `build/captures/combat-cues-minimal-20260807/` with 78 files;
+- attack-route, combat-renderer, run, attack-contract, HUD, capture-driver, and
+  visual-authority validators passed;
+- full Godot import and production Web export passed; the built output loaded
+  on the registered Codex lane at `127.0.0.1:13029` with all seven requests at
+  HTTP 200 and no browser console warning or error;
+- the task-owned server was stopped and port `13029` was verified clean;
 - upgrade phases remain open and this plan stays active.
