@@ -18,7 +18,6 @@ var timers: Dictionary = {}
 var orbit_angle := 0.0
 var orbit_target_cooldowns: Dictionary = {}
 var mines: Array[Dictionary] = []
-var drone_position := Vector2.ZERO
 var seeker_cooldown := 0.0
 var _candidate_buffer: Array[EnemyState] = []
 var _expired_cooldown_ids: Array[String] = []
@@ -52,7 +51,6 @@ func reset(player_position: Vector2) -> void:
 	orbit_target_cooldowns.clear()
 	mines.clear()
 	orbit_angle = 0.0
-	drone_position = player_position
 	seeker_cooldown = 0.0
 
 
@@ -114,15 +112,6 @@ func update(
 		query_radius,
 		_damage_output
 	)
-	_update_drone(
-		delta,
-		player_position,
-		build,
-		enemies,
-		line_of_sight,
-		query_radius,
-		_damage_output
-	)
 	return _result
 
 
@@ -142,7 +131,6 @@ func snapshot(build: VehicleRunBuild) -> Dictionary:
 		"equipped":equipped_families(build),
 		"orbit_angle":orbit_angle,
 		"mines":mines.duplicate(true),
-		"drone_position":drone_position,
 		"seeker_cooldown":seeker_cooldown,
 	}
 
@@ -152,13 +140,12 @@ func fill_presentation_snapshot(output: Dictionary) -> Dictionary:
 	output.clear()
 	output["orbit_angle"] = orbit_angle
 	output["mines"] = mines
-	output["drone_position"] = drone_position
 	return output
 
 
 func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 	var result: Array[Dictionary] = [{"id":&"seeker", "level":1, "name_key":"SECONDARY_SEEKER_NAME", "slot_kind":&"built_in"}]
-	for secondary_id in [&"ion_field", &"orbit_blades", &"wake_mines", &"escort_drone"]:
+	for secondary_id in [&"ion_field", &"orbit_blades", &"wake_mines"]:
 		var definition: VehicleSecondaryDefinition = definitions.get(secondary_id)
 		if definition == null:
 			continue
@@ -183,12 +170,7 @@ func _update_seeker(
 	var targets_variant: Variant = find_targets.call(seeker_count)
 	if not targets_variant is Array or targets_variant.is_empty():
 		return
-	var cooldown := maxf(
-		SEEKER_COOLDOWN * 0.60,
-		build.stat(&"seeker_interval", SEEKER_COOLDOWN)
-	)
-	cooldown *= cooldown_multiplier
-	seeker_cooldown = cooldown
+	seeker_cooldown = SEEKER_COOLDOWN * cooldown_multiplier
 	var seeker_scale: float = [1.0, 0.85, 0.70][clampi(seeker_count - 1, 0, 2)]
 	for target_variant in targets_variant:
 		var target := target_variant as EnemyState
@@ -199,15 +181,15 @@ func _update_seeker(
 			"pos": origin + direction * 33.0,
 			"velocity": direction * 490.0,
 			"radius": 8.0,
-			"damage": 25.0 * build.stat(&"seeker_damage_multiplier", 1.0) * seeker_scale * (1.25 if target.marked_time > 0.0 else 1.0),
+			"damage": 25.0 * seeker_scale * (1.25 if target.marked_time > 0.0 else 1.0),
 			"life": 1.8,
 			"color": Color("8ae9dc"),
 			"owner": "seeker",
-			"pierce": build.level_of(&"phase_seeker"),
+			"pierce": 0,
 			"bounces": 0,
 			"homing": true,
 			"target_id": target.id,
-			"explosive": build.has(&"hunter_firmware"),
+			"explosive": false,
 			"structure_damage": 25.0,
 			"status_profile": null,
 			"wall_piercing": false,
@@ -285,30 +267,6 @@ func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: Veh
 			if _eligible(enemy) and Vector2(mine["pos"]).distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(Vector2(mine["pos"]), enemy.pos, 3.0):
 				_append_damage_intent(output, enemy, definition.value(level), "Wake Mine")
 		mines.remove_at(index)
-
-
-func _update_drone(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
-	var definition: VehicleSecondaryDefinition = definitions.get(&"escort_drone")
-	var level := build.level_of(definition.upgrade_id) if definition != null else 0
-	if level <= 0:
-		drone_position = origin
-		return
-	var desired := origin + Vector2.RIGHT.rotated(orbit_angle * 0.42) * 92.0
-	drone_position = drone_position.lerp(desired, clampf(delta * 8.0, 0.0, 1.0))
-	if not _timer_ready(&"escort_drone", delta, definition.auxiliary(level)):
-		return
-	var best: EnemyState
-	var best_distance := 480.0
-	_query_candidates(drone_position, best_distance, enemies, query_radius)
-	for enemy in _candidate_buffer:
-		if not _eligible(enemy):
-			continue
-		var distance := drone_position.distance_to(enemy.pos)
-		if distance < best_distance and line_of_sight.call(drone_position, enemy.pos, 3.0):
-			best = enemy
-			best_distance = distance
-	if best != null:
-		_append_damage_intent(output, best, definition.value(level), "Escort Drone")
 
 
 func _timer_ready(timer_id: StringName, delta: float, interval: float) -> bool:

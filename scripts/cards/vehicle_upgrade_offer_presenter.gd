@@ -4,46 +4,8 @@ extends RefCounted
 ## Builds immutable UI snapshots from upgrade definitions. Gameplay owns levels
 ## and application; UI and validators share this presentation boundary.
 
-const ARTWORK_BY_UPGRADE := {
-	&"ion_field": &"upgrade/ion_field",
-	&"orbit_blades": &"secondary/orbit_blade",
-	&"wake_mines": &"secondary/wake_mine",
-	&"escort_drone": &"secondary/escort_drone",
-	&"incendiary_core": &"upgrade/element_thermal",
-	&"thermal_compound": &"upgrade/element_thermal",
-	&"toxin_core": &"upgrade/element_toxin",
-	&"concentrated_toxin": &"upgrade/element_toxin",
-	&"contagion": &"upgrade/element_toxin",
-	&"cryo_core": &"upgrade/element_cryo",
-	&"deep_freeze": &"upgrade/element_cryo",
-	&"tuned_thrusters": &"upgrade/mobility_thruster",
-	&"dash_capacitor": &"upgrade/mobility_thruster",
-	&"coolant_wake": &"upgrade/dash_wake",
-	&"ion_wake": &"upgrade/dash_wake",
-	&"phase_shear": &"upgrade/dash_wake",
-	&"ram_pulse": &"upgrade/dash_wake",
-	&"aegis_cycle": &"upgrade/defense_matrix",
-	&"siphon_matrix": &"upgrade/defense_matrix",
-	&"static_aegis": &"upgrade/defense_matrix",
-	&"relay_overload": &"upgrade/system_relay",
-	&"pickup_magnet": &"upgrade/pickup_magnet",
-	&"reinforced_hull": &"upgrade/hull_reinforcement",
-}
-
 static func artwork_asset_id(definition: VehicleUpgradeDefinition) -> StringName:
-	if definition.artwork_asset_id != &"":
-		return definition.artwork_asset_id
-	if ARTWORK_BY_UPGRADE.has(definition.id):
-		return StringName(ARTWORK_BY_UPGRADE[definition.id])
-	if definition.family == &"primary":
-		return &"projectile/energy_teardrop"
-	if definition.family == &"secondary":
-		if definition.secondary_slot_kind == &"built_in":
-			return &"secondary/seeker"
-		return StringName("secondary/%s" % String(definition.id).replace("_", "-"))
-	if definition.family == &"skill":
-		return &"effect/emp_release"
-	return &"upgrade/system_relay"
+	return definition.artwork_asset_id
 
 
 static func snapshot(
@@ -60,23 +22,25 @@ static func snapshot(
 		})
 		if effect_rows.size() >= 2:
 			break
-	var summary_key := definition.summary_key_at(current_level + 1)
-	var behavior_change_key := ""
-	if (
-		not definition.behavior_ids.is_empty()
-		and definition.description_key != summary_key
-	):
-		behavior_change_key = definition.description_key
+	var change_kind := &"stats" if not definition.modifiers.is_empty() else (
+		&"unlock" if current_level == 0 else &"enhance"
+	)
+	var change_label_key := ""
+	if change_kind == &"unlock":
+		change_label_key = "UPGRADE_CHANGE_UNLOCK"
+	elif change_kind == &"enhance":
+		change_label_key = "UPGRADE_CHANGE_ENHANCE"
 	return {
 		"id":definition.id,
 		"title_key":definition.title_key,
-		"summary_key":summary_key,
-		"family_key":"UPGRADE_FAMILY_%s" % String(definition.family).to_upper(),
-		"family":definition.family,
+		"description_key":definition.description_key,
+		"category_key":"UPGRADE_CATEGORY_%s" % String(definition.category).to_upper(),
+		"category":definition.category,
 		"current_level":current_level,
 		"next_level":current_level + 1,
 		"max_level":definition.max_level,
+		"change_kind":change_kind,
+		"change_label_key":change_label_key,
 		"effect_rows":effect_rows,
-		"behavior_change_key":behavior_change_key,
 		"artwork_asset_id":artwork_asset_id(definition),
 	}

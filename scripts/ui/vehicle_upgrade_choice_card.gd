@@ -24,7 +24,7 @@ var _large := false
 var _accessibility_mode := false
 var _content_margin: MarginContainer
 var _content_box: VBoxContainer
-var _family: Label
+var _category: Label
 var _title: Label
 var _dossier: HBoxContainer
 var _art_lane: CenterContainer
@@ -38,7 +38,6 @@ var _comparison_fallback: Label
 var _footer_rule: HSeparator
 var _footer_box: VBoxContainer
 var _summary: Label
-var _behavior: Label
 
 
 func _ready() -> void:
@@ -115,7 +114,6 @@ func debug_contract() -> Dictionary:
 		"value_rows":(
 			(_effects.get_child_count() if is_instance_valid(_effects) else 0)
 			+ (1 if is_instance_valid(_comparison_fallback) and _comparison_fallback.visible else 0)
-			+ (1 if is_instance_valid(_behavior) and _behavior.visible else 0)
 			+ (1 if is_instance_valid(_level) and _level.visible else 0)
 		),
 		"effect_rows":_effects.get_child_count() if is_instance_valid(_effects) else 0,
@@ -131,17 +129,16 @@ func debug_contract() -> Dictionary:
 		"description_in_comparison":_comparison_fallback.visible,
 		"footer_visible":_footer_box.visible,
 		"type_sizes":{
-			"family":_family.get_theme_font_size("font_size"),
+			"category":_category.get_theme_font_size("font_size"),
 			"level":_level.get_theme_font_size("font_size"),
 			"title":_title.get_theme_font_size("font_size"),
 			"summary":_summary.get_theme_font_size("font_size"),
-			"behavior":_behavior.get_theme_font_size("font_size"),
 		},
 		"summary_max_lines":_summary.max_lines_visible,
 		"comparison_max_lines":_comparison_fallback.max_lines_visible,
 		"header_art_count":0,
 		"body_art_count":1 if is_instance_valid(_artwork) else 0,
-		"family_badge_count":0,
+		"category_badge_count":0,
 		"level_visible":_level.visible,
 		"level_text":_level.text,
 		"current_level":int(_offer.get("current_level", 0)),
@@ -150,11 +147,10 @@ func debug_contract() -> Dictionary:
 		"body_art_size":_artwork.custom_minimum_size,
 		"body_art_asset_id":artwork_asset_id,
 		"body_order":[
-			"family",
+			"category",
 			"title",
 			"dossier:art/divider/level/effects",
 			"description",
-			"behavior",
 		],
 		"state_cues":{
 			"normal_flat":normal_style is StyleBoxFlat,
@@ -165,8 +161,8 @@ func debug_contract() -> Dictionary:
 			"variation":theme_type_variation,
 		},
 		"mouse_passthrough":(
-			is_instance_valid(_family)
-			and _family.mouse_filter == Control.MOUSE_FILTER_IGNORE
+			is_instance_valid(_category)
+			and _category.mouse_filter == Control.MOUSE_FILTER_IGNORE
 		),
 	}
 
@@ -209,12 +205,12 @@ func _build() -> void:
 	_content_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content_margin.add_child(_content_box)
 
-	_family = _label(16, Art.SYSTEM)
-	_family.name = "FamilyLabel"
-	_family.theme_type_variation = &"MetricLabel"
-	_family.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_family.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_content_box.add_child(_family)
+	_category = _label(16, Art.SYSTEM)
+	_category.name = "CategoryLabel"
+	_category.theme_type_variation = &"MetricLabel"
+	_category.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_category.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_content_box.add_child(_category)
 
 	_title = _label(28, Art.TEXT_PRIMARY)
 	_title.name = "TitleLabel"
@@ -311,16 +307,6 @@ func _build() -> void:
 	_summary.size_flags_stretch_ratio = 2.0
 	_footer_box.add_child(_summary)
 
-	_behavior = _label(15, Art.SUPPORT)
-	_behavior.name = "BehaviorLabel"
-	_behavior.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_behavior.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_behavior.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_behavior.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_behavior.visible = false
-	_footer_box.add_child(_behavior)
-
-
 func _apply_layout_profile() -> void:
 	var horizontal_margin := 24
 	var vertical_margin := 20
@@ -329,20 +315,18 @@ func _apply_layout_profile() -> void:
 	var change_gap := 6
 	var effect_gap := 6
 	var footer_gap := 6
-	var family_size := 16
+	var category_size := 16
 	var title_size := 28
 	var level_size := 18
 	var summary_size := 16
-	var behavior_size := 15
 	var dossier_height := 190.0
 	var glyph_size := Vector2(128.0, 128.0)
 	var art_lane_width := 128.0
 	var change_lane_width := 132.0
-	var family_height := 20.0
+	var category_height := 20.0
 	var title_height := 54.0
 	var footer_height := 88.0
 	var summary_height := 52.0
-	var behavior_height := 28.0
 	if _accessibility_mode:
 		custom_minimum_size = ACCESSIBILITY_SIZE
 		horizontal_margin = 20
@@ -356,11 +340,10 @@ func _apply_layout_profile() -> void:
 		glyph_size = Vector2(176.0, 176.0)
 		art_lane_width = 176.0
 		change_lane_width = 268.0
-		family_height = 44.0
+		category_height = 44.0
 		title_height = 144.0
 		footer_height = 290.0
 		summary_height = 200.0
-		behavior_height = 82.0
 	elif _large:
 		custom_minimum_size = LARGE_SIZE
 		horizontal_margin = 28
@@ -370,20 +353,18 @@ func _apply_layout_profile() -> void:
 		change_gap = 8
 		effect_gap = 8
 		footer_gap = 8
-		family_size = 18
+		category_size = 18
 		title_size = 32
 		level_size = 18
 		summary_size = 18
-		behavior_size = 16
 		dossier_height = 204.0
 		glyph_size = Vector2(128.0, 128.0)
 		art_lane_width = 148.0
 		change_lane_width = 168.0
-		family_height = 24.0
+		category_height = 24.0
 		title_height = 62.0
 		footer_height = 94.0
 		summary_height = 56.0
-		behavior_height = 32.0
 	elif _compact:
 		custom_minimum_size = COMPACT_SIZE
 		horizontal_margin = 14
@@ -393,20 +374,18 @@ func _apply_layout_profile() -> void:
 		change_gap = 5
 		effect_gap = 5
 		footer_gap = 4
-		family_size = 13
+		category_size = 13
 		title_size = 22
 		level_size = 15
 		summary_size = 14
-		behavior_size = 14
 		dossier_height = 182.0
 		glyph_size = Vector2(88.0, 88.0)
 		art_lane_width = 88.0
 		change_lane_width = 140.0
-		family_height = 18.0
+		category_height = 18.0
 		title_height = 48.0
 		footer_height = 72.0
 		summary_height = 42.0
-		behavior_height = 24.0
 	else:
 		custom_minimum_size = WIDE_SIZE
 
@@ -419,7 +398,7 @@ func _apply_layout_profile() -> void:
 	_change_lane.add_theme_constant_override("separation", change_gap)
 	_effects.add_theme_constant_override("separation", effect_gap)
 	_footer_box.add_theme_constant_override("separation", footer_gap)
-	_family.custom_minimum_size.y = family_height
+	_category.custom_minimum_size.y = category_height
 	_title.custom_minimum_size.y = title_height
 	_dossier.custom_minimum_size.y = dossier_height
 	_art_lane.custom_minimum_size.x = art_lane_width
@@ -428,24 +407,21 @@ func _apply_layout_profile() -> void:
 	_artwork.size = glyph_size
 	_footer_box.custom_minimum_size.y = footer_height
 	_summary.custom_minimum_size.y = summary_height
-	_behavior.custom_minimum_size.y = behavior_height
-	Factory.apply_font_size(_family, family_size)
+	Factory.apply_font_size(_category, category_size)
 	Factory.apply_font_size(_title, title_size)
 	Factory.apply_font_size(_level, level_size)
 	Factory.apply_font_size(_comparison_fallback, summary_size)
 	Factory.apply_font_size(_summary, summary_size)
-	Factory.apply_font_size(_behavior, behavior_size)
 	_refresh_text_budgets()
 
 
 func _refresh() -> void:
 	if _offer.is_empty():
 		return
-	_family.text = tr(String(_offer.get("family_key", "")))
+	_category.text = tr(String(_offer.get("category_key", "")))
 	_level.text = _level_transition_text()
 	_title.text = tr(String(_offer.get("title_key", "")))
-	_summary.text = tr(String(_offer.get("summary_key", "")))
-	_comparison_fallback.text = _summary.text
+	_summary.text = tr(String(_offer.get("description_key", "")))
 	_refresh_artwork()
 	_clear(_effects)
 	var accessible_values := PackedStringArray()
@@ -485,24 +461,24 @@ func _refresh() -> void:
 		_effects.add_child(row)
 		accessible_values.append("%s %s" % [stat.text, _preview_value(preview)])
 	_effects.visible = _effects.get_child_count() > 0
-	_comparison_fallback.visible = not _effects.visible
-	_summary.visible = _effects.visible and not _summary.text.is_empty()
-	var behavior_key := String(_offer.get("behavior_change_key", ""))
-	_behavior.text = tr(behavior_key) if not behavior_key.is_empty() else ""
-	_behavior.visible = (
-		not _behavior.text.is_empty()
-		and _behavior.text != _summary.text
+	var change_kind := StringName(_offer.get("change_kind", &"stats"))
+	var change_label := tr(String(_offer.get("change_label_key", "")))
+	_comparison_fallback.visible = change_kind != &"stats"
+	_comparison_fallback.text = (
+		"%s\n%s" % [change_label, _summary.text]
+		if _comparison_fallback.visible
+		else ""
 	)
-	_footer_box.visible = _summary.visible or _behavior.visible
+	_summary.visible = change_kind == &"stats" and not _summary.text.is_empty()
+	_footer_box.visible = _summary.visible
 	_footer_rule.visible = _footer_box.visible
 	_refresh_text_budgets()
 	var accessibility_parts := PackedStringArray([
-		_family.text,
+		_category.text,
 		_title.text,
 		_level.text,
 		"; ".join(accessible_values),
-		_summary.text,
-		_behavior.text,
+		_comparison_fallback.text if _comparison_fallback.visible else _summary.text,
 	])
 	var non_empty_parts := PackedStringArray()
 	for part in accessibility_parts:
@@ -513,18 +489,15 @@ func _refresh() -> void:
 
 func _refresh_text_budgets() -> void:
 	if _accessibility_mode:
-		_comparison_fallback.max_lines_visible = 6
+		_comparison_fallback.max_lines_visible = 8
 		_summary.max_lines_visible = 5
-		_behavior.max_lines_visible = 2
 		return
 	if _compact:
-		_comparison_fallback.max_lines_visible = 7
+		_comparison_fallback.max_lines_visible = 8
 		_summary.max_lines_visible = 3
-		_behavior.max_lines_visible = 2
 		return
-	_comparison_fallback.max_lines_visible = 6
+	_comparison_fallback.max_lines_visible = 8
 	_summary.max_lines_visible = 3
-	_behavior.max_lines_visible = 2
 
 
 func _effect_stat_size() -> int:

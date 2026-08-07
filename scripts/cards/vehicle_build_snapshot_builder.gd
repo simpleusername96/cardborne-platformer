@@ -25,7 +25,7 @@ static func build(
 			"id":upgrade_id,
 			"title_key":definition.title_key,
 			"description_key":definition.description_key,
-			"family":definition.family,
+			"category":definition.category,
 			"level":run_build.level_of(upgrade_id),
 			"max_level":definition.max_level,
 		})

@@ -18,7 +18,7 @@ func _initialize() -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 83, "upgrade catalog produces 83 selectable level states")
+	_expect(snapshots.size() == 39, "upgrade catalog produces 39 selectable level states")
 
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
@@ -53,12 +53,12 @@ func _initialize() -> void:
 				% locale
 		)
 		for snapshot in snapshots:
-			_expect_translated(String(snapshot["family_key"]), locale)
+			_expect_translated(String(snapshot["category_key"]), locale)
 			_expect_translated(String(snapshot["title_key"]), locale)
-			_expect_translated(String(snapshot["summary_key"]), locale)
-			var behavior_key := String(snapshot["behavior_change_key"])
-			if not behavior_key.is_empty():
-				_expect_translated(behavior_key, locale)
+			_expect_translated(String(snapshot["description_key"]), locale)
+			var change_label_key := String(snapshot["change_label_key"])
+			if not change_label_key.is_empty():
+				_expect_translated(change_label_key, locale)
 			for preview_variant in snapshot["effect_rows"]:
 				_expect_translated(
 					String(Dictionary(preview_variant)["stat_key"]),

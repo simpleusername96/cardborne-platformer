@@ -1199,18 +1199,6 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 					warning_total
 				)
 			_sync_area_telegraph(descriptor)
-	var trails_variant: Variant = state.get("trails")
-	if trails_variant is Array:
-		for trail_variant in trails_variant:
-			var trail: Dictionary = trail_variant
-			var position := Vector2(trail["pos"])
-			if visible_world.has_point(position):
-				var alpha := clampf(float(trail["time"]) / maxf(0.001, float(trail["duration"])), 0.0, 1.0)
-				_write_ring(
-					position,
-					float(trail["radius"]),
-					Color(Art.MUSTARD, alpha * 0.64)
-				)
 	var player_position := Vector2(state["player_position"])
 	var hull_direction := Vector2(state["hull_direction"])
 	var aim_direction := Vector2(state["aim_direction"])
@@ -1324,19 +1312,6 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				16.0,
 				Color.WHITE
 			)
-	if bool(state.get("escort_drone", false)):
-		var drone_position := Vector2(secondary.get("drone_position", player_position))
-		var drone_direction := radial_outward_direction(
-			player_position,
-			drone_position
-		)
-		_queue_semantic_texture(
-			StringName(_secondary_asset_ids.get(&"escort_drone", &"")),
-			drone_position,
-			drone_direction.angle(),
-			19.0,
-			Color.WHITE
-		)
 	var cursor_position := Vector2(state.get("cursor_position", player_position + aim_direction * 230.0))
 	for direction in CARDINAL_DIRECTIONS:
 		_write_diamond(cursor_position + direction * 18.0, 6.0, Art.MUSTARD)

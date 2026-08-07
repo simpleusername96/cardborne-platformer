@@ -62,6 +62,8 @@ func _run() -> void:
 				>= visible_rect.size.length() + run.PRIMARY_VISIBLE_RANGE_MARGIN,
 			"primary range covers the full visible field diagonal with margin"
 		)
+		_check_upgrade_transaction_contract(run)
+		run.call("_reset_run", false)
 		_check_visual_collision_separation(run)
 		_check_critical_enemy_attack_progression(run)
 		var boss_arrival: Vector2 = run.call("_choose_boss_arrival_anchor")
@@ -105,6 +107,62 @@ func _run() -> void:
 	root.queue_free()
 	await process_frame
 	_finish()
+
+
+func _check_upgrade_transaction_contract(run) -> void:
+	run.capture_set_mode(&"playing")
+	run.call("_open_upgrade_reward", &"level_up")
+	_expect(
+		run.current_card_offer.size() == 3
+			and run.upgrade_offer_error.is_empty(),
+		"runtime freezes exactly three cards before opening an upgrade reward"
+	)
+	if run.current_card_offer.size() != 3:
+		return
+	var offered_id := StringName(run.current_card_offer[0]["id"])
+	var unoffered_id := &""
+	for definition in run.upgrade_catalog.all_definitions():
+		if not run.call("_current_offer_contains", definition.id):
+			unoffered_id = definition.id
+			break
+	var levels_before: int = int(run.run_build.total_levels())
+	var frozen_offer: Array[Dictionary] = run.current_card_offer.duplicate(true)
+	run.current_card_offer.pop_back()
+	_expect(
+		not run.apply_upgrade(offered_id)
+			and run.run_build.total_levels() == levels_before,
+		"runtime rejects selection from an incomplete frozen offer"
+	)
+	run.current_card_offer = frozen_offer
+	run.upgrade_offer_error = {"reason":"validation"}
+	_expect(
+		not run.apply_upgrade(offered_id)
+			and run.run_build.total_levels() == levels_before,
+		"runtime rejects selection while offer construction has an error"
+	)
+	run.upgrade_offer_error.clear()
+	_expect(
+		not run.apply_upgrade(unoffered_id)
+			and run.run_build.total_levels() == levels_before,
+		"runtime rejects a legal but unoffered upgrade without mutation"
+	)
+	_expect(
+		run.apply_upgrade(offered_id)
+			and run.run_build.total_levels() == levels_before + 1,
+		"runtime applies one card from the exact frozen offer"
+	)
+	_expect(
+		not run.apply_upgrade(offered_id)
+			and run.run_build.total_levels() == levels_before + 1,
+		"runtime rejects a double submit in the same transaction"
+	)
+	run.call("_resolve_reward_transaction")
+	run.capture_set_mode(&"playing")
+	_expect(
+		not run.apply_upgrade(offered_id)
+			and run.run_build.total_levels() == levels_before + 1,
+		"runtime rejects a stale selection after the transaction closes"
+	)
 
 
 func _check_visual_collision_separation(run) -> void:
@@ -547,7 +605,6 @@ func _check_combat_presentation_frame(run) -> void:
 	)
 	var original_mines: Array = run.secondary_runtime.mines.duplicate(true)
 	var original_orbit_angle := float(run.secondary_runtime.orbit_angle)
-	var original_drone_position := Vector2(run.secondary_runtime.drone_position)
 	run.player_protection_sources.clear()
 	run.player_protection_sources[&"emp"] = 0.40
 	run.secondary_runtime.mines.clear()
@@ -556,9 +613,6 @@ func _check_combat_presentation_frame(run) -> void:
 		"life":3.25,
 	})
 	run.secondary_runtime.orbit_angle = 0.37
-	run.secondary_runtime.drone_position = (
-		run.player_position + Vector2(0.0, 92.0)
-	)
 	var oracle: Dictionary = run.call("_combat_presentation_snapshot")
 	var first: Dictionary = run.call("_runtime_combat_presentation_snapshot")
 	var secondary: Dictionary = first["secondary"]
@@ -568,7 +622,6 @@ func _check_combat_presentation_frame(run) -> void:
 	)
 	_expect(
 		is_same(first["zones"], run.denied_zones)
-			and is_same(first["trails"], run.damaging_trails)
 			and is_same(first["protection_sources"], run.player_protection_sources)
 			and is_same(first["resolved_boss_modules"], run.resolved_boss_module_visuals)
 			and is_same(secondary, run._runtime_secondary_presentation_frame)
@@ -578,10 +631,10 @@ func _check_combat_presentation_frame(run) -> void:
 		"combat presentation borrows synchronous live collections without duplication"
 	)
 	_expect(
-		secondary.size() == 3
+		secondary.size() == 2
 			and not secondary.has("equipped")
 			and not secondary.has("seeker_cooldown"),
-		"runtime secondary state exposes only orbit, mines, and drone fields"
+		"runtime secondary state exposes only orbit and mine fields"
 	)
 	_expect(
 		not is_same(oracle["protection_sources"], run.player_protection_sources)
@@ -621,7 +674,6 @@ func _check_combat_presentation_frame(run) -> void:
 	run.secondary_runtime.mines.clear()
 	run.secondary_runtime.mines.append_array(original_mines)
 	run.secondary_runtime.orbit_angle = original_orbit_angle
-	run.secondary_runtime.drone_position = original_drone_position
 
 
 func _presentation_snapshots_match(
@@ -629,20 +681,20 @@ func _presentation_snapshots_match(
 	actual: Dictionary
 ) -> bool:
 	for key in [
-		"zones", "trails", "player_position", "hull_direction",
+		"zones", "player_position", "hull_direction",
 		"aim_direction", "player_speed", "dash_active", "dash_progress",
 		"dash_direction", "player_hit", "player_hit_remaining",
 		"player_barrier_hit_remaining", "player_invulnerable_remaining",
 		"protection_sources", "muzzle_flash",
 		"barrier_strength", "reduced_motion", "run_time",
 		"secondary_visual_tier", "resolved_boss_modules",
-		"ion_level", "blade_level", "escort_drone", "cursor_position",
+		"ion_level", "blade_level", "cursor_position",
 	]:
 		if expected.get(key) != actual.get(key):
 			return false
 	var expected_secondary := Dictionary(expected.get("secondary", {}))
 	var actual_secondary := Dictionary(actual.get("secondary", {}))
-	for key in ["orbit_angle", "mines", "drone_position"]:
+	for key in ["orbit_angle", "mines"]:
 		if expected_secondary.get(key) != actual_secondary.get(key):
 			return false
 	return true

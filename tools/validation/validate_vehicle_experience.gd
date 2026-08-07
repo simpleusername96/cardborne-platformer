@@ -5,7 +5,6 @@ const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.g
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
-const CycleRuntime = preload("res://scripts/cards/vehicle_cycle_runtime.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const LayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
@@ -120,7 +119,7 @@ func _validate_experience_runtime() -> void:
 
 func _validate_route_level_cadence() -> void:
 	var runtime := ExperienceRuntime.new()
-	var expected_levels := [7, 4, 3, 3, 4]
+	var expected_levels := [7, 4, 2, 4, 3]
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
 		var stage_experience := 24 # Stage-boss core plus the minimum quota path.
@@ -147,7 +146,7 @@ func _validate_route_level_cadence() -> void:
 		)
 		while runtime.consume_pending_level():
 			pass
-	_expect(runtime.run_level == 22, "the enlarged-field quota path ends at run level twenty-two")
+	_expect(runtime.run_level == 21, "the authored quota path ends at run level twenty-one")
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:
@@ -163,17 +162,15 @@ func _validate_level_up_cards() -> void:
 	var build := RunBuild.new(catalog)
 	var offer := catalog.offer(build, 0, 0, &"level_up", 0)
 	_expect(offer.size() == 3, "level-up source produces three choices")
-	var cycles := CycleRuntime.new()
-	build.apply(&"aegis_cycle")
-	var activations := cycles.sync_build(build)
-	_expect(activations.has(&"aegis_cycle") and cycles.is_active(&"aegis_cycle"), "new cycle activates immediately")
-	_expect(is_equal_approx(float(cycles.states[&"aegis_cycle"]["active"]), 5.0), "Aegis level one demonstrates its five-second window")
-	cycles.advance(5.0)
-	_expect(is_equal_approx(float(cycles.states[&"aegis_cycle"]["recharge"]), 14.0), "Aegis enters its exact fourteen-second recharge")
-	build.apply(&"aegis_cycle")
-	activations = cycles.sync_build(build)
-	_expect(activations.has(&"aegis_cycle") and cycles.states.size() == 1, "upgrading a cycle re-demonstrates it without duplicating orbit state")
-	_expect(is_equal_approx(float(cycles.states[&"aegis_cycle"]["active"]), 6.0), "Aegis level two uses its six-second active window")
+	for _level in 3:
+		_expect(
+			bool(build.apply(&"pickup_magnet").get("applied", false)),
+			"Pickup Magnet remains available through three levels"
+		)
+	_expect(
+		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 210.0),
+		"Pickup Magnet reaches its exact final collection bonus"
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

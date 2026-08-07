@@ -26,7 +26,6 @@ const PRESSURE_FIELDS := [
 	"experience_shards",
 	"effects",
 	"denied_zones",
-	"damaging_trails",
 ]
 
 var output_path := ""

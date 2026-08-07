@@ -146,12 +146,12 @@ func _run() -> void:
 	)
 	rendered_effect.time = 0.5
 	var presentation := {
-		"zones":[], "trails":[], "player_position":Vector2(260.0,300.0),
+		"zones":[], "player_position":Vector2(260.0,300.0),
 		"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
 		"player_hit":false, "muzzle_flash":0.0, "barrier_strength":10.0,
 		"player_barrier_hit_remaining":0.0,
 		"reduced_motion":true, "run_time":1.0, "ion_level":0,
-		"blade_level":0, "escort_drone":false, "secondary":{},
+		"blade_level":0, "secondary":{},
 		"cursor_position":Vector2(460.0,300.0),
 	}
 	renderer.sync(
@@ -725,7 +725,7 @@ func _validate_player_directional_cues(
 			and active_status_beams - expired_status_beams == 2,
 		"marked/sheared add four amber brackets and two mint side bars, then expire"
 	)
-	for asset_id in [&"secondary/orbit_blade", &"secondary/escort_drone"]:
+	for asset_id in [&"secondary/orbit_blade"]:
 		var draws := renderer.debug_semantic_texture_draws(asset_id)
 		_expect(not draws.is_empty(), "%s owns a rendered directional fixture" % asset_id)
 		for draw in draws:
@@ -744,7 +744,6 @@ func _player_presentation(
 ) -> Dictionary:
 	return {
 		"zones":[],
-		"trails":[],
 		"player_position":player_position,
 		"hull_direction":Vector2.RIGHT,
 		"aim_direction":Vector2.UP,
@@ -764,11 +763,9 @@ func _player_presentation(
 		"resolved_boss_modules":[],
 		"ion_level":0,
 		"blade_level":1,
-		"escort_drone":true,
 		"secondary":{
 			"orbit_angle":0.37,
 			"mines":[],
-			"drone_position":player_position + Vector2.DOWN * 92.0,
 		},
 		"cursor_position":player_position + Vector2.UP * 230.0,
 	}

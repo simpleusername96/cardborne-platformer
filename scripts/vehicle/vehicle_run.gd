@@ -42,7 +42,6 @@ const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.g
 const RewardRuntime = preload("res://scripts/rewards/vehicle_reward_runtime.gd")
 const PickupContact = preload("res://scripts/rewards/vehicle_pickup_contact.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
-const CycleRuntime = preload("res://scripts/cards/vehicle_cycle_runtime.gd")
 const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 const PursuitField = preload("res://scripts/enemies/vehicle_pursuit_field.gd")
@@ -210,16 +209,16 @@ var upgrade_catalog := UpgradeCatalog.new()
 var run_build := RunBuild.new(upgrade_catalog)
 var _status_profile: VehicleStatusProfile = StatusProfile.from_build(run_build)
 var experience_runtime := ExperienceRuntime.new()
-var cycle_runtime := CycleRuntime.new()
 var applied_upgrades: Dictionary = run_build.levels
 var current_card_offer: Array[Dictionary] = []
+var upgrade_offer_error: Dictionary = {}
+var upgrade_selection_applied := false
 var reward_runtime := RewardRuntime.new()
 var completed_group_rewards: Dictionary = {}
 var pending_stage_completion := false
 var experience_recall_timer := 0.0
 var stage_transition_remaining := 0.0
 var completed_stage_reports: Array[Dictionary] = []
-var lifesteal_budget := 6.0
 
 var enemy_store := EnemyStore.new()
 var _enemy_update_schedule := EnemyUpdateSchedule.new()
@@ -240,7 +239,6 @@ var denied_zones: Array[Dictionary] = []
 var effect_store := EffectStore.new()
 var effects: Array[VehicleEffectState] = effect_store.live
 var resolved_boss_module_visuals: Array[Dictionary] = []
-var damaging_trails: Array[Dictionary] = []
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
 var _motion_cover_query: Array[Rect2] = []
@@ -505,7 +503,6 @@ func _physics_process(delta: float) -> void:
 		_update_player(delta)
 		var pickup_motion_end := player_position
 		_update_terrain(delta, pickup_motion_start)
-		_update_cycle_upgrades(delta)
 		_update_pickups(pickup_motion_start, pickup_motion_end)
 		if experience_recall_timer > 0.0:
 			_update_experience(delta)
@@ -529,7 +526,6 @@ func _physics_process(delta: float) -> void:
 			section_started = Time.get_ticks_usec()
 		_update_projectiles(delta)
 		_update_denied_zones(delta)
-		_update_trails(delta)
 		if _simulation_lod_bucket == 0:
 			_update_effects(delta * 2.0)
 		if _performance_detail_sample_active:
@@ -787,13 +783,12 @@ func _reset_run(
 		experience_runtime.pending_level_ups = 0
 		reward_runtime.reset_stage()
 	_status_profile = StatusProfile.from_build(run_build)
-	cycle_runtime.reset()
 	secondary_runtime.reset(player_position)
-	_sync_cycle_upgrades()
 	experience_recall_timer = 0.0
-	lifesteal_budget = 6.0
 	player_health = _player_max_health()
 	current_card_offer.clear()
+	upgrade_offer_error.clear()
+	upgrade_selection_applied = false
 	_clear_enemies()
 	_clear_projectiles()
 	pickups.clear()
@@ -801,7 +796,6 @@ func _reset_run(
 	denied_zones.clear()
 	_clear_effects()
 	resolved_boss_module_visuals.clear()
-	damaging_trails.clear()
 	encounter_runtime.configure(
 		current_stage_id,
 		StageCatalog.packets(current_stage_id),
@@ -1307,7 +1301,6 @@ func _release_tree_pause() -> void:
 
 func _update_player(delta: float) -> void:
 	var previous_position := player_position
-	lifesteal_budget = minf(6.0, lifesteal_budget + 6.0 * delta)
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
 	_advance_player_protection_sources(delta)
 	var primary_held := Input.is_action_pressed("primary_fire")
@@ -1473,23 +1466,9 @@ func _update_dash(delta: float) -> void:
 				30.0,
 				player_dash_direction
 			)
-		if applied_upgrades.has(&"ion_wake"):
-			damaging_trails.append({
-				"pos": before,
-				"radius": 42.0,
-				"time": 0.75,
-				"duration": 0.75,
-				"hit_ids": {},
-			})
 	if player_dash_timer <= 0.0:
 		if run_build.has(&"coolant_wake"):
 			coolant_surge_timer = 2.0
-		if applied_upgrades.has(&"ram_pulse"):
-			_damage_enemies_in_radius(
-				player_position, 145.0, 32.0, "Ram Pulse", &"kinetic", true
-			)
-			_clear_hostile_projectiles(player_position, 170.0)
-			_play_sound(&"emp", 1.55)
 
 
 func _live_effect_count(kind: StringName) -> int:
@@ -1517,10 +1496,7 @@ func _fire_primary() -> void:
 	var primary_multiplier := run_build.stat(&"primary_damage_multiplier", 1.0)
 	var origin := player_position + player_aim_direction * 39.0
 	var fork_level := mini(2, run_build.level_of(&"forked_muzzle"))
-	var spread_step := deg_to_rad(7.0) * run_build.stat(&"primary_spread", 1.0)
-	var projectile_speed := run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED)
-	var base_radius := run_build.stat(&"primary_radius", PRIMARY_PROJECTILE_RADIUS)
-	var primary_structure := run_build.stat(&"primary_structure", 1.0)
+	var spread_step := deg_to_rad(7.0)
 	var projectile_range := _primary_projectile_range()
 	var projectile_specs: Array[Dictionary] = [{"angle":0.0, "scale":1.0}]
 	if fork_level == 1:
@@ -1535,10 +1511,10 @@ func _fire_primary() -> void:
 			origin,
 			player_aim_direction.rotated(float(spec["angle"])),
 			18.0 * primary_multiplier * scale,
-			projectile_speed,
+			PRIMARY_PROJECTILE_SPEED,
 			run_build.level_of(&"phase_lance"),
-			base_radius,
-			18.0 * primary_structure * scale,
+			PRIMARY_PROJECTILE_RADIUS,
+			18.0 * scale,
 			projectile_range,
 			_status_profile,
 			false
@@ -1560,10 +1536,9 @@ func _primary_fire_interval() -> float:
 
 
 func _primary_projectile_range() -> float:
-	var authored_range := run_build.stat(&"primary_range", PRIMARY_RANGE)
 	var visible_diagonal := _visible_world_rect(0.0).size.length()
 	return maxf(
-		authored_range,
+		PRIMARY_RANGE,
 		visible_diagonal + PRIMARY_VISIBLE_RANGE_MARGIN
 	)
 
@@ -1748,7 +1723,7 @@ func _spawn_player_projectile(
 		"color": Art.attack_color(affinity, true),
 		"owner": "player_primary",
 		"pierce": extra_pierce,
-		"bounces": 1 if run_build.has(&"ricochet_matrix") else 0,
+		"bounces": 0,
 		"homing": false,
 		"target_id": "",
 		"explosive": false,
@@ -1810,10 +1785,7 @@ func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:
 		var role := enemy.role
 		if enemy.marked_time > 0.0:
 			priority -= 900.0
-		if applied_upgrades.has(&"hunter_firmware"):
-			if role in [&"generator", &"turret", &"mine", &"boss_pylon", &"beam_sentinel", &"repair_tender", &"drone_carrier"]:
-				priority -= 500.0
-		elif role in [&"chaser", &"shooter", &"controller"]:
+		if role in [&"chaser", &"shooter", &"controller"]:
 			priority -= 60.0
 		enemy.target_score = priority + distance
 		candidates.append(enemy)
@@ -1852,7 +1824,7 @@ func _start_emp() -> void:
 
 func _release_emp(is_aftershock: bool) -> void:
 	var radius := _emp_radius() * (0.68 if is_aftershock else 1.0)
-	var damage := (34.0 if is_aftershock else 62.0) * run_build.stat(&"emp_damage_multiplier", 1.0)
+	var damage := 34.0 if is_aftershock else 62.0
 	_damage_enemies_in_radius(
 		player_position,
 		radius,
@@ -1870,8 +1842,6 @@ func _release_emp(is_aftershock: bool) -> void:
 	for enemy in _enemy_query_buffer:
 		if Vector2(enemy.pos).distance_to(player_position) <= radius:
 			var stun_duration := 1.25 if is_aftershock else 2.1
-			if not is_aftershock and run_build.has(&"relay_overload") and SpecialistRuntime.is_support_or_installation(StringName(enemy.role)):
-				stun_duration += 2.5 * run_build.level_of(&"relay_overload")
 			enemy.stun = maxf(float(enemy.stun), stun_duration)
 	_add_effect(
 		&"player_emp_release",
@@ -1888,11 +1858,11 @@ func _release_emp(is_aftershock: bool) -> void:
 
 func _emp_cooldown_max() -> float:
 	var base := EMP_COOLDOWN - (1.5 if persistent_relay_module else 0.0)
-	return maxf(EMP_COOLDOWN * 0.70, run_build.stat(&"emp_cooldown_multiplier", base))
+	return base
 
 
 func _emp_radius() -> float:
-	return run_build.stat(&"emp_radius_multiplier", EMP_RADIUS)
+	return EMP_RADIUS
 
 
 func _player_move_speed() -> float:
@@ -1900,30 +1870,11 @@ func _player_move_speed() -> float:
 
 
 func _dash_cooldown_max() -> float:
-	return maxf(DASH_COOLDOWN * 0.75, run_build.stat(&"dash_cooldown_multiplier", DASH_COOLDOWN))
+	return DASH_COOLDOWN
 
 
 func _player_max_health() -> float:
 	return run_build.stat(&"max_health_bonus", PLAYER_MAX_HEALTH)
-
-
-func _sync_cycle_upgrades() -> void:
-	for upgrade_id in cycle_runtime.sync_build(run_build).keys():
-		_activate_cycle(StringName(upgrade_id))
-
-
-func _update_cycle_upgrades(delta: float) -> void:
-	for upgrade_id in cycle_runtime.advance(delta):
-		_activate_cycle(upgrade_id)
-
-
-func _activate_cycle(upgrade_id: StringName) -> void:
-	if upgrade_id != &"aegis_cycle":
-		return
-	var level := cycle_runtime.level(upgrade_id)
-	player_barrier_strength = maxf(player_barrier_strength, 28.0 if level >= 2 else 20.0)
-	player_barrier_timer = maxf(player_barrier_timer, 6.0 if level >= 2 else 5.0)
-	_clear_hostile_projectiles(player_position, 86.0)
 
 
 func _update_pickups(motion_start: Vector2, motion_end: Vector2) -> void:
@@ -3878,23 +3829,6 @@ func _update_denied_zones(delta: float) -> void:
 			)
 
 
-func _update_trails(delta: float) -> void:
-	for index in range(damaging_trails.size() - 1, -1, -1):
-		var trail: Dictionary = damaging_trails[index]
-		trail["time"] = float(trail["time"]) - delta
-		if float(trail["time"]) <= 0.0:
-			damaging_trails.remove_at(index)
-			continue
-		var hit_ids: Dictionary = trail["hit_ids"]
-		enemy_grid.query_radius_into(Vector2(trail["pos"]), float(trail["radius"]), enemies, _enemy_query_buffer)
-		for enemy in _enemy_query_buffer:
-			if hit_ids.has(enemy.id):
-				continue
-			if enemy.pos.distance_to(Vector2(trail["pos"])) <= float(trail["radius"]) + enemy.radius:
-				hit_ids[enemy.id] = true
-				_damage_enemy(enemy, 18.0, "Ion Wake", &"arc", true)
-
-
 func _update_effects(delta: float) -> void:
 	if _emp_aftershock_timer > 0.0:
 		_emp_aftershock_timer = maxf(0.0, _emp_aftershock_timer - delta)
@@ -3958,8 +3892,6 @@ func _damage_enemy(
 	):
 		enemy.health_visible_timer = 1.5
 		return 0.0
-	if not final_effective and player_owned and cycle_runtime.is_active(&"overclock_cycle"):
-		amount *= 1.35 if cycle_runtime.level(&"overclock_cycle") >= 2 else 1.25
 	var multiplier := 1.0
 	if not final_effective and enemy.shielded:
 		multiplier *= 0.45
@@ -3986,13 +3918,6 @@ func _damage_enemy(
 			stage_telemetry.record_outgoing(
 				DamageSourceCatalog.outgoing_id(source), attribute, mine_applied
 			)
-		_apply_lifesteal(
-			mine_applied,
-			source,
-			role,
-			player_owned,
-			enemy.pos
-		)
 		return mine_applied
 	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
 	if applied_damage <= 0.0:
@@ -4020,13 +3945,6 @@ func _damage_enemy(
 		)
 	enemy.flash = 0.11
 	enemy.health_visible_timer = 1.0 if enemy.health_class == &"swarm" else 1.5
-	_apply_lifesteal(
-		applied_damage,
-		source,
-		role,
-		player_owned,
-		enemy.pos
-	)
 	if (
 		role == &"stage_boss"
 		and enemy.health > 0.0
@@ -4084,30 +4002,6 @@ func _record_status_applications(profile: StatusProfile) -> void:
 		stage_telemetry.record_status_application(&"chill")
 
 
-func _apply_lifesteal(
-	applied_damage: float,
-	source: String,
-	_role: StringName,
-	player_owned: bool,
-	_source_position: Vector2
-) -> void:
-	if (
-		not player_owned
-		or applied_damage <= 0.0
-		or not run_build.has(&"siphon_matrix")
-		or lifesteal_budget <= 0.0
-	):
-		return
-	if source == "validation":
-		return
-	var ratio := 0.035 if run_build.level_of(&"siphon_matrix") >= 2 else 0.02
-	var healing := minf(minf(applied_damage * ratio, lifesteal_budget), _player_max_health() - player_health)
-	if healing <= 0.0:
-		return
-	player_health += healing
-	lifesteal_budget -= healing
-
-
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
@@ -4130,7 +4024,6 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		enemy_store.queue_defeat(enemy)
 		_handle_boss_module_result(module_result)
 		return
-	var spreads_poison := StatusRuntime.contagion_enabled(enemy)
 	var split_on_defeat := (
 		enemy.archetype == &"splitter_barge"
 		and not enemy.summoned
@@ -4166,24 +4059,6 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	var defeated_group := enemy.group_id
 	if not defeated_group.is_empty():
 		_try_group_completion_reward(defeated_group, enemy.pos)
-	if spreads_poison:
-		var nearby: Array[EnemyState] = []
-		enemy_grid.query_radius_into(enemy.pos, 100.0, enemies, nearby)
-		nearby.sort_custom(
-			func(a: EnemyState, b: EnemyState) -> bool:
-				var a_distance := a.pos.distance_squared_to(enemy.pos)
-				var b_distance := b.pos.distance_squared_to(enemy.pos)
-				if not is_equal_approx(a_distance, b_distance):
-					return a_distance < b_distance
-				return a.id < b.id
-		)
-		var spread_count := 0
-		for target in nearby:
-			if target != enemy and target.alive and target.pos.distance_to(enemy.pos) <= 100.0:
-				StatusRuntime.spread_poison(enemy, target)
-				spread_count += 1
-				if spread_count >= 8:
-					break
 	_play_sound(
 		&"destroy_priority"
 		if role in [&"stage_boss", &"generator", &"interceptor_tower", &"repair_tender", &"drone_carrier", &"beam_sentinel"]
@@ -4520,7 +4395,21 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 	if offer_serial < 0:
 		return
 	mode = RunMode.UPGRADE
+	upgrade_selection_applied = false
 	current_card_offer = _build_card_offer(source_id, offer_serial)
+	if current_card_offer.size() != 3:
+		var offer_seed := field_layout.seed if field_layout != null else run_index
+		upgrade_offer_error = {
+			"source":source_id,
+			"seed":offer_seed,
+			"stage_index":current_stage_index,
+			"offer_serial":offer_serial,
+			"offer_size":current_card_offer.size(),
+			"build_levels":run_build.levels.duplicate(true),
+		}
+		push_error("Invalid vehicle upgrade offer: %s" % JSON.stringify(upgrade_offer_error))
+		return
+	upgrade_offer_error.clear()
 	_ui.show_upgrade(current_card_offer)
 	_play_sound(&"card", 0.9)
 	_set_mouse_for_mode()
@@ -4537,6 +4426,15 @@ func _run_build_summary() -> String:
 
 
 func apply_upgrade(upgrade_id: StringName) -> bool:
+	if (
+		mode != RunMode.UPGRADE
+		or reward_runtime.current_source().is_empty()
+		or upgrade_selection_applied
+		or current_card_offer.size() != 3
+		or not upgrade_offer_error.is_empty()
+		or not _current_offer_contains(upgrade_id)
+	):
+		return false
 	var receipt := run_build.apply(upgrade_id)
 	if not bool(receipt.get("applied", false)):
 		return false
@@ -4545,9 +4443,16 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 	if upgrade_id == &"reinforced_hull":
 		player_health = minf(_player_max_health(), player_health + 15.0)
 	_status_profile = StatusProfile.from_build(run_build)
-	_sync_cycle_upgrades()
 	_hud_presenter.mark_guidebook_dirty()
+	upgrade_selection_applied = true
 	return true
+
+
+func _current_offer_contains(upgrade_id: StringName) -> bool:
+	for card in current_card_offer:
+		if StringName(card.get("id", &"")) == upgrade_id:
+			return true
+	return false
 
 
 func _resolve_reward_transaction() -> void:
@@ -4560,6 +4465,7 @@ func _resolve_reward_transaction() -> void:
 		experience_runtime.consume_pending_level()
 	encounter_runtime.record_reward()
 	current_card_offer.clear()
+	upgrade_selection_applied = false
 
 
 func _advance_reward_queue() -> void:
@@ -5130,7 +5036,6 @@ func _complete_stage() -> void:
 			enemy_store.queue_defeat(enemy)
 	projectile_store.retain_player_only()
 	denied_zones.clear()
-	damaging_trails.clear()
 	experience_recall_timer = 0.65
 	_ui.notify(tr("NOTIFY_BOSS_SHARD"), 3.0, Rules.AMBER)
 
@@ -5225,7 +5130,6 @@ func _begin_stage_transition() -> void:
 	crates.clear()
 	denied_zones.clear()
 	_clear_effects()
-	damaging_trails.clear()
 	encounter_runtime.configure(
 		current_stage_id,
 		_transition_packets(current_stage_id),
@@ -5813,7 +5717,6 @@ func _fill_combat_presentation_snapshot(
 		cursor_position = get_global_mouse_position()
 	snapshot.clear()
 	snapshot["zones"] = denied_zones
-	snapshot["trails"] = damaging_trails
 	snapshot["player_position"] = player_position
 	snapshot["hull_direction"] = player_hull_direction
 	snapshot["aim_direction"] = player_aim_direction
@@ -5834,14 +5737,10 @@ func _fill_combat_presentation_snapshot(
 	snapshot["barrier_strength"] = player_barrier_strength
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
 	snapshot["run_time"] = run_time
-	snapshot["secondary_visual_tier"] = maxi(
-		run_build.level_of(&"seeker_warhead"),
-		run_build.level_of(&"escort_drone")
-	)
+	snapshot["secondary_visual_tier"] = 0
 	snapshot["resolved_boss_modules"] = resolved_boss_module_visuals
 	snapshot["ion_level"] = run_build.level_of(&"ion_field")
 	snapshot["blade_level"] = run_build.level_of(&"orbit_blades")
-	snapshot["escort_drone"] = run_build.has(&"escort_drone")
 	snapshot["secondary"] = secondary
 	mystery_device_runtime.fill_device_snapshot(mystery_devices)
 	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)
@@ -6405,7 +6304,6 @@ func _fill_manual_performance_frame() -> void:
 	)
 	_manual_performance_pressure["effects"] = effects.size()
 	_manual_performance_pressure["denied_zones"] = denied_zones.size()
-	_manual_performance_pressure["damaging_trails"] = damaging_trails.size()
 	_manual_performance_context.clear()
 	_manual_performance_context["stage_id"] = String(current_stage_id)
 	_manual_performance_context["stage_index"] = current_stage_index
@@ -6518,7 +6416,6 @@ func _performance_counts() -> Dictionary:
 		"effects": effects.size(),
 		"effect_store":effect_store.debug_snapshot(),
 		"zones": denied_zones.size(),
-		"trails": damaging_trails.size(),
 		"layout":field_layout.debug_snapshot(current_stage_id) if field_layout != null else {},
 		"collective_tactics":collective_tactics.debug_snapshot(),
 		"boss_exam":boss_exam_runtime.snapshot(),

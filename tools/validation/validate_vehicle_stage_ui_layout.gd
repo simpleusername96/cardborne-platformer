@@ -169,28 +169,25 @@ func _initialize() -> void:
 			_expect(
 				Dictionary(card["type_sizes"]) == (
 					{
-						"family":13,
+						"category":13,
 						"level":15,
 						"title":22,
 						"summary":14,
-						"behavior":13,
 					}
 					if width < 1100.0
 					else (
 						{
-							"family":16,
+							"category":16,
 							"level":18,
 							"title":28,
 							"summary":16,
-							"behavior":15,
 						}
 						if width < 1600.0
 						else {
-							"family":18,
+							"category":18,
 							"level":18,
 							"title":32,
 							"summary":18,
-							"behavior":16,
 						}
 					)
 				),
@@ -762,7 +759,7 @@ func _validate_upgrade_matrix(ui: VehicleStageUI) -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 83, "layout matrix contains all 83 card/level states")
+	_expect(snapshots.size() == 39, "layout matrix contains all 39 card/level states")
 	var safe_card := snapshots[0]
 	var original_locale := TranslationServer.get_locale()
 	for locale in ["ko", "en"]:

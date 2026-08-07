@@ -27,6 +27,12 @@ const VALID_SCENARIOS: Array[StringName] = [
 	&"production_replay", &"peak_horde", &"capacity_pressure",
 	&"lifecycle_pressure", &"boss_pressure",
 ]
+const PERFORMANCE_EFFECT_IDS: Array[StringName] = [
+	&"player_dash_afterimage",
+	&"player_emp_charge",
+	&"player_emp_release",
+	&"boss_core_reduced_hit",
+]
 const MOBILE_ARCHETYPES: Array[StringName] = [
 	&"scrap_drone", &"needle_drone", &"chaser", &"shooter", &"controller",
 	&"shield_escort", &"artillery_spotter", &"rammer", &"repair_tender",
@@ -78,7 +84,6 @@ func activate(run: Node) -> void:
 	run.experience_runtime.clear_shards()
 	run.call("_clear_effects")
 	run.denied_zones.clear()
-	run.damaging_trails.clear()
 	run.encounter_runtime.current_beat = 4
 	_production_roles = _production_pressure_roles(ORDINARY_CAPACITY_LOAD)
 	var load_class := _load_class()
@@ -105,10 +110,9 @@ func activate(run: Node) -> void:
 	_fill_enemies(run)
 	_fill_experience(run, 96 if scenario_id in [&"peak_horde", &"boss_pressure"] else ExperienceRuntime.MAX_SHARDS)
 	_fill_effects(run, _effect_target())
-	_fill_zones_and_trails(run, 8 if scenario_id in [&"peak_horde", &"boss_pressure"] else 16)
+	_fill_damage_zones(run, 8 if scenario_id in [&"peak_horde", &"boss_pressure"] else 16)
 	run.run_build.apply(&"ion_field")
 	run.run_build.apply(&"orbit_blades")
-	run.call("_sync_cycle_upgrades")
 	run.call("_rebuild_enemy_runtime_indexes")
 	_fill_projectiles(run, true)
 
@@ -144,7 +148,7 @@ func after_physics(run: Node) -> void:
 		_record_production_pressure(run, scheduler_snapshot)
 		return
 	_maintain_enemy_pressure(run)
-	_maintain_zone_and_trail_pressure(run)
+	_maintain_damage_zone_pressure(run)
 	_fill_projectiles(run, false)
 	_maintain_effects(run)
 
@@ -214,7 +218,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and run.experience_runtime.validate_capacity()
 		and run.effects.size() == effect_target
 		and bool(effect_store_snapshot["valid"])
-		and run.denied_zones.size() + run.damaging_trails.size() <= 16
+		and run.denied_zones.size() <= 16
 		and int(renderer_snapshot["batches"]) <= 50
 		and int(enemy_snapshot["rejected_capacity"]) == 0
 		and int(renderer_snapshot["enemy_capacity"]) == EnemyStore.MAX_LIVE_HOSTILES
@@ -241,7 +245,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"effects": run.effects.size(),
 		"effect_target":effect_target,
 		"effect_store":effect_store_snapshot,
-		"zones_and_trails": run.denied_zones.size() + run.damaging_trails.size(),
+		"damage_zones": run.denied_zones.size(),
 		"lifecycle_cycles": lifecycle_cycles,
 		"boss_active": boss_valid,
 		"pressure": pressure,
@@ -446,13 +450,17 @@ func _fill_experience(run: Node, target: int) -> void:
 
 func _fill_effects(run: Node, target: int) -> void:
 	for index in target:
+		var effect_id: StringName = PERFORMANCE_EFFECT_IDS[index % PERFORMANCE_EFFECT_IDS.size()]
 		run.call(
 			"_add_effect",
-			"shock" if index % 3 else "impact",
+			effect_id,
 			_spawn_points[index % _spawn_points.size()],
 			Art.MUSTARD if index % 2 else Art.MINT,
 			2.0 + float(index % 5) * 0.2,
-			18.0 + float(index % 4) * 6.0
+			18.0 + float(index % 4) * 6.0,
+			Vector2.RIGHT.rotated(float(index % 16) * TAU / 16.0),
+			24.0 + float(index % 12),
+			0.68
 		)
 
 
@@ -464,7 +472,20 @@ func _maintain_effects(run: Node) -> void:
 		remaining_adjustments -= 1
 	while run.effects.size() < target and remaining_adjustments > 0:
 		var index := _shot_serial % _spawn_points.size()
-		run.call("_add_effect", "shock", _spawn_points[index], Art.MINT, 2.0, 24.0)
+		var effect_id: StringName = PERFORMANCE_EFFECT_IDS[
+			_shot_serial % PERFORMANCE_EFFECT_IDS.size()
+		]
+		run.call(
+			"_add_effect",
+			effect_id,
+			_spawn_points[index],
+			Art.MINT,
+			2.0,
+			24.0,
+			Vector2.RIGHT,
+			32.0,
+			0.68
+		)
 		_shot_serial += 1
 		remaining_adjustments -= 1
 
@@ -491,40 +512,27 @@ func _effect_store_qualification(run: Node) -> Dictionary:
 	return snapshot
 
 
-func _fill_zones_and_trails(run: Node, target: int) -> void:
-	var index: int = run.denied_zones.size() + run.damaging_trails.size()
+func _fill_damage_zones(run: Node, target: int) -> void:
+	var index: int = run.denied_zones.size()
 	var safety: int = target + 1
-	while (
-		run.denied_zones.size() + run.damaging_trails.size() < target
-		and safety > 0
-	):
+	while run.denied_zones.size() < target and safety > 0:
 		safety -= 1
 		var position := _spawn_points[index % _spawn_points.size()]
-		if index % 2 == 0:
-			run.denied_zones.append({
-				"pos": position, "radius": 46.0, "warning": 0.0,
-				"duration": 100000.0, "tick": 0.2, "damage": 0.1,
-				"source": "performance_zone",
-				"color": Art.CORAL,
-			})
-		else:
-			run.damaging_trails.append({
-				"pos": position, "radius": 42.0,
-				"time": 100000.0, "duration": 100000.0, "hit_ids": {},
-				"source": "performance_trail",
-			})
+		run.denied_zones.append({
+			"pos": position, "radius": 46.0, "warning": 0.0,
+			"duration": 100000.0, "tick": 0.2, "damage": 0.1,
+			"source": "performance_zone",
+			"color": Art.CORAL,
+		})
 		index += 1
-	if safety == 0 and run.denied_zones.size() + run.damaging_trails.size() < target:
+	if safety == 0 and run.denied_zones.size() < target:
 		push_error("Performance zone fixture could not reach its declared pressure")
 
 
-func _maintain_zone_and_trail_pressure(run: Node) -> void:
+func _maintain_damage_zone_pressure(run: Node) -> void:
 	var target := 8 if scenario_id in [&"peak_horde", &"boss_pressure"] else 16
-	var safety: int = run.denied_zones.size() + run.damaging_trails.size() + 1
-	while (
-		run.denied_zones.size() + run.damaging_trails.size() > target
-		and safety > 0
-	):
+	var safety: int = run.denied_zones.size() + 1
+	while run.denied_zones.size() > target and safety > 0:
 		safety -= 1
 		var removed_fixture := false
 		for index in range(run.denied_zones.size() - 1, -1, -1):
@@ -533,19 +541,11 @@ func _maintain_zone_and_trail_pressure(run: Node) -> void:
 			run.denied_zones.remove_at(index)
 			removed_fixture = true
 			break
-		if removed_fixture:
-			continue
-		for index in range(run.damaging_trails.size() - 1, -1, -1):
-			if String(run.damaging_trails[index].get("source", "")) != "performance_trail":
-				continue
-			run.damaging_trails.remove_at(index)
-			removed_fixture = true
-			break
 		if not removed_fixture:
 			break
-	if safety == 0 and run.denied_zones.size() + run.damaging_trails.size() > target:
+	if safety == 0 and run.denied_zones.size() > target:
 		push_error("Performance zone fixture could not retire artificial pressure")
-	_fill_zones_and_trails(run, target)
+	_fill_damage_zones(run, target)
 
 
 func _prepare_stage_five(run: Node) -> void:
@@ -704,7 +704,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		"effects":run.effects.size(),
 		"effect_target":-1,
 		"effect_store":effect_store_snapshot,
-		"zones_and_trails":run.denied_zones.size() + run.damaging_trails.size(),
+		"damage_zones":run.denied_zones.size(),
 		"lifecycle_cycles":0,
 		"boss_active":false,
 		"scheduler_spawn_seen":scheduler_spawned,

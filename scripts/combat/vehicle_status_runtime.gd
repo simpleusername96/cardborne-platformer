@@ -16,12 +16,12 @@ static func apply(enemy: EnemyState, profile: VehicleStatusProfile) -> void:
 	if profile.burn_enabled:
 		_add_stack(
 			enemy, &"burn", profile.burn_dps_per_stack, profile.burn_duration,
-			profile.burn_max_stacks, false
+			profile.burn_max_stacks
 		)
 	if profile.poison_enabled:
 		_add_stack(
 			enemy, &"poison", profile.poison_dps_per_stack, profile.poison_duration,
-			profile.poison_max_stacks, profile.contagion
+			profile.poison_max_stacks
 		)
 	if profile.chill_enabled:
 		var boss_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
@@ -86,34 +86,12 @@ static func stack_count(enemy: EnemyState, kind: StringName) -> int:
 	return int(enemy.statuses[kind].get("stacks", 1))
 
 
-static func contagion_enabled(enemy: EnemyState) -> bool:
-	return (
-		enemy.statuses.has(&"poison")
-		and bool(enemy.statuses[&"poison"].get("capstone", false))
-	)
-
-
-static func spread_poison(source: EnemyState, target: EnemyState) -> void:
-	if not source.statuses.has(&"poison"):
-		return
-	var source_status: Dictionary = source.statuses[&"poison"]
-	_add_stack(
-		target,
-		&"poison",
-		float(source_status["dps_per_stack"]),
-		float(source_status.get("duration", source_status["time"])),
-		int(source_status["max_stacks"]),
-		bool(source_status.get("capstone", false))
-	)
-
-
 static func _add_stack(
 	enemy: EnemyState,
 	kind: StringName,
 	dps_per_stack: float,
 	duration: float,
-	max_stacks: int,
-	capstone: bool
+	max_stacks: int
 ) -> void:
 	var status: Dictionary = enemy.statuses.get(kind, {
 		"dps_per_stack":dps_per_stack,
@@ -122,12 +100,10 @@ static func _add_stack(
 		"tick":TICK_SECONDS,
 		"stacks":0,
 		"max_stacks":max_stacks,
-		"capstone":capstone,
 	})
 	status["dps_per_stack"] = dps_per_stack
 	status["duration"] = duration
 	status["time"] = duration
 	status["stacks"] = mini(max_stacks, int(status["stacks"]) + 1)
 	status["max_stacks"] = max_stacks
-	status["capstone"] = capstone
 	enemy.statuses[kind] = status

@@ -9,15 +9,12 @@ const OUTGOING: Dictionary = {
 	&"ion_field": "REPORT_SOURCE_ION_FIELD",
 	&"orbit_blades": "REPORT_SOURCE_ORBIT_BLADES",
 	&"wake_mine": "REPORT_SOURCE_WAKE_MINE",
-	&"escort_drone": "REPORT_SOURCE_ESCORT_DRONE",
 	&"emp": "REPORT_SOURCE_EMP",
 	&"emp_aftershock": "REPORT_SOURCE_EMP_AFTERSHOCK",
 	&"dash_impact": "REPORT_SOURCE_DASH",
 	&"elemental_status": "REPORT_SOURCE_STATUS",
 	&"arc_mine": "REPORT_SOURCE_ARC_MINE",
-	&"ion_wake": "REPORT_SOURCE_ION_WAKE",
 	&"reflected": "REPORT_SOURCE_REFLECTED",
-	&"ram_pulse": "REPORT_SOURCE_RAM_PULSE",
 	&"other": "REPORT_SOURCE_OTHER",
 }
 
@@ -46,8 +43,6 @@ static func outgoing_id(source: String) -> StringName:
 			return &"orbit_blades"
 		"wake mine":
 			return &"wake_mine"
-		"escort drone":
-			return &"escort_drone"
 		"emp nova":
 			return &"emp"
 		"emp aftershock":
@@ -58,10 +53,6 @@ static func outgoing_id(source: String) -> StringName:
 			return &"elemental_status"
 		"enemy_mine", "arc proximity burst", "player_arc_mine", "player_spark_minelet":
 			return &"arc_mine"
-		"ion wake":
-			return &"ion_wake"
-		"ram pulse":
-			return &"ram_pulse"
 		"seeker burst":
 			return &"seeker"
 	return &"other"

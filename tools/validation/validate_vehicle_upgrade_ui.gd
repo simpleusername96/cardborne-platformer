@@ -21,20 +21,20 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const WORST_TEXT_TRIPLETS := {
 	"ko":[
-		{"id":&"siphon_matrix", "current_level":1},
-		{"id":&"aegis_cycle", "current_level":1},
+		{"id":&"twin_seekers", "current_level":1},
 		{"id":&"marked_salvo", "current_level":0},
+		{"id":&"static_aegis", "current_level":1},
 	],
 	"en":[
 		{"id":&"marked_salvo", "current_level":0},
-		{"id":&"siphon_matrix", "current_level":1},
-		{"id":&"aegis_cycle", "current_level":1},
+		{"id":&"twin_seekers", "current_level":1},
+		{"id":&"phase_lance", "current_level":1},
 	],
 }
 const DENSE_STAT_TRIPLET := [
-	{"id":&"stabilizer", "current_level":1},
-	{"id":&"emp_focus", "current_level":1},
-	{"id":&"mass_driver", "current_level":2},
+	{"id":&"kinetic_rounds", "current_level":2},
+	{"id":&"pickup_magnet", "current_level":2},
+	{"id":&"reinforced_hull", "current_level":2},
 ]
 const VIEWPORTS := [
 	Vector2i(960, 540),
@@ -52,7 +52,7 @@ func _initialize() -> void:
 	_validate_authored_artwork()
 	var catalog := Catalog.new()
 	await _validate_intent_contract(catalog)
-	await _validate_family_body_art(catalog)
+	await _validate_category_body_art(catalog)
 	await _validate_triplet_matrix(catalog)
 	_finish()
 
@@ -147,7 +147,7 @@ func _validate_authored_artwork() -> void:
 		_expect(SemanticAssets.texture(asset_id) != null, "%s authored upgrade art loads" % asset_id)
 
 
-func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
+func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 	var card := UpgradeChoiceCard.new()
 	card.theme = _theme
 	get_root().add_child(card)
@@ -155,8 +155,8 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 	card.set_compact_mode(true)
 	card.size = card.custom_minimum_size
 	for definition in catalog.all_definitions():
-		var family := definition.family
-		_expect(definition != null, "%s has a live upgrade card fixture" % family)
+		var category := definition.category
+		_expect(definition != null, "%s has a live upgrade card fixture" % category)
 		if definition == null:
 			continue
 		card.set_offer(OfferPresenter.snapshot(definition, 0))
@@ -165,38 +165,37 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 		_expect(
 			int(contract["header_art_count"]) == 0
 				and int(contract["body_art_count"]) == 1
-				and int(contract["family_badge_count"]) == 0
+				and int(contract["category_badge_count"]) == 0
 				and int(contract["stage_pip_count"]) == 0,
 			"%s renders exactly one lower artwork and no header art/badge"
-			% family
+			% category
 		)
 		_expect(
 			Vector2(contract["body_art_size"]) == Vector2(88.0, 88.0)
 				and StringName(contract["body_art_asset_id"])
 					!= &""
 				and Array(contract["body_order"]) == [
-					"family",
+					"category",
 					"title",
 					"dossier:art/divider/level/effects",
 					"description",
-					"behavior",
 				]
 				and bool(contract["dossier_split"])
 				and int(contract["body_divider_count"]) == 1,
-			"%s uses the compact split-dossier artwork contract" % family
+			"%s uses the compact split-dossier artwork contract" % category
 		)
 		_expect(
-			int(Dictionary(contract["type_sizes"])["behavior"]) >= 14,
-			"%s keeps compact behavior copy at the 14 px body-text minimum"
-			% family
+			int(Dictionary(contract["type_sizes"])["summary"]) >= 14,
+			"%s keeps compact description copy at the 14 px body-text minimum"
+			% category
 		)
 		var geometry := card.debug_geometry_contract()
-		_expect_card_geometry(geometry, "%s compact family" % family)
+		_expect_card_geometry(geometry, "%s compact category" % category)
 		var artwork := Dictionary(geometry["artwork"])
 		_expect(
 			StringName(artwork["asset_id"]) != &""
 				and bool(artwork["texture_loaded"]),
-			"%s body art uses one authored semantic texture" % family
+			"%s body art uses one authored semantic texture" % category
 		)
 	card.queue_free()
 	await process_frame
@@ -327,7 +326,7 @@ func _validate_triplet_matrix(catalog: VehicleUpgradeCatalog) -> void:
 	var snapshot_count := 0
 	for definition in catalog.all_definitions():
 		snapshot_count += definition.max_level
-	_expect(snapshot_count == 83, "worst-case fixture is grounded in all 83 card states")
+	_expect(snapshot_count == 39, "worst-case fixture is grounded in all 39 card states")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		_validate_longest_fixture(catalog, locale)
@@ -439,7 +438,7 @@ func _validate_panel(
 		_expect(
 			int(card_contract["header_art_count"]) == 0
 				and int(card_contract["body_art_count"]) == 1
-				and int(card_contract["family_badge_count"]) == 0
+				and int(card_contract["category_badge_count"]) == 0
 				and Vector2(card_contract["body_art_size"]) == (
 					Vector2(88.0, 88.0)
 					if compact
@@ -531,16 +530,6 @@ func _expect_card_geometry(card: Dictionary, context: String) -> void:
 					label["text"],
 				]
 			)
-func _first_family_definition(
-	catalog: VehicleUpgradeCatalog,
-	family: StringName
-) -> VehicleUpgradeDefinition:
-	for definition in catalog.all_definitions():
-		if definition.family == family:
-			return definition
-	return null
-
-
 func _offers_from_fixture(
 	catalog: VehicleUpgradeCatalog,
 	records: Array
@@ -572,7 +561,7 @@ func _validate_longest_fixture(
 			var score := (
 				TranslationServer.translate(String(snapshot["title_key"])).length()
 				+ TranslationServer.translate(
-					String(snapshot["summary_key"])
+					String(snapshot["description_key"])
 				).length()
 			)
 			var prior_score := int(highest_by_id.get(definition.id, -1))

@@ -4,6 +4,15 @@ const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 
+const DELETED_IDS: Array[StringName] = [
+	&"accelerator_coil", &"aegis_cycle", &"concentrated_toxin", &"contagion",
+	&"dash_capacitor", &"deep_freeze", &"emp_capacitor", &"emp_focus",
+	&"escort_drone", &"hunter_firmware", &"ion_wake", &"mass_driver",
+	&"overclock_cycle", &"phase_seeker", &"ram_pulse", &"relay_overload",
+	&"ricochet_matrix", &"seeker_cycle", &"seeker_warhead", &"siphon_matrix",
+	&"stabilizer", &"thermal_compound",
+]
+
 var failures: Array[String] = []
 
 
@@ -21,101 +30,174 @@ func _initialize() -> void:
 		"unrelated catalog files remain excluded"
 	)
 	var catalog := Catalog.new()
-	for error in catalog.validate_contract(): failures.append(error)
-	_expect(catalog.definitions.size() == 41, "catalog contains exactly 41 upgrades")
-	var state_count := 0
-	for definition in catalog.all_definitions():
+	for error in catalog.validate_contract():
+		failures.append(error)
+	_expect(catalog.definitions.size() == 19, "catalog contains exactly 19 upgrades")
+	_validate_presentation(catalog)
+	_validate_secondary_slots(catalog)
+	_validate_offers(catalog)
+	_validate_stats(catalog)
+	for deleted_id in DELETED_IDS:
 		_expect(
-			definition.summary_keys.size() == definition.max_level,
-			"%s has one explicit summary key per level" % definition.id
+			catalog.get_definition(deleted_id) == null,
+			"%s is absent from the minimal catalog" % deleted_id
 		)
+	_finish()
+
+
+func _validate_presentation(catalog: Catalog) -> void:
+	var state_count := 0
+	var category_counts := {}
+	for definition in catalog.all_definitions():
+		category_counts[definition.category] = int(
+			category_counts.get(definition.category, 0)
+		) + 1
 		for current_level in definition.max_level:
 			var snapshot := OfferPresenter.snapshot(definition, current_level)
 			_expect(
-				not String(snapshot["summary_key"]).is_empty(),
-				"%s level %d has a summary" % [definition.id, current_level + 1]
+				not String(snapshot["description_key"]).is_empty()
+					and not String(snapshot["category_key"]).is_empty(),
+				"%s level %d has category and description text"
+				% [definition.id, current_level + 1]
 			)
 			_expect(
 				Array(snapshot["effect_rows"]).size() <= 2,
 				"%s level %d has at most two effect rows"
 				% [definition.id, current_level + 1]
 			)
+			var expected_kind := &"stats" if not definition.modifiers.is_empty() else (
+				&"unlock" if current_level == 0 else &"enhance"
+			)
+			_expect(
+				StringName(snapshot["change_kind"]) == expected_kind,
+				"%s level %d exposes its level-specific change kind"
+				% [definition.id, current_level + 1]
+			)
+			if expected_kind != &"stats":
+				_expect(
+					not String(snapshot["change_label_key"]).is_empty(),
+					"%s behavior level has a localized change label" % definition.id
+				)
 			state_count += 1
-	_expect(state_count == 83, "upgrade presentation covers all 83 level states")
+	_expect(state_count == 39, "upgrade presentation covers all 39 level states")
+	_expect(
+		category_counts == {
+			&"primary":4, &"secondary":5, &"element":3,
+			&"dash":2, &"emp":2, &"chassis":3,
+		},
+		"six player-facing categories own the exact minimal roster"
+	)
+
+
+func _validate_secondary_slots(catalog: Catalog) -> void:
 	var optional_ids: Array[StringName] = []
 	var built_in_ids: Array[StringName] = []
 	for definition in catalog.all_definitions():
-		if definition.family != &"secondary":
+		if definition.category != &"secondary":
 			continue
 		if definition.secondary_slot_kind == &"optional":
 			optional_ids.append(definition.id)
 		elif definition.secondary_slot_kind == &"built_in":
 			built_in_ids.append(definition.id)
-	_expect(optional_ids.size() == 4, "four optional secondary identities are declared")
-	_expect(built_in_ids.size() == 6, "six built-in seeker upgrade identities are declared")
-	for id in optional_ids:
-		var definition := catalog.get_definition(id)
-		_expect(definition != null and definition.max_level == 3 and definition.family == &"secondary", "%s is a three-level optional secondary" % id)
+	optional_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
+	built_in_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
+	_expect(
+		_id_key(optional_ids) == "ion_field|orbit_blades|wake_mines",
+		"three optional secondary identities support a choose-two decision: %s"
+		% _id_key(optional_ids)
+	)
+	_expect(
+		_id_key(built_in_ids) == "marked_salvo|twin_seekers",
+		"two built-in Seeker behavior cards do not consume slots: %s"
+		% _id_key(built_in_ids)
+	)
 	var build := RunBuild.new(catalog)
-	for run_seed in 24:
-		for source_id in [&"level_up", &"boss", &"cache"]:
-			var offer := catalog.offer(
-				build,
-				run_seed,
-				run_seed % 5,
-				source_id,
-				run_seed
-			)
-			var offered_ids := {}
-			for card in offer:
-				offered_ids[card.id] = true
-			_expect(
-				offered_ids.size() == offer.size(),
-				"one offer never repeats an upgrade card"
-			)
-	var stable_offer_a := catalog.offer(build, 0xCA4D, 1, &"level_up", 7)
-	var stable_offer_b := catalog.offer(build, 0xCA4D, 1, &"level_up", 7)
-	_expect(
-		_offer_key(stable_offer_a) == _offer_key(stable_offer_b),
-		"one reward transaction remains stable for the same run seed and serial"
-	)
-	var sequential_offers := {}
-	for offer_serial in 12:
-		sequential_offers[
-			_offer_key(catalog.offer(build, 0xCA4D, 1, &"level_up", offer_serial))
-		] = true
-	_expect(
-		sequential_offers.size() > 1,
-		"successive reward transactions draw more than one constrained offer"
-	)
-	var expected := [280.0, 302.4, 324.8, 347.2]
-	_expect(is_equal_approx(build.stat(&"move_speed_multiplier", 280.0), expected[0]), "base movement is 280")
-	for level in 3:
-		_expect(bool(build.apply(&"tuned_thrusters").get("applied", false)), "Tuned Thrusters level applies")
-		_expect(is_equal_approx(build.stat(&"move_speed_multiplier", 280.0), expected[level + 1]), "Tuned Thrusters uses exact level speed")
-	build.reset()
-	build.apply(&"kinetic_rounds")
-	var second_offer := catalog.offer(build, 0, 0, &"level_up", 1)
-	_expect(second_offer.any(func(card): return card.id == &"tuned_thrusters"), "second level-up offers Tuned Thrusters")
-	build.reset()
-	_expect(bool(build.apply(&"incendiary_core").get("applied", false)), "fire root applies")
-	_expect(bool(build.apply(&"toxin_core").get("applied", false)), "poison root stacks with fire")
-	_expect(bool(build.apply(&"cryo_core").get("applied", false)), "chill root stacks with fire and poison")
-	for deleted_id in [&"breach_round", &"fast_capacitor", &"shock_breach", &"flashover", &"shatter"]:
-		_expect(catalog.get_definition(deleted_id) == null, "%s is absent from the live catalog" % deleted_id)
-	build.apply(&"thermal_compound")
-	var branch_offer := catalog.offer(build, 4, 1, &"level_up", 3)
-	_expect(
-		branch_offer.any(func(card): return card.id in [&"concentrated_toxin", &"deep_freeze"]),
-		"level-up reserves an eligible child from an owned least-progressed branch"
-	)
-	build.reset()
 	build.apply(&"ion_field")
 	build.apply(&"orbit_blades")
-	_expect(build.active_optional_secondaries() == 2, "two optional secondary slots are occupied")
-	_expect(not catalog.compatible(catalog.get_definition(&"wake_mines"), build), "a fourth total family is blocked")
-	_expect(catalog.compatible(catalog.get_definition(&"ion_field"), build), "owned family remains levelable")
-	_finish()
+	_expect(build.active_optional_secondaries() == 2, "two optional slots are occupied")
+	_expect(
+		not catalog.compatible(catalog.get_definition(&"wake_mines"), build),
+		"a third optional secondary is blocked"
+	)
+	_expect(
+		catalog.compatible(catalog.get_definition(&"ion_field"), build),
+		"an owned optional secondary remains levelable"
+	)
+
+
+func _validate_offers(catalog: Catalog) -> void:
+	var empty_build := RunBuild.new(catalog)
+	for run_seed in 24:
+		for source_id in [&"level_up", &"boss"]:
+			var offer := catalog.offer(
+				empty_build, run_seed, run_seed % 5, source_id, run_seed
+			)
+			_expect(_offer_is_legal(offer, empty_build, catalog), "fresh offer has three legal cards")
+	var stable_offer_a := catalog.offer(empty_build, 0xCA4D, 1, &"level_up", 7)
+	var stable_offer_b := catalog.offer(empty_build, 0xCA4D, 1, &"level_up", 7)
+	_expect(
+		_offer_key(stable_offer_a) == _offer_key(stable_offer_b),
+		"one reward transaction remains stable for the same seed and serial"
+	)
+	for run_seed in 24:
+		var build := RunBuild.new(catalog)
+		for choice_index in 25:
+			var source_id := &"boss" if choice_index in [4, 9, 14, 19, 24] else &"level_up"
+			var offer := catalog.offer(
+				build,
+				0xCA4D + run_seed,
+				mini(4, choice_index / 5),
+				source_id,
+				choice_index
+			)
+			_expect(
+				_offer_is_legal(offer, build, catalog),
+				"seed %d choice %d keeps the shipped 25-choice route legal"
+				% [run_seed, choice_index + 1]
+			)
+			if offer.size() != 3:
+				break
+			build.apply(offer[run_seed % offer.size()].id)
+
+
+func _validate_stats(catalog: Catalog) -> void:
+	var build := RunBuild.new(catalog)
+	var expected_speeds := [280.0, 302.4, 324.8, 347.2]
+	_expect(
+		is_equal_approx(build.stat(&"move_speed_multiplier", 280.0), expected_speeds[0]),
+		"base movement is 280"
+	)
+	for level in 3:
+		_expect(bool(build.apply(&"tuned_thrusters").get("applied", false)), "Tuned Thrusters level applies")
+		_expect(
+			is_equal_approx(
+				build.stat(&"move_speed_multiplier", 280.0),
+				expected_speeds[level + 1]
+			),
+			"Tuned Thrusters uses its exact level speed"
+		)
+	build.reset()
+	for _level in 3:
+		build.apply(&"pickup_magnet")
+	_expect(
+		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 210.0),
+		"Pickup Magnet remains a three-level +210 collection upgrade"
+	)
+
+
+func _offer_is_legal(
+	offer: Array[VehicleUpgradeDefinition],
+	build: RunBuild,
+	catalog: Catalog
+) -> bool:
+	if offer.size() != 3:
+		return false
+	var ids := {}
+	for definition in offer:
+		if ids.has(definition.id) or not catalog.compatible(definition, build):
+			return false
+		ids[definition.id] = true
+	return ids.size() == 3
 
 
 func _offer_key(offer: Array[VehicleUpgradeDefinition]) -> String:
@@ -125,8 +207,16 @@ func _offer_key(offer: Array[VehicleUpgradeDefinition]) -> String:
 	return "|".join(ids)
 
 
+func _id_key(ids: Array[StringName]) -> String:
+	var parts := PackedStringArray()
+	for id in ids:
+		parts.append(String(id))
+	return "|".join(parts)
+
+
 func _expect(condition: bool, message: String) -> void:
-	if not condition: failures.append(message)
+	if not condition:
+		failures.append(message)
 
 
 func _finish() -> void:
@@ -134,5 +224,6 @@ func _finish() -> void:
 		print("VEHICLE_UPGRADE_SYSTEM_VALIDATION_OK")
 		quit(0)
 	else:
-		for failure in failures: push_error(failure)
+		for failure in failures:
+			push_error(failure)
 		quit(1)

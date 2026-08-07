@@ -32,7 +32,7 @@ func active_optional_secondaries() -> int:
 	var count := 0
 	for definition in catalog.all_definitions():
 		if (
-			definition.family == &"secondary"
+			definition.category == &"secondary"
 			and definition.secondary_slot_kind == &"optional"
 			and has(definition.id)
 		):
@@ -65,7 +65,7 @@ func preview(upgrade_id: StringName) -> Dictionary:
 		"max_level": definition.max_level,
 		"title_key": definition.title_key,
 		"description_key": definition.description_key,
-		"family": definition.family,
+		"category": definition.category,
 	}
 
 
@@ -75,11 +75,3 @@ func apply(upgrade_id: StringName) -> Dictionary:
 	levels[upgrade_id] = int(receipt["new_level"])
 	receipt["applied"] = true
 	return receipt
-
-
-func behavior(behavior_id: StringName) -> bool:
-	for upgrade_id in levels:
-		var definition := catalog.get_definition(StringName(upgrade_id))
-		if definition != null and behavior_id in definition.behavior_ids:
-			return true
-	return false

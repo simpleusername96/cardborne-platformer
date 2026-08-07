@@ -2,7 +2,7 @@ class_name VehicleSecondaryVisualCatalog
 extends RefCounted
 
 ## Presentation identities for player secondaries. Cadence, targeting, damage,
-## orbit motion, mine triggers, and drone behavior stay in secondary runtime.
+## orbit motion and mine triggers stay in secondary runtime.
 
 const DESCRIPTORS := {
 	&"seeker": {
@@ -10,11 +10,6 @@ const DESCRIPTORS := {
 		"projectile_asset": &"projectile/energy_teardrop",
 		"silhouette": &"guided_forward_wedge",
 		"motion": &"homing",
-	},
-	&"escort_drone": {
-		"asset": &"secondary/escort_drone",
-		"silhouette": &"twin_fin_support_drone",
-		"motion": &"escort",
 	},
 	&"orbit_blade": {
 		"asset": &"secondary/orbit_blade",

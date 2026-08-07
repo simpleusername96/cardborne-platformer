@@ -203,7 +203,7 @@ func _run() -> void:
 			})
 			scenario.after_physics(run)
 			_expect(
-				run.denied_zones.size() + run.damaging_trails.size() == 16,
+				run.denied_zones.size() == 16,
 				"real attack zones retire artificial fixture zones without lowering pressure"
 			)
 			var authored_probe_preserved := false
@@ -221,7 +221,7 @@ func _run() -> void:
 					break
 			scenario.after_physics(run)
 			_expect(
-				run.denied_zones.size() + run.damaging_trails.size() == 16,
+				run.denied_zones.size() == 16,
 				"expired real zones are backfilled to the declared fixture pressure"
 			)
 		if scenario_id == &"lifecycle_pressure":

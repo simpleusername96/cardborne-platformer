@@ -101,7 +101,6 @@ func _run() -> void:
 			"experience_shards":6,
 			"effects":5,
 			"denied_zones":2,
-			"damaging_trails":1,
 		}
 		trace.advance_frame(
 			(21.0 + float(frame_index)) / 1000.0,

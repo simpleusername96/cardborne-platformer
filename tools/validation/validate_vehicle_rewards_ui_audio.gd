@@ -110,9 +110,9 @@ func _run() -> void:
 		cards.append({
 			"id":StringName("card_%d" % index),
 			"title_key":"UPGRADE_KINETIC_ROUNDS_TITLE",
-			"summary_key":"UPGRADE_KINETIC_ROUNDS_DESC",
-			"family_key":"UPGRADE_FAMILY_PRIMARY",
-			"family":&"primary",
+			"description_key":"UPGRADE_KINETIC_ROUNDS_DESC",
+			"category_key":"UPGRADE_CATEGORY_PRIMARY",
+			"category":&"primary",
 			"current_level":0,
 			"next_level":1,
 			"max_level":3,
@@ -122,7 +122,9 @@ func _run() -> void:
 				"current":1.0,
 				"next":1.15,
 			}],
-			"behavior_change_key":"",
+			"change_kind":&"stats",
+			"change_label_key":"",
+			"artwork_asset_id":&"projectile/energy_teardrop",
 		})
 	panel.confirmed.connect(func(_id: StringName) -> void: confirmed_count += 1)
 	panel.open(cards)
