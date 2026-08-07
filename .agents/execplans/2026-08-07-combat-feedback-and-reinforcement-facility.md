@@ -4,8 +4,8 @@ status: active
 owner: BK
 created: 2026-08-07
 last_reviewed: 2026-08-08
-topic: Combat readability feedback and reinforcement facility
-scope: Projectile and actor scale, combat feedback removal, exclusive elements, upgrade and EMP HUD layout, enemy rewards and balance, reinforcement facility, and final-run completion
+topic: HUD upgrade rail, upgrade-card hierarchy, boss shield loop, attack-cue clarity, and prior-delivery audit
+scope: Top HUD alternatives and integration, upgrade-card order, enemy and boss durability, removal of boss objective modules, boss-owned shield windows, hostile area-attack grammar, and verification of the 2026-08-07 delivery
 related:
   - ../../AGENTS.md
   - ../PLANS.md
@@ -15,118 +15,379 @@ related:
   - ../../docs/product/vehicle_upgrade_catalog.md
 ---
 
-# Combat Feedback and Reinforcement Facility - Execution Contract
+# HUD, Boss Shield, and Combat Readability - Execution Contract
 
-This plan applies the 2026-08-07 gameplay feedback in low-coupling order, then adds one
-bounded reinforcement facility without merging it into enemy AI, ordinary defeat quota,
-or boss progression. It is complete when every checkbox is checked, focused validators
-and the Web export pass, the final-stage no-offer path reaches the result screen, and
-rendered Korean/English UI evidence has no clipping at the supported viewports.
+## Why and context
 
-## Locked decisions
+The 2026-08-07 delivery added the requested combat-scale, projectile, upgrade,
+EMP, reward, reinforcement-facility, and Stage 5 changes. User review then found
+that the top HUD did not expose the acquired build, the upgrade-card body order
+was still wrong, boss objective modules made the vulnerability rule harder to
+read than intended, and hostile circular attacks still used several colors and
+ordinary-enemy sources.
 
-- Player craft visual radius becomes 70% of its current value; collision truth is unchanged.
-- Projectile visuals use 70% length and 50% thickness. Player primary, player seeker,
-  and hostile shots use separate semantic assets/batches; collision truth is unchanged.
-- The existing approved `secondary/seeker` raster becomes the runtime seeker identity.
-  No other projectile family may consume it. New hostile-projectile and facility rasters
-  require the canonical style sheet as an actual ImageGen reference and visual-authority
-  review before production promotion. SVG geometry is not permitted by project policy.
-- Mine and orbit-blade visuals become 200% of current size; XP visuals become 70%.
-- Enemy/player elemental actor tints, attacked-enemy target brackets and yellow priority
-  markers, floating damage text, and charge-route lines are removed. Charge endpoints
-  remain. All hostile circular bombardment telegraphs use the danger-coral family.
-- Upgrade cards use a centered vertical hierarchy: category/title, artwork, level,
-  compact unlock icon, one localized single-line summary, then stat deltas. Visible
-  change-kind phrases such as `새 행동` and `스탯 변화` remain removed.
-- The action rail becomes one panel-free, 88 px round EMP cooldown/ready indicator.
-- Thermal, toxin, and cryo are mutually exclusive. Before selection all three may be
-  offered; after selection only the chosen element can reappear. Player primary color
-  follows the selected element.
-- Every defeated hostile except boss objective pylons drops its bounded health-class XP,
-  including EMP kills and summoned/reinforcement units. Summons remain outside quota.
-- Non-boss enemy health is multiplied by 1.30 after existing stage/role scaling. Generator
-  and repair-tender healing is multiplied by 2.0. Boss health is unchanged.
-- One `reinforcement_fabricator` world facility may appear per stage after 35% of the
-  ordinary quota is defeated. It is a destructible world facility, not `EnemyState`:
-  it does not join enemy AI, count toward ordinary quota, or drop enemy XP.
-- The facility selects a deterministic clear ordinary anchor, is always visible on the
-  minimap with a dedicated facility marker, and spawns existing mobile roles at 8/7/6/5/4
-  second intervals for stages 1-5. Roles progress through chaser, shooter, rammer,
-  bulkhead guard, and splitter barge. It may own at most 2/3/4/5/6 live reinforcements
-  and must obey the unchanged global enemy capacity.
-- If a reward transaction cannot produce three valid cards, it is claimed without a
-  selection and the reward queue continues. This prevents a maxed or element-locked
-  stage-5 build from becoming stuck before the final result.
+This revision keeps one active progress owner. It first repairs the current
+validation baseline, produces three comparable top-HUD candidates, and then
+implements the chosen/default layout with the lower-coupling card and balance
+changes before the cross-system boss and attack-grammar changes.
 
-## Work order
+## Scope and non-scope
 
-- [x] 1. Apply independent scale, health, healing, XP-drop, telegraph-color, charge-line,
-  damage-text, target-marker, and elemental-actor-feedback changes with focused tests.
-- [x] 2. Split projectile visual families, bind the dedicated seeker, create/review the
-  hostile projectile candidate, and preserve bounded retained batches.
-- [x] 3. Make element selection exclusive and bind primary projectile color to affinity;
-  update product contracts and upgrade-system tests.
-- [x] 4. Recompose upgrade cards vertically and replace the action rail with the round
-  EMP-only indicator; verify Korean/English overflow, focus, and 200% text behavior.
-- [x] 5. Implement the separate reinforcement-facility runtime, authored raster, world
-  damage/render path, stage-scaled spawn policy, global/live-child caps, and minimap role.
-- [x] 6. Repair and validate incomplete reward-offer recovery and stage-5 final-result
-  presentation.
-- [x] 7. Run visual-authority and focused gameplay/UI validators, Web export, built-app
-  smoke/visual QA, performance workload re-baseline where the new facility changes load,
-  and a task-scoped quality audit. Commit coherent task-owned changes only.
-- [x] 8. Apply the 2026-08-08 follow-up: restore concise card summaries, remove residual
-  yellow enemy markers and decorative attack routes, then repeat focused and rendered QA.
+In scope:
 
-## Validation contract
+- Three code-native top-HUD candidates using the current Theme, component
+  factory, semantic upgrade artwork, and localization.
+- One production top-HUD layout with player hull centered above an acquired-
+  upgrade rail, and stage/message information moved into the former top-left
+  hull zone.
+- Event-driven acquired-build delivery to the HUD; upgrade arrays must not be
+  rebuilt or deep-copied by the 10 Hz fast HUD path.
+- Upgrade-card body order and typography correction.
+- Exact preservation of the already-applied final `1.30` ordinary-enemy health
+  multiplier, plus a new `1.30` boss-health multiplier over the current authored
+  five-stage curve.
+- Removal of external boss objective modules and replacement with a timed,
+  boss-owned shield state.
+- A single hostile circular-bombardment grammar: only boss damaging area attacks
+  use a ground circle, and every such circle uses the same orange warning family.
+- A current-HEAD audit of the prior plan, including repair of any stale or
+  hanging focused validators before they can be used as evidence.
+- Korean and English copy, product/visual contracts, focused validators,
+  deterministic captures, Web export, and built-Web smoke for the changed flow.
 
-- Focused headless validators cover visual-profile constants, projectile-family routing,
-  element exclusivity, XP on summoned/EMP defeat paths, enemy balance, charge/telegraph
-  cues, HUD/card contracts, minimap geometry, facility lifecycle/caps, and final reward flow.
-- Visual captures cover upgrade and HUD surfaces at 960x540, 1280x720, and 1920x1080 in
-  Korean and English, plus the existing 200% UI scale case. No content may clip or overlap.
-- `./tools/validation/validate_cardborne_visual_authority.ps1` passes after asset/contract
-  changes. The final `./tools/export_web.ps1` succeeds before handoff.
-- Performance thresholds and capacities are not lowered. Because the facility adds a new
-  live workload, old frame-time evidence is not reused as a claim; affected scenarios are
-  re-measured after implementation.
+Out of scope:
 
-## Progress notes
+- New raster artwork, SVG geometry, ImageMagick-authored visuals, a new UI Theme,
+  new dependencies, or a redesign of the minimap.
+- Changes to player collision, projectile collision, global capacities, boss
+  pattern cadence, stage quota, reinforcement-facility policy, or the fixed Hard
+  difficulty.
+- A release-performance claim. The authorized removal of two boss-module actors
+  changes workload and must be recorded as a product change, not an optimization.
+- New ordinary enemy roles or new boss patterns.
 
-- 2026-08-07: Discovery confirmed one shared projectile batch, coexistable element cards,
-  summoned-hostile XP suppression, split upgrade cards, a three-slot action rail, and an
-  invalid-offer path that can leave stage completion in `UPGRADE` mode. Execution started.
-- 2026-08-07: Canonical visual authority was inspected at original detail. Expected and
-  observed SHA-256 were both
-  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`;
-  its recorded provenance is
-  `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`
-  at 2026-08-02 12:13:44 KST.
-- 2026-08-07: Hostile bolt and reinforcement-facility ImageGen calls used the canonical
-  sheet as an actual raster reference. The reviewed source outputs are
-  `C:/Users/BK/.codex/generated_images/019fdc36-5189-72f2-9e47-9834db637d7e/exec-8b9aba17-b1be-485f-87a5-1e61f33abb63.png`
-  and
-  `C:/Users/BK/.codex/generated_images/019fdc36-5189-72f2-9e47-9834db637d7e/exec-5f438fac-7b62-4ff2-ae72-6b2a536f6792.png`.
-  Both passed style-family, silhouette-role, alpha-boundary, and runtime-size review and
-  were promoted to the production manifest. An earlier craft-like hostile bolt candidate
-  was rejected and never promoted.
-- 2026-08-07: Focused facility lifecycle/cap/minimap validation and the exhausted Stage 5
-  reward-to-result regression pass. UI, reward, projectile, XP, catalog, renderer, and
-  core run validators pass after their contracts were updated.
-- 2026-08-07: Final visual-authority and document-authority checks, focused gameplay/UI
-  validators, Web export, and the affected pressure microbenchmark passed. Deterministic
-  rendered evidence was reviewed at Korean 1280x720 full coverage, English 960x540 with
-  200% text, and English 1920x1080 core coverage. The exported Web build served from the
-  registered Codex lane with all seven requests returning 200, no console warnings or
-  errors, and a correctly rendered deployment surface. The task-owned preview server and
-  browser tab were then closed.
-- 2026-08-08: User review reopened the visual pass. The remaining enemy-attached yellow
-  vulnerability crosshair, boss/pylon reward-color markers, projectile entry previews,
-  ranged startup ticks, and collective direction indicators were removed. Upgrade card
-  descriptions were restored as one-line summaries with AGY-assisted Korean and English
-  copy. Focused validators, visual/document authority, Korean 1280x720 and English
-  960x540 at 200% captures, Web export, and built-Web smoke passed. The Web smoke loaded
-  one canvas, returned HTTP 200 for all seven requests, and emitted no console warnings
-  or errors. This plan remains active only through user review; once accepted, delete it
-  under the ExecPlan standard instead of inventing another terminal status.
+## Assumptions and locked decisions
+
+- The phrase “enemy health +30%” refers to a final total multiplier of `1.30`,
+  not another `1.30` multiplication on the already-modified value. Ordinary
+  health therefore remains at the current total value and receives regression
+  coverage rather than another balance increase.
+- “Boss health stronger” uses the same bounded first-pass increase: the authored
+  values `[1250, 1350, 1450, 1550, 1650]` are multiplied by `1.30`, producing
+  `[1625, 1755, 1885, 2015, 2145]`.
+- A boss shield is not a separate actor, target, health pool, minimap marker, or
+  projectile blocker. It is one state on the boss entity.
+- The shield is active at boss entry and every phase transition. Completion of a
+  committed direct boss attack drops it for `4.0` seconds. Autonomous pressure
+  does not independently open or extend the window. A phase transition cancels
+  an open window and reactivates the shield.
+- Shielded boss damage uses `0.25x`; unshielded damage uses `1.00x`. There is no
+  hidden `1.55x` bonus, HP floor, or immunity. The active shield uses one retained
+  boss-attached boundary in `boss_command` color with no ambient pulse; the
+  boundary is absent while the shield is down.
+- The top-left mission surface keeps the current hull-zone footprint as its
+  baseline. It shows stage/quota, one current message or shield state, compact XP
+  progress, and conditional boss health. It does not duplicate those values in
+  the center zone.
+- The center player-health bar is panel-free and responsive: `400x10` at compact,
+  `520x12` at standard, and `640x14` at large. It shows the current/max value
+  without adding a large label block.
+- Acquired-upgrade icons are sorted by existing catalog category and stable
+  catalog order. Only acquired upgrades appear. Each icon may carry one plain
+  corner level numeral, without a pill, badge panel, or repeated text label.
+- Full upgrade names and values remain available in the paused Ship Status
+  surface. The live rail is for fast build recognition, not full inspection.
+- Candidate B below is the implementation default because it scales by semantic
+  category and gives future upgrades a stable location. An explicit user choice
+  after the three captures overrides that default before production integration.
+- No blocking design question remains. Tuning beyond the locked first pass is a
+  later playtest decision, not an implementation guess.
+
+## Proposed design
+
+### Common top-HUD frame
+
+- Top-left: one restrained mission surface in the old hull location. Normal play
+  shows stage/quota, the current objective or transient message, and a thin XP
+  meter. During a boss encounter the same surface adds the compact boss-health
+  meter and replaces the objective detail with `방어막 전개/해제` or its English
+  equivalent.
+- Top-center: the panel-free player-health bar. Acquired upgrades appear directly
+  below it using the existing semantic upgrade artwork provider.
+- Top-right: the existing minimap and conditional target content. Its footprint
+  and marker grammar stay unchanged.
+- Bottom-center: the existing panel-free `88x88` EMP indicator stays unchanged.
+- No full-width dock or full-rail background is allowed. Standard top-center
+  height targets `72 px` with one icon row and may reach `104 px` only after a
+  real second row is needed. Empty future slots are never rendered.
+- Candidate fixtures must cover 0, 6, 12, and 18 acquired upgrades so the design
+  is judged on growth rather than on one convenient build.
+
+### Candidate A - Linear rail
+
+- One centered row of `30 px` icons at standard size.
+- The first 12 upgrades stay in one row; 13-18 wrap into a second centered row.
+- Strength: fastest single-scan reading and the smallest early-run footprint.
+- Tradeoff: later upgrades can shift position when the second row appears.
+
+### Candidate B - Category clusters (recommended/default)
+
+- Four centered clusters follow the current user-facing categories: Primary,
+  Elements, Secondary Weapons, and Ship Systems.
+- Only clusters with acquired upgrades are shown. A restrained semantic notch and
+  inter-cluster spacing identify the category; repeated category words are not
+  shown on the live HUD.
+- A cluster keeps its icon order as it grows and wraps as a complete cluster when
+  necessary. This supports the current 12 upgrades and an 18-upgrade fixture
+  without mixing mechanic families.
+- Strength: acquired and future content keeps a predictable semantic location.
+- Tradeoff: slightly more horizontal spacing than Candidate A in the middle run.
+
+### Candidate C - Fixed two-row matrix
+
+- A centered `9 x 2` matrix uses `28 px` icons and preserves a constant maximum
+  footprint from the first upgrade onward, while still hiding empty cells.
+- Stable insertion positions avoid reflow during combat and give 18 visible
+  upgrade positions at every supported desktop width.
+- Strength: the best high-count capacity and the least layout movement.
+- Tradeoff: it consumes two-row vertical space earlier than the other candidates.
+
+### Candidate production rule
+
+The three candidates are built behind a capture/debug-only selector using the
+same shared HUD component and snapshot. They are rendered at `960x540`,
+`1280x720`, and `1920x1080`, in Korean and English, plus the existing 200% text
+case. The selector cannot ship. The user-selected candidate is promoted; if no
+explicit choice is supplied, Candidate B is promoted and the other branches are
+deleted rather than retained as production options.
+
+### Upgrade card
+
+The card header and artwork remain above the change body. Inside the body the
+order becomes exactly:
+
+1. `Lv.current -> next`
+2. real current-to-next values, or the existing small icon-only unlock marker for
+   a first behavior acquisition
+3. the concise localized description as the final row
+
+Both `HSeparator` controls and their layout/debug contracts are removed. The
+description font increases from `14` to `16` in compact/standard layouts and to
+`18` in the large/200% profile. Descriptions keep the approved roughly ten-
+character Korean and two-to-five-word English copy, use center alignment, and do
+not become a footer panel.
+
+### Boss shield and boss modules
+
+- Replace the objective-module catalog/runtime with one narrow boss-shield state
+  owner. Boss pattern ownership remains in `VehicleBossRuntime` and
+  `VehicleBossPatterns`; the run orchestrator only forwards direct-pattern and
+  phase-transition receipts.
+- Remove `boss_pylon` creation, targeting, collision, damage, XP exception,
+  minimap/threat-radar contacts, renderer branches, guidebook identity,
+  localization, captures, and objective snapshots.
+- Remove orphaned boss-node raster/manifest entries only after consumer search
+  proves zero live references. Recompute the production manifest count instead
+  of preserving the current exact-count assertion by adding unused assets.
+- The boss HUD snapshot exposes only boss health, shield active/down state, and
+  remaining down-window seconds. No module IDs or module health cross the UI
+  boundary.
+- Existing phase floors continue to select phase changes but never clamp or
+  cancel accepted damage.
+
+### Hostile area attacks
+
+- Boss `area` telegraphs ignore attack affinity for presentation and always use
+  the same orange hostile-bombardment color. Purple arc and red kinetic boss
+  circles disappear.
+- `controller` and `artillery_spotter` stop using targeted `area` attacks. Their
+  existing attack slots become direct hostile-projectile attacks using the
+  existing hostile projectile family; no new projectile image is added.
+- Stationary mine damage remains local area damage, but its world-space danger
+  circle is removed. One-shot actor state changes communicate arming and imminent
+  detonation without a ground bombardment ring or attack route.
+- Non-damaging actor-attached support/shield boundaries may remain in their
+  support color. They must never use the orange bombardment grammar.
+- Charge routes, projectile entry lanes, ranged startup ticks, collective attack
+  directions, floating damage text, and yellow enemy selection overlays remain
+  absent and receive regression coverage.
+
+## Prior delivery audit - 2026-08-08
+
+| Prior requirement | Current evidence | Audit result |
+| --- | --- | --- |
+| Player/projectile/XP size and dedicated projectile families | Visual-profile constants remain `35`, `0.70`, `0.50`, and XP `17/20/23`; projectile catalog has Primary, Seeker, and Hostile identities | Implemented in source; current focused proof is blocked by a stale validator parse error |
+| Mine/orbit presentation enlargement | Secondary visual constants and renderer routing remain in the prior delivery | Implemented in source; must be rechecked by the repaired projectile/renderer validation batch |
+| Concise card descriptions and exclusive element choice | Localized summaries are present; catalog compatibility excludes the two unchosen elements after selection | Implemented; card row order is superseded by this plan |
+| EMP-only bottom indicator | HUD owns one panel-free `88x88` action slot and no dash/secondary slots | Implemented |
+| Yellow enemy overlays and attack-route removal | Follow-up commit `b3be088b` removed vulnerability crosshair, reward-color markers, entry previews, startup ticks, and collective direction indicators | Implemented in source; preserve with regression tests |
+| EMP/summon XP, ordinary health, doubled healing | Enemy defeats use the normal XP path; ordinary multiplier is `1.30`; repair/generator values are doubled to `8` | Implemented in source |
+| Reinforcement facility | A separate facility runtime owns activation, health, spawn interval, child cap, and minimap snapshot | Implemented in source |
+| Stage 5 completion | Exhausted offers resolve without a modal and final completion calls the result flow | Implemented in source |
+
+The prior delivery is therefore present, but it cannot be called fully reverified
+on current HEAD. `validate_vehicle_projectile_readability.gd` does not parse
+because it calls `descriptor()` without the now-required semantic ID, and
+`validate_vehicle_damage_feedback.gd` did not terminate within the bounded audit
+window. These are the first implementation blockers to repair and diagnose.
+
+## Milestones and work order
+
+Prior completed delivery:
+
+- [x] 1. Apply the original scale, health, healing, XP, feedback-removal, and
+  telegraph changes.
+- [x] 2. Split projectile families and add the dedicated hostile and facility
+  rasters through the visual-authority workflow.
+- [x] 3. Make element selection exclusive and bind primary projectile color.
+- [x] 4. Simplify the upgrade and EMP HUD surfaces.
+- [x] 5. Add the separate reinforcement-facility runtime and minimap role.
+- [x] 6. Repair Stage 5 exhausted-offer completion.
+- [x] 7. Run the original focused, visual, Web, and workload checks.
+- [x] 8. Restore concise descriptions and remove residual yellow markers/routes.
+
+Current follow-up, ordered from lower coupling to higher coupling:
+
+- [ ] 9. Repair the stale projectile-readability validator and diagnose the
+  bounded non-termination in damage-feedback validation. Run the prior-scope
+  focused audit before using its earlier “complete” status as current evidence.
+- [ ] 10. Correct the upgrade-card row order, remove both separators, raise the
+  description type size, and lock ordinary/boss health constants with focused
+  tests. Do not touch boss mechanics in this milestone.
+- [ ] 11. Build the shared acquired-upgrade rail and the three debug/capture-only
+  top-HUD candidates. Produce the complete responsive/localized comparison set.
+- [ ] 12. Promote the explicit user choice or default Candidate B, delete the
+  other runtime branches, move stage/message/XP/boss summary into the top-left
+  mission surface, and deliver build changes to the HUD only on upgrade/reset.
+- [ ] 13. Replace external boss modules with the boss-owned timed shield, apply
+  the boss-health multiplier, remove every module consumer, and update boss HUD,
+  radar, minimap, guidebook, localization, captures, and workload fixtures.
+- [ ] 14. Unify boss circles to orange, convert ordinary targeted area attacks to
+  direct projectiles, replace the mine ground circle with actor-state cues, and
+  prove no ordinary hostile can create a damaging ground circle.
+- [ ] 15. Update `vehicle_game_spec.md`, `VISUAL_SYSTEM.md`, and upgrade contracts
+  to the approved HUD, card hierarchy, shield loop, health values, and attack
+  grammar. Remove obsolete objective-module wording and exact asset-count claims.
+- [ ] 16. Run focused gameplay/UI/authority validation, deterministic Korean and
+  English captures, Web export, built-Web smoke, and the task-scoped quality
+  audit. Commit coherent task-owned slices only.
+
+## Progress and next step
+
+- Canonical progress: the checkboxes above.
+- Current milestone: 9.
+- Next action after plan approval: repair the two current-HEAD validation blockers,
+  then implement Milestone 10 before any HUD or boss refactor.
+- Update rule: check a milestone only when its source change, focused validation,
+  and named evidence are present. Do not reuse a historical pass after its owner
+  changes.
+
+## Test plan and acceptance criteria
+
+### Focused correctness
+
+- Upgrade cards report body order `level -> effects/unlock -> summary`, contain no
+  separators, keep one summary per card, and fit Korean/English at all three
+  card profiles and 200% text.
+- The ordinary-health contract reports exactly `1.30`. Boss health reports the
+  five locked values after the `1.30` multiplier.
+- Boss-shield tests cover entry, direct-pattern completion, the exact `4.0`
+  second down window, `0.25x/1.00x` damage, phase reactivation, no HP floor, and
+  removal of all module actors/targets/snapshots.
+- Attack-contract tests prove that only a stage boss can emit a damaging
+  world-space `area` telegraph. Every boss area warning resolves to the same
+  orange color regardless of affinity. Controller and artillery attacks resolve
+  to direct projectiles; mine startup produces no ground ring.
+- Prior-plan focused tests cover projectile visual families/scales, element
+  exclusivity, EMP-only HUD, XP drops, doubled healing, facility lifecycle/caps,
+  route/overlay suppression, and final-result progression.
+
+### HUD and visual evidence
+
+- Candidate captures cover 0/6/12/18 upgrades at `960x540`, `1280x720`, and
+  `1920x1080`, in Korean and English, plus 200% text.
+- No icon, level numeral, health value, stage/message line, boss meter, target
+  block, or minimap child clips, overlaps, or leaves its container.
+- The top center uses no full-width or full-rail background. One-row standard
+  height is at most `72 px`; a second row appears only when the real build needs
+  it and stays at or below `104 px`.
+- The active boss shield is visually attached to the boss, clearly different
+  from the orange ground attack circle, and absent during the down window.
+- The visual-authority validator passes after the canonical HUD/boss contracts
+  and manifest are updated.
+
+### Runtime handoff
+
+- Focused HUD presentation checks show that acquired-upgrade arrays update only
+  after build/reset changes and are not copied by the 10 Hz fast clusters.
+- Global enemy/projectile/effect capacities and thresholds remain unchanged.
+  Performance fixtures record the authorized removal of boss-module workload;
+  no lower workload is presented as an optimization win.
+- The Web export succeeds. The production-style built app loads, reaches the
+  changed HUD/card/boss flows, returns no console errors, and is closed together
+  with task-owned browser/server helpers after review.
+- `codebase-quality-auditor` finds no remaining task-owned responsibility creep,
+  stale module API, unreachable failure path, or missing focused contract.
+
+## Rollback and safety
+
+- Keep the three HUD alternatives behind a debug/capture selector until one is
+  promoted. Production never owns multiple switchable HUD architectures.
+- Land the card/balance, HUD, boss shield, and attack grammar as separate coherent
+  commits so a regression can be isolated without reverting unrelated user work.
+- Before removing boss-module assets, search manifest, provider, guidebook,
+  renderer, capture, localization, and validation consumers. Delete only proven
+  task-owned orphans and report their removal.
+- Preserve current collision radii, capacities, stage saves, upgrade IDs, and
+  localization columns. No dependency, schema migration, or destructive user-
+  data action is required.
+- If a built flow cannot expose a required state deterministically, stop that QA
+  branch and report the missing fixture rather than weakening the assertion.
+
+## Risks and mitigations
+
+- **HUD rail allocations:** reusing the frozen build snapshot at fast cadence
+  would reintroduce snapshot cost. Mitigation: event-driven build receipts and a
+  retained icon pool owned by the HUD component.
+- **Future upgrade count:** one convenient 12-card fixture can hide overflow.
+  Mitigation: 18-upgrade captures and a two-row bound in every candidate.
+- **Boss difficulty spike:** higher HP plus shielded damage reduction may lengthen
+  fights. Mitigation: lock the first pass, preserve a readable `4.0` second full-
+  damage window, and record playtest duration separately from correctness.
+- **Hidden mine danger:** removing its ring can reduce reaction clarity.
+  Mitigation: use explicit actor arming/imminent states and validate the full
+  startup duration without adding another ground attack symbol.
+- **Large obsolete surface:** `boss_pylon` crosses many owners. Mitigation: remove
+  it by consumer class with zero-reference searches and dedicated no-module
+  acceptance checks, not a broad `VehicleRun` rewrite.
+- **Evidence drift:** the previous plan recorded passes that current validators no
+  longer reproduce. Mitigation: repair the validator API and non-termination first
+  and label historical evidence as historical.
+
+## Open questions
+
+No blocking implementation question remains. The user may explicitly select HUD
+Candidate A or C after seeing the three rendered comparisons; without that input,
+Candidate B is the recorded default. Boss health or shield timing changes beyond
+the locked first pass require later playtest evidence and a separate tuning note.
+
+## Decision notes and provenance
+
+- 2026-08-07: The original delivery was implemented in `75dc8edd` and the first
+  user-review cleanup in `b3be088b`.
+- 2026-08-07: Canonical visual authority was inspected at original detail. The
+  expected and observed SHA-256 were
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+- 2026-08-07: The hostile bolt and reinforcement-facility rasters used the
+  canonical sheet as an actual ImageGen reference and were promoted after review.
+- 2026-08-08: The authority document and original-detail style sheet were
+  rechecked before planning this HUD/card/boss visual revision. The sheet remains
+  a style reference, never asset approval. This plan adds no new raster output.
+- 2026-08-08: Source audit confirmed the final ordinary-health multiplier is
+  already `1.30`; applying another 30% would produce an unintended `1.69` total.
+- 2026-08-08: Purple and red circular warnings were traced to affinity-colored
+  boss area patterns and ordinary controller/mine/artillery area contracts. The
+  plan replaces that mixed grammar with boss-only orange bombardment circles.
+- 2026-08-08: The current-HEAD audit found one validator parse failure and one
+  bounded non-termination. Prior implementation remains present in source, but
+  full re-verification is deliberately not claimed until Milestone 9 passes.
