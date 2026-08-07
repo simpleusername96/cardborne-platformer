@@ -32,7 +32,6 @@ func _validate_drop_values() -> void:
 	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"turret")) == 4, "priority XP is 4")
 	_expect(FieldDropRules.experience_for_enemy(_enemy(&"boss", &"stage_boss")) == 24, "stage boss XP is 24")
 	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser", "carrier")) == 1, "summoned carrier children grant their normal XP")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"boss_pylon")) == 0, "boss pylons grant no XP")
 
 
 func _validate_stage_items() -> void:

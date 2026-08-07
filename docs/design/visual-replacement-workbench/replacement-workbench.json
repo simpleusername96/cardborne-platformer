@@ -376,8 +376,8 @@
       "id": "projectile_family",
       "category_id": "combat",
       "order": 1,
-      "title_en": "Shared Energy Projectile",
-      "title_ko": "공용 에너지 탄환",
+      "title_en": "Distinct Projectile Families",
+      "title_ko": "구분된 탄환 계열",
       "owner": "gameplay_manifest",
       "switch_kind": "consolidate",
       "status": "applied",
@@ -398,17 +398,10 @@
         "scripts/presentation/vehicle_combat_renderer.gd"
       ],
       "consumer_asset_ids": [
-        "projectile/hostile_arc",
-        "projectile/hostile_cryo",
-        "projectile/hostile_hybrid",
-        "projectile/hostile_kinetic",
-        "projectile/hostile_thermal",
-        "projectile/hostile_toxin",
-        "projectile/player_opening_breach",
-        "projectile/player_primary",
-        "projectile/player_seeker"
+        "projectile/energy_teardrop",
+        "projectile/hostile_barbed_bolt"
       ],
-      "direction_en": "Consolidate all nine projectile PNG identities into one right-facing, tailless energy-teardrop master. Runtime retains collision, damage, range, cadence, homing, rotation, scale, and faction or affinity tint.",
+      "direction_en": "Keep the player primary energy-teardrop and add one exclusive hostile barbed-bolt identity. The built-in Seeker continues to use its separate secondary/seeker identity. Runtime retains collision, damage, range, cadence, homing, rotation, scale, and affinity tint.",
       "deliverables": [
         {
           "target_path": "art/visuals/production/gameplay/weapons/projectiles/projectile_energy_teardrop.png",
@@ -426,10 +419,25 @@
           "blend": null,
           "brief_en": "Create one complete right-facing energy-teardrop projectile with an opaque collision-centered core, one broad flat-color body, dark perimeter, no tail, rail, bead, detached part, glow, texture, or micro-detail.",
           "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_barbed_bolt.png",
+          "width": 96,
+          "height": 64,
+          "pivot": [48, 32],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One complete right-facing hostile barbed bolt with an opaque collision-centered core, dark perimeter, compact spearhead mass, transparent background, and no detached trail or micro-detail.",
+          "external_source_ids": []
         }
       ],
       "final_paths": [
-        "art/visuals/production/gameplay/weapons/projectiles/projectile_energy_teardrop.png"
+        "art/visuals/production/gameplay/weapons/projectiles/projectile_energy_teardrop.png",
+        "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_barbed_bolt.png"
       ],
       "reuse_paths": [],
       "preview_paths": [
@@ -474,7 +482,8 @@
         "approved_at": "2026-08-04T13:43:54+09:00",
         "baseline_commit": "d7ccf4646b99b4ce8d06ddd68600ec41c295c0b5",
         "deliverable_sha256": {
-          "art/visuals/production/gameplay/weapons/projectiles/projectile_energy_teardrop.png": "dada224c14916cd9c4e8484c0d3171ddd7a4a1fb4686cadf1d575cb2509d3671"
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_energy_teardrop.png": "dada224c14916cd9c4e8484c0d3171ddd7a4a1fb4686cadf1d575cb2509d3671",
+          "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_barbed_bolt.png": "6aa17c8c6fa5f34e737e7a431f793496a426aea58ac6e7f3be8d82822d2efa7d"
         },
         "retire_paths": [
           "art/visuals/production/gameplay/weapons/projectiles/projectile_hostile_arc.png",
@@ -932,23 +941,6 @@
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_boss_pylon_base.png",
-          "width": 160,
-          "height": 160,
-          "pivot": [
-            80,
-            80
-          ],
-          "patch_margin": null,
-          "safe_inset": null,
-          "frame_count": null,
-          "fps": null,
-          "loop": null,
-          "blend": null,
-          "brief_en": "Redraw actor_enemy_boss_pylon_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
-          "external_source_ids": []
-        },
-        {
           "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_bulkhead_guard_base.png",
           "width": 112,
           "height": 112,
@@ -1224,7 +1216,6 @@
       "final_paths": [
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png",
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_boss_pylon_base.png",
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_bulkhead_guard_base.png",
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_chaser_base.png",
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_controller_base.png",
@@ -1259,7 +1250,6 @@
         "deliverable_sha256": {
           "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png": "4907d7488987ef30da64c97a0ad0077d734c2b07894149b0aa4189790e31e657",
           "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png": "bf361c070bc71382415299b5fce6ff04eba8592d64fb49b06181f139927d6bb0",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_boss_pylon_base.png": "200b2ed9b2feb81a2451df6e682082a4c359a463dc238cf3b327178a3566b718",
           "art/visuals/production/gameplay/actors/enemies/actor_enemy_bulkhead_guard_base.png": "58a3077452305a75cb61baadcc9533ce28a2ead5270fc34c3fe2ddeb17625813",
           "art/visuals/production/gameplay/actors/enemies/actor_enemy_chaser_base.png": "c5eb6f0d0c476c7aecbe541d61295183d14c3fd9d68734de4e562d3297a7c3da",
           "art/visuals/production/gameplay/actors/enemies/actor_enemy_controller_base.png": "98c6a54dbd8377ee25167a7ad2b36664b75f3839d15d8f844e52b5496a1615ca",
@@ -2255,8 +2245,8 @@
       "id": "boss_and_shared_node_family",
       "category_id": "boss",
       "order": 1,
-      "title_en": "Boss Bodies and Shared Nodes",
-      "title_ko": "보스 본체 및 공통 노드",
+      "title_en": "Boss Bodies",
+      "title_ko": "보스 본체",
       "owner": "composite",
       "switch_kind": "consolidate",
       "status": "applied",
@@ -2283,26 +2273,13 @@
         "scripts/presentation/vehicle_combat_renderer.gd"
       ],
       "consumer_asset_ids": [
-        "boss_module/armor_car",
-        "boss_module/crown_lattice",
-        "boss_module/crown_pylon",
-        "boss_module/forge_plate_active",
-        "boss_module/forge_plate_disabled",
-        "boss_module/relay_negative",
-        "boss_module/relay_positive",
-        "boss_module/route_switch",
-        "boss_module/segment_lock_active",
-        "boss_module/segment_lock_disabled",
-        "boss_node/active",
-        "boss_node/damaged",
-        "boss_node/resolved",
         "boss/behemoth",
         "boss/colossus",
         "boss/crown",
         "boss/leviathan",
         "boss/titan"
       ],
-      "direction_en": "Replace five boss bodies in place, add three shared node states, and retire ten boss-specific module PNGs while gameplay retains module kind, index, shield logic, and sequence.",
+      "direction_en": "Keep five distinct boss bodies and retire every external objective-module and shared-node PNG. The current shield is a body-attached runtime state with no separate actor or raster asset.",
       "deliverables": [
         {
           "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png",
@@ -2388,57 +2365,6 @@
           "blend": null,
           "brief_en": "Redraw actor_boss_titan_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
           "external_source_ids": []
-        },
-        {
-          "target_path": "art/visuals/production/gameplay/actors/bosses/shared/boss_node_active.png",
-          "width": 160,
-          "height": 160,
-          "pivot": [
-            80,
-            80
-          ],
-          "patch_margin": null,
-          "safe_inset": null,
-          "frame_count": null,
-          "fps": null,
-          "loop": null,
-          "blend": null,
-          "brief_en": "Create boss_node_active.png as one complete shared boss-node state on a common footprint; distinguish complete, broken, or opened rail/housing structure rather than hue alone.",
-          "external_source_ids": []
-        },
-        {
-          "target_path": "art/visuals/production/gameplay/actors/bosses/shared/boss_node_damaged.png",
-          "width": 160,
-          "height": 160,
-          "pivot": [
-            80,
-            80
-          ],
-          "patch_margin": null,
-          "safe_inset": null,
-          "frame_count": null,
-          "fps": null,
-          "loop": null,
-          "blend": null,
-          "brief_en": "Create boss_node_damaged.png as one complete shared boss-node state on a common footprint; distinguish complete, broken, or opened rail/housing structure rather than hue alone.",
-          "external_source_ids": []
-        },
-        {
-          "target_path": "art/visuals/production/gameplay/actors/bosses/shared/boss_node_resolved.png",
-          "width": 160,
-          "height": 160,
-          "pivot": [
-            80,
-            80
-          ],
-          "patch_margin": null,
-          "safe_inset": null,
-          "frame_count": null,
-          "fps": null,
-          "loop": null,
-          "blend": null,
-          "brief_en": "Create boss_node_resolved.png as one complete shared boss-node state on a common footprint; distinguish complete, broken, or opened rail/housing structure rather than hue alone.",
-          "external_source_ids": []
         }
       ],
       "final_paths": [
@@ -2446,10 +2372,7 @@
         "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png",
         "art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png",
         "art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png",
-        "art/visuals/production/gameplay/actors/bosses/shared/boss_node_active.png",
-        "art/visuals/production/gameplay/actors/bosses/shared/boss_node_damaged.png",
-        "art/visuals/production/gameplay/actors/bosses/shared/boss_node_resolved.png"
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png"
       ],
       "reuse_paths": [],
       "preview_paths": [
@@ -2498,10 +2421,7 @@
           "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png": "75d653ba6e31bb3485b8bd721689aacc79fec1c0abe91bad59d0bec8c551f6de",
           "art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png": "8e830d6e1544e89b5d7b9fa292769dc0e63fd56b8a342827f24747bc0f49569e",
           "art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png": "dea5e220c7308fab723f0efb7053293f86c2ec16121cb292f435905bcfa99ce9",
-          "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png": "638999a200879dfabbc17718d1291dd86143ab1872c1ae9a2020d9e201bb5492",
-          "art/visuals/production/gameplay/actors/bosses/shared/boss_node_active.png": "fa0e1da4efa4b902f9a14ad744b94e7c974d3d22403c0699b0d974933e681240",
-          "art/visuals/production/gameplay/actors/bosses/shared/boss_node_damaged.png": "a170e9e5eaaac5f6113ec12ff1439acfecd09a0fefaf0e3699d0c3a11d2c8b76",
-          "art/visuals/production/gameplay/actors/bosses/shared/boss_node_resolved.png": "d1c28dbf68954d4051fa026495d6d7c6dffbb8f2bbfb02006b2c16c28c51c097"
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png": "638999a200879dfabbc17718d1291dd86143ab1872c1ae9a2020d9e201bb5492"
         },
         "retire_paths": [
           "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png",
@@ -2897,6 +2817,20 @@
           "external_source_ids": [
             "kenney_structure_closed"
           ]
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/world/world_facility_reinforcement_fabricator.png",
+          "width": 256,
+          "height": 256,
+          "pivot": [128, 128],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One complete top-down hostile reinforcement fabricator with a broad stationary mechanical mass, red threat plane, dark perimeter, readable production mouth, transparent background, and no decorative micro-detail.",
+          "external_source_ids": []
         }
       ],
       "final_paths": [
@@ -2907,7 +2841,8 @@
         "art/visuals/production/gameplay/world/terrain_solid_cover_block.png",
         "art/visuals/production/gameplay/world/world_bulkhead_damaged.png",
         "art/visuals/production/gameplay/world/world_bulkhead_intact.png",
-        "art/visuals/production/gameplay/world/world_bulkhead_open.png"
+        "art/visuals/production/gameplay/world/world_bulkhead_open.png",
+        "art/visuals/production/gameplay/world/world_facility_reinforcement_fabricator.png"
       ],
       "reuse_paths": [
         "art/visuals/production/gameplay/world/terrain_solid_cover_block.png"
@@ -2950,7 +2885,8 @@
           "art/visuals/production/gameplay/world/facility_transit_gate.png": "8cd361f68f95802ca802d668f20dae9040e0ae2a534d893ac68c7e26961dd090",
           "art/visuals/production/gameplay/world/world_bulkhead_damaged.png": "c4a3471e4539c9fa3acd06fd11c4ceac31ac7d6f422340d3dc91dc9a94e35c01",
           "art/visuals/production/gameplay/world/world_bulkhead_intact.png": "d1911187be70c6bac940c70f12681c400d0a32ef4f02e138b09601d635452a17",
-          "art/visuals/production/gameplay/world/world_bulkhead_open.png": "fa635dfb78682728bc134fb77d6fc66aca769035338b595233d1a498bdf73e8b"
+          "art/visuals/production/gameplay/world/world_bulkhead_open.png": "fa635dfb78682728bc134fb77d6fc66aca769035338b595233d1a498bdf73e8b",
+          "art/visuals/production/gameplay/world/world_facility_reinforcement_fabricator.png": "08cf6c2086b16bfc07029e1726b5c1fbc9b5b3c4bd3a8145ca9ce904e77c8b78"
         },
         "retire_paths": [
           "art/visuals/production/gameplay/world/facility_overdrive_lane.png",

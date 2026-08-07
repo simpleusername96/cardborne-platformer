@@ -27,7 +27,7 @@
     "shared_world_cue_rule": "Fixed world surface, wall, health-frame, ring, beam, marker, disk, and crosshair identities are authored PNGs. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, and live timing remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 73,
+  "final_asset_count": 69,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -72,16 +72,12 @@
     {"id": "actor/splitter_barge", "path": "actors/enemies/actor_enemy_splitter_barge_base.png", "canvas": [112, 112], "pivot": [56, 56], "category": "actor"},
     {"id": "actor/interceptor_tower", "path": "actors/enemies/actor_enemy_interceptor_tower_base.png", "canvas": [160, 160], "pivot": [80, 80], "category": "actor"},
     {"id": "actor/beam_sentinel", "path": "actors/enemies/actor_enemy_beam_sentinel_base.png", "canvas": [160, 160], "pivot": [80, 80], "category": "actor"},
-    {"id": "actor/boss_pylon", "path": "actors/enemies/actor_enemy_boss_pylon_base.png", "canvas": [160, 160], "pivot": [80, 80], "category": "actor"},
 
     {"id": "boss/colossus", "path": "actors/bosses/actor_boss_colossus_base.png", "canvas": [352, 352], "pivot": [176, 176], "category": "boss"},
     {"id": "boss/leviathan", "path": "actors/bosses/actor_boss_leviathan_base.png", "canvas": [352, 352], "pivot": [176, 176], "category": "boss"},
     {"id": "boss/titan", "path": "actors/bosses/actor_boss_titan_base.png", "canvas": [352, 352], "pivot": [176, 176], "category": "boss"},
     {"id": "boss/behemoth", "path": "actors/bosses/actor_boss_behemoth_base.png", "canvas": [352, 352], "pivot": [176, 176], "category": "boss"},
     {"id": "boss/crown", "path": "actors/bosses/actor_boss_crown_base.png", "canvas": [352, 352], "pivot": [176, 176], "category": "boss"},
-    {"id": "boss/node_active", "path": "actors/bosses/shared/boss_node_active.png", "canvas": [160, 160], "pivot": [80, 80], "category": "boss_node"},
-    {"id": "boss/node_damaged", "path": "actors/bosses/shared/boss_node_damaged.png", "canvas": [160, 160], "pivot": [80, 80], "category": "boss_node"},
-    {"id": "boss/node_resolved", "path": "actors/bosses/shared/boss_node_resolved.png", "canvas": [160, 160], "pivot": [80, 80], "category": "boss_node"},
 
     {"id": "secondary/seeker", "path": "weapons/secondaries/secondary_seeker.png", "canvas": [96, 64], "pivot": [58, 32], "category": "secondary"},
     {"id": "secondary/escort_drone", "path": "weapons/secondaries/secondary_escort_drone.png", "canvas": [64, 48], "pivot": [32, 24], "category": "secondary"},

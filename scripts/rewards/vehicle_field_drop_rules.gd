@@ -10,8 +10,6 @@ const PICKUP_TYPES: Array[StringName] = [&"repair", &"experience_recall"]
 
 static func experience_for_enemy(enemy: EnemyState) -> int:
 	var role := enemy.role
-	if role == &"boss_pylon":
-		return 0
 	if role == &"stage_boss":
 		return 24
 	var base := 2

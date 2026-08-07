@@ -58,6 +58,13 @@ func _initialize() -> void:
 		"projectile startup keeps a bounded radar-readiness horizon"
 	)
 	_expect(
+		StringName(AttackContract.ORDINARY_ATTACKS[&"controller"]["kind"])
+			== &"projectile"
+			and StringName(AttackContract.ORDINARY_ATTACKS[&"artillery_spotter"]["kind"])
+				== &"projectile",
+		"ordinary controller and artillery roles never create ranged area bombardments"
+	)
+	_expect(
 		is_zero_approx(AttackContract.warning_readiness(0.8, 0.8))
 			and is_equal_approx(AttackContract.warning_readiness(0.4, 0.8), 0.5)
 			and is_equal_approx(AttackContract.warning_readiness(0.0, 0.8), 1.0),

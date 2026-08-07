@@ -18,11 +18,11 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"mobile_drone_carrier", "category":&"mobile", "name_key":"ENEMY_DRONE_CARRIER", "description_key":"GUIDE_MOBILE_CARRIER_DESC"},
 	{"id":&"mobile_bulkhead_guard", "category":&"mobile", "name_key":"ENEMY_BULKHEAD_GUARD", "description_key":"GUIDE_MOBILE_GUARD_DESC", "preview":{"kind":&"enemy", "id":&"bulkhead_guard"}},
 	{"id":&"mobile_splitter_barge", "category":&"mobile", "name_key":"ENEMY_SPLITTER_BARGE", "description_key":"GUIDE_MOBILE_SPLITTER_DESC", "preview":{"kind":&"enemy", "id":&"splitter_barge"}},
-	{"id":&"boss_stage_1", "category":&"bosses", "name_key":"ENEMY_FOUNDRY_COLOSSUS", "description_key":"GUIDE_BOSS_1_DESC", "counter_key":"BOSS_EXAM_FOUNDRY_P1", "preview":{"kind":&"boss", "id":&"colossus"}},
-	{"id":&"boss_stage_2", "category":&"bosses", "name_key":"ENEMY_ARCHIVE_LEVIATHAN", "description_key":"GUIDE_BOSS_2_DESC", "counter_key":"BOSS_EXAM_LEVIATHAN_P1", "preview":{"kind":&"boss", "id":&"leviathan"}},
-	{"id":&"boss_stage_3", "category":&"bosses", "name_key":"ENEMY_DRYDOCK_TITAN", "description_key":"GUIDE_BOSS_3_DESC", "counter_key":"BOSS_EXAM_TITAN_P1", "preview":{"kind":&"boss", "id":&"titan"}},
-	{"id":&"boss_stage_4", "category":&"bosses", "name_key":"ENEMY_SWITCHYARD_BEHEMOTH", "description_key":"GUIDE_BOSS_4_DESC", "counter_key":"BOSS_EXAM_BEHEMOTH_P1", "preview":{"kind":&"boss", "id":&"behemoth"}},
-	{"id":&"boss_stage_5", "category":&"bosses", "name_key":"ENEMY_CROWN_ENGINE", "description_key":"GUIDE_BOSS_5_DESC", "counter_key":"BOSS_EXAM_CROWN_P1", "preview":{"kind":&"boss", "id":&"crown"}},
+	{"id":&"boss_stage_1", "category":&"bosses", "name_key":"ENEMY_FOUNDRY_COLOSSUS", "description_key":"GUIDE_BOSS_1_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"colossus"}},
+	{"id":&"boss_stage_2", "category":&"bosses", "name_key":"ENEMY_ARCHIVE_LEVIATHAN", "description_key":"GUIDE_BOSS_2_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"leviathan"}},
+	{"id":&"boss_stage_3", "category":&"bosses", "name_key":"ENEMY_DRYDOCK_TITAN", "description_key":"GUIDE_BOSS_3_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"titan"}},
+	{"id":&"boss_stage_4", "category":&"bosses", "name_key":"ENEMY_SWITCHYARD_BEHEMOTH", "description_key":"GUIDE_BOSS_4_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"behemoth"}},
+	{"id":&"boss_stage_5", "category":&"bosses", "name_key":"ENEMY_CROWN_ENGINE", "description_key":"GUIDE_BOSS_5_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"crown"}},
 	{"id":&"object_experience", "category":&"objects", "name_key":"GUIDE_OBJECT_EXPERIENCE_NAME", "description_key":"GUIDE_OBJECT_EXPERIENCE_DESC", "preview":{"kind":&"pickup", "id":&"experience"}},
 	{"id":&"object_repair", "category":&"objects", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "description_key":"GUIDE_OBJECT_REPAIR_DESC", "preview":{"kind":&"pickup", "id":&"repair"}},
 	{"id":&"object_recall", "category":&"objects", "name_key":"GUIDE_OBJECT_RECALL_NAME", "description_key":"GUIDE_OBJECT_RECALL_DESC"},
@@ -45,7 +45,7 @@ static func valid_ids() -> Dictionary:
 
 static func entry_id_for_enemy(archetype: StringName, behavior: StringName) -> StringName:
 	var stationary_archetypes: Array[StringName] = [
-		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator", &"boss_pylon",
+		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator",
 	]
 	if archetype in stationary_archetypes:
 		return &""

@@ -308,7 +308,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 		resolve_path,
 		resolve_charge_path
 	)
-	_expect(boss.attack_telegraphs.size() == 4, "autonomous pylon warning exposes its area and three aimed projectiles")
+	_expect(boss.attack_telegraphs.size() == 4, "boss bombardment exposes its area and three aimed projectiles")
 	_expect(
 		boss.attack_telegraphs.all(
 			func(warning): return StringName(warning["affinity"]) == AttackContract.ARC
@@ -363,7 +363,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 				float(mine.attack_telegraphs[0]["radius"]),
 				float(AttackContract.ORDINARY_ATTACKS[&"mine"]["radius"])
 			),
-		"mine warning uses its exact proximity damage radius"
+		"mine simulation descriptor retains its exact proximity damage radius"
 	)
 
 	var controller = stage.call("_make_enemy", {
@@ -373,13 +373,15 @@ func _check_attack_telegraphs(stage: Node) -> void:
 		"active":true,
 	})
 	controller.phase = &"startup"
+	controller.committed_dir = Vector2.LEFT
 	controller.committed_target = stage.player_position
 	stage.denied_zones.clear()
+	var hostile_before: int = stage.projectile_store.hostile_count()
 	stage.call("_begin_enemy_active", controller)
 	_expect(
-		stage.denied_zones.size() == 1
-			and is_zero_approx(float(stage.denied_zones[0]["warning"])),
-		"committed area startup flows directly into its fixed damaging zone"
+		stage.denied_zones.is_empty()
+			and stage.projectile_store.hostile_count() == hostile_before + 1,
+		"ordinary controller fires a projectile instead of a ranged area zone"
 	)
 
 

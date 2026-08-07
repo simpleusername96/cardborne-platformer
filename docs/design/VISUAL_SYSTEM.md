@@ -116,11 +116,9 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
   filled plane으로 구성한다. boss body도 같은 문법을 확대해 4–6개의 큰
   filled plane과 한 겹의 외곽선으로 제한한다. 미세 panel, 반복 lamp,
   nested outline과 greeble로 boss 등급을 표현하지 않는다.
-- 모든 boss에서 방어막을 낮추는 외부 objective는 동일한 **보스 방어막
-  노드** family를 재사용한다. boss마다 forge plate, segment lock, relay,
-  route switch, lattice처럼 다른 장치 silhouette를 만들지 않는다. 노드는
-  동일한 housing에서 `active → damaged → resolved` 상태만 바뀌며, 색뿐
-  아니라 완전한 rail, 끊어진 rail, 열린 housing으로 상태를 구분한다.
+- 보스 방어막은 외부 objective나 별도 actor가 아니라 boss body에 붙은 한 겹의
+  command-color boundary다. `shield_up`과 `shield_down` 두 상태만 사용하며,
+  별도 node, pylon, module, objective marker를 만들지 않는다.
 - 짧은 한 방향 shadow, hard edge highlight와 얕은 inset은 승인 시안의
   기계적 깊이를 설명할 때 사용한다. soft glow, photoreal material,
   uncontrolled glossy effect와 반복 nested outline은 사용하지 않는다.
@@ -261,9 +259,8 @@ collision.
   세우지 않는다. Mystery Device는 crate보다 큰 `intact` body와 효과가 anchor를
   필요로 할 때만 유지하는 `resolved` wreck state를 가진다. 결과 종류는 파괴
   전 image, 색, lamp, glyph로 암시하지 않는다.
-- boss별 objective module art는 금지한다. 공통 node의 `active`, `damaged`,
-  `resolved` authored 상태 세 개만 유지하고 module kind/index는 gameplay
-  owner가 계속 보존한다.
+- boss objective module art와 shared node art는 모두 production에서 제외한다.
+  방어막 상태는 boss body와 HUD의 직접 상태 표현이 소유한다.
 - EMP는 유일하게 유지하는 대형 effect이며 transparent `512×512` authored
   PNG 하나를 gameplay radius에 맞춰 scale/fade한다. 나머지 작은 effect image와
   raster frame animation은 현재 production visual owner가 아니다. 필수 hit/
@@ -375,30 +372,29 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - projectile startup과 이미 생성된 projectile은 발사원 가시성과 관계없이
   예측 경로 또는 진입선을 표시하지 않는다. 화면 밖 발사원의 공격은 threat
   radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
-  표시한다. full committed path는 beam에만 사용하고 charge는 locked endpoint
-  cap만 사용한다. charge 이동 경로의 side boundary는 표시하지 않는다.
+  표시한다. charge와 beam startup도 이동 경로, endpoint cap, corridor boundary를
+  표시하지 않는다.
 - beam은 gameplay corridor가 길이와 폭을 소유하고 shared authored beam-strip
-  PNG를 그 live rectangle에 stretch한다. projectile PNG를 corridor 길이로
-  늘이지 않으며, startup/end contact 같은 작은 cosmetic frame은 만들지 않는다.
-- telegraph는 gameplay이 제공한 exact live geometry를 사용한다. hostile area는
-  affinity와 무관한 danger outer boundary 한 개, charge는 endpoint cap, beam은 두
-  corridor boundary와 endpoint cap만 유지한다. affinity별 inner ring, diamond,
-  center line, tick bar와 commit marker는 만들지 않는다. readiness는
-  단조롭게 증가하며 warning이 뜬 뒤 origin, direction과 target을 장식
-  animation으로 바꾸지 않는다.
+  PNG를 실제 active damage rectangle에만 stretch한다. projectile PNG를 corridor
+  길이로 늘이지 않으며, startup/end contact나 확장 danger boundary를 만들지 않는다.
+- 원거리 원형 폭격 footprint는 boss만 사용한다. 모든 boss bombardment는 affinity와
+  무관하게 `thermal` orange outer boundary 한 개로 통일한다. ordinary controller와
+  artillery는 projectile을 발사하며 ordinary mine의 근접 폭발 범위도 world ring으로
+  표시하지 않는다. affinity별 inner ring, diamond, center line, tick bar, commit
+  marker는 만들지 않는다.
 - threat radar는 world cue로 아직 보이지 않는 committed projectile attack,
-  active boss objective와 boss arrival만 표시한다. 일반 off-screen enemy 위치는
+  boss arrival만 표시한다. 일반 off-screen enemy 위치는
   minimap이 소유하며 radar에서 중복하지 않는다. world 경로와 radar contact는
   같은 공격을 동시에 표시하지 않는다.
-- maximum pressure에서도 player, crosshair, committed threat, boss
-  objective, pickup과 current target이 world decoration보다 먼저 읽혀야 한다.
+- maximum pressure에서도 player, crosshair, committed threat, boss shield,
+  pickup과 current target이 world decoration보다 먼저 읽혀야 한다.
 - 조준 대상, 피격 대상 또는 일시적 취약 상태라는 이유로 적 본체에 노란
   bracket, crosshair, ring 또는 route overlay를 붙이지 않는다. manual-aim cursor는
-  적 상태와 독립된 system-color cue이며, 보스 OPEN 상태와 활성 objective도
+  적 상태와 독립된 system-color cue이며, 보스 `shield_down` 상태도
   authored body, HUD와 체력 정보로 전달하고 player-reward overlay를 사용하지 않는다.
-- boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 외부
-  방어막 노드는 boss별 장식이 아니라 공통 gameplay 언어이므로 body와
-  독립된 같은 크기·pivot·상태 family를 사용한다.
+- boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 방어막은
+  body 중심에 붙은 한 겹의 boundary로만 표시하며 별도 actor나 asset family를
+  사용하지 않는다.
 - EMP는 one-shot authored `512×512` PNG의 중심과 실제 gameplay radius를
   일치시키고 짧은 scale/fade만 적용한다. 여러 ring, spark, dot, noise와
   frame-by-frame sprite sequence를 추가하지 않는다.
@@ -561,9 +557,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - all 10 shared upgrade semantic artwork identities resolve with no missing slot,
   no image appears above a card title, and every card body has exactly one artwork
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
-  판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
-  active/damaged/resolved 상태만 사용됨
-- exact approval 뒤 final gameplay manifest가 정확히 73 PNG를 색인함. 전용
+  판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
+  `shield_up/shield_down` 상태만 사용됨
+- exact approval 뒤 final gameplay manifest가 정확히 69 PNG를 색인함. 전용
   hostile bolt와 reinforcement facility를 포함하며, candidate/intermediate는
   production manifest에 포함하지 않음
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든

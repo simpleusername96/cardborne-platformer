@@ -85,7 +85,8 @@ five-stage run.
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
 All non-boss enemy archetypes receive a final `1.30` health multiplier after the
-fixed profile and stage curve. Boss health remains on its existing authored curve.
+fixed profile and stage curve. Boss health receives a separate final `1.30`
+multiplier on its authored curve.
 Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
 `0.75 s`; both healing outputs are twice their previous values.
 
@@ -123,25 +124,20 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   area radius. Projectile and beam corridors stop at the same current wall or
   live crate as collision. From the first visible startup frame, damaging boss
   attacks hold their warned origin, direction, and target through impact; only
-  warning readiness changes.
+  warning readiness changes. These descriptors remain simulation truth and do
+  not require a visible world route.
 - Projectile attacks use muzzle/cadence and the actual projectile without a
   predicted route, including off-screen sources and live shots approaching the
   viewport. The threat radar owns the directional warning for an off-screen
-  source. Beam is the only delivery that warns its full committed corridor.
-  Charge uses its locked endpoint capsule. Non-damaging support descriptors do
-  not create attack warnings.
-- Minimal damage footprints contain only their collision-relevant boundary:
-  one danger-colored outer ring for every hostile area, the endpoint cap for charge,
-  and two side boundaries plus endpoint caps for beam. Affinity-specific inner
-  rings, diamonds, center lines, tick bars, and commit markers are not rendered.
-  Active beams retain both their
-  physical beam body and the expanded player-center danger boundary. Persistent
-  damage zones and boss area attacks keep their exact outer boundary visible
-  for the complete damaging window. Hostile circular damage falls linearly from
-  100% at the center to 45% at that boundary and stops outside it.
-- Warning readiness progresses monotonically from a pale, restrained footprint
-  to a darker and stronger affinity cue at impact. It never pulses, follows the
-  player, or changes the committed damage geometry after appearing.
+  source. Charge and beam startup routes are also hidden. Active beams draw only
+  their physical damage body. Non-damaging support descriptors create no warning.
+- Only boss attacks may create ranged circular bombardment. Every boss area uses
+  one orange outer boundary for startup and its damaging window, independent of
+  affinity. Controller and Artillery Spotter attacks are projectiles; ordinary
+  mine proximity damage draws no world range ring. Affinity-specific inner rings,
+  diamonds, center lines, tick bars, endpoint caps, and commit markers are absent.
+  Circular damage falls linearly from 100% at the center to 45% at the boundary
+  and stops outside it.
 - `Affinity` is an attack's impact family and controls large color and trail
   shape cues: kinetic, thermal, toxin, cryo, arc, hybrid, or support.
   `Condition` means a real persistent burn, poison, or chill payload. Thermal,
@@ -206,8 +202,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
   debug/performance snapshots expose the selected field, seed, and fingerprint.
 - The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed.
-  Dynamic markers expose only four tactical roles: player craft, item, enemy,
-  and boss. All live pickups, unopened crates, and intact Mystery Devices share
+  Dynamic markers expose only five tactical roles: player craft, item, enemy,
+  boss, and reinforcement facility. All live pickups, unopened crates, and intact Mystery Devices share
   the item marker; all non-boss hostiles share the enemy marker; every boss uses
   the same boss marker. Subtypes, elite distinctions, objective state, hazard
   affinity, and mystery outcome are not separate minimap markers.
@@ -316,7 +312,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    from the player's commitment-time position. Every damaging circular pattern
    allows the base 280-pixel-per-second ship to clear the radius with at least
    40 pixels of margin during startup. Projectile attacks lock a predictively
-   aimed lane and repeat volleys along it; charge, area, pylon, and damaging
+   aimed lane and repeat volleys along it; charge, area, autonomous bombardment, and damaging
    summon patterns add one aimed three-shot pressure burst. Recovery resumes
    repositioning only after the committed attack ends.
 8. Boss defeat recalls all live experience within 0.65 seconds and resolves the
@@ -346,20 +342,18 @@ scheduled autonomous pressure. Every damaging pattern has a visible startup,
 active window, and recovery. Routine hits never interrupt or stop the boss, and
 every direct pattern remains committed after its warning appears.
 
-Boss objective state changes damage efficiency rather than creating immunity:
-`SEALED` applies `0.20×`, `OPEN` applies `1.55×` for five seconds, and
-`STABLE` applies `1.00×`. Objective lock and phase thresholds never clamp
-accepted damage to zero. A phase threshold starts the next sequential objective
-but is not an HP floor. Inactive sequential modules are neither targetable nor
-projectile blockers. The boss strip, objective tracker, world cue, threat radar,
-and minimap consume the same active module ID, state, and health. A state-entry
-hint appears once and the same hint cannot repeat within two seconds.
+Each boss owns one body-attached shield and no external objective actor.
+`shield_up` applies `0.25×` damage. Completing a direct boss attack lowers the
+shield for four seconds, during which damage is `1.00×`, then the shield returns.
+Phase thresholds start the next phase and raise the shield but are not HP floors.
+The boss body and boss strip consume the same shield state. A state-entry hint
+appears once and the same hint cannot repeat within two seconds.
 
 ### Items, experience, and upgrades
 
 - Enemy defeats leave collectible geometric experience shards. Experience is
   granted only when a shard is collected; summoned enemies grant the normal XP
-  for their health class. Boss objective pylons grant none.
+  for their health class.
 - Exactly two field item behaviors exist: repair restores hull and experience
   recall pulls all live shards toward the player. Breakable crates contain one
   of those two items. Recall retargets the ship's current position every physics
@@ -419,16 +413,17 @@ hint appears once and the same hint cannot repeat within two seconds.
   projectiles, hits, arrivals, deaths, pickups, and persistent states render
   from their gameplay, actor, world, HUD, or audio owners without cosmetic
   event objects.
-- The live HUD prioritizes hull/experience, stage quota, EMP, minimap, boss health,
-  target state, and exceptional timed
-  effects. It uses four restrained zones: top-left hull/experience, top-center
-  objective and conditional boss state, top-right minimap and conditional
-  target, and one enlarged round panel-free bottom-center EMP indicator. It shows
+- The live HUD prioritizes hull, the acquired build, stage quota, EMP, minimap,
+  boss health, target state, and exceptional timed effects. Top-left uses one
+  restrained mission surface for stage, objective/message, experience, and the
+  conditional boss summary. Top-center uses a long panel-free hull strip with
+  acquired upgrade icons below it. Top-right owns the minimap and conditional
+  target. Bottom-center owns one enlarged round panel-free EMP indicator. It shows
   cooldown and enabled/disabled state; dash and secondary slots are omitted. No
   ornamental full-width dock covers the field.
 - The minimap owns general enemy presence. The threat radar is limited to an
-  unseen committed projectile attack that has no world cue yet, the active boss
-  objective, and boss arrival. A single attack never appears as both a world
+  unseen committed projectile attack that has no world cue yet and boss arrival.
+  A single attack never appears as both a world
   route and a radar contact.
   An active reinforcement facility always uses its dedicated two-tone diamond marker.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,

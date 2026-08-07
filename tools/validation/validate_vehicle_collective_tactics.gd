@@ -79,7 +79,7 @@ func _validate_catalog_and_stage_rollout() -> void:
 func _validate_role_signatures() -> void:
 	var signatures := {}
 	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
-		if archetype in [&"stage_boss", &"boss_pylon"]:
+		if archetype == &"stage_boss":
 			continue
 		var signature := String(archetype)
 		_expect(

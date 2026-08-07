@@ -17,7 +17,7 @@ const CRITICAL_PHASES: Array[StringName] = [
 	&"startup", &"active", &"interrupted_recovery",
 ]
 const SPECIAL_ROLES: Array[StringName] = [
-	&"stage_boss", &"generator", &"boss_pylon",
+	&"stage_boss", &"generator",
 ]
 const SUPPORT_ROLES: Array[StringName] = [
 	&"generator", &"shield_escort",

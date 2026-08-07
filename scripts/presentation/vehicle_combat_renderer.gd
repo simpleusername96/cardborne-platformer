@@ -219,7 +219,6 @@ func sync(
 		_sync_mystery_devices(presentation, visible_world)
 		_sync_reinforcement_facility(presentation, visible_world)
 		_sync_mystery_effects(presentation, visible_world)
-		_sync_resolved_boss_modules(presentation, visible_world)
 	_apply_visible_counts()
 	queue_redraw()
 
@@ -560,33 +559,20 @@ func _sync_enemies(
 			player_position,
 			run_time
 		)
-		if role == &"boss_pylon":
-			_queue_semantic_texture(
-				_boss_module_asset_id(enemy),
-				position,
-				angle,
-				radius,
-				(
-					Color.WHITE
-					if enemy.boss_module_state == &"active"
-					else Color(0.52, 0.58, 0.66, 0.56)
-				)
-			)
 		var batch: BatchHandle = (
 			_boss_variant_batches.get(enemy.boss_variant)
 			if archetype == &"stage_boss"
 			else _enemy_batches.get(archetype)
 		)
-		if batch == null and role != &"boss_pylon":
+		if batch == null:
 			continue
-		if role != &"boss_pylon":
-			_write_instance(
-				batch,
-				position,
-				angle,
-				Vector2.ONE * radius,
-				_enemy_body_modulate(enemy)
-			)
+		_write_instance(
+			batch,
+			position,
+			angle,
+			Vector2.ONE * radius,
+			_enemy_body_modulate(enemy)
+		)
 		if (
 			role != &"stage_boss"
 			and (
@@ -610,8 +596,7 @@ func _sync_enemies(
 			enemy,
 			position,
 			radius,
-			angle,
-			player_position
+			angle
 		)
 	for index in _health_overlay_candidate_count:
 		_sync_enemy_health_bar(_health_overlay_candidates[index])
@@ -621,6 +606,8 @@ func _sync_enemies(
 func _enemy_body_modulate(enemy: EnemyState) -> Color:
 	if enemy.flash > 0.0:
 		return Color(1.0, 0.66, 0.66, 1.0)
+	if enemy.role == &"mine" and enemy.phase == &"mine_armed":
+		return Art.IVORY_BRIGHT.lerp(Art.DANGER, 0.42)
 	if enemy.shielded:
 		return Color(0.72, 1.0, 0.88, 1.0)
 	if enemy.guard_plate_structure > 0.0:
@@ -715,13 +702,9 @@ func _sync_enemy_semantic_overlays(
 	enemy: EnemyState,
 	position: Vector2,
 	radius: float,
-	angle: float,
-	player_position: Vector2
+	angle: float
 ) -> void:
 	var forward := Vector2.RIGHT.rotated(angle)
-	if enemy.role == &"boss_pylon":
-		_sync_boss_module_overlay(enemy, position, radius)
-		return
 	if enemy.role == &"stage_boss":
 		_sync_boss_core_overlay(enemy, position, radius)
 	if (
@@ -736,37 +719,6 @@ func _sync_enemy_semantic_overlays(
 			8.0,
 			Art.BOSS_COMMAND
 		)
-	if enemy.role != &"mine":
-		return
-	var mobile := enemy.archetype == &"spark_minelet"
-	var activation_radius := 160.0 if mobile else 230.0
-	var damage_radius := 100.0 if mobile else 160.0
-	if enemy.phase == &"mine_armed":
-		var fuse := 1.0 if mobile else 1.25
-		var readiness := 1.0 - clampf(enemy.phase_time / fuse, 0.0, 1.0)
-		_write_instance(
-			_overlay_batches[&"danger_ring"],
-			position,
-			0.0,
-			Vector2.ONE * damage_radius,
-			Color(Art.CORAL, 0.82)
-		)
-		_write_instance(
-			_overlay_batches[&"diamond"],
-			position + Vector2.RIGHT.rotated(-PI * 0.5 + readiness * TAU)
-				* damage_radius,
-			readiness * TAU,
-			Vector2(7.0, 5.0),
-			Art.IVORY_BRIGHT
-		)
-	elif player_position.distance_to(position) <= activation_radius * 1.20:
-		_write_instance(
-			_overlay_batches[&"danger_ring"],
-			position,
-			0.0,
-			Vector2.ONE * activation_radius,
-			Color(Art.DANGER, 0.30)
-		)
 
 
 func _sync_boss_core_overlay(
@@ -774,27 +726,9 @@ func _sync_boss_core_overlay(
 	position: Vector2,
 	radius: float
 ) -> void:
-	var core_radius := radius * 0.25
-	if enemy.boss_module_state == &"open":
+	if enemy.boss_shield_state != &"shield_up":
 		return
-	if enemy.boss_module_state == &"stable":
-		_write_ring(position, core_radius, Color(Art.BOSS_COMMAND, 0.72))
-	else:
-		_write_disk(position, core_radius, Color(Art.BOSS_COMMAND, 0.54))
-
-
-func _sync_boss_module_overlay(
-	enemy: EnemyState,
-	position: Vector2,
-	radius: float
-) -> void:
-	var cue_position := position - Vector2(0.0, radius + 14.0)
-	if enemy.boss_module_state == &"active":
-		return
-	if enemy.boss_module_state in [&"resolved", &"disabled"]:
-		_write_ring(cue_position, 9.0, Color(Art.SUPPORT, 0.72))
-	else:
-		_write_ring(cue_position, 9.0, Color(Art.LINE, 0.72))
+	_write_ring(position, radius + 12.0, Color(Art.BOSS_COMMAND, 0.90))
 
 
 func _sync_projectiles(
@@ -875,55 +809,13 @@ func _sync_enemy_attack_telegraphs(
 			telegraph,
 			visible_world
 		):
-			CombatCuePolicy.MODE_CHARGE_FOOTPRINT:
-				_sync_charge_telegraph(telegraph)
-			CombatCuePolicy.MODE_BEAM_WARNING:
-				_sync_corridor_telegraph(telegraph)
 			CombatCuePolicy.MODE_ACTIVE_BEAM:
 				_sync_active_beam(telegraph)
 			CombatCuePolicy.MODE_AREA_FOOTPRINT:
 				_sync_area_telegraph(telegraph)
 
 
-func _sync_charge_telegraph(telegraph: Dictionary) -> void:
-	var to := Vector2(telegraph["to"])
-	var half_width := maxf(1.0, float(telegraph["half_width"]))
-	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
-	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
-	var intensity := smoothstep(0.0, 1.0, readiness)
-	var color := Art.attack_warning_color(affinity, readiness)
-	var boundary_alpha := lerpf(0.38, 0.92, intensity)
-	_write_danger_ring(to, half_width, Color(color, boundary_alpha))
-
-
-func _sync_corridor_telegraph(telegraph: Dictionary) -> void:
-	var from := Vector2(telegraph["from"])
-	var to := Vector2(telegraph["to"])
-	var vector := to - from
-	var length := vector.length()
-	if length <= 0.001:
-		return
-	var direction := vector / length
-	var tangent := direction.rotated(PI * 0.5)
-	var half_width := maxf(1.0, float(telegraph["half_width"]))
-	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
-	var intensity := smoothstep(0.0, 1.0, readiness)
-	var color := Color(Art.DANGER, lerpf(0.72, 1.0, readiness))
-	var damage := float(telegraph.get("damage", 0.0))
-	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
-	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
-	var boundary_alpha := lerpf(0.36, 0.88, intensity)
-	# The exact capsule is the complete warning; affinity-specific interior marks
-	# duplicate the same truth and are intentionally omitted.
-	_write_beam(from + tangent * boundary_offset, to + tangent * boundary_offset, boundary_width, Color(color, boundary_alpha))
-	_write_beam(from - tangent * boundary_offset, to - tangent * boundary_offset, boundary_width, Color(color, boundary_alpha))
-	_write_danger_ring(from, half_width, Color(color, boundary_alpha))
-	_write_danger_ring(to, half_width, Color(color, boundary_alpha))
-
-
 func _sync_active_beam(telegraph: Dictionary) -> void:
-	# Keep the exact player-center danger boundary visible around the beam body.
-	_sync_corridor_telegraph(telegraph)
 	var from := Vector2(telegraph["from"])
 	var to := Vector2(telegraph["to"])
 	var width := maxf(1.0, float(telegraph["active_width"]))
@@ -936,12 +828,10 @@ func _sync_active_beam(telegraph: Dictionary) -> void:
 func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var center := Vector2(telegraph["center"])
 	var radius := maxf(1.0, float(telegraph["radius"]))
-	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
-	var color := Art.attack_warning_color(affinity, readiness)
 	var boundary_alpha := lerpf(0.38, 0.90, intensity)
-	_write_danger_ring(center, radius, Color(color, boundary_alpha))
+	_write_danger_ring(center, radius, Color(Art.THERMAL, boundary_alpha))
 
 
 func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> void:
@@ -1254,33 +1144,6 @@ func _sync_reinforcement_facility(
 	)
 
 
-func _sync_resolved_boss_modules(
-	state: Dictionary,
-	visible_world: Rect2
-) -> void:
-	var modules_variant: Variant = state.get("resolved_boss_modules")
-	if not modules_variant is Array:
-		return
-	for module_variant in modules_variant:
-		var module: Dictionary = module_variant
-		var position := Vector2(module["position"])
-		var radius := float(module["radius"])
-		if not visible_world.grow(radius).has_point(position):
-			continue
-		_queue_semantic_texture(
-			&"boss/node_resolved",
-			position,
-			0.0,
-			radius,
-			Color(0.52, 0.58, 0.66, 0.78)
-		)
-		_write_ring(
-			position - Vector2(0.0, radius + 14.0),
-			9.0,
-			Color(Art.SUPPORT, 0.72)
-		)
-
-
 func _queue_semantic_texture(
 	asset_id: StringName,
 	position: Vector2,
@@ -1346,14 +1209,6 @@ func _semantic_texture_spec(
 	)
 	_semantic_texture_specs[asset_id] = spec
 	return spec
-
-
-func _boss_module_asset_id(enemy: EnemyState) -> StringName:
-	if enemy.boss_module_state in [&"disabled", &"resolved"]:
-		return &"boss/node_resolved"
-	if enemy.health < enemy.max_health:
-		return &"boss/node_damaged"
-	return &"boss/node_active"
 
 
 func _sync_target_brackets(position: Vector2, radius: float) -> void:

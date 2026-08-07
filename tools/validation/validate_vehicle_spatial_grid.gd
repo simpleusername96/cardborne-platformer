@@ -211,7 +211,7 @@ func _validate_local_overlap_cache() -> void:
 	live[7].active = false
 	live[19].alive = false
 	live[33].role = &"stage_boss"
-	live[41].role = &"boss_pylon"
+	live[41].role = &"stage_boss"
 	var grid := Grid.new()
 	grid.configure(Rect2(0.0, 0.0, 1600.0, 1280.0), 160.0)
 	grid.rebuild(live)
@@ -346,9 +346,9 @@ func _validate_local_overlap_edges() -> void:
 	var boss := _local_enemy("boss", 23, Vector2(706.0, 700.0), 30.0)
 	boss.role = &"stage_boss"
 	live.append(boss)
-	var pylon := _local_enemy("pylon", 24, Vector2(708.0, 700.0), 30.0)
-	pylon.role = &"boss_pylon"
-	live.append(pylon)
+	var second_boss := _local_enemy("second_boss", 24, Vector2(708.0, 700.0), 30.0)
+	second_boss.role = &"stage_boss"
+	live.append(second_boss)
 	var grid := Grid.new()
 	grid.configure(Rect2(0.0, 0.0, 1000.0, 1000.0), 160.0)
 	grid.rebuild(live)
@@ -449,7 +449,7 @@ func _brute_local_overlaps(
 		owner == null
 		or not owner.alive
 		or not owner.active
-		or owner.role in [&"stage_boss", &"boss_pylon"]
+		or owner.role == &"stage_boss"
 	):
 		return result
 	for candidate in live:
@@ -457,7 +457,7 @@ func _brute_local_overlaps(
 			candidate == owner
 			or not candidate.alive
 			or not candidate.active
-			or candidate.role in [&"stage_boss", &"boss_pylon"]
+			or candidate.role == &"stage_boss"
 		):
 			continue
 		var distance_squared := owner.pos.distance_squared_to(candidate.pos)

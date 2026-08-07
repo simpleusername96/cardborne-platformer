@@ -8,12 +8,8 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"attachment/player_craft_body",
 	&"actor/scrap_drone",
 	&"actor/mine",
-	&"actor/boss_pylon",
 	&"boss/colossus",
 	&"boss/crown",
-	&"boss/node_active",
-	&"boss/node_damaged",
-	&"boss/node_resolved",
 	&"secondary/seeker",
 	&"secondary/escort_drone",
 	&"secondary/orbit_blade",
@@ -59,7 +55,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 73, "all 73 current gameplay PNGs are indexed")
+	_expect(ids.size() == 69, "all 69 current gameplay PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
@@ -89,9 +85,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 73
+		int(manifest.get("final_asset_count", 0)) == 69
 			and not manifest.has("animations"),
-		"manifest declares 73 static authored rasters and no frame animations"
+		"manifest declares 69 static authored rasters and no frame animations"
 	)
 	_validate_map_object_content_rects()
 	for error in AssetProvider.validate_pack():

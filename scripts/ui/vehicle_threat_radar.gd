@@ -161,15 +161,11 @@ func _kind_priority(kind: StringName) -> int:
 			return 3
 		CombatCuePolicy.CONTACT_BOSS_ARRIVAL:
 			return 2
-		CombatCuePolicy.CONTACT_BOSS_OBJECTIVE:
-			return 1
 	return 0
 
 
 func _kind_color(kind: StringName, readiness: float) -> Color:
 	match kind:
-		CombatCuePolicy.CONTACT_BOSS_OBJECTIVE:
-			return Art.PLAYER_REWARD
 		CombatCuePolicy.CONTACT_BOSS_ARRIVAL:
 			return Art.BOSS_COMMAND
 		_:

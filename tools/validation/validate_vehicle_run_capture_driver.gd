@@ -42,7 +42,7 @@ func _initialize() -> void:
 	for gateway_api in [
 		"prepare_stage",
 		"prepare_boss",
-		"resolve_boss_objective",
+		"lower_boss_shield",
 		"set_player_fixture",
 		"set_world_fixture",
 		"show_ui_fixture",

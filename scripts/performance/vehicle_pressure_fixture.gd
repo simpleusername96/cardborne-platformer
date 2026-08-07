@@ -9,8 +9,7 @@ const SpawnAllocator = preload("res://scripts/encounters/vehicle_spawn_allocator
 
 const FIXED_SEED := 12886704
 const PEAK_ORDINARY_COUNT := 276
-const CAPACITY_ORDINARY_COUNT := 280
-const CAPACITY_AUXILIARY_COUNT := 40
+const CAPACITY_ORDINARY_COUNT := 320
 const BOSS_ORDINARY_COUNT := 76
 const INNER_COUNT := 124
 const NEAR_COUNT := 100
@@ -33,14 +32,12 @@ static func build(
 	production_roles: Array[StringName]
 ) -> Dictionary:
 	var ordinary_count := PEAK_ORDINARY_COUNT
-	var auxiliary_count := 0
 	var include_boss := false
 	match load_class:
 		&"peak":
 			pass
 		&"capacity", &"lifecycle":
 			ordinary_count = CAPACITY_ORDINARY_COUNT
-			auxiliary_count = CAPACITY_AUXILIARY_COUNT
 		&"boss":
 			ordinary_count = BOSS_ORDINARY_COUNT
 			include_boss = true
@@ -69,15 +66,6 @@ static func build(
 			"counts_active_cap":index >= 4,
 			"fixture_kind":&"ordinary",
 		})
-	for index in auxiliary_count:
-		descriptors.append({
-			"id":"pressure_%s_auxiliary_%03d" % [String(load_class), index],
-			"role":&"boss_pylon",
-			"pos":positions[(ordinary_count - 1 - index) % positions.size()],
-			"active":true,
-			"counts_active_cap":false,
-			"fixture_kind":&"auxiliary",
-		})
 	if include_boss:
 		descriptors.append({
 			"id":"performance_boss",
@@ -92,7 +80,7 @@ static func build(
 		"seed":FIXED_SEED,
 		"descriptors":descriptors,
 		"ordinary_count":ordinary_count,
-		"auxiliary_count":auxiliary_count,
+		"auxiliary_count":0,
 		"boss_count":1 if include_boss else 0,
 		"fingerprint":_fingerprint(descriptors),
 	}

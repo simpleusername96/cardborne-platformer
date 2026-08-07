@@ -137,12 +137,6 @@ func update_active(
 			boss.hit_committed = true
 			services.call("_damage_player", damage, pattern, true, true, true)
 		if before.distance_to(boss.pos) + 1.0 < requested.length():
-			services.call(
-				"_on_boss_charge_collision",
-				boss,
-				before,
-				boss.pos
-			)
 			boss.phase_time = 0.0
 	elif kind == &"beam":
 		if (
@@ -170,6 +164,7 @@ func update_active(
 			boss.hit_committed = true
 			services.call("_damage_player", area_damage, pattern, false, true, true)
 	if boss.phase_time <= 0.0:
+		services.call("_on_boss_direct_attack_complete", boss)
 		boss.phase = &"boss_recovery"
 		boss.phase_time = Patterns.recovery_seconds(pattern)
 		boss.vulnerable = 1.55 if kind in [&"charge", &"area"] else 0.65

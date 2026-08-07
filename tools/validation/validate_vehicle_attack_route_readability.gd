@@ -123,6 +123,28 @@ func _validate_offscreen_intersection() -> void:
 		) == CombatCuePolicy.MODE_NONE,
 		"visible projectile source relies on its muzzle and projectile body"
 	)
+	var charge := projectile.duplicate()
+	charge["delivery"] = &"charge"
+	_expect(
+		CombatCuePolicy.telegraph_mode(
+			Vector2(300.0, 360.0), 26.0, &"startup", charge, visible
+		) == CombatCuePolicy.MODE_NONE,
+		"ordinary charge startup does not expose a movement route"
+	)
+	var ordinary_area := {
+		"shape":&"area", "delivery":&"area",
+		"center":Vector2(640.0, 360.0), "radius":180.0,
+		"damage":14.0,
+	}
+	_expect(
+		CombatCuePolicy.telegraph_mode(
+			Vector2(300.0, 360.0), 26.0, &"startup", ordinary_area, visible
+		) == CombatCuePolicy.MODE_NONE
+			and CombatCuePolicy.telegraph_mode(
+				Vector2(300.0, 360.0), 112.0, &"boss_startup", ordinary_area, visible
+			) == CombatCuePolicy.MODE_AREA_FOOTPRINT,
+		"only boss startup exposes a circular bombardment footprint"
+	)
 	var unseen_descriptors: Array[Dictionary] = [projectile]
 	_expect(
 		is_equal_approx(
@@ -153,7 +175,9 @@ func _validate_offscreen_intersection() -> void:
 			and not renderer_source.contains("_sync_incoming_projectile_cue")
 			and not renderer_source.contains("_sync_collective_tactic_module")
 			and not renderer_source.contains("_sync_commit_marker")
-			and not renderer_source.contains("_sync_support_telegraph"),
+			and not renderer_source.contains("_sync_support_telegraph")
+			and not renderer_source.contains("_sync_charge_telegraph")
+			and not renderer_source.contains("_sync_corridor_telegraph"),
 		"decorative routes, commit markers, and support warnings stay retired"
 	)
 

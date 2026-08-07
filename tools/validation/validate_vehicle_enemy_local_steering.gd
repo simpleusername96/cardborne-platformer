@@ -130,7 +130,7 @@ func _brute_adjusted_velocity(
 			candidate == owner
 			or not candidate.alive
 			or not candidate.active
-			or candidate.role in [&"stage_boss", &"boss_pylon"]
+			or candidate.role == &"stage_boss"
 		):
 			continue
 		var distance_squared := owner.pos.distance_squared_to(candidate.pos)

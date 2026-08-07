@@ -215,26 +215,10 @@ func _run() -> void:
 	)
 	var corridor_caps := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var corridor_boundaries := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
-	var corridor_boundary_buffer := corridor_boundaries.multimesh.buffer
 	_expect(
 		corridor_caps.multimesh.visible_instance_count == 0
-			and corridor_boundaries.multimesh.visible_instance_count == 2,
-		"corridor warnings avoid redundant fill geometry"
-	)
-	_expect(
-		Vector2(
-			corridor_boundary_buffer[3],
-			corridor_boundary_buffer[7]
-		).is_equal_approx(
-			Vector2(300.0, 300.0)
-		)
-			and Vector2(
-				corridor_boundary_buffer[15],
-				corridor_boundary_buffer[19]
-			).is_equal_approx(
-				Vector2(500.0, 300.0)
-			),
-		"corridor warning outline caps stay centered on the simulated segment endpoints"
+			and corridor_boundaries.multimesh.visible_instance_count == 0,
+		"ordinary startup corridors do not draw attack lines or routes"
 	)
 	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
@@ -442,28 +426,19 @@ func _run() -> void:
 	open_boss.role = &"stage_boss"
 	open_boss.archetype = &"stage_boss"
 	open_boss.boss_variant = &"colossus"
-	open_boss.boss_module_state = &"open"
+	open_boss.boss_shield_state = &"shield_up"
 	open_boss.pos = Vector2(700.0, 360.0)
 	open_boss.visual_radius = Art.STAGE_BOSS_RADIUS
 	open_boss.alive = true
 	open_boss.active = true
-	var active_pylon := EnemyState.new()
-	active_pylon.id = "active_pylon"
-	active_pylon.role = &"boss_pylon"
-	active_pylon.archetype = &"boss_pylon"
-	active_pylon.boss_module_state = &"active"
-	active_pylon.pos = Vector2(920.0, 360.0)
-	active_pylon.visual_radius = 36.0
-	active_pylon.alive = true
-	active_pylon.active = true
 	renderer.sync(
-		[open_boss, active_pylon], no_projectiles, no_projectiles, [], [],
+		[open_boss], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true, "open_boss"
 	)
 	var diamond_batch := renderer.get_node("Overlay_diamond") as MultiMeshInstance2D
 	_expect(
 		diamond_batch.multimesh.visible_instance_count == 0,
-		"boss and objective states do not add yellow target overlays"
+		"boss shield state does not add a yellow target overlay"
 	)
 	var run_source := FileAccess.get_file_as_string(
 		"res://scripts/vehicle/vehicle_run.gd"
@@ -512,8 +487,32 @@ func _run() -> void:
 	)
 	_expect(
 		area_disk.multimesh.visible_instance_count == 0
-			and area_ring.multimesh.visible_instance_count == 1,
-		"an on-screen outline-only danger footprint renders independently of its off-screen owner"
+			and area_ring.multimesh.visible_instance_count == 0,
+		"ordinary enemies do not draw circular ranged bombardment footprints"
+	)
+	var armed_mine := EnemyState.new()
+	armed_mine.id = "armed_mine"
+	armed_mine.role = &"mine"
+	armed_mine.archetype = &"mine"
+	armed_mine.pos = Vector2(640.0, 360.0)
+	armed_mine.visual_radius = 42.0
+	armed_mine.alive = true
+	armed_mine.active = true
+	armed_mine.phase = &"mine_armed"
+	armed_mine.phase_time = 0.25
+	renderer.sync(
+		[armed_mine], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	_expect(
+		area_ring.multimesh.visible_instance_count == 0,
+		"armed mines use their body state without a proximity or damage ring"
+	)
+	offscreen_enemy.role = &"stage_boss"
+	offscreen_enemy.phase = &"boss_startup"
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	var early_area_buffer := area_ring.multimesh.buffer
 	var early_area_color := Color(
@@ -535,11 +534,11 @@ func _run() -> void:
 		late_area_buffer[11]
 	)
 	_expect(
-		late_area_color.get_luminance() < early_area_color.get_luminance()
+		Color(early_area_color, 1.0).is_equal_approx(Color(Art.THERMAL, 1.0))
+			and Color(late_area_color, 1.0).is_equal_approx(Color(Art.THERMAL, 1.0))
 			and late_area_color.a > early_area_color.a,
-		"area outline continuously darkens and gains contrast toward impact"
+		"all boss bombardment rings share one orange hue and strengthen toward impact"
 	)
-	offscreen_enemy.role = &"stage_boss"
 	offscreen_enemy.phase = &"boss_active"
 	renderer.sync(
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
@@ -567,8 +566,8 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count >= 4,
-		"active off-screen beam keeps its exact danger boundary and beam body visible"
+		beam_batch.multimesh.visible_instance_count >= 2,
+		"active off-screen beam draws only its damaging body without a predicted route"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	snapshot = renderer.debug_snapshot()
@@ -798,7 +797,6 @@ func _player_presentation(
 		"reduced_motion":false,
 		"run_time":1.0,
 		"secondary_visual_tier":0,
-		"resolved_boss_modules":[],
 		"electric_field_level":0,
 		"orbiting_blade_level":1,
 		"secondary":{

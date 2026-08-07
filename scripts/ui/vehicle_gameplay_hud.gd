@@ -862,7 +862,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 			boss_width,
 			58.0
 		),
-		"boss_objective_coexist":true,
+		"boss_shield_coexist":true,
 		"boss_inside_objective_zone":false,
 		"boss_inside_mission_zone":(
 			_boss_cluster.get_parent().get_parent() == _mission_panel

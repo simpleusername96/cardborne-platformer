@@ -11,7 +11,7 @@ const AttackTelegraphs = preload(
 	"res://scripts/combat/vehicle_attack_telegraph_builder.gd"
 )
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
-const BossExamCatalog = preload("res://scripts/bosses/vehicle_boss_exam_catalog.gd")
+const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ExperienceRuntime = preload(
 	"res://scripts/progression/vehicle_experience_runtime.gd"
@@ -451,11 +451,6 @@ func _capture_build_state_evidence() -> void:
 			"kind":&"boss_arrival",
 			"readiness":1.0,
 		},
-		{
-			"offset":Vector2(120.0, -900.0),
-			"kind":&"boss_objective",
-			"readiness":1.0,
-		},
 	]
 	_run._threat_contact_cache = threat_contacts
 	await _settle_capture()
@@ -763,7 +758,7 @@ func _capture_all_boss_evidence() -> void:
 			)
 			_run.capture_set_mode(&"paused")
 			await _settle_capture()
-			_save_capture("30-boss-01-stage-1-sealed-hit.png")
+			_save_capture("30-boss-01-stage-1-shield-up-hit.png")
 			_run.call("_clear_effects")
 		_run._boss_select_pattern(boss)
 		_run.capture_set_mode(&"paused")
@@ -787,7 +782,7 @@ func _capture_all_boss_evidence() -> void:
 
 		_run._clear_projectiles()
 		_run.denied_zones.clear()
-		resolve_boss_objective()
+		lower_boss_shield()
 		_run.call("_clear_effects")
 		boss.phase = "boss_recovery"
 		boss.phase_time = BossPatterns.recovery_seconds(String(boss.pattern))
@@ -796,16 +791,16 @@ func _capture_all_boss_evidence() -> void:
 		boss.pattern = "recovery_window"
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-recovery.png" % [stage_index + 1, stage_slug])
-		_run.boss_exam_runtime.advance(BossExamCatalog.VULNERABILITY_SECONDS + 0.1)
-		boss.boss_module_state = _run.boss_exam_runtime.core_state()
+		_run.boss_shield_runtime.advance(BossShieldRuntime.SHIELD_DOWN_SECONDS + 0.1)
+		boss.boss_shield_state = _run.boss_shield_runtime.state()
 		await _settle_capture()
 		_save_capture(
-			"30-boss-%02d-%s-stable.png" % [stage_index + 1, stage_slug]
+			"30-boss-%02d-%s-shield-restored.png" % [stage_index + 1, stage_slug]
 		)
 
 		boss.health = float(boss.max_health) * 0.48
 		_run._ui.clear_notifications()
-		_run._begin_boss_exam_phase(boss, 2)
+		_run._begin_boss_shield_phase(boss, 2)
 		_run._boss_select_pattern(boss)
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-phase-two.png" % [stage_index + 1, stage_slug])
@@ -858,39 +853,15 @@ func prepare_boss(stage_index: int) -> EnemyState:
 	var boss: VehicleEnemyState = _run._find_enemy_by_id("stage_boss")
 	if boss == null:
 		return null
-	var previous_position: Vector2 = boss.pos
 	boss.pos = _run.player_position + Vector2(360.0, 0.0)
-	var module_shift: Vector2 = boss.pos - previous_position
-	for enemy in _run.enemies:
-		if (
-			enemy.alive
-			and enemy.role == &"boss_pylon"
-			and not enemy.boss_objective_id.is_empty()
-		):
-			enemy.pos += module_shift
 	_run.player_aim_direction = (Vector2(boss.pos) - _run.player_position).normalized()
 	return boss
 
 
-func resolve_boss_objective() -> void:
-	var safety := 0
-	while _run.boss_exam_runtime.objective_locked and safety < 4:
-		var active_ids: PackedStringArray = (
-			_run.boss_exam_runtime.active_module_ids()
-		)
-		if active_ids.is_empty():
-			break
-		var module: VehicleEnemyState = _run._find_enemy_by_id(active_ids[0])
-		if module == null:
-			break
-		_run._damage_enemy(
-			module,
-			module.health,
-			"validation",
-			&"kinetic",
-			true
-		)
-		safety += 1
+func lower_boss_shield() -> void:
+	var boss: VehicleEnemyState = _run._find_enemy_by_id("stage_boss")
+	if boss != null:
+		_run._on_boss_direct_attack_complete(boss)
 
 
 func _fit_camera_to_stage(bounds: Rect2) -> void:

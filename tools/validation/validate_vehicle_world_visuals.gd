@@ -59,6 +59,7 @@ func _validate_catalog() -> void:
 		&"hazard_lava_pool": [ &"world/hazard_lava_pool", &"broad_ground" ],
 		&"mystery_device_intact": [ &"world/mystery_device_intact", &"neutral_mechanical_body" ],
 		&"mystery_device_resolved": [ &"world/mystery_device_resolved", &"resolved_wreck" ],
+		&"reinforcement_fabricator": [ &"world/facility_reinforcement_fabricator", &"wide_static_fabricator" ],
 	}
 	_expect(
 		WorldCatalog.WORLD_OBJECT_DESCRIPTORS.size() == expected_objects.size(),

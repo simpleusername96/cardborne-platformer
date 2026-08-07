@@ -170,21 +170,16 @@ func validation_snapshot(run: Node) -> Dictionary:
 	var effect_store_snapshot := _effect_store_qualification(run)
 	var renderer_snapshot: Dictionary = run._combat_renderer.debug_snapshot()
 	var ordinary_count := 0
-	var auxiliary_count := 0
 	var boss_count := 0
 	for enemy in run.enemies:
-		match enemy.role:
-			&"stage_boss":
-				boss_count += 1
-			&"boss_pylon":
-				auxiliary_count += 1
-			_:
-				ordinary_count += 1
+		if enemy.role == &"stage_boss":
+			boss_count += 1
+		else:
+			ordinary_count += 1
 	var expected_ordinary := mini(
 		ORDINARY_CAPACITY_LOAD,
 		expected_enemies - (1 if scenario_id == &"boss_pressure" else 0)
 	)
-	var expected_auxiliary := expected_enemies - expected_ordinary - (1 if scenario_id == &"boss_pressure" else 0)
 	var boss_valid := true
 	if scenario_id == &"boss_pressure":
 		var boss: EnemyState = run.call("_find_enemy_by_id", "performance_boss")
@@ -208,7 +203,6 @@ func validation_snapshot(run: Node) -> Dictionary:
 	var valid: bool = (
 		int(enemy_snapshot["live"]) == expected_enemies
 		and ordinary_count == expected_ordinary
-		and auxiliary_count == expected_auxiliary
 		and boss_count == (1 if scenario_id == &"boss_pressure" else 0)
 		and int(projectile_snapshot["player"]) == player_target
 		and int(projectile_snapshot["hostile"]) == hostile_target
@@ -234,7 +228,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"fixture_qualification":_fixture_qualification.duplicate(true),
 		"expected_enemies": expected_enemies,
 		"ordinary_enemies": ordinary_count,
-		"auxiliary_enemies": auxiliary_count,
+		"auxiliary_enemies": 0,
 		"boss_enemies": boss_count,
 		"expected_player_projectiles": player_target,
 		"expected_hostile_projectiles": hostile_target,
@@ -290,9 +284,7 @@ func _fill_enemies(run: Node) -> void:
 		enemy.counts_active_cap = bool(descriptor["counts_active_cap"])
 		enemy.health = 1000000.0
 		enemy.max_health = 1000000.0
-		if enemy.role == &"boss_pylon":
-			enemy.support_tick = 1000000.0
-		elif enemy.role == &"stage_boss":
+		if enemy.role == &"stage_boss":
 			enemy.phase = &"boss_read"
 			enemy.phase_time = 0.0
 		run.call("_append_enemy", enemy)
@@ -356,7 +348,7 @@ func _run_lifecycle_cycles(run: Node, count: int) -> void:
 func _churn_one_enemy(run: Node) -> void:
 	var retired: EnemyState
 	for enemy in run.enemies:
-		if enemy.role != &"boss_pylon":
+		if enemy.role != &"stage_boss":
 			retired = enemy
 			break
 	if retired == null:

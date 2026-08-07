@@ -31,8 +31,8 @@ const AudioDirector = preload("res://scripts/presentation/vehicle_audio_director
 const CombatRenderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
 const StageBackdrop = preload("res://scripts/vehicle/vehicle_stage_backdrop.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
-const BossExamCatalog = preload("res://scripts/bosses/vehicle_boss_exam_catalog.gd")
-const BossExamRuntime = preload("res://scripts/bosses/vehicle_boss_exam_runtime.gd")
+const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
+const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
 const UpgradeOfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const BossPracticeSession = preload("res://scripts/bosses/vehicle_boss_practice_session.gd")
@@ -171,7 +171,7 @@ var mystery_device_runtime := MysteryDeviceRuntime.new()
 var reinforcement_facility_runtime := ReinforcementFacilityRuntime.new()
 var stage_telemetry := StageTelemetry.new()
 var boss_runtime := BossRuntime.new()
-var boss_exam_runtime := BossExamRuntime.new()
+var boss_shield_runtime := BossShieldRuntime.new()
 var boss_practice := BossPracticeSession.new()
 var _runtime_blockers: Array[Rect2] = []
 var _runtime_structural_walls: Array[Rect2] = []
@@ -237,7 +237,6 @@ var _live_crate_count := 0
 var denied_zones: Array[Dictionary] = []
 var effect_store := EffectStore.new()
 var effects: Array[VehicleEffectState] = effect_store.live
-var resolved_boss_module_visuals: Array[Dictionary] = []
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
 var _motion_cover_query: Array[Rect2] = []
@@ -793,7 +792,6 @@ func _reset_run(
 	crates.clear()
 	denied_zones.clear()
 	_clear_effects()
-	resolved_boss_module_visuals.clear()
 	encounter_runtime.configure(
 		current_stage_id,
 		StageCatalog.packets(current_stage_id),
@@ -818,7 +816,7 @@ func _reset_run(
 	tutorial_dash = false
 	tutorial_announced = false
 	boss_started = false
-	boss_exam_runtime.configure(current_stage_id)
+	boss_shield_runtime.configure(current_stage_id)
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
@@ -1046,10 +1044,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.pattern_index = 0
 	enemy.boss_phase = 1
 	enemy.boss_variant = StringName(spec.get("boss_variant", &"colossus"))
-	enemy.boss_objective_id = StringName(spec.get("boss_objective_id", &""))
-	enemy.boss_module_kind = StringName(spec.get("boss_module_kind", &""))
-	enemy.boss_module_index = int(spec.get("boss_module_index", -1))
-	enemy.boss_module_state = StringName(spec.get("boss_module_state", &""))
+	enemy.boss_shield_state = StringName(spec.get("boss_shield_state", &""))
 	enemy.pattern = &""
 	enemy.last_pattern = &""
 	enemy.pattern_timer = 0.0
@@ -2068,8 +2063,6 @@ func _update_enemies(delta: float) -> void:
 		if role == &"generator":
 			_update_generator(enemy, delta)
 			continue
-		if role == &"boss_pylon":
-			continue
 		if enemy.stun > 0.0:
 			enemy.velocity = Vector2.ZERO
 	if performance_active:
@@ -2231,9 +2224,6 @@ func _apply_hazard_damage_to_enemy(
 	current_position: Vector2,
 	delta: float
 ) -> void:
-	if enemy.role == &"boss_pylon":
-		terrain_runtime.forget_hazard_actor(enemy.id)
-		return
 	var actor_kind := &"boss" if enemy.role == &"stage_boss" else &"ordinary"
 	var damage := terrain_runtime.hazard_damage_for_actor(
 		enemy.id,
@@ -2348,7 +2338,6 @@ func _update_motion_only_ordinary_enemy(
 		return
 	if enemy.role in [
 		&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
-		&"boss_pylon",
 	]:
 		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
 		return
@@ -2460,14 +2449,14 @@ func _append_enemy_shield_assignments(
 		if support.role == &"generator":
 			for candidate in _support_query_buffer:
 				var candidate_role := candidate.role
-				if candidate != support and candidate_role not in [&"generator", &"shield_escort", &"stage_boss", &"boss_pylon"] and support_position.distance_squared_to(candidate.pos) <= 390.0 * 390.0:
+				if candidate != support and candidate_role not in [&"generator", &"shield_escort", &"stage_boss"] and support_position.distance_squared_to(candidate.pos) <= 390.0 * 390.0:
 					shielded_ids[candidate.id] = true
 			continue
 		var closest_id := ""
 		var closest_distance_squared := 300.0 * 300.0
 		for candidate in _support_query_buffer:
 			var candidate_role := candidate.role
-			if candidate == support or candidate_role in [&"generator", &"shield_escort", &"stage_boss", &"boss_pylon"]:
+			if candidate == support or candidate_role in [&"generator", &"shield_escort", &"stage_boss"]:
 				continue
 			var distance_squared := support_position.distance_squared_to(candidate.pos)
 			if distance_squared <= closest_distance_squared:
@@ -2550,7 +2539,7 @@ func _spawn_carrier_child(carrier: EnemyState) -> void:
 		or (
 			carrier.role == &"stage_boss"
 			and _live_boss_add_count()
-				>= BossExamCatalog.MAX_LIVE_ADDS
+				>= BossPhaseCatalog.MAX_LIVE_ADDS
 		)
 	):
 		return
@@ -2852,16 +2841,17 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			enemy.phase_time = 0.72
 		&"controller":
 			var controller_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
-			denied_zones.append({
-				"pos": enemy.committed_target,
-				"radius": float(controller_attack["radius"]),
-				"warning": 0.0,
-				"duration": 2.15,
-				"tick": 0.0,
-				"damage": float(controller_attack["damage"]),
-				"source": "Controller flood zone",
-				"affinity": StringName(controller_attack["affinity"]),
-			})
+			_spawn_hostile_projectile(
+				enemy.pos + enemy.committed_dir * float(controller_attack["origin_offset"]),
+				enemy.committed_dir,
+				float(controller_attack["damage"]),
+				float(controller_attack["speed"]),
+				"Controller bolt",
+				StringName(controller_attack["affinity"]),
+				false,
+				false,
+				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.88
 		&"turret":
@@ -2881,14 +2871,17 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				_damage_player(mine_damage, "Arc proximity burst", true)
 		&"artillery_spotter":
 			var artillery_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
-			denied_zones.append({
-				"pos": enemy.committed_target, "radius": float(artillery_attack["radius"]),
-				"warning": 0.0,
-				"duration": 1.35, "tick": 0.0,
-				"damage": float(artillery_attack["damage"]),
-				"source": "Artillery impact",
-				"affinity": StringName(artillery_attack["affinity"]),
-			})
+			_spawn_hostile_projectile(
+				enemy.pos + enemy.committed_dir * float(artillery_attack["origin_offset"]),
+				enemy.committed_dir,
+				float(artillery_attack["damage"]),
+				float(artillery_attack["speed"]),
+				"Artillery shell",
+				StringName(artillery_attack["affinity"]),
+				false,
+				false,
+				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 1.05
 		&"interceptor_tower":
@@ -3037,7 +3030,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decision_due: bool = true) -> void:
 	var role := enemy.role
 	if (
-		role in [&"turret", &"interceptor_tower", &"beam_sentinel", &"generator", &"boss_pylon"]
+		role in [&"turret", &"interceptor_tower", &"beam_sentinel", &"generator"]
 		or (role == &"mine" and enemy.archetype != &"spark_minelet")
 	):
 		return
@@ -3556,7 +3549,7 @@ func _update_projectile_buffer(
 					index += 1
 					continue
 				var enemy_damage := projectile.damage
-				if hit_enemy.role in [&"turret", &"mine", &"generator", &"interceptor_tower", &"beam_sentinel", &"boss_pylon"]:
+				if hit_enemy.role in [&"turret", &"mine", &"generator", &"interceptor_tower", &"beam_sentinel"]:
 					enemy_damage = projectile.structure_damage
 				var damage_source := "reflected_%s" % projectile.owner if projectile.reflected else projectile.owner
 				var direct_attribute := (
@@ -3618,11 +3611,6 @@ func _remove_projectile_at(hostile: bool, index: int) -> void:
 func _is_player_targetable_enemy(enemy: EnemyState) -> bool:
 	if enemy == null or not enemy.alive or not enemy.active:
 		return false
-	if (
-		enemy.role == &"boss_pylon"
-		and not enemy.boss_objective_id.is_empty()
-	):
-		return boss_exam_runtime.can_damage_module(enemy.id)
 	return true
 
 
@@ -3910,13 +3898,6 @@ func _damage_enemy(
 	if not enemy.alive:
 		return 0.0
 	var role := enemy.role
-	if (
-		role == &"boss_pylon"
-		and not enemy.boss_objective_id.is_empty()
-		and not boss_exam_runtime.can_damage_module(enemy.id)
-	):
-		enemy.health_visible_timer = 1.5
-		return 0.0
 	var multiplier := 1.0
 	if not final_effective and enemy.shielded:
 		multiplier *= 0.45
@@ -3924,7 +3905,7 @@ func _damage_enemy(
 		multiplier *= 1.50
 	var boss_damage_multiplier := 1.0
 	if role == &"stage_boss" and not final_effective:
-		boss_damage_multiplier = boss_exam_runtime.boss_damage_multiplier()
+		boss_damage_multiplier = boss_shield_runtime.boss_damage_multiplier()
 		multiplier *= boss_damage_multiplier
 	var health_before := enemy.health
 	if (
@@ -3959,12 +3940,12 @@ func _damage_enemy(
 		and enemy.health > 0.0
 		and not boss_practice.active
 	):
-		var transition := boss_exam_runtime.try_advance_phase(
+		var transition := boss_shield_runtime.try_advance_phase(
 			enemy.health,
 			enemy.max_health
 		)
 		if not transition.is_empty():
-			_begin_boss_exam_phase(enemy, int(transition["phase"]))
+			_begin_boss_shield_phase(enemy, int(transition["phase"]))
 	if enemy.health <= 0.0:
 		_defeat_enemy(enemy, source)
 	return applied_damage
@@ -3977,7 +3958,7 @@ func _mystery_enemy_target(enemy: EnemyState) -> Vector2:
 func _is_fixed_structure_enemy(enemy: EnemyState) -> bool:
 	return (
 		enemy.role in [
-			&"generator", &"turret", &"boss_pylon",
+			&"generator", &"turret",
 			&"interceptor_tower", &"beam_sentinel",
 		]
 		or (
@@ -4017,21 +3998,11 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
 	terrain_runtime.forget_hazard_actor(enemy.id)
 	var role := enemy.role
-	var module_result := {}
-	if role == &"boss_pylon" and not enemy.boss_objective_id.is_empty():
-		module_result = boss_exam_runtime.register_module_defeat(enemy.id)
-		resolved_boss_module_visuals.append({
-			"position": enemy.pos,
-			"radius": enemy.visual_radius,
-			"kind": enemy.boss_module_kind,
-			"index": enemy.boss_module_index,
-		})
 	if boss_practice.active:
 		enemy.alive = false
 		enemy.active = false
 		enemy_grid.update_actor(enemy)
 		enemy_store.queue_defeat(enemy)
-		_handle_boss_module_result(module_result)
 		return
 	var split_on_defeat := (
 		enemy.archetype == &"splitter_barge"
@@ -4049,8 +4020,11 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	stage_telemetry.record_defeat(enemy.archetype, enemy.elite_trait)
 	var reward_source := &""
 	if role == &"stage_boss": reward_source = &"boss"
-	if role != &"boss_pylon":
-		experience_runtime.spawn_shard(enemy.pos, FieldDropRules.experience_for_enemy(enemy), reward_source)
+	experience_runtime.spawn_shard(
+		enemy.pos,
+		FieldDropRules.experience_for_enemy(enemy),
+		reward_source
+	)
 	if _is_countable_stage_enemy(enemy):
 		if stage_flow.record_countable_defeat():
 			encounter_runtime.stop_spawning()
@@ -4059,12 +4033,11 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 			_discover_guide(StringName("boss_stage_%d" % (current_stage_index + 1)))
 			_ui.notify(tr("NOTIFY_BOSS_INBOUND"), 1.5, Rules.CORAL)
 			_play_sound(&"boss", 0.82)
-	if role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"boss_pylon"]:
+	if role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel"]:
 		stats_installations += 1
 	if role == &"stage_boss":
 		if stage_flow.record_boss_defeat():
 			_complete_stage()
-	_handle_boss_module_result(module_result)
 	var defeated_group := enemy.group_id
 	if not defeated_group.is_empty():
 		_try_group_completion_reward(defeated_group, enemy.pos)
@@ -4114,7 +4087,7 @@ func _spawn_splitter_children(parent: EnemyState) -> void:
 func _is_countable_stage_enemy(enemy: EnemyState) -> bool:
 	if enemy.summoned:
 		return false
-	return enemy.role not in [&"stage_boss", &"boss_pylon"]
+	return enemy.role != &"stage_boss"
 
 
 func _try_group_completion_reward(group_id: String, _position: Vector2) -> void:
@@ -4127,7 +4100,7 @@ func _try_group_completion_reward(group_id: String, _position: Vector2) -> void:
 
 
 func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
-	if role in [&"stage_boss", &"boss_pylon"]:
+	if role == &"stage_boss":
 		for index in range(denied_zones.size() - 1, -1, -1):
 			if String(denied_zones[index]["source"]).contains("Colossus"):
 				denied_zones.remove_at(index)
@@ -4584,12 +4557,12 @@ func _start_stage_boss() -> void:
 	if (
 		enemy_store.live_count()
 		> EnemyStore.MAX_LIVE_HOSTILES
-			- BossExamCatalog.BOSS_ENTRY_SLOT_RESERVE
+			- BossPhaseCatalog.BOSS_ENTRY_SLOT_RESERVE
 	):
 		return
 	boss_started = true
 	discovered_markers["stage_boss"] = true
-	boss_exam_runtime.configure(current_stage_id)
+	boss_shield_runtime.configure(current_stage_id)
 	if boss_arrival_position.is_zero_approx():
 		boss_arrival_position = _choose_boss_arrival_anchor()
 	var boss := _make_enemy({
@@ -4598,7 +4571,8 @@ func _start_stage_boss() -> void:
 		"pos": boss_arrival_position,
 		"zone": "boss",
 		"name_key": StageCatalog.profile(current_stage_id)["boss_name_key"],
-		"boss_variant":boss_exam_runtime.variant(),
+		"boss_variant":boss_shield_runtime.variant(),
+		"boss_shield_state":&"shield_up",
 	})
 	if boss == null:
 		boss_started = false
@@ -4611,7 +4585,7 @@ func _start_stage_boss() -> void:
 	if not _append_enemy(boss):
 		boss_started = false
 		return
-	_begin_boss_exam_phase(boss, 1)
+	_begin_boss_shield_phase(boss, 1)
 	_play_sound(&"boss")
 	camera_shake = 12.0
 
@@ -4667,8 +4641,8 @@ func _choose_boss_arrival_anchor() -> Vector2:
 func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 	if not bool(boss.alive):
 		return
-	boss_exam_runtime.advance(delta)
-	boss.boss_module_state = boss_exam_runtime.core_state()
+	boss_shield_runtime.advance(delta)
+	boss.boss_shield_state = boss_shield_runtime.state()
 	_show_pending_boss_state_hint()
 	if (
 		boss_practice.is_pattern_loop()
@@ -4805,7 +4779,7 @@ func _boss_fire_aimed_burst(boss: EnemyState, pattern: String, damage: float) ->
 func _execute_boss_autonomous(event: Dictionary) -> void:
 	var pattern := String(event["pattern"])
 	if pattern == "beam_sentinel_call":
-		if _live_boss_add_count() >= BossExamCatalog.MAX_LIVE_ADDS:
+		if _live_boss_add_count() >= BossPhaseCatalog.MAX_LIVE_ADDS:
 			return
 		var sentinel := _make_enemy({
 			"id":String(event["id"]),
@@ -4862,72 +4836,28 @@ func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> vo
 	boss.velocity = (Vector2(boss.pos) - position) / maxf(delta, 0.0001)
 
 
-func _begin_boss_exam_phase(boss: EnemyState, next_phase: int) -> void:
-	_remove_boss_objective_modules()
-	resolved_boss_module_visuals.clear()
-	if _flush_defeated_enemies() > 0:
-		enemy_grid.rebuild(enemies)
+func _begin_boss_shield_phase(boss: EnemyState, next_phase: int) -> void:
 	boss.boss_phase = clampi(next_phase, 1, 3)
 	boss.phase = &"boss_read"
 	boss.phase_time = 0.90
 	boss.pattern = &"phase_transition" if boss.boss_phase > 1 else &"system_wake"
 	boss.pattern_index = 0
-	boss.boss_module_state = &"sealed"
+	boss.boss_shield_state = &"shield_up"
 	boss.attack_telegraphs.clear()
-	var payload := boss_exam_runtime.begin_phase(
-		boss.max_health,
-		boss.boss_phase
-	)
-	_spawn_boss_objective_modules(boss, Array(payload["modules"]))
+	var payload := boss_shield_runtime.begin_phase(boss.boss_phase)
 	if not boss_practice.is_pattern_loop():
-		_spawn_boss_exam_adds(
+		_spawn_boss_phase_adds(
 			boss,
 			Array(payload.get("add_roles", [])),
 			StringName(payload.get("tactic_id", &""))
 		)
-	_sync_boss_module_states()
 	_show_pending_boss_state_hint()
 	if boss.boss_phase > 1:
 		boss_phase_two_announced = true
 		_play_sound(&"boss", 0.78)
 
 
-func _spawn_boss_objective_modules(
-	boss: EnemyState,
-	module_specs: Array
-) -> void:
-	for spec_variant in module_specs:
-		var spec := Dictionary(spec_variant)
-		var offset := Vector2(spec["offset"])
-		var position := _move_actor(
-			boss.pos,
-			offset,
-			33.0,
-			false
-		)
-		var module := _make_enemy({
-			"id":String(spec["id"]),
-			"role":&"boss_pylon",
-			"pos":position,
-			"zone":"boss_objective",
-			"name_key":_boss_module_name_key(
-				StringName(spec["kind"])
-			),
-			"boss_objective_id":boss_exam_runtime.objective_id(),
-			"boss_module_kind":StringName(spec["kind"]),
-			"boss_module_index":int(spec["index"]),
-			"boss_module_state":&"locked",
-			"active":true,
-		})
-		if module == null:
-			continue
-		module.health = float(spec["health"])
-		module.max_health = module.health
-		module.active = true
-		_append_enemy(module)
-
-
-func _spawn_boss_exam_adds(
+func _spawn_boss_phase_adds(
 	boss: EnemyState,
 	roles: Array,
 	tactic_id: StringName
@@ -4935,7 +4865,7 @@ func _spawn_boss_exam_adds(
 	var live_before := _live_boss_add_count()
 	var available := maxi(
 		0,
-		BossExamCatalog.MAX_LIVE_ADDS - live_before
+		BossPhaseCatalog.MAX_LIVE_ADDS - live_before
 	)
 	var spawn_count := mini(available, roles.size())
 	var spawned := 0
@@ -4968,7 +4898,7 @@ func _spawn_boss_exam_adds(
 		})
 		if add != null and _append_enemy(add):
 			spawned += 1
-	boss_exam_runtime.note_adds_spawned(
+	boss_shield_runtime.note_adds_spawned(
 		spawned,
 		live_before + spawned
 	)
@@ -4989,103 +4919,25 @@ func _live_boss_add_count() -> int:
 	return count
 
 
-func _remove_boss_objective_modules() -> void:
-	for enemy in enemies:
-		if (
-			enemy.alive
-			and enemy.role == &"boss_pylon"
-			and not enemy.boss_objective_id.is_empty()
-		):
-			enemy.alive = false
-			enemy.active = false
-			enemy_grid.update_actor(enemy)
-			enemy_store.queue_defeat(enemy)
-
-
-func _sync_boss_module_states() -> void:
-	for enemy in enemies:
-		if (
-			enemy.alive
-			and enemy.role == &"boss_pylon"
-			and not enemy.boss_objective_id.is_empty()
-		):
-			enemy.boss_module_state = boss_exam_runtime.module_state(enemy.id)
-
-
-func _handle_boss_module_result(result: Dictionary) -> void:
-	if result.is_empty():
-		return
-	_sync_boss_module_states()
-	if bool(result.get("resolved", false)):
-		var boss := _find_enemy_by_id("stage_boss")
-		if boss != null and boss.alive:
-			boss.vulnerable = float(result.get("vulnerability", 0.0))
-			boss.boss_module_state = &"open"
-		_show_pending_boss_state_hint()
-		_play_sound(&"impact", 1.08)
-	else:
-		_play_sound(&"impact", 0.82)
-
-
 func _show_pending_boss_state_hint() -> void:
-	var hint_key := boss_exam_runtime.take_state_entry_hint()
+	var hint_key := boss_shield_runtime.take_state_entry_hint()
 	if hint_key.is_empty():
 		return
 	var color := (
-		Art.PLAYER_REWARD
-		if hint_key == "BOSS_EXAM_CORE_OPEN"
+		Art.SYSTEM
+		if hint_key == "BOSS_SHIELD_DOWN_HINT"
 		else Art.BOSS_COMMAND
 	)
 	_ui.notify(tr(hint_key), 2.6, color)
 
 
-func _on_boss_charge_collision(
-	boss: EnemyState,
-	before: Vector2,
-	after: Vector2
-) -> void:
-	var target_id := boss_exam_runtime.route_collision_target()
-	if target_id.is_empty() and boss_exam_runtime.objective_id() == &"forge_plate":
-		for module_id in boss_exam_runtime.active_module_ids():
-			var module := _find_enemy_by_id(module_id)
-			if (
-				module != null
-				and Rules.point_segment_distance(
-					module.pos,
-					before,
-					after
-				) <= module.radius + boss.radius
-			):
-				target_id = module_id
-				break
-	if target_id.is_empty():
+func _on_boss_direct_attack_complete(boss: EnemyState) -> void:
+	if boss == null or not boss.alive:
 		return
-	var target := _find_enemy_by_id(target_id)
-	if target != null and target.alive:
-		_damage_enemy(
-			target,
-			target.health,
-			"Boss routed collision",
-			&"kinetic",
-			true
-		)
-
-
-func _boss_module_name_key(kind: StringName) -> String:
-	match kind:
-		&"forge_plate":
-			return "BOSS_MODULE_FORGE_PLATE"
-		&"segment_lock":
-			return "BOSS_MODULE_SEGMENT_LOCK"
-		&"relay_positive":
-			return "BOSS_MODULE_RELAY_POSITIVE"
-		&"relay_negative":
-			return "BOSS_MODULE_RELAY_NEGATIVE"
-		&"route_switch":
-			return "BOSS_MODULE_ROUTE_SWITCH"
-		&"armor_car":
-			return "BOSS_MODULE_ARMOR_CAR"
-	return "BOSS_MODULE_LATTICE_OUTER"
+	if boss_shield_runtime.lower_after_direct_attack():
+		boss.boss_shield_state = boss_shield_runtime.state()
+		_show_pending_boss_state_hint()
+		_play_sound(&"impact", 1.04)
 
 
 func _complete_stage() -> void:
@@ -5217,7 +5069,7 @@ func _begin_stage_transition() -> void:
 	_populate_stage_items()
 	_configure_reinforcement_facility()
 	boss_started = false
-	boss_exam_runtime.configure(current_stage_id)
+	boss_shield_runtime.configure(current_stage_id)
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
@@ -5399,7 +5251,7 @@ func _fill_fast_hud_snapshot(
 		boss_snapshot["health"] = boss.health
 		boss_snapshot["max_health"] = boss.max_health
 		boss_snapshot["state"] = _boss_state_text(boss)
-		boss_snapshot["objective"] = _boss_objective_snapshot()
+		boss_snapshot["shield"] = _boss_shield_snapshot()
 
 	var stage_title := tr(String(stage_profile["title_key"]))
 	snapshot["health"] = player_health
@@ -5481,12 +5333,11 @@ func _objective_text() -> Array[String]:
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
 		return [tr("OBJECTIVE_BOSS_INBOUND").replace("%s", boss_name), tr("OBJECTIVE_BOSS_INBOUND_DETAIL")]
 	if boss_started:
-		var boss_detail_key := boss_exam_runtime.cue_key()
-		match boss_exam_runtime.core_state():
-			&"open":
-				boss_detail_key = "BOSS_EXAM_CORE_OPEN"
-			&"stable":
-				boss_detail_key = "BOSS_EXAM_CORE_STABLE"
+		var boss_detail_key := (
+			"BOSS_SHIELD_UP_HINT"
+			if boss_shield_runtime.shield_up
+			else "BOSS_SHIELD_DOWN_HINT"
+		)
 		return [
 			tr("OBJECTIVE_BOSS_STAGE").replace("%s", boss_name),
 			tr(boss_detail_key),
@@ -5516,59 +5367,23 @@ func _enemy_state_text(enemy: EnemyState) -> String:
 
 
 func _boss_state_text(boss: EnemyState) -> String:
-	var objective := _boss_objective_snapshot()
-	var state := StringName(objective.get("state", &"stable"))
-	var base_state := ""
-	if state == &"sealed":
-		var active_modules := Array(objective.get("active_modules", []))
-		if active_modules.is_empty():
-			base_state = tr("BOSS_CORE_SEALED_STATUS_EMPTY")
-		else:
-			var active := Dictionary(active_modules[0])
-			base_state = tr("BOSS_CORE_SEALED_STATUS") % [
-				String(active.get("name", "")),
-				roundi(float(active.get("health", 0.0))),
-				roundi(float(active.get("max_health", 1.0))),
-			]
-	elif state == &"open":
-		base_state = tr("BOSS_CORE_OPEN_STATUS") % boss_exam_runtime.vulnerability_remaining
-	else:
-		base_state = tr("BOSS_CORE_STABLE_STATUS")
+	var base_state := (
+		tr("BOSS_SHIELD_UP_STATUS")
+		if boss_shield_runtime.shield_up
+		else tr("BOSS_SHIELD_DOWN_STATUS")
+			% boss_shield_runtime.shield_down_remaining
+	)
 	var parts: Array[String] = [base_state]
 	parts.append_array(_localized_status_parts(boss))
 	return "  •  ".join(parts)
 
 
-func _boss_objective_snapshot() -> Dictionary:
-	var modules: Array[Dictionary] = []
-	var active_modules: Array[Dictionary] = []
-	for enemy in enemies:
-		if (
-			not enemy.alive
-			or enemy.role != &"boss_pylon"
-			or enemy.boss_objective_id.is_empty()
-		):
-			continue
-		var module_state := boss_exam_runtime.module_state(enemy.id)
-		var descriptor := {
-			"id":enemy.id,
-			"objective_id":enemy.boss_objective_id,
-			"kind":enemy.boss_module_kind,
-			"state":module_state,
-			"name":tr(String(enemy.name)),
-			"health":enemy.health,
-			"max_health":enemy.max_health,
-			"position":enemy.pos,
-		}
-		modules.append(descriptor)
-		if module_state == &"active":
-			active_modules.append(descriptor)
+func _boss_shield_snapshot() -> Dictionary:
 	return {
-		"objective_id":boss_exam_runtime.objective_id(),
-		"state":boss_exam_runtime.core_state(),
-		"damage_multiplier":boss_exam_runtime.boss_damage_multiplier(),
-		"active_modules":active_modules,
-		"modules":modules,
+		"state":boss_shield_runtime.state(),
+		"shield_up":boss_shield_runtime.shield_up,
+		"damage_multiplier":boss_shield_runtime.boss_damage_multiplier(),
+		"shield_down_remaining":boss_shield_runtime.shield_down_remaining,
 	}
 
 
@@ -5814,7 +5629,6 @@ func _fill_combat_presentation_snapshot(
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
 	snapshot["run_time"] = run_time
 	snapshot["secondary_visual_tier"] = 0
-	snapshot["resolved_boss_modules"] = resolved_boss_module_visuals
 	snapshot["electric_field_level"] = run_build.level_of(&"electric_field")
 	snapshot["orbiting_blade_level"] = run_build.level_of(&"orbiting_blades")
 	snapshot["secondary"] = secondary
@@ -5877,17 +5691,6 @@ func _update_threat_contacts(delta: float) -> void:
 	for enemy in enemies:
 		if not bool(enemy.alive) or not bool(enemy.active):
 			continue
-		var objective_active := (
-			enemy.role == &"boss_pylon"
-			and not enemy.boss_objective_id.is_empty()
-			and boss_exam_runtime.module_state(enemy.id) == &"active"
-		)
-		if (
-			enemy.role == &"boss_pylon"
-			and not enemy.boss_objective_id.is_empty()
-			and not objective_active
-		):
-			continue
 		var enemy_screen := canvas_transform * Vector2(enemy.pos)
 		if safe_viewport.has_point(enemy_screen):
 			_discover_guide(GuidebookCatalog.entry_id_for_enemy(enemy.archetype, enemy.role))
@@ -5895,23 +5698,11 @@ func _update_threat_contacts(delta: float) -> void:
 				_discover_guide(StringName("object_elite_%s" % String(enemy.elite_trait)))
 		var offset := Vector2(enemy.pos) - player_position
 		if (
-			not objective_active
-			and offset.length_squared()
+			offset.length_squared()
 				> THREAT_SCAN_DISTANCE * THREAT_SCAN_DISTANCE
 		):
 			continue
 		if safe_viewport.has_point(enemy_screen):
-			continue
-		var radar_offset := offset
-		if objective_active and radar_offset.length() > THREAT_SCAN_DISTANCE:
-			radar_offset = radar_offset.normalized() * THREAT_SCAN_DISTANCE * 0.98
-		if objective_active:
-			contacts.append({
-				"offset":radar_offset,
-				"kind":CombatCuePolicy.CONTACT_BOSS_OBJECTIVE,
-				"objective_id":enemy.id,
-				"readiness":1.0,
-			})
 			continue
 		var readiness := CombatCuePolicy.unseen_projectile_attack_readiness(
 			enemy.pos,
@@ -5922,7 +5713,7 @@ func _update_threat_contacts(delta: float) -> void:
 		)
 		if readiness >= 0.0:
 			contacts.append({
-				"offset":radar_offset,
+				"offset":offset,
 				"kind":CombatCuePolicy.CONTACT_INCOMING_ATTACK,
 				"readiness":readiness,
 			})
@@ -6156,7 +5947,7 @@ func _enemy_color(role: StringName) -> Color:
 			return Art.CORAL_DARK
 		&"generator", &"shield_escort", &"repair_tender":
 			return Art.MINT
-		&"controller", &"drone_carrier", &"stage_boss", &"boss_pylon":
+		&"controller", &"drone_carrier", &"stage_boss":
 			return Art.BOSS_MAGENTA
 	return Art.CORAL
 
@@ -6252,14 +6043,15 @@ func _start_boss_practice() -> void:
 	_ui.show_gameplay()
 	player_position = Rules.player_start(current_stage_id)
 	boss_runtime.configure(current_stage_id)
-	boss_exam_runtime.configure(current_stage_id, boss_practice.phase)
+	boss_shield_runtime.configure(current_stage_id, boss_practice.phase)
 	var boss := _make_enemy({
 		"id":"stage_boss",
 		"role":&"stage_boss",
 		"pos":_choose_boss_arrival_anchor(),
 		"zone":"practice",
 		"name_key":StageCatalog.profile(current_stage_id)["boss_name_key"],
-		"boss_variant":boss_exam_runtime.variant(),
+		"boss_variant":boss_shield_runtime.variant(),
+		"boss_shield_state":&"shield_up",
 		"active":true,
 	})
 	boss.active = true
@@ -6271,7 +6063,7 @@ func _start_boss_practice() -> void:
 	_append_enemy(boss)
 	boss_started = true
 	stage_flow.state = StageFlow.State.BOSS_ACTIVE
-	_begin_boss_exam_phase(boss, boss_practice.phase)
+	_begin_boss_shield_phase(boss, boss_practice.phase)
 	_ui.notify(tr("BOSS_PRACTICE_START"), 1.5, Art.MUSTARD)
 	_set_mouse_for_mode()
 
@@ -6489,7 +6281,7 @@ func _performance_counts() -> Dictionary:
 		"zones": denied_zones.size(),
 		"layout":field_layout.debug_snapshot(current_stage_id) if field_layout != null else {},
 		"collective_tactics":collective_tactics.debug_snapshot(),
-		"boss_exam":boss_exam_runtime.snapshot(),
+		"boss_shield":boss_shield_runtime.snapshot(),
 	}
 
 

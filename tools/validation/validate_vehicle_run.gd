@@ -355,34 +355,27 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 		)
 	)
 	_expect(
-		is_equal_approx(applied, 20.0)
-			and is_equal_approx(health_before - boss.health, 20.0),
-		"sealed boss damage is reduced to twenty percent instead of cancelled"
+		is_equal_approx(applied, 25.0)
+			and is_equal_approx(health_before - boss.health, 25.0),
+		"raised boss shield reduces damage to twenty-five percent"
 	)
 	_expect(
 		run.effects.size() == effect_count_before,
-		"sealed boss damage does not create floating damage feedback"
+		"shielded boss damage does not create floating damage feedback"
 	)
 	var hud := Dictionary(run.call("_build_hud_snapshot"))
-	var objective := Dictionary(Dictionary(hud["boss"])["objective"])
-	var active_modules := Array(objective["active_modules"])
+	var shield := Dictionary(Dictionary(hud["boss"])["shield"])
 	_expect(
-		objective["state"] == &"sealed"
-			and is_equal_approx(float(objective["damage_multiplier"]), 0.20)
-			and not active_modules.is_empty(),
-		"boss strip consumes the sealed state and active module health snapshot"
+		shield["state"] == &"shield_up"
+			and bool(shield["shield_up"])
+			and is_equal_approx(float(shield["damage_multiplier"]), 0.25),
+		"boss strip consumes the boss-attached shield state"
 	)
-	var active := Dictionary(active_modules[0])
 	var minimap_markers := Array(hud["minimap"]["markers"])
-	var active_module_markers := minimap_markers.filter(
+	var boss_markers := minimap_markers.filter(
 		func(marker_variant) -> bool:
 			var marker := Dictionary(marker_variant)
-			return (
-				StringName(marker.get("kind", &"")) == &"enemy"
-				and Vector2(marker.get("position", Vector2.ZERO)).is_equal_approx(
-					Vector2(active["position"])
-				)
-			)
+			return StringName(marker.get("kind", &"")) == &"boss"
 	)
 	var only_shared_minimap_roles := true
 	for marker_variant in minimap_markers:
@@ -392,55 +385,24 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 			only_shared_minimap_roles = false
 			break
 	_expect(
-		not active_module_markers.is_empty()
-			and only_shared_minimap_roles,
-		"minimap folds objective modules into the shared enemy role"
+		boss_markers.size() == 1 and only_shared_minimap_roles,
+		"minimap exposes one dedicated boss marker without objective actors"
 	)
-	var all_modules := Array(objective["modules"])
-	var locked_modules := all_modules.filter(
-		func(module_variant) -> bool:
-			return StringName(Dictionary(module_variant)["state"]) == &"locked"
-	)
-	if not locked_modules.is_empty():
-		var locked := Dictionary(locked_modules[0])
-		var locked_enemy: EnemyState = run.call(
-			"_find_enemy_by_id",
-			String(locked["id"])
-		)
-		var probe := ProjectileState.new()
-		probe.radius = 6.0
-		var locked_candidates: Array[EnemyState] = [locked_enemy]
-		var contact = run.call(
-			"_player_projectile_contact",
-			probe,
-			locked_enemy.pos - Vector2(120.0, 0.0),
-			locked_enemy.pos + Vector2(120.0, 0.0),
-			probe.radius,
-			locked_candidates
-		)
-		_expect(
-			contact == null,
-			"inactive sequential objective modules are projectile-pass-through"
-		)
 	run._threat_sample_timer = 0.0
 	run.call("_update_threat_contacts", 0.11)
 	var objective_contacts: Array = run._threat_contact_cache.filter(
 		func(contact_variant) -> bool:
-			var contact := Dictionary(contact_variant)
-			return (
-				StringName(contact.get("kind", &"")) == &"boss_objective"
-				and String(contact.get("objective_id", "")) == String(active["id"])
-			)
+			return StringName(Dictionary(contact_variant).get("kind", &"")) == &"boss_objective"
 	)
 	_expect(
-		not objective_contacts.is_empty(),
-		"off-screen radar retains the active boss objective without duplicate state"
+		objective_contacts.is_empty(),
+		"off-screen radar has no removed boss-objective contact"
 	)
 	ui.update_hud(hud)
 	_expect(
 		ui._hud._boss_cluster.visible
-			and ui._hud._objective_panel.visible,
-		"boss strip and objective panel remain visible together"
+			and ui._hud._mission_panel.visible,
+		"boss strip and mission panel remain visible together"
 	)
 
 
@@ -673,7 +635,6 @@ func _check_combat_presentation_frame(run) -> void:
 	_expect(
 		is_same(first["zones"], run.denied_zones)
 			and is_same(first["protection_sources"], run.player_protection_sources)
-			and is_same(first["resolved_boss_modules"], run.resolved_boss_module_visuals)
 			and is_same(secondary, run._runtime_secondary_presentation_frame)
 			and is_same(secondary["mines"], run.secondary_runtime.mines)
 			and is_same(first["mystery_devices"], run._mystery_device_snapshot_buffer)
@@ -737,7 +698,7 @@ func _presentation_snapshots_match(
 		"player_barrier_hit_remaining", "player_invulnerable_remaining",
 		"protection_sources", "muzzle_flash",
 		"barrier_strength", "reduced_motion", "run_time",
-		"secondary_visual_tier", "resolved_boss_modules",
+		"secondary_visual_tier",
 		"electric_field_level", "orbiting_blade_level", "cursor_position",
 	]:
 		if expected.get(key) != actual.get(key):

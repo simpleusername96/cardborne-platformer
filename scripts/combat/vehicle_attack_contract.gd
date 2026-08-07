@@ -49,8 +49,8 @@ const ORDINARY_ATTACKS := {
 		"damage":10.0, "speed":500.0, "origin_offset":30.0,
 	},
 	&"controller":{
-		"kind":&"area", "affinity":KINETIC, "startup":0.82,
-		"damage":9.0, "radius":112.0,
+		"kind":&"projectile", "affinity":KINETIC, "startup":0.82,
+		"damage":9.0, "speed":440.0, "origin_offset":34.0,
 	},
 	&"turret":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":0.68,
@@ -61,8 +61,8 @@ const ORDINARY_ATTACKS := {
 		"damage":16.0, "radius":205.0,
 	},
 	&"artillery_spotter":{
-		"kind":&"area", "affinity":KINETIC, "startup":1.15,
-		"damage":15.0, "radius":175.0,
+		"kind":&"projectile", "affinity":KINETIC, "startup":1.15,
+		"damage":15.0, "speed":360.0, "origin_offset":36.0,
 	},
 	&"interceptor_tower":{
 		"kind":&"projectile", "affinity":ARC, "startup":0.78,

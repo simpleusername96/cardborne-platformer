@@ -258,26 +258,26 @@ Prior completed delivery:
 
 Current follow-up, ordered from lower coupling to higher coupling:
 
-- [ ] 9. Repair the stale projectile-readability validator and diagnose the
+- [x] 9. Repair the stale projectile-readability validator and diagnose the
   bounded non-termination in damage-feedback validation. Run the prior-scope
   focused audit before using its earlier “complete” status as current evidence.
-- [ ] 10. Correct the upgrade-card row order, remove both separators, raise the
+- [x] 10. Correct the upgrade-card row order, remove both separators, raise the
   description type size, and lock ordinary/boss health constants with focused
   tests. Do not touch boss mechanics in this milestone.
-- [ ] 11. Build the selected linear acquired-upgrade rail, move
+- [x] 11. Build the selected linear acquired-upgrade rail, move
   stage/message/XP/boss summary into the top-left mission surface, and deliver
   build changes to the HUD only on upgrade/reset. No alternative runtime branch
   is created.
 - [ ] 12. Apply the locked minimap marker radii and produce the complete selected-
   HUD responsive/localized capture set, including ordinary and boss marker
   evidence.
-- [ ] 13. Replace external boss modules with the boss-owned timed shield, apply
+- [x] 13. Replace external boss modules with the boss-owned timed shield, apply
   the boss-health multiplier, remove every module consumer, and update boss HUD,
   radar, minimap, guidebook, localization, captures, and workload fixtures.
-- [ ] 14. Unify boss circles to orange, convert ordinary targeted area attacks to
+- [x] 14. Unify boss circles to orange, convert ordinary targeted area attacks to
   direct projectiles, replace the mine ground circle with actor-state cues, and
   prove no ordinary hostile can create a damaging ground circle.
-- [ ] 15. Update `vehicle_game_spec.md`, `VISUAL_SYSTEM.md`, and upgrade contracts
+- [x] 15. Update `vehicle_game_spec.md`, `VISUAL_SYSTEM.md`, and upgrade contracts
   to the approved HUD, card hierarchy, shield loop, health values, and attack
   grammar. Remove obsolete objective-module wording and exact asset-count claims.
 - [ ] 16. Run focused gameplay/UI/authority validation, deterministic Korean and
@@ -287,9 +287,9 @@ Current follow-up, ordered from lower coupling to higher coupling:
 ## Progress and next step
 
 - Canonical progress: the checkboxes above.
-- Current milestone: 9.
-- Next action after plan approval: repair the two current-HEAD validation blockers,
-  then implement Milestone 10 before any HUD or boss refactor.
+- Current milestone: 16.
+- Next action: run the broad focused batch, deterministic visual comparison, Web
+  export, built-app smoke, and the task-scoped quality audit.
 - Update rule: check a milestone only when its source change, focused validation,
   and named evidence are present. Do not reuse a historical pass after its owner
   changes.

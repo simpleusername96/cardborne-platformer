@@ -20,11 +20,6 @@ const DISTINCT_GROUPS := {
 		&"pickup/repair",
 		&"pickup/experience_recall",
 	],
-	"shared_boss_node_states":[
-		&"boss/node_active",
-		&"boss/node_damaged",
-		&"boss/node_resolved",
-	],
 	"hazard_variants":[
 		&"world/hazard_toxic_bog",
 		&"world/hazard_lava_pool",
@@ -55,6 +50,7 @@ func _validate_active_world_roles() -> void:
 		&"hazard_toxic_bog",
 		&"mystery_device_intact",
 		&"mystery_device_resolved",
+		&"reinforcement_fabricator",
 		&"transit_gate",
 	]
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()

@@ -30,19 +30,11 @@ const DESCRIPTORS := {
 	&"repair_tender": {"role": &"repair", "asset": &"actor/repair_tender", "color": &"support", "states": [&"base", &"elite", &"collective"]},
 	&"drone_carrier": {"role": &"carrier", "asset": &"actor/drone_carrier", "color": &"boss_command", "states": [&"base", &"elite", &"collective"]},
 	&"beam_sentinel": {"role": &"beam", "asset": &"actor/beam_sentinel", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
-	&"boss_pylon": {"role": &"boss_module", "asset": &"actor/boss_pylon", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"forge_plate": {"role": &"boss_module", "asset_family": &"boss/node", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"segment_lock": {"role": &"boss_module", "asset_family": &"boss/node", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"relay_positive": {"role": &"boss_module", "asset_family": &"boss/node", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"relay_negative": {"role": &"boss_module", "asset_family": &"boss/node", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"route_switch": {"role": &"boss_module", "asset_family": &"boss/node", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"armor_car": {"role": &"boss_module", "asset_family": &"boss/node", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"lattice_outer": {"role": &"boss_module", "asset_family": &"boss/node", "color": &"boss_command", "states": [&"active", &"disabled"]},
-	&"behemoth": {"role": &"boss", "asset": &"boss/behemoth", "color": &"boss_command", "module_budget": 5, "states": [&"sealed", &"vulnerable"]},
-	&"colossus": {"role": &"boss", "asset": &"boss/colossus", "color": &"boss_command", "module_budget": 5, "states": [&"sealed", &"vulnerable"]},
-	&"crown": {"role": &"boss", "asset": &"boss/crown", "color": &"boss_command", "module_budget": 5, "states": [&"sealed", &"vulnerable"]},
-	&"leviathan": {"role": &"boss", "asset": &"boss/leviathan", "color": &"boss_command", "module_budget": 5, "states": [&"sealed", &"vulnerable"]},
-	&"titan": {"role": &"boss", "asset": &"boss/titan", "color": &"boss_command", "module_budget": 5, "states": [&"sealed", &"vulnerable"]},
+	&"behemoth": {"role": &"boss", "asset": &"boss/behemoth", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
+	&"colossus": {"role": &"boss", "asset": &"boss/colossus", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
+	&"crown": {"role": &"boss", "asset": &"boss/crown", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
+	&"leviathan": {"role": &"boss", "asset": &"boss/leviathan", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
+	&"titan": {"role": &"boss", "asset": &"boss/titan", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
 }
 
 const ENEMY_ARCHETYPES: Array[StringName] = [
@@ -50,7 +42,7 @@ const ENEMY_ARCHETYPES: Array[StringName] = [
 	&"shooter", &"controller", &"turret", &"mine", &"generator",
 	&"shield_escort", &"artillery_spotter", &"interceptor_tower",
 	&"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender",
-	&"drone_carrier", &"beam_sentinel", &"boss_pylon", &"stage_boss",
+	&"drone_carrier", &"beam_sentinel", &"stage_boss",
 ]
 
 

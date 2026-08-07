@@ -47,9 +47,9 @@ func _initialize() -> void:
 	var generator := store.live[9]
 	generator.role = &"generator"
 	generator.phase = &"active"
-	var boss_pylon := store.live[10]
-	boss_pylon.role = &"boss_pylon"
-	boss_pylon.phase = &"interrupted_recovery"
+	var shielded_boss := store.live[10]
+	shielded_boss.role = &"stage_boss"
+	shielded_boss.phase = &"interrupted_recovery"
 
 	var schedule := Schedule.new()
 	schedule.rebuild(store.live, 1.0 / 60.0, Vector2(2800.0, 1700.0), 820.0 * 820.0, 0, 0, 0)
@@ -66,7 +66,7 @@ func _initialize() -> void:
 	_expect(
 		stage_boss not in schedule.critical
 		and generator not in schedule.critical
-		and boss_pylon not in schedule.critical,
+		and shielded_boss not in schedule.critical,
 		"special roles stay out of ordinary behavior worklists"
 	)
 	_expect(schedule.carrier_child_count(carrier.id) == 3, "carrier child count is precomputed")
@@ -152,7 +152,7 @@ func _initialize() -> void:
 	_expect(
 		stage_boss not in schedule.ordinary_due
 		and generator not in schedule.ordinary_due
-		and boss_pylon not in schedule.ordinary_due,
+		and shielded_boss not in schedule.ordinary_due,
 		"special roles never enter deferred ordinary behavior work"
 	)
 	_expect(

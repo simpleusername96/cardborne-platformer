@@ -35,7 +35,7 @@ static func repair_target_id(tender: EnemyState, enemies: Array[EnemyState], sta
 		if target == tender or not target.alive or not target.active:
 			continue
 		var role := target.role
-		if role in [&"repair_tender", &"stage_boss", &"boss_pylon"]:
+		if role in [&"repair_tender", &"stage_boss"]:
 			continue
 		var maximum := target.max_health
 		if maximum <= 0.0 or target.health >= maximum:

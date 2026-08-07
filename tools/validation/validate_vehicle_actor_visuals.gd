@@ -20,12 +20,6 @@ const ORDINARY_ARCHETYPES: Array[StringName] = [
 const BOSS_VARIANTS: Array[StringName] = [
 	&"colossus", &"leviathan", &"titan", &"behemoth", &"crown",
 ]
-const MODULE_ASSETS: Array[StringName] = [
-	&"boss/node_active",
-	&"boss/node_damaged",
-	&"boss/node_resolved",
-]
-
 var _failures: Array[String] = []
 
 
@@ -84,13 +78,6 @@ func _validate_actor_images() -> void:
 			signatures
 		)
 	_expect(signatures.size() == 5, "all five boss body silhouettes remain distinct")
-	signatures.clear()
-	for module_asset in MODULE_ASSETS:
-		_validate_unique_visual_signature(module_asset, signatures)
-	_expect(
-		signatures.size() == MODULE_ASSETS.size(),
-		"the three shared objective node states remain distinct"
-	)
 
 
 func _validate_secondary_ownership() -> void:
@@ -138,29 +125,6 @@ func _validate_unique_alpha_signature(
 	_expect(
 		not signatures.has(signature),
 		"%s keeps a unique alpha silhouette from %s"
-		% [asset_id, signatures.get(signature, &"")]
-	)
-	signatures[signature] = asset_id
-
-
-func _validate_unique_visual_signature(
-	asset_id: StringName,
-	signatures: Dictionary
-) -> void:
-	var descriptor := AssetProvider.descriptor(asset_id)
-	var path := String(descriptor.get("path", ""))
-	_expect(not path.is_empty(), "%s has a runtime path" % asset_id)
-	if path.is_empty():
-		return
-	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
-	_expect(image != null and not image.is_empty(), "%s loads as an image" % asset_id)
-	if image == null or image.is_empty():
-		return
-	image.resize(24, 24, Image.INTERPOLATE_LANCZOS)
-	var signature := image.get_data().hex_encode().sha256_text()
-	_expect(
-		not signatures.has(signature),
-		"%s keeps a unique visual pattern from %s"
 		% [asset_id, signatures.get(signature, &"")]
 	)
 	signatures[signature] = asset_id
