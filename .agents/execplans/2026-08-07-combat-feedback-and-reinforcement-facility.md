@@ -27,19 +27,22 @@ read than intended, and hostile circular attacks still used several colors and
 ordinary-enemy sources.
 
 This revision keeps one active progress owner. It first repairs the current
-validation baseline, produces three comparable top-HUD candidates, and then
-implements the chosen/default layout with the lower-coupling card and balance
-changes before the cross-system boss and attack-grammar changes.
+validation baseline, then implements the user-selected linear top-HUD reference
+with the lower-coupling card and balance changes before the cross-system boss,
+minimap-marker, and attack-grammar changes.
 
 ## Scope and non-scope
 
 In scope:
 
-- Three code-native top-HUD candidates using the current Theme, component
+- The user-selected linear top-HUD reference using the current Theme, component
   factory, semantic upgrade artwork, and localization.
 - One production top-HUD layout with player hull centered above an acquired-
   upgrade rail, and stage/message information moved into the former top-left
   hull zone.
+- A clearer minimap threat hierarchy: ordinary enemy markers become smaller and
+  the boss marker becomes substantially larger, while the minimap frame and map
+  geometry stay unchanged.
 - Event-driven acquired-build delivery to the HUD; upgrade arrays must not be
   rebuilt or deep-copied by the 10 Hz fast HUD path.
 - Upgrade-card body order and typography correction.
@@ -58,7 +61,8 @@ In scope:
 Out of scope:
 
 - New raster artwork, SVG geometry, ImageMagick-authored visuals, a new UI Theme,
-  new dependencies, or a redesign of the minimap.
+  new dependencies, or a redesign of the minimap frame, map geometry, or marker
+  role set.
 - Changes to player collision, projectile collision, global capacities, boss
   pattern cadence, stage quota, reinforcement-facility policy, or the fixed Hard
   difficulty.
@@ -97,9 +101,13 @@ Out of scope:
   corner level numeral, without a pill, badge panel, or repeated text label.
 - Full upgrade names and values remain available in the paused Ship Status
   surface. The live rail is for fast build recognition, not full inspection.
-- Candidate B below is the implementation default because it scales by semantic
-  category and gives future upgrades a stable location. An explicit user choice
-  after the three captures overrides that default before production integration.
+- The user selected Candidate A / Image 1 on 2026-08-08. Production uses one
+  centered linear rail. Up to 12 icons remain on one row; 13-18 wrap into a
+  second centered row. Candidate B and Candidate C are rejected for this pass and
+  do not become runtime options.
+- Ordinary minimap enemy markers use outer/inner radii `4.0/2.6`; the boss uses
+  outer/inner radii `10.0/7.6`. Item, player, and reinforcement-facility markers
+  retain their current geometry.
 - No blocking design question remains. Tuning beyond the locked first pass is a
   later playtest decision, not an implementation guess.
 
@@ -114,8 +122,9 @@ Out of scope:
   equivalent.
 - Top-center: the panel-free player-health bar. Acquired upgrades appear directly
   below it using the existing semantic upgrade artwork provider.
-- Top-right: the existing minimap and conditional target content. Its footprint
-  and marker grammar stay unchanged.
+- Top-right: the existing minimap and conditional target content. Its footprint,
+  map geometry, and five-role grammar stay unchanged; only the ordinary-enemy
+  and boss marker radii change to strengthen threat hierarchy.
 - Bottom-center: the existing panel-free `88x88` EMP indicator stays unchanged.
 - No full-width dock or full-rail background is allowed. Standard top-center
   height targets `72 px` with one icon row and may reach `104 px` only after a
@@ -123,14 +132,14 @@ Out of scope:
 - Candidate fixtures must cover 0, 6, 12, and 18 acquired upgrades so the design
   is judged on growth rather than on one convenient build.
 
-### Candidate A - Linear rail
+### Candidate A - Linear rail (selected)
 
 - One centered row of `30 px` icons at standard size.
 - The first 12 upgrades stay in one row; 13-18 wrap into a second centered row.
 - Strength: fastest single-scan reading and the smallest early-run footprint.
 - Tradeoff: later upgrades can shift position when the second row appears.
 
-### Candidate B - Category clusters (recommended/default)
+### Candidate B - Category clusters (rejected for this pass)
 
 - Four centered clusters follow the current user-facing categories: Primary,
   Elements, Secondary Weapons, and Ship Systems.
@@ -143,7 +152,7 @@ Out of scope:
 - Strength: acquired and future content keeps a predictable semantic location.
 - Tradeoff: slightly more horizontal spacing than Candidate A in the middle run.
 
-### Candidate C - Fixed two-row matrix
+### Candidate C - Fixed two-row matrix (rejected for this pass)
 
 - A centered `9 x 2` matrix uses `28 px` icons and preserves a constant maximum
   footprint from the first upgrade onward, while still hiding empty cells.
@@ -152,14 +161,15 @@ Out of scope:
 - Strength: the best high-count capacity and the least layout movement.
 - Tradeoff: it consumes two-row vertical space earlier than the other candidates.
 
-### Candidate production rule
+### Selection and production rule
 
-The three candidates are built behind a capture/debug-only selector using the
-same shared HUD component and snapshot. They are rendered at `960x540`,
-`1280x720`, and `1920x1080`, in Korean and English, plus the existing 200% text
-case. The selector cannot ship. The user-selected candidate is promoted; if no
-explicit choice is supplied, Candidate B is promoted and the other branches are
-deleted rather than retained as production options.
+The three ImageGen previews used the same current gameplay capture, canonical
+style-reference sheet, and existing upgrade-card artwork as actual image inputs.
+The user selected the first displayed result at
+`C:/Users/BK/.codex/generated_images/019fdc36-5189-72f2-9e47-9834db637d7e/exec-6eed99e2-bcba-43f5-aaa3-8c01f8c09b1f.png`.
+It is a visual target, not a production raster: runtime recreates its hierarchy
+with existing Godot Controls and semantic upgrade textures. No preview image is
+copied into the game or production manifest.
 
 ### Upgrade card
 
@@ -254,11 +264,13 @@ Current follow-up, ordered from lower coupling to higher coupling:
 - [ ] 10. Correct the upgrade-card row order, remove both separators, raise the
   description type size, and lock ordinary/boss health constants with focused
   tests. Do not touch boss mechanics in this milestone.
-- [ ] 11. Build the shared acquired-upgrade rail and the three debug/capture-only
-  top-HUD candidates. Produce the complete responsive/localized comparison set.
-- [ ] 12. Promote the explicit user choice or default Candidate B, delete the
-  other runtime branches, move stage/message/XP/boss summary into the top-left
-  mission surface, and deliver build changes to the HUD only on upgrade/reset.
+- [ ] 11. Build the selected linear acquired-upgrade rail, move
+  stage/message/XP/boss summary into the top-left mission surface, and deliver
+  build changes to the HUD only on upgrade/reset. No alternative runtime branch
+  is created.
+- [ ] 12. Apply the locked minimap marker radii and produce the complete selected-
+  HUD responsive/localized capture set, including ordinary and boss marker
+  evidence.
 - [ ] 13. Replace external boss modules with the boss-owned timed shield, apply
   the boss-health multiplier, remove every module consumer, and update boss HUD,
   radar, minimap, guidebook, localization, captures, and workload fixtures.
@@ -304,7 +316,7 @@ Current follow-up, ordered from lower coupling to higher coupling:
 
 ### HUD and visual evidence
 
-- Candidate captures cover 0/6/12/18 upgrades at `960x540`, `1280x720`, and
+- Selected linear-rail captures cover 0/6/12/18 upgrades at `960x540`, `1280x720`, and
   `1920x1080`, in Korean and English, plus 200% text.
 - No icon, level numeral, health value, stage/message line, boss meter, target
   block, or minimap child clips, overlaps, or leaves its container.
@@ -313,6 +325,9 @@ Current follow-up, ordered from lower coupling to higher coupling:
   it and stays at or below `104 px`.
 - The active boss shield is visually attached to the boss, clearly different
   from the orange ground attack circle, and absent during the down window.
+- Ordinary minimap markers resolve at `4.0/2.6` radii and the boss resolves at
+  `10.0/7.6`; boss and ordinary markers remain distinct in grayscale without
+  changing item, player, or facility geometry.
 - The visual-authority validator passes after the canonical HUD/boss contracts
   and manifest are updated.
 
@@ -366,10 +381,9 @@ Current follow-up, ordered from lower coupling to higher coupling:
 
 ## Open questions
 
-No blocking implementation question remains. The user may explicitly select HUD
-Candidate A or C after seeing the three rendered comparisons; without that input,
-Candidate B is the recorded default. Boss health or shield timing changes beyond
-the locked first pass require later playtest evidence and a separate tuning note.
+No blocking implementation question remains. Candidate A / Image 1 is selected.
+Boss health or shield timing changes beyond the locked first pass require later
+playtest evidence and a separate tuning note.
 
 ## Decision notes and provenance
 
@@ -391,3 +405,7 @@ the locked first pass require later playtest evidence and a separate tuning note
 - 2026-08-08: The current-HEAD audit found one validator parse failure and one
   bounded non-termination. Prior implementation remains present in source, but
   full re-verification is deliberately not claimed until Milestone 9 passes.
+- 2026-08-08: The user selected the first displayed top-HUD preview and required
+  minimum map occlusion plus a larger boss and smaller ordinary-enemy minimap
+  hierarchy. The locked runtime radii are `10.0/7.6` for boss and `4.0/2.6` for
+  ordinary enemies.
