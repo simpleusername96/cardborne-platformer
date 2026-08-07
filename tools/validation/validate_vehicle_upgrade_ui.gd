@@ -185,7 +185,13 @@ func _validate_family_body_art(catalog: VehicleUpgradeCatalog) -> void:
 				and int(contract["body_divider_count"]) == 1,
 			"%s uses the compact split-dossier artwork contract" % family
 		)
+		_expect(
+			int(Dictionary(contract["type_sizes"])["behavior"]) >= 14,
+			"%s keeps compact behavior copy at the 14 px body-text minimum"
+			% family
+		)
 		var geometry := card.debug_geometry_contract()
+		_expect_card_geometry(geometry, "%s compact family" % family)
 		var artwork := Dictionary(geometry["artwork"])
 		_expect(
 			StringName(artwork["asset_id"]) != &""

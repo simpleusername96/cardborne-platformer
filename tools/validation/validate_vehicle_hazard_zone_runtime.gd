@@ -48,8 +48,19 @@ func _validate_feature_contract() -> void:
 func _validate_exposure_timing_and_damage() -> void:
 	var runtime := TerrainRuntime.new()
 	runtime.configure(_blueprint())
+	_expect(
+		runtime.hazard_damage_for_actor(
+			"outside_visible_edge",
+			Vector2(80, 200),
+			Vector2(80, 200),
+			24.0,
+			&"player",
+			0.10
+		) == 0.0,
+		"actor radius cannot expand damage beyond the visible hazard footprint"
+	)
 	var player_entry := runtime.hazard_damage_for_actor(
-		"player", Vector2(0, 200), Vector2(150, 200), 0.0, &"player", 0.10
+		"player", Vector2(80, 200), Vector2(150, 200), 24.0, &"player", 0.10
 	)
 	_expect(
 		player_entry == TerrainRuntime.HAZARD_PLAYER_DAMAGE,

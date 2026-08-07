@@ -247,10 +247,12 @@ func _damage_for_actor_kind(actor_kind: StringName) -> float:
 			return HAZARD_ORDINARY_DAMAGE
 
 
-func _point_inside_hazard(position: Vector2, actor_radius: float) -> bool:
-	var grown_radius := maxf(0.0, actor_radius)
+func _point_inside_hazard(position: Vector2, _actor_radius: float) -> bool:
+	# The rendered hazard placement and gameplay share this exact rectangle. Keep the
+	# radius parameter for the public sweep contract, but never grow damage past
+	# the visible hazard footprint.
 	for feature in _hazard_zones:
-		if feature.rect.grow(grown_radius).has_point(position):
+		if feature.rect.has_point(position):
 			return true
 	return false
 
@@ -258,13 +260,10 @@ func _point_inside_hazard(position: Vector2, actor_radius: float) -> bool:
 func _segment_crosses_hazard(
 	from: Vector2,
 	to: Vector2,
-	actor_radius: float
+	_actor_radius: float
 ) -> bool:
-	var grown_radius := maxf(0.0, actor_radius)
 	for feature in _hazard_zones:
-		if _segment_intersects_rect(
-			from, to, feature.rect.grow(grown_radius)
-		):
+		if _segment_intersects_rect(from, to, feature.rect):
 			return true
 	return false
 

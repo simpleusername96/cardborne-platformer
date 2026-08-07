@@ -51,6 +51,7 @@ a {
 a:hover { color: #c6f7fc; }
 
 a:focus-visible,
+button:focus-visible,
 summary:focus-visible {
   outline: 3px solid var(--amber);
   outline-offset: 3px;
@@ -101,16 +102,29 @@ summary:focus-visible {
   padding: 0 0 8px;
 }
 
-.nav a {
+.nav a,
+.nav button {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   padding: 8px 12px;
   border: 1px solid transparent;
+  background: transparent;
   color: var(--muted);
+  font: inherit;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
+}
+
+.nav button { cursor: pointer; }
+
+.nav button:hover { color: var(--text); }
+
+.nav .language-toggle {
+  margin-left: auto;
+  border-color: var(--line);
+  color: var(--text);
 }
 
 .nav a[aria-current="page"] {
@@ -429,6 +443,7 @@ summary {
   .site-header { position: static; }
   html { scroll-padding-top: 20px; }
   .nav { flex-wrap: wrap; overflow-x: visible; }
+  .nav .language-toggle { margin-left: 0; }
   main.shell { padding-top: 34px; }
   .decision-grid,
   .topic-grid,

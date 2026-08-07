@@ -397,7 +397,7 @@ func _apply_layout_profile() -> void:
 		title_size = 22
 		level_size = 15
 		summary_size = 14
-		behavior_size = 13
+		behavior_size = 14
 		dossier_height = 182.0
 		glyph_size = Vector2(88.0, 88.0)
 		art_lane_width = 88.0
