@@ -16,6 +16,26 @@ const COMPACT_SIZE := Vector2(280.0, 378.0)
 const LARGE_SIZE := Vector2(420.0, 480.0)
 const ACCESSIBILITY_SIZE := Vector2(520.0, 920.0)
 
+class UnlockIndicator:
+	extends Control
+
+	func _ready() -> void:
+		custom_minimum_size = Vector2(22.0, 22.0)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var center := size * 0.5
+		var radius := minf(size.x, size.y) * 0.42
+		var outline := PackedVector2Array([
+			center + Vector2(0.0, -radius),
+			center + Vector2(radius, 0.0),
+			center + Vector2(0.0, radius),
+			center + Vector2(-radius, 0.0),
+		])
+		draw_colored_polygon(outline, Art.SPACE_BLACK)
+		draw_line(center - Vector2(radius * 0.42, 0.0), center + Vector2(radius * 0.42, 0.0), Art.SYSTEM, 2.0)
+		draw_line(center - Vector2(0.0, radius * 0.42), center + Vector2(0.0, radius * 0.42), Art.SYSTEM, 2.0)
+
 
 var _offer: Dictionary = {}
 var _selected := false
@@ -26,18 +46,15 @@ var _content_margin: MarginContainer
 var _content_box: VBoxContainer
 var _category: Label
 var _title: Label
-var _dossier: HBoxContainer
+var _dossier: VBoxContainer
 var _art_lane: CenterContainer
 var _artwork: TextureRect
-var _body_divider: VSeparator
+var _body_divider: HSeparator
 var _change_lane: VBoxContainer
 var _level: Label
 var _change_rule: HSeparator
 var _effects: VBoxContainer
-var _comparison_fallback: Label
-var _footer_rule: HSeparator
-var _footer_box: VBoxContainer
-var _summary: Label
+var _unlock_indicator: UnlockIndicator
 
 
 func _ready() -> void:
@@ -113,7 +130,7 @@ func debug_contract() -> Dictionary:
 		"actual_size":size,
 		"value_rows":(
 			(_effects.get_child_count() if is_instance_valid(_effects) else 0)
-			+ (1 if is_instance_valid(_comparison_fallback) and _comparison_fallback.visible else 0)
+			+ (1 if is_instance_valid(_unlock_indicator) and _unlock_indicator.visible else 0)
 			+ (1 if is_instance_valid(_level) and _level.visible else 0)
 		),
 		"effect_rows":_effects.get_child_count() if is_instance_valid(_effects) else 0,
@@ -124,18 +141,20 @@ func debug_contract() -> Dictionary:
 		"compact":_compact,
 		"large":_large,
 		"accessibility_mode":_accessibility_mode,
-		"dossier_split":true,
+		"dossier_split":false,
+		"vertical_dossier":true,
 		"body_divider_count":1,
-		"description_in_comparison":_comparison_fallback.visible,
-		"footer_visible":_footer_box.visible,
+		"description_in_comparison":false,
+		"footer_visible":false,
+		"unlock_icon_visible":_unlock_indicator.visible,
 		"type_sizes":{
 			"category":_category.get_theme_font_size("font_size"),
 			"level":_level.get_theme_font_size("font_size"),
 			"title":_title.get_theme_font_size("font_size"),
-			"summary":_summary.get_theme_font_size("font_size"),
+			"summary":0,
 		},
-		"summary_max_lines":_summary.max_lines_visible,
-		"comparison_max_lines":_comparison_fallback.max_lines_visible,
+		"summary_max_lines":0,
+		"comparison_max_lines":0,
 		"header_art_count":0,
 		"body_art_count":1 if is_instance_valid(_artwork) else 0,
 		"category_badge_count":0,
@@ -149,8 +168,7 @@ func debug_contract() -> Dictionary:
 		"body_order":[
 			"category",
 			"title",
-			"dossier:art/divider/level/effects",
-			"description",
+			"dossier:art/divider/level/unlock-icon/effects",
 		],
 		"state_cues":{
 			"normal_flat":normal_style is StyleBoxFlat,
@@ -182,7 +200,7 @@ func debug_geometry_contract() -> Dictionary:
 		"art_lane_rect":_art_lane.get_global_rect(),
 		"change_lane_rect":_change_lane.get_global_rect(),
 		"body_divider_rect":_body_divider.get_global_rect(),
-		"footer_rect":_footer_box.get_global_rect() if _footer_box.visible else Rect2(),
+		"footer_rect":Rect2(),
 		"labels":labels,
 		"artwork":{
 			"asset_id":artwork_asset_id,
@@ -191,7 +209,7 @@ func debug_geometry_contract() -> Dictionary:
 		},
 		"selected":_selected,
 		"disabled":disabled,
-		"summary_max_lines":_summary.max_lines_visible,
+		"summary_max_lines":0,
 	}
 
 
@@ -208,20 +226,20 @@ func _build() -> void:
 	_category = _label(16, Art.SYSTEM)
 	_category.name = "CategoryLabel"
 	_category.theme_type_variation = &"MetricLabel"
-	_category.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_category.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_category.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_content_box.add_child(_category)
 
 	_title = _label(28, Art.TEXT_PRIMARY)
 	_title.name = "TitleLabel"
 	_title.theme_type_variation = &"TitleLabel"
-	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.max_lines_visible = 2
 	_content_box.add_child(_title)
 
-	_dossier = HBoxContainer.new()
+	_dossier = VBoxContainer.new()
 	_dossier.name = "DossierBody"
 	_dossier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dossier.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -232,7 +250,6 @@ func _build() -> void:
 	_art_lane.name = "ArtworkLane"
 	_art_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_art_lane.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_art_lane.size_flags_stretch_ratio = 0.95
 	_art_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dossier.add_child(_art_lane)
 	_artwork = TextureRect.new()
@@ -242,10 +259,10 @@ func _build() -> void:
 	_artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_art_lane.add_child(_artwork)
 
-	_body_divider = VSeparator.new()
+	_body_divider = HSeparator.new()
 	_body_divider.name = "DossierDivider"
-	_body_divider.custom_minimum_size.x = 1.0
-	_body_divider.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body_divider.custom_minimum_size.y = 1.0
+	_body_divider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body_divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dossier.add_child(_body_divider)
 
@@ -253,14 +270,14 @@ func _build() -> void:
 	_change_lane.name = "ChangeLane"
 	_change_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_change_lane.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_change_lane.size_flags_stretch_ratio = 1.05
+	_change_lane.alignment = BoxContainer.ALIGNMENT_CENTER
 	_change_lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dossier.add_child(_change_lane)
 
 	_level = _label(18, Art.SYSTEM)
 	_level.name = "LevelLabel"
 	_level.theme_type_variation = &"MetricLabel"
-	_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_level.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_change_lane.add_child(_level)
 
@@ -269,6 +286,14 @@ func _build() -> void:
 	_change_rule.custom_minimum_size.y = 1.0
 	_change_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_change_lane.add_child(_change_rule)
+	var unlock_center := CenterContainer.new()
+	unlock_center.name = "UnlockIndicatorCenter"
+	unlock_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	unlock_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_change_lane.add_child(unlock_center)
+	_unlock_indicator = UnlockIndicator.new()
+	_unlock_indicator.name = "UnlockIndicator"
+	unlock_center.add_child(_unlock_indicator)
 
 	_effects = VBoxContainer.new()
 	_effects.name = "EffectRows"
@@ -277,94 +302,47 @@ func _build() -> void:
 	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_change_lane.add_child(_effects)
 
-	_comparison_fallback = _label(16, Art.TEXT_PRIMARY)
-	_comparison_fallback.name = "ComparisonDescriptionLabel"
-	_comparison_fallback.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_comparison_fallback.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_comparison_fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_comparison_fallback.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_comparison_fallback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_comparison_fallback.visible = false
-	_change_lane.add_child(_comparison_fallback)
-
-	_footer_rule = HSeparator.new()
-	_footer_rule.name = "DescriptionRule"
-	_footer_rule.custom_minimum_size.y = 1.0
-	_footer_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content_box.add_child(_footer_rule)
-
-	_footer_box = VBoxContainer.new()
-	_footer_box.name = "DescriptionFooter"
-	_footer_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content_box.add_child(_footer_box)
-
-	_summary = _label(16, Art.TEXT_PRIMARY)
-	_summary.name = "SummaryLabel"
-	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_summary.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_summary.size_flags_stretch_ratio = 2.0
-	_footer_box.add_child(_summary)
-
 func _apply_layout_profile() -> void:
 	var horizontal_margin := 24
 	var vertical_margin := 20
 	var content_gap := 8
-	var body_gap := 12
+	var body_gap := 8
 	var change_gap := 6
 	var effect_gap := 6
-	var footer_gap := 6
 	var category_size := 16
 	var title_size := 28
 	var level_size := 18
-	var summary_size := 16
-	var dossier_height := 190.0
+	var dossier_height := 292.0
 	var glyph_size := Vector2(128.0, 128.0)
-	var art_lane_width := 128.0
-	var change_lane_width := 132.0
 	var category_height := 20.0
 	var title_height := 54.0
-	var footer_height := 88.0
-	var summary_height := 52.0
 	if _accessibility_mode:
 		custom_minimum_size = ACCESSIBILITY_SIZE
 		horizontal_margin = 20
 		vertical_margin = 16
 		content_gap = 10
-		body_gap = 16
+		body_gap = 12
 		change_gap = 10
 		effect_gap = 12
-		footer_gap = 8
-		dossier_height = 340.0
+		dossier_height = 670.0
 		glyph_size = Vector2(176.0, 176.0)
-		art_lane_width = 176.0
-		change_lane_width = 268.0
 		category_height = 44.0
 		title_height = 144.0
-		footer_height = 290.0
-		summary_height = 200.0
 	elif _large:
 		custom_minimum_size = LARGE_SIZE
 		horizontal_margin = 28
 		vertical_margin = 22
 		content_gap = 10
-		body_gap = 14
+		body_gap = 10
 		change_gap = 8
 		effect_gap = 8
-		footer_gap = 8
 		category_size = 18
 		title_size = 32
 		level_size = 18
-		summary_size = 18
-		dossier_height = 204.0
+		dossier_height = 316.0
 		glyph_size = Vector2(128.0, 128.0)
-		art_lane_width = 148.0
-		change_lane_width = 168.0
 		category_height = 24.0
 		title_height = 62.0
-		footer_height = 94.0
-		summary_height = 56.0
 	elif _compact:
 		custom_minimum_size = COMPACT_SIZE
 		horizontal_margin = 14
@@ -373,19 +351,13 @@ func _apply_layout_profile() -> void:
 		body_gap = 8
 		change_gap = 5
 		effect_gap = 5
-		footer_gap = 4
 		category_size = 13
 		title_size = 22
 		level_size = 15
-		summary_size = 14
-		dossier_height = 182.0
+		dossier_height = 250.0
 		glyph_size = Vector2(88.0, 88.0)
-		art_lane_width = 88.0
-		change_lane_width = 140.0
 		category_height = 18.0
 		title_height = 48.0
-		footer_height = 72.0
-		summary_height = 42.0
 	else:
 		custom_minimum_size = WIDE_SIZE
 
@@ -397,22 +369,15 @@ func _apply_layout_profile() -> void:
 	_dossier.add_theme_constant_override("separation", body_gap)
 	_change_lane.add_theme_constant_override("separation", change_gap)
 	_effects.add_theme_constant_override("separation", effect_gap)
-	_footer_box.add_theme_constant_override("separation", footer_gap)
 	_category.custom_minimum_size.y = category_height
 	_title.custom_minimum_size.y = title_height
 	_dossier.custom_minimum_size.y = dossier_height
-	_art_lane.custom_minimum_size.x = art_lane_width
-	_change_lane.custom_minimum_size.x = change_lane_width
+	_art_lane.custom_minimum_size.y = glyph_size.y
 	_artwork.custom_minimum_size = glyph_size
 	_artwork.size = glyph_size
-	_footer_box.custom_minimum_size.y = footer_height
-	_summary.custom_minimum_size.y = summary_height
 	Factory.apply_font_size(_category, category_size)
 	Factory.apply_font_size(_title, title_size)
 	Factory.apply_font_size(_level, level_size)
-	Factory.apply_font_size(_comparison_fallback, summary_size)
-	Factory.apply_font_size(_summary, summary_size)
-	_refresh_text_budgets()
 
 
 func _refresh() -> void:
@@ -421,7 +386,7 @@ func _refresh() -> void:
 	_category.text = tr(String(_offer.get("category_key", "")))
 	_level.text = _level_transition_text()
 	_title.text = tr(String(_offer.get("title_key", "")))
-	_summary.text = tr(String(_offer.get("description_key", "")))
+	var description := tr(String(_offer.get("description_key", "")))
 	_refresh_artwork()
 	_clear(_effects)
 	var accessible_values := PackedStringArray()
@@ -431,12 +396,14 @@ func _refresh() -> void:
 		var row_number := _effects.get_child_count() + 1
 		var row := VBoxContainer.new()
 		row.name = "EffectRow%d" % row_number
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_constant_override("separation", 2 if _compact else 4)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var stat := _label(_effect_stat_size(), Art.TEXT_PRIMARY)
 		stat.name = "StatLabel%d" % row_number
 		stat.text = tr(String(preview.get("stat_key", "")))
-		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		stat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		stat.max_lines_visible = 2 if _compact or _accessibility_mode else 1
 		row.add_child(stat)
@@ -444,6 +411,7 @@ func _refresh() -> void:
 		delta_row.name = "DeltaRow%d" % row_number
 		delta_row.add_theme_constant_override("separation", 4)
 		delta_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		delta_row.alignment = BoxContainer.ALIGNMENT_CENTER
 		var parts := _preview_value_parts(preview)
 		var current := _label(_effect_value_size(), Art.TEXT_PRIMARY)
 		current.name = "CurrentValueLabel%d" % row_number
@@ -463,43 +431,20 @@ func _refresh() -> void:
 	_effects.visible = _effects.get_child_count() > 0
 	var change_kind := StringName(_offer.get("change_kind", &"stats"))
 	var change_label := tr(String(_offer.get("change_label_key", "")))
-	_comparison_fallback.visible = change_kind != &"stats"
-	_comparison_fallback.text = (
-		"%s\n%s" % [change_label, _summary.text]
-		if _comparison_fallback.visible
-		else ""
-	)
-	_summary.visible = change_kind == &"stats" and not _summary.text.is_empty()
-	_footer_box.visible = _summary.visible
-	_footer_rule.visible = _footer_box.visible
-	_refresh_text_budgets()
+	_unlock_indicator.visible = change_kind == &"unlock"
 	var accessibility_parts := PackedStringArray([
 		_category.text,
 		_title.text,
 		_level.text,
 		"; ".join(accessible_values),
-		_comparison_fallback.text if _comparison_fallback.visible else _summary.text,
+		change_label,
+		description,
 	])
 	var non_empty_parts := PackedStringArray()
 	for part in accessibility_parts:
 		if not part.is_empty():
 			non_empty_parts.append(part)
 	accessibility_name = " · ".join(non_empty_parts)
-
-
-func _refresh_text_budgets() -> void:
-	if _accessibility_mode:
-		_comparison_fallback.max_lines_visible = 8
-		_summary.max_lines_visible = 5
-		return
-	if _compact:
-		_comparison_fallback.max_lines_visible = 8
-		_summary.max_lines_visible = 3
-		return
-	_comparison_fallback.max_lines_visible = 8
-	_summary.max_lines_visible = 3
-
-
 func _effect_stat_size() -> int:
 	return 14 if _compact and not _accessibility_mode else 16
 

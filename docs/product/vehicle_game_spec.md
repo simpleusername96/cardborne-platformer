@@ -84,6 +84,11 @@ five-stage run.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
+All non-boss enemy archetypes receive a final `1.30` health multiplier after the
+fixed profile and stage curve. Boss health remains on its existing authored curve.
+Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
+`0.75 s`; both healing outputs are twice their previous values.
+
 ### Damage readability and hostile projectiles
 
 - Accepted hull damage starts exactly one second of post-hit invulnerability.
@@ -128,7 +133,7 @@ five-stage run.
   endpoint capsule. Non-damaging support descriptors do not create attack
   warnings.
 - Minimal damage footprints contain only their collision-relevant boundary:
-  one outer ring for area, two side boundaries and the endpoint cap for charge,
+  one danger-colored outer ring for every hostile area, the endpoint cap for charge,
   and two side boundaries plus endpoint caps for beam. Affinity-specific inner
   rings, diamonds, center lines, tick bars, and commit markers are not rendered.
   Active beams retain both their
@@ -144,8 +149,7 @@ five-stage run.
   `Condition` means a real persistent burn, poison, or chill payload. Thermal,
   toxin, or cryo presentation alone never invents a condition. Current hostile
   attacks apply direct damage only; player primary rounds derive affinity from
-  their actual stackable condition payload, with multi-condition rounds shown
-  as hybrid.
+  the one selected condition payload. Multi-condition player rounds are not legal.
 - Every projectile stops at the same static or run-selected inner wall that blocks
   the ship. A live crate also blocks line of sight and both projectile teams;
   hostile fire is absorbed without destroying the reward crate, while player
@@ -298,6 +302,11 @@ five-stage run.
    convergence result. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
    or stage completion and summons do not count toward the quota.
+   At 35% quota progress, one separate reinforcement facility activates at a
+   clear distant anchor. It is not an enemy actor and does not count toward the
+   quota. While alive it spawns an existing stage-scaled role every `8/7/6/5/4`
+   seconds, respects both the global active cap and a per-facility live-child cap
+   of `2/3/4/5/6`, and stops immediately when destroyed or the stage completes.
 6. On reaching the quota, ordinary spawning stops and a 1.5-second boss warning
    identifies a reachable arrival anchor at least 1200 pixels from the player
    when the field permits it. Boss creation and boss-defeat completion reject
@@ -328,7 +337,9 @@ five-stage run.
 | 4 | 250 | 1026 | Switchyard Behemoth |
 | 5 | 291 | 1260 | Crown Engine |
 
-No map-spawned stationary enemies are added per stage. Ordinary hostile projectiles
+The reinforcement facility is the only map-spawned stationary hostile facility;
+it is managed outside the enemy actor store and appears as a dedicated minimap
+objective. Ordinary hostile projectiles
 stop at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
 health, damage, and movement rise only on a shallow stage curve; boss behavior
 changes through authored patterns rather than unchecked stat inflation. Each
@@ -349,7 +360,8 @@ hint appears once and the same hint cannot repeat within two seconds.
 ### Items, experience, and upgrades
 
 - Enemy defeats leave collectible geometric experience shards. Experience is
-  granted only when a shard is collected; summons grant none.
+  granted only when a shard is collected; summoned enemies grant the normal XP
+  for their health class. Boss objective pylons grant none.
 - Exactly two field item behaviors exist: repair restores hull and experience
   recall pulls all live shards toward the player. Breakable crates contain one
   of those two items. Recall retargets the ship's current position every physics
@@ -371,10 +383,11 @@ hint appears once and the same hint cannot repeat within two seconds.
 - `Movement Speed`, `Pickup Radius`, and `Hull Integrity` are the complete
   Chassis & Support category. Pickup Radius preserves the former Pickup Magnet
   card's three-level collection effect.
-- Thermal Burn, Bio Toxin, and Cryo Slow are independent complete packages and may all
-  coexist. Burn, poison, and chill accumulate bounded stacks rather than
-  replacing or consuming one another. World arcs and Korean/English target text
-  expose active stack counts. There are no intermediate element branch cards.
+- Thermal Burn, Bio Toxin, and Cryo Slow are mutually exclusive complete packages.
+  The first selected root locks the other two out of future offers, and only that
+  root's later levels remain eligible. Its affinity changes player-primary projectile
+  color. The selected condition accumulates bounded stacks and Korean/English
+  target text exposes its count. There are no intermediate element branch cards.
 - **Secondary Weapons** is the umbrella category for four automatic weapon
   types. **Seeker** is its always-equipped built-in subtype; up to two of the
   other three optional subtypes may be active,
@@ -403,21 +416,23 @@ hint appears once and the same hint cannot repeat within two seconds.
   manual aim remains independent through cursor, muzzle, projectile, and hit
   cues. Dash feedback uses a directional afterimage and rear-anchor flare,
   never a danger ring or radial burst.
-- The transient effect buffer contains only dash afterimage, EMP charge and
-  release, and exceptional reduced-boss-damage text. Attack footprints,
+- The transient effect buffer contains only dash afterimage and EMP charge/release.
+  Floating damage numbers and small burn/poison/chill actor effects are not rendered. Attack footprints,
   projectiles, hits, arrivals, deaths, pickups, and persistent states render
   from their gameplay, actor, world, HUD, or audio owners without cosmetic
   event objects.
-- The live HUD prioritizes hull/experience, stage quota, dash, EMP, active
-  secondary families, minimap, boss health, target state, and exceptional timed
+- The live HUD prioritizes hull/experience, stage quota, EMP, minimap, boss health,
+  target state, and exceptional timed
   effects. It uses four restrained zones: top-left hull/experience, top-center
   objective and conditional boss state, top-right minimap and conditional
-  target, and one compact bottom-center action strip. No ornamental full-width
-  dock covers the field.
+  target, and one enlarged round panel-free bottom-center EMP indicator. It shows
+  cooldown and enabled/disabled state; dash and secondary slots are omitted. No
+  ornamental full-width dock covers the field.
 - The minimap owns general enemy presence. The threat radar is limited to an
   unseen committed projectile attack that has no world cue yet, the active boss
   objective, and boss arrival. A single attack never appears as both a world
   route and a radar contact.
+  An active reinforcement facility always uses its dedicated two-tone diamond marker.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, bosses, and field objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered
@@ -437,24 +452,27 @@ hint appears once and the same hint cannot repeat within two seconds.
   Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
-- One upgrade offer contains exactly three unique compatible card IDs. The
+- One upgrade offer contains exactly three unique compatible card IDs while at
+  least three legal IDs remain. The
   deterministic first pass prefers distinct categories, then fills from the
   same legal pool; it never duplicates or fabricates a fallback. Each newly opened reward
   transaction advances a run-scoped constrained draw, while the cards remain
   frozen for that transaction until the player selects one and confirms Equip;
   UI refreshes never reroll an open offer. The runtime rejects an unoffered,
   stale, or double-submitted ID without mutating the build. An opened reward
-  transaction has no Leave, Exit, Skip, or decline action.
+  transaction has no Leave, Exit, Skip, or decline action. If progression exhausts
+  the catalog below three legal IDs, the reward resolves without opening the modal;
+  this recovery path cannot block Stage 5 completion.
 - The upgrade modal starts directly with the three cards: it has no separate
   kicker, screen title, or instruction header. Every card shows its real current
   and next level; cards backed by numeric stat modifiers also show the real
   current-to-next stat value.
-- Each card follows one fixed information order: category, upgrade name, large
-  semantic artwork, `Lv.current → next`, up to two real current-to-next values,
-  then a concise description. Behavior cards use localized “New behavior” for
-  their first level and “Behavior upgrade” for later levels rather than
-  fabricated numbers. The card uses one shared artwork identity
-  per mechanic group; UI code does not draw upgrade-specific glyph geometry.
+- Each card follows one centered vertical information order: category, upgrade
+  name, large semantic artwork, `Lv.current → next`, then up to two real
+  current-to-next values. Visible descriptions and change-kind text are omitted.
+  A first acquisition uses one small shared code-native unlock diamond; later
+  levels add no change-kind label. The card uses one shared artwork identity per
+  mechanic group; UI code does not draw mechanic-specific glyph geometry.
 - Upgrade cards never scroll independently. At 200% text scale only, the offer
   body may provide one outer vertical scroll while all three cards remain
   non-scrolling and the Equip action remains fixed.
@@ -513,8 +531,8 @@ hint appears once and the same hint cannot repeat within two seconds.
   Pickup Magnet card's three values, the four secondary weapon types load, no more than three are active,
   and their bounded simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
-  default-inner-wall collision, explicit wall-piercing, projectile-role share,
-  status-stack, element coexistence, and XP-cadence contracts pass focused
+  default-inner-wall collision, explicit wall-piercing, separate projectile roles,
+  status-stack, element exclusivity, and XP-cadence contracts pass focused
   tests.
 - Held primary fire uses one uniform shot contract, reaches the complete
   unobstructed visible field, hits the enlarged visible enemy target through

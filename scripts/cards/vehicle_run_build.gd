@@ -1,6 +1,10 @@
 class_name VehicleRunBuild
 extends RefCounted
 
+const ELEMENT_UPGRADE_IDS: Array[StringName] = [
+	&"thermal_burn", &"bio_toxin", &"cryo_slow",
+]
+
 var catalog: VehicleUpgradeCatalog
 var levels: Dictionary = {}
 
@@ -38,6 +42,13 @@ func active_optional_secondaries() -> int:
 		):
 			count += 1
 	return count
+
+
+func active_element_id() -> StringName:
+	for upgrade_id in ELEMENT_UPGRADE_IDS:
+		if has(upgrade_id):
+			return upgrade_id
+	return &""
 
 
 func stat(stat_id: StringName, base_value: float) -> float:

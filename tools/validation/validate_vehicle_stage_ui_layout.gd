@@ -63,11 +63,11 @@ func _initialize() -> void:
 		)
 		var action_rail_size := Vector2(contract["action_rail_size"])
 		var action_rail_position := Vector2(contract["action_rail_position"])
-		_expect(action_rail_size == Vector2(168.0, 60.0), "action rail contains three 44 px targets plus shared surface margins at %d" % width)
+		_expect(action_rail_size == Vector2(88.0, 88.0), "EMP uses one enlarged round indicator at %d" % width)
 		_expect(
 			is_equal_approx(action_rail_position.x, (width - action_rail_size.x) * 0.5)
-				and is_equal_approx(action_rail_position.y, width * 9.0 / 16.0 - 80.0),
-			"action rail stays centered at the bottom at %d" % width
+				and is_equal_approx(action_rail_position.y, width * 9.0 / 16.0 - 108.0),
+			"EMP indicator stays centered at the bottom at %d" % width
 		)
 		var health_meter := Dictionary(contract["health_meter"])
 		_expect(
@@ -80,12 +80,12 @@ func _initialize() -> void:
 			"health and XP meters use complete code-native geometry at %d" % width
 		)
 		_expect(
-			int(contract["zone_surface_count"]) == 4
+			int(contract["zone_surface_count"]) == 3
 				and Array(contract["zone_surface_variations"]) == [
-					&"HudSurface", &"HudSurface", &"HudSurface", &"HudSurface",
+					&"HudSurface", &"HudSurface", &"HudSurface",
 				]
 				and StringName(contract["toast_surface_variation"]) == &"ToastSurface",
-			"HUD uses four shared zones and one shared toast at %d" % width
+			"HUD uses three backed zones, one panel-free EMP indicator, and one toast at %d" % width
 		)
 		_expect(
 			not bool(contract["conditional_clusters_have_backing"])
@@ -95,9 +95,13 @@ func _initialize() -> void:
 			"boss and target reuse their owning zones without raster or nested backing at %d" % width
 		)
 		_expect(bool(contract["action_rail_icon_only"]), "action rail contains icons only at %d" % width)
-		_expect(int(contract["action_slot_count"]) == 3, "action rail contains three auxiliary actions at %d" % width)
+		_expect(
+			int(contract["action_slot_count"]) == 1
+				and bool(contract["action_rail_panel_free"]),
+			"bottom HUD contains only one panel-free EMP action at %d" % width
+		)
 		_expect(not bool(contract["shows_primary_slot"]), "primary fire is omitted from the action rail at %d" % width)
-		_expect(Vector2(contract["secondary_slot_size"]) == Vector2(44.0, 44.0), "action icons remain readable at %d" % width)
+		_expect(Vector2(contract["secondary_slot_size"]) == Vector2.ZERO, "dash and secondary slots are absent at %d" % width)
 		for status_name in Dictionary(contract["status_font_sizes"]):
 			_expect(
 				int(contract["status_font_sizes"][status_name]) >= 14,
@@ -172,7 +176,7 @@ func _initialize() -> void:
 						"category":13,
 						"level":15,
 						"title":22,
-						"summary":14,
+						"summary":0,
 					}
 					if width < 1100.0
 					else (
@@ -180,14 +184,14 @@ func _initialize() -> void:
 							"category":16,
 							"level":18,
 							"title":28,
-							"summary":16,
+							"summary":0,
 						}
 						if width < 1600.0
 						else {
 							"category":18,
 							"level":18,
 							"title":32,
-							"summary":18,
+							"summary":0,
 						}
 					)
 				),
@@ -206,9 +210,15 @@ func _initialize() -> void:
 			)
 			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
 			_expect(
-				bool(card["dossier_split"])
+				not bool(card["dossier_split"])
+					and bool(card["vertical_dossier"])
 					and int(card["body_divider_count"]) == 1,
-				"upgrade card uses one split dossier and one body divider"
+				"upgrade card uses one centered vertical dossier and one body divider"
+			)
+			_expect(
+				not bool(card["footer_visible"])
+					and not bool(card["description_in_comparison"]),
+				"upgrade card keeps description prose out of the visible layout"
 			)
 			_expect(
 				bool(card["level_visible"])
@@ -358,12 +368,8 @@ func _initialize() -> void:
 		var minimap_size := Vector2(contract["minimap_size"])
 		_expect(minimap_size.x >= 160.0 and minimap_size.y >= 98.0, "minimap keeps tactical area at %d" % width)
 	ui.update_hud({
-		"dash_available":false,
-		"dash_ratio":0.75,
-		"seeker_available":false,
-		"seeker_ratio":0.5,
 		"skill_available":false,
-		"skill_ratio":1.0,
+		"skill_ratio":0.5,
 	})
 	var cooldown_contract := ui.debug_ui_contract(1280.0)
 	var cooldown_glyph_ids: Array[StringName] = []
@@ -391,14 +397,10 @@ func _initialize() -> void:
 			"action identity uses a complete shared glyph recipe"
 		)
 	_expect(
-		cooldown_glyph_ids == [&"seeker", &"dash", &"emp"],
-		"action rail keeps seeker, dash, and EMP in their authored order"
+		cooldown_glyph_ids == [&"emp"],
+		"bottom indicator exposes only EMP"
 	)
 	ui.update_hud({
-		"dash_available":true,
-		"dash_ratio":0.0,
-		"seeker_available":true,
-		"seeker_ratio":0.0,
 		"skill_available":true,
 		"skill_ratio":0.0,
 	})
@@ -411,7 +413,7 @@ func _initialize() -> void:
 				and not bool(slot["semantic_icon_image_retained"])
 				and bool(slot["code_native_glyph"])
 				and not bool(slot["semantic_texture"])
-				and bool(slot["available_has_structural_rail"])
+				and bool(slot["available_has_structural_ring"])
 				and not bool(slot["disabled_has_structural_slash"])
 				and not bool(slot["interior_filled"]),
 			"ready action slots use shared code-native glyphs and state structure"
@@ -431,6 +433,7 @@ func _initialize() -> void:
 			{"kind":&"item", "position":Vector2(2300.0, 1000.0), "discovered":true},
 			{"kind":&"enemy", "position":Vector2(2800.0, 1200.0), "discovered":true},
 			{"kind":&"boss", "position":Vector2(3300.0, 900.0), "discovered":true},
+			{"kind":&"facility", "position":Vector2(3700.0, 1400.0), "discovered":true},
 		],
 	}, Vector2(176.0, 108.0))
 	_expect(tactical_mesh != null, "tactical minimap compiles a dynamic marker mesh")
@@ -440,8 +443,8 @@ func _initialize() -> void:
 	)
 	var minimap_palette := MinimapMeshBuilder.dynamic_colors()
 	_expect(
-		UiGlyphCatalog.minimap_ids() == [&"player", &"item", &"enemy", &"boss"],
-		"minimap exposes exactly four semantic marker roles"
+		UiGlyphCatalog.minimap_ids() == [&"player", &"item", &"enemy", &"boss", &"facility"],
+		"minimap exposes five semantic marker roles including the reinforcement facility"
 	)
 	var retained_snapshot := {
 		"cols":13,
@@ -454,6 +457,7 @@ func _initialize() -> void:
 			{"kind":&"item", "position":Vector2(1800.0, 900.0), "discovered":true},
 			{"kind":&"enemy", "position":Vector2(2600.0, 900.0), "discovered":true},
 			{"kind":&"boss", "position":Vector2(3400.0, 900.0), "discovered":true},
+			{"kind":&"facility", "position":Vector2(4000.0, 1200.0), "discovered":true},
 		],
 	}
 	var retained_map := RetainedMinimapMesh.new(Vector2(176.0, 108.0))
@@ -475,7 +479,8 @@ func _initialize() -> void:
 	_expect(
 		int(cleared_counts.get(Art.DANGER.to_rgba32(), 0)) == 0
 			and int(cleared_counts.get(Art.SUPPORT.to_rgba32(), 0)) == 0
-			and int(cleared_counts.get(Art.BOSS_COMMAND.to_rgba32(), 0)) == 0,
+			and int(cleared_counts.get(Art.BOSS_COMMAND.to_rgba32(), 0)) == 0
+			and int(cleared_counts.get(Art.MUSTARD_DARK.to_rgba32(), 0)) == 0,
 		"retained minimap clears channels that leave the snapshot"
 	)
 	var pressure_markers: Array[Dictionary] = []

@@ -89,6 +89,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_build_state_evidence()
 		&"field_items":
 			await _capture_field_item_evidence()
+		&"reinforcement_facility":
+			await _capture_reinforcement_facility_evidence()
 		&"level_up":
 			await _capture_level_up_evidence()
 		&"boss_preview":
@@ -474,6 +476,21 @@ func _capture_field_item_evidence() -> void:
 	_run.experience_runtime.spawn_shard(_run.player_position + Vector2(245.0, 150.0), 18)
 	await _settle_capture()
 	_save_capture("05-two-field-items.png")
+
+
+func _capture_reinforcement_facility_evidence() -> void:
+	prepare_stage(0)
+	_run._clear_enemies()
+	_run.crates.clear()
+	_run.pickups.clear()
+	_run.reinforcement_facility_runtime.configure(
+		0, _run.player_position + Vector2(360.0, 0.0)
+	)
+	_run.reinforcement_facility_runtime.activate_if_ready(35, 100)
+	_run.reinforcement_facility_runtime.receive_damage(72.0, &"player", &"direct")
+	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
+	await _settle_capture()
+	_save_capture("05b-reinforcement-facility.png")
 
 
 func _capture_level_up_evidence() -> void:

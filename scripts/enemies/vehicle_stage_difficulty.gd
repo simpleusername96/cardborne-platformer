@@ -7,6 +7,7 @@ extends RefCounted
 const HEALTH := [1.0, 1.04, 1.08, 1.12, 1.16]
 const DAMAGE := [1.0, 1.03, 1.06, 1.09, 1.12]
 const SPEED := [1.0, 1.01, 1.02, 1.03, 1.04]
+const ORDINARY_HEALTH_MULTIPLIER := 1.30
 
 
 static func multipliers(stage_index: int) -> Dictionary:
@@ -20,4 +21,9 @@ static func boss_health(stage_index: int) -> float:
 
 
 static func debug_contract() -> Dictionary:
-	return {"health":HEALTH.duplicate(), "damage":DAMAGE.duplicate(), "speed":SPEED.duplicate()}
+	return {
+		"health":HEALTH.duplicate(),
+		"damage":DAMAGE.duplicate(),
+		"speed":SPEED.duplicate(),
+		"ordinary_health_multiplier":ORDINARY_HEALTH_MULTIPLIER,
+	}

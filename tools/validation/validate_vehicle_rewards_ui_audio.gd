@@ -138,7 +138,9 @@ func _run() -> void:
 			and int(card["effect_rows"]) == 1
 			and bool(card["level_visible"])
 			and int(card["value_rows"]) >= 2
-			and bool(card["dossier_split"])
+			and not bool(card["dossier_split"])
+			and bool(card["vertical_dossier"])
+			and not bool(card["footer_visible"])
 			and int(card["body_divider_count"]) == 1
 			and int(card["pip_slots"]) == 0
 			and int(card["stage_pip_count"]) == 0
@@ -193,7 +195,12 @@ func _run() -> void:
 	var stage_ui: CanvasLayer = stage.get("_ui")
 	stage_ui.call("show_deployment", &"pulse_cannon")
 	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)
-	_expect(Vector2(ui_contract["action_rail_size"]) == Vector2(168.0, 60.0), "action rail contains three 44 px actions inside one shared bottom-center surface")
+	_expect(
+		Vector2(ui_contract["action_rail_size"]) == Vector2(88.0, 88.0)
+			and int(ui_contract["action_slot_count"]) == 1
+			and bool(ui_contract["action_rail_panel_free"]),
+		"bottom HUD uses one enlarged panel-free EMP indicator"
+	)
 	_expect(Vector2(ui_contract["health_cluster_size"]) == Vector2(216.0, 74.0), "health and XP share the readable hull cluster")
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
 	_expect(not bool(ui_contract["deployment_has_difficulty_ui"]), "deployment exposes no difficulty choice")

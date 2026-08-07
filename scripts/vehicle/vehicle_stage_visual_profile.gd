@@ -61,15 +61,15 @@ const BORDER_WIDTH := 1
 const FOCUS_WIDTH := 2
 const SELECTED_RAIL_WIDTH := 3
 
-const PLAYER_VISUAL_RADIUS := 50.0
+const PLAYER_VISUAL_RADIUS := 35.0
 const ORDINARY_ENEMY_RADIUS := 44.0
 const INSTALLATION_RADIUS := 62.0
 const STAGE_BOSS_RADIUS := 146.0
 const PICKUP_PLINTH_RADIUS := 42.0
 const EXPERIENCE_RADII := {
-	&"small":24.0,
-	&"medium":28.0,
-	&"large":33.0,
+	&"small":17.0,
+	&"medium":20.0,
+	&"large":23.0,
 }
 ## Visual envelopes are intentionally larger than collision truth. They are
 ## presentation-only and keep the shared teardrop readable at live speed.
@@ -77,7 +77,10 @@ const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 3.85
 const PLAYER_PRIMARY_PROJECTILE_SCALE := 4.375
 const PLAYER_SEEKER_PROJECTILE_SCALE := 5.0
 const PLAYER_OPENING_BREACH_PROJECTILE_SCALE := 4.55
-const PLAYER_DROP_MINE_HALF_SIZE := 22.0
+const PROJECTILE_LENGTH_FACTOR := 0.70
+const PROJECTILE_THICKNESS_FACTOR := 0.50
+const PLAYER_DROP_MINE_HALF_SIZE := 44.0
+const PLAYER_ORBIT_BLADE_HALF_SIZE := 38.0
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
 const COVER_EDGE_OFFSET := Vector2(14.0, 18.0)
 const WALL_FILL := STRUCTURE_BASE
@@ -206,8 +209,8 @@ static func validate_contract() -> PackedStringArray:
 	for affinity in [&"kinetic", &"thermal", &"toxin", &"cryo", &"arc", &"hybrid"]:
 		if attack_color(affinity).a < 1.0:
 			errors.append("attack affinity color must remain opaque: %s" % affinity)
-	if not is_equal_approx(PLAYER_VISUAL_RADIUS, 50.0):
-		errors.append("player visual radius must remain 50 px")
+	if not is_equal_approx(PLAYER_VISUAL_RADIUS, 35.0):
+		errors.append("player visual radius must remain 35 px")
 	if not is_equal_approx(ORDINARY_ENEMY_RADIUS, 44.0):
 		errors.append("ordinary enemy visual radius must remain 44 px")
 	if not is_equal_approx(INSTALLATION_RADIUS, 62.0):
@@ -216,8 +219,8 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("pickup plinth radius must remain 42 px")
 	if not is_equal_approx(STAGE_BOSS_RADIUS, 146.0):
 		errors.append("stage boss visual radius must remain 146 px")
-	if EXPERIENCE_RADII != {&"small":24.0, &"medium":28.0, &"large":33.0}:
-		errors.append("experience visual radii must remain 24/28/33 px")
+	if EXPERIENCE_RADII != {&"small":17.0, &"medium":20.0, &"large":23.0}:
+		errors.append("experience visual radii must remain 17/20/23 px")
 	if (
 		MAP_SURFACE_FILL == MAP_OUTER_WALL_FILL
 		or MAP_SURFACE_FILL == MAP_INNER_WALL_FILL
@@ -239,6 +242,12 @@ static func validate_contract() -> PackedStringArray:
 		errors.append("player seeker projectile visual must remain 5x collision radius")
 	if not is_equal_approx(PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 4.55):
 		errors.append("opening breach projectile visual must remain 4.55x collision radius")
-	if not is_equal_approx(PLAYER_DROP_MINE_HALF_SIZE, 22.0):
-		errors.append("player drop-mine visual half-size must remain 22 world units")
+	if not is_equal_approx(PROJECTILE_LENGTH_FACTOR, 0.70):
+		errors.append("projectile visual length must remain at 70 percent")
+	if not is_equal_approx(PROJECTILE_THICKNESS_FACTOR, 0.50):
+		errors.append("projectile visual thickness must remain at 50 percent")
+	if not is_equal_approx(PLAYER_DROP_MINE_HALF_SIZE, 44.0):
+		errors.append("player drop-mine visual half-size must remain 44 world units")
+	if not is_equal_approx(PLAYER_ORBIT_BLADE_HALF_SIZE, 38.0):
+		errors.append("player orbit-blade visual half-size must remain 38 world units")
 	return errors

@@ -206,12 +206,12 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | --- | --- | --- |
 | gameplay cue catalog | reusable authored cue texture, pivot, and stretch/tint contract | gameplay rule, collision, live dimension |
 | actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
-| projectile catalog | one authored energy-teardrop master, pivot, and collision-normalized core | damage, range, hit rule, faction/affinity tint, and scale |
+| projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored pickup, shard, and crate visual ID plus value-scale mapping | spawn, value, collection |
-| effect catalog | four buffered transients only: dash afterimage, live EMP charge radius, authored EMP release, and reduced-boss-damage text | timer, damage, protection rule, direct actor/HUD/audio feedback |
-| world catalog | authored hazard, Transit Gate, Mystery Device, and state descriptor | topology, collision, exposure, health, outcome |
+| effect catalog | three buffered transients only: dash afterimage, live EMP charge radius, and authored EMP release | timer, damage, protection rule, direct actor/HUD/audio feedback |
+| world catalog | authored hazard, Transit Gate, Mystery Device, reinforcement facility, and state descriptor | topology, collision, exposure, health, spawn cadence, outcome |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
-| defense catalog | shared authored support-ring image, actor tint, and localized status text recipe | protection, damage, slow, stack, timer |
+| defense catalog | shared authored support-ring image and localized status text recipe | protection, damage, slow, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
 | semantic asset provider | approved persistent gameplay raster texture, including upgrade content art, pivot, and attachment | collision, behavior, map topology, live descriptor |
 
@@ -227,8 +227,9 @@ collision.
 
 #### Media ownership boundary
 
-- player, ordinary enemy, boss, secondary body, shared projectile master,
-  pickup, reward crate, Transit Gate, hazard ground, Mystery Device, common boss
+- player, ordinary enemy, boss, secondary body, three projectile roles,
+  pickup, reward crate, Transit Gate, hazard ground, Mystery Device, reinforcement
+  facility, common boss
   node처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된 authored
   PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와 state
   선택만 소유한다. field topology와 정확히 같은 surface/outer-wall/inner-wall
@@ -241,15 +242,19 @@ collision.
   Combat cues, target brackets, telegraph boundaries, and beam/radius corridor fixed
   visual identities use shared authored PNGs; runtime owns live position, length, width,
   radius, rotation, tint, alpha, and readiness.
-- A projectile is an independent world object, but its visual family is not subdivided.
-  Every player/hostile projectile shares one tailless energy-teardrop master PNG;
-  runtime applies facing, scale, and faction/affinity tint.
+- A projectile is an independent world object. Player primary, built-in Seeker,
+  and hostile non-beam shots have separate authored PNG identities. The Seeker
+  image is exclusive to homing Seeker shots and the hostile bolt is not reused by
+  player weapons. Runtime applies facing, the reduced presentation scale, and
+  selected-element tint to player-primary shots.
 - barrier, ion, shield source와 burn/poison/chill은 별도 raster asset을 갖지
-  않는다. 보호와 범위는 shared authored ring과 runtime tint/scale로, 지속 상태는 actor tint와
-  localized target-status text로 전달한다. cosmetic emitter, plate, orbit icon은
+  않는다. 보호와 범위는 shared authored ring과 runtime tint/scale로 전달한다.
+  작은 속성 actor effect와 damage number는 표시하지 않고, 필요한 지속 상태는
+  localized target-status text로만 전달한다. cosmetic emitter, plate, orbit icon은
   gameplay truth가 아니므로 만들지 않는다.
 - 경험치 pickup의 small/medium/large는 하나의 authored XP master PNG를
-  scale/value로 표현한다. reward crate, repair pickup과 experience recall은
+  각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
+  크기에서 약 30% 줄인 값이다. reward crate, repair pickup과 experience recall은
   gameplay 역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
 - toxic bog와 lava pool은 같은 hazard-ground footprint family다. 각각 toxin과
   thermal 색을 넓은 바닥 면으로 사용하며 얇은 curtain, node, pylon 또는 벽처럼
@@ -294,12 +299,14 @@ collision.
 | 위험 지대 | 넓고 낮은 swamp/lava ground 면; exact effect rect를 채우며 벽·curtain·작은 node처럼 보이지 않음 | hazard exposure runtime |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
 | 미확인 장치 | 상자보다 큰 neutral mechanical body; 파괴 전 결과를 숨기고 파괴 후 resolved state만 표시 | device health와 hidden outcome |
+| 증원 조립소 | 넓은 적대 시설 body와 상시 체력 표시; 일반 적과 다른 미니맵 표식 | 별도 facility health, 가동 임계점, 소환 주기와 상한 |
 | 보상 상자 | amber body, lock seam과 파손 가능한 contour | crate health와 drop |
 | 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
 
-별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad,
-Breakable Bulkhead와 map-spawned stationary threat는 현재 product category가
-아니다. 내부 구조벽·위험 지대·게이트·미확인 장치·보상 상자·픽업을 서로
+별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad와
+Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 승인된
+별도 stationary facility category다. 내부 구조벽·위험 지대·게이트·미확인
+장치·증원 조립소·보상 상자·픽업을 서로
 바꿔 부르거나 같은 silhouette로 합치지 않는다.
 
 ### World
@@ -326,6 +333,9 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
 - Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
   hazard는 damage ground, Mystery Device는 destructible interaction이므로 세
   silhouette를 공유하지 않는다.
+- reinforcement facility는 enemy actor catalog를 재사용하지 않는 완성된
+  `256×256` authored body다. 가동 중에만 world에 나타나고, 시설 체력 bar와
+  two-tone diamond minimap marker가 사용자의 파괴 목표를 전달한다.
 - 상자, loose pickup, hazard와 Mystery Device는 넓은 role-color 면과 dark contour를
   사용해 서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
   표시하지 않는다.
@@ -337,6 +347,8 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
 - player는 이동 방향을 보여주는 하나의 craft body와 independent manual-aim
   cue를 분리한다. 고정 engine/weapon housing은 craft body geometry에 포함하며
   별도 authored engine 또는 aim-mount texture를 사용하지 않는다.
+- player craft presentation radius는 `35`이며 collision radius `24`와 분리한다.
+  이는 이전 표시 크기에서 30% 줄인 값이다.
 - craft body는 hull transform만 따르고 aim input으로 회전하지 않는다. cursor,
   muzzle origin/flash, projectile와 hit feedback은 aim direction을 따른다.
   idle과 일반 이동에는 flame을 표시하지 않고 dash 동안에만 rear anchor에서
@@ -350,13 +362,13 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
   effect event로 복제하지 않는다.
 - ordinary enemy role은 외곽선과 negative space로 먼저 구분한다. command와
   boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
-- 모든 비-beam projectile은 오른쪽을 향한 하나의 완성된 energy-teardrop PNG를
-  공유한다. 불투명 core는 collision boundary와 일치하며 tail, rail, bead,
-  detached part 또는 별도 조립 파츠를 갖지 않는다.
-- runtime은 같은 master의 rotation, scale, faction/affinity tint로 owner와
-  필요한 gameplay 차이를 전달한다. ordinary/elite/boss tier나 개별 attack은
-  별도 projectile raster identity를 만들지 않으며 cadence, speed, homing,
-  collision과 damage 차이는 계속 gameplay code가 소유한다.
+- 비-beam projectile은 player primary energy teardrop, built-in Seeker, hostile
+  barbed bolt 세 identity를 사용한다. 세 identity는 서로 재사용하지 않으며,
+  불투명 core와 authored contour가 small runtime scale에서도 역할을 구분한다.
+- 모든 기체 탄환의 presentation length는 이전 기준의 `0.70`, thickness는 `0.50`을
+  적용한다. 이 transform은 collision truth를 바꾸지 않는다. player primary는
+  선택한 단일 element affinity tint를 사용하고 Seeker와 hostile bolt는 authored
+  identity를 유지한다. cadence, speed, homing, collision과 damage는 gameplay code가 소유한다.
 - hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
   않는 persistent condition을 약속하지 않는다. burn/poison/chill은 별도
   projectile badge나 orbit icon 없이 실제 actor state feedback으로만 표시한다.
@@ -364,13 +376,13 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
   projectile만 표시하고 예측 경로를 그리지 않는다. 화면 밖 발사원의 short
   lead가 현재 viewport에 들어올 때만 최대 `0.4 s` 경로를 표시하며, 이미
   생성된 화면 밖 hostile projectile도 같은 진입 조건과 `0.36 s` 반응 구간만
-  표시한다. full committed path는 beam에만 사용하고 charge는 locked
-  endpoint capsule을 사용한다.
+  표시한다. full committed path는 beam에만 사용하고 charge는 locked endpoint
+  cap만 사용한다. charge 이동 경로의 side boundary는 표시하지 않는다.
 - beam은 gameplay corridor가 길이와 폭을 소유하고 shared authored beam-strip
   PNG를 그 live rectangle에 stretch한다. projectile PNG를 corridor 길이로
   늘이지 않으며, startup/end contact 같은 작은 cosmetic frame은 만들지 않는다.
-- telegraph는 gameplay이 제공한 exact live geometry를 사용한다. area는
-  outer boundary 한 개, charge는 두 side boundary와 endpoint cap, beam은 두
+- telegraph는 gameplay이 제공한 exact live geometry를 사용한다. hostile area는
+  affinity와 무관한 danger outer boundary 한 개, charge는 endpoint cap, beam은 두
   corridor boundary와 endpoint cap만 유지한다. affinity별 inner ring, diamond,
   center line, tick bar와 commit marker는 만들지 않는다. readiness는
   단조롭게 증가하며 warning이 뜬 뒤 origin, direction과 target을 장식
@@ -449,13 +461,11 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
 - upgrade card는 compact에서 `280×378`, gap `12`, standard에서 `360×456`,
   gap `16`, large에서 `420×480`, gap `24`를 사용한다. 세 카드 container는
   사용 가능한 공간에 맞춰 확장하며 standard에서 좁은 352px 카드를 유지하지
-  않는다. 순서는 family, 큰 좌정렬 title, split dossier, description footer다.
-  dossier uses compact `88×88`, standard `112×112`, and large `128×128` artwork
-  on the left, with `Lv.<current> → <next>` and at most two effect rows on the right.
-  두며 하나의 vertical divider만 사용한다. 수치가 없는 behavior card는
-  description을 오른쪽 comparison lane에 배치해 빈 column을 만들지 않는다.
-  footer는 description과 별도 behavior 문장이 실제로 있을 때만 나타난다.
-  title 위 image, icon, badge와 level text를 반복하는 단계 pip는 사용하지
+  않는다. 순서는 centered family, title, artwork, level, 실제 effect row의
+  vertical stack이다. dossier uses compact `88×88`, standard `112×112`, and large
+  `128×128` centered artwork. 설명, change-kind 문장, description footer와 split
+  column은 표시하지 않는다. 첫 획득만 작은 code-native unlock diamond로 표시한다.
+  title 위 반복 image, badge와 level text를 반복하는 단계 pip는 사용하지
   않는다. Seeker와 선택형 secondary upgrade는 같은 `보조 무기 / Secondary
   Weapons` family label을 사용하고 title이 실제 subtype을 식별한다.
 - upgrade card 자체는 scroll을 사용하지 않는다. 200% text scale에서만 세
@@ -471,17 +481,18 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
 
 - top-left는 hull/experience, top-center는 objective와 conditional boss,
   top-right는 `176×108` minimap과 conditional target을 소유한다.
-- minimap의 dynamic marker는 player craft, item, enemy, boss 네 역할만 사용한다.
+- minimap의 dynamic marker는 player craft, item, enemy, boss, reinforcement facility
+  다섯 역할만 사용한다.
   item/enemy/boss subtype, elite/stationary distinction, objective state와 support
   field를 별도 marker로 표시하지 않는다. explored static geometry와 fog는 유지한다.
-- bottom-center에는 dash, 보조 무기 aggregate와 EMP의 compact 세 slot action
-  strip만 둔다. primary fire는 별도 slot을 만들지 않는다.
+- bottom-center에는 panel이 없는 확대 원형 EMP indicator 하나만 둔다. cooldown과
+  enabled/disabled 상태만 표시하며 primary, dash, secondary slot은 만들지 않는다.
 - 각 zone은 최대 한 subtle Surface만 사용한다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는
   사용하지 않는다.
 - notification과 transition은 objective 아래 한 줄 ToastSurface에 나타나며
   crosshair를 가리지 않는다.
-- HUD off-screen threat와 네 종류 minimap marker는 기존 code-native retained
+- HUD off-screen threat와 다섯 종류 minimap marker는 기존 code-native retained
   mesh를 유지한다. world-space crosshair는 shared authored PNG retained textured
   batch로 배치한다. persistent-status orbit과 support timer는 사용하지 않는다.
 
@@ -534,9 +545,9 @@ Breakable Bulkhead와 map-spawned stationary threat는 현재 product category�
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, boss-specific 방어막 장치 asset이 0이며 공통 노드의
   active/damaged/resolved 상태만 사용됨
-- exact approval 뒤 final gameplay manifest가 정확히 71 PNG를 색인함: 기존
-  67개 gameplay image에 toxic bog, lava pool, Mystery Device intact/resolved
-  네 image를 추가함
+- exact approval 뒤 final gameplay manifest가 정확히 73 PNG를 색인함. 전용
+  hostile bolt와 reinforcement facility를 포함하며, candidate/intermediate는
+  production manifest에 포함하지 않음
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함
 - deterministic layout/presentation hash equality와 walkable/void containment
@@ -562,10 +573,11 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - Hazard and Mystery Device gameplay and their four approved raster assets are
   integrated. Candidate and intermediate files stay outside the production
   manifest.
-- Every non-beam projectile resolves `projectile/energy_teardrop`; runtime owns
-  scale, rotation, faction/affinity tint, collision, speed, and homing.
-- The integrated player craft, XP master, four secondary bodies, shared
-  projectile, pickups, current approved facilities, five bosses, three shared
+- Every non-beam projectile resolves one of the three exclusive player-primary,
+  player-seeker, or hostile-bolt identities; runtime owns scale, rotation,
+  player-primary affinity tint, collision, speed, and homing.
+- The integrated player craft, XP master, four secondary bodies, three
+  projectile roles, pickups, current approved facilities, five bosses, three shared
   boss-node states, EMP image, and four map assets remain the applied set.
 - Manual aim remains readable through independent cursor, muzzle, projectile,
   and hit feedback. The player rear anchor is used only by transient dash

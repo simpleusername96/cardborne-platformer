@@ -70,6 +70,9 @@ const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd
 const MysteryDeviceRuntime = preload(
 	"res://scripts/vehicle/vehicle_mystery_device_runtime.gd"
 )
+const ReinforcementFacilityRuntime = preload(
+	"res://scripts/vehicle/vehicle_reinforcement_facility_runtime.gd"
+)
 const DamageSourceCatalog = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
 const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
@@ -165,6 +168,7 @@ var pursuit_field := PursuitField.new()
 var secondary_runtime := SecondaryRuntime.new()
 var terrain_runtime := TerrainRuntime.new()
 var mystery_device_runtime := MysteryDeviceRuntime.new()
+var reinforcement_facility_runtime := ReinforcementFacilityRuntime.new()
 var stage_telemetry := StageTelemetry.new()
 var boss_runtime := BossRuntime.new()
 var boss_exam_runtime := BossExamRuntime.new()
@@ -241,6 +245,7 @@ var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
 var _crate_hit_receipt: Dictionary = {"crate":null, "t":INF}
 var _mystery_device_hit_receipt: Dictionary = {}
+var _reinforcement_facility_hit_receipt: Dictionary = {}
 var _mystery_device_snapshot_buffer: Array[Dictionary] = []
 var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
 var _mystery_retired_event_buffer: Array[Dictionary] = []
@@ -507,6 +512,7 @@ func _physics_process(delta: float) -> void:
 			subsystem_ms["player_and_rewards"] = _elapsed_ms(section_started)
 			section_started = Time.get_ticks_usec()
 		_update_encounter(delta)
+		_update_reinforcement_facility(delta)
 		pursuit_field.update(delta, player_position)
 		if _performance_detail_sample_active:
 			subsystem_ms["encounter_and_pursuit"] = _elapsed_ms(section_started)
@@ -804,6 +810,7 @@ func _reset_run(
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
 	_populate_stage_items()
+	_configure_reinforcement_facility()
 
 	tutorial_move = false
 	tutorial_aim = false
@@ -905,6 +912,34 @@ func _populate_stage_items() -> void:
 	_rebuild_crate_collision_cells()
 
 
+func _configure_reinforcement_facility() -> void:
+	reinforcement_facility_runtime.retire()
+	var selected_position := player_position
+	var selected_distance_squared := -1.0
+	for anchor in _active_tactical_layout.ordinary_spawn_anchors:
+		var candidate := Vector2(anchor)
+		if not _reinforcement_facility_position_clear(candidate):
+			continue
+		var distance_squared := candidate.distance_squared_to(player_position)
+		if distance_squared > selected_distance_squared:
+			selected_position = candidate
+			selected_distance_squared = distance_squared
+	if selected_distance_squared < 0.0:
+		push_warning("No clear reinforcement facility anchor; using player-opposite fallback")
+		selected_position = Rules.world_rect(current_stage_id).get_center()
+	reinforcement_facility_runtime.configure(current_stage_index, selected_position)
+
+
+func _reinforcement_facility_position_clear(position: Vector2) -> bool:
+	var clearance := ReinforcementFacilityRuntime.COLLISION_RADIUS + 18.0
+	if not Rules.is_position_walkable(position, clearance, current_stage_id):
+		return false
+	for cover in _runtime_cover_rects():
+		if Rules.circle_overlaps_rect(position, clearance, cover):
+			return false
+	return _position_clear_of_stage_objects(position, clearance)
+
+
 func _make_enemy(spec: Dictionary) -> EnemyState:
 	var enemy: EnemyState = enemy_store.acquire()
 	if enemy == null:
@@ -922,7 +957,11 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	if archetype == &"stage_boss":
 		health = StageDifficulty.boss_health(current_stage_index) * float(difficulty_profile["boss_health"])
 	else:
-		health *= float(stage_curve["health"]) * float(difficulty_profile["health"])
+		health *= (
+			float(stage_curve["health"])
+			* float(difficulty_profile["health"])
+			* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
+		)
 	var position: Vector2 = spec["pos"]
 	var movement_multiplier := (
 		EncounterDirector.ENEMY_SPEED_MULTIPLIER
@@ -1079,6 +1118,39 @@ func _update_encounter(delta: float) -> void:
 		var enemy := _make_enemy(bounded_spec)
 		_apply_pending_elite(enemy)
 		_append_enemy(enemy)
+
+
+func _update_reinforcement_facility(delta: float) -> void:
+	if pending_stage_completion or stage_complete:
+		return
+	if reinforcement_facility_runtime.activate_if_ready(
+		stage_flow.defeats, stage_flow.quota
+	):
+		if is_instance_valid(_ui):
+			_ui.notify(
+				tr("NOTIFY_REINFORCEMENT_FACILITY"), 3.5, Art.MUSTARD
+			)
+		_play_sound(&"boss", 0.82)
+	var live_children := 0
+	for enemy in enemies:
+		if (
+			enemy.alive
+			and enemy.summoned
+			and enemy.carrier_id == "reinforcement_facility"
+		):
+			live_children += 1
+	var spawn_spec := reinforcement_facility_runtime.advance(
+		delta,
+		live_children,
+		encounter_runtime.available_active_slots(_active_mobile_count())
+	)
+	if spawn_spec.is_empty():
+		return
+	var bounded_spec := _bounded_spawn_spec(spawn_spec)
+	var enemy := _make_enemy(bounded_spec)
+	if not _append_enemy(enemy):
+		return
+	_play_sound(&"boss", 0.58)
 
 
 func _refresh_elite_reservations() -> void:
@@ -2434,7 +2506,10 @@ func _update_generator(enemy: EnemyState, delta: float) -> void:
 		if target == enemy:
 			continue
 		if target.pos.distance_to(enemy.pos) <= 390.0:
-			target.health = minf(target.max_health, target.health + 4.0)
+			target.health = minf(
+				target.max_health,
+				target.health + SpecialistRuntime.GENERATOR_HEAL_PER_TICK
+			)
 
 
 func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool) -> void:
@@ -3242,6 +3317,8 @@ func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: b
 
 
 func _position_clear_of_stage_objects(position: Vector2, actor_radius: float) -> bool:
+	if not reinforcement_facility_runtime.is_position_clear(position, actor_radius):
+		return false
 	if not mystery_device_runtime.is_position_clear(position, actor_radius):
 		return false
 	return _position_clear_of_crates(
@@ -3359,7 +3436,16 @@ func _update_projectile_buffer(
 				from, to, radius, _mystery_device_hit_receipt
 			)
 		)
-		if not projectile.wall_piercing:
+		var facility_hit := (
+			not hostile
+			and reinforcement_facility_runtime.first_active_segment_hit(
+				from, to, radius, _reinforcement_facility_hit_receipt
+			)
+		)
+		var facility_is_first_structure := facility_hit and _reinforcement_facility_hit_is_first(
+			from, to, radius, projectile.wall_piercing, mystery_hit
+		)
+		if not projectile.wall_piercing and not facility_is_first_structure:
 			var cover_hit := _runtime_first_cover_hit(from, to, radius)
 			var mystery_before_crate := true
 			if mystery_hit:
@@ -3402,7 +3488,7 @@ func _update_projectile_buffer(
 			if _projectile_hits_crate(projectile, from, to, not hostile):
 				_remove_projectile_at(hostile, index)
 				continue
-		elif mystery_hit:
+		elif mystery_hit and not facility_is_first_structure:
 			if _damage_mystery_device(
 				StringName(_mystery_device_hit_receipt["device_id"]),
 				projectile.structure_damage,
@@ -3439,12 +3525,22 @@ func _update_projectile_buffer(
 				projectile_radius,
 				_enemy_query_buffer,
 				_enemy_query_group_ends,
-				_enemy_query_group_exit_t
+				_enemy_query_group_exit_t,
+				float(_reinforcement_facility_hit_receipt.get("t", INF))
+					if facility_is_first_structure
+					else INF
 			)
 			if contact is bool:
 				projectile_store.remove_player_at_swap(index)
 				continue
 			var hit_enemy := contact as EnemyState
+			if hit_enemy == null and facility_is_first_structure:
+				if _damage_reinforcement_facility(
+					projectile.structure_damage, &"direct"
+				):
+					stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
+				projectile_store.remove_player_at_swap(index)
+				continue
 			if hit_enemy != null:
 				var hit_position := hit_enemy.pos
 				if _try_absorb_protective_structure(hit_enemy, projectile):
@@ -3536,7 +3632,8 @@ func _player_projectile_contact(
 	projectile_radius: float,
 	candidates: Array[EnemyState],
 	group_ends: PackedInt32Array = PackedInt32Array(),
-	group_exit_t: PackedFloat32Array = PackedFloat32Array()
+	group_exit_t: PackedFloat32Array = PackedFloat32Array(),
+	maximum_hit_t: float = INF
 ) -> Variant:
 	var best: EnemyState
 	var best_hit_t := INF
@@ -3563,7 +3660,7 @@ func _player_projectile_contact(
 					AttackContract.INTERCEPTOR_PROJECTILE_RADIUS
 						+ projectile.radius
 				)
-				if intercept_t < best_hit_t:
+				if intercept_t < best_hit_t and intercept_t < maximum_hit_t:
 					best_hit_t = intercept_t
 					best = enemy
 					best_is_intercept = true
@@ -3578,7 +3675,7 @@ func _player_projectile_contact(
 				enemy.pos,
 				target_radius + projectile_radius
 			)
-			if hit_t < best_hit_t:
+			if hit_t < best_hit_t and hit_t < maximum_hit_t:
 				best_hit_t = hit_t
 				best = enemy
 				best_is_intercept = false
@@ -3848,20 +3945,6 @@ func _damage_enemy(
 	if applied_damage <= 0.0:
 		return 0.0
 	enemy.health = health_before - applied_damage
-	if role == &"stage_boss" and boss_damage_multiplier < 1.0:
-		var impact_direction := (enemy.pos - player_position).normalized()
-		if impact_direction.is_zero_approx():
-			impact_direction = Vector2.RIGHT
-		_add_effect(
-			&"boss_core_reduced_hit",
-			enemy.pos,
-			Art.MUSTARD,
-			0.52,
-			enemy.radius,
-			impact_direction,
-			applied_damage,
-			boss_damage_multiplier
-		)
 	if player_owned and not boss_practice.active and source != "validation":
 		stage_telemetry.record_outgoing(
 			DamageSourceCatalog.outgoing_id(source),
@@ -3965,7 +4048,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	stage_telemetry.record_defeat(enemy.archetype, enemy.elite_trait)
 	var reward_source := &""
 	if role == &"stage_boss": reward_source = &"boss"
-	if not enemy.summoned and role != &"boss_pylon":
+	if role != &"boss_pylon":
 		experience_runtime.spawn_shard(enemy.pos, FieldDropRules.experience_for_enemy(enemy), reward_source)
 	if _is_countable_stage_enemy(enemy):
 		if stage_flow.record_countable_defeat():
@@ -4184,6 +4267,58 @@ func _damage_enemies_in_radius(
 			_damage_enemy(enemy, damage, source, attribute, player_owned)
 	if player_owned:
 		_damage_mystery_devices_in_radius(center, radius, damage)
+		var facility := reinforcement_facility_runtime.snapshot()
+		if (
+			bool(facility.get("visible", false))
+			and Vector2(facility["position"]).distance_to(center)
+				<= radius + ReinforcementFacilityRuntime.COLLISION_RADIUS
+		):
+			_damage_reinforcement_facility(damage, &"area")
+
+
+func _reinforcement_facility_hit_is_first(
+	from: Vector2,
+	to: Vector2,
+	radius: float,
+	wall_piercing: bool,
+	mystery_hit: bool
+) -> bool:
+	var facility_t := float(_reinforcement_facility_hit_receipt.get("t", INF))
+	if (
+		mystery_hit
+		and float(_mystery_device_hit_receipt.get("t", INF)) <= facility_t
+	):
+		return false
+	if wall_piercing:
+		return true
+	var cover_hit := _runtime_first_cover_hit(from, to, radius)
+	if bool(cover_hit.get("hit", false)) and float(cover_hit.get("t", INF)) <= facility_t:
+		return false
+	var crate_hit := _first_live_crate_hit(from, to, radius)
+	return float(crate_hit.get("t", INF)) > facility_t
+
+
+func _damage_reinforcement_facility(
+	amount: float,
+	attack_kind: StringName
+) -> bool:
+	var receipt := reinforcement_facility_runtime.receive_damage(
+		amount, &"player", attack_kind
+	)
+	if not bool(receipt.get("accepted", false)):
+		return false
+	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
+	if bool(receipt.get("destroyed", false)):
+		stats_installations += 1
+		_play_sound(&"destroy_priority", 1.0)
+		if is_instance_valid(_ui):
+			_ui.notify(
+				tr("NOTIFY_REINFORCEMENT_FACILITY_DESTROYED"),
+				2.5,
+				Art.PLAYER_REWARD
+			)
+	queue_redraw()
+	return true
 
 
 func _damage_mystery_devices_in_radius(
@@ -4319,8 +4454,6 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 	var offer_serial := reward_runtime.begin(current_stage_id, source_id)
 	if offer_serial < 0:
 		return
-	mode = RunMode.UPGRADE
-	upgrade_selection_applied = false
 	current_card_offer = _build_card_offer(source_id, offer_serial)
 	if current_card_offer.size() != 3:
 		var offer_seed := field_layout.seed if field_layout != null else run_index
@@ -4332,9 +4465,15 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 			"offer_size":current_card_offer.size(),
 			"build_levels":run_build.levels.duplicate(true),
 		}
-		push_error("Invalid vehicle upgrade offer: %s" % JSON.stringify(upgrade_offer_error))
+		push_warning(
+			"Vehicle upgrade reward resolved without a selection: %s"
+			% JSON.stringify(upgrade_offer_error)
+		)
+		_resolve_reward_transaction()
 		return
 	upgrade_offer_error.clear()
+	mode = RunMode.UPGRADE
+	upgrade_selection_applied = false
 	_ui.show_upgrade(current_card_offer)
 	_play_sound(&"card", 0.9)
 	_set_mouse_for_mode()
@@ -4953,6 +5092,7 @@ func _complete_stage() -> void:
 		return
 	pending_stage_completion = true
 	encounter_runtime.stop_spawning()
+	reinforcement_facility_runtime.retire()
 	for enemy in enemies:
 		if enemy.alive:
 			enemy.alive = false
@@ -5074,6 +5214,7 @@ func _begin_stage_transition() -> void:
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
 	_populate_stage_items()
+	_configure_reinforcement_facility()
 	boss_started = false
 	boss_exam_runtime.configure(current_stage_id)
 	boss_phase_two_announced = false
@@ -5494,6 +5635,13 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 				"position":Vector2(device["position"]),
 				"discovered":true,
 			})
+	var facility := reinforcement_facility_runtime.snapshot()
+	if bool(facility.get("visible", false)):
+		markers.append({
+			"kind":&"facility",
+			"position":Vector2(facility["position"]),
+			"discovered":true,
+		})
 	var snapshot := {
 		"cols": MINIMAP_COLS,
 		"rows": MINIMAP_ROWS,
@@ -5559,6 +5707,14 @@ func _runtime_minimap_snapshot(
 				&"item",
 				Vector2(device["position"])
 			)
+	var facility := reinforcement_facility_runtime.snapshot()
+	if bool(facility.get("visible", false)):
+		_append_runtime_minimap_marker(
+			frame_index,
+			markers,
+			&"facility",
+			Vector2(facility["position"])
+		)
 	snapshot["player"] = player_position
 	snapshot["player_facing"] = player_hull_direction
 	snapshot["world_size"] = Rules.world_rect(current_stage_id).size
@@ -5665,6 +5821,7 @@ func _fill_combat_presentation_snapshot(
 	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)
 	snapshot["mystery_devices"] = mystery_devices
 	snapshot["mystery_effects"] = mystery_effects
+	snapshot["reinforcement_facility"] = reinforcement_facility_runtime.snapshot()
 	snapshot["cursor_position"] = cursor_position
 	return snapshot
 

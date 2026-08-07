@@ -9,8 +9,6 @@ const PICKUP_TYPES: Array[StringName] = [&"repair", &"experience_recall"]
 
 
 static func experience_for_enemy(enemy: EnemyState) -> int:
-	if not enemy.carrier_id.is_empty() or enemy.summoned:
-		return 0
 	var role := enemy.role
 	if role == &"boss_pylon":
 		return 0

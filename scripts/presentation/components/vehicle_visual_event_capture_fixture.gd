@@ -14,7 +14,6 @@ const GROUPS := [
 			&"player_dash_afterimage",
 			&"player_emp_charge",
 			&"player_emp_release",
-			&"boss_core_reduced_hit",
 		],
 	},
 ]

@@ -48,6 +48,7 @@ static func dynamic_colors() -> Array[Color]:
 		Art.SUPPORT,
 		Art.DANGER,
 		Art.BOSS_COMMAND,
+		Art.MUSTARD_DARK,
 	]
 
 
@@ -131,6 +132,8 @@ static func _append_markers(
 				_append_round_marker(vertices, colors, indices, point)
 			&"boss":
 				_append_boss_marker(vertices, colors, indices, point)
+			&"facility":
+				_append_facility_marker(vertices, colors, indices, point)
 
 
 static func _append_player(
@@ -194,6 +197,24 @@ static func _append_boss_marker(
 	)
 	_append_regular_polygon(
 		vertices, colors, indices, center, 5.2, 6, 0.0, Art.BOSS_COMMAND
+	)
+
+
+static func _append_facility_marker(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	center: Vector2
+) -> void:
+	_append_regular_polygon(
+		vertices, colors, indices, center, 8.0, 4, PI * 0.25, Art.SPACE_BLACK
+	)
+	_append_regular_polygon(
+		vertices, colors, indices, center, 6.2, 4, PI * 0.25, Art.MUSTARD
+	)
+	_append_rect(
+		vertices, colors, indices, Rect2(center - Vector2(2.0, 2.0), Vector2(4.0, 4.0)),
+		Art.MUSTARD_DARK
 	)
 
 

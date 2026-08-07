@@ -29,6 +29,8 @@ func _run() -> void:
 		_check_reward_recall_gate(run)
 		run.call("_reset_run", false)
 		_check_stage_one_to_three(run)
+		run.call("_reset_run", false)
+		_check_stage_five_no_offer_completion(run)
 	root.queue_free()
 	await process_frame
 	_finish()
@@ -223,6 +225,35 @@ func _check_stage_one_to_three(run) -> void:
 	_expect(
 		int(run.terrain_runtime.hazard_runtime_snapshot()["tracked_actor_count"]) == 0,
 		"Stage 2→3 clears stage-local hazard exposure"
+	)
+
+
+func _check_stage_five_no_offer_completion(run) -> void:
+	run.current_stage_index = Catalog.STAGE_IDS.size() - 1
+	run.current_stage_id = Catalog.STAGE_IDS[run.current_stage_index]
+	run.mode = run.RunMode.PLAYING
+	run.stage_complete = false
+	run.pending_stage_completion = true
+	run.experience_recall_timer = 0.0
+	run.experience_runtime.clear_shards()
+	run.experience_runtime.pending_level_ups = 0
+	run.reward_runtime.reset_stage()
+	run.stage_flow.state = StageFlow.State.REWARDS
+	for definition in run.upgrade_catalog.all_definitions():
+		run.run_build.levels[definition.id] = definition.max_level
+	run.call("_open_upgrade_reward", &"boss")
+	_expect(
+		run.mode == run.RunMode.PLAYING
+			and run.reward_runtime.has_claimed(run.current_stage_id, &"boss")
+			and run.reward_runtime.is_idle(),
+		"an exhausted Stage 5 offer resolves without trapping the run in upgrade mode"
+	)
+	run.call("_advance_reward_queue")
+	_expect(
+		run.mode == run.RunMode.RESULT
+			and run.stage_complete
+			and run.stage_flow.state == StageFlow.State.COMPLETE,
+		"Stage 5 reaches the final result after an exhausted reward catalog"
 	)
 
 

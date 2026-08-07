@@ -25,13 +25,13 @@ const WorldCatalog = preload(
 )
 const CODE_NATIVE_UI_STATE_OWNERS := [
 	"res://scripts/ui/vehicle_gameplay_hud.gd",
+	"res://scripts/ui/vehicle_upgrade_choice_card.gd",
 ]
 
 const EXPECTED_EVENT_IDS := [
 	"player_dash_afterimage",
 	"player_emp_charge",
 	"player_emp_release",
-	"boss_core_reduced_hit",
 ]
 
 var _failures: Array[String] = []
@@ -40,8 +40,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 71,
-		"gameplay manifest declares the final 71 authored rasters"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 73,
+		"gameplay manifest declares the current 73 authored rasters"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(int(family_counts.get("upgrade", 0)) == 10, "gameplay manifest declares ten shared upgrade rasters")
@@ -49,7 +49,7 @@ func _initialize() -> void:
 	for asset_variant in Array(gameplay_manifest.get("assets", [])):
 		if StringName(Dictionary(asset_variant).get("category", &"")) == &"world":
 			world_asset_count += 1
-	_expect(world_asset_count == 17, "gameplay manifest declares seventeen world rasters")
+	_expect(world_asset_count == 18, "gameplay manifest declares eighteen world rasters")
 	_validate_active_world_catalog()
 	_expect(
 		not gameplay_manifest.has("animations"),
@@ -88,14 +88,14 @@ func _validate_active_world_catalog() -> void:
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
 	var expected := [
 		&"hazard_lava_pool", &"hazard_toxic_bog", &"mystery_device_intact",
-		&"mystery_device_resolved", &"transit_gate",
+		&"mystery_device_resolved", &"reinforcement_fabricator", &"transit_gate",
 	]
 	var matches := active_ids.size() == expected.size()
 	for expected_id in expected:
 		matches = matches and active_ids.has(expected_id)
 	_expect(
 		matches,
-		"runtime world catalog switches only the transit gate, two hazards, and mystery states"
+		"runtime world catalog switches the transit gate, hazards, mystery states, and reinforcement facility"
 	)
 
 
@@ -105,7 +105,6 @@ func _validate_event_catalog() -> void:
 		&"hull_afterimage":1,
 		&"live_emp_radius":1,
 		&"authored_emp":1,
-		&"floating_damage":1,
 	}
 	var mode_counts := {}
 	_expect(
@@ -232,7 +231,6 @@ func _validate_ui_runtime_contract() -> void:
 			)
 	for source_path in [
 		"res://scripts/ui/vehicle_modal_surface.gd",
-		"res://scripts/ui/vehicle_upgrade_choice_card.gd",
 		"res://scripts/ui/vehicle_guidebook_preview.gd",
 		"res://scripts/ui/vehicle_deployment_panel.gd",
 	]:

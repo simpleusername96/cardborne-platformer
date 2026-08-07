@@ -31,7 +31,6 @@ const PERFORMANCE_EFFECT_IDS: Array[StringName] = [
 	&"player_dash_afterimage",
 	&"player_emp_charge",
 	&"player_emp_release",
-	&"boss_core_reduced_hit",
 ]
 const MOBILE_ARCHETYPES: Array[StringName] = [
 	&"scrap_drone", &"needle_drone", &"chaser", &"shooter", &"controller",

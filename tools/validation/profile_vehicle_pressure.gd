@@ -33,7 +33,7 @@ func _profile_difficulty(difficulty: StringName) -> bool:
 	stage.call("_reset_run", false, true, false)
 	stage.mode = 1
 	stage.encounter_runtime.current_beat = 4
-	stage.call("_debug_append_packet_enemies", stage.encounter_runtime.active_cap() + 12)
+	stage.call("_debug_append_packet_enemies", 320)
 	var mobile_index := 0
 	for enemy in stage.enemies:
 		if enemy.counts_active_cap:
@@ -73,14 +73,18 @@ func _profile_difficulty(difficulty: StringName) -> bool:
 	var combined_ms := moving_ms + hud_ms + scheduler_ms
 	var cap: int = int(stage.encounter_runtime.active_cap())
 	var shard_count: int = stage.experience_runtime.shards.size()
-	var result := active_capped == cap and shard_count == 192 and int(scheduler["queued_spawns"]) > 0
+	var result := (
+		active_capped == cap
+		and shard_count == 192
+		and int(scheduler["queued_windows"]) > 0
+	)
 	print("WARNING vehicle_pressure_microbenchmark excludes rendering and complete frame orchestration")
 	print("vehicle_pressure_microbenchmark difficulty=%s active_capped=%d cap=%d shards=%d queued=%d steps=%d moving_ms=%.3f hud_ms=%.3f scheduler_ms=%.3f combined_ms=%.3f" % [
 		difficulty,
 		active_capped,
 		cap,
 		shard_count,
-		int(scheduler["queued_spawns"]),
+		int(scheduler["queued_windows"]),
 		MEASURED_STEPS,
 		moving_ms,
 		hud_ms,
@@ -110,5 +114,5 @@ func _profile_saturated_scheduler(difficulty: StringName) -> Dictionary:
 	)
 	return {
 		"step_ms": step_ms,
-		"queued_spawns": int(runtime.debug_snapshot()["queued_spawns"]),
+		"queued_windows": int(runtime.debug_snapshot()["queued_windows"]),
 	}

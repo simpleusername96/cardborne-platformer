@@ -1,30 +1,42 @@
 class_name VehicleProjectileVisualCatalog
 extends RefCounted
 
-## One authored projectile identity shared by every non-beam projectile. Runtime
-## still owns collision, damage, cadence, homing, facing, scale, and tint.
+## Separate authored identities for player primary, player seeker, and hostile
+## non-beam projectiles. Runtime still owns collision, damage, homing, scale, and tint.
 
-const SHARED_VISUAL_ID := &"energy_teardrop"
-const SHARED_ASSET_ID := &"projectile/energy_teardrop"
+const PLAYER_PRIMARY := &"player_primary"
+const PLAYER_SEEKER := &"player_seeker"
+const HOSTILE := &"hostile"
 
 const DESCRIPTORS := {
-	SHARED_VISUAL_ID: {
-		"asset": SHARED_ASSET_ID,
+	PLAYER_PRIMARY: {
+		"asset": &"projectile/energy_teardrop",
 		"shape": &"energy_teardrop",
 		"facing": &"right",
 		"collision_centered": true,
-		"tail": false,
-		"runtime_tint": true,
-		"runtime_scale": true,
+	},
+	PLAYER_SEEKER: {
+		"asset": &"secondary/seeker",
+		"shape": &"guided_forward_wedge",
+		"facing": &"right",
+		"collision_centered": true,
+	},
+	HOSTILE: {
+		"asset": &"projectile/hostile_barbed_bolt",
+		"shape": &"barbed_spearhead",
+		"facing": &"right",
+		"collision_centered": true,
 	},
 }
 
 
 static func descriptor_ids() -> Array[StringName]:
-	return [SHARED_VISUAL_ID]
+	return [PLAYER_PRIMARY, PLAYER_SEEKER, HOSTILE]
 
 
-static func descriptor(visual_id: StringName = SHARED_VISUAL_ID) -> Dictionary:
-	if visual_id != SHARED_VISUAL_ID:
-		return {}
-	return Dictionary(DESCRIPTORS[SHARED_VISUAL_ID]).duplicate(true)
+static func descriptor(visual_id: StringName) -> Dictionary:
+	return Dictionary(DESCRIPTORS.get(visual_id, {})).duplicate(true)
+
+
+static func asset_id(visual_id: StringName) -> StringName:
+	return StringName(descriptor(visual_id).get("asset", &""))

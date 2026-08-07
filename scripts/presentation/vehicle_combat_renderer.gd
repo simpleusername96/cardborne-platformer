@@ -40,14 +40,11 @@ const EXPERIENCE_CAPACITY := 192
 const BUFFER_FLOATS_PER_INSTANCE := 12
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
 const MAX_ORDINARY_HEALTH_BARS := 12
-const MAX_EXTRA_PRIORITY_MARKERS := 8
 const ENEMY_BATCH_INITIAL_CAPACITY := 64
-const PROJECTILE_BATCH_INITIAL_CAPACITY := 120
 const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
 const MYSTERY_DEVICE_CAPACITY := 3
 const MYSTERY_DEVICE_VISUAL_RADIUS := 96.0
 const SEMANTIC_TEXTURE_DRAW_CAPACITY := 512
-const FLOATING_DAMAGE_DRAW_CAPACITY := 32
 const CARDINAL_DIRECTIONS := [
 	Vector2.LEFT,
 	Vector2.RIGHT,
@@ -162,37 +159,26 @@ class SemanticTextureSpec:
 	var pivot := Vector2.ZERO
 
 
-class FloatingDamageDraw:
-	var position := Vector2.ZERO
-	var text := ""
-	var color := Color.WHITE
-
-
 var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
-var _projectile_batch: BatchHandle
+var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
 var _mystery_device_batches: Dictionary = {}
+var _reinforcement_facility_batch: BatchHandle
 var _mystery_effect_ring_batch: BatchHandle
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _player_craft_body_batch: BatchHandle
 var _last_health_bar_count := 0
-var _last_priority_marker_count := 0
 var _last_tactic_module_count := 0
 var _semantic_texture_draws: Array[SemanticTextureDraw] = []
 var _semantic_texture_draw_count := 0
 var _semantic_texture_specs: Dictionary = {}
-var _floating_damage_draws: Array[FloatingDamageDraw] = []
-var _floating_damage_draw_count := 0
 var _secondary_asset_ids: Dictionary = {}
 var _player_rear_anchor := Vector2(-0.84, 0.0)
 var _health_overlay_candidates: Array[EnemyState] = []
 var _health_overlay_scores := PackedInt64Array()
 var _health_overlay_candidate_count := 0
-var _priority_overlay_candidates: Array[EnemyState] = []
-var _priority_overlay_scores := PackedInt64Array()
-var _priority_overlay_candidate_count := 0
 
 
 func _ready() -> void:
@@ -200,12 +186,8 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	for _index in SEMANTIC_TEXTURE_DRAW_CAPACITY:
 		_semantic_texture_draws.append(SemanticTextureDraw.new())
-	for _index in FLOATING_DAMAGE_DRAW_CAPACITY:
-		_floating_damage_draws.append(FloatingDamageDraw.new())
 	_health_overlay_candidates.resize(MAX_ORDINARY_HEALTH_BARS)
 	_health_overlay_scores.resize(MAX_ORDINARY_HEALTH_BARS)
-	_priority_overlay_candidates.resize(MAX_EXTRA_PRIORITY_MARKERS)
-	_priority_overlay_scores.resize(MAX_EXTRA_PRIORITY_MARKERS)
 	_cache_catalog_asset_ids()
 	_build_batches()
 
@@ -226,7 +208,6 @@ func sync(
 	# Presentation is synchronous borrowed scratch; never retain or mutate it.
 	_reset_counts()
 	_semantic_texture_draw_count = 0
-	_floating_damage_draw_count = 0
 	if active:
 		_sync_enemies(
 			enemies, visible_world, player_position, run_time, aim_target_id
@@ -237,6 +218,7 @@ func sync(
 		_sync_effects(effects, visible_world)
 		_sync_world_overlays(presentation, visible_world)
 		_sync_mystery_devices(presentation, visible_world)
+		_sync_reinforcement_facility(presentation, visible_world)
 		_sync_mystery_effects(presentation, visible_world)
 		_sync_resolved_boss_modules(presentation, visible_world)
 	_apply_visible_counts()
@@ -246,8 +228,6 @@ func sync(
 func _draw() -> void:
 	for index in _semantic_texture_draw_count:
 		_draw_semantic_texture(_semantic_texture_draws[index])
-	for index in _floating_damage_draw_count:
-		_draw_floating_damage(_floating_damage_draws[index])
 
 
 static func player_rear_anchors(
@@ -325,11 +305,11 @@ func debug_snapshot() -> Dictionary:
 		"batch_allocations":batch_allocations,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"health_bar_count": _last_health_bar_count,
-		"priority_marker_count": _last_priority_marker_count,
+		"priority_marker_count": 0,
 		"tactic_module_count": _last_tactic_module_count,
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
 		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
-		"floating_damage_draw_count":_floating_damage_draw_count,
+		"floating_damage_draw_count":0,
 	}
 
 
@@ -371,13 +351,29 @@ func _build_batches() -> void:
 			-1,
 			true
 		)
-	_projectile_batch = _create_asset_batch(
-		"Projectile_shared_energy_teardrop",
-		ProjectileCatalog.SHARED_ASSET_ID,
-		PROJECTILE_CAPACITY + HOSTILE_PROJECTILE_CAPACITY,
+	_projectile_batches[ProjectileCatalog.PLAYER_PRIMARY] = _create_asset_batch(
+		"Projectile_player_primary",
+		ProjectileCatalog.asset_id(ProjectileCatalog.PLAYER_PRIMARY),
+		PROJECTILE_CAPACITY,
 		2,
-		&"projectile_shared_energy_teardrop",
-		PROJECTILE_BATCH_INITIAL_CAPACITY
+		&"projectile_player_primary",
+		96
+	)
+	_projectile_batches[ProjectileCatalog.PLAYER_SEEKER] = _create_asset_batch(
+		"Projectile_player_seeker",
+		ProjectileCatalog.asset_id(ProjectileCatalog.PLAYER_SEEKER),
+		PROJECTILE_CAPACITY,
+		2,
+		&"projectile_player_seeker",
+		24
+	)
+	_projectile_batches[ProjectileCatalog.HOSTILE] = _create_asset_batch(
+		"Projectile_hostile_barbed_bolt",
+		ProjectileCatalog.asset_id(ProjectileCatalog.HOSTILE),
+		HOSTILE_PROJECTILE_CAPACITY,
+		2,
+		&"projectile_hostile",
+		64
 	)
 	_experience_batch = _create_asset_batch(
 		"Experience_master",
@@ -404,6 +400,19 @@ func _build_batches() -> void:
 			).get("asset", &"")
 		),
 		MYSTERY_DEVICE_CAPACITY, 2, &"mystery_device_resolved", MYSTERY_DEVICE_CAPACITY
+	)
+	_reinforcement_facility_batch = _create_asset_batch(
+		"ReinforcementFacility",
+		StringName(
+			WorldCatalog.world_object_descriptor(
+				&"reinforcement_fabricator"
+			).get("asset", &"")
+		),
+		1,
+		2,
+		&"reinforcement_fabricator",
+		-1,
+		true
 	)
 	_mystery_effect_ring_batch = _create_asset_batch(
 		"MysteryEffect_ring",
@@ -530,7 +539,6 @@ func _sync_enemies(
 	aim_target_id: String
 ) -> void:
 	_health_overlay_candidate_count = 0
-	_priority_overlay_candidate_count = 0
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active:
 			continue
@@ -598,15 +606,6 @@ func _sync_enemies(
 				_health_overlay_candidate_count,
 				MAX_ORDINARY_HEALTH_BARS
 			)
-		if enemy.health_class == &"priority":
-			_priority_overlay_candidate_count = _offer_overlay_candidate(
-				enemy,
-				_enemy_overlay_score(enemy, player_position, aim_target_id),
-				_priority_overlay_candidates,
-				_priority_overlay_scores,
-				_priority_overlay_candidate_count,
-				MAX_EXTRA_PRIORITY_MARKERS
-			)
 		_sync_collective_tactic_module(enemy, position, radius)
 		if enemy.threat_kind == &"ranged" and enemy.phase == &"startup":
 			var attack_direction := enemy.committed_dir.normalized()
@@ -628,20 +627,9 @@ func _sync_enemies(
 			player_position,
 			enemy.id == aim_target_id
 		)
-		if enemy.id == aim_target_id:
-			_sync_target_brackets(position, radius + 16.0)
 	for index in _health_overlay_candidate_count:
 		_sync_enemy_health_bar(_health_overlay_candidates[index])
-	for index in _priority_overlay_candidate_count:
-		var enemy := _priority_overlay_candidates[index]
-		_sync_enemy_priority_marker(
-			enemy,
-			enemy.pos,
-			enemy.visual_radius,
-			true
-		)
 	_last_health_bar_count = _health_overlay_candidate_count
-	_last_priority_marker_count = _priority_overlay_candidate_count
 
 
 func _enemy_body_modulate(enemy: EnemyState) -> Color:
@@ -651,13 +639,6 @@ func _enemy_body_modulate(enemy: EnemyState) -> Color:
 		return Color(0.72, 1.0, 0.88, 1.0)
 	if enemy.guard_plate_structure > 0.0:
 		return Color(0.82, 0.90, 1.0, 1.0)
-	# Persistent conditions remain readable without orbiting raster badges.
-	if enemy.statuses.has(&"burn"):
-		return Art.THERMAL.lightened(0.24)
-	if enemy.statuses.has(&"poison"):
-		return Art.TOXIN.lightened(0.24)
-	if enemy.statuses.has(&"chill"):
-		return Art.CRYO.lightened(0.24)
 	return Color.WHITE
 
 
@@ -766,22 +747,6 @@ func _enemy_overlay_rank(enemy: EnemyState, aim_target_id: String) -> int:
 	return 4
 
 
-func _sync_enemy_priority_marker(
-	enemy: EnemyState,
-	position: Vector2,
-	radius: float,
-	show_priority_marker: bool
-) -> void:
-	if enemy.role == &"boss_pylon":
-		return
-	if show_priority_marker:
-		_write_diamond(
-			position - Vector2(0.0, radius + 12.0),
-			8.0,
-			Art.PLAYER_REWARD
-		)
-
-
 func _sync_enemy_semantic_overlays(
 	enemy: EnemyState,
 	position: Vector2,
@@ -888,6 +853,9 @@ func _sync_projectiles(
 		if direction.is_zero_approx():
 			direction = Vector2.RIGHT
 		if hostile:
+			var hostile_batch: BatchHandle = _projectile_batches[
+				ProjectileCatalog.HOSTILE
+			]
 			var hostile_visual_radius := (
 				radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
 			)
@@ -897,11 +865,14 @@ func _sync_projectiles(
 				)
 				continue
 			_write_instance_basis(
-				_projectile_batch,
+				hostile_batch,
 				position,
 				direction,
-				Vector2.ONE * hostile_visual_radius,
-				Art.attack_color(affinity)
+				Vector2(
+					hostile_visual_radius * Art.PROJECTILE_LENGTH_FACTOR,
+					hostile_visual_radius * Art.PROJECTILE_THICKNESS_FACTOR
+				),
+				Color.WHITE
 			)
 			continue
 		var visual_id := (
@@ -910,19 +881,28 @@ func _sync_projectiles(
 			else (&"opening_breach" if projectile.wall_piercing else &"primary")
 		)
 		var visual_scale := Art.PLAYER_PRIMARY_PROJECTILE_SCALE
+		var projectile_batch: BatchHandle = _projectile_batches[
+			ProjectileCatalog.PLAYER_PRIMARY
+		]
 		if visual_id == &"seeker":
 			visual_scale = Art.PLAYER_SEEKER_PROJECTILE_SCALE
+			projectile_batch = _projectile_batches[
+				ProjectileCatalog.PLAYER_SEEKER
+			]
 		elif visual_id == &"opening_breach":
 			visual_scale = Art.PLAYER_OPENING_BREACH_PROJECTILE_SCALE
 		var visual_radius := radius * visual_scale
 		if not visible_world.grow(visual_radius).has_point(position):
 			continue
 		_write_instance_basis(
-			_projectile_batch,
+			projectile_batch,
 			position,
 			direction,
-			Vector2.ONE * visual_radius,
-			Art.SUPPORT if visual_id == &"seeker" else Art.PLAYER_REWARD
+			Vector2(
+				visual_radius * Art.PROJECTILE_LENGTH_FACTOR,
+				visual_radius * Art.PROJECTILE_THICKNESS_FACTOR
+			),
+			Color.WHITE if visual_id == &"seeker" else Art.attack_color(affinity, true)
 		)
 
 
@@ -992,35 +972,13 @@ func _sync_projectile_telegraph(telegraph: Dictionary) -> void:
 
 
 func _sync_charge_telegraph(telegraph: Dictionary) -> void:
-	var from := Vector2(telegraph["from"])
 	var to := Vector2(telegraph["to"])
-	var vector := to - from
-	var length := vector.length()
-	if length <= 0.001:
-		return
-	var direction := vector / length
-	var tangent := direction.rotated(PI * 0.5)
 	var half_width := maxf(1.0, float(telegraph["half_width"]))
 	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
 	var color := Art.attack_warning_color(affinity, readiness)
-	var damage := float(telegraph.get("damage", 0.0))
-	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
-	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
 	var boundary_alpha := lerpf(0.38, 0.92, intensity)
-	_write_beam(
-		from + tangent * boundary_offset,
-		to + tangent * boundary_offset,
-		boundary_width,
-		Color(color, boundary_alpha)
-	)
-	_write_beam(
-		from - tangent * boundary_offset,
-		to - tangent * boundary_offset,
-		boundary_width,
-		Color(color, boundary_alpha)
-	)
 	_write_danger_ring(to, half_width, Color(color, boundary_alpha))
 
 
@@ -1034,10 +992,9 @@ func _sync_corridor_telegraph(telegraph: Dictionary) -> void:
 	var direction := vector / length
 	var tangent := direction.rotated(PI * 0.5)
 	var half_width := maxf(1.0, float(telegraph["half_width"]))
-	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
-	var color := Art.attack_warning_color(affinity, readiness)
+	var color := Color(Art.DANGER, lerpf(0.72, 1.0, readiness))
 	var damage := float(telegraph.get("damage", 0.0))
 	var boundary_width := 4.0 if AttackContract.power_tier(damage) == &"heavy" else 3.0
 	var boundary_offset := maxf(0.0, half_width - boundary_width * 0.5)
@@ -1138,18 +1095,6 @@ func _sync_effects(effects: Array[EffectState], visible_world: Rect2) -> void:
 				color
 			)
 			continue
-		if bool(event.get("floating_damage", false)):
-			_queue_floating_damage(
-				position + Vector2(
-					-34.0,
-					-radius * 0.62 - progress * 22.0
-				),
-				"%d  ×%d%%" % [
-					maxi(1, roundi(effect.value)),
-					roundi(effect.multiplier * 100.0),
-				],
-				Color(color, 1.0 - progress)
-			)
 
 
 func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
@@ -1229,7 +1174,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	)
 	if float(state.get("muzzle_flash", 0.0)) > 0.0:
 		_write_diamond(
-			displayed_player_position + aim_direction * 64.0,
+			displayed_player_position + aim_direction * (Art.PLAYER_VISUAL_RADIUS * 1.28),
 			9.0 + float(state.get("muzzle_flash", 0.0)) * 58.0,
 			Art.MUSTARD
 		)
@@ -1261,7 +1206,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		var barrier_flash := clampf(barrier_hit_remaining / 0.16, 0.0, 1.0)
 		_write_ring(
 			player_position,
-			61.0 + barrier_flash * 3.0,
+			Art.PLAYER_VISUAL_RADIUS + 11.0 + barrier_flash * 3.0,
 			Color(Art.MINT, lerpf(0.78, 1.0, barrier_flash))
 		)
 	var electric_field_level := int(state.get("electric_field_level", 0))
@@ -1284,7 +1229,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				StringName(_secondary_asset_ids.get(&"orbit_blade", &"")),
 				blade_position,
 				blade_direction.angle(),
-				19.0,
+				Art.PLAYER_ORBIT_BLADE_HALF_SIZE,
 				Color.WHITE
 			)
 	var mines_variant: Variant = secondary.get("mines")
@@ -1348,6 +1293,51 @@ func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 			Vector2.ONE * radius,
 			Color(color, 0.28)
 		)
+
+
+func _sync_reinforcement_facility(
+	state: Dictionary,
+	visible_world: Rect2
+) -> void:
+	var facility_variant: Variant = state.get("reinforcement_facility")
+	if not facility_variant is Dictionary:
+		return
+	var facility := Dictionary(facility_variant)
+	if not bool(facility.get("visible", false)):
+		return
+	var position := Vector2(facility.get("position", Vector2.ZERO))
+	var radius := float(facility.get("radius", 112.0))
+	if not visible_world.grow(radius).has_point(position):
+		return
+	_write_instance(
+		_reinforcement_facility_batch,
+		position,
+		0.0,
+		Vector2.ONE * radius,
+		Color.WHITE
+	)
+	var health_ratio := clampf(
+		float(facility.get("health", 0.0))
+		/ maxf(0.001, float(facility.get("max_health", 1.0))),
+		0.0,
+		1.0
+	)
+	var bar_width := radius * 1.5
+	var bar_position := position + Vector2(0.0, radius + 16.0)
+	_write_instance(
+		_overlay_batches[&"health"],
+		bar_position,
+		0.0,
+		Vector2(bar_width, 11.0),
+		Art.IVORY_SHADE
+	)
+	_write_instance(
+		_overlay_batches[&"health"],
+		bar_position + Vector2(-bar_width * (1.0 - health_ratio) * 0.5, 0.0),
+		0.0,
+		Vector2(bar_width * health_ratio, 11.0),
+		Art.CORAL
+	)
 
 
 func _sync_resolved_boss_modules(
@@ -1442,46 +1432,6 @@ func _semantic_texture_spec(
 	)
 	_semantic_texture_specs[asset_id] = spec
 	return spec
-
-
-func _queue_floating_damage(
-	position: Vector2,
-	text: String,
-	color: Color
-) -> void:
-	if _floating_damage_draw_count >= FLOATING_DAMAGE_DRAW_CAPACITY:
-		return
-	var damage_draw := _floating_damage_draws[
-		_floating_damage_draw_count
-	]
-	damage_draw.position = position
-	damage_draw.text = text
-	damage_draw.color = color
-	_floating_damage_draw_count += 1
-
-
-func _draw_floating_damage(damage_draw: FloatingDamageDraw) -> void:
-	var position := damage_draw.position
-	var text := damage_draw.text
-	var color := damage_draw.color
-	draw_string(
-		ThemeDB.fallback_font,
-		position + Vector2(2.0, 2.0),
-		text,
-		HORIZONTAL_ALIGNMENT_LEFT,
-		-1.0,
-		16,
-		Color(Art.COBALT_VOID, color.a)
-	)
-	draw_string(
-		ThemeDB.fallback_font,
-		position,
-		text,
-		HORIZONTAL_ALIGNMENT_LEFT,
-		-1.0,
-		16,
-		color
-	)
 
 
 func _boss_module_asset_id(enemy: EnemyState) -> StringName:
@@ -1620,7 +1570,6 @@ func _write_instance_basis(
 
 func _reset_counts() -> void:
 	_last_health_bar_count = 0
-	_last_priority_marker_count = 0
 	_last_tactic_module_count = 0
 	for batch in _batches:
 		batch.reset()

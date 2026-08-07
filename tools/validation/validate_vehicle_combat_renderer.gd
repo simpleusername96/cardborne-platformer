@@ -42,8 +42,10 @@ func _run() -> void:
 		"hostile projectile collision radii remain 5/6/7 world units"
 	)
 	_expect(
-		renderer.get_node_or_null("Projectile_shared_energy_teardrop") != null,
-		"all non-beam projectile identities share one semantic texture batch"
+		renderer.get_node_or_null("Projectile_player_primary") != null
+			and renderer.get_node_or_null("Projectile_player_seeker") != null
+			and renderer.get_node_or_null("Projectile_hostile_barbed_bolt") != null,
+		"primary, seeker, and hostile projectiles own separate semantic batches"
 	)
 	_expect(
 		renderer.get_node_or_null("Player_craft_body") != null
@@ -59,9 +61,9 @@ func _run() -> void:
 			"%s boss owns a semantic texture batch" % variant
 		)
 	_expect(
-		renderer.get_node_or_null("Projectile_player_primary") == null
+		renderer.get_node_or_null("Projectile_shared_energy_teardrop") == null
 			and renderer.get_node_or_null("Projectile_enemy_arc") == null,
-		"legacy player and affinity projectile batches are retired"
+		"the shared and affinity-specific legacy projectile batches are retired"
 	)
 	for pair in [
 		[&"shooter", &"artillery_spotter"],
@@ -135,14 +137,14 @@ func _run() -> void:
 	var shards: Array[ExperienceShard] = [shard]
 	var effect_store := EffectStore.new()
 	var rendered_effect = effect_store.add(
-		&"boss_core_reduced_hit",
+		&"player_emp_release",
 		Vector2(360.0, 320.0),
 		Color.WHITE,
 		1.0,
 		20.0,
 		Vector2.RIGHT,
-		18.0,
-		0.20
+		0.0,
+		1.0
 	)
 	rendered_effect.time = 0.5
 	var presentation := {
@@ -185,8 +187,8 @@ func _run() -> void:
 	)
 	snapshot = repeated_snapshot
 	_expect(
-		int(snapshot["floating_damage_draw_count"]) == 1,
-		"sealed boss feedback renders one actual-damage overlay"
+		int(snapshot["floating_damage_draw_count"]) == 0,
+		"combat presentation does not render floating damage text"
 	)
 	var experience_batch := renderer.get_node_or_null(
 		"Experience_master"
@@ -252,7 +254,7 @@ func _run() -> void:
 		"batched buffer preserves the selected enemy presentation scale"
 	)
 	var projectile_visual := renderer.get_node(
-		"Projectile_shared_energy_teardrop"
+		"Projectile_player_primary"
 	) as MultiMeshInstance2D
 	var projectile_buffer := projectile_visual.multimesh.buffer
 	_expect(
@@ -264,12 +266,13 @@ func _run() -> void:
 	_expect(
 		Vector2(projectile_buffer[0], projectile_buffer[4]).is_equal_approx(
 		projectile_direction * 5.0 * Art.PLAYER_PRIMARY_PROJECTILE_SCALE
+			* Art.PROJECTILE_LENGTH_FACTOR
 		),
-		"player primary image uses its authored long-form presentation scale"
+		"player primary image uses the reduced presentation length"
 	)
 	_expect(
 		projectile_visual.texture != null,
-		"shared projectile batch binds the approved raster image"
+		"player primary batch binds its approved raster image"
 	)
 	var player_craft := renderer.get_node("Player_craft_body") as MultiMeshInstance2D
 	var craft_buffer := player_craft.multimesh.buffer
@@ -286,7 +289,7 @@ func _run() -> void:
 	for status_id in [&"burn", &"poison", &"chill"]:
 		_expect(
 			renderer.get_node_or_null("Status_%s" % status_id) == null,
-			"%s uses actor tint and text instead of a raster orbit icon" % status_id
+			"%s does not create a raster orbit icon" % status_id
 		)
 	var renderer_source := FileAccess.get_file_as_string(
 		"res://scripts/presentation/vehicle_combat_renderer.gd"
@@ -299,29 +302,38 @@ func _run() -> void:
 			and not arc_area_section.contains("_write_diamond("),
 		"every damaging area uses one exact outer ring without affinity ornaments"
 	)
+	var hostile_visual := renderer.get_node(
+		"Projectile_hostile_barbed_bolt"
+	) as MultiMeshInstance2D
+	var hostile_buffer := hostile_visual.multimesh.buffer
 	_expect(
-		Vector2(projectile_buffer[12], projectile_buffer[16]).is_equal_approx(
+		Vector2(hostile_buffer[0], hostile_buffer[4]).is_equal_approx(
 			Vector2.LEFT * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+				* Art.PROJECTILE_LENGTH_FACTOR
 		),
-		"hostile visual envelope is owned by the visual profile"
+		"hostile visual envelope uses the reduced presentation length"
 	)
 	_expect(
-		Vector2(projectile_buffer[15], projectile_buffer[19]).is_equal_approx(
+		Vector2(hostile_buffer[3], hostile_buffer[7]).is_equal_approx(
 			Vector2(390.0, 300.0)
 		),
 		"hostile projectile remains centered on collision state"
 	)
 	_expect(
-		Vector2(projectile_buffer[13], projectile_buffer[17]).is_equal_approx(
-			Vector2.LEFT.rotated(PI * 0.5) * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+		is_equal_approx(
+			Vector2(hostile_buffer[1], hostile_buffer[5]).length(),
+			5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+				* Art.PROJECTILE_THICKNESS_FACTOR
 		),
-		"hostile visual envelope preserves uniform scaling"
+		"hostile visual envelope uses the reduced presentation thickness"
 	)
 	_expect(
 		projectile_visual.texture != null
 			and projectile_visual.multimesh.mesh is QuadMesh
-			and projectile_visual.multimesh.visible_instance_count == 2,
-		"player and hostile projectiles share one texture-capable retained surface"
+			and projectile_visual.multimesh.visible_instance_count == 1
+			and hostile_visual.texture != null
+			and hostile_visual.multimesh.visible_instance_count == 1,
+		"player and hostile projectiles retain distinct texture-capable surfaces"
 	)
 	_validate_mystery_device_presentation(renderer, no_enemies, no_projectiles, no_shards)
 	_validate_player_directional_cues(
@@ -360,8 +372,8 @@ func _run() -> void:
 		"ordinary health bars stop at the deterministic twelve-actor budget"
 	)
 	_expect(
-		int(snapshot["priority_marker_count"]) == Renderer.MAX_EXTRA_PRIORITY_MARKERS,
-		"extra priority markers stop at the deterministic eight-actor budget"
+		int(snapshot["priority_marker_count"]) == 0,
+		"ordinary priority-target markers are removed"
 	)
 	var crowd_body := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	_expect(

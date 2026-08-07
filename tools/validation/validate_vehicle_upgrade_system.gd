@@ -40,6 +40,7 @@ func _initialize() -> void:
 	_expect(catalog.definitions.size() == 12, "catalog contains exactly 12 upgrades")
 	_validate_presentation(catalog)
 	_validate_secondary_slots(catalog)
+	_validate_element_lock(catalog)
 	_validate_offers(catalog)
 	_validate_stats(catalog)
 	for retired_id in RETIRED_IDS:
@@ -129,6 +130,30 @@ func _validate_secondary_slots(catalog: Catalog) -> void:
 	)
 
 
+func _validate_element_lock(catalog: Catalog) -> void:
+	var build := RunBuild.new(catalog)
+	_expect(
+		catalog.compatible(catalog.get_definition(&"thermal_burn"), build)
+			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
+			and catalog.compatible(catalog.get_definition(&"cryo_slow"), build),
+		"all three elemental roots are legal before selection"
+	)
+	_expect(bool(build.apply(&"bio_toxin").get("applied", false)), "one element can be selected")
+	_expect(
+		build.active_element_id() == &"bio_toxin"
+			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
+			and not catalog.compatible(catalog.get_definition(&"thermal_burn"), build)
+			and not catalog.compatible(catalog.get_definition(&"cryo_slow"), build),
+		"the selected element remains levelable and excludes other roots"
+	)
+	for serial in 12:
+		for definition in catalog.offer(build, 1701, 3, &"level_up", serial):
+			_expect(
+				definition.category != &"element" or definition.id == &"bio_toxin",
+				"post-selection offers contain only the active element"
+			)
+
+
 func _validate_offers(catalog: Catalog) -> void:
 	var empty_build := RunBuild.new(catalog)
 	for run_seed in 24:
@@ -145,6 +170,7 @@ func _validate_offers(catalog: Catalog) -> void:
 	)
 	for run_seed in 24:
 		var build := RunBuild.new(catalog)
+		var legal_choices := 0
 		for choice_index in 25:
 			var source_id := &"boss" if choice_index in [4, 9, 14, 19, 24] else &"level_up"
 			var offer := catalog.offer(
@@ -154,14 +180,20 @@ func _validate_offers(catalog: Catalog) -> void:
 				source_id,
 				choice_index
 			)
-			_expect(
-				_offer_is_legal(offer, build, catalog),
-				"seed %d choice %d keeps the shipped 25-choice route legal"
-				% [run_seed, choice_index + 1]
-			)
 			if offer.size() != 3:
 				break
+			_expect(
+				_offer_is_legal(offer, build, catalog),
+				"seed %d choice %d contains three compatible cards"
+				% [run_seed, choice_index + 1]
+			)
+			legal_choices += 1
 			build.apply(offer[run_seed % offer.size()].id)
+		_expect(
+			legal_choices >= 21,
+			"seed %d retains at least 21 complete choices before bounded no-offer recovery"
+			% run_seed
+		)
 
 
 func _validate_stats(catalog: Catalog) -> void:

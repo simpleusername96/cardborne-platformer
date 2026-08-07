@@ -45,6 +45,12 @@ const WORLD_OBJECT_DESCRIPTORS := {
 		"shape": &"resolved_wreck",
 		"color": &"raised",
 	},
+	&"reinforcement_fabricator": {
+		"asset": &"world/facility_reinforcement_fabricator",
+		"kind": &"reinforcement_facility",
+		"shape": &"wide_static_fabricator",
+		"color": &"danger",
+	},
 }
 
 

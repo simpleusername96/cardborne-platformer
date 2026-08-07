@@ -9,11 +9,11 @@ const ActionGlyphRenderer = preload(
 )
 
 const MINIMAP_GLYPHS: Array[StringName] = [
-	&"player", &"item", &"enemy", &"boss",
+	&"player", &"item", &"enemy", &"boss", &"facility",
 ]
 const CORE_GLYPHS: Array[StringName] = [
 	&"primary", &"seeker", &"dash", &"emp", &"secondary", &"breach_ready",
-	&"player", &"item", &"enemy", &"boss", &"repair", &"recall", &"target",
+	&"player", &"item", &"enemy", &"boss", &"facility", &"repair", &"recall", &"target",
 	&"locked_silhouette",
 ]
 

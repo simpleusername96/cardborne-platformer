@@ -9,6 +9,8 @@ const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
+const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
@@ -52,6 +54,15 @@ func _run() -> void:
 		)
 		_expect(run.current_stage_id == &"stage_1" and run.player_position == Vector2(3600,2160), "run begins at shared center")
 		_expect(run.PLAYER_BASE_SPEED == 280.0, "player base speed remains 280 px/s")
+		_expect(
+			is_equal_approx(StageDifficulty.ORDINARY_HEALTH_MULTIPLIER, 1.30),
+			"all non-boss enemy health receives the requested 30 percent increase"
+		)
+		_expect(
+			is_equal_approx(SpecialistRuntime.REPAIR_PER_SECOND, 8.0)
+				and is_equal_approx(SpecialistRuntime.GENERATOR_HEAL_PER_TICK, 8.0),
+			"repair tender and generator healing are doubled"
+		)
 		_expect(run.PICKUP_BODY_RADIUS == 42.0, "pickup body radius is 42 px")
 		_expect(run.MINIMAP_COLS == 20 and run.MINIMAP_ROWS == 12, "run uses 20x12 explored minimap")
 		_expect(run.ORDINARY_DECISION_BUCKET_COUNT == 6, "ordinary high-cost decisions are distributed at 10 Hz")
@@ -185,6 +196,46 @@ func _check_visual_collision_separation(run) -> void:
 			"%s keeps movement compact while its projectile hit radius matches the art" % fixture[0]
 		)
 		run.enemy_store.release_untracked(enemy)
+	var ordering_enemy := EnemyState.new()
+	ordering_enemy.id = "facility_order_probe"
+	ordering_enemy.role = &"chaser"
+	ordering_enemy.archetype = &"chaser"
+	ordering_enemy.alive = true
+	ordering_enemy.active = true
+	ordering_enemy.pos = Vector2(70.0, 0.0)
+	ordering_enemy.radius = 10.0
+	ordering_enemy.projectile_hit_radius = 10.0
+	var ordering_projectile := ProjectileState.new()
+	ordering_projectile.radius = 2.0
+	var ordering_candidates: Array[EnemyState] = [ordering_enemy]
+	_expect(
+		run.call(
+			"_player_projectile_contact",
+			ordering_projectile,
+			Vector2.ZERO,
+			Vector2(100.0, 0.0),
+			2.0,
+			ordering_candidates,
+			PackedInt32Array(),
+			PackedFloat32Array(),
+			0.40
+		) == null,
+		"a nearer facility limit excludes enemies behind it from direct contact"
+	)
+	_expect(
+		run.call(
+			"_player_projectile_contact",
+			ordering_projectile,
+			Vector2.ZERO,
+			Vector2(100.0, 0.0),
+			2.0,
+			ordering_candidates,
+			PackedInt32Array(),
+			PackedFloat32Array(),
+			0.80
+		) == ordering_enemy,
+		"an enemy before the facility remains the first direct contact"
+	)
 
 
 func _check_simulation_lod_contract(run) -> void:
@@ -292,6 +343,7 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	if boss == null:
 		return
 	var health_before := boss.health
+	var effect_count_before: int = run.effects.size()
 	var applied := float(
 		run.call(
 			"_damage_enemy",
@@ -308,10 +360,8 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 		"sealed boss damage is reduced to twenty percent instead of cancelled"
 	)
 	_expect(
-		not run.effects.is_empty()
-			and run.effects[-1].kind == &"boss_core_reduced_hit"
-			and is_equal_approx(run.effects[-1].value, 20.0),
-		"sealed hit feedback exposes the actual applied damage"
+		run.effects.size() == effect_count_before,
+		"sealed boss damage does not create floating damage feedback"
 	)
 	var hud := Dictionary(run.call("_build_hud_snapshot"))
 	var objective := Dictionary(Dictionary(hud["boss"])["objective"])

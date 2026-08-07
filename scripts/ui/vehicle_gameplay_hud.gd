@@ -14,7 +14,7 @@ const UiGlyphCatalog = preload(
 )
 
 const HEALTH_CLUSTER_SIZE := Vector2(216.0, 74.0)
-const ACTION_RAIL_SIZE := Vector2(168.0, 60.0)
+const ACTION_RAIL_SIZE := Vector2(88.0, 88.0)
 const ACTION_RAIL_BOTTOM_MARGIN := 20.0
 
 
@@ -175,7 +175,7 @@ class HealthPips:
 class ActionRailSlot:
 	extends Control
 
-	var action_id: StringName = &"seeker"
+	var action_id: StringName = &"emp"
 	var accent := Art.PLAYER_REWARD
 	var cooldown_ratio := 0.0
 	var available := true
@@ -183,7 +183,7 @@ class ActionRailSlot:
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		focus_mode = Control.FOCUS_NONE
-		custom_minimum_size = Vector2(44.0, 44.0)
+		custom_minimum_size = ACTION_RAIL_SIZE
 
 	func configure(glyph_id: StringName, color: Color) -> void:
 		if action_id == glyph_id and accent.is_equal_approx(color):
@@ -202,23 +202,18 @@ class ActionRailSlot:
 
 	func _draw() -> void:
 		var center := size * 0.5
-		var radius := 19.0
-		var slot_rect := Rect2(center - Vector2.ONE * 20.0, Vector2.ONE * 40.0)
+		var radius := minf(size.x, size.y) * 0.44
 		var state_color := accent if available else Art.TEXT_MUTED
-		draw_rect(slot_rect, Color(state_color, 0.88), false, 1.0)
+		draw_circle(center, radius, Color(Art.SPACE_BLACK, 0.72))
+		draw_arc(center, radius, 0.0, TAU, 48, Color(state_color, 0.88), 3.0, true)
 		if available:
-			# The short lower rail is a structural ready cue independent of color.
-			draw_line(
-				Vector2(slot_rect.position.x + 11.0, slot_rect.end.y - 3.0),
-				Vector2(slot_rect.end.x - 11.0, slot_rect.end.y - 3.0),
-				Art.IVORY_BRIGHT,
-				2.0
-			)
+			# The inner ring is a structural ready cue independent of color.
+			draw_arc(center, radius - 7.0, 0.0, TAU, 40, Art.IVORY_BRIGHT, 2.0, true)
 		UiGlyphCatalog.draw_action_glyph(
 			self,
 			action_id,
 			center,
-			13.0,
+			24.0,
 			{
 				&"primary":Color(state_color, 1.0 if available else 0.42),
 				&"secondary":Color(state_color, 0.78 if available else 0.34),
@@ -228,19 +223,19 @@ class ActionRailSlot:
 		if not available and cooldown_ratio < 0.9999:
 			draw_arc(
 				center,
-				radius - 3.0,
+				radius - 7.0,
 				-PI * 0.5,
 				-PI * 0.5 + TAU * (1.0 - cooldown_ratio),
 				24,
 				Color(accent, 0.82),
-				2.0,
+				5.0,
 				true
 			)
 		if not available:
 			# A diagonal lockout slash keeps disabled readable in grayscale.
 			draw_line(
-				Vector2(slot_rect.position.x + 7.0, slot_rect.end.y - 7.0),
-				Vector2(slot_rect.end.x - 7.0, slot_rect.position.y + 7.0),
+				center - Vector2.ONE * (radius * 0.50),
+				center + Vector2.ONE * (radius * 0.50),
 				Art.IVORY_BRIGHT,
 				2.0
 			)
@@ -254,13 +249,16 @@ class ActionRailSlot:
 			"semantic_icon_image_retained":false,
 			"code_native_glyph":true,
 			"disabled_not_color_only":true,
-			"available_has_structural_rail":available,
+			"available_has_structural_rail":false,
+			"available_has_structural_ring":available,
 			"disabled_has_structural_slash":not available,
 			"cooldown_has_structural_arc":(
 				not available and cooldown_ratio < 0.9999
 			),
 			"cooldown_ratio":cooldown_ratio,
 			"interior_filled":false,
+			"round":true,
+			"panel_free":true,
 			"has_text":false,
 			"draw_batches":2,
 			"minimum_size":custom_minimum_size,
@@ -371,7 +369,6 @@ var _health_panel: PanelContainer
 var _objective_panel: PanelContainer
 var _minimap_panel: PanelContainer
 var _target_panel: VBoxContainer
-var _dock_panel: PanelContainer
 var _health_bar: HealthPips
 var _objective_label: Label
 var _objective_detail: Label
@@ -389,8 +386,6 @@ var _boss_state: Label
 var _target_name: Label
 var _target_bar: ProgressBar
 var _target_state: Label
-var _dash_slot: ActionRailSlot
-var _seeker_slot: ActionRailSlot
 var _skill_slot: ActionRailSlot
 var _buff_label: Label
 var _minimap: StageMinimap
@@ -534,18 +529,10 @@ func _build() -> void:
 	_target_panel.add_child(_target_state)
 	_target_panel.visible = false
 
-	_dock_panel = Factory.surface(Factory.SURFACE_HUD, ACTION_RAIL_SIZE)
-	_dock_panel.name = "ActionRail"
-	_dock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_dock_panel.size = ACTION_RAIL_SIZE
-	add_child(_dock_panel)
-	var dock := HBoxContainer.new()
-	dock.add_theme_constant_override("separation", 8)
-	dock.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dock_panel.add_child(dock)
-	_seeker_slot = _action_slot(dock, &"seeker", Art.SUPPORT)
-	_dash_slot = _action_slot(dock, &"dash", Art.SYSTEM)
-	_skill_slot = _action_slot(dock, &"emp", Art.BOSS_COMMAND)
+	_skill_slot = ActionRailSlot.new()
+	_skill_slot.name = "EmpCooldownIndicator"
+	_skill_slot.configure(&"emp", Art.BOSS_COMMAND)
+	add_child(_skill_slot)
 
 	_buff_label = Factory.label("", 14, Art.TEXT_PRIMARY)
 	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -596,19 +583,12 @@ func update_snapshot(snapshot: Dictionary) -> void:
 		if next_detail != _last_objective_detail:
 			_last_objective_detail = next_detail
 			_objective_detail.text = next_detail
-	if snapshot.has("dash_available"):
-		_dash_slot.set_state(
-			bool(snapshot["dash_available"]),
-			float(snapshot.get("dash_ratio", 0.0))
-		)
-		_seeker_slot.set_state(
-			bool(snapshot.get("seeker_available", false)),
-			float(snapshot.get("seeker_ratio", 0.0))
-		)
+	if snapshot.has("skill_available"):
 		_skill_slot.set_state(
 			bool(snapshot.get("skill_available", false)),
 			float(snapshot.get("skill_ratio", 0.0))
 		)
+	if snapshot.has("buff_text"):
 		var next_buff_text := String(snapshot.get("buff_text", ""))
 		if next_buff_text != _last_buff_text:
 			_last_buff_text = next_buff_text
@@ -729,8 +709,6 @@ func hide_stage_transition() -> void:
 
 func refresh_localized_content() -> void:
 	_transition_banner.refresh_localized_content()
-	_seeker_slot.queue_redraw()
-	_dash_slot.queue_redraw()
 	_skill_slot.queue_redraw()
 
 
@@ -813,7 +791,6 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		Rect2(Vector2(18.0, 16.0), HEALTH_CLUSTER_SIZE),
 		Rect2(Vector2(objective_start, 16.0), objective_zone_size),
 		Rect2(Vector2(minimap_start, 16.0), minimap_zone_size),
-		Rect2(dock_position, ACTION_RAIL_SIZE),
 	]
 	var opaque_area := 0.0
 	var central_safe := Rect2(
@@ -831,14 +808,13 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"action_rail_size":ACTION_RAIL_SIZE,
 		"action_rail_position":dock_position,
 		"action_rail_icon_only":true,
-		"action_slot_count":3,
+		"action_slot_count":1,
+		"action_rail_panel_free":true,
 		"shows_primary_slot":false,
 		"action_slot_contracts":[
-			_seeker_slot.debug_contract(),
-			_dash_slot.debug_contract(),
 			_skill_slot.debug_contract(),
 		],
-		"secondary_slot_size":_dash_slot.custom_minimum_size,
+		"secondary_slot_size":Vector2.ZERO,
 		"minimap_size":minimap_base_size,
 		"minimap_zone_size":minimap_zone_size,
 		"health_cluster_size":HEALTH_CLUSTER_SIZE,
@@ -858,12 +834,11 @@ func debug_contract(viewport_width: float) -> Dictionary:
 			_target_panel.get_parent().get_parent() == _minimap_panel
 		),
 		"conditional_clusters_have_backing":false,
-		"zone_surface_count":4,
+		"zone_surface_count":3,
 		"zone_surface_variations":[
 			_health_panel.theme_type_variation,
 			_objective_panel.theme_type_variation,
 			_minimap_panel.theme_type_variation,
-			_dock_panel.theme_type_variation,
 		],
 		"toast_surface_variation":_notification_panel.theme_type_variation,
 		"raster_chrome_consumer":false,
@@ -949,8 +924,8 @@ func _apply_responsive_layout() -> void:
 		minimap_zone_size.x - 20.0,
 		target_size.y
 	)
-	_dock_panel.size = ACTION_RAIL_SIZE
-	_dock_panel.position = Vector2(
+	_skill_slot.size = ACTION_RAIL_SIZE
+	_skill_slot.position = Vector2(
 		(size.x - ACTION_RAIL_SIZE.x) * 0.5,
 		size.y - ACTION_RAIL_SIZE.y - ACTION_RAIL_BOTTOM_MARGIN
 	)
@@ -999,17 +974,6 @@ func _show_notification(entry: Dictionary) -> void:
 	_notification_panel.visible = true
 	_notification_timer = float(entry["duration"])
 	set_process(true)
-
-
-func _action_slot(
-	parent: HBoxContainer,
-	action_id: StringName,
-	color: Color
-) -> ActionRailSlot:
-	var slot := ActionRailSlot.new()
-	slot.configure(action_id, color)
-	parent.add_child(slot)
-	return slot
 
 
 func _shadow_label(label: Label) -> void:

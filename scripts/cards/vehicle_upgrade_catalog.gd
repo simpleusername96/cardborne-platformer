@@ -105,6 +105,10 @@ func validate_contract() -> PackedStringArray:
 func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) -> bool:
 	if definition == null or build.level_of(definition.id) >= definition.max_level:
 		return false
+	if definition.category == &"element":
+		var active_element := build.active_element_id()
+		if not active_element.is_empty() and definition.id != active_element:
+			return false
 	if (
 		definition.category == &"secondary"
 		and definition.secondary_slot_kind == &"optional"

@@ -17,6 +17,7 @@ Thumbs.db
 
 # Runtime logs and local artifacts
 *.log
+.agents/tmp/
 dist/
 exports/
 /build/*

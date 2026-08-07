@@ -159,6 +159,7 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 		card.set_offer(OfferPresenter.snapshot(definition, 0))
 		await process_frame
 		var contract := card.debug_contract()
+		var expects_unlock_icon := definition.modifiers.is_empty()
 		_expect(
 			int(contract["header_art_count"]) == 0
 				and int(contract["body_art_count"]) == 1
@@ -174,16 +175,19 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 				and Array(contract["body_order"]) == [
 					"category",
 					"title",
-					"dossier:art/divider/level/effects",
-					"description",
+					"dossier:art/divider/level/unlock-icon/effects",
 				]
-				and bool(contract["dossier_split"])
+				and not bool(contract["dossier_split"])
+				and bool(contract["vertical_dossier"])
 				and int(contract["body_divider_count"]) == 1,
-			"%s uses the compact split-dossier artwork contract" % category
+			"%s uses the compact centered vertical artwork contract" % category
 		)
 		_expect(
-			int(Dictionary(contract["type_sizes"])["summary"]) >= 14,
-			"%s keeps compact description copy at the 14 px body-text minimum"
+			int(Dictionary(contract["type_sizes"])["summary"]) == 0
+				and not bool(contract["footer_visible"])
+				and not bool(contract["description_in_comparison"])
+				and bool(contract["unlock_icon_visible"]) == expects_unlock_icon,
+			"%s removes visible prose and uses only the compact unlock icon when needed"
 			% category
 		)
 		var geometry := card.debug_geometry_contract()
