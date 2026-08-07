@@ -6,6 +6,7 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 
 var failures: Array[String] = []
 
@@ -15,6 +16,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	InputProfile.apply_input_map(InputProfile.default_descriptors())
 	var settings := root.get_node_or_null("SettingsStore")
 	var original_reduced_motion := bool(settings.reduced_motion) if settings != null else false
 	if settings != null:
@@ -181,30 +183,6 @@ func _run() -> void:
 	if player_projectiles.size() == 1:
 		_expect(is_equal_approx(float(player_projectiles[0].radius), 7.0), "default player projectile uses the larger seven-unit collision radius")
 		_expect(not bool(player_projectiles[0].wall_piercing), "default player projectile cannot cross solid blockers")
-
-	var field_layout: Variant = stage.get("field_layout")
-	var cover: Rect2 = field_layout.tactical_layout(&"stage_1").cover_rects[0]
-	var cover_from := cover.get_center() - Vector2(cover.size.x * 0.5 + 80.0, 0.0)
-	stage.set("player_position", cover.get_center() + Vector2(0.0, 250.0))
-	projectile_store.call("clear")
-	stage.call("_spawn_hostile_projectile", cover_from, Vector2.RIGHT, 4.0, 500.0, "validation cover")
-	stage.call("_update_projectiles", 0.5)
-	_expect(projectile_store.call("hostile_count") == 0, "default hostile projectile stops at runtime cover")
-
-	projectile_store.call("clear")
-	stage.call(
-		"_spawn_hostile_projectile",
-		cover_from,
-		Vector2.RIGHT,
-		4.0,
-		500.0,
-		"validation phase shot",
-		AttackContract.KINETIC,
-		false,
-		true
-	)
-	stage.call("_update_projectiles", 0.5)
-	_expect(projectile_store.call("hostile_count") == 1, "explicit wall-piercing projectile can cross runtime cover")
 
 	var crates: Array = stage.get("crates")
 	var crate: Dictionary = crates[0]

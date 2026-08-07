@@ -40,9 +40,17 @@ func _initialize() -> void:
 			var pixel := image.get_pixel(x, y)
 			_expect(pixel.a >= 0.90, "projectile 3x3 pivot neighborhood remains opaque")
 	_expect(
-		ProjectileCatalog.descriptor()["asset"] == PROJECTILE_ID
-			and not bool(ProjectileCatalog.descriptor()["tail"]),
-		"projectile catalog keeps one tailless shared identity"
+		ProjectileCatalog.asset_id(ProjectileCatalog.PLAYER_PRIMARY) == PROJECTILE_ID,
+		"primary projectile keeps its dedicated semantic identity"
+	)
+	_expect(
+		ProjectileCatalog.asset_id(ProjectileCatalog.PLAYER_SEEKER)
+			!= ProjectileCatalog.asset_id(ProjectileCatalog.PLAYER_PRIMARY)
+			and ProjectileCatalog.asset_id(ProjectileCatalog.HOSTILE)
+			!= ProjectileCatalog.asset_id(ProjectileCatalog.PLAYER_PRIMARY)
+			and ProjectileCatalog.asset_id(ProjectileCatalog.HOSTILE)
+			!= ProjectileCatalog.asset_id(ProjectileCatalog.PLAYER_SEEKER),
+		"primary, seeker, and hostile projectiles keep distinct assets"
 	)
 	_expect(AssetProvider.descriptor(PROJECTILE_ID).get("pivot") == Vector2(32, 32), "projectile pivot is semantic center")
 	_validate_scale_contract()
