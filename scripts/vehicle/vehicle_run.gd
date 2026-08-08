@@ -46,6 +46,7 @@ const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_
 const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 const PursuitField = preload("res://scripts/enemies/vehicle_pursuit_field.gd")
+const EnemyMovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
 const SecondaryRuntime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
 const GuidebookCatalog = preload("res://scripts/progression/vehicle_guidebook_catalog.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
@@ -2260,7 +2261,11 @@ func _update_motion_only_ordinary_enemy(
 func _move_cached_enemy_role(enemy: EnemyState, delta: float) -> void:
 	if delta <= 0.0 or enemy.desired_velocity.is_zero_approx():
 		return
-	_move_enemy_with_recovery(enemy, enemy.desired_velocity, delta)
+	_move_enemy_with_recovery(
+		enemy,
+		_smoothed_enemy_velocity(enemy, delta, false),
+		delta
+	)
 
 
 func _record_motion_only_enemy_change(
@@ -2938,13 +2943,14 @@ func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decisio
 		or (role == &"mine" and enemy.archetype != &"spark_minelet")
 	):
 		return
+	var refresh_overlap := false
 	if decision_due or enemy.desired_velocity.is_zero_approx():
 		var steering_slot := (
 			enemy.spatial_slot
 			if enemy.spatial_slot >= 0
 			else enemy.runtime_slot
 		)
-		var refresh_overlap := (
+		refresh_overlap = (
 			decision_due
 			and (
 				steering_slot < 0
@@ -2952,77 +2958,62 @@ func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decisio
 			)
 		)
 		enemy.desired_velocity = _desired_enemy_velocity(
-			enemy, recovering, refresh_overlap
+			enemy, recovering
 		)
-	_move_enemy_with_recovery(enemy, enemy.desired_velocity, delta)
+	_move_enemy_with_recovery(
+		enemy,
+		_smoothed_enemy_velocity(enemy, delta, refresh_overlap),
+		delta
+	)
 
 
 func _desired_enemy_velocity(
 	enemy: EnemyState,
-	recovering: bool,
-	refresh_overlap: bool = true
+	recovering: bool
 ) -> Vector2:
-	var role := enemy.role
 	var position := enemy.pos
 	var target := _mystery_enemy_target(enemy)
-	var to_target := target - position
-	var distance := maxf(1.0, to_target.length())
-	var direction_to_target := to_target / distance
-	var desired := Vector2.ZERO
-	match role:
-		&"chaser":
-			desired = direction_to_target
-			if recovering:
-				desired = -direction_to_target.rotated(enemy.strafe_sign * 0.35)
-		&"shooter":
-			if distance < 330.0:
-				desired = -direction_to_target
-			elif distance > 500.0:
-				desired = direction_to_target
-			else:
-				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
-		&"controller":
-			if distance < 390.0:
-				desired = -direction_to_target
-			elif distance > 540.0:
-				desired = direction_to_target
-			else:
-				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
-		&"shield_escort":
-			if distance < 300.0:
-				desired = -direction_to_target
-			elif distance > 470.0:
-				desired = direction_to_target
-			else:
-				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
-		&"artillery_spotter":
-			if distance < 520.0:
-				desired = -direction_to_target
-			elif distance > 760.0:
-				desired = direction_to_target
-			else:
-				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
-		&"rammer":
-			desired = direction_to_target if not recovering else -direction_to_target
-		&"bulkhead_guard", &"splitter_barge":
-			desired = direction_to_target
-		&"mine":
-			desired = direction_to_target
-		&"repair_tender", &"drone_carrier":
-			if distance < 430.0:
-				desired = -direction_to_target
-			elif distance > 620.0:
-				desired = direction_to_target
-			else:
-				desired = direction_to_target.rotated(enemy.strafe_sign * PI * 0.5)
+	var intent := EnemyMovementPolicy.intent(
+		enemy.archetype,
+		enemy.role,
+		position,
+		target,
+		enemy.strafe_sign,
+		recovering
+	)
+	var desired := Vector2(intent["direction"])
 	var route_direction := (
 		Vector2.ZERO
 		if _mystery_decoy_targets.has(enemy.id)
 		else pursuit_field.direction_at(position, enemy.radius)
 	)
-	if not route_direction.is_zero_approx() and (distance > 520.0 or not _runtime_has_line_of_sight(position, target, enemy.radius * 0.45)):
+	var direct_path_blocked := not _runtime_has_line_of_sight(
+		position, target, enemy.radius * 0.45
+	)
+	if (
+		not route_direction.is_zero_approx()
+		and EnemyMovementPolicy.route_guidance_requested(
+			intent, direct_path_blocked
+		)
+	):
 		desired = (route_direction * 0.86 + desired * 0.14).normalized()
-	var role_velocity := desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
+	return desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
+
+
+func _smoothed_enemy_velocity(
+	enemy: EnemyState,
+	delta: float,
+	refresh_overlap: bool
+) -> Vector2:
+	var movement_family := EnemyMovementPolicy.family(enemy.archetype, enemy.role)
+	var speed_cap := enemy.speed * StatusRuntime.speed_multiplier(enemy)
+	var role_velocity := EnemyMovementPolicy.smooth_velocity(
+		enemy.velocity,
+		enemy.desired_velocity,
+		EnemyMovementPolicy.turn_response(movement_family),
+		delta,
+		speed_cap
+	)
 	return _enemy_local_steering.adjusted_velocity(
 		enemy, role_velocity, enemy_grid, enemies, refresh_overlap
 	)

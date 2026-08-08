@@ -278,12 +278,19 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 4. Ordinary mobile movement applies one 1.40 multiplier after role base speed
    and before the fixed Hard profile, stage, and elite factors. Boss,
    committed charge, and projectile speeds are unchanged. After birth, each
-   mobile follows its role pursuit/range/support behavior toward the player;
+   mobile follows its role pursuit/standoff/escort/support behavior. Pursuit
+   roles keep closing until their attack contract. Ranged and support roles use
+   continuous radial correction around their existing distance band while
+   tangential movement peaks at the midpoint. Turn response is `9/s` for
+   pursuit, `6/s` for standoff, and `5/s` for escort/support. Shared route
+   guidance is used only for an approach intent whose direct path is blocked;
+   it never pulls a holding, strafing, or retreating role back toward the player.
+   Attack timing and distance contracts remain unchanged, and
    logical squad anchors and centroid cohesion do not steer ordinary movement.
    Bounded local separation runs only during actual body overlap, checks at
    most eight nearby actors within 120 pixels, blends role/separation velocity
    at 0.55/0.45, and never exceeds the role's original speed. With no overlap,
-   role velocity remains bit-for-bit unchanged. Inner-wall recovery and committed
+   separation leaves the smoothed role velocity unchanged. Inner-wall recovery and committed
    attack paths take priority. High density near the player is an allowed
    convergence result. Stationary roles hold authored anchors.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel

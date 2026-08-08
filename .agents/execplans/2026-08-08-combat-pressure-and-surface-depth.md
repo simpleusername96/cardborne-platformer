@@ -338,7 +338,7 @@ difficulty/boss/movement/Run validators, including
     enemy and a no-class-factor enemy across stages; assert boss health is unchanged.
   - Accept: difficulty, boss-exam, boss-pattern, and Run validators pass and no stale 0.25 or old
     health-curve assertion remains outside retained history/evidence.
-- [ ] **3.3** Centralize role movement intent without changing combat timing.
+- [x] **3.3** Centralize role movement intent without changing combat timing.
   - Change: add `scripts/enemies/vehicle_enemy_movement_policy.gd` as the pure owner of movement
     family, existing distance bands, radial/tangential weights, route-guidance eligibility, and
     role turn response. Keep attack ranges/timing in current combat owners and keep archetype
@@ -347,7 +347,7 @@ difficulty/boss/movement/Run validators, including
     `rammer`, `bulkhead_guard`, `splitter_barge`, mobile `spark_minelet`), standoff (`needle_drone`,
     `shooter`, `controller`, `artillery_spotter`), escort (`shield_escort`), or support
     (`repair_tender`, `drone_carrier`). Fixed installations resolve stationary.
-- [ ] **3.4** Replace abrupt range switching with continuous steering.
+- [x] **3.4** Replace abrupt range switching with continuous steering.
   - Change: for each standoff/escort/support band, compute a signed normalized distance error around
     its midpoint. Blend radial approach/retreat continuously with the existing signed tangential
     strafe; radial weight reaches full outside the band and tangential weight peaks at the midpoint.
@@ -357,7 +357,7 @@ difficulty/boss/movement/Run validators, including
   - Accept: crossing a band edge does not flip velocity by 90/180 degrees in one decision; pursuit
     roles continue closing until their attack contract; ranged/support roles converge on and orbit
     within their existing bands; role speed remains capped.
-- [ ] **3.5** Stop route guidance from defeating standoff behavior.
+- [x] **3.5** Stop route guidance from defeating standoff behavior.
   - Change: apply `PursuitField.direction_at` only while the policy requests approach and direct
     line of sight/navigation is blocked. Never blend a player-directed pursuit vector while a role
     is holding, strafing, or retreating inside its band. Keep overlap separation and collision
@@ -648,12 +648,13 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 3 - Rebalance health, shielding, and role movement.
-- Next task: 3.3 - Centralize role movement intent. Task 1.2 remains deferred until
+- Next task: 3.6 - Capture one pursuit/ranged movement fixture; policy implementation is ready.
+  Task 1.2 remains deferred until
   user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
-- Last completed gate: Tasks 3.1-3.2 applied the ordinary-health curve
-  `[0.85,1.00,1.15,1.30,1.45]` and shield multiplier `0.15`; class-factor,
-  no-class-factor, and unchanged boss-health examples pass difficulty, boss-exam, boss-pattern,
-  and Run validation.
+- Last completed gate: Tasks 3.3-3.5 centralize movement families, continuous band steering,
+  response smoothing, and approach-only blocked-path route guidance. Deterministic policy,
+  local-steering, scheduler, attack-contract, and Run validators pass; Task 3.6 retains the
+  rendered capture check for final runtime QA.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 
