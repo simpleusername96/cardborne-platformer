@@ -932,6 +932,28 @@ func _capture_all_boss_evidence() -> void:
 			_save_capture(
 				"30-boss-01-stage-1-offscreen-furnace-active.png"
 			)
+		elif stage_index == 4:
+			boss.pos = _run.player_position + Vector2(420.0, 0.0)
+			boss.phase = &"boss_startup"
+			boss.phase_time = BossPatterns.startup_seconds("crown_beam") * 0.5
+			boss.pattern = "crown_beam"
+			boss.committed_target = _run.player_position
+			boss.committed_dir = (_run.player_position - Vector2(boss.pos)).normalized()
+			AttackTelegraphs.refresh_boss(
+				boss,
+				"crown_beam",
+				_run._runtime_attack_path_callable,
+				_run._runtime_charge_path_callable
+			)
+			_run._camera.position = _run.player_position
+			await _settle_capture()
+			_save_capture("30-boss-05-stage-5-crown-beam-startup.png")
+			boss.phase_time = 0.0
+			AttackTelegraphs.update_boss_readiness(boss, "crown_beam")
+			_run._boss_begin_active(boss)
+			_run._boss_update_active(boss, 0.05)
+			await _settle_capture()
+			_save_capture("30-boss-05-stage-5-crown-beam-active.png")
 
 
 func prepare_boss(stage_index: int) -> EnemyState:

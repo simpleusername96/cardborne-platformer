@@ -4110,9 +4110,18 @@
         "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-beam-sentinel-startup.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-beam-sentinel-active.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-crown-beam-startup.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-crown-beam-active.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/comparison.png"
+      ],
       "rendered_as_is_paths": [
-        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/07-stage-boss-startup.png"
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-beam-sentinel-startup.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-beam-sentinel-active.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-crown-beam-startup.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-crown-beam-active.png"
       ],
       "retire_paths": [],
       "runtime_change_paths": [

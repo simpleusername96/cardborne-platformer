@@ -540,7 +540,9 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
     actual referenced images. Candidate
     `527607b4f68c950a4781b4a6dc521d086d66d752851b34320ca799be0edf23fe` is exact `128x32`
     RGBA with a centered `128x20` borderless plane and remains workbench-only pending rendered
-    state evidence and exact user approval.
+    state evidence and exact user approval. The canonical 87-image native capture passes and now
+    includes dedicated Beam Sentinel and Crown-beam startup/active AS-IS/TO-BE evidence; only the
+    approval gate remains.
 - [ ] **6.7** Retune the existing beam planes without adding a batch.
   - Change: startup uses full-width body alpha `0.16 -> 0.34` over readiness plus an ivory filament
     `min(3.5, width*0.065)` at alpha `0.32 -> 0.66`. Active uses full-width body alpha `0.92`,

@@ -46,3 +46,11 @@ text, shadow, reflection, and watermark.
 - Canvas/pivot: `128x32`, `[64,16]`.
 - Shared by Beam Sentinel and straight boss beams.
 - Candidate bytes may move to production only after exact user approval.
+
+## Rendered evidence
+
+The canonical full-evidence capture path passed with 87 exact outputs at 1280x720 after adding
+dedicated Crown-beam startup and active fixtures. The original production raster was restored to
+SHA-256 `f30a3e2027de9e3580973d1e54051617e7b5f87e58571d768f6ad558b2924e48`
+after candidate capture. Exact AS-IS and TO-BE Beam Sentinel/Crown startup and active images are
+stored under `docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/`.

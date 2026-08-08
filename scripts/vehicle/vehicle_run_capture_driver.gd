@@ -122,6 +122,8 @@ const FULL_CAPTURE_FILES := [
 	"30-boss-05-stage-5-shield-restored.png",
 	"30-boss-05-stage-5-startup-imminent.png",
 	"30-boss-05-stage-5-startup.png",
+	"30-boss-05-stage-5-crown-beam-startup.png",
+	"30-boss-05-stage-5-crown-beam-active.png",
 	"90-pause.png",
 	"91-stage-report.png",
 	"92-failure-report.png",
