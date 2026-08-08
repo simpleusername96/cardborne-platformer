@@ -333,7 +333,8 @@ func query_nearest_overlaps_into(
 
 func rebuild_local_overlap_cache(refresh_slots: PackedByteArray) -> void:
 	## Captures one immutable boundary snapshot, then rebuilds only marked owner
-	## rows from their 3x3 local-cell neighborhoods.
+	## rows from cells that can contain a body overlap. The candidate loop stays
+	## inline because dispatching once per dense-cell candidate is a measured hot path.
 	_local_overlap_builds += 1
 	_local_overlap_valid.fill(0)
 	_local_overlap_counts.fill(0)
@@ -353,24 +354,95 @@ func rebuild_local_overlap_cache(refresh_slots: PackedByteArray) -> void:
 			continue
 		_local_overlap_valid[owner_slot] = 1
 		_local_overlap_generations[owner_slot] = _local_snapshot_generations[owner_slot]
-		var owner_cell_index := _local_member_cells[owner_slot]
-		var owner_cell_y := floori(
-			float(owner_cell_index) / float(_local_columns)
+		var owner_position := _local_snapshot_positions[owner_slot]
+		var owner_radius := float(_local_snapshot_body_radii[owner_slot])
+		var overlap_extent := minf(
+			LOCAL_OVERLAP_DISTANCE,
+			owner_radius + _maximum_local_body_radius
 		)
-		var owner_cell_x := owner_cell_index - owner_cell_y * _local_columns
-		var min_x := maxi(0, owner_cell_x - 1)
-		var max_x := mini(_local_columns - 1, owner_cell_x + 1)
-		var min_y := maxi(0, owner_cell_y - 1)
-		var max_y := mini(_local_rows - 1, owner_cell_y + 1)
-		for cell_y in range(min_y, max_y + 1):
-			for cell_x in range(min_x, max_x + 1):
+		var extent := Vector2.ONE * overlap_extent
+		var min_cell := _local_cell_for(owner_position - extent)
+		var max_cell := _local_cell_for(owner_position + extent)
+		var row_offset := owner_slot * LOCAL_OVERLAP_LIMIT
+		var overlap_count := 0
+		for cell_y in range(min_cell.y, max_cell.y + 1):
+			for cell_x in range(min_cell.x, max_cell.x + 1):
 				var bucket: Array = _local_cells[
 					cell_y * _local_columns + cell_x
 				]
 				for candidate_slot_value in bucket:
-					_offer_local_overlap_candidate(
-						owner_slot, int(candidate_slot_value)
+					var candidate_slot := int(candidate_slot_value)
+					if (
+						candidate_slot < 0
+						or candidate_slot >= MAX_TRACKED_ACTORS
+						or owner_slot == candidate_slot
+						or _local_snapshot_valid[candidate_slot] == 0
+					):
+						continue
+					var distance_squared := owner_position.distance_squared_to(
+						_local_snapshot_positions[candidate_slot]
 					)
+					var combined_radius := (
+						owner_radius
+						+ float(_local_snapshot_body_radii[candidate_slot])
+					)
+					if (
+						distance_squared > LOCAL_OVERLAP_DISTANCE_SQUARED
+						or distance_squared >= combined_radius * combined_radius
+					):
+						continue
+					var insert_at := mini(
+						overlap_count, LOCAL_OVERLAP_LIMIT - 1
+					)
+					if overlap_count >= LOCAL_OVERLAP_LIMIT:
+						var worst_slot := _local_overlap_neighbor_slots[
+							row_offset + insert_at
+						]
+						var worst_distance := _local_overlap_distances[
+							row_offset + insert_at
+						]
+						if not (
+							distance_squared < worst_distance
+							or (
+								is_equal_approx(distance_squared, worst_distance)
+								and _local_snapshot_actor_ids[candidate_slot]
+									< _local_snapshot_actor_ids[worst_slot]
+							)
+						):
+							continue
+					while insert_at > 0:
+						var previous_index := row_offset + insert_at - 1
+						var previous_slot := _local_overlap_neighbor_slots[
+							previous_index
+						]
+						var previous_distance := _local_overlap_distances[
+							previous_index
+						]
+						if not (
+							distance_squared < previous_distance
+							or (
+								is_equal_approx(distance_squared, previous_distance)
+								and _local_snapshot_actor_ids[candidate_slot]
+									< _local_snapshot_actor_ids[previous_slot]
+							)
+						):
+							break
+						_local_overlap_neighbor_slots[
+							row_offset + insert_at
+						] = previous_slot
+						_local_overlap_distances[
+							row_offset + insert_at
+						] = previous_distance
+						insert_at -= 1
+					_local_overlap_neighbor_slots[
+						row_offset + insert_at
+					] = candidate_slot
+					_local_overlap_distances[
+						row_offset + insert_at
+					] = distance_squared
+					if overlap_count < LOCAL_OVERLAP_LIMIT:
+						overlap_count += 1
+		_local_overlap_counts[owner_slot] = overlap_count
 
 
 func cached_local_overlap_count(owner: EnemyState) -> int:
@@ -667,83 +739,6 @@ func _local_overlap_owner_is_valid(owner: EnemyState, slot: int) -> bool:
 		and slot < MAX_TRACKED_ACTORS
 		and _local_overlap_valid[slot] != 0
 		and _local_overlap_generations[slot] == maxi(1, owner.runtime_generation)
-	)
-
-
-func _offer_local_overlap_candidate(owner_slot: int, candidate_slot: int) -> void:
-	if (
-		owner_slot < 0
-		or owner_slot >= MAX_TRACKED_ACTORS
-		or candidate_slot < 0
-		or candidate_slot >= MAX_TRACKED_ACTORS
-		or owner_slot == candidate_slot
-		or _local_snapshot_valid[owner_slot] == 0
-		or _local_snapshot_valid[candidate_slot] == 0
-	):
-		return
-	var distance_squared := _local_snapshot_positions[owner_slot].distance_squared_to(
-		_local_snapshot_positions[candidate_slot]
-	)
-	var combined_radius := (
-		float(_local_snapshot_body_radii[owner_slot])
-		+ float(_local_snapshot_body_radii[candidate_slot])
-	)
-	if (
-		distance_squared > LOCAL_OVERLAP_DISTANCE_SQUARED
-		or distance_squared >= combined_radius * combined_radius
-	):
-		return
-	_offer_local_overlap_result(owner_slot, candidate_slot, distance_squared)
-
-
-func _offer_local_overlap_result(
-	owner_slot: int,
-	neighbor_slot: int,
-	distance_squared: float
-) -> void:
-	var row_offset := owner_slot * LOCAL_OVERLAP_LIMIT
-	var count := int(_local_overlap_counts[owner_slot])
-	if count >= LOCAL_OVERLAP_LIMIT and not _local_overlap_value_is_better(
-		neighbor_slot,
-		distance_squared,
-		_local_overlap_neighbor_slots[row_offset + count - 1],
-		_local_overlap_distances[row_offset + count - 1]
-	):
-		return
-	var insert_at := mini(count, LOCAL_OVERLAP_LIMIT - 1)
-	while insert_at > 0 and _local_overlap_value_is_better(
-		neighbor_slot,
-		distance_squared,
-		_local_overlap_neighbor_slots[row_offset + insert_at - 1],
-		_local_overlap_distances[row_offset + insert_at - 1]
-	):
-		if insert_at < LOCAL_OVERLAP_LIMIT:
-			_local_overlap_neighbor_slots[row_offset + insert_at] = (
-				_local_overlap_neighbor_slots[row_offset + insert_at - 1]
-			)
-			_local_overlap_distances[row_offset + insert_at] = (
-				_local_overlap_distances[row_offset + insert_at - 1]
-			)
-		insert_at -= 1
-	_local_overlap_neighbor_slots[row_offset + insert_at] = neighbor_slot
-	_local_overlap_distances[row_offset + insert_at] = distance_squared
-	if count < LOCAL_OVERLAP_LIMIT:
-		_local_overlap_counts[owner_slot] = count + 1
-
-
-func _local_overlap_value_is_better(
-	candidate_slot: int,
-	distance_squared: float,
-	other_slot: int,
-	other_distance_squared: float
-) -> bool:
-	return (
-		distance_squared < other_distance_squared
-		or (
-			is_equal_approx(distance_squared, other_distance_squared)
-			and _local_snapshot_actor_ids[candidate_slot]
-				< _local_snapshot_actor_ids[other_slot]
-		)
 	)
 
 

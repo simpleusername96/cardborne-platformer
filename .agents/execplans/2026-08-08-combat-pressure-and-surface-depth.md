@@ -219,6 +219,9 @@ Source owners: `scripts/performance/vehicle_performance_scenario.gd`,
     never as a release pass.
   - Guard: do not start if the wrapper detects another Godot process or if the user cannot drive
     the trace; record the deferred precondition without substituting a synthetic play claim.
+  - Deferred precondition: no user-controlled gameplay was available during the 2026-08-09
+    implementation run. Keep this task open; the synthetic release scenarios below are not a
+    substitute for the requested normal-play correlation trace.
 - [ ] **1.3** Complete clean native qualification owned by the active performance plan.
   - Change: after the required user cost alignment, run the exact clean-commit `peak_horde` and
     `capacity_pressure` commands in Phase 8/Test Plan of
@@ -229,6 +232,25 @@ Source owners: `scripts/performance/vehicle_performance_scenario.gd`,
     frame over 33.3 ms, capacity physics p95/p99 `<=6/8 ms`, draw p95 `<=200`, batches `<=50`.
   - Guard: any overlap, focus loss, dirty commit, workload mismatch, or invalid authority field
     rejects the sample without tuning the workload.
+  - Current evidence: clean commit `cc9167a2` produced authoritative, focused, workload-valid
+    `peak_horde` and `capacity_pressure` results at 1280x720 with GL Compatibility. Both are valid
+    failures. Peak frame p95/p99 is `143.677/147.068 ms`, median is `7.5 FPS`, 1% low is
+    `6.746 FPS`, and physics p95/p99 is `29.463/36.566 ms`. Capacity frame p95/p99 is
+    `144.588/149.093 ms`, median is `7.5 FPS`, 1% low is `6.690 FPS`, and physics p95/p99 is
+    `39.015/49.223 ms`. Both keep 38 batches and draw p95 below 100. The first peak attempt lost
+    focus and is retained separately as `invalid-cc9167a2-peak_horde-60s-focus-loss.json`.
+  - Recovery requirement: follow the valid-failure contingency in the prerequisite performance
+    plan. Preserve counts, cadence, renderer, and thresholds; make only a semantics-preserving
+    correction inside the measured `enemy_scheduled_ordinary` / `enemies_and_grid` owner, rerun
+    its focused checks, commit it, and requalify both native scenarios before Phase 2.
+  - Recovery evidence: a diagnostic owner split attributed about `8.0 ms` of the saturated
+    ordinary-enemy step to roughly 3,823 overlap candidates per cache build. Keeping the existing
+    array buckets while restricting them to the exact possible-overlap cell rectangle and inlining
+    the candidate/top-eight loop reduced the same headless 320-enemy moving-path mean from
+    `12.078 ms` to `5.601 ms`. Spatial-grid, local-steering, update-schedule, Run, and performance-
+    scenario validators pass without changing counts, cadence, collision predicates, ordering,
+    workload, or thresholds. This diagnostic is direction evidence only; native qualification is
+    still required.
 - [ ] **1.4** Qualify the built Web target and close the prerequisite plan.
   - Change: only after both native samples pass, export Web from the same clean commit, load
     `$npjt-port-guard`, use the `codex` lane, collect the exact built-Web `peak_horde` result with
@@ -613,8 +635,10 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 1 - Qualify the current performance baseline.
-- Next task: 1.2 - Record one user-controlled normal-play hitch trace.
-- Last completed gate: Task 1.1 focused fixture validation.
+- Next task: 1.3 recovery - Correct the measured ordinary-enemy hot path, then rerun native
+  qualification. Task 1.2 remains deferred until user-controlled normal play is available.
+- Last completed gate: Task 1.1 focused fixture validation; Task 1.3 has valid red evidence but has
+  not passed.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 
