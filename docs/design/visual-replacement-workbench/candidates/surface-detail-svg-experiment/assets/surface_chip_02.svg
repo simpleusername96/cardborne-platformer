@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" shape-rendering="geometricPrecision">
+  <title>Flat embedded surface chip 2</title>
+  <desc>Review-only deterministic SVG experiment authorized by the user on 2026-08-09. Not approved or connected to runtime.</desc>
+  <polygon points="57.192,32 48.887,43.747 32,44.828 15.979,43.145 12.43,32 15.68,20.647 32,15.709 45.372,22.697" fill="#607586" fill-opacity="0.28"/>
+  <polygon points="45.525,30.797 36.417,36.307 24.909,37.552 17.27,30.797 25.536,24.709 37.776,23.838" fill="#C0C9D0" fill-opacity="0.14"/>
+  <path d="M 23.915 33.678 L 40.204 30.232" fill="none" stroke="#4F6575" stroke-opacity="0.2" stroke-width="1.25" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" shape-rendering="geometricPrecision">
+  <title>Surface detail SVG candidate sheet</title>
+  <desc>Review-only deterministic SVG experiment authorized by the user on 2026-08-09. Not approved or connected to runtime.</desc>
+  <rect width="960" height="420" fill="#EEF3F7"/>
+  <text x="40" y="48" fill="#243445" font-family="Arial, sans-serif" font-size="22" font-weight="700">SURFACE DETAIL — SVG EXPERIMENT</text>
+  <text x="40" y="73" fill="#465A6E" font-family="Arial, sans-serif" font-size="14">REVIEW ONLY · NOT CONNECTED TO RUNTIME</text>
+  <g>
+    <rect x="40" y="105" width="270" height="270" rx="8" fill="#9EADBC"/>
+    <g transform="rotate(0 118 173)" opacity="1">
+      <g transform="translate(70 125)">
+        <g transform="scale(1 1)">
+<g fill="none" stroke="#536979" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 55.394 11.041 L 63 20.773 L 56 33.709 L 50 43.284 L 54 53.221 L 51 63.937 L 54 75.741" stroke-opacity="0.46" stroke-width="2.1"/>
+    <path d="M 56 33.709 L 65.541 37.542 L 77.302 47.874" stroke-opacity="0.34" stroke-width="1.45"/>
+    <path d="M 54 53.221 L 67.823 57.626 L 69.451 62.56" stroke-opacity="0.3" stroke-width="1.25"/>
+  </g>
+        </g>
+      </g>
+    </g>
+    <g transform="rotate(0 226 254)" opacity="1">
+      <g transform="translate(178 206)">
+        <g transform="scale(1 1)">
+<g fill="none" stroke="#536979" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 44.66 12.449 L 45 25.127 L 40 37.119 L 35 46.8 L 43 58.969 L 45 69.87 L 38 79.45" stroke-opacity="0.46" stroke-width="2.1"/>
+    <path d="M 40 37.119 L 29.011 43.218 L 17.418 48.208" stroke-opacity="0.34" stroke-width="1.45"/>
+    <path d="M 43 58.969 L 53.173 65.038 L 58.788 70.037" stroke-opacity="0.3" stroke-width="1.25"/>
+  </g>
+        </g>
+      </g>
+    </g>
+    <text x="58" y="352" fill="#243445" font-family="Arial, sans-serif" font-size="14" font-weight="700">CRACK · 96×96</text>
+  </g>
+  <g>
+    <rect x="345" y="105" width="270" height="270" rx="8" fill="#9EADBC"/>
+    <g transform="rotate(0 439 178)" opacity="1">
+      <g transform="translate(375 130)">
+        <g transform="scale(1 1)">
+<path d="M 116.83 48 L 111.233 59.777 L 99.45 70.048 L 76.434 69.431 L 58.243 78.674 L 39.428 71.833 L 28.824 62.312 L 16.432 53.662 L 11.817 41.789 L 31.423 34.746 L 38.119 22.897 L 59.899 26.152 L 78.805 22.483 L 97.705 27.038 L 103.023 38.271 Z" fill="#627887" fill-opacity="0.1"/>
+  <path d="M 96.244 46.808 L 91.145 56.92 L 74.112 60.205 L 62.808 68.202 L 46.903 64.626 L 31.605 60.767 L 28.662 51.118 L 32.023 42.985 L 33.785 33.984 L 45.842 27.344 L 62.025 29.207 L 76.235 31.602 L 88.961 37.37 Z" fill="#536B7B" fill-opacity="0.08"/>
+  <path d="M 91.16 35.257 L 88.591 39.595 L 82.152 42.109 L 74.567 41.249 L 68.212 37.939 L 68.04 32.535 L 75.034 29.761 L 82.442 27.393 L 90.719 29.819 Z" fill="#718594" fill-opacity="0.07"/>
+        </g>
+      </g>
+    </g>
+    <g transform="rotate(180 520 268)" opacity="1">
+      <g transform="translate(456 220)">
+        <g transform="scale(1 1)">
+<path d="M 113.554 48 L 104.447 58.085 L 101.31 71.205 L 80.027 75.623 L 59.569 71.606 L 44.015 67.384 L 27.036 63.039 L 15.424 53.782 L 20.9 42.87 L 27.64 33.207 L 42.18 26.835 L 59.712 25.151 L 77.483 24.762 L 94.624 28.954 L 106.113 37.5 Z" fill="#627887" fill-opacity="0.1"/>
+  <path d="M 91.28 47.472 L 93.781 57.504 L 76.61 60.53 L 65.402 67.404 L 50.488 64.224 L 33.773 61.811 L 25.088 52.721 L 28.991 42.79 L 35.344 33.952 L 48.938 28.316 L 65.347 27.806 L 78.761 32.581 L 91.785 38.057 Z" fill="#536B7B" fill-opacity="0.08"/>
+  <path d="M 96.751 39.6 L 91.746 43.769 L 86.075 47.98 L 76.814 46.913 L 72.442 42.116 L 73.46 37.313 L 78.154 33.716 L 85.498 33.235 L 92.975 34.797 Z" fill="#718594" fill-opacity="0.07"/>
+        </g>
+      </g>
+    </g>
+    <text x="363" y="352" fill="#243445" font-family="Arial, sans-serif" font-size="14" font-weight="700">WEAR STAIN · 128×96</text>
+  </g>
+  <g>
+    <rect x="650" y="105" width="270" height="270" rx="8" fill="#9EADBC"/>
+    <g transform="rotate(0 732 177)" opacity="1">
+      <g transform="translate(700 145)">
+        <g transform="scale(1 1)">
+<polygon points="54.881,32 48.325,43.357 32,45.924 15.918,43.187 7.431,32 16.901,21.496 32,17.105 45.25,22.783" fill="#607586" fill-opacity="0.28"/>
+  <polygon points="45.558,30.147 37.903,35.812 25.468,37.735 19.79,30.147 26.459,23.614 39.65,22.619" fill="#C0C9D0" fill-opacity="0.14"/>
+  <path d="M 24.719 35.598 L 45.172 27.707" fill="none" stroke="#4F6575" stroke-opacity="0.2" stroke-width="1.25" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+    <g transform="rotate(90 822 267)" opacity="1">
+      <g transform="translate(790 235)">
+        <g transform="scale(1 1)">
+<polygon points="57.192,32 48.887,43.747 32,44.828 15.979,43.145 12.43,32 15.68,20.647 32,15.709 45.372,22.697" fill="#607586" fill-opacity="0.28"/>
+  <polygon points="45.525,30.797 36.417,36.307 24.909,37.552 17.27,30.797 25.536,24.709 37.776,23.838" fill="#C0C9D0" fill-opacity="0.14"/>
+  <path d="M 23.915 33.678 L 40.204 30.232" fill="none" stroke="#4F6575" stroke-opacity="0.2" stroke-width="1.25" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+    <text x="668" y="352" fill="#243445" font-family="Arial, sans-serif" font-size="14" font-weight="700">EMBEDDED CHIP · 64×64</text>
+  </g>
+</svg>
