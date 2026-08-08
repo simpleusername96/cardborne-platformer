@@ -635,9 +635,12 @@ Web export만으로 interactive built-Web smoke나 release performance를
   PNGs are fitted inside that truth and never become a
   second topology owner.
 - Walkable surface, outer wall, and inner wall render as the three flat map-role
-  fills without legacy patterned floor or shared-wall rasters. `SurfaceDetail` is
-  now an authorized semantic category, but no detail asset or runtime placement is
-  production-integrated until its active ExecPlan approval and validation gates pass.
+  fills without legacy patterned floor or shared-wall rasters. The three approved
+  `SurfaceDetail` SVGs are production-integrated as deterministic presentation-only
+  72/72/48 retained instances with no collision, navigation, or per-frame update owner.
+- Beam Sentinel and boss straight beams share the approved borderless `128x32`
+  beam-strip raster. Runtime tint, alpha, live corridor size, and the two-plane
+  startup/three-plane active hierarchy remain presentation-owned.
 - Mystery Device gameplay and its two approved raster states are integrated.
   Candidate and intermediate files stay outside the production manifest.
 - Every non-beam projectile resolves one of the three exclusive player-primary,

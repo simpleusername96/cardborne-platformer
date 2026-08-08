@@ -4076,7 +4076,7 @@
       "title_ko": "직선 빔 스트립 교체",
       "owner": "gameplay_manifest",
       "switch_kind": "replace",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png"
       ],
@@ -4159,7 +4159,21 @@
         },
         "retire_paths": []
       },
-      "application": null
+      "application": {
+        "commit": "655e0ee2cee81a8e4e300782dc0285295da5f952",
+        "applied_at": "2026-08-09T08:56:46+09:00",
+        "validation_evidence": [
+          ".\\tools\\godot.ps1 --path . --headless --import",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_attack_route_readability.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_player_presentation.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          ".\\tools\\validation\\validate_cardborne_visual_authority.ps1",
+          "native full-evidence capture: 87 exact Korean 1280x720 outputs"
+        ]
+      }
     },
     {
       "id": "gameplay_code_asset_rasterization",

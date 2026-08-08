@@ -520,8 +520,9 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
     eligible rendering evidence regresses,
     stop this branch for contract revision; do not silently add chunking or reduce thresholds.
   - Progress: asset promotion, exact hashes, 70-image manifest, stable SVG import, retained
-    72/72/48 batches, and the focused code/authority gates pass. Native/Web actual-size,
-    grayscale, and combat-pressure capture remains in the Phase 7 built-product QA pass.
+    72/72/48 batches, and the focused code/authority gates pass. The 87-image native actual-size
+    and combat-pressure capture passes; Web and explicit grayscale review remain in the Phase 7
+    built-product QA pass.
 - [x] **6.5** Open a dedicated per-asset beam replacement unit.
   - Change: create a workbench unit for `cue/beam_strip_9` instead of reopening the old eight-asset
     rasterization batch. Preserve semantic ID, `128x32` canvas, `[64,16]` pivot, import settings,
@@ -543,7 +544,7 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
     and includes dedicated Beam Sentinel and Crown-beam startup/active AS-IS/TO-BE evidence. On
     2026-08-09 the user referenced this exact candidate and authorized continuation with the
     runtime-colored result; the workbench technical ledger pins the target path and exact hash.
-- [ ] **6.7** Retune the existing beam planes without adding a batch.
+- [x] **6.7** Retune the existing beam planes without adding a batch.
   - Change: startup uses full-width body alpha `0.16 -> 0.34` over readiness plus an ivory filament
     `min(3.5, width*0.065)` at alpha `0.32 -> 0.66`. Active uses full-width body alpha `0.92`,
     inner plane `min(20, width*0.34)` at alpha `0.88`, and ivory core
@@ -551,8 +552,11 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
   - Accept: startup reads non-damaging and active reads stronger; the full active width remains
     visible; Beam Sentinel and every boss beam use the same approved strip; combat/effect counts,
     overlay batch count, damage geometry, timing, and collision are unchanged.
-  - Progress: the numeric two-plane/three-plane hierarchy and exact buffer assertions are
-    implemented. Candidate promotion and final rendered-state validation remain gated by 6.6.
+  - Evidence: commit `655e0ee2` promotes the approved bytes at the pinned SHA-256. Import and
+    combat-renderer, attack-readability, player-presentation, semantic-provider, workbench, and
+    visual-authority checks pass. The production 87-image Korean 1280x720 capture shows Beam
+    Sentinel and Crown startup as a restrained two-plane corridor and active as a borderless
+    three-plane corridor, with unchanged damage geometry and no added batch or endpoint cap.
 
 Batch gate:
 
@@ -663,9 +667,9 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 6 - Retune and replace the straight boss beam.
-- Next task: 6.7 - promote the approved 128x32 beam candidate and validate the shared two-/three-
-  plane renderer. Task 3.6 retains its rendered
+- Current phase: Phase 7 - Consolidate correctness, feel, export, and performance.
+- Next task: 7.1 - run the consolidated correctness/authority matrix and production Web export.
+  Task 3.6 retains its rendered
   pursuit/ranged capture for final runtime QA. Task 1.2 remains deferred until
   user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
 - Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
