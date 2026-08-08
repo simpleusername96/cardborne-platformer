@@ -26,8 +26,8 @@ const COMBAT_RENDERER_PATH := (
 const WORLD_GEOMETRY_PATH := (
 	"res://scripts/presentation/vehicle_world_mesh_builder.gd"
 )
-const SURFACE_PATTERN_PATH := (
-	"res://scripts/presentation/vehicle_field_surface_pattern_compiler.gd"
+const SURFACE_DETAIL_PATH := (
+	"res://scripts/presentation/vehicle_surface_detail_compiler.gd"
 )
 const MINIMAP_GEOMETRY_PATH := (
 	"res://scripts/ui/vehicle_minimap_mesh_builder.gd"
@@ -76,6 +76,7 @@ static func provider_fingerprint() -> String:
 	)
 	_append_descriptor_records(records, "world_field", WorldCatalog.FIELD_DESCRIPTORS)
 	_append_descriptor_records(records, "world_object", WorldCatalog.WORLD_OBJECT_DESCRIPTORS)
+	_append_descriptor_records(records, "surface_detail", WorldCatalog.SURFACE_DETAIL_DESCRIPTORS)
 	records.append(
 		"action_glyph_recipes=%s"
 		% FileAccess.get_sha256(ACTION_GLYPH_RECIPE_PATH)
@@ -89,8 +90,8 @@ static func provider_fingerprint() -> String:
 		% FileAccess.get_sha256(WORLD_GEOMETRY_PATH)
 	)
 	records.append(
-		"surface_pattern=%s"
-		% FileAccess.get_sha256(SURFACE_PATTERN_PATH)
+		"surface_detail=%s"
+		% FileAccess.get_sha256(SURFACE_DETAIL_PATH)
 	)
 	records.append(
 		"minimap_geometry=%s"

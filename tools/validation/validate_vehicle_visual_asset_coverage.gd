@@ -6,13 +6,12 @@ const AssetProvider = preload(
 
 const EXPECTED_CATEGORY_COUNTS := {
 	&"attachment":1,
-	&"actor":19,
+	&"actor":18,
 	&"boss":5,
-	&"boss_node":3,
 	&"secondary":4,
-	&"projectile":1,
+	&"projectile":2,
 	&"pickup":4,
-	&"world":17,
+	&"world":19,
 	&"effect":1,
 	&"cue":6,
 	&"upgrade":10,
@@ -39,8 +38,8 @@ func _initialize() -> void:
 			]
 		)
 	_expect(
-		AssetProvider.asset_ids().size() == 71,
-		"final production coverage totals 71 authored gameplay images"
+		AssetProvider.asset_ids().size() == 70,
+		"final production coverage totals 67 PNGs plus three approved SVGs"
 	)
 	var unique_paths := {}
 	for asset_id in AssetProvider.asset_ids():

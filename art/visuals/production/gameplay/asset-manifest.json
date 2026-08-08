@@ -8,7 +8,7 @@
     "reference_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889"
   },
   "image_contract": {
-    "format": "PNG",
+    "format": "PNG, with the exact approved deterministic SurfaceDetail SVG exception",
     "color_space": "sRGB",
     "alpha": "straight RGBA",
     "facing": "+X/right unless the asset is rotationally symmetric",
@@ -24,10 +24,10 @@
     "collision_rule": "Collision geometry, radii, live telegraphs, timing, damage, value, and state remain authoritative in gameplay code.",
     "projectile_rule": "Player primary, player seeker, and hostile non-beam projectiles use separate semantic identities; runtime owns rotation, presentation-only scale, and affinity tint.",
     "effect_rule": "effect/emp_release is the only authored raster effect; runtime owns live-radius scale and fade.",
-    "shared_world_cue_rule": "Fixed world surface, wall, health-frame, ring, beam, marker, disk, and crosshair identities are authored PNGs. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
+    "shared_world_cue_rule": "Fixed world surface, wall, health-frame, ring, beam, marker, disk, and crosshair identities are authored PNGs. The three approved SurfaceDetail identities are exact deterministic SVG sources. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, and live timing remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 67,
+  "final_asset_count": 70,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -39,6 +39,7 @@
     "pickup_reward": 4,
     "world_facility": 16,
     "world_presentation": 2,
+    "surface_detail": 3,
     "cue": 6,
     "emp": 1,
     "upgrade": 10
@@ -116,6 +117,9 @@
     {"id": "world/wear_tile_intact", "path": "world/wear_tile_intact.png", "canvas": [240, 160], "pivot": [120, 80], "category": "world"},
     {"id": "world/wear_tile_cracked", "path": "world/wear_tile_cracked.png", "canvas": [240, 160], "pivot": [120, 80], "category": "world"},
     {"id": "world/wear_tile_collapsed", "path": "world/wear_tile_collapsed.png", "canvas": [240, 160], "pivot": [120, 80], "category": "world"},
+    {"id": "world/surface_detail_crack", "path": "world/surface_detail_crack.svg", "canvas": [96, 96], "content_rect": [0, 0, 96, 96], "pivot": [48, 48], "category": "world", "authoring": "approved_deterministic_surface_detail_svg"},
+    {"id": "world/surface_detail_stain", "path": "world/surface_detail_stain.svg", "canvas": [128, 96], "content_rect": [0, 0, 128, 96], "pivot": [64, 48], "category": "world", "authoring": "approved_deterministic_surface_detail_svg"},
+    {"id": "world/surface_detail_embedded_chip", "path": "world/surface_detail_embedded_chip.svg", "canvas": [64, 64], "content_rect": [0, 0, 64, 64], "pivot": [32, 32], "category": "world", "authoring": "approved_deterministic_surface_detail_svg"},
 
     {"id": "effect/emp_release", "path": "effects/fx_emp_release.png", "canvas": [512, 512], "pivot": [256, 256], "category": "effect", "scale_from_gameplay_radius": true},
 

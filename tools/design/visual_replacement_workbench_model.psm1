@@ -17,6 +17,11 @@ $script:Owners = @(
 )
 $script:SwitchKinds = @('replace', 'add', 'consolidate', 'retire')
 $script:TechnicalRecordOwners = @('BK', 'autonomous-executor')
+$script:ApprovedSurfaceDetailSvgPaths = @{
+    'art/visuals/production/gameplay/world/surface_detail_crack.svg' = @(96, 96, '87828561653b35672dc09608848fbfda0befda687cb53b93f502a4444005a2de')
+    'art/visuals/production/gameplay/world/surface_detail_stain.svg' = @(128, 96, '955bdb5bb132775b1d331fca86f90c01bc1f5a1b281206e3a491199f69dad347')
+    'art/visuals/production/gameplay/world/surface_detail_embedded_chip.svg' = @(64, 64, 'b5c7c0867a8c8f7b51f666875c81f8281db44479d41fff02601cb6cf652ab593')
+}
 
 function ConvertTo-NormalizedVisualPath {
     param([Parameter(Mandatory)][string]$Path)
@@ -85,12 +90,40 @@ function Get-VisualProductionMediaPaths {
     $root = Resolve-VisualRepositoryPath -RepoRoot $RepoRoot -Path $script:ProductionRoot
     return @(
         Get-ChildItem -LiteralPath $root -Recurse -File |
-            Where-Object { $_.Extension -in @('.png', '.ttf') } |
+            Where-Object {
+                $_.Extension -in @('.png', '.ttf') -or
+                $script:ApprovedSurfaceDetailSvgPaths.ContainsKey(
+                    (ConvertTo-NormalizedVisualPath $_.FullName.Substring($RepoRoot.Length + 1))
+                )
+            } |
             ForEach-Object {
                 ConvertTo-NormalizedVisualPath $_.FullName.Substring($RepoRoot.Length + 1)
             } |
             Sort-Object
     )
+}
+
+function Get-VisualMediaDimensions {
+    param(
+        [Parameter(Mandatory)][string]$LiteralPath,
+        [Parameter(Mandatory)][string]$RepositoryPath
+    )
+    if ($RepositoryPath.EndsWith('.png')) { return Get-VisualPngDimensions $LiteralPath }
+    if ($RepositoryPath.EndsWith('.svg')) {
+        $productionPath = if ($RepositoryPath.StartsWith("$script:WorkbenchRoot/to-be/assets/")) {
+            $RepositoryPath.Substring("$script:WorkbenchRoot/to-be/assets/".Length)
+        } else { $RepositoryPath }
+        if (-not $script:ApprovedSurfaceDetailSvgPaths.ContainsKey($productionPath)) {
+            throw "unapproved SVG media path: $RepositoryPath"
+        }
+        $contract = $script:ApprovedSurfaceDetailSvgPaths[$productionPath]
+        $observedHash = Get-VisualSha256 $LiteralPath
+        if ($observedHash -cne [string]$contract[2]) {
+            throw "approved SurfaceDetail SVG hash mismatch: $RepositoryPath"
+        }
+        return @([int]$contract[0], [int]$contract[1])
+    }
+    return @($null, $null)
 }
 
 function Get-VisualCanonicalJson {
@@ -313,11 +346,11 @@ function Get-VisualReplacementProjection {
                 if (-not $allowsRetiredPathsMissing) { $failures.Add("missing current path: $id -> $path") }
                 continue
             }
-            if ([IO.Path]::GetExtension($path).ToLowerInvariant() -in @('.png','.ttf')) {
+            if ([IO.Path]::GetExtension($path).ToLowerInvariant() -in @('.png','.ttf','.svg')) {
                 if ($coveredMedia.ContainsKey($path)) { $failures.Add("production media assigned twice: $path") }
                 $coveredMedia[$path] = $id
             }
-            $dimensions = if ($path.EndsWith('.png')) { Get-VisualPngDimensions $absolute } else { @($null,$null) }
+            $dimensions = Get-VisualMediaDimensions $absolute $path
             $currentRecords.Add([ordered]@{path=$path;bytes=(Get-Item -LiteralPath $absolute).Length;width=$dimensions[0];height=$dimensions[1];sha256=(Get-VisualSha256 $absolute)})
         }
         foreach ($pathValue in @($unit.consumer_paths) + @($unit.runtime_change_paths) + @($unit.preview_paths) + $renderedAsIsPathsRaw + @($unit.retire_paths)) {
@@ -342,7 +375,10 @@ function Get-VisualReplacementProjection {
             $path = ConvertTo-NormalizedVisualPath ([string]$pathValue)
             try { Resolve-VisualRepositoryPath $RepoRoot $path | Out-Null } catch { $failures.Add($_.Exception.Message); continue }
             if (-not $path.StartsWith("$script:ProductionRoot/")) { $failures.Add("final path escapes production root: $id -> $path") }
-            if ([IO.Path]::GetExtension($path).ToLowerInvariant() -notin @('.png','.ttf')) { $failures.Add("final path is not PNG or font: $id -> $path") }
+            $extension = [IO.Path]::GetExtension($path).ToLowerInvariant()
+            if ($extension -notin @('.png','.ttf') -and -not $script:ApprovedSurfaceDetailSvgPaths.ContainsKey($path)) {
+                $failures.Add("final path is not PNG, font, or an exact approved SurfaceDetail SVG: $id -> $path")
+            }
             if ($finalPaths.ContainsKey($path)) { $failures.Add("final path assigned twice: $path") }
             $finalPaths[$path] = $id
             $unitFinalPaths.Add($path)
@@ -361,11 +397,11 @@ function Get-VisualReplacementProjection {
                     continue
                 }
                 $unitCurrentPaths[$path] = $true
-                if ([IO.Path]::GetExtension($path).ToLowerInvariant() -in @('.png','.ttf')) {
+                if ([IO.Path]::GetExtension($path).ToLowerInvariant() -in @('.png','.ttf','.svg')) {
                     if ($coveredMedia.ContainsKey($path)) { $failures.Add("production media assigned twice: $path") }
                     $coveredMedia[$path] = $id
                 }
-                $dimensions = if ($path.EndsWith('.png')) { Get-VisualPngDimensions $absolute } else { @($null,$null) }
+                $dimensions = Get-VisualMediaDimensions $absolute $path
                 $currentRecords.Add([ordered]@{
                     path=$path;bytes=(Get-Item -LiteralPath $absolute).Length;
                     width=$dimensions[0];height=$dimensions[1];sha256=(Get-VisualSha256 $absolute)
@@ -414,7 +450,7 @@ function Get-VisualReplacementProjection {
             $exists = Test-Path -LiteralPath $absoluteToBe -PathType Leaf
             if ($exists -and ([IO.Path]::GetFileNameWithoutExtension($target) -match '(sheet|montage|candidates)')) { $failures.Add("deliverable looks like review media: $target") }
             if ($exists) {
-                $actualSize = Get-VisualPngDimensions $absoluteToBe
+                $actualSize = Get-VisualMediaDimensions $absoluteToBe $toBePath
                 if ($actualSize[0] -ne [int]$deliverable.width -or $actualSize[1] -ne [int]$deliverable.height) { $failures.Add("deliverable dimension mismatch: $target") }
             }
             $hash = if ($exists) { Get-VisualSha256 $absoluteToBe } else { $null }
@@ -474,6 +510,9 @@ function Get-VisualReplacementProjection {
                 }
 
                 $hasRasterDeliverable = @($deliverableRecords | Where-Object { [string]$_.target_path -like '*.png' }).Count -gt 0
+                $hasSurfaceDetailSvgDeliverable = @($deliverableRecords | Where-Object {
+                    $script:ApprovedSurfaceDetailSvgPaths.ContainsKey([string]$_.target_path)
+                }).Count -gt 0
                 $referenceInputMethod = if ($null -ne $visualAuthorityEvidence.PSObject.Properties['reference_input_method']) { [string]$visualAuthorityEvidence.reference_input_method } else { '' }
                 if ($hasRasterDeliverable) {
                     if ($actualImageReferenceUsed -isnot [bool] -or -not [bool]$actualImageReferenceUsed) {
@@ -481,6 +520,13 @@ function Get-VisualReplacementProjection {
                     }
                     if ([string]::IsNullOrWhiteSpace($referenceInputMethod) -or $referenceInputMethod -ceq 'not_applicable') {
                         $failures.Add("raster unit lacks reference input method: $id")
+                    }
+                } elseif ($hasSurfaceDetailSvgDeliverable) {
+                    if ($actualImageReferenceUsed -isnot [bool] -or [bool]$actualImageReferenceUsed) {
+                        $failures.Add("SurfaceDetail SVG unit must mark actual image reference as not used: $id")
+                    }
+                    if ($referenceInputMethod -cne 'deterministic_surface_detail_svg_exception') {
+                        $failures.Add("SurfaceDetail SVG unit lacks its exact exception method: $id")
                     }
                 } else {
                     if ($actualImageReferenceUsed -isnot [bool] -or [bool]$actualImageReferenceUsed) {
@@ -601,7 +647,8 @@ function Get-VisualReplacementProjection {
     foreach ($path in $productionMedia) { if (-not $coveredMedia.ContainsKey($path)) { $failures.Add("unassigned production media: $path") } }
     foreach ($path in $coveredMedia.Keys) { if ($path -notin $productionMedia) { $failures.Add("assigned non-production media: $path") } }
     $currentGameplayPng = @($productionMedia | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') })
-    foreach ($path in $currentGameplayPng) {
+    $currentGameplaySvg = @($productionMedia | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.svg') })
+    foreach ($path in @($currentGameplayPng) + @($currentGameplaySvg)) {
         $isFinal = $finalPaths.ContainsKey($path)
         $isRetired = $retirePathOwners.ContainsKey($path)
         if ($isFinal -eq $isRetired) { $failures.Add("current gameplay PNG needs exactly one final disposition: $path") }
@@ -622,7 +669,10 @@ function Get-VisualReplacementProjection {
         };
         summary=[ordered]@{
             gameplay_png=$currentGameplayPng.Count;
+            gameplay_svg=$currentGameplaySvg.Count;
+            gameplay_images=$currentGameplayPng.Count + $currentGameplaySvg.Count;
             final_gameplay_png=@($finalPaths.Keys | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') }).Count;
+            final_gameplay_svg=@($finalPaths.Keys | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.svg') }).Count;
             authored_gameplay_png=@($targetPaths.Keys | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') }).Count;
             reused_gameplay_png=@($reusePaths.Keys | Where-Object { $_.StartsWith("$script:ProductionRoot/gameplay/") -and $_.EndsWith('.png') }).Count;
             retired_gameplay_png=@($currentGameplayPng | Where-Object { $retirePathOwners.ContainsKey($_) }).Count;

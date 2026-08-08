@@ -450,10 +450,11 @@ Source owners: `docs/design/VISUAL_SYSTEM.md`, production asset manifest/workben
     SVG authoring to the checked-in SurfaceDetail generator and exact selected hashes while
     continuing to ban dense noise, obvious tile repetition, collision cues, and gameplay
     interference.
-- [ ] **5.2** Replace the dormant competing floor-pattern owner.
+- [x] **5.2** Replace the dormant competing floor-pattern owner.
   - Change: retire `vehicle_field_surface_pattern_compiler.gd` and register a dedicated
     `vehicle_surface_detail_compiler.gd` responsibility in the active plan/visual contract. The
-    new compiler owns placement only; authored PNGs own pixels and tactical layout owns geometry.
+    new compiler owns placement only; the exact approved SVGs own visible geometry and tactical
+    layout owns gameplay geometry.
   - Accept: only one runtime owner can create ambient floor detail and no prohibited panel-pattern
     path remains reachable or registered.
 - [ ] **5.3** Validate the visual authority workflow change.
@@ -463,6 +464,9 @@ Source owners: `docs/design/VISUAL_SYSTEM.md`, production asset manifest/workben
     `reference_input_method=deterministic_surface_detail_svg_exception`, plus generator path,
     fixed seeds, exact hashes, and user approval. Keep `_02` variants outside production.
   - Accept: `validate_cardborne_visual_authority.ps1` and document-authority validation pass.
+  - Evidence: the visual-authority validator passes. Document authority remains blocked only by
+    the pre-existing retired `2026-08-07-combat-feedback-and-reinforcement-facility.md`; this plan
+    explicitly requires user approval before deleting that document.
 
 ### Phase 6: Promote and integrate sparse surface SVGs and the beam raster
 
@@ -494,7 +498,7 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
   - Accept: the user explicitly approves the reviewed direction and requests these assets be used.
   - Evidence: user approval on 2026-08-09. `_01` is selected for each production identity; `_02`
     remains a review alternative to preserve the three-batch contract.
-- [ ] **6.3** Compile deterministic presentation-only placement.
+- [x] **6.3** Compile deterministic presentation-only placement.
   - Change: generate at most 72 crack, 72 stain, and 48 chip transforms from run-fixed field
     geometry plus a fixed salt. Use fixed low z, 90-degree rotations, scales
     `0.75/1.0/1.25`, minimum 140-pixel center separation, and rejection against void, walls,
@@ -515,6 +519,9 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
     rather than forcing 70. If three batches exceed 12, Godot SVG import is not stable, or
     eligible rendering evidence regresses,
     stop this branch for contract revision; do not silently add chunking or reduce thresholds.
+  - Progress: asset promotion, exact hashes, 70-image manifest, stable SVG import, retained
+    72/72/48 batches, and the focused code/authority gates pass. Native/Web actual-size,
+    grayscale, and combat-pressure capture remains in the Phase 7 built-product QA pass.
 - [ ] **6.5** Open a dedicated per-asset beam replacement unit.
   - Change: create a workbench unit for `cue/beam_strip_9` instead of reopening the old eight-asset
     rasterization batch. Preserve semantic ID, `128x32` canvas, `[64,16]` pivot, import settings,
@@ -647,14 +654,14 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 5 - Authorize and integrate SurfaceDetail.
-- Next task: 5.2 - Replace the dormant floor-pattern owner. Task 3.6 retains its rendered
+- Current phase: Phase 6 - Retune and replace the straight boss beam.
+- Next task: 6.5 - create the exact 128x32 beam candidate and renderer plane hierarchy. Task 3.6 retains its rendered
   pursuit/ranged capture for final runtime QA. Task 1.2 remains deferred until
   user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
-- Last completed gate: Phase 4 replaces Thermal Burn with the bounded Thermal Burst contract.
-  Element/status, attack-contract, dense-group and shield-adjacency burst, upgrade, telemetry,
-  report, localization, renderer, projectile, workbench, and Run validators pass with no new live
-  effect kind.
+- Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
+  promoted unchanged and compile to deterministic 72/72/48 placement across stages in three
+  retained batches. Manifest/provider/world/workbench/visual-authority/Run gates pass. The
+  unrelated retired-plan lifecycle failure keeps Task 5.3 open pending user-approved cleanup.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 

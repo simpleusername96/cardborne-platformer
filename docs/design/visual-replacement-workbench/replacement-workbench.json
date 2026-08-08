@@ -2649,6 +2649,134 @@
       }
     },
     {
+      "id": "surface_detail_family",
+      "category_id": "world",
+      "order": 4,
+      "title_en": "Sparse Surface Detail",
+      "title_ko": "희소 표면 디테일",
+      "owner": "gameplay_manifest",
+      "switch_kind": "add",
+      "status": "approved_for_switch",
+      "current_paths": [
+        "art/visuals/production/gameplay/world/surface_detail_crack.svg",
+        "art/visuals/production/gameplay/world/surface_detail_embedded_chip.svg",
+        "art/visuals/production/gameplay/world/surface_detail_stain.svg"
+      ],
+      "consumer_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/components/vehicle_world_visual_catalog.gd",
+        "scripts/presentation/vehicle_surface_detail_compiler.gd",
+        "scripts/presentation/vehicle_world_mesh_builder.gd"
+      ],
+      "consumer_asset_ids": [
+        "world/surface_detail_crack",
+        "world/surface_detail_embedded_chip",
+        "world/surface_detail_stain"
+      ],
+      "direction_en": "Use only the exact user-approved deterministic SVG crack, low-contrast stain, and shallow embedded chip. Place at most 72/72/48 static instances with safe spacing in three retained presentation-only batches; never create collision, navigation, gameplay state, or repeating tile noise.",
+      "deliverables": [
+        {
+          "target_path": "art/visuals/production/gameplay/world/surface_detail_crack.svg",
+          "width": 96,
+          "height": 96,
+          "pivot": [48, 48],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "Exact user-approved compact low-contrast deterministic SurfaceDetail crack SVG; no runtime-generated path changes.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/world/surface_detail_embedded_chip.svg",
+          "width": 64,
+          "height": 64,
+          "pivot": [32, 32],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "Exact user-approved shallow embedded chip SVG; flat, non-interactive, and visually subordinate to combat.",
+          "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/world/surface_detail_stain.svg",
+          "width": 128,
+          "height": 96,
+          "pivot": [64, 48],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "Exact user-approved broad low-opacity deterministic SurfaceDetail wear stain SVG; no shader noise or tile repetition.",
+          "external_source_ids": []
+        }
+      ],
+      "final_paths": [
+        "art/visuals/production/gameplay/world/surface_detail_crack.svg",
+        "art/visuals/production/gameplay/world/surface_detail_embedded_chip.svg",
+        "art/visuals/production/gameplay/world/surface_detail_stain.svg"
+      ],
+      "reuse_paths": [],
+      "preview_paths": [],
+      "rendered_as_is_paths": [],
+      "retire_paths": [
+        "scripts/presentation/vehicle_field_surface_pattern_compiler.gd",
+        "scripts/presentation/vehicle_field_surface_pattern_compiler.gd.uid"
+      ],
+      "runtime_change_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/components/vehicle_visual_system_registry.gd",
+        "scripts/presentation/components/vehicle_world_visual_catalog.gd",
+        "scripts/presentation/vehicle_surface_detail_compiler.gd",
+        "scripts/presentation/vehicle_world_mesh_builder.gd",
+        "tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        "tools/validation/validate_vehicle_visual_asset_coverage.gd",
+        "tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+        "tools/validation/validate_vehicle_world_visuals.gd"
+      ],
+      "acceptance_commands": [
+        ".\\tools\\godot.ps1 --path . --headless --import",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_visuals.gd",
+        ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+        ".\\tools\\validation\\validate_cardborne_visual_authority.ps1"
+      ],
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": false,
+        "reference_input_method": "deterministic_surface_detail_svg_exception"
+      },
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-09T01:51:28+09:00",
+        "baseline_commit": "f7b780ce668f67feaffc6c5508a34d43d01da216",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/world/surface_detail_crack.svg": "87828561653b35672dc09608848fbfda0befda687cb53b93f502a4444005a2de",
+          "art/visuals/production/gameplay/world/surface_detail_embedded_chip.svg": "b5c7c0867a8c8f7b51f666875c81f8281db44479d41fff02601cb6cf652ab593",
+          "art/visuals/production/gameplay/world/surface_detail_stain.svg": "955bdb5bb132775b1d331fca86f90c01bc1f5a1b281206e3a491199f69dad347"
+        },
+        "retire_paths": [
+          "scripts/presentation/vehicle_field_surface_pattern_compiler.gd",
+          "scripts/presentation/vehicle_field_surface_pattern_compiler.gd.uid"
+        ]
+      },
+      "application": null
+    },
+    {
       "id": "world_facility_family",
       "category_id": "world",
       "order": 2,
@@ -3071,7 +3199,6 @@
         "art/visuals/production/gameplay/world/world_wall_t_junction.png"
       ],
       "consumer_paths": [
-        "scripts/presentation/vehicle_field_surface_pattern_compiler.gd",
         "scripts/presentation/vehicle_world_mesh_builder.gd"
       ],
       "consumer_asset_ids": [

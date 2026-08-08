@@ -62,10 +62,13 @@ try {
         Expect ($styleReferenceDimensions[0] -eq $canonicalStyleReferenceSheet.width -and $styleReferenceDimensions[1] -eq $canonicalStyleReferenceSheet.height) 'canonical style reference sheet dimension mismatch'
     }
     Expect ($actual.summary.font -eq 1) 'production font count must be 1'
-    Expect ($actual.summary.units -eq 19) 'switch unit count must be 19'
+    Expect ($actual.summary.units -eq 20) 'switch unit count must be 20'
     Expect ($actual.summary.retire_only -eq 6) 'retire-only count must be 6'
     Expect ($actual.summary.gameplay_png -eq 67) 'production gameplay PNG count must be 67'
     Expect ($actual.summary.final_gameplay_png -eq 67) 'final gameplay PNG forecast must be 67'
+    Expect ($actual.summary.gameplay_svg -eq 3) 'production SurfaceDetail SVG count must be 3'
+    Expect ($actual.summary.final_gameplay_svg -eq 3) 'final SurfaceDetail SVG forecast must be 3'
+    Expect ($actual.summary.gameplay_images -eq 70) 'production gameplay image count must be 70'
     Expect ($actual.summary.authored_gameplay_png -eq 65) 'authored gameplay PNG output count must be 65'
     Expect ($actual.summary.reused_gameplay_png -eq 2) 'reused gameplay PNG count must be 2'
     Expect ($actual.summary.retired_gameplay_png -eq 0) 'no retired gameplay PNG may remain in production'
@@ -89,6 +92,10 @@ try {
     $invalidRasterUnit=$invalidRasterSource.units|Where-Object id -ceq 'projectile_family'
     $invalidRasterUnit|Add-Member -NotePropertyName visual_authority_evidence -NotePropertyValue (New-AuthorityEvidence $false 'not_applicable') -Force
     Expect-ProjectionRejected $invalidRasterSource 'raster unit lacks actual sheet-reference evidence' 'raster unit without actual reference input'
+
+    $invalidSurfaceSvgSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
+    ($invalidSurfaceSvgSource.units|Where-Object id -ceq 'surface_detail_family').visual_authority_evidence.reference_input_method='not_applicable'
+    Expect-ProjectionRejected $invalidSurfaceSvgSource 'SurfaceDetail SVG unit lacks its exact exception method' 'SurfaceDetail SVG without the exact exception method'
 
     $autonomousRecordSource=Get-Content $sourcePath -Raw|ConvertFrom-Json -Depth 100
     ($autonomousRecordSource.units|Where-Object id -ceq 'effect_atlas_retirement').approval.approved_by='autonomous-executor'
@@ -116,6 +123,7 @@ try {
         upgrade_content_artwork=@(10,10)
         pickup_reward_family=@(4,4)
         world_facility_family=@(9,9)
+        surface_detail_family=@(3,3)
         mystery_device_family=@(2,2)
         secondary_and_wear_family=@(7,7)
         ordinary_enemy_family=@(18,18)
@@ -183,8 +191,13 @@ try {
             Expect ([bool]$authorityEvidence.document_read_complete) "unit authority document was not read completely: $($unit.id)"
             Expect ([bool]$authorityEvidence.sheet_inspected_original) "unit authority sheet was not inspected at original detail: $($unit.id)"
             $hasRasterDeliverable=@($unit.deliverables|Where-Object{[string]$_.target_path -like '*.png'}).Count -gt 0
+            $hasSurfaceDetailSvgDeliverable=@($unit.deliverables|Where-Object{[string]$_.target_path -like 'art/visuals/production/gameplay/world/surface_detail_*.svg'}).Count -gt 0
             Expect ([bool]$authorityEvidence.actual_image_reference_used -eq $hasRasterDeliverable) "unit actual-reference evidence disagrees with media type: $($unit.id)"
-            Expect (([string]$authorityEvidence.reference_input_method -cne 'not_applicable') -eq $hasRasterDeliverable) "unit reference input method disagrees with media type: $($unit.id)"
+            if($hasSurfaceDetailSvgDeliverable){
+                Expect ([string]$authorityEvidence.reference_input_method -ceq 'deterministic_surface_detail_svg_exception') "SurfaceDetail unit lacks its exact reference method: $($unit.id)"
+            }else{
+                Expect (([string]$authorityEvidence.reference_input_method -cne 'not_applicable') -eq $hasRasterDeliverable) "unit reference input method disagrees with media type: $($unit.id)"
+            }
         }
         switch([string]$unit.status){
             'keep_current' { Expect ($null -eq $unit.approval -and $null -eq $unit.application) "keep-current unit contains workflow ledger data: $($unit.id)" }
@@ -209,7 +222,7 @@ $index=Get-Content $indexPath -Raw
 $match=[regex]::Match($index,'(?s)<script id="inventory-data" type="application/json">(.*?)</script>')
 Expect $match.Success 'index lacks embedded inventory data'
 if($match.Success){try{$embedded=$match.Groups[1].Value|ConvertFrom-Json -Depth 100;Expect ((Get-VisualCanonicalJson $embedded) -ceq (Get-VisualCanonicalJson $actual)) 'embedded inventory differs'}catch{$failures.Add("invalid embedded inventory: $($_.Exception.Message)")}}
-foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":67','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
+foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":67','"final_gameplay_svg":3','"gameplay_images":70','"surface_detail_family"','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
 $authorityUiMarkers=@(
     'id="visual-authority-pair"',
     'id="style-authority-link"',

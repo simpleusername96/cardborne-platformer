@@ -11,6 +11,9 @@ const WorldCatalog = preload(
 const WorldBuilder = preload(
 	"res://scripts/presentation/vehicle_world_mesh_builder.gd"
 )
+const SurfaceDetailCompiler = preload(
+	"res://scripts/presentation/vehicle_surface_detail_compiler.gd"
+)
 const MinimapBuilder = preload(
 	"res://scripts/ui/vehicle_minimap_mesh_builder.gd"
 )
@@ -49,8 +52,8 @@ func _validate_catalog() -> void:
 		)
 		_expect(not descriptor.is_empty(), "%s has a world descriptor" % field_id)
 		_expect(
-			int(descriptor.get("decoration_budget", -1)) == 0,
-			"%s does not allocate presentation-only map decorations" % field_id
+			int(descriptor.get("decoration_budget", -1)) == 192,
+			"%s allocates only the bounded SurfaceDetail budget" % field_id
 		)
 
 	var expected_objects := {
@@ -70,6 +73,23 @@ func _validate_catalog() -> void:
 			StringName(descriptor.get("asset", &"")) == expected[0]
 				and StringName(descriptor.get("shape", &"")) == expected[1],
 			"%s retains its approved world visual identity" % visual_id
+		)
+	var expected_details := {
+		&"surface_detail_crack": [&"world/surface_detail_crack", &"crack"],
+		&"surface_detail_stain": [&"world/surface_detail_stain", &"stain"],
+		&"surface_detail_embedded_chip": [&"world/surface_detail_embedded_chip", &"embedded_chip"],
+	}
+	_expect(
+		WorldCatalog.SURFACE_DETAIL_DESCRIPTORS.size() == expected_details.size(),
+		"surface catalog contains exactly the three user-approved detail families"
+	)
+	for visual_id in expected_details:
+		var descriptor := Dictionary(WorldCatalog.SURFACE_DETAIL_DESCRIPTORS.get(visual_id, {}))
+		var expected: Array = expected_details[visual_id]
+		_expect(
+			StringName(descriptor.get("asset", &"")) == expected[0]
+				and StringName(descriptor.get("family", &"")) == expected[1],
+			"%s retains its approved SurfaceDetail identity" % visual_id
 		)
 
 
@@ -121,11 +141,11 @@ func _validate_field(field_id: StringName) -> void:
 	)
 	_expect(
 		bool(contract.get("decoration_budget_ok", false)),
-		"%s reports the zero-decoration contract" % field_id
+		"%s reports the bounded SurfaceDetail contract" % field_id
 	)
 	_expect(
-		int(contract.get("decoration_count", 99)) == 0,
-		"%s emits no presentation-only map decorations" % field_id
+		int(contract.get("decoration_count", -1)) == 192,
+		"%s emits exactly the approved presentation-only SurfaceDetail budget" % field_id
 	)
 	_expect(
 		int(contract.get("decoration_collision_nodes", -1)) == 0,
@@ -146,6 +166,8 @@ func _validate_field(field_id: StringName) -> void:
 	)
 
 	var solid := Dictionary(contract.get("solid_geometry", {}))
+	var surface_detail := Dictionary(contract.get("surface_detail", {}))
+	_validate_surface_detail_contract(field_id, geometry_snapshot, surface_detail)
 	_expect(
 		bool(solid.get("presentation_only", false)),
 		"%s solid map geometry remains presentation-only" % field_id
@@ -283,6 +305,14 @@ func _validate_field(field_id: StringName) -> void:
 		"%s flushes every retained authored-object transform exactly once" % field_id
 	)
 	_expect(collision_count == 0, "%s visual builder adds no collision objects" % field_id)
+	_expect(
+		texture_batch_count in [3, 4],
+		"%s uses exactly three SurfaceDetail batches and at most one cover batch" % field_id
+	)
+	_expect(
+		texture_instance_count == tactical.cover_rects.size() + 192,
+		"%s retains cover plus exactly 192 static SurfaceDetail instances" % field_id
+	)
 
 	var replay := WorldBuilder.new()
 	root.add_child(replay)
@@ -293,8 +323,63 @@ func _validate_field(field_id: StringName) -> void:
 		== String(contract.get("geometry_fingerprint", "")),
 		"%s world compilation is deterministic" % field_id
 	)
+	_expect(
+		String(Dictionary(replay.debug_contract().get("surface_detail", {})).get("fingerprint", ""))
+		== String(surface_detail.get("fingerprint", "")),
+		"%s SurfaceDetail compilation is deterministic" % field_id
+	)
+	var final_stage_tactical := run_layout.tactical_layout(&"stage_5")
+	_expect(final_stage_tactical != null, "%s exposes the final-stage tactical layout" % field_id)
+	if final_stage_tactical != null:
+		var final_stage_details := SurfaceDetailCompiler.compile(final_stage_tactical.geometry_snapshot)
+		_expect(
+			String(final_stage_details.get("fingerprint", ""))
+				== String(surface_detail.get("fingerprint", "")),
+			"%s keeps identical SurfaceDetail placement across all stages" % field_id
+		)
 	world.queue_free()
 	replay.queue_free()
+
+
+func _validate_surface_detail_contract(
+	field_id: StringName,
+	geometry_snapshot: Object,
+	contract: Dictionary
+) -> void:
+	_expect(bool(contract.get("presentation_only", false)), "%s SurfaceDetail is presentation-only" % field_id)
+	_expect(int(contract.get("collision_nodes", -1)) == 0, "%s SurfaceDetail owns zero collision nodes" % field_id)
+	_expect(int(contract.get("runtime_updates", -1)) == 0, "%s SurfaceDetail owns zero runtime updates" % field_id)
+	_expect(int(contract.get("batch_count", -1)) == 3, "%s SurfaceDetail stays in three retained batches" % field_id)
+	_expect(int(contract.get("placement_count", -1)) == 192, "%s compiles the full 192-detail budget" % field_id)
+	var family_counts := Dictionary(contract.get("family_counts", {}))
+	_expect(
+		int(family_counts.get(&"crack", 0)) == 72
+			and int(family_counts.get(&"stain", 0)) == 72
+			and int(family_counts.get(&"embedded_chip", 0)) == 48,
+		"%s uses the approved 72/72/48 family distribution" % field_id
+	)
+	var placements := Array(contract.get("placements", []))
+	var allowed_rotations := SurfaceDetailCompiler.ROTATIONS
+	var allowed_scales := SurfaceDetailCompiler.SCALES
+	for index in placements.size():
+		var placement := Dictionary(placements[index])
+		var position := Vector2(placement.get("position", Vector2.ZERO))
+		_expect(
+			geometry_snapshot.is_spawnable_disc(position, SurfaceDetailCompiler.EDGE_AND_GEOMETRY_CLEARANCE),
+			"%s detail %d clears edges, voids, walls, and cover" % [field_id, index]
+		)
+		_expect(
+			position.distance_to(geometry_snapshot.player_start) >= SurfaceDetailCompiler.PLAYER_START_CLEARANCE,
+			"%s detail %d clears the player start" % [field_id, index]
+		)
+		_expect(allowed_rotations.has(float(placement.get("rotation", -1.0))), "%s detail %d uses a discrete rotation" % [field_id, index])
+		_expect(allowed_scales.has(float(placement.get("scale", -1.0))), "%s detail %d uses an approved scale" % [field_id, index])
+		for other_index in index:
+			var other := Vector2(Dictionary(placements[other_index]).get("position", Vector2.ZERO))
+			_expect(
+				position.distance_to(other) >= SurfaceDetailCompiler.MINIMUM_SEPARATION,
+				"%s details %d/%d keep minimum separation" % [field_id, other_index, index]
+			)
 
 
 func _validate_solid_mesh(

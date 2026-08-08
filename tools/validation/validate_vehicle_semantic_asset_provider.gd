@@ -33,6 +33,9 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"world/facility_transit_gate",
 	&"world/mystery_device_intact",
 	&"world/mystery_device_resolved",
+	&"world/surface_detail_crack",
+	&"world/surface_detail_stain",
+	&"world/surface_detail_embedded_chip",
 	&"effect/emp_release",
 	&"cue/health_bar_frame_9",
 	&"cue/ring",
@@ -53,7 +56,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 67, "all 67 current gameplay PNGs are indexed")
+	_expect(ids.size() == 70, "all 67 gameplay PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
@@ -83,10 +86,11 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 67
+		int(manifest.get("final_asset_count", 0)) == 70
 			and not manifest.has("animations"),
-		"manifest declares 67 static authored rasters and no frame animations"
+		"manifest declares 70 static authored images and no frame animations"
 	)
+	_validate_surface_details()
 	_validate_map_object_content_rects()
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)
@@ -158,6 +162,27 @@ func _validate_map_object_content_rects() -> void:
 				and mesh.size.is_equal_approx(canvas_size / unit_radius),
 			"%s normalizes from visible content instead of transparent canvas padding"
 			% asset_id
+		)
+
+
+func _validate_surface_details() -> void:
+	var expected := {
+		&"world/surface_detail_crack":Vector2i(96, 96),
+		&"world/surface_detail_stain":Vector2i(128, 96),
+		&"world/surface_detail_embedded_chip":Vector2i(64, 64),
+	}
+	for asset_id in expected:
+		var descriptor := AssetProvider.descriptor(asset_id)
+		var path := String(descriptor.get("path", ""))
+		var texture := AssetProvider.texture(asset_id)
+		_expect(
+			path.ends_with(".svg")
+				and Vector2i(descriptor.get("canvas", Vector2i.ZERO)) == expected[asset_id],
+			"%s is the approved deterministic SVG canvas" % asset_id
+		)
+		_expect(
+			texture != null and Vector2i(texture.get_size()) == expected[asset_id],
+			"%s imports as its exact runtime canvas" % asset_id
 		)
 
 

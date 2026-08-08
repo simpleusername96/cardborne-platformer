@@ -15,9 +15,12 @@ const WorldCatalog = preload(
 const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
+const SurfaceDetailCompiler = preload(
+	"res://scripts/presentation/vehicle_surface_detail_compiler.gd"
+)
 
 const MAX_VISUAL_BATCHES := 12
-const DECORATION_BUDGET := 0
+const DECORATION_BUDGET := 192
 
 var _stage_id: StringName = &""
 var _field_id: StringName = &""
@@ -29,6 +32,7 @@ var _surface_rect_count := 0
 var _outer_wall_segment_count := 0
 var _inner_wall_rect_count := 0
 var _geometry_fingerprint := ""
+var _surface_detail_contract: Dictionary = {}
 
 
 func _init() -> void:
@@ -57,10 +61,11 @@ func debug_contract() -> Dictionary:
 		"batch_budget": MAX_VISUAL_BATCHES,
 		"batch_budget_ok": _batch_count <= MAX_VISUAL_BATCHES,
 		"flushed_transform_count": _flushed_transform_count,
-		"decoration_count": 0,
+		"decoration_count": int(_surface_detail_contract.get("placement_count", 0)),
 		"decoration_budget": DECORATION_BUDGET,
-		"decoration_budget_ok": true,
+		"decoration_budget_ok": int(_surface_detail_contract.get("placement_count", 0)) <= DECORATION_BUDGET,
 		"decoration_collision_nodes": 0,
+		"surface_detail": _surface_detail_contract.duplicate(true),
 		"geometry_fed": true,
 		"collision_owner": "vehicle_stage_geometry",
 		"geometry_fingerprint": _geometry_fingerprint,
@@ -88,6 +93,7 @@ func _rebuild(layout: Object) -> void:
 	_surface_rect_count = 0
 	_outer_wall_segment_count = 0
 	_inner_wall_rect_count = 0
+	_surface_detail_contract = SurfaceDetailCompiler.compile(null)
 	var snapshot: Object = layout.geometry_snapshot if layout != null else null
 	var walkable_polygons: Array[PackedVector2Array] = []
 	if snapshot != null:
@@ -158,6 +164,21 @@ func _rebuild(layout: Object) -> void:
 			),
 			3
 		)
+		_surface_detail_contract = SurfaceDetailCompiler.compile(snapshot)
+		for placement_value in Array(_surface_detail_contract["placements"]):
+			var placement := Dictionary(placement_value)
+			var asset_id := StringName(placement["asset_id"])
+			var canvas := _asset_content_size(asset_id)
+			if canvas == Vector2.ZERO:
+				continue
+			var unit_radius := maxf(canvas.x, canvas.y) * 0.5
+			_append_texture_instance(
+				asset_id,
+				2,
+				Vector2(placement["position"]),
+				float(placement["rotation"]),
+				Vector2.ONE * unit_radius * float(placement["scale"])
+			)
 		_flush_texture_batches()
 	_geometry_fingerprint = (
 		_compile_geometry_fingerprint(snapshot, layout)

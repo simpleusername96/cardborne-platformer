@@ -40,8 +40,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 67,
-		"gameplay manifest declares the current 67 authored rasters"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 70,
+		"gameplay manifest declares 67 PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(int(family_counts.get("upgrade", 0)) == 10, "gameplay manifest declares ten shared upgrade rasters")
@@ -49,7 +49,7 @@ func _initialize() -> void:
 	for asset_variant in Array(gameplay_manifest.get("assets", [])):
 		if StringName(Dictionary(asset_variant).get("category", &"")) == &"world":
 			world_asset_count += 1
-	_expect(world_asset_count == 16, "gameplay manifest declares sixteen world rasters")
+	_expect(world_asset_count == 19, "gameplay manifest declares sixteen world PNGs and three SurfaceDetail SVGs")
 	_validate_active_world_catalog()
 	_expect(
 		not gameplay_manifest.has("animations"),
