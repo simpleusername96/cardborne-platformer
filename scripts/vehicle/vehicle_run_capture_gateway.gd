@@ -569,8 +569,8 @@ func _capture_level_up_evidence() -> void:
 	var localization_fixture: Array[Dictionary] = []
 	for upgrade_record in [
 		[&"pickup_radius", 1],
-		[&"split_muzzle", 1],
 		[&"homing_missiles", 1],
+		[&"lifesteal", 1],
 	]:
 		var upgrade_id := StringName(upgrade_record[0])
 		var definition: VehicleUpgradeDefinition = (

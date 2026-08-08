@@ -37,7 +37,7 @@ func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract():
 		failures.append(error)
-	_expect(catalog.definitions.size() == 12, "catalog contains exactly 12 upgrades")
+	_expect(catalog.definitions.size() == 13, "catalog contains exactly 13 upgrades")
 	_validate_presentation(catalog)
 	_validate_secondary_slots(catalog)
 	_validate_element_lock(catalog)
@@ -85,10 +85,10 @@ func _validate_presentation(catalog: Catalog) -> void:
 					"%s behavior level has a localized change label" % definition.id
 				)
 			state_count += 1
-	_expect(state_count == 34, "upgrade presentation covers all 34 level states")
+	_expect(state_count == 36, "upgrade presentation covers all 36 level states")
 	_expect(
 		category_counts == {
-			&"primary":2, &"secondary":4, &"element":3, &"chassis":3,
+			&"primary":2, &"secondary":4, &"element":3, &"chassis":4,
 		},
 		"four player-facing categories own the exact minimal roster"
 	)
@@ -219,6 +219,20 @@ func _validate_stats(catalog: Catalog) -> void:
 		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 210.0),
 		"Pickup Radius preserves the three-level +210 collection behavior"
 	)
+	build.reset()
+	_expect(
+		is_equal_approx(build.stat(&"lifesteal_percent", 0.0), 0.0),
+		"Lifesteal starts at zero percent"
+	)
+	for expected_percent in [2.0, 3.5]:
+		_expect(bool(build.apply(&"lifesteal").get("applied", false)), "Lifesteal level applies")
+		_expect(
+			is_equal_approx(
+				build.stat(&"lifesteal_percent", 0.0),
+				expected_percent
+			),
+			"Lifesteal exposes its exact damage-healing percentage"
+		)
 
 
 func _offer_is_legal(

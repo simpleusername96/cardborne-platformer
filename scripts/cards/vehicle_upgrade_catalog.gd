@@ -2,22 +2,24 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 12
-const EXPECTED_LEVEL_STATES := 34
+const EXPECTED_COUNT := 13
+const EXPECTED_LEVEL_STATES := 36
 const OPTIONAL_SECONDARY_SLOTS := 2
 const CATEGORIES: Array[StringName] = [
 	&"primary", &"secondary", &"element", &"chassis",
 ]
 const SECONDARY_SLOT_KINDS: Array[StringName] = [&"", &"built_in", &"optional"]
 const MODIFIER_OPERATIONS: Array[String] = ["add", "multiply"]
+const MODIFIER_DISPLAY_UNITS: Array[String] = ["none", "percent"]
 const STAT_IDS: Array[StringName] = [
 	&"move_speed_multiplier",
 	&"pickup_radius_bonus",
 	&"max_health_bonus",
+	&"lifesteal_percent",
 ]
 const EXPECTED_IDS: Array[StringName] = [
 	&"bio_toxin", &"chassis_speed", &"cryo_slow", &"drop_mines",
-	&"electric_field", &"homing_missiles", &"hull_integrity",
+	&"electric_field", &"homing_missiles", &"hull_integrity", &"lifesteal",
 	&"orbiting_blades", &"pickup_radius", &"piercing_rounds",
 	&"split_muzzle", &"thermal_burn",
 ]
@@ -95,6 +97,8 @@ func validate_contract() -> PackedStringArray:
 		for modifier in definition.modifiers:
 			if modifier.operation not in MODIFIER_OPERATIONS:
 				errors.append("%s has invalid modifier operation %s" % [definition.id, modifier.operation])
+			if modifier.display_unit not in MODIFIER_DISPLAY_UNITS:
+				errors.append("%s has invalid modifier display unit %s" % [definition.id, modifier.display_unit])
 			if modifier.stat_id not in STAT_IDS:
 				errors.append("%s has unknown stat id %s" % [definition.id, modifier.stat_id])
 	if level_states != EXPECTED_LEVEL_STATES:

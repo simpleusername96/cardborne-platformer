@@ -18,7 +18,7 @@ func _initialize() -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 34, "upgrade catalog produces 34 selectable level states")
+	_expect(snapshots.size() == 36, "upgrade catalog produces 36 selectable level states")
 
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
@@ -124,6 +124,17 @@ func _initialize() -> void:
 	_expect(
 		String(card.call("_preview_value", additive_preview)) == "+18 → +36",
 		"second additive level keeps the same preview semantics"
+	)
+	var percent_preview := {
+		"stat_key":"UPGRADE_STAT_LIFESTEAL_PERCENT",
+		"operation":&"add",
+		"display_unit":&"percent",
+		"current":2.0,
+		"next":3.5,
+	}
+	_expect(
+		String(card.call("_preview_value", percent_preview)) == "2% → 3.5%",
+		"percentage card preview preserves its unit and fractional level value"
 	)
 	card.queue_free()
 	var localization_source := FileAccess.get_file_as_string(

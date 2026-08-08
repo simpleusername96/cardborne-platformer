@@ -369,14 +369,16 @@ does not produce a transient message.
   progression index. This makes early choices frequent while restoring a rising
   late-run requirement. Each level and boss reward opens a guarded three-card
   selection that requires an explicit choice and confirm.
-- The live catalog is the 12-card, 34-level-state contract in
+- The live catalog is the 13-card, 36-level-state contract in
   `vehicle_upgrade_catalog.md`. It uses four player-facing categories: Primary
   Weapon Mods, Secondary Weapon Systems, Attack Status Effects, and Chassis &
   Support. Category is separate from change kind and optional weapon-slot
   ownership. Dash and EMP remain base actions but have no upgrade cards.
-- `Movement Speed`, `Pickup Radius`, and `Hull Integrity` are the complete
-  Chassis & Support category. Pickup Radius preserves the former Pickup Magnet
-  card's three-level collection effect.
+- `Movement Speed`, `Pickup Radius`, `Hull Integrity`, and `Lifesteal` are the
+  complete Chassis & Support category. Pickup Radius preserves the former
+  Pickup Magnet card's three-level collection effect. Lifesteal restores Hull
+  from actual player-owned enemy damage at 2%/3.5%, with a six-Hull recovery
+  capacity that replenishes at six Hull per second and never exceeds maximum Hull.
 - Thermal Burn, Bio Toxin, and Cryo Slow are mutually exclusive complete packages.
   The first selected root locks the other two out of future offers, and only that
   root's later levels remain eligible. Its affinity changes player-primary projectile
@@ -535,7 +537,7 @@ does not produce a transient message.
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same
   profile, and no UI or saved preference can change difficulty.
-- The exact 12-card and 34-state catalog loads, Pickup Radius retains the former
+- The exact 13-card and 36-state catalog loads, Pickup Radius retains the former
   Pickup Magnet card's three values, the four secondary weapon types load, no more than three are active,
   and their bounded simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
@@ -564,7 +566,7 @@ does not produce a transient message.
 - More than three simultaneous secondary families.
 - Unconstrained procedural topology, per-stage layout rerolls, a chore-filled
   base, or exploration puzzles in this run.
-- Alternative growth systems beyond the current 12-card catalog and four
+- Alternative growth systems beyond the current 13-card catalog and four
   secondary weapon types are inactive and require an explicit product-spec revision.
 - A selectable, adaptive, or meta-progression difficulty model is inactive and
   requires an explicit product-spec revision.

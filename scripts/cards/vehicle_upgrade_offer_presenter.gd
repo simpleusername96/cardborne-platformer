@@ -17,6 +17,7 @@ static func snapshot(
 		effect_rows.append({
 			"stat_key":"UPGRADE_STAT_%s" % String(modifier.stat_id).to_upper(),
 			"operation":modifier.operation,
+			"display_unit":modifier.display_unit,
 			"current":modifier.value_at(current_level),
 			"next":modifier.value_at(current_level + 1),
 		})

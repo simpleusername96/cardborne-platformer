@@ -33,7 +33,7 @@ const WORST_TEXT_TRIPLETS := {
 }
 const DENSE_STAT_TRIPLET := [
 	{"id":&"chassis_speed", "current_level":2},
-	{"id":&"pickup_radius", "current_level":2},
+	{"id":&"lifesteal", "current_level":1},
 	{"id":&"hull_integrity", "current_level":2},
 ]
 const VIEWPORTS := [
@@ -354,7 +354,7 @@ func _validate_triplet_matrix(catalog: VehicleUpgradeCatalog) -> void:
 	var snapshot_count := 0
 	for definition in catalog.all_definitions():
 		snapshot_count += definition.max_level
-	_expect(snapshot_count == 34, "worst-case fixture is grounded in all 34 card states")
+	_expect(snapshot_count == 36, "worst-case fixture is grounded in all 36 card states")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		_validate_longest_fixture(catalog, locale)

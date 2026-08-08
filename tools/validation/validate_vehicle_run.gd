@@ -75,6 +75,8 @@ func _run() -> void:
 		)
 		_check_upgrade_transaction_contract(run)
 		run.call("_reset_run", false)
+		_check_lifesteal_contract(run)
+		run.call("_reset_run", false)
 		_check_visual_collision_separation(run)
 		_check_critical_enemy_attack_progression(run)
 		var boss_arrival: Vector2 = run.call("_choose_boss_arrival_anchor")
@@ -174,6 +176,122 @@ func _check_upgrade_transaction_contract(run) -> void:
 			and run.run_build.total_levels() == levels_before + 1,
 		"runtime rejects a stale selection after the transaction closes"
 	)
+
+
+func _check_lifesteal_contract(run) -> void:
+	run.run_build.reset()
+	_expect(
+		bool(run.run_build.apply(&"lifesteal").get("applied", false)),
+		"Lifesteal level one applies to the run build"
+	)
+	run.call("_reset_run", false, true, true)
+	run.player_health = 50.0
+	var overkill_target: EnemyState = run.call("_make_enemy", {
+		"id":"lifesteal_overkill_probe",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(420.0, 0.0),
+		"active":true,
+	})
+	overkill_target.health = 50.0
+	overkill_target.max_health = 50.0
+	run.call(
+		"_damage_enemy",
+		overkill_target,
+		100.0,
+		"player_primary",
+		&"kinetic",
+		true
+	)
+	_expect(
+		is_equal_approx(float(run.player_health), 51.0),
+		"Lifesteal uses actual applied damage after enemy overkill clamping"
+	)
+	run.enemy_store.release_untracked(overkill_target)
+
+	var excluded_health := float(run.player_health)
+	var excluded_target: EnemyState = run.call("_make_enemy", {
+		"id":"lifesteal_excluded_probe",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(460.0, 0.0),
+		"active":true,
+	})
+	run.call(
+		"_damage_enemy",
+		excluded_target,
+		20.0,
+		"enemy_probe",
+		&"kinetic",
+		false
+	)
+	run.call(
+		"_damage_enemy",
+		excluded_target,
+		20.0,
+		"validation",
+		&"kinetic",
+		true
+	)
+	_expect(
+		is_equal_approx(float(run.player_health), excluded_health),
+		"hostile and validation damage receipts never restore player Hull"
+	)
+	run.enemy_store.release_untracked(excluded_target)
+
+	_expect(
+		bool(run.run_build.apply(&"lifesteal").get("applied", false)),
+		"Lifesteal level two applies to the run build"
+	)
+	run.lifesteal_runtime.reset(
+		run.run_build.stat(&"lifesteal_percent", 0.0)
+	)
+	var level_two_target: EnemyState = run.call("_make_enemy", {
+		"id":"lifesteal_level_two_probe",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(500.0, 0.0),
+		"active":true,
+	})
+	level_two_target.health = 200.0
+	level_two_target.max_health = 200.0
+	run.call(
+		"_damage_enemy",
+		level_two_target,
+		200.0,
+		"player_primary",
+		&"kinetic",
+		true
+	)
+	_expect(
+		is_equal_approx(float(run.player_health), excluded_health + 6.0),
+		"Lifesteal level two remains bounded by the six-Hull recovery budget"
+	)
+	run.enemy_store.release_untracked(level_two_target)
+
+	run.lifesteal_runtime.reset(
+		run.run_build.stat(&"lifesteal_percent", 0.0)
+	)
+	run.player_health = run.call("_player_max_health") - 1.0
+	var hull_limit_target: EnemyState = run.call("_make_enemy", {
+		"id":"lifesteal_hull_limit_probe",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(540.0, 0.0),
+		"active":true,
+	})
+	run.call(
+		"_damage_enemy",
+		hull_limit_target,
+		100.0,
+		"player_primary",
+		&"kinetic",
+		true
+	)
+	_expect(
+		is_equal_approx(
+			float(run.player_health),
+			float(run.call("_player_max_health"))
+		),
+		"Lifesteal never restores beyond maximum Hull"
+	)
+	run.enemy_store.release_untracked(hull_limit_target)
 
 
 func _check_visual_collision_separation(run) -> void:

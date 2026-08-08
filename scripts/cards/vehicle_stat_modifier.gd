@@ -3,6 +3,9 @@ extends Resource
 
 @export var stat_id: StringName
 @export_enum("multiply", "add") var operation := "multiply"
+## Presentation unit for the upgrade-card comparison row. Runtime values keep
+## their domain unit; the UI only formats the already-authored number.
+@export_enum("none", "percent") var display_unit := "none"
 @export var values_by_level: Array[float] = []
 
 

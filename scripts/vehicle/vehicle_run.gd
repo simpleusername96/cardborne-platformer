@@ -22,6 +22,7 @@ const CollectiveTacticRuntime = preload(
 )
 const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
+const LifestealRuntime = preload("res://scripts/cards/vehicle_lifesteal_runtime.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const StatusProfile = preload("res://scripts/combat/vehicle_status_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
@@ -206,6 +207,7 @@ var selected_run_difficulty: StringName = RunDifficulty.DEFAULT
 var selected_upgrade_title_key := "UPGRADE_NONE"
 var upgrade_catalog := UpgradeCatalog.new()
 var run_build := RunBuild.new(upgrade_catalog)
+var lifesteal_runtime := LifestealRuntime.new()
 var _status_profile: VehicleStatusProfile = StatusProfile.from_build(run_build)
 var experience_runtime := ExperienceRuntime.new()
 var applied_upgrades: Dictionary = run_build.levels
@@ -778,6 +780,7 @@ func _reset_run(
 		experience_runtime.pending_level_ups = 0
 		reward_runtime.reset_stage()
 	_status_profile = StatusProfile.from_build(run_build)
+	lifesteal_runtime.reset(run_build.stat(&"lifesteal_percent", 0.0))
 	secondary_runtime.reset(player_position)
 	experience_recall_timer = 0.0
 	player_health = _player_max_health()
@@ -1350,6 +1353,7 @@ func _release_tree_pause() -> void:
 
 func _update_player(delta: float) -> void:
 	var previous_position := player_position
+	lifesteal_runtime.advance(delta)
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
 	_advance_player_protection_sources(delta)
 	var primary_held := Input.is_action_pressed("primary_fire")
@@ -3918,6 +3922,7 @@ func _damage_enemy(
 			stage_telemetry.record_outgoing(
 				DamageSourceCatalog.outgoing_id(source), attribute, mine_applied
 			)
+		_apply_lifesteal(mine_applied, source, player_owned)
 		return mine_applied
 	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
 	if applied_damage <= 0.0:
@@ -3931,6 +3936,7 @@ func _damage_enemy(
 		)
 	enemy.flash = 0.11
 	enemy.health_visible_timer = 1.0 if enemy.health_class == &"swarm" else 1.5
+	_apply_lifesteal(applied_damage, source, player_owned)
 	if (
 		role == &"stage_boss"
 		and enemy.health > 0.0
@@ -3945,6 +3951,21 @@ func _damage_enemy(
 	if enemy.health <= 0.0:
 		_defeat_enemy(enemy, source)
 	return applied_damage
+
+
+func _apply_lifesteal(
+	applied_damage: float,
+	source: String,
+	player_owned: bool
+) -> void:
+	if not player_owned or source == "validation":
+		return
+	var healing := lifesteal_runtime.consume(
+		applied_damage,
+		_player_max_health() - player_health
+	)
+	if healing > 0.0:
+		player_health += healing
 
 
 func _mystery_enemy_target(enemy: EnemyState) -> Vector2:
@@ -4474,6 +4495,7 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 	selected_upgrade_title_key = definition.title_key
 	if upgrade_id == &"hull_integrity":
 		player_health = minf(_player_max_health(), player_health + 15.0)
+	lifesteal_runtime.configure(run_build.stat(&"lifesteal_percent", 0.0))
 	_status_profile = StatusProfile.from_build(run_build)
 	_hud_presenter.mark_guidebook_dirty()
 	upgrade_selection_applied = true

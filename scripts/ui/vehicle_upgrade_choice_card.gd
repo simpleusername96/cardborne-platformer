@@ -434,8 +434,14 @@ func _preview_value(preview: Dictionary) -> String:
 
 func _preview_value_parts(preview: Dictionary) -> PackedStringArray:
 	var operation := String(preview.get("operation", "add"))
+	var display_unit := String(preview.get("display_unit", "none"))
 	var current := float(preview.get("current", 0.0))
 	var next := float(preview.get("next", 0.0))
+	if display_unit == "percent":
+		return PackedStringArray([
+			_percent_text(current),
+			_percent_text(next),
+		])
 	var current_text := (
 		"×%.2f" % current
 		if operation == "multiply"
@@ -447,6 +453,12 @@ func _preview_value_parts(preview: Dictionary) -> PackedStringArray:
 		else "%+.0f" % next
 	)
 	return PackedStringArray([current_text, next_text])
+
+
+func _percent_text(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return "%d%%" % roundi(value)
+	return "%.1f%%" % value
 
 
 func _level_transition_text() -> String:
