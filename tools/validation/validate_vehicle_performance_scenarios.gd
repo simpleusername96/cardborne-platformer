@@ -103,7 +103,7 @@ func _run() -> void:
 			"%s uses its locked actor load" % String(scenario_id)
 		)
 		_expect(
-			int(snapshot["health_overlay_capacity"]) == 50,
+			int(snapshot["health_overlay_capacity"]) == 28,
 			"%s keeps the fixed world-health overlay capacity" % String(scenario_id)
 		)
 		_expect(

@@ -198,13 +198,17 @@ Source owners: `scripts/performance/vehicle_performance_scenario.gd`,
 `tools/validation/validate_vehicle_performance_scenarios.gd`,
 `.agents/execplans/2026-08-02-pre-asset-code-stabilization.md`
 
-- [ ] **1.1** Restore a truthful performance fixture contract.
+- [x] **1.1** Restore a truthful performance fixture contract.
   - Change: replace the stale required health-overlay capacity `50` with renderer capacity `28`
     in the scenario and its focused validator. Do not change the release batch threshold `50`.
   - Accept: `validate_vehicle_combat_renderer.gd`,
     `validate_vehicle_performance_scenarios.gd`, and `validate_vehicle_run.gd` pass.
   - Guard: if any other renderer/scenario capacity disagrees, stop and reconcile it with the
     canonical visual contract; do not lower workload or thresholds.
+  - Evidence: scenario validity now requires `Overlay_health == 28` in both fixture and
+    production-replay paths while the combat-batch threshold remains `50`;
+    `validate_vehicle_combat_renderer.gd`, `validate_vehicle_performance_scenarios.gd`, and
+    `validate_vehicle_run.gd` passed on 2026-08-09.
 - [ ] **1.2** Record one user-controlled normal-play hitch trace.
   - Change: from the clean committed fixture state, run
     `./tools/run_manual_performance_trace.ps1`; reproduce normal play until the hitch occurs, exit
@@ -609,8 +613,8 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 1 - Qualify the current performance baseline.
-- Next task: 1.1 - Restore a truthful performance fixture contract.
-- Last completed gate: Discovery Closure Gate.
+- Next task: 1.2 - Record one user-controlled normal-play hitch trace.
+- Last completed gate: Task 1.1 focused fixture validation.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 

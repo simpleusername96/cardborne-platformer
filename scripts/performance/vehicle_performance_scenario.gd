@@ -215,7 +215,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and int(renderer_snapshot["batches"]) <= 50
 		and int(Dictionary(renderer_snapshot["batch_allocations"]).get(
 			"Overlay_health", 0
-		)) == 50
+		)) == 28
 		and int(enemy_snapshot["rejected_capacity"]) == 0
 		and int(renderer_snapshot["enemy_capacity"]) == EnemyStore.MAX_LIVE_HOSTILES
 		and boss_valid
@@ -683,7 +683,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		and int(renderer_snapshot["batches"]) <= 50
 		and int(Dictionary(renderer_snapshot["batch_allocations"]).get(
 			"Overlay_health", 0
-		)) == 50
+		)) == 28
 		and scheduler_spawned
 		and pressure_qualified
 	)
