@@ -213,6 +213,9 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and bool(effect_store_snapshot["valid"])
 		and run.denied_zones.size() <= 16
 		and int(renderer_snapshot["batches"]) <= 50
+		and int(Dictionary(renderer_snapshot["batch_allocations"]).get(
+			"Overlay_health", 0
+		)) == 50
 		and int(enemy_snapshot["rejected_capacity"]) == 0
 		and int(renderer_snapshot["enemy_capacity"]) == EnemyStore.MAX_LIVE_HOSTILES
 		and boss_valid
@@ -242,6 +245,11 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"lifecycle_cycles": lifecycle_cycles,
 		"boss_active": boss_valid,
 		"pressure": pressure,
+		"health_overlay_capacity":int(
+			Dictionary(renderer_snapshot["batch_allocations"]).get(
+				"Overlay_health", 0
+			)
+		),
 	}
 
 
@@ -673,6 +681,9 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		and run.projectile_store.validate_counts()
 		and bool(effect_store_snapshot["valid"])
 		and int(renderer_snapshot["batches"]) <= 50
+		and int(Dictionary(renderer_snapshot["batch_allocations"]).get(
+			"Overlay_health", 0
+		)) == 50
 		and scheduler_spawned
 		and pressure_qualified
 	)
@@ -701,6 +712,11 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		"scheduler_spawn_seen":scheduler_spawned,
 		"scheduler":scheduler,
 		"pressure":scheduler.get("pressure", {}),
+		"health_overlay_capacity":int(
+			Dictionary(renderer_snapshot["batch_allocations"]).get(
+				"Overlay_health", 0
+			)
+		),
 		"production_qualification":{
 			"valid":pressure_qualified,
 			"sample_count":_production_pressure_samples.size(),

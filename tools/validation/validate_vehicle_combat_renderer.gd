@@ -352,8 +352,15 @@ func _run() -> void:
 	)
 	snapshot = renderer.debug_snapshot()
 	_expect(
-		int(snapshot["health_bar_count"]) == Renderer.MAX_ORDINARY_HEALTH_BARS,
+		int(snapshot["health_bar_count"]) == Renderer.MAX_ORDINARY_HEALTH_BARS
+			and int(snapshot["ordinary_health_bar_count"])
+				== Renderer.MAX_ORDINARY_HEALTH_BARS,
 		"ordinary health bars stop at the deterministic twelve-actor budget"
+	)
+	_expect(
+		int(snapshot["batch_allocations"]["Overlay_health"])
+			== Renderer.HEALTH_BAR_INSTANCE_CAPACITY,
+		"the shared world-health batch preallocates its exact fixed fifty-instance ceiling"
 	)
 	_expect(
 		int(snapshot["priority_marker_count"]) == 0,
@@ -429,6 +436,8 @@ func _run() -> void:
 	open_boss.boss_shield_state = &"shield_up"
 	open_boss.pos = Vector2(700.0, 360.0)
 	open_boss.visual_radius = Art.STAGE_BOSS_RADIUS
+	open_boss.health = 160.0
+	open_boss.max_health = 320.0
 	open_boss.alive = true
 	open_boss.active = true
 	renderer.sync(
@@ -439,6 +448,18 @@ func _run() -> void:
 	_expect(
 		diamond_batch.multimesh.visible_instance_count == 0,
 		"boss shield state does not add a yellow target overlay"
+	)
+	snapshot = renderer.debug_snapshot()
+	_expect(
+		int(snapshot["boss_health_bar_count"]) == 1
+			and int(snapshot["ordinary_health_bar_count"]) == 0
+			and int(snapshot["health_bar_count"]) == 1,
+		"the boss owns one large world-attached health bar without consuming the ordinary budget"
+	)
+	var boss_health_batch := renderer.get_node("Overlay_health") as MultiMeshInstance2D
+	_expect(
+		boss_health_batch.multimesh.buffer[7] < open_boss.pos.y,
+		"the boss health bar is positioned above its world body"
 	)
 	var run_source := FileAccess.get_file_as_string(
 		"res://scripts/vehicle/vehicle_run.gd"
@@ -619,9 +640,41 @@ func _validate_mystery_device_presentation(
 	var resolved_position := Vector2(620.0, 260.0)
 	var presentation := _player_presentation(Vector2(260.0, 300.0), false)
 	presentation["mystery_devices"] = [
-		{"state":&"intact", "visible":true, "position":device_position},
+		{
+			"state":&"intact",
+			"visible":true,
+			"position":device_position,
+			"health":45.0,
+			"max_health":90.0,
+			"health_visible_timer":1.0,
+		},
 		{"state":&"resolved", "visible":true, "position":resolved_position},
 		{"state":&"retired", "visible":true, "position":Vector2(760.0, 260.0)},
+	]
+	presentation["reinforcement_facility"] = {
+		"visible":true,
+		"position":Vector2(900.0, 360.0),
+		"radius":112.0,
+		"health":120.0,
+		"max_health":240.0,
+	}
+	presentation["crate_health_overlays"] = [
+		{
+			"visible":true,
+			"position":Vector2(320.0, 520.0),
+			"radius":31.0,
+			"health":12.0,
+			"max_health":24.0,
+			"health_visible_timer":1.0,
+		},
+		{
+			"visible":true,
+			"position":Vector2(420.0, 520.0),
+			"radius":31.0,
+			"health":24.0,
+			"max_health":24.0,
+			"health_visible_timer":0.0,
+		},
 	]
 	presentation["mystery_effects"] = [
 		{"effect_id":&"gravity_pull", "position":device_position, "radius":144.0},
@@ -656,6 +709,23 @@ func _validate_mystery_device_presentation(
 			and rings.multimesh.visible_instance_count == 3,
 		"gravity, cryo, and decoy each publish one restrained ground-level retained ring"
 	)
+	var health_snapshot := renderer.debug_snapshot()
+	_expect(
+		int(health_snapshot["mystery_health_bar_count"]) == 1
+			and int(health_snapshot["facility_health_bar_count"]) == 1
+			and int(health_snapshot["crate_health_bar_count"]) == 1
+			and int(health_snapshot["health_bar_count"]) == 3,
+		"damaged devices and crates use timed world bars while the active facility always owns one"
+	)
+	var health_buffer := (
+		(renderer.get_node("Overlay_health") as MultiMeshInstance2D).multimesh.buffer
+	)
+	_expect(
+		health_buffer[7] < device_position.y
+			and health_buffer[2 * Renderer.BUFFER_FLOATS_PER_INSTANCE + 7] < 360.0
+			and health_buffer[4 * Renderer.BUFFER_FLOATS_PER_INSTANCE + 7] < 520.0,
+		"device, facility, and crate health bars each sit above their owning body"
+	)
 	var expected_radii := [144.0, 108.0, 72.0]
 	for index in expected_radii.size():
 		var offset := index * Renderer.BUFFER_FLOATS_PER_INSTANCE
@@ -676,6 +746,8 @@ func _validate_mystery_device_presentation(
 	)
 	presentation["mystery_devices"] = []
 	presentation["mystery_effects"] = []
+	presentation["reinforcement_facility"] = {}
+	presentation["crate_health_overlays"] = []
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation

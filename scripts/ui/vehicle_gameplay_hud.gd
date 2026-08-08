@@ -7,7 +7,6 @@ extends Control
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
-const StageTransitionBanner = preload("res://scripts/ui/vehicle_stage_transition_banner.gd")
 const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
 const AcquiredUpgradeRail = preload(
 	"res://scripts/ui/vehicle_acquired_upgrade_rail.gd"
@@ -16,10 +15,11 @@ const UiGlyphCatalog = preload(
 	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
 )
 
-const MISSION_CLUSTER_SIZE := Vector2(260.0, 76.0)
 const HEALTH_STRIP_SIZE := Vector2(520.0, 24.0)
 const ACTION_RAIL_SIZE := Vector2(88.0, 88.0)
 const ACTION_RAIL_BOTTOM_MARGIN := 20.0
+const TOP_MARGIN := 8.0
+const TOP_STATUS_GAP := 4.0
 
 
 class HealthPips:
@@ -355,30 +355,17 @@ class StageMinimap:
 		return mesh
 
 
-var _mission_panel: PanelContainer
+var _stage_progress: VBoxContainer
 var _center_status: VBoxContainer
 var _minimap_panel: PanelContainer
-var _target_panel: VBoxContainer
 var _health_bar: HealthPips
 var _upgrade_rail: VehicleAcquiredUpgradeRail
-var _stage_label: Label
-var _objective_label: Label
-var _objective_detail: Label
-var _experience_bar: ProgressBar
-var _objective_detail_timer := 0.0
-var _last_objective_text := ""
-var _last_objective_detail := ""
+var _stage_heading: Label
+var _stage_value: Label
+var _defeated_heading: Label
+var _defeated_value: Label
 var _accessibility_text_scale := 1.0
 var _last_buff_text := ""
-var _boss_visible := false
-var _target_visible := false
-var _boss_cluster: VBoxContainer
-var _boss_name: Label
-var _boss_bar: ProgressBar
-var _boss_state: Label
-var _target_name: Label
-var _target_bar: ProgressBar
-var _target_state: Label
 var _skill_slot: ActionRailSlot
 var _buff_label: Label
 var _minimap: StageMinimap
@@ -386,7 +373,6 @@ var _notification_panel: PanelContainer
 var _notification: Label
 var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
-var _transition_banner: VehicleStageTransitionBanner
 var _threat_radar: VehicleThreatRadar
 
 
@@ -410,12 +396,7 @@ func _process(delta: float) -> void:
 		if _notification_timer <= 0.0:
 			_notification_panel.visible = false
 			_show_next_notification()
-	if _objective_detail_timer > 0.0:
-		_objective_detail_timer = maxf(0.0, _objective_detail_timer - delta)
-		if _objective_detail_timer <= 0.0 and _objective_detail.visible:
-			_objective_detail.visible = false
-			_apply_responsive_layout()
-	if _notification_timer <= 0.0 and _objective_detail_timer <= 0.0:
+	if _notification_timer <= 0.0:
 		set_process(false)
 
 
@@ -424,69 +405,37 @@ func _build() -> void:
 	_threat_radar.name = "ThreatRadar"
 	add_child(_threat_radar)
 
-	_mission_panel = Factory.surface(Factory.SURFACE_HUD, MISSION_CLUSTER_SIZE)
-	_mission_panel.name = "MissionPanel"
-	_mission_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_mission_panel.position = Vector2(18.0, 16.0)
-	_mission_panel.size = MISSION_CLUSTER_SIZE
-	add_child(_mission_panel)
-	var mission_zone := VBoxContainer.new()
-	mission_zone.name = "MissionZoneContent"
-	mission_zone.add_theme_constant_override("separation", 2)
-	mission_zone.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_mission_panel.add_child(mission_zone)
-	_stage_label = Factory.label("STAGE_1_NAME", 14, Art.IVORY_BRIGHT)
-	_stage_label.name = "StageLabel"
-	_stage_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_shadow_label(_stage_label)
-	mission_zone.add_child(_stage_label)
-	_objective_label = Factory.label("OBJECTIVE_CALIBRATE", 14, Art.IVORY_BRIGHT)
-	_objective_label.name = "ObjectiveLabel"
-	_objective_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_shadow_label(_objective_label)
-	mission_zone.add_child(_objective_label)
-	_objective_detail = Factory.label("DEPLOY_CONTROLS", 14, Art.TEXT_MUTED)
-	_objective_detail.name = "ObjectiveDetail"
-	_objective_detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_objective_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	mission_zone.add_child(_objective_detail)
-	_objective_detail.visible = false
-	_boss_cluster = VBoxContainer.new()
-	_boss_cluster.name = "BossCluster"
-	_boss_cluster.add_theme_constant_override("separation", 1)
-	mission_zone.add_child(_boss_cluster)
-	_boss_name = Factory.label(
-		"ENEMY_FOUNDRY_COLOSSUS",
-		14,
-		Art.IVORY_BRIGHT
-	)
-	_shadow_label(_boss_name)
-	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_boss_cluster.add_child(_boss_name)
-	_boss_bar = Factory.meter(Factory.METER_BOSS)
-	_boss_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_boss_bar.max_value = 1.0
-	_boss_bar.value = 1.0
-	_boss_bar.custom_minimum_size.y = 10.0
-	_boss_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_boss_cluster.add_child(_boss_bar)
-	_boss_state = Factory.label(
-		"PATTERN_READING_ARENA",
-		14,
-		Art.TEXT_MUTED
-	)
-	_shadow_label(_boss_state)
-	_boss_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_boss_state.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_boss_cluster.add_child(_boss_state)
-	_boss_cluster.visible = false
-	_experience_bar = Factory.meter(Factory.METER_SUPPORT)
-	_experience_bar.name = "ExperienceBar"
-	_experience_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_experience_bar.max_value = 12.0
-	_experience_bar.value = 0.0
-	_experience_bar.custom_minimum_size.y = 5.0
-	mission_zone.add_child(_experience_bar)
+	_stage_progress = VBoxContainer.new()
+	_stage_progress.name = "StageProgress"
+	_stage_progress.add_theme_constant_override("separation", 4)
+	_stage_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_stage_progress)
+	_stage_heading = Factory.label("HUD_STAGE_LABEL", 16, Art.TEXT_MUTED)
+	_stage_heading.name = "StageHeading"
+	_stage_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_shadow_label(_stage_heading)
+	_stage_progress.add_child(_stage_heading)
+	_stage_value = Factory.label("1 / 5", 32, Art.TEXT_PRIMARY)
+	_stage_value.name = "StageValue"
+	_stage_value.theme_type_variation = &"DisplayLabel"
+	_stage_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_shadow_label(_stage_value)
+	_stage_progress.add_child(_stage_value)
+	var group_spacer := Control.new()
+	group_spacer.name = "ProgressGroupSpacer"
+	group_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage_progress.add_child(group_spacer)
+	_defeated_heading = Factory.label("HUD_DEFEATED_LABEL", 16, Art.TEXT_MUTED)
+	_defeated_heading.name = "DefeatedHeading"
+	_defeated_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_shadow_label(_defeated_heading)
+	_stage_progress.add_child(_defeated_heading)
+	_defeated_value = Factory.label("0 / 0", 32, Art.TEXT_PRIMARY)
+	_defeated_value.name = "DefeatedValue"
+	_defeated_value.theme_type_variation = &"DisplayLabel"
+	_defeated_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_shadow_label(_defeated_value)
+	_stage_progress.add_child(_defeated_value)
 
 	_center_status = VBoxContainer.new()
 	_center_status.name = "CenterStatus"
@@ -509,29 +458,10 @@ func _build() -> void:
 	add_child(_minimap_panel)
 	var minimap_zone := VBoxContainer.new()
 	minimap_zone.name = "MinimapZoneContent"
-	minimap_zone.add_theme_constant_override("separation", 4)
 	_minimap_panel.add_child(minimap_zone)
 	_minimap = StageMinimap.new()
 	_minimap.custom_minimum_size = Vector2(168.0, 100.0)
 	minimap_zone.add_child(_minimap)
-
-	_target_panel = VBoxContainer.new()
-	_target_panel.name = "TargetPanel"
-	_target_panel.add_theme_constant_override("separation", 1)
-	minimap_zone.add_child(_target_panel)
-	_target_name = Factory.label("—", 14, Art.IVORY_BRIGHT)
-	_target_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_target_panel.add_child(_target_name)
-	_target_bar = Factory.meter(Factory.METER_HEALTH)
-	_target_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_target_bar.max_value = 1.0
-	_target_bar.value = 1.0
-	_target_bar.custom_minimum_size.y = 9.0
-	_target_panel.add_child(_target_bar)
-	_target_state = Factory.label("", 14, Art.TEXT_MUTED)
-	_target_state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_target_panel.add_child(_target_state)
-	_target_panel.visible = false
 
 	_skill_slot = ActionRailSlot.new()
 	_skill_slot.name = "EmpCooldownIndicator"
@@ -551,7 +481,7 @@ func _build() -> void:
 	)
 	_notification_panel.name = "NotificationPanel"
 	_notification_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_notification_panel.size = Vector2(360.0, 44.0)
+	_notification_panel.size = Vector2(360.0, 40.0)
 	add_child(_notification_panel)
 	_notification = Factory.label("", 18, Art.IVORY_BRIGHT)
 	_notification.name = "Notification"
@@ -560,10 +490,6 @@ func _build() -> void:
 	_shadow_label(_notification)
 	_notification_panel.add_child(_notification)
 	_notification_panel.visible = false
-
-	_transition_banner = StageTransitionBanner.new()
-	add_child(_transition_banner)
-
 
 func update_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.has("health"):
@@ -579,31 +505,16 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			required_experience,
 			bool(snapshot.get("reduced_motion", false))
 		)
-		_experience_bar.max_value = required_experience
-		_experience_bar.value = clampf(
-			float(snapshot.get("experience", 0.0)),
-			0.0,
-			required_experience
-		)
-	if snapshot.has("stage_title"):
-		_stage_label.text = String(snapshot["stage_title"])
-	if snapshot.has("objective"):
-		var next_objective := String(snapshot["objective"])
-		if next_objective != _last_objective_text:
-			_last_objective_text = next_objective
-			_objective_detail_timer = 3.0
-			_objective_detail.visible = true
-			_objective_label.text = next_objective
-			set_process(true)
-		var next_detail := String(snapshot.get("objective_detail", ""))
-		if next_detail != _last_objective_detail:
-			_last_objective_detail = next_detail
-			_objective_detail.text = next_detail
-		_objective_detail.visible = (
-			_objective_detail_timer > 0.0
-			and not _objective_detail.text.is_empty()
-		)
-		_apply_responsive_layout()
+	if snapshot.has("stage_number") or snapshot.has("stage_total"):
+		_stage_value.text = "%d / %d" % [
+			int(snapshot.get("stage_number", 1)),
+			maxi(1, int(snapshot.get("stage_total", 5))),
+		]
+	if snapshot.has("defeated") or snapshot.has("quota"):
+		_defeated_value.text = "%d / %d" % [
+			maxi(0, int(snapshot.get("defeated", 0))),
+			maxi(0, int(snapshot.get("quota", 0))),
+		]
 	if snapshot.has("build_snapshot"):
 		_upgrade_rail.set_build_snapshot(
 			Dictionary(snapshot["build_snapshot"])
@@ -620,59 +531,6 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			_last_buff_text = next_buff_text
 			_buff_label.text = next_buff_text
 			_buff_label.visible = not next_buff_text.is_empty()
-	if snapshot.has("boss"):
-		var boss := Dictionary(snapshot["boss"])
-		var boss_name := String(boss.get("name", "")).strip_edges()
-		var next_boss_visible := (
-			bool(boss.get("visible", false))
-			and not boss_name.is_empty()
-		)
-		if next_boss_visible != _boss_visible:
-			_boss_visible = next_boss_visible
-			_boss_cluster.visible = next_boss_visible
-			_apply_responsive_layout()
-		if next_boss_visible:
-			if _boss_name.text != boss_name:
-				_boss_name.text = boss_name
-			var next_boss_maximum := maxf(
-				1.0,
-				float(boss.get("max_health", 1.0))
-			)
-			var next_boss_health := float(boss.get("health", 0.0))
-			if not is_equal_approx(_boss_bar.max_value, next_boss_maximum):
-				_boss_bar.max_value = next_boss_maximum
-			if not is_equal_approx(_boss_bar.value, next_boss_health):
-				_boss_bar.value = next_boss_health
-			var next_boss_state := String(boss.get("state", ""))
-			if _boss_state.text != next_boss_state:
-				_boss_state.text = next_boss_state
-				_boss_state.visible = not next_boss_state.is_empty()
-	if snapshot.has("target"):
-		var target := Dictionary(snapshot["target"])
-		var target_name := String(target.get("name", "")).strip_edges()
-		var next_target_visible := (
-			bool(target.get("visible", false))
-			and not target_name.is_empty()
-		)
-		if next_target_visible != _target_visible:
-			_target_visible = next_target_visible
-			_target_panel.visible = next_target_visible
-			_apply_responsive_layout()
-		if next_target_visible:
-			if _target_name.text != target_name:
-				_target_name.text = target_name
-			var next_target_maximum := maxf(
-				1.0,
-				float(target.get("max_health", 1.0))
-			)
-			var next_target_health := float(target.get("health", 0.0))
-			if not is_equal_approx(_target_bar.max_value, next_target_maximum):
-				_target_bar.max_value = next_target_maximum
-			if not is_equal_approx(_target_bar.value, next_target_health):
-				_target_bar.value = next_target_health
-			var next_target_state := String(target.get("state", ""))
-			if _target_state.text != next_target_state:
-				_target_state.text = next_target_state
 	if snapshot.has("minimap"):
 		_minimap.set_snapshot(snapshot["minimap"])
 	if snapshot.has("threat_radar"):
@@ -716,30 +574,11 @@ func debug_notification_contract() -> Dictionary:
 	}
 
 
-func show_stage_transition(
-	stage_number: int,
-	stage_title_key: String,
-	reduced_motion: bool
-) -> void:
-	_transition_banner.show_stage(
-		stage_number,
-		stage_title_key,
-		reduced_motion
-	)
-
-
-func hide_stage_transition() -> void:
-	_transition_banner.hide_banner()
-
-
 func refresh_localized_content() -> void:
-	_transition_banner.refresh_localized_content()
+	_stage_heading.text = tr("HUD_STAGE_LABEL")
+	_defeated_heading.text = tr("HUD_DEFEATED_LABEL")
 	_upgrade_rail.refresh_localized_content()
 	_skill_slot.queue_redraw()
-
-
-func debug_transition_banner() -> Dictionary:
-	return _transition_banner.debug_snapshot()
 
 
 func debug_health_animation_contract() -> Dictionary:
@@ -775,40 +614,26 @@ func debug_contract(viewport_width: float) -> Dictionary:
 	var compact := viewport_width < 1100.0
 	var viewport_height := viewport_width * 9.0 / 16.0
 	var accessibility := _accessibility_text_scale > 1.0
-	var mission_base_size := Vector2(
-		MISSION_CLUSTER_SIZE.x,
-		MISSION_CLUSTER_SIZE.y
-			+ (34.0 if _objective_detail.visible else 0.0)
-			+ (58.0 if _boss_visible else 0.0)
-	)
+	var large := viewport_width >= 1600.0 and not accessibility
+	var safe_margin := _safe_margin(viewport_width)
+	var stage_progress_size := _stage_progress_size(compact, large)
 	var minimap_base_size := (
 		Vector2(160.0, 98.0)
 		if compact
 		else Vector2(176.0, 108.0)
 	)
-	var target_size := (
-		Vector2(168.0, 60.0)
-		if compact
-		else Vector2(184.0, 64.0)
-	)
-	var minimap_zone_size := Vector2(
-		maxf(
-			minimap_base_size.x,
-			target_size.x if _target_visible else 0.0
-		),
-		minimap_base_size.y + (target_size.y + 4.0 if _target_visible else 0.0)
-	)
 	var rail_contract := _upgrade_rail.debug_contract()
 	var center_width := _center_width(viewport_width, accessibility)
-	var center_height := HEALTH_STRIP_SIZE.y
-	if int(rail_contract["acquired_count"]) > 0:
-		var row_count := int(rail_contract["row_count"])
-		center_height += 2.0 + (
-			float(rail_contract["row_height"]) * float(row_count)
-			+ float(rail_contract["row_separation"]) * float(maxi(0, row_count - 1))
-		)
+	var center_height := _center_status_height(rail_contract)
 	var center_zone_size := Vector2(center_width, center_height)
-	var boss_width := mission_base_size.x - 20.0
+	var toast_size := Vector2(
+		720.0 if accessibility else (320.0 if compact else 360.0),
+		80.0 if accessibility else (36.0 if compact else 40.0)
+	)
+	var toast_position := Vector2(
+		(viewport_width - toast_size.x) * 0.5,
+		TOP_MARGIN + center_zone_size.y + TOP_STATUS_GAP
+	)
 	var dock_position := Vector2(
 		(viewport_width - ACTION_RAIL_SIZE.x) * 0.5,
 		viewport_height - ACTION_RAIL_SIZE.y - ACTION_RAIL_BOTTOM_MARGIN
@@ -816,10 +641,9 @@ func debug_contract(viewport_width: float) -> Dictionary:
 	var center_start := (
 		viewport_width * 0.5 - center_zone_size.x * 0.5
 	)
-	var minimap_start := viewport_width - minimap_zone_size.x - 18.0
+	var minimap_start := viewport_width - minimap_base_size.x - safe_margin
 	var opaque_rects := [
-		Rect2(Vector2(18.0, 16.0), mission_base_size),
-		Rect2(Vector2(minimap_start, 16.0), minimap_zone_size),
+		Rect2(Vector2(minimap_start, TOP_MARGIN), minimap_base_size),
 	]
 	var opaque_area := 0.0
 	var central_safe := Rect2(
@@ -845,57 +669,45 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		],
 		"secondary_slot_size":Vector2.ZERO,
 		"minimap_size":minimap_base_size,
-		"minimap_zone_size":minimap_zone_size,
+		"minimap_zone_size":minimap_base_size,
 		"health_cluster_size":Vector2(center_width, HEALTH_STRIP_SIZE.y),
-		"mission_cluster_size":mission_base_size,
+		"stage_progress_size":stage_progress_size,
+		"stage_progress_panel_free":true,
+		"stage_progress_values":[_stage_value.text, _defeated_value.text],
 		"health_panel_free":true,
 		"health_meter":_health_bar.debug_contract(),
-		"mission_experience_meter":(
-			_experience_bar.get_parent().get_parent() == _mission_panel
-			and _experience_bar.custom_minimum_size.y == 5.0
-		),
 		"upgrade_rail":rail_contract,
-		"objective_cluster_size":center_zone_size,
-		"objective_zone_size":center_zone_size,
-		"target_cluster_size":target_size,
-		"boss_strip_size":Vector2(
-			boss_width,
-			58.0
-		),
-		"boss_shield_coexist":true,
-		"boss_inside_objective_zone":false,
-		"boss_inside_mission_zone":(
-			_boss_cluster.get_parent().get_parent() == _mission_panel
-		),
-		"target_inside_minimap_zone":(
-			_target_panel.get_parent().get_parent() == _minimap_panel
-		),
+		"center_status_size":center_zone_size,
+		"edge_boss_health_visible":false,
+		"edge_target_health_visible":false,
 		"conditional_clusters_have_backing":false,
-		"zone_surface_count":2,
+		"zone_surface_count":1,
 		"zone_surface_variations":[
-			_mission_panel.theme_type_variation,
 			_minimap_panel.theme_type_variation,
 		],
 		"toast_surface_variation":_notification_panel.theme_type_variation,
+		"toast_size":toast_size,
+		"toast_position":toast_position,
+		"toast_center_attached":is_equal_approx(
+			toast_position.y,
+			TOP_MARGIN + center_zone_size.y + TOP_STATUS_GAP
+		),
 		"raster_chrome_consumer":false,
 		"opaque_combat_area_ratio":(
 			opaque_area / (viewport_width * viewport_height)
 		),
 		"central_safe_clear":central_safe_clear,
 		"top_clusters_do_not_overlap":(
-			18.0 + mission_base_size.x <= center_start
+			safe_margin + stage_progress_size.x <= center_start
 			and center_start + center_zone_size.x <= minimap_start
 		),
 		"zone_count":4,
 		"notification_inside_hud":_notification_panel.get_parent() == self,
 		"status_font_sizes":{
-			"stage":_stage_label.get_theme_font_size("font_size"),
-			"objective":_objective_label.get_theme_font_size("font_size"),
-			"objective_detail":_objective_detail.get_theme_font_size(
-				"font_size"
-			),
-			"boss_state":_boss_state.get_theme_font_size("font_size"),
-			"target_state":_target_state.get_theme_font_size("font_size"),
+			"stage_label":_stage_heading.get_theme_font_size("font_size"),
+			"stage_value":_stage_value.get_theme_font_size("font_size"),
+			"defeated_label":_defeated_heading.get_theme_font_size("font_size"),
+			"defeated_value":_defeated_value.get_theme_font_size("font_size"),
 			"buff":_buff_label.get_theme_font_size("font_size"),
 		},
 	}
@@ -907,63 +719,35 @@ func _apply_responsive_layout() -> void:
 	var compact := size.x < 1100.0
 	var accessibility := _accessibility_text_scale > 1.0
 	var large := size.x >= 1600.0 and not accessibility
-	var mission_size := Vector2(
-		MISSION_CLUSTER_SIZE.x,
-		MISSION_CLUSTER_SIZE.y
-			+ (34.0 if _objective_detail.visible else 0.0)
-			+ (58.0 if _boss_visible else 0.0)
-	)
-	var target_size := (
-		Vector2(168.0, 60.0)
-		if compact
-		else Vector2(184.0, 64.0)
-	)
+	var safe_margin := _safe_margin(size.x)
+	var stage_progress_size := _stage_progress_size(compact, large)
 	var minimap_base_size := (
 		Vector2(160.0, 98.0)
 		if compact
 		else Vector2(176.0, 108.0)
 	)
-	var minimap_zone_size := Vector2(
-		maxf(
-			minimap_base_size.x,
-			target_size.x if _target_visible else 0.0
-		),
-		minimap_base_size.y + (target_size.y + 4.0 if _target_visible else 0.0)
-	)
 	var center_width := _center_width(size.x, accessibility)
 	_upgrade_rail.set_layout_profile(compact, accessibility, large)
 	var rail_contract := _upgrade_rail.debug_contract()
-	var center_height := HEALTH_STRIP_SIZE.y
-	if int(rail_contract["acquired_count"]) > 0:
-		var row_count := int(rail_contract["row_count"])
-		center_height += 2.0 + (
-			float(rail_contract["row_height"]) * float(row_count)
-			+ float(rail_contract["row_separation"]) * float(maxi(0, row_count - 1))
-		)
+	var center_height := _center_status_height(rail_contract)
 	var center_size := Vector2(center_width, center_height)
-	_mission_panel.position = Vector2(18.0, 16.0)
-	_mission_panel.custom_minimum_size = mission_size
-	_mission_panel.size = mission_size
-	_center_status.position = Vector2((size.x - center_width) * 0.5, 16.0)
+	_stage_progress.position = Vector2(safe_margin, TOP_MARGIN)
+	_stage_progress.custom_minimum_size = stage_progress_size
+	_stage_progress.size = stage_progress_size
+	_center_status.position = Vector2((size.x - center_width) * 0.5, TOP_MARGIN)
 	_center_status.custom_minimum_size = center_size
 	_center_status.size = center_size
 	_health_bar.custom_minimum_size = Vector2(center_width, HEALTH_STRIP_SIZE.y)
 	_health_bar.size = Vector2(center_width, HEALTH_STRIP_SIZE.y)
-	_boss_cluster.custom_minimum_size.y = 58.0 if _boss_visible else 0.0
-	_boss_bar.custom_minimum_size.x = 0.0
-	_minimap_panel.custom_minimum_size = minimap_zone_size
-	_minimap_panel.size = minimap_zone_size
+	_minimap_panel.custom_minimum_size = minimap_base_size
+	_minimap_panel.size = minimap_base_size
 	_minimap_panel.position = Vector2(
-		size.x - minimap_zone_size.x - 18.0,
-		16.0
+		size.x - minimap_base_size.x - safe_margin,
+		TOP_MARGIN
 	)
 	_minimap.custom_minimum_size = Vector2(
-		minimap_zone_size.x - 20.0,
+		minimap_base_size.x - 20.0,
 		minimap_base_size.y - 16.0
-	)
-	_target_panel.custom_minimum_size = Vector2(
-		minimap_zone_size.x - 20.0,
-		target_size.y
 	)
 	_skill_slot.size = ACTION_RAIL_SIZE
 	_skill_slot.position = Vector2(
@@ -974,21 +758,19 @@ func _apply_responsive_layout() -> void:
 		(size.x - _buff_label.size.x) * 0.5,
 		size.y - 124.0
 	)
-	for label in [_stage_label, _objective_label, _objective_detail, _boss_name, _boss_state]:
-		Factory.apply_font_size(label, 14)
+	var label_size := 15 if compact else (18 if large else 16)
+	var value_size := 30 if compact else (40 if large else 32)
+	Factory.apply_font_size(_stage_heading, label_size)
+	Factory.apply_font_size(_defeated_heading, label_size)
+	Factory.apply_font_size(_stage_value, value_size)
+	Factory.apply_font_size(_defeated_value, value_size)
 	_notification_panel.size = Vector2(
 		720.0 if accessibility else (320.0 if compact else 360.0),
-		80.0 if accessibility else 44.0
+		80.0 if accessibility else (36.0 if compact else 40.0)
 	)
 	_notification_panel.position = Vector2(
 		(size.x - _notification_panel.size.x) * 0.5,
-		16.0 + maxf(mission_size.y, center_size.y) + 12.0
-	)
-	_transition_banner.apply_viewport(
-		size,
-		_accessibility_text_scale,
-		16.0 + maxf(mission_size.y, center_size.y) + 12.0
-			if accessibility else 126.0
+		TOP_MARGIN + center_size.y + TOP_STATUS_GAP
 	)
 
 
@@ -1002,13 +784,35 @@ func _center_width(viewport_width: float, accessibility: bool) -> float:
 	return HEALTH_STRIP_SIZE.x
 
 
+func _center_status_height(rail_contract: Dictionary) -> float:
+	var result := HEALTH_STRIP_SIZE.y
+	if int(rail_contract["acquired_count"]) <= 0:
+		return result
+	var row_count := int(rail_contract["row_count"])
+	return result + 2.0 + (
+		float(rail_contract["row_height"]) * float(row_count)
+		+ float(rail_contract["row_separation"]) * float(maxi(0, row_count - 1))
+	)
+
+
+func _safe_margin(viewport_width: float) -> float:
+	if viewport_width < 1100.0:
+		return 16.0
+	if viewport_width >= 1600.0:
+		return 32.0
+	return 24.0
+
+
+func _stage_progress_size(compact: bool, large: bool) -> Vector2:
+	if compact:
+		return Vector2(180.0, 112.0)
+	if large:
+		return Vector2(220.0, 124.0)
+	return Vector2(200.0, 116.0)
+
+
 func set_accessibility_text_scale(scale: float) -> void:
 	_accessibility_text_scale = clampf(scale, 1.0, 2.0)
-	_objective_detail.text_overrun_behavior = (
-		TextServer.OVERRUN_NO_TRIMMING
-		if _accessibility_text_scale > 1.0
-		else TextServer.OVERRUN_TRIM_ELLIPSIS
-	)
 	_apply_responsive_layout()
 
 

@@ -11,30 +11,10 @@ const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
 
-const WIDE_SIZE := Vector2(360.0, 456.0)
-const COMPACT_SIZE := Vector2(280.0, 378.0)
-const LARGE_SIZE := Vector2(420.0, 480.0)
+const WIDE_SIZE := Vector2(360.0, 488.0)
+const COMPACT_SIZE := Vector2(280.0, 410.0)
+const LARGE_SIZE := Vector2(420.0, 512.0)
 const ACCESSIBILITY_SIZE := Vector2(520.0, 920.0)
-
-class UnlockIndicator:
-	extends Control
-
-	func _ready() -> void:
-		custom_minimum_size = Vector2(22.0, 22.0)
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	func _draw() -> void:
-		var center := size * 0.5
-		var radius := minf(size.x, size.y) * 0.42
-		var outline := PackedVector2Array([
-			center + Vector2(0.0, -radius),
-			center + Vector2(radius, 0.0),
-			center + Vector2(0.0, radius),
-			center + Vector2(-radius, 0.0),
-		])
-		draw_colored_polygon(outline, Art.SPACE_BLACK)
-		draw_line(center - Vector2(radius * 0.42, 0.0), center + Vector2(radius * 0.42, 0.0), Art.SYSTEM, 2.0)
-		draw_line(center - Vector2(0.0, radius * 0.42), center + Vector2(0.0, radius * 0.42), Art.SYSTEM, 2.0)
 
 
 var _offer: Dictionary = {}
@@ -53,7 +33,6 @@ var _change_lane: VBoxContainer
 var _level: Label
 var _summary: Label
 var _effects: VBoxContainer
-var _unlock_indicator: UnlockIndicator
 
 
 func _ready() -> void:
@@ -129,7 +108,6 @@ func debug_contract() -> Dictionary:
 		"actual_size":size,
 		"value_rows":(
 			(_effects.get_child_count() if is_instance_valid(_effects) else 0)
-			+ (1 if is_instance_valid(_unlock_indicator) and _unlock_indicator.visible else 0)
 			+ (1 if is_instance_valid(_level) and _level.visible else 0)
 		),
 		"effect_rows":_effects.get_child_count() if is_instance_valid(_effects) else 0,
@@ -145,15 +123,15 @@ func debug_contract() -> Dictionary:
 		"body_divider_count":0,
 		"description_in_comparison":false,
 		"description_visible":_summary.visible,
+		"summary_color":_summary.get_theme_color("font_color"),
 		"footer_visible":false,
-		"unlock_icon_visible":_unlock_indicator.visible,
 		"type_sizes":{
 			"category":_category.get_theme_font_size("font_size"),
 			"level":_level.get_theme_font_size("font_size"),
 			"title":_title.get_theme_font_size("font_size"),
 			"summary":_summary.get_theme_font_size("font_size"),
 		},
-		"summary_max_lines":1,
+		"summary_max_lines":2,
 		"comparison_max_lines":0,
 		"header_art_count":0,
 		"body_art_count":1 if is_instance_valid(_artwork) else 0,
@@ -168,7 +146,7 @@ func debug_contract() -> Dictionary:
 		"body_order":[
 			"category",
 			"title",
-			"dossier:art/level/unlock-icon/effects/summary",
+			"dossier:art/level/effects/summary",
 		],
 		"state_cues":{
 			"normal_flat":normal_style is StyleBoxFlat,
@@ -209,7 +187,7 @@ func debug_geometry_contract() -> Dictionary:
 		},
 		"selected":_selected,
 		"disabled":disabled,
-		"summary_max_lines":1,
+		"summary_max_lines":2,
 	}
 
 
@@ -274,15 +252,6 @@ func _build() -> void:
 	_level.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_change_lane.add_child(_level)
 
-	var unlock_center := CenterContainer.new()
-	unlock_center.name = "UnlockIndicatorCenter"
-	unlock_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	unlock_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_change_lane.add_child(unlock_center)
-	_unlock_indicator = UnlockIndicator.new()
-	_unlock_indicator.name = "UnlockIndicator"
-	unlock_center.add_child(_unlock_indicator)
-
 	_effects = VBoxContainer.new()
 	_effects.name = "EffectRows"
 	_effects.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -290,12 +259,13 @@ func _build() -> void:
 	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_change_lane.add_child(_effects)
 
-	_summary = _label(17, Art.TEXT_MUTED)
+	_summary = _label(34, Art.TEXT_PRIMARY)
 	_summary.name = "SummaryLabel"
 	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_summary.max_lines_visible = 1
+	_summary.max_lines_visible = 2
+	_summary.custom_minimum_size.y = 84.0
 	_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_change_lane.add_child(_summary)
@@ -310,8 +280,8 @@ func _apply_layout_profile() -> void:
 	var category_size := 16
 	var title_size := 28
 	var level_size := 18
-	var summary_size := 17
-	var dossier_height := 292.0
+	var summary_size := 34
+	var dossier_height := 324.0
 	var glyph_size := Vector2(128.0, 128.0)
 	var category_height := 20.0
 	var title_height := 54.0
@@ -327,7 +297,7 @@ func _apply_layout_profile() -> void:
 		glyph_size = Vector2(176.0, 176.0)
 		category_height = 44.0
 		title_height = 144.0
-		summary_size = 20
+		summary_size = 40
 	elif _large:
 		custom_minimum_size = LARGE_SIZE
 		horizontal_margin = 28
@@ -339,8 +309,8 @@ func _apply_layout_profile() -> void:
 		category_size = 18
 		title_size = 32
 		level_size = 18
-		summary_size = 18
-		dossier_height = 316.0
+		summary_size = 36
+		dossier_height = 336.0
 		glyph_size = Vector2(128.0, 128.0)
 		category_height = 24.0
 		title_height = 62.0
@@ -355,8 +325,8 @@ func _apply_layout_profile() -> void:
 		category_size = 13
 		title_size = 22
 		level_size = 15
-		summary_size = 16
-		dossier_height = 250.0
+		summary_size = 32
+		dossier_height = 274.0
 		glyph_size = Vector2(88.0, 88.0)
 		category_height = 18.0
 		title_height = 48.0
@@ -377,6 +347,7 @@ func _apply_layout_profile() -> void:
 	_art_lane.custom_minimum_size.y = glyph_size.y
 	_artwork.custom_minimum_size = glyph_size
 	_artwork.size = glyph_size
+	_summary.custom_minimum_size.y = maxf(84.0, float(summary_size) * 2.35)
 	Factory.apply_font_size(_category, category_size)
 	Factory.apply_font_size(_title, title_size)
 	Factory.apply_font_size(_level, level_size)
@@ -434,9 +405,7 @@ func _refresh() -> void:
 		_effects.add_child(row)
 		accessible_values.append("%s %s" % [stat.text, _preview_value(preview)])
 	_effects.visible = _effects.get_child_count() > 0
-	var change_kind := StringName(_offer.get("change_kind", &"stats"))
 	var change_label := tr(String(_offer.get("change_label_key", "")))
-	_unlock_indicator.visible = change_kind == &"unlock"
 	var accessibility_parts := PackedStringArray([
 		_category.text,
 		_title.text,

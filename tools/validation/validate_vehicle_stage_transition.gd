@@ -130,25 +130,12 @@ func _check_stage_one_to_three(run) -> void:
 	_expect(run.pickups.size() == 6 and run.crates.size() == 8, "Stage 2 items refresh to six loose and eight crates")
 	_expect(run.completed_stage_reports.size() == 1, "Stage 1 telemetry is retained in run history")
 	var ui = run.get_node_or_null("VehicleStageUI")
-	var banner: Dictionary = ui.debug_transition_banner() if ui != null else {}
 	_expect(
-		not banner.is_empty()
-			and bool(banner["visible"])
-			and int(banner["mouse_filter"]) == Control.MOUSE_FILTER_IGNORE
-			and bool(banner.get("input_passthrough", false)),
-		"transition banner is visible and never captures gameplay input"
-	)
-	var banner_frame := Dictionary(banner.get("mechanical_frame", {}))
-	_expect(
-		bool(banner.get("shared_toast_surface", false))
-			and StringName(banner.get("surface_variation", &""))
-				== &"ToastSurface"
-			and not bool(banner_frame.get("layered_depth", true))
-			and StringName(banner.get("title_variation", &""))
-				== &"TitleLabel"
-			and int(banner.get("title_font_size", 0)) >= 22
-			and int(banner.get("status_font_size", 0)) >= 14,
-		"transition banner uses one shared Toast surface and canonical type hierarchy"
+		ui != null
+			and not ui.has_method("show_stage_transition")
+			and not ui.has_method("hide_stage_transition")
+			and not ui.has_method("debug_transition_banner"),
+		"automatic stage progression exposes no redundant transition-banner API"
 	)
 	_expect(
 		ui != null
@@ -158,15 +145,14 @@ func _check_stage_one_to_three(run) -> void:
 	)
 	run.call("_pause_run")
 	_expect(
-		run.mode == run.RunMode.PAUSED
-			and not bool(ui.debug_transition_banner()["visible"]),
-		"pause hides the transition banner instead of layering it over the modal"
+		run.mode == run.RunMode.PAUSED,
+		"pause preserves transition state without a banner layer"
 	)
 	run.call("_resume_run")
 	_expect(
 		run.mode == run.RunMode.STAGE_TRANSITION
-			and bool(ui.debug_transition_banner()["visible"]),
-		"resuming restores the non-modal transition presentation"
+			and ui.debug_hud_visible(),
+		"resuming restores automatic transition play with only the regular HUD"
 	)
 
 	run.call("_update_encounter", 0.35)

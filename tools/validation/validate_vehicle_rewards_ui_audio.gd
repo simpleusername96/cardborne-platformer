@@ -142,7 +142,7 @@ func _run() -> void:
 			and bool(card["vertical_dossier"])
 			and not bool(card["footer_visible"])
 			and bool(card["description_visible"])
-			and int(card["summary_max_lines"]) == 1
+			and int(card["summary_max_lines"]) == 2
 			and int(card["body_divider_count"]) == 0
 			and int(card["pip_slots"]) == 0
 			and int(card["stage_pip_count"]) == 0
@@ -174,8 +174,8 @@ func _run() -> void:
 	root.add_child(stage)
 	await process_frame
 	stage.set("player_health", 20.0)
-	stage.call("_collect_pickup", {"active": true, "kind": &"repair", "pos": Vector2.ZERO, "heal_amount": 35.0})
-	_expect(is_equal_approx(float(stage.get("player_health")), 55.0), "repair restores its authored hull amount")
+	stage.call("_collect_pickup", {"active": true, "kind": &"repair", "pos": Vector2.ZERO, "heal_amount": 70.0})
+	_expect(is_equal_approx(float(stage.get("player_health")), 90.0), "repair restores its doubled authored hull amount")
 	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")
@@ -206,8 +206,10 @@ func _run() -> void:
 	_expect(
 		Vector2(ui_contract["health_cluster_size"]) == Vector2(520.0, 24.0)
 			and bool(ui_contract["health_panel_free"])
-			and bool(ui_contract["mission_experience_meter"]),
-		"health is a centered panel-free strip while XP stays with the mission cluster"
+			and bool(ui_contract["stage_progress_panel_free"])
+			and not bool(ui_contract["edge_boss_health_visible"])
+			and not bool(ui_contract["edge_target_health_visible"]),
+		"health and B stage progress are panel-free with no duplicated edge health"
 	)
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
 	_expect(not bool(ui_contract["deployment_has_difficulty_ui"]), "deployment exposes no difficulty choice")

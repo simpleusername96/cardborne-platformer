@@ -12,16 +12,13 @@ const WORLD_MARKER_INTERVAL := 0.20
 const INITIAL_WORLD_PHASE_OFFSET := ACTION_INTERVAL * 0.5
 const FAST_CLUSTERS := [
 	[
-		"health", "max_health", "level", "experience",
-		"experience_required", "reduced_motion",
+		"health", "max_health", "reduced_motion",
 	],
-	["objective", "objective_detail", "stage_title"],
+	["stage_number", "stage_total", "defeated", "quota"],
 	[
 		"dash_available", "dash_ratio", "seeker_available", "seeker_ratio",
 		"skill_available", "skill_ratio", "buff_text",
 	],
-	["target"],
-	["boss"],
 ]
 
 var _action_timer := 0.0

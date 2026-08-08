@@ -27,6 +27,14 @@ func _initialize() -> void:
 			"DEPLOY_CONTROL_AIM_PRIMARY_BINDING",
 			"GARAGE_LAUNCH",
 			"GARAGE_SETTINGS",
+			"HUD_STAGE_LABEL",
+			"HUD_DEFEATED_LABEL",
+			"NOTIFY_REINFORCEMENT_FACILITY",
+			"NOTIFY_REINFORCEMENT_FACILITY_DESTROYED",
+			"NOTIFY_BOSS_INBOUND",
+			"NOTIFY_BARRIER_DEPLETED",
+			"NOTIFY_MYSTERY_DEVICE_RESULT",
+			"BOSS_SHIELD_DOWN_HINT",
 		]:
 			_expect_translated(entry_key, locale)
 		_expect(
@@ -121,6 +129,9 @@ func _initialize() -> void:
 	var localization_source := FileAccess.get_file_as_string(
 		"res://localization/vehicle_stage.csv"
 	)
+	var run_source := FileAccess.get_file_as_string(
+		"res://scripts/vehicle/vehicle_run.gd"
+	)
 	for removed_key in [
 		"SETTINGS_DIFFICULTY_LOCKED",
 		"DEPLOY_DIFFICULTY_LABEL",
@@ -134,10 +145,48 @@ func _initialize() -> void:
 		"UPGRADE_CONFIRM_LEAVE",
 		"UPGRADE_OPTIONAL_NOTICE",
 		"NOTIFY_REWARD_DECLINED",
+		"OBJECTIVE_CALIBRATE",
+		"OBJECTIVE_BOSS_STAGE",
+		"OBJECTIVE_THREATS",
+		"OBJECTIVE_THREATS_DETAIL",
+		"OBJECTIVE_BOSS_INBOUND",
+		"OBJECTIVE_BOSS_INBOUND_DETAIL",
+		"NOTIFY_DEPLOYED",
+		"NOTIFY_CONTACT_INBOUND",
+		"NOTIFY_MODULE_ONLINE",
+		"NOTIFY_STAGE_RESET",
+		"NOTIFY_STAGE_ARRIVAL",
+		"STAGE_TRANSITION_TITLE",
+		"STAGE_TRANSITION_STATUS",
+		"NOTIFY_CALIBRATION_COMPLETE",
+		"NOTIFY_REPAIR",
+		"NOTIFY_HULL_DISABLED",
+		"NOTIFY_EXPERIENCE_RECALL",
+		"NOTIFY_LEVEL_UP",
+		"NOTIFY_BOSS_SHARD",
+		"BOSS_SHIELD_UP_HINT",
+		"BOSS_SHIELD_UP_STATUS",
+		"BOSS_SHIELD_DOWN_STATUS",
 	]:
 		_expect(
 			not localization_source.contains("\n%s," % removed_key),
-			"obsolete user-facing difficulty key is removed: %s" % removed_key
+			"obsolete user-facing localization key is removed: %s" % removed_key
+		)
+	_expect(
+		run_source.count("_ui.notify(") == 6,
+		"gameplay runtime has exactly six essential notification producers"
+	)
+	for retained_key in [
+		"NOTIFY_REINFORCEMENT_FACILITY",
+		"NOTIFY_REINFORCEMENT_FACILITY_DESTROYED",
+		"NOTIFY_BOSS_INBOUND",
+		"NOTIFY_BARRIER_DEPLETED",
+		"NOTIFY_MYSTERY_DEVICE_RESULT",
+		"BOSS_SHIELD_DOWN_HINT",
+	]:
+		_expect(
+			run_source.contains(retained_key),
+			"essential gameplay notification remains: %s" % retained_key
 		)
 	TranslationServer.set_locale(original_locale)
 	await process_frame

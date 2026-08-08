@@ -247,11 +247,10 @@ var _mystery_device_hit_receipt: Dictionary = {}
 var _reinforcement_facility_hit_receipt: Dictionary = {}
 var _mystery_device_snapshot_buffer: Array[Dictionary] = []
 var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
+var _runtime_crate_overlay_buffer: Array[Dictionary] = []
 var _mystery_retired_event_buffer: Array[Dictionary] = []
 var _mystery_decoy_targets: Dictionary = {}
 var _runtime_fast_hud_frame: Dictionary = {}
-var _runtime_fast_target_frame: Dictionary = {}
-var _runtime_fast_boss_frame: Dictionary = {}
 var _runtime_minimap_frames: Array[Dictionary] = []
 var _runtime_minimap_visited_buffers: Array = []
 var _runtime_minimap_marker_buffers: Array = []
@@ -502,7 +501,7 @@ func _physics_process(delta: float) -> void:
 		_update_player(delta)
 		var pickup_motion_end := player_position
 		_update_terrain(delta, pickup_motion_start)
-		_update_pickups(pickup_motion_start, pickup_motion_end)
+		_update_pickups(delta, pickup_motion_start, pickup_motion_end)
 		if experience_recall_timer > 0.0:
 			_update_experience(delta)
 		elif _simulation_lod_bucket == 0:
@@ -741,7 +740,6 @@ func _reset_run(
 		_apply_camera_stage_limits()
 	if is_instance_valid(_ui):
 		_ui.clear_notifications()
-		_ui.hide_stage_transition()
 	stage_transition_remaining = 0.0
 	mode = RunMode.DEPLOYMENT
 	player_position = Rules.player_start(current_stage_id)
@@ -906,6 +904,7 @@ func _populate_stage_items() -> void:
 			"max_health": 24.0,
 			"alive": true,
 			"flash": 0.0,
+			"health_visible_timer": 0.0,
 		})
 	_rebuild_crate_collision_cells()
 
@@ -1104,10 +1103,8 @@ func _update_encounter(delta: float) -> void:
 		enemies,
 		projectile_store.hostile_count()
 	)
-	for cue in requests["cues"]:
+	for _cue in requests["cues"]:
 		_play_sound(&"boss", 0.72)
-		if int(cue["beat"]) == 0:
-			_ui.notify(tr("NOTIFY_CONTACT_INBOUND"), 1.2, Art.MUSTARD)
 	for spawn_spec in requests["spawns"]:
 		var bounded_spec := _bounded_spawn_spec(Dictionary(spawn_spec))
 		var enemy := _make_enemy(bounded_spec)
@@ -1242,7 +1239,6 @@ func _start_deployed_run(primary_id: StringName) -> void:
 	selected_primary = primary_id
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
-	_ui.notify(tr("NOTIFY_DEPLOYED"), 3.2, Rules.CYAN)
 	_play_sound(&"card", 1.15)
 	_set_mouse_for_mode()
 	_start_manual_performance_trace()
@@ -1258,7 +1254,6 @@ func _on_upgrade_selected(upgrade_id: StringName) -> void:
 	_resolve_reward_transaction()
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
-	_ui.notify(tr("NOTIFY_MODULE_ONLINE") % tr(selected_upgrade_title_key), 3.0, Rules.AMBER)
 	_play_sound(&"card", 1.0)
 	_set_mouse_for_mode()
 	_advance_reward_queue()
@@ -1269,7 +1264,6 @@ func _pause_run() -> void:
 		return
 	mode_before_pause = mode
 	mode = RunMode.PAUSED
-	_ui.hide_stage_transition()
 	var build_snapshot := _build_snapshot()
 	_ui.update_hud({
 		"build_snapshot":build_snapshot,
@@ -1286,8 +1280,6 @@ func _resume_run() -> void:
 	_release_tree_pause()
 	mode = mode_before_pause
 	_ui.show_gameplay()
-	if mode == RunMode.STAGE_TRANSITION:
-		_present_stage_transition_banner()
 	_set_mouse_for_mode()
 
 
@@ -1298,7 +1290,6 @@ func _restart_stage() -> void:
 	selected_primary = primary
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
-	_ui.notify(tr("NOTIFY_STAGE_RESET"), 2.6, Rules.MUTED)
 	_set_mouse_for_mode()
 
 
@@ -1408,7 +1399,6 @@ func _update_player(delta: float) -> void:
 
 	if tutorial_move and tutorial_aim and tutorial_fire and tutorial_dash and not tutorial_announced:
 		tutorial_announced = true
-		_ui.notify(tr("NOTIFY_CALIBRATION_COMPLETE"), 3.0, Rules.MOSS)
 
 
 func _grant_player_protection(duration: float, source: StringName) -> void:
@@ -1894,7 +1884,17 @@ func _player_max_health() -> float:
 	return run_build.stat(&"max_health_bonus", PLAYER_MAX_HEALTH)
 
 
-func _update_pickups(motion_start: Vector2, motion_end: Vector2) -> void:
+func _update_pickups(
+	delta: float,
+	motion_start: Vector2,
+	motion_end: Vector2
+) -> void:
+	for crate in crates:
+		crate["flash"] = maxf(0.0, float(crate["flash"]) - delta)
+		crate["health_visible_timer"] = maxf(
+			0.0,
+			float(crate.get("health_visible_timer", 0.0)) - delta
+		)
 	for pickup in pickups:
 		if not bool(pickup["active"]):
 			continue
@@ -1920,13 +1920,10 @@ func _collect_pickup(pickup: Dictionary) -> void:
 	match kind:
 		&"repair":
 			_discover_guide(&"object_repair")
-			var before := player_health
-			player_health = minf(_player_max_health(), player_health + float(pickup.get("heal_amount", 35.0)))
-			_ui.notify(tr("NOTIFY_REPAIR") % roundi(player_health - before), 2.0, Rules.MOSS)
+			player_health = minf(_player_max_health(), player_health + float(pickup.get("heal_amount", 70.0)))
 		&"experience_recall":
 			_discover_guide(&"object_recall")
 			experience_recall_timer = 0.65
-			_ui.notify(tr("NOTIFY_EXPERIENCE_RECALL"), 2.0, Rules.CYAN)
 	_play_sound(&"pickup")
 
 
@@ -1944,8 +1941,6 @@ func _update_experience(delta: float) -> void:
 		_play_sound(&"pickup", 1.22)
 	for source in result["reward_sources"]:
 		reward_runtime.enqueue(StringName(source))
-	if int(result["levels"]) > 0:
-		_ui.notify(tr("NOTIFY_LEVEL_UP"), 1.8, Art.MUSTARD)
 	_advance_reward_queue()
 
 
@@ -3795,6 +3790,7 @@ func _damage_crate(crate: Dictionary, amount: float) -> void:
 		return
 	crate["health"] = float(crate["health"]) - amount
 	crate["flash"] = 0.12
+	crate["health_visible_timer"] = 1.5
 	if float(crate["health"]) > 0.0:
 		return
 	crate["alive"] = false
@@ -4178,7 +4174,6 @@ func _damage_source_family(source: String, enemy_source: bool) -> StringName:
 func _handle_player_defeat() -> void:
 	_clear_projectiles()
 	denied_zones.clear()
-	_ui.notify(tr("NOTIFY_HULL_DISABLED"), 3.0, Rules.CORAL)
 	if boss_practice.active:
 		mode = RunMode.GARAGE
 		_ui.show_garage({})
@@ -4408,7 +4403,6 @@ func _update_stage_progression(delta: float = 0.0) -> void:
 		if stage_transition_remaining <= 0.0:
 			stage_flow.record_transition_complete()
 			mode = RunMode.PLAYING
-			_ui.hide_stage_transition()
 			_set_mouse_for_mode()
 
 
@@ -4921,14 +4915,9 @@ func _live_boss_add_count() -> int:
 
 func _show_pending_boss_state_hint() -> void:
 	var hint_key := boss_shield_runtime.take_state_entry_hint()
-	if hint_key.is_empty():
+	if hint_key != "BOSS_SHIELD_DOWN_HINT":
 		return
-	var color := (
-		Art.SYSTEM
-		if hint_key == "BOSS_SHIELD_DOWN_HINT"
-		else Art.BOSS_COMMAND
-	)
-	_ui.notify(tr(hint_key), 2.6, color)
+	_ui.notify(tr(hint_key), 2.6, Art.SYSTEM)
 
 
 func _on_boss_direct_attack_complete(boss: EnemyState) -> void:
@@ -4955,7 +4944,6 @@ func _complete_stage() -> void:
 	projectile_store.retain_player_only()
 	denied_zones.clear()
 	experience_recall_timer = 0.65
-	_ui.notify(tr("NOTIFY_BOSS_SHARD"), 3.0, Rules.AMBER)
 
 
 func _finalize_stage_completion() -> void:
@@ -5095,18 +5083,9 @@ func _begin_stage_transition() -> void:
 	stage_transition_remaining = STAGE_TRANSITION_SECONDS
 	mode = RunMode.STAGE_TRANSITION
 	_hud_presenter.reset()
-	_present_stage_transition_banner()
+	_ui.show_gameplay()
 	_play_sound(&"card", 1.12)
 	_set_mouse_for_mode()
-
-
-func _present_stage_transition_banner() -> void:
-	var profile := StageCatalog.profile(current_stage_id)
-	_ui.show_stage_transition(
-		int(profile["number"]),
-		String(profile["title_key"]),
-		_reduced_motion_enabled()
-	)
 
 
 func _transition_packets(stage_id: StringName) -> Array[Dictionary]:
@@ -5203,66 +5182,23 @@ func _build_hud_snapshot(include_world_channels: bool = true, include_guidebook:
 
 
 func _build_fast_hud_snapshot() -> Dictionary:
-	return _fill_fast_hud_snapshot({}, {}, {})
+	return _fill_fast_hud_snapshot({})
 
 
 func _runtime_fast_hud_snapshot() -> Dictionary:
-	return _fill_fast_hud_snapshot(
-		_runtime_fast_hud_frame,
-		_runtime_fast_target_frame,
-		_runtime_fast_boss_frame
-	)
+	return _fill_fast_hud_snapshot(_runtime_fast_hud_frame)
 
 
-func _fill_fast_hud_snapshot(
-	snapshot: Dictionary,
-	target_snapshot: Dictionary,
-	boss_snapshot: Dictionary
-) -> Dictionary:
+func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 	snapshot.clear()
-	target_snapshot.clear()
-	boss_snapshot.clear()
-	var objective := _objective_text()
 	var stage_profile := StageCatalog.profile(current_stage_id)
-	target_snapshot["visible"] = false
-	if not _aim_target_id.is_empty():
-		var target := _find_enemy_by_id(_aim_target_id)
-		var show_priority_target := (
-			target != null
-			and (
-				target.health_class == &"priority"
-				or (target.health_class == &"boss" and target.role != &"stage_boss")
-			)
-		)
-		if target != null and target.alive and show_priority_target:
-			target_snapshot["visible"] = true
-			target_snapshot["name"] = tr(String(target.name))
-			target_snapshot["health"] = target.health
-			target_snapshot["max_health"] = target.max_health
-			target_snapshot["state"] = _enemy_state_text(target)
-
-	boss_snapshot["visible"] = false
-	var boss := _find_enemy_by_id("stage_boss")
-	if boss != null and boss.alive:
-		boss_snapshot["visible"] = true
-		boss_snapshot["name"] = tr("ENEMY_BOSS_PHASE") % [
-			tr(String(boss.name)), int(boss.boss_phase),
-		]
-		boss_snapshot["health"] = boss.health
-		boss_snapshot["max_health"] = boss.max_health
-		boss_snapshot["state"] = _boss_state_text(boss)
-		boss_snapshot["shield"] = _boss_shield_snapshot()
-
-	var stage_title := tr(String(stage_profile["title_key"]))
 	snapshot["health"] = player_health
 	snapshot["max_health"] = _player_max_health()
-	snapshot["level"] = experience_runtime.run_level
-	snapshot["experience"] = experience_runtime.experience
-	snapshot["experience_required"] = experience_runtime.required_experience()
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
-	snapshot["objective"] = objective[0]
-	snapshot["objective_detail"] = objective[1]
-	snapshot["stage_title"] = stage_title
+	snapshot["stage_number"] = int(stage_profile["number"])
+	snapshot["stage_total"] = StageCatalog.STAGE_IDS.size()
+	snapshot["defeated"] = stage_flow.defeats
+	snapshot["quota"] = stage_flow.quota
 	snapshot["dash_available"] = player_dash_cooldown <= 0.0
 	snapshot["dash_ratio"] = clampf(
 		player_dash_cooldown / _dash_cooldown_max(), 0.0, 1.0
@@ -5278,8 +5214,6 @@ func _fill_fast_hud_snapshot(
 		player_emp_cooldown / _emp_cooldown_max(), 0.0, 1.0
 	)
 	snapshot["buff_text"] = ""
-	snapshot["target"] = target_snapshot
-	snapshot["boss"] = boss_snapshot
 	return snapshot
 
 
@@ -5325,80 +5259,6 @@ func _discover_guide(entry_id: StringName) -> void:
 	var store := get_node_or_null("/root/VehicleGuidebookStore")
 	if store != null and bool(store.discover(entry_id)):
 		_hud_presenter.mark_guidebook_dirty()
-
-
-func _objective_text() -> Array[String]:
-	var profile := StageCatalog.profile(current_stage_id)
-	var boss_name := tr(String(profile["boss_name_key"]))
-	if stage_flow.state == StageFlow.State.BOSS_WARNING:
-		return [tr("OBJECTIVE_BOSS_INBOUND").replace("%s", boss_name), tr("OBJECTIVE_BOSS_INBOUND_DETAIL")]
-	if boss_started:
-		var boss_detail_key := (
-			"BOSS_SHIELD_UP_HINT"
-			if boss_shield_runtime.shield_up
-			else "BOSS_SHIELD_DOWN_HINT"
-		)
-		return [
-			tr("OBJECTIVE_BOSS_STAGE").replace("%s", boss_name),
-			tr(boss_detail_key),
-		]
-	return [tr("OBJECTIVE_THREATS") % [stage_flow.defeats, stage_flow.quota], tr("OBJECTIVE_THREATS_DETAIL")]
-
-
-func _enemy_state_text(enemy: EnemyState) -> String:
-	var parts: Array[String] = []
-	if bool(enemy.shielded):
-		parts.append(tr("ENEMY_STATE_GENERATOR_SHIELD"))
-	if float(enemy.stun) > 0.0:
-		parts.append(tr("ENEMY_STATE_STUNNED"))
-	var phase := String(enemy.phase)
-	if phase == "startup":
-		parts.append(tr("ENEMY_STATE_STARTUP"))
-	elif phase == "active":
-		parts.append(tr("ENEMY_STATE_ACTIVE"))
-	elif phase == "recovery":
-		parts.append(tr("ENEMY_STATE_RECOVERY"))
-	elif StringName(enemy.role) == &"generator":
-		parts.append(tr("ENEMY_STATE_SUPPORT"))
-	parts.append_array(_localized_status_parts(enemy))
-	if parts.is_empty():
-		parts.append(tr("ENEMY_STATE_REPOSITION"))
-	return "  •  ".join(parts)
-
-
-func _boss_state_text(boss: EnemyState) -> String:
-	var base_state := (
-		tr("BOSS_SHIELD_UP_STATUS")
-		if boss_shield_runtime.shield_up
-		else tr("BOSS_SHIELD_DOWN_STATUS")
-			% boss_shield_runtime.shield_down_remaining
-	)
-	var parts: Array[String] = [base_state]
-	parts.append_array(_localized_status_parts(boss))
-	return "  •  ".join(parts)
-
-
-func _boss_shield_snapshot() -> Dictionary:
-	return {
-		"state":boss_shield_runtime.state(),
-		"shield_up":boss_shield_runtime.shield_up,
-		"damage_multiplier":boss_shield_runtime.boss_damage_multiplier(),
-		"shield_down_remaining":boss_shield_runtime.shield_down_remaining,
-	}
-
-
-func _localized_status_parts(enemy: EnemyState) -> Array[String]:
-	var parts: Array[String] = []
-	var burn_stacks := StatusRuntime.stack_count(enemy, &"burn")
-	var poison_stacks := StatusRuntime.stack_count(enemy, &"poison")
-	var chill_stacks := StatusRuntime.stack_count(enemy, &"chill")
-	if burn_stacks > 0:
-		parts.append(tr("STATUS_BURN_STACKS") % burn_stacks)
-	if poison_stacks > 0:
-		parts.append(tr("STATUS_POISON_STACKS") % poison_stacks)
-	if chill_stacks > 0:
-		parts.append(tr("STATUS_CHILL_STACKS") % chill_stacks)
-	return parts
 
 
 func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
@@ -5573,12 +5433,14 @@ func _append_minimap_static_geometry(snapshot: Dictionary) -> void:
 func _combat_presentation_snapshot() -> Dictionary:
 	var mystery_devices: Array[Dictionary] = []
 	var mystery_effects: Array[Dictionary] = []
+	var crate_overlays: Array[Dictionary] = []
 	return _fill_combat_presentation_snapshot(
 		{},
 		player_protection_sources.duplicate(),
 		secondary_runtime.snapshot(run_build),
 		mystery_devices,
-		mystery_effects
+		mystery_effects,
+		crate_overlays
 	)
 
 
@@ -5591,7 +5453,8 @@ func _runtime_combat_presentation_snapshot() -> Dictionary:
 		player_protection_sources,
 		_runtime_secondary_presentation_frame,
 		_mystery_device_snapshot_buffer,
-		_mystery_effect_snapshot_buffer
+		_mystery_effect_snapshot_buffer,
+		_runtime_crate_overlay_buffer
 	)
 
 
@@ -5600,7 +5463,8 @@ func _fill_combat_presentation_snapshot(
 	protection_sources: Dictionary,
 	secondary: Dictionary,
 	mystery_devices: Array[Dictionary],
-	mystery_effects: Array[Dictionary]
+	mystery_effects: Array[Dictionary],
+	crate_overlays: Array[Dictionary]
 ) -> Dictionary:
 	var cursor_position := player_position + player_aim_direction * 230.0
 	var mouse_direction := get_global_mouse_position() - player_position
@@ -5636,9 +5500,32 @@ func _fill_combat_presentation_snapshot(
 	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)
 	snapshot["mystery_devices"] = mystery_devices
 	snapshot["mystery_effects"] = mystery_effects
+	_fill_crate_health_overlay_snapshot(crate_overlays)
+	snapshot["crate_health_overlays"] = crate_overlays
 	snapshot["reinforcement_facility"] = reinforcement_facility_runtime.snapshot()
 	snapshot["cursor_position"] = cursor_position
 	return snapshot
+
+
+func _fill_crate_health_overlay_snapshot(
+	output: Array[Dictionary]
+) -> Array[Dictionary]:
+	while output.size() < crates.size():
+		output.append({})
+	output.resize(crates.size())
+	for index in crates.size():
+		var crate := crates[index]
+		var record := output[index]
+		record.clear()
+		record["position"] = Vector2(crate["pos"])
+		record["radius"] = CRATE_COLLISION_RADIUS
+		record["health"] = float(crate["health"])
+		record["max_health"] = float(crate["max_health"])
+		record["health_visible_timer"] = float(
+			crate.get("health_visible_timer", 0.0)
+		)
+		record["visible"] = bool(crate["alive"])
+	return output
 
 
 func _is_world_position_visited(position: Vector2) -> bool:
@@ -6064,7 +5951,6 @@ func _start_boss_practice() -> void:
 	boss_started = true
 	stage_flow.state = StageFlow.State.BOSS_ACTIVE
 	_begin_boss_shield_phase(boss, boss_practice.phase)
-	_ui.notify(tr("BOSS_PRACTICE_START"), 1.5, Art.MUSTARD)
 	_set_mouse_for_mode()
 
 

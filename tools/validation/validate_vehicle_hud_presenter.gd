@@ -10,10 +10,11 @@ var static_minimap_calls := 0
 var guide_calls := 0
 var fast_health := 120.0
 var fast_max_health := 120.0
-var fast_level := 1
-var fast_experience := 0.0
-var fast_experience_required := 12.0
 var fast_reduced_motion := false
+var fast_stage_number := 2
+var fast_stage_total := 5
+var fast_defeated := 86
+var fast_quota := 168
 var fast_dash_available := true
 var fast_dash_ratio := 0.0
 
@@ -25,14 +26,14 @@ func _initialize() -> void:
 	)
 	_expect(
 		_all_hull_fields_present(first)
-			and _all_objective_fields_present(first)
+			and _all_stage_progress_fields_present(first)
 			and _all_action_fields_present(first)
-			and first.has("target")
-			and first.has("boss")
+			and not first.has("target")
+			and not first.has("boss")
 			and first.has("minimap")
 			and first.has("threat_radar")
 			and first.has("guidebook"),
-		"initial publication includes every field in all five atomic clusters and every dirty channel"
+		"initial publication includes the minimal atomic HUD clusters and every dirty channel"
 	)
 	_expect(fast_calls == 1 and minimap_calls == 1 and static_minimap_calls == 1 and guide_calls == 1, "initial channel builders run once")
 	var quiet := presenter.advance(0.01, _fast, _minimap, _threat, _guide)
@@ -66,9 +67,9 @@ func _initialize() -> void:
 	)
 	_expect(
 		_all_hull_fields_present(damage_update)
-		and not damage_update.has("objective")
+		and not damage_update.has("stage_number")
 		and not damage_update.has("dash_available"),
-		"a hull-only change omits unchanged objective and action clusters"
+		"a hull-only change omits unchanged stage-progress and action clusters"
 	)
 	fast_health = 120.0
 	var heal_update := state_presenter.advance(0.10, _fast, _minimap, _threat, _guide)
@@ -85,20 +86,29 @@ func _initialize() -> void:
 		and max_hull_update.get("max_health", -1.0) == 135.0,
 		"max-hull changes publish current and maximum hull together"
 	)
-	fast_level = 2
-	fast_experience = 3.0
-	fast_experience_required = 16.0
 	fast_reduced_motion = true
-	var progression_update := state_presenter.advance(
+	var motion_update := state_presenter.advance(
 		0.10, _fast, _minimap, _threat, _guide
 	)
 	_expect(
-		_all_hull_fields_present(progression_update)
-		and progression_update.get("level", 0) == 2
-		and progression_update.get("experience", -1.0) == 3.0
-		and progression_update.get("experience_required", -1.0) == 16.0
-		and bool(progression_update.get("reduced_motion", false)),
-		"XP, level, and reduced-motion changes publish the full hull/progression cluster"
+		_all_hull_fields_present(motion_update)
+		and bool(motion_update.get("reduced_motion", false))
+		and not motion_update.has("level")
+		and not motion_update.has("experience"),
+		"reduced-motion changes publish the minimal hull cluster without retired XP fields"
+	)
+	fast_defeated = 87
+	var progress_update := state_presenter.advance(
+		0.10, _fast, _minimap, _threat, _guide
+	)
+	_expect(
+		_all_stage_progress_fields_present(progress_update)
+		and int(progress_update["stage_number"]) == 2
+		and int(progress_update["stage_total"]) == 5
+		and int(progress_update["defeated"]) == 87
+		and int(progress_update["quota"]) == 168
+		and not progress_update.has("health"),
+		"one defeat republishes the complete numeric stage-progress cluster only"
 	)
 	fast_dash_available = false
 	fast_dash_ratio = 0.5
@@ -108,7 +118,7 @@ func _initialize() -> void:
 	_expect(
 		_all_action_fields_present(action_update)
 		and not action_update.has("health")
-		and not action_update.has("objective"),
+		and not action_update.has("stage_number"),
 		"one action change publishes every action sibling and no unchanged cluster"
 	)
 	var health_pips := GameplayHud.HealthPips.new()
@@ -129,13 +139,11 @@ func _fast() -> Dictionary:
 	return {
 		"health":fast_health,
 		"max_health":fast_max_health,
-		"level":fast_level,
-		"experience":fast_experience,
-		"experience_required":fast_experience_required,
 		"reduced_motion":fast_reduced_motion,
-		"objective":"",
-		"objective_detail":"",
-		"stage_title":"",
+		"stage_number":fast_stage_number,
+		"stage_total":fast_stage_total,
+		"defeated":fast_defeated,
+		"quota":fast_quota,
 		"dash_available":fast_dash_available,
 		"dash_ratio":fast_dash_ratio,
 		"seeker_available":true,
@@ -143,16 +151,11 @@ func _fast() -> Dictionary:
 		"skill_available":true,
 		"skill_ratio":0.0,
 		"buff_text":"",
-		"target":{"visible":false},
-		"boss":{"visible":false},
 	}
 
 
 func _all_hull_fields_present(update: Dictionary) -> bool:
-	for key in [
-		"health", "max_health", "level", "experience",
-		"experience_required", "reduced_motion",
-	]:
+	for key in ["health", "max_health", "reduced_motion"]:
 		if not update.has(key):
 			return false
 	return true
@@ -168,8 +171,8 @@ func _all_action_fields_present(update: Dictionary) -> bool:
 	return true
 
 
-func _all_objective_fields_present(update: Dictionary) -> bool:
-	for key in ["objective", "objective_detail", "stage_title"]:
+func _all_stage_progress_fields_present(update: Dictionary) -> bool:
+	for key in ["stage_number", "stage_total", "defeated", "quota"]:
 		if not update.has(key):
 			return false
 	return true

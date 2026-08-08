@@ -55,8 +55,8 @@ func _run() -> void:
 		_expect(run.current_stage_id == &"stage_1" and run.player_position == Vector2(3600,2160), "run begins at shared center")
 		_expect(run.PLAYER_BASE_SPEED == 280.0, "player base speed remains 280 px/s")
 		_expect(
-			is_equal_approx(StageDifficulty.ORDINARY_HEALTH_MULTIPLIER, 1.30),
-			"all non-boss enemy health receives the requested 30 percent increase"
+			is_equal_approx(StageDifficulty.ORDINARY_HEALTH_MULTIPLIER, 2.60),
+			"all non-boss enemy health receives the requested doubled final multiplier"
 		)
 		_expect(
 			is_equal_approx(SpecialistRuntime.REPAIR_PER_SECOND, 8.0)
@@ -364,12 +364,14 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 		"shielded boss damage does not create floating damage feedback"
 	)
 	var hud := Dictionary(run.call("_build_hud_snapshot"))
-	var shield := Dictionary(Dictionary(hud["boss"])["shield"])
 	_expect(
-		shield["state"] == &"shield_up"
-			and bool(shield["shield_up"])
-			and is_equal_approx(float(shield["damage_multiplier"]), 0.25),
-		"boss strip consumes the boss-attached shield state"
+		not hud.has("boss")
+			and not hud.has("target")
+			and int(hud["stage_number"]) == run.current_stage_index + 1
+			and int(hud["stage_total"]) == Catalog.STAGE_IDS.size()
+			and int(hud["defeated"]) == run.stage_flow.defeats
+			and int(hud["quota"]) == run.stage_flow.quota,
+		"HUD publishes only numeric stage progress and no edge boss or target health"
 	)
 	var minimap_markers := Array(hud["minimap"]["markers"])
 	var boss_markers := minimap_markers.filter(
@@ -400,9 +402,12 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	)
 	ui.update_hud(hud)
 	_expect(
-		ui._hud._boss_cluster.visible
-			and ui._hud._mission_panel.visible,
-		"boss strip and mission panel remain visible together"
+		ui._hud._stage_progress.visible
+			and ui._hud._stage_value.text == "%d / %d" % [
+				run.current_stage_index + 1,
+				Catalog.STAGE_IDS.size(),
+			],
+		"panel-free B progress remains visible during the boss encounter"
 	)
 
 
@@ -638,7 +643,8 @@ func _check_combat_presentation_frame(run) -> void:
 			and is_same(secondary, run._runtime_secondary_presentation_frame)
 			and is_same(secondary["mines"], run.secondary_runtime.mines)
 			and is_same(first["mystery_devices"], run._mystery_device_snapshot_buffer)
-			and is_same(first["mystery_effects"], run._mystery_effect_snapshot_buffer),
+			and is_same(first["mystery_effects"], run._mystery_effect_snapshot_buffer)
+			and is_same(first["crate_health_overlays"], run._runtime_crate_overlay_buffer),
 		"combat presentation borrows synchronous live collections without duplication"
 	)
 	_expect(
@@ -648,10 +654,11 @@ func _check_combat_presentation_frame(run) -> void:
 		"runtime secondary state exposes only orbit and mine fields"
 	)
 	_expect(
-		not is_same(oracle["protection_sources"], run.player_protection_sources)
+			not is_same(oracle["protection_sources"], run.player_protection_sources)
 			and not is_same(oracle["secondary"]["mines"], run.secondary_runtime.mines)
 			and not is_same(oracle["mystery_devices"], run._mystery_device_snapshot_buffer)
-			and not is_same(oracle["mystery_effects"], run._mystery_effect_snapshot_buffer),
+			and not is_same(oracle["mystery_effects"], run._mystery_effect_snapshot_buffer)
+			and not is_same(oracle["crate_health_overlays"], run._runtime_crate_overlay_buffer),
 		"cold combat snapshot remains independently owned for validators and capture"
 	)
 	var identities_stable := true
@@ -664,6 +671,7 @@ func _check_combat_presentation_frame(run) -> void:
 			and is_same(secondary, repeated["secondary"])
 			and is_same(first["mystery_devices"], repeated["mystery_devices"])
 			and is_same(first["mystery_effects"], repeated["mystery_effects"])
+			and is_same(first["crate_health_overlays"], repeated["crate_health_overlays"])
 		)
 	_expect(
 		identities_stable,
@@ -700,6 +708,12 @@ func _presentation_snapshots_match(
 		"barrier_strength", "reduced_motion", "run_time",
 		"secondary_visual_tier",
 		"electric_field_level", "orbiting_blade_level", "cursor_position",
+	]:
+		if expected.get(key) != actual.get(key):
+			return false
+	for key in [
+		"mystery_devices", "mystery_effects", "crate_health_overlays",
+		"reinforcement_facility",
 	]:
 		if expected.get(key) != actual.get(key):
 			return false

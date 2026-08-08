@@ -151,17 +151,17 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 	_expect(occupied_sectors.size() >= 4, "%s items occupy at least four field sectors" % stage_id)
 	_expect(loose_recall_count == 2, "%s keeps two loose recall pickups" % stage_id)
 	_expect(crate_recall_count == 2, "%s keeps two crate recall drops" % stage_id)
-	var twenty_five_count := repair_values.count(25.0)
-	var twenty_count := repair_values.count(20.0)
+	var fifty_count := repair_values.count(50.0)
+	var forty_count := repair_values.count(40.0)
 	var repair_total := 0.0
 	for value in repair_values:
 		repair_total += value
 	_expect(
 		repair_values.size() == 10
-			and twenty_five_count == 9
-			and twenty_count == 1
-			and is_equal_approx(repair_total, 245.0),
-		"%s keeps ten repair events and the 245-hull budget" % stage_id
+			and fifty_count == 9
+			and forty_count == 1
+			and is_equal_approx(repair_total, 490.0),
+		"%s keeps ten repair events and the doubled 490-hull budget" % stage_id
 	)
 	var recall_positions: Array[Vector2] = []
 	for spec in layout.pickup_blueprint(stage_id):

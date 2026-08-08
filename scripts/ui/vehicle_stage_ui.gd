@@ -273,27 +273,6 @@ func show_gameplay() -> void:
 	_hud.visible = true
 
 
-func show_stage_transition(
-	stage_number: int,
-	stage_title_key: String,
-	reduced_motion: bool
-) -> void:
-	show_gameplay()
-	_hud.show_stage_transition(
-		stage_number,
-		stage_title_key,
-		reduced_motion
-	)
-
-
-func hide_stage_transition() -> void:
-	_hud.hide_stage_transition()
-
-
-func debug_transition_banner() -> Dictionary:
-	return _hud.debug_transition_banner()
-
-
 func debug_health_animation_contract() -> Dictionary:
 	return _hud.debug_health_animation_contract()
 
@@ -303,7 +282,6 @@ func debug_submit_deployment() -> void:
 
 
 func show_stage_report(snapshot: Dictionary) -> void:
-	hide_stage_transition()
 	hide_all_modals()
 	_report_panel.open(snapshot)
 	_show_modal("report")

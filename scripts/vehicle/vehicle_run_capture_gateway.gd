@@ -91,6 +91,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_field_item_evidence()
 		&"reinforcement_facility":
 			await _capture_reinforcement_facility_evidence()
+		&"damageable_world_health":
+			await _capture_damageable_world_health_evidence()
 		&"level_up":
 			await _capture_level_up_evidence()
 		&"boss_preview":
@@ -489,7 +491,7 @@ func _capture_field_item_evidence() -> void:
 	_run.crates.clear()
 	_run.pickups.clear()
 	_run.player_health = 64.0
-	_run.pickups.append({"id":"capture_repair", "kind":&"repair", "pos":_run.player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":35.0})
+	_run.pickups.append({"id":"capture_repair", "kind":&"repair", "pos":_run.player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":70.0})
 	_run.pickups.append({"id":"capture_recall", "kind":&"experience_recall", "pos":_run.player_position + Vector2(150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":0.0})
 	_run.experience_runtime.clear_shards()
 	_run.experience_runtime.spawn_shard(_run.player_position + Vector2(245.0, -90.0), 1)
@@ -510,8 +512,44 @@ func _capture_reinforcement_facility_evidence() -> void:
 	_run.reinforcement_facility_runtime.activate_if_ready(35, 100)
 	_run.reinforcement_facility_runtime.receive_damage(72.0, &"player", &"direct")
 	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
+	_run._ui.notify(tr("NOTIFY_REINFORCEMENT_FACILITY"), 2.4, Art.DANGER)
 	await _settle_capture()
 	_save_capture("05b-reinforcement-facility.png")
+
+
+func _capture_damageable_world_health_evidence() -> void:
+	prepare_stage(0)
+	_run._clear_enemies()
+	_run.pickups.clear()
+	_run.crates.clear()
+	_run.crates.append({
+		"id":"capture_damaged_crate",
+		"pos":_run.player_position + Vector2(-270.0, 90.0),
+		"drop":&"repair",
+		"heal_amount":50.0,
+		"health":12.0,
+		"max_health":24.0,
+		"alive":true,
+		"flash":0.0,
+		"health_visible_timer":1.5,
+	})
+	_run._rebuild_crate_collision_cells()
+	_run.mystery_device_runtime.configure(
+		[{
+			"id":&"capture_damaged_device",
+			"pos":_run.player_position + Vector2(290.0, -70.0),
+			"outcome":&"gravity_pull",
+		}],
+		771,
+		&"stage_1"
+	)
+	_run.mystery_device_runtime.receive_damage(
+		&"capture_damaged_device", 45.0, &"player", &"direct"
+	)
+	_run.capture_set_mode(&"paused")
+	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
+	await _settle_capture()
+	_save_capture("05c-damageable-world-health.png")
 
 
 func _capture_level_up_evidence() -> void:

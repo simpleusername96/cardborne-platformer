@@ -366,7 +366,7 @@ static func _try_build_stage_objects(
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + 1],
 			"kind":&"experience_recall" if index < 2 else &"repair",
-			"heal_amount":0.0 if index < 2 else 25.0,
+			"heal_amount":0.0 if index < 2 else 50.0,
 			"pos":pickup_positions[index],
 		})
 	for index in 8:
@@ -375,7 +375,7 @@ static func _try_build_stage_objects(
 			"id":"%s_crate_%02d" % [String(stage_id), index + 1],
 			"pos":crate_positions[index],
 			"drop":&"experience_recall" if recall else &"repair",
-			"heal_amount":0.0 if recall else (20.0 if index == 7 else 25.0),
+			"heal_amount":0.0 if recall else (40.0 if index == 7 else 50.0),
 		})
 	return {"mystery_devices":devices, "pickups":pickups, "crates":crates}
 

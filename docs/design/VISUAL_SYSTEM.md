@@ -457,18 +457,19 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 
 - layout breakpoint는 width `1100`, large upgrade breakpoint는 `1600`,
   guide/report three-column breakpoint는 `1180`이다.
-- upgrade card는 compact에서 `280×378`, gap `12`, standard에서 `360×456`,
-  gap `16`, large에서 `420×480`, gap `24`를 사용한다. 세 카드 container는
+- upgrade card는 compact에서 `280×410`, gap `12`, standard에서 `360×488`,
+  gap `16`, large에서 `420×512`, gap `24`를 사용한다. 세 카드 container는
   사용 가능한 공간에 맞춰 확장하며 standard에서 좁은 352px 카드를 유지하지
   않는다. 순서는 centered family, title, artwork, level, 실제 effect row,
-  localized 한 줄 설명의 vertical stack이다. 내부 가로 separator는 사용하지
+  localized 최대 두 줄 설명의 vertical stack이다. 내부 가로 separator는 사용하지
   않는다. dossier uses compact `88×88`, standard `112×112`, and large
   `128×128` centered artwork. 설명은 항상 변화 수치 아래 마지막에 두고
-  compact/standard/large에서 각각 `16/17/18 px`을 사용한다. 한국어는 공백 포함
+  `text_primary` 색상과 compact/standard/large 각각 `32/34/36 px`을 사용한다.
+  한국어는 공백 포함
   약 10자, 영어는 2–5단어를 기준으로 하며
-  supported viewport에서 한 줄을 넘지 않는다. change-kind 문장, description
-  footer와 split column은 표시하지 않는다. 첫 획득만 작은 code-native unlock
-  diamond로 표시한다.
+  supported viewport에서 두 줄을 넘지 않는다. change-kind 문장, description
+  footer와 split column은 표시하지 않는다. 첫 획득의 change-kind 의미는
+  접근성 이름에만 유지하며 별도 unlock diamond나 `+` 아이콘은 사용하지 않는다.
   title 위 반복 image, badge와 level text를 반복하는 단계 pip는 사용하지
   않는다. Seeker와 선택형 secondary upgrade는 같은 `보조 무기 / Secondary
   Weapons` family label을 사용하고 title이 실제 subtype을 식별한다.
@@ -483,10 +484,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 
 ### HUD
 
-- top-left의 한 subtle Surface는 stage, objective/message, experience와
-  conditional boss summary를 소유한다. top-center는 panel 없는 긴 player hull
-  strip과 그 아래 acquired-only upgrade rail을 소유한다. top-right는 `176×108`
-  minimap과 conditional target을 소유한다.
+- top-left B stack은 panel, bar, icon 없이 localized stage와 defeated label 및
+  `current / total` 값만 표시한다. compact/standard/large의 label/fraction은
+  `15/30`, `16/32`, `18/40 px`이며 left margin은 `16/24/32 px`이다. top-left,
+  top-center, top-right는 모두 화면 상단 8px datum에 붙는다. top-center는 panel
+  없는 긴 player hull strip과 그 아래 acquired-only upgrade rail을 소유한다.
+  top-right는 `176×108` minimap만 소유한다. edge boss/target health, objective,
+  experience rail과 mission Surface는 사용하지 않는다.
 - live upgrade rail은 기존 semantic upgrade artwork와 작은 level numeral만
   표시한다. 빈 slot, family label, 공통 배경 panel은 만들지 않는다. compact,
   standard, large icon은 각각 `26/30/40 px`이며 기본 화면에서는 12개까지 한 줄,
@@ -502,12 +506,20 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   유지한다. explored static geometry와 fog는 유지한다.
 - bottom-center에는 panel이 없는 확대 원형 EMP indicator 하나만 둔다. cooldown과
   enabled/disabled 상태만 표시하며 primary, dash, secondary slot은 만들지 않는다.
-- mission과 minimap zone만 각각 최대 한 subtle Surface를 사용한다. center hull과
+- minimap zone만 한 subtle Surface를 사용한다. B stage stack, center hull과
   acquired-upgrade rail은 panel-free다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는
   사용하지 않는다.
-- notification과 transition은 top status 영역 아래 한 줄 ToastSurface에 나타나며
-  crosshair를 가리지 않는다.
+- normal ToastSurface는 compact `320×36`, standard/large `360×40`이며 center
+  status stack 아래 4px에 붙는다. left B stack 높이는 toast Y에 영향을 주지
+  않는다. gameplay toast는 reinforcement facility active/destroyed, boss inbound,
+  barrier depleted, Mystery Device result, boss shield-down 여섯 event만 허용한다.
+  stage transition banner는 사용하지 않는다.
+- stage boss와 active reinforcement facility는 world body 위에 항상 backed health
+  bar를 둔다. Mystery Device와 reward crate는 accepted damage 이후 1.5초 동안만
+  body 위 bar를 표시한다. ordinary enemy bar는 최대 12개다. 모두 기존
+  `Overlay_health` retained batch를 공유하며 backing/fill을 합친 fixed capacity는
+  50 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
 - HUD off-screen threat와 다섯 종류 minimap marker는 기존 code-native retained
   mesh를 유지한다. world-space crosshair는 shared authored PNG retained textured
   batch로 배치한다. persistent-status orbit과 support timer는 사용하지 않는다.

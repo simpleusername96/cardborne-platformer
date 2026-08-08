@@ -62,11 +62,11 @@ func _initialize() -> void:
 				Difficulty.boss_health(stage_index),
 				base_health * Difficulty.BOSS_HEALTH_MULTIPLIER
 			),
-			"%s applies the dedicated 30 percent boss-health increase" % stage_id
+			"%s applies the doubled final boss-health multiplier" % stage_id
 		)
 	_expect(
-		is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIER, 1.30),
-		"boss health multiplier remains 1.30"
+		is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIER, 2.60),
+		"boss health multiplier is doubled from 1.30 to 2.60"
 	)
 	_expect(
 		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),

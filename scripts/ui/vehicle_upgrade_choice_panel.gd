@@ -47,7 +47,7 @@ func _build() -> void:
 	_row.alignment = FlowContainer.ALIGNMENT_CENTER
 	_row.last_wrap_alignment = FlowContainer.LAST_WRAP_ALIGNMENT_CENTER
 	_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_row.custom_minimum_size.y = 456.0
+	_row.custom_minimum_size.y = 488.0
 	_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_row_scroll.add_child(_row)
 	for index in 3:
@@ -78,7 +78,7 @@ func set_compact_mode(value: bool) -> void:
 		return
 	_row.add_theme_constant_override("h_separation", 12 if value else 16)
 	_row.add_theme_constant_override("v_separation", 12 if value else 16)
-	_row.custom_minimum_size.y = 378.0 if value else 456.0
+	_row.custom_minimum_size.y = 410.0 if value else 488.0
 	_message.custom_minimum_size.y = 20.0 if value else 22.0
 	Factory.apply_font_size(
 		_message,
@@ -111,7 +111,7 @@ func set_large_mode(value: bool) -> void:
 		24 if _large else (12 if _compact else 16)
 	)
 	_row.custom_minimum_size.y = (
-		480.0 if _large else (378.0 if _compact else 456.0)
+		512.0 if _large else (410.0 if _compact else 488.0)
 	)
 	_message.custom_minimum_size.y = (
 		24.0 if _large else (20.0 if _compact else 22.0)
@@ -156,7 +156,7 @@ func set_accessibility_mode(enabled: bool) -> void:
 	_row.custom_minimum_size.y = (
 		920.0
 		if enabled
-		else (378.0 if _compact else 456.0)
+		else (410.0 if _compact else 488.0)
 	)
 
 

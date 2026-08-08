@@ -84,8 +84,8 @@ five-stage run.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
-All non-boss enemy archetypes receive a final `1.30` health multiplier after the
-fixed profile and stage curve. Boss health receives a separate final `1.30`
+All non-boss enemy archetypes receive a final `2.60` health multiplier after the
+fixed profile and stage curve. Boss health receives a separate final `2.60`
 multiplier on its authored curve.
 Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
 `0.75 s`; both healing outputs are twice their previous values.
@@ -318,9 +318,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 8. Boss defeat recalls all live experience within 0.65 seconds and resolves the
    mandatory reward choice. Stages 1–4 then full-heal the ship, grant 1.2
    seconds of transition protection, preserve position, facing, aim, build,
-   fixed Hard state, exploration, inner walls, and hazard geometry, and show a
-   non-modal 1.6-second stage banner while the next encounter begins. No success
-   report or continue input interrupts the run. Stage 5 opens the final result;
+   fixed Hard state, exploration, inner walls, and hazard geometry while the next
+   encounter begins. No transition banner, success report, or continue input
+   interrupts the run. Stage 5 opens the final result;
    failures still open the failure report.
 
 | Stage | Fixed Hard quota | Authored mobile population | Boss |
@@ -346,8 +346,9 @@ Each boss owns one body-attached shield and no external objective actor.
 `shield_up` applies `0.25×` damage. Completing a direct boss attack lowers the
 shield for four seconds, during which damage is `1.00×`, then the shield returns.
 Phase thresholds start the next phase and raise the shield but are not HP floors.
-The boss body and boss strip consume the same shield state. A state-entry hint
-appears once and the same hint cannot repeat within two seconds.
+The boss body owns the shield state and one always-visible world-attached health
+bar. The four-second shield-down window produces one top-center hint; shield-up
+does not produce a transient message.
 
 ### Items, experience, and upgrades
 
@@ -359,9 +360,10 @@ appears once and the same hint cannot repeat within two seconds.
   of those two items. Recall retargets the ship's current position every physics
   frame and guarantees all live shards reach it before the 0.65-second recall
   window expires, including while the ship dashes.
-- Each stage places six loose field items and eight breakable crates. The larger
-  number of item sightings redistributes the existing 245-point field-repair
-  budget rather than increasing total recovery without limit.
+- Each stage places six loose field items and eight breakable crates. Four loose
+  repairs restore `50 HP`; five crate repairs restore `50 HP` and one restores
+  `40 HP`, for an exact `490 HP` field-repair budget. Repair collection still
+  clamps at the ship's current maximum hull.
 - Level thresholds use
   `min(160, 12 + round(3n + 0.55n²))`, where `n` is the zero-based level
   progression index. This makes early choices frequent while restoring a rising
@@ -413,14 +415,25 @@ appears once and the same hint cannot repeat within two seconds.
   projectiles, hits, arrivals, deaths, pickups, and persistent states render
   from their gameplay, actor, world, HUD, or audio owners without cosmetic
   event objects.
-- The live HUD prioritizes hull, the acquired build, stage quota, EMP, minimap,
-  boss health, target state, and exceptional timed effects. Top-left uses one
-  restrained mission surface for stage, objective/message, experience, and the
-  conditional boss summary. Top-center uses a long panel-free hull strip with
-  acquired upgrade icons below it. Top-right owns the minimap and conditional
-  target. Bottom-center owns one enlarged round panel-free EMP indicator. It shows
-  cooldown and enabled/disabled state; dash and secondary slots are omitted. No
+- The live HUD prioritizes hull, the acquired build, numeric stage progress, EMP,
+  minimap, and exceptional timed effects. A panel-free top-left B stack shows only
+  localized stage and defeated labels with `current / total` values. At compact,
+  standard, and large widths its label/fraction sizes are `15/30`, `16/32`, and
+  `18/40 px`; all top zones use an eight-pixel top datum. Top-center uses a long
+  panel-free hull strip with acquired upgrade icons below it. Top-right owns only
+  the minimap. Bottom-center owns one enlarged round panel-free EMP indicator. No
+  edge boss/target health, mission surface, objective text, experience bar, or
   ornamental full-width dock covers the field.
+- The normal top-center toast is `320×36` compact or `360×40` standard/large and
+  sits four pixels below the center status stack, independent of the taller B
+  stack. Only facility active/destroyed, boss inbound, barrier depleted, Mystery
+  Device result, and boss shield-down events may enqueue gameplay toasts. Stage
+  transitions use no banner.
+- Boss and active reinforcement-facility health bars are attached above their
+  world bodies. Mystery Device and reward-crate bars appear for 1.5 seconds after
+  accepted damage and disappear immediately when the object resolves or breaks.
+  Ordinary enemy bars retain their deterministic 12-actor cap. All world health
+  bars share one retained batch with a fixed 50-instance ceiling.
 - The minimap owns general enemy presence. The threat radar is limited to an
   unseen committed projectile attack that has no world cue yet and boss arrival.
   A single attack never appears as both a world

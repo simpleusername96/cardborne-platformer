@@ -77,24 +77,34 @@ func _initialize() -> void:
 				and bool(health_meter["has_trailing_health_geometry"])
 				and bool(health_meter["has_health_geometry"])
 				and not bool(health_meter["has_experience_geometry"])
-				and bool(health_meter["panel_free"])
-				and bool(contract["mission_experience_meter"]),
-			"center health and top-left XP use separate code-native geometry at %d" % width
+				and bool(health_meter["panel_free"]),
+			"center health remains panel-free and exposes no XP geometry at %d" % width
 		)
 		_expect(
-			int(contract["zone_surface_count"]) == 2
+			int(contract["zone_surface_count"]) == 1
 				and Array(contract["zone_surface_variations"]) == [
-					&"HudSurface", &"HudSurface",
+					&"HudSurface",
 				]
 				and StringName(contract["toast_surface_variation"]) == &"ToastSurface",
-			"HUD uses three backed zones, one panel-free EMP indicator, and one toast at %d" % width
+			"only the minimap keeps a backed HUD surface while stage progress stays panel-free at %d" % width
 		)
 		_expect(
-			not bool(contract["conditional_clusters_have_backing"])
-				and bool(contract["boss_inside_mission_zone"])
-				and bool(contract["target_inside_minimap_zone"])
+			bool(contract["stage_progress_panel_free"])
+				and not bool(contract["edge_boss_health_visible"])
+				and not bool(contract["edge_target_health_visible"])
+				and bool(contract["toast_center_attached"])
 				and not bool(contract["raster_chrome_consumer"]),
-			"boss and target reuse their owning zones without raster or nested backing at %d" % width
+			"B progress is panel-free, toast follows center status, and edge health panels are absent at %d" % width
+		)
+		var expected_label_size := 15 if width < 1100.0 else (18 if width >= 1600.0 else 16)
+		var expected_value_size := 30 if width < 1100.0 else (40 if width >= 1600.0 else 32)
+		var status_sizes := Dictionary(contract["status_font_sizes"])
+		_expect(
+			int(status_sizes["stage_label"]) == expected_label_size
+				and int(status_sizes["defeated_label"]) == expected_label_size
+				and int(status_sizes["stage_value"]) == expected_value_size
+				and int(status_sizes["defeated_value"]) == expected_value_size,
+			"B progress uses the locked responsive typography at %d" % width
 		)
 		_expect(bool(contract["action_rail_icon_only"]), "action rail contains icons only at %d" % width)
 		_expect(
@@ -104,7 +114,7 @@ func _initialize() -> void:
 		)
 		_expect(not bool(contract["shows_primary_slot"]), "primary fire is omitted from the action rail at %d" % width)
 		_expect(Vector2(contract["secondary_slot_size"]) == Vector2.ZERO, "dash and secondary slots are absent at %d" % width)
-		for status_name in Dictionary(contract["status_font_sizes"]):
+		for status_name in status_sizes:
 			_expect(
 				int(contract["status_font_sizes"][status_name]) >= 14,
 				"%s HUD status typography stays at or above 14 px at %d"
@@ -162,12 +172,12 @@ func _initialize() -> void:
 			var card_size := Vector2(card["minimum_size"])
 			_expect(
 				(
-					card_size == Vector2(280.0, 378.0)
+					card_size == Vector2(280.0, 410.0)
 					if width < 1100.0
 					else (
-						card_size == Vector2(360.0, 456.0)
+						card_size == Vector2(360.0, 488.0)
 						if width < 1600.0
-						else card_size == Vector2(420.0, 480.0)
+						else card_size == Vector2(420.0, 512.0)
 					)
 				),
 				"upgrade cards use the supported hierarchy at %d" % width
@@ -178,7 +188,7 @@ func _initialize() -> void:
 						"category":13,
 						"level":15,
 						"title":22,
-						"summary":16,
+						"summary":32,
 					}
 					if width < 1100.0
 					else (
@@ -186,14 +196,14 @@ func _initialize() -> void:
 							"category":16,
 							"level":18,
 							"title":28,
-							"summary":17,
+							"summary":34,
 						}
 						if width < 1600.0
 						else {
 							"category":18,
 							"level":18,
 							"title":32,
-							"summary":18,
+							"summary":36,
 						}
 					)
 				),
@@ -221,8 +231,8 @@ func _initialize() -> void:
 				not bool(card["footer_visible"])
 					and not bool(card["description_in_comparison"])
 					and bool(card["description_visible"])
-					and int(card["summary_max_lines"]) == 1,
-				"upgrade card shows one concise description outside stat comparison"
+					and int(card["summary_max_lines"]) == 2,
+				"upgrade card shows one large two-line description outside stat comparison"
 			)
 			_expect(
 				bool(card["level_visible"])
@@ -841,12 +851,12 @@ func _expect_upgrade_geometry(
 			Vector2(520.0, 920.0)
 			if card_rect.size.x > 500.0
 			else (
-				Vector2(280.0, 378.0)
+				Vector2(280.0, 410.0)
 				if card_rect.size.x < 300.0
 				else (
-					Vector2(420.0, 480.0)
+					Vector2(420.0, 512.0)
 					if card_rect.size.x > 400.0
-					else Vector2(360.0, 456.0)
+					else Vector2(360.0, 488.0)
 				)
 			)
 		)

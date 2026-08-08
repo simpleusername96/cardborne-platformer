@@ -40,6 +40,7 @@ func configure(device_blueprint: Array, layout_seed: int, stage_id: StringName) 
 			"id":StringName(blueprint.get("id", "mystery_device_%d" % (index + 1))),
 			"position":Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))),
 			"health":DEVICE_HEALTH,
+			"health_visible_timer":0.0,
 			"outcome":outcome,
 			"state":&"intact",
 		})
@@ -73,6 +74,7 @@ func receive_damage(
 	if applied <= 0.0:
 		return receipt
 	device["health"] = maxf(0.0, float(device["health"]) - applied)
+	device["health_visible_timer"] = 1.5
 	receipt["accepted"] = true
 	receipt["remaining_health"] = float(device["health"])
 	if float(device["health"]) > 0.0:
@@ -96,9 +98,15 @@ func advance(delta: float) -> Array[Dictionary]:
 func advance_into(delta: float, retired: Array[Dictionary]) -> Array[Dictionary]:
 	## Hot-path form. The caller keeps and reuses the returned receipt buffer.
 	retired.clear()
+	var elapsed := maxf(0.0, delta)
+	for device in devices:
+		device["health_visible_timer"] = maxf(
+			0.0,
+			float(device.get("health_visible_timer", 0.0)) - elapsed
+		)
 	for index in range(active_effects.size() - 1, -1, -1):
 		var effect := active_effects[index]
-		effect["remaining_seconds"] = maxf(0.0, float(effect["remaining_seconds"]) - maxf(0.0, delta))
+		effect["remaining_seconds"] = maxf(0.0, float(effect["remaining_seconds"]) - elapsed)
 		if float(effect["remaining_seconds"]) > 0.0:
 			continue
 		retired.append({
@@ -174,6 +182,8 @@ func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 		record["position"] = Vector2(device["position"])
 		record["radius"] = DEVICE_RADIUS
 		record["health"] = float(device["health"])
+		record["max_health"] = DEVICE_HEALTH
+		record["health_visible_timer"] = float(device["health_visible_timer"])
 		record["state"] = StringName(device["state"])
 		record["visible"] = StringName(device["state"]) != &"retired"
 		if StringName(device["state"]) != &"intact":

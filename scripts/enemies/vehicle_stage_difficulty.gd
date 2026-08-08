@@ -7,8 +7,8 @@ extends RefCounted
 const HEALTH := [1.0, 1.04, 1.08, 1.12, 1.16]
 const DAMAGE := [1.0, 1.03, 1.06, 1.09, 1.12]
 const SPEED := [1.0, 1.01, 1.02, 1.03, 1.04]
-const ORDINARY_HEALTH_MULTIPLIER := 1.30
-const BOSS_HEALTH_MULTIPLIER := 1.30
+const ORDINARY_HEALTH_MULTIPLIER := 2.60
+const BOSS_HEALTH_MULTIPLIER := 2.60
 
 
 static func multipliers(stage_index: int) -> Dictionary:

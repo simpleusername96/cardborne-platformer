@@ -181,7 +181,6 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 		card.set_offer(OfferPresenter.snapshot(definition, 0))
 		await process_frame
 		var contract := card.debug_contract()
-		var expects_unlock_icon := definition.modifiers.is_empty()
 		_expect(
 			int(contract["header_art_count"]) == 0
 				and int(contract["body_art_count"]) == 1
@@ -197,7 +196,7 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 				and Array(contract["body_order"]) == [
 					"category",
 					"title",
-					"dossier:art/level/unlock-icon/effects/summary",
+					"dossier:art/level/effects/summary",
 				]
 				and not bool(contract["dossier_split"])
 				and bool(contract["vertical_dossier"])
@@ -205,13 +204,14 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 			"%s uses the compact centered vertical artwork contract" % category
 		)
 		_expect(
-			int(Dictionary(contract["type_sizes"])["summary"]) == 16
+			int(Dictionary(contract["type_sizes"])["summary"]) == 32
 				and not bool(contract["footer_visible"])
 				and not bool(contract["description_in_comparison"])
 				and bool(contract["description_visible"])
-				and int(contract["summary_max_lines"]) == 1
-				and bool(contract["unlock_icon_visible"]) == expects_unlock_icon,
-			"%s shows one compact effect summary and only the unlock icon when needed"
+				and int(contract["summary_max_lines"]) == 2
+				and Color(contract["summary_color"]).is_equal_approx(Art.TEXT_PRIMARY)
+				and not contract.has("unlock_icon_visible"),
+			"%s shows one large primary-color effect summary without an unlock icon"
 			% category
 		)
 		var geometry := card.debug_geometry_contract()
@@ -327,7 +327,10 @@ func _validate_intent_contract(catalog: VehicleUpgradeCatalog) -> void:
 			not panel_source.contains(forbidden_panel_token),
 			"mandatory upgrade panel removes %s" % forbidden_panel_token
 		)
-	for forbidden_card_token in ["_header", "_family_badge", "FamilyBadge"]:
+	for forbidden_card_token in [
+		"_header", "_family_badge", "FamilyBadge",
+		"UnlockIndicator", "_unlock_indicator", "unlock-icon",
+	]:
 		_expect(
 			not card_source.contains(forbidden_card_token),
 			"upgrade card removes %s" % forbidden_card_token
@@ -399,7 +402,7 @@ func _validate_panel(
 	surface.theme_type_variation = &"ModalSurface"
 	surface.custom_minimum_size = Vector2(
 		minf(1160.0, float(viewport.x) - 48.0),
-		minf(580.0, float(viewport.y) - 24.0)
+		minf(616.0, float(viewport.y) - 24.0)
 	)
 	center.add_child(surface)
 	var panel := UpgradeChoicePanel.new()
@@ -415,9 +418,9 @@ func _validate_panel(
 	var surface_rect := surface.get_global_rect().grow(0.75)
 	_expect(surface_rect.encloses(panel_rect), "%s panel stays inside its surface" % context)
 	var expected_size := (
-		Vector2(280.0, 378.0)
+		Vector2(280.0, 410.0)
 		if compact
-		else Vector2(360.0, 456.0)
+		else Vector2(360.0, 488.0)
 	)
 	var expected_gap := 12.0 if compact else 16.0
 	var prior_card := Rect2()
@@ -470,6 +473,13 @@ func _validate_panel(
 					else Vector2(128.0, 128.0)
 				),
 			"%s card keeps one correctly sized lower artwork" % context
+		)
+		_expect(
+			int(Dictionary(card_contract["type_sizes"])["summary"])
+				== (32 if compact else 34)
+				and int(card_contract["summary_max_lines"]) == 2
+				and Color(card_contract["summary_color"]).is_equal_approx(Art.TEXT_PRIMARY),
+			"%s card uses the doubled primary-color two-line summary contract" % context
 		)
 		_expect(
 			bool(card_contract["level_visible"])
