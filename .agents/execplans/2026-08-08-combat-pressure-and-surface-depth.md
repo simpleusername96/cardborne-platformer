@@ -2,7 +2,7 @@
 type: plan
 status: active
 created: 2026-08-08
-scope: Cardborne combat pressure, elemental hit behavior, surface depth, and qualified frame pacing
+scope: Cardborne combat pressure, enemy movement, elemental hit behavior, surface and boss-beam depth, and qualified frame pacing
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
@@ -14,27 +14,31 @@ related:
   - 2026-08-02-pre-asset-code-stabilization.md
 ---
 
-# Combat Pressure, Thermal Burst, and Surface Depth - Execution Contract
+# Combat Pressure, Role Movement, Thermal Burst, Surface Depth, and Boss Beam - Execution Contract
 
 Deliver a harder-to-cheese but less front-loaded five-stage run by removing the four neutral
 map hazard zones, lowering Stage 1 ordinary-enemy health, strengthening stage-to-stage
-ordinary health growth, reducing shielded boss damage, replacing Thermal Burn with a bounded
-on-hit Thermal Burst, and adding sparse approved surface-detail rasters without compromising
-combat readability or the retained-rendering budget. The verified starting point is clean
-commit `e6324c96`; current HEAD has no eligible performance sample, so performance qualification
-precedes feature edits and is repeated after the final workload is complete.
+ordinary health growth, making role movement continuous and distance-aware, reducing shielded
+boss damage, replacing Thermal Burn with a bounded on-hit Thermal Burst, adding sparse approved
+surface-detail rasters, and replacing the boxed boss-beam strip without compromising combat
+readability or the retained-rendering budget. The verified starting point is clean
+gameplay commit `e6324c96` plus plan-only commit `eaaa344d`; current HEAD has no eligible
+performance sample, so performance qualification precedes feature edits and is repeated after
+the final workload is complete.
 
 ## Purpose
 
-- Objective: implement the requested pressure, shield, elemental, surface, and frame-pacing
-  outcomes as one decision-complete sequence with independent causal commits.
-- Deliverable: updated gameplay rules, bilingual product copy, visual authority contract,
-  approved production rasters, deterministic retained surface placement, focused validators,
-  production Web export, and eligible native/Web performance evidence.
+- Objective: implement the requested pressure, movement, shield, elemental, surface, beam, and
+  frame-pacing outcomes as one decision-complete sequence with independent causal commits.
+- Deliverable: updated gameplay and movement rules, bilingual product copy, visual authority
+  contract, approved production surface and beam rasters, deterministic retained surface
+  placement, focused validators, production Web export, and eligible native/Web performance
+  evidence.
 - Completion state: neutral hazards no longer exist; ordinary health uses the locked five-stage
-  curve; shielded bosses take 15% incoming damage; Thermal Burst applies bounded enemy-only
-  splash; the floor has sparse non-gameplay detail; all correctness, visual, export, and
-  performance gates pass from the exact clean final commit.
+  curve; mobile enemies preserve their role distances with continuous motion; shielded bosses
+  take 15% incoming damage; Thermal Burst applies bounded enemy-only splash; the floor has sparse
+  non-gameplay detail; straight beams use the approved borderless plane hierarchy; all
+  correctness, visual, export, and performance gates pass from the exact clean final commit.
 
 ## Scope and Boundaries
 
@@ -43,9 +47,12 @@ In scope:
 - Remove the current four traversable `hazard_zone` footprints, their player/enemy/boss damage,
   lingering exposure, rendering, production assets, guidebook entry, localization, docs, and
   obsolete validator branches.
-- Change only ordinary-enemy stage health scaling to `[0.80, 1.00, 1.20, 1.40, 1.60]` while
+- Change only ordinary-enemy stage health scaling to `[0.85, 1.00, 1.15, 1.30, 1.45]` while
   retaining authored archetype health, the current ordinary final multiplier `2.60`, and the
   existing 1.12 swarm/standard class factor.
+- Preserve existing enemy roles but make mobile pursuit, standoff, escort, and support movement
+  obey continuous distance bands. Remove the far-distance route override that currently masks
+  ranged standoff behavior, and smooth ordinary role turns without changing attack cadence.
 - Change boss `shield_up` incoming damage from `0.25` to `0.15`; preserve the `1.0` exposed
   multiplier, four-second shield-down window, transitions, and `final_effective` bypass.
 - Replace the persistent thermal condition and the `thermal_burn` card identity with
@@ -53,6 +60,9 @@ In scope:
   flat damage `4/6/8` at levels 1/2/3.
 - Introduce the presentation-only `SurfaceDetail` visual category and three small approved
   production rasters: crack, stain/wear, and embedded debris chip.
+- Replace the current dark-bordered `cue/beam_strip_9` raster with a tintable flat alpha mask and
+  retune the existing two-plane startup/three-plane active composition for Beam Sentinel and boss
+  straight beams.
 - Diagnose the reported hitch from eligible evidence and make only an evidence-selected,
   task-scoped performance correction if a release gate remains red.
 
@@ -67,6 +77,8 @@ Out of scope:
   debris detail is embedded, flat, non-interactive floor wear.
 - TileMap adoption, a full-field texture, runtime noise/shader generation, per-detail nodes,
   animated floor detail, gameplay collision, or stage-randomized detail layouts.
+- A navigation rewrite, new pathfinding dependency, boids/flocking system, per-enemy full-neighbor
+  scans, 60 Hz ordinary-decision cadence, or changes to attack startup/active/recovery timing.
 - New Thermal Burst world-radius telegraph, persistent ring, particle system, sound asset, or
   standalone explosion raster. Existing thermal projectile color, impact sound, and per-target
   hit feedback carry the response in this scope.
@@ -95,6 +107,9 @@ Constraints and invariants:
 - Performance claims require eligible current-commit evidence under
   `.agents/cardborne-performance-engineering-policy.md`. Historical results are diagnostic only.
 - Use Godot 4.7.1 through `./tools/godot.ps1`; add no production dependency.
+- Movement logic may reuse the existing pursuit field, scheduler, packed overlap cache, and
+  collision recovery only. It must preserve 10 Hz decisions, 30 Hz near motion, 20 Hz far motion,
+  critical-phase updates, active counts, and the eight-neighbor overlap ceiling.
 
 Destructive or irreversible actions:
 
@@ -111,26 +126,33 @@ Exact actions requiring owner or user approval:
 
 - This contract authorizes no implementation by itself. Begin execution only after the user
   approves the plan or explicitly asks to implement it.
-- Before promoting any generated surface raster, present an exact AS-IS/TO-BE comparison with
-  the authority sheet, each candidate at 1x, provenance, intended asset ID, footprint, and in-
-  game placement capture. Promote only candidates the user explicitly approves.
+- Before promoting any generated surface or beam raster, present an exact AS-IS/TO-BE comparison
+  with the authority sheet, each candidate at 1x, provenance, intended asset ID, footprint, and
+  in-game placement/state capture. Promote only candidates the user explicitly approves.
 - Before the first broad native/Web qualification batch, state its purpose, clean-commit scope,
   expected duration, system impact, and stop condition; run it only after the user aligns with
   that cost. Focused validators and a user-requested manual trace are not this broad batch.
+- Deleting this plan after completion or deleting the older completed plan currently blocking the
+  document-authority validator requires explicit user approval at that time.
 
 ## Discovery Closure
 
 | Requirement or concern | Verified current owner and behavior | Evidence | Locked decision | Task IDs |
 | --- | --- | --- | --- | --- |
 | “Neutral attack zone” identity | No such symbol exists. Four `hazard_zone` footprints are generated by `VehicleFieldLayoutGenerator`; `VehicleTerrainRuntime` applies neutral immediate, 0.75-second tick, and 2.5-second lingering damage. They hurt ordinary enemies more than the player and their kills still advance quota/drop XP. Boss `denied_zones` are separate attack telegraphs. | `scripts/vehicle/vehicle_field_layout_generator.gd`; `scripts/vehicle/vehicle_terrain_runtime.gd`; `scripts/vehicle/vehicle_run.gd`; commit `580cde2c`; product spec | Treat the request as removal of map hazard zones. Remove the mechanic and all unused presentation/product surfaces; preserve boss attack zones. | 2.1-2.3 |
-| Early ordinary health and later growth | Ordinary health is authored base x optional 1.12 class factor x `[1.00,1.04,1.08,1.12,1.16]` x `2.60`. Commit `8924a877` doubled the final multiplier from 1.30 on 2026-08-08. Boss health is separate. | `VehicleStageDifficulty`; `VehicleRun._make_enemy`; git history; product spec | Use additive percentage-point growth `[0.80,1.00,1.20,1.40,1.60]`, not 20% compounding. It gives the requested 20% Stage 1 reduction and clear stage separation without compounding Stage 5 to 2.0736x Stage 1. Boss health is excluded. | 3.1-3.2 |
-| Combined late-run pressure | Quotas, authored population, active population, role mix, and boss pressure already rise by stage. Removing enemy-damaging hazards also increases effective enemy durability. | Product spec stage tables; encounter owners; hazard damage rules | Keep the requested health direction but do not also raise quotas, counts, damage, speed, or boss HP. Treat `[0.80,1.00,1.20,1.40,1.60]` as the maximum curve for this pass and validate clear-time/TTK before any further increase. | 3.2, 7.2 |
+| Early ordinary health and later growth | Ordinary health is authored base x optional 1.12 class factor x `[1.00,1.04,1.08,1.12,1.16]` x `2.60`. Commit `8924a877` doubled the final multiplier from 1.30 on 2026-08-08. Boss health is separate. | `VehicleStageDifficulty`; `VehicleRun._make_enemy`; git history; product spec; user revision on 2026-08-08 | Use the user-selected additive curve `[0.85,1.00,1.15,1.30,1.45]`. It lowers Stage 1 by 15% and adds 0.15 of the authored/current-final baseline per stage. Boss health is excluded. | 3.1-3.2 |
+| Combined late-run pressure | Quotas, authored population, active population, role mix, and boss pressure already rise by stage. Removing enemy-damaging hazards also increases effective enemy durability. | Product spec stage tables; encounter owners; hazard damage rules | Keep the selected health direction but do not also raise quotas, counts, damage, speed, or boss HP. Treat `[0.85,1.00,1.15,1.30,1.45]` as the complete curve for this pass and validate clear-time/TTK before any further increase. | 3.2, 7.2 |
+| Ordinary movement role truth | The basic algorithm exists: chasers and contact roles approach; shooters hold 330-500, controllers 390-540, artillery 520-760, escorts 300-470, and support roles 430-620. Stationary roles do not move. | `VehicleRun._desired_enemy_velocity`; `VehicleEnemyArchetypes`; `VehicleEnemyUpdateSchedule` | Preserve these bands and role identities. Centralize them in `VehicleEnemyMovementPolicy` so callers request pursuit/standoff/escort/support intent without owning threshold tables. | 3.3-3.6 |
+| Unnatural movement causes | Distance bands switch instantly between full retreat, full perpendicular strafe, and full approach. Above distance 520 the pursuit field currently receives 86% weight even with line of sight, masking artillery/support standoff. Desired direction changes at 10 Hz; overlap steering reacts only after body penetration; fixed side recovery can add abrupt turns. | `VehicleRun._desired_enemy_velocity`; `_move_enemy_with_recovery`; `VehicleEnemyLocalSteering`; scheduler and steering validators | Replace hard direction switches with continuous radial/tangential weights and role turn response. Use pursuit-field guidance only for an approaching role whose direct route is blocked. Preserve packed overlap behavior and cadence; do not add boids or presentation lag. | 3.3-3.6 |
 | Shielded boss durability | `VehicleBossShieldRuntime` owns `0.25` shielded, `1.0` exposed, and a four-second down window. | `scripts/bosses/vehicle_boss_shield_runtime.gd`; boss/run validators; commit `b7b9df11` | Set shielded to `0.15`. This is a 40% reduction from current shielded throughput while retaining meaningful chip damage; `0.10` is rejected for this pass because it approaches immunity during downtime. | 3.1-3.2 |
 | Thermal meaning and ownership | `thermal_burn` is a persistent three-stack condition held in `VehicleStatusProfile/Runtime`; affinity is inferred from a burn condition bit. All split primary projectiles receive the profile. Seekers do not. | card resource, `VehicleRun._fire_primary`, `VehicleAttackContract`, `VehicleStatusProfile`, `VehicleStatusRuntime` | Canonical term is `Thermal Burst`: an instant elemental payload, not a status. Replace the card ID and profile owner with `VehicleElementProfile`; keep `VehicleStatusRuntime` only for Toxin/Chill. Give attack affinity an explicit element source instead of pretending thermal is a condition. | 4.1-4.4 |
 | Thermal Burst hit contract | Existing `_damage_enemies_in_radius` uses the spatial grid but also damages devices/facilities. Seeker burst already excludes its direct target. | `VehicleRun._update_projectile_buffer`; `VehicleRun._damage_enemies_in_radius` | Trigger once for every direct enemy hit by a non-reflected `player_primary` projectile, including split/piercing hits. Use spatial-grid query, radius `72/84/96`, flat damage `4/6/8`, exclude the direct target, damage targetable enemies including a nearby boss through normal shield rules, exclude structures/devices/facility, and never chain or apply Toxin/Chill. | 4.2-4.4 |
 | Thermal presentation | Current `upgrade/element_thermal` artwork is a generic orange thermal core, not a burn glyph. Current visual contract permits only a small bounded transient set. | Original-detail asset inspection; visual system; combat renderer | Reuse the artwork, thermal projectile color, impact sound, and normal hit feedback. Add no new effect kind or world visual in this pass. | 4.3-4.4 |
-| Surface flatness versus current contract | The visual system mandates a flat `#9EADBC` plane and bans seams, scratches, random noise, and decorative patterning. `VehicleWorldMeshBuilder.DECORATION_BUDGET` is zero. | Full `VISUAL_SYSTEM.md`; original-detail authority sheet; world mesh builder | The flatness feedback is valid, but random uncontrolled PNG scatter is not. Amend the contract first to allow a narrow semantic `SurfaceDetail` category, then add three sparse low-contrast authored rasters under an explicit approval gate. | 5.1-6.4 |
+| Surface flatness and detail boundary | Runtime still has `VehicleWorldMeshBuilder.DECORATION_BUDGET == 0`. On 2026-08-08 the user explicitly replaced the absolute visual ban with a conditional rule: enough sparse detail to avoid an unnatural blank plane, but no dense noise, obvious tile repetition, or gameplay interference. | Full `VISUAL_SYSTEM.md`; original-detail authority sheet; user sketch; world mesh builder | `VISUAL_SYSTEM.md` now authorizes `SurfaceDetail` as three low-contrast authored raster families with at most 192 static instances and three retained batches. Runtime integration still requires exact asset approval. | 5.1-6.4 |
 | Surface rendering choice | The world builder already caches asset/z `MultiMeshInstance2D` batches. TileMap would add a new owner; procedural shader/noise violates visual rules; a full 7200x4320 RGBA surface would be roughly 124 MB before mip/import overhead. | Local renderer; Godot 4.7 `MultiMeshInstance2D`, `MultiMesh`, TileMapLayer, GPU optimization, CanvasItem, and RNG docs | Retain the current batch path. Add 72 crack, 72 stain, and 48 embedded-chip instances maximum (192 total), one batch per asset, fixed low z, compact transparent quads, discrete 90-degree rotation and `0.75/1.0/1.25` scale variants, and no runtime updates. | 5.1-6.4 |
+| Surface concept evidence | The grounded ImageGen preview used the canonical sheet as actual style reference and the user's sketch as semantic reference. It shows enlarged crack/stain/chip families beside a sparse final-scale distribution. It is concept evidence, not an individual production asset or approval. | `image_gen.referenced_image_paths`; required sheet hash; original-detail inspections | Use this visual meaning for Phase 6 candidates: dominant empty `#9EADBC` floor, irregular low-contrast marks, embedded-not-raised chips. Do not promote the concept sheet. | 6.1-6.4 |
+| Straight boss beam awkwardness | Current 128x32 `cue/beam_strip_9` is a white rectangle with a dark perimeter. Renderer startup stretches it twice and active stretches it three times, producing nested framed bars instead of energy planes. The same owner serves Beam Sentinel and boss beams. | Original-detail asset inspection; workbench unit `gameplay_code_asset_rasterization`; `VehicleCombatRenderer._sync_beam_startup/_sync_active_beam` | Preserve the exact straight collision corridor and shared semantic ID, but replace the raster with a borderless tintable alpha mask. Startup is two flat planes; active is three. No glow, gradient, endpoint cap, frame, particle, or extra batch. | 6.5-6.7 |
+| Boss beam concept evidence | The first ImageGen concept was rejected because it introduced panel repetition and soft glow. A corrected second concept shows the intended startup/active hierarchy on a plain floor, but remains preview-only and is not the final 128x32 strip. | Canonical sheet, current Crown boss, and current beam strip supplied through `image_gen.referenced_image_paths` | Carry forward the corrected flat-plane hierarchy. Generate and approve an exact canvas/pivot/import-compatible strip before runtime replacement. | 6.5-6.7 |
 | Comparable-game evidence | Official Into the Breach material supports deterministic, immediately readable combat; public primary sources for Into the Breach, Wasteland Kings, and Spelunky do not disclose exact floor-decal batching. | GDC postmortem and official game pages; Godot official docs | Do not claim an unverified clone technique. Use comparable games only for sparse/readable/deterministic principles; choose the renderer from Cardborne architecture and official Godot guidance. | 5.1, 6.4 |
 | Reported hitch | Current HEAD has no eligible performance JSON. The last eligible older sample showed frame p95 143 ms with physics catch-up and simulation/HUD cost while render CPU/GPU were low. Later allocator prewarm improved a diagnostic but was never release-qualified. On 2026-08-08, 16 unrelated Godot processes prevented a clean run. | Active performance plan; runtime architecture audit; historical JSON | Make no current root-cause claim. First qualify clean current HEAD, then repeat after all feature work. Optimize only the subsystem selected by a valid trace/sample; never blame new PNGs by intuition. | 1.1-1.4, 7.3-7.4 |
 | Performance fixture mismatch | Renderer capacity and visual contract are 28 health overlays, but the performance scenario and its validator still require 50. Release batch threshold remains at most 50. | combat renderer, visual system, renderer validator, performance scenario and validator | Change only the scenario fixture expectation from 50 to 28; retain the release threshold `batches <= 50`. A failing focused validator blocks all expensive samples. | 1.1 |
@@ -144,6 +166,11 @@ Readiness statement:
   ImageGen workflow and requires the declared user approval gate before promotion.
 - Remaining unknowns are implementation-local or measured performance evidence. They cannot
   change this contract without triggering the predetermined change-control rules.
+- Visual authority evidence for this revision: the full current `VISUAL_SYSTEM.md` was read;
+  the canonical sheet was inspected at original detail; expected and observed SHA-256 are both
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`;
+  `actual_image_reference_used=true`; reference input method was
+  `image_gen.referenced_image_paths`. Both generated images are preview-only and unapproved.
 
 ## Tasks
 
@@ -234,31 +261,70 @@ production asset manifest, product/visual specs, and focused validators
   - Accept: field-layout, terrain, map-mechanics, stage-layout, world-visual, guidebook,
     localization, asset-manifest, and Run validators pass; `git diff --check` passes.
 
-### Phase 3: Rebalance ordinary health and boss shielding
+### Phase 3: Rebalance ordinary health, boss shielding, and role movement
 
-Goal: make the opening less spongy, make stage growth explicit, and make the boss attack window
-matter without changing boss HP or turning shielding into immunity.
+Goal: make the opening less spongy, make stage growth explicit, make mobile enemies obey their
+combat distance naturally, and make the boss attack window matter without changing boss HP or
+turning shielding into immunity.
 
 Preconditions:
 
 - Phase 2 acceptance passes.
 
 Source owners: `scripts/enemies/vehicle_stage_difficulty.gd`,
-`scripts/vehicle/vehicle_run.gd`, `scripts/bosses/vehicle_boss_shield_runtime.gd`, product spec,
-and difficulty/boss/Run validators
+`scripts/enemies/vehicle_enemy_movement_policy.gd`, `scripts/vehicle/vehicle_run.gd`,
+`scripts/bosses/vehicle_boss_shield_runtime.gd`, product spec, and focused
+difficulty/boss/movement/Run validators, including
+`tools/validation/validate_vehicle_enemy_movement_policy.gd`
 
 - [ ] **3.1** Apply the locked numeric contracts at their existing owners.
-  - Change: set ordinary health curve to `[0.80,1.00,1.20,1.40,1.60]` and shielded boss damage
+  - Change: set ordinary health curve to `[0.85,1.00,1.15,1.30,1.45]` and shielded boss damage
     multiplier to `0.15`. Do not change `ORDINARY_HEALTH_MULTIPLIER`, boss HP, exposed multiplier,
     shield-down duration, damage/speed curves, or `final_effective` handling.
-  - Accept: Stage 1 ordinary health is exactly 80% of the current formula; successive stages add
-    exactly 0.20 of the authored/current-final baseline; 100 ordinary incoming damage applies 15
+  - Accept: Stage 1 ordinary health is exactly 85% of the current formula; successive stages add
+    exactly 0.15 of the authored/current-final baseline; 100 ordinary incoming damage applies 15
     while shielded and 100 while exposed.
 - [ ] **3.2** Update balance truth and regression examples.
   - Change: update the product spec and exact validator mirrors; add examples for a class-factor
     enemy and a no-class-factor enemy across stages; assert boss health is unchanged.
   - Accept: difficulty, boss-exam, boss-pattern, and Run validators pass and no stale 0.25 or old
     health-curve assertion remains outside retained history/evidence.
+- [ ] **3.3** Centralize role movement intent without changing combat timing.
+  - Change: add `scripts/enemies/vehicle_enemy_movement_policy.gd` as the pure owner of movement
+    family, existing distance bands, radial/tangential weights, route-guidance eligibility, and
+    role turn response. Keep attack ranges/timing in current combat owners and keep archetype
+    speed/health in `VehicleEnemyArchetypes`.
+  - Accept: every mobile archetype resolves exactly one family: pursuit (`scrap_drone`, `chaser`,
+    `rammer`, `bulkhead_guard`, `splitter_barge`, mobile `spark_minelet`), standoff (`needle_drone`,
+    `shooter`, `controller`, `artillery_spotter`), escort (`shield_escort`), or support
+    (`repair_tender`, `drone_carrier`). Fixed installations resolve stationary.
+- [ ] **3.4** Replace abrupt range switching with continuous steering.
+  - Change: for each standoff/escort/support band, compute a signed normalized distance error around
+    its midpoint. Blend radial approach/retreat continuously with the existing signed tangential
+    strafe; radial weight reaches full outside the band and tangential weight peaks at the midpoint.
+    Smooth ordinary move/recovery velocity toward the new intent with response `9/s` for pursuit,
+    `6/s` for standoff, and `5/s` for escort/support. Charges, startup locks, active attacks,
+    stun, forced Mystery Device motion, and fixed installations bypass this smoothing.
+  - Accept: crossing a band edge does not flip velocity by 90/180 degrees in one decision; pursuit
+    roles continue closing until their attack contract; ranged/support roles converge on and orbit
+    within their existing bands; role speed remains capped.
+- [ ] **3.5** Stop route guidance from defeating standoff behavior.
+  - Change: apply `PursuitField.direction_at` only while the policy requests approach and direct
+    line of sight/navigation is blocked. Never blend a player-directed pursuit vector while a role
+    is holding, strafing, or retreating inside its band. Keep overlap separation and collision
+    recovery bounded and allocation-free.
+  - Accept: a shooter at 415, controller at 465, artillery at 640, escort at 385, and support at
+    525 world units with line of sight choose tangential/center-correcting motion rather than the
+    pursuit field; blocked far attackers still route around walls; close ranged roles retreat.
+- [ ] **3.6** Add deterministic movement oracles and rendered feel checks.
+  - Change: add `tools/validation/validate_vehicle_enemy_movement_policy.gd` with focused policy
+    tests for every family, band midpoint/edge/outside cases, recovery, blocked route, role speed
+    cap, deterministic strafe sign, and the unchanged scheduler/overlap ceilings. Add a bounded
+    capture/harness with one pursuit and one ranged enemy following a moving player around cover.
+  - Accept: movement-policy, local-steering, pursuit-field, update-schedule, attack-contract, and
+    Run validators pass; rendered motion shows no band-edge ping-pong or ranged collapse into melee.
+  - Guard: do not raise decision/motion cadence or add a full neighbor scan to make the capture
+    look smoother.
 
 ### Phase 4: Replace Thermal Burn with Thermal Burst
 
@@ -315,19 +381,23 @@ Goal: amend the visual contract before generating or integrating any floor-detai
 
 Preconditions:
 
-- Phase 4 batch gate passes.
+- The text-contract task may complete during planning because the user explicitly authorized it;
+  runtime-owner and validation tasks still wait for the Phase 4 batch gate.
 - Reverify the authority-pair hash and inspect the sheet at original detail.
 
 Source owners: `docs/design/VISUAL_SYSTEM.md`, production asset manifest/workbench inventory,
 `.agents/execplans/2026-08-08-combat-pressure-and-surface-depth.md`
 
-- [ ] **5.1** Define the exception without weakening combat readability.
+- [x] **5.1** Define the exception without weakening combat readability.
   - Change: keep flat `#9EADBC` as the dominant surface and add `SurfaceDetail` as a semantic,
     presentation-only exception. Permit only crack, stain/wear, and embedded debris-chip rasters;
     ban grids, seams, repeated panels, rivets, nested rings, lamps, random micro-noise, photoreal
     grime, raised-looking loose stones, and topology cues.
   - Accept: the contract states size/density/contrast/z/batch/placement limits, names runtime and
     approval owners, and keeps every gameplay signal above detail priority.
+  - Evidence: the user-authorized 2026-08-08 `VISUAL_SYSTEM.md` revision permits at most 192
+    sparse low-contrast instances across three retained batches while continuing to ban dense
+    noise, obvious tile repetition, collision cues, and gameplay interference.
 - [ ] **5.2** Replace the dormant competing floor-pattern owner.
   - Change: retire `vehicle_field_surface_pattern_compiler.gd` and register a dedicated
     `vehicle_surface_detail_compiler.gd` responsibility in the active plan/visual contract. The
@@ -336,13 +406,14 @@ Source owners: `docs/design/VISUAL_SYSTEM.md`, production asset manifest/workben
     path remains reachable or registered.
 - [ ] **5.3** Validate the visual authority workflow change.
   - Change: update manifest/workbench expectations for removal of two hazards and later addition
-    of three surface assets; record `actual_image_reference_used=false` for this contract-only
-    phase because it creates no raster.
+    of three surface assets; record `actual_image_reference_used=true` for the concept revision,
+    while keeping preview concepts outside production and approval state.
   - Accept: `validate_cardborne_visual_authority.ps1` and document-authority validation pass.
 
-### Phase 6: Generate, approve, and integrate sparse surface rasters
+### Phase 6: Generate, approve, and integrate sparse surface and beam rasters
 
-Goal: add modest physical depth while keeping the surface quiet, deterministic, and cheap.
+Goal: add modest physical depth to the floor and replace the framed straight-beam bar while
+keeping both surfaces deterministic, readable, and cheap.
 
 Preconditions:
 
@@ -385,11 +456,34 @@ Source owners: three production raster assets, production manifest/workbench evi
   - Guard: if the pre-edit manifest count is not 69, calculate and assert `starting - 2 + 3`
     rather than forcing 70. If three batches exceed 12 or eligible rendering evidence regresses,
     stop this branch for contract revision; do not silently add chunking or reduce thresholds.
+- [ ] **6.5** Open a dedicated per-asset beam replacement unit.
+  - Change: create a workbench unit for `cue/beam_strip_9` instead of reopening the old eight-asset
+    rasterization batch. Preserve semantic ID, `128x32` canvas, `[64,16]` pivot, import settings,
+    retained batch, exact gameplay length/width, and all non-beam assets.
+  - Accept: the unit contains current AS-IS hash
+    `f30a3e2027de9e3580973d1e54051617e7b5f87e58571d768f6ad558b2924e48`, current runtime
+    captures, user feedback, authority evidence, and one exact TO-BE brief.
+- [ ] **6.6** Generate and obtain approval for the borderless beam mask.
+  - Change: with the canonical sheet supplied as an actual image reference, generate an exact
+    128x32 transparent tintable flat strip with clean antialiased top/bottom alpha edges and no
+    dark perimeter, embedded core, gradient, glow, cap, particle, or detached mark. Present the
+    source at original detail plus Beam Sentinel and boss startup/active AS-IS/TO-BE captures.
+  - Accept: the user explicitly approves the exact strip and four runtime states. Rejected outputs
+    remain outside production and are never described as compliant.
+- [ ] **6.7** Retune the existing beam planes without adding a batch.
+  - Change: startup uses full-width body alpha `0.16 -> 0.34` over readiness plus an ivory filament
+    `min(3.5, width*0.065)` at alpha `0.32 -> 0.66`. Active uses full-width body alpha `0.92`,
+    inner plane `min(20, width*0.34)` at alpha `0.88`, and ivory core
+    `min(7, width*0.10)` at alpha `1.0`. Preserve straight clipping and no endpoint cap.
+  - Accept: startup reads non-damaging and active reads stronger; the full active width remains
+    visible; Beam Sentinel and every boss beam use the same approved strip; combat/effect counts,
+    overlay batch count, damage geometry, timing, and collision are unchanged.
 
 Batch gate:
 
-- Production manifest, import, world-visual, field-layout, stage-layout, combat-renderer, capture,
-  and visual-authority validators pass; the approved runtime capture matches the promoted files.
+- Production manifest, workbench, import, world-visual, field-layout, stage-layout,
+  combat-renderer, attack-readability, capture, and visual-authority validators pass; approved
+  surface and beam runtime captures match the promoted files.
 
 ### Phase 7: Consolidate correctness, feel, export, and performance
 
@@ -412,19 +506,22 @@ scenarios, active performance policy/evidence records
     are recorded once.
 - [ ] **7.2** Perform built-product gameplay QA.
   - Change: use production-style native and built Web paths to check all five ordinary-health
-    stages, absence of neutral hazards, one shield-up/down boss cycle, Thermal Burst at all three
-    levels in a crowd and near a structure, bilingual card surfaces, and surface readability at
-    actual size/grayscale.
+    stages, absence of neutral hazards, pursuit/standoff movement around cover, one shield-up/down
+    boss cycle, Beam Sentinel and boss beam startup/active, Thermal Burst at all three levels in a
+    crowd and near a structure, bilingual card surfaces, and surface readability at actual
+    size/grayscale.
   - Accept: the opening is less spongy, later health growth is observable without changing the
-    locked curve, boss damage windows are legible, burst never double-hits/direct-chains/damages
+    locked curve, melee closes distance, ranged holds distance without band-edge ping-pong, boss
+    damage windows and beam states are legible, burst never double-hits/direct-chains/damages
     structures, and detail never reads as collision or combat signal.
 - [ ] **7.3** Requalify the exact clean final native commit.
   - Change: after user cost alignment, repeat the Phase 1 `peak_horde` and `capacity_pressure`
     protocol from the exact clean final commit. Compare eligible fields with the Phase 1 baseline;
     save raw JSON unchanged.
   - Accept: both final samples pass the unchanged release thresholds and declared workloads.
-  - Guard: because removing hazards, adding splash queries, and adding three retained batches all
-    change workload, Phase 1 evidence cannot qualify the final commit.
+  - Guard: because removing hazards, changing steering, adding splash queries, replacing a beam
+    raster, and adding three retained batches all change workload, Phase 1 evidence cannot qualify
+    the final commit.
 - [ ] **7.4** Diagnose and correct only a valid red owner, then qualify built Web.
   - Change: if a valid final sample or current-commit manual trace is red, use its subsystem/slow-
     frame evidence to select one owner, make the smallest correction that preserves counts,
@@ -434,25 +531,29 @@ scenarios, active performance policy/evidence records
   - Accept: evidence links the correction to the measured owner; native and Web results are
     authority-eligible and passing; no optimization claim exceeds the evidence.
 - [ ] **7.5** Close durable records and commits.
-  - Change: update product/visual/performance owners with final values and evidence, mark this plan
-    `done`, move it to `.agents/execplans/completed/`, and create coherent scoped commits containing
-    only task-owned files.
+  - Change: update product/visual/performance owners with final values and evidence, create coherent
+    scoped commits containing only task-owned files, then obtain explicit user approval and delete
+    this completed plan as required by `.agents/AGENTS.md`.
   - Accept: working tree has no task-owned uncommitted changes, no stale active plan remains, and
-    final docs do not retain superseded hazard/burn/flat-surface contracts.
+    final docs do not retain superseded hazard, burn, or absolute no-surface-detail contracts.
 
 ## Validation and Rework Controls
 
 | Cadence | Exact check | Run when | Do not rerun until |
 | --- | --- | --- | --- |
 | Inner loop | The one or two focused validators named by the active task plus `git diff --check` | After that task compiles and its direct examples are implemented | A relevant source/test/input changes |
-| Gameplay phase gate | Field/terrain/map/Run validators for Phase 2; difficulty/boss/Run validators for Phase 3; build/status/attack/telemetry/report/renderer/Run validators for Phase 4 | The phase's tasks pass | A phase-owned input changes |
-| Visual phase gate | Production manifest, world visual, field/stage layout, capture, import, and `validate_cardborne_visual_authority.ps1` | Contract changes in Phase 5 and approved asset integration in Phase 6 | Visual contract, raster, manifest, placement, renderer, or capture changes |
+| Gameplay phase gate | Field/terrain/map/Run validators for Phase 2; difficulty/boss/movement-policy/local-steering/pursuit/schedule/Run validators for Phase 3; build/status/attack/telemetry/report/renderer/Run validators for Phase 4 | The phase's tasks pass | A phase-owned input changes |
+| Visual phase gate | Production manifest, workbench, world visual, field/stage layout, combat renderer, attack readability, capture, import, and `validate_cardborne_visual_authority.ps1` | Contract changes in Phase 5 and approved surface/beam integration in Phase 6 | Visual contract, raster, manifest, placement, renderer, or capture changes |
 | Export gate | `./tools/godot.ps1 --path . --headless --import`; `./tools/export_web.ps1`; require `WEB_EXPORT_OK` | Once after all feature phases and affected focused validators pass | An imported asset, export-affecting source, or project setting changes |
 | Native performance gate | Exact clean-commit `peak_horde` and `capacity_pressure` protocol in the prerequisite performance plan | Phase 1 baseline and Phase 7 final state, after user cost alignment | Workload/code/asset/instrumentation changes or a sample is invalid/red for a new evidence-backed hypothesis |
 | Web performance gate | Built-Web `peak_horde` on the `codex` lane with exact JSON capture | Native qualification passes and matching Web artifact exists | Native/build/asset/workload changes or the sample is invalid |
 
 Validation rules:
 
+- On start or resume, read this active contract and inspect the worktree only enough to confirm
+  checkpoint inputs, then continue from the first unchecked task whose prerequisites are met.
+- Treat checked tasks and recorded passing evidence as complete unless a relevant input changed,
+  evidence is missing, or this contract schedules a broader final gate.
 - Run the narrowest check that proves the current task.
 - Run each named phase gate once after its owned tasks pass.
 - Treat product feel checks as evidence for the locked balance, not permission to tune numbers
@@ -461,6 +562,10 @@ Validation rules:
   them. Do not kill unrelated processes; wait for a quiet window.
 - Rerun a failed check only after a relevant implementation change or a new hypothesis can produce
   new evidence.
+- Mark a task complete only after its acceptance check passes; record task state and advance the
+  single progress pointer in the same plan edit.
+- If reality contradicts a material decision, stop that branch and revise this contract. Handle
+  implementation-local mechanics inside the locked contract without reopening planning.
 - Record known non-blocking warnings once instead of rediscovering them.
 
 ## Predetermined Contingencies and Change Control
@@ -470,8 +575,10 @@ Validation rules:
 | The user's “neutral attack zone” is proven to mean something other than map `hazard_zone` | Stop Phase 2 and ask the user to identify the exact visible mechanic | Never remove boss `denied_zones` or another attack family by inference |
 | The additive health curve makes Stage 4/5 clear time fail the existing run contract | Report measured TTK/clear-time evidence and propose a new curve in this plan | Do not silently reduce quotas, populations, damage, speed, or the locked curve |
 | Thermal Burst exceeds projectile/frame budgets in an eligible sample | Attribute spatial-query target count and subsystem time; optimize storage/query reuse within the same visible contract | Do not reduce trigger cadence, radius, damage, projectile count, or enemy count without contract revision |
+| Continuous steering changes a role's attack opportunity or makes collision recovery unstable | Stop at the Phase 3 harness, preserve the locked bands/timing, and correct the pure movement policy or turn response | Do not change attack range, damage, scheduler cadence, collision radius, or pursuit-field topology |
 | An exact surface candidate is rejected | Keep it outside production and regenerate from the same approved semantic/size/contrast brief | Any change to asset count, category, theme, or renderer requires plan and visual-contract revision |
 | Surface detail conflicts with gameplay readability or batch cap | Remove the unapproved integration from the candidate branch and stop the visual branch | Do not lower readability/batch thresholds or invent TileMap/shader/chunking ownership |
+| The exact borderless beam still reads as a flat bar in runtime | Reject the candidate and revise the one beam workbench unit within the locked two-/three-plane contract | Do not curve the damage corridor, add glow/particles/caps, or alter gameplay width/timing |
 | A valid current sample is red | Select the largest evidenced owner from slow-frame/subsystem data and make one causal correction | No broad optimization pass and no claim based on historical or invalid samples |
 | A verified material fact contradicts this contract | Stop the affected branch, update the contract, and obtain any required approval before resuming | Do not let the executor choose a new product, architecture, dependency, data, UX, safety, or validation contract |
 
@@ -496,8 +603,8 @@ Complete when:
 - No placeholder or unresolved material decision remains.
 - Durable product, visual, performance, and lifecycle owners contain the final contracts and
   eligible evidence.
-- Frontmatter status is changed to `done` only after implementation is complete, then the plan is
-  moved to `.agents/execplans/completed/`.
+- After implementation is complete, every final gate passes, and the user explicitly approves
+  the destructive cleanup, the completed plan is deleted under `.agents/AGENTS.md`.
 
 Replan when:
 

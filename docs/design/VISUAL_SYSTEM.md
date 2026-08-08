@@ -109,8 +109,11 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
   lane처럼 보이게 만들지 않는다.
 - 형태는 큰 mechanical mass, 명확한 front/rear cut, 기능 module, sparse
   state accent 네 층으로 구성한다.
-- 모든 형태는 antialiased hard-edged geometry를 사용한다. 고정 raster 방향
-  frame, 미세 texture noise와 dither는 사용하지 않는다.
+- actor, projectile, effect와 UI 형태는 antialiased hard-edged geometry를
+  사용한다. 고정 raster 방향 frame, dither와 형태를 흐리는 microtexture는
+  사용하지 않는다. 이동 surface에는 아래 `SurfaceDetail` 계약 안에서만 작은
+  authored crack, wear stain과 embedded chip을 허용한다. 이 예외는 넓은 단색
+  바닥을 대체하는 noise layer나 반복 pattern을 허용하지 않는다.
 - ordinary component는 dark perimeter/separation, semantic main mass,
   secondary mechanical plane, restrained hard highlight 또는 inset의 3–5
   filled plane으로 구성한다. boss body도 같은 문법을 확대해 4–6개의 큰
@@ -145,10 +148,11 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
 5. semantic accent는 상태나 방향을 설명하는 한 곳에만 사용한다.
 6. 최종 크기와 grayscale에서 silhouette, facing과 state를 다시 검증한다.
 
-작은 원과 rivet, 기능 없는 panel seam, 반복 lamp, 동심원, nested frame,
-무작위 scratch와 설명할 수 없는 greeble은 넣지 않는다. 경계선은 서로 다른
-mass를 분리하거나 실제 상태를 표시할 때만 사용하며, 이미 색면으로 구분된
-영역을 다시 장식선으로 감싸지 않는다.
+actor, facility, projectile와 UI에는 작은 원과 rivet, 기능 없는 panel seam,
+반복 lamp, 동심원, nested frame, 무작위 scratch와 설명할 수 없는 greeble을
+넣지 않는다. 이동 surface의 작은 환경 흔적은 아래 `SurfaceDetail` 범주만
+따른다. 경계선은 서로 다른 mass를 분리하거나 실제 상태를 표시할 때만
+사용하며, 이미 색면으로 구분된 영역을 다시 장식선으로 감싸지 않는다.
 
 The canonical style-reference sheet is required evidence for proportion, plane
 count, edge treatment, detail density, and contrast. Its individual silhouette,
@@ -233,6 +237,11 @@ collision.
   선택만 소유한다. field topology와 정확히 같은 surface/outer-wall/inner-wall
   단색 mesh는 독립 object가 아니라 geometry truth의 retained presentation이므로
   이 raster 규칙의 예외다.
+- `SurfaceDetail`은 독립 gameplay object가 아니라 walkable surface 위에 놓이는
+  presentation-only authored PNG다. runtime은 승인된 crack, wear stain과
+  embedded chip image의 deterministic transform, scale, rotation과 batching만
+  소유한다. 이 image는 collision, navigation, topology, pickup, cover, hazard,
+  objective 또는 damage truth를 만들지 않는다.
 - Upgrade-card content artwork is also authored PNG content. It is one reusable
   semantic identity per shared mechanic group and is rendered by the semantic
   asset provider; the card never draws a mechanic glyph procedurally.
@@ -290,7 +299,7 @@ collision.
 
 | 표시 역할 | 시각 계약 | gameplay/collision owner |
 | --- | --- | --- |
-| 이동 surface | `#9EADBC` 단색의 light-gray full-bleed 면, per-tile frame과 기능 없는 문양 없음 | field geometry |
+| 이동 surface | `#9EADBC` light-gray full-bleed 면이 지배하며, 아래 `SurfaceDetail` 한도 안에서만 작은 low-contrast crack, wear stain과 embedded chip을 드물게 배치 | field geometry; detail transform은 presentation-only compiler |
 | 외곽 경계벽 | `#070B11` 단색 black mass | field boundary와 collision |
 | 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
 | 위험 지대 | 넓고 낮은 swamp/lava ground 면; exact effect rect를 채우며 벽·curtain·작은 node처럼 보이지 않음 | hazard exposure runtime |
@@ -311,8 +320,24 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - field geometry, collision, reachability, inner-wall selection, hazard placement와
   deterministic fingerprint는 같은 layout owner를 사용한다. presentation image는
   topology, collision, exposure, health 또는 hidden outcome을 소유하지 않는다.
-- walkable polygon은 `map_surface_fill` 한 색면으로 채운다. tile grid, panel
-  variant, gutter, chamfer, inset, seam, scratch와 decorative rail을 표시하지 않는다.
+- walkable polygon은 `map_surface_fill` 한 색면으로 먼저 채운다. 이 면은 언제나
+  화면과 지도에서 dominant surface로 남아야 한다. tile grid, panel variant,
+  gutter, chamfer, inset, functional-looking seam과 decorative rail은 표시하지
+  않는다.
+- `SurfaceDetail`은 승인된 transparent authored PNG 세 family만 사용한다:
+  compact crack, broad low-contrast wear stain, flat embedded chip. 각 흔적은 작은
+  1× footprint와 바닥에 가까운 cool neutral-gray 범위를 사용하며 cast shadow,
+  높이 cue, 밝은 semantic accent와 gameplay boundary를 갖지 않는다. loose stone,
+  rubble pile 또는 cover처럼 보이는 형상은 embedded chip으로 승인하지 않는다.
+- detail 배치는 run-fixed field geometry와 fixed salt에서 한 번 계산한다. 같은
+  field에서는 stage가 바뀌어도 같은 결과를 내며, irregular spacing과 discrete
+  rotation/scale variant로 기계적 반복을 피한다. 현재 허용 상한은 전체 192개,
+  asset별 retained batch 한 개와 총 세 batch다. 모든 frame update, node-per-detail,
+  collision과 per-stage reroll은 금지한다.
+- 적당한 surface detail은 허용하지만 noise를 바닥 전체에 뿌리거나 같은 tile을
+  눈에 띄게 반복해서는 안 된다. detail보다 비어 있는 바닥이 훨씬 넓어야 하며,
+  player, enemy, projectile, pickup, telegraph, objective, wall과 gate가 grayscale와
+  1× actual size에서 항상 먼저 읽혀야 한다.
 - outer boundary segment는 `map_outer_wall_fill`, run-selected inner-wall rectangle은
   `map_inner_wall_fill`로 그린다. outline, bevel, shadow와 patterned raster를
   덧붙이지 않는다. inner wall은 straight/L/T/step shape가 달라도 같은 단색
@@ -336,8 +361,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - 상자, loose pickup, hazard와 Mystery Device는 넓은 role-color 면과 dark contour를
   사용해 서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
   표시하지 않는다.
-- 세 field의 시각 차이는 별도 floor pattern이 아니라 실제 walkable topology와
-  run-selected wall/hazard arrangement에서만 나온다.
+- 세 field의 주요 시각 차이는 실제 walkable topology와 run-selected wall/hazard
+  arrangement가 소유한다. `SurfaceDetail` 분포는 바닥의 밋밋함만 줄이고 field
+  identity, route, 위험도 또는 stage 변화를 암시하지 않는다.
 
 ### Actor, projectile 및 effect
 
@@ -381,6 +407,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   표시한다. active는 같은 rectangle에 body, inner energy plane, hot core 세 겹을
   채운다. 모두 shared authored beam-strip PNG를 stretch하며, projectile PNG를
   corridor 길이로 늘이거나 endpoint cap·확장 danger boundary를 만들지 않는다.
+  beam-strip은 tintable flat alpha mask이며 dark perimeter, boxed rail, nested frame,
+  soft glow와 gradient를 갖지 않는다. startup과 active의 강도 차이는 runtime
+  alpha, plane width와 세 개 이하의 hard-edged filled plane만으로 전달한다.
 - 원거리 원형 폭격 footprint는 boss만 사용한다. 모든 boss bombardment는 affinity와
   무관하게 `thermal` orange outer boundary 한 개로 통일한다. ordinary controller와
   artillery는 projectile을 발사하며 ordinary mine의 근접 폭발 범위도 world ring으로
@@ -585,6 +614,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함
 - deterministic layout/presentation hash equality와 walkable/void containment
+- `SurfaceDetail`이 통합된 batch에서는 instance `<=192`, retained detail batch
+  `<=3`, node/collision/navigation owner `0`, same-field cross-stage fingerprint equality
 - grayscale role/affinity/state 구분
 - 8 hull direction × 8 aim direction에서 craft-body transform drift 0,
   independent cursor/muzzle/projectile cue mismatch 0
@@ -603,7 +634,9 @@ Web export만으로 interactive built-Web smoke나 release performance를
   PNGs are fitted inside that truth and never become a
   second topology owner.
 - Walkable surface, outer wall, and inner wall render as the three flat map-role
-  fills without legacy patterned floor or shared-wall rasters.
+  fills without legacy patterned floor or shared-wall rasters. `SurfaceDetail` is
+  now an authorized semantic category, but no detail asset or runtime placement is
+  production-integrated until its active ExecPlan approval and validation gates pass.
 - Hazard and Mystery Device gameplay and their four approved raster assets are
   integrated. Candidate and intermediate files stay outside the production
   manifest.
