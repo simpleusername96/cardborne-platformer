@@ -251,6 +251,15 @@ Source owners: `scripts/performance/vehicle_performance_scenario.gd`,
     scenario validators pass without changing counts, cadence, collision predicates, ordering,
     workload, or thresholds. This diagnostic is direction evidence only; native qualification is
     still required.
+  - Post-recovery evidence: clean commit `c9b1b10e` remained authoritative, focused, and workload-
+    valid but still failed the unchanged release gates. Peak physics p95/p99 improved from
+    `29.463/36.566 ms` to `18.084/21.903 ms`; capacity improved from `39.015/49.223 ms` to
+    `20.015/23.399 ms`. Peak median improved from `7.5` to `23.077 FPS`; capacity remained at
+    `7.5 FPS`. Rendering stayed below 100 draw calls p95 and at 38 batches. A diagnostic split
+    then measured capacity `ordinary_due` p95 `7.83 ms`, overlap-cache p95 `2.15 ms`, combat/effects
+    p95 `4.21 ms`, and player/rewards p95 `3.56 ms`; no single remaining owner supports another
+    speculative micro-fix. Keep Tasks 1.3 and 1.4 open and requalify after the already-authorized
+    workload changes; do not lower the gates.
 - [ ] **1.4** Qualify the built Web target and close the prerequisite plan.
   - Change: only after both native samples pass, export Web from the same clean commit, load
     `$npjt-port-guard`, use the `codex` lane, collect the exact built-Web `peak_horde` result with
@@ -262,6 +271,10 @@ Batch gate:
 
 - No Phase 2 edit begins until Phase 1 has an eligible clean baseline or the user explicitly
   chooses to defer the baseline after being told that later comparisons will lose causal value.
+- Gate evidence: the authoritative clean `cc9167a2` before-state and `c9b1b10e` owner-correction
+  results provide the eligible causal baseline. They are valid red evidence, not a release pass;
+  the performance plan remains active while the separately user-approved hazard/workload removal
+  proceeds.
 
 ### Phase 2: Remove neutral map hazards completely
 
@@ -635,10 +648,10 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 1 - Qualify the current performance baseline.
-- Next task: 1.3 recovery - Correct the measured ordinary-enemy hot path, then rerun native
-  qualification. Task 1.2 remains deferred until user-controlled normal play is available.
-- Last completed gate: Task 1.1 focused fixture validation; Task 1.3 has valid red evidence but has
-  not passed.
+- Next task: 2.1 - Remove neutral hazard generation and combat behavior. Task 1.2 remains deferred
+  until user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
+- Last completed gate: Phase 1 batch gate has an authoritative clean causal baseline; native
+  release thresholds remain red.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 

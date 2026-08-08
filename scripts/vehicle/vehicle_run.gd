@@ -2066,14 +2066,27 @@ func _update_enemies(delta: float) -> void:
 	if performance_active:
 		_performance_enemy_sections["active_states"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
+	var scheduled_started := section_started
 	_prepare_enemy_local_overlap_cache()
+	if performance_active:
+		_performance_enemy_sections["overlap_cache"] = _elapsed_ms(section_started)
+		section_started = Time.get_ticks_usec()
 	for enemy in _enemy_update_schedule.critical:
 		_update_scheduled_ordinary_enemy(enemy, delta)
+	if performance_active:
+		_performance_enemy_sections["critical"] = _elapsed_ms(section_started)
+		section_started = Time.get_ticks_usec()
 	for enemy in _enemy_update_schedule.ordinary_due:
 		_update_scheduled_ordinary_enemy(enemy)
+	if performance_active:
+		_performance_enemy_sections["ordinary_due"] = _elapsed_ms(section_started)
+		section_started = Time.get_ticks_usec()
 	_apply_mystery_device_forced_motion(delta)
 	if performance_active:
-		_performance_enemy_sections["scheduled_ordinary"] = _elapsed_ms(section_started)
+		_performance_enemy_sections["forced_motion"] = _elapsed_ms(section_started)
+		_performance_enemy_sections["scheduled_ordinary"] = _elapsed_ms(
+			scheduled_started
+		)
 		section_started = Time.get_ticks_usec()
 	for enemy in _hazard_motion_candidates:
 		var hazard_identity := _hazard_identity(enemy)
