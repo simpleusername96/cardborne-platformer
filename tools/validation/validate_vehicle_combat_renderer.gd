@@ -307,9 +307,9 @@ func _run() -> void:
 		is_equal_approx(
 			Vector2(hostile_buffer[1], hostile_buffer[5]).length(),
 			5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
-				* Art.PROJECTILE_THICKNESS_FACTOR
+				* Art.HOSTILE_PROJECTILE_THICKNESS_FACTOR
 		),
-		"hostile visual envelope uses the reduced presentation thickness"
+		"hostile visual envelope uses twice the previous presentation thickness"
 	)
 	_expect(
 		projectile_visual.texture != null
@@ -352,15 +352,15 @@ func _run() -> void:
 	)
 	snapshot = renderer.debug_snapshot()
 	_expect(
-		int(snapshot["health_bar_count"]) == Renderer.MAX_ORDINARY_HEALTH_BARS
-			and int(snapshot["ordinary_health_bar_count"])
-				== Renderer.MAX_ORDINARY_HEALTH_BARS,
-		"ordinary health bars stop at the deterministic twelve-actor budget"
+		int(snapshot["health_bar_count"]) == 0
+			and int(snapshot["ordinary_health_bar_count"]) == 0
+			and int(snapshot["installation_health_bar_count"]) == 0,
+		"mobile enemies never receive world health bars"
 	)
 	_expect(
 		int(snapshot["batch_allocations"]["Overlay_health"])
 			== Renderer.HEALTH_BAR_INSTANCE_CAPACITY,
-		"the shared world-health batch preallocates its exact fixed fifty-instance ceiling"
+		"the structural world-health batch preallocates its exact twenty-eight-instance ceiling"
 	)
 	_expect(
 		int(snapshot["priority_marker_count"]) == 0,
@@ -371,6 +371,38 @@ func _run() -> void:
 		crowd_body.multimesh.visible_instance_count == 110
 			and crowd_body.multimesh.instance_count >= 110,
 		"adaptive component buffers grow without hiding ordinary enemy bodies"
+	)
+	var installations: Array[EnemyState] = []
+	for index in 16:
+		var installation := EnemyState.new()
+		var role: StringName = Renderer.HEALTH_BAR_INSTALLATION_ROLES[
+			index % Renderer.HEALTH_BAR_INSTALLATION_ROLES.size()
+		]
+		installation.id = "installation_%02d" % index
+		installation.role = role
+		installation.archetype = role
+		installation.runtime_slot = index
+		installation.pos = Vector2(
+			100.0 + float(index % 8) * 140.0,
+			160.0 + float(index / 8) * 300.0
+		)
+		installation.alive = true
+		installation.active = true
+		installation.visual_radius = 34.0
+		installation.health = 40.0
+		installation.max_health = 80.0
+		installations.append(installation)
+	renderer.sync(
+		installations, no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2(640.0,360.0), 2.0, true
+	)
+	snapshot = renderer.debug_snapshot()
+	_expect(
+		int(snapshot["installation_health_bar_count"])
+			== Renderer.MAX_INSTALLATION_HEALTH_BARS
+			and int(snapshot["health_bar_count"])
+				== Renderer.MAX_INSTALLATION_HEALTH_BARS,
+		"fixed installations own the deterministic twelve-bar structural budget"
 	)
 	var projectile_attacker := EnemyState.new()
 	projectile_attacker.id = "projectile_attacker"
@@ -453,8 +485,9 @@ func _run() -> void:
 	_expect(
 		int(snapshot["boss_health_bar_count"]) == 1
 			and int(snapshot["ordinary_health_bar_count"]) == 0
+			and int(snapshot["installation_health_bar_count"]) == 0
 			and int(snapshot["health_bar_count"]) == 1,
-		"the boss owns one large world-attached health bar without consuming the ordinary budget"
+		"the boss owns one large world-attached health bar without consuming the installation budget"
 	)
 	var boss_health_batch := renderer.get_node("Overlay_health") as MultiMeshInstance2D
 	_expect(
@@ -581,14 +614,25 @@ func _run() -> void:
 		"damage":28.0,
 		"affinity":AttackContract.ARC,
 		"active_width":54.0,
+		"readiness":0.72,
 	}]
+	offscreen_enemy.phase = &"startup"
 	renderer.sync(
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count >= 2,
-		"active off-screen beam draws only its damaging body without a predicted route"
+		beam_batch.multimesh.visible_instance_count == 2,
+		"Beam Sentinel startup draws one exact-width charge plane and one hot core"
+	)
+	offscreen_enemy.phase = &"active"
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 3,
+		"active off-screen beam draws a three-plane hot damaging body"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	snapshot = renderer.debug_snapshot()
@@ -658,24 +702,6 @@ func _validate_mystery_device_presentation(
 		"health":120.0,
 		"max_health":240.0,
 	}
-	presentation["crate_health_overlays"] = [
-		{
-			"visible":true,
-			"position":Vector2(320.0, 520.0),
-			"radius":31.0,
-			"health":12.0,
-			"max_health":24.0,
-			"health_visible_timer":1.0,
-		},
-		{
-			"visible":true,
-			"position":Vector2(420.0, 520.0),
-			"radius":31.0,
-			"health":24.0,
-			"max_health":24.0,
-			"health_visible_timer":0.0,
-		},
-	]
 	presentation["mystery_effects"] = [
 		{"effect_id":&"gravity_pull", "position":device_position, "radius":144.0},
 		{"effect_id":&"cryo_lock", "position":resolved_position, "radius":108.0},
@@ -711,20 +737,23 @@ func _validate_mystery_device_presentation(
 	)
 	var health_snapshot := renderer.debug_snapshot()
 	_expect(
-		int(health_snapshot["mystery_health_bar_count"]) == 1
+		int(health_snapshot["mystery_health_bar_count"]) == 0
 			and int(health_snapshot["facility_health_bar_count"]) == 1
-			and int(health_snapshot["crate_health_bar_count"]) == 1
-			and int(health_snapshot["health_bar_count"]) == 3,
-		"damaged devices and crates use timed world bars while the active facility always owns one"
+			and int(health_snapshot["crate_health_bar_count"]) == 0
+			and int(health_snapshot["health_bar_count"]) == 1,
+		"devices and crates omit health bars while the active facility always owns one"
 	)
 	var health_buffer := (
 		(renderer.get_node("Overlay_health") as MultiMeshInstance2D).multimesh.buffer
 	)
 	_expect(
-		health_buffer[7] < device_position.y
-			and health_buffer[2 * Renderer.BUFFER_FLOATS_PER_INSTANCE + 7] < 360.0
-			and health_buffer[4 * Renderer.BUFFER_FLOATS_PER_INSTANCE + 7] < 520.0,
-		"device, facility, and crate health bars each sit above their owning body"
+		health_buffer[7] < 360.0
+			and is_equal_approx(absf(health_buffer[5]), 20.0)
+			and is_equal_approx(
+				absf(health_buffer[Renderer.BUFFER_FLOATS_PER_INSTANCE + 5]),
+				16.0
+			),
+		"the facility owns a visibly thick sixteen-unit bar with a four-unit frame"
 	)
 	var expected_radii := [144.0, 108.0, 72.0]
 	for index in expected_radii.size():
@@ -747,7 +776,6 @@ func _validate_mystery_device_presentation(
 	presentation["mystery_devices"] = []
 	presentation["mystery_effects"] = []
 	presentation["reinforcement_facility"] = {}
-	presentation["crate_health_overlays"] = []
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation

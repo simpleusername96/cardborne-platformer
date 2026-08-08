@@ -76,6 +76,11 @@ func _validate_scale_contract() -> void:
 		is_equal_approx(collision_radius * Art.PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 27.3),
 		"opening-breach visual envelope uses the profile multiplier"
 	)
+	_expect(
+		is_equal_approx(Art.HOSTILE_PROJECTILE_THICKNESS_FACTOR, 1.0)
+			and is_equal_approx(Art.PROJECTILE_THICKNESS_FACTOR, 0.5),
+		"hostile shots are twice the player projectile thickness factor"
+	)
 	_expect(Art.attack_color(&"kinetic").a >= 1.0 and Art.attack_color(&"thermal").a >= 1.0, "friendly and hostile role colors remain opaque")
 
 

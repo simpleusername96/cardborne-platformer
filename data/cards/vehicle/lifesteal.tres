@@ -8,6 +8,8 @@ script = ExtResource("2_mod")
 stat_id = &"lifesteal_percent"
 operation = "add"
 display_unit = "percent"
+level_zero_display_override_enabled = true
+level_zero_display_value = 0.5
 values_by_level = Array[float]([2.0, 3.5])
 
 [resource]

@@ -79,6 +79,7 @@ const PLAYER_SEEKER_PROJECTILE_SCALE := 5.0
 const PLAYER_OPENING_BREACH_PROJECTILE_SCALE := 4.55
 const PROJECTILE_LENGTH_FACTOR := 0.70
 const PROJECTILE_THICKNESS_FACTOR := 0.50
+const HOSTILE_PROJECTILE_THICKNESS_FACTOR := 1.00
 const PLAYER_DROP_MINE_HALF_SIZE := 44.0
 const PLAYER_ORBIT_BLADE_HALF_SIZE := 38.0
 const CACHE_HALF_SIZE := Vector2(70.0, 52.0)
@@ -245,7 +246,9 @@ static func validate_contract() -> PackedStringArray:
 	if not is_equal_approx(PROJECTILE_LENGTH_FACTOR, 0.70):
 		errors.append("projectile visual length must remain at 70 percent")
 	if not is_equal_approx(PROJECTILE_THICKNESS_FACTOR, 0.50):
-		errors.append("projectile visual thickness must remain at 50 percent")
+		errors.append("player projectile visual thickness must remain at 50 percent")
+	if not is_equal_approx(HOSTILE_PROJECTILE_THICKNESS_FACTOR, 1.00):
+		errors.append("hostile projectile visual thickness must remain at 100 percent")
 	if not is_equal_approx(PLAYER_DROP_MINE_HALF_SIZE, 44.0):
 		errors.append("player drop-mine visual half-size must remain 44 world units")
 	if not is_equal_approx(PLAYER_ORBIT_BLADE_HALF_SIZE, 38.0):

@@ -3,10 +3,10 @@ type: evidence
 status: active
 owner: BK
 created: 2026-08-05
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-08
 topic: Cardborne runtime architecture and stutter attribution
-scope: Repository state ba8846ed, runtime checkpoint 76989997, retained local performance evidence, gameplay raster pack, and current Godot stable guidance
-source: Official Godot stable documentation and Cardborne repository evidence through ba8846ed
+scope: Repository history through the 2026-08-08 combat-readability implementation, retained local performance evidence, gameplay raster pack, and current Godot 4.7 guidance
+source: Official Godot 4.7 documentation and Cardborne repository evidence through the 2026-08-08 combat-readability implementation based on 6339795d
 related:
   - ./cardborne-performance-engineering-policy.md
   - ./execplans/2026-08-02-pre-asset-code-stabilization.md
@@ -27,31 +27,31 @@ or an implementation plan.
 
 ### Primary external sources
 
-- [Godot: General optimization tips](https://docs.godotengine.org/en/stable/tutorials/performance/general_optimization.html)
+- [Godot 4.7: General optimization tips](https://docs.godotengine.org/en/4.7/tutorials/performance/general_optimization.html)
   — profile first, distinguish CPU/GPU owners, prefer performant algorithms and compact,
   local data, and retest each change.
-- [Godot: Debugger panel](https://docs.godotengine.org/en/stable/tutorials/scripting/debug/debugger_panel.html)
+- [Godot 4.7: Debugger panel](https://docs.godotengine.org/en/4.7/tutorials/scripting/debug/debugger_panel.html)
   — the Visual Profiler measures rendering CPU/GPU and excludes scripting and physics.
-- [Godot: CPU optimization](https://docs.godotengine.org/en/stable/tutorials/performance/cpu_optimization.html)
+- [Godot 4.7: CPU optimization](https://docs.godotengine.org/en/4.7/tutorials/performance/cpu_optimization.html)
   — profile bottlenecks, account for Node/physics cost, reuse bounded state, and avoid
   optimizing unmeasured paths.
-- [Godot: Engine](https://docs.godotengine.org/en/stable/classes/class_engine.html)
+- [Godot 4.7: Engine](https://docs.godotengine.org/en/4.7/classes/class_engine.html)
   — physics defaults to 60 ticks/s and at most eight physics steps per rendered frame;
   falling behind can make the game appear to slow down.
-- [Godot: Performance monitors](https://docs.godotengine.org/en/stable/classes/class_performance.html)
+- [Godot 4.7: Performance monitors](https://docs.godotengine.org/en/4.7/classes/class_performance.html)
   — process/physics time, object/node count, collision pairs, draw calls, and texture/video
   memory are distinct monitors with sampling limitations.
-- [Godot: GPU optimization](https://docs.godotengine.org/en/stable/tutorials/performance/gpu_optimization.html)
+- [Godot 4.7: GPU optimization](https://docs.godotengine.org/en/4.7/tutorials/performance/gpu_optimization.html)
   — 2D batching reduces draw/state changes; resolution sensitivity helps identify fill
   rate; transparent overlap and texture reads can be expensive when GPU-bound.
-- [Godot: Importing images](https://docs.godotengine.org/en/stable/tutorials/assets_pipeline/importing_images.html)
+- [Godot 4.7: Importing images](https://docs.godotengine.org/en/4.7/tutorials/assets_pipeline/importing_images.html)
   — source-file bytes, decoded texture memory, compression, mipmaps, and load behavior are
   different concerns; 2D compression/mipmap choices carry quality and memory tradeoffs.
-- [Godot: MultiMesh](https://docs.godotengine.org/en/stable/classes/class_multimesh.html)
+- [Godot 4.7: MultiMesh](https://docs.godotengine.org/en/4.7/classes/class_multimesh.html)
   — instancing reduces submission overhead but treats instances as one spatial object for
   visibility purposes.
-- [Godot: GDScript static typing](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/static_typing.html)
-  and [GDScript basics](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html)
+- [Godot 4.7: GDScript static typing](https://docs.godotengine.org/en/4.7/tutorials/scripting/gdscript/static_typing.html)
+  and [GDScript basics](https://docs.godotengine.org/en/4.7/tutorials/scripting/gdscript/gdscript_basics.html)
   — typed operations can use optimized opcodes; packed arrays are compact and can improve
   measured numeric hot paths.
 - [Godot: Using multiple threads](https://docs.godotengine.org/en/stable/tutorials/performance/using_multiple_threads.html),
@@ -59,6 +59,9 @@ or an implementation plan.
   and [Optimization using Servers](https://docs.godotengine.org/en/stable/tutorials/performance/using_servers.html)
   — threads and direct servers are escalation paths with synchronization, SceneTree,
   rendering-resource, and readback hazards.
+- [Godot 4.7: Background loading](https://docs.godotengine.org/en/4.7/tutorials/io/background_loading.html)
+  — blocking resource loads can cause visible pauses; threaded loading is appropriate
+  only for a demonstrated load transition with a managed request and retrieval lifecycle.
 
 The stable MultiMesh tutorial currently warns that it was not updated for Godot 4.7. This
 audit therefore relies on the current stable `MultiMesh` class reference for binding API
@@ -282,7 +285,43 @@ The current evidence explains sustained frame collapse, not the first frame on w
 texture is requested. Add a one-time load/residency measurement only if users report a
 repeatable first-use hitch after frame/physics performance is green.
 
-### 8. Design verdict
+### 8. 2026-08-08 follow-up: current symptom paths and safe responses
+
+The user still reports stutter, but this task did not produce a valid new timing sample.
+The required quiescence preflight found 16 pre-existing Godot processes before the
+planned native diagnostic. Starting another recorder would have mixed Cardborne cost with
+unrelated editor, test, or capture work, so no performance scenario was started and no
+pass/fail claim was made.
+
+One narrow hot-path cleanup was safe without attribution: crates no longer have health
+bars, so `VehicleRun` no longer builds or retains `crate_health_overlays` on every combat
+presentation snapshot. This removes obsolete recurring dictionary writes. It is a code-
+contract cleanup, not evidence that the visible stutter is fixed. The visual workload also
+changed: the world-health batch ceiling fell from 50 to 28 instances, hostile projectile
+thickness changed only through the existing transform, and a visible Beam Sentinel now
+uses two startup planes and three active planes. These bounded changes require the same
+clean requalification as any other current workload; historical timing cannot qualify them.
+
+Use the symptom shape to choose the next measurement and response:
+
+| Symptom | Current evidence | Next clean measurement | Safe response if confirmed | Do not do by default |
+| --- | --- | --- | --- | --- |
+| Sustained slow motion or repeated long frames under dense combat | Historical evidence selected a physics catch-up backlog, led by enemy/grid work; current HEAD is unqualified | Run the active plan's clean native `peak_horde` and `capacity_pressure` pair; compare frame, physics, scheduled-enemy, grid, combat/effects, render CPU, and GPU fields | If grid/scheduling is still material, narrow packed overlap-cache work. If combat/effects is material, reuse projectile query receipts while preserving exact earliest-hit collision | Do not reduce counts, cadence, collision checks, or thresholds |
+| One hitch when the first enemies arrive | A manual trace selected synchronous spawn allocation; commit `483cab1f` prewarmed immutable geometry | Record the debug-only manual trace from launch through the first arrival and compare the spawn-allocation owner before and after prewarm | Correct only the named spawn path if it remains material | Do not infer a texture or GPU problem from one visual coincidence |
+| One hitch the first time a specific asset or stage appears | Cold load/residency remains unmeasured | Add a one-time resource-load and texture-memory trace around the exact transition | Preload only the demonstrated set during an authored transition, or use `ResourceLoader` threaded loading with an explicit request/poll/retrieval lifecycle | Do not bulk-preload the whole project or move SceneTree work to background threads |
+| Isolated spike during projectile or effect bursts | Two historical `combat_and_effects` spikes were retained, but their post-fix recurrence is unknown | Capture a manual trace covering the exact burst and inspect projectile/effect count plus subsystem p95/tail | Reuse bounded receipts or pooled state in the selected owner without changing damage, collision, or visual timing | Do not rewrite the renderer or lower effect/projectile capacity without evidence |
+| Cost rises sharply with resolution or beam-heavy scenes while physics stays green | Historical render CPU/GPU was green; the new beam adds bounded transparent overlap | Compare two resolutions and use the Visual Profiler for rendering CPU/GPU only | Reduce proven overdraw or dirty uploads while preserving the exact gameplay corridor and readability contract | Do not treat the Visual Profiler as scripting or physics evidence |
+| Native is smooth but built Web stutters | No current built-Web qualification exists | Run the active plan's built-Web peak after native evidence is clean | Isolate Web-specific main-thread, browser, or upload cost while preserving the workload | Do not use native-only success as Web qualification |
+| Results vary while other Godot/editor jobs run | This follow-up found 16 pre-existing Godot processes | Repeat only after the environment is quiet and record process isolation with the evidence | Reuse a known project-owned process or wait for quiescence | Do not publish contaminated samples |
+
+Official Godot guidance supports this order: classify and profile the actual bottleneck,
+use the Debugger monitors to separate process/physics/render ownership, treat the Visual
+Profiler as rendering-only evidence, and use background loading only for demonstrated
+blocking loads. Threads and direct servers remain later escalation paths because their
+synchronization and SceneTree constraints add correctness risk; they require a separately
+approved contract after the existing owners are exhausted.
+
+### 9. Design verdict
 
 The project does have design debt, but not in the form “the assets are different sizes” or
 “Godot cannot handle this 2D game.”
@@ -343,7 +382,8 @@ user approves its cost and risk.
 - Retained JSON under `build/performance/` is ignored local evidence and is not portable
   repository state; durable figures above are corroborated by the active plan/evidence.
 - No GPU frame capture, texture-residency trace, or cold-load timing was available.
-- This audit did not run Godot, a server, or an expensive performance scenario and made no
-  runtime code or asset changes.
+- The 2026-08-08 follow-up ran focused functional validators and made the narrow combat-
+  presentation cleanup described above. It did not start a performance scenario because
+  the quiescence preflight failed, and it made no asset changes.
 - Hardware-specific conclusions require the same controlled measurements on the intended
   release hardware and Web target.

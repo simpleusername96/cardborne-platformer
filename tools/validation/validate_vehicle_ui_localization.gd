@@ -136,6 +136,12 @@ func _initialize() -> void:
 		String(card.call("_preview_value", percent_preview)) == "2% → 3.5%",
 		"percentage card preview preserves its unit and fractional level value"
 	)
+	percent_preview["current"] = 0.5
+	percent_preview["next"] = 2.0
+	_expect(
+		String(card.call("_preview_value", percent_preview)) == "0.5% → 2%",
+		"percentage card preview exposes the built-in Lifesteal floor"
+	)
 	card.queue_free()
 	var localization_source := FileAccess.get_file_as_string(
 		"res://localization/vehicle_stage.csv"

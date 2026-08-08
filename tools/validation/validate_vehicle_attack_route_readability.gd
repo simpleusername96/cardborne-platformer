@@ -41,7 +41,10 @@ func _run() -> void:
 
 
 func _validate_ordinary(resolve_path: Callable, resolve_charge: Callable, player: Vector2) -> void:
-	for role in [&"shooter", &"chaser", &"controller", &"turret", &"mine", &"artillery_spotter"]:
+	for role in [
+		&"shooter", &"chaser", &"controller", &"turret", &"mine",
+		&"artillery_spotter", &"beam_sentinel",
+	]:
 		var enemy := EnemyState.new()
 		enemy.role = role
 		enemy.phase = &"startup"
@@ -131,6 +134,16 @@ func _validate_offscreen_intersection() -> void:
 		) == CombatCuePolicy.MODE_NONE,
 		"ordinary charge startup does not expose a movement route"
 	)
+	var beam := projectile.duplicate()
+	beam["delivery"] = &"beam"
+	beam["active_width"] = 54.0
+	beam["affinity"] = AttackContract.ARC
+	_expect(
+		CombatCuePolicy.telegraph_mode(
+			Vector2(-180.0, 360.0), 50.0, &"startup", beam, visible
+		) == CombatCuePolicy.MODE_BEAM_STARTUP,
+		"Beam Sentinel startup exposes its exact clipped damage corridor"
+	)
 	var ordinary_area := {
 		"shape":&"area", "delivery":&"area",
 		"center":Vector2(640.0, 360.0), "radius":180.0,
@@ -163,8 +176,9 @@ func _validate_offscreen_intersection() -> void:
 		"res://scripts/presentation/vehicle_combat_renderer.gd"
 	)
 	_expect(
-		renderer_source.contains("_sync_active_beam"),
-		"active beams retain a damaging-interval presentation"
+		renderer_source.contains("_sync_beam_startup")
+			and renderer_source.contains("_sync_active_beam"),
+		"beams retain distinct charge and damaging-interval presentations"
 	)
 	_expect(
 		renderer_source.contains("_sync_area_telegraph"),

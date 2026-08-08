@@ -5,6 +5,7 @@ extends RefCounted
 ## cue. Gameplay continues to own attack geometry, damage, collision, and time.
 
 const MODE_NONE: StringName = &"none"
+const MODE_BEAM_STARTUP: StringName = &"beam_startup"
 const MODE_ACTIVE_BEAM: StringName = &"active_beam"
 const MODE_AREA_FOOTPRINT: StringName = &"area_footprint"
 
@@ -25,6 +26,13 @@ static func telegraph_mode(
 		return MODE_NONE
 	var shape := StringName(telegraph.get("shape", &""))
 	var delivery := StringName(telegraph.get("delivery", &""))
+	if (
+		phase in [&"startup", &"boss_startup"]
+		and shape == &"corridor"
+		and delivery == &"beam"
+		and float(telegraph.get("active_width", 0.0)) > 0.0
+	):
+		return MODE_BEAM_STARTUP
 	if phase == &"boss_startup" and shape == &"area":
 		return MODE_AREA_FOOTPRINT
 	if (

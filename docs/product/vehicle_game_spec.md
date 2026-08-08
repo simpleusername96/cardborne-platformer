@@ -129,8 +129,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 - Projectile attacks use muzzle/cadence and the actual projectile without a
   predicted route, including off-screen sources and live shots approaching the
   viewport. The threat radar owns the directional warning for an off-screen
-  source. Charge and beam startup routes are also hidden. Active beams draw only
-  their physical damage body. Non-damaging support descriptors create no warning.
+  source. Charge startup routes remain hidden. Beam startup shows the exact
+  committed damage corridor at low intensity; the active beam fills that same
+  rectangle with a body, inner energy plane, and hot core. Neither state adds
+  endpoint caps or a larger predicted route. Non-damaging support descriptors
+  create no warning.
 - Only boss attacks may create ranged circular bombardment. Every boss area uses
   one orange outer boundary for startup and its damaging window, independent of
   affinity. Controller and Artillery Spotter attacks are projectiles; ordinary
@@ -376,9 +379,10 @@ does not produce a transient message.
   ownership. Dash and EMP remain base actions but have no upgrade cards.
 - `Movement Speed`, `Pickup Radius`, `Hull Integrity`, and `Lifesteal` are the
   complete Chassis & Support category. Pickup Radius preserves the former
-  Pickup Magnet card's three-level collection effect. Lifesteal restores Hull
-  from actual player-owned enemy damage at 2%/3.5%, with a six-Hull recovery
-  capacity that replenishes at six Hull per second and never exceeds maximum Hull.
+  Pickup Magnet card's three-level collection effect. Every run starts with
+  `0.5%` Lifesteal. The Lifesteal card raises the total rate to `2%`/`3.5%`.
+  Recovery uses actual player-owned enemy damage, has a six-Hull capacity that
+  replenishes at six Hull per second, and never exceeds maximum Hull.
 - Thermal Burn, Bio Toxin, and Cryo Slow are mutually exclusive complete packages.
   The first selected root locks the other two out of future offers, and only that
   root's later levels remain eligible. Its affinity changes player-primary projectile
@@ -431,11 +435,12 @@ does not produce a transient message.
   stack. Only facility active/destroyed, boss inbound, barrier depleted, Mystery
   Device result, and boss shield-down events may enqueue gameplay toasts. Stage
   transitions use no banner.
-- Boss and active reinforcement-facility health bars are attached above their
-  world bodies. Mystery Device and reward-crate bars appear for 1.5 seconds after
-  accepted damage and disappear immediately when the object resolves or breaks.
-  Ordinary enemy bars retain their deterministic 12-actor cap. All world health
-  bars share one retained batch with a fixed 50-instance ceiling.
+- Bosses, active reinforcement facilities, and fixed combat installations
+  (`turret`, `interceptor_tower`, `beam_sentinel`, and `generator`) own thick,
+  backed health bars above their world bodies. Mobile enemies, mines, Mystery
+  Devices, and reward crates never receive world health bars. Installation bars
+  use a deterministic 12-actor cap. All world health bars share one retained
+  batch with a fixed 28-instance ceiling.
 - The minimap owns general enemy presence. The threat radar is limited to an
   unseen committed projectile attack that has no world cue yet and boss arrival.
   A single attack never appears as both a world
@@ -538,12 +543,15 @@ does not produce a transient message.
 - Fixed Hard preserves the previous baseline factors, every run uses that same
   profile, and no UI or saved preference can change difficulty.
 - The exact 13-card and 36-state catalog loads, Pickup Radius retains the former
-  Pickup Magnet card's three values, the four secondary weapon types load, no more than three are active,
-  and their bounded simulations pass tests.
+  Pickup Magnet card's three values, baseline Lifesteal restores `0.5%`, the
+  Lifesteal card raises the total rate to `2%`/`3.5%`, the four secondary weapon
+  types load, no more than three are active, and their bounded simulations pass
+  tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
   default-inner-wall collision, explicit wall-piercing, separate projectile roles,
-  status-stack, element exclusivity, and XP-cadence contracts pass focused
-  tests.
+  doubled hostile-projectile presentation thickness, structural-only health
+  bars, Beam Sentinel startup/active corridors, status-stack, element
+  exclusivity, and XP-cadence contracts pass focused tests.
 - Held primary fire uses one uniform shot contract, reaches the complete
   unobstructed visible field, hits the enlarged visible enemy target through
   swept collision at full horde capacity, stops at the first target unless

@@ -180,6 +180,30 @@ func _check_upgrade_transaction_contract(run) -> void:
 
 func _check_lifesteal_contract(run) -> void:
 	run.run_build.reset()
+	run.call("_reset_run", false, true, true)
+	run.player_health = 50.0
+	var baseline_target: EnemyState = run.call("_make_enemy", {
+		"id":"lifesteal_baseline_probe",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(380.0, 0.0),
+		"active":true,
+	})
+	baseline_target.health = 100.0
+	baseline_target.max_health = 100.0
+	run.call(
+		"_damage_enemy",
+		baseline_target,
+		100.0,
+		"player_primary",
+		&"kinetic",
+		true
+	)
+	_expect(
+		is_equal_approx(float(run.player_health), 50.5),
+		"player-owned damage restores the baseline half percent without the card"
+	)
+	run.enemy_store.release_untracked(baseline_target)
+
 	_expect(
 		bool(run.run_build.apply(&"lifesteal").get("applied", false)),
 		"Lifesteal level one applies to the run build"
@@ -761,8 +785,7 @@ func _check_combat_presentation_frame(run) -> void:
 			and is_same(secondary, run._runtime_secondary_presentation_frame)
 			and is_same(secondary["mines"], run.secondary_runtime.mines)
 			and is_same(first["mystery_devices"], run._mystery_device_snapshot_buffer)
-			and is_same(first["mystery_effects"], run._mystery_effect_snapshot_buffer)
-			and is_same(first["crate_health_overlays"], run._runtime_crate_overlay_buffer),
+			and is_same(first["mystery_effects"], run._mystery_effect_snapshot_buffer),
 		"combat presentation borrows synchronous live collections without duplication"
 	)
 	_expect(
@@ -775,8 +798,7 @@ func _check_combat_presentation_frame(run) -> void:
 			not is_same(oracle["protection_sources"], run.player_protection_sources)
 			and not is_same(oracle["secondary"]["mines"], run.secondary_runtime.mines)
 			and not is_same(oracle["mystery_devices"], run._mystery_device_snapshot_buffer)
-			and not is_same(oracle["mystery_effects"], run._mystery_effect_snapshot_buffer)
-			and not is_same(oracle["crate_health_overlays"], run._runtime_crate_overlay_buffer),
+			and not is_same(oracle["mystery_effects"], run._mystery_effect_snapshot_buffer),
 		"cold combat snapshot remains independently owned for validators and capture"
 	)
 	var identities_stable := true
@@ -789,7 +811,6 @@ func _check_combat_presentation_frame(run) -> void:
 			and is_same(secondary, repeated["secondary"])
 			and is_same(first["mystery_devices"], repeated["mystery_devices"])
 			and is_same(first["mystery_effects"], repeated["mystery_effects"])
-			and is_same(first["crate_health_overlays"], repeated["crate_health_overlays"])
 		)
 	_expect(
 		identities_stable,
@@ -830,8 +851,7 @@ func _presentation_snapshots_match(
 		if expected.get(key) != actual.get(key):
 			return false
 	for key in [
-		"mystery_devices", "mystery_effects", "crate_health_overlays",
-		"reinforcement_facility",
+		"mystery_devices", "mystery_effects", "reinforcement_facility",
 	]:
 		if expected.get(key) != actual.get(key):
 			return false

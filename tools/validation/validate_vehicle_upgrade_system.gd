@@ -222,7 +222,16 @@ func _validate_stats(catalog: Catalog) -> void:
 	build.reset()
 	_expect(
 		is_equal_approx(build.stat(&"lifesteal_percent", 0.0), 0.0),
-		"Lifesteal starts at zero percent"
+		"the build stores no card bonus before Lifesteal is acquired"
+	)
+	var lifesteal_definition = catalog.get_definition(&"lifesteal")
+	var lifesteal_snapshot := OfferPresenter.snapshot(lifesteal_definition, 0)
+	_expect(
+		is_equal_approx(
+			float(lifesteal_snapshot["effect_rows"][0]["current"]),
+			0.5
+		),
+		"Lifesteal presents the built-in half-percent rate before level one"
 	)
 	for expected_percent in [2.0, 3.5]:
 		_expect(bool(build.apply(&"lifesteal").get("applied", false)), "Lifesteal level applies")

@@ -9,6 +9,11 @@ var failures: Array[String] = []
 
 func _initialize() -> void:
 	var runtime := LifestealRuntime.new()
+	runtime.reset(0.0)
+	_expect(
+		is_equal_approx(runtime.consume(100.0, 120.0), 0.5),
+		"a build without the card restores the baseline half percent"
+	)
 	runtime.reset(2.0)
 	_expect(
 		is_equal_approx(runtime.consume(100.0, 120.0), 2.0),
@@ -40,11 +45,6 @@ func _initialize() -> void:
 	_expect(
 		is_equal_approx(runtime.consume(100.0, 1.25), 1.25),
 		"recovery never exceeds missing Hull"
-	)
-	runtime.reset(0.0)
-	_expect(
-		is_equal_approx(runtime.consume(100.0, 120.0), 0.0),
-		"a build without Lifesteal cannot recover Hull"
 	)
 	runtime.reset(3.5)
 	_expect(

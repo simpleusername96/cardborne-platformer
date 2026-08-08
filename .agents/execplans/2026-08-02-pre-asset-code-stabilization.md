@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-02
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-08
 topic: Behavior-preserving combat performance stabilization
 scope: Dense-enemy steering, conservative motion clearance, bounded simulation receipts, HUD staging, combat presentation staging, and real-play workload correlation
 related:
@@ -591,6 +591,13 @@ nonstandard detail stride.
   so earlier performance JSON is historical evidence only and cannot qualify the new
   catalog. Keep every threshold unchanged, but record a new clean native baseline before
   resuming release qualification.
+- 2026-08-08: The separately authorized combat-readability pass removed obsolete crate
+  health-overlay staging, reduced the shared world-health batch ceiling from 50 to 28,
+  doubled hostile projectile presentation thickness through its existing transform, and
+  changed Beam Sentinel presentation to two startup planes and three active planes. The
+  quiescence preflight found 16 pre-existing Godot processes, so no contaminated native
+  performance run was started. These changes do not alter scenario counts or thresholds,
+  but the clean baseline must use the resulting committed workload.
 
 ## Progress
 
@@ -603,10 +610,11 @@ nonstandard detail stride.
 - [x] Complete Phase 7.
 - [ ] Complete Phase 8 and retire this plan.
 
-Current task: **After the upgrade-reduction work is committed, record a new clean native
-baseline for the damage-zone-only workload. Then use that exact new workload for the two
-native release scenarios; do not compare it directly with the retired zones-and-trails
-evidence and do not change the existing thresholds.**
+Current task: **After the combat-readability work is committed and the environment is
+quiet, record a new clean native baseline for the current damage-zone-only workload. Then
+use that exact committed workload for the two native release scenarios; do not compare it
+directly with the retired zones-and-trails evidence and do not change the existing
+thresholds.**
 
 ## Open Questions
 

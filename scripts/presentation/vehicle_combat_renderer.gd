@@ -39,12 +39,13 @@ const HOSTILE_PROJECTILE_CAPACITY := 120
 const EXPERIENCE_CAPACITY := 192
 const BUFFER_FLOATS_PER_INSTANCE := 12
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
-const MAX_ORDINARY_HEALTH_BARS := 12
+const MAX_INSTALLATION_HEALTH_BARS := 12
 const MAX_BOSS_HEALTH_BARS := 1
 const MAX_FACILITY_HEALTH_BARS := 1
-const MAX_MYSTERY_DEVICE_HEALTH_BARS := 3
-const MAX_CRATE_HEALTH_BARS := 8
-const HEALTH_BAR_INSTANCE_CAPACITY := 50
+const HEALTH_BAR_INSTANCE_CAPACITY := 28
+const HEALTH_BAR_INSTALLATION_ROLES: Array[StringName] = [
+	&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
+]
 const ENEMY_BATCH_INITIAL_CAPACITY := 64
 const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
 const MYSTERY_DEVICE_CAPACITY := 3
@@ -175,19 +176,17 @@ var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _player_craft_body_batch: BatchHandle
 var _last_health_bar_count := 0
-var _ordinary_health_bar_count := 0
+var _installation_health_bar_count := 0
 var _boss_health_bar_count := 0
 var _facility_health_bar_count := 0
-var _mystery_health_bar_count := 0
-var _crate_health_bar_count := 0
 var _semantic_texture_draws: Array[SemanticTextureDraw] = []
 var _semantic_texture_draw_count := 0
 var _semantic_texture_specs: Dictionary = {}
 var _secondary_asset_ids: Dictionary = {}
 var _player_rear_anchor := Vector2(-0.84, 0.0)
-var _health_overlay_candidates: Array[EnemyState] = []
-var _health_overlay_scores := PackedInt64Array()
-var _health_overlay_candidate_count := 0
+var _installation_health_candidates: Array[EnemyState] = []
+var _installation_health_scores := PackedInt64Array()
+var _installation_health_candidate_count := 0
 
 
 func _ready() -> void:
@@ -195,8 +194,8 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	for _index in SEMANTIC_TEXTURE_DRAW_CAPACITY:
 		_semantic_texture_draws.append(SemanticTextureDraw.new())
-	_health_overlay_candidates.resize(MAX_ORDINARY_HEALTH_BARS)
-	_health_overlay_scores.resize(MAX_ORDINARY_HEALTH_BARS)
+	_installation_health_candidates.resize(MAX_INSTALLATION_HEALTH_BARS)
+	_installation_health_scores.resize(MAX_INSTALLATION_HEALTH_BARS)
 	_cache_catalog_asset_ids()
 	_build_batches()
 
@@ -228,14 +227,11 @@ func sync(
 		_sync_world_overlays(presentation, visible_world)
 		_sync_mystery_devices(presentation, visible_world)
 		_sync_reinforcement_facility(presentation, visible_world)
-		_sync_crate_health_overlays(presentation, visible_world)
 		_sync_mystery_effects(presentation, visible_world)
 		_last_health_bar_count = (
-			_ordinary_health_bar_count
+			_installation_health_bar_count
 			+ _boss_health_bar_count
 			+ _facility_health_bar_count
-			+ _mystery_health_bar_count
-			+ _crate_health_bar_count
 		)
 	_apply_visible_counts()
 	queue_redraw()
@@ -321,11 +317,12 @@ func debug_snapshot() -> Dictionary:
 		"batch_allocations":batch_allocations,
 		"enemy_capacity": ENEMY_CAPACITY,
 		"health_bar_count": _last_health_bar_count,
-		"ordinary_health_bar_count": _ordinary_health_bar_count,
+		"installation_health_bar_count": _installation_health_bar_count,
+		"ordinary_health_bar_count": 0,
 		"boss_health_bar_count": _boss_health_bar_count,
 		"facility_health_bar_count": _facility_health_bar_count,
-		"mystery_health_bar_count": _mystery_health_bar_count,
-		"crate_health_bar_count": _crate_health_bar_count,
+		"mystery_health_bar_count": 0,
+		"crate_health_bar_count": 0,
 		"priority_marker_count": 0,
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
 		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
@@ -556,9 +553,9 @@ func _sync_enemies(
 	visible_world: Rect2,
 	player_position: Vector2,
 	run_time: float,
-	aim_target_id: String
+	_aim_target_id: String
 ) -> void:
-	_health_overlay_candidate_count = 0
+	_installation_health_candidate_count = 0
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active:
 			continue
@@ -603,27 +600,19 @@ func _sync_enemies(
 				enemy.health,
 				enemy.max_health,
 				1.9,
-				14.0,
+				18.0,
 				18.0,
 				Art.BOSS_COMMAND
 			)
 			_boss_health_bar_count += 1
-		if (
-			role != &"stage_boss"
-			and (
-				enemy.health_class == &"priority"
-				or enemy.id == aim_target_id
-				or enemy.health_visible_timer > 0.0
-				or enemy.phase in [&"startup", &"active"]
-			)
-		):
-			_health_overlay_candidate_count = _offer_overlay_candidate(
+		if role in HEALTH_BAR_INSTALLATION_ROLES:
+			_installation_health_candidate_count = _offer_overlay_candidate(
 				enemy,
-				_enemy_overlay_score(enemy, player_position, aim_target_id),
-				_health_overlay_candidates,
-				_health_overlay_scores,
-				_health_overlay_candidate_count,
-				MAX_ORDINARY_HEALTH_BARS
+				_installation_health_score(enemy, player_position),
+				_installation_health_candidates,
+				_installation_health_scores,
+				_installation_health_candidate_count,
+				MAX_INSTALLATION_HEALTH_BARS
 			)
 		if enemy.shielded:
 			_write_ring(position, radius + 7.0, Color(Art.MINT, 0.78))
@@ -633,9 +622,9 @@ func _sync_enemies(
 			radius,
 			angle
 		)
-	for index in _health_overlay_candidate_count:
-		_sync_enemy_health_bar(_health_overlay_candidates[index])
-	_ordinary_health_bar_count = _health_overlay_candidate_count
+	for index in _installation_health_candidate_count:
+		_sync_installation_health_bar(_installation_health_candidates[index])
+	_installation_health_bar_count = _installation_health_candidate_count
 
 
 func _enemy_body_modulate(enemy: EnemyState) -> Color:
@@ -650,21 +639,15 @@ func _enemy_body_modulate(enemy: EnemyState) -> Color:
 	return Color.WHITE
 
 
-func _enemy_overlay_score(
+func _installation_health_score(
 	enemy: EnemyState,
-	player_position: Vector2,
-	aim_target_id: String
+	player_position: Vector2
 ) -> int:
 	var distance_key := mini(
 		99999999,
 		roundi(player_position.distance_squared_to(enemy.pos))
 	)
-	var score := (
-		_enemy_overlay_rank(enemy, aim_target_id) * 1000000000000
-		+ distance_key * 10000
-		+ clampi(enemy.runtime_slot, 0, 9999)
-	)
-	return score
+	return distance_key * 10000 + clampi(enemy.runtime_slot, 0, 9999)
 
 
 func _offer_overlay_candidate(
@@ -691,7 +674,7 @@ func _offer_overlay_candidate(
 	return next_count
 
 
-func _sync_enemy_health_bar(enemy: EnemyState) -> void:
+func _sync_installation_health_bar(enemy: EnemyState) -> void:
 	if enemy == null:
 		return
 	_sync_health_bar(
@@ -699,9 +682,9 @@ func _sync_enemy_health_bar(enemy: EnemyState) -> void:
 		enemy.visual_radius,
 		enemy.health,
 		enemy.max_health,
-		1.6,
-		10.0,
-		14.0,
+		1.8,
+		16.0,
+		16.0,
 		Art.CORAL
 	)
 
@@ -723,7 +706,7 @@ func _sync_health_bar(
 		_overlay_batches[&"health"],
 		bar_position,
 		0.0,
-		Vector2(bar_width, height),
+		Vector2(bar_width + 4.0, height + 4.0),
 		Art.IVORY_SHADE
 	)
 	_write_instance(
@@ -736,20 +719,6 @@ func _sync_health_bar(
 		Vector2(bar_width * health_ratio, height),
 		fill_color
 	)
-
-
-func _enemy_overlay_rank(enemy: EnemyState, aim_target_id: String) -> int:
-	if enemy.id == aim_target_id:
-		return 0
-	if enemy.phase in [&"startup", &"active"]:
-		return 1
-	if enemy.health_visible_timer > 0.0:
-		return 2
-	if enemy.health_class == &"priority":
-		return 3
-	return 4
-
-
 func _sync_enemy_semantic_overlays(
 	enemy: EnemyState,
 	position: Vector2,
@@ -813,7 +782,8 @@ func _sync_projectiles(
 				direction,
 				Vector2(
 					hostile_visual_radius * Art.PROJECTILE_LENGTH_FACTOR,
-					hostile_visual_radius * Art.PROJECTILE_THICKNESS_FACTOR
+					hostile_visual_radius
+						* Art.HOSTILE_PROJECTILE_THICKNESS_FACTOR
 				),
 				Color.WHITE
 			)
@@ -861,10 +831,30 @@ func _sync_enemy_attack_telegraphs(
 			telegraph,
 			visible_world
 		):
+			CombatCuePolicy.MODE_BEAM_STARTUP:
+				_sync_beam_startup(telegraph)
 			CombatCuePolicy.MODE_ACTIVE_BEAM:
 				_sync_active_beam(telegraph)
 			CombatCuePolicy.MODE_AREA_FOOTPRINT:
 				_sync_area_telegraph(telegraph)
+
+
+func _sync_beam_startup(telegraph: Dictionary) -> void:
+	var from := Vector2(telegraph["from"])
+	var to := Vector2(telegraph["to"])
+	var width := maxf(1.0, float(telegraph["active_width"]))
+	var readiness := clampf(float(telegraph.get("readiness", 0.0)), 0.0, 1.0)
+	var intensity := smoothstep(0.0, 1.0, readiness)
+	var color := Art.attack_color(
+		AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
+	)
+	_write_beam(from, to, width, Color(color, lerpf(0.18, 0.42, intensity)))
+	_write_beam(
+		from,
+		to,
+		minf(6.0, width * 0.12),
+		Color(Art.IVORY_BRIGHT, lerpf(0.38, 0.76, intensity))
+	)
 
 
 func _sync_active_beam(telegraph: Dictionary) -> void:
@@ -873,8 +863,14 @@ func _sync_active_beam(telegraph: Dictionary) -> void:
 	var width := maxf(1.0, float(telegraph["active_width"]))
 	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
 	var color := Art.attack_color(affinity)
-	_write_beam(from, to, width, Color(color, 0.92))
-	_write_beam(from, to, minf(11.0, width * 0.24), Art.IVORY_BRIGHT)
+	_write_beam(from, to, width, Color(color, 0.98))
+	_write_beam(
+		from,
+		to,
+		minf(24.0, width * 0.46),
+		Color(color.lerp(Art.IVORY_BRIGHT, 0.62), 0.94)
+	)
+	_write_beam(from, to, minf(9.0, width * 0.16), Art.IVORY_BRIGHT)
 
 
 func _sync_area_telegraph(telegraph: Dictionary) -> void:
@@ -1126,24 +1122,6 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			Vector2.ONE * MYSTERY_DEVICE_VISUAL_RADIUS,
 			Color.WHITE
 		)
-		if (
-			device_state == &"intact"
-			and float(device.get("health_visible_timer", 0.0)) > 0.0
-			and _mystery_health_bar_count < MAX_MYSTERY_DEVICE_HEALTH_BARS
-		):
-			_sync_health_bar(
-				position,
-				MYSTERY_DEVICE_VISUAL_RADIUS,
-				float(device.get("health", 0.0)),
-				float(device.get("max_health", 1.0)),
-				1.45,
-				11.0,
-				16.0,
-				Art.CORAL
-			)
-			_mystery_health_bar_count += 1
-
-
 func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 	var effects_variant: Variant = state.get("mystery_effects")
 	if not effects_variant is Array:
@@ -1193,45 +1171,12 @@ func _sync_reinforcement_facility(
 		radius,
 		float(facility.get("health", 0.0)),
 		float(facility.get("max_health", 1.0)),
-		1.5,
-		11.0,
+		1.65,
+		16.0,
 		16.0,
 		Art.CORAL
 	)
 	_facility_health_bar_count = 1
-
-
-func _sync_crate_health_overlays(
-	state: Dictionary,
-	visible_world: Rect2
-) -> void:
-	var crates_variant: Variant = state.get("crate_health_overlays")
-	if not crates_variant is Array:
-		return
-	for crate_variant in crates_variant:
-		if _crate_health_bar_count >= MAX_CRATE_HEALTH_BARS:
-			return
-		var crate := Dictionary(crate_variant)
-		if (
-			not bool(crate.get("visible", false))
-			or float(crate.get("health_visible_timer", 0.0)) <= 0.0
-		):
-			continue
-		var position := Vector2(crate.get("position", Vector2.ZERO))
-		var radius := float(crate.get("radius", 31.0))
-		if not visible_world.grow(radius).has_point(position):
-			continue
-		_sync_health_bar(
-			position,
-			radius,
-			float(crate.get("health", 0.0)),
-			float(crate.get("max_health", 1.0)),
-			1.7,
-			9.0,
-			12.0,
-			Art.CORAL
-		)
-		_crate_health_bar_count += 1
 
 
 func _queue_semantic_texture(
@@ -1429,11 +1374,9 @@ func _write_instance_basis(
 
 func _reset_counts() -> void:
 	_last_health_bar_count = 0
-	_ordinary_health_bar_count = 0
+	_installation_health_bar_count = 0
 	_boss_health_bar_count = 0
 	_facility_health_bar_count = 0
-	_mystery_health_bar_count = 0
-	_crate_health_bar_count = 0
 	for batch in _batches:
 		batch.reset()
 

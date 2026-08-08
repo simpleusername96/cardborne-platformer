@@ -362,21 +362,25 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - 비-beam projectile은 player primary energy teardrop, built-in Seeker, hostile
   barbed bolt 세 identity를 사용한다. 세 identity는 서로 재사용하지 않으며,
   불투명 core와 authored contour가 small runtime scale에서도 역할을 구분한다.
-- 모든 기체 탄환의 presentation length는 이전 기준의 `0.70`, thickness는 `0.50`을
-  적용한다. 이 transform은 collision truth를 바꾸지 않는다. player primary는
-  선택한 단일 element affinity tint를 사용하고 Seeker와 hostile bolt는 authored
-  identity를 유지한다. cadence, speed, homing, collision과 damage는 gameplay code가 소유한다.
+- 모든 기체 탄환의 presentation length는 이전 기준의 `0.70`을 적용한다. player
+  primary와 Seeker thickness는 `0.50`, hostile bolt thickness는 이전 `0.50`의
+  두 배인 `1.00`을 적용한다. 이 transform은 collision truth를 바꾸지 않는다.
+  player primary는 선택한 단일 element affinity tint를 사용하고 Seeker와 hostile
+  bolt는 authored identity를 유지한다. cadence, speed, homing, collision과 damage는
+  gameplay code가 소유한다.
 - hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
   않는 persistent condition을 약속하지 않는다. burn/poison/chill은 별도
   projectile badge나 orbit icon 없이 실제 actor state feedback으로만 표시한다.
 - projectile startup과 이미 생성된 projectile은 발사원 가시성과 관계없이
   예측 경로 또는 진입선을 표시하지 않는다. 화면 밖 발사원의 공격은 threat
   radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
-  표시한다. charge와 beam startup도 이동 경로, endpoint cap, corridor boundary를
-  표시하지 않는다.
-- beam은 gameplay corridor가 길이와 폭을 소유하고 shared authored beam-strip
-  PNG를 실제 active damage rectangle에만 stretch한다. projectile PNG를 corridor
-  길이로 늘이지 않으며, startup/end contact나 확장 danger boundary를 만들지 않는다.
+  표시한다. charge startup도 이동 경로, endpoint cap, corridor boundary를 표시하지
+  않는다.
+- beam은 gameplay corridor가 길이와 폭을 소유한다. Beam Sentinel과 boss beam
+  startup은 그 정확한 damage rectangle을 낮은 강도의 body와 hot core 두 겹으로
+  표시한다. active는 같은 rectangle에 body, inner energy plane, hot core 세 겹을
+  채운다. 모두 shared authored beam-strip PNG를 stretch하며, projectile PNG를
+  corridor 길이로 늘이거나 endpoint cap·확장 danger boundary를 만들지 않는다.
 - 원거리 원형 폭격 footprint는 boss만 사용한다. 모든 boss bombardment는 affinity와
   무관하게 `thermal` orange outer boundary 한 개로 통일한다. ordinary controller와
   artillery는 projectile을 발사하며 ordinary mine의 근접 폭발 범위도 world ring으로
@@ -515,11 +519,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   않는다. gameplay toast는 reinforcement facility active/destroyed, boss inbound,
   barrier depleted, Mystery Device result, boss shield-down 여섯 event만 허용한다.
   stage transition banner는 사용하지 않는다.
-- stage boss와 active reinforcement facility는 world body 위에 항상 backed health
-  bar를 둔다. Mystery Device와 reward crate는 accepted damage 이후 1.5초 동안만
-  body 위 bar를 표시한다. ordinary enemy bar는 최대 12개다. 모두 기존
+- stage boss, active reinforcement facility, 고정 전투 시설 `turret`,
+  `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed
+  health bar를 둔다. mobile enemy, mine, Mystery Device, reward crate에는 표시하지
+  않는다. 시설 bar는 최대 12개이며 fill 높이는 16 world unit, boss fill 높이는
+  18 world unit이다. backing은 fill보다 상하좌우 2 world unit씩 크다. 모두 기존
   `Overlay_health` retained batch를 공유하며 backing/fill을 합친 fixed capacity는
-  50 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
+  28 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
 - HUD off-screen threat와 다섯 종류 minimap marker는 기존 code-native retained
   mesh를 유지한다. world-space crosshair는 shared authored PNG retained textured
   batch로 배치한다. persistent-status orbit과 support timer는 사용하지 않는다.

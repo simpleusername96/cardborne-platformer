@@ -18,8 +18,8 @@ static func snapshot(
 			"stat_key":"UPGRADE_STAT_%s" % String(modifier.stat_id).to_upper(),
 			"operation":modifier.operation,
 			"display_unit":modifier.display_unit,
-			"current":modifier.value_at(current_level),
-			"next":modifier.value_at(current_level + 1),
+			"current":modifier.display_value_at(current_level),
+			"next":modifier.display_value_at(current_level + 1),
 		})
 		if effect_rows.size() >= 2:
 			break

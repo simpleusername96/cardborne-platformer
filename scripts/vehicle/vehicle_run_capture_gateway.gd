@@ -13,6 +13,9 @@ const AttackTelegraphs = preload(
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const SpecialistRuntime = preload(
+	"res://scripts/enemies/vehicle_enemy_specialist_runtime.gd"
+)
 const ExperienceRuntime = preload(
 	"res://scripts/progression/vehicle_experience_runtime.gd"
 )
@@ -91,8 +94,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_field_item_evidence()
 		&"reinforcement_facility":
 			await _capture_reinforcement_facility_evidence()
-		&"damageable_world_health":
-			await _capture_damageable_world_health_evidence()
+		&"structural_health_bars":
+			await _capture_structural_health_bar_evidence()
 		&"level_up":
 			await _capture_level_up_evidence()
 		&"boss_preview":
@@ -105,6 +108,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_ordinary_projectile_evidence()
 		&"arc_area_telegraphs":
 			await _capture_arc_area_telegraph_evidence()
+		&"beam_sentinel":
+			await _capture_beam_sentinel_evidence()
 		&"damage_feedback":
 			await _capture_damage_feedback_evidence()
 		&"collision_overlays":
@@ -517,39 +522,39 @@ func _capture_reinforcement_facility_evidence() -> void:
 	_save_capture("05b-reinforcement-facility.png")
 
 
-func _capture_damageable_world_health_evidence() -> void:
-	prepare_stage(0)
+func _capture_structural_health_bar_evidence() -> void:
+	prepare_stage(2)
 	_run._clear_enemies()
 	_run.pickups.clear()
 	_run.crates.clear()
-	_run.crates.append({
-		"id":"capture_damaged_crate",
-		"pos":_run.player_position + Vector2(-270.0, 90.0),
-		"drop":&"repair",
-		"heal_amount":50.0,
-		"health":12.0,
-		"max_health":24.0,
-		"alive":true,
-		"flash":0.0,
-		"health_visible_timer":1.5,
+	var mobile: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_mobile_without_health_bar",
+		"role":&"chaser",
+		"pos":_run.player_position + Vector2(-280.0, 90.0),
+		"active":true,
 	})
-	_run._rebuild_crate_collision_cells()
-	_run.mystery_device_runtime.configure(
-		[{
-			"id":&"capture_damaged_device",
-			"pos":_run.player_position + Vector2(290.0, -70.0),
-			"outcome":&"gravity_pull",
-		}],
-		771,
-		&"stage_1"
+	if mobile != null:
+		mobile.health = mobile.max_health * 0.5
+		mobile.health_visible_timer = 99.0
+		_run._append_enemy(mobile)
+	var installation: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_structural_health_bar",
+		"role":&"beam_sentinel",
+		"pos":_run.player_position + Vector2(290.0, -70.0),
+		"active":true,
+	})
+	if installation != null:
+		installation.health = installation.max_health * 0.5
+		_run._append_enemy(installation)
+	_run.reinforcement_facility_runtime.configure(
+		2, _run.player_position + Vector2(20.0, 250.0)
 	)
-	_run.mystery_device_runtime.receive_damage(
-		&"capture_damaged_device", 45.0, &"player", &"direct"
-	)
+	_run.reinforcement_facility_runtime.activate_if_ready(70, 100)
+	_run.reinforcement_facility_runtime.receive_damage(72.0, &"player", &"direct")
 	_run.capture_set_mode(&"paused")
 	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 	await _settle_capture()
-	_save_capture("05c-damageable-world-health.png")
+	_save_capture("05c-structural-health-bars.png")
 
 
 func _capture_level_up_evidence() -> void:
@@ -752,6 +757,36 @@ func _capture_ordinary_projectile_evidence() -> void:
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("09-effects-projectile-hostile-hit.png")
+
+
+func _capture_beam_sentinel_evidence() -> void:
+	prepare_stage(2, true)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	var sentinel: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_beam_sentinel",
+		"role":&"beam_sentinel",
+		"pos":_run.player_position + Vector2(-360.0, 0.0),
+		"active":true,
+	})
+	if sentinel == null:
+		push_error("beam sentinel capture fixture could not create the installation")
+		return
+	_run._append_enemy(sentinel)
+	_run._start_enemy_attack(sentinel)
+	sentinel.phase_time = SpecialistRuntime.BEAM_STARTUP * 0.5
+	AttackTelegraphs.refresh_ordinary(
+		sentinel,
+		_run._runtime_attack_path_callable,
+		_run._runtime_charge_path_callable
+	)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("09-effects-beam-sentinel-startup.png")
+	_run._begin_enemy_active(sentinel)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("09-effects-beam-sentinel-active.png")
 
 
 func _capture_arc_area_telegraph_evidence() -> void:

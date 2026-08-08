@@ -1,23 +1,25 @@
 class_name VehicleLifestealRuntime
 extends RefCounted
 
-## Owns the bounded recovery budget for the Lifesteal card. Damage resolution
-## stays with VehicleRun; this runtime only converts an accepted receipt to Hull.
+## Owns baseline and upgrade Lifesteal rates plus their bounded recovery budget.
+## Damage resolution stays with VehicleRun; this runtime only converts an
+## accepted receipt to Hull.
 
+const BASE_HEALING_PERCENT := 0.5
 const MAX_RECOVERY_BUDGET := 6.0
 const RECOVERY_BUDGET_PER_SECOND := 6.0
 
-var _healing_percent := 0.0
+var _healing_percent := BASE_HEALING_PERCENT
 var _remaining_budget := MAX_RECOVERY_BUDGET
 
 
 func reset(healing_percent: float = 0.0) -> void:
-	_healing_percent = maxf(0.0, healing_percent)
+	_healing_percent = maxf(BASE_HEALING_PERCENT, healing_percent)
 	_remaining_budget = MAX_RECOVERY_BUDGET
 
 
 func configure(healing_percent: float) -> void:
-	_healing_percent = maxf(0.0, healing_percent)
+	_healing_percent = maxf(BASE_HEALING_PERCENT, healing_percent)
 
 
 func advance(delta: float) -> void:

@@ -249,7 +249,6 @@ var _mystery_device_hit_receipt: Dictionary = {}
 var _reinforcement_facility_hit_receipt: Dictionary = {}
 var _mystery_device_snapshot_buffer: Array[Dictionary] = []
 var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
-var _runtime_crate_overlay_buffer: Array[Dictionary] = []
 var _mystery_retired_event_buffer: Array[Dictionary] = []
 var _mystery_decoy_targets: Dictionary = {}
 var _runtime_fast_hud_frame: Dictionary = {}
@@ -5455,14 +5454,12 @@ func _append_minimap_static_geometry(snapshot: Dictionary) -> void:
 func _combat_presentation_snapshot() -> Dictionary:
 	var mystery_devices: Array[Dictionary] = []
 	var mystery_effects: Array[Dictionary] = []
-	var crate_overlays: Array[Dictionary] = []
 	return _fill_combat_presentation_snapshot(
 		{},
 		player_protection_sources.duplicate(),
 		secondary_runtime.snapshot(run_build),
 		mystery_devices,
-		mystery_effects,
-		crate_overlays
+		mystery_effects
 	)
 
 
@@ -5475,8 +5472,7 @@ func _runtime_combat_presentation_snapshot() -> Dictionary:
 		player_protection_sources,
 		_runtime_secondary_presentation_frame,
 		_mystery_device_snapshot_buffer,
-		_mystery_effect_snapshot_buffer,
-		_runtime_crate_overlay_buffer
+		_mystery_effect_snapshot_buffer
 	)
 
 
@@ -5485,8 +5481,7 @@ func _fill_combat_presentation_snapshot(
 	protection_sources: Dictionary,
 	secondary: Dictionary,
 	mystery_devices: Array[Dictionary],
-	mystery_effects: Array[Dictionary],
-	crate_overlays: Array[Dictionary]
+	mystery_effects: Array[Dictionary]
 ) -> Dictionary:
 	var cursor_position := player_position + player_aim_direction * 230.0
 	var mouse_direction := get_global_mouse_position() - player_position
@@ -5522,32 +5517,9 @@ func _fill_combat_presentation_snapshot(
 	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)
 	snapshot["mystery_devices"] = mystery_devices
 	snapshot["mystery_effects"] = mystery_effects
-	_fill_crate_health_overlay_snapshot(crate_overlays)
-	snapshot["crate_health_overlays"] = crate_overlays
 	snapshot["reinforcement_facility"] = reinforcement_facility_runtime.snapshot()
 	snapshot["cursor_position"] = cursor_position
 	return snapshot
-
-
-func _fill_crate_health_overlay_snapshot(
-	output: Array[Dictionary]
-) -> Array[Dictionary]:
-	while output.size() < crates.size():
-		output.append({})
-	output.resize(crates.size())
-	for index in crates.size():
-		var crate := crates[index]
-		var record := output[index]
-		record.clear()
-		record["position"] = Vector2(crate["pos"])
-		record["radius"] = CRATE_COLLISION_RADIUS
-		record["health"] = float(crate["health"])
-		record["max_health"] = float(crate["max_health"])
-		record["health_visible_timer"] = float(
-			crate.get("health_visible_timer", 0.0)
-		)
-		record["visible"] = bool(crate["alive"])
-	return output
 
 
 func _is_world_position_visited(position: Vector2) -> bool:
