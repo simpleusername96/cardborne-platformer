@@ -131,18 +131,20 @@ function New-PolygonPoints([Random]$Rng, [double]$CenterX, [double]$CenterY, [do
 
 function New-ChipSvg([int]$Seed, [int]$Variant) {
     $rng = [Random]::new($Seed)
-    $outer = New-PolygonPoints $rng 32 32 23 16 8
-    $facet = New-PolygonPoints $rng (Next-Range $rng 29 34) (Next-Range $rng 29 33) 13 8 6
-    $seamStartX = Next-Range $rng 20 27
-    $seamStartY = Next-Range $rng 30 36
-    $seamEndX = Next-Range $rng 38 46
-    $seamEndY = Next-Range $rng 25 31
-    $header = New-SvgHeader 64 64 "Flat embedded surface chip $Variant"
+    $outer = New-PolygonPoints $rng 32 32 25 10.5 10
+    $exposedLayer = New-PolygonPoints $rng (Next-Range $rng 29 33) (Next-Range $rng 31 34) 17 6.5 8
+    $edgeLeftX = Next-Range $rng 11 17
+    $edgeLeftY = Next-Range $rng 28 33
+    $edgeCenterX = Next-Range $rng 20 27
+    $edgeCenterY = Next-Range $rng 25 29
+    $edgeRightX = Next-Range $rng 43 51
+    $edgeRightY = Next-Range $rng 31 35
+    $header = New-SvgHeader 64 64 "Shallow embedded surface chip $Variant"
     return @"
 $header
-  <polygon points="$outer" fill="#607586" fill-opacity="0.28"/>
-  <polygon points="$facet" fill="#C0C9D0" fill-opacity="0.14"/>
-  <path d="M $(Format-Number $seamStartX) $(Format-Number $seamStartY) L $(Format-Number $seamEndX) $(Format-Number $seamEndY)" fill="none" stroke="#4F6575" stroke-opacity="0.2" stroke-width="1.25" stroke-linecap="round"/>
+  <polygon points="$outer" fill="#5D7282" fill-opacity="0.19"/>
+  <polygon points="$exposedLayer" fill="#718493" fill-opacity="0.12"/>
+  <path d="M $(Format-Number $edgeLeftX) $(Format-Number $edgeLeftY) L $(Format-Number $edgeCenterX) $(Format-Number $edgeCenterY) M $(Format-Number ($edgeRightX - 8)) $(Format-Number ($edgeRightY - 3)) L $(Format-Number $edgeRightX) $(Format-Number $edgeRightY)" fill="none" stroke="#4F6575" stroke-opacity="0.17" stroke-width="1.15" stroke-linecap="round"/>
 </svg>
 "@
 }
