@@ -62,7 +62,7 @@ try {
         Expect ($styleReferenceDimensions[0] -eq $canonicalStyleReferenceSheet.width -and $styleReferenceDimensions[1] -eq $canonicalStyleReferenceSheet.height) 'canonical style reference sheet dimension mismatch'
     }
     Expect ($actual.summary.font -eq 1) 'production font count must be 1'
-    Expect ($actual.summary.units -eq 20) 'switch unit count must be 20'
+    Expect ($actual.summary.units -eq 21) 'switch unit count must be 21'
     Expect ($actual.summary.retire_only -eq 6) 'retire-only count must be 6'
     Expect ($actual.summary.gameplay_png -eq 67) 'production gameplay PNG count must be 67'
     Expect ($actual.summary.final_gameplay_png -eq 67) 'final gameplay PNG forecast must be 67'
@@ -128,7 +128,8 @@ try {
         secondary_and_wear_family=@(7,7)
         ordinary_enemy_family=@(18,18)
         boss_and_shared_node_family=@(5,5)
-        gameplay_code_asset_rasterization=@(8,8)
+        straight_beam_strip_replacement=@(1,1)
+        gameplay_code_asset_rasterization=@(7,7)
     }
     foreach($unitId in $expectedGameplayUnits.Keys){
         $matches=@($actual.units|Where-Object id -ceq $unitId)

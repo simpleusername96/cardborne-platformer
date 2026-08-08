@@ -624,6 +624,24 @@ func _run() -> void:
 		beam_batch.multimesh.visible_instance_count == 2,
 		"Beam Sentinel startup draws one exact-width charge plane and one hot core"
 	)
+	var startup_beam_buffer := beam_batch.multimesh.buffer
+	var startup_intensity := smoothstep(0.0, 1.0, 0.72)
+	_expect(
+		is_equal_approx(startup_beam_buffer[5], 54.0 / 0.32)
+			and is_equal_approx(
+				startup_beam_buffer[17],
+				minf(3.5, 54.0 * 0.065) / 0.32
+			)
+			and is_equal_approx(
+				startup_beam_buffer[11],
+				lerpf(0.16, 0.34, startup_intensity)
+			)
+			and is_equal_approx(
+				startup_beam_buffer[23],
+				lerpf(0.32, 0.66, startup_intensity)
+			),
+		"startup beam preserves the full corridor and uses the restrained 3.5-unit filament hierarchy"
+	)
 	offscreen_enemy.phase = &"active"
 	renderer.sync(
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
@@ -632,6 +650,16 @@ func _run() -> void:
 	_expect(
 		beam_batch.multimesh.visible_instance_count == 3,
 		"active off-screen beam draws a three-plane hot damaging body"
+	)
+	var active_beam_buffer := beam_batch.multimesh.buffer
+	_expect(
+		is_equal_approx(active_beam_buffer[5], 54.0 / 0.32)
+			and is_equal_approx(active_beam_buffer[17], minf(20.0, 54.0 * 0.34) / 0.32)
+			and is_equal_approx(active_beam_buffer[29], minf(7.0, 54.0 * 0.10) / 0.32)
+			and is_equal_approx(active_beam_buffer[11], 0.92)
+			and is_equal_approx(active_beam_buffer[23], 0.88)
+			and is_equal_approx(active_beam_buffer[35], 1.0),
+		"active beam keeps the full body visible beneath its narrower inner and ivory core planes"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	snapshot = renderer.debug_snapshot()

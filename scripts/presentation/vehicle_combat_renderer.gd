@@ -58,6 +58,16 @@ const CARDINAL_DIRECTIONS := [
 	Vector2.DOWN,
 ]
 const ELECTRIC_FIELD_RADII := [120.0, 140.0, 160.0]
+const BEAM_STARTUP_BODY_ALPHA := Vector2(0.16, 0.34)
+const BEAM_STARTUP_FILAMENT_ALPHA := Vector2(0.32, 0.66)
+const BEAM_STARTUP_FILAMENT_WIDTH_MAX := 3.5
+const BEAM_STARTUP_FILAMENT_WIDTH_RATIO := 0.065
+const BEAM_ACTIVE_BODY_ALPHA := 0.92
+const BEAM_ACTIVE_INNER_ALPHA := 0.88
+const BEAM_ACTIVE_INNER_WIDTH_MAX := 20.0
+const BEAM_ACTIVE_INNER_WIDTH_RATIO := 0.34
+const BEAM_ACTIVE_CORE_WIDTH_MAX := 7.0
+const BEAM_ACTIVE_CORE_WIDTH_RATIO := 0.10
 class BatchBuffer:
 	var values := PackedFloat32Array()
 
@@ -848,12 +858,28 @@ func _sync_beam_startup(telegraph: Dictionary) -> void:
 	var color := Art.attack_color(
 		AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
 	)
-	_write_beam(from, to, width, Color(color, lerpf(0.18, 0.42, intensity)))
 	_write_beam(
 		from,
 		to,
-		minf(6.0, width * 0.12),
-		Color(Art.IVORY_BRIGHT, lerpf(0.38, 0.76, intensity))
+		width,
+		Color(color, lerpf(
+			BEAM_STARTUP_BODY_ALPHA.x,
+			BEAM_STARTUP_BODY_ALPHA.y,
+			intensity
+		))
+	)
+	_write_beam(
+		from,
+		to,
+		minf(
+			BEAM_STARTUP_FILAMENT_WIDTH_MAX,
+			width * BEAM_STARTUP_FILAMENT_WIDTH_RATIO
+		),
+		Color(Art.IVORY_BRIGHT, lerpf(
+			BEAM_STARTUP_FILAMENT_ALPHA.x,
+			BEAM_STARTUP_FILAMENT_ALPHA.y,
+			intensity
+		))
 	)
 
 
@@ -863,14 +889,19 @@ func _sync_active_beam(telegraph: Dictionary) -> void:
 	var width := maxf(1.0, float(telegraph["active_width"]))
 	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
 	var color := Art.attack_color(affinity)
-	_write_beam(from, to, width, Color(color, 0.98))
+	_write_beam(from, to, width, Color(color, BEAM_ACTIVE_BODY_ALPHA))
 	_write_beam(
 		from,
 		to,
-		minf(24.0, width * 0.46),
-		Color(color.lerp(Art.IVORY_BRIGHT, 0.62), 0.94)
+		minf(BEAM_ACTIVE_INNER_WIDTH_MAX, width * BEAM_ACTIVE_INNER_WIDTH_RATIO),
+		Color(color.lerp(Art.IVORY_BRIGHT, 0.62), BEAM_ACTIVE_INNER_ALPHA)
 	)
-	_write_beam(from, to, minf(9.0, width * 0.16), Art.IVORY_BRIGHT)
+	_write_beam(
+		from,
+		to,
+		minf(BEAM_ACTIVE_CORE_WIDTH_MAX, width * BEAM_ACTIVE_CORE_WIDTH_RATIO),
+		Art.IVORY_BRIGHT
+	)
 
 
 func _sync_area_telegraph(telegraph: Dictionary) -> void:

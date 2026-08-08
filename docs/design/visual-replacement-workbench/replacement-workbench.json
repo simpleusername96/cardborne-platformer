@@ -4069,6 +4069,82 @@
       }
     },
     {
+      "id": "straight_beam_strip_replacement",
+      "category_id": "combat",
+      "order": 8,
+      "title_en": "Straight Beam Strip Replacement",
+      "title_ko": "직선 빔 스트립 교체",
+      "owner": "gameplay_manifest",
+      "switch_kind": "replace",
+      "status": "switch_ready",
+      "current_paths": [
+        "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png"
+      ],
+      "consumer_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/vehicle/vehicle_run.gd"
+      ],
+      "consumer_asset_ids": [
+        "cue/beam_strip_9"
+      ],
+      "direction_en": "Replace the awkward dark-framed straight beam with one borderless tintable flat alpha plane. Preserve the exact 128x32 canvas, center pivot, semantic ID, import settings, retained overlay batch, collision corridor, length, timing, and Beam Sentinel/boss sharing. User feedback: the current nested framed bars look visually awkward.",
+      "deliverables": [
+        {
+          "target_path": "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png",
+          "width": 128,
+          "height": 32,
+          "pivot": [64, 16],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One exact 128x32 transparent tintable straight-beam alpha mask: a continuous 128x20 ivory-white flat strip centered vertically, with clean antialiased horizontal edges and no dark perimeter, internal core, gradient, glow, cap, particle, detached mark, repetition, or texture.",
+          "external_source_ids": []
+        }
+      ],
+      "final_paths": [
+        "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png"
+      ],
+      "reuse_paths": [],
+      "preview_paths": [],
+      "rendered_as_is_paths": [
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/07-stage-boss-startup.png"
+      ],
+      "retire_paths": [],
+      "runtime_change_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "tools/validation/validate_vehicle_attack_route_readability.gd",
+        "tools/validation/validate_vehicle_combat_renderer.gd",
+        "tools/validation/validate_vehicle_player_presentation.gd",
+        "tools/validation/validate_vehicle_semantic_asset_provider.gd"
+      ],
+      "acceptance_commands": [
+        ".\\tools\\godot.ps1 --path . --headless --import",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_attack_route_readability.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_player_presentation.gd",
+        ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+        ".\\tools\\validation\\validate_cardborne_visual_authority.ps1"
+      ],
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      },
+      "approval": null,
+      "application": null
+    },
+    {
       "id": "gameplay_code_asset_rasterization",
       "category_id": "world",
       "order": 95,
@@ -4078,7 +4154,6 @@
       "switch_kind": "consolidate",
       "status": "applied",
       "current_paths": [
-        "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png",
         "art/visuals/production/gameplay/effects/cues/cue_crosshair.png",
         "art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png",
         "art/visuals/production/gameplay/effects/cues/cue_disk_mask.png",
@@ -4095,7 +4170,6 @@
         "scripts/vehicle/vehicle_run.gd"
       ],
       "consumer_asset_ids": [
-        "cue/beam_strip_9",
         "cue/crosshair",
         "cue/diamond_marker",
         "cue/disk_mask",
@@ -4104,9 +4178,8 @@
         "world/surface_panel_9",
         "world/wall_segment_9"
       ],
-      "direction_en": "Use eight shared flat authored PNGs for reusable world-space cues, the field surface, and every static wall. Retire the decorative service rail and the redundant support-timer segment. UI remains unchanged; runtime retains topology, collision, position, live dimensions, tint, alpha, clipping, readiness, timing, and batching.",
+      "direction_en": "Use seven shared flat authored PNGs for reusable non-beam world-space cues, the field surface, and every static wall. The straight beam now has a dedicated replacement unit. Retire the decorative service rail and the redundant support-timer segment. UI remains unchanged; runtime retains topology, collision, position, live dimensions, tint, alpha, clipping, readiness, timing, and batching.",
       "deliverables": [
-        {"target_path":"art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png","width":128,"height":32,"pivot":[64,16],"patch_margin":[16,0,16,0],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Flat high-contrast beam strip with one dark perimeter and one light core; no glow, gradient, particle, or detached cap.","external_source_ids":[]},
         {"target_path":"art/visuals/production/gameplay/effects/cues/cue_crosshair.png","width":96,"height":96,"pivot":[48,48],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Open four-bracket world-space crosshair with broad flat strokes, clear center, and no dots or ornament.","external_source_ids":[]},
         {"target_path":"art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png","width":64,"height":64,"pivot":[32,32],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"One compact filled diamond marker with a dark perimeter and no detached detail.","external_source_ids":[]},
         {"target_path":"art/visuals/production/gameplay/effects/cues/cue_disk_mask.png","width":128,"height":128,"pivot":[64,64],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"One flat filled circular mask with a dark perimeter for runtime radius and alpha modulation.","external_source_ids":[]},
@@ -4116,7 +4189,6 @@
         {"target_path":"art/visuals/production/gameplay/world/presentation/world_wall_segment_9.png","width":192,"height":96,"pivot":[96,48],"patch_margin":[24,12,24,12],"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Flat structural wall segment with a large readable mass, one dark perimeter, and no micro-detail.","external_source_ids":[]}
       ],
       "final_paths": [
-        "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png",
         "art/visuals/production/gameplay/effects/cues/cue_crosshair.png",
         "art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png",
         "art/visuals/production/gameplay/effects/cues/cue_disk_mask.png",
@@ -4194,7 +4266,6 @@
         "approved_at": "2026-08-04T16:17:39+09:00",
         "baseline_commit": "c2853b0701d10093abbed5d6824543c0c71ed670",
         "deliverable_sha256": {
-          "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png": "f30a3e2027de9e3580973d1e54051617e7b5f87e58571d768f6ad558b2924e48",
           "art/visuals/production/gameplay/effects/cues/cue_crosshair.png": "1d2178754a6fc5b8a88adfd5269103f56d5392c1caebeb358d59dfcfbc6138ee",
           "art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png": "650292d8620b237446298a1dcdfde2e85eadfff857c86f393a1a230e9bbbe021",
           "art/visuals/production/gameplay/effects/cues/cue_disk_mask.png": "d3ca68bf46e4902fb1d93594a5af49a53c297968e0d99643ab3d9d641bdfa28e",

@@ -522,7 +522,7 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
   - Progress: asset promotion, exact hashes, 70-image manifest, stable SVG import, retained
     72/72/48 batches, and the focused code/authority gates pass. Native/Web actual-size,
     grayscale, and combat-pressure capture remains in the Phase 7 built-product QA pass.
-- [ ] **6.5** Open a dedicated per-asset beam replacement unit.
+- [x] **6.5** Open a dedicated per-asset beam replacement unit.
   - Change: create a workbench unit for `cue/beam_strip_9` instead of reopening the old eight-asset
     rasterization batch. Preserve semantic ID, `128x32` canvas, `[64,16]` pivot, import settings,
     retained batch, exact gameplay length/width, and all non-beam assets.
@@ -536,6 +536,11 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
     source at original detail plus Beam Sentinel and boss startup/active AS-IS/TO-BE captures.
   - Accept: the user explicitly approves the exact strip and four runtime states. Rejected outputs
     remain outside production and are never described as compliant.
+  - Progress: built-in ImageGen received the authority sheet, current strip, and Crown boss as
+    actual referenced images. Candidate
+    `527607b4f68c950a4781b4a6dc521d086d66d752851b34320ca799be0edf23fe` is exact `128x32`
+    RGBA with a centered `128x20` borderless plane and remains workbench-only pending rendered
+    state evidence and exact user approval.
 - [ ] **6.7** Retune the existing beam planes without adding a batch.
   - Change: startup uses full-width body alpha `0.16 -> 0.34` over readiness plus an ivory filament
     `min(3.5, width*0.065)` at alpha `0.32 -> 0.66`. Active uses full-width body alpha `0.92`,
@@ -544,6 +549,8 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
   - Accept: startup reads non-damaging and active reads stronger; the full active width remains
     visible; Beam Sentinel and every boss beam use the same approved strip; combat/effect counts,
     overlay batch count, damage geometry, timing, and collision are unchanged.
+  - Progress: the numeric two-plane/three-plane hierarchy and exact buffer assertions are
+    implemented. Candidate promotion and final rendered-state validation remain gated by 6.6.
 
 Batch gate:
 
@@ -655,7 +662,7 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 6 - Retune and replace the straight boss beam.
-- Next task: 6.5 - create the exact 128x32 beam candidate and renderer plane hierarchy. Task 3.6 retains its rendered
+- Next task: 6.6 - capture and approve the exact 128x32 beam candidate. Task 3.6 retains its rendered
   pursuit/ranged capture for final runtime QA. Task 1.2 remains deferred until
   user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
 - Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
