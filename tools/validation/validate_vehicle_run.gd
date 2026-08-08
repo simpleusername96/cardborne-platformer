@@ -497,9 +497,9 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 		)
 	)
 	_expect(
-		is_equal_approx(applied, 25.0)
-			and is_equal_approx(health_before - boss.health, 25.0),
-		"raised boss shield reduces damage to twenty-five percent"
+		is_equal_approx(applied, 15.0)
+			and is_equal_approx(health_before - boss.health, 15.0),
+		"raised boss shield reduces damage to fifteen percent"
 	)
 	_expect(
 		run.effects.size() == effect_count_before,

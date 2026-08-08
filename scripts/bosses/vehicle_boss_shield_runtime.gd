@@ -7,7 +7,7 @@ extends RefCounted
 
 const Catalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 
-const SHIELDED_DAMAGE_MULTIPLIER := 0.25
+const SHIELDED_DAMAGE_MULTIPLIER := 0.15
 const EXPOSED_DAMAGE_MULTIPLIER := 1.00
 const SHIELD_DOWN_SECONDS := 4.0
 const HINT_REPEAT_COOLDOWN := 2.0

@@ -4,6 +4,7 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 
 var failures: Array[String] = []
 
@@ -57,6 +58,58 @@ func _run() -> void:
 		),
 		"boss movement preserves the committed-attack multiplier"
 	)
+	var health_curve := [0.85, 1.00, 1.15, 1.30, 1.45]
+	var boss_bases := [1250.0, 1350.0, 1450.0, 1550.0, 1650.0]
+	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health uses the locked five-stage curve")
+	for stage_index in health_curve.size():
+		stage.current_stage_index = stage_index
+		var standard_enemy = stage.call("_make_enemy", {
+			"id":"standard_health_%d" % stage_index,
+			"role":&"chaser",
+			"pos":Vector2.ZERO,
+		})
+		var priority_enemy = stage.call("_make_enemy", {
+			"id":"priority_health_%d" % stage_index,
+			"role":&"repair_tender",
+			"pos":Vector2.ZERO,
+		})
+		var stage_boss = stage.call("_make_enemy", {
+			"id":"boss_health_%d" % stage_index,
+			"role":&"stage_boss",
+			"pos":Vector2.ZERO,
+		})
+		_expect(
+			_near(
+				standard_enemy.health,
+				48.0 * EncounterDirector.ENEMY_HEALTH_MULTIPLIER
+					* health_curve[stage_index]
+					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER,
+				0.001
+			),
+			"Stage %d applies class and stage factors to standard health"
+				% (stage_index + 1)
+		)
+		_expect(
+			_near(
+				priority_enemy.health,
+				74.0 * health_curve[stage_index]
+					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER,
+				0.001
+			),
+			"Stage %d applies only the stage factor to priority health"
+				% (stage_index + 1)
+		)
+		_expect(
+			_near(
+				stage_boss.health,
+				boss_bases[stage_index]
+					* StageDifficulty.BOSS_HEALTH_MULTIPLIER,
+				0.001
+			),
+			"Stage %d leaves the authored boss-health curve unchanged"
+				% (stage_index + 1)
+		)
+	stage.current_stage_index = 0
 	var hard_damage := float(stage.call("_scaled_incoming_damage", 10.0, true))
 	var hard_final_damage := float(stage.call("_scaled_incoming_damage", 10.0, true, true))
 	stage.selected_run_difficulty = &"easy"

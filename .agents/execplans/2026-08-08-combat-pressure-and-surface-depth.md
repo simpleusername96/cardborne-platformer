@@ -326,14 +326,14 @@ Source owners: `scripts/enemies/vehicle_stage_difficulty.gd`,
 difficulty/boss/movement/Run validators, including
 `tools/validation/validate_vehicle_enemy_movement_policy.gd`
 
-- [ ] **3.1** Apply the locked numeric contracts at their existing owners.
+- [x] **3.1** Apply the locked numeric contracts at their existing owners.
   - Change: set ordinary health curve to `[0.85,1.00,1.15,1.30,1.45]` and shielded boss damage
     multiplier to `0.15`. Do not change `ORDINARY_HEALTH_MULTIPLIER`, boss HP, exposed multiplier,
     shield-down duration, damage/speed curves, or `final_effective` handling.
   - Accept: Stage 1 ordinary health is exactly 85% of the current formula; successive stages add
     exactly 0.15 of the authored/current-final baseline; 100 ordinary incoming damage applies 15
     while shielded and 100 while exposed.
-- [ ] **3.2** Update balance truth and regression examples.
+- [x] **3.2** Update balance truth and regression examples.
   - Change: update the product spec and exact validator mirrors; add examples for a class-factor
     enemy and a no-class-factor enemy across stages; assert boss health is unchanged.
   - Accept: difficulty, boss-exam, boss-pattern, and Run validators pass and no stale 0.25 or old
@@ -648,13 +648,12 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 3 - Rebalance health, shielding, and role movement.
-- Next task: 3.1 - Apply the locked ordinary-health curve. Task 1.2 remains deferred until
+- Next task: 3.3 - Centralize role movement intent. Task 1.2 remains deferred until
   user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
-- Last completed gate: Phase 2 removed map hazards across generation, runtime, presentation,
-  guidebook/localization, manifest/workbench, specs, and validators while preserving Transit
-  Gates and boss `denied_zones`. Field layout, terrain, stage layout/transition, map mechanics,
-  guidebook, semantic asset/separation, visual replacement, world visuals, Run, workbench, visual
-  authority, and `git diff --check` passed with 67 remaining gameplay PNGs.
+- Last completed gate: Tasks 3.1-3.2 applied the ordinary-health curve
+  `[0.85,1.00,1.15,1.30,1.45]` and shield multiplier `0.15`; class-factor,
+  no-class-factor, and unchanged boss-health examples pass difficulty, boss-exam, boss-pattern,
+  and Run validation.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 

@@ -85,7 +85,8 @@ five-stage run.
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
 All non-boss enemy archetypes receive a final `2.60` health multiplier after the
-fixed profile and stage curve. Boss health receives a separate final `2.60`
+fixed profile and stage curve. The five ordinary health curve values are
+`[0.85, 1.00, 1.15, 1.30, 1.45]`. Boss health receives a separate final `2.60`
 multiplier on its authored curve.
 Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
 `0.75 s`; both healing outputs are twice their previous values.
@@ -334,7 +335,7 @@ active window, and recovery. Routine hits never interrupt or stop the boss, and
 every direct pattern remains committed after its warning appears.
 
 Each boss owns one body-attached shield and no external objective actor.
-`shield_up` applies `0.25×` damage. Completing a direct boss attack lowers the
+`shield_up` applies `0.15×` damage. Completing a direct boss attack lowers the
 shield for four seconds, during which damage is `1.00×`, then the shield returns.
 Phase thresholds start the next phase and raise the shield but are not HP floors.
 The boss body owns the shield state and one always-visible world-attached health

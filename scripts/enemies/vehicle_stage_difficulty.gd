@@ -4,7 +4,7 @@ extends RefCounted
 ## Bounded stage-to-stage stat progression. Telegraph and projectile timing are
 ## intentionally excluded so difficulty grows without invalidating reactions.
 
-const HEALTH := [1.0, 1.04, 1.08, 1.12, 1.16]
+const HEALTH := [0.85, 1.00, 1.15, 1.30, 1.45]
 const DAMAGE := [1.0, 1.03, 1.06, 1.09, 1.12]
 const SPEED := [1.0, 1.01, 1.02, 1.03, 1.04]
 const ORDINARY_HEALTH_MULTIPLIER := 2.60

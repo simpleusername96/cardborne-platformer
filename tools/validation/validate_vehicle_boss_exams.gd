@@ -54,7 +54,7 @@ func _validate_shield_cycle() -> void:
 		var payload := runtime.begin_phase(1)
 		_expect(
 			runtime.state() == &"shield_up"
-				and is_equal_approx(runtime.boss_damage_multiplier(), 0.25)
+				and is_equal_approx(runtime.boss_damage_multiplier(), 0.15)
 				and not payload.has("modules"),
 			"%s starts with one boss-owned shield and no external objective" % stage_id
 		)
@@ -73,7 +73,7 @@ func _validate_shield_cycle() -> void:
 		runtime.advance(Runtime.SHIELD_DOWN_SECONDS + 0.01)
 		_expect(
 			runtime.state() == &"shield_up"
-				and is_equal_approx(runtime.boss_damage_multiplier(), 0.25),
+				and is_equal_approx(runtime.boss_damage_multiplier(), 0.15),
 			"%s shield returns after the bounded window" % stage_id
 		)
 		var transition := runtime.try_advance_phase(650.0, 1000.0)
