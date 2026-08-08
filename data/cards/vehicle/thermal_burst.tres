@@ -4,9 +4,9 @@
 
 [resource]
 script = ExtResource("1_def")
-id = &"thermal_burn"
-title_key = "UPGRADE_THERMAL_BURN_TITLE"
-description_key = "UPGRADE_THERMAL_BURN_DESC"
+id = &"thermal_burst"
+title_key = "UPGRADE_THERMAL_BURST_TITLE"
+description_key = "UPGRADE_THERMAL_BURST_DESC"
 category = &"element"
 artwork_asset_id = &"upgrade/element_thermal"
 max_level = 3

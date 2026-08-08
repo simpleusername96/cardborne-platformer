@@ -41,7 +41,7 @@ Dash와 EMP는 기본 액션으로 유지하지만 관련 업그레이드 카드
 | --- | --- | --- | ---: |
 | `primary` | 주무기 개조 / Primary Weapon Mods | 기본 탄환의 형태와 충돌 규칙을 바꾼다 | 2 |
 | `secondary` | 보조 무기 체계 / Secondary Weapon Systems | 추적 미사일 또는 자율 보조 무기를 바꾼다 | 4 |
-| `element` | 공격 속성 부여 / Attack Status Effects | 적격 공격에 화염·독·냉기 상태를 부여한다 | 3 |
+| `element` | 공격 속성 부여 / Attack Elements | 주무기에 열폭발·독·냉기 중 하나를 부여한다 | 3 |
 | `chassis` | 차체 및 지원 / Chassis & Support | 이동·수거·내구·회복 수치를 영구 변경한다 | 4 |
 
 `category`는 카드가 어느 성장 축에 속하는지만 나타낸다. 보조 무기 슬롯은
@@ -90,11 +90,11 @@ Dash와 EMP는 기본 액션으로 유지하지만 관련 업그레이드 카드
 유지하면서 표시 반지름을 44로 키웠다. 회전 칼날도 판정은 유지하고 표시
 반지름을 이전의 두 배인 38로 키웠다.
 
-### 공격 속성 부여 / Attack Status Effects
+### 공격 속성 부여 / Attack Elements
 
 | ID | 한국어 / English | 레벨 | 정확한 효과 |
 | --- | --- | ---: | --- |
-| `thermal_burn` | 화염 부여 / Thermal Burn | 3 | 적격 공격이 최대 3중첩의 화염을 부여한다. L1/L2/L3: 중첩당 2/3/4 DPS, 지속 3/4/5초. |
+| `thermal_burst` | 열폭발 / Thermal Burst | 3 | 반사되지 않은 주무기 탄환이 적에게 직접 명중하면 직접 대상 외 주변 적에게 폭발 피해를 준다. L1/L2/L3: 반경 72/84/96, 피해 4/6/8. |
 | `bio_toxin` | 독 부여 / Bio Toxin | 3 | 적격 공격이 최대 3중첩의 독을 부여한다. L1/L2/L3: 중첩당 2/3/4 DPS, 지속 5/6/7초. |
 | `cryo_slow` | 냉기 부여 / Cryo Slow | 3 | 적격 공격이 최대 3중첩의 냉기를 부여한다. L1/L2/L3: 중첩당 이동·공격 속도 6%/8%/10% 감소, 지속 2/2.5/3초. 보스는 감속량과 지속 시간이 절반이다. |
 
@@ -153,7 +153,7 @@ Dash와 EMP는 기본 액션으로 유지하지만 관련 업그레이드 카드
 | `ion_field` | `electric_field` |
 | `orbit_blades` | `orbiting_blades` |
 | `wake_mines` | `drop_mines` |
-| `incendiary_core` | `thermal_burn` |
+| `incendiary_core` | `thermal_burst` |
 | `toxin_core` | `bio_toxin` |
 | `cryo_core` | `cryo_slow` |
 | `tuned_thrusters` | `chassis_speed` |
@@ -201,7 +201,8 @@ Dash와 EMP는 기본 액션으로 유지하지만 관련 업그레이드 카드
   `scripts/cards/vehicle_run_build.gd`
 - 실제 동작: `scripts/vehicle/vehicle_run.gd`,
   `scripts/player/vehicle_secondary_runtime.gd`,
-  `scripts/combat/vehicle_status_profile.gd`
+  `scripts/combat/vehicle_element_profile.gd`,
+  `scripts/combat/vehicle_status_runtime.gd`
 - 카드 표시: `scripts/cards/vehicle_upgrade_offer_presenter.gd`,
   `scripts/ui/vehicle_upgrade_choice_card.gd`
 - 한국어·영어 문구: `localization/vehicle_stage.csv`

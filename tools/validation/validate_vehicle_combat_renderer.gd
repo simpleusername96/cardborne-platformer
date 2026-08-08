@@ -97,7 +97,6 @@ func _run() -> void:
 	enemy.health_visible_timer = 1.0
 	enemy.phase = &"startup"
 	enemy.statuses = {
-		&"burn":{"stacks":3},
 		&"poison":{"stacks":2},
 		&"chill":{"stacks":1},
 	}
@@ -270,7 +269,7 @@ func _run() -> void:
 			and player_craft.texture != null,
 		"one authored craft body remains centered and follows the hull direction"
 	)
-	for status_id in [&"burn", &"poison", &"chill"]:
+	for status_id in [&"poison", &"chill"]:
 		_expect(
 			renderer.get_node_or_null("Status_%s" % status_id) == null,
 			"%s does not create a raster orbit icon" % status_id

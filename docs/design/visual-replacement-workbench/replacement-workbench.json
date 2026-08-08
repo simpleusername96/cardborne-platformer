@@ -558,7 +558,7 @@
         "state/player_ion_emitter",
         "state/poison"
       ],
-      "direction_en": "Retire all seven presentation-only overlays. Preserve protection, radius, burn, poison, chill, stacks, damage, slow, and timing through existing gameplay state plus restrained code-native ring, actor tint, meter, and localized target-status text.",
+      "direction_en": "Retire all seven legacy presentation-only overlays. Preserve protection, radius, poison, chill, stacks, damage, slow, and timing through gameplay state plus restrained code-native ring, actor tint, meter, and localized target-status text. Thermal Burst is immediate damage and has no persistent overlay.",
       "deliverables": [],
       "final_paths": [],
       "reuse_paths": [],

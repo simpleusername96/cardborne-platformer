@@ -258,7 +258,7 @@ collision.
   image is exclusive to homing Seeker shots and the hostile bolt is not reused by
   player weapons. Runtime applies facing, the reduced presentation scale, and
   selected-element tint to player-primary shots.
-- barrier, ion, shield source와 burn/poison/chill은 별도 raster asset을 갖지
+- barrier, ion, shield source와 poison/chill은 별도 raster asset을 갖지
   않는다. 보호와 범위는 shared authored ring과 runtime tint/scale로 전달한다.
   작은 속성 actor effect와 damage number는 표시하지 않고, 필요한 지속 상태는
   localized target-status text로만 전달한다. cosmetic emitter, plate, orbit icon은
@@ -395,7 +395,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   bolt는 authored identity를 유지한다. cadence, speed, homing, collision과 damage는
   gameplay code가 소유한다.
 - hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
-  않는 persistent condition을 약속하지 않는다. burn/poison/chill은 별도
+  않는 persistent condition을 약속하지 않는다. poison/chill은 별도
   projectile badge나 orbit icon 없이 실제 actor state feedback으로만 표시한다.
 - projectile startup과 이미 생성된 projectile은 발사원 가시성과 관계없이
   예측 경로 또는 진입선을 표시하지 않는다. 화면 밖 발사원의 공격은 threat

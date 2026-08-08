@@ -1,23 +1,18 @@
 class_name VehicleStatusRuntime
 extends RefCounted
 
-## Applies bounded independent elemental stacks and returns explicit DOT damage.
+## Applies bounded persistent Toxin/Chill stacks and returns explicit toxin DOT.
 
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
-const StatusProfile = preload("res://scripts/combat/vehicle_status_profile.gd")
+const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
 
 const TICK_SECONDS := 0.25
-const DOT_KINDS: Array[StringName] = [&"burn", &"poison"]
+const DOT_KINDS: Array[StringName] = [&"poison"]
 
 
-static func apply(enemy: EnemyState, profile: VehicleStatusProfile) -> void:
+static func apply(enemy: EnemyState, profile: VehicleElementProfile) -> void:
 	if profile == null:
 		return
-	if profile.burn_enabled:
-		_add_stack(
-			enemy, &"burn", profile.burn_dps_per_stack, profile.burn_duration,
-			profile.burn_max_stacks
-		)
 	if profile.poison_enabled:
 		_add_stack(
 			enemy, &"poison", profile.poison_dps_per_stack, profile.poison_duration,
@@ -40,7 +35,7 @@ static func apply(enemy: EnemyState, profile: VehicleStatusProfile) -> void:
 
 static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 	var statuses := enemy.statuses
-	var damage := {"burn":0.0, "poison":0.0}
+	var damage := {"poison":0.0}
 	if statuses.is_empty():
 		return damage
 	for kind in DOT_KINDS:

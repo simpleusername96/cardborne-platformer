@@ -21,7 +21,7 @@ const EXPECTED_IDS: Array[StringName] = [
 	&"bio_toxin", &"chassis_speed", &"cryo_slow", &"drop_mines",
 	&"electric_field", &"homing_missiles", &"hull_integrity", &"lifesteal",
 	&"orbiting_blades", &"pickup_radius", &"piercing_rounds",
-	&"split_muzzle", &"thermal_burn",
+	&"split_muzzle", &"thermal_burst",
 ]
 
 var definitions: Dictionary = {}

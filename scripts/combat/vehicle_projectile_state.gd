@@ -25,7 +25,7 @@ var wall_piercing := false
 var affinity: StringName = AttackContract.KINETIC
 var threat_tier: StringName = AttackContract.THREAT_ORDINARY
 var condition_mask := 0
-var status_profile: VehicleStatusProfile
+var element_profile: VehicleElementProfile
 var team: StringName = &""
 var spawn_serial := 0
 var uses_boss_reserve := false
@@ -58,7 +58,7 @@ func configure(
 		StringName(spec.get("threat_tier", AttackContract.THREAT_ORDINARY))
 	)
 	condition_mask = int(spec.get("condition_mask", 0)) & AttackContract.CONDITION_MASK
-	status_profile = spec.get("status_profile") as VehicleStatusProfile
+	element_profile = spec.get("element_profile") as VehicleElementProfile
 	team = team_value
 	spawn_serial = serial
 	uses_boss_reserve = boss_reserve

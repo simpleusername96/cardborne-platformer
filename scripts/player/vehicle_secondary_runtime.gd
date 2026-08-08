@@ -205,7 +205,7 @@ func _update_seeker(
 			"target_id": target.id,
 			"explosive": false,
 			"structure_damage": 25.0,
-			"status_profile": null,
+			"element_profile": null,
 			"wall_piercing": false,
 		})
 

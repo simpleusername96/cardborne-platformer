@@ -26,10 +26,9 @@ const AFFINITIES: Array[StringName] = [
 	KINETIC, THERMAL, TOXIN, CRYO, ARC, HYBRID, SUPPORT,
 ]
 
-const CONDITION_BURN := 1
-const CONDITION_POISON := 2
-const CONDITION_CHILL := 4
-const CONDITION_MASK := CONDITION_BURN | CONDITION_POISON | CONDITION_CHILL
+const CONDITION_POISON := 1
+const CONDITION_CHILL := 2
+const CONDITION_MASK := CONDITION_POISON | CONDITION_CHILL
 
 const HOSTILE_PROJECTILE_LIFETIME := 2.2
 const PROJECTILE_TELEGRAPH_LEAD_SECONDS := 0.36
@@ -166,8 +165,6 @@ static func condition_mask_for_profile(profile: Variant) -> int:
 	if profile == null:
 		return 0
 	var result := 0
-	if bool(profile.burn_enabled):
-		result |= CONDITION_BURN
 	if bool(profile.poison_enabled):
 		result |= CONDITION_POISON
 	if bool(profile.chill_enabled):
@@ -177,13 +174,11 @@ static func condition_mask_for_profile(profile: Variant) -> int:
 
 static func affinity_for_condition_mask(mask: int) -> StringName:
 	var normalized := mask & CONDITION_MASK
-	if normalized == CONDITION_BURN:
-		return THERMAL
 	if normalized == CONDITION_POISON:
 		return TOXIN
 	if normalized == CONDITION_CHILL:
 		return CRYO
-	if normalized != 0:
+	if normalized == CONDITION_MASK:
 		return HYBRID
 	return KINETIC
 
@@ -206,7 +201,7 @@ static func validate_contract() -> PackedStringArray:
 		Rules.PLAYER_RADIUS + STANDARD_PROJECTILE_RADIUS
 	):
 		errors.append("projectile warning must expose the player-center hit footprint")
-	if affinity_for_condition_mask(CONDITION_BURN | CONDITION_POISON) != HYBRID:
+	if affinity_for_condition_mask(CONDITION_POISON | CONDITION_CHILL) != HYBRID:
 		errors.append("multi-condition projectiles must use the hybrid affinity")
 	if (
 		PROJECTILE_TELEGRAPH_LEAD_SECONDS <= 0.0

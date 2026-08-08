@@ -57,8 +57,6 @@ static func _attribute_rows(
 		var damage := maxf(0.0, float(values.get(attribute, 0.0)))
 		var applications := 0
 		match StringName(attribute):
-			&"thermal":
-				applications = int(status_applications.get(&"burn", 0))
 			&"toxin":
 				applications = int(status_applications.get(&"poison", 0))
 			&"cryo":

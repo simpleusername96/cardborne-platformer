@@ -2,7 +2,7 @@ class_name VehicleRunBuild
 extends RefCounted
 
 const ELEMENT_UPGRADE_IDS: Array[StringName] = [
-	&"thermal_burn", &"bio_toxin", &"cryo_slow",
+	&"thermal_burst", &"bio_toxin", &"cryo_slow",
 ]
 
 var catalog: VehicleUpgradeCatalog

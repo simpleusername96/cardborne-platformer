@@ -144,10 +144,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   and stops outside it.
 - `Affinity` is an attack's impact family and controls large color and trail
   shape cues: kinetic, thermal, toxin, cryo, arc, hybrid, or support.
-  `Condition` means a real persistent burn, poison, or chill payload. Thermal,
-  toxin, or cryo presentation alone never invents a condition. Current hostile
-  attacks apply direct damage only; player primary rounds derive affinity from
-  the one selected condition payload. Multi-condition player rounds are not legal.
+  `Condition` means a real persistent poison or chill payload. Thermal Burst is
+  immediate thermal area damage and never creates a persistent condition.
+  Thermal, toxin, or cryo presentation alone never invents a condition. Current
+  hostile attacks apply direct damage only; player primary rounds derive affinity
+  from the one selected element. Multi-element player rounds are not legal.
 - Every projectile stops at the same static or run-selected inner wall that blocks
   the ship. A live crate also blocks line of sight and both projectile teams;
   hostile fire is absorbed without destroying the reward crate, while player
@@ -379,7 +380,7 @@ does not produce a transient message.
   `0.5%` Lifesteal. The Lifesteal card raises the total rate to `2%`/`3.5%`.
   Recovery uses actual player-owned enemy damage, has a six-Hull capacity that
   replenishes at six Hull per second, and never exceeds maximum Hull.
-- Thermal Burn, Bio Toxin, and Cryo Slow are mutually exclusive complete packages.
+- Thermal Burst, Bio Toxin, and Cryo Slow are mutually exclusive complete packages.
   The first selected root locks the other two out of future offers, and only that
   root's later levels remain eligible. Its affinity changes player-primary projectile
   color. The selected condition accumulates bounded stacks and Korean/English
@@ -413,7 +414,7 @@ does not produce a transient message.
   cues. Dash feedback uses a directional afterimage and rear-anchor flare,
   never a danger ring or radial burst.
 - The transient effect buffer contains only dash afterimage and EMP charge/release.
-  Floating damage numbers and small burn/poison/chill actor effects are not rendered. Attack footprints,
+  Floating damage numbers and small poison/chill actor effects are not rendered. Attack footprints,
   projectiles, hits, arrivals, deaths, pickups, and persistent states render
   from their gameplay, actor, world, HUD, or audio owners without cosmetic
   event objects.

@@ -389,7 +389,7 @@ Source owners: card resource/catalog/build, `scripts/combat/vehicle_element_prof
 `scripts/combat/vehicle_projectile_state.gd`, `scripts/vehicle/vehicle_run.gd`, damage source,
 telemetry/report owners, localization, product/catalog docs, and focused validators
 
-- [ ] **4.1** Align the elemental domain language.
+- [x] **4.1** Align the elemental domain language.
   - Change: replace `thermal_burn` with `thermal_burst` in the run-only card/build/catalog
     contract; replace `VehicleStatusProfile` with immutable `VehicleElementProfile`; make thermal
     affinity explicit while condition masks contain only persistent Toxin and Chill. Keep
@@ -397,7 +397,7 @@ telemetry/report owners, localization, product/catalog docs, and focused validat
   - Accept: no live burn DPS, duration, stack, condition bit, report source, localization, or test
     remains; Toxin/Chill behavior and mutual exclusion are unchanged; generic thermal artwork is
     still the card art.
-- [ ] **4.2** Apply bounded enemy-only burst damage on primary hits.
+- [x] **4.2** Apply bounded enemy-only burst damage on primary hits.
   - Change: put level values `radius=[72,84,96]`, `damage=[4,6,8]` in the element profile. On each
     eligible direct hit, use the existing spatial grid to damage targetable nearby enemies once,
     excluding the direct target and all structures/devices/facility. Do not scan the full enemy
@@ -405,12 +405,12 @@ telemetry/report owners, localization, product/catalog docs, and focused validat
   - Accept: normal, split, and piercing primary hits follow the contract; Seekers, EMP, status
     ticks, reflected shots, splash hits, and structure-only hits do not trigger a burst; a nearby
     boss receives its normal shield multiplier.
-- [ ] **4.3** Preserve readable thermal feedback without expanding the visual workload.
+- [x] **4.3** Preserve readable thermal feedback without expanding the visual workload.
   - Change: keep thermal projectile affinity/color, reuse current impact audio, and use existing
     per-target hit feedback for every damaged target. Add no effect-store kind or geometry.
   - Accept: combat renderer and attack-contract captures show thermal primary projectiles and
     distinct affected-target feedback without a persistent radius or extra live effects.
-- [ ] **4.4** Update product copy, reporting, and focused validation.
+- [x] **4.4** Update product copy, reporting, and focused validation.
   - Change: title the card `열폭발` / `Thermal Burst`; describe primary-hit area damage in both
     languages; attribute splash as `thermal_burst`/thermal player damage; update catalog count and
     state assertions only if the rename actually changes them.
@@ -647,14 +647,14 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3 - Rebalance health, shielding, and role movement.
-- Next task: 3.6 - Capture one pursuit/ranged movement fixture; policy implementation is ready.
-  Task 1.2 remains deferred until
+- Current phase: Phase 5 - Authorize and integrate SurfaceDetail.
+- Next task: 5.2 - Replace the dormant floor-pattern owner. Task 3.6 retains its rendered
+  pursuit/ranged capture for final runtime QA. Task 1.2 remains deferred until
   user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
-- Last completed gate: Tasks 3.3-3.5 centralize movement families, continuous band steering,
-  response smoothing, and approach-only blocked-path route guidance. Deterministic policy,
-  local-steering, scheduler, attack-contract, and Run validators pass; Task 3.6 retains the
-  rendered capture check for final runtime QA.
+- Last completed gate: Phase 4 replaces Thermal Burn with the bounded Thermal Burst contract.
+  Element/status, attack-contract, dense-group and shield-adjacency burst, upgrade, telemetry,
+  report, localization, renderer, projectile, workbench, and Run validators pass with no new live
+  effect kind.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 

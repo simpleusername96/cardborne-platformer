@@ -133,7 +133,7 @@ func _validate_secondary_slots(catalog: Catalog) -> void:
 func _validate_element_lock(catalog: Catalog) -> void:
 	var build := RunBuild.new(catalog)
 	_expect(
-		catalog.compatible(catalog.get_definition(&"thermal_burn"), build)
+		catalog.compatible(catalog.get_definition(&"thermal_burst"), build)
 			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
 			and catalog.compatible(catalog.get_definition(&"cryo_slow"), build),
 		"all three elemental roots are legal before selection"
@@ -142,7 +142,7 @@ func _validate_element_lock(catalog: Catalog) -> void:
 	_expect(
 		build.active_element_id() == &"bio_toxin"
 			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
-			and not catalog.compatible(catalog.get_definition(&"thermal_burn"), build)
+			and not catalog.compatible(catalog.get_definition(&"thermal_burst"), build)
 			and not catalog.compatible(catalog.get_definition(&"cryo_slow"), build),
 		"the selected element remains levelable and excludes other roots"
 	)

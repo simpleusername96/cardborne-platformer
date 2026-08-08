@@ -4,7 +4,7 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
-const StatusProfile = preload("res://scripts/combat/vehicle_status_profile.gd")
+const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
 
 var failures: Array[String] = []
 
@@ -108,24 +108,22 @@ func _initialize() -> void:
 		"path clipping leaves a missed circle untouched"
 	)
 
-	var profile := StatusProfile.new()
-	profile.burn_enabled = true
+	var profile := ElementProfile.new()
+	profile.thermal_enabled = true
 	_expect(
-		AttackContract.affinity_for_condition_mask(
-			AttackContract.condition_mask_for_profile(profile)
-		) == AttackContract.THERMAL,
-		"a burn payload presents as thermal"
+		AttackContract.condition_mask_for_profile(profile) == 0
+			and profile.affinity() == AttackContract.THERMAL,
+		"thermal affinity is explicit and does not claim a persistent condition"
 	)
 	profile.poison_enabled = true
+	profile.chill_enabled = true
 	_expect(
 		AttackContract.affinity_for_condition_mask(
 			AttackContract.condition_mask_for_profile(profile)
 		) == AttackContract.HYBRID,
-		"stacked burn and poison payloads present as hybrid"
+		"combined persistent toxin and chill payloads present as hybrid"
 	)
-	profile.burn_enabled = false
 	profile.poison_enabled = false
-	profile.chill_enabled = true
 	_expect(
 		AttackContract.affinity_for_condition_mask(
 			AttackContract.condition_mask_for_profile(profile)

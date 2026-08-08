@@ -24,7 +24,7 @@ const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const LifestealRuntime = preload("res://scripts/cards/vehicle_lifesteal_runtime.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
-const StatusProfile = preload("res://scripts/combat/vehicle_status_profile.gd")
+const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
@@ -209,7 +209,7 @@ var selected_upgrade_title_key := "UPGRADE_NONE"
 var upgrade_catalog := UpgradeCatalog.new()
 var run_build := RunBuild.new(upgrade_catalog)
 var lifesteal_runtime := LifestealRuntime.new()
-var _status_profile: VehicleStatusProfile = StatusProfile.from_build(run_build)
+var _element_profile: VehicleElementProfile = ElementProfile.from_build(run_build)
 var experience_runtime := ExperienceRuntime.new()
 var applied_upgrades: Dictionary = run_build.levels
 var current_card_offer: Array[Dictionary] = []
@@ -776,7 +776,7 @@ func _reset_run(
 		experience_runtime.clear_shards()
 		experience_runtime.pending_level_ups = 0
 		reward_runtime.reset_stage()
-	_status_profile = StatusProfile.from_build(run_build)
+	_element_profile = ElementProfile.from_build(run_build)
 	lifesteal_runtime.reset(run_build.stat(&"lifesteal_percent", 0.0))
 	secondary_runtime.reset(player_position)
 	experience_recall_timer = 0.0
@@ -1521,7 +1521,7 @@ func _fire_primary() -> void:
 			PRIMARY_PROJECTILE_RADIUS,
 			18.0 * scale,
 			projectile_range,
-			_status_profile,
+			_element_profile,
 			false
 		)
 func _try_fire_primary() -> bool:
@@ -1706,11 +1706,15 @@ func _spawn_player_projectile(
 	radius: float = PRIMARY_PROJECTILE_RADIUS,
 	structure_damage: float = -1.0,
 	projectile_range: float = PRIMARY_RANGE,
-	status_profile: VehicleStatusProfile = null,
+	element_profile: VehicleElementProfile = null,
 	wall_piercing: bool = false
 ) -> void:
-	var condition_mask := AttackContract.condition_mask_for_profile(status_profile)
-	var affinity := AttackContract.affinity_for_condition_mask(condition_mask)
+	var condition_mask := AttackContract.condition_mask_for_profile(element_profile)
+	var affinity := (
+		AttackContract.normalize_affinity(element_profile.affinity())
+		if element_profile != null
+		else AttackContract.KINETIC
+	)
 	projectile_store.add_player({
 		"pos": origin,
 		"velocity": direction.normalized() * speed,
@@ -1731,7 +1735,7 @@ func _spawn_player_projectile(
 		"condition_mask": condition_mask,
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
-		"status_profile": status_profile,
+		"element_profile": element_profile,
 	})
 
 
@@ -2019,9 +2023,7 @@ func _update_enemies(delta: float) -> void:
 	for enemy in _enemy_update_schedule.active:
 		if not enemy.statuses.is_empty():
 			var status_damage := StatusRuntime.tick(enemy, delta)
-			if float(status_damage["burn"]) > 0.0:
-				_damage_enemy(enemy, float(status_damage["burn"]), "status", &"thermal", true)
-			if enemy.alive and float(status_damage["poison"]) > 0.0:
+			if float(status_damage["poison"]) > 0.0:
 				_damage_enemy(enemy, float(status_damage["poison"]), "status", &"toxin", true)
 				if not enemy.alive:
 					continue
@@ -3459,8 +3461,20 @@ func _update_projectile_buffer(
 					direct_attribute,
 					true
 				)
-				StatusRuntime.apply(hit_enemy, projectile.status_profile)
-				_record_status_applications(projectile.status_profile)
+				StatusRuntime.apply(hit_enemy, projectile.element_profile)
+				_record_status_applications(projectile.element_profile)
+				if (
+					projectile.element_profile != null
+					and projectile.element_profile.can_trigger_thermal_burst(
+						projectile.owner, projectile.reflected
+					)
+					and not _is_fixed_structure_enemy(hit_enemy)
+				):
+					_apply_thermal_burst(
+						hit_enemy,
+						hit_position,
+						projectile.element_profile
+					)
 				stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
 				_play_sound(&"impact", _rng.randf_range(0.92, 1.08))
 				if projectile.explosive:
@@ -3894,11 +3908,9 @@ func _telemetry_attribute_for_affinity(affinity: StringName) -> StringName:
 	return &"kinetic"
 
 
-func _record_status_applications(profile: StatusProfile) -> void:
+func _record_status_applications(profile: ElementProfile) -> void:
 	if profile == null or boss_practice.active:
 		return
-	if profile.burn_enabled:
-		stage_telemetry.record_status_application(&"burn")
 	if profile.poison_enabled:
 		stage_telemetry.record_status_application(&"poison")
 	if profile.chill_enabled:
@@ -4161,6 +4173,34 @@ func _damage_enemies_in_radius(
 			_damage_reinforcement_facility(damage, &"area")
 
 
+func _apply_thermal_burst(
+	direct_target: EnemyState,
+	center: Vector2,
+	profile: VehicleElementProfile
+) -> void:
+	## One bounded splash query per eligible primary contact. Splash never
+	## targets its direct hit, fixed structures, devices, or facilities.
+	if profile == null or not profile.thermal_enabled:
+		return
+	var radius := profile.thermal_burst_radius
+	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
+	for enemy in _enemy_query_buffer:
+		if (
+			enemy == direct_target
+			or not _is_player_targetable_enemy(enemy)
+			or _is_fixed_structure_enemy(enemy)
+		):
+			continue
+		if enemy.pos.distance_to(center) <= radius + enemy.radius:
+			_damage_enemy(
+				enemy,
+				profile.thermal_burst_damage,
+				"thermal_burst",
+				&"thermal",
+				true
+			)
+
+
 func _reinforcement_facility_hit_is_first(
 	from: Vector2,
 	to: Vector2,
@@ -4391,7 +4431,7 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 	if upgrade_id == &"hull_integrity":
 		player_health = minf(_player_max_health(), player_health + 15.0)
 	lifesteal_runtime.configure(run_build.stat(&"lifesteal_percent", 0.0))
-	_status_profile = StatusProfile.from_build(run_build)
+	_element_profile = ElementProfile.from_build(run_build)
 	_hud_presenter.mark_guidebook_dirty()
 	upgrade_selection_applied = true
 	return true
