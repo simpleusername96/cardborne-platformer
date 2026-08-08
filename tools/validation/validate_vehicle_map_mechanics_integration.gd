@@ -31,7 +31,6 @@ func _run() -> void:
 		_validate_device_collision_and_damage_authority(run)
 		_validate_projectile_purge_scope(run)
 		_validate_effect_targeting(run)
-		_validate_hazard_damage_path(run)
 	game_root.queue_free()
 	await process_frame
 	_finish()
@@ -140,32 +139,6 @@ func _validate_effect_targeting(run) -> void:
 		"decoy signal redirects a fresh enemy attack toward its anchor"
 	)
 	_expect(boss.pos == boss_before and structure.pos == structure_before, "decoy signal ignores bosses and structures")
-
-
-func _validate_hazard_damage_path(run) -> void:
-	var hazard := Rect2()
-	for feature in run.terrain_runtime.features:
-		if feature.kind == &"hazard_zone":
-			hazard = feature.rect
-			break
-	_expect(hazard.has_area(), "run exposes a hazard-zone fixture")
-	if not hazard.has_area():
-		return
-	var center := hazard.get_center()
-	var outside := Vector2(hazard.position.x - 120.0, center.y)
-	run.player_position = center
-	run.player_health = run._player_max_health()
-	run.call("_update_terrain", 0.1, outside)
-	_expect(is_equal_approx(run._player_max_health() - run.player_health, 5.0), "VehicleRun applies the player hazard damage value of 5")
-	run.call("_clear_enemies")
-	var ordinary = _append_enemy(run, &"chaser", "validation_hazard_ordinary", center)
-	var boss = _append_enemy(run, &"stage_boss", "validation_hazard_boss", center + Vector2(40.0, 0.0))
-	var ordinary_before: float = ordinary.health
-	var boss_before: float = boss.health
-	run.call("_apply_hazard_damage_to_enemy", ordinary, outside, ordinary.pos, 0.1)
-	run.call("_apply_hazard_damage_to_enemy", boss, outside, boss.pos, 0.1)
-	_expect(is_equal_approx(ordinary_before - ordinary.health, 8.0), "VehicleRun applies the ordinary hazard damage value of 8")
-	_expect(is_equal_approx(boss_before - boss.health, 3.0), "VehicleRun applies the boss hazard damage value of 3")
 
 
 func _expect(condition: bool, message: String) -> void:

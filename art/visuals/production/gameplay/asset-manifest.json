@@ -27,7 +27,7 @@
     "shared_world_cue_rule": "Fixed world surface, wall, health-frame, ring, beam, marker, disk, and crosshair identities are authored PNGs. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, and live timing remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 69,
+  "final_asset_count": 67,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -109,8 +109,6 @@
     {"id": "world/facility_overdrive_pad", "path": "world/facility_overdrive_pad.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
     {"id": "world/facility_arc_surge_strip", "path": "world/facility_arc_surge_strip.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
     {"id": "world/facility_transit_gate", "path": "world/facility_transit_gate.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
-    {"id": "world/hazard_toxic_bog", "path": "world/hazard_toxic_bog.png", "canvas": [1024, 768], "content_rect": [12, 64, 1000, 639], "pivot": [512, 383.5], "category": "world"},
-    {"id": "world/hazard_lava_pool", "path": "world/hazard_lava_pool.png", "canvas": [1024, 768], "content_rect": [12, 54, 1000, 660], "pivot": [512, 384], "category": "world"},
     {"id": "world/mystery_device_intact", "path": "world/mystery_device_intact.png", "canvas": [384, 384], "content_rect": [6, 5, 372, 374], "pivot": [192, 192], "category": "world"},
     {"id": "world/mystery_device_resolved", "path": "world/mystery_device_resolved.png", "canvas": [384, 384], "content_rect": [6, 5, 372, 374], "pivot": [192, 192], "category": "world"},
     {"id": "world/facility_reinforcement_fabricator", "path": "world/world_facility_reinforcement_fabricator.png", "canvas": [256, 256], "content_rect": [16, 43, 224, 170], "pivot": [128, 128], "category": "world"},

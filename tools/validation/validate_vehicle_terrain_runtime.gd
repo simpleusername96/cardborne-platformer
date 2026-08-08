@@ -1,7 +1,6 @@
 extends SceneTree
 
-## Stable terrain entrypoint retained for broad validation suites. The focused
-## hazard validator carries exhaustive cadence/capacity coverage.
+## Stable terrain entrypoint retained for broad validation suites.
 
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
 
@@ -12,10 +11,6 @@ func _initialize() -> void:
 	var runtime := TerrainRuntime.new()
 	runtime.configure([
 		{
-			"id":&"bog", "kind":&"hazard_zone",
-			"variant":&"toxic_bog", "rect":Rect2(100, 100, 400, 300),
-		},
-		{
 			"id":&"gate_a_1", "kind":&"transit_gate", "pair":&"a",
 			"pos":Vector2.ZERO,
 		},
@@ -24,12 +19,6 @@ func _initialize() -> void:
 			"pos":Vector2(1600.0, 0.0),
 		},
 	])
-	_expect(
-		runtime.hazard_damage_for_actor(
-			"player", Vector2.ZERO, Vector2(200, 200), 24.0, &"player", 0.0
-		) == TerrainRuntime.HAZARD_PLAYER_DAMAGE,
-		"hazard entry deals the authored player tick"
-	)
 	var events: Array[Dictionary] = []
 	for _step in 4:
 		events.append_array(
@@ -42,9 +31,10 @@ func _initialize() -> void:
 	)
 	var snapshot := runtime.snapshot()
 	_expect(
-		not snapshot.has("support_fields")
+		not snapshot.has("hazard")
+		and not snapshot.has("support_fields")
 		and not snapshot.has("overdrive_active"),
-		"retired support and damage-zone systems do not return"
+		"retired neutral-damage and support systems do not return"
 	)
 	_finish()
 

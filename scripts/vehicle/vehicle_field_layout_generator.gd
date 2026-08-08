@@ -12,10 +12,8 @@ const GRID_SIZE := 96.0
 const ORDINARY_RADIUS := 36.0
 const BOSS_RADIUS := 76.0
 const INNER_WALL_GROUP_COUNT := 5
-const HAZARD_ZONE_COUNT := 4
 const MYSTERY_DEVICE_COUNT := 3
 const WALL_CLEARANCE := 384.0
-const HAZARD_CLEARANCE := 576.0
 const DEVICE_PAIR_CLEARANCE := 960.0
 
 static var _field: Dictionary = {}
@@ -169,36 +167,14 @@ static func _try_build_run_features(rng: RandomNumberGenerator) -> Array[Diction
 				"template":[&"i_short", &"i_long", &"l_small", &"l_large", &"t_small", &"step"][template], "rect":rect,
 			})
 		group_centers.append(center)
-	var hazard_count := 0
-	var hazard_sizes: Array[Vector2] = [
-		Vector2(768, 576), Vector2(960, 576), Vector2(1152, 480), Vector2(864, 672),
-	]
-	for value in candidates:
-		if hazard_count == HAZARD_ZONE_COUNT:
-			break
-		var center := _snap_to_grid(Vector2(value))
-		var size: Vector2 = hazard_sizes[hazard_count]
-		if rng.randi_range(0, 1) == 1:
-			size = Vector2(size.y, size.x)
-		var rect := Rect2(center - size * 0.5, size)
-		if not _hazard_valid(rect, result):
-			continue
-		result.append({
-			"id":"hazard_%02d" % (hazard_count + 1),
-			"kind":&"hazard_zone", "variant":&"", "rect":rect,
-		})
-		hazard_count += 1
-	var variant: StringName = &"toxic_bog" if rng.randi_range(0, 1) == 0 else &"lava_pool"
-	for feature in result:
-		if StringName(feature["kind"]) == &"hazard_zone": feature["variant"] = variant
-	if group_centers.size() != INNER_WALL_GROUP_COUNT or hazard_count != HAZARD_ZONE_COUNT:
+	if group_centers.size() != INNER_WALL_GROUP_COUNT:
 		return []
 	return result
 
 
 static func _fallback_run_features(layout_seed: int) -> Array[Dictionary]:
 	# Try seed-specific candidates first so ordinary fallback use does not collapse
-	# distinct runs onto one shared wall/hazard layout.
+	# distinct runs onto one shared wall layout.
 	for attempt in 24:
 		var result: Array[Dictionary] = []
 		result.assign(_try_build_run_features(
@@ -259,19 +235,6 @@ static func _wall_group_valid(rectangles: Array[Rect2], features: Array[Dictiona
 		for rect in rectangles:
 			if _rect_distance(rect, Rect2(feature["rect"])) < WALL_CLEARANCE:
 				return false
-	return true
-
-
-static func _hazard_valid(rect: Rect2, features: Array[Dictionary]) -> bool:
-	if not _rect_inside_floor_union(rect) or _circle_overlaps_rect(Vector2(_field["player_start"]), float(_field["start_clearance"]), rect):
-		return false
-	for feature in Array(_field.get("features", [])) + features:
-		if _single_feature_overlaps_rect(Dictionary(feature), rect):
-			return false
-		if StringName(feature.get("kind", &"")) == &"structural_wall" and _rect_distance(Rect2(feature["rect"]), rect) < 192.0:
-			return false
-		if StringName(feature.get("kind", &"")) == &"hazard_zone" and _rect_distance(Rect2(feature["rect"]), rect) < HAZARD_CLEARANCE:
-			return false
 	return true
 
 
@@ -448,10 +411,6 @@ static func _stage_point_valid(
 			return false
 	for feature_value in Array(_field.get("features", [])):
 		var feature := Dictionary(feature_value)
-		if feature.has("rect") and StringName(feature.get("kind", &"")) == &"hazard_zone":
-			var hazard_clearance := 576.0 if kind == &"mystery_device" else 384.0
-			if _rect_distance(Rect2(feature["rect"]), Rect2(point - Vector2.ONE * 54.0, Vector2.ONE * 108.0)) < hazard_clearance:
-				return false
 		if kind == &"mystery_device" and StringName(feature.get("kind", &"")) == &"transit_gate" and point.distance_to(Vector2(feature["pos"])) < 576.0:
 			return false
 	return true

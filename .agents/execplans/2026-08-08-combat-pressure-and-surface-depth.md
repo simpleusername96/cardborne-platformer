@@ -292,20 +292,20 @@ Source owners: `scripts/vehicle/vehicle_field_layout_generator.gd`,
 `scripts/presentation/components/vehicle_world_visual_catalog.gd`, guidebook/localization,
 production asset manifest, product/visual specs, and focused validators
 
-- [ ] **2.1** Remove hazard generation and combat behavior.
+- [x] **2.1** Remove hazard generation and combat behavior.
   - Change: remove four hazard footprints, exposure state/timers, player/ordinary/boss hazard
     damage, neutral hazard kill attribution, and hazard geometry snapshots. Keep terrain runtime
     transit-gate ownership and keep `VehicleRun.denied_zones` unchanged.
   - Accept: generated layouts contain zero hazards; no actor can receive hazard damage or retain
     exposure; transit gates and boss attack zones still work.
-- [ ] **2.2** Retire every now-unused hazard surface.
+- [x] **2.2** Retire every now-unused hazard surface.
   - Change: remove hazard visual descriptors/batches, guidebook entry, Korean/English strings,
     product/visual spec clauses, manifest IDs `world/hazard_toxic_bog` and
     `world/hazard_lava_pool`, and their tracked PNGs. Replace or delete hazard-only validators;
     keep mixed validators and rewrite their exact expectations.
   - Accept: repository search finds no live `hazard_zone`, hazard asset ID, exposure, or guidebook
     contract; no asset is orphaned; visual authority validation passes.
-- [ ] **2.3** Commit the hazard removal as one causal change.
+- [x] **2.3** Commit the hazard removal as one causal change.
   - Change: stage and commit only Phase 2 files.
   - Accept: field-layout, terrain, map-mechanics, stage-layout, world-visual, guidebook,
     localization, asset-manifest, and Run validators pass; `git diff --check` passes.
@@ -647,11 +647,14 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1 - Qualify the current performance baseline.
-- Next task: 2.1 - Remove neutral hazard generation and combat behavior. Task 1.2 remains deferred
-  until user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
-- Last completed gate: Phase 1 batch gate has an authoritative clean causal baseline; native
-  release thresholds remain red.
+- Current phase: Phase 3 - Rebalance health, shielding, and role movement.
+- Next task: 3.1 - Apply the locked ordinary-health curve. Task 1.2 remains deferred until
+  user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
+- Last completed gate: Phase 2 removed map hazards across generation, runtime, presentation,
+  guidebook/localization, manifest/workbench, specs, and validators while preserving Transit
+  Gates and boss `denied_zones`. Field layout, terrain, stage layout/transition, map mechanics,
+  guidebook, semantic asset/separation, visual replacement, world visuals, Run, workbench, visual
+  authority, and `git diff --check` passed with 67 remaining gameplay PNGs.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 

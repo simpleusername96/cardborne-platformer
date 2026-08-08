@@ -302,9 +302,6 @@ var _enemy_decision_cycle_epoch := 0
 var _simulation_lod_bucket := 0
 var _far_enemy_simulation_bucket := 0
 var _enemy_coordination_initialized := false
-var _hazard_motion_candidates: Array[EnemyState] = []
-var _hazard_tracked_id_buffer: Array[String] = []
-var _hazard_processed_ids: Dictionary = {}
 var _low_count_overlay_timer := 0.0
 var _physics_serial := 0
 var _presented_physics_serial := -1
@@ -1428,38 +1425,17 @@ func _advance_player_protection_sources(delta: float) -> void:
 
 
 func _update_terrain(delta: float, previous_player_position: Vector2) -> void:
-	var hazard_motion_start := previous_player_position
 	var events := terrain_runtime.advance(delta, player_position)
 	for event in events:
 		match StringName(event["kind"]):
 			&"transit":
 				player_position = Vector2(event["destination"])
-				hazard_motion_start = player_position
 				player_velocity = Vector2.ZERO
 				_grant_player_protection(
 					float(event["invulnerability"]),
 					&"transit"
 				)
 				_play_sound(&"dash", 1.18)
-	var hazard_damage := terrain_runtime.hazard_damage_for_actor(
-		"player",
-		hazard_motion_start,
-		player_position,
-		Rules.PLAYER_RADIUS,
-		&"player",
-		delta
-	)
-	if hazard_damage > 0.0:
-		# Hazard ticks keep their authored 0.75-second cadence. They respect any
-		# existing protection but do not create the ordinary hit grace window.
-		_damage_player(
-			hazard_damage,
-			"Hazard Zone",
-			false,
-			false,
-			true,
-			false
-		)
 
 
 func _update_player_aim() -> void:
@@ -1950,9 +1926,6 @@ func _update_experience(delta: float) -> void:
 func _update_enemies(delta: float) -> void:
 	var performance_active := _performance_detail_sample_active
 	var section_started := Time.get_ticks_usec() if performance_active else 0
-	_hazard_motion_candidates.clear()
-	_hazard_tracked_id_buffer.clear()
-	_hazard_processed_ids.clear()
 	_prepare_mystery_device_effects(delta)
 	var decision_bucket := _enemy_decision_bucket
 	_enemy_decision_bucket = (_enemy_decision_bucket + 1) % ORDINARY_DECISION_BUCKET_COUNT
@@ -2055,8 +2028,6 @@ func _update_enemies(delta: float) -> void:
 		if role == &"stage_boss":
 			_update_stage_boss(enemy, delta)
 			enemy_grid.update_actor(enemy)
-			if enemy.pos != _enemy_update_schedule.motion_start(enemy):
-				_hazard_motion_candidates.append(enemy)
 			continue
 		if role == &"generator":
 			_update_generator(enemy, delta)
@@ -2088,37 +2059,6 @@ func _update_enemies(delta: float) -> void:
 			scheduled_started
 		)
 		section_started = Time.get_ticks_usec()
-	for enemy in _hazard_motion_candidates:
-		var hazard_identity := _hazard_identity(enemy)
-		if not enemy.alive or _hazard_processed_ids.has(hazard_identity):
-			continue
-		_hazard_processed_ids[hazard_identity] = true
-		_apply_hazard_damage_to_enemy(
-			enemy,
-			_enemy_update_schedule.motion_start(enemy),
-			enemy.pos,
-			delta
-		)
-	terrain_runtime.append_tracked_hazard_actor_ids(_hazard_tracked_id_buffer)
-	for actor_id in _hazard_tracked_id_buffer:
-		if actor_id == "player":
-			continue
-		var tracked_enemy := _find_enemy_by_id(actor_id)
-		if tracked_enemy == null or not tracked_enemy.alive:
-			terrain_runtime.forget_hazard_actor(actor_id)
-			continue
-		var tracked_identity := _hazard_identity(tracked_enemy)
-		if _hazard_processed_ids.has(tracked_identity):
-			continue
-		_hazard_processed_ids[tracked_identity] = true
-		_apply_hazard_damage_to_enemy(
-			tracked_enemy,
-			tracked_enemy.pos,
-			tracked_enemy.pos,
-			delta
-		)
-	if performance_active:
-		_performance_enemy_sections["hazard_terrain"] = _elapsed_ms(section_started)
 
 
 func _prepare_mystery_device_effects(delta: float) -> void:
@@ -2196,11 +2136,6 @@ func _steer_enemy_toward_mystery_anchor(
 		return
 	enemy.velocity = (enemy.pos - previous_position) / delta
 	enemy_grid.update_actor_position(enemy)
-	# If forced movement enters a hazard, the hazard owns the neutral damage
-	# and any later quota/XP result. The regular tracked pass advances timers.
-	_apply_hazard_damage_to_enemy(
-		enemy, previous_position, enemy.pos, 0.0
-	)
 
 
 func _prepare_enemy_local_overlap_cache() -> void:
@@ -2223,44 +2158,6 @@ func _mark_enemy_overlap_refresh(enemy: EnemyState) -> void:
 		and posmod(slot + _enemy_decision_cycle_epoch, 2) == 0
 	):
 		_enemy_overlap_refresh_mask[slot] = 1
-
-
-func _hazard_identity(enemy: EnemyState) -> int:
-	return (enemy.spatial_slot + 1) * 0x100000000 + enemy.runtime_generation
-
-
-func _apply_hazard_damage_to_enemy(
-	enemy: EnemyState,
-	previous_position: Vector2,
-	current_position: Vector2,
-	delta: float
-) -> void:
-	var actor_kind := &"boss" if enemy.role == &"stage_boss" else &"ordinary"
-	var damage := terrain_runtime.hazard_damage_for_actor(
-		enemy.id,
-		previous_position,
-		current_position,
-		enemy.radius,
-		actor_kind,
-		delta
-	)
-	if damage <= 0.0:
-		return
-	_damage_enemy(
-		enemy,
-		damage,
-		"Hazard Zone",
-		_active_hazard_affinity(),
-		false,
-		true
-	)
-
-
-func _active_hazard_affinity() -> StringName:
-	for feature in terrain_runtime.features:
-		if feature.kind == &"hazard_zone":
-			return AttackContract.normalize_affinity(feature.affinity)
-	return AttackContract.KINETIC
 
 
 func _update_scheduled_ordinary_enemy(
@@ -2321,8 +2218,6 @@ func _update_scheduled_ordinary_enemy(
 			enemy_grid.update_actor_position(enemy)
 		else:
 			enemy_grid.update_actor(enemy)
-	if enemy.alive and enemy.pos != previous_position:
-		_hazard_motion_candidates.append(enemy)
 
 
 func _update_motion_only_ordinary_enemy(
@@ -2381,8 +2276,6 @@ func _record_motion_only_enemy_change(
 			enemy_grid.update_actor_position(enemy)
 		else:
 			enemy_grid.update_actor(enemy)
-	if enemy.alive and enemy.pos != previous_position:
-		_hazard_motion_candidates.append(enemy)
 
 
 func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
@@ -4025,7 +3918,6 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
 	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
-	terrain_runtime.forget_hazard_actor(enemy.id)
 	var role := enemy.role
 	if boss_practice.active:
 		enemy.alive = false
@@ -5566,7 +5458,6 @@ func _update_threat_contacts(delta: float) -> void:
 		)
 		if safe_viewport.has_point(canvas_transform * feature_position):
 			var terrain_entry := StringName({
-				&"hazard_zone":&"object_hazard_zone",
 				&"transit_gate":&"object_transit_gate",
 			}.get(feature.kind, &""))
 			if terrain_entry != &"":

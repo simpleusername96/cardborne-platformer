@@ -71,19 +71,6 @@ func _check_stage_one_to_three(run) -> void:
 	var run_feature_fingerprint := hash(
 		var_to_str(run.field_layout.run_feature_blueprint())
 	)
-	var hazard_center := Vector2.ZERO
-	for feature in run.field_layout.run_feature_blueprint():
-		if StringName(feature.get("kind", &"")) == &"hazard_zone":
-			hazard_center = Rect2(feature["rect"]).get_center()
-			break
-	run.terrain_runtime.hazard_damage_for_actor(
-		"transition_fixture",
-		hazard_center,
-		hazard_center,
-		24.0,
-		&"ordinary",
-		0.0
-	)
 	run.stage_flow.state = StageFlow.State.REWARDS
 	run.call("_finalize_stage_completion")
 
@@ -114,9 +101,8 @@ func _check_stage_one_to_three(run) -> void:
 	)
 	_expect(
 		hash(var_to_str(run.field_layout.run_feature_blueprint()))
-			== run_feature_fingerprint
-		and int(run.terrain_runtime.hazard_runtime_snapshot()["tracked_actor_count"]) == 0,
-		"transition preserves run-fixed walls/hazards and clears exposure"
+			== run_feature_fingerprint,
+		"transition preserves run-fixed walls and gates"
 	)
 	_expect(
 		run.mystery_device_runtime.devices.size() == 3,
@@ -200,17 +186,13 @@ func _check_stage_one_to_three(run) -> void:
 	_expect(
 		hash(var_to_str(run.field_layout.run_feature_blueprint()))
 			== run_feature_fingerprint,
-		"Stage 3 keeps the same run-fixed inner walls and hazards"
+		"Stage 3 keeps the same run-fixed inner walls and gates"
 	)
 	_expect(
 		run.run_build.has(&"chassis_speed")
 			and run.visited_cells.has(explored_cell)
 			and run.completed_stage_reports.size() == 2,
 		"Stage 2→3 preserves build, exploration, and both telemetry snapshots"
-	)
-	_expect(
-		int(run.terrain_runtime.hazard_runtime_snapshot()["tracked_actor_count"]) == 0,
-		"Stage 2→3 clears stage-local hazard exposure"
 	)
 
 

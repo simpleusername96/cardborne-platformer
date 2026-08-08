@@ -46,21 +46,12 @@ func _initialize() -> void:
 	_expect(Catalog.cover_rects().is_empty(), "static catalog owns no internal cover")
 	var walls := layout.run_feature_blueprint().filter(func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"structural_wall")
 	var groups := {}
-	var hazards := layout.run_feature_blueprint().filter(func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"hazard_zone")
 	for wall in walls:
 		groups[int(wall.get("group", -1))] = true
 	_expect(groups.size() == 5, "run fixes exactly five inner-wall groups")
-	_expect(hazards.size() == 4, "run fixes four broad hazard zones")
 	var templates := {}
 	for wall in walls: templates[StringName(wall.get("template", &""))] = true
 	_expect(templates.size() == 5, "wall groups use five unique templates")
-	var hazard_sizes := {}
-	var variants := {}
-	for hazard in hazards:
-		var rect := Rect2(hazard["rect"])
-		hazard_sizes[Vector2(maxf(rect.size.x, rect.size.y), minf(rect.size.x, rect.size.y))] = true
-		variants[StringName(hazard.get("variant", &""))] = true
-	_expect(hazard_sizes.size() == 4 and variants.size() == 1, "hazards use all four footprints and one run variant")
 	for stage_id in Catalog.STAGE_IDS:
 		for device in layout.mystery_device_blueprint(stage_id):
 			_expect(not device.has("effect"), "%s device blueprint hides outcome" % stage_id)

@@ -215,7 +215,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored pickup, shard, and crate visual ID plus value-scale mapping | spawn, value, collection |
 | effect catalog | three buffered transients only: dash afterimage, live EMP charge radius, and authored EMP release | timer, damage, protection rule, direct actor/HUD/audio feedback |
-| world catalog | authored hazard, Transit Gate, Mystery Device, reinforcement facility, and state descriptor | topology, collision, exposure, health, spawn cadence, outcome |
+| world catalog | authored Transit Gate, Mystery Device, reinforcement facility, SurfaceDetail, and state descriptor | topology, collision, health, spawn cadence, outcome |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
 | defense catalog | shared authored support-ring image and localized status text recipe | protection, damage, slow, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
@@ -234,7 +234,7 @@ collision.
 #### Media ownership boundary
 
 - player, ordinary enemy, boss, secondary body, three projectile roles,
-  pickup, reward crate, Transit Gate, hazard ground, Mystery Device, reinforcement
+  pickup, reward crate, Transit Gate, Mystery Device, reinforcement
   facility, common boss
   node처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된 authored
   PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와 state
@@ -244,7 +244,7 @@ collision.
 - `SurfaceDetail`은 독립 gameplay object가 아니라 walkable surface 위에 놓이는
   presentation-only authored SVG다. runtime은 승인된 crack, wear stain과
   embedded chip image의 deterministic transform, scale, rotation과 batching만
-  소유한다. 이 image는 collision, navigation, topology, pickup, cover, hazard,
+  소유한다. 이 image는 collision, navigation, topology, pickup, cover,
   objective 또는 damage truth를 만들지 않는다.
 - Upgrade-card content artwork is also authored PNG content. It is one reusable
   semantic identity per shared mechanic group and is rendered by the semantic
@@ -267,9 +267,7 @@ collision.
   각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
   크기에서 약 30% 줄인 값이다. reward crate, repair pickup과 experience recall은
   gameplay 역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
-- toxic bog와 lava pool은 같은 hazard-ground footprint family다. 각각 toxin과
-  thermal 색을 넓은 바닥 면으로 사용하며 얇은 curtain, node, pylon 또는 벽처럼
-  세우지 않는다. Mystery Device는 crate보다 큰 `intact` body와 효과가 anchor를
+- Mystery Device는 crate보다 큰 `intact` body와 효과가 anchor를
   필요로 할 때만 유지하는 `resolved` wreck state를 가진다. 결과 종류는 파괴
   전 image, 색, lamp, glyph로 암시하지 않는다.
 - boss objective module art와 shared node art는 모두 production에서 제외한다.
@@ -306,7 +304,6 @@ collision.
 | 이동 surface | `#9EADBC` light-gray full-bleed 면이 지배하며, 아래 `SurfaceDetail` 한도 안에서만 작은 low-contrast crack, wear stain과 embedded chip을 드물게 배치 | field geometry; detail transform은 presentation-only compiler |
 | 외곽 경계벽 | `#070B11` 단색 black mass | field boundary와 collision |
 | 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
-| 위험 지대 | 넓고 낮은 swamp/lava ground 면; exact effect rect를 채우며 벽·curtain·작은 node처럼 보이지 않음 | hazard exposure runtime |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
 | 미확인 장치 | 상자보다 큰 neutral mechanical body; 파괴 전 결과를 숨기고 파괴 후 resolved state만 표시 | device health와 hidden outcome |
 | 증원 조립소 | 넓은 적대 시설 body와 상시 체력 표시; 일반 적과 다른 미니맵 표식 | 별도 facility health, 가동 임계점, 소환 주기와 상한 |
@@ -321,7 +318,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 
 ### World
 
-- field geometry, collision, reachability, inner-wall selection, hazard placement와
+- field geometry, collision, reachability, inner-wall selection과
   deterministic fingerprint는 같은 layout owner를 사용한다. presentation image는
   topology, collision, exposure, health 또는 hidden outcome을 소유하지 않는다.
 - walkable polygon은 `map_surface_fill` 한 색면으로 먼저 채운다. 이 면은 언제나
@@ -357,15 +354,14 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   anchor가 필요한 동안만 resolved wreck를 표시하고 결과 이름은 localized text가
   전달한다.
 - Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
-  hazard는 damage ground, Mystery Device는 destructible interaction이므로 세
-  silhouette를 공유하지 않는다.
+  Mystery Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
 - reinforcement facility는 enemy actor catalog를 재사용하지 않는 완성된
   `256×256` authored body다. 가동 중에만 world에 나타나고, 시설 체력 bar와
   two-tone diamond minimap marker가 사용자의 파괴 목표를 전달한다.
-- 상자, loose pickup, hazard와 Mystery Device는 넓은 role-color 면과 dark contour를
+- 상자, loose pickup과 Mystery Device는 넓은 role-color 면과 dark contour를
   사용해 서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
   표시하지 않는다.
-- 세 field의 주요 시각 차이는 실제 walkable topology와 run-selected wall/hazard
+- 세 field의 주요 시각 차이는 실제 walkable topology와 run-selected wall
   arrangement가 소유한다. `SurfaceDetail` 분포는 바닥의 밋밋함만 줄이고 field
   identity, route, 위험도 또는 stage 변화를 암시하지 않는다.
 
@@ -613,7 +609,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
 - active SurfaceDetail plan 완료 뒤 final gameplay manifest가 정확히 70 image를
-  색인함: hazard retirement 뒤 67 PNG와 user-approved SurfaceDetail SVG 3개다.
+  색인함: 현재 gameplay PNG 67개와 user-approved SurfaceDetail SVG 3개다.
   전용 hostile bolt와 reinforcement facility를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
@@ -642,9 +638,8 @@ Web export만으로 interactive built-Web smoke나 release performance를
   fills without legacy patterned floor or shared-wall rasters. `SurfaceDetail` is
   now an authorized semantic category, but no detail asset or runtime placement is
   production-integrated until its active ExecPlan approval and validation gates pass.
-- Hazard and Mystery Device gameplay and their four approved raster assets are
-  integrated. Candidate and intermediate files stay outside the production
-  manifest.
+- Mystery Device gameplay and its two approved raster states are integrated.
+  Candidate and intermediate files stay outside the production manifest.
 - Every non-beam projectile resolves one of the three exclusive player-primary,
   player-seeker, or hostile-bolt identities; runtime owns scale, rotation,
   player-primary affinity tint, collision, speed, and homing.

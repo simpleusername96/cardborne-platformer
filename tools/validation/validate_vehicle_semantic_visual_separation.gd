@@ -20,10 +20,6 @@ const DISTINCT_GROUPS := {
 		&"pickup/repair",
 		&"pickup/experience_recall",
 	],
-	"hazard_variants":[
-		&"world/hazard_toxic_bog",
-		&"world/hazard_lava_pool",
-	],
 	"mystery_device_states":[
 		&"world/mystery_device_intact",
 		&"world/mystery_device_resolved",
@@ -46,8 +42,6 @@ func _initialize() -> void:
 
 func _validate_active_world_roles() -> void:
 	var expected := [
-		&"hazard_lava_pool",
-		&"hazard_toxic_bog",
 		&"mystery_device_intact",
 		&"mystery_device_resolved",
 		&"reinforcement_fabricator",

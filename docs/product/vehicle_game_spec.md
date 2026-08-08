@@ -21,8 +21,8 @@ run-selected field while manually aiming a held primary weapon, dashing through
 pressure, and building a compact set of automatic secondary weapons. A new run
 selects one of three registered macro fields plus five deterministic
 stage-tactical content arrangements. All five combat stages reuse that field's
-floor, boundary, five inner-wall groups, four broad hazard zones, and two
-Transit Gate routes. Each stage scatters its own three mystery devices, six
+floor, boundary, five inner-wall groups, and two Transit Gate routes. Each
+stage scatters its own three mystery devices, six
 loose pickups, and eight reward crates.
 
 This is the canonical product contract for the current executable.
@@ -208,10 +208,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   Dynamic markers expose only five tactical roles: player craft, item, enemy,
   boss, and reinforcement facility. All live pickups, unopened crates, and intact Mystery Devices share
   the item marker; all non-boss hostiles share the enemy marker; every boss uses
-  the same boss marker. Subtypes, elite distinctions, objective state, hazard
-  affinity, and mystery outcome are not separate minimap markers.
+  the same boss marker. Subtypes, elite distinctions, objective state, and
+  mystery outcome are not separate minimap markers.
 
-### Inner walls, hazard zones, Transit Gates, and Mystery Devices
+### Inner walls, Transit Gates, and Mystery Devices
 
 - An inner wall is run-fixed, impassable structure. It blocks movement,
   projectiles, line of sight, and pursuit through the same tactical geometry.
@@ -219,18 +219,6 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   cover, so there is no separate cover category. A wall group may compile to
   two rectangles, but U, C, O, closed-room, and reward-pocket shapes are not
   generated.
-- Exactly four hazard zones remain active for the entire run. They have no solid
-  collision and enemy AI does not globally avoid or intentionally attack them.
-  Entering or remaining inside a zone refreshes one non-stacking environmental
-  `field_exposure` to 2.5 seconds. Contact deals an immediate tick; further
-  ticks occur every 0.75 seconds, including after exit until exposure expires.
-  Tick damage is 5 to the player, 8 to ordinary/elite enemies, and 3 to the
-  stage boss.
-- Hazard damage is neutral. A hazard kill advances the ordinary quota and drops
-  the normal XP shard, but it never invokes player-owned kill effects. The
-  toxic-bog or lava-pool label changes affinity and ground presentation only;
-  both use the same neutral environment damage source and do not use or stack the player's burn/poison/chill
-  payload rules.
 - Two paired Transit Gate routes remain fixed through the run. Gates require a
   dwell, preserve aim, clear velocity, share a ten-second pair cooldown, grant
   the existing short transfer protection, and move only the player. They never

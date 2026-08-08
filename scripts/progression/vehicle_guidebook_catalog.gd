@@ -27,7 +27,6 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"object_repair", "category":&"objects", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "description_key":"GUIDE_OBJECT_REPAIR_DESC", "preview":{"kind":&"pickup", "id":&"repair"}},
 	{"id":&"object_recall", "category":&"objects", "name_key":"GUIDE_OBJECT_RECALL_NAME", "description_key":"GUIDE_OBJECT_RECALL_DESC"},
 	{"id":&"object_crate", "category":&"objects", "name_key":"GUIDE_OBJECT_CRATE_NAME", "description_key":"GUIDE_OBJECT_CRATE_DESC"},
-	{"id":&"object_hazard_zone", "category":&"objects", "name_key":"GUIDE_TERRAIN_HAZARD_NAME", "description_key":"GUIDE_TERRAIN_HAZARD_DESC"},
 	{"id":&"object_mystery_device", "category":&"objects", "name_key":"GUIDE_OBJECT_MYSTERY_DEVICE_NAME", "description_key":"GUIDE_OBJECT_MYSTERY_DEVICE_DESC"},
 	{"id":&"object_transit_gate", "category":&"objects", "name_key":"GUIDE_FACILITY_GATE_NAME", "description_key":"GUIDE_FACILITY_GATE_DESC", "preview":{"kind":&"facility", "id":&"transit_gate"}},
 	{"id":&"object_elite_armored", "category":&"objects", "name_key":"ELITE_ARMORED", "description_key":"GUIDE_ELITE_ARMORED_DESC", "preview":{"kind":&"elite", "id":&"armored"}},

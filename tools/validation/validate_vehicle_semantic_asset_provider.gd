@@ -31,8 +31,6 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"pickup/repair",
 	&"pickup/experience_recall",
 	&"world/facility_transit_gate",
-	&"world/hazard_toxic_bog",
-	&"world/hazard_lava_pool",
 	&"world/mystery_device_intact",
 	&"world/mystery_device_resolved",
 	&"effect/emp_release",
@@ -55,7 +53,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 69, "all 69 current gameplay PNGs are indexed")
+	_expect(ids.size() == 67, "all 67 current gameplay PNGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
@@ -85,9 +83,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 69
+		int(manifest.get("final_asset_count", 0)) == 67
 			and not manifest.has("animations"),
-		"manifest declares 69 static authored rasters and no frame animations"
+		"manifest declares 67 static authored rasters and no frame animations"
 	)
 	_validate_map_object_content_rects()
 	for error in AssetProvider.validate_pack():
@@ -118,8 +116,6 @@ func _initialize() -> void:
 
 func _validate_map_object_content_rects() -> void:
 	var expected := {
-		&"world/hazard_toxic_bog":Rect2i(12, 64, 1000, 639),
-		&"world/hazard_lava_pool":Rect2i(12, 54, 1000, 660),
 		&"world/mystery_device_intact":Rect2i(6, 5, 372, 374),
 		&"world/mystery_device_resolved":Rect2i(6, 5, 372, 374),
 		&"world/facility_reinforcement_fabricator":Rect2i(16, 43, 224, 170),

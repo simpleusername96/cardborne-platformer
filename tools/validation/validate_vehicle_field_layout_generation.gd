@@ -39,7 +39,11 @@ func _validate_field(field_id: StringName) -> void:
 	_expect(fixed.fingerprint == replay.fingerprint, "%s same seed reproduces layout" % field_id)
 	_validate_no_feature_overlaps(fixed, fixed.field_definition)
 	var fixed_features := fixed.run_feature_blueprint()
-	_expect(fixed_features.filter(func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"hazard_zone").size() == 4, "%s fixes four hazard zones" % field_id)
+	_expect(
+		fixed_features.all(func(feature: Dictionary) -> bool: return StringName(feature["kind"]) in [&"structural_wall", &"transit_gate"]),
+		"%s contains only wall and transit terrain"
+			% field_id
+	)
 	var wall_groups := {}
 	for feature in fixed_features:
 		if StringName(feature["kind"]) == &"structural_wall": wall_groups[int(feature.get("group", -1))] = true
@@ -180,9 +184,6 @@ func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -
 	var devices := layout.mystery_device_blueprint(stage_id)
 	var crates := layout.crate_blueprint(stage_id)
 	var pickups := layout.pickup_blueprint(stage_id)
-	var hazards: Array = layout.run_feature_blueprint().filter(
-		func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"hazard_zone"
-	)
 	var gates: Array = layout.run_feature_blueprint().filter(
 		func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"transit_gate"
 	)
@@ -190,8 +191,6 @@ func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -
 		var device_pos := Vector2(devices[first]["pos"])
 		for second in range(first + 1, devices.size()):
 			_expect(device_pos.distance_to(Vector2(devices[second]["pos"])) >= 960.0, "%s devices keep 960 spacing" % stage_id)
-		for hazard in hazards:
-			_expect(_point_to_rect_distance(device_pos, Rect2(hazard["rect"])) >= 576.0, "%s device avoids hazard" % stage_id)
 		for gate in gates:
 			_expect(device_pos.distance_to(Vector2(gate["pos"])) >= 576.0, "%s device avoids gate" % stage_id)
 	for first in crates.size():
@@ -200,8 +199,6 @@ func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -
 			_expect(crate_pos.distance_to(Vector2(crates[second]["pos"])) >= 672.0, "%s crates keep 672 spacing" % stage_id)
 		for device in devices:
 			_expect(crate_pos.distance_to(Vector2(device["pos"])) >= 576.0, "%s crate avoids device" % stage_id)
-		for hazard in hazards:
-			_expect(_point_to_rect_distance(crate_pos, Rect2(hazard["rect"])) >= 384.0, "%s crate avoids hazard" % stage_id)
 	for first in pickups.size():
 		var pickup_pos := Vector2(pickups[first]["pos"])
 		for second in range(first + 1, pickups.size()):
@@ -210,16 +207,6 @@ func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -
 			_expect(pickup_pos.distance_to(Vector2(crate["pos"])) >= 384.0, "%s pickup avoids crate" % stage_id)
 		for device in devices:
 			_expect(pickup_pos.distance_to(Vector2(device["pos"])) >= 480.0, "%s pickup avoids device" % stage_id)
-		for hazard in hazards:
-			_expect(_point_to_rect_distance(pickup_pos, Rect2(hazard["rect"])) >= 384.0, "%s pickup avoids hazard" % stage_id)
-
-
-func _point_to_rect_distance(point: Vector2, rectangle: Rect2) -> float:
-	var nearest := Vector2(
-		clampf(point.x, rectangle.position.x, rectangle.end.x),
-		clampf(point.y, rectangle.position.y, rectangle.end.y)
-	)
-	return point.distance_to(nearest)
 
 
 func _item_sector(position: Vector2, center: Vector2) -> int:

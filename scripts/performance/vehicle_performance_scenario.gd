@@ -640,7 +640,6 @@ func _retire_production_batch(run: Node, budget: int) -> void:
 		if not enemy.alive or not enemy.active or not enemy.counts_active_cap:
 			continue
 		run.collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
-		run.terrain_runtime.forget_hazard_actor(enemy.id)
 		enemy.alive = false
 		enemy.active = false
 		run.enemy_grid.update_actor(enemy)

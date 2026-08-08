@@ -17,20 +17,6 @@ const WORLD_OBJECT_DESCRIPTORS := {
 		"shape": &"round_portal",
 		"color": &"system",
 	},
-	&"hazard_toxic_bog": {
-		"asset": &"world/hazard_toxic_bog",
-		"kind": &"hazard_zone",
-		"variant": &"toxic_bog",
-		"shape": &"broad_ground",
-		"color": &"toxin",
-	},
-	&"hazard_lava_pool": {
-		"asset": &"world/hazard_lava_pool",
-		"kind": &"hazard_zone",
-		"variant": &"lava_pool",
-		"shape": &"broad_ground",
-		"color": &"thermal",
-	},
 	&"mystery_device_intact": {
 		"asset": &"world/mystery_device_intact",
 		"kind": &"mystery_device",

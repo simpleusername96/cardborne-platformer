@@ -24,7 +24,6 @@ func _run() -> void:
 	_expect(Catalog.entry_id_for_enemy(&"mine", &"mine").is_empty(), "retired map-stationary roles have no guide entry")
 	_expect(Catalog.valid_ids().has(&"mobile_bulkhead_guard"), "Bulkhead Guard has a stable guide entry")
 	_expect(Catalog.valid_ids().has(&"object_transit_gate"), "Transit Gate has a stable guide entry")
-	_expect(Catalog.valid_ids().has(&"object_hazard_zone"), "Hazard Zone has a stable guide entry")
 	_expect(Catalog.valid_ids().has(&"object_mystery_device"), "Mystery Device has a stable guide entry")
 	var locked := store.snapshot({"health":120.0})
 	var mobile: Array = locked["categories"][&"mobile"]
@@ -32,7 +31,6 @@ func _run() -> void:
 	_expect(hidden.all(func(entry: Dictionary) -> bool: return entry.keys().all(func(key): return key in ["id", "locked", "name", "description"]) and entry["name"] == "???" and entry["description"] == ""), "locked entries contain no hidden copy")
 	store.discover(&"boss_stage_2")
 	store.discover(&"object_transit_gate")
-	store.discover(&"object_hazard_zone")
 	store.discover(&"object_mystery_device")
 	var active_ship := {
 		"active":true,
@@ -66,7 +64,7 @@ func _run() -> void:
 	var loaded := Store.new()
 	loaded.save_path = TEST_PATH
 	loaded.load_discovery()
-	_expect(loaded.known.has(&"mobile_chaser") and loaded.known.size() == 5, "discovery save round-trips sanitized IDs")
+	_expect(loaded.known.has(&"mobile_chaser") and loaded.known.size() == 4, "discovery save round-trips sanitized IDs")
 	var panel := GuidePanel.new()
 	get_root().add_child(panel)
 	await process_frame
