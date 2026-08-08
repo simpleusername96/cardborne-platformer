@@ -20,9 +20,10 @@ Deliver a harder-to-cheese but less front-loaded five-stage run by removing the 
 map hazard zones, lowering Stage 1 ordinary-enemy health, strengthening stage-to-stage
 ordinary health growth, making role movement continuous and distance-aware, reducing shielded
 boss damage, replacing Thermal Burn with a bounded on-hit Thermal Burst, adding sparse approved
-surface-detail rasters, and replacing the boxed boss-beam strip without compromising combat
+surface-detail SVGs, and replacing the boxed boss-beam strip without compromising combat
 readability or the retained-rendering budget. The verified starting point is clean
-gameplay commit `e6324c96` plus plan-only commit `eaaa344d`; current HEAD has no eligible
+current commit `db4adfb8`, which adds the user-reviewed deterministic SVG experiment on top of
+the earlier gameplay and plan commits; current HEAD has no eligible
 performance sample, so performance qualification precedes feature edits and is repeated after
 the final workload is complete.
 
@@ -31,7 +32,7 @@ the final workload is complete.
 - Objective: implement the requested pressure, movement, shield, elemental, surface, beam, and
   frame-pacing outcomes as one decision-complete sequence with independent causal commits.
 - Deliverable: updated gameplay and movement rules, bilingual product copy, visual authority
-  contract, approved production surface and beam rasters, deterministic retained surface
+  contract, approved production surface SVGs and beam raster, deterministic retained surface
   placement, focused validators, production Web export, and eligible native/Web performance
   evidence.
 - Completion state: neutral hazards no longer exist; ordinary health uses the locked five-stage
@@ -58,8 +59,9 @@ In scope:
 - Replace the persistent thermal condition and the `thermal_burn` card identity with
   `thermal_burst`: primary-projectile hits create enemy-only splash with radii `72/84/96` and
   flat damage `4/6/8` at levels 1/2/3.
-- Introduce the presentation-only `SurfaceDetail` visual category and three small approved
-  production rasters: crack, stain/wear, and embedded debris chip.
+- Introduce the presentation-only `SurfaceDetail` visual category and promote the exact approved
+  `_01` deterministic SVG from each family: crack, stain/wear, and embedded debris chip. Keep
+  `_02` files as review alternatives outside production so the runtime stays at three batches.
 - Replace the current dark-bordered `cue/beam_strip_9` raster with a tintable flat alpha mask and
   retune the existing two-plane startup/three-plane active composition for Beam Sentinel and boss
   straight beams.
@@ -95,7 +97,9 @@ Constraints and invariants:
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
 - Player-facing raster creation must use ImageGen or another raster authoring path with the
   canonical sheet supplied as an actual image reference. SVG/ImageMagick geometric authoring is
-  prohibited; ImageMagick remains limited to non-creative conversion and evidence work.
+  prohibited except for the exact deterministic `SurfaceDetail` workflow approved by the user on
+  2026-08-09 and recorded in `AGENTS.md`, `$cardborne-visual-authority`, and `VISUAL_SYSTEM.md`.
+  ImageMagick remains limited to non-creative conversion and evidence work.
 - The surface remains a low-detail neutral matte plane. Surface detail must be lower contrast
   than every actor, projectile, pickup, telegraph, objective, and world boundary.
 - Surface placement is deterministic from the run-fixed field geometry plus a fixed salt. It
@@ -126,9 +130,11 @@ Exact actions requiring owner or user approval:
 
 - This contract authorizes no implementation by itself. Begin execution only after the user
   approves the plan or explicitly asks to implement it.
-- Before promoting any generated surface or beam raster, present an exact AS-IS/TO-BE comparison
-  with the authority sheet, each candidate at 1x, provenance, intended asset ID, footprint, and
-  in-game placement/state capture. Promote only candidates the user explicitly approves.
+- The surface-asset approval gate is satisfied by the user's 2026-08-09 instruction to use the
+  reviewed SVG family. Promote only `surface_crack_01.svg`, `surface_stain_01.svg`, and the revised
+  `surface_chip_01.svg` at the hashes recorded below. Beam promotion still requires an exact
+  AS-IS/TO-BE comparison with the authority sheet, 1x source, provenance, intended asset ID,
+  footprint, and in-game state capture.
 - Before the first broad native/Web qualification batch, state its purpose, clean-commit scope,
   expected duration, system impact, and stop condition; run it only after the user aligns with
   that cost. Focused validators and a user-requested manual trace are not this broad batch.
@@ -148,9 +154,9 @@ Exact actions requiring owner or user approval:
 | Thermal meaning and ownership | `thermal_burn` is a persistent three-stack condition held in `VehicleStatusProfile/Runtime`; affinity is inferred from a burn condition bit. All split primary projectiles receive the profile. Seekers do not. | card resource, `VehicleRun._fire_primary`, `VehicleAttackContract`, `VehicleStatusProfile`, `VehicleStatusRuntime` | Canonical term is `Thermal Burst`: an instant elemental payload, not a status. Replace the card ID and profile owner with `VehicleElementProfile`; keep `VehicleStatusRuntime` only for Toxin/Chill. Give attack affinity an explicit element source instead of pretending thermal is a condition. | 4.1-4.4 |
 | Thermal Burst hit contract | Existing `_damage_enemies_in_radius` uses the spatial grid but also damages devices/facilities. Seeker burst already excludes its direct target. | `VehicleRun._update_projectile_buffer`; `VehicleRun._damage_enemies_in_radius` | Trigger once for every direct enemy hit by a non-reflected `player_primary` projectile, including split/piercing hits. Use spatial-grid query, radius `72/84/96`, flat damage `4/6/8`, exclude the direct target, damage targetable enemies including a nearby boss through normal shield rules, exclude structures/devices/facility, and never chain or apply Toxin/Chill. | 4.2-4.4 |
 | Thermal presentation | Current `upgrade/element_thermal` artwork is a generic orange thermal core, not a burn glyph. Current visual contract permits only a small bounded transient set. | Original-detail asset inspection; visual system; combat renderer | Reuse the artwork, thermal projectile color, impact sound, and normal hit feedback. Add no new effect kind or world visual in this pass. | 4.3-4.4 |
-| Surface flatness and detail boundary | Runtime still has `VehicleWorldMeshBuilder.DECORATION_BUDGET == 0`. On 2026-08-08 the user explicitly replaced the absolute visual ban with a conditional rule: enough sparse detail to avoid an unnatural blank plane, but no dense noise, obvious tile repetition, or gameplay interference. | Full `VISUAL_SYSTEM.md`; original-detail authority sheet; user sketch; world mesh builder | `VISUAL_SYSTEM.md` now authorizes `SurfaceDetail` as three low-contrast authored raster families with at most 192 static instances and three retained batches. Runtime integration still requires exact asset approval. | 5.1-6.4 |
+| Surface flatness and detail boundary | Runtime still has `VehicleWorldMeshBuilder.DECORATION_BUDGET == 0`. On 2026-08-08 the user explicitly replaced the absolute visual ban with a conditional rule; on 2026-08-09 the user explicitly approved the reviewed deterministic SVG direction and requested implementation. | Full `VISUAL_SYSTEM.md`; original-detail authority sheet; user sketch; SVG asset sheet/distribution preview; world mesh builder | `VISUAL_SYSTEM.md` authorizes only the exact deterministic `SurfaceDetail` SVG workflow as a narrow exception, with at most 192 static instances and three retained batches. No other SVG authoring is permitted. | 5.1-6.4 |
 | Surface rendering choice | The world builder already caches asset/z `MultiMeshInstance2D` batches. TileMap would add a new owner; procedural shader/noise violates visual rules; a full 7200x4320 RGBA surface would be roughly 124 MB before mip/import overhead. | Local renderer; Godot 4.7 `MultiMeshInstance2D`, `MultiMesh`, TileMapLayer, GPU optimization, CanvasItem, and RNG docs | Retain the current batch path. Add 72 crack, 72 stain, and 48 embedded-chip instances maximum (192 total), one batch per asset, fixed low z, compact transparent quads, discrete 90-degree rotation and `0.75/1.0/1.25` scale variants, and no runtime updates. | 5.1-6.4 |
-| Surface concept evidence | The grounded ImageGen preview used the canonical sheet as actual style reference and the user's sketch as semantic reference. It shows enlarged crack/stain/chip families beside a sparse final-scale distribution. It is concept evidence, not an individual production asset or approval. | `image_gen.referenced_image_paths`; required sheet hash; original-detail inspections | Use this visual meaning for Phase 6 candidates: dominant empty `#9EADBC` floor, irregular low-contrast marks, embedded-not-raised chips. Do not promote the concept sheet. | 6.1-6.4 |
+| Approved SurfaceDetail sources | The grounded ImageGen sheet remains concept evidence. The later deterministic SVG experiment was reviewed twice, including a flatter embedded-chip revision, and the user instructed the project to use it. | `tools/design/generate_surface_detail_svg_experiment.ps1`; candidate asset sheet/distribution preview; authority preflight; user approval on 2026-08-09 | Promote exact `_01` sources only: crack SHA-256 `87828561653B35672DC09608848FBFDA0BEFDA687CB53B93F502A4444005A2DE`, stain `955BDB5BB132775B1D331FCA86F90C01BC1F5A1B281206E3A491199F69DAD347`, chip `B5C7C0867A8C8F7B51F666875C81F8281DB44479D41FFF02601CB6CF652AB593`. Keep `_02` review-only. | 6.1-6.4 |
 | Straight boss beam awkwardness | Current 128x32 `cue/beam_strip_9` is a white rectangle with a dark perimeter. Renderer startup stretches it twice and active stretches it three times, producing nested framed bars instead of energy planes. The same owner serves Beam Sentinel and boss beams. | Original-detail asset inspection; workbench unit `gameplay_code_asset_rasterization`; `VehicleCombatRenderer._sync_beam_startup/_sync_active_beam` | Preserve the exact straight collision corridor and shared semantic ID, but replace the raster with a borderless tintable alpha mask. Startup is two flat planes; active is three. No glow, gradient, endpoint cap, frame, particle, or extra batch. | 6.5-6.7 |
 | Boss beam concept evidence | The first ImageGen concept was rejected because it introduced panel repetition and soft glow. A corrected second concept shows the intended startup/active hierarchy on a plain floor, but remains preview-only and is not the final 128x32 strip. | Canonical sheet, current Crown boss, and current beam strip supplied through `image_gen.referenced_image_paths` | Carry forward the corrected flat-plane hierarchy. Generate and approve an exact canvas/pivot/import-compatible strip before runtime replacement. | 6.5-6.7 |
 | Comparable-game evidence | Official Into the Breach material supports deterministic, immediately readable combat; public primary sources for Into the Breach, Wasteland Kings, and Spelunky do not disclose exact floor-decal batching. | GDC postmortem and official game pages; Godot official docs | Do not claim an unverified clone technique. Use comparable games only for sparse/readable/deterministic principles; choose the renderer from Cardborne architecture and official Godot guidance. | 5.1, 6.4 |
@@ -162,15 +168,19 @@ Readiness statement:
 - Every material product, architecture, dependency, data, UX, ownership, safety, and validation
   decision is closed.
 - Godot 4.7.1 is available through `./tools/godot.ps1`; no bootstrap or dependency change is
-  required. Each validator named below already exists. Surface generation uses the installed
-  ImageGen workflow and requires the declared user approval gate before promotion.
+  required. Surface SVG generation uses the checked-in deterministic PowerShell generator and
+  the exact approved hashes above; beam raster generation continues to use the installed ImageGen
+  workflow and its separate approval gate.
 - Remaining unknowns are implementation-local or measured performance evidence. They cannot
   change this contract without triggering the predetermined change-control rules.
 - Visual authority evidence for this revision: the full current `VISUAL_SYSTEM.md` was read;
   the canonical sheet was inspected at original detail; expected and observed SHA-256 are both
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`;
   `actual_image_reference_used=true`; reference input method was
-  `image_gen.referenced_image_paths`. Both generated images are preview-only and unapproved.
+  `image_gen.referenced_image_paths`. Both generated images remain preview-only. For the exact
+  approved SurfaceDetail SVG exception, `actual_image_reference_used=false`, reference input
+  method is `deterministic_surface_detail_svg_exception`, the generator and fixed seeds are
+  checked in, and the three selected hashes are recorded above.
 
 ## Tasks
 
@@ -377,7 +387,7 @@ Batch gate:
 
 ### Phase 5: Authorize a narrow SurfaceDetail visual category
 
-Goal: amend the visual contract before generating or integrating any floor-detail raster.
+Goal: amend the visual contract before promoting or integrating any floor-detail image.
 
 Preconditions:
 
@@ -390,14 +400,17 @@ Source owners: `docs/design/VISUAL_SYSTEM.md`, production asset manifest/workben
 
 - [x] **5.1** Define the exception without weakening combat readability.
   - Change: keep flat `#9EADBC` as the dominant surface and add `SurfaceDetail` as a semantic,
-    presentation-only exception. Permit only crack, stain/wear, and embedded debris-chip rasters;
+    presentation-only exception. Permit only the exact deterministic crack, stain/wear, and
+    embedded debris-chip SVG workflow;
     ban grids, seams, repeated panels, rivets, nested rings, lamps, random micro-noise, photoreal
     grime, raised-looking loose stones, and topology cues.
   - Accept: the contract states size/density/contrast/z/batch/placement limits, names runtime and
     approval owners, and keeps every gameplay signal above detail priority.
   - Evidence: the user-authorized 2026-08-08 `VISUAL_SYSTEM.md` revision permits at most 192
-    sparse low-contrast instances across three retained batches while continuing to ban dense
-    noise, obvious tile repetition, collision cues, and gameplay interference.
+    sparse low-contrast instances across three retained batches; the 2026-08-09 approval narrows
+    SVG authoring to the checked-in SurfaceDetail generator and exact selected hashes while
+    continuing to ban dense noise, obvious tile repetition, collision cues, and gameplay
+    interference.
 - [ ] **5.2** Replace the dormant competing floor-pattern owner.
   - Change: retire `vehicle_field_surface_pattern_compiler.gd` and register a dedicated
     `vehicle_surface_detail_compiler.gd` responsibility in the active plan/visual contract. The
@@ -406,11 +419,13 @@ Source owners: `docs/design/VISUAL_SYSTEM.md`, production asset manifest/workben
     path remains reachable or registered.
 - [ ] **5.3** Validate the visual authority workflow change.
   - Change: update manifest/workbench expectations for removal of two hazards and later addition
-    of three surface assets; record `actual_image_reference_used=true` for the concept revision,
-    while keeping preview concepts outside production and approval state.
+    of three surface SVGs. Preserve `actual_image_reference_used=true` for the earlier ImageGen
+    concept; for the selected SVGs record `actual_image_reference_used=false` and
+    `reference_input_method=deterministic_surface_detail_svg_exception`, plus generator path,
+    fixed seeds, exact hashes, and user approval. Keep `_02` variants outside production.
   - Accept: `validate_cardborne_visual_authority.ps1` and document-authority validation pass.
 
-### Phase 6: Generate, approve, and integrate sparse surface and beam rasters
+### Phase 6: Promote and integrate sparse surface SVGs and the beam raster
 
 Goal: add modest physical depth to the floor and replace the framed straight-beam bar while
 keeping both surfaces deterministic, readable, and cheap.
@@ -418,24 +433,28 @@ keeping both surfaces deterministic, readable, and cheap.
 Preconditions:
 
 - Phase 5 passes.
-- The canonical sheet is supplied to ImageGen as an actual referenced image.
+- The surface SVG authority gate and exact-source approval are complete. The canonical sheet is
+  supplied to ImageGen as an actual referenced image for the separate beam-raster task.
 
-Source owners: three production raster assets, production manifest/workbench evidence,
+Source owners: three production SurfaceDetail SVG assets, production manifest/workbench evidence,
 `scripts/presentation/vehicle_surface_detail_compiler.gd`,
 `scripts/presentation/vehicle_world_mesh_builder.gd`, world visual catalog, and visual validators
 
-- [ ] **6.1** Generate grounded candidates to the locked brief.
-  - Change: create transparent raster candidates for `world/surface_detail_crack` (96x96),
-    `world/surface_detail_stain` (128x96), and `world/surface_detail_embedded_chip` (64x64). Keep
-    neutral hangar-floor colors close to `#9EADBC`, irregular authored silhouettes, compact alpha
+- [x] **6.1** Generate grounded candidates to the locked brief.
+  - Change: generate transparent deterministic SVG candidates for `world/surface_detail_crack`
+    (96x96), `world/surface_detail_stain` (128x96), and
+    `world/surface_detail_embedded_chip` (64x64), with neutral low-contrast colors, compact alpha
     bounds, no cast shadow/height cue, and no game-signal colors.
-  - Accept: provenance records exact reference path/hash and `actual_image_reference_used=true`;
-    each candidate is inspected at original detail and at intended 1x footprint.
-- [ ] **6.2** Obtain exact candidate approval before promotion.
-  - Change: present AS-IS flat-surface and TO-BE runtime captures plus the three source candidates,
-    constraints, provenance, and rejected alternatives.
-  - Accept: the user explicitly approves each exact candidate. Rejected candidates remain outside
-    production paths and are regenerated from the same locked brief.
+  - Accept: the checked-in generator reproduces identical hashes; each family is inspected at
+    original detail and intended 1x footprint.
+  - Evidence: commits `57f753be` and `db4adfb8`; deterministic regeneration and XML/canvas checks
+    passed; the exact selected hashes are recorded in Discovery Closure.
+- [x] **6.2** Obtain exact candidate approval before promotion.
+  - Change: present the six-source asset sheet and sparse runtime-scale distribution; revise only
+    the embedded-chip family after feedback.
+  - Accept: the user explicitly approves the reviewed direction and requests these assets be used.
+  - Evidence: user approval on 2026-08-09. `_01` is selected for each production identity; `_02`
+    remains a review alternative to preserve the three-batch contract.
 - [ ] **6.3** Compile deterministic presentation-only placement.
   - Change: generate at most 72 crack, 72 stain, and 48 chip transforms from run-fixed field
     geometry plus a fixed salt. Use fixed low z, 90-degree rotations, scales
@@ -444,17 +463,18 @@ Source owners: three production raster assets, production manifest/workbench evi
     Placement must be identical across all five stages for the same field.
   - Accept: fingerprints are deterministic across rebuilds/stages; all centers are walkable and
     clear; no detail enters collision/topology data; no per-frame RNG or update occurs.
-- [ ] **6.4** Integrate through retained batches and promote only approved rasters.
-  - Change: add one compact-quad `MultiMeshInstance2D` batch per approved asset through the
+- [ ] **6.4** Integrate through retained batches and promote only approved SVGs.
+  - Change: add one compact-quad `MultiMeshInstance2D` batch per selected `_01` SVG through the
     existing world builder; change `DECORATION_BUDGET` from zero to 192; retire the two hazard
-    assets and add the three approved details, for a net manifest count of 70 if the starting
-    exact count is still 69.
+    PNGs and add the three approved SVG details, producing 70 total manifest images (67 PNG and
+    three SVG) if the starting exact count is still 69.
   - Accept: world batches remain `<=12`; detail instances remain `<=192`; no node-per-detail,
     shader noise, full-field texture, TileMap, collision, or runtime transform update exists.
     Native and Web captures at actual size, grayscale, and combat pressure show no lost actor,
     projectile, pickup, telegraph, boundary, or objective readability.
   - Guard: if the pre-edit manifest count is not 69, calculate and assert `starting - 2 + 3`
-    rather than forcing 70. If three batches exceed 12 or eligible rendering evidence regresses,
+    rather than forcing 70. If three batches exceed 12, Godot SVG import is not stable, or
+    eligible rendering evidence regresses,
     stop this branch for contract revision; do not silently add chunking or reduce thresholds.
 - [ ] **6.5** Open a dedicated per-asset beam replacement unit.
   - Change: create a workbench unit for `cue/beam_strip_9` instead of reopening the old eight-asset
