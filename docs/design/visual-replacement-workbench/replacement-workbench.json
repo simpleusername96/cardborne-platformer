@@ -4076,7 +4076,7 @@
       "title_ko": "직선 빔 스트립 교체",
       "owner": "gameplay_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png"
       ],
@@ -4150,7 +4150,15 @@
         "actual_image_reference_used": true,
         "reference_input_method": "image_gen.referenced_image_paths"
       },
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-09T08:51:48+09:00",
+        "baseline_commit": "790320c324bee775dbaf2b15211a1873337dc02e",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png": "527607b4f68c950a4781b4a6dc521d086d66d752851b34320ca799be0edf23fe"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {

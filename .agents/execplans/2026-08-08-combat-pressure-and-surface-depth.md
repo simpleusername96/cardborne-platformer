@@ -529,7 +529,7 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
   - Accept: the unit contains current AS-IS hash
     `f30a3e2027de9e3580973d1e54051617e7b5f87e58571d768f6ad558b2924e48`, current runtime
     captures, user feedback, authority evidence, and one exact TO-BE brief.
-- [ ] **6.6** Generate and obtain approval for the borderless beam mask.
+- [x] **6.6** Generate and obtain approval for the borderless beam mask.
   - Change: with the canonical sheet supplied as an actual image reference, generate an exact
     128x32 transparent tintable flat strip with clean antialiased top/bottom alpha edges and no
     dark perimeter, embedded core, gradient, glow, cap, particle, or detached mark. Present the
@@ -539,10 +539,10 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
   - Progress: built-in ImageGen received the authority sheet, current strip, and Crown boss as
     actual referenced images. Candidate
     `527607b4f68c950a4781b4a6dc521d086d66d752851b34320ca799be0edf23fe` is exact `128x32`
-    RGBA with a centered `128x20` borderless plane and remains workbench-only pending rendered
-    state evidence and exact user approval. The canonical 87-image native capture passes and now
-    includes dedicated Beam Sentinel and Crown-beam startup/active AS-IS/TO-BE evidence; only the
-    approval gate remains.
+    RGBA with a centered `128x20` borderless plane. The canonical 87-image native capture passes
+    and includes dedicated Beam Sentinel and Crown-beam startup/active AS-IS/TO-BE evidence. On
+    2026-08-09 the user referenced this exact candidate and authorized continuation with the
+    runtime-colored result; the workbench technical ledger pins the target path and exact hash.
 - [ ] **6.7** Retune the existing beam planes without adding a batch.
   - Change: startup uses full-width body alpha `0.16 -> 0.34` over readiness plus an ivory filament
     `min(3.5, width*0.065)` at alpha `0.32 -> 0.66`. Active uses full-width body alpha `0.92`,
@@ -664,7 +664,8 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 6 - Retune and replace the straight boss beam.
-- Next task: 6.6 - capture and approve the exact 128x32 beam candidate. Task 3.6 retains its rendered
+- Next task: 6.7 - promote the approved 128x32 beam candidate and validate the shared two-/three-
+  plane renderer. Task 3.6 retains its rendered
   pursuit/ranged capture for final runtime QA. Task 1.2 remains deferred until
   user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
 - Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
