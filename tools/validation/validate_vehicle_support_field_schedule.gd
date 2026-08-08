@@ -1,7 +1,7 @@
 extends SceneTree
 
 ## Compatibility entrypoint for the retired repair/overdrive field scheduler.
-## Terrain owns only static hazard zones and player-operated transit gates.
+## Terrain owns only structural-wall records and player-operated transit gates.
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")

@@ -5,7 +5,7 @@ extends RefCounted
 ##
 ## Terrain visuals and collision remain owned by their callers.  This record
 ## only carries the stable authored footprint and the gameplay metadata that
-## the terrain runtime needs for hazards and transit gates.
+## the terrain runtime needs for transit gates and structural-wall snapshots.
 
 var id: StringName
 var kind: StringName
