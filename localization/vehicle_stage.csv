@@ -197,7 +197,7 @@ DEPLOY_PULSE_CANNON_SUMMARY,"중립형 펄스 캐논\n누르고 있으면 같은
 UPGRADE_CRYO_SLOW_TITLE,"냉기 부여","Cryo Slow"
 UPGRADE_CRYO_SLOW_DESC,"적을 냉각해 움직임 둔화","Slows enemies with chill"
 UPGRADE_THERMAL_BURST_TITLE,"열폭발","Thermal Burst"
-UPGRADE_THERMAL_BURST_DESC,"주 탄환 명중 시 주변 적에게 폭발 피해","Primary hits damage nearby enemies"
+UPGRADE_THERMAL_BURST_DESC,"명중 시 주변 피해","Hits damage nearby foes"
 UPGRADE_BIO_TOXIN_TITLE,"독 부여","Bio Toxin"
 UPGRADE_BIO_TOXIN_DESC,"적을 중독시켜 지속 피해","Poisons foes over time"
 UPGRADE_PICKUP_RADIUS_TITLE,"수거 범위","Pickup Radius"
