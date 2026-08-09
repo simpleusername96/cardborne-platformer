@@ -20,11 +20,12 @@ Deliver a harder-to-cheese but less front-loaded five-stage run and restore the 
 feedback loop. The completed portion removes neutral hazards, applies the selected ordinary-health
 curve, makes role movement distance-aware, strengthens boss shielding, replaces Thermal Burn with
 bounded Thermal Burst damage, integrates sparse approved surface detail, and replaces the boxed
-straight-beam strip. The remaining portion restores visible XP progress, prevents late-run level
+straight-beam strip. The remaining portion restores unmistakable XP progress, prevents late-run level
 rewards from disappearing when fewer than three legal cards remain, makes elemental upgrades show
 their real current-to-next values, restores restrained nearby-enemy direction cues, differentiates
-minimap roles, adds bounded elemental hit feedback, and stops the boss shield from masking authored
-boss bodies. The verified implementation baseline for this revision is `b9a41aee`; current HEAD
+minimap roles, makes Electric Field show its complete damage area without reading as a shield, adds
+bounded elemental hit feedback, and stops the boss shield from masking authored boss bodies. The
+verified implementation baseline for this revision is `b9a41aee`; current HEAD
 still has no eligible native/Web release-performance qualification, so the exact final workload is
 measured once after all remaining behavior and visual work is complete.
 
@@ -34,7 +35,7 @@ measured once after all remaining behavior and visual work is complete.
   elemental, surface, beam, and frame-pacing outcomes as one decision-complete sequence with
   independent causal commits.
 - Deliverable: updated gameplay and movement rules; a truthful bilingual XP and upgrade flow;
-  retained HUD, threat-radar, minimap, projectile, status, and shield presentation; approved
+  retained HUD, threat-radar, minimap, Electric Field, projectile, status, and shield presentation; approved
   production surface SVGs, beam raster, and any separately approved Thermal impact raster;
   focused validators; production Web export; and eligible native/Web performance evidence.
 - Completion state: neutral hazards no longer exist; ordinary health uses the locked five-stage
@@ -42,7 +43,9 @@ measured once after all remaining behavior and visual work is complete.
   damage and remain visually identifiable; Thermal Burst applies bounded enemy-only splash with
   bounded impact feedback; XP progress and late-run rewards never disappear silently; upgrade
   copy shows true level deltas; nearby off-screen enemies and distinct minimap roles are readable;
-  Toxin/Cryo states are visible without per-enemy nodes; the floor and straight beams retain the
+  Electric Field fills the exact `120/140/160` damage disk in Arc purple instead of reusing shield
+  language; Toxin/Cryo states are visible as same-silhouette translucent body overlays without
+  per-enemy nodes; the floor and straight beams retain the
   approved presentation; and all correctness, visual, export, and performance gates pass from the
   exact clean final commit.
 
@@ -70,8 +73,9 @@ In scope:
 - Replace the current dark-bordered `cue/beam_strip_9` raster with a tintable flat alpha mask and
   retune the existing two-plane startup/three-plane active composition for Beam Sentinel and boss
   straight beams.
-- Restore a slim panel-free XP rail and level value under the top-center hull/upgrade zone. Publish
-  XP through the reusable fast-HUD snapshot instead of rebuilding the full build snapshot.
+- Restore a slim panel-free XP rail and level value under the top-center hull/upgrade zone. Label
+  the value with the literal `EXP` so the rail cannot be mistaken for the hull bar. Publish XP
+  through the reusable fast-HUD snapshot instead of rebuilding the full build snapshot.
 - Permit one, two, or three legal upgrade choices near catalog exhaustion. Show an explicit
   localized `MAX` progression state only when zero compatible upgrades remain; never consume a
   pending level through a warning-only path.
@@ -82,9 +86,13 @@ In scope:
 - Expand the minimap's bounded semantic roles to distinguish field pickup, reward crate, Mystery
   Device, mobile enemy, fixed priority enemy, boss, and reinforcement facility by shape as well as
   color.
+- Replace the current Mint Electric Field ring with an Arc-purple, ground-attached, low-alpha filled
+  disk at the exact `120/140/160` gameplay radii. The enemy body-overlap rule remains gameplay truth;
+  the visual adds no collision owner and does not reuse player/enemy shield geometry.
 - Add one separately approved, bounded Thermal impact identity at the direct hit point and add
-  Toxin/Cryo application and persistent status tint through retained enemy-batch data. Do not add
-  one node, raster, or timer object per affected enemy.
+  Toxin/Cryo application and persistent status tint as a same-size, actor-alpha-clipped overlay
+  composed through retained enemy-batch data. Do not add one node, raster, material, or timer object
+  per affected enemy.
 - Reduce the shared boss-shield overlay's visual dominance and give the boss minimap marker a
   command-color notched shape. Preserve the five existing authored boss PNG identities.
 - Diagnose the reported hitch from eligible evidence and make only an evidence-selected,
@@ -106,8 +114,8 @@ Out of scope:
 - A Thermal world-radius telegraph, persistent ring, particle system, new sound asset, per-splash-
   target effect, or frame-animation pack. The permitted impact is one short authored identity at
   each eligible direct hit, scaled to the actual burst radius.
-- Persistent Toxin/Cryo rings, status icons, orbit markers, per-enemy labels, repeated strobing,
-  damage numbers, or separate status rasters.
+- Persistent Toxin/Cryo rings, outlines, enlarged silhouettes, status icons, orbit markers,
+  per-enemy labels, repeated strobing, damage numbers, or separate status rasters.
 - Recoloring the Seeker as if it inherited the selected primary element; its authored identity and
   gameplay payload remain separate from player-primary affinity.
 - Redrawing the five boss bodies in this pass. If shield reduction does not reveal their existing
@@ -139,10 +147,13 @@ Constraints and invariants:
 - The world renderer stays retained. Surface instances use at most three existing-style
   `MultiMeshInstance2D` batches, zero per-instance nodes, zero per-frame transform updates, and
   keep `MAX_VISUAL_BATCHES <= 12`.
-- Minimap and threat feedback remain code-native retained meshes. Status feedback is composed into
-  existing enemy instance colors. Thermal impact uses the fixed 96-state effect store with a
+- Minimap and threat feedback remain code-native retained meshes. Electric Field uses one bounded
+  retained code-native area batch because it visualizes collision-owned radius truth; it creates no
+  per-frame or per-target nodes and stays beneath actors. Status feedback is composed into existing
+  enemy instance colors with the authored body alpha acting as the exact overlay mask. Thermal
+  impact uses the fixed 96-state effect store with a
   dedicated live cosmetic sub-limit and must never evict EMP charge/release state.
-- The four images under
+- The five images under
   `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/`
   are approval-before-implementation composition references only. They do not approve production
   pixels, replace exact runtime capture, or override this contract.
@@ -204,14 +215,15 @@ Exact actions requiring owner or user approval:
 | Comparable-game evidence | Official Into the Breach material supports deterministic, immediately readable combat; public primary sources for Into the Breach, Wasteland Kings, and Spelunky do not disclose exact floor-decal batching. | GDC postmortem and official game pages; Godot official docs | Do not claim an unverified clone technique. Use comparable games only for sparse/readable/deterministic principles; choose the renderer from Cardborne architecture and official Godot guidance. | 5.1, 6.4 |
 | Reported hitch | Current HEAD has no eligible performance JSON. The last eligible older sample showed frame p95 143 ms with physics catch-up and simulation/HUD cost while render CPU/GPU were low. Later allocator prewarm improved a diagnostic but was never release-qualified. On 2026-08-08, 16 unrelated Godot processes prevented a clean run. | Active performance plan; runtime architecture audit; historical JSON | Make no current root-cause claim. First qualify clean current HEAD, then repeat after all feature work. Optimize only the subsystem selected by a valid trace/sample; never blame new PNGs by intuition. | 1.1-1.4, 10.3-10.4 |
 | Performance fixture mismatch | Renderer capacity and visual contract are 28 health overlays, but the performance scenario and its validator still require 50. Release batch threshold remains at most 50. | combat renderer, visual system, renderer validator, performance scenario and validator | Change only the scenario fixture expectation from 50 to 28; retain the release threshold `batches <= 50`. A failing focused validator blocks all expensive samples. | 1.1 |
-| Missing XP feedback | `VehicleExperienceRuntime` still advances levels with the capped formula `min(160, 12 + round(3n + 0.55n^2))`. `VehicleGameplayHud.HealthPips` still stores XP fields, but `_fill_fast_hud_snapshot` omits them and `debug_contract()` asserts `has_experience_geometry=false`; the product and visual specs explicitly removed the rail. | `scripts/progression/vehicle_experience_runtime.gd`; `scripts/vehicle/vehicle_run.gd`; `scripts/ui/vehicle_gameplay_hud.gd`; product/visual specs | Restore a slim panel-free XP rail and level value in the existing top-center zone. Publish only scalar level/current/required/MAX fields through the fast HUD snapshot; do not rebuild the full build summary at HUD cadence. | 7.1-7.2 |
+| Missing XP feedback | `VehicleExperienceRuntime` still advances levels with the capped formula `min(160, 12 + round(3n + 0.55n^2))`. `VehicleGameplayHud.HealthPips` still stores XP fields, but `_fill_fast_hud_snapshot` omits them and `debug_contract()` asserts `has_experience_geometry=false`; the product and visual specs explicitly removed the rail. | `scripts/progression/vehicle_experience_runtime.gd`; `scripts/vehicle/vehicle_run.gd`; `scripts/ui/vehicle_gameplay_hud.gd`; product/visual specs | Restore a slim panel-free XP rail and level value in the existing top-center zone. Show literal `EXP` beside the numeric value so it cannot read as a second hull bar. Publish only scalar level/current/required/MAX fields through the fast HUD snapshot; do not rebuild the full build summary at HUD cadence. | 7.1-7.2 |
 | Stage 4 level-up symptom | XP collection and stage gains have no Stage 4 cap. The failure is the reward gate: `_open_upgrade_reward()` requires exactly three cards and otherwise logs a warning, resolves the transaction, and `consume_pending_level()` removes the pending level. Catalog compatibility shrinks late in a run due to max levels, element exclusion, and optional-secondary limits. | `VehicleRun._open_upgrade_reward/_resolve_reward_transaction`; `VehicleUpgradeCatalog.offer`; experience/upgrade validators | Accept one to three legal cards and center only visible cards. Zero legal cards enters an explicit localized progression-complete `MAX` receipt, stops future XP drops/awards, and never uses a warning-only silent consume path. | 7.1, 7.4 |
 | Element card truth | The presenter can distinguish `unlock` and `enhance`, but element resources have no stat modifiers, so their visible descriptions remain static and show no real level deltas. Runtime values live only in `VehicleElementProfile`: Thermal radius `72/84/96`, damage `4/6/8`; Toxin DPS/stack `2/3/4`, duration `5/6/7`; Cryo slow/stack `6/8/10%`, duration `2/2.5/3`, with boss Chill effectiveness halved. | `vehicle_upgrade_offer_presenter.gd`; element card resources; `vehicle_element_profile.gd`; `vehicle_status_runtime.gd` | Make one gameplay-owned level-value descriptor consumable by runtime and offer presenter. First acquisition shows behavior plus initial values; enhancements show exact current-to-next rows. Korean and English remain complete; UI does not copy value arrays. | 7.3-7.4 |
 | Nearby direction cue | Commit `b9e66b86` narrowed threat radar to unseen committed projectile attacks and boss arrival. The retained mesh still has 12 sectors, a 1200-unit maximum, sector aggregation, and five-hertz publication. Ordinary off-screen location is minimap-only. | `VehicleRun._threat_radar_snapshot`; `VehicleThreatRadar`; `VehicleCombatCuePolicy`; git history | Add low-priority `nearby_enemy` contacts only for nearby enemies outside the viewport. Aggregate by existing sectors, vary width by density/proximity, draw no triangle, and let incoming attack and boss arrival win the sector. Visible enemies remain excluded and the minimap owns exact location. | 8.1-8.2 |
 | Minimap role collapse | Snapshot creation emits pickups, crates, and intact Mystery Devices as `item`; mobile and fixed ordinary enemies as `enemy`; builder supports only item/enemy/boss/facility plus player. The large neutral Mystery Device can therefore disappear into pickup semantics. Boss differs mainly by size. | `VehicleRun._minimap_snapshot/_runtime_minimap_snapshot`; `VehicleMinimapMeshBuilder`; UI glyph catalog | Use eight bounded roles: player, field pickup, reward crate, Mystery Device, mobile enemy, fixed priority enemy, boss, and reinforcement facility. Distinguish shape as well as semantic color; keep Mystery Device outcome hidden; use one notched command-magenta boss marker instead of arbitrary per-stage colors. | 8.1, 8.3-8.4 |
-| Projectile affinity and persistent status feedback | Player-primary projectile tint already follows Thermal/Toxin/Cryo; Seeker and hostile bolt intentionally keep authored identities. Generic enemy hit feedback is a short common flash. Renderer input does not expose Toxin/Chill stacks or application time, so persistent status has no direct body feedback. | `VehicleCombatRenderer`; `VehicleAttackContract`; `VehicleStatusRuntime`; current renderer/status validators | Preserve primary-only affinity tint and Seeker identity. Publish bounded status stack ratios plus one application pulse receipt in the enemy presentation frame; compose Toxin/Cryo tint into existing instance colors. Generic damage flash wins briefly, then status tint returns. Reduced motion removes the pulse/strobe but preserves static state tint. | 9.2-9.3, 9.5 |
-| Boss visual identity | Five boss variants already resolve separate authored PNGs. The shared large opaque magenta shield boundary masks their silhouette and makes them read alike. The minimap boss marker is a larger plain hexagon. | actor visual catalog; combat renderer; current boss captures; `boss-shield-readability-to-be.png` | Preserve all boss PNGs. Reduce shield fill/thickness/opacity to one restrained body-attached boundary, then validate all five at 1x and grayscale. Change only the minimap marker to a notched command shape. Open per-boss art replacement only if authored bodies remain indistinct after the shield fix. | 8.3-8.4, 9.4-9.5 |
-| TO-BE visual evidence | The latest production capture set is the Korean 87-image `beam-production-655e0ee2` set. It predates `b9a41aee` only by documentation/workbench and Thermal-copy changes. Four ImageGen edits used the relevant current capture and the canonical sheet as actual referenced images. | `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/README.md`; capture manifest; git diff `655e0ee2..b9a41aee` | Use the four images for composition, hierarchy, and expected-state discussion only. Runtime owners, exact copy, supported viewports, and task acceptance below remain binding; no generated pixels are production-approved. | 7.2-9.5 |
+| Electric Field area and shield collision | `VehicleSecondaryRuntime` damages every eligible enemy whose body overlaps radii `120/140/160` at a `0.25s` tick and passes line of sight. `VehicleCombatRenderer` duplicates those radii in `ELECTRIC_FIELD_RADII` and draws only a Mint `cue/ring` at alpha `0.48`. Player barrier and enemy shields use the same Mint ring family, so the damage field reads as protection and its interior is visually empty. | `data/weapons/vehicle/secondary/electric_field.tres`; `scripts/player/vehicle_secondary_runtime.gd`; `scripts/presentation/vehicle_combat_renderer.gd`; `30-boss-04-stage-4-active.png` | Make the secondary definition/snapshot the single radius source. Draw one low-alpha Arc-purple filled disk below actors at `120/140/160`, with one restrained broken perimeter and at most four broad internal planes. The disk represents the field volume; damage still begins when an enemy body overlaps it. Do not reuse Mint/support shield geometry or create a second collision owner. | 8.1, 9.4, 9.6 |
+| Projectile affinity and persistent status feedback | Player-primary projectile tint already follows Thermal/Toxin/Cryo; Seeker and hostile bolt intentionally keep authored identities. Generic enemy hit feedback is a short common flash. Renderer input does not expose Toxin/Chill stacks or application time, so persistent status has no direct body feedback. | `VehicleCombatRenderer`; `VehicleAttackContract`; `VehicleStatusRuntime`; current renderer/status validators | Preserve primary-only affinity tint and Seeker identity. Publish bounded status stack ratios plus one application pulse receipt in the enemy presentation frame. Visually treat the actor's authored alpha as an exact same-size overlay mask: no enlarged silhouette, perimeter, halo, or external geometry. Generic damage flash wins briefly, then the Toxin/Cryo body overlay returns. Reduced motion removes the pulse change but preserves the static overlay. | 9.2-9.3, 9.6 |
+| Boss visual identity | Five boss variants already resolve separate authored PNGs. The shared large opaque magenta shield boundary masks their silhouette and makes them read alike. The minimap boss marker is a larger plain hexagon. | actor visual catalog; combat renderer; current boss captures; `boss-shield-readability-to-be.png` | Preserve all boss PNGs. Reduce shield fill/thickness/opacity to one restrained body-attached boundary, then validate all five at 1x and grayscale. Change only the minimap marker to a notched command shape. Open per-boss art replacement only if authored bodies remain indistinct after the shield fix. | 8.3-8.4, 9.5-9.6 |
+| TO-BE visual evidence | The latest production capture set is the Korean 87-image `beam-production-655e0ee2` set. It predates `b9a41aee` only by documentation/workbench and Thermal-copy changes. Five ImageGen edits used the relevant current capture and the canonical sheet as actual referenced images. The first over-scaled combined HUD/field generation was rejected and not copied into the repository. | `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/README.md`; capture manifest; git diff `655e0ee2..b9a41aee` | Use the five repository images for composition, hierarchy, and expected-state discussion only. Runtime owners, exact copy, supported viewports, and task acceptance below remain binding; no generated pixels are production-approved. | 7.2-9.6 |
 
 Readiness statement:
 
@@ -227,7 +239,7 @@ Readiness statement:
   the canonical sheet was inspected at original detail; expected and observed SHA-256 are both
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`;
   `actual_image_reference_used=true`; reference input method was
-  `image_gen.referenced_image_paths`. All four generated images remain preview-only. For the exact
+  `image_gen.referenced_image_paths`. All five generated images remain preview-only. For the exact
   approved SurfaceDetail SVG exception, `actual_image_reference_used=false`, reference input
   method is `deterministic_surface_detail_svg_exception`, the generator and fixed seeds are
   checked in, and the three selected hashes are recorded above.
@@ -656,9 +668,10 @@ visual specs, and focused XP/upgrade/HUD validators
   - Change: add `level`, `experience`, `experience_required`, and `experience_complete` scalars to
     the reusable fast HUD frame. Draw a panel-free meter below the acquired-upgrade rail in the
     existing top-center zone: compact/standard/large track widths `280/360/420`, height `6/8/8`,
-    current amber fill, dark track, `Lv. N` at left and `current / required` at right. Put `MAX` in
-    the value position when complete. Let the rail follow one- or two-row acquired-upgrade height
-    and keep the toast stack four pixels below it.
+    current amber fill, dark track, `Lv. N` at left and `EXP current / required` at right. The literal
+    `EXP` label is mandatory at every supported width. Put `EXP MAX` in the value position when
+    complete. Let the rail follow one- or two-row acquired-upgrade height and keep the toast stack
+    four pixels below it.
   - Accept: collection updates within the existing fast-HUD cadence; no full build snapshot,
     catalog scan, node rebuild, or allocation occurs per update. The rail fits with 0, 12, and 18
     acquired upgrades at `960x540`, `1280x720`, `1920x1080`, and 200% text without overlapping the
@@ -673,7 +686,9 @@ visual specs, and focused XP/upgrade/HUD validators
     initial values without a false zero-to-value delta; later offers show current-to-next values;
     level three is never offered. Visible row labels are `효과 범위 / Effect radius`,
     `폭발 피해 / Burst damage`, `중독 피해/중첩 / Toxin damage/stack`,
-    `지속 시간 / Duration`, and `감속/중첩 / Slow/stack`.
+    `지속 시간 / Duration`, and `감속/중첩 / Slow/stack`. Separate every card section and effect
+    row with vertical spacing and alignment only. An upgrade card may contain zero horizontal
+    separators, dividers, rules, underlines, row boxes, or line-like background bars in every state.
   - Accept: runtime profile values, card rows, Korean/English labels, build snapshot, stage report,
     and validators all derive identical numbers. Boss Chill's existing half-effect rule is stated
     in accessible/detail copy without changing the displayed base player-owned value.
@@ -711,9 +726,10 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
 
 - [ ] **8.1** Amend the visual contract narrowly before runtime changes.
   - Change: replace the absolute no-XP, incoming-only radar, five-marker minimap, three-card-only
-    modal, three-effect-only, and text-only persistent-status clauses with the bounded contracts in
-    Phases 7-9. Preserve sparse HUD, one minimap Surface, no full radar circle, no per-enemy status
-    node, no decorative markers, and exact visual-authority/approval requirements.
+    modal, shared-ring Electric Field, three-effect-only, and text-only persistent-status clauses
+    with the bounded contracts in Phases 7-9. Preserve sparse HUD, one minimap Surface, no full
+    radar circle, no per-enemy status node/material, no decorative markers, zero internal upgrade-
+    card horizontal separators, and exact visual-authority/approval requirements.
   - Accept: product and visual specs describe the same reachable states, localization, ownership,
     reduced-motion behavior, capacities, and non-goals; visual-authority validation passes.
 - [ ] **8.2** Add low-priority nearby-enemy contacts to the retained threat radar.
@@ -748,10 +764,10 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
     grayscale, and reduced-motion review matches the hierarchy in
     `gameplay-hud-minimap-to-be.png` without reproducing its generated pixels.
 
-### Phase 9: Add bounded elemental feedback and reveal boss identity
+### Phase 9: Add bounded elemental feedback, distinguish Electric Field, and reveal boss identity
 
-Goal: make selected-element hits and persistent statuses visible without turning hit feedback into
-an effect storm or hiding boss bodies behind their shields.
+Goal: make selected-element hits and persistent statuses visible, show the complete Electric Field
+damage area without shield ambiguity, and keep boss bodies readable without creating an effect storm.
 
 Preconditions:
 
@@ -762,8 +778,10 @@ Preconditions:
 Source owners: `scripts/combat/vehicle_element_profile.gd`,
 `scripts/combat/vehicle_status_runtime.gd`, enemy state/presentation snapshots,
 `scripts/combat/vehicle_effect_store.gd`, effect/asset catalogs and manifest,
+`data/weapons/vehicle/secondary/electric_field.tres`,
+`scripts/player/vehicle_secondary_runtime.gd`,
 `scripts/presentation/vehicle_combat_renderer.gd`, boss actor catalog, workbench evidence,
-localization, capture fixtures, and focused status/effect/renderer validators
+localization, capture fixtures, and focused secondary/status/effect/renderer validators
 
 - [ ] **9.1** Author and approve one Thermal impact identity.
   - Change: open a dedicated workbench unit for a transparent `192x192` Thermal Burst impact PNG
@@ -787,15 +805,37 @@ localization, capture fixtures, and focused status/effect/renderer validators
     input.
 - [ ] **9.3** Compose Toxin and Cryo state into existing enemy batches.
   - Change: add bounded scalar presentation fields for Toxin/Cryo stack ratio and a `0.16s`
-    application pulse receipt. Mix semantic Toxin/Cryo color into the existing actor instance color
-    at `0.12/0.16/0.20` for stacks 1/2/3; the short application pulse may reach `0.32`. Generic
-    direct-damage flash wins during its existing `0.11s`, then persistent tint returns. Reduced
-    motion omits the pulse boost and keeps only static tint. Do not add status raster, ring, icon,
-    label, node, material, or repeated strobe.
+    application pulse receipt. Compose semantic Toxin/Cryo color through the existing actor
+    instance at `0.12/0.16/0.20` for stacks 1/2/3; this must look exactly like a translucent layer
+    clipped by the authored sprite alpha at the same transform, scale, and silhouette. The short
+    application pulse may reach `0.32`. It changes only overlay alpha and never expands the actor.
+    Generic direct-damage flash wins during its existing `0.11s`, then persistent overlay returns.
+    Reduced motion omits the pulse boost and keeps only the static overlay. Do not add a second
+    draw, status raster, outline, halo, enlarged silhouette, ring, icon, label, node, material, or
+    repeated strobe.
   - Accept: stack gain, refresh, expiry, boss half-Chill, pooled enemy retirement/reuse, generic
     damage flash, stealth/visibility, and grayscale/affinity tests all show correct state with no
-    stale tint. Renderer consumes staged snapshot scalars and never reads live status dictionaries.
-- [ ] **9.4** Reduce boss-shield dominance before considering new boss art.
+    stale tint. Pixel-mask comparison confirms every colored overlay pixel remains inside the
+    unchanged actor alpha and footprint. Renderer consumes staged snapshot scalars and never reads
+    live status dictionaries.
+- [ ] **9.4** Replace the shield-like Electric Field ring with its complete damage area.
+  - Change: remove renderer-owned `ELECTRIC_FIELD_RADII` duplication and publish the selected
+    secondary definition radius `120/140/160` in the borrowed presentation snapshot. Add one
+    capacity-one retained code-native field-area batch below actors: Arc-purple fill alpha `0.10`,
+    one broken perimeter at alpha `0.28`, and at most four broad internal planes at alpha `0.04`.
+    All geometry stays within the exact radius and moves with the player. It has no collision,
+    query, timer, damage, or target owner. Preserve the runtime's `0.25s` tick, LOS test, and enemy-
+    body overlap check `radius + enemy.radius`.
+  - Accept: levels 1/2/3 measure exactly `120/140/160` world units in debug-overlay captures; the
+    full interior is visible at 1x, every eligible overlapping enemy can be visually explained, and
+    player barrier/enemy shield remains Mint while Electric Field is Arc purple and ground-attached.
+    No cyan/mint field, hollow donut, body-hugging bubble, glow, particle spray, repeated ring, or
+    second collision truth remains. The added field batch is one retained instance and the existing
+    combat/draw-call budgets remain unchanged.
+  - Guard: if the filled alpha causes a measurable fill-rate or readability regression, reduce only
+    the locked fill/perimeter alpha within the accepted hierarchy after an eligible comparison; do
+    not shrink the visual below the damage radius, reduce damage radius, or restore the shield ring.
+- [ ] **9.5** Reduce boss-shield dominance before considering new boss art.
   - Change: preserve the five boss PNGs and current batch. Reuse the shared authored ring but change
     the boss-only shield write from alpha `0.90` to `0.38` and radius offset from `+12` to `+8`;
     preserve shield-down absence and existing hit feedback. Add no shield node, module, objective,
@@ -806,15 +846,17 @@ localization, capture fixtures, and focused status/effect/renderer validators
   - Guard: if the existing ring remains too thick or masks a boss after the exact retune, stop and
     open one dedicated shared boss-boundary raster workbench unit. Do not draw replacement geometry
     procedurally or redraw boss bodies by inference.
-- [ ] **9.5** Capture every elemental and boss state under real pressure.
+- [ ] **9.6** Capture every elemental, Electric Field, and boss state under real pressure.
   - Change: add deterministic fixtures for Thermal levels 1-3 at direct hit and crowded splash,
-    Toxin/Cryo stacks 1-3 at application/persistent/expiry, reduced motion, saturated effect store
-    with EMP, and all five bosses shield-up/down/hit. Capture affinity-colored player-primary shots
-    and the unchanged authored Seeker identity.
+    Toxin/Cryo stacks 1-3 at application/persistent/expiry, Electric Field levels 1-3 beside player
+    barrier and enemy shield, reduced motion, saturated effect store with EMP, and all five bosses
+    shield-up/down/hit. Capture affinity-colored player-primary shots and the unchanged authored
+    Seeker identity.
   - Accept: status, attack, effect-store, combat renderer, damage feedback, boss, visual provider,
     manifest/workbench, capture, reduced-motion, visual-authority, and Run validators pass. Actual-
-    size results preserve the hierarchy shown by `elemental-hit-feedback-to-be.png` and
-    `boss-shield-readability-to-be.png` while respecting their documented limitations.
+    size results preserve the hierarchy shown by `elemental-hit-feedback-to-be.png`,
+    `electric-field-to-be.png`, and `boss-shield-readability-to-be.png` while respecting their
+    documented limitations.
 
 Batch gate:
 
@@ -853,14 +895,15 @@ scenarios, active performance policy/evidence records
   - Change: use production-style native and built Web paths to check all five ordinary-health
     stages; absence of neutral hazards; pursuit/standoff around cover; XP collection and tail
     offers through MAX; one shield-up/down boss cycle for every boss; Beam Sentinel and boss beam
-    startup/active; Thermal Burst at all levels in a crowd and near a structure; Toxin/Cryo stack
-    feedback; bilingual cards; radar/minimap roles; and surface readability at actual size and
-    grayscale.
+    startup/active; Thermal Burst at all levels in a crowd and near a structure; Toxin/Cryo same-
+    silhouette overlays; Electric Field levels 1-3 beside a barrier and shield; bilingual cards;
+    radar/minimap roles; and surface readability at actual size and grayscale.
   - Accept: the opening is less spongy; later health growth is observable; melee closes and ranged
     holds distance; no level reward disappears; element values match runtime; nearby direction and
     exact minimap roles do not compete; boss bodies remain readable; burst never double-hits,
-    chains, or damages structures; status tint never persists after state expiry; and detail never
-    reads as collision or combat signal.
+    chains, or damages structures; status overlay never escapes the actor alpha or persists after
+    state expiry; Electric Field fills the exact damage disk without reading as a shield; and detail
+    never reads as collision or combat signal.
   - Progress: the pre-revision 87-image Korean `1280x720` native capture verifies the completed
     beam/surface/boss fixture set. User-controlled movement feel, the new progression/readability
     states, explicit grayscale review, and interactive built-Web play remain open.
@@ -870,8 +913,8 @@ scenarios, active performance policy/evidence records
     save raw JSON unchanged.
   - Accept: both final samples pass the unchanged release thresholds and declared workloads.
   - Guard: hazard removal, steering, splash queries, three surface batches, XP/radar/minimap data,
-    Thermal effects, status tint, and shield presentation all change the final workload. No earlier
-    sample qualifies the final commit.
+    Thermal effects, status overlay, Electric Field area, and shield presentation all change the
+    final workload. No earlier sample qualifies the final commit.
   - Deferred precondition: a pre-existing normal `Cardborne (DEBUG)` Godot run blocked the last
     isolated sample. Resume only after it closes; do not terminate it by inference.
 - [ ] **10.4** Diagnose and correct only a valid red owner, then qualify built Web.
@@ -899,7 +942,7 @@ scenarios, active performance policy/evidence records
 | Visual phase gate | Production manifest, workbench, world visual, field/stage layout, combat renderer, attack readability, capture, import, and `validate_cardborne_visual_authority.ps1` | Contract changes in Phase 5 and approved surface/beam integration in Phase 6 | Visual contract, raster, manifest, placement, renderer, or capture changes |
 | Progression phase gate | Experience, upgrade catalog/system/presenter/UI, HUD presenter/layout, localization, stage transition, reward/audio, build/report, capture, and Run validators | Phase 7 tasks pass | XP, reward transaction, offer compatibility, element values/copy, HUD geometry, or localization changes |
 | HUD and minimap phase gate | Threat radar, combat cue policy, minimap builder/retained mesh, glyph catalog, HUD presenter/layout, capture, visual registry, visual authority, and Run validators | Phase 8 tasks pass | Contact sampling/priority, marker roles/geometry, HUD layout, or visual contract changes |
-| Combat-feedback phase gate | Element/status, attack, effect store, damage feedback, renderer, boss, provider/manifest/workbench, capture, reduced motion, visual authority, and Run validators | Phase 9 tasks and exact Thermal approval pass | Effect source/hash/import, effect allocation, status snapshot/tint, shield overlay, or capture changes |
+| Combat-feedback phase gate | Element/status, secondary weapon, attack, effect store, damage feedback, renderer, boss, provider/manifest/workbench, capture, reduced motion, visual authority, and Run validators | Phase 9 tasks and exact Thermal approval pass | Effect source/hash/import, effect allocation, status snapshot/overlay, Electric Field geometry/radius, shield overlay, or capture changes |
 | Export gate | `./tools/godot.ps1 --path . --headless --import`; `./tools/export_web.ps1`; require `WEB_EXPORT_OK` | Once after all feature phases and affected focused validators pass | An imported asset, export-affecting source, or project setting changes |
 | Native performance gate | Exact clean-commit `peak_horde` and `capacity_pressure` protocol in the prerequisite performance plan | Phase 1 baseline and Phase 10 final state, after user cost alignment | Workload/code/asset/instrumentation changes or a sample is invalid/red for a new evidence-backed hypothesis |
 | Web performance gate | Built-Web `peak_horde` on the `codex` lane with exact JSON capture | Native qualification passes and matching Web artifact exists | Native/build/asset/workload changes or the sample is invalid |
@@ -941,7 +984,8 @@ Validation rules:
 | The eight minimap roles are not distinct at 1x/grayscale | Revise marker silhouette inside the locked role set and retained mesh | Do not add per-archetype markers, hidden Mystery Device outcomes, arbitrary boss colors, labels, or a second minimap layer |
 | The exact Thermal impact candidate is rejected | Keep it outside production and regenerate one candidate from the same `192x192`, footprint, plane-count, and no-particle brief | Do not ship the mockup burst, generate an animation pack, author SVG geometry, or replace gameplay values |
 | Thermal impacts saturate the effect store | Recycle/drop Thermal cosmetic receipts within the 24-live sub-limit and preserve damage/EMP | Do not increase capacity, evict EMP, reduce attack activity, or suppress damage |
-| Toxin/Cryo tint hides actor identity or conflicts with hit flash | Lower only the locked status mix/pulse intensity and preserve hit-flash priority in the existing batch | Do not add rings, icons, per-enemy nodes, materials, or repeated strobe |
+| Toxin/Cryo overlay hides actor identity, escapes the actor alpha, or conflicts with hit flash | Lower only the locked overlay/pulse intensity and preserve same-size actor-alpha clipping and hit-flash priority in the existing batch | Do not add outlines, halos, enlarged silhouettes, rings, icons, per-enemy nodes, materials, or repeated strobe |
+| Electric Field reads as a shield or does not explain every damaging overlap | Correct only the field fill, broken perimeter, z-order, or radius-source wiring inside the locked Arc-purple full-disk contract | Do not restore the Mint ring, shrink the visual below `120/140/160`, change the enemy-body overlap rule, or add particles/glow |
 | Boss remains obscured after the exact alpha/radius retune | Stop the visual branch and open one shared boss-boundary raster workbench unit under the authority pair | Do not redraw boss bodies, change collision size, or create procedural replacement geometry |
 | A valid current sample is red | Select the largest evidenced owner from slow-frame/subsystem data and make one causal correction | No broad optimization pass and no claim based on historical or invalid samples |
 | A verified material fact contradicts this contract | Stop the affected branch, update the contract, and obtain any required approval before resuming | Do not let the executor choose a new product, architecture, dependency, data, UX, safety, or validation contract |
@@ -961,9 +1005,11 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   promoted unchanged and compile to deterministic 72/72/48 placement across stages in three
   retained batches, and the borderless straight-beam replacement is production-integrated.
   Manifest/provider/world/workbench/visual-authority/Run gates pass for that completed workload.
-  The 2026-08-09 progression/readability discovery gate is complete; its four TO-BE images are
-  preview-only evidence. The unrelated retired-plan lifecycle failure keeps Task 5.3 open pending
-  user-approved cleanup.
+  The 2026-08-09 progression/readability discovery gate is complete; its five revised TO-BE images
+  are preview-only evidence. The XP rail now carries a literal `EXP` label, the Electric Field has
+  a separate radius-preserving full-area reference, upgrade cards contain no horizontal separator,
+  and Toxin/Cryo references use same-size body overlays. The unrelated retired-plan lifecycle
+  failure keeps Task 5.3 open pending user-approved cleanup.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 
