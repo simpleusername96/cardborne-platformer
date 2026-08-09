@@ -2,7 +2,7 @@
 type: plan
 status: active
 created: 2026-08-08
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-10
 scope: Cardborne combat pressure, enemy movement, progression feedback, HUD and minimap readability, elemental hit behavior, surface and boss presentation, and qualified frame pacing
 related:
   - ../../AGENTS.md
@@ -28,8 +28,8 @@ top-center HUD, makes elemental upgrades show their real current-to-next values,
 nearby-enemy direction cues, differentiates minimap roles, makes Electric Field show its complete
 damage area without reading as a shield, adds bounded elemental hit feedback, and stops the boss
 shield from masking authored boss bodies. The
-verified implementation baseline for this corrective revision is `ca8212f8`; current HEAD
-still has no eligible native/Web release-performance qualification, so the exact final workload is
+corrective implementation commit for this revision is `cbd6d2d4`; current HEAD still has no
+eligible native/Web release-performance qualification, so the exact final workload is
 measured once after all remaining behavior and visual work is complete.
 
 ## Purpose
@@ -963,7 +963,7 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
 CanvasItem shader, `scripts/vehicle/vehicle_run.gd`, capture gateway, and focused
 status/renderer/encounter/radar/Run validators
 
-- [ ] **9.7** Make Toxin/Cryo body color unmistakable after real hits.
+- [x] **9.7** Make Toxin/Cryo body color unmistakable after real hits.
   - Change: separate base actor modulation from status composition. Enable custom data only on the
     existing enemy and boss MultiMeshes and assign one shared CanvasItem shader that samples the
     current actor texture, preserves its alpha and broad luminance planes, and colorizes within the
@@ -979,7 +979,12 @@ status/renderer/encounter/radar/Run validators
   - Guard: the shared shader may add four floats only to enemy/boss instance records. It may not
     add a second instance, draw, batch, node, texture, per-enemy material, particle, ring, outline,
     or status Dictionary read in the renderer.
-- [ ] **9.8** Reuse ordinary arrival timing as a direction-only radar receipt.
+  - Evidence: commit `cbd6d2d4` assigns one shared CanvasItem material to the existing enemy and
+    boss batches, carries semantic RGB plus mix in their four custom-data floats, queues the full
+    0.16-second application pulse behind direct-hit flash, and suppresses only Toxin DOT hit flash.
+    Original-size application, persistent, reduced-motion, hit-flash, and expired captures show
+    distinct green/blue actor-body states without geometry outside the authored alpha.
+- [x] **9.8** Reuse ordinary arrival timing as a direction-only radar receipt.
   - Change: when `_update_encounter()` receives its existing cue dictionaries, copy only
     `birth_position` and `visual_duration + 1.10s` into an eight-slot preallocated receipt store.
     Advance and clear that store on simulation/stage boundaries. At the existing five-hertz threat
@@ -993,7 +998,11 @@ status/renderer/encounter/radar/Run validators
     value-for-value unchanged.
   - Guard: no world route, exact coordinate, new contact kind, new triangle, toast, label, actor,
     node, allocation scan, spawn trigger, or movement/proximity condition is added.
-- [ ] **9.9** Replace the misleading fixtures and collect focused rendered evidence.
+  - Evidence: commit `cbd6d2d4` retains the scheduler and allocator unchanged and copies existing
+    cue data into eight preallocated position/lifetime slots. The held-player Stage 1 fixture
+    receives its cue at 5.1 seconds and publishes the existing dim `nearby_enemy` sector arc before
+    the 0.90-second birth lead completes; lifetime, distance clamp, expiry, and stage clearing pass.
+- [x] **9.9** Replace the misleading fixtures and collect focused rendered evidence.
   - Change: make elemental capture drive the actual direct-damage-then-status order and include
     post-flash application, persistent, reduced-motion, DOT, and expiry states. Make the existing
     first-contact capture publish the real scheduler cue through the HUD radar. Extend focused
@@ -1005,6 +1014,12 @@ status/renderer/encounter/radar/Run validators
     and visual-authority checks pass. Original-size focused captures show a clear Toxin/Cryo vs
     expired pixel delta and a dim no-triangle first-arrival sector while hull/XP/minimap remain
     unchanged.
+  - Evidence: the 103-file Korean `1280x720` matrix under
+    `build/visual-captures/phase9a-status-arrival-ko-1280` drives real damage/status ordering and the
+    scheduler-authored first-contact cue. Status stacking, combat renderer, Run, encounter pacing,
+    arrival scheduler, spawn allocation, multi-sector spawns, attack-route readability, HUD layout,
+    capture driver, Godot 4.7.1 import, document authority, visual authority, and `git diff --check`
+    pass. The current four-file production Web export reports `WEB_EXPORT_OK`.
 
 Batch gate:
 
@@ -1168,11 +1183,15 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 9A - Correct status visibility and make timed ordinary arrivals perceptible.
-- Next task: 9.7 - replace multiplicative status tint with shared alpha-clipped batch composition,
-  then complete 9.8 arrival receipts and 9.9 focused evidence before returning to the still-open
-  Phase 10 performance tasks.
-- Last completed gate: the exact user-approved Thermal impact SHA-256
+- Current phase: Phase 10 - Consolidate correctness, feel, export, and performance.
+- Next task: 10.2 built-product interactive gameplay QA and the user-controlled 1.2 hitch trace;
+  after both are available, run the exact-clean-commit native/Web qualification in 10.3-10.4.
+- Last completed gate: Phase 9A is complete in `cbd6d2d4`. Toxin/Cryo now use one shared
+  alpha-clipped batch compositor with queued application feedback and DOT no-flash behavior. Timed
+  ordinary arrivals remain scheduler-authored and now publish a bounded direction-only receipt to
+  a stationary player. The 103-file Korean capture matrix, focused validators, Godot import,
+  authority checks, diff check, and production Web export pass. This is correctness and rendered
+  evidence, not release-performance qualification. The exact user-approved Thermal impact SHA-256
   `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904` is promoted and rendered
   with a 24-live sub-limit inside the fixed 96-state store and one retained render batch; the
   103-file Korean matrix confirms radii `72/84/96` plus full-store Thermal/EMP coexistence. The
