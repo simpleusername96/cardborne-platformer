@@ -1,13 +1,13 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-08-08
-last_reviewed: 2026-08-08
+last_reviewed: 2026-08-09
 topic: selected combat HUD implementation QA
 source: C:/Users/BK/.codex/generated_images/019fdc36-5189-72f2-9e47-9834db637d7e/exec-6eed99e2-bcba-43f5-aaa3-8c01f8c09b1f.png
 related:
-  - .agents/execplans/2026-08-07-combat-feedback-and-reinforcement-facility.md
+  - .agents/execplans/2026-08-08-combat-pressure-and-surface-depth.md
   - docs/design/VISUAL_SYSTEM.md
 ---
 

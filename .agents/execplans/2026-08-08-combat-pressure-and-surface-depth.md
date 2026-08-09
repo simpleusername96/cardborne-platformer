@@ -544,16 +544,16 @@ Source owners: `docs/design/VISUAL_SYSTEM.md`, production asset manifest/workben
     layout owns gameplay geometry.
   - Accept: only one runtime owner can create ambient floor detail and no prohibited panel-pattern
     path remains reachable or registered.
-- [ ] **5.3** Validate the visual authority workflow change.
+- [x] **5.3** Validate the visual authority workflow change.
   - Change: update manifest/workbench expectations for removal of two hazards and later addition
     of three surface SVGs. Preserve `actual_image_reference_used=true` for the earlier ImageGen
     concept; for the selected SVGs record `actual_image_reference_used=false` and
     `reference_input_method=deterministic_surface_detail_svg_exception`, plus generator path,
     fixed seeds, exact hashes, and user approval. Keep `_02` variants outside production.
   - Accept: `validate_cardborne_visual_authority.ps1` and document-authority validation pass.
-  - Evidence: the visual-authority validator passes. Document authority remains blocked only by
-    the pre-existing retired `2026-08-07-combat-feedback-and-reinforcement-facility.md`; this plan
-    explicitly requires user approval before deleting that document.
+  - Evidence: the visual-authority validator passes. On 2026-08-09 BK approved deletion of the
+    completed retired plan; it was removed after its current decisions were confirmed in this
+    active contract and the durable product/visual owners. Document-authority validation passes.
 
 ### Phase 6: Promote and integrate sparse surface SVGs and the beam raster
 
@@ -827,7 +827,7 @@ Source owners: `scripts/combat/vehicle_element_profile.gd`,
 `scripts/presentation/vehicle_combat_renderer.gd`, boss actor catalog, workbench evidence,
 localization, capture fixtures, and focused secondary/status/effect/renderer validators
 
-- [ ] **9.1** Author and approve one Thermal impact identity.
+- [x] **9.1** Author and approve one Thermal impact identity.
   - Change: open a dedicated workbench unit for a transparent `192x192` Thermal Burst impact PNG
     centered at `[96,96]`. With the canonical sheet and current combat capture supplied as actual
     ImageGen references, generate one hard-edged 2-3-plane orange burst with a compact hot center,
@@ -836,11 +836,12 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
   - Accept: the exact PNG, semantic ID, hash, alpha bounds, import settings, intended footprint,
     AS-IS/TO-BE comparison, and all three 1x scales receive explicit user approval before one
     manifest entry is added. Rejected candidates remain outside production.
-  - Evidence: the `switch_ready` workbench unit now holds exact candidate SHA-256
+  - Evidence: the workbench unit holds exact candidate SHA-256
     `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904`, RGBA bounds
     `173x176+9+8`, actual-reference provenance, AS-IS evidence, and `0.75/0.875/1.0` runtime-scale
-    previews. The production path and approval ledger remain empty pending explicit user approval.
-- [ ] **9.2** Integrate Thermal impact without expanding capacity or splash noise.
+    previews. BK approved the exact bytes on 2026-08-09; commit `c2c245af` records the approval,
+    `b27ef661` promotes and integrates the same hash, and `68d07e84` records application evidence.
+- [x] **9.2** Integrate Thermal impact without expanding capacity or splash noise.
   - Change: create one `thermal_burst_impact` effect at each eligible direct player-primary enemy
     hit, not at splash recipients. Give it `0.18s` scale/fade and the gameplay radius. Keep overall
     effect-store capacity `96`; permit at most 24 live Thermal impacts. When that sub-limit or the
@@ -851,6 +852,11 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
     reflected, structure-only, splash, DOT, and EMP damage show none. Gameplay damage/radius and
     audio remain unchanged, effect capacity validates, and EMP is present under saturated Thermal
     input.
+  - Evidence: the production manifest indexes the exact approved `192x192` PNG. The existing
+    direct-contact call path emits one `0.18s` radius-scaled receipt; the fixed 96-state store caps
+    Thermal at 24, recycles only its oldest Thermal state, and drops a new receipt rather than
+    evicting EMP when no Thermal state is available. Effect-store, Thermal damage, renderer,
+    provider, visual-coverage, and workbench validators pass.
 - [x] **9.3** Compose Toxin and Cryo state into existing enemy batches.
   - Change: add bounded scalar presentation fields for Toxin/Cryo stack ratio and a `0.16s`
     application pulse receipt. Compose semantic Toxin/Cryo color through the existing actor
@@ -894,7 +900,7 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
   - Guard: if the existing ring remains too thick or masks a boss after the exact retune, stop and
     open one dedicated shared boss-boundary raster workbench unit. Do not draw replacement geometry
     procedurally or redraw boss bodies by inference.
-- [ ] **9.6** Capture every elemental, Electric Field, and boss state under real pressure.
+- [x] **9.6** Capture every elemental, Electric Field, and boss state under real pressure.
   - Change: add deterministic fixtures for Thermal levels 1-3 at direct hit and crowded splash,
     Toxin/Cryo stacks 1-3 at application/persistent/expiry, Electric Field levels 1-3 beside player
     barrier and enemy shield, reduced motion, saturated effect store with EMP, and all five bosses
@@ -905,11 +911,13 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
     size results preserve the hierarchy shown by `elemental-hit-feedback-to-be.png`,
     `electric-field-to-be.png`, and `boss-shield-readability-to-be.png` while respecting their
     documented limitations.
-  - Evidence: the 96-file Korean matrix under
-    `build/visual-captures/phase9-elemental-feedback-ko` now covers Toxin/Cryo application,
-    persistent, hit-flash, reduced-motion, and expired states; Electric Field levels 1-3 beside
-    Mint player/enemy shields; and all five boss families with shield-up/down/hit states. Thermal
-    runtime receipts and saturated Thermal-plus-EMP evidence remain gated by Tasks 9.1-9.2.
+  - Evidence: the 103-file Korean `1280x720` matrix under
+    `build/visual-captures/phase9-thermal-impact-ko-v4` covers Toxin/Cryo application, persistent,
+    hit-flash, reduced-motion, and expired states; Electric Field levels 1-3 beside Mint
+    player/enemy shields; all five boss families with shield-up/down/hit states; and Thermal levels
+    1-3 at radii `72/84/96` in a crowd. Original-size review confirms the impact grows by level.
+    The saturation frame and runtime log show `live=96`, `thermal_live=24`, one Thermal recycle,
+    and one retained EMP charge plus one retained EMP release. Commit `25986e26` owns the fixture.
 
 Batch gate:
 
@@ -941,9 +949,9 @@ scenarios, active performance policy/evidence records
     movement, Thermal Burst damage, world, provider, renderer, capture, workload, workbench, and
     visual-authority validators passed. Godot import and the four-file production Web export passed
     with `WEB_EXPORT_OK`. These results do not qualify the new Phases 7-9 workload. Document
-    authority also retained one known failure: the retired
-    `2026-08-07-combat-feedback-and-reinforcement-facility.md` requires explicit user approval
-    before deletion.
+    authority previously retained one known retired-plan failure. The user approved its deletion
+    on 2026-08-09 and the document-authority gate now passes; the consolidated matrix and current
+    production Web export remain pending.
 - [ ] **10.2** Perform built-product gameplay and visual QA.
   - Change: use production-style native and built Web paths to check all five ordinary-health
     stages; absence of neutral hazards; pursuit/standoff around cover; XP collection and tail
@@ -1054,14 +1062,15 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 9 - Add bounded elemental feedback, distinguish Electric Field, and reveal
-  boss identity.
-- Next task: 9.1 - obtain explicit approval or rejection of exact Thermal candidate SHA-256
-  `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904`; production promotion and
-  Task 9.2 remain blocked until that decision. Tasks 9.3-9.5 and 3.6 are complete; Task 5.3 still
-  requires owner-approved retired-plan deletion; Tasks 1.2-1.4
-  remain open evidence gates and final release qualification is deferred to Phase 10.
-- Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
+- Current phase: Phase 10 - Consolidate correctness, built-product QA, and performance evidence.
+- Next task: 1.2 - run the user-approved normal-play manual performance trace from the exact clean
+  current commit, then complete the Phase 10 correctness/Web matrix. Tasks 1.3-1.4 remain open
+  release-performance gates.
+- Last completed gate: the exact user-approved Thermal impact SHA-256
+  `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904` is promoted and rendered
+  with a 24-live sub-limit inside the fixed 96-state store; the 103-file Korean matrix confirms
+  radii `72/84/96` plus full-store Thermal/EMP coexistence. The exact user-approved crack, stain,
+  and embedded-chip SVG hashes are
   promoted unchanged and compile to deterministic 72/72/48 placement across stages in three
   retained batches, and the borderless straight-beam replacement is production-integrated.
   Manifest/provider/world/workbench/visual-authority/Run gates pass for that completed workload.
@@ -1074,8 +1083,7 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   `build/visual-captures/xp-equal-width-ko-{960,1280}`. The Electric Field has a separate
   radius-preserving full-area reference,
   upgrade cards contain no horizontal separator, and Toxin/Cryo references use same-size body
-  overlays. The unrelated retired-plan lifecycle failure keeps Task 5.3 open pending user-approved
-  cleanup.
+  overlays. The approved retired-plan cleanup is complete and document authority passes.
   Phase 7 is complete: one-to-three-card tail offers and explicit `MAX` completion replace the
   silent exact-three loss path; the live acquired-upgrade rail and its validator are deleted;
   fast HUD updates publish allocation-free XP scalars into the amber-hull/blue-XP center stack;
@@ -1101,14 +1109,15 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   review of `04e-radar-minimap-roles.png` confirms the dim no-triangle nearby arc, brighter committed
   attack and boss triangles, shape-separated marker roles, unchanged hull-plus-XP stack, and zero
   live upgrade icons.
-  Phase 9 independent work is complete: pooled enemies publish fixed Toxin/Cryo ratios and one
+  Phase 9 is complete: pooled enemies publish fixed Toxin/Cryo ratios and one
   bounded application receipt without renderer status-Dictionary reads or extra draws; direct hit
   flash wins and reduced motion keeps static tint. Electric Field reads its exact `120/140/160`
   radius from the secondary definition snapshot and uses one below-actor Arc-purple retained mesh;
   boss-only shield presentation is exactly `+8` radius and `0.38` alpha. Focused status, secondary,
   renderer, damage-feedback, boss, attack-contract, capture-driver, Run, workbench, and visual-
-  authority gates pass. The 96-file Korean capture matrix completed and was inspected at original
-  size. Thermal runtime work remains intentionally unimplemented until exact candidate approval.
+  authority gates pass. The exact approved Thermal raster is integrated at direct contacts with a
+  bounded 24-live cosmetic policy that preserves EMP, and the 103-file Korean capture matrix under
+  `build/visual-captures/phase9-thermal-impact-ko-v4` completed and was inspected at original size.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 
