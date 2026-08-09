@@ -2,6 +2,7 @@
 type: plan
 status: active
 created: 2026-08-08
+last_reviewed: 2026-08-09
 scope: Cardborne combat pressure, enemy movement, progression feedback, HUD and minimap readability, elemental hit behavior, surface and boss presentation, and qualified frame pacing
 related:
   - ../../AGENTS.md
@@ -21,10 +22,12 @@ feedback loop. The completed portion removes neutral hazards, applies the select
 curve, makes role movement distance-aware, strengthens boss shielding, replaces Thermal Burn with
 bounded Thermal Burst damage, integrates sparse approved surface detail, and replaces the boxed
 straight-beam strip. The remaining portion restores unmistakable XP progress, prevents late-run level
-rewards from disappearing when fewer than three legal cards remain, makes elemental upgrades show
-their real current-to-next values, restores restrained nearby-enemy direction cues, differentiates
-minimap roles, makes Electric Field show its complete damage area without reading as a shield, adds
-bounded elemental hit feedback, and stops the boss shield from masking authored boss bodies. The
+rewards from disappearing when fewer than three legal cards remain, removes the redundant and
+ambiguous live upgrade-icon rail, keeps only differently weighted hull and experience meters in the
+top-center HUD, makes elemental upgrades show their real current-to-next values, restores restrained
+nearby-enemy direction cues, differentiates minimap roles, makes Electric Field show its complete
+damage area without reading as a shield, adds bounded elemental hit feedback, and stops the boss
+shield from masking authored boss bodies. The
 verified implementation baseline for this revision is `b9a41aee`; current HEAD
 still has no eligible native/Web release-performance qualification, so the exact final workload is
 measured once after all remaining behavior and visual work is complete.
@@ -35,14 +38,17 @@ measured once after all remaining behavior and visual work is complete.
   elemental, surface, beam, and frame-pacing outcomes as one decision-complete sequence with
   independent causal commits.
 - Deliverable: updated gameplay and movement rules; a truthful bilingual XP and upgrade flow;
-  retained HUD, threat-radar, minimap, Electric Field, projectile, status, and shield presentation; approved
+  a two-meter top-center HUD with no live upgrade icons; retained threat-radar, minimap, Electric
+  Field, projectile, status, and shield presentation; approved
   production surface SVGs, beam raster, and any separately approved Thermal impact raster;
   focused validators; production Web export; and eligible native/Web performance evidence.
 - Completion state: neutral hazards no longer exist; ordinary health uses the locked five-stage
   curve; mobile enemies preserve role distance continuously; shielded bosses take 15% incoming
   damage and remain visually identifiable; Thermal Burst applies bounded enemy-only splash with
   bounded impact feedback; XP progress and late-run rewards never disappear silently; upgrade
-  copy shows true level deltas; nearby off-screen enemies and distinct minimap roles are readable;
+  copy shows true level deltas; the live HUD contains no acquired-upgrade icon rail while paused
+  Settings > Ship Status retains the full named build; nearby off-screen enemies and distinct
+  minimap roles are readable;
   Electric Field fills the exact `120/140/160` damage disk in Arc purple instead of reusing shield
   language; Toxin/Cryo states are visible as same-silhouette translucent body overlays without
   per-enemy nodes; the floor and straight beams retain the
@@ -73,9 +79,13 @@ In scope:
 - Replace the current dark-bordered `cue/beam_strip_9` raster with a tintable flat alpha mask and
   retune the existing two-plane startup/three-plane active composition for Beam Sentinel and boss
   straight beams.
-- Restore a slim panel-free XP rail and level value under the top-center hull/upgrade zone. Label
-  the value with the literal `EXP` so the rail cannot be mistaken for the hull bar. Publish XP
-  through the reusable fast-HUD snapshot instead of rebuilding the full build snapshot.
+- Remove every acquired-upgrade icon and level numeral from the top-center HUD. Keep only the
+  panel-free hull and XP meters there: the hull remains `player_reward` amber with a 13-pixel fill,
+  while XP uses a restrained `system` blue fill at `6/8/8` pixels for compact/standard/large and
+  stays shorter than the hull meter. Label the XP value with the literal `EXP` so the two meters
+  remain distinguishable without color. Publish XP through the reusable fast-HUD snapshot instead
+  of rebuilding the full build snapshot. Preserve the complete named upgrade list in paused
+  Settings > Ship Status.
 - Permit one, two, or three legal upgrade choices near catalog exhaustion. Show an explicit
   localized `MAX` progression state only when zero compatible upgrades remain; never consume a
   pending level through a warning-only path.
@@ -155,8 +165,11 @@ Constraints and invariants:
   dedicated live cosmetic sub-limit and must never evict EMP charge/release state.
 - The five images under
   `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/`
-  are approval-before-implementation composition references only. They do not approve production
-  pixels, replace exact runtime capture, or override this contract.
+  and three alternatives under
+  `docs/design/visual-replacement-workbench/candidates/hud-progression-density-options-v1/` are
+  approval-before-implementation composition references only. They do not approve production
+  pixels, replace exact runtime capture, or override this contract. The user's later no-icon
+  decision supersedes every icon-bearing top-center layout shown in those references.
 - Performance claims require eligible current-commit evidence under
   `.agents/cardborne-performance-engineering-policy.md`. Historical results are diagnostic only.
 - Use Godot 4.7.1 through `./tools/godot.ps1`; add no production dependency.
@@ -184,8 +197,10 @@ Exact actions requiring owner or user approval:
   `surface_chip_01.svg` at the hashes recorded below. Beam promotion still requires an exact
   AS-IS/TO-BE comparison with the authority sheet, 1x source, provenance, intended asset ID,
   footprint, and in-game state capture.
-- The HUD, modal, minimap, status, and boss-shield mockups document expected hierarchy only. Exact
-  runtime review remains required. Any new Thermal impact PNG requires a dedicated workbench unit,
+- The HUD, modal, minimap, status, and boss-shield mockups document expected hierarchy only. The
+  user's 2026-08-09 decision locks the live top-center HUD to hull and XP meters with zero upgrade
+  icons; no generated HUD image overrides that decision. Exact runtime review remains required.
+  Any new Thermal impact PNG requires a dedicated workbench unit,
   actual canonical-sheet input, transparent-source inspection, exact hash, 1x in-game comparison,
   and explicit user approval before manifest promotion.
 - Before the first broad native/Web qualification batch, state its purpose, clean-commit scope,
@@ -215,7 +230,7 @@ Exact actions requiring owner or user approval:
 | Comparable-game evidence | Official Into the Breach material supports deterministic, immediately readable combat; public primary sources for Into the Breach, Wasteland Kings, and Spelunky do not disclose exact floor-decal batching. | GDC postmortem and official game pages; Godot official docs | Do not claim an unverified clone technique. Use comparable games only for sparse/readable/deterministic principles; choose the renderer from Cardborne architecture and official Godot guidance. | 5.1, 6.4 |
 | Reported hitch | Current HEAD has no eligible performance JSON. The last eligible older sample showed frame p95 143 ms with physics catch-up and simulation/HUD cost while render CPU/GPU were low. Later allocator prewarm improved a diagnostic but was never release-qualified. On 2026-08-08, 16 unrelated Godot processes prevented a clean run. | Active performance plan; runtime architecture audit; historical JSON | Make no current root-cause claim. First qualify clean current HEAD, then repeat after all feature work. Optimize only the subsystem selected by a valid trace/sample; never blame new PNGs by intuition. | 1.1-1.4, 10.3-10.4 |
 | Performance fixture mismatch | Renderer capacity and visual contract are 28 health overlays, but the performance scenario and its validator still require 50. Release batch threshold remains at most 50. | combat renderer, visual system, renderer validator, performance scenario and validator | Change only the scenario fixture expectation from 50 to 28; retain the release threshold `batches <= 50`. A failing focused validator blocks all expensive samples. | 1.1 |
-| Missing XP feedback | `VehicleExperienceRuntime` still advances levels with the capped formula `min(160, 12 + round(3n + 0.55n^2))`. `VehicleGameplayHud.HealthPips` still stores XP fields, but `_fill_fast_hud_snapshot` omits them and `debug_contract()` asserts `has_experience_geometry=false`; the product and visual specs explicitly removed the rail. | `scripts/progression/vehicle_experience_runtime.gd`; `scripts/vehicle/vehicle_run.gd`; `scripts/ui/vehicle_gameplay_hud.gd`; product/visual specs | Restore a slim panel-free XP rail and level value in the existing top-center zone. Show literal `EXP` beside the numeric value so it cannot read as a second hull bar. Publish only scalar level/current/required/MAX fields through the fast HUD snapshot; do not rebuild the full build summary at HUD cadence. | 7.1-7.2 |
+| Top-center progression feedback and redundant build icons | `VehicleExperienceRuntime` still advances levels with the capped formula `min(160, 12 + round(3n + 0.55n^2))`. `VehicleGameplayHud.HealthPips` stores XP fields, but `_fill_fast_hud_snapshot` omits them and `debug_contract()` asserts `has_experience_geometry=false`. The HUD instead instantiates the only consumer of `VehicleAcquiredUpgradeRail`, which renders up to 18 image-and-level cells whose shared category artwork cannot identify individual mechanics. Paused Settings already opens Ship Status first; `VehicleBuildSummaryPanel._refresh_upgrades()` renders every acquired upgrade by localized title and `level / max` from the frozen gameplay-owned build snapshot. | `scripts/progression/vehicle_experience_runtime.gd`; `scripts/vehicle/vehicle_run.gd`; `scripts/ui/vehicle_gameplay_hud.gd`; `scripts/ui/vehicle_acquired_upgrade_rail.gd`; `scripts/ui/vehicle_settings_panel.gd`; `scripts/ui/vehicle_build_summary_panel.gd`; product/visual specs; user decision on 2026-08-09 | Remove the live acquired-upgrade rail and its now-ownerless component/validator. Keep Settings > Ship Status as the detailed named build surface and retain its event-driven snapshot path. Top center contains only a full-width 13-pixel amber hull meter and a shorter `6/8/8`-pixel system-blue XP meter with `Lv. N` and literal `EXP current / required` or `EXP MAX`. Publish only scalar level/current/required/MAX fields through the fast HUD snapshot; do not send or rebuild upgrade imagery at HUD cadence. | 7.1-7.2 |
 | Stage 4 level-up symptom | XP collection and stage gains have no Stage 4 cap. The failure is the reward gate: `_open_upgrade_reward()` requires exactly three cards and otherwise logs a warning, resolves the transaction, and `consume_pending_level()` removes the pending level. Catalog compatibility shrinks late in a run due to max levels, element exclusion, and optional-secondary limits. | `VehicleRun._open_upgrade_reward/_resolve_reward_transaction`; `VehicleUpgradeCatalog.offer`; experience/upgrade validators | Accept one to three legal cards and center only visible cards. Zero legal cards enters an explicit localized progression-complete `MAX` receipt, stops future XP drops/awards, and never uses a warning-only silent consume path. | 7.1, 7.4 |
 | Element card truth | The presenter can distinguish `unlock` and `enhance`, but element resources have no stat modifiers, so their visible descriptions remain static and show no real level deltas. Runtime values live only in `VehicleElementProfile`: Thermal radius `72/84/96`, damage `4/6/8`; Toxin DPS/stack `2/3/4`, duration `5/6/7`; Cryo slow/stack `6/8/10%`, duration `2/2.5/3`, with boss Chill effectiveness halved. | `vehicle_upgrade_offer_presenter.gd`; element card resources; `vehicle_element_profile.gd`; `vehicle_status_runtime.gd` | Make one gameplay-owned level-value descriptor consumable by runtime and offer presenter. First acquisition shows behavior plus initial values; enhancements show exact current-to-next rows. Korean and English remain complete; UI does not copy value arrays. | 7.3-7.4 |
 | Nearby direction cue | Commit `b9e66b86` narrowed threat radar to unseen committed projectile attacks and boss arrival. The retained mesh still has 12 sectors, a 1200-unit maximum, sector aggregation, and five-hertz publication. Ordinary off-screen location is minimap-only. | `VehicleRun._threat_radar_snapshot`; `VehicleThreatRadar`; `VehicleCombatCuePolicy`; git history | Add low-priority `nearby_enemy` contacts only for nearby enemies outside the viewport. Aggregate by existing sectors, vary width by density/proximity, draw no triangle, and let incoming attack and boss arrival win the sector. Visible enemies remain excluded and the minimap owns exact location. | 8.1-8.2 |
@@ -223,7 +238,7 @@ Exact actions requiring owner or user approval:
 | Electric Field area and shield collision | `VehicleSecondaryRuntime` damages every eligible enemy whose body overlaps radii `120/140/160` at a `0.25s` tick and passes line of sight. `VehicleCombatRenderer` duplicates those radii in `ELECTRIC_FIELD_RADII` and draws only a Mint `cue/ring` at alpha `0.48`. Player barrier and enemy shields use the same Mint ring family, so the damage field reads as protection and its interior is visually empty. | `data/weapons/vehicle/secondary/electric_field.tres`; `scripts/player/vehicle_secondary_runtime.gd`; `scripts/presentation/vehicle_combat_renderer.gd`; `30-boss-04-stage-4-active.png` | Make the secondary definition/snapshot the single radius source. Draw one low-alpha Arc-purple filled disk below actors at `120/140/160`, with one restrained broken perimeter and at most four broad internal planes. The disk represents the field volume; damage still begins when an enemy body overlaps it. Do not reuse Mint/support shield geometry or create a second collision owner. | 8.1, 9.4, 9.6 |
 | Projectile affinity and persistent status feedback | Player-primary projectile tint already follows Thermal/Toxin/Cryo; Seeker and hostile bolt intentionally keep authored identities. Generic enemy hit feedback is a short common flash. Renderer input does not expose Toxin/Chill stacks or application time, so persistent status has no direct body feedback. | `VehicleCombatRenderer`; `VehicleAttackContract`; `VehicleStatusRuntime`; current renderer/status validators | Preserve primary-only affinity tint and Seeker identity. Publish bounded status stack ratios plus one application pulse receipt in the enemy presentation frame. Visually treat the actor's authored alpha as an exact same-size overlay mask: no enlarged silhouette, perimeter, halo, or external geometry. Generic damage flash wins briefly, then the Toxin/Cryo body overlay returns. Reduced motion removes the pulse change but preserves the static overlay. | 9.2-9.3, 9.6 |
 | Boss visual identity | Five boss variants already resolve separate authored PNGs. The shared large opaque magenta shield boundary masks their silhouette and makes them read alike. The minimap boss marker is a larger plain hexagon. | actor visual catalog; combat renderer; current boss captures; `boss-shield-readability-to-be.png` | Preserve all boss PNGs. Reduce shield fill/thickness/opacity to one restrained body-attached boundary, then validate all five at 1x and grayscale. Change only the minimap marker to a notched command shape. Open per-boss art replacement only if authored bodies remain indistinct after the shield fix. | 8.3-8.4, 9.5-9.6 |
-| TO-BE visual evidence | The latest production capture set is the Korean 87-image `beam-production-655e0ee2` set. It predates `b9a41aee` only by documentation/workbench and Thermal-copy changes. Five ImageGen edits used the relevant current capture and the canonical sheet as actual referenced images. The first over-scaled combined HUD/field generation was rejected and not copied into the repository. | `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/README.md`; capture manifest; git diff `655e0ee2..b9a41aee` | Use the five repository images for composition, hierarchy, and expected-state discussion only. Runtime owners, exact copy, supported viewports, and task acceptance below remain binding; no generated pixels are production-approved. | 7.2-9.6 |
+| TO-BE visual evidence | The latest production capture set is the Korean 87-image `beam-production-655e0ee2` set. It predates `b9a41aee` only by documentation/workbench and Thermal-copy changes. Five progression/readability edits and three later HUD-density alternatives used the relevant current capture and the canonical sheet as actual referenced images. The first over-scaled combined HUD/field generation was rejected and not copied into the repository. The later alternatives proved that persistent build icons still consume attention and remain ambiguous when artwork is shared. | `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/README.md`; `docs/design/visual-replacement-workbench/candidates/hud-progression-density-options-v1/README.md`; capture manifest; git diff `655e0ee2..b9a41aee`; user decision on 2026-08-09 | Keep all eight repository images as composition evidence only. The selected runtime contract is simpler than every icon-bearing alternative: zero top-center upgrade icons, hull plus XP only, and complete named build details in paused Ship Status. Runtime owners, exact copy, supported viewports, and task acceptance below remain binding; no generated pixels are production-approved. | 7.2-9.6 |
 
 Readiness statement:
 
@@ -239,7 +254,7 @@ Readiness statement:
   the canonical sheet was inspected at original detail; expected and observed SHA-256 are both
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`;
   `actual_image_reference_used=true`; reference input method was
-  `image_gen.referenced_image_paths`. All five generated images remain preview-only. For the exact
+  `image_gen.referenced_image_paths`. All eight generated images remain preview-only. For the exact
   approved SurfaceDetail SVG exception, `actual_image_reference_used=false`, reference input
   method is `deterministic_surface_detail_svg_exception`, the generator and fixed seeds are
   checked in, and the three selected hashes are recorded above.
@@ -645,8 +660,10 @@ Source owners: `scripts/progression/vehicle_experience_runtime.gd`,
 `scripts/rewards/vehicle_reward_runtime.gd`, `scripts/cards/vehicle_upgrade_catalog.gd`,
 `scripts/cards/vehicle_run_build.gd`, `scripts/cards/vehicle_upgrade_offer_presenter.gd`, element
 card resources, `scripts/combat/vehicle_element_profile.gd`, `scripts/vehicle/vehicle_run.gd`,
-`scripts/ui/vehicle_gameplay_hud.gd`, upgrade choice panel/card owners, localization, product and
-visual specs, and focused XP/upgrade/HUD validators
+`scripts/ui/vehicle_gameplay_hud.gd`, the obsolete
+`scripts/ui/vehicle_acquired_upgrade_rail.gd`, `scripts/ui/vehicle_stage_ui.gd`,
+`scripts/ui/vehicle_settings_panel.gd`, `scripts/ui/vehicle_build_summary_panel.gd`, upgrade choice
+panel/card owners, localization, product and visual specs, and focused XP/upgrade/HUD validators
 
 - [ ] **7.1** Remove the silent late-run reward loss and define progression completion.
   - Change: accept any non-empty legal offer of one to three unique cards; remove exact-size-three
@@ -655,7 +672,7 @@ visual specs, and focused XP/upgrade/HUD validators
     clear remaining queued level rewards and uncollected XP shards through
     `VehicleExperienceRuntime`, and make future shard spawn/XP award calls no-ops. Claim the active
     reward transaction only after that receipt is visible; do not use the warning-only path.
-    The receipt is `모든 업그레이드 완료` / `All upgrades complete`; the compact rail value is
+    The receipt is `모든 업그레이드 완료` / `All upgrades complete`; the compact XP value is
     language-neutral `MAX`.
   - Accept: one-, two-, and three-card offers open, center only visible cards, accept keyboard
     shortcuts only for visible cards, and apply exactly one legal card. A zero-card state displays
@@ -664,18 +681,31 @@ visual specs, and focused XP/upgrade/HUD validators
   - Guard: a zero-card result while `VehicleUpgradeCatalog` still reports a compatible definition
     is an invariant failure, not progression completion; keep the transaction open, report exact
     seed/build evidence, and stop that branch.
-- [ ] **7.2** Restore the slim XP rail without rebuilding heavy HUD data.
-  - Change: add `level`, `experience`, `experience_required`, and `experience_complete` scalars to
-    the reusable fast HUD frame. Draw a panel-free meter below the acquired-upgrade rail in the
-    existing top-center zone: compact/standard/large track widths `280/360/420`, height `6/8/8`,
-    current amber fill, dark track, `Lv. N` at left and `EXP current / required` at right. The literal
-    `EXP` label is mandatory at every supported width. Put `EXP MAX` in the value position when
-    complete. Let the rail follow one- or two-row acquired-upgrade height and keep the toast stack
-    four pixels below it.
+- [ ] **7.2** Replace the live build-icon rail with a two-meter top-center HUD.
+  - Change: first amend the product and visual specs so top center owns only hull and XP. Remove
+    `VehicleAcquiredUpgradeRail` from `VehicleGameplayHud`, remove the HUD's `build_snapshot`
+    consumer and responsive row-height branches, then delete the ownerless rail script and its
+    dedicated validator. Keep `VehicleStageUi`'s event-driven `_latest_build_snapshot` cache and
+    paused Settings > Ship Status path unchanged so localized upgrade names, levels, and effective
+    values remain available outside live combat. Add `level`, `experience`,
+    `experience_required`, and `experience_complete` scalars to the reusable fast HUD frame and
+    draw them in the existing code-native `HealthPips` owner. Hull keeps the current full center
+    widths `400/520/640` for compact/standard/large, a 13-pixel `player_reward` amber fill, trailing
+    damage response, and centered current/max value. XP is centered directly below it with track
+    widths `280/360/420`, heights `6/8/8`, and restrained `system` blue fill; accessibility uses a
+    404-pixel center zone, 360-pixel XP track, and 8-pixel fill. Show `Lv. N` at left and literal
+    `EXP current / required` at right, or `EXP MAX` when complete. Use the dark common track and a
+    four-pixel inter-meter gap; keep the toast stack four pixels below the resulting fixed-height
+    two-meter cluster. Do not add icons, panels, category summaries, dividers, or another build
+    receipt to the live HUD.
   - Accept: collection updates within the existing fast-HUD cadence; no full build snapshot,
-    catalog scan, node rebuild, or allocation occurs per update. The rail fits with 0, 12, and 18
-    acquired upgrades at `960x540`, `1280x720`, `1920x1080`, and 200% text without overlapping the
-    stage stack, minimap, hull value, toast, or world view.
+    catalog scan, texture lookup, icon node rebuild, or allocation occurs per update. Debug
+    contracts report `has_experience_geometry=true`, `live_upgrade_icon_count=0`, and no acquired-
+    rail owner or validator remains. Both meters fit at `960x540`, `1280x720`, `1920x1080`, and
+    200% text without overlapping the stage stack, minimap, each other's values, toast, or world
+    view. Grayscale still distinguishes them by thickness and width; color review shows amber hull
+    and blue XP without either reading as enemy damage, shield, or a single merged meter. Paused
+    Ship Status still lists the full named build after one or more upgrades.
 - [ ] **7.3** Make element acquisition and enhancement copy use one value source.
   - Change: register two real stat modifiers per element card and make
     `VehicleElementProfile.from_build()` read the same build-owned values used by the offer
@@ -696,16 +726,19 @@ visual specs, and focused XP/upgrade/HUD validators
   - Change: extend deterministic progression tests through catalog exhaustion, including one- and
     two-card tail offers, multiple queued levels, zero-card MAX, shard suppression after MAX, and
     Stage 4 collection. Add Korean/English captures for first Thermal acquisition, Thermal level
-    1-to-2 enhancement, a two-card tail offer, XP rail in Stage 4, and MAX.
+    1-to-2 enhancement, a two-card tail offer, the hull-plus-XP HUD in Stage 4, paused Ship Status
+    with the acquired build, and MAX.
   - Accept: experience, upgrade system, upgrade UI, HUD presenter/layout, localization, capture,
     stage transition, rewards/audio, build/report, and Run validators pass. No pending level can be
     consumed without an applied card or explicit progression-complete receipt.
 
 Batch gate:
 
-- Current Korean and English production captures match the expected hierarchy in
-  `gameplay-hud-minimap-to-be.png` and `element-upgrade-enhance-to-be.png`; exact text remains
-  Control-owned and all supported viewport/text-scale checks pass.
+- Current Korean and English production captures show zero live upgrade icons, a thicker amber
+  hull meter above a shorter blue XP meter, and the full named build in paused Ship Status. The
+  upgrade modal matches the expected hierarchy in `element-upgrade-enhance-to-be.png`; exact text
+  remains Control-owned and all supported viewport/text-scale checks pass. The icon-bearing HUD
+  mockups are evidence of rejected density alternatives, not the selected runtime target.
 
 ### Phase 8: Restore nearby direction cues and semantic minimap roles
 
@@ -724,12 +757,14 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
 `scripts/ui/vehicle_retained_minimap_mesh.gd`, `scripts/ui/vehicle_gameplay_hud.gd`,
 `scripts/vehicle/vehicle_run.gd`, capture gateway/driver, and focused HUD/minimap validators
 
-- [ ] **8.1** Amend the visual contract narrowly before runtime changes.
-  - Change: replace the absolute no-XP, incoming-only radar, five-marker minimap, three-card-only
-    modal, shared-ring Electric Field, three-effect-only, and text-only persistent-status clauses
-    with the bounded contracts in Phases 7-9. Preserve sparse HUD, one minimap Surface, no full
-    radar circle, no per-enemy status node/material, no decorative markers, zero internal upgrade-
-    card horizontal separators, and exact visual-authority/approval requirements.
+- [ ] **8.1** Amend the remaining visual contract before runtime changes.
+  - Change: retain the Phase 7 hull-plus-XP and zero-live-upgrade-icon contract while replacing the
+    incoming-only radar, five-marker minimap, shared-ring Electric Field, three-effect-only, and
+    text-only persistent-status clauses with the bounded contracts in Phases 8-9. Preserve sparse
+    HUD, one minimap Surface, no full radar circle, no per-enemy status node/material, no decorative
+    markers, zero internal upgrade-card horizontal separators, and exact visual-authority/approval
+    requirements. If the three-card-only modal clause was not already updated by Task 7.1, update
+    it here before the remaining Phase 8 runtime work.
   - Accept: product and visual specs describe the same reachable states, localization, ownership,
     reduced-motion behavior, capacities, and non-goals; visual-authority validation passes.
 - [ ] **8.2** Add low-priority nearby-enemy contacts to the retained threat radar.
@@ -761,7 +796,8 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
     arrival. Extend the production capture with one HUD/minimap/radar evidence state.
   - Accept: minimap builder, retained mesh, HUD layout/presenter, threat radar, combat cue policy,
     glyph catalog, localization, capture, visual registry, and Run validators pass. Actual-size,
-    grayscale, and reduced-motion review matches the hierarchy in
+    grayscale, and reduced-motion review preserves the selected hull-plus-XP top center with no
+    upgrade icons while matching the radar/minimap hierarchy discussed in
     `gameplay-hud-minimap-to-be.png` without reproducing its generated pixels.
 
 ### Phase 9: Add bounded elemental feedback, distinguish Electric Field, and reveal boss identity
@@ -894,12 +930,15 @@ scenarios, active performance policy/evidence records
 - [ ] **10.2** Perform built-product gameplay and visual QA.
   - Change: use production-style native and built Web paths to check all five ordinary-health
     stages; absence of neutral hazards; pursuit/standoff around cover; XP collection and tail
-    offers through MAX; one shield-up/down boss cycle for every boss; Beam Sentinel and boss beam
+    offers through MAX; the icon-free hull-plus-XP HUD and paused Ship Status after multiple
+    upgrades; one shield-up/down boss cycle for every boss; Beam Sentinel and boss beam
     startup/active; Thermal Burst at all levels in a crowd and near a structure; Toxin/Cryo same-
     silhouette overlays; Electric Field levels 1-3 beside a barrier and shield; bilingual cards;
     radar/minimap roles; and surface readability at actual size and grayscale.
   - Accept: the opening is less spongy; later health growth is observable; melee closes and ranged
-    holds distance; no level reward disappears; element values match runtime; nearby direction and
+    holds distance; no level reward disappears; the live top center never shows build icons; hull
+    and XP remain distinct by thickness, width, label, and color; paused Ship Status retains the
+    complete named build; element values match runtime; nearby direction and
     exact minimap roles do not compete; boss bodies remain readable; burst never double-hits,
     chains, or damages structures; status overlay never escapes the actor alpha or persists after
     state expiry; Electric Field fills the exact damage disk without reading as a shield; and detail
@@ -940,7 +979,7 @@ scenarios, active performance policy/evidence records
 | Inner loop | The one or two focused validators named by the active task plus `git diff --check` | After that task compiles and its direct examples are implemented | A relevant source/test/input changes |
 | Gameplay phase gate | Field/terrain/map/Run validators for Phase 2; difficulty/boss/movement-policy/local-steering/pursuit/schedule/Run validators for Phase 3; build/status/attack/telemetry/report/renderer/Run validators for Phase 4 | The phase's tasks pass | A phase-owned input changes |
 | Visual phase gate | Production manifest, workbench, world visual, field/stage layout, combat renderer, attack readability, capture, import, and `validate_cardborne_visual_authority.ps1` | Contract changes in Phase 5 and approved surface/beam integration in Phase 6 | Visual contract, raster, manifest, placement, renderer, or capture changes |
-| Progression phase gate | Experience, upgrade catalog/system/presenter/UI, HUD presenter/layout, localization, stage transition, reward/audio, build/report, capture, and Run validators | Phase 7 tasks pass | XP, reward transaction, offer compatibility, element values/copy, HUD geometry, or localization changes |
+| Progression phase gate | Experience, upgrade catalog/system/presenter/UI, HUD presenter/layout, Ship Status/build snapshot, localization, stage transition, reward/audio, build/report, capture, and Run validators; repository search proves the acquired-upgrade rail has no live owner or validator | Phase 7 tasks pass | XP, reward transaction, offer compatibility, element values/copy, HUD geometry, Ship Status snapshot ownership, or localization changes |
 | HUD and minimap phase gate | Threat radar, combat cue policy, minimap builder/retained mesh, glyph catalog, HUD presenter/layout, capture, visual registry, visual authority, and Run validators | Phase 8 tasks pass | Contact sampling/priority, marker roles/geometry, HUD layout, or visual contract changes |
 | Combat-feedback phase gate | Element/status, secondary weapon, attack, effect store, damage feedback, renderer, boss, provider/manifest/workbench, capture, reduced motion, visual authority, and Run validators | Phase 9 tasks and exact Thermal approval pass | Effect source/hash/import, effect allocation, status snapshot/overlay, Electric Field geometry/radius, shield overlay, or capture changes |
 | Export gate | `./tools/godot.ps1 --path . --headless --import`; `./tools/export_web.ps1`; require `WEB_EXPORT_OK` | Once after all feature phases and affected focused validators pass | An imported asset, export-affecting source, or project setting changes |
@@ -980,6 +1019,8 @@ Validation rules:
 | The exact borderless beam still reads as a flat bar in runtime | Reject the candidate and revise the one beam workbench unit within the locked two-/three-plane contract | Do not curve the damage corridor, add glow/particles/caps, or alter gameplay width/timing |
 | A one- or two-card tail offer cannot fit or focus correctly | Correct centering, focus order, and visible-key handling inside the existing panel/card owners | Do not pad the offer with duplicates, incompatible cards, fake choices, skip actions, or silent reward consumption |
 | Zero legal cards occurs while a compatible definition exists | Preserve the active transaction, record seed/build/catalog evidence, and fix the offer invariant | Do not mark progression MAX or consume pending levels from a contradictory catalog state |
+| Hull and XP read as one meter, or either value clips at a supported viewport/text scale | Adjust only the XP track width, the locked 6/8/8-pixel thickness, local label placement, or the restrained system-blue alpha inside `HealthPips`; preserve the 13-pixel amber hull hierarchy and literal `EXP` label | Do not restore upgrade icons, add a category summary/panel/divider, hide numeric progress, or move detailed build data out of paused Ship Status |
+| Removing the live rail also removes or stales paused build details | Restore the event-driven Stage UI build-snapshot cache and Settings > Ship Status consumer before continuing | Do not reintroduce live icons or publish the full build snapshot at fast-HUD cadence |
 | Nearby-enemy radar arcs become a second minimap or obscure attacks | Reduce only nearby-contact alpha/width within the locked 12-sector aggregation and keep attack priority | Do not remove committed-attack triangles, expose exact coordinates, increase cadence, or add a full radar circle |
 | The eight minimap roles are not distinct at 1x/grayscale | Revise marker silhouette inside the locked role set and retained mesh | Do not add per-archetype markers, hidden Mystery Device outcomes, arbitrary boss colors, labels, or a second minimap layer |
 | The exact Thermal impact candidate is rejected | Keep it outside production and regenerate one candidate from the same `192x192`, footprint, plane-count, and no-particle brief | Do not ship the mockup burst, generate an animation pack, author SVG geometry, or replace gameplay values |
@@ -1005,11 +1046,14 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   promoted unchanged and compile to deterministic 72/72/48 placement across stages in three
   retained batches, and the borderless straight-beam replacement is production-integrated.
   Manifest/provider/world/workbench/visual-authority/Run gates pass for that completed workload.
-  The 2026-08-09 progression/readability discovery gate is complete; its five revised TO-BE images
-  are preview-only evidence. The XP rail now carries a literal `EXP` label, the Electric Field has
-  a separate radius-preserving full-area reference, upgrade cards contain no horizontal separator,
-  and Toxin/Cryo references use same-size body overlays. The unrelated retired-plan lifecycle
-  failure keeps Task 5.3 open pending user-approved cleanup.
+  The 2026-08-09 progression/readability discovery gate is complete; its five original and three
+  HUD-density TO-BE images are preview-only evidence. The user's final HUD decision supersedes the
+  icon-bearing alternatives: top center keeps only a 13-pixel amber hull meter and a shorter
+  6/8/8-pixel blue XP meter with a literal `EXP` label, while paused Ship Status retains named
+  upgrade details. The Electric Field has a separate radius-preserving full-area reference,
+  upgrade cards contain no horizontal separator, and Toxin/Cryo references use same-size body
+  overlays. The unrelated retired-plan lifecycle failure keeps Task 5.3 open pending user-approved
+  cleanup.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 
