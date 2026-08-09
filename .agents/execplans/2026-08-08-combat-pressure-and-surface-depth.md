@@ -990,8 +990,11 @@ scenarios, active performance policy/evidence records
   - Guard: hazard removal, steering, splash queries, three surface batches, XP/radar/minimap data,
     Thermal effects, status overlay, Electric Field area, and shield presentation all change the
     final workload. No earlier sample qualifies the final commit.
-  - Deferred precondition: a pre-existing normal `Cardborne (DEBUG)` Godot run blocked the last
-    isolated sample. Resume only after it closes; do not terminate it by inference.
+  - Deferred precondition: user cost alignment is complete and clean runtime commit `710d8999`
+    has no competing Godot process, but the prerequisite user-controlled normal-play trace remains
+    open. Its 2026-08-09 attempt entered no gameplay and correctly wrote no JSON. Do not start the
+    two release samples until the user can drive that trace; synthetic fixtures cannot establish
+    the requested normal-play hitch correlation.
 - [ ] **10.4** Diagnose and correct only a valid red owner, then qualify built Web.
   - Change: if a valid final sample or current-commit manual trace is red, use its subsystem/slow-
     frame evidence to select one owner, make the smallest correction that preserves counts,
@@ -1000,6 +1003,11 @@ scenarios, active performance policy/evidence records
     `$npjt-port-guard` on the `codex` lane and clean up only the task-owned server.
   - Accept: evidence links the correction to the measured owner; native and Web results are
     authority-eligible and passing; no optimization claim exceeds the evidence.
+  - Progress: the production Web export is current and served with HTTP 200 on the registered
+    `codex` lane. No interactive or Web-performance result was collected because the browser
+    runtime failed before navigation with the tool-local kernel-assets path error recorded in
+    Task 10.2. The task-owned HTTP server was identified by exact PID/command/port and stopped;
+    port `13029` no longer listens.
 - [ ] **10.5** Close durable records and commits.
   - Change: update product/visual/performance owners with final values and evidence, create coherent
     scoped commits containing only task-owned files, then obtain explicit user approval and delete
@@ -1007,6 +1015,10 @@ scenarios, active performance policy/evidence records
   - Accept: working tree has no task-owned uncommitted changes, no stale active plan remains, and
     final docs do not retain superseded hazard, burn, XP, radar, minimap, status, or surface-detail
     contracts.
+  - Progress: implementation, exact Thermal approval/application, capture, batch correction,
+    retired-plan cleanup, stale hazard-contract correction, and Phase 10 correctness evidence are
+    in scoped commits through `710d8999`. Keep this plan active until Tasks 1.2-1.4 and 10.2-10.4
+    have eligible interactive/performance evidence.
 
 ## Validation and Rework Controls
 
