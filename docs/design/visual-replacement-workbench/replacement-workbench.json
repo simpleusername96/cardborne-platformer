@@ -4176,6 +4176,88 @@
       }
     },
     {
+      "id": "thermal_burst_impact",
+      "category_id": "combat",
+      "order": 9,
+      "title_en": "Thermal Burst Direct-impact Receipt",
+      "title_ko": "열폭발 직접 명중 이펙트",
+      "owner": "gameplay_manifest",
+      "switch_kind": "replace",
+      "status": "switch_ready",
+      "current_paths": [],
+      "consumer_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/combat/vehicle_effect_store.gd",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/components/vehicle_visual_event_catalog.gd",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/vehicle/vehicle_run.gd"
+      ],
+      "consumer_asset_ids": [
+        "effect/thermal_burst_impact"
+      ],
+      "direction_en": "Add one approval-gated 192x192 transparent Thermal Burst receipt at eligible direct player-primary enemy contacts. Scale the one raster to gameplay radii 72/84/96, fade it over 0.18 seconds, and never emit it for splash recipients or non-primary damage.",
+      "deliverables": [
+        {
+          "target_path": "art/visuals/production/gameplay/effects/thermal_burst_impact.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One exact transparent 192x192 hard-edged orange Thermal Burst with a compact pale center and two or three large color planes. Use the approved PNG as-is with lossless import, alpha and linear filtering enabled, mipmaps and repeat disabled; add no ring, particles, smoke, glow, gradient, text, endpoint, or frame sequence.",
+          "external_source_ids": []
+        }
+      ],
+      "final_paths": [
+        "art/visuals/production/gameplay/effects/thermal_burst_impact.png"
+      ],
+      "reuse_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/thermal-burst-impact-v1/to-be-thermal-level-1-radius-72.png",
+        "docs/design/visual-replacement-workbench/previews/thermal-burst-impact-v1/to-be-thermal-level-2-radius-84.png",
+        "docs/design/visual-replacement-workbench/previews/thermal-burst-impact-v1/to-be-thermal-level-3-radius-96.png"
+      ],
+      "rendered_as_is_paths": [
+        "docs/design/visual-replacement-workbench/previews/thermal-burst-impact-v1/as-is-generic-direct-hit.png"
+      ],
+      "retire_paths": [],
+      "runtime_change_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/combat/vehicle_effect_store.gd",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/components/vehicle_visual_event_catalog.gd",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/vehicle/vehicle_run.gd",
+        "tools/validation/validate_vehicle_combat_renderer.gd",
+        "tools/validation/validate_vehicle_effect_store.gd",
+        "tools/validation/validate_vehicle_semantic_asset_provider.gd"
+      ],
+      "acceptance_commands": [
+        ".\\tools\\godot.ps1 --path . --headless --import",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_effect_store.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+        ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+        ".\\tools\\validation\\validate_cardborne_visual_authority.ps1"
+      ],
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      },
+      "approval": null,
+      "application": null
+    },
+    {
       "id": "gameplay_code_asset_rasterization",
       "category_id": "world",
       "order": 95,

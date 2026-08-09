@@ -828,6 +828,10 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
   - Accept: the exact PNG, semantic ID, hash, alpha bounds, import settings, intended footprint,
     AS-IS/TO-BE comparison, and all three 1x scales receive explicit user approval before one
     manifest entry is added. Rejected candidates remain outside production.
+  - Evidence: the `switch_ready` workbench unit now holds exact candidate SHA-256
+    `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904`, RGBA bounds
+    `173x176+9+8`, actual-reference provenance, AS-IS evidence, and `0.75/0.875/1.0` runtime-scale
+    previews. The production path and approval ledger remain empty pending explicit user approval.
 - [ ] **9.2** Integrate Thermal impact without expanding capacity or splash noise.
   - Change: create one `thermal_burst_impact` effect at each eligible direct player-primary enemy
     hit, not at splash recipients. Give it `0.18s` scale/fade and the gameplay radius. Keep overall
@@ -839,7 +843,7 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
     reflected, structure-only, splash, DOT, and EMP damage show none. Gameplay damage/radius and
     audio remain unchanged, effect capacity validates, and EMP is present under saturated Thermal
     input.
-- [ ] **9.3** Compose Toxin and Cryo state into existing enemy batches.
+- [x] **9.3** Compose Toxin and Cryo state into existing enemy batches.
   - Change: add bounded scalar presentation fields for Toxin/Cryo stack ratio and a `0.16s`
     application pulse receipt. Compose semantic Toxin/Cryo color through the existing actor
     instance at `0.12/0.16/0.20` for stacks 1/2/3; this must look exactly like a translucent layer
@@ -854,7 +858,7 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
     stale tint. Pixel-mask comparison confirms every colored overlay pixel remains inside the
     unchanged actor alpha and footprint. Renderer consumes staged snapshot scalars and never reads
     live status dictionaries.
-- [ ] **9.4** Replace the shield-like Electric Field ring with its complete damage area.
+- [x] **9.4** Replace the shield-like Electric Field ring with its complete damage area.
   - Change: remove renderer-owned `ELECTRIC_FIELD_RADII` duplication and publish the selected
     secondary definition radius `120/140/160` in the borrowed presentation snapshot. Add one
     capacity-one retained code-native field-area batch below actors: Arc-purple fill alpha `0.10`,
@@ -871,7 +875,7 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
   - Guard: if the filled alpha causes a measurable fill-rate or readability regression, reduce only
     the locked fill/perimeter alpha within the accepted hierarchy after an eligible comparison; do
     not shrink the visual below the damage radius, reduce damage radius, or restore the shield ring.
-- [ ] **9.5** Reduce boss-shield dominance before considering new boss art.
+- [x] **9.5** Reduce boss-shield dominance before considering new boss art.
   - Change: preserve the five boss PNGs and current batch. Reuse the shared authored ring but change
     the boss-only shield write from alpha `0.90` to `0.38` and radius offset from `+12` to `+8`;
     preserve shield-down absence and existing hit feedback. Add no shield node, module, objective,
@@ -893,6 +897,11 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
     size results preserve the hierarchy shown by `elemental-hit-feedback-to-be.png`,
     `electric-field-to-be.png`, and `boss-shield-readability-to-be.png` while respecting their
     documented limitations.
+  - Evidence: the 96-file Korean matrix under
+    `build/visual-captures/phase9-elemental-feedback-ko` now covers Toxin/Cryo application,
+    persistent, hit-flash, reduced-motion, and expired states; Electric Field levels 1-3 beside
+    Mint player/enemy shields; and all five boss families with shield-up/down/hit states. Thermal
+    runtime receipts and saturated Thermal-plus-EMP evidence remain gated by Tasks 9.1-9.2.
 
 Batch gate:
 
@@ -1039,9 +1048,9 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 9 - Add bounded elemental feedback, distinguish Electric Field, and reveal
   boss identity.
-- Next task: 9.1 - prepare the dedicated Thermal impact workbench unit and exact approval evidence;
-  production promotion remains blocked until the user approves one exact raster. Independent
-  Tasks 9.3-9.5 may proceed without bypassing that approval gate. Task 3.6 retains its rendered pursuit/ranged capture
+- Next task: 9.1 - obtain explicit approval or rejection of exact Thermal candidate SHA-256
+  `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904`; production promotion and
+  Task 9.2 remain blocked until that decision. Tasks 9.3-9.5 are complete. Task 3.6 retains its rendered pursuit/ranged capture
   for final runtime QA; Task 5.3 still requires owner-approved retired-plan deletion; Tasks 1.2-1.4
   remain open evidence gates and final release qualification is deferred to Phase 10.
 - Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
@@ -1077,6 +1086,14 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   review of `04e-radar-minimap-roles.png` confirms the dim no-triangle nearby arc, brighter committed
   attack and boss triangles, shape-separated marker roles, unchanged hull-plus-XP stack, and zero
   live upgrade icons.
+  Phase 9 independent work is complete: pooled enemies publish fixed Toxin/Cryo ratios and one
+  bounded application receipt without renderer status-Dictionary reads or extra draws; direct hit
+  flash wins and reduced motion keeps static tint. Electric Field reads its exact `120/140/160`
+  radius from the secondary definition snapshot and uses one below-actor Arc-purple retained mesh;
+  boss-only shield presentation is exactly `+8` radius and `0.38` alpha. Focused status, secondary,
+  renderer, damage-feedback, boss, attack-contract, capture-driver, Run, workbench, and visual-
+  authority gates pass. The 96-file Korean capture matrix completed and was inspected at original
+  size. Thermal runtime work remains intentionally unimplemented until exact candidate approval.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 
