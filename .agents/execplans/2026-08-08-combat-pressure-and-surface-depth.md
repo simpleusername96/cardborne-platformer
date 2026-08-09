@@ -296,8 +296,10 @@ Source owners: `scripts/performance/vehicle_performance_scenario.gd`,
     never as a release pass.
   - Guard: do not start if the wrapper detects another Godot process or if the user cannot drive
     the trace; record the deferred precondition without substituting a synthetic play claim.
-  - Deferred precondition: no user-controlled gameplay was available during the 2026-08-09
-    implementation run. Keep this task open; the synthetic release scenarios below are not a
+  - Deferred precondition: on 2026-08-09 the wrapper started from clean commit `6323d09d` with no
+    competing Godot process, but no gameplay session was entered during the 22-minute window.
+    Normal window close therefore wrote no JSON, as designed. Keep this task open and retry from
+    the exact clean final commit when the user can drive the game; synthetic scenarios are not a
     substitute for the requested normal-play correlation trace.
 - [ ] **1.3** Complete clean native qualification owned by the active performance plan.
   - Change: after the required user cost alignment, run the exact clean-commit `peak_horde` and
@@ -912,12 +914,14 @@ localization, capture fixtures, and focused secondary/status/effect/renderer val
     `electric-field-to-be.png`, and `boss-shield-readability-to-be.png` while respecting their
     documented limitations.
   - Evidence: the 103-file Korean `1280x720` matrix under
-    `build/visual-captures/phase9-thermal-impact-ko-v4` covers Toxin/Cryo application, persistent,
+    `build/visual-captures/phase9-thermal-impact-ko-v5` covers Toxin/Cryo application, persistent,
     hit-flash, reduced-motion, and expired states; Electric Field levels 1-3 beside Mint
     player/enemy shields; all five boss families with shield-up/down/hit states; and Thermal levels
     1-3 at radii `72/84/96` in a crowd. Original-size review confirms the impact grows by level.
     The saturation frame and runtime log show `live=96`, `thermal_live=24`, one Thermal recycle,
-    and one retained EMP charge plus one retained EMP release. Commit `25986e26` owns the fixture.
+    and one retained EMP charge plus one retained EMP release. Commit `25986e26` owns the fixture;
+    commit `e7baab12` moves all 24 Thermal instances into one retained MultiMesh batch, and the
+    `v5` matrix is generated from that clean runtime path.
 
 Batch gate:
 
@@ -1068,8 +1072,9 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   release-performance gates.
 - Last completed gate: the exact user-approved Thermal impact SHA-256
   `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904` is promoted and rendered
-  with a 24-live sub-limit inside the fixed 96-state store; the 103-file Korean matrix confirms
-  radii `72/84/96` plus full-store Thermal/EMP coexistence. The exact user-approved crack, stain,
+  with a 24-live sub-limit inside the fixed 96-state store and one retained render batch; the
+  103-file Korean matrix confirms radii `72/84/96` plus full-store Thermal/EMP coexistence. The
+  exact user-approved crack, stain,
   and embedded-chip SVG hashes are
   promoted unchanged and compile to deterministic 72/72/48 placement across stages in three
   retained batches, and the borderless straight-beam replacement is production-integrated.
@@ -1117,7 +1122,7 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   renderer, damage-feedback, boss, attack-contract, capture-driver, Run, workbench, and visual-
   authority gates pass. The exact approved Thermal raster is integrated at direct contacts with a
   bounded 24-live cosmetic policy that preserves EMP, and the 103-file Korean capture matrix under
-  `build/visual-captures/phase9-thermal-impact-ko-v4` completed and was inspected at original size.
+  `build/visual-captures/phase9-thermal-impact-ko-v5` completed and was inspected at original size.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 
