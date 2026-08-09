@@ -1,15 +1,15 @@
 ---
 type: evidence
-status: draft
+status: active
 created: 2026-08-09
 scope: Approval-gated Thermal Burst direct-impact raster candidate
 ---
 
 # Thermal Burst Impact Candidate V1
 
-This workbench unit is isolated from production. The exact candidate, hash, alpha bounds, import
-contract, and runtime-scale evidence must receive explicit user approval before any manifest,
-provider, catalog, renderer, or effect-store integration.
+This workbench unit records the exact candidate, hash, alpha bounds, import contract, and
+runtime-scale evidence that BK approved on 2026-08-09. Production promotion must preserve the
+approved bytes and the runtime contract below.
 
 ## Locked target
 
@@ -24,8 +24,11 @@ provider, catalog, renderer, or effect-store integration.
 
 ## Approval state
 
-The candidate is technically normalized and registered as `switch_ready`, but it has not received
-user approval. `switch_ready` is not approval and does not authorize production promotion.
+BK approved the exact candidate SHA-256
+`4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904` as-is for
+`effect/thermal_burst_impact` on 2026-08-09. The workbench unit is now
+`approved_for_switch`; application evidence remains empty until runtime integration is committed
+and validated.
 
 ## Exact candidate
 
@@ -73,8 +76,10 @@ the candidate yet.
 | `docs/design/visual-replacement-workbench/previews/thermal-burst-impact-v1/to-be-thermal-level-2-radius-84.png` | Candidate at `0.875x`, radius `84` | `4bc9fd1d66cc246533ea855e7802a5d18b82b8b7725f3888d5a7b06761a4f66c` |
 | `docs/design/visual-replacement-workbench/previews/thermal-burst-impact-v1/to-be-thermal-level-3-radius-96.png` | Candidate at `1.0x`, radius `96` | `32abe80d35c926424d9ddd9605d7d7a2acc88cc3f6f71842ed21fc5cbb2c700d` |
 
-## Exact approval gate
+## Exact approval record
 
-Approval must identify the SHA-256 above and accept the asset **as-is** for
-`effect/thermal_burst_impact`. Until then, Phase 9.2 remains blocked: do not copy it into
-production, add it to the manifest/provider, or emit a live Thermal effect.
+- Approved by: BK
+- Approved at: `2026-08-09T21:38:37+09:00`
+- Baseline commit: `f5e05ffe6128ed9d23376e3a8973d07b0f69e20f`
+- Approved bytes: the exact candidate SHA-256 above
+- Retirement scope: none

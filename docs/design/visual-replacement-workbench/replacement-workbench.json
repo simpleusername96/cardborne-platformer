@@ -4183,7 +4183,7 @@
       "title_ko": "열폭발 직접 명중 이펙트",
       "owner": "gameplay_manifest",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [],
       "consumer_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
@@ -4254,7 +4254,15 @@
         "actual_image_reference_used": true,
         "reference_input_method": "image_gen.referenced_image_paths"
       },
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-09T21:38:37+09:00",
+        "baseline_commit": "f5e05ffe6128ed9d23376e3a8973d07b0f69e20f",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/effects/thermal_burst_impact.png": "4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904"
+        },
+        "retire_paths": []
+      },
       "application": null
     },
     {
