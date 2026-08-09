@@ -583,6 +583,12 @@ scenarios, active performance policy/evidence records
     visual authority, and a production Web export.
   - Accept: all commands exit zero, Web reports `WEB_EXPORT_OK`, and known non-blocking warnings
     are recorded once.
+  - Progress: the consolidated gameplay, movement, Thermal Burst, world, provider, renderer,
+    capture, workload, workbench, and visual-authority validators pass on the final feature set.
+    Godot import and the four-file production Web export pass with `WEB_EXPORT_OK`. Document
+    authority has exactly one known failure: the retired
+    `2026-08-07-combat-feedback-and-reinforcement-facility.md` remains in the active tree and
+    requires explicit user approval before deletion.
 - [ ] **7.2** Perform built-product gameplay QA.
   - Change: use production-style native and built Web paths to check all five ordinary-health
     stages, absence of neutral hazards, pursuit/standoff movement around cover, one shield-up/down
@@ -593,6 +599,10 @@ scenarios, active performance policy/evidence records
     locked curve, melee closes distance, ranged holds distance without band-edge ping-pong, boss
     damage windows and beam states are legible, burst never double-hits/direct-chains/damages
     structures, and detail never reads as collision or combat signal.
+  - Progress: the production 87-image Korean 1280x720 native capture passes and verifies all five
+    boss states, Beam Sentinel/Crown startup and active beams, peak combat composition, and sparse
+    surface readability at actual size. User-controlled movement feel, explicit grayscale review,
+    and interactive built-Web play remain open.
 - [ ] **7.3** Requalify the exact clean final native commit.
   - Change: after user cost alignment, repeat the Phase 1 `peak_horde` and `capacity_pressure`
     protocol from the exact clean final commit. Compare eligible fields with the Phase 1 baseline;
@@ -601,6 +611,10 @@ scenarios, active performance policy/evidence records
   - Guard: because removing hazards, changing steering, adding splash queries, replacing a beam
     raster, and adding three retained batches all change workload, Phase 1 evidence cannot qualify
     the final commit.
+  - Deferred precondition: the tracked tree is clean, but a pre-existing normal `Cardborne
+    (DEBUG)` Godot run remains open. Starting a release sample would violate process isolation, so
+    no native scenario was started. Resume once the existing run closes; do not terminate it by
+    inference.
 - [ ] **7.4** Diagnose and correct only a valid red owner, then qualify built Web.
   - Change: if a valid final sample or current-commit manual trace is red, use its subsystem/slow-
     frame evidence to select one owner, make the smallest correction that preserves counts,
@@ -668,8 +682,8 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 7 - Consolidate correctness, feel, export, and performance.
-- Next task: 7.1 - run the consolidated correctness/authority matrix and production Web export.
-  Task 3.6 retains its rendered
+- Next task: 7.3 - run the final native peak/capacity pair after the pre-existing Cardborne run
+  closes. Task 7.1 still requires owner-approved retired-plan deletion; Task 3.6 retains its rendered
   pursuit/ranged capture for final runtime QA. Task 1.2 remains deferred until
   user-controlled normal play is available; Tasks 1.3-1.4 remain open release gates.
 - Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
