@@ -21,26 +21,28 @@ Deliver a harder-to-cheese but less front-loaded five-stage run and restore the 
 feedback loop. The completed portion removes neutral hazards, applies the selected ordinary-health
 curve, makes role movement distance-aware, strengthens boss shielding, replaces Thermal Burn with
 bounded Thermal Burst damage, integrates sparse approved surface detail, and replaces the boxed
-straight-beam strip. The remaining portion restores unmistakable XP progress, prevents late-run level
-rewards from disappearing when fewer than three legal cards remain, removes the redundant and
-ambiguous live upgrade-icon rail, keeps only differently weighted hull and experience meters in the
-top-center HUD, makes elemental upgrades show their real current-to-next values, restores restrained
-nearby-enemy direction cues, differentiates minimap roles, makes Electric Field show its complete
-damage area without reading as a shield, adds bounded elemental hit feedback, and stops the boss
-shield from masking authored boss bodies. The
-corrective implementation commit for this revision is `cbd6d2d4`; current HEAD still has no
+straight-beam strip. The completed feedback portion also restores XP progress, late-run rewards,
+the hull-plus-XP HUD, truthful element copy, nearby-enemy direction cues, semantic minimap roles,
+Electric Field extent, elemental hit feedback, boss identity, status visibility, and timed-arrival
+receipts. The new remaining revision stabilizes dash presentation, restores Drop Mine detonation
+feedback, normalizes minimap scale, aligns directional enemies to their actual target or committed
+attack, raises current ordinary-enemy damage by 30%, makes autonomous boss pattern kinds execute
+their declared geometry, and turns the existing Mystery Device outcomes into readable tactical
+choices. The last corrective implementation commit is `cbd6d2d4`; current HEAD still has no
 eligible native/Web release-performance qualification, so the exact final workload is
 measured once after all remaining behavior and visual work is complete.
 
 ## Purpose
 
-- Objective: implement the requested pressure, movement, progression, HUD, minimap, shield,
-  elemental, surface, beam, and frame-pacing outcomes as one decision-complete sequence with
-  independent causal commits.
+- Objective: implement the requested pressure, movement, facing, secondary-weapon, progression,
+  HUD, minimap, Mystery Device, boss-pattern, shield, elemental, surface, beam, and frame-pacing
+  outcomes as one decision-complete sequence with independent causal commits.
 - Deliverable: updated gameplay and movement rules; a truthful bilingual XP and upgrade flow;
   a two-meter top-center HUD with no live upgrade icons; retained threat-radar, minimap, Electric
   Field, projectile, status, and shield presentation; approved
-  production surface SVGs, beam raster, and any separately approved Thermal impact raster;
+  production surface SVGs, beam raster, and the approved Thermal impact raster; dash-stable
+  presentation, truthful enemy facing, bounded Drop Mine and Mystery Device receipts, corrected
+  autonomous boss execution, and a measured minimap size hierarchy;
   focused validators; production Web export; and eligible native/Web performance evidence.
 - Completion state: neutral hazards no longer exist; ordinary health uses the locked five-stage
   curve; mobile enemies preserve role distance continuously; shielded bosses take 15% incoming
@@ -52,7 +54,11 @@ measured once after all remaining behavior and visual work is complete.
   Electric Field fills the exact `120/140/160` damage disk in Arc purple instead of reusing shield
   language; Toxin/Cryo states are visible as same-silhouette translucent body overlays without
   per-enemy nodes; the floor and straight beams retain the
-  approved presentation; and all correctness, visual, export, and performance gates pass from the
+  approved presentation; dash no longer separates craft/afterimage/attached cues; Drop Mines show
+  one post-damage radius receipt; ordinary enemies deal exactly 1.30 times their current effective
+  damage; boss difficulty comes from committed geometry rather than another damage/HP increase;
+  directional actors face their effective target; Mystery Device effects are revealed, counted,
+  and visibly distinct; and all correctness, visual, export, and performance gates pass from the
   exact clean final commit.
 
 ## Scope and Boundaries
@@ -68,6 +74,15 @@ In scope:
 - Preserve existing enemy roles but make mobile pursuit, standoff, escort, and support movement
   obey continuous distance bands. Remove the far-distance route override that currently masks
   ranged standoff behavior, and smooth ordinary role turns without changing attack cadence.
+- During an active dash, use the fixed dash direction as the sole craft-presentation direction and
+  suppress craft-only hit recoil. Craft, rear anchor, dash beam, afterimage, and any attached
+  secondary presentation use that direction; collision, motion, aim, orbit simulation, Electric
+  Field truth, and deployed-mine world positions remain unchanged.
+- Give every directional enemy one explicit presentation-facing result derived from its effective
+  target or committed attack. The authored forward axis remains positive X. Controller keeps its
+  intentional spin; stationary mine/generator remain neutral; startup/active turret, rammer, Beam
+  Sentinel, Interceptor Tower, and boss use frozen committed direction; all other directional
+  hostile roles face the current player-or-decoy target.
 - Change boss `shield_up` incoming damage from `0.25` to `0.15`; preserve the `1.0` exposed
   multiplier, four-second shield-down window, transitions, and `final_effective` bypass.
 - Replace the persistent thermal condition and the `thermal_burn` card identity with
@@ -96,6 +111,11 @@ In scope:
 - Expand the minimap's bounded semantic roles to distinguish field pickup, reward crate, Mystery
   Device, mobile enemy, fixed priority enemy, boss, and reinforcement facility by shape as well as
   color.
+- Normalize minimap perceived size instead of treating each silhouette's bounding box as its scale:
+  field pickup becomes a `12 x 7.6` lozenge, reward crate a `9 x 9` notched square, and their outer
+  polygon areas remain within 10%. Scale the current Mystery Device marker by `1.20` to a `14.4`
+  maximum span so its larger world footprint sits above pickup/crate and below the radius-8
+  facility and radius-10 boss hierarchy. Keep all eight roles and one retained mesh.
 - Replace the current Mint Electric Field ring with an Arc-purple, ground-attached, low-alpha filled
   disk at the exact `120/140/160` gameplay radii. The enemy body-overlap rule remains gameplay truth;
   the visual adds no collision owner and does not reuse player/enemy shield geometry.
@@ -111,6 +131,29 @@ In scope:
   receipts during their cue lead and short post-birth hold. Reuse the dim no-triangle
   `nearby_enemy` arc; do not add an exact coordinate, new marker identity, spawn trigger, or world
   telegraph.
+- Restore one post-damage Drop Mine detonation receipt at the exact `96/108/120` gameplay radius.
+  Use a `0.18s` code-native amber disk plus ivory core through existing retained overlay geometry,
+  with at most eight live mine receipts inside the unchanged 96-state effect capacity. Emit one
+  existing impact sound per mine, never per damaged enemy; reduced motion starts at full radius
+  and fades without scale motion.
+- Multiply the current ordinary-enemy outgoing damage boundary by exactly `1.30`: change the global
+  multiplier from `1.35` to `1.755` while preserving stage damage `[1.00,1.03,1.06,1.09,1.12]`,
+  recovery `1.28`, attack cadence, health, speed, counts, and difficulty factor. This includes
+  ordinary mobile, specialist, fixed-installation, and summoned-add contact/projectile/area damage;
+  it excludes boss `final_effective` patterns, player damage, and non-enemy environmental sources.
+- Preserve boss damage, health, shield multiplier, and four-second exposure window. Make each
+  autonomous event execute its declared `area`, `lanes`, `beam`, or `summon` kind instead of routing
+  every non-summon event into a circular denied zone. Area target lead is capped at `96`; lanes use
+  the existing `4/5` phase volley contract; beam uses the existing `920`-range committed corridor
+  at its authored width; one fixed-cap autonomous state freezes direction after startup and never
+  exceeds the existing 24-projectile boss reservation.
+- Keep exactly three deterministic Mystery Devices and the current four outcome values. Change the
+  device lifecycle to hidden until the first accepted player hit, then reveal the assigned outcome
+  once while the device remains destructible; breaking it triggers the effect and reports the
+  number of affected enemies or cleared hostile projectiles in the existing bilingual result toast.
+  Do not reveal outcomes on the minimap. Reuse the current retained ring, the enemy body compositor
+  for Cryo, the resolved-device body for Decoy focus, and one short System purge pulse; add no fifth
+  outcome, reward, quota, XP, drop, per-enemy node, or full-store scan.
 - Reduce the shared boss-shield overlay's visual dominance and give the boss minimap marker a
   command-color notched shape. Preserve the five existing authored boss PNG identities.
 - Diagnose the reported hitch from eligible evidence and make only an evidence-selected,
@@ -119,9 +162,9 @@ In scope:
 Out of scope:
 
 - Boss-owned telegraphed `denied_zones`; these are attacks, not the neutral map hazards.
-- Boss base-health curve or final boss-health multiplier, ordinary damage/speed curves,
-  encounter counts, quotas, spawn cadence, projectile/effect store capacity, collision rules,
-  and performance thresholds.
+- Boss base-health curve or final boss-health multiplier, boss damage, ordinary speed/health beyond
+  the already-locked curve, encounter counts, quotas, spawn cadence, projectile/effect store total
+  capacity, collision rules, and performance thresholds.
 - New named material, cultural, marine, ritual, or photoreal environment theme.
 - Loose stones that imply collision, navigation, cover, or pickup behavior; the approved
   debris detail is embedded, flat, non-interactive floor wear.
@@ -134,6 +177,12 @@ Out of scope:
   each eligible direct hit, scaled to the actual burst radius.
 - Persistent Toxin/Cryo rings, outlines, enlarged silhouettes, status icons, orbit markers,
   per-enemy labels, repeated strobing, damage numbers, or separate status rasters.
+- Restoring the retired Drop Mine frame atlas, drawing an armed/proximity range before detonation,
+  adding particles/glow, or turning the detonation receipt into a second collision/damage owner.
+- A fifth Mystery Device outcome, random runtime assignment, player-affecting device effect, device
+  reward economy, outcome-specific minimap marker, or a general destructible-terrain system.
+- Raising boss damage/HP, shortening committed startup/reaction windows, live retargeting after a
+  warning, or increasing boss projectile/add capacity to manufacture difficulty.
 - Recoloring the Seeker as if it inherited the selected primary element; its authored identity and
   gameplay payload remain separate from player-primary affinity.
 - Redrawing the five boss bodies in this pass. If shield reduction does not reveal their existing
@@ -171,6 +220,15 @@ Constraints and invariants:
   enemy instance colors with the authored body alpha acting as the exact overlay mask. Thermal
   impact uses the fixed 96-state effect store with a
   dedicated live cosmetic sub-limit and must never evict EMP charge/release state.
+- Dash correction is presentation-only. No secondary acquires smoothing, lag, interpolation, or a
+  second position owner; deployed mines remain world-fixed and Electric Field/orbit damage stays
+  centered on gameplay `player_position`.
+- Drop Mine and instant Mystery purge receipts occur only after gameplay resolution. They reuse
+  existing retained overlay batches, keep the effect store at 96, and may drop only their own
+  cosmetic receipt when their sub-limit is full; gameplay damage/purge always completes.
+- Enemy facing is published in existing pooled presentation data and reuses current actor batches.
+  It creates no per-enemy node/material and never changes attack target, velocity, collision, AI
+  cadence, or committed geometry.
 - Ordinary-arrival radar receipts are presentation-only. They use at most eight preallocated
   position/lifetime slots, publish at the existing five-hertz radar cadence, clamp positions beyond
   1,200 units to direction-only range, and never affect encounter elapsed time, packet admission,
@@ -227,7 +285,7 @@ Exact actions requiring owner or user approval:
 | --- | --- | --- | --- | --- |
 | “Neutral attack zone” identity | No such symbol exists. Four `hazard_zone` footprints are generated by `VehicleFieldLayoutGenerator`; `VehicleTerrainRuntime` applies neutral immediate, 0.75-second tick, and 2.5-second lingering damage. They hurt ordinary enemies more than the player and their kills still advance quota/drop XP. Boss `denied_zones` are separate attack telegraphs. | `scripts/vehicle/vehicle_field_layout_generator.gd`; `scripts/vehicle/vehicle_terrain_runtime.gd`; `scripts/vehicle/vehicle_run.gd`; commit `580cde2c`; product spec | Treat the request as removal of map hazard zones. Remove the mechanic and all unused presentation/product surfaces; preserve boss attack zones. | 2.1-2.3 |
 | Early ordinary health and later growth | Ordinary health is authored base x optional 1.12 class factor x `[1.00,1.04,1.08,1.12,1.16]` x `2.60`. Commit `8924a877` doubled the final multiplier from 1.30 on 2026-08-08. Boss health is separate. | `VehicleStageDifficulty`; `VehicleRun._make_enemy`; git history; product spec; user revision on 2026-08-08 | Use the user-selected additive curve `[0.85,1.00,1.15,1.30,1.45]`. It lowers Stage 1 by 15% and adds 0.15 of the authored/current-final baseline per stage. Boss health is excluded. | 3.1-3.2 |
-| Combined late-run pressure | Quotas, authored population, active population, role mix, and boss pressure already rise by stage. Removing enemy-damaging hazards also increases effective enemy durability. | Product spec stage tables; encounter owners; hazard damage rules | Keep the selected health direction but do not also raise quotas, counts, damage, speed, or boss HP. Treat `[0.85,1.00,1.15,1.30,1.45]` as the complete curve for this pass and validate clear-time/TTK before any further increase. | 3.2, 10.2 |
+| Combined late-run pressure | Quotas, authored population, active population, role mix, and boss pressure already rise by stage. Removing enemy-damaging hazards also increases effective enemy durability. | Product spec stage tables; encounter owners; hazard damage rules; user revision on 2026-08-10 | Keep the selected health curve and do not raise ordinary HP again. Apply the separately requested 30% increase only to ordinary outgoing damage at the shared damage boundary; preserve quotas, counts, speed, and boss HP/damage. | 3.2, 9.16, 10.2 |
 | Ordinary movement role truth | The basic algorithm exists: chasers and contact roles approach; shooters hold 330-500, controllers 390-540, artillery 520-760, escorts 300-470, and support roles 430-620. Stationary roles do not move. | `VehicleRun._desired_enemy_velocity`; `VehicleEnemyArchetypes`; `VehicleEnemyUpdateSchedule` | Preserve these bands and role identities. Centralize them in `VehicleEnemyMovementPolicy` so callers request pursuit/standoff/escort/support intent without owning threshold tables. | 3.3-3.6 |
 | Unnatural movement causes | Distance bands switch instantly between full retreat, full perpendicular strafe, and full approach. Above distance 520 the pursuit field currently receives 86% weight even with line of sight, masking artillery/support standoff. Desired direction changes at 10 Hz; overlap steering reacts only after body penetration; fixed side recovery can add abrupt turns. | `VehicleRun._desired_enemy_velocity`; `_move_enemy_with_recovery`; `VehicleEnemyLocalSteering`; scheduler and steering validators | Replace hard direction switches with continuous radial/tangential weights and role turn response. Use pursuit-field guidance only for an approaching role whose direct route is blocked. Preserve packed overlap behavior and cadence; do not add boids or presentation lag. | 3.3-3.6 |
 | Shielded boss durability | `VehicleBossShieldRuntime` owns `0.25` shielded, `1.0` exposed, and a four-second down window. | `scripts/bosses/vehicle_boss_shield_runtime.gd`; boss/run validators; commit `b7b9df11` | Set shielded to `0.15`. This is a 40% reduction from current shielded throughput while retaining meaningful chip damage; `0.10` is rejected for this pass because it approaches immunity during downtime. | 3.1-3.2 |
@@ -253,6 +311,14 @@ Exact actions requiring owner or user approval:
 | Ordinary spawn timing perception | Every ordinary packet trigger is time/event scheduler truth and the fixed-player encounter validator passes. Stage 1's first cue is admitted at 5.1 seconds and the first birth follows the 0.90-second lead. The allocator deliberately chooses 900-2400-unit off-screen positions, but `VehicleRun._update_encounter()` currently consumes each exact cue only as a non-positional sound. Bodies are culled until visible and `nearby_enemy` radar currently stops at 1,200 units. | `scripts/encounters/vehicle_encounter_runtime.gd`; `scripts/encounters/vehicle_spawn_allocator.gd`; `scripts/vehicle/vehicle_run.gd`; encounter/arrival/spawn validators | Preserve all scheduler and allocator rules. Store at most eight cue positions in preallocated scalar arrays for `visual_duration + 1.10s`; at the existing five-hertz radar publication, emit each as the existing dim, no-triangle `nearby_enemy` kind. Clamp farther offsets to the 1,200-unit boundary so the receipt conveys sector only, not distance or coordinate. Incoming attacks and boss arrival retain priority. | 9.8-9.9 |
 | Boss visual identity | Five boss variants already resolve separate authored PNGs. The shared large opaque magenta shield boundary masks their silhouette and makes them read alike. The minimap boss marker is a larger plain hexagon. | actor visual catalog; combat renderer; current boss captures; `boss-shield-readability-to-be.png` | Preserve all boss PNGs. Reduce shield fill/thickness/opacity to one restrained body-attached boundary, then validate all five at 1x and grayscale. Change only the minimap marker to a notched command shape. Open per-boss art replacement only if authored bodies remain indistinct after the shield fix. | 8.3-8.4, 9.5-9.6 |
 | TO-BE visual evidence | The latest production capture set is the Korean 87-image `beam-production-655e0ee2` set. It predates `b9a41aee` only by documentation/workbench and Thermal-copy changes. Five progression/readability edits and three later HUD-density alternatives used the relevant current capture and the canonical sheet as actual referenced images. The first over-scaled combined HUD/field generation was rejected and not copied into the repository. The later alternatives proved that persistent build icons still consume attention and remain ambiguous when artwork is shared. | `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/README.md`; `docs/design/visual-replacement-workbench/candidates/hud-progression-density-options-v1/README.md`; capture manifest; git diff `655e0ee2..b9a41aee`; user decision on 2026-08-09 | Keep all eight repository images as composition evidence only. The selected runtime contract is simpler than every icon-bearing alternative: zero top-center upgrade icons, hull plus XP only, and complete named build details in paused Ship Status. Runtime owners, exact copy, supported viewports, and task acceptance below remain binding; no generated pixels are production-approved. | 7.2-9.6 |
+| Dash-adjacent secondary wobble | Dash motion/afterimage use frozen `player_dash_direction`, but current input continues to update `player_hull_direction`; craft, rear anchor, dash beam, and legacy attached decoration use hull direction. The craft alone may also receive up to five pixels of hit recoil while orbit/field truth stays at raw player position. Changing input during the 0.20-second dash therefore rotates one visual group away from the travel/afterimage group, and combat hit feedback can amplify the relative split. Current `secondary_visual_tier` is zero, so the retired escort decoration is not restored; orbit-blade simulation itself is stable. | `VehicleRun._update_player/_start_dash/_fill_presentation_snapshot`; `VehicleCombatRenderer._sync_world_overlays`; `VehicleSecondaryRuntime`; commits `5c219883`, `7150b476`; focused source trace | While dash is active, use frozen dash direction for every craft-attached directional cue and suppress craft-only positional recoil. Keep raw player-centered orbit/field gameplay and deployed mines unchanged. Do not add spring smoothing or restore the retired decoration. | 9.10-9.11, 9.15 |
+| Enemy front-facing drift | `_enemy_angle()` has a stale hard-coded subset. Shield Escort, Repair Tender, Drone Carrier, and Interceptor Tower fall through to fixed +X; turret/rammer/Beam Sentinel use `committed_dir` even outside a commitment. All directional production actors are authored facing +X. Controller spin and stationary mine/generator are intentional exceptions. | `VehicleCombatRenderer._enemy_angle`; actor visual catalog/manifest original-detail inspection; movement/attack target owners; user report on 2026-08-10 | Publish one effective facing vector with each pooled enemy presentation record. Use committed direction only during startup/active, otherwise player or active Decoy target; keep Controller spin and mine/generator neutral. Renderer consumes the vector and does not infer AI state. | 9.10, 9.12, 9.15 |
+| Drop Mine detonation invisibility | `VehicleSecondaryRuntime` detects the target, applies radius `96/108/120` damage, and removes the mine, but returns only damage/projectile intents. The caller produces recipient hit flash only; the renderer stops drawing the mine with no origin receipt or sound. Commit `f3dbcc5b` intentionally retired the old detonation atlas and route, and no current capture covers player Drop Mine detonation. | `vehicle_secondary_runtime.gd`; `vehicle_run.gd`; `vehicle_combat_renderer.gd`; `vehicle_visual_event_catalog.gd`; git history/workbench inventory | Return one presentation-only position/radius receipt after gameplay damage, add one existing impact sound, and show a `0.18s` amber exact-radius disk plus ivory core through existing overlay batches. Cap live mine cosmetics at eight inside total 96; never restore the old atlas or draw an armed range ring. | 9.10, 9.13, 9.15 |
+| Minimap item/crate scale mismatch | Pickup and crate have equal 12-pixel width, but pickup is only 6.4 pixels high while crate is 12 pixels high; their outer polygon areas are about `57.6` and `130.5` despite similar world presentation radii `42` and `38`. No validator asserts their relative perceived area. The larger radius-84 Mystery Device also uses a roughly crate-sized marker. | `VehicleMinimapMeshBuilder`; current `04e-radar-minimap-roles.png`; pickup/crate/device world owners; stage UI validator | Keep silhouettes and colors, but use area-aware size: pickup `12 x 7.6`, crate `9 x 9` with the existing proportional notch, areas within 10%; scale Mystery Device by 1.20. Preserve mobile/priority/facility/boss geometry and one retained mesh. | 9.10, 9.14-9.15 |
+| Ordinary outgoing damage | Normal enemy damage is `base x 1.35 x [1.00,1.03,1.06,1.09,1.12] x difficulty`; recovery is already accelerated by `1.28`. Boss attacks carry `final_effective=true` and bypass this boundary. Current effective ordinary multipliers are `1.35/1.3905/1.431/1.4715/1.512`. | `VehicleEncounterDirector`; `VehicleStageDifficulty`; `VehicleRun._scaled_incoming_damage`; `VehicleAttackContract`; boss pattern call sites | Treat “30% increase” as multiplication of the current result, not replacement with 1.30. Set the global multiplier to `1.755`, yielding `1.755/1.80765/1.8603/1.91295/1.9656`; preserve cooldowns and every boss final-damage value. Do not add ordinary HP in the same pass. | 9.16, 9.19 |
+| Boss pattern weakness | Boss direct attacks have authored reaction windows and four-second exposure payoff. Autonomous events declare `area`, `lanes`, `beam`, or `summon`, but `_execute_boss_autonomous()` routes every non-summon kind into the same circular denied zone. Targets are additionally displaced `215/250/285` units from the player while several radii are only `145-225`, so pressure often starts beside the player. Phase order changes, but declared autonomous identity and overlap do not. | `VehicleBossPatterns`; `VehicleBossRuntime.advance_autonomous`; `VehicleRun._execute_boss_autonomous`; boss validators; user report on 2026-08-10 | Keep boss HP, damage, shield, startup, and exposure. Cap area lead at 96; execute lanes with existing 4/5 volleys, beam with the existing committed corridor, summon unchanged, and one fixed autonomous state. Difficulty comes from truthful geometry and overlap, not unreadable reaction loss or more damage. | 9.17, 9.19 |
+| Mystery Device operation and perceived failure | The black neutral world object is `Mystery Device`, not Reinforcement Facility. Three devices receive three distinct deterministic outcomes from four. Integration tests prove Gravity Pull, Cryo Lock, Projectile Purge, and Decoy Signal, while excluding bosses/structures and quota/XP. Perception is poor because Gravity and Decoy both move enemies toward the wreck, Purge is instantaneous with no world receipt, Cryo lasts 0.8 seconds without a dedicated device-applied body state, and the toast reports no affected count. | `VehicleMysteryDeviceRuntime`; `VehicleRun._prepare_mystery_device_effects/_apply_mystery_device_forced_motion/_handle_mystery_device_break`; renderer; map-mechanics validator | Do not add a fifth effect. Reveal the deterministic outcome on first accepted hit, trigger it on break, then show one count-bearing result receipt. Cryo uses the same-size blue actor compositor, Purge gets one post-clear System pulse, Decoy becomes legible through target-facing enemies, and Gravity retains visible forced motion. Minimap stays outcome-neutral. | 9.10, 9.12, 9.18-9.19 |
+| Destructible-combat-object design evidence | Comparable developer material stresses that destruction must change gameplay predictably, remain under player control, and receive clear warning/feedback; adding more cosmetic or random outcomes without tactical readability reduces agency. | [X-Morph: Defense destruction postmortem](https://www.gamedeveloper.com/design/creating-fully-destructible-cities-while-maintaining-60fps); [Red Faction destruction encounter article](https://www.gamedeveloper.com/design/designing-for-destruction---part-2-know-thy-enemy); [GTFO depth-over-breadth developer interview](https://www.gamedeveloper.com/design/q-a-how-steam-co-op-hit-i-gtfo-i-chooses-depth-over-breadth-in-game-design) | Prefer a readable two-step discover/trigger loop and stronger differentiation of the existing four effects over more random outcomes or general destructible terrain. The object remains bounded, deterministic, enemy-only, and optional. | 9.18-9.19 |
 
 Readiness statement:
 
@@ -1027,6 +1093,170 @@ Batch gate:
   texture batch; ordinary-arrival feedback stays inside the existing retained radar mesh and
   five-hertz publication. No result is described as a release-performance pass.
 
+### Phase 9B: Stabilize attachment, facing, detonation, and minimap scale
+
+Goal: remove four presentation defects without moving gameplay truth: dash-attached visuals remain
+coherent, directional enemies show their real intent, Drop Mine damage has a visible origin receipt,
+and minimap marker area reflects world-size hierarchy.
+
+Preconditions:
+
+- Phase 9A passes and the current authority-pair preflight remains valid.
+- Product and visual contracts are revised before player-facing runtime geometry changes.
+
+Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`,
+`scripts/vehicle/vehicle_run.gd`, `scripts/player/vehicle_secondary_runtime.gd`,
+`scripts/enemies/vehicle_enemy_state.gd`, one responsibility-shaped enemy-facing policy,
+`scripts/presentation/vehicle_combat_renderer.gd`,
+`scripts/presentation/components/vehicle_visual_event_catalog.gd`,
+`scripts/combat/vehicle_effect_store.gd`, `scripts/ui/vehicle_minimap_mesh_builder.gd`, capture
+gateway/driver, and focused player/secondary/actor/renderer/minimap validators
+
+- [ ] **9.10** Amend product and visual contracts before runtime changes.
+  - Change: add the dash-stable presentation direction, enemy-facing exceptions, post-damage Drop
+    Mine receipt, area-aware minimap size hierarchy, Mystery reveal/trigger lifecycle, and declared-
+    kind autonomous boss contract. Reconcile the stale five-role minimap paragraph in the product
+    spec with its current eight-role section. Record that short exact-radius impact/purge disks are
+    gameplay receipts, not armed threat rings or new collision owners.
+  - Accept: product and visual specs agree on names, values, ownership, timing, z-order, reduced
+    motion, capacity, localization, exceptions, and non-goals; document and visual authority checks
+    pass. No new raster/SVG candidate or production asset is authorized by this task.
+- [ ] **9.11** Make dash presentation use one stable direction and center.
+  - Change: derive `player_presentation_direction` as fixed `dash_direction` while dash is active and
+    `hull_direction` otherwise. Use it for craft angle, rear anchor, dash beam, afterimage, and any
+    current/future attached-secondary offset. Disable only the craft's five-pixel hit-recoil offset
+    during dash so raw player-centered orbit/field presentation does not split from the body. Keep
+    aim direction and muzzle ownership unchanged.
+  - Accept: in a fixture that starts a dash along A then holds input B, travel, body nose, rear cue,
+    dash beam, afterimage, and attached-secondary fixture stay aligned to A for the full 0.20 seconds;
+    after dash they return to B. Orbit blades retain 78-unit radial offsets, Electric Field retains
+    exact radius, deployed mines stay world-fixed, and collision/damage snapshots are unchanged.
+- [ ] **9.12** Publish truthful enemy-facing intent.
+  - Change: centralize facing modes as `target`, `committed`, `spin`, or `neutral`. Publish one
+    normalized facing direction through the existing pooled enemy presentation record. During
+    startup/active, committed roles use frozen `committed_dir`; otherwise target-facing roles use
+    the same effective player-or-Mystery-Decoy target as movement/attack selection. Controller spins;
+    stationary mine/generator remain unrotated. Renderer rotates the +X-authored body only and owns
+    no target heuristics.
+  - Accept: chaser, shooter, artillery, escort, repair tender, drone carrier, idle turret,
+    Interceptor Tower, boss, and other directional roles point their authored sharp/front end at the
+    effective target; committed attacks do not pivot; Decoy redirects both behavior and facing;
+    Controller/mine/generator exceptions remain exact. Pool reuse clears stale facing and adds no
+    node, material, batch, AI query, or cadence change.
+- [ ] **9.13** Restore one bounded Drop Mine detonation receipt.
+  - Change: return one detonation dictionary with exact position/radius after each proximity or
+    timeout resolution, while keeping damage intents authoritative. Route a `mine_detonation`
+    visual event with `0.18s` lifetime and an eight-live own-type sub-limit inside the fixed 96-state
+    store. Reuse retained disk/diamond overlays: amber disk reaches exact `96/108/120`, ivory core
+    stays compact, both fade after damage. Reduced motion begins at full radius. Play one existing
+    `impact` event at a fixed mine pitch once per detonation.
+  - Accept: proximity, timeout, zero-hit, one-hit, and multi-hit cases show exactly one origin receipt
+    and one sound; recipients retain their normal hit flash; damage occurs once and before the
+    cosmetic; saturation can drop/recycle only mine cosmetics and preserves all gameplay plus EMP
+    and Thermal state. No pre-detonation ring, old atlas, particle, glow, target list, or new batch
+    appears.
+- [ ] **9.14** Normalize minimap size by perceived polygon area.
+  - Change: set pickup vertices to X `[-6,-3,3,6,3,-3]` and Y
+    `[0,-3.8,-3.8,0,3.8,3.8]`. Set crate half-extent `4.5` and scale its current notch coordinates
+    proportionally to `[1.125,-4.5]`, `[1.125,-2.25]`, `[4.5,-2.25]`; keep inner scale `0.68`.
+    Multiply every current Mystery Device outer point by `1.20` and retain inner scale `0.66`.
+    Preserve other marker geometry and the one-mesh builder.
+  - Accept: computed pickup/crate outer areas are within 10%; both remain distinct at native size
+    and grayscale; Mystery Device is larger than either but smaller than facility/boss; overlapping
+    fixtures do not hide the player or priority roles. Validator asserts area/span hierarchy rather
+    than only constant radii, and Korean/English captures include pickup, crate, device, facility,
+    and boss together.
+- [ ] **9.15** Close the presentation correction gate with deterministic and rendered evidence.
+  - Change: extend focused fixtures for dash A-to-B input with/without hit feedback, every enemy
+    facing mode and Decoy override, Drop Mine levels 1-3 at proximity/timeout/full-store/reduced-
+    motion states, and the complete minimap scale ladder. Capture actual-size Korean frames and one
+    grayscale comparison; capture no stale retired Seeker decoration as if it were production.
+  - Accept: player presentation, secondary runtime, effect store, actor visual, combat renderer,
+    minimap builder/retained mesh, HUD layout, capture, Run, document authority, visual authority,
+    Godot import, and `git diff --check` pass. Batch/effect capacities remain unchanged.
+
+Batch gate:
+
+- Mine feedback reuses existing overlay batches and has an eight-live cosmetic sub-limit inside
+  capacity 96. Facing and dash fixes add scalar data only to existing snapshots. Minimap remains one
+  retained mesh. No result is described as a release-performance pass.
+
+### Phase 9C: Raise ordinary pressure, execute boss patterns, and make Mystery Devices tactical
+
+Goal: apply the user's exact ordinary-damage increase, strengthen bosses through declared and fair
+pattern geometry rather than raw damage, and make the existing neutral device's four outcomes
+understandable and worth timing.
+
+Preconditions:
+
+- Phase 9B passes.
+- The product/visual amendments in Task 9.10 are canonical before gameplay changes.
+
+Source owners: `scripts/encounters/vehicle_encounter_director.gd`,
+`scripts/enemies/vehicle_stage_difficulty.gd`, `scripts/combat/vehicle_attack_contract.gd`,
+`scripts/bosses/vehicle_boss_patterns.gd`, `scripts/bosses/vehicle_boss_runtime.gd`,
+`scripts/vehicle/vehicle_mystery_device_runtime.gd`, `scripts/vehicle/vehicle_run.gd`, enemy
+presentation snapshots/compositor, localization, capture gateway/driver, and focused difficulty,
+boss, Mystery Device, map-mechanics, renderer, and Run validators
+
+- [ ] **9.16** Increase current ordinary outgoing damage by exactly 30%.
+  - Change: set `ENEMY_DAMAGE_MULTIPLIER` from `1.35` to `1.755`. Preserve the stage curve,
+    difficulty factor, `ENEMY_RECOVERY_RATE`, authored base damage, attack cadence, projectile speed,
+    ordinary HP/speed, and every boss `final_effective` value. Update product examples and add a
+    role-by-stage oracle for contact, projectile, area, specialist, fixed, and summoned-add sources.
+  - Accept: effective stage multipliers are exactly
+    `1.755/1.80765/1.8603/1.91295/1.9656`; representative Stage 1 chaser `14` resolves to `24.57`,
+    shooter `10` to `17.55`, and enemy mine `16` to `28.08` before armor/barrier. Every tested boss
+    pattern produces byte-for-byte/value-for-value current final damage. No health, count, cooldown,
+    speed, or boss number changes in the same commit.
+- [ ] **9.17** Execute autonomous boss kinds instead of collapsing them into circles.
+  - Change: add one fixed-cap autonomous attack state owned by `VehicleBossRuntime`. For `area`,
+    retain the denied-zone path but target predicted player position with lead capped at 96. For
+    `lanes`, lock origin/direction after startup and emit the existing four volleys in phase 1 and
+    five in phases 2-3 at the authored interval/speed. For `beam`, use the existing 920-range beam
+    startup/active corridor at authored width with direction frozen after warning. Keep `summon`
+    and its finite-add cap unchanged. The direct four-pattern sequences and reaction windows remain
+    unchanged.
+  - Accept: every autonomous pattern's declared kind matches its collision and telegraph shape;
+    stationary-player fixtures can see and escape startup but cannot ignore the pattern because its
+    center no longer starts arbitrarily 215-285 units away; no committed lane/beam retargets;
+    stage/phase practice covers
+    all ten autonomous patterns; live boss projectiles never exceed the existing 24 reservation and
+    boss damage, HP, shield, exposure, add cap, and phase thresholds remain exact.
+- [ ] **9.18** Turn the existing Mystery Device into a discover-then-trigger choice.
+  - Change: add `hidden_intact -> revealed_intact -> resolved -> retired`. The first accepted player
+    direct/area hit reveals the outcome once without triggering it when health remains; a lethal
+    first hit reveals and triggers in the same transaction. Minimap continues to emit only neutral
+    `mystery_device`. On break, count eligible affected enemies for Gravity/Cryo/Decoy and use the
+    purge function's exact cleared-projectile count. Format one bilingual result toast with outcome
+    plus count/zero-effect receipt. Cryo publishes a temporary same-size blue body-compositor weight;
+    Purge emits one `0.18s` post-clear System disk; Decoy reuses the resolved wreck and Task 9.12
+    facing; Gravity keeps current forced motion and ring. Keep current radii/durations and three-
+    unique-of-four deterministic assignment.
+  - Accept: outcome is absent before first accepted hit, revealed exactly once afterward, never
+    appears on minimap, and the break receipt names and counts what occurred. All four functional
+    effects, exclusion of boss/fixed structures, warned-attack completion, quota/XP/drop exclusion,
+    device collision release, stage reset, reduced motion, pooling, localization, and no-full-scan
+    rules pass. The user can choose whether/when to finish a revealed device; no fifth outcome or
+    reward loop is added.
+- [ ] **9.19** Validate pressure and tactical readability in the built product.
+  - Change: run the role-by-stage damage matrix; all boss pattern/unit/integration exams; every
+    Mystery outcome at zero/one/many affected targets; and native captures for five boss stages at
+    phases 1-3 plus hidden/revealed/broken devices. In manual QA, compare ordinary time-to-threat,
+    boss safe-space pressure, and whether the player can explain each device outcome without reading
+    logs. Preserve raw observations instead of opportunistically retuning values.
+  - Accept: the exact 30% ordinary-damage delta passes; boss weakness is corrected by autonomous
+    shape/placement while reaction and damage stay fair; all four device outcomes are recognizable
+    from world response plus the compact toast; no UI/effect storm, stale state, capacity breach, or
+    performance-owner regression is introduced. Focused validators, product/visual authority,
+    import, production Web export, and `git diff --check` pass before Phase 10 resumes.
+
+Batch gate:
+
+- Autonomous boss execution reuses existing projectile/beam/telegraph owners and one fixed state.
+  Mystery feedback reuses current ring/actor/overlay batches and pooled snapshots. Total effects
+  remain 96, boss projectiles 24, boss adds 12, and no per-target presentation allocation is added.
+
 ### Phase 10: Consolidate correctness, feel, export, and performance
 
 Goal: verify the exact final workload once, preserve causal evidence, and correct only a measured
@@ -1034,7 +1264,7 @@ hitch owner if needed.
 
 Preconditions:
 
-- Phases 2-9 are complete in separate coherent scoped commits.
+- Phases 2-9C are complete in separate coherent scoped commits.
 - Task-local failures are fixed; no unrelated process overlaps broad validation.
 
 Source owners: all task-owned files, focused validators, export tooling, performance recorder and
@@ -1059,12 +1289,19 @@ scenarios, active performance policy/evidence records
     upgrades; one shield-up/down boss cycle for every boss; Beam Sentinel and boss beam
     startup/active; Thermal Burst at all levels in a crowd and near a structure; Toxin/Cryo same-
     silhouette overlays; Electric Field levels 1-3 beside a barrier and shield; bilingual cards;
-    radar/minimap roles; and surface readability at actual size and grayscale.
+    radar/minimap roles and scale; dash A-to-B input with orbit blades/Electric Field/hit feedback;
+    Drop Mine levels 1-3; ordinary damage examples; enemy/Decoy facing; all autonomous boss kinds;
+    every Mystery Device hidden/revealed/broken outcome; and surface readability at actual size and
+    grayscale.
   - Accept: the opening is less spongy; later health growth is observable; melee closes and ranged
     holds distance; no level reward disappears; the live top center never shows build icons; hull
     and XP remain distinct despite equal width through thickness, label, and color; paused Ship Status retains the
     complete named build; element values match runtime; nearby direction and
-    exact minimap roles do not compete; boss bodies remain readable; burst never double-hits,
+    exact minimap roles do not compete and pickup/crate/device sizes follow the locked area hierarchy;
+    dash-attached cues do not rotate or recoil away from travel; directional enemies show their real
+    target; Drop Mine damage has one exact post-hit receipt; ordinary damage is exactly 30% above
+    the prior current result; autonomous boss lanes/beams no longer become circles; Mystery effects
+    are revealed once, counted, and distinguishable; boss bodies remain readable; burst never double-hits,
     chains, or damages structures; status overlay never escapes the actor alpha or persists after
     state expiry; Electric Field fills the exact damage disk without reading as a shield; and detail
     never reads as collision or combat signal.
@@ -1127,6 +1364,8 @@ scenarios, active performance policy/evidence records
 | HUD and minimap phase gate | Threat radar, combat cue policy, minimap builder/retained mesh, glyph catalog, HUD presenter/layout, capture, visual registry, visual authority, and Run validators | Phase 8 tasks pass | Contact sampling/priority, marker roles/geometry, HUD layout, or visual contract changes |
 | Combat-feedback phase gate | Element/status, secondary weapon, attack, effect store, damage feedback, renderer, boss, provider/manifest/workbench, capture, reduced motion, visual authority, and Run validators | Phase 9 tasks and exact Thermal approval pass | Effect source/hash/import, effect allocation, status snapshot/overlay, Electric Field geometry/radius, shield overlay, or capture changes |
 | Corrective feedback gate | Status, renderer, Run, encounter pacing, arrival scheduler, spawn allocation, multi-sector spawn, attack-route readability, HUD layout, capture-driver, Godot import, and visual authority | Phase 9A tasks pass | Status shader/buffer/timing, DOT feedback, encounter cue receipt, radar publication, capture fixture, or binding visual/product contract changes |
+| Presentation correction gate | Player presentation, secondary runtime, effect store, actor facing, combat renderer, minimap builder/retained mesh, HUD layout, capture, Run, document/visual authority, import, and diff check | Phase 9B tasks pass | Dash direction/recoil, facing policy/snapshot, mine receipt/capacity, marker geometry, or binding visual/product contract changes |
+| Pressure and Mystery gate | Run difficulty, attack contract, boss patterns/runtime/exams, Mystery Device runtime/map integration, status compositor, renderer, localization, capture, Run, document/visual authority, import, export, and diff check | Phase 9C tasks pass | Ordinary multiplier/scope, boss autonomous state/geometry/targeting, device lifecycle/effect values/count receipt, or binding contract changes |
 | Export gate | `./tools/godot.ps1 --path . --headless --import`; `./tools/export_web.ps1`; require `WEB_EXPORT_OK` | Once after all feature phases and affected focused validators pass | An imported asset, export-affecting source, or project setting changes |
 | Native performance gate | Exact clean-commit `peak_horde` and `capacity_pressure` protocol in the prerequisite performance plan | Phase 1 baseline and Phase 10 final state, after user cost alignment | Workload/code/asset/instrumentation changes or a sample is invalid/red for a new evidence-backed hypothesis |
 | Web performance gate | Built-Web `peak_horde` on the `codex` lane with exact JSON capture | Native qualification passes and matching Web artifact exists | Native/build/asset/workload changes or the sample is invalid |
@@ -1174,6 +1413,12 @@ Validation rules:
 | Ordinary arrival arcs imply an exact location, obscure attacks, or outlive their packet | Reduce only the locked 1.10-second post-birth hold or dim `nearby_enemy` width/alpha and preserve offset clamping plus priority 1 | Do not alter packet triggers, cue lead, birth positions, counts, capacity, cadence, movement, add a new marker kind, or expose coordinates |
 | Electric Field reads as a shield or does not explain every damaging overlap | Correct only the field fill, broken perimeter, z-order, or radius-source wiring inside the locked Arc-purple full-disk contract | Do not restore the Mint ring, shrink the visual below `120/140/160`, change the enemy-body overlap rule, or add particles/glow |
 | Boss remains obscured after the exact alpha/radius retune | Stop the visual branch and open one shared boss-boundary raster workbench unit under the authority pair | Do not redraw boss bodies, change collision size, or create procedural replacement geometry |
+| Dash still appears to wobble after the locked direction/recoil correction | Capture body, afterimage, orbit center, field center, camera offset, and hit offset in the same deterministic frame and correct only the proven presentation owner | Do not smooth or move gameplay position, orbit radius, field radius, collision, dash vector, or deployed mines |
+| Pickup and crate still read at materially different scale or overlap priority markers | Adjust both polygons proportionally while keeping their computed outer areas within 10% and the locked role hierarchy | Do not collapse silhouettes, add labels, enlarge the minimap, or change world-object size |
+| Mine cosmetic saturation competes with Thermal/EMP or reads as an armed telegraph | Drop/recycle only the oldest mine cosmetic, reduce only post-damage alpha/lifetime within 0.18s, and keep the damage-first ordering | Do not raise effect capacity, restore the retired atlas, draw a pre-hit range, or suppress damage/sound truth |
+| The exact 30% ordinary-damage increase creates an evidenced unavoidable one-hit or fails the five-stage pressure contract | Preserve the failing role/stage/source evidence and return to this contract for a user-owned balance decision | Do not silently alter HP, cadence, stage curve, armor, boss damage, or only one role to hide the global result |
+| Autonomous boss lane/beam execution exceeds the 24-projectile reservation or loses a readable escape | Serialize the locked four/five volleys inside the one autonomous state or correct committed spacing/telegraph while preserving startup and authored width | Do not increase capacity, damage, live retargeting, or remove a declared kind |
+| First-hit Mystery reveal removes too much uncertainty or its feedback crowds combat | Keep the hidden-before-hit and neutral-minimap boundary; shorten only the one toast/pulse after actual-size review | Do not add a fifth outcome, reward, permanent HUD icon, per-enemy label, or revert to an unobservable break |
 | A valid current sample is red | Select the largest evidenced owner from slow-frame/subsystem data and make one causal correction | No broad optimization pass and no claim based on historical or invalid samples |
 | A verified material fact contradicts this contract | Stop the affected branch, update the contract, and obtain any required approval before resuming | Do not let the executor choose a new product, architecture, dependency, data, UX, safety, or validation contract |
 
@@ -1183,9 +1428,10 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 10 - Consolidate correctness, feel, export, and performance.
-- Next task: 10.2 built-product interactive gameplay QA and the user-controlled 1.2 hitch trace;
-  after both are available, run the exact-clean-commit native/Web qualification in 10.3-10.4.
+- Current phase: Phase 9B - Stabilize attachment, facing, detonation, and minimap scale.
+- Next task: 9.10 amend product/visual contracts, then implement 9.11-9.15 before Phase 9C. This
+  revision is planning-only; no runtime, asset, localization, spec, or validator implementation has
+  started. Phase 10 and the user-controlled hitch trace resume only after Phases 9B-9C pass.
 - Last completed gate: Phase 9A is complete in `cbd6d2d4`. Toxin/Cryo now use one shared
   alpha-clipped batch compositor with queued application feedback and DOT no-flash behavior. Timed
   ordinary arrivals remain scheduler-authored and now publish a bounded direction-only receipt to
