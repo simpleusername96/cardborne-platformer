@@ -166,15 +166,28 @@ func _run() -> void:
 		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
 		presentation
 	)
-	var thermal_draws := renderer.debug_semantic_texture_draws(
-		&"effect/thermal_burst_impact"
-	)
+	var thermal_batch := renderer.get_node(
+		"Effect_thermal_burst_impact"
+	) as MultiMeshInstance2D
+	var thermal_buffer := thermal_batch.multimesh.buffer
 	_expect(
-		thermal_draws.size() == 1
-		and Vector2(thermal_draws[0]["position"]) == Vector2(420.0, 320.0)
-		and is_equal_approx(float(thermal_draws[0]["radius"]), 84.0 * 0.72)
-		and Color(thermal_draws[0]["modulate"]).is_equal_approx(Color.WHITE),
-		"Thermal receipt begins at the approved bounded scale with full authored color"
+		thermal_batch.multimesh.instance_count
+			== EffectStore.MAX_LIVE_THERMAL_IMPACTS
+		and thermal_batch.multimesh.visible_instance_count == 1
+		and thermal_batch.texture == AssetProvider.texture(
+			&"effect/thermal_burst_impact"
+		)
+		and Vector2(thermal_buffer[3], thermal_buffer[7])
+			== Vector2(420.0, 320.0)
+		and is_equal_approx(
+			Vector2(thermal_buffer[0], thermal_buffer[4]).length(),
+			84.0 * 0.72
+		)
+		and Color(
+			thermal_buffer[8], thermal_buffer[9],
+			thermal_buffer[10], thermal_buffer[11]
+		).is_equal_approx(Color.WHITE),
+		"one retained Thermal batch begins at the approved bounded scale and full authored color"
 	)
 	thermal_effect.time = 0.09
 	renderer.sync(
@@ -183,14 +196,14 @@ func _run() -> void:
 		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
 		presentation
 	)
-	thermal_draws = renderer.debug_semantic_texture_draws(
-		&"effect/thermal_burst_impact"
-	)
+	thermal_buffer = thermal_batch.multimesh.buffer
 	_expect(
-		thermal_draws.size() == 1
-		and is_equal_approx(float(thermal_draws[0]["radius"]), 84.0)
-		and is_equal_approx(Color(thermal_draws[0]["modulate"]).a, 0.5),
-		"Thermal receipt reaches its gameplay radius while fading over 0.18 seconds"
+		thermal_batch.multimesh.visible_instance_count == 1
+		and is_equal_approx(
+			Vector2(thermal_buffer[0], thermal_buffer[4]).length(), 84.0
+		)
+		and is_equal_approx(thermal_buffer[11], 0.5),
+		"retained Thermal receipt reaches its gameplay radius while fading over 0.18 seconds"
 	)
 	snapshot = renderer.debug_snapshot()
 	var status_enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D

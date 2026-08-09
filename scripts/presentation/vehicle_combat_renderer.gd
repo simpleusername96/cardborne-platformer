@@ -31,6 +31,7 @@ const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
+const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 
 const ENEMY_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES
@@ -180,6 +181,7 @@ var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
 var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
+var _thermal_impact_batch: BatchHandle
 var _mystery_device_batches: Dictionary = {}
 var _reinforcement_facility_batch: BatchHandle
 var _mystery_effect_ring_batch: BatchHandle
@@ -360,7 +362,6 @@ func debug_semantic_texture_draws(asset_id: StringName = &"") -> Array[Dictionar
 			"position":texture_draw.position,
 			"angle":texture_draw.angle,
 			"radius":texture_draw.radius,
-			"modulate":texture_draw.modulate,
 		})
 	return result
 
@@ -419,6 +420,14 @@ func _build_batches() -> void:
 		-1,
 		&"experience_master",
 		EXPERIENCE_BATCH_INITIAL_CAPACITY
+	)
+	_thermal_impact_batch = _create_asset_batch(
+		"Effect_thermal_burst_impact",
+		&"effect/thermal_burst_impact",
+		EffectStore.MAX_LIVE_THERMAL_IMPACTS,
+		-1,
+		&"effect_thermal_burst_impact",
+		EffectStore.MAX_LIVE_THERMAL_IMPACTS
 	)
 	_mystery_device_batches[&"intact"] = _create_asset_batch(
 		"MysteryDevice_intact",
@@ -1102,11 +1111,11 @@ func _sync_effects(effects: Array[EffectState], visible_world: Rect2) -> void:
 		if mode == &"authored_thermal":
 			var scale_progress := clampf(progress / 0.45, 0.0, 1.0)
 			var impact_radius := radius * lerpf(0.72, 1.0, scale_progress)
-			_queue_semantic_texture(
-				StringName(event.get("asset", &"effect/thermal_burst_impact")),
+			_write_instance(
+				_thermal_impact_batch,
 				position,
 				0.0,
-				impact_radius,
+				Vector2.ONE * impact_radius,
 				color
 			)
 			continue
