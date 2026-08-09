@@ -91,6 +91,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_pressure_evidence()
 		&"collective_tactic":
 			await _capture_collective_tactic_evidence()
+		&"movement_policy":
+			await _capture_movement_policy_evidence()
 		&"build_state":
 			await _capture_build_state_evidence()
 		&"radar_minimap_roles":
@@ -428,6 +430,189 @@ func _capture_collective_tactic_evidence() -> void:
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("03c-collective-break.png")
+
+
+func _capture_movement_policy_evidence() -> void:
+	## Exercise the real scheduler, pursuit field, collision recovery, and retained
+	## actor renderer while one pursuit and one ranged role follow a moving player.
+	prepare_stage(0, true)
+	# Beat zero intentionally permits one first-contact enemy. This fixture needs
+	# the normal encounter cap so both movement families remain active together.
+	_run.encounter_runtime.current_beat = 1
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	var fixture := _movement_capture_fixture()
+	if fixture.is_empty():
+		push_error("movement capture fixture could not find one clear authored cover")
+		return
+	var player_start := Vector2(fixture["player_start"])
+	var player_turn := Vector2(fixture["player_turn"])
+	var player_end := Vector2(fixture["player_end"])
+	_run.player_position = player_start
+	_run.player_invulnerable = 99.0
+	var chaser: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_movement_chaser",
+		"role":&"chaser",
+		"pos":Vector2(fixture["chaser_start"]),
+		"active":true,
+	})
+	var shooter: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_movement_shooter",
+		"role":&"shooter",
+		"pos":Vector2(fixture["shooter_start"]),
+		"active":true,
+	})
+	if chaser == null or shooter == null:
+		push_error("movement capture fixture could not acquire both enemies")
+		return
+	for enemy in [chaser, shooter]:
+		enemy.attack_cooldown = 99.0
+		enemy.decision_elapsed = 0.10
+		enemy.motion_elapsed = 1.0 / 30.0
+	chaser.strafe_sign = -1.0
+	shooter.strafe_sign = 1.0
+	var chaser_added: bool = _run._append_enemy(chaser)
+	var shooter_added: bool = _run._append_enemy(shooter)
+	if not chaser_added or not shooter_added:
+		push_error("movement capture fixture could not register both enemies")
+		return
+	var metrics := {
+		"initial_chaser_distance":chaser.pos.distance_to(player_start),
+		"chaser_travel":0.0,
+		"shooter_travel":0.0,
+		"shooter_max_desired_speed":0.0,
+		"shooter_max_velocity":0.0,
+		"shooter_min_distance":shooter.pos.distance_to(player_start),
+		"shooter_max_distance":shooter.pos.distance_to(player_start),
+		"shooter_runtime_slot":shooter.runtime_slot,
+		"shooter_decision_bucket":shooter.decision_bucket,
+	}
+	_run.player_aim_direction = (shooter.pos - _run.player_position).normalized()
+	_run.set_physics_process(false)
+	_focus_movement_capture(shooter)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("03d-movement-cover-approach.png")
+	_advance_movement_capture_segment(
+		player_start, player_turn, 1.25, chaser, shooter, metrics
+	)
+	_focus_movement_capture(shooter)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("03e-movement-cover-turn.png")
+	_advance_movement_capture_segment(
+		player_turn, player_end, 1.25, chaser, shooter, metrics
+	)
+	_focus_movement_capture(shooter)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("03f-movement-cover-standoff.png")
+	_run.set_physics_process(true)
+	metrics["final_chaser_distance"] = chaser.pos.distance_to(player_end)
+	metrics["final_shooter_distance"] = shooter.pos.distance_to(player_end)
+	metrics["final_shooter_active"] = shooter.active
+	metrics["final_shooter_alive"] = shooter.alive
+	metrics["final_shooter_phase"] = String(shooter.phase)
+	var passed := (
+		float(metrics["chaser_travel"]) >= 120.0
+		and float(metrics["shooter_travel"]) >= 60.0
+		and float(metrics["final_chaser_distance"])
+			< float(metrics["initial_chaser_distance"]) - 80.0
+		and float(metrics["shooter_min_distance"]) >= 250.0
+		and float(metrics["shooter_max_distance"]) <= 650.0
+	)
+	metrics["passed"] = passed
+	print(JSON.stringify({"capture":"movement_policy", "metrics":metrics}))
+	if not passed:
+		_run._capture_driver.failed = true
+		push_error("movement capture fixture violated pursuit/standoff bounds")
+
+
+func _movement_capture_fixture() -> Dictionary:
+	var geometry = _run._active_tactical_layout.geometry_snapshot
+	for cover in _run._runtime_cover_rects():
+		var rectangle := Rect2(cover)
+		var center := rectangle.get_center()
+		var major := Vector2.DOWN if rectangle.size.y >= rectangle.size.x else Vector2.RIGHT
+		var half_length := maxf(rectangle.size.x, rectangle.size.y) * 0.5
+		var tangent := major.rotated(PI * 0.5)
+		for endpoint_sign in [-1.0, 1.0]:
+			var outward: Vector2 = major * float(endpoint_sign)
+			var endpoint: Vector2 = center + outward * half_length
+			var player_start: Vector2 = endpoint + outward * 120.0 - tangent * 220.0
+			var player_turn: Vector2 = endpoint + outward * 220.0
+			var player_end: Vector2 = endpoint + outward * 120.0 + tangent * 220.0
+			var shooter_start: Vector2 = endpoint + outward * 620.0
+			var points := [player_start, player_turn, player_end, shooter_start]
+			var clear := true
+			for point in points:
+				if not geometry.is_spawnable_disc(Vector2(point), 48.0):
+					clear = false
+					break
+			if not clear:
+				continue
+			return {
+				"player_start":player_start,
+				"player_turn":player_turn,
+				"player_end":player_end,
+				"chaser_start":player_end,
+				"shooter_start":shooter_start,
+			}
+	return {}
+
+
+func _focus_movement_capture(shooter: VehicleEnemyState) -> void:
+	_run._camera.position = (_run.player_position + shooter.pos) * 0.5
+	_run._camera.zoom = Vector2.ONE * 0.75
+
+
+func _advance_movement_capture_segment(
+	from: Vector2,
+	to: Vector2,
+	duration: float,
+	chaser: VehicleEnemyState,
+	shooter: VehicleEnemyState,
+	metrics: Dictionary
+) -> void:
+	const DELTA := 1.0 / 60.0
+	var steps := maxi(1, roundi(duration / DELTA))
+	_run.capture_set_mode(&"playing")
+	for step in steps:
+		var previous_chaser := chaser.pos
+		var previous_shooter := shooter.pos
+		_run.player_position = from.lerp(to, float(step + 1) / float(steps))
+		_run.player_aim_direction = (
+			shooter.pos - _run.player_position
+		).normalized()
+		_run.pursuit_field.update(DELTA, _run.player_position)
+		_run._simulation_lod_bucket = 1 - _run._simulation_lod_bucket
+		_run._far_enemy_simulation_bucket = (
+			(_run._far_enemy_simulation_bucket + 1)
+			% _run.FAR_ENEMY_SIMULATION_BUCKET_COUNT
+		)
+		_run._update_enemies(DELTA)
+		metrics["chaser_travel"] = (
+			float(metrics["chaser_travel"])
+			+ previous_chaser.distance_to(chaser.pos)
+		)
+		metrics["shooter_travel"] = (
+			float(metrics["shooter_travel"])
+			+ previous_shooter.distance_to(shooter.pos)
+		)
+		metrics["shooter_max_desired_speed"] = maxf(
+			float(metrics["shooter_max_desired_speed"]),
+			shooter.desired_velocity.length()
+		)
+		metrics["shooter_max_velocity"] = maxf(
+			float(metrics["shooter_max_velocity"]), shooter.velocity.length()
+		)
+		var shooter_distance := shooter.pos.distance_to(_run.player_position)
+		metrics["shooter_min_distance"] = minf(
+			float(metrics["shooter_min_distance"]), shooter_distance
+		)
+		metrics["shooter_max_distance"] = maxf(
+			float(metrics["shooter_max_distance"]), shooter_distance
+		)
 
 
 func _capture_build_state_evidence() -> void:

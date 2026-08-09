@@ -2,6 +2,8 @@ extends SceneTree
 
 const Archetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const Policy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
+const LocalSteering = preload("res://scripts/enemies/vehicle_enemy_local_steering.gd")
+const UpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
 
 var failures: Array[String] = []
 
@@ -11,6 +13,7 @@ func _initialize() -> void:
 	_validate_band_oracles()
 	_validate_continuity_and_recovery()
 	_validate_route_and_speed_contracts()
+	_validate_cadence_and_overlap_contracts()
 	_finish()
 
 
@@ -47,15 +50,10 @@ func _validate_family_coverage() -> void:
 
 
 func _validate_band_oracles() -> void:
-	var midpoint_cases := {
-		&"shooter":415.0,
-		&"controller":465.0,
-		&"artillery_spotter":640.0,
-		&"shield_escort":385.0,
-		&"repair_tender":525.0,
-	}
-	for role in midpoint_cases:
-		var result := _intent(role, float(midpoint_cases[role]), 1.0)
+	for role in Policy.DISTANCE_BANDS:
+		var band := Vector2(Policy.DISTANCE_BANDS[role])
+		var midpoint := (band.x + band.y) * 0.5
+		var result := _intent(role, midpoint, 1.0)
 		var direction := Vector2(result["direction"])
 		_expect(
 			absf(direction.x) <= 0.001 and direction.y > 0.99
@@ -63,25 +61,42 @@ func _validate_band_oracles() -> void:
 				and not bool(result["requests_approach"]),
 			"%s uses deterministic tangential motion at its band midpoint" % role
 		)
-	var close := _intent(&"shooter", 240.0, 1.0)
-	var far := _intent(&"shooter", 620.0, 1.0)
-	_expect(
-		Vector2(close["direction"]).x < -0.99
-			and StringName(close["mode"]) == &"retreat",
-		"close ranged roles retreat"
-	)
-	_expect(
-		Vector2(far["direction"]).x > 0.99
-			and bool(far["requests_approach"]),
-		"far ranged roles approach"
-	)
+		var close := _intent(role, maxf(1.0, band.x - 90.0), 1.0)
+		var far := _intent(role, band.y + 90.0, 1.0)
+		var lower_edge := _intent(role, band.x, 1.0)
+		var upper_edge := _intent(role, band.y, 1.0)
+		_expect(
+			Vector2(close["direction"]).x < 0.0
+				and StringName(close["mode"]) == &"retreat",
+			"%s retreats below its distance band" % role
+		)
+		_expect(
+			Vector2(far["direction"]).x > 0.0
+				and bool(far["requests_approach"]),
+			"%s approaches above its distance band" % role
+		)
+		_expect(
+			Vector2(lower_edge["direction"]).x < -0.99
+				and StringName(lower_edge["mode"]) == &"retreat",
+			"%s retreats at its exact lower edge" % role
+		)
+		_expect(
+			Vector2(upper_edge["direction"]).x > 0.99
+				and bool(upper_edge["requests_approach"]),
+			"%s approaches at its exact upper edge" % role
+		)
 
 
 func _validate_continuity_and_recovery() -> void:
-	for edge in [330.0, 500.0]:
-		var before := Vector2(_intent(&"shooter", edge - 0.1, 1.0)["direction"])
-		var after := Vector2(_intent(&"shooter", edge + 0.1, 1.0)["direction"])
-		_expect(before.dot(after) > 0.99, "shooter crosses band edge without an intent flip")
+	for role in Policy.DISTANCE_BANDS:
+		var band := Vector2(Policy.DISTANCE_BANDS[role])
+		for edge in [band.x, band.y]:
+			var before := Vector2(_intent(role, edge - 0.1, 1.0)["direction"])
+			var after := Vector2(_intent(role, edge + 0.1, 1.0)["direction"])
+			_expect(
+				before.dot(after) > 0.99,
+				"%s crosses a band edge without an intent flip" % role
+			)
 	var positive := Vector2(_intent(&"controller", 465.0, 1.0)["direction"])
 	var replay := Vector2(_intent(&"controller", 465.0, 1.0)["direction"])
 	var negative := Vector2(_intent(&"controller", 465.0, -1.0)["direction"])
@@ -96,6 +111,14 @@ func _validate_continuity_and_recovery() -> void:
 		Vector2(chaser_recovery["direction"]).x < 0.0
 			and not bool(chaser_recovery["requests_approach"]),
 		"pursuit recovery backs out without requesting a route"
+	)
+	var rammer_recovery := Policy.intent(
+		&"rammer", &"rammer", Vector2.ZERO, Vector2(200.0, 0.0), -1.0, true
+	)
+	_expect(
+		Vector2(rammer_recovery["direction"]).x < -0.99
+			and not bool(rammer_recovery["requests_approach"]),
+		"rammer recovery reverses without requesting a route"
 	)
 	var smoothed := Policy.smooth_velocity(
 		Vector2(-155.0, 0.0), Vector2(155.0, 0.0), Policy.STANDOFF_RESPONSE,
@@ -112,6 +135,19 @@ func _validate_route_and_speed_contracts() -> void:
 			and not Policy.route_guidance_requested(approach, false)
 			and Policy.route_guidance_requested(approach, true),
 		"route guidance requires both approach intent and a blocked direct path"
+	)
+
+
+func _validate_cadence_and_overlap_contracts() -> void:
+	_expect(
+		is_equal_approx(UpdateSchedule.DECISION_INTERVAL, 0.10)
+			and is_equal_approx(UpdateSchedule.NEAR_MOTION_INTERVAL, 1.0 / 30.0)
+			and is_equal_approx(UpdateSchedule.FAR_MOTION_INTERVAL, 1.0 / 20.0),
+		"movement policy preserves 10 Hz decisions and 30/20 Hz motion"
+	)
+	_expect(
+		LocalSteering.MAX_OVERLAP_NEIGHBORS == 8,
+		"movement policy preserves the eight-neighbor overlap ceiling"
 	)
 	var capped := Policy.smooth_velocity(
 		Vector2(500.0, 0.0), Vector2(500.0, 500.0),

@@ -58,6 +58,9 @@ const FULL_CAPTURE_FILES := [
 	"03-peak-horde.png",
 	"03b-collective-lock.png",
 	"03c-collective-break.png",
+	"03d-movement-cover-approach.png",
+	"03e-movement-cover-turn.png",
+	"03f-movement-cover-standoff.png",
 	"04-stage-4-xp-hud.png",
 	"04b-stage-4-xp-collected.png",
 	"04c-progression-max.png",
@@ -255,6 +258,7 @@ func run(gateway: RefCounted) -> void:
 			return
 	if is_full_evidence(gateway.snapshot(&"viewport")):
 		for fixture_kind in [
+			&"movement_policy",
 			&"visual_events",
 			&"ordinary_projectile",
 			&"arc_area_telegraphs",

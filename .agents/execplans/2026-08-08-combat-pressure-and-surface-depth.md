@@ -442,7 +442,7 @@ difficulty/boss/movement/Run validators, including
   - Accept: a shooter at 415, controller at 465, artillery at 640, escort at 385, and support at
     525 world units with line of sight choose tangential/center-correcting motion rather than the
     pursuit field; blocked far attackers still route around walls; close ranged roles retreat.
-- [ ] **3.6** Add deterministic movement oracles and rendered feel checks.
+- [x] **3.6** Add deterministic movement oracles and rendered feel checks.
   - Change: add `tools/validation/validate_vehicle_enemy_movement_policy.gd` with focused policy
     tests for every family, band midpoint/edge/outside cases, recovery, blocked route, role speed
     cap, deterministic strafe sign, and the unchanged scheduler/overlap ceilings. Add a bounded
@@ -451,6 +451,13 @@ difficulty/boss/movement/Run validators, including
     Run validators pass; rendered motion shows no band-edge ping-pong or ranged collapse into melee.
   - Guard: do not raise decision/motion cadence or add a full neighbor scan to make the capture
     look smoother.
+  - Evidence: the policy validator covers every family at midpoint, edge, outside-band, and
+    recovery cases while retaining 10 Hz decisions, 30/20 Hz motion, and the eight-neighbor cap.
+    The real scheduler/steering capture under
+    `build/visual-captures/phase3-movement-feel-ko-v9` shows a chaser travel `601.66` units and
+    close to `26.94`, while a shooter travels `306.68` units and stays within `324.26-546.26`.
+    Movement-policy, local-steering, navigation/pursuit, update-schedule, attack-contract,
+    capture-driver, and Run validators exit zero.
 
 ### Phase 4: Replace Thermal Burn with Thermal Burst
 
@@ -736,7 +743,7 @@ panel/card owners, localization, product and visual specs, and focused XP/upgrad
 Batch gate:
 
 - Current Korean and English production captures show zero live upgrade icons, a thicker amber
-  hull meter above a shorter blue XP meter, and the full named build in paused Ship Status. The
+  hull meter above a thinner equal-width blue XP meter, and the full named build in paused Ship Status. The
   upgrade modal matches the expected hierarchy in `element-upgrade-enhance-to-be.png`; exact text
   remains Control-owned and all supported viewport/text-scale checks pass. The icon-bearing HUD
   mockups are evidence of rejected density alternatives, not the selected runtime target.
@@ -947,7 +954,7 @@ scenarios, active performance policy/evidence records
     radar/minimap roles; and surface readability at actual size and grayscale.
   - Accept: the opening is less spongy; later health growth is observable; melee closes and ranged
     holds distance; no level reward disappears; the live top center never shows build icons; hull
-    and XP remain distinct by thickness, width, label, and color; paused Ship Status retains the
+    and XP remain distinct despite equal width through thickness, label, and color; paused Ship Status retains the
     complete named build; element values match runtime; nearby direction and
     exact minimap roles do not compete; boss bodies remain readable; burst never double-hits,
     chains, or damages structures; status overlay never escapes the actor alpha or persists after
@@ -1029,7 +1036,7 @@ Validation rules:
 | The exact borderless beam still reads as a flat bar in runtime | Reject the candidate and revise the one beam workbench unit within the locked two-/three-plane contract | Do not curve the damage corridor, add glow/particles/caps, or alter gameplay width/timing |
 | A one- or two-card tail offer cannot fit or focus correctly | Correct centering, focus order, and visible-key handling inside the existing panel/card owners | Do not pad the offer with duplicates, incompatible cards, fake choices, skip actions, or silent reward consumption |
 | Zero legal cards occurs while a compatible definition exists | Preserve the active transaction, record seed/build/catalog evidence, and fix the offer invariant | Do not mark progression MAX or consume pending levels from a contradictory catalog state |
-| Hull and XP read as one meter, or either value clips at a supported viewport/text scale | Adjust only the XP track width, the locked 6/8/8-pixel thickness, local label placement, or the restrained system-blue alpha inside `HealthPips`; preserve the 13-pixel amber hull hierarchy and literal `EXP` label | Do not restore upgrade icons, add a category summary/panel/divider, hide numeric progress, or move detailed build data out of paused Ship Status |
+| Hull and XP read as one meter, or either value clips at a supported viewport/text scale | Adjust only their shared track width, the locked 6/8/8-pixel XP thickness, local label placement, or the restrained system-blue alpha inside `HealthPips`; preserve equal widths, the 13-pixel amber hull hierarchy, and literal `EXP` label | Do not restore upgrade icons, add a category summary/panel/divider, hide numeric progress, or move detailed build data out of paused Ship Status |
 | Removing the live rail also removes or stales paused build details | Restore the event-driven Stage UI build-snapshot cache and Settings > Ship Status consumer before continuing | Do not reintroduce live icons or publish the full build snapshot at fast-HUD cadence |
 | Nearby-enemy radar arcs become a second minimap or obscure attacks | Reduce only nearby-contact alpha/width within the locked 12-sector aggregation and keep attack priority | Do not remove committed-attack triangles, expose exact coordinates, increase cadence, or add a full radar circle |
 | The eight minimap roles are not distinct at 1x/grayscale | Revise marker silhouette inside the locked role set and retained mesh | Do not add per-archetype markers, hidden Mystery Device outcomes, arbitrary boss colors, labels, or a second minimap layer |
@@ -1051,8 +1058,8 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   boss identity.
 - Next task: 9.1 - obtain explicit approval or rejection of exact Thermal candidate SHA-256
   `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904`; production promotion and
-  Task 9.2 remain blocked until that decision. Tasks 9.3-9.5 are complete. Task 3.6 retains its rendered pursuit/ranged capture
-  for final runtime QA; Task 5.3 still requires owner-approved retired-plan deletion; Tasks 1.2-1.4
+  Task 9.2 remain blocked until that decision. Tasks 9.3-9.5 and 3.6 are complete; Task 5.3 still
+  requires owner-approved retired-plan deletion; Tasks 1.2-1.4
   remain open evidence gates and final release qualification is deferred to Phase 10.
 - Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
   promoted unchanged and compile to deterministic 72/72/48 placement across stages in three
@@ -1079,6 +1086,10 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   `build/visual-captures/phase7-progression-{ko,en}`, with compact, large, and 200% text variants
   under the adjacent `phase7-*` directories; actual-size review found no overlap or clipped
   supported state.
+  Task 3.6 is complete: deterministic family/band/cadence oracles and the real scheduler/steering
+  fixture pass. Its three Korean rendered frames under
+  `build/visual-captures/phase3-movement-feel-ko-v9` keep both actors and cover visible; the chaser
+  closes to contact while the shooter moves without collapsing into melee.
   Phase 8 is complete: the five-hertz threat scan now republishes targetable off-screen ordinary
   enemies within 1,200 units through a fixed-capacity contact pool; 12-sector aggregation preserves
   incoming/boss/nearby priorities `3/2/1` and gives nearby pressure no triangle. The minimap emits
