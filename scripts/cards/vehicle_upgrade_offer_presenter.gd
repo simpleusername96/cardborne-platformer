@@ -20,11 +20,15 @@ static func snapshot(
 			"display_unit":modifier.display_unit,
 			"current":modifier.display_value_at(current_level),
 			"next":modifier.display_value_at(current_level + 1),
+			"show_current":current_level > 0 or definition.category != &"element",
+			"absolute_value":definition.category == &"element",
 		})
 		if effect_rows.size() >= 2:
 			break
-	var change_kind := &"stats" if not definition.modifiers.is_empty() else (
-		&"unlock" if current_level == 0 else &"enhance"
+	var change_kind := (
+		(&"unlock" if current_level == 0 else &"enhance")
+		if definition.category == &"element" or definition.modifiers.is_empty()
+		else &"stats"
 	)
 	var change_label_key := ""
 	if change_kind == &"unlock":

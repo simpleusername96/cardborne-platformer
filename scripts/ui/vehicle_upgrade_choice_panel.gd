@@ -199,8 +199,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := event as InputEventKey
 		if key.keycode >= KEY_1 and key.keycode <= KEY_3:
-			_select(int(key.keycode - KEY_1))
-			get_viewport().set_input_as_handled()
+			var shortcut_index := int(key.keycode - KEY_1)
+			if shortcut_index < _cards.size():
+				_select(shortcut_index)
+				get_viewport().set_input_as_handled()
 		elif key.keycode == KEY_ESCAPE:
 			_message.text = tr("UPGRADE_MANDATORY_NOTICE")
 			get_viewport().set_input_as_handled()

@@ -383,6 +383,13 @@ func _validate_triplet_matrix(catalog: VehicleUpgradeCatalog) -> void:
 						fixture_record["name"],
 					]
 				)
+		var tail_offers := _offers_from_fixture(catalog, DENSE_STAT_TRIPLET)
+		for visible_count in [1, 2]:
+			await _validate_panel(
+				Vector2i(1280, 720),
+				tail_offers.slice(0, visible_count),
+				"%s 1280x720 %d-card-tail" % [locale, visible_count]
+			)
 	TranslationServer.set_locale(original_locale)
 
 
@@ -445,17 +452,20 @@ func _validate_panel(
 		prior_card = card_rect
 		card_count += 1
 		_expect_card_geometry(card, context)
-	_expect(card_count == 3, "%s renders exactly three complete cards" % context)
+	_expect(
+		card_count == offers.size(),
+		"%s renders every visible offer card and no hidden card" % context
+	)
 	var contract := panel.debug_contract()
 	var unique_offer_ids := {}
 	for offer_id in Array(contract["offer_ids"]):
 		unique_offer_ids[StringName(offer_id)] = true
 	_expect(
-		int(contract["visible_card_count"]) == 3
-			and unique_offer_ids.size() == 3
+		int(contract["visible_card_count"]) == offers.size()
+			and unique_offer_ids.size() == offers.size()
 			and int(contract["command_count"]) == 1
 			and int(contract["exit_action_count"]) == 0,
-		"%s shows three unique frozen offers and one Equip command" % context
+		"%s shows one to three unique frozen offers and one Equip command" % context
 	)
 	_expect(
 		String(contract["row_type"]) == "HFlowContainer",
@@ -463,6 +473,8 @@ func _validate_panel(
 	)
 	for card_contract_variant in Array(contract["cards"]):
 		var card_contract := Dictionary(card_contract_variant)
+		if not bool(card_contract["visible"]):
+			continue
 		_expect(
 			int(card_contract["header_art_count"]) == 0
 				and int(card_contract["body_art_count"]) == 1
@@ -531,14 +543,19 @@ func _validate_panel(
 func _expect_card_geometry(card: Dictionary, context: String) -> void:
 	var card_rect := Rect2(card["rect"]).grow(0.75)
 	var content_rect := Rect2(card["content_rect"])
-	_expect(card_rect.encloses(content_rect), "%s card content stays inside its frame" % context)
+	_expect(
+		card_rect.encloses(content_rect),
+		"%s card content %s stays inside frame %s"
+		% [context, content_rect, card_rect]
+	)
 	for label_variant in card["labels"]:
 		var label := Dictionary(label_variant)
 		var label_rect := Rect2(label["rect"]).grow(0.75)
 		var glyph_rect := Rect2(label["glyph_rect"])
 		_expect(
 			card_rect.encloses(label_rect),
-			"%s label stays inside card: %s" % [context, label["text"]]
+			"%s label %s stays inside card %s: %s"
+			% [context, label_rect, card_rect, label["text"]]
 		)
 		_expect(
 			label_rect.encloses(glyph_rect),

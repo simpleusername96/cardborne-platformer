@@ -10,12 +10,18 @@ const CATEGORIES: Array[StringName] = [
 ]
 const SECONDARY_SLOT_KINDS: Array[StringName] = [&"", &"built_in", &"optional"]
 const MODIFIER_OPERATIONS: Array[String] = ["add", "multiply"]
-const MODIFIER_DISPLAY_UNITS: Array[String] = ["none", "percent"]
+const MODIFIER_DISPLAY_UNITS: Array[String] = ["none", "percent", "seconds"]
 const STAT_IDS: Array[StringName] = [
 	&"move_speed_multiplier",
 	&"pickup_radius_bonus",
 	&"max_health_bonus",
 	&"lifesteal_percent",
+	&"thermal_burst_radius",
+	&"thermal_burst_damage",
+	&"toxin_dps_per_stack",
+	&"toxin_duration",
+	&"cryo_slow_per_stack",
+	&"cryo_duration",
 ]
 const EXPECTED_IDS: Array[StringName] = [
 	&"bio_toxin", &"chassis_speed", &"cryo_slow", &"drop_mines",
@@ -123,6 +129,14 @@ func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) ->
 	return true
 
 
+func compatible_definitions(build: VehicleRunBuild) -> Array[VehicleUpgradeDefinition]:
+	var result: Array[VehicleUpgradeDefinition] = []
+	for definition in all_definitions():
+		if compatible(definition, build):
+			result.append(definition)
+	return result
+
+
 ## Stable within one reward transaction; callers advance offer_serial exactly
 ## once when a new transaction opens.
 func offer(
@@ -132,10 +146,7 @@ func offer(
 	source_id: StringName,
 	offer_serial: int
 ) -> Array[VehicleUpgradeDefinition]:
-	var available: Array[VehicleUpgradeDefinition] = []
-	for definition in all_definitions():
-		if compatible(definition, build):
-			available.append(definition)
+	var available := compatible_definitions(build)
 	var seed_value := hash(
 		"upgrade-offer:v3:%d:%d:%s:%d"
 		% [run_seed, stage_index, source_id, offer_serial]

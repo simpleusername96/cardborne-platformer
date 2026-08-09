@@ -1,6 +1,20 @@
-[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/cards/vehicle_upgrade_definition.gd" id="1_def"]
+[ext_resource type="Script" path="res://scripts/cards/vehicle_stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="Modifier_damage"]
+script = ExtResource("2_mod")
+stat_id = &"toxin_dps_per_stack"
+operation = "add"
+values_by_level = Array[float]([2.0, 3.0, 4.0])
+
+[sub_resource type="Resource" id="Modifier_duration"]
+script = ExtResource("2_mod")
+stat_id = &"toxin_duration"
+operation = "add"
+display_unit = "seconds"
+values_by_level = Array[float]([5.0, 6.0, 7.0])
 
 [resource]
 script = ExtResource("1_def")
@@ -10,3 +24,4 @@ description_key = "UPGRADE_BIO_TOXIN_DESC"
 category = &"element"
 artwork_asset_id = &"upgrade/element_toxin"
 max_level = 3
+modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_damage"), SubResource("Modifier_duration")])

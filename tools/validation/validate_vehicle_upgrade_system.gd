@@ -3,6 +3,7 @@ extends SceneTree
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
+const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
 
 const RETIRED_IDS: Array[StringName] = [
 	&"accelerator_coil", &"aegis_cycle", &"concentrated_toxin", &"contagion",
@@ -71,8 +72,10 @@ func _validate_presentation(catalog: Catalog) -> void:
 				"%s level %d has at most two effect rows"
 				% [definition.id, current_level + 1]
 			)
-			var expected_kind := &"stats" if not definition.modifiers.is_empty() else (
-				&"unlock" if current_level == 0 else &"enhance"
+			var expected_kind := (
+				(&"unlock" if current_level == 0 else &"enhance")
+				if definition.category == &"element" or definition.modifiers.is_empty()
+				else &"stats"
 			)
 			_expect(
 				StringName(snapshot["change_kind"]) == expected_kind,
@@ -161,7 +164,10 @@ func _validate_offers(catalog: Catalog) -> void:
 			var offer := catalog.offer(
 				empty_build, run_seed, run_seed % 5, source_id, run_seed
 			)
-			_expect(_offer_is_legal(offer, empty_build, catalog), "fresh offer has three legal cards")
+			_expect(
+				offer.size() == 3 and _offer_is_legal(offer, empty_build, catalog),
+				"fresh offer has three legal cards"
+			)
 	var stable_offer_a := catalog.offer(empty_build, 0xCA4D, 1, &"level_up", 7)
 	var stable_offer_b := catalog.offer(empty_build, 0xCA4D, 1, &"level_up", 7)
 	_expect(
@@ -171,7 +177,8 @@ func _validate_offers(catalog: Catalog) -> void:
 	for run_seed in 24:
 		var build := RunBuild.new(catalog)
 		var legal_choices := 0
-		for choice_index in 25:
+		var observed_sizes := {}
+		for choice_index in 40:
 			var source_id := &"boss" if choice_index in [4, 9, 14, 19, 24] else &"level_up"
 			var offer := catalog.offer(
 				build,
@@ -180,18 +187,24 @@ func _validate_offers(catalog: Catalog) -> void:
 				source_id,
 				choice_index
 			)
-			if offer.size() != 3:
+			if offer.is_empty():
 				break
 			_expect(
 				_offer_is_legal(offer, build, catalog),
-				"seed %d choice %d contains three compatible cards"
+				"seed %d choice %d contains one to three compatible cards"
 				% [run_seed, choice_index + 1]
 			)
+			observed_sizes[offer.size()] = true
 			legal_choices += 1
 			build.apply(offer[run_seed % offer.size()].id)
 		_expect(
-			legal_choices >= 21,
-			"seed %d retains at least 21 complete choices before bounded no-offer recovery"
+			legal_choices >= 21 and catalog.compatible_definitions(build).is_empty(),
+			"seed %d reaches catalog exhaustion after all legal choices"
+			% run_seed
+		)
+		_expect(
+			observed_sizes.has(1) and observed_sizes.has(2) and observed_sizes.has(3),
+			"seed %d exposes three-, two-, and one-card offers at the reachable tail"
 			% run_seed
 		)
 
@@ -242,6 +255,66 @@ func _validate_stats(catalog: Catalog) -> void:
 			),
 			"Lifesteal exposes its exact damage-healing percentage"
 		)
+	_validate_element_stats(catalog)
+
+
+func _validate_element_stats(catalog: Catalog) -> void:
+	var cases := [
+		{
+			"id":&"thermal_burst",
+			"stat_a":&"thermal_burst_radius", "a":[72.0, 84.0, 96.0],
+			"stat_b":&"thermal_burst_damage", "b":[4.0, 6.0, 8.0],
+		},
+		{
+			"id":&"bio_toxin",
+			"stat_a":&"toxin_dps_per_stack", "a":[2.0, 3.0, 4.0],
+			"stat_b":&"toxin_duration", "b":[5.0, 6.0, 7.0],
+		},
+		{
+			"id":&"cryo_slow",
+			"stat_a":&"cryo_slow_per_stack", "a":[6.0, 8.0, 10.0],
+			"stat_b":&"cryo_duration", "b":[2.0, 2.5, 3.0],
+		},
+	]
+	for case_variant in cases:
+		var case := Dictionary(case_variant)
+		var build := RunBuild.new(catalog)
+		var definition := catalog.get_definition(StringName(case["id"]))
+		var first_snapshot := OfferPresenter.snapshot(definition, 0)
+		_expect(
+			StringName(first_snapshot["change_kind"]) == &"unlock"
+				and Array(first_snapshot["effect_rows"]).all(
+					func(row: Dictionary) -> bool: return not bool(row["show_current"])
+				),
+			"%s first acquisition exposes initial values without false zero deltas"
+			% case["id"]
+		)
+		for level in 3:
+			build.apply(StringName(case["id"]))
+			var profile := ElementProfile.from_build(build)
+			_expect(
+				is_equal_approx(build.stat(StringName(case["stat_a"]), 0.0), float(case["a"][level]))
+					and is_equal_approx(build.stat(StringName(case["stat_b"]), 0.0), float(case["b"][level])),
+				"%s level %d keeps both authored card values" % [case["id"], level + 1]
+			)
+			if StringName(case["id"]) == &"thermal_burst":
+				_expect(
+					is_equal_approx(profile.thermal_burst_radius, float(case["a"][level]))
+						and is_equal_approx(profile.thermal_burst_damage, float(case["b"][level])),
+					"Thermal runtime profile derives from build modifiers"
+				)
+			elif StringName(case["id"]) == &"bio_toxin":
+				_expect(
+					is_equal_approx(profile.poison_dps_per_stack, float(case["a"][level]))
+						and is_equal_approx(profile.poison_duration, float(case["b"][level])),
+					"Toxin runtime profile derives from build modifiers"
+				)
+			else:
+				_expect(
+					is_equal_approx(profile.chill_magnitude_per_stack, float(case["a"][level]) / 100.0)
+						and is_equal_approx(profile.chill_duration, float(case["b"][level])),
+					"Cryo runtime profile derives from build modifiers"
+				)
 
 
 func _offer_is_legal(
@@ -249,14 +322,14 @@ func _offer_is_legal(
 	build: RunBuild,
 	catalog: Catalog
 ) -> bool:
-	if offer.size() != 3:
+	if offer.is_empty() or offer.size() > 3:
 		return false
 	var ids := {}
 	for definition in offer:
 		if ids.has(definition.id) or not catalog.compatible(definition, build):
 			return false
 		ids[definition.id] = true
-	return ids.size() == 3
+	return ids.size() == offer.size()
 
 
 func _offer_key(offer: Array[VehicleUpgradeDefinition]) -> String:

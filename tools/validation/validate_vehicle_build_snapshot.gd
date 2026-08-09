@@ -24,7 +24,11 @@ func _run() -> void:
 		catalog,
 		stats,
 		[{"id":&"seeker", "level":1, "name_key":"SECONDARY_HOMING_MISSILES_NAME"}],
-		{"health":100.0, "max_health":120.0, "level":2}
+		{
+			"health":100.0, "max_health":120.0, "level":2,
+			"experience":4, "experience_required":16,
+			"experience_complete":false,
+		}
 	)
 	_expect(bool(snapshot["active"]), "build snapshot is explicitly active")
 	_expect(snapshot["stats"].size() == 1, "effective stats are preserved")
@@ -63,6 +67,13 @@ func _run() -> void:
 		String(english_contract["summary_level_text"]).begins_with("Level")
 			and String(english_contract["first_group_title"]).begins_with("Hull"),
 		"active build refreshes dynamic and static copy in English"
+	)
+	var max_snapshot := snapshot.duplicate(true)
+	max_snapshot["run_state"]["experience_complete"] = true
+	panel.set_snapshot(max_snapshot)
+	_expect(
+		String(panel.debug_contract()["summary_xp_text"]) == "XP MAX",
+		"paused Ship Status shares the explicit progression-complete state"
 	)
 	panel.set_snapshot({})
 	var empty_contract := panel.debug_contract()

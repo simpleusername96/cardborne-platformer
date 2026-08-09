@@ -774,7 +774,7 @@ func _reset_run(
 	else:
 		stage_telemetry.reset_stage()
 		experience_runtime.clear_shards()
-		experience_runtime.pending_level_ups = 0
+		experience_runtime.clear_pending_levels()
 		reward_runtime.reset_stage()
 	_element_profile = ElementProfile.from_build(run_build)
 	lifesteal_runtime.reset(run_build.stat(&"lifesteal_percent", 0.0))
@@ -1119,7 +1119,7 @@ func _update_reinforcement_facility(delta: float) -> void:
 		stage_flow.defeats, stage_flow.quota
 	):
 		if is_instance_valid(_ui):
-			_ui.notify(
+			_ui.notify_immediate(
 				tr("NOTIFY_REINFORCEMENT_FACILITY"), 3.5, Art.MUSTARD
 			)
 		_play_sound(&"boss", 0.82)
@@ -4379,20 +4379,31 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 	if offer_serial < 0:
 		return
 	current_card_offer = _build_card_offer(source_id, offer_serial)
-	if current_card_offer.size() != 3:
+	if current_card_offer.is_empty():
 		var offer_seed := field_layout.seed if field_layout != null else run_index
-		upgrade_offer_error = {
-			"source":source_id,
-			"seed":offer_seed,
-			"stage_index":current_stage_index,
-			"offer_serial":offer_serial,
-			"offer_size":current_card_offer.size(),
-			"build_levels":run_build.levels.duplicate(true),
-		}
-		push_warning(
-			"Vehicle upgrade reward resolved without a selection: %s"
-			% JSON.stringify(upgrade_offer_error)
-		)
+		var compatible := upgrade_catalog.compatible_definitions(run_build)
+		if not compatible.is_empty():
+			upgrade_offer_error = {
+				"source":source_id,
+				"seed":offer_seed,
+				"stage_index":current_stage_index,
+				"offer_serial":offer_serial,
+				"offer_size":current_card_offer.size(),
+				"compatible_count":compatible.size(),
+				"build_levels":run_build.levels.duplicate(true),
+			}
+			push_error(
+				"Vehicle upgrade offer invariant failed: %s"
+				% JSON.stringify(upgrade_offer_error)
+			)
+			return
+		upgrade_offer_error.clear()
+		if experience_runtime.complete_progression():
+			_ui.notify(
+				tr("NOTIFY_ALL_UPGRADES_COMPLETE"),
+				2.4,
+				Art.SYSTEM
+			)
 		_resolve_reward_transaction()
 		return
 	upgrade_offer_error.clear()
@@ -4418,7 +4429,8 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 		mode != RunMode.UPGRADE
 		or reward_runtime.current_source().is_empty()
 		or upgrade_selection_applied
-		or current_card_offer.size() != 3
+		or current_card_offer.is_empty()
+		or current_card_offer.size() > 3
 		or not upgrade_offer_error.is_empty()
 		or not _current_offer_contains(upgrade_id)
 	):
@@ -4982,7 +4994,7 @@ func _begin_stage_transition() -> void:
 	)
 	experience_recall_timer = 0.0
 	experience_runtime.clear_shards()
-	experience_runtime.pending_level_ups = 0
+	experience_runtime.clear_pending_levels()
 	stage_telemetry.reset_stage()
 	reward_runtime.reset_stage()
 	current_card_offer.clear()
@@ -5151,6 +5163,10 @@ func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 	var stage_profile := StageCatalog.profile(current_stage_id)
 	snapshot["health"] = player_health
 	snapshot["max_health"] = _player_max_health()
+	snapshot["level"] = experience_runtime.run_level
+	snapshot["experience"] = experience_runtime.experience
+	snapshot["experience_required"] = experience_runtime.required_experience()
+	snapshot["experience_complete"] = experience_runtime.progression_complete
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
 	snapshot["stage_number"] = int(stage_profile["number"])
 	snapshot["stage_total"] = StageCatalog.STAGE_IDS.size()
@@ -5206,6 +5222,7 @@ func _build_snapshot() -> Dictionary:
 			"level":int(experience["level"]),
 			"experience":int(experience["experience"]),
 			"experience_required":int(experience["required"]),
+			"experience_complete":bool(experience["complete"]),
 		}
 	)
 

@@ -112,8 +112,33 @@ func _validate_experience_runtime() -> void:
 	result = runtime.advance(0.0, Vector2.ZERO, 92.0, 0.0)
 	_expect(int(result["levels"]) == 4 and runtime.pending_level_ups == 4, "one collection safely queues multiple level-ups")
 	_expect(&"boss" in result["reward_sources"], "boss reward remains queued behind simultaneous levels")
+	runtime.spawn_shard(Vector2(120.0, 0.0), 12)
+	_expect(runtime.complete_progression(), "catalog exhaustion marks progression complete once")
+	_expect(
+		bool(runtime.snapshot()["complete"])
+			and runtime.pending_level_ups == 0
+			and runtime.experience == 0
+			and runtime.shards.is_empty(),
+		"MAX clears queued levels, carried XP, and live shards"
+	)
+	runtime.spawn_shard(Vector2.ZERO, 100, &"boss")
+	result = runtime.advance(0.0, Vector2.ZERO, 100.0, 0.0)
+	_expect(
+		int(result["experience"]) == 0
+			and int(result["levels"]) == 0
+			and runtime.shards.is_empty(),
+		"MAX suppresses future shard spawning and XP awards"
+	)
+	_expect(not runtime.complete_progression(), "progression completion receipt is emitted only once")
 	runtime.reset()
-	_expect(runtime.run_level == 1 and runtime.experience == 0 and runtime.pending_level_ups == 0 and runtime.shards.is_empty(), "run reset clears XP, levels, choices, and shards")
+	_expect(
+		runtime.run_level == 1
+			and runtime.experience == 0
+			and runtime.pending_level_ups == 0
+			and runtime.shards.is_empty()
+			and not runtime.progression_complete,
+		"run reset clears XP, levels, completion, choices, and shards"
+	)
 
 
 func _validate_route_level_cadence() -> void:

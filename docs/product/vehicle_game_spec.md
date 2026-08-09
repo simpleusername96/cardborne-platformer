@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-08
+last_reviewed: 2026-08-09
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -367,8 +367,11 @@ does not produce a transient message.
 - Level thresholds use
   `min(160, 12 + round(3n + 0.55n²))`, where `n` is the zero-based level
   progression index. This makes early choices frequent while restoring a rising
-  late-run requirement. Each level and boss reward opens a guarded three-card
-  selection that requires an explicit choice and confirm.
+  late-run requirement. Each level and boss reward opens a guarded selection
+  of every legal offer card up to three and requires an explicit choice and
+  confirm. When no compatible upgrade remains, one localized completion receipt
+  marks XP as `MAX`, clears queued levels and live shards, and suppresses future
+  shard spawning and XP awards for that run.
 - The live catalog is the 13-card, 36-level-state contract in
   `vehicle_upgrade_catalog.md`. It uses four player-facing categories: Primary
   Weapon Mods, Secondary Weapon Systems, Attack Status Effects, and Chassis &
@@ -385,6 +388,10 @@ does not produce a transient message.
   root's later levels remain eligible. Its affinity changes player-primary projectile
   color. The selected condition accumulates bounded stacks and Korean/English
   target text exposes its count. There are no intermediate element branch cards.
+  Their card values and runtime payload share one build-owned source: Thermal
+  radius is `72/84/96` with burst damage `4/6/8`; Toxin damage per stack is
+  `2/3/4` with `5/6/7s` duration; Cryo slow per stack is `6/8/10%` with
+  `2/2.5/3s` duration. Boss Chill retains its existing half-effect rule.
 - **Secondary Weapons** is the umbrella category for four automatic weapon
   types. **Seeker** is its always-equipped built-in subtype; up to two of the
   other three optional subtypes may be active,
@@ -418,19 +425,23 @@ does not produce a transient message.
   projectiles, hits, arrivals, deaths, pickups, and persistent states render
   from their gameplay, actor, world, HUD, or audio owners without cosmetic
   event objects.
-- The live HUD prioritizes hull, the acquired build, numeric stage progress, EMP,
+- The live HUD prioritizes hull, XP, numeric stage progress, EMP,
   minimap, and exceptional timed effects. A panel-free top-left B stack shows only
   localized stage and defeated labels with `current / total` values. At compact,
   standard, and large widths its label/fraction sizes are `15/30`, `16/32`, and
   `18/40 px`; all top zones use an eight-pixel top datum. Top-center uses a long
-  panel-free hull strip with acquired upgrade icons below it. Top-right owns only
+  panel-free hull strip with a shorter XP meter below it. The hull widths are
+  `400/520/640` and its amber fill is 13 pixels thick; the centered blue XP
+  track is `280/360/420` wide and `6/8/8` pixels thick. It shows `Lv. N` and
+  `EXP current / required`, or `EXP MAX` after progression completes. Top-right owns only
   the minimap. Bottom-center owns one enlarged round panel-free EMP indicator. No
-  edge boss/target health, mission surface, objective text, experience bar, or
+  live upgrade icon, edge boss/target health, mission surface, objective text, or
   ornamental full-width dock covers the field.
 - The normal top-center toast is `320×36` compact or `360×40` standard/large and
   sits four pixels below the center status stack, independent of the taller B
   stack. Only facility active/destroyed, boss inbound, barrier depleted, Mystery
-  Device result, and boss shield-down events may enqueue gameplay toasts. Stage
+  Device result, boss shield-down, and progression-complete events may enqueue
+  gameplay toasts. Stage
   transitions use no banner.
 - Bosses, active reinforcement facilities, and fixed combat installations
   (`turret`, `interceptor_tower`, `beam_sentinel`, and `generator`) own thick,
@@ -462,31 +473,33 @@ does not produce a transient message.
   Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
-- One upgrade offer contains exactly three unique compatible card IDs while at
-  least three legal IDs remain. The
+- One upgrade offer contains one to three unique compatible card IDs. The
   deterministic first pass prefers distinct categories, then fills from the
   same legal pool; it never duplicates or fabricates a fallback. Each newly opened reward
   transaction advances a run-scoped constrained draw, while the cards remain
   frozen for that transaction until the player selects one and confirms Equip;
   UI refreshes never reroll an open offer. The runtime rejects an unoffered,
   stale, or double-submitted ID without mutating the build. An opened reward
-  transaction has no Leave, Exit, Skip, or decline action. If progression exhausts
-  the catalog below three legal IDs, the reward resolves without opening the modal;
-  this recovery path cannot block Stage 5 completion.
-- The upgrade modal starts directly with the three cards: it has no separate
+  transaction has no Leave, Exit, Skip, or decline action. If no legal ID remains,
+  the explicit `MAX` progression-complete receipt resolves the transaction and
+  cannot block Stage 5 completion. A zero-card offer while a compatible definition
+  remains is an invariant failure and never resolves silently.
+- The upgrade modal starts directly with its one to three visible cards: it has no separate
   kicker, screen title, or instruction header. Every card shows its real current
   and next level; cards backed by numeric stat modifiers also show the real
-  current-to-next stat value.
+  current-to-next stat value. A first element acquisition shows its initial
+  values without a false zero-to-value comparison; later levels show the real
+  current-to-next values.
 - Each card follows one centered vertical information order: category, upgrade
   name, large semantic artwork, `Lv.current → next`, one short localized effect
   summary, then up to two real current-to-next values. Korean summaries target
   roughly ten characters and English summaries use two to five words. Visible
-  change-kind text remains omitted. A first acquisition uses one small shared
-  code-native unlock diamond; later levels add no change-kind label. The card uses
+  change-kind text remains omitted while unlock/enhance meaning stays in its
+  accessibility name. The card uses
   one shared artwork identity per mechanic group; UI code does not draw
   mechanic-specific glyph geometry.
 - Upgrade cards never scroll independently. At 200% text scale only, the offer
-  body may provide one outer vertical scroll while all three cards remain
+  body may provide one outer vertical scroll while all visible cards remain
   non-scrolling and the Equip action remains fixed.
 - Deployment presents loadout and complete control information with one Deploy
   primary action. Deploy, Settings, and the debug-only Boss Practice action share

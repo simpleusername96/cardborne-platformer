@@ -665,7 +665,7 @@ card resources, `scripts/combat/vehicle_element_profile.gd`, `scripts/vehicle/ve
 `scripts/ui/vehicle_settings_panel.gd`, `scripts/ui/vehicle_build_summary_panel.gd`, upgrade choice
 panel/card owners, localization, product and visual specs, and focused XP/upgrade/HUD validators
 
-- [ ] **7.1** Remove the silent late-run reward loss and define progression completion.
+- [x] **7.1** Remove the silent late-run reward loss and define progression completion.
   - Change: accept any non-empty legal offer of one to three unique cards; remove exact-size-three
     guards from open/apply paths while retaining the mandatory selection guard. When the compatible
     catalog is empty, publish one explicit localized progression-complete receipt, mark XP `MAX`,
@@ -681,7 +681,7 @@ panel/card owners, localization, product and visual specs, and focused XP/upgrad
   - Guard: a zero-card result while `VehicleUpgradeCatalog` still reports a compatible definition
     is an invariant failure, not progression completion; keep the transaction open, report exact
     seed/build evidence, and stop that branch.
-- [ ] **7.2** Replace the live build-icon rail with a two-meter top-center HUD.
+- [x] **7.2** Replace the live build-icon rail with a two-meter top-center HUD.
   - Change: first amend the product and visual specs so top center owns only hull and XP. Remove
     `VehicleAcquiredUpgradeRail` from `VehicleGameplayHud`, remove the HUD's `build_snapshot`
     consumer and responsive row-height branches, then delete the ownerless rail script and its
@@ -706,7 +706,7 @@ panel/card owners, localization, product and visual specs, and focused XP/upgrad
     view. Grayscale still distinguishes them by thickness and width; color review shows amber hull
     and blue XP without either reading as enemy damage, shield, or a single merged meter. Paused
     Ship Status still lists the full named build after one or more upgrades.
-- [ ] **7.3** Make element acquisition and enhancement copy use one value source.
+- [x] **7.3** Make element acquisition and enhancement copy use one value source.
   - Change: register two real stat modifiers per element card and make
     `VehicleElementProfile.from_build()` read the same build-owned values used by the offer
     presenter. Thermal rows are radius `72/84/96` and burst damage `4/6/8`; Toxin rows are DPS per
@@ -722,7 +722,7 @@ panel/card owners, localization, product and visual specs, and focused XP/upgrad
   - Accept: runtime profile values, card rows, Korean/English labels, build snapshot, stage report,
     and validators all derive identical numbers. Boss Chill's existing half-effect rule is stated
     in accessible/detail copy without changing the displayed base player-owned value.
-- [ ] **7.4** Prove progression reachability and the revised modal at late-run state.
+- [x] **7.4** Prove progression reachability and the revised modal at late-run state.
   - Change: extend deterministic progression tests through catalog exhaustion, including one- and
     two-card tail offers, multiple queued levels, zero-card MAX, shard suppression after MAX, and
     Stage 4 collection. Add Korean/English captures for first Thermal acquisition, Thermal level
@@ -1037,9 +1037,10 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 7 - Restore truthful XP and upgrade progression.
-- Next task: 7.1 - replace the exact-three-card warning/consume path with visible one-to-three-card
-  offers and an explicit zero-card MAX receipt. Task 3.6 retains its rendered pursuit/ranged capture
+- Current phase: Phase 8 - Restore nearby direction cues and semantic minimap roles.
+- Next task: 8.1 - amend the product and visual contracts for the bounded nearby-enemy radar,
+  eight minimap roles, and Phase 9 feedback owners before changing their runtime behavior.
+  Task 3.6 retains its rendered pursuit/ranged capture
   for final runtime QA; Task 5.3 still requires owner-approved retired-plan deletion; Tasks 1.2-1.4
   remain open evidence gates and final release qualification is deferred to Phase 10.
 - Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
@@ -1054,6 +1055,16 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   upgrade cards contain no horizontal separator, and Toxin/Cryo references use same-size body
   overlays. The unrelated retired-plan lifecycle failure keeps Task 5.3 open pending user-approved
   cleanup.
+  Phase 7 is complete: one-to-three-card tail offers and explicit `MAX` completion replace the
+  silent exact-three loss path; the live acquired-upgrade rail and its validator are deleted;
+  fast HUD updates publish allocation-free XP scalars into the amber-hull/blue-XP center stack;
+  paused Ship Status retains the named build; and Thermal/Toxin/Cryo card rows share their exact
+  runtime values. Focused experience, upgrade system/UI, HUD presenter/layout, localization,
+  reward/audio, build snapshot, stage transition/report, capture-driver, Run, parse/import, and
+  visual-authority gates pass. Runtime evidence is under
+  `build/visual-captures/phase7-progression-{ko,en}`, with compact, large, and 200% text variants
+  under the adjacent `phase7-*` directories; actual-size review found no overlap or clipped
+  supported state.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 

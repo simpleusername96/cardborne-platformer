@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-08
+last_reviewed: 2026-08-09
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -491,8 +491,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - layout breakpoint는 width `1100`, large upgrade breakpoint는 `1600`,
   guide/report three-column breakpoint는 `1180`이다.
 - upgrade card는 compact에서 `280×410`, gap `12`, standard에서 `360×488`,
-  gap `16`, large에서 `420×512`, gap `24`를 사용한다. 세 카드 container는
-  사용 가능한 공간에 맞춰 확장하며 standard에서 좁은 352px 카드를 유지하지
+  gap `16`, large에서 `420×512`, gap `24`를 사용한다. 최대 세 카드 container는
+  최대 세 개의 visible card를 중앙 정렬하고 사용 가능한 공간에 맞춰 확장하며
+  standard에서 좁은 352px 카드를 유지하지
   않는다. 순서는 centered family, title, artwork, level, 실제 effect row,
   localized 최대 두 줄 설명의 vertical stack이다. 내부 가로 separator는 사용하지
   않는다. dossier uses compact `88×88`, standard `112×112`, and large
@@ -506,7 +507,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   title 위 반복 image, badge와 level text를 반복하는 단계 pip는 사용하지
   않는다. Seeker와 선택형 secondary upgrade는 같은 `보조 무기 / Secondary
   Weapons` family label을 사용하고 title이 실제 subtype을 식별한다.
-- upgrade card 자체는 scroll을 사용하지 않는다. 200% text scale에서만 세
+- upgrade card 자체는 scroll을 사용하지 않는다. 200% text scale에서만 visible
   card를 담는 offer body가 하나의 outer vertical scroll을 가질 수 있으며,
   card는 `520×920`을 사용하고 Equip primary action은 fixed 상태를 유지한다.
   settings, guidebook, report는 지정 content region만 scroll하고 primary
@@ -521,16 +522,14 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   `current / total` 값만 표시한다. compact/standard/large의 label/fraction은
   `15/30`, `16/32`, `18/40 px`이며 left margin은 `16/24/32 px`이다. top-left,
   top-center, top-right는 모두 화면 상단 8px datum에 붙는다. top-center는 panel
-  없는 긴 player hull strip과 그 아래 acquired-only upgrade rail을 소유한다.
-  top-right는 `176×108` minimap만 소유한다. edge boss/target health, objective,
-  experience rail과 mission Surface는 사용하지 않는다.
-- live upgrade rail은 기존 semantic upgrade artwork와 작은 level numeral만
-  표시한다. 빈 slot, family label, 공통 배경 panel은 만들지 않는다. compact,
-  standard, large icon은 각각 `26/30/40 px`이며 기본 화면에서는 12개까지 한 줄,
-  13–18개는 두 번째 centered row로 감싼다. 200% text에서는 `34 px` icon을
-  10개 단위로 감싸 404px center zone 밖으로 나가지 않는다.
-  full name과 수치는 paused Ship Status가 계속 소유한다. build receipt가 바뀔
-  때만 rail을 다시 만들며 fast HUD cadence에서 rebuild하지 않는다.
+  없는 player hull과 XP 두 meter만 소유한다. hull은 compact/standard/large에서
+  `400/520/640 px`, amber fill 높이 `13 px`이고 centered current/max를 표시한다.
+  XP는 그 아래 4px gap을 두고 `280/360/420 px`, 높이 `6/8/8 px`의 restrained
+  system-blue meter로 표시하며 왼쪽 `Lv. N`, 오른쪽 `EXP current / required` 또는
+  `EXP MAX`를 사용한다. 200% text는 404px center zone, 360px XP track, 8px fill을
+  사용한다. top-right는 `176×108` minimap만 소유한다. live upgrade icon,
+  edge boss/target health, objective와 mission Surface는 사용하지 않는다.
+  full upgrade name, level과 effective value는 paused Ship Status만 소유한다.
 - minimap의 dynamic marker는 player craft, item, enemy, boss, reinforcement facility
   다섯 역할만 사용한다.
   item/enemy/boss subtype, elite/stationary distinction, objective state와 support
@@ -539,14 +538,15 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   유지한다. explored static geometry와 fog는 유지한다.
 - bottom-center에는 panel이 없는 확대 원형 EMP indicator 하나만 둔다. cooldown과
   enabled/disabled 상태만 표시하며 primary, dash, secondary slot은 만들지 않는다.
-- minimap zone만 한 subtle Surface를 사용한다. B stage stack, center hull과
-  acquired-upgrade rail은 panel-free다. full-width dock,
+- minimap zone만 한 subtle Surface를 사용한다. B stage stack과 center 두 meter는
+  panel-free다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는
   사용하지 않는다.
 - normal ToastSurface는 compact `320×36`, standard/large `360×40`이며 center
   status stack 아래 4px에 붙는다. left B stack 높이는 toast Y에 영향을 주지
   않는다. gameplay toast는 reinforcement facility active/destroyed, boss inbound,
-  barrier depleted, Mystery Device result, boss shield-down 여섯 event만 허용한다.
+  barrier depleted, Mystery Device result, boss shield-down과 progression complete
+  일곱 event만 허용한다.
   stage transition banner는 사용하지 않는다.
 - stage boss, active reinforcement facility, 고정 전투 시설 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed

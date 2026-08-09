@@ -160,6 +160,19 @@ func _run() -> void:
 	panel.call("_confirm_selected")
 	panel.call("_confirm_selected")
 	_expect(confirmed_count == 1, "duplicate confirmation emits once")
+	panel.open(cards.slice(0, 2))
+	panel.call("_process", 0.36)
+	panel.call("_select", 2)
+	_expect(
+		int(panel.debug_contract()["visible_card_count"]) == 2
+			and int(panel.debug_contract()["selected_index"]) == -1,
+		"two-card tail centers only visible cards and rejects a hidden third shortcut"
+	)
+	panel.open(cards.slice(0, 1))
+	_expect(
+		int(panel.debug_contract()["visible_card_count"]) == 1,
+		"one-card tail exposes one mandatory visible choice"
+	)
 	panel.free()
 
 	var audio := AudioDirector.new()
@@ -204,12 +217,15 @@ func _run() -> void:
 		"bottom HUD uses one enlarged panel-free EMP indicator"
 	)
 	_expect(
-		Vector2(ui_contract["health_cluster_size"]) == Vector2(520.0, 24.0)
+		Vector2(ui_contract["health_cluster_size"]) == Vector2(520.0, 44.0)
 			and bool(ui_contract["health_panel_free"])
 			and bool(ui_contract["stage_progress_panel_free"])
+			and bool(Dictionary(ui_contract["health_meter"])["has_experience_geometry"])
+			and int(ui_contract["live_upgrade_icon_count"]) == 0
+			and not bool(ui_contract["has_live_upgrade_rail"])
 			and not bool(ui_contract["edge_boss_health_visible"])
 			and not bool(ui_contract["edge_target_health_visible"]),
-		"health and B stage progress are panel-free with no duplicated edge health"
+		"hull, XP, and B stage progress are panel-free with no live build rail or duplicated edge health"
 	)
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
 	_expect(not bool(ui_contract["deployment_has_difficulty_ui"]), "deployment exposes no difficulty choice")

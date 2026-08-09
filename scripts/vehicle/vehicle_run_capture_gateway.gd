@@ -422,7 +422,7 @@ func _capture_collective_tactic_evidence() -> void:
 
 
 func _capture_build_state_evidence() -> void:
-	prepare_stage(0)
+	prepare_stage(3)
 	_run._clear_enemies()
 	for index in 4:
 		var angle := -0.75 + float(index) * 0.5
@@ -456,37 +456,31 @@ func _capture_build_state_evidence() -> void:
 		},
 	]
 	_run._threat_contact_cache = threat_contacts
-	for count in [0, 6, 12, 18]:
-		_apply_upgrade_rail_capture_fixture(count)
-		await _settle_capture()
-		_save_capture("04-build-state-%02d-upgrades.png" % count)
-
-
-func _apply_upgrade_rail_capture_fixture(count: int) -> void:
-	_run.run_build.reset()
-	var definitions: Array[VehicleUpgradeDefinition] = (
-		_run.upgrade_catalog.all_definitions()
+	_run.experience_runtime.run_level = 12
+	_run.experience_runtime.experience = 73
+	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
+	await _settle_capture()
+	_save_capture("04-stage-4-xp-hud.png")
+	_run.experience_runtime.experience += 7
+	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
+	await _settle_capture()
+	_save_capture("04b-stage-4-xp-collected.png")
+	_run.experience_runtime.complete_progression()
+	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
+	_run._ui.notify_immediate(
+		tr("NOTIFY_ALL_UPGRADES_COMPLETE"), 2.4, Art.SYSTEM
 	)
-	for index in mini(count, definitions.size()):
-		var definition := definitions[index]
-		_run.run_build.levels[definition.id] = 1
+	await _settle_capture()
+	_save_capture("04c-progression-max.png")
+	prepare_stage(3)
+	for upgrade_id in [&"thermal_burst", &"chassis_speed", &"homing_missiles"]:
+		_run.run_build.apply(upgrade_id)
+	_run.run_build.apply(&"thermal_burst")
 	var build_snapshot: Dictionary = _run._build_snapshot()
-	var upgrades := Array(build_snapshot.get("upgrades", [])).duplicate(true)
-	# The live catalog currently has twelve unique upgrades. Capture-only future
-	# receipts exercise the locked two-row/18-slot bound without changing gameplay.
-	while upgrades.size() < count and not upgrades.is_empty():
-		var source := Dictionary(upgrades[upgrades.size() % definitions.size()]).duplicate(true)
-		source["id"] = StringName("capture_future_upgrade_%02d" % upgrades.size())
-		source["level"] = 1 + upgrades.size() % 3
-		upgrades.append(source)
-	build_snapshot["upgrades"] = upgrades.slice(0, count)
-	_run._ui.update_hud({
-		"build_snapshot":build_snapshot,
-		"health":_run.player_health,
-		"max_health":_run._player_max_health(),
-		"minimap":_run._minimap_snapshot(true),
-		"threat_radar":_run._threat_radar_snapshot(),
-	})
+	_run._ui.update_hud({"build_snapshot":build_snapshot})
+	_run._ui.debug_active_settings_contract()
+	await _settle_capture()
+	_save_capture("04d-ship-status-acquired-build.png")
 
 
 func _capture_field_item_evidence() -> void:
@@ -558,40 +552,46 @@ func _capture_structural_health_bar_evidence() -> void:
 
 func _capture_level_up_evidence() -> void:
 	prepare_stage(0)
-	_run.experience_runtime.spawn_shard(_run.player_position, _run.experience_runtime.required_experience())
-	_run._update_experience(0.0)
+	var first_acquisition := _upgrade_offer_fixture([
+		[&"thermal_burst", 0],
+		[&"pickup_radius", 0],
+		[&"homing_missiles", 0],
+	])
+	_run._ui.show_upgrade(first_acquisition)
 	await _settle_capture()
-	_save_capture("06-level-up-choice.png")
-	if _run.current_card_offer.is_empty():
-		return
+	_save_capture("06-thermal-first-acquisition.png")
 	_run._ui.debug_select_upgrade(0)
 	await _settle_capture()
-	_save_capture("06b-level-up-selected.png")
-	_run._on_upgrade_selected(StringName(_run.current_card_offer[0]["id"]))
-	await _settle_capture()
-	_save_capture("06c-level-up-confirmed.png")
-	var localization_fixture: Array[Dictionary] = []
-	for upgrade_record in [
+	_save_capture("06b-thermal-first-selected.png")
+	var enhancement := _upgrade_offer_fixture([
+		[&"thermal_burst", 1],
 		[&"pickup_radius", 1],
 		[&"homing_missiles", 1],
-		[&"lifesteal", 1],
-	]:
+	])
+	_run._ui.show_upgrade(enhancement)
+	_run._ui.debug_select_upgrade(0)
+	await _settle_capture()
+	_save_capture("06c-thermal-enhancement.png")
+	_run._ui.show_upgrade(enhancement.slice(0, 2))
+	await _settle_capture()
+	_save_capture("06d-two-card-tail.png")
+
+
+func _upgrade_offer_fixture(records: Array) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for upgrade_record in records:
 		var upgrade_id := StringName(upgrade_record[0])
 		var definition: VehicleUpgradeDefinition = (
 			_run.upgrade_catalog.get_definition(upgrade_id)
 		)
 		if definition != null:
-			localization_fixture.append(
+			result.append(
 				UpgradeOfferPresenter.snapshot(
 					definition,
 					int(upgrade_record[1])
 				)
 			)
-	if localization_fixture.size() == 3:
-		_run._ui.show_upgrade(localization_fixture)
-		_run._ui.debug_select_upgrade(2)
-		await _settle_capture()
-		_save_capture("06d-localization-third-slot.png")
+	return result
 
 
 func _capture_boss_preview() -> void:

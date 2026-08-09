@@ -204,7 +204,7 @@ func _check_stage_five_no_offer_completion(run) -> void:
 	run.pending_stage_completion = true
 	run.experience_recall_timer = 0.0
 	run.experience_runtime.clear_shards()
-	run.experience_runtime.pending_level_ups = 0
+	run.experience_runtime.clear_pending_levels()
 	run.reward_runtime.reset_stage()
 	run.stage_flow.state = StageFlow.State.REWARDS
 	for definition in run.upgrade_catalog.all_definitions():
@@ -213,8 +213,11 @@ func _check_stage_five_no_offer_completion(run) -> void:
 	_expect(
 		run.mode == run.RunMode.PLAYING
 			and run.reward_runtime.has_claimed(run.current_stage_id, &"boss")
-			and run.reward_runtime.is_idle(),
-		"an exhausted Stage 5 offer resolves without trapping the run in upgrade mode"
+			and run.reward_runtime.is_idle()
+			and run.experience_runtime.progression_complete
+			and String(run._ui.debug_notification_contract()["active_message"])
+				== tr("NOTIFY_ALL_UPGRADES_COMPLETE"),
+		"an exhausted Stage 5 offer shows MAX and resolves without trapping the run"
 	)
 	run.call("_advance_reward_queue")
 	_expect(

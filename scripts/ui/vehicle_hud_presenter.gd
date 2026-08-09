@@ -12,7 +12,8 @@ const WORLD_MARKER_INTERVAL := 0.20
 const INITIAL_WORLD_PHASE_OFFSET := ACTION_INTERVAL * 0.5
 const FAST_CLUSTERS := [
 	[
-		"health", "max_health", "reduced_motion",
+		"health", "max_health", "level", "experience",
+		"experience_required", "experience_complete", "reduced_motion",
 	],
 	["stage_number", "stage_total", "defeated", "quota"],
 	[

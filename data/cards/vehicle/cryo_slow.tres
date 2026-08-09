@@ -1,6 +1,21 @@
-[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/cards/vehicle_upgrade_definition.gd" id="1_def"]
+[ext_resource type="Script" path="res://scripts/cards/vehicle_stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="Modifier_slow"]
+script = ExtResource("2_mod")
+stat_id = &"cryo_slow_per_stack"
+operation = "add"
+display_unit = "percent"
+values_by_level = Array[float]([6.0, 8.0, 10.0])
+
+[sub_resource type="Resource" id="Modifier_duration"]
+script = ExtResource("2_mod")
+stat_id = &"cryo_duration"
+operation = "add"
+display_unit = "seconds"
+values_by_level = Array[float]([2.0, 2.5, 3.0])
 
 [resource]
 script = ExtResource("1_def")
@@ -10,3 +25,4 @@ description_key = "UPGRADE_CRYO_SLOW_DESC"
 category = &"element"
 artwork_asset_id = &"upgrade/element_cryo"
 max_level = 3
+modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_slow"), SubResource("Modifier_duration")])

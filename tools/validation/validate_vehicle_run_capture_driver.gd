@@ -82,10 +82,13 @@ func _initialize() -> void:
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 35, "core manifest has 35 captures")
 	_expect(Driver.FULL_CAPTURE_FILES.size() == 87, "full manifest has 87 captures")
 	for required_capture in [
-		"04-build-state-00-upgrades.png",
-		"04-build-state-06-upgrades.png",
-		"04-build-state-12-upgrades.png",
-		"04-build-state-18-upgrades.png",
+		"04-stage-4-xp-hud.png",
+		"04b-stage-4-xp-collected.png",
+		"04c-progression-max.png",
+		"04d-ship-status-acquired-build.png",
+		"06-thermal-first-acquisition.png",
+		"06c-thermal-enhancement.png",
+		"06d-two-card-tail.png",
 		"05b-reinforcement-facility.png",
 		"05c-structural-health-bars.png",
 		"09-effects-essential-transients.png",

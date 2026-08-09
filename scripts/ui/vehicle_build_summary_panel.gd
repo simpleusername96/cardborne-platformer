@@ -124,9 +124,13 @@ func _refresh_summary() -> void:
 	_summary_values[1].text = tr("SHIP_STATUS_SUMMARY_HULL").replace(
 		"%current%", str(roundi(float(run_state.get("health", 0.0))))
 	).replace("%max%", str(roundi(float(run_state.get("max_health", 0.0)))))
-	_summary_values[2].text = tr("SHIP_STATUS_SUMMARY_XP").replace(
-		"%current%", str(int(run_state.get("experience", 0)))
-	).replace("%required%", str(int(run_state.get("experience_required", 0))))
+	_summary_values[2].text = (
+		tr("SHIP_STATUS_SUMMARY_XP_MAX")
+		if bool(run_state.get("experience_complete", false))
+		else tr("SHIP_STATUS_SUMMARY_XP").replace(
+			"%current%", str(int(run_state.get("experience", 0)))
+		).replace("%required%", str(int(run_state.get("experience_required", 0))))
+	)
 
 
 func _refresh_stats() -> void:
@@ -231,6 +235,7 @@ func debug_contract() -> Dictionary:
 		"text_row_count":_rendered_text_row_count,
 		"empty_only":not active and _empty_label.visible and not _summary_rows.visible,
 		"summary_level_text":_summary_values[0].text if not _summary_values.is_empty() else "",
+		"summary_xp_text":_summary_values[2].text if _summary_values.size() > 2 else "",
 		"first_group_title":tr(String(STAT_GROUPS[0]["key"])),
 		"upgrades":_snapshot.get("upgrades", []).size(),
 	}

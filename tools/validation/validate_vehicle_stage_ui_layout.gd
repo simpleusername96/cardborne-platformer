@@ -76,9 +76,24 @@ func _initialize() -> void:
 				and bool(health_meter["has_background_geometry"])
 				and bool(health_meter["has_trailing_health_geometry"])
 				and bool(health_meter["has_health_geometry"])
-				and not bool(health_meter["has_experience_geometry"])
+				and bool(health_meter["has_experience_geometry"])
+				and int(health_meter["live_upgrade_icon_count"]) == 0
 				and bool(health_meter["panel_free"]),
-			"center health remains panel-free and exposes no XP geometry at %d" % width
+			"center hull and XP remain panel-free with zero live upgrade icons at %d" % width
+		)
+		_expect(
+			is_equal_approx(
+				float(health_meter["experience_track_width"]),
+				280.0 if width < 1100.0 else (420.0 if width >= 1600.0 else 360.0)
+			)
+				and is_equal_approx(
+					float(health_meter["experience_track_height"]),
+					6.0 if width < 1100.0 else 8.0
+				)
+				and int(contract["live_upgrade_icon_count"]) == 0
+				and not bool(contract["has_live_upgrade_rail"]),
+			"XP uses the locked responsive track and the acquired rail is absent at %d"
+			% width
 		)
 		_expect(
 			int(contract["zone_surface_count"]) == 1
@@ -124,7 +139,7 @@ func _initialize() -> void:
 		_expect(bool(contract["central_safe_clear"]), "central play space remains clear at %d" % width)
 		var upgrade_contract := Dictionary(contract["upgrade_choice"])
 		_expect(bool(upgrade_contract["structured_cards"]), "upgrade choices use structured card components at %d" % width)
-		_expect(int(upgrade_contract["card_count"]) == 3, "upgrade choice keeps exactly three card slots at %d" % width)
+		_expect(int(upgrade_contract["card_count"]) == 3, "upgrade choice keeps a fixed capacity of three card slots at %d" % width)
 		_expect(
 			Vector2(upgrade_contract["confirm_size"]) == (
 				Vector2(300.0, 48.0)

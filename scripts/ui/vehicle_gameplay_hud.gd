@@ -8,14 +8,11 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
 const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
-const AcquiredUpgradeRail = preload(
-	"res://scripts/ui/vehicle_acquired_upgrade_rail.gd"
-)
 const UiGlyphCatalog = preload(
 	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
 )
 
-const HEALTH_STRIP_SIZE := Vector2(520.0, 24.0)
+const HEALTH_STRIP_SIZE := Vector2(520.0, 44.0)
 const ACTION_RAIL_SIZE := Vector2(88.0, 88.0)
 const ACTION_RAIL_BOTTOM_MARGIN := 20.0
 const TOP_MARGIN := 8.0
@@ -31,7 +28,11 @@ class HealthPips:
 	var run_level := 1
 	var experience := 0.0
 	var experience_required := 12.0
+	var experience_complete := false
 	var reduced_motion := false
+	var _experience_track_width := 360.0
+	var _experience_track_height := 8.0
+	var _meter_font_size := 14
 	var _trail_from := 120.0
 	var _trail_hold := 0.0
 	var _trail_elapsed := 0.0
@@ -49,7 +50,8 @@ class HealthPips:
 		level_value: int = 1,
 		experience_value: float = 0.0,
 		required_value: float = 12.0,
-		reduced_motion_value: bool = false
+		reduced_motion_value: bool = false,
+		experience_complete_value: bool = false
 	) -> void:
 		var next_health := clampf(value, 0.0, maxf(1.0, max_value))
 		var next_maximum := maxf(1.0, max_value)
@@ -60,6 +62,7 @@ class HealthPips:
 			or run_level != level_value
 			or not is_equal_approx(experience, experience_value)
 			or not is_equal_approx(experience_required, next_required)
+			or experience_complete != experience_complete_value
 		)
 		reduced_motion = reduced_motion_value
 		if next_health < health:
@@ -79,6 +82,7 @@ class HealthPips:
 		run_level = level_value
 		experience = experience_value
 		experience_required = next_required
+		experience_complete = experience_complete_value
 		if values_changed:
 			queue_redraw()
 
@@ -105,7 +109,7 @@ class HealthPips:
 
 	func _draw() -> void:
 		var font := get_theme_default_font()
-		var hull_rect := Rect2(0.0, 5.0, size.x, 13.0)
+		var hull_rect := Rect2(0.0, 0.0, size.x, 13.0)
 		_draw_meter_track(hull_rect)
 		_draw_meter_fill(
 			hull_rect,
@@ -121,13 +125,55 @@ class HealthPips:
 			draw_rect(hull_rect, Art.IVORY_BRIGHT, false, 2.0)
 		draw_string(
 			font,
-			Vector2(0.0, 17.0),
+			Vector2(0.0, 12.0),
 			"%d / %d" % [roundi(health), roundi(maximum)],
 			HORIZONTAL_ALIGNMENT_CENTER,
 			size.x,
-			16,
+			_meter_font_size,
 			Art.IVORY_BRIGHT
 		)
+		var experience_rect := Rect2(
+			(size.x - _experience_track_width) * 0.5,
+			17.0,
+			_experience_track_width,
+			_experience_track_height
+		)
+		_draw_meter_track(experience_rect)
+		if not experience_complete:
+			_draw_meter_fill(
+				experience_rect,
+				clampf(experience / experience_required, 0.0, 1.0),
+				Art.SYSTEM
+			)
+		var value_baseline := experience_rect.end.y + float(_meter_font_size) + 1.0
+		draw_string(
+			font,
+			Vector2(experience_rect.position.x, value_baseline),
+			"Lv. %d" % run_level,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			experience_rect.size.x * 0.5,
+			_meter_font_size,
+			Art.TEXT_PRIMARY
+		)
+		draw_string(
+			font,
+			Vector2(experience_rect.position.x, value_baseline),
+			"EXP MAX" if experience_complete else "EXP %d / %d" % [
+				roundi(experience), roundi(experience_required),
+			],
+			HORIZONTAL_ALIGNMENT_RIGHT,
+			experience_rect.size.x,
+			_meter_font_size,
+			Art.TEXT_PRIMARY
+		)
+
+	func set_layout_profile(compact: bool, accessibility: bool, large: bool) -> void:
+		_experience_track_width = (
+			360.0 if accessibility else (280.0 if compact else (420.0 if large else 360.0))
+		)
+		_experience_track_height = 6.0 if compact and not accessibility else 8.0
+		_meter_font_size = 13 if compact else 14
+		queue_redraw()
 
 	func _draw_meter_track(rect: Rect2) -> void:
 		draw_rect(rect, Art.COBALT_DEEP)
@@ -153,7 +199,11 @@ class HealthPips:
 			"has_background_geometry":true,
 			"has_trailing_health_geometry":true,
 			"has_health_geometry":true,
-			"has_experience_geometry":false,
+			"has_experience_geometry":true,
+			"experience_track_width":_experience_track_width,
+			"experience_track_height":_experience_track_height,
+			"experience_complete":experience_complete,
+			"live_upgrade_icon_count":0,
 			"panel_free":true,
 			"centered_value":true,
 			"trailing_animation_preserved":true,
@@ -359,7 +409,6 @@ var _stage_progress: VBoxContainer
 var _center_status: VBoxContainer
 var _minimap_panel: PanelContainer
 var _health_bar: HealthPips
-var _upgrade_rail: VehicleAcquiredUpgradeRail
 var _stage_heading: Label
 var _stage_value: Label
 var _defeated_heading: Label
@@ -373,6 +422,7 @@ var _notification_panel: PanelContainer
 var _notification: Label
 var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
+var _active_notification_entry: Dictionary = {}
 var _threat_radar: VehicleThreatRadar
 
 
@@ -445,8 +495,6 @@ func _build() -> void:
 	add_child(_center_status)
 	_health_bar = HealthPips.new()
 	_center_status.add_child(_health_bar)
-	_upgrade_rail = AcquiredUpgradeRail.new()
-	_center_status.add_child(_upgrade_rail)
 
 	_minimap_panel = Factory.surface(
 		Factory.SURFACE_HUD,
@@ -503,7 +551,8 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			int(snapshot.get("level", 1)),
 			float(snapshot.get("experience", 0.0)),
 			required_experience,
-			bool(snapshot.get("reduced_motion", false))
+			bool(snapshot.get("reduced_motion", false)),
+			bool(snapshot.get("experience_complete", false))
 		)
 	if snapshot.has("stage_number") or snapshot.has("stage_total"):
 		_stage_value.text = "%d / %d" % [
@@ -515,11 +564,6 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			maxi(0, int(snapshot.get("defeated", 0))),
 			maxi(0, int(snapshot.get("quota", 0))),
 		]
-	if snapshot.has("build_snapshot"):
-		_upgrade_rail.set_build_snapshot(
-			Dictionary(snapshot["build_snapshot"])
-		)
-		_apply_responsive_layout()
 	if snapshot.has("skill_available"):
 		_skill_slot.set_state(
 			bool(snapshot.get("skill_available", false)),
@@ -551,9 +595,24 @@ func notify(
 	_show_notification(entry)
 
 
+func notify_immediate(
+	message: String,
+	duration: float = 2.4,
+	color: Color = Art.IVORY_BRIGHT
+) -> void:
+	if _notification_timer > 0.0 and not _active_notification_entry.is_empty():
+		var interrupted := _active_notification_entry.duplicate(true)
+		interrupted["duration"] = _notification_timer
+		if _notification_queue.size() >= 5:
+			_notification_queue.pop_back()
+		_notification_queue.push_front(interrupted)
+	_show_notification({"message":message, "duration":duration, "color":color})
+
+
 func clear_notifications() -> void:
 	_notification_queue.clear()
 	_notification_timer = 0.0
+	_active_notification_entry.clear()
 	_notification_panel.visible = false
 
 
@@ -577,7 +636,6 @@ func debug_notification_contract() -> Dictionary:
 func refresh_localized_content() -> void:
 	_stage_heading.text = tr("HUD_STAGE_LABEL")
 	_defeated_heading.text = tr("HUD_DEFEATED_LABEL")
-	_upgrade_rail.refresh_localized_content()
 	_skill_slot.queue_redraw()
 
 
@@ -622,9 +680,8 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		if compact
 		else Vector2(176.0, 108.0)
 	)
-	var rail_contract := _upgrade_rail.debug_contract()
 	var center_width := _center_width(viewport_width, accessibility)
-	var center_height := _center_status_height(rail_contract)
+	var center_height := _center_status_height()
 	var center_zone_size := Vector2(center_width, center_height)
 	var toast_size := Vector2(
 		720.0 if accessibility else (320.0 if compact else 360.0),
@@ -670,13 +727,14 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"secondary_slot_size":Vector2.ZERO,
 		"minimap_size":minimap_base_size,
 		"minimap_zone_size":minimap_base_size,
-		"health_cluster_size":Vector2(center_width, HEALTH_STRIP_SIZE.y),
+		"health_cluster_size":Vector2(center_width, center_height),
 		"stage_progress_size":stage_progress_size,
 		"stage_progress_panel_free":true,
 		"stage_progress_values":[_stage_value.text, _defeated_value.text],
 		"health_panel_free":true,
 		"health_meter":_health_bar.debug_contract(),
-		"upgrade_rail":rail_contract,
+		"live_upgrade_icon_count":0,
+		"has_live_upgrade_rail":false,
 		"center_status_size":center_zone_size,
 		"edge_boss_health_visible":false,
 		"edge_target_health_visible":false,
@@ -727,9 +785,8 @@ func _apply_responsive_layout() -> void:
 		else Vector2(176.0, 108.0)
 	)
 	var center_width := _center_width(size.x, accessibility)
-	_upgrade_rail.set_layout_profile(compact, accessibility, large)
-	var rail_contract := _upgrade_rail.debug_contract()
-	var center_height := _center_status_height(rail_contract)
+	_health_bar.set_layout_profile(compact, accessibility, large)
+	var center_height := _center_status_height()
 	var center_size := Vector2(center_width, center_height)
 	_stage_progress.position = Vector2(safe_margin, TOP_MARGIN)
 	_stage_progress.custom_minimum_size = stage_progress_size
@@ -784,15 +841,8 @@ func _center_width(viewport_width: float, accessibility: bool) -> float:
 	return HEALTH_STRIP_SIZE.x
 
 
-func _center_status_height(rail_contract: Dictionary) -> float:
-	var result := HEALTH_STRIP_SIZE.y
-	if int(rail_contract["acquired_count"]) <= 0:
-		return result
-	var row_count := int(rail_contract["row_count"])
-	return result + 2.0 + (
-		float(rail_contract["row_height"]) * float(row_count)
-		+ float(rail_contract["row_separation"]) * float(maxi(0, row_count - 1))
-	)
+func _center_status_height() -> float:
+	return HEALTH_STRIP_SIZE.y
 
 
 func _safe_margin(viewport_width: float) -> float:
@@ -822,6 +872,7 @@ func _show_next_notification() -> void:
 
 
 func _show_notification(entry: Dictionary) -> void:
+	_active_notification_entry = entry.duplicate(true)
 	_notification.text = String(entry["message"])
 	_notification.add_theme_color_override(
 		"font_color",

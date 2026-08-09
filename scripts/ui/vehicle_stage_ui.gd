@@ -303,6 +303,14 @@ func notify(
 	_hud.notify(message, duration, color)
 
 
+func notify_immediate(
+	message: String,
+	duration: float = 2.4,
+	color: Color = Art.IVORY_BRIGHT
+) -> void:
+	_hud.notify_immediate(message, duration, color)
+
+
 func clear_notifications() -> void:
 	_hud.clear_notifications()
 

@@ -74,6 +74,7 @@ func _run() -> void:
 			"primary range covers the full visible field diagonal with margin"
 		)
 		_check_upgrade_transaction_contract(run)
+		_check_progression_completion_contract(run)
 		run.call("_reset_run", false)
 		_check_lifesteal_contract(run)
 		run.call("_reset_run", false)
@@ -123,14 +124,26 @@ func _run() -> void:
 
 
 func _check_upgrade_transaction_contract(run) -> void:
+	for visible_count in [1, 2]:
+		run.capture_set_mode(&"playing")
+		run.call("_open_upgrade_reward", &"level_up")
+		_expect(
+			run.current_card_offer.size() == 3
+				and run.upgrade_offer_error.is_empty(),
+			"fresh runtime reward freezes three legal cards"
+		)
+		if run.current_card_offer.size() != 3:
+			return
+		run.current_card_offer = run.current_card_offer.slice(0, visible_count)
+		var tail_id := StringName(run.current_card_offer[0]["id"])
+		_expect(
+			run.apply_upgrade(tail_id),
+			"runtime applies one legal card from a %d-card tail offer" % visible_count
+		)
+		run.call("_resolve_reward_transaction")
 	run.capture_set_mode(&"playing")
 	run.call("_open_upgrade_reward", &"level_up")
-	_expect(
-		run.current_card_offer.size() == 3
-			and run.upgrade_offer_error.is_empty(),
-		"runtime freezes exactly three cards before opening an upgrade reward"
-	)
-	if run.current_card_offer.size() != 3:
+	if run.current_card_offer.is_empty():
 		return
 	var offered_id := StringName(run.current_card_offer[0]["id"])
 	var unoffered_id := &""
@@ -139,14 +152,6 @@ func _check_upgrade_transaction_contract(run) -> void:
 			unoffered_id = definition.id
 			break
 	var levels_before: int = int(run.run_build.total_levels())
-	var frozen_offer: Array[Dictionary] = run.current_card_offer.duplicate(true)
-	run.current_card_offer.pop_back()
-	_expect(
-		not run.apply_upgrade(offered_id)
-			and run.run_build.total_levels() == levels_before,
-		"runtime rejects selection from an incomplete frozen offer"
-	)
-	run.current_card_offer = frozen_offer
 	run.upgrade_offer_error = {"reason":"validation"}
 	_expect(
 		not run.apply_upgrade(offered_id)
@@ -175,6 +180,43 @@ func _check_upgrade_transaction_contract(run) -> void:
 		not run.apply_upgrade(offered_id)
 			and run.run_build.total_levels() == levels_before + 1,
 		"runtime rejects a stale selection after the transaction closes"
+	)
+
+
+func _check_progression_completion_contract(run) -> void:
+	while true:
+		var compatible: Array = run.upgrade_catalog.compatible_definitions(run.run_build)
+		if compatible.is_empty():
+			break
+		var definition = compatible[0]
+		_expect(
+			bool(run.run_build.apply(definition.id).get("applied", false)),
+			"catalog exhaustion fixture applies every reachable level"
+		)
+	run.experience_runtime.pending_level_ups = 2
+	run.experience_runtime.spawn_shard(run.player_position, 40)
+	run.capture_set_mode(&"playing")
+	run.call("_open_upgrade_reward", &"level_up")
+	var notification := Dictionary(run._ui.debug_notification_contract())
+	var fast_snapshot := Dictionary(run.call("_build_fast_hud_snapshot"))
+	_expect(
+		run.experience_runtime.progression_complete
+			and run.experience_runtime.pending_level_ups == 0
+			and run.experience_runtime.shards.is_empty()
+			and run.reward_runtime.is_idle()
+			and run.current_card_offer.is_empty()
+			and run.upgrade_offer_error.is_empty(),
+		"zero compatible cards resolve through explicit progression completion"
+	)
+	_expect(
+		String(notification["active_message"]) == tr("NOTIFY_ALL_UPGRADES_COMPLETE")
+			and bool(fast_snapshot["experience_complete"]),
+		"completion receipt is visible and the fast HUD publishes EXP MAX"
+	)
+	run.experience_runtime.spawn_shard(run.player_position, 99)
+	_expect(
+		run.experience_runtime.shards.is_empty(),
+		"future enemy rewards cannot create hidden XP after MAX"
 	)
 
 

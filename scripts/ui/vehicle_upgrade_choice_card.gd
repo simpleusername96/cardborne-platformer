@@ -104,6 +104,7 @@ func debug_contract() -> Dictionary:
 	var artwork_asset_id := StringName(_offer.get("artwork_asset_id", &""))
 	return {
 		"structured":true,
+		"visible":visible,
 		"minimum_size":custom_minimum_size,
 		"actual_size":size,
 		"value_rows":(
@@ -370,37 +371,40 @@ func _refresh() -> void:
 	for preview_variant in previews.slice(0, 2):
 		var preview := Dictionary(preview_variant)
 		var row_number := _effects.get_child_count() + 1
-		var row := VBoxContainer.new()
+		var row := HBoxContainer.new()
 		row.name = "EffectRow%d" % row_number
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_theme_constant_override("separation", 2 if _compact else 4)
+		row.add_theme_constant_override("separation", 8 if _compact else 12)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var stat := _label(_effect_stat_size(), Art.TEXT_PRIMARY)
 		stat.name = "StatLabel%d" % row_number
 		stat.text = tr(String(preview.get("stat_key", "")))
-		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		stat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		stat.max_lines_visible = 2 if _compact or _accessibility_mode else 1
+		stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(stat)
 		var delta_row := HBoxContainer.new()
 		delta_row.name = "DeltaRow%d" % row_number
 		delta_row.add_theme_constant_override("separation", 4)
 		delta_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		delta_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		delta_row.alignment = BoxContainer.ALIGNMENT_END
 		var parts := _preview_value_parts(preview)
-		var current := _label(_effect_value_size(), Art.TEXT_PRIMARY)
-		current.name = "CurrentValueLabel%d" % row_number
-		current.text = String(parts[0])
-		delta_row.add_child(current)
-		var arrow := _label(_effect_value_size(), Art.TEXT_MUTED)
-		arrow.name = "ValueArrowLabel%d" % row_number
-		arrow.text = "→"
-		delta_row.add_child(arrow)
+		if bool(preview.get("show_current", true)):
+			var current := _label(_effect_value_size(), Art.TEXT_PRIMARY)
+			current.name = "CurrentValueLabel%d" % row_number
+			current.text = String(parts[0])
+			delta_row.add_child(current)
+			var arrow := _label(_effect_value_size(), Art.TEXT_MUTED)
+			arrow.name = "ValueArrowLabel%d" % row_number
+			arrow.text = "→"
+			delta_row.add_child(arrow)
 		var next := _label(_effect_value_size(), Art.SYSTEM)
 		next.name = "NextValueLabel%d" % row_number
 		next.text = String(parts[1])
 		delta_row.add_child(next)
+		delta_row.size_flags_horizontal = Control.SIZE_SHRINK_END
 		row.add_child(delta_row)
 		_effects.add_child(row)
 		accessible_values.append("%s %s" % [stat.text, _preview_value(preview)])
@@ -429,6 +433,8 @@ func _effect_value_size() -> int:
 
 func _preview_value(preview: Dictionary) -> String:
 	var parts := _preview_value_parts(preview)
+	if not bool(preview.get("show_current", true)):
+		return parts[1]
 	return "%s → %s" % [parts[0], parts[1]]
 
 
@@ -442,17 +448,36 @@ func _preview_value_parts(preview: Dictionary) -> PackedStringArray:
 			_percent_text(current),
 			_percent_text(next),
 		])
+	if display_unit == "seconds":
+		return PackedStringArray([
+			"%ss" % _plain_number(current),
+			"%ss" % _plain_number(next),
+		])
 	var current_text := (
 		"×%.2f" % current
 		if operation == "multiply"
-		else "%+.0f" % current
+		else (
+			_plain_number(current)
+			if bool(preview.get("absolute_value", false))
+			else "%+.0f" % current
+		)
 	)
 	var next_text := (
 		"×%.2f" % next
 		if operation == "multiply"
-		else "%+.0f" % next
+		else (
+			_plain_number(next)
+			if bool(preview.get("absolute_value", false))
+			else "%+.0f" % next
+		)
 	)
 	return PackedStringArray([current_text, next_text])
+
+
+func _plain_number(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return str(roundi(value))
+	return "%.1f" % value
 
 
 func _percent_text(value: float) -> String:

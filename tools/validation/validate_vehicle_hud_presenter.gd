@@ -10,6 +10,10 @@ var static_minimap_calls := 0
 var guide_calls := 0
 var fast_health := 120.0
 var fast_max_health := 120.0
+var fast_level := 4
+var fast_experience := 19
+var fast_experience_required := 27
+var fast_experience_complete := false
 var fast_reduced_motion := false
 var fast_stage_number := 2
 var fast_stage_total := 5
@@ -93,9 +97,19 @@ func _initialize() -> void:
 	_expect(
 		_all_hull_fields_present(motion_update)
 		and bool(motion_update.get("reduced_motion", false))
-		and not motion_update.has("level")
-		and not motion_update.has("experience"),
-		"reduced-motion changes publish the minimal hull cluster without retired XP fields"
+		and int(motion_update["level"]) == 4
+		and int(motion_update["experience"]) == 19,
+		"reduced-motion changes publish the complete hull-and-XP cluster"
+	)
+	fast_experience = 20
+	var experience_update := state_presenter.advance(
+		0.10, _fast, _minimap, _threat, _guide
+	)
+	_expect(
+		_all_hull_fields_present(experience_update)
+			and int(experience_update["experience"]) == 20
+			and not experience_update.has("stage_number"),
+		"XP collection republishes the complete center meter cluster only"
 	)
 	fast_defeated = 87
 	var progress_update := state_presenter.advance(
@@ -131,6 +145,7 @@ func _initialize() -> void:
 			and is_equal_approx(health_pips.maximum, 120.0),
 		"HUD HealthPips consumes the atomic pair without falling back to 1/1"
 	)
+	health_pips.free()
 	_finish()
 
 
@@ -139,6 +154,10 @@ func _fast() -> Dictionary:
 	return {
 		"health":fast_health,
 		"max_health":fast_max_health,
+		"level":fast_level,
+		"experience":fast_experience,
+		"experience_required":fast_experience_required,
+		"experience_complete":fast_experience_complete,
 		"reduced_motion":fast_reduced_motion,
 		"stage_number":fast_stage_number,
 		"stage_total":fast_stage_total,
@@ -155,7 +174,10 @@ func _fast() -> Dictionary:
 
 
 func _all_hull_fields_present(update: Dictionary) -> bool:
-	for key in ["health", "max_health", "reduced_motion"]:
+	for key in [
+		"health", "max_health", "level", "experience",
+		"experience_required", "experience_complete", "reduced_motion",
+	]:
 		if not update.has(key):
 			return false
 	return true
