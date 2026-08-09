@@ -757,7 +757,7 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
 `scripts/ui/vehicle_retained_minimap_mesh.gd`, `scripts/ui/vehicle_gameplay_hud.gd`,
 `scripts/vehicle/vehicle_run.gd`, capture gateway/driver, and focused HUD/minimap validators
 
-- [ ] **8.1** Amend the remaining visual contract before runtime changes.
+- [x] **8.1** Amend the remaining visual contract before runtime changes.
   - Change: retain the Phase 7 hull-plus-XP and zero-live-upgrade-icon contract while replacing the
     incoming-only radar, five-marker minimap, shared-ring Electric Field, three-effect-only, and
     text-only persistent-status clauses with the bounded contracts in Phases 8-9. Preserve sparse
@@ -767,7 +767,7 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
     it here before the remaining Phase 8 runtime work.
   - Accept: product and visual specs describe the same reachable states, localization, ownership,
     reduced-motion behavior, capacities, and non-goals; visual-authority validation passes.
-- [ ] **8.2** Add low-priority nearby-enemy contacts to the retained threat radar.
+- [x] **8.2** Add low-priority nearby-enemy contacts to the retained threat radar.
   - Change: at the existing five-hertz publication boundary, sample only active targetable ordinary
     enemies whose body is outside the visible world rectangle and within `1200` world units. Emit
     `nearby_enemy` offsets into the existing fixed contact cache; aggregate into the existing 12
@@ -778,7 +778,7 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
     12 drawn sectors; incoming projectile triangles and boss arrival remain brighter; exact enemy
     coordinates never appear on the radar; cadence, retained mesh count, and allocation behavior
     are unchanged.
-- [ ] **8.3** Split minimap semantics without leaking hidden outcomes.
+- [x] **8.3** Split minimap semantics without leaking hidden outcomes.
   - Change: emit and draw exactly eight roles: player, `field_pickup`, `reward_crate`,
     `mystery_device`, `mobile_enemy`, `priority_enemy`, `boss`, and
     `reinforcement_facility`. Intact Mystery Device uses one neutral system-notched marker and
@@ -790,7 +790,7 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
     square, device neutral cut marker, mobile enemy wedge/round mass, fixed enemy square/cut mass,
     notched boss command mass, and two-tone facility diamond. No subtype beyond the locked roles is
     emitted.
-- [ ] **8.4** Add density, accessibility, and capture oracles.
+- [x] **8.4** Add density, accessibility, and capture oracles.
   - Change: add focused snapshots containing every marker role, overlapping nearby roles, a hidden
     Mystery Device outcome, a dense off-screen enemy sector, committed projectile contact, and boss
     arrival. Extend the production capture with one HUD/minimap/radar evidence state.
@@ -1037,10 +1037,11 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 8 - Restore nearby direction cues and semantic minimap roles.
-- Next task: 8.1 - amend the product and visual contracts for the bounded nearby-enemy radar,
-  eight minimap roles, and Phase 9 feedback owners before changing their runtime behavior.
-  Task 3.6 retains its rendered pursuit/ranged capture
+- Current phase: Phase 9 - Add bounded elemental feedback, distinguish Electric Field, and reveal
+  boss identity.
+- Next task: 9.1 - prepare the dedicated Thermal impact workbench unit and exact approval evidence;
+  production promotion remains blocked until the user approves one exact raster. Independent
+  Tasks 9.3-9.5 may proceed without bypassing that approval gate. Task 3.6 retains its rendered pursuit/ranged capture
   for final runtime QA; Task 5.3 still requires owner-approved retired-plan deletion; Tasks 1.2-1.4
   remain open evidence gates and final release qualification is deferred to Phase 10.
 - Last completed gate: the exact user-approved crack, stain, and embedded-chip SVG hashes are
@@ -1065,6 +1066,17 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   `build/visual-captures/phase7-progression-{ko,en}`, with compact, large, and 200% text variants
   under the adjacent `phase7-*` directories; actual-size review found no overlap or clipped
   supported state.
+  Phase 8 is complete: the five-hertz threat scan now republishes targetable off-screen ordinary
+  enemies within 1,200 units through a fixed-capacity contact pool; 12-sector aggregation preserves
+  incoming/boss/nearby priorities `3/2/1` and gives nearby pressure no triangle. The minimap emits
+  exactly eight roles with no Mystery Device outcome field, fixed installations use the priority
+  mass, bosses use a command-magenta notched mass, and the facility is a two-tone diamond. Focused
+  combat-cue, reinforcement-facility, world-visual, HUD layout/presenter, localization, visual
+  coverage, capture-driver, Run, parse/import, and visual-authority gates pass. The 88-file Korean
+  production capture completed under `build/visual-captures/phase8-radar-minimap-ko`; original-size
+  review of `04e-radar-minimap-roles.png` confirms the dim no-triangle nearby arc, brighter committed
+  attack and boss triangles, shape-separated marker roles, unchanged hull-plus-XP stack, and zero
+  live upgrade icons.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit.
 

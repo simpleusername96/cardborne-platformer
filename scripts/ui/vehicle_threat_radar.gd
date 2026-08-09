@@ -74,20 +74,34 @@ func _aggregate_contacts(contacts: Array, maximum_distance: float) -> Array[Dict
 			buckets[sector_index] = {
 				"angle": angle,
 				"distance": distance,
+				"proximity_distance": distance,
 				"count": 1,
-				"kind":kind,
-				"readiness":readiness,
-				"objective_id":String(contact.get("objective_id", "")),
+				"kind": kind,
+				"readiness": readiness,
+				"objective_id": String(contact.get("objective_id", "")),
 			}
 			continue
 		existing["count"] = int(existing["count"]) + 1
-		existing["readiness"] = maxf(float(existing["readiness"]), readiness)
-		if _kind_priority(kind) > _kind_priority(StringName(existing["kind"])):
+		existing["proximity_distance"] = minf(
+			float(existing["proximity_distance"]), distance
+		)
+		var existing_kind := StringName(existing["kind"])
+		var priority := CombatCuePolicy.contact_priority(kind)
+		var existing_priority := CombatCuePolicy.contact_priority(existing_kind)
+		if priority > existing_priority:
 			existing["kind"] = kind
+			existing["readiness"] = readiness
 			existing["objective_id"] = String(contact.get("objective_id", ""))
-		if distance < float(existing["distance"]):
 			existing["angle"] = angle
 			existing["distance"] = distance
+		elif priority == existing_priority:
+			existing["readiness"] = maxf(
+				float(existing["readiness"]), readiness
+			)
+		if priority == existing_priority and distance < float(existing["distance"]):
+			existing["angle"] = angle
+			existing["distance"] = distance
+			existing["objective_id"] = String(contact.get("objective_id", ""))
 		buckets[sector_index] = existing
 	var result: Array[Dictionary] = []
 	for bucket in buckets:
@@ -109,18 +123,27 @@ func _build_threat_mesh(
 		var kind := StringName(sector["kind"])
 		var readiness := clampf(float(sector["readiness"]), 0.0, 1.0)
 		var proximity := 1.0 - clampf(
-			float(sector["distance"]) / maxf(1.0, maximum_distance),
+			float(sector["proximity_distance"]) / maxf(1.0, maximum_distance),
 			0.0,
 			1.0
 		)
 		var density := minf(1.0, float(int(sector["count"]) - 1) / 5.0)
-		var width := 5.0 + density * 5.0 + proximity * 2.0 + readiness * 2.0
+		var nearby := kind == CombatCuePolicy.CONTACT_NEARBY_ENEMY
+		var width := (
+			3.5 + density * 4.0 + proximity * 1.5
+			if nearby
+			else 5.0 + density * 5.0 + proximity * 2.0 + readiness * 2.0
+		)
 		var color := _kind_color(kind, readiness)
-		var alpha := 0.56 + proximity * 0.22 + readiness * 0.18
+		var alpha := (
+			0.26 + proximity * 0.18
+			if nearby
+			else 0.56 + proximity * 0.22 + readiness * 0.18
+		)
 		_append_arc_band(
 			vertices, colors, indices, center, ARC_RADIUS + 2.0,
 			angle - ARC_HALF_WIDTH, angle + ARC_HALF_WIDTH, width + 4.0,
-			Color(Art.COBALT_DEEP, 0.82), 12
+			Color(Art.COBALT_DEEP, 0.52 if nearby else 0.82), 12
 		)
 		_append_arc_band(
 			vertices, colors, indices, center, ARC_RADIUS,
@@ -130,10 +153,7 @@ func _build_threat_mesh(
 		var direction := Vector2.RIGHT.rotated(angle)
 		var tangent := direction.rotated(PI * 0.5)
 		var tip := center + direction * (ARC_RADIUS - 10.0)
-		if kind in [
-			CombatCuePolicy.CONTACT_INCOMING_ATTACK,
-			CombatCuePolicy.CONTACT_BOSS_ARRIVAL,
-		]:
+		if CombatCuePolicy.contact_uses_triangle(kind):
 			_append_triangle(
 				vertices,
 				colors,
@@ -155,19 +175,12 @@ func _build_threat_mesh(
 	return mesh
 
 
-func _kind_priority(kind: StringName) -> int:
-	match kind:
-		CombatCuePolicy.CONTACT_INCOMING_ATTACK:
-			return 3
-		CombatCuePolicy.CONTACT_BOSS_ARRIVAL:
-			return 2
-	return 0
-
-
 func _kind_color(kind: StringName, readiness: float) -> Color:
 	match kind:
 		CombatCuePolicy.CONTACT_BOSS_ARRIVAL:
 			return Art.BOSS_COMMAND
+		CombatCuePolicy.CONTACT_NEARBY_ENEMY:
+			return Art.DANGER.lerp(Art.RAISED, 0.48)
 		_:
 			return Art.DANGER.lerp(Art.IVORY_BRIGHT, readiness * 0.36)
 
@@ -232,9 +245,29 @@ func debug_contract() -> Dictionary:
 		"sector_count": SECTOR_COUNT,
 		"maximum_markers": SECTOR_COUNT,
 		"offscreen_arcs": true,
-		"objective_channel":true,
-		"incoming_attack_only":true,
+		"objective_channel": true,
+		"incoming_attack_only": false,
+		"nearby_enemy_contact": true,
+		"nearby_enemy_triangle": false,
+		"contact_priorities": {
+			"incoming_attack": CombatCuePolicy.contact_priority(
+				CombatCuePolicy.CONTACT_INCOMING_ATTACK
+			),
+			"boss_arrival": CombatCuePolicy.contact_priority(
+				CombatCuePolicy.CONTACT_BOSS_ARRIVAL
+			),
+			"nearby_enemy": CombatCuePolicy.contact_priority(
+				CombatCuePolicy.CONTACT_NEARBY_ENEMY
+			),
+		},
 		"batched_mesh": true,
 		"full_rect": is_zero_approx(anchor_left) and is_zero_approx(anchor_top) and is_equal_approx(anchor_right, 1.0) and is_equal_approx(anchor_bottom, 1.0),
 		"mouse_ignored": mouse_filter == Control.MOUSE_FILTER_IGNORE,
 	}
+
+
+func debug_aggregate_contacts(
+	contacts: Array,
+	maximum_distance: float = 1200.0
+) -> Array[Dictionary]:
+	return _aggregate_contacts(contacts, maximum_distance)

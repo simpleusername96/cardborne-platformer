@@ -431,18 +431,22 @@ func _validate_minimap_tokens() -> void:
 		"world_size": Vector2(7200.0, 4320.0),
 		"markers": [
 			{"kind":&"boss", "position":Vector2(800,800), "discovered":true},
-			{"kind":&"item", "position":Vector2(1600,800), "discovered":true},
-			{"kind":&"enemy", "position":Vector2(2400,800), "discovered":true},
+			{"kind":&"field_pickup", "position":Vector2(1400,800), "discovered":true},
+			{"kind":&"reward_crate", "position":Vector2(2000,800), "discovered":true},
+			{"kind":&"mystery_device", "position":Vector2(2600,800), "discovered":true},
+			{"kind":&"mobile_enemy", "position":Vector2(3200,800), "discovered":true},
+			{"kind":&"priority_enemy", "position":Vector2(3800,800), "discovered":true},
+			{"kind":&"reinforcement_facility", "position":Vector2(4400,800), "discovered":true},
 			{
 				"kind":&"objective",
-				"position":Vector2(3200,800),
+				"position":Vector2(5000,800),
 				"color":Color(0.123, 0.456, 0.789),
 				"discovered":true,
 			},
 		],
 	}
 	var mesh := MinimapBuilder.build(snapshot, Vector2(260.0, 120.0))
-	_expect(mesh != null, "minimap compiles the four semantic marker roles")
+	_expect(mesh != null, "minimap compiles all eight bounded semantic roles")
 	if mesh == null:
 		return
 	_expect(mesh.get_surface_count() == 1, "minimap stays in one vertex-colored batch")
@@ -459,8 +463,9 @@ func _validate_minimap_tokens() -> void:
 	_expect(
 		colors.has(Art.PLAYER_REWARD)
 		and colors.has(Art.SUPPORT)
+		and colors.has(Art.TEXT_MUTED)
 		and colors.has(Art.DANGER),
-		"minimap preserves player, item, and enemy semantic colors"
+		"minimap preserves player, pickup, neutral-device, and enemy semantics"
 	)
 	_expect(
 		not colors.has(Color(0.123, 0.456, 0.789)),

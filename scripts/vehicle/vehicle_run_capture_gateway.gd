@@ -90,6 +90,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_collective_tactic_evidence()
 		&"build_state":
 			await _capture_build_state_evidence()
+		&"radar_minimap_roles":
+			await _capture_radar_minimap_roles()
 		&"field_items":
 			await _capture_field_item_evidence()
 		&"reinforcement_facility":
@@ -481,6 +483,49 @@ func _capture_build_state_evidence() -> void:
 	_run._ui.debug_active_settings_contract()
 	await _settle_capture()
 	_save_capture("04d-ship-status-acquired-build.png")
+
+
+func _capture_radar_minimap_roles() -> void:
+	prepare_stage(2)
+	_run._clear_enemies()
+	var world_size: Vector2 = Rules.world_rect(_run.current_stage_id).size
+	var minimap: Dictionary = _run._minimap_snapshot(true)
+	minimap["visited"] = []
+	for row in _run.MINIMAP_ROWS:
+		for column in _run.MINIMAP_COLS:
+			minimap["visited"].append(Vector2i(column, row))
+	minimap["player"] = world_size * Vector2(0.50, 0.56)
+	minimap["player_facing"] = Vector2.RIGHT
+	minimap["markers"] = [
+		{"kind":&"field_pickup", "position":world_size * Vector2(0.12, 0.24), "discovered":true},
+		{"kind":&"reward_crate", "position":world_size * Vector2(0.27, 0.25), "discovered":true},
+		{"kind":&"mystery_device", "position":world_size * Vector2(0.42, 0.24), "discovered":true},
+		{"kind":&"mobile_enemy", "position":world_size * Vector2(0.61, 0.25), "discovered":true},
+		{"kind":&"priority_enemy", "position":world_size * Vector2(0.74, 0.25), "discovered":true},
+		{"kind":&"boss", "position":world_size * Vector2(0.88, 0.25), "discovered":true},
+		{"kind":&"reinforcement_facility", "position":world_size * Vector2(0.78, 0.72), "discovered":true},
+	]
+	var contacts: Array[Dictionary] = [
+		{"offset":Vector2(-940.0, -220.0), "kind":&"nearby_enemy", "readiness":0.0},
+		{"offset":Vector2(-890.0, -175.0), "kind":&"nearby_enemy", "readiness":0.0},
+		{"offset":Vector2(-820.0, -135.0), "kind":&"nearby_enemy", "readiness":0.0},
+		{"offset":Vector2(900.0, -150.0), "kind":&"incoming_attack", "readiness":0.72},
+		{"offset":Vector2(240.0, 980.0), "kind":&"boss_arrival", "readiness":1.0},
+	]
+	# Settle the normal world publication first so the deterministic evidence
+	# snapshot remains the last HUD write before the forced capture draw.
+	await _settle_capture()
+	_run._ui.update_hud({
+		"minimap":minimap,
+		"threat_radar":{
+			"visible":true,
+			"center":_run.get_viewport_rect().size * 0.5,
+			"max_distance":_run.THREAT_SCAN_DISTANCE,
+			"contacts":contacts,
+		},
+	})
+	await _run.get_tree().process_frame
+	_save_capture("04e-radar-minimap-roles.png")
 
 
 func _capture_field_item_evidence() -> void:

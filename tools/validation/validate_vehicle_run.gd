@@ -97,6 +97,8 @@ func _run() -> void:
 		_expect(run.player_position == Vector2(3600,2160), "stage transition respawns at center")
 		var hud: Dictionary = run.call("_build_hud_snapshot")
 		_expect(hud["minimap"]["cols"] == 20 and hud["guidebook"].has("categories"), "HUD exposes minimap and guide snapshots")
+		_check_nearby_radar_contacts(run)
+		run.call("_reset_run", false, true, true)
 		var ui = run.get_node_or_null("VehicleStageUI")
 		var ui_contract: Dictionary = ui.debug_ui_contract() if ui != null else {}
 		var component_owners := Dictionary(ui_contract.get("component_owners", {}))
@@ -566,7 +568,9 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	var only_shared_minimap_roles := true
 	for marker_variant in minimap_markers:
 		if StringName(Dictionary(marker_variant).get("kind", &"")) not in [
-			&"item", &"enemy", &"boss",
+			&"field_pickup", &"reward_crate", &"mystery_device",
+			&"mobile_enemy", &"priority_enemy", &"boss",
+			&"reinforcement_facility",
 		]:
 			only_shared_minimap_roles = false
 			break
@@ -924,6 +928,10 @@ func _check_runtime_minimap_at_horde_capacity(run) -> void:
 			== run.MINIMAP_FRAME_COUNT * run.MINIMAP_MARKER_CAPACITY,
 		"runtime minimap owns exactly two fixed-capacity marker pools"
 	)
+	_expect(
+		run._runtime_threat_contact_pool.size() == run.THREAT_CONTACT_CAPACITY,
+		"threat radar owns one fixed-capacity contact pool"
+	)
 	var retained_player := Vector2(first["player"])
 	var retained_marker_position := Vector2(first_markers[0]["position"])
 	var retained_visited := first_visited.duplicate()
@@ -961,6 +969,55 @@ func _check_runtime_minimap_at_horde_capacity(run) -> void:
 		is_same(threat_first, threat_second)
 			and is_same(threat_first["contacts"], run._threat_contact_cache),
 		"threat radar reuses its synchronous wrapper and borrowed contact cache"
+	)
+
+
+func _check_nearby_radar_contacts(run) -> void:
+	run.call("_clear_enemies")
+	var visible_enemy: EnemyState = run.call("_make_enemy", {
+		"id":"radar_visible", "role":&"chaser",
+		"pos":run.player_position + Vector2(200.0, 0.0), "active":true,
+	})
+	var nearby_enemy: EnemyState = run.call("_make_enemy", {
+		"id":"radar_nearby", "role":&"chaser",
+		"pos":run.player_position + Vector2(850.0, 0.0), "active":true,
+	})
+	var distant_enemy: EnemyState = run.call("_make_enemy", {
+		"id":"radar_distant", "role":&"chaser",
+		"pos":run.player_position + Vector2(1450.0, 0.0), "active":true,
+	})
+	for enemy in [visible_enemy, nearby_enemy, distant_enemy]:
+		if enemy != null:
+			enemy.active = true
+			run.call("_append_enemy", enemy)
+	run._threat_sample_timer = 0.0
+	run.call("_update_threat_contacts", run.THREAT_SAMPLE_INTERVAL)
+	var nearby_contacts: Array = run._threat_contact_cache.filter(
+		func(contact_variant) -> bool:
+			return (
+				StringName(Dictionary(contact_variant).get("kind", &""))
+				== &"nearby_enemy"
+			)
+	)
+	_expect(
+		nearby_contacts.size() == 1
+			and Vector2(nearby_contacts[0]["offset"]).is_equal_approx(
+				Vector2(850.0, 0.0)
+			),
+		"five-hertz radar includes only off-screen targetable enemies within 1,200 units"
+	)
+	var retained_contact: Dictionary = nearby_contacts[0] if not nearby_contacts.is_empty() else {}
+	if nearby_enemy != null:
+		nearby_enemy.pos += Vector2(20.0, 0.0)
+	run._threat_sample_timer = 0.0
+	run.call("_update_threat_contacts", run.THREAT_SAMPLE_INTERVAL)
+	_expect(
+		not retained_contact.is_empty()
+			and is_same(retained_contact, run._threat_contact_cache[0])
+			and Vector2(run._threat_contact_cache[0]["offset"]).is_equal_approx(
+				Vector2(870.0, 0.0)
+			),
+		"radar republishes nearby pressure through the preallocated contact record"
 	)
 
 

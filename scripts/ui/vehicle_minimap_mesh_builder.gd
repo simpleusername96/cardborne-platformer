@@ -5,8 +5,10 @@ extends RefCounted
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
-const ENEMY_OUTER_RADIUS := 4.0
-const ENEMY_INNER_RADIUS := 2.6
+const MOBILE_ENEMY_OUTER_RADIUS := 4.0
+const MOBILE_ENEMY_INNER_RADIUS := 2.6
+const PRIORITY_ENEMY_OUTER_RADIUS := 6.2
+const PRIORITY_ENEMY_INNER_RADIUS := 4.3
 const BOSS_OUTER_RADIUS := 10.0
 const BOSS_INNER_RADIUS := 7.6
 
@@ -51,6 +53,7 @@ static func dynamic_colors() -> Array[Color]:
 		Art.SPACE_BLACK,
 		Art.PLAYER_REWARD,
 		Art.SUPPORT,
+		Art.TEXT_MUTED,
 		Art.DANGER,
 		Art.BOSS_COMMAND,
 		Art.MUSTARD_DARK,
@@ -59,10 +62,12 @@ static func dynamic_colors() -> Array[Color]:
 
 static func marker_size_contract() -> Dictionary:
 	return {
-		"enemy_outer":ENEMY_OUTER_RADIUS,
-		"enemy_inner":ENEMY_INNER_RADIUS,
-		"boss_outer":BOSS_OUTER_RADIUS,
-		"boss_inner":BOSS_INNER_RADIUS,
+		"mobile_enemy_outer": MOBILE_ENEMY_OUTER_RADIUS,
+		"mobile_enemy_inner": MOBILE_ENEMY_INNER_RADIUS,
+		"priority_enemy_outer": PRIORITY_ENEMY_OUTER_RADIUS,
+		"priority_enemy_inner": PRIORITY_ENEMY_INNER_RADIUS,
+		"boss_outer": BOSS_OUTER_RADIUS,
+		"boss_inner": BOSS_INNER_RADIUS,
 	}
 
 
@@ -140,13 +145,19 @@ static func _append_markers(
 		var point := _map_point(Vector2(marker.get("position", Vector2.ZERO)), world_size, canvas_size)
 		var kind := StringName(marker.get("kind", &""))
 		match kind:
-			&"item":
-				_append_diamond_marker(vertices, colors, indices, point)
-			&"enemy":
-				_append_round_marker(vertices, colors, indices, point)
+			&"field_pickup":
+				_append_field_pickup_marker(vertices, colors, indices, point)
+			&"reward_crate":
+				_append_reward_crate_marker(vertices, colors, indices, point)
+			&"mystery_device":
+				_append_mystery_device_marker(vertices, colors, indices, point)
+			&"mobile_enemy":
+				_append_mobile_enemy_marker(vertices, colors, indices, point)
+			&"priority_enemy":
+				_append_priority_enemy_marker(vertices, colors, indices, point)
 			&"boss":
 				_append_boss_marker(vertices, colors, indices, point)
-			&"facility":
+			&"reinforcement_facility":
 				_append_facility_marker(vertices, colors, indices, point)
 
 
@@ -176,32 +187,85 @@ static func _append_player(
 	_append_polygon(vertices, colors, indices, inner, Art.PLAYER_REWARD)
 
 
-static func _append_diamond_marker(
+static func _append_field_pickup_marker(
 	vertices: Array[Vector3],
 	colors: Array[Color],
 	indices: Array[int],
 	center: Vector2
 ) -> void:
-	_append_regular_polygon(
-		vertices, colors, indices, center, 6.0, 4, PI * 0.25, Art.SPACE_BLACK
-	)
-	_append_regular_polygon(
-		vertices, colors, indices, center, 4.2, 4, PI * 0.25, Art.SUPPORT
+	var outer := PackedVector2Array([
+		center + Vector2(-6.0, 0.0), center + Vector2(-3.0, -3.2),
+		center + Vector2(3.0, -3.2), center + Vector2(6.0, 0.0),
+		center + Vector2(3.0, 3.2), center + Vector2(-3.0, 3.2),
+	])
+	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
+	_append_scaled_polygon(vertices, colors, indices, outer, center, 0.68, Art.SUPPORT)
+
+
+static func _append_reward_crate_marker(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	center: Vector2
+) -> void:
+	var outer := PackedVector2Array([
+		center + Vector2(-6.0, -6.0), center + Vector2(1.5, -6.0),
+		center + Vector2(1.5, -3.0), center + Vector2(6.0, -3.0),
+		center + Vector2(6.0, 6.0), center + Vector2(-6.0, 6.0),
+	])
+	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
+	_append_scaled_polygon(
+		vertices, colors, indices, outer, center, 0.68, Art.PLAYER_REWARD
 	)
 
 
-static func _append_round_marker(
+static func _append_mystery_device_marker(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	center: Vector2
+) -> void:
+	var outer := PackedVector2Array([
+		center + Vector2(-6.0, -4.0), center + Vector2(-2.0, -4.0),
+		center + Vector2(0.0, -6.0), center + Vector2(6.0, 0.0),
+		center + Vector2(0.0, 6.0), center + Vector2(-2.0, 4.0),
+		center + Vector2(-6.0, 4.0), center + Vector2(-4.0, 0.0),
+	])
+	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
+	_append_scaled_polygon(
+		vertices, colors, indices, outer, center, 0.66, Art.TEXT_MUTED
+	)
+
+
+static func _append_mobile_enemy_marker(
 	vertices: Array[Vector3],
 	colors: Array[Color],
 	indices: Array[int],
 	center: Vector2
 ) -> void:
 	_append_circle(
-		vertices, colors, indices, center, ENEMY_OUTER_RADIUS, Art.SPACE_BLACK, 10
+		vertices, colors, indices, center,
+		MOBILE_ENEMY_OUTER_RADIUS, Art.SPACE_BLACK, 10
 	)
-	_append_circle(
-		vertices, colors, indices, center, ENEMY_INNER_RADIUS, Art.DANGER, 10
-	)
+	var wedge := PackedVector2Array([
+		center + Vector2(MOBILE_ENEMY_INNER_RADIUS, 0.0),
+		center + Vector2(-MOBILE_ENEMY_INNER_RADIUS * 0.72, -2.0),
+		center + Vector2(-MOBILE_ENEMY_INNER_RADIUS * 0.34, 0.0),
+		center + Vector2(-MOBILE_ENEMY_INNER_RADIUS * 0.72, 2.0),
+	])
+	_append_polygon(vertices, colors, indices, wedge, Art.DANGER)
+
+
+static func _append_priority_enemy_marker(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	center: Vector2
+) -> void:
+	var outer := _cut_square(center, PRIORITY_ENEMY_OUTER_RADIUS)
+	var inner := _cut_square(center, PRIORITY_ENEMY_INNER_RADIUS)
+	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
+	_append_polygon(vertices, colors, indices, inner, Art.DANGER)
 
 
 static func _append_boss_marker(
@@ -210,12 +274,10 @@ static func _append_boss_marker(
 	indices: Array[int],
 	center: Vector2
 ) -> void:
-	_append_regular_polygon(
-		vertices, colors, indices, center, BOSS_OUTER_RADIUS, 6, 0.0, Art.SPACE_BLACK
-	)
-	_append_regular_polygon(
-		vertices, colors, indices, center, BOSS_INNER_RADIUS, 6, 0.0, Art.BOSS_COMMAND
-	)
+	var outer := _boss_notched_mass(center, BOSS_OUTER_RADIUS)
+	var inner := _boss_notched_mass(center, BOSS_INNER_RADIUS)
+	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
+	_append_polygon(vertices, colors, indices, inner, Art.BOSS_COMMAND)
 
 
 static func _append_facility_marker(
@@ -225,10 +287,10 @@ static func _append_facility_marker(
 	center: Vector2
 ) -> void:
 	_append_regular_polygon(
-		vertices, colors, indices, center, 8.0, 4, PI * 0.25, Art.SPACE_BLACK
+		vertices, colors, indices, center, 8.0, 4, 0.0, Art.SPACE_BLACK
 	)
 	_append_regular_polygon(
-		vertices, colors, indices, center, 6.2, 4, PI * 0.25, Art.MUSTARD
+		vertices, colors, indices, center, 6.2, 4, 0.0, Art.MUSTARD
 	)
 	_append_rect(
 		vertices, colors, indices, Rect2(center - Vector2(2.0, 2.0), Vector2(4.0, 4.0)),
@@ -254,6 +316,52 @@ static func _append_regular_polygon(
 			) * radius
 		)
 	_append_polygon(vertices, colors, indices, points, color)
+
+
+static func _append_scaled_polygon(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	points: PackedVector2Array,
+	center: Vector2,
+	scale: float,
+	color: Color
+) -> void:
+	var scaled := PackedVector2Array()
+	for point in points:
+		scaled.append(center + (point - center) * scale)
+	_append_polygon(vertices, colors, indices, scaled, color)
+
+
+static func _cut_square(center: Vector2, radius: float) -> PackedVector2Array:
+	var cut := radius * 0.42
+	return PackedVector2Array([
+		center + Vector2(-radius + cut, -radius),
+		center + Vector2(radius, -radius),
+		center + Vector2(radius, radius - cut),
+		center + Vector2(radius - cut, radius),
+		center + Vector2(-radius, radius),
+		center + Vector2(-radius, -radius + cut),
+	])
+
+
+static func _boss_notched_mass(center: Vector2, radius: float) -> PackedVector2Array:
+	var middle := radius * 0.42
+	var notch := radius * 0.68
+	return PackedVector2Array([
+		center + Vector2(-middle, -radius),
+		center + Vector2(middle, -radius),
+		center + Vector2(middle, -notch),
+		center + Vector2(radius, -middle),
+		center + Vector2(radius, middle),
+		center + Vector2(middle, notch),
+		center + Vector2(middle, radius),
+		center + Vector2(-middle, radius),
+		center + Vector2(-middle, notch),
+		center + Vector2(-radius, middle),
+		center + Vector2(-radius, -middle),
+		center + Vector2(-middle, -notch),
+	])
 
 
 static func _append_circle(

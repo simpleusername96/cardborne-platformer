@@ -68,7 +68,7 @@ func _initialize() -> void:
 		"world_size":Vector2(100.0, 100.0),
 		"player":Vector2.ZERO,
 		"player_facing":Vector2.RIGHT,
-		"markers":[{"kind":&"facility", "position":Vector2(50.0, 50.0), "discovered":true}],
+		"markers":[{"kind":&"reinforcement_facility", "position":Vector2(50.0, 50.0), "discovered":true}],
 	}, Vector2(100.0, 100.0))
 	_expect(minimap.has(Art.MUSTARD_DARK.to_rgba32()), "facility owns a distinct two-tone minimap marker")
 	_finish()

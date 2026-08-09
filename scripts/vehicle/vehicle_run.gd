@@ -114,10 +114,14 @@ const MINIMAP_COLS := 20
 const MINIMAP_ROWS := 12
 const MINIMAP_FRAME_COUNT := 2
 const MINIMAP_MARKER_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES + 24
+const MINIMAP_PRIORITY_ENEMY_ROLES: Array[StringName] = [
+	&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
+]
 const MINIMAP_STATIC_KEYS: Array[StringName] = [
 	&"floor_polygons", &"void_polygons", &"blocker_polygons",
 ]
 const THREAT_SCAN_DISTANCE := 1200.0
+const THREAT_CONTACT_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES + 1
 const BOSS_ARRIVAL_MIN_DISTANCE := 1200.0
 const BOSS_ARRIVAL_PREFERRED_MAX_DISTANCE := 1500.0
 # Threat contacts feed the radar/world-marker channel, whose observable refresh
@@ -259,6 +263,7 @@ var _runtime_minimap_marker_buffers: Array = []
 var _runtime_minimap_marker_pool: Array[Dictionary] = []
 var _runtime_minimap_frame_index := -1
 var _runtime_threat_radar_frame: Dictionary = {}
+var _runtime_threat_contact_pool: Array[Dictionary] = []
 var _runtime_combat_presentation_frame: Dictionary = {}
 var _runtime_secondary_presentation_frame: Dictionary = {}
 var _build_fast_hud_snapshot_callable: Callable
@@ -432,10 +437,16 @@ func _initialize_hud_staging() -> void:
 		})
 		for _marker_index in MINIMAP_MARKER_CAPACITY:
 			_runtime_minimap_marker_pool.append({
-				"kind":&"enemy",
+				"kind":&"mobile_enemy",
 				"position":Vector2.ZERO,
 				"discovered":true,
 			})
+	for _contact_index in THREAT_CONTACT_CAPACITY:
+		_runtime_threat_contact_pool.append({
+			"offset": Vector2.ZERO,
+			"kind": CombatCuePolicy.CONTACT_NEARBY_ENEMY,
+			"readiness": 0.0,
+		})
 	_runtime_threat_radar_frame = {
 		"visible":false,
 		"center":Vector2.ZERO,
@@ -5257,21 +5268,21 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		if not enemy.alive or not enemy.active or enemy.role == &"stage_boss":
 			continue
 		markers.append({
-			"kind":&"enemy",
+			"kind":_minimap_role_for_enemy(enemy),
 			"position":enemy.pos,
 			"discovered":true,
 		})
 	for pickup in pickups:
 		if bool(pickup["active"]):
 			markers.append({
-				"kind":&"item",
+				"kind":&"field_pickup",
 				"position":Vector2(pickup["pos"]),
 				"discovered":true,
 			})
 	for crate in crates:
 		if bool(crate["alive"]):
 			markers.append({
-				"kind":&"item",
+				"kind":&"reward_crate",
 				"position":Vector2(crate["pos"]),
 				"discovered":true,
 			})
@@ -5281,14 +5292,14 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 	for device in _mystery_device_snapshot_buffer:
 		if StringName(device["state"]) == &"intact":
 			markers.append({
-				"kind":&"item",
+				"kind":&"mystery_device",
 				"position":Vector2(device["position"]),
 				"discovered":true,
 			})
 	var facility := reinforcement_facility_runtime.snapshot()
 	if bool(facility.get("visible", false)):
 		markers.append({
-			"kind":&"facility",
+			"kind":&"reinforcement_facility",
 			"position":Vector2(facility["position"]),
 			"discovered":true,
 		})
@@ -5334,17 +5345,17 @@ func _runtime_minimap_snapshot(
 		if not enemy.alive or not enemy.active or enemy.role == &"stage_boss":
 			continue
 		_append_runtime_minimap_marker(
-			frame_index, markers, &"enemy", enemy.pos
+			frame_index, markers, _minimap_role_for_enemy(enemy), enemy.pos
 		)
 	for pickup in pickups:
 		if bool(pickup["active"]):
 			_append_runtime_minimap_marker(
-				frame_index, markers, &"item", Vector2(pickup["pos"])
+				frame_index, markers, &"field_pickup", Vector2(pickup["pos"])
 			)
 	for crate in crates:
 		if bool(crate["alive"]):
 			_append_runtime_minimap_marker(
-				frame_index, markers, &"item", Vector2(crate["pos"])
+				frame_index, markers, &"reward_crate", Vector2(crate["pos"])
 			)
 	mystery_device_runtime.fill_device_snapshot(
 		_mystery_device_snapshot_buffer
@@ -5354,7 +5365,7 @@ func _runtime_minimap_snapshot(
 			_append_runtime_minimap_marker(
 				frame_index,
 				markers,
-				&"item",
+				&"mystery_device",
 				Vector2(device["position"])
 			)
 	var facility := reinforcement_facility_runtime.snapshot()
@@ -5362,7 +5373,7 @@ func _runtime_minimap_snapshot(
 		_append_runtime_minimap_marker(
 			frame_index,
 			markers,
-			&"facility",
+			&"reinforcement_facility",
 			Vector2(facility["position"])
 		)
 	snapshot["player"] = player_position
@@ -5391,6 +5402,12 @@ func _append_runtime_minimap_marker(
 	marker["position"] = position
 	marker["discovered"] = true
 	markers.append(marker)
+
+
+func _minimap_role_for_enemy(enemy: EnemyState) -> StringName:
+	if enemy.role in MINIMAP_PRIORITY_ENEMY_ROLES:
+		return &"priority_enemy"
+	return &"mobile_enemy"
 
 
 func _append_minimap_static_geometry(snapshot: Dictionary) -> void:
@@ -5493,7 +5510,7 @@ func _update_threat_contacts(delta: float) -> void:
 	if _threat_sample_timer > 0.0:
 		return
 	_threat_sample_timer = THREAT_SAMPLE_INTERVAL
-	var contacts: Array[Dictionary] = []
+	_threat_contact_cache.clear()
 	var viewport_size := get_viewport_rect().size
 	var safe_viewport := Rect2(Vector2(90.0, 90.0), viewport_size - Vector2(180.0, 220.0))
 	var canvas_transform := get_canvas_transform()
@@ -5530,13 +5547,6 @@ func _update_threat_contacts(delta: float) -> void:
 			if enemy.elite_trait != &"":
 				_discover_guide(StringName("object_elite_%s" % String(enemy.elite_trait)))
 		var offset := Vector2(enemy.pos) - player_position
-		if (
-			offset.length_squared()
-				> THREAT_SCAN_DISTANCE * THREAT_SCAN_DISTANCE
-		):
-			continue
-		if safe_viewport.has_point(enemy_screen):
-			continue
 		var readiness := CombatCuePolicy.unseen_projectile_attack_readiness(
 			enemy.pos,
 			enemy.visual_radius,
@@ -5545,18 +5555,43 @@ func _update_threat_contacts(delta: float) -> void:
 			visible_world
 		)
 		if readiness >= 0.0:
-			contacts.append({
-				"offset":offset,
-				"kind":CombatCuePolicy.CONTACT_INCOMING_ATTACK,
-				"readiness":readiness,
-			})
+			_append_runtime_threat_contact(
+				offset, CombatCuePolicy.CONTACT_INCOMING_ATTACK, readiness
+			)
+		elif (
+			enemy.role != &"stage_boss"
+			and CombatCuePolicy.nearby_enemy_is_eligible(
+				enemy.pos,
+				enemy.visual_radius,
+				player_position,
+				visible_world,
+				THREAT_SCAN_DISTANCE
+			)
+		):
+			_append_runtime_threat_contact(
+				offset, CombatCuePolicy.CONTACT_NEARBY_ENEMY, 0.0
+			)
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
-		contacts.append({
-			"offset":boss_arrival_position - player_position,
-			"kind":CombatCuePolicy.CONTACT_BOSS_ARRIVAL,
-			"readiness":1.0,
-		})
-	_threat_contact_cache = contacts
+		_append_runtime_threat_contact(
+			boss_arrival_position - player_position,
+			CombatCuePolicy.CONTACT_BOSS_ARRIVAL,
+			1.0
+		)
+
+
+func _append_runtime_threat_contact(
+	offset: Vector2,
+	kind: StringName,
+	readiness: float
+) -> void:
+	var contact_index := _threat_contact_cache.size()
+	if contact_index >= THREAT_CONTACT_CAPACITY:
+		return
+	var contact: Dictionary = _runtime_threat_contact_pool[contact_index]
+	contact["offset"] = offset
+	contact["kind"] = kind
+	contact["readiness"] = readiness
+	_threat_contact_cache.append(contact)
 
 
 func _threat_radar_snapshot() -> Dictionary:

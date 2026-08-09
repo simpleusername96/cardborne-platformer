@@ -172,6 +172,27 @@ func _validate_offscreen_intersection() -> void:
 		),
 		"radar owns the off-screen projectile warning without a world route"
 	)
+	_expect(
+		CombatCuePolicy.nearby_enemy_is_eligible(
+			Vector2(-180.0, 360.0), 26.0, Vector2(640.0, 360.0), visible, 1200.0
+		)
+			and not CombatCuePolicy.nearby_enemy_is_eligible(
+				Vector2(300.0, 360.0), 26.0, Vector2(640.0, 360.0), visible, 1200.0
+			)
+			and not CombatCuePolicy.nearby_enemy_is_eligible(
+				Vector2(-800.0, 360.0), 26.0, Vector2(640.0, 360.0), visible, 1200.0
+			),
+		"nearby radar accepts only off-screen enemy bodies within 1,200 world units"
+	)
+	_expect(
+		CombatCuePolicy.contact_priority(CombatCuePolicy.CONTACT_INCOMING_ATTACK) == 3
+			and CombatCuePolicy.contact_priority(CombatCuePolicy.CONTACT_BOSS_ARRIVAL) == 2
+			and CombatCuePolicy.contact_priority(CombatCuePolicy.CONTACT_NEARBY_ENEMY) == 1
+			and not CombatCuePolicy.contact_uses_triangle(
+				CombatCuePolicy.CONTACT_NEARBY_ENEMY
+			),
+		"radar contact priority and nearby no-triangle semantics remain centralized"
+	)
 	var renderer_source := FileAccess.get_file_as_string(
 		"res://scripts/presentation/vehicle_combat_renderer.gd"
 	)

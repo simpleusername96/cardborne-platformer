@@ -420,11 +420,15 @@ does not produce a transient message.
   manual aim remains independent through cursor, muzzle, projectile, and hit
   cues. Dash feedback uses a directional afterimage and rear-anchor flare,
   never a danger ring or radial burst.
-- The transient effect buffer contains only dash afterimage and EMP charge/release.
-  Floating damage numbers and small poison/chill actor effects are not rendered. Attack footprints,
-  projectiles, hits, arrivals, deaths, pickups, and persistent states render
-  from their gameplay, actor, world, HUD, or audio owners without cosmetic
-  event objects.
+- The fixed-capacity transient effect buffer contains dash afterimage, EMP
+  charge/release, and the approved Thermal Burst impact receipt. It keeps its
+  96-effect ceiling and at most 24 live Thermal impacts; saturated Thermal
+  feedback may recycle the oldest Thermal impact or drop the new cosmetic
+  receipt but never evicts EMP or changes damage. Toxin and Chill do not create
+  effect objects. Their existing actor instance composes a same-size translucent
+  green or blue layer inside the authored body alpha, with a bounded 0.16-second
+  application pulse. Reduced motion removes that pulse and keeps the static
+  condition layer. Floating damage numbers remain absent.
 - The live HUD prioritizes hull, XP, numeric stage progress, EMP,
   minimap, and exceptional timed effects. A panel-free top-left B stack shows only
   localized stage and defeated labels with `current / total` values. At compact,
@@ -449,11 +453,30 @@ does not produce a transient message.
   Devices, and reward crates never receive world health bars. Installation bars
   use a deterministic 12-actor cap. All world health bars share one retained
   batch with a fixed 28-instance ceiling.
-- The minimap owns general enemy presence. The threat radar is limited to an
-  unseen committed projectile attack that has no world cue yet and boss arrival.
-  A single attack never appears as both a world
-  route and a radar contact.
-  An active reinforcement facility always uses its dedicated two-tone diamond marker.
+- The threat radar samples at five hertz and aggregates contacts into at most 12
+  directional sectors around the player. It includes targetable non-boss enemy
+  bodies outside the visible world rectangle and within 1,200 world units as dim
+  `nearby_enemy` arcs. These arcs reveal direction and pressure density, never an
+  exact coordinate or triangle. An unseen committed projectile attack has
+  priority 3, boss arrival priority 2, and nearby enemy pressure priority 1 when
+  contacts share a sector; only the winning role owns that sector's color and
+  triangle. A single attack never appears as both a world route and a radar
+  contact.
+- The minimap publishes exactly eight semantic roles: player, field pickup,
+  reward crate, intact Mystery Device, mobile enemy, priority enemy, boss, and
+  reinforcement facility. `turret`, `interceptor_tower`, `beam_sentinel`, and
+  `generator` are priority enemies; other active non-boss enemies are mobile
+  enemies. An intact Mystery Device uses one neutral marker that never leaks its
+  hidden result, and resolved or retired devices disappear. Bosses use one
+  command-magenta notched marker independent of stage. The reinforcement
+  facility keeps its dedicated two-tone diamond. All roles share the existing
+  marker capacity, borrowed buffers, explored geometry, fog, and one retained
+  minimap mesh.
+- Electric Field displays its complete selected damage radius of 120, 140, or
+  160 world units as one ground-attached arc-purple area below actors. The area
+  uses a restrained fill, one broken perimeter, and at most four broad internal
+  planes; it is not a shield and owns no collision or damage query. Gameplay
+  retains the 0.25-second tick, line-of-sight rule, and enemy-body overlap test.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, bosses, and field objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered

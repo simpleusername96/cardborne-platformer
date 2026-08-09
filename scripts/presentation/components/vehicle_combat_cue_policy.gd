@@ -11,6 +11,35 @@ const MODE_AREA_FOOTPRINT: StringName = &"area_footprint"
 
 const CONTACT_INCOMING_ATTACK: StringName = &"incoming_attack"
 const CONTACT_BOSS_ARRIVAL: StringName = &"boss_arrival"
+const CONTACT_NEARBY_ENEMY: StringName = &"nearby_enemy"
+
+
+static func contact_priority(kind: StringName) -> int:
+	match kind:
+		CONTACT_INCOMING_ATTACK:
+			return 3
+		CONTACT_BOSS_ARRIVAL:
+			return 2
+		CONTACT_NEARBY_ENEMY:
+			return 1
+	return 0
+
+
+static func contact_uses_triangle(kind: StringName) -> bool:
+	return kind in [CONTACT_INCOMING_ATTACK, CONTACT_BOSS_ARRIVAL]
+
+
+static func nearby_enemy_is_eligible(
+	position: Vector2,
+	radius: float,
+	player_position: Vector2,
+	visible_world: Rect2,
+	maximum_distance: float
+) -> bool:
+	if source_is_visible(position, radius, visible_world):
+		return false
+	var maximum := maxf(0.0, maximum_distance)
+	return position.distance_squared_to(player_position) <= maximum * maximum
 
 
 static func telegraph_mode(

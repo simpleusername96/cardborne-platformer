@@ -3,6 +3,10 @@ extends SceneTree
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 const MinimapMeshBuilder = preload("res://scripts/ui/vehicle_minimap_mesh_builder.gd")
 const RetainedMinimapMesh = preload("res://scripts/ui/vehicle_retained_minimap_mesh.gd")
+const ThreatRadar = preload("res://scripts/ui/vehicle_threat_radar.gd")
+const CombatCuePolicy = preload(
+	"res://scripts/presentation/components/vehicle_combat_cue_policy.gd"
+)
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const VehicleRun = preload("res://scripts/vehicle/vehicle_run.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
@@ -451,6 +455,38 @@ func _initialize() -> void:
 	await _validate_upgrade_matrix(ui)
 	await _validate_text_scale_probe(ui)
 	_validate_owner_boundaries()
+	var radar_contract := ui.debug_threat_radar_contract()
+	_expect(
+		int(radar_contract["sector_count"]) == 12
+			and bool(radar_contract["nearby_enemy_contact"])
+			and not bool(radar_contract["nearby_enemy_triangle"])
+			and Dictionary(radar_contract["contact_priorities"]) == {
+				"incoming_attack":3, "boss_arrival":2, "nearby_enemy":1,
+			},
+		"threat radar keeps 12 sectors and the 3/2/1 contact hierarchy"
+	)
+	var radar := ThreatRadar.new()
+	var shared_sector := radar.debug_aggregate_contacts([
+		{"offset":Vector2(800.0, 20.0), "kind":CombatCuePolicy.CONTACT_NEARBY_ENEMY},
+		{"offset":Vector2(850.0, 10.0), "kind":CombatCuePolicy.CONTACT_BOSS_ARRIVAL, "readiness":1.0},
+		{"offset":Vector2(900.0, 0.0), "kind":CombatCuePolicy.CONTACT_INCOMING_ATTACK, "readiness":0.4},
+	])
+	_expect(
+		shared_sector.size() == 1
+			and StringName(shared_sector[0]["kind"])
+				== CombatCuePolicy.CONTACT_INCOMING_ATTACK
+			and int(shared_sector[0]["count"]) == 3
+			and is_equal_approx(float(shared_sector[0]["readiness"]), 0.4),
+		"the winning radar kind owns sector color/readiness while density still accumulates"
+	)
+	var radar_mesh: ArrayMesh = radar._build_threat_mesh(
+		Vector2(640.0, 360.0), shared_sector, 1200.0
+	)
+	_expect(
+		radar_mesh != null and radar_mesh.get_surface_count() == 1,
+		"mixed radar pressure compiles into one bounded mesh surface"
+	)
+	radar.free()
 	var tactical_mesh := MinimapMeshBuilder.build({
 		"cols":13,
 		"rows":6,
@@ -459,10 +495,13 @@ func _initialize() -> void:
 		"player":Vector2(2600.0, 1100.0),
 		"player_facing":Vector2.RIGHT,
 		"markers":[
-			{"kind":&"item", "position":Vector2(2300.0, 1000.0), "discovered":true},
-			{"kind":&"enemy", "position":Vector2(2800.0, 1200.0), "discovered":true},
-			{"kind":&"boss", "position":Vector2(3300.0, 900.0), "discovered":true},
-			{"kind":&"facility", "position":Vector2(3700.0, 1400.0), "discovered":true},
+			{"kind":&"field_pickup", "position":Vector2(900.0, 650.0), "discovered":true},
+			{"kind":&"reward_crate", "position":Vector2(1500.0, 650.0), "discovered":true},
+			{"kind":&"mystery_device", "position":Vector2(2100.0, 650.0), "discovered":true},
+			{"kind":&"mobile_enemy", "position":Vector2(2700.0, 650.0), "discovered":true},
+			{"kind":&"priority_enemy", "position":Vector2(3300.0, 650.0), "discovered":true},
+			{"kind":&"boss", "position":Vector2(3900.0, 650.0), "discovered":true},
+			{"kind":&"reinforcement_facility", "position":Vector2(4500.0, 1500.0), "discovered":true},
 		],
 	}, Vector2(176.0, 108.0))
 	_expect(tactical_mesh != null, "tactical minimap compiles a dynamic marker mesh")
@@ -473,15 +512,21 @@ func _initialize() -> void:
 	var minimap_palette := MinimapMeshBuilder.dynamic_colors()
 	var marker_sizes := MinimapMeshBuilder.marker_size_contract()
 	_expect(
-		is_equal_approx(float(marker_sizes["enemy_outer"]), 4.0)
-			and is_equal_approx(float(marker_sizes["enemy_inner"]), 2.6)
+		is_equal_approx(float(marker_sizes["mobile_enemy_outer"]), 4.0)
+			and is_equal_approx(float(marker_sizes["mobile_enemy_inner"]), 2.6)
+			and is_equal_approx(float(marker_sizes["priority_enemy_outer"]), 6.2)
+			and is_equal_approx(float(marker_sizes["priority_enemy_inner"]), 4.3)
 			and is_equal_approx(float(marker_sizes["boss_outer"]), 10.0)
 			and is_equal_approx(float(marker_sizes["boss_inner"]), 7.6),
-		"minimap makes ordinary enemies smaller and the boss substantially larger"
+		"minimap preserves the mobile, priority, and boss size hierarchy"
 	)
 	_expect(
-		UiGlyphCatalog.minimap_ids() == [&"player", &"item", &"enemy", &"boss", &"facility"],
-		"minimap exposes five semantic marker roles including the reinforcement facility"
+		UiGlyphCatalog.minimap_ids() == [
+			&"player", &"field_pickup", &"reward_crate", &"mystery_device",
+			&"mobile_enemy", &"priority_enemy", &"boss",
+			&"reinforcement_facility",
+		],
+		"minimap exposes exactly eight bounded semantic roles"
 	)
 	var retained_snapshot := {
 		"cols":13,
@@ -491,10 +536,13 @@ func _initialize() -> void:
 		"player":Vector2(2600.0, 1100.0),
 		"player_facing":Vector2.RIGHT,
 		"markers":[
-			{"kind":&"item", "position":Vector2(1800.0, 900.0), "discovered":true},
-			{"kind":&"enemy", "position":Vector2(2600.0, 900.0), "discovered":true},
-			{"kind":&"boss", "position":Vector2(3400.0, 900.0), "discovered":true},
-			{"kind":&"facility", "position":Vector2(4000.0, 1200.0), "discovered":true},
+			{"kind":&"field_pickup", "position":Vector2(900.0, 700.0), "discovered":true},
+			{"kind":&"reward_crate", "position":Vector2(1500.0, 700.0), "discovered":true},
+			{"kind":&"mystery_device", "position":Vector2(2100.0, 700.0), "discovered":true},
+			{"kind":&"mobile_enemy", "position":Vector2(2700.0, 700.0), "discovered":true},
+			{"kind":&"priority_enemy", "position":Vector2(3300.0, 700.0), "discovered":true},
+			{"kind":&"boss", "position":Vector2(3900.0, 700.0), "discovered":true},
+			{"kind":&"reinforcement_facility", "position":Vector2(4500.0, 1400.0), "discovered":true},
 		],
 	}
 	var retained_map := RetainedMinimapMesh.new(Vector2(176.0, 108.0))
@@ -516,6 +564,7 @@ func _initialize() -> void:
 	_expect(
 		int(cleared_counts.get(Art.DANGER.to_rgba32(), 0)) == 0
 			and int(cleared_counts.get(Art.SUPPORT.to_rgba32(), 0)) == 0
+			and int(cleared_counts.get(Art.TEXT_MUTED.to_rgba32(), 0)) == 0
 			and int(cleared_counts.get(Art.BOSS_COMMAND.to_rgba32(), 0)) == 0
 			and int(cleared_counts.get(Art.MUSTARD_DARK.to_rgba32(), 0)) == 0,
 		"retained minimap clears channels that leave the snapshot"
@@ -523,7 +572,7 @@ func _initialize() -> void:
 	var pressure_markers: Array[Dictionary] = []
 	for index in EnemyStore.MAX_LIVE_HOSTILES:
 		pressure_markers.append({
-			"kind":&"enemy",
+			"kind":&"mobile_enemy",
 			"position":Vector2(
 				300.0 + float(index % 32) * 140.0,
 				300.0 + float(index / 32) * 140.0
@@ -550,7 +599,7 @@ func _initialize() -> void:
 	var all_marker_retained := int(all_marker_counts.get(danger_key, 0))
 	_expect(
 		pressure_markers.size() == EnemyStore.MAX_LIVE_HOSTILES
-			and all_marker_compiled.size() > 3500
+			and all_marker_compiled.size() > 1500
 			and all_marker_compiled.size()
 				<= int(all_marker_contract["vertices_per_color"])
 			and all_marker_retained == all_marker_compiled.size(),
