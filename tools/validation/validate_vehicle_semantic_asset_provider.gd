@@ -37,6 +37,7 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"world/surface_detail_stain",
 	&"world/surface_detail_embedded_chip",
 	&"effect/emp_release",
+	&"effect/thermal_burst_impact",
 	&"cue/health_bar_frame_9",
 	&"cue/ring",
 	&"cue/beam_strip_9",
@@ -56,7 +57,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 70, "all 67 gameplay PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 71, "all 68 gameplay PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in ids:
@@ -86,9 +87,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 70
+		int(manifest.get("final_asset_count", 0)) == 71
 			and not manifest.has("animations"),
-		"manifest declares 70 static authored images and no frame animations"
+		"manifest declares 71 static authored images and no frame animations"
 	)
 	_validate_surface_details()
 	_validate_map_object_content_rects()

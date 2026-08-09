@@ -10,9 +10,8 @@ style reference only, never asset approval.
 
 ## Ownership
 
-- `gameplay/asset-manifest.json` explicitly indexes 57 gameplay PNGs: the
-  approved 49 persistent images plus 2 shared world-presentation textures and
-  6 shared world-space combat-cue textures.
+- `gameplay/asset-manifest.json` explicitly indexes 71 gameplay images: 68
+  approved PNGs plus 3 approved deterministic SurfaceDetail SVGs.
 - All non-beam projectiles reuse `projectile/energy_teardrop`. Runtime owns
   rotation, scale, faction or affinity tint, collision, cadence, range, homing,
   and damage.
@@ -22,8 +21,9 @@ style reference only, never asset approval.
   `boss/node_resolved`; gameplay retains module kind, index, health, and state.
 - Repair and overdrive are complete circular authored pads. Gameplay owns their
   live radii, and presentation scales the pad to the live footprint.
-- `effect/emp_release` is the only authored raster effect. Runtime owns its
-  live-radius scale and short fade.
+- `effect/emp_release` and `effect/thermal_burst_impact` are the only authored
+  raster effects. Runtime owns their live-radius scale and short fade; Thermal
+  is emitted only for an eligible direct player-primary enemy contact.
 - HUD and minimap UI remain code-native. World-space combat cues, telegraphs,
   beams, and live-radius presentation reuse shared authored PNGs while runtime
   retains their position, dimensions, tint, alpha, readiness, and batching.

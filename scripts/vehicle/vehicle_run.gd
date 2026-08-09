@@ -3796,6 +3796,11 @@ func _add_effect(
 	if not VisualEventCatalog.has_event(kind):
 		push_error("Unknown transient visual event: %s" % kind)
 		return
+	if kind == EffectStore.THERMAL_BURST_IMPACT_KIND:
+		effect_store.add_thermal_burst_impact(
+			position, color, duration, radius
+		)
+		return
 	effect_store.add(
 		kind,
 		position,
@@ -4194,6 +4199,13 @@ func _apply_thermal_burst(
 	if profile == null or not profile.thermal_enabled:
 		return
 	var radius := profile.thermal_burst_radius
+	_add_effect(
+		&"thermal_burst_impact",
+		center,
+		Color.WHITE,
+		0.18,
+		radius
+	)
 	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
 		if (

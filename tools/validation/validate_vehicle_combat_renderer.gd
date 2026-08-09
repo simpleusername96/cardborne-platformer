@@ -147,6 +147,10 @@ func _run() -> void:
 		1.0
 	)
 	rendered_effect.time = 0.5
+	var thermal_effect = effect_store.add_thermal_burst_impact(
+		Vector2(420.0, 320.0), Color.WHITE, 0.18, 84.0
+	)
+	thermal_effect.time = 0.18
 	var presentation := {
 		"zones":[], "player_position":Vector2(260.0,300.0),
 		"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
@@ -161,6 +165,32 @@ func _run() -> void:
 		Rect2(0,0,1280,720),
 		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
 		presentation
+	)
+	var thermal_draws := renderer.debug_semantic_texture_draws(
+		&"effect/thermal_burst_impact"
+	)
+	_expect(
+		thermal_draws.size() == 1
+		and Vector2(thermal_draws[0]["position"]) == Vector2(420.0, 320.0)
+		and is_equal_approx(float(thermal_draws[0]["radius"]), 84.0 * 0.72)
+		and Color(thermal_draws[0]["modulate"]).is_equal_approx(Color.WHITE),
+		"Thermal receipt begins at the approved bounded scale with full authored color"
+	)
+	thermal_effect.time = 0.09
+	renderer.sync(
+		enemies, projectiles, hostile_projectiles, shards, effect_store.live,
+		Rect2(0,0,1280,720),
+		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
+		presentation
+	)
+	thermal_draws = renderer.debug_semantic_texture_draws(
+		&"effect/thermal_burst_impact"
+	)
+	_expect(
+		thermal_draws.size() == 1
+		and is_equal_approx(float(thermal_draws[0]["radius"]), 84.0)
+		and is_equal_approx(Color(thermal_draws[0]["modulate"]).a, 0.5),
+		"Thermal receipt reaches its gameplay radius while fading over 0.18 seconds"
 	)
 	snapshot = renderer.debug_snapshot()
 	var status_enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D

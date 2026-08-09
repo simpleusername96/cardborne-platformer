@@ -99,6 +99,75 @@ func _initialize() -> void:
 	)
 
 	store.clear()
+	for index in EffectStore.MAX_LIVE_THERMAL_IMPACTS:
+		var impact = store.add_thermal_burst_impact(
+			Vector2(float(index), 12.0), Color.WHITE, 0.18, 72.0
+		)
+		impact.time = 0.01 if index == 0 else 0.18
+	var recycled = store.add_thermal_burst_impact(
+		Vector2(999.0, 12.0), Color.WHITE, 0.18, 96.0
+	)
+	var thermal_snapshot := store.debug_snapshot()
+	var oldest_thermal_survived := false
+	for state in store.live:
+		oldest_thermal_survived = (
+			oldest_thermal_survived or state.pos == Vector2(0.0, 12.0)
+		)
+	_expect(
+		recycled != null
+		and store.count_kind(EffectStore.THERMAL_BURST_IMPACT_KIND)
+			== EffectStore.MAX_LIVE_THERMAL_IMPACTS
+		and not oldest_thermal_survived
+		and int(thermal_snapshot["thermal_recycles"]) == 1,
+		"the twenty-fifth Thermal receipt recycles only the oldest Thermal state"
+	)
+
+	store.clear()
+	store.add(&"player_emp_charge", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	store.add(&"player_emp_release", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	for index in 22:
+		store.add_thermal_burst_impact(
+			Vector2(float(index), 20.0), Color.WHITE, 0.18, 84.0
+		)
+	for index in EffectStore.MAX_LIVE_EFFECTS - 24:
+		store.add(
+			&"fixture_priority", Vector2(float(index), 30.0),
+			Color.WHITE, 1.0, 10.0
+		)
+	var full_recycled = store.add_thermal_burst_impact(
+		Vector2(1000.0, 20.0), Color.WHITE, 0.18, 84.0
+	)
+	_expect(
+		full_recycled != null
+		and store.live.size() == EffectStore.MAX_LIVE_EFFECTS
+		and store.count_kind(&"player_emp_charge") == 1
+		and store.count_kind(&"player_emp_release") == 1
+		and store.count_kind(EffectStore.THERMAL_BURST_IMPACT_KIND) == 22
+		and store.validate_capacity(),
+		"a full store recycles Thermal while preserving both EMP states and total capacity"
+	)
+
+	store.clear()
+	store.add(&"player_emp_charge", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	store.add(&"player_emp_release", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	for index in EffectStore.MAX_LIVE_EFFECTS - 2:
+		store.add(
+			&"fixture_priority", Vector2(float(index), 40.0),
+			Color.WHITE, 1.0, 10.0
+		)
+	var rejected_thermal = store.add_thermal_burst_impact(
+		Vector2(1000.0, 40.0), Color.WHITE, 0.18, 72.0
+	)
+	_expect(
+		rejected_thermal == null
+		and store.live.size() == EffectStore.MAX_LIVE_EFFECTS
+		and store.count_kind(&"player_emp_charge") == 1
+		and store.count_kind(&"player_emp_release") == 1
+		and int(store.debug_snapshot()["rejected_thermal_capacity"]) == 1,
+		"Thermal drops its cosmetic receipt when a full store has no Thermal state to recycle"
+	)
+
+	store.clear()
 	for iteration in 2048:
 		store.add(
 			&"soak",

@@ -360,6 +360,7 @@ func debug_semantic_texture_draws(asset_id: StringName = &"") -> Array[Dictionar
 			"position":texture_draw.position,
 			"angle":texture_draw.angle,
 			"radius":texture_draw.radius,
+			"modulate":texture_draw.modulate,
 		})
 	return result
 
@@ -1095,6 +1096,17 @@ func _sync_effects(effects: Array[EffectState], visible_world: Rect2) -> void:
 				position,
 				0.0,
 				radius,
+				color
+			)
+			continue
+		if mode == &"authored_thermal":
+			var scale_progress := clampf(progress / 0.45, 0.0, 1.0)
+			var impact_radius := radius * lerpf(0.72, 1.0, scale_progress)
+			_queue_semantic_texture(
+				StringName(event.get("asset", &"effect/thermal_burst_impact")),
+				position,
+				0.0,
+				impact_radius,
 				color
 			)
 			continue

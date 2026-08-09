@@ -14,6 +14,7 @@ const GROUPS := [
 			&"player_dash_afterimage",
 			&"player_emp_charge",
 			&"player_emp_release",
+			&"thermal_burst_impact",
 		],
 	},
 ]
@@ -38,8 +39,12 @@ static func validate() -> PackedStringArray:
 			authored_effects += 1
 			if StringName(descriptor.get("asset", &"")) != &"effect/emp_release":
 				errors.append("authored EMP event uses the wrong asset: %s" % event_id)
+		if mode == &"authored_thermal":
+			authored_effects += 1
+			if StringName(descriptor.get("asset", &"")) != &"effect/thermal_burst_impact":
+				errors.append("authored Thermal event uses the wrong asset: %s" % event_id)
 		if not captured.has(event_id):
 			errors.append("transient event has no capture fixture: %s" % event_id)
-	if authored_effects != 1:
-		errors.append("exactly one event must request the authored EMP raster")
+	if authored_effects != 2:
+		errors.append("exactly one EMP and one Thermal event must request authored rasters")
 	return errors

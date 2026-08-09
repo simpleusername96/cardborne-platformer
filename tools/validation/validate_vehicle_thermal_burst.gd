@@ -39,11 +39,22 @@ func _run() -> void:
 	_expect(is_equal_approx(boss_before - boss.health, 0.6), "burst reaches bosses through the raised shield multiplier")
 	_expect(structure.health == structure_before, "burst excludes fixed structures")
 	_expect(far.health == far_before, "burst stops outside its radius")
-	_expect(run.effects.size() == effect_count_before, "burst adds no live effect object")
+	_expect(
+		run.effects.size() == effect_count_before + 1
+		and run.effects[-1].kind == &"thermal_burst_impact"
+		and run.effects[-1].pos == center
+		and is_equal_approx(run.effects[-1].duration, 0.18)
+		and is_equal_approx(run.effects[-1].radius, 72.0),
+		"burst adds one bounded radius-scaled receipt at the direct contact"
+	)
 	run.boss_shield_runtime.lower_after_direct_attack()
 	boss_before = boss.health
 	run.call("_apply_thermal_burst", direct, center, profile)
 	_expect(is_equal_approx(boss_before - boss.health, 4.0), "exposed bosses receive full burst damage")
+	_expect(
+		run.effects.size() == effect_count_before + 2,
+		"each eligible direct contact adds one receipt without adding splash receipts"
+	)
 	var telemetry: Dictionary = run.stage_telemetry.stage_snapshot()
 	_expect(
 		is_equal_approx(float(telemetry["outgoing"][&"thermal_burst"]), 12.6)

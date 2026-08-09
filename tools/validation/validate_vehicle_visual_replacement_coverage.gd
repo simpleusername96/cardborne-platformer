@@ -32,6 +32,7 @@ const EXPECTED_EVENT_IDS := [
 	"player_dash_afterimage",
 	"player_emp_charge",
 	"player_emp_release",
+	"thermal_burst_impact",
 ]
 
 var _failures: Array[String] = []
@@ -40,8 +41,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 70,
-		"gameplay manifest declares 67 PNGs plus three approved SurfaceDetail SVGs"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 71,
+		"gameplay manifest declares 68 PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(int(family_counts.get("upgrade", 0)) == 10, "gameplay manifest declares ten shared upgrade rasters")
@@ -56,15 +57,17 @@ func _initialize() -> void:
 		"gameplay manifest contains no raster frame animations"
 	)
 	var authored_effects := []
+	var authored_effect_ids := {}
 	for asset_variant in Array(gameplay_manifest.get("assets", [])):
 		var asset := Dictionary(asset_variant)
 		if StringName(asset.get("category", &"")) == &"effect":
 			authored_effects.append(asset)
+			authored_effect_ids[StringName(asset.get("id", &""))] = true
 	_expect(
-		authored_effects.size() == 1
-			and StringName(Dictionary(authored_effects[0]).get("id", &""))
-				== &"effect/emp_release",
-		"EMP is the only authored raster effect"
+		authored_effects.size() == 2
+			and authored_effect_ids.has(&"effect/emp_release")
+			and authored_effect_ids.has(&"effect/thermal_burst_impact"),
+		"EMP release and Thermal Burst impact are the only authored raster effects"
 	)
 
 	if not FileAccess.file_exists(EVENT_CATALOG_PATH):
@@ -105,6 +108,7 @@ func _validate_event_catalog() -> void:
 		&"hull_afterimage":1,
 		&"live_emp_radius":1,
 		&"authored_emp":1,
+		&"authored_thermal":1,
 	}
 	var mode_counts := {}
 	_expect(
@@ -130,10 +134,17 @@ func _validate_event_catalog() -> void:
 						== &"effect/emp_release",
 				"only EMP release requests the authored EMP raster"
 			)
+		elif mode == &"authored_thermal":
+			_expect(
+				event_id == &"thermal_burst_impact"
+					and StringName(event.get("asset", &""))
+						== &"effect/thermal_burst_impact",
+				"only Thermal direct contacts request the authored impact raster"
+			)
 		else:
 			_expect(
 				not event.has("asset"),
-				"non-EMP event does not request an authored raster: %s" % event_id
+				"code-native event does not request an authored raster: %s" % event_id
 			)
 	for mode in expected_mode_counts:
 		_expect(

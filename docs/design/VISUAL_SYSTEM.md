@@ -638,8 +638,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- active SurfaceDetail plan 완료 뒤 final gameplay manifest가 정확히 70 image를
-  색인함: 현재 gameplay PNG 67개와 user-approved SurfaceDetail SVG 3개다.
+- active Thermal impact plan 완료 뒤 final gameplay manifest가 정확히 71 image를
+  색인함: gameplay PNG 68개와 user-approved SurfaceDetail SVG 3개다.
   전용 hostile bolt와 reinforcement facility를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
