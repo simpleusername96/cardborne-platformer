@@ -28,7 +28,7 @@ top-center HUD, makes elemental upgrades show their real current-to-next values,
 nearby-enemy direction cues, differentiates minimap roles, makes Electric Field show its complete
 damage area without reading as a shield, adds bounded elemental hit feedback, and stops the boss
 shield from masking authored boss bodies. The
-verified implementation baseline for this revision is `b9a41aee`; current HEAD
+verified implementation baseline for this corrective revision is `ca8212f8`; current HEAD
 still has no eligible native/Web release-performance qualification, so the exact final workload is
 measured once after all remaining behavior and visual work is complete.
 
@@ -103,6 +103,14 @@ In scope:
   Toxin/Cryo application and persistent status tint as a same-size, actor-alpha-clipped overlay
   composed through retained enemy-batch data. Do not add one node, raster, material, or timer object
   per affected enemy.
+- Correct the post-integration Toxin/Cryo visibility defect without changing status damage, slow,
+  duration, stack, or expiry rules. Use one shader material shared by all retained enemy and boss
+  actor batches, carry color/mix through existing per-instance buffer uploads, queue the application
+  pulse behind direct-hit flash, and prevent Toxin DOT ticks from restarting generic hit flash.
+- Publish already-authored ordinary arrival cue positions as bounded direction-only threat-radar
+  receipts during their cue lead and short post-birth hold. Reuse the dim no-triangle
+  `nearby_enemy` arc; do not add an exact coordinate, new marker identity, spawn trigger, or world
+  telegraph.
 - Reduce the shared boss-shield overlay's visual dominance and give the boss minimap marker a
   command-color notched shape. Preserve the five existing authored boss PNG identities.
 - Diagnose the reported hitch from eligible evidence and make only an evidence-selected,
@@ -163,6 +171,10 @@ Constraints and invariants:
   enemy instance colors with the authored body alpha acting as the exact overlay mask. Thermal
   impact uses the fixed 96-state effect store with a
   dedicated live cosmetic sub-limit and must never evict EMP charge/release state.
+- Ordinary-arrival radar receipts are presentation-only. They use at most eight preallocated
+  position/lifetime slots, publish at the existing five-hertz radar cadence, clamp positions beyond
+  1,200 units to direction-only range, and never affect encounter elapsed time, packet admission,
+  birth position, active slots, or actor state.
 - The five images under
   `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/`
   and three alternatives under
@@ -237,6 +249,8 @@ Exact actions requiring owner or user approval:
 | Minimap role collapse | Snapshot creation emits pickups, crates, and intact Mystery Devices as `item`; mobile and fixed ordinary enemies as `enemy`; builder supports only item/enemy/boss/facility plus player. The large neutral Mystery Device can therefore disappear into pickup semantics. Boss differs mainly by size. | `VehicleRun._minimap_snapshot/_runtime_minimap_snapshot`; `VehicleMinimapMeshBuilder`; UI glyph catalog | Use eight bounded roles: player, field pickup, reward crate, Mystery Device, mobile enemy, fixed priority enemy, boss, and reinforcement facility. Distinguish shape as well as semantic color; keep Mystery Device outcome hidden; use one notched command-magenta boss marker instead of arbitrary per-stage colors. | 8.1, 8.3-8.4 |
 | Electric Field area and shield collision | `VehicleSecondaryRuntime` damages every eligible enemy whose body overlaps radii `120/140/160` at a `0.25s` tick and passes line of sight. `VehicleCombatRenderer` duplicates those radii in `ELECTRIC_FIELD_RADII` and draws only a Mint `cue/ring` at alpha `0.48`. Player barrier and enemy shields use the same Mint ring family, so the damage field reads as protection and its interior is visually empty. | `data/weapons/vehicle/secondary/electric_field.tres`; `scripts/player/vehicle_secondary_runtime.gd`; `scripts/presentation/vehicle_combat_renderer.gd`; `30-boss-04-stage-4-active.png` | Make the secondary definition/snapshot the single radius source. Draw one low-alpha Arc-purple filled disk below actors at `120/140/160`, with one restrained broken perimeter and at most four broad internal planes. The disk represents the field volume; damage still begins when an enemy body overlaps it. Do not reuse Mint/support shield geometry or create a second collision owner. | 8.1, 9.4, 9.6 |
 | Projectile affinity and persistent status feedback | Player-primary projectile tint already follows Thermal/Toxin/Cryo; Seeker and hostile bolt intentionally keep authored identities. Generic enemy hit feedback is a short common flash. Renderer input does not expose Toxin/Chill stacks or application time, so persistent status has no direct body feedback. | `VehicleCombatRenderer`; `VehicleAttackContract`; `VehicleStatusRuntime`; current renderer/status validators | Preserve primary-only affinity tint and Seeker identity. Publish bounded status stack ratios plus one application pulse receipt in the enemy presentation frame. Visually treat the actor's authored alpha as an exact same-size overlay mask: no enlarged silhouette, perimeter, halo, or external geometry. Generic damage flash wins briefly, then the Toxin/Cryo body overlay returns. Reduced motion removes the pulse change but preserves the static overlay. | 9.2-9.3, 9.6 |
+| Toxin/Cryo post-integration visibility regression | Phase 9 publishes correct stack scalars, but `_enemy_body_modulate()` linearly folds low-alpha status color into instance modulation. Godot then multiplies that result by the danger-red actor texture, so green/blue barely changes rendered pixels. The function returns early for the 0.11-second direct-hit flash while the 0.16-second pulse keeps expiring, and every 0.25-second Toxin DOT call restarts generic flash. The capture fixture injects scalars and does not reproduce this damage path. | `scripts/presentation/vehicle_combat_renderer.gd`; `scripts/combat/vehicle_status_runtime.gd`; `scripts/vehicle/vehicle_run.gd`; `scripts/vehicle/vehicle_run_capture_gateway.gd`; rendered application/persistent/expired pixel comparison on `ca8212f8` | Keep one actor draw and the authored alpha/transform/scale. Add one shared CanvasItem shader to enemy/boss batches and pack one semantic status color plus mix weight in per-instance custom data. Preserve large texture planes through luminance-aware colorization. Static stack weights are `0.66/0.76/0.84`; the queued application pulse may reach `0.94` after direct flash. Direct damage keeps the common flash; Toxin DOT damage explicitly does not start it. Reduced motion keeps only the static weight. | 9.7, 9.9 |
+| Ordinary spawn timing perception | Every ordinary packet trigger is time/event scheduler truth and the fixed-player encounter validator passes. Stage 1's first cue is admitted at 5.1 seconds and the first birth follows the 0.90-second lead. The allocator deliberately chooses 900-2400-unit off-screen positions, but `VehicleRun._update_encounter()` currently consumes each exact cue only as a non-positional sound. Bodies are culled until visible and `nearby_enemy` radar currently stops at 1,200 units. | `scripts/encounters/vehicle_encounter_runtime.gd`; `scripts/encounters/vehicle_spawn_allocator.gd`; `scripts/vehicle/vehicle_run.gd`; encounter/arrival/spawn validators | Preserve all scheduler and allocator rules. Store at most eight cue positions in preallocated scalar arrays for `visual_duration + 1.10s`; at the existing five-hertz radar publication, emit each as the existing dim, no-triangle `nearby_enemy` kind. Clamp farther offsets to the 1,200-unit boundary so the receipt conveys sector only, not distance or coordinate. Incoming attacks and boss arrival retain priority. | 9.8-9.9 |
 | Boss visual identity | Five boss variants already resolve separate authored PNGs. The shared large opaque magenta shield boundary masks their silhouette and makes them read alike. The minimap boss marker is a larger plain hexagon. | actor visual catalog; combat renderer; current boss captures; `boss-shield-readability-to-be.png` | Preserve all boss PNGs. Reduce shield fill/thickness/opacity to one restrained body-attached boundary, then validate all five at 1x and grayscale. Change only the minimap marker to a notched command shape. Open per-boss art replacement only if authored bodies remain indistinct after the shield fix. | 8.3-8.4, 9.5-9.6 |
 | TO-BE visual evidence | The latest production capture set is the Korean 87-image `beam-production-655e0ee2` set. It predates `b9a41aee` only by documentation/workbench and Thermal-copy changes. Five progression/readability edits and three later HUD-density alternatives used the relevant current capture and the canonical sheet as actual referenced images. The first over-scaled combined HUD/field generation was rejected and not copied into the repository. The later alternatives proved that persistent build icons still consume attention and remain ambiguous when artwork is shared. | `docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/README.md`; `docs/design/visual-replacement-workbench/candidates/hud-progression-density-options-v1/README.md`; capture manifest; git diff `655e0ee2..b9a41aee`; user decision on 2026-08-09 | Keep all eight repository images as composition evidence only. The selected runtime contract is simpler than every icon-bearing alternative: zero top-center upgrade icons, hull plus XP only, and complete named build details in paused Ship Status. Runtime owners, exact copy, supported viewports, and task acceptance below remain binding; no generated pixels are production-approved. | 7.2-9.6 |
 
@@ -931,6 +945,73 @@ Batch gate:
   `<=200`, effect capacity remains `96`, and no partial visual-budget result is called a release-
   performance pass.
 
+### Phase 9A: Correct status visibility and make timed ordinary arrivals perceptible
+
+Goal: repair two verified presentation defects without changing elemental gameplay or encounter
+simulation: Toxin/Cryo must read on the actor body after a real hit, and a stationary player must
+receive a direction cue for scheduler-authored off-screen arrivals.
+
+Preconditions:
+
+- The authority-pair preflight for this corrective revision passes.
+- Phase 9's gameplay values, encounter schedule, spawn allocator, radar priorities, batch ceilings,
+  and no-extra-effect rules remain binding.
+
+Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`,
+`scripts/enemies/vehicle_enemy_state.gd`, `scripts/combat/vehicle_status_runtime.gd`,
+`scripts/presentation/vehicle_combat_renderer.gd`, one responsibility-shaped shared enemy-status
+CanvasItem shader, `scripts/vehicle/vehicle_run.gd`, capture gateway, and focused
+status/renderer/encounter/radar/Run validators
+
+- [ ] **9.7** Make Toxin/Cryo body color unmistakable after real hits.
+  - Change: separate base actor modulation from status composition. Enable custom data only on the
+    existing enemy and boss MultiMeshes and assign one shared CanvasItem shader that samples the
+    current actor texture, preserves its alpha and broad luminance planes, and colorizes within the
+    same pixels from packed semantic color/mix data. Use static stack weights `0.66/0.76/0.84` and
+    application maximum `0.94`. Add fixed per-status pulse-delay scalars to pooled enemy state;
+    application queues behind the current direct-hit flash for the full 0.16 seconds. Pass an
+    explicit no-flash flag for Toxin DOT damage so each 0.25-second tick does not hide the state.
+  - Accept: a real primary hit produces the common 0.11-second hit flash, then a full 0.16-second
+    semantic pulse and persistent stack color; Toxin DOT changes health without restarting generic
+    flash. Toxin and Cryo are visibly different from expired actors at 1x, stacks remain ordered,
+    reduced motion is static, pooled reuse clears all receipts, and actor alpha/footprint, draw
+    count, batch count, damage, slow, duration, telemetry, and lifesteal remain unchanged.
+  - Guard: the shared shader may add four floats only to enemy/boss instance records. It may not
+    add a second instance, draw, batch, node, texture, per-enemy material, particle, ring, outline,
+    or status Dictionary read in the renderer.
+- [ ] **9.8** Reuse ordinary arrival timing as a direction-only radar receipt.
+  - Change: when `_update_encounter()` receives its existing cue dictionaries, copy only
+    `birth_position` and `visual_duration + 1.10s` into an eight-slot preallocated receipt store.
+    Advance and clear that store on simulation/stage boundaries. At the existing five-hertz threat
+    publication, append off-screen receipts as `nearby_enemy`; clamp offsets beyond 1,200 units to
+    the boundary and retain the current 3/2/1 incoming/boss/nearby priority and no-triangle shape.
+  - Accept: with the player held fixed, the first Stage 1 cue appears from elapsed time alone,
+    publishes a dim sector arc before birth, survives through the packet's first/tail arrival, and
+    expires without stale contacts. Existing 900-2400/2800 birth distances, 0.90-second lead,
+    1.20-second window gap, 0.16-second unit spacing, active-cap reservations, spawn counts,
+    allocator determinism, minimap coordinates, and attack priorities are byte-for-byte or
+    value-for-value unchanged.
+  - Guard: no world route, exact coordinate, new contact kind, new triangle, toast, label, actor,
+    node, allocation scan, spawn trigger, or movement/proximity condition is added.
+- [ ] **9.9** Replace the misleading fixtures and collect focused rendered evidence.
+  - Change: make elemental capture drive the actual direct-damage-then-status order and include
+    post-flash application, persistent, reduced-motion, DOT, and expiry states. Make the existing
+    first-contact capture publish the real scheduler cue through the HUD radar. Extend focused
+    validators to assert shared-material/custom-buffer ownership, queued pulse timing, DOT no-flash,
+    eight-slot cue lifetime, fixed-player time trigger, distance clamping, expiry, and unchanged
+    contact priority.
+  - Accept: status, renderer, Run, encounter pacing, arrival scheduler, spawn allocation,
+    multi-sector spawn, attack-route readability, HUD layout, capture-driver, Godot parse/import,
+    and visual-authority checks pass. Original-size focused captures show a clear Toxin/Cryo vs
+    expired pixel delta and a dim no-triangle first-arrival sector while hull/XP/minimap remain
+    unchanged.
+
+Batch gate:
+
+- Enemy/boss status custom data retains the same actor batch count and one draw per existing
+  texture batch; ordinary-arrival feedback stays inside the existing retained radar mesh and
+  five-hertz publication. No result is described as a release-performance pass.
+
 ### Phase 10: Consolidate correctness, feel, export, and performance
 
 Goal: verify the exact final workload once, preserve causal evidence, and correct only a measured
@@ -1030,6 +1111,7 @@ scenarios, active performance policy/evidence records
 | Progression phase gate | Experience, upgrade catalog/system/presenter/UI, HUD presenter/layout, Ship Status/build snapshot, localization, stage transition, reward/audio, build/report, capture, and Run validators; repository search proves the acquired-upgrade rail has no live owner or validator | Phase 7 tasks pass | XP, reward transaction, offer compatibility, element values/copy, HUD geometry, Ship Status snapshot ownership, or localization changes |
 | HUD and minimap phase gate | Threat radar, combat cue policy, minimap builder/retained mesh, glyph catalog, HUD presenter/layout, capture, visual registry, visual authority, and Run validators | Phase 8 tasks pass | Contact sampling/priority, marker roles/geometry, HUD layout, or visual contract changes |
 | Combat-feedback phase gate | Element/status, secondary weapon, attack, effect store, damage feedback, renderer, boss, provider/manifest/workbench, capture, reduced motion, visual authority, and Run validators | Phase 9 tasks and exact Thermal approval pass | Effect source/hash/import, effect allocation, status snapshot/overlay, Electric Field geometry/radius, shield overlay, or capture changes |
+| Corrective feedback gate | Status, renderer, Run, encounter pacing, arrival scheduler, spawn allocation, multi-sector spawn, attack-route readability, HUD layout, capture-driver, Godot import, and visual authority | Phase 9A tasks pass | Status shader/buffer/timing, DOT feedback, encounter cue receipt, radar publication, capture fixture, or binding visual/product contract changes |
 | Export gate | `./tools/godot.ps1 --path . --headless --import`; `./tools/export_web.ps1`; require `WEB_EXPORT_OK` | Once after all feature phases and affected focused validators pass | An imported asset, export-affecting source, or project setting changes |
 | Native performance gate | Exact clean-commit `peak_horde` and `capacity_pressure` protocol in the prerequisite performance plan | Phase 1 baseline and Phase 10 final state, after user cost alignment | Workload/code/asset/instrumentation changes or a sample is invalid/red for a new evidence-backed hypothesis |
 | Web performance gate | Built-Web `peak_horde` on the `codex` lane with exact JSON capture | Native qualification passes and matching Web artifact exists | Native/build/asset/workload changes or the sample is invalid |
@@ -1073,7 +1155,8 @@ Validation rules:
 | The eight minimap roles are not distinct at 1x/grayscale | Revise marker silhouette inside the locked role set and retained mesh | Do not add per-archetype markers, hidden Mystery Device outcomes, arbitrary boss colors, labels, or a second minimap layer |
 | The exact Thermal impact candidate is rejected | Keep it outside production and regenerate one candidate from the same `192x192`, footprint, plane-count, and no-particle brief | Do not ship the mockup burst, generate an animation pack, author SVG geometry, or replace gameplay values |
 | Thermal impacts saturate the effect store | Recycle/drop Thermal cosmetic receipts within the 24-live sub-limit and preserve damage/EMP | Do not increase capacity, evict EMP, reduce attack activity, or suppress damage |
-| Toxin/Cryo overlay hides actor identity, escapes the actor alpha, or conflicts with hit flash | Lower only the locked overlay/pulse intensity and preserve same-size actor-alpha clipping and hit-flash priority in the existing batch | Do not add outlines, halos, enlarged silhouettes, rings, icons, per-enemy nodes, materials, or repeated strobe |
+| Toxin/Cryo colorization hides actor identity, escapes actor alpha, or still fails to separate from expired state | Adjust only the shared shader's locked luminance/color mix weights after focused rendered comparison; preserve one shared material, custom-data footprint, direct-flash priority, queued pulse, and same actor alpha/transform | Do not add outlines, halos, enlarged silhouettes, rings, icons, second instances/draws/batches, per-enemy nodes/materials, or repeated strobe |
+| Ordinary arrival arcs imply an exact location, obscure attacks, or outlive their packet | Reduce only the locked 1.10-second post-birth hold or dim `nearby_enemy` width/alpha and preserve offset clamping plus priority 1 | Do not alter packet triggers, cue lead, birth positions, counts, capacity, cadence, movement, add a new marker kind, or expose coordinates |
 | Electric Field reads as a shield or does not explain every damaging overlap | Correct only the field fill, broken perimeter, z-order, or radius-source wiring inside the locked Arc-purple full-disk contract | Do not restore the Mint ring, shrink the visual below `120/140/160`, change the enemy-body overlap rule, or add particles/glow |
 | Boss remains obscured after the exact alpha/radius retune | Stop the visual branch and open one shared boss-boundary raster workbench unit under the authority pair | Do not redraw boss bodies, change collision size, or create procedural replacement geometry |
 | A valid current sample is red | Select the largest evidenced owner from slow-frame/subsystem data and make one causal correction | No broad optimization pass and no claim based on historical or invalid samples |
@@ -1085,10 +1168,10 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 10 - Consolidate correctness, built-product QA, and performance evidence.
-- Next task: 1.2 - run the user-approved normal-play manual performance trace from the exact clean
-  current commit, then complete the Phase 10 correctness/Web matrix. Tasks 1.3-1.4 remain open
-  release-performance gates.
+- Current phase: Phase 9A - Correct status visibility and make timed ordinary arrivals perceptible.
+- Next task: 9.7 - replace multiplicative status tint with shared alpha-clipped batch composition,
+  then complete 9.8 arrival receipts and 9.9 focused evidence before returning to the still-open
+  Phase 10 performance tasks.
 - Last completed gate: the exact user-approved Thermal impact SHA-256
   `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904` is promoted and rendered
   with a 24-live sub-limit inside the fixed 96-state store and one retained render batch; the
