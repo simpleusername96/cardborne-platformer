@@ -92,6 +92,10 @@ const FULL_CAPTURE_FILES := [
 	"09g-electric-field-level-1.png",
 	"09h-electric-field-level-2.png",
 	"09i-electric-field-level-3.png",
+	"09j-thermal-burst-level-1.png",
+	"09k-thermal-burst-level-2.png",
+	"09l-thermal-burst-level-3.png",
+	"09m-thermal-burst-saturation-emp.png",
 	"10-field-drowned-ruin-field.png",
 	"10-field-storm-drydock-field.png",
 	"10-field-tidal-archive-field.png",
@@ -266,6 +270,7 @@ func run(gateway: RefCounted) -> void:
 			&"damage_feedback",
 			&"elemental_status_feedback",
 			&"electric_field_feedback",
+			&"thermal_burst_feedback",
 			&"collision_overlays",
 			&"all_bosses",
 		]:

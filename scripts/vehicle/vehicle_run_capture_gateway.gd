@@ -34,6 +34,7 @@ const GuidebookCatalog = preload(
 )
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
 const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const StageReportBuilder = preload(
@@ -123,6 +124,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_elemental_status_evidence()
 		&"electric_field_feedback":
 			await _capture_electric_field_evidence()
+		&"thermal_burst_feedback":
+			await _capture_thermal_burst_evidence()
 		&"collision_overlays":
 			await _capture_collision_overlay_evidence()
 		&"all_bosses":
@@ -1017,6 +1020,125 @@ func _capture_electric_field_evidence() -> void:
 		)
 
 
+func _capture_thermal_burst_evidence() -> void:
+	var file_prefixes := ["09j", "09k", "09l"]
+	for level_index in 3:
+		prepare_stage(1)
+		_run._clear_enemies()
+		_run._clear_projectiles()
+		_run._clear_effects()
+		_run.run_build.reset()
+		for _level in level_index + 1:
+			_run.run_build.apply(&"thermal_burst")
+		var profile := ElementProfile.from_build(_run.run_build)
+		var center: Vector2 = _run.player_position + Vector2(290.0, 0.0)
+		var direct: EnemyState = _run._make_enemy({
+			"id":"capture_thermal_direct_%d" % (level_index + 1),
+			"role":&"chaser",
+			"pos":center,
+			"active":true,
+		})
+		if direct != null:
+			direct.health_visible_timer = 0.0
+			_run._append_enemy(direct)
+		for crowd_index in 5:
+			var angle := TAU * float(crowd_index) / 5.0
+			var role := &"turret" if crowd_index == 4 else &"chaser"
+			var enemy: EnemyState = _run._make_enemy({
+				"id":"capture_thermal_crowd_%d_%d"
+					% [level_index + 1, crowd_index],
+				"role":role,
+				"pos":center + Vector2.RIGHT.rotated(angle)
+					* profile.thermal_burst_radius * 0.92,
+				"active":true,
+			})
+			if enemy == null:
+				continue
+			enemy.health_visible_timer = 0.0
+			_run._append_enemy(enemy)
+		_run._spawn_player_projectile(
+			center + Vector2(-128.0, -118.0),
+			Vector2.RIGHT,
+			1.0,
+			360.0,
+			0,
+			6.0,
+			1.0,
+			420.0,
+			profile
+		)
+		_run.capture_set_mode(&"paused")
+		await _settle_capture()
+		if direct != null:
+			_run._apply_thermal_burst(direct, center, profile)
+			direct.flash = 0.11
+		if not _run.effects.is_empty():
+			_run.effects[-1].time = 0.09
+		_refresh_combat_capture()
+		await _run.get_tree().process_frame
+		_save_capture(
+			"%s-thermal-burst-level-%d.png"
+			% [file_prefixes[level_index], level_index + 1]
+		)
+
+	prepare_stage(1)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	_run._clear_effects()
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_run._add_effect(
+		&"player_emp_charge", _run.player_position,
+		Art.BOSS_MAGENTA, 1.0, 142.0
+	)
+	_run._add_effect(
+		&"player_emp_release", _run.player_position,
+		Art.BOSS_MAGENTA, 1.0, 142.0
+	)
+	for impact_index in EffectStore.MAX_LIVE_THERMAL_IMPACTS:
+		var column := impact_index % 6
+		var row := impact_index / 6
+		var position: Vector2 = _run.player_position + Vector2(
+			-360.0 + float(column) * 144.0,
+			-216.0 + float(row) * 144.0
+		)
+		_run._add_effect(
+			&"thermal_burst_impact", position,
+			Color.WHITE, 0.18, 72.0
+		)
+		_run.effects[-1].time = 0.09
+	for fill_index in (
+		EffectStore.MAX_LIVE_EFFECTS
+		- EffectStore.MAX_LIVE_THERMAL_IMPACTS
+		- 2
+	):
+		_run._add_effect(
+			&"player_dash_afterimage",
+			Vector2(10000.0 + float(fill_index), 10000.0),
+			Color.WHITE,
+			1.0,
+			30.0,
+			Vector2.RIGHT
+		)
+	_run._add_effect(
+		&"thermal_burst_impact",
+		_run.player_position + Vector2(360.0, 216.0),
+		Color.WHITE,
+		0.18,
+		72.0
+	)
+	_run.effects[-1].time = 0.09
+	print(JSON.stringify({
+		"capture_group":"thermal_burst_saturation_emp",
+		"effect_store":_run.effect_store.debug_snapshot(),
+		"emp_charge":_run.effect_store.count_kind(&"player_emp_charge"),
+		"emp_release":_run.effect_store.count_kind(&"player_emp_release"),
+	}))
+	_refresh_combat_capture()
+	await _run.get_tree().process_frame
+	_save_capture("09m-thermal-burst-saturation-emp.png")
+
+
 func _capture_visual_event_evidence() -> void:
 	var colors := [Art.SYSTEM, Art.MUSTARD, Art.CORAL, Art.MINT]
 	for group_variant in VisualEventCaptureFixture.GROUPS:
@@ -1036,12 +1158,14 @@ func _capture_visual_event_evidence() -> void:
 			var direction := Vector2.RIGHT.rotated(
 				float(index) * TAU / maxf(1.0, float(event_ids.size()))
 			)
+			var event_id := StringName(event_ids[index])
 			_run._add_effect(
-				StringName(event_ids[index]),
+				event_id,
 				position,
-				colors[index % colors.size()],
+				Color.WHITE if event_id == &"thermal_burst_impact"
+				else colors[index % colors.size()],
 				1.0,
-				54.0,
+				72.0 if event_id == &"thermal_burst_impact" else 54.0,
 				direction,
 				18.0,
 				0.20
@@ -1341,6 +1465,24 @@ func _fit_camera_to_stage(bounds: Rect2) -> void:
 func _settle_capture() -> void:
 	for frame in 4:
 		await _run.get_tree().process_frame
+
+
+func _refresh_combat_capture() -> void:
+	## Transient evidence is staged after the world settles so its exact short
+	## mid-frame state is not consumed by capture-only wait frames.
+	_run._combat_renderer.sync(
+		_run.enemies,
+		_run.player_projectiles,
+		_run.hostile_projectiles,
+		_run.experience_runtime.shards,
+		_run.effects,
+		_run._visible_world_rect(0.0),
+		_run.player_position,
+		_run.run_time,
+		true,
+		_run._aim_target_id,
+		_run._runtime_combat_presentation_snapshot()
+	)
 
 
 func _save_capture(file_name: String) -> void:
