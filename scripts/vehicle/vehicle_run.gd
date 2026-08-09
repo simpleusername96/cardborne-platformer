@@ -5435,7 +5435,8 @@ func _combat_presentation_snapshot() -> Dictionary:
 
 func _runtime_combat_presentation_snapshot() -> Dictionary:
 	secondary_runtime.fill_presentation_snapshot(
-		_runtime_secondary_presentation_frame
+		_runtime_secondary_presentation_frame,
+		run_build
 	)
 	return _fill_combat_presentation_snapshot(
 		_runtime_combat_presentation_frame,
@@ -5480,7 +5481,6 @@ func _fill_combat_presentation_snapshot(
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
 	snapshot["run_time"] = run_time
 	snapshot["secondary_visual_tier"] = 0
-	snapshot["electric_field_level"] = run_build.level_of(&"electric_field")
 	snapshot["orbiting_blade_level"] = run_build.level_of(&"orbiting_blades")
 	snapshot["secondary"] = secondary
 	mystery_device_runtime.fill_device_snapshot(mystery_devices)

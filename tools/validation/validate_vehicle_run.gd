@@ -835,10 +835,10 @@ func _check_combat_presentation_frame(run) -> void:
 		"combat presentation borrows synchronous live collections without duplication"
 	)
 	_expect(
-		secondary.size() == 2
+		secondary.size() == 3
 			and not secondary.has("equipped")
 			and not secondary.has("seeker_cooldown"),
-		"runtime secondary state exposes only orbit and mine fields"
+		"runtime secondary state exposes only orbit, mine, and field-radius presentation fields"
 	)
 	_expect(
 			not is_same(oracle["protection_sources"], run.player_protection_sources)
@@ -892,7 +892,7 @@ func _presentation_snapshots_match(
 		"protection_sources", "muzzle_flash",
 		"barrier_strength", "reduced_motion", "run_time",
 		"secondary_visual_tier",
-		"electric_field_level", "orbiting_blade_level", "cursor_position",
+		"orbiting_blade_level", "cursor_position",
 	]:
 		if expected.get(key) != actual.get(key):
 			return false
@@ -903,7 +903,7 @@ func _presentation_snapshots_match(
 			return false
 	var expected_secondary := Dictionary(expected.get("secondary", {}))
 	var actual_secondary := Dictionary(actual.get("secondary", {}))
-	for key in ["orbit_angle", "mines"]:
+	for key in ["orbit_angle", "mines", "electric_field_radius"]:
 		if expected_secondary.get(key) != actual_secondary.get(key):
 			return false
 	return true

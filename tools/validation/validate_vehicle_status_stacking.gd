@@ -59,6 +59,11 @@ func _initialize() -> void:
 		StatusRuntime.apply(enemy, toxin_profile)
 	_expect(StatusRuntime.stack_count(enemy, &"poison") == 3, "selected toxin stacks to three")
 	_expect(StatusRuntime.stack_count(enemy, &"chill") == 0, "unselected chill is absent")
+	_expect(
+		is_equal_approx(enemy.toxin_stack_ratio, 1.0)
+			and is_equal_approx(enemy.toxin_application_pulse, 1.0),
+		"toxin publishes a bounded full-stack ratio and one application receipt"
+	)
 	var dot := StatusRuntime.tick(enemy, 0.25)
 	_expect(is_equal_approx(float(dot["poison"]), 1.5), "toxin DOT remains independent")
 	_expect(
@@ -74,6 +79,30 @@ func _initialize() -> void:
 	var boss_chill: Dictionary = boss.statuses[&"chill"]
 	_expect(is_equal_approx(float(boss_chill["magnitude_per_stack"]), 0.03), "boss chill magnitude is halved")
 	_expect(is_equal_approx(float(boss_chill["time"]), 1.0), "boss chill duration is halved")
+	_expect(
+		is_equal_approx(boss.cryo_stack_ratio, 1.0 / 3.0)
+			and is_equal_approx(boss.cryo_application_pulse, 1.0),
+		"boss Chill keeps gameplay halving separate from its one-stack presentation receipt"
+	)
+	var pulse_enemy := EnemyState.new()
+	StatusRuntime.apply(pulse_enemy, chill_profile)
+	StatusRuntime.tick(pulse_enemy, 0.08)
+	_expect(
+		is_equal_approx(pulse_enemy.cryo_application_pulse, 0.5),
+		"the normalized application receipt reaches half strength after 0.08 seconds"
+	)
+	StatusRuntime.tick(pulse_enemy, 0.08)
+	_expect(
+		is_zero_approx(pulse_enemy.cryo_application_pulse),
+		"the application receipt ends exactly after 0.16 seconds"
+	)
+	boss.reset_runtime_collections()
+	_expect(
+		boss.statuses.is_empty()
+			and is_zero_approx(boss.cryo_stack_ratio)
+			and is_zero_approx(boss.cryo_application_pulse),
+		"pooled enemy reset clears every status presentation scalar"
+	)
 	_finish()
 
 

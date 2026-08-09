@@ -140,15 +140,28 @@ func snapshot(build: VehicleRunBuild) -> Dictionary:
 		"orbit_angle":orbit_angle,
 		"mines":mines.duplicate(true),
 		"seeker_cooldown":seeker_cooldown,
+		"electric_field_radius":_electric_field_radius(build),
 	}
 
 
-func fill_presentation_snapshot(output: Dictionary) -> Dictionary:
+func fill_presentation_snapshot(
+	output: Dictionary,
+	build: VehicleRunBuild
+) -> Dictionary:
 	## Fills synchronous renderer scratch; mine state remains runtime-owned.
 	output.clear()
 	output["orbit_angle"] = orbit_angle
 	output["mines"] = mines
+	output["electric_field_radius"] = _electric_field_radius(build)
 	return output
+
+
+func _electric_field_radius(build: VehicleRunBuild) -> float:
+	var definition: VehicleSecondaryDefinition = definitions.get(&"electric_field")
+	if definition == null:
+		return 0.0
+	var level := build.level_of(definition.upgrade_id)
+	return definition.auxiliary(level) if level > 0 else 0.0
 
 
 func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:

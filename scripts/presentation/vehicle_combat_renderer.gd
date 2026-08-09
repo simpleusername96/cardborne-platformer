@@ -57,7 +57,8 @@ const CARDINAL_DIRECTIONS := [
 	Vector2.UP,
 	Vector2.DOWN,
 ]
-const ELECTRIC_FIELD_RADII := [120.0, 140.0, 160.0]
+const STATUS_STACK_ALPHA := [0.12, 0.16, 0.20]
+const STATUS_APPLICATION_ALPHA_MAX := 0.32
 const BEAM_STARTUP_BODY_ALPHA := Vector2(0.16, 0.34)
 const BEAM_STARTUP_FILAMENT_ALPHA := Vector2(0.32, 0.66)
 const BEAM_STARTUP_FILAMENT_WIDTH_MAX := 3.5
@@ -182,6 +183,7 @@ var _experience_batch: BatchHandle
 var _mystery_device_batches: Dictionary = {}
 var _reinforcement_facility_batch: BatchHandle
 var _mystery_effect_ring_batch: BatchHandle
+var _electric_field_batch: BatchHandle
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
 var _player_craft_body_batch: BatchHandle
@@ -228,7 +230,8 @@ func sync(
 	_semantic_texture_draw_count = 0
 	if active:
 		_sync_enemies(
-			enemies, visible_world, player_position, run_time, aim_target_id
+			enemies, visible_world, player_position, run_time, aim_target_id,
+			bool(presentation.get("reduced_motion", false))
 		)
 		_sync_projectiles(player_projectiles, &"player", visible_world)
 		_sync_projectiles(hostile_projectiles, &"enemy", visible_world)
@@ -337,6 +340,12 @@ func debug_snapshot() -> Dictionary:
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
 		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
 		"floating_damage_draw_count":0,
+		"electric_field_instance_count":_electric_field_batch.count,
+		"electric_field_radius":(
+			_electric_field_batch.buffer.values[0]
+			if _electric_field_batch.count > 0
+			else 0.0
+		),
 	}
 
 
@@ -449,6 +458,13 @@ func _build_batches() -> void:
 		&"mystery_effect_ring",
 		MYSTERY_DEVICE_CAPACITY
 	)
+	_electric_field_batch = _create_batch(
+		"ElectricField_area",
+		_build_electric_field_mesh(),
+		1,
+		-1,
+		&"electric_field_area"
+	)
 	_overlay_batches[&"health"] = _create_asset_batch(
 		"Overlay_health", &"cue/health_bar_frame_9", HEALTH_BAR_INSTANCE_CAPACITY, 3,
 		&"overlay_health", HEALTH_BAR_INSTANCE_CAPACITY
@@ -520,6 +536,73 @@ func _create_batch(
 	return handle
 
 
+static func _build_electric_field_mesh() -> Mesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var fill_color := Color(Art.ARC, 0.10)
+	var perimeter_color := Color(Art.ARC, 0.28)
+	var plane_color := Color(Art.ARC, 0.04)
+	var segment_count := 64
+	for index in segment_count:
+		var angle_a := TAU * float(index) / float(segment_count)
+		var angle_b := TAU * float(index + 1) / float(segment_count)
+		_append_colored_triangle(
+			surface,
+			Vector2.ZERO,
+			Vector2.RIGHT.rotated(angle_a) * 0.96,
+			Vector2.RIGHT.rotated(angle_b) * 0.96,
+			fill_color
+		)
+	for index in 48:
+		if index % 4 == 3:
+			continue
+		var angle_a := TAU * float(index) / 48.0
+		var angle_b := TAU * float(index + 1) / 48.0
+		var inner_a := Vector2.RIGHT.rotated(angle_a) * 0.96
+		var inner_b := Vector2.RIGHT.rotated(angle_b) * 0.96
+		var outer_a := Vector2.RIGHT.rotated(angle_a)
+		var outer_b := Vector2.RIGHT.rotated(angle_b)
+		_append_colored_quad(
+			surface, inner_a, outer_a, outer_b, inner_b, perimeter_color
+		)
+	for plane_index in 4:
+		var direction := Vector2.RIGHT.rotated(TAU * float(plane_index) / 4.0)
+		var lateral := direction.rotated(PI * 0.5) * 0.055
+		_append_colored_quad(
+			surface,
+			direction * 0.18 - lateral,
+			direction * 0.82 - lateral,
+			direction * 0.82 + lateral,
+			direction * 0.18 + lateral,
+			plane_color
+		)
+	return surface.commit()
+
+
+static func _append_colored_triangle(
+	surface: SurfaceTool,
+	a: Vector2,
+	b: Vector2,
+	c: Vector2,
+	color: Color
+) -> void:
+	for point in [a, b, c]:
+		surface.set_color(color)
+		surface.add_vertex(Vector3(point.x, point.y, 0.0))
+
+
+static func _append_colored_quad(
+	surface: SurfaceTool,
+	a: Vector2,
+	b: Vector2,
+	c: Vector2,
+	d: Vector2,
+	color: Color
+) -> void:
+	_append_colored_triangle(surface, a, b, c, color)
+	_append_colored_triangle(surface, a, c, d, color)
+
+
 func _create_asset_batch(
 	batch_name: String,
 	asset_id: StringName,
@@ -563,7 +646,8 @@ func _sync_enemies(
 	visible_world: Rect2,
 	player_position: Vector2,
 	run_time: float,
-	_aim_target_id: String
+	_aim_target_id: String,
+	reduced_motion: bool
 ) -> void:
 	_installation_health_candidate_count = 0
 	for enemy in enemies:
@@ -601,7 +685,7 @@ func _sync_enemies(
 			position,
 			angle,
 			Vector2.ONE * radius,
-			_enemy_body_modulate(enemy)
+			_enemy_body_modulate(enemy, reduced_motion)
 		)
 		if role == &"stage_boss" and _boss_health_bar_count < MAX_BOSS_HEALTH_BARS:
 			_sync_health_bar(
@@ -637,16 +721,52 @@ func _sync_enemies(
 	_installation_health_bar_count = _installation_health_candidate_count
 
 
-func _enemy_body_modulate(enemy: EnemyState) -> Color:
+func _enemy_body_modulate(
+	enemy: EnemyState,
+	reduced_motion: bool
+) -> Color:
 	if enemy.flash > 0.0:
 		return Color(1.0, 0.66, 0.66, 1.0)
+	var body_color := Color.WHITE
 	if enemy.role == &"mine" and enemy.phase == &"mine_armed":
-		return Art.IVORY_BRIGHT.lerp(Art.DANGER, 0.42)
-	if enemy.shielded:
-		return Color(0.72, 1.0, 0.88, 1.0)
-	if enemy.guard_plate_structure > 0.0:
-		return Color(0.82, 0.90, 1.0, 1.0)
-	return Color.WHITE
+		body_color = Art.IVORY_BRIGHT.lerp(Art.DANGER, 0.42)
+	elif enemy.shielded:
+		body_color = Color(0.72, 1.0, 0.88, 1.0)
+	elif enemy.guard_plate_structure > 0.0:
+		body_color = Color(0.82, 0.90, 1.0, 1.0)
+	var toxin_alpha := _status_overlay_alpha(
+		enemy.toxin_stack_ratio,
+		enemy.toxin_application_pulse,
+		reduced_motion
+	)
+	if toxin_alpha > 0.0:
+		body_color = body_color.lerp(Color(Art.TOXIN, 1.0), toxin_alpha)
+	var cryo_alpha := _status_overlay_alpha(
+		enemy.cryo_stack_ratio,
+		enemy.cryo_application_pulse,
+		reduced_motion
+	)
+	if cryo_alpha > 0.0:
+		body_color = body_color.lerp(Color(Art.CRYO, 1.0), cryo_alpha)
+	return body_color
+
+
+static func _status_overlay_alpha(
+	stack_ratio: float,
+	application_pulse: float,
+	reduced_motion: bool
+) -> float:
+	if stack_ratio <= 0.0:
+		return 0.0
+	var stack_index := clampi(ceili(stack_ratio * 3.0) - 1, 0, 2)
+	var persistent_alpha: float = STATUS_STACK_ALPHA[stack_index]
+	if reduced_motion:
+		return persistent_alpha
+	return lerpf(
+		persistent_alpha,
+		STATUS_APPLICATION_ALPHA_MAX,
+		clampf(application_pulse, 0.0, 1.0)
+	)
 
 
 func _installation_health_score(
@@ -759,7 +879,7 @@ func _sync_boss_core_overlay(
 ) -> void:
 	if enemy.boss_shield_state != &"shield_up":
 		return
-	_write_ring(position, radius + 12.0, Color(Art.BOSS_COMMAND, 0.90))
+	_write_ring(position, radius + 8.0, Color(Art.BOSS_COMMAND, 0.38))
 
 
 func _sync_projectiles(
@@ -1092,11 +1212,16 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			Art.PLAYER_VISUAL_RADIUS + 11.0 + barrier_flash * 3.0,
 			Color(Art.MINT, lerpf(0.78, 1.0, barrier_flash))
 		)
-	var electric_field_level := int(state.get("electric_field_level", 0))
-	if electric_field_level > 0:
-		var field_radius: float = ELECTRIC_FIELD_RADII[electric_field_level - 1]
-		_write_ring(player_position, field_radius, Color(Art.MINT, 0.48))
 	var secondary: Dictionary = state.get("secondary", {})
+	var field_radius := float(secondary.get("electric_field_radius", 0.0))
+	if field_radius > 0.0:
+		_write_instance(
+			_electric_field_batch,
+			player_position,
+			0.0,
+			Vector2.ONE * field_radius,
+			Color.WHITE
+		)
 	var orbiting_blade_level := int(state.get("orbiting_blade_level", 0))
 	if orbiting_blade_level > 0:
 		var blade_count: int = [2, 3, 4][orbiting_blade_level - 1]

@@ -7,6 +7,7 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
 
 const TICK_SECONDS := 0.25
+const APPLICATION_PULSE_SECONDS := 0.16
 const DOT_KINDS: Array[StringName] = [&"poison"]
 
 
@@ -18,6 +19,7 @@ static func apply(enemy: EnemyState, profile: VehicleElementProfile) -> void:
 			enemy, &"poison", profile.poison_dps_per_stack, profile.poison_duration,
 			profile.poison_max_stacks
 		)
+		enemy.toxin_application_pulse = 1.0
 	if profile.chill_enabled:
 		var boss_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
 		var status: Dictionary = enemy.statuses.get(&"chill", {
@@ -31,12 +33,23 @@ static func apply(enemy: EnemyState, profile: VehicleElementProfile) -> void:
 		status["stacks"] = mini(profile.chill_max_stacks, int(status["stacks"]) + 1)
 		status["max_stacks"] = profile.chill_max_stacks
 		enemy.statuses[&"chill"] = status
+		enemy.cryo_application_pulse = 1.0
+	_sync_presentation_scalars(enemy)
 
 
 static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 	var statuses := enemy.statuses
 	var damage := {"poison":0.0}
+	enemy.toxin_application_pulse = maxf(
+		0.0,
+		enemy.toxin_application_pulse - delta / APPLICATION_PULSE_SECONDS
+	)
+	enemy.cryo_application_pulse = maxf(
+		0.0,
+		enemy.cryo_application_pulse - delta / APPLICATION_PULSE_SECONDS
+	)
 	if statuses.is_empty():
+		_sync_presentation_scalars(enemy)
 		return damage
 	for kind in DOT_KINDS:
 		if not statuses.has(kind):
@@ -62,6 +75,7 @@ static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 			statuses.erase(&"chill")
 		else:
 			statuses[&"chill"] = chill
+	_sync_presentation_scalars(enemy)
 	return damage
 
 
@@ -102,3 +116,16 @@ static func _add_stack(
 	status["stacks"] = mini(max_stacks, int(status["stacks"]) + 1)
 	status["max_stacks"] = max_stacks
 	enemy.statuses[kind] = status
+
+
+static func _sync_presentation_scalars(enemy: EnemyState) -> void:
+	enemy.toxin_stack_ratio = _stack_ratio(enemy.statuses, &"poison")
+	enemy.cryo_stack_ratio = _stack_ratio(enemy.statuses, &"chill")
+
+
+static func _stack_ratio(statuses: Dictionary, kind: StringName) -> float:
+	if not statuses.has(kind):
+		return 0.0
+	var status: Dictionary = statuses[kind]
+	var max_stacks := maxi(1, int(status.get("max_stacks", 1)))
+	return clampf(float(status.get("stacks", 0)) / float(max_stacks), 0.0, 1.0)

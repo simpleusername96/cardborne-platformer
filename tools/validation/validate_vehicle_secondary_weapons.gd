@@ -65,24 +65,47 @@ func _initialize() -> void:
 	var oracle := runtime.snapshot(build)
 	var presentation_frame: Dictionary = {}
 	var presentation_first := runtime.fill_presentation_snapshot(
-		presentation_frame
+		presentation_frame,
+		build
 	)
 	var presentation_second := runtime.fill_presentation_snapshot(
-		presentation_frame
+		presentation_frame,
+		build
 	)
 	_expect(
 		is_same(presentation_first, presentation_second)
-			and presentation_first.size() == 2
+			and presentation_first.size() == 3
 			and is_same(presentation_first["mines"], runtime.mines),
 		"secondary presentation reuses caller scratch and borrows live mine state"
 	)
 	_expect(
 		presentation_first["orbit_angle"] == oracle["orbit_angle"]
-			and presentation_first["mines"] == oracle["mines"],
-		"secondary presentation exposes exactly the renderer-visible oracle fields"
+			and presentation_first["mines"] == oracle["mines"]
+			and presentation_first["electric_field_radius"]
+				== oracle["electric_field_radius"],
+		"secondary presentation exposes the renderer-visible oracle fields and definition-owned field radius"
 	)
+	_validate_electric_field_radius(catalog)
 	_validate_mine_direction(catalog)
 	_finish()
+
+
+func _validate_electric_field_radius(catalog: Catalog) -> void:
+	var expected_radii := [120.0, 140.0, 160.0]
+	var build := RunBuild.new(catalog)
+	var runtime := Runtime.new()
+	var frame: Dictionary = {}
+	for level_index in 3:
+		build.apply(&"electric_field")
+		runtime.fill_presentation_snapshot(frame, build)
+		_expect(
+			is_equal_approx(
+				float(frame["electric_field_radius"]),
+				expected_radii[level_index]
+			),
+			"Electric Field level %d publishes its exact definition radius"
+			% (level_index + 1)
+		)
 
 
 func _validate_homing_progression(catalog: Catalog) -> void:

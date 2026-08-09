@@ -96,10 +96,11 @@ func _run() -> void:
 	enemy.max_health = 40.0
 	enemy.health_visible_timer = 1.0
 	enemy.phase = &"startup"
-	enemy.statuses = {
-		&"poison":{"stacks":2},
-		&"chill":{"stacks":1},
-	}
+	# Deliberately conflicting live status data proves the renderer consumes only
+	# the fixed presentation scalars.
+	enemy.statuses = {&"chill":{"stacks":3}}
+	enemy.toxin_stack_ratio = 2.0 / 3.0
+	enemy.toxin_application_pulse = 1.0
 	enemy.committed_dir = Vector2.RIGHT
 	enemy.committed_target = Vector2(500.0, 300.0)
 	enemy.attack_telegraphs = [{
@@ -151,7 +152,7 @@ func _run() -> void:
 		"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
 		"player_hit":false, "muzzle_flash":0.0, "barrier_strength":10.0,
 		"player_barrier_hit_remaining":0.0,
-		"reduced_motion":true, "run_time":1.0, "electric_field_level":0,
+		"reduced_motion":true, "run_time":1.0,
 		"orbiting_blade_level":0, "secondary":{},
 		"cursor_position":Vector2(460.0,300.0),
 	}
@@ -162,6 +163,54 @@ func _run() -> void:
 		presentation
 	)
 	snapshot = renderer.debug_snapshot()
+	var status_enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
+	var expected_toxin_modulate := Color(0.72, 1.0, 0.88, 1.0).lerp(
+		Color(Art.TOXIN, 1.0), 0.16
+	)
+	var status_enemy_buffer := status_enemy_batch.multimesh.buffer
+	var actual_toxin_modulate := Color(
+		status_enemy_buffer[8],
+		status_enemy_buffer[9],
+		status_enemy_buffer[10],
+		status_enemy_buffer[11]
+	)
+	_expect(
+		actual_toxin_modulate.is_equal_approx(expected_toxin_modulate),
+		"reduced-motion enemy tint uses staged Toxin stacks and ignores conflicting live status data"
+	)
+	presentation["reduced_motion"] = false
+	renderer.sync(
+		enemies, projectiles, hostile_projectiles, shards, effect_store.live,
+		Rect2(0,0,1280,720), Vector2(260.0,300.0), 1.0, true,
+		"renderer_enemy", presentation
+	)
+	status_enemy_buffer = status_enemy_batch.multimesh.buffer
+	actual_toxin_modulate = Color(
+		status_enemy_buffer[8], status_enemy_buffer[9],
+		status_enemy_buffer[10], status_enemy_buffer[11]
+	)
+	_expect(
+		actual_toxin_modulate.is_equal_approx(
+			Color(0.72, 1.0, 0.88, 1.0).lerp(Color(Art.TOXIN, 1.0), 0.32)
+		),
+		"standard motion raises only the same-size application tint to alpha 0.32"
+	)
+	enemy.flash = 0.11
+	renderer.sync(
+		enemies, projectiles, hostile_projectiles, shards, effect_store.live,
+		Rect2(0,0,1280,720), Vector2(260.0,300.0), 1.0, true,
+		"renderer_enemy", presentation
+	)
+	status_enemy_buffer = status_enemy_batch.multimesh.buffer
+	_expect(
+		Color(
+			status_enemy_buffer[8], status_enemy_buffer[9],
+			status_enemy_buffer[10], status_enemy_buffer[11]
+		).is_equal_approx(Color(1.0, 0.66, 0.66, 1.0)),
+		"generic direct-damage flash wins before the persistent status tint"
+	)
+	enemy.flash = 0.0
+	presentation["reduced_motion"] = true
 	var repeated_counts_stable := true
 	for _sync_index in 128:
 		renderer.sync(
@@ -492,6 +541,17 @@ func _run() -> void:
 	_expect(
 		boss_health_batch.multimesh.buffer[7] < open_boss.pos.y,
 		"the boss health bar is positioned above its world body"
+	)
+	var boss_ring_batch := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
+	var boss_ring_buffer := boss_ring_batch.multimesh.buffer
+	_expect(
+		boss_ring_batch.multimesh.visible_instance_count == 1
+			and is_equal_approx(
+				float(boss_ring_buffer[0]),
+				Art.STAGE_BOSS_RADIUS + 8.0
+			)
+			and is_equal_approx(float(boss_ring_buffer[11]), 0.38),
+		"boss-only shield boundary uses the exact +8 radius and 0.38 alpha retune"
 	)
 	var run_source := FileAccess.get_file_as_string(
 		"res://scripts/vehicle/vehicle_run.gd"
@@ -872,6 +932,30 @@ func _validate_player_directional_cues(
 		"absorbed barrier damage uses one direct player-state ring flash"
 	)
 	presentation["player_barrier_hit_remaining"] = 0.0
+	presentation["secondary"]["electric_field_radius"] = 140.0
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "",
+		presentation
+	)
+	var field_batch := renderer.get_node("ElectricField_area") as MultiMeshInstance2D
+	var field_buffer := field_batch.multimesh.buffer
+	var field_mesh_bounds := field_batch.multimesh.mesh.get_aabb()
+	_expect(
+		field_batch.z_index == -1
+			and field_batch.multimesh.visible_instance_count == 1
+			and Vector2(field_buffer[3], field_buffer[7]).is_equal_approx(
+				player_position
+			)
+			and is_equal_approx(float(field_buffer[0]), 140.0)
+			and is_equal_approx(float(field_buffer[5]), 140.0)
+			and is_equal_approx(field_mesh_bounds.position.x, -1.0)
+			and is_equal_approx(field_mesh_bounds.position.y, -1.0)
+			and is_equal_approx(field_mesh_bounds.size.x, 2.0)
+			and is_equal_approx(field_mesh_bounds.size.y, 2.0),
+		"one below-actor Electric Field instance fills the exact definition-owned radius"
+	)
+	presentation["secondary"]["electric_field_radius"] = 0.0
 	presentation["secondary"]["mines"] = [
 		{"pos":player_position + Vector2.RIGHT * 120.0, "life":4.0},
 	]
@@ -924,11 +1008,11 @@ func _player_presentation(
 		"reduced_motion":false,
 		"run_time":1.0,
 		"secondary_visual_tier":0,
-		"electric_field_level":0,
 		"orbiting_blade_level":1,
 		"secondary":{
 			"orbit_angle":0.37,
 			"mines":[],
+			"electric_field_radius":0.0,
 		},
 		"cursor_position":player_position + Vector2.UP * 230.0,
 	}

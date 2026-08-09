@@ -90,6 +90,12 @@ var lane_centers: Array = []
 var attack_telegraphs: Array[Dictionary] = []
 var decision_bucket := 0
 var statuses: Dictionary = {}
+# Renderer-facing status receipts are fixed scalars. Presentation never walks
+# the live status Dictionary on the frame hot path; pulse values are normalized.
+var toxin_stack_ratio := 0.0
+var cryo_stack_ratio := 0.0
+var toxin_application_pulse := 0.0
+var cryo_application_pulse := 0.0
 var runtime_slot := -1
 # Stable pool identity and reuse generation let spatial membership reject stale
 # cell entries after swap retirement or pooled actor reuse.
@@ -102,6 +108,10 @@ var motion_elapsed := 0.0
 
 func reset_runtime_collections() -> void:
 	statuses.clear()
+	toxin_stack_ratio = 0.0
+	cryo_stack_ratio = 0.0
+	toxin_application_pulse = 0.0
+	cryo_application_pulse = 0.0
 	lane_centers.clear()
 	attack_telegraphs.clear()
 	target_score = 0.0

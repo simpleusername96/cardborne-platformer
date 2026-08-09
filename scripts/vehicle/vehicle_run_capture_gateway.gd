@@ -33,6 +33,9 @@ const GuidebookCatalog = preload(
 	"res://scripts/progression/vehicle_guidebook_catalog.gd"
 )
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
+const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
+const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const StageReportBuilder = preload(
 	"res://scripts/combat/vehicle_stage_report_builder.gd"
 )
@@ -114,6 +117,10 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_beam_sentinel_evidence()
 		&"damage_feedback":
 			await _capture_damage_feedback_evidence()
+		&"elemental_status_feedback":
+			await _capture_elemental_status_evidence()
+		&"electric_field_feedback":
+			await _capture_electric_field_evidence()
 		&"collision_overlays":
 			await _capture_collision_overlay_evidence()
 		&"all_bosses":
@@ -713,6 +720,116 @@ func _capture_damage_feedback_evidence() -> void:
 	_save_capture("08-player-barrier-only.png")
 	if settings != null:
 		settings.reduced_motion = original_reduced_motion
+
+
+func _capture_elemental_status_evidence() -> void:
+	prepare_stage(1)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	var settings: Node = _run.get_node_or_null("/root/SettingsStore")
+	var original_reduced_motion := bool(settings.reduced_motion) if settings != null else false
+	if settings != null:
+		settings.reduced_motion = false
+	var toxin_build := RunBuild.new(_run.upgrade_catalog)
+	var cryo_build := RunBuild.new(_run.upgrade_catalog)
+	toxin_build.apply(&"bio_toxin")
+	cryo_build.apply(&"cryo_slow")
+	var toxin_profile := ElementProfile.from_build(toxin_build)
+	var cryo_profile := ElementProfile.from_build(cryo_build)
+	var status_enemies: Array[EnemyState] = []
+	for row in 2:
+		for stack_index in 3:
+			var enemy: EnemyState = _run._make_enemy({
+				"id":"capture_status_%d_%d" % [row, stack_index],
+				"role":&"chaser",
+				"pos":_run.player_position + Vector2(
+					165.0 + float(stack_index) * 105.0,
+					-105.0 if row == 0 else 105.0
+				),
+				"active":true,
+			})
+			if enemy == null:
+				continue
+			for _stack in stack_index + 1:
+				StatusRuntime.apply(
+					enemy,
+					toxin_profile if row == 0 else cryo_profile
+				)
+			enemy.health_visible_timer = 0.0
+			_run._append_enemy(enemy)
+			status_enemies.append(enemy)
+	_run._spawn_player_projectile(
+		_run.player_position + Vector2(75.0, -105.0),
+		Vector2.RIGHT, 1.0, 360.0, 0, 6.0, 1.0, 420.0, toxin_profile
+	)
+	_run._spawn_player_projectile(
+		_run.player_position + Vector2(75.0, 105.0),
+		Vector2.RIGHT, 1.0, 360.0, 0, 6.0, 1.0, 420.0, cryo_profile
+	)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_save_capture("09b-element-status-application.png")
+	for enemy in status_enemies:
+		enemy.toxin_application_pulse = 0.0
+		enemy.cryo_application_pulse = 0.0
+	await _settle_capture()
+	_save_capture("09c-element-status-persistent.png")
+	if status_enemies.size() >= 3:
+		status_enemies[2].flash = 0.11
+	await _settle_capture()
+	_save_capture("09d-element-status-hit-flash.png")
+	if status_enemies.size() >= 3:
+		status_enemies[2].flash = 0.0
+	for enemy in status_enemies:
+		enemy.toxin_application_pulse = 1.0
+		enemy.cryo_application_pulse = 1.0
+	if settings != null:
+		settings.reduced_motion = true
+	await _settle_capture()
+	_save_capture("09e-element-status-reduced-motion.png")
+	for enemy in status_enemies:
+		enemy.statuses.clear()
+		enemy.toxin_stack_ratio = 0.0
+		enemy.cryo_stack_ratio = 0.0
+		enemy.toxin_application_pulse = 0.0
+		enemy.cryo_application_pulse = 0.0
+	await _settle_capture()
+	_save_capture("09f-element-status-expired.png")
+	if settings != null:
+		settings.reduced_motion = original_reduced_motion
+
+
+func _capture_electric_field_evidence() -> void:
+	prepare_stage(0)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	_run.run_build.reset()
+	_run.player_barrier_strength = 100.0
+	_run.player_barrier_timer = 99.0
+	for index in 2:
+		var enemy: EnemyState = _run._make_enemy({
+			"id":"capture_field_target_%d" % index,
+			"role":&"chaser",
+			"pos":_run.player_position + Vector2(
+				130.0 if index == 0 else -145.0,
+				0.0
+			),
+			"active":true,
+		})
+		if enemy == null:
+			continue
+		enemy.shielded = index == 0
+		enemy.health_visible_timer = 0.0
+		_run._append_enemy(enemy)
+	_run.capture_set_mode(&"paused")
+	var level_suffixes := ["g", "h", "i"]
+	for level_index in 3:
+		_run.run_build.apply(&"electric_field")
+		await _settle_capture()
+		_save_capture(
+			"09%s-electric-field-level-%d.png"
+			% [level_suffixes[level_index], level_index + 1]
+		)
 
 
 func _capture_visual_event_evidence() -> void:
