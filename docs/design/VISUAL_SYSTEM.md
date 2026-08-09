@@ -548,10 +548,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   top-center, top-right는 모두 화면 상단 8px datum에 붙는다. top-center는 panel
   없는 player hull과 XP 두 meter만 소유한다. hull은 compact/standard/large에서
   `400/520/640 px`, amber fill 높이 `13 px`이고 centered current/max를 표시한다.
-  XP는 그 아래 4px gap을 두고 `280/360/420 px`, 높이 `6/8/8 px`의 restrained
-  system-blue meter로 표시하며 왼쪽 `Lv. N`, 오른쪽 `EXP current / required` 또는
-  `EXP MAX`를 사용한다. 200% text는 404px center zone, 360px XP track, 8px fill을
-  사용한다. top-right는 `176×108` minimap만 소유한다. live upgrade icon,
+  XP는 그 아래 4px gap을 두고 hull과 같은 `400/520/640 px`, 높이 `6/8/8 px`의
+  restrained system-blue meter로 표시하며 왼쪽 `Lv. N`, 오른쪽
+  `EXP current / required` 또는 `EXP MAX`를 사용한다. 200% text는 404px center
+  zone과 같은 404px XP track, 8px fill을 사용한다. top-right는 `176×108`
+  minimap만 소유한다. live upgrade icon,
   edge boss/target health, objective와 mission Surface는 사용하지 않는다.
   full upgrade name, level과 effective value는 paused Ship Status만 소유한다.
 - minimap의 dynamic marker는 player, `field_pickup`, `reward_crate`,

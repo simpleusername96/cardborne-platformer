@@ -88,7 +88,7 @@ func _initialize() -> void:
 		_expect(
 			is_equal_approx(
 				float(health_meter["experience_track_width"]),
-				280.0 if width < 1100.0 else (420.0 if width >= 1600.0 else 360.0)
+				Vector2(contract["health_cluster_size"]).x
 			)
 				and is_equal_approx(
 					float(health_meter["experience_track_height"]),
@@ -96,7 +96,7 @@ func _initialize() -> void:
 				)
 				and int(contract["live_upgrade_icon_count"]) == 0
 				and not bool(contract["has_live_upgrade_rail"]),
-			"XP uses the locked responsive track and the acquired rail is absent at %d"
+			"XP shares the responsive hull width and the acquired rail is absent at %d"
 			% width
 		)
 		_expect(

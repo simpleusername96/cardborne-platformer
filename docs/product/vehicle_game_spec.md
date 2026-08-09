@@ -434,11 +434,11 @@ does not produce a transient message.
   localized stage and defeated labels with `current / total` values. At compact,
   standard, and large widths its label/fraction sizes are `15/30`, `16/32`, and
   `18/40 px`; all top zones use an eight-pixel top datum. Top-center uses a long
-  panel-free hull strip with a shorter XP meter below it. The hull widths are
-  `400/520/640` and its amber fill is 13 pixels thick; the centered blue XP
-  track is `280/360/420` wide and `6/8/8` pixels thick. It shows `Lv. N` and
-  `EXP current / required`, or `EXP MAX` after progression completes. Top-right owns only
-  the minimap. Bottom-center owns one enlarged round panel-free EMP indicator. No
+  panel-free hull strip with an equal-width XP meter below it. Both tracks are
+  `400/520/640` wide at compact/standard/large sizes; the amber hull fill is
+  13 pixels thick and the blue XP fill is `6/8/8` pixels thick. XP shows `Lv. N`
+  and `EXP current / required`, or `EXP MAX` after progression completes. Top-right
+  owns only the minimap. Bottom-center owns one enlarged round panel-free EMP indicator. No
   live upgrade icon, edge boss/target health, mission surface, objective text, or
   ornamental full-width dock covers the field.
 - The normal top-center toast is `320×36` compact or `360×40` standard/large and

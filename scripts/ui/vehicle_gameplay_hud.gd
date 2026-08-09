@@ -30,7 +30,6 @@ class HealthPips:
 	var experience_required := 12.0
 	var experience_complete := false
 	var reduced_motion := false
-	var _experience_track_width := 360.0
 	var _experience_track_height := 8.0
 	var _meter_font_size := 14
 	var _trail_from := 120.0
@@ -133,9 +132,9 @@ class HealthPips:
 			Art.IVORY_BRIGHT
 		)
 		var experience_rect := Rect2(
-			(size.x - _experience_track_width) * 0.5,
+			0.0,
 			17.0,
-			_experience_track_width,
+			size.x,
 			_experience_track_height
 		)
 		_draw_meter_track(experience_rect)
@@ -167,10 +166,7 @@ class HealthPips:
 			Art.TEXT_PRIMARY
 		)
 
-	func set_layout_profile(compact: bool, accessibility: bool, large: bool) -> void:
-		_experience_track_width = (
-			360.0 if accessibility else (280.0 if compact else (420.0 if large else 360.0))
-		)
+	func set_layout_profile(compact: bool, accessibility: bool, _large: bool) -> void:
 		_experience_track_height = 6.0 if compact and not accessibility else 8.0
 		_meter_font_size = 13 if compact else 14
 		queue_redraw()
@@ -200,7 +196,7 @@ class HealthPips:
 			"has_trailing_health_geometry":true,
 			"has_health_geometry":true,
 			"has_experience_geometry":true,
-			"experience_track_width":_experience_track_width,
+			"experience_track_width":size.x,
 			"experience_track_height":_experience_track_height,
 			"experience_complete":experience_complete,
 			"live_upgrade_icon_count":0,
