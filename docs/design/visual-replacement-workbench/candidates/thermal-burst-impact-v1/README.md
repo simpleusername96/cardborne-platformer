@@ -27,8 +27,8 @@ approved bytes and the runtime contract below.
 BK approved the exact candidate SHA-256
 `4cb1b15b1118a093c52ad0f5f750e38af2af0640536659ffc4dc1e19c0474904` as-is for
 `effect/thermal_burst_impact` on 2026-08-09. The workbench unit is now
-`approved_for_switch`; application evidence remains empty until runtime integration is committed
-and validated.
+`applied`. Runtime integration is recorded at commit
+`b27ef66175011e55833dad81858cdf45f5aa958c`.
 
 ## Exact candidate
 

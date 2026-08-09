@@ -4183,8 +4183,10 @@
       "title_ko": "열폭발 직접 명중 이펙트",
       "owner": "gameplay_manifest",
       "switch_kind": "replace",
-      "status": "approved_for_switch",
-      "current_paths": [],
+      "status": "applied",
+      "current_paths": [
+        "art/visuals/production/gameplay/effects/thermal_burst_impact.png"
+      ],
       "consumer_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
         "scripts/combat/vehicle_effect_store.gd",
@@ -4263,7 +4265,19 @@
         },
         "retire_paths": []
       },
-      "application": null
+      "application": {
+        "commit": "b27ef66175011e55833dad81858cdf45f5aa958c",
+        "applied_at": "2026-08-09T21:46:32+09:00",
+        "validation_evidence": [
+          ".\\tools\\godot.ps1 --path . --headless --import",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_effect_store.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_thermal_burst.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd"
+        ]
+      }
     },
     {
       "id": "gameplay_code_asset_rasterization",

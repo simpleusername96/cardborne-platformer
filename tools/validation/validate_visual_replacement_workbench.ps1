@@ -64,11 +64,11 @@ try {
     Expect ($actual.summary.font -eq 1) 'production font count must be 1'
     Expect ($actual.summary.units -eq 22) 'switch unit count must be 22'
     Expect ($actual.summary.retire_only -eq 6) 'retire-only count must be 6'
-    Expect ($actual.summary.gameplay_png -eq 67) 'production gameplay PNG count must be 67'
+    Expect ($actual.summary.gameplay_png -eq 68) 'production gameplay PNG count must be 68'
     Expect ($actual.summary.final_gameplay_png -eq 68) 'final gameplay PNG forecast must be 68'
     Expect ($actual.summary.gameplay_svg -eq 3) 'production SurfaceDetail SVG count must be 3'
     Expect ($actual.summary.final_gameplay_svg -eq 3) 'final SurfaceDetail SVG forecast must be 3'
-    Expect ($actual.summary.gameplay_images -eq 70) 'production gameplay image count must be 70'
+    Expect ($actual.summary.gameplay_images -eq 71) 'production gameplay image count must be 71'
     Expect ($actual.summary.authored_gameplay_png -eq 66) 'authored gameplay PNG output count must be 66'
     Expect ($actual.summary.reused_gameplay_png -eq 2) 'reused gameplay PNG count must be 2'
     Expect ($actual.summary.retired_gameplay_png -eq 0) 'no retired gameplay PNG may remain in production'
@@ -129,7 +129,7 @@ try {
         ordinary_enemy_family=@(18,18)
         boss_and_shared_node_family=@(5,5)
         straight_beam_strip_replacement=@(1,1)
-        thermal_burst_impact=@(0,1)
+        thermal_burst_impact=@(1,1)
         gameplay_code_asset_rasterization=@(7,7)
     }
     foreach($unitId in $expectedGameplayUnits.Keys){
@@ -224,7 +224,7 @@ $index=Get-Content $indexPath -Raw
 $match=[regex]::Match($index,'(?s)<script id="inventory-data" type="application/json">(.*?)</script>')
 Expect $match.Success 'index lacks embedded inventory data'
 if($match.Success){try{$embedded=$match.Groups[1].Value|ConvertFrom-Json -Depth 100;Expect ((Get-VisualCanonicalJson $embedded) -ceq (Get-VisualCanonicalJson $actual)) 'embedded inventory differs'}catch{$failures.Add("invalid embedded inventory: $($_.Exception.Message)")}}
-foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":68','"final_gameplay_svg":3','"gameplay_images":70','"surface_detail_family"','"thermal_burst_impact"','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
+foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":68','"final_gameplay_svg":3','"gameplay_images":71','"surface_detail_family"','"thermal_burst_impact"','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
 $authorityUiMarkers=@(
     'id="visual-authority-pair"',
     'id="style-authority-link"',
