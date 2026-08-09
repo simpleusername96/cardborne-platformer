@@ -176,7 +176,11 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 			_run._ui.debug_active_settings_contract()
 		&"first_contact":
 			_run._ui.show_gameplay()
+			_run.capture_set_mode(&"playing")
 			_run._update_encounter(5.1)
+			_run._threat_sample_timer = 0.0
+			_run._update_threat_contacts(_run.THREAT_SAMPLE_INTERVAL)
+			_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 		&"pause":
 			_run.capture_set_mode(&"paused")
 			_run._ui.show_pause()
@@ -939,6 +943,13 @@ func _capture_elemental_status_evidence() -> void:
 			if enemy == null:
 				continue
 			for _stack in stack_index + 1:
+				_run._damage_enemy(
+					enemy,
+					1.0,
+					"validation",
+					&"kinetic",
+					false
+				)
 				StatusRuntime.apply(
 					enemy,
 					toxin_profile if row == 0 else cryo_profile
@@ -956,21 +967,31 @@ func _capture_elemental_status_evidence() -> void:
 	)
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
+	_save_capture("09d-element-status-hit-flash.png")
+	for enemy in status_enemies:
+		enemy.flash = 0.0
+		StatusRuntime.tick(enemy, 0.11)
+	await _settle_capture()
 	_save_capture("09b-element-status-application.png")
 	for enemy in status_enemies:
-		enemy.toxin_application_pulse = 0.0
-		enemy.cryo_application_pulse = 0.0
+		var status_damage := StatusRuntime.tick(enemy, 0.16)
+		if float(status_damage["poison"]) > 0.0:
+			_run._damage_enemy(
+				enemy,
+				float(status_damage["poison"]),
+				"status",
+				&"toxin",
+				true,
+				false,
+				false
+			)
 	await _settle_capture()
 	_save_capture("09c-element-status-persistent.png")
-	if status_enemies.size() >= 3:
-		status_enemies[2].flash = 0.11
-	await _settle_capture()
-	_save_capture("09d-element-status-hit-flash.png")
-	if status_enemies.size() >= 3:
-		status_enemies[2].flash = 0.0
 	for enemy in status_enemies:
-		enemy.toxin_application_pulse = 1.0
-		enemy.cryo_application_pulse = 1.0
+		StatusRuntime.apply(
+			enemy,
+			toxin_profile if enemy.toxin_stack_ratio > 0.0 else cryo_profile
+		)
 	if settings != null:
 		settings.reduced_motion = true
 	await _settle_capture()

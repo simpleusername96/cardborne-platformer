@@ -207,19 +207,30 @@ func _run() -> void:
 	)
 	snapshot = renderer.debug_snapshot()
 	var status_enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
-	var expected_toxin_modulate := Color(0.72, 1.0, 0.88, 1.0).lerp(
-		Color(Art.TOXIN, 1.0), 0.16
+	var peer_enemy_batch := renderer.get_node("Enemy_shooter") as MultiMeshInstance2D
+	_expect(
+		status_enemy_batch.multimesh.is_using_custom_data()
+			and status_enemy_batch.material is ShaderMaterial
+			and is_same(status_enemy_batch.material, peer_enemy_batch.material),
+		"enemy roles share one custom-data status compositor without a new batch or material per actor"
 	)
 	var status_enemy_buffer := status_enemy_batch.multimesh.buffer
-	var actual_toxin_modulate := Color(
+	var actual_body_modulate := Color(
 		status_enemy_buffer[8],
 		status_enemy_buffer[9],
 		status_enemy_buffer[10],
 		status_enemy_buffer[11]
 	)
+	var actual_status_overlay := Color(
+		status_enemy_buffer[12],
+		status_enemy_buffer[13],
+		status_enemy_buffer[14],
+		status_enemy_buffer[15]
+	)
 	_expect(
-		actual_toxin_modulate.is_equal_approx(expected_toxin_modulate),
-		"reduced-motion enemy tint uses staged Toxin stacks and ignores conflicting live status data"
+		actual_body_modulate.is_equal_approx(Color(0.72, 1.0, 0.88, 1.0))
+			and actual_status_overlay.is_equal_approx(Color(Art.TOXIN, 0.76)),
+		"reduced motion keeps base protection modulation separate from staged static Toxin colorization"
 	)
 	presentation["reduced_motion"] = false
 	renderer.sync(
@@ -228,15 +239,13 @@ func _run() -> void:
 		"renderer_enemy", presentation
 	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
-	actual_toxin_modulate = Color(
-		status_enemy_buffer[8], status_enemy_buffer[9],
-		status_enemy_buffer[10], status_enemy_buffer[11]
+	actual_status_overlay = Color(
+		status_enemy_buffer[12], status_enemy_buffer[13],
+		status_enemy_buffer[14], status_enemy_buffer[15]
 	)
 	_expect(
-		actual_toxin_modulate.is_equal_approx(
-			Color(0.72, 1.0, 0.88, 1.0).lerp(Color(Art.TOXIN, 1.0), 0.32)
-		),
-		"standard motion raises only the same-size application tint to alpha 0.32"
+		actual_status_overlay.is_equal_approx(Color(Art.TOXIN, 0.94)),
+		"standard motion raises only the same-size application colorization to the bounded pulse weight"
 	)
 	enemy.flash = 0.11
 	renderer.sync(
@@ -249,7 +258,8 @@ func _run() -> void:
 		Color(
 			status_enemy_buffer[8], status_enemy_buffer[9],
 			status_enemy_buffer[10], status_enemy_buffer[11]
-		).is_equal_approx(Color(1.0, 0.66, 0.66, 1.0)),
+		).is_equal_approx(Color(1.0, 0.66, 0.66, 1.0))
+			and is_zero_approx(status_enemy_buffer[15]),
 		"generic direct-damage flash wins before the persistent status tint"
 	)
 	enemy.flash = 0.0
@@ -314,8 +324,10 @@ func _run() -> void:
 	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
 	_expect(
-		enemy_batch.material == null,
-		"authored actor perimeters do not add a runtime outline shader"
+		enemy_batch.material is ShaderMaterial
+			and (enemy_batch.material as ShaderMaterial).shader.resource_path
+				== "res://scripts/presentation/shaders/vehicle_enemy_status_overlay.gdshader",
+		"authored actor batch uses only the shared alpha-clipped status compositor"
 	)
 	_expect(
 		Vector2(enemy_buffer[3], enemy_buffer[7]).is_equal_approx(Vector2(300.0, 300.0)),
@@ -880,14 +892,14 @@ func _validate_mystery_device_presentation(
 		health_buffer[7] < 360.0
 			and is_equal_approx(absf(health_buffer[5]), 20.0)
 			and is_equal_approx(
-				absf(health_buffer[Renderer.BUFFER_FLOATS_PER_INSTANCE + 5]),
+				absf(health_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 5]),
 				16.0
 			),
 		"the facility owns a visibly thick sixteen-unit bar with a four-unit frame"
 	)
 	var expected_radii := [144.0, 108.0, 72.0]
 	for index in expected_radii.size():
-		var offset := index * Renderer.BUFFER_FLOATS_PER_INSTANCE
+		var offset := index * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
 		_expect(
 			is_equal_approx(Vector2(rings.multimesh.buffer[offset], rings.multimesh.buffer[offset + 4]).length(), expected_radii[index]),
 			"mystery effect ring %d preserves its exact gameplay radius" % (index + 1)

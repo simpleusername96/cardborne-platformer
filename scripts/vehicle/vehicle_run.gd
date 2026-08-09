@@ -121,7 +121,11 @@ const MINIMAP_STATIC_KEYS: Array[StringName] = [
 	&"floor_polygons", &"void_polygons", &"blocker_polygons",
 ]
 const THREAT_SCAN_DISTANCE := 1200.0
-const THREAT_CONTACT_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES + 1
+const ORDINARY_ARRIVAL_CUE_CAPACITY := 8
+const ORDINARY_ARRIVAL_POST_BIRTH_HOLD := 1.10
+const THREAT_CONTACT_CAPACITY := (
+	EnemyStore.MAX_LIVE_HOSTILES + ORDINARY_ARRIVAL_CUE_CAPACITY + 1
+)
 const BOSS_ARRIVAL_MIN_DISTANCE := 1200.0
 const BOSS_ARRIVAL_PREFERRED_MAX_DISTANCE := 1500.0
 # Threat contacts feed the radar/world-marker channel, whose observable refresh
@@ -264,6 +268,9 @@ var _runtime_minimap_marker_pool: Array[Dictionary] = []
 var _runtime_minimap_frame_index := -1
 var _runtime_threat_radar_frame: Dictionary = {}
 var _runtime_threat_contact_pool: Array[Dictionary] = []
+var _ordinary_arrival_cue_positions := PackedVector2Array()
+var _ordinary_arrival_cue_remaining := PackedFloat32Array()
+var _ordinary_arrival_cue_count := 0
 var _runtime_combat_presentation_frame: Dictionary = {}
 var _runtime_secondary_presentation_frame: Dictionary = {}
 var _build_fast_hud_snapshot_callable: Callable
@@ -441,6 +448,8 @@ func _initialize_hud_staging() -> void:
 				"position":Vector2.ZERO,
 				"discovered":true,
 			})
+	_ordinary_arrival_cue_positions.resize(ORDINARY_ARRIVAL_CUE_CAPACITY)
+	_ordinary_arrival_cue_remaining.resize(ORDINARY_ARRIVAL_CUE_CAPACITY)
 	for _contact_index in THREAT_CONTACT_CAPACITY:
 		_runtime_threat_contact_pool.append({
 			"offset": Vector2.ZERO,
@@ -839,6 +848,7 @@ func _reset_run(
 		visited_cells.clear()
 	discovered_markers.clear()
 	_threat_contact_cache.clear()
+	_clear_ordinary_arrival_cues()
 	_threat_sample_timer = 0.0
 	_shielded_enemy_ids.clear()
 	_pending_shielded_enemy_ids.clear()
@@ -1104,6 +1114,7 @@ func _simulation_active() -> bool:
 
 
 func _update_encounter(delta: float) -> void:
+	_advance_ordinary_arrival_cues(delta)
 	_refresh_elite_reservations()
 	var requests := encounter_runtime.tick(
 		delta,
@@ -1114,13 +1125,57 @@ func _update_encounter(delta: float) -> void:
 		enemies,
 		projectile_store.hostile_count()
 	)
-	for _cue in requests["cues"]:
+	for cue in requests["cues"]:
+		_record_ordinary_arrival_cue(Dictionary(cue))
 		_play_sound(&"boss", 0.72)
 	for spawn_spec in requests["spawns"]:
 		var bounded_spec := _bounded_spawn_spec(Dictionary(spawn_spec))
 		var enemy := _make_enemy(bounded_spec)
 		_apply_pending_elite(enemy)
 		_append_enemy(enemy)
+
+
+func _record_ordinary_arrival_cue(cue: Dictionary) -> void:
+	if not cue.has("birth_position"):
+		return
+	var slot := _ordinary_arrival_cue_count
+	if slot < ORDINARY_ARRIVAL_CUE_CAPACITY:
+		_ordinary_arrival_cue_count += 1
+	else:
+		slot = 0
+		for index in range(1, ORDINARY_ARRIVAL_CUE_CAPACITY):
+			if (
+				_ordinary_arrival_cue_remaining[index]
+				< _ordinary_arrival_cue_remaining[slot]
+			):
+				slot = index
+	_ordinary_arrival_cue_positions[slot] = Vector2(cue["birth_position"])
+	_ordinary_arrival_cue_remaining[slot] = (
+		maxf(0.0, float(cue.get("visual_duration", 0.0)))
+		+ ORDINARY_ARRIVAL_POST_BIRTH_HOLD
+	)
+
+
+func _advance_ordinary_arrival_cues(delta: float) -> void:
+	var step := maxf(0.0, delta)
+	var index := 0
+	while index < _ordinary_arrival_cue_count:
+		_ordinary_arrival_cue_remaining[index] -= step
+		if _ordinary_arrival_cue_remaining[index] > 0.0:
+			index += 1
+			continue
+		_ordinary_arrival_cue_count -= 1
+		if index < _ordinary_arrival_cue_count:
+			_ordinary_arrival_cue_positions[index] = (
+				_ordinary_arrival_cue_positions[_ordinary_arrival_cue_count]
+			)
+			_ordinary_arrival_cue_remaining[index] = (
+				_ordinary_arrival_cue_remaining[_ordinary_arrival_cue_count]
+			)
+
+
+func _clear_ordinary_arrival_cues() -> void:
+	_ordinary_arrival_cue_count = 0
 
 
 func _update_reinforcement_facility(delta: float) -> void:
@@ -2035,7 +2090,15 @@ func _update_enemies(delta: float) -> void:
 		if not enemy.statuses.is_empty():
 			var status_damage := StatusRuntime.tick(enemy, delta)
 			if float(status_damage["poison"]) > 0.0:
-				_damage_enemy(enemy, float(status_damage["poison"]), "status", &"toxin", true)
+				_damage_enemy(
+					enemy,
+					float(status_damage["poison"]),
+					"status",
+					&"toxin",
+					true,
+					false,
+					false
+				)
 				if not enemy.alive:
 					continue
 		var role := enemy.role
@@ -3819,7 +3882,8 @@ func _damage_enemy(
 	source: String,
 	attribute: StringName,
 	player_owned: bool,
-	final_effective: bool = false
+	final_effective: bool = false,
+	show_hit_flash: bool = true
 ) -> float:
 	if not enemy.alive:
 		return 0.0
@@ -3841,7 +3905,8 @@ func _damage_enemy(
 	):
 		var mine_applied := maxf(0.0, health_before - 1.0)
 		enemy.health = 1.0
-		enemy.flash = 0.11
+		if show_hit_flash:
+			enemy.flash = 0.11
 		enemy.health_visible_timer = 1.5
 		_arm_mine(enemy, 0.75, true)
 		if player_owned and not boss_practice.active and source != "validation":
@@ -3860,7 +3925,8 @@ func _damage_enemy(
 			attribute,
 			applied_damage
 		)
-	enemy.flash = 0.11
+	if show_hit_flash:
+		enemy.flash = 0.11
 	enemy.health_visible_timer = 1.0 if enemy.health_class == &"swarm" else 1.5
 	_apply_lifesteal(applied_damage, source, player_owned)
 	if (
@@ -5060,6 +5126,7 @@ func _begin_stage_transition() -> void:
 	_elite_spawned = 0
 	_elite_threshold_cursor = 0
 	_threat_contact_cache.clear()
+	_clear_ordinary_arrival_cues()
 	_threat_sample_timer = 0.0
 	_shielded_enemy_ids.clear()
 	_pending_shielded_enemy_ids.clear()
@@ -5550,6 +5617,19 @@ func _update_threat_contacts(delta: float) -> void:
 			)
 		):
 			_discover_guide(&"object_mystery_device")
+	for cue_index in _ordinary_arrival_cue_count:
+		var cue_position := _ordinary_arrival_cue_positions[cue_index]
+		if visible_world.has_point(cue_position):
+			continue
+		var cue_offset := _direction_only_threat_offset(
+			cue_position - player_position
+		)
+		if not cue_offset.is_zero_approx():
+			_append_runtime_threat_contact(
+				cue_offset,
+				CombatCuePolicy.CONTACT_NEARBY_ENEMY,
+				0.0
+			)
 	for enemy in enemies:
 		if not bool(enemy.alive) or not bool(enemy.active):
 			continue
@@ -5589,6 +5669,13 @@ func _update_threat_contacts(delta: float) -> void:
 			CombatCuePolicy.CONTACT_BOSS_ARRIVAL,
 			1.0
 		)
+
+
+func _direction_only_threat_offset(offset: Vector2) -> Vector2:
+	var maximum := THREAT_SCAN_DISTANCE - 0.01
+	if offset.length_squared() <= maximum * maximum:
+		return offset
+	return offset.normalized() * maximum
 
 
 func _append_runtime_threat_contact(

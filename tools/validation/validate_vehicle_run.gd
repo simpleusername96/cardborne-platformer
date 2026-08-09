@@ -77,6 +77,7 @@ func _run() -> void:
 		_check_progression_completion_contract(run)
 		run.call("_reset_run", false)
 		_check_lifesteal_contract(run)
+		_check_status_damage_feedback(run)
 		run.call("_reset_run", false)
 		_check_visual_collision_separation(run)
 		_check_critical_enemy_attack_progression(run)
@@ -360,6 +361,41 @@ func _check_lifesteal_contract(run) -> void:
 		"Lifesteal never restores beyond maximum Hull"
 	)
 	run.enemy_store.release_untracked(hull_limit_target)
+
+
+func _check_status_damage_feedback(run) -> void:
+	var enemy: EnemyState = run.call("_make_enemy", {
+		"id":"status_feedback_enemy",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(180.0, 0.0),
+		"active":true,
+	})
+	_expect(enemy != null, "status feedback fixture creates an ordinary enemy")
+	if enemy == null:
+		return
+	var direct_damage := float(run.call(
+		"_damage_enemy", enemy, 1.0, "validation", &"kinetic", false
+	))
+	_expect(
+		direct_damage > 0.0 and is_equal_approx(enemy.flash, 0.11),
+		"direct damage retains the generic enemy hit flash"
+	)
+	enemy.flash = 0.0
+	var status_damage := float(run.call(
+		"_damage_enemy",
+		enemy,
+		1.0,
+		"status",
+		&"toxin",
+		false,
+		false,
+		false
+	))
+	_expect(
+		status_damage > 0.0 and is_zero_approx(enemy.flash),
+		"Toxin DOT changes health without restarting the generic hit flash"
+	)
+	run.enemy_store.release_untracked(enemy)
 
 
 func _check_visual_collision_separation(run) -> void:
@@ -974,6 +1010,7 @@ func _check_runtime_minimap_at_horde_capacity(run) -> void:
 
 func _check_nearby_radar_contacts(run) -> void:
 	run.call("_clear_enemies")
+	run.call("_clear_ordinary_arrival_cues")
 	var visible_enemy: EnemyState = run.call("_make_enemy", {
 		"id":"radar_visible", "role":&"chaser",
 		"pos":run.player_position + Vector2(200.0, 0.0), "active":true,
@@ -1018,6 +1055,46 @@ func _check_nearby_radar_contacts(run) -> void:
 				Vector2(870.0, 0.0)
 			),
 		"radar republishes nearby pressure through the preallocated contact record"
+	)
+	run.call("_clear_enemies")
+	run.call("_clear_ordinary_arrival_cues")
+	var cue_position: Vector2 = run.player_position + Vector2(2200.0, 220.0)
+	run.call("_record_ordinary_arrival_cue", {
+		"birth_position":cue_position,
+		"visual_duration":0.90,
+	})
+	var held_player_position := Vector2(run.player_position)
+	run._threat_sample_timer = 0.0
+	run.call("_update_threat_contacts", run.THREAT_SAMPLE_INTERVAL)
+	var arrival_contacts: Array = run._threat_contact_cache.filter(
+		func(contact_variant) -> bool:
+			return (
+				StringName(Dictionary(contact_variant).get("kind", &""))
+				== &"nearby_enemy"
+			)
+	)
+	var arrival_offset := (
+		Vector2(arrival_contacts[0]["offset"])
+		if not arrival_contacts.is_empty()
+		else Vector2.ZERO
+	)
+	_expect(
+		run.player_position == held_player_position
+			and run._ordinary_arrival_cue_count == 1
+			and arrival_contacts.size() == 1
+			and arrival_offset.length() < run.THREAT_SCAN_DISTANCE
+			and arrival_offset.normalized().is_equal_approx(
+				(cue_position - held_player_position).normalized()
+			),
+		"a stationary player receives a direction-only nearby arc for a distant timed arrival cue"
+	)
+	run.call("_advance_ordinary_arrival_cues", 2.01)
+	run._threat_sample_timer = 0.0
+	run.call("_update_threat_contacts", run.THREAT_SAMPLE_INTERVAL)
+	_expect(
+		run._ordinary_arrival_cue_count == 0
+			and run._threat_contact_cache.is_empty(),
+		"ordinary arrival radar receipt expires after cue lead plus the bounded post-birth hold"
 	)
 
 

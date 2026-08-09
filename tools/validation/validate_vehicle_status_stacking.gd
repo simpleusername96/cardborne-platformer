@@ -96,11 +96,28 @@ func _initialize() -> void:
 		is_zero_approx(pulse_enemy.cryo_application_pulse),
 		"the application receipt ends exactly after 0.16 seconds"
 	)
+	var queued_enemy := EnemyState.new()
+	queued_enemy.flash = 0.11
+	StatusRuntime.apply(queued_enemy, chill_profile)
+	StatusRuntime.tick(queued_enemy, 0.08)
+	_expect(
+		is_equal_approx(queued_enemy.cryo_application_pulse, 1.0)
+			and is_equal_approx(queued_enemy.cryo_application_delay, 0.03),
+		"direct-hit flash delays the application pulse without consuming it"
+	)
+	StatusRuntime.tick(queued_enemy, 0.03)
+	StatusRuntime.tick(queued_enemy, 0.08)
+	_expect(
+		is_equal_approx(queued_enemy.cryo_application_pulse, 0.5)
+			and is_zero_approx(queued_enemy.cryo_application_delay),
+		"the complete 0.16-second pulse begins after direct-hit flash"
+	)
 	boss.reset_runtime_collections()
 	_expect(
 		boss.statuses.is_empty()
 			and is_zero_approx(boss.cryo_stack_ratio)
-			and is_zero_approx(boss.cryo_application_pulse),
+			and is_zero_approx(boss.cryo_application_pulse)
+			and is_zero_approx(boss.cryo_application_delay),
 		"pooled enemy reset clears every status presentation scalar"
 	)
 	_finish()

@@ -261,10 +261,13 @@ collision.
 - barrier, ion과 shield source는 별도 raster asset을 갖지 않고 shared authored
   support ring과 runtime tint/scale로 보호 상태를 전달한다. Electric Field는 이
   ring을 재사용하지 않으며 actor 아래의 arc-purple 전체 damage area로 표시한다.
-  poison/chill은 별도 raster, node, material, outline, halo, ring, icon 또는 label을
-  만들지 않는다. 기존 actor instance가 authored alpha와 동일한 transform·scale·
-  silhouette 안에서 Toxin/Cryo translucent layer를 합성한다. damage number와
-  cosmetic emitter, plate, orbit icon은 만들지 않는다.
+  poison/chill은 별도 raster, node, per-enemy/per-status material, outline, halo,
+  ring, icon 또는 label을 만들지 않는다. 기존 enemy와 boss retained batch는 하나의
+  shared CanvasItem status compositor를 사용하고, instance custom data가 Toxin/Cryo
+  semantic color와 bounded mix weight만 전달한다. compositor는 authored alpha와 동일한
+  transform·scale·silhouette 안에서 translucent body layer를 합성하며 draw, batch,
+  actor instance 또는 texture를 추가하지 않는다. damage number와 cosmetic emitter,
+  plate, orbit icon은 만들지 않는다.
 - 경험치 pickup의 small/medium/large는 하나의 authored XP master PNG를
   각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
   크기에서 약 30% 줄인 값이다. reward crate, repair pickup과 experience recall은
@@ -399,11 +402,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
   않는 persistent condition을 약속하지 않는다. poison/chill은 별도
   projectile badge나 orbit icon 없이 실제 actor state feedback으로만 표시한다.
-  Toxin/Cryo stack 1/2/3은 기존 actor instance 안에서 각각 `0.12/0.16/0.20`
-  alpha의 green/blue translucent layer로 합성한다. 적용 순간의 `0.16s` pulse는
-  최대 `0.32` alpha이며 generic direct-damage flash가 우선한 뒤 persistent
-  layer가 돌아온다. reduced motion은 pulse 없이 static layer만 유지한다. overlay
-  pixel은 authored actor alpha와 footprint 밖으로 나가지 않는다.
+  Toxin/Cryo stack 1/2/3은 기존 actor batch 안에서 각각 `0.66/0.76/0.84`
+  semantic-color mix weight의 green/blue translucent body layer로 합성한다. shared
+  compositor는 원본 alpha를 그대로 유지하고 luminance를 재사용해 기존 큰 light/shadow
+  plane을 보존한다. 적용 순간의 `0.16s` pulse는 최대 `0.94`이며 generic
+  direct-damage flash `0.11s`가 끝난 뒤 전체 수명을 소비한다. Toxin DOT tick은 generic
+  flash를 다시 시작하지 않는다. reduced motion은 pulse 없이 static layer만 유지한다.
+  overlay pixel은 authored actor alpha와 footprint 밖으로 나가지 않는다.
 - projectile startup과 이미 생성된 projectile은 발사원 가시성과 관계없이
   예측 경로 또는 진입선을 표시하지 않는다. 화면 밖 발사원의 공격은 threat
   radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
@@ -425,10 +430,15 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - threat radar는 기존 5 Hz publication과 fixed contact cache를 유지하며 player
   주위 12 sector까지만 그린다. visible world rectangle 밖이면서 1,200 world
   unit 안에 있는 active targetable non-boss enemy는 exact coordinate나 triangle이
-  없는 dim danger arc `nearby_enemy`가 된다. proximity와 같은 sector의 density만
-  arc width를 늘린다. unseen committed projectile attack priority는 3, boss arrival는
-  2, nearby enemy는 1이며 같은 sector에서는 winning kind만 color와 triangle을
-  소유한다. world 경로와 radar contact는 같은 공격을 동시에 표시하지 않는다.
+  없는 dim danger arc `nearby_enemy`가 된다. scheduler가 이미 만든 ordinary
+  arrival cue는 최대 여덟 개의 preallocated position/lifetime receipt로만 보관하고,
+  `visual_duration + 1.10s` 동안 같은 `nearby_enemy` arc를 재사용한다. 1,200 unit보다
+  먼 cue offset은 radar boundary로 clamp해 direction만 전달한다. proximity와 같은
+  sector의 density만 arc width를 늘린다. unseen committed projectile attack priority는
+  3, boss arrival는 2, nearby enemy는 1이며 같은 sector에서는 winning kind만 color와
+  triangle을 소유한다. world 경로와 radar contact는 같은 공격을 동시에 표시하지
+  않는다. arrival receipt는 spawn trigger, admission, birth position, count, capacity,
+  actor state 또는 minimap coordinate를 소유하지 않는다.
 - maximum pressure에서도 player, crosshair, committed threat, boss shield,
   pickup과 current target이 world decoration보다 먼저 읽혀야 한다.
 - 조준 대상, 피격 대상 또는 일시적 취약 상태라는 이유로 적 본체에 노란
@@ -585,7 +595,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - HUD off-screen threat와 여덟 종류 minimap marker는 기존 code-native retained
   mesh를 유지한다. world-space crosshair는 shared authored PNG retained textured
   batch로 배치한다. persistent-status orbit과 support timer는 사용하지 않으며
-  Toxin/Cryo 상태는 기존 actor batch 내부의 same-size alpha-clipped layer만 쓴다.
+  Toxin/Cryo 상태는 하나의 shared compositor와 기존 actor batch 내부의 same-size
+  alpha-clipped layer만 쓴다.
 
 ### Modal
 

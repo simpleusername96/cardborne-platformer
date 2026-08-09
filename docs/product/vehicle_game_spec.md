@@ -265,7 +265,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    lead the first atomic round by 0.90 seconds; windows begin at least 1.20
    seconds apart and tail rounds preserve 0.16-second unit spacing. Due rounds
    contain at most four enemies and later packets wait for the current packet's
-   final round.
+   final round. Presentation copies at most eight active cue positions into a
+   fixed receipt store and reuses the dim, no-triangle `nearby_enemy` radar arc
+   for `cue visual duration + 1.10s`. Positions beyond 1,200 units are clamped
+   to the radar boundary, so the cue exposes direction only and never changes
+   trigger time, admission, birth position, count, capacity, or actor state.
    Projectile-firing mobile roles remain at or below 15% of authored mobile
    population; only three ranged attackers and two denial attackers may commit
    at once. Ordinary hostile fire cannot consume the 24-shot boss reserve.
@@ -422,10 +426,14 @@ does not produce a transient message.
   96-effect ceiling and at most 24 live Thermal impacts; saturated Thermal
   feedback may recycle the oldest Thermal impact or drop the new cosmetic
   receipt but never evicts EMP or changes damage. Toxin and Chill do not create
-  effect objects. Their existing actor instance composes a same-size translucent
-  green or blue layer inside the authored body alpha, with a bounded 0.16-second
-  application pulse. Reduced motion removes that pulse and keeps the static
-  condition layer. Floating damage numbers remain absent.
+  effect objects. Existing enemy and boss batches share one status compositor;
+  per-instance custom data composes a same-size translucent green or blue layer
+  inside the authored body alpha without another draw, batch, actor, texture, or
+  per-enemy material. Stack levels use ordered `0.66/0.76/0.84` colorization
+  weights. The bounded 0.16-second application pulse reaches at most `0.94` only
+  after the direct-hit flash ends, and Toxin DOT does not restart that generic
+  flash. Reduced motion removes the pulse and keeps the static condition layer.
+  Floating damage numbers remain absent.
 - The live HUD prioritizes hull, XP, numeric stage progress, EMP,
   minimap, and exceptional timed effects. A panel-free top-left B stack shows only
   localized stage and defeated labels with `current / total` values. At compact,
@@ -453,7 +461,9 @@ does not produce a transient message.
 - The threat radar samples at five hertz and aggregates contacts into at most 12
   directional sectors around the player. It includes targetable non-boss enemy
   bodies outside the visible world rectangle and within 1,200 world units as dim
-  `nearby_enemy` arcs. These arcs reveal direction and pressure density, never an
+  `nearby_enemy` arcs. Scheduler-authored ordinary arrival cues reuse that same
+  dim arc during their bounded receipt lifetime; farther cue offsets clamp to the
+  1,200-unit boundary. These arcs reveal direction and pressure density, never an
   exact coordinate or triangle. An unseen committed projectile attack has
   priority 3, boss arrival priority 2, and nearby enemy pressure priority 1 when
   contacts share a sector; only the winning role owns that sector's color and

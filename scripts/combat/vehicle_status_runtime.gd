@@ -20,6 +20,10 @@ static func apply(enemy: EnemyState, profile: VehicleElementProfile) -> void:
 			profile.poison_max_stacks
 		)
 		enemy.toxin_application_pulse = 1.0
+		enemy.toxin_application_delay = maxf(
+			enemy.toxin_application_delay,
+			enemy.flash
+		)
 	if profile.chill_enabled:
 		var boss_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
 		var status: Dictionary = enemy.statuses.get(&"chill", {
@@ -34,20 +38,30 @@ static func apply(enemy: EnemyState, profile: VehicleElementProfile) -> void:
 		status["max_stacks"] = profile.chill_max_stacks
 		enemy.statuses[&"chill"] = status
 		enemy.cryo_application_pulse = 1.0
+		enemy.cryo_application_delay = maxf(
+			enemy.cryo_application_delay,
+			enemy.flash
+		)
 	_sync_presentation_scalars(enemy)
 
 
 static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 	var statuses := enemy.statuses
 	var damage := {"poison":0.0}
-	enemy.toxin_application_pulse = maxf(
-		0.0,
-		enemy.toxin_application_pulse - delta / APPLICATION_PULSE_SECONDS
+	var toxin_timing := _advance_application_pulse(
+		enemy.toxin_application_pulse,
+		enemy.toxin_application_delay,
+		delta
 	)
-	enemy.cryo_application_pulse = maxf(
-		0.0,
-		enemy.cryo_application_pulse - delta / APPLICATION_PULSE_SECONDS
+	enemy.toxin_application_pulse = toxin_timing.x
+	enemy.toxin_application_delay = toxin_timing.y
+	var cryo_timing := _advance_application_pulse(
+		enemy.cryo_application_pulse,
+		enemy.cryo_application_delay,
+		delta
 	)
+	enemy.cryo_application_pulse = cryo_timing.x
+	enemy.cryo_application_delay = cryo_timing.y
 	if statuses.is_empty():
 		_sync_presentation_scalars(enemy)
 		return damage
@@ -129,3 +143,20 @@ static func _stack_ratio(statuses: Dictionary, kind: StringName) -> float:
 	var status: Dictionary = statuses[kind]
 	var max_stacks := maxi(1, int(status.get("max_stacks", 1)))
 	return clampf(float(status.get("stacks", 0)) / float(max_stacks), 0.0, 1.0)
+
+
+static func _advance_application_pulse(
+	pulse: float,
+	delay: float,
+	delta: float
+) -> Vector2:
+	var step := maxf(0.0, delta)
+	var queued := maxf(0.0, delay)
+	var pulse_step := step
+	if queued > 0.0:
+		pulse_step = maxf(0.0, step - queued)
+		queued = maxf(0.0, queued - step)
+	return Vector2(
+		maxf(0.0, pulse - pulse_step / APPLICATION_PULSE_SECONDS),
+		queued
+	)

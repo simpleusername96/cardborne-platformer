@@ -33,12 +33,16 @@ const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.g
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
+const ENEMY_STATUS_SHADER = preload(
+	"res://scripts/presentation/shaders/vehicle_enemy_status_overlay.gdshader"
+)
 
 const ENEMY_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES
 const PROJECTILE_CAPACITY := 240
 const HOSTILE_PROJECTILE_CAPACITY := 120
 const EXPERIENCE_CAPACITY := 192
-const BUFFER_FLOATS_PER_INSTANCE := 12
+const BASE_BUFFER_FLOATS_PER_INSTANCE := 12
+const CUSTOM_BUFFER_FLOATS_PER_INSTANCE := 16
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
 const MAX_INSTALLATION_HEALTH_BARS := 12
 const MAX_BOSS_HEALTH_BARS := 1
@@ -58,8 +62,8 @@ const CARDINAL_DIRECTIONS := [
 	Vector2.UP,
 	Vector2.DOWN,
 ]
-const STATUS_STACK_ALPHA := [0.12, 0.16, 0.20]
-const STATUS_APPLICATION_ALPHA_MAX := 0.32
+const STATUS_STACK_MIX := [0.66, 0.76, 0.84]
+const STATUS_APPLICATION_MIX_MAX := 0.94
 const BEAM_STARTUP_BODY_ALPHA := Vector2(0.16, 0.34)
 const BEAM_STARTUP_FILAMENT_ALPHA := Vector2(0.32, 0.66)
 const BEAM_STARTUP_FILAMENT_WIDTH_MAX := 3.5
@@ -72,13 +76,21 @@ const BEAM_ACTIVE_CORE_WIDTH_MAX := 7.0
 const BEAM_ACTIVE_CORE_WIDTH_RATIO := 0.10
 class BatchBuffer:
 	var values := PackedFloat32Array()
+	var floats_per_instance := BASE_BUFFER_FLOATS_PER_INSTANCE
+	var custom_data_enabled := false
 
 
-	func _init(capacity: int) -> void:
-		values.resize(capacity * BUFFER_FLOATS_PER_INSTANCE)
+	func _init(capacity: int, use_custom_data: bool = false) -> void:
+		custom_data_enabled = use_custom_data
+		floats_per_instance = (
+			CUSTOM_BUFFER_FLOATS_PER_INSTANCE
+			if custom_data_enabled
+			else BASE_BUFFER_FLOATS_PER_INSTANCE
+		)
+		values.resize(capacity * floats_per_instance)
 
 	func resize(capacity: int) -> void:
-		values.resize(capacity * BUFFER_FLOATS_PER_INSTANCE)
+		values.resize(capacity * floats_per_instance)
 
 
 	func write(
@@ -86,14 +98,16 @@ class BatchBuffer:
 		position: Vector2,
 		angle: float,
 		scale: Vector2,
-		color: Color
+		color: Color,
+		custom_data: Color = Color.TRANSPARENT
 	) -> void:
 		write_basis(
 			instance_index,
 			position,
 			Vector2(cos(angle), sin(angle)),
 			scale,
-			color
+			color,
+			custom_data
 		)
 
 
@@ -102,9 +116,10 @@ class BatchBuffer:
 		position: Vector2,
 		x_axis: Vector2,
 		scale: Vector2,
-		color: Color
+		color: Color,
+		custom_data: Color = Color.TRANSPARENT
 	) -> void:
-		var offset := instance_index * BUFFER_FLOATS_PER_INSTANCE
+		var offset := instance_index * floats_per_instance
 		# Godot's 2D MultiMesh buffer stores row-major Transform2D values:
 		# [x.x, y.x, 0, origin.x, x.y, y.y, 0, origin.y], then RGBA.
 		values[offset] = x_axis.x * scale.x
@@ -119,6 +134,11 @@ class BatchBuffer:
 		values[offset + 9] = color.g
 		values[offset + 10] = color.b
 		values[offset + 11] = color.a
+		if custom_data_enabled:
+			values[offset + 12] = custom_data.r
+			values[offset + 13] = custom_data.g
+			values[offset + 14] = custom_data.b
+			values[offset + 15] = custom_data.a
 
 
 class BatchHandle:
@@ -179,6 +199,7 @@ class SemanticTextureSpec:
 
 var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
+var _enemy_status_material: ShaderMaterial
 var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
 var _thermal_impact_batch: BatchHandle
@@ -367,6 +388,8 @@ func debug_semantic_texture_draws(asset_id: StringName = &"") -> Array[Dictionar
 
 
 func _build_batches() -> void:
+	_enemy_status_material = ShaderMaterial.new()
+	_enemy_status_material.shader = ENEMY_STATUS_SHADER
 	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
 		if archetype == &"stage_boss":
 			continue
@@ -377,6 +400,8 @@ func _build_batches() -> void:
 			0,
 			archetype,
 			ENEMY_BATCH_INITIAL_CAPACITY,
+			true,
+			_enemy_status_material,
 			true
 		)
 	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
@@ -387,6 +412,8 @@ func _build_batches() -> void:
 			0,
 			StringName("boss_%s" % String(variant)),
 			-1,
+			true,
+			_enemy_status_material,
 			true
 		)
 	_projectile_batches[ProjectileCatalog.PLAYER_PRIMARY] = _create_asset_batch(
@@ -516,7 +543,8 @@ func _create_batch(
 	_buffer_key: StringName,
 	initial_capacity: int = -1,
 	texture: Texture2D = null,
-	material: Material = null
+	material: Material = null,
+	use_custom_data: bool = false
 ) -> BatchHandle:
 	var allocated_capacity := (
 		capacity
@@ -526,6 +554,7 @@ func _create_batch(
 	var multi_mesh := MultiMesh.new()
 	multi_mesh.transform_format = MultiMesh.TRANSFORM_2D
 	multi_mesh.use_colors = true
+	multi_mesh.use_custom_data = use_custom_data
 	multi_mesh.instance_count = allocated_capacity
 	multi_mesh.visible_instance_count = 0
 	multi_mesh.mesh = mesh
@@ -539,7 +568,7 @@ func _create_batch(
 	add_child(instance)
 	var handle := BatchHandle.new(
 		instance,
-		BatchBuffer.new(allocated_capacity),
+		BatchBuffer.new(allocated_capacity, use_custom_data),
 		capacity
 	)
 	_batches.append(handle)
@@ -620,7 +649,9 @@ func _create_asset_batch(
 	child_z: int,
 	buffer_key: StringName,
 	initial_capacity: int = -1,
-	_outlined: bool = false
+	_outlined: bool = false,
+	material: Material = null,
+	use_custom_data: bool = false
 ) -> BatchHandle:
 	var mesh := AssetProvider.normalized_mesh(asset_id)
 	var texture := AssetProvider.texture(asset_id)
@@ -633,7 +664,9 @@ func _create_asset_batch(
 		child_z,
 		buffer_key,
 		initial_capacity,
-		texture
+		texture,
+		material,
+		use_custom_data
 	)
 
 
@@ -695,7 +728,8 @@ func _sync_enemies(
 			position,
 			angle,
 			Vector2.ONE * radius,
-			_enemy_body_modulate(enemy, reduced_motion)
+			_enemy_body_modulate(enemy),
+			_enemy_status_custom_data(enemy, reduced_motion)
 		)
 		if role == &"stage_boss" and _boss_health_bar_count < MAX_BOSS_HEALTH_BARS:
 			_sync_health_bar(
@@ -731,10 +765,7 @@ func _sync_enemies(
 	_installation_health_bar_count = _installation_health_candidate_count
 
 
-func _enemy_body_modulate(
-	enemy: EnemyState,
-	reduced_motion: bool
-) -> Color:
+func _enemy_body_modulate(enemy: EnemyState) -> Color:
 	if enemy.flash > 0.0:
 		return Color(1.0, 0.66, 0.66, 1.0)
 	var body_color := Color.WHITE
@@ -744,24 +775,40 @@ func _enemy_body_modulate(
 		body_color = Color(0.72, 1.0, 0.88, 1.0)
 	elif enemy.guard_plate_structure > 0.0:
 		body_color = Color(0.82, 0.90, 1.0, 1.0)
-	var toxin_alpha := _status_overlay_alpha(
+	return body_color
+
+
+func _enemy_status_custom_data(
+	enemy: EnemyState,
+	reduced_motion: bool
+) -> Color:
+	if enemy.flash > 0.0:
+		return Color.TRANSPARENT
+	var toxin_mix := _status_overlay_mix(
 		enemy.toxin_stack_ratio,
 		enemy.toxin_application_pulse,
 		reduced_motion
 	)
-	if toxin_alpha > 0.0:
-		body_color = body_color.lerp(Color(Art.TOXIN, 1.0), toxin_alpha)
-	var cryo_alpha := _status_overlay_alpha(
+	var cryo_mix := _status_overlay_mix(
 		enemy.cryo_stack_ratio,
 		enemy.cryo_application_pulse,
 		reduced_motion
 	)
-	if cryo_alpha > 0.0:
-		body_color = body_color.lerp(Color(Art.CRYO, 1.0), cryo_alpha)
-	return body_color
+	var total_mix := toxin_mix + cryo_mix
+	if total_mix <= 0.0:
+		return Color.TRANSPARENT
+	var toxin_color := Color(Art.TOXIN, 1.0)
+	var cryo_color := Color(Art.CRYO, 1.0)
+	var semantic_color := Color(
+		(toxin_color.r * toxin_mix + cryo_color.r * cryo_mix) / total_mix,
+		(toxin_color.g * toxin_mix + cryo_color.g * cryo_mix) / total_mix,
+		(toxin_color.b * toxin_mix + cryo_color.b * cryo_mix) / total_mix,
+		maxf(toxin_mix, cryo_mix)
+	)
+	return semantic_color
 
 
-static func _status_overlay_alpha(
+static func _status_overlay_mix(
 	stack_ratio: float,
 	application_pulse: float,
 	reduced_motion: bool
@@ -769,12 +816,12 @@ static func _status_overlay_alpha(
 	if stack_ratio <= 0.0:
 		return 0.0
 	var stack_index := clampi(ceili(stack_ratio * 3.0) - 1, 0, 2)
-	var persistent_alpha: float = STATUS_STACK_ALPHA[stack_index]
+	var persistent_mix: float = STATUS_STACK_MIX[stack_index]
 	if reduced_motion:
-		return persistent_alpha
+		return persistent_mix
 	return lerpf(
-		persistent_alpha,
-		STATUS_APPLICATION_ALPHA_MAX,
+		persistent_mix,
+		STATUS_APPLICATION_MIX_MAX,
 		clampf(application_pulse, 0.0, 1.0)
 	)
 
@@ -1529,10 +1576,24 @@ func _enemy_angle(archetype: StringName, enemy: EnemyState, player_position: Vec
 	return 0.0
 
 
-func _write_instance(batch: BatchHandle, position: Vector2, angle: float, scale: Vector2, color: Color) -> void:
+func _write_instance(
+	batch: BatchHandle,
+	position: Vector2,
+	angle: float,
+	scale: Vector2,
+	color: Color,
+	custom_data: Color = Color.TRANSPARENT
+) -> void:
 	if not batch.ensure_capacity(batch.count + 1):
 		return
-	batch.buffer.write(batch.count, position, angle, scale, color)
+	batch.buffer.write(
+		batch.count,
+		position,
+		angle,
+		scale,
+		color,
+		custom_data
+	)
 	batch.count += 1
 
 

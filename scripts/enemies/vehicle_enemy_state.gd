@@ -96,6 +96,8 @@ var toxin_stack_ratio := 0.0
 var cryo_stack_ratio := 0.0
 var toxin_application_pulse := 0.0
 var cryo_application_pulse := 0.0
+var toxin_application_delay := 0.0
+var cryo_application_delay := 0.0
 var runtime_slot := -1
 # Stable pool identity and reuse generation let spatial membership reject stale
 # cell entries after swap retirement or pooled actor reuse.
@@ -112,6 +114,8 @@ func reset_runtime_collections() -> void:
 	cryo_stack_ratio = 0.0
 	toxin_application_pulse = 0.0
 	cryo_application_pulse = 0.0
+	toxin_application_delay = 0.0
+	cryo_application_delay = 0.0
 	lane_centers.clear()
 	attack_telegraphs.clear()
 	target_score = 0.0
