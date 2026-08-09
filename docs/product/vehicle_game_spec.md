@@ -172,7 +172,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   English rather than reusing another field's label.
 - Every registered field uses a `7200x4320` world rectangle and respawns the
   player at `(3600, 2160)`.
-- Run-fixed wall, hazard, and gate footprints have no forbidden overlap and
+- Run-fixed wall and gate footprints have no forbidden overlap and
   remain outside the player-start clearance. The generator treats their exact
   rectangles or effect radii as reserved space for stage devices, crates,
   pickups, ordinary spawn anchors, and boss arrival anchors.
@@ -184,14 +184,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   uses 192-pixel wall thickness, 96-pixel grid alignment, and 90-degree
   rotation. The selected walls are validated for the ordinary 36-pixel and
   boss 76-pixel actor radii before play.
-- The generator also places exactly four traversable hazard footprints:
-  `768x576`, `960x576`, `1152x480`, and `864x672`. A run selects one shared
-  hazard presentation, toxic bog or lava pool, while both use the same neutral
-  damage rule. The combined footprint is broad ground pressure, not a narrow
-  pass-through wall.
+- The generator places no neutral or traversable damage zone. Only authored
+  enemy and boss attacks can create hostile damage areas on the field.
 - Rendering, movement, projectile collision, line of sight, pursuit, minimap,
   and validation consume the same active tactical layout. Exact retries
-  reproduce it, and the inner-wall and hazard geometry remains fixed through all five
+  reproduce it, and the inner-wall geometry remains fixed through all five
   stages so a run reads as one continuous field rather than five reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
   least thirty-two content candidates are reusable authored sources. Each
@@ -490,10 +487,9 @@ does not produce a transient message.
 - Stage 1–4 success history is retained for later inspection but does not open a
   modal report. Stage 5 result lists actual defeat counts and effective outgoing
   damage by stable source, plus a second partition by kinetic, thermal, toxin,
-  cryo, or arc attribute. Both outgoing totals agree within 0.01 and
-  neutral hazard-zone damage is excluded. A failed attempt opens the report in
-  failure mode with the last hit and the three largest incoming sources before
-  Garage.
+  cryo, or arc attribute. Both outgoing totals agree within 0.01. A failed
+  attempt opens the report in failure mode with the last hit and the three
+  largest incoming sources before Garage.
 - Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
 - One upgrade offer contains one to three unique compatible card IDs. The
@@ -548,9 +544,8 @@ does not produce a transient message.
   spatial-query path, presentation batch, retirement rule, and deterministic
   performance-scenario coverage before increasing runtime load.
 - Static minimap geometry and each bounded dynamic tactical snapshot use one
-  vertex-colored mesh surface. Four hazard footprints and at most three Mystery
-  Devices reuse retained world batches; neither system creates per-actor canvas
-  draws or per-field scene nodes.
+  vertex-colored mesh surface. At most three Mystery Devices reuse retained
+  world batches and create no per-actor canvas draws or per-field scene nodes.
 - Combat presentation coalesces mobile enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained
   batches. The hard ceiling remains 50 combat batches.

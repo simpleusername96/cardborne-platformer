@@ -27,7 +27,7 @@ func _initialize() -> void:
 	_expect(Catalog.boss_arrival_anchors().size() == 12, "field has twelve boss anchors")
 	for stage_id in Catalog.STAGE_IDS:
 		var tactical := layout.tactical_layout(stage_id)
-		_expect(tactical.cover_rects.size() == 8, "%s has eight modular blockers" % stage_id)
+		_expect(tactical.cover_rects.is_empty(), "%s retires dedicated tactical blockers" % stage_id)
 		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s retains twenty ordinary anchors" % stage_id)
 		for anchor in tactical.ordinary_spawn_anchors:
 			_expect(Rules.grid_reachable_with_extra(Catalog.player_start(), anchor, 36.0, 96.0, false, stage_id, tactical.cover_rects), "%s ordinary anchor reaches center" % stage_id)

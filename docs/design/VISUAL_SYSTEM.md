@@ -347,11 +347,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   `map_inner_wall_fill`로 그린다. outline, bevel, shadow와 patterned raster를
   덧붙이지 않는다. inner wall은 straight/L/T/step shape가 달라도 같은 단색
   역할을 유지한다.
-- toxic bog와 lava pool은 exact gameplay rectangle을 채우는 authored full-bleed
-  ground PNG다. 네 구역의 폭은 모두 최소 480 world unit이며 얇은 beam, curtain,
-  fence, lane marker 또는 작은 node로 보일 수 없다. Bog는 toxin, lava는 thermal
-  large plane을 사용하지만 danger projectile보다 높은 밝기나 빠른 animation을
-  갖지 않는다.
+- neutral 또는 traversable damage-zone surface는 사용하지 않는다. 바닥 detail은
+  presentation-only이며 damage, collision, danger telegraph 또는 objective 의미를
+  가질 수 없다.
 - Mystery Device는 reward crate보다 크고 neutral/dark mechanical mass가 지배하는
   exact `192×192` authored body다. 한 개의 restrained system accent만 허용하며
   파괴 전에는 네 결과의 색, glyph, 방향, animation을 노출하지 않는다. 파괴 후

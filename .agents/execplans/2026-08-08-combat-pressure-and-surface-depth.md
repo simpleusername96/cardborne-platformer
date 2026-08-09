@@ -595,7 +595,7 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
     Placement must be identical across all five stages for the same field.
   - Accept: fingerprints are deterministic across rebuilds/stages; all centers are walkable and
     clear; no detail enters collision/topology data; no per-frame RNG or update occurs.
-- [ ] **6.4** Integrate through retained batches and promote only approved SVGs.
+- [x] **6.4** Integrate through retained batches and promote only approved SVGs.
   - Change: add one compact-quad `MultiMeshInstance2D` batch per selected `_01` SVG through the
     existing world builder; change `DECORATION_BUDGET` from zero to 192; retire the two hazard
     PNGs and add the three approved SVG details, producing 70 total manifest images (67 PNG and
@@ -608,10 +608,11 @@ Source owners: three production SurfaceDetail SVG assets, production manifest/wo
     rather than forcing 70. If three batches exceed 12, Godot SVG import is not stable, or
     eligible rendering evidence regresses,
     stop this branch for contract revision; do not silently add chunking or reduce thresholds.
-  - Progress: asset promotion, exact hashes, 70-image manifest, stable SVG import, retained
-    72/72/48 batches, and the focused code/authority gates pass. The 87-image native actual-size
-    and combat-pressure capture passes; Web and explicit grayscale review remain in the Phase 10
-    built-product QA pass.
+  - Evidence: asset promotion, exact hashes, the then-current 70-image manifest, stable SVG import,
+    retained 72/72/48 batches, and the focused code/authority gates pass. The later Thermal impact
+    raises the current manifest independently to 71 images. The 103-image native `1280x720`
+    capture, production Web export, and explicit grayscale review show the sparse details below
+    actors, projectiles, combat areas, objectives, and boundaries.
 - [x] **6.5** Open a dedicated per-asset beam replacement unit.
   - Change: create a workbench unit for `cue/beam_strip_9` instead of reopening the old eight-asset
     rasterization batch. Preserve semantic ID, `128x32` canvas, `[64,16]` pivot, import settings,
@@ -943,19 +944,18 @@ Preconditions:
 Source owners: all task-owned files, focused validators, export tooling, performance recorder and
 scenarios, active performance policy/evidence records
 
-- [ ] **10.1** Run the named focused correctness and authority matrix.
+- [x] **10.1** Run the named focused correctness and authority matrix.
   - Change: run the validators named in each phase, then one consolidated union without repeating
     unchanged passing checks; run Godot headless import, `git diff --check`, document authority,
     visual authority, and a production Web export.
   - Accept: all commands exit zero, Web reports `WEB_EXPORT_OK`, and known non-blocking warnings
     are recorded once.
-  - Progress: before the 2026-08-09 progression-feedback revision, the consolidated gameplay,
-    movement, Thermal Burst damage, world, provider, renderer, capture, workload, workbench, and
-    visual-authority validators passed. Godot import and the four-file production Web export passed
-    with `WEB_EXPORT_OK`. These results do not qualify the new Phases 7-9 workload. Document
-    authority previously retained one known retired-plan failure. The user approved its deletion
-    on 2026-08-09 and the document-authority gate now passes; the consolidated matrix and current
-    production Web export remain pending.
+  - Evidence: on 2026-08-09 the complete union of 68 settings/vehicle Godot validators passed.
+    The run exposed one stale single-field assertion that still expected eight retired tactical
+    blockers; its expectation and the remaining superseded hazard clauses in the product/visual
+    contracts were corrected, then the validator and every following check passed. Godot import,
+    `git diff --check`, document authority, deterministic workbench, workbench validation, and
+    visual authority pass. The current four-file production export reports `WEB_EXPORT_OK`.
 - [ ] **10.2** Perform built-product gameplay and visual QA.
   - Change: use production-style native and built Web paths to check all five ordinary-health
     stages; absence of neutral hazards; pursuit/standoff around cover; XP collection and tail
@@ -972,9 +972,16 @@ scenarios, active performance policy/evidence records
     chains, or damages structures; status overlay never escapes the actor alpha or persists after
     state expiry; Electric Field fills the exact damage disk without reading as a shield; and detail
     never reads as collision or combat signal.
-  - Progress: the pre-revision 87-image Korean `1280x720` native capture verifies the completed
-    beam/surface/boss fixture set. User-controlled movement feel, the new progression/readability
-    states, explicit grayscale review, and interactive built-Web play remain open.
+  - Progress: the current 103-image Korean `1280x720` native capture verifies movement fixtures,
+    progression/readability states, beam, surface, all bosses, status, Electric Field, and Thermal
+    impact/saturation states. Seven representative actual-size outputs also pass explicit
+    grayscale review: equal-width hull/XP remain distinct by thickness and label, minimap roles
+    keep separate silhouettes, the full Electric Field and Thermal impact remain visible, surface
+    detail stays subordinate, and the shielded Stage 5 boss body remains readable. The current Web
+    export serves on the registered `codex` lane with HTTP 200, but interactive browser play is
+    still open because the browser-control runtime failed before navigation with `failed to write
+    kernel assets: 지정된 경로를 찾을 수 없습니다. (os error 3)`. This is tooling evidence, not an
+    application failure. User-controlled native movement feel also remains open.
 - [ ] **10.3** Requalify the exact clean final native commit.
   - Change: after user cost alignment, repeat the Phase 1 `peak_horde` and `capacity_pressure`
     protocol from the exact clean final commit. Compare eligible fields with the Phase 1 baseline;
