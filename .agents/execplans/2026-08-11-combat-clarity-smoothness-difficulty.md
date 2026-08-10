@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-11
 last_reviewed: 2026-08-11
@@ -232,7 +232,7 @@ Out of scope:
   rendered result for grammar, overlap, edge placement, and opacity hierarchy.
 - [x] 4.4 Run Godot import and Web export. Start the built product through the project
   fastrun `codex` lane and smoke the relevant flows.
-- [ ] 4.5 Run comparable native/runtime performance evidence after code stops changing.
+- [x] 4.5 Run comparable native/runtime performance evidence after code stops changing.
   Report the pre-existing red stress baseline honestly and reject any new allocation or
   frame-pacing regression.
 
@@ -240,10 +240,10 @@ Out of scope:
 
 - [x] 5.1 Run the codebase quality audit over all task-owned multi-file changes and make
   only small safe task-scoped corrections.
-- [ ] 5.2 Record commands, results, captures, residual risks, and any user-only play-feel
+- [x] 5.2 Record commands, results, captures, residual risks, and any user-only play-feel
   QA in this plan.
-- [ ] 5.3 Commit only task-owned files in coherent scoped commits.
-- [ ] 5.4 Mark this plan `done` only after every automated gate is complete and no required
+- [x] 5.3 Commit only task-owned files in coherent scoped commits.
+- [x] 5.4 Mark this plan `done` only after every automated gate is complete and no required
   implementation work remains.
 
 ## Test Plan
@@ -337,7 +337,7 @@ deferred to the user after all deterministic and production-build gates pass.
 
 ## Progress and Evidence
 
-- Current step: Task 4.5.
+- Current step: Complete.
 - Evidence baseline: `.agents/combat-clarity-runtime-difficulty-analysis.md`.
 - Commands/results: all affected focused Godot validators passed; the visual-authority
   PowerShell validator passed with the canonical style-sheet hash intact. Godot import
@@ -355,7 +355,30 @@ deferred to the user after all deterministic and production-build gates pass.
   difficulty, boss, and progression owners; the renderer API addition is optional and
   synchronized across callers; bounded capacities and rejection paths are covered; no
   competing runtime owner, catch-all fallback, or untested reachable failure path remains.
-- Residual risks: pending final validation.
+- Performance: clean commit `6af25e29` produced authoritative native fixture records at
+  `build/performance/frame-pacing/final-6af25e29-peak_horde-60s.json` and
+  `final-6af25e29-capacity_pressure-60s.json`. Both preserve exact scenario counts,
+  fixed allocation caps, focus eligibility, and `dirty=false`, but both remain release-red
+  at `7.5` median FPS under the known stress workload. Peak presentation was
+  `4.084 ms` median / `8.219 ms` p95; capacity was `5.154 ms` / `7.915 ms`.
+  Fixed combat allocation count was `1869`, identical to the immediate parent in the
+  available peak diagnostic; the Explosive Seeker receipt reuses the existing `96` effect
+  states. The immediate-parent run could not be
+  made authority-eligible because Chrome/Codex reclaimed focus, and an unrelated
+  `paint-mountain` headless Godot load was already active, so no causal performance
+  improvement or regression is claimed. Invalid focus-loss evidence is preserved beside
+  the final JSON. Built-Web performance was correctly skipped because native release gates
+  are red.
+- Commit: `6af25e29 fix(combat): unify effects and raise encounter pressure` contains the
+  task-owned implementation, specifications, plan contract, and validators. This closure
+  update is the only post-measurement tracked change and is committed separately.
+- Residual risks: whole-run enjoyment, dense-fight heal-link legibility, and health-bar
+  proportion at the user's normal viewport remain subjective user QA. Performance release
+  qualification remains red and requires a separate quiet-environment performance task;
+  it does not invalidate the deterministic correctness or production-build smoke gates.
+  The repository-wide document-authority validator also remains red because the unrelated
+  retired `2026-08-10-combat-correction-and-boss-pattern-expansion.md` still exists in the
+  active tree; this task did not delete or otherwise alter that historical document.
 
 ## Completion Conditions
 
