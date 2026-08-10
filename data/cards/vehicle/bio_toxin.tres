@@ -21,6 +21,7 @@ script = ExtResource("1_def")
 id = &"bio_toxin"
 title_key = "UPGRADE_BIO_TOXIN_TITLE"
 description_key = "UPGRADE_BIO_TOXIN_DESC"
+enhance_description_key = "UPGRADE_BIO_TOXIN_ENHANCE_DESC"
 category = &"element"
 artwork_asset_id = &"upgrade/element_toxin"
 max_level = 3

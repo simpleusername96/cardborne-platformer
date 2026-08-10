@@ -5,9 +5,10 @@
 [resource]
 script = ExtResource("1")
 id = &"seeker"
+upgrade_id = &"homing_missiles"
 name_key = "SECONDARY_HOMING_MISSILES_NAME"
 description_key = "SECONDARY_HOMING_MISSILES_DESC"
 behavior = &"projectile"
-values_by_level = Array[float]([25.0])
-auxiliary_by_level = Array[float]([1.35])
-cap_by_level = Array[int]([1])
+values_by_level = Array[float]([25.0, 28.0, 32.0])
+auxiliary_by_level = Array[float]([1.35, 1.35, 1.35])
+cap_by_level = Array[int]([1, 2, 3])

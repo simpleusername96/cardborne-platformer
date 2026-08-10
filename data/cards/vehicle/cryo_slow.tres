@@ -22,6 +22,7 @@ script = ExtResource("1_def")
 id = &"cryo_slow"
 title_key = "UPGRADE_CRYO_SLOW_TITLE"
 description_key = "UPGRADE_CRYO_SLOW_DESC"
+enhance_description_key = "UPGRADE_CRYO_SLOW_ENHANCE_DESC"
 category = &"element"
 artwork_asset_id = &"upgrade/element_cryo"
 max_level = 3

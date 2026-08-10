@@ -5,15 +5,13 @@ extends RefCounted
 ## seeker and optional weapons share one runtime; VehicleRun remains the sole
 ## projectile-store owner and consumes the borrowed projectile intents.
 
-const DEFINITION_PATH := "res://data/weapons/vehicle/secondary"
 const ION_TICK := 0.25
 const ORBIT_HIT_COOLDOWN := 0.55
 const MINE_LIFETIME := 8.0
-const SEEKER_RANGE := 560.0
-const SEEKER_COOLDOWN := 1.35
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const SecondaryCatalog = preload("res://scripts/player/vehicle_secondary_catalog.gd")
 
-var definitions: Dictionary = {}
+var catalog: RefCounted
 var timers: Dictionary = {}
 var orbit_angle := 0.0
 var orbit_target_cooldowns: Dictionary = {}
@@ -32,33 +30,22 @@ var _result: Dictionary = {}
 
 
 func _init() -> void:
+	catalog = SecondaryCatalog.new()
 	_result = {
 		"damage":_damage_output,
 		"projectiles":_projectile_output,
 		"detonations":_detonation_output,
 	}
-	for file_name in DirAccess.get_files_at(DEFINITION_PATH):
-		var resource_name := _source_resource_name(file_name)
-		if resource_name.is_empty():
-			continue
-		var definition := load(DEFINITION_PATH.path_join(resource_name)) as VehicleSecondaryDefinition
-		if definition != null:
-			definitions[definition.id] = definition
-
-
-static func _source_resource_name(file_name: String) -> String:
-	# Keep dynamic resource discovery identical in source trees and exported packs.
-	if file_name.ends_with(".tres.remap"):
-		return file_name.trim_suffix(".remap")
-	return file_name if file_name.ends_with(".tres") else ""
-
-
 func reset(player_position: Vector2) -> void:
 	timers.clear()
 	orbit_target_cooldowns.clear()
 	mines.clear()
 	orbit_angle = 0.0
 	seeker_cooldown = 0.0
+
+
+func _definition(secondary_id: StringName) -> VehicleSecondaryDefinition:
+	return catalog.call("get_definition", secondary_id) as VehicleSecondaryDefinition
 
 
 func update(
@@ -167,7 +154,7 @@ func fill_presentation_snapshot(
 
 
 func _electric_field_radius(build: VehicleRunBuild) -> float:
-	var definition: VehicleSecondaryDefinition = definitions.get(&"electric_field")
+	var definition := _definition(&"electric_field")
 	if definition == null:
 		return 0.0
 	var level := build.level_of(definition.upgrade_id)
@@ -175,14 +162,15 @@ func _electric_field_radius(build: VehicleRunBuild) -> float:
 
 
 func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
+	var seeker := _definition(&"seeker")
 	var result: Array[Dictionary] = [{
 		"id":&"seeker",
 		"level":1,
-		"name_key":"SECONDARY_HOMING_MISSILES_NAME",
+		"name_key":seeker.name_key if seeker != null else "SECONDARY_HOMING_MISSILES_NAME",
 		"slot_kind":&"built_in",
 	}]
 	for secondary_id in [&"electric_field", &"orbiting_blades", &"drop_mines"]:
-		var definition: VehicleSecondaryDefinition = definitions.get(secondary_id)
+		var definition := _definition(secondary_id)
 		if definition == null:
 			continue
 		var level := build.level_of(definition.upgrade_id)
@@ -202,13 +190,17 @@ func _update_seeker(
 ) -> void:
 	if blocked or seeker_cooldown > 0.0 or not find_targets.is_valid():
 		return
+	var definition := _definition(&"seeker")
+	if definition == null:
+		return
 	var missile_level := clampi(build.level_of(&"homing_missiles"), 0, 2)
-	var seeker_count := 1 + missile_level
+	var definition_level := missile_level + 1
+	var seeker_count := definition.cap(definition_level)
 	var targets_variant: Variant = find_targets.call(seeker_count)
 	if not targets_variant is Array or targets_variant.is_empty():
 		return
-	seeker_cooldown = SEEKER_COOLDOWN * cooldown_multiplier
-	var seeker_damage: float = [25.0, 28.0, 32.0][missile_level]
+	seeker_cooldown = definition.auxiliary(definition_level) * cooldown_multiplier
+	var seeker_damage := definition.value(definition_level)
 	for target_variant in targets_variant:
 		var target := target_variant as EnemyState
 		if target == null:
@@ -234,7 +226,7 @@ func _update_seeker(
 
 
 func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
-	var definition: VehicleSecondaryDefinition = definitions.get(&"electric_field")
+	var definition := _definition(&"electric_field")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		return
@@ -256,7 +248,7 @@ func _update_orbit(
 	query_radius: Callable,
 	output: Array[Dictionary]
 ) -> void:
-	var definition: VehicleSecondaryDefinition = definitions.get(&"orbiting_blades")
+	var definition := _definition(&"orbiting_blades")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		return
@@ -285,7 +277,7 @@ func _update_mines(
 	damage_output: Array[Dictionary],
 	detonation_output: Array[Dictionary]
 ) -> void:
-	var definition: VehicleSecondaryDefinition = definitions.get(&"drop_mines")
+	var definition := _definition(&"drop_mines")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		mines.clear()

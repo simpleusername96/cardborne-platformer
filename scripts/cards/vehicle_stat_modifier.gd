@@ -5,7 +5,7 @@ extends Resource
 @export_enum("multiply", "add") var operation := "multiply"
 ## Presentation unit for the upgrade-card comparison row. Runtime values keep
 ## their domain unit; the UI only formats the already-authored number.
-@export_enum("none", "percent") var display_unit := "none"
+@export_enum("none", "percent", "seconds") var display_unit := "none"
 ## Optional effective value shown before the first card level. This keeps a
 ## built-in stat floor visible without changing the modifier's runtime value.
 @export var level_zero_display_override_enabled := false

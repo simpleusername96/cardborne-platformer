@@ -61,21 +61,23 @@ func _initialize() -> void:
 func _validate_description_density(catalog: VehicleUpgradeCatalog) -> void:
 	var original_locale := TranslationServer.get_locale()
 	for definition in catalog.all_definitions():
-		TranslationServer.set_locale("ko")
-		var korean := tr(definition.description_key).strip_edges()
-		_expect(
-			korean.length() >= 7 and korean.length() <= 13,
-			"%s Korean summary stays near ten characters: %s"
-			% [definition.id, korean]
-		)
-		TranslationServer.set_locale("en")
-		var english := tr(definition.description_key).strip_edges()
-		var word_count := english.split(" ", false).size()
-		_expect(
-			word_count >= 2 and word_count <= 5 and english.length() <= 24,
-			"%s English summary stays within one compact phrase: %s"
-			% [definition.id, english]
-		)
+		for current_level in definition.max_level:
+			var snapshot := OfferPresenter.snapshot(definition, current_level)
+			TranslationServer.set_locale("ko")
+			var korean := tr(String(snapshot["description_key"])).strip_edges()
+			_expect(
+				korean.length() >= 7 and korean.length() <= 13,
+				"%s level %d Korean summary stays near ten characters: %s"
+				% [definition.id, current_level + 1, korean]
+			)
+			TranslationServer.set_locale("en")
+			var english := tr(String(snapshot["description_key"])).strip_edges()
+			var word_count := english.split(" ", false).size()
+			_expect(
+				word_count >= 2 and word_count <= 5 and english.length() <= 24,
+				"%s level %d English summary stays within one compact phrase: %s"
+				% [definition.id, current_level + 1, english]
+			)
 	TranslationServer.set_locale(original_locale)
 
 
@@ -500,8 +502,8 @@ func _validate_panel(
 				and int(card_contract["next_level"])
 					<= int(card_contract["max_level"])
 				and String(card_contract["level_text"]).contains("→")
-				and int(card_contract["value_rows"]) >= 1,
-			"%s card always exposes its real current-to-next level" % context
+				and int(card_contract["effect_rows"]) >= 1,
+			"%s card exposes its level plus at least one real effect row" % context
 		)
 	var expected_panel_scale := (
 		{"message":15, "confirm":22}

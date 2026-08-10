@@ -800,8 +800,8 @@ func _capture_level_up_evidence() -> void:
 	prepare_stage(0)
 	var first_acquisition := _upgrade_offer_fixture([
 		[&"thermal_burst", 0],
-		[&"pickup_radius", 0],
-		[&"homing_missiles", 0],
+		[&"split_muzzle", 0],
+		[&"electric_field", 0],
 	])
 	_run._ui.show_upgrade(first_acquisition)
 	await _settle_capture()
@@ -811,7 +811,7 @@ func _capture_level_up_evidence() -> void:
 	_save_capture("06b-thermal-first-selected.png")
 	var enhancement := _upgrade_offer_fixture([
 		[&"thermal_burst", 1],
-		[&"pickup_radius", 1],
+		[&"drop_mines", 1],
 		[&"homing_missiles", 1],
 	])
 	_run._ui.show_upgrade(enhancement)

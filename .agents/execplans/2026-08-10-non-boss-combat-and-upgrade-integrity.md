@@ -449,24 +449,24 @@ Source owners: `scripts/player/vehicle_primary_upgrade_rules.gd`,
 `scripts/cards/vehicle_upgrade_offer_presenter.gd`,
 `scripts/ui/vehicle_upgrade_choice_card.gd`, card/secondary `.tres`, localization
 
-- [ ] **1.1 Centralize behavior values without changing them.**
+- [x] **1.1 Centralize behavior values without changing them.**
   - Change: extract primary upgrade rules, centralize secondary definition loading, expand
     Seeker's definition to base/L1/L2, and make primary/secondary runtime consume those
     owners. Preserve every damage, count, angle, interval, radius, cap, cadence, and slot rule.
   - Accept: focused primary/secondary tests prove exact equivalence for all levels; repository
     search finds no duplicate Seeker arrays or Split/Pierce rule tables in runtime/presenter.
-- [ ] **1.2 Publish exact behavior effect previews.**
+- [x] **1.2 Publish exact behavior effect previews.**
   - Change: implement the locked six-card row matrix and correct first-acquisition current
     visibility. Existing modifier-backed cards continue through real modifiers.
   - Accept: every legal card/current-level pair publishes one or two effect rows, never
     more than two; exact numeric sequences match gameplay owners.
-- [ ] **1.3 Publish correct level-aware semantics and copy.**
+- [x] **1.3 Publish correct level-aware semantics and copy.**
   - Change: add optional enhancement description ownership, three localized element
     enhancement summaries, and correct built-in Seeker's first-offer kind to `enhance`.
   - Accept: first element/optional-secondary acquisition remains an unlock, Seeker is an
     enhancement from its first offer, and every later behavior level is an enhancement in
     accessibility text and frozen snapshot data.
-- [ ] **1.4 Close the upgrade UI gate.**
+- [x] **1.4 Close the upgrade UI gate.**
   - Change: keep the existing vertical hierarchy and zero-divider structure; strengthen
     validators to assert actual `effect_rows >= 1` rather than combined `value_rows`.
   - Accept: Korean/English at 960x540, 1280x720, 1920x1080, and 200% text scale show no
@@ -846,19 +846,24 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1, with the approval-gated Phase 0.3 baseline still required before
-  any Phase 2 runtime hot-path edit.
-- Next task: 1.1, centralize behavior values without changing them.
-- Last completed gate: Phase 0 contract/oracle checkpoint. The three owning specs match the
-  locked upgrade, contact, reinforcement, and exact-area contracts;
-  `VEHICLE_DAMAGE_FEEDBACK_VALIDATION_OK`, `CARDBORNE_VISUAL_AUTHORITY_VALIDATION_OK`,
-  focused stale-wavefront search, and `git diff --check` pass.
+- Current phase: Phase 0.3 approval gate before Phase 2. Phase 1 is complete and no runtime
+  hot-path work has started.
+- Next task: 0.3, obtain alignment and record the clean native before baseline.
+- Last completed gate: Phase 1 upgrade gate. Upgrade system, secondary weapons, upgrade UI,
+  UI localization, stage UI layout, capture driver, visual authority, Godot import, and
+  `git diff --check` pass. The compact Korean capture manifest completed under
+  `build/captures/combat-upgrade-effect-integrity/phase1-ko-960/`; inspected `06` and `06c`
+  show Thermal unlock/enhancement plus Split, Electric, Mine, and Seeker effect rows with
+  the correct final summaries and no divider, clipping, or overflow.
 - Verified source baseline: clean commit `04839774` preceded the Task 0.1/0.2 work. The
   former crate-warning failure was fixture contamination from generated cover; the isolated
   one-crate clear-path fixture passes without a runtime geometry change. Phase 0.3 has not
   yet produced an eligible native performance baseline.
-- Implementation completed under this contract: Tasks 0.1 and 0.2. Phase 0.3 remains
-  unchecked because its two 60-second foreground scenarios require user alignment.
+- Implementation completed under this contract: Tasks 0.1, 0.2, and 1.1-1.4. Primary
+  Split/Pierce and secondary definitions now own runtime/preview values; all 36 offer states
+  expose one or two rows; built-in Seeker begins as `enhance`; element enhancement copy is
+  level-aware. Phase 0.3 remains unchecked because its two 60-second foreground scenarios
+  require user alignment.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 

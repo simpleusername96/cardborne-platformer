@@ -4,6 +4,7 @@ const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const PrimaryRules = preload("res://scripts/player/vehicle_primary_upgrade_rules.gd")
 
 const RETIRED_IDS: Array[StringName] = [
 	&"accelerator_coil", &"aegis_cycle", &"concentrated_toxin", &"contagion",
@@ -40,6 +41,7 @@ func _initialize() -> void:
 		failures.append(error)
 	_expect(catalog.definitions.size() == 13, "catalog contains exactly 13 upgrades")
 	_validate_presentation(catalog)
+	_validate_behavior_previews(catalog)
 	_validate_secondary_slots(catalog)
 	_validate_element_lock(catalog)
 	_validate_offers(catalog)
@@ -68,14 +70,19 @@ func _validate_presentation(catalog: Catalog) -> void:
 				% [definition.id, current_level + 1]
 			)
 			_expect(
-				Array(snapshot["effect_rows"]).size() <= 2,
-				"%s level %d has at most two effect rows"
+				Array(snapshot["effect_rows"]).size() >= 1
+					and Array(snapshot["effect_rows"]).size() <= 2,
+				"%s level %d has one or two effect rows"
 				% [definition.id, current_level + 1]
 			)
 			var expected_kind := (
-				(&"unlock" if current_level == 0 else &"enhance")
-				if definition.category == &"element" or definition.modifiers.is_empty()
-				else &"stats"
+				&"stats"
+				if not definition.modifiers.is_empty() and definition.category != &"element"
+				else (
+					&"enhance"
+					if definition.secondary_slot_kind == &"built_in"
+					else (&"unlock" if current_level == 0 else &"enhance")
+				)
 			)
 			_expect(
 				StringName(snapshot["change_kind"]) == expected_kind,
@@ -95,6 +102,105 @@ func _validate_presentation(catalog: Catalog) -> void:
 		},
 		"four player-facing categories own the exact minimal roster"
 	)
+
+
+func _validate_behavior_previews(catalog: Catalog) -> void:
+	_expect(
+		PrimaryRules.projectiles_per_volley(0) == 1
+			and PrimaryRules.projectiles_per_volley(1) == 2
+			and PrimaryRules.projectiles_per_volley(2) == 3
+			and is_equal_approx(PrimaryRules.total_volley_damage_percent(0), 100.0)
+			and is_equal_approx(PrimaryRules.total_volley_damage_percent(1), 140.0)
+			and is_equal_approx(PrimaryRules.total_volley_damage_percent(2), 165.0)
+			and PrimaryRules.additional_penetrations(3) == 3,
+		"primary gameplay rules own the exact Split and Pierce sequences"
+	)
+	var cases := [
+		{
+			"id":&"split_muzzle",
+			"keys":["UPGRADE_EFFECT_PROJECTILES_PER_VOLLEY", "UPGRADE_EFFECT_TOTAL_VOLLEY_DAMAGE"],
+			"current":[[1.0, 2.0], [100.0, 140.0]],
+			"next":[[2.0, 3.0], [140.0, 165.0]],
+			"show":[true, true],
+		},
+		{
+			"id":&"piercing_rounds",
+			"keys":["UPGRADE_EFFECT_ADDITIONAL_PENETRATIONS"],
+			"current":[[0.0, 1.0, 2.0]],
+			"next":[[1.0, 2.0, 3.0]],
+			"show":[true, true, true],
+		},
+		{
+			"id":&"homing_missiles",
+			"keys":["UPGRADE_EFFECT_MISSILES_PER_VOLLEY", "UPGRADE_EFFECT_DAMAGE_PER_MISSILE"],
+			"current":[[1.0, 2.0], [25.0, 28.0]],
+			"next":[[2.0, 3.0], [28.0, 32.0]],
+			"show":[true, true],
+		},
+		{
+			"id":&"electric_field",
+			"keys":["UPGRADE_EFFECT_DPS", "UPGRADE_EFFECT_RADIUS"],
+			"current":[[8.0, 8.0, 12.0], [120.0, 120.0, 140.0]],
+			"next":[[8.0, 12.0, 16.0], [120.0, 140.0, 160.0]],
+			"show":[false, true, true],
+		},
+		{
+			"id":&"orbiting_blades",
+			"keys":["UPGRADE_EFFECT_BLADE_COUNT", "UPGRADE_EFFECT_DAMAGE_PER_BLADE"],
+			"current":[[2.0, 2.0, 3.0], [14.0, 14.0, 18.0]],
+			"next":[[2.0, 3.0, 4.0], [14.0, 18.0, 22.0]],
+			"show":[false, true, true],
+		},
+		{
+			"id":&"drop_mines",
+			"keys":["UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_DEPLOYMENT_INTERVAL"],
+			"current":[[48.0, 48.0, 60.0], [3.2, 3.2, 2.8]],
+			"next":[[48.0, 60.0, 72.0], [3.2, 2.8, 2.4]],
+			"show":[false, true, true],
+		},
+	]
+	for case_variant in cases:
+		var case := Dictionary(case_variant)
+		var definition := catalog.get_definition(StringName(case["id"]))
+		for current_level in definition.max_level:
+			var snapshot := OfferPresenter.snapshot(definition, current_level)
+			var rows: Array = snapshot["effect_rows"]
+			_expect(
+				rows.size() == Array(case["keys"]).size(),
+				"%s level %d publishes the expected row count"
+				% [case["id"], current_level + 1]
+			)
+			for row_index in mini(rows.size(), Array(case["keys"]).size()):
+				var row := Dictionary(rows[row_index])
+				_expect(
+					String(row["stat_key"]) == String(Array(case["keys"])[row_index])
+						and is_equal_approx(
+							float(row["current"]),
+							float(Array(Array(case["current"])[row_index])[current_level])
+						)
+						and is_equal_approx(
+							float(row["next"]),
+							float(Array(Array(case["next"])[row_index])[current_level])
+						)
+						and bool(row["show_current"]) == bool(Array(case["show"])[current_level]),
+					"%s level %d row %d matches gameplay-owned values"
+					% [case["id"], current_level + 1, row_index + 1]
+				)
+	var enhancement_keys := {
+		&"thermal_burst":"UPGRADE_THERMAL_BURST_ENHANCE_DESC",
+		&"bio_toxin":"UPGRADE_BIO_TOXIN_ENHANCE_DESC",
+		&"cryo_slow":"UPGRADE_CRYO_SLOW_ENHANCE_DESC",
+	}
+	for upgrade_id_variant in enhancement_keys:
+		var upgrade_id := StringName(upgrade_id_variant)
+		var definition := catalog.get_definition(upgrade_id)
+		_expect(
+			String(OfferPresenter.snapshot(definition, 0)["description_key"])
+				== definition.description_key
+				and String(OfferPresenter.snapshot(definition, 1)["description_key"])
+					== String(enhancement_keys[upgrade_id]),
+			"%s switches from unlock to enhancement summary" % upgrade_id
+		)
 
 
 func _validate_secondary_slots(catalog: Catalog) -> void:

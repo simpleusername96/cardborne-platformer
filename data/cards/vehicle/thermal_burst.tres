@@ -20,6 +20,7 @@ script = ExtResource("1_def")
 id = &"thermal_burst"
 title_key = "UPGRADE_THERMAL_BURST_TITLE"
 description_key = "UPGRADE_THERMAL_BURST_DESC"
+enhance_description_key = "UPGRADE_THERMAL_BURST_ENHANCE_DESC"
 category = &"element"
 artwork_asset_id = &"upgrade/element_thermal"
 max_level = 3

@@ -78,6 +78,7 @@ const ReinforcementFacilityRuntime = preload(
 const DamageSourceCatalog = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
 const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
+const PrimaryUpgradeRules = preload("res://scripts/player/vehicle_primary_upgrade_rules.gd")
 const StageReportBuilder = preload("res://scripts/combat/vehicle_stage_report_builder.gd")
 const CaptureDriver = preload("res://scripts/vehicle/vehicle_run_capture_driver.gd")
 const CaptureGateway = preload("res://scripts/vehicle/vehicle_run_capture_gateway.gd")
@@ -1572,24 +1573,22 @@ func _fire_primary() -> void:
 	player_muzzle_flash = 0.075
 	_primary_shot_serial += 1
 	var origin := player_position + player_aim_direction * 39.0
-	var fork_level := mini(2, run_build.level_of(&"split_muzzle"))
-	var spread_step := deg_to_rad(7.0)
+	var fork_level := run_build.level_of(&"split_muzzle")
 	var projectile_range := _primary_projectile_range()
-	var projectile_specs: Array[Dictionary] = [{"angle":0.0, "scale":1.0}]
-	if fork_level == 1:
-		var side_sign := -1.0 if _primary_shot_serial % 2 == 0 else 1.0
-		projectile_specs.append({"angle":side_sign * spread_step, "scale":0.40})
-	elif fork_level >= 2:
-		projectile_specs.append({"angle":-spread_step, "scale":0.325})
-		projectile_specs.append({"angle":spread_step, "scale":0.325})
-	for spec in projectile_specs:
-		var scale := float(spec["scale"])
+	for projectile_index in PrimaryUpgradeRules.projectiles_per_volley(fork_level):
+		var scale := PrimaryUpgradeRules.projectile_damage_scale(
+			fork_level, projectile_index
+		)
 		_spawn_player_projectile(
 			origin,
-			player_aim_direction.rotated(float(spec["angle"])),
+			player_aim_direction.rotated(PrimaryUpgradeRules.projectile_angle(
+				fork_level, _primary_shot_serial, projectile_index
+			)),
 			18.0 * scale,
 			PRIMARY_PROJECTILE_SPEED,
-			run_build.level_of(&"piercing_rounds"),
+			PrimaryUpgradeRules.additional_penetrations(
+				run_build.level_of(&"piercing_rounds")
+			),
 			PRIMARY_PROJECTILE_RADIUS,
 			18.0 * scale,
 			projectile_range,

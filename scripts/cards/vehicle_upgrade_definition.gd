@@ -4,6 +4,8 @@ extends Resource
 @export var id: StringName
 @export var title_key := ""
 @export var description_key := ""
+## Optional summary used after the first acquired level.
+@export var enhance_description_key := ""
 ## Player-facing build lane. Trigger ownership and slot ownership remain
 ## separate so category names stay stable when a behavior changes internally.
 @export var category: StringName

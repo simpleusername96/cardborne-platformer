@@ -3,6 +3,7 @@ extends SceneTree
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const Runtime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
+const SecondaryCatalog = preload("res://scripts/player/vehicle_secondary_catalog.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 var failures: Array[String] = []
@@ -12,28 +13,38 @@ var _requested_seeker_count := 0
 
 func _initialize() -> void:
 	_expect(
-		Runtime._source_resource_name("example.tres.remap") == "example.tres",
+		SecondaryCatalog._source_resource_name("example.tres.remap") == "example.tres",
 		"exported secondary remaps resolve to source resource paths"
 	)
 	_expect(
-		Runtime._source_resource_name("example.tres") == "example.tres",
+		SecondaryCatalog._source_resource_name("example.tres") == "example.tres",
 		"source-tree secondary resources remain unchanged"
 	)
 	_expect(
-		Runtime._source_resource_name("example.png").is_empty(),
+		SecondaryCatalog._source_resource_name("example.png").is_empty(),
 		"unrelated secondary files remain excluded"
 	)
 	var catalog := Catalog.new()
 	var build := RunBuild.new(catalog)
 	var runtime := Runtime.new()
-	_expect(runtime.definitions.size() == 4, "built-in Seeker and three optional secondary definitions load")
+	for error in runtime.catalog.validate_contract():
+		failures.append(error)
+	_expect(runtime.catalog.definitions.size() == 4, "built-in Seeker and three optional secondary definitions load")
 	for secondary_id in [&"electric_field", &"orbiting_blades", &"drop_mines"]:
-		var definition = runtime.definitions.get(secondary_id)
+		var definition = runtime.catalog.get_definition(secondary_id)
 		_expect(definition != null and definition.values_by_level.size() == 3, "%s owns three bounded levels" % secondary_id)
 		for level in 3:
 			_expect(bool(build.apply(secondary_id).get("applied", false)), "%s level applies" % secondary_id)
 		if build.active_optional_secondaries() >= 2:
 			break
+	var seeker = runtime.catalog.get_definition(&"seeker")
+	_expect(
+		seeker != null
+			and seeker.upgrade_id == &"homing_missiles"
+			and seeker.values_by_level == [25.0, 28.0, 32.0]
+			and seeker.cap_by_level == [1, 2, 3],
+		"Seeker definition owns its base, L1, and L2 damage/count states"
+	)
 	_expect(build.active_optional_secondaries() == 2, "two optional weapons fill the slot cap")
 	var optional_ids: Array[StringName] = []
 	for definition in catalog.all_definitions():
