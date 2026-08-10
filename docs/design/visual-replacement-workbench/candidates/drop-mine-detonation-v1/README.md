@@ -64,9 +64,10 @@ effect geometry.
 
 ## Gate
 
-- Technical state: approved for switch.
+- Technical state: applied.
 - User approval: BK approved exact SHA-256
   `16fc0b4c945ad196d17ac75487465b7e507eb9597dc71e153194a65bc7e6d9eb`
   in the active conversation at `2026-08-10T14:30:22+09:00`.
-- Production manifest/provider/renderer registration: authorized for only this
-  exact hash; application evidence remains pending until integration passes.
+- Production manifest/provider/renderer registration: applied as exact hash
+  `16fc0b4c945ad196d17ac75487465b7e507eb9597dc71e153194a65bc7e6d9eb`
+  in commit `49b3b2e5d4ca7ca4734c0d6734ea71126948c851`.

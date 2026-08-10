@@ -40,10 +40,10 @@ outcome.
 
 - The earlier plan accumulated 42 completed and 17 unresolved tasks. Re-reading all of it
   obscures the remaining decisions and wastes active context.
-- Drop Mine currently applies one `48/60/72` area hit at radius `96/108/120` after proximity
-  or timeout, removes itself, and emits no origin receipt. Thermal Burst is a different
-  system: an eligible player-primary direct hit adds only `4/6/8` elemental splash at
-  radius `72/84/96`.
+- Before correction, Drop Mine applied one `48/60/72` area hit at radius `96/108/120`
+  after proximity or timeout, removed itself, and emitted no origin receipt. Thermal Burst
+  is a different system: an eligible player-primary direct hit adds only `4/6/8`
+  elemental splash at radius `72/84/96`.
 - Cryo exists. It does not spawn a separate ice-projectile body. Selecting Cryo tints the
   normal player-primary projectile blue and applies Chill stacks. Slow per stack is
   `6/8/10%`, duration is `2/2.5/3s`, and the cap is three stacks. The current same-size
@@ -164,14 +164,14 @@ decisions and chained commitments, not hidden tracking or higher boss damage.
   distinction, Cryo truth, minimap hierarchy, Mystery lifecycle, and expected production raster
   count after approval. Reconcile the stale minimap-role text. The boss maneuver matrix remains
   excluded from this execution by the user's 2026-08-10 direction.
-- [ ] **1.2 Author and approve the Drop Mine candidate.** Use the visual-authority
+- [x] **1.2 Author and approve the Drop Mine candidate.** Use the visual-authority
   workflow and required raster references. Record prompt, source hashes, output hash,
   original-size sheet, and the user's exact approval. Stop asset promotion if approval is
   absent; continue unrelated nonvisual code only.
 - [x] **1.3 Stabilize dash and enemy facing.** Change the player presentation snapshot and
   pooled enemy presentation records. Renderer consumes published truth and does not infer AI
   state.
-- [ ] **1.4 Add the distinct Drop Mine receipt.** Return position/radius only after damage
+- [x] **1.4 Add the distinct Drop Mine receipt.** Return position/radius only after damage
   resolution, register `effect/drop_mine_detonation`, add a distinct existing-impact sound,
   enforce the mine subcap, and cover proximity, timeout, all levels, full store, and reduced
   motion.
@@ -253,8 +253,7 @@ decisions and chained commitments, not hidden tracking or higher boss damage.
 
 ## Open Questions
 
-- No gameplay or architecture decision is open. The exact Drop Mine candidate bytes require the
-  user's visual approval before production promotion.
+- No gameplay, architecture, or non-boss visual-approval decision is open.
 
 ## Decision Notes
 
@@ -269,27 +268,31 @@ decisions and chained commitments, not hidden tracking or higher boss damage.
 - 2026-08-10: The user explicitly excluded boss attack-pattern implementation from the current
   execution. Tasks 2.2, 2.3, and 2.5b stay open without blocking truthful completion of the
   non-boss corrections.
+- 2026-08-10: BK approved exact Drop Mine SHA-256
+  `16fc0b4c945ad196d17ac75487465b7e507eb9597dc71e153194a65bc7e6d9eb`; production
+  integration is recorded in commit `49b3b2e5d4ca7ca4734c0d6734ea71126948c851`.
 
 ## Progress
 
-- Current phase: non-boss implementation is complete except exact Drop Mine visual approval,
-  production promotion, rendered capture, and final build qualification.
-- Completed in this execution: 1.1, 1.3, 1.5, 2.1, 2.4, and 2.5a. Focused Godot validators for
+- Current phase: non-boss implementation and Drop Mine production promotion are complete;
+  rendered full-capture review and final build qualification remain.
+- Completed in this execution: 1.1–1.5 except the capture-only 1.6 gate, plus 2.1, 2.4, and
+  2.5a. Focused Godot validators for
   secondary weapons, effect capacity, Mystery runtime/integration, damage, minimap/UI,
   localization, player snapshot, main run, combat renderer, semantic assets, and visual
   replacement coverage pass. The post-change responsibility/failure-path audit found no
   remaining task-scoped architecture defect after consolidating the Mystery outcome mapping and
-  keeping the pending Drop Mine raster out of the production event catalog.
-- Current approval gate: Drop Mine candidate hash
-  `16fc0b4c945ad196d17ac75487465b7e507eb9597dc71e153194a65bc7e6d9eb` is switch-ready but
-  has no exact user approval. Production manifest/provider/renderer promotion remains forbidden.
+  binding the approved Drop Mine ID to its own fixed-cap renderer batch.
+- Resolved approval gate: exact Drop Mine hash
+  `16fc0b4c945ad196d17ac75487465b7e507eb9597dc71e153194a65bc7e6d9eb` is indexed as
+  `effect/drop_mine_detonation` in the 72-image production manifest and rendered through a
+  dedicated eight-instance retained batch.
 - Deferred by user direction: 2.2, 2.3, and 2.5b boss attack-pattern work.
 
 ## Next Steps
 
-1. Record the user's exact approval or rejection of the switch-ready Drop Mine byte.
-2. If approved, promote and register only that hash, add its retained batch, then complete 1.2,
-   1.4, and the affected 1.6 captures.
-3. Run 3.1 Web export and built-product inspection after the visual byte stops changing.
-4. Run 3.2–3.4 only against a genuinely final workload after separate user alignment on the
+1. Run the prepared 1.6 full-capture fixtures for all three Drop Mine radii and reduced motion,
+   then inspect the rendered gameplay result at 1x and grayscale.
+2. Run 3.1 Web export and built-product inspection now that the visual byte has stopped changing.
+3. Run 3.2–3.4 only against a genuinely final workload after separate user alignment on the
    performance run cost. Boss tasks remain deferred until the user reopens them.
