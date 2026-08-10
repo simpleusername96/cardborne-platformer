@@ -15,9 +15,9 @@ related:
 ## Purpose
 
 This folder records the separately authored Drop Mine detonation candidate. It
-is not a Thermal Burst variant and is not production-approved. The exact
-switch-ready byte remains under the mirrored `to-be/assets/` path until BK
-approves its hash.
+is not a Thermal Burst variant. BK approved the exact switch-target byte on
+2026-08-10; production promotion still follows the workbench ledger and runtime
+integration checks below.
 
 ## Sources
 
@@ -64,7 +64,9 @@ effect geometry.
 
 ## Gate
 
-- Technical state: switch-ready candidate.
-- User approval: absent for the exact `16fc...9eb` byte.
-- Production manifest/provider/renderer registration: prohibited until that
-  exact hash is approved.
+- Technical state: approved for switch.
+- User approval: BK approved exact SHA-256
+  `16fc0b4c945ad196d17ac75487465b7e507eb9597dc71e153194a65bc7e6d9eb`
+  in the active conversation at `2026-08-10T14:30:22+09:00`.
+- Production manifest/provider/renderer registration: authorized for only this
+  exact hash; application evidence remains pending until integration passes.
