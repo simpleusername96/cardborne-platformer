@@ -128,6 +128,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_thermal_burst_evidence()
 		&"drop_mine_feedback":
 			await _capture_drop_mine_evidence()
+		&"exact_area_effects":
+			await _capture_exact_area_effect_evidence()
 		&"collision_overlays":
 			await _capture_collision_overlay_evidence()
 		&"all_bosses":
@@ -1228,6 +1230,123 @@ func _capture_drop_mine_evidence() -> void:
 		settings.reduced_motion = original_reduced_motion
 
 
+func _capture_exact_area_effect_evidence() -> void:
+	var settings := _run.get_node_or_null("/root/SettingsStore")
+	var original_reduced_motion := (
+		bool(settings.reduced_motion) if settings != null else false
+	)
+	for reduced_motion in [false, true]:
+		if settings != null:
+			settings.reduced_motion = reduced_motion
+		var center := _prepare_exact_area_scene(0.90)
+		_run._start_emp()
+		_run.effects[-1].time = _run.effects[-1].duration
+		_add_exact_area_reference_markers(center, 285.0, 325.0)
+		_run.capture_set_mode(&"paused")
+		_refresh_combat_capture()
+		await _run.get_tree().process_frame
+		_save_capture(
+			"09%s-emp-charge-%s.png"
+			% ["s" if reduced_motion else "r", "reduced" if reduced_motion else "standard"]
+		)
+
+		center = _prepare_exact_area_scene(0.90)
+		_run._release_emp()
+		_run.effects[-1].time = _run.effects[-1].duration
+		_add_exact_area_reference_markers(center, 285.0, 325.0)
+		_run.capture_set_mode(&"paused")
+		_refresh_combat_capture()
+		await _run.get_tree().process_frame
+		_save_capture(
+			"09%s-emp-release-%s.png"
+			% ["u" if reduced_motion else "t", "reduced" if reduced_motion else "standard"]
+		)
+
+	var mystery_profiles := [
+		[&"gravity_pull", 480.0, 0.60, "09v-mystery-gravity-pull.png"],
+		[&"cryo_lock", 360.0, 0.80, "09w-mystery-cryo-lock.png"],
+		[&"projectile_purge", 420.0, 0.70, "09x-mystery-projectile-purge.png"],
+		[&"decoy_signal", 900.0, 0.35, "09y-mystery-decoy-signal.png"],
+	]
+	if settings != null:
+		settings.reduced_motion = false
+	for profile_variant in mystery_profiles:
+		var profile := Array(profile_variant)
+		var outcome := StringName(profile[0])
+		var radius := float(profile[1])
+		var center := _prepare_exact_area_scene(float(profile[2]))
+		_run.mystery_device_runtime.configure(
+			[{"id":&"capture_mystery", "pos":center, "outcome":outcome}],
+			1701,
+			_run.current_stage_id
+		)
+		var receipt: Dictionary = _run.mystery_device_runtime.receive_damage(
+			&"capture_mystery", 90.0, &"player", &"area"
+		)
+		if not bool(receipt.get("broken", false)):
+			push_error("exact-area Mystery fixture did not resolve %s" % outcome)
+			continue
+		_run._handle_mystery_device_break(Dictionary(receipt["break_event"]))
+		if outcome == &"projectile_purge" and not _run.effects.is_empty():
+			_run.effects[-1].time = _run.effects[-1].duration
+		_add_exact_area_reference_markers(center, radius, radius)
+		_run.capture_set_mode(&"paused")
+		_refresh_combat_capture()
+		await _run.get_tree().process_frame
+		_save_capture(String(profile[3]))
+	if settings != null:
+		settings.reduced_motion = original_reduced_motion
+	_run._camera.zoom = Vector2.ONE
+
+
+func _prepare_exact_area_scene(camera_zoom: float) -> Vector2:
+	prepare_stage(0, true)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	_run._clear_effects()
+	_run.mystery_device_runtime.devices.clear()
+	_run.mystery_device_runtime.active_effects.clear()
+	var center: Vector2 = Rules.world_rect(_run.current_stage_id).get_center()
+	_run.player_position = center
+	_run._camera.position = center
+	_run._camera.zoom = Vector2.ONE * camera_zoom
+	return center
+
+
+func _add_exact_area_reference_markers(
+	center: Vector2,
+	actor_radius: float,
+	projectile_radius: float
+) -> void:
+	var actor_distances := [actor_radius * 0.48, actor_radius, actor_radius + 42.0]
+	for index in actor_distances.size():
+		var enemy: EnemyState = _run._make_enemy({
+			"id":"exact_area_actor_%d" % index,
+			"role":&"chaser",
+			"pos":center + Vector2.LEFT.rotated(float(index) * 0.48)
+				* float(actor_distances[index]),
+			"active":true,
+		})
+		if enemy != null:
+			enemy.health_visible_timer = 0.0
+			_run._append_enemy(enemy)
+	var projectile_distances := [
+		projectile_radius * 0.58,
+		projectile_radius,
+		projectile_radius + 28.0,
+	]
+	for index in projectile_distances.size():
+		var direction := Vector2.RIGHT.rotated(-0.68 + float(index) * 0.52)
+		_run._spawn_hostile_projectile(
+			center + direction * float(projectile_distances[index]),
+			direction.rotated(PI * 0.5),
+			6.0,
+			500.0,
+			"exact area reference"
+		)
+	_run._rebuild_enemy_runtime_indexes()
+
+
 func _capture_visual_event_evidence() -> void:
 	var colors := [Art.SYSTEM, Art.MUSTARD, Art.CORAL, Art.MINT]
 	for group_variant in VisualEventCaptureFixture.GROUPS:
@@ -1251,22 +1370,40 @@ func _capture_visual_event_evidence() -> void:
 			var authored_impact := event_id in [
 				&"thermal_burst_impact", EffectStore.DROP_MINE_DETONATION_KIND,
 			]
+			var radius := 54.0
+			var secondary_radius := 0.0
+			var duration := 1.0
+			match event_id:
+				EffectStore.EMP_CHARGE_KIND:
+					radius = 285.0
+					secondary_radius = 325.0
+					duration = 0.42
+				EffectStore.EMP_RELEASE_KIND:
+					radius = 285.0
+					secondary_radius = 325.0
+					duration = 0.55
+				EffectStore.THERMAL_BURST_IMPACT_KIND:
+					radius = 84.0
+					duration = 0.18
+				EffectStore.DROP_MINE_DETONATION_KIND:
+					radius = 108.0
+					duration = 0.18
+				EffectStore.MYSTERY_PURGE_PULSE_KIND:
+					radius = 420.0
+					duration = 0.18
 			_run._add_effect(
 				event_id,
 				position,
 				Color.WHITE if authored_impact
 				else colors[index % colors.size()],
-				1.0,
-				(
-					108.0
-					if event_id == EffectStore.DROP_MINE_DETONATION_KIND
-					else (72.0 if event_id == &"thermal_burst_impact" else 54.0)
-				),
+				duration,
+				radius,
 				direction,
 				18.0,
-				0.20
+				0.20,
+				secondary_radius
 			)
-			_run.effects[-1].time = 0.52
+			_run.effects[-1].time = duration * 0.65
 		_run.capture_set_mode(&"paused")
 		print(JSON.stringify({
 			"capture_group":String(group["id"]),

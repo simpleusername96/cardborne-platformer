@@ -38,6 +38,7 @@ func _initialize() -> void:
 		and is_equal_approx(first.time, 0.75)
 		and is_equal_approx(first.duration, 0.75)
 		and is_equal_approx(first.radius, 42.0)
+		and is_equal_approx(first.secondary_radius, 0.0)
 		and first.direction == Vector2.LEFT
 		and is_equal_approx(first.value, 18.0)
 		and is_equal_approx(first.multiplier, 0.20),
@@ -50,9 +51,45 @@ func _initialize() -> void:
 	_expect(
 		is_same(first, reused)
 		and reused.kind == &"fixture_reused"
+		and is_equal_approx(reused.secondary_radius, 0.0)
 		and is_equal_approx(reused.value, 0.0)
 		and is_equal_approx(reused.multiplier, 1.0),
 		"retired state is reset and reused without allocating a replacement"
+	)
+	store.clear()
+	var emp_charge = store.add_emp_footprint(
+		EffectStore.EMP_CHARGE_KIND,
+		Vector2(31.0, 47.0),
+		Color.WHITE,
+		0.42,
+		285.0,
+		325.0
+	)
+	var emp_release = store.add_emp_footprint(
+		EffectStore.EMP_RELEASE_KIND,
+		Vector2(41.0, 57.0),
+		Color.WHITE,
+		0.55,
+		285.0,
+		325.0
+	)
+	_expect(
+		emp_charge != null
+		and emp_release != null
+		and is_equal_approx(emp_charge.radius, 285.0)
+		and is_equal_approx(emp_charge.secondary_radius, 325.0)
+		and is_equal_approx(emp_release.radius, 285.0)
+		and is_equal_approx(emp_release.secondary_radius, 325.0),
+		"named EMP acquisition publishes exact damage/stun and projectile-clear radii"
+	)
+	store.remove_at_swap(0)
+	var reset_emp_state = store.add(
+		&"fixture_after_emp", Vector2.ZERO, Color.WHITE, 1.0, 12.0
+	)
+	_expect(
+		is_same(emp_charge, reset_emp_state)
+		and is_equal_approx(reset_emp_state.secondary_radius, 0.0),
+		"EMP secondary radius resets before pooled state reuse"
 	)
 
 	store.clear()
@@ -123,8 +160,12 @@ func _initialize() -> void:
 	)
 
 	store.clear()
-	store.add(&"player_emp_charge", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
-	store.add(&"player_emp_release", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	store.add_emp_footprint(
+		EffectStore.EMP_CHARGE_KIND, Vector2.ZERO, Color.WHITE, 1.0, 100.0, 140.0
+	)
+	store.add_emp_footprint(
+		EffectStore.EMP_RELEASE_KIND, Vector2.ZERO, Color.WHITE, 1.0, 100.0, 140.0
+	)
 	for index in 22:
 		store.add_thermal_burst_impact(
 			Vector2(float(index), 20.0), Color.WHITE, 0.18, 84.0
@@ -148,8 +189,12 @@ func _initialize() -> void:
 	)
 
 	store.clear()
-	store.add(&"player_emp_charge", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
-	store.add(&"player_emp_release", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	store.add_emp_footprint(
+		EffectStore.EMP_CHARGE_KIND, Vector2.ZERO, Color.WHITE, 1.0, 100.0, 140.0
+	)
+	store.add_emp_footprint(
+		EffectStore.EMP_RELEASE_KIND, Vector2.ZERO, Color.WHITE, 1.0, 100.0, 140.0
+	)
 	for index in EffectStore.MAX_LIVE_EFFECTS - 2:
 		store.add(
 			&"fixture_priority", Vector2(float(index), 40.0),
@@ -192,8 +237,12 @@ func _initialize() -> void:
 	)
 
 	store.clear()
-	store.add(&"player_emp_charge", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
-	store.add(&"player_emp_release", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	store.add_emp_footprint(
+		EffectStore.EMP_CHARGE_KIND, Vector2.ZERO, Color.WHITE, 1.0, 100.0, 140.0
+	)
+	store.add_emp_footprint(
+		EffectStore.EMP_RELEASE_KIND, Vector2.ZERO, Color.WHITE, 1.0, 100.0, 140.0
+	)
 	for index in EffectStore.MAX_LIVE_EFFECTS - 2:
 		store.add(
 			&"fixture_priority", Vector2(float(index), 60.0),

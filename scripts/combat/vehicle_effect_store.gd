@@ -6,6 +6,8 @@ extends RefCounted
 
 const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 const MAX_LIVE_EFFECTS := 96
+const EMP_CHARGE_KIND := &"player_emp_charge"
+const EMP_RELEASE_KIND := &"player_emp_release"
 const THERMAL_BURST_IMPACT_KIND := &"thermal_burst_impact"
 const MAX_LIVE_THERMAL_IMPACTS := 24
 const DROP_MINE_DETONATION_KIND := &"drop_mine_detonation"
@@ -49,6 +51,33 @@ func add(
 		_evictions += 1
 	return _acquire_configured(
 		kind, position, color, duration, radius, direction, value, multiplier
+	)
+
+
+func add_emp_footprint(
+	kind: StringName,
+	position: Vector2,
+	color: Color,
+	duration: float,
+	damage_stun_radius: float,
+	projectile_clear_radius: float
+) -> VehicleEffectState:
+	if kind != EMP_CHARGE_KIND and kind != EMP_RELEASE_KIND:
+		push_error("EMP footprint requires a charge or release event kind")
+		return null
+	if live.size() >= MAX_LIVE_EFFECTS:
+		remove_at_swap(0)
+		_evictions += 1
+	return _acquire_configured(
+		kind,
+		position,
+		color,
+		duration,
+		damage_stun_radius,
+		Vector2.ZERO,
+		0.0,
+		1.0,
+		projectile_clear_radius
 	)
 
 
@@ -159,7 +188,8 @@ func _acquire_configured(
 	radius: float,
 	direction: Vector2 = Vector2.ZERO,
 	value: float = 0.0,
-	multiplier: float = 1.0
+	multiplier: float = 1.0,
+	secondary_radius: float = 0.0
 ) -> VehicleEffectState:
 	if _pool.is_empty():
 		_rejected_capacity += 1
@@ -173,7 +203,8 @@ func _acquire_configured(
 		radius,
 		direction,
 		value,
-		multiplier
+		multiplier,
+		secondary_radius
 	)
 	live.append(state)
 	_acquisitions += 1

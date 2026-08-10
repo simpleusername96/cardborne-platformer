@@ -228,6 +228,7 @@ func _run() -> void:
 			crate_path_end.is_equal_approx(crate_position - crate_test_direction * 36.0),
 			"projectile warning stops at the same live-crate contact boundary"
 		)
+	_check_emp_footprint_results(stage)
 	_check_attack_telegraphs(stage)
 
 	_expect(
@@ -254,6 +255,67 @@ func _find_clear_crate_test_direction(stage: Node, crate_position: Vector2) -> V
 		if not bool(cover_hit.get("hit", false)):
 			return direction
 	return Vector2.ZERO
+
+
+func _check_emp_footprint_results(stage: Node) -> void:
+	var center := Vector2(1600.0, 1200.0)
+	stage.set("player_position", center)
+	stage.call("_clear_enemies")
+	var inside_enemy = stage.call("_make_enemy", {
+		"id":"emp_inside", "role":&"chaser",
+		"pos":center + Vector2.RIGHT * 284.0, "active":true,
+	})
+	var outside_enemy = stage.call("_make_enemy", {
+		"id":"emp_outside", "role":&"chaser",
+		"pos":center + Vector2.RIGHT * 286.0, "active":true,
+	})
+	stage.call("_append_enemy", inside_enemy)
+	stage.call("_append_enemy", outside_enemy)
+	stage.call("_rebuild_enemy_runtime_indexes")
+	var projectile_store: RefCounted = stage.get("projectile_store")
+	projectile_store.call("clear")
+	stage.call(
+		"_spawn_hostile_projectile",
+		center + Vector2.UP * 324.0,
+		Vector2.RIGHT,
+		4.0,
+		500.0,
+		"emp inside",
+		AttackContract.KINETIC,
+		false
+	)
+	stage.call(
+		"_spawn_hostile_projectile",
+		center + Vector2.UP * 326.0,
+		Vector2.RIGHT,
+		4.0,
+		500.0,
+		"emp outside",
+		AttackContract.KINETIC,
+		false
+	)
+	stage.call("_clear_effects")
+	stage.call("_release_emp")
+	var hostile_projectiles: Array = projectile_store.get("hostile_live")
+	var effects: Array = stage.get("effects")
+	_expect(
+		is_equal_approx(float(inside_enemy.stun), 2.1)
+			and is_zero_approx(float(outside_enemy.stun)),
+		"EMP stun accepts the 284-unit center and rejects the 286-unit center"
+	)
+	_expect(
+		hostile_projectiles.size() == 1
+			and Vector2(hostile_projectiles[0].pos)
+				.is_equal_approx(center + Vector2.UP * 326.0),
+		"EMP projectile clear accepts radius 324 and rejects radius 326"
+	)
+	_expect(
+		effects.size() == 1
+			and effects[0].kind == &"player_emp_release"
+			and is_equal_approx(float(effects[0].radius), 285.0)
+			and is_equal_approx(float(effects[0].secondary_radius), 325.0),
+		"EMP gameplay and presentation receipt publish the same two exact envelopes"
+	)
 
 
 func _check_attack_telegraphs(stage: Node) -> void:

@@ -202,8 +202,22 @@ func _validate_offscreen_intersection() -> void:
 		"beams retain distinct charge and damaging-interval presentations"
 	)
 	_expect(
-		renderer_source.contains("_sync_area_telegraph"),
-		"active boss areas retain a damaging-interval presentation"
+		renderer_source.contains("_sync_area_telegraph")
+			and renderer_source.get_slice("func _sync_area_telegraph", 1)
+				.get_slice("func _sync_experience", 0)
+				.contains("_write_disk(center, radius")
+			and renderer_source.get_slice("func _sync_area_telegraph", 1)
+				.get_slice("func _sync_experience", 0)
+				.contains("_write_danger_ring(center, radius"),
+		"active boss areas retain one exact full body and one boundary"
+	)
+	_expect(
+		not renderer_source.contains("EMP_RELEASE_EXPAND_SECONDS")
+			and not renderer_source.contains("EMP_RELEASE_INITIAL_SCALE")
+			and not renderer_source.contains("impact_radius")
+			and not renderer_source.contains("detonation_radius")
+			and not renderer_source.contains("pulse_radius"),
+		"instant area effects contain no renderer-owned radius interpolation"
 	)
 	_expect(
 		not renderer_source.contains("_sync_projectile_telegraph")

@@ -56,8 +56,6 @@ const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
 const MYSTERY_DEVICE_CAPACITY := 3
 const MYSTERY_DEVICE_VISUAL_RADIUS := 96.0
 const SEMANTIC_TEXTURE_DRAW_CAPACITY := 512
-const EMP_RELEASE_INITIAL_SCALE := 0.15
-const EMP_RELEASE_EXPAND_SECONDS := 0.20
 const CARDINAL_DIRECTIONS := [
 	Vector2.LEFT,
 	Vector2.RIGHT,
@@ -595,9 +593,9 @@ func _create_batch(
 static func _build_electric_field_mesh() -> Mesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var fill_color := Color(Art.ARC, 0.10)
-	var perimeter_color := Color(Art.ARC, 0.28)
-	var plane_color := Color(Art.ARC, 0.04)
+	var fill_color := Color(Art.ARC, 0.18)
+	var perimeter_color := Color(Art.ARC, 0.30)
+	var plane_color := Color(Art.ARC, 0.06)
 	var segment_count := 64
 	for index in segment_count:
 		var angle_a := TAU * float(index) / float(segment_count)
@@ -605,8 +603,8 @@ static func _build_electric_field_mesh() -> Mesh:
 		_append_colored_triangle(
 			surface,
 			Vector2.ZERO,
-			Vector2.RIGHT.rotated(angle_a) * 0.96,
-			Vector2.RIGHT.rotated(angle_b) * 0.96,
+			Vector2.RIGHT.rotated(angle_a),
+			Vector2.RIGHT.rotated(angle_b),
 			fill_color
 		)
 	for index in 48:
@@ -1106,6 +1104,7 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
 	var boundary_alpha := lerpf(0.38, 0.90, intensity)
+	_write_disk(center, radius, Color(Art.THERMAL, lerpf(0.10, 0.20, readiness)))
 	_write_danger_ring(center, radius, Color(Art.THERMAL, boundary_alpha))
 
 
@@ -1130,14 +1129,15 @@ func _sync_effects(
 	effects: Array[EffectState],
 	visible_world: Rect2,
 	player_position: Vector2,
-	reduced_motion: bool
+	_reduced_motion: bool
 ) -> void:
 	for effect in effects:
 		var position := effect.pos
 		var duration := maxf(0.001, effect.duration)
 		var progress := 1.0 - clampf(effect.time / duration, 0.0, 1.0)
 		var radius := effect.radius
-		if not visible_world.grow(radius).has_point(position):
+		var secondary_radius := effect.secondary_radius
+		if not visible_world.grow(maxf(radius, secondary_radius)).has_point(position):
 			continue
 		var event_id := effect.kind
 		if not VisualEventCatalog.has_event(event_id):
@@ -1155,10 +1155,20 @@ func _sync_effects(
 			else 0.0
 		)
 		if mode == &"live_emp_radius":
-			_write_ring(
+			_write_disk(
+				player_position,
+				secondary_radius,
+				Color(Art.SYSTEM, 0.08)
+			)
+			_write_disk(
 				player_position,
 				radius,
-				Color(color, maxf(0.20, color.a * 0.62))
+				Color(Art.SYSTEM, 0.12)
+			)
+			_write_ring(
+				player_position,
+				secondary_radius,
+				Color(Art.SYSTEM, 0.36)
 			)
 			continue
 		if mode == &"hull_afterimage":
@@ -1171,59 +1181,62 @@ func _sync_effects(
 			)
 			continue
 		if mode == &"authored_emp":
-			var emp_radius := radius
-			if not reduced_motion:
-				var elapsed := maxf(0.0, duration - effect.time)
-				var scale_progress := clampf(
-					elapsed / EMP_RELEASE_EXPAND_SECONDS,
-					0.0,
-					1.0
-				)
-				emp_radius *= lerpf(
-					EMP_RELEASE_INITIAL_SCALE,
-					1.0,
-					scale_progress
-				)
+			var fade := 1.0 - progress
+			_write_disk(
+				position,
+				secondary_radius,
+				Color(Art.SYSTEM, 0.10 * fade)
+			)
+			_write_disk(
+				position,
+				radius,
+				Color(Art.SYSTEM, 0.20 * fade)
+			)
 			_queue_semantic_texture(
 				StringName(event.get("asset", &"effect/emp_release")),
 				position,
 				0.0,
-				emp_radius,
+				radius,
 				color
 			)
 			continue
 		if mode == &"authored_thermal":
-			var scale_progress := clampf(progress / 0.45, 0.0, 1.0)
-			var impact_radius := radius * lerpf(0.72, 1.0, scale_progress)
+			_write_disk(
+				position,
+				radius,
+				Color(Art.THERMAL, 0.16 * (1.0 - progress))
+			)
 			_write_instance(
 				_thermal_impact_batch,
 				position,
 				0.0,
-				Vector2.ONE * impact_radius,
+				Vector2.ONE * radius,
 				color
 			)
 			continue
 		if mode == &"authored_drop_mine":
-			var detonation_radius := radius
-			if not reduced_motion:
-				detonation_radius *= lerpf(
-					0.78, 1.0, clampf(progress / 0.35, 0.0, 1.0)
-				)
+			_write_disk(
+				position,
+				radius,
+				Color(Art.PLAYER_REWARD, 0.16 * (1.0 - progress))
+			)
 			_write_instance(
 				_drop_mine_detonation_batch,
 				position,
 				0.0,
-				Vector2.ONE * detonation_radius,
+				Vector2.ONE * radius,
 				color
 			)
 			continue
 		if mode == &"mystery_purge_pulse":
-			var pulse_radius := radius if reduced_motion else radius * lerpf(
-				0.88, 1.0, clampf(progress / 0.45, 0.0, 1.0)
+			_write_disk(
+				position,
+				radius,
+				Color(Art.SYSTEM, 0.14 * (1.0 - progress))
 			)
 			_write_ring(
 				position,
-				pulse_radius,
+				radius,
 				Color(Art.SYSTEM, color.a * 0.54)
 			)
 			continue
@@ -1422,6 +1435,12 @@ func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 		if radius <= 0.0 or not visible_world.grow(radius).has_point(position):
 			continue
 		var color := Art.CRYO if effect_id == &"cryo_lock" else Art.SYSTEM
+		var body_alpha := (
+			0.12
+			if effect_id == &"cryo_lock"
+			else (0.10 if effect_id == &"gravity_pull" else 0.08)
+		)
+		_write_disk(position, radius, Color(color, body_alpha))
 		_write_instance(
 			_mystery_effect_ring_batch,
 			position,

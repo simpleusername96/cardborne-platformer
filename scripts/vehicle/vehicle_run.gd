@@ -114,6 +114,7 @@ const SEEKER_COOLDOWN := 1.35
 const EMP_COOLDOWN := 13.0
 const EMP_STARTUP := 0.42
 const EMP_RADIUS := 285.0
+const EMP_PROJECTILE_CLEAR_RADIUS := 325.0
 const MINIMAP_COLS := 20
 const MINIMAP_ROWS := 12
 const MINIMAP_FRAME_COUNT := 2
@@ -1912,7 +1913,11 @@ func _start_emp() -> void:
 		player_position,
 		Art.SYSTEM,
 		EMP_STARTUP,
-		_emp_radius()
+		_emp_radius(),
+		Vector2.ZERO,
+		0.0,
+		1.0,
+		EMP_PROJECTILE_CLEAR_RADIUS
 	)
 
 
@@ -1926,7 +1931,7 @@ func _release_emp() -> void:
 		&"arc",
 		true
 	)
-	_clear_hostile_projectiles(player_position, radius + 40.0)
+	_clear_hostile_projectiles(player_position, EMP_PROJECTILE_CLEAR_RADIUS)
 	enemy_grid.query_radius_into(player_position, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
 		if Vector2(enemy.pos).distance_to(player_position) <= radius:
@@ -1936,7 +1941,11 @@ func _release_emp() -> void:
 		player_position,
 		Color.WHITE,
 		0.55,
-		radius
+		radius,
+		Vector2.ZERO,
+		0.0,
+		1.0,
+		EMP_PROJECTILE_CLEAR_RADIUS
 	)
 	camera_shake = maxf(camera_shake, 11.0)
 	_play_sound(&"emp")
@@ -3877,7 +3886,8 @@ func _add_effect(
 	radius: float,
 	direction: Vector2 = Vector2.ZERO,
 	value: float = 0.0,
-	multiplier: float = 1.0
+	multiplier: float = 1.0,
+	secondary_radius: float = 0.0
 ) -> void:
 	if not VisualEventCatalog.has_event(kind):
 		push_error("Unknown transient visual event: %s" % kind)
@@ -3895,6 +3905,11 @@ func _add_effect(
 	if kind == EffectStore.MYSTERY_PURGE_PULSE_KIND:
 		effect_store.add_mystery_purge_pulse(
 			position, color, duration, radius
+		)
+		return
+	if kind == EffectStore.EMP_CHARGE_KIND or kind == EffectStore.EMP_RELEASE_KIND:
+		effect_store.add_emp_footprint(
+			kind, position, color, duration, radius, secondary_radius
 		)
 		return
 	effect_store.add(

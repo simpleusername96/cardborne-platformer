@@ -5,6 +5,7 @@ const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const Runtime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
 const SecondaryCatalog = preload("res://scripts/player/vehicle_secondary_catalog.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 
 var failures: Array[String] = []
 var _seeker_targets: Array[EnemyState] = []
@@ -241,14 +242,27 @@ func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
 		)
 		var damage: Array = result["damage"]
 		var detonations: Array = result["detonations"]
+		var effect_store := EffectStore.new()
+		var detonation_effect = null
+		if detonations.size() == 1:
+			detonation_effect = effect_store.add_drop_mine_detonation(
+				Vector2(detonations[0]["position"]),
+				Color.WHITE,
+				0.18,
+				float(detonations[0]["radius"])
+			)
 		_expect(
 			damage.size() == 1
 			and is_equal_approx(float(damage[0]["damage"]), expected_damage[level_index])
 			and detonations.size() == 1
 			and Vector2(detonations[0]["position"]) == target.pos
 			and is_equal_approx(float(detonations[0]["radius"]), expected_radius[level_index])
-			and int(detonations[0]["level"]) == level_index + 1,
-			"Drop Mine level %d resolves damage before one exact origin receipt"
+			and int(detonations[0]["level"]) == level_index + 1
+			and detonation_effect != null
+			and is_equal_approx(
+				float(detonation_effect.radius), expected_radius[level_index]
+			),
+			"Drop Mine level %d resolves damage and publishes one exact-radius effect receipt"
 			% (level_index + 1)
 		)
 

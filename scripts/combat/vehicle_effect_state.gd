@@ -10,6 +10,7 @@ var color := Color.WHITE
 var time := 0.0
 var duration := 0.0
 var radius := 0.0
+var secondary_radius := 0.0
 var direction := Vector2.ZERO
 var value := 0.0
 var multiplier := 1.0
@@ -23,7 +24,8 @@ func configure(
 	next_radius: float,
 	next_direction: Vector2 = Vector2.ZERO,
 	next_value: float = 0.0,
-	next_multiplier: float = 1.0
+	next_multiplier: float = 1.0,
+	next_secondary_radius: float = 0.0
 ) -> void:
 	kind = next_kind
 	pos = position
@@ -31,6 +33,7 @@ func configure(
 	time = next_duration
 	duration = next_duration
 	radius = next_radius
+	secondary_radius = next_secondary_radius
 	direction = next_direction
 	value = next_value
 	multiplier = next_multiplier
@@ -43,6 +46,7 @@ func reset() -> void:
 	time = 0.0
 	duration = 0.0
 	radius = 0.0
+	secondary_radius = 0.0
 	direction = Vector2.ZERO
 	value = 0.0
 	multiplier = 1.0
