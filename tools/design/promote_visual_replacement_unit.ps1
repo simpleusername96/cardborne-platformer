@@ -16,6 +16,7 @@ if($LASTEXITCODE -ne 0){throw 'workbench validation failed'}
 $source=Get-Content (Join-Path $repoRoot 'docs\design\visual-replacement-workbench\replacement-workbench.json') -Raw|ConvertFrom-Json -Depth 100
 $projection=Get-VisualReplacementProjection -RepoRoot $repoRoot -Source $source
 $units=if($AllApproved){@($projection.units|Where-Object status -ceq 'approved_for_switch')}else{@($projection.units|Where-Object id -ceq $UnitId)}
+$units=@($units)
 if($AllApproved -and $units.Count -eq 0){throw 'no technically ready units found'}
 if(-not $AllApproved -and $units.Count -ne 1){throw "unit must exist exactly once: $UnitId"}
 foreach($unit in $units){
