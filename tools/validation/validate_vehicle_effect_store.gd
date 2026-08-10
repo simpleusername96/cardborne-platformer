@@ -168,6 +168,62 @@ func _initialize() -> void:
 	)
 
 	store.clear()
+	for index in EffectStore.MAX_LIVE_DROP_MINE_DETONATIONS:
+		var mine_effect = store.add_drop_mine_detonation(
+			Vector2(float(index), 50.0), Color.WHITE, 0.18, 96.0
+		)
+		mine_effect.time = 0.01 if index == 0 else 0.18
+	var recycled_mine = store.add_drop_mine_detonation(
+		Vector2(999.0, 50.0), Color.WHITE, 0.18, 120.0
+	)
+	var mine_snapshot := store.debug_snapshot()
+	var oldest_mine_survived := false
+	for state in store.live:
+		oldest_mine_survived = (
+			oldest_mine_survived or state.pos == Vector2(0.0, 50.0)
+		)
+	_expect(
+		recycled_mine != null
+		and store.count_kind(EffectStore.DROP_MINE_DETONATION_KIND)
+			== EffectStore.MAX_LIVE_DROP_MINE_DETONATIONS
+		and not oldest_mine_survived
+		and int(mine_snapshot["drop_mine_recycles"]) == 1,
+		"the ninth Drop Mine receipt recycles only the oldest Drop Mine cosmetic"
+	)
+
+	store.clear()
+	store.add(&"player_emp_charge", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	store.add(&"player_emp_release", Vector2.ZERO, Color.WHITE, 1.0, 100.0)
+	for index in EffectStore.MAX_LIVE_EFFECTS - 2:
+		store.add(
+			&"fixture_priority", Vector2(float(index), 60.0),
+			Color.WHITE, 1.0, 10.0
+		)
+	var rejected_mine = store.add_drop_mine_detonation(
+		Vector2(1000.0, 60.0), Color.WHITE, 0.18, 108.0
+	)
+	_expect(
+		rejected_mine == null
+		and store.live.size() == EffectStore.MAX_LIVE_EFFECTS
+		and store.count_kind(&"player_emp_charge") == 1
+		and store.count_kind(&"player_emp_release") == 1
+		and int(store.debug_snapshot()["rejected_drop_mine_capacity"]) == 1,
+		"Drop Mine drops its cosmetic receipt when no mine slot can be recycled"
+	)
+
+	store.clear()
+	for index in EffectStore.MAX_LIVE_MYSTERY_PURGE_PULSES + 1:
+		store.add_mystery_purge_pulse(
+			Vector2(float(index), 70.0), Color.WHITE, 0.18, 420.0
+		)
+	_expect(
+		store.count_kind(EffectStore.MYSTERY_PURGE_PULSE_KIND)
+			== EffectStore.MAX_LIVE_MYSTERY_PURGE_PULSES
+		and int(store.debug_snapshot()["mystery_purge_recycles"]) == 1,
+		"Mystery purge feedback stays inside its three-pulse cosmetic subcap"
+	)
+
+	store.clear()
 	for iteration in 2048:
 		store.add(
 			&"soak",

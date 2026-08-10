@@ -88,6 +88,11 @@ All non-boss enemy archetypes receive a final `2.60` health multiplier after the
 fixed profile and stage curve. The five ordinary health curve values are
 `[0.85, 1.00, 1.15, 1.30, 1.45]`. Boss health receives a separate final `2.60`
 multiplier on its authored curve.
+Ordinary enemy-sourced damage applies the shared `1.755` multiplier, followed
+by the stage curve `[1.00, 1.03, 1.06, 1.09, 1.12]`. These compose to
+`1.755/1.80765/1.8603/1.91295/1.9656`. Boss `final-effective` attacks and
+friendly or environmental damage bypass this ordinary multiplier exactly as
+before.
 Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
 `0.75 s`; both healing outputs are twice their previous values.
 
@@ -102,6 +107,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   normal and pale-coral state without becoming transparent. Reduced motion
   replaces recoil, camera shake, and flicker with a steady pale-coral state and
   a thin ring.
+- During the complete `0.20 s` dash, the craft and all hull-attached
+  directional cues use the frozen dash direction. Craft-only positional hit
+  recoil is suppressed during the dash. Orbiting secondaries remain centered
+  on the true player position, and deployed mines remain world-positioned.
 - Hull UI applies current damage immediately, holds the lost segment for 0.18
   seconds, then closes it over 0.45 seconds. This animation processes only while
   active.
@@ -204,11 +213,13 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
   debug/performance snapshots expose the selected field, seed, and fingerprint.
 - The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed.
-  Dynamic markers expose only five tactical roles: player craft, item, enemy,
-  boss, and reinforcement facility. All live pickups, unopened crates, and intact Mystery Devices share
-  the item marker; all non-boss hostiles share the enemy marker; every boss uses
-  the same boss marker. Subtypes, elite distinctions, objective state, and
-  mystery outcome are not separate minimap markers.
+  Dynamic markers expose exactly eight tactical roles: player craft, field
+  pickup, reward crate, intact Mystery Device, mobile enemy, priority enemy,
+  boss, and reinforcement facility. The pickup marker is `12 x 7.6`, the
+  notched crate marker is `9 x 9`, and their perceived polygon areas differ by
+  no more than ten percent. The Mystery Device silhouette scales every outer
+  point by `1.20`. Elite distinctions, stage-specific boss identity, and the
+  Mystery outcome are not separate minimap markers.
 
 ### Inner walls, Transit Gates, and Mystery Devices
 
@@ -227,14 +238,21 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   to five unmodified 18-damage primary hits. Player direct and area damage may
   break it; enemy AI and hostile attacks ignore it. It is not an enemy, never
   counts toward quota, and drops no XP or item.
-- A stage assigns three different hidden outcomes from `gravity_pull`,
-  `cryo_lock`, `projectile_purge`, and `decoy_signal`. Breaking a device reveals
-  and applies one outcome. Pull affects non-boss enemies within 480 pixels for
+- A stage assigns three different outcomes from `gravity_pull`, `cryo_lock`,
+  `projectile_purge`, and `decoy_signal`. The first accepted player hit reveals
+  the assigned outcome without triggering it; breaking the device applies it
+  and reports the number of affected enemies or cleared hostile projectiles.
+  Pull affects non-boss enemies within 480 pixels for
   1.2 seconds. Cryo lock stops non-boss movement and new attack starts within
   360 pixels for 0.8 seconds but does not cancel a committed warned attack.
   Projectile purge retires hostile projectiles within 420 pixels immediately.
   Decoy signal redirects nearby enemy movement/aim toward the wreck within 900
   pixels for 6 seconds without making the wreck an attack target.
+- Cryo lock feeds the same exact-size translucent blue enemy-body compositor as
+  Chill without creating a Chill stack. Projectile purge emits one short System
+  pulse after the clear. Decoy redirection is visible because affected enemies
+  face its target outside already committed attacks. The minimap never reveals
+  the outcome.
 - Primary rounds apply the same per-shot structure damage at every point in the
   firing cadence. Structure upgrades change the repeated-hit result for Mystery
   Devices, Bulkhead Guard plates, and armored-elite shells without introducing
@@ -408,6 +426,13 @@ does not produce a transient message.
 | Orbiting Blades | Close orbiting contact damage |
 | Drop Mines | Timed mines dropped behind movement |
 
+Drop Mine is distinct from Thermal Burst. At levels 1–3 it applies one
+`48/60/72` area hit at radius `96/108/120` after proximity or timeout, then
+publishes one origin receipt only after damage resolution. Its cosmetic has a
+`0.18 s` lifetime and an eight-instance subcap inside the unchanged 96-effect
+store. When saturated, it may recycle only another Drop Mine cosmetic; missing
+feedback never cancels or duplicates damage.
+
 ### UI, guidebook, and persistence
 
 - Every player-facing world, actor, projectile, reward, effect, HUD, modal,
@@ -422,8 +447,10 @@ does not produce a transient message.
   cues. Dash feedback uses a directional afterimage and rear-anchor flare,
   never a danger ring or radial burst.
 - The fixed-capacity transient effect buffer contains dash afterimage, EMP
-  charge/release, and the approved Thermal Burst impact receipt. It keeps its
-  96-effect ceiling and at most 24 live Thermal impacts; saturated Thermal
+  charge/release, the approved Thermal Burst impact receipt, bounded Mystery
+  purge pulses, and the separate Drop Mine receipt. It keeps its 96-effect
+  ceiling, at most 24 live Thermal impacts, and at most eight live Drop Mine
+  receipts; saturated Thermal
   feedback may recycle the oldest Thermal impact or drop the new cosmetic
   receipt but never evicts EMP or changes damage. Toxin and Chill do not create
   effect objects. Existing enemy and boss batches share one status compositor;
@@ -434,6 +461,11 @@ does not produce a transient message.
   after the direct-hit flash ends, and Toxin DOT does not restart that generic
   flash. Reduced motion removes the pulse and keeps the static condition layer.
   Floating damage numbers remain absent.
+- Every directional enemy publishes one simulation-owned effective facing.
+  During startup and active attack phases this is the committed direction;
+  otherwise it points to the player or an active Decoy target. Controller spin
+  and nondirectional mine/generator bodies are the only exceptions. The renderer
+  consumes this field and does not infer AI targets.
 - The live HUD prioritizes hull, XP, numeric stage progress, EMP,
   minimap, and exceptional timed effects. A panel-free top-left B stack shows only
   localized stage and defeated labels with `current / total` values. At compact,
@@ -478,7 +510,9 @@ does not produce a transient message.
   command-magenta notched marker independent of stage. The reinforcement
   facility keeps its dedicated two-tone diamond. All roles share the existing
   marker capacity, borrowed buffers, explored geometry, fog, and one retained
-  minimap mesh.
+  minimap mesh. Pickup and crate use the exact size and area relationship
+  defined in the field contract above; the Mystery Device uses the `1.20`
+  silhouette scale.
 - Electric Field displays its complete selected damage radius of 120, 140, or
   160 world units as one ground-attached arc-purple area below actors. The area
   uses a restrained fill, one broken perimeter, and at most four broad internal

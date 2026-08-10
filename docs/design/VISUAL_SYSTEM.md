@@ -214,7 +214,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored pickup, shard, and crate visual ID plus value-scale mapping | spawn, value, collection |
-| effect catalog | buffered dash afterimage, live EMP charge radius, authored EMP release, and approved Thermal Burst impact identity within the fixed 96-effect/24-Thermal limits | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback |
+| effect catalog | buffered dash afterimage, live EMP charge radius, authored EMP release, approved Thermal Burst impact, separately approved Drop Mine detonation, and code-native Mystery purge pulse within the fixed 96-effect/24-Thermal/8-Drop-Mine limits | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback |
 | world catalog | authored Transit Gate, Mystery Device, reinforcement facility, SurfaceDetail, and state descriptor | topology, collision, health, spawn cadence, outcome |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
 | defense catalog | shared authored support-ring image plus Toxin/Cryo actor-overlay recipe | protection, Electric Field damage area, damage, slow, stack, timer |
@@ -268,19 +268,27 @@ collision.
   transform·scale·silhouette 안에서 translucent body layer를 합성하며 draw, batch,
   actor instance 또는 texture를 추가하지 않는다. damage number와 cosmetic emitter,
   plate, orbit icon은 만들지 않는다.
+  Mystery Device의 Cryo Lock도 Chill stack을 만들지 않은 채 같은 blue
+  same-size compositor input을 사용한다.
 - 경험치 pickup의 small/medium/large는 하나의 authored XP master PNG를
   각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
   크기에서 약 30% 줄인 값이다. reward crate, repair pickup과 experience recall은
   gameplay 역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
 - Mystery Device는 crate보다 큰 `intact` body와 효과가 anchor를
-  필요로 할 때만 유지하는 `resolved` wreck state를 가진다. 결과 종류는 파괴
-  전 image, 색, lamp, glyph로 암시하지 않는다.
+  필요로 할 때만 유지하는 `resolved` wreck state를 가진다. 결과 종류는 첫
+  accepted hit 전 image, 색, lamp, glyph로 암시하지 않는다. 첫 hit는 localized
+  text로 결과를 식별하며 body asset이나 minimap marker를 바꾸지 않는다.
 - boss objective module art와 shared node art는 모두 production에서 제외한다.
   방어막 상태는 boss body와 HUD의 직접 상태 표현이 소유한다.
 - EMP는 유지하는 유일한 대형 effect이며 transparent `512×512` authored PNG
   하나를 gameplay radius에 맞춰 scale/fade한다. Thermal Burst는 별도 승인을
   받은 transparent `192×192` impact PNG 한 장만 direct primary hit 위치에 짧게
-  scale/fade하며 splash recipient에는 생성하지 않는다. 그 밖의 작은 effect
+  scale/fade하며 splash recipient에는 생성하지 않는다. Drop Mine은 Thermal과
+  semantic ID, raster, batch, color, sound를 공유하지 않는 별도 transparent
+  `256×256` detonation PNG 한 장을 mine origin에 `0.18s` 동안 scale/fade한다.
+  gameplay radius `96/108/120`은 runtime scale `0.80/0.90/1.00`에 대응한다.
+  최대 여덟 cosmetic instance만 허용하며 포화 시 다른 mine cosmetic만
+  recycle한다. Reduced motion은 최종 radius에서 fade한다. 그 밖의 작은 effect
   image와 raster frame animation은 production visual owner가 아니다. 필수 hit/
   state truth는 actor tint, state composition, live boundary 같은 기존 직접
   피드백으로 유지한다. 별도 media-boundary 승인 없이 one-file-per-frame pack을
@@ -355,9 +363,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   가질 수 없다.
 - Mystery Device는 reward crate보다 크고 neutral/dark mechanical mass가 지배하는
   exact `192×192` authored body다. 한 개의 restrained system accent만 허용하며
-  파괴 전에는 네 결과의 색, glyph, 방향, animation을 노출하지 않는다. 파괴 후
-  anchor가 필요한 동안만 resolved wreck를 표시하고 결과 이름은 localized text가
-  전달한다.
+  첫 accepted hit 전에는 네 결과의 색, glyph, 방향, animation을 노출하지 않는다.
+  첫 hit의 localized text가 결과를 식별하고, 파괴 후 anchor가 필요한 동안만
+  resolved wreck를 표시한다. 발동 text는 실제 영향 대상 수를 함께 전달한다.
+  Projectile Purge는 clear 뒤 shared System ring으로 한 번 짧게 pulse하며 별도
+  raster를 추가하지 않는다.
 - Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
   Mystery Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
 - reinforcement facility는 enemy actor catalog를 재사용하지 않는 완성된
@@ -383,6 +393,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   flare를 표시한다.
 - dash는 0.20초 동안 directional afterimage 한 개와 engine flare를
   사용한다. danger color 원, radial ring과 circular burst는 사용하지 않는다.
+- dash 동안 craft body와 모든 hull-attached directional cue는 frozen dash
+  direction을 사용하고 craft-only hit recoil position은 적용하지 않는다. orbiting
+  secondary와 Electric Field는 true player center를, deployed mine은 world position을
+  계속 사용한다.
 - reduced motion에서도 같은 한 개의 elongated silhouette와 engine flash만
   사용하고 추가 반복 또는 폭발 장식을 만들지 않는다.
 - hull hit는 actor tint, barrier hit는 기존 support ring의 짧은 밝기 변화,
@@ -390,6 +404,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   effect event로 복제하지 않는다.
 - ordinary enemy role은 외곽선과 negative space로 먼저 구분한다. command와
   boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
+- directional enemy는 simulation이 publish한 effective facing을 사용한다. startup/
+  active에서는 committed direction, 그 밖에는 player 또는 active Decoy target을
+  향한다. Controller spin과 nondirectional mine/generator는 예외이며 renderer는
+  target이나 AI phase를 추론하지 않는다.
 - 비-beam projectile은 player primary energy teardrop, built-in Seeker, hostile
   barbed bolt 세 identity를 사용한다. 세 identity는 서로 재사용하지 않으며,
   불투명 core와 authored contour가 small runtime scale에서도 역할을 구분한다.
@@ -572,7 +590,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   boss는 command-magenta notched mass, facility는 two-tone diamond다. resolved/retired
   device는 사라지고 elite, stage별 boss color, hidden outcome과 그 밖의 subtype은
   표시하지 않는다. marker capacity, borrowed buffer, explored static geometry와 fog,
-  player facing, 한 retained minimap Surface를 유지한다.
+  player facing, 한 retained minimap Surface를 유지한다. pickup outer size는
+  `12×7.6`, 기존 notch를 유지한 crate는 `9×9`이며 perceived polygon area 차이는
+  10% 이하다. Mystery Device outer point는 기존 neutral cut silhouette의 `1.20×`다.
 - bottom-center에는 panel이 없는 확대 원형 EMP indicator 하나만 둔다. cooldown과
   enabled/disabled 상태만 표시하며 primary, dash, secondary slot은 만들지 않는다.
 - minimap zone만 한 subtle Surface를 사용한다. B stage stack과 center 두 meter는
@@ -582,8 +602,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - normal ToastSurface는 compact `320×36`, standard/large `360×40`이며 center
   status stack 아래 4px에 붙는다. left B stack 높이는 toast Y에 영향을 주지
   않는다. gameplay toast는 reinforcement facility active/destroyed, boss inbound,
-  barrier depleted, Mystery Device result, boss shield-down과 progression complete
-  일곱 event만 허용한다.
+  barrier depleted, Mystery Device first-hit reveal, Mystery Device triggered result,
+  boss shield-down과 progression complete event만 허용한다.
   stage transition banner는 사용하지 않는다.
 - stage boss, active reinforcement facility, 고정 전투 시설 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed
@@ -647,8 +667,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- active Thermal impact plan 완료 뒤 final gameplay manifest가 정확히 71 image를
-  색인함: gameplay PNG 68개와 user-approved SurfaceDetail SVG 3개다.
+- 별도 Drop Mine candidate가 exact user approval과 promotion을 마친 뒤 final
+  gameplay manifest가 정확히 72 image를 색인함: gameplay PNG 69개와
+  user-approved SurfaceDetail SVG 3개다. 승격 전 current manifest는 71개다.
   전용 hostile bolt와 reinforcement facility를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
@@ -682,6 +703,9 @@ Web export만으로 interactive built-Web smoke나 release performance를
   startup/three-plane active hierarchy remain presentation-owned.
 - Mystery Device gameplay and its two approved raster states are integrated.
   Candidate and intermediate files stay outside the production manifest.
+- Drop Mine gameplay receipt and eight-instance cosmetic subcap are integrated.
+  Its separately authored raster remains workbench-only until exact user approval;
+  an unapproved byte is never registered in the production manifest.
 - Every non-beam projectile resolves one of the three exclusive player-primary,
   player-seeker, or hostile-bolt identities; runtime owns scale, rotation,
   player-primary affinity tint, collision, speed, and homing.
@@ -690,7 +714,8 @@ Web export만으로 interactive built-Web smoke나 release performance를
   boss-node states, EMP image, and four map assets remain the applied set.
 - Manual aim remains readable through independent cursor, muzzle, projectile,
   and hit feedback. The player rear anchor is used only by transient dash
-  feedback.
+  feedback. Dash presentation consumes the frozen dash direction, and directional
+  enemies consume one simulation-published effective facing vector.
 
 ## Non-Goals
 

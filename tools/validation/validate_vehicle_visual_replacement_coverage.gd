@@ -33,6 +33,7 @@ const EXPECTED_EVENT_IDS := [
 	"player_emp_charge",
 	"player_emp_release",
 	"thermal_burst_impact",
+	"mystery_projectile_purge",
 ]
 
 var _failures: Array[String] = []
@@ -109,6 +110,7 @@ func _validate_event_catalog() -> void:
 		&"live_emp_radius":1,
 		&"authored_emp":1,
 		&"authored_thermal":1,
+		&"mystery_purge_pulse":1,
 	}
 	var mode_counts := {}
 	_expect(
@@ -167,13 +169,19 @@ func _validate_event_producers() -> void:
 			"VehicleRun emits an unmapped visual event: %s" % event_id
 		)
 	for event_id in EXPECTED_EVENT_IDS:
+		if event_id == "mystery_projectile_purge":
+			_expect(
+				run_source.contains("EffectStore.MYSTERY_PURGE_PULSE_KIND"),
+				"VehicleRun does not emit the Mystery projectile-purge pulse"
+			)
+			continue
 		_expect(
 			produced.has(StringName(event_id)),
 			"VehicleRun does not emit required transient event: %s" % event_id
 		)
 	_expect(
-		produced.size() == EXPECTED_EVENT_IDS.size(),
-		"VehicleRun emits exactly the four reviewed transient event IDs"
+		produced.size() == EXPECTED_EVENT_IDS.size() - 1,
+		"VehicleRun emits exactly the four reviewed direct transient event IDs"
 	)
 	var secondary_source := FileAccess.get_file_as_string(SECONDARY_PATH)
 	_expect(

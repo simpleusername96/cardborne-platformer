@@ -259,7 +259,11 @@ func sync(
 		_sync_projectiles(player_projectiles, &"player", visible_world)
 		_sync_projectiles(hostile_projectiles, &"enemy", visible_world)
 		_sync_experience(shards, visible_world)
-		_sync_effects(effects, visible_world)
+		_sync_effects(
+			effects,
+			visible_world,
+			bool(presentation.get("reduced_motion", false))
+		)
 		_sync_world_overlays(presentation, visible_world)
 		_sync_mystery_devices(presentation, visible_world)
 		_sync_reinforcement_facility(presentation, visible_world)
@@ -794,6 +798,8 @@ func _enemy_status_custom_data(
 		enemy.cryo_application_pulse,
 		reduced_motion
 	)
+	if enemy.mystery_cryo_remaining > 0.0:
+		cryo_mix = maxf(cryo_mix, STATUS_STACK_MIX[1])
 	var total_mix := toxin_mix + cryo_mix
 	if total_mix <= 0.0:
 		return Color.TRANSPARENT
@@ -1107,7 +1113,11 @@ func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> v
 		)
 
 
-func _sync_effects(effects: Array[EffectState], visible_world: Rect2) -> void:
+func _sync_effects(
+	effects: Array[EffectState],
+	visible_world: Rect2,
+	reduced_motion: bool
+) -> void:
 	for effect in effects:
 		var position := effect.pos
 		var duration := maxf(0.001, effect.duration)
@@ -1166,6 +1176,16 @@ func _sync_effects(effects: Array[EffectState], visible_world: Rect2) -> void:
 				color
 			)
 			continue
+		if mode == &"mystery_purge_pulse":
+			var pulse_radius := radius if reduced_motion else radius * lerpf(
+				0.88, 1.0, clampf(progress / 0.45, 0.0, 1.0)
+			)
+			_write_ring(
+				position,
+				pulse_radius,
+				Color(Art.SYSTEM, color.a * 0.54)
+			)
+			continue
 
 
 func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
@@ -1206,6 +1226,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var aim_direction := Vector2(state["aim_direction"])
 	var reduced_motion := bool(state.get("reduced_motion", false))
 	var hit_remaining := float(state.get("player_hit_remaining", 0.0))
+	var dash_active := bool(state.get("dash_active", false))
 	var protection_sources: Dictionary = state.get("protection_sources", {})
 	var displayed_player_position := player_position
 	var hull_color := Color.WHITE
@@ -1213,7 +1234,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	if hit_remaining > 0.0:
 		var hit_progress := 1.0 - clampf(hit_remaining / 0.20, 0.0, 1.0)
 		feedback_color = Color(Art.CORAL).lerp(Art.IVORY_BRIGHT, 0.24)
-		if not reduced_motion:
+		if not reduced_motion and not dash_active:
 			var amplitude := 5.0 * (1.0 - hit_progress)
 			var jitter_direction := Vector2(
 				sin(float(state.get("run_time", 0.0)) * 91.0),
@@ -1229,7 +1250,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		displayed_player_position,
 		hull_direction
 	)
-	if bool(state.get("dash_active", false)):
+	if dash_active:
 		_write_beam(
 			rear_anchor + rear * 8.0,
 			rear_anchor + rear * 47.0,
@@ -1562,17 +1583,18 @@ func _write_diamond(position: Vector2, radius: float, color: Color) -> void:
 	)
 
 
-func _enemy_angle(archetype: StringName, enemy: EnemyState, player_position: Vector2, run_time: float) -> float:
-	if archetype in [
-		&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser",
-		&"shooter", &"artillery_spotter", &"bulkhead_guard",
-		&"splitter_barge", &"stage_boss",
-	]:
-		return (player_position - enemy.pos).angle()
-	if archetype in [&"turret", &"rammer", &"beam_sentinel"]:
-		return enemy.committed_dir.angle()
+func _enemy_angle(
+	archetype: StringName,
+	enemy: EnemyState,
+	_player_position: Vector2,
+	run_time: float
+) -> float:
 	if archetype == &"controller":
 		return run_time * 0.22
+	if enemy.role in [&"mine", &"generator"]:
+		return 0.0
+	if not enemy.presentation_facing.is_zero_approx():
+		return enemy.presentation_facing.angle()
 	return 0.0
 
 

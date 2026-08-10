@@ -517,8 +517,19 @@ func _initialize() -> void:
 			and is_equal_approx(float(marker_sizes["priority_enemy_outer"]), 6.2)
 			and is_equal_approx(float(marker_sizes["priority_enemy_inner"]), 4.3)
 			and is_equal_approx(float(marker_sizes["boss_outer"]), 10.0)
-			and is_equal_approx(float(marker_sizes["boss_inner"]), 7.6),
-		"minimap preserves the mobile, priority, and boss size hierarchy"
+			and is_equal_approx(float(marker_sizes["boss_inner"]), 7.6)
+			and Vector2(marker_sizes["field_pickup_size"])
+				== Vector2(12.0, 7.6)
+			and Vector2(marker_sizes["reward_crate_size"])
+				== Vector2(9.0, 9.0)
+			and is_equal_approx(float(marker_sizes["mystery_device_scale"]), 1.20),
+		"minimap preserves the locked role and world-object size hierarchy"
+	)
+	var pickup_area := float(marker_sizes["field_pickup_polygon_area"])
+	var crate_area := float(marker_sizes["reward_crate_polygon_area"])
+	_expect(
+		absf(pickup_area - crate_area) / maxf(pickup_area, crate_area) <= 0.10,
+		"pickup and reward-crate perceived polygon areas differ by at most ten percent"
 	)
 	_expect(
 		UiGlyphCatalog.minimap_ids() == [

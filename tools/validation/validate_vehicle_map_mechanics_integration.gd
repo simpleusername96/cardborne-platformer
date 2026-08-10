@@ -3,6 +3,7 @@ extends SceneTree
 ## Focused live-run coverage for the map mechanics that only VehicleRun owns.
 
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
+const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 
 var failures: Array[String] = []
 
@@ -67,7 +68,14 @@ func _validate_device_collision_and_damage_authority(run) -> void:
 	var quota_before := int(run.stage_flow.defeats)
 	var experience_before := int(run.experience_runtime.experience)
 	_expect(not bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"contact", position, Color.WHITE, Vector2.RIGHT)), "contact damage cannot break a device")
-	_expect(bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"direct", position, Color.WHITE, Vector2.RIGHT)), "player direct damage breaks a device")
+	_expect(bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 45.0, &"direct", position, Color.WHITE, Vector2.RIGHT)), "the first player hit is accepted")
+	var revealed_devices := Array(run.mystery_device_runtime.snapshot()["devices"])
+	_expect(
+		StringName(revealed_devices[0]["state"]) == &"intact"
+		and StringName(revealed_devices[0]["revealed_outcome"]) == &"gravity_pull",
+		"the first player hit reveals the device outcome before break"
+	)
+	_expect(bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 45.0, &"direct", position, Color.WHITE, Vector2.RIGHT)), "the second player hit breaks the device")
 	_expect(int(run.stage_flow.defeats) == quota_before and int(run.experience_runtime.experience) == experience_before, "device break changes neither quota nor XP")
 	_expect(bool(run.mystery_device_runtime.is_position_clear(position, 0.0)), "resolved device no longer blocks actor collision")
 
@@ -81,6 +89,16 @@ func _validate_projectile_purge_scope(run) -> void:
 	run.projectile_store.add_hostile({"pos":center + Vector2(500.0, 0.0), "velocity":Vector2.RIGHT, "radius":4.0, "damage":1.0, "life":2.0})
 	run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"area", center, Color.WHITE, Vector2.RIGHT)
 	_expect(run.projectile_store.player_count() == 1 and run.projectile_store.hostile_count() == 1, "projectile purge clears only hostile projectiles inside its radius")
+	_expect(
+		StringName(run._mystery_device_result_receipt["effect_id"])
+			== &"projectile_purge"
+		and int(run._mystery_device_result_receipt["affected_count"]) == 1,
+		"Mystery result receipt reports the one cleared hostile projectile"
+	)
+	_expect(
+		run.effect_store.count_kind(EffectStore.MYSTERY_PURGE_PULSE_KIND) == 1,
+		"projectile purge publishes one short System pulse after the clear"
+	)
 
 
 func _append_enemy(run, archetype: StringName, id: String, position: Vector2):
@@ -99,8 +117,18 @@ func _validate_effect_targeting(run) -> void:
 	startup.phase = &"startup"
 	startup.velocity = Vector2(10.0, 0.0)
 	run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"direct", center, Color.WHITE, Vector2.RIGHT)
+	_expect(
+		StringName(run._mystery_device_result_receipt["effect_id"]) == &"cryo_lock"
+		and int(run._mystery_device_result_receipt["affected_count"]) == 2,
+		"Mystery result receipt reports both Cryo-affected ordinary enemies"
+	)
 	run.call("_prepare_mystery_device_effects", 0.1)
-	_expect(movable.stun > 0.0 and movable.velocity == Vector2.ZERO, "cryo blocks fresh ordinary movement and commitment")
+	_expect(
+		movable.stun > 0.0
+		and movable.velocity == Vector2.ZERO
+		and movable.mystery_cryo_remaining > 0.0,
+		"cryo blocks fresh movement and publishes the shared blue body-overlay state"
+	)
 	_expect(startup.stun == 0.0 and startup.velocity == Vector2(10.0, 0.0), "cryo preserves warned startup attacks")
 
 	run.call("_clear_enemies")
@@ -127,6 +155,11 @@ func _validate_effect_targeting(run) -> void:
 	structure_before = structure.pos
 	run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"direct", center, Color.WHITE, Vector2.RIGHT)
 	run.call("_prepare_mystery_device_effects", 0.1)
+	run.call("_refresh_enemy_presentation_facing", ordinary)
+	_expect(
+		ordinary.presentation_facing.is_equal_approx((center - ordinary.pos).normalized()),
+		"decoy signal publishes its redirected target through enemy facing"
+	)
 	var ordinary_before: Vector2 = ordinary.pos
 	run.call("_move_enemy_role", ordinary, 0.1, false, true)
 	_expect(

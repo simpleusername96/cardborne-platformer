@@ -23,13 +23,20 @@ var _candidate_buffer: Array[EnemyState] = []
 var _expired_cooldown_ids: Array[String] = []
 var _damage_output: Array[Dictionary] = []
 var _projectile_output: Array[Dictionary] = []
+var _detonation_output: Array[Dictionary] = []
 var _damage_intent_pool: Array[Dictionary] = []
+var _detonation_receipt_pool: Array[Dictionary] = []
 var _damage_intent_count := 0
+var _detonation_receipt_count := 0
 var _result: Dictionary = {}
 
 
 func _init() -> void:
-	_result = {"damage":_damage_output, "projectiles":_projectile_output}
+	_result = {
+		"damage":_damage_output,
+		"projectiles":_projectile_output,
+		"detonations":_detonation_output,
+	}
 	for file_name in DirAccess.get_files_at(DEFINITION_PATH):
 		var resource_name := _source_resource_name(file_name)
 		if resource_name.is_empty():
@@ -71,7 +78,9 @@ func update(
 	# remain valid only until the next update call.
 	_damage_output.clear()
 	_projectile_output.clear()
+	_detonation_output.clear()
 	_damage_intent_count = 0
+	_detonation_receipt_count = 0
 	seeker_cooldown = maxf(0.0, seeker_cooldown - delta)
 	_update_seeker(
 		delta,
@@ -118,7 +127,8 @@ func update(
 		enemies,
 		line_of_sight,
 		query_radius,
-		_damage_output
+		_damage_output,
+		_detonation_output
 	)
 	return _result
 
@@ -264,7 +274,17 @@ func _update_orbit(
 				_append_damage_intent(output, enemy, definition.value(level), "Orbiting Blades")
 
 
-func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
+func _update_mines(
+	delta: float,
+	origin: Vector2,
+	direction: Vector2,
+	build: VehicleRunBuild,
+	enemies: Array[EnemyState],
+	line_of_sight: Callable,
+	query_radius: Callable,
+	damage_output: Array[Dictionary],
+	detonation_output: Array[Dictionary]
+) -> void:
 	var definition: VehicleSecondaryDefinition = definitions.get(&"drop_mines")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
@@ -292,7 +312,12 @@ func _update_mines(delta: float, origin: Vector2, direction: Vector2, build: Veh
 		for enemy in _candidate_buffer:
 			var contact_radius := radius + enemy.radius
 			if _eligible(enemy) and Vector2(mine["pos"]).distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(Vector2(mine["pos"]), enemy.pos, 3.0):
-				_append_damage_intent(output, enemy, definition.value(level), "Drop Mine")
+				_append_damage_intent(
+					damage_output, enemy, definition.value(level), "Drop Mine"
+				)
+		_append_detonation_receipt(
+			detonation_output, Vector2(mine["pos"]), radius, level
+		)
 		mines.remove_at(index)
 
 
@@ -324,6 +349,22 @@ func _append_damage_intent(
 	intent["damage"] = damage
 	intent["source"] = source
 	output.append(intent)
+
+
+func _append_detonation_receipt(
+	output: Array[Dictionary],
+	position: Vector2,
+	radius: float,
+	level: int
+) -> void:
+	if _detonation_receipt_count >= _detonation_receipt_pool.size():
+		_detonation_receipt_pool.append({})
+	var receipt := _detonation_receipt_pool[_detonation_receipt_count]
+	_detonation_receipt_count += 1
+	receipt["position"] = position
+	receipt["radius"] = radius
+	receipt["level"] = level
+	output.append(receipt)
 
 
 func _query_candidates(center: Vector2, radius: float, enemies: Array[EnemyState], query_radius: Callable) -> void:

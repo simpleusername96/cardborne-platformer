@@ -8,6 +8,10 @@ const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 const MAX_LIVE_EFFECTS := 96
 const THERMAL_BURST_IMPACT_KIND := &"thermal_burst_impact"
 const MAX_LIVE_THERMAL_IMPACTS := 24
+const DROP_MINE_DETONATION_KIND := &"drop_mine_detonation"
+const MAX_LIVE_DROP_MINE_DETONATIONS := 8
+const MYSTERY_PURGE_PULSE_KIND := &"mystery_projectile_purge"
+const MAX_LIVE_MYSTERY_PURGE_PULSES := 3
 
 var live: Array[VehicleEffectState] = []
 
@@ -18,6 +22,10 @@ var _evictions := 0
 var _rejected_capacity := 0
 var _thermal_recycles := 0
 var _rejected_thermal_capacity := 0
+var _drop_mine_recycles := 0
+var _rejected_drop_mine_capacity := 0
+var _mystery_purge_recycles := 0
+var _rejected_mystery_purge_capacity := 0
 
 
 func _init() -> void:
@@ -52,33 +60,95 @@ func add_thermal_burst_impact(
 ) -> VehicleEffectState:
 	## Thermal is cosmetic and may recycle only its own oldest receipt. It must
 	## never displace EMP or another higher-priority transient from the store.
-	var thermal_count := 0
-	var oldest_thermal_index := -1
-	var oldest_remaining := INF
-	for index in live.size():
-		var state := live[index]
-		if state.kind != THERMAL_BURST_IMPACT_KIND:
-			continue
-		thermal_count += 1
-		if state.time < oldest_remaining:
-			oldest_remaining = state.time
-			oldest_thermal_index = index
-	if (
-		thermal_count >= MAX_LIVE_THERMAL_IMPACTS
-		or live.size() >= MAX_LIVE_EFFECTS
-	):
-		if oldest_thermal_index < 0:
-			_rejected_thermal_capacity += 1
-			return null
-		remove_at_swap(oldest_thermal_index)
-		_thermal_recycles += 1
-	return _acquire_configured(
+	return _add_bounded_cosmetic(
 		THERMAL_BURST_IMPACT_KIND,
+		MAX_LIVE_THERMAL_IMPACTS,
 		position,
 		color,
 		duration,
 		radius
 	)
+
+
+func add_drop_mine_detonation(
+	position: Vector2,
+	color: Color,
+	duration: float,
+	radius: float
+) -> VehicleEffectState:
+	## Mine feedback is cosmetic and may recycle only another mine receipt.
+	return _add_bounded_cosmetic(
+		DROP_MINE_DETONATION_KIND,
+		MAX_LIVE_DROP_MINE_DETONATIONS,
+		position,
+		color,
+		duration,
+		radius
+	)
+
+
+func add_mystery_purge_pulse(
+	position: Vector2,
+	color: Color,
+	duration: float,
+	radius: float
+) -> VehicleEffectState:
+	return _add_bounded_cosmetic(
+		MYSTERY_PURGE_PULSE_KIND,
+		MAX_LIVE_MYSTERY_PURGE_PULSES,
+		position,
+		color,
+		duration,
+		radius
+	)
+
+
+func _add_bounded_cosmetic(
+	kind: StringName,
+	max_live: int,
+	position: Vector2,
+	color: Color,
+	duration: float,
+	radius: float
+) -> VehicleEffectState:
+	var kind_count := 0
+	var oldest_index := -1
+	var oldest_remaining := INF
+	for index in live.size():
+		var state := live[index]
+		if state.kind != kind:
+			continue
+		kind_count += 1
+		if state.time < oldest_remaining:
+			oldest_remaining = state.time
+			oldest_index = index
+	if kind_count >= max_live or live.size() >= MAX_LIVE_EFFECTS:
+		if oldest_index < 0:
+			_note_bounded_cosmetic_rejection(kind)
+			return null
+		remove_at_swap(oldest_index)
+		_note_bounded_cosmetic_recycle(kind)
+	return _acquire_configured(kind, position, color, duration, radius)
+
+
+func _note_bounded_cosmetic_recycle(kind: StringName) -> void:
+	match kind:
+		THERMAL_BURST_IMPACT_KIND:
+			_thermal_recycles += 1
+		DROP_MINE_DETONATION_KIND:
+			_drop_mine_recycles += 1
+		MYSTERY_PURGE_PULSE_KIND:
+			_mystery_purge_recycles += 1
+
+
+func _note_bounded_cosmetic_rejection(kind: StringName) -> void:
+	match kind:
+		THERMAL_BURST_IMPACT_KIND:
+			_rejected_thermal_capacity += 1
+		DROP_MINE_DETONATION_KIND:
+			_rejected_drop_mine_capacity += 1
+		MYSTERY_PURGE_PULSE_KIND:
+			_rejected_mystery_purge_capacity += 1
 
 
 func _acquire_configured(
@@ -140,6 +210,10 @@ func validate_capacity() -> bool:
 		live.size() <= MAX_LIVE_EFFECTS
 		and count_kind(THERMAL_BURST_IMPACT_KIND)
 			<= MAX_LIVE_THERMAL_IMPACTS
+		and count_kind(DROP_MINE_DETONATION_KIND)
+			<= MAX_LIVE_DROP_MINE_DETONATIONS
+		and count_kind(MYSTERY_PURGE_PULSE_KIND)
+			<= MAX_LIVE_MYSTERY_PURGE_PULSES
 		and live.size() + _pool.size() == MAX_LIVE_EFFECTS
 		and _state_instances_created == MAX_LIVE_EFFECTS
 	)
@@ -158,4 +232,12 @@ func debug_snapshot() -> Dictionary:
 		"thermal_capacity":MAX_LIVE_THERMAL_IMPACTS,
 		"thermal_recycles":_thermal_recycles,
 		"rejected_thermal_capacity":_rejected_thermal_capacity,
+		"drop_mine_live":count_kind(DROP_MINE_DETONATION_KIND),
+		"drop_mine_capacity":MAX_LIVE_DROP_MINE_DETONATIONS,
+		"drop_mine_recycles":_drop_mine_recycles,
+		"rejected_drop_mine_capacity":_rejected_drop_mine_capacity,
+		"mystery_purge_live":count_kind(MYSTERY_PURGE_PULSE_KIND),
+		"mystery_purge_capacity":MAX_LIVE_MYSTERY_PURGE_PULSES,
+		"mystery_purge_recycles":_mystery_purge_recycles,
+		"rejected_mystery_purge_capacity":_rejected_mystery_purge_capacity,
 	}

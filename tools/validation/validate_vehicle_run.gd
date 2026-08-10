@@ -909,6 +909,24 @@ func _check_combat_presentation_frame(run) -> void:
 			and float(changed["secondary"]["mines"][0]["life"]) == 1.75,
 		"reused combat presentation reflects current protection, orbit, and mine state"
 	)
+	var original_dash_timer := float(run.player_dash_timer)
+	var original_dash_direction := Vector2(run.player_dash_direction)
+	var original_hull_direction := Vector2(run.player_hull_direction)
+	run.player_dash_timer = 0.10
+	run.player_dash_direction = Vector2.LEFT
+	run.player_hull_direction = Vector2.DOWN
+	var dash_snapshot: Dictionary = run.call(
+		"_runtime_combat_presentation_snapshot"
+	)
+	_expect(
+		bool(dash_snapshot["dash_active"])
+		and Vector2(dash_snapshot["hull_direction"]) == Vector2.LEFT
+		and Vector2(dash_snapshot["dash_direction"]) == Vector2.LEFT,
+		"dash freezes the craft and every hull-attached directional cue to its committed direction"
+	)
+	run.player_dash_timer = original_dash_timer
+	run.player_dash_direction = original_dash_direction
+	run.player_hull_direction = original_hull_direction
 	run.player_protection_sources.clear()
 	run.player_protection_sources.merge(original_protection)
 	run.secondary_runtime.mines.clear()

@@ -1,7 +1,7 @@
 class_name VehicleVisualEventCatalog
 extends RefCounted
 
-## Presentation-only contract for the four transient visuals that are actually
+## Presentation-only contract for the bounded transient visuals that are
 ## buffered and rendered. Gameplay truth and direct actor/HUD feedback stay out.
 
 const EVENTS := {
@@ -17,6 +17,9 @@ const EVENTS := {
 	&"thermal_burst_impact": {
 		"mode": &"authored_thermal",
 		"asset": &"effect/thermal_burst_impact",
+	},
+	&"mystery_projectile_purge": {
+		"mode": &"mystery_purge_pulse",
 	},
 }
 

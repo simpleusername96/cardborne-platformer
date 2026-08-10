@@ -87,6 +87,7 @@ func _initialize() -> void:
 	)
 	_validate_electric_field_radius(catalog)
 	_validate_mine_direction(catalog)
+	_validate_mine_detonation_receipts(catalog)
 	_finish()
 
 
@@ -199,6 +200,67 @@ func _validate_mine_direction(catalog: Catalog) -> void:
 		mines.size() == 1
 			and Vector2(mines[0]["pos"]).distance_to(origin - Vector2.LEFT * 48.0) <= 0.001,
 		"stationary drop mine falls back to hull direction"
+	)
+
+
+func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
+	var expected_damage := [48.0, 60.0, 72.0]
+	var expected_radius := [96.0, 108.0, 120.0]
+	for level_index in 3:
+		var build := RunBuild.new(catalog)
+		for _level in level_index + 1:
+			build.apply(&"drop_mines")
+		var runtime := Runtime.new()
+		var origin := Vector2(320.0, 240.0)
+		var target := EnemyState.new()
+		target.id = "mine_target_%d" % level_index
+		target.alive = true
+		target.active = true
+		target.pos = origin - Vector2.RIGHT * 48.0
+		target.radius = 18.0
+		var targets: Array[EnemyState] = [target]
+		var result := runtime.update(
+			0.1,
+			origin,
+			Vector2.RIGHT,
+			Vector2.RIGHT,
+			build,
+			targets,
+			Callable(self, "_los")
+		)
+		var damage: Array = result["damage"]
+		var detonations: Array = result["detonations"]
+		_expect(
+			damage.size() == 1
+			and is_equal_approx(float(damage[0]["damage"]), expected_damage[level_index])
+			and detonations.size() == 1
+			and Vector2(detonations[0]["position"]) == target.pos
+			and is_equal_approx(float(detonations[0]["radius"]), expected_radius[level_index])
+			and int(detonations[0]["level"]) == level_index + 1,
+			"Drop Mine level %d resolves damage before one exact origin receipt"
+			% (level_index + 1)
+		)
+
+	var timeout_build := RunBuild.new(catalog)
+	timeout_build.apply(&"drop_mines")
+	var timeout_runtime := Runtime.new()
+	var no_targets: Array[EnemyState] = []
+	timeout_runtime.update(
+		0.1, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		timeout_build, no_targets, Callable(self, "_los")
+	)
+	timeout_runtime.mines[0]["life"] = 0.01
+	var timeout_result := timeout_runtime.update(
+		0.02, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		timeout_build, no_targets, Callable(self, "_los")
+	)
+	_expect(
+		Array(timeout_result["damage"]).is_empty()
+		and Array(timeout_result["detonations"]).size() == 1
+		and is_equal_approx(
+			float(Array(timeout_result["detonations"])[0]["radius"]), 96.0
+		),
+		"Drop Mine timeout emits its receipt even when it damages no target"
 	)
 
 

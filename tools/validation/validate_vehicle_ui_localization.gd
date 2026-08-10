@@ -33,7 +33,8 @@ func _initialize() -> void:
 			"NOTIFY_REINFORCEMENT_FACILITY_DESTROYED",
 			"NOTIFY_BOSS_INBOUND",
 			"NOTIFY_BARRIER_DEPLETED",
-			"NOTIFY_MYSTERY_DEVICE_RESULT",
+			"NOTIFY_MYSTERY_DEVICE_REVEALED",
+			"NOTIFY_MYSTERY_DEVICE_TRIGGERED",
 			"BOSS_SHIELD_DOWN_HINT",
 		]:
 			_expect_translated(entry_key, locale)
@@ -190,15 +191,16 @@ func _initialize() -> void:
 			"obsolete user-facing localization key is removed: %s" % removed_key
 		)
 	_expect(
-		run_source.count("_ui.notify(") == 6,
-		"gameplay runtime has exactly six essential notification producers"
+		run_source.count("_ui.notify(") == 7,
+		"gameplay runtime has exactly seven essential notification producers"
 	)
 	for retained_key in [
 		"NOTIFY_REINFORCEMENT_FACILITY",
 		"NOTIFY_REINFORCEMENT_FACILITY_DESTROYED",
 		"NOTIFY_BOSS_INBOUND",
 		"NOTIFY_BARRIER_DEPLETED",
-		"NOTIFY_MYSTERY_DEVICE_RESULT",
+		"NOTIFY_MYSTERY_DEVICE_REVEALED",
+		"NOTIFY_MYSTERY_DEVICE_TRIGGERED",
 		"BOSS_SHIELD_DOWN_HINT",
 	]:
 		_expect(

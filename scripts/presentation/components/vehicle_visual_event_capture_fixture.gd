@@ -15,6 +15,7 @@ const GROUPS := [
 			&"player_emp_charge",
 			&"player_emp_release",
 			&"thermal_burst_impact",
+			&"mystery_projectile_purge",
 		],
 	},
 ]

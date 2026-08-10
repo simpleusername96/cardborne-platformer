@@ -59,11 +59,22 @@ func _validate_damage_authority_and_break_event() -> void:
 	var ignored := runtime.receive_damage(&"a", 90.0, &"hostile", &"direct")
 	_expect(not bool(ignored["accepted"]), "hostile damage receipt is rejected")
 	var partial := runtime.receive_damage(&"a", 45.0, &"player", &"direct")
-	_expect(bool(partial["accepted"]) and not bool(partial["broken"]), "authorized direct damage reduces health")
+	_expect(
+		bool(partial["accepted"])
+		and not bool(partial["broken"])
+		and bool(partial["revealed_now"])
+		and StringName(partial["revealed_outcome"]) == &"gravity_pull",
+		"the first authorized hit reduces health and reveals the assigned outcome once"
+	)
 	var damaged: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
 	_expect(
 		is_equal_approx(float(damaged["health_visible_timer"]), 1.5),
 		"authorized damage opens the device health bar for one and a half seconds"
+	)
+	_expect(
+		StringName(damaged["revealed_outcome"]) == &"gravity_pull"
+		and StringName(damaged["state"]) == &"intact",
+		"the revealed outcome remains visible while the damaged device is intact"
 	)
 	runtime.advance(0.5)
 	damaged = Dictionary(Array(runtime.snapshot()["devices"])[0])
@@ -73,7 +84,12 @@ func _validate_damage_authority_and_break_event() -> void:
 	)
 	var broken := runtime.receive_damage(&"a", 45.0, &"player", &"area")
 	var event := Dictionary(broken["break_event"])
-	_expect(bool(broken["broken"]) and not event.is_empty(), "lethal authorized damage returns one break event")
+	_expect(
+		bool(broken["broken"])
+		and not bool(broken["revealed_now"])
+		and not event.is_empty(),
+		"later lethal damage triggers one break event without repeating the reveal"
+	)
 	_expect(
 		StringName(event["effect_id"]) == &"gravity_pull"
 		and Vector2(event["position"]) == Vector2(100.0, 200.0)
@@ -88,7 +104,7 @@ func _validate_damage_authority_and_break_event() -> void:
 		"break event explicitly grants no quota, XP, or drop"
 	)
 	var revealed: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
-	_expect(StringName(revealed["revealed_outcome"]) == &"gravity_pull", "outcome appears only after break")
+	_expect(StringName(revealed["revealed_outcome"]) == &"gravity_pull", "resolved state retains the first-hit outcome")
 	_expect(StringName(revealed["state"]) == &"resolved" and bool(revealed["visible"]), "broken device stays resolved while effect is active")
 	_expect(not runtime.is_intact(&"a") and runtime.intact_devices_snapshot().size() == 2, "broken device is no longer intact or damageable")
 

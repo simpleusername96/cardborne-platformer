@@ -103,6 +103,30 @@ func _run() -> void:
 	enemy.toxin_application_pulse = 1.0
 	enemy.committed_dir = Vector2.RIGHT
 	enemy.committed_target = Vector2(500.0, 300.0)
+	enemy.presentation_facing = Vector2.UP
+	_expect(
+		is_equal_approx(
+			float(renderer.call(
+				"_enemy_angle", enemy.archetype, enemy, Vector2.LEFT * 500.0, 0.0
+			)),
+			Vector2.UP.angle()
+		),
+		"enemy rendering consumes the published facing instead of inferring a target"
+	)
+	var mystery_cryo_enemy := EnemyState.new()
+	mystery_cryo_enemy.mystery_cryo_remaining = 1.0
+	var mystery_cryo_color: Color = renderer.call(
+		"_enemy_status_custom_data", mystery_cryo_enemy, true
+	)
+	_expect(
+		mystery_cryo_color.a > 0.0
+		and Vector3(
+			mystery_cryo_color.r,
+			mystery_cryo_color.g,
+			mystery_cryo_color.b
+		).distance_to(Vector3(Art.CRYO.r, Art.CRYO.g, Art.CRYO.b)) <= 0.001,
+		"Mystery Cryo uses the same exact-size blue enemy-body compositor"
+	)
 	enemy.attack_telegraphs = [{
 		"shape":&"corridor",
 		"delivery":&"beam",
@@ -928,6 +952,28 @@ func _validate_mystery_device_presentation(
 			and rings.multimesh.visible_instance_count == 0,
 		"inactive mystery device and timed-effect inputs clear their retained instances"
 	)
+	var purge_store := EffectStore.new()
+	var purge := purge_store.add_mystery_purge_pulse(
+		Vector2(540.0, 320.0), Art.SYSTEM, 0.18, 420.0
+	)
+	purge.time = 0.18
+	presentation["reduced_motion"] = true
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, purge_store.live,
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+	)
+	var purge_ring := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
+	_expect(
+		purge_ring.multimesh.visible_instance_count == 1
+		and is_equal_approx(
+			Vector2(
+				purge_ring.multimesh.buffer[0],
+				purge_ring.multimesh.buffer[4]
+			).length(),
+			420.0
+		),
+		"reduced motion renders one Mystery purge pulse at its final gameplay radius"
+	)
 
 
 func _validate_player_directional_cues(
@@ -974,6 +1020,22 @@ func _validate_player_directional_cues(
 		beam_batch.multimesh.visible_instance_count == 1,
 		"dash renders exactly one rear engine thrust cue"
 	)
+	presentation["player_hit_remaining"] = 0.10
+	presentation["run_time"] = 1.37
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "",
+		presentation
+	)
+	var craft_batch := renderer.get_node("Player_craft_body") as MultiMeshInstance2D
+	_expect(
+		Vector2(
+			craft_batch.multimesh.buffer[3],
+			craft_batch.multimesh.buffer[7]
+		).is_equal_approx(player_position),
+		"craft-only hit recoil cannot displace the craft during dash"
+	)
+	presentation["player_hit_remaining"] = 0.0
 	presentation["dash_active"] = false
 	presentation["player_barrier_hit_remaining"] = 0.16
 	renderer.sync(

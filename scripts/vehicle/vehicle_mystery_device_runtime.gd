@@ -42,6 +42,7 @@ func configure(device_blueprint: Array, layout_seed: int, stage_id: StringName) 
 			"health":DEVICE_HEALTH,
 			"health_visible_timer":0.0,
 			"outcome":outcome,
+			"revealed":false,
 			"state":&"intact",
 		})
 
@@ -62,6 +63,8 @@ func receive_damage(
 		"broken":false,
 		"device_id":device_id,
 		"remaining_health":0.0,
+		"revealed_now":false,
+		"revealed_outcome":&"",
 		"break_event":{},
 	}
 	var device := _device_by_id(device_id)
@@ -75,8 +78,12 @@ func receive_damage(
 		return receipt
 	device["health"] = maxf(0.0, float(device["health"]) - applied)
 	device["health_visible_timer"] = 1.5
+	var revealed_now := not bool(device.get("revealed", false))
+	device["revealed"] = true
 	receipt["accepted"] = true
 	receipt["remaining_health"] = float(device["health"])
+	receipt["revealed_now"] = revealed_now
+	receipt["revealed_outcome"] = StringName(device["outcome"])
 	if float(device["health"]) > 0.0:
 		return receipt
 	device["state"] = &"resolved"
@@ -186,7 +193,7 @@ func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 		record["health_visible_timer"] = float(device["health_visible_timer"])
 		record["state"] = StringName(device["state"])
 		record["visible"] = StringName(device["state"]) != &"retired"
-		if StringName(device["state"]) != &"intact":
+		if bool(device.get("revealed", false)):
 			record["revealed_outcome"] = StringName(device["outcome"])
 	return output
 

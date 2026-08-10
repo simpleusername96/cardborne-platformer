@@ -260,6 +260,7 @@ var _mystery_device_snapshot_buffer: Array[Dictionary] = []
 var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
 var _mystery_retired_event_buffer: Array[Dictionary] = []
 var _mystery_decoy_targets: Dictionary = {}
+var _mystery_device_result_receipt: Dictionary = {}
 var _runtime_fast_hud_frame: Dictionary = {}
 var _runtime_minimap_frames: Array[Dictionary] = []
 var _runtime_minimap_visited_buffers: Array = []
@@ -901,6 +902,7 @@ func _configure_stage_map_runtime() -> void:
 		current_stage_id
 	)
 	_mystery_decoy_targets.clear()
+	_mystery_device_result_receipt.clear()
 
 
 func _populate_stage_items() -> void:
@@ -1001,6 +1003,10 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.home = position
 	enemy.velocity = Vector2.ZERO
 	enemy.desired_velocity = Vector2.ZERO
+	var initial_facing := (player_position - position).normalized()
+	enemy.presentation_facing = (
+		initial_facing if not initial_facing.is_zero_approx() else Vector2.RIGHT
+	)
 	enemy.health = health
 	enemy.max_health = health
 	enemy.speed = speed
@@ -1837,6 +1843,19 @@ func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
 				&"arc" if secondary_source == "Electric Field" else &"kinetic",
 				true
 			)
+	# Mine gameplay resolves before its one origin receipt becomes visible.
+	for detonation_variant in secondary_result.get("detonations", []):
+		var detonation: Dictionary = detonation_variant
+		_add_effect(
+			EffectStore.DROP_MINE_DETONATION_KIND,
+			Vector2(detonation["position"]),
+			Color.WHITE,
+			0.18,
+			float(detonation["radius"])
+		)
+		_play_sound(&"impact", 0.90)
+
+
 func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:
 	var candidates: Array[EnemyState] = []
 	enemy_grid.query_radius_into(player_position, SEEKER_RANGE, enemies, _enemy_query_buffer)
@@ -2034,6 +2053,10 @@ func _update_enemies(delta: float) -> void:
 		var vulnerable := enemy.vulnerable
 		if vulnerable > 0.0:
 			enemy.vulnerable = maxf(0.0, vulnerable - delta)
+		if enemy.mystery_cryo_remaining > 0.0:
+			enemy.mystery_cryo_remaining = maxf(
+				0.0, enemy.mystery_cryo_remaining - delta
+			)
 		var health_visible_timer := enemy.health_visible_timer
 		if health_visible_timer > 0.0:
 			enemy.health_visible_timer = maxf(0.0, health_visible_timer - delta)
@@ -2102,8 +2125,10 @@ func _update_enemies(delta: float) -> void:
 				if not enemy.alive:
 					continue
 		var role := enemy.role
+		_refresh_enemy_presentation_facing(enemy)
 		if role == &"stage_boss":
 			_update_stage_boss(enemy, delta)
+			_refresh_enemy_presentation_facing(enemy)
 			enemy_grid.update_actor(enemy)
 			continue
 		if role == &"generator":
@@ -2163,6 +2188,10 @@ func _prepare_mystery_device_effects(delta: float) -> void:
 				continue
 			match effect_id:
 				&"cryo_lock":
+					enemy.mystery_cryo_remaining = maxf(
+						enemy.mystery_cryo_remaining,
+						float(effect["remaining_seconds"])
+					)
 					# Warned startup/active attacks finish. Every other state is
 					# held long enough to prevent movement or a fresh commitment.
 					if enemy.phase not in [&"startup", &"active"]:
@@ -2295,6 +2324,21 @@ func _update_scheduled_ordinary_enemy(
 			enemy_grid.update_actor_position(enemy)
 		else:
 			enemy_grid.update_actor(enemy)
+	_refresh_enemy_presentation_facing(enemy)
+
+
+func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
+	## Directional actors publish simulation-owned facing. Controller spin and
+	## nondirectional mine/generator bodies remain explicit renderer exceptions.
+	if enemy.role in [&"controller", &"mine", &"generator"]:
+		return
+	var facing := Vector2.ZERO
+	if enemy.phase in [&"startup", &"active", &"boss_startup", &"boss_active"]:
+		facing = enemy.committed_dir
+	else:
+		facing = _mystery_enemy_target(enemy) - enemy.pos
+	if not facing.is_zero_approx():
+		enemy.presentation_facing = facing.normalized()
 
 
 func _update_motion_only_ordinary_enemy(
@@ -3864,6 +3908,16 @@ func _add_effect(
 			position, color, duration, radius
 		)
 		return
+	if kind == EffectStore.DROP_MINE_DETONATION_KIND:
+		effect_store.add_drop_mine_detonation(
+			position, color, duration, radius
+		)
+		return
+	if kind == EffectStore.MYSTERY_PURGE_PULSE_KIND:
+		effect_store.add_mystery_purge_pulse(
+			position, color, duration, radius
+		)
+		return
 	effect_store.add(
 		kind,
 		position,
@@ -4378,29 +4432,88 @@ func _damage_mystery_device(
 	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 	if bool(receipt["broken"]):
 		_handle_mystery_device_break(Dictionary(receipt["break_event"]))
+	elif bool(receipt.get("revealed_now", false)):
+		_notify_mystery_device_reveal(
+			StringName(receipt.get("revealed_outcome", &""))
+		)
 	queue_redraw()
 	return true
 
 
-func _handle_mystery_device_break(event: Dictionary) -> void:
+func _handle_mystery_device_break(event: Dictionary) -> Dictionary:
 	var effect_id := StringName(event["effect_id"])
+	var affected_count := 0
 	if effect_id == &"projectile_purge":
-		_clear_hostile_projectiles(
+		affected_count = _clear_hostile_projectiles(
 			Vector2(event["position"]), float(event["radius"])
 		)
-	var outcome_key := String({
+		_add_effect(
+			EffectStore.MYSTERY_PURGE_PULSE_KIND,
+			Vector2(event["position"]),
+			Art.SYSTEM,
+			0.18,
+			float(event["radius"])
+		)
+	else:
+		affected_count = _count_mystery_effect_targets(
+			effect_id,
+			Vector2(event["position"]),
+			float(event["radius"])
+		)
+	var outcome_key := _mystery_outcome_key(effect_id)
+	if not outcome_key.is_empty():
+		_ui.notify(
+			tr("NOTIFY_MYSTERY_DEVICE_TRIGGERED")
+				% [tr(outcome_key), affected_count],
+			2.4,
+			Art.SYSTEM
+		)
+	_play_sound(&"destroy_priority", 1.02)
+	_mystery_device_result_receipt.clear()
+	_mystery_device_result_receipt["effect_id"] = effect_id
+	_mystery_device_result_receipt["affected_count"] = affected_count
+	return _mystery_device_result_receipt
+
+
+func _notify_mystery_device_reveal(effect_id: StringName) -> void:
+	var outcome_key := _mystery_outcome_key(effect_id)
+	if outcome_key.is_empty():
+		return
+	_ui.notify(
+		tr("NOTIFY_MYSTERY_DEVICE_REVEALED") % tr(outcome_key),
+		2.0,
+		Art.SYSTEM
+	)
+
+
+func _mystery_outcome_key(effect_id: StringName) -> String:
+	return String({
 		&"gravity_pull":"MYSTERY_OUTCOME_GRAVITY_PULL",
 		&"cryo_lock":"MYSTERY_OUTCOME_CRYO_LOCK",
 		&"projectile_purge":"MYSTERY_OUTCOME_PROJECTILE_PURGE",
 		&"decoy_signal":"MYSTERY_OUTCOME_DECOY_SIGNAL",
 	}.get(effect_id, ""))
-	if not outcome_key.is_empty():
-		_ui.notify(
-			tr("NOTIFY_MYSTERY_DEVICE_RESULT") % tr(outcome_key),
-			2.4,
-			Art.SYSTEM
-		)
-	_play_sound(&"destroy_priority", 1.02)
+
+
+func _count_mystery_effect_targets(
+	effect_id: StringName,
+	center: Vector2,
+	radius: float
+) -> int:
+	if effect_id not in [&"gravity_pull", &"cryo_lock", &"decoy_signal"]:
+		return 0
+	var count := 0
+	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
+	for enemy in _enemy_query_buffer:
+		if (
+			enemy.alive
+			and enemy.active
+			and enemy.role != &"stage_boss"
+			and not _is_fixed_structure_enemy(enemy)
+			and enemy.pos.distance_to(center) <= radius + enemy.radius
+		):
+			count += 1
+	return count
 
 
 func _clear_hostile_projectiles(center: Vector2, radius: float) -> int:
@@ -5540,7 +5653,11 @@ func _fill_combat_presentation_snapshot(
 	snapshot.clear()
 	snapshot["zones"] = denied_zones
 	snapshot["player_position"] = player_position
-	snapshot["hull_direction"] = player_hull_direction
+	snapshot["hull_direction"] = (
+		player_dash_direction
+		if player_dash_timer > 0.0
+		else player_hull_direction
+	)
 	snapshot["aim_direction"] = player_aim_direction
 	snapshot["player_speed"] = player_velocity.length()
 	snapshot["dash_active"] = player_dash_timer > 0.0

@@ -22,6 +22,7 @@ func _run() -> void:
 	_expect(RunDifficulty.normalize(&"normal") == RunDifficulty.HARD, "retired Normal collapses to Hard")
 	_expect(RunDifficulty.normalize(&"easy") == RunDifficulty.HARD, "retired Easy collapses to Hard")
 	_expect(is_equal_approx(EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER, 1.40), "ordinary movement multiplier is locked to 1.40")
+	_expect(is_equal_approx(EncounterDirector.ENEMY_DAMAGE_MULTIPLIER, 1.755), "ordinary outgoing-damage multiplier is locked to 1.755")
 	for axis in ["quota", "active_cap", "health", "boss_health", "damage", "speed"]:
 		_expect(is_equal_approx(RunDifficulty.factor(RunDifficulty.HARD, axis), 1.0), "Hard %s factor preserves the previous baseline" % axis)
 		_expect(is_equal_approx(RunDifficulty.factor(&"easy", axis), 1.0), "retired identifiers cannot alter the %s factor" % axis)
@@ -109,9 +110,25 @@ func _run() -> void:
 			"Stage %d leaves the authored boss-health curve unchanged"
 				% (stage_index + 1)
 		)
+	var damage_curve := [1.00, 1.03, 1.06, 1.09, 1.12]
+	var expected_damage := [17.55, 18.0765, 18.603, 19.1295, 19.656]
+	for stage_index in damage_curve.size():
+		stage.current_stage_index = stage_index
+		_expect(
+			_near(
+				float(stage.call("_scaled_incoming_damage", 10.0, true)),
+				expected_damage[stage_index],
+				0.001
+			),
+			"Stage %d applies the exact ordinary outgoing-damage curve"
+				% (stage_index + 1)
+		)
 	stage.current_stage_index = 0
 	var hard_damage := float(stage.call("_scaled_incoming_damage", 10.0, true))
 	var hard_final_damage := float(stage.call("_scaled_incoming_damage", 10.0, true, true))
+	var environmental_damage := float(stage.call("_scaled_incoming_damage", 10.0, false))
+	_expect(_near(hard_final_damage, 10.0, 0.001), "final-effective boss damage bypass remains unchanged")
+	_expect(_near(environmental_damage, 10.0, 0.001), "friendly and environmental damage bypass remains unchanged")
 	stage.selected_run_difficulty = &"easy"
 	var compatibility_enemy = stage.call("_make_enemy", {"id":"compatibility_probe", "role":&"chaser", "pos":Vector2.ZERO})
 	var compatibility_boss = stage.call("_make_enemy", {"id":"compatibility_boss_probe", "role":&"stage_boss", "pos":Vector2.ZERO})
