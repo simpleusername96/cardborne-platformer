@@ -494,24 +494,24 @@ Source owners: `scripts/enemies/vehicle_enemy_contact_runtime.gd`,
 `scripts/enemies/vehicle_enemy_state.gd`, `scripts/enemies/vehicle_enemy_store.gd`,
 `scripts/vehicle/vehicle_run.gd`, `scripts/combat/vehicle_attack_contract.gd`
 
-- [ ] **2.1 Make player damage acceptance explicit.**
+- [x] **2.1 Make player damage acceptance explicit.**
   - Change: return a boolean receipt from `_damage_player()` with the accepted/rejected
     semantics above; preserve all existing damage, telemetry, barrier, hit feedback, defeat,
     and one-second invulnerability behavior.
   - Accept: direct focused tests cover inactive/stage-complete/invulnerable rejection,
     full and partial barrier acceptance, hull acceptance, and callers that ignore the return.
-- [ ] **2.2 Implement the bounded relative-sweep contact owner.**
+- [x] **2.2 Implement the bounded relative-sweep contact owner.**
   - Change: add fixed enemy start-position/cooldown state, one no-allocation pass over the
     existing active list, exact relative swept-circle math, and the locked role matrix.
   - Accept: endpoint crossing at large delta cannot tunnel; no per-frame allocation or
     per-enemy grid query is introduced; fixed state resets cleanly on pool reuse.
-- [ ] **2.3 Remove competing legacy contact owners and integrate at 60 Hz.**
+- [x] **2.3 Remove competing legacy contact owners and integrate at 60 Hz.**
   - Change: remove Chaser, Rammer, collective-charge endpoint checks and Bulkhead/Splitter
     decision-only overlap checks; invoke the new owner after every ordinary/forced movement
     and before projectile damage; instrument the named section only in diagnostic mode.
   - Accept: every role has exactly one contact owner; presentation/collision radii remain
     separate; boss, mine, ranged, support, and fixed-structure paths are unchanged.
-- [ ] **2.4 Close the contact correctness and cost gate.**
+- [x] **2.4 Close the contact correctness and cost gate.**
   - Change: add `validate_vehicle_enemy_contact.gd` with deterministic relative-motion,
     phase, cooldown, barrier, invulnerability, dash protection, collective, role-exclusion,
     pool-reuse, and large-delta cases.
@@ -539,17 +539,17 @@ Source owners: `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd`,
 `scripts/vehicle/vehicle_run.gd`, `scripts/enemies/vehicle_stage_difficulty.gd`,
 `scripts/encounters/vehicle_encounter_director.gd`, focused validators
 
-- [ ] **3.1 Prove the complete reinforcement lifecycle.**
+- [x] **3.1 Prove the complete reinforcement lifecycle.**
   - Change: extend the focused runtime validator and add run-integration coverage for two
     intervals, both caps, released slots, destroy/retire/stage-complete, and carrier identity.
   - Accept: stages 1-5 preserve `8/7/6/5/4s`, `2/3/4/5/6` children, stage roles, and
     time-driven recurrence. If current production code already passes, leave it unchanged.
-- [ ] **3.2 Re-verify and report enemy balance without retuning.**
+- [x] **3.2 Re-verify and report enemy balance without retuning.**
   - Change: retain the existing difficulty oracle, add only missing exact effective examples
     if needed, and run it after contact integration.
   - Accept: every multiplier and bypass in the Proposed Design passes. The handoff reports
     both authored factors and effective stage multipliers so a tester can verify the claim.
-- [ ] **3.3 Perform a bounded normal-play contact sanity pass.**
+- [x] **3.3 Perform a bounded normal-play contact sanity pass.**
   - Change: use a deterministic or capture fixture with one Chaser, one Rammer, one
     persistent hull role, and one ranged control while the player crosses their bodies.
   - Accept: visible hit feedback and hull/barrier changes match the contact validator; no
@@ -578,7 +578,7 @@ Source owners: `scripts/combat/vehicle_effect_state.gd`,
 `scripts/vehicle/vehicle_run_capture_gateway.gd`,
 `scripts/vehicle/vehicle_run_capture_driver.gd`, focused validators
 
-- [ ] **4.1 Publish exact transient area footprints.**
+- [x] **4.1 Publish exact transient area footprints.**
   - Change: add and reset explicit secondary-radius state, add a named EMP effect-store
     acquisition path, and publish charge/release damage/stun `285` plus projectile-clear
     `325` from gameplay-owned constants. Keep all single-radius events unchanged except for
@@ -586,7 +586,7 @@ Source owners: `scripts/combat/vehicle_effect_state.gd`,
   - Accept: the effect store reuses its fixed 96 states, EMP snapshots expose both exact
     radii without renderer arithmetic, pool reuse clears both, and gameplay damage, stun,
     clear order, values, center, cooldown, and effect capacity are unchanged.
-- [ ] **4.2 Render full-area bodies without false propagation.**
+- [x] **4.2 Render full-area bodies without false propagation.**
   - Change: implement the locked matrix with the existing disk batch and Electric Field
     mesh; remove radius interpolation from EMP, Thermal, Drop Mine, and Mystery Purge;
     render Gravity Pull, Cryo Lock, and Decoy Signal as full persistent footprints; retain
@@ -595,7 +595,7 @@ Source owners: `scripts/combat/vehicle_effect_state.gd`,
   - Accept: renderer debug data proves exact center/radius and first-frame final extent for
     every matrix row; no area is hollow or edge-only, no pixel extends beyond its gameplay
     footprint, and no node, texture, material, batch, or recurring allocation is added.
-- [ ] **4.3 Strengthen deterministic footprint validation.**
+- [x] **4.3 Strengthen deterministic footprint validation.**
   - Change: update effect-store, combat-renderer, attack-route, secondary-weapon, and damage-
     feedback validators for the matrix, including EMP `285/325`, Electric `120/140/160`,
     Thermal `72/84/96`, Drop Mine `96/108/120`, Mystery Purge `420`, Gravity Pull `480`,
@@ -636,7 +636,7 @@ Source owners: `scripts/vehicle/vehicle_run_capture_driver.gd`,
 `scripts/performance/vehicle_performance_recorder.gd`,
 `.agents/semantic-v2-runtime-acceptance-evidence.md`
 
-- [ ] **5.1 Inspect rendered UI and consolidated combat evidence.**
+- [x] **5.1 Inspect rendered UI and consolidated combat evidence.**
   - Change: capture Korean/English supported viewports and 200% text for upgrade cards;
     reuse the passing Phase 4 effect evidence unless an owned input changed; inspect upgrade,
     contact, reinforcement, effect, and player/enemy priority at 1x and grayscale.
@@ -854,23 +854,27 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 2. Phase 1 is complete and no runtime hot-path work has started.
-- Next task: 2.1, make player damage acceptance explicit, then implement the single bounded
-  relative-sweep contact owner.
-- Last completed gate: Phase 1 upgrade gate. Upgrade system, secondary weapons, upgrade UI,
-  UI localization, stage UI layout, capture driver, visual authority, Godot import, and
-  `git diff --check` pass. The compact Korean capture manifest completed under
-  `build/captures/combat-upgrade-effect-integrity/phase1-ko-960/`; inspected `06` and `06c`
-  show Thermal unlock/enhancement plus Split, Electric, Mine, and Seeker effect rows with
-  the correct final summaries and no divider, clipping, or overflow.
+- Current phase: Phase 5 final qualification. Runtime and visual feature sources are frozen.
+- Next task: finish the built-product smoke, then run Task 5.3's final-only native and Web
+  performance qualification against the committed tree.
+- Last completed gate: the focused final batch. Nineteen upgrade, contact, reinforcement,
+  area-effect, capture, fixed-capacity, and performance-structure validators pass, as do
+  visual authority and Godot import. Web export reports `WEB_EXPORT_OK`; the built product
+  starts on the guarded `codex` lane, switches Korean to English, shows the complete EMP
+  footprint, and records an ordinary collision/melee contact in its failure report with no
+  browser console warnings or errors.
 - Verified source baseline: clean commit `04839774` preceded the Task 0.1/0.2 work. The
   former crate-warning failure was fixture contamination from generated cover; the isolated
   one-crate clear-path fixture passes without a runtime geometry change. Per user direction,
   this contract intentionally has no pre-change native performance baseline.
-- Implementation completed under this contract: Tasks 0.1, 0.2, and 1.1-1.4. Primary
-  Split/Pierce and secondary definitions now own runtime/preview values; all 36 offer states
-  expose one or two rows; built-in Seeker begins as `enhance`; element enhancement copy is
-  level-aware. Task 0.3 records that long performance work is deferred to final qualification.
+- Implementation completed under this contract: Tasks 0.1-4.3 and 5.1. Primary Split/Pierce
+  and secondary definitions own runtime/preview values; all 36 offer states expose one or two
+  rows; built-in Seeker begins as `enhance`; ordinary melee contact has one bounded relative-
+  sweep owner; reinforcement recurrence and locked balance values are proven; every area body
+  uses gameplay-owned exact footprints. Task 4.4's color/grayscale evidence is complete under
+  `build/evidence/execplan-2026-08-10-area-effects/`, but its user-composition approval remains
+  open for handoff. Task 0.3's deferred long performance work is now eligible because all
+  owned fixes, focused validation, rendered inspection, import, and Web export are complete.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
