@@ -93,7 +93,7 @@ func _initialize() -> void:
 		"manifest declares 72 static authored images and no frame animations"
 	)
 	_validate_surface_details()
-	_validate_map_object_content_rects()
+	_validate_normalized_content_rects()
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)
 	for upgrade_id in [
@@ -120,11 +120,12 @@ func _initialize() -> void:
 	_finish()
 
 
-func _validate_map_object_content_rects() -> void:
+func _validate_normalized_content_rects() -> void:
 	var expected := {
 		&"world/mystery_device_intact":Rect2i(6, 5, 372, 374),
 		&"world/mystery_device_resolved":Rect2i(6, 5, 372, 374),
 		&"world/facility_reinforcement_fabricator":Rect2i(16, 43, 224, 170),
+		&"cue/disk_mask":Rect2i(7, 6, 113, 115),
 	}
 	for asset_id in expected:
 		var descriptor := AssetProvider.descriptor(asset_id)

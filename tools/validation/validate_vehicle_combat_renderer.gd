@@ -213,8 +213,8 @@ func _run() -> void:
 		and Color(
 			thermal_buffer[8], thermal_buffer[9],
 			thermal_buffer[10], thermal_buffer[11]
-		).is_equal_approx(Color.WHITE),
-		"one retained Thermal accent begins at the exact gameplay radius and full authored color"
+		).is_equal_approx(Color(Color.WHITE, 0.20)),
+		"one retained Thermal accent begins at the exact gameplay radius and restrained alpha"
 	)
 	var mine_batch := renderer.get_node(
 		"Effect_drop_mine_detonation"
@@ -235,7 +235,7 @@ func _run() -> void:
 		and Color(
 			mine_buffer[8], mine_buffer[9],
 			mine_buffer[10], mine_buffer[11]
-		).is_equal_approx(Color.WHITE),
+		).is_equal_approx(Color(Color.WHITE, 0.20)),
 		"reduced motion renders the approved Drop Mine raster at its final gameplay radius"
 	)
 	var effect_disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
@@ -270,7 +270,7 @@ func _run() -> void:
 		and is_equal_approx(
 			Vector2(thermal_buffer[0], thermal_buffer[4]).length(), 84.0
 		)
-		and is_equal_approx(thermal_buffer[11], 0.5),
+		and is_equal_approx(thermal_buffer[11], 0.10),
 		"retained Thermal accent keeps its gameplay radius while fading over 0.18 seconds"
 	)
 	snapshot = renderer.debug_snapshot()
@@ -311,7 +311,7 @@ func _run() -> void:
 		is_equal_approx(
 			Vector2(mine_buffer[0], mine_buffer[4]).length(), 108.0
 		)
-		and is_equal_approx(mine_buffer[11], 1.0),
+		and is_equal_approx(mine_buffer[11], 0.20),
 		"standard motion starts the Drop Mine accent at its exact final radius"
 	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
@@ -335,7 +335,7 @@ func _run() -> void:
 		is_equal_approx(
 			Vector2(mine_buffer[0], mine_buffer[4]).length(), 108.0
 		)
-		and is_equal_approx(mine_buffer[11], 0.5),
+		and is_equal_approx(mine_buffer[11], 0.10),
 		"Drop Mine reaches its exact gameplay radius while fading over 0.18 seconds"
 	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
@@ -974,9 +974,9 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 				release_radius
 			)
 			and Color(release_draws[0]["modulate"]).is_equal_approx(
-				Color.WHITE
+				Color(Color.WHITE, 0.30)
 			),
-		"standard-motion EMP accent begins at the exact inner radius and release position"
+		"standard-motion EMP secondary accent begins at the exact inner radius and restrained alpha"
 	)
 	_expect(
 		release_disks.multimesh.visible_instance_count == 2

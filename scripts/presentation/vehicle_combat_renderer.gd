@@ -1103,7 +1103,7 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var radius := maxf(1.0, float(telegraph["radius"]))
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
-	var boundary_alpha := lerpf(0.38, 0.90, intensity)
+	var boundary_alpha := lerpf(0.03, 0.06, intensity)
 	_write_disk(center, radius, Color(Art.THERMAL, lerpf(0.10, 0.20, readiness)))
 	_write_danger_ring(center, radius, Color(Art.THERMAL, boundary_alpha))
 
@@ -1168,7 +1168,7 @@ func _sync_effects(
 			_write_ring(
 				player_position,
 				secondary_radius,
-				Color(Art.SYSTEM, 0.36)
+				Color(Art.SYSTEM, 0.10)
 			)
 			continue
 		if mode == &"hull_afterimage":
@@ -1197,7 +1197,7 @@ func _sync_effects(
 				position,
 				0.0,
 				radius,
-				color
+				Color(color, color.a * 0.30)
 			)
 			continue
 		if mode == &"authored_thermal":
@@ -1211,7 +1211,7 @@ func _sync_effects(
 				position,
 				0.0,
 				Vector2.ONE * radius,
-				color
+				Color(color, color.a * 0.20)
 			)
 			continue
 		if mode == &"authored_drop_mine":
@@ -1225,7 +1225,7 @@ func _sync_effects(
 				position,
 				0.0,
 				Vector2.ONE * radius,
-				color
+				Color(color, color.a * 0.20)
 			)
 			continue
 		if mode == &"mystery_purge_pulse":
@@ -1237,7 +1237,7 @@ func _sync_effects(
 			_write_ring(
 				position,
 				radius,
-				Color(Art.SYSTEM, color.a * 0.54)
+				Color(Art.SYSTEM, color.a * 0.14)
 			)
 			continue
 
@@ -1446,7 +1446,7 @@ func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 			position,
 			0.0,
 			Vector2.ONE * radius,
-			Color(color, 0.28)
+			Color(color, 0.10)
 		)
 
 

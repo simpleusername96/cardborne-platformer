@@ -133,7 +133,7 @@
     {"id": "cue/ring", "path": "effects/cues/cue_ring.png", "canvas": [128, 128], "pivot": [64, 64], "category": "cue"},
     {"id": "cue/beam_strip_9", "path": "effects/cues/cue_beam_strip_9.png", "canvas": [128, 32], "pivot": [64, 16], "category": "cue"},
     {"id": "cue/diamond_marker", "path": "effects/cues/cue_diamond_marker.png", "canvas": [64, 64], "pivot": [32, 32], "category": "cue"},
-    {"id": "cue/disk_mask", "path": "effects/cues/cue_disk_mask.png", "canvas": [128, 128], "pivot": [64, 64], "category": "cue"},
+    {"id": "cue/disk_mask", "path": "effects/cues/cue_disk_mask.png", "canvas": [128, 128], "content_rect": [7, 6, 113, 115], "pivot": [64, 64], "category": "cue"},
     {"id": "cue/crosshair", "path": "effects/cues/cue_crosshair.png", "canvas": [96, 96], "pivot": [48, 48], "category": "cue"}
   ]
 }

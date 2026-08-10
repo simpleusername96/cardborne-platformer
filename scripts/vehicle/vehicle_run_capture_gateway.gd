@@ -1066,31 +1066,10 @@ func _capture_thermal_burst_evidence() -> void:
 		if direct != null:
 			direct.health_visible_timer = 0.0
 			_run._append_enemy(direct)
-		for crowd_index in 5:
-			var angle := TAU * float(crowd_index) / 5.0
-			var role := &"turret" if crowd_index == 4 else &"chaser"
-			var enemy: EnemyState = _run._make_enemy({
-				"id":"capture_thermal_crowd_%d_%d"
-					% [level_index + 1, crowd_index],
-				"role":role,
-				"pos":center + Vector2.RIGHT.rotated(angle)
-					* profile.thermal_burst_radius * 0.92,
-				"active":true,
-			})
-			if enemy == null:
-				continue
-			enemy.health_visible_timer = 0.0
-			_run._append_enemy(enemy)
-		_run._spawn_player_projectile(
-			center + Vector2(-128.0, -118.0),
-			Vector2.RIGHT,
-			1.0,
-			360.0,
-			0,
-			6.0,
-			1.0,
-			420.0,
-			profile
+		_add_exact_area_reference_markers(
+			center,
+			profile.thermal_burst_radius,
+			profile.thermal_burst_radius
 		)
 		_run.capture_set_mode(&"paused")
 		await _settle_capture()
@@ -1112,14 +1091,8 @@ func _capture_thermal_burst_evidence() -> void:
 	_run._clear_effects()
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
-	_run._add_effect(
-		&"player_emp_charge", _run.player_position,
-		Art.BOSS_MAGENTA, 1.0, 142.0
-	)
-	_run._add_effect(
-		&"player_emp_release", _run.player_position,
-		Art.BOSS_MAGENTA, 1.0, 142.0
-	)
+	_run._start_emp()
+	_run._release_emp()
 	for impact_index in EffectStore.MAX_LIVE_THERMAL_IMPACTS:
 		var column := impact_index % 6
 		var row := impact_index / 6
@@ -1173,19 +1146,9 @@ func _capture_drop_mine_evidence() -> void:
 		_run._clear_projectiles()
 		_run._clear_effects()
 		var center: Vector2 = _run.player_position + Vector2(290.0, 0.0)
-		for crowd_index in 5:
-			var enemy: EnemyState = _run._make_enemy({
-				"id":"capture_drop_mine_%d_%d"
-					% [level_index + 1, crowd_index],
-				"role":&"chaser",
-				"pos":center + Vector2.RIGHT.rotated(
-					TAU * float(crowd_index) / 5.0
-				) * radii[level_index] * 0.84,
-				"active":true,
-			})
-			if enemy != null:
-				enemy.health_visible_timer = 0.0
-				_run._append_enemy(enemy)
+		_add_exact_area_reference_markers(
+			center, radii[level_index], radii[level_index]
+		)
 		_run.capture_set_mode(&"paused")
 		await _settle_capture()
 		_run._add_effect(
