@@ -6,7 +6,7 @@ source: Current Cardborne production capture geometry at 655e0ee2 plus three ind
 topic: HUD progression-density alternatives before user selection
 related:
   - ../../../VISUAL_SYSTEM.md
-  - ../../../../../.agents/execplans/2026-08-08-combat-pressure-and-surface-depth.md
+  - ../../../../../docs/reports/2026-08-08-combat-pressure-and-surface-depth.md
   - ../progression-feedback-combat-readability-v1/README.md
 ---
 

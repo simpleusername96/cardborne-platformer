@@ -6,7 +6,7 @@ source: Current Cardborne production capture geometry at 655e0ee2 plus built-in 
 topic: Progression feedback, combat readability, and HUD TO-BE direction
 related:
   - ../../../VISUAL_SYSTEM.md
-  - ../../../../../.agents/execplans/2026-08-08-combat-pressure-and-surface-depth.md
+  - ../../../../../docs/reports/2026-08-08-combat-pressure-and-surface-depth.md
 ---
 
 # Progression Feedback and Combat Readability TO-BE Evidence

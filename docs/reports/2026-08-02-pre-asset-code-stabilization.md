@@ -1,17 +1,18 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-08-02
-last_reviewed: 2026-08-08
+last_reviewed: 2026-08-10
 topic: Behavior-preserving combat performance stabilization
 scope: Dense-enemy steering, conservative motion clearance, bounded simulation receipts, HUD staging, combat presentation staging, and real-play workload correlation
+superseded_by: ../../.agents/execplans/2026-08-10-combat-correction-and-boss-pattern-expansion.md
 related:
   - ../../AGENTS.md
-  - ../AGENTS.md
-  - ../PLANS.md
-  - ../../docs/product/vehicle_game_spec.md
-  - ../semantic-v2-runtime-acceptance-evidence.md
+  - ../../.agents/AGENTS.md
+  - ../../.agents/PLANS.md
+  - ../product/vehicle_game_spec.md
+  - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
 # Combat Frame-Pacing Stabilization - Execution Contract

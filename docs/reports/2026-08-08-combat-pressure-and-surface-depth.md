@@ -1,18 +1,19 @@
 ---
 type: plan
-status: active
+status: superseded
 created: 2026-08-08
 last_reviewed: 2026-08-10
 scope: Cardborne combat pressure, enemy movement, progression feedback, HUD and minimap readability, elemental hit behavior, surface and boss presentation, and qualified frame pacing
+superseded_by: ../../.agents/execplans/2026-08-10-combat-correction-and-boss-pattern-expansion.md
 related:
   - ../../AGENTS.md
-  - ../AGENTS.md
-  - ../PLANS.md
-  - ../../docs/product/vehicle_game_spec.md
-  - ../../docs/design/VISUAL_SYSTEM.md
-  - ../design/DESIGN.md
-  - ../cardborne-performance-engineering-policy.md
-  - 2026-08-02-pre-asset-code-stabilization.md
+  - ../../.agents/AGENTS.md
+  - ../../.agents/PLANS.md
+  - ../product/vehicle_game_spec.md
+  - ../design/VISUAL_SYSTEM.md
+  - ../../.agents/design/DESIGN.md
+  - ../../.agents/cardborne-performance-engineering-policy.md
+  - ./2026-08-02-pre-asset-code-stabilization.md
 ---
 
 # Combat Pressure, Progression Feedback, Combat Readability, and Surface Depth - Execution Contract
@@ -353,7 +354,7 @@ Preconditions:
 
 Source owners: `scripts/performance/vehicle_performance_scenario.gd`,
 `tools/validation/validate_vehicle_performance_scenarios.gd`,
-`.agents/execplans/2026-08-02-pre-asset-code-stabilization.md`
+`docs/reports/2026-08-02-pre-asset-code-stabilization.md`
 
 - [x] **1.1** Restore a truthful performance fixture contract.
   - Change: replace the stale required health-overlay capacity `50` with renderer capacity `28`
@@ -384,7 +385,7 @@ Source owners: `scripts/performance/vehicle_performance_scenario.gd`,
 - [ ] **1.3** Complete clean native qualification owned by the active performance plan.
   - Change: after the required user cost alignment, run the exact clean-commit `peak_horde` and
     `capacity_pressure` commands in Phase 8/Test Plan of
-    `.agents/execplans/2026-08-02-pre-asset-code-stabilization.md` with GL Compatibility,
+    `docs/reports/2026-08-02-pre-asset-code-stabilization.md` with GL Compatibility,
     1280x720, quoted position `'40,40'`, VSync disabled, ten-second warmup, and 60-second sample.
   - Accept: both files match commit/workload/window/focus/renderer metadata and pass: frame
     p95/p99 `<=18/25 ms`, median `>=59 FPS`, 1% low `>=55 FPS`, no more than one consecutive
@@ -604,7 +605,7 @@ Preconditions:
 - Reverify the authority-pair hash and inspect the sheet at original detail.
 
 Source owners: `docs/design/VISUAL_SYSTEM.md`, production asset manifest/workbench inventory,
-`.agents/execplans/2026-08-08-combat-pressure-and-surface-depth.md`
+`docs/reports/2026-08-08-combat-pressure-and-surface-depth.md`
 
 - [x] **5.1** Define the exception without weakening combat readability.
   - Change: keep flat `#9EADBC` as the dominant surface and add `SurfaceDetail` as a semantic,

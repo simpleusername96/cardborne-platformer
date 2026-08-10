@@ -7,7 +7,7 @@ last_reviewed: 2026-08-02
 topic: 일반 적 이동·군집·spawn 분산 설계 근거
 scope: Asset/UI 교체 전에 적용할 ordinary-enemy movement와 encounter arrival
 related:
-  - execplans/2026-08-02-pre-asset-code-stabilization.md
+  - ../docs/reports/2026-08-02-pre-asset-code-stabilization.md
   - ../docs/product/vehicle_game_spec.md
 ---
 

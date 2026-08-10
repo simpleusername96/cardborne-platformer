@@ -8,7 +8,7 @@ canonical_for: Cardborne runtime performance diagnosis, optimization, and perfor
 scope: Runtime hot paths, visual and asset integration, performance fixtures, profiling, and release qualification
 related:
   - ./cardborne-runtime-architecture-audit.md
-  - ./execplans/2026-08-02-pre-asset-code-stabilization.md
+  - ./execplans/2026-08-10-combat-correction-and-boss-pattern-expansion.md
   - ./semantic-v2-runtime-acceptance-evidence.md
   - ../docs/design/VISUAL_SYSTEM.md
 ---
@@ -217,7 +217,7 @@ one named hypothesis.
 ## Related
 
 - Current audit and source map: `./cardborne-runtime-architecture-audit.md`
-- Active stabilization contract: `./execplans/2026-08-02-pre-asset-code-stabilization.md`
+- Active stabilization contract: `./execplans/2026-08-10-combat-correction-and-boss-pattern-expansion.md`
 - Historical performance evidence: `./semantic-v2-runtime-acceptance-evidence.md`
 - Visual/collision ownership contract: `../docs/design/VISUAL_SYSTEM.md`
 - Reusable workflow trigger: `./skills/cardborne-performance-guard/SKILL.md`

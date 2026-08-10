@@ -9,7 +9,7 @@ scope: Repository history through the 2026-08-08 combat-readability implementati
 source: Official Godot 4.7 documentation and Cardborne repository evidence through the 2026-08-08 combat-readability implementation based on 6339795d
 related:
   - ./cardborne-performance-engineering-policy.md
-  - ./execplans/2026-08-02-pre-asset-code-stabilization.md
+  - ../docs/reports/2026-08-02-pre-asset-code-stabilization.md
   - ./semantic-v2-runtime-acceptance-evidence.md
   - ../docs/design/VISUAL_SYSTEM.md
 ---
@@ -99,7 +99,7 @@ garbage-collector issue; only the narrower reuse principle is carried into this 
 - `scripts/combat/vehicle_spatial_grid.gd`
 - `scripts/performance/vehicle_performance_scenario.gd`
 - `scripts/performance/vehicle_performance_recorder.gd`
-- `.agents/execplans/2026-08-02-pre-asset-code-stabilization.md`
+- `docs/reports/2026-08-02-pre-asset-code-stabilization.md`
 - `.agents/semantic-v2-runtime-acceptance-evidence.md`
 - retained ignored JSON under `build/performance/`
 - relevant git history through `ba8846ed`
