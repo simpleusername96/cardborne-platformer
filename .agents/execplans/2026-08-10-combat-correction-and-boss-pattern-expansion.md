@@ -15,6 +15,7 @@ related:
   - ../PLANS.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
+  - ../../docs/design/visual-replacement-workbench/candidates/boss-signature-pattern-concepts-v1/README.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
   - ../cardborne-runtime-architecture-audit.md
@@ -113,6 +114,11 @@ slot per boss with the following signature maneuver; do not add net slots. One f
 `VehicleBossRuntime` maneuver state owns a bounded step array. Every step is
 `startup -> committed active -> recovery`; target position or bearing freezes at the end of
 startup, and cover/collision truth stays authoritative.
+
+The review-only left-to-right storyboards for this matrix are recorded in
+`docs/design/visual-replacement-workbench/candidates/boss-signature-pattern-concepts-v1/`.
+They explain timing and safe-space topology but do not approve generated pixels, actor
+replacements, collision geometry, or VFX.
 
 | Stage | Signature maneuver | Locked composition and cap |
 | --- | --- | --- |
