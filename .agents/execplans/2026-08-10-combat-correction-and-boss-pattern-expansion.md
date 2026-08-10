@@ -159,42 +159,44 @@ decisions and chained commitments, not hidden tracking or higher boss damage.
 
 ### Phase 1 - Bind contracts and presentation corrections
 
-- [ ] **1.1 Amend authoritative specifications.** Update
+- [x] **1.1 Amend authoritative non-boss specifications.** Update
   `docs/product/vehicle_game_spec.md` and `docs/design/VISUAL_SYSTEM.md` with the effect
-  distinction, Cryo truth, boss maneuver matrix, minimap hierarchy, Mystery lifecycle, and
-  expected production raster count after approval. Reconcile the stale minimap-role text.
+  distinction, Cryo truth, minimap hierarchy, Mystery lifecycle, and expected production raster
+  count after approval. Reconcile the stale minimap-role text. The boss maneuver matrix remains
+  excluded from this execution by the user's 2026-08-10 direction.
 - [ ] **1.2 Author and approve the Drop Mine candidate.** Use the visual-authority
   workflow and required raster references. Record prompt, source hashes, output hash,
   original-size sheet, and the user's exact approval. Stop asset promotion if approval is
   absent; continue unrelated nonvisual code only.
-- [ ] **1.3 Stabilize dash and enemy facing.** Change the player presentation snapshot and
+- [x] **1.3 Stabilize dash and enemy facing.** Change the player presentation snapshot and
   pooled enemy presentation records. Renderer consumes published truth and does not infer AI
   state.
 - [ ] **1.4 Add the distinct Drop Mine receipt.** Return position/radius only after damage
   resolution, register `effect/drop_mine_detonation`, add a distinct existing-impact sound,
   enforce the mine subcap, and cover proximity, timeout, all levels, full store, and reduced
   motion.
-- [ ] **1.5 Normalize minimap scale.** Change only the retained marker mesh data and add
+- [x] **1.5 Normalize minimap scale.** Change only the retained marker mesh data and add
   area-order assertions.
 - [ ] **1.6 Close the presentation gate.** Run focused unit/source validators and capture
   dash, facing/Decoy, mine levels, reduced motion, minimap overlap, 1x, and grayscale states.
 
 ### Phase 2 - Pressure, boss maneuvers, and Mystery Device
 
-- [ ] **2.1 Raise ordinary damage only.** Apply `1.755` at the shared ordinary incoming-
+- [x] **2.1 Raise ordinary damage only.** Apply `1.755` at the shared ordinary incoming-
   damage boundary and prove boss/friendly/environmental/final-effective paths are unchanged.
-- [ ] **2.2 Implement the bounded boss maneuver executor.** Fix the autonomous-kind
+- [ ] **2.2 Deferred: implement the bounded boss maneuver executor.** Fix the autonomous-kind
   dispatcher, add one allocation-stable step state, freeze targets after startup, and serialize
   steps under the existing capacities.
-- [ ] **2.3 Implement the five signature maneuvers.** Replace one autonomous slot per boss
+- [ ] **2.3 Deferred: implement the five signature maneuvers.** Replace one autonomous slot per boss
   with the locked matrix. Add deterministic seeds and boss-practice coverage for every step,
   phase, cover interaction, safe route, and cap boundary.
-- [ ] **2.4 Make Mystery outcomes legible.** Implement reveal-on-first-hit, break activation,
+- [x] **2.4 Make Mystery outcomes legible.** Implement reveal-on-first-hit, break activation,
   affected-count receipts, shared Cryo compositor input, post-clear purge pulse, and
   Decoy-facing integration without changing outcome mechanics.
-- [ ] **2.5 Close the combat gate.** Validate exact damage math, all ten autonomous slots,
-  five signatures, no immediate repeat, safe route at base movement, no live retargeting,
-  Mystery zero/one/many targets, localization, reduced motion, and capacity invariants.
+- [x] **2.5a Close the non-boss combat gate.** Validate exact ordinary-damage math, Mystery
+  targeting and receipts, localization, reduced motion, dash/facing truth, and capacity invariants.
+- [ ] **2.5b Deferred: close the boss combat gate.** Validate all ten autonomous slots, five
+  signatures, no immediate repeat, safe route at base movement, and no live retargeting.
 
 ### Phase 3 - Final product and performance qualification
 
@@ -264,11 +266,30 @@ decisions and chained commitments, not hidden tracking or higher boss damage.
   projectile family.
 - 2026-08-10: Boss variety is expanded with five bounded, stage-specific maneuver compositions.
   The limit is readability and runtime capacity, not genre precedent or Godot capability.
+- 2026-08-10: The user explicitly excluded boss attack-pattern implementation from the current
+  execution. Tasks 2.2, 2.3, and 2.5b stay open without blocking truthful completion of the
+  non-boss corrections.
 
 ## Progress
 
-- Current phase: Phase 1.
-- Next task: 1.1 authoritative specification amendments, followed by the separate Drop Mine
-  candidate approval lane.
-- Last completed gate: prior combat feedback and timed-arrival work recorded in the superseded
-  2026-08-08 report.
+- Current phase: non-boss implementation is complete except exact Drop Mine visual approval,
+  production promotion, rendered capture, and final build qualification.
+- Completed in this execution: 1.1, 1.3, 1.5, 2.1, 2.4, and 2.5a. Focused Godot validators for
+  secondary weapons, effect capacity, Mystery runtime/integration, damage, minimap/UI,
+  localization, player snapshot, main run, combat renderer, semantic assets, and visual
+  replacement coverage pass. The post-change responsibility/failure-path audit found no
+  remaining task-scoped architecture defect after consolidating the Mystery outcome mapping and
+  keeping the pending Drop Mine raster out of the production event catalog.
+- Current approval gate: Drop Mine candidate hash
+  `16fc0b4c945ad196d17ac75487465b7e507eb9597dc71e153194a65bc7e6d9eb` is switch-ready but
+  has no exact user approval. Production manifest/provider/renderer promotion remains forbidden.
+- Deferred by user direction: 2.2, 2.3, and 2.5b boss attack-pattern work.
+
+## Next Steps
+
+1. Record the user's exact approval or rejection of the switch-ready Drop Mine byte.
+2. If approved, promote and register only that hash, add its retained batch, then complete 1.2,
+   1.4, and the affected 1.6 captures.
+3. Run 3.1 Web export and built-product inspection after the visual byte stops changing.
+4. Run 3.2–3.4 only against a genuinely final workload after separate user alignment on the
+   performance run cost. Boss tasks remain deferred until the user reopens them.

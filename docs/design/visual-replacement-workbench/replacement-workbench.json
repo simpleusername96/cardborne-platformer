@@ -4280,6 +4280,87 @@
       }
     },
     {
+      "id": "drop_mine_detonation",
+      "category_id": "combat",
+      "order": 10,
+      "title_en": "Drop Mine Kinetic Detonation",
+      "title_ko": "투하 지뢰 운동성 폭발",
+      "owner": "gameplay_manifest",
+      "switch_kind": "add",
+      "status": "switch_ready",
+      "current_paths": [],
+      "consumer_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/combat/vehicle_effect_store.gd",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/components/vehicle_visual_event_catalog.gd",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/vehicle/vehicle_run.gd"
+      ],
+      "consumer_asset_ids": [
+        "effect/drop_mine_detonation"
+      ],
+      "direction_en": "Add one exact-user-approval-gated 256x256 transparent Drop Mine detonation at the mine origin after gameplay damage resolves. Keep it distinct from Thermal Burst, scale it to gameplay radii 96/108/120 over 0.18 seconds, and retain at most eight cosmetics inside the unchanged effect store.",
+      "deliverables": [
+        {
+          "target_path": "art/visuals/production/gameplay/effects/drop_mine_detonation.png",
+          "width": 256,
+          "height": 256,
+          "pivot": [128, 128],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "One transparent top-down kinetic detonation with a compact ivory mechanical core and exactly five short amber pressure plates. Use the switch target byte as-is; add no flame, smoke, glow, ring, particle, debris, shadow, text, or animation frame.",
+          "external_source_ids": []
+        }
+      ],
+      "final_paths": [
+        "art/visuals/production/gameplay/effects/drop_mine_detonation.png"
+      ],
+      "reuse_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/drop-mine-detonation-v1/technical-contact-sheet.png"
+      ],
+      "rendered_as_is_paths": [],
+      "retire_paths": [],
+      "runtime_change_paths": [
+        "art/visuals/production/gameplay/asset-manifest.json",
+        "scripts/combat/vehicle_effect_store.gd",
+        "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
+        "scripts/presentation/components/vehicle_visual_event_catalog.gd",
+        "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/vehicle/vehicle_run.gd",
+        "tools/validation/validate_vehicle_combat_renderer.gd",
+        "tools/validation/validate_vehicle_effect_store.gd",
+        "tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        "tools/validation/validate_vehicle_secondary_weapons.gd"
+      ],
+      "acceptance_commands": [
+        ".\\tools\\godot.ps1 --path . --headless --import",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_secondary_weapons.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_effect_store.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+        ".\\tools\\validation\\validate_cardborne_visual_authority.ps1"
+      ],
+      "visual_authority_evidence": {
+        "spec_path": "docs/design/VISUAL_SYSTEM.md",
+        "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+        "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+        "document_read_complete": true,
+        "sheet_inspected_original": true,
+        "actual_image_reference_used": true,
+        "reference_input_method": "image_gen.referenced_image_paths"
+      },
+      "approval": null,
+      "application": null
+    },
+    {
       "id": "gameplay_code_asset_rasterization",
       "category_id": "world",
       "order": 95,
