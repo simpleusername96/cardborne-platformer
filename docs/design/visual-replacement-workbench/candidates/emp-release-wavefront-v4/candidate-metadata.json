@@ -1,6 +1,6 @@
 {
   "id": "emp_release_wavefront_v4",
-  "status": "awaiting_exact_user_approval",
+  "status": "switch_ready",
   "production_applied": false,
   "purpose": "Reference-led review sheet and exact production-shaped review candidate for the user-selected single-wavefront EMP direction.",
   "sheet_path": "docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/emp_wavefront_motion_sheet.png",
@@ -29,6 +29,45 @@
     "placement": "Trimmed authored pixels resized proportionally into a 488x488 bound, then centered without drawing on a transparent 512x512 canvas",
     "geometry_authoring": false,
     "comparison_processing": "Mechanical placement of current and candidate rasters on one dark evidence sheet with plain labels"
+  },
+  "previous_production_revision": {
+    "purpose": "Preserve the prior applied workbench ledger before reopening emp_authored_replacement for the option-2 revision.",
+    "asset_path": "art/visuals/production/gameplay/effects/fx_emp_release.png",
+    "asset_sha256": "d47097896367a63ec87e1f022f0d57567c51d3873fa10caaaeea9a89055867c6",
+    "workbench_status": "applied",
+    "switch_kind": "consolidate",
+    "approval": {
+      "approved_by": "autonomous-executor",
+      "approved_at": "2026-08-04T13:43:54+09:00",
+      "baseline_commit": "d7ccf4646b99b4ce8d06ddd68600ec41c295c0b5",
+      "deliverable_sha256": {
+        "art/visuals/production/gameplay/effects/fx_emp_release.png": "d47097896367a63ec87e1f022f0d57567c51d3873fa10caaaeea9a89055867c6"
+      },
+      "retire_paths": [
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png.import",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png.import",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png.import",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png.import",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png.import",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png",
+        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png.import"
+      ]
+    },
+    "application": {
+      "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
+      "applied_at": "2026-08-04T14:25:31+09:00",
+      "validation_evidence": [
+        ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
+        ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
+        "production gameplay PNG reconciliation: exactly 49",
+        ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
+      ]
+    }
   },
   "current_runtime_truth": {
     "charge_seconds": 0.42,
@@ -111,7 +150,11 @@
   },
   "approval": {
     "winner_selected": true,
-    "exact_user_approval": false,
-    "switch_ready": false
+    "exact_user_approval": true,
+    "approved_by": "BK",
+    "approved_at": "2026-08-10T17:47:58+09:00",
+    "approval_message": "ㅇㅇ 적용",
+    "approved_candidate_sha256": "558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896",
+    "switch_ready": true
   }
 }

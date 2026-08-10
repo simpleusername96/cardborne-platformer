@@ -1296,15 +1296,10 @@
       "title_en": "EMP Authored Replacement",
       "title_ko": "EMP 단일 이미지 교체",
       "owner": "composite",
-      "switch_kind": "consolidate",
-      "status": "applied",
+      "switch_kind": "replace",
+      "status": "switch_ready",
       "current_paths": [
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png"
+        "art/visuals/production/gameplay/effects/fx_emp_release.png"
       ],
       "consumer_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
@@ -1312,15 +1307,9 @@
         "scripts/presentation/vehicle_combat_renderer.gd"
       ],
       "consumer_asset_ids": [
-        "effect/emp_release",
-        "effect/emp_release/00",
-        "effect/emp_release/01",
-        "effect/emp_release/02",
-        "effect/emp_release/03",
-        "effect/emp_release/04",
-        "effect/emp_release/05"
+        "effect/emp_release"
       ],
-      "direction_en": "Replace the six-frame EMP sequence with one authored 512x512 PNG scaled and faded from the existing live timer and radius.",
+      "direction_en": "Replace the current full-radius EMP raster with the exact user-approved system-blue octagonal compression front. Standard motion expands one authored wavefront from 15 to 100 percent radius over 0.20 seconds inside the unchanged 0.55-second fade; reduced motion starts at final radius. Gameplay resolution remains immediate and unchanged.",
       "deliverables": [
         {
           "target_path": "art/visuals/production/gameplay/effects/fx_emp_release.png",
@@ -1336,7 +1325,7 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Create one transparent 512x512 hard-edged EMP ring/pulse with one dominant silhouette and open center; runtime owns only live-radius scale and fade, and no external source is used.",
+          "brief_en": "Use the exact user-approved transparent 512x512 system-blue octagonal compression front with one dominant hard-edged silhouette and open center. Runtime owns release position, radius expansion, fade, and reduced-motion behavior; add no secondary ring, spark, particle, persistent fill, or frame sequence.",
           "external_source_ids": []
         }
       ],
@@ -1345,67 +1334,39 @@
       ],
       "reuse_paths": [],
       "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/final-batch/emp_authored_replacement.png"
+        "docs/design/visual-replacement-workbench/previews/final-batch/emp_authored_replacement.png",
+        "docs/design/visual-replacement-workbench/previews/emp-wavefront-v4/emp_wavefront_option2_comparison.png",
+        "docs/design/visual-replacement-workbench/previews/emp-wavefront-v4/emp_wavefront_option2_runtime_scale_preview.png"
       ],
-      "retire_paths": [
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png.import",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png.import",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png.import",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png.import",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png.import",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png",
-        "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png.import"
-      ],
+      "retire_paths": [],
       "runtime_change_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
+        "docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/candidate-metadata.json",
         "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
         "scripts/presentation/components/vehicle_visual_event_capture_fixture.gd",
         "scripts/presentation/components/vehicle_visual_event_catalog.gd",
         "scripts/presentation/vehicle_combat_renderer.gd",
+        "scripts/vehicle/vehicle_run.gd",
+        "tools/validation/validate_vehicle_combat_renderer.gd",
+        "tools/validation/validate_vehicle_effect_store.gd",
         "tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        "tools/validation/validate_vehicle_visual_asset_coverage.gd",
         "tools/validation/validate_vehicle_visual_replacement_coverage.gd"
       ],
       "acceptance_commands": [
+        ".\\tools\\godot.ps1 --path . --headless --import",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_effect_store.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
+        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
-        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+        ".\\tools\\validation\\validate_cardborne_visual_authority.ps1",
+        ".\\tools\\export_web.ps1"
       ],
-      "approval": {
-        "approved_by": "autonomous-executor",
-        "approved_at": "2026-08-04T13:43:54+09:00",
-        "baseline_commit": "d7ccf4646b99b4ce8d06ddd68600ec41c295c0b5",
-        "deliverable_sha256": {
-          "art/visuals/production/gameplay/effects/fx_emp_release.png": "d47097896367a63ec87e1f022f0d57567c51d3873fa10caaaeea9a89055867c6"
-        },
-        "retire_paths": [
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_00.png.import",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_01.png.import",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_02.png.import",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_03.png.import",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_04.png.import",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png",
-          "art/visuals/production/gameplay/effects/frames/fx_emp_release/frame_05.png.import"
-        ]
-      },
-      "application": {
-        "commit": "908c519009dc49b8200ea7dfc75b1132960070a6",
-        "applied_at": "2026-08-04T14:25:31+09:00",
-        "validation_evidence": [
-          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply",
-          ".\\tools\\design\\retire_visual_replacement_batch.ps1 -Apply",
-          "production gameplay PNG reconciliation: exactly 49",
-          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check"
-        ]
-      },
+      "approval": null,
+      "application": null,
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
