@@ -154,10 +154,11 @@ Destructive or irreversible actions:
 
 Exact actions requiring owner or user approval:
 
-- Before the two 60-second native performance scenarios or the user-driven manual trace,
-  state their duration, foreground/window impact, stopping condition, and required quiet
-  machine state, then obtain user alignment. Do not infer that this plan-writing request
-  authorizes those expensive runs.
+- The user directed that all feature fixes be completed before the two 60-second native
+  performance scenarios or the user-driven manual trace. Immediately before that final
+  qualification, state their duration, foreground/window impact, stopping condition, and
+  required quiet machine state. This direction authorizes the final runs, not an interim
+  or pre-change baseline.
 - Before Phase 4 closes, present the exact-radius color/grayscale captures for user review.
   This approves the runtime composition only; it does not reopen or replace any raster.
 
@@ -229,7 +230,7 @@ belongs in `vehicle_game_spec.md` and `VISUAL_SYSTEM.md`; no new glossary file i
 | Reinforcement recurrence | Runtime resets its interval after each accepted spawn and retains zero while capacity-blocked; current test stops after first spawn/cap checks. | `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd:45`, `tools/validation/validate_vehicle_reinforcement_facility.gd:20` | Extend lifecycle and run-integration tests; change production only if those exact tests expose a defect. | 3.1 |
 | Missing player contact damage | Player and enemy endpoints are checked at different cadences; there is no relative swept contact owner. | `scripts/vehicle/vehicle_run.gd:1423`, `:2628`, `:2967`, `:3021`; `scripts/enemies/vehicle_enemy_update_schedule.gd` | Add one fixed-cap 60 Hz contact runtime using relative swept circles and explicit role semantics; remove legacy endpoint/decision-only checks. | 2.1-2.4 |
 | Hit protection semantics | `_damage_player()` returns no receipt; one-shot attacks commit before an invulnerability rejection. | `scripts/vehicle/vehicle_run.gd:4169`, `tools/validation/validate_vehicle_damage_feedback.gd` | Return accepted/not-accepted while preserving every caller; barrier absorption is accepted, invulnerability rejection is not. One-shot attacks remain consumed; persistent hull contact retries while overlap remains. | 2.1-2.4 |
-| Hot-path risk | Current runtime already has a bounded active worklist, reusable effect state, retained disk batch, and reusable render buffers; current HEAD lacks qualified release evidence. | `.agents/cardborne-performance-engineering-policy.md`, `.agents/cardborne-runtime-architecture-audit.md`, `scripts/vehicle/vehicle_run.gd:2016`, `scripts/presentation/vehicle_combat_renderer.gd:536` | Reuse the active worklist and existing disk batch, add no per-frame allocations/new batch, measure the named contact section, and compare clean before/after scenarios without changing workload. | 0.3, 2.2-2.4, 4.1-4.4, 5.3 |
+| Hot-path risk | Current runtime already has a bounded active worklist, reusable effect state, retained disk batch, and reusable render buffers; current HEAD lacks qualified release evidence. | `.agents/cardborne-performance-engineering-policy.md`, `.agents/cardborne-runtime-architecture-audit.md`, `scripts/vehicle/vehicle_run.gd:2016`, `scripts/presentation/vehicle_combat_renderer.gd:536` | Reuse the active worklist and existing disk batch, add no per-frame allocations/new batch, instrument the named contact section, and qualify the unchanged final workload only after all fixes. Without a comparable pre-change baseline, make no causal regression claim. | 0.3, 2.2-2.4, 4.1-4.4, 5.3 |
 | Validation baseline | Four focused validators pass; damage feedback has one unrelated crate-warning failure on clean `3eea8434`. | Commands and output recorded during 2026-08-10 discovery | Isolate the crate fixture before using that validator as a gate; never report the current failing script as passed. | 0.2 |
 | Visual authority | Current visual spec was read completely; canonical sheet inspected at 1448x1086 with SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. The sheet is style reference, not asset approval. | `docs/design/VISUAL_SYSTEM.md`, canonical PNG | Add no asset. UI changes reuse current Theme/components; area effects reuse approved semantic textures/retained batches and require exact-radius rendered evidence plus the authority validator. | 1.4, 4.1-4.4, 5.1-5.2 |
 
@@ -415,20 +416,20 @@ Source owners: `docs/product/vehicle_game_spec.md`,
     stop at the same live-crate boundary.
   - Guard: if isolation reveals a real runtime mismatch instead of a fixture defect, stop
     and amend this contract before changing combat geometry.
-- [ ] **0.3 Record the clean native before baseline.**
-  - Change: after user alignment and a quiescent-process preflight, commit the doc/oracle
-    baseline and run `peak_horde` and `capacity_pressure` once for 10s warmup + 60s sample
-    at 1280x720, GL Compatibility, VSync off. Record exact commit, dirty state, renderer,
-    workload/count validity, focus, hardware, and raw JSON under ignored `build/performance/`.
-  - Accept: both samples are valid and comparable, whether green or red. A red result is
-    labeled pre-existing and does not justify a speculative optimization.
-  - Guard: do not start if unrelated Godot/capture/build/heavy processes overlap; do not
-    stop processes whose ownership is unknown.
+- [x] **0.3 Lock final-only performance cadence.**
+  - Change: per the user's direction, do not run an interim or pre-change performance
+    baseline. Complete Phases 2-4 first; Phase 5.3 owns the manual trace and clean native/Web
+    qualification against the final committed workload.
+  - Accept: no authoritative performance scenario runs before feature work is complete, and
+    the final report makes no causal regression claim because this contract has no comparable
+    pre-change sample.
+  - Guard: focused structural and diagnostic validators remain allowed during implementation;
+    do not present them as release-performance evidence.
 
 Batch gate:
 
-- `git diff --check`, focused product/search checks, passing damage-feedback validator,
-  and two eligible native baseline records.
+- `git diff --check`, focused product/search checks, passing damage-feedback validator, and
+  the final-only performance cadence recorded in this contract.
 
 ### Phase 1: Make every upgrade offer truthful
 
@@ -437,9 +438,7 @@ real gameplay values, and the correct level-aware summary without changing gamep
 
 Preconditions:
 
-- Phase 0 contract and oracle tasks pass. Phase 0.3 may run immediately before Phase 2 if
-  the executor completes the UI-only tasks first, but it must precede any runtime hot-path
-  edit.
+- Phase 0 contract, oracle, and validation-cadence tasks pass.
 
 Source owners: `scripts/player/vehicle_primary_upgrade_rules.gd`,
 `scripts/player/vehicle_secondary_catalog.gd`,
@@ -486,7 +485,6 @@ all non-melee overlap, warning, invulnerability, barrier, dash, and one-hit sema
 
 Preconditions:
 
-- Eligible Phase 0.3 native baseline exists.
 - Phase 1 acceptance checks pass and the runtime workload is frozen except for Phase 2.
 
 Source owners: `scripts/enemies/vehicle_enemy_contact_runtime.gd`,
@@ -566,7 +564,6 @@ radius, and resolution timing; boundaries and authored impacts remain secondary 
 
 Preconditions:
 
-- Phase 0.3 has an eligible pre-change native baseline.
 - Phases 1-3 pass, and effect/gameplay constants are frozen to the matrix above.
 
 Source owners: `scripts/combat/vehicle_effect_state.gd`,
@@ -647,22 +644,22 @@ Source owners: `scripts/vehicle/vehicle_run_capture_driver.gd`,
   - Accept: `WEB_EXPORT_OK`, required Web files, Korean/English navigation, upgrade selection,
     ordinary contact, complete area effects, reinforcement recurrence, and stage progression
     work in the build.
-- [ ] **5.3 Compare final runtime and diagnose the user's stutter report.**
-  - Change: after user alignment, collect one normal-play manual trace through the reported
-    slow period, then run the same clean native `peak_horde` and `capacity_pressure` pair and
-    built-Web peak-horde against the final commit. Compare exact workload, frame/physics,
+- [ ] **5.3 Qualify final runtime and diagnose the user's stutter report.**
+  - Change: after all fixes and the production Web build are complete, state the approved
+    run impact, collect one normal-play manual trace through the reported slow period, then
+    run the clean native `peak_horde` and `capacity_pressure` pair and built-Web peak-horde
+    against the final commit. Inspect exact workload, frame/physics,
     contact section, scheduled enemies/grid, combat/effects, disk/effect counts, draw calls,
     transparent coverage, HUD/presentation, render CPU/GPU, focus, and process-isolation
     metadata.
-  - Accept: samples are valid and neither contact nor full-area presentation causes a
-    regression. Use only the precise labels `scenario valid`, `native release performance
-    passed`, or `Web release performance passed` when their complete gates pass.
-  - Guard: if only contact resolution is red, apply the predetermined retained melee-worklist
-    optimization and repeat the affected scenario once. If only measured area-effect
-    overdraw is red, stop and present one measured alpha-only correction for user approval;
-    do not remove the full-area body, change resolution, or change footprint. If another
-    owner is red, stop and create a measured-owner plan; do not fold a generic optimization
-    into this contract.
+  - Accept: samples are valid and receive only the precise labels `scenario valid`, `native
+    release performance passed`, or `Web release performance passed` when their complete
+    gates pass. Report measured final owners, but do not claim that this contract caused or
+    avoided a regression because no comparable pre-change baseline was collected.
+  - Guard: if contact resolution or area-effect fill is red, preserve the final evidence and
+    stop the affected optimization branch for a separately approved measured-owner change.
+    Do not apply the prior before/after contingencies, remove the full-area body, change
+    resolution or footprint, or fold a generic optimization into this contract.
 - [ ] **5.4 Close durable records and plan lifecycle.**
   - Change: update the owning product/catalog/design and performance evidence with accepted
     facts, remove task-owned temporary helpers, mark all checkboxes truthfully, and set this
@@ -746,7 +743,7 @@ For built Web, first load `npjt-port-guard`, resolve the `codex` lane, serve onl
 | Gameplay evidence gate | Reinforcement, difficulty, contact, damage, report, capture, Run | Tasks 3.1-3.3 pass | Facility, balance, contact, or fixture inputs change |
 | Area-effect phase gate | Effect store, renderer, attack route, secondary weapons, damage feedback, capture, visual authority, import, exact-radius review | Tasks 4.1-4.4 pass | Effect state/catalog/renderer/cue/capture/spec input changes |
 | Export gate | Visual authority, import, `tools/export_web.ps1`, built smoke | All feature phases and rendered inspection pass | Imported/export/runtime input changes |
-| Native release gate | Exact clean native pair with workload and isolation metadata | Before hot-path edit and once on final code, after user alignment | Runtime/workload/instrumentation changes or sample invalidation |
+| Native release gate | Exact clean native pair with workload and isolation metadata | Once on final code after all feature, render, export, and built-smoke work | Runtime/workload/instrumentation changes or sample invalidation |
 | Web release gate | Built-Web peak-horde on codex lane with exact JSON | Final native gate is valid and built artifact matches | Build/runtime/workload changes or sample invalidation |
 
 Validation rules:
@@ -786,9 +783,9 @@ Validation rules:
   prove legacy endpoint/decision checks are gone.
 - Starting persistent-contact cooldown on an invulnerability rejection would recreate the
   user's missed-hit complaint. Only accepted barrier/hull contact starts that cooldown.
-- A new 60 Hz scan can regress physics tails. The active list is bounded and reused, the
-  baseline precedes edits, and the only in-contract optimization is a fixed contact-role
-  worklist.
+- A new 60 Hz scan can increase physics tails. The active list is bounded and reused, the
+  named section is instrumented, and final qualification reports its measured cost without
+  a causal regression claim.
 - Card copy can overflow Korean or English even when logic tests pass. Rendered supported-
   viewport and 200% evidence is mandatory.
 - Repeated facility tests may pass while the run counts the wrong children. The integration
@@ -798,8 +795,8 @@ Validation rules:
 - EMP has two gameplay envelopes. Collapsing them into one radius would misstate either
   damage/stun or projectile clear; explicit pooled state and boundary tests prevent that.
 - Additional large translucent disks can increase overdraw. The plan reuses one retained
-  batch, records a before baseline, validates draw/batch ceilings, and permits only measured
-  opacity correction that preserves complete footprint visibility.
+  batch, validates draw/batch ceilings, and reports final fill cost without silently reducing
+  complete footprint visibility.
 
 ## Predetermined Contingencies and Change Control
 
@@ -809,8 +806,8 @@ Validation rules:
 | Crate baseline failure is a real runtime geometry defect | Preserve evidence and amend scope before editing combat geometry | Task 0.2 authorizes fixture isolation only |
 | Reinforcement recurrence test fails | Fix only timer/cap/child-identity lifecycle to the already-authored values | Do not change cadence, roles, caps, quota, or rewards |
 | Post-contact play still feels weak while exact hit tests pass | Report the evidence and request a separate balance decision | Do not increase health/damage inside this contract |
-| Contact section alone causes a qualified performance regression | Maintain a fixed retained melee-contact worklist in the existing update schedule, preserving exact sweep semantics | No cadence/collision/workload reduction |
-| Full-area disks alone cause a qualified fill-rate regression | Stop and present one measured alpha-only correction for explicit user approval, then rerun the affected render/performance gate once if approved | Do not remove the body, reduce resolution, shrink radius, or change gameplay |
+| Final contact section exceeds its qualified budget | Preserve evidence and create a measured-owner contact optimization contract | No causal regression claim and no cadence/collision/workload reduction inside this plan |
+| Final full-area presentation exceeds its qualified fill budget | Preserve evidence and present a measured-owner follow-up for explicit user approval | Do not remove the body, reduce resolution, shrink radius, or change gameplay inside this plan |
 | Another performance owner is red | Stop optimization, record the measured owner, and create a new owner-specific contract | No generic cache/pool/thread/render rewrite |
 | A new or revised authored effect raster is requested | Finish or checkpoint the current phase and create a separate authority-pair AS-IS/TO-BE approval contract | This plan changes retained composition only |
 | Boss-pattern or boss-value work is requested during execution | Finish or checkpoint the current phase and create a separate implementation contract | Shared circular footprint presentation does not authorize boss gameplay changes |
@@ -842,13 +839,16 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 - 2026-08-10: Behavior previews use gameplay owners rather than fake stat modifiers.
 - 2026-08-10: Relative swept contact uses a bounded reused active list instead of adding
   one spatial query per enemy or a second collision truth.
+- 2026-08-10: The user directed that all planned fixes precede the long performance scenarios
+  and manual trace. This contract therefore collects final-only qualification and makes no
+  before/after causal regression claim.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 0.3 approval gate before Phase 2. Phase 1 is complete and no runtime
-  hot-path work has started.
-- Next task: 0.3, obtain alignment and record the clean native before baseline.
+- Current phase: Phase 2. Phase 1 is complete and no runtime hot-path work has started.
+- Next task: 2.1, make player damage acceptance explicit, then implement the single bounded
+  relative-sweep contact owner.
 - Last completed gate: Phase 1 upgrade gate. Upgrade system, secondary weapons, upgrade UI,
   UI localization, stage UI layout, capture driver, visual authority, Godot import, and
   `git diff --check` pass. The compact Korean capture manifest completed under
@@ -857,13 +857,12 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   the correct final summaries and no divider, clipping, or overflow.
 - Verified source baseline: clean commit `04839774` preceded the Task 0.1/0.2 work. The
   former crate-warning failure was fixture contamination from generated cover; the isolated
-  one-crate clear-path fixture passes without a runtime geometry change. Phase 0.3 has not
-  yet produced an eligible native performance baseline.
+  one-crate clear-path fixture passes without a runtime geometry change. Per user direction,
+  this contract intentionally has no pre-change native performance baseline.
 - Implementation completed under this contract: Tasks 0.1, 0.2, and 1.1-1.4. Primary
   Split/Pierce and secondary definitions now own runtime/preview values; all 36 offer states
   expose one or two rows; built-in Seeker begins as `enhance`; element enhancement copy is
-  level-aware. Phase 0.3 remains unchecked because its two 60-second foreground scenarios
-  require user alignment.
+  level-aware. Task 0.3 records that long performance work is deferred to final qualification.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
