@@ -48,6 +48,11 @@ const MAX_INSTALLATION_HEALTH_BARS := 12
 const MAX_BOSS_HEALTH_BARS := 1
 const MAX_FACILITY_HEALTH_BARS := 1
 const HEALTH_BAR_INSTANCE_CAPACITY := 28
+const MAX_REPAIR_LINKS := 16
+const REPAIR_LINK_SEGMENTS := 5
+const PRESENTATION_MIN_INTERVAL := 1.0 / 60.0
+const PRESENTATION_MAX_INTERVAL := 1.0 / 20.0
+const PRESENTATION_SNAP_DISTANCE := 180.0
 const HEALTH_BAR_INSTALLATION_ROLES: Array[StringName] = [
 	&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
 ]
@@ -74,7 +79,6 @@ const BEAM_ACTIVE_INNER_WIDTH_MAX := 20.0
 const BEAM_ACTIVE_INNER_WIDTH_RATIO := 0.34
 const BEAM_ACTIVE_CORE_WIDTH_MAX := 7.0
 const BEAM_ACTIVE_CORE_WIDTH_RATIO := 0.10
-const HEALTH_BAR_ASPECT := 6.0
 class BatchBuffer:
 	var values := PackedFloat32Array()
 	var floats_per_instance := BASE_BUFFER_FLOATS_PER_INSTANCE
@@ -222,6 +226,18 @@ var _player_rear_anchor := Vector2(-0.84, 0.0)
 var _installation_health_candidates: Array[EnemyState] = []
 var _installation_health_scores := PackedInt64Array()
 var _installation_health_candidate_count := 0
+var _repair_link_candidates: Array[EnemyState] = []
+var _repair_link_scores := PackedInt64Array()
+var _repair_link_candidate_count := 0
+var _last_repair_link_count := 0
+var _presentation_sync_serial := 0
+var _presented_generations := PackedInt32Array()
+var _presented_last_seen_serials := PackedInt32Array()
+var _presented_origins := PackedVector2Array()
+var _presented_positions := PackedVector2Array()
+var _presented_targets := PackedVector2Array()
+var _presented_elapsed := PackedFloat32Array()
+var _presented_durations := PackedFloat32Array()
 
 
 func _ready() -> void:
@@ -231,6 +247,17 @@ func _ready() -> void:
 		_semantic_texture_draws.append(SemanticTextureDraw.new())
 	_installation_health_candidates.resize(MAX_INSTALLATION_HEALTH_BARS)
 	_installation_health_scores.resize(MAX_INSTALLATION_HEALTH_BARS)
+	_repair_link_candidates.resize(MAX_REPAIR_LINKS)
+	_repair_link_scores.resize(MAX_REPAIR_LINKS)
+	_presented_generations.resize(ENEMY_CAPACITY)
+	_presented_generations.fill(-1)
+	_presented_last_seen_serials.resize(ENEMY_CAPACITY)
+	_presented_last_seen_serials.fill(-2)
+	_presented_origins.resize(ENEMY_CAPACITY)
+	_presented_positions.resize(ENEMY_CAPACITY)
+	_presented_targets.resize(ENEMY_CAPACITY)
+	_presented_elapsed.resize(ENEMY_CAPACITY)
+	_presented_durations.resize(ENEMY_CAPACITY)
 	_cache_catalog_asset_ids()
 	_build_batches()
 
@@ -246,15 +273,19 @@ func sync(
 	run_time: float,
 	active: bool,
 	aim_target_id: String = "",
-	presentation: Dictionary = {}
+	presentation: Dictionary = {},
+	frame_delta: float = 1.0 / 60.0
 ) -> void:
 	# Presentation is synchronous borrowed scratch; never retain or mutate it.
 	_reset_counts()
+	_last_repair_link_count = 0
 	_semantic_texture_draw_count = 0
 	if active:
+		_presentation_sync_serial += 1
 		_sync_enemies(
 			enemies, visible_world, player_position, run_time, aim_target_id,
-			bool(presentation.get("reduced_motion", false))
+			bool(presentation.get("reduced_motion", false)),
+			maxf(0.0, frame_delta)
 		)
 		_sync_projectiles(player_projectiles, &"player", visible_world)
 		_sync_projectiles(hostile_projectiles, &"enemy", visible_world)
@@ -274,6 +305,8 @@ func sync(
 			+ _boss_health_bar_count
 			+ _facility_health_bar_count
 		)
+	else:
+		_reset_enemy_presentation()
 	_apply_visible_counts()
 	queue_redraw()
 
@@ -365,6 +398,7 @@ func debug_snapshot() -> Dictionary:
 		"mystery_health_bar_count": 0,
 		"crate_health_bar_count": 0,
 		"priority_marker_count": 0,
+		"repair_link_count":_last_repair_link_count,
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
 		"semantic_texture_draw_capacity":SEMANTIC_TEXTURE_DRAW_CAPACITY,
 		"floating_damage_draw_count":0,
@@ -397,7 +431,7 @@ func _build_batches() -> void:
 	_enemy_status_material = ShaderMaterial.new()
 	_enemy_status_material.shader = ENEMY_STATUS_SHADER
 	var unit_quad_mesh := _build_unit_quad_mesh()
-	var health_rect_mesh := _build_unit_quad_mesh(1.0 / HEALTH_BAR_ASPECT)
+	var health_rect_mesh := _build_unit_quad_mesh(0.5)
 	var unit_ring_mesh := _build_unit_ring_mesh()
 	var unit_disk_mesh := _build_unit_disk_mesh()
 	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
@@ -581,8 +615,7 @@ static func _build_electric_field_mesh() -> Mesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var fill_color := Color(Art.ARC, 0.18)
-	var perimeter_color := Color(Art.ARC, 0.30)
-	var plane_color := Color(Art.ARC, 0.06)
+	var plane_color := Color(Art.ARC, 0.045)
 	var segment_count := 64
 	for index in segment_count:
 		var angle_a := TAU * float(index) / float(segment_count)
@@ -594,27 +627,15 @@ static func _build_electric_field_mesh() -> Mesh:
 			Vector2.RIGHT.rotated(angle_b),
 			fill_color
 		)
-	for index in 48:
-		if index % 4 == 3:
-			continue
-		var angle_a := TAU * float(index) / 48.0
-		var angle_b := TAU * float(index + 1) / 48.0
-		var inner_a := Vector2.RIGHT.rotated(angle_a) * 0.96
-		var inner_b := Vector2.RIGHT.rotated(angle_b) * 0.96
-		var outer_a := Vector2.RIGHT.rotated(angle_a)
-		var outer_b := Vector2.RIGHT.rotated(angle_b)
-		_append_colored_quad(
-			surface, inner_a, outer_a, outer_b, inner_b, perimeter_color
-		)
-	for plane_index in 4:
-		var direction := Vector2.RIGHT.rotated(TAU * float(plane_index) / 4.0)
-		var lateral := direction.rotated(PI * 0.5) * 0.055
+	for plane_index in 2:
+		var direction := Vector2.RIGHT.rotated(0.42 + float(plane_index) * 1.73)
+		var lateral := direction.rotated(PI * 0.5) * 0.105
 		_append_colored_quad(
 			surface,
-			direction * 0.18 - lateral,
-			direction * 0.82 - lateral,
-			direction * 0.82 + lateral,
-			direction * 0.18 + lateral,
+			direction * -0.58 - lateral,
+			direction * 0.58 - lateral,
+			direction * 0.58 + lateral,
+			direction * -0.58 + lateral,
 			plane_color
 		)
 	return surface.commit()
@@ -744,13 +765,15 @@ func _sync_enemies(
 	player_position: Vector2,
 	run_time: float,
 	_aim_target_id: String,
-	reduced_motion: bool
+	reduced_motion: bool,
+	frame_delta: float
 ) -> void:
 	_installation_health_candidate_count = 0
+	_repair_link_candidate_count = 0
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active:
 			continue
-		var position := enemy.pos
+		var position := _advance_enemy_presentation(enemy, frame_delta)
 		var radius := enemy.visual_radius
 		if (
 			not enemy.attack_telegraphs.is_empty()
@@ -792,9 +815,12 @@ func _sync_enemies(
 				enemy.health,
 				enemy.max_health,
 				1.9,
+				96.0,
+				120.0,
 				18.0,
 				18.0,
-				Art.BOSS_COMMAND
+				Art.BOSS_COMMAND,
+				visible_world
 			)
 			_boss_health_bar_count += 1
 		if role in HEALTH_BAR_INSTALLATION_ROLES:
@@ -808,6 +834,15 @@ func _sync_enemies(
 			)
 		if enemy.shielded:
 			_write_ring(position, radius + 7.0, Color(Art.MINT, 0.78))
+		if enemy.role == &"repair_tender" and not enemy.repair_target_id.is_empty():
+			_repair_link_candidate_count = _offer_overlay_candidate(
+				enemy,
+				_installation_health_score(enemy, player_position),
+				_repair_link_candidates,
+				_repair_link_scores,
+				_repair_link_candidate_count,
+				MAX_REPAIR_LINKS
+			)
 		_sync_enemy_semantic_overlays(
 			enemy,
 			position,
@@ -815,8 +850,161 @@ func _sync_enemies(
 			angle
 		)
 	for index in _installation_health_candidate_count:
-		_sync_installation_health_bar(_installation_health_candidates[index])
+		_sync_installation_health_bar(
+			_installation_health_candidates[index], visible_world
+		)
 	_installation_health_bar_count = _installation_health_candidate_count
+	var repair_links_drawn := 0
+	for index in _repair_link_candidate_count:
+		if _sync_repair_link(
+			_repair_link_candidates[index], enemies, run_time, reduced_motion
+		):
+			repair_links_drawn += 1
+	_last_repair_link_count = repair_links_drawn
+
+
+func _reset_enemy_presentation() -> void:
+	_presentation_sync_serial = 0
+	_presented_generations.fill(-1)
+	_presented_last_seen_serials.fill(-2)
+
+
+func _advance_enemy_presentation(
+	enemy: EnemyState,
+	frame_delta: float
+) -> Vector2:
+	var slot := enemy.spatial_slot
+	if slot < 0 or slot >= ENEMY_CAPACITY:
+		return enemy.pos
+	var generation_changed := (
+		_presented_generations[slot] != enemy.runtime_generation
+	)
+	var reactivated := (
+		_presented_last_seen_serials[slot] != _presentation_sync_serial - 1
+	)
+	if generation_changed or reactivated:
+		_snap_enemy_presentation(slot, enemy)
+		return enemy.pos
+	var duration := maxf(PRESENTATION_MIN_INTERVAL, _presented_durations[slot])
+	var elapsed := minf(duration, _presented_elapsed[slot] + frame_delta)
+	var current := _presented_origins[slot].lerp(
+		_presented_targets[slot],
+		clampf(elapsed / duration, 0.0, 1.0)
+	)
+	_presented_elapsed[slot] = elapsed
+	_presented_positions[slot] = current
+	if not enemy.pos.is_equal_approx(_presented_targets[slot]):
+		var discontinuity_threshold := maxf(
+			PRESENTATION_SNAP_DISTANCE,
+			maxf(enemy.visual_radius * 4.0, enemy.speed * 0.22)
+		)
+		if enemy.speed <= 0.001 or current.distance_to(enemy.pos) >= discontinuity_threshold:
+			_snap_enemy_presentation(slot, enemy)
+			return enemy.pos
+		_presented_origins[slot] = current
+		_presented_targets[slot] = enemy.pos
+		_presented_durations[slot] = _enemy_presentation_duration(
+			enemy, current.distance_to(enemy.pos)
+		)
+		_presented_elapsed[slot] = minf(
+			frame_delta, _presented_durations[slot]
+		)
+		current = _presented_origins[slot].lerp(
+			_presented_targets[slot],
+			clampf(
+				_presented_elapsed[slot] / _presented_durations[slot],
+				0.0,
+				1.0
+			)
+		)
+		_presented_positions[slot] = current
+	_presented_last_seen_serials[slot] = _presentation_sync_serial
+	return current
+
+
+func _snap_enemy_presentation(slot: int, enemy: EnemyState) -> void:
+	_presented_generations[slot] = enemy.runtime_generation
+	_presented_last_seen_serials[slot] = _presentation_sync_serial
+	_presented_origins[slot] = enemy.pos
+	_presented_positions[slot] = enemy.pos
+	_presented_targets[slot] = enemy.pos
+	_presented_elapsed[slot] = PRESENTATION_MIN_INTERVAL
+	_presented_durations[slot] = PRESENTATION_MIN_INTERVAL
+
+
+func _enemy_presentation_duration(enemy: EnemyState, distance: float) -> float:
+	if enemy.speed <= 0.001 or distance <= 0.001:
+		return PRESENTATION_MIN_INTERVAL
+	return clampf(
+		distance / enemy.speed,
+		PRESENTATION_MIN_INTERVAL,
+		PRESENTATION_MAX_INTERVAL
+	)
+
+
+func _presented_enemy_position(enemy: EnemyState) -> Vector2:
+	var slot := enemy.spatial_slot
+	if (
+		slot < 0
+		or slot >= ENEMY_CAPACITY
+		or _presented_generations[slot] != enemy.runtime_generation
+		or _presented_last_seen_serials[slot] != _presentation_sync_serial
+	):
+		return enemy.pos
+	return _presented_positions[slot]
+
+
+func _sync_repair_link(
+	repairer: EnemyState,
+	enemies: Array[EnemyState],
+	run_time: float,
+	reduced_motion: bool
+) -> bool:
+	var target: EnemyState = null
+	for candidate in enemies:
+		if candidate.id == repairer.repair_target_id:
+			target = candidate
+			break
+	if target == null or not target.alive or not target.active:
+		return false
+	var source_position := _presented_enemy_position(repairer)
+	var target_position := _presented_enemy_position(target)
+	var direction := (target_position - source_position).normalized()
+	if direction.is_zero_approx():
+		return false
+	var start := source_position + direction * (repairer.visual_radius * 0.55)
+	var finish := target_position - direction * (target.visual_radius * 0.72)
+	var link := finish - start
+	var link_length := link.length()
+	if link_length <= 12.0:
+		return false
+	var packet_length := minf(26.0, link_length / float(REPAIR_LINK_SEGMENTS * 2))
+	var phase := 0.35 if reduced_motion else fposmod(run_time * 1.35, 1.0)
+	for segment_index in REPAIR_LINK_SEGMENTS:
+		var fraction := fposmod(
+			(float(segment_index) + phase) / float(REPAIR_LINK_SEGMENTS),
+			1.0
+		)
+		var packet_start := start + link * fraction
+		var packet_end := packet_start + direction * packet_length
+		if packet_end.distance_to(start) > link_length:
+			packet_end = finish
+		_write_beam(packet_start, packet_end, 5.0, Color(Art.MINT, 0.78))
+	var lateral := direction.rotated(PI * 0.5)
+	var chevron_back := finish - direction * 16.0
+	_write_beam(
+		chevron_back + lateral * 8.0,
+		finish,
+		4.0,
+		Color(Art.MINT, 0.88)
+	)
+	_write_beam(
+		chevron_back - lateral * 8.0,
+		finish,
+		4.0,
+		Color(Art.MINT, 0.88)
+	)
+	return true
 
 
 func _enemy_body_modulate(enemy: EnemyState) -> Color:
@@ -917,18 +1105,24 @@ func _offer_overlay_candidate(
 	return next_count
 
 
-func _sync_installation_health_bar(enemy: EnemyState) -> void:
+func _sync_installation_health_bar(
+	enemy: EnemyState,
+	visible_world: Rect2
+) -> void:
 	if enemy == null:
 		return
 	_sync_health_bar(
-		enemy.pos,
+		_presented_enemy_position(enemy),
 		enemy.visual_radius,
 		enemy.health,
 		enemy.max_health,
 		1.8,
+		42.0,
+		72.0,
 		16.0,
 		16.0,
-		Art.CORAL
+		Art.CORAL,
+		visible_world
 	)
 
 
@@ -938,28 +1132,49 @@ func _sync_health_bar(
 	health: float,
 	max_health: float,
 	width_scale: float,
+	min_half_width: float,
+	max_half_width: float,
 	height: float,
 	vertical_gap: float,
-	fill_color: Color
+	fill_color: Color,
+	visible_world: Rect2
 ) -> void:
 	var health_ratio := clampf(health / maxf(0.001, max_health), 0.0, 1.0)
-	var bar_width := radius * width_scale
+	var bar_half_width := clampf(
+		radius * width_scale,
+		min_half_width,
+		max_half_width
+	)
 	var bar_position := position - Vector2(0.0, radius + vertical_gap)
+	var backing_half_width := bar_half_width + 2.0
+	var backing_half_height := (height + 4.0) * 0.5
+	if bar_position.y - backing_half_height < visible_world.position.y:
+		bar_position.y = position.y + radius + vertical_gap
+	bar_position.x = clampf(
+		bar_position.x,
+		visible_world.position.x + backing_half_width,
+		visible_world.end.x - backing_half_width
+	)
+	bar_position.y = clampf(
+		bar_position.y,
+		visible_world.position.y + backing_half_height,
+		visible_world.end.y - backing_half_height
+	)
 	_write_instance(
 		_overlay_batches[&"health"],
 		bar_position,
 		0.0,
-		Vector2(bar_width + 4.0, height + 4.0),
+		Vector2(backing_half_width, height + 4.0),
 		Art.IVORY_SHADE
 	)
 	_write_instance(
 		_overlay_batches[&"health"],
 		bar_position + Vector2(
-			-bar_width * (1.0 - health_ratio) * 0.5,
+			-bar_half_width * (1.0 - health_ratio),
 			0.0
 		),
 		0.0,
-		Vector2(bar_width * health_ratio, height),
+		Vector2(bar_half_width * health_ratio, height),
 		fill_color
 	)
 func _sync_enemy_semantic_overlays(
@@ -1171,18 +1386,20 @@ func _sync_effects(
 	_reduced_motion: bool
 ) -> void:
 	for effect in effects:
-		var position := effect.pos
+		var event_id := effect.kind
+		if not VisualEventCatalog.has_event(event_id):
+			continue
+		var event := VisualEventCatalog.descriptor(event_id)
+		var mode := StringName(event.get("mode", &""))
+		var position := (
+			player_position if mode == &"live_emp_radius" else effect.pos
+		)
 		var duration := maxf(0.001, effect.duration)
 		var progress := 1.0 - clampf(effect.time / duration, 0.0, 1.0)
 		var radius := effect.radius
 		var secondary_radius := effect.secondary_radius
 		if not visible_world.grow(maxf(radius, secondary_radius)).has_point(position):
 			continue
-		var event_id := effect.kind
-		if not VisualEventCatalog.has_event(event_id):
-			continue
-		var event := VisualEventCatalog.descriptor(event_id)
-		var mode := StringName(event.get("mode", &""))
 		var color := effect.color
 		color.a *= 1.0 - progress
 		var direction := effect.direction.normalized()
@@ -1195,19 +1412,15 @@ func _sync_effects(
 		)
 		if mode == &"live_emp_radius":
 			_write_disk(
-				player_position,
-				secondary_radius,
-				Color(Art.SYSTEM, 0.08)
-			)
-			_write_disk(
-				player_position,
+				position,
 				radius,
 				Color(Art.SYSTEM, 0.12)
 			)
-			_write_ring(
-				player_position,
+			_write_emp_utility_fringe(
+				position,
+				radius,
 				secondary_radius,
-				Color(Art.SYSTEM, 0.10)
+				Color(Art.SYSTEM, 0.24)
 			)
 			continue
 		if mode == &"hull_afterimage":
@@ -1223,27 +1436,35 @@ func _sync_effects(
 			var fade := 1.0 - progress
 			_write_disk(
 				position,
-				secondary_radius,
-				Color(Art.SYSTEM, 0.10 * fade)
-			)
-			_write_disk(
-				position,
 				radius,
 				Color(Art.SYSTEM, 0.20 * fade)
+			)
+			_write_emp_utility_fringe(
+				position,
+				radius,
+				secondary_radius,
+				Color(Art.SYSTEM, 0.34 * fade)
 			)
 			continue
 		if mode == &"thermal_area":
 			_write_disk(
 				position,
 				radius,
-				Color(Art.THERMAL, 0.16 * (1.0 - progress))
+				Color(Art.THERMAL, 0.20 * _instant_impact_alpha(progress))
 			)
 			continue
 		if mode == &"drop_mine_area":
 			_write_disk(
 				position,
 				radius,
-				Color(Art.PLAYER_REWARD, 0.16 * (1.0 - progress))
+				Color(Art.PLAYER_REWARD, 0.18 * _instant_impact_alpha(progress))
+			)
+			continue
+		if mode == &"explosive_seeker_area":
+			_write_disk(
+				position,
+				radius,
+				Color(effect.color, 0.18 * _instant_impact_alpha(progress))
 			)
 			continue
 		if mode == &"mystery_purge_pulse":
@@ -1258,6 +1479,40 @@ func _sync_effects(
 				Color(Art.SYSTEM, color.a * 0.14)
 			)
 			continue
+
+
+static func _instant_impact_alpha(progress: float) -> float:
+	var bounded := clampf(progress, 0.0, 1.0)
+	if bounded < 0.20:
+		return lerpf(0.55, 1.0, smoothstep(0.0, 0.20, bounded))
+	if bounded <= 0.50:
+		return 1.0
+	return 1.0 - smoothstep(0.50, 1.0, bounded)
+
+
+func _write_emp_utility_fringe(
+	position: Vector2,
+	inner_radius: float,
+	outer_radius: float,
+	color: Color
+) -> void:
+	if outer_radius <= inner_radius or color.a <= 0.0:
+		return
+	var band_radius := (inner_radius + outer_radius) * 0.5
+	var band_width := maxf(3.0, (outer_radius - inner_radius) * 0.22)
+	var segment_length := maxf(10.0, band_radius * 0.12)
+	for segment_index in 12:
+		var radial := Vector2.RIGHT.rotated(
+			TAU * float(segment_index) / 12.0
+		)
+		var tangent := radial.rotated(PI * 0.5)
+		var center := position + radial * band_radius
+		_write_beam(
+			center - tangent * segment_length * 0.5,
+			center + tangent * segment_length * 0.5,
+			band_width,
+			color
+		)
 
 
 func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
@@ -1495,9 +1750,12 @@ func _sync_reinforcement_facility(
 		float(facility.get("health", 0.0)),
 		float(facility.get("max_health", 1.0)),
 		1.65,
+		88.0,
+		112.0,
 		16.0,
 		16.0,
-		Art.CORAL
+		Art.CORAL,
+		visible_world
 	)
 	_facility_health_bar_count = 1
 

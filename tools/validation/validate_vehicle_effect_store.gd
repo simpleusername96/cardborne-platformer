@@ -261,6 +261,31 @@ func _initialize() -> void:
 	)
 
 	store.clear()
+	for index in EffectStore.MAX_LIVE_EXPLOSIVE_SEEKER_IMPACTS:
+		var seeker_effect = store.add_explosive_seeker_impact(
+			Vector2(float(index), 65.0), Color.WHITE, 0.18, 95.0
+		)
+		seeker_effect.time = 0.01 if index == 0 else 0.18
+	var recycled_seeker = store.add_explosive_seeker_impact(
+		Vector2(999.0, 65.0), Color.WHITE, 0.18, 95.0
+	)
+	var seeker_snapshot := store.debug_snapshot()
+	var oldest_seeker_survived := false
+	for state in store.live:
+		oldest_seeker_survived = (
+			oldest_seeker_survived or state.pos == Vector2(0.0, 65.0)
+		)
+	_expect(
+		recycled_seeker != null
+		and store.count_kind(EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND)
+			== EffectStore.MAX_LIVE_EXPLOSIVE_SEEKER_IMPACTS
+		and not oldest_seeker_survived
+		and int(seeker_snapshot["explosive_seeker_recycles"]) == 1
+		and store.validate_capacity(),
+		"the ninth Explosive Seeker receipt recycles only its oldest cosmetic"
+	)
+
+	store.clear()
 	for index in EffectStore.MAX_LIVE_MYSTERY_PURGE_PULSES + 1:
 		store.add_mystery_purge_pulse(
 			Vector2(float(index), 70.0), Color.WHITE, 0.18, 420.0

@@ -778,6 +778,15 @@ func _capture_structural_health_bar_evidence() -> void:
 		mobile.health = mobile.max_health * 0.5
 		mobile.health_visible_timer = 99.0
 		_run._append_enemy(mobile)
+	var repairer: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_repair_link",
+		"role":&"repair_tender",
+		"pos":_run.player_position + Vector2(-440.0, 90.0),
+		"active":true,
+	})
+	if repairer != null and mobile != null:
+		repairer.repair_target_id = mobile.id
+		_run._append_enemy(repairer)
 	var installation: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_structural_health_bar",
 		"role":&"beam_sentinel",
@@ -787,6 +796,17 @@ func _capture_structural_health_bar_evidence() -> void:
 	if installation != null:
 		installation.health = installation.max_health * 0.5
 		_run._append_enemy(installation)
+	var boss: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_boss_health_bar",
+		"role":&"stage_boss",
+		"pos":_run.player_position + Vector2(-300.0, -245.0),
+		"active":true,
+		"boss_variant":&"titan",
+		"boss_shield_state":&"shield_down",
+	})
+	if boss != null:
+		boss.health = boss.max_health * 0.5
+		_run._append_enemy(boss)
 	_run.reinforcement_facility_runtime.configure(
 		2, _run.player_position + Vector2(20.0, 250.0)
 	)
@@ -1231,6 +1251,23 @@ func _capture_exact_area_effect_evidence() -> void:
 			% ["u" if reduced_motion else "t", "reduced" if reduced_motion else "standard"]
 		)
 
+	if settings != null:
+		settings.reduced_motion = false
+	var seeker_center := _prepare_exact_area_scene(1.0)
+	_run._add_effect(
+		EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND,
+		seeker_center,
+		Art.MUSTARD,
+		0.18,
+		95.0
+	)
+	_run.effects[-1].time = _run.effects[-1].duration
+	_add_exact_area_reference_markers(seeker_center, 95.0, 95.0)
+	_run.capture_set_mode(&"paused")
+	_refresh_combat_capture()
+	await _run.get_tree().process_frame
+	_save_capture("09z-explosive-seeker-impact.png")
+
 	var mystery_profiles := [
 		[&"gravity_pull", 0.60, "09v-mystery-gravity-pull.png"],
 		[&"cryo_lock", 0.80, "09w-mystery-cryo-lock.png"],
@@ -1337,8 +1374,9 @@ func _capture_visual_event_evidence() -> void:
 				float(index) * TAU / maxf(1.0, float(event_ids.size()))
 			)
 			var event_id := StringName(event_ids[index])
-			var authored_impact := event_id in [
+			var instant_impact := event_id in [
 				&"thermal_burst_impact", EffectStore.DROP_MINE_DETONATION_KIND,
+				EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND,
 			]
 			var radius := 54.0
 			var secondary_radius := 0.0
@@ -1358,13 +1396,16 @@ func _capture_visual_event_evidence() -> void:
 				EffectStore.DROP_MINE_DETONATION_KIND:
 					radius = 108.0
 					duration = 0.18
+				EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND:
+					radius = 95.0
+					duration = 0.18
 				EffectStore.MYSTERY_PURGE_PULSE_KIND:
 					radius = 420.0
 					duration = 0.18
 			_run._add_effect(
 				event_id,
 				position,
-				Color.WHITE if authored_impact
+				Art.MUSTARD if instant_impact
 				else colors[index % colors.size()],
 				duration,
 				radius,

@@ -644,7 +644,8 @@ func _process(delta: float) -> void:
 			run_time,
 			presentation_active,
 			_aim_target_id,
-			_runtime_combat_presentation_snapshot()
+			_runtime_combat_presentation_snapshot(),
+			delta
 		)
 		if timing_active:
 			presentation_ms = _elapsed_ms(presentation_started)
@@ -992,6 +993,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	else:
 		health *= (
 			float(stage_curve["health"])
+			* float(stage_curve["ordinary_health_pressure"])
 			* float(difficulty_profile["health"])
 			* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
 		)
@@ -3588,6 +3590,13 @@ func _update_projectile_buffer(
 						hit_position, 95.0, 12.0,
 						"Seeker burst", &"kinetic", true, hit_enemy.id
 					)
+					_add_effect(
+						EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND,
+						hit_position,
+						projectile.color,
+						0.18,
+						95.0
+					)
 				if projectile.pierce > 0:
 					projectile.pierce -= 1
 					projectile.pos = to + projectile.velocity.normalized() * 8.0
@@ -3899,6 +3908,11 @@ func _add_effect(
 		return
 	if kind == EffectStore.DROP_MINE_DETONATION_KIND:
 		effect_store.add_drop_mine_detonation(
+			position, color, duration, radius
+		)
+		return
+	if kind == EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND:
+		effect_store.add_explosive_seeker_impact(
 			position, color, duration, radius
 		)
 		return
@@ -4216,10 +4230,12 @@ func _scaled_incoming_damage(amount: float, enemy_source: bool, final_effective:
 	var difficulty_damage := RunDifficulty.factor(selected_run_difficulty, "damage")
 	if final_effective:
 		return amount * difficulty_damage
+	var stage_curve := StageDifficulty.multipliers(current_stage_index)
 	return (
 		amount
 		* EncounterDirector.ENEMY_DAMAGE_MULTIPLIER
-		* float(StageDifficulty.multipliers(current_stage_index)["damage"])
+		* float(stage_curve["damage"])
+		* float(stage_curve["ordinary_damage_pressure"])
 		* difficulty_damage
 	)
 
@@ -4551,7 +4567,9 @@ func _update_aim_target() -> void:
 
 
 func _update_stage_progression(delta: float = 0.0) -> void:
-	if stage_flow.state == StageFlow.State.BOSS_WARNING and stage_flow.tick(delta):
+	if stage_flow.state == StageFlow.State.BOSS_WARNING:
+		stage_flow.tick(delta)
+	if stage_flow.boss_entry_ready() and not boss_started:
 		_start_stage_boss()
 	if mode == RunMode.STAGE_TRANSITION:
 		stage_transition_remaining = maxf(
@@ -5832,7 +5850,6 @@ func _runtime_threat_radar_snapshot() -> Dictionary:
 func _draw() -> void:
 	_draw_terrain()
 	_draw_pickups_and_crates()
-	_draw_enemies()
 	if _debug_collision_overlay:
 		_draw_debug_collision_overlay()
 
@@ -5979,31 +5996,6 @@ func _draw_semantic_asset_fitted(
 	if texture == null:
 		return
 	draw_texture_rect(texture, target, false, modulate)
-
-
-func _draw_enemies() -> void:
-	var visible_world := _visible_world_rect(180.0)
-	for enemy in enemies:
-		if not bool(enemy.alive) or not bool(enemy.active):
-			continue
-		if not visible_world.has_point(Vector2(enemy.pos)):
-			continue
-		_draw_enemy_overlay(enemy)
-
-
-func _draw_enemy_overlay(enemy: EnemyState) -> void:
-	var role := StringName(enemy.role)
-	var position := Vector2(enemy.pos)
-	if role == &"repair_tender" and not enemy.repair_target_id.is_empty():
-		var repair_target := _find_enemy_by_id(String(enemy.repair_target_id))
-		if repair_target != null and repair_target.alive:
-			draw_line(
-				position,
-				repair_target.pos,
-				Color(Art.MINT, 0.82),
-				14.0,
-				true
-			)
 
 
 func _enemy_color(role: StringName) -> Color:

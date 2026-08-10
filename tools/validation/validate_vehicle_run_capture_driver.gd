@@ -80,7 +80,7 @@ func _initialize() -> void:
 		"driver does not access VehicleRun private capture hooks"
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 36, "core manifest has 36 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 115, "full manifest has 115 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 116, "full manifest has 116 captures")
 	for required_capture in [
 		"03d-movement-cover-approach.png",
 		"03e-movement-cover-turn.png",
@@ -122,6 +122,7 @@ func _initialize() -> void:
 		"09s-emp-charge-reduced.png",
 		"09t-emp-release-standard.png",
 		"09u-emp-release-reduced.png",
+		"09z-explosive-seeker-impact.png",
 		"09v-mystery-gravity-pull.png",
 		"09w-mystery-cryo-lock.png",
 		"09x-mystery-projectile-purge.png",

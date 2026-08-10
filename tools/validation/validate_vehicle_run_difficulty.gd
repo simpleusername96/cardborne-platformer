@@ -5,6 +5,7 @@ const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
 var failures: Array[String] = []
 
@@ -46,7 +47,7 @@ func _run() -> void:
 	_expect(
 		_near(
 			hard_enemy.speed,
-			205.0 * EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER,
+			190.0 * EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER,
 			0.001
 		),
 		"ordinary movement uses its dedicated multiplier"
@@ -60,8 +61,13 @@ func _run() -> void:
 		"boss movement preserves the committed-attack multiplier"
 	)
 	var health_curve := [0.85, 1.00, 1.15, 1.30, 1.45]
+	var health_pressure := [1.35, 1.40, 1.45, 1.50, 1.50]
 	var boss_bases := [1250.0, 1350.0, 1450.0, 1550.0, 1650.0]
 	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health uses the locked five-stage curve")
+	_expect(
+		StageDifficulty.ORDINARY_HEALTH_PRESSURE == health_pressure,
+		"ordinary health adds the accepted 35-50 percent stage pressure"
+	)
 	for stage_index in health_curve.size():
 		stage.current_stage_index = stage_index
 		var standard_enemy = stage.call("_make_enemy", {
@@ -84,6 +90,7 @@ func _run() -> void:
 				standard_enemy.health,
 				48.0 * EncounterDirector.ENEMY_HEALTH_MULTIPLIER
 					* health_curve[stage_index]
+					* health_pressure[stage_index]
 					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER,
 				0.001
 			),
@@ -94,6 +101,7 @@ func _run() -> void:
 			_near(
 				priority_enemy.health,
 				74.0 * health_curve[stage_index]
+					* health_pressure[stage_index]
 					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER,
 				0.001
 			),
@@ -111,7 +119,12 @@ func _run() -> void:
 				% (stage_index + 1)
 		)
 	var damage_curve := [1.00, 1.03, 1.06, 1.09, 1.12]
-	var expected_damage := [17.55, 18.0765, 18.603, 19.1295, 19.656]
+	var damage_pressure := [1.15, 1.20, 1.25, 1.30, 1.30]
+	var expected_damage := [20.1825, 21.6918, 23.25375, 24.86835, 25.5528]
+	_expect(
+		StageDifficulty.ORDINARY_DAMAGE_PRESSURE == damage_pressure,
+		"ordinary damage adds the accepted 15-30 percent stage pressure"
+	)
 	for stage_index in damage_curve.size():
 		stage.current_stage_index = stage_index
 		_expect(
@@ -137,6 +150,36 @@ func _run() -> void:
 	_expect(_near(compatibility_boss.health, hard_boss.health, 0.001), "retired identifiers cannot alter boss health")
 	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true)), hard_damage, 0.001), "retired identifiers cannot alter ordinary damage")
 	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true, true)), hard_final_damage, 0.001), "retired identifiers cannot alter authored boss damage")
+	var tuned_mobile_bases := {
+		&"scrap_drone":190.0,
+		&"needle_drone":176.0,
+		&"spark_minelet":100.0,
+		&"chaser":190.0,
+		&"shooter":166.0,
+		&"controller":150.0,
+		&"shield_escort":170.0,
+		&"artillery_spotter":140.0,
+		&"rammer":190.0,
+		&"bulkhead_guard":164.0,
+		&"splitter_barge":157.0,
+		&"repair_tender":159.0,
+		&"drone_carrier":136.0,
+	}
+	for archetype in tuned_mobile_bases:
+		var base_speed := float(
+			EnemyArchetypes.definition(StringName(archetype))["speed"]
+		)
+		var stage_five_speed := (
+			base_speed
+			* EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER
+			* float(StageDifficulty.SPEED[4])
+		)
+		_expect(
+			_near(base_speed, float(tuned_mobile_bases[archetype]), 0.001)
+				and stage_five_speed < 280.0,
+			"%s keeps its tuned base and stays below player speed at Stage 5"
+			% String(archetype)
+		)
 	stage.call("_reset_run", false, true, true)
 	_expect(stage.encounter_runtime.difficulty == RunDifficulty.HARD, "encounters ignore retired compatibility identifiers")
 	_expect(stage.stage_flow.quota == StageCatalog.quota(&"stage_1"), "retired identifiers cannot alter stage quota")

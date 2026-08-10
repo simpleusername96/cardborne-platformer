@@ -108,6 +108,7 @@ const FULL_CAPTURE_FILES := [
 	"09w-mystery-cryo-lock.png",
 	"09x-mystery-projectile-purge.png",
 	"09y-mystery-decoy-signal.png",
+	"09z-explosive-seeker-impact.png",
 	"10-field-drowned-ruin-field.png",
 	"10-field-storm-drydock-field.png",
 	"10-field-tidal-archive-field.png",

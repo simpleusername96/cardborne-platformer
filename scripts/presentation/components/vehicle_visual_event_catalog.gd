@@ -13,6 +13,7 @@ const EVENTS := {
 	&"player_emp_release": {"mode": &"emp_area"},
 	&"thermal_burst_impact": {"mode": &"thermal_area"},
 	&"drop_mine_detonation": {"mode": &"drop_mine_area"},
+	&"explosive_seeker_impact": {"mode": &"explosive_seeker_area"},
 	&"mystery_projectile_purge": {
 		"mode": &"mystery_purge_pulse",
 	},

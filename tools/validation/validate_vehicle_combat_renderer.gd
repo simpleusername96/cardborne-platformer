@@ -36,6 +36,8 @@ func _run() -> void:
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
 	_validate_primitive_batches(renderer)
 	_validate_emp_presentation(renderer)
+	_validate_health_bar_geometry(renderer)
+	_validate_enemy_presentation(renderer)
 	_expect(
 		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
 			and AttackContract.STANDARD_PROJECTILE_RADIUS == 6.0
@@ -178,6 +180,10 @@ func _run() -> void:
 		Vector2(500.0, 340.0), Color.WHITE, 0.18, 108.0
 	)
 	mine_effect.time = 0.18
+	var seeker_effect = effect_store.add_explosive_seeker_impact(
+		Vector2(560.0, 300.0), Art.MUSTARD, 0.18, 95.0
+	)
+	seeker_effect.time = 0.18
 	var presentation := {
 		"zones":[], "player_position":Vector2(260.0,300.0),
 		"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
@@ -195,15 +201,16 @@ func _run() -> void:
 	)
 	_expect(
 		renderer.get_node_or_null("Effect_thermal_burst_impact") == null
-			and renderer.get_node_or_null("Effect_drop_mine_detonation") == null,
-		"Thermal and Drop Mine use the shared primitive batch without dedicated raster nodes"
+			and renderer.get_node_or_null("Effect_drop_mine_detonation") == null
+			and renderer.get_node_or_null("Effect_explosive_seeker_impact") == null,
+		"instant impacts use the shared primitive batch without dedicated raster nodes"
 	)
 	var effect_disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var effect_disk_buffer := effect_disks.multimesh.buffer
-	var expected_effect_disk_radii := [24.0, 20.0, 84.0, 108.0]
+	var expected_effect_disk_radii := [20.0, 84.0, 108.0, 95.0]
 	_expect(
 		effect_disks.multimesh.visible_instance_count == expected_effect_disk_radii.size(),
-		"EMP, Thermal, and Drop Mine publish four complete retained area bodies"
+		"EMP damage, Thermal, Drop Mine, and Explosive Seeker publish four complete retained area bodies"
 	)
 	for index in expected_effect_disk_radii.size():
 		var offset := index * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
@@ -219,14 +226,18 @@ func _run() -> void:
 		)
 	_expect(
 		Vector2(
-			effect_disk_buffer[2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
-			effect_disk_buffer[2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
+			effect_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
+			effect_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
 		).is_equal_approx(Vector2(420.0, 320.0))
+			and Vector2(
+				effect_disk_buffer[2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
+				effect_disk_buffer[2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
+			).is_equal_approx(Vector2(500.0, 340.0))
 			and Vector2(
 				effect_disk_buffer[3 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
 				effect_disk_buffer[3 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
-			).is_equal_approx(Vector2(500.0, 340.0)),
-		"Thermal and Drop Mine primitive disks preserve their gameplay-owned origins"
+			).is_equal_approx(Vector2(560.0, 300.0)),
+		"instant-impact disks preserve gameplay-owned origins"
 	)
 	thermal_effect.time = 0.09
 	renderer.sync(
@@ -236,7 +247,7 @@ func _run() -> void:
 		presentation
 	)
 	effect_disk_buffer = effect_disks.multimesh.buffer
-	var thermal_offset := 2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
+	var thermal_offset := Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
 	_expect(
 		is_equal_approx(
 			Vector2(
@@ -245,8 +256,8 @@ func _run() -> void:
 			).length(),
 			84.0
 		)
-			and is_equal_approx(effect_disk_buffer[thermal_offset + 11], 0.08),
-		"Thermal primitive keeps its gameplay radius while fading over 0.18 seconds"
+			and is_equal_approx(effect_disk_buffer[thermal_offset + 11], 0.20),
+		"Thermal primitive keeps its complete gameplay radius through the hold point"
 	)
 	snapshot = renderer.debug_snapshot()
 	var status_enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
@@ -282,7 +293,7 @@ func _run() -> void:
 		"renderer_enemy", presentation
 	)
 	effect_disk_buffer = effect_disks.multimesh.buffer
-	var mine_offset := 3 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
+	var mine_offset := 2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
 	_expect(
 		is_equal_approx(
 			Vector2(
@@ -291,7 +302,7 @@ func _run() -> void:
 			).length(),
 			108.0
 		)
-		and is_equal_approx(effect_disk_buffer[mine_offset + 11], 0.16),
+		and is_equal_approx(effect_disk_buffer[mine_offset + 11], 0.099),
 		"standard motion starts the Drop Mine primitive at its exact final radius"
 	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
@@ -319,8 +330,8 @@ func _run() -> void:
 			).length(),
 			108.0
 		)
-		and is_equal_approx(effect_disk_buffer[mine_offset + 11], 0.08),
-		"Drop Mine reaches its exact gameplay radius while fading over 0.18 seconds"
+		and is_equal_approx(effect_disk_buffer[mine_offset + 11], 0.18),
+		"Drop Mine keeps its exact gameplay radius through the shared hold point"
 	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
 	_expect(
@@ -905,6 +916,204 @@ func _validate_primitive_batches(renderer: Renderer) -> void:
 		)
 
 
+func _validate_health_bar_geometry(renderer: Renderer) -> void:
+	var health_batch := renderer.get_node("Overlay_health") as MultiMeshInstance2D
+	var mesh_bounds := health_batch.multimesh.mesh.get_aabb()
+	_expect(
+		is_equal_approx(mesh_bounds.position.x, -1.0)
+			and is_equal_approx(mesh_bounds.position.y, -0.5)
+			and is_equal_approx(mesh_bounds.size.x, 2.0)
+			and is_equal_approx(mesh_bounds.size.y, 1.0),
+		"health bars use normalized full-height geometry"
+	)
+	var expected_left := NAN
+	for ratio in [0.0, 0.25, 0.5, 0.75, 1.0]:
+		renderer.call("_reset_counts")
+		renderer.call(
+			"_sync_health_bar",
+			Vector2(20.0, 10.0),
+			50.0,
+			ratio * 100.0,
+			100.0,
+			1.8,
+			42.0,
+			72.0,
+			16.0,
+			16.0,
+			Art.CORAL,
+			Rect2(0.0, 0.0, 200.0, 120.0)
+		)
+		renderer.call("_apply_visible_counts")
+		var buffer := health_batch.multimesh.buffer
+		var fill_offset := Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
+		var fill_left := (
+			buffer[fill_offset + 3] - absf(buffer[fill_offset])
+		)
+		if is_nan(expected_left):
+			expected_left = fill_left
+		_expect(
+			is_equal_approx(fill_left, expected_left),
+			"health fill keeps its left edge fixed at ratio %.2f" % ratio
+		)
+		_expect(
+			is_equal_approx(absf(buffer[5]) * mesh_bounds.size.y, 20.0)
+				and is_equal_approx(
+					absf(buffer[fill_offset + 5]) * mesh_bounds.size.y,
+					16.0
+				)
+				and buffer[3] >= 74.0
+				and buffer[7] > 10.0,
+			"installation bar preserves 16-unit fill, 2-unit backing, and safe below placement"
+		)
+	renderer.call("_reset_counts")
+	renderer.call(
+		"_sync_health_bar",
+		Vector2(1260.0, 710.0),
+		112.0,
+		50.0,
+		100.0,
+		1.9,
+		96.0,
+		120.0,
+		18.0,
+		18.0,
+		Art.BOSS_COMMAND,
+		Rect2(0.0, 0.0, 1280.0, 720.0)
+	)
+	renderer.call("_apply_visible_counts")
+	var edge_buffer := health_batch.multimesh.buffer
+	_expect(
+		is_equal_approx(absf(edge_buffer[0]), 122.0)
+			and edge_buffer[3] <= 1158.0
+			and edge_buffer[7] <= 709.0,
+		"boss bar clamps its 120-unit half-width and complete backing inside the viewport"
+	)
+
+
+func _validate_enemy_presentation(renderer: Renderer) -> void:
+	var no_projectiles: Array[ProjectileState] = []
+	var no_shards: Array[ExperienceShard] = []
+	var moving := EnemyState.new()
+	moving.id = "interpolation_probe"
+	moving.role = &"chaser"
+	moving.archetype = &"chaser"
+	moving.pos = Vector2(100.0, 240.0)
+	moving.visual_radius = 26.0
+	moving.speed = 190.0
+	moving.spatial_slot = 0
+	moving.runtime_generation = 1
+	moving.alive = true
+	moving.active = true
+	moving.shielded = true
+	var moving_enemies: Array[EnemyState] = [moving]
+	renderer.sync(
+		moving_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 0.0, true, "", {},
+		1.0 / 60.0
+	)
+	moving.pos = Vector2(100.0 + 190.0 / 30.0, 240.0)
+	renderer.sync(
+		moving_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 0.0, true, "", {},
+		1.0 / 60.0
+	)
+	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
+	var body_position := Vector2(
+		enemy_batch.multimesh.buffer[3], enemy_batch.multimesh.buffer[7]
+	)
+	var shield_batch := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
+	var shield_position := Vector2(
+		shield_batch.multimesh.buffer[3], shield_batch.multimesh.buffer[7]
+	)
+	_expect(
+		body_position.x > 100.0
+			and body_position.x < moving.pos.x
+			and shield_position.is_equal_approx(body_position)
+			and moving.pos.is_equal_approx(Vector2(106.333333, 240.0)),
+		"30 Hz simulation samples interpolate without mutating gameplay position and attached shields follow"
+	)
+	renderer.sync(
+		moving_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 0.0, true, "", {},
+		1.0 / 60.0
+	)
+	body_position = Vector2(
+		enemy_batch.multimesh.buffer[3], enemy_batch.multimesh.buffer[7]
+	)
+	_expect(
+		body_position.is_equal_approx(moving.pos),
+		"presentation reaches a 30 Hz target after two 60 Hz frames"
+	)
+	moving.pos = Vector2(500.0, 240.0)
+	renderer.sync(
+		moving_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 0.0, true, "", {},
+		1.0 / 60.0
+	)
+	_expect(
+		Vector2(enemy_batch.multimesh.buffer[3], enemy_batch.multimesh.buffer[7])
+			.is_equal_approx(moving.pos),
+		"large discontinuities snap instead of crossing the field"
+	)
+	moving.runtime_generation = 2
+	moving.pos = Vector2(220.0, 240.0)
+	renderer.sync(
+		moving_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 0.0, true, "", {},
+		1.0 / 60.0
+	)
+	_expect(
+		Vector2(enemy_batch.multimesh.buffer[3], enemy_batch.multimesh.buffer[7])
+			.is_equal_approx(moving.pos),
+		"pooled generation reuse resets presentation history"
+	)
+	var repairer := EnemyState.new()
+	repairer.id = "repairer"
+	repairer.role = &"repair_tender"
+	repairer.archetype = &"repair_tender"
+	repairer.pos = Vector2(300.0, 300.0)
+	repairer.visual_radius = 32.0
+	repairer.spatial_slot = 1
+	repairer.runtime_generation = 1
+	repairer.alive = true
+	repairer.active = true
+	repairer.repair_target_id = "recipient"
+	var recipient := EnemyState.new()
+	recipient.id = "recipient"
+	recipient.role = &"chaser"
+	recipient.archetype = &"chaser"
+	recipient.pos = Vector2(500.0, 300.0)
+	recipient.visual_radius = 26.0
+	recipient.spatial_slot = 2
+	recipient.runtime_generation = 1
+	recipient.alive = true
+	recipient.active = true
+	var support_pair: Array[EnemyState] = [repairer, recipient]
+	renderer.sync(
+		support_pair, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 1.0, true, "", {},
+		1.0 / 60.0
+	)
+	var beam_batch := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
+	_expect(
+		beam_batch.multimesh.visible_instance_count
+			== Renderer.REPAIR_LINK_SEGMENTS + 2
+			and int(renderer.debug_snapshot()["repair_link_count"]) == 1,
+		"Repair Tender uses five directional packets plus one open recipient chevron"
+	)
+	recipient.active = false
+	renderer.sync(
+		support_pair, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 1.0, true, "", {},
+		1.0 / 60.0
+	)
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 0
+			and int(renderer.debug_snapshot()["repair_link_count"]) == 0,
+		"repair presentation retires when its recipient is inactive"
+	)
+
+
 func _validate_emp_presentation(renderer: Renderer) -> void:
 	var no_enemies: Array[EnemyState] = []
 	var no_projectiles: Array[ProjectileState] = []
@@ -940,36 +1149,27 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 	)
 	var release_draws := renderer.debug_semantic_texture_draws(&"effect/emp_release")
 	var release_disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
+	var utility_segments := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
+	var emp_rings := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
 	var release_disk_buffer := release_disks.multimesh.buffer
 	_expect(
 		release_draws.is_empty(),
 		"standard-motion EMP requests no authored effect raster"
 	)
 	_expect(
-		release_disks.multimesh.visible_instance_count == 2
+		release_disks.multimesh.visible_instance_count == 1
 		and Vector2(release_disk_buffer[3], release_disk_buffer[7])
 			.is_equal_approx(release_position)
-		and Vector2(
-			release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
-			release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
-		).is_equal_approx(release_position)
 		and is_equal_approx(
 			Vector2(release_disk_buffer[0], release_disk_buffer[4]).length(),
-			clear_radius
-		)
-		and is_equal_approx(
-			Vector2(
-				release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE],
-				release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 4]
-			).length(),
 			release_radius
 		)
-		and is_equal_approx(release_disk_buffer[11], 0.10)
-		and is_equal_approx(
-			release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 11],
-			0.20
+		and is_equal_approx(release_disk_buffer[11], 0.20)
+		and emp_rings.multimesh.visible_instance_count == 0
+		and _emp_fringe_matches(
+			utility_segments, release_position, release_radius, clear_radius, 0.34
 		),
-		"EMP release starts with complete 325 projectile-clear and 285 damage/stun disks"
+		"EMP release starts with one complete 285 damage disk and a segmented 285-325 utility fringe"
 	)
 	release.time = 0.35
 	renderer.sync(
@@ -991,17 +1191,11 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 		release_draws.is_empty()
 			and is_equal_approx(
 				Vector2(release_disk_buffer[0], release_disk_buffer[4]).length(),
-				clear_radius
-			)
-			and is_equal_approx(
-				Vector2(
-					release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE],
-					release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 4]
-				).length(),
 				release_radius
 			)
-			and release_disk_buffer[11] < 0.10,
-		"standard-motion EMP keeps both final radii and only fades"
+			and release_disk_buffer[11] < 0.20
+			and utility_segments.multimesh.buffer[11] < 0.34,
+		"standard-motion EMP keeps its fixed footprint and fades both semantic regions"
 	)
 	presentation["reduced_motion"] = true
 	release.time = 0.55
@@ -1024,21 +1218,17 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 		release_draws.is_empty()
 			and is_equal_approx(
 				Vector2(release_disk_buffer[0], release_disk_buffer[4]).length(),
-				clear_radius
-			)
-			and is_equal_approx(
-				Vector2(
-					release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE],
-					release_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 4]
-				).length(),
 				release_radius
+			)
+			and _emp_fringe_matches(
+				utility_segments, release_position, release_radius, clear_radius, 0.34
 			),
-		"reduced-motion EMP starts with the same complete two-envelope footprint"
+		"reduced-motion EMP starts with the same damage disk and utility fringe"
 	)
 	var charge_store := EffectStore.new()
 	var charge = charge_store.add_emp_footprint(
 		EffectStore.EMP_CHARGE_KIND,
-		Vector2(120.0, 140.0),
+		Vector2(-1200.0, -900.0),
 		Art.SYSTEM,
 		0.42,
 		release_radius,
@@ -1058,42 +1248,22 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 		"",
 		presentation
 	)
-	var charge_ring := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
-	var charge_buffer := charge_ring.multimesh.buffer
 	var charge_disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var charge_disk_buffer := charge_disks.multimesh.buffer
 	_expect(
-		charge_ring.multimesh.visible_instance_count == 1
-			and Vector2(charge_buffer[3], charge_buffer[7]).is_equal_approx(
-				player_position
-			)
-			and Color(
-				charge_buffer[8],
-				charge_buffer[9],
-				charge_buffer[10],
-				1.0
-			).is_equal_approx(Color(Art.SYSTEM, 1.0)),
-		"EMP charge boundary follows the live player position and uses the system-blue hierarchy"
-	)
-	_expect(
-		charge_disks.multimesh.visible_instance_count == 2
+		charge_disks.multimesh.visible_instance_count == 1
+		and emp_rings.multimesh.visible_instance_count == 0
+		and Vector2(charge_disk_buffer[3], charge_disk_buffer[7])
+			.is_equal_approx(player_position)
 		and is_equal_approx(
 			Vector2(charge_disk_buffer[0], charge_disk_buffer[4]).length(),
-			clear_radius
-		)
-		and is_equal_approx(charge_disk_buffer[11], 0.08)
-		and is_equal_approx(
-			Vector2(
-				charge_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE],
-				charge_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 4]
-			).length(),
 			release_radius
 		)
-		and is_equal_approx(
-			charge_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 11],
-			0.12
+		and is_equal_approx(charge_disk_buffer[11], 0.12)
+		and _emp_fringe_matches(
+			utility_segments, player_position, release_radius, clear_radius, 0.24
 		),
-		"EMP charge previews complete outer and inner footprints without propagation"
+		"EMP charge culls and draws from the live player center despite its stale stored center"
 	)
 	var moved_player_position := player_position + Vector2(37.0, -19.0)
 	renderer.sync(
@@ -1104,11 +1274,10 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 	_expect(
 		Vector2(charge_disk_buffer[3], charge_disk_buffer[7])
 			.is_equal_approx(moved_player_position)
-		and Vector2(
-			charge_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
-			charge_disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
-		).is_equal_approx(moved_player_position),
-		"both EMP charge envelopes follow the current player center"
+		and _emp_fringe_matches(
+			utility_segments, moved_player_position, release_radius, clear_radius, 0.24
+		),
+		"the EMP charge disk and utility fringe follow the current player center"
 	)
 	var run_source := FileAccess.get_file_as_string(
 		"res://scripts/vehicle/vehicle_run.gd"
@@ -1124,6 +1293,32 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 			and not emp_source.contains("Art.BOSS_MAGENTA"),
 		"EMP runtime publishes its named clear radius without renderer or call-site arithmetic"
 	)
+
+
+func _emp_fringe_matches(
+	batch: MultiMeshInstance2D,
+	center: Vector2,
+	inner_radius: float,
+	outer_radius: float,
+	expected_alpha: float
+) -> bool:
+	if batch.multimesh.visible_instance_count != 12:
+		return false
+	var buffer := batch.multimesh.buffer
+	var band_radius := (inner_radius + outer_radius) * 0.5
+	for index in 12:
+		var offset := index * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
+		var origin := Vector2(buffer[offset + 3], buffer[offset + 7])
+		if not is_equal_approx(origin.distance_to(center), band_radius):
+			return false
+		if not is_equal_approx(buffer[offset + 11], expected_alpha):
+			return false
+		var segment_color := Color(
+			buffer[offset + 8], buffer[offset + 9], buffer[offset + 10], 1.0
+		)
+		if not segment_color.is_equal_approx(Color(Art.SYSTEM, 1.0)):
+			return false
+	return true
 
 
 func _validate_mystery_device_presentation(
@@ -1393,7 +1588,8 @@ func _validate_player_directional_cues(
 	var field_colors: PackedColorArray = field_arrays[Mesh.ARRAY_COLOR]
 	var fill_reaches_boundary := false
 	var field_geometry_inside_radius := true
-	var field_alpha_contract := {0.18:false, 0.30:false, 0.06:false}
+	var field_alpha_contract := {0.18:false, 0.045:false}
+	var has_perimeter_alpha := false
 	for vertex_index in field_vertices.size():
 		var vertex_radius := Vector2(
 			field_vertices[vertex_index].x, field_vertices[vertex_index].y
@@ -1407,6 +1603,8 @@ func _validate_player_directional_cues(
 				field_alpha_contract[expected_alpha] = true
 		if absf(alpha - 0.18) <= 0.005 and vertex_radius >= 0.999:
 			fill_reaches_boundary = true
+		if absf(alpha - 0.30) <= 0.005:
+			has_perimeter_alpha = true
 	_expect(
 		field_batch.z_index == -1
 			and field_batch.multimesh.visible_instance_count == 1
@@ -1421,8 +1619,9 @@ func _validate_player_directional_cues(
 			and is_equal_approx(field_mesh_bounds.size.y, 2.0)
 			and fill_reaches_boundary
 			and field_geometry_inside_radius
+			and not has_perimeter_alpha
 			and field_alpha_contract.values().all(func(value): return bool(value)),
-		"one below-actor Electric Field instance fills the exact definition-owned radius"
+		"one below-actor Electric Field instance fills its exact radius without a perimeter"
 	)
 	for expected_radius in [120.0, 140.0, 160.0]:
 		presentation["secondary"]["electric_field_radius"] = expected_radius

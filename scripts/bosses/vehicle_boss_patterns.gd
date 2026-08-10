@@ -1,8 +1,9 @@
 class_name VehicleBossPatterns
 extends RefCounted
 
-## Data-owned boss exams. Damage values are final Standard damage and therefore
-## bypass ordinary enemy and stage multipliers in VehicleRun.
+## Data-owned boss exams. PATTERNS store authored base Standard damage. The
+## public damage contract applies one boss-only multiplier before VehicleRun
+## bypasses ordinary enemy and stage multipliers.
 
 const ACTIVE_MOVE_SCALE := 0.62
 const AREA_TARGET_MAX_LEAD := 96.0
@@ -11,6 +12,7 @@ const BOSS_CHARGE_SPEED := 790.0
 const BOSS_CONTACT_PADDING := 10.0
 const BEAM_RANGE := 920.0
 const BEAM_COVER_PADDING := 5.0
+const BOSS_DAMAGE_MULTIPLIER := 1.30
 
 const PATTERNS := {
 	&"furnace_gates":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.90, "recovery":0.90, "damage":22.0},
@@ -166,7 +168,7 @@ static func recovery_seconds(pattern: String) -> float:
 
 
 static func damage(pattern: String) -> float:
-	return float(definition(pattern)["damage"])
+	return float(definition(pattern)["damage"]) * BOSS_DAMAGE_MULTIPLIER
 
 
 static func affinity(pattern: String) -> StringName:

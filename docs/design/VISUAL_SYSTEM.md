@@ -281,13 +281,17 @@ collision.
   text로 결과를 식별하며 body asset이나 minimap marker를 바꾸지 않는다.
 - boss objective module art와 shared node art는 모두 production에서 제외한다.
   방어막 상태는 boss body와 HUD의 직접 상태 표현이 소유한다.
-- EMP는 damage/stun `285`와 hostile-projectile clear `325`를 별도 code-native
-  full disk로 즉시 표시하며 authored octagon이나 다른 raster accent를 사용하지
-  않는다. Thermal Burst는 direct primary hit 위치의 exact splash radius를 하나의
-  thermal disk로, Drop Mine은 mine origin의 exact radius `96/108/120`을 하나의
-  player-reward disk로 `0.18s` 동안 표시한다. 두 effect는 별도 raster, texture,
-  material, node 또는 retained batch를 만들지 않고 fixed effect store receipt와
-  shared disk batch만 사용한다. Reduced motion도 최종 radius에서 fade한다. Effect
+- EMP는 damage/stun `285`를 하나의 code-native full disk로 즉시 표시한다.
+  hostile-projectile clear `325`는 두 번째 damage disk가 아니라 `285–325` 사이의
+  sparse segmented utility fringe로 구분한다. 둘은 같은 release frame에 완전한
+  크기로 나타나 함께 사라지며 outward damage propagation을 암시하지 않는다.
+  Thermal Burst는 direct primary hit 위치의 exact splash radius를 하나의 thermal
+  disk로, Drop Mine은 mine origin의 exact radius `96/108/120`을 하나의
+  player-reward disk로, Explosive Seeker는 hit 위치의 exact `95` radius를 하나의
+  kinetic disk로 `0.18s` 동안 표시한다. 세 effect는 footprint 전체가 같은
+  attack/hold/fade envelope를 사용한다. 별도 raster, texture, material, node 또는
+  retained batch를 만들지 않고 fixed effect store receipt와 shared disk batch만
+  사용한다. Reduced motion도 같은 최종 radius에서 fade한다. Effect
   image와 raster frame animation은 production visual owner가 아니다. 필수 hit/
   state truth는 actor tint, state composition, live boundary 같은 기존 직접
   피드백으로 유지한다. 별도 media-boundary 승인 없이 one-file-per-frame pack을
@@ -629,9 +633,18 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed
   health bar를 둔다. mobile enemy, mine, Mystery Device, reward crate에는 표시하지
   않는다. 시설 bar는 최대 12개이며 fill 높이는 16 world unit, boss fill 높이는
-  18 world unit이다. backing은 fill보다 상하좌우 2 world unit씩 크다. 모두 기존
+  18 world unit이다. installation half-width는 `42–72`, boss는 `96–120`,
+  facility는 `88–112` world unit로 제한한다. fill은 모든 비율에서 왼쪽 edge를
+  고정하고 backing은 fill보다 상하좌우 2 world unit씩 크다. body 위 공간이
+  viewport top을 넘으면 아래로 옮기고, complete backing을 visible world 안에
+  clamp한다. 모두 기존
   `Overlay_health` retained batch를 공유하며 backing/fill을 합친 fixed capacity는
   28 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
+- shield와 barrier는 보호받는 body에 붙은 하나의 closed boundary만 사용한다.
+  damaging beam은 startup과 active 모두 exact filled corridor를 사용한다. Repair
+  Tender healing은 source에서 recipient로 향하는 segmented mint packet과 recipient
+  쪽 open chevron을 사용한다. heal은 continuous solid beam이나 closed ring을
+  사용하지 않으며 reduced motion에서는 packet travel만 멈춘다.
 - HUD off-screen threat와 여덟 종류 minimap marker는 기존 code-native retained
   mesh를 유지한다. world-space crosshair는 shared authored PNG retained textured
   batch로 배치한다. persistent-status orbit과 support timer는 사용하지 않으며
@@ -685,8 +698,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - all 10 shared upgrade semantic artwork identities resolve with no missing slot,
   no image appears above a card title, and every card body has exactly one artwork
 - every displayed circular area has a continuous full-area body from center to exact
-  gameplay radius, instant areas use final radius on their first frame, EMP preserves
-  separately readable `285/325` envelopes, and beam corridors remain exact filled rectangles
+  gameplay radius, instant areas use final radius on their first frame, EMP preserves a
+  full `285` damage/stun disk plus a separately readable `285–325` utility fringe, and
+  beam corridors remain exact filled rectangles
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨

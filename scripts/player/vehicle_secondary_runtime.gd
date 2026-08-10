@@ -218,7 +218,7 @@ func _update_seeker(
 			"bounces": 0,
 			"homing": true,
 			"target_id": target.id,
-			"explosive": false,
+			"explosive": true,
 			"structure_damage": 25.0,
 			"element_profile": null,
 			"wall_piercing": false,

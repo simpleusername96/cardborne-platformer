@@ -62,11 +62,19 @@ func _initialize() -> void:
 				Difficulty.boss_health(stage_index),
 				base_health * Difficulty.BOSS_HEALTH_MULTIPLIER
 			),
-			"%s applies the doubled final boss-health multiplier" % stage_id
+			"%s applies the final 3.90 boss-health multiplier" % stage_id
 		)
 	_expect(
-		is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIER, 2.60),
-		"boss health multiplier is doubled from 1.30 to 2.60"
+		is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIER, 3.90),
+		"boss health multiplier is raised from 2.60 to 3.90"
+	)
+	_expect(
+		is_equal_approx(Patterns.BOSS_DAMAGE_MULTIPLIER, 1.30)
+			and is_equal_approx(
+				float(Patterns.definition("furnace_gates")["damage"]), 22.0
+			)
+			and is_equal_approx(Patterns.damage("furnace_gates"), 28.6),
+		"boss patterns preserve authored base damage and expose the 1.30 final multiplier"
 	)
 	_expect(
 		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),

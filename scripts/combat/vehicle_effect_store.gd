@@ -12,6 +12,8 @@ const THERMAL_BURST_IMPACT_KIND := &"thermal_burst_impact"
 const MAX_LIVE_THERMAL_IMPACTS := 24
 const DROP_MINE_DETONATION_KIND := &"drop_mine_detonation"
 const MAX_LIVE_DROP_MINE_DETONATIONS := 8
+const EXPLOSIVE_SEEKER_IMPACT_KIND := &"explosive_seeker_impact"
+const MAX_LIVE_EXPLOSIVE_SEEKER_IMPACTS := 8
 const MYSTERY_PURGE_PULSE_KIND := &"mystery_projectile_purge"
 const MAX_LIVE_MYSTERY_PURGE_PULSES := 3
 
@@ -26,6 +28,8 @@ var _thermal_recycles := 0
 var _rejected_thermal_capacity := 0
 var _drop_mine_recycles := 0
 var _rejected_drop_mine_capacity := 0
+var _explosive_seeker_recycles := 0
+var _rejected_explosive_seeker_capacity := 0
 var _mystery_purge_recycles := 0
 var _rejected_mystery_purge_capacity := 0
 
@@ -116,6 +120,23 @@ func add_drop_mine_detonation(
 	)
 
 
+func add_explosive_seeker_impact(
+	position: Vector2,
+	color: Color,
+	duration: float,
+	radius: float
+) -> VehicleEffectState:
+	## Seeker feedback is cosmetic and may recycle only another Seeker receipt.
+	return _add_bounded_cosmetic(
+		EXPLOSIVE_SEEKER_IMPACT_KIND,
+		MAX_LIVE_EXPLOSIVE_SEEKER_IMPACTS,
+		position,
+		color,
+		duration,
+		radius
+	)
+
+
 func add_mystery_purge_pulse(
 	position: Vector2,
 	color: Color,
@@ -166,6 +187,8 @@ func _note_bounded_cosmetic_recycle(kind: StringName) -> void:
 			_thermal_recycles += 1
 		DROP_MINE_DETONATION_KIND:
 			_drop_mine_recycles += 1
+		EXPLOSIVE_SEEKER_IMPACT_KIND:
+			_explosive_seeker_recycles += 1
 		MYSTERY_PURGE_PULSE_KIND:
 			_mystery_purge_recycles += 1
 
@@ -176,6 +199,8 @@ func _note_bounded_cosmetic_rejection(kind: StringName) -> void:
 			_rejected_thermal_capacity += 1
 		DROP_MINE_DETONATION_KIND:
 			_rejected_drop_mine_capacity += 1
+		EXPLOSIVE_SEEKER_IMPACT_KIND:
+			_rejected_explosive_seeker_capacity += 1
 		MYSTERY_PURGE_PULSE_KIND:
 			_rejected_mystery_purge_capacity += 1
 
@@ -243,6 +268,8 @@ func validate_capacity() -> bool:
 			<= MAX_LIVE_THERMAL_IMPACTS
 		and count_kind(DROP_MINE_DETONATION_KIND)
 			<= MAX_LIVE_DROP_MINE_DETONATIONS
+		and count_kind(EXPLOSIVE_SEEKER_IMPACT_KIND)
+			<= MAX_LIVE_EXPLOSIVE_SEEKER_IMPACTS
 		and count_kind(MYSTERY_PURGE_PULSE_KIND)
 			<= MAX_LIVE_MYSTERY_PURGE_PULSES
 		and live.size() + _pool.size() == MAX_LIVE_EFFECTS
@@ -267,6 +294,10 @@ func debug_snapshot() -> Dictionary:
 		"drop_mine_capacity":MAX_LIVE_DROP_MINE_DETONATIONS,
 		"drop_mine_recycles":_drop_mine_recycles,
 		"rejected_drop_mine_capacity":_rejected_drop_mine_capacity,
+		"explosive_seeker_live":count_kind(EXPLOSIVE_SEEKER_IMPACT_KIND),
+		"explosive_seeker_capacity":MAX_LIVE_EXPLOSIVE_SEEKER_IMPACTS,
+		"explosive_seeker_recycles":_explosive_seeker_recycles,
+		"rejected_explosive_seeker_capacity":_rejected_explosive_seeker_capacity,
 		"mystery_purge_live":count_kind(MYSTERY_PURGE_PULSE_KIND),
 		"mystery_purge_capacity":MAX_LIVE_MYSTERY_PURGE_PULSES,
 		"mystery_purge_recycles":_mystery_purge_recycles,

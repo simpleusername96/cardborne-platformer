@@ -1,9 +1,9 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-08-10
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-11
 topic: Upgrade truth, contact damage, exact area-effect presentation, reinforcement recurrence, balance evidence, and final qualification
 scope: Upgrade-card progression copy and values, ordinary melee contact reliability, exact gameplay-footprint presentation for every displayed area effect, reinforcement-facility recurrence proof, locked enemy balance verification, and release qualification
 supersedes: ./2026-08-10-combat-correction-and-boss-pattern-expansion.md
@@ -19,9 +19,15 @@ related:
   - ../cardborne-performance-engineering-policy.md
   - ../cardborne-runtime-architecture-audit.md
   - ./2026-08-10-emp-wavefront-integration.md
+  - ./2026-08-11-combat-clarity-smoothness-difficulty.md
 ---
 
 # Combat, Upgrade, and Area-Effect Integrity - Execution Contract
+
+> Superseded on 2026-08-11 by
+> `2026-08-11-combat-clarity-smoothness-difficulty.md`. The successor preserves
+> completed work and owns the remaining qualification plus the newly authorized visual,
+> runtime, health-bar, boss-entry, and difficulty changes.
 
 The completed non-boss work remains in production. This contract finishes the newly
 verified progression and contact defects, proves the already-authored reinforcement and

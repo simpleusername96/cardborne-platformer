@@ -30,7 +30,10 @@ func _validate_configure_and_hidden_outcomes() -> void:
 	for device in Array(snapshot["devices"]):
 		_expect(is_equal_approx(float(device["health"]), 90.0), "intact device has 90 health")
 		_expect(is_equal_approx(float(device["max_health"]), 90.0), "device snapshot publishes max health")
-		_expect(is_zero_approx(float(device["health_visible_timer"])), "undamaged device hides its health bar")
+		_expect(
+			not Dictionary(device).has("health_visible_timer"),
+			"device snapshot carries no forbidden world-health-bar timer"
+		)
 		_expect(is_equal_approx(float(device["radius"]), 84.0), "intact device has radius 84")
 		_expect(StringName(device["state"]) == &"intact" and bool(device["visible"]), "intact device is visible")
 		_expect(not Dictionary(device).has("revealed_outcome"), "intact snapshot hides the outcome")
@@ -68,8 +71,8 @@ func _validate_damage_authority_and_break_event() -> void:
 	)
 	var damaged: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
 	_expect(
-		is_equal_approx(float(damaged["health_visible_timer"]), 1.5),
-		"authorized damage opens the device health bar for one and a half seconds"
+		not damaged.has("health_visible_timer"),
+		"authorized damage does not publish forbidden device health-bar state"
 	)
 	_expect(
 		StringName(damaged["revealed_outcome"]) == &"gravity_pull"
@@ -79,8 +82,8 @@ func _validate_damage_authority_and_break_event() -> void:
 	runtime.advance(0.5)
 	damaged = Dictionary(Array(runtime.snapshot()["devices"])[0])
 	_expect(
-		is_equal_approx(float(damaged["health_visible_timer"]), 1.0),
-		"device health-bar visibility counts down with the reused runtime advance"
+		not damaged.has("health_visible_timer"),
+		"runtime advance keeps device snapshots free of health-bar state"
 	)
 	var broken := runtime.receive_damage(&"a", 45.0, &"player", &"area")
 	var event := Dictionary(broken["break_event"])

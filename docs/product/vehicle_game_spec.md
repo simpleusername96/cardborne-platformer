@@ -84,15 +84,17 @@ five-stage run.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
-All non-boss enemy archetypes receive a final `2.60` health multiplier after the
-fixed profile and stage curve. The five ordinary health curve values are
-`[0.85, 1.00, 1.15, 1.30, 1.45]`. Boss health receives a separate final `2.60`
-multiplier on its authored curve.
-Ordinary enemy-sourced damage applies the shared `1.755` multiplier, followed
-by the stage curve `[1.00, 1.03, 1.06, 1.09, 1.12]`. These compose to
-`1.755/1.80765/1.8603/1.91295/1.9656`. Boss `final-effective` attacks and
-friendly or environmental damage bypass this ordinary multiplier exactly as
-before.
+All non-boss enemy archetypes receive the existing final `2.60` health
+multiplier after the fixed profile and shallow stage curve, then the stage
+pressure `[1.35, 1.40, 1.45, 1.50, 1.50]`. The five ordinary health curve values
+remain `[0.85, 1.00, 1.15, 1.30, 1.45]`. Boss health receives a separate final
+`3.90` multiplier on its authored curve.
+Ordinary enemy-sourced damage applies the shared `1.755` multiplier, the stage
+curve `[1.00, 1.03, 1.06, 1.09, 1.12]`, and the additional stage pressure
+`[1.15, 1.20, 1.25, 1.30, 1.30]`. For one authored damage point these compose
+to `2.01825/2.16918/2.325375/2.486835/2.55528`. Boss `final-effective` attacks
+use their separate `1.30` multiplier and bypass the ordinary multiplier and
+ordinary stage pressure. Friendly or environmental damage bypasses both.
 Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
 `0.75 s`; both healing outputs are twice their previous values.
 
@@ -325,7 +327,13 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    at 0.55/0.45, and never exceeds the role's original speed. With no overlap,
    separation leaves the smoothed role velocity unchanged. Inner-wall recovery and committed
    attack paths take priority. High density near the player is an allowed
-   convergence result. Stationary roles hold authored anchors.
+   convergence result. Stationary roles hold authored anchors. The tuned mobile
+   base speeds are Scrap Drone/Chaser/Rammer `190`, Needle Drone `176`, Shield
+   Escort `170`, Shooter `166`, Bulkhead Guard `164`, Repair Tender `159`,
+   Splitter Barge `157`, Controller `150`, Artillery Spotter `140`, Drone Carrier
+   `136`, and Spark Minelet `100` pixels per second. With the Stage 5 `1.04`
+   curve, every ordinary continuous movement speed remains below the player's
+   `280 px/s`; explicitly committed charges remain exceptions.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
    or stage completion and summons do not count toward the quota.
    At 35% quota progress, one separate reinforcement facility activates at a
@@ -341,7 +349,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 6. On reaching the quota, ordinary spawning stops and a 1.5-second boss warning
    identifies a reachable arrival anchor at least 1200 pixels from the player
    when the field permits it. Boss creation and boss-defeat completion reject
-   calls unless the quota has been reached and the warning has resolved.
+   calls unless the quota has been reached and the warning has resolved. If the
+   enemy store cannot preserve the boss-entry reserve when the warning ends,
+   boss entry stays pending and retries every progression tick. It begins once
+   live enemies fall to the safe threshold and never exceeds the 320-enemy cap.
 7. The boss enters the same field and pursues the player. It does not wait in a
    sealed arena. It repositions during its read state, predicts the player once
    when selecting an attack, then freezes its position and committed geometry
@@ -380,7 +391,7 @@ active window, and recovery. Routine hits never interrupt or stop the boss, and
 every direct pattern remains committed after its warning appears.
 
 Each boss owns one body-attached shield and no external objective actor.
-`shield_up` applies `0.15×` damage. Completing a direct boss attack lowers the
+`shield_up` applies `0.12×` damage. Completing a direct boss attack lowers the
 shield for four seconds, during which damage is `1.00×`, then the shield returns.
 Phase thresholds start the next phase and raise the shield but are not HP floors.
 The boss body owns the shield state and one always-visible world-attached health
@@ -464,6 +475,11 @@ publishes one origin receipt only after damage resolution. Its cosmetic has a
 store. When saturated, it may recycle only another Drop Mine cosmetic; missing
 feedback never cancels or duplicates damage.
 
+Each Seeker missile applies its level-owned direct damage, then one `12` damage
+kinetic burst to other enemies inside `95` world units. The direct target is not
+damaged twice. Damage resolves before the bounded Explosive Seeker impact receipt;
+missing or recycled feedback never cancels or repeats gameplay damage.
+
 ### UI, guidebook, and persistence
 
 - Every player-facing world, actor, projectile, reward, effect, HUD, modal,
@@ -478,8 +494,8 @@ feedback never cancels or duplicates damage.
   cues. Dash feedback uses a directional afterimage and rear-anchor flare,
   never a danger ring or radial burst.
 - The fixed-capacity transient effect buffer contains dash afterimage, EMP
-  charge/release, the approved Thermal Burst impact receipt, bounded Mystery
-  purge pulses, and the separate Drop Mine receipt. It keeps its 96-effect
+  charge/release, Thermal Burst, bounded Mystery purge pulses, Drop Mine, and
+  Explosive Seeker impact receipts. It keeps its 96-effect
   ceiling, at most 24 live Thermal impacts, and at most eight live Drop Mine
   receipts; saturated Thermal
   feedback may recycle the oldest Thermal impact or drop the new cosmetic
@@ -497,6 +513,12 @@ feedback never cancels or duplicates damage.
   otherwise it points to the player or an active Decoy target. Controller spin
   and nondirectional mine/generator bodies are the only exceptions. The renderer
   consumes this field and does not infer AI targets.
+- The renderer keeps one fixed-capacity presentation sample for each enemy pool
+  slot and generation. It interpolates scheduled `20/30 Hz` movement samples
+  without changing simulation position, collision, targeting, or decision
+  cadence, and resets on first appearance, pool reuse, reactivation, or a large
+  discontinuity. Bodies and all attached shield, support, semantic, and health
+  cues consume the same presented position.
 - The live HUD prioritizes hull, XP, numeric stage progress, EMP,
   minimap, and exceptional timed effects. A panel-free top-left B stack shows only
   localized stage and defeated labels with `current / total` values. At compact,
@@ -519,8 +541,11 @@ feedback never cancels or duplicates damage.
   (`turret`, `interceptor_tower`, `beam_sentinel`, and `generator`) own thick,
   backed health bars above their world bodies. Mobile enemies, mines, Mystery
   Devices, and reward crates never receive world health bars. Installation bars
-  use a deterministic 12-actor cap. All world health bars share one retained
-  batch with a fixed 28-instance ceiling.
+  use a deterministic 12-actor cap. Fill left edges remain fixed at every health
+  ratio. Installation, boss, and facility half-widths clamp to `42–72`,
+  `96–120`, and `88–112` world units; complete bars prefer the body top, move
+  below when the top edge would clip, and clamp inside the visible world. All
+  world health bars share one retained batch with a fixed 28-instance ceiling.
 - The threat radar samples at five hertz and aggregates contacts into at most 12
   directional sectors around the player. It includes targetable non-boss enemy
   bodies outside the visible world rectangle and within 1,200 world units as dim
@@ -546,8 +571,8 @@ feedback never cancels or duplicates damage.
   silhouette scale.
 - Electric Field displays its complete selected damage radius of 120, 140, or
   160 world units as one ground-attached arc-purple area below actors. The area
-  uses a restrained fill, one broken perimeter, and at most four broad internal
-  planes; it is not a shield and owns no collision or damage query. Gameplay
+  uses a restrained fill and at most two broad low-contrast internal planes. It
+  has no perimeter, is not a shield, and owns no collision or damage query. Gameplay
   retains the 0.25-second tick, line-of-sight rule, and enemy-body overlap test.
 - Every displayed area effect contains a continuous low-alpha body from its
   center through its exact gameplay boundary. A perimeter or authored impact
@@ -558,17 +583,18 @@ feedback never cancels or duplicates damage.
   timing and never performs collision or damage queries.
 - The exact area presentation contract is:
   - Electric Field follows the player for its complete active interval at radius
-    `120/140/160` with a full arc-purple disk, internal planes, and one restrained
-    perimeter, all clipped inside the live damage radius.
+    `120/140/160` with a full arc-purple disk and at most two low-contrast internal
+    planes, all clipped inside the live damage radius and with no perimeter.
   - EMP charge follows the player and previews a full inner `285` damage/stun disk
-    plus a full outer `325` hostile-projectile-clear disk. On release, both
-    envelopes resolve immediately at the release position and appear at final
-    size for the `0.55 s` fade; the authored octagon is an inner-envelope accent,
-    not an outward-moving damage front.
-  - Thermal Burst shows a full radius `72/84/96` disk from its direct-hit center;
-    the approved impact is a centered accent. Drop Mine shows a full radius
-    `96/108/120` disk at the mine origin; its approved detonation is a centered
-    accent. Both resolve at final size and only fade during their `0.18 s` life.
+    plus a sparse segmented `285–325` hostile-projectile-clear utility fringe. On
+    release, both resolve immediately at the release position and appear at final
+    size for the `0.55 s` fade. Neither standard nor reduced motion uses an
+    outward-moving damage front or shape-only image accent.
+  - Thermal Burst shows a full radius `72/84/96` disk from its direct-hit center.
+    Drop Mine shows a full radius `96/108/120` disk at the mine origin. Explosive
+    Seeker shows its full `95` radius at the impact point. Each complete footprint
+    uses one synchronized `0.18 s` attack/hold/fade envelope with no independently
+    shrinking or disappearing middle shape.
   - Mystery Projectile Purge shows its full `420` hostile-projectile-clear disk
     immediately at the device position; its single boundary may remain as an
     accent.
@@ -578,6 +604,11 @@ feedback never cancels or duplicates damage.
   - Every boss circular damaging startup/window fills the complete committed
     radius with a restrained thermal body plus its single outer boundary. Beam
     startup and active continue to fill their exact clipped damage rectangle.
+- Protection, damage, and support keep distinct geometry. A shield is one closed
+  boundary attached to the protected body. A laser or beam is a filled damage
+  corridor. Repair Tender healing is a segmented source-to-recipient mint link
+  with an open recipient chevron; it is neither a solid damage beam nor a closed
+  shield ring.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, bosses, and field objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered

@@ -34,6 +34,7 @@ const EXPECTED_EVENT_IDS := [
 	"player_emp_release",
 	"thermal_burst_impact",
 	"drop_mine_detonation",
+	"explosive_seeker_impact",
 	"mystery_projectile_purge",
 ]
 
@@ -108,6 +109,7 @@ func _validate_event_catalog() -> void:
 		&"emp_area":1,
 		&"thermal_area":1,
 		&"drop_mine_area":1,
+		&"explosive_seeker_area":1,
 		&"mystery_purge_pulse":1,
 	}
 	var mode_counts := {}
@@ -152,16 +154,18 @@ func _validate_event_producers() -> void:
 			"VehicleRun emits an unmapped visual event: %s" % event_id
 		)
 	for event_id in EXPECTED_EVENT_IDS:
-		if event_id in ["drop_mine_detonation", "mystery_projectile_purge"]:
+		if event_id in [
+			"drop_mine_detonation",
+			"explosive_seeker_impact",
+			"mystery_projectile_purge",
+		]:
+			var constant_name := "MYSTERY_PURGE_PULSE_KIND"
+			if event_id == "drop_mine_detonation":
+				constant_name = "DROP_MINE_DETONATION_KIND"
+			elif event_id == "explosive_seeker_impact":
+				constant_name = "EXPLOSIVE_SEEKER_IMPACT_KIND"
 			_expect(
-				run_source.contains(
-					"EffectStore.%s"
-					% (
-						"DROP_MINE_DETONATION_KIND"
-						if event_id == "drop_mine_detonation"
-						else "MYSTERY_PURGE_PULSE_KIND"
-					)
-				),
+				run_source.contains("EffectStore.%s" % constant_name),
 				"VehicleRun does not emit the constant-owned event: %s" % event_id
 			)
 			continue
@@ -170,7 +174,7 @@ func _validate_event_producers() -> void:
 			"VehicleRun does not emit required transient event: %s" % event_id
 		)
 	_expect(
-		produced.size() == EXPECTED_EVENT_IDS.size() - 2,
+		produced.size() == EXPECTED_EVENT_IDS.size() - 3,
 		"VehicleRun emits exactly the four reviewed direct transient event IDs"
 	)
 	var secondary_source := FileAccess.get_file_as_string(SECONDARY_PATH)

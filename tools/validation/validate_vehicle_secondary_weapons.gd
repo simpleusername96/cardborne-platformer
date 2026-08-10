@@ -162,6 +162,10 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 				"homing level %d uses %.0f damage per missile"
 				% [upgrade_level, expected_damage[upgrade_level]]
 			)
+			_expect(
+				bool(projectile["explosive"]),
+				"Seeker missiles publish their 95-unit explosive collision contract"
+			)
 
 
 func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:

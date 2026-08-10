@@ -5,6 +5,7 @@ const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
@@ -555,8 +556,50 @@ func _check_boss_progression_gate(run) -> void:
 	run.call("_start_stage_boss")
 	_expect(run.call("_find_enemy_by_id", "stage_boss") == null, "boss remains blocked one defeat before quota")
 	_expect(run.stage_flow.record_countable_defeat(), "final ordinary defeat begins the boss warning")
+	var blocked_live_count := (
+		EnemyStore.MAX_LIVE_HOSTILES
+		- BossPhaseCatalog.BOSS_ENTRY_SLOT_RESERVE
+		+ 1
+	)
+	var filler_ids := PackedStringArray()
+	while run.enemy_store.live_count() < blocked_live_count:
+		var filler_id := "boss_capacity_filler_%03d" % filler_ids.size()
+		var filler: EnemyState = run.call("_make_enemy", {
+			"id":filler_id,
+			"role":&"scrap_drone",
+			"pos":run.player_position + Vector2(float(filler_ids.size()), 500.0),
+			"active":true,
+		})
+		if filler == null or not run.call("_append_enemy", filler):
+			break
+		filler_ids.append(filler_id)
 	run.call("_update_stage_progression", 1.5)
-	_expect(run.call("_find_enemy_by_id", "stage_boss") != null, "boss spawns only after quota and warning")
+	_expect(
+		run.stage_flow.boss_entry_ready()
+			and run.call("_find_enemy_by_id", "stage_boss") == null
+			and run.enemy_store.live_count() == blocked_live_count,
+		"boss entry remains pending when the reserved capacity is unavailable"
+	)
+	var released_filler_id := String(filler_ids[0])
+	var released_filler: EnemyState = run.call(
+		"_find_enemy_by_id", released_filler_id
+	)
+	released_filler.alive = false
+	run.enemy_store.queue_defeat(released_filler)
+	run.enemy_store.flush_defeated()
+	run.call("_update_stage_progression", 0.0)
+	_expect(
+		run.call("_find_enemy_by_id", "stage_boss") != null
+			and run.enemy_store.live_count() <= EnemyStore.MAX_LIVE_HOSTILES,
+		"pending boss entry retries after one slot clears and never exceeds capacity"
+	)
+	for filler_id in filler_ids:
+		var filler_enemy: EnemyState = run.call("_find_enemy_by_id", String(filler_id))
+		if filler_enemy == null:
+			continue
+		filler_enemy.alive = false
+		run.enemy_store.queue_defeat(filler_enemy)
+	run.enemy_store.flush_defeated()
 
 
 func _check_boss_damage_and_guidance(run, ui) -> void:
@@ -577,9 +620,9 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 		)
 	)
 	_expect(
-		is_equal_approx(applied, 15.0)
-			and is_equal_approx(health_before - boss.health, 15.0),
-		"raised boss shield reduces damage to fifteen percent"
+		is_equal_approx(applied, 12.0)
+			and is_equal_approx(health_before - boss.health, 12.0),
+		"raised boss shield reduces damage to twelve percent"
 	)
 	_expect(
 		run.effects.size() == effect_count_before,

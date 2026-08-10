@@ -1,8 +1,8 @@
 class_name VehicleEffectVisualCatalog
 extends RefCounted
 
-## Authored-image lookup for the retained dash afterimage batch. Visual event
-## feedback, including the authored EMP, is owned by VehicleVisualEventCatalog.
+## Authored-image lookup for the retained dash afterimage batch. Code-native
+## transient effect modes are owned by VehicleVisualEventCatalog.
 
 const DESCRIPTORS := {
 	&"dash_afterimage": {
