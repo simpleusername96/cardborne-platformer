@@ -880,25 +880,32 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 - 2026-08-10: The built-Web workload completed, but the automation browser identified itself
   as headless and scheduler-throttled. Preserve it as an ineligible diagnostic and do not issue
   a Web release-performance label.
+- 2026-08-10: The revised code-native renderer was qualified at clean commit `982fef4c`.
+  Both native workloads are scenario-valid and authority-eligible but fail release frame
+  thresholds. The first peak attempt was preserved as unfocused evidence and replaced once
+  by a focused run under the invalid-sample rule. The current built-Web peak workload is
+  correct but remains headless and scheduler-throttled, so it is diagnostic-only.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 5 final qualification and durable closeout.
-- Next task: commit the accepted code-native renderer/build evidence, then rerun the clean
-  final native pair and built-Web diagnostic once because the renderer input changed.
+- Next task: collect the user-driven normal-play trace through the reported slow period,
+  inspect it, and then close Task 5.3 plus the durable plan lifecycle.
 - Last completed gate: the revised focused final batch passed all 12 contract validators,
   visual authority, Godot import, and `git diff --check`. The 115-capture runtime matrix and
   24-case color/grayscale sheet show continuous exact-area bodies. Web export reports
   `WEB_EXPORT_OK`; the newly built product starts on the guarded `codex` lane, switches Korean
   to English, shows the immediate complete EMP footprint, and records ordinary collision/melee
   contact in its failure report with no browser console warnings or errors.
-- Final qualification evidence: native `peak_horde` and `capacity_pressure` are scenario-valid,
-  authority-eligible 10+60 second samples but fail release thresholds. Median FPS is `19.09`
-  and `7.50`; enemies/grid p95 is `11.84/14.17 ms`, contact p95 is `0.584/0.680 ms`, and native
-  GPU time is `1.61/1.70 ms`. The Web peak workload is correct but release-ineligible because
-  the automation browser is headless and scheduler-throttled. Exact payloads and the narrow
-  non-causal diagnosis are recorded in `../semantic-v2-runtime-acceptance-evidence.md`.
+- Final qualification evidence: revised native `peak_horde` and `capacity_pressure` are
+  scenario-valid, authority-eligible 10+60 second samples but fail release thresholds. Median
+  FPS is `12.13/7.50`; enemies/grid p95 is `13.04/17.15 ms`, contact p95 is `0.685/0.786 ms`,
+  combat/effects p95 is `3.11/5.91 ms`, draw-call p95 is `82/82`, batches are `39/39`, and
+  native GPU time is `1.62/1.75 ms`. The current Web peak workload is correct but release-
+  ineligible because the automation browser is headless and scheduler-throttled. Exact
+  payloads and the narrow non-causal diagnosis are recorded in
+  `../semantic-v2-runtime-acceptance-evidence.md`.
 - Verified source baseline: clean commit `04839774` preceded the Task 0.1/0.2 work. The
   former crate-warning failure was fixture contamination from generated cover; the isolated
   one-crate clear-path fixture passes without a runtime geometry change. Per user direction,
@@ -911,10 +918,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   retired, and the revised code-native renderer has current native capture and built-Web
   evidence. The prior final qualification remains historical and does not qualify the revised
   renderer input.
-- Manual-trace status: the final trace launcher was started only after all fixes and synthetic
-  qualification. No user gameplay or normal close occurred during the bounded wait, so it was
-  stopped without a JSON and without substituting synthetic input. Task 5.3 remains open for
-  that user-driven trace; the red synthetic evidence has already been preserved.
+- Manual-trace status: the prior launcher attempt produced no JSON because no user gameplay
+  or normal close occurred. The revised synthetic evidence is complete, but Task 5.3 remains
+  open for one user-driven normal-play trace through the reported slow period; synthetic input
+  is not an acceptable substitute.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 

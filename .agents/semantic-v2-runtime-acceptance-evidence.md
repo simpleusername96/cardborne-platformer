@@ -539,6 +539,36 @@ recovery path.
   logs, with zero warnings or errors. The exact task-owned Python server was
   stopped and port `13029` was verified free.
 
-The native and Web performance payloads in the preceding checkpoint predate
-this renderer input and remain historical only. A clean final qualification is
-required before issuing a current performance label.
+### Revised final performance qualification
+
+Clean commit `982fef4c6b832067a55e5ff2be0fd0b81548d6fb` produced the current
+native 1280x720 `gl_compatibility` pair with 10 seconds of warmup and 60 seconds
+of sampling. Both workloads are scenario-valid, authority-eligible, focused,
+and tied to the clean commit. Both fail the native release frame thresholds:
+
+| Scenario | Median / 1% low FPS | Frame p95 / p99 | Physics p95 | Enemies + grid p95 | Contact p95 | Combat/effects p95 | Presentation p95 | Draw p95 / batches | Render CPU / GPU |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `peak_horde` | `12.13 / 7.17` | `133.33 / 137.71 ms` | `18.61 ms` | `13.04 ms` | `0.685 ms` | `3.11 ms` | `3.25 ms` | `82 / 39` | `0.71 / 1.62 ms` |
+| `capacity_pressure` | `7.50 / 6.75` | `144.44 / 147.52 ms` | `26.29 ms` | `17.15 ms` | `0.786 ms` | `5.91 ms` | `4.97 ms` | `82 / 39` | `0.71 / 1.75 ms` |
+
+The first peak attempt recorded every sample as unfocused. It is preserved as
+`982fef4c-peak_horde-60s-unfocused.json` and was replaced once by a focused run
+under the invalid-sample rule. No workload, threshold, gameplay, or visual input
+changed between those attempts.
+
+The current built-Web peak payload has the exact expected actor/projectile/
+effect workload, but the automation browser identifies itself as
+`HeadlessChrome`; `authority_eligible=false` and `scheduler_throttled=true`.
+Its `7.50` median FPS and `6.67` 1% low remain an ineligible diagnostic, not a
+Web release-performance claim. Current ignored payloads are:
+
+- `build/performance/combat-upgrade-effect-integrity/982fef4c-peak_horde-60s.json`
+- `build/performance/combat-upgrade-effect-integrity/982fef4c-capacity_pressure-60s.json`
+- `build/performance/combat-upgrade-effect-integrity/982fef4c-web-peak-horde-60s.json`
+
+The renderer budgets remain green, and neither contact nor presentation is the
+largest named native subsystem. The accepted full-area bodies were not reduced
+to manufacture a pass. Because there is still no comparable pre-change
+baseline, these samples make no causal regression claim. One user-driven
+normal-play trace through the reported slow period remains required before the
+active plan's performance task can close.
