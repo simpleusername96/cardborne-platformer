@@ -1240,8 +1240,11 @@ func _capture_exact_area_effect_evidence() -> void:
 			settings.reduced_motion = reduced_motion
 		var center := _prepare_exact_area_scene(0.90)
 		_run._start_emp()
-		_run.effects[-1].time = _run.effects[-1].duration
-		_add_exact_area_reference_markers(center, 285.0, 325.0)
+		var emp_effect = _run.effects[-1]
+		emp_effect.time = emp_effect.duration
+		_add_exact_area_reference_markers(
+			center, emp_effect.radius, emp_effect.secondary_radius
+		)
 		_run.capture_set_mode(&"paused")
 		_refresh_combat_capture()
 		await _run.get_tree().process_frame
@@ -1252,8 +1255,11 @@ func _capture_exact_area_effect_evidence() -> void:
 
 		center = _prepare_exact_area_scene(0.90)
 		_run._release_emp()
-		_run.effects[-1].time = _run.effects[-1].duration
-		_add_exact_area_reference_markers(center, 285.0, 325.0)
+		emp_effect = _run.effects[-1]
+		emp_effect.time = emp_effect.duration
+		_add_exact_area_reference_markers(
+			center, emp_effect.radius, emp_effect.secondary_radius
+		)
 		_run.capture_set_mode(&"paused")
 		_refresh_combat_capture()
 		await _run.get_tree().process_frame
@@ -1263,18 +1269,17 @@ func _capture_exact_area_effect_evidence() -> void:
 		)
 
 	var mystery_profiles := [
-		[&"gravity_pull", 480.0, 0.60, "09v-mystery-gravity-pull.png"],
-		[&"cryo_lock", 360.0, 0.80, "09w-mystery-cryo-lock.png"],
-		[&"projectile_purge", 420.0, 0.70, "09x-mystery-projectile-purge.png"],
-		[&"decoy_signal", 900.0, 0.35, "09y-mystery-decoy-signal.png"],
+		[&"gravity_pull", 0.60, "09v-mystery-gravity-pull.png"],
+		[&"cryo_lock", 0.80, "09w-mystery-cryo-lock.png"],
+		[&"projectile_purge", 0.70, "09x-mystery-projectile-purge.png"],
+		[&"decoy_signal", 0.35, "09y-mystery-decoy-signal.png"],
 	]
 	if settings != null:
 		settings.reduced_motion = false
 	for profile_variant in mystery_profiles:
 		var profile := Array(profile_variant)
 		var outcome := StringName(profile[0])
-		var radius := float(profile[1])
-		var center := _prepare_exact_area_scene(float(profile[2]))
+		var center := _prepare_exact_area_scene(float(profile[1]))
 		_run.mystery_device_runtime.configure(
 			[{"id":&"capture_mystery", "pos":center, "outcome":outcome}],
 			1701,
@@ -1286,14 +1291,16 @@ func _capture_exact_area_effect_evidence() -> void:
 		if not bool(receipt.get("broken", false)):
 			push_error("exact-area Mystery fixture did not resolve %s" % outcome)
 			continue
-		_run._handle_mystery_device_break(Dictionary(receipt["break_event"]))
+		var event := Dictionary(receipt["break_event"])
+		var radius := float(event["radius"])
+		_run._handle_mystery_device_break(event)
 		if outcome == &"projectile_purge" and not _run.effects.is_empty():
 			_run.effects[-1].time = _run.effects[-1].duration
 		_add_exact_area_reference_markers(center, radius, radius)
 		_run.capture_set_mode(&"paused")
 		_refresh_combat_capture()
 		await _run.get_tree().process_frame
-		_save_capture(String(profile[3]))
+		_save_capture(String(profile[2]))
 	if settings != null:
 		settings.reduced_motion = original_reduced_motion
 	_run._camera.zoom = Vector2.ONE
