@@ -36,6 +36,11 @@ var attack_cooldown := 0.0
 var committed_dir := Vector2.LEFT
 var committed_target := Vector2.ZERO
 var hit_committed := false
+# Contact resolution snapshots the physics-start position and the attack motion
+# that occurred this tick. The resolver remains the only owner of hull damage.
+var contact_previous_position := Vector2.ZERO
+var contact_cooldown := 0.0
+var contact_attack: StringName = &""
 var burst_left := 0
 var burst_timer := 0.0
 var stun := 0.0
@@ -115,6 +120,9 @@ var motion_elapsed := 0.0
 
 func reset_runtime_collections() -> void:
 	statuses.clear()
+	contact_previous_position = pos
+	contact_cooldown = 0.0
+	contact_attack = &""
 	toxin_stack_ratio = 0.0
 	cryo_stack_ratio = 0.0
 	toxin_application_pulse = 0.0

@@ -53,6 +53,9 @@ const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
 const EnemyLocalSteering = preload("res://scripts/enemies/vehicle_enemy_local_steering.gd")
+const EnemyContactRuntime = preload(
+	"res://scripts/enemies/vehicle_enemy_contact_runtime.gd"
+)
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
@@ -233,6 +236,7 @@ var completed_stage_reports: Array[Dictionary] = []
 
 var enemy_store := EnemyStore.new()
 var _enemy_update_schedule := EnemyUpdateSchedule.new()
+var _enemy_contact_runtime := EnemyContactRuntime.new()
 var enemy_grid := SpatialGrid.new()
 var enemies: Array[EnemyState] = enemy_store.live
 var _enemy_query_buffer: Array[EnemyState] = []
@@ -284,6 +288,8 @@ var _query_enemy_radius_callable: Callable
 var _enemy_find_callable: Callable
 var _runtime_attack_path_callable: Callable
 var _runtime_charge_path_callable: Callable
+var _damage_player_callable: Callable
+var _enemy_contact_damage_callable: Callable
 var _elite_pending := 0
 var _elite_spawned := 0
 var _elite_threshold_cursor := 0
@@ -373,6 +379,11 @@ func _ready() -> void:
 	_enemy_find_callable = Callable(enemy_store, "find")
 	_runtime_attack_path_callable = Callable(self, "_runtime_attack_path_end")
 	_runtime_charge_path_callable = Callable(self, "_runtime_charge_path_end")
+	_damage_player_callable = Callable(self, "_damage_player")
+	_enemy_contact_damage_callable = Callable(self, "_enemy_contact_damage")
+	_enemy_contact_runtime.configure(
+		_damage_player_callable, _enemy_contact_damage_callable
+	)
 	_rng.seed = 0xC4A2B0
 	_layout_session_rng.randomize()
 	_layout_session_seed = _layout_session_rng.seed
@@ -536,7 +547,7 @@ func _physics_process(delta: float) -> void:
 		if _performance_detail_sample_active:
 			subsystem_ms["encounter_and_pursuit"] = _elapsed_ms(section_started)
 			section_started = Time.get_ticks_usec()
-		_update_enemies(delta)
+		_update_enemies(delta, pickup_motion_start)
 		if _performance_detail_sample_active:
 			for section_name in _performance_enemy_sections:
 				subsystem_ms["enemy_%s" % String(section_name)] = _performance_enemy_sections[section_name]
@@ -2012,7 +2023,10 @@ func _update_experience(delta: float) -> void:
 	_advance_reward_queue()
 
 
-func _update_enemies(delta: float) -> void:
+func _update_enemies(
+	delta: float,
+	player_contact_previous_position: Vector2
+) -> void:
 	var performance_active := _performance_detail_sample_active
 	var section_started := Time.get_ticks_usec() if performance_active else 0
 	_prepare_mystery_device_effects(delta)
@@ -2040,6 +2054,9 @@ func _update_enemies(delta: float) -> void:
 	for enemy in enemies:
 		if not enemy.alive:
 			continue
+		if enemy.active:
+			enemy.contact_previous_position = enemy.pos
+			enemy.contact_attack = &""
 		var flash := enemy.flash
 		if flash > 0.0:
 			enemy.flash = maxf(0.0, flash - delta)
@@ -2160,6 +2177,16 @@ func _update_enemies(delta: float) -> void:
 			scheduled_started
 		)
 		section_started = Time.get_ticks_usec()
+	_enemy_contact_runtime.advance(
+		_enemy_update_schedule.active,
+		player_contact_previous_position,
+		player_position,
+		delta
+	)
+	if performance_active:
+		_performance_enemy_sections["contact_resolution"] = _elapsed_ms(
+			section_started
+		)
 
 
 func _prepare_mystery_device_effects(delta: float) -> void:
@@ -2626,17 +2653,6 @@ func _update_ordinary_enemy(
 	enemy.attack_cooldown = maxf(0.0, enemy.attack_cooldown - delta * StatusRuntime.speed_multiplier(enemy))
 	if enemy.role in [&"bulkhead_guard", &"splitter_barge"]:
 		_move_enemy_role(enemy, motion_delta, false, decision_due)
-		if (
-			motion_delta > 0.0
-			and
-			enemy.attack_cooldown <= 0.0
-			and enemy.pos.distance_to(player_position)
-				<= enemy.radius + Rules.PLAYER_RADIUS + 12.0
-		):
-			_damage_player(
-				_enemy_contact_damage(enemy, 12.0), "Enemy hull impact", true
-			)
-			enemy.attack_cooldown = 0.8
 		return false
 	var phase := enemy.phase
 	if phase == &"interrupted_recovery":
@@ -2702,6 +2718,7 @@ func _update_collective_enemy(
 			return true
 		&"execute":
 			if enemy.collective_mode in [&"charge", &"fuse"]:
+				enemy.contact_attack = EnemyContactRuntime.ATTACK_COLLECTIVE
 				var before := enemy.pos
 				var requested := (
 					enemy.collective_direction
@@ -2723,17 +2740,6 @@ func _update_collective_enemy(
 					collective_tactics.break_squad(
 						enemy.squad_id,
 						&"cover_collision"
-					)
-				elif (
-					not enemy.hit_committed
-					and player_position.distance_to(after)
-						<= enemy.radius + Rules.PLAYER_RADIUS + 10.0
-				):
-					enemy.hit_committed = true
-					_damage_player(
-						_enemy_contact_damage(enemy, 12.0),
-						"Collective charge",
-						true
 					)
 			else:
 				var to_slot := enemy.collective_target - enemy.pos
@@ -2953,6 +2959,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 	enemy.phase_time = maxf(0.0, enemy.phase_time - delta)
 	match role:
 		&"chaser":
+			enemy.contact_attack = EnemyContactRuntime.ATTACK_CHASER
 			var chaser_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			var before := enemy.pos
 			enemy.pos = _runtime_charge_path_end(
@@ -2963,20 +2970,6 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 					* delta,
 				enemy.radius
 			)
-			if (
-				not enemy.hit_committed
-				and player_position.distance_to(enemy.pos)
-					<= AttackContract.contact_danger_half_width(
-						enemy.radius,
-						float(chaser_attack["contact_padding"])
-					)
-			):
-				enemy.hit_committed = true
-				_damage_player(
-					_enemy_contact_damage(enemy, float(chaser_attack["damage"])),
-					"Rivet Chaser lunge",
-					true
-				)
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 0.52
@@ -3006,6 +2999,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 1.2
 		&"rammer":
+			enemy.contact_attack = EnemyContactRuntime.ATTACK_RAMMER
 			var before := enemy.pos
 			var requested := enemy.committed_dir * SpecialistRuntime.RAMMER_SPEED * delta
 			var after := _runtime_charge_path_end(
@@ -3016,20 +3010,6 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			)
 			enemy.pos = after
 			var struck_cover := before.distance_to(after) + 1.0 < requested.length()
-			if (
-				not enemy.hit_committed
-				and player_position.distance_to(after)
-					<= AttackContract.contact_danger_half_width(
-						enemy.radius,
-						SpecialistRuntime.RAMMER_CONTACT_PADDING
-					)
-			):
-				enemy.hit_committed = true
-				_damage_player(
-					_enemy_contact_damage(enemy, SpecialistRuntime.RAMMER_DAMAGE),
-					"Rammer charge",
-					true
-				)
 			if struck_cover or enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = SpecialistRuntime.RAMMER_RECOVERY
@@ -4172,21 +4152,26 @@ func _damage_player(
 	enemy_source: bool = true,
 	final_effective: bool = false,
 	grant_hit_protection: bool = true
-) -> void:
+) -> bool:
 	if not _simulation_active() or player_invulnerable > 0.0 or stage_complete:
-		return
+		return false
 	var remaining := _scaled_incoming_damage(amount, enemy_source, final_effective)
+	if remaining <= 0.0:
+		return false
+	var accepted := false
 	if blockable and player_barrier_strength > 0.0 and player_barrier_timer > 0.0:
 		var absorbed := minf(player_barrier_strength, remaining)
 		player_barrier_strength -= absorbed
 		remaining -= absorbed
 		if absorbed > 0.0:
+			accepted = true
 			player_barrier_hit_flash = PLAYER_BARRIER_HIT_FLASH_DURATION
 			_play_sound(&"cover", 1.04)
 		if player_barrier_strength <= 0.0:
 			_ui.notify(tr("NOTIFY_BARRIER_DEPLETED"), 1.6, Rules.CORAL)
 	if remaining <= 0.0:
-		return
+		return accepted
+	accepted = true
 	encounter_runtime.record_player_damage(_damage_source_family(source, enemy_source))
 	player_health = maxf(
 		1.0 if boss_practice.active and boss_practice.invulnerable else 0.0,
@@ -4207,6 +4192,7 @@ func _damage_player(
 	_play_sound(&"hurt")
 	if player_health <= 0.0:
 		_handle_player_defeat()
+	return accepted
 
 
 func _scaled_incoming_damage(amount: float, enemy_source: bool, final_effective: bool = false) -> float:

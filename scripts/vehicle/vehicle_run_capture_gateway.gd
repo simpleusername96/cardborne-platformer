@@ -599,7 +599,7 @@ func _advance_movement_capture_segment(
 			(_run._far_enemy_simulation_bucket + 1)
 			% _run.FAR_ENEMY_SIMULATION_BUCKET_COUNT
 		)
-		_run._update_enemies(DELTA)
+		_run._update_enemies(DELTA, _run.player_position)
 		metrics["chaser_travel"] = (
 			float(metrics["chaser_travel"])
 			+ previous_chaser.distance_to(chaser.pos)
