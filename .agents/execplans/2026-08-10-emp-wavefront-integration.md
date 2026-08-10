@@ -223,7 +223,7 @@ Preconditions:
 Source owners: `replacement-workbench.json`, `to-be/assets/`,
 `art/visuals/production/gameplay/effects/fx_emp_release.png`, generated workbench files
 
-- [ ] **3.1** Stage the exact approved candidate for the existing switch unit.
+- [x] **3.1** Stage the exact approved candidate for the existing switch unit.
   - Change: append the existing approval/application ledger to an immutable unit-local
     revision-history entry before changing any active field; copy only the approved
     candidate bytes into the mirrored TO-BE path; update the existing EMP unit's active
@@ -232,13 +232,13 @@ Source owners: `replacement-workbench.json`, `to-be/assets/`,
   - Accept: deterministic workbench build/check and technical promotion preview pass with
     the exact candidate hash, and the prior `d4709789...` production approval/application
     remains recoverable from the hand-authored workbench source without consulting Git.
-- [ ] **3.2** Promote the exact asset and record application.
+- [x] **3.2** Promote the exact asset and record application.
   - Change: from a clean committed worktree, run the scoped promotion script with `-Apply`,
     then record the application commit/time/evidence and return the unit to `applied`.
   - Accept: production PNG hash equals the approved candidate hash; manifest path, ID,
     dimensions, pivot, and gameplay scale contract remain unchanged.
   - Guard: do not retire or delete any additional path.
-- [ ] **3.3** Rebuild and validate all asset projections.
+- [x] **3.3** Rebuild and validate all asset projections.
   - Change: regenerate `inventory.json` and `index.html` from the one hand-authored
     workbench source.
   - Accept: workbench check, visual replacement coverage, semantic asset provider, and
@@ -324,11 +324,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: exact user approval boundary between Phase 2 and Phase 3.
-- Next task: after exact comparison approval, 3.1 - stage the approved candidate while
-  preserving the prior workbench revision ledger.
-- Last completed gate: Phase 2 focused renderer/effect-store checks; the Phase 2 user
-  approval gate remains open.
+- Current phase: Phase 4 - Production qualification and closeout.
+- Next task: 4.1 - run final focused source and import checks from the applied production
+  checkpoint.
+- Last completed gate: Phase 3 applied-asset projection and focused integration gate.
 - Evidence on 2026-08-10:
   - Candidate `558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896`,
     comparison `7a28b3604fbef5750b2b7ad061ba6ab43f495a3776e2c70e1b2320713f5ff133`,
@@ -347,6 +346,19 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   - The deterministic workbench check and validator both pass with `units=23`,
     `current=69`, `final=69`, and `authored=67`; the candidate remains outside the
     production projection.
+  - BK approved the exact comparison with `ㅇㅇ 적용` on 2026-08-10. The approved
+    candidate hash is `558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896`.
+  - Switch-ready baseline commit `3bfbf7da89a71876ef735c573257f2b5b5b1c894`
+    preserves the exact TO-BE file and the previous `d4709789...` application ledger.
+    Approval ledger commit `ad56b86d` passes the scoped technical promotion preview.
+  - `promote_visual_replacement_unit.ps1 -UnitId emp_authored_replacement -Apply`
+    copied exactly one file. Production asset commit
+    `622f3e05aee959537496994514058ea504b21c74` has the approved hash and the same
+    semantic ID, `512x512` canvas, `256,256` pivot, and import contract.
+  - Godot import reimported only `fx_emp_release.png`. Renderer, effect-store, capture,
+    provider, visual-asset coverage, and visual-replacement coverage validators pass.
+    The applied workbench returns to `applied=15` with `current=69`, `final=69`, and
+    `authored=67`.
 - Quality audit: scale/origin logic remains in the existing effect renderer; emission
   color remains in `VehicleRun`; no new event, provider, asset ID, batch, node, capacity,
   allocation, or gameplay owner was introduced. Adding `modulate` to the existing debug

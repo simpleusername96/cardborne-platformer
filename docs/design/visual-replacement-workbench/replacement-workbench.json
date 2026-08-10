@@ -1297,7 +1297,7 @@
       "title_ko": "EMP 단일 이미지 교체",
       "owner": "composite",
       "switch_kind": "replace",
-      "status": "approved_for_switch",
+      "status": "applied",
       "current_paths": [
         "art/visuals/production/gameplay/effects/fx_emp_release.png"
       ],
@@ -1374,7 +1374,25 @@
         },
         "retire_paths": []
       },
-      "application": null,
+      "application": {
+        "commit": "622f3e05aee959537496994514058ea504b21c74",
+        "applied_at": "2026-08-10T17:52:43+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -UnitId emp_authored_replacement",
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -UnitId emp_authored_replacement -Apply",
+          "production SHA-256: 558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896",
+          ".\\tools\\godot.ps1 --path . --headless --import",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_effect_store.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run_capture_driver.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          ".\\tools\\validation\\validate_cardborne_visual_authority.ps1"
+        ]
+      },
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
         "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
