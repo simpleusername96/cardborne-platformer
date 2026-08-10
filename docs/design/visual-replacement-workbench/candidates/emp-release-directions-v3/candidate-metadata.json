@@ -1,0 +1,56 @@
+{
+  "id": "emp_release_directions_v3",
+  "status": "rejected",
+  "production_applied": false,
+  "purpose": "Review-only sheet of five EMP release directions created after the emp-magnetic-flux-v2 candidate was judged not clearly better than production.",
+  "sheet_path": "docs/design/visual-replacement-workbench/candidates/emp-release-directions-v3/emp_release_five_direction_sheet.png",
+  "sheet_sha256": "3970ec8c28ece4f5d0ead9551d09bba329d45fa8b63c6faa9a37cf59f0e99d8e",
+  "canvas": [1904, 826],
+  "layout": "Five numbered square review cells in one horizontal row; no candidate has been selected or cropped as a production deliverable.",
+  "directions": [
+    "Five broad angular shutter plates",
+    "Three offset shock-front slabs",
+    "Four asymmetric interference planes",
+    "Six broad blackout fan sectors",
+    "Five sparse directional pressure fins"
+  ],
+  "visual_authority_evidence": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "document_read_complete": true,
+    "sheet_inspected_original": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "image_gen.referenced_image_paths"
+  },
+  "reference_inputs": [
+    "docs/design/cardborne-universal-art-style-reference.png",
+    "art/visuals/production/gameplay/effects/fx_emp_release.png",
+    "docs/design/visual-replacement-workbench/candidates/emp-magnetic-flux-v2/emp_magnetic_flux_candidate.png",
+    "docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/electric-field-to-be.png"
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "initial_output": "exec-bf126876-9055-49dc-8b1b-58df978aa636.png",
+    "selected_output": "exec-aa06136d-907b-4e55-bafe-1d003717d3df.png",
+    "prompt_summary": "Five top-down system-blue EMP release silhouettes that avoid the current magenta horseshoe, the rejected mirrored magnetic crescents, and the persistent purple Electric Field.",
+    "cleanup_pass": "Preserved the five-cell sheet while removing detached fragments and simplifying each direction around one filled faceted center core."
+  },
+  "intended_runtime_contract_if_selected": {
+    "asset_id": "effect/emp_release",
+    "single_transparent_raster": true,
+    "target_canvas": [512, 512],
+    "pivot": [256, 256],
+    "gameplay_radius_owned_by_runtime": true,
+    "timing_owned_by_runtime": true,
+    "presentation": "One centered short scale/fade release; no animation sequence.",
+    "production_switch_requires_exact_user_approval": true
+  },
+  "approval": {
+    "winner_selected": false,
+    "exact_user_approval": false,
+    "switch_ready": false,
+    "rejected_by_user": true,
+    "rejection_reason": "The sheet was authored as static radial shutters and fins before confirming the runtime timeline or researching recognizable EMP wavefront references. It does not communicate an EMP release correctly."
+  }
+}

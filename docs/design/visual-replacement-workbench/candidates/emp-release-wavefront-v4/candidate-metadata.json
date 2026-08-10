@@ -1,0 +1,87 @@
+{
+  "id": "emp_release_wavefront_v4",
+  "status": "awaiting_user_direction",
+  "production_applied": false,
+  "purpose": "Reference-led review sheet of five single-wavefront EMP directions, each shown at three uniform runtime scales.",
+  "sheet_path": "docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/emp_wavefront_motion_sheet.png",
+  "sheet_sha256": "39d4fe935df31741bb5e3cb3f4c9d5bf87ba843e43fe9970948bc9fb92983c2c",
+  "canvas": [1774, 887],
+  "layout": "Five numbered candidate columns; each column shows the same wavefront at approximately 15, 55, and 100 percent radius.",
+  "current_runtime_truth": {
+    "charge_seconds": 0.42,
+    "gameplay_radius": 285.0,
+    "damage": 62.0,
+    "stun_seconds": 2.1,
+    "projectile_clear_radius": 325.0,
+    "release_visual_seconds": 0.55,
+    "gameplay_resolution": "Damage, stun, and projectile clearing resolve immediately across the full radius when charge completes.",
+    "visual_resolution": "The current authored EMP raster appears immediately at full radius and only fades; it does not propagate outward.",
+    "charge_center_mismatch": "The charge cue is currently fixed at the position where charge starts, while release gameplay and the release raster use the player's position when charge completes.",
+    "source_paths": [
+      "scripts/vehicle/vehicle_run.gd",
+      "scripts/presentation/vehicle_combat_renderer.gd"
+    ]
+  },
+  "proposed_presentation_contract": {
+    "gameplay_change": false,
+    "runtime_presentation_change_required": true,
+    "release_timeline": "Keep gameplay resolution at release. Scale one authored wavefront from about 15 percent to 100 percent radius over about 0.20 seconds, then finish the existing 0.55-second lifetime with a quick fade.",
+    "origin_alignment": "Start the wavefront at the actual release position. Any later integration must also keep the charge cue aligned with that release truth while the player moves.",
+    "selected_asset_contract": "One transparent 512x512 raster with a 256x256 center pivot; no frame sequence.",
+    "interior_behavior": "The area behind the moving wavefront clears instead of remaining a persistent field."
+  },
+  "directions": [
+    "Broad faceted circular pressure band with four large breaks",
+    "Single octagonal compression front",
+    "Wide digital-blackout band with four bold dropout cuts",
+    "Near-circular front built from four unequal broad arc plates",
+    "Stepped industrial pulse band with large silhouette cuts"
+  ],
+  "reference_research": [
+    {
+      "source": "https://www.fortnite.com/news/fortnite-battle-royale-v26-00-sep-6-hotfix-shield-breaker-emp-and-more?lang=en-US",
+      "owner": "Epic Games",
+      "takeaway": "A thrown EMP is recognized by immediate shield and electronics disablement in an area."
+    },
+    {
+      "source": "https://www.ea.com/games/apex-legends/apex-legends/characters-hub/crypto",
+      "owner": "Electronic Arts",
+      "takeaway": "A charged source produces one area blast that damages shields, slows targets, and destroys traps."
+    },
+    {
+      "source": "https://www.mobygames.com/game/73809/wasteland-angel/screenshots/windows/791216/",
+      "owner": "MobyGames screenshot record",
+      "takeaway": "A top-down vehicle EMP reads clearly as one blue wavefront moving away from the vehicle."
+    },
+    {
+      "source": "https://science.nasa.gov/learn/basics-of-space-flight/chapter6-2/",
+      "owner": "NASA",
+      "takeaway": "The visible wavefront is a gameplay metaphor for electromagnetic propagation, not literal visible electricity."
+    }
+  ],
+  "visual_authority_evidence": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "document_read_complete": true,
+    "sheet_inspected_original": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "image_gen.referenced_image_paths"
+  },
+  "generation_reference_inputs": [
+    "docs/design/cardborne-universal-art-style-reference.png",
+    "art/visuals/production/gameplay/effects/fx_emp_release.png",
+    "docs/design/visual-replacement-workbench/candidates/emp-magnetic-flux-v2/emp_magnetic_flux_candidate.png",
+    "docs/design/visual-replacement-workbench/candidates/emp-release-directions-v3/emp_release_five_direction_sheet.png"
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "selected_output": "exec-c66a1ed4-919f-457b-b0e3-44b90369ef9d.png",
+    "prompt_summary": "Five original Cardborne-styled single EMP wavefronts shown at three expansion phases; no blades, petals, lightning, particles, persistent field, or copied named-game asset."
+  },
+  "approval": {
+    "winner_selected": false,
+    "exact_user_approval": false,
+    "switch_ready": false
+  }
+}
