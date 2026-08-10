@@ -3,13 +3,14 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-10
 topic: Semantic-v2 runtime integration, UI acceptance, boss guidance, and final performance
 scope: Non-map semantic-v2 runtime switch and its post-acceptance validation
 related:
   - ../docs/design/VISUAL_SYSTEM.md
   - ../docs/product/vehicle_game_spec.md
   - ../art/visuals/production/README.md
+  - ./execplans/2026-08-10-non-boss-combat-and-upgrade-integrity.md
 ---
 
 # Semantic-v2 Runtime Acceptance Evidence
@@ -431,3 +432,69 @@ JavaScript, WASM, PCK, icon, and blob requests returned HTTP 200, the deployment
 screen rendered, and Chrome reported no warning or error. The exact task-owned
 server was stopped and port 13029 was verified clean. This checkpoint is
 functional and visual evidence only; it does not qualify performance.
+
+## 2026-08-10 combat, upgrade, and area-effect integrity checkpoint
+
+Commit `0d220ae2604dd62110badd07fd584a8a0bfa41b5` contains the final feature
+checkpoint for the active combat-integrity plan. Nineteen focused upgrade,
+contact, reinforcement, area-effect, capture, fixed-capacity, and performance-
+structure validators passed. Godot import, visual authority, and Web export also
+passed. The built Web product loaded through the guarded Codex lane, switched
+from Korean to English, rendered the complete EMP footprint, and produced an
+ordinary collision/melee failure receipt without browser warnings or errors.
+
+The exact-radius runtime evidence is under
+`build/evidence/execplan-2026-08-10-area-effects/`. It contains color and
+grayscale sheets for Electric Field levels 1-3, EMP charge/release in standard
+and reduced motion, Thermal Burst and Drop Mine levels 1-3, all four Mystery
+outcomes, boss circular startup/active, and beam startup/active. The production
+EMP and other production raster bytes were not changed. The unchanged 128x128
+cue disk now records its measured visible-alpha `content_rect` of
+`Rect2i(7, 6, 113, 115)` so the retained mesh normalizes visible content to the
+gameplay radius. Runtime effect capacity remained `96`; the peak and capacity
+fixtures held `48` and `96` effects with zero capacity rejection.
+
+### Final native qualification
+
+The clean native 1280x720 `gl_compatibility` pair used 10 seconds of warmup and
+60 seconds of sampling per scenario. Both payloads are workload-valid,
+authority-eligible, focused, and tied to the exact clean commit. Neither passed
+the native release thresholds:
+
+| Scenario | Median / 1% low FPS | Frame p95 / p99 | Physics p95 | Enemies + grid p95 | Contact p95 | Combat/effects p95 | Draw p95 / batches | Render CPU / GPU |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `peak_horde` | `19.09 / 8.18` | `82.86 / 116.84 ms` | `17.86 ms` | `11.84 ms` | `0.584 ms` | `2.72 ms` | `89 / 41` | `0.60 / 1.61 ms` |
+| `capacity_pressure` | `7.50 / 6.73` | `144.44 / 147.50 ms` | `22.54 ms` | `14.17 ms` | `0.680 ms` | `5.12 ms` | `100 / 41` | `0.58 / 1.70 ms` |
+
+Native rendering budgets remained green: draw-call p95 stayed below `200`,
+combat batches stayed below `50`, and GPU time stayed below `1.70 ms`. The new
+contact owner was not the dominant named section. The larger named cost was
+`enemies_and_grid`, while measured-work medians of `17.17/21.02 ms` caused
+physics catch-up and frame medians of `52.38/133.33 ms`. Wait-or-unattributed
+medians were also material at `35.21/112.31 ms`; this evidence does not by
+itself select a safe implementation change.
+
+The plan intentionally collected no comparable pre-change baseline, so these
+results do not prove that the combat-integrity changes caused or avoided a
+regression. They diagnose the final workload only. The full-area effect body is
+not identified as the measured owner, and no visual quality, gameplay workload,
+collision, cadence, capacity, or threshold was reduced to manufacture a pass.
+
+### Built-Web diagnostic and remaining manual trace
+
+The built-Web `peak_horde` fixture produced the correct workload and exact
+60-second payload, but the connected automation browser identified itself as
+`HeadlessChrome` and the recorder reported `authority_eligible=false` and
+`scheduler_throttled=true`. Its `7.50` median FPS and `6.68` 1% low are retained
+only as an ineligible diagnostic; they are not a Web release-performance claim.
+The exact ignored payloads are:
+
+- `build/performance/combat-upgrade-effect-integrity/0d220ae2-peak_horde-60s.json`
+- `build/performance/combat-upgrade-effect-integrity/0d220ae2-capacity_pressure-60s.json`
+- `build/performance/combat-upgrade-effect-integrity/0d220ae2-web-peak-horde-60s.json`
+
+A normal-play manual trace was launched only after all fixes and final synthetic
+tests. No user gameplay or normal close occurred during the bounded wait, so no
+manual JSON was produced and no synthetic input was substituted. The user-
+reported slow period still requires one user-driven normal-play trace before
+the active plan's performance task can close.

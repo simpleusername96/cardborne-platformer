@@ -112,7 +112,9 @@ Out of scope:
 
 - Creating, editing, selecting, approving, promoting, or switching any authored raster or
   SVG. The production EMP, Thermal Burst, Drop Mine, cue ring, and cue disk bytes, pivots,
-  semantic IDs, manifests, and workbench metadata remain unchanged.
+  semantic IDs, and workbench metadata remain unchanged. The one allowed descriptor repair
+  is the measured `cue/disk_mask` alpha `content_rect`, because its transparent canvas padding
+  otherwise makes a gameplay-radius transform render a visibly smaller affected body.
 - Boss attack patterns, boss contact rules, boss damage, boss health, boss shielding, or
   boss body work. Only the shared presentation of an existing circular gameplay footprint
   may change.
@@ -832,6 +834,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   Production EMP raster bytes remain approved and unchanged as a secondary accent.
 - 2026-08-10: Every displayed area effect must show a continuous body through its complete
   gameplay footprint. A ring, burst, or perimeter may never be the sole area representation.
+- 2026-08-10: The retained cue disk's visible alpha occupies `Rect2i(7, 6, 113, 115)` inside
+  its unchanged 128x128 canvas. Recording that existing alpha bound as `content_rect` is the
+  smallest normalization repair that makes visible extent equal gameplay extent without
+  changing pixels, pivot, semantic ID, nodes, batches, or recurring runtime work.
 - 2026-08-10: Runtime tracing found that Gravity Pull, Cryo Lock, and Decoy Signal also used
   ring-only Mystery presentation. They are governed by the same full-area rule at exact
   radii `480`, `360`, and `900` for their complete active durations.
@@ -850,19 +856,34 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 - 2026-08-10: The user directed that all planned fixes precede the long performance scenarios
   and manual trace. This contract therefore collects final-only qualification and makes no
   before/after causal regression claim.
+- 2026-08-10: The clean final native pair is workload-valid and authority-eligible but fails
+  release frame thresholds. Native render GPU, draw calls, batches, contact, and combat/effect
+  timings do not identify the new full-area presentation or contact owner as the dominant cost;
+  `enemies_and_grid`, physics catch-up, and unattributed wait remain the measured investigation
+  surfaces. No optimization or product tradeoff is authorized inside this contract.
+- 2026-08-10: The built-Web workload completed, but the automation browser identified itself
+  as headless and scheduler-throttled. Preserve it as an ineligible diagnostic and do not issue
+  a Web release-performance label.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 5 final qualification. Runtime and visual feature sources are frozen.
-- Next task: finish the built-product smoke, then run Task 5.3's final-only native and Web
-  performance qualification against the committed tree.
+- Current phase: Phase 5 evidence closeout. Runtime and visual feature sources are frozen.
+- Next task: obtain the user's runtime-composition approval for Task 4.4 and one user-driven
+  normal-play manual trace through the reported slow period; then close Tasks 5.2-5.4 without
+  changing workload, visuals, collision, cadence, capacity, or thresholds.
 - Last completed gate: the focused final batch. Nineteen upgrade, contact, reinforcement,
   area-effect, capture, fixed-capacity, and performance-structure validators pass, as do
   visual authority and Godot import. Web export reports `WEB_EXPORT_OK`; the built product
   starts on the guarded `codex` lane, switches Korean to English, shows the complete EMP
   footprint, and records an ordinary collision/melee contact in its failure report with no
   browser console warnings or errors.
+- Final qualification evidence: native `peak_horde` and `capacity_pressure` are scenario-valid,
+  authority-eligible 10+60 second samples but fail release thresholds. Median FPS is `19.09`
+  and `7.50`; enemies/grid p95 is `11.84/14.17 ms`, contact p95 is `0.584/0.680 ms`, and native
+  GPU time is `1.61/1.70 ms`. The Web peak workload is correct but release-ineligible because
+  the automation browser is headless and scheduler-throttled. Exact payloads and the narrow
+  non-causal diagnosis are recorded in `../semantic-v2-runtime-acceptance-evidence.md`.
 - Verified source baseline: clean commit `04839774` preceded the Task 0.1/0.2 work. The
   former crate-warning failure was fixture contamination from generated cover; the isolated
   one-crate clear-path fixture passes without a runtime geometry change. Per user direction,
@@ -875,6 +896,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   `build/evidence/execplan-2026-08-10-area-effects/`, but its user-composition approval remains
   open for handoff. Task 0.3's deferred long performance work is now eligible because all
   owned fixes, focused validation, rendered inspection, import, and Web export are complete.
+- Manual-trace status: the final trace launcher was started only after all fixes and synthetic
+  qualification. No user gameplay or normal close occurred during the bounded wait, so it was
+  stopped without a JSON and without substituting synthetic input. Task 5.3 remains open for
+  that user-driven trace; the red synthetic evidence has already been preserved.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
@@ -888,8 +913,9 @@ Complete when:
   accepted balance are proven, and the built artifact is inspected.
 - Performance claims use exact eligible labels and evidence; any measured red external
   owner has an explicit successor contract rather than a hidden workaround.
-- EMP and other production raster bytes/metadata, boss behavior/values, and all excluded
-  gameplay values are unchanged.
+- EMP and other production raster bytes, pivots, and semantic IDs, boss behavior/values,
+  and all excluded gameplay values are unchanged. The cue disk has only the explicit measured
+  `content_rect` normalization described above.
 - Durable decisions are in their owning specs/evidence, and this plan's frontmatter is
   changed to `done` only after no required work remains.
 
