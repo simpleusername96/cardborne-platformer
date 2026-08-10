@@ -280,8 +280,9 @@ collision.
   text로 결과를 식별하며 body asset이나 minimap marker를 바꾸지 않는다.
 - boss objective module art와 shared node art는 모두 production에서 제외한다.
   방어막 상태는 boss body와 HUD의 직접 상태 표현이 소유한다.
-- EMP는 유지하는 유일한 대형 effect이며 transparent `512×512` authored PNG
-  하나를 gameplay radius에 맞춰 scale/fade한다. Thermal Burst는 별도 승인을
+- EMP는 유지하는 유일한 대형 effect이며 system-blue의 단일 팔각형 압축 파면을
+  담은 transparent `512×512` authored PNG 하나를 gameplay radius에 맞춰
+  scale/fade한다. Thermal Burst는 별도 승인을
   받은 transparent `192×192` impact PNG 한 장만 direct primary hit 위치에 짧게
   scale/fade하며 splash recipient에는 생성하지 않는다. Drop Mine은 Thermal과
   semantic ID, raster, batch, color, sound를 공유하지 않는 별도 transparent
@@ -478,9 +479,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   geometry는 radius 안에 둔다. Mint barrier/enemy shield와 색·ground attachment·
   silhouette가 다르며 hollow donut, body-hugging bubble, glow, particle spray,
   repeated ring 또는 두 번째 collision truth를 만들지 않는다.
-- EMP는 one-shot authored `512×512` PNG의 중심과 실제 gameplay radius를
-  일치시키고 짧은 scale/fade만 적용한다. 여러 ring, spark, dot, noise와
-  frame-by-frame sprite sequence를 추가하지 않는다.
+- EMP charge boundary는 이동 중인 player의 현재 위치를 따라가고, release 파면은
+  실제 release 위치와 gameplay radius를 중심으로 삼는다. Damage, stun과 hostile
+  projectile clear는 charge 완료 시 전체 gameplay 범위에 즉시 적용한다. Standard
+  motion의 one-shot authored `512×512` 팔각형 파면은 기존 `0.55s` fade 수명 안에서
+  첫 `0.20s` 동안 radius `0.15`에서 `1.00`까지 바깥으로 퍼지고, 지나간 내부에는
+  persistent field를 남기지 않는다. Reduced motion은 최종 radius에서 바로 fade한다.
+  여러 ring, spark, dot, noise와 frame-by-frame sprite sequence를 추가하지 않는다.
 
 ### Typography, spacing 및 control
 

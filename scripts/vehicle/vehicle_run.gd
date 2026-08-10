@@ -1900,7 +1900,7 @@ func _start_emp() -> void:
 	_add_effect(
 		&"player_emp_charge",
 		player_position,
-		Art.BOSS_MAGENTA,
+		Art.SYSTEM,
 		EMP_STARTUP,
 		_emp_radius()
 	)
@@ -1924,7 +1924,7 @@ func _release_emp() -> void:
 	_add_effect(
 		&"player_emp_release",
 		player_position,
-		Art.BOSS_MAGENTA,
+		Color.WHITE,
 		0.55,
 		radius
 	)

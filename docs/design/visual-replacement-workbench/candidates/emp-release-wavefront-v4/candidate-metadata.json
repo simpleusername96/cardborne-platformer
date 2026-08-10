@@ -1,12 +1,35 @@
 {
   "id": "emp_release_wavefront_v4",
-  "status": "awaiting_user_direction",
+  "status": "awaiting_exact_user_approval",
   "production_applied": false,
-  "purpose": "Reference-led review sheet of five single-wavefront EMP directions, each shown at three uniform runtime scales.",
+  "purpose": "Reference-led review sheet and exact production-shaped review candidate for the user-selected single-wavefront EMP direction.",
   "sheet_path": "docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/emp_wavefront_motion_sheet.png",
   "sheet_sha256": "39d4fe935df31741bb5e3cb3f4c9d5bf87ba843e43fe9970948bc9fb92983c2c",
   "canvas": [1774, 887],
   "layout": "Five numbered candidate columns; each column shows the same wavefront at approximately 15, 55, and 100 percent radius.",
+  "selected_direction": {
+    "index": 2,
+    "name": "Single octagonal compression front",
+    "selected_by": "user",
+    "selected_at": "2026-08-10",
+    "selection_scope": "Direction approval only; the isolated transparent raster remains subject to exact AS-IS/TO-BE approval before production promotion."
+  },
+  "candidate_path": "docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/emp_wavefront_option2_candidate.png",
+  "candidate_sha256": "558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896",
+  "comparison_path": "docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/emp_wavefront_option2_comparison.png",
+  "comparison_sha256": "7a28b3604fbef5750b2b7ad061ba6ab43f495a3776e2c70e1b2320713f5ff133",
+  "runtime_scale_preview_path": "docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/emp_wavefront_option2_runtime_scale_preview.png",
+  "runtime_scale_preview_sha256": "891d5032d0d9a3c8e0fa2e4fcfb1e193921a7d8eb38d34359ed360f3593528c0",
+  "candidate_canvas": [512, 512],
+  "candidate_pivot": [256, 256],
+  "candidate_extraction": {
+    "source_frame": "Direction 2 at approximately 100 percent radius",
+    "source_crop": "300x300+380+480 from emp_wavefront_motion_sheet.png",
+    "background_removal": "Bundled remove_chroma_key.py using border auto-key #030e19, soft matte thresholds 12/72, and one-pixel edge contraction",
+    "placement": "Trimmed authored pixels resized proportionally into a 488x488 bound, then centered without drawing on a transparent 512x512 canvas",
+    "geometry_authoring": false,
+    "comparison_processing": "Mechanical placement of current and candidate rasters on one dark evidence sheet with plain labels"
+  },
   "current_runtime_truth": {
     "charge_seconds": 0.42,
     "gameplay_radius": 285.0,
@@ -25,10 +48,11 @@
   "proposed_presentation_contract": {
     "gameplay_change": false,
     "runtime_presentation_change_required": true,
-    "release_timeline": "Keep gameplay resolution at release. Scale one authored wavefront from about 15 percent to 100 percent radius over about 0.20 seconds, then finish the existing 0.55-second lifetime with a quick fade.",
-    "origin_alignment": "Start the wavefront at the actual release position. Any later integration must also keep the charge cue aligned with that release truth while the player moves.",
+    "release_timeline": "Keep gameplay resolution at release. In standard motion, scale one authored wavefront from 15 percent to 100 percent radius over the first 0.20 seconds while retaining the existing 0.55-second fade lifetime. In reduced motion, start at the final radius and only fade.",
+    "origin_alignment": "Start the wavefront at the actual release position and render the charge radius at the player's current position while the player moves.",
     "selected_asset_contract": "One transparent 512x512 raster with a 256x256 center pivot; no frame sequence.",
-    "interior_behavior": "The area behind the moving wavefront clears instead of remaining a persistent field."
+    "interior_behavior": "The area behind the moving wavefront clears instead of remaining a persistent field.",
+    "color_contract": "Use system blue for the live charge cue and Color.WHITE modulation for the authored release so its selected blue planes are preserved."
   },
   "directions": [
     "Broad faceted circular pressure band with four large breaks",
@@ -77,10 +101,16 @@
   "generation": {
     "method": "built-in image_gen",
     "selected_output": "exec-c66a1ed4-919f-457b-b0e3-44b90369ef9d.png",
-    "prompt_summary": "Five original Cardborne-styled single EMP wavefronts shown at three expansion phases; no blades, petals, lightning, particles, persistent field, or copied named-game asset."
+    "prompt_summary": "Five original Cardborne-styled single EMP wavefronts shown at three expansion phases; no blades, petals, lightning, particles, persistent field, or copied named-game asset.",
+    "postprocess": [
+      "Exact crop of direction 2's final frame with no geometric redraw",
+      "Bundled alpha helper with border auto-key, soft matte, and one-pixel edge contraction",
+      "Mechanical Lanczos resize and centered placement on a 512x512 transparent canvas",
+      "Mechanical AS-IS/TO-BE comparison placement with plain labels"
+    ]
   },
   "approval": {
-    "winner_selected": false,
+    "winner_selected": true,
     "exact_user_approval": false,
     "switch_ready": false
   }

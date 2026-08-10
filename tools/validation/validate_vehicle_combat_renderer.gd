@@ -35,6 +35,7 @@ func _run() -> void:
 	)
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
 	_validate_area_cue_asset()
+	_validate_emp_presentation(renderer)
 	_expect(
 		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
 			and AttackContract.STANDARD_PROJECTILE_RADIUS == 6.0
@@ -881,6 +882,160 @@ func _validate_area_cue_asset() -> void:
 				dark_pixels += 1
 	_expect(opaque_pixels > 4000, "area telegraph ring retains a readable annulus")
 	_expect(dark_pixels == 0, "area telegraph ring has no black RGB fringe")
+
+
+func _validate_emp_presentation(renderer: Renderer) -> void:
+	var no_enemies: Array[EnemyState] = []
+	var no_projectiles: Array[ProjectileState] = []
+	var no_shards: Array[ExperienceShard] = []
+	var player_position := Vector2(260.0, 300.0)
+	var release_position := Vector2(360.0, 320.0)
+	var release_radius := 285.0
+	var release_store := EffectStore.new()
+	var release = release_store.add(
+		&"player_emp_release",
+		release_position,
+		Color.WHITE,
+		0.55,
+		release_radius,
+		Vector2.RIGHT,
+		0.0,
+		1.0
+	)
+	var presentation := _player_presentation(player_position, false)
+	release.time = 0.55
+	renderer.sync(
+		no_enemies,
+		no_projectiles,
+		no_projectiles,
+		no_shards,
+		release_store.live,
+		Rect2(0, 0, 1280, 720),
+		player_position,
+		0.0,
+		true,
+		"",
+		presentation
+	)
+	var release_draws := renderer.debug_semantic_texture_draws(
+		&"effect/emp_release"
+	)
+	_expect(
+		release_draws.size() == 1
+			and Vector2(release_draws[0]["position"]).is_equal_approx(
+				release_position
+			)
+			and is_equal_approx(
+				float(release_draws[0]["radius"]),
+				release_radius * 0.15
+			)
+			and Color(release_draws[0]["modulate"]).is_equal_approx(
+				Color.WHITE
+			),
+		"standard-motion EMP begins as one authored wavefront at fifteen percent radius and preserves authored color"
+	)
+	release.time = 0.35
+	renderer.sync(
+		no_enemies,
+		no_projectiles,
+		no_projectiles,
+		no_shards,
+		release_store.live,
+		Rect2(0, 0, 1280, 720),
+		player_position,
+		0.20,
+		true,
+		"",
+		presentation
+	)
+	release_draws = renderer.debug_semantic_texture_draws(&"effect/emp_release")
+	_expect(
+		release_draws.size() == 1
+			and is_equal_approx(
+				float(release_draws[0]["radius"]),
+				release_radius
+			)
+			and Vector2(release_draws[0]["position"]).is_equal_approx(
+				release_position
+			),
+		"standard-motion EMP reaches its release radius after 0.20 seconds without moving its origin"
+	)
+	presentation["reduced_motion"] = true
+	release.time = 0.55
+	renderer.sync(
+		no_enemies,
+		no_projectiles,
+		no_projectiles,
+		no_shards,
+		release_store.live,
+		Rect2(0, 0, 1280, 720),
+		player_position,
+		0.0,
+		true,
+		"",
+		presentation
+	)
+	release_draws = renderer.debug_semantic_texture_draws(&"effect/emp_release")
+	_expect(
+		release_draws.size() == 1
+			and is_equal_approx(
+				float(release_draws[0]["radius"]),
+				release_radius
+			),
+		"reduced-motion EMP starts at the final radius and only uses the existing fade"
+	)
+	var charge_store := EffectStore.new()
+	var charge = charge_store.add(
+		&"player_emp_charge",
+		Vector2(120.0, 140.0),
+		Art.SYSTEM,
+		0.42,
+		release_radius,
+		Vector2.RIGHT,
+		0.0,
+		1.0
+	)
+	charge.time = 0.42
+	renderer.sync(
+		no_enemies,
+		no_projectiles,
+		no_projectiles,
+		no_shards,
+		charge_store.live,
+		Rect2(0, 0, 1280, 720),
+		player_position,
+		0.0,
+		true,
+		"",
+		presentation
+	)
+	var charge_ring := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
+	var charge_buffer := charge_ring.multimesh.buffer
+	_expect(
+		charge_ring.multimesh.visible_instance_count == 1
+			and Vector2(charge_buffer[3], charge_buffer[7]).is_equal_approx(
+				player_position
+			)
+			and Color(
+				charge_buffer[8],
+				charge_buffer[9],
+				charge_buffer[10],
+				1.0
+			).is_equal_approx(Color(Art.SYSTEM, 1.0)),
+		"EMP charge boundary follows the live player position and uses the system-blue hierarchy"
+	)
+	var run_source := FileAccess.get_file_as_string(
+		"res://scripts/vehicle/vehicle_run.gd"
+	)
+	var emp_source := run_source.get_slice(
+		"func _start_emp()", 1
+	).get_slice("func _emp_cooldown_max()", 0)
+	_expect(
+		emp_source.contains("Art.SYSTEM")
+			and emp_source.contains("Color.WHITE")
+			and not emp_source.contains("Art.BOSS_MAGENTA"),
+		"EMP runtime emits a system-blue charge and white-modulated authored release"
+	)
 
 
 func _validate_mystery_device_presentation(

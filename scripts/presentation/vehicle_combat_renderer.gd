@@ -56,6 +56,8 @@ const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
 const MYSTERY_DEVICE_CAPACITY := 3
 const MYSTERY_DEVICE_VISUAL_RADIUS := 96.0
 const SEMANTIC_TEXTURE_DRAW_CAPACITY := 512
+const EMP_RELEASE_INITIAL_SCALE := 0.15
+const EMP_RELEASE_EXPAND_SECONDS := 0.20
 const CARDINAL_DIRECTIONS := [
 	Vector2.LEFT,
 	Vector2.RIGHT,
@@ -263,6 +265,7 @@ func sync(
 		_sync_effects(
 			effects,
 			visible_world,
+			player_position,
 			bool(presentation.get("reduced_motion", false))
 		)
 		_sync_world_overlays(presentation, visible_world)
@@ -388,6 +391,7 @@ func debug_semantic_texture_draws(asset_id: StringName = &"") -> Array[Dictionar
 			"position":texture_draw.position,
 			"angle":texture_draw.angle,
 			"radius":texture_draw.radius,
+			"modulate":texture_draw.modulate,
 		})
 	return result
 
@@ -1125,6 +1129,7 @@ func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> v
 func _sync_effects(
 	effects: Array[EffectState],
 	visible_world: Rect2,
+	player_position: Vector2,
 	reduced_motion: bool
 ) -> void:
 	for effect in effects:
@@ -1151,7 +1156,7 @@ func _sync_effects(
 		)
 		if mode == &"live_emp_radius":
 			_write_ring(
-				position,
+				player_position,
 				radius,
 				Color(color, maxf(0.20, color.a * 0.62))
 			)
@@ -1166,11 +1171,24 @@ func _sync_effects(
 			)
 			continue
 		if mode == &"authored_emp":
+			var emp_radius := radius
+			if not reduced_motion:
+				var elapsed := maxf(0.0, duration - effect.time)
+				var scale_progress := clampf(
+					elapsed / EMP_RELEASE_EXPAND_SECONDS,
+					0.0,
+					1.0
+				)
+				emp_radius *= lerpf(
+					EMP_RELEASE_INITIAL_SCALE,
+					1.0,
+					scale_progress
+				)
 			_queue_semantic_texture(
 				StringName(event.get("asset", &"effect/emp_release")),
 				position,
 				0.0,
-				radius,
+				emp_radius,
 				color
 			)
 			continue
