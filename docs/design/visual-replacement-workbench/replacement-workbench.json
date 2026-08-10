@@ -1297,7 +1297,7 @@
       "title_ko": "EMP 단일 이미지 교체",
       "owner": "composite",
       "switch_kind": "replace",
-      "status": "switch_ready",
+      "status": "approved_for_switch",
       "current_paths": [
         "art/visuals/production/gameplay/effects/fx_emp_release.png"
       ],
@@ -1365,7 +1365,15 @@
         ".\\tools\\validation\\validate_cardborne_visual_authority.ps1",
         ".\\tools\\export_web.ps1"
       ],
-      "approval": null,
+      "approval": {
+        "approved_by": "BK",
+        "approved_at": "2026-08-10T17:47:58+09:00",
+        "baseline_commit": "3bfbf7da89a71876ef735c573257f2b5b5b1c894",
+        "deliverable_sha256": {
+          "art/visuals/production/gameplay/effects/fx_emp_release.png": "558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896"
+        },
+        "retire_paths": []
+      },
       "application": null,
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",

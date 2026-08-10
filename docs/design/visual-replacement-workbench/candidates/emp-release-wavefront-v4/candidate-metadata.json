@@ -1,6 +1,6 @@
 {
   "id": "emp_release_wavefront_v4",
-  "status": "switch_ready",
+  "status": "approved_for_switch",
   "production_applied": false,
   "purpose": "Reference-led review sheet and exact production-shaped review candidate for the user-selected single-wavefront EMP direction.",
   "sheet_path": "docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/emp_wavefront_motion_sheet.png",
@@ -155,6 +155,7 @@
     "approved_at": "2026-08-10T17:47:58+09:00",
     "approval_message": "ㅇㅇ 적용",
     "approved_candidate_sha256": "558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896",
+    "workbench_baseline_commit": "3bfbf7da89a71876ef735c573257f2b5b5b1c894",
     "switch_ready": true
   }
 }
