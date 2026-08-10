@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Cardborne의 기존 보스 공격과 명확히 구분되는 다섯 가지 시그니처 패턴 제안 보고서">
+  <title>Cardborne 보스 시그니처 패턴 제안</title>
+  <style>
+    @font-face {
+      font-family: "Noto Sans KR";
+      src: url("../../art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    :root {
+      --space: #070b11;
+      --canvas: #101923;
+      --surface: #182431;
+      --raised: #243445;
+      --line: #465a6e;
+      --text: #eef3f7;
+      --muted: #9eadbc;
+      --player: #f2b735;
+      --danger: #f05a5f;
+      --boss: #d43f8d;
+      --system: #58bfea;
+      --support: #72d6c4;
+      --max-width: 1420px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--space);
+      color: var(--text);
+      font-family: "Noto Sans KR", system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 650;
+      line-height: 1.68;
+    }
+
+    a { color: #8dd9f6; text-underline-offset: 0.2em; }
+    a:hover { color: var(--text); }
+    a:focus-visible { outline: 2px solid var(--system); outline-offset: 4px; }
+    code {
+      color: #b9e8fb;
+      font: 700 0.92em ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .page {
+      width: min(calc(100% - 48px), var(--max-width));
+      margin: 0 auto;
+      padding: 56px 0 96px;
+    }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
+      gap: 48px;
+      align-items: end;
+      padding-bottom: 48px;
+    }
+
+    .eyebrow,
+    .stage-label {
+      margin: 0 0 12px;
+      color: var(--system);
+      font-size: 14px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3, .lead, .status-box strong {
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    h1 {
+      max-width: 920px;
+      margin-bottom: 20px;
+      font-size: clamp(40px, 5.2vw, 72px);
+      font-weight: 880;
+      letter-spacing: -0.045em;
+      line-height: 1.08;
+    }
+
+    .lead {
+      max-width: 900px;
+      margin-bottom: 0;
+      color: #ced8e1;
+      font-size: clamp(18px, 2vw, 24px);
+      line-height: 1.55;
+    }
+
+    .status-box {
+      border-left: 4px solid var(--boss);
+      background: var(--canvas);
+      padding: 20px 22px;
+    }
+
+    .status-box strong { display: block; margin-bottom: 6px; font-size: 17px; }
+    .status-box p { margin-bottom: 0; color: var(--muted); font-size: 14px; }
+
+    .report-nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      gap: 8px 20px;
+      overflow-x: auto;
+      margin: 0 calc(50% - 50vw) 56px;
+      padding: 12px max(24px, calc((100vw - var(--max-width)) / 2));
+      background: rgba(7, 11, 17, 0.96);
+      border-bottom: 1px solid #223140;
+      scrollbar-width: thin;
+    }
+
+    .report-nav a {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .report-nav a:hover { color: var(--text); }
+
+    .section {
+      scroll-margin-top: 72px;
+      margin-bottom: 80px;
+    }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 0.65fr) minmax(320px, 1.35fr);
+      gap: 32px;
+      align-items: start;
+      margin-bottom: 32px;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      font-size: clamp(28px, 3.6vw, 46px);
+      font-weight: 860;
+      letter-spacing: -0.035em;
+      line-height: 1.2;
+    }
+
+    .section-heading p { margin-bottom: 0; color: var(--muted); }
+
+    .baseline-table,
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--canvas);
+    }
+
+    th, td {
+      padding: 15px 18px;
+      border-bottom: 1px solid #2d4051;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: var(--text); font-size: 14px; font-weight: 840; }
+    td { color: #c2ced8; }
+    tbody tr:last-child td { border-bottom: 0; }
+
+    .callout {
+      margin-top: 24px;
+      padding: 18px 20px;
+      background: #141f2a;
+      border-left: 4px solid var(--danger);
+      color: #dbe3e9;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+
+    .pattern {
+      scroll-margin-top: 72px;
+      margin-bottom: 72px;
+      background: var(--canvas);
+      border: 1px solid #2a3d4e;
+      border-top: 4px solid var(--boss);
+    }
+
+    .pattern-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding: 28px 30px 24px;
+    }
+
+    .pattern h3 {
+      margin-bottom: 4px;
+      font-size: clamp(26px, 3vw, 38px);
+      font-weight: 860;
+      letter-spacing: -0.03em;
+      line-height: 1.18;
+    }
+
+    .code-name { color: var(--muted); font-size: 14px; }
+    .recommendation {
+      color: var(--support);
+      font-size: 14px;
+      font-weight: 840;
+      text-align: right;
+    }
+
+    figure { margin: 0; }
+    .pattern-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1672 / 941;
+      object-fit: cover;
+      background: var(--raised);
+    }
+    figcaption {
+      padding: 12px 30px 14px;
+      color: var(--muted);
+      font-size: 13px;
+      background: #0c131b;
+    }
+
+    .pattern-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+      gap: 34px;
+      padding: 30px;
+    }
+
+    .pattern-copy > p { color: #cbd5dd; }
+    .difference {
+      margin: 22px 0 0;
+      padding: 18px 20px;
+      background: #1a2531;
+      border-left: 4px solid var(--player);
+    }
+    .difference strong { display: block; margin-bottom: 5px; color: var(--player); }
+    .difference p { margin: 0; color: #d7dfe5; }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 24px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .timeline li { padding: 14px; background: var(--surface); }
+    .timeline b {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--system);
+      font-size: 13px;
+    }
+    .timeline span { color: #c5d0d8; font-size: 14px; }
+
+    .spec-table th { width: 39%; color: var(--muted); }
+    .spec-table td { color: var(--text); }
+
+    .scope-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .scope-block { padding: 24px; background: var(--canvas); border-top: 3px solid var(--line); }
+    .scope-block h3 { margin-bottom: 12px; font-size: 21px; }
+    .scope-block ul { margin: 0; padding-left: 20px; color: #c5d0d8; }
+    .scope-block li + li { margin-top: 8px; }
+    .scope-block.reject { border-top-color: var(--danger); }
+    .scope-block.guard { border-top-color: var(--system); }
+
+    .decision-table-wrap { overflow-x: auto; }
+    .decision-table-wrap table { min-width: 840px; }
+
+    .sources {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px 32px;
+      margin: 0;
+      padding-left: 22px;
+      color: #c5d0d8;
+    }
+    .sources li { padding-left: 4px; }
+
+    .evidence {
+      margin-top: 64px;
+      padding: 28px;
+      background: #0d151d;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .evidence h2 { margin-bottom: 16px; color: var(--text); font-size: 22px; }
+    .evidence dl { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 8px 18px; margin: 0; }
+    .evidence dt { color: #c3d0da; font-weight: 800; }
+    .evidence dd { margin: 0; overflow-wrap: anywhere; }
+
+    .footer-note {
+      margin: 26px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .page { width: min(calc(100% - 32px), var(--max-width)); padding-top: 36px; }
+      .masthead,
+      .section-heading,
+      .pattern-body { grid-template-columns: 1fr; }
+      .masthead { gap: 28px; }
+      .pattern-header { grid-template-columns: 1fr; }
+      .recommendation { text-align: left; }
+      .scope-grid,
+      .sources { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      body { font-size: 15px; }
+      .page { width: min(calc(100% - 24px), var(--max-width)); padding-top: 28px; }
+      .masthead { padding-bottom: 34px; }
+      .report-nav { margin-bottom: 40px; padding-left: 12px; padding-right: 12px; }
+      .section { margin-bottom: 56px; }
+      .pattern { margin-bottom: 48px; }
+      .pattern-header,
+      .pattern-body { padding: 22px 18px; }
+      figcaption { padding: 10px 18px 12px; }
+      .timeline { grid-template-columns: 1fr; }
+      th, td { padding: 12px 13px; }
+      .baseline-table { min-width: 680px; }
+      .baseline-scroll { overflow-x: auto; }
+      .evidence { padding: 22px 18px; }
+      .evidence dl { grid-template-columns: 1fr; gap: 3px; }
+      .evidence dd + dt { margin-top: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    @media print {
+      body { background: white; color: #111; }
+      .page { width: 100%; padding: 0; }
+      .report-nav { display: none; }
+      .pattern, .status-box, .scope-block, .evidence, .baseline-table, .spec-table {
+        break-inside: avoid;
+        color: #111;
+        background: white;
+      }
+      a { color: #145b80; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">Cardborne / Boss combat design / 2026-08-10</p>
+        <h1>보스 시그니처 패턴 제안</h1>
+        <p class="lead">기존의 부채꼴·직선 레인·십자·원형 장판·빔을 조금씩 돌려 쓰는 대신, 발사 순서와 탄환 상태가 실제로 달라지는 다섯 가지 패턴을 제안한다.</p>
+      </div>
+      <aside class="status-box" aria-label="보고서 상태">
+        <strong>결론: 기존 v1 시안은 채택하지 않는다.</strong>
+        <p>아래 이미지는 패턴 이해를 위한 설명용 합성 시안이다. 런타임 자산이나 시각 효과 승인이 아니며, 표의 메커니즘과 제한 조건이 이미지보다 우선한다.</p>
+      </aside>
+    </header>
+
+    <nav class="report-nav" aria-label="보고서 목차">
+      <a href="#baseline">현재 문제</a>
+      <a href="#stage-1">1단계</a>
+      <a href="#stage-2">2단계</a>
+      <a href="#stage-3">3단계</a>
+      <a href="#stage-4">4단계</a>
+      <a href="#stage-5">5단계</a>
+      <a href="#guards">구현 경계</a>
+      <a href="#sources">근거</a>
+    </nav>
+
+    <section class="section" id="baseline">
+      <div class="section-heading">
+        <h2>현재 패턴과 무엇이 다른가</h2>
+        <p>현재 직접 공격은 <code>lanes</code>, <code>charge</code>, <code>fan</code>, <code>cross</code>, <code>area</code>, <code>beam</code>, <code>summon</code> 일곱 종류다. 특히 <code>fan</code>은 같은 다섯 각도를 한 번에 발사하고 3~4회 반복한다. 패턴 이름이 달라도 이동 법칙과 회피 판단이 같으면 새 시그니처로 보지 않는다.</p>
+      </div>
+      <div class="baseline-scroll" role="region" aria-label="현재 패턴 비교표" tabindex="0">
+        <table class="baseline-table">
+          <thead>
+            <tr>
+              <th>현재 계열</th>
+              <th>플레이어가 하는 판단</th>
+              <th>새 시그니처로 부족한 이유</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>부채꼴·십자·레인</td><td>경고된 직선 사이의 빈 공간으로 이동</td><td>각도나 축만 바뀌고 탄환의 시간 동작은 동일하다.</td></tr>
+            <tr><td>원형 장판</td><td>고정 반경 밖으로 이탈</td><td>장판 위치와 반경을 바꿔도 회피 규칙이 같다.</td></tr>
+            <tr><td>빔·돌진</td><td>고정된 직선 축에서 벗어남</td><td>빔 개수나 순서를 늘리는 것은 같은 축 회피의 반복이다.</td></tr>
+            <tr><td>소환</td><td>추가 적을 우선 처리</td><td>탄막의 이동 법칙이 아니라 적 수와 표적 우선순위를 바꾼다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <p><strong>선정 기준:</strong> 다섯 패턴은 각각 최소 하나의 새로운 상태 변화를 가져야 한다. 순차 각도 변화, 휴면 후 점화, 공전 후 방출, 고정 방향 반전, 비행 중 분열을 서로 겹치지 않게 한 단계씩 배정한다.</p>
+      </div>
+    </section>
+
+    <article class="pattern" id="stage-1">
+      <header class="pattern-header">
+        <div>
+          <p class="stage-label">Stage 1 · Foundry Colossus</p>
+          <h3>각도 코일 / 역코일</h3>
+          <div class="code-name"><code>angular_coil</code> · <code>foundry_burst</code> 교체</div>
+        </div>
+        <div class="recommendation">우선 구현 권장 · 새 탄환 이동 상태 불필요</div>
+      </header>
+      <figure>
+        <img class="pattern-image" src="assets/boss-pattern-concepts-2026-08-10/stage-1-angular-coil.png" alt="주조소 보스가 한 발씩 각도를 바꾸어 발사하고, 열두 개의 직선 탄환이 시간차로 굽은 띠처럼 배치된 탑다운 전투 시안" width="1672" height="941">
+        <figcaption>한 장에 여러 발사 시점을 겹친 설명용 시안이다. 실제 게임에서는 궤적선이나 잔상을 그리지 않고 각 탄환 본체만 표시한다.</figcaption>
+      </figure>
+      <div class="pattern-body">
+        <div class="pattern-copy">
+          <p>보스가 조준 기준각을 한 번 고정한 뒤 탄환을 한 발씩 발사한다. 첫 절반은 발사각을 일정하게 증가시키고, 나머지 절반은 증가 방향을 뒤집는다. 개별 탄환은 끝까지 직선으로 움직이지만 시간차를 둔 탄환 묶음은 C자에서 S자로 접히는 코일처럼 보인다.</p>
+          <ol class="timeline" aria-label="각도 코일 전투 흐름">
+            <li><b>1 · 준비</b><span>플레이어의 예측 위치로 기준각을 한 번 고정한다.</span></li>
+            <li><b>2 · 전개</b><span>0.08초 간격으로 한 발씩, 각도 증분을 적용해 12발을 쏜다.</span></li>
+            <li><b>3 · 역코일</b><span>중간부터 각도 증분의 부호를 바꿔 두 번째 빈 공간을 만든다.</span></li>
+          </ol>
+          <div class="difference">
+            <strong>기존 <code>fan</code>과의 차이</strong>
+            <p>다섯 발을 동시에 같은 각도로 반복하지 않는다. 플레이어는 고정 부채꼴의 틈이 아니라 시간에 따라 이동하는 곡선형 빈 공간을 읽는다.</p>
+          </div>
+        </div>
+        <table class="spec-table" aria-label="각도 코일 제안 사양">
+          <tbody>
+            <tr><th>초기 튜닝</th><td>준비 0.85초 · 발사 0.96초 · 회복 0.90초</td></tr>
+            <tr><th>최대 탄환</th><td>12발 · 한 번에 한 발 생성</td></tr>
+            <tr><th>이동 법칙</th><td>각 탄환은 직선 · 발사기 각도만 순차 변경</td></tr>
+            <tr><th>표적 규칙</th><td>준비 종료 시 한 번 고정 · 이후 추적 없음</td></tr>
+            <tr><th>회피 핵심</th><td>코일 안쪽으로 파고들지, 바깥쪽으로 빠질지 조기에 선택</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="pattern" id="stage-2">
+      <header class="pattern-header">
+        <div>
+          <p class="stage-label">Stage 2 · Archive Leviathan</p>
+          <h3>지연 점화 연쇄</h3>
+          <div class="code-name"><code>delayed_ignition_chain</code> · <code>archive_cross</code> 교체</div>
+        </div>
+        <div class="recommendation">위치와 방향을 미리 확정하는 시간 패턴</div>
+      </header>
+      <figure>
+        <img class="pattern-image" src="assets/boss-pattern-concepts-2026-08-10/stage-2-delayed-ignition-chain.png" alt="길쭉한 보스와 플레이어 사이에 어두운 휴면탄 세 개와 이미 발사된 밝은 탄환 세 개가 대각선 연쇄로 놓인 탑다운 전투 시안" width="1672" height="941">
+        <figcaption>어두운 탄환은 아직 피해를 주지 않는 휴면 상태, 밝은 탄환은 순서대로 점화된 상태를 뜻한다. 별도의 원형 장판이나 경로선은 사용하지 않는다.</figcaption>
+      </figure>
+      <div class="pattern-body">
+        <div class="pattern-copy">
+          <p>보스가 전장에 여섯 개의 휴면탄을 느슨한 연쇄 형태로 배치한다. 모든 위치와 방향은 준비 단계에서 확정된다. 활성 단계가 시작되면 휴면탄이 앞에서 뒤로 하나씩 열리고, 각자 미리 정한 직선 방향으로 발사된다.</p>
+          <ol class="timeline" aria-label="지연 점화 연쇄 전투 흐름">
+            <li><b>1 · 배치</b><span>여섯 위치와 발사 방향을 고정하고 어두운 휴면탄을 표시한다.</span></li>
+            <li><b>2 · 점화</b><span>0.15초 간격으로 한 개씩 밝아지며 직선 발사한다.</span></li>
+            <li><b>3 · 통과</b><span>먼저 열린 공간이 다시 닫히기 전에 연쇄의 옆으로 빠진다.</span></li>
+          </ol>
+          <div class="difference">
+            <strong>기존 <code>cross</code>·<code>area</code>와의 차이</strong>
+            <p>동시에 네 방향을 막거나 고정 반경을 점유하지 않는다. 위험 위치가 정지해 있는 동안 발사 시점만 이동하므로, 공간이 아니라 순서를 읽는 패턴이다.</p>
+          </div>
+        </div>
+        <table class="spec-table" aria-label="지연 점화 연쇄 제안 사양">
+          <tbody>
+            <tr><th>초기 튜닝</th><td>준비 1.00초 · 점화 0.90초 · 회복 1.00초</td></tr>
+            <tr><th>최대 탄환</th><td>6개 · 휴면과 비행 상태를 같은 예약 슬롯에서 전환</td></tr>
+            <tr><th>이동 법칙</th><td>휴면 중 정지 · 점화 뒤 직선</td></tr>
+            <tr><th>표적 규칙</th><td>배치 시 위치·방향 고정 · 개별 재조준 없음</td></tr>
+            <tr><th>회피 핵심</th><td>현재 밝은 탄환이 아니라 다음 휴면탄의 방향을 먼저 읽기</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="pattern" id="stage-3">
+      <header class="pattern-header">
+        <div>
+          <p class="stage-label">Stage 3 · Drydock Titan</p>
+          <h3>공전 후 접선 방출</h3>
+          <div class="code-name"><code>orbit_release</code> · <code>titan_burst</code> 교체</div>
+        </div>
+        <div class="recommendation">실제 곡선 운동 · 제한된 새 hot-path 상태 필요</div>
+      </header>
+      <figure>
+        <img class="pattern-image" src="assets/boss-pattern-concepts-2026-08-10/stage-3-orbit-release.png" alt="드라이독 보스 가까이에 네 탄환이 접선 방향으로 공전하고 두 탄환이 바깥으로 방출된 탑다운 전투 시안" width="1672" height="941">
+        <figcaption>보스 가까이의 네 발은 비피해 공전 상태, 멀어진 두 발은 피해가 활성화된 접선 방출 상태다. 실제 게임에서도 공전 궤도선은 그리지 않는다.</figcaption>
+      </figure>
+      <div class="pattern-body">
+        <div class="pattern-copy">
+          <p>여섯 탄환이 보스 주위를 짧게 공전한다. 공전 중에는 충돌 피해가 없고 탄환 방향이 곧 방출 방향을 보여준다. 이후 세 발씩 두 묶음으로 접선 방향에 방출되며, 방출 뒤에는 방향을 바꾸지 않는다.</p>
+          <ol class="timeline" aria-label="공전 후 접선 방출 전투 흐름">
+            <li><b>1 · 공전</b><span>여섯 발이 0.75초 동안 보스 중심을 고정해 회전한다.</span></li>
+            <li><b>2 · 1차 방출</b><span>서로 떨어진 세 발이 현재 접선 방향으로 출발한다.</span></li>
+            <li><b>3 · 2차 방출</b><span>0.22초 뒤 나머지 세 발이 반대 위상에서 출발한다.</span></li>
+          </ol>
+          <div class="difference">
+            <strong>기존 <code>area</code>·방사형 탄막과의 차이</strong>
+            <p>보스 중심에서 전 방향으로 동시에 뿌리지 않는다. 탄환이 먼저 곡선으로 이동하고, 플레이어는 탄환이 향한 접선과 두 차례의 방출 위상을 읽는다.</p>
+          </div>
+        </div>
+        <table class="spec-table" aria-label="공전 후 접선 방출 제안 사양">
+          <tbody>
+            <tr><th>초기 튜닝</th><td>준비 1.00초 · 공전/방출 1.19초 · 회복 1.10초</td></tr>
+            <tr><th>최대 탄환</th><td>6발</td></tr>
+            <tr><th>이동 법칙</th><td>보스 중심 공전 → 접선 직선 비행</td></tr>
+            <tr><th>표적 규칙</th><td>플레이어 추적 없음 · 공전 중심은 준비 종료 시 보스 위치에 고정</td></tr>
+            <tr><th>회피 핵심</th><td>첫 묶음이 만든 빈 위상으로 이동한 뒤 두 번째 묶음을 확인</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="pattern" id="stage-4">
+      <header class="pattern-header">
+        <div>
+          <p class="stage-label">Stage 4 · Switchyard Behemoth</p>
+          <h3>귀환 갈고리</h3>
+          <div class="code-name"><code>return_hook</code> · 이름만 반사인 <code>ricochet_volley</code> 교체</div>
+        </div>
+        <div class="recommendation">한 번만 방향 전환 · 벽 반사보다 공정한 대안</div>
+      </header>
+      <figure>
+        <img class="pattern-image" src="assets/boss-pattern-concepts-2026-08-10/stage-4-return-hook.png" alt="스위치야드 보스 위쪽에는 밖으로 나가는 어두운 탄환 세 개가, 아래쪽에는 보스 쪽으로 돌아오는 밝은 탄환 세 개가 배치된 탑다운 전투 시안" width="1672" height="941">
+        <figcaption>어두운 세 발은 외향 구간, 밝은 세 발은 고정된 회전 뒤 귀환 구간이다. 화살표나 예측 경로 없이 탄환 본체 방향만으로 상태를 읽는다.</figcaption>
+      </figure>
+      <div class="pattern-body">
+        <div class="pattern-copy">
+          <p>두 묶음의 탄환이 넓게 퍼져 나간 뒤, 각자 정해진 시간에 0.16초 동안 방향을 돌려 준비 종료 시 고정한 보스 기준점으로 되돌아온다. 현재 플레이어나 이동 중인 보스를 추적하지 않으며, 한 탄환은 정확히 한 번만 방향을 바꾼다.</p>
+          <ol class="timeline" aria-label="귀환 갈고리 전투 흐름">
+            <li><b>1 · 외향</b><span>세 발씩 두 묶음이 넓은 간격으로 바깥을 향한다.</span></li>
+            <li><b>2 · 회전</b><span>탄환 본체가 밝아지고 0.16초 동안 고정 각도로 방향을 돌린다.</span></li>
+            <li><b>3 · 귀환</b><span>고정된 보스 기준점으로 돌아오며 뒤늦게 안쪽 공간을 다시 압박한다.</span></li>
+          </ol>
+          <div class="difference">
+            <strong>기존 <code>fan</code>·벽 반사와의 차이</strong>
+            <p>현재 <code>ricochet_volley</code>는 실제로는 일반 부채꼴이다. 새 패턴은 벽 위치에 의존하지 않고 탄환 자체가 한 번 되돌아온다. 전체 반사 경로를 미리 그릴 필요가 없어 현재의 경로선 금지 규칙도 지킨다.</p>
+          </div>
+        </div>
+        <table class="spec-table" aria-label="귀환 갈고리 제안 사양">
+          <tbody>
+            <tr><th>초기 튜닝</th><td>준비 1.00초 · 외향 0.55초 · 회전 0.16초 · 귀환 0.65초</td></tr>
+            <tr><th>최대 탄환</th><td>6발</td></tr>
+            <tr><th>이동 법칙</th><td>직선 → 한 번의 고정 회전 → 직선 귀환</td></tr>
+            <tr><th>표적 규칙</th><td>준비 종료 시 보스 기준점 고정 · 플레이어·현재 보스 위치 추적 없음</td></tr>
+            <tr><th>회피 핵심</th><td>탄환을 따라 바깥으로만 이동하지 않고 귀환 공간을 남겨 두기</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="pattern" id="stage-5">
+      <header class="pattern-header">
+        <div>
+          <p class="stage-label">Stage 5 · Crown Engine</p>
+          <h3>분열 별자리</h3>
+          <div class="code-name"><code>splitter_constellation</code> · <code>crown_burst</code> 교체</div>
+        </div>
+        <div class="recommendation">최종 보스용 구조 변화 · 최대 9발</div>
+      </header>
+      <figure>
+        <img class="pattern-image" src="assets/boss-pattern-concepts-2026-08-10/stage-5-splitter-constellation.png" alt="크라운 엔진이 큰 부모탄 두 개를 발사했고, 먼저 사라진 부모탄이 작은 자식 탄환 세 개로 나뉜 상태를 보여주는 탑다운 전투 시안" width="1672" height="941">
+        <figcaption>한 장에 서로 다른 발사 시점을 겹쳤다. 큰 탄환은 부모탄, 왼쪽의 작은 세 발은 먼저 발사된 부모탄이 사라진 뒤 생성된 자식 탄환이다.</figcaption>
+      </figure>
+      <div class="pattern-body">
+        <div class="pattern-copy">
+          <p>보스가 부모탄 세 발을 차례로 발사한다. 각 부모탄은 고정된 비행 시간 뒤 짧게 밝아지고, 자신이 사라진 다음 세 개의 자식 탄환을 고정 각도로 만든다. 부모와 자식이 동시에 중복되지 않으므로 최종 동시 수는 아홉 발이다.</p>
+          <ol class="timeline" aria-label="분열 별자리 전투 흐름">
+            <li><b>1 · 부모탄</b><span>0.22초 간격으로 세 발을 서로 다른 고정 방향에 발사한다.</span></li>
+            <li><b>2 · 예고</b><span>분열 0.16초 전에 부모탄 본체만 밝아진다.</span></li>
+            <li><b>3 · 분열</b><span>부모탄을 먼저 제거하고 각 위치에서 자식탄 세 발을 만든다.</span></li>
+          </ol>
+          <div class="difference">
+            <strong>기존 <code>fan</code>·<code>summon</code>과의 차이</strong>
+            <p>처음부터 여러 발을 동시에 뿌리지 않고 비행 중 탄환 구조가 바뀐다. 새 적을 만드는 소환도 아니며, 플레이어는 부모탄의 미래 분열 위치를 추정해야 한다.</p>
+          </div>
+        </div>
+        <table class="spec-table" aria-label="분열 별자리 제안 사양">
+          <tbody>
+            <tr><th>초기 튜닝</th><td>준비 1.00초 · 부모탄 간격 0.22초 · 개별 분열 0.65초 뒤</td></tr>
+            <tr><th>최대 탄환</th><td>부모 3발 → 자식 9발 · 부모 제거 후 자식 생성</td></tr>
+            <tr><th>이동 법칙</th><td>부모·자식 모두 직선 · 분열 시 고정 상대각</td></tr>
+            <tr><th>표적 규칙</th><td>부모 발사 시 방향 고정 · 분열 후 추적 없음</td></tr>
+            <tr><th>회피 핵심</th><td>부모탄 바로 옆을 따라가지 않고 예상 분열 공간을 확보</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <section class="section" id="guards">
+      <div class="section-heading">
+        <h2>구현 경계와 제외안</h2>
+        <p>이 보고서는 패턴 메커니즘을 선택하기 위한 연구·결정 자료다. 피해량, 속도, 최종 타이밍은 프로토타입과 플레이 테스트 뒤 확정한다. 보스 패턴 종류를 실제로 추가하려면 제품 사양 개정과 별도 ExecPlan이 먼저 필요하다.</p>
+      </div>
+      <div class="scope-grid">
+        <section class="scope-block guard">
+          <h3>반드시 지킬 경계</h3>
+          <ul>
+            <li>다섯 패턴은 자동 공격이 아니라 직접 공격 슬롯 하나씩을 교체한다.</li>
+            <li>시그니처 활성 중 탄환형 자동 공격은 회복 단계까지 지연해 형태와 회피 판단을 섞지 않는다.</li>
+            <li>패턴당 동시 탄환은 최대 12발로 제한해 보스 예약 24발을 침범하지 않는다.</li>
+            <li>경고가 끝난 뒤 플레이어 위치를 다시 읽지 않는다. 지속 유도탄은 만들지 않는다.</li>
+            <li>새 탄환 그림을 만들지 않고 승인된 hostile bolt를 크기·색·회전·상태로 재사용한다.</li>
+            <li>현재 HEAD는 release performance가 검증되지 않았다. 구현 뒤에는 기능 검증과 성능 측정을 별도로 기록한다.</li>
+          </ul>
+        </section>
+        <section class="scope-block reject">
+          <h3>이번 안에서 제외</h3>
+          <ul>
+            <li>기존 v1의 방사형 안전 틈, 연속 장판, 회전 팬, 계단식 빔, 교차 레인.</li>
+            <li>벽 반사탄: 전체 반사 경로를 보여 주지 않으면 불공정하고, 현재 시각 계약은 발사 전 예측 경로선을 금지한다.</li>
+            <li>지속 호밍과 플레이어 재추적: 경고 뒤 공격 형상이 고정된다는 보스 계약을 깨뜨린다.</li>
+            <li>탄환 수로만 압박하는 무제한 나선과 화면 채우기식 탄막.</li>
+            <li>별도의 미니 보스, 위성 장치, 외부 방어막 장치 같은 새 목표물.</li>
+          </ul>
+        </section>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="decision-title">
+      <div class="section-heading">
+        <h2 id="decision-title">권장 구현 순서</h2>
+        <p>먼저 기존 직선탄만으로 만들 수 있는 패턴을 적용하고, 그다음 새 탄환 상태가 필요한 패턴을 추가한다. 이 순서면 신규 메커니즘의 효과와 hot-path 비용을 분리해 확인할 수 있다.</p>
+      </div>
+      <div class="decision-table-wrap" role="region" aria-label="권장 구현 순서표" tabindex="0">
+        <table class="baseline-table">
+          <thead><tr><th>순서</th><th>패턴</th><th>새 상태</th><th>최대 동시 탄환</th><th>이유</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>각도 코일</td><td>발사기 각도·순번</td><td>12</td><td>기존 직선탄을 그대로 사용하며 차이가 가장 크게 보인다.</td></tr>
+            <tr><td>2</td><td>지연 점화 연쇄</td><td>휴면/점화</td><td>6</td><td>위치 고정과 순차 활성의 공정성을 먼저 검증한다.</td></tr>
+            <tr><td>3</td><td>분열 별자리</td><td>한 번의 자식 생성</td><td>9</td><td>부모 제거 후 생성 규칙으로 용량을 명확히 제한할 수 있다.</td></tr>
+            <tr><td>4</td><td>귀환 갈고리</td><td>한 번의 방향 전환</td><td>6</td><td>방향 전환의 판독성과 충돌 연속성을 검증해야 한다.</td></tr>
+            <tr><td>5</td><td>공전 후 방출</td><td>공전 운동·접선 전환</td><td>6</td><td>유일한 지속 곡선 운동이므로 마지막에 별도 프로파일링한다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="sources">
+      <div class="section-heading">
+        <h2>조사 근거</h2>
+        <p>아래 자료에서 구체적인 미술이나 공격을 복제하지 않았다. 시간 순서, 발사기 회전, 방향 변화, 자식 탄환 생성처럼 일반화할 수 있는 탄막 구성 원리만 Cardborne의 고정 경고·수용량·가독성 규칙에 맞게 다시 설계했다.</p>
+      </div>
+      <ul class="sources">
+        <li><a href="https://www.asahi-net.or.jp/~cs8k-cyu/bulletml/index_e.html">BulletML 공식 문서</a> — <code>repeat</code>, <code>wait</code>, 순차 방향 변화와 비행 중 방향 전환.</li>
+        <li><a href="https://www.asahi-net.or.jp/~cs8k-cyu/bulletml/bulletml_ref.html">BulletML 언어 참조</a> — 탄환 행동, 자식 발사, 속도·방향 변경과 소멸.</li>
+        <li><a href="https://arxiv.org/abs/1806.04718">Talakat 연구 논문</a> — 시간에 따라 회전하는 발사기와 발사기 조합.</li>
+        <li><a href="https://arxiv.org/abs/2107.02991">Keiki 연구 논문</a> — 발사 간격과 순서를 포함하는 탄막의 매개변수화.</li>
+        <li><a href="https://sparen.github.io/ph3tutorials/ddsga3.html">Sparen의 Danmaku Design Guide</a> — 움직이는 발사점, 각도 변화, 탄속 차이와 시간 패턴.</li>
+        <li><a href="../product/vehicle_game_spec.md">Cardborne 제품 사양</a> — 준비·활성·회복, 경고 후 고정, 보스 예약 24발과 성능 계약.</li>
+      </ul>
+    </section>
+
+    <aside class="evidence" aria-labelledby="evidence-title">
+      <h2 id="evidence-title">시각 근거와 승인 상태</h2>
+      <dl>
+        <dt>텍스트 정본</dt><dd><code>docs/design/VISUAL_SYSTEM.md</code> 전체 확인</dd>
+        <dt>스타일 정본</dt><dd><code>docs/design/cardborne-universal-art-style-reference.png</code>, 원본 1448×1086 확인</dd>
+        <dt>요구·관측 SHA-256</dt><dd><code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code></dd>
+        <dt>원본 생성물 기록</dt><dd><code>C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png</code>, 2026-08-02 12:13:44 KST</dd>
+        <dt>참조 전달 방식</dt><dd>모든 생성·수정 호출에 정본 PNG를 실제 <code>referenced_image_paths</code> 입력으로 전달</dd>
+        <dt>콘텐츠 참조</dt><dd>해당 단계의 승인된 보스 PNG, 플레이어 기체 PNG와 hostile bolt PNG를 역할 참조로 사용. 생성 결과는 이 자산들을 교체하거나 승인하지 않음</dd>
+        <dt>생성 방식</dt><dd>OpenAI 내장 ImageGen. SVG·ImageMagick으로 시각 형상을 만들거나 보정하지 않음</dd>
+        <dt>보고서 이미지 SHA-256</dt><dd><code>stage-1 e60ade4a…b09e07e</code> · <code>stage-2 4aec47c4…11cc78</code> · <code>stage-3 e7d78a6c…8a86913</code> · <code>stage-4 1668fdeb…ef0d2461</code> · <code>stage-5 b76b6421…ebcfcb</code></dd>
+        <dt>이미지 상태</dt><dd>패턴 설명용 보고서 이미지. 런타임 자산, 충돌 형상, VFX, UI 또는 개별 시각 승인 아님</dd>
+      </dl>
+    </aside>
+
+    <p class="footer-note">Cardborne 보스 패턴 연구 보고서 · 한국어 · 2026-08-10</p>
+  </main>
+</body>
+</html>
