@@ -262,6 +262,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   pulse after the clear. Decoy redirection is visible because affected enemies
   face its target outside already committed attacks. The minimap never reveals
   the outcome.
+- Every revealed Mystery effect shows its complete gameplay footprint from the
+  device position: Gravity Pull radius `480` for `1.2 s`, Cryo Lock radius `360`
+  for `0.8 s`, Projectile Purge radius `420` for its short pulse, and Decoy Signal
+  radius `900` for `6 s`. A boundary accent never substitutes for the filled area.
 - Primary rounds apply the same per-shot structure damage at every point in the
   firing cadence. Structure upgrades change the repeated-hit result for Mystery
   Devices, Bulkhead Guard plates, and armored-elite shells without introducing
@@ -568,6 +572,9 @@ feedback never cancels or duplicates damage.
   - Mystery Projectile Purge shows its full `420` hostile-projectile-clear disk
     immediately at the device position; its single boundary may remain as an
     accent.
+  - Mystery Gravity Pull, Cryo Lock, and Decoy Signal keep full disks at their
+    exact respective radii `480`, `360`, and `900` for their complete active
+    durations; their single boundaries remain accents.
   - Every boss circular damaging startup/window fills the complete committed
     radius with a restrained thermal body plus its single outer boundary. Beam
     startup and active continue to fill their exact clipped damage rectangle.

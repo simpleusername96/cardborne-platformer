@@ -369,8 +369,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   첫 accepted hit 전에는 네 결과의 색, glyph, 방향, animation을 노출하지 않는다.
   첫 hit의 localized text가 결과를 식별하고, 파괴 후 anchor가 필요한 동안만
   resolved wreck를 표시한다. 발동 text는 실제 영향 대상 수를 함께 전달한다.
-  Projectile Purge는 clear 뒤 shared System ring으로 한 번 짧게 pulse하며 별도
-  raster를 추가하지 않는다.
+  네 결과는 모두 device position과 gameplay radius가 일치하는 full-area body를
+  표시한다. Projectile Purge는 clear 뒤 짧게 pulse하고, Gravity Pull, Cryo Lock,
+  Decoy Signal은 실제 영향 지속시간 전체에 exact footprint를 유지한다. Existing
+  shared ring은 boundary accent로만 사용하며 별도 raster를 추가하지 않는다.
 - Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
   Mystery Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
 - reinforcement facility는 enemy actor catalog를 재사용하지 않는 완성된
@@ -500,6 +502,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   position의 projectile-clear radius `420`을 alpha `0.14` full system disk로 즉시
   표시하며 existing single perimeter는 accent로만 fade한다. 두 effect 모두 damage나
   clear가 끝난 뒤 radius를 키우지 않는다.
+- Mystery Gravity Pull은 radius `480`에 alpha `0.10` full system disk를 `1.2s`, Cryo
+  Lock은 radius `360`에 alpha `0.12` full cryo disk를 `0.8s`, Decoy Signal은 radius
+  `900`에 alpha `0.08` full system disk를 `6s` 동안 유지한다. 세 effect 모두 device
+  position을 중심으로 하고 existing perimeter는 boundary accent일 뿐 영향 범위의
+  유일한 표현이 아니다.
 
 ### Typography, spacing 및 control
 

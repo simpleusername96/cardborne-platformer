@@ -310,6 +310,9 @@ keep the shared authored strip. No visual geometry calculates damage or collisio
 | Thermal Burst | Direct-hit center; instant splash radius `72/84/96`; `0.18s` visual life | Full thermal disk alpha `0.16` at final radius from the first frame; approved impact raster remains a centered identity accent and only fades |
 | Drop Mine | Mine origin; instant area hit radius `96/108/120`; `0.18s` visual life | Full player-reward disk alpha `0.16` at final radius from the first frame; approved detonation raster remains a centered identity accent and only fades |
 | Mystery Projectile Purge | Device position; instant hostile-projectile clear radius `420`; `0.18s` visual life | Full system disk alpha `0.14` at final radius from the first frame; one existing perimeter accent may remain and only fades |
+| Mystery Gravity Pull | Device position; affects non-boss enemies through radius `480` for `1.2s` | Full system disk alpha `0.10` at the exact live radius for the complete duration; the existing boundary remains an accent |
+| Mystery Cryo Lock | Device position; affects non-boss enemies through radius `360` for `0.8s` | Full cryo disk alpha `0.12` at the exact live radius for the complete duration; the existing boundary remains an accent |
+| Mystery Decoy Signal | Device position; redirects enemies through radius `900` for `6s` | Full system disk alpha `0.08` at the exact live radius for the complete duration; the existing boundary remains an accent |
 | Boss circular area | Committed center and pattern/zone radius during startup and damaging window | Full thermal disk alpha `0.10 -> 0.20` from readiness `0 -> 1`, plus the existing single outer boundary; active damage keeps the full disk at exact radius |
 | Beam startup/active | Exact clipped damage rectangle | Keep the existing two-plane startup and three-plane active filled corridor unchanged; validate as the non-radial compliant case |
 
@@ -322,7 +325,7 @@ task adds a detonation effect for it, that effect must use the same full-area ru
 Add an explicit secondary-radius field to the fixed `VehicleEffectState` and a named EMP
 effect-store acquisition method so `VehicleRun` publishes `285` and `325` without making
 the renderer derive `+40`. Reset the field on pool reuse and validate both radii. Remove
-EMP, Thermal, Drop Mine, and Mystery radius interpolation because their gameplay resolves
+EMP, Thermal, Drop Mine, and Mystery Purge radius interpolation because their gameplay resolves
 at full extent immediately. Standard and reduced motion retain the same complete footprint;
 they may differ only in non-spatial fade behavior already allowed by the visual system.
 
@@ -586,25 +589,27 @@ Source owners: `scripts/combat/vehicle_effect_state.gd`,
 - [ ] **4.2 Render full-area bodies without false propagation.**
   - Change: implement the locked matrix with the existing disk batch and Electric Field
     mesh; remove radius interpolation from EMP, Thermal, Drop Mine, and Mystery Purge;
-    retain authored rasters/rings only as secondary accents. Fill boss circular startup and
-    active areas while leaving boss patterns and damage untouched. Keep beams unchanged.
+    render Gravity Pull, Cryo Lock, and Decoy Signal as full persistent footprints; retain
+    authored rasters/rings only as secondary accents. Fill boss circular startup and active
+    areas while leaving boss patterns and damage untouched. Keep beams unchanged.
   - Accept: renderer debug data proves exact center/radius and first-frame final extent for
     every matrix row; no area is hollow or edge-only, no pixel extends beyond its gameplay
     footprint, and no node, texture, material, batch, or recurring allocation is added.
 - [ ] **4.3 Strengthen deterministic footprint validation.**
   - Change: update effect-store, combat-renderer, attack-route, secondary-weapon, and damage-
     feedback validators for the matrix, including EMP `285/325`, Electric `120/140/160`,
-    Thermal `72/84/96`, Drop Mine `96/108/120`, Mystery `420`, boss runtime radii, first-
-    frame full extent, standard/reduced parity, and unchanged beam corridors.
+    Thermal `72/84/96`, Drop Mine `96/108/120`, Mystery Purge `420`, Gravity Pull `480`,
+    Cryo Lock `360`, Decoy Signal `900`, boss runtime radii, first-frame full extent,
+    persistent full-duration extent, standard/reduced parity, and unchanged beam corridors.
   - Accept: tests fail for an edge-only disk, renderer-derived radius, delayed scale-up,
     wrong center, alpha/geometry outside the footprint, stale pooled radius, or changed
     gameplay recipient result.
 - [ ] **4.4 Capture and approve exact-radius runtime evidence.**
   - Change: capture Electric levels 1-3; EMP charge and release in standard/reduced motion;
-    Thermal and Drop Mine levels 1-3; Mystery Purge; boss circular startup/active; and beam
-    startup/active at 1280x720 in color and grayscale. Place reference actors/projectiles at
-    the inner, boundary, and just-outside cases and present the consolidated sheet for user
-    review before closing the phase.
+    Thermal and Drop Mine levels 1-3; all four Mystery outcomes; boss circular
+    startup/active; and beam startup/active at 1280x720 in color and grayscale. Place
+    reference actors/projectiles at the inner, boundary, and just-outside cases and present
+    the consolidated sheet for user review before closing the phase.
   - Accept: center, middle, and edge all read as one affected area; just-outside space is
     clearly unaffected; EMP's `285` inner and `325` outer envelopes are distinguishable;
     actors/projectiles remain readable; the user approves the runtime composition.
@@ -827,6 +832,9 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   Production EMP raster bytes remain approved and unchanged as a secondary accent.
 - 2026-08-10: Every displayed area effect must show a continuous body through its complete
   gameplay footprint. A ring, burst, or perimeter may never be the sole area representation.
+- 2026-08-10: Runtime tracing found that Gravity Pull, Cryo Lock, and Decoy Signal also used
+  ring-only Mystery presentation. They are governed by the same full-area rule at exact
+  radii `480`, `360`, and `900` for their complete active durations.
 - 2026-08-10: EMP preserves separate `285` damage/stun and `325` projectile-clear envelopes;
   both appear at full extent on release because both gameplay results resolve immediately.
 - 2026-08-10: The existing mixed boss/non-boss plan is superseded, not deleted. Its
