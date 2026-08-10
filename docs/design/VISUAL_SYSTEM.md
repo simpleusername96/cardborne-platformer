@@ -280,9 +280,11 @@ collision.
   text로 결과를 식별하며 body asset이나 minimap marker를 바꾸지 않는다.
 - boss objective module art와 shared node art는 모두 production에서 제외한다.
   방어막 상태는 boss body와 HUD의 직접 상태 표현이 소유한다.
-- EMP는 유지하는 유일한 대형 effect이며 system-blue의 단일 팔각형 압축 파면을
-  담은 transparent `512×512` authored PNG 하나를 gameplay radius에 맞춰
-  scale/fade한다. Thermal Burst는 별도 승인을
+- EMP는 유지하는 유일한 대형 authored effect이며 system-blue의 단일 팔각형
+  transparent `512×512` PNG를 damage/stun radius `285`의 perimeter accent로
+  scale/fade한다. Runtime의 full-area body는 damage/stun `285`와 hostile-projectile
+  clear `325`를 별도 disk로 즉시 표시하며 authored octagon이 판정 범위를
+  대신하지 않는다. Thermal Burst는 별도 승인을
   받은 transparent `192×192` impact PNG 한 장만 direct primary hit 위치에 짧게
   scale/fade하며 splash recipient에는 생성하지 않는다. Drop Mine은 Thermal과
   semantic ID, raster, batch, color, sound를 공유하지 않는 별도 transparent
@@ -442,7 +444,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   soft glow와 gradient를 갖지 않는다. startup과 active의 강도 차이는 runtime
   alpha, plane width와 세 개 이하의 hard-edged filled plane만으로 전달한다.
 - 원거리 원형 폭격 footprint는 boss만 사용한다. 모든 boss bombardment는 affinity와
-  무관하게 `thermal` orange outer boundary 한 개로 통일한다. ordinary controller와
+  무관하게 exact committed radius를 채우는 `thermal` orange full disk와 outer
+  boundary 한 개로 통일한다. startup body alpha는 readiness에 따라 `0.10 -> 0.20`,
+  damaging window는 `0.20`을 유지한다. ordinary controller와
   artillery는 projectile을 발사하며 ordinary mine의 근접 폭발 범위도 world ring으로
   표시하지 않는다. affinity별 inner ring, diamond, center line, tick bar, commit
   marker는 만들지 않는다.
@@ -470,22 +474,32 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   이며 `shield_down`에는 표시하지 않는다.
 - Thermal Burst impact는 승인된 transparent `192×192` raster 한 장을 direct
   player-primary hit 위치에서 `0.18s` scale/fade한다. gameplay radius `72/84/96`에
-  각각 runtime scale `0.75/0.875/1.0`을 사용한다. splash, DOT, Seeker, reflected,
+  각각 runtime scale `0.75/0.875/1.0`을 사용한다. 같은 위치와 radius에 alpha
+  `0.16`의 full thermal disk가 첫 frame부터 최종 크기로 나타나고 impact raster는
+  centered identity accent로만 fade한다. splash, DOT, Seeker, reflected,
   structure-only와 EMP damage에는 생성하지 않는다. live Thermal impact는 최대
   24개이고 전체 effect store 96 capacity와 EMP 우선권을 유지한다.
 - Electric Field는 player actor 아래 한 retained code-native batch로 실제 damage
-  radius `120/140/160` 전체를 표시한다. arc-purple fill alpha `0.10`, broken
-  perimeter alpha `0.28`, 최대 네 broad internal plane alpha `0.04`만 사용하고 모든
+  radius `120/140/160` 전체를 표시한다. arc-purple fill alpha `0.18`, broken
+  perimeter alpha `0.30`, 최대 네 broad internal plane alpha `0.06`만 사용하고 모든
   geometry는 radius 안에 둔다. Mint barrier/enemy shield와 색·ground attachment·
   silhouette가 다르며 hollow donut, body-hugging bubble, glow, particle spray,
   repeated ring 또는 두 번째 collision truth를 만들지 않는다.
-- EMP charge boundary는 이동 중인 player의 현재 위치를 따라가고, release 파면은
-  실제 release 위치와 gameplay radius를 중심으로 삼는다. Damage, stun과 hostile
-  projectile clear는 charge 완료 시 전체 gameplay 범위에 즉시 적용한다. Standard
-  motion의 one-shot authored `512×512` 팔각형 파면은 기존 `0.55s` fade 수명 안에서
-  첫 `0.20s` 동안 radius `0.15`에서 `1.00`까지 바깥으로 퍼지고, 지나간 내부에는
-  persistent field를 남기지 않는다. Reduced motion은 최종 radius에서 바로 fade한다.
-  여러 ring, spark, dot, noise와 frame-by-frame sprite sequence를 추가하지 않는다.
+- EMP charge는 이동 중인 player의 현재 위치를 따라가며 alpha `0.12`의 full inner
+  damage/stun disk `285`, alpha `0.08`의 full outer projectile-clear disk `325`, outer
+  boundary 하나를 최종 크기로 표시한다. Release는 실제 release 위치에서 inner
+  alpha `0.20`, outer alpha `0.10`의 두 full disk와 radius `285` authored octagon
+  accent를 첫 frame부터 최종 크기로 표시하고 기존 `0.55s` 동안 fade한다. Damage,
+  stun과 hostile projectile clear는 charge 완료 시 각각의 전체 gameplay 범위에
+  즉시 적용되므로 standard/reduced motion 모두 radius interpolation이나 바깥으로
+  퍼지는 파면을 사용하지 않는다. 여러 ring, spark, dot, noise와 frame-by-frame
+  sprite sequence를 추가하지 않는다.
+- Drop Mine detonation은 mine origin과 gameplay radius `96/108/120`에 alpha `0.16`
+  full player-reward disk를 첫 frame부터 최종 크기로 표시하고 approved raster는
+  centered identity accent로만 `0.18s` fade한다. Mystery Projectile Purge도 device
+  position의 projectile-clear radius `420`을 alpha `0.14` full system disk로 즉시
+  표시하며 existing single perimeter는 accent로만 fade한다. 두 effect 모두 damage나
+  clear가 끝난 뒤 radius를 키우지 않는다.
 
 ### Typography, spacing 및 control
 
@@ -669,6 +683,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
 - all 10 shared upgrade semantic artwork identities resolve with no missing slot,
   no image appears above a card title, and every card body has exactly one artwork
+- every displayed circular area has a continuous full-area body from center to exact
+  gameplay radius, instant areas use final radius on their first frame, EMP preserves
+  separately readable `285/325` envelopes, and beam corridors remain exact filled rectangles
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
@@ -710,8 +727,8 @@ Web export만으로 interactive built-Web smoke나 release performance를
   Candidate and intermediate files stay outside the production manifest.
 - Drop Mine gameplay receipt, eight-instance cosmetic subcap, and exact user-approved
   `256x256` raster are production-integrated. Its dedicated retained batch scales the
-  receipt to radius `96/108/120`, uses a short kinetic pop only in standard motion, and
-  starts at the final radius in reduced motion.
+  receipt to radius `96/108/120` as an accent over a full-area disk; standard and reduced
+  motion both start at final radius and only fade.
 - Every non-beam projectile resolves one of the three exclusive player-primary,
   player-seeker, or hostile-bolt identities; runtime owns scale, rotation,
   player-primary affinity tint, collision, speed, and homing.

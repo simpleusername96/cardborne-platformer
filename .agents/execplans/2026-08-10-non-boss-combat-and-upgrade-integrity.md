@@ -396,7 +396,7 @@ Source owners: `docs/product/vehicle_game_spec.md`,
 `tools/validation/validate_vehicle_damage_feedback.gd`,
 `scripts/performance/vehicle_performance_recorder.gd`
 
-- [ ] **0.1 Reconcile durable product contracts.**
+- [x] **0.1 Reconcile durable product contracts.**
   - Change: add the effect-row matrix, unlock/enhance rules, element summary transition,
     relative melee-contact matrix, reinforcement recurrence acceptance, and exact area-
     footprint matrix. Correct the product card order so effect rows precede the final
@@ -406,7 +406,7 @@ Source owners: `docs/product/vehicle_game_spec.md`,
   - Accept: product/catalog prose matches the locked design above, Korean/English content
     requirements are explicit, every displayed area requires a center-to-boundary body,
     and no product value or boss pattern changes.
-- [ ] **0.2 Repair the pre-existing damage-feedback oracle without gameplay changes.**
+- [x] **0.2 Repair the pre-existing damage-feedback oracle without gameplay changes.**
   - Change: isolate the live-crate warning fixture from generated cover so its expected
     boundary comes only from `CRATE_COLLISION_RADIUS + padding`; keep runtime geometry and
     warning behavior byte-for-byte unchanged.
@@ -846,14 +846,19 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 0.
-- Next task: 0.1, reconcile durable product and upgrade catalog contracts.
-- Last completed gate: Discovery Closure Gate.
-- Verified source baseline: clean commit `6494563f`; the completed EMP contract and earlier
-  four focused validators record their passing gates, while the exact pre-existing crate-
-  warning validation failure remains recorded above. Phase 0.3 has not yet produced an
-  eligible native performance baseline.
-- Implementation completed under this contract: none.
+- Current phase: Phase 1, with the approval-gated Phase 0.3 baseline still required before
+  any Phase 2 runtime hot-path edit.
+- Next task: 1.1, centralize behavior values without changing them.
+- Last completed gate: Phase 0 contract/oracle checkpoint. The three owning specs match the
+  locked upgrade, contact, reinforcement, and exact-area contracts;
+  `VEHICLE_DAMAGE_FEEDBACK_VALIDATION_OK`, `CARDBORNE_VISUAL_AUTHORITY_VALIDATION_OK`,
+  focused stale-wavefront search, and `git diff --check` pass.
+- Verified source baseline: clean commit `04839774` preceded the Task 0.1/0.2 work. The
+  former crate-warning failure was fixture contamination from generated cover; the isolated
+  one-crate clear-path fixture passes without a runtime geometry change. Phase 0.3 has not
+  yet produced an eligible native performance baseline.
+- Implementation completed under this contract: Tasks 0.1 and 0.2. Phase 0.3 remains
+  unchecked because its two 60-second foreground scenarios require user alignment.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 

@@ -127,6 +127,15 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   and swept collision chooses the earliest intersected enemy. A round without
   explicit pierce is retired at that first enemy instead of crossing the
   visible body.
+- Ordinary hull contact uses the relative swept path between the player's and
+  enemy's physics-start and physics-end positions, so two moving bodies cannot
+  cross between endpoint checks. Chaser, Scrap Drone, Rammer, and committed
+  collective execution contact can damage at most once per warned active
+  attack. Bulkhead Guard and Splitter Barge use persistent hull contact with a
+  `0.8 s` per-enemy retry cooldown that starts only when barrier or hull accepts
+  damage; an invulnerability rejection leaves the contact armed. Ranged,
+  support, fixed-structure, and ordinary-mine hull overlap never deals contact
+  damage. Boss contact remains independently authored.
 - Every hostile attack has a startup descriptor produced from simulation
   values. Its `danger footprint` is the exact set of player-center positions
   that can receive damage: projectile radius plus player radius, contact
@@ -319,7 +328,12 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    clear distant anchor. It is not an enemy actor and does not count toward the
    quota. While alive it spawns an existing stage-scaled role every `8/7/6/5/4`
    seconds, respects both the global active cap and a per-facility live-child cap
-   of `2/3/4/5/6`, and stops immediately when destroyed or the stage completes.
+   of `2/3/4/5/6`, and resets its interval after every accepted spawn. A full
+   child or global cap holds a completed interval at zero; freeing either slot
+   permits the pending spawn immediately. The facility can repeat this cycle for
+   its complete active lifetime and stops permanently when destroyed, retired,
+   or the stage completes. Only living summoned actors whose `carrier_id` is
+   `reinforcement_facility` count against its child cap.
 6. On reaching the quota, ordinary spawning stops and a 1.5-second boss warning
    identifies a reachable arrival anchor at least 1200 pixels from the player
    when the field permits it. Boss creation and boss-defeat completion reject
@@ -396,6 +410,19 @@ does not produce a transient message.
   Weapon Mods, Secondary Weapon Systems, Attack Status Effects, and Chassis &
   Support. Category is separate from change kind and optional weapon-slot
   ownership. Dash and EMP remain base actions but have no upgrade cards.
+- A first acquisition is an `unlock` only when it creates a previously absent
+  behavior: Split Muzzle, Piercing Rounds, an optional secondary, or an element.
+  Homing Missiles is an `enhance` offer from its first card because Seeker starts
+  equipped; all later behavior-card levels are enhancements. Change kind remains
+  in the frozen offer and localized accessibility name, not visible card chrome.
+- Every legal card state publishes one or two gameplay-owned effect rows. The
+  six behavior-card sequences are: Split Muzzle `1->2->3` projectiles per volley
+  and `100%->140%->165%` total volley damage; Piercing Rounds `0->1->2->3`
+  additional penetrations; Homing Missiles `1->2->3` missiles and `25->28->32`
+  damage per missile; Electric Field `8->12->16` DPS and `120->140->160` radius;
+  Orbiting Blades `2->3->4` blades and `14->18->22` damage per blade; Drop Mines
+  `48->60->72` damage and `3.2->2.8->2.4 s` deployment interval. Optional-secondary
+  and element unlocks show their acquired values without a false zero comparison.
 - `Movement Speed`, `Pickup Radius`, `Hull Integrity`, and `Lifesteal` are the
   complete Chassis & Support category. Pickup Radius preserves the former
   Pickup Magnet card's three-level collection effect. Every run starts with
@@ -518,6 +545,32 @@ feedback never cancels or duplicates damage.
   uses a restrained fill, one broken perimeter, and at most four broad internal
   planes; it is not a shield and owns no collision or damage query. Gameplay
   retains the 0.25-second tick, line-of-sight rule, and enemy-body overlap test.
+- Every displayed area effect contains a continuous low-alpha body from its
+  center through its exact gameplay boundary. A perimeter or authored impact
+  may reinforce identity but is never the only range representation. An area
+  that resolves in one simulation step appears at full extent on that frame and
+  only fades; it does not grow outward after recipients were already resolved.
+  Presentation consumes gameplay-owned centers, shapes, radii, phases, and
+  timing and never performs collision or damage queries.
+- The exact area presentation contract is:
+  - Electric Field follows the player for its complete active interval at radius
+    `120/140/160` with a full arc-purple disk, internal planes, and one restrained
+    perimeter, all clipped inside the live damage radius.
+  - EMP charge follows the player and previews a full inner `285` damage/stun disk
+    plus a full outer `325` hostile-projectile-clear disk. On release, both
+    envelopes resolve immediately at the release position and appear at final
+    size for the `0.55 s` fade; the authored octagon is an inner-envelope accent,
+    not an outward-moving damage front.
+  - Thermal Burst shows a full radius `72/84/96` disk from its direct-hit center;
+    the approved impact is a centered accent. Drop Mine shows a full radius
+    `96/108/120` disk at the mine origin; its approved detonation is a centered
+    accent. Both resolve at final size and only fade during their `0.18 s` life.
+  - Mystery Projectile Purge shows its full `420` hostile-projectile-clear disk
+    immediately at the device position; its single boundary may remain as an
+    accent.
+  - Every boss circular damaging startup/window fills the complete committed
+    radius with a restrained thermal body plus its single outer boundary. Beam
+    startup and active continue to fill their exact clipped damage rectangle.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   mobile enemies, bosses, and field objects categories.
 - The current ship page shows derived stats and equipped secondaries. Encountered
@@ -554,8 +607,8 @@ feedback never cancels or duplicates damage.
   values without a false zero-to-value comparison; later levels show the real
   current-to-next values.
 - Each card follows one centered vertical information order: category, upgrade
-  name, large semantic artwork, `Lv.current → next`, one short localized effect
-  summary, then up to two real current-to-next values. Korean summaries target
+  name, large semantic artwork, `Lv.current → next`, one or two real effect rows,
+  then one short localized effect summary. Korean summaries target
   roughly ten characters and English summaries use two to five words. Visible
   change-kind text remains omitted while unlock/enhance meaning stays in its
   accessibility name. The card uses
