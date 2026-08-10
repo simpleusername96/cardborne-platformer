@@ -1,0 +1,46 @@
+{
+  "id": "emp_magnetic_flux_v2",
+  "status": "awaiting_exact_user_approval",
+  "production_applied": false,
+  "user_direction": "Replace the current EMP visual with a magnetic-field vibe while keeping its shape and color distinct from Electric Field and enemy shields.",
+  "candidate_path": "docs/design/visual-replacement-workbench/candidates/emp-magnetic-flux-v2/emp_magnetic_flux_candidate.png",
+  "comparison_path": "docs/design/visual-replacement-workbench/candidates/emp-magnetic-flux-v2/emp_magnetic_flux_comparison.png",
+  "candidate_sha256": "eb78a1b3e4ade8ebbe904d183b2e44dd3caf5383ee80105b75bcfa84e9a69054",
+  "canvas": [512, 512],
+  "pivot": [256, 256],
+  "visual_authority_evidence": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "document_read_complete": true,
+    "sheet_inspected_original": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "image_gen.referenced_image_paths"
+  },
+  "reference_inputs": [
+    "docs/design/cardborne-universal-art-style-reference.png",
+    "art/visuals/production/gameplay/effects/fx_emp_release.png",
+    "docs/design/visual-replacement-workbench/candidates/progression-feedback-combat-readability-v1/electric-field-to-be.png"
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "selected_output": "exec-90bc5d1b-f8d5-4e56-a18d-8caf6c647045.png",
+    "prompt_summary": "Two opposed system-blue magnetic flux sheets joined at the player center; broad ground-parallel energy planes; no ring, shield, X, particles, lightning, magenta, purple, or mint.",
+    "postprocess": [
+      "remove_chroma_key.py with border auto-key, soft matte, despill, and edge-contract 1",
+      "mechanical Lanczos resize to 512x512",
+      "mechanical AS-IS/TO-BE comparison placement with plain labels"
+    ]
+  },
+  "intended_runtime_contract": {
+    "asset_id": "effect/emp_release",
+    "single_raster": true,
+    "retire_current_live_emp_radius_ring": true,
+    "charge_presentation": "Reuse the same raster at low alpha, centered on the live player position, with runtime-owned charge scale and timing.",
+    "release_presentation": "Reuse the same raster for one short radius-scaled release fade.",
+    "gameplay_radius_owned_by_runtime": true,
+    "timing_owned_by_runtime": true,
+    "candidate_does_not_change_damage_stun_or_projectile_clear": true,
+    "production_switch_requires_exact_user_approval": true
+  }
+}
