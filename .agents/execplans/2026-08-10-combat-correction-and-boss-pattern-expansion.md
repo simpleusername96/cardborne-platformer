@@ -1,9 +1,10 @@
 ---
 type: plan
-status: active
+status: superseded
 owner: BK
 created: 2026-08-10
 last_reviewed: 2026-08-10
+superseded_by: ./2026-08-10-non-boss-combat-and-upgrade-integrity.md
 topic: Remaining combat presentation, pressure, boss-pattern, Mystery Device, and release-qualification corrections
 scope: Dash-stable presentation, truthful facing, distinct Drop Mine feedback, minimap scale, ordinary damage, diverse bounded boss maneuvers, Mystery Device readability, and final performance qualification
 supersedes:
@@ -33,8 +34,9 @@ stage-specific maneuvers, make Mystery Device outcomes legible, and then qualify
 built workload.
 
 The superseded plans remain under `docs/reports/` as historical evidence. Their completed
-tasks are not repeated here. This file is the only active execution contract for this
-outcome.
+tasks are not repeated here. This file was the active execution contract for this outcome;
+it is now superseded by `2026-08-10-non-boss-combat-and-upgrade-integrity.md`. Do not execute
+its unchecked tasks unless a later user direction creates a new active contract for them.
 
 ## Why and Current Evidence
 
