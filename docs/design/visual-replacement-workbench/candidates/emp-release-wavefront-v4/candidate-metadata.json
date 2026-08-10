@@ -162,6 +162,13 @@
     "production_path": "art/visuals/production/gameplay/effects/fx_emp_release.png",
     "production_sha256": "558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896",
     "commit": "622f3e05aee959537496994514058ea504b21c74",
-    "applied_at": "2026-08-10T17:52:43+09:00"
+    "applied_at": "2026-08-10T17:52:43+09:00",
+    "validation_evidence": [
+      ".\\tools\\godot.ps1 --path . --headless --import",
+      ".\\tools\\export_web.ps1",
+      "build/visual-captures/emp-wavefront-final-web/standard-release-start.png sha256=395ff67ce6d6a9f5249088aff63f11f3e974d90a50ce737f4c2426cf2a22d699",
+      "build/visual-captures/emp-wavefront-final-web/reduced-motion-final-radius.png sha256=52137ad4e44fe66ffbf50e8bbfaa43c31041e7ba889953d90db2b680a6f87952",
+      "Chrome built-product smoke completed with no console warnings or errors"
+    ]
   }
 }

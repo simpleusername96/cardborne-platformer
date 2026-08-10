@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-10
 last_reviewed: 2026-08-10
@@ -262,21 +262,21 @@ Preconditions:
 
 Source owners: Godot importer, Web exporter, capture driver, this execution contract
 
-- [ ] **4.1** Run final focused source and import checks.
+- [x] **4.1** Run final focused source and import checks.
   - Change: run the authority/workbench/runtime validators once, then perform a full Godot
     import after the production PNG stops changing.
   - Accept: all commands exit zero; no missing resource, import, parse, or manifest error.
-- [ ] **4.2** Build and inspect the production-style Web artifact.
+- [x] **4.2** Build and inspect the production-style Web artifact.
   - Change: run `./tools/export_web.ps1`, start the built artifact through the repository's
     guarded path, and inspect standard/reduced EMP release placement, clipping, and motion.
   - Accept: the built product displays one centered outward octagonal wavefront, reduced
     motion shows final radius immediately, and the current gameplay result remains intact.
-- [ ] **4.3** Record evidence and performance limits.
+- [x] **4.3** Record evidence and performance limits.
   - Change: record hashes, commands, screenshots/captures, unchanged capacity/draw
     ownership, and any known warning in this plan.
   - Accept: structural visual budgets remain within the existing contract and the report
     makes no unmeasured native/Web release-performance claim.
-- [ ] **4.4** Close the ExecPlan.
+- [x] **4.4** Close the ExecPlan.
   - Change: update progress, incorporate durable visual behavior into its owning spec,
     mark frontmatter `done`, and commit only task-owned files.
   - Accept: no placeholder, stale approval state, untracked candidate, or required task
@@ -324,10 +324,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4 - Production qualification and closeout.
-- Next task: 4.1 - run final focused source and import checks from the applied production
-  checkpoint.
-- Last completed gate: Phase 3 applied-asset projection and focused integration gate.
+- Current phase: Complete - production qualification and closeout passed.
+- Next task: none; this plan is done. The related non-boss combat plan remains a separate
+  active contract and is not advanced by this EMP closeout.
+- Last completed gate: Phase 4 built-product qualification and closeout gate.
 - Evidence on 2026-08-10:
   - Candidate `558a990821e4bb27422c3a3c754550e1b903500b9eecda2babe6b18b0587f896`,
     comparison `7a28b3604fbef5750b2b7ad061ba6ab43f495a3776e2c70e1b2320713f5ff133`,
@@ -359,6 +359,21 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
     provider, visual-asset coverage, and visual-replacement coverage validators pass.
     The applied workbench returns to `applied=15` with `current=69`, `final=69`, and
     `authored=67`.
+  - Final visual-authority validation passes with canonical sheet SHA-256
+    `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+    `./tools/export_web.ps1` exits zero and reports
+    `WEB_EXPORT_OK path=build/web/index.html files=4`.
+  - The guarded built-Web smoke used Codex lane `13029`. Standard motion displays the
+    centered authored octagon at its small release-start scale; reduced motion displays the
+    same octagon at the final radius immediately. Both fit inside the `1280x720` game
+    viewport without clipping, and Chrome reported no console warning or error. Evidence:
+    `build/visual-captures/emp-wavefront-final-web/standard-release-start.png`
+    (`395ff67c...`) and `reduced-motion-final-radius.png` (`52137ad4...`). The temporary
+    task-owned server was positively identified and stopped; the reduced-motion setting was
+    restored to off.
+  - This closeout proves import, structural budgets, focused behavior, and built-product
+    visual presentation only. It does not claim native or Web release performance; the
+    existing release-performance gate remains unqualified and outside this contract.
 - Quality audit: scale/origin logic remains in the existing effect renderer; emission
   color remains in `VehicleRun`; no new event, provider, asset ID, batch, node, capacity,
   allocation, or gameplay owner was introduced. Adding `modulate` to the existing debug
