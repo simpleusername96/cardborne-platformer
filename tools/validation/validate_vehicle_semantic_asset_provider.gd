@@ -36,6 +36,9 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"world/surface_detail_crack",
 	&"world/surface_detail_stain",
 	&"world/surface_detail_embedded_chip",
+]
+
+const RETIRED_PRIMITIVE_IDS: Array[StringName] = [
 	&"effect/emp_release",
 	&"effect/thermal_burst_impact",
 	&"effect/drop_mine_detonation",
@@ -45,6 +48,18 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"cue/diamond_marker",
 	&"cue/disk_mask",
 	&"cue/crosshair",
+]
+
+const RETIRED_PRIMITIVE_PATHS := [
+	"res://art/visuals/production/gameplay/effects/fx_emp_release.png",
+	"res://art/visuals/production/gameplay/effects/thermal_burst_impact.png",
+	"res://art/visuals/production/gameplay/effects/drop_mine_detonation.png",
+	"res://art/visuals/production/gameplay/effects/cues/cue_health_bar_frame_9.png",
+	"res://art/visuals/production/gameplay/effects/cues/cue_ring.png",
+	"res://art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png",
+	"res://art/visuals/production/gameplay/effects/cues/cue_diamond_marker.png",
+	"res://art/visuals/production/gameplay/effects/cues/cue_disk_mask.png",
+	"res://art/visuals/production/gameplay/effects/cues/cue_crosshair.png",
 ]
 
 const FORBIDDEN_ID_PREFIXES := [
@@ -58,9 +73,16 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 72, "all 69 gameplay PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 63, "all 60 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
+	for asset_id in RETIRED_PRIMITIVE_IDS:
+		_expect(not AssetProvider.has_asset(asset_id), "%s stays retired from the runtime pack" % asset_id)
+	for path in RETIRED_PRIMITIVE_PATHS:
+		_expect(
+			not FileAccess.file_exists(path) and not FileAccess.file_exists("%s.import" % path),
+			"shape/color-only production source and import sidecar stay retired: %s" % path
+		)
 	for asset_id in ids:
 		var id_text := String(asset_id)
 		_expect(
@@ -88,9 +110,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 72
+		int(manifest.get("final_asset_count", 0)) == 63
 			and not manifest.has("animations"),
-		"manifest declares 72 static authored images and no frame animations"
+		"manifest declares 63 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	_validate_normalized_content_rects()
@@ -125,7 +147,6 @@ func _validate_normalized_content_rects() -> void:
 		&"world/mystery_device_intact":Rect2i(6, 5, 372, 374),
 		&"world/mystery_device_resolved":Rect2i(6, 5, 372, 374),
 		&"world/facility_reinforcement_fabricator":Rect2i(16, 43, 224, 170),
-		&"cue/disk_mask":Rect2i(7, 6, 113, 115),
 	}
 	for asset_id in expected:
 		var descriptor := AssetProvider.descriptor(asset_id)

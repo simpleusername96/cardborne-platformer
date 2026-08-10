@@ -10,8 +10,8 @@ style reference only, never asset approval.
 
 ## Ownership
 
-- `gameplay/asset-manifest.json` explicitly indexes 72 gameplay images: 69
-  approved PNGs plus 3 approved deterministic SurfaceDetail SVGs.
+- `gameplay/asset-manifest.json` explicitly indexes 63 gameplay images: 60
+  approved semantic PNGs plus 3 approved deterministic SurfaceDetail SVGs.
 - All non-beam projectiles reuse `projectile/energy_teardrop`. Runtime owns
   rotation, scale, faction or affinity tint, collision, cadence, range, homing,
   and damage.
@@ -21,14 +21,12 @@ style reference only, never asset approval.
   `boss/node_resolved`; gameplay retains module kind, index, health, and state.
 - Repair and overdrive are complete circular authored pads. Gameplay owns their
   live radii, and presentation scales the pad to the live footprint.
-- `effect/emp_release`, `effect/thermal_burst_impact`, and
-  `effect/drop_mine_detonation` are the authored raster effects. Runtime owns
-  their live-radius scale and short fade; Thermal is emitted only for an
-  eligible direct player-primary enemy contact, while Drop Mine is emitted once
-  at its origin after damage resolves and is capped at eight cosmetics.
-- HUD and minimap UI remain code-native. World-space combat cues, telegraphs,
-  beams, and live-radius presentation reuse shared authored PNGs while runtime
-  retains their position, dimensions, tint, alpha, readiness, and batching.
+- EMP, Thermal Burst, Drop Mine, Mystery, and boss area effects use retained
+  code-native geometry driven by gameplay-owned centers, radii, timing, and
+  semantic colors. No authored effect raster is indexed.
+- HUD, minimap UI, health rectangles, rings, beam corridors, disks, and simple
+  markers remain code-native. Shape/color-only primitives do not receive a
+  production image identity.
 - `ui/` owns the shared code-native Theme, font, and font license. It contains
   no UI chrome PNG, UI image manifest, or UI image provider.
 - Collision, navigation, damage, targeting, encounters, values, and state

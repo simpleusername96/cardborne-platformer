@@ -23,11 +23,11 @@
   "integration": {
     "collision_rule": "Collision geometry, radii, live telegraphs, timing, damage, value, and state remain authoritative in gameplay code.",
     "projectile_rule": "Player primary, player seeker, and hostile non-beam projectiles use separate semantic identities; runtime owns rotation, presentation-only scale, and affinity tint.",
-    "effect_rule": "effect/emp_release, effect/thermal_burst_impact, and effect/drop_mine_detonation are the authored raster effects; runtime owns live-radius scale and fade, Thermal is a direct-hit cosmetic receipt only, and Drop Mine is a distinct origin receipt capped at eight cosmetics.",
-    "shared_world_cue_rule": "Fixed world surface, wall, health-frame, ring, beam, marker, disk, and crosshair identities are authored PNGs. The three approved SurfaceDetail identities are exact deterministic SVG sources. Runtime owns only placement, stretch, rotation, tint, alpha, clipping, and live-state timing.",
-    "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, and live timing remain runtime truth; they do not create a second visual-identity asset."
+    "effect_rule": "EMP, Thermal Burst, Drop Mine, Mystery, and boss area effects use code-native retained geometry driven by gameplay-owned centers, radii, timing, and semantic colors; no authored raster effect is indexed.",
+    "shared_world_cue_rule": "Fixed world surface and wall identities remain authored PNGs. The three approved SurfaceDetail identities are exact deterministic SVG sources. Dynamic health rectangles, rings, beam corridors, disks, and simple markers are code-native geometry.",
+    "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, live timing, and shape/color-only dynamic primitives remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 72,
+  "final_asset_count": 63,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -40,10 +40,10 @@
     "world_facility": 16,
     "world_presentation": 2,
     "surface_detail": 3,
-    "cue": 6,
-    "emp": 1,
-    "thermal_impact": 1,
-    "drop_mine_detonation": 1,
+    "cue": 0,
+    "emp": 0,
+    "thermal_impact": 0,
+    "drop_mine_detonation": 0,
     "upgrade": 10
   },
   "attachments": {
@@ -123,17 +123,7 @@
     {"id": "world/surface_detail_stain", "path": "world/surface_detail_stain.svg", "canvas": [128, 96], "content_rect": [0, 0, 128, 96], "pivot": [64, 48], "category": "world", "authoring": "approved_deterministic_surface_detail_svg"},
     {"id": "world/surface_detail_embedded_chip", "path": "world/surface_detail_embedded_chip.svg", "canvas": [64, 64], "content_rect": [0, 0, 64, 64], "pivot": [32, 32], "category": "world", "authoring": "approved_deterministic_surface_detail_svg"},
 
-    {"id": "effect/emp_release", "path": "effects/fx_emp_release.png", "canvas": [512, 512], "pivot": [256, 256], "category": "effect", "scale_from_gameplay_radius": true},
-    {"id": "effect/thermal_burst_impact", "path": "effects/thermal_burst_impact.png", "canvas": [192, 192], "pivot": [96, 96], "category": "effect", "scale_from_gameplay_radius": true},
-    {"id": "effect/drop_mine_detonation", "path": "effects/drop_mine_detonation.png", "canvas": [256, 256], "pivot": [128, 128], "category": "effect", "scale_from_gameplay_radius": true},
-
     {"id": "world/surface_panel_9", "path": "world/presentation/world_surface_panel_9.png", "canvas": [288, 288], "pivot": [144, 144], "category": "world"},
-    {"id": "world/wall_segment_9", "path": "world/presentation/world_wall_segment_9.png", "canvas": [192, 96], "pivot": [96, 48], "category": "world"},
-    {"id": "cue/health_bar_frame_9", "path": "effects/cues/cue_health_bar_frame_9.png", "canvas": [96, 16], "pivot": [48, 8], "category": "cue"},
-    {"id": "cue/ring", "path": "effects/cues/cue_ring.png", "canvas": [128, 128], "pivot": [64, 64], "category": "cue"},
-    {"id": "cue/beam_strip_9", "path": "effects/cues/cue_beam_strip_9.png", "canvas": [128, 32], "pivot": [64, 16], "category": "cue"},
-    {"id": "cue/diamond_marker", "path": "effects/cues/cue_diamond_marker.png", "canvas": [64, 64], "pivot": [32, 32], "category": "cue"},
-    {"id": "cue/disk_mask", "path": "effects/cues/cue_disk_mask.png", "canvas": [128, 128], "content_rect": [7, 6, 113, 115], "pivot": [64, 64], "category": "cue"},
-    {"id": "cue/crosshair", "path": "effects/cues/cue_crosshair.png", "canvas": [96, 96], "pivot": [48, 48], "category": "cue"}
+    {"id": "world/wall_segment_9", "path": "world/presentation/world_wall_segment_9.png", "canvas": [192, 96], "pivot": [96, 48], "category": "world"}
   ]
 }

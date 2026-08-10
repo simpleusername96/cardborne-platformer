@@ -5848,8 +5848,15 @@ func _draw_terrain() -> void:
 				var cooldown := float(feature.get("cooldown", 0.0))
 				var available := cooldown <= 0.0
 				var gate_color := Art.SYSTEM if available else Art.TEXT_MUTED
-				_draw_semantic_asset(
-					&"cue/ring", center, TerrainRuntime.GATE_RADIUS, gate_color
+				draw_arc(
+					center,
+					TerrainRuntime.GATE_RADIUS,
+					0.0,
+					TAU,
+					64,
+					gate_color,
+					8.0,
+					true
 				)
 				_draw_semantic_asset(
 					&"world/facility_transit_gate",
@@ -5974,32 +5981,6 @@ func _draw_semantic_asset_fitted(
 	draw_texture_rect(texture, target, false, modulate)
 
 
-func _draw_semantic_asset_segment(
-	asset_id: StringName,
-	from: Vector2,
-	to: Vector2,
-	width: float,
-	modulate: Color = Color.WHITE
-) -> void:
-	var vector := to - from
-	var length := vector.length()
-	if length <= 0.001 or width <= 0.0:
-		return
-	var texture := SemanticAssets.texture(asset_id)
-	var descriptor := SemanticAssets.descriptor(asset_id)
-	if texture == null or descriptor.is_empty():
-		return
-	var canvas := Vector2(descriptor.get("canvas", texture.get_size()))
-	var pivot := Vector2(descriptor.get("pivot", canvas * 0.5))
-	draw_set_transform(
-		from + vector * 0.5,
-		vector.angle(),
-		Vector2(length / canvas.x, width / canvas.y)
-	)
-	draw_texture_rect(texture, Rect2(-pivot, canvas), false, modulate)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-
 func _draw_enemies() -> void:
 	var visible_world := _visible_world_rect(180.0)
 	for enemy in enemies:
@@ -6016,13 +5997,15 @@ func _draw_enemy_overlay(enemy: EnemyState) -> void:
 	if role == &"repair_tender" and not enemy.repair_target_id.is_empty():
 		var repair_target := _find_enemy_by_id(String(enemy.repair_target_id))
 		if repair_target != null and repair_target.alive:
-			_draw_semantic_asset_segment(
-				&"cue/beam_strip_9",
+			draw_line(
 				position,
 				repair_target.pos,
+				Color(Art.MINT, 0.82),
 				14.0,
-				Color(Art.MINT, 0.82)
+				true
 			)
+
+
 func _enemy_color(role: StringName) -> Color:
 	match role:
 		&"chaser", &"shooter", &"mine", &"artillery_spotter", &"rammer":

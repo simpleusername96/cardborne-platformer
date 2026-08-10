@@ -34,7 +34,7 @@ func _run() -> void:
 		"component batches reserve bounded working buffers and retain their full growth ceiling"
 	)
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
-	_validate_area_cue_asset()
+	_validate_primitive_batches(renderer)
 	_validate_emp_presentation(renderer)
 	_expect(
 		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
@@ -193,50 +193,10 @@ func _run() -> void:
 		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
 		presentation
 	)
-	var thermal_batch := renderer.get_node(
-		"Effect_thermal_burst_impact"
-	) as MultiMeshInstance2D
-	var thermal_buffer := thermal_batch.multimesh.buffer
 	_expect(
-		thermal_batch.multimesh.instance_count
-			== EffectStore.MAX_LIVE_THERMAL_IMPACTS
-		and thermal_batch.multimesh.visible_instance_count == 1
-		and thermal_batch.texture == AssetProvider.texture(
-			&"effect/thermal_burst_impact"
-		)
-		and Vector2(thermal_buffer[3], thermal_buffer[7])
-			== Vector2(420.0, 320.0)
-		and is_equal_approx(
-			Vector2(thermal_buffer[0], thermal_buffer[4]).length(),
-			84.0
-		)
-		and Color(
-			thermal_buffer[8], thermal_buffer[9],
-			thermal_buffer[10], thermal_buffer[11]
-		).is_equal_approx(Color(Color.WHITE, 0.20)),
-		"one retained Thermal accent begins at the exact gameplay radius and restrained alpha"
-	)
-	var mine_batch := renderer.get_node(
-		"Effect_drop_mine_detonation"
-	) as MultiMeshInstance2D
-	var mine_buffer := mine_batch.multimesh.buffer
-	_expect(
-		mine_batch.multimesh.instance_count
-			== EffectStore.MAX_LIVE_DROP_MINE_DETONATIONS
-		and mine_batch.multimesh.visible_instance_count == 1
-		and mine_batch.texture == AssetProvider.texture(
-			&"effect/drop_mine_detonation"
-		)
-		and Vector2(mine_buffer[3], mine_buffer[7])
-			== Vector2(500.0, 340.0)
-		and is_equal_approx(
-			Vector2(mine_buffer[0], mine_buffer[4]).length(), 108.0
-		)
-		and Color(
-			mine_buffer[8], mine_buffer[9],
-			mine_buffer[10], mine_buffer[11]
-		).is_equal_approx(Color(Color.WHITE, 0.20)),
-		"reduced motion renders the approved Drop Mine raster at its final gameplay radius"
+		renderer.get_node_or_null("Effect_thermal_burst_impact") == null
+			and renderer.get_node_or_null("Effect_drop_mine_detonation") == null,
+		"Thermal and Drop Mine use the shared primitive batch without dedicated raster nodes"
 	)
 	var effect_disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var effect_disk_buffer := effect_disks.multimesh.buffer
@@ -257,6 +217,17 @@ func _run() -> void:
 			),
 			"transient area body %d starts at its exact final radius" % (index + 1)
 		)
+	_expect(
+		Vector2(
+			effect_disk_buffer[2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
+			effect_disk_buffer[2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
+		).is_equal_approx(Vector2(420.0, 320.0))
+			and Vector2(
+				effect_disk_buffer[3 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
+				effect_disk_buffer[3 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
+			).is_equal_approx(Vector2(500.0, 340.0)),
+		"Thermal and Drop Mine primitive disks preserve their gameplay-owned origins"
+	)
 	thermal_effect.time = 0.09
 	renderer.sync(
 		enemies, projectiles, hostile_projectiles, shards, effect_store.live,
@@ -264,14 +235,18 @@ func _run() -> void:
 		Vector2(260.0,300.0), 1.0, true, "renderer_enemy",
 		presentation
 	)
-	thermal_buffer = thermal_batch.multimesh.buffer
+	effect_disk_buffer = effect_disks.multimesh.buffer
+	var thermal_offset := 2 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
 	_expect(
-		thermal_batch.multimesh.visible_instance_count == 1
-		and is_equal_approx(
-			Vector2(thermal_buffer[0], thermal_buffer[4]).length(), 84.0
+		is_equal_approx(
+			Vector2(
+				effect_disk_buffer[thermal_offset],
+				effect_disk_buffer[thermal_offset + 4]
+			).length(),
+			84.0
 		)
-		and is_equal_approx(thermal_buffer[11], 0.10),
-		"retained Thermal accent keeps its gameplay radius while fading over 0.18 seconds"
+			and is_equal_approx(effect_disk_buffer[thermal_offset + 11], 0.08),
+		"Thermal primitive keeps its gameplay radius while fading over 0.18 seconds"
 	)
 	snapshot = renderer.debug_snapshot()
 	var status_enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
@@ -306,13 +281,18 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2(260.0,300.0), 1.0, true,
 		"renderer_enemy", presentation
 	)
-	mine_buffer = mine_batch.multimesh.buffer
+	effect_disk_buffer = effect_disks.multimesh.buffer
+	var mine_offset := 3 * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
 	_expect(
 		is_equal_approx(
-			Vector2(mine_buffer[0], mine_buffer[4]).length(), 108.0
+			Vector2(
+				effect_disk_buffer[mine_offset],
+				effect_disk_buffer[mine_offset + 4]
+			).length(),
+			108.0
 		)
-		and is_equal_approx(mine_buffer[11], 0.20),
-		"standard motion starts the Drop Mine accent at its exact final radius"
+		and is_equal_approx(effect_disk_buffer[mine_offset + 11], 0.16),
+		"standard motion starts the Drop Mine primitive at its exact final radius"
 	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
 	actual_status_overlay = Color(
@@ -330,12 +310,16 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2(260.0,300.0), 1.0, true,
 		"renderer_enemy", presentation
 	)
-	mine_buffer = mine_batch.multimesh.buffer
+	effect_disk_buffer = effect_disks.multimesh.buffer
 	_expect(
 		is_equal_approx(
-			Vector2(mine_buffer[0], mine_buffer[4]).length(), 108.0
+			Vector2(
+				effect_disk_buffer[mine_offset],
+				effect_disk_buffer[mine_offset + 4]
+			).length(),
+			108.0
 		)
-		and is_equal_approx(mine_buffer[11], 0.10),
+		and is_equal_approx(effect_disk_buffer[mine_offset + 11], 0.08),
 		"Drop Mine reaches its exact gameplay radius while fading over 0.18 seconds"
 	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
@@ -852,10 +836,10 @@ func _run() -> void:
 	var startup_beam_buffer := beam_batch.multimesh.buffer
 	var startup_intensity := smoothstep(0.0, 1.0, 0.72)
 	_expect(
-		is_equal_approx(startup_beam_buffer[5], 54.0 / 0.32)
+		is_equal_approx(startup_beam_buffer[5], 54.0 * 0.5)
 			and is_equal_approx(
 				startup_beam_buffer[17],
-				minf(3.5, 54.0 * 0.065) / 0.32
+				minf(3.5, 54.0 * 0.065) * 0.5
 			)
 			and is_equal_approx(
 				startup_beam_buffer[11],
@@ -878,9 +862,9 @@ func _run() -> void:
 	)
 	var active_beam_buffer := beam_batch.multimesh.buffer
 	_expect(
-		is_equal_approx(active_beam_buffer[5], 54.0 / 0.32)
-			and is_equal_approx(active_beam_buffer[17], minf(20.0, 54.0 * 0.34) / 0.32)
-			and is_equal_approx(active_beam_buffer[29], minf(7.0, 54.0 * 0.10) / 0.32)
+		is_equal_approx(active_beam_buffer[5], 54.0 * 0.5)
+			and is_equal_approx(active_beam_buffer[17], minf(20.0, 54.0 * 0.34) * 0.5)
+			and is_equal_approx(active_beam_buffer[29], minf(7.0, 54.0 * 0.10) * 0.5)
 			and is_equal_approx(active_beam_buffer[11], 0.92)
 			and is_equal_approx(active_beam_buffer[23], 0.88)
 			and is_equal_approx(active_beam_buffer[35], 1.0),
@@ -902,28 +886,23 @@ func _run() -> void:
 	_finish()
 
 
-func _validate_area_cue_asset() -> void:
-	var texture := AssetProvider.texture(&"cue/ring")
-	_expect(texture != null, "area telegraph ring texture resolves")
-	if texture == null:
-		return
-	var image := texture.get_image()
-	_expect(
-		Vector2i(image.get_size()) == Vector2i(128, 128),
-		"area telegraph ring keeps its 128x128 canvas"
-	)
-	var opaque_pixels := 0
-	var dark_pixels := 0
-	for y in image.get_height():
-		for x in image.get_width():
-			var pixel := image.get_pixel(x, y)
-			if pixel.a < 0.05:
-				continue
-			opaque_pixels += 1
-			if pixel.r < 0.90 or pixel.g < 0.90 or pixel.b < 0.90:
-				dark_pixels += 1
-	_expect(opaque_pixels > 4000, "area telegraph ring retains a readable annulus")
-	_expect(dark_pixels == 0, "area telegraph ring has no black RGB fringe")
+func _validate_primitive_batches(renderer: Renderer) -> void:
+	for node_name in [
+		"Overlay_health",
+		"Overlay_ring",
+		"Overlay_danger_ring",
+		"Overlay_beam",
+		"Overlay_disk",
+		"Overlay_diamond",
+		"MysteryEffect_ring",
+	]:
+		var batch := renderer.get_node(node_name) as MultiMeshInstance2D
+		_expect(
+			batch != null
+				and batch.texture == null
+				and batch.multimesh.mesh != null,
+			"%s uses retained code-native geometry without a texture" % node_name
+		)
 
 
 func _validate_emp_presentation(renderer: Renderer) -> void:
@@ -959,24 +938,12 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 		"",
 		presentation
 	)
-	var release_draws := renderer.debug_semantic_texture_draws(
-		&"effect/emp_release"
-	)
+	var release_draws := renderer.debug_semantic_texture_draws(&"effect/emp_release")
 	var release_disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var release_disk_buffer := release_disks.multimesh.buffer
 	_expect(
-		release_draws.size() == 1
-			and Vector2(release_draws[0]["position"]).is_equal_approx(
-				release_position
-			)
-			and is_equal_approx(
-				float(release_draws[0]["radius"]),
-				release_radius
-			)
-			and Color(release_draws[0]["modulate"]).is_equal_approx(
-				Color(Color.WHITE, 0.30)
-			),
-		"standard-motion EMP secondary accent begins at the exact inner radius and restrained alpha"
+		release_draws.is_empty(),
+		"standard-motion EMP requests no authored effect raster"
 	)
 	_expect(
 		release_disks.multimesh.visible_instance_count == 2
@@ -1021,14 +988,7 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 	release_draws = renderer.debug_semantic_texture_draws(&"effect/emp_release")
 	release_disk_buffer = release_disks.multimesh.buffer
 	_expect(
-		release_draws.size() == 1
-			and is_equal_approx(
-				float(release_draws[0]["radius"]),
-				release_radius
-			)
-			and Vector2(release_draws[0]["position"]).is_equal_approx(
-				release_position
-			)
+		release_draws.is_empty()
 			and is_equal_approx(
 				Vector2(release_disk_buffer[0], release_disk_buffer[4]).length(),
 				clear_radius
@@ -1061,11 +1021,7 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 	release_draws = renderer.debug_semantic_texture_draws(&"effect/emp_release")
 	release_disk_buffer = release_disks.multimesh.buffer
 	_expect(
-		release_draws.size() == 1
-			and is_equal_approx(
-				float(release_draws[0]["radius"]),
-				release_radius
-			)
+		release_draws.is_empty()
 			and is_equal_approx(
 				Vector2(release_disk_buffer[0], release_disk_buffer[4]).length(),
 				clear_radius
@@ -1251,7 +1207,7 @@ func _validate_mystery_device_presentation(
 				absf(health_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 5]),
 				16.0
 			),
-		"the facility owns a visibly thick sixteen-unit bar with a four-unit frame"
+		"the code-native facility health rectangles preserve the authored-frame aspect"
 	)
 	var expected_radii := [480.0, 360.0, 900.0]
 	var expected_alphas := [0.10, 0.12, 0.08]

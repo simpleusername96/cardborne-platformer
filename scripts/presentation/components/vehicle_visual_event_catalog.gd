@@ -10,18 +10,9 @@ const EVENTS := {
 		"rotation": &"direction",
 	},
 	&"player_emp_charge": {"mode": &"live_emp_radius"},
-	&"player_emp_release": {
-		"mode": &"authored_emp",
-		"asset": &"effect/emp_release",
-	},
-	&"thermal_burst_impact": {
-		"mode": &"authored_thermal",
-		"asset": &"effect/thermal_burst_impact",
-	},
-	&"drop_mine_detonation": {
-		"mode": &"authored_drop_mine",
-		"asset": &"effect/drop_mine_detonation",
-	},
+	&"player_emp_release": {"mode": &"emp_area"},
+	&"thermal_burst_impact": {"mode": &"thermal_area"},
+	&"drop_mine_detonation": {"mode": &"drop_mine_area"},
 	&"mystery_projectile_purge": {
 		"mode": &"mystery_purge_pulse",
 	},

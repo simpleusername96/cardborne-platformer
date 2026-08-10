@@ -43,8 +43,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 72,
-		"gameplay manifest declares 69 PNGs plus three approved SurfaceDetail SVGs"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 63,
+		"gameplay manifest declares 60 semantic PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(int(family_counts.get("upgrade", 0)) == 10, "gameplay manifest declares ten shared upgrade rasters")
@@ -59,18 +59,13 @@ func _initialize() -> void:
 		"gameplay manifest contains no raster frame animations"
 	)
 	var authored_effects := []
-	var authored_effect_ids := {}
 	for asset_variant in Array(gameplay_manifest.get("assets", [])):
 		var asset := Dictionary(asset_variant)
 		if StringName(asset.get("category", &"")) == &"effect":
 			authored_effects.append(asset)
-			authored_effect_ids[StringName(asset.get("id", &""))] = true
 	_expect(
-		authored_effects.size() == 3
-			and authored_effect_ids.has(&"effect/emp_release")
-			and authored_effect_ids.has(&"effect/thermal_burst_impact")
-			and authored_effect_ids.has(&"effect/drop_mine_detonation"),
-		"EMP release, Thermal Burst, and Drop Mine are the authored raster effects"
+		authored_effects.is_empty(),
+		"transient area effects use no authored raster identities"
 	)
 
 	if not FileAccess.file_exists(EVENT_CATALOG_PATH):
@@ -110,9 +105,9 @@ func _validate_event_catalog() -> void:
 	var expected_mode_counts := {
 		&"hull_afterimage":1,
 		&"live_emp_radius":1,
-		&"authored_emp":1,
-		&"authored_thermal":1,
-		&"authored_drop_mine":1,
+		&"emp_area":1,
+		&"thermal_area":1,
+		&"drop_mine_area":1,
 		&"mystery_purge_pulse":1,
 	}
 	var mode_counts := {}
@@ -132,32 +127,10 @@ func _validate_event_catalog() -> void:
 			not event.has("animation"),
 			"event no longer references raster animation frames: %s" % event_id
 		)
-		if mode == &"authored_emp":
-			_expect(
-				event_id == &"player_emp_release"
-					and StringName(event.get("asset", &""))
-						== &"effect/emp_release",
-				"only EMP release requests the authored EMP raster"
-			)
-		elif mode == &"authored_thermal":
-			_expect(
-				event_id == &"thermal_burst_impact"
-					and StringName(event.get("asset", &""))
-						== &"effect/thermal_burst_impact",
-				"only Thermal direct contacts request the authored impact raster"
-			)
-		elif mode == &"authored_drop_mine":
-			_expect(
-				event_id == &"drop_mine_detonation"
-					and StringName(event.get("asset", &""))
-						== &"effect/drop_mine_detonation",
-				"only Drop Mine receipts request the authored detonation raster"
-			)
-		else:
-			_expect(
-				not event.has("asset"),
-				"code-native event does not request an authored raster: %s" % event_id
-			)
+		_expect(
+			not event.has("asset"),
+			"transient event does not request an authored raster: %s" % event_id
+		)
 	for mode in expected_mode_counts:
 		_expect(
 			int(mode_counts.get(mode, 0)) == int(expected_mode_counts[mode]),

@@ -74,6 +74,7 @@ const BEAM_ACTIVE_INNER_WIDTH_MAX := 20.0
 const BEAM_ACTIVE_INNER_WIDTH_RATIO := 0.34
 const BEAM_ACTIVE_CORE_WIDTH_MAX := 7.0
 const BEAM_ACTIVE_CORE_WIDTH_RATIO := 0.10
+const HEALTH_BAR_ASPECT := 6.0
 class BatchBuffer:
 	var values := PackedFloat32Array()
 	var floats_per_instance := BASE_BUFFER_FLOATS_PER_INSTANCE
@@ -202,8 +203,6 @@ var _boss_variant_batches: Dictionary = {}
 var _enemy_status_material: ShaderMaterial
 var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
-var _thermal_impact_batch: BatchHandle
-var _drop_mine_detonation_batch: BatchHandle
 var _mystery_device_batches: Dictionary = {}
 var _reinforcement_facility_batch: BatchHandle
 var _mystery_effect_ring_batch: BatchHandle
@@ -397,6 +396,10 @@ func debug_semantic_texture_draws(asset_id: StringName = &"") -> Array[Dictionar
 func _build_batches() -> void:
 	_enemy_status_material = ShaderMaterial.new()
 	_enemy_status_material.shader = ENEMY_STATUS_SHADER
+	var unit_quad_mesh := _build_unit_quad_mesh()
+	var health_rect_mesh := _build_unit_quad_mesh(1.0 / HEALTH_BAR_ASPECT)
+	var unit_ring_mesh := _build_unit_ring_mesh()
+	var unit_disk_mesh := _build_unit_disk_mesh()
 	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
 		if archetype == &"stage_boss":
 			continue
@@ -455,22 +458,6 @@ func _build_batches() -> void:
 		&"experience_master",
 		EXPERIENCE_BATCH_INITIAL_CAPACITY
 	)
-	_thermal_impact_batch = _create_asset_batch(
-		"Effect_thermal_burst_impact",
-		&"effect/thermal_burst_impact",
-		EffectStore.MAX_LIVE_THERMAL_IMPACTS,
-		-1,
-		&"effect_thermal_burst_impact",
-		EffectStore.MAX_LIVE_THERMAL_IMPACTS
-	)
-	_drop_mine_detonation_batch = _create_asset_batch(
-		"Effect_drop_mine_detonation",
-		&"effect/drop_mine_detonation",
-		EffectStore.MAX_LIVE_DROP_MINE_DETONATIONS,
-		-1,
-		&"effect_drop_mine_detonation",
-		EffectStore.MAX_LIVE_DROP_MINE_DETONATIONS
-	)
 	_mystery_device_batches[&"intact"] = _create_asset_batch(
 		"MysteryDevice_intact",
 		StringName(
@@ -502,9 +489,9 @@ func _build_batches() -> void:
 		-1,
 		true
 	)
-	_mystery_effect_ring_batch = _create_asset_batch(
+	_mystery_effect_ring_batch = _create_batch(
 		"MysteryEffect_ring",
-		&"cue/ring",
+		unit_ring_mesh,
 		MYSTERY_DEVICE_CAPACITY,
 		-1,
 		&"mystery_effect_ring",
@@ -517,25 +504,25 @@ func _build_batches() -> void:
 		-1,
 		&"electric_field_area"
 	)
-	_overlay_batches[&"health"] = _create_asset_batch(
-		"Overlay_health", &"cue/health_bar_frame_9", HEALTH_BAR_INSTANCE_CAPACITY, 3,
+	_overlay_batches[&"health"] = _create_batch(
+		"Overlay_health", health_rect_mesh, HEALTH_BAR_INSTANCE_CAPACITY, 3,
 		&"overlay_health", HEALTH_BAR_INSTANCE_CAPACITY
 	)
-	_overlay_batches[&"ring"] = _create_asset_batch(
-		"Overlay_ring", &"cue/ring", 1024, 3, &"overlay_ring", 64
+	_overlay_batches[&"ring"] = _create_batch(
+		"Overlay_ring", unit_ring_mesh, 1024, 3, &"overlay_ring", 64
 	)
 	_overlay_batches[&"shield"] = _overlay_batches[&"ring"]
-	_overlay_batches[&"danger_ring"] = _create_asset_batch(
-		"Overlay_danger_ring", &"cue/ring", 256, 3, &"overlay_danger_ring", 32
+	_overlay_batches[&"danger_ring"] = _create_batch(
+		"Overlay_danger_ring", unit_ring_mesh, 256, 3, &"overlay_danger_ring", 32
 	)
-	_overlay_batches[&"beam"] = _create_asset_batch(
-		"Overlay_beam", &"cue/beam_strip_9", 1024, 3, &"overlay_beam", 128
+	_overlay_batches[&"beam"] = _create_batch(
+		"Overlay_beam", unit_quad_mesh, 1024, 3, &"overlay_beam", 128
 	)
-	_overlay_batches[&"disk"] = _create_asset_batch(
-		"Overlay_disk", &"cue/disk_mask", 96, 1, &"overlay_disk"
+	_overlay_batches[&"disk"] = _create_batch(
+		"Overlay_disk", unit_disk_mesh, 96, 1, &"overlay_disk"
 	)
-	_overlay_batches[&"diamond"] = _create_asset_batch(
-		"Overlay_diamond", &"cue/diamond_marker", 640, 4, &"overlay_diamond", 48
+	_overlay_batches[&"diamond"] = _create_batch(
+		"Overlay_diamond", unit_quad_mesh, 640, 4, &"overlay_diamond", 48
 	)
 	_player_craft_body_batch = _create_asset_batch(
 		"Player_craft_body",
@@ -629,6 +616,58 @@ static func _build_electric_field_mesh() -> Mesh:
 			direction * 0.82 + lateral,
 			direction * 0.18 + lateral,
 			plane_color
+		)
+	return surface.commit()
+
+
+static func _build_unit_quad_mesh(half_height: float = 1.0) -> Mesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_append_colored_quad(
+		surface,
+		Vector2(-1.0, -half_height),
+		Vector2(1.0, -half_height),
+		Vector2(1.0, half_height),
+		Vector2(-1.0, half_height),
+		Color.WHITE
+	)
+	return surface.commit()
+
+
+static func _build_unit_disk_mesh() -> Mesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var segment_count := 64
+	for index in segment_count:
+		var angle_a := TAU * float(index) / float(segment_count)
+		var angle_b := TAU * float(index + 1) / float(segment_count)
+		_append_colored_triangle(
+			surface,
+			Vector2.ZERO,
+			Vector2.RIGHT.rotated(angle_a),
+			Vector2.RIGHT.rotated(angle_b),
+			Color.WHITE
+		)
+	return surface.commit()
+
+
+static func _build_unit_ring_mesh() -> Mesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var segment_count := 64
+	var inner_radius := 0.94
+	for index in segment_count:
+		var angle_a := TAU * float(index) / float(segment_count)
+		var angle_b := TAU * float(index + 1) / float(segment_count)
+		var outer_a := Vector2.RIGHT.rotated(angle_a)
+		var outer_b := Vector2.RIGHT.rotated(angle_b)
+		_append_colored_quad(
+			surface,
+			outer_a * inner_radius,
+			outer_a,
+			outer_b,
+			outer_b * inner_radius,
+			Color.WHITE
 		)
 	return surface.commit()
 
@@ -1180,7 +1219,7 @@ func _sync_effects(
 				Color(color, color.a * 0.62)
 			)
 			continue
-		if mode == &"authored_emp":
+		if mode == &"emp_area":
 			var fade := 1.0 - progress
 			_write_disk(
 				position,
@@ -1192,40 +1231,19 @@ func _sync_effects(
 				radius,
 				Color(Art.SYSTEM, 0.20 * fade)
 			)
-			_queue_semantic_texture(
-				StringName(event.get("asset", &"effect/emp_release")),
-				position,
-				0.0,
-				radius,
-				Color(color, color.a * 0.30)
-			)
 			continue
-		if mode == &"authored_thermal":
+		if mode == &"thermal_area":
 			_write_disk(
 				position,
 				radius,
 				Color(Art.THERMAL, 0.16 * (1.0 - progress))
 			)
-			_write_instance(
-				_thermal_impact_batch,
-				position,
-				0.0,
-				Vector2.ONE * radius,
-				Color(color, color.a * 0.20)
-			)
 			continue
-		if mode == &"authored_drop_mine":
+		if mode == &"drop_mine_area":
 			_write_disk(
 				position,
 				radius,
 				Color(Art.PLAYER_REWARD, 0.16 * (1.0 - progress))
-			)
-			_write_instance(
-				_drop_mine_detonation_batch,
-				position,
-				0.0,
-				Vector2.ONE * radius,
-				Color(color, color.a * 0.20)
 			)
 			continue
 		if mode == &"mystery_purge_pulse":
@@ -1572,39 +1590,7 @@ func _write_beam(from: Vector2, to: Vector2, width: float, color: Color) -> void
 		return
 	_write_instance_basis(
 		_overlay_batches[&"beam"], from + vector * 0.5,
-		vector / length, Vector2(length * 0.5, width / 0.32), color
-	)
-
-
-func _write_player_barrel(
-	position: Vector2,
-	aim_direction: Vector2,
-	tip_distance: float,
-	color: Color
-) -> void:
-	if aim_direction.is_zero_approx():
-		return
-	var direction := aim_direction.normalized()
-	var barrel_start := position + direction * 12.0
-	var barrel_end := position + direction * tip_distance
-	var vector := barrel_end - barrel_start
-	var length := vector.length()
-	if length <= 0.001:
-		return
-	var center := barrel_start + vector * 0.5
-	_write_instance_basis(
-		_overlay_batches[&"player_barrel"],
-		center,
-		direction,
-		Vector2(length * 0.5, 7.0 / 0.32),
-		Art.INK
-	)
-	_write_instance_basis(
-		_overlay_batches[&"player_barrel"],
-		center,
-		direction,
-		Vector2(length * 0.5, 3.0 / 0.32),
-		color
+		vector / length, Vector2(length * 0.5, width * 0.5), color
 	)
 
 

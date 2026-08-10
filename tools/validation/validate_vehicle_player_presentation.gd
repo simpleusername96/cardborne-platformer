@@ -33,7 +33,7 @@ func _initialize() -> void:
 			"rear anchor remains rigid at %d degrees" % degrees
 		)
 	for asset_id in [&"cue/beam_strip_9", &"cue/diamond_marker", &"cue/ring", &"cue/crosshair"]:
-		_expect(AssetProvider.texture(asset_id) != null, "%s is an authored gameplay cue" % asset_id)
+		_expect(not AssetProvider.has_asset(asset_id), "%s stays code-native instead of an authored cue" % asset_id)
 	_expect(Run.MAX_DASH_AFTERIMAGES == 1, "dash uses exactly one transient afterimage")
 	_finish()
 

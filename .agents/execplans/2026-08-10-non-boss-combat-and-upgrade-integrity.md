@@ -28,9 +28,10 @@ verified progression and contact defects, proves the already-authored reinforcem
 balance behavior, corrects every displayed area effect so its visible body covers its exact
 gameplay footprint, carries the still-required capture/export gates, and qualifies the
 resulting workload. Boss attack patterns and values remain excluded, but their shared
-circular area presentation follows the same footprint rule. The current production EMP
-raster remains byte-identical as a secondary perimeter accent; the previously integrated
-outward-only wavefront motion is replaced by an immediate full-area presentation.
+circular area presentation follows the same footprint rule. The user rejected raster
+layers whose only job is shape and color, so dynamic disks, boundaries, corridors, bars,
+and simple markers are code-native retained geometry. The previously integrated
+outward-only EMP wavefront and its decorative raster are removed from runtime.
 
 ## Purpose
 
@@ -42,8 +43,8 @@ outward-only wavefront motion is replaced by an immediate full-area presentation
   a bounded swept-contact runtime, gameplay-owned area-effect footprint data, full-area
   retained presentation, focused deterministic validators, rendered UI/combat evidence,
   a production Web artifact, and precise performance qualification.
-- Completion state: all task and phase gates pass; no gameplay-value, boss-pattern, or
-  production-raster byte changes;
+- Completion state: all task and phase gates pass; no gameplay-value or boss-pattern
+  changes; obsolete shape-only effect/cue rasters are absent from the runtime pack;
   the plan is then marked `done` and removed only after its durable decisions have been
   incorporated into their owning product/design sources.
 
@@ -98,7 +99,7 @@ In scope:
 - Exact full-area presentation for Electric Field, EMP charge/release, Thermal Burst,
   Drop Mine, Mystery Projectile Purge, and every boss circular damage footprint.
 - Explicit EMP damage/stun radius `285` and projectile-clear radius `325` presentation
-  without delayed radius growth; the current authored octagon remains a secondary accent.
+  without delayed radius growth or an authored-raster accent.
 - Regression proof that beam startup/active continues to fill its exact damage corridor.
 - Repeated reinforcement-facility lifecycle and run-integration validation.
 - Verification of the accepted ordinary health curve
@@ -110,11 +111,10 @@ In scope:
 
 Out of scope:
 
-- Creating, editing, selecting, approving, promoting, or switching any authored raster or
-  SVG. The production EMP, Thermal Burst, Drop Mine, cue ring, and cue disk bytes, pivots,
-  semantic IDs, and workbench metadata remain unchanged. The one allowed descriptor repair
-  is the measured `cue/disk_mask` alpha `content_rect`, because its transparent canvas padding
-  otherwise makes a gameplay-radius transform render a visibly smaller affected body.
+- Creating or replacing authored raster/SVG content. This contract retires only the nine
+  existing shape/color-only runtime images for EMP, Thermal Burst, Drop Mine, health frame,
+  ring, beam strip, diamond marker, disk mask, and unused crosshair; their historical
+  workbench evidence remains history and no replacement image is created.
 - Boss attack patterns, boss contact rules, boss damage, boss health, boss shielding, or
   boss body work. Only the shared presentation of an existing circular gameplay footprint
   may change.
@@ -137,13 +137,15 @@ Constraints and invariants:
 - Cards show one or two real effect rows in every legal offer state, use no horizontal
   separator, and fit Korean/English at 960x540, 1280x720, 1920x1080, and 200% text scale.
 - Every displayed area effect has a continuous low-alpha body from center to exact gameplay
-  boundary. A perimeter, burst raster, or internal plane may reinforce identity but may
-  never be the sole range representation. Instant gameplay areas appear at full extent on
-  their resolution frame; presentation must not imply outward damage propagation.
+  boundary. A perimeter or internal plane may reinforce identity but may never be the sole
+  range representation. Instant gameplay areas appear at full extent on their resolution
+  frame; presentation must not imply outward damage propagation.
 - Presentation consumes gameplay-owned centers, shapes, radii, timing, and phase. It owns
   no collision/damage query and creates no second gameplay truth.
-- The existing retained `cue/disk_mask` batch supplies full-area bodies. No node, texture,
-  material, batch, effect-store capacity, or unbounded per-frame allocation is added.
+- Existing retained batches consume reusable code-native unit meshes for dynamic disks,
+  rings, beam corridors, health rectangles, and diamond markers. No replacement texture,
+  material, batch, effect-store capacity, or unbounded per-frame allocation is added; the
+  dedicated Thermal and Drop Mine raster batches are removed.
 - Contact correctness is fairness-critical and remains on the 60 Hz physics boundary.
   The implementation may scan the already-built bounded active-enemy worklist once, but it
   may not allocate, query the spatial grid once per enemy, or add per-contact nodes/events.
@@ -151,8 +153,11 @@ Constraints and invariants:
 
 Destructive or irreversible actions:
 
-- None. Generated build, capture, and performance outputs remain under ignored `build/`
-  paths. Every source change lands in a coherent task-owned commit.
+- Remove the nine exact obsolete production PNGs and their `.import` sidecars after all
+  runtime references and manifest entries are removed. This is explicitly within the
+  user's shape/color-only retirement direction; git history and workbench evidence remain
+  recoverable. Generated build, capture, and performance outputs remain under ignored
+  `build/` paths. Every source change lands in a coherent task-owned commit.
 
 Exact actions requiring owner or user approval:
 
@@ -166,8 +171,9 @@ Exact actions requiring owner or user approval:
 
 ## Assumptions
 
-- The current production EMP and all already-approved production imagery remain byte-identical;
-  only their retained runtime composition may change.
+- Authored actors, projectiles, rewards, facilities, upgrade art, and other images with a
+  real semantic silhouette remain unchanged. Only shape/color-only effect and cue images
+  are retired.
 - The six missing card rows are a presentation-boundary defect, not authorization to change
   their gameplay values.
 - Reinforcement recurrence code is expected to be correct; tests determine whether any
@@ -222,9 +228,9 @@ belongs in `vehicle_game_spec.md` and `VISUAL_SYSTEM.md`; no new glossary file i
 | Requirement or concern | Verified current owner and behavior | Evidence | Locked decision | Task IDs |
 | --- | --- | --- | --- | --- |
 | Active plan lifecycle | The prior active plan mixes completed non-boss work with deferred boss work and open qualification gates. | `.agents/execplans/2026-08-10-combat-correction-and-boss-pattern-expansion.md` | Supersede it, preserve it as history, and make this the only active contract. | 0.1, 5.4 |
-| Area-effect invariant | The user requires every displayed area effect to cover its complete gameplay footprint; edge-only rings or bursts are not truthful substitutes. | User decision on 2026-08-10; Electric Field and boss-area captures; production effect rasters | Reuse the approved retained disk mask as the complete area body; keep boundaries and authored rasters only as secondary identity accents. | 0.1, 4.1-4.4 |
-| EMP multi-envelope mismatch | EMP damage/stun resolves instantly at radius `285`; projectile clear resolves instantly at `325`; the release event currently carries only `285` and visually expands an open-center octagon for `0.20s`. | `VehicleRun._release_emp()`, `VehicleEffectState`, `VehicleCombatRenderer._sync_effects()`, completed EMP plan | Publish both radii, show both complete disks immediately, keep the octagon at `285` only as an accent, and remove all release-radius interpolation. | 0.1, 4.1-4.4 |
-| Other area-effect mismatch | Electric Field's interior is perceptually weak; Thermal, Drop Mine, and Mystery Purge scale toward final radius after instant resolution; boss circular areas render only a ring. Beams already fill their exact corridors. | `VehicleCombatRenderer._build_electric_field_mesh()`, `_sync_effects()`, `_sync_area_telegraph()`, retained captures | Apply the locked footprint matrix and retain beam behavior byte-for-byte except for stronger validation. | 0.1, 4.2-4.4 |
+| Area-effect invariant | The user requires every displayed area effect to cover its complete gameplay footprint and rejected images whose only role is shape/color. | User decisions on 2026-08-10; Electric Field and boss-area captures; current cue/effect rasters | Render dynamic footprints from reusable code-native geometry; keep no EMP, Thermal, or Drop Mine raster accent. | 0.1, 4.1-4.4 |
+| EMP multi-envelope mismatch | EMP damage/stun resolves instantly at radius `285`; projectile clear resolves instantly at `325`; the release previously expanded an open-center octagon and then retained that octagon as a decorative accent. | `VehicleRun._release_emp()`, `VehicleEffectState`, `VehicleCombatRenderer._sync_effects()`, user correction on 2026-08-10 | Publish both radii and show both complete code-native disks immediately; remove the octagon asset and all release-radius interpolation. | 0.1, 4.1-4.4 |
+| Other geometric cue ownership | Dynamic disks, rings, beam strips, health frames, and diamond markers currently request authored PNGs even though runtime supplies their dimensions and colors. | `VehicleCombatRenderer._build_batches()`, `_write_beam()`, `_write_disk()`, `_sync_health_bar()`, `VehicleRun._draw_terrain()`, `_draw_enemy_overlay()` | Reuse retained code-native unit meshes and code-native lines/arcs, preserve exact gameplay dimensions and capacities, and retire the nine obsolete runtime images. | 4.2-4.4 |
 | Missing card values | Presenter builds rows only from `definition.modifiers`; six behavior cards have none. | `scripts/cards/vehicle_upgrade_offer_presenter.gd:15`, `data/cards/vehicle/*.tres` | Add a gameplay-owned behavior-preview boundary; never add fake runtime modifiers. | 1.1-1.3 |
 | Upgrade source truth | Split/Pierce values live in `VehicleRun`; Seeker upgrades are hardcoded in secondary runtime; optional secondary values live in `.tres` definitions. | `scripts/vehicle/vehicle_run.gd:1575`, `scripts/player/vehicle_secondary_runtime.gd:205`, `data/weapons/vehicle/secondary/*.tres` | Centralize primary rules and secondary definition loading, then make both runtime and previews consume them. | 1.1 |
 | Card semantics and layout | Built-in Seeker is misclassified; element copy is static. Runtime already renders level, effect rows, then summary with zero dividers, while product prose lists summary before values. | `scripts/cards/vehicle_upgrade_offer_presenter.gd:30`, `scripts/ui/vehicle_upgrade_choice_card.gd:243`, `docs/product/vehicle_game_spec.md:550`, `docs/design/VISUAL_SYSTEM.md` | Correct change-kind semantics, add enhancement summaries, and reconcile product prose to the binding visual order. | 0.1, 1.2-1.4 |
@@ -232,9 +238,9 @@ belongs in `vehicle_game_spec.md` and `VISUAL_SYSTEM.md`; no new glossary file i
 | Reinforcement recurrence | Runtime resets its interval after each accepted spawn and retains zero while capacity-blocked; current test stops after first spawn/cap checks. | `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd:45`, `tools/validation/validate_vehicle_reinforcement_facility.gd:20` | Extend lifecycle and run-integration tests; change production only if those exact tests expose a defect. | 3.1 |
 | Missing player contact damage | Player and enemy endpoints are checked at different cadences; there is no relative swept contact owner. | `scripts/vehicle/vehicle_run.gd:1423`, `:2628`, `:2967`, `:3021`; `scripts/enemies/vehicle_enemy_update_schedule.gd` | Add one fixed-cap 60 Hz contact runtime using relative swept circles and explicit role semantics; remove legacy endpoint/decision-only checks. | 2.1-2.4 |
 | Hit protection semantics | `_damage_player()` returns no receipt; one-shot attacks commit before an invulnerability rejection. | `scripts/vehicle/vehicle_run.gd:4169`, `tools/validation/validate_vehicle_damage_feedback.gd` | Return accepted/not-accepted while preserving every caller; barrier absorption is accepted, invulnerability rejection is not. One-shot attacks remain consumed; persistent hull contact retries while overlap remains. | 2.1-2.4 |
-| Hot-path risk | Current runtime already has a bounded active worklist, reusable effect state, retained disk batch, and reusable render buffers; current HEAD lacks qualified release evidence. | `.agents/cardborne-performance-engineering-policy.md`, `.agents/cardborne-runtime-architecture-audit.md`, `scripts/vehicle/vehicle_run.gd:2016`, `scripts/presentation/vehicle_combat_renderer.gd:536` | Reuse the active worklist and existing disk batch, add no per-frame allocations/new batch, instrument the named contact section, and qualify the unchanged final workload only after all fixes. Without a comparable pre-change baseline, make no causal regression claim. | 0.3, 2.2-2.4, 4.1-4.4, 5.3 |
+| Hot-path risk | Current runtime already has a bounded active worklist, reusable effect state, retained overlay batches, and reusable render buffers; current HEAD lacks a comparable pre-change release baseline. | `.agents/cardborne-performance-engineering-policy.md`, `.agents/cardborne-runtime-architecture-audit.md`, `scripts/vehicle/vehicle_run.gd`, `scripts/presentation/vehicle_combat_renderer.gd` | Preserve batch capacities, replace textures with startup-built meshes, remove two obsolete effect batches, add no per-frame allocation, and qualify only after all fixes. Without a comparable pre-change baseline, make no causal regression claim. | 0.3, 2.2-2.4, 4.1-4.4, 5.3 |
 | Validation baseline | Four focused validators pass; damage feedback has one unrelated crate-warning failure on clean `3eea8434`. | Commands and output recorded during 2026-08-10 discovery | Isolate the crate fixture before using that validator as a gate; never report the current failing script as passed. | 0.2 |
-| Visual authority | Current visual spec was read completely; canonical sheet inspected at 1448x1086 with SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. The sheet is style reference, not asset approval. | `docs/design/VISUAL_SYSTEM.md`, canonical PNG | Add no asset. UI changes reuse current Theme/components; area effects reuse approved semantic textures/retained batches and require exact-radius rendered evidence plus the authority validator. | 1.4, 4.1-4.4, 5.1-5.2 |
+| Visual authority | Current visual spec was read completely; canonical sheet inspected at 1448x1086 with SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. The sheet is style reference, not asset approval. | `docs/design/VISUAL_SYSTEM.md`, canonical PNG | Add no asset. Dynamic truth uses restrained hard-edged code-native geometry and semantic tokens; exact-radius rendered evidence plus the authority validator remain required. | 1.4, 4.1-4.4, 5.1-5.2 |
 
 Readiness statement:
 
@@ -253,8 +259,8 @@ Readiness statement:
   `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`
   from `2026-08-02 12:13:44 KST`. `actual_image_reference_used=false` and
   `reference_input_method=not_applicable` because this plan creates no raster/SVG and only
-  changes retained composition. Existing raster approvals remain unchanged; the new runtime
-  composition is pending the Phase 4.4 exact-radius review.
+  changes retained code-native composition. Historical raster approvals are not reused as
+  runtime authority; the new composition is pending the Phase 4.4 exact-radius review.
 
 ## Proposed Design
 
@@ -299,24 +305,25 @@ one artwork, zero horizontal/body dividers, and the existing shared component hi
 
 ### Exact area-effect footprint presentation
 
-The renderer composes every displayed area from an exact gameplay-owned footprint plus an
-optional identity accent. The continuous area body uses the existing approved
-`cue/disk_mask` retained batch; Electric Field keeps its dedicated retained mesh, and beams
-keep the shared authored strip. No visual geometry calculates damage or collision.
+The renderer composes every displayed area from an exact gameplay-owned footprint. The
+continuous area body, boundary, and beam corridor use reusable code-native unit meshes in
+the existing retained batches; Electric Field keeps its dedicated retained mesh. Runtime
+health rectangles and simple diamond markers use the same code-native ownership rule. No
+visual geometry calculates damage or collision.
 
 | Effect | Gameplay footprint and timing | Locked presentation |
 | --- | --- | --- |
 | Electric Field | Player-centered persistent radius `120/140/160`, active continuously with `0.25s` damage ticks | Dedicated full disk fill alpha `0.18`, up to four internal planes alpha `0.06`, broken perimeter alpha `0.30`; all geometry remains inside the exact live radius |
 | EMP charge preview | Live player center; previews damage/stun `285` and projectile clear `325`; no gameplay result before release | Full outer `325` system disk alpha `0.08`, full inner `285` system disk alpha `0.12`, one outer boundary accent; both follow the current player and do not expand |
-| EMP release | Release position; damage/stun resolves instantly through `285`, projectile clear instantly through `325`; `0.55s` visual life | Full outer `325` disk alpha `0.10`, full inner `285` disk alpha `0.20`, current authored octagon at radius `285` as the sole perimeter accent; all layers start at final size and only fade |
-| Thermal Burst | Direct-hit center; instant splash radius `72/84/96`; `0.18s` visual life | Full thermal disk alpha `0.16` at final radius from the first frame; approved impact raster remains a centered identity accent and only fades |
-| Drop Mine | Mine origin; instant area hit radius `96/108/120`; `0.18s` visual life | Full player-reward disk alpha `0.16` at final radius from the first frame; approved detonation raster remains a centered identity accent and only fades |
+| EMP release | Release position; damage/stun resolves instantly through `285`, projectile clear instantly through `325`; `0.55s` visual life | Full outer `325` disk alpha `0.10` and full inner `285` disk alpha `0.20`; both start at final size and only fade, with no raster accent |
+| Thermal Burst | Direct-hit center; instant splash radius `72/84/96`; `0.18s` visual life | One full thermal disk alpha `0.16` at final radius from the first frame; it only fades |
+| Drop Mine | Mine origin; instant area hit radius `96/108/120`; `0.18s` visual life | One full player-reward disk alpha `0.16` at final radius from the first frame; it only fades |
 | Mystery Projectile Purge | Device position; instant hostile-projectile clear radius `420`; `0.18s` visual life | Full system disk alpha `0.14` at final radius from the first frame; one existing perimeter accent may remain and only fades |
 | Mystery Gravity Pull | Device position; affects non-boss enemies through radius `480` for `1.2s` | Full system disk alpha `0.10` at the exact live radius for the complete duration; the existing boundary remains an accent |
 | Mystery Cryo Lock | Device position; affects non-boss enemies through radius `360` for `0.8s` | Full cryo disk alpha `0.12` at the exact live radius for the complete duration; the existing boundary remains an accent |
 | Mystery Decoy Signal | Device position; redirects enemies through radius `900` for `6s` | Full system disk alpha `0.08` at the exact live radius for the complete duration; the existing boundary remains an accent |
 | Boss circular area | Committed center and pattern/zone radius during startup and damaging window | Full thermal disk alpha `0.10 -> 0.20` from readiness `0 -> 1`, plus the existing single outer boundary; active damage keeps the full disk at exact radius |
-| Beam startup/active | Exact clipped damage rectangle | Keep the existing two-plane startup and three-plane active filled corridor unchanged; validate as the non-radial compliant case |
+| Beam startup/active | Exact clipped damage rectangle | Preserve the existing two-plane startup and three-plane active filled corridor dimensions and colors on a code-native unit quad; validate as the non-radial compliant case |
 
 Projectiles, melee/contact, orbiting blades, dash afterimages, barriers/shields, Toxin/Cryo
 body overlays, and actor bodies do not claim radial areas and do not receive a disk. The
@@ -565,7 +572,7 @@ Batch gate:
 ### Phase 4: Make every displayed area footprint truthful
 
 Goal: every area visual covers its complete gameplay footprint at the same center, shape,
-radius, and resolution timing; boundaries and authored impacts remain secondary accents.
+radius, and resolution timing without shape/color-only raster layers.
 
 Preconditions:
 
@@ -588,21 +595,23 @@ Source owners: `scripts/combat/vehicle_effect_state.gd`,
   - Accept: the effect store reuses its fixed 96 states, EMP snapshots expose both exact
     radii without renderer arithmetic, pool reuse clears both, and gameplay damage, stun,
     clear order, values, center, cooldown, and effect capacity are unchanged.
-- [x] **4.2 Render full-area bodies without false propagation.**
-  - Change: implement the locked matrix with the existing disk batch and Electric Field
-    mesh; remove radius interpolation from EMP, Thermal, Drop Mine, and Mystery Purge;
-    render Gravity Pull, Cryo Lock, and Decoy Signal as full persistent footprints; retain
-    authored rasters/rings only as secondary accents. Fill boss circular startup and active
-    areas while leaving boss patterns and damage untouched. Keep beams unchanged.
+- [ ] **4.2 Render full-area bodies without false propagation or raster primitives.**
+  - Change: replace shape/color-only disk, ring, beam, health-frame, and diamond textures
+    with reusable code-native meshes in the existing retained batches; use code-native
+    line/arc drawing for the two matching `VehicleRun` overlays; remove EMP, Thermal, and
+    Drop Mine raster accents and their two dedicated batches; retain the locked final-radius
+    timing, mystery footprints, boss fill, and beam plane dimensions.
   - Accept: renderer debug data proves exact center/radius and first-frame final extent for
-    every matrix row; no area is hollow or edge-only, no pixel extends beyond its gameplay
-    footprint, and no node, texture, material, batch, or recurring allocation is added.
-- [x] **4.3 Strengthen deterministic footprint validation.**
+    every matrix row; no area is hollow or edge-only, no primitive depends on an authored
+    texture, no geometry extends beyond its gameplay footprint, two effect batches are
+    removed, and no new node, material, batch, or recurring allocation is added.
+- [ ] **4.3 Strengthen deterministic footprint and asset-retirement validation.**
   - Change: update effect-store, combat-renderer, attack-route, secondary-weapon, and damage-
     feedback validators for the matrix, including EMP `285/325`, Electric `120/140/160`,
     Thermal `72/84/96`, Drop Mine `96/108/120`, Mystery Purge `420`, Gravity Pull `480`,
     Cryo Lock `360`, Decoy Signal `900`, boss runtime radii, first-frame full extent,
-    persistent full-duration extent, standard/reduced parity, and unchanged beam corridors.
+    persistent full-duration extent, standard/reduced parity, unchanged beam corridors,
+    texture-free primitive batches, and absence of retired runtime IDs/files.
   - Accept: tests fail for an edge-only disk, renderer-derived radius, delayed scale-up,
     wrong center, alpha/geometry outside the footprint, stale pooled radius, or changed
     gameplay recipient result.
@@ -638,7 +647,7 @@ Source owners: `scripts/vehicle/vehicle_run_capture_driver.gd`,
 `scripts/performance/vehicle_performance_recorder.gd`,
 `.agents/semantic-v2-runtime-acceptance-evidence.md`
 
-- [x] **5.1 Inspect rendered UI and consolidated combat evidence.**
+- [ ] **5.1 Inspect rendered UI and consolidated combat evidence.**
   - Change: capture Korean/English supported viewports and 200% text for upgrade cards;
     reuse the passing Phase 4 effect evidence unless an owned input changed; inspect upgrade,
     contact, reinforcement, effect, and player/enemy priority at 1x and grayscale.
@@ -672,7 +681,8 @@ Source owners: `scripts/vehicle/vehicle_run_capture_driver.gd`,
     facts, remove task-owned temporary helpers, mark all checkboxes truthfully, and set this
     plan to `done` only when no required work remains. The superseded plan stays non-current.
   - Accept: there is exactly one relevant active ExecPlan, no completed decision depends on
-    chat history, and EMP/boss gameplay plus all production raster bytes are unchanged.
+    chat history, EMP/boss gameplay is unchanged, and only the explicitly retired
+    shape/color-only production rasters are removed.
 
 Batch gate:
 
@@ -816,7 +826,7 @@ Validation rules:
 | Final contact section exceeds its qualified budget | Preserve evidence and create a measured-owner contact optimization contract | No causal regression claim and no cadence/collision/workload reduction inside this plan |
 | Final full-area presentation exceeds its qualified fill budget | Preserve evidence and present a measured-owner follow-up for explicit user approval | Do not remove the body, reduce resolution, shrink radius, or change gameplay inside this plan |
 | Another performance owner is red | Stop optimization, record the measured owner, and create a new owner-specific contract | No generic cache/pool/thread/render rewrite |
-| A new or revised authored effect raster is requested | Finish or checkpoint the current phase and create a separate authority-pair AS-IS/TO-BE approval contract | This plan changes retained composition only |
+| A new or revised authored effect raster is requested | Stop and obtain an explicit user decision that supersedes the shape/color-only no-raster rule before opening a separate authority-pair AS-IS/TO-BE contract | This plan retires authored transient effect rasters |
 | Boss-pattern or boss-value work is requested during execution | Finish or checkpoint the current phase and create a separate implementation contract | Shared circular footprint presentation does not authorize boss gameplay changes |
 | A verified material fact contradicts this contract | Stop the affected branch, update the contract, and obtain required approval | Executors may resolve implementation-local details only |
 
@@ -829,15 +839,15 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 
 ## Decision Notes
 
-- 2026-08-10: The completed EMP wavefront plan remains historical evidence, but its outward-
-  propagation presentation decision is superseded by the user's later full-area rule.
-  Production EMP raster bytes remain approved and unchanged as a secondary accent.
+- 2026-08-10: The completed EMP wavefront plan remains historical evidence, but both its
+  outward-propagation presentation and later raster-accent fallback are superseded. EMP now
+  uses two immediate code-native disks and no authored effect image.
 - 2026-08-10: Every displayed area effect must show a continuous body through its complete
   gameplay footprint. A ring, burst, or perimeter may never be the sole area representation.
-- 2026-08-10: The retained cue disk's visible alpha occupies `Rect2i(7, 6, 113, 115)` inside
-  its unchanged 128x128 canvas. Recording that existing alpha bound as `content_rect` is the
-  smallest normalization repair that makes visible extent equal gameplay extent without
-  changing pixels, pivot, semantic ID, nodes, batches, or recurring runtime work.
+- 2026-08-10: The user rejected images whose only role is geometry and color. Dynamic disk,
+  ring, beam, health-frame, and simple diamond geometry therefore belongs to reusable
+  code-native primitives; EMP, Thermal, and Drop Mine raster accents are retired instead
+  of composited over those footprints. This supersedes the cue-disk normalization repair.
 - 2026-08-10: Runtime tracing found that Gravity Pull, Cryo Lock, and Decoy Signal also used
   ring-only Mystery presentation. They are governed by the same full-area rule at exact
   radii `480`, `360`, and `900` for their complete active durations.
@@ -868,10 +878,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 5 evidence closeout. Runtime and visual feature sources are frozen.
-- Next task: obtain the user's runtime-composition approval for Task 4.4 and one user-driven
-  normal-play manual trace through the reported slow period; then close Tasks 5.2-5.4 without
-  changing workload, visuals, collision, cadence, capacity, or thresholds.
+- Current phase: Phase 4 procedural effect and cue composition. The user's no-raster
+  primitive decision changed a renderer/spec/manifest input after the prior evidence pass.
+- Next task: complete Tasks 4.2-4.4 on code-native geometry, then rerun the affected final
+  visual/build/qualification gates once from the new clean checkpoint.
 - Last completed gate: the focused final batch. Nineteen upgrade, contact, reinforcement,
   area-effect, capture, fixed-capacity, and performance-structure validators pass, as do
   visual authority and Godot import. Web export reports `WEB_EXPORT_OK`; the built product
@@ -888,14 +898,13 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   former crate-warning failure was fixture contamination from generated cover; the isolated
   one-crate clear-path fixture passes without a runtime geometry change. Per user direction,
   this contract intentionally has no pre-change native performance baseline.
-- Implementation completed under this contract: Tasks 0.1-4.3 and 5.1. Primary Split/Pierce
+- Implementation completed under this contract: Tasks 0.1-4.1. Primary Split/Pierce
   and secondary definitions own runtime/preview values; all 36 offer states expose one or two
   rows; built-in Seeker begins as `enhance`; ordinary melee contact has one bounded relative-
-  sweep owner; reinforcement recurrence and locked balance values are proven; every area body
-  uses gameplay-owned exact footprints. Task 4.4's color/grayscale evidence is complete under
-  `build/evidence/execplan-2026-08-10-area-effects/`, but its user-composition approval remains
-  open for handoff. Task 0.3's deferred long performance work is now eligible because all
-  owned fixes, focused validation, rendered inspection, import, and Web export are complete.
+  sweep owner; reinforcement recurrence and locked balance values are proven; every area
+  state publishes gameplay-owned exact footprints. The prior raster-composited captures,
+  build smoke, and final qualification remain historical evidence but do not qualify the
+  revised renderer input.
 - Manual-trace status: the final trace launcher was started only after all fixes and synthetic
   qualification. No user gameplay or normal close occurred during the bounded wait, so it was
   stopped without a JSON and without substituting synthetic input. Task 5.3 remains open for
@@ -913,9 +922,9 @@ Complete when:
   accepted balance are proven, and the built artifact is inspected.
 - Performance claims use exact eligible labels and evidence; any measured red external
   owner has an explicit successor contract rather than a hidden workaround.
-- EMP and other production raster bytes, pivots, and semantic IDs, boss behavior/values,
-  and all excluded gameplay values are unchanged. The cue disk has only the explicit measured
-  `content_rect` normalization described above.
+- The nine shape/color-only runtime raster IDs and files are retired; all remaining authored
+  visual bytes, pivots, and semantic IDs, boss behavior/values, and excluded gameplay values
+  are unchanged.
 - Durable decisions are in their owning specs/evidence, and this plan's frontmatter is
   changed to `done` only after no required work remains.
 

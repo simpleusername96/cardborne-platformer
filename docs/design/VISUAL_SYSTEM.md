@@ -210,14 +210,14 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 
 | owner | 책임 | 금지 |
 | --- | --- | --- |
-| gameplay cue catalog | reusable authored cue texture, pivot, and stretch/tint contract | gameplay rule, collision, live dimension |
+| runtime primitive geometry | reusable code-native disk, ring, quad, line, arc, and simple marker meshes plus tint/alpha contract | gameplay rule, collision, authored semantic silhouette |
 | actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored pickup, shard, and crate visual ID plus value-scale mapping | spawn, value, collection |
-| effect catalog | buffered dash afterimage, live EMP charge radius, authored EMP release, approved Thermal Burst impact, separately approved Drop Mine detonation, and code-native Mystery purge pulse within the fixed 96-effect/24-Thermal/8-Drop-Mine limits | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback |
+| effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, and Mystery purge presentation modes within the fixed 96-effect store | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
 | world catalog | authored Transit Gate, Mystery Device, reinforcement facility, SurfaceDetail, and state descriptor | topology, collision, health, spawn cadence, outcome |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
-| defense catalog | shared authored support-ring image plus Toxin/Cryo actor-overlay recipe | protection, Electric Field damage area, damage, slow, stack, timer |
+| defense catalog | shared code-native support boundary plus Toxin/Cryo actor-overlay recipe | protection, Electric Field damage area, damage, slow, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
 | semantic asset provider | approved persistent gameplay image texture, including upgrade content art and the exact `SurfaceDetail` SVG exception, pivot, and attachment | collision, behavior, map topology, live descriptor |
 
@@ -249,17 +249,18 @@ collision.
 - Upgrade-card content artwork is also authored PNG content. It is one reusable
   semantic identity per shared mechanic group and is rendered by the semantic
   asset provider; the card never draws a mechanic glyph procedurally.
-- HUD action glyph, minimap marker, and preview marker remain shared code-native UI geometry.
-  Combat cues, target brackets, telegraph boundaries, and beam/radius corridor fixed
-  visual identities use shared authored PNGs; runtime owns live position, length, width,
-  radius, rotation, tint, alpha, and readiness.
+- HUD action glyph, minimap marker, preview marker, combat disk/ring, target bracket,
+  telegraph boundary, beam corridor, health rectangle, and simple diamond remain shared
+  code-native geometry. Runtime owns their live position, length, width, radius, rotation,
+  tint, alpha, and readiness. A shape/color-only primitive is not promoted to an authored
+  image merely to supply those values.
 - A projectile is an independent world object. Player primary, built-in Seeker,
   and hostile non-beam shots have separate authored PNG identities. The Seeker
   image is exclusive to homing Seeker shots and the hostile bolt is not reused by
   player weapons. Runtime applies facing, the reduced presentation scale, and
   selected-element tint to player-primary shots.
-- barrier, ion과 shield source는 별도 raster asset을 갖지 않고 shared authored
-  support ring과 runtime tint/scale로 보호 상태를 전달한다. Electric Field는 이
+- barrier, ion과 shield source는 별도 raster asset을 갖지 않고 shared code-native
+  support boundary와 runtime tint/scale로 보호 상태를 전달한다. Electric Field는 이
   ring을 재사용하지 않으며 actor 아래의 arc-purple 전체 damage area로 표시한다.
   poison/chill은 별도 raster, node, per-enemy/per-status material, outline, halo,
   ring, icon 또는 label을 만들지 않는다. 기존 enemy와 boss retained batch는 하나의
@@ -280,18 +281,13 @@ collision.
   text로 결과를 식별하며 body asset이나 minimap marker를 바꾸지 않는다.
 - boss objective module art와 shared node art는 모두 production에서 제외한다.
   방어막 상태는 boss body와 HUD의 직접 상태 표현이 소유한다.
-- EMP는 유지하는 유일한 대형 authored effect이며 system-blue의 단일 팔각형
-  transparent `512×512` PNG를 damage/stun radius `285`의 perimeter accent로
-  scale/fade한다. Runtime의 full-area body는 damage/stun `285`와 hostile-projectile
-  clear `325`를 별도 disk로 즉시 표시하며 authored octagon이 판정 범위를
-  대신하지 않는다. Thermal Burst는 별도 승인을
-  받은 transparent `192×192` impact PNG 한 장만 direct primary hit 위치에 짧게
-  scale/fade하며 splash recipient에는 생성하지 않는다. Drop Mine은 Thermal과
-  semantic ID, raster, batch, color, sound를 공유하지 않는 별도 transparent
-  `256×256` detonation PNG 한 장을 mine origin에 `0.18s` 동안 scale/fade한다.
-  gameplay radius `96/108/120`은 runtime scale `0.80/0.90/1.00`에 대응한다.
-  최대 여덟 cosmetic instance만 허용하며 포화 시 다른 mine cosmetic만
-  recycle한다. Reduced motion은 최종 radius에서 fade한다. 그 밖의 작은 effect
+- EMP는 damage/stun `285`와 hostile-projectile clear `325`를 별도 code-native
+  full disk로 즉시 표시하며 authored octagon이나 다른 raster accent를 사용하지
+  않는다. Thermal Burst는 direct primary hit 위치의 exact splash radius를 하나의
+  thermal disk로, Drop Mine은 mine origin의 exact radius `96/108/120`을 하나의
+  player-reward disk로 `0.18s` 동안 표시한다. 두 effect는 별도 raster, texture,
+  material, node 또는 retained batch를 만들지 않고 fixed effect store receipt와
+  shared disk batch만 사용한다. Reduced motion도 최종 radius에서 fade한다. Effect
   image와 raster frame animation은 production visual owner가 아니다. 필수 hit/
   state truth는 actor tint, state composition, live boundary 같은 기존 직접
   피드백으로 유지한다. 별도 media-boundary 승인 없이 one-file-per-frame pack을
@@ -440,11 +436,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - beam은 gameplay corridor가 길이와 폭을 소유한다. Beam Sentinel과 boss beam
   startup은 그 정확한 damage rectangle을 낮은 강도의 body와 hot core 두 겹으로
   표시한다. active는 같은 rectangle에 body, inner energy plane, hot core 세 겹을
-  채운다. 모두 shared authored beam-strip PNG를 stretch하며, projectile PNG를
-  corridor 길이로 늘이거나 endpoint cap·확장 danger boundary를 만들지 않는다.
-  beam-strip은 tintable flat alpha mask이며 dark perimeter, boxed rail, nested frame,
-  soft glow와 gradient를 갖지 않는다. startup과 active의 강도 차이는 runtime
-  alpha, plane width와 세 개 이하의 hard-edged filled plane만으로 전달한다.
+  채운다. 모두 shared code-native unit quad를 정확한 corridor dimensions로 scale하며,
+  projectile PNG를 corridor 길이로 늘이거나 endpoint cap·확장 danger boundary를
+  만들지 않는다. startup과 active의 강도 차이는 runtime alpha, plane width와 세 개
+  이하의 hard-edged filled plane만으로 전달한다.
 - 원거리 원형 폭격 footprint는 boss만 사용한다. 모든 boss bombardment는 affinity와
   무관하게 exact committed radius를 채우는 `thermal` orange full disk와 outer
   boundary 한 개로 통일한다. startup body alpha는 readiness에 따라 `0.10 -> 0.20`,
@@ -474,11 +469,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   body 중심에 붙은 한 겹의 boundary로만 표시하며 별도 actor나 asset family를
   사용하지 않는다. boss-only shield boundary는 alpha `0.38`, body radius `+8`
   이며 `shield_down`에는 표시하지 않는다.
-- Thermal Burst impact는 승인된 transparent `192×192` raster 한 장을 direct
-  player-primary hit 위치에서 `0.18s` scale/fade한다. gameplay radius `72/84/96`에
-  각각 runtime scale `0.75/0.875/1.0`을 사용한다. 같은 위치와 radius에 alpha
-  `0.16`의 full thermal disk가 첫 frame부터 최종 크기로 나타나고 impact raster는
-  centered identity accent로만 fade한다. splash, DOT, Seeker, reflected,
+- Thermal Burst impact는 direct player-primary hit 위치와 gameplay radius
+  `72/84/96`에 alpha `0.16`의 full thermal disk를 첫 frame부터 최종 크기로
+  표시하고 `0.18s` 동안 fade한다. 별도 impact raster나 accent를 사용하지 않는다.
+  splash, DOT, Seeker, reflected,
   structure-only와 EMP damage에는 생성하지 않는다. live Thermal impact는 최대
   24개이고 전체 effect store 96 capacity와 EMP 우선권을 유지한다.
 - Electric Field는 player actor 아래 한 retained code-native batch로 실제 damage
@@ -490,15 +484,15 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - EMP charge는 이동 중인 player의 현재 위치를 따라가며 alpha `0.12`의 full inner
   damage/stun disk `285`, alpha `0.08`의 full outer projectile-clear disk `325`, outer
   boundary 하나를 최종 크기로 표시한다. Release는 실제 release 위치에서 inner
-  alpha `0.20`, outer alpha `0.10`의 두 full disk와 radius `285` authored octagon
-  accent를 첫 frame부터 최종 크기로 표시하고 기존 `0.55s` 동안 fade한다. Damage,
+  alpha `0.20`, outer alpha `0.10`의 두 full disk를 첫 frame부터 최종 크기로
+  표시하고 기존 `0.55s` 동안 fade한다. 별도 raster accent는 없다. Damage,
   stun과 hostile projectile clear는 charge 완료 시 각각의 전체 gameplay 범위에
   즉시 적용되므로 standard/reduced motion 모두 radius interpolation이나 바깥으로
   퍼지는 파면을 사용하지 않는다. 여러 ring, spark, dot, noise와 frame-by-frame
   sprite sequence를 추가하지 않는다.
 - Drop Mine detonation은 mine origin과 gameplay radius `96/108/120`에 alpha `0.16`
-  full player-reward disk를 첫 frame부터 최종 크기로 표시하고 approved raster는
-  centered identity accent로만 `0.18s` fade한다. Mystery Projectile Purge도 device
+  full player-reward disk를 첫 frame부터 최종 크기로 표시하고 `0.18s` 동안 fade한다.
+  별도 raster accent는 없다. Mystery Projectile Purge도 device
   position의 projectile-clear radius `420`을 alpha `0.14` full system disk로 즉시
   표시하며 existing single perimeter는 accent로만 fade한다. 두 effect 모두 damage나
   clear가 끝난 뒤 radius를 키우지 않는다.
@@ -696,12 +690,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- exact user approval과 promotion을 마친 Drop Mine raster를 포함해 final
-  gameplay manifest가 정확히 72 image를 색인함: gameplay PNG 69개와
-  user-approved SurfaceDetail SVG 3개다.
+- final gameplay manifest가 정확히 63 image를 색인함: semantic PNG 60개와
+  user-approved SurfaceDetail SVG 3개다. Shape/color-only effect/cue raster는 0이다.
   전용 hostile bolt와 reinforcement facility를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음
-- HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
+- HUD/minimap/UI PNG와 effect/cue raster 및 frame animation raster가 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함
 - deterministic layout/presentation hash equality와 walkable/void containment
 - `SurfaceDetail`이 통합된 batch에서는 instance `<=192`, retained detail batch
@@ -727,21 +720,21 @@ Web export만으로 interactive built-Web smoke나 release performance를
   fills without legacy patterned floor or shared-wall rasters. The three approved
   `SurfaceDetail` SVGs are production-integrated as deterministic presentation-only
   72/72/48 retained instances with no collision, navigation, or per-frame update owner.
-- Beam Sentinel and boss straight beams share the approved borderless `128x32`
-  beam-strip raster. Runtime tint, alpha, live corridor size, and the two-plane
-  startup/three-plane active hierarchy remain presentation-owned.
+- Beam Sentinel and boss straight beams share one code-native unit quad. Runtime tint,
+  alpha, live corridor size, and the two-plane startup/three-plane active hierarchy remain
+  presentation-owned.
 - Mystery Device gameplay and its two approved raster states are integrated.
   Candidate and intermediate files stay outside the production manifest.
-- Drop Mine gameplay receipt, eight-instance cosmetic subcap, and exact user-approved
-  `256x256` raster are production-integrated. Its dedicated retained batch scales the
-  receipt to radius `96/108/120` as an accent over a full-area disk; standard and reduced
-  motion both start at final radius and only fade.
+- Drop Mine gameplay receipts remain fixed-capacity effect-store state. The shared
+  code-native disk batch displays radius `96/108/120`; standard and reduced motion both
+  start at final radius and only fade, with no dedicated texture or batch.
 - Every non-beam projectile resolves one of the three exclusive player-primary,
   player-seeker, or hostile-bolt identities; runtime owns scale, rotation,
   player-primary affinity tint, collision, speed, and homing.
 - The integrated player craft, XP master, four secondary bodies, three
   projectile roles, pickups, current approved facilities, five bosses, three shared
-  boss-node states, EMP image, and four map assets remain the applied set.
+  boss-node states and four map assets remain the applied authored set. EMP and other
+  transient area effects have no authored image identity.
 - Manual aim remains readable through independent cursor, muzzle, projectile,
   and hit feedback. The player rear anchor is used only by transient dash
   feedback. Dash presentation consumes the frozen dash direction, and directional
