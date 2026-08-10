@@ -304,6 +304,18 @@ function Get-VisualReplacementProjection {
     $reusePaths = @{}
     $retirePathOwners = @{}
     $coveredMedia = @{}
+    $declaredRetirePaths = @{}
+    foreach ($sourceUnit in @($Source.units)) {
+        if (
+            [string]$sourceUnit.switch_kind -cne 'retire' -or
+            [string]$sourceUnit.status -cne 'retired' -or
+            $null -eq $sourceUnit.application
+        ) { continue }
+        foreach ($retirePathValue in @($sourceUnit.retire_paths)) {
+            if ($null -eq $retirePathValue -or [string]::IsNullOrWhiteSpace([string]$retirePathValue)) { continue }
+            $declaredRetirePaths[(ConvertTo-NormalizedVisualPath ([string]$retirePathValue))] = $true
+        }
+    }
     $projectedUnits = [Collections.Generic.List[object]]::new()
     foreach ($unit in @($Source.units)) {
         $id = [string]$unit.id
@@ -393,6 +405,7 @@ function Get-VisualReplacementProjection {
                 if ($unitCurrentPaths.ContainsKey($path)) { continue }
                 $absolute = Resolve-VisualRepositoryPath $RepoRoot $path
                 if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) {
+                    if ($declaredRetirePaths.ContainsKey($path)) { continue }
                     $failures.Add("missing applied final path: $id -> $path")
                     continue
                 }

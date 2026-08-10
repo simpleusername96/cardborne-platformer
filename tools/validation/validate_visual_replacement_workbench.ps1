@@ -62,13 +62,13 @@ try {
         Expect ($styleReferenceDimensions[0] -eq $canonicalStyleReferenceSheet.width -and $styleReferenceDimensions[1] -eq $canonicalStyleReferenceSheet.height) 'canonical style reference sheet dimension mismatch'
     }
     Expect ($actual.summary.font -eq 1) 'production font count must be 1'
-    Expect ($actual.summary.units -eq 23) 'switch unit count must be 23'
-    Expect ($actual.summary.retire_only -eq 6) 'retire-only count must be 6'
-    Expect ($actual.summary.gameplay_png -eq 69) 'production gameplay PNG count must be 69'
+    Expect ($actual.summary.units -eq 24) 'switch unit count must be 24'
+    Expect ($actual.summary.retire_only -eq 7) 'retire-only count must be 7'
+    Expect ($actual.summary.gameplay_png -eq 60) 'production gameplay PNG count must be 60'
     Expect ($actual.summary.final_gameplay_png -eq 69) 'final gameplay PNG forecast must be 69'
     Expect ($actual.summary.gameplay_svg -eq 3) 'production SurfaceDetail SVG count must be 3'
     Expect ($actual.summary.final_gameplay_svg -eq 3) 'final SurfaceDetail SVG forecast must be 3'
-    Expect ($actual.summary.gameplay_images -eq 72) 'production gameplay image count must be 72'
+    Expect ($actual.summary.gameplay_images -eq 63) 'production gameplay image count must be 63'
     Expect ($actual.summary.authored_gameplay_png -eq 67) 'authored gameplay PNG output count must be 67'
     Expect ($actual.summary.reused_gameplay_png -eq 2) 'reused gameplay PNG count must be 2'
     Expect ($actual.summary.retired_gameplay_png -eq 0) 'no retired gameplay PNG may remain in production'
@@ -117,7 +117,7 @@ try {
         player_craft=@(1,1)
         hud_minimap_combat_cues_code_native=@(0,0)
         small_effect_suppression=@(0,0)
-        emp_authored_replacement=@(1,1)
+        emp_authored_replacement=@(0,1)
         projectile_family=@(2,2)
         defense_status_family=@(0,0)
         upgrade_content_artwork=@(10,10)
@@ -128,10 +128,10 @@ try {
         secondary_and_wear_family=@(7,7)
         ordinary_enemy_family=@(18,18)
         boss_and_shared_node_family=@(5,5)
-        straight_beam_strip_replacement=@(1,1)
-        thermal_burst_impact=@(1,1)
-        drop_mine_detonation=@(1,1)
-        gameplay_code_asset_rasterization=@(7,7)
+        straight_beam_strip_replacement=@(0,1)
+        thermal_burst_impact=@(0,1)
+        drop_mine_detonation=@(0,1)
+        gameplay_code_asset_rasterization=@(2,7)
     }
     foreach($unitId in $expectedGameplayUnits.Keys){
         $matches=@($actual.units|Where-Object id -ceq $unitId)
@@ -141,10 +141,22 @@ try {
             Expect (@($matches[0].final_paths).Count -eq [int]$expectedGameplayUnits[$unitId][1]) "final PNG count mismatch: $unitId"
         }
     }
-    $historicRetirementIds=@('effect_atlas_retirement','orphan_ui_state_retirement','procedural_floor_and_walls')
+    $historicRetirementIds=@('effect_atlas_retirement','orphan_ui_state_retirement','procedural_floor_and_walls','shape_color_primitive_retirement')
     $historicRetirements=@($actual.units|Where-Object id -in $historicRetirementIds)
-    Expect ($historicRetirements.Count -eq 3) 'historic retirement unit set is incomplete'
+    Expect ($historicRetirements.Count -eq 4) 'historic retirement unit set is incomplete'
     foreach($historicUnit in $historicRetirements){Expect ([string]$historicUnit.status -ceq 'retired') "historic retirement unit changed state: $($historicUnit.id)"}
+    $primitiveRetirement=$actual.units|Where-Object id -ceq 'shape_color_primitive_retirement'
+    Expect ($null -ne $primitiveRetirement) 'shape/color primitive retirement unit is missing'
+    if($null -ne $primitiveRetirement){
+        Expect (@($primitiveRetirement.current_files).Count -eq 0) 'retired primitive PNGs still appear as current files'
+        Expect (@($primitiveRetirement.deliverables).Count -eq 0) 'primitive retirement must not create replacement media'
+        Expect (@($primitiveRetirement.consumer_paths).Count -eq 0) 'primitive retirement retains runtime consumers'
+        Expect (@($primitiveRetirement.consumer_asset_ids).Count -eq 0) 'primitive retirement retains semantic IDs'
+        Expect (@($primitiveRetirement.retire_paths).Count -eq 18) 'primitive retirement must own nine PNGs and nine import sidecars'
+        foreach($retirePath in @($primitiveRetirement.retire_paths)){
+            Expect (-not (Test-Path -LiteralPath (Join-Path $repoRoot ([string]$retirePath)))) "primitive retirement path still exists: $retirePath"
+        }
+    }
     $uiRetirements=@($actual.units|Where-Object id -eq 'ui_chrome_retirement')
     Expect ($uiRetirements.Count -eq 1) 'UI chrome retirement unit must exist exactly once'
     $uiRetirement=if($uiRetirements.Count -eq 1){$uiRetirements[0]}else{$null}
@@ -225,7 +237,7 @@ $index=Get-Content $indexPath -Raw
 $match=[regex]::Match($index,'(?s)<script id="inventory-data" type="application/json">(.*?)</script>')
 Expect $match.Success 'index lacks embedded inventory data'
 if($match.Success){try{$embedded=$match.Groups[1].Value|ConvertFrom-Json -Depth 100;Expect ((Get-VisualCanonicalJson $embedded) -ceq (Get-VisualCanonicalJson $actual)) 'embedded inventory differs'}catch{$failures.Add("invalid embedded inventory: $($_.Exception.Message)")}}
-foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":69','"final_gameplay_svg":3','"gameplay_images":72','"surface_detail_family"','"thermal_burst_impact"','"drop_mine_detonation"','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
+foreach($required in @('id="language-toggle"','id="search"','id="domain-filter"','id="status-filter"','id="kind-filter"','id="issue-only"','id="copy-issues"','id="download-issues"','data-issue-check','data-issue-note','localStorage','cardborne.visualReplacementIssues.v1','Technical status','기술 상태','<dialog id="image-dialog"','loading="lazy"','prefers-reduced-motion','data-image','aria-live="polite"','approved_for_switch','target_required','retire_only','"final_gameplay_png":69','"final_gameplay_svg":3','"gameplay_images":63','"surface_detail_family"','"thermal_burst_impact"','"drop_mine_detonation"','"shape_color_primitive_retirement"','"external_sources"','"style_reference_sheet"','"visual_authority_evidence"')){Expect ($index.Contains($required)) "index contract missing: $required"}
 $authorityUiMarkers=@(
     'id="visual-authority-pair"',
     'id="style-authority-link"',
