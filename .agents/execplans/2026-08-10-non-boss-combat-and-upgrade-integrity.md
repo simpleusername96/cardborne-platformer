@@ -595,7 +595,7 @@ Source owners: `scripts/combat/vehicle_effect_state.gd`,
   - Accept: the effect store reuses its fixed 96 states, EMP snapshots expose both exact
     radii without renderer arithmetic, pool reuse clears both, and gameplay damage, stun,
     clear order, values, center, cooldown, and effect capacity are unchanged.
-- [ ] **4.2 Render full-area bodies without false propagation or raster primitives.**
+- [x] **4.2 Render full-area bodies without false propagation or raster primitives.**
   - Change: replace shape/color-only disk, ring, beam, health-frame, and diamond textures
     with reusable code-native meshes in the existing retained batches; use code-native
     line/arc drawing for the two matching `VehicleRun` overlays; remove EMP, Thermal, and
@@ -605,7 +605,7 @@ Source owners: `scripts/combat/vehicle_effect_state.gd`,
     every matrix row; no area is hollow or edge-only, no primitive depends on an authored
     texture, no geometry extends beyond its gameplay footprint, two effect batches are
     removed, and no new node, material, batch, or recurring allocation is added.
-- [ ] **4.3 Strengthen deterministic footprint and asset-retirement validation.**
+- [x] **4.3 Strengthen deterministic footprint and asset-retirement validation.**
   - Change: update effect-store, combat-renderer, attack-route, secondary-weapon, and damage-
     feedback validators for the matrix, including EMP `285/325`, Electric `120/140/160`,
     Thermal `72/84/96`, Drop Mine `96/108/120`, Mystery Purge `420`, Gravity Pull `480`,
@@ -615,7 +615,7 @@ Source owners: `scripts/combat/vehicle_effect_state.gd`,
   - Accept: tests fail for an edge-only disk, renderer-derived radius, delayed scale-up,
     wrong center, alpha/geometry outside the footprint, stale pooled radius, or changed
     gameplay recipient result.
-- [ ] **4.4 Capture and approve exact-radius runtime evidence.**
+- [x] **4.4 Capture and approve exact-radius runtime evidence.**
   - Change: capture Electric levels 1-3; EMP charge and release in standard/reduced motion;
     Thermal and Drop Mine levels 1-3; all four Mystery outcomes; boss circular
     startup/active; and beam startup/active at 1280x720 in color and grayscale. Place
@@ -647,13 +647,13 @@ Source owners: `scripts/vehicle/vehicle_run_capture_driver.gd`,
 `scripts/performance/vehicle_performance_recorder.gd`,
 `.agents/semantic-v2-runtime-acceptance-evidence.md`
 
-- [ ] **5.1 Inspect rendered UI and consolidated combat evidence.**
+- [x] **5.1 Inspect rendered UI and consolidated combat evidence.**
   - Change: capture Korean/English supported viewports and 200% text for upgrade cards;
     reuse the passing Phase 4 effect evidence unless an owned input changed; inspect upgrade,
     contact, reinforcement, effect, and player/enemy priority at 1x and grayscale.
   - Accept: card values/copy/layout, every area-footprint mapping, player/enemy priority,
     and existing visual contracts are correct with zero overflow or horizontal dividers.
-- [ ] **5.2 Build and smoke the production Web artifact.**
+- [x] **5.2 Build and smoke the production Web artifact.**
   - Change: run visual/document authority checks, Godot import, focused final validators,
     `tools/export_web.ps1`, and a production-style built start through the `npjt-port-guard`
     codex lane.
@@ -866,9 +866,15 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 - 2026-08-10: The user directed that all planned fixes precede the long performance scenarios
   and manual trace. This contract therefore collects final-only qualification and makes no
   before/after causal regression claim.
+- 2026-08-10: After rejecting image assets used only for geometry and color, the user
+  delegated the remaining implementation and review judgment. The authority-pair review,
+  exact-radius color/grayscale sheets, and built-Web EMP check therefore close the revised
+  runtime-composition gate without another raster candidate or review pause.
 - 2026-08-10: The clean final native pair is workload-valid and authority-eligible but fails
-  release frame thresholds. Native render GPU, draw calls, batches, contact, and combat/effect
-  timings do not identify the new full-area presentation or contact owner as the dominant cost;
+  release frame thresholds for the prior raster-composited renderer. It remains historical
+  evidence after the primitive-retirement input change. Native render GPU, draw calls,
+  batches, contact, and combat/effect timings did not identify the full-area presentation
+  or contact owner as the dominant cost;
   `enemies_and_grid`, physics catch-up, and unattributed wait remain the measured investigation
   surfaces. No optimization or product tradeoff is authorized inside this contract.
 - 2026-08-10: The built-Web workload completed, but the automation browser identified itself
@@ -878,16 +884,15 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4 procedural effect and cue composition. The user's no-raster
-  primitive decision changed a renderer/spec/manifest input after the prior evidence pass.
-- Next task: complete Tasks 4.2-4.4 on code-native geometry, then rerun the affected final
-  visual/build/qualification gates once from the new clean checkpoint.
-- Last completed gate: the focused final batch. Nineteen upgrade, contact, reinforcement,
-  area-effect, capture, fixed-capacity, and performance-structure validators pass, as do
-  visual authority and Godot import. Web export reports `WEB_EXPORT_OK`; the built product
-  starts on the guarded `codex` lane, switches Korean to English, shows the complete EMP
-  footprint, and records an ordinary collision/melee contact in its failure report with no
-  browser console warnings or errors.
+- Current phase: Phase 5 final qualification and durable closeout.
+- Next task: commit the accepted code-native renderer/build evidence, then rerun the clean
+  final native pair and built-Web diagnostic once because the renderer input changed.
+- Last completed gate: the revised focused final batch passed all 12 contract validators,
+  visual authority, Godot import, and `git diff --check`. The 115-capture runtime matrix and
+  24-case color/grayscale sheet show continuous exact-area bodies. Web export reports
+  `WEB_EXPORT_OK`; the newly built product starts on the guarded `codex` lane, switches Korean
+  to English, shows the immediate complete EMP footprint, and records ordinary collision/melee
+  contact in its failure report with no browser console warnings or errors.
 - Final qualification evidence: native `peak_horde` and `capacity_pressure` are scenario-valid,
   authority-eligible 10+60 second samples but fail release thresholds. Median FPS is `19.09`
   and `7.50`; enemies/grid p95 is `11.84/14.17 ms`, contact p95 is `0.584/0.680 ms`, and native
@@ -898,13 +903,14 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   former crate-warning failure was fixture contamination from generated cover; the isolated
   one-crate clear-path fixture passes without a runtime geometry change. Per user direction,
   this contract intentionally has no pre-change native performance baseline.
-- Implementation completed under this contract: Tasks 0.1-4.1. Primary Split/Pierce
+- Implementation completed under this contract: Tasks 0.1-5.2. Primary Split/Pierce
   and secondary definitions own runtime/preview values; all 36 offer states expose one or two
   rows; built-in Seeker begins as `enhance`; ordinary melee contact has one bounded relative-
   sweep owner; reinforcement recurrence and locked balance values are proven; every area
-  state publishes gameplay-owned exact footprints. The prior raster-composited captures,
-  build smoke, and final qualification remain historical evidence but do not qualify the
-  revised renderer input.
+  state publishes gameplay-owned exact footprints, shape/color-only runtime rasters are
+  retired, and the revised code-native renderer has current native capture and built-Web
+  evidence. The prior final qualification remains historical and does not qualify the revised
+  renderer input.
 - Manual-trace status: the final trace launcher was started only after all fixes and synthetic
   qualification. No user gameplay or normal close occurred during the bounded wait, so it was
   stopped without a JSON and without substituting synthetic input. Task 5.3 remains open for

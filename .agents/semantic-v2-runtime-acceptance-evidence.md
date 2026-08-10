@@ -498,3 +498,47 @@ tests. No user gameplay or normal close occurred during the bounded wait, so no
 manual JSON was produced and no synthetic input was substituted. The user-
 reported slow period still requires one user-driven normal-play trace before
 the active plan's performance task can close.
+
+## 2026-08-10 code-native combat-primitive checkpoint
+
+Commits `3c166a03e6924f917a4dafd12acfa863ddb6dd2e` and `639e4532` retire the
+nine production PNGs whose only runtime job was geometry and color. Dynamic
+disks, rings, beam corridors, health rectangles, and diamond markers now use
+startup-built retained meshes; the Transit Gate ring and Repair Tender beam use
+code-native arc/line drawing. The EMP, Thermal Burst, and Drop Mine raster
+accents and the two dedicated transient raster batches are absent. Gameplay
+centers, radii, recipients, timing, batch capacities, and boss behavior remain
+unchanged.
+
+The revised manifest contains 63 production images: 60 semantic PNGs and three
+approved `SurfaceDetail` SVGs. It contains zero cue, EMP, Thermal Burst, or Drop
+Mine raster IDs. The retirement unit preserves all 18 deleted paths and their
+provenance in the workbench; git history and the prior TO-BE copies remain the
+recovery path.
+
+### Revised rendered and build evidence
+
+- All 12 contract validators, visual-authority validation, Godot import, and
+  `git diff --check` passed after the renderer change. Workbench build/check and
+  validation also pass with 24 units, 60 current PNGs, 63 production images,
+  and seven retire-only units.
+- The native capture root is
+  `build/captures/execplan-2026-08-10-procedural-v1/` and contains 115 captures.
+  The consolidated 24-case color and grayscale sheets are under
+  `build/evidence/execplan-2026-08-10-procedural-area-effects/`.
+- Review confirmed continuous center-to-boundary bodies for Electric Field,
+  Thermal Burst, Drop Mine, EMP, all four Mystery outcomes, boss circular
+  footprints, and beam corridors. EMP charge/release shows the complete inner
+  `285` damage/stun disk and outer `325` projectile-clear disk immediately; it
+  does not show an outward wavefront or authored octagon.
+- `tools/export_web.ps1` returned `WEB_EXPORT_OK` and produced the four required
+  files. The built artifact ran on the guarded Codex lane at
+  `127.0.0.1:13029`, switched Korean to English, entered live gameplay, showed
+  the complete EMP charge footprint, and recorded ordinary collision/melee
+  damage in the failure report. Chrome reported only the Godot/WebGL startup
+  logs, with zero warnings or errors. The exact task-owned Python server was
+  stopped and port `13029` was verified free.
+
+The native and Web performance payloads in the preceding checkpoint predate
+this renderer input and remain historical only. A clean final qualification is
+required before issuing a current performance label.
