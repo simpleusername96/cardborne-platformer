@@ -126,6 +126,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_electric_field_evidence()
 		&"thermal_burst_feedback":
 			await _capture_thermal_burst_evidence()
+		&"drop_mine_feedback":
+			await _capture_drop_mine_evidence()
 		&"collision_overlays":
 			await _capture_collision_overlay_evidence()
 		&"all_bosses":
@@ -1160,6 +1162,72 @@ func _capture_thermal_burst_evidence() -> void:
 	_save_capture("09m-thermal-burst-saturation-emp.png")
 
 
+func _capture_drop_mine_evidence() -> void:
+	var file_prefixes := ["09n", "09o", "09p"]
+	var radii := [96.0, 108.0, 120.0]
+	for level_index in 3:
+		prepare_stage(0)
+		_run._clear_enemies()
+		_run._clear_projectiles()
+		_run._clear_effects()
+		var center: Vector2 = _run.player_position + Vector2(290.0, 0.0)
+		for crowd_index in 5:
+			var enemy: EnemyState = _run._make_enemy({
+				"id":"capture_drop_mine_%d_%d"
+					% [level_index + 1, crowd_index],
+				"role":&"chaser",
+				"pos":center + Vector2.RIGHT.rotated(
+					TAU * float(crowd_index) / 5.0
+				) * radii[level_index] * 0.84,
+				"active":true,
+			})
+			if enemy != null:
+				enemy.health_visible_timer = 0.0
+				_run._append_enemy(enemy)
+		_run.capture_set_mode(&"paused")
+		await _settle_capture()
+		_run._add_effect(
+			EffectStore.DROP_MINE_DETONATION_KIND,
+			center,
+			Color.WHITE,
+			0.18,
+			radii[level_index]
+		)
+		_run.effects[-1].time = 0.09
+		_refresh_combat_capture()
+		await _run.get_tree().process_frame
+		_save_capture(
+			"%s-drop-mine-level-%d.png"
+			% [file_prefixes[level_index], level_index + 1]
+		)
+
+	var settings := _run.get_node_or_null("/root/SettingsStore")
+	var original_reduced_motion := (
+		bool(settings.reduced_motion) if settings != null else false
+	)
+	if settings != null:
+		settings.reduced_motion = true
+	prepare_stage(0)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	_run._clear_effects()
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_run._add_effect(
+		EffectStore.DROP_MINE_DETONATION_KIND,
+		_run.player_position + Vector2(290.0, 0.0),
+		Color.WHITE,
+		0.18,
+		120.0
+	)
+	_run.effects[-1].time = 0.18
+	_refresh_combat_capture()
+	await _run.get_tree().process_frame
+	_save_capture("09q-drop-mine-reduced-motion.png")
+	if settings != null:
+		settings.reduced_motion = original_reduced_motion
+
+
 func _capture_visual_event_evidence() -> void:
 	var colors := [Art.SYSTEM, Art.MUSTARD, Art.CORAL, Art.MINT]
 	for group_variant in VisualEventCaptureFixture.GROUPS:
@@ -1180,13 +1248,20 @@ func _capture_visual_event_evidence() -> void:
 				float(index) * TAU / maxf(1.0, float(event_ids.size()))
 			)
 			var event_id := StringName(event_ids[index])
+			var authored_impact := event_id in [
+				&"thermal_burst_impact", EffectStore.DROP_MINE_DETONATION_KIND,
+			]
 			_run._add_effect(
 				event_id,
 				position,
-				Color.WHITE if event_id == &"thermal_burst_impact"
+				Color.WHITE if authored_impact
 				else colors[index % colors.size()],
 				1.0,
-				72.0 if event_id == &"thermal_burst_impact" else 54.0,
+				(
+					108.0
+					if event_id == EffectStore.DROP_MINE_DETONATION_KIND
+					else (72.0 if event_id == &"thermal_burst_impact" else 54.0)
+				),
 				direction,
 				18.0,
 				0.20

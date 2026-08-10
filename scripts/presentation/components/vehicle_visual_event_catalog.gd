@@ -18,6 +18,10 @@ const EVENTS := {
 		"mode": &"authored_thermal",
 		"asset": &"effect/thermal_burst_impact",
 	},
+	&"drop_mine_detonation": {
+		"mode": &"authored_drop_mine",
+		"asset": &"effect/drop_mine_detonation",
+	},
 	&"mystery_projectile_purge": {
 		"mode": &"mystery_purge_pulse",
 	},

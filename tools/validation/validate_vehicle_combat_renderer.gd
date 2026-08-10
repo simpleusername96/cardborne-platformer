@@ -175,6 +175,10 @@ func _run() -> void:
 		Vector2(420.0, 320.0), Color.WHITE, 0.18, 84.0
 	)
 	thermal_effect.time = 0.18
+	var mine_effect = effect_store.add_drop_mine_detonation(
+		Vector2(500.0, 340.0), Color.WHITE, 0.18, 108.0
+	)
+	mine_effect.time = 0.18
 	var presentation := {
 		"zones":[], "player_position":Vector2(260.0,300.0),
 		"hull_direction":Vector2.RIGHT, "aim_direction":Vector2.DOWN,
@@ -212,6 +216,28 @@ func _run() -> void:
 			thermal_buffer[10], thermal_buffer[11]
 		).is_equal_approx(Color.WHITE),
 		"one retained Thermal batch begins at the approved bounded scale and full authored color"
+	)
+	var mine_batch := renderer.get_node(
+		"Effect_drop_mine_detonation"
+	) as MultiMeshInstance2D
+	var mine_buffer := mine_batch.multimesh.buffer
+	_expect(
+		mine_batch.multimesh.instance_count
+			== EffectStore.MAX_LIVE_DROP_MINE_DETONATIONS
+		and mine_batch.multimesh.visible_instance_count == 1
+		and mine_batch.texture == AssetProvider.texture(
+			&"effect/drop_mine_detonation"
+		)
+		and Vector2(mine_buffer[3], mine_buffer[7])
+			== Vector2(500.0, 340.0)
+		and is_equal_approx(
+			Vector2(mine_buffer[0], mine_buffer[4]).length(), 108.0
+		)
+		and Color(
+			mine_buffer[8], mine_buffer[9],
+			mine_buffer[10], mine_buffer[11]
+		).is_equal_approx(Color.WHITE),
+		"reduced motion renders the approved Drop Mine raster at its final gameplay radius"
 	)
 	thermal_effect.time = 0.09
 	renderer.sync(
@@ -262,6 +288,14 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2(260.0,300.0), 1.0, true,
 		"renderer_enemy", presentation
 	)
+	mine_buffer = mine_batch.multimesh.buffer
+	_expect(
+		is_equal_approx(
+			Vector2(mine_buffer[0], mine_buffer[4]).length(), 108.0 * 0.78
+		)
+		and is_equal_approx(mine_buffer[11], 1.0),
+		"standard motion starts the Drop Mine kinetic pop inside its final radius"
+	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
 	actual_status_overlay = Color(
 		status_enemy_buffer[12], status_enemy_buffer[13],
@@ -272,10 +306,19 @@ func _run() -> void:
 		"standard motion raises only the same-size application colorization to the bounded pulse weight"
 	)
 	enemy.flash = 0.11
+	mine_effect.time = 0.09
 	renderer.sync(
 		enemies, projectiles, hostile_projectiles, shards, effect_store.live,
 		Rect2(0,0,1280,720), Vector2(260.0,300.0), 1.0, true,
 		"renderer_enemy", presentation
+	)
+	mine_buffer = mine_batch.multimesh.buffer
+	_expect(
+		is_equal_approx(
+			Vector2(mine_buffer[0], mine_buffer[4]).length(), 108.0
+		)
+		and is_equal_approx(mine_buffer[11], 0.5),
+		"Drop Mine reaches its exact gameplay radius while fading over 0.18 seconds"
 	)
 	status_enemy_buffer = status_enemy_batch.multimesh.buffer
 	_expect(

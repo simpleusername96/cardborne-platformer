@@ -667,9 +667,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- 별도 Drop Mine candidate가 exact user approval과 promotion을 마친 뒤 final
+- exact user approval과 promotion을 마친 Drop Mine raster를 포함해 final
   gameplay manifest가 정확히 72 image를 색인함: gameplay PNG 69개와
-  user-approved SurfaceDetail SVG 3개다. 승격 전 current manifest는 71개다.
+  user-approved SurfaceDetail SVG 3개다.
   전용 hostile bolt와 reinforcement facility를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음
 - HUD/minimap/UI PNG와 EMP 이외의 frame animation raster가 0이며, 모든
@@ -703,9 +703,10 @@ Web export만으로 interactive built-Web smoke나 release performance를
   startup/three-plane active hierarchy remain presentation-owned.
 - Mystery Device gameplay and its two approved raster states are integrated.
   Candidate and intermediate files stay outside the production manifest.
-- Drop Mine gameplay receipt and eight-instance cosmetic subcap are integrated.
-  Its separately authored raster remains workbench-only until exact user approval;
-  an unapproved byte is never registered in the production manifest.
+- Drop Mine gameplay receipt, eight-instance cosmetic subcap, and exact user-approved
+  `256x256` raster are production-integrated. Its dedicated retained batch scales the
+  receipt to radius `96/108/120`, uses a short kinetic pop only in standard motion, and
+  starts at the final radius in reduced motion.
 - Every non-beam projectile resolves one of the three exclusive player-primary,
   player-seeker, or hostile-bolt identities; runtime owns scale, rotation,
   player-primary affinity tint, collision, speed, and homing.

@@ -33,6 +33,7 @@ const EXPECTED_EVENT_IDS := [
 	"player_emp_charge",
 	"player_emp_release",
 	"thermal_burst_impact",
+	"drop_mine_detonation",
 	"mystery_projectile_purge",
 ]
 
@@ -42,8 +43,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 71,
-		"gameplay manifest declares 68 PNGs plus three approved SurfaceDetail SVGs"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 72,
+		"gameplay manifest declares 69 PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(int(family_counts.get("upgrade", 0)) == 10, "gameplay manifest declares ten shared upgrade rasters")
@@ -65,10 +66,11 @@ func _initialize() -> void:
 			authored_effects.append(asset)
 			authored_effect_ids[StringName(asset.get("id", &""))] = true
 	_expect(
-		authored_effects.size() == 2
+		authored_effects.size() == 3
 			and authored_effect_ids.has(&"effect/emp_release")
-			and authored_effect_ids.has(&"effect/thermal_burst_impact"),
-		"EMP release and Thermal Burst impact are the only authored raster effects"
+			and authored_effect_ids.has(&"effect/thermal_burst_impact")
+			and authored_effect_ids.has(&"effect/drop_mine_detonation"),
+		"EMP release, Thermal Burst, and Drop Mine are the authored raster effects"
 	)
 
 	if not FileAccess.file_exists(EVENT_CATALOG_PATH):
@@ -110,6 +112,7 @@ func _validate_event_catalog() -> void:
 		&"live_emp_radius":1,
 		&"authored_emp":1,
 		&"authored_thermal":1,
+		&"authored_drop_mine":1,
 		&"mystery_purge_pulse":1,
 	}
 	var mode_counts := {}
@@ -143,6 +146,13 @@ func _validate_event_catalog() -> void:
 						== &"effect/thermal_burst_impact",
 				"only Thermal direct contacts request the authored impact raster"
 			)
+		elif mode == &"authored_drop_mine":
+			_expect(
+				event_id == &"drop_mine_detonation"
+					and StringName(event.get("asset", &""))
+						== &"effect/drop_mine_detonation",
+				"only Drop Mine receipts request the authored detonation raster"
+			)
 		else:
 			_expect(
 				not event.has("asset"),
@@ -169,10 +179,17 @@ func _validate_event_producers() -> void:
 			"VehicleRun emits an unmapped visual event: %s" % event_id
 		)
 	for event_id in EXPECTED_EVENT_IDS:
-		if event_id == "mystery_projectile_purge":
+		if event_id in ["drop_mine_detonation", "mystery_projectile_purge"]:
 			_expect(
-				run_source.contains("EffectStore.MYSTERY_PURGE_PULSE_KIND"),
-				"VehicleRun does not emit the Mystery projectile-purge pulse"
+				run_source.contains(
+					"EffectStore.%s"
+					% (
+						"DROP_MINE_DETONATION_KIND"
+						if event_id == "drop_mine_detonation"
+						else "MYSTERY_PURGE_PULSE_KIND"
+					)
+				),
+				"VehicleRun does not emit the constant-owned event: %s" % event_id
 			)
 			continue
 		_expect(
@@ -180,7 +197,7 @@ func _validate_event_producers() -> void:
 			"VehicleRun does not emit required transient event: %s" % event_id
 		)
 	_expect(
-		produced.size() == EXPECTED_EVENT_IDS.size() - 1,
+		produced.size() == EXPECTED_EVENT_IDS.size() - 2,
 		"VehicleRun emits exactly the four reviewed direct transient event IDs"
 	)
 	var secondary_source := FileAccess.get_file_as_string(SECONDARY_PATH)

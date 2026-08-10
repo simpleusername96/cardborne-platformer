@@ -203,6 +203,7 @@ var _enemy_status_material: ShaderMaterial
 var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
 var _thermal_impact_batch: BatchHandle
+var _drop_mine_detonation_batch: BatchHandle
 var _mystery_device_batches: Dictionary = {}
 var _reinforcement_facility_batch: BatchHandle
 var _mystery_effect_ring_batch: BatchHandle
@@ -459,6 +460,14 @@ func _build_batches() -> void:
 		-1,
 		&"effect_thermal_burst_impact",
 		EffectStore.MAX_LIVE_THERMAL_IMPACTS
+	)
+	_drop_mine_detonation_batch = _create_asset_batch(
+		"Effect_drop_mine_detonation",
+		&"effect/drop_mine_detonation",
+		EffectStore.MAX_LIVE_DROP_MINE_DETONATIONS,
+		-1,
+		&"effect_drop_mine_detonation",
+		EffectStore.MAX_LIVE_DROP_MINE_DETONATIONS
 	)
 	_mystery_device_batches[&"intact"] = _create_asset_batch(
 		"MysteryDevice_intact",
@@ -1173,6 +1182,20 @@ func _sync_effects(
 				position,
 				0.0,
 				Vector2.ONE * impact_radius,
+				color
+			)
+			continue
+		if mode == &"authored_drop_mine":
+			var detonation_radius := radius
+			if not reduced_motion:
+				detonation_radius *= lerpf(
+					0.78, 1.0, clampf(progress / 0.35, 0.0, 1.0)
+				)
+			_write_instance(
+				_drop_mine_detonation_batch,
+				position,
+				0.0,
+				Vector2.ONE * detonation_radius,
 				color
 			)
 			continue
