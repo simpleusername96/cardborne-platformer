@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-11
 last_reviewed: 2026-08-11
@@ -612,11 +612,11 @@ save keys remain intact and receive parity tests.
   fastrun `codex` lane, serve only `build/web` from a hidden task-owned process, and perform
   production-style navigation and workflow QA in the built app. Stop only that verified
   task-owned process.
-- [ ] 6.6 After advance notice and user alignment for the expensive final checkpoint, run
+- [x] 6.6 After advance notice and user alignment for the expensive final checkpoint, run
   one clean native `peak_horde` and `capacity_pressure` pair. Compare scenario validity,
   frame/physics/scheduled-enemy/grid/combat/render metrics, and allocations against the
   current clean baseline. Do not rerun without a material hot-path change.
-- [ ] 6.7 Commit coherent task-owned changes only. Integrate durable decisions into the
+- [x] 6.7 Commit coherent task-owned changes only. Integrate durable decisions into the
   product/design specifications, add final evidence, close lifecycle status, and remove
   the completed plan when project policy requires plan deletion.
 
@@ -847,6 +847,13 @@ the user playtest determines whether a later tuning-only pass is desired.
   wide child's minimum size can expand its host before the responsive decision runs.
 - 2026-08-11: Published the Guidebook snapshot on every Deployment presentation after built-
   Web QA exposed an empty first-open catalog before the first gameplay HUD update.
+- 2026-08-11: Recorded the single clean native pair at `d0822273`. Both scenarios were
+  structurally valid. `capacity_pressure` was focused and authoritative but remained red at
+  7.5 median FPS, matching the inherited `6af25e29` median; draw-call p95 rose from 82 to 99
+  while remaining below 200. `peak_horde` lost focus during 142 samples and is therefore not
+  authority evidence. All CPU subsystem medians moved together by roughly 28-39%, so the
+  pair does not support attributing that timing delta to one task-owned subsystem. Per the
+  performance guard, the pair was not rerun without a material hot-path change.
 
 ## Progress
 
@@ -859,11 +866,11 @@ the user playtest determines whether a later tuning-only pass is desired.
 - [x] Compare alternatives and lock a decision-complete implementation contract.
 - [x] Implement Milestones 0-5 and complete deterministic rendered inspection.
 - [x] Complete import, focused/consolidated validators, Web export, and built-app smoke QA.
-- [ ] Complete Milestone 6 qualification and close the plan lifecycle.
+- [x] Complete Milestone 6 qualification and close the plan lifecycle.
 
 ## Next Steps
 
-Commit the task-owned implementation from the validated tree, run the one declared clean
-native performance pair, record its qualification relative to the inherited baseline, and
-close this plan as `done`. Project policy calls for later deletion, but document deletion
-requires explicit user approval under the active lifecycle steward.
+No implementation work remains. A user playtest can decide whether the accepted monotonic
+balance curve needs a later tuning-only pass. Project policy calls for deletion of completed
+plans after integration, but document deletion requires explicit user approval under the
+active lifecycle steward; this plan therefore remains retained with `status: done`.
