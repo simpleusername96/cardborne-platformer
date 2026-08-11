@@ -8,8 +8,9 @@ extends RefCounted
 const HEALTH := [0.85, 1.00, 1.15, 1.30, 1.45]
 const DAMAGE := [1.0, 1.03, 1.06, 1.09, 1.12]
 const SPEED := [1.0, 1.01, 1.02, 1.03, 1.04]
-const ORDINARY_HEALTH_PRESSURE := [1.35, 1.45, 1.55, 1.65, 1.75]
-const ORDINARY_DAMAGE_PRESSURE := [1.15, 1.24, 1.33, 1.42, 1.50]
+# Ease Stage 1 onboarding, then exceed the previous ordinary-enemy pressure curve.
+const ORDINARY_HEALTH_PRESSURE := [1.15, 1.55, 1.70, 1.85, 2.00]
+const ORDINARY_DAMAGE_PRESSURE := [0.98, 1.30, 1.42, 1.54, 1.66]
 const ORDINARY_HEALTH_MULTIPLIER := 2.60
 
 const BOSS_BASE_HEALTH := [1250.0, 1350.0, 1450.0, 1550.0, 1650.0]

@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-11
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -86,15 +86,16 @@ five-stage run.
 
 All non-boss enemy archetypes receive the existing final `2.60` health
 multiplier after the fixed profile and shallow stage curve, then the stage
-pressure `[1.35, 1.40, 1.45, 1.50, 1.50]`. The five ordinary health curve values
-remain `[0.85, 1.00, 1.15, 1.30, 1.45]`. Boss health receives a separate final
-`3.90` multiplier on its authored curve.
+pressure `[1.15, 1.55, 1.70, 1.85, 2.00]`. The five ordinary health curve values
+remain `[0.85, 1.00, 1.15, 1.30, 1.45]`. Stage 1 pressure is approximately 15%
+lower than its previous value; Stage 2–5 pressure is higher. Boss health uses
+the separate stage profile defined below.
 Ordinary enemy-sourced damage applies the shared `1.755` multiplier, the stage
 curve `[1.00, 1.03, 1.06, 1.09, 1.12]`, and the additional stage pressure
-`[1.15, 1.20, 1.25, 1.30, 1.30]`. For one authored damage point these compose
-to `2.01825/2.16918/2.325375/2.486835/2.55528`. Boss `final-effective` attacks
-use their separate `1.30` multiplier and bypass the ordinary multiplier and
-ordinary stage pressure. Friendly or environmental damage bypasses both.
+`[0.98, 1.30, 1.42, 1.54, 1.66]`. For one authored damage point these compose
+to `1.7199/2.349945/2.641626/2.945943/3.262896`. Boss `final-effective` attacks
+use their separate stage profile and bypass the ordinary multiplier and ordinary
+stage pressure. Friendly or environmental damage bypasses both.
 Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
 `0.75 s`; both healing outputs are twice their previous values.
 
@@ -402,11 +403,12 @@ The reinforcement facility is the only map-spawned stationary hostile facility;
 it is managed outside the enemy actor store and appears as a dedicated minimap
 objective. Ordinary hostile projectiles
 stop at 96 so 24 of the global 120-shot cap remain reserved for boss attacks.
-Stage 1 ordinary health and damage remain unchanged. Stage 2–5 ordinary health
-pressure is `1.45/1.55/1.65/1.75` and damage pressure is
-`1.24/1.33/1.42/1.50`; these multiply the existing stage, class, fixed-Hard, and
-global factors without changing speed, cadence, projectile speed, count, quota,
-or cap. Each
+Stage 1 ordinary health and damage pressure is `1.15/0.98`, approximately 15%
+below the previous `1.35/1.15`. Stage 2–5 ordinary health pressure is
+`1.55/1.70/1.85/2.00` and damage pressure is `1.30/1.42/1.54/1.66`; each is
+higher than its previous value. These multiply the existing stage, class,
+fixed-Hard, and global factors without changing speed, cadence, projectile speed,
+count, quota, or cap. Each
 boss uses a distinct three-phase direct-pattern sequence plus independently
 scheduled autonomous pressure. Every damaging pattern has a visible startup,
 active window, and recovery. Routine hits never interrupt or stop the boss, and
