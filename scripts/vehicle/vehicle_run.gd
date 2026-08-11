@@ -2269,8 +2269,8 @@ func _update_enemies(
 				if not enemy.alive:
 					continue
 		var role := enemy.role
-		_refresh_enemy_presentation_facing(enemy)
 		if role == &"stage_boss":
+			_refresh_enemy_presentation_facing(enemy)
 			_update_stage_boss(enemy, delta)
 			_refresh_enemy_presentation_facing(enemy)
 			enemy_grid.update_actor(enemy)
@@ -2620,6 +2620,7 @@ func _record_motion_only_enemy_change(
 			enemy_grid.update_actor_position(enemy)
 		else:
 			enemy_grid.update_actor(enemy)
+	_refresh_enemy_presentation_facing(enemy)
 
 
 func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
