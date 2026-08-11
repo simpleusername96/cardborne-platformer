@@ -27,7 +27,6 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"upgrade/pickup_magnet",
 	&"upgrade/hull_reinforcement",
 	&"pickup/experience_master",
-	&"pickup/reward_crate",
 	&"pickup/repair",
 	&"pickup/experience_recall",
 	&"world/facility_transit_gate",

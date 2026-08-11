@@ -200,6 +200,72 @@ The stopping condition is a named owner that is material and scales with N, or e
 that current instrumentation cannot distinguish the owner. “Material” means median at
 least 1 ms or p95 at least 2 ms at capacity and at least 10% of recorded physics time.
 
+### 6. Executed scaling, ablation, and attribution evidence
+
+The diagnostic matrix was executed on the exact same fixed workload, seed, viewport, and
+enemy-count override. The override is capacity-only and does not change release gameplay.
+Samples use a five-second warmup and ten-second recording window. Raw JSON and logs are
+under `build/performance/dense-combat/`; they are local generated evidence and are not
+committed.
+
+The first count sweep at instrumentation commit `14e8ef29` was:
+
+| Enemies | Physics median | p95 | p99 | Enemies/grid median | Decision median | Combat median | Presentation median |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 64 | 6.047 ms | 8.043 ms | 10.094 ms | 2.006 ms | 0.468 ms | 3.249 ms | 2.089 ms |
+| 128 | 9.125 ms | 14.457 ms | 16.180 ms | 4.210 ms | 1.176 ms | 3.612 ms | 2.822 ms |
+| 192 | 13.599 ms | 22.418 ms | 26.716 ms | 7.459 ms | 2.071 ms | 4.069 ms | 3.512 ms |
+| 256 | 18.590 ms | 25.711 ms | 30.005 ms | 11.384 ms | 3.033 ms | 4.488 ms | 4.859 ms |
+| 320 | 20.927 ms | 28.565 ms | 33.587 ms | 13.364 ms | 4.278 ms | 4.535 ms | 5.093 ms |
+
+The 320 point was contaminated by transient system load, so it is not the optimization
+baseline. Three repeated 320-enemy runs after movement attribution at `c94c6509` were stable:
+
+| Repeat | Physics median | p95 | p99 |
+| ---: | ---: | ---: | ---: |
+| 1 | 15.555 ms | 20.061 ms | 23.487 ms |
+| 2 | 15.837 ms | 20.472 ms | 24.154 ms |
+| 3 | 15.828 ms | 20.592 ms | 24.193 ms |
+
+Repeat 3 is the comparison baseline. Its named medians were enemies/grid `10.629 ms`,
+decision `3.304 ms`, motion `2.480 ms`, and overlap `1.610 ms`. Movement intent,
+smoothing, and collision were `0.595/0.719/0.279 ms`.
+
+The four 320-enemy diagnostic ablations selected the work owners:
+
+| Ablation | Physics median | p95 | p99 | Interpretation |
+| --- | ---: | ---: | ---: | --- |
+| ordinary decision off | 11.419 ms | 15.069 ms | 18.032 ms | largest removable branch |
+| attacks off | 16.023 ms | 24.010 ms | 29.316 ms | combat is material but secondary |
+| overlap off | 20.483 ms | 28.319 ms | 33.414 ms | smaller than decision branch |
+| presentation off | 20.934 ms | 28.085 ms | 32.697 ms | does not explain physics scaling |
+
+Presentation was therefore rejected as the first fix. Ordinary decision/movement was the
+primary owner, with projectile combat selected after movement improvements.
+
+### 7. Implemented optimization sequence and measured effect
+
+Each step preserved all 320 enemies, projectile/effect capacities, exact hit tests, attack
+truth, visual assets, and draw topology.
+
+| Commit | Change | Physics median | p95 | Selected child result |
+| --- | --- | ---: | ---: | --- |
+| `ad64cfdd` | reuse frame active/family aggregates, event-owned facility child count, static-cover broad phase, generation-stamped overlap rows | 15.511 ms | 20.435 ms | facility rescan removed; overlap 1.423 ms |
+| `ca80425a` | cache immutable enemy movement profiles | 14.971 ms | 19.219 ms | grid 9.775; decision 3.140; motion 2.274 ms |
+| `92b449a0` | align ordinary facing refresh with scheduled motion | 14.935 ms | 19.154 ms | active-state loop 0.443 -> 0.072 ms |
+| `17069ceb` | precompute bounded exact separation in the spatial grid | 14.570 ms | 18.962 ms | smoothing 0.664 -> 0.267 ms |
+| `1db38892` | repair projectile timer attribution and split zones/effects | 14.591 ms | 18.501 ms | player projectile 2.719; hostile 0.591 ms |
+| `793e3bf9` | split projectile cover and structure query timers | 14.700 ms | 18.619 ms | cover 1.103; structure 0.487; candidates 1.019 ms |
+| `eea6920a` | reuse exact-order projectile cover candidates and remove per-shot empty receipt allocation | 14.517 ms | 18.323 ms | cover 1.066 ms |
+
+Against stable baseline repeat 3, current candidate `eea6920a` reduces recorded physics
+median from `15.828` to `14.517 ms` (**8.3%**) and p95 from `20.592` to `18.323 ms`
+(**11.0%**). This is a real same-workload improvement, but it is not release qualification.
+The existing capacity gate is p95 `<=6 ms` and p99 `<=8 ms`; the candidate remains far above
+it. The next largest measured combat owner is the player-projectile route, particularly
+cover and spatial-candidate queries. Further changes require another bounded evidence step,
+not count reduction or gameplay degradation.
+
 ## Recommendations
 
 ### Selected resolution sequence
@@ -245,9 +311,10 @@ least 1 ms or p95 at least 2 ms at capacity and at least 10% of recorded physics
 
 ## Limitations
 
-- No profiler capture for current HEAD was produced during this research-only turn.
-- Historical timings identify the likely ownership region, not the exact line-level cost
-  after later changes.
+- The short 5/10-second diagnostic samples select owners and compare candidates; they do
+  not replace the authoritative 60-second peak/capacity native and Web release scenarios.
+- The historical `66f78582` record and current short samples have different code and sample
+  windows, so only same-series count/ablation/candidate comparisons are valid.
 - Static inspection cannot quantify cache locality, allocator stalls, browser JavaScript/
   WebAssembly overhead, driver behavior, or operating-system scheduling.
 - Native gates and Web playability are separate. The browser build needs its own smoke and

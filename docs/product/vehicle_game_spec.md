@@ -22,8 +22,7 @@ pressure, and building a compact set of automatic secondary weapons. A new run
 selects one of three registered macro fields plus five deterministic
 stage-tactical content arrangements. All five combat stages reuse that field's
 floor, boundary, five inner-wall groups, and two Transit Gate routes. Each
-stage scatters its own three mystery devices, six
-loose pickups, and eight reward crates.
+stage scatters its own three Anomaly Devices and fourteen direct pickups.
 
 This is the canonical product contract for the current executable.
 
@@ -143,8 +142,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   values. Its `danger footprint` is the exact set of player-center positions
   that can receive damage: projectile radius plus player radius, contact
   colliders plus padding, beam half-width plus player radius, or the authored
-  area radius. Projectile and beam corridors stop at the same current wall or
-  live crate as collision. From the first visible startup frame, damaging boss
+  area radius. Projectile and beam corridors stop at the same current tactical
+  wall as collision. From the first visible startup frame, damaging boss
   attacks hold their warned origin, direction, and target through impact; only
   warning readiness changes. These descriptors remain simulation truth and do
   not require a visible world route.
@@ -171,9 +170,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   hostile attacks apply direct damage only; player primary rounds derive affinity
   from the one selected element. Multi-element player rounds are not legal.
 - Every projectile stops at the same static or run-selected inner wall that blocks
-  the ship. A live crate also blocks line of sight and both projectile teams;
-  hostile fire is absorbed without destroying the reward crate, while player
-  fire can break it. `wall_piercing` is an explicit projectile capability whose
+  the ship. Attackable field structures resolve through the player structure-hit
+  route and are never treated as reward cover. `wall_piercing` is an explicit projectile capability whose
   default is false. No current ordinary enemy, boss pattern, primary shot, or
   secondary shot receives that capability implicitly.
 - An intact Anomaly Device blocks actors and player projectiles. Hostile
@@ -195,7 +193,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   player at `(3600, 2160)`.
 - Run-fixed wall and gate footprints have no forbidden overlap and
   remain outside the player-start clearance. The generator treats their exact
-  rectangles or effect radii as reserved space for stage devices, crates,
+  rectangles or effect radii as reserved space for stage devices, direct
   pickups, ordinary spawn anchors, and boss arrival anchors.
 - The center has a 560-pixel safe clearance. The camera remains at zoom 1, so the
   field is larger than one screen and exploration state matters.
@@ -213,9 +211,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   stages so a run reads as one continuous field rather than five reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
   least thirty-two content candidates are reusable authored sources. Each
-  stage selects three Anomaly Devices, six pickups, and eight crates with
-  explicit separation. Crates are never attached to one another or relocated
-  into guarded reward enclosures. No stage owns a separate map, boss room,
+  stage selects three Anomaly Devices and fourteen direct pickups with explicit
+  separation. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Pickup contact uses the swept player path with the 24-pixel player radius and
   42-pixel pickup body. Endpoint contact, tangent contact, and a complete dash
@@ -225,11 +222,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
   debug/performance snapshots expose the selected field, seed, and fingerprint.
 - The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed.
-  Dynamic markers expose exactly eight tactical roles: player craft, field
-  pickup, reward crate, intact Anomaly Device, mobile enemy, priority enemy,
-  boss, and reinforcement facility. The pickup marker is `12 x 7.6`, the
-  notched crate marker is `9 x 9`, and their perceived polygon areas differ by
-  no more than ten percent. The Anomaly Device silhouette scales every outer
+  Dynamic markers expose exactly seven tactical roles: player craft, field
+  pickup, intact Anomaly Device, mobile enemy, priority enemy, boss, and
+  reinforcement facility. The pickup marker is `12 x 7.6`. The Anomaly Device silhouette scales every outer
   point by `1.20`. Elite distinctions, stage-specific boss identity, and the
   Mystery outcome are not separate minimap markers.
 
@@ -360,12 +355,15 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    clear distant anchor. It is not an enemy actor and does not count toward the
    quota. While alive it spawns an existing stage-scaled role every `8/7/6/5/4`
    seconds, respects both the global active cap and a per-facility live-child cap
-   of `2/3/4/5/6`, and resets its interval after every accepted spawn. A full
-   child or global cap holds a completed interval at zero; freeing either slot
-   permits the pending spawn immediately. The facility can repeat this cycle for
-   its complete active lifetime and stops permanently when destroyed, retired,
-   or the stage completes. Only living summoned actors whose `carrier_id` is
-   `reinforcement_facility` count against its child cap.
+   of `2/3/4/5/6`, and resets its interval after every accepted spawn. It owns
+   the same finite total of `2/3/4/5/6` production charges by stage. An accepted
+   birth consumes one charge; a retired child releases one live-child slot. A
+   full child or global cap holds a completed interval at zero and resumes as
+   soon as a slot is free. After the final charge and final child are gone, the
+   facility enters `spent` for 0.8 seconds and retires. Destruction, explicit
+   retirement, or stage completion also stops production permanently. Only
+   living summoned actors whose `carrier_id` is `reinforcement_facility` count
+   against its child cap.
 6. On reaching the quota, ordinary spawning stops and a 1.5-second boss warning
    identifies a reachable arrival anchor at least 1200 pixels from the player
    when the field permits it. Boss creation and boss-defeat completion reject
@@ -437,14 +435,14 @@ does not produce a transient message.
   granted only when a shard is collected; summoned enemies grant the normal XP
   for their health class.
 - Exactly two field item behaviors exist: repair restores hull and experience
-  recall pulls all live shards toward the player. Breakable crates contain one
-  of those two items. Recall retargets the ship's current position every physics
+  recall pulls all live shards toward the player. Both spawn directly on the
+  field. Recall retargets the ship's current position every physics
   frame and guarantees all live shards reach it before the 0.65-second recall
   window expires, including while the ship dashes.
-- Each stage places six loose field items and eight breakable crates. Four loose
-  repairs restore `50 HP`; five crate repairs restore `50 HP` and one restores
-  `40 HP`, for an exact `490 HP` field-repair budget. Repair collection still
-  clamps at the ship's current maximum hull.
+- Each stage places fourteen direct pickups: four experience recalls and ten
+  repairs. Nine repairs restore `50 HP` and one restores `40 HP`, for an exact
+  `490 HP` field-repair budget. Repair collection clamps at the ship's current
+  maximum Hull unless Overflow Barrier converts eligible excess recovery.
 - Level thresholds use
   `min(160, 12 + round(3n + 0.55n²))`, where `n` is the zero-based level
   progression index. This makes early choices frequent while restoring a rising
@@ -453,42 +451,57 @@ does not produce a transient message.
   confirm. When no compatible upgrade remains, one localized completion receipt
   marks XP as `MAX`, clears queued levels and live shards, and suppresses future
   shard spawning and XP awards for that run.
-- The live catalog is the 13-card, 36-level-state contract in
-  `vehicle_upgrade_catalog.md`. It uses four player-facing categories: Primary
-  Weapon Mods, Secondary Weapon Systems, Attack Status Effects, and Chassis &
-  Support. Category is separate from change kind and optional weapon-slot
-  ownership. Dash and EMP remain base actions but have no upgrade cards.
+- The live catalog is the 21-card, 68-level-state contract in
+  `vehicle_upgrade_catalog.md`. It uses five player-facing categories: Primary
+  Weapon Mods, Secondary Weapon Systems, Attack Elements, Chassis & Support,
+  and Combat Conditions. Category is separate from change kind and optional
+  weapon-slot ownership. Dash and EMP remain base actions; Dash has two
+  extension cards and EMP has no upgrade card.
 - A first acquisition is an `unlock` only when it creates a previously absent
   behavior: Split Muzzle, Piercing Rounds, an optional secondary, or an element.
   Homing Missiles is an `enhance` offer from its first card because Seeker starts
   equipped; all later behavior-card levels are enhancements. Change kind remains
   in the frozen offer and localized accessibility name, not visible card chrome.
 - Every legal card state publishes one or two gameplay-owned effect rows. The
-  six behavior-card sequences are: Split Muzzle `1->2->3` projectiles per volley
-  and `100%->140%->165%` total volley damage; Piercing Rounds `0->1->2->3`
-  additional penetrations; Homing Missiles `1->2->3` missiles and `25->28->32`
-  damage per missile; Electric Field `8->12->16` DPS and `120->140->160` radius;
-  Orbiting Blades `2->3->4` blades and `14->18->22` damage per blade; Drop Mines
-  `48->60->72` damage and `3.2->2.8->2.4 s` deployment interval. Optional-secondary
-  and element unlocks show their acquired values without a false zero comparison.
-- `Movement Speed`, `Pickup Radius`, `Hull Integrity`, and `Lifesteal` are the
-  complete Chassis & Support category. Pickup Radius preserves the former
+  extended attack sequences preserve existing object counts: Split Muzzle ends
+  at three projectiles and `180%` volley damage; Piercing Rounds ends at four
+  additional penetrations; Homing Missiles ends at three missiles and `38`
+  damage; Electric Field ends at `22 DPS` and radius `160`; Orbiting Blades ends
+  at four blades and `28` damage; Drop Mines ends at `88` damage, `2.4 s`
+  interval, and five live mines; Thermal Burst ends at `11` damage and radius
+  `96`; Bio Toxin ends at `5.5 DPS` per stack for seven seconds. Optional-secondary
+  and element unlocks show acquired values without a false zero comparison.
+- `Movement Speed`, `Pickup Radius`, `Hull Integrity`, `Lifesteal`, and
+  `Overflow Barrier` form Chassis & Support. Pickup Radius preserves the former
   Pickup Magnet card's three-level collection effect. Every run starts with
-  `0.5%` Lifesteal. The Lifesteal card raises the total rate to `2%`/`3.5%`.
-  Recovery uses actual player-owned enemy damage, has a six-Hull capacity that
-  replenishes at six Hull per second, and never exceeds maximum Hull.
+  `0.5%` Lifesteal; its card raises the total rate to `2%`/`3.5%`. Recovery uses
+  actual player-owned enemy damage and a six-Hull budget replenished at six Hull
+  per second. Overflow Barrier applies Hull recovery first, then converts
+  eligible excess at `50/75/100%` into an eight-second barrier capped at
+  `15/25/35%` of maximum Hull.
 - Thermal Burst, Bio Toxin, and Cryo Slow are mutually exclusive complete packages.
   The first selected root locks the other two out of future offers, and only that
   root's later levels remain eligible. Its affinity changes player-primary projectile
   color. The selected condition accumulates bounded stacks and Korean/English
   target text exposes its count. There are no intermediate element branch cards.
   Their card values and runtime payload share one build-owned source: Thermal
-  radius is `72/84/96` with burst damage `4/6/8`; Toxin damage per stack is
-  `2/3/4` with `5/6/7s` duration; Cryo slow per stack is `6/8/10%` with
+  radius is `72/84/96/96` with burst damage `4/6/8/11`; Toxin damage per stack is
+  `2/3/4/5.5` with `5/6/7/7s` duration; Cryo slow per stack is `6/8/10%` with
   `2/2.5/3s` duration. Boss Chill retains its existing half-effect rule.
-- **Secondary Weapons** is the umbrella category for four automatic weapon
+- Combat Conditions contains Critical Targeting, Range Polarization, Dash
+  Overdrive, Dash Afterburn Field, and Last Stand Amplifier. Direct attacks have
+  a deterministic `8/12/16%` critical chance for `2x` damage. Eligible attacks
+  gain `12/20/30%` at 260 pixels or nearer and 620 pixels or farther. Dash
+  Overdrive grants `15/25/35%` for two seconds after Dash. Last Stand scales from
+  zero below 60% Hull to `15/25/35%` at 25% Hull. These non-critical bonuses add
+  and cap at `+100%`; critical multiplication happens afterward.
+- Dash Afterburn Field creates one exact capsule from the Dash start to the
+  actual Dash end, including an end shortened by cover. Its half-width is 72,
+  lifetime is three seconds, tick interval is 0.5 seconds, tick damage is
+  `10/15/20`, and at most two paths remain active.
+- **Secondary Weapons** is the umbrella category for six automatic weapon
   types. **Seeker** is its always-equipped built-in subtype; up to two of the
-  other three optional subtypes may be active,
+  other five optional subtypes may be active,
   for three total. Data expresses this with `secondary_slot_kind` values
   `built_in` and `optional`; offer eligibility counts only owned optional
   definitions and never infers slot ownership from a card ID. Seeker remains
@@ -499,14 +512,23 @@ does not produce a transient message.
 | Homing Missiles | Periodic targeted projectiles; upgrades increase count and damage |
 | Electric Field | Damage over time near the ship |
 | Orbiting Blades | Close orbiting contact damage |
-| Drop Mines | Timed mines dropped behind movement |
+| Drop Mines | One immediate mine, then timed mines behind movement or the stopped hull |
+| Rear Laser | A cover-clipped beam opposite a successful primary shot |
+| Storm Barrage | A warned area strike on a distant threat cluster |
 
-Drop Mine is distinct from Thermal Burst. At levels 1–3 it applies one
-`48/60/72` area hit at radius `96/108/120` after proximity or timeout, then
+Drop Mine is distinct from Thermal Burst. At levels 1–4 it applies one
+`48/60/72/88` area hit at radius `96/108/120/120` after proximity or timeout, then
 publishes one origin receipt only after damage resolution. Its cosmetic has a
 `0.18 s` lifetime and an eight-instance subcap inside the unchanged 96-effect
 store. When saturated, it may recycle only another Drop Mine cosmetic; missing
 feedback never cancels or duplicates damage.
+
+Rear Laser fires at most every `0.9 s` on a successful primary shot, exactly
+opposite the primary direction. It deals `48/66/86`, uses a 760-long corridor
+with half-width 18, and stops at the first tactical wall. Storm Barrage checks
+threats from 480 to 960 pixels every `4.5 s`, warns for `0.55 s`, then deals
+`70/95/125` inside radius 140 to at most twelve eligible targets. It can damage
+ordinary enemies, the reinforcement facility, and an Anomaly Device.
 
 Each Seeker missile applies its level-owned direct damage, then one `12` damage
 kinetic burst to other enemies inside `95` world units. The direct target is not
@@ -572,8 +594,8 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   transitions use no banner.
 - Bosses, active reinforcement facilities, and fixed combat installations
   (`turret`, `interceptor_tower`, `beam_sentinel`, and `generator`) own thick,
-  backed health bars above their world bodies. Mobile enemies, mines, Mystery
-  Devices, and reward crates never receive world health bars. Installation bars
+  backed health bars above their world bodies. Mobile enemies, mines, and
+  Anomaly Devices never receive world health bars. Installation bars
   use a deterministic 12-actor cap. Fill left edges remain fixed at every health
   ratio. Installation, boss, and facility half-widths clamp to `42–72`,
   `96–120`, and `88–112` world units; complete bars prefer the body top, move
@@ -595,8 +617,8 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   contacts share a sector; only the winning role owns that sector's color and
   triangle. A single attack never appears as both a world route and a radar
   contact.
-- The minimap publishes exactly eight semantic roles: player, field pickup,
-  reward crate, intact Anomaly Device, mobile enemy, priority enemy, boss, and
+- The minimap publishes exactly seven semantic roles: player, field pickup,
+  intact Anomaly Device, mobile enemy, priority enemy, boss, and
   reinforcement facility. `turret`, `interceptor_tower`, `beam_sentinel`, and
   `generator` are priority enemies; other active non-boss enemies are mobile
   enemies. An intact Anomaly Device uses one neutral marker that never leaks its
@@ -604,9 +626,7 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   command-magenta notched marker independent of stage. The reinforcement
   facility keeps its dedicated two-tone diamond. All roles share the existing
   marker capacity, borrowed buffers, explored geometry, fog, and one retained
-  minimap mesh. Pickup and crate use the exact size and area relationship
-  defined in the field contract above; the Anomaly Device uses the `1.20`
-  silhouette scale.
+  minimap mesh. The Anomaly Device uses the `1.20` silhouette scale.
 - Electric Field displays its complete selected damage radius of 120, 140, or
   160 world units as one ground-attached arc-purple area below actors. The area
   uses a restrained fill and at most two broad low-contrast internal planes. It
@@ -650,7 +670,10 @@ missing or recycled feedback never cancels or repeats gameplay damage.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   enemies, bosses, and field objects categories. Enemies contains every non-boss
   hostile actor, including stationary installations and elite modifiers. Field
-  Objects contains only non-hostile interaction, traversal, and reward objects.
+  Objects contains interaction, traversal, direct reward objects, the Anomaly
+  Device, and the separately managed reinforcement facility. The facility is a
+  destructible hostile objective but not an enemy actor; it therefore never
+  appears in the enemy list.
 - The current ship page shows derived stats and equipped secondaries. Encountered
   enemy and boss entries show ordered combat statistics derived from gameplay
   owners, not duplicated movement/attack/counter prose. An active run shows exact
@@ -686,6 +709,9 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   the explicit `MAX` progression-complete receipt resolves the transaction and
   cannot block Stage 5 completion. A zero-card offer while a compatible definition
   remains is an invariant failure and never resolves silently.
+- From Stage 3 onward, every offer includes at least one compatible unfinished
+  attack card when one exists. This guarantee preserves all optional-secondary,
+  element, unique-ID, and frozen-transaction rules.
 - The upgrade modal starts directly with its one to three visible cards: it has no separate
   kicker, screen title, or instruction header. Every card shows its real current
   and next level; cards backed by numeric stat modifiers also show the real
@@ -753,9 +779,9 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same
   profile, and no UI or saved preference can change difficulty.
-- The exact 13-card and 36-state catalog loads, Pickup Radius retains the former
+- The exact 21-card and 68-state catalog loads, Pickup Radius retains the former
   Pickup Magnet card's three values, baseline Lifesteal restores `0.5%`, the
-  Lifesteal card raises the total rate to `2%`/`3.5%`, the four secondary weapon
+  Lifesteal card raises the total rate to `2%`/`3.5%`, the six secondary weapon
   types load, no more than three are active, and their bounded simulations pass
   tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
@@ -785,8 +811,8 @@ missing or recycled feedback never cancels or repeats gameplay damage.
 - More than three simultaneous secondary families.
 - Unconstrained procedural topology, per-stage layout rerolls, a chore-filled
   base, or exploration puzzles in this run.
-- Alternative growth systems beyond the current 13-card catalog and four
-  secondary weapon types are inactive and require an explicit product-spec revision.
+- Growth systems beyond the current 21-card catalog and six secondary weapon
+  types require an explicit product-spec revision.
 - A selectable, adaptive, or meta-progression difficulty model is inactive and
   requires an explicit product-spec revision.
 - Additional map-generation systems, coordinated-enemy tactics, or new boss

@@ -432,7 +432,6 @@ func _validate_minimap_tokens() -> void:
 		"markers": [
 			{"kind":&"boss", "position":Vector2(800,800), "discovered":true},
 			{"kind":&"field_pickup", "position":Vector2(1400,800), "discovered":true},
-			{"kind":&"reward_crate", "position":Vector2(2000,800), "discovered":true},
 			{"kind":&"mystery_device", "position":Vector2(2600,800), "discovered":true},
 			{"kind":&"mobile_enemy", "position":Vector2(3200,800), "discovered":true},
 			{"kind":&"priority_enemy", "position":Vector2(3800,800), "discovered":true},
@@ -446,7 +445,7 @@ func _validate_minimap_tokens() -> void:
 		],
 	}
 	var mesh := MinimapBuilder.build(snapshot, Vector2(260.0, 120.0))
-	_expect(mesh != null, "minimap compiles all eight bounded semantic roles")
+	_expect(mesh != null, "minimap compiles all seven bounded semantic roles")
 	if mesh == null:
 		return
 	_expect(mesh.get_surface_count() == 1, "minimap stays in one vertex-colored batch")

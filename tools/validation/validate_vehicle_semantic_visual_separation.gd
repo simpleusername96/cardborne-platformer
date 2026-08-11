@@ -14,9 +14,8 @@ const DISTINCT_GROUPS := {
 		&"secondary/orbit_blade",
 		&"secondary/wake_mine",
 	],
-	"pickups_and_rewards":[
+	"active_pickups":[
 		&"pickup/experience_master",
-		&"pickup/reward_crate",
 		&"pickup/repair",
 		&"pickup/experience_recall",
 	],

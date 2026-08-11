@@ -1057,10 +1057,11 @@ func _check_combat_presentation_frame(run) -> void:
 		"combat presentation borrows synchronous live collections without duplication"
 	)
 	_expect(
-		secondary.size() == 3
+		secondary.size() == 11
 			and not secondary.has("equipped")
-			and not secondary.has("seeker_cooldown"),
-		"runtime secondary state exposes only orbit, mine, and field-radius presentation fields"
+			and not secondary.has("seeker_cooldown")
+			and not secondary.has("storm_cooldown"),
+		"runtime secondary state exposes only renderer-owned bounded presentation fields"
 	)
 	_expect(
 			not is_same(oracle["protection_sources"], run.player_protection_sources)

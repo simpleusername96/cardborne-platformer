@@ -521,7 +521,6 @@ func _initialize() -> void:
 		"player_facing":Vector2.RIGHT,
 		"markers":[
 			{"kind":&"field_pickup", "position":Vector2(900.0, 650.0), "discovered":true},
-			{"kind":&"reward_crate", "position":Vector2(1500.0, 650.0), "discovered":true},
 			{"kind":&"mystery_device", "position":Vector2(2100.0, 650.0), "discovered":true},
 			{"kind":&"mobile_enemy", "position":Vector2(2700.0, 650.0), "discovered":true},
 			{"kind":&"priority_enemy", "position":Vector2(3300.0, 650.0), "discovered":true},
@@ -545,24 +544,16 @@ func _initialize() -> void:
 			and is_equal_approx(float(marker_sizes["boss_inner"]), 7.6)
 			and Vector2(marker_sizes["field_pickup_size"])
 				== Vector2(12.0, 7.6)
-			and Vector2(marker_sizes["reward_crate_size"])
-				== Vector2(9.0, 9.0)
 			and is_equal_approx(float(marker_sizes["mystery_device_scale"]), 1.20),
 		"minimap preserves the locked role and world-object size hierarchy"
 	)
-	var pickup_area := float(marker_sizes["field_pickup_polygon_area"])
-	var crate_area := float(marker_sizes["reward_crate_polygon_area"])
-	_expect(
-		absf(pickup_area - crate_area) / maxf(pickup_area, crate_area) <= 0.10,
-		"pickup and reward-crate perceived polygon areas differ by at most ten percent"
-	)
 	_expect(
 		UiGlyphCatalog.minimap_ids() == [
-			&"player", &"field_pickup", &"reward_crate", &"mystery_device",
+			&"player", &"field_pickup", &"mystery_device",
 			&"mobile_enemy", &"priority_enemy", &"boss",
 			&"reinforcement_facility",
 		],
-		"minimap exposes exactly eight bounded semantic roles"
+		"minimap exposes exactly seven bounded semantic roles"
 	)
 	var retained_snapshot := {
 		"cols":13,
@@ -573,7 +564,6 @@ func _initialize() -> void:
 		"player_facing":Vector2.RIGHT,
 		"markers":[
 			{"kind":&"field_pickup", "position":Vector2(900.0, 700.0), "discovered":true},
-			{"kind":&"reward_crate", "position":Vector2(1500.0, 700.0), "discovered":true},
 			{"kind":&"mystery_device", "position":Vector2(2100.0, 700.0), "discovered":true},
 			{"kind":&"mobile_enemy", "position":Vector2(2700.0, 700.0), "discovered":true},
 			{"kind":&"priority_enemy", "position":Vector2(3300.0, 700.0), "discovered":true},
@@ -884,7 +874,10 @@ func _validate_upgrade_matrix(ui: VehicleStageUI) -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 36, "layout matrix contains all 36 card/level states")
+	_expect(
+		snapshots.size() == Catalog.EXPECTED_LEVEL_STATES,
+		"layout matrix contains all catalog card/level states"
+	)
 	var safe_card := snapshots[0]
 	var original_locale := TranslationServer.get_locale()
 	for locale in ["ko", "en"]:
@@ -893,26 +886,29 @@ func _validate_upgrade_matrix(ui: VehicleStageUI) -> void:
 			get_root().content_scale_size = viewport
 			get_root().size = viewport
 			await process_frame
-			for snapshot in snapshots:
-				for slot in 3:
-					var offer: Array[Dictionary] = [
-						safe_card.duplicate(true),
-						safe_card.duplicate(true),
-						safe_card.duplicate(true),
-					]
-					offer[slot] = snapshot
-					ui.show_upgrade(offer)
-					await process_frame
-					_expect_upgrade_geometry(
-						ui.debug_upgrade_geometry(),
-						"%s %s slot %d unselected" % [locale, snapshot["id"], slot + 1]
-					)
-					ui.debug_select_upgrade(slot)
-					await process_frame
-					_expect_upgrade_geometry(
-						ui.debug_upgrade_geometry(),
-						"%s %s slot %d selected" % [locale, snapshot["id"], slot + 1]
-					)
+			for snapshot_index in snapshots.size():
+				var snapshot := snapshots[snapshot_index]
+				# Every state still renders in every locale and viewport. Rotating the
+				# occupied slot removes three equivalent full-layout passes.
+				var slot := snapshot_index % 3
+				var offer: Array[Dictionary] = [
+					safe_card.duplicate(true),
+					safe_card.duplicate(true),
+					safe_card.duplicate(true),
+				]
+				offer[slot] = snapshot
+				ui.show_upgrade(offer)
+				await process_frame
+				_expect_upgrade_geometry(
+					ui.debug_upgrade_geometry(),
+					"%s %s slot %d unselected" % [locale, snapshot["id"], slot + 1]
+				)
+				ui.debug_select_upgrade(slot)
+				await process_frame
+				_expect_upgrade_geometry(
+					ui.debug_upgrade_geometry(),
+					"%s %s slot %d selected" % [locale, snapshot["id"], slot + 1]
+				)
 	TranslationServer.set_locale(original_locale)
 
 

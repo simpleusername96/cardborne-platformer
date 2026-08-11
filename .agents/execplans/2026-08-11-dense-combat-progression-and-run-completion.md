@@ -461,26 +461,27 @@ outgoing policy에, 대시 완료 효과는 dash runtime에, 회복 분리는 re
   조건부 피해·회복·보조 무기 계산 validator를 구현한다.
 - [x] `M4` facility 유한 충전·offline/spent lifecycle·incremental child count와 mystery
   revealed-state/count presentation, guidebook stat을 구현한다.
-- [ ] `M5` 기능 변경 후 clean baseline과 scaling/ablation evidence를 한 번 수집하고 material
+- [x] `M5` 기능 변경 후 clean baseline과 scaling/ablation evidence를 한 번 수집하고 material
   owner를 고정된 기준으로 선택한다.
-- [ ] `M6` 중복 aggregate scan 제거와 선택된 LOS/overlap/combat branch를 순서대로 구현하고
+- [x] `M6` 중복 aggregate scan 제거와 선택된 LOS/overlap/combat branch를 순서대로 구현하고
   각 owner를 동일 capacity에서 재측정한다.
-- [ ] `M7` 제품 명세, upgrade catalog, active visual system, localization, save-compatible
+- [x] `M7` 제품 명세, upgrade catalog, active visual system, localization, save-compatible
   retired crate alias를 현재 동작과 일치시킨다.
 - [ ] `M8` focused validator, import, Web export, built native/Web 수동·렌더 QA, 최종 clean
   peak/capacity pair를 실행한다.
 - [ ] `M9` task-owned code quality audit를 통과하고, durable spec에 결정을 옮긴 뒤 이 계획을
   `done`으로 표시하고 coherent scoped commit을 만든다.
 
-Current pointer: `M5`. M3/M4는 카드 21종·명목 상태 68·합법 선택 48~51, 전체 대시
+Current pointer: `M8`. M3/M4는 카드 21종·명목 상태 68·합법 선택 48~51, 전체 대시
 경로 장판, 역방향 beam, 원거리 전격포, 유한 증원 충전과 event-owned child count,
-장치 공개 chip/count, 시설·장치 가이드북 실수치를 runtime에 연결했다.
-`VEHICLE_CONDITIONAL_UPGRADES_VALIDATION_OK`,
-`VEHICLE_SECONDARY_WEAPONS_VALIDATION_OK`, `VEHICLE_UPGRADE_SYSTEM_VALIDATION_OK`,
-`VEHICLE_UPGRADE_UI_VALIDATION_OK`, `VEHICLE_REINFORCEMENT_FACILITY_VALIDATION`,
-`VEHICLE_MYSTERY_DEVICE_RUNTIME_VALIDATION_OK`, `VEHICLE_GUIDEBOOK_VALIDATION_OK`,
-`VEHICLE_COMBAT_RENDERER_VALIDATION_OK`, `VEHICLE_STAGE_TRANSITION_VALIDATION_OK`가
-통과했다. 열린 제품 선택은 없다.
+장치 공개 chip/count, 시설·장치 가이드북 실수치를 runtime에 연결했다. M5/M6는
+64/128/192/256/320 scaling과 decision/attack/presentation/overlap ablation을 실행해
+ordinary decision/movement와 projectile route를 실제 비용 소유자로 선택했다. 동일
+320적 안정 기준 대비 현재 후보는 recorded physics 중앙값 `15.828→14.517 ms`
+(`-8.3%`), p95 `20.592→18.323 ms`(`-11.0%`)다. 동일 workload 개선은 확인됐지만
+capacity p95 `6 ms`, p99 `8 ms` 게이트에는 아직 미달하므로 이 계획은 active 상태다.
+M7은 제품 명세, 업그레이드 카탈로그, 시각 시스템, 성능 근거, 시설·장치 보고서를
+현재 런타임과 일치시켰다. 열린 제품 선택은 없다.
 
 ## Acceptance Criteria
 
@@ -664,3 +665,9 @@ performance 변경이 있었을 때만 최종 pair를 한 번 다시 실행한�
   workbench와 완료 보고서는 증거로 보존한다.
 - 2026-08-11: threads, Servers, GDExtension, ECS는 현재 증거가 요구하지 않으며 Web 배포
   위험이 커서 이 계약에서 제외한다.
+- 2026-08-11: 320적 ablation은 ordinary decision을 1순위, attack/projectile route를
+  2순위 비용 소유자로 선택했다. frame aggregate 재사용, 정적 엄폐 broad phase,
+  generation stamp, movement profile·facing cadence·separation precompute, projectile
+  cover candidate 재사용을 적용했다. 동일 workload p95는 11.0% 줄었지만 기존
+  capacity gate에는 미달하므로 M8의 60초 권위 측정 뒤에도 실패하면 계획을 done으로
+  표시하지 않고 다음 비용 소유자 계획으로 이어 간다.
