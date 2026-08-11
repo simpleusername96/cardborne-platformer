@@ -129,7 +129,7 @@ related:
 | 전투 시스템 | `critical_targeting` / 정밀 조준 | 직접 공격 치명타 `8/12/16%`, 피해 `2.0×` | `치명타 확률 증가` / `Raises critical chance` |
 | 전투 시스템 | `range_polarization` / 거리 극화 | 공격 원점 기준 `<=260` 또는 `>=620` 직접 사격 피해 `+12/20/30%` | `근·원거리 피해 증가` / `Boosts near/far damage` |
 | 전투 시스템 | `dash_overdrive` / 대시 과충전 | 대시 완료 뒤 2초간 모든 피해 `+15/25/35%` | `대시 후 공격력 증가` / `Boosts damage after dash` |
-| 전투 시스템 | `dash_afterburn_field` / 잔류 열흔 | 대시 종료점에 반지름 130, 3초 장판; 0.5초마다 `10/15/20` | `대시 끝에 피해장 생성` / `Leaves a damage field` |
+| 전투 시스템 | `dash_afterburn_field` / 잔류 열흔 | 대시 시작점부터 실제 종료점까지 반너비 72 capsule 장판; 3초 동안 0.5초마다 `10/15/20`, 최대 2개 | `대시 궤적에 피해장 생성` / `Leaves a damaging trail` |
 | 전투 시스템 | `last_stand_amplifier` / 위기 증폭기 | 체력 60%부터 증가해 25% 이하에서 `+15/25/35%` | `낮은 체력일수록 강해짐` / `More damage at low hull` |
 | 차체 | `overflow_barrier` / 초과 회복막 | 체력부터 회복, 초과분의 `50/75/100%`를 최대 체력의 `15/25/35%` 한도 8초 방어막으로 전환 | `초과 회복을 방어막 전환` / `Converts excess healing` |
 | 선택 보조 | `rear_laser` / 역방향 레이저 | 주무기 발사 때 0.9초마다 조준 반대편으로 길이 760 관통 beam, 피해 `48/66/86` | `조준 반대편에 레이저` / `Fires opposite your aim` |

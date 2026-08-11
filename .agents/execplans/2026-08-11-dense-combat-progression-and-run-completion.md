@@ -140,7 +140,7 @@ repair 10개, repair 총량 490이다. 상자는 체력 24, 이동 충돌, 양 �
 | 결과 전환 | `VehicleStageFlow` + `VehicleRun` | Stage 5 boss claim 뒤 `RunMode.RESULT`와 실제 모달이 같은 프레임 경계에서 열림 |
 | 업그레이드 효과 | primary/secondary/element runtime | 표시 수치가 실제 damage source와 같고 새 레벨에서 개체 수·틱·범위 상한을 늘리지 않음 |
 | 조건부 피해 | `VehicleOutgoingDamagePolicy` | 직접/주기 피해 태그와 발사 원점이 명시되고 비치명 조건 보너스는 합산 후 +100% 상한, 치명타는 그 뒤 적용 |
-| 대시 완료 효과 | `VehicleDashUpgradeRuntime` | 대시 활성→비활성 전환 1회에만 버프/장판 생성; 지형에 막힌 대시도 실제 종료점 사용 |
+| 대시 완료 효과 | `VehicleDashUpgradeRuntime` | 대시 시작·실제 종료점을 기록하고 활성→비활성 전환 1회에만 버프/연속 장판 생성 |
 | 회복과 방어막 | `VehiclePlayerRecoveryPolicy` | 회복은 체력을 먼저 채우고 초과분만 전환; 기존 blockable 피해와 shield timer 계약 유지 |
 | 선택 보조 | `VehicleSecondaryRuntime` | optional 5종 중 최대 2종; 역방향 레이저는 실체 탄 없음, 전격포는 pending 1회와 bounded target scan |
 | 후반 제안 | `VehicleUpgradeCatalog` | 3~5스테이지에 합법 공격 카드가 있으면 3장 중 최소 1장; ID 중복과 슬롯/원소 규칙 없음 |
@@ -253,7 +253,7 @@ secondary definition은 built-in base 상태를 포함하므로 seeker는 4개 �
 | `critical_targeting` / 정밀 조준 | 치명타 확률 `8/12/16%`, 배율 `2.0×` | player-owned 직접 공격 receipt만. 독·장판 등 주기 피해 제외 |
 | `range_polarization` / 거리 극화 | 공격 원점에서 표적까지 `<=260` 또는 `>=620`이면 직접 사격 피해 `+12/20/30%`; 중간 거리는 0 | 주무기, 추적탄, 역방향 레이저, 전격포. 전기장·날개·기뢰·EMP·장판 제외 |
 | `dash_overdrive` / 대시 과충전 | 대시 완료 뒤 정확히 2.0초 동안 모든 player-owned 피해 `+15/25/35%` | 대시 중에는 기존처럼 사격 불가. 완료 전환 1회에만 시작 |
-| `dash_afterburn_field` / 잔류 열흔 | 대시 종료점에 반지름 130, 3.0초, 0.5초 tick 장판. tick당 `10/15/20`, 최대 2개 | 주기 열 피해라 치명타·거리 보너스 제외. 적용 시점의 대시 과충전·위기 증폭은 적용 |
+| `dash_afterburn_field` / 잔류 열흔 | 대시 시작점부터 실제 종료점까지 반너비 72의 연속 capsule 장판. 3.0초, 0.5초 tick, tick당 `10/15/20`, 최대 2개 | 주기 열 피해라 치명타·거리 보너스 제외. 적용 시점의 대시 과충전·위기 증폭은 적용 |
 | `last_stand_amplifier` / 위기 증폭기 | 체력 60% 이상 0, 25% 이하 `+15/25/35%`, 그 사이 선형 보간 | 모든 player-owned 피해 |
 | `overflow_barrier` / 초과 회복막 | 체력을 먼저 채운 뒤 초과 회복의 `50/75/100%`를 방어막으로 변환. 최대 체력의 `15/25/35%` 상한, 8초 | repair와 기존 흡혈의 실제 회복량. gain마다 8초 갱신, blockable 피해만 흡수 |
 
@@ -267,7 +267,10 @@ secondary definition은 built-in base 상태를 포함하므로 seeker는 4개 �
 거리 극화는 현재 기체 위치가 아니라 이 공격 원점에서 명중점까지의 거리를 쓴다.
 직접 공격과 주기 피해는 source 문자열을 해석하지 않고 안정적인 damage-kind flag로
 구분한다. `VehicleOutgoingDamagePolicy`는 매 hit Dictionary를 만들지 않는 순수 계산기로
-두고, `VehicleDashUpgradeRuntime`은 대시 완료 감지·버프 timer·최대 2개 장판만 소유한다.
+두고, `VehicleDashUpgradeRuntime`은 대시 시작점을 기록한 뒤 실제 완료 위치와 한 개의
+선분 zone을 만들며 버프 timer·최대 2개 장판만 소유한다. 벽에 막히면 계획된 dash
+거리 대신 실제 이동한 짧은 선분을 사용한다. 피해 판정은 point-to-segment 거리 72
+이하이고, 시작점과 종료점까지 포함하는 capsule이다.
 
 초과 회복막은 공통 `_apply_player_recovery` 경로에서 gross 회복을 `체력 → 초과분`으로
 분리한다. 흡혈의 기존 예산 6과 초당 회복 6 상한은 그대로라 만체력 흡혈이 무제한
@@ -294,7 +297,9 @@ impact는 최종 반지름 disk와 넓은 단일 타격 accent만 사용한다. 
 `upgrade/system_relay`, 대시 카드는 `upgrade/dash_wake`, 초과 회복막은
 `upgrade/defense_matrix`, 역방향 레이저는 `projectile/energy_teardrop`, 전격포는
 `upgrade/ion_field`를 사용한다. beam/장판/포격 범위는 code-native 동적 효과이므로
-canonical sprite처럼 새 raster로 굽지 않는다.
+canonical sprite처럼 새 raster로 굽지 않는다. 잔류 열흔은 실제 선분의 filled quad와
+양 끝 반지름 72 disk로 한 capsule을 구성하고 첫 표시 frame부터 전체 판정 구간을
+보인다. 반복 ring, 진행 파면, particle trail은 사용하지 않는다.
 
 #### B4. 후방 기뢰 발동 설명 교정
 
@@ -423,7 +428,7 @@ authoritative pair를 실행하고 기존 release gate를 그대로 사용한다
 | final reward | `scripts/vehicle/vehicle_run.gd`, `scripts/rewards/vehicle_reward_runtime.gd` | stage transition validator |
 | upgrade data | `data/cards/vehicle/*.tres`, `data/weapons/vehicle/secondary/*.tres` | primary rules, secondary runtime/catalog, previews, product catalog |
 | conditional damage | 새 `scripts/player/vehicle_outgoing_damage_policy.gd` | projectile spawn origin, direct/periodic receipt flags, damage-source telemetry |
-| dash upgrades | 새 `scripts/player/vehicle_dash_upgrade_runtime.gd` | dash completion signal, buff HUD snapshot, bounded ground zones |
+| dash upgrades | 새 `scripts/player/vehicle_dash_upgrade_runtime.gd` | dash start/end capture, completion signal, buff HUD snapshot, bounded segment zones |
 | recovery split | 새 `scripts/player/vehicle_player_recovery_policy.gd` | repair pickup, lifesteal budget, existing barrier state/rendering |
 | passive secondaries | `scripts/player/vehicle_secondary_runtime.gd`, secondary definitions | rear beam corridor, storm target selection, cooldown/pending caps |
 | offer policy | `scripts/cards/vehicle_upgrade_catalog.gd` | upgrade-system validator |
@@ -481,7 +486,8 @@ Current pointer: `M1`. 조사와 결정은 끝났고 구현은 시작하지 않�
 - 신규 8개 카드는 모두 3레벨이며 표의 조건·수치·제외 범위를 그대로 적용한다. 직접/주기
   피해 구분, 비치명 보너스 +100% 상한, 치명타 적용 순서, 결정적 판정이 fixture와 일치한다.
 - 거리 극화는 저장한 공격 원점을 사용하고 260/620 경계와 중간 무보너스를 정확히 처리한다.
-- 대시 완료 한 번에 과충전 timer와 종료점 장판이 각 1회만 시작되며 장판은 최대 2개다.
+- 대시 완료 한 번에 과충전 timer와 시작점~실제 종료점 capsule 장판이 각 1회만 시작되며
+  반너비 72, 수명 3초, 0.5초 tick, 최대 2개 상한을 지킨다.
 - 초과 회복막은 체력을 먼저 채우고 repair/흡혈 초과분만 전환한다. 레벨별 cap, 8초 갱신,
   blockable 피해 흡수와 기존 흡혈 예산이 유지된다.
 - 역방향 레이저는 성공한 주무기 발사의 반대 corridor에서만 0.9초마다 발동하고 solid
@@ -509,7 +515,7 @@ Current pointer: `M1`. 조사와 결정은 끝났고 구현은 시작하지 않�
   한국어/영어, 200% text scale에서 잘리거나 겹치지 않는다.
 - 8개 신규 카드와 기뢰 설명은 compact card에서 overflow가 없고 상세 수치·발동 조건은
   guide/preview에서 확인할 수 있다. 대시 과충전은 기존 buff text로 남은 시간을 표시한다.
-- 역방향 레이저 corridor, 잔류 열흔 반지름, 전격포 경고 반지름은 첫 표시 프레임부터
+- 역방향 레이저 corridor, 잔류 열흔 capsule, 전격포 경고 반지름은 첫 표시 프레임부터
   실제 판정과 같고 반복 링·particle spray·새 raster가 없다.
 - keyboard/controller focus가 결과 모달, upgrade card, guidebook back icon에서 보인다.
 - 장치 short chip과 count는 player, boss telegraph, damage warning, minimap priority를
@@ -605,7 +611,7 @@ performance 변경이 있었을 때만 최종 pair를 한 번 다시 실행한�
 | 새 공격 레벨이 성능을 악화 | 탄/효과 수 증가 | 모든 최종 레벨에서 count/tick/radius/lifetime 상한 고정 validator |
 | 조건부 피해가 hot path allocation을 늘림 | 밀집전 프레임 악화 | Dictionary/source 문자열 분기 없이 flag와 scalar를 쓰는 순수 policy, capacity에서 source별 비용 기록 |
 | 치명타 운 편차가 재현성을 깨뜨림 | 테스트·밸런스 불안정 | run seed+attack serial+target/source의 결정 판정, shared RNG 소비 금지 |
-| 대시 장판·포격이 판정과 다르게 보임 | 불공정한 피격/공격 판단 | 첫 프레임부터 exact footprint, 장판 2·pending 1 상한, original-detail capture |
+| 대시 장판·포격이 판정과 다르게 보임 | 불공정한 피격/공격 판단 | 실제 dash 선분의 exact capsule을 첫 프레임부터 표시, 장판 2·pending 1 상한, original-detail capture |
 | 초과 회복막이 흡혈로 무한 유지됨 | 생존 카드가 자동 정답 | 기존 흡혈 예산 유지, shield cap·8초 timer, 실제 recovery event에서만 갱신 |
 | facility 유한화가 존재감을 약화 | 우선 목표 가치 감소 | 기존 HP/간격/역할 유지, offline/charge 정보로 계획성 강화 |
 | incremental count가 누락됨 | 생산 정지 또는 상한 초과 | accepted spawn/defeat/retire 단일 transition API와 debug reconciliation |
@@ -632,6 +638,8 @@ performance 변경이 있었을 때만 최종 pair를 한 번 다시 실행한�
   확정한다. 카탈로그는 21종·명목 상태 68, 합법 선택 상한은 optional 조합별 49~51이다.
 - 2026-08-11: “근거리나 원거리”는 근접/원거리 중 하나를 택하는 두 카드가 아니라 한 장이
   양 극단을 보상하고 중간 거리는 보너스가 없는 `거리 극화`로 해석한다.
+- 2026-08-11: 사용자 정정에 따라 잔류 열흔은 종료점 원형 장판이 아니라 대시 시작점부터
+  실제 종료점까지의 반너비 72 capsule 전체다. 벽에 막힌 경우 실제 이동 구간만 남긴다.
 - 2026-08-11: 직접/주기 피해, 대시 완료, 초과 회복, 방어막을 안정된 용어와 별도 runtime
   책임으로 둔다. 조건 보너스는 합산 후 +100% 제한, 치명타는 그 뒤 2배다.
 - 2026-08-11: 후방 기뢰는 이동 중 전용이 아니다. 획득 직후와 주기마다 이동 방향 또는
