@@ -360,6 +360,7 @@ var _performance_request: Dictionary = {}
 var _performance_recorder: VehiclePerformanceRecorder
 var _performance_scenario: VehiclePerformanceScenario
 var _performance_finishing := false
+var _performance_ablation: StringName = &"none"
 var _performance_enemy_sections: Dictionary = {}
 var _performance_detail_sample_active := false
 var _manual_performance_request: Dictionary = {}
@@ -557,7 +558,8 @@ func _physics_process(delta: float) -> void:
 		if _performance_detail_sample_active:
 			subsystem_ms["enemies_and_grid"] = _elapsed_ms(section_started)
 			section_started = Time.get_ticks_usec()
-		_update_projectiles(delta)
+		if _performance_ablation != &"attacks":
+			_update_projectiles(delta)
 		_update_denied_zones(delta)
 		if _simulation_lod_bucket == 0:
 			_update_effects(delta * 2.0)
@@ -633,6 +635,7 @@ func _process(delta: float) -> void:
 	var presentation_active := _simulation_active() or _capture_mode
 	if (
 		is_instance_valid(_combat_renderer)
+		and _performance_ablation != &"presentation"
 		and (
 			_presented_physics_serial != _physics_serial
 			or _last_presentation_active != presentation_active
@@ -1135,10 +1138,18 @@ func _simulation_active() -> bool:
 func _update_encounter(delta: float) -> void:
 	_advance_ordinary_arrival_cues(delta)
 	_refresh_elite_reservations()
+	var aggregate_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
+	var active_mobile_count := _active_mobile_count()
+	var active_attack_families := _active_attack_families()
+	_performance_accumulate_enemy_section(
+		"encounter_aggregate_scans", aggregate_started
+	)
 	var requests := encounter_runtime.tick(
 		delta,
-		_active_mobile_count(),
-		_active_attack_families(),
+		active_mobile_count,
+		active_attack_families,
 		player_position,
 		_visible_world_rect(0.0),
 		enemies,
@@ -1209,9 +1220,16 @@ func _update_reinforcement_facility(delta: float) -> void:
 				tr("NOTIFY_REINFORCEMENT_FACILITY"), 3.5, Art.MUSTARD
 			)
 		_play_sound(&"boss", 0.82)
+	var facility_count_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
+	var active_mobile_count := _active_mobile_count()
+	_performance_accumulate_enemy_section(
+		"facility_active_scan", facility_count_started
+	)
 	var spawn_spec := reinforcement_facility_runtime.advance(
 		delta,
-		encounter_runtime.available_active_slots(_active_mobile_count())
+		encounter_runtime.available_active_slots(active_mobile_count)
 	)
 	if spawn_spec.is_empty():
 		return
@@ -1748,12 +1766,37 @@ func _runtime_cover_has_line_of_sight(
 	padding: float
 ) -> bool:
 	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(padding)
-	for blocker in _runtime_blockers:
+	var static_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
+	if field_layout != null:
+		for blocker in _active_tactical_layout.cover_rects:
+			if (
+				swept.intersects(blocker.grow(padding), true)
+				and Rules.segment_rect_intersects(from, to, blocker, padding)
+			):
+				_performance_accumulate_enemy_section(
+					"los_static_cover", static_started
+				)
+				return false
+	_performance_accumulate_enemy_section(
+		"los_static_cover", static_started
+	)
+	var dynamic_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
+	for blocker in _runtime_structural_walls:
 		if (
 			swept.intersects(blocker.grow(padding), true)
 			and Rules.segment_rect_intersects(from, to, blocker, padding)
 		):
+			_performance_accumulate_enemy_section(
+				"los_dynamic_structure", dynamic_started
+			)
 			return false
+	_performance_accumulate_enemy_section(
+		"los_dynamic_structure", dynamic_started
+	)
 	return true
 
 
@@ -2213,7 +2256,8 @@ func _update_enemies(
 		_performance_enemy_sections["active_states"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
 	var scheduled_started := section_started
-	_prepare_enemy_local_overlap_cache()
+	if _performance_ablation != &"overlap":
+		_prepare_enemy_local_overlap_cache()
 	if performance_active:
 		_performance_enemy_sections["overlap_cache"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
@@ -2373,7 +2417,17 @@ func _prepare_enemy_local_overlap_cache() -> void:
 	for enemy in _enemy_update_schedule.ordinary_due:
 		if _enemy_update_schedule.decision_due(enemy):
 			_mark_enemy_overlap_refresh(enemy)
-	enemy_grid.rebuild_local_overlap_cache(_enemy_overlap_refresh_mask)
+	enemy_grid.rebuild_local_overlap_cache(
+		_enemy_overlap_refresh_mask,
+		_performance_detail_sample_active
+	)
+	if _performance_detail_sample_active:
+		_performance_enemy_sections["overlap_snapshot_clear"] = (
+			enemy_grid.last_overlap_snapshot_ms
+		)
+		_performance_enemy_sections["overlap_candidate_query"] = (
+			enemy_grid.last_overlap_query_ms
+		)
 
 
 func _mark_enemy_overlap_refresh(enemy: EnemyState) -> void:
@@ -2409,11 +2463,20 @@ func _update_scheduled_ordinary_enemy(
 		critical_delta >= 0.0
 		or _enemy_update_schedule.decision_due(enemy)
 	)
+	if _performance_ablation == &"decision" and critical_delta < 0.0:
+		decision_due = false
 	var motion_due := critical_delta >= 0.0 or _enemy_update_schedule.motion_due(enemy)
 	if not motion_due and not decision_due:
 		return
 	if motion_due and not decision_due:
+		var motion_started := (
+			Time.get_ticks_usec() if _performance_detail_sample_active else 0
+		)
 		_update_motion_only_ordinary_enemy(enemy, motion_delta)
+		if _performance_detail_sample_active:
+			_performance_accumulate_enemy_section(
+				"ordinary_motion_policy", motion_started
+			)
 		return
 	var previous_position := enemy.pos
 	var previous_alive := enemy.alive
@@ -2421,6 +2484,7 @@ func _update_scheduled_ordinary_enemy(
 	var can_commit := (
 		critical_delta < 0.0
 		and decision_due
+		and _performance_ablation != &"attacks"
 		and _enemy_update_schedule.can_commit(
 			enemy,
 			encounter_runtime.threat_budget(),
@@ -2428,10 +2492,17 @@ func _update_scheduled_ordinary_enemy(
 			encounter_runtime.denial_commit_cap()
 		)
 	)
+	var policy_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
 	if _update_ordinary_enemy(
 		enemy, decision_delta, can_commit, decision_due, motion_delta
 	):
 		_enemy_update_schedule.note_commit(enemy)
+	if _performance_detail_sample_active:
+		_performance_accumulate_enemy_section(
+			"ordinary_decision_policy", policy_started
+		)
 	# The spatial grid is already correct when a scheduled tick only advances
 	# timers or attack state. Re-index only after a position/occupancy change;
 	# collision truth and the next exact query remain unchanged.
@@ -2792,9 +2863,18 @@ func _update_ordinary_enemy(
 	_move_enemy_role(enemy, motion_delta, false, decision_due)
 	if not decision_due or not can_commit or enemy.attack_cooldown > 0.0:
 		return false
+	var attack_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
 	if _enemy_can_attack(enemy):
 		_start_enemy_attack(enemy)
+		_performance_accumulate_enemy_section(
+			"attack_admission_commit", attack_started
+		)
 		return true
+	_performance_accumulate_enemy_section(
+		"attack_admission_commit", attack_started
+	)
 	return false
 
 
@@ -3261,7 +3341,13 @@ func _desired_enemy_velocity(
 		line_recovery
 	)
 	if route_requested and not _mystery_decoy_targets.has(enemy.id):
+		var pursuit_started := (
+			Time.get_ticks_usec() if _performance_detail_sample_active else 0
+		)
 		var route_direction := pursuit_field.direction_at(position, enemy.radius)
+		_performance_accumulate_enemy_section(
+			"pursuit_sampling", pursuit_started
+		)
 		if not route_direction.is_zero_approx():
 			var route_weight := 0.55 if line_recovery else 0.86
 			desired = (
@@ -3539,8 +3625,20 @@ func _count_hostile_projectiles() -> int:
 
 
 func _update_projectiles(delta: float) -> void:
+	var section_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
 	_update_projectile_buffer(hostile_projectiles, true, delta)
+	_performance_accumulate_enemy_section(
+		"projectile_hostile", section_started
+	)
+	section_started = (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
 	_update_projectile_buffer(player_projectiles, false, delta)
+	_performance_accumulate_enemy_section(
+		"projectile_player", section_started
+	)
 
 
 func _update_projectile_buffer(
@@ -3640,6 +3738,10 @@ func _update_projectile_buffer(
 				continue
 		else:
 			var projectile_radius := radius
+			var query_started := (
+				Time.get_ticks_usec()
+				if _performance_detail_sample_active else 0
+			)
 			enemy_grid.query_segment_cells_into(
 				from,
 				to,
@@ -3648,6 +3750,13 @@ func _update_projectile_buffer(
 				_enemy_query_buffer,
 				_enemy_query_group_ends,
 				_enemy_query_group_exit_t
+			)
+			_performance_accumulate_enemy_section(
+				"projectile_candidate_query", query_started
+			)
+			var hit_started := (
+				Time.get_ticks_usec()
+				if _performance_detail_sample_active else 0
 			)
 			var contact: Variant = _player_projectile_contact(
 				projectile,
@@ -3660,6 +3769,9 @@ func _update_projectile_buffer(
 				float(_reinforcement_facility_hit_receipt.get("t", INF))
 					if facility_is_first_structure
 					else INF
+			)
+			_performance_accumulate_enemy_section(
+				"projectile_hit_resolution", hit_started
 			)
 			if contact is bool:
 				projectile_store.remove_player_at_swap(index)
@@ -6286,6 +6398,18 @@ func _elapsed_ms(started_usec: int) -> float:
 	return float(Time.get_ticks_usec() - started_usec) / 1000.0
 
 
+func _performance_accumulate_enemy_section(
+	section_name: String,
+	started_usec: int
+) -> void:
+	if not _performance_detail_sample_active or started_usec <= 0:
+		return
+	_performance_enemy_sections[section_name] = (
+		float(_performance_enemy_sections.get(section_name, 0.0))
+		+ _elapsed_ms(started_usec)
+	)
+
+
 func _parse_boss_practice_request() -> Dictionary:
 	if not OS.is_debug_build():
 		return {}
@@ -6486,6 +6610,14 @@ func _parse_performance_request() -> Dictionary:
 			values["warmup"] = float(argument.trim_prefix("--performance-warmup="))
 		elif argument.begins_with("--performance-duration="):
 			values["duration"] = float(argument.trim_prefix("--performance-duration="))
+		elif argument.begins_with("--performance-enemy-count="):
+			values["enemy_count"] = int(
+				argument.trim_prefix("--performance-enemy-count=")
+			)
+		elif argument.begins_with("--performance-ablation="):
+			values["ablation"] = argument.trim_prefix(
+				"--performance-ablation="
+			)
 	if OS.has_feature("web"):
 		var query_value: Variant = JavaScriptBridge.eval("window.location.search", true)
 		if query_value is String:
@@ -6506,8 +6638,13 @@ func _parse_performance_request() -> Dictionary:
 	if not values.has("scenario"):
 		return {}
 	var scenario := PerformanceScenario.new()
-	if not scenario.configure(StringName(values["scenario"])):
+	var enemy_count := int(values.get("enemy_count", -1))
+	if not scenario.configure(StringName(values["scenario"]), enemy_count):
 		push_error("Unknown performance scenario: %s" % String(values["scenario"]))
+		return {}
+	var ablation := StringName(values.get("ablation", "none"))
+	if ablation not in [&"none", &"decision", &"attacks", &"presentation", &"overlap"]:
+		push_error("Unknown performance ablation: %s" % String(ablation))
 		return {}
 	values["output"] = String(values.get(
 		"output",
@@ -6515,13 +6652,21 @@ func _parse_performance_request() -> Dictionary:
 	))
 	values["warmup"] = maxf(0.0, float(values.get("warmup", 10.0)))
 	values["duration"] = maxf(0.25, float(values.get("duration", 60.0)))
+	values["enemy_count"] = enemy_count
+	values["ablation"] = ablation
 	return values
 
 
 func _start_performance_scenario() -> void:
 	_performance_scenario = PerformanceScenario.new()
-	if not _performance_scenario.configure(StringName(_performance_request["scenario"])):
+	if not _performance_scenario.configure(
+		StringName(_performance_request["scenario"]),
+		int(_performance_request.get("enemy_count", -1))
+	):
 		return
+	_performance_ablation = StringName(
+		_performance_request.get("ablation", &"none")
+	)
 	if (
 		not OS.has_feature("web")
 		and DisplayServer.has_method("window_move_to_foreground")
@@ -6573,6 +6718,10 @@ func _performance_counts() -> Dictionary:
 		"layout":field_layout.debug_snapshot(current_stage_id) if field_layout != null else {},
 		"collective_tactics":collective_tactics.debug_snapshot(),
 		"boss_shield":boss_shield_runtime.snapshot(),
+		"diagnostic":{
+			"enemy_count":int(_performance_request.get("enemy_count", -1)),
+			"ablation":String(_performance_ablation),
+		},
 	}
 
 

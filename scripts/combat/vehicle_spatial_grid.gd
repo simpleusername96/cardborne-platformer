@@ -64,6 +64,8 @@ var _local_snapshot_generations := PackedInt32Array()
 var _local_snapshot_valid := PackedByteArray()
 var _local_overlap_builds := 0
 var _legacy_nearest_query_calls := 0
+var last_overlap_snapshot_ms := 0.0
+var last_overlap_query_ms := 0.0
 
 
 func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SIZE) -> void:
@@ -135,6 +137,8 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_generation_rejects = 0
 	_local_overlap_builds = 0
 	_legacy_nearest_query_calls = 0
+	last_overlap_snapshot_ms = 0.0
+	last_overlap_query_ms = 0.0
 
 
 func rebuild(live: Array[EnemyState]) -> void:
@@ -331,11 +335,15 @@ func query_nearest_overlaps_into(
 	_sort_nearest_query_results(output)
 
 
-func rebuild_local_overlap_cache(refresh_slots: PackedByteArray) -> void:
+func rebuild_local_overlap_cache(
+	refresh_slots: PackedByteArray,
+	measure_sections: bool = false
+) -> void:
 	## Captures one immutable boundary snapshot, then rebuilds only marked owner
 	## rows from cells that can contain a body overlap. The candidate loop stays
 	## inline because dispatching once per dense-cell candidate is a measured hot path.
 	_local_overlap_builds += 1
+	var section_started := Time.get_ticks_usec() if measure_sections else 0
 	_local_overlap_valid.fill(0)
 	_local_overlap_counts.fill(0)
 	_local_snapshot_valid.fill(0)
@@ -348,6 +356,14 @@ func rebuild_local_overlap_cache(refresh_slots: PackedByteArray) -> void:
 		_local_snapshot_body_radii[slot] = maxf(0.0, enemy.radius)
 		_local_snapshot_actor_ids[slot] = String(enemy.id)
 		_local_snapshot_generations[slot] = _member_generations[slot]
+	if measure_sections:
+		last_overlap_snapshot_ms = (
+			float(Time.get_ticks_usec() - section_started) / 1000.0
+		)
+		section_started = Time.get_ticks_usec()
+	else:
+		last_overlap_snapshot_ms = 0.0
+		last_overlap_query_ms = 0.0
 	var owner_limit := mini(refresh_slots.size(), MAX_TRACKED_ACTORS)
 	for owner_slot in owner_limit:
 		if refresh_slots[owner_slot] == 0 or _local_snapshot_valid[owner_slot] == 0:
@@ -443,6 +459,10 @@ func rebuild_local_overlap_cache(refresh_slots: PackedByteArray) -> void:
 					if overlap_count < LOCAL_OVERLAP_LIMIT:
 						overlap_count += 1
 		_local_overlap_counts[owner_slot] = overlap_count
+	if measure_sections:
+		last_overlap_query_ms = (
+			float(Time.get_ticks_usec() - section_started) / 1000.0
+		)
 
 
 func cached_local_overlap_count(owner: EnemyState) -> int:

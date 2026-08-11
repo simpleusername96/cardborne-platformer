@@ -236,6 +236,27 @@ func _run() -> void:
 			_expect(int(snapshot["lifecycle_cycles"]) >= 305, "lifecycle scenario keeps retiring and replacing actors during sampling")
 			_expect(bool(snapshot["valid"]), "lifecycle churn preserves the declared live composition")
 		scenario.deactivate()
+	var scaling := Scenario.new()
+	_expect(
+		scaling.configure(&"capacity_pressure", 64),
+		"capacity diagnostics accept an explicit bounded enemy count"
+	)
+	_expect(
+		not Scenario.new().configure(&"peak_horde", 64)
+			and not Scenario.new().configure(&"capacity_pressure", 321),
+		"enemy-count overrides remain diagnostic-only and capacity bounded"
+	)
+	scaling.activate(run)
+	scaling.after_physics(run)
+	var scaling_snapshot := scaling.validation_snapshot(run)
+	_expect(
+		bool(scaling_snapshot["valid"])
+			and int(scaling_snapshot["expected_enemies"]) == 64
+			and int(scaling_snapshot["ordinary_enemies"]) == 64
+			and int(scaling_snapshot["diagnostic_enemy_count"]) == 64,
+		"64-enemy diagnostic preserves every non-enemy capacity workload"
+	)
+	scaling.deactivate()
 	_expect(peak_fingerprint != 0, "peak workload has a stable nonzero fingerprint")
 	_validate_threshold_contract()
 	run.queue_free()

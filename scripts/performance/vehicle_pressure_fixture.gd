@@ -29,7 +29,8 @@ static func build(
 	player_position: Vector2,
 	visible_world: Rect2,
 	spawn_anchors: Array[Vector2],
-	production_roles: Array[StringName]
+	production_roles: Array[StringName],
+	ordinary_count_override: int = -1
 ) -> Dictionary:
 	var ordinary_count := PEAK_ORDINARY_COUNT
 	var include_boss := false
@@ -44,6 +45,10 @@ static func build(
 		_:
 			push_error("Unknown pressure fixture load class: %s" % String(load_class))
 			return {}
+	if ordinary_count_override > 0:
+		ordinary_count = clampi(
+			ordinary_count_override, 1, CAPACITY_ORDINARY_COUNT
+		)
 	if production_roles.is_empty():
 		push_error("Pressure fixture requires a production role sequence")
 		return {}

@@ -38,6 +38,7 @@ const MOBILE_ARCHETYPES: Array[StringName] = [
 	&"drone_carrier",
 ]
 var scenario_id: StringName
+var diagnostic_enemy_count := -1
 var elapsed := 0.0
 var lifecycle_cycles := 0
 var _shot_serial := 0
@@ -57,10 +58,19 @@ var _production_next_sample := 0.0
 var _production_last_sample_spawned := 0
 
 
-func configure(id: StringName) -> bool:
+func configure(id: StringName, enemy_count_override: int = -1) -> bool:
 	if id not in VALID_SCENARIOS:
 		return false
+	if (
+		enemy_count_override > 0
+		and (
+			id != &"capacity_pressure"
+			or enemy_count_override > CAPACITY_PRESSURE_TARGET
+		)
+	):
+		return false
 	scenario_id = id
+	diagnostic_enemy_count = enemy_count_override
 	return true
 
 
@@ -84,7 +94,12 @@ func activate(run: Node) -> void:
 	run.call("_clear_effects")
 	run.denied_zones.clear()
 	run.encounter_runtime.current_beat = 4
-	_production_roles = _production_pressure_roles(ORDINARY_CAPACITY_LOAD)
+	var ordinary_target := (
+		diagnostic_enemy_count
+		if diagnostic_enemy_count > 0
+		else ORDINARY_CAPACITY_LOAD
+	)
+	_production_roles = _production_pressure_roles(ordinary_target)
 	var load_class := _load_class()
 	_fixture = PressureFixture.build(
 		load_class,
@@ -92,7 +107,8 @@ func activate(run: Node) -> void:
 		run.player_position,
 		run.call("_visible_world_rect", 0.0),
 		run._active_tactical_layout.ordinary_spawn_anchors,
-		_production_roles
+		_production_roles,
+		diagnostic_enemy_count
 	)
 	_spawn_points.clear()
 	for descriptor_variant in Array(_fixture["descriptors"]):
@@ -176,9 +192,13 @@ func validation_snapshot(run: Node) -> Dictionary:
 			boss_count += 1
 		else:
 			ordinary_count += 1
-	var expected_ordinary := mini(
-		ORDINARY_CAPACITY_LOAD,
-		expected_enemies - (1 if scenario_id == &"boss_pressure" else 0)
+	var expected_ordinary := (
+		diagnostic_enemy_count
+		if diagnostic_enemy_count > 0
+		else mini(
+			ORDINARY_CAPACITY_LOAD,
+			expected_enemies - (1 if scenario_id == &"boss_pressure" else 0)
+		)
 	)
 	var boss_valid := true
 	if scenario_id == &"boss_pressure":
@@ -226,6 +246,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"valid": valid,
 		"scenario_origin":&"fixture",
 		"load_class":_load_class(),
+		"diagnostic_enemy_count":diagnostic_enemy_count,
 		"fixture_seed":int(_fixture["seed"]),
 		"fixture_fingerprint":int(_fixture["fingerprint"]),
 		"fixture_qualification":_fixture_qualification.duplicate(true),
