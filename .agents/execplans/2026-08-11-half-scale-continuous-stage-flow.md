@@ -89,10 +89,12 @@ Seeker, EMP의 ready/ratio가 이미 있고, `VehicleRun.stats_enemies_defeated`
 격파가 이미 기록된다. 따라서 새 전투 규칙을 만들 필요 없이 기존 진실을 HUD snapshot과
 배치에 정확히 연결하면 된다.
 
-사용자 참고 캡처와 canonical Cardborne sheet를 실제 ImageGen reference로 넣어 A/B/C 세
-layout을 비교했다. A는 상단 점유가 너무 컸고 C는 참고 캡처의 가독성 문제를 반복할 위험이
-있었다. B의 “두 줄 full-width meter + 균형 잡힌 좌측 tactical rail”을 선택한다. 시안의
-배경·기체·나무·아이콘 그림은 채택하지 않으며, layout 관계만 구현 계약으로 사용한다.
+현재 HEAD에서 새로 생성한 Cardborne 한국어 1279×720 결정론적 캡처
+`build/captures/hud-current-76210948-ko-1279/04-stage-4-xp-hud.png`를 모든 시안의
+편집 대상으로 사용했다. canonical sheet는 style grammar, 사용자 캡처는 상단 bar와 그 아래
+정보의 layout 관계만 제공했다. A/B/C 모두 실제 Cardborne world·actor·camera를 유지한 HUD
+edit이며, 수정 B의 “두 줄 full-width meter + 균형 잡힌 좌측 tactical rail”을 선택한다.
+시안 pixel은 production asset이 아니고 layout 관계만 구현 계약으로 사용한다.
 
 ## Scope and Boundaries
 
@@ -211,9 +213,10 @@ Stage 5는 next-stage full heal을 하지 않고, 보스 소유 상태를 정리
    공격하는 orphan damage가 생겨 기각한다.
 6. 일반 적과 일반 전투만 유지하고 boss ownership tag로 선택 정리한다. 사용자 요구와
    전투 공정성을 함께 만족해 선택한다.
-7. HUD 시안 A의 큰 meter/수직 정보 블록은 시인성은 높지만 전투 화면 점유가 커서 기각한다.
-   C의 얇은 meter/한 줄 정보는 화면을 덜 가리지만 사용자가 지적한 작은 글자 문제를 반복할
-   가능성이 커서 기각한다. B의 32/16px standard meter와 수평 tactical rail을 선택한다.
+7. 현재 Cardborne 캡처 위 A의 36/18px meter와 stacked 52px cooldown row는 읽기 쉽지만
+   상단 점유가 과해 기각한다. C의 28/14px meter는 낮지만 stage 한 줄과 filled cooldown
+   card 둘째 줄의 대비가 강해 전투보다 먼저 읽히므로 기각한다. 수정 B의 32/16px full-width
+   meter, two-line stage block, divider 하나, 48px 수평 cooldown rail을 선택한다.
 
 ## Proposed Design
 
@@ -312,6 +315,8 @@ validator가 검사한다.
 
 ### HUD concept visual-authority evidence
 
+- UIUX gate: Level 4 gameplay HUD redesign. Primary task는 전투 중 HP/EXP, stage, 누적 격파,
+  세 cooldown을 시야 손실 없이 읽는 것이다.
 - Canonical authority: `docs/design/VISUAL_SYSTEM.md` 전체 읽기 완료;
   `docs/design/cardborne-universal-art-style-reference.png` original detail inspection 완료.
 - Expected/observed sheet SHA-256:
@@ -319,11 +324,18 @@ validator가 검사한다.
 - Canonical sheet provenance: original ImageGen artifact
   `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`,
   generated 2026-08-02 12:13:44 KST.
-- Layout reference: user capture `2026-08-11 22 43 42.png`, original detail inspection 완료.
-- Reference method: A/B/C 생성 모두 canonical sheet와 user capture를 실제
-  `referenced_image_paths` 입력으로 전달했다. 프롬프트 텍스트 참조만 사용하지 않았다.
-- Status: A/B/C는 preview-only layout evidence다. B의 정보 구조와 비율만 선택했으며
-  생성된 actor/background/icon/ring은 승인·승격·manifest 편입 대상이 아니다.
+- Current edit target: HEAD `76210948`에서 새로 생성한
+  `build/captures/hud-current-76210948-ko-1279/04-stage-4-xp-hud.png`; Korean,
+  `1279×720`, text scale `1.0`, layout seed `12886704`. Core capture 42개와 manifest가
+  `VEHICLE_STAGE_CAPTURE_COMPLETE`로 종료됐고 이 target을 original detail로 검사했다.
+- Layout-only reference: 사용자 캡처 `2026-08-11 22 43 42.png`, original detail inspection 완료.
+- Reference method: A/B/C는 current Cardborne edit target, canonical sheet, layout-only user
+  capture를 모두 실제 `referenced_image_paths`로 전달했다. 수정 B는 최초 B target까지 포함한
+  네 reference를 실제 입력으로 받았다. 프롬프트 텍스트 참조만 사용하지 않았다.
+- Selected rendered relation: HP와 EXP track이 각각 x=0에서 viewport right까지 이어지고
+  gap 0, 아래 rail은 `STAGE 4 / 5`, `누적 격파 418`, divider, Dash/Seeker/EMP 순서다.
+- Status: A/B/C와 수정 B는 preview-only layout evidence다. 수정 B의 정보 구조와 비율만
+  선택했으며 생성 pixel은 승인·승격·manifest 편입 대상이 아니다.
 
 ## Discovery Closure
 
@@ -341,7 +353,7 @@ validator가 검사한다.
 | HP/EXP 배치 | `HealthPips`가 520×44 고정, bar 사이 4px | `vehicle_gameplay_hud.gd` | responsive 100% width, top=0, gap=0 dual meter | 3.2 |
 | 누적 격파 | `stats_enemies_defeated`는 존재하지만 HUD가 stage defeated/quota만 받음 | `vehicle_run.gd`, presenter fast cluster | `cumulative_defeated` snapshot을 rail에 표시 | 3.1~3.3 |
 | cooldown | presenter는 Dash/Seeker/EMP를 모두 발행하나 UI는 bottom EMP만 표시 | presenter, HUD, action glyph renderer | 기존 glyph로 세 slot, bottom EMP 제거 | 3.3 |
-| 시안 선택 | A는 과점유, C는 과소, B는 meter/rail 균형 | canonical sheet+capture를 실제 참조한 A/B/C | B layout만 구현, 생성 그림은 미승인 | 3.2~3.3 |
+| 시안 선택 | 현재 Cardborne capture에서 A는 과점유, C는 cooldown card 대비가 과함, 최초 B는 bar가 실제 full-width가 아님 | current HEAD capture+canonical sheet+layout-only user reference를 실제 입력한 A/B/C와 수정 B | 수정 B layout만 구현, 생성 pixel은 미승인 | 3.2~3.3 |
 | 제품/시각 문서 | full heal+1.2s protection+boss reward와 이전 HUD footprint 명시 | product/upgrade/visual docs | 연속 계약, screen/world 단위, 선택안 B HUD로 갱신 | 3.4 |
 | 성능 | 기존 320적 capacity가 이미 red, zoom은 visible workload를 바꿈 | active performance plan/policy | 새 결과를 별도 baseline으로 표시, 기존 실패를 해결로 주장하지 않음 | 4.2 |
 
@@ -477,7 +489,7 @@ Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_hud_present
 - [ ] **3.3** 선택안 B tactical rail을 구현한다.
   - Change: stage+cumulative 두 줄, divider 하나, 기존 glyph 기반 Dash/Seeker/EMP slot,
     top-right minimap, non-overlapping toast를 배치하고 bottom-center EMP 중복 slot을 제거한다.
-  - Accept: standard에서 한 줄 순서가 stage→divider→Dash→Seeker→EMP이고 compact에서도
+  - Accept: standard에서 수정 B처럼 한 줄 순서가 stage→divider→Dash→Seeker→EMP이고 compact에서도
     slot 44px 이상이다. 200% text는 cooldown group만 둘째 줄로 wrap하며 minimap/toast와
     겹치거나 viewport 밖으로 나가는 node가 0개다.
   - Guard: 새 raster/SVG, nested ring, 설명 panel, 네 번째 cooldown을 추가하지 않는다.
@@ -620,8 +632,11 @@ runtime이 제공하는 Dash/Seeker/EMP 세 개로 결정했다. 이 해석이 �
 - 2026-08-11: next cue는 즉시 시작하되 공정한 0.9초 arrival warning은 유지한다.
 - 2026-08-11: 기존 dense-combat 계획의 성능 실패는 별도이며 camera 변경으로 해결됐다고
   주장하지 않는다.
-- 2026-08-11: A/B/C HUD 시안을 canonical sheet와 사용자 캡처의 실제 image reference로
-  생성·비교했고, 가독성과 화면 점유가 균형인 B의 layout만 선택했다.
+- 2026-08-11: 최초 A/B/C가 current Cardborne snapshot을 편집 대상으로 사용하지 않은
+  오류를 폐기했다. 현재 HEAD의 Korean 1279×720 capture를 새로 생성해 모든 교정 시안의
+  edit target으로 사용했고, canonical sheet와 layout-only 사용자 캡처도 실제 reference로 전달했다.
+- 2026-08-11: 교정 A/B/C와 full-width meter 수정 B를 실제 Cardborne 화면에서 비교했고,
+  가독성과 화면 점유가 균형인 수정 B의 layout만 선택했다.
 - 2026-08-11: HP/EXP는 standard 32/16px를 포함한 responsive 높이로 top full-width, gap 0이며
   stage·누적 격파·Dash/Seeker/EMP를 meter 아래 좌측 rail에 둔다.
 - 2026-08-11: 시안의 생성 actor/background/icon/ring은 preview-only이며 production asset
