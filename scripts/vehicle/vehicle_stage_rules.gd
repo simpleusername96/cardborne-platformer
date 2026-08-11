@@ -119,6 +119,26 @@ static func first_cover_hit_with_extra_into(
 	return best
 
 
+static func first_cover_hit_candidates_into(
+	from: Vector2,
+	to: Vector2,
+	radius: float,
+	blockers: Array,
+	best: Dictionary,
+	candidate: Dictionary
+) -> Dictionary:
+	## Resolves a caller-owned broadphase candidate list without rebuilding it.
+	best["hit"] = false
+	best["t"] = 2.0
+	if blockers.is_empty():
+		return best
+	var swept_bounds := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	_consider_cover_hits_into(
+		from, to, radius, swept_bounds, blockers, best, candidate
+	)
+	return best
+
+
 static func _consider_cover_hits(
 	from: Vector2,
 	to: Vector2,

@@ -268,6 +268,7 @@ var effect_store := EffectStore.new()
 var effects: Array[VehicleEffectState] = effect_store.live
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
+var _projectile_runtime_cover_query: Array[Rect2] = []
 var _motion_cover_query: Array[Rect2] = []
 var _los_cover_query: Array[Rect2] = []
 var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
@@ -1719,11 +1720,19 @@ func _runtime_cover_rects() -> Array[Rect2]:
 
 func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) -> Array[Rect2]:
 	_projectile_cover_query.clear()
+	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	for cover in StageCatalog.cover_rects_near_motion(
+		current_stage_id, from, to, radius
+	):
+		if swept.intersects(cover.grow(radius), true):
+			_projectile_cover_query.append(cover)
 	if field_layout != null:
 		_active_tactical_layout.covers_near_motion_into(
-			from, to, radius, _projectile_cover_query
+			from, to, radius, _projectile_runtime_cover_query
 		)
-	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+		_projectile_cover_query.append_array(
+			_projectile_runtime_cover_query
+		)
 	for wall in _runtime_structural_walls:
 		if swept.intersects(wall.grow(radius), true):
 			_projectile_cover_query.append(wall)
@@ -1773,15 +1782,14 @@ func _rebuild_runtime_blockers() -> void:
 
 func _runtime_first_cover_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
 	var runtime_cover := _runtime_projectile_cover_rects(from, to, padding)
-	if runtime_cover.is_empty() and StageCatalog.cover_rects(current_stage_id).is_empty():
+	if runtime_cover.is_empty():
 		_cover_hit_receipt["hit"] = false
 		_cover_hit_receipt["t"] = 2.0
 		return _cover_hit_receipt
-	return Rules.first_cover_hit_with_extra_into(
+	return Rules.first_cover_hit_candidates_into(
 		from,
 		to,
 		padding,
-		current_stage_id,
 		runtime_cover,
 		_cover_hit_receipt,
 		_cover_hit_candidate

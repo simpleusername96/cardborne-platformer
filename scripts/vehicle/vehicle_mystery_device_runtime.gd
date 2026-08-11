@@ -143,9 +143,10 @@ func first_intact_segment_hit(
 	## Fills caller-owned receipt with id/t/position; never exposes the hidden outcome.
 	receipt.clear()
 	var first_t := INF
-	var first_device: Dictionary = {}
+	var first_device_index := -1
 	var hit_radius := DEVICE_RADIUS + maxf(0.0, padding)
-	for device in devices:
+	for index in devices.size():
+		var device := devices[index]
 		if StringName(device["state"]) != &"intact":
 			continue
 		var candidate_t := AttackContract.segment_circle_first_t(
@@ -153,9 +154,10 @@ func first_intact_segment_hit(
 		)
 		if candidate_t < first_t:
 			first_t = candidate_t
-			first_device = device
-	if first_device.is_empty():
+			first_device_index = index
+	if first_device_index < 0:
 		return false
+	var first_device := devices[first_device_index]
 	receipt["device_id"] = StringName(first_device["id"])
 	receipt["t"] = first_t
 	receipt["position"] = from.lerp(to, first_t)
