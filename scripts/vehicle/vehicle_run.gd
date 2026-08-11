@@ -555,19 +555,26 @@ func _physics_process(delta: float) -> void:
 			subsystem_ms["encounter_and_pursuit"] = _elapsed_ms(section_started)
 			section_started = Time.get_ticks_usec()
 		_update_enemies(delta, pickup_motion_start)
-		if _performance_detail_sample_active:
-			for section_name in _performance_enemy_sections:
-				subsystem_ms["enemy_%s" % String(section_name)] = _performance_enemy_sections[section_name]
 		_update_threat_contacts(delta)
 		if _performance_detail_sample_active:
 			subsystem_ms["enemies_and_grid"] = _elapsed_ms(section_started)
 			section_started = Time.get_ticks_usec()
 		if _performance_ablation != &"attacks":
 			_update_projectiles(delta)
+		var effects_started := (
+			Time.get_ticks_usec() if _performance_detail_sample_active else 0
+		)
 		_update_denied_zones(delta)
 		if _simulation_lod_bucket == 0:
 			_update_effects(delta * 2.0)
 		if _performance_detail_sample_active:
+			_performance_enemy_sections["zones_and_effects"] = _elapsed_ms(
+				effects_started
+			)
+			for section_name in _performance_enemy_sections:
+				subsystem_ms["enemy_%s" % String(section_name)] = (
+					_performance_enemy_sections[section_name]
+				)
 			subsystem_ms["combat_and_effects"] = _elapsed_ms(section_started)
 			section_started = Time.get_ticks_usec()
 		_update_stage_progression(delta)
