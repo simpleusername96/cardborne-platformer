@@ -4309,6 +4309,8 @@ func _apply_player_recovery(gross_recovery: float) -> float:
 
 
 func _mystery_enemy_target(enemy: EnemyState) -> Vector2:
+	if _mystery_decoy_targets.is_empty():
+		return player_position
 	return Vector2(_mystery_decoy_targets.get(enemy.id, player_position))
 
 
