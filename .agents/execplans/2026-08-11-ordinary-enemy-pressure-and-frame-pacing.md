@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-11
 last_reviewed: 2026-08-11
@@ -208,13 +208,12 @@ These are decision aids, not homing: the target remains frozen after commitment.
 - [x] `M4` Replace radar per-frame Dictionary churn and guidebook discovery allocation with fixed/constant storage.
 - [x] `M5` Update the product specification and capture metrics for intercept and firing-lane behavior.
 - [x] `M6` Run focused gameplay, spawn, scheduler, UI, radar, guidebook, and visual-authority validators; correct task-owned failures.
-- [ ] `M7` Run import, Web export, built production smoke, rendered movement/radar QA, and bounded performance evidence when quiescence permits.
-- [ ] `M8` Run the codebase quality audit, close evidence, mark this plan `done`, and commit only task-owned changes.
+- [x] `M7` Run import, Web export, built production smoke, rendered movement/radar QA, and bounded performance evidence when quiescence permits.
+- [x] `M8` Run the codebase quality audit, close evidence, mark this plan `done`, and commit only task-owned changes.
 
-Current pointer: `M7` performance evidence is next. Targeting, movement, spawn order,
-radar storage, guidebook lookup, specification, capture instrumentation, import, Web
-export, native capture, and built-Web smoke are complete. Discovery remains closed; no
-material product or architecture choice remains open.
+Current pointer: no implementation or validation work remains. A later player feel test may
+tune the existing bounded policy constants, but it is not required for this contract.
+Discovery remains closed; no material product or architecture choice remains open.
 
 ## Validation Evidence
 
@@ -234,6 +233,30 @@ material product or architecture choice remains open.
   `index.wasm`. The built output loads on the registered codex Web port, enters gameplay
   through keyboard activation, renders the HUD/world, and reports no browser console
   warnings or errors. The task-owned server and isolated browser page were closed.
+- Clean committed checkpoint `66f78582` completed authoritative, focused, scenario-valid
+  `60 s` capacity-pressure and peak-horde native runs after the required warmup. The raw
+  evidence is retained under `build/performance/ordinary-enemy-pressure/`.
+- In capacity pressure, the immediately preceding `d0822273` checkpoint versus `66f78582`
+  changed HUD median from `2.386` to `0.171 ms`, scheduled ordinary-enemy median from
+  `14.990` to `9.428 ms`, ordinary-due median from `11.614` to `7.258 ms`, overlap-cache
+  median from `2.818` to `1.852 ms`, physics median from `29.488` to `19.077 ms`, and
+  presentation median from `6.966` to `4.624 ms`. Their p95 values also declined from
+  `25.918` to `9.542 ms`, `37.063` to `12.443 ms`, `28.819` to `9.497 ms`, `7.723` to
+  `2.661 ms`, `71.593` to `24.768 ms`, and `16.665` to `6.010 ms`, respectively.
+- The capacity checkpoint also improves every listed task-owned CPU distribution versus
+  the earlier `6af25e29` baseline. Draw-call p95 remains `99`, below the visual threshold
+  of `200` but above that baseline's `82`; retained radar topology and visual fidelity were
+  intentionally preserved.
+- The global native release gate remains red: capacity frame median is `133.333 ms`
+  (`7.5 FPS`) and p95 is `142.633 ms`. The peak checkpoint is also scenario-valid and
+  authoritative but remains globally red at `129.339/143.750 ms` median/p95. The prior
+  peak file was unfocused and non-authoritative, so it is supporting evidence only. The
+  accepted conclusion is narrow: the task-owned HUD and ordinary-enemy update regression
+  is reversed, while Cardborne's pre-existing maximum-load frame ceiling is not resolved
+  or claimed green by this plan.
+- The post-implementation codebase quality audit found and corrected the artillery reach
+  mismatch, then reported no remaining task-owned contract break, reachable failure path,
+  public-interface drift, or responsibility creep.
 
 ## Test Plan
 
@@ -321,3 +344,8 @@ the remaining choices without a risky product assumption.
 - 2026-08-11: No raster output is created. The canonical visual sheet was inspected only
   as style authority; expected and observed SHA-256 are
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+- 2026-08-11: Accept the clean performance pair as evidence that the new radar and ordinary-
+  enemy hot paths recovered. Do not classify overall peak/capacity performance as passing;
+  its persistent global frame-time failure is outside this bounded regression contract.
+- 2026-08-11: Retain this completed ExecPlan with `status: done` because deleting an agent-
+  relevant plan requires explicit user approval under the documentation lifecycle policy.
