@@ -13,6 +13,8 @@ var pos := Vector2.ZERO
 var home := Vector2.ZERO
 var velocity := Vector2.ZERO
 var desired_velocity := Vector2.ZERO
+var movement_band := Vector2.ZERO
+var movement_turn_response := 0.0
 # Presentation consumes this simulation-owned effective facing. It never infers
 # targets or attack phase from renderer-only state.
 var presentation_facing := Vector2.RIGHT

@@ -257,18 +257,46 @@ func update_actor_position(enemy: EnemyState) -> void:
 	):
 		update_actor(enemy)
 		return
-	var extent := Vector2(cached_radius, cached_radius)
-	var min_cell := _cell_for(enemy.pos - extent)
-	var max_cell := _cell_for(enemy.pos + extent)
+	var position := enemy.pos
+	var local_x := position.x - bounds.position.x
+	var local_y := position.y - bounds.position.y
+	var min_x := float(_member_min_x[slot]) * cell_size
+	var min_y := float(_member_min_y[slot]) * cell_size
+	var max_x := float(_member_max_x[slot] + 1) * cell_size
+	var max_y := float(_member_max_y[slot] + 1) * cell_size
+	var contracts_min_x := (
+		_member_min_x[slot] < _member_max_x[slot]
+		and local_x - cached_radius
+			>= float(_member_min_x[slot] + 1) * cell_size
+	)
+	var contracts_min_y := (
+		_member_min_y[slot] < _member_max_y[slot]
+		and local_y - cached_radius
+			>= float(_member_min_y[slot] + 1) * cell_size
+	)
+	var contracts_max_x := (
+		_member_max_x[slot] > _member_min_x[slot]
+		and local_x + cached_radius
+			< float(_member_max_x[slot]) * cell_size
+	)
+	var contracts_max_y := (
+		_member_max_y[slot] > _member_min_y[slot]
+		and local_y + cached_radius
+			< float(_member_max_y[slot]) * cell_size
+	)
 	if (
-		_member_min_x[slot] != min_cell.x
-		or _member_min_y[slot] != min_cell.y
-		or _member_max_x[slot] != max_cell.x
-		or _member_max_y[slot] != max_cell.y
+		local_x - cached_radius < min_x
+		or local_y - cached_radius < min_y
+		or local_x + cached_radius >= max_x
+		or local_y + cached_radius >= max_y
+		or contracts_min_x
+		or contracts_min_y
+		or contracts_max_x
+		or contracts_max_y
 	):
 		update_actor(enemy)
 		return
-	_positions[slot] = enemy.pos
+	_positions[slot] = position
 	_update_local_membership(slot, enemy)
 
 
@@ -921,6 +949,18 @@ func _update_local_membership(slot: int, enemy: EnemyState) -> void:
 	if enemy.role == &"stage_boss":
 		_remove_local_membership(slot)
 		return
+	if _local_member_active[slot] != 0:
+		var current_index := _local_member_cells[slot]
+		var current_x := current_index % _local_columns
+		var current_y := current_index / _local_columns
+		var local := enemy.pos - bounds.position
+		if (
+			local.x >= float(current_x) * LOCAL_QUERY_CELL_SIZE
+			and local.x < float(current_x + 1) * LOCAL_QUERY_CELL_SIZE
+			and local.y >= float(current_y) * LOCAL_QUERY_CELL_SIZE
+			and local.y < float(current_y + 1) * LOCAL_QUERY_CELL_SIZE
+		):
+			return
 	var next_cell := _local_cell_for(enemy.pos)
 	var next_cell_index := next_cell.y * _local_columns + next_cell.x
 	if (

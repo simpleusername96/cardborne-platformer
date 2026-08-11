@@ -5,6 +5,7 @@ extends RefCounted
 ## It never owns an actor, queries world geometry, or changes a committed target.
 
 const MIN_TARGET_SPEED := 80.0
+const MIN_TARGET_SPEED_SQUARED := MIN_TARGET_SPEED * MIN_TARGET_SPEED
 const MovementPolicy = preload(
 	"res://scripts/enemies/vehicle_enemy_movement_policy.gd"
 )
@@ -41,7 +42,7 @@ static func movement_focus(
 	movement_speed: float,
 	exact_focus: bool = false
 ) -> Vector2:
-	if exact_focus or target_velocity.length() < MIN_TARGET_SPEED:
+	if exact_focus or target_velocity.length_squared() < MIN_TARGET_SPEED_SQUARED:
 		return pressure_focus
 	var maximum_seconds := float(MOVEMENT_MAX_SECONDS.get(movement_family, 0.0))
 	var maximum_distance := float(MOVEMENT_MAX_DISTANCE.get(movement_family, 0.0))
@@ -65,7 +66,7 @@ static func attack_target(
 	if (
 		exact_focus
 		or maximum_distance <= 0.0
-		or target_velocity.length() < MIN_TARGET_SPEED
+		or target_velocity.length_squared() < MIN_TARGET_SPEED_SQUARED
 	):
 		return pressure_focus
 	var startup := maxf(0.0, startup_seconds)
