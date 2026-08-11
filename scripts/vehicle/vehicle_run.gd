@@ -4206,6 +4206,9 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		stats_installations += 1
 	if role == &"stage_boss":
 		if stage_flow.record_boss_defeat():
+			# Final progression suppresses XP shards, so transport the boss reward
+			# directly from the authoritative defeat transition.
+			reward_runtime.enqueue(&"boss")
 			_complete_stage()
 	var defeated_group := enemy.group_id
 	if not defeated_group.is_empty():

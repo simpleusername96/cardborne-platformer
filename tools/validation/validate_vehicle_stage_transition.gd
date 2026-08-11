@@ -2,6 +2,7 @@ extends SceneTree
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
+const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
 var failures: Array[String] = []
@@ -199,32 +200,66 @@ func _check_stage_one_to_three(run) -> void:
 func _check_stage_five_no_offer_completion(run) -> void:
 	run.current_stage_index = Catalog.STAGE_IDS.size() - 1
 	run.current_stage_id = Catalog.STAGE_IDS[run.current_stage_index]
+	run.stage_flow.stage_index = run.current_stage_index
+	run.stage_flow.quota = 1
+	run.stage_flow.defeats = 1
+	run.stage_flow.state = StageFlow.State.BOSS_ACTIVE
 	run.mode = run.RunMode.PLAYING
 	run.stage_complete = false
-	run.pending_stage_completion = true
+	run.pending_stage_completion = false
 	run.experience_recall_timer = 0.0
 	run.experience_runtime.clear_shards()
 	run.experience_runtime.clear_pending_levels()
+	run.experience_runtime.progression_complete = true
 	run.reward_runtime.reset_stage()
-	run.stage_flow.state = StageFlow.State.REWARDS
 	for definition in run.upgrade_catalog.all_definitions():
 		run.run_build.levels[definition.id] = definition.max_level
-	run.call("_open_upgrade_reward", &"boss")
+	run.call("_clear_enemies")
+	run.boss_shield_runtime.configure(run.current_stage_id)
+	var boss: EnemyState = run.call("_make_enemy", {
+		"id": "stage_5_reward_transport_boss",
+		"role": "stage_boss",
+		"pos": run.player_position,
+		"active": true,
+	})
+	_expect(boss != null, "Stage 5 creates an EnemyState boss fixture")
+	if boss == null:
+		return
+	_expect(run.call("_append_enemy", boss), "Stage 5 registers the boss fixture")
+	run.call(
+		"_damage_enemy",
+		boss,
+		boss.max_health + 1.0,
+		"validation",
+		&"kinetic",
+		true,
+		true,
+		false
+	)
+	_expect(
+		run.pending_stage_completion
+			and run.experience_runtime.shards.is_empty()
+			and run.reward_runtime.has_pending(),
+		"progression-complete boss defeat queues a reward without an XP shard"
+	)
+	run.experience_recall_timer = 0.0
+	run.call("_advance_reward_queue")
 	_expect(
 		run.mode == run.RunMode.PLAYING
 			and run.reward_runtime.has_claimed(run.current_stage_id, &"boss")
 			and run.reward_runtime.is_idle()
 			and run.experience_runtime.progression_complete
-			and String(run._ui.debug_notification_contract()["active_message"])
-				== tr("NOTIFY_ALL_UPGRADES_COMPLETE"),
-		"an exhausted Stage 5 offer shows MAX and resolves without trapping the run"
+			and not run.reward_runtime.has_pending(),
+		"Stage 5 claims the boss reward exactly once after the exhausted catalog"
 	)
 	run.call("_advance_reward_queue")
 	_expect(
 		run.mode == run.RunMode.RESULT
 			and run.stage_complete
-			and run.stage_flow.state == StageFlow.State.COMPLETE,
-		"Stage 5 reaches the final result after an exhausted reward catalog"
+			and run.stage_flow.state == StageFlow.State.COMPLETE
+			and run._ui.debug_surface_visible("result")
+			and run.reward_runtime.begin(run.current_stage_id, &"boss") == -1,
+		"Stage 5 reaches the final result modal without duplicating the boss reward"
 	)
 
 
