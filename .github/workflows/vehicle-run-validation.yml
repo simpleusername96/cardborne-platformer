@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ITCH_WEB_TARGET: itchioprofile1351321/cardborne:html5
+  ITCH_GAME_TITLE: Cardborne
 
 jobs:
   validate-build-render:
@@ -55,6 +55,42 @@ jobs:
           if ([string]::IsNullOrWhiteSpace($env:BUTLER_API_KEY)) {
               throw 'The BUTLER_API_KEY GitHub Actions secret is missing.'
           }
+
+      - name: Resolve itch.io project target
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+        shell: pwsh
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $headers = @{ Authorization = "Bearer $env:BUTLER_API_KEY" }
+          $profile = Invoke-RestMethod -Uri 'https://api.itch.io/profile' -Headers $headers
+          $response = Invoke-RestMethod -Uri 'https://api.itch.io/profile/games' -Headers $headers
+          $matches = @($response.games | Where-Object { $_.title -ceq $env:ITCH_GAME_TITLE })
+          if ($matches.Count -ne 1) {
+              throw "Expected one itch.io project titled '$env:ITCH_GAME_TITLE', found $($matches.Count)."
+          }
+
+          $gameUrl = [Uri]$matches[0].url
+          if ($gameUrl.Scheme -ne 'https' -or -not $gameUrl.Host.EndsWith('.itch.io')) {
+              throw "Unexpected itch.io project URL: $gameUrl"
+          }
+          $username = $gameUrl.Host.Substring(0, $gameUrl.Host.Length - '.itch.io'.Length)
+          $slug = $gameUrl.AbsolutePath.Trim('/')
+          if ([string]::IsNullOrWhiteSpace($username) -or
+              [string]::IsNullOrWhiteSpace($slug) -or $slug.Contains('/')) {
+              throw "Could not derive a Butler target from $gameUrl"
+          }
+          if ([string]$profile.user.username -ne $username) {
+              throw "The API key belongs to '$($profile.user.username)', but the project belongs to '$username'."
+          }
+
+          $target = "${username}/${slug}:html5"
+          "ITCH_WEB_TARGET=$target" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "ITCH_GAME_URL=$($gameUrl.AbsoluteUri.TrimEnd('/'))" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Resolved itch.io project: $($gameUrl.AbsoluteUri)"
 
       - name: Validate document authority
         shell: pwsh
