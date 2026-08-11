@@ -485,8 +485,16 @@ M7은 제품 명세, 업그레이드 카탈로그, 시각 시스템, 성능 근�
 `22.048/27.357 ms`, capacity는 `26.803/32.994 ms`였고 두 시나리오 모두 count와
 draw-call 검증은 통과했지만 성능 게이트는 실패했다. 물리 catch-up 상한 축소는 필수
 시뮬레이션을 버리는 동작 변경이므로 적용하지 않았다. 추가 scalar/facing 후보는 동일
-320적 비교에서 효과가 없어 되돌렸고, 현재 M8은 import/Web export와 built QA를 진행한
-뒤 성능 실패를 미해결 조건으로 남긴다. 열린 제품 선택은 없다.
+320적 비교에서 효과가 없어 되돌렸다. import와 Web export, itch 정적 계약 검증은
+통과했다. 1280x720 built Web에서 배포 화면, 실제 전투 진입, 대시, 패배 결과 모달과
+console 무오류를 확인했다. 3초 비권위 `peak_horde` smoke도 고착 없이 끝났지만 적 276,
+플레이어 탄 140, 적 탄 72에서 physics p95 `36 ms`, frame p95 `144.83 ms`, 중앙 FPS
+`7.4`로 Web 성능 역시 실패했다. 따라서 M8의 기능·빌드·수동 QA 작업은 실행됐지만
+성능 acceptance가 충족되지 않아 체크하지 않고, 다음 구조 변경 계약 전까지 이 실패를
+미해결 조건으로 남긴다. `origin/master..HEAD` 88개 task-owned 파일의 최종 품질 감사와
+`git diff --check`, 문서 권위 검증은 통과했고 임시 계측·도달 가능한 새 실패 경로·책임
+중복은 발견되지 않았다. M9는 계획을 `done`으로 만들 수 없어서 체크하지 않는다. 열린
+제품 선택은 없다.
 
 ## Acceptance Criteria
 
@@ -676,3 +684,6 @@ performance 변경이 있었을 때만 최종 pair를 한 번 다시 실행한�
   cover candidate 재사용을 적용했다. 동일 workload p95는 11.0% 줄었지만 기존
   capacity gate에는 미달하므로 M8의 60초 권위 측정 뒤에도 실패하면 계획을 done으로
   표시하지 않고 다음 비용 소유자 계획으로 이어 간다.
+- 2026-08-11: built Web export와 itch release 정적 계약은 통과했다. 1280x720 수동
+  smoke에서 시작·전투·대시·패배 결과와 console 무오류를 확인했지만, 짧은 dense fixture도
+  physics/frame gate를 크게 초과했다. 빌드 성공을 성능 해결로 주장하지 않는다.

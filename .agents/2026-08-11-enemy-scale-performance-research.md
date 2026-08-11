@@ -307,6 +307,24 @@ workload now requires a new architectural contract such as packed-data simulatio
 native hot-path extension, with separate Web compatibility and determinism design. It must
 not be represented as a small continuation of this optimization pass.
 
+### 9. Built Web smoke
+
+The release export passed `validate_itch_web_release.ps1`: nine files, 53,757,002 raw
+bytes, 22,188,981 estimated gzip bytes, no thread requirement, and all itch.io size/path
+limits satisfied. At 1280x720, the built product showed the deployment screen, entered
+live Stage 1, accepted dash input, rendered the defeat result modal, and emitted no browser
+console warning or error.
+
+A three-second `peak_horde` browser smoke completed rather than hanging. It was explicitly
+non-authoritative because headless Chrome reported scheduler throttling and the window was
+short. At 276 enemies, 140 player projectiles, and 72 hostile projectiles it recorded
+physics median/p95/p99 `27.0/36.0/42.2 ms`, frame p95/p99 `144.83/148.77 ms`, median
+`7.4 FPS`, and draw-call p95 `109`. The scenario counts and draw-call limit were valid, but
+the simulation and frame gates failed. Ordinary manual Stage 1 also accumulated a large
+swarm and reached defeat at `00:19`, consistent with the same unresolved dense-load
+pressure. The browser build is deployable and completes the fixture; it is not performant
+under the requested density.
+
 ## Recommendations
 
 ### Selected resolution sequence
