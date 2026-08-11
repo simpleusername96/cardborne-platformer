@@ -9,6 +9,9 @@ const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalo
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const EnemyTargetingPolicy = preload(
+	"res://scripts/enemies/vehicle_enemy_targeting_policy.gd"
+)
 const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
@@ -564,13 +567,16 @@ func _check_critical_enemy_attack_progression(run) -> void:
 func _check_ordinary_predicted_commitment(run) -> void:
 	var pressure_focus: Vector2 = run.player_position
 	var origin := pressure_focus + Vector2(-500.0, 0.0)
+	var found_clear_focus_line := false
 	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
 		var candidate: Vector2 = pressure_focus + Vector2(direction) * 500.0
 		if bool(run.call(
 			"_runtime_has_line_of_sight", candidate, pressure_focus, 7.0
 		)):
 			origin = candidate
+			found_clear_focus_line = true
 			break
+	_expect(found_clear_focus_line, "ordinary attack fixture finds a clear focus line")
 	var shooter: EnemyState = run.call("_make_enemy", {
 		"id":"ordinary_predicted_commitment",
 		"role":&"shooter",
@@ -579,12 +585,24 @@ func _check_ordinary_predicted_commitment(run) -> void:
 	})
 	var original_velocity: Vector2 = run.player_velocity
 	run.player_velocity = Vector2(0.0, 220.0)
+	var attack := AttackContract.ordinary_attack(&"shooter")
+	var predicted := EnemyTargetingPolicy.attack_target(
+		&"shooter",
+		origin,
+		pressure_focus,
+		run.player_velocity,
+		float(attack["startup"]),
+		Director.effective_hostile_projectile_speed(float(attack["speed"]))
+	)
+	var expected := predicted
+	if not bool(run.call("_runtime_has_line_of_sight", origin, predicted, 7.0)):
+		expected = pressure_focus
 	run.call("_start_enemy_attack", shooter)
 	var committed := shooter.committed_target
 	_expect(
-		committed.y > pressure_focus.y
+		committed.is_equal_approx(expected)
 			and committed.distance_to(pressure_focus) <= 260.001,
-		"ordinary projectile startup commits one bounded moving-player lead"
+		"ordinary projectile startup uses bounded prediction with geometry fallback"
 	)
 	run.player_position += Vector2(0.0, 90.0)
 	_expect(
