@@ -4,8 +4,8 @@ status: active
 owner: BK
 created: 2026-08-11
 last_reviewed: 2026-08-11
-topic: Half-scale world presentation and uninterrupted stage continuation
-scope: Cardborne gameplay camera, visible-world consumers, boss-defeat stage flow, combat-state continuity, UI contracts, validators, and Web release QA
+topic: Half-scale world presentation, uninterrupted stage continuation, and full-width combat HUD
+scope: Cardborne gameplay camera, visible-world consumers, boss-defeat stage flow, combat-state continuity, gameplay HUD, validators, and Web release QA
 related:
   - ../../AGENTS.md
   - ../AGENTS.md
@@ -19,23 +19,27 @@ related:
   - ../../docs/design/VISUAL_SYSTEM.md
 ---
 
-# 월드 1/2 표시와 무중단 스테이지 진행 실행 계약
+# 월드 1/2 표시, 무중단 스테이지 진행, full-width HUD 실행 계약
 
 기체·적·시설·아이템·지형을 모두 현재 화면 크기의 1/2로 표시하되 충돌과 월드
 좌표의 진실은 유지한다. 1~4스테이지 보스 처치 후에는 보스 전용 보상, XP 회수 대기,
 전환 모드, 안전 무적 시간을 거치지 않고 체력만 완전 회복한 뒤 같은 전투 화면에서
 다음 스테이지를 즉시 시작한다. 이미 태어난 일반 적과 일반 전투 상태는 남기고,
 보스에게 종속된 위협만 제거한다. 5스테이지 보스는 빈 화면 없이 즉시 최종 결과를 연다.
+동시에 체력/EXP를 화면 최상단에 빈틈 없는 full-width meter로 두고, 그 아래 왼쪽에
+stage·누적 격파와 Dash/Seeker/EMP cooldown을 읽기 쉬운 tactical rail로 묶는다.
 
 ## Purpose
 
 - 목표: 월드 오브젝트의 화면상 크기를 일관되게 절반으로 줄이고, 스테이지 사이의
   명시적 휴식·경계·보상 정지를 없앤다.
 - 산출물: 카메라/가시 영역 계약, 연속 스테이지 상태 전이, 선택적 보스 정리,
-  일반 적 유지, 제품·시각 명세, 집중 validator, native/Web 검증 결과다.
+  일반 적 유지, 선택안 B의 full-width gameplay HUD, 제품·시각 명세, 집중 validator,
+  native/Web 검증 결과다.
 - 완료 상태: 모든 작업 체크와 최종 게이트가 통과하고, 실제 1→2 및 4→5 전환에서
-  일반 적이 계속 움직이고 공격하는 동안 HUD의 스테이지 번호만 바뀌며, 기체 체력은
-  즉시 최대치가 되고, 전환 모달·배너·타이머·보스 카드가 나타나지 않는다.
+  일반 적이 계속 움직이고 공격하는 동안 HUD의 스테이지 번호가 즉시 바뀌며, 기체 체력은
+  즉시 최대치가 되고, 전환 모달·배너·타이머·보스 카드가 나타나지 않는다. 체력/EXP는
+  모든 지원 viewport에서 최상단 전체 폭을 채우고, 누적 격파와 세 cooldown이 겹침 없이 보인다.
 
 ## Why and Current Context
 
@@ -76,13 +80,30 @@ cadence를 쓰므로, 그대로 두면 새 화면 안에서 보이는 원거리 
 이번 후속 사용자 결정으로 대체한다. 이 문서가 카메라 배율과 스테이지 연속성 범위의
 현재 실행 소스다. 기존 문서가 보스 보상/전환 동작을 다시 도입하는 근거가 되어서는 안 된다.
 
+### 현재 HUD는 요청한 정보 구조와 다르다
+
+`VehicleGameplayHud.HealthPips`는 현재 520×44 고정 폭이고 체력과 EXP 사이에 4px 틈이
+있다. 좌측 정보는 `stage defeated/quota`라 run 전체 누적 격파가 아니며, cooldown은
+화면 하단의 EMP 하나만 크게 보인다. 그러나 `VehicleHudPresenter` snapshot에는 Dash,
+Seeker, EMP의 ready/ratio가 이미 있고, `VehicleRun.stats_enemies_defeated`에는 run 누적
+격파가 이미 기록된다. 따라서 새 전투 규칙을 만들 필요 없이 기존 진실을 HUD snapshot과
+배치에 정확히 연결하면 된다.
+
+사용자 참고 캡처와 canonical Cardborne sheet를 실제 ImageGen reference로 넣어 A/B/C 세
+layout을 비교했다. A는 상단 점유가 너무 컸고 C는 참고 캡처의 가독성 문제를 반복할 위험이
+있었다. B의 “두 줄 full-width meter + 균형 잡힌 좌측 tactical rail”을 선택한다. 시안의
+배경·기체·나무·아이콘 그림은 채택하지 않으며, layout 관계만 구현 계약으로 사용한다.
+
 ## Scope and Boundaries
 
 ### In scope
 
 - gameplay camera zoom을 0.5로 고정해 모든 월드 표시를 절반으로 만든다.
-- HUD, 메뉴, 업그레이드 카드, 가이드북, 미니맵 frame, 위협 레이더 frame은 현재
-  화면 크기와 접근성을 유지한다.
+- HUD, 메뉴, 업그레이드 카드, 가이드북, 미니맵 frame, 위협 레이더 frame은 camera zoom에
+  따라 1/2로 줄지 않으며 접근성을 유지한다.
+- 체력과 EXP meter를 viewport 최상단에서 각각 100% 폭으로 만들고 세로로 맞붙인다.
+- 두 meter 아래 좌측에 현재 stage, run 누적 격파, Dash/Seeker/EMP cooldown을 선택안 B의
+  tactical rail로 배치하고 미니맵은 우측에 유지한다.
 - zoom에 따라 가시 영역, 스폰 배제, boss arrival, 위협 레이더, renderer culling,
   원거리 simulation cadence, 주무기 visible range가 같은 좌표계를 사용하게 한다.
 - Stage 1~4 보스 처치 시 같은 프레임에 full heal과 다음 stage configure를 완료하고
@@ -104,6 +125,8 @@ cadence를 쓰므로, 그대로 두면 새 화면 안에서 보이는 원거리 
   월드 크기, spawn 수, quota, 체력, 공격력, 공격 cadence를 일괄 1/2로 바꾸는 일.
 - 개별 PNG/SVG를 다시 만들거나 새 player-facing asset을 생성하는 일.
 - HUD와 메뉴 자체를 1/2로 축소하는 일.
+- A/B/C 시안 이미지를 runtime asset 또는 승인된 시각 자산으로 편입하는 일.
+- 아직 HUD snapshot에 없는 보조 무기나 네 번째 cooldown을 추측해 표시하는 일.
 - Stage 1~4 기존 일반 적을 다음 stage 계수로 소급 강화하거나 체력을 다시 채우는 일.
 - 보스 소환물과 보스 공격을 다음 stage까지 남기는 일.
 - stage-local 픽업·장치·시설을 누적해 한 맵에 5스테이지 분량을 동시에 두는 일.
@@ -131,6 +154,20 @@ cadence를 쓰므로, 그대로 두면 새 화면 안에서 보이는 원거리 
 - 파괴·이동·저장처럼 되돌리기 어려운 외부 동작은 없다. 구현은 task-owned git commit으로
   복구 가능해야 한다.
 - 외부 배포와 기존 성능 threshold 변경은 별도 사용자 승인 없이는 하지 않는다.
+- 체력/EXP track은 top=0에서 시작하고 둘 사이 물리적 gap은 0px다. 경계가 필요하면
+  두 track이 공유하는 1px seam만 사용한다.
+- meter 높이는 compact 28/14px, standard 32/16px, large 40/20px, 200% text 52/32px로
+  고정한다. 순서는 항상 HP 위, EXP 아래다.
+- HP 중앙은 KO `기체 현재 / 최대`, EN `HULL current / max`를 보이고, EXP는 좌측 `Lv. N`,
+  우측 `EXP current / required` 또는 `EXP MAX`를 보인다.
+- tactical rail은 meter 아래 12/16/24px 간격과 16/24/32px 좌측 margin을 사용한다.
+  stage block은 `STAGE N / 5`와 KO `누적 격파 N`/EN `TOTAL DEFEATED N` 두 줄이다.
+- cooldown은 stage block 뒤 하나의 divider 다음에 Dash, Seeker, EMP 순으로 둔다.
+  기존 action glyph를 사용하고 ready/ratio, 남은 초를 함께 보여 color만으로 상태를 구분하지 않는다.
+- 표준 slot은 compact/standard/large에서 44/48/56px다. 200% text에서는 글자나 slot을
+  억지로 줄이지 않고 cooldown group을 stage block 아래 둘째 줄로 wrap한다.
+- minimap은 meter 아래 우측에 유지한다. status toast는 meter와 tactical rail/minimap의
+  가장 낮은 경계 아래에 두어 겹치지 않게 한다. player-anchored threat radar는 영향을 받지 않는다.
 
 ## Assumptions and Locked Behavior
 
@@ -154,7 +191,7 @@ full heal이라는 뜻으로 고정한다. 무적, cooldown 초기화, 무료 EM
 | 정적 필드 | field layout, run-fixed wall/gate, gate cooldown, 탐사 유지 |
 | stage-local object | 이전 pickup/device/facility를 retire하고 다음 stage 배치로 교체 |
 | 시설 자식 | 살아 있는 actor는 유지, 이전 시설 provenance로 분리해 새 counter와 무관 |
-| HUD | gameplay HUD 유지, stage 번호/quota만 새 값으로 바뀜 |
+| HUD | full-width HP/EXP와 tactical rail 유지, stage 번호와 run 누적 격파만 즉시 갱신 |
 
 Stage 5는 next-stage full heal을 하지 않고, 보스 소유 상태를 정리하고 stage report history를
 완성한 뒤 같은 frame boundary에서 `RunMode.RESULT`와 결과 모달을 연다.
@@ -174,6 +211,9 @@ Stage 5는 next-stage full heal을 하지 않고, 보스 소유 상태를 정리
    공격하는 orphan damage가 생겨 기각한다.
 6. 일반 적과 일반 전투만 유지하고 boss ownership tag로 선택 정리한다. 사용자 요구와
    전투 공정성을 함께 만족해 선택한다.
+7. HUD 시안 A의 큰 meter/수직 정보 블록은 시인성은 높지만 전투 화면 점유가 커서 기각한다.
+   C의 얇은 meter/한 줄 정보는 화면을 덜 가리지만 사용자가 지적한 작은 글자 문제를 반복할
+   가능성이 커서 기각한다. B의 32/16px standard meter와 수평 tactical rail을 선택한다.
 
 ## Proposed Design
 
@@ -247,6 +287,44 @@ ID를 넣고, defeat 시 현재 facility instance와 일치할 때만 `note_chil
 다음 stage 계약으로 갱신하고, 보존된 enemy store를 clear하지 않은 채 grid와 coordination
 index만 rebuild/reconcile한다.
 
+### E. 선택안 B — full-width dual meter와 balanced tactical rail
+
+`VehicleGameplayHud`의 top band를 하나의 responsive owner로 만든다. HP와 EXP는 각각
+viewport의 x=0부터 width=viewport width까지 채우고 y=0부터 gap 없이 연속 배치한다.
+meter fill은 semantic color를 사용하되 값은 항상 텍스트로도 제공한다. bar 장식은 얇은
+industrial border 한 겹만 쓰며 double frame, 중첩 원형 gauge, 장식용 badge를 추가하지 않는다.
+
+meter 바로 아래 왼쪽에는 배경판 없이 한 줄 rail을 둔다. stage/cumulative block 뒤에 하나의
+divider를 놓고 Dash, Seeker, EMP를 기존 `VehicleUiActionGlyphRenderer` recipe로 그린다.
+각 cooldown은 glyph, 짧은 KO/EN label, ready 또는 0.1초 단위 남은 시간, 단일 progress
+표현만 가진다. standard 1280/1920에서는 가로 한 줄, compact 960에서는 44px slot과 12px
+간격으로 같은 순서를 유지한다. 200% text scale에서만 cooldown group을 둘째 줄로 내린다.
+
+`VehicleRun`은 기존 `stats_enemies_defeated`를 `cumulative_defeated` snapshot field로
+내보낸다. 현재 stage quota 진행값은 encounter 내부 진실로 남지만 이 rail에는 표시하지
+않는다. stage 전환이 일반 적을 보존하므로 carry-over 적을 다음 stage에서 처치해도 누적은
+run 전체에서 정확히 한 번 증가한다. 기존 bottom-center EMP slot은 제거해 정보 중복과
+시선 이동을 없앤다.
+
+미니맵은 top band 아래 우측에 그대로 남는다. toast와 buff 문구는 rail/minimap과 충돌하지
+않는 중앙 상단 안전 영역으로 이동하고, safe-area 및 text-scale 변경 때 clip/overflow를
+validator가 검사한다.
+
+### HUD concept visual-authority evidence
+
+- Canonical authority: `docs/design/VISUAL_SYSTEM.md` 전체 읽기 완료;
+  `docs/design/cardborne-universal-art-style-reference.png` original detail inspection 완료.
+- Expected/observed sheet SHA-256:
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+- Canonical sheet provenance: original ImageGen artifact
+  `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`,
+  generated 2026-08-02 12:13:44 KST.
+- Layout reference: user capture `2026-08-11 22 43 42.png`, original detail inspection 완료.
+- Reference method: A/B/C 생성 모두 canonical sheet와 user capture를 실제
+  `referenced_image_paths` 입력으로 전달했다. 프롬프트 텍스트 참조만 사용하지 않았다.
+- Status: A/B/C는 preview-only layout evidence다. B의 정보 구조와 비율만 선택했으며
+  생성된 actor/background/icon/ring은 승인·승격·manifest 편입 대상이 아니다.
+
 ## Discovery Closure
 
 | 요구/우려 | 확인한 현재 owner와 동작 | 근거 | 잠근 결정 | Task |
@@ -260,7 +338,11 @@ index만 rebuild/reconcile한다.
 | 시설 자식 carry-over | 고정 carrier ID가 한 stage counter만 가정 | reinforcement runtime/defeat path | stage instance provenance | 2.4 |
 | next-stage 시작 시각 | transition packet cue 0.35, birth 1.35 | `_transition_packets()` | cue 0.0, birth 0.9, mode PLAYING | 2.5 |
 | stage-local object | transition이 pickup/device/facility를 전량 재구성 | map runtime helpers | 다음 stage 배치로 교체, terrain/gate는 보존 | 2.6 |
-| 제품/시각 문서 | full heal+1.2s protection+boss reward와 zoom 1 footprint 명시 | product/upgrade/visual docs | 새 연속 계약과 screen/world 단위 분리 | 3.1 |
+| HP/EXP 배치 | `HealthPips`가 520×44 고정, bar 사이 4px | `vehicle_gameplay_hud.gd` | responsive 100% width, top=0, gap=0 dual meter | 3.2 |
+| 누적 격파 | `stats_enemies_defeated`는 존재하지만 HUD가 stage defeated/quota만 받음 | `vehicle_run.gd`, presenter fast cluster | `cumulative_defeated` snapshot을 rail에 표시 | 3.1~3.3 |
+| cooldown | presenter는 Dash/Seeker/EMP를 모두 발행하나 UI는 bottom EMP만 표시 | presenter, HUD, action glyph renderer | 기존 glyph로 세 slot, bottom EMP 제거 | 3.3 |
+| 시안 선택 | A는 과점유, C는 과소, B는 meter/rail 균형 | canonical sheet+capture를 실제 참조한 A/B/C | B layout만 구현, 생성 그림은 미승인 | 3.2~3.3 |
+| 제품/시각 문서 | full heal+1.2s protection+boss reward와 이전 HUD footprint 명시 | product/upgrade/visual docs | 연속 계약, screen/world 단위, 선택안 B HUD로 갱신 | 3.4 |
 | 성능 | 기존 320적 capacity가 이미 red, zoom은 visible workload를 바꿈 | active performance plan/policy | 새 결과를 별도 baseline으로 표시, 기존 실패를 해결로 주장하지 않음 | 4.2 |
 
 Readiness statement:
@@ -313,8 +395,8 @@ Phase gate:
   `validate_vehicle_run.gd`, `validate_vehicle_combat_renderer.gd`,
   `validate_vehicle_performance_scenarios.gd`가 통과한다.
 - 1280x720 original-detail capture에서 player, representative ordinary, facility, pickup,
-  terrain gate의 screen-space bounding size가 기존 baseline의 50%±2px이고 HUD height는
-  기존과 같다.
+  terrain gate의 screen-space bounding size가 기존 baseline의 50%±2px이다. HUD CanvasLayer는
+  camera zoom 영향을 받지 않으며, 최종 top band 높이는 Phase 3의 responsive 계약을 따른다.
 
 ### Phase 2: 보스 처치 후 무중단 stage continuation
 
@@ -367,36 +449,53 @@ Phase gate:
   `validate_vehicle_rewards_ui_audio.gd`, `validate_vehicle_enemy_contact.gd`,
   `validate_vehicle_stage_telemetry.gd`가 통과한다.
 
-### Phase 3: 활성 UI·제품·시각 계약 정리
+### Phase 3: 선택안 B gameplay HUD와 활성 계약 정리
 
-Goal: 코드, 사용자 문서, 가이드/현지화 검증이 새 동작만 설명한다.
+Goal: full-width meter와 tactical rail을 구현하고 코드, 사용자 문서, 현지화 검증이
+새 동작만 설명하게 한다.
 
 Preconditions: Phase 2 gate 통과.
 
-Source owners: `docs/product/vehicle_game_spec.md`,
-`docs/product/vehicle_upgrade_catalog.md`, `docs/design/VISUAL_SYSTEM.md`,
-`scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_stage_ui.gd`,
-`tools/validation/validate_vehicle_ui_localization.gd`, 두 active ExecPlan
+Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_hud_presenter.gd`,
+`scripts/ui/vehicle_gameplay_hud.gd`,
+`scripts/presentation/components/vehicle_ui_action_glyph_renderer.gd`,
+`scripts/presentation/vehicle_stage_visual_profile.gd`,
+`docs/product/vehicle_game_spec.md`, `docs/product/vehicle_upgrade_catalog.md`,
+`docs/design/VISUAL_SYSTEM.md`, UI validator, 두 active ExecPlan
 
-- [ ] **3.1** 제품과 시각 명세를 현재 동작으로 갱신한다.
-  - Change: boss reward/1.2s protection/1.6s transition 문장을 full-heal immediate continuation으로
-    바꾸고 world-unit footprint와 0.5 screen presentation을 구분한다.
-  - Accept: active spec에서 Stage 1~4 boss card, transition timer/protection을 현재 동작으로
-    주장하는 문장이 0개이며, player/enemy/facility의 world collision 수치는 유지된다.
-- [ ] **3.2** obsolete transition surface와 이전 계획 충돌을 제거한다.
-  - Change: 사용되지 않는 RunMode/상수/localization validation expectation을 제거한다.
-    이전 dense-combat plan의 boss reward/transition acceptance에는 이 문서로 대체되었음을
-    유지하고 구현 결과와 충돌하는 작업 문장을 정리한다.
-  - Accept: `STAGE_TRANSITION`, transition timer/invulnerability/cue constants, boss reward
-    transition gate의 reachable reference가 0개다. failure stage-report UI는 유지된다.
-- [ ] **3.3** 한국어/영어 HUD와 result flow를 검증한다.
-  - Change: 필요한 stage/quota snapshot refresh만 수행하고 새 설명 UI나 배너는 추가하지 않는다.
-  - Accept: KO/EN 960/1280/1920과 200% text scale에서 HUD가 잘리지 않고 stage number가
-    같은 frame에 갱신된다. Stage 5 결과의 기본 focus와 dim이 정상이다.
+- [ ] **3.1** 누적 격파와 세 cooldown을 HUD data contract에 연결한다.
+  - Change: `VehicleRun.stats_enemies_defeated`를 `cumulative_defeated` snapshot/presenter
+    cluster에 추가하고 Dash/Seeker/EMP ready·ratio·remaining을 하나의 HUD view model로 만든다.
+  - Accept: stage 1에서 5회, carry-over 포함 stage 2에서 3회 처치한 fixture가 rail에 8을
+    표시하고 stage quota reset과 무관하다. 세 cooldown은 runtime 값과 0.05 이내로 일치한다.
+  - Guard: UI가 gameplay timer를 다시 계산하거나 quota를 누적으로 오인하지 않는다.
+- [ ] **3.2** HP/EXP를 top full-width dual meter로 재구성한다.
+  - Change: fixed `HealthPips` 폭과 4px gap을 제거하고 이 문서의 compact/standard/large/200%
+    높이, top=0, width=viewport, gap=0 계약을 적용한다.
+  - Accept: KO/EN 960×540, 1280×720, 1920×1080에서 두 track의 x=0, right=viewport width,
+    HP top=0, EXP top=HP bottom이며 1px 넘는 gap/overlap이 없다. 값/level/EXP MAX도 잘리지 않는다.
+- [ ] **3.3** 선택안 B tactical rail을 구현한다.
+  - Change: stage+cumulative 두 줄, divider 하나, 기존 glyph 기반 Dash/Seeker/EMP slot,
+    top-right minimap, non-overlapping toast를 배치하고 bottom-center EMP 중복 slot을 제거한다.
+  - Accept: standard에서 한 줄 순서가 stage→divider→Dash→Seeker→EMP이고 compact에서도
+    slot 44px 이상이다. 200% text는 cooldown group만 둘째 줄로 wrap하며 minimap/toast와
+    겹치거나 viewport 밖으로 나가는 node가 0개다.
+  - Guard: 새 raster/SVG, nested ring, 설명 panel, 네 번째 cooldown을 추가하지 않는다.
+- [ ] **3.4** 제품·시각 명세와 obsolete transition surface를 갱신한다.
+  - Change: boss reward/1.2s protection/1.6s transition을 immediate continuation으로 바꾸고
+    world-unit/0.5 screen presentation, full-width HUD, 누적 격파, 세 cooldown을 명시한다.
+    dead RunMode/상수/localization expectation과 이전 active plan의 충돌 문장을 제거한다.
+  - Accept: active spec에서 old transition과 fixed-width/EMP-only HUD를 현재 동작으로 주장하는
+    문장이 0개다. failure stage-report UI와 world collision 수치는 유지된다.
+- [ ] **3.5** 한국어/영어 HUD와 result flow를 검증한다.
+  - Change: KO/EN label, number format, ready/seconds, EXP MAX, text scale fixture를 추가한다.
+  - Accept: KO/EN 960/1280/1920과 200% text scale에서 clip/overflow/overlap이 0이고 stage와
+    누적 격파가 같은 frame에 갱신된다. Stage 5 결과의 기본 focus와 dim도 정상이다.
 
 Phase gate:
 
-- `validate_vehicle_ui_localization.gd`, `validate_vehicle_stage_ui_layout.gd`,
+- `validate_vehicle_hud_presenter.gd`, `validate_vehicle_stage_ui_layout.gd`,
+  `validate_vehicle_ui_components.gd`, `validate_vehicle_ui_localization.gd`,
   `validate_vehicle_guidebook.gd`, `validate_cardborne_visual_authority.ps1`,
   `validate_document_authority.ps1`가 통과한다.
 
@@ -421,7 +520,7 @@ Preconditions: Phase 1~3 task와 phase gate 통과, worktree task scope 확인.
   - Change: `./tools/export_web.ps1` 후 `$npjt-port-guard` codex lane에서 built Web을 열고
     Chrome으로 gameplay를 확인한다.
   - Accept: console error 0, world 1/2/HUD 유지, dash/aim/fire 정상, mixed-enemy Stage 1→2
-    연속성, Stage 5 result가 실제 브라우저에서 재현된다.
+    연속성, full-width dual meter, 누적 격파, 세 cooldown, Stage 5 result가 실제 브라우저에서 재현된다.
 - [ ] **4.4** task-owned multi-file 품질 감사를 통과한다.
   - Change: `$codebase-quality-auditor`로 transition responsibility, catch-all 확장,
     dead API, save/API break, missing failure path를 감사하고 작은 task-scoped 결함만 수정한다.
@@ -443,7 +542,7 @@ Final gate:
 | Inner loop | `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_continuity.gd` | stage/boss cleanup 변경 | 관련 입력 변경 |
 | Phase 1 | world-view, spawn, run, renderer, performance-scenario validator 묶음 | Phase 1 task 통과 | Phase 1 owner 변경 |
 | Phase 2 | continuity, facility, XP/reward, contact, telemetry validator 묶음 | Phase 2 task 통과 | Phase 2 owner 변경 |
-| Phase 3 | UI/localization/guidebook/visual/document authority | Phase 3 task 통과 | UI/doc/visual contract 변경 |
+| Phase 3 | HUD presenter/layout/component/localization/guidebook/visual/document authority | Phase 3 task 통과 | UI/doc/visual contract 변경 |
 | Final | `./tools/godot.ps1 --path . --headless --import`; `./tools/export_web.ps1`; built Web QA; declared native A/B | 모든 phase 통과 | final input 변경 |
 
 Validation rules:
@@ -466,6 +565,8 @@ Validation rules:
 | boss-owned damage를 typed ownership으로 구분할 수 없음 | 해당 state에 명시적 owner tag를 추가 | pattern 문자열 추론으로 ship 금지 |
 | native A/B가 10% 이상 악화 | release 중단, evidence를 보존하고 이 계획의 visible scheduling을 개정 | threshold 약화나 workload 축소는 사용자 승인 필요 |
 | Stage 5 result가 같은 frame에 열리지 않음 | result owner만 수정하고 실제 boss-defeat fixture 재실행 | 보스 보상/대기 gate 재도입 금지 |
+| 200% text에서 tactical rail이 한 줄에 맞지 않음 | cooldown group만 stage block 아래 둘째 줄로 wrap하고 meter 높이는 52/32px 사용 | 글자·glyph를 최소치 아래로 축소하거나 viewport 밖 clip 금지 |
+| cooldown 표시가 runtime과 어긋남 | presenter snapshot의 ready/ratio/remaining만 사용하고 fixture로 비교 | HUD 자체 timer나 추정 cooldown 금지 |
 | material fact가 계약과 충돌 | 영향 branch를 중단하고 계약 수정 | executor의 제품/구조 재선택 금지 |
 
 구현 중 발견한 로컬 mechanics는 visible behavior, ownership, architecture, safety, acceptance를
@@ -495,12 +596,15 @@ Validation rules:
 | 보스 zone 문자열 정리가 누락됨 | 보스 사망 뒤 orphan damage | typed owner tag와 mixed fixture |
 | stage-local object 교체가 눈에 보임 | 완전한 세계 지속감 약화 | modal/time stop 없이 같은 frame 교체; 누적 배치는 scope 밖 |
 | 기존 active plan이 old reward를 재도입 | 문서 권위 충돌 | 양 문서에 후속 결정 우선순위 기록 |
+| full-width meter가 전투 화면을 과도하게 가림 | 상단 시야 감소 | B의 고정 responsive 높이, 단일 얇은 border, 별도 배경판 금지 |
+| cooldown glyph/label이 작거나 색에만 의존 | 전투 중 판독 실패 | 최소 44px slot, 기존 glyph, 숫자 시간, ready 상태를 함께 표시 |
 
 ## Open Questions
 
 없음. “1/2”는 world screen-space scale, “체력만”은 full heal 외 즉시 혜택 없음,
 “일반 적 유지”는 boss-owned actor를 제외한 이미 태어난 ordinary combat actor 유지로
-결정했다. 이 해석이 바뀌면 구현 전에 본 계약을 개정한다.
+결정했다. HUD는 선택안 B, 누적은 run 전체의 `stats_enemies_defeated`, cooldown은 현재
+runtime이 제공하는 Dash/Seeker/EMP 세 개로 결정했다. 이 해석이 바뀌면 구현 전에 본 계약을 개정한다.
 
 ## Decision Notes
 
@@ -516,6 +620,12 @@ Validation rules:
 - 2026-08-11: next cue는 즉시 시작하되 공정한 0.9초 arrival warning은 유지한다.
 - 2026-08-11: 기존 dense-combat 계획의 성능 실패는 별도이며 camera 변경으로 해결됐다고
   주장하지 않는다.
+- 2026-08-11: A/B/C HUD 시안을 canonical sheet와 사용자 캡처의 실제 image reference로
+  생성·비교했고, 가독성과 화면 점유가 균형인 B의 layout만 선택했다.
+- 2026-08-11: HP/EXP는 standard 32/16px를 포함한 responsive 높이로 top full-width, gap 0이며
+  stage·누적 격파·Dash/Seeker/EMP를 meter 아래 좌측 rail에 둔다.
+- 2026-08-11: 시안의 생성 actor/background/icon/ring은 preview-only이며 production asset
+  approval이나 manifest 편입으로 간주하지 않는다.
 
 ## Progress and Next Steps
 
@@ -534,7 +644,7 @@ Complete when:
 - 모든 task acceptance, phase gate, final gate가 통과한다.
 - 제품/시각 명세가 구현과 일치하고 이전 active plan의 충돌 문장이 정리된다.
 - actual native/Web flow에서 world 1/2, HUD 유지, ordinary continuity, HP-only continuation,
-  Stage 5 result를 확인한다.
+  Stage 5 result와 선택안 B full-width meter/누적 격파/세 cooldown을 확인한다.
 - task-owned code quality audit와 clean scoped commit이 완료된다.
 - 그 뒤에만 frontmatter status를 `done`으로 바꾸고 durable spec 반영을 확인한다.
 
@@ -544,6 +654,7 @@ Replan when:
   만족할 수 없다는 material evidence가 나온다.
 - boss-owned state를 일반 combat과 안정적으로 구분할 ownership seam이 현재 구조에 없다.
 - stage-local object 유지/교체에 관한 사용자의 후속 결정이 이 계약과 다르다.
+- 누적 격파 대신 quota 표시를 다시 요구하거나 HUD에 새 cooldown 종류를 추가하는 후속 결정이 나온다.
 
 Do not replan or stop for:
 
