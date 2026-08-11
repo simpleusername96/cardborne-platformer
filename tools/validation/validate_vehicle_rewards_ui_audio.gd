@@ -87,18 +87,12 @@ func _run() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, StageCatalog.STAGE_IDS)
 	for stage_id in StageCatalog.STAGE_IDS:
 		var stage_pickups := layout.pickup_blueprint(stage_id)
-		var stage_crates := layout.crate_blueprint(stage_id)
-		_expect(stage_pickups.size() == 6, "%s has four repairs and two experience recalls" % stage_id)
-		_expect(layout.crate_blueprint(stage_id).size() == 8, "%s has eight authored crates" % stage_id)
-		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").size() == 4, "%s pickup set contains exactly four repairs" % stage_id)
-		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s pickup set contains exactly two experience recalls" % stage_id)
-		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"repair").size() == 6, "%s crate set contains exactly six repairs" % stage_id)
-		_expect(stage_crates.filter(func(item: Dictionary) -> bool: return StringName(item["drop"]) == &"experience_recall").size() == 2, "%s crate set contains exactly two experience recalls" % stage_id)
+		_expect(stage_pickups.size() == 14, "%s has ten repairs and four experience recalls" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").size() == 10, "%s pickup set contains exactly ten repairs" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 4, "%s pickup set contains exactly four experience recalls" % stage_id)
 	var kinds: Dictionary = {}
 	for item in layout.pickup_blueprint(&"stage_1"):
 		kinds[StringName(item["kind"])] = true
-	for crate in layout.crate_blueprint(&"stage_1"):
-		kinds[StringName(crate["drop"])] = true
 	for required_kind in [&"repair", &"experience_recall"]:
 		_expect(kinds.has(required_kind), "field catalog exposes %s" % required_kind)
 	_expect(kinds.size() == 2, "field item contract exposes exactly two families")

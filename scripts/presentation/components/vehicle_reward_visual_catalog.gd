@@ -5,12 +5,6 @@ extends RefCounted
 ## effects, persistence, and reward value stay in reward/gameplay owners.
 
 const DESCRIPTORS := {
-	&"reward_crate": {
-		"asset": &"pickup/reward_crate",
-		"shape": &"stepped_mechanical_crate",
-		"glyph": &"crate",
-		"color": &"player_reward",
-	},
 	&"experience_small": {
 		"asset": &"pickup/experience_master",
 		"shape": &"mechanical_shard_tier_1",

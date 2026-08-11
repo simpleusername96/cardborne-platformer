@@ -716,7 +716,7 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	var only_shared_minimap_roles := true
 	for marker_variant in minimap_markers:
 		if StringName(Dictionary(marker_variant).get("kind", &"")) not in [
-			&"field_pickup", &"reward_crate", &"mystery_device",
+			&"field_pickup", &"mystery_device",
 			&"mobile_enemy", &"priority_enemy", &"boss",
 			&"reinforcement_facility",
 		]:
@@ -1338,14 +1338,6 @@ func _minimap_snapshots_match(expected: Dictionary, actual: Dictionary) -> bool:
 
 
 func _check_hot_path_guards(run) -> void:
-	var live_crates := 0
-	for crate in run.crates:
-		if bool(crate["alive"]):
-			live_crates += 1
-	_expect(
-		int(run._live_crate_count) == live_crates,
-		"live crate count mirrors the populated collision set"
-	)
 	var open_from: Vector2 = run.player_position
 	var open_motion := Vector2(1.0, 0.0)
 	var open_cover: Array = run.call(
@@ -1443,32 +1435,6 @@ func _check_hot_path_guards(run) -> void:
 			24.0
 		)),
 		"three intact mystery devices participate in exact actor collision"
-	)
-	var collision_crate: Dictionary = {}
-	for crate in run.crates:
-		if bool(crate["alive"]):
-			collision_crate = crate
-			break
-	if not collision_crate.is_empty():
-		var crate_position := Vector2(collision_crate["pos"])
-		var crate_from := crate_position - Vector2(90.0, 0.0)
-		var crate_motion := Vector2(90.0, 0.0)
-		_expect(
-			Vector2(run.call("_move_actor", crate_from, crate_motion, 24.0, false))
-				!= crate_from + crate_motion,
-			"live crate collision remains exact after static certification"
-		)
-	else:
-		_expect(false, "stage fixture exposes a live collision crate")
-	for crate in run.crates:
-		if bool(crate["alive"]):
-			run.call("_damage_crate", crate, 9999.0)
-	_expect(int(run._live_crate_count) == 0, "destroying the final crate updates the live count")
-	_expect(
-		bool(run.call("_position_clear_of_crates", run.player_position, 31.0))
-			and not bool(run.call("_segment_hits_live_crate", run.player_position, run.player_position + Vector2.RIGHT * 100.0, 7.0))
-			and run.call("_first_live_crate_hit", run.player_position, run.player_position + Vector2.RIGHT * 100.0, 7.0)["crate"] == null,
-		"empty crate topology returns exact no-hit results"
 	)
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")

@@ -60,10 +60,6 @@ func pickup_blueprint() -> Array[Dictionary]:
 	return _duplicate_specs("pickups")
 
 
-func crate_blueprint() -> Array[Dictionary]:
-	return _duplicate_specs("crates")
-
-
 func mystery_device_blueprint() -> Array[Dictionary]:
 	return _duplicate_specs("mystery_devices")
 
@@ -117,7 +113,6 @@ func canonical_blueprint() -> Dictionary:
 		"ordinary_anchors":Array(ordinary_spawn_anchors),
 		"boss_anchors":Array(boss_arrival_anchors),
 		"pickups":_canonical_specs("pickups"),
-		"crates":_canonical_specs("crates"),
 		"mystery_devices":_canonical_specs("mystery_devices"),
 		"encounter_seed":encounter_seed,
 		"used_fallback":used_fallback,

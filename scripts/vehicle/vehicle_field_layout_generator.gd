@@ -298,35 +298,34 @@ static func _try_build_stage_objects(
 	var candidates: Array = _stage_scatter_candidates()
 	_shuffle(candidates, rng)
 	var devices: Array[Dictionary] = []
-	var crate_positions: Array[Vector2] = []
+	var reward_pickup_positions: Array[Vector2] = []
 	var pickup_positions: Array[Vector2] = []
 	for value in candidates:
 		if devices.size() == MYSTERY_DEVICE_COUNT:
 			break
 		var point := _snap_to_grid(Vector2(value))
-		if not _stage_point_valid(point, reachable, devices, crate_positions, pickup_positions, &"mystery_device"):
+		if not _stage_point_valid(point, reachable, devices, reward_pickup_positions, pickup_positions, &"mystery_device"):
 			continue
 		devices.append({
 			"id":"%s_mystery_%02d" % [String(stage_id), devices.size() + 1],
 			"pos":point,
 		})
 	for value in candidates:
-		if crate_positions.size() == 8:
+		if reward_pickup_positions.size() == 8:
 			break
 		var point := _snap_to_grid(Vector2(value))
-		if _stage_point_valid(point, reachable, devices, crate_positions, pickup_positions, &"crate"):
-			crate_positions.append(point)
+		if _stage_point_valid(point, reachable, devices, reward_pickup_positions, pickup_positions, &"reward_pickup"):
+			reward_pickup_positions.append(point)
 	for value in candidates:
 		if pickup_positions.size() == 6:
 			break
 		var point := _snap_to_grid(Vector2(value))
-		if _stage_point_valid(point, reachable, devices, crate_positions, pickup_positions, &"pickup"):
+		if _stage_point_valid(point, reachable, devices, reward_pickup_positions, pickup_positions, &"pickup"):
 			pickup_positions.append(point)
-	if devices.size() != MYSTERY_DEVICE_COUNT or crate_positions.size() != 8 or pickup_positions.size() != 6:
+	if devices.size() != MYSTERY_DEVICE_COUNT or reward_pickup_positions.size() != 8 or pickup_positions.size() != 6:
 		return {}
-	_prioritize_separated_recalls(crate_positions, pickup_positions)
+	_prioritize_separated_recalls(reward_pickup_positions, pickup_positions)
 	var pickups: Array[Dictionary] = []
-	var crates: Array[Dictionary] = []
 	for index in 6:
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + 1],
@@ -336,34 +335,34 @@ static func _try_build_stage_objects(
 		})
 	for index in 8:
 		var recall := index < 2
-		crates.append({
-			"id":"%s_crate_%02d" % [String(stage_id), index + 1],
-			"pos":crate_positions[index],
-			"drop":&"experience_recall" if recall else &"repair",
+		pickups.append({
+			"id":"%s_pickup_%02d" % [String(stage_id), index + 7],
+			"kind":&"experience_recall" if recall else &"repair",
 			"heal_amount":0.0 if recall else (
 				REPAIR_HEAL_MIN if index == 7 else REPAIR_HEAL_MAX
 			),
+			"pos":reward_pickup_positions[index],
 		})
-	return {"mystery_devices":devices, "pickups":pickups, "crates":crates}
+	return {"mystery_devices":devices, "pickups":pickups}
 
 
 static func _prioritize_separated_recalls(
-	crate_positions: Array[Vector2],
+	reward_pickup_positions: Array[Vector2],
 	pickup_positions: Array[Vector2]
 ) -> void:
-	var crate_index := 0
+	var reward_pickup_index := 0
 	var pickup_index := 0
 	var greatest_distance := -1.0
-	for crate in crate_positions.size():
+	for reward_pickup in reward_pickup_positions.size():
 		for pickup in pickup_positions.size():
-			var distance := crate_positions[crate].distance_squared_to(pickup_positions[pickup])
+			var distance := reward_pickup_positions[reward_pickup].distance_squared_to(pickup_positions[pickup])
 			if distance > greatest_distance:
 				greatest_distance = distance
-				crate_index = crate
+				reward_pickup_index = reward_pickup
 				pickup_index = pickup
-	var crate_first := crate_positions[0]
-	crate_positions[0] = crate_positions[crate_index]
-	crate_positions[crate_index] = crate_first
+	var reward_pickup_first := reward_pickup_positions[0]
+	reward_pickup_positions[0] = reward_pickup_positions[reward_pickup_index]
+	reward_pickup_positions[reward_pickup_index] = reward_pickup_first
 	var pickup_first := pickup_positions[0]
 	pickup_positions[0] = pickup_positions[pickup_index]
 	pickup_positions[pickup_index] = pickup_first
@@ -394,7 +393,7 @@ static func _stage_point_valid(
 	point: Vector2,
 	reachable: Dictionary,
 	devices: Array,
-	crate_positions: Array[Vector2],
+	reward_pickup_positions: Array[Vector2],
 	pickup_positions: Array[Vector2],
 	kind: StringName
 ) -> bool:
@@ -403,12 +402,12 @@ static func _stage_point_valid(
 	if feature_overlaps_circle(_field, point, 54.0):
 		return false
 	for device in devices:
-		var device_clearance := DEVICE_PAIR_CLEARANCE if kind == &"mystery_device" else (576.0 if kind == &"crate" else 480.0)
+		var device_clearance := DEVICE_PAIR_CLEARANCE if kind == &"mystery_device" else (576.0 if kind == &"reward_pickup" else 480.0)
 		if point.distance_to(Vector2(Dictionary(device)["pos"])) < device_clearance:
 			return false
-	for crate in crate_positions:
-		var crate_clearance := 672.0 if kind == &"crate" else 384.0
-		if point.distance_to(crate) < crate_clearance:
+	for reward_pickup in reward_pickup_positions:
+		var reward_pickup_clearance := 672.0 if kind == &"reward_pickup" else 384.0
+		if point.distance_to(reward_pickup) < reward_pickup_clearance:
 			return false
 	for pickup in pickup_positions:
 		if point.distance_to(pickup) < 384.0:

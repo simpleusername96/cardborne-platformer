@@ -737,7 +737,6 @@ func _capture_radar_minimap_roles() -> void:
 	minimap["player_facing"] = Vector2.RIGHT
 	minimap["markers"] = [
 		{"kind":&"field_pickup", "position":world_size * Vector2(0.12, 0.24), "discovered":true},
-		{"kind":&"reward_crate", "position":world_size * Vector2(0.27, 0.25), "discovered":true},
 		{"kind":&"mystery_device", "position":world_size * Vector2(0.42, 0.24), "discovered":true},
 		{"kind":&"mobile_enemy", "position":world_size * Vector2(0.61, 0.25), "discovered":true},
 		{"kind":&"priority_enemy", "position":world_size * Vector2(0.74, 0.25), "discovered":true},

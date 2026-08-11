@@ -11,7 +11,6 @@ const ActionGlyphRenderer = preload(
 const MINIMAP_GLYPHS: Array[StringName] = [
 	&"player",
 	&"field_pickup",
-	&"reward_crate",
 	&"mystery_device",
 	&"mobile_enemy",
 	&"priority_enemy",
@@ -20,7 +19,7 @@ const MINIMAP_GLYPHS: Array[StringName] = [
 ]
 const CORE_GLYPHS: Array[StringName] = [
 	&"primary", &"seeker", &"dash", &"emp", &"secondary", &"breach_ready",
-	&"player", &"field_pickup", &"reward_crate", &"mystery_device",
+	&"player", &"field_pickup", &"mystery_device",
 	&"mobile_enemy", &"priority_enemy", &"boss", &"reinforcement_facility",
 	&"repair", &"recall", &"target",
 	&"locked_silhouette",

@@ -20,8 +20,7 @@ func _initialize() -> void:
 		_expect(Catalog.world_rect(stage_id) == Rect2(0,0,7200,4320), "%s world bounds" % stage_id)
 		_expect(Catalog.player_start(stage_id) == Vector2(3600,2160), "%s center spawn" % stage_id)
 		_expect(layout.mystery_device_blueprint(stage_id).size() == 3, "%s scatters three mystery devices" % stage_id)
-		_expect(layout.pickup_blueprint(stage_id).size() == 6, "%s restocks six loose pickups" % stage_id)
-		_expect(layout.crate_blueprint(stage_id).size() == 8, "%s restocks eight crates" % stage_id)
+		_expect(layout.pickup_blueprint(stage_id).size() == 14, "%s restocks fourteen direct pickups" % stage_id)
 		_expect(Catalog.packets(stage_id).all(func(packet: Dictionary) -> bool: return StringName(packet["trigger"]["kind"]) == &"time"), "%s uses only timed arrivals" % stage_id)
 		var mobile_blueprint := Catalog.packet_enemy_blueprint(stage_id)
 		var mobile_projectile_count := mobile_blueprint.filter(

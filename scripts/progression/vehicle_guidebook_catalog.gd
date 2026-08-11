@@ -59,7 +59,6 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"object_experience", "category":&"objects", "entry_kind":&"object", "object_kind":&"experience", "name_key":"GUIDE_OBJECT_EXPERIENCE_NAME", "preview":{"kind":&"pickup", "id":&"experience"}},
 	{"id":&"object_repair", "category":&"objects", "entry_kind":&"object", "object_kind":&"repair", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "preview":{"kind":&"pickup", "id":&"repair"}},
 	{"id":&"object_recall", "category":&"objects", "entry_kind":&"object", "object_kind":&"recall", "name_key":"GUIDE_OBJECT_RECALL_NAME", "preview":{"kind":&"pickup", "id":&"experience_recall"}},
-	{"id":&"object_crate", "category":&"objects", "entry_kind":&"object", "object_kind":&"crate", "name_key":"GUIDE_OBJECT_CRATE_NAME", "preview":{"kind":&"pickup", "id":&"reward_crate"}},
 	{"id":&"object_mystery_device", "category":&"objects", "entry_kind":&"object", "object_kind":&"mystery_device", "name_key":"GUIDE_OBJECT_MYSTERY_DEVICE_NAME", "preview":{"kind":&"mystery_device"}},
 	{"id":&"object_transit_gate", "category":&"objects", "entry_kind":&"object", "object_kind":&"transit_gate", "name_key":"GUIDE_FACILITY_GATE_NAME", "preview":{"kind":&"facility", "id":&"transit_gate"}},
 ]

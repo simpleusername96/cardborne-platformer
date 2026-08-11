@@ -145,8 +145,6 @@ const FAR_SIMULATION_DISTANCE := 820.0
 const FAR_SIMULATION_DISTANCE_SQUARED := FAR_SIMULATION_DISTANCE * FAR_SIMULATION_DISTANCE
 const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
 const PICKUP_BODY_RADIUS := Art.PICKUP_PLINTH_RADIUS
-const CRATE_COLLISION_RADIUS := 31.0
-const CRATE_COLLISION_CELL_SIZE := 320.0
 const MYSTERY_GRAVITY_PULL_SPEED := 380.0
 const CHARGE_PATH_SAMPLE_STEP := 8.0
 const CHARGE_PATH_BINARY_STEPS := 8
@@ -250,9 +248,6 @@ var projectile_store := ProjectileStore.new()
 var player_projectiles: Array[ProjectileState] = projectile_store.player_live
 var hostile_projectiles: Array[ProjectileState] = projectile_store.hostile_live
 var pickups: Array[Dictionary] = []
-var crates: Array[Dictionary] = []
-var _crate_collision_cells: Dictionary = {}
-var _live_crate_count := 0
 var denied_zones: Array[Dictionary] = []
 var effect_store := EffectStore.new()
 var effects: Array[VehicleEffectState] = effect_store.live
@@ -261,7 +256,6 @@ var _projectile_cover_query: Array[Rect2] = []
 var _motion_cover_query: Array[Rect2] = []
 var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
-var _crate_hit_receipt: Dictionary = {"crate":null, "t":INF}
 var _mystery_device_hit_receipt: Dictionary = {}
 var _reinforcement_facility_hit_receipt: Dictionary = {}
 var _mystery_device_snapshot_buffer: Array[Dictionary] = []
@@ -819,7 +813,6 @@ func _reset_run(
 	_clear_enemies()
 	_clear_projectiles()
 	pickups.clear()
-	crates.clear()
 	denied_zones.clear()
 	_clear_effects()
 	encounter_runtime.configure(
@@ -918,7 +911,6 @@ func _configure_stage_map_runtime() -> void:
 
 func _populate_stage_items() -> void:
 	pickups.clear()
-	crates.clear()
 	for spec in _active_tactical_layout.pickup_blueprint():
 		pickups.append({
 			"id": String(spec["id"]),
@@ -928,19 +920,6 @@ func _populate_stage_items() -> void:
 			"pulse": _rng.randf_range(0.0, TAU),
 			"heal_amount": float(spec.get("heal_amount", 0.0)),
 		})
-	for spec in _active_tactical_layout.crate_blueprint():
-		crates.append({
-			"id": String(spec["id"]),
-			"pos": Vector2(spec["pos"]),
-			"drop": StringName(spec["drop"]),
-			"heal_amount": float(spec.get("heal_amount", 0.0)),
-			"health": 24.0,
-			"max_health": 24.0,
-			"alive": true,
-			"flash": 0.0,
-			"health_visible_timer": 0.0,
-		})
-	_rebuild_crate_collision_cells()
 
 
 func _configure_reinforcement_facility() -> void:
@@ -1694,9 +1673,7 @@ func _runtime_first_cover_hit(from: Vector2, to: Vector2, padding: float) -> Dic
 
 
 func _runtime_has_line_of_sight(from: Vector2, to: Vector2, padding: float) -> bool:
-	if not _runtime_cover_has_line_of_sight(from, to, padding):
-		return false
-	return not _segment_hits_live_crate(from, to, padding)
+	return _runtime_cover_has_line_of_sight(from, to, padding)
 
 
 func _runtime_cover_has_line_of_sight(
@@ -1725,16 +1702,11 @@ func _runtime_attack_path_end(
 		return origin
 	var desired := origin + normalized * distance
 	var cover_hit := _runtime_first_cover_hit(origin, desired, padding)
-	var result := (
+	return (
 		Vector2(cover_hit["point"])
 		if bool(cover_hit.get("hit", false))
 		else desired
 	)
-	var crate_hit := _first_live_crate_hit(origin, result, padding)
-	if crate_hit["crate"] == null:
-		return result
-	var hit_t := float(crate_hit["t"])
-	return origin.lerp(result, hit_t) if hit_t != INF else result
 
 
 func _runtime_charge_path_end(
@@ -1972,12 +1944,6 @@ func _update_pickups(
 	motion_start: Vector2,
 	motion_end: Vector2
 ) -> void:
-	for crate in crates:
-		crate["flash"] = maxf(0.0, float(crate["flash"]) - delta)
-		crate["health_visible_timer"] = maxf(
-			0.0,
-			float(crate.get("health_visible_timer", 0.0)) - delta
-		)
 	for pickup in pickups:
 		if not bool(pickup["active"]):
 			continue
@@ -3397,38 +3363,6 @@ func _position_clear_of_stage_objects(position: Vector2, actor_radius: float) ->
 		return false
 	if not mystery_device_runtime.is_position_clear(position, actor_radius):
 		return false
-	return _position_clear_of_crates(
-		position, actor_radius + CRATE_COLLISION_RADIUS
-	)
-
-
-func _position_clear_of_crates(position: Vector2, clearance: float) -> bool:
-	if _live_crate_count <= 0:
-		return true
-	var minimum := position - Vector2.ONE * clearance
-	var maximum := position + Vector2.ONE * clearance
-	var min_cell := Vector2i(
-		floori(minimum.x / CRATE_COLLISION_CELL_SIZE),
-		floori(minimum.y / CRATE_COLLISION_CELL_SIZE)
-	)
-	var max_cell := Vector2i(
-		floori(maximum.x / CRATE_COLLISION_CELL_SIZE),
-		floori(maximum.y / CRATE_COLLISION_CELL_SIZE)
-	)
-	var clearance_squared := clearance * clearance
-	for cell_y in range(min_cell.y, max_cell.y + 1):
-		for cell_x in range(min_cell.x, max_cell.x + 1):
-			var cell := Vector2i(cell_x, cell_y)
-			if not _crate_collision_cells.has(cell):
-				continue
-			var bucket: Array = _crate_collision_cells[cell]
-			for crate in bucket:
-				if (
-					bool(crate["alive"])
-					and position.distance_squared_to(Vector2(crate["pos"]))
-						< clearance_squared
-				):
-					return false
 	return true
 
 
@@ -3523,16 +3457,8 @@ func _update_projectile_buffer(
 		)
 		if not projectile.wall_piercing and not facility_is_first_structure:
 			var cover_hit := _runtime_first_cover_hit(from, to, radius)
-			var mystery_before_crate := true
-			if mystery_hit:
-				var crate_receipt := _first_live_crate_hit(from, to, radius)
-				mystery_before_crate = (
-					float(_mystery_device_hit_receipt["t"])
-					< float(crate_receipt["t"])
-				)
 			if (
 				mystery_hit
-				and mystery_before_crate
 				and (
 					not bool(cover_hit.get("hit", false))
 					or float(_mystery_device_hit_receipt["t"])
@@ -3559,9 +3485,6 @@ func _update_projectile_buffer(
 					index += 1
 					continue
 				_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
-				_remove_projectile_at(hostile, index)
-				continue
-			if _projectile_hits_crate(projectile, from, to, not hostile):
 				_remove_projectile_at(hostile, index)
 				continue
 		elif mystery_hit and not facility_is_first_structure:
@@ -3782,134 +3705,6 @@ func _player_projectile_contact(
 		best.intercept_recharge = 4.0
 		return true
 	return best
-
-
-func _segment_hits_live_crate(from: Vector2, to: Vector2, padding: float) -> bool:
-	if _live_crate_count <= 0:
-		return false
-	var clearance := CRATE_COLLISION_RADIUS + padding
-	var minimum := (
-		Vector2(minf(from.x, to.x), minf(from.y, to.y))
-		- Vector2.ONE * clearance
-	)
-	var maximum := (
-		Vector2(maxf(from.x, to.x), maxf(from.y, to.y))
-		+ Vector2.ONE * clearance
-	)
-	var min_cell := Vector2i(
-		floori(minimum.x / CRATE_COLLISION_CELL_SIZE),
-		floori(minimum.y / CRATE_COLLISION_CELL_SIZE)
-	)
-	var max_cell := Vector2i(
-		floori(maximum.x / CRATE_COLLISION_CELL_SIZE),
-		floori(maximum.y / CRATE_COLLISION_CELL_SIZE)
-	)
-	for cell_y in range(min_cell.y, max_cell.y + 1):
-		for cell_x in range(min_cell.x, max_cell.x + 1):
-			var cell := Vector2i(cell_x, cell_y)
-			if not _crate_collision_cells.has(cell):
-				continue
-			var bucket: Array = _crate_collision_cells[cell]
-			for crate in bucket:
-				if (
-					bool(crate["alive"])
-					and AttackContract.segment_circle_first_t(
-						from,
-						to,
-						Vector2(crate["pos"]),
-						clearance
-					) != INF
-				):
-					return true
-	return false
-
-
-func _first_live_crate_hit(from: Vector2, to: Vector2, padding: float) -> Dictionary:
-	if _live_crate_count <= 0:
-		_crate_hit_receipt["crate"] = null
-		_crate_hit_receipt["t"] = INF
-		return _crate_hit_receipt
-	var clearance := CRATE_COLLISION_RADIUS + padding
-	var minimum := Vector2(minf(from.x, to.x), minf(from.y, to.y)) - Vector2.ONE * clearance
-	var maximum := Vector2(maxf(from.x, to.x), maxf(from.y, to.y)) + Vector2.ONE * clearance
-	var min_cell := Vector2i(floori(minimum.x / CRATE_COLLISION_CELL_SIZE), floori(minimum.y / CRATE_COLLISION_CELL_SIZE))
-	var max_cell := Vector2i(floori(maximum.x / CRATE_COLLISION_CELL_SIZE), floori(maximum.y / CRATE_COLLISION_CELL_SIZE))
-	_crate_hit_receipt["crate"] = null
-	_crate_hit_receipt["t"] = INF
-	for cell_y in range(min_cell.y, max_cell.y + 1):
-		for cell_x in range(min_cell.x, max_cell.x + 1):
-			var cell := Vector2i(cell_x, cell_y)
-			if not _crate_collision_cells.has(cell):
-				continue
-			var bucket: Array = _crate_collision_cells[cell]
-			for crate in bucket:
-				if not bool(crate["alive"]):
-					continue
-				var crate_position := Vector2(crate["pos"])
-				var hit_t := AttackContract.segment_circle_first_t(
-					from,
-					to,
-					crate_position,
-					clearance
-				)
-				if hit_t < float(_crate_hit_receipt["t"]):
-					_crate_hit_receipt["t"] = hit_t
-					_crate_hit_receipt["crate"] = crate
-	return _crate_hit_receipt
-
-
-func _projectile_hits_crate(
-	projectile: ProjectileState,
-	from: Vector2,
-	to: Vector2,
-	damage_crate: bool
-) -> bool:
-	var crate_receipt := _first_live_crate_hit(from, to, projectile.radius)
-	var crate_hit: Variant = crate_receipt["crate"]
-	if crate_hit == null:
-		return false
-	if damage_crate:
-		_damage_crate(crate_hit, projectile.structure_damage)
-	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
-	return true
-
-
-func _rebuild_crate_collision_cells() -> void:
-	_crate_collision_cells.clear()
-	_live_crate_count = 0
-	for crate in crates:
-		if bool(crate["alive"]):
-			_live_crate_count += 1
-		var position := Vector2(crate["pos"])
-		var cell := Vector2i(
-			floori(position.x / CRATE_COLLISION_CELL_SIZE),
-			floori(position.y / CRATE_COLLISION_CELL_SIZE)
-		)
-		if not _crate_collision_cells.has(cell):
-			_crate_collision_cells[cell] = []
-		var bucket: Array = _crate_collision_cells[cell]
-		bucket.append(crate)
-
-
-func _damage_crate(crate: Dictionary, amount: float) -> void:
-	if not bool(crate["alive"]):
-		return
-	crate["health"] = float(crate["health"]) - amount
-	crate["flash"] = 0.12
-	crate["health_visible_timer"] = 1.5
-	if float(crate["health"]) > 0.0:
-		return
-	crate["alive"] = false
-	_live_crate_count = maxi(0, _live_crate_count - 1)
-	pickups.append({
-		"id": "%s_drop" % String(crate["id"]),
-		"kind": StringName(crate["drop"]),
-		"pos": Vector2(crate["pos"]),
-		"active": true,
-		"pulse": 0.0,
-		"heal_amount": float(crate.get("heal_amount", 0.0)),
-	})
-	_play_sound(&"destroy", 1.35)
 
 
 func _find_enemy_by_id(enemy_id: String) -> EnemyState:
@@ -4483,8 +4278,7 @@ func _reinforcement_facility_hit_is_first(
 	var cover_hit := _runtime_first_cover_hit(from, to, radius)
 	if bool(cover_hit.get("hit", false)) and float(cover_hit.get("t", INF)) <= facility_t:
 		return false
-	var crate_hit := _first_live_crate_hit(from, to, radius)
-	return float(crate_hit.get("t", INF)) > facility_t
+	return true
 
 
 func _damage_reinforcement_facility(
@@ -5406,7 +5200,6 @@ func _begin_stage_transition() -> void:
 	_clear_enemies()
 	_clear_projectiles()
 	pickups.clear()
-	crates.clear()
 	denied_zones.clear()
 	_clear_effects()
 	encounter_runtime.configure(
@@ -5679,13 +5472,6 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 				"position":Vector2(pickup["pos"]),
 				"discovered":true,
 			})
-	for crate in crates:
-		if bool(crate["alive"]):
-			markers.append({
-				"kind":&"reward_crate",
-				"position":Vector2(crate["pos"]),
-				"discovered":true,
-			})
 	mystery_device_runtime.fill_device_snapshot(
 		_mystery_device_snapshot_buffer
 	)
@@ -5751,11 +5537,6 @@ func _runtime_minimap_snapshot(
 		if bool(pickup["active"]):
 			_append_runtime_minimap_marker(
 				frame_index, markers, &"field_pickup", Vector2(pickup["pos"])
-			)
-	for crate in crates:
-		if bool(crate["alive"]):
-			_append_runtime_minimap_marker(
-				frame_index, markers, &"reward_crate", Vector2(crate["pos"])
 			)
 	mystery_device_runtime.fill_device_snapshot(
 		_mystery_device_snapshot_buffer
@@ -6041,7 +5822,7 @@ func _reset_threat_radar_feed() -> void:
 
 func _draw() -> void:
 	_draw_terrain()
-	_draw_pickups_and_crates()
+	_draw_pickups()
 	if _debug_collision_overlay:
 		_draw_debug_collision_overlay()
 
@@ -6100,7 +5881,7 @@ func _draw_closed_polyline(polygon: PackedVector2Array, color: Color, width: flo
 	draw_polyline(loop, color, width, true)
 
 
-func _draw_pickups_and_crates() -> void:
+func _draw_pickups() -> void:
 	for pickup in pickups:
 		if not bool(pickup["active"]):
 			continue
@@ -6128,31 +5909,6 @@ func _draw_pickups_and_crates() -> void:
 			visual_radius,
 			Art.PLAYER_REWARD if is_experience else Color.WHITE
 		)
-	for crate in crates:
-		if not bool(crate["alive"]):
-			continue
-		var position := Vector2(crate["pos"])
-		var face := (
-			Art.IVORY_BRIGHT
-			if float(crate["flash"]) > 0.0
-			else Art.PLAYER_REWARD
-		)
-		var content_color := (
-			Art.SUPPORT
-			if StringName(crate["drop"]) == &"repair"
-			else Art.SYSTEM
-		)
-		_draw_semantic_asset(
-			&"pickup/reward_crate",
-			position,
-			38.0,
-			Color(
-				face.lerp(content_color, 0.12),
-				1.0
-			)
-		)
-
-
 func _draw_semantic_asset(
 	asset_id: StringName,
 	center: Vector2,

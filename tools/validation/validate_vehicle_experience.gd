@@ -38,13 +38,9 @@ func _validate_stage_items() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, Catalog.STAGE_IDS)
 	for stage_id in Catalog.STAGE_IDS:
 		var pickups := layout.pickup_blueprint(stage_id)
-		_expect(pickups.size() == 6, "%s has six authored loose pickups" % stage_id)
-		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").size() == 4, "%s has four loose repair pickups" % stage_id)
-		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s has two loose recall pickups" % stage_id)
-		var crates := layout.crate_blueprint(stage_id)
-		_expect(crates.size() == 8, "%s has eight crates" % stage_id)
-		_expect(crates.filter(func(item): return StringName(item["drop"]) == &"repair").size() == 6, "%s crates contain six repairs" % stage_id)
-		_expect(crates.filter(func(item): return StringName(item["drop"]) == &"experience_recall").size() == 2, "%s crates contain two recalls" % stage_id)
+		_expect(pickups.size() == 14, "%s has fourteen authored direct pickups" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").size() == 10, "%s has ten direct repair pickups" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 4, "%s has four direct recall pickups" % stage_id)
 
 
 func _validate_experience_runtime() -> void:

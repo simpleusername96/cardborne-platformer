@@ -46,11 +46,6 @@ func pickup_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	return layout.pickup_blueprint() if layout != null else []
 
 
-func crate_blueprint(stage_id: StringName) -> Array[Dictionary]:
-	var layout := tactical_layout(stage_id)
-	return layout.crate_blueprint() if layout != null else []
-
-
 func mystery_device_blueprint(stage_id: StringName) -> Array[Dictionary]:
 	var layout := tactical_layout(stage_id)
 	return layout.mystery_device_blueprint() if layout != null else []

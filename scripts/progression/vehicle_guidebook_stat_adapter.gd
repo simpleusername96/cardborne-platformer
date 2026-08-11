@@ -191,8 +191,6 @@ static func object_rows(object_kind: StringName) -> Array[Dictionary]:
 			)]
 		&"recall":
 			return [_row("GUIDE_STAT_EFFECT", "GUIDE_VALUE_RECALL", [], &"effect")]
-		&"crate":
-			return [_row("GUIDE_STAT_DROP", "GUIDE_VALUE_CRATE_DROP", [], &"effect")]
 		&"mystery_device":
 			return [
 				_row(

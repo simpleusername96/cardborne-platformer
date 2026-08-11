@@ -48,10 +48,10 @@ func _validate_field(field_id: StringName) -> void:
 		"%s runtime exposes no mutable bulkhead API" % field_id
 	)
 	for stage_id in Catalog.STAGE_IDS:
-		var crates := layout.crate_blueprint(stage_id)
-		_expect(crates.size() == 8, "%s/%s keeps eight independently placed crates" % [field_id, stage_id])
-		for crate in crates:
-			_expect(not Dictionary(crate).has("guarded_by"), "%s/%s crate has no terrain guard" % [field_id, stage_id])
+		var pickups := layout.pickup_blueprint(stage_id)
+		_expect(pickups.size() == 14, "%s/%s exposes fourteen direct pickups" % [field_id, stage_id])
+		for pickup in pickups:
+			_expect(not Dictionary(pickup).has("guarded_by"), "%s/%s pickup has no terrain guard" % [field_id, stage_id])
 
 
 func _validate_mystery_device_authority() -> void:

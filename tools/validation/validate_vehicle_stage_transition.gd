@@ -114,7 +114,7 @@ func _check_stage_one_to_three(run) -> void:
 			and run.player_invulnerable >= 1.2,
 		"transition fully repairs the hull and grants the authored safety window"
 	)
-	_expect(run.pickups.size() == 6 and run.crates.size() == 8, "Stage 2 items refresh to six loose and eight crates")
+	_expect(run.pickups.size() == 14, "Stage 2 refreshes fourteen direct pickups")
 	_expect(run.completed_stage_reports.size() == 1, "Stage 1 telemetry is retained in run history")
 	var ui = run.get_node_or_null("VehicleStageUI")
 	_expect(

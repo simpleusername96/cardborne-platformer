@@ -99,7 +99,6 @@ func _add_pickup(pickup_id: StringName) -> void:
 		&"experience":&"pickup/experience_master",
 		&"repair":&"pickup/repair",
 		&"experience_recall":&"pickup/experience_recall",
-		&"reward_crate":&"pickup/reward_crate",
 	}.get(pickup_id, &"pickup/experience_master"))
 	_add_asset(asset_id, 72.0)
 

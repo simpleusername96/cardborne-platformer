@@ -57,8 +57,7 @@ func _validate_field(field_id: StringName) -> void:
 		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s/%s retains at least 20 ordinary anchors" % [field_id, stage_id])
 		_expect(tactical.boss_arrival_anchors.size() >= 8, "%s/%s retains at least eight boss anchors" % [field_id, stage_id])
 		_expect(fixed.mystery_device_blueprint(stage_id).size() == 3, "%s/%s has three mystery devices" % [field_id, stage_id])
-		_expect(fixed.pickup_blueprint(stage_id).size() == 6, "%s/%s has six loose pickups" % [field_id, stage_id])
-		_expect(fixed.crate_blueprint(stage_id).size() == 8, "%s/%s has eight crates" % [field_id, stage_id])
+		_expect(fixed.pickup_blueprint(stage_id).size() == 14, "%s/%s has fourteen direct pickups" % [field_id, stage_id])
 		_validate_stage_objects(fixed, stage_id)
 		_validate_stage_spacing(fixed, stage_id)
 
@@ -112,23 +111,13 @@ func _validate_no_feature_overlaps(
 					layout.field_id, stage_id
 				]
 			)
-		for spec in layout.crate_blueprint(stage_id):
-			_expect(
-				not Generator.feature_overlaps_circle(
-					definition, Vector2(spec["pos"]), 54.0
-				),
-				"%s/%s crate avoids functional terrain" % [
-					layout.field_id, stage_id
-				]
-			)
 
 
 func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -> void:
 	var positions: Array[Vector2] = []
 	var occupied_sectors := {}
 	var repair_values: Array[float] = []
-	var loose_recall_count := 0
-	var crate_recall_count := 0
+	var recall_count := 0
 	for spec in layout.pickup_blueprint(stage_id):
 		var position := Vector2(spec["pos"])
 		positions.append(position)
@@ -136,25 +125,14 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 			_item_sector(position, Vector2(layout.field_definition["player_start"]))
 		] = true
 		if StringName(spec["kind"]) == &"experience_recall":
-			loose_recall_count += 1
-		else:
-			repair_values.append(float(spec["heal_amount"]))
-	for spec in layout.crate_blueprint(stage_id):
-		var position := Vector2(spec["pos"])
-		positions.append(position)
-		occupied_sectors[
-			_item_sector(position, Vector2(layout.field_definition["player_start"]))
-		] = true
-		if StringName(spec["drop"]) == &"experience_recall":
-			crate_recall_count += 1
+			recall_count += 1
 		else:
 			repair_values.append(float(spec["heal_amount"]))
 	for first in positions.size():
 		for second in range(first + 1, positions.size()):
 			_expect(positions[first].distance_to(positions[second]) >= 180.0, "%s item sockets keep pair clearance" % stage_id)
 	_expect(occupied_sectors.size() >= 4, "%s items occupy at least four field sectors" % stage_id)
-	_expect(loose_recall_count == 2, "%s keeps two loose recall pickups" % stage_id)
-	_expect(crate_recall_count == 2, "%s keeps two crate recall drops" % stage_id)
+	_expect(recall_count == 4, "%s keeps four direct recall pickups" % stage_id)
 	var fifty_count := repair_values.count(50.0)
 	var forty_count := repair_values.count(40.0)
 	var repair_total := 0.0
@@ -171,9 +149,6 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 	for spec in layout.pickup_blueprint(stage_id):
 		if StringName(spec["kind"]) == &"experience_recall":
 			recall_positions.append(Vector2(spec["pos"]))
-	for spec in layout.crate_blueprint(stage_id):
-		if StringName(spec["drop"]) == &"experience_recall":
-			recall_positions.append(Vector2(spec["pos"]))
 	_expect(
 		recall_positions.size() == 4 and _maximum_pair_distance(recall_positions) >= 1200.0,
 		"%s four recall sources include a separated pair" % stage_id
@@ -182,7 +157,6 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 
 func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -> void:
 	var devices := layout.mystery_device_blueprint(stage_id)
-	var crates := layout.crate_blueprint(stage_id)
 	var pickups := layout.pickup_blueprint(stage_id)
 	var gates: Array = layout.run_feature_blueprint().filter(
 		func(feature: Dictionary) -> bool: return StringName(feature["kind"]) == &"transit_gate"
@@ -193,20 +167,18 @@ func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -
 			_expect(device_pos.distance_to(Vector2(devices[second]["pos"])) >= 960.0, "%s devices keep 960 spacing" % stage_id)
 		for gate in gates:
 			_expect(device_pos.distance_to(Vector2(gate["pos"])) >= 576.0, "%s device avoids gate" % stage_id)
-	for first in crates.size():
-		var crate_pos := Vector2(crates[first]["pos"])
-		for second in range(first + 1, crates.size()):
-			_expect(crate_pos.distance_to(Vector2(crates[second]["pos"])) >= 672.0, "%s crates keep 672 spacing" % stage_id)
-		for device in devices:
-			_expect(crate_pos.distance_to(Vector2(device["pos"])) >= 576.0, "%s crate avoids device" % stage_id)
 	for first in pickups.size():
 		var pickup_pos := Vector2(pickups[first]["pos"])
 		for second in range(first + 1, pickups.size()):
 			_expect(pickup_pos.distance_to(Vector2(pickups[second]["pos"])) >= 384.0, "%s pickups keep 384 spacing" % stage_id)
-		for crate in crates:
-			_expect(pickup_pos.distance_to(Vector2(crate["pos"])) >= 384.0, "%s pickup avoids crate" % stage_id)
 		for device in devices:
 			_expect(pickup_pos.distance_to(Vector2(device["pos"])) >= 480.0, "%s pickup avoids device" % stage_id)
+	for first in range(6, pickups.size()):
+		var reward_pickup_pos := Vector2(pickups[first]["pos"])
+		for second in range(first + 1, pickups.size()):
+			_expect(reward_pickup_pos.distance_to(Vector2(pickups[second]["pos"])) >= 672.0, "%s converted reward pickups keep their authored spacing" % stage_id)
+		for device in devices:
+			_expect(reward_pickup_pos.distance_to(Vector2(device["pos"])) >= 576.0, "%s converted reward pickup avoids device" % stage_id)
 
 
 func _item_sector(position: Vector2, center: Vector2) -> int:

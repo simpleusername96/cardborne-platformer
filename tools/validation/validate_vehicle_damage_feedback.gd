@@ -184,50 +184,6 @@ func _run() -> void:
 		_expect(is_equal_approx(float(player_projectiles[0].radius), 7.0), "default player projectile uses the larger seven-unit collision radius")
 		_expect(not bool(player_projectiles[0].wall_piercing), "default player projectile cannot cross solid blockers")
 
-	var crates: Array = stage.get("crates")
-	var crate: Dictionary = crates[0]
-	var crate_position := Vector2(crate["pos"])
-	var crate_health := float(crate["health"])
-	var isolated_crates: Array[Dictionary] = [crate]
-	stage.set("crates", isolated_crates)
-	stage.call("_rebuild_crate_collision_cells")
-	var crate_test_direction := _find_clear_crate_test_direction(stage, crate_position)
-	_expect(not crate_test_direction.is_zero_approx(), "crate fixture finds a path clear of generated cover")
-	if not crate_test_direction.is_zero_approx():
-		var crate_from := crate_position - crate_test_direction * 100.0
-		var crate_to := crate_position + crate_test_direction * 100.0
-		stage.set("player_position", crate_position + crate_test_direction.rotated(PI * 0.5) * 200.0)
-		_expect(
-			bool(stage.call("_segment_hits_live_crate", crate_from, crate_to, 5.0)),
-			"crate broadphase reports the live movement blocker"
-		)
-		projectile_store.call("clear")
-		stage.call(
-			"_spawn_hostile_projectile",
-			crate_from,
-			crate_test_direction,
-			4.0,
-			500.0,
-			"validation crate"
-		)
-		stage.call("_update_projectiles", 0.5)
-		_expect(projectile_store.call("hostile_count") == 0, "default hostile projectile stops at a live crate")
-		_expect(is_equal_approx(float(crate["health"]), crate_health), "hostile projectile uses a crate as cover without destroying the reward")
-		_expect(
-			not bool(stage.call("_runtime_has_line_of_sight", crate_from, crate_to, 5.0)),
-			"live crate blocks enemy projectile line of sight"
-		)
-		var crate_path_end := Vector2(stage.call(
-			"_runtime_attack_path_end",
-			crate_from,
-			crate_test_direction,
-			200.0,
-			5.0
-		))
-		_expect(
-			crate_path_end.is_equal_approx(crate_position - crate_test_direction * 36.0),
-			"projectile warning stops at the same live-crate contact boundary"
-		)
 	_check_emp_footprint_results(stage)
 	_check_attack_telegraphs(stage)
 
@@ -241,20 +197,6 @@ func _run() -> void:
 	stage.queue_free()
 	await process_frame
 	_finish()
-
-
-func _find_clear_crate_test_direction(stage: Node, crate_position: Vector2) -> Vector2:
-	for index in range(16):
-		var direction := Vector2.RIGHT.rotated(TAU * float(index) / 16.0)
-		var cover_hit: Dictionary = stage.call(
-			"_runtime_first_cover_hit",
-			crate_position - direction * 100.0,
-			crate_position + direction * 100.0,
-			5.0
-		)
-		if not bool(cover_hit.get("hit", false)):
-			return direction
-	return Vector2.ZERO
 
 
 func _check_emp_footprint_results(stage: Node) -> void:

@@ -13,8 +13,6 @@ const BOSS_OUTER_RADIUS := 10.0
 const BOSS_INNER_RADIUS := 7.6
 const FIELD_PICKUP_SIZE := Vector2(12.0, 7.6)
 const FIELD_PICKUP_POLYGON_AREA := 68.4
-const REWARD_CRATE_SIZE := Vector2(9.0, 9.0)
-const REWARD_CRATE_POLYGON_AREA := 73.40625
 const MYSTERY_DEVICE_SCALE := 1.20
 
 
@@ -75,8 +73,6 @@ static func marker_size_contract() -> Dictionary:
 		"boss_inner": BOSS_INNER_RADIUS,
 		"field_pickup_size": FIELD_PICKUP_SIZE,
 		"field_pickup_polygon_area": FIELD_PICKUP_POLYGON_AREA,
-		"reward_crate_size": REWARD_CRATE_SIZE,
-		"reward_crate_polygon_area": REWARD_CRATE_POLYGON_AREA,
 		"mystery_device_scale": MYSTERY_DEVICE_SCALE,
 	}
 
@@ -157,8 +153,6 @@ static func _append_markers(
 		match kind:
 			&"field_pickup":
 				_append_field_pickup_marker(vertices, colors, indices, point)
-			&"reward_crate":
-				_append_reward_crate_marker(vertices, colors, indices, point)
 			&"mystery_device":
 				_append_mystery_device_marker(vertices, colors, indices, point)
 			&"mobile_enemy":
@@ -214,27 +208,6 @@ static func _append_field_pickup_marker(
 	])
 	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
 	_append_scaled_polygon(vertices, colors, indices, outer, center, 0.68, Art.SUPPORT)
-
-
-static func _append_reward_crate_marker(
-	vertices: Array[Vector3],
-	colors: Array[Color],
-	indices: Array[int],
-	center: Vector2
-) -> void:
-	var half_size := REWARD_CRATE_SIZE * 0.5
-	var outer := PackedVector2Array([
-		center + Vector2(-half_size.x, -half_size.y),
-		center + Vector2(half_size.x * 0.25, -half_size.y),
-		center + Vector2(half_size.x * 0.25, -half_size.y * 0.5),
-		center + Vector2(half_size.x, -half_size.y * 0.5),
-		center + Vector2(half_size.x, half_size.y),
-		center + Vector2(-half_size.x, half_size.y),
-	])
-	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
-	_append_scaled_polygon(
-		vertices, colors, indices, outer, center, 0.68, Art.PLAYER_REWARD
-	)
 
 
 static func _append_mystery_device_marker(
