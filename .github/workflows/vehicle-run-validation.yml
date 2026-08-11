@@ -30,8 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ITCH_GAME_TITLE: Cardborne
-  ITCH_GAME_MATCH: cardborne
+  ITCH_PROJECT_URL: https://itchioprofile1351321.itch.io/iron-breakthrough
 
 jobs:
   validate-build-render:
@@ -69,15 +68,13 @@ jobs:
           $headers = @{ Authorization = "Bearer $env:BUTLER_API_KEY" }
           $profile = Invoke-RestMethod -Uri 'https://api.itch.io/profile' -Headers $headers
           $response = Invoke-RestMethod -Uri 'https://api.itch.io/profile/games' -Headers $headers
+          $expectedUrl = ([Uri]$env:ITCH_PROJECT_URL).AbsoluteUri.TrimEnd('/')
           $matches = @($response.games | Where-Object {
               $candidateUrl = [Uri]$_.url
-              $candidateSlug = $candidateUrl.AbsolutePath.Trim('/')
-              $_.title -ieq $env:ITCH_GAME_TITLE -or
-                  $_.title -ilike "*$env:ITCH_GAME_MATCH*" -or
-                  $candidateSlug -ilike "*$env:ITCH_GAME_MATCH*"
+              $candidateUrl.AbsoluteUri.TrimEnd('/') -ieq $expectedUrl
           })
           if ($matches.Count -ne 1) {
-              throw "Expected one itch.io project matching '$env:ITCH_GAME_MATCH', found $($matches.Count)."
+              throw "Expected one itch.io project at '$expectedUrl', found $($matches.Count)."
           }
 
           $gameUrl = [Uri]$matches[0].url
