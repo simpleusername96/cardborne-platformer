@@ -341,7 +341,10 @@ func _check_attack_telegraphs(stage: Node) -> void:
 	_expect(boss.attack_telegraphs.size() == 4, "furnace startup exposes its area and three aimed projectiles")
 	_expect(
 		StringName(boss.attack_telegraphs[0]["shape"]) == &"area"
-			and is_equal_approx(float(boss.attack_telegraphs[0]["radius"]), 230.0),
+			and is_equal_approx(
+				float(boss.attack_telegraphs[0]["radius"]),
+				BossPatterns.radius("furnace_ring", 0)
+			),
 		"furnace warning uses the exact direct-damage radius"
 	)
 	for warning in boss.attack_telegraphs:

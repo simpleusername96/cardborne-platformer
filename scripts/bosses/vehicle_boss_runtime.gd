@@ -164,7 +164,7 @@ func update_active(
 		var area_damage := AttackContract.radial_damage(
 			damage,
 			services.player_position.distance_to(boss.committed_target),
-			Patterns.radius(pattern)
+			Patterns.radius(pattern, stage_index)
 		)
 		if area_damage > 0.0 and not boss.hit_committed:
 			boss.hit_committed = true

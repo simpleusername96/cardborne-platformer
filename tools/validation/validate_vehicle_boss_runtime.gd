@@ -8,6 +8,35 @@ const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.
 var _failures: Array[String] = []
 
 
+class BossServiceStub:
+	extends RefCounted
+
+	var player_position := Vector2.ZERO
+	var damage_calls := 0
+
+
+	func _boss_fire_aimed_burst(
+		_boss: EnemyState,
+		_pattern: String,
+		_damage: float
+	) -> void:
+		pass
+
+
+	func _damage_player(
+		_damage: float,
+		_source: String,
+		_is_contact: bool,
+		_is_hostile: bool,
+		_is_boss: bool
+	) -> void:
+		damage_calls += 1
+
+
+	func _on_boss_direct_attack_complete(_boss: EnemyState) -> void:
+		pass
+
+
 func _init() -> void:
 	var runtime := BossRuntime.new()
 	var previous_gap := INF
@@ -84,7 +113,29 @@ func _init() -> void:
 		runtime.read_gap(1) > runtime.read_gap(3),
 		"direct-pattern read cadence escalates without owning semantic phase floors"
 	)
+	_validate_late_stage_direct_area_coverage(runtime)
 	_finish()
+
+
+func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
+	runtime.configure(&"stage_5")
+	var pattern := "furnace_ring"
+	var default_radius := BossPatterns.radius(pattern)
+	var stage_radius := BossPatterns.radius(pattern, 4)
+	var services := BossServiceStub.new()
+	services.player_position = Vector2((default_radius + stage_radius) * 0.5, 0.0)
+	var boss := _boss()
+	boss.pattern = StringName(pattern)
+	boss.phase = &"boss_active"
+	boss.phase_time = 0.5
+	boss.pattern_volleys = 0
+	boss.hit_committed = false
+	boss.committed_target = Vector2.ZERO
+	runtime.update_active(boss, 0.01, services)
+	_expect(
+		services.damage_calls == 1,
+		"stage 5 direct area damage reaches beyond the default boss footprint"
+	)
 
 
 func _boss() -> EnemyState:

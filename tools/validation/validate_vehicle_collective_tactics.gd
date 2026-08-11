@@ -201,7 +201,10 @@ func _validate_source_boundaries() -> void:
 		"TACTIC_COUNTER_REPAIR_NETWORK",
 		"TACTIC_COUNTER_CROSSFIRE",
 	]:
-		_expect(guide_source.contains(key), "guidebook exposes %s" % key)
+		_expect(
+			not guide_source.contains(key),
+			"guidebook keeps movement and counterplay prose out of stat entries: %s" % key
+		)
 
 
 func _enemy(
