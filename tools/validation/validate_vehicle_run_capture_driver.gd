@@ -79,6 +79,10 @@ func _initialize() -> void:
 		not driver_source.contains("._capture_"),
 		"driver does not access VehicleRun private capture hooks"
 	)
+	_expect(
+		not gateway_source.contains("_run.crates"),
+		"capture gateway does not reference the retired crate runtime"
+	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 42, "core manifest has 42 captures")
 	_expect(Driver.FULL_CAPTURE_FILES.size() == 122, "full manifest has 122 captures")
 	for required_capture in [

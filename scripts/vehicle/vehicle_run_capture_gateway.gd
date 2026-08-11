@@ -827,7 +827,6 @@ func _publish_threat_fixture(
 func _capture_field_item_evidence() -> void:
 	prepare_stage(0)
 	_run._clear_enemies()
-	_run.crates.clear()
 	_run.pickups.clear()
 	_run.player_health = 64.0
 	_run.pickups.append({"id":"capture_repair", "kind":&"repair", "pos":_run.player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":70.0})
@@ -843,7 +842,6 @@ func _capture_field_item_evidence() -> void:
 func _capture_reinforcement_facility_evidence() -> void:
 	prepare_stage(0)
 	_run._clear_enemies()
-	_run.crates.clear()
 	_run.pickups.clear()
 	_run.reinforcement_facility_runtime.configure(
 		0, _run.player_position + Vector2(360.0, 0.0)
@@ -860,7 +858,6 @@ func _capture_structural_health_bar_evidence() -> void:
 	prepare_stage(2)
 	_run._clear_enemies()
 	_run.pickups.clear()
-	_run.crates.clear()
 	var mobile: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_mobile_without_health_bar",
 		"role":&"chaser",
