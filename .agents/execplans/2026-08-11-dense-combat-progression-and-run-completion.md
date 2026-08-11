@@ -452,7 +452,7 @@ outgoing policy에, 대시 완료 효과는 dash runtime에, 회복 분리는 re
 - [x] `M0` 성능 연구와 업그레이드 아이디어를 별도 문서화하고 선택지·근거·한계를 남긴다.
 - [x] `M0` 5스테이지 빈 화면의 실제 reward transport 결함과 validator coverage gap을
   정적으로 확인하고 결정 완료 계획을 작성한다.
-- [ ] `M1` 보스 보상 source를 XP 조각과 분리하고 실제 MAX progression boss-defeat 결과
+- [x] `M1` 보스 보상 source를 XP 조각과 분리하고 실제 MAX progression boss-defeat 결과
   통합 validator를 추가한다.
 - [ ] `M2` crate blueprint를 14개 direct pickup으로 통합하고 crate runtime/cover/UI/guide
   active surface를 제거한다.
@@ -472,7 +472,8 @@ outgoing policy에, 대시 완료 효과는 dash runtime에, 회복 분리는 re
 - [ ] `M9` task-owned code quality audit를 통과하고, durable spec에 결정을 옮긴 뒤 이 계획을
   `done`으로 표시하고 coherent scoped commit을 만든다.
 
-Current pointer: `M1`. 조사와 결정은 끝났고 구현은 시작하지 않았다. 열린 제품 선택은 없다.
+Current pointer: `M2`. M1 실제 boss-defeat fixture가
+`VEHICLE_STAGE_TRANSITION_VALIDATION_OK`로 통과했다. 열린 제품 선택은 없다.
 
 ## Acceptance Criteria
 
