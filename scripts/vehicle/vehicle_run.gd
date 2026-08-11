@@ -2554,23 +2554,11 @@ func _update_scheduled_ordinary_enemy(
 		or enemy.alive != previous_alive
 		or enemy.active != previous_active
 	):
-		var publish_started := (
-			Time.get_ticks_usec() if _performance_detail_sample_active else 0
-		)
 		if enemy.alive and enemy.active and previous_alive and previous_active:
 			enemy_grid.update_actor_position(enemy)
 		else:
 			enemy_grid.update_actor(enemy)
-		_performance_accumulate_enemy_section(
-			"motion_grid_publish", publish_started
-		)
-	var facing_started := (
-		Time.get_ticks_usec() if _performance_detail_sample_active else 0
-	)
 	_refresh_enemy_presentation_facing(enemy)
-	_performance_accumulate_enemy_section(
-		"motion_facing_publish", facing_started
-	)
 
 
 func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
@@ -2643,23 +2631,11 @@ func _record_motion_only_enemy_change(
 		enemy.pos != previous_position
 		or enemy.active != previous_active
 	):
-		var publish_started := (
-			Time.get_ticks_usec() if _performance_detail_sample_active else 0
-		)
 		if enemy.alive and enemy.active and previous_active:
 			enemy_grid.update_actor_position(enemy)
 		else:
 			enemy_grid.update_actor(enemy)
-		_performance_accumulate_enemy_section(
-			"motion_grid_publish", publish_started
-		)
-	var facing_started := (
-		Time.get_ticks_usec() if _performance_detail_sample_active else 0
-	)
 	_refresh_enemy_presentation_facing(enemy)
-	_performance_accumulate_enemy_section(
-		"motion_facing_publish", facing_started
-	)
 
 
 func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
