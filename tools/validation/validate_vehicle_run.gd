@@ -82,6 +82,7 @@ func _run() -> void:
 		run.call("_reset_run", false)
 		_check_visual_collision_separation(run)
 		_check_critical_enemy_attack_progression(run)
+		_check_ordinary_predicted_commitment(run)
 		var boss_arrival: Vector2 = run.call("_choose_boss_arrival_anchor")
 		_expect(
 			run.player_position.distance_to(boss_arrival)
@@ -557,6 +558,41 @@ func _check_critical_enemy_attack_progression(run) -> void:
 		"critical ordinary shooter reaches its real fire path instead of freezing"
 	)
 	projectile_store.call("clear")
+	run.enemy_store.release_untracked(shooter)
+
+
+func _check_ordinary_predicted_commitment(run) -> void:
+	var pressure_focus: Vector2 = run.player_position
+	var origin := pressure_focus + Vector2(-500.0, 0.0)
+	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+		var candidate: Vector2 = pressure_focus + Vector2(direction) * 500.0
+		if bool(run.call(
+			"_runtime_has_line_of_sight", candidate, pressure_focus, 7.0
+		)):
+			origin = candidate
+			break
+	var shooter: EnemyState = run.call("_make_enemy", {
+		"id":"ordinary_predicted_commitment",
+		"role":&"shooter",
+		"pos":origin,
+		"active":true,
+	})
+	var original_velocity: Vector2 = run.player_velocity
+	run.player_velocity = Vector2(0.0, 220.0)
+	run.call("_start_enemy_attack", shooter)
+	var committed := shooter.committed_target
+	_expect(
+		committed.y > pressure_focus.y
+			and committed.distance_to(pressure_focus) <= 260.001,
+		"ordinary projectile startup commits one bounded moving-player lead"
+	)
+	run.player_position += Vector2(0.0, 90.0)
+	_expect(
+		shooter.committed_target == committed,
+		"ordinary predicted aim remains frozen after startup commitment"
+	)
+	run.player_position = pressure_focus
+	run.player_velocity = original_velocity
 	run.enemy_store.release_untracked(shooter)
 
 

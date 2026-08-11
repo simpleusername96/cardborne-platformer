@@ -8,6 +8,7 @@ const SCHEMA_VERSION := 1
 
 var known: Dictionary = {}
 var save_path := SAVE_PATH
+var _valid_ids: Dictionary = Catalog.valid_ids()
 
 
 func _ready() -> void:
@@ -15,7 +16,11 @@ func _ready() -> void:
 
 
 func discover(entry_id: StringName) -> bool:
-	if known.has(entry_id) or not Catalog.valid_ids().has(entry_id):
+	if (
+		entry_id.is_empty()
+		or known.has(entry_id)
+		or not _valid_ids.has(entry_id)
+	):
 		return false
 	known[entry_id] = true
 	save_discovery()
@@ -50,8 +55,7 @@ func load_discovery() -> void:
 	if error != OK or int(config.get_value("meta", "version", 0)) != SCHEMA_VERSION:
 		push_warning("Guidebook discovery could not be loaded; using an empty catalog.")
 		return
-	var valid := Catalog.valid_ids()
 	for value in config.get_value("discovery", "known", PackedStringArray()):
 		var entry_id := StringName(value)
-		if valid.has(entry_id):
+		if _valid_ids.has(entry_id):
 			known[entry_id] = true

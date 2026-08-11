@@ -47,6 +47,9 @@ an explicit evidence blocker, not permission to stop correctness work or to weak
 - Ordinary projectile and charge attacks commit the player's current coordinate even
   though startup and travel time are substantial. A moving player leaves those attacks
   behind. Bosses already own bounded prediction, but ordinary enemies do not.
+- Artillery holds at `520–760 px` and may start firing at `880 px`, while its unchanged
+  effective shell travel is about `649 px` over the canonical lifetime. It therefore
+  spends commit budget on stationary targets beyond its physical reach.
 - Spawn allocation distributes complete packets over eight sectors and meets separation,
   offscreen, and geometry constraints. Its first sector is hash-selected and ignores the
   player's travel direction. A moving player can therefore receive the earliest births
@@ -78,8 +81,11 @@ In scope:
 - Separate ordinary-enemy pressure focus, movement focus, and committed attack target.
 - Add deterministic, bounded, role-aware prediction without per-enemy navigation or
   tactical candidate searches.
-- Make ranged, escort, and support enemies recover a firing lane when their direct attack
-  path is blocked, using the existing shared pursuit field.
+- Bring the artillery hold/admission distance inside its existing projectile reach;
+  preserve projectile speed, lifetime, startup, damage, and cadence.
+- Make ranged enemies recover a firing lane when their direct attack path is blocked,
+  using the existing shared pursuit field. Escort/support roles keep shorter predictive
+  movement focus but do not pay a line-of-fire query for attacks they do not own.
 - Bias the first spawn arrival sector toward player travel while retaining complete
   eight-sector distribution, deterministic replay, and all spatial constraints.
 - Remove radar render-frame Dictionary churn while preserving its exact live-anchor and
@@ -154,9 +160,9 @@ These are decision aids, not homing: the target remains frozen after commitment.
 
 - Add an allocation-free direction API to `VehicleEnemyMovementPolicy`. Retain the
   Dictionary `intent()` adapter only for compatibility validators and non-hot callers.
-- Pursuit approaches movement focus. Ranged/support families keep their authored distance
-  bands, but a blocked line of fire turns tangential movement into an explicit reposition
-  request.
+- Pursuit approaches movement focus. Ranged families keep their authored distance bands,
+  but a blocked line of fire turns tangential movement into an explicit reposition request.
+  Escort/support roles keep their authored bands without a meaningless direct-fire query.
 - In `VehicleRun._desired_enemy_velocity()`, evaluate direct obstruction first and query
   the shared pursuit field only when approach or line-of-fire recovery needs it. Blend
   route guidance strongly for blocked approach and moderately for lateral repositioning.
@@ -196,17 +202,38 @@ These are decision aids, not homing: the target remains frozen after commitment.
 - [x] `M0` Reproduce and trace the current semantics and compare committed performance evidence.
 - [x] `M0` Read root/project instructions, ExecPlan policy, performance guard, domain guidance, UI/visual authority, design authority, and the full visual system; inspect the canonical sheet at original detail.
 - [x] `M0` Lock invariants, alternatives, target bounds, validation workloads, and performance evidence rules in this plan.
-- [ ] `M1` Add the pure targeting policy and its deterministic validator.
-- [ ] `M2` Integrate bounded movement focus, line-of-fire recovery, deferred route sampling, and predicted attack commitment.
-- [ ] `M3` Add forward-first moving arrival order while preserving complete packet distribution and replay compatibility at zero velocity.
-- [ ] `M4` Replace radar per-frame Dictionary churn and guidebook discovery allocation with fixed/constant storage.
-- [ ] `M5` Update the product specification and capture metrics for intercept and firing-lane behavior.
-- [ ] `M6` Run focused gameplay, spawn, scheduler, UI, radar, guidebook, and visual-authority validators; correct task-owned failures.
+- [x] `M1` Add the pure targeting policy and its deterministic validator.
+- [x] `M2` Integrate bounded movement focus, line-of-fire recovery, deferred route sampling, and predicted attack commitment.
+- [x] `M3` Add forward-first moving arrival order while preserving complete packet distribution and replay compatibility at zero velocity.
+- [x] `M4` Replace radar per-frame Dictionary churn and guidebook discovery allocation with fixed/constant storage.
+- [x] `M5` Update the product specification and capture metrics for intercept and firing-lane behavior.
+- [x] `M6` Run focused gameplay, spawn, scheduler, UI, radar, guidebook, and visual-authority validators; correct task-owned failures.
 - [ ] `M7` Run import, Web export, built production smoke, rendered movement/radar QA, and bounded performance evidence when quiescence permits.
 - [ ] `M8` Run the codebase quality audit, close evidence, mark this plan `done`, and commit only task-owned changes.
 
-Current pointer: `M1` is next. Discovery is closed; no material product or architecture
-choice remains open.
+Current pointer: `M7` performance evidence is next. Targeting, movement, spawn order,
+radar storage, guidebook lookup, specification, capture instrumentation, import, Web
+export, native capture, and built-Web smoke are complete. Discovery remains closed; no
+material product or architecture choice remains open.
+
+## Validation Evidence
+
+- Pure targeting, movement, attack contract, update schedule, contact, encounter pacing,
+  Guidebook, stage UI, and full run validators pass on Godot `4.7.1`.
+- Spawn allocation passes the complete five-stage allocation validator and the
+  16-seed/all-field multi-sector validator. Zero-velocity replay is unchanged and
+  moving-right first arrivals use forward sector 4 while every canonical window still
+  covers all eight sectors with balanced counts.
+- Visual authority validation passes with canonical sheet SHA-256
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+- Full Korean `1280x720` native capture completes. The movement fixture reports
+  `chaser_intercept_samples=10`, chaser travel `529.33 px`, shooter distance
+  `399.88–546.26 px`, and `passed=true`. Movement and dash-radar frames were inspected at
+  original detail; actor silhouettes remain readable and the radar remains centered.
+- Godot import and Web release export pass with `index.html`, `index.js`, `index.pck`, and
+  `index.wasm`. The built output loads on the registered codex Web port, enters gameplay
+  through keyboard activation, renders the HUD/world, and reports no browser console
+  warnings or errors. The task-owned server and isolated browser page were closed.
 
 ## Test Plan
 
@@ -289,6 +316,8 @@ the remaining choices without a risky product assumption.
   reject per-enemy navigation and numerical escalation.
 - 2026-08-11: Treat the radar Dictionary rebase as a confirmed local regression, while
   treating broader physics timing as inconclusive until the machine is isolated.
+- 2026-08-11: The quality audit found an artillery reach mismatch. Correct its hold band
+  to `440–600 px` and attack maximum to `650 px`; do not raise shell speed or lifetime.
 - 2026-08-11: No raster output is created. The canonical visual sheet was inspected only
   as style authority; expected and observed SHA-256 are
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.

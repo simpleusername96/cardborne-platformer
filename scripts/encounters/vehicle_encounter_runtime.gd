@@ -129,7 +129,8 @@ func tick(
 	player_position: Vector2 = Field.CENTER,
 	visible_world: Rect2 = Rect2(),
 	active_enemies: Array = [],
-	hostile_projectile_count: int = 0
+	hostile_projectile_count: int = 0,
+	player_velocity: Vector2 = Vector2.ZERO
 ) -> Dictionary:
 	var step := maxf(0.0, delta)
 	elapsed += step
@@ -152,7 +153,14 @@ func tick(
 			_packet_fence_blocked_seconds += step
 		if not _packet_inflight:
 			_activate_next_ready_packet()
-		_admit_due_window(active_mobile_count + spawns.size(), step, player_position, visible_world, cues)
+		_admit_due_window(
+			active_mobile_count + spawns.size(),
+			step,
+			player_position,
+			player_velocity,
+			visible_world,
+			cues
+		)
 		_complete_inflight_packet_if_ready()
 	return {"cues":cues, "spawns":spawns}
 
@@ -374,6 +382,7 @@ func _admit_due_window(
 	active_mobile_count: int,
 	delta: float,
 	player_position: Vector2,
+	player_velocity: Vector2,
 	visible_world: Rect2,
 	cues: Array[Dictionary]
 ) -> void:
@@ -403,7 +412,8 @@ func _admit_due_window(
 		player_position,
 		visible_world,
 		[],
-		recent_positions
+		recent_positions,
+		player_velocity
 	)
 	if allocations.is_empty():
 		_birth_capacity_blocked += 1

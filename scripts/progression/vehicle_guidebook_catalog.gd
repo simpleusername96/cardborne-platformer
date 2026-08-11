@@ -9,26 +9,26 @@ const StatAdapter = preload(
 )
 
 const CATEGORIES: Array[StringName] = [&"ship", &"enemies", &"bosses", &"objects"]
-const ENEMY_ARCHETYPES: Array[StringName] = [
-	&"scrap_drone",
-	&"needle_drone",
-	&"spark_minelet",
-	&"chaser",
-	&"shooter",
-	&"controller",
-	&"shield_escort",
-	&"artillery_spotter",
-	&"rammer",
-	&"repair_tender",
-	&"drone_carrier",
-	&"bulkhead_guard",
-	&"splitter_barge",
-	&"turret",
-	&"mine",
-	&"interceptor_tower",
-	&"beam_sentinel",
-	&"generator",
-]
+const ENEMY_ENTRY_IDS := {
+	&"scrap_drone":&"mobile_scrap_drone",
+	&"needle_drone":&"mobile_needle_drone",
+	&"spark_minelet":&"mobile_spark_minelet",
+	&"chaser":&"mobile_chaser",
+	&"shooter":&"mobile_shooter",
+	&"controller":&"mobile_controller",
+	&"shield_escort":&"mobile_shield_escort",
+	&"artillery_spotter":&"mobile_artillery_spotter",
+	&"rammer":&"mobile_rammer",
+	&"repair_tender":&"mobile_repair_tender",
+	&"drone_carrier":&"mobile_drone_carrier",
+	&"bulkhead_guard":&"mobile_bulkhead_guard",
+	&"splitter_barge":&"mobile_splitter_barge",
+	&"turret":&"mobile_turret",
+	&"mine":&"mobile_mine",
+	&"interceptor_tower":&"mobile_interceptor_tower",
+	&"beam_sentinel":&"mobile_beam_sentinel",
+	&"generator":&"mobile_generator",
+}
 const ENTRIES: Array[Dictionary] = [
 	{"id":&"mobile_scrap_drone", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"scrap_drone", "name_key":"ENEMY_SCRAP_DRONE"},
 	{"id":&"mobile_needle_drone", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"needle_drone", "name_key":"ENEMY_NEEDLE_DRONE"},
@@ -76,11 +76,7 @@ static func entry_id_for_enemy(
 	archetype: StringName,
 	_behavior: StringName
 ) -> StringName:
-	if archetype == &"stage_boss":
-		return &""
-	if archetype not in ENEMY_ARCHETYPES:
-		return &""
-	return StringName("mobile_%s" % String(archetype))
+	return StringName(ENEMY_ENTRY_IDS.get(archetype, &""))
 
 
 static func snapshot(

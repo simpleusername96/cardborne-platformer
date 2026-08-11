@@ -303,6 +303,12 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    for `cue visual duration + 1.10s`. Positions beyond 1,200 units are clamped
    to the radar boundary, so the cue exposes direction only and never changes
    trigger time, admission, birth position, count, capacity, or actor state.
+   While the player travels at least 80 pixels per second, each due window starts
+   its existing maximally-spaced sector order at the available sector nearest the
+   travel heading. The remaining births still complete the same all-sector,
+   deterministic distribution. At lower speed the seeded start sector is
+   unchanged. This rule changes arrival order only; it never changes packet
+   membership, count, cue timing, geometry, distance, or separation truth.
    Projectile-firing mobile roles remain at or below 15% of authored mobile
    population; only three ranged attackers and two denial attackers may commit
    at once. Ordinary hostile fire cannot consume the 24-shot boss reserve.
@@ -317,10 +323,23 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    roles keep closing until their attack contract. Ranged and support roles use
    continuous radial correction around their existing distance band while
    tangential movement peaks at the midpoint. Turn response is `9/s` for
-   pursuit, `6/s` for standoff, and `5/s` for escort/support. Shared route
-   guidance is used only for an approach intent whose direct path is blocked;
-   it never pulls a holding, strafing, or retreating role back toward the player.
-   Attack timing and distance contracts remain unchanged, and
+   pursuit, `6/s` for standoff, and `5/s` for escort/support. Ordinary targeting
+   separates pressure focus, movement focus, and committed attack target. The
+   pressure focus is the current player or exact active Decoy position. At the
+   existing decision cadence, a moving-player movement focus may lead pursuit by
+   at most `1.20 s / 280 px`, standoff by `0.85 s / 200 px`, and escort/support by
+   `0.60 s / 140 px`; movement below 80 pixels per second and Decoy focus receive
+   no prediction. Shared route guidance is sampled only when a direct approach is
+   blocked or a ranged actor in or beyond its safe band must recover a
+   blocked firing lane. It never becomes a squad anchor or overrides a necessary
+   close-range retreat. Ordinary attacks predict once when startup begins, include
+   startup and projectile/charge travel, clamp direct lead to 260 pixels,
+   artillery to 320 pixels, and beam lead to 220 pixels, then keep that warned
+   target frozen through resolution. A blocked predicted line falls back to the
+   current pressure focus. Attack timing remains unchanged. Artillery alone corrects
+   its old unreachable `520–760` hold band to `440–600` and its direct-fire admission
+   maximum from 880 to 650, within the unchanged shell speed and 2.2-second lifetime;
+   other attack distance contracts remain unchanged. In all cases,
    logical squad anchors and centroid cohesion do not steer ordinary movement.
    Bounded local separation runs only during actual body overlap, checks at
    most eight nearby actors within 120 pixels, blends role/separation velocity
@@ -563,7 +582,8 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   rebases those bounded records against the live player world position and draws
   the retained radar at the matching projected player position every frame, so a
   complete dash cannot separate or squeeze the radar origin. This live-anchor path
-  does not rescan enemies or rebuild meshes. It includes targetable non-boss enemy
+  rebases fixed packed storage for exactly 12 sample/display slots; it does not
+  allocate sector dictionaries, rescan enemies, or rebuild meshes. It includes targetable non-boss enemy
   bodies outside the visible world rectangle and within 1,200 world units as dim
   `nearby_enemy` arcs. Scheduler-authored ordinary arrival cues reuse that same
   dim arc during their bounded receipt lifetime; farther cue offsets clamp to the

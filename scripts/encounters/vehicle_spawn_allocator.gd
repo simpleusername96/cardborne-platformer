@@ -16,6 +16,7 @@ const ARRIVAL_WINDOWS := 3
 const SQUADS_PER_WINDOW := 4
 const SECTOR_COUNT := 8
 const MIN_SAFE_SECTORS := 2
+const FORWARD_ARRIVAL_SPEED_THRESHOLD := 80.0
 const RELAXATION_TIERS: Array[Dictionary] = [
 	{"id":&"T0", "maximum":MAX_PLAYER_DISTANCE, "clearance":480.0},
 	{"id":&"T1", "maximum":MAX_PLAYER_DISTANCE, "clearance":400.0},
@@ -72,7 +73,8 @@ func allocate(
 	packet: Dictionary,
 	player_position: Vector2,
 	visible_world: Rect2,
-	recent_birth_positions: Array[Vector2] = []
+	recent_birth_positions: Array[Vector2] = [],
+	player_velocity: Vector2 = Vector2.ZERO
 ) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var window_count := _window_count(packet)
@@ -83,7 +85,8 @@ func allocate(
 			player_position,
 			visible_world,
 			[],
-			recent_birth_positions
+			recent_birth_positions,
+			player_velocity
 		)
 		if allocations.is_empty():
 			return []
@@ -98,7 +101,8 @@ func allocate_window(
 	player_position: Vector2,
 	visible_world: Rect2,
 	reserved_positions: Array[Vector2] = [],
-	recent_birth_positions: Array[Vector2] = []
+	recent_birth_positions: Array[Vector2] = [],
+	player_velocity: Vector2 = Vector2.ZERO
 ) -> Array[Dictionary]:
 	var squads: Array = packet["squads"]
 	var reordered := _reorder_roles(squads, String(packet["id"]))
@@ -134,7 +138,8 @@ func allocate_window(
 			separation_truth,
 			tier,
 			String(packet["id"]),
-			arrival_window
+			arrival_window,
+			player_velocity
 		)
 		if positions.is_empty():
 			continue
@@ -160,13 +165,19 @@ func _try_allocate_requests(
 	existing_positions: Array[Vector2],
 	tier: Dictionary,
 	packet_id: String,
-	arrival_window: int
+	arrival_window: int,
+	player_velocity: Vector2
 ) -> Array[Dictionary]:
 	var candidates_by_sector := _candidates_by_sector(player_position, visible_world, tier)
 	var available_sectors := _available_sectors(candidates_by_sector)
 	if available_sectors.size() < MIN_SAFE_SECTORS:
 		return []
-	var sector_order := _maximally_spaced_sector_order(available_sectors, packet_id, arrival_window)
+	var sector_order := _maximally_spaced_sector_order(
+		available_sectors,
+		packet_id,
+		arrival_window,
+		player_velocity
+	)
 	var selected := existing_positions.duplicate()
 	var result: Array[Dictionary] = []
 	for request_index in requests.size():
@@ -296,14 +307,43 @@ func _available_sectors(candidates_by_sector: Array[Array]) -> PackedInt32Array:
 func _maximally_spaced_sector_order(
 	available: PackedInt32Array,
 	packet_id: String,
-	arrival_window: int
+	arrival_window: int,
+	player_velocity: Vector2 = Vector2.ZERO
 ) -> PackedInt32Array:
 	var remaining: Array[int] = []
 	for sector in available:
 		remaining.append(sector)
 	remaining.sort()
 	var result := PackedInt32Array()
-	var start_index := wrapi(hash("%d:%s:%d:sector" % [_seed, packet_id, arrival_window]), 0, remaining.size())
+	var start_index := wrapi(
+		hash("%d:%s:%d:sector" % [_seed, packet_id, arrival_window]),
+		0,
+		remaining.size()
+	)
+	if player_velocity.length() >= FORWARD_ARRIVAL_SPEED_THRESHOLD:
+		var forward_sector := _sector_for(player_velocity)
+		var closest_distance := SECTOR_COUNT
+		var closest_tie := 0x7fffffff
+		for index in remaining.size():
+			var sector := remaining[index]
+			var difference := absi(sector - forward_sector)
+			var circular_distance := mini(
+				difference, SECTOR_COUNT - difference
+			)
+			var tie := absi(hash(
+				"%d:%s:%d:%d:forward"
+				% [_seed, packet_id, arrival_window, sector]
+			))
+			if (
+				circular_distance < closest_distance
+				or (
+					circular_distance == closest_distance
+					and tie < closest_tie
+				)
+			):
+				start_index = index
+				closest_distance = circular_distance
+				closest_tie = tie
 	result.append(remaining.pop_at(start_index))
 	while not remaining.is_empty():
 		var best_index := 0

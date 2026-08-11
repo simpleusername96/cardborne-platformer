@@ -44,6 +44,26 @@ func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, vi
 	var replay := replay_allocator.allocate(packet, player_position, visible_world)
 	_expect(var_to_str(allocations) == var_to_str(replay), "%s is deterministic" % context)
 	_expect(allocations.size() == 12, "%s allocates twelve logical squads" % context)
+	var moving_allocator := Allocator.new()
+	moving_allocator.configure(
+		tactical.encounter_seed,
+		tactical.ordinary_spawn_anchors,
+		tactical.geometry_snapshot
+	)
+	var moving := moving_allocator.allocate_window(
+		packet,
+		0,
+		player_position,
+		visible_world,
+		[],
+		[],
+		Vector2(240.0, 0.0)
+	)
+	_expect(
+		not moving.is_empty()
+			and int(Array(moving[0]["unit_sectors"])[0]) == 4,
+		"%s starts moving-right arrivals in the forward sector" % context
+	)
 	var positions_by_window := {}
 	var histograms := {}
 	for allocation in allocations:

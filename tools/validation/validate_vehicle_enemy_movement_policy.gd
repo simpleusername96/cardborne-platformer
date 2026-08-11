@@ -2,6 +2,10 @@ extends SceneTree
 
 const Archetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const Policy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+const EncounterDirector = preload(
+	"res://scripts/encounters/vehicle_encounter_director.gd"
+)
 const LocalSteering = preload("res://scripts/enemies/vehicle_enemy_local_steering.gd")
 const UpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_schedule.gd")
 
@@ -135,6 +139,56 @@ func _validate_route_and_speed_contracts() -> void:
 			and not Policy.route_guidance_requested(approach, false)
 			and Policy.route_guidance_requested(approach, true),
 		"route guidance requires both approach intent and a blocked direct path"
+	)
+	var blocked_direction := Policy.direction(
+		&"shooter",
+		&"shooter",
+		Vector2.ZERO,
+		Vector2(415.0, 0.0),
+		1.0,
+		false,
+		true
+	)
+	var recovery_requested := Policy.line_of_fire_recovery_requested(
+		&"shooter",
+		&"shooter",
+		Vector2.ZERO,
+		Vector2(415.0, 0.0),
+		true
+	)
+	_expect(
+		blocked_direction.y > 0.99
+			and recovery_requested
+			and Policy.hot_route_guidance_requested(
+				false, false, recovery_requested
+			),
+		"blocked standoff movement requests a lateral firing-lane recovery"
+	)
+	_expect(
+		not Policy.line_of_fire_recovery_requested(
+			&"shooter",
+			&"shooter",
+			Vector2.ZERO,
+			Vector2(200.0, 0.0),
+			true
+		),
+		"a ranged enemy that is too close retreats before lane recovery"
+	)
+	var artillery_attack: Dictionary = (
+		AttackContract.ORDINARY_ATTACKS[&"artillery_spotter"]
+	)
+	var artillery_band := Policy.distance_band(&"artillery_spotter")
+	var artillery_reach := (
+		EncounterDirector.effective_hostile_projectile_speed(
+			float(artillery_attack["speed"])
+		)
+		* AttackContract.HOSTILE_PROJECTILE_LIFETIME
+		+ float(artillery_attack["origin_offset"])
+	)
+	_expect(
+		artillery_band == Vector2(440.0, 600.0)
+			and artillery_reach + 0.001 >= artillery_band.y,
+		"artillery holds inside the stationary-target reach of its real shell"
 	)
 
 

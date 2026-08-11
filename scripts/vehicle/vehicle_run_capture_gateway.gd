@@ -514,6 +514,7 @@ func _capture_movement_policy_evidence() -> void:
 		"shooter_max_velocity":0.0,
 		"shooter_min_distance":shooter.pos.distance_to(player_start),
 		"shooter_max_distance":shooter.pos.distance_to(player_start),
+		"chaser_intercept_samples":0,
 		"shooter_runtime_slot":shooter.runtime_slot,
 		"shooter_decision_bucket":shooter.decision_bucket,
 	}
@@ -606,6 +607,7 @@ func _advance_movement_capture_segment(
 ) -> void:
 	const DELTA := 1.0 / 60.0
 	var steps := maxi(1, roundi(duration / DELTA))
+	_run.player_velocity = (to - from) / maxf(duration, DELTA)
 	_run.capture_set_mode(&"playing")
 	for step in steps:
 		var previous_chaser := chaser.pos
@@ -636,6 +638,18 @@ func _advance_movement_capture_segment(
 		metrics["shooter_max_velocity"] = maxf(
 			float(metrics["shooter_max_velocity"]), shooter.velocity.length()
 		)
+		var direct_chaser_direction: Vector2 = (
+			_run.player_position - chaser.pos
+		).normalized()
+		if (
+			not chaser.desired_velocity.is_zero_approx()
+			and chaser.desired_velocity.normalized().dot(direct_chaser_direction)
+				< 0.995
+			and chaser.desired_velocity.dot(_run.player_velocity) > 0.0
+		):
+			metrics["chaser_intercept_samples"] = (
+				int(metrics["chaser_intercept_samples"]) + 1
+			)
 		var shooter_distance := shooter.pos.distance_to(_run.player_position)
 		metrics["shooter_min_distance"] = minf(
 			float(metrics["shooter_min_distance"]), shooter_distance
@@ -643,6 +657,7 @@ func _advance_movement_capture_segment(
 		metrics["shooter_max_distance"] = maxf(
 			float(metrics["shooter_max_distance"]), shooter_distance
 		)
+	_run.player_velocity = Vector2.ZERO
 
 
 func _capture_build_state_evidence() -> void:

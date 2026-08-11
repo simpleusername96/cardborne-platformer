@@ -47,6 +47,9 @@ const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 const PursuitField = preload("res://scripts/enemies/vehicle_pursuit_field.gd")
 const EnemyMovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
+const EnemyTargetingPolicy = preload(
+	"res://scripts/enemies/vehicle_enemy_targeting_policy.gd"
+)
 const SecondaryRuntime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
 const GuidebookCatalog = preload("res://scripts/progression/vehicle_guidebook_catalog.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
@@ -1141,7 +1144,8 @@ func _update_encounter(delta: float) -> void:
 		player_position,
 		_visible_world_rect(0.0),
 		enemies,
-		projectile_store.hostile_count()
+		projectile_store.hostile_count(),
+		player_velocity
 	)
 	for cue in requests["cues"]:
 		_record_ordinary_arrival_cue(Dictionary(cue))
@@ -2822,7 +2826,11 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 		&"mine":
 			return distance <= 190.0
 		&"artillery_spotter":
-			return distance <= 880.0 and distance >= 250.0 and _runtime_has_line_of_sight(enemy.pos, target, 5.0)
+			return (
+				distance <= 650.0
+				and distance >= 250.0
+				and _runtime_has_line_of_sight(enemy.pos, target, 5.0)
+			)
 		&"interceptor_tower":
 			return distance <= 700.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
 		&"rammer":
@@ -2840,18 +2848,50 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 
 func _start_enemy_attack(enemy: EnemyState) -> void:
 	var role := enemy.role
-	var target := _mystery_enemy_target(enemy)
+	var pressure_focus := _mystery_enemy_target(enemy)
+	var attack := AttackContract.ordinary_attack(role)
+	var startup := 0.0
+	var attack_speed := 0.0
+	if not attack.is_empty():
+		startup = float(attack["startup"])
+		match StringName(attack.get("kind", &"")):
+			&"projectile":
+				attack_speed = EncounterDirector.effective_hostile_projectile_speed(
+					float(attack.get("speed", 0.0))
+				)
+			&"charge":
+				attack_speed = (
+					float(attack.get("speed", 0.0))
+					* EncounterDirector.ENEMY_SPEED_MULTIPLIER
+				)
+	elif role == &"rammer":
+		startup = SpecialistRuntime.RAMMER_STARTUP
+		attack_speed = SpecialistRuntime.RAMMER_SPEED
+	elif role == &"beam_sentinel":
+		startup = SpecialistRuntime.BEAM_STARTUP
+	var target := EnemyTargetingPolicy.attack_target(
+		role,
+		enemy.pos,
+		pressure_focus,
+		player_velocity,
+		startup,
+		attack_speed,
+		_mystery_decoy_targets.has(enemy.id)
+	)
+	if (
+		not target.is_equal_approx(pressure_focus)
+		and not _runtime_has_line_of_sight(
+			enemy.pos,
+			target,
+			_enemy_attack_line_padding(enemy)
+		)
+	):
+		target = pressure_focus
 	enemy.phase = &"startup"
 	enemy.hit_committed = false
 	enemy.committed_dir = (target - enemy.pos).normalized()
 	enemy.committed_target = target
-	var attack := AttackContract.ordinary_attack(role)
-	if not attack.is_empty():
-		enemy.phase_time = float(attack["startup"])
-	elif role == &"rammer":
-		enemy.phase_time = SpecialistRuntime.RAMMER_STARTUP
-	elif role == &"beam_sentinel":
-		enemy.phase_time = SpecialistRuntime.BEAM_STARTUP
+	enemy.phase_time = startup
 	AttackTelegraphs.refresh_ordinary(
 		enemy,
 		_runtime_attack_path_callable,
@@ -3078,31 +3118,66 @@ func _desired_enemy_velocity(
 	recovering: bool
 ) -> Vector2:
 	var position := enemy.pos
-	var target := _mystery_enemy_target(enemy)
-	var intent := EnemyMovementPolicy.intent(
+	var pressure_focus := _mystery_enemy_target(enemy)
+	var movement_family := EnemyMovementPolicy.family(
+		enemy.archetype, enemy.role
+	)
+	var movement_focus := EnemyTargetingPolicy.movement_focus(
+		movement_family,
+		position,
+		pressure_focus,
+		player_velocity,
+		enemy.speed,
+		_mystery_decoy_targets.has(enemy.id)
+	)
+	var movement_path_blocked := not _runtime_has_line_of_sight(
+		position, movement_focus, enemy.radius * 0.45
+	)
+	var firing_lane_blocked := (
+		movement_family == EnemyMovementPolicy.STANDOFF
+		and not _runtime_has_line_of_sight(
+			position,
+			pressure_focus,
+			_enemy_attack_line_padding(enemy)
+		)
+	)
+	var line_recovery := EnemyMovementPolicy.line_of_fire_recovery_requested(
 		enemy.archetype,
 		enemy.role,
 		position,
-		target,
-		enemy.strafe_sign,
+		pressure_focus,
+		firing_lane_blocked,
 		recovering
 	)
-	var desired := Vector2(intent["direction"])
-	var route_direction := (
-		Vector2.ZERO
-		if _mystery_decoy_targets.has(enemy.id)
-		else pursuit_field.direction_at(position, enemy.radius)
+	var desired := EnemyMovementPolicy.direction(
+		enemy.archetype,
+		enemy.role,
+		position,
+		movement_focus,
+		enemy.strafe_sign,
+		recovering,
+		line_recovery
 	)
-	var direct_path_blocked := not _runtime_has_line_of_sight(
-		position, target, enemy.radius * 0.45
+	var requests_approach := EnemyMovementPolicy.requests_approach(
+		enemy.archetype,
+		enemy.role,
+		position,
+		movement_focus,
+		recovering
 	)
-	if (
-		not route_direction.is_zero_approx()
-		and EnemyMovementPolicy.route_guidance_requested(
-			intent, direct_path_blocked
-		)
-	):
-		desired = (route_direction * 0.86 + desired * 0.14).normalized()
+	var route_requested := EnemyMovementPolicy.hot_route_guidance_requested(
+		requests_approach,
+		movement_path_blocked,
+		line_recovery
+	)
+	if route_requested and not _mystery_decoy_targets.has(enemy.id):
+		var route_direction := pursuit_field.direction_at(position, enemy.radius)
+		if not route_direction.is_zero_approx():
+			var route_weight := 0.55 if line_recovery else 0.86
+			desired = (
+				route_direction * route_weight
+				+ desired * (1.0 - route_weight)
+			).normalized()
 	return desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
 
 
@@ -4039,6 +4114,17 @@ func _apply_lifesteal(
 
 func _mystery_enemy_target(enemy: EnemyState) -> Vector2:
 	return Vector2(_mystery_decoy_targets.get(enemy.id, player_position))
+
+
+func _enemy_attack_line_padding(enemy: EnemyState) -> float:
+	match enemy.role:
+		&"controller":
+			return 4.0
+		&"artillery_spotter":
+			return 5.0
+		&"rammer":
+			return 12.0
+	return 7.0
 
 
 func _is_fixed_structure_enemy(enemy: EnemyState) -> bool:
@@ -5550,7 +5636,7 @@ func _build_snapshot() -> Dictionary:
 
 
 func _discover_guide(entry_id: StringName) -> void:
-	if boss_practice.active:
+	if boss_practice.active or entry_id.is_empty():
 		return
 	var store := get_node_or_null("/root/VehicleGuidebookStore")
 	if store != null and bool(store.discover(entry_id)):

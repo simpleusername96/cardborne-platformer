@@ -448,6 +448,9 @@ func _initialize() -> void:
 		int(radar_contract["sector_count"]) == 12
 			and bool(radar_contract["nearby_enemy_contact"])
 			and not bool(radar_contract["nearby_enemy_triangle"])
+			and bool(radar_contract["packed_rebase"])
+			and int(radar_contract["sample_storage_count"]) == 12
+			and int(radar_contract["display_storage_count"]) == 12
 			and int(radar_contract["retained_mesh_recipes"]) > 1
 			and not bool(radar_contract["mesh_recreated_per_anchor"])
 			and Dictionary(radar_contract["contact_priorities"]) == {

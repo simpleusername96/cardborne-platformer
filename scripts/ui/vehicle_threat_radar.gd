@@ -23,8 +23,18 @@ const MIN_WIDTH_BUCKET := 3
 const MAX_WIDTH_BUCKET := 15
 
 var snapshot: Dictionary = {}
-var _sample_sectors: Array[Dictionary] = []
-var _display_sectors: Array[Dictionary] = []
+var _sample_active := PackedByteArray()
+var _sample_count := PackedInt32Array()
+var _sample_world_position := PackedVector2Array()
+var _sample_kind: Array[StringName] = []
+var _sample_readiness := PackedFloat32Array()
+var _display_active := PackedByteArray()
+var _display_angle := PackedFloat32Array()
+var _display_distance := PackedFloat32Array()
+var _display_proximity_distance := PackedFloat32Array()
+var _display_count := PackedInt32Array()
+var _display_kind: Array[StringName] = []
+var _display_readiness := PackedFloat32Array()
 var _arc_meshes: Dictionary = {}
 var _triangle_mesh: ArrayMesh
 var _live_world_position := Vector2.ZERO
@@ -37,9 +47,7 @@ var _sample_generation := 0
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for _sector_index in SECTOR_COUNT:
-		_sample_sectors.append(_new_sector())
-		_display_sectors.append(_new_sector())
+	_resize_storage()
 	for width in range(MIN_WIDTH_BUCKET, MAX_WIDTH_BUCKET + 1):
 		_arc_meshes[width] = _build_arc_mesh(float(width))
 	_triangle_mesh = _build_triangle_mesh()
@@ -51,23 +59,22 @@ func set_snapshot(value: Dictionary) -> void:
 	_maximum_distance = maxf(1.0, float(value.get("max_distance", 1200.0)))
 	_sample_generation = int(value.get("generation", _sample_generation))
 	var source: Array = value.get("sectors", [])
+	_reset_sample_storage()
 	for index in SECTOR_COUNT:
-		var target := _sample_sectors[index]
-		_reset_sector(target)
 		if index >= source.size():
 			continue
 		var incoming: Dictionary = source[index]
 		if not bool(incoming.get("active", false)):
 			continue
-		target["active"] = true
-		target["count"] = int(incoming.get("count", 1))
-		target["world_position"] = Vector2(
+		_sample_active[index] = 1
+		_sample_count[index] = int(incoming.get("count", 1))
+		_sample_world_position[index] = Vector2(
 			incoming.get("world_position", Vector2.ZERO)
 		)
-		target["kind"] = StringName(incoming.get(
+		_sample_kind[index] = StringName(incoming.get(
 			"kind", CombatCuePolicy.CONTACT_NEARBY_ENEMY
 		))
-		target["readiness"] = clampf(
+		_sample_readiness[index] = clampf(
 			float(incoming.get("readiness", 0.0)), 0.0, 1.0
 		)
 	_rebase_sectors()
@@ -98,18 +105,20 @@ func _draw() -> void:
 	var center := _live_screen_position
 	center.x = clampf(center.x, OUTER_RADIUS + 8.0, size.x - OUTER_RADIUS - 8.0)
 	center.y = clampf(center.y, OUTER_RADIUS + 8.0, size.y - OUTER_RADIUS - 8.0)
-	for sector in _display_sectors:
-		if not bool(sector["active"]):
+	for sector_index in SECTOR_COUNT:
+		if _display_active[sector_index] == 0:
 			continue
-		var angle := float(sector["angle"])
-		var kind := StringName(sector["kind"])
-		var readiness := clampf(float(sector["readiness"]), 0.0, 1.0)
+		var angle := _display_angle[sector_index]
+		var kind := _display_kind[sector_index]
+		var readiness := clampf(_display_readiness[sector_index], 0.0, 1.0)
 		var proximity := 1.0 - clampf(
-			float(sector["proximity_distance"]) / _maximum_distance,
+			_display_proximity_distance[sector_index] / _maximum_distance,
 			0.0,
 			1.0
 		)
-		var density := minf(1.0, float(int(sector["count"]) - 1) / 5.0)
+		var density := minf(
+			1.0, float(_display_count[sector_index] - 1) / 5.0
+		)
 		var nearby := kind == CombatCuePolicy.CONTACT_NEARBY_ENEMY
 		var width := (
 			3.5 + density * 4.0 + proximity * 1.5
@@ -137,12 +146,13 @@ func _draw() -> void:
 
 
 func _rebase_sectors() -> void:
-	for sector in _display_sectors:
-		_reset_sector(sector)
-	for sample in _sample_sectors:
-		if not bool(sample["active"]):
+	_reset_display_storage()
+	for sample_index in SECTOR_COUNT:
+		if _sample_active[sample_index] == 0:
 			continue
-		var offset := Vector2(sample["world_position"]) - _live_world_position
+		var offset := (
+			_sample_world_position[sample_index] - _live_world_position
+		)
 		var distance := offset.length()
 		if distance <= 0.001 or distance > _maximum_distance:
 			continue
@@ -151,39 +161,38 @@ func _rebase_sectors() -> void:
 			floori((angle + PI) / TAU * float(SECTOR_COUNT)),
 			SECTOR_COUNT
 		)
-		var target := _display_sectors[sector_index]
-		var kind := StringName(sample["kind"])
-		var readiness := float(sample["readiness"])
-		var count := int(sample["count"])
-		if not bool(target["active"]):
-			target["active"] = true
-			target["angle"] = angle
-			target["distance"] = distance
-			target["proximity_distance"] = distance
-			target["count"] = count
-			target["kind"] = kind
-			target["readiness"] = readiness
+		var kind := _sample_kind[sample_index]
+		var readiness := _sample_readiness[sample_index]
+		var count := _sample_count[sample_index]
+		if _display_active[sector_index] == 0:
+			_display_active[sector_index] = 1
+			_display_angle[sector_index] = angle
+			_display_distance[sector_index] = distance
+			_display_proximity_distance[sector_index] = distance
+			_display_count[sector_index] = count
+			_display_kind[sector_index] = kind
+			_display_readiness[sector_index] = readiness
 			continue
-		target["count"] = int(target["count"]) + count
-		target["proximity_distance"] = minf(
-			float(target["proximity_distance"]), distance
+		_display_count[sector_index] += count
+		_display_proximity_distance[sector_index] = minf(
+			_display_proximity_distance[sector_index], distance
 		)
 		var priority := CombatCuePolicy.contact_priority(kind)
 		var existing_priority := CombatCuePolicy.contact_priority(
-			StringName(target["kind"])
+			_display_kind[sector_index]
 		)
 		if priority > existing_priority:
-			target["kind"] = kind
-			target["readiness"] = readiness
-			target["angle"] = angle
-			target["distance"] = distance
+			_display_kind[sector_index] = kind
+			_display_readiness[sector_index] = readiness
+			_display_angle[sector_index] = angle
+			_display_distance[sector_index] = distance
 		elif priority == existing_priority:
-			target["readiness"] = maxf(
-				float(target["readiness"]), readiness
+			_display_readiness[sector_index] = maxf(
+				_display_readiness[sector_index], readiness
 			)
-			if distance < float(target["distance"]):
-				target["angle"] = angle
-				target["distance"] = distance
+			if distance < _display_distance[sector_index]:
+				_display_angle[sector_index] = angle
+				_display_distance[sector_index] = distance
 
 
 func _mesh_for_width(width: float) -> ArrayMesh:
@@ -255,37 +264,46 @@ func _kind_color(kind: StringName, readiness: float) -> Color:
 			return Art.DANGER.lerp(Art.IVORY_BRIGHT, readiness * 0.36)
 
 
-func _new_sector() -> Dictionary:
-	return {
-		"active":false,
-		"angle":0.0,
-		"distance":0.0,
-		"proximity_distance":0.0,
-		"count":0,
-		"world_position":Vector2.ZERO,
-		"kind":CombatCuePolicy.CONTACT_NEARBY_ENEMY,
-		"readiness":0.0,
-	}
+func _resize_storage() -> void:
+	_sample_active.resize(SECTOR_COUNT)
+	_sample_count.resize(SECTOR_COUNT)
+	_sample_world_position.resize(SECTOR_COUNT)
+	_sample_readiness.resize(SECTOR_COUNT)
+	_display_active.resize(SECTOR_COUNT)
+	_display_angle.resize(SECTOR_COUNT)
+	_display_distance.resize(SECTOR_COUNT)
+	_display_proximity_distance.resize(SECTOR_COUNT)
+	_display_count.resize(SECTOR_COUNT)
+	_display_readiness.resize(SECTOR_COUNT)
+	_sample_kind.resize(SECTOR_COUNT)
+	_display_kind.resize(SECTOR_COUNT)
+	_reset_sample_storage()
+	_reset_display_storage()
 
 
-func _reset_sector(sector: Dictionary) -> void:
-	sector["active"] = false
-	sector["angle"] = 0.0
-	sector["distance"] = 0.0
-	sector["proximity_distance"] = 0.0
-	sector["count"] = 0
-	sector["world_position"] = Vector2.ZERO
-	sector["kind"] = CombatCuePolicy.CONTACT_NEARBY_ENEMY
-	sector["readiness"] = 0.0
+func _reset_sample_storage() -> void:
+	_sample_active.fill(0)
+	_sample_count.fill(0)
+	_sample_world_position.fill(Vector2.ZERO)
+	_sample_readiness.fill(0.0)
+
+
+func _reset_display_storage() -> void:
+	_display_active.fill(0)
+	_display_angle.fill(0.0)
+	_display_distance.fill(0.0)
+	_display_proximity_distance.fill(0.0)
+	_display_count.fill(0)
+	_display_readiness.fill(0.0)
 
 
 func debug_contract() -> Dictionary:
 	var active_count := 0
 	var first_active_angle := 0.0
-	for sector in _display_sectors:
-		if bool(sector["active"]):
+	for sector_index in SECTOR_COUNT:
+		if _display_active[sector_index] != 0:
 			if active_count == 0:
-				first_active_angle = float(sector["angle"])
+				first_active_angle = _display_angle[sector_index]
 			active_count += 1
 	return {
 		"diameter":DIAMETER,
@@ -309,6 +327,9 @@ func debug_contract() -> Dictionary:
 		},
 		"retained_mesh_recipes":_arc_meshes.size() + 1,
 		"mesh_recreated_per_anchor":false,
+		"packed_rebase":true,
+		"sample_storage_count":_sample_active.size(),
+		"display_storage_count":_display_active.size(),
 		"sample_generation":_sample_generation,
 		"active_sector_count":active_count,
 		"first_active_angle":first_active_angle,

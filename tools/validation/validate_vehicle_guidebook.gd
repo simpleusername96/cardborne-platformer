@@ -23,6 +23,7 @@ func _run() -> void:
 	store.known.clear()
 	_expect(store.discover(&"mobile_chaser"), "first encounter unlocks one entry")
 	_expect(not store.discover(&"mobile_chaser"), "discovery is idempotent")
+	_expect(not store.discover(&""), "empty discovery IDs are discarded")
 	_expect(not store.discover(&"unknown_entry"), "unknown IDs are discarded")
 	for stationary in [
 		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator",
@@ -192,12 +193,17 @@ func _validate_catalog_partition() -> void:
 	for archetype in Archetypes.DEFINITIONS:
 		if archetype == &"stage_boss":
 			continue
-		var entry_id := StringName("mobile_%s" % String(archetype))
+		var entry_id := Catalog.entry_id_for_enemy(archetype, archetype)
 		_expect(
-			entries_by_id.has(entry_id)
+			not entry_id.is_empty()
+				and entries_by_id.has(entry_id)
 				and StringName(entries_by_id[entry_id]["category"]) == &"enemies",
 			"%s appears under Enemies" % archetype
 		)
+	_expect(
+		Catalog.ENEMY_ENTRY_IDS.size() == Archetypes.DEFINITIONS.size() - 1,
+		"constant enemy discovery mapping covers every non-boss archetype"
+	)
 	for elite_id in [
 		&"object_elite_armored", &"object_elite_overclocked", &"object_elite_heavy",
 	]:
