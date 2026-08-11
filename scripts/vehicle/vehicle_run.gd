@@ -1015,6 +1015,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.id = String(spec.get("id", role))
 	enemy.role = role
 	enemy.archetype = archetype
+	enemy.movement_family = EnemyMovementPolicy.family(archetype, role)
 	enemy.name = String(spec.get("name_key", definition["name_key"]))
 	enemy.pos = position
 	enemy.home = position
@@ -3333,9 +3334,11 @@ func _desired_enemy_velocity(
 ) -> Vector2:
 	var position := enemy.pos
 	var pressure_focus := _mystery_enemy_target(enemy)
-	var movement_family := EnemyMovementPolicy.family(
-		enemy.archetype, enemy.role
-	)
+	var movement_family := enemy.movement_family
+	if movement_family.is_empty():
+		movement_family = EnemyMovementPolicy.family(enemy.archetype, enemy.role)
+		enemy.movement_family = movement_family
+	var movement_band := EnemyMovementPolicy.distance_band(enemy.role)
 	var movement_focus := EnemyTargetingPolicy.movement_focus(
 		movement_family,
 		position,
@@ -3355,26 +3358,28 @@ func _desired_enemy_velocity(
 			_enemy_attack_line_padding(enemy)
 		)
 	)
-	var line_recovery := EnemyMovementPolicy.line_of_fire_recovery_requested(
-		enemy.archetype,
-		enemy.role,
+	var line_recovery := EnemyMovementPolicy.line_of_fire_recovery_for_profile(
+		movement_family,
+		movement_band,
 		position,
 		pressure_focus,
 		firing_lane_blocked,
 		recovering
 	)
-	var desired := EnemyMovementPolicy.direction(
-		enemy.archetype,
+	var desired := EnemyMovementPolicy.direction_for_profile(
+		movement_family,
 		enemy.role,
+		movement_band,
 		position,
 		movement_focus,
 		enemy.strafe_sign,
 		recovering,
 		line_recovery
 	)
-	var requests_approach := EnemyMovementPolicy.requests_approach(
-		enemy.archetype,
+	var requests_approach := EnemyMovementPolicy.requests_approach_for_profile(
+		movement_family,
 		enemy.role,
+		movement_band,
 		position,
 		movement_focus,
 		recovering
@@ -3406,12 +3411,15 @@ func _smoothed_enemy_velocity(
 	delta: float,
 	refresh_overlap: bool
 ) -> Vector2:
-	var movement_family := EnemyMovementPolicy.family(enemy.archetype, enemy.role)
+	if enemy.movement_family.is_empty():
+		enemy.movement_family = EnemyMovementPolicy.family(
+			enemy.archetype, enemy.role
+		)
 	var speed_cap := enemy.speed * StatusRuntime.speed_multiplier(enemy)
 	var role_velocity := EnemyMovementPolicy.smooth_velocity(
 		enemy.velocity,
 		enemy.desired_velocity,
-		EnemyMovementPolicy.turn_response(movement_family),
+		EnemyMovementPolicy.turn_response(enemy.movement_family),
 		delta,
 		speed_cap
 	)

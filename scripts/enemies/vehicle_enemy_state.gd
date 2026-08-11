@@ -7,6 +7,7 @@ extends RefCounted
 var id := ""
 var role: StringName = &""
 var archetype: StringName = &""
+var movement_family: StringName = &""
 var name := ""
 var pos := Vector2.ZERO
 var home := Vector2.ZERO

@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_validate_band_oracles()
 	_validate_continuity_and_recovery()
 	_validate_route_and_speed_contracts()
+	_validate_cached_profile_equivalence()
 	_validate_cadence_and_overlap_contracts()
 	_finish()
 
@@ -190,6 +191,49 @@ func _validate_route_and_speed_contracts() -> void:
 			and artillery_reach + 0.001 >= artillery_band.y,
 		"artillery holds inside the stationary-target reach of its real shell"
 	)
+
+
+func _validate_cached_profile_equivalence() -> void:
+	for archetype in Archetypes.DEFINITIONS:
+		var definition: Dictionary = Archetypes.DEFINITIONS[archetype]
+		var role := StringName(definition["behavior"])
+		var movement_family := Policy.family(archetype, role)
+		var band := Policy.distance_band(role)
+		for distance in [120.0, 420.0, 720.0]:
+			var target := Vector2(distance, 35.0)
+			for recovering in [false, true]:
+				for blocked in [false, true]:
+					_expect(
+						Policy.direction(
+							archetype, role, Vector2.ZERO, target, -1.0,
+							recovering, blocked
+						).is_equal_approx(
+							Policy.direction_for_profile(
+								movement_family, role, band, Vector2.ZERO,
+								target, -1.0, recovering, blocked
+							)
+						),
+						"%s cached direction matches the public policy" % archetype
+					)
+					_expect(
+						Policy.requests_approach(
+							archetype, role, Vector2.ZERO, target, recovering
+						) == Policy.requests_approach_for_profile(
+							movement_family, role, band, Vector2.ZERO, target,
+							recovering
+						),
+						"%s cached approach matches the public policy" % archetype
+					)
+					_expect(
+						Policy.line_of_fire_recovery_requested(
+							archetype, role, Vector2.ZERO, target, blocked,
+							recovering
+						) == Policy.line_of_fire_recovery_for_profile(
+							movement_family, band, Vector2.ZERO, target, blocked,
+							recovering
+						),
+						"%s cached lane recovery matches the public policy" % archetype
+					)
 
 
 func _validate_cadence_and_overlap_contracts() -> void:

@@ -106,6 +106,28 @@ static func direction(
 	line_of_fire_blocked: bool = false
 ) -> Vector2:
 	var movement_family := family(archetype, role)
+	return direction_for_profile(
+		movement_family,
+		role,
+		distance_band(role),
+		position,
+		target,
+		strafe_sign,
+		recovering,
+		line_of_fire_blocked
+	)
+
+
+static func direction_for_profile(
+	movement_family: StringName,
+	role: StringName,
+	band: Vector2,
+	position: Vector2,
+	target: Vector2,
+	strafe_sign: float,
+	recovering: bool = false,
+	line_of_fire_blocked: bool = false
+) -> Vector2:
 	var offset := target - position
 	var distance := maxf(1.0, offset.length())
 	var radial := offset / distance
@@ -118,7 +140,6 @@ static func direction(
 			return -radial
 		return radial
 
-	var band := distance_band(role)
 	if band == Vector2.ZERO:
 		return radial
 	var signed_error := _signed_band_error(distance, band)
@@ -143,13 +164,30 @@ static func requests_approach(
 	recovering: bool = false
 ) -> bool:
 	var movement_family := family(archetype, role)
+	return requests_approach_for_profile(
+		movement_family,
+		role,
+		distance_band(role),
+		position,
+		target,
+		recovering
+	)
+
+
+static func requests_approach_for_profile(
+	movement_family: StringName,
+	role: StringName,
+	band: Vector2,
+	position: Vector2,
+	target: Vector2,
+	recovering: bool = false
+) -> bool:
 	if movement_family == STATIONARY:
 		return false
 	if movement_family == PURSUIT:
 		if recovering and role in [&"chaser", &"rammer"]:
 			return false
 		return true
-	var band := distance_band(role)
 	if band == Vector2.ZERO:
 		return true
 	return _signed_band_error(position.distance_to(target), band) > 0.001
@@ -190,9 +228,28 @@ static func line_of_fire_recovery_requested(
 	if not direct_path_blocked or recovering:
 		return false
 	var movement_family := family(archetype, role)
+	return line_of_fire_recovery_for_profile(
+		movement_family,
+		distance_band(role),
+		position,
+		target,
+		direct_path_blocked,
+		recovering
+	)
+
+
+static func line_of_fire_recovery_for_profile(
+	movement_family: StringName,
+	band: Vector2,
+	position: Vector2,
+	target: Vector2,
+	direct_path_blocked: bool,
+	recovering: bool = false
+) -> bool:
+	if not direct_path_blocked or recovering:
+		return false
 	if movement_family != STANDOFF:
 		return false
-	var band := distance_band(role)
 	return (
 		band != Vector2.ZERO
 		and _signed_band_error(position.distance_to(target), band) >= -0.35
