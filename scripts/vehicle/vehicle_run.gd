@@ -3261,6 +3261,9 @@ func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decisio
 		return
 	var refresh_overlap := false
 	if decision_due or enemy.desired_velocity.is_zero_approx():
+		var intent_started := (
+			Time.get_ticks_usec() if _performance_detail_sample_active else 0
+		)
 		var steering_slot := (
 			enemy.spatial_slot
 			if enemy.spatial_slot >= 0
@@ -3276,10 +3279,24 @@ func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decisio
 		enemy.desired_velocity = _desired_enemy_velocity(
 			enemy, recovering
 		)
-	_move_enemy_with_recovery(
-		enemy,
-		_smoothed_enemy_velocity(enemy, delta, refresh_overlap),
-		delta
+		_performance_accumulate_enemy_section(
+			"movement_intent", intent_started
+	)
+	var steering_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
+	var smoothed_velocity := _smoothed_enemy_velocity(
+		enemy, delta, refresh_overlap
+	)
+	_performance_accumulate_enemy_section(
+		"movement_smoothing", steering_started
+	)
+	var collision_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
+	_move_enemy_with_recovery(enemy, smoothed_velocity, delta)
+	_performance_accumulate_enemy_section(
+		"movement_collision", collision_started
 	)
 
 
