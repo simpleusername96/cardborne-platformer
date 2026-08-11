@@ -1,17 +1,41 @@
 name: Vehicle Run Validation
 
 on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - ".agents/**"
+      - "docs/**"
+      - "screenshots/**"
+      - ".editorconfig"
+      - ".gitattributes"
+      - ".gitignore"
+      - "AGENTS.md"
+      - "README.md"
   pull_request:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the verified Web build to itch.io
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
+concurrency:
+  group: vehicle-run-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ITCH_WEB_TARGET: itchioprofile1351321/cardborne:html5
+
 jobs:
   validate-build-render:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     env:
       GODOT_VERSION: 4.7.1
       GODOT_STATUS: stable
@@ -21,6 +45,16 @@ jobs:
     steps:
       - name: Check out branch
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Check deployment credential
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+        shell: pwsh
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:BUTLER_API_KEY)) {
+              throw 'The BUTLER_API_KEY GitHub Actions secret is missing.'
+          }
 
       - name: Validate document authority
         shell: pwsh
@@ -47,16 +81,29 @@ jobs:
           editor_zip="$GODOT_DIR/cache/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64.zip"
           templates_tpz="$GODOT_DIR/cache/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_export_templates.tpz"
           release_root="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-${GODOT_STATUS}"
-          if [[ ! -s "$editor_zip" ]]; then
-            curl --fail --location --retry 4 --retry-all-errors \
-              "$release_root/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64.zip" \
-              --output "$editor_zip"
-          fi
-          if [[ ! -s "$templates_tpz" ]]; then
-            curl --fail --location --retry 4 --retry-all-errors \
-              "$release_root/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_export_templates.tpz" \
-              --output "$templates_tpz"
-          fi
+          editor_sha512="4CCDAB7A48EECCBE8819A2FC1F6262F8D72065D98601BCB3743FCBD7EBD39F373758A788EE3293A05EC5B2C48538266C437404312E372225CD2DF273945A2DE9"
+          templates_sha512="AFCC83D8D3D298038F19C58744A0D660FA75DD4BAA33CB55D1011BB2565A2A8C2381728924564CB909E37C205A23F21B521B23BD057993AFD43AE4DA0B2F9D47"
+
+          download_and_verify() {
+            local url="$1"
+            local destination="$2"
+            local expected_sha512="$3"
+            if [[ -s "$destination" ]] && echo "$expected_sha512  $destination" | sha512sum --check --status; then
+              return
+            fi
+            rm -f "$destination"
+            curl --fail --location --retry 4 --retry-all-errors "$url" --output "$destination"
+            echo "$expected_sha512  $destination" | sha512sum --check
+          }
+
+          download_and_verify \
+            "$release_root/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64.zip" \
+            "$editor_zip" \
+            "$editor_sha512"
+          download_and_verify \
+            "$release_root/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_export_templates.tpz" \
+            "$templates_tpz" \
+            "$templates_sha512"
           rm -rf "$GODOT_DIR/editor" "$RUNNER_TEMP/godot-templates"
           mkdir -p "$GODOT_DIR/editor" "$RUNNER_TEMP/godot-templates"
           unzip -q "$editor_zip" -d "$GODOT_DIR/editor"
@@ -124,6 +171,25 @@ jobs:
             test -s "build/web/$file"
           done
 
+          short_commit="${GITHUB_SHA:0:7}"
+          build_version="alpha.${GITHUB_RUN_NUMBER}+${short_commit}"
+          pck_sha256="$(sha256sum build/web/index.pck | cut -d ' ' -f 1)"
+          {
+            echo 'Cardborne itch.io Web alpha build'
+            echo "version=$build_version"
+            echo "commit=$GITHUB_SHA"
+            echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "pck_sha256=$pck_sha256"
+          } > build/web/build-info.txt
+          web_build_bytes="$(find build/web -type f -printf '%s\n' | awk '{ total += $1 } END { print total }')"
+          echo "BUILD_VERSION=$build_version" >> "$GITHUB_ENV"
+          echo "WEB_BUILD_SHA256=$pck_sha256" >> "$GITHUB_ENV"
+          echo "WEB_BUILD_BYTES=$web_build_bytes" >> "$GITHUB_ENV"
+
+      - name: Validate itch.io Web release contract
+        shell: pwsh
+        run: ./tools/validation/validate_itch_web_release.ps1 -ReleaseDirectory build/web
+
       - name: Boot and render the built Web artifact
         shell: bash
         run: |
@@ -158,6 +224,51 @@ jobs:
             echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           } > "$EVIDENCE_DIR/manifest.txt"
           find "$EVIDENCE_DIR" -maxdepth 2 -type f -printf '%P %s bytes\n' | sort
+
+      - name: Publish verified Web build to itch.io
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+        shell: pwsh
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $butlerArchive = Join-Path $env:RUNNER_TEMP 'butler-linux-amd64-v15.30.0.zip'
+          $butlerUrl = 'https://github.com/itchio/butler/releases/download/v15.30.0/butler-linux-amd64.zip'
+          Invoke-WebRequest -UseBasicParsing -Uri $butlerUrl -OutFile $butlerArchive
+          $butlerHash = (Get-FileHash -LiteralPath $butlerArchive -Algorithm SHA256).Hash
+          $expectedButlerHash = 'F2CAE7D24EBA0605048F71D0CC056F65C3B7FF9F73724F504C731CF3645BEF08'
+          if ($butlerHash -ne $expectedButlerHash) {
+              throw "Butler checksum mismatch. Expected $expectedButlerHash, received $butlerHash."
+          }
+
+          $butlerRoot = Join-Path $env:RUNNER_TEMP 'butler-v15.30.0'
+          Expand-Archive -LiteralPath $butlerArchive -DestinationPath $butlerRoot -Force
+          $butlerPath = Join-Path $butlerRoot 'linux-amd64/butler'
+          if (-not (Test-Path -LiteralPath $butlerPath -PathType Leaf)) {
+              throw 'The Butler archive did not contain linux-amd64/butler.'
+          }
+          & chmod '+x' '--' $butlerPath
+          & $butlerPath version
+          if ($LASTEXITCODE -ne 0) {
+              throw 'Butler version check failed.'
+          }
+
+          & $butlerPath push build/web $env:ITCH_WEB_TARGET --userversion $env:BUILD_VERSION
+          if ($LASTEXITCODE -ne 0) {
+              throw "Butler Web push failed with exit code $LASTEXITCODE."
+          }
+
+          @(
+              '### itch.io Web deployment'
+              ''
+              "- Browser channel: ``$env:ITCH_WEB_TARGET``"
+              "- Version: ``$env:BUILD_VERSION``"
+              "- Commit: ``$env:GITHUB_SHA``"
+              "- Extracted bytes: ``$env:WEB_BUILD_BYTES``"
+              "- index.pck SHA-256: ``$env:WEB_BUILD_SHA256``"
+          ) | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
 
       - name: Upload rendered evidence and logs
         if: always()
