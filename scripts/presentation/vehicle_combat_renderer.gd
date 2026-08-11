@@ -36,6 +36,9 @@ const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 const ENEMY_STATUS_SHADER = preload(
 	"res://scripts/presentation/shaders/vehicle_enemy_status_overlay.gdshader"
 )
+const WORLD_CHIP_FONT = preload(
+	"res://art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf"
+)
 
 const ENEMY_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES
 const PROJECTILE_CAPACITY := 240
@@ -61,6 +64,7 @@ const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
 const MYSTERY_DEVICE_CAPACITY := 3
 const MYSTERY_DEVICE_VISUAL_RADIUS := 96.0
 const SEMANTIC_TEXTURE_DRAW_CAPACITY := 512
+const WORLD_CHIP_CAPACITY := 3
 const CARDINAL_DIRECTIONS := [
 	Vector2.LEFT,
 	Vector2.RIGHT,
@@ -202,6 +206,12 @@ class SemanticTextureSpec:
 	var pivot := Vector2.ZERO
 
 
+class WorldChipDraw:
+	var text := ""
+	var position := Vector2.ZERO
+	var color := Color.WHITE
+
+
 var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
 var _enemy_status_material: ShaderMaterial
@@ -221,6 +231,8 @@ var _facility_health_bar_count := 0
 var _semantic_texture_draws: Array[SemanticTextureDraw] = []
 var _semantic_texture_draw_count := 0
 var _semantic_texture_specs: Dictionary = {}
+var _world_chip_draws: Array[WorldChipDraw] = []
+var _world_chip_draw_count := 0
 var _secondary_asset_ids: Dictionary = {}
 var _player_rear_anchor := Vector2(-0.84, 0.0)
 var _installation_health_candidates: Array[EnemyState] = []
@@ -245,6 +257,8 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	for _index in SEMANTIC_TEXTURE_DRAW_CAPACITY:
 		_semantic_texture_draws.append(SemanticTextureDraw.new())
+	for _index in WORLD_CHIP_CAPACITY:
+		_world_chip_draws.append(WorldChipDraw.new())
 	_installation_health_candidates.resize(MAX_INSTALLATION_HEALTH_BARS)
 	_installation_health_scores.resize(MAX_INSTALLATION_HEALTH_BARS)
 	_repair_link_candidates.resize(MAX_REPAIR_LINKS)
@@ -280,6 +294,7 @@ func sync(
 	_reset_counts()
 	_last_repair_link_count = 0
 	_semantic_texture_draw_count = 0
+	_world_chip_draw_count = 0
 	if active:
 		_presentation_sync_serial += 1
 		_sync_enemies(
@@ -314,6 +329,8 @@ func sync(
 func _draw() -> void:
 	for index in _semantic_texture_draw_count:
 		_draw_semantic_texture(_semantic_texture_draws[index])
+	for index in _world_chip_draw_count:
+		_draw_world_chip(_world_chip_draws[index])
 
 
 static func player_rear_anchors(
@@ -396,7 +413,6 @@ func debug_snapshot() -> Dictionary:
 		"boss_health_bar_count": _boss_health_bar_count,
 		"facility_health_bar_count": _facility_health_bar_count,
 		"mystery_health_bar_count": 0,
-		"crate_health_bar_count": 0,
 		"priority_marker_count": 0,
 		"repair_link_count":_last_repair_link_count,
 		"semantic_texture_draw_count":_semantic_texture_draw_count,
@@ -1566,6 +1582,23 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				"readiness": readiness,
 			}
 			_sync_area_telegraph(descriptor)
+	var dash_trails_variant: Variant = state.get("dash_afterburn_trails")
+	if dash_trails_variant is Array:
+		for trail_variant in dash_trails_variant:
+			if not (trail_variant is Object):
+				continue
+			var trail_start := Vector2(trail_variant.get("start"))
+			var trail_end := Vector2(trail_variant.get("end"))
+			var trail_radius := 72.0
+			var trail_alpha := 0.10 + 0.08 * clampf(
+				float(trail_variant.get("remaining")) / 3.0, 0.0, 1.0
+			)
+			var trail_color := Color(Art.THERMAL, trail_alpha)
+			_write_beam(
+				trail_start, trail_end, trail_radius * 2.0, trail_color
+			)
+			_write_disk(trail_start, trail_radius, trail_color)
+			_write_disk(trail_end, trail_radius, trail_color)
 	var player_position := Vector2(state["player_position"])
 	var hull_direction := Vector2(state["hull_direction"])
 	var aim_direction := Vector2(state["aim_direction"])
@@ -1647,6 +1680,51 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			Color(Art.MINT, lerpf(0.78, 1.0, barrier_flash))
 		)
 	var secondary: Dictionary = state.get("secondary", {})
+	var rear_laser_remaining := float(
+		secondary.get("rear_laser_active_remaining", 0.0)
+	)
+	if rear_laser_remaining > 0.0:
+		var laser_alpha := clampf(
+			rear_laser_remaining / 0.14, 0.0, 1.0
+		)
+		_write_beam(
+			Vector2(secondary.get("rear_laser_origin", player_position)),
+			Vector2(secondary.get("rear_laser_end", player_position)),
+			36.0,
+			Color(Art.SYSTEM, 0.50 + 0.35 * laser_alpha)
+		)
+	var storm_radius := 140.0
+	var storm_position := Vector2(
+		secondary.get("storm_position", player_position)
+	)
+	var storm_warning_remaining := float(
+		secondary.get("storm_warning_remaining", 0.0)
+	)
+	if bool(secondary.get("storm_pending", false)):
+		var warning_alpha := 0.10 + 0.12 * clampf(
+			storm_warning_remaining / 0.55, 0.0, 1.0
+		)
+		_write_disk(
+			storm_position, storm_radius, Color(Art.ARC, warning_alpha)
+		)
+	var storm_impact_remaining := float(
+		secondary.get("storm_impact_remaining", 0.0)
+	)
+	if storm_impact_remaining > 0.0:
+		var impact_alpha := clampf(
+			storm_impact_remaining / 0.18, 0.0, 1.0
+		)
+		_write_disk(
+			storm_position,
+			storm_radius,
+			Color(Art.ARC, 0.18 + 0.22 * impact_alpha)
+		)
+		_write_beam(
+			storm_position + Vector2(-storm_radius, 0.0),
+			storm_position + Vector2(storm_radius, 0.0),
+			24.0,
+			Color(Art.SYSTEM, 0.64 * impact_alpha)
+		)
 	var field_radius := float(secondary.get("electric_field_radius", 0.0))
 	if field_radius > 0.0:
 		_write_instance(
@@ -1712,6 +1790,59 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			Vector2.ONE * MYSTERY_DEVICE_VISUAL_RADIUS,
 			Color.WHITE
 		)
+		var outcome_label := String(device.get("outcome_label", ""))
+		if not outcome_label.is_empty():
+			_queue_world_chip(
+				"%s · %d" % [
+					outcome_label,
+					int(device.get("target_count", 0)),
+				],
+				position - Vector2(0.0, MYSTERY_DEVICE_VISUAL_RADIUS + 18.0),
+				_mystery_outcome_color(StringName(
+					device.get("revealed_outcome", &"")
+				))
+			)
+
+
+func _mystery_outcome_color(outcome: StringName) -> Color:
+	match outcome:
+		&"cryo_lock":
+			return Art.CRYO
+		&"projectile_purge":
+			return Art.MINT
+		&"decoy_signal":
+			return Art.MUSTARD
+	return Art.SYSTEM
+
+
+func _queue_world_chip(text_value: String, position: Vector2, color: Color) -> void:
+	if text_value.is_empty() or _world_chip_draw_count >= WORLD_CHIP_CAPACITY:
+		return
+	var chip := _world_chip_draws[_world_chip_draw_count]
+	chip.text = text_value
+	chip.position = position
+	chip.color = color
+	_world_chip_draw_count += 1
+
+
+func _draw_world_chip(chip: WorldChipDraw) -> void:
+	var font_size := 14
+	var text_size := WORLD_CHIP_FONT.get_string_size(
+		chip.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size
+	)
+	var size := text_size + Vector2(14.0, 8.0)
+	var rectangle := Rect2(chip.position - size * 0.5, size)
+	draw_rect(rectangle, Color(Art.SPACE_BLACK, 0.90), true)
+	draw_rect(rectangle, Color(chip.color, 0.86), false, 2.0)
+	draw_string(
+		WORLD_CHIP_FONT,
+		chip.position + Vector2(-text_size.x * 0.5, text_size.y * 0.32),
+		chip.text,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		-1.0,
+		font_size,
+		Art.TEXT_PRIMARY
+	)
 func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 	var effects_variant: Variant = state.get("mystery_effects")
 	if not effects_variant is Array:
@@ -1755,13 +1886,21 @@ func _sync_reinforcement_facility(
 	var radius := float(facility.get("radius", 112.0))
 	if not visible_world.grow(radius).has_point(position):
 		return
+	var facility_state := StringName(facility.get("state", &"offline"))
+	var facility_modulate := Color.WHITE
+	if facility_state == &"offline":
+		facility_modulate = Color(Art.TEXT_MUTED, 0.62)
+	elif facility_state == &"spent":
+		facility_modulate = Color(Art.TEXT_MUTED, 0.42)
 	_write_instance(
 		_reinforcement_facility_batch,
 		position,
 		0.0,
 		Vector2.ONE * radius,
-		Color.WHITE
+		facility_modulate
 	)
+	if facility_state != &"active":
+		return
 	_sync_health_bar(
 		position,
 		radius,
@@ -1773,6 +1912,19 @@ func _sync_reinforcement_facility(
 		16.0,
 		16.0,
 		Art.CORAL,
+		visible_world
+	)
+	_sync_health_bar(
+		position,
+		radius + 26.0,
+		1.0 - float(facility.get("spawn_ratio", 1.0)),
+		1.0,
+		1.15,
+		72.0,
+		96.0,
+		8.0,
+		12.0,
+		Art.MUSTARD,
 		visible_world
 	)
 	_facility_health_bar_count = 1

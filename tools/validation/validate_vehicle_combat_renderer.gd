@@ -7,6 +7,9 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
+const DashUpgradeRuntime = preload(
+	"res://scripts/player/vehicle_dash_upgrade_runtime.gd"
+)
 const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
@@ -503,6 +506,9 @@ func _run() -> void:
 		"player and hostile projectiles retain distinct texture-capable surfaces"
 	)
 	_validate_mystery_device_presentation(renderer, no_enemies, no_projectiles, no_shards)
+	_validate_conditional_attack_footprints(
+		renderer, no_enemies, no_projectiles, no_shards
+	)
 	_validate_player_directional_cues(
 		renderer,
 		no_enemies,
@@ -1344,6 +1350,7 @@ func _validate_mystery_device_presentation(
 	]
 	presentation["reinforcement_facility"] = {
 		"visible":true,
+		"state":&"active",
 		"position":Vector2(900.0, 360.0),
 		"radius":112.0,
 		"health":120.0,
@@ -1388,9 +1395,8 @@ func _validate_mystery_device_presentation(
 	_expect(
 		int(health_snapshot["mystery_health_bar_count"]) == 0
 			and int(health_snapshot["facility_health_bar_count"]) == 1
-			and int(health_snapshot["crate_health_bar_count"]) == 0
 			and int(health_snapshot["health_bar_count"]) == 1,
-		"devices and crates omit health bars while the active facility always owns one"
+		"devices omit health bars while the active facility owns its status meters"
 	)
 	var health_buffer := (
 		(renderer.get_node("Overlay_health") as MultiMeshInstance2D).multimesh.buffer
@@ -1498,6 +1504,112 @@ func _validate_mystery_device_presentation(
 			420.0
 		),
 		"standard and reduced motion keep the same Mystery purge footprint"
+	)
+
+
+func _validate_conditional_attack_footprints(
+	renderer: Renderer,
+	no_enemies: Array[EnemyState],
+	no_projectiles: Array[ProjectileState],
+	no_shards: Array[ExperienceShard]
+) -> void:
+	var player_position := Vector2(640.0, 360.0)
+	var presentation := _player_presentation(player_position, false)
+	var trail := DashUpgradeRuntime.TrailState.new()
+	trail.start = Vector2(300.0, 360.0)
+	trail.end = Vector2(700.0, 360.0)
+	trail.remaining = DashUpgradeRuntime.TRAIL_DURATION
+	trail.level = 1
+	presentation["dash_afterburn_trails"] = [trail]
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "", presentation
+	)
+	var beam_batch := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
+	var disk_batch := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
+	var beam_buffer := beam_batch.multimesh.buffer
+	var disk_buffer := disk_batch.multimesh.buffer
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 1
+			and disk_batch.multimesh.visible_instance_count == 2
+			and is_equal_approx(
+				Vector2(beam_buffer[0], beam_buffer[4]).length(), 200.0
+			)
+			and is_equal_approx(
+				Vector2(beam_buffer[1], beam_buffer[5]).length(), 72.0
+			)
+			and Vector2(disk_buffer[3], disk_buffer[7]) == trail.start
+			and Vector2(
+				disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 3],
+				disk_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 7]
+			) == trail.end,
+		"dash afterburn renders the full actual path as one radius-72 capsule"
+	)
+
+	presentation["dash_afterburn_trails"] = []
+	presentation["secondary"] = {
+		"mines":[],
+		"electric_field_radius":0.0,
+		"rear_laser_active_remaining":0.14,
+		"rear_laser_origin":Vector2(600.0, 360.0),
+		"rear_laser_end":Vector2(200.0, 360.0),
+		"storm_pending":false,
+		"storm_impact_remaining":0.0,
+	}
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "", presentation
+	)
+	beam_buffer = beam_batch.multimesh.buffer
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 1
+			and is_equal_approx(
+				Vector2(beam_buffer[0], beam_buffer[4]).length(), 200.0
+			)
+			and is_equal_approx(
+				Vector2(beam_buffer[1], beam_buffer[5]).length(), 18.0
+			)
+			and Vector2(beam_buffer[3], beam_buffer[7])
+				== Vector2(400.0, 360.0),
+		"rear laser renders its exact corridor without a startup ring"
+	)
+
+	var storm_position := Vector2(900.0, 360.0)
+	presentation["secondary"]["rear_laser_active_remaining"] = 0.0
+	presentation["secondary"]["storm_pending"] = true
+	presentation["secondary"]["storm_position"] = storm_position
+	presentation["secondary"]["storm_warning_remaining"] = 0.55
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "", presentation
+	)
+	disk_buffer = disk_batch.multimesh.buffer
+	_expect(
+		disk_batch.multimesh.visible_instance_count == 1
+			and Vector2(disk_buffer[3], disk_buffer[7]) == storm_position
+			and is_equal_approx(disk_buffer[0], 140.0)
+			and is_equal_approx(disk_buffer[5], 140.0),
+		"storm warning shows its full radius-140 footprint on the first frame"
+	)
+
+	presentation["secondary"]["storm_pending"] = false
+	presentation["secondary"]["storm_warning_remaining"] = 0.0
+	presentation["secondary"]["storm_impact_remaining"] = 0.18
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "", presentation
+	)
+	beam_buffer = beam_batch.multimesh.buffer
+	_expect(
+		disk_batch.multimesh.visible_instance_count == 1
+			and beam_batch.multimesh.visible_instance_count == 1
+			and is_equal_approx(
+				Vector2(beam_buffer[0], beam_buffer[4]).length(), 140.0
+			)
+			and is_equal_approx(
+				Vector2(beam_buffer[1], beam_buffer[5]).length(), 12.0
+			),
+		"storm impact uses one final disk and one wide accent"
 	)
 
 

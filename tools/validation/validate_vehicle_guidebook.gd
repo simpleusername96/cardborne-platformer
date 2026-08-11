@@ -36,7 +36,7 @@ func _run() -> void:
 		)
 	for entry_id in [
 		&"boss_stage_2", &"object_transit_gate", &"object_mystery_device",
-		&"object_elite_armored",
+		&"object_reinforcement_facility", &"object_elite_armored",
 	]:
 		_expect(store.discover(entry_id), "%s unlocks" % entry_id)
 	_validate_catalog_partition()
@@ -83,12 +83,31 @@ func _run() -> void:
 	var active := store.snapshot(active_ship, {"active_stage_index":1})
 	_validate_stat_parity(outside, active)
 
+	var compatibility_config := ConfigFile.new()
+	_expect(
+		compatibility_config.load(TEST_PATH) == OK,
+		"discovery fixture is available for retired-ID compatibility"
+	)
+	var compatibility_ids := PackedStringArray(
+		compatibility_config.get_value(
+			"discovery", "known", PackedStringArray()
+		)
+	)
+	compatibility_ids.append("object_crate")
+	compatibility_config.set_value("discovery", "known", compatibility_ids)
+	_expect(
+		compatibility_config.save(TEST_PATH) == OK,
+		"retired crate fixture is written without changing the live catalog"
+	)
 	var loaded := Store.new()
 	loaded.save_path = TEST_PATH
 	loaded.load_discovery()
 	_expect(
-		loaded.known.has(&"mobile_chaser") and loaded.known.size() == 10,
-		"schema-v1 discovery save round-trips stable old and new IDs"
+		loaded.known.has(&"mobile_chaser")
+			and loaded.known.has(&"object_reinforcement_facility")
+			and not loaded.known.has(&"object_crate")
+			and loaded.known.size() == 11,
+		"schema-v1 load ignores the retired crate ID and preserves live IDs"
 	)
 
 	var panel := GuidePanel.new()
@@ -204,6 +223,11 @@ func _validate_catalog_partition() -> void:
 		Catalog.ENEMY_ENTRY_IDS.size() == Archetypes.DEFINITIONS.size() - 1,
 		"constant enemy discovery mapping covers every non-boss archetype"
 	)
+	_expect(
+		not entries_by_id.has(&"object_crate")
+			and not Catalog.valid_ids().has(&"object_crate"),
+		"retired crates stay absent from active catalog and discovery"
+	)
 	for elite_id in [
 		&"object_elite_armored", &"object_elite_overclocked", &"object_elite_heavy",
 	]:
@@ -248,8 +272,24 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 	var anomaly := _entry(active, &"objects", &"object_mystery_device")
 	_expect(
 		String(anomaly["name_key"]) == "GUIDE_OBJECT_MYSTERY_DEVICE_NAME"
-			and Array(anomaly["stat_rows"]).size() == 2,
-		"Anomaly Device keeps its stable runtime ID and exposes real effect stats"
+			and Array(anomaly["stat_rows"]).size() == 5
+			and String(Dictionary(Array(anomaly["stat_rows"])[0])["value_key"])
+				== "GUIDE_VALUE_HP",
+		"Anomaly Device exposes HP and all four exact runtime outcomes"
+	)
+	var facility := _entry(
+		active, &"objects", &"object_reinforcement_facility"
+	)
+	var facility_rows := Array(facility["stat_rows"])
+	_expect(
+		facility_rows.size() == 4
+			and int(Array(Dictionary(facility_rows[0])["value_args"])[0]) == 390
+			and is_equal_approx(
+				float(Array(Dictionary(facility_rows[1])["value_args"])[0]), 7.0
+			)
+			and int(Array(Dictionary(facility_rows[2])["value_args"])[0]) == 3
+			and int(Array(Dictionary(facility_rows[3])["value_args"])[0]) == 3,
+		"Reinforcement Facility exposes Stage 2 HP, cadence, live cap, and charges"
 	)
 
 

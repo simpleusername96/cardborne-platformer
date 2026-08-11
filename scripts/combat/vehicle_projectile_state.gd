@@ -7,6 +7,7 @@ extends RefCounted
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 
 var pos := Vector2.ZERO
+var spawn_origin := Vector2.ZERO
 var velocity := Vector2.ZERO
 var radius := 5.0
 var damage := 0.0
@@ -38,6 +39,7 @@ func configure(
 	boss_reserve: bool = false
 ) -> void:
 	pos = Vector2(spec.get("pos", Vector2.ZERO))
+	spawn_origin = Vector2(spec.get("spawn_origin", pos))
 	velocity = Vector2(spec.get("velocity", Vector2.ZERO))
 	radius = float(spec.get("radius", 5.0))
 	damage = float(spec.get("damage", 0.0))

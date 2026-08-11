@@ -318,7 +318,7 @@ canonical sprite처럼 새 raster로 굽지 않는다. 잔류 열흔은 실제 �
 
 기존 카드 13종에 신규 카드 8종을 더해 21종이 된다. 명목 상태는 기존 36에 기존 최종
 레벨 8개와 신규 3레벨 24개를 더한 68이다. optional 5종 중 최대 2종, 원소 1종 제한을
-적용하면 한 런의 합법 선택 상한은 선택한 optional 조합에 따라 49~51이다. 이 범위를
+적용하면 한 런의 합법 선택 상한은 선택한 optional 조합과 원소 레벨 수에 따라 48~51이다. 이 범위를
 exhaustion validator가 전부 순회하며 가짜 카드나 제한 위반이 없음을 확인한다.
 
 `VehicleUpgradeCatalog`에 공격 ID 집합을 한 번만 정의한다. `stage_index >= 2`이고
@@ -456,10 +456,10 @@ outgoing policy에, 대시 완료 효과는 dash runtime에, 회복 분리는 re
   통합 validator를 추가한다.
 - [x] `M2` crate blueprint를 14개 direct pickup으로 통합하고 crate runtime/cover/UI/guide
   active surface를 제거한다.
-- [ ] `M3` 기존 공격 카드 8종의 새 최종 레벨과 신규 카드 8종, `combat` 카테고리,
+- [x] `M3` 기존 공격 카드 8종의 새 최종 레벨과 신규 카드 8종, `combat` 카테고리,
   역방향 레이저·전격포, 기뢰 발동 설명, 후반 공격 offer 보장, preview/localization/spec,
   조건부 피해·회복·보조 무기 계산 validator를 구현한다.
-- [ ] `M4` facility 유한 충전·offline/spent lifecycle·incremental child count와 mystery
+- [x] `M4` facility 유한 충전·offline/spent lifecycle·incremental child count와 mystery
   revealed-state/count presentation, guidebook stat을 구현한다.
 - [ ] `M5` 기능 변경 후 clean baseline과 scaling/ablation evidence를 한 번 수집하고 material
   owner를 고정된 기준으로 선택한다.
@@ -472,11 +472,15 @@ outgoing policy에, 대시 완료 효과는 dash runtime에, 회복 분리는 re
 - [ ] `M9` task-owned code quality audit를 통과하고, durable spec에 결정을 옮긴 뒤 이 계획을
   `done`으로 표시하고 coherent scoped commit을 만든다.
 
-Current pointer: `M3`. M2는 같은 결정적 위치와 recall 4/repair 10/총 회복 490을
-14개 direct pickup으로 보존하면서 crate schema, 충돌, 시야, 투사체, 미니맵, 가이드북
-active surface를 제거했다. `VEHICLE_FIELD_LAYOUT_GENERATION_VALIDATION_OK`,
-`VEHICLE_DESTRUCTIBLE_TERRAIN_FLOW_VALIDATION_OK`,
-`VEHICLE_STAGE_TRANSITION_VALIDATION_OK`가 통과했다. 열린 제품 선택은 없다.
+Current pointer: `M5`. M3/M4는 카드 21종·명목 상태 68·합법 선택 48~51, 전체 대시
+경로 장판, 역방향 beam, 원거리 전격포, 유한 증원 충전과 event-owned child count,
+장치 공개 chip/count, 시설·장치 가이드북 실수치를 runtime에 연결했다.
+`VEHICLE_CONDITIONAL_UPGRADES_VALIDATION_OK`,
+`VEHICLE_SECONDARY_WEAPONS_VALIDATION_OK`, `VEHICLE_UPGRADE_SYSTEM_VALIDATION_OK`,
+`VEHICLE_UPGRADE_UI_VALIDATION_OK`, `VEHICLE_REINFORCEMENT_FACILITY_VALIDATION`,
+`VEHICLE_MYSTERY_DEVICE_RUNTIME_VALIDATION_OK`, `VEHICLE_GUIDEBOOK_VALIDATION_OK`,
+`VEHICLE_COMBAT_RENDERER_VALIDATION_OK`, `VEHICLE_STAGE_TRANSITION_VALIDATION_OK`가
+통과했다. 열린 제품 선택은 없다.
 
 ## Acceptance Criteria
 
@@ -500,8 +504,8 @@ active surface를 제거했다. `VEHICLE_FIELD_LAYOUT_GENERATION_VALIDATION_OK`,
   폭발한다. 카드와 상세 한국어/영어 설명이 이 동작을 숨기지 않는다.
 - 3~5스테이지에 합법 미완성 공격 카드가 있으면 offer 3장 중 최소 1장이고 같은 seed는
   같은 offer를 만든다.
-- 카탈로그는 21종·명목 상태 68이며, 모든 합법 업그레이드 소진은 optional 조합별 실제
-  선택 상한 49~51에서 종료되고 가짜 카드가 나오지 않는다.
+- 카탈로그는 21종·명목 상태 68이며, 모든 합법 업그레이드 소진은 optional 조합과 선택
+  원소별 실제 선택 상한 48~51에서 종료되고 가짜 카드가 나오지 않는다.
 - 각 스테이지 direct pickup은 정확히 14개이며 recall 4, repair 10, 총 repair 490이다.
   `crates` runtime/schema/live collision/cover/damage/drop/marker/guide entry는 0개다.
 - 시설은 시작부터 offline 위치가 보이고 35%에서 활성화되며 총 `[2,3,4,5,6]`회만
@@ -639,7 +643,7 @@ performance 변경이 있었을 때만 최종 pair를 한 번 다시 실행한�
 - 2026-08-11: 직접 피해 카드 8종에 +1레벨을 추가하되 새 최종 레벨의 actor/query count를
   늘리지 않는다.
 - 2026-08-11: 사용자 선택을 조건부 전투 카드 5종, 초과 회복막 1종, 선택 보조 무기 2종으로
-  확정한다. 카탈로그는 21종·명목 상태 68, 합법 선택 상한은 optional 조합별 49~51이다.
+  확정한다. 카탈로그는 21종·명목 상태 68, 합법 선택 상한은 optional 조합과 원소별 48~51이다.
 - 2026-08-11: “근거리나 원거리”는 근접/원거리 중 하나를 택하는 두 카드가 아니라 한 장이
   양 극단을 보상하고 중간 거리는 보너스가 없는 `거리 극화`로 해석한다.
 - 2026-08-11: 사용자 정정에 따라 잔류 열흔은 종료점 원형 장판이 아니라 대시 시작점부터

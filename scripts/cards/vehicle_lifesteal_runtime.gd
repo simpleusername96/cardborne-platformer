@@ -31,17 +31,17 @@ func advance(delta: float) -> void:
 	)
 
 
-func consume(applied_damage: float, missing_hull: float) -> float:
+func consume(applied_damage: float, recovery_capacity: float) -> float:
 	if (
 		applied_damage <= 0.0
-		or missing_hull <= 0.0
+		or recovery_capacity <= 0.0
 		or _healing_percent <= 0.0
 		or _remaining_budget <= 0.0
 	):
 		return 0.0
 	var healing := minf(
 		minf(applied_damage * _healing_percent / 100.0, _remaining_budget),
-		missing_hull
+		recovery_capacity
 	)
 	_remaining_budget -= healing
 	return healing

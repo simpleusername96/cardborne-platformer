@@ -10,4 +10,4 @@ description_key = "UPGRADE_ORBITING_BLADES_DESC"
 category = &"secondary"
 secondary_slot_kind = &"optional"
 artwork_asset_id = &"secondary/orbit_blade"
-max_level = 3
+max_level = 4

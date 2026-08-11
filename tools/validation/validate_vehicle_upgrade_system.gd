@@ -39,7 +39,7 @@ func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract():
 		failures.append(error)
-	_expect(catalog.definitions.size() == 13, "catalog contains exactly 13 upgrades")
+	_expect(catalog.definitions.size() == 21, "catalog contains exactly 21 upgrades")
 	_validate_presentation(catalog)
 	_validate_behavior_previews(catalog)
 	_validate_secondary_slots(catalog)
@@ -95,12 +95,13 @@ func _validate_presentation(catalog: Catalog) -> void:
 					"%s behavior level has a localized change label" % definition.id
 				)
 			state_count += 1
-	_expect(state_count == 36, "upgrade presentation covers all 36 level states")
+	_expect(state_count == 68, "upgrade presentation covers all 68 level states")
 	_expect(
 		category_counts == {
-			&"primary":2, &"secondary":4, &"element":3, &"chassis":4,
+			&"primary":2, &"secondary":6, &"element":3, &"chassis":5,
+			&"combat":5,
 		},
-		"four player-facing categories own the exact minimal roster"
+		"five player-facing categories own the exact expanded roster"
 	)
 
 
@@ -109,54 +110,56 @@ func _validate_behavior_previews(catalog: Catalog) -> void:
 		PrimaryRules.projectiles_per_volley(0) == 1
 			and PrimaryRules.projectiles_per_volley(1) == 2
 			and PrimaryRules.projectiles_per_volley(2) == 3
+			and PrimaryRules.projectiles_per_volley(3) == 3
 			and is_equal_approx(PrimaryRules.total_volley_damage_percent(0), 100.0)
 			and is_equal_approx(PrimaryRules.total_volley_damage_percent(1), 140.0)
 			and is_equal_approx(PrimaryRules.total_volley_damage_percent(2), 165.0)
-			and PrimaryRules.additional_penetrations(3) == 3,
+			and is_equal_approx(PrimaryRules.total_volley_damage_percent(3), 180.0)
+			and PrimaryRules.additional_penetrations(4) == 4,
 		"primary gameplay rules own the exact Split and Pierce sequences"
 	)
 	var cases := [
 		{
 			"id":&"split_muzzle",
 			"keys":["UPGRADE_EFFECT_PROJECTILES_PER_VOLLEY", "UPGRADE_EFFECT_TOTAL_VOLLEY_DAMAGE"],
-			"current":[[1.0, 2.0], [100.0, 140.0]],
-			"next":[[2.0, 3.0], [140.0, 165.0]],
-			"show":[true, true],
+			"current":[[1.0, 2.0, 3.0], [100.0, 140.0, 165.0]],
+			"next":[[2.0, 3.0, 3.0], [140.0, 165.0, 180.0]],
+			"show":[true, true, true],
 		},
 		{
 			"id":&"piercing_rounds",
 			"keys":["UPGRADE_EFFECT_ADDITIONAL_PENETRATIONS"],
-			"current":[[0.0, 1.0, 2.0]],
-			"next":[[1.0, 2.0, 3.0]],
-			"show":[true, true, true],
+			"current":[[0.0, 1.0, 2.0, 3.0]],
+			"next":[[1.0, 2.0, 3.0, 4.0]],
+			"show":[true, true, true, true],
 		},
 		{
 			"id":&"homing_missiles",
 			"keys":["UPGRADE_EFFECT_MISSILES_PER_VOLLEY", "UPGRADE_EFFECT_DAMAGE_PER_MISSILE"],
-			"current":[[1.0, 2.0], [25.0, 28.0]],
-			"next":[[2.0, 3.0], [28.0, 32.0]],
-			"show":[true, true],
+			"current":[[1.0, 2.0, 3.0], [25.0, 28.0, 32.0]],
+			"next":[[2.0, 3.0, 3.0], [28.0, 32.0, 38.0]],
+			"show":[true, true, true],
 		},
 		{
 			"id":&"electric_field",
 			"keys":["UPGRADE_EFFECT_DPS", "UPGRADE_EFFECT_RADIUS"],
-			"current":[[8.0, 8.0, 12.0], [120.0, 120.0, 140.0]],
-			"next":[[8.0, 12.0, 16.0], [120.0, 140.0, 160.0]],
-			"show":[false, true, true],
+			"current":[[8.0, 8.0, 12.0, 16.0], [120.0, 120.0, 140.0, 160.0]],
+			"next":[[8.0, 12.0, 16.0, 22.0], [120.0, 140.0, 160.0, 160.0]],
+			"show":[false, true, true, true],
 		},
 		{
 			"id":&"orbiting_blades",
 			"keys":["UPGRADE_EFFECT_BLADE_COUNT", "UPGRADE_EFFECT_DAMAGE_PER_BLADE"],
-			"current":[[2.0, 2.0, 3.0], [14.0, 14.0, 18.0]],
-			"next":[[2.0, 3.0, 4.0], [14.0, 18.0, 22.0]],
-			"show":[false, true, true],
+			"current":[[2.0, 2.0, 3.0, 4.0], [14.0, 14.0, 18.0, 22.0]],
+			"next":[[2.0, 3.0, 4.0, 4.0], [14.0, 18.0, 22.0, 28.0]],
+			"show":[false, true, true, true],
 		},
 		{
 			"id":&"drop_mines",
 			"keys":["UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_DEPLOYMENT_INTERVAL"],
-			"current":[[48.0, 48.0, 60.0], [3.2, 3.2, 2.8]],
-			"next":[[48.0, 60.0, 72.0], [3.2, 2.8, 2.4]],
-			"show":[false, true, true],
+			"current":[[48.0, 48.0, 60.0, 72.0], [3.2, 3.2, 2.8, 2.4]],
+			"next":[[48.0, 60.0, 72.0, 88.0], [3.2, 2.8, 2.4, 2.4]],
+			"show":[false, true, true, true],
 		},
 	]
 	for case_variant in cases:
@@ -216,8 +219,8 @@ func _validate_secondary_slots(catalog: Catalog) -> void:
 	optional_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	built_in_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	_expect(
-		_id_key(optional_ids) == "drop_mines|electric_field|orbiting_blades",
-		"three optional secondary identities support a choose-two decision: %s"
+		_id_key(optional_ids) == "drop_mines|electric_field|orbiting_blades|rear_laser|storm_barrage",
+		"five optional secondary identities support a choose-two decision: %s"
 		% _id_key(optional_ids)
 	)
 	_expect(
@@ -274,6 +277,13 @@ func _validate_offers(catalog: Catalog) -> void:
 				offer.size() == 3 and _offer_is_legal(offer, empty_build, catalog),
 				"fresh offer has three legal cards"
 			)
+		var late_offer := catalog.offer(
+			empty_build, run_seed, 2, &"level_up", run_seed
+		)
+		_expect(
+			late_offer.any(func(definition: VehicleUpgradeDefinition) -> bool: return Catalog.ATTACK_UPGRADE_IDS.has(definition.id)),
+			"Stage 3+ offer guarantees one legal unfinished attack upgrade"
+		)
 	var stable_offer_a := catalog.offer(empty_build, 0xCA4D, 1, &"level_up", 7)
 	var stable_offer_b := catalog.offer(empty_build, 0xCA4D, 1, &"level_up", 7)
 	_expect(
@@ -284,7 +294,7 @@ func _validate_offers(catalog: Catalog) -> void:
 		var build := RunBuild.new(catalog)
 		var legal_choices := 0
 		var observed_sizes := {}
-		for choice_index in 40:
+		for choice_index in 60:
 			var source_id := &"boss" if choice_index in [4, 9, 14, 19, 24] else &"level_up"
 			var offer := catalog.offer(
 				build,
@@ -304,9 +314,18 @@ func _validate_offers(catalog: Catalog) -> void:
 			legal_choices += 1
 			build.apply(offer[run_seed % offer.size()].id)
 		_expect(
-			legal_choices >= 21 and catalog.compatible_definitions(build).is_empty(),
-			"seed %d reaches catalog exhaustion after all legal choices"
-			% run_seed
+			legal_choices >= 48
+				and legal_choices <= 51
+				and catalog.compatible_definitions(build).is_empty(),
+			(
+				"seed %d reaches catalog exhaustion after all legal choices "
+					+ "(choices=%d, remaining=%d)"
+			)
+			% [
+				run_seed,
+				legal_choices,
+				catalog.compatible_definitions(build).size(),
+			]
 		)
 		_expect(
 			observed_sizes.has(1) and observed_sizes.has(2) and observed_sizes.has(3),
@@ -368,13 +387,13 @@ func _validate_element_stats(catalog: Catalog) -> void:
 	var cases := [
 		{
 			"id":&"thermal_burst",
-			"stat_a":&"thermal_burst_radius", "a":[72.0, 84.0, 96.0],
-			"stat_b":&"thermal_burst_damage", "b":[4.0, 6.0, 8.0],
+			"stat_a":&"thermal_burst_radius", "a":[72.0, 84.0, 96.0, 96.0],
+			"stat_b":&"thermal_burst_damage", "b":[4.0, 6.0, 8.0, 11.0],
 		},
 		{
 			"id":&"bio_toxin",
-			"stat_a":&"toxin_dps_per_stack", "a":[2.0, 3.0, 4.0],
-			"stat_b":&"toxin_duration", "b":[5.0, 6.0, 7.0],
+			"stat_a":&"toxin_dps_per_stack", "a":[2.0, 3.0, 4.0, 5.5],
+			"stat_b":&"toxin_duration", "b":[5.0, 6.0, 7.0, 7.0],
 		},
 		{
 			"id":&"cryo_slow",
@@ -395,7 +414,7 @@ func _validate_element_stats(catalog: Catalog) -> void:
 			"%s first acquisition exposes initial values without false zero deltas"
 			% case["id"]
 		)
-		for level in 3:
+		for level in definition.max_level:
 			build.apply(StringName(case["id"]))
 			var profile := ElementProfile.from_build(build)
 			_expect(

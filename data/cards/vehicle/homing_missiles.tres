@@ -10,4 +10,4 @@ description_key = "UPGRADE_HOMING_MISSILES_DESC"
 category = &"secondary"
 secondary_slot_kind = &"built_in"
 artwork_asset_id = &"secondary/seeker"
-max_level = 2
+max_level = 3

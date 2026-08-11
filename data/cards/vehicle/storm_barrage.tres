@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1_def")
-id = &"electric_field"
-title_key = "UPGRADE_ELECTRIC_FIELD_TITLE"
-description_key = "UPGRADE_ELECTRIC_FIELD_DESC"
+id = &"storm_barrage"
+title_key = "UPGRADE_STORM_BARRAGE_TITLE"
+description_key = "UPGRADE_STORM_BARRAGE_DESC"
 category = &"secondary"
 secondary_slot_kind = &"optional"
 artwork_asset_id = &"upgrade/ion_field"
-max_level = 4
+max_level = 3

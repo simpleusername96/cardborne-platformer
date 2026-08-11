@@ -5,6 +5,15 @@ extends RefCounted
 
 const PrimaryRules = preload("res://scripts/player/vehicle_primary_upgrade_rules.gd")
 const SecondaryCatalog = preload("res://scripts/player/vehicle_secondary_catalog.gd")
+const OutgoingDamagePolicy = preload(
+	"res://scripts/player/vehicle_outgoing_damage_policy.gd"
+)
+const RecoveryPolicy = preload(
+	"res://scripts/player/vehicle_player_recovery_policy.gd"
+)
+const DashRuntime = preload(
+	"res://scripts/player/vehicle_dash_upgrade_runtime.gd"
+)
 
 static var _secondary_catalog: RefCounted
 
@@ -62,6 +71,90 @@ static func rows(
 				"UPGRADE_EFFECT_DEPLOYMENT_INTERVAL",
 				false,
 				"seconds"
+			)
+		&"critical_targeting":
+			return [
+				_row(
+					"UPGRADE_EFFECT_CRITICAL_CHANCE",
+					OutgoingDamagePolicy.critical_chance(current_level) * 100.0,
+					OutgoingDamagePolicy.critical_chance(current_level + 1) * 100.0,
+					"percent"
+				),
+				_row(
+					"UPGRADE_EFFECT_CRITICAL_MULTIPLIER",
+					OutgoingDamagePolicy.CRITICAL_MULTIPLIER,
+					OutgoingDamagePolicy.CRITICAL_MULTIPLIER
+				),
+			]
+		&"range_polarization":
+			return [_row(
+				"UPGRADE_EFFECT_CONDITIONAL_DAMAGE",
+				OutgoingDamagePolicy.range_bonus(current_level) * 100.0,
+				OutgoingDamagePolicy.range_bonus(current_level + 1) * 100.0,
+				"percent"
+			)]
+		&"dash_overdrive":
+			return [
+				_row(
+					"UPGRADE_EFFECT_CONDITIONAL_DAMAGE",
+					OutgoingDamagePolicy.dash_bonus(current_level) * 100.0,
+					OutgoingDamagePolicy.dash_bonus(current_level + 1) * 100.0,
+					"percent"
+				),
+				_row(
+					"UPGRADE_EFFECT_DURATION",
+					DashRuntime.OVERDRIVE_DURATION,
+					DashRuntime.OVERDRIVE_DURATION,
+					"seconds"
+				),
+			]
+		&"dash_afterburn_field":
+			return [
+				_row(
+					"UPGRADE_EFFECT_DAMAGE_PER_TICK",
+					DashRuntime.damage_per_tick(current_level),
+					DashRuntime.damage_per_tick(current_level + 1)
+				),
+				_row(
+					"UPGRADE_EFFECT_DURATION",
+					DashRuntime.TRAIL_DURATION,
+					DashRuntime.TRAIL_DURATION,
+					"seconds"
+				),
+			]
+		&"last_stand_amplifier":
+			return [_row(
+				"UPGRADE_EFFECT_MAX_DAMAGE_BONUS",
+				OutgoingDamagePolicy.crisis_max_bonus(current_level) * 100.0,
+				OutgoingDamagePolicy.crisis_max_bonus(current_level + 1) * 100.0,
+				"percent"
+			)]
+		&"overflow_barrier":
+			return [
+				_row(
+					"UPGRADE_EFFECT_OVERFLOW_CONVERSION",
+					RecoveryPolicy.conversion_rate(current_level) * 100.0,
+					RecoveryPolicy.conversion_rate(current_level + 1) * 100.0,
+					"percent"
+				),
+				_row(
+					"UPGRADE_EFFECT_BARRIER_CAP",
+					RecoveryPolicy.BARRIER_CAP_RATIOS[clampi(current_level, 0, 3)] * 100.0,
+					RecoveryPolicy.BARRIER_CAP_RATIOS[clampi(current_level + 1, 0, 3)] * 100.0,
+					"percent"
+				),
+			]
+		&"rear_laser":
+			return _optional_secondary_rows(
+				definition.id, current_level,
+				"UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_COOLDOWN",
+				false, "seconds"
+			)
+		&"storm_barrage":
+			return _optional_secondary_rows(
+				definition.id, current_level,
+				"UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_COOLDOWN",
+				false, "seconds"
 			)
 	return []
 

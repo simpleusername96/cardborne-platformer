@@ -2,11 +2,11 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 13
-const EXPECTED_LEVEL_STATES := 36
+const EXPECTED_COUNT := 21
+const EXPECTED_LEVEL_STATES := 68
 const OPTIONAL_SECONDARY_SLOTS := 2
 const CATEGORIES: Array[StringName] = [
-	&"primary", &"secondary", &"element", &"chassis",
+	&"primary", &"secondary", &"element", &"chassis", &"combat",
 ]
 const SECONDARY_SLOT_KINDS: Array[StringName] = [&"", &"built_in", &"optional"]
 const MODIFIER_OPERATIONS: Array[String] = ["add", "multiply"]
@@ -24,11 +24,31 @@ const STAT_IDS: Array[StringName] = [
 	&"cryo_duration",
 ]
 const EXPECTED_IDS: Array[StringName] = [
-	&"bio_toxin", &"chassis_speed", &"cryo_slow", &"drop_mines",
-	&"electric_field", &"homing_missiles", &"hull_integrity", &"lifesteal",
-	&"orbiting_blades", &"pickup_radius", &"piercing_rounds",
-	&"split_muzzle", &"thermal_burst",
+	&"bio_toxin", &"chassis_speed", &"critical_targeting", &"cryo_slow",
+	&"dash_afterburn_field", &"dash_overdrive", &"drop_mines",
+	&"electric_field", &"homing_missiles", &"hull_integrity",
+	&"last_stand_amplifier", &"lifesteal", &"orbiting_blades",
+	&"overflow_barrier", &"pickup_radius", &"piercing_rounds",
+	&"range_polarization", &"rear_laser", &"split_muzzle",
+	&"storm_barrage", &"thermal_burst",
 ]
+const ATTACK_UPGRADE_IDS := {
+	&"split_muzzle":true,
+	&"piercing_rounds":true,
+	&"homing_missiles":true,
+	&"electric_field":true,
+	&"orbiting_blades":true,
+	&"drop_mines":true,
+	&"thermal_burst":true,
+	&"bio_toxin":true,
+	&"critical_targeting":true,
+	&"range_polarization":true,
+	&"dash_overdrive":true,
+	&"dash_afterburn_field":true,
+	&"last_stand_amplifier":true,
+	&"rear_laser":true,
+	&"storm_barrage":true,
+}
 
 var definitions: Dictionary = {}
 var load_errors := PackedStringArray()
@@ -160,6 +180,12 @@ func offer(
 		available[swap_index] = temporary
 	var result: Array[VehicleUpgradeDefinition] = []
 	var used_categories := {}
+	if stage_index >= 2:
+		for definition in available:
+			if ATTACK_UPGRADE_IDS.has(definition.id):
+				_append_unique(result, definition)
+				used_categories[definition.category] = true
+				break
 	for definition in available:
 		if result.size() >= 3:
 			break

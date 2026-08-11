@@ -23,12 +23,12 @@ const WORST_TEXT_TRIPLETS := {
 	"ko":[
 		{"id":&"hull_integrity", "current_level":2},
 		{"id":&"cryo_slow", "current_level":2},
-		{"id":&"orbiting_blades", "current_level":2},
+		{"id":&"drop_mines", "current_level":3},
 	],
 	"en":[
-		{"id":&"orbiting_blades", "current_level":2},
-		{"id":&"homing_missiles", "current_level":1},
-		{"id":&"hull_integrity", "current_level":2},
+		{"id":&"last_stand_amplifier", "current_level":2},
+		{"id":&"range_polarization", "current_level":2},
+		{"id":&"critical_targeting", "current_level":2},
 	],
 }
 const DENSE_STAT_TRIPLET := [
@@ -356,7 +356,7 @@ func _validate_triplet_matrix(catalog: VehicleUpgradeCatalog) -> void:
 	var snapshot_count := 0
 	for definition in catalog.all_definitions():
 		snapshot_count += definition.max_level
-	_expect(snapshot_count == 36, "worst-case fixture is grounded in all 36 card states")
+	_expect(snapshot_count == 68, "worst-case fixture is grounded in all 68 card states")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		_validate_longest_fixture(catalog, locale)
@@ -640,8 +640,11 @@ func _validate_longest_fixture(
 		fixture_ids[StringName(Dictionary(record_variant)["id"])] = true
 	_expect(
 		fixture_ids.size() == 3 and fixture_ids == expected_ids,
-		"%s worst-text fixture keeps the three independent longest offers together"
-		% locale
+		(
+			"%s worst-text fixture keeps the three independent longest offers together "
+				+ "(expected=%s fixture=%s)"
+		)
+		% [locale, str(expected_ids.keys()), str(fixture_ids.keys())]
 	)
 
 

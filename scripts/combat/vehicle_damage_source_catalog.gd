@@ -13,6 +13,9 @@ const OUTGOING: Dictionary = {
 	&"dash_impact": "REPORT_SOURCE_DASH",
 	&"elemental_status": "REPORT_SOURCE_STATUS",
 	&"thermal_burst": "REPORT_SOURCE_THERMAL_BURST",
+	&"dash_afterburn": "REPORT_SOURCE_DASH_AFTERBURN",
+	&"rear_laser": "REPORT_SOURCE_REAR_LASER",
+	&"storm_barrage": "REPORT_SOURCE_STORM_BARRAGE",
 	&"arc_mine": "REPORT_SOURCE_ARC_MINE",
 	&"reflected": "REPORT_SOURCE_REFLECTED",
 	&"other": "REPORT_SOURCE_OTHER",
@@ -51,6 +54,12 @@ static func outgoing_id(source: String) -> StringName:
 			return &"elemental_status"
 		"thermal_burst":
 			return &"thermal_burst"
+		"dash_afterburn":
+			return &"dash_afterburn"
+		"rear_laser":
+			return &"rear_laser"
+		"storm_barrage":
+			return &"storm_barrage"
 		"enemy_mine", "arc proximity burst", "player_arc_mine", "player_spark_minelet":
 			return &"arc_mine"
 		"seeker burst":

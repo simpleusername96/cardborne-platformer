@@ -5,7 +5,8 @@ extends RefCounted
 
 const DEFINITION_PATH := "res://data/weapons/vehicle/secondary"
 const EXPECTED_IDS: Array[StringName] = [
-	&"drop_mines", &"electric_field", &"orbiting_blades", &"seeker",
+	&"drop_mines", &"electric_field", &"orbiting_blades", &"rear_laser",
+	&"seeker", &"storm_barrage",
 ]
 
 var definitions: Dictionary = {}
@@ -68,10 +69,13 @@ func validate_contract() -> PackedStringArray:
 		if definition == null or definition.upgrade_id == &"":
 			errors.append("vehicle secondary definition has no upgrade owner")
 			continue
+		var expected_states := 4 if definition.id in [
+			&"seeker", &"drop_mines", &"electric_field", &"orbiting_blades"
+		] else 3
 		if (
-			definition.values_by_level.size() != 3
-			or definition.auxiliary_by_level.size() != 3
-			or definition.cap_by_level.size() != 3
+			definition.values_by_level.size() != expected_states
+			or definition.auxiliary_by_level.size() != expected_states
+			or definition.cap_by_level.size() != expected_states
 		):
-			errors.append("%s must own exactly three bounded states" % definition.id)
+			errors.append("%s must own exactly %d bounded states" % [definition.id, expected_states])
 	return errors

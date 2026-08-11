@@ -7,13 +7,13 @@
 script = ExtResource("2_mod")
 stat_id = &"thermal_burst_radius"
 operation = "add"
-values_by_level = Array[float]([72.0, 84.0, 96.0])
+values_by_level = Array[float]([72.0, 84.0, 96.0, 96.0])
 
 [sub_resource type="Resource" id="Modifier_damage"]
 script = ExtResource("2_mod")
 stat_id = &"thermal_burst_damage"
 operation = "add"
-values_by_level = Array[float]([4.0, 6.0, 8.0])
+values_by_level = Array[float]([4.0, 6.0, 8.0, 11.0])
 
 [resource]
 script = ExtResource("1_def")
@@ -23,5 +23,5 @@ description_key = "UPGRADE_THERMAL_BURST_DESC"
 enhance_description_key = "UPGRADE_THERMAL_BURST_ENHANCE_DESC"
 category = &"element"
 artwork_asset_id = &"upgrade/element_thermal"
-max_level = 3
+max_level = 4
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_radius"), SubResource("Modifier_damage")])

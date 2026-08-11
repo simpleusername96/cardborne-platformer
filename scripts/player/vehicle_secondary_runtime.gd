@@ -18,6 +18,7 @@ const STORM_MAX_DISTANCE := 960.0
 const STORM_TARGET_LIMIT := 12
 const STORM_WARNING_DURATION := 0.55
 const STORM_RADIUS := 140.0
+const STORM_IMPACT_DURATION := 0.18
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const SecondaryCatalog = preload("res://scripts/player/vehicle_secondary_catalog.gd")
 const OutgoingDamagePolicy = preload(
@@ -31,8 +32,12 @@ var orbit_target_cooldowns: Dictionary = {}
 var mines: Array[Dictionary] = []
 var seeker_cooldown := 0.0
 var rear_laser_cooldown := 0.0
+var rear_laser_active_remaining := 0.0
+var rear_laser_active_origin := Vector2.ZERO
+var rear_laser_active_end := Vector2.ZERO
 var storm_cooldown := 0.0
 var storm_warning_remaining := 0.0
+var storm_impact_remaining := 0.0
 var storm_pending := false
 var storm_position := Vector2.ZERO
 var storm_pending_damage := 0.0
@@ -84,8 +89,12 @@ func reset(player_position: Vector2) -> void:
 	orbit_angle = 0.0
 	seeker_cooldown = 0.0
 	rear_laser_cooldown = 0.0
+	rear_laser_active_remaining = 0.0
+	rear_laser_active_origin = player_position
+	rear_laser_active_end = player_position
 	storm_cooldown = 0.0
 	storm_warning_remaining = 0.0
+	storm_impact_remaining = 0.0
 	storm_pending = false
 	storm_position = player_position
 	storm_pending_damage = 0.0
@@ -142,7 +151,11 @@ func update(
 	_impact_receipt_count = 0
 	seeker_cooldown = maxf(0.0, seeker_cooldown - delta)
 	rear_laser_cooldown = maxf(0.0, rear_laser_cooldown - delta)
+	rear_laser_active_remaining = maxf(
+		0.0, rear_laser_active_remaining - delta
+	)
 	storm_cooldown = maxf(0.0, storm_cooldown - delta)
+	storm_impact_remaining = maxf(0.0, storm_impact_remaining - delta)
 	_update_rear_laser(
 		player_position,
 		build,
@@ -229,10 +242,14 @@ func snapshot(build: VehicleRunBuild) -> Dictionary:
 		"mines":mines.duplicate(true),
 		"seeker_cooldown":seeker_cooldown,
 		"rear_laser_cooldown":rear_laser_cooldown,
+		"rear_laser_active_remaining":rear_laser_active_remaining,
+		"rear_laser_origin":rear_laser_active_origin,
+		"rear_laser_end":rear_laser_active_end,
 		"storm_cooldown":storm_cooldown,
 		"storm_pending":storm_pending,
 		"storm_position":storm_position,
 		"storm_warning_remaining":storm_warning_remaining,
+		"storm_impact_remaining":storm_impact_remaining,
 		"electric_field_radius":_electric_field_radius(build),
 	}
 
@@ -247,9 +264,13 @@ func fill_presentation_snapshot(
 	output["mines"] = mines
 	output["electric_field_radius"] = _electric_field_radius(build)
 	output["rear_laser_cooldown"] = rear_laser_cooldown
+	output["rear_laser_active_remaining"] = rear_laser_active_remaining
+	output["rear_laser_origin"] = rear_laser_active_origin
+	output["rear_laser_end"] = rear_laser_active_end
 	output["storm_pending"] = storm_pending
 	output["storm_position"] = storm_position
 	output["storm_warning_remaining"] = storm_warning_remaining
+	output["storm_impact_remaining"] = storm_impact_remaining
 	return output
 
 
@@ -311,6 +332,9 @@ func _update_rear_laser(
 			beam_end = path_end_variant
 	var beam_length := beam_origin.distance_to(beam_end)
 	var attack_serial := _next_attack_serial()
+	rear_laser_active_origin = beam_origin
+	rear_laser_active_end = beam_end
+	rear_laser_active_remaining = REAR_LASER_DURATION
 	rear_laser_cooldown = maxf(
 		REAR_LASER_COOLDOWN,
 		definition.auxiliary(level)
@@ -452,8 +476,10 @@ func _resolve_storm_barrage(
 		storm_position,
 		STORM_RADIUS,
 		storm_pending_level,
+		storm_pending_damage,
 		storm_pending_attack_serial
 	)
+	storm_impact_remaining = STORM_IMPACT_DURATION
 
 
 func _storm_candidate_is_eligible(enemy: EnemyState, origin: Vector2) -> bool:
@@ -804,6 +830,7 @@ func _append_impact_receipt(
 	position: Vector2,
 	radius: float,
 	level: int,
+	damage: float,
 	attack_serial: int
 ) -> void:
 	if _impact_receipt_count >= _impact_receipt_pool.size():
@@ -814,6 +841,7 @@ func _append_impact_receipt(
 	receipt["position"] = position
 	receipt["radius"] = radius
 	receipt["level"] = level
+	receipt["damage"] = damage
 	receipt["attack_serial"] = attack_serial
 	_impact_output.append(receipt)
 
