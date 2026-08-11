@@ -79,9 +79,12 @@ func _initialize() -> void:
 		not driver_source.contains("._capture_"),
 		"driver does not access VehicleRun private capture hooks"
 	)
-	_expect(Driver.CORE_CAPTURE_FILES.size() == 36, "core manifest has 36 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 116, "full manifest has 116 captures")
+	_expect(Driver.CORE_CAPTURE_FILES.size() == 42, "core manifest has 42 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 122, "full manifest has 122 captures")
 	for required_capture in [
+		"01i-guidebook-elite-stats.png",
+		"01j-guidebook-field-objects.png",
+		"01k-guidebook-enemy-stage-range.png",
 		"03d-movement-cover-approach.png",
 		"03e-movement-cover-turn.png",
 		"03f-movement-cover-standoff.png",
@@ -90,6 +93,10 @@ func _initialize() -> void:
 		"04c-progression-max.png",
 		"04d-ship-status-acquired-build.png",
 		"04e-radar-minimap-roles.png",
+		"04f-radar-dash-begin.png",
+		"04g-radar-dash-mid.png",
+		"04h-radar-dash-end.png",
+		"04i-radar-dash-mid-reduced.png",
 		"06-thermal-first-acquisition.png",
 		"06c-thermal-enhancement.png",
 		"06d-two-card-tail.png",

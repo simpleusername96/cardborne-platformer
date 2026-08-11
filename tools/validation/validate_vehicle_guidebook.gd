@@ -1,11 +1,15 @@
 extends SceneTree
 
+const Archetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const Catalog = preload("res://scripts/progression/vehicle_guidebook_catalog.gd")
-const Store = preload("res://scripts/autoload/vehicle_guidebook_store.gd")
+const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const GuidePanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
+const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const Store = preload("res://scripts/autoload/vehicle_guidebook_store.gd")
+
+const TEST_PATH := "user://vehicle-guidebook-validation.cfg"
 
 var failures: Array[String] = []
-const TEST_PATH := "user://vehicle-guidebook-validation.cfg"
 
 
 func _initialize() -> void:
@@ -20,18 +24,48 @@ func _run() -> void:
 	_expect(store.discover(&"mobile_chaser"), "first encounter unlocks one entry")
 	_expect(not store.discover(&"mobile_chaser"), "discovery is idempotent")
 	_expect(not store.discover(&"unknown_entry"), "unknown IDs are discarded")
-	_expect(Catalog.entry_id_for_enemy(&"spark_minelet", &"mine") == &"mobile_spark_minelet", "moving minelets stay in the mobile guide category")
-	_expect(Catalog.entry_id_for_enemy(&"mine", &"mine").is_empty(), "retired map-stationary roles have no guide entry")
-	_expect(Catalog.valid_ids().has(&"mobile_bulkhead_guard"), "Bulkhead Guard has a stable guide entry")
-	_expect(Catalog.valid_ids().has(&"object_transit_gate"), "Transit Gate has a stable guide entry")
-	_expect(Catalog.valid_ids().has(&"object_mystery_device"), "Mystery Device has a stable guide entry")
-	var locked := store.snapshot({"health":120.0})
-	var mobile: Array = locked["categories"][&"mobile"]
-	var hidden := mobile.filter(func(entry: Dictionary) -> bool: return bool(entry["locked"]))
-	_expect(hidden.all(func(entry: Dictionary) -> bool: return entry.keys().all(func(key): return key in ["id", "locked", "name", "description"]) and entry["name"] == "???" and entry["description"] == ""), "locked entries contain no hidden copy")
-	store.discover(&"boss_stage_2")
-	store.discover(&"object_transit_gate")
-	store.discover(&"object_mystery_device")
+	for stationary in [
+		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator",
+	]:
+		var entry_id := Catalog.entry_id_for_enemy(stationary, stationary)
+		_expect(
+			entry_id == StringName("mobile_%s" % String(stationary))
+				and store.discover(entry_id),
+			"%s has a discoverable stable enemy entry" % stationary
+		)
+	for entry_id in [
+		&"boss_stage_2", &"object_transit_gate", &"object_mystery_device",
+		&"object_elite_armored",
+	]:
+		_expect(store.discover(entry_id), "%s unlocks" % entry_id)
+	_validate_catalog_partition()
+
+	var outside := store.snapshot({"health":120.0})
+	_expect(
+		Array(outside["category_order"]) == [
+			&"ship", &"enemies", &"bosses", &"objects",
+		],
+		"Guidebook category order is Current Ship, Enemies, Bosses, Field Objects"
+	)
+	_expect(
+		not JSON.stringify(outside).contains("???")
+			and not JSON.stringify(outside).contains("movement_key")
+			and not JSON.stringify(outside).contains("attack_key")
+			and not JSON.stringify(outside).contains("counter_key")
+			and not JSON.stringify(outside).contains("description_key"),
+		"snapshot contains no fake unknown rows or generic prose fields"
+	)
+	for category in [&"enemies", &"bosses", &"objects"]:
+		var summaries := Array(outside["categories"][category]).filter(
+			func(value: Variant) -> bool:
+				return bool(Dictionary(value).get("locked_summary", false))
+		)
+		_expect(
+			summaries.size() <= 1
+				and (summaries.is_empty() or int(summaries[0]["locked_count"]) > 0),
+			"%s has at most one non-disclosing locked-count summary" % category
+		)
+
 	var active_ship := {
 		"active":true,
 		"run_state":{
@@ -45,86 +79,74 @@ func _run() -> void:
 		"secondaries":[],
 		"upgrades":[],
 	}
-	var visual := store.snapshot(active_ship)
-	for category in [&"bosses"]:
-		var unlocked: Array = visual["categories"][category].filter(
-			func(entry: Dictionary) -> bool: return not bool(entry["locked"])
-		)
-		var complete := true
-		for entry in unlocked:
-			complete = (
-				complete
-				and not Dictionary(entry.get("preview", {})).is_empty()
-				and not String(entry.get("counter_key", "")).is_empty()
-			)
-		_expect(
-			complete,
-			"%s unlocked entries expose preview and counterplay metadata" % category
-		)
+	var active := store.snapshot(active_ship, {"active_stage_index":1})
+	_validate_stat_parity(outside, active)
+
 	var loaded := Store.new()
 	loaded.save_path = TEST_PATH
 	loaded.load_discovery()
-	_expect(loaded.known.has(&"mobile_chaser") and loaded.known.size() == 4, "discovery save round-trips sanitized IDs")
+	_expect(
+		loaded.known.has(&"mobile_chaser") and loaded.known.size() == 10,
+		"schema-v1 discovery save round-trips stable old and new IDs"
+	)
+
 	var panel := GuidePanel.new()
 	get_root().add_child(panel)
 	await process_frame
-	panel.open(visual)
+	panel.open(active)
 	await process_frame
 	var contract := panel.debug_contract()
 	_expect(
 		int(contract["categories"]) == 4
 			and Array(contract["category_order"]) == [
-				&"ship", &"mobile", &"bosses", &"objects",
+				&"ship", &"enemies", &"bosses", &"objects",
 			]
-			and int(contract["command_height"]) >= 44
+			and int(contract["command_height"]) >= 48
 			and bool(contract["category_has_focus"]),
 		"guide modal preserves four accessible categories in product order"
+	)
+	_expect(
+		String(contract["close_text"]) == "←"
+			and String(contract["close_accessible_name"]) == tr("COMMON_BACK")
+			and String(contract["close_tooltip"]) == tr("COMMON_BACK"),
+		"Guidebook Back is a 48px icon command with a localized accessible name"
 	)
 	_expect(bool(contract["ship_entry_column_hidden"]), "Current Ship removes the redundant entry column")
 	_expect(
 		bool(contract["ship_detail_full_width"])
 			and StringName(contract["preview_shell_variation"]) == &"PreviewFrame"
 			and bool(Dictionary(contract["preview"])["ship_nose_up"]),
-		"Current Ship uses a full-width shared PreviewWell with nose-up craft asset"
+		"Current Ship keeps its full-width shared PreviewWell"
 	)
 	var build_contract := Dictionary(contract["build_summary"])
 	_expect(
 		bool(build_contract["active"])
 			and int(build_contract["summary_panel_count"]) == 0
 			and int(build_contract["text_row_count"]) >= 5,
-		"active ship summary uses shared rows without a summary panel"
+		"active ship summary keeps its useful build rows"
 	)
 	_expect(panel.debug_select_entry(&"bosses", &"boss_stage_2"), "discovered boss detail is selectable")
 	contract = panel.debug_contract()
 	_expect(
 		bool(contract["entry_column_visible"])
-			and bool(contract["structured_counterplay"])
-			and int(contract["counterplay_rows"]) == 3
+			and bool(contract["structured_stats"])
+			and int(contract["stat_rows"]) == 6
 			and int(contract["row_panel_count"]) == 0
 			and bool(Dictionary(contract["preview"])["semantic_provider"]),
-		"discovered detail restores the list and three unboxed counterplay rows"
+		"boss detail renders six canonical stat rows without generic prose"
 	)
-	var locked_id := &""
-	for category in [&"mobile", &"bosses", &"objects"]:
-		for entry_variant in Array(visual["categories"][category]):
-			var entry := Dictionary(entry_variant)
-			if bool(entry.get("locked", false)):
-				locked_id = StringName(entry["id"])
-				_expect(panel.debug_select_entry(category, locked_id), "locked entry remains selectable without disclosure")
-				contract = panel.debug_contract()
-				_expect(
-					Array(Dictionary(contract["preview"])["asset_ids"])
-						== [&"actor/chaser"],
-					"locked detail reuses one muted actor silhouette without a HUD raster"
-				)
-				break
-		if not locked_id.is_empty():
-			break
-	_expect(not locked_id.is_empty(), "guide fixture includes a locked confidentiality state")
+	_expect(panel.debug_select_entry(&"enemies", &"mobile_chaser"), "enemy detail is selectable")
+	contract = panel.debug_contract()
+	_expect(
+		int(contract["stat_rows"]) == 3
+			and int(contract["locked_summary_count"]) == 3,
+		"enemy detail shows health, attack, and speed while locks stay summarized"
+	)
+
 	panel.set_compact_mode(true)
-	panel.open(visual)
+	panel.open(active)
 	await process_frame
-	_expect(panel.debug_select_entry(&"mobile", &"mobile_chaser"), "compact list selects a discovered mobile entry")
+	_expect(panel.debug_select_entry(&"enemies", &"mobile_chaser"), "compact list selects a discovered enemy")
 	contract = panel.debug_contract()
 	var ratios := Array(contract["entry_detail_ratios"])
 	_expect(
@@ -132,48 +154,117 @@ func _run() -> void:
 			and not bool(contract["wide_rail_visible"])
 			and int(contract["compact_selector_count"]) == 4
 			and bool(contract["category_has_focus"])
-			and int(contract["entry_focusables"]) > 0
+			and int(contract["entry_focusables"]) == 7
 			and is_equal_approx(float(ratios[0]), 0.34)
 			and is_equal_approx(float(ratios[1]), 0.66)
 			and bool(contract["independent_scroll"]),
-		"compact guide uses one four-option selector and independent 34/66 scroll panes"
+		"compact guide keeps independent panes and excludes the locked summary from focus"
 	)
-	panel.call("_select_category", &"ship")
-	contract = panel.debug_contract()
-	_expect(
-		bool(contract["ship_entry_column_hidden"])
-			and bool(contract["ship_detail_full_width"]),
-		"Ship full-width detail restores after repeated compact category changes"
-	)
+
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
-		panel.open(visual)
+		panel.open(active)
 		contract = panel.debug_contract()
 		_expect(
 			String(contract["title"]) == tr("GUIDE_TITLE")
-				and String(contract["close_text"]) == tr("SETTINGS_CLOSE"),
-			"guidebook persistent controls refresh in %s" % locale
+				and String(contract["close_text"]) == "←"
+				and String(contract["close_accessible_name"]) == tr("COMMON_BACK"),
+			"guidebook title and icon command refresh in %s" % locale
 		)
 	TranslationServer.set_locale(original_locale)
 	panel.queue_free()
 	await process_frame
 	store.free()
 	loaded.free()
-	panel = null
-	store = null
-	loaded = null
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_PATH))
 	_finish()
 
 
+func _validate_catalog_partition() -> void:
+	var entries_by_id := {}
+	for entry in Catalog.ENTRIES:
+		entries_by_id[StringName(entry["id"])] = entry
+		if StringName(entry["category"]) == &"objects":
+			_expect(
+				StringName(entry["entry_kind"]) == &"object",
+				"Field Objects contains only non-hostile world objects"
+			)
+	for archetype in Archetypes.DEFINITIONS:
+		if archetype == &"stage_boss":
+			continue
+		var entry_id := StringName("mobile_%s" % String(archetype))
+		_expect(
+			entries_by_id.has(entry_id)
+				and StringName(entries_by_id[entry_id]["category"]) == &"enemies",
+			"%s appears under Enemies" % archetype
+		)
+	for elite_id in [
+		&"object_elite_armored", &"object_elite_overclocked", &"object_elite_heavy",
+	]:
+		_expect(
+			StringName(entries_by_id[elite_id]["category"]) == &"enemies",
+			"%s modifier appears under Enemies" % elite_id
+		)
+
+
+func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
+	var outside_chaser := _entry(outside, &"enemies", &"mobile_chaser")
+	var active_chaser := _entry(active, &"enemies", &"mobile_chaser")
+	var outside_health := Dictionary(Array(outside_chaser["stat_rows"])[0])
+	var active_health := Dictionary(Array(active_chaser["stat_rows"])[0])
+	var definition := Archetypes.definition(&"chaser")
+	var stage_two_curve := StageDifficulty.multipliers(1)
+	var expected_stage_two_health := (
+		float(definition["health"])
+		* EncounterDirector.ENEMY_HEALTH_MULTIPLIER
+		* float(stage_two_curve["health"])
+		* float(stage_two_curve["ordinary_health_pressure"])
+		* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
+	)
+	_expect(
+		String(outside_health["value_key"]) == "GUIDE_VALUE_HP_RANGE"
+			and Array(outside_health["value_args"]).size() == 2
+			and String(active_health["value_key"]) == "GUIDE_VALUE_HP"
+			and int(Array(active_health["value_args"])[0])
+				== roundi(expected_stage_two_health),
+		"enemy health row derives the Stage 2 exact value and outside-run Stage 1–5 range"
+	)
+	var boss := _entry(active, &"bosses", &"boss_stage_2")
+	var boss_rows := Array(boss["stat_rows"])
+	_expect(
+		boss_rows.size() == 6
+			and int(Array(Dictionary(boss_rows[0])["value_args"])[0])
+				== roundi(StageDifficulty.boss_health(1))
+			and float(Array(Dictionary(boss_rows[1])["value_args"])[0]) > 0.0
+			and int(Array(Dictionary(boss_rows[2])["value_args"])[0]) == 90,
+		"boss rows derive exact HP, positive damage, and Stage 2 shield reduction"
+	)
+	var anomaly := _entry(active, &"objects", &"object_mystery_device")
+	_expect(
+		String(anomaly["name_key"]) == "GUIDE_OBJECT_MYSTERY_DEVICE_NAME"
+			and Array(anomaly["stat_rows"]).size() == 2,
+		"Anomaly Device keeps its stable runtime ID and exposes real effect stats"
+	)
+
+
+func _entry(snapshot: Dictionary, category: StringName, entry_id: StringName) -> Dictionary:
+	for value in Array(snapshot["categories"][category]):
+		var entry := Dictionary(value)
+		if StringName(entry.get("id", &"")) == entry_id:
+			return entry
+	return {}
+
+
 func _expect(condition: bool, message: String) -> void:
-	if not condition: failures.append(message)
+	if not condition:
+		failures.append(message)
 
 
 func _finish() -> void:
 	if failures.is_empty():
 		print("VEHICLE_GUIDEBOOK_VALIDATION_OK")
 		quit(0)
-	else:
-		for failure in failures: push_error(failure)
-		quit(1)
+		return
+	for failure in failures:
+		push_error(failure)
+	quit(1)

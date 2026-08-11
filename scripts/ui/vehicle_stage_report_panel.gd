@@ -2,7 +2,6 @@ class_name VehicleStageReportPanel
 extends VBoxContainer
 
 signal continued
-signal garage_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const DamageSources = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
@@ -214,7 +213,15 @@ func _rebuild() -> void:
 			_incoming_box.add_child(last)
 		for row in _snapshot.get("incoming", []):
 			_incoming_box.add_child(_damage_row(Dictionary(row), false))
-	_continue_button.text = tr("REPORT_GARAGE" if failure else ("REPORT_FINAL" if not bool(_snapshot.get("has_next_stage", false)) else "REPORT_CONTINUE"))
+	_continue_button.text = tr(
+		"REPORT_DEPLOYMENT"
+		if failure
+		else (
+			"REPORT_FINAL"
+			if not bool(_snapshot.get("has_next_stage", false))
+			else "REPORT_CONTINUE"
+		)
+	)
 
 
 func _fill_defeats(box: VBoxContainer) -> void:
@@ -392,10 +399,7 @@ func _label(key: String, size: int, color: Color) -> Label:
 func _on_continue() -> void:
 	if _guard > 0.0:
 		return
-	if bool(_snapshot.get("failure", false)):
-		garage_requested.emit()
-	else:
-		continued.emit()
+	continued.emit()
 
 
 func debug_contract() -> Dictionary:

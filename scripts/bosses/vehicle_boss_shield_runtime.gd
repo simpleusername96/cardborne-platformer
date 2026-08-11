@@ -6,13 +6,14 @@ extends RefCounted
 ## destructible objective participates in the state transition.
 
 const Catalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
+const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 
-const SHIELDED_DAMAGE_MULTIPLIER := 0.12
 const EXPOSED_DAMAGE_MULTIPLIER := 1.00
 const SHIELD_DOWN_SECONDS := 4.0
 const HINT_REPEAT_COOLDOWN := 2.0
 
 var stage_id: StringName = &"stage_1"
+var stage_index := 0
 var phase := 1
 var shield_up := true
 var shield_down_remaining := 0.0
@@ -31,6 +32,7 @@ var _last_hint_elapsed := HINT_REPEAT_COOLDOWN
 
 func configure(next_stage_id: StringName, starting_phase: int = 1) -> void:
 	stage_id = next_stage_id
+	stage_index = StageDifficulty.stage_index_from_id(stage_id)
 	phase = clampi(starting_phase, 1, 3)
 	shield_up = true
 	shield_down_remaining = 0.0
@@ -88,7 +90,7 @@ func lower_after_direct_attack() -> bool:
 
 func boss_damage_multiplier() -> float:
 	return (
-		SHIELDED_DAMAGE_MULTIPLIER
+		StageDifficulty.boss_shielded_damage_multiplier(stage_index)
 		if shield_up else EXPOSED_DAMAGE_MULTIPLIER
 	)
 
@@ -130,6 +132,7 @@ func variant() -> StringName:
 func snapshot() -> Dictionary:
 	return {
 		"stage_id":stage_id,
+		"stage_index":stage_index,
 		"variant":variant(),
 		"phase":phase,
 		"phase_history":Array(_phase_history),

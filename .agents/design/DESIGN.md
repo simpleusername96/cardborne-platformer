@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-04
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-11
 canonical_for: Agent-facing map of Cardborne product and surface intent, authority order, preserved experience contracts, and production design owners
 scope: Substantial user-facing UI and visual work across gameplay, HUD, modals, menus, guidebook, reports, and visual replacement
 related:
@@ -61,6 +61,13 @@ responsible owner. Do not blend them or resolve the disagreement in this map.
   only detail that communicates role, state, direction, or action.
 - The shipped run has one fixed Hard difficulty. Do not add a difficulty selector
   or imply unsupported modes in UI copy.
+- Keep the threat radar on the live projected player anchor while its bounded
+  hostile sector feed remains sampled at five hertz.
+- Keep the Guidebook stat-first: combat owners provide effective values, Enemies
+  contains all hostiles and elite modifiers, Field Objects contains no enemies,
+  and undiscovered content is one count rather than fake `???` entries.
+- Garage is not a reachable product surface. Pause abort, failure, and final result
+  return directly to Deployment; Boss Practice defeat returns to its selection.
 
 ## Runtime Source Map
 

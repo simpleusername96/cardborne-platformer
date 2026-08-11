@@ -5,6 +5,7 @@ extends RefCounted
 ## Semantic phase floors and objectives belong to VehicleBossExamRuntime.
 
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
@@ -13,6 +14,7 @@ const PHASE_GAPS := [0.55, 0.42, 0.32]
 const AUTONOMOUS_INTERVALS := [6.0, 4.9, 3.9]
 
 var stage_id: StringName = &"stage_1"
+var stage_index := 0
 var autonomous_timer := 3.2
 var autonomous_index := 0
 var autonomous_serial := 0
@@ -21,14 +23,18 @@ var finite_summons_remaining := 6
 
 func configure(next_stage_id: StringName) -> void:
 	stage_id = next_stage_id
-	autonomous_timer = 3.2
+	stage_index = StageDifficulty.stage_index_from_id(stage_id)
+	autonomous_timer = 3.2 * StageDifficulty.boss_cadence_scale(stage_index)
 	autonomous_index = 0
 	autonomous_serial = 0
 	finite_summons_remaining = 6
 
 
 func read_gap(phase: int) -> float:
-	return float(PHASE_GAPS[clampi(phase - 1, 0, PHASE_GAPS.size() - 1)])
+	return (
+		float(PHASE_GAPS[clampi(phase - 1, 0, PHASE_GAPS.size() - 1)])
+		* StageDifficulty.boss_cadence_scale(stage_index)
+	)
 
 
 func select_direct(boss: VehicleEnemyState) -> String:
@@ -68,7 +74,7 @@ func update_active(
 	boss.pattern_tick -= delta
 	var pattern := String(boss.pattern)
 	var kind := Patterns.kind(pattern)
-	var damage := Patterns.damage(pattern)
+	var damage := Patterns.damage(pattern, stage_index)
 	var escalated := boss.boss_phase >= 2
 	if damage <= 0.0:
 		services.call("_boss_combat_move", boss, delta, Patterns.ACTIVE_MOVE_SCALE)
@@ -91,8 +97,8 @@ func update_active(
 					AttackContract.THREAT_BOSS
 				)
 		else:
-			var offsets := (
-				[-0.34, -0.17, 0.0, 0.17, 0.34]
+			var offsets: Array = (
+				Patterns.fan_offsets(stage_index)
 				if kind == &"fan"
 				else [0.0, PI * 0.5, PI, PI * 1.5]
 			)
@@ -143,7 +149,7 @@ func update_active(
 			not boss.hit_committed
 			and Rules.point_segment_distance(
 				services.player_position, boss.pos, boss.beam_end
-			) <= Rules.PLAYER_RADIUS + Patterns.width(pattern) * 0.5
+			) <= Rules.PLAYER_RADIUS + Patterns.width(pattern, stage_index) * 0.5
 		):
 			boss.hit_committed = true
 			services.call("_damage_player", damage, pattern, true, true, true)
@@ -187,7 +193,7 @@ func advance_autonomous(
 	autonomous_serial += 1
 	autonomous_timer = float(
 		AUTONOMOUS_INTERVALS[clampi(boss.boss_phase - 1, 0, 2)]
-	)
+	) * StageDifficulty.boss_cadence_scale(stage_index)
 	if Patterns.kind(pattern) == &"summon":
 		if finite_summons_remaining <= 0:
 			return events
@@ -198,12 +204,15 @@ func advance_autonomous(
 	events.append({
 		"id":"boss_system_%d" % autonomous_serial,
 		"pattern":pattern,
+		"kind":Patterns.kind(pattern),
 		"origin":boss.pos,
 		"target":player_position + offset,
 		"startup":Patterns.startup_seconds(pattern),
 		"duration":Patterns.active_seconds(pattern),
-		"damage":Patterns.damage(pattern),
-		"radius":Patterns.radius(pattern),
+		"damage":Patterns.damage(pattern, stage_index),
+		"radius":Patterns.radius(pattern, stage_index),
+		"width":Patterns.width(pattern, stage_index),
+		"lane_spacing":Patterns.lane_spacing(stage_index),
 		"affinity":Patterns.affinity(pattern),
 		"commit_mode":&"autonomous",
 	})
@@ -213,6 +222,8 @@ func advance_autonomous(
 func snapshot() -> Dictionary:
 	return {
 		"stage_id":stage_id,
+		"stage_index":stage_index,
+		"cadence_scale":StageDifficulty.boss_cadence_scale(stage_index),
 		"autonomous_timer":autonomous_timer,
 		"autonomous_index":autonomous_index,
 		"finite_summons_remaining":finite_summons_remaining,

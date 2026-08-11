@@ -100,9 +100,7 @@ func _init() -> void:
 	get_root().add_child(panel)
 	await process_frame
 	var continued := [0]
-	var garage_requested := [0]
 	panel.continued.connect(func() -> void: continued[0] += 1)
-	panel.garage_requested.connect(func() -> void: garage_requested[0] += 1)
 	panel.open(report)
 	var contract := panel.debug_contract()
 	_expect(is_equal_approx(float(contract["guard"]), 0.35), "report blocks carried input for 0.35 seconds")
@@ -120,7 +118,7 @@ func _init() -> void:
 	_expect(int(contract["fixed_actions"]) == 1, "report exposes exactly one fixed action")
 	panel.call("_process", 0.36)
 	panel.call("_on_continue")
-	_expect(continued[0] == 1 and garage_requested[0] == 0, "successful report emits only continue")
+	_expect(continued[0] == 1, "successful report emits its single continue intent")
 	panel.open(failure_report)
 	await process_frame
 	contract = panel.debug_contract()
@@ -130,16 +128,14 @@ func _init() -> void:
 	_expect(int(contract["fixed_actions"]) == 1, "failure report keeps one fixed action")
 	panel.call("_process", 0.36)
 	panel.call("_on_continue")
-	_expect(continued[0] == 1 and garage_requested[0] == 1, "failure report emits only garage intent")
+	_expect(continued[0] == 2, "failure report emits the same single lifecycle intent")
 	panel.queue_free()
 
 	var result := ResultPanel.new()
 	get_root().add_child(result)
 	await process_frame
-	var result_garage := [0]
-	var result_replay := [0]
-	result.garage_requested.connect(func() -> void: result_garage[0] += 1)
-	result.replay_requested.connect(func() -> void: result_replay[0] += 1)
+	var deployment_requested := [0]
+	result.deployment_requested.connect(func() -> void: deployment_requested[0] += 1)
 	_expect(result.open({
 		"stage_number":5,
 		"stage_title_key":"STAGE_DROWNED_RUINS_5",
@@ -156,12 +152,11 @@ func _init() -> void:
 	_expect(int(result_contract["summary_text_rows"]) == 1, "final result uses one summary TextRow")
 	_expect(int(result_contract["summary_values"]) == 3, "final summary preserves all three values")
 	_expect(int(result_contract["summary_surfaces"]) == 0, "final summary and detail sections remain unboxed")
-	_expect(int(result_contract["focusables"]) == 2, "final result preserves Garage and Replay actions")
+	_expect(int(result_contract["focusables"]) == 1, "final result exposes one direct Deployment action")
 	_expect(bool(result_contract["performance_visible"]), "final result preserves performance values")
 	_expect(bool(result_contract["reward_visible"]), "final result preserves reward values")
-	_expect(bool(result_contract["initial_focus_is_garage"]), "final result initially focuses Garage")
-	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Garage remains the primary command")
-	_expect(StringName(result_contract["secondary_variation"]) == &"SecondaryButton", "Replay remains the secondary command")
+	_expect(bool(result_contract["initial_focus_is_deployment"]), "final result initially focuses Deployment")
+	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Deployment is the primary command")
 	var joined_summary := " ".join(PackedStringArray(result_contract["summary_texts"]))
 	_expect("4:18" in joined_summary and "72" in joined_summary, "final summary preserves time and hull values")
 	_expect("41" in String(result_contract["performance_text"]) and "7" in String(result_contract["performance_text"]) and "3" in String(result_contract["performance_text"]), "performance section preserves all three counters")
@@ -169,11 +164,10 @@ func _init() -> void:
 		TranslationServer.set_locale(locale)
 		result.refresh_localized_content()
 		result_contract = result.debug_contract()
-		var visible_text := " ".join(PackedStringArray(result_contract["summary_texts"])) + " " + String(result_contract["performance_text"]) + " " + String(result_contract["reward_text"]) + " " + String(result_contract["primary_action"]) + " " + String(result_contract["secondary_action"])
+		var visible_text := " ".join(PackedStringArray(result_contract["summary_texts"])) + " " + String(result_contract["performance_text"]) + " " + String(result_contract["reward_text"]) + " " + String(result_contract["primary_action"])
 		_expect("RESULT_" not in visible_text and "UPGRADE_" not in visible_text, "%s final result contains no raw localization key" % locale)
 	(result.get("_first_button") as Button).pressed.emit()
-	(result.get("_replay_button") as Button).pressed.emit()
-	_expect(result_garage[0] == 1 and result_replay[0] == 1, "final commands preserve Garage and Replay signals")
+	_expect(deployment_requested[0] == 1, "final command routes directly to Deployment")
 	result.queue_free()
 	await process_frame
 	_finish()

@@ -110,9 +110,20 @@ func _run() -> void:
 					== "res://scripts/ui/vehicle_guidebook_panel.gd",
 			"guidebook modal is connected through the shared Stage UI owner"
 		)
+		run.call("_present_deployment")
+		var deployment_guide := Dictionary(
+			run._ui._latest_guidebook_snapshot
+		)
+		_expect(
+			Array(deployment_guide.get("category_order", [])).size() == 4
+				and Dictionary(deployment_guide.get("categories", {})).has(&"ship"),
+			"deployment publishes a complete Guidebook before gameplay HUD updates"
+		)
 		_check_simulation_lod_contract(run)
 		_check_boss_progression_gate(run)
 		_check_boss_damage_and_guidance(run, ui)
+		run.call("_reset_run", false, true, true)
+		_check_boss_autonomous_shapes(run)
 		run.call("_reset_run", false, true, true)
 		_check_boss_committed_recovery(run)
 		run.call("_reset_run", false, true, true)
@@ -619,10 +630,14 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 			false
 		)
 	)
+	var expected_shielded_damage := (
+		100.0
+		* StageDifficulty.boss_shielded_damage_multiplier(run.current_stage_index)
+	)
 	_expect(
-		is_equal_approx(applied, 12.0)
-			and is_equal_approx(health_before - boss.health, 12.0),
-		"raised boss shield reduces damage to twelve percent"
+		is_equal_approx(applied, expected_shielded_damage)
+			and is_equal_approx(health_before - boss.health, expected_shielded_damage),
+		"current-stage boss shield applies its exact received-damage profile"
 	)
 	_expect(
 		run.effects.size() == effect_count_before,
@@ -659,9 +674,14 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	)
 	run._threat_sample_timer = 0.0
 	run.call("_update_threat_contacts", 0.11)
-	var objective_contacts: Array = run._threat_contact_cache.filter(
+	var objective_contacts: Array = Array(
+		run._threat_radar_feed.snapshot()["sectors"]
+	).filter(
 		func(contact_variant) -> bool:
-			return StringName(Dictionary(contact_variant).get("kind", &"")) == &"boss_objective"
+			var contact := Dictionary(contact_variant)
+			return bool(contact.get("active", false)) and StringName(
+				contact.get("kind", &"")
+			) == &"boss_objective"
 	)
 	_expect(
 		objective_contacts.is_empty(),
@@ -745,7 +765,6 @@ func _check_boss_committed_recovery(run) -> void:
 		Vector2(boss["pos"]).is_equal_approx(committed_origin),
 		"damaging boss attacks do not drift away from their warned origin"
 	)
-
 	run.call("_clear_projectiles")
 	var ordinary_limit := Director.HOSTILE_PROJECTILE_CAP - Director.BOSS_PROJECTILE_RESERVE
 	for index in ordinary_limit + 8:
@@ -772,6 +791,76 @@ func _check_boss_committed_recovery(run) -> void:
 	)
 	_expect(run.call("_count_hostile_projectiles") == before_boss_shot + 1, "boss attacks still fire when ordinary projectile pressure is saturated")
 
+
+func _check_boss_autonomous_shapes(run) -> void:
+	for stage_index in 5:
+		var stage_id := StringName("stage_%d" % (stage_index + 1))
+		for pattern_name in BossPatterns.autonomous_sequence(stage_id):
+			var pattern := String(pattern_name)
+			var kind := BossPatterns.kind(pattern)
+			run.denied_zones.clear()
+			var enemies_before: int = run.enemy_store.live.size()
+			run.call("_execute_boss_autonomous", {
+				"id":"validation_%d_%s" % [stage_index, pattern],
+				"pattern":pattern,
+				"kind":kind,
+				"origin":run.player_position + Vector2(-480.0, 0.0),
+				"target":run.player_position + Vector2(240.0, 0.0),
+				"startup":BossPatterns.startup_seconds(pattern),
+				"duration":BossPatterns.active_seconds(pattern),
+				"damage":BossPatterns.damage(pattern, stage_index),
+				"radius":BossPatterns.radius(pattern, stage_index),
+				"width":BossPatterns.width(pattern, stage_index),
+				"lane_spacing":BossPatterns.lane_spacing(stage_index),
+				"affinity":BossPatterns.affinity(pattern),
+			})
+			if kind == &"area":
+				_expect(
+					run.denied_zones.size() == 1
+						and StringName(run.denied_zones[0]["shape"]) == &"area"
+						and is_equal_approx(
+							float(run.denied_zones[0]["radius"]),
+							BossPatterns.radius(pattern, stage_index)
+						),
+					"%s executes as its exact scaled circular area" % pattern
+				)
+			elif kind == &"lanes":
+				_expect(
+					run.denied_zones.size() == 2
+						and _all_corridors_match(
+							run.denied_zones,
+							BossPatterns.width(pattern, stage_index)
+						),
+					"%s executes as two scaled lane corridors" % pattern
+				)
+			elif kind == &"beam":
+				_expect(
+					run.denied_zones.size() == 1
+						and StringName(run.denied_zones[0]["shape"]) == &"corridor"
+						and is_equal_approx(
+							float(run.denied_zones[0]["width"]),
+							BossPatterns.width(pattern, stage_index)
+						),
+					"%s executes as its exact scaled beam corridor" % pattern
+				)
+			elif kind == &"summon":
+				_expect(
+					run.enemy_store.live.size() == enemies_before + 1,
+					"%s executes through the bounded sentinel summon path" % pattern
+				)
+			else:
+				_expect(false, "%s must fail validation as an unknown autonomous kind" % pattern)
+
+
+func _all_corridors_match(zones: Array, expected_width: float) -> bool:
+	for zone_variant in zones:
+		var zone: Dictionary = zone_variant
+		if (
+			StringName(zone["shape"]) != &"corridor"
+			or not is_equal_approx(float(zone["width"]), expected_width)
+		):
+			return false
+	return true
 
 func _check_enemy_expansion(run) -> void:
 	var mine: EnemyState = run.call("_make_enemy", {
@@ -1025,9 +1114,11 @@ func _check_runtime_minimap_at_horde_capacity(run) -> void:
 			== run.MINIMAP_FRAME_COUNT * run.MINIMAP_MARKER_CAPACITY,
 		"runtime minimap owns exactly two fixed-capacity marker pools"
 	)
+	var threat_feed_contract: Dictionary = run._threat_radar_feed.debug_contract()
 	_expect(
-		run._runtime_threat_contact_pool.size() == run.THREAT_CONTACT_CAPACITY,
-		"threat radar owns one fixed-capacity contact pool"
+		int(threat_feed_contract["frame_count"]) == 2
+			and int(threat_feed_contract["sector_count"]) == 12,
+		"threat radar owns two fixed twelve-sector sample frames"
 	)
 	var retained_player := Vector2(first["player"])
 	var retained_marker_position := Vector2(first_markers[0]["position"])
@@ -1064,8 +1155,10 @@ func _check_runtime_minimap_at_horde_capacity(run) -> void:
 	var threat_second: Dictionary = run.call("_runtime_threat_radar_snapshot")
 	_expect(
 		is_same(threat_first, threat_second)
-			and is_same(threat_first["contacts"], run._threat_contact_cache),
-		"threat radar reuses its synchronous wrapper and borrowed contact cache"
+			and threat_first.has("generation")
+			and threat_first.has("sample_origin")
+			and Array(threat_first["sectors"]).size() == 12,
+		"threat radar reuses one wrapper around a coherent fixed-sector generation"
 	)
 
 
@@ -1090,32 +1183,38 @@ func _check_nearby_radar_contacts(run) -> void:
 			run.call("_append_enemy", enemy)
 	run._threat_sample_timer = 0.0
 	run.call("_update_threat_contacts", run.THREAT_SAMPLE_INTERVAL)
-	var nearby_contacts: Array = run._threat_contact_cache.filter(
-		func(contact_variant) -> bool:
-			return (
-				StringName(Dictionary(contact_variant).get("kind", &""))
-				== &"nearby_enemy"
-			)
-	)
+	var nearby_contacts := _active_threat_sectors(run, &"nearby_enemy")
 	_expect(
 		nearby_contacts.size() == 1
-			and Vector2(nearby_contacts[0]["offset"]).is_equal_approx(
+			and (
+				Vector2(nearby_contacts[0]["world_position"])
+				- run.player_position
+			).is_equal_approx(
 				Vector2(850.0, 0.0)
 			),
 		"five-hertz radar includes only off-screen targetable enemies within 1,200 units"
 	)
-	var retained_contact: Dictionary = nearby_contacts[0] if not nearby_contacts.is_empty() else {}
+	var retained_frame: Dictionary = run._threat_radar_feed.snapshot()
+	var retained_position := (
+		Vector2(nearby_contacts[0]["world_position"])
+		if not nearby_contacts.is_empty()
+		else Vector2.ZERO
+	)
 	if nearby_enemy != null:
 		nearby_enemy.pos += Vector2(20.0, 0.0)
 	run._threat_sample_timer = 0.0
 	run.call("_update_threat_contacts", run.THREAT_SAMPLE_INTERVAL)
+	var moved_contacts := _active_threat_sectors(run, &"nearby_enemy")
 	_expect(
-		not retained_contact.is_empty()
-			and is_same(retained_contact, run._threat_contact_cache[0])
-			and Vector2(run._threat_contact_cache[0]["offset"]).is_equal_approx(
-				Vector2(870.0, 0.0)
-			),
-		"radar republishes nearby pressure through the preallocated contact record"
+		not nearby_contacts.is_empty()
+			and not is_same(retained_frame, run._threat_radar_feed.snapshot())
+			and Vector2(nearby_contacts[0]["world_position"]) == retained_position
+			and moved_contacts.size() == 1
+			and (
+				Vector2(moved_contacts[0]["world_position"])
+				- run.player_position
+			).is_equal_approx(Vector2(870.0, 0.0)),
+		"radar swaps coherent frames without mutating the immediately retained sample"
 	)
 	run.call("_clear_enemies")
 	run.call("_clear_ordinary_arrival_cues")
@@ -1127,15 +1226,9 @@ func _check_nearby_radar_contacts(run) -> void:
 	var held_player_position := Vector2(run.player_position)
 	run._threat_sample_timer = 0.0
 	run.call("_update_threat_contacts", run.THREAT_SAMPLE_INTERVAL)
-	var arrival_contacts: Array = run._threat_contact_cache.filter(
-		func(contact_variant) -> bool:
-			return (
-				StringName(Dictionary(contact_variant).get("kind", &""))
-				== &"nearby_enemy"
-			)
-	)
+	var arrival_contacts := _active_threat_sectors(run, &"nearby_enemy")
 	var arrival_offset := (
-		Vector2(arrival_contacts[0]["offset"])
+		Vector2(arrival_contacts[0]["world_position"]) - held_player_position
 		if not arrival_contacts.is_empty()
 		else Vector2.ZERO
 	)
@@ -1154,9 +1247,20 @@ func _check_nearby_radar_contacts(run) -> void:
 	run.call("_update_threat_contacts", run.THREAT_SAMPLE_INTERVAL)
 	_expect(
 		run._ordinary_arrival_cue_count == 0
-			and run._threat_contact_cache.is_empty(),
+			and _active_threat_sectors(run, &"nearby_enemy").is_empty(),
 		"ordinary arrival radar receipt expires after cue lead plus the bounded post-birth hold"
 	)
+
+
+func _active_threat_sectors(run, kind: StringName) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for sector_variant in Array(run._threat_radar_feed.snapshot()["sectors"]):
+		var sector := Dictionary(sector_variant)
+		if bool(sector.get("active", false)) and StringName(
+			sector.get("kind", &"")
+		) == kind:
+			result.append(sector)
+	return result
 
 
 func _minimap_snapshots_match(expected: Dictionary, actual: Dictionary) -> bool:

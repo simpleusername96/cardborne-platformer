@@ -152,21 +152,54 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 		&"guidebook_boss":
 			var all_known := GuidebookCatalog.valid_ids()
 			_run._ui.debug_guide_entry(
-				GuidebookCatalog.snapshot(all_known, _run._build_snapshot()),
+				GuidebookCatalog.snapshot(
+					all_known,
+					_run._build_snapshot(),
+					{"active_stage_index":_run.current_stage_index}
+				),
 				&"bosses",
 				&"boss_stage_2"
 			)
 		&"guidebook_locked":
 			_run._ui.debug_guide_entry(
 				GuidebookCatalog.snapshot({}, _run._build_snapshot()),
-				&"mobile",
-				&"mobile_scrap_drone"
+				&"enemies",
+				&"locked_summary_enemies"
 			)
-		&"guidebook_counterplay":
+		&"guidebook_enemy_stats":
+			var all_known := GuidebookCatalog.valid_ids()
+			_run._ui.debug_guide_entry(
+				GuidebookCatalog.snapshot(
+					all_known,
+					_run._build_snapshot(),
+					{"active_stage_index":_run.current_stage_index}
+				),
+				&"enemies",
+				&"mobile_chaser"
+			)
+		&"guidebook_elite_stats":
+			var all_known := GuidebookCatalog.valid_ids()
+			_run._ui.debug_guide_entry(
+				GuidebookCatalog.snapshot(
+					all_known,
+					_run._build_snapshot(),
+					{"active_stage_index":_run.current_stage_index}
+				),
+				&"enemies",
+				&"object_elite_armored"
+			)
+		&"guidebook_field_objects":
 			var all_known := GuidebookCatalog.valid_ids()
 			_run._ui.debug_guide_entry(
 				GuidebookCatalog.snapshot(all_known, _run._build_snapshot()),
-				&"mobile",
+				&"objects",
+				&"object_mystery_device"
+			)
+		&"guidebook_enemy_range":
+			var all_known := GuidebookCatalog.valid_ids()
+			_run._ui.debug_guide_entry(
+				GuidebookCatalog.snapshot(all_known, _run._build_snapshot()),
+				&"enemies",
 				&"mobile_chaser"
 			)
 		&"boss_practice":
@@ -205,17 +238,6 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 				"primary_hits":42,
 				"dash_uses":11,
 				"installations":5,
-			})
-		&"garage":
-			_run._ui.show_garage({
-				"selected_primary":_run.selected_primary,
-				"clear_count":1,
-				"relay_module_unlocked":true,
-				"field_module_unlocked":true,
-				"build_summary":_run._run_build_summary(),
-				"secondaries":_run.secondary_runtime.equipped_families(
-					_run.run_build
-				),
 			})
 
 
@@ -272,10 +294,7 @@ func restore_baseline() -> void:
 		)
 	if is_instance_valid(_run._ui):
 		_run._ui.debug_set_text_scale(1.0)
-		_run._ui.show_deployment(
-			_run.selected_primary,
-			String(_run.field_layout.field_definition["name_key"])
-		)
+		_run._present_deployment()
 	_run._release_tree_pause()
 
 
@@ -660,10 +679,12 @@ func _capture_build_state_evidence() -> void:
 			"readiness":1.0,
 		},
 	]
-	_run._threat_contact_cache = threat_contacts
+	_publish_threat_fixture(threat_contacts)
 	_run.experience_runtime.run_level = 12
 	_run.experience_runtime.experience = 73
-	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
+	var hud_snapshot: Dictionary = _run._build_hud_snapshot(false, false)
+	hud_snapshot["threat_radar"] = _run._runtime_threat_radar_snapshot()
+	_run._ui.update_hud(hud_snapshot)
 	await _settle_capture()
 	_save_capture("04-stage-4-xp-hud.png")
 	_run.experience_runtime.experience += 7
@@ -718,17 +739,75 @@ func _capture_radar_minimap_roles() -> void:
 	# Settle the normal world publication first so the deterministic evidence
 	# snapshot remains the last HUD write before the forced capture draw.
 	await _settle_capture()
+	var sampled_player_position: Vector2 = _run.player_position
+	_publish_threat_fixture(contacts, sampled_player_position)
 	_run._ui.update_hud({
 		"minimap":minimap,
-		"threat_radar":{
-			"visible":true,
-			"center":_run.get_viewport_rect().size * 0.5,
-			"max_distance":_run.THREAT_SCAN_DISTANCE,
-			"contacts":contacts,
-		},
+		"threat_radar":_run._runtime_threat_radar_snapshot(),
 	})
 	await _run.get_tree().process_frame
 	_save_capture("04e-radar-minimap-roles.png")
+	var dash_distances := [0.0, 122.0, 244.0]
+	var dash_files := [
+		"04f-radar-dash-begin.png",
+		"04g-radar-dash-mid.png",
+		"04h-radar-dash-end.png",
+	]
+	for index in dash_distances.size():
+		_run.player_position = (
+			sampled_player_position + Vector2.RIGHT * float(dash_distances[index])
+		)
+		_refresh_combat_capture()
+		await _run.get_tree().process_frame
+		_publish_threat_fixture(contacts, sampled_player_position)
+		_run._ui.update_threat_anchor(
+			_run.player_position,
+			_run.get_canvas_transform() * _run.player_position,
+			true
+		)
+		_run._ui.update_hud({
+			"threat_radar":_run._runtime_threat_radar_snapshot(),
+		})
+		await _run.get_tree().process_frame
+		_save_capture(String(dash_files[index]))
+	_run.player_position = sampled_player_position + Vector2.RIGHT * 122.0
+	_refresh_combat_capture()
+	await _run.get_tree().process_frame
+	_publish_threat_fixture(contacts, sampled_player_position)
+	_run._ui.update_threat_anchor(
+		_run.player_position,
+		_run.get_canvas_transform() * _run.player_position,
+		true
+	)
+	_run._ui.update_hud({
+		"reduced_motion":true,
+		"threat_radar":_run._runtime_threat_radar_snapshot(),
+	})
+	await _run.get_tree().process_frame
+	_save_capture("04i-radar-dash-mid-reduced.png")
+
+
+func _publish_threat_fixture(
+	contacts: Array[Dictionary],
+	sample_origin: Vector2 = Vector2.INF
+) -> void:
+	var origin: Vector2 = (
+		_run.player_position if sample_origin == Vector2.INF else sample_origin
+	)
+	_run._threat_sample_timer = 999.0
+	_run._threat_radar_feed.begin_sample(origin)
+	for contact in contacts:
+		_run._threat_radar_feed.append_offset(
+			Vector2(contact.get("offset", Vector2.ZERO)),
+			StringName(contact.get("kind", &"nearby_enemy")),
+			float(contact.get("readiness", 0.0))
+		)
+	_run._threat_radar_feed.commit_sample()
+	_run._ui.update_threat_anchor(
+		_run.player_position,
+		_run.get_canvas_transform() * _run.player_position,
+		true
+	)
 
 
 func _capture_field_item_evidence() -> void:

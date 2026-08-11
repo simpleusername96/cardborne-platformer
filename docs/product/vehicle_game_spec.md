@@ -175,7 +175,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   fire can break it. `wall_piercing` is an explicit projectile capability whose
   default is false. No current ordinary enemy, boss pattern, primary shot, or
   secondary shot receives that capability implicitly.
-- An intact Mystery Device blocks actors and player projectiles. Hostile
+- An intact Anomaly Device blocks actors and player projectiles. Hostile
   projectiles pass through it and enemy AI never targets it, so a neutral
   interaction cannot become an unintended shield against enemy fire.
 - The unmodified Pulse Cannon has an authored 1600-pixel range. At runtime its
@@ -212,7 +212,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   stages so a run reads as one continuous field rather than five reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
   least thirty-two content candidates are reusable authored sources. Each
-  stage selects three Mystery Devices, six pickups, and eight crates with
+  stage selects three Anomaly Devices, six pickups, and eight crates with
   explicit separation. Crates are never attached to one another or relocated
   into guarded reward enclosures. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
@@ -225,14 +225,14 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   debug/performance snapshots expose the selected field, seed, and fingerprint.
 - The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed.
   Dynamic markers expose exactly eight tactical roles: player craft, field
-  pickup, reward crate, intact Mystery Device, mobile enemy, priority enemy,
+  pickup, reward crate, intact Anomaly Device, mobile enemy, priority enemy,
   boss, and reinforcement facility. The pickup marker is `12 x 7.6`, the
   notched crate marker is `9 x 9`, and their perceived polygon areas differ by
-  no more than ten percent. The Mystery Device silhouette scales every outer
+  no more than ten percent. The Anomaly Device silhouette scales every outer
   point by `1.20`. Elite distinctions, stage-specific boss identity, and the
   Mystery outcome are not separate minimap markers.
 
-### Inner walls, Transit Gates, and Mystery Devices
+### Inner walls, Transit Gates, and Anomaly Devices
 
 - An inner wall is run-fixed, impassable structure. It blocks movement,
   projectiles, line of sight, and pursuit through the same tactical geometry.
@@ -244,7 +244,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   dwell, preserve aim, clear velocity, share a ten-second pair cooldown, grant
   the existing short transfer protection, and move only the player. They never
   damage actors.
-- Every stage places exactly three Mystery Devices. Each is a neutral 192-pixel
+- Every stage places exactly three Anomaly Devices. Each is a neutral 192-pixel
   body with an 84-pixel collision/target radius and 90 structure health, equal
   to five unmodified 18-damage primary hits. Player direct and area damage may
   break it; enemy AI and hostile attacks ignore it. It is not an enemy, never
@@ -382,16 +382,28 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 The reinforcement facility is the only map-spawned stationary hostile facility;
 it is managed outside the enemy actor store and appears as a dedicated minimap
 objective. Ordinary hostile projectiles
-stop at 96 so 24 of the global 120-shot cap remain reserved for boss attacks. Enemy
-health, damage, and movement rise only on a shallow stage curve; boss behavior
-changes through authored patterns rather than unchecked stat inflation. Each
+stop at 96 so 24 of the global 120-shot cap remain reserved for boss attacks.
+Stage 1 ordinary health and damage remain unchanged. Stage 2–5 ordinary health
+pressure is `1.45/1.55/1.65/1.75` and damage pressure is
+`1.24/1.33/1.42/1.50`; these multiply the existing stage, class, fixed-Hard, and
+global factors without changing speed, cadence, projectile speed, count, quota,
+or cap. Each
 boss uses a distinct three-phase direct-pattern sequence plus independently
 scheduled autonomous pressure. Every damaging pattern has a visible startup,
 active window, and recovery. Routine hits never interrupt or stop the boss, and
 every direct pattern remains committed after its warning appears.
 
 Each boss owns one body-attached shield and no external objective actor.
-`shield_up` applies `0.12×` damage. Completing a direct boss attack lowers the
+Stage 1–5 boss profiles use target HP `5250/5805/6380/6975/7590`, damage
+multipliers `1.35/1.42/1.50/1.58/1.70`, shield-up received-damage multipliers
+`0.110/0.105/0.100/0.095/0.090`, cadence scales
+`0.95/0.90/0.85/0.80/0.75`, and coverage scales
+`1.05/1.10/1.15/1.20/1.25`. Cadence scales only the read gap, initial autonomous
+delay, and autonomous interval. Coverage scales each pattern's applicable radius,
+beam width, lane spacing, and fan spread. Projectile count and speed, startup,
+active duration, recovery, and caps remain pattern-owned. Autonomous `area`,
+`lanes`, `beam`, and `summon` attacks execute their authored shape rather than a
+generic circular substitute. Completing a direct boss attack lowers the
 shield for four seconds, during which damage is `1.00×`, then the shield returns.
 Phase thresholds start the next phase and raise the shield but are not HP floors.
 The boss body owns the shield state and one always-visible world-attached health
@@ -546,8 +558,12 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   `96–120`, and `88–112` world units; complete bars prefer the body top, move
   below when the top edge would clip, and clamp inside the visible world. All
   world health bars share one retained batch with a fixed 28-instance ceiling.
-- The threat radar samples at five hertz and aggregates contacts into at most 12
-  directional sectors around the player. It includes targetable non-boss enemy
+- The threat radar samples at five hertz and atomically publishes its sampled
+  player origin, generation, and at most 12 directional sector records. The HUD
+  rebases those bounded records against the live player world position and draws
+  the retained radar at the matching projected player position every frame, so a
+  complete dash cannot separate or squeeze the radar origin. This live-anchor path
+  does not rescan enemies or rebuild meshes. It includes targetable non-boss enemy
   bodies outside the visible world rectangle and within 1,200 world units as dim
   `nearby_enemy` arcs. Scheduler-authored ordinary arrival cues reuse that same
   dim arc during their bounded receipt lifetime; farther cue offsets clamp to the
@@ -558,16 +574,16 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   triangle. A single attack never appears as both a world route and a radar
   contact.
 - The minimap publishes exactly eight semantic roles: player, field pickup,
-  reward crate, intact Mystery Device, mobile enemy, priority enemy, boss, and
+  reward crate, intact Anomaly Device, mobile enemy, priority enemy, boss, and
   reinforcement facility. `turret`, `interceptor_tower`, `beam_sentinel`, and
   `generator` are priority enemies; other active non-boss enemies are mobile
-  enemies. An intact Mystery Device uses one neutral marker that never leaks its
+  enemies. An intact Anomaly Device uses one neutral marker that never leaks its
   hidden result, and resolved or retired devices disappear. Bosses use one
   command-magenta notched marker independent of stage. The reinforcement
   facility keeps its dedicated two-tone diamond. All roles share the existing
   marker capacity, borrowed buffers, explored geometry, fog, and one retained
   minimap mesh. Pickup and crate use the exact size and area relationship
-  defined in the field contract above; the Mystery Device uses the `1.20`
+  defined in the field contract above; the Anomaly Device uses the `1.20`
   silhouette scale.
 - Electric Field displays its complete selected damage radius of 120, 140, or
   160 world units as one ground-attached arc-purple area below actors. The area
@@ -610,11 +626,19 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   with an open recipient chevron; it is neither a solid damage beam nor a closed
   shield ring.
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
-  mobile enemies, bosses, and field objects categories.
+  enemies, bosses, and field objects categories. Enemies contains every non-boss
+  hostile actor, including stationary installations and elite modifiers. Field
+  Objects contains only non-hostile interaction, traversal, and reward objects.
 - The current ship page shows derived stats and equipped secondaries. Encountered
-  entries persist across runs and reuse the same combat meshes for visual
-  identification. Unseen entries show only `???` and one neutral silhouette;
-  they never leak a name, color, description, or counterplay.
+  enemy and boss entries show ordered combat statistics derived from gameplay
+  owners, not duplicated movement/attack/counter prose. An active run shows exact
+  effective values for its current stage; outside a run ordinary enemies show an
+  explicit Stage 1–5 range. Encountered entries persist across runs and reuse the
+  same combat previews for identification. Each category summarizes undiscovered
+  content with one non-selectable count; it never creates selectable `???` entries
+  or leaks a name, preview, or statistic. The existing `mystery_device` mechanic is
+  displayed as Anomaly Device / 변칙 장치. Guidebook navigation uses one 48-pixel
+  left-arrow command with a localized accessible name, tooltip, and input hint.
 - Settings places read-only Ship Status first. During a paused run it shows
   effective movement, defense, primary, EMP, secondary, level, and
   acquired-upgrade values from one frozen gameplay-owned snapshot. Outside a
@@ -624,8 +648,10 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   damage by stable source, plus a second partition by kinetic, thermal, toxin,
   cryo, or arc attribute. Both outgoing totals agree within 0.01. A failed
   attempt opens the report in failure mode with the last hit and the three
-  largest incoming sources before Garage.
-- Deployment, upgrade, pause/settings, guidebook, result, and garage are modal
+  largest incoming sources, then returns directly to Deployment. The final result
+  and Pause abort action also return directly to Deployment. A Boss Practice defeat
+  returns to Boss Practice selection.
+- Deployment, upgrade, pause/settings, guidebook, result, report, and Boss Practice are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
 - One upgrade offer contains one to three unique compatible card IDs. The
   deterministic first pass prefers distinct categories, then fills from the
@@ -679,7 +705,7 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   spatial-query path, presentation batch, retirement rule, and deterministic
   performance-scenario coverage before increasing runtime load.
 - Static minimap geometry and each bounded dynamic tactical snapshot use one
-  vertex-colored mesh surface. At most three Mystery Devices reuse retained
+  vertex-colored mesh surface. At most three Anomaly Devices reuse retained
   world batches and create no per-actor canvas draws or per-field scene nodes.
 - Combat presentation coalesces mobile enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained
@@ -720,8 +746,8 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   swept collision at full horde capacity, stops at the first target unless
   explicitly pierced, chips structures through repeated hits, and gains no
   alternate first round after release.
-- Guide discovery persists, locked entries expose only `???`, settings and pause
-  both reach the guide, and Korean/English copy is complete.
+- Guide discovery persists, locked content appears only as a non-selectable count,
+  settings and pause both reach the guide, and Korean/English copy is complete.
 - Godot import, all focused validators, native boot, Web export, and rendered
   review at supported sizes succeed. Release performance is governed by the
   complete native/Web frame-pacing, capacity, draw-call, and lifecycle gates;

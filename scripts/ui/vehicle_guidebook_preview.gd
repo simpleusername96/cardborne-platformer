@@ -45,6 +45,8 @@ func show_preview(preview: Dictionary) -> void:
 			)
 		&"boss":
 			_add_asset(StringName("boss/%s" % preview_id), 220.0)
+		&"mystery_device":
+			_add_asset(&"world/mystery_device_intact", 150.0)
 		&"terrain":
 			_add_terrain(preview_id)
 		&"facility":

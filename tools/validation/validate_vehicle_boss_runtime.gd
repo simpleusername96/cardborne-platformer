@@ -3,15 +3,33 @@ extends SceneTree
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 
 var _failures: Array[String] = []
 
 
 func _init() -> void:
 	var runtime := BossRuntime.new()
+	var previous_gap := INF
+	var previous_initial_delay := INF
 	for stage_index in 5:
 		var stage_id := StringName("stage_%d" % (stage_index + 1))
 		runtime.configure(stage_id)
+		var configured := runtime.snapshot()
+		_expect(
+			is_equal_approx(
+				float(configured["autonomous_timer"]),
+				3.2 * StageDifficulty.boss_cadence_scale(stage_index)
+			),
+			"%s applies stage cadence to the initial autonomous delay" % stage_id
+		)
+		_expect(
+			runtime.read_gap(1) <= previous_gap
+				and float(configured["autonomous_timer"]) <= previous_initial_delay,
+			"%s never slows the stage-owned direct or autonomous cadence" % stage_id
+		)
+		previous_gap = runtime.read_gap(1)
+		previous_initial_delay = float(configured["autonomous_timer"])
 		var boss := _boss()
 		var cycle: Array[String] = []
 		for _index in 4:
@@ -40,6 +58,27 @@ func _init() -> void:
 			_expect(
 				BossPatterns.commit_mode(pattern) == &"committed",
 				"%s phase-two direct selection stays committed" % stage_id
+			)
+		var events := runtime.advance_autonomous(10.0, boss, Vector2(320.0, 180.0))
+		_expect(events.size() == 1, "%s emits its next bounded autonomous attack" % stage_id)
+		if not events.is_empty():
+			var event := events[0]
+			_expect(
+				StringName(event["kind"]) == BossPatterns.kind(String(event["pattern"])),
+				"%s preserves the authored autonomous shape" % stage_id
+			)
+			_expect(
+				is_equal_approx(
+					float(event["damage"]),
+					BossPatterns.damage(String(event["pattern"]), stage_index)
+				) and is_equal_approx(
+					float(event["radius"]),
+					BossPatterns.radius(String(event["pattern"]), stage_index)
+				) and is_equal_approx(
+					float(event["width"]),
+					BossPatterns.width(String(event["pattern"]), stage_index)
+				),
+				"%s autonomous event uses stage-scaled damage and footprint" % stage_id
 			)
 	_expect(
 		runtime.read_gap(1) > runtime.read_gap(3),

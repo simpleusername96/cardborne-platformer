@@ -11,8 +11,7 @@ signal upgrade_previewed(upgrade_id: StringName)
 signal pause_requested
 signal resume_requested
 signal restart_requested
-signal garage_requested
-signal replay_requested
+signal deployment_requested
 signal stage_report_continued
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
@@ -26,7 +25,6 @@ const DeploymentPanel = preload(
 )
 const PausePanel = preload("res://scripts/ui/vehicle_pause_panel.gd")
 const ResultPanel = preload("res://scripts/ui/vehicle_result_panel.gd")
-const GaragePanel = preload("res://scripts/ui/vehicle_garage_panel.gd")
 const BossPracticePanel = preload(
 	"res://scripts/ui/vehicle_boss_practice_panel.gd"
 )
@@ -45,7 +43,6 @@ const MODAL_MINIMUMS := {
 	"pause":Vector2(520.0, 430.0),
 	"result":Vector2(900.0, 560.0),
 	"report":Vector2(1200.0, 640.0),
-	"garage":Vector2(960.0, 560.0),
 	"settings":Vector2(920.0, 570.0),
 	"guidebook":Vector2(1160.0, 636.0),
 	"practice":Vector2(720.0, 610.0),
@@ -61,7 +58,6 @@ var _upgrade_panel: VehicleUpgradeChoicePanel
 var _pause_panel: VehiclePausePanel
 var _result_panel: VehicleResultPanel
 var _report_panel: VehicleStageReportPanel
-var _garage_panel: VehicleGaragePanel
 var _settings_panel: VehicleSettingsPanel
 var _guide_panel: VehicleGuidebookPanel
 var _practice_panel: VehicleBossPracticePanel
@@ -73,7 +69,6 @@ var _guide_return_surface := "pause"
 var _latest_guidebook_snapshot: Dictionary = {}
 var _latest_build_snapshot: Dictionary = {}
 var _latest_upgrade_cards: Array[Dictionary] = []
-var _latest_garage_data: Dictionary = {}
 
 
 func _ready() -> void:
@@ -129,7 +124,7 @@ func _install_components() -> void:
 	_deployment_panel.settings_requested.connect(
 		_show_settings.bind("deployment")
 	)
-	_deployment_panel.practice_requested.connect(_show_boss_practice)
+	_deployment_panel.practice_requested.connect(show_boss_practice)
 
 	_upgrade_panel = UpgradeChoicePanel.new()
 	_mount_modal("upgrade", _upgrade_panel)
@@ -150,19 +145,16 @@ func _install_components() -> void:
 	_pause_panel.restart_requested.connect(
 		func() -> void: restart_requested.emit()
 	)
-	_pause_panel.garage_requested.connect(
-		func() -> void: garage_requested.emit()
+	_pause_panel.abort_requested.connect(
+		func() -> void: deployment_requested.emit()
 	)
 	_pause_panel.settings_requested.connect(_show_settings.bind("pause"))
 	_pause_panel.guide_requested.connect(_show_guidebook.bind("pause"))
 
 	_result_panel = ResultPanel.new()
 	_mount_modal("result", _result_panel)
-	_result_panel.garage_requested.connect(
-		func() -> void: garage_requested.emit()
-	)
-	_result_panel.replay_requested.connect(
-		func() -> void: replay_requested.emit()
+	_result_panel.deployment_requested.connect(
+		func() -> void: deployment_requested.emit()
 	)
 
 	_report_panel = StageReportPanel.new()
@@ -170,16 +162,6 @@ func _install_components() -> void:
 	_report_panel.continued.connect(
 		func() -> void: stage_report_continued.emit()
 	)
-	_report_panel.garage_requested.connect(
-		func() -> void: garage_requested.emit()
-	)
-
-	_garage_panel = GaragePanel.new()
-	_mount_modal("garage", _garage_panel)
-	_garage_panel.replay_requested.connect(
-		func() -> void: replay_requested.emit()
-	)
-	_garage_panel.settings_requested.connect(_show_settings.bind("garage"))
 
 	_settings_panel = SettingsPanel.new()
 	_mount_modal("settings", _settings_panel)
@@ -225,6 +207,14 @@ func update_hud(snapshot: Dictionary) -> void:
 	_hud.update_snapshot(snapshot)
 
 
+func update_threat_anchor(
+	world_position: Vector2,
+	screen_position: Vector2,
+	is_visible: bool
+) -> void:
+	_hud.update_threat_anchor(world_position, screen_position, is_visible)
+
+
 func show_deployment(
 	selected: StringName = &"pulse_cannon",
 	field_name_key: String = "FIELD_DROWNED_RUIN"
@@ -258,14 +248,6 @@ func show_result(summary: Dictionary) -> void:
 		return
 	hide_all_modals()
 	_show_modal("result")
-
-
-func show_garage(data: Dictionary) -> void:
-	hide_all_modals()
-	_latest_garage_data = data.duplicate(true)
-	_selected_primary = &"pulse_cannon"
-	_garage_panel.open(data)
-	_show_modal("garage")
 
 
 func show_gameplay() -> void:
@@ -387,7 +369,6 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 	var deployment_contract := _deployment_panel.debug_contract()
 	var pause_contract := _pause_panel.debug_contract()
 	var result_contract := _result_panel.debug_contract()
-	var garage_contract := _garage_panel.debug_contract()
 	var contract := {
 		"theme_path":(
 			_root.theme.resource_path
@@ -492,12 +473,6 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		"pause_command_order":pause_contract["command_order"],
 		"pause_command_widths":pause_contract["command_widths"],
 		"result_focusables":result_contract["focusables"],
-		"garage_focusables":garage_contract["focusables"],
-		"garage_columns":garage_contract["columns"],
-		"garage_rows":garage_contract["rows"],
-		"garage_nested_summary_panel":garage_contract["nested_summary_panel"],
-		"garage_primary_action":garage_contract["primary_action"],
-		"garage_secondary_action":garage_contract["secondary_action"],
 		"locale":TranslationServer.get_locale().left(2),
 		"settings":_settings_panel.debug_contract(),
 		"component_owners":{
@@ -506,7 +481,6 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 			"pause":_pause_panel.get_script().resource_path,
 			"guidebook":_guide_panel.get_script().resource_path,
 			"result":_result_panel.get_script().resource_path,
-			"garage":_garage_panel.get_script().resource_path,
 			"practice":(
 				_practice_panel.get_script().resource_path
 				if _practice_panel != null
@@ -596,14 +570,12 @@ func debug_modal_contract(
 			})
 		"report":
 			show_stage_report({})
-		"garage":
-			show_garage({})
 		"settings":
 			_show_settings("deployment")
 		"guidebook":
 			_show_guidebook("settings")
 		"practice":
-			_show_boss_practice()
+			show_boss_practice()
 	return {
 		"surface":surface,
 		"hud_hidden":not _hud.visible,
@@ -687,8 +659,6 @@ func _close_settings() -> void:
 	match _settings_return_surface:
 		"pause":
 			show_pause()
-		"garage":
-			show_garage(_latest_garage_data)
 		_:
 			show_deployment(
 				_selected_primary,
@@ -710,7 +680,7 @@ func _close_guidebook() -> void:
 		show_pause()
 
 
-func _show_boss_practice() -> void:
+func show_boss_practice() -> void:
 	if _practice_panel == null:
 		return
 	hide_all_modals()
@@ -730,7 +700,6 @@ func _on_locale_changed(_locale: String) -> void:
 func _refresh_localized_content() -> void:
 	_deployment_panel.refresh_localized_content()
 	_result_panel.refresh_localized_content()
-	_garage_panel.refresh_localized_content()
 	_guide_panel.refresh_localized_content()
 	_hud.refresh_localized_content()
 	if _practice_panel != null:

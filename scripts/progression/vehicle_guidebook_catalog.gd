@@ -1,37 +1,67 @@
 class_name VehicleGuidebookCatalog
 extends RefCounted
 
-## Stable guide metadata. Locked snapshots never include hidden copy.
+## Stable Guidebook identity and discovery metadata. Combat statistics are
+## projected by VehicleGuidebookStatAdapter from gameplay-owned values.
 
-const CATEGORIES: Array[StringName] = [&"ship", &"mobile", &"bosses", &"objects"]
+const StatAdapter = preload(
+	"res://scripts/progression/vehicle_guidebook_stat_adapter.gd"
+)
+
+const CATEGORIES: Array[StringName] = [&"ship", &"enemies", &"bosses", &"objects"]
+const ENEMY_ARCHETYPES: Array[StringName] = [
+	&"scrap_drone",
+	&"needle_drone",
+	&"spark_minelet",
+	&"chaser",
+	&"shooter",
+	&"controller",
+	&"shield_escort",
+	&"artillery_spotter",
+	&"rammer",
+	&"repair_tender",
+	&"drone_carrier",
+	&"bulkhead_guard",
+	&"splitter_barge",
+	&"turret",
+	&"mine",
+	&"interceptor_tower",
+	&"beam_sentinel",
+	&"generator",
+]
 const ENTRIES: Array[Dictionary] = [
-	{"id":&"mobile_scrap_drone", "category":&"mobile", "name_key":"ENEMY_SCRAP_DRONE", "description_key":"GUIDE_MOBILE_SWARM_DESC", "preview":{"kind":&"enemy", "id":&"scrap_drone"}},
-	{"id":&"mobile_needle_drone", "category":&"mobile", "name_key":"ENEMY_NEEDLE_DRONE", "description_key":"GUIDE_MOBILE_RANGED_DESC", "preview":{"kind":&"enemy", "id":&"needle_drone"}},
-	{"id":&"mobile_spark_minelet", "category":&"mobile", "name_key":"ENEMY_SPARK_MINELET", "description_key":"GUIDE_MOBILE_MINELET_DESC", "counter_key":"TACTIC_COUNTER_FUSE_PACK", "preview":{"kind":&"enemy", "id":&"spark_minelet"}},
-	{"id":&"mobile_chaser", "category":&"mobile", "name_key":"ENEMY_RIVET_CHASER", "description_key":"GUIDE_MOBILE_CHASER_DESC", "counter_key":"TACTIC_COUNTER_SPEARHEAD"},
-	{"id":&"mobile_shooter", "category":&"mobile", "name_key":"ENEMY_LANE_SKIRMISHER", "description_key":"GUIDE_MOBILE_RANGED_DESC", "counter_key":"TACTIC_COUNTER_CROSSFIRE"},
-	{"id":&"mobile_controller", "category":&"mobile", "name_key":"ENEMY_FLOOD_CONTROLLER", "description_key":"GUIDE_MOBILE_CONTROLLER_DESC", "counter_key":"TACTIC_COUNTER_SHEPHERD"},
-	{"id":&"mobile_shield_escort", "category":&"mobile", "name_key":"ENEMY_SHIELD_ESCORT", "description_key":"GUIDE_MOBILE_SUPPORT_DESC"},
-	{"id":&"mobile_artillery_spotter", "category":&"mobile", "name_key":"ENEMY_ARTILLERY_SPOTTER", "description_key":"GUIDE_MOBILE_ARTILLERY_DESC"},
-	{"id":&"mobile_rammer", "category":&"mobile", "name_key":"ENEMY_RAMMER", "description_key":"GUIDE_MOBILE_RAMMER_DESC"},
-	{"id":&"mobile_repair_tender", "category":&"mobile", "name_key":"ENEMY_REPAIR_TENDER", "description_key":"GUIDE_MOBILE_SUPPORT_DESC", "counter_key":"TACTIC_COUNTER_REPAIR_NETWORK"},
-	{"id":&"mobile_drone_carrier", "category":&"mobile", "name_key":"ENEMY_DRONE_CARRIER", "description_key":"GUIDE_MOBILE_CARRIER_DESC"},
-	{"id":&"mobile_bulkhead_guard", "category":&"mobile", "name_key":"ENEMY_BULKHEAD_GUARD", "description_key":"GUIDE_MOBILE_GUARD_DESC", "preview":{"kind":&"enemy", "id":&"bulkhead_guard"}},
-	{"id":&"mobile_splitter_barge", "category":&"mobile", "name_key":"ENEMY_SPLITTER_BARGE", "description_key":"GUIDE_MOBILE_SPLITTER_DESC", "preview":{"kind":&"enemy", "id":&"splitter_barge"}},
-	{"id":&"boss_stage_1", "category":&"bosses", "name_key":"ENEMY_FOUNDRY_COLOSSUS", "description_key":"GUIDE_BOSS_1_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"colossus"}},
-	{"id":&"boss_stage_2", "category":&"bosses", "name_key":"ENEMY_ARCHIVE_LEVIATHAN", "description_key":"GUIDE_BOSS_2_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"leviathan"}},
-	{"id":&"boss_stage_3", "category":&"bosses", "name_key":"ENEMY_DRYDOCK_TITAN", "description_key":"GUIDE_BOSS_3_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"titan"}},
-	{"id":&"boss_stage_4", "category":&"bosses", "name_key":"ENEMY_SWITCHYARD_BEHEMOTH", "description_key":"GUIDE_BOSS_4_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"behemoth"}},
-	{"id":&"boss_stage_5", "category":&"bosses", "name_key":"ENEMY_CROWN_ENGINE", "description_key":"GUIDE_BOSS_5_DESC", "counter_key":"BOSS_SHIELD_COUNTER", "preview":{"kind":&"boss", "id":&"crown"}},
-	{"id":&"object_experience", "category":&"objects", "name_key":"GUIDE_OBJECT_EXPERIENCE_NAME", "description_key":"GUIDE_OBJECT_EXPERIENCE_DESC", "preview":{"kind":&"pickup", "id":&"experience"}},
-	{"id":&"object_repair", "category":&"objects", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "description_key":"GUIDE_OBJECT_REPAIR_DESC", "preview":{"kind":&"pickup", "id":&"repair"}},
-	{"id":&"object_recall", "category":&"objects", "name_key":"GUIDE_OBJECT_RECALL_NAME", "description_key":"GUIDE_OBJECT_RECALL_DESC"},
-	{"id":&"object_crate", "category":&"objects", "name_key":"GUIDE_OBJECT_CRATE_NAME", "description_key":"GUIDE_OBJECT_CRATE_DESC"},
-	{"id":&"object_mystery_device", "category":&"objects", "name_key":"GUIDE_OBJECT_MYSTERY_DEVICE_NAME", "description_key":"GUIDE_OBJECT_MYSTERY_DEVICE_DESC"},
-	{"id":&"object_transit_gate", "category":&"objects", "name_key":"GUIDE_FACILITY_GATE_NAME", "description_key":"GUIDE_FACILITY_GATE_DESC", "preview":{"kind":&"facility", "id":&"transit_gate"}},
-	{"id":&"object_elite_armored", "category":&"objects", "name_key":"ELITE_ARMORED", "description_key":"GUIDE_ELITE_ARMORED_DESC", "preview":{"kind":&"elite", "id":&"armored"}},
-	{"id":&"object_elite_overclocked", "category":&"objects", "name_key":"ELITE_OVERCLOCKED", "description_key":"GUIDE_ELITE_OVERCLOCKED_DESC", "preview":{"kind":&"elite", "id":&"overclocked"}},
-	{"id":&"object_elite_heavy", "category":&"objects", "name_key":"ELITE_HEAVY", "description_key":"GUIDE_ELITE_HEAVY_DESC", "preview":{"kind":&"elite", "id":&"heavy"}},
+	{"id":&"mobile_scrap_drone", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"scrap_drone", "name_key":"ENEMY_SCRAP_DRONE"},
+	{"id":&"mobile_needle_drone", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"needle_drone", "name_key":"ENEMY_NEEDLE_DRONE"},
+	{"id":&"mobile_spark_minelet", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"spark_minelet", "name_key":"ENEMY_SPARK_MINELET"},
+	{"id":&"mobile_chaser", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"chaser", "name_key":"ENEMY_RIVET_CHASER"},
+	{"id":&"mobile_shooter", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"shooter", "name_key":"ENEMY_LANE_SKIRMISHER"},
+	{"id":&"mobile_controller", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"controller", "name_key":"ENEMY_FLOOD_CONTROLLER"},
+	{"id":&"mobile_shield_escort", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"shield_escort", "name_key":"ENEMY_SHIELD_ESCORT"},
+	{"id":&"mobile_artillery_spotter", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"artillery_spotter", "name_key":"ENEMY_ARTILLERY_SPOTTER"},
+	{"id":&"mobile_rammer", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"rammer", "name_key":"ENEMY_RAMMER"},
+	{"id":&"mobile_repair_tender", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"repair_tender", "name_key":"ENEMY_REPAIR_TENDER"},
+	{"id":&"mobile_drone_carrier", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"drone_carrier", "name_key":"ENEMY_DRONE_CARRIER"},
+	{"id":&"mobile_bulkhead_guard", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"bulkhead_guard", "name_key":"ENEMY_BULKHEAD_GUARD"},
+	{"id":&"mobile_splitter_barge", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"splitter_barge", "name_key":"ENEMY_SPLITTER_BARGE"},
+	{"id":&"mobile_turret", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"turret", "name_key":"ENEMY_FOUNDRY_TURRET"},
+	{"id":&"mobile_mine", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"mine", "name_key":"ENEMY_ARC_MINE"},
+	{"id":&"mobile_interceptor_tower", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"interceptor_tower", "name_key":"ENEMY_INTERCEPTOR_TOWER"},
+	{"id":&"mobile_beam_sentinel", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"beam_sentinel", "name_key":"ENEMY_BEAM_SENTINEL"},
+	{"id":&"mobile_generator", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"generator", "name_key":"ENEMY_BARRIER_GENERATOR"},
+	{"id":&"object_elite_armored", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"armored", "name_key":"ELITE_ARMORED", "preview":{"kind":&"elite", "id":&"armored"}},
+	{"id":&"object_elite_overclocked", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"overclocked", "name_key":"ELITE_OVERCLOCKED", "preview":{"kind":&"elite", "id":&"overclocked"}},
+	{"id":&"object_elite_heavy", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"heavy", "name_key":"ELITE_HEAVY", "preview":{"kind":&"elite", "id":&"heavy"}},
+	{"id":&"boss_stage_1", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":0, "name_key":"ENEMY_FOUNDRY_COLOSSUS", "preview":{"kind":&"boss", "id":&"colossus"}},
+	{"id":&"boss_stage_2", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":1, "name_key":"ENEMY_ARCHIVE_LEVIATHAN", "preview":{"kind":&"boss", "id":&"leviathan"}},
+	{"id":&"boss_stage_3", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":2, "name_key":"ENEMY_DRYDOCK_TITAN", "preview":{"kind":&"boss", "id":&"titan"}},
+	{"id":&"boss_stage_4", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":3, "name_key":"ENEMY_SWITCHYARD_BEHEMOTH", "preview":{"kind":&"boss", "id":&"behemoth"}},
+	{"id":&"boss_stage_5", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":4, "name_key":"ENEMY_CROWN_ENGINE", "preview":{"kind":&"boss", "id":&"crown"}},
+	{"id":&"object_experience", "category":&"objects", "entry_kind":&"object", "object_kind":&"experience", "name_key":"GUIDE_OBJECT_EXPERIENCE_NAME", "preview":{"kind":&"pickup", "id":&"experience"}},
+	{"id":&"object_repair", "category":&"objects", "entry_kind":&"object", "object_kind":&"repair", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "preview":{"kind":&"pickup", "id":&"repair"}},
+	{"id":&"object_recall", "category":&"objects", "entry_kind":&"object", "object_kind":&"recall", "name_key":"GUIDE_OBJECT_RECALL_NAME", "preview":{"kind":&"pickup", "id":&"experience_recall"}},
+	{"id":&"object_crate", "category":&"objects", "entry_kind":&"object", "object_kind":&"crate", "name_key":"GUIDE_OBJECT_CRATE_NAME", "preview":{"kind":&"pickup", "id":&"reward_crate"}},
+	{"id":&"object_mystery_device", "category":&"objects", "entry_kind":&"object", "object_kind":&"mystery_device", "name_key":"GUIDE_OBJECT_MYSTERY_DEVICE_NAME", "preview":{"kind":&"mystery_device"}},
+	{"id":&"object_transit_gate", "category":&"objects", "entry_kind":&"object", "object_kind":&"transit_gate", "name_key":"GUIDE_FACILITY_GATE_NAME", "preview":{"kind":&"facility", "id":&"transit_gate"}},
 ]
 
 
@@ -42,67 +72,65 @@ static func valid_ids() -> Dictionary:
 	return result
 
 
-static func entry_id_for_enemy(archetype: StringName, behavior: StringName) -> StringName:
-	var stationary_archetypes: Array[StringName] = [
-		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator",
-	]
-	if archetype in stationary_archetypes:
+static func entry_id_for_enemy(
+	archetype: StringName,
+	_behavior: StringName
+) -> StringName:
+	if archetype == &"stage_boss":
+		return &""
+	if archetype not in ENEMY_ARCHETYPES:
 		return &""
 	return StringName("mobile_%s" % String(archetype))
 
 
-static func snapshot(known: Dictionary, ship: Dictionary) -> Dictionary:
+static func snapshot(
+	known: Dictionary,
+	ship: Dictionary,
+	context: Dictionary = {}
+) -> Dictionary:
 	var categories := {}
+	var locked_counts := {}
 	for category in CATEGORIES:
 		categories[category] = []
-	categories[&"ship"] = [{"id":&"current_ship", "locked":false, "name_key":"GUIDE_CURRENT_SHIP", "description":"", "ship":ship.duplicate(true)}]
+		locked_counts[category] = 0
+	categories[&"ship"] = [{
+		"id":&"current_ship",
+		"locked":false,
+		"name_key":"GUIDE_CURRENT_SHIP",
+		"ship":ship.duplicate(true),
+	}]
 	for entry in ENTRIES:
 		var entry_id := StringName(entry["id"])
-		if known.has(entry_id):
-			categories[StringName(entry["category"])].append({
-				"id":entry_id, "locked":false, "name_key":String(entry["name_key"]),
-				"description_key":String(entry["description_key"]),
-				"preview":_preview_for(entry),
-				"movement_key":_row_key(entry, "movement"),
-				"attack_key":_row_key(entry, "attack"),
-				"counter_key":_row_key(entry, "counter"),
-			})
-		else:
-			categories[StringName(entry["category"])].append({"id":entry_id, "locked":true, "name":"???", "description":""})
-	return {"categories":categories, "category_order":CATEGORIES.duplicate()}
+		var category := StringName(entry["category"])
+		if not known.has(entry_id):
+			locked_counts[category] = int(locked_counts[category]) + 1
+			continue
+		categories[category].append({
+			"id":entry_id,
+			"locked":false,
+			"name_key":String(entry["name_key"]),
+			"preview":_preview_for(entry),
+			"stat_rows":StatAdapter.rows_for(entry, context),
+		})
+	for category in CATEGORIES:
+		if category == &"ship" or int(locked_counts[category]) <= 0:
+			continue
+		categories[category].append({
+			"id":StringName("locked_summary_%s" % String(category)),
+			"locked_summary":true,
+			"locked_count":int(locked_counts[category]),
+		})
+	return {
+		"categories":categories,
+		"category_order":CATEGORIES.duplicate(),
+		"stage_context":context.duplicate(),
+	}
 
 
 static func _preview_for(entry: Dictionary) -> Dictionary:
 	var explicit := Dictionary(entry.get("preview", {}))
 	if not explicit.is_empty():
 		return explicit.duplicate(true)
-	var category := StringName(entry["category"])
-	var entry_id := String(entry["id"])
-	if category == &"mobile":
-		return {
-			"kind":&"enemy",
-			"id":StringName(entry_id.trim_prefix("mobile_")),
-		}
-	if entry_id == "object_recall":
-		return {"kind":&"pickup", "id":&"experience_recall"}
-	if entry_id == "object_crate":
-		return {"kind":&"pickup", "id":&"reward_crate"}
+	if StringName(entry["entry_kind"]) == &"enemy":
+		return {"kind":&"enemy", "id":StringName(entry["archetype"])}
 	return {}
-
-
-static func _row_key(entry: Dictionary, row: String) -> String:
-	var explicit_key := String(entry.get("%s_key" % row, ""))
-	if not explicit_key.is_empty():
-		return explicit_key
-	var preview := _preview_for(entry)
-	if StringName(entry["category"]) == &"objects" and StringName(preview.get("kind", &"")) != &"elite":
-		return {
-			"movement":"GUIDE_ROW_OBJECT_MOVEMENT",
-			"attack":"GUIDE_ROW_OBJECT_EFFECT",
-			"counter":"GUIDE_ROW_OBJECT_COUNTER",
-		}[row]
-	return {
-		"movement":"GUIDE_ROW_MOVEMENT_DEFAULT",
-		"attack":"GUIDE_ROW_ATTACK_DEFAULT",
-		"counter":"GUIDE_ROW_COUNTER_DEFAULT",
-	}[row]

@@ -169,7 +169,7 @@ func _validate_pause() -> void:
 			"PAUSE_SETTINGS",
 			"PAUSE_ABORT",
 		],
-		"Pause command order is Resume, Restart, Settings, Garage"
+		"Pause command order is Resume, Restart, Settings, Abort"
 	)
 	for width in Array(contract["command_widths"]):
 		_expect(is_equal_approx(float(width), 360.0), "Pause commands share one width")
@@ -179,7 +179,7 @@ func _validate_pause() -> void:
 	)
 	_expect(
 		StringName(contract["abort_variation"]) == &"DangerButton",
-		"Pause Garage action uses the shared danger role"
+		"Pause Abort action uses the shared danger role"
 	)
 	root_control.queue_free()
 	await process_frame

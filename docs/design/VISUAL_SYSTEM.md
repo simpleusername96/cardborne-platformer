@@ -215,7 +215,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored pickup, shard, and crate visual ID plus value-scale mapping | spawn, value, collection |
 | effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, and Mystery purge presentation modes within the fixed 96-effect store | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
-| world catalog | authored Transit Gate, Mystery Device, reinforcement facility, SurfaceDetail, and state descriptor | topology, collision, health, spawn cadence, outcome |
+| world catalog | authored Transit Gate, Anomaly Device, reinforcement facility, SurfaceDetail, and state descriptor | topology, collision, health, spawn cadence, outcome |
 | secondary catalog | authored seeker, drone, blade, mine presentation identity | targeting, cadence, damage |
 | defense catalog | shared code-native support boundary plus Toxin/Cryo actor-overlay recipe | protection, Electric Field damage area, damage, slow, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
@@ -234,7 +234,7 @@ collision.
 #### Media ownership boundary
 
 - player, ordinary enemy, boss, secondary body, three projectile roles,
-  pickup, reward crate, Transit Gate, Mystery Device, reinforcement
+  pickup, reward crate, Transit Gate, Anomaly Device, reinforcement
   facility, common boss
   node처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된 authored
   PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와 state
@@ -269,13 +269,13 @@ collision.
   transform·scale·silhouette 안에서 translucent body layer를 합성하며 draw, batch,
   actor instance 또는 texture를 추가하지 않는다. damage number와 cosmetic emitter,
   plate, orbit icon은 만들지 않는다.
-  Mystery Device의 Cryo Lock도 Chill stack을 만들지 않은 채 같은 blue
+  Anomaly Device의 Cryo Lock도 Chill stack을 만들지 않은 채 같은 blue
   same-size compositor input을 사용한다.
 - 경험치 pickup의 small/medium/large는 하나의 authored XP master PNG를
   각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
   크기에서 약 30% 줄인 값이다. reward crate, repair pickup과 experience recall은
   gameplay 역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
-- Mystery Device는 crate보다 큰 `intact` body와 효과가 anchor를
+- Anomaly Device는 crate보다 큰 `intact` body와 효과가 anchor를
   필요로 할 때만 유지하는 `resolved` wreck state를 가진다. 결과 종류는 첫
   accepted hit 전 image, 색, lamp, glyph로 암시하지 않는다. 첫 hit는 localized
   text로 결과를 식별하며 body asset이나 minimap marker를 바꾸지 않는다.
@@ -323,14 +323,14 @@ collision.
 | 외곽 경계벽 | `#070B11` 단색 black mass | field boundary와 collision |
 | 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
-| 미확인 장치 | 상자보다 큰 neutral mechanical body; 파괴 전 결과를 숨기고 파괴 후 resolved state만 표시 | device health와 hidden outcome |
+| 변칙 장치 | 상자보다 큰 neutral mechanical body; 파괴 전 결과를 숨기고 파괴 후 resolved state만 표시 | device health와 hidden outcome |
 | 증원 조립소 | 넓은 적대 시설 body와 상시 체력 표시; 일반 적과 다른 미니맵 표식 | 별도 facility health, 가동 임계점, 소환 주기와 상한 |
 | 보상 상자 | amber body, lock seam과 파손 가능한 contour | crate health와 drop |
 | 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
 
 별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad와
 Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 승인된
-별도 stationary facility category다. 내부 구조벽·위험 지대·게이트·미확인
+별도 stationary facility category다. 내부 구조벽·위험 지대·게이트·변칙
 장치·증원 조립소·보상 상자·픽업을 서로
 바꿔 부르거나 같은 silhouette로 합치지 않는다.
 
@@ -364,7 +364,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - neutral 또는 traversable damage-zone surface는 사용하지 않는다. 바닥 detail은
   presentation-only이며 damage, collision, danger telegraph 또는 objective 의미를
   가질 수 없다.
-- Mystery Device는 reward crate보다 크고 neutral/dark mechanical mass가 지배하는
+- Anomaly Device는 reward crate보다 크고 neutral/dark mechanical mass가 지배하는
   exact `192×192` authored body다. 한 개의 restrained system accent만 허용하며
   첫 accepted hit 전에는 네 결과의 색, glyph, 방향, animation을 노출하지 않는다.
   첫 hit의 localized text가 결과를 식별하고, 파괴 후 anchor가 필요한 동안만
@@ -374,11 +374,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   Decoy Signal은 실제 영향 지속시간 전체에 exact footprint를 유지한다. Existing
   shared ring은 boundary accent로만 사용하며 별도 raster를 추가하지 않는다.
 - Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
-  Mystery Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
+  Anomaly Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
 - reinforcement facility는 enemy actor catalog를 재사용하지 않는 완성된
   `256×256` authored body다. 가동 중에만 world에 나타나고, 시설 체력 bar와
   two-tone diamond minimap marker가 사용자의 파괴 목표를 전달한다.
-- 상자, loose pickup과 Mystery Device는 넓은 role-color 면과 dark contour를
+- 상자, loose pickup과 Anomaly Device는 넓은 role-color 면과 dark contour를
   사용해 서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
   표시하지 않는다.
 - 세 field의 주요 시각 차이는 실제 walkable topology와 run-selected wall
@@ -451,8 +451,12 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   artillery는 projectile을 발사하며 ordinary mine의 근접 폭발 범위도 world ring으로
   표시하지 않는다. affinity별 inner ring, diamond, center line, tick bar, commit
   marker는 만들지 않는다.
-- threat radar는 기존 5 Hz publication과 fixed contact cache를 유지하며 player
-  주위 12 sector까지만 그린다. visible world rectangle 밖이면서 1,200 world
+- threat radar는 기존 5 Hz hostile scan을 유지하며 sampled player origin,
+  generation과 12개 이하 sector record를 한 frame으로 교체한다. HUD는 매 render
+  frame 현재 player world position으로 이 bounded record를 rebase하고, 같은 frame의
+  projected player position을 radar anchor로 사용한다. dash 중에도 center 오차는
+  1 px 이하여야 하며 이 경로는 enemy를 다시 scan하거나 mesh를 재생성하지 않는다.
+  visible world rectangle 밖이면서 1,200 world
   unit 안에 있는 active targetable non-boss enemy는 exact coordinate나 triangle이
   없는 dim danger arc `nearby_enemy`가 된다. scheduler가 이미 만든 ordinary
   arrival cue는 최대 여덟 개의 preallocated position/lifetime receipt로만 보관하고,
@@ -608,7 +612,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - minimap의 dynamic marker는 player, `field_pickup`, `reward_crate`,
   `mystery_device`, `mobile_enemy`, `priority_enemy`, `boss`,
   `reinforcement_facility` 정확히 여덟 역할만 사용한다. pickup은 lozenge, crate는
-  amber notched square, intact Mystery Device는 hidden result를 전혀 암시하지 않는
+  amber notched square, intact Anomaly Device는 hidden result를 전혀 암시하지 않는
   neutral cut marker, mobile enemy는 wedge/round mass, 고정 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`는 square/cut priority mass,
   boss는 command-magenta notched mass, facility는 two-tone diamond다. resolved/retired
@@ -616,7 +620,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   표시하지 않는다. marker capacity, borrowed buffer, explored static geometry와 fog,
   player facing, 한 retained minimap Surface를 유지한다. pickup outer size는
   `12×7.6`, 기존 notch를 유지한 crate는 `9×9`이며 perceived polygon area 차이는
-  10% 이하다. Mystery Device outer point는 기존 neutral cut silhouette의 `1.20×`다.
+  10% 이하다. Anomaly Device outer point는 기존 neutral cut silhouette의 `1.20×`다.
 - bottom-center에는 panel이 없는 확대 원형 EMP indicator 하나만 둔다. cooldown과
   enabled/disabled 상태만 표시하며 primary, dash, secondary slot은 만들지 않는다.
 - minimap zone만 한 subtle Surface를 사용한다. B stage stack과 center 두 meter는
@@ -626,12 +630,12 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - normal ToastSurface는 compact `320×36`, standard/large `360×40`이며 center
   status stack 아래 4px에 붙는다. left B stack 높이는 toast Y에 영향을 주지
   않는다. gameplay toast는 reinforcement facility active/destroyed, boss inbound,
-  barrier depleted, Mystery Device first-hit reveal, Mystery Device triggered result,
+  barrier depleted, Anomaly Device first-hit reveal, Anomaly Device triggered result,
   boss shield-down과 progression complete event만 허용한다.
   stage transition banner는 사용하지 않는다.
 - stage boss, active reinforcement facility, 고정 전투 시설 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed
-  health bar를 둔다. mobile enemy, mine, Mystery Device, reward crate에는 표시하지
+  health bar를 둔다. mobile enemy, mine, Anomaly Device, reward crate에는 표시하지
   않는다. 시설 bar는 최대 12개이며 fill 높이는 16 world unit, boss fill 높이는
   18 world unit이다. installation half-width는 `42–72`, boss는 `96–120`,
   facility는 `88–112` world unit로 제한한다. fill은 모든 비율에서 왼쪽 edge를
@@ -663,16 +667,22 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   structured Selectable card와 explicit selection, Equip confirm만 사용한다.
   각 card는 title 아래 관련 artwork 한 개만 가지며 Leave, Exit, Skip 또는
   decline action은 없다.
-- Pause는 Resume, Restart, Settings, Garage의 equal-width vertical stack을
-  사용한다. Resume만 filled primary이고 Garage는 restrained danger다.
+- Pause는 Resume, Restart, Settings, Abort Run의 equal-width vertical stack을
+  사용한다. Resume만 filled primary이고 Abort Run은 restrained danger다. Abort
+  Run은 중간 화면 없이 Deployment로 돌아간다.
 - Settings는 category rail + content이며 Ship Status, audio, controls,
   motion, language 순서를 유지한다.
 - Guidebook은 wide에서 category/list/detail 세 column, compact에서 category
-  tab + list/detail 두 pane다. discovered preview는 runtime component,
-  locked entry는 neutral silhouette를 쓴다.
+  tab + list/detail 두 pane다. category는 Ship, Enemies, Bosses, Field Objects이며
+  stationary hostile와 elite modifier도 Enemies에 둔다. 발견된 enemy/boss detail은
+  canonical gameplay owner에서 읽은 ordered stat row를 사용하고 generic
+  Movement/Attack/Counter 설명은 사용하지 않는다. 잠금 항목은 category별 count 한
+  줄로만 요약하며 selectable `???` preview를 만들지 않는다. Back은 localized
+  accessible name, tooltip과 input hint를 가진 48×48 left-arrow command다.
 - Report는 wide three-column, compact keyboard tab과 fixed bottom primary를
   사용한다.
-- Result/Garage는 metric, build/loadout와 next action을 glyph로 요약한다.
+- Result는 metric과 build/loadout를 요약하고 하나의 Deployment action을 제공한다.
+  Failure Report도 Deployment로 직접 돌아간다.
 - Boss Practice는 debug-only이지만 production boss descriptor와 Theme를
   재사용한다.
 
@@ -737,7 +747,7 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - Beam Sentinel and boss straight beams share one code-native unit quad. Runtime tint,
   alpha, live corridor size, and the two-plane startup/three-plane active hierarchy remain
   presentation-owned.
-- Mystery Device gameplay and its two approved raster states are integrated.
+- Anomaly Device gameplay and its two approved raster states are integrated.
   Candidate and intermediate files stay outside the production manifest.
 - Drop Mine gameplay receipts remain fixed-capacity effect-store state. The shared
   code-native disk batch displays radius `96/108/120`; standard and reduced motion both

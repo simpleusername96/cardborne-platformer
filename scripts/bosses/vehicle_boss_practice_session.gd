@@ -50,6 +50,11 @@ func is_pattern_loop() -> bool:
 	return active and pattern != "full"
 
 
+func stop() -> void:
+	active = false
+	loop_wait = 0.0
+
+
 func health_ratio() -> float:
 	return [0.80, 0.50, 0.20][clampi(phase - 1, 0, 2)]
 

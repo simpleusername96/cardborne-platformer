@@ -1522,6 +1522,34 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	if zones_variant is Array:
 		for zone_variant in zones_variant:
 			var zone: Dictionary = zone_variant
+			var shape := StringName(zone.get("shape", &"area"))
+			var warning := float(zone["warning"])
+			var warning_total := maxf(
+				warning,
+				float(zone.get("warning_total", warning))
+			)
+			var readiness := (
+				AttackContract.warning_readiness(warning, warning_total)
+				if warning > 0.0 else 1.0
+			)
+			if shape == &"corridor":
+				var corridor := {
+					"from":Vector2(zone["from"]),
+					"to":Vector2(zone["to"]),
+					"active_width":float(zone["width"]),
+					"damage":float(zone.get("damage", 0.0)),
+					"affinity":AttackContract.normalize_affinity(
+						StringName(zone.get("affinity", AttackContract.KINETIC))
+					),
+					"readiness":readiness,
+				}
+				if warning > 0.0:
+					_sync_beam_startup(corridor)
+				else:
+					_sync_active_beam(corridor)
+				continue
+			if shape != &"area":
+				continue
 			var position := Vector2(zone["pos"])
 			var radius := float(zone["radius"])
 			if not visible_world.grow(radius).has_point(position):
@@ -1535,18 +1563,8 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				"radius": radius,
 				"damage": damage,
 				"affinity": affinity,
-				"readiness": 1.0,
+				"readiness": readiness,
 			}
-			var warning := float(zone["warning"])
-			if warning > 0.0:
-				var warning_total := maxf(
-					warning,
-					float(zone.get("warning_total", warning))
-				)
-				descriptor["readiness"] = AttackContract.warning_readiness(
-					warning,
-					warning_total
-				)
 			_sync_area_telegraph(descriptor)
 	var player_position := Vector2(state["player_position"])
 	var hull_direction := Vector2(state["hull_direction"])

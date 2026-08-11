@@ -577,6 +577,14 @@ func update_snapshot(snapshot: Dictionary) -> void:
 		_threat_radar.set_snapshot(snapshot["threat_radar"])
 
 
+func update_threat_anchor(
+	world_position: Vector2,
+	screen_position: Vector2,
+	is_visible: bool
+) -> void:
+	_threat_radar.set_live_anchor(world_position, screen_position, is_visible)
+
+
 func notify(
 	message: String,
 	duration: float = 2.4,

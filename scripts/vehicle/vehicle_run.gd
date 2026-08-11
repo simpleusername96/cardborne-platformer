@@ -66,6 +66,9 @@ const VisualEventCatalog = preload(
 const CombatCuePolicy = preload(
 	"res://scripts/presentation/components/vehicle_combat_cue_policy.gd"
 )
+const ThreatRadarFeed = preload(
+	"res://scripts/presentation/vehicle_threat_radar_feed.gd"
+)
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const ManualPerformanceTrace = preload("res://scripts/performance/vehicle_manual_performance_trace.gd")
@@ -95,7 +98,6 @@ enum RunMode {
 	STAGE_REPORT,
 	FAILURE_REPORT,
 	RESULT,
-	GARAGE,
 }
 
 const SAVE_PATH := "user://vehicle-run.cfg"
@@ -128,9 +130,6 @@ const MINIMAP_STATIC_KEYS: Array[StringName] = [
 const THREAT_SCAN_DISTANCE := 1200.0
 const ORDINARY_ARRIVAL_CUE_CAPACITY := 8
 const ORDINARY_ARRIVAL_POST_BIRTH_HOLD := 1.10
-const THREAT_CONTACT_CAPACITY := (
-	EnemyStore.MAX_LIVE_HOSTILES + ORDINARY_ARRIVAL_CUE_CAPACITY + 1
-)
 const BOSS_ARRIVAL_MIN_DISTANCE := 1200.0
 const BOSS_ARRIVAL_PREFERRED_MAX_DISTANCE := 1500.0
 # Threat contacts feed the radar/world-marker channel, whose observable refresh
@@ -274,7 +273,7 @@ var _runtime_minimap_marker_buffers: Array = []
 var _runtime_minimap_marker_pool: Array[Dictionary] = []
 var _runtime_minimap_frame_index := -1
 var _runtime_threat_radar_frame: Dictionary = {}
-var _runtime_threat_contact_pool: Array[Dictionary] = []
+var _threat_radar_feed := ThreatRadarFeed.new(THREAT_SCAN_DISTANCE)
 var _ordinary_arrival_cue_positions := PackedVector2Array()
 var _ordinary_arrival_cue_remaining := PackedFloat32Array()
 var _ordinary_arrival_cue_count := 0
@@ -312,7 +311,6 @@ var current_stage_id: StringName = StageCatalog.STAGE_IDS[0]
 
 var visited_cells: Dictionary = {}
 var discovered_markers: Dictionary = {}
-var _threat_contact_cache: Array[Dictionary] = []
 var _threat_sample_timer := 0.0
 var _enemy_local_steering := EnemyLocalSteering.new()
 var _enemy_overlap_refresh_mask := PackedByteArray()
@@ -420,10 +418,7 @@ func _ready() -> void:
 		_load_persistence()
 	selected_run_difficulty = RunDifficulty.HARD
 	_reset_run(false)
-	_ui.show_deployment(
-		selected_primary,
-		String(field_layout.field_definition["name_key"])
-	)
+	_present_deployment()
 	_set_mouse_for_mode()
 	queue_redraw()
 	_prepare_manual_performance_trace()
@@ -464,17 +459,12 @@ func _initialize_hud_staging() -> void:
 			})
 	_ordinary_arrival_cue_positions.resize(ORDINARY_ARRIVAL_CUE_CAPACITY)
 	_ordinary_arrival_cue_remaining.resize(ORDINARY_ARRIVAL_CUE_CAPACITY)
-	for _contact_index in THREAT_CONTACT_CAPACITY:
-		_runtime_threat_contact_pool.append({
-			"offset": Vector2.ZERO,
-			"kind": CombatCuePolicy.CONTACT_NEARBY_ENEMY,
-			"readiness": 0.0,
-		})
 	_runtime_threat_radar_frame = {
 		"visible":false,
-		"center":Vector2.ZERO,
+		"generation":0,
+		"sample_origin":Vector2.ZERO,
 		"max_distance":THREAT_SCAN_DISTANCE,
-		"contacts":_threat_contact_cache,
+		"sectors":[],
 	}
 
 
@@ -604,6 +594,11 @@ func _process(delta: float) -> void:
 	camera_shake = maxf(0.0, camera_shake - delta * 18.0)
 	if is_instance_valid(_ui) and (_simulation_active() or _capture_mode):
 		var hud_started := Time.get_ticks_usec() if timing_active else 0
+		_ui.update_threat_anchor(
+			player_position,
+			get_canvas_transform() * player_position,
+			_simulation_active()
+		)
 		var hud_update := _hud_presenter.advance(
 			delta,
 			_build_fast_hud_snapshot_callable,
@@ -730,8 +725,7 @@ func _build_ui() -> void:
 	_ui.pause_requested.connect(_pause_run)
 	_ui.resume_requested.connect(_resume_run)
 	_ui.restart_requested.connect(_restart_stage)
-	_ui.garage_requested.connect(_show_garage)
-	_ui.replay_requested.connect(_replay_stage)
+	_ui.deployment_requested.connect(_return_to_deployment)
 	_ui.stage_report_continued.connect(_continue_stage_report)
 
 
@@ -862,7 +856,7 @@ func _reset_run(
 	if not preserve_upgrades:
 		visited_cells.clear()
 	discovered_markers.clear()
-	_threat_contact_cache.clear()
+	_reset_threat_radar_feed()
 	_clear_ordinary_arrival_cues()
 	_threat_sample_timer = 0.0
 	_shielded_enemy_ids.clear()
@@ -1094,7 +1088,10 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.vulnerable = 0.0
 	enemy.elite_trait = &""
 	enemy.armor_structure = 0.0
-	enemy.guard_plate_structure = 72.0 if archetype == &"bulkhead_guard" else 0.0
+	enemy.guard_plate_structure = (
+		SpecialistRuntime.GUARD_PLATE_STRUCTURE
+		if archetype == &"bulkhead_guard" else 0.0
+	)
 	enemy.mine_armed_by_player = false
 	enemy.mine_fast_cue_played = false
 	enemy.splitter_spawned = false
@@ -1380,35 +1377,27 @@ func _restart_stage() -> void:
 	_set_mouse_for_mode()
 
 
-func _replay_stage() -> void:
-	run_index += 1
-	mode = RunMode.DEPLOYMENT
+func _return_to_deployment() -> void:
+	_release_tree_pause()
+	_reset_run(true)
+	_present_deployment()
+	_set_mouse_for_mode()
+
+
+func _present_deployment() -> void:
+	var build_snapshot := _build_snapshot()
+	_ui.update_hud({
+		"build_snapshot":build_snapshot,
+		"guidebook":_guidebook_snapshot(build_snapshot),
+	})
 	_ui.show_deployment(
 		selected_primary,
 		String(field_layout.field_definition["name_key"])
 	)
-	_set_mouse_for_mode()
 
 
 func _advance_stage() -> void:
 	_begin_stage_transition()
-
-
-func _show_garage() -> void:
-	_release_tree_pause()
-	mode = RunMode.GARAGE
-	player_health = _player_max_health()
-	_clear_projectiles()
-	denied_zones.clear()
-	_ui.show_garage({
-		"selected_primary": selected_primary,
-		"clear_count": persistent_clear_count,
-		"relay_module_unlocked": persistent_relay_module,
-		"field_module_unlocked": persistent_field_module,
-		"build_summary": _run_build_summary(),
-		"secondaries": secondary_runtime.equipped_families(run_build),
-	})
-	_set_mouse_for_mode()
 
 
 func _set_mouse_for_mode() -> void:
@@ -2505,7 +2494,11 @@ func _append_enemy_shield_assignments(
 		) != support_bucket:
 			continue
 		var support_position := support.pos
-		var support_radius := 390.0 if support.role == &"generator" else 300.0
+		var support_radius := (
+			SpecialistRuntime.GENERATOR_RANGE
+			if support.role == &"generator"
+			else SpecialistRuntime.SHIELD_ESCORT_RANGE
+		)
 		enemy_grid.query_radius_into(
 			support_position,
 			support_radius,
@@ -2515,11 +2508,14 @@ func _append_enemy_shield_assignments(
 		if support.role == &"generator":
 			for candidate in _support_query_buffer:
 				var candidate_role := candidate.role
-				if candidate != support and candidate_role not in [&"generator", &"shield_escort", &"stage_boss"] and support_position.distance_squared_to(candidate.pos) <= 390.0 * 390.0:
+				if candidate != support and candidate_role not in [&"generator", &"shield_escort", &"stage_boss"] and support_position.distance_squared_to(candidate.pos) <= SpecialistRuntime.GENERATOR_RANGE * SpecialistRuntime.GENERATOR_RANGE:
 					shielded_ids[candidate.id] = true
 			continue
 		var closest_id := ""
-		var closest_distance_squared := 300.0 * 300.0
+		var closest_distance_squared := (
+			SpecialistRuntime.SHIELD_ESCORT_RANGE
+			* SpecialistRuntime.SHIELD_ESCORT_RANGE
+		)
 		for candidate in _support_query_buffer:
 			var candidate_role := candidate.role
 			if candidate == support or candidate_role in [&"generator", &"shield_escort", &"stage_boss"]:
@@ -2551,17 +2547,17 @@ func _update_generator(enemy: EnemyState, delta: float) -> void:
 	enemy.support_tick -= delta
 	if enemy.support_tick > 0.0:
 		return
-	enemy.support_tick = 0.75
+	enemy.support_tick = SpecialistRuntime.GENERATOR_TICK_SECONDS
 	enemy_grid.query_radius_into(
 		enemy.pos,
-		390.0,
+		SpecialistRuntime.GENERATOR_RANGE,
 		enemies,
 		_support_query_buffer
 	)
 	for target in _support_query_buffer:
 		if target == enemy:
 			continue
-		if target.pos.distance_to(enemy.pos) <= 390.0:
+		if target.pos.distance_to(enemy.pos) <= SpecialistRuntime.GENERATOR_RANGE:
 			target.health = minf(
 				target.max_health,
 				target.health + SpecialistRuntime.GENERATOR_HEAL_PER_TICK
@@ -3223,8 +3219,14 @@ func _explode_mine(enemy: EnemyState) -> void:
 	if enemy == null or not enemy.alive:
 		return
 	var mobile := enemy.archetype == &"spark_minelet"
-	var radius := 100.0 if mobile else 160.0
-	var center_damage := 14.0 if mobile else 26.0
+	var radius := (
+		SpecialistRuntime.MOBILE_MINE_RADIUS
+		if mobile else SpecialistRuntime.STATIC_MINE_RADIUS
+	)
+	var center_damage := (
+		SpecialistRuntime.MOBILE_MINE_DAMAGE
+		if mobile else SpecialistRuntime.STATIC_MINE_DAMAGE
+	)
 	var origin := enemy.pos
 	var source := "player_spark_minelet" if mobile else "player_arc_mine"
 	if (
@@ -3855,12 +3857,25 @@ func _update_denied_zones(delta: float) -> void:
 		if float(zone["duration"]) <= 0.0:
 			denied_zones.remove_at(index)
 			continue
-		var distance := player_position.distance_to(Vector2(zone["pos"]))
-		var damage := AttackContract.radial_damage(
-			float(zone["damage"]),
-			distance,
-			float(zone["radius"])
-		)
+		var shape := StringName(zone.get("shape", &"area"))
+		var damage := 0.0
+		if shape == &"area":
+			damage = AttackContract.radial_damage(
+				float(zone["damage"]),
+				player_position.distance_to(Vector2(zone["pos"])),
+				float(zone["radius"])
+			)
+		elif shape == &"corridor":
+			if Rules.point_segment_distance(
+				player_position,
+				Vector2(zone["from"]),
+				Vector2(zone["to"])
+			) <= Rules.PLAYER_RADIUS + float(zone["width"]) * 0.5:
+				damage = float(zone["damage"])
+		else:
+			push_error("Unsupported denied-zone shape: %s" % String(shape))
+			denied_zones.remove_at(index)
+			continue
 		if damage > 0.0 and float(zone["tick"]) <= 0.0:
 			zone["tick"] = 0.62
 			_damage_player(
@@ -3952,7 +3967,7 @@ func _damage_enemy(
 	var role := enemy.role
 	var multiplier := 1.0
 	if not final_effective and enemy.shielded:
-		multiplier *= 0.45
+		multiplier *= SpecialistRuntime.SHIELDED_RECEIVED_DAMAGE_MULTIPLIER
 	if not final_effective and role == &"rammer" and enemy.vulnerable > 0.0:
 		multiplier *= 1.50
 	var boss_damage_multiplier := 1.0
@@ -4255,8 +4270,9 @@ func _handle_player_defeat() -> void:
 	_clear_projectiles()
 	denied_zones.clear()
 	if boss_practice.active:
-		mode = RunMode.GARAGE
-		_ui.show_garage({})
+		boss_practice.stop()
+		mode = RunMode.DEPLOYMENT
+		_ui.show_boss_practice()
 		_set_mouse_for_mode()
 		return
 	mode = RunMode.FAILURE_REPORT
@@ -4634,16 +4650,6 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 	_set_mouse_for_mode()
 
 
-func _run_build_summary() -> String:
-	var parts: PackedStringArray = []
-	for upgrade_id in applied_upgrades.keys():
-		var definition := upgrade_catalog.get_definition(StringName(upgrade_id))
-		if definition != null:
-			parts.append("%s %d" % [tr(definition.title_key), run_build.level_of(StringName(upgrade_id))])
-	parts.sort()
-	return "  ·  ".join(parts)
-
-
 func apply_upgrade(upgrade_id: StringName) -> bool:
 	if (
 		mode != RunMode.UPGRADE
@@ -4891,7 +4897,7 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	)
 	if (
 		kind in [&"area", &"pylons", &"summon"]
-		and BossPatterns.damage(pattern) > 0.0
+		and BossPatterns.damage(pattern, current_stage_index) > 0.0
 	):
 		var lead := predicted_target - player_position
 		predicted_target = (
@@ -4903,12 +4909,14 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	if Vector2(boss.committed_dir).is_zero_approx():
 		boss.committed_dir = Vector2.RIGHT
 	if kind == &"lanes":
-		boss.lane_centers = [-135.0, 135.0]
+		var spacing := BossPatterns.lane_spacing(current_stage_index)
+		boss.lane_centers = [-spacing, spacing]
 	AttackTelegraphs.refresh_boss(
 		boss,
 		pattern,
 		_runtime_attack_path_callable,
-		_runtime_charge_path_callable
+		_runtime_charge_path_callable,
+		current_stage_index
 	)
 
 
@@ -4917,12 +4925,15 @@ func _practice_autonomous_event(boss: EnemyState) -> Dictionary:
 	return {
 		"id":"practice_system",
 		"pattern":pattern,
+		"kind":BossPatterns.kind(pattern),
 		"origin":boss.pos,
 		"target":player_position,
 		"startup":BossPatterns.startup_seconds(pattern),
 		"duration":BossPatterns.active_seconds(pattern),
-		"damage":BossPatterns.damage(pattern),
-		"radius":BossPatterns.radius(pattern),
+		"damage":BossPatterns.damage(pattern, current_stage_index),
+		"radius":BossPatterns.radius(pattern, current_stage_index),
+		"width":BossPatterns.width(pattern, current_stage_index),
+		"lane_spacing":BossPatterns.lane_spacing(current_stage_index),
 		"affinity":BossPatterns.affinity(pattern),
 		"commit_mode":&"autonomous",
 	}
@@ -4961,7 +4972,8 @@ func _boss_fire_aimed_burst(boss: EnemyState, pattern: String, damage: float) ->
 
 func _execute_boss_autonomous(event: Dictionary) -> void:
 	var pattern := String(event["pattern"])
-	if pattern == "beam_sentinel_call":
+	var kind := StringName(event.get("kind", BossPatterns.kind(pattern)))
+	if kind == &"summon" and pattern == "beam_sentinel_call":
 		if _live_boss_add_count() >= BossPhaseCatalog.MAX_LIVE_ADDS:
 			return
 		var sentinel := _make_enemy({
@@ -4974,15 +4986,95 @@ func _execute_boss_autonomous(event: Dictionary) -> void:
 		})
 		_append_enemy(sentinel)
 		return
+	if kind == &"area":
+		_append_boss_area_zone(event)
+		return
+	if kind == &"lanes":
+		_append_boss_lane_zones(event)
+		return
+	if kind == &"beam":
+		_append_boss_beam_zone(event)
+		return
+	push_error("Unsupported autonomous boss pattern kind: %s (%s)" % [String(kind), pattern])
+
+
+func _append_boss_area_zone(event: Dictionary) -> void:
 	denied_zones.append({
 		"id":event["id"],
+		"shape":&"area",
 		"pos":Vector2(event["target"]),
 		"radius":float(event["radius"]),
 		"warning":float(event["startup"]),
+		"warning_total":float(event["startup"]),
 		"duration":maxf(0.62, float(event["duration"])),
 		"tick":0.0,
 		"damage":float(event["damage"]),
-		"source":pattern,
+		"source":String(event["pattern"]),
+		"affinity":StringName(event["affinity"]),
+		"commit_mode":&"autonomous",
+		"final_damage":true,
+	})
+
+
+func _append_boss_lane_zones(event: Dictionary) -> void:
+	var origin := Vector2(event["origin"])
+	var direction := (Vector2(event["target"]) - origin).normalized()
+	if direction.is_zero_approx():
+		direction = Vector2.RIGHT
+	var tangent := direction.rotated(PI * 0.5)
+	var spacing := float(event["lane_spacing"])
+	for lane_index in [-1, 1]:
+		var lane_origin := origin + tangent * spacing * float(lane_index)
+		var lane_end := _runtime_attack_path_end(
+			lane_origin,
+			direction,
+			BossPatterns.BEAM_RANGE,
+			float(event["width"]) * 0.5
+		)
+		_append_boss_corridor_zone(
+			event,
+			"%s_lane_%d" % [String(event["id"]), lane_index],
+			lane_origin,
+			lane_end
+		)
+
+
+func _append_boss_beam_zone(event: Dictionary) -> void:
+	var origin := Vector2(event["origin"])
+	var direction := (Vector2(event["target"]) - origin).normalized()
+	if direction.is_zero_approx():
+		direction = Vector2.RIGHT
+	_append_boss_corridor_zone(
+		event,
+		String(event["id"]),
+		origin,
+		_runtime_attack_path_end(
+			origin,
+			direction,
+			BossPatterns.BEAM_RANGE,
+			float(event["width"]) * 0.5
+		)
+	)
+
+
+func _append_boss_corridor_zone(
+	event: Dictionary,
+	zone_id: String,
+	from: Vector2,
+	to: Vector2
+) -> void:
+	denied_zones.append({
+		"id":zone_id,
+		"shape":&"corridor",
+		"from":from,
+		"to":to,
+		"width":float(event["width"]),
+		"warning":float(event["startup"]),
+		"warning_total":float(event["startup"]),
+		"duration":maxf(0.62, float(event["duration"])),
+		"tick":0.0,
+		"damage":float(event["damage"]),
+		"source":String(event["pattern"]),
 		"affinity":StringName(event["affinity"]),
 		"commit_mode":&"autonomous",
 		"final_damage":true,
@@ -5173,6 +5265,9 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 
 
 func _continue_stage_report() -> void:
+	if mode == RunMode.FAILURE_REPORT:
+		_return_to_deployment()
+		return
 	if mode != RunMode.STAGE_REPORT:
 		return
 	if bool(_pending_stage_report.get("has_next_stage", false)):
@@ -5256,7 +5351,7 @@ func _begin_stage_transition() -> void:
 	_elite_pending = 0
 	_elite_spawned = 0
 	_elite_threshold_cursor = 0
-	_threat_contact_cache.clear()
+	_reset_threat_radar_feed()
 	_clear_ordinary_arrival_cues()
 	_threat_sample_timer = 0.0
 	_shielded_enemy_ids.clear()
@@ -5417,7 +5512,13 @@ func _guidebook_snapshot(build_snapshot: Dictionary = {}) -> Dictionary:
 		return {}
 	if build_snapshot.is_empty():
 		build_snapshot = _build_snapshot()
-	return store.snapshot(build_snapshot)
+	var guide_context := {}
+	if (
+		mode in [RunMode.PLAYING, RunMode.STAGE_TRANSITION, RunMode.UPGRADE]
+		or (mode == RunMode.PAUSED and mode_before_pause != RunMode.DEPLOYMENT)
+	):
+		guide_context["active_stage_index"] = current_stage_index
+	return store.snapshot(build_snapshot, guide_context)
 
 
 func _build_snapshot() -> Dictionary:
@@ -5724,7 +5825,7 @@ func _update_threat_contacts(delta: float) -> void:
 	if _threat_sample_timer > 0.0:
 		return
 	_threat_sample_timer = THREAT_SAMPLE_INTERVAL
-	_threat_contact_cache.clear()
+	_threat_radar_feed.begin_sample(player_position)
 	var viewport_size := get_viewport_rect().size
 	var safe_viewport := Rect2(Vector2(90.0, 90.0), viewport_size - Vector2(180.0, 220.0))
 	var canvas_transform := get_canvas_transform()
@@ -5804,6 +5905,7 @@ func _update_threat_contacts(delta: float) -> void:
 			CombatCuePolicy.CONTACT_BOSS_ARRIVAL,
 			1.0
 		)
+	_threat_radar_feed.commit_sample()
 
 
 func _direction_only_threat_offset(offset: Vector2) -> Vector2:
@@ -5818,33 +5920,34 @@ func _append_runtime_threat_contact(
 	kind: StringName,
 	readiness: float
 ) -> void:
-	var contact_index := _threat_contact_cache.size()
-	if contact_index >= THREAT_CONTACT_CAPACITY:
-		return
-	var contact: Dictionary = _runtime_threat_contact_pool[contact_index]
-	contact["offset"] = offset
-	contact["kind"] = kind
-	contact["readiness"] = readiness
-	_threat_contact_cache.append(contact)
+	_threat_radar_feed.append_offset(offset, kind, readiness)
 
 
 func _threat_radar_snapshot() -> Dictionary:
-	return {
-		"visible": _simulation_active(),
-		"center": get_canvas_transform() * player_position,
-		"max_distance": THREAT_SCAN_DISTANCE,
-		"contacts": _threat_contact_cache,
-	}
+	return _fill_threat_radar_snapshot({})
 
 
 func _runtime_threat_radar_snapshot() -> Dictionary:
-	_runtime_threat_radar_frame["visible"] = _simulation_active()
-	_runtime_threat_radar_frame["center"] = (
-		get_canvas_transform() * player_position
-	)
-	_runtime_threat_radar_frame["max_distance"] = THREAT_SCAN_DISTANCE
-	_runtime_threat_radar_frame["contacts"] = _threat_contact_cache
-	return _runtime_threat_radar_frame
+	return _fill_threat_radar_snapshot(_runtime_threat_radar_frame)
+
+
+func _fill_threat_radar_snapshot(frame: Dictionary) -> Dictionary:
+	var sample := _threat_radar_feed.snapshot()
+	frame["visible"] = _simulation_active()
+	frame["generation"] = int(sample.get("generation", 0))
+	frame["sample_origin"] = Vector2(sample.get(
+		"sample_origin", player_position
+	))
+	frame["max_distance"] = float(sample.get(
+		"max_distance", THREAT_SCAN_DISTANCE
+	))
+	frame["sectors"] = sample.get("sectors", [])
+	return frame
+
+
+func _reset_threat_radar_feed() -> void:
+	_threat_radar_feed.begin_sample(player_position)
+	_threat_radar_feed.commit_sample()
 
 
 func _draw() -> void:

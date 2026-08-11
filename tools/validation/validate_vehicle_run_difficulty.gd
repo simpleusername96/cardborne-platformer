@@ -61,12 +61,13 @@ func _run() -> void:
 		"boss movement preserves the committed-attack multiplier"
 	)
 	var health_curve := [0.85, 1.00, 1.15, 1.30, 1.45]
-	var health_pressure := [1.35, 1.40, 1.45, 1.50, 1.50]
+	var health_pressure := [1.35, 1.45, 1.55, 1.65, 1.75]
 	var boss_bases := [1250.0, 1350.0, 1450.0, 1550.0, 1650.0]
+	var boss_health_multipliers := [4.20, 4.30, 4.40, 4.50, 4.60]
 	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health uses the locked five-stage curve")
 	_expect(
 		StageDifficulty.ORDINARY_HEALTH_PRESSURE == health_pressure,
-		"ordinary health adds the accepted 35-50 percent stage pressure"
+		"ordinary health applies the accepted monotonic 35-75 percent stage pressure"
 	)
 	for stage_index in health_curve.size():
 		stage.current_stage_index = stage_index
@@ -112,18 +113,18 @@ func _run() -> void:
 			_near(
 				stage_boss.health,
 				boss_bases[stage_index]
-					* StageDifficulty.BOSS_HEALTH_MULTIPLIER,
+					* boss_health_multipliers[stage_index],
 				0.001
 			),
-			"Stage %d leaves the authored boss-health curve unchanged"
+			"Stage %d applies the exact monotonic boss-health profile"
 				% (stage_index + 1)
 		)
 	var damage_curve := [1.00, 1.03, 1.06, 1.09, 1.12]
-	var damage_pressure := [1.15, 1.20, 1.25, 1.30, 1.30]
-	var expected_damage := [20.1825, 21.6918, 23.25375, 24.86835, 25.5528]
+	var damage_pressure := [1.15, 1.24, 1.33, 1.42, 1.50]
+	var expected_damage := [20.1825, 22.41486, 24.74199, 27.16389, 29.484]
 	_expect(
 		StageDifficulty.ORDINARY_DAMAGE_PRESSURE == damage_pressure,
-		"ordinary damage adds the accepted 15-30 percent stage pressure"
+		"ordinary damage applies the accepted monotonic 15-50 percent stage pressure"
 	)
 	for stage_index in damage_curve.size():
 		stage.current_stage_index = stage_index

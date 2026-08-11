@@ -113,6 +113,27 @@ static func command_button(text: String, role: StringName) -> Button:
 	return button
 
 
+static func icon_command_button(
+	glyph: String,
+	accessible_name_key: String,
+	role: StringName
+) -> Button:
+	var button := command_button(glyph, role)
+	button.custom_minimum_size = Vector2(48.0, 48.0)
+	button.set_meta(&"accessible_name_key", accessible_name_key)
+	refresh_icon_command_button(button)
+	return button
+
+
+static func refresh_icon_command_button(button: Button) -> void:
+	var key := String(button.get_meta(&"accessible_name_key", ""))
+	if key.is_empty():
+		return
+	var localized := TranslationServer.translate(key)
+	button.tooltip_text = localized
+	button.accessibility_name = localized
+
+
 static func selectable_button(text: String, selected := false) -> Button:
 	var button := command_button(
 		text,

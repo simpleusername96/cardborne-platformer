@@ -2,10 +2,9 @@ class_name VehicleResultPanel
 extends VBoxContainer
 
 ## Stage/final result composition. It formats a supplied summary and emits only
-## garage or replay intent.
+## deployment intent.
 
-signal garage_requested
-signal replay_requested
+signal deployment_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
@@ -18,7 +17,6 @@ var _performance_label: Label
 var _reward_title: Label
 var _reward_label: Label
 var _first_button: Button
-var _replay_button: Button
 var _summary: Dictionary = {}
 
 
@@ -101,20 +99,13 @@ func _build() -> void:
 	actions.add_theme_constant_override("separation", 14)
 	add_child(actions)
 	_first_button = Factory.command_button(
-		tr("RESULT_REVIEW_GARAGE"),
+		tr("RESULT_DEPLOYMENT"),
 		Factory.COMMAND_PRIMARY
 	)
 	_first_button.custom_minimum_size = Vector2(300.0, 48.0)
 	Factory.apply_font_size(_first_button, 22)
-	_first_button.pressed.connect(func() -> void: garage_requested.emit())
+	_first_button.pressed.connect(func() -> void: deployment_requested.emit())
 	actions.add_child(_first_button)
-	_replay_button = Factory.command_button(
-		tr("RESULT_REPLAY"),
-		Factory.COMMAND_SECONDARY
-	)
-	_replay_button.custom_minimum_size.x = 210.0
-	_replay_button.pressed.connect(func() -> void: replay_requested.emit())
-	actions.add_child(_replay_button)
 
 
 func open(summary: Dictionary) -> bool:
@@ -145,8 +136,7 @@ func refresh_localized_content() -> void:
 	)
 	_performance_title.text = tr("RESULT_PERFORMANCE")
 	_reward_title.text = tr("RESULT_REWARD")
-	_first_button.text = tr("RESULT_REVIEW_GARAGE")
-	_replay_button.text = tr("RESULT_REPLAY")
+	_first_button.text = tr("RESULT_DEPLOYMENT")
 	_metric_labels[0].text = tr("RESULT_CLEAR_TIME") % String(
 		_summary.get("time", "0:00")
 	)
@@ -191,12 +181,10 @@ func debug_contract() -> Dictionary:
 		"summary_values":_metric_labels.size(),
 		"performance_visible":not _performance_label.text.is_empty(),
 		"reward_visible":not _reward_label.text.is_empty(),
-		"initial_focus_is_garage":_first_button.has_focus(),
+		"initial_focus_is_deployment":_first_button.has_focus(),
 		"summary_texts":summary_texts,
 		"performance_text":_performance_label.text,
 		"reward_text":_reward_label.text,
 		"primary_action":_first_button.text,
-		"secondary_action":_replay_button.text,
 		"primary_variation":_first_button.theme_type_variation,
-		"secondary_variation":_replay_button.theme_type_variation,
 	}

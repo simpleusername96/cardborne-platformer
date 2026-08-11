@@ -63,9 +63,13 @@ func _install_content() -> void:
 func _apply_viewport() -> void:
 	if surface == null:
 		return
+	# A large child's minimum size can expand this CenterContainer before the
+	# responsive decision runs. Use the actual viewport so the modal cannot
+	# misclassify a narrow window as a wide layout.
+	var viewport_size := get_viewport_rect().size
 	var available := Vector2(
-		maxf(320.0, size.x - 48.0),
-		maxf(260.0, size.y - 24.0)
+		maxf(320.0, viewport_size.x - 48.0),
+		maxf(260.0, viewport_size.y - 24.0)
 	)
 	var target_size := preferred_size
 	if (
@@ -78,8 +82,12 @@ func _apply_viewport() -> void:
 		minf(target_size.x, available.x),
 		minf(target_size.y, available.y)
 	)
-	var responsive_compact := size.x < 1100.0 or size.y < 650.0
-	var responsive_large := size.x >= 1600.0 and size.y >= 900.0
+	var responsive_compact := (
+		viewport_size.x < 1100.0 or viewport_size.y < 650.0
+	)
+	var responsive_large := (
+		viewport_size.x >= 1600.0 and viewport_size.y >= 900.0
+	)
 	var compact := responsive_compact or _accessibility_compact
 	surface.theme_type_variation = (
 		&"ModalSurfaceCompact" if compact else &"ModalSurface"

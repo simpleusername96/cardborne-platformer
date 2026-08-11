@@ -262,7 +262,7 @@ func _initialize() -> void:
 			)
 			_expect(not bool(card["has_scroll"]), "upgrade card never scrolls")
 		_expect(bool(contract["has_selectable_theme"]), "upgrade cards use the public shared Selectable states at %d" % width)
-		_expect(bool(contract["has_danger_theme"]), "garage exit uses the public shared danger state at %d" % width)
+		_expect(bool(contract["has_danger_theme"]), "run abort uses the public shared danger state at %d" % width)
 		_expect(
 			is_equal_approx(float(contract["body_font_weight"]), 650.0),
 			"shared UI body typography uses weight 650 at %d" % width
@@ -349,18 +349,6 @@ func _initialize() -> void:
 				and secondary_roles_only,
 			"deployment flattens all visible actions into one ordered row at %d"
 			% width
-		)
-		_expect(
-			int(contract["garage_columns"]) == 2
-				and int(contract["garage_rows"]) == 5
-				and not bool(contract["garage_nested_summary_panel"]),
-			"garage uses two unboxed shared-row columns at %d" % width
-		)
-		_expect(
-			String(contract["garage_primary_action"]) == "GARAGE_LAUNCH"
-				and String(contract["garage_secondary_action"])
-					== "GARAGE_SETTINGS",
-			"garage exposes only Deployment Setup and Settings at %d" % width
 		)
 		var deployment_surface := Vector2(contract["deployment_surface_size"])
 		_expect(
@@ -460,12 +448,16 @@ func _initialize() -> void:
 		int(radar_contract["sector_count"]) == 12
 			and bool(radar_contract["nearby_enemy_contact"])
 			and not bool(radar_contract["nearby_enemy_triangle"])
+			and int(radar_contract["retained_mesh_recipes"]) > 1
+			and not bool(radar_contract["mesh_recreated_per_anchor"])
 			and Dictionary(radar_contract["contact_priorities"]) == {
 				"incoming_attack":3, "boss_arrival":2, "nearby_enemy":1,
 			},
 		"threat radar keeps 12 sectors and the 3/2/1 contact hierarchy"
 	)
 	var radar := ThreatRadar.new()
+	get_root().add_child(radar)
+	await process_frame
 	var shared_sector := radar.debug_aggregate_contacts([
 		{"offset":Vector2(800.0, 20.0), "kind":CombatCuePolicy.CONTACT_NEARBY_ENEMY},
 		{"offset":Vector2(850.0, 10.0), "kind":CombatCuePolicy.CONTACT_BOSS_ARRIVAL, "readiness":1.0},
@@ -479,12 +471,42 @@ func _initialize() -> void:
 			and is_equal_approx(float(shared_sector[0]["readiness"]), 0.4),
 		"the winning radar kind owns sector color/readiness while density still accumulates"
 	)
-	var radar_mesh: ArrayMesh = radar._build_threat_mesh(
-		Vector2(640.0, 360.0), shared_sector, 1200.0
+	radar.set_live_anchor(
+		Vector2(1000.0, 1000.0), Vector2(640.0, 360.0), true
 	)
+	radar.set_snapshot({
+		"generation":1,
+		"sample_origin":Vector2(1000.0, 1000.0),
+		"max_distance":1200.0,
+		"sectors":[{
+			"active":true,
+			"count":1,
+			"world_position":Vector2(1800.0, 1000.0),
+			"kind":CombatCuePolicy.CONTACT_NEARBY_ENEMY,
+			"readiness":0.0,
+		}],
+	})
+	var dash_start := radar.debug_contract()
+	radar.set_live_anchor(
+		Vector2(1244.0, 1100.0), Vector2(640.0, 360.0), true
+	)
+	var dash_middle := radar.debug_contract()
+	radar.set_live_anchor(
+		Vector2(1244.0, 1100.0), Vector2(700.0, 390.0), true
+	)
+	var dash_end := radar.debug_contract()
 	_expect(
-		radar_mesh != null and radar_mesh.get_surface_count() == 1,
-		"mixed radar pressure compiles into one bounded mesh surface"
+		Vector2(dash_start["live_anchor"]) == Vector2(640.0, 360.0)
+			and Vector2(dash_middle["live_anchor"]) == Vector2(640.0, 360.0)
+			and Vector2(dash_end["live_anchor"]) == Vector2(700.0, 390.0)
+			and int(dash_middle["active_sector_count"]) == 1
+			and not is_equal_approx(
+				float(dash_start["first_active_angle"]),
+				float(dash_middle["first_active_angle"])
+			)
+			and int(dash_end["retained_mesh_recipes"])
+				== int(dash_start["retained_mesh_recipes"]),
+		"dash live anchor follows the projected craft while sampled directions rebase without rebuilding mesh recipes"
 	)
 	radar.free()
 	var tactical_mesh := MinimapMeshBuilder.build({
@@ -696,7 +718,6 @@ func _validate_modal_matrix(ui: VehicleStageUI) -> void:
 				"pause",
 				"result",
 				"report",
-				"garage",
 				"settings",
 				"guidebook",
 				"practice",
@@ -836,7 +857,6 @@ func _validate_owner_boundaries() -> void:
 		"_deployment_control_row",
 		"func _practice_option",
 		"_result_metric_labels",
-		"_garage_primary_label",
 		"HealthPips",
 		"StageMinimap",
 	]:

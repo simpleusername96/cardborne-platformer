@@ -12,13 +12,16 @@ const BOSS_CHARGE_SPEED := 790.0
 const BOSS_CONTACT_PADDING := 10.0
 const BEAM_RANGE := 920.0
 const BEAM_COVER_PADDING := 5.0
-const BOSS_DAMAGE_MULTIPLIER := 1.30
+const BASE_LANE_SPACING := 135.0
+const BASE_FAN_OFFSETS := [-0.34, -0.17, 0.0, 0.17, 0.34]
+
+const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 
 const PATTERNS := {
 	&"furnace_gates":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.90, "recovery":0.90, "damage":22.0},
 	&"foundry_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},
 	&"foundry_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"thermal", "startup":0.85, "active":0.70, "recovery":0.90, "damage":20.0},
-	&"furnace_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
+	&"furnace_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.05, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
 	&"slag_ring":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"thermal", "startup":1.15, "active":0.70, "recovery":0.0, "damage":20.0, "radius":210.0},
 	&"forge_vent":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.00, "active":2.4, "recovery":0.0, "damage":20.0, "radius":190.0},
 
@@ -38,7 +41,7 @@ const PATTERNS := {
 
 	&"breaker_charge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.70, "recovery":1.20, "damage":36.0},
 	&"ricochet_volley":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.00, "active":0.75, "recovery":1.05, "damage":22.0},
-	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.00, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
+	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.20, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
 	&"switch_sweep":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.05, "active":0.80, "recovery":1.15, "damage":30.0, "width":78.0},
 	&"switchyard_mines":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":0.0, "damage":26.0, "radius":145.0},
 	&"switch_sweeps":{"kind":&"beam", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.75, "recovery":0.0, "damage":28.0, "width":72.0},
@@ -167,8 +170,11 @@ static func recovery_seconds(pattern: String) -> float:
 	return float(definition(pattern)["recovery"])
 
 
-static func damage(pattern: String) -> float:
-	return float(definition(pattern)["damage"]) * BOSS_DAMAGE_MULTIPLIER
+static func damage(pattern: String, stage_index: int = 0) -> float:
+	return (
+		float(definition(pattern)["damage"])
+		* StageDifficulty.boss_damage_multiplier(stage_index)
+	)
 
 
 static func affinity(pattern: String) -> StringName:
@@ -187,12 +193,30 @@ static func commit_mode_display_key(mode: StringName) -> String:
 	return String(COMMIT_MODE_KEYS.get(mode, ""))
 
 
-static func radius(pattern: String) -> float:
-	return float(definition(pattern).get("radius", 210.0))
+static func radius(pattern: String, stage_index: int = 0) -> float:
+	return (
+		float(definition(pattern).get("radius", 210.0))
+		* StageDifficulty.boss_coverage_scale(stage_index)
+	)
 
 
-static func width(pattern: String) -> float:
-	return float(definition(pattern).get("width", 68.0))
+static func width(pattern: String, stage_index: int = 0) -> float:
+	return (
+		float(definition(pattern).get("width", 68.0))
+		* StageDifficulty.boss_coverage_scale(stage_index)
+	)
+
+
+static func lane_spacing(stage_index: int = 0) -> float:
+	return BASE_LANE_SPACING * StageDifficulty.boss_coverage_scale(stage_index)
+
+
+static func fan_offsets(stage_index: int = 0) -> Array[float]:
+	var scale := StageDifficulty.boss_coverage_scale(stage_index)
+	var result: Array[float] = []
+	for value in BASE_FAN_OFFSETS:
+		result.append(float(value) * scale)
+	return result
 
 
 static func volley_interval(pattern: String) -> float:

@@ -93,6 +93,8 @@ func _validate_session_contract() -> void:
 		session.is_pattern_loop() and session.health_ratio() == 0.20,
 		"phase-three pattern loop uses its fixed health"
 	)
+	session.stop()
+	_expect(not session.active, "practice can return to its selection state after defeat")
 	errors = session.configure({
 		"stage_id":&"stage_9",
 		"field_id":&"missing",
@@ -102,6 +104,15 @@ func _validate_session_contract() -> void:
 	_expect(
 		errors.size() == 4 and not session.active,
 		"malformed practice arguments fail without substitution"
+	)
+	var run_source := FileAccess.get_file_as_string(
+		"res://scripts/vehicle/vehicle_run.gd"
+	)
+	_expect(
+		run_source.contains("boss_practice.stop()")
+			and run_source.contains("_ui.show_boss_practice()")
+			and not run_source.contains("show_garage"),
+		"practice defeat returns to Boss Practice selection without a Garage route"
 	)
 
 

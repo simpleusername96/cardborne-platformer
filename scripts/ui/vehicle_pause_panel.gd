@@ -5,7 +5,7 @@ extends VBoxContainer
 
 signal resume_requested
 signal restart_requested
-signal garage_requested
+signal abort_requested
 signal settings_requested
 signal guide_requested
 
@@ -75,7 +75,7 @@ func _build() -> void:
 		Factory.COMMAND_DANGER
 	)
 	abort_button.custom_minimum_size = Vector2(360.0, 48.0)
-	abort_button.pressed.connect(func() -> void: garage_requested.emit())
+	abort_button.pressed.connect(func() -> void: abort_requested.emit())
 	_command_stack.add_child(abort_button)
 
 

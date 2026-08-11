@@ -13,7 +13,7 @@ const GuidebookPreview = preload("res://scripts/ui/vehicle_guidebook_preview.gd"
 
 const CATEGORY_KEYS := {
 	&"ship":"GUIDE_CATEGORY_SHIP",
-	&"mobile":"GUIDE_CATEGORY_MOBILE",
+	&"enemies":"GUIDE_CATEGORY_ENEMIES",
 	&"bosses":"GUIDE_CATEGORY_BOSSES",
 	&"objects":"GUIDE_CATEGORY_OBJECTS",
 }
@@ -30,11 +30,10 @@ var _entry_separator: VSeparator
 var _detail_scroll: ScrollContainer
 var _title_label: Label
 var _detail_title: Label
-var _detail_body: Label
 var _build_summary: VehicleBuildSummaryPanel
 var _preview_well: PanelContainer
 var _preview: VehicleGuidebookPreview
-var _counterplay_rows: VBoxContainer
+var _stat_rows: VBoxContainer
 var _close_button: Button
 var _active_category: StringName = &"ship"
 var _active_entry_id: StringName = &""
@@ -99,8 +98,9 @@ func _build() -> void:
 	_title_label.theme_type_variation = &"DisplayLabel"
 	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_title_label)
-	_close_button = Factory.command_button("SETTINGS_CLOSE", Factory.COMMAND_SECONDARY)
-	_close_button.custom_minimum_size = Vector2(136.0, 48.0)
+	_close_button = Factory.icon_command_button(
+		"←", "COMMON_BACK", Factory.COMMAND_SECONDARY
+	)
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
 	header.add_child(_close_button)
 
@@ -158,12 +158,9 @@ func _build() -> void:
 	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_preview_well.add_child(_preview)
-	_detail_body = Factory.label("", 17, Art.TEXT_PRIMARY)
-	_detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.add_child(_detail_body)
-	_counterplay_rows = VBoxContainer.new()
-	_counterplay_rows.add_theme_constant_override("separation", 5)
-	detail.add_child(_counterplay_rows)
+	_stat_rows = VBoxContainer.new()
+	_stat_rows.add_theme_constant_override("separation", 6)
+	detail.add_child(_stat_rows)
 	_build_summary = BuildSummaryPanel.new()
 	detail.add_child(_build_summary)
 	_apply_category_layout()
@@ -173,7 +170,7 @@ func refresh_localized_content() -> void:
 	if not is_instance_valid(_title_label):
 		return
 	_title_label.text = tr("GUIDE_TITLE")
-	_close_button.text = tr("SETTINGS_CLOSE")
+	Factory.refresh_icon_command_button(_close_button)
 	if _category_buttons.is_empty():
 		return
 	var category := _active_category
@@ -224,17 +221,32 @@ func _select_category(category: StringName) -> void:
 	var entries: Array = Dictionary(_snapshot.get("categories", {})).get(category, [])
 	for entry_variant in entries:
 		var entry := Dictionary(entry_variant)
-		var title := "???" if bool(entry.get("locked", true)) else tr(String(entry.get("name_key", "")))
+		var locked_summary := bool(entry.get("locked_summary", false))
+		var title := (
+			tr("GUIDE_LOCKED_SUMMARY") % int(entry.get("locked_count", 0))
+			if locked_summary
+			else tr(String(entry.get("name_key", "")))
+		)
 		var button := _selectable(title)
 		button.toggle_mode = false
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.custom_minimum_size.y = 48.0
 		var entry_id := StringName(entry.get("id", &""))
-		button.pressed.connect(_select_entry.bind(entry))
+		if locked_summary:
+			button.disabled = true
+			button.focus_mode = Control.FOCUS_NONE
+		else:
+			button.pressed.connect(_select_entry.bind(entry))
+			_entry_buttons[entry_id] = button
 		_entry_list.add_child(button)
-		_entry_buttons[entry_id] = button
-	if not entries.is_empty():
-		_select_entry(Dictionary(entries[0]))
+	var first_selectable := entries.filter(
+		func(value: Variant) -> bool:
+			return not bool(Dictionary(value).get("locked_summary", false))
+	)
+	if not first_selectable.is_empty():
+		_select_entry(Dictionary(first_selectable[0]))
+	elif not entries.is_empty():
+		_show_entry(Dictionary(entries[0]))
 	_entry_scroll.scroll_vertical = 0
 	_detail_scroll.scroll_vertical = 0
 
@@ -261,47 +273,49 @@ func _select_entry_by_id(category: StringName, entry_id: StringName) -> bool:
 
 
 func _show_entry(entry: Dictionary) -> void:
-	if bool(entry.get("locked", false)):
-		_detail_title.text = "???"
-		_detail_body.visible = false
-		_counterplay_rows.visible = false
-		_preview.show_preview({"kind":&"locked"})
-		_preview_well.visible = true
+	if bool(entry.get("locked_summary", false)):
+		_detail_title.text = (
+			tr("GUIDE_LOCKED_SUMMARY") % int(entry.get("locked_count", 0))
+		)
+		_stat_rows.visible = false
+		_preview_well.visible = false
 		_build_summary.visible = false
 		return
 	_detail_title.text = tr(String(entry.get("name_key", "GUIDE_CURRENT_SHIP")))
 	if entry.has("ship"):
-		_detail_body.visible = false
-		_counterplay_rows.visible = false
+		_stat_rows.visible = false
 		_preview.show_preview({"kind":&"ship"})
 		_preview_well.visible = true
 		_build_summary.visible = true
 		_build_summary.set_snapshot(Dictionary(entry["ship"]))
 	else:
-		_detail_body.visible = true
-		_counterplay_rows.visible = true
+		_stat_rows.visible = true
 		_build_summary.visible = false
-		_detail_body.text = tr(String(entry.get("description_key", "")))
 		_preview.show_preview(Dictionary(entry.get("preview", {})))
 		_preview_well.visible = _preview.visible
-		_set_counterplay_rows(entry)
+		_set_stat_rows(entry)
 
 
-func _set_counterplay_rows(entry: Dictionary) -> void:
-	_clear(_counterplay_rows)
-	for definition in [
-		["GUIDE_ROW_MOVEMENT", String(entry.get("movement_key", "GUIDE_ROW_MOVEMENT_DEFAULT"))],
-		["GUIDE_ROW_ATTACK", String(entry.get("attack_key", "GUIDE_ROW_ATTACK_DEFAULT"))],
-		["GUIDE_ROW_COUNTER", String(entry.get("counter_key", "GUIDE_ROW_COUNTER_DEFAULT"))],
-	]:
-		var row := Factory.text_row(String(definition[0]), String(definition[1]), {
-			"label_min_width":104.0,
+func _set_stat_rows(entry: Dictionary) -> void:
+	_clear(_stat_rows)
+	for row_variant in Array(entry.get("stat_rows", [])):
+		var definition := Dictionary(row_variant)
+		var value_text := tr(String(definition.get("value_key", "")))
+		var value_args := Array(definition.get("value_args", []))
+		if not value_args.is_empty():
+			value_text = value_text % value_args
+		var row := Factory.text_row(
+			tr(String(definition.get("label_key", ""))),
+			value_text,
+			{
+			"label_min_width":122.0,
 			"label_size":16,
 			"value_size":15,
 			"value_color":Art.MINT_SOFT,
-		})
+			}
+		)
 		(row.get_child(1) as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_counterplay_rows.add_child(row)
+		_stat_rows.add_child(row)
 
 
 func _apply_category_layout() -> void:
@@ -374,17 +388,29 @@ func debug_contract() -> Dictionary:
 		"ship_entry_column_hidden":_active_category == &"ship" and not _entry_scroll.visible and not _entry_separator.visible,
 		"entry_column_visible":_entry_scroll.visible and _entry_separator.visible,
 		"ship_detail_full_width":_active_category == &"ship" and not _entry_scroll.visible,
-		"structured_counterplay":is_instance_valid(_counterplay_rows),
-		"counterplay_rows":_counterplay_rows.get_child_count(),
+		"structured_stats":is_instance_valid(_stat_rows),
+		"stat_rows":_stat_rows.get_child_count(),
+		"locked_summary_count":_locked_summary_count(),
 		"row_panel_count":0,
 		"preview_shell_variation":_preview_well.theme_type_variation,
 		"preview":preview_contract,
 		"build_summary":_build_summary.debug_contract(),
 		"title":_title_label.text,
 		"close_text":_close_button.text,
+		"close_accessible_name":_close_button.accessibility_name,
+		"close_tooltip":_close_button.tooltip_text,
 	}
 
 
 func debug_select_entry(category: StringName, entry_id: StringName) -> bool:
 	_select_category(category)
 	return _select_entry_by_id(category, entry_id)
+
+
+func _locked_summary_count() -> int:
+	var count := 0
+	for category in Dictionary(_snapshot.get("categories", {})).values():
+		for entry_variant in Array(category):
+			if bool(Dictionary(entry_variant).get("locked_summary", false)):
+				count += 1
+	return count

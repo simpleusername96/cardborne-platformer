@@ -10,7 +10,10 @@ const CORE_CAPTURE_FILES := [
 	"01d-gameplay-settings.png",
 	"01e-guidebook-boss-preview.png",
 	"01f-guidebook-locked.png",
-	"01g-guidebook-enemy-counterplay.png",
+	"01g-guidebook-enemy-stats.png",
+	"01i-guidebook-elite-stats.png",
+	"01j-guidebook-field-objects.png",
+	"01k-guidebook-enemy-stage-range.png",
 	"01h-boss-practice.png",
 	"02-safe-arrival.png",
 	"02b-first-contact-cue.png",
@@ -24,6 +27,10 @@ const CORE_CAPTURE_FILES := [
 	"04c-progression-max.png",
 	"04d-ship-status-acquired-build.png",
 	"04e-radar-minimap-roles.png",
+	"04f-radar-dash-begin.png",
+	"04g-radar-dash-mid.png",
+	"04h-radar-dash-end.png",
+	"04i-radar-dash-mid-reduced.png",
 	"05-two-field-items.png",
 	"05b-reinforcement-facility.png",
 	"05c-structural-health-bars.png",
@@ -39,7 +46,6 @@ const CORE_CAPTURE_FILES := [
 	"91-stage-report.png",
 	"92-failure-report.png",
 	"93-final-result.png",
-	"94-garage.png",
 ]
 
 const FULL_CAPTURE_FILES := [
@@ -49,7 +55,10 @@ const FULL_CAPTURE_FILES := [
 	"01d-gameplay-settings.png",
 	"01e-guidebook-boss-preview.png",
 	"01f-guidebook-locked.png",
-	"01g-guidebook-enemy-counterplay.png",
+	"01g-guidebook-enemy-stats.png",
+	"01i-guidebook-elite-stats.png",
+	"01j-guidebook-field-objects.png",
+	"01k-guidebook-enemy-stage-range.png",
 	"01h-boss-practice.png",
 	"02-safe-arrival.png",
 	"02b-first-contact-cue.png",
@@ -66,6 +75,10 @@ const FULL_CAPTURE_FILES := [
 	"04c-progression-max.png",
 	"04d-ship-status-acquired-build.png",
 	"04e-radar-minimap-roles.png",
+	"04f-radar-dash-begin.png",
+	"04g-radar-dash-mid.png",
+	"04h-radar-dash-end.png",
+	"04i-radar-dash-mid-reduced.png",
 	"05-two-field-items.png",
 	"05b-reinforcement-facility.png",
 	"05c-structural-health-bars.png",
@@ -158,7 +171,6 @@ const FULL_CAPTURE_FILES := [
 	"91-stage-report.png",
 	"92-failure-report.png",
 	"93-final-result.png",
-	"94-garage.png",
 ]
 
 var directory := ""
@@ -242,7 +254,13 @@ func run(gateway: RefCounted) -> void:
 		return
 	if not await _capture_ui(gateway, &"guidebook_locked", "01f-guidebook-locked.png"):
 		return
-	if not await _capture_ui(gateway, &"guidebook_counterplay", "01g-guidebook-enemy-counterplay.png"):
+	if not await _capture_ui(gateway, &"guidebook_enemy_stats", "01g-guidebook-enemy-stats.png"):
+		return
+	if not await _capture_ui(gateway, &"guidebook_elite_stats", "01i-guidebook-elite-stats.png"):
+		return
+	if not await _capture_ui(gateway, &"guidebook_field_objects", "01j-guidebook-field-objects.png"):
+		return
+	if not await _capture_ui(gateway, &"guidebook_enemy_range", "01k-guidebook-enemy-stage-range.png"):
 		return
 	if not await _capture_ui(gateway, &"boss_practice", "01h-boss-practice.png"):
 		return
@@ -300,8 +318,6 @@ func run(gateway: RefCounted) -> void:
 	if not await _capture_ui(gateway, &"failure_report", "92-failure-report.png", 0.36):
 		return
 	if not await _capture_ui(gateway, &"result", "93-final-result.png"):
-		return
-	if not await _capture_ui(gateway, &"garage", "94-garage.png"):
 		return
 	finish_capture(gateway, 0)
 

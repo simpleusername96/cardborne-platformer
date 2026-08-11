@@ -1,7 +1,8 @@
 class_name VehicleEnemySpecialistRuntime
 extends RefCounted
 
-## Pure coordination helpers for the four advanced target-priority roles.
+## Pure coordination helpers and canonical values for specialist, support,
+## protective, and mine roles.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
@@ -25,6 +26,15 @@ const BEAM_RANGE := 920.0
 const BEAM_WIDTH := 54.0
 const BEAM_COVER_PADDING := 5.0
 const BEAM_DAMAGE := 18.0
+const SHIELD_ESCORT_RANGE := 300.0
+const GENERATOR_RANGE := 390.0
+const SHIELDED_RECEIVED_DAMAGE_MULTIPLIER := 0.45
+const GENERATOR_TICK_SECONDS := 0.75
+const GUARD_PLATE_STRUCTURE := 72.0
+const MOBILE_MINE_RADIUS := 100.0
+const MOBILE_MINE_DAMAGE := 14.0
+const STATIC_MINE_RADIUS := 160.0
+const STATIC_MINE_DAMAGE := 26.0
 
 
 static func repair_target_id(tender: EnemyState, enemies: Array[EnemyState], stage_id: StringName, include_dynamic_cover: bool, extra_cover: Array = []) -> String:

@@ -77,7 +77,8 @@ static func refresh_boss(
 	enemy: EnemyState,
 	pattern: String,
 	resolve_path: Callable,
-	resolve_charge_path: Callable = Callable()
+	resolve_charge_path: Callable = Callable(),
+	stage_index: int = 0
 ) -> void:
 	enemy.attack_telegraphs.clear()
 	if enemy.phase != &"boss_startup":
@@ -89,7 +90,7 @@ static func refresh_boss(
 	)
 	var kind := BossPatterns.kind(pattern)
 	var affinity := BossPatterns.affinity(pattern)
-	var damage := BossPatterns.damage(pattern)
+	var damage := BossPatterns.damage(pattern, stage_index)
 	if kind == &"lanes":
 		var direction := Vector2(enemy.committed_dir)
 		var tangent := direction.rotated(PI * 0.5)
@@ -100,8 +101,8 @@ static func refresh_boss(
 				affinity, resolve_path
 			)
 	elif kind in [&"fan", &"cross"]:
-		var offsets := (
-			[-0.34, -0.17, 0.0, 0.17, 0.34]
+		var offsets: Array = (
+			BossPatterns.fan_offsets(stage_index)
 			if kind == &"fan"
 			else [0.0, PI * 0.5, PI, PI * 1.5]
 		)
@@ -140,16 +141,16 @@ static func refresh_boss(
 		enemy.attack_telegraphs.append(_corridor(
 			enemy.pos,
 			to,
-			AttackContract.beam_danger_half_width(BossPatterns.width(pattern)),
+			AttackContract.beam_danger_half_width(BossPatterns.width(pattern, stage_index)),
 			damage,
 			affinity,
 			&"beam",
-			BossPatterns.width(pattern)
+			BossPatterns.width(pattern, stage_index)
 		))
 	elif kind in [&"area", &"pylons"]:
 		enemy.attack_telegraphs.append(_area(
 			enemy.committed_target,
-			BossPatterns.radius(pattern),
+			BossPatterns.radius(pattern, stage_index),
 			damage,
 			affinity
 		))
@@ -160,7 +161,7 @@ static func refresh_boss(
 		if damage > 0.0:
 			enemy.attack_telegraphs.append(_area(
 				enemy.committed_target,
-				BossPatterns.radius(pattern),
+				BossPatterns.radius(pattern, stage_index),
 				damage,
 				affinity
 			))

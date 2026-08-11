@@ -64,6 +64,12 @@ class PauseProbe:
 		_expect(not get_tree().paused, "Escape resumes the scene tree from the pause surface")
 		_expect(run.mode == run.RunMode.PLAYING, "Escape returns to gameplay mode")
 		_expect(ui._hud.visible, "gameplay HUD returns after resume")
+		await _tap_escape()
+		ui._pause_panel.abort_button.pressed.emit()
+		await get_tree().process_frame
+		_expect(not get_tree().paused, "Abort releases the paused scene tree")
+		_expect(run.mode == run.RunMode.DEPLOYMENT, "Abort routes directly to Deployment")
+		_expect(ui.debug_surface_visible("deployment"), "Deployment replaces the removed Garage detour")
 		if get_tree().paused:
 			run.call("_resume_run")
 		game_root.queue_free()

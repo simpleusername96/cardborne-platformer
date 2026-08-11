@@ -505,110 +505,110 @@ save keys remain intact and receive parity tests.
 
 ### 0. Contract and specification
 
-- [ ] 0.1 Reconcile `docs/product/vehicle_game_spec.md` with threat radar origin/sample
+- [x] 0.1 Reconcile `docs/product/vehicle_game_spec.md` with threat radar origin/sample
   ownership, new ordinary/boss curves, corrected autonomous pattern kinds, Guidebook
   categories/stats/locked behavior, Anomaly Device label, direct post-run routes, and the
   removal of Garage.
-- [ ] 0.2 Reconcile `docs/design/VISUAL_SYSTEM.md` and `.agents/design/DESIGN.md` with the
+- [x] 0.2 Reconcile `docs/design/VISUAL_SYSTEM.md` and `.agents/design/DESIGN.md` with the
   retained radar visual grammar, stat-first Guidebook detail, icon-only Back accessibility,
   modal stack without Garage, and updated screen-flow map.
-- [ ] 0.3 Update relevant validators before implementation so old borrowed-cache,
+- [x] 0.3 Update relevant validators before implementation so old borrowed-cache,
   three-prose-row, `???`, text-Back, and Garage assumptions fail for the intended reasons.
-- [ ] 0.4 Run `tools/validation/validate_cardborne_visual_authority.ps1` after authority
+- [x] 0.4 Run `tools/validation/validate_cardborne_visual_authority.ps1` after authority
   surfaces change and record that no visual asset was created or approved.
 
 ### 1. Dash-coherent threat radar
 
-- [ ] 1.1 Add a responsibility-shaped fixed-capacity threat-feed owner with two sample
+- [x] 1.1 Add a responsibility-shaped fixed-capacity threat-feed owner with two sample
   frames, 12 sector records, and an atomic generation swap.
-- [ ] 1.2 Change `VehicleRun._update_threat_contacts()` to fill the inactive sector frame
+- [x] 1.2 Change `VehicleRun._update_threat_contacts()` to fill the inactive sector frame
   at the existing cadence; remove the borrowed mutable contact-cache contract.
-- [ ] 1.3 Publish the current player world/screen anchor after the current camera transform
+- [x] 1.3 Publish the current player world/screen anchor after the current camera transform
   through `VehicleStageUI` and `VehicleGameplayHud` without allocating or scanning enemies.
-- [ ] 1.4 Change `VehicleThreatRadar` to draw at local origin, rebase/regroup at most 12
+- [x] 1.4 Change `VehicleThreatRadar` to draw at local origin, rebase/regroup at most 12
   summaries with retained storage, and update compact geometry without recreating meshes.
-- [ ] 1.5 Add a deterministic dash fixture covering dash begin/mid/end, a HUD-timer phase
+- [x] 1.5 Add a deterministic dash fixture covering dash begin/mid/end, a HUD-timer phase
   mismatch, buffer reuse, sector crossings, camera smoothing, no-enemy state, and
   viewport-edge clamping.
-- [ ] 1.6 Inspect rendered normal/reduced-motion radar evidence at 960, 1280, and 1920
+- [x] 1.6 Inspect rendered normal/reduced-motion radar evidence at 960, 1280, and 1920
   widths and both locales; require center error <= `1 px` for the complete dash.
 
 ### 2. Ordinary Stage 2-to-5 difficulty
 
-- [ ] 2.1 Replace only `ORDINARY_HEALTH_PRESSURE` and
+- [x] 2.1 Replace only `ORDINARY_HEALTH_PRESSURE` and
   `ORDINARY_DAMAGE_PRESSURE` with the locked arrays.
-- [ ] 2.2 Extend `validate_vehicle_run_difficulty.gd` with exact formulas for priority and
+- [x] 2.2 Extend `validate_vehicle_run_difficulty.gd` with exact formulas for priority and
   swarm/standard examples at all five stages, including damage values and Stage 1 parity.
-- [ ] 2.3 Confirm encounter counts, role speeds, attack recovery, projectile speed,
+- [x] 2.3 Confirm encounter counts, role speeds, attack recovery, projectile speed,
   quotas, caps, player stats, and reward economy are byte-for-byte or value-for-value
   unchanged by this phase.
 
 ### 3. Boss shape and stage profile
 
-- [ ] 3.1 Add the aligned boss curves and public accessors to
+- [x] 3.1 Add the aligned boss curves and public accessors to
   `VehicleStageDifficulty`; validate size, bounds, and monotonicity.
-- [ ] 3.2 Replace autonomous catch-all circle execution with explicit `area`, `lanes`,
+- [x] 3.2 Replace autonomous catch-all circle execution with explicit `area`, `lanes`,
   `beam`, and `summon` dispatch. Exercise every pattern in `AUTONOMOUS_SEQUENCES` and fail
   unknown kinds.
-- [ ] 3.3 Apply stage damage and coverage scalars through `VehicleBossPatterns`; remove the
+- [x] 3.3 Apply stage damage and coverage scalars through `VehicleBossPatterns`; remove the
   single global boss damage constant as an independent authority.
-- [ ] 3.4 Apply stage cadence scale through `VehicleBossRuntime` and shield-up multiplier
+- [x] 3.4 Apply stage cadence scale through `VehicleBossRuntime` and shield-up multiplier
   through `VehicleBossShieldRuntime`; keep exposure at `1.00` for `4.0 s`.
-- [ ] 3.5 Increase only the startup values required by the `radius + 40` escape margin,
+- [x] 3.5 Increase only the startup values required by the `radius + 40` escape margin,
   including `gate_shockwave` to `1.20 s`; do not shorten any warning or recovery.
-- [ ] 3.6 Extend boss pattern/runtime/exam validators for effective shape, telegraph-hit
+- [x] 3.6 Extend boss pattern/runtime/exam validators for effective shape, telegraph-hit
   parity, Stage 1-to-5 profile monotonicity, add/projectile/effect caps, and arena-safe
   target placement.
-- [ ] 3.7 Inspect all five bosses in Boss Practice at phase 1 and later phase for startup,
+- [x] 3.7 Inspect all five bosses in Boss Practice at phase 1 and later phase for startup,
   active, recovery, shield-up/exposed, autonomous/direct overlap, safe space, and actual
   map coverage.
 
 ### 4. Guidebook structure and stats
 
-- [ ] 4.1 Add `VehicleGuidebookStatAdapter` and parity tests against canonical enemy,
+- [x] 4.1 Add `VehicleGuidebookStatAdapter` and parity tests against canonical enemy,
   attack, specialist, elite, stage, boss-pattern, boss-runtime, and shield owners.
-- [ ] 4.2 Change the category ID/label from `mobile` to `enemies`, preserve existing entry
+- [x] 4.2 Change the category ID/label from `mobile` to `enemies`, preserve existing entry
   IDs, add stationary hostile entries, and move elite entries out of Field Objects.
-- [ ] 4.3 Replace per-entry locked rows with one non-selectable discovered/undiscovered
+- [x] 4.3 Replace per-entry locked rows with one non-selectable discovered/undiscovered
   summary per category, without name/preview/stat leakage.
-- [ ] 4.4 Rename only the visible Mystery Device name to Anomaly Device/변칙 장치 and add
+- [x] 4.4 Rename only the visible Mystery Device name to Anomaly Device/변칙 장치 and add
   concise field-object outcome rows while preserving runtime/save IDs and behavior.
-- [ ] 4.5 Replace generic description and Movement/Attack/Counter rows with ordered
+- [x] 4.5 Replace generic description and Movement/Attack/Counter rows with ordered
   stage-aware `stat_rows`; active run shows current stage and non-run shows Stage 1-to-5.
-- [ ] 4.6 Add the shared navigation command and replace the Guidebook text Back button with
+- [x] 4.6 Add the shared navigation command and replace the Guidebook text Back button with
   the accessible left-arrow command.
-- [ ] 4.7 Update discovery/store snapshots, Stage UI/HUD propagation, localization,
+- [x] 4.7 Update discovery/store snapshots, Stage UI/HUD propagation, localization,
   compact/wide layout contracts, capture fixtures, and Guidebook validators.
-- [ ] 4.8 Inspect Korean and English at text scales `1.0`, `1.3`, and `2.0`; verify long
+- [x] 4.8 Inspect Korean and English at text scales `1.0`, `1.3`, and `2.0`; verify long
   stat ranges, empty/partial/full discovery, all categories, keyboard/controller focus,
   no clipping, and no horizontal overflow.
 
 ### 5. Remove Garage and close flow gaps
 
-- [ ] 5.1 Add one explicit return-to-Deployment lifecycle route and use it from Pause,
+- [x] 5.1 Add one explicit return-to-Deployment lifecycle route and use it from Pause,
   failure report, and final result.
-- [ ] 5.2 Route Boss Practice defeat to Boss Practice selection and prove normal-run and
+- [x] 5.2 Route Boss Practice defeat to Boss Practice selection and prove normal-run and
   practice-run teardown do not cross.
-- [ ] 5.3 Remove Garage panel/UID, runtime mode/branch, Stage UI host, signals, Settings
+- [x] 5.3 Remove Garage panel/UID, runtime mode/branch, Stage UI host, signals, Settings
   return context, localization, debug/capture surface, and manifest entry `94-garage.png`.
-- [ ] 5.4 Replace result/report command labels and focus contracts with one useful next
+- [x] 5.4 Replace result/report command labels and focus contracts with one useful next
   action per the route table; preserve visible text for abandon/destructive actions.
-- [ ] 5.5 Prove persistent modules, unlock flags, discovery state, and save load/store are
+- [x] 5.5 Prove persistent modules, unlock flags, discovery state, and save load/store are
   unchanged, then remove obsolete code rather than retaining compatibility wrappers.
 
 ### 6. Integration, quality audit, and final qualification
 
-- [ ] 6.1 Run focused owner validators after each phase and `git diff --check` after each
+- [x] 6.1 Run focused owner validators after each phase and `git diff --check` after each
   coherent edit group.
-- [ ] 6.2 Use `codebase-quality-auditor` after the multi-file implementation; correct only
+- [x] 6.2 Use `codebase-quality-auditor` after the multi-file implementation; correct only
   small task-owned responsibility leaks, duplicated constants, stale public routes, or
   reachable failure paths.
-- [ ] 6.3 Run the consolidated gameplay/UI/localization/capture/import validators once the
+- [x] 6.3 Run the consolidated gameplay/UI/localization/capture/import validators once the
   feature set is substantially complete.
-- [ ] 6.4 Generate deterministic Korean/English rendered evidence, compare it with the
+- [x] 6.4 Generate deterministic Korean/English rendered evidence, compare it with the
   canonical visual authority, and inspect it at original detail. Update capture manifests
   and counts after removing Garage and replacing locked/counterplay fixtures.
-- [ ] 6.5 Run `tools/export_web.ps1`, then load `npjt-port-guard`, resolve the current
+- [x] 6.5 Run `tools/export_web.ps1`, then load `npjt-port-guard`, resolve the current
   fastrun `codex` lane, serve only `build/web` from a hidden task-owned process, and perform
   production-style navigation and workflow QA in the built app. Stop only that verified
   task-owned process.
@@ -843,6 +843,10 @@ the user playtest determines whether a later tuning-only pass is desired.
 - 2026-08-11: Selected full Garage UI/route removal while preserving progression owners.
 - 2026-08-11: Limited the visible icon-Back migration to Guidebook while creating a reusable
   accessible component boundary.
+- 2026-08-11: Corrected compact modal classification to use the actual viewport, because a
+  wide child's minimum size can expand its host before the responsive decision runs.
+- 2026-08-11: Published the Guidebook snapshot on every Deployment presentation after built-
+  Web QA exposed an empty first-open catalog before the first gameplay HUD update.
 
 ## Progress
 
@@ -853,14 +857,13 @@ the user playtest determines whether a later tuning-only pass is desired.
 - [x] Trace Guidebook catalog/UI/discovery/stat owners, locked entries, Field Objects, and
   Garage callers/persistence owners.
 - [x] Compare alternatives and lock a decision-complete implementation contract.
-- [ ] Implement Milestones 0-5.
+- [x] Implement Milestones 0-5 and complete deterministic rendered inspection.
+- [x] Complete import, focused/consolidated validators, Web export, and built-app smoke QA.
 - [ ] Complete Milestone 6 qualification and close the plan lifecycle.
 
 ## Next Steps
 
-Start with Milestone 0 and make old validator assumptions fail explicitly. Then implement
-the radar ownership correction before any balance or UI work, because it has the highest
-hot-path risk. Correct autonomous boss shape dispatch before applying boss scalars. Build
-the Guidebook adapter before changing the panel. Add the direct deployment lifecycle route
-before deleting Garage. Run broad, rendered, export, and performance gates only at their
-declared checkpoints.
+Commit the task-owned implementation from the validated tree, run the one declared clean
+native performance pair, record its qualification relative to the inherited baseline, and
+close this plan as `done`. Project policy calls for later deletion, but document deletion
+requires explicit user approval under the active lifecycle steward.

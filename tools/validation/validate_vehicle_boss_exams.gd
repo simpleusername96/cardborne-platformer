@@ -2,6 +2,7 @@ extends SceneTree
 
 const Catalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const Runtime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
+const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
@@ -54,9 +55,12 @@ func _validate_shield_cycle() -> void:
 		var payload := runtime.begin_phase(1)
 		_expect(
 			runtime.state() == &"shield_up"
-				and is_equal_approx(runtime.boss_damage_multiplier(), 0.12)
+				and is_equal_approx(
+					runtime.boss_damage_multiplier(),
+					StageDifficulty.boss_shielded_damage_multiplier(stage_number)
+				)
 				and not payload.has("modules"),
-			"%s starts with one boss-owned shield and no external objective" % stage_id
+			"%s starts with its stage-owned boss shield and no external objective" % stage_id
 		)
 		_expect(
 			runtime.take_state_entry_hint() == "BOSS_SHIELD_UP_HINT"
@@ -73,7 +77,10 @@ func _validate_shield_cycle() -> void:
 		runtime.advance(Runtime.SHIELD_DOWN_SECONDS + 0.01)
 		_expect(
 			runtime.state() == &"shield_up"
-				and is_equal_approx(runtime.boss_damage_multiplier(), 0.12),
+				and is_equal_approx(
+					runtime.boss_damage_multiplier(),
+					StageDifficulty.boss_shielded_damage_multiplier(stage_number)
+				),
 			"%s shield returns after the bounded window" % stage_id
 		)
 		var transition := runtime.try_advance_phase(650.0, 1000.0)

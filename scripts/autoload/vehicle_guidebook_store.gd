@@ -23,8 +23,11 @@ func discover(entry_id: StringName) -> bool:
 	return true
 
 
-func snapshot(ship: Dictionary = {}) -> Dictionary:
-	return Catalog.snapshot(known, ship)
+func snapshot(
+	ship: Dictionary = {},
+	context: Dictionary = {}
+) -> Dictionary:
+	return Catalog.snapshot(known, ship, context)
 
 
 func save_discovery() -> Error:

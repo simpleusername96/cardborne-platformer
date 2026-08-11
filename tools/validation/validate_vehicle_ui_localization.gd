@@ -25,8 +25,9 @@ func _initialize() -> void:
 		for entry_key in [
 			"DEPLOY_CONTROL_AIM_FIRE",
 			"DEPLOY_CONTROL_AIM_PRIMARY_BINDING",
-			"GARAGE_LAUNCH",
-			"GARAGE_SETTINGS",
+			"RESULT_DEPLOYMENT",
+			"REPORT_DEPLOYMENT",
+			"GUIDE_CATEGORY_ENEMIES",
 			"HUD_STAGE_LABEL",
 			"HUD_DEFEATED_LABEL",
 			"NOTIFY_REINFORCEMENT_FACILITY",
@@ -38,16 +39,6 @@ func _initialize() -> void:
 			"BOSS_SHIELD_DOWN_HINT",
 		]:
 			_expect_translated(entry_key, locale)
-		_expect(
-			TranslationServer.translate("GARAGE_LAUNCH")
-				== ("출격 설정" if locale == "ko" else "Deployment Setup"),
-			"%s garage primary action names the deployment setup flow" % locale
-		)
-		_expect(
-			TranslationServer.translate("GARAGE_SETTINGS")
-				== ("설정" if locale == "ko" else "Settings"),
-			"%s garage secondary action uses the general settings label" % locale
-		)
 		var field_stage_titles := {}
 		for field_id in FieldRegistry.FIELD_IDS:
 			for stage_id in CombatStages.STAGE_IDS:
@@ -185,6 +176,25 @@ func _initialize() -> void:
 		"BOSS_SHIELD_UP_HINT",
 		"BOSS_SHIELD_UP_STATUS",
 		"BOSS_SHIELD_DOWN_STATUS",
+		"RESULT_REVIEW_GARAGE",
+		"RESULT_REPLAY",
+		"REPORT_GARAGE",
+		"GARAGE_KICKER",
+		"GARAGE_TITLE",
+		"GARAGE_STAGE_CLEARS",
+		"GARAGE_HULL_RESET",
+		"GARAGE_LOADOUT",
+		"GARAGE_PRIMARY",
+		"GARAGE_SECONDARY_WEAPONS",
+		"GARAGE_ACTIVE",
+		"GARAGE_MODULE",
+		"GARAGE_ACTIVE_EMP",
+		"GARAGE_NO_MODULE",
+		"GARAGE_RELAY_MODULE",
+		"GARAGE_DREDGE_MODULE",
+		"GARAGE_RUN_BUILD",
+		"GARAGE_LAUNCH",
+		"GARAGE_SETTINGS",
 	]:
 		_expect(
 			not localization_source.contains("\n%s," % removed_key),
