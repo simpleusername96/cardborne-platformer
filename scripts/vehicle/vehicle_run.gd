@@ -2584,9 +2584,7 @@ func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
 	else:
 		facing = _mystery_enemy_target(enemy) - enemy.pos
 	if not facing.is_zero_approx():
-		# Presentation consumes only direction/angle. Keeping the non-zero vector
-		# avoids a square root for every scheduled moving enemy.
-		enemy.presentation_facing = facing
+		enemy.presentation_facing = facing.normalized()
 
 
 func _update_motion_only_ordinary_enemy(
