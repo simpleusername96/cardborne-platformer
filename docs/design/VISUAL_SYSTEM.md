@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-12
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -602,19 +602,25 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 
 ### HUD
 
-- top-left B stack은 panel, bar, icon 없이 localized stage와 defeated label 및
-  `current / total` 값만 표시한다. compact/standard/large의 label/fraction은
-  `15/30`, `16/32`, `18/40 px`이며 left margin은 `16/24/32 px`이다. top-left,
-  top-center, top-right는 모두 화면 상단 8px datum에 붙는다. top-center는 panel
-  없는 player hull과 XP 두 meter만 소유한다. hull은 compact/standard/large에서
-  `400/520/640 px`, amber fill 높이 `13 px`이고 centered current/max를 표시한다.
-  XP는 그 아래 4px gap을 두고 hull과 같은 `400/520/640 px`, 높이 `6/8/8 px`의
-  restrained system-blue meter로 표시하며 왼쪽 `Lv. N`, 오른쪽
-  `EXP current / required` 또는 `EXP MAX`를 사용한다. 200% text는 404px center
-  zone과 같은 404px XP track, 8px fill을 사용한다. top-right는 `176×108`
-  minimap만 소유한다. live upgrade icon,
-  edge boss/target health, objective와 mission Surface는 사용하지 않는다.
-  full upgrade name, level과 effective value는 paused Ship Status만 소유한다.
+- player hull과 XP는 viewport 최상단에서 각각 100% 폭의 두 meter로 세로 배치한다.
+  hull top은 `0`, XP top은 hull bottom이며 둘 사이 gap은 `0`이다. 높이는
+  compact/standard/large에서 hull `28/32/40 px`, XP `18/22/26 px`이고 200% text에서
+  `52/32 px`다. hull은 amber fill과 centered `HP current / max`, XP는 restrained
+  system-blue fill과 centered `LV N · EXP current / required` 또는 `LV N · EXP MAX`를
+  표시한다. 두 meter는 meter별 추가 backing이나 panel을 만들지 않고 필요한 경우 공유
+  1 px seam만 사용한다.
+- 두 meter 바로 아래 좌상단에는 `stage_progress`, `total_defeats`, `dash`, `seeker`, `emp`
+  순서의 panel-free compact icon/value cluster를 한 줄로 둔다. top gap은
+  compact/standard/large `4/6/8 px`, left margin은 `16/24/32 px`다. icon optical size는
+  `16/18/20 px`, invisible slot은 `34×36/36×40/40×44 px`, item gap은 `4/6/8 px`다.
+  200% text는 `20 px` icon, `60×64 px` slot, `4 px` gap을 사용한다. 각 item 내부의
+  icon과 값만 중앙 정렬하고 cluster 자체는 좌측 정렬한다. stage는 `N / 5`, 누적 격파는
+  숫자, action은 `READY` 또는 `N.Ns`만 표시한다. visible label, backing, panel, section,
+  surface, border, divider, card, frame, rail, line, cooldown progress geometry, blur와 shadow
+  plate는 만들지 않는다. 각 glyph는 게임 전체에서 정확히 한 semantic ID만 소유한다.
+- top-right는 두 meter 아래의 `176×108` minimap만 소유한다. live upgrade icon,
+  edge boss/target health, objective와 mission Surface는 사용하지 않는다. full upgrade name,
+  level과 effective value는 paused Ship Status만 소유한다.
 - minimap의 dynamic marker는 player, `field_pickup`, `mystery_device`,
   `mobile_enemy`, `priority_enemy`, `boss`, `reinforcement_facility` 정확히 일곱
   역할만 사용한다. pickup은 lozenge, intact Anomaly Device는 hidden result를 전혀 암시하지 않는
@@ -625,15 +631,15 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   표시하지 않는다. marker capacity, borrowed buffer, explored static geometry와 fog,
   player facing, 한 retained minimap Surface를 유지한다. pickup outer size는
   `12×7.6`이다. Anomaly Device outer point는 기존 neutral cut silhouette의 `1.20×`다.
-- bottom-center에는 panel이 없는 확대 원형 EMP indicator 하나만 둔다. cooldown과
-  enabled/disabled 상태만 표시하며 primary, dash, secondary slot은 만들지 않는다.
-- minimap zone만 한 subtle Surface를 사용한다. B stage stack과 center 두 meter는
+- bottom-center EMP indicator는 사용하지 않는다. Dash, Seeker와 EMP 상태는 좌상단 cluster가
+  중복 없이 소유한다.
+- minimap zone만 한 subtle Surface를 사용한다. 두 full-width meter와 좌상단 cluster는
   panel-free다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는
   사용하지 않는다.
 - normal ToastSurface는 compact `320×36`, standard/large `360×40`이며 center
-  status stack 아래 4px에 붙는다. left B stack 높이는 toast Y에 영향을 주지
-  않는다. gameplay toast는 reinforcement facility active/destroyed, boss inbound,
+  status band의 가장 낮은 경계 아래 4px에 붙고 좌상단 cluster 및 minimap과 겹치지 않는다.
+  gameplay toast는 reinforcement facility active/destroyed, boss inbound,
   barrier depleted, Anomaly Device first-hit reveal, Anomaly Device triggered result,
   boss shield-down과 progression complete event만 허용한다.
   stage transition banner는 사용하지 않는다.
