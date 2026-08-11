@@ -419,25 +419,25 @@ Source owners: `scripts/vehicle/vehicle_stage_rules.gd`,
 `scripts/presentation/vehicle_combat_renderer.gd`,
 `scripts/vehicle/vehicle_run_capture_gateway.gd`
 
-- [ ] **1.1** gameplay world view를 0.5로 고정한다.
+- [x] **1.1** gameplay world view를 0.5로 고정한다.
   - Change: Rules constant와 `_build_camera()`를 연결하고 live-gameplay capture reset의
     hardcoded `Vector2.ONE`만 authority 상수로 바꾼다.
   - Accept: 새 focused validator에서 camera zoom이 정확히 `(0.5, 0.5)`, visible rect가
     같은 viewport에서 기존 world width/height의 2배, player/enemy/facility collision
     상수가 변경 전 값과 같음을 확인한다.
   - Guard: close-up/workbench capture의 명시적 composition zoom은 바꾸지 않는다.
-- [ ] **1.2** spawn/boss arrival/radar가 확대된 visible rect를 따른다.
+- [x] **1.2** spawn/boss arrival/radar가 확대된 visible rect를 따른다.
   - Change: runtime radar distance를 visible half-diagonal 기반으로 계산하고 spawn allocator와
     boss exclusion이 실제 canvas rect를 받는지 고정한다.
   - Accept: 960x540, 1280x720, 1920x1080 fixture에서 ordinary birth와 선택 가능한 boss
     anchor가 visible rect+margin 안에 없고, 화면 바로 밖 480 world-unit band의 위협이 radar에 남는다.
-- [ ] **1.3** 화면 안 enemy/projectile cadence를 보존한다.
+- [x] **1.3** 화면 안 enemy/projectile cadence를 보존한다.
   - Change: schedule/projectile near threshold를 current minimum과 visible half-diagonal+margin의
     max로 만들고 physics tick마다 한 번 계산해 재사용한다.
   - Accept: visible rect 네 모서리의 ordinary actor와 projectile이 near cadence를 사용하고,
     그 바깥 actor만 기존 far bucket을 사용한다.
   - Guard: active count, attack decision interval, collision sweep, projectile speed/life truth는 바꾸지 않는다.
-- [ ] **1.4** renderer/capture/performance pressure의 좌표 정합을 갱신한다.
+- [x] **1.4** renderer/capture/performance pressure의 좌표 정합을 갱신한다.
   - Change: hardcoded zoom fixture와 visible-count expectation을 gameplay/intentional close-up으로
     분류하고 gameplay path만 새 authority에 맞춘다.
   - Accept: renderer culling count, `ordinary_center_in_viewport`, radar discovery, primary visible
@@ -463,32 +463,32 @@ Source owners: `scripts/encounters/vehicle_stage_flow.gd`,
 `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd`,
 `scripts/encounters/vehicle_encounter_runtime.gd`
 
-- [ ] **2.1** reward/transition state를 stage-flow에서 제거한다.
+- [x] **2.1** reward/transition state를 stage-flow에서 제거한다.
   - Change: `REWARDS`, `TRANSITION`과 관련 API를 제거하고 boss defeat를 `COMPLETE`, next
     configure를 `ORDINARY`로 만든다.
   - Accept: state unit fixture가 ordinary→warning→boss→complete와 next configure→ordinary만
     허용하고 transition/reward state symbol이 reachable code에 0개다.
-- [ ] **2.2** boss card/recall/timer 없이 stage를 같은 frame에 넘긴다.
+- [x] **2.2** boss card/recall/timer 없이 stage를 같은 frame에 넘긴다.
   - Change: boss defeat에서 telemetry history를 finalize한 뒤 Stage 1~4는 continuation,
     Stage 5는 result로 직접 분기한다. pending completion과 boss reward claim gate를 제거한다.
   - Accept: Stage 1 boss damage call 반환 직후 mode `PLAYING`, stage ID `stage_2`, HP=max,
     boss reward pending/current/claimed 모두 false, invulnerability 0이며 stage history가 1개다.
   - Guard: 자연 level-up pending/claim과 failure report는 기존대로 동작한다.
-- [ ] **2.3** 보스 소유 위협만 선택적으로 retire한다.
+- [x] **2.3** 보스 소유 위협만 선택적으로 retire한다.
   - Change: boss-owned actor helper, projectile-store boss retirement, denied-zone owner tag를 추가한다.
   - Accept: mixed fixture에서 ordinary 3, facility child 1, ordinary hostile projectile 2,
     player projectile 2는 동일 object/state로 남고 boss add 2, boss projectile 2, boss zone 2만 사라진다.
   - Guard: projectile pool 합계와 ordinary/boss counter invariant가 통과한다.
-- [ ] **2.4** 시설 자식 provenance를 stage instance별로 분리한다.
+- [x] **2.4** 시설 자식 provenance를 stage instance별로 분리한다.
   - Change: facility runtime이 instance carrier ID를 발급하고 spawn/defeat가 그 ID로 count한다.
   - Accept: Stage 1 facility child가 Stage 2까지 살아 있다가 죽어도 Stage 2 facility
     `live_children`이 감소하지 않고 debug reconciliation이 두 stage case에서 맞는다.
-- [ ] **2.5** next encounter를 cue 즉시, birth 0.9초로 시작한다.
+- [x] **2.5** next encounter를 cue 즉시, birth 0.9초로 시작한다.
   - Change: `_transition_packets()`을 continuation packet builder로 바꾸고 deployment first
     packet을 제외한 상대 시각을 cue 0에 맞춘다.
   - Accept: stage advance 직후 첫 cue time 0.0, 0.89초까지 birth 0, 0.9초에 authored first
     group이 최대 tick admission cap 안에서 태어난다. carry-over ordinary는 그 동안 계속 공격한다.
-- [ ] **2.6** run-state와 stage-local refresh를 명시적으로 분리한다.
+- [x] **2.6** run-state와 stage-local refresh를 명시적으로 분리한다.
   - Change: player combat/XP/ordinary store/terrain gate를 보존하고 pickup/device/facility,
     stage metadata/layout/blocker/pursuit/HUD만 다음 stage로 갱신한다.
   - Accept: 전환 전후 player 위치·속도·aim·dash/cooldown·build·XP shard identity·ordinary
@@ -519,20 +519,20 @@ Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_hud_present
 `docs/product/vehicle_game_spec.md`, `docs/product/vehicle_upgrade_catalog.md`,
 `docs/design/VISUAL_SYSTEM.md`, UI validator, 두 active ExecPlan
 
-- [ ] **3.1** 누적 격파와 세 cooldown을 HUD data contract에 연결한다.
+- [x] **3.1** 누적 격파와 세 cooldown을 HUD data contract에 연결한다.
   - Change: `VehicleRun.stats_enemies_defeated`를 `cumulative_defeated` snapshot/presenter
     cluster에 추가하고 Dash/Seeker/EMP ready·ratio·remaining을 하나의 HUD view model로 만든다.
   - Accept: stage 1에서 5회, carry-over 포함 stage 2에서 3회 처치한 fixture가 cluster에 8을
     표시하고 stage quota reset과 무관하다. 세 cooldown은 runtime 값과 0.05 이내로 일치한다.
   - Guard: UI가 gameplay timer를 다시 계산하거나 quota를 누적으로 오인하지 않는다.
-- [ ] **3.2** HP/EXP를 top full-width dual meter로 재구성한다.
+- [x] **3.2** HP/EXP를 top full-width dual meter로 재구성한다.
   - Change: fixed `HealthPips` 폭과 4px gap을 제거하고 이 문서의 compact/standard/large/200%
     높이, top=0, width=viewport, gap=0 계약과 centered `HP`/`LV · EXP` 값을 적용한다.
   - Accept: KO/EN 960×540, 1280×720, 1920×1080에서 두 track의 x=0, right=viewport width,
     HP top=0, EXP top=HP bottom이며 1px 넘는 gap/overlap이 없다. `HP current / max`와
     `LV N · EXP current / required|MAX`가 track 전체 중앙에 있고 fill ratio와 실제 값 차이는
     1px 이하다.
-- [ ] **3.3** 최종 좌상단 panel-free compact semantic icon/value cluster를 구현한다.
+- [x] **3.3** 최종 좌상단 panel-free compact semantic icon/value cluster를 구현한다.
   - Change: 새 `vehicle_ui_status_glyph_renderer.gd`에 `stage_progress` deck stack과
     `total_defeats` skull code-native recipe를 추가하고 `VehicleUiGlyphCatalog`가 이를 노출한다.
     기존 Dash/Seeker/EMP glyph slot, top-right minimap, non-overlapping toast를 배치한다.
@@ -546,13 +546,13 @@ Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_hud_present
   - Guard: OS emoji, 새 raster/SVG, panel, section, surface, backing, border, divider, card,
     frame, progress rail, cooldown ring, blur, shadow plate, 네 번째 cooldown 또는 기존
     minimap/target/affinity silhouette 재사용을 추가하지 않는다.
-- [ ] **3.4** 제품·시각 명세와 obsolete transition surface를 갱신한다.
+- [x] **3.4** 제품·시각 명세와 obsolete transition surface를 갱신한다.
   - Change: boss reward/1.2s protection/1.6s transition을 immediate continuation으로 바꾸고
     world-unit/0.5 screen presentation, full-width HUD, 누적 격파, 세 cooldown을 명시한다.
     dead RunMode/상수/localization expectation과 이전 active plan의 충돌 문장을 제거한다.
   - Accept: active spec에서 old transition과 fixed-width/EMP-only HUD를 현재 동작으로 주장하는
     문장이 0개다. failure stage-report UI와 world collision 수치는 유지된다.
-- [ ] **3.5** 한국어/영어 HUD와 result flow를 검증한다.
+- [x] **3.5** 한국어/영어 HUD와 result flow를 검증한다.
   - Change: locale-invariant `HP/EXP/LV/READY`, number/seconds, EXP MAX와 text-scale fixture를
     추가하고 stage/누적 격파의 기존 localization key가 live HUD에 다시 나타나지 않게 한다.
   - Accept: KO/EN 960/1280/1920과 200% text scale에서 clip/overflow/overlap이 0이고 stage와
@@ -572,10 +572,10 @@ Goal: 변경된 workload를 정직하게 측정하고 native/Web 실제 흐름�
 
 Preconditions: Phase 1~3 task와 phase gate 통과, worktree task scope 확인.
 
-- [ ] **4.1** import와 focused integration을 완료한다.
+- [x] **4.1** import와 focused integration을 완료한다.
   - Change: material implementation 수정이 끝난 뒤 import와 named validator를 한 번 실행한다.
   - Accept: import error 0, 모든 phase validator exit 0, `git diff --check` exit 0다.
-- [ ] **4.2** zoom product change의 clean native A/B를 기록한다.
+- [x] **4.2** zoom product change의 clean native A/B를 기록한다.
   - Change: 같은 seed/count/viewport/duration에서 current 1.0 baseline과 candidate 0.5를
     별도 clean checkpoint로 측정한다. 이 단계 전 목적·예상 시간·중단 조건을 사용자에게 알린다.
   - Accept: 두 sample이 scenario-valid이고 exact actor/projectile/effect count, viewport,
@@ -588,7 +588,7 @@ Preconditions: Phase 1~3 task와 phase gate 통과, worktree task scope 확인.
     Chrome으로 gameplay를 확인한다.
   - Accept: console error 0, world 1/2/HUD 유지, dash/aim/fire 정상, mixed-enemy Stage 1→2
     연속성, full-width dual meter, 누적 격파, 세 cooldown, Stage 5 result가 실제 브라우저에서 재현된다.
-- [ ] **4.4** task-owned multi-file 품질 감사를 통과한다.
+- [x] **4.4** task-owned multi-file 품질 감사를 통과한다.
   - Change: `$codebase-quality-auditor`로 transition responsibility, catch-all 확장,
     dead API, save/API break, missing failure path를 감사하고 작은 task-scoped 결함만 수정한다.
   - Accept: competing stage owner, 문자열 기반 boss cleanup, reachable dead transition,
@@ -723,12 +723,52 @@ Validation rules:
   적용해 값을 40px로 만들고 60/72px slot 밖으로 넘기는 결함을 확인했다. 표준 base 14px를
   한 번만 28px로 확대하고 status/action slot을 72/92px로 넓혀 panel 없이 444px 한 줄로 교정했다.
 
+## Execution Evidence
+
+2026-08-12의 task-owned 구현은 commit `405fd3c1156da5bc81dd4b5c5a2cdccf04f356c9`에
+고정했다.
+
+- Phase 1: `validate_vehicle_world_view_scale`, spawn allocation, Run, combat renderer,
+  performance-scenario validator가 통과했다. 1280×720 current capture와 새 0.5 camera capture를
+  original detail로 비교했고 collision/world 상수는 바꾸지 않았다.
+- Phase 2: 새 `validate_vehicle_stage_continuity`가 ordinary/facility actor, ordinary/player
+  projectile, XP/build/player combat state 유지와 boss actor/projectile/zone 선택 정리,
+  Stage 1→2 same-call continuation, Stage 5 same-call result를 통과했다. facility, projectile
+  store, XP/reward, contact, telemetry, arrival 검증도 통과했다.
+- Phase 3: HUD presenter/layout/component/localization/guidebook 검증과 visual/document authority
+  검증이 통과했다. 최종 캡처는
+  `build/captures/half-scale-continuity-hud-ko-960`,
+  `build/captures/half-scale-continuity-hud-ko-1280-v2`,
+  `build/captures/half-scale-continuity-hud-en-1920`,
+  `build/captures/half-scale-continuity-hud-ko-1280-text200-v2`다. 200% 첫 캡처의 겹침을
+  재현한 뒤 v2에서 다섯 값의 clip/overlap이 없는 것을 original detail로 확인했다.
+- Phase 4 import/quality: Godot 4.7.1 import error 0, named validator exit 0,
+  `git diff --check` exit 0다. 품질 감사에서 next-layout 실패 전 부분 stage mutation과
+  삭제된 원형 EMP debug contract 때문에 validator coroutine이 종료되지 않던 문제를 수정했다.
+- Clean native A/B: `peak_horde`는 276 enemies/140 player projectiles/72 hostile
+  projectiles/48 effects, `capacity_pressure`는 320/240/120/96으로 exact count가 일치한다.
+  두 baseline/candidate 모두 1280×720, focused, native, authoritative, scenario-valid다.
+  0.5 camera로 visible instance는 peak `400→539`, capacity `546→698`로 늘었다.
+  peak p95는 frame `143.603→137.787 ms`, physics `42.738→21.039 ms`, presentation
+  `9.941→5.294 ms`, HUD `17.449→8.891 ms`다. capacity p95는 frame
+  `143.263→144.444 ms`(+0.8%), physics `26.503→24.640 ms`, presentation
+  `7.052→6.833 ms`, HUD `11.195→10.034 ms`다. 10% regression stop은 발생하지 않았지만
+  baseline과 candidate 모두 기존 absolute threshold는 실패했다. 따라서 scenario와 regression
+  gate는 valid/pass, native release performance는 failed이며 성능 해결 주장은 하지 않는다.
+- Web: `./tools/export_web.ps1`과 `validate_itch_web_release.ps1`가 통과했다. codex lane
+  `127.0.0.1:13029`에서 `index.html/js/wasm/pck`가 각각 HTTP 200과 올바른 MIME으로
+  응답했고 서버는 종료했다. in-app browser runtime은 초기화 전
+  `failed to write kernel assets: 지정된 경로를 찾을 수 없습니다. (os error 3)`로 두 번
+  실패했다. 따라서 built Web static smoke는 pass지만 interactive browser smoke와 실제
+  Web continuity는 unqualified이며 task 4.3은 열어 둔다.
+
 ## Progress and Next Steps
 
 - Canonical progress: 이 문서의 task checkbox다.
-- Current phase: Phase 1.
-- Next task: 1.1 gameplay world view를 0.5로 고정한다.
-- Last completed gate: Discovery Closure Gate.
+- Current phase: Phase 4, interactive Web QA 대기.
+- Next task: browser runtime이 정상화되면 4.3 built Web에서 입력, HUD와 1→2/5→RESULT를 확인한다.
+- Last completed gate: Phase 1~3, Phase 4.1/4.2/4.4와 Web static release gate.
+- Current blocker: 제품 코드가 아니라 in-app browser kernel asset path 초기화 실패다.
 - Update rule: acceptance가 통과할 때 증거를 해당 task에 기록하고 checkbox와 current pointer를
   같은 edit에서 갱신한다.
 - Resume rule: worktree에서 checkpoint 입력만 확인한 뒤 첫 unchecked task부터 진행한다.
