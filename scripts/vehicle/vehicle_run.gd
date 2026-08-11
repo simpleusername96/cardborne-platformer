@@ -1024,10 +1024,6 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.role = role
 	enemy.archetype = archetype
 	enemy.movement_family = EnemyMovementPolicy.family(archetype, role)
-	enemy.movement_band = EnemyMovementPolicy.distance_band(role)
-	enemy.movement_turn_response = EnemyMovementPolicy.turn_response(
-		enemy.movement_family
-	)
 	enemy.name = String(spec.get("name_key", definition["name_key"]))
 	enemy.pos = position
 	enemy.home = position
@@ -3358,11 +3354,7 @@ func _desired_enemy_velocity(
 	if movement_family.is_empty():
 		movement_family = EnemyMovementPolicy.family(enemy.archetype, enemy.role)
 		enemy.movement_family = movement_family
-		enemy.movement_band = EnemyMovementPolicy.distance_band(enemy.role)
-		enemy.movement_turn_response = EnemyMovementPolicy.turn_response(
-			movement_family
-		)
-	var movement_band := enemy.movement_band
+	var movement_band := EnemyMovementPolicy.distance_band(enemy.role)
 	var movement_focus := EnemyTargetingPolicy.movement_focus(
 		movement_family,
 		position,
@@ -3382,35 +3374,30 @@ func _desired_enemy_velocity(
 			_enemy_attack_line_padding(enemy)
 		)
 	)
-	var movement_offset := movement_focus - position
-	var movement_distance := maxf(1.0, movement_offset.length())
-	var pressure_distance := (
-		movement_distance
-		if movement_focus == pressure_focus
-		else position.distance_to(pressure_focus)
-	)
-	var line_recovery := EnemyMovementPolicy.line_of_fire_recovery_for_profile_distance(
+	var line_recovery := EnemyMovementPolicy.line_of_fire_recovery_for_profile(
 		movement_family,
 		movement_band,
-		pressure_distance,
+		position,
+		pressure_focus,
 		firing_lane_blocked,
 		recovering
 	)
-	var desired := EnemyMovementPolicy.direction_for_profile_distance(
+	var desired := EnemyMovementPolicy.direction_for_profile(
 		movement_family,
 		enemy.role,
 		movement_band,
-		movement_offset,
-		movement_distance,
+		position,
+		movement_focus,
 		enemy.strafe_sign,
 		recovering,
 		line_recovery
 	)
-	var requests_approach := EnemyMovementPolicy.requests_approach_for_profile_distance(
+	var requests_approach := EnemyMovementPolicy.requests_approach_for_profile(
 		movement_family,
 		enemy.role,
 		movement_band,
-		movement_distance,
+		position,
+		movement_focus,
 		recovering
 	)
 	var route_requested := EnemyMovementPolicy.hot_route_guidance_requested(
@@ -3432,7 +3419,7 @@ func _desired_enemy_velocity(
 				route_direction * route_weight
 				+ desired * (1.0 - route_weight)
 			).normalized()
-	return desired * enemy.speed * StatusRuntime.speed_multiplier(enemy)
+	return desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
 
 
 func _smoothed_enemy_velocity(
@@ -3444,21 +3431,16 @@ func _smoothed_enemy_velocity(
 		enemy.movement_family = EnemyMovementPolicy.family(
 			enemy.archetype, enemy.role
 		)
-		enemy.movement_band = EnemyMovementPolicy.distance_band(enemy.role)
-		enemy.movement_turn_response = EnemyMovementPolicy.turn_response(
-			enemy.movement_family
-		)
 	var speed_cap := enemy.speed * StatusRuntime.speed_multiplier(enemy)
 	var role_velocity := EnemyMovementPolicy.smooth_velocity(
 		enemy.velocity,
 		enemy.desired_velocity,
-		enemy.movement_turn_response,
+		EnemyMovementPolicy.turn_response(enemy.movement_family),
 		delta,
 		speed_cap
 	)
-	var role_speed := role_velocity.length()
 	return _enemy_local_steering.adjusted_velocity(
-		enemy, role_velocity, enemy_grid, enemies, refresh_overlap, role_speed
+		enemy, role_velocity, enemy_grid, enemies, refresh_overlap
 	)
 
 

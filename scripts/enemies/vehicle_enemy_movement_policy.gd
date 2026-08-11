@@ -130,30 +130,6 @@ static func direction_for_profile(
 ) -> Vector2:
 	var offset := target - position
 	var distance := maxf(1.0, offset.length())
-	return direction_for_profile_distance(
-		movement_family,
-		role,
-		band,
-		offset,
-		distance,
-		strafe_sign,
-		recovering,
-		line_of_fire_blocked
-	)
-
-
-static func direction_for_profile_distance(
-	movement_family: StringName,
-	role: StringName,
-	band: Vector2,
-	offset: Vector2,
-	distance: float,
-	strafe_sign: float,
-	recovering: bool = false,
-	line_of_fire_blocked: bool = false
-) -> Vector2:
-	## Hot-path equivalent that reuses the caller's exact distance calculation.
-	distance = maxf(1.0, distance)
 	var radial := offset / distance
 	if movement_family == STATIONARY:
 		return Vector2.ZERO
@@ -206,23 +182,6 @@ static func requests_approach_for_profile(
 	target: Vector2,
 	recovering: bool = false
 ) -> bool:
-	return requests_approach_for_profile_distance(
-		movement_family,
-		role,
-		band,
-		position.distance_to(target),
-		recovering
-	)
-
-
-static func requests_approach_for_profile_distance(
-	movement_family: StringName,
-	role: StringName,
-	band: Vector2,
-	distance: float,
-	recovering: bool = false
-) -> bool:
-	## Hot-path equivalent that reuses the caller's exact distance calculation.
 	if movement_family == STATIONARY:
 		return false
 	if movement_family == PURSUIT:
@@ -231,7 +190,7 @@ static func requests_approach_for_profile_distance(
 		return true
 	if band == Vector2.ZERO:
 		return true
-	return _signed_band_error(distance, band) > 0.001
+	return _signed_band_error(position.distance_to(target), band) > 0.001
 
 
 static func movement_mode(
@@ -287,30 +246,13 @@ static func line_of_fire_recovery_for_profile(
 	direct_path_blocked: bool,
 	recovering: bool = false
 ) -> bool:
-	return line_of_fire_recovery_for_profile_distance(
-		movement_family,
-		band,
-		position.distance_to(target),
-		direct_path_blocked,
-		recovering
-	)
-
-
-static func line_of_fire_recovery_for_profile_distance(
-	movement_family: StringName,
-	band: Vector2,
-	distance: float,
-	direct_path_blocked: bool,
-	recovering: bool = false
-) -> bool:
-	## Hot-path equivalent that reuses the caller's exact distance calculation.
 	if not direct_path_blocked or recovering:
 		return false
 	if movement_family != STANDOFF:
 		return false
 	return (
 		band != Vector2.ZERO
-		and _signed_band_error(distance, band) >= -0.35
+		and _signed_band_error(position.distance_to(target), band) >= -0.35
 	)
 
 
