@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-11
 last_reviewed: 2026-08-11
-topic: Dense-combat performance, final-run completion, upgrade depth, direct pickups, and field-object correction
+topic: Dense-combat performance, final-run completion, conditional upgrade depth, secondary weapons, direct pickups, and field-object correction
 scope: Five-stage Cardborne run, native and Web runtime, product/UI contracts, validators, and performance evidence
 related:
   - ../../AGENTS.md
@@ -25,8 +25,9 @@ related:
 
 이 계획은 적이 많을 때 발생하는 극심한 물리 프레임 지연을 실제 비용 소유자부터
 줄이고, 5스테이지 보스 처치 후 빈 화면에 머무는 종료 결함을 고친다. 동시에 후반
-화력 성장, 직접 아이템 배치, 증원 조립소와 변칙 장치의 역할·정보 전달을 하나의
-검증 가능한 제품 계약으로 정리한다.
+화력 성장, 조건부 전투 카드 5종, 초과 회복 방어막, 선택 보조 무기 2종, 직접 아이템
+배치, 증원 조립소와 변칙 장치의 역할·정보 전달을 하나의 검증 가능한 제품 계약으로
+정리한다.
 
 완료 조건은 “코드가 바뀜”이 아니다. 실제 보스 처치 경로가 결과 모달까지 도달하고,
 4~5스테이지 공격 빌드가 새 레벨을 정상 제안·적용하며, 상자 런타임이 완전히 사라지고,
@@ -98,6 +99,12 @@ repair 10개, repair 총량 490이다. 상자는 체력 24, 이동 충돌, 양 �
 - 실제 보스 처치에서 보스 보상을 XP 조각과 독립적으로 queue하고 5스테이지 결과
   모달까지 검증한다.
 - 기존 직접 피해 카드 8종에 성능 친화적인 최종 레벨을 하나씩 추가한다.
+- `전투 시스템/Combat Systems` 카테고리를 추가하고 치명타, 거리 극화, 대시 과충전,
+  잔류 열흔, 위기 증폭기 카드와 차체의 초과 회복막 카드를 각 3레벨로 추가한다.
+- 선택 보조 무기에 역방향 레이저와 원거리 전격포를 각 3레벨로 추가하되 선택 보조
+  2슬롯 제한은 유지한다.
+- 후방 기뢰의 실제 즉시/주기 발동, 이동·정지 배치 방향, 근접/수명 폭발 조건을
+  한국어/영어 설명에 정확히 드러낸다.
 - 3~5스테이지 보상에 호환 가능한 공격 카드 최소 1장을 결정적으로 보장한다.
 - 상자 8개를 같은 보상·결정적 위치의 직접 픽업으로 바꾸고 상자 런타임, 엄폐,
   렌더, 미니맵, 가이드북, 활성 시각 역할을 제거한다.
@@ -115,7 +122,8 @@ repair 10개, repair 총량 490이다. 상자는 체력 24, 이동 충돌, 양 �
 - 적 처치 할당량, active cap, 역할 구성, 공격 동시성, 공격 startup/recovery, 충돌
   정확도, 시각 품질을 낮춰 성능 수치를 맞추는 일.
 - 일반 적이나 보스의 체력·공격력·스테이지 곡선을 이번 작업에서 추가로 변경하는 일.
-- 새 카드 종류, 진화 시스템, 재추첨 화폐, 영구 메타 성장, 새 슬롯 UI.
+- 이 계획에 명시한 8종 외 신규 카드, 진화 시스템, 재추첨 화폐, 영구 메타 성장,
+  새 슬롯 UI 또는 선택 보조 슬롯 증설.
 - 변칙 장치 결과의 재추첨, 새로운 다섯 번째 효과, 자동 발동 대기.
 - 새 raster/SVG 자산, 기존 actor/effect 교체, 새 procedural player-facing visual.
 - 엔진 버전 변경, GDExtension, C++/Rust, ECS 전환, 새 production dependency,
@@ -131,6 +139,10 @@ repair 10개, repair 총량 490이다. 상자는 체력 24, 이동 충돌, 양 �
 | 보스 보상 | `VehicleRewardRuntime` | 보스 처치마다 최대 1회 queue/claim; XP 진행 완료와 무관 |
 | 결과 전환 | `VehicleStageFlow` + `VehicleRun` | Stage 5 boss claim 뒤 `RunMode.RESULT`와 실제 모달이 같은 프레임 경계에서 열림 |
 | 업그레이드 효과 | primary/secondary/element runtime | 표시 수치가 실제 damage source와 같고 새 레벨에서 개체 수·틱·범위 상한을 늘리지 않음 |
+| 조건부 피해 | `VehicleOutgoingDamagePolicy` | 직접/주기 피해 태그와 발사 원점이 명시되고 비치명 조건 보너스는 합산 후 +100% 상한, 치명타는 그 뒤 적용 |
+| 대시 완료 효과 | `VehicleDashUpgradeRuntime` | 대시 활성→비활성 전환 1회에만 버프/장판 생성; 지형에 막힌 대시도 실제 종료점 사용 |
+| 회복과 방어막 | `VehiclePlayerRecoveryPolicy` | 회복은 체력을 먼저 채우고 초과분만 전환; 기존 blockable 피해와 shield timer 계약 유지 |
+| 선택 보조 | `VehicleSecondaryRuntime` | optional 5종 중 최대 2종; 역방향 레이저는 실체 탄 없음, 전격포는 pending 1회와 bounded target scan |
 | 후반 제안 | `VehicleUpgradeCatalog` | 3~5스테이지에 합법 공격 카드가 있으면 3장 중 최소 1장; ID 중복과 슬롯/원소 규칙 없음 |
 | 필드 보상 | field layout + pickup runtime | 스테이지마다 직접 픽업 14개, recall 4, repair 10, 총 repair 490, 같은 시드 재현 |
 | 상자 제거 | run/layout/presentation | live crate, crate cover, crate marker, crate guide entry가 reachable runtime에 0개 |
@@ -141,7 +153,8 @@ repair 10개, repair 총량 490이다. 상자는 체력 24, 이동 충돌, 양 �
 
 `object_crate`가 과거 guidebook save에 들어 있어도 로드는 실패하지 않아야 한다. 이 ID는
 숨겨진 retired alias로만 허용하고 현재 catalog, discovery, preview에는 노출하지 않는다.
-나머지 upgrade ID와 save 의미는 바꾸지 않는다.
+나머지 upgrade ID와 save 의미는 바꾸지 않는다. 신규 ID는 기존 저장을 깨지 않는 append-only
+정의다. 새 `combat` 분류는 표시·제안 다양성만 소유하고 피해 계산을 UI에 넣지 않는다.
 
 ## Alternatives Considered
 
@@ -207,7 +220,9 @@ pending이므로 즉시 정상 흐름으로 이어진다. 실제 통합 validato
 않는다. 모드 값뿐 아니라 모달 visible, 한국어/영어 title/body, 기본 버튼 focus,
 background dim, 빈 전투 상태를 확인한다.
 
-### B. 공격 업그레이드 최종 레벨과 후반 제안
+### B. 공격 업그레이드 확장과 후반 제안
+
+#### B1. 기존 직접 피해 카드의 최종 레벨
 
 새 최종 값은 다음으로 고정한다.
 
@@ -224,8 +239,82 @@ background dim, 빈 전투 상태를 확인한다.
 
 `VehiclePrimaryUpgradeRules`는 split L3에서 네 번째 탄을 만들지 않고 L2와 같은 3발을
 반환한다. Mine radius도 level 공식으로 132가 되지 않게 L3의 120에 고정한다.
-secondary definition은 built-in base 상태를 포함하므로 seeker는 4개 상태, optional은
-각 4개 상태를 허용한다. catalog 명목 상태 계약은 44다.
+secondary definition은 built-in base 상태를 포함하므로 seeker는 4개 상태, 기존 optional은
+각 4개 상태를 허용한다.
+
+#### B2. 조건부 전투 카드와 초과 회복막
+
+`primary/secondary/element/chassis`에 전역 공격 조건을 억지로 넣지 않는다.
+`combat` 카테고리(한국어 `전투 시스템`, 영어 `Combat Systems`)를 추가하고 아래 카드
+5종을 각 3레벨로 둔다. 초과 회복막은 회복·방어 책임에 맞게 `chassis`에 둔다.
+
+| ID / 표시명 | 3레벨 계약 | 적용 범위와 제외 |
+| --- | --- | --- |
+| `critical_targeting` / 정밀 조준 | 치명타 확률 `8/12/16%`, 배율 `2.0×` | player-owned 직접 공격 receipt만. 독·장판 등 주기 피해 제외 |
+| `range_polarization` / 거리 극화 | 공격 원점에서 표적까지 `<=260` 또는 `>=620`이면 직접 사격 피해 `+12/20/30%`; 중간 거리는 0 | 주무기, 추적탄, 역방향 레이저, 전격포. 전기장·날개·기뢰·EMP·장판 제외 |
+| `dash_overdrive` / 대시 과충전 | 대시 완료 뒤 정확히 2.0초 동안 모든 player-owned 피해 `+15/25/35%` | 대시 중에는 기존처럼 사격 불가. 완료 전환 1회에만 시작 |
+| `dash_afterburn_field` / 잔류 열흔 | 대시 종료점에 반지름 130, 3.0초, 0.5초 tick 장판. tick당 `10/15/20`, 최대 2개 | 주기 열 피해라 치명타·거리 보너스 제외. 적용 시점의 대시 과충전·위기 증폭은 적용 |
+| `last_stand_amplifier` / 위기 증폭기 | 체력 60% 이상 0, 25% 이하 `+15/25/35%`, 그 사이 선형 보간 | 모든 player-owned 피해 |
+| `overflow_barrier` / 초과 회복막 | 체력을 먼저 채운 뒤 초과 회복의 `50/75/100%`를 방어막으로 변환. 최대 체력의 `15/25/35%` 상한, 8초 | repair와 기존 흡혈의 실제 회복량. gain마다 8초 갱신, blockable 피해만 흡수 |
+
+한 피해 receipt에서 거리 극화, 대시 과충전, 위기 증폭의 비치명 보너스는 더한 뒤
+`+100%`에서 제한한다. 치명타 `2.0×`는 그 결과에 곱한다. 이후 기존
+`_damage_enemy()`의 적 방어막과 보스 방어력을 적용한다. 치명 여부는 공유 RNG 순서에
+의존하지 않고 run seed, attack serial, target stable ID, damage source를 섞은 결정값으로
+판정해 같은 입력을 재현한다.
+
+`VehicleProjectileState`에는 발사 때의 `spawn_origin`을 저장하고 pool reset 때 지운다.
+거리 극화는 현재 기체 위치가 아니라 이 공격 원점에서 명중점까지의 거리를 쓴다.
+직접 공격과 주기 피해는 source 문자열을 해석하지 않고 안정적인 damage-kind flag로
+구분한다. `VehicleOutgoingDamagePolicy`는 매 hit Dictionary를 만들지 않는 순수 계산기로
+두고, `VehicleDashUpgradeRuntime`은 대시 완료 감지·버프 timer·최대 2개 장판만 소유한다.
+
+초과 회복막은 공통 `_apply_player_recovery` 경로에서 gross 회복을 `체력 → 초과분`으로
+분리한다. 흡혈의 기존 예산 6과 초당 회복 6 상한은 그대로라 만체력 흡혈이 무제한
+방어막을 만들지 않는다. 기존 `player_barrier_strength/timer`와 renderer를 재사용하고,
+방어막을 만들 회복 event가 없으면 생성되지 않는다.
+
+#### B3. 선택 보조 무기 2종
+
+두 무기는 기존 optional 2슬롯 안에서 전기장·회전 날개·후방 기뢰와 경쟁한다.
+기본 추적 미사일을 포함한 동시 보조 무기 상한은 3개 그대로다.
+
+| ID / 표시명 | 3레벨 계약 | 표적·성능·시각 계약 |
+| --- | --- | --- |
+| `rear_laser` / 역방향 레이저 | 피해 `48/66/86`, 내부 cooldown 0.9초 | 성공한 주무기 발사 때 조준의 정확히 180° 반대로 즉시 관통 beam. 길이 760, 반너비 18, 첫 solid cover에서 종료, corridor 안 적을 1회씩 타격. projectile entity 없음. 정확한 corridor를 0.14초 표시 |
+| `storm_barrage` / 원거리 전격포 | 피해 `70/95/125`, cooldown 4.5초, 경고 0.55초, 반지름 140 | 기체에서 480~960 거리 후보가 있을 때만 예약. 최대 12개 후보를 군집 수·우선 역할·조준선 근접·stable ID 순으로 결정 선택. ground point 고정, pending 1개, impact 때 반지름 query 1회. 상공 포격이라 cover 무시 |
+
+전격포는 eligible target이 없으면 cooldown ready를 유지한다. 한 pending strike가 끝나기
+전에는 다음 것을 예약하지 않는다. 영향 대상은 일반 적·적격 장치·시설이며 기존 area
+damage 경로로 보낸다. 경고 첫 프레임부터 실제 반지름 140의 시스템 footprint가 보이고,
+impact는 최종 반지름 disk와 넓은 단일 타격 accent만 사용한다. 반복 링·particle spray는
+만들지 않는다. 역방향 레이저도 startup ring 없이 실제 충돌 corridor가 시각 truth다.
+
+새 raster는 만들지 않는다. 기존 승인 semantic art를 재사용한다. 조건부 전투 카드는
+`upgrade/system_relay`, 대시 카드는 `upgrade/dash_wake`, 초과 회복막은
+`upgrade/defense_matrix`, 역방향 레이저는 `projectile/energy_teardrop`, 전격포는
+`upgrade/ion_field`를 사용한다. beam/장판/포격 범위는 code-native 동적 효과이므로
+canonical sprite처럼 새 raster로 굽지 않는다.
+
+#### B4. 후방 기뢰 발동 설명 교정
+
+현재 코드는 카드를 얻으면 첫 update에 즉시 기뢰 하나를 놓고, 이후 레벨별
+`3.2/2.8/2.4`초마다 놓는다. 이동 중에는 실제 이동 방향 뒤 48px, 정지 중에는 마지막
+차체 방향 뒤 48px에 놓이므로 “이동 중에만 경로에 생성”되는 무기가 아니다. 살아 있는
+기뢰는 `3/4/5`개, 수명 8초이며 적이 trigger 반지름 54에 들어오거나 수명이 끝나면
+폭발한다.
+
+카드 요약은 한국어 `주행 뒤 자동 기뢰 투하`, 영어 `Auto-drops mines behind`로 바꾼다.
+상세 설명은 첫 기뢰 즉시, 이후 투하 간격, 이동·정지 방향, 근접 또는 8초 만료 폭발을
+모두 적는다. 효과 행은 기존처럼 피해와 투하 간격을 보여 주고 최종 L4 수치는 피해 88,
+2.4초, 최대 5개, 반지름 120을 유지한다.
+
+#### B5. 카탈로그 규모와 후반 제안
+
+기존 카드 13종에 신규 카드 8종을 더해 21종이 된다. 명목 상태는 기존 36에 기존 최종
+레벨 8개와 신규 3레벨 24개를 더한 68이다. optional 5종 중 최대 2종, 원소 1종 제한을
+적용하면 한 런의 합법 선택 상한은 선택한 optional 조합에 따라 49~51이다. 이 범위를
+exhaustion validator가 전부 순회하며 가짜 카드나 제한 위반이 없음을 확인한다.
 
 `VehicleUpgradeCatalog`에 공격 ID 집합을 한 번만 정의한다. `stage_index >= 2`이고
 합법 공격 후보가 있으면 결정적 shuffle 결과의 첫 공격 후보를 offer에 먼저 넣고,
@@ -333,6 +422,10 @@ authoritative pair를 실행하고 기존 release gate를 그대로 사용한다
 | --- | --- | --- |
 | final reward | `scripts/vehicle/vehicle_run.gd`, `scripts/rewards/vehicle_reward_runtime.gd` | stage transition validator |
 | upgrade data | `data/cards/vehicle/*.tres`, `data/weapons/vehicle/secondary/*.tres` | primary rules, secondary runtime/catalog, previews, product catalog |
+| conditional damage | 새 `scripts/player/vehicle_outgoing_damage_policy.gd` | projectile spawn origin, direct/periodic receipt flags, damage-source telemetry |
+| dash upgrades | 새 `scripts/player/vehicle_dash_upgrade_runtime.gd` | dash completion signal, buff HUD snapshot, bounded ground zones |
+| recovery split | 새 `scripts/player/vehicle_player_recovery_policy.gd` | repair pickup, lifesteal budget, existing barrier state/rendering |
+| passive secondaries | `scripts/player/vehicle_secondary_runtime.gd`, secondary definitions | rear beam corridor, storm target selection, cooldown/pending caps |
 | offer policy | `scripts/cards/vehicle_upgrade_catalog.gd` | upgrade-system validator |
 | direct field items | `scripts/vehicle/vehicle_field_layout_generator.gd`, `scripts/vehicle/vehicle_run.gd` | field layout, pickup contact, map/destructible validators |
 | facility | `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd` | run integration, renderer snapshot, guide stats |
@@ -341,8 +434,9 @@ authoritative pair를 실행하고 기존 release gate를 그대로 사용한다
 | performance | `vehicle_run`, enemy schedule, spatial grid, performance recorder/scenarios | raw clean JSON and performance report |
 | product truth | game spec, upgrade catalog, visual system | Korean/English complete runtime surfaces |
 
-`vehicle_run.gd`는 orchestration과 runtime integration만 소유한다. 새 upgrade 계산은 각
-weapon owner에, 시설 lifecycle은 facility runtime에, 시각 조합은 renderer/UI owner에
+`vehicle_run.gd`는 orchestration과 runtime integration만 소유한다. 조건부 피해 계산은
+outgoing policy에, 대시 완료 효과는 dash runtime에, 회복 분리는 recovery policy에,
+보조 무기 cadence는 secondary runtime에 둔다. 시설 lifecycle은 facility runtime에, 시각 조합은 renderer/UI owner에
 둔다. performance helper가 필요하면 query/schedule responsibility에 맞는 별도 파일을
 사용하고 `vehicle_run.gd`에 범용 cache를 쌓지 않는다.
 
@@ -357,8 +451,9 @@ weapon owner에, 시설 lifecycle은 facility runtime에, 시각 조합은 rende
   통합 validator를 추가한다.
 - [ ] `M2` crate blueprint를 14개 direct pickup으로 통합하고 crate runtime/cover/UI/guide
   active surface를 제거한다.
-- [ ] `M3` 공격 카드 8종의 새 최종 레벨, 후반 공격 offer 보장, preview/localization/spec,
-  계산 validator를 구현한다.
+- [ ] `M3` 기존 공격 카드 8종의 새 최종 레벨과 신규 카드 8종, `combat` 카테고리,
+  역방향 레이저·전격포, 기뢰 발동 설명, 후반 공격 offer 보장, preview/localization/spec,
+  조건부 피해·회복·보조 무기 계산 validator를 구현한다.
 - [ ] `M4` facility 유한 충전·offline/spent lifecycle·incremental child count와 mystery
   revealed-state/count presentation, guidebook stat을 구현한다.
 - [ ] `M5` 기능 변경 후 clean baseline과 scaling/ablation evidence를 한 번 수집하고 material
@@ -381,11 +476,22 @@ Current pointer: `M1`. 조사와 결정은 끝났고 구현은 시작하지 않�
 - 진행을 모두 완료한 Stage 5에서 실제 보스 처치 후 빈 전투 상태를 거쳐 boss reward가
   한 번 열리고, claim 뒤 클리어 결과 모달이 보이며 focus가 기본 버튼에 있다.
 - Stage 1~4도 보스 XP와 boss reward 순서를 유지하고 다음 스테이지로 한 번만 전환한다.
-- 8개 공격 카드는 표의 새 max와 실제 최종 값을 표시·적용한다. 새 레벨에서 player
+- 기존 8개 공격 카드는 표의 새 max와 실제 최종 값을 표시·적용한다. 새 레벨에서 player
   projectile, seeker, blade, mine, query radius, tick 수가 표의 상한을 넘지 않는다.
+- 신규 8개 카드는 모두 3레벨이며 표의 조건·수치·제외 범위를 그대로 적용한다. 직접/주기
+  피해 구분, 비치명 보너스 +100% 상한, 치명타 적용 순서, 결정적 판정이 fixture와 일치한다.
+- 거리 극화는 저장한 공격 원점을 사용하고 260/620 경계와 중간 무보너스를 정확히 처리한다.
+- 대시 완료 한 번에 과충전 timer와 종료점 장판이 각 1회만 시작되며 장판은 최대 2개다.
+- 초과 회복막은 체력을 먼저 채우고 repair/흡혈 초과분만 전환한다. 레벨별 cap, 8초 갱신,
+  blockable 피해 흡수와 기존 흡혈 예산이 유지된다.
+- 역방향 레이저는 성공한 주무기 발사의 반대 corridor에서만 0.9초마다 발동하고 solid
+  cover에서 끝난다. 전격포는 480~960 후보·12개 scan·pending 1개·반지름 query 1회를 넘지 않는다.
+- 기뢰는 획득 직후와 주기마다 이동/정지 방향 계약대로 놓이고 54 근접 또는 8초 만료에
+  폭발한다. 카드와 상세 한국어/영어 설명이 이 동작을 숨기지 않는다.
 - 3~5스테이지에 합법 미완성 공격 카드가 있으면 offer 3장 중 최소 1장이고 같은 seed는
   같은 offer를 만든다.
-- 모든 합법 업그레이드 소진은 실제 선택 상한 33에서 종료되고 가짜 카드가 나오지 않는다.
+- 카탈로그는 21종·명목 상태 68이며, 모든 합법 업그레이드 소진은 optional 조합별 실제
+  선택 상한 49~51에서 종료되고 가짜 카드가 나오지 않는다.
 - 각 스테이지 direct pickup은 정확히 14개이며 recall 4, repair 10, 총 repair 490이다.
   `crates` runtime/schema/live collision/cover/damage/drop/marker/guide entry는 0개다.
 - 시설은 시작부터 offline 위치가 보이고 35%에서 활성화되며 총 `[2,3,4,5,6]`회만
@@ -401,6 +507,10 @@ Current pointer: `M1`. 조사와 결정은 끝났고 구현은 시작하지 않�
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`가 유지된다.
 - 결과 모달, upgrade offer, facility/device 상태, guidebook이 960/1280/1920 너비와
   한국어/영어, 200% text scale에서 잘리거나 겹치지 않는다.
+- 8개 신규 카드와 기뢰 설명은 compact card에서 overflow가 없고 상세 수치·발동 조건은
+  guide/preview에서 확인할 수 있다. 대시 과충전은 기존 buff text로 남은 시간을 표시한다.
+- 역방향 레이저 corridor, 잔류 열흔 반지름, 전격포 경고 반지름은 첫 표시 프레임부터
+  실제 판정과 같고 반복 링·particle spray·새 raster가 없다.
 - keyboard/controller focus가 결과 모달, upgrade card, guidebook back icon에서 보인다.
 - 장치 short chip과 count는 player, boss telegraph, damage warning, minimap priority를
   가리지 않는다.
@@ -423,7 +533,11 @@ Current pointer: `M1`. 조사와 결정은 끝났고 구현은 시작하지 않�
 
 - Reward: `validate_vehicle_stage_transition.gd`, 새 progression-complete boss-defeat fixture.
 - Upgrade: `validate_vehicle_upgrade_system.gd`, `validate_vehicle_upgrade_ui.gd`, primary/
-  secondary focused contract.
+  secondary focused contract, 새 `validate_vehicle_conditional_damage_upgrades.gd`.
+- Recovery: 새 `validate_vehicle_player_recovery.gd`에서 repair/흡혈/만체력/부분 체력,
+  전환율·cap·8초 refresh·blockable 피해를 검증한다.
+- Secondary: `validate_vehicle_secondary_weapons.gd`에 역방향 레이저의 180°/cover/cooldown과
+  전격포의 distance/selection/pending/impact cap, 기뢰의 즉시·이동·정지·만료 발동을 추가한다.
 - Pickup/crate removal: `validate_vehicle_field_layout_generation.gd`,
   `validate_vehicle_destructible_terrain_flow.gd`, `validate_vehicle_damage_feedback.gd`,
   `validate_vehicle_run.gd`.
@@ -440,6 +554,10 @@ Current pointer: `M1`. 조사와 결정은 끝났고 구현은 시작하지 않�
   facility charge, mystery outcomes, upgrade exhaustion, boss reward, result modal을 연결한다.
 - Stage 4 late build에서 모든 새 공격 source가 실제 damage receipt에 나타나는지, 방어막
   multiplier 적용/우회가 기존 계약과 같은지 확인한다.
+- 최대 조건 빌드에서 거리·대시·저체력 합산, 치명타, 적 방어 순서를 oracle 계산과
+  대조하고 같은 seed를 반복해 receipt와 전격포 표적이 같은지 확인한다.
+- dense fixture에 장판 2개, 역방향 레이저, 전격포 경고/impact를 동시에 활성화해 entity,
+  query, pending cap과 combat/effect recorder의 새 source를 확인한다.
 - 상자 제거 후 player/ordinary/boss projectile의 earliest swept hit가 wall, bulkhead,
   actor에 대해 그대로이고 보이지 않는 crate collision이 없는지 확인한다.
 - Korean/English 960/1280/1920과 200% text scale capture를 생성해 original detail로
@@ -485,6 +603,10 @@ performance 변경이 있었을 때만 최종 pair를 한 번 다시 실행한�
 | 상자 엄폐 제거가 난이도를 올림 | 사격선과 이동 경로가 더 열림 | 보상 총량·위치는 유지하고 새 공격 레벨과 함께 Stage 4/5 수동 QA |
 | 공격 offer 보장이 무작위성을 줄임 | 빌드 편차 감소 | 공격 ID를 고정하지 않고 compatible shuffled 후보 한 장만 보장 |
 | 새 공격 레벨이 성능을 악화 | 탄/효과 수 증가 | 모든 최종 레벨에서 count/tick/radius/lifetime 상한 고정 validator |
+| 조건부 피해가 hot path allocation을 늘림 | 밀집전 프레임 악화 | Dictionary/source 문자열 분기 없이 flag와 scalar를 쓰는 순수 policy, capacity에서 source별 비용 기록 |
+| 치명타 운 편차가 재현성을 깨뜨림 | 테스트·밸런스 불안정 | run seed+attack serial+target/source의 결정 판정, shared RNG 소비 금지 |
+| 대시 장판·포격이 판정과 다르게 보임 | 불공정한 피격/공격 판단 | 첫 프레임부터 exact footprint, 장판 2·pending 1 상한, original-detail capture |
+| 초과 회복막이 흡혈로 무한 유지됨 | 생존 카드가 자동 정답 | 기존 흡혈 예산 유지, shield cap·8초 timer, 실제 recovery event에서만 갱신 |
 | facility 유한화가 존재감을 약화 | 우선 목표 가치 감소 | 기존 HP/간격/역할 유지, offline/charge 정보로 계획성 강화 |
 | incremental count가 누락됨 | 생산 정지 또는 상한 초과 | accepted spawn/defeat/retire 단일 transition API와 debug reconciliation |
 | mystery chip이 화면을 가림 | 전투 가독성 저하 | 짧은 localized chip, 5Hz, distance/viewport culling, 기존 UI priority 유지 |
@@ -505,7 +627,18 @@ performance 변경이 있었을 때만 최종 pair를 한 번 다시 실행한�
 - 2026-08-11: 보스 reward transaction을 XP shard transport에서 분리한다. stage finalization의
   boss claim 조건은 유지한다.
 - 2026-08-11: 직접 피해 카드 8종에 +1레벨을 추가하되 새 최종 레벨의 actor/query count를
-  늘리지 않는다. 명목 상태 44, 실제 합법 선택 상한 33으로 정한다.
+  늘리지 않는다.
+- 2026-08-11: 사용자 선택을 조건부 전투 카드 5종, 초과 회복막 1종, 선택 보조 무기 2종으로
+  확정한다. 카탈로그는 21종·명목 상태 68, 합법 선택 상한은 optional 조합별 49~51이다.
+- 2026-08-11: “근거리나 원거리”는 근접/원거리 중 하나를 택하는 두 카드가 아니라 한 장이
+  양 극단을 보상하고 중간 거리는 보너스가 없는 `거리 극화`로 해석한다.
+- 2026-08-11: 직접/주기 피해, 대시 완료, 초과 회복, 방어막을 안정된 용어와 별도 runtime
+  책임으로 둔다. 조건 보너스는 합산 후 +100% 제한, 치명타는 그 뒤 2배다.
+- 2026-08-11: 후방 기뢰는 이동 중 전용이 아니다. 획득 직후와 주기마다 이동 방향 또는
+  마지막 차체 방향 뒤에 생성되는 실제 코드를 보존하고 설명을 교정한다.
+- 2026-08-11: 신규 전투 효과는 canonical 문서·sheet SHA-256
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`를 기준으로 기존
+  semantic art만 재사용한다. beam/장판/포격 footprint는 code-native truth이며 새 raster를 만들지 않는다.
 - 2026-08-11: 3~5스테이지는 합법 공격 후보가 있으면 최소 1장을 보장한다.
 - 2026-08-11: 상자 보상은 14개 direct pickup으로 변환하고 상자의 엄폐까지 제거한다.
   총 recall 4, repair 10, repair 490을 유지한다.
