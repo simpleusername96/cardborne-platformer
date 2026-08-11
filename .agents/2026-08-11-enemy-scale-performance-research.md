@@ -266,6 +266,47 @@ it. The next largest measured combat owner is the player-projectile route, parti
 cover and spatial-candidate queries. Further changes require another bounded evidence step,
 not count reduction or gameplay degradation.
 
+### 8. Clean qualification attempt and stop decision
+
+Commit `98b39a11` was measured from a clean worktree with the same viewport, seed, and
+exact-count fixtures. The final diagnostic scaling sweep was:
+
+| Enemies | Physics median | p95 | p99 | Frame p95 |
+| ---: | ---: | ---: | ---: | ---: |
+| 64 | 6.140 ms | 8.440 ms | 9.610 ms | 16.670 ms |
+| 128 | 10.030 ms | 13.420 ms | 15.670 ms | 22.040 ms |
+| 192 | 14.200 ms | 18.850 ms | 21.620 ms | 135.190 ms |
+| 256 | 17.070 ms | 25.160 ms | 29.110 ms | 143.170 ms |
+| 320 | 17.840 ms | 23.910 ms | 29.090 ms | 144.170 ms |
+
+The authoritative 60-second `peak_horde` run recorded physics median/p95/p99
+`15.590/22.048/27.357 ms` and frame p95/p99 `141.027/144.752 ms`. The authoritative
+60-second `capacity_pressure` run kept the exact `320/240/120` enemy/player-projectile/
+hostile-projectile counts and recorded physics `18.390/26.803/32.994 ms`, frame
+`142.913/145.833 ms`, and draw-call p95 `101`. Both scenarios were valid and clean, but
+both failed the simulation and frame gates.
+
+The capacity record also confirms the fixed-step backlog mechanism. One displayed frame
+regularly consumes several physics ticks; measured frame median is `133.333 ms` while the
+median directly attributed work is `23.613 ms`, leaving about `109.720 ms` as catch-up or
+unattributed delay. Lowering `max_physics_steps_per_frame` would shorten the visible stall
+by dropping required catch-up work and slowing simulation under load. That changes product
+behavior, so it was diagnosed but not shipped as an optimization.
+
+Two later micro-candidates were rejected after same-count comparison: caching additional
+movement scalars and publishing a non-normalized facing vector did not materially improve
+physics or their named child sections, so both commits were reverted. Temporary attribution
+measured motion-to-grid publication at `0.778 ms` median and facing publication at
+`0.406 ms`; its instrumentation was then removed. The only retained follow-up is an exact
+empty-decoy fast path that skips per-enemy ID hashing when no decoy effect exists.
+
+This is the current stop decision for the bounded algorithmic branch. The implementation
+has a verified same-workload improvement over the stable baseline, but the existing
+capacity gate remains failed. Reaching `6/8 ms` at the exact 320-enemy and 360-projectile
+workload now requires a new architectural contract such as packed-data simulation or a
+native hot-path extension, with separate Web compatibility and determinism design. It must
+not be represented as a small continuation of this optimization pass.
+
 ## Recommendations
 
 ### Selected resolution sequence

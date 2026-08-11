@@ -481,7 +481,12 @@ ordinary decision/movement와 projectile route를 실제 비용 소유자로 선
 (`-8.3%`), p95 `20.592→18.323 ms`(`-11.0%`)다. 동일 workload 개선은 확인됐지만
 capacity p95 `6 ms`, p99 `8 ms` 게이트에는 아직 미달하므로 이 계획은 active 상태다.
 M7은 제품 명세, 업그레이드 카탈로그, 시각 시스템, 성능 근거, 시설·장치 보고서를
-현재 런타임과 일치시켰다. 열린 제품 선택은 없다.
+현재 런타임과 일치시켰다. clean 60초 권위 측정에서 peak physics p95/p99는
+`22.048/27.357 ms`, capacity는 `26.803/32.994 ms`였고 두 시나리오 모두 count와
+draw-call 검증은 통과했지만 성능 게이트는 실패했다. 물리 catch-up 상한 축소는 필수
+시뮬레이션을 버리는 동작 변경이므로 적용하지 않았다. 추가 scalar/facing 후보는 동일
+320적 비교에서 효과가 없어 되돌렸고, 현재 M8은 import/Web export와 built QA를 진행한
+뒤 성능 실패를 미해결 조건으로 남긴다. 열린 제품 선택은 없다.
 
 ## Acceptance Criteria
 
