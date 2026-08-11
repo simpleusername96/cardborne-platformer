@@ -48,50 +48,10 @@ func adjusted_velocity(
 	if overlap_count <= 0:
 		_cache(slot, generation, role_velocity)
 		return role_velocity
-	var separation := Vector2.ZERO
-	var strongest_actor_id := ""
-	var strongest_penetration := -1.0
-	var strongest_direction := Vector2.ZERO
-	for index in overlap_count:
-		var candidate_slot: int = spatial_grid.cached_local_overlap_slot(
-			enemy, index
-		)
-		if candidate_slot < 0:
-			continue
-		var candidate_position: Vector2 = spatial_grid.cached_local_position(
-			candidate_slot
-		)
-		var candidate_radius: float = spatial_grid.cached_local_body_radius(
-			candidate_slot
-		)
-		var candidate_id: String = spatial_grid.cached_local_actor_id(
-			candidate_slot
-		)
-		var offset := enemy.pos - candidate_position
-		var distance_squared := offset.length_squared()
-		var combined_radius := enemy.radius + candidate_radius
-		var distance := sqrt(distance_squared)
-		var penetration := combined_radius - distance
-		var direction := _separation_direction(
-			String(enemy.id), candidate_id, offset, distance
-		)
-		separation += direction * penetration
-		if (
-			penetration > strongest_penetration
-			or (
-				is_equal_approx(penetration, strongest_penetration)
-				and (
-					strongest_actor_id.is_empty()
-					or candidate_id < strongest_actor_id
-				)
-			)
-		):
-			strongest_actor_id = candidate_id
-			strongest_penetration = penetration
-			strongest_direction = direction
-	if separation.length_squared() <= 0.0001:
-		separation = strongest_direction
-	var separation_velocity := separation.normalized() * role_velocity.length()
+	var separation_direction: Vector2 = (
+		spatial_grid.cached_local_separation_direction(enemy)
+	)
+	var separation_velocity := separation_direction * role_velocity.length()
 	var adjusted := (
 		role_velocity * ROLE_WEIGHT
 		+ separation_velocity * SEPARATION_WEIGHT
@@ -106,17 +66,3 @@ func _cache(slot: int, generation: int, velocity: Vector2) -> void:
 	_cached_generations[slot] = generation
 	_cached_valid[slot] = 1
 	_cached_velocity[slot] = velocity
-
-
-func _separation_direction(
-	first_id: String,
-	second_id: String,
-	offset: Vector2,
-	distance: float
-) -> Vector2:
-	if distance > 0.0001:
-		return offset / distance
-	var ordered := first_id + ":" + second_id if first_id < second_id else second_id + ":" + first_id
-	var angle := float(wrapi(hash(ordered), 0, 4096)) / 4096.0 * TAU
-	var direction := Vector2.RIGHT.rotated(angle)
-	return direction if first_id < second_id else -direction

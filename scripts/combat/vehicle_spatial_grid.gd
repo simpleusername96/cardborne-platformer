@@ -57,6 +57,7 @@ var _local_overlap_valid := PackedInt32Array()
 var _local_overlap_counts := PackedByteArray()
 var _local_overlap_neighbor_slots := PackedInt32Array()
 var _local_overlap_distances := PackedFloat64Array()
+var _local_overlap_separation_directions := PackedVector2Array()
 var _local_snapshot_positions := PackedVector2Array()
 var _local_snapshot_body_radii := PackedFloat64Array()
 var _local_snapshot_actor_ids := PackedStringArray()
@@ -126,6 +127,7 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_local_overlap_distances.resize(
 		MAX_TRACKED_ACTORS * LOCAL_OVERLAP_LIMIT
 	)
+	_local_overlap_separation_directions.resize(MAX_TRACKED_ACTORS)
 	_local_snapshot_positions.resize(MAX_TRACKED_ACTORS)
 	_local_snapshot_body_radii.resize(MAX_TRACKED_ACTORS)
 	_local_snapshot_actor_ids.resize(MAX_TRACKED_ACTORS)
@@ -471,6 +473,15 @@ func rebuild_local_overlap_cache(
 					if overlap_count < LOCAL_OVERLAP_LIMIT:
 						overlap_count += 1
 		_local_overlap_counts[owner_slot] = overlap_count
+		_local_overlap_separation_directions[owner_slot] = (
+			_local_separation_direction(
+				owner_slot,
+				row_offset,
+				overlap_count,
+				owner_position,
+				owner_radius
+			)
+		)
 	if measure_sections:
 		last_overlap_query_ms = (
 			float(Time.get_ticks_usec() - section_started) / 1000.0
@@ -508,6 +519,13 @@ func cached_local_overlap_distance_squared(owner: EnemyState, index: int) -> flo
 	return _local_overlap_distances[
 		owner_slot * LOCAL_OVERLAP_LIMIT + index
 	]
+
+
+func cached_local_separation_direction(owner: EnemyState) -> Vector2:
+	var slot := _stable_slot(owner)
+	if not _local_overlap_owner_is_valid(owner, slot):
+		return Vector2.ZERO
+	return _local_overlap_separation_directions[slot]
 
 
 func cached_local_position(slot: int) -> Vector2:
@@ -784,6 +802,70 @@ func _local_overlap_owner_is_valid(owner: EnemyState, slot: int) -> bool:
 		and _local_overlap_valid[slot] == _local_overlap_build_serial
 		and _local_overlap_generations[slot] == maxi(1, owner.runtime_generation)
 	)
+
+
+func _local_separation_direction(
+	owner_slot: int,
+	row_offset: int,
+	overlap_count: int,
+	owner_position: Vector2,
+	owner_radius: float
+) -> Vector2:
+	if overlap_count <= 0:
+		return Vector2.ZERO
+	var separation := Vector2.ZERO
+	var strongest_actor_id := ""
+	var strongest_penetration := -1.0
+	var strongest_direction := Vector2.ZERO
+	var owner_id := String(_local_snapshot_actor_ids[owner_slot])
+	for index in overlap_count:
+		var candidate_slot := _local_overlap_neighbor_slots[row_offset + index]
+		var candidate_id := String(_local_snapshot_actor_ids[candidate_slot])
+		var offset := owner_position - _local_snapshot_positions[candidate_slot]
+		var distance := offset.length()
+		var penetration := (
+			owner_radius
+			+ float(_local_snapshot_body_radii[candidate_slot])
+			- distance
+		)
+		var direction := _deterministic_separation_direction(
+			owner_id, candidate_id, offset, distance
+		)
+		separation += direction * penetration
+		if (
+			penetration > strongest_penetration
+			or (
+				is_equal_approx(penetration, strongest_penetration)
+				and (
+					strongest_actor_id.is_empty()
+					or candidate_id < strongest_actor_id
+				)
+			)
+		):
+			strongest_actor_id = candidate_id
+			strongest_penetration = penetration
+			strongest_direction = direction
+	if separation.length_squared() <= 0.0001:
+		separation = strongest_direction
+	return separation.normalized()
+
+
+func _deterministic_separation_direction(
+	first_id: String,
+	second_id: String,
+	offset: Vector2,
+	distance: float
+) -> Vector2:
+	if distance > 0.0001:
+		return offset / distance
+	var ordered := (
+		first_id + ":" + second_id
+		if first_id < second_id
+		else second_id + ":" + first_id
+	)
+	var angle := float(wrapi(hash(ordered), 0, 4096)) / 4096.0 * TAU
+	var direction := Vector2.RIGHT.rotated(angle)
+	return direction if first_id < second_id else -direction
 
 
 func _add_membership(
