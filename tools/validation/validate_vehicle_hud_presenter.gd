@@ -17,10 +17,9 @@ var fast_experience_complete := false
 var fast_reduced_motion := false
 var fast_stage_number := 2
 var fast_stage_total := 5
-var fast_defeated := 86
-var fast_quota := 168
+var fast_cumulative_defeated := 86
 var fast_dash_available := true
-var fast_dash_ratio := 0.0
+var fast_dash_remaining := 0.0
 
 
 func _initialize() -> void:
@@ -111,7 +110,7 @@ func _initialize() -> void:
 			and not experience_update.has("stage_number"),
 		"XP collection republishes the complete center meter cluster only"
 	)
-	fast_defeated = 87
+	fast_cumulative_defeated = 87
 	var progress_update := state_presenter.advance(
 		0.10, _fast, _minimap, _threat, _guide
 	)
@@ -119,13 +118,12 @@ func _initialize() -> void:
 		_all_stage_progress_fields_present(progress_update)
 		and int(progress_update["stage_number"]) == 2
 		and int(progress_update["stage_total"]) == 5
-		and int(progress_update["defeated"]) == 87
-		and int(progress_update["quota"]) == 168
+		and int(progress_update["cumulative_defeated"]) == 87
 		and not progress_update.has("health"),
 		"one defeat republishes the complete numeric stage-progress cluster only"
 	)
 	fast_dash_available = false
-	fast_dash_ratio = 0.5
+	fast_dash_remaining = 0.5
 	var action_update := state_presenter.advance(
 		0.10, _fast, _minimap, _threat, _guide
 	)
@@ -161,14 +159,13 @@ func _fast() -> Dictionary:
 		"reduced_motion":fast_reduced_motion,
 		"stage_number":fast_stage_number,
 		"stage_total":fast_stage_total,
-		"defeated":fast_defeated,
-		"quota":fast_quota,
+		"cumulative_defeated":fast_cumulative_defeated,
 		"dash_available":fast_dash_available,
-		"dash_ratio":fast_dash_ratio,
+		"dash_remaining":fast_dash_remaining,
 		"seeker_available":true,
-		"seeker_ratio":0.0,
+		"seeker_remaining":0.0,
 		"skill_available":true,
-		"skill_ratio":0.0,
+		"skill_remaining":0.0,
 		"buff_text":"",
 	}
 
@@ -185,8 +182,9 @@ func _all_hull_fields_present(update: Dictionary) -> bool:
 
 func _all_action_fields_present(update: Dictionary) -> bool:
 	for key in [
-		"dash_available", "dash_ratio", "seeker_available", "seeker_ratio",
-		"skill_available", "skill_ratio", "buff_text",
+		"dash_available", "dash_remaining",
+		"seeker_available", "seeker_remaining",
+		"skill_available", "skill_remaining", "buff_text",
 	]:
 		if not update.has(key):
 			return false
@@ -194,7 +192,7 @@ func _all_action_fields_present(update: Dictionary) -> bool:
 
 
 func _all_stage_progress_fields_present(update: Dictionary) -> bool:
-	for key in ["stage_number", "stage_total", "defeated", "quota"]:
+	for key in ["stage_number", "stage_total", "cumulative_defeated"]:
 		if not update.has(key):
 			return false
 	return true

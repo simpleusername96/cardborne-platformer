@@ -37,6 +37,15 @@ func _initialize() -> void:
 		"ordinary quota remains available when boss shots are inserted first"
 	)
 	_expect(interleaved_store.validate_counts(), "mixed insertion order preserves hostile accounting")
+	var retired_boss := interleaved_store.retire_boss_hostiles()
+	var selective_snapshot := interleaved_store.debug_snapshot()
+	_expect(
+		retired_boss == 12
+			and int(selective_snapshot["boss_hostile"]) == 0
+			and int(selective_snapshot["ordinary_hostile"]) == ordinary_limit
+			and interleaved_store.validate_counts(),
+		"boss retirement preserves every ordinary hostile and pool counter"
+	)
 
 	var reuse_store := ProjectileStore.new()
 	var elite_projectile := _projectile(Vector2(10.0, 10.0))

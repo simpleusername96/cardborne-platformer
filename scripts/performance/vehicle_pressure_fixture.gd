@@ -136,8 +136,8 @@ static func qualification(
 static func peak_qualification_passes(snapshot: Dictionary) -> bool:
 	return (
 		int(snapshot.get("active", 0)) == PEAK_ORDINARY_COUNT
-		and int(snapshot.get("visible", 0)) >= 120
-		and int(snapshot.get("visible", 0)) <= 160
+		and int(snapshot.get("visible", 0)) >= 180
+		and int(snapshot.get("visible", 0)) <= 260
 		and int(snapshot.get("near_600", 0)) <= 160
 		and int(snapshot.get("near_900", 0)) >= 200
 		and int(snapshot.get("near_900", 0)) <= 240
@@ -269,10 +269,13 @@ static func _positions_for_band(
 		var angle := base_angle + float(signed_lane) * angular_step
 		var candidate := player_position + Vector2.RIGHT.rotated(angle) * radius
 		var in_sector := _sector_for_offset(candidate - player_position) == sector
+		# The fixed radial workload must survive camera presentation changes.
+		# Inner actors remain provably visible; outer bands keep their coordinates
+		# instead of being pushed outward when the camera shows more of the field.
 		var visibility_matches := (
 			visible_world.grow(-42.0).has_point(candidate)
 			if require_visible
-			else not visible_world.grow(72.0).has_point(candidate)
+			else true
 		)
 		if (
 			in_sector

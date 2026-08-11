@@ -205,21 +205,23 @@ func _run() -> void:
 	stage_ui.call("show_deployment", &"pulse_cannon")
 	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)
 	_expect(
-		Vector2(ui_contract["action_rail_size"]) == Vector2(88.0, 88.0)
-			and int(ui_contract["action_slot_count"]) == 1
-			and bool(ui_contract["action_rail_panel_free"]),
-		"bottom HUD uses one enlarged panel-free EMP indicator"
+		Vector2(ui_contract["action_rail_size"]) == Vector2.ZERO
+			and int(ui_contract["action_slot_count"]) == 3
+			and Vector2(ui_contract["status_cluster_size"]) == Vector2(246.0, 40.0)
+			and int(ui_contract["status_cluster_background_geometry_count"]) == 0,
+		"top-left panel-free cluster owns Dash, Seeker, and EMP without a bottom rail"
 	)
 	_expect(
-		Vector2(ui_contract["health_cluster_size"]) == Vector2(520.0, 44.0)
+		Vector2(ui_contract["health_cluster_size"]) == Vector2(1280.0, 54.0)
 			and bool(ui_contract["health_panel_free"])
-			and bool(ui_contract["stage_progress_panel_free"])
+			and bool(ui_contract["status_cluster_panel_free"])
+			and is_equal_approx(float(ui_contract["meter_gap"]), 0.0)
 			and bool(Dictionary(ui_contract["health_meter"])["has_experience_geometry"])
 			and int(ui_contract["live_upgrade_icon_count"]) == 0
 			and not bool(ui_contract["has_live_upgrade_rail"])
 			and not bool(ui_contract["edge_boss_health_visible"])
 			and not bool(ui_contract["edge_target_health_visible"]),
-		"hull, XP, and B stage progress are panel-free with no live build rail or duplicated edge health"
+		"full-width HP/EXP and semantic status items are panel-free with no live build rail or duplicated edge health"
 	)
 	_expect(bool(ui_contract["top_clusters_do_not_overlap"]), "top HUD clusters do not overlap at 1280 pixels")
 	_expect(not bool(ui_contract["deployment_has_difficulty_ui"]), "deployment exposes no difficulty choice")

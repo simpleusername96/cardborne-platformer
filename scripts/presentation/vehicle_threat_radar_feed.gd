@@ -41,6 +41,13 @@ func begin_sample(origin: Vector2) -> void:
 		_reset_sector(sector_variant as Dictionary)
 
 
+func set_maximum_distance(maximum_distance: float) -> void:
+	## Keeps both fixed frames on the same range contract without reallocating.
+	_maximum_distance = maxf(1.0, maximum_distance)
+	for frame in _frames:
+		frame["max_distance"] = _maximum_distance
+
+
 func append_offset(
 	offset: Vector2,
 	kind: StringName,

@@ -1,7 +1,8 @@
 class_name VehicleGameplayHud
 extends Control
 
-## Owns the four-zone gameplay HUD and transient HUD-only presentation.
+## Owns the full-width meters, compact semantic status cluster, minimap, and
+## transient HUD-only presentation.
 ## It consumes immutable snapshots and never queries or mutates gameplay state.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
@@ -12,11 +13,7 @@ const UiGlyphCatalog = preload(
 	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
 )
 
-const HEALTH_STRIP_SIZE := Vector2(520.0, 44.0)
-const ACTION_RAIL_SIZE := Vector2(88.0, 88.0)
-const ACTION_RAIL_BOTTOM_MARGIN := 20.0
-const TOP_MARGIN := 8.0
-const TOP_STATUS_GAP := 4.0
+const TOP_STATUS_GAP := 8.0
 
 
 class HealthPips:
@@ -30,7 +27,8 @@ class HealthPips:
 	var experience_required := 12.0
 	var experience_complete := false
 	var reduced_motion := false
-	var _experience_track_height := 8.0
+	var _health_track_height := 32.0
+	var _experience_track_height := 22.0
 	var _meter_font_size := 14
 	var _trail_from := 120.0
 	var _trail_hold := 0.0
@@ -40,7 +38,7 @@ class HealthPips:
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		custom_minimum_size = HEALTH_STRIP_SIZE
+		custom_minimum_size = Vector2(1.0, total_height())
 		set_process(false)
 
 	func set_values(
@@ -108,7 +106,7 @@ class HealthPips:
 
 	func _draw() -> void:
 		var font := get_theme_default_font()
-		var hull_rect := Rect2(0.0, 0.0, size.x, 13.0)
+		var hull_rect := Rect2(0.0, 0.0, size.x, _health_track_height)
 		_draw_meter_track(hull_rect)
 		_draw_meter_fill(
 			hull_rect,
@@ -122,18 +120,15 @@ class HealthPips:
 		)
 		if _pulse_time > 0.0:
 			draw_rect(hull_rect, Art.IVORY_BRIGHT, false, 2.0)
-		draw_string(
+		_draw_centered_value(
 			font,
-			Vector2(0.0, 12.0),
-			"%d / %d" % [roundi(health), roundi(maximum)],
-			HORIZONTAL_ALIGNMENT_CENTER,
-			size.x,
-			_meter_font_size,
+			hull_rect,
+			"HP %d / %d" % [roundi(health), roundi(maximum)],
 			Art.IVORY_BRIGHT
 		)
 		var experience_rect := Rect2(
 			0.0,
-			17.0,
+			_health_track_height,
 			size.x,
 			_experience_track_height
 		)
@@ -144,32 +139,64 @@ class HealthPips:
 				clampf(experience / experience_required, 0.0, 1.0),
 				Art.SYSTEM
 			)
-		var value_baseline := experience_rect.end.y + float(_meter_font_size) + 1.0
-		draw_string(
-			font,
-			Vector2(experience_rect.position.x, value_baseline),
-			"Lv. %d" % run_level,
-			HORIZONTAL_ALIGNMENT_LEFT,
-			experience_rect.size.x * 0.5,
-			_meter_font_size,
-			Art.TEXT_PRIMARY
+		var experience_text := (
+			"LV %d · EXP MAX" % run_level
+			if experience_complete
+			else "LV %d · EXP %d / %d" % [
+				run_level, roundi(experience), roundi(experience_required),
+			]
 		)
-		draw_string(
-			font,
-			Vector2(experience_rect.position.x, value_baseline),
-			"EXP MAX" if experience_complete else "EXP %d / %d" % [
-				roundi(experience), roundi(experience_required),
-			],
-			HORIZONTAL_ALIGNMENT_RIGHT,
-			experience_rect.size.x,
-			_meter_font_size,
-			Art.TEXT_PRIMARY
-		)
+		_draw_centered_value(font, experience_rect, experience_text, Art.TEXT_PRIMARY)
 
-	func set_layout_profile(compact: bool, accessibility: bool, _large: bool) -> void:
-		_experience_track_height = 6.0 if compact and not accessibility else 8.0
-		_meter_font_size = 13 if compact else 14
+	func set_layout_profile(compact: bool, accessibility: bool, large: bool) -> void:
+		if accessibility:
+			_health_track_height = 52.0
+			_experience_track_height = 32.0
+			_meter_font_size = 20
+		elif compact:
+			_health_track_height = 28.0
+			_experience_track_height = 18.0
+			_meter_font_size = 13
+		elif large:
+			_health_track_height = 40.0
+			_experience_track_height = 26.0
+			_meter_font_size = 16
+		else:
+			_health_track_height = 32.0
+			_experience_track_height = 22.0
+			_meter_font_size = 14
+		custom_minimum_size.y = total_height()
 		queue_redraw()
+
+	func total_height() -> float:
+		return _health_track_height + _experience_track_height
+
+	func _draw_centered_value(
+		font: Font,
+		rect: Rect2,
+		text: String,
+		color: Color
+	) -> void:
+		var baseline := rect.position.y + (rect.size.y + float(_meter_font_size) * 0.72) * 0.5
+		draw_string_outline(
+			font,
+			Vector2(rect.position.x, baseline),
+			text,
+			HORIZONTAL_ALIGNMENT_CENTER,
+			rect.size.x,
+			_meter_font_size,
+			1,
+			Art.COBALT_VOID
+		)
+		draw_string(
+			font,
+			Vector2(rect.position.x, baseline),
+			text,
+			HORIZONTAL_ALIGNMENT_CENTER,
+			rect.size.x,
+			_meter_font_size,
+			color
+		)
 
 	func _draw_meter_track(rect: Rect2) -> void:
 		draw_rect(rect, Art.COBALT_DEEP)
@@ -197,7 +224,10 @@ class HealthPips:
 			"has_health_geometry":true,
 			"has_experience_geometry":true,
 			"experience_track_width":size.x,
+			"health_track_height":_health_track_height,
 			"experience_track_height":_experience_track_height,
+			"meter_gap":0.0,
+			"total_height":total_height(),
 			"experience_complete":experience_complete,
 			"live_upgrade_icon_count":0,
 			"panel_free":true,
@@ -208,102 +238,105 @@ class HealthPips:
 		}
 
 
-class ActionRailSlot:
+class StatusGlyphItem:
 	extends Control
 
-	var action_id: StringName = &"emp"
-	var accent := Art.PLAYER_REWARD
-	var cooldown_ratio := 0.0
+	var glyph_id: StringName = &"stage_progress"
+	var glyph_family: StringName = &"status"
+	var accent := Art.SYSTEM
 	var available := true
+	var _glyph_size := 18.0
+	var _value_label: Label
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		focus_mode = Control.FOCUS_NONE
-		custom_minimum_size = ACTION_RAIL_SIZE
+		_value_label = Label.new()
+		_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_value_label.add_theme_color_override("font_color", Art.TEXT_PRIMARY)
+		_value_label.add_theme_color_override("font_shadow_color", Art.COBALT_VOID)
+		_value_label.add_theme_constant_override("shadow_offset_x", 1)
+		_value_label.add_theme_constant_override("shadow_offset_y", 1)
+		add_child(_value_label)
+		set_layout_profile(false, false, false)
 
-	func configure(glyph_id: StringName, color: Color) -> void:
-		if action_id == glyph_id and accent.is_equal_approx(color):
-			return
-		action_id = glyph_id
+	func configure(next_id: StringName, family: StringName, color: Color) -> void:
+		glyph_id = next_id
+		glyph_family = family
 		accent = color
 		queue_redraw()
 
-	func set_state(is_available: bool, ratio: float = 0.0) -> void:
-		var next_ratio := clampf(ratio, 0.0, 1.0)
-		if available == is_available and is_equal_approx(cooldown_ratio, next_ratio):
+	func set_value(value: String, is_available: bool = true) -> void:
+		if available == is_available and _value_label.text == value:
 			return
 		available = is_available
-		cooldown_ratio = next_ratio
+		_value_label.text = value
+		queue_redraw()
+
+	func set_layout_profile(compact: bool, accessibility: bool, large: bool) -> void:
+		var slot_size := Vector2(36.0, 40.0)
+		var font_size := 14
+		_glyph_size = 18.0
+		if accessibility:
+			slot_size = Vector2(92.0 if glyph_family == &"action" else 72.0, 64.0)
+			# Factory applies the selected 200% text scale. Keep the base size at
+			# the standard value so this profile does not scale the text twice.
+			font_size = 14
+			_glyph_size = 20.0
+		elif compact:
+			slot_size = Vector2(46.0 if glyph_family == &"action" else 34.0, 36.0)
+			font_size = 13
+			_glyph_size = 16.0
+		elif large:
+			slot_size = Vector2(54.0 if glyph_family == &"action" else 40.0, 44.0)
+			font_size = 15
+			_glyph_size = 20.0
+		elif glyph_family == &"action":
+			slot_size.x = 50.0
+		custom_minimum_size = slot_size
+		size = slot_size
+		if _value_label != null:
+			_value_label.position = Vector2(0.0, _glyph_size + 3.0)
+			_value_label.size = Vector2(slot_size.x, slot_size.y - _glyph_size - 3.0)
+			Factory.apply_font_size(_value_label, font_size)
 		queue_redraw()
 
 	func _draw() -> void:
-		var center := size * 0.5
-		var radius := minf(size.x, size.y) * 0.44
+		var center := Vector2(size.x * 0.5, _glyph_size * 0.5 + 1.0)
 		var state_color := accent if available else Art.TEXT_MUTED
-		draw_circle(center, radius, Color(Art.SPACE_BLACK, 0.72))
-		draw_arc(center, radius, 0.0, TAU, 48, Color(state_color, 0.88), 3.0, true)
-		if available:
-			# The inner ring is a structural ready cue independent of color.
-			draw_arc(center, radius - 7.0, 0.0, TAU, 40, Art.IVORY_BRIGHT, 2.0, true)
-		UiGlyphCatalog.draw_action_glyph(
-			self,
-			action_id,
-			center,
-			24.0,
-			{
-				&"primary":Color(state_color, 1.0 if available else 0.42),
-				&"secondary":Color(state_color, 0.78 if available else 0.34),
-				&"highlight":Color(Art.IVORY_BRIGHT, 1.0 if available else 0.40),
-			}
-		)
-		if not available and cooldown_ratio < 0.9999:
-			draw_arc(
-				center,
-				radius - 7.0,
-				-PI * 0.5,
-				-PI * 0.5 + TAU * (1.0 - cooldown_ratio),
-				24,
-				Color(accent, 0.82),
-				5.0,
-				true
+		var palette := {
+			&"primary":Color(state_color, 1.0 if available else 0.52),
+			&"secondary":Color(state_color, 0.72 if available else 0.38),
+			&"highlight":Art.IVORY_BRIGHT,
+			&"cutout":Art.COBALT_VOID,
+		}
+		if glyph_family == &"action":
+			UiGlyphCatalog.draw_action_glyph(
+				self, glyph_id, center, _glyph_size * 0.5, palette
 			)
-		if not available:
-			# A diagonal lockout slash keeps disabled readable in grayscale.
-			draw_line(
-				center - Vector2.ONE * (radius * 0.50),
-				center + Vector2.ONE * (radius * 0.50),
-				Art.IVORY_BRIGHT,
-				2.0
+		else:
+			UiGlyphCatalog.draw_status_glyph(
+				self, glyph_id, center, _glyph_size * 0.5, palette
 			)
 
 	func debug_contract() -> Dictionary:
-		var descriptor := UiGlyphCatalog.action_descriptor(action_id)
 		return {
 			"available":available,
 			"image_backed":false,
-			"state_code_drawn":true,
-			"semantic_icon_image_retained":false,
 			"code_native_glyph":true,
-			"disabled_not_color_only":true,
-			"available_has_structural_rail":false,
-			"available_has_structural_ring":available,
-			"disabled_has_structural_slash":not available,
-			"cooldown_has_structural_arc":(
-				not available and cooldown_ratio < 0.9999
-			),
-			"cooldown_ratio":cooldown_ratio,
-			"interior_filled":false,
-			"round":true,
 			"panel_free":true,
-			"has_text":false,
-			"draw_batches":2,
+			"background_geometry_count":0,
+			"cooldown_progress_geometry_count":0,
+			"has_text":true,
+			"value":_value_label.text,
 			"minimum_size":custom_minimum_size,
-			"glyph_id":action_id,
-			"shared_glyph_recipe":not descriptor.is_empty(),
-			"semantic_texture":false,
-			"glyph_command_count":Array(
-				descriptor.get("commands", [])
-			).size(),
+			"glyph_id":glyph_id,
+			"glyph_family":glyph_family,
+			"glyph_optical_size":_glyph_size,
+			"value_font_size":_value_label.get_theme_font_size("font_size"),
+			"value_centered":_value_label.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER,
 		}
 
 
@@ -401,17 +434,12 @@ class StageMinimap:
 		return mesh
 
 
-var _stage_progress: VBoxContainer
-var _center_status: VBoxContainer
+var _status_cluster: HBoxContainer
 var _minimap_panel: PanelContainer
 var _health_bar: HealthPips
-var _stage_heading: Label
-var _stage_value: Label
-var _defeated_heading: Label
-var _defeated_value: Label
+var _status_items: Dictionary = {}
 var _accessibility_text_scale := 1.0
 var _last_buff_text := ""
-var _skill_slot: ActionRailSlot
 var _buff_label: Label
 var _minimap: StageMinimap
 var _notification_panel: PanelContainer
@@ -451,46 +479,19 @@ func _build() -> void:
 	_threat_radar.name = "ThreatRadar"
 	add_child(_threat_radar)
 
-	_stage_progress = VBoxContainer.new()
-	_stage_progress.name = "StageProgress"
-	_stage_progress.add_theme_constant_override("separation", 4)
-	_stage_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_stage_progress)
-	_stage_heading = Factory.label("HUD_STAGE_LABEL", 16, Art.TEXT_MUTED)
-	_stage_heading.name = "StageHeading"
-	_stage_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_shadow_label(_stage_heading)
-	_stage_progress.add_child(_stage_heading)
-	_stage_value = Factory.label("1 / 5", 32, Art.TEXT_PRIMARY)
-	_stage_value.name = "StageValue"
-	_stage_value.theme_type_variation = &"DisplayLabel"
-	_stage_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_shadow_label(_stage_value)
-	_stage_progress.add_child(_stage_value)
-	var group_spacer := Control.new()
-	group_spacer.name = "ProgressGroupSpacer"
-	group_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_stage_progress.add_child(group_spacer)
-	_defeated_heading = Factory.label("HUD_DEFEATED_LABEL", 16, Art.TEXT_MUTED)
-	_defeated_heading.name = "DefeatedHeading"
-	_defeated_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_shadow_label(_defeated_heading)
-	_stage_progress.add_child(_defeated_heading)
-	_defeated_value = Factory.label("0 / 0", 32, Art.TEXT_PRIMARY)
-	_defeated_value.name = "DefeatedValue"
-	_defeated_value.theme_type_variation = &"DisplayLabel"
-	_defeated_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_shadow_label(_defeated_value)
-	_stage_progress.add_child(_defeated_value)
-
-	_center_status = VBoxContainer.new()
-	_center_status.name = "CenterStatus"
-	_center_status.alignment = BoxContainer.ALIGNMENT_CENTER
-	_center_status.add_theme_constant_override("separation", 2)
-	_center_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_center_status)
 	_health_bar = HealthPips.new()
-	_center_status.add_child(_health_bar)
+	_health_bar.name = "FullWidthMeters"
+	add_child(_health_bar)
+
+	_status_cluster = HBoxContainer.new()
+	_status_cluster.name = "CompactStatusCluster"
+	_status_cluster.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_status_cluster)
+	_add_status_item(&"stage", &"stage_progress", &"status", Art.SYSTEM, "1 / 5")
+	_add_status_item(&"defeats", &"total_defeats", &"status", Art.DANGER, "0")
+	_add_status_item(&"dash", &"dash", &"action", Art.SYSTEM, "READY")
+	_add_status_item(&"seeker", &"seeker", &"action", Art.PLAYER_REWARD, "READY")
+	_add_status_item(&"emp", &"emp", &"action", Art.BOSS_COMMAND, "READY")
 
 	_minimap_panel = Factory.surface(
 		Factory.SURFACE_HUD,
@@ -506,11 +507,6 @@ func _build() -> void:
 	_minimap = StageMinimap.new()
 	_minimap.custom_minimum_size = Vector2(168.0, 100.0)
 	minimap_zone.add_child(_minimap)
-
-	_skill_slot = ActionRailSlot.new()
-	_skill_slot.name = "EmpCooldownIndicator"
-	_skill_slot.configure(&"emp", Art.BOSS_COMMAND)
-	add_child(_skill_slot)
 
 	_buff_label = Factory.label("", 14, Art.TEXT_PRIMARY)
 	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -535,6 +531,21 @@ func _build() -> void:
 	_notification_panel.add_child(_notification)
 	_notification_panel.visible = false
 
+
+func _add_status_item(
+	item_id: StringName,
+	glyph_id: StringName,
+	glyph_family: StringName,
+	accent: Color,
+	initial_value: String
+) -> void:
+	var item := StatusGlyphItem.new()
+	item.name = "%sStatus" % String(item_id).capitalize()
+	_status_cluster.add_child(item)
+	item.configure(glyph_id, glyph_family, accent)
+	item.set_value(initial_value)
+	_status_items[item_id] = item
+
 func update_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.has("health"):
 		var required_experience := maxf(
@@ -551,20 +562,17 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			bool(snapshot.get("experience_complete", false))
 		)
 	if snapshot.has("stage_number") or snapshot.has("stage_total"):
-		_stage_value.text = "%d / %d" % [
+		_status_item(&"stage").set_value("%d / %d" % [
 			int(snapshot.get("stage_number", 1)),
 			maxi(1, int(snapshot.get("stage_total", 5))),
-		]
-	if snapshot.has("defeated") or snapshot.has("quota"):
-		_defeated_value.text = "%d / %d" % [
-			maxi(0, int(snapshot.get("defeated", 0))),
-			maxi(0, int(snapshot.get("quota", 0))),
-		]
-	if snapshot.has("skill_available"):
-		_skill_slot.set_state(
-			bool(snapshot.get("skill_available", false)),
-			float(snapshot.get("skill_ratio", 0.0))
+		])
+	if snapshot.has("cumulative_defeated"):
+		_status_item(&"defeats").set_value(
+			str(maxi(0, int(snapshot.get("cumulative_defeated", 0))))
 		)
+	_update_action_status(snapshot, &"dash", "dash_available", "dash_remaining")
+	_update_action_status(snapshot, &"seeker", "seeker_available", "seeker_remaining")
+	_update_action_status(snapshot, &"emp", "skill_available", "skill_remaining")
 	if snapshot.has("buff_text"):
 		var next_buff_text := String(snapshot.get("buff_text", ""))
 		if next_buff_text != _last_buff_text:
@@ -575,6 +583,26 @@ func update_snapshot(snapshot: Dictionary) -> void:
 		_minimap.set_snapshot(snapshot["minimap"])
 	if snapshot.has("threat_radar"):
 		_threat_radar.set_snapshot(snapshot["threat_radar"])
+
+
+func _status_item(item_id: StringName) -> StatusGlyphItem:
+	return _status_items[item_id] as StatusGlyphItem
+
+
+func _update_action_status(
+	snapshot: Dictionary,
+	item_id: StringName,
+	available_key: String,
+	remaining_key: String
+) -> void:
+	if not snapshot.has(available_key) and not snapshot.has(remaining_key):
+		return
+	var is_available := bool(snapshot.get(available_key, false))
+	var remaining := maxf(0.0, float(snapshot.get(remaining_key, 0.0)))
+	_status_item(item_id).set_value(
+		"READY" if is_available else "%.1fs" % remaining,
+		is_available
+	)
 
 
 func update_threat_anchor(
@@ -638,9 +666,8 @@ func debug_notification_contract() -> Dictionary:
 
 
 func refresh_localized_content() -> void:
-	_stage_heading.text = tr("HUD_STAGE_LABEL")
-	_defeated_heading.text = tr("HUD_DEFEATED_LABEL")
-	_skill_slot.queue_redraw()
+	for item in _status_items.values():
+		(item as StatusGlyphItem).queue_redraw()
 
 
 func debug_health_animation_contract() -> Dictionary:
@@ -678,33 +705,39 @@ func debug_contract(viewport_width: float) -> Dictionary:
 	var accessibility := _accessibility_text_scale > 1.0
 	var large := viewport_width >= 1600.0 and not accessibility
 	var safe_margin := _safe_margin(viewport_width)
-	var stage_progress_size := _stage_progress_size(compact, large)
+	var meter_heights := _meter_heights(compact, accessibility, large)
+	var meter_height := meter_heights.x + meter_heights.y
+	var status_top_gap := _status_top_gap(compact, accessibility, large)
+	var status_item_size := _status_item_size(compact, accessibility, large, false)
+	var action_item_size := _status_item_size(compact, accessibility, large, true)
+	var item_gap := _status_item_gap(compact, accessibility, large)
+	var status_size := Vector2(
+		status_item_size.x * 2.0 + action_item_size.x * 3.0 + item_gap * 4.0,
+		status_item_size.y
+	)
+	var status_position := Vector2(safe_margin, meter_height + status_top_gap)
 	var minimap_base_size := (
 		Vector2(160.0, 98.0)
 		if compact
 		else Vector2(176.0, 108.0)
 	)
-	var center_width := _center_width(viewport_width, accessibility)
-	var center_height := _center_status_height()
-	var center_zone_size := Vector2(center_width, center_height)
+	var minimap_position := Vector2(
+		viewport_width - minimap_base_size.x - safe_margin,
+		meter_height + status_top_gap
+	)
+	var top_band_bottom := meter_height + status_top_gap + maxf(
+		status_size.y, minimap_base_size.y
+	)
 	var toast_size := Vector2(
 		720.0 if accessibility else (320.0 if compact else 360.0),
 		80.0 if accessibility else (36.0 if compact else 40.0)
 	)
 	var toast_position := Vector2(
 		(viewport_width - toast_size.x) * 0.5,
-		TOP_MARGIN + center_zone_size.y + TOP_STATUS_GAP
+		top_band_bottom + 4.0
 	)
-	var dock_position := Vector2(
-		(viewport_width - ACTION_RAIL_SIZE.x) * 0.5,
-		viewport_height - ACTION_RAIL_SIZE.y - ACTION_RAIL_BOTTOM_MARGIN
-	)
-	var center_start := (
-		viewport_width * 0.5 - center_zone_size.x * 0.5
-	)
-	var minimap_start := viewport_width - minimap_base_size.x - safe_margin
 	var opaque_rects := [
-		Rect2(Vector2(minimap_start, TOP_MARGIN), minimap_base_size),
+		Rect2(minimap_position, minimap_base_size),
 	]
 	var opaque_area := 0.0
 	var central_safe := Rect2(
@@ -718,28 +751,40 @@ func debug_contract(viewport_width: float) -> Dictionary:
 			central_safe_clear
 			and not Rect2(rect).intersects(central_safe)
 		)
+	var item_contracts: Array[Dictionary] = []
+	var status_values: Array[String] = []
+	for item_id in [&"stage", &"defeats", &"dash", &"seeker", &"emp"]:
+		var item := _status_item(item_id)
+		item_contracts.append(item.debug_contract())
+		status_values.append(String(item._value_label.text))
 	return {
-		"action_rail_size":ACTION_RAIL_SIZE,
-		"action_rail_position":dock_position,
-		"action_rail_icon_only":true,
-		"action_slot_count":1,
-		"action_rail_panel_free":true,
+		"action_rail_size":Vector2.ZERO,
+		"action_slot_count":3,
 		"shows_primary_slot":false,
 		"action_slot_contracts":[
-			_skill_slot.debug_contract(),
+			item_contracts[2], item_contracts[3], item_contracts[4],
 		],
-		"secondary_slot_size":Vector2.ZERO,
 		"minimap_size":minimap_base_size,
 		"minimap_zone_size":minimap_base_size,
-		"health_cluster_size":Vector2(center_width, center_height),
-		"stage_progress_size":stage_progress_size,
-		"stage_progress_panel_free":true,
-		"stage_progress_values":[_stage_value.text, _defeated_value.text],
+		"minimap_position":minimap_position,
+		"health_cluster_size":Vector2(viewport_width, meter_height),
+		"meter_width":viewport_width,
+		"meter_top":0.0,
+		"meter_gap":0.0,
+		"meter_heights":meter_heights,
+		"status_cluster_size":status_size,
+		"status_cluster_position":status_position,
+		"status_cluster_panel_free":true,
+		"status_cluster_background_geometry_count":0,
+		"status_cluster_one_line":true,
+		"status_item_gap":item_gap,
+		"status_item_contracts":item_contracts,
+		"status_values":status_values,
+		"visible_status_label_count":0,
 		"health_panel_free":true,
 		"health_meter":_health_bar.debug_contract(),
 		"live_upgrade_icon_count":0,
 		"has_live_upgrade_rail":false,
-		"center_status_size":center_zone_size,
 		"edge_boss_health_visible":false,
 		"edge_target_health_visible":false,
 		"conditional_clusters_have_backing":false,
@@ -752,7 +797,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"toast_position":toast_position,
 		"toast_center_attached":is_equal_approx(
 			toast_position.y,
-			TOP_MARGIN + center_zone_size.y + TOP_STATUS_GAP
+			top_band_bottom + 4.0
 		),
 		"raster_chrome_consumer":false,
 		"opaque_combat_area_ratio":(
@@ -760,93 +805,71 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		),
 		"central_safe_clear":central_safe_clear,
 		"top_clusters_do_not_overlap":(
-			safe_margin + stage_progress_size.x <= center_start
-			and center_start + center_zone_size.x <= minimap_start
+			status_position.x + status_size.x <= minimap_position.x
 		),
 		"zone_count":4,
 		"notification_inside_hud":_notification_panel.get_parent() == self,
-		"status_font_sizes":{
-			"stage_label":_stage_heading.get_theme_font_size("font_size"),
-			"stage_value":_stage_value.get_theme_font_size("font_size"),
-			"defeated_label":_defeated_heading.get_theme_font_size("font_size"),
-			"defeated_value":_defeated_value.get_theme_font_size("font_size"),
-			"buff":_buff_label.get_theme_font_size("font_size"),
-		},
+		"viewport_height":viewport_height,
 	}
 
 
 func _apply_responsive_layout() -> void:
-	if _center_status == null:
+	if _health_bar == null:
 		return
 	var compact := size.x < 1100.0
 	var accessibility := _accessibility_text_scale > 1.0
 	var large := size.x >= 1600.0 and not accessibility
 	var safe_margin := _safe_margin(size.x)
-	var stage_progress_size := _stage_progress_size(compact, large)
 	var minimap_base_size := (
 		Vector2(160.0, 98.0)
 		if compact
 		else Vector2(176.0, 108.0)
 	)
-	var center_width := _center_width(size.x, accessibility)
 	_health_bar.set_layout_profile(compact, accessibility, large)
-	var center_height := _center_status_height()
-	var center_size := Vector2(center_width, center_height)
-	_stage_progress.position = Vector2(safe_margin, TOP_MARGIN)
-	_stage_progress.custom_minimum_size = stage_progress_size
-	_stage_progress.size = stage_progress_size
-	_center_status.position = Vector2((size.x - center_width) * 0.5, TOP_MARGIN)
-	_center_status.custom_minimum_size = center_size
-	_center_status.size = center_size
-	_health_bar.custom_minimum_size = Vector2(center_width, HEALTH_STRIP_SIZE.y)
-	_health_bar.size = Vector2(center_width, HEALTH_STRIP_SIZE.y)
+	var meter_height := _health_bar.total_height()
+	var status_top_gap := _status_top_gap(compact, accessibility, large)
+	_health_bar.position = Vector2.ZERO
+	_health_bar.custom_minimum_size = Vector2(size.x, meter_height)
+	_health_bar.size = Vector2(size.x, meter_height)
+	var item_gap := _status_item_gap(compact, accessibility, large)
+	_status_cluster.add_theme_constant_override("separation", roundi(item_gap))
+	for item in _status_items.values():
+		(item as StatusGlyphItem).set_layout_profile(compact, accessibility, large)
+	var status_item_size := _status_item_size(compact, accessibility, large, false)
+	var action_item_size := _status_item_size(compact, accessibility, large, true)
+	var status_size := Vector2(
+		status_item_size.x * 2.0 + action_item_size.x * 3.0 + item_gap * 4.0,
+		status_item_size.y
+	)
+	_status_cluster.position = Vector2(safe_margin, meter_height + status_top_gap)
+	_status_cluster.custom_minimum_size = status_size
+	_status_cluster.size = status_size
 	_minimap_panel.custom_minimum_size = minimap_base_size
 	_minimap_panel.size = minimap_base_size
 	_minimap_panel.position = Vector2(
 		size.x - minimap_base_size.x - safe_margin,
-		TOP_MARGIN
+		meter_height + status_top_gap
 	)
 	_minimap.custom_minimum_size = Vector2(
 		minimap_base_size.x - 20.0,
 		minimap_base_size.y - 16.0
 	)
-	_skill_slot.size = ACTION_RAIL_SIZE
-	_skill_slot.position = Vector2(
-		(size.x - ACTION_RAIL_SIZE.x) * 0.5,
-		size.y - ACTION_RAIL_SIZE.y - ACTION_RAIL_BOTTOM_MARGIN
+	var top_band_bottom := meter_height + status_top_gap + maxf(
+		status_size.y, minimap_base_size.y
 	)
-	_buff_label.position = Vector2(
-		(size.x - _buff_label.size.x) * 0.5,
-		size.y - 124.0
-	)
-	var label_size := 15 if compact else (18 if large else 16)
-	var value_size := 30 if compact else (40 if large else 32)
-	Factory.apply_font_size(_stage_heading, label_size)
-	Factory.apply_font_size(_defeated_heading, label_size)
-	Factory.apply_font_size(_stage_value, value_size)
-	Factory.apply_font_size(_defeated_value, value_size)
 	_notification_panel.size = Vector2(
 		720.0 if accessibility else (320.0 if compact else 360.0),
 		80.0 if accessibility else (36.0 if compact else 40.0)
 	)
 	_notification_panel.position = Vector2(
 		(size.x - _notification_panel.size.x) * 0.5,
-		TOP_MARGIN + center_size.y + TOP_STATUS_GAP
+		top_band_bottom + 4.0
 	)
-
-
-func _center_width(viewport_width: float, accessibility: bool) -> float:
-	if accessibility:
-		return 404.0
-	if viewport_width < 1100.0:
-		return 400.0
-	if viewport_width >= 1600.0:
-		return 640.0
-	return HEALTH_STRIP_SIZE.x
-
-
-func _center_status_height() -> float:
-	return HEALTH_STRIP_SIZE.y
+	_buff_label.size.x = minf(600.0, size.x - safe_margin * 2.0)
+	_buff_label.position = Vector2(
+		(size.x - _buff_label.size.x) * 0.5,
+		_notification_panel.position.y + _notification_panel.size.y + TOP_STATUS_GAP
+	)
 
 
 func _safe_margin(viewport_width: float) -> float:
@@ -857,12 +880,47 @@ func _safe_margin(viewport_width: float) -> float:
 	return 24.0
 
 
-func _stage_progress_size(compact: bool, large: bool) -> Vector2:
+func _meter_heights(compact: bool, accessibility: bool, large: bool) -> Vector2:
+	if accessibility:
+		return Vector2(52.0, 32.0)
 	if compact:
-		return Vector2(180.0, 112.0)
+		return Vector2(28.0, 18.0)
 	if large:
-		return Vector2(220.0, 124.0)
-	return Vector2(200.0, 116.0)
+		return Vector2(40.0, 26.0)
+	return Vector2(32.0, 22.0)
+
+
+func _status_item_size(
+	compact: bool,
+	accessibility: bool,
+	large: bool,
+	action: bool
+) -> Vector2:
+	if accessibility:
+		return Vector2(92.0 if action else 72.0, 64.0)
+	if compact:
+		return Vector2(46.0 if action else 34.0, 36.0)
+	if large:
+		return Vector2(54.0 if action else 40.0, 44.0)
+	return Vector2(50.0 if action else 36.0, 40.0)
+
+
+func _status_item_gap(compact: bool, accessibility: bool, large: bool) -> float:
+	if accessibility:
+		return 6.0
+	if compact:
+		return 4.0
+	if large:
+		return 8.0
+	return 6.0
+
+
+func _status_top_gap(compact: bool, accessibility: bool, large: bool) -> float:
+	if accessibility or compact:
+		return 4.0
+	if large:
+		return 8.0
+	return 6.0
 
 
 func set_accessibility_text_scale(scale: float) -> void:

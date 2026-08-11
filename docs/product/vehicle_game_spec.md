@@ -381,12 +381,14 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    aimed lane and repeat volleys along it; charge, area, autonomous bombardment, and damaging
    summon patterns add one aimed three-shot pressure burst. Recovery resumes
    repositioning only after the committed attack ends.
-8. Boss defeat recalls all live experience within 0.65 seconds and resolves the
-   mandatory reward choice. Stages 1–4 then full-heal the ship, grant 1.2
-   seconds of transition protection, preserve position, facing, aim, build,
-   fixed Hard state, exploration, inner walls, and hazard geometry while the next
-   encounter begins. No transition banner, success report, or continue input
-   interrupts the run. Stage 5 opens the final result;
+8. Boss defeat records the completed-stage telemetry and removes only boss-owned
+   adds, hostile projectiles, and damage zones. Stages 1–4 full-heal the ship and
+   begin the next encounter in the same gameplay frame. Existing ordinary enemies,
+   ordinary and player projectiles, XP shards, position, velocity, facing, aim,
+   cooldowns, build, fixed Hard state, exploration, and run-fixed terrain remain.
+   There is no boss reward card, forced XP recall, transition protection, banner,
+   success report, timer, or continue input. Stage-local pickups, Anomaly Devices,
+   and the reinforcement facility refresh for the new stage. Stage 5 opens the final result;
    failures still open the failure report.
 
 | Stage | Fixed Hard quota | Authored mobile population | Boss |
@@ -446,7 +448,7 @@ does not produce a transient message.
 - Level thresholds use
   `min(160, 12 + round(3n + 0.55n²))`, where `n` is the zero-based level
   progression index. This makes early choices frequent while restoring a rising
-  late-run requirement. Each level and boss reward opens a guarded selection
+  late-run requirement. Each level opens a guarded selection
   of every legal offer card up to three and requires an explicit choice and
   confirm. When no compatible upgrade remains, one localized completion receipt
   marks XP as `MAX`, clears queued levels and live shards, and suppresses future
@@ -548,6 +550,11 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   manual aim remains independent through cursor, muzzle, projectile, and hit
   cues. Dash feedback uses a directional afterimage and rear-anchor flare,
   never a danger ring or radial burst.
+- The gameplay camera uses `0.5×` zoom, so the ship, enemies, facilities,
+  pickups, terrain, projectiles, and world effects appear at half their previous
+  screen size while world coordinates, collision radii, speeds, attack ranges,
+  spawn counts, and map dimensions remain unchanged. HUD and modal CanvasLayers
+  do not inherit this world scale.
 - The fixed-capacity transient effect buffer contains dash afterimage, EMP
   charge/release, Thermal Burst, bounded Mystery purge pulses, Drop Mine, and
   Explosive Seeker impact receipts. It keeps its 96-effect
@@ -574,21 +581,20 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   cadence, and resets on first appearance, pool reuse, reactivation, or a large
   discontinuity. Bodies and all attached shield, support, semantic, and health
   cues consume the same presented position.
-- The live HUD prioritizes hull, XP, numeric stage progress, EMP,
-  minimap, and exceptional timed effects. A panel-free top-left B stack shows only
-  localized stage and defeated labels with `current / total` values. At compact,
-  standard, and large widths its label/fraction sizes are `15/30`, `16/32`, and
-  `18/40 px`; all top zones use an eight-pixel top datum. Top-center uses a long
-  panel-free hull strip with an equal-width XP meter below it. Both tracks are
-  `400/520/640` wide at compact/standard/large sizes; the amber hull fill is
-  13 pixels thick and the blue XP fill is `6/8/8` pixels thick. XP shows `Lv. N`
-  and `EXP current / required`, or `EXP MAX` after progression completes. Top-right
-  owns only the minimap. Bottom-center owns one enlarged round panel-free EMP indicator. No
-  live upgrade icon, edge boss/target health, mission surface, objective text, or
-  ornamental full-width dock covers the field.
+- The live HUD starts at viewport `y=0` with full-width HP and EXP meters and no
+  gap between them. HP shows centered `HP current / max`; EXP shows centered
+  `LV N · EXP current / required` or `LV N · EXP MAX`. HP/EXP heights are
+  `28/18`, `32/22`, `40/26`, and `52/32 px` for compact, standard, large, and
+  200% text respectively. Immediately below, a panel-free one-line cluster at
+  left margin `16/24/32 px` shows exactly five icon/value items in this order:
+  stage deck stack `N / 5`, total-defeats skull with the run-cumulative count,
+  Dash, Seeker, and EMP. Action values are `READY` or remaining time to 0.1 s.
+  Every icon owns one meaning; the cluster has no labels, panels, sections,
+  borders, dividers, cooldown rings, or progress rails. Top-right owns only the
+  minimap. No bottom-center action, live upgrade icon, edge boss/target health,
+  mission surface, objective text, or ornamental dock is present.
 - The normal top-center toast is `320×36` compact or `360×40` standard/large and
-  sits four pixels below the center status stack, independent of the taller B
-  stack. Only facility active/destroyed, boss inbound, barrier depleted, Mystery
+  sits four pixels below the lower edge of the status-cluster/minimap band. Only facility active/destroyed, boss inbound, barrier depleted, Mystery
   Device result, boss shield-down, and progression-complete events may enqueue
   gameplay toasts. Stage
   transitions use no banner.
@@ -608,10 +614,11 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   complete dash cannot separate or squeeze the radar origin. This live-anchor path
   rebases fixed packed storage for exactly 12 sample/display slots; it does not
   allocate sector dictionaries, rescan enemies, or rebuild meshes. It includes targetable non-boss enemy
-  bodies outside the visible world rectangle and within 1,200 world units as dim
+  bodies outside the visible world rectangle and within the greater of 1,200
+  world units or the farthest visible corner plus a 480-world-unit band as dim
   `nearby_enemy` arcs. Scheduler-authored ordinary arrival cues reuse that same
-  dim arc during their bounded receipt lifetime; farther cue offsets clamp to the
-  1,200-unit boundary. These arcs reveal direction and pressure density, never an
+  dim arc during their bounded receipt lifetime; farther cue offsets clamp to that
+  runtime boundary. These arcs reveal direction and pressure density, never an
   exact coordinate or triangle. An unseen committed projectile attack has
   priority 3, boss arrival priority 2, and nearby enemy pressure priority 1 when
   contacts share a sector; only the winning role owns that sector's color and

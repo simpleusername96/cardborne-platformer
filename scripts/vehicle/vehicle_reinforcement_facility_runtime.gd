@@ -29,10 +29,17 @@ var spawn_serial := 0
 var remaining_charges := 0
 var live_children := 0
 var spent_remaining := 0.0
+var _instance_serial := 0
+var _carrier_id := &""
 
 
 func configure(next_stage_index: int, next_position: Vector2) -> void:
+	_instance_serial += 1
 	stage_index = clampi(next_stage_index, 0, HEALTH_BY_STAGE.size() - 1)
+	_carrier_id = StringName(
+		"reinforcement_facility:s%d:i%d"
+		% [stage_index + 1, _instance_serial]
+	)
 	position = next_position
 	maximum_health = HEALTH_BY_STAGE[stage_index]
 	health = maximum_health
@@ -87,7 +94,7 @@ func advance(delta: float, available_global_slots: int) -> Dictionary:
 		"pos":position + Vector2.RIGHT.rotated(angle) * (COLLISION_RADIUS + 42.0),
 		"active":true,
 		"summoned":true,
-		"carrier_id":"reinforcement_facility",
+		"carrier_id":_carrier_id,
 		"zone":&"reinforcement_facility",
 	}
 
@@ -106,6 +113,10 @@ func note_child_retired() -> void:
 	if live_children > 0:
 		live_children -= 1
 	_try_begin_spent()
+
+
+func owns_child(carrier_id: String) -> bool:
+	return not _carrier_id.is_empty() and String(_carrier_id) == carrier_id
 
 
 func _try_begin_spent() -> void:
@@ -167,6 +178,7 @@ func is_position_clear(candidate: Vector2, actor_radius: float) -> bool:
 func snapshot() -> Dictionary:
 	return {
 		"id":FACILITY_ID,
+		"carrier_id":_carrier_id,
 		"position":position,
 		"health":health,
 		"max_health":maximum_health,

@@ -23,7 +23,7 @@ func _initialize() -> void:
 	packet["trigger"] = {"kind":&"time", "at":0.0}
 	_validate_truthful_rounds(stage_id, packet, tactical)
 	_validate_capacity_reservation(stage_id, packet, tactical)
-	_validate_transition_lead(stage_id, packet, tactical)
+	_validate_continuation_lead(stage_id, packet, tactical)
 	_finish()
 
 
@@ -79,9 +79,9 @@ func _validate_capacity_reservation(stage_id: StringName, packet: Dictionary, ta
 	_expect(int(runtime.debug_snapshot()["reserved_arrival_slots"]) == 4, "admitted cue reserves its complete first round")
 
 
-func _validate_transition_lead(stage_id: StringName, source_packet: Dictionary, tactical) -> void:
+func _validate_continuation_lead(stage_id: StringName, source_packet: Dictionary, tactical) -> void:
 	var packet := source_packet.duplicate(true)
-	packet["cue_lead"] = 1.0
+	packet["cue_lead"] = 0.9
 	var runtime := _runtime(stage_id, [packet], tactical)
 	var cue_at := -1.0
 	var first_spawn_at := -1.0
@@ -92,7 +92,7 @@ func _validate_transition_lead(stage_id: StringName, source_packet: Dictionary, 
 		if first_spawn_at < 0.0 and not Array(result["spawns"]).is_empty():
 			first_spawn_at = runtime.elapsed
 			break
-	_expect(is_equal_approx(first_spawn_at - cue_at, 1.0), "transition opening preserves its exact one-second cue lead")
+	_expect(is_equal_approx(first_spawn_at - cue_at, 0.9), "continuation opening preserves its exact 0.9-second cue lead")
 
 
 func _runtime(stage_id: StringName, packets: Array[Dictionary], tactical) -> VehicleEncounterRuntime:

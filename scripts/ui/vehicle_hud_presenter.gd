@@ -15,10 +15,11 @@ const FAST_CLUSTERS := [
 		"health", "max_health", "level", "experience",
 		"experience_required", "experience_complete", "reduced_motion",
 	],
-	["stage_number", "stage_total", "defeated", "quota"],
+	["stage_number", "stage_total", "cumulative_defeated"],
 	[
-		"dash_available", "dash_ratio", "seeker_available", "seeker_ratio",
-		"skill_available", "skill_ratio", "buff_text",
+		"dash_available", "dash_remaining",
+		"seeker_available", "seeker_remaining",
+		"skill_available", "skill_remaining", "buff_text",
 	],
 ]
 

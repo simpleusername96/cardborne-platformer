@@ -7,6 +7,9 @@ extends RefCounted
 const ActionGlyphRenderer = preload(
 	"res://scripts/presentation/components/vehicle_ui_action_glyph_renderer.gd"
 )
+const StatusGlyphRenderer = preload(
+	"res://scripts/presentation/components/vehicle_ui_status_glyph_renderer.gd"
+)
 
 const MINIMAP_GLYPHS: Array[StringName] = [
 	&"player",
@@ -19,6 +22,7 @@ const MINIMAP_GLYPHS: Array[StringName] = [
 ]
 const CORE_GLYPHS: Array[StringName] = [
 	&"primary", &"seeker", &"dash", &"emp", &"secondary", &"breach_ready",
+	&"stage_progress", &"total_defeats",
 	&"player", &"field_pickup", &"mystery_device",
 	&"mobile_enemy", &"priority_enemy", &"boss", &"reinforcement_facility",
 	&"repair", &"recall", &"target",
@@ -38,6 +42,10 @@ static func minimap_ids() -> Array[StringName]:
 
 static func action_ids() -> Array[StringName]:
 	return ActionGlyphRenderer.action_ids()
+
+
+static func status_ids() -> Array[StringName]:
+	return StatusGlyphRenderer.status_ids()
 
 
 static func action_descriptor(action_id: StringName) -> Dictionary:
@@ -80,5 +88,39 @@ static func draw_action_glyph(
 	)
 
 
+static func draw_status_glyph(
+	canvas_item: CanvasItem,
+	status_id: StringName,
+	center: Vector2,
+	scale: float,
+	palette: Dictionary
+) -> int:
+	return StatusGlyphRenderer.draw_glyph(
+		canvas_item, status_id, center, scale, palette
+	)
+
+
 static func validate_action_recipes() -> PackedStringArray:
 	return ActionGlyphRenderer.validate_recipes()
+
+
+static func validate_status_recipes() -> PackedStringArray:
+	return StatusGlyphRenderer.validate_recipes()
+
+
+static func validate_semantic_ownership() -> PackedStringArray:
+	var errors := PackedStringArray()
+	var seen := {}
+	for glyph_id in CORE_GLYPHS:
+		if seen.has(glyph_id):
+			errors.append("duplicate core glyph semantic owner: %s" % glyph_id)
+		seen[glyph_id] = true
+	for status_id in status_ids():
+		if status_id in action_ids():
+			errors.append("status/action glyph meaning collision: %s" % status_id)
+		if status_id not in CORE_GLYPHS:
+			errors.append("status glyph missing from core catalog: %s" % status_id)
+	for action_id in action_ids():
+		if action_id not in CORE_GLYPHS:
+			errors.append("action glyph missing from core catalog: %s" % action_id)
+	return errors

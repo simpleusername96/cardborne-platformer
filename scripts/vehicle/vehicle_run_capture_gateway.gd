@@ -349,7 +349,7 @@ func prepare_stage(stage_index: int, preserve_upgrades: bool = false) -> void:
 	_run.capture_set_mode(&"playing")
 	_run.player_position = Rules.player_start(_run.current_stage_id)
 	_run.player_invulnerable = 99.0
-	_run._camera.zoom = Vector2.ONE
+	_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
 	_run._ui.show_gameplay()
 
 
@@ -978,7 +978,7 @@ func _capture_stage_map_evidence() -> void:
 		_fit_camera_to_stage(bounds)
 		await _settle_capture()
 		_save_capture("10-field-%s.png" % String(field_id).replace("_", "-"))
-	_run._camera.zoom = Vector2.ONE
+	_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
 	_run._field_id_override = original_override
 	_run.field_layout = null
 	_run._reset_run(false, false, true)
@@ -1393,7 +1393,7 @@ func _capture_exact_area_effect_evidence() -> void:
 		_save_capture(String(profile[2]))
 	if settings != null:
 		settings.reduced_motion = original_reduced_motion
-	_run._camera.zoom = Vector2.ONE
+	_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
 
 
 func _prepare_exact_area_scene(camera_zoom: float) -> Vector2:
@@ -1642,7 +1642,7 @@ func _capture_collision_overlay_evidence() -> void:
 		var stage_slug := String(_run.current_stage_id).replace("_", "-")
 		_save_capture("20-collision-%02d-%s-default.png" % [stage_index + 1, stage_slug])
 		_run._debug_collision_overlay = false
-	_run._camera.zoom = Vector2.ONE
+	_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
 
 
 func _capture_all_boss_evidence() -> void:

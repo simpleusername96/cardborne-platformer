@@ -104,7 +104,6 @@ const CaptureGateway = preload("res://scripts/vehicle/vehicle_run_capture_gatewa
 enum RunMode {
 	DEPLOYMENT,
 	PLAYING,
-	STAGE_TRANSITION,
 	UPGRADE,
 	PAUSED,
 	STAGE_REPORT,
@@ -153,6 +152,8 @@ const LOW_COUNT_OVERLAY_INTERVAL := 0.05
 const ORDINARY_DECISION_BUCKET_COUNT := 6
 const FAR_SIMULATION_DISTANCE := 820.0
 const FAR_SIMULATION_DISTANCE_SQUARED := FAR_SIMULATION_DISTANCE * FAR_SIMULATION_DISTANCE
+const VISIBLE_SIMULATION_MARGIN := 240.0
+const THREAT_OFFSCREEN_BAND := 480.0
 const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
 const PICKUP_BODY_RADIUS := Art.PICKUP_PLINTH_RADIUS
 const MYSTERY_GRAVITY_PULL_SPEED := 380.0
@@ -164,10 +165,8 @@ const PERFORMANCE_DETAIL_SAMPLE_STRIDE := 7
 const PLAYER_HIT_FLASH_DURATION := 0.20
 const PLAYER_BARRIER_HIT_FLASH_DURATION := 0.16
 const PLAYER_HIT_INVULNERABILITY := 1.0
-const STAGE_TRANSITION_SECONDS := 1.6
-const STAGE_TRANSITION_INVULNERABILITY := 1.2
-const STAGE_TRANSITION_CUE_AT := 0.35
-const STAGE_TRANSITION_FIRST_SPAWN_AT := 1.35
+const CONTINUATION_FIRST_CUE_AT := 0.0
+const CONTINUATION_FIRST_SPAWN_AT := 0.9
 const FIXED_LAYOUT_SEED := 0xC4A2B0
 
 var mode := RunMode.DEPLOYMENT
@@ -242,9 +241,7 @@ var upgrade_offer_error: Dictionary = {}
 var upgrade_selection_applied := false
 var reward_runtime := RewardRuntime.new()
 var completed_group_rewards: Dictionary = {}
-var pending_stage_completion := false
 var experience_recall_timer := 0.0
-var stage_transition_remaining := 0.0
 var completed_stage_reports: Array[Dictionary] = []
 
 var enemy_store := EnemyStore.new()
@@ -290,6 +287,8 @@ var _runtime_minimap_marker_pool: Array[Dictionary] = []
 var _runtime_minimap_frame_index := -1
 var _runtime_threat_radar_frame: Dictionary = {}
 var _threat_radar_feed := ThreatRadarFeed.new(THREAT_SCAN_DISTANCE)
+var _runtime_threat_scan_distance := THREAT_SCAN_DISTANCE
+var _near_simulation_distance_squared := FAR_SIMULATION_DISTANCE_SQUARED
 var _ordinary_arrival_cue_positions := PackedVector2Array()
 var _ordinary_arrival_cue_remaining := PackedFloat32Array()
 var _ordinary_arrival_cue_count := 0
@@ -539,6 +538,7 @@ func _physics_process(delta: float) -> void:
 		run_time += delta
 		var section_started := Time.get_ticks_usec() if _performance_detail_sample_active else 0
 		_update_player(delta)
+		_refresh_visible_world_runtime_ranges()
 		var pickup_motion_end := player_position
 		_update_terrain(delta, pickup_motion_start)
 		_update_pickups(delta, pickup_motion_start, pickup_motion_end)
@@ -711,6 +711,7 @@ func _build_camera() -> void:
 	_camera = Camera2D.new()
 	_camera.name = "VehicleCamera"
 	_camera.enabled = true
+	_camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
 	_camera.position = Rules.player_start(current_stage_id)
 	_camera.position_smoothing_enabled = true
 	_camera.position_smoothing_speed = 8.0
@@ -794,7 +795,6 @@ func _reset_run(
 		_apply_camera_stage_limits()
 	if is_instance_valid(_ui):
 		_ui.clear_notifications()
-	stage_transition_remaining = 0.0
 	mode = RunMode.DEPLOYMENT
 	player_position = Rules.player_start(current_stage_id)
 	player_velocity = Vector2.ZERO
@@ -874,7 +874,6 @@ func _reset_run(
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
-	pending_stage_completion = false
 	completed_group_rewards.clear()
 	_pending_stage_report.clear()
 	if not preserve_upgrades:
@@ -931,6 +930,10 @@ func _generate_field_layout() -> void:
 
 func _configure_stage_map_runtime() -> void:
 	terrain_runtime.configure(field_layout.run_feature_blueprint())
+	_configure_stage_local_runtime()
+
+
+func _configure_stage_local_runtime() -> void:
 	mystery_device_runtime.configure(
 		_active_tactical_layout.mystery_device_blueprint(),
 		field_layout.seed,
@@ -1147,7 +1150,7 @@ func _rebuild_enemy_runtime_indexes() -> void:
 
 
 func _simulation_active() -> bool:
-	return mode in [RunMode.PLAYING, RunMode.STAGE_TRANSITION]
+	return mode == RunMode.PLAYING
 
 
 func _update_encounter(delta: float) -> void:
@@ -1218,7 +1221,7 @@ func _clear_ordinary_arrival_cues() -> void:
 
 
 func _update_reinforcement_facility(delta: float) -> void:
-	if pending_stage_completion or stage_complete:
+	if stage_complete:
 		return
 	if reinforcement_facility_runtime.activate_if_ready(
 		stage_flow.defeats, stage_flow.quota
@@ -1253,7 +1256,7 @@ func debug_reinforcement_facility_count_matches() -> bool:
 			enemy.alive
 			and enemy.active
 			and enemy.summoned
-			and enemy.carrier_id == "reinforcement_facility"
+			and reinforcement_facility_runtime.owns_child(enemy.carrier_id)
 		):
 			actual_live_children += 1
 	return actual_live_children == reinforcement_facility_runtime.live_children
@@ -1457,7 +1460,7 @@ func _present_deployment() -> void:
 
 
 func _advance_stage() -> void:
-	_begin_stage_transition()
+	_begin_next_stage_continuation()
 
 
 func _set_mouse_for_mode() -> void:
@@ -2181,7 +2184,7 @@ func _update_enemies(
 	# scheduler accumulators are lane-owned; rebuilding only on bucket zero
 	# would discard five-sixths of decision/motion cadence.
 	_enemy_update_schedule.rebuild(
-		enemies, delta, player_position, FAR_SIMULATION_DISTANCE_SQUARED,
+		enemies, delta, player_position, _near_simulation_distance_squared,
 		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket,
 		enemy_store.membership_revision
 	)
@@ -3719,7 +3722,7 @@ func _update_projectile_buffer(
 		var projectile := buffer[index]
 		var from := projectile.pos
 		var simulation_delta := delta
-		if player_position.distance_squared_to(from) > FAR_SIMULATION_DISTANCE_SQUARED:
+		if player_position.distance_squared_to(from) > _near_simulation_distance_squared:
 			if projectile.spawn_serial % 2 != _simulation_lod_bucket:
 				index += 1
 				continue
@@ -4340,7 +4343,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
 	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
-	if enemy.carrier_id == "reinforcement_facility":
+	if reinforcement_facility_runtime.owns_child(enemy.carrier_id):
 		reinforcement_facility_runtime.note_child_retired()
 	var role := enemy.role
 	if boss_practice.active:
@@ -4363,12 +4366,10 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	enemy_store.queue_defeat(enemy)
 	stats_enemies_defeated += 1
 	stage_telemetry.record_defeat(enemy.archetype, enemy.elite_trait)
-	var reward_source := &""
-	if role == &"stage_boss": reward_source = &"boss"
 	experience_runtime.spawn_shard(
 		enemy.pos,
 		FieldDropRules.experience_for_enemy(enemy),
-		reward_source
+		&""
 	)
 	if _is_countable_stage_enemy(enemy):
 		if stage_flow.record_countable_defeat():
@@ -4382,9 +4383,6 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		stats_installations += 1
 	if role == &"stage_boss":
 		if stage_flow.record_boss_defeat():
-			# Final progression suppresses XP shards, so transport the boss reward
-			# directly from the authoritative defeat transition.
-			reward_runtime.enqueue(&"boss")
 			_complete_stage()
 	var defeated_group := enemy.group_id
 	if not defeated_group.is_empty():
@@ -4449,9 +4447,7 @@ func _try_group_completion_reward(group_id: String, _position: Vector2) -> void:
 
 func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
 	if role == &"stage_boss":
-		for index in range(denied_zones.size() - 1, -1, -1):
-			if String(denied_zones[index]["source"]).contains("Colossus"):
-				denied_zones.remove_at(index)
+		_retire_denied_zones_by_owner(&"stage_boss")
 
 
 func _damage_player(
@@ -4890,15 +4886,6 @@ func _update_stage_progression(delta: float = 0.0) -> void:
 		stage_flow.tick(delta)
 	if stage_flow.boss_entry_ready() and not boss_started:
 		_start_stage_boss()
-	if mode == RunMode.STAGE_TRANSITION:
-		stage_transition_remaining = maxf(
-			0.0,
-			stage_transition_remaining - maxf(0.0, delta)
-		)
-		if stage_transition_remaining <= 0.0:
-			stage_flow.record_transition_complete()
-			mode = RunMode.PLAYING
-			_set_mouse_for_mode()
 
 
 func _trigger_contains(trigger: Variant, point: Vector2) -> bool:
@@ -5001,28 +4988,12 @@ func _resolve_reward_transaction() -> void:
 func _advance_reward_queue() -> void:
 	if mode != RunMode.PLAYING:
 		return
-	if (
-		pending_stage_completion
-		and (
-			experience_recall_timer > 0.0
-			or not experience_runtime.shards.is_empty()
-		)
-	):
-		return
 	if experience_runtime.pending_level_ups > 0:
 		_open_upgrade_reward(RewardRuntime.LEVEL_UP_SOURCE)
 		return
 	if reward_runtime.has_pending():
 		var source := reward_runtime.pop_pending()
 		_open_upgrade_reward(source)
-		return
-	if (
-		pending_stage_completion
-		and reward_runtime.is_idle()
-		and not reward_runtime.has_pending()
-		and reward_runtime.has_claimed(current_stage_id, &"boss")
-	):
-		_finalize_stage_completion()
 
 
 func _build_card_offer(
@@ -5313,6 +5284,7 @@ func _append_boss_area_zone(event: Dictionary) -> void:
 		"tick":0.0,
 		"damage":float(event["damage"]),
 		"source":String(event["pattern"]),
+		"owner_kind":&"stage_boss",
 		"affinity":StringName(event["affinity"]),
 		"commit_mode":&"autonomous",
 		"final_damage":true,
@@ -5378,6 +5350,7 @@ func _append_boss_corridor_zone(
 		"tick":0.0,
 		"damage":float(event["damage"]),
 		"source":String(event["pattern"]),
+		"owner_kind":&"stage_boss",
 		"affinity":StringName(event["affinity"]),
 		"commit_mode":&"autonomous",
 		"final_damage":true,
@@ -5485,14 +5458,7 @@ func _spawn_boss_phase_adds(
 func _live_boss_add_count() -> int:
 	var count := 0
 	for enemy in enemies:
-		if (
-			enemy.alive
-			and enemy.active
-			and (
-				enemy.zone in ["boss_wave", "boss_system"]
-				or enemy.carrier_id == "stage_boss"
-			)
-		):
+		if enemy.alive and enemy.active and _is_boss_owned_enemy(enemy):
 			count += 1
 	return count
 
@@ -5514,31 +5480,14 @@ func _on_boss_direct_attack_complete(boss: EnemyState) -> void:
 
 
 func _complete_stage() -> void:
-	if stage_complete or pending_stage_completion:
-		return
-	pending_stage_completion = true
-	encounter_runtime.stop_spawning()
-	reinforcement_facility_runtime.retire()
-	for enemy in enemies:
-		if enemy.alive:
-			if enemy.carrier_id == "reinforcement_facility":
-				reinforcement_facility_runtime.note_child_retired()
-			enemy.alive = false
-			enemy.active = false
-			enemy_grid.update_actor(enemy)
-			enemy_store.queue_defeat(enemy)
-	projectile_store.retain_player_only()
-	denied_zones.clear()
-	experience_recall_timer = 0.65
-
-
-func _finalize_stage_completion() -> void:
 	if stage_complete:
 		return
 	stage_complete = true
-	pending_stage_completion = false
-	_clear_projectiles()
-	denied_zones.clear()
+	encounter_runtime.stop_spawning()
+	reinforcement_facility_runtime.retire()
+	_retire_boss_owned_enemies()
+	projectile_store.retire_boss_hostiles()
+	_retire_denied_zones_by_owner(&"stage_boss")
 	_pending_stage_report = StageReportBuilder.build(
 		stage_telemetry.freeze_stage(),
 		_stage_report_context(
@@ -5546,15 +5495,39 @@ func _finalize_stage_completion() -> void:
 		)
 	)
 	completed_stage_reports.append(_pending_stage_report.duplicate(true))
-	var has_next_stage := current_stage_index < StageCatalog.STAGE_IDS.size() - 1
-	stage_flow.record_rewards_complete(has_next_stage)
-	if has_next_stage:
-		_begin_stage_transition()
+	if current_stage_index < StageCatalog.STAGE_IDS.size() - 1:
+		_begin_next_stage_continuation()
 		return
 	persistent_clear_count += 1
 	persistent_relay_module = true
 	_save_persistence()
 	_show_final_result()
+
+
+func _retire_boss_owned_enemies() -> void:
+	for enemy in enemies:
+		if not enemy.alive or not _is_boss_owned_enemy(enemy):
+			continue
+		collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
+		enemy.alive = false
+		enemy.active = false
+		enemy_grid.update_actor(enemy)
+		enemy_store.queue_defeat(enemy)
+	_enemy_frame_aggregate_valid = false
+
+
+func _is_boss_owned_enemy(enemy: EnemyState) -> bool:
+	return (
+		enemy.role == &"stage_boss"
+		or enemy.zone in ["boss_wave", "boss_system"]
+		or enemy.carrier_id == "stage_boss"
+	)
+
+
+func _retire_denied_zones_by_owner(owner_kind: StringName) -> void:
+	for index in range(denied_zones.size() - 1, -1, -1):
+		if StringName(denied_zones[index].get("owner_kind", &"")) == owner_kind:
+			denied_zones.remove_at(index)
 
 
 func _stage_report_context(has_next_stage: bool) -> Dictionary:
@@ -5584,63 +5557,40 @@ func _continue_stage_report() -> void:
 	_show_final_result()
 
 
-func _begin_stage_transition() -> void:
+func _begin_next_stage_continuation() -> void:
 	if current_stage_index >= StageCatalog.STAGE_IDS.size() - 1:
 		return
-	var preserved_position := player_position
-	var preserved_hull_direction := player_hull_direction
-	var preserved_aim_direction := player_aim_direction
-	current_stage_index += 1
-	current_stage_id = StageCatalog.STAGE_IDS[current_stage_index]
-	_active_tactical_layout = field_layout.tactical_layout(current_stage_id)
-	if _active_tactical_layout == null:
-		push_error("Missing tactical layout for %s" % current_stage_id)
+	var next_stage_index := current_stage_index + 1
+	var next_stage_id: StringName = StageCatalog.STAGE_IDS[next_stage_index]
+	var next_tactical_layout = field_layout.tactical_layout(next_stage_id)
+	if next_tactical_layout == null:
+		push_error("Missing tactical layout for %s" % next_stage_id)
 		return
+	current_stage_index = next_stage_index
+	current_stage_id = next_stage_id
+	_active_tactical_layout = next_tactical_layout
 	if is_instance_valid(_backdrop):
 		_backdrop.configure(current_stage_id, _active_tactical_layout)
 	if is_instance_valid(_camera):
 		_apply_camera_stage_limits()
-	player_position = preserved_position
-	player_hull_direction = preserved_hull_direction
-	player_aim_direction = preserved_aim_direction
-	player_velocity = Vector2.ZERO
-	player_dash_timer = 0.0
-	player_dash_trail_timer = 0.0
-	player_emp_startup = 0.0
 	player_health = _player_max_health()
-	_grant_player_protection(
-		STAGE_TRANSITION_INVULNERABILITY,
-		&"stage_transition"
-	)
-	experience_recall_timer = 0.0
-	experience_runtime.clear_shards()
-	experience_runtime.clear_pending_levels()
 	stage_telemetry.reset_stage()
-	reward_runtime.reset_stage()
-	current_card_offer.clear()
-	secondary_runtime.reset(player_position)
-	dash_upgrade_runtime.reset()
-	_clear_enemies()
-	_clear_projectiles()
-	pickups.clear()
-	denied_zones.clear()
-	_clear_effects()
 	encounter_runtime.configure(
 		current_stage_id,
-		_transition_packets(current_stage_id),
+		_continuation_packets(current_stage_id),
 		selected_run_difficulty,
 		_active_tactical_layout.ordinary_spawn_anchors,
 		_active_tactical_layout.encounter_seed,
 		_active_tactical_layout.geometry_snapshot
 	)
-	stage_flow.configure_transition(
+	stage_flow.configure(
 		current_stage_index,
 		RunDifficulty.scaled_quota(
 			StageCatalog.quota(current_stage_id),
 			selected_run_difficulty
 		)
 	)
-	_configure_stage_map_runtime()
+	_configure_stage_local_runtime()
 	_rebuild_runtime_blockers()
 	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
 	_populate_stage_items()
@@ -5650,8 +5600,6 @@ func _begin_stage_transition() -> void:
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
-	pending_stage_completion = false
-	completed_group_rewards.clear()
 	discovered_markers.clear()
 	_elite_pending = 0
 	_elite_spawned = 0
@@ -5670,15 +5618,13 @@ func _begin_stage_transition() -> void:
 	)
 	enemy_grid.rebuild(enemies)
 	stage_started_at = run_time
-	stage_transition_remaining = STAGE_TRANSITION_SECONDS
-	mode = RunMode.STAGE_TRANSITION
+	mode = RunMode.PLAYING
 	_hud_presenter.reset()
 	_ui.show_gameplay()
-	_play_sound(&"card", 1.12)
 	_set_mouse_for_mode()
 
 
-func _transition_packets(stage_id: StringName) -> Array[Dictionary]:
+func _continuation_packets(stage_id: StringName) -> Array[Dictionary]:
 	var authored := StageCatalog.packets(stage_id)
 	var result: Array[Dictionary] = []
 	if authored.size() <= 1:
@@ -5688,15 +5634,15 @@ func _transition_packets(stage_id: StringName) -> Array[Dictionary]:
 		var packet := authored[packet_index].duplicate(true)
 		var trigger := Dictionary(packet["trigger"]).duplicate(true)
 		trigger["at"] = (
-			STAGE_TRANSITION_CUE_AT
+			CONTINUATION_FIRST_CUE_AT
 			+ float(trigger["at"])
 			- authored_first_time
 		)
 		packet["trigger"] = trigger
 		if packet_index == 1:
 			packet["cue_lead"] = (
-				STAGE_TRANSITION_FIRST_SPAWN_AT
-				- STAGE_TRANSITION_CUE_AT
+				CONTINUATION_FIRST_SPAWN_AT
+				- CONTINUATION_FIRST_CUE_AT
 			)
 		result.append(packet)
 	return result
@@ -5791,21 +5737,18 @@ func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
 	snapshot["stage_number"] = int(stage_profile["number"])
 	snapshot["stage_total"] = StageCatalog.STAGE_IDS.size()
-	snapshot["defeated"] = stage_flow.defeats
-	snapshot["quota"] = stage_flow.quota
+	snapshot["cumulative_defeated"] = stats_enemies_defeated
 	snapshot["dash_available"] = player_dash_cooldown <= 0.0
-	snapshot["dash_ratio"] = clampf(
-		player_dash_cooldown / _dash_cooldown_max(), 0.0, 1.0
-	)
+	snapshot["dash_remaining"] = maxf(0.0, player_dash_cooldown)
 	snapshot["seeker_available"] = secondary_runtime.seeker_cooldown <= 0.0
-	snapshot["seeker_ratio"] = clampf(
-		secondary_runtime.seeker_cooldown / SEEKER_COOLDOWN, 0.0, 1.0
+	snapshot["seeker_remaining"] = maxf(
+		0.0, secondary_runtime.seeker_cooldown
 	)
 	snapshot["skill_available"] = (
 		player_emp_startup <= 0.0 and player_emp_cooldown <= 0.0
 	)
-	snapshot["skill_ratio"] = clampf(
-		player_emp_cooldown / _emp_cooldown_max(), 0.0, 1.0
+	snapshot["skill_remaining"] = maxf(
+		player_emp_startup, player_emp_cooldown
 	)
 	var facility := reinforcement_facility_runtime.snapshot()
 	if dash_upgrade_runtime.overdrive_active():
@@ -5833,7 +5776,7 @@ func _guidebook_snapshot(build_snapshot: Dictionary = {}) -> Dictionary:
 		build_snapshot = _build_snapshot()
 	var guide_context := {}
 	if (
-		mode in [RunMode.PLAYING, RunMode.STAGE_TRANSITION, RunMode.UPGRADE]
+		mode in [RunMode.PLAYING, RunMode.UPGRADE]
 		or (mode == RunMode.PAUSED and mode_before_pause != RunMode.DEPLOYMENT)
 	):
 		guide_context["active_stage_index"] = current_stage_index
@@ -6177,6 +6120,7 @@ func _update_threat_contacts(delta: float) -> void:
 	if _threat_sample_timer > 0.0:
 		return
 	_threat_sample_timer = THREAT_SAMPLE_INTERVAL
+	_threat_radar_feed.set_maximum_distance(_runtime_threat_scan_distance)
 	_threat_radar_feed.begin_sample(player_position)
 	var viewport_size := get_viewport_rect().size
 	var safe_viewport := Rect2(Vector2(90.0, 90.0), viewport_size - Vector2(180.0, 220.0))
@@ -6245,7 +6189,7 @@ func _update_threat_contacts(delta: float) -> void:
 				enemy.visual_radius,
 				player_position,
 				visible_world,
-				THREAT_SCAN_DISTANCE
+				_runtime_threat_scan_distance
 			)
 		):
 			_append_runtime_threat_contact(
@@ -6261,7 +6205,7 @@ func _update_threat_contacts(delta: float) -> void:
 
 
 func _direction_only_threat_offset(offset: Vector2) -> Vector2:
-	var maximum := THREAT_SCAN_DISTANCE - 0.01
+	var maximum := _runtime_threat_scan_distance - 0.01
 	if offset.length_squared() <= maximum * maximum:
 		return offset
 	return offset.normalized() * maximum
@@ -6447,6 +6391,33 @@ func _visible_world_rect(margin: float = 0.0) -> Rect2:
 	var top_left := inverse_canvas * Vector2.ZERO
 	var bottom_right := inverse_canvas * viewport_size
 	return Rect2(top_left, bottom_right - top_left).abs().grow(margin)
+
+
+func _refresh_visible_world_runtime_ranges() -> void:
+	## Compute the enlarged-view thresholds once per physics tick. This keeps
+	## visible actors smooth and radar coverage coherent without changing counts.
+	var visible_world := _visible_world_rect(0.0)
+	var farthest_squared := 0.0
+	for corner in [
+		visible_world.position,
+		Vector2(visible_world.end.x, visible_world.position.y),
+		visible_world.end,
+		Vector2(visible_world.position.x, visible_world.end.y),
+	]:
+		farthest_squared = maxf(
+			farthest_squared,
+			player_position.distance_squared_to(corner)
+		)
+	var farthest := sqrt(farthest_squared)
+	var near_distance := maxf(
+		FAR_SIMULATION_DISTANCE,
+		farthest + VISIBLE_SIMULATION_MARGIN
+	)
+	_near_simulation_distance_squared = near_distance * near_distance
+	_runtime_threat_scan_distance = maxf(
+		THREAT_SCAN_DISTANCE,
+		farthest + THREAT_OFFSCREEN_BAND
+	)
 
 
 func _regular_polygon(origin: Vector2, radius: float, sides: int, rotation: float = 0.0) -> PackedVector2Array:
@@ -6675,11 +6646,7 @@ func _fill_manual_performance_frame() -> void:
 	_manual_performance_context["stage_time_seconds"] = maxf(
 		0.0, run_time - stage_started_at
 	)
-	_manual_performance_context["run_mode"] = (
-		"stage_transition"
-		if mode == RunMode.STAGE_TRANSITION
-		else "playing"
-	)
+	_manual_performance_context["run_mode"] = "playing"
 
 
 func _parse_performance_request() -> Dictionary:

@@ -8,6 +8,7 @@ const Geometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 const Visual = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const PLAYER_RADIUS := 24.0
+const GAMEPLAY_CAMERA_ZOOM := Vector2(0.5, 0.5)
 
 const CANVAS := Visual.WORLD_CANVAS
 const SURFACE := Visual.SURFACE

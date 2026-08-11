@@ -70,7 +70,7 @@ func _run() -> void:
 		_expect(run.PICKUP_BODY_RADIUS == 42.0, "pickup body radius is 42 px")
 		_expect(run.MINIMAP_COLS == 20 and run.MINIMAP_ROWS == 12, "run uses 20x12 explored minimap")
 		_expect(run.ORDINARY_DECISION_BUCKET_COUNT == 6, "ordinary high-cost decisions are distributed at 10 Hz")
-		_expect(run._camera.zoom == Vector2.ONE, "gameplay camera keeps zoom 1")
+		_expect(run._camera.zoom == Rules.GAMEPLAY_CAMERA_ZOOM, "gameplay camera uses the shared half-scale world zoom")
 		var visible_rect: Rect2 = run.call("_visible_world_rect", 0.0)
 		_expect(
 			float(run.call("_primary_projectile_range"))
@@ -98,9 +98,9 @@ func _run() -> void:
 		run.current_stage_index = 1
 		run.current_stage_id = Catalog.STAGE_IDS[1]
 		run.call("_reset_run", false, true, true)
-		_expect(int(run.field_layout.fingerprint) == initial_fingerprint, "stage transition preserves run-scoped field geometry")
-		_expect(run.run_build.has(&"chassis_speed") and run.visited_cells.has(Vector2i(2,2)), "stage transition preserves build and exploration")
-		_expect(run.player_position == Vector2(3600,2160), "stage transition respawns at center")
+		_expect(int(run.field_layout.fingerprint) == initial_fingerprint, "stage reset preserves run-scoped field geometry")
+		_expect(run.run_build.has(&"chassis_speed") and run.visited_cells.has(Vector2i(2,2)), "stage reset preserves build and exploration")
+		_expect(run.player_position == Vector2(3600,2160), "stage reset starts at the shared center")
 		var hud: Dictionary = run.call("_build_hud_snapshot")
 		_expect(hud["minimap"]["cols"] == 20 and hud["guidebook"].has("categories"), "HUD exposes minimap and guide snapshots")
 		_check_nearby_radar_contacts(run)
@@ -703,9 +703,10 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 			and not hud.has("target")
 			and int(hud["stage_number"]) == run.current_stage_index + 1
 			and int(hud["stage_total"]) == Catalog.STAGE_IDS.size()
-			and int(hud["defeated"]) == run.stage_flow.defeats
-			and int(hud["quota"]) == run.stage_flow.quota,
-		"HUD publishes only numeric stage progress and no edge boss or target health"
+			and int(hud["cumulative_defeated"]) == run.stats_enemies_defeated
+			and not hud.has("defeated")
+			and not hud.has("quota"),
+		"HUD publishes stage plus cumulative defeats and no quota or edge health"
 	)
 	var minimap_markers := Array(hud["minimap"]["markers"])
 	var boss_markers := minimap_markers.filter(
@@ -743,12 +744,12 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	)
 	ui.update_hud(hud)
 	_expect(
-		ui._hud._stage_progress.visible
-			and ui._hud._stage_value.text == "%d / %d" % [
+		ui._hud._status_cluster.visible
+			and ui._hud._status_item(&"stage")._value_label.text == "%d / %d" % [
 				run.current_stage_index + 1,
 				Catalog.STAGE_IDS.size(),
 			],
-		"panel-free B progress remains visible during the boss encounter"
+		"panel-free semantic stage item remains visible during the boss encounter"
 	)
 
 
@@ -1220,17 +1221,25 @@ func _check_runtime_minimap_at_horde_capacity(run) -> void:
 func _check_nearby_radar_contacts(run) -> void:
 	run.call("_clear_enemies")
 	run.call("_clear_ordinary_arrival_cues")
+	run.call("_refresh_visible_world_runtime_ranges")
+	var visible_world: Rect2 = run.call("_visible_world_rect", 0.0)
+	var nearby_offset: float = maxf(
+		850.0,
+		visible_world.end.x - run.player_position.x + 80.0
+	)
+	nearby_offset = minf(nearby_offset, run._runtime_threat_scan_distance - 80.0)
+	var distant_offset: float = run._runtime_threat_scan_distance + 200.0
 	var visible_enemy: EnemyState = run.call("_make_enemy", {
 		"id":"radar_visible", "role":&"chaser",
 		"pos":run.player_position + Vector2(200.0, 0.0), "active":true,
 	})
 	var nearby_enemy: EnemyState = run.call("_make_enemy", {
 		"id":"radar_nearby", "role":&"chaser",
-		"pos":run.player_position + Vector2(850.0, 0.0), "active":true,
+		"pos":run.player_position + Vector2(nearby_offset, 0.0), "active":true,
 	})
 	var distant_enemy: EnemyState = run.call("_make_enemy", {
 		"id":"radar_distant", "role":&"chaser",
-		"pos":run.player_position + Vector2(1450.0, 0.0), "active":true,
+		"pos":run.player_position + Vector2(distant_offset, 0.0), "active":true,
 	})
 	for enemy in [visible_enemy, nearby_enemy, distant_enemy]:
 		if enemy != null:
@@ -1244,10 +1253,8 @@ func _check_nearby_radar_contacts(run) -> void:
 			and (
 				Vector2(nearby_contacts[0]["world_position"])
 				- run.player_position
-			).is_equal_approx(
-				Vector2(850.0, 0.0)
-			),
-		"five-hertz radar includes only off-screen targetable enemies within 1,200 units"
+			).is_equal_approx(Vector2(nearby_offset, 0.0)),
+		"five-hertz radar includes only off-screen targetable enemies inside the runtime band"
 	)
 	var retained_frame: Dictionary = run._threat_radar_feed.snapshot()
 	var retained_position := (
@@ -1268,7 +1275,7 @@ func _check_nearby_radar_contacts(run) -> void:
 			and (
 				Vector2(moved_contacts[0]["world_position"])
 				- run.player_position
-			).is_equal_approx(Vector2(870.0, 0.0)),
+			).is_equal_approx(Vector2(nearby_offset + 20.0, 0.0)),
 		"radar swaps coherent frames without mutating the immediately retained sample"
 	)
 	run.call("_clear_enemies")
@@ -1291,7 +1298,7 @@ func _check_nearby_radar_contacts(run) -> void:
 		run.player_position == held_player_position
 			and run._ordinary_arrival_cue_count == 1
 			and arrival_contacts.size() == 1
-			and arrival_offset.length() < run.THREAT_SCAN_DISTANCE
+			and arrival_offset.length() < run._runtime_threat_scan_distance
 			and arrival_offset.normalized().is_equal_approx(
 				(cue_position - held_player_position).normalized()
 			),

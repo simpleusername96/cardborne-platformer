@@ -25,10 +25,12 @@ func _run() -> void:
 	_expect(facility.activate_if_ready(7, 20), "facility activates at 35 percent")
 	_expect(facility.advance(7.9, 1).is_empty(), "stage one interval is eight seconds")
 	var spawn := facility.advance(0.1, 1)
+	var stage_one_carrier := String(spawn.get("carrier_id", ""))
 	_expect(
 		StringName(spawn.get("role", &"")) == &"chaser"
 			and bool(spawn.get("summoned", false))
-			and String(spawn.get("carrier_id", "")) == "reinforcement_facility",
+			and stage_one_carrier.begins_with("reinforcement_facility:s1:")
+			and facility.owns_child(stage_one_carrier),
 		"stage one produces a bounded ordinary reinforcement"
 	)
 	facility.note_spawn_accepted()
@@ -94,8 +96,10 @@ func _run() -> void:
 	var stage_five_spawn := facility.advance(4.0, 1)
 	_expect(
 		StringName(stage_five_spawn.get("role", &"")) == &"splitter_barge"
+			and String(stage_five_spawn.get("carrier_id", "")) != stage_one_carrier
+			and not facility.owns_child(stage_one_carrier)
 			and int(facility.snapshot()["live_child_cap"]) == 6,
-		"stage five escalates role, interval, and child cap"
+		"stage five escalates role/cap and replaces facility child ownership"
 	)
 
 	var minimap := MinimapBuilder.build_triangle_channels({
@@ -178,7 +182,6 @@ func _validate_run_integration() -> void:
 	# The facility activates after ordinary progress has advanced beyond the
 	# one-actor tutorial beat used by a freshly configured encounter runtime.
 	stage.encounter_runtime.current_beat = 1
-	stage.pending_stage_completion = false
 	stage.stage_complete = false
 	stage.reinforcement_facility_runtime.configure(
 		0, stage.player_position + Vector2(500.0, 0.0)
@@ -187,12 +190,15 @@ func _validate_run_integration() -> void:
 	stage.call("_update_reinforcement_facility", 8.0)
 	stage.call("_update_reinforcement_facility", 8.0)
 	var facility_children := _living_facility_children(stage.enemies)
+	var active_carrier := String(
+		stage.reinforcement_facility_runtime.snapshot()["carrier_id"]
+	)
 	_expect(
 		facility_children.size() == 2
 			and facility_children[0].summoned
 			and facility_children[1].summoned
-			and facility_children[0].carrier_id == "reinforcement_facility"
-			and facility_children[1].carrier_id == "reinforcement_facility"
+			and facility_children[0].carrier_id == active_carrier
+			and facility_children[1].carrier_id == active_carrier
 			and stage.reinforcement_facility_runtime.live_children == 2
 			and stage.reinforcement_facility_runtime.remaining_charges == 0
 			and stage.debug_reinforcement_facility_count_matches(),
@@ -217,7 +223,7 @@ func _validate_run_integration() -> void:
 		"pos":stage.player_position + Vector2(700.0, 0.0),
 		"active":true,
 		"summoned":false,
-		"carrier_id":"reinforcement_facility",
+		"carrier_id":active_carrier,
 	})
 	stage.call("_append_enemy", ordinary)
 	var other_summon: EnemyState = stage.call("_make_enemy", {
@@ -264,7 +270,7 @@ func _living_facility_children(enemies: Array[EnemyState]) -> Array[EnemyState]:
 		if (
 			enemy.alive
 			and enemy.summoned
-			and enemy.carrier_id == "reinforcement_facility"
+			and enemy.carrier_id.begins_with("reinforcement_facility:")
 		):
 			result.append(enemy)
 	return result

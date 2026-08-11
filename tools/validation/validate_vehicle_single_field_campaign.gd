@@ -49,9 +49,8 @@ func _check_stage_flow() -> void:
 		_expect(flow.stop_ordinary_spawning(), "quota stops ordinary spawning")
 		_expect(flow.tick(1.5), "warning resolves after 1.5 seconds")
 		_expect(flow.boss_entry_ready(), "boss entry requires the exact defeat quota")
-		_expect(flow.record_boss_defeat(), "active boss defeat begins rewards")
-		flow.record_rewards_complete()
-		_expect(flow.state == StageFlow.State.COMPLETE, "stage flow reaches complete without a map trigger")
+		_expect(flow.record_boss_defeat(), "active boss defeat completes the stage")
+		_expect(flow.state == StageFlow.State.COMPLETE, "stage flow reaches complete without reward or transition states")
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -612,8 +612,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - 두 meter 바로 아래 좌상단에는 `stage_progress`, `total_defeats`, `dash`, `seeker`, `emp`
   순서의 panel-free compact icon/value cluster를 한 줄로 둔다. top gap은
   compact/standard/large `4/6/8 px`, left margin은 `16/24/32 px`다. icon optical size는
-  `16/18/20 px`, invisible slot은 `34×36/36×40/40×44 px`, item gap은 `4/6/8 px`다.
-  200% text는 `20 px` icon, `60×64 px` slot, `4 px` gap을 사용한다. 각 item 내부의
+  `16/18/20 px`다. invisible status slot은 `34×36/36×40/40×44 px`, action slot은
+  `46×36/50×40/54×44 px`, item gap은 `4/6/8 px`다.
+  200% text는 `20 px` icon, `72×64 px` status slot, `92×64 px` action slot,
+  `6 px` gap을 사용한다. 각 item 내부의
   icon과 값만 중앙 정렬하고 cluster 자체는 좌측 정렬한다. stage는 `N / 5`, 누적 격파는
   숫자, action은 `READY` 또는 `N.Ns`만 표시한다. visible label, backing, panel, section,
   surface, border, divider, card, frame, rail, line, cooldown progress geometry, blur와 shadow

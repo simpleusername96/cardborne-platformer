@@ -101,6 +101,18 @@ func retain_player_only() -> void:
 	_boss_hostile_count = 0
 
 
+func retire_boss_hostiles() -> int:
+	var retired_count := 0
+	var index := 0
+	while index < hostile_live.size():
+		if hostile_live[index].uses_boss_reserve:
+			remove_hostile_at_swap(index)
+			retired_count += 1
+		else:
+			index += 1
+	return retired_count
+
+
 func clear_hostiles_in_radius(center: Vector2, radius: float) -> int:
 	var cleared := 0
 	var radius_squared := radius * radius

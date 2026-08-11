@@ -22,6 +22,12 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	for error in UiGlyphCatalog.validate_action_recipes():
 		failures.append("shared action glyph recipe: %s" % error)
+	for error in UiGlyphCatalog.validate_status_recipes():
+		failures.append("shared status glyph recipe: %s" % error)
+	for error in UiGlyphCatalog.validate_semantic_ownership():
+		failures.append("glyph semantic ownership: %s" % error)
+	for status_id in UiGlyphCatalog.status_ids():
+		_expect(status_id not in UiGlyphCatalog.action_ids(), "%s owns one glyph meaning" % status_id)
 	_validate_action_glyph_meshes()
 	var ui := StageUI.new()
 	get_root().add_child(ui)
@@ -65,14 +71,6 @@ func _initialize() -> void:
 			int(shared_styles["non_code_native_style_count"]) == 0,
 			"shared Theme uses only code-native StyleBox types at %d" % width
 		)
-		var action_rail_size := Vector2(contract["action_rail_size"])
-		var action_rail_position := Vector2(contract["action_rail_position"])
-		_expect(action_rail_size == Vector2(88.0, 88.0), "EMP uses one enlarged round indicator at %d" % width)
-		_expect(
-			is_equal_approx(action_rail_position.x, (width - action_rail_size.x) * 0.5)
-				and is_equal_approx(action_rail_position.y, width * 9.0 / 16.0 - 108.0),
-			"EMP indicator stays centered at the bottom at %d" % width
-		)
 		var health_meter := Dictionary(contract["health_meter"])
 		_expect(
 			bool(health_meter["code_drawn"])
@@ -83,20 +81,24 @@ func _initialize() -> void:
 				and bool(health_meter["has_experience_geometry"])
 				and int(health_meter["live_upgrade_icon_count"]) == 0
 				and bool(health_meter["panel_free"]),
-			"center hull and XP remain panel-free with zero live upgrade icons at %d" % width
+			"full-width HP and EXP remain code-native and panel-free at %d" % width
+		)
+		var expected_meter_heights := (
+			Vector2(28.0, 18.0)
+			if width < 1100.0
+			else (Vector2(40.0, 26.0) if width >= 1600.0 else Vector2(32.0, 22.0))
 		)
 		_expect(
 			is_equal_approx(
 				float(health_meter["experience_track_width"]),
-				Vector2(contract["health_cluster_size"]).x
+				width
 			)
-				and is_equal_approx(
-					float(health_meter["experience_track_height"]),
-					6.0 if width < 1100.0 else 8.0
-				)
+				and Vector2(contract["meter_heights"]) == expected_meter_heights
+				and is_equal_approx(float(contract["meter_top"]), 0.0)
+				and is_equal_approx(float(contract["meter_gap"]), 0.0)
 				and int(contract["live_upgrade_icon_count"]) == 0
 				and not bool(contract["has_live_upgrade_rail"]),
-			"XP shares the responsive hull width and the acquired rail is absent at %d"
+			"HP/EXP fill viewport width, stack without a gap, and keep the upgrade rail absent at %d"
 			% width
 		)
 		_expect(
@@ -105,39 +107,46 @@ func _initialize() -> void:
 					&"HudSurface",
 				]
 				and StringName(contract["toast_surface_variation"]) == &"ToastSurface",
-			"only the minimap keeps a backed HUD surface while stage progress stays panel-free at %d" % width
+			"only the minimap keeps a backed HUD surface at %d" % width
 		)
 		_expect(
-			bool(contract["stage_progress_panel_free"])
+			bool(contract["status_cluster_panel_free"])
+				and int(contract["status_cluster_background_geometry_count"]) == 0
 				and not bool(contract["edge_boss_health_visible"])
 				and not bool(contract["edge_target_health_visible"])
 				and bool(contract["toast_center_attached"])
 				and not bool(contract["raster_chrome_consumer"]),
-			"B progress is panel-free, toast follows center status, and edge health panels are absent at %d" % width
+			"status cluster is panel-free and toast/edge health contracts remain coherent at %d" % width
 		)
-		var expected_label_size := 15 if width < 1100.0 else (18 if width >= 1600.0 else 16)
-		var expected_value_size := 30 if width < 1100.0 else (40 if width >= 1600.0 else 32)
-		var status_sizes := Dictionary(contract["status_font_sizes"])
+		var expected_status_size := (
+			Vector2(222.0, 36.0)
+			if width < 1100.0
+			else (Vector2(274.0, 44.0) if width >= 1600.0 else Vector2(246.0, 40.0))
+		)
+		var expected_status_x := 16.0 if width < 1100.0 else (32.0 if width >= 1600.0 else 24.0)
 		_expect(
-			int(status_sizes["stage_label"]) == expected_label_size
-				and int(status_sizes["defeated_label"]) == expected_label_size
-				and int(status_sizes["stage_value"]) == expected_value_size
-				and int(status_sizes["defeated_value"]) == expected_value_size,
-			"B progress uses the locked responsive typography at %d" % width
+			Vector2(contract["status_cluster_size"]) == expected_status_size
+				and is_equal_approx(Vector2(contract["status_cluster_position"]).x, expected_status_x)
+				and bool(contract["status_cluster_one_line"])
+				and int(contract["visible_status_label_count"]) == 0,
+			"five compact icon/value items keep the locked top-left footprint at %d" % width
 		)
-		_expect(bool(contract["action_rail_icon_only"]), "action rail contains icons only at %d" % width)
+		var status_items := Array(contract["status_item_contracts"])
+		var expected_ids := [&"stage_progress", &"total_defeats", &"dash", &"seeker", &"emp"]
 		_expect(
-			int(contract["action_slot_count"]) == 1
-				and bool(contract["action_rail_panel_free"]),
-			"bottom HUD contains only one panel-free EMP action at %d" % width
+			status_items.size() == 5 and int(contract["action_slot_count"]) == 3,
+			"HUD owns five status items and exactly three cooldown actions at %d" % width
 		)
-		_expect(not bool(contract["shows_primary_slot"]), "primary fire is omitted from the action rail at %d" % width)
-		_expect(Vector2(contract["secondary_slot_size"]) == Vector2.ZERO, "dash and secondary slots are absent at %d" % width)
-		for status_name in status_sizes:
+		for item_index in status_items.size():
+			var item := Dictionary(status_items[item_index])
 			_expect(
-				int(contract["status_font_sizes"][status_name]) >= 14,
-				"%s HUD status typography stays at or above 14 px at %d"
-				% [status_name, width]
+				StringName(item["glyph_id"]) == expected_ids[item_index]
+					and bool(item["panel_free"])
+					and int(item["background_geometry_count"]) == 0
+					and int(item["cooldown_progress_geometry_count"]) == 0
+					and bool(item["value_centered"]),
+				"status item %d has one meaning, centered value, and no backing/progress geometry at %d"
+				% [item_index, width]
 			)
 		_expect(bool(contract["top_clusters_do_not_overlap"]), "top clusters do not overlap at %d" % width)
 		_expect(bool(contract["central_safe_clear"]), "central play space remains clear at %d" % width)
@@ -389,55 +398,55 @@ func _initialize() -> void:
 		var minimap_size := Vector2(contract["minimap_size"])
 		_expect(minimap_size.x >= 160.0 and minimap_size.y >= 98.0, "minimap keeps tactical area at %d" % width)
 	ui.update_hud({
+		"dash_available":false,
+		"dash_remaining":0.8,
+		"seeker_available":false,
+		"seeker_remaining":0.6,
 		"skill_available":false,
-		"skill_ratio":0.5,
+		"skill_remaining":11.4,
 	})
 	var cooldown_contract := ui.debug_ui_contract(1280.0)
 	var cooldown_glyph_ids: Array[StringName] = []
+	var cooldown_values: Array[String] = []
 	for slot_variant in cooldown_contract["action_slot_contracts"]:
 		var slot := Dictionary(slot_variant)
 		cooldown_glyph_ids.append(StringName(slot["glyph_id"]))
-		_expect(not bool(slot["interior_filled"]), "cooldown action circles keep an empty interior")
-		_expect(not bool(slot["has_text"]), "action circles do not render labels")
+		cooldown_values.append(String(slot["value"]))
 		_expect(
 			not bool(slot["image_backed"])
-				and bool(slot["state_code_drawn"])
-				and bool(slot["disabled_not_color_only"])
-				and bool(slot["disabled_has_structural_slash"]),
-			"disabled action slots use code-native non-color structural cues"
-		)
-		_expect(
-			bool(slot["cooldown_has_structural_arc"])
-				== (float(slot["cooldown_ratio"]) < 0.9999),
-			"cooldown arc visibility matches the authored ratio"
-		)
-		_expect(int(slot["draw_batches"]) <= 2, "each action glyph uses one retained mesh plus at most one cooldown arc")
-		_expect(
-			bool(slot["shared_glyph_recipe"])
-				and int(slot["glyph_command_count"]) >= 3,
-			"action identity uses a complete shared glyph recipe"
+				and bool(slot["code_native_glyph"])
+				and bool(slot["panel_free"])
+				and int(slot["background_geometry_count"]) == 0
+				and int(slot["cooldown_progress_geometry_count"]) == 0
+				and bool(slot["has_text"])
+				and not bool(slot["available"]),
+			"cooldown action items use only a glyph and exact remaining-time text"
 		)
 	_expect(
-		cooldown_glyph_ids == [&"emp"],
-		"bottom indicator exposes only EMP"
+		cooldown_glyph_ids == [&"dash", &"seeker", &"emp"]
+			and cooldown_values == ["0.8s", "0.6s", "11.4s"],
+		"top-left action items preserve Dash, Seeker, EMP order and exact cooldown text"
 	)
 	ui.update_hud({
+		"dash_available":true,
+		"dash_remaining":0.0,
+		"seeker_available":true,
+		"seeker_remaining":0.0,
 		"skill_available":true,
-		"skill_ratio":0.0,
+		"skill_remaining":0.0,
 	})
 	var ready_contract := ui.debug_ui_contract(1280.0)
 	for slot_variant in ready_contract["action_slot_contracts"]:
 		var slot := Dictionary(slot_variant)
 		_expect(
 			not bool(slot["image_backed"])
-				and bool(slot["state_code_drawn"])
-				and not bool(slot["semantic_icon_image_retained"])
 				and bool(slot["code_native_glyph"])
-				and not bool(slot["semantic_texture"])
-				and bool(slot["available_has_structural_ring"])
-				and not bool(slot["disabled_has_structural_slash"])
-				and not bool(slot["interior_filled"]),
-			"ready action slots use shared code-native glyphs and state structure"
+				and bool(slot["panel_free"])
+				and int(slot["background_geometry_count"]) == 0
+				and int(slot["cooldown_progress_geometry_count"]) == 0
+				and bool(slot["available"])
+				and String(slot["value"]) == "READY",
+			"ready action items use one code-native glyph plus READY without backing"
 		)
 	await _validate_modal_matrix(ui)
 	await _validate_upgrade_matrix(ui)
@@ -797,10 +806,19 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	ui.debug_set_text_scale(2.0)
 	await _settle_ui()
 	var contract := ui.debug_ui_contract(1280.0)
-	for status_name in Dictionary(contract["status_font_sizes"]):
+	_expect(
+		Vector2(contract["meter_heights"]) == Vector2(52.0, 32.0)
+			and Vector2(contract["status_cluster_size"]) == Vector2(444.0, 64.0)
+			and bool(contract["top_clusters_do_not_overlap"]),
+		"200% probe preserves full-width meters and a single unclipped status row"
+	)
+	for item_variant in Array(contract["status_item_contracts"]):
+		var item := Dictionary(item_variant)
 		_expect(
-			int(contract["status_font_sizes"][status_name]) >= 28,
-			"200%% probe doubles local HUD typography for %s" % status_name
+			int(item["value_font_size"]) == 28
+				and Vector2(item["minimum_size"]).y == 64.0
+				and Vector2(item["minimum_size"]).x >= 72.0,
+			"200%% probe keeps each compact HUD value legible without adding a panel"
 		)
 	var upgrade := Dictionary(contract["upgrade_choice"])
 	_expect(

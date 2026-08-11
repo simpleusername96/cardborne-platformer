@@ -180,9 +180,10 @@ production asset이 아니고 layout·정보·semantic 관계만 구현 계약�
   ready action은 `READY`, cooldown 중 action은 0.1초 단위 `N.Ns`를 표시한다. 별도 label과
   cooldown progress geometry는 만들지 않으며 숫자/READY가 color-independent state cue다.
 - icon optical size는 compact/standard/large에서 `16/18/20px`, 200% text에서 `20px`다.
-  invisible layout slot은 `34×36/36×40/40×44px`, 200% text에서 `60×64px`이며 background를
-  그리지 않는다. item gap은 compact/standard/large/200%에서 `4/6/8/4px`다. 다섯 item은
-  지원 viewport에서 약 `186/204/232/316px` 폭의 한 줄 좌측 정렬을 유지하고
+  invisible status slot은 `34×36/36×40/40×44px`, action slot은
+  `46×36/50×40/54×44px`다. 200% text에서는 status `72×64px`, action `92×64px`이며
+  background를 그리지 않는다. item gap은 compact/standard/large/200%에서 `4/6/8/6px`다. 다섯 item은
+  지원 viewport에서 약 `222/246/274/444px` 폭의 한 줄 좌측 정렬을 유지하고
   글자나 glyph를 최소치 아래로 줄이거나 slot 밖으로 clip하지 않는다.
 - minimap은 meter 아래 우측에 유지한다. status toast는 meter와 icon cluster/minimap의
   가장 낮은 경계 아래에 두어 겹치지 않게 한다. player-anchored threat radar는 영향을 받지 않는다.
@@ -514,7 +515,7 @@ Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_hud_present
 `scripts/presentation/components/vehicle_ui_status_glyph_renderer.gd`,
 `scripts/presentation/components/vehicle_ui_glyph_catalog.gd`,
 `scripts/presentation/components/vehicle_ui_action_glyph_renderer.gd`,
-`scripts/presentation/vehicle_stage_visual_profile.gd`,
+`scripts/vehicle/vehicle_stage_visual_profile.gd`,
 `docs/product/vehicle_game_spec.md`, `docs/product/vehicle_upgrade_catalog.md`,
 `docs/design/VISUAL_SYSTEM.md`, UI validator, 두 active ExecPlan
 
@@ -539,7 +540,7 @@ Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_hud_present
     bottom-center EMP 중복 slot을 제거한다.
   - Accept: 모든 viewport에서 한 줄 순서가 stage icon→skull→Dash→Seeker→EMP이며 stage
     `N / 5`, 누적 숫자, action `READY|N.Ns` 외 visible label은 0개다. standard icon optical
-    size는 `18px`, standard cluster x는 `24px`, 폭은 `204px`이고 minimap/toast와 겹치거나 viewport 밖으로
+    size는 `18px`, standard cluster x는 `24px`, 폭은 `246px`이고 minimap/toast와 겹치거나 viewport 밖으로
     나가는 node가 0개다. cluster/item background draw count와 cooldown progress geometry는
     각각 0이며 catalog ID coverage와 duplicate semantic owner는 각각 complete/0이다.
   - Guard: OS emoji, 새 raster/SVG, panel, section, surface, backing, border, divider, card,
@@ -631,7 +632,7 @@ Validation rules:
 | boss-owned damage를 typed ownership으로 구분할 수 없음 | 해당 state에 명시적 owner tag를 추가 | pattern 문자열 추론으로 ship 금지 |
 | native A/B가 10% 이상 악화 | release 중단, evidence를 보존하고 이 계획의 visible scheduling을 개정 | threshold 약화나 workload 축소는 사용자 승인 필요 |
 | Stage 5 result가 같은 frame에 열리지 않음 | result owner만 수정하고 실제 boss-defeat fixture 재실행 | 보스 보상/대기 gate 재도입 금지 |
-| 200% text에서 icon cluster와 minimap clearance가 부족함 | cluster는 60×64px invisible slot, 좌측 안전 여백과 한 줄 좌측 정렬을 유지하고 inter-item gap을 4px로 둔 뒤 minimap을 같은 top band 안에서 아래로 이동 | visible backing 추가, icon 확대, cluster wrap, viewport 밖 clip 금지 |
+| 200% text에서 icon cluster와 minimap clearance가 부족함 | cluster는 status 72×64px/action 92×64px invisible slot, 좌측 안전 여백과 한 줄 좌측 정렬을 유지하고 inter-item gap을 6px로 둔 뒤 minimap을 같은 top band 안에서 아래로 이동 | visible backing 추가, icon 확대, cluster wrap, viewport 밖 clip 금지 |
 | cooldown 표시가 runtime과 어긋남 | presenter snapshot의 ready/ratio/remaining만 사용하고 fixture로 비교 | HUD 자체 timer나 추정 cooldown 금지 |
 | material fact가 계약과 충돌 | 영향 branch를 중단하고 계약 수정 | executor의 제품/구조 재선택 금지 |
 
@@ -663,7 +664,7 @@ Validation rules:
 | stage-local object 교체가 눈에 보임 | 완전한 세계 지속감 약화 | modal/time stop 없이 같은 frame 교체; 누적 배치는 scope 밖 |
 | 기존 active plan이 old reward를 재도입 | 문서 권위 충돌 | 양 문서에 후속 결정 우선순위 기록 |
 | full-width meter가 전투 화면을 과도하게 가림 | 상단 시야 감소 | 최종 responsive 높이, 단일 얇은 border, meter별 추가 배경판 금지 |
-| 작은 cooldown glyph에서 상태값이 흐려짐 | 전투 중 판독 실패 | standard 18px glyph와 14px value, 1px contrast outline, 숫자 시간 또는 READY를 유지; backing/progress geometry는 추가하지 않음 |
+| 작은 cooldown glyph에서 상태값이 흐려짐 | 전투 중 판독 실패 | standard 18px glyph와 14px value, 50px action slot, 1px contrast outline, 숫자 시간 또는 READY를 유지; backing/progress geometry는 추가하지 않음 |
 | 한 glyph가 HUD·미니맵·조준에서 다른 뜻으로 재사용됨 | 학습한 의미가 깨지고 전투 중 오판 | catalog one-ID/one-meaning validator, stage deck stack과 total-defeats skull의 exclusive owner 고정 |
 
 ## Open Questions
@@ -714,6 +715,13 @@ Validation rules:
 - 2026-08-12: 첫 좌상단 편집은 item 간격이 넓어 폐기하고, 같은 target을 재편집한
   `exec-f7c396ef-f2d9-44c5-9ba6-b657215cf6c4.png`를 최종 preview 관계로 선택했다. 다섯 item은
   1280 기준 약 204px 안에 모이며 preview pixel은 여전히 production asset이 아니다.
+- 2026-08-12: 첫 runtime 1280×720 캡처에서 36px action slot의 14px `READY` 값이
+  서로 붙는 실제 clipping/spacing 결함을 확인했다. icon optical size와 좌상단 관계는 유지하고
+  action slot만 50px로 넓혀 standard cluster를 246px로 교정했다. preview의 204px 관계보다
+  실제 판독성과 overflow 0 계약을 우선한다.
+- 2026-08-12: 200% runtime 캡처에서 accessibility profile이 base 20px에 다시 2배 배율을
+  적용해 값을 40px로 만들고 60/72px slot 밖으로 넘기는 결함을 확인했다. 표준 base 14px를
+  한 번만 28px로 확대하고 status/action slot을 72/92px로 넓혀 panel 없이 444px 한 줄로 교정했다.
 
 ## Progress and Next Steps
 
