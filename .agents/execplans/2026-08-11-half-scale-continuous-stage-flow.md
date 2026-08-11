@@ -1,0 +1,553 @@
+---
+type: plan
+status: active
+owner: BK
+created: 2026-08-11
+last_reviewed: 2026-08-11
+topic: Half-scale world presentation and uninterrupted stage continuation
+scope: Cardborne gameplay camera, visible-world consumers, boss-defeat stage flow, combat-state continuity, UI contracts, validators, and Web release QA
+related:
+  - ../../AGENTS.md
+  - ../AGENTS.md
+  - ../PLANS.md
+  - ../design/DESIGN.md
+  - ../cardborne-performance-engineering-policy.md
+  - ../cardborne-runtime-architecture-audit.md
+  - ./2026-08-11-dense-combat-progression-and-run-completion.md
+  - ../../docs/product/vehicle_game_spec.md
+  - ../../docs/product/vehicle_upgrade_catalog.md
+  - ../../docs/design/VISUAL_SYSTEM.md
+---
+
+# 월드 1/2 표시와 무중단 스테이지 진행 실행 계약
+
+기체·적·시설·아이템·지형을 모두 현재 화면 크기의 1/2로 표시하되 충돌과 월드
+좌표의 진실은 유지한다. 1~4스테이지 보스 처치 후에는 보스 전용 보상, XP 회수 대기,
+전환 모드, 안전 무적 시간을 거치지 않고 체력만 완전 회복한 뒤 같은 전투 화면에서
+다음 스테이지를 즉시 시작한다. 이미 태어난 일반 적과 일반 전투 상태는 남기고,
+보스에게 종속된 위협만 제거한다. 5스테이지 보스는 빈 화면 없이 즉시 최종 결과를 연다.
+
+## Purpose
+
+- 목표: 월드 오브젝트의 화면상 크기를 일관되게 절반으로 줄이고, 스테이지 사이의
+  명시적 휴식·경계·보상 정지를 없앤다.
+- 산출물: 카메라/가시 영역 계약, 연속 스테이지 상태 전이, 선택적 보스 정리,
+  일반 적 유지, 제품·시각 명세, 집중 validator, native/Web 검증 결과다.
+- 완료 상태: 모든 작업 체크와 최종 게이트가 통과하고, 실제 1→2 및 4→5 전환에서
+  일반 적이 계속 움직이고 공격하는 동안 HUD의 스테이지 번호만 바뀌며, 기체 체력은
+  즉시 최대치가 되고, 전환 모달·배너·타이머·보스 카드가 나타나지 않는다.
+
+## Why and Current Context
+
+### 화면 크기 변경은 단일 상수로 시작하지만 단일 영향이 아니다
+
+`VehicleRun._build_camera()`는 현재 `Camera2D.zoom == Vector2.ONE`을 사용한다. 카메라
+zoom을 `Vector2(0.5, 0.5)`로 바꾸면 CanvasLayer HUD를 제외한 기체, 적, 탄환, 시설,
+아이템, 지형, 월드 이펙트가 모두 정확히 절반의 화면 크기로 보인다. 이는 수백 개의
+시각 반경과 충돌 반경을 따로 줄이는 것보다 일관되고, 시각과 충돌 진실을 분리한다.
+
+그러나 같은 viewport가 가로·세로 두 배, 면적 네 배의 월드를 보게 된다.
+`_visible_world_rect()`를 입력으로 쓰는 스폰 배제, 전투 renderer culling, 위협 레이더,
+집단 전술, 성능 pressure가 모두 달라진다. 현재 820px 바깥의 적과 탄환은 낮은 motion
+cadence를 쓰므로, 그대로 두면 새 화면 안에서 보이는 원거리 적과 탄환이 끊겨 움직일
+수 있다. 주무기 사거리는 visible diagonal을 따라 자동으로 늘어나 projectile 수명과
+성능에도 영향을 줄 수 있다.
+
+### 현재 스테이지 전환은 일반 적을 보존할 수 없는 일괄 초기화다
+
+`VehicleRun._complete_stage()`는 보스를 포함해 살아 있는 모든 적을 죽이고 적 탄환을
+제거한다. 이후 보스 XP를 0.65초 동안 회수하고 보스 보상 카드를 claim해야만
+`_finalize_stage_completion()`이 실행된다. `_begin_stage_transition()`은 다음을 한꺼번에
+수행한다.
+
+- `RunMode.STAGE_TRANSITION`을 1.6초 유지한다.
+- 1.2초 무적을 주고 기체 속도, 대시, EMP startup, 보조 무기와 대시 runtime을 리셋한다.
+- 적, 탄환, 효과, XP 조각, 픽업, 장치, 시설 상태를 지우고 다시 만든다.
+- 0.35초 뒤 도착 신호, 1.35초 뒤 첫 다음 스테이지 적을 생성한다.
+
+따라서 일반 적 유지와 “체력만 채운 뒤 즉시 계속”은 타이머 삭제만으로 만들 수 없다.
+보스 소유 위협과 일반 전투 상태를 구분하고, 다음 encounter 설정과 기존 actor store를
+분리해야 한다.
+
+### 이전 활성 계획과의 우선순위
+
+`2026-08-11-dense-combat-progression-and-run-completion.md`의 미해결 성능 게이트는 계속
+유효하다. 다만 그 문서의 “스테이지마다 보스 보상 카드를 claim한 뒤 전환한다”는 계약은
+이번 후속 사용자 결정으로 대체한다. 이 문서가 카메라 배율과 스테이지 연속성 범위의
+현재 실행 소스다. 기존 문서가 보스 보상/전환 동작을 다시 도입하는 근거가 되어서는 안 된다.
+
+## Scope and Boundaries
+
+### In scope
+
+- gameplay camera zoom을 0.5로 고정해 모든 월드 표시를 절반으로 만든다.
+- HUD, 메뉴, 업그레이드 카드, 가이드북, 미니맵 frame, 위협 레이더 frame은 현재
+  화면 크기와 접근성을 유지한다.
+- zoom에 따라 가시 영역, 스폰 배제, boss arrival, 위협 레이더, renderer culling,
+  원거리 simulation cadence, 주무기 visible range가 같은 좌표계를 사용하게 한다.
+- Stage 1~4 보스 처치 시 같은 프레임에 full heal과 다음 stage configure를 완료하고
+  계속 `RunMode.PLAYING`으로 둔다.
+- 이미 생성된 일반 적, 일반 적 탄환, 플레이어 탄환, player-owned zone/effect,
+  XP 조각, 빌드, 레벨, 위치, 방향, 속도, cooldown, 대시 상태를 유지한다.
+- 보스 본체, 보스 소환물, 보스 reserve 탄환, 보스 공격 telegraph/denied zone만 정리한다.
+- 이전 스테이지 시설 자식은 유지하되 새 시설의 자식 수와 섞이지 않게 시설 instance
+  provenance를 부여한다.
+- 다음 스테이지의 stage-local 픽업, 변칙 장치, 증원 시설은 현재 설계처럼 새 배치로
+  교체한다. run-fixed 지형, transit gate cooldown, 탐사 상태는 유지한다.
+- Stage 5 보스 처치 직후 최종 결과 모달을 연다.
+- 현재 동작과 충돌하는 제품·업그레이드·시각 명세, dead transition enum/상수/검증을 갱신한다.
+- 새 표시 workload에 대한 native/Web 성능 증거를 별도 라벨로 기록한다.
+
+### Out of scope
+
+- player/enemy/facility/item collision radius, 이동 속도, 공격 사거리 상수, 맵 좌표,
+  월드 크기, spawn 수, quota, 체력, 공격력, 공격 cadence를 일괄 1/2로 바꾸는 일.
+- 개별 PNG/SVG를 다시 만들거나 새 player-facing asset을 생성하는 일.
+- HUD와 메뉴 자체를 1/2로 축소하는 일.
+- Stage 1~4 기존 일반 적을 다음 stage 계수로 소급 강화하거나 체력을 다시 채우는 일.
+- 보스 소환물과 보스 공격을 다음 stage까지 남기는 일.
+- stage-local 픽업·장치·시설을 누적해 한 맵에 5스테이지 분량을 동시에 두는 일.
+- 일반 level-up 카드와 자연 XP 수집을 제거하는 일.
+- 기존 고밀도 전투 성능 문제 전체를 이번 변경의 부수 작업으로 해결하는 일.
+- GitHub push, itch.io publish, production dependency, 엔진 버전, thread/Web header 변경.
+
+### Constraints and invariants
+
+- `docs/design/cardborne-universal-art-style-reference.png`의 SHA-256
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`와 기존 semantic
+  asset identity를 유지한다.
+- 월드 시각과 충돌 geometry는 독립이다. 카메라가 절반으로 표시해도 world-unit
+  collision/debug truth는 바뀌지 않는다.
+- ordinary spawn은 확대된 visible rect 안에 직접 생성되지 않는다.
+- 화면 안 actor/projectile은 “far” cadence 때문에 육안으로 점프하지 않는다.
+- 다음 stage quota는 0에서 시작한다. 이전 stage에서 살아남은 countable ordinary를
+  다음 stage에서 처치하면 새 quota에 1회 계산한다. summoned 적은 기존처럼 계산하지 않는다.
+- 다음 stage 신규 적만 새 stage 체력·공격 계수를 사용한다. carry-over 적은 생성 당시
+  수치를 유지한다.
+- 보스 전용 보상 source는 더 이상 queue/open/claim하지 않는다. 일반 level-up reward만
+  `VehicleRewardRuntime`을 계속 사용한다.
+- 보스 처치가 XP 조각을 만들면 일반 XP 조각으로 남는다. stage 전환을 위해 recall하거나
+  지우지 않는다.
+- 파괴·이동·저장처럼 되돌리기 어려운 외부 동작은 없다. 구현은 task-owned git commit으로
+  복구 가능해야 한다.
+- 외부 배포와 기존 성능 threshold 변경은 별도 사용자 승인 없이는 하지 않는다.
+
+## Assumptions and Locked Behavior
+
+사용자의 “체력만 채워지고”는 Stage 1~4 경계에서 기체에 적용하는 유일한 즉시 혜택이
+full heal이라는 뜻으로 고정한다. 무적, cooldown 초기화, 무료 EMP/보조 무기 초기화,
+보스 카드, 강제 XP 회수는 없다. 이미 pending인 일반 level-up은 다음 stage가 시작된
+뒤 기존 reward loop가 정상적으로 열 수 있지만, stage 번호 변경을 지연시키지 않는다.
+
+상태별 유지 계약은 다음과 같다.
+
+| 상태 | Stage 1~4 보스 처치 결과 |
+| --- | --- |
+| 기체 | 위치·방향·속도·대시·cooldown·barrier 유지, HP만 max로 설정 |
+| 빌드/XP | build, level, XP progress, live shard, pending level-up 유지 |
+| 일반 적 | alive/active/HP/status/phase/velocity/squad 그대로 유지 |
+| 일반 적 탄환 | 위치·수명·소유·진행 그대로 유지 |
+| 플레이어 공격 | 탄환, 기뢰, 대시 장판, 보조 무기 pending 상태 유지 |
+| 보스 소유 상태 | 보스 add/system, boss-reserve projectile, boss zone/telegraph 제거 |
+| encounter | 이전 queue/cue는 폐기, 다음 stage continuation packet을 즉시 cue |
+| quota | 다음 stage 0으로 초기화, carry-over countable 처치부터 새 quota에 반영 |
+| 정적 필드 | field layout, run-fixed wall/gate, gate cooldown, 탐사 유지 |
+| stage-local object | 이전 pickup/device/facility를 retire하고 다음 stage 배치로 교체 |
+| 시설 자식 | 살아 있는 actor는 유지, 이전 시설 provenance로 분리해 새 counter와 무관 |
+| HUD | gameplay HUD 유지, stage 번호/quota만 새 값으로 바뀜 |
+
+Stage 5는 next-stage full heal을 하지 않고, 보스 소유 상태를 정리하고 stage report history를
+완성한 뒤 같은 frame boundary에서 `RunMode.RESULT`와 결과 모달을 연다.
+
+## Alternatives Considered
+
+1. 모든 visual/collision/좌표 상수를 절반으로 바꾼다. 충돌, AI 거리, 공격 footprint,
+   spawn, map topology, 수백 개 validator가 함께 달라져 “크기” 요청보다 훨씬 큰 게임
+   재설계가 되므로 기각한다.
+2. sprite만 절반으로 표시하고 collision은 그대로 둔다. 보이지 않는 충돌과 불공정한
+   피격이 생기므로 기각한다.
+3. 월드 root를 `scale=0.5`로 바꾼다. 카메라 추적과 좌표 변환, UI anchor, 맵 원점까지
+   함께 이동해 Godot의 camera contract보다 위험하므로 기각한다.
+4. `Camera2D.zoom=0.5`를 단일 표시 authority로 쓰고 가시 영역 소비자를 함께 교정한다.
+   월드/충돌 진실과 HUD를 유지하면서 모든 월드 항목에 동일하게 적용되어 선택한다.
+5. 보스 처치 때 모든 hostile을 유지한다. 보스가 사라진 뒤에도 보스 장판과 소환 시스템이
+   공격하는 orphan damage가 생겨 기각한다.
+6. 일반 적과 일반 전투만 유지하고 boss ownership tag로 선택 정리한다. 사용자 요구와
+   전투 공정성을 함께 만족해 선택한다.
+
+## Proposed Design
+
+### A. 하나의 world-view scale
+
+`scripts/vehicle/vehicle_stage_rules.gd`에 gameplay 표시 authority
+`GAMEPLAY_CAMERA_ZOOM := Vector2(0.5, 0.5)`를 둔다. `VehicleRun._build_camera()`는 이 값을
+사용한다. live gameplay를 재현하는 capture reset만 같은 상수를 사용하고, 명시적으로
+close-up을 만드는 visual workbench capture의 개별 zoom은 유지한다.
+
+`_visible_world_rect()`는 Godot canvas inverse로 이미 zoom을 반영하므로 별도 배율을 다시
+곱하지 않는다. 대신 그 결과를 소비하는 계약을 정리한다.
+
+- spawn allocator와 boss arrival는 enlarged visible rect와 margin 밖을 우선한다.
+- combat renderer와 threat discovery는 같은 rect/canvas transform을 사용한다.
+- threat radar 최대 world distance는 현재 1200 고정값과 visible half-diagonal + 480 중
+  큰 값으로 계산해, 화면 바로 밖 경고 band가 사라지지 않게 한다.
+- enemy/projectile near-simulation 반경도 현재 820 고정값과 visible half-diagonal + 최대
+  actor margin 중 큰 값을 사용한다. 화면 안 actor를 20Hz/절반 physics bucket으로 보내지 않는다.
+- 주무기 range의 기존 “visible diagonal + 80” 계약은 유지한다. 새 화면 끝까지 수동 사격이
+  보이도록 하되 projectile capacity와 frame cost를 성능 단계에서 별도 기록한다.
+
+### B. stage flow에서 reward/transition 상태 제거
+
+`scripts/encounters/vehicle_stage_flow.gd`는 `ORDINARY → BOSS_WARNING → BOSS_ACTIVE → COMPLETE`
+만 소유한다. `REWARDS`와 `TRANSITION`, `configure_transition()`,
+`record_rewards_complete()`, `record_transition_complete()`를 제거한다. 다음 stage는
+`configure(next_stage_index, quota)`가 즉시 새 `ORDINARY` 상태를 만든다.
+
+`VehicleRun`에서는 `RunMode.STAGE_TRANSITION`, transition timer/상수,
+`pending_stage_completion`, boss reward enqueue/claim gate를 제거한다. 보스 defeat가
+확정되면 stage telemetry snapshot을 history에 먼저 넣고 다음 중 하나를 수행한다.
+
+- Stage 1~4: `_begin_next_stage_continuation()`을 같은 call stack에서 실행하고 mode를 계속
+  `PLAYING`으로 유지한다.
+- Stage 5: run persistence를 저장하고 `_show_final_result()`를 즉시 실행한다.
+
+다음 stage encounter는 deployment 전용 첫 packet을 제외한다. 첫 continuation packet의
+arrival cue는 stage advance와 같은 시각 `t=0.0`에 시작하고, birth는 기존 공정한 cue lead
+0.9초 뒤에 허용한다. 이미 남아 있는 일반 적이 계속 압박하므로 별도 빈 시간은 없다.
+
+### C. 선택적 combat-state 정리
+
+보스 종속 actor는 기존 `zone in ["boss_wave", "boss_system"]` 또는
+`carrier_id == "stage_boss"`를 하나의 helper로 판정한다. 보스 defeat 시 이 actor만
+retire하고 `collective_tactics`, `enemy_grid`, `enemy_store`를 정상 갱신한다.
+
+`VehicleProjectileStore`에는 pool/counter를 보존하는 `retire_boss_hostiles()`를 추가해
+`uses_boss_reserve` projectile만 swap-remove한다. `denied_zones`에는 문자열 pattern 검사가
+아닌 명시적 `owner_kind: &"stage_boss"`를 기록하고 그 값만 제거한다. 일반 hostile과
+player projectile/effect는 보존한다. 짧은 presentation-only effect는 damage를 소유하지
+않으므로 자연 만료시킨다.
+
+증원 시설은 stage별 instance ID를 제공한다. spawned child의 `carrier_id`에 그 instance
+ID를 넣고, defeat 시 현재 facility instance와 일치할 때만 `note_child_retired()`를 호출한다.
+이전 stage 시설 자식은 actor로 남지만 다음 stage 시설의 live-child cap을 차지하지 않는다.
+
+### D. stage-local refresh와 run-state 보존 분리
+
+현재 `_begin_stage_transition()`을 복사하지 않고 다음 책임으로 나눈다.
+
+- telemetry/history 종료
+- boss-owned combat retirement
+- stage metadata/layout/encounter/stage-flow 설정
+- stage-local pickup/device/facility refresh
+- run-fixed terrain/gate/exploration과 live ordinary combat 보존
+- HUD dirty/reset 최소 갱신
+
+`terrain_runtime.configure()`는 run 시작 때만 호출해 gate cooldown/progress를 stage 사이에
+보존한다. 새 tactical layout의 cover/blocker/pursuit field는 같은 shared field 안에서
+다음 stage 계약으로 갱신하고, 보존된 enemy store를 clear하지 않은 채 grid와 coordination
+index만 rebuild/reconcile한다.
+
+## Discovery Closure
+
+| 요구/우려 | 확인한 현재 owner와 동작 | 근거 | 잠근 결정 | Task |
+| --- | --- | --- | --- | --- |
+| 월드 전체 1/2 표시 | `VehicleRun._build_camera()`, zoom 1.0 | `vehicle_run.gd`, `validate_vehicle_run.gd` | camera zoom 0.5, HUD 유지, collision 불변 | 1.1 |
+| 확대된 가시 영역 | `_visible_world_rect()`가 spawn/render/radar/pressure에 공유됨 | run call sites와 capture gateway | 수동 배율 중복 없이 소비자 계약 교정 | 1.2~1.4 |
+| 화면 안 far LOD | 820px 밖 enemy/projectile cadence 저하 | `vehicle_enemy_update_schedule.gd`, projectile loop | visible half-diagonal 기반 near radius | 1.3 |
+| 현재 보스 종료 | 모든 적/적 탄 제거, XP recall, boss card claim 필요 | `_complete_stage()`, `_advance_reward_queue()` | boss card와 pending gate 제거, 즉시 분기 | 2.1~2.2 |
+| 일반 적 유지 | `_begin_stage_transition()`이 `_clear_enemies()` 호출 | `vehicle_run.gd` | non-boss, non-boss-owned actor 상태 보존 | 2.3 |
+| orphan boss damage | projectile에 boss reserve, zone에는 불안정한 pattern 문자열 | projectile store, denied zone builders | typed retirement API와 owner tag | 2.3 |
+| 시설 자식 carry-over | 고정 carrier ID가 한 stage counter만 가정 | reinforcement runtime/defeat path | stage instance provenance | 2.4 |
+| next-stage 시작 시각 | transition packet cue 0.35, birth 1.35 | `_transition_packets()` | cue 0.0, birth 0.9, mode PLAYING | 2.5 |
+| stage-local object | transition이 pickup/device/facility를 전량 재구성 | map runtime helpers | 다음 stage 배치로 교체, terrain/gate는 보존 | 2.6 |
+| 제품/시각 문서 | full heal+1.2s protection+boss reward와 zoom 1 footprint 명시 | product/upgrade/visual docs | 새 연속 계약과 screen/world 단위 분리 | 3.1 |
+| 성능 | 기존 320적 capacity가 이미 red, zoom은 visible workload를 바꿈 | active performance plan/policy | 새 결과를 별도 baseline으로 표시, 기존 실패를 해결로 주장하지 않음 | 4.2 |
+
+Readiness statement:
+
+- 제품, 구조, UI, 상태 유지, 성능 라벨, validation cadence의 재결정 사항은 없다.
+- Godot 4.7.1은 `./tools/godot.ps1`, Web export는 `./tools/export_web.ps1`로 실행 가능하다.
+- 남은 선택은 이 계약 안의 구현 세부이며 visible behavior나 ownership을 바꾸지 않는다.
+
+## Tasks
+
+### Phase 1: 월드 표시 배율과 가시 영역 정합
+
+Goal: 모든 world-space 표시를 1/2로 만들고 확대된 화면에서 spawn, radar, motion,
+projectile이 정확히 동작하게 한다.
+
+Preconditions: 현재 clean HEAD의 camera/visible-world 성능과 1280x720 capture를 한 번 기록한다.
+
+Source owners: `scripts/vehicle/vehicle_stage_rules.gd`,
+`scripts/vehicle/vehicle_run.gd`, `scripts/enemies/vehicle_enemy_update_schedule.gd`,
+`scripts/presentation/vehicle_combat_renderer.gd`,
+`scripts/vehicle/vehicle_run_capture_gateway.gd`
+
+- [ ] **1.1** gameplay world view를 0.5로 고정한다.
+  - Change: Rules constant와 `_build_camera()`를 연결하고 live-gameplay capture reset의
+    hardcoded `Vector2.ONE`만 authority 상수로 바꾼다.
+  - Accept: 새 focused validator에서 camera zoom이 정확히 `(0.5, 0.5)`, visible rect가
+    같은 viewport에서 기존 world width/height의 2배, player/enemy/facility collision
+    상수가 변경 전 값과 같음을 확인한다.
+  - Guard: close-up/workbench capture의 명시적 composition zoom은 바꾸지 않는다.
+- [ ] **1.2** spawn/boss arrival/radar가 확대된 visible rect를 따른다.
+  - Change: runtime radar distance를 visible half-diagonal 기반으로 계산하고 spawn allocator와
+    boss exclusion이 실제 canvas rect를 받는지 고정한다.
+  - Accept: 960x540, 1280x720, 1920x1080 fixture에서 ordinary birth와 선택 가능한 boss
+    anchor가 visible rect+margin 안에 없고, 화면 바로 밖 480 world-unit band의 위협이 radar에 남는다.
+- [ ] **1.3** 화면 안 enemy/projectile cadence를 보존한다.
+  - Change: schedule/projectile near threshold를 current minimum과 visible half-diagonal+margin의
+    max로 만들고 physics tick마다 한 번 계산해 재사용한다.
+  - Accept: visible rect 네 모서리의 ordinary actor와 projectile이 near cadence를 사용하고,
+    그 바깥 actor만 기존 far bucket을 사용한다.
+  - Guard: active count, attack decision interval, collision sweep, projectile speed/life truth는 바꾸지 않는다.
+- [ ] **1.4** renderer/capture/performance pressure의 좌표 정합을 갱신한다.
+  - Change: hardcoded zoom fixture와 visible-count expectation을 gameplay/intentional close-up으로
+    분류하고 gameplay path만 새 authority에 맞춘다.
+  - Accept: renderer culling count, `ordinary_center_in_viewport`, radar discovery, primary visible
+    range가 동일한 visible rect를 사용하며, capture restore 뒤 live zoom이 0.5다.
+
+Phase gate:
+
+- `validate_vehicle_world_view_scale.gd`, `validate_vehicle_spawn_allocation.gd`,
+  `validate_vehicle_run.gd`, `validate_vehicle_combat_renderer.gd`,
+  `validate_vehicle_performance_scenarios.gd`가 통과한다.
+- 1280x720 original-detail capture에서 player, representative ordinary, facility, pickup,
+  terrain gate의 screen-space bounding size가 기존 baseline의 50%±2px이고 HUD height는
+  기존과 같다.
+
+### Phase 2: 보스 처치 후 무중단 stage continuation
+
+Goal: 일반 전투가 살아 있는 채 HP만 회복하고 다음 stage를 즉시 시작한다.
+
+Preconditions: Phase 1 gate 통과.
+
+Source owners: `scripts/encounters/vehicle_stage_flow.gd`,
+`scripts/vehicle/vehicle_run.gd`, `scripts/combat/vehicle_projectile_store.gd`,
+`scripts/vehicle/vehicle_reinforcement_facility_runtime.gd`,
+`scripts/encounters/vehicle_encounter_runtime.gd`
+
+- [ ] **2.1** reward/transition state를 stage-flow에서 제거한다.
+  - Change: `REWARDS`, `TRANSITION`과 관련 API를 제거하고 boss defeat를 `COMPLETE`, next
+    configure를 `ORDINARY`로 만든다.
+  - Accept: state unit fixture가 ordinary→warning→boss→complete와 next configure→ordinary만
+    허용하고 transition/reward state symbol이 reachable code에 0개다.
+- [ ] **2.2** boss card/recall/timer 없이 stage를 같은 frame에 넘긴다.
+  - Change: boss defeat에서 telemetry history를 finalize한 뒤 Stage 1~4는 continuation,
+    Stage 5는 result로 직접 분기한다. pending completion과 boss reward claim gate를 제거한다.
+  - Accept: Stage 1 boss damage call 반환 직후 mode `PLAYING`, stage ID `stage_2`, HP=max,
+    boss reward pending/current/claimed 모두 false, invulnerability 0이며 stage history가 1개다.
+  - Guard: 자연 level-up pending/claim과 failure report는 기존대로 동작한다.
+- [ ] **2.3** 보스 소유 위협만 선택적으로 retire한다.
+  - Change: boss-owned actor helper, projectile-store boss retirement, denied-zone owner tag를 추가한다.
+  - Accept: mixed fixture에서 ordinary 3, facility child 1, ordinary hostile projectile 2,
+    player projectile 2는 동일 object/state로 남고 boss add 2, boss projectile 2, boss zone 2만 사라진다.
+  - Guard: projectile pool 합계와 ordinary/boss counter invariant가 통과한다.
+- [ ] **2.4** 시설 자식 provenance를 stage instance별로 분리한다.
+  - Change: facility runtime이 instance carrier ID를 발급하고 spawn/defeat가 그 ID로 count한다.
+  - Accept: Stage 1 facility child가 Stage 2까지 살아 있다가 죽어도 Stage 2 facility
+    `live_children`이 감소하지 않고 debug reconciliation이 두 stage case에서 맞는다.
+- [ ] **2.5** next encounter를 cue 즉시, birth 0.9초로 시작한다.
+  - Change: `_transition_packets()`을 continuation packet builder로 바꾸고 deployment first
+    packet을 제외한 상대 시각을 cue 0에 맞춘다.
+  - Accept: stage advance 직후 첫 cue time 0.0, 0.89초까지 birth 0, 0.9초에 authored first
+    group이 최대 tick admission cap 안에서 태어난다. carry-over ordinary는 그 동안 계속 공격한다.
+- [ ] **2.6** run-state와 stage-local refresh를 명시적으로 분리한다.
+  - Change: player combat/XP/ordinary store/terrain gate를 보존하고 pickup/device/facility,
+    stage metadata/layout/blocker/pursuit/HUD만 다음 stage로 갱신한다.
+  - Accept: 전환 전후 player 위치·속도·aim·dash/cooldown·build·XP shard identity·ordinary
+    HP/phase가 같고, terrain gate cooldown과 visited cell이 유지된다. next stage pickup 14,
+    mystery device 3, offline facility 1은 새 stage ID/수치를 가진다.
+
+Phase gate:
+
+- 기존 `validate_vehicle_stage_transition.gd`를
+  `validate_vehicle_stage_continuity.gd`로 대체하고 1→2, 2→3, 4→5, 5→RESULT를 검증한다.
+- `validate_vehicle_reinforcement_facility.gd`, `validate_vehicle_experience.gd`,
+  `validate_vehicle_rewards_ui_audio.gd`, `validate_vehicle_enemy_contact.gd`,
+  `validate_vehicle_stage_telemetry.gd`가 통과한다.
+
+### Phase 3: 활성 UI·제품·시각 계약 정리
+
+Goal: 코드, 사용자 문서, 가이드/현지화 검증이 새 동작만 설명한다.
+
+Preconditions: Phase 2 gate 통과.
+
+Source owners: `docs/product/vehicle_game_spec.md`,
+`docs/product/vehicle_upgrade_catalog.md`, `docs/design/VISUAL_SYSTEM.md`,
+`scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_stage_ui.gd`,
+`tools/validation/validate_vehicle_ui_localization.gd`, 두 active ExecPlan
+
+- [ ] **3.1** 제품과 시각 명세를 현재 동작으로 갱신한다.
+  - Change: boss reward/1.2s protection/1.6s transition 문장을 full-heal immediate continuation으로
+    바꾸고 world-unit footprint와 0.5 screen presentation을 구분한다.
+  - Accept: active spec에서 Stage 1~4 boss card, transition timer/protection을 현재 동작으로
+    주장하는 문장이 0개이며, player/enemy/facility의 world collision 수치는 유지된다.
+- [ ] **3.2** obsolete transition surface와 이전 계획 충돌을 제거한다.
+  - Change: 사용되지 않는 RunMode/상수/localization validation expectation을 제거한다.
+    이전 dense-combat plan의 boss reward/transition acceptance에는 이 문서로 대체되었음을
+    유지하고 구현 결과와 충돌하는 작업 문장을 정리한다.
+  - Accept: `STAGE_TRANSITION`, transition timer/invulnerability/cue constants, boss reward
+    transition gate의 reachable reference가 0개다. failure stage-report UI는 유지된다.
+- [ ] **3.3** 한국어/영어 HUD와 result flow를 검증한다.
+  - Change: 필요한 stage/quota snapshot refresh만 수행하고 새 설명 UI나 배너는 추가하지 않는다.
+  - Accept: KO/EN 960/1280/1920과 200% text scale에서 HUD가 잘리지 않고 stage number가
+    같은 frame에 갱신된다. Stage 5 결과의 기본 focus와 dim이 정상이다.
+
+Phase gate:
+
+- `validate_vehicle_ui_localization.gd`, `validate_vehicle_stage_ui_layout.gd`,
+  `validate_vehicle_guidebook.gd`, `validate_cardborne_visual_authority.ps1`,
+  `validate_document_authority.ps1`가 통과한다.
+
+### Phase 4: 통합·성능·release 검증
+
+Goal: 변경된 workload를 정직하게 측정하고 native/Web 실제 흐름을 확인한다.
+
+Preconditions: Phase 1~3 task와 phase gate 통과, worktree task scope 확인.
+
+- [ ] **4.1** import와 focused integration을 완료한다.
+  - Change: material implementation 수정이 끝난 뒤 import와 named validator를 한 번 실행한다.
+  - Accept: import error 0, 모든 phase validator exit 0, `git diff --check` exit 0다.
+- [ ] **4.2** zoom product change의 clean native A/B를 기록한다.
+  - Change: 같은 seed/count/viewport/duration에서 current 1.0 baseline과 candidate 0.5를
+    별도 clean checkpoint로 측정한다. 이 단계 전 목적·예상 시간·중단 조건을 사용자에게 알린다.
+  - Accept: 두 sample이 scenario-valid이고 exact actor/projectile/effect count, viewport,
+    focus, renderer, duration이 같다. visible count 차이는 의도된 workload로 기록한다.
+  - Guard: frame/presentation/render CPU/GPU p95가 baseline보다 10% 이상 나빠지면 release를
+    멈추고 카메라 방식 또는 visible-work scheduling 계약을 개정한다. 5% 미만은 noise로
+    성능 주장을 하지 않고, 5~10%면 동일 조건 confirmation pair를 한 번만 실행한다.
+- [ ] **4.3** Web release build에서 실제 continuity를 확인한다.
+  - Change: `./tools/export_web.ps1` 후 `$npjt-port-guard` codex lane에서 built Web을 열고
+    Chrome으로 gameplay를 확인한다.
+  - Accept: console error 0, world 1/2/HUD 유지, dash/aim/fire 정상, mixed-enemy Stage 1→2
+    연속성, Stage 5 result가 실제 브라우저에서 재현된다.
+- [ ] **4.4** task-owned multi-file 품질 감사를 통과한다.
+  - Change: `$codebase-quality-auditor`로 transition responsibility, catch-all 확장,
+    dead API, save/API break, missing failure path를 감사하고 작은 task-scoped 결함만 수정한다.
+  - Accept: competing stage owner, 문자열 기반 boss cleanup, reachable dead transition,
+    validator coverage gap이 없다.
+
+Final gate:
+
+- clean committed checkpoint에서 Phase 1~3 validator, import, Web export, built Web QA,
+  declared native A/B evidence가 모두 완료된다.
+- 새 성능 결과는 `scenario valid`, `native release performance passed/failed/unqualified`,
+  `Web smoke passed`를 구분한다. 기존 dense-capacity failure를 해결했다고 주장하지 않는다.
+
+## Test Plan and Validation Controls
+
+| Cadence | Exact check | Run when | Do not rerun until |
+| --- | --- | --- | --- |
+| Inner loop | `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_view_scale.gd` | camera/visible consumer 변경 | 관련 입력 변경 |
+| Inner loop | `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_continuity.gd` | stage/boss cleanup 변경 | 관련 입력 변경 |
+| Phase 1 | world-view, spawn, run, renderer, performance-scenario validator 묶음 | Phase 1 task 통과 | Phase 1 owner 변경 |
+| Phase 2 | continuity, facility, XP/reward, contact, telemetry validator 묶음 | Phase 2 task 통과 | Phase 2 owner 변경 |
+| Phase 3 | UI/localization/guidebook/visual/document authority | Phase 3 task 통과 | UI/doc/visual contract 변경 |
+| Final | `./tools/godot.ps1 --path . --headless --import`; `./tools/export_web.ps1`; built Web QA; declared native A/B | 모든 phase 통과 | final input 변경 |
+
+Validation rules:
+
+- 각 task는 가장 좁은 acceptance check만 먼저 실행한다.
+- passing check는 관련 입력이 바뀌지 않으면 다시 실행하지 않는다.
+- failed check는 관련 구현 변경 또는 새 causal hypothesis 뒤에만 다시 실행한다.
+- 광범위한 import/export/performance pair는 구현 안정 후 한 번 실행하고, 시작 전 사용자에게
+  목적·범위·예상 비용·중단 조건을 알린다.
+- camera product change와 simulation optimization을 같은 성능 개선 commit/claim으로 섞지 않는다.
+
+## Predetermined Contingencies and Change Control
+
+| Trigger | Required response | Boundary |
+| --- | --- | --- |
+| 실제 visual size를 1/2로 만들려면 collision/world constant 변경이 필요함 | 해당 branch 중단, camera/canvas 증거를 재확인하고 계약 개정 | executor가 임의로 gameplay geometry를 축소하지 않음 |
+| 확대 visible rect 때문에 offscreen spawn anchor가 없음 | 기존 allocator의 deterministic farthest valid fallback을 사용하고 visible birth는 거부 | map size/anchor count 변경은 재계획 |
+| 화면 안 actor가 far cadence로 보임 | near radius/visible classification만 교정 | 적 수·속도·attack cadence 축소 금지 |
+| carry-over actor가 새 layout blocker 안에 겹침 | actor를 삭제/teleport하지 않고 exact motion solver가 다음 이동부터 빠져나오게 함; 완전 고착 fixture면 nearest reachable point로 1회 분리하고 기록 | 대규모 actor reset은 재계획 |
+| boss-owned damage를 typed ownership으로 구분할 수 없음 | 해당 state에 명시적 owner tag를 추가 | pattern 문자열 추론으로 ship 금지 |
+| native A/B가 10% 이상 악화 | release 중단, evidence를 보존하고 이 계획의 visible scheduling을 개정 | threshold 약화나 workload 축소는 사용자 승인 필요 |
+| Stage 5 result가 같은 frame에 열리지 않음 | result owner만 수정하고 실제 boss-defeat fixture 재실행 | 보스 보상/대기 gate 재도입 금지 |
+| material fact가 계약과 충돌 | 영향 branch를 중단하고 계약 수정 | executor의 제품/구조 재선택 금지 |
+
+구현 중 발견한 로컬 mechanics는 visible behavior, ownership, architecture, safety, acceptance를
+바꾸지 않는 범위에서만 처리한다.
+
+## Rollback and Safety
+
+- camera authority는 단일 상수라 revert가 명확하다. 개별 asset을 변형하거나 삭제하지 않는다.
+- collision/world constants와 save schema는 바꾸지 않는다.
+- facility carrier provenance는 run-scoped 문자열이며 영구 save migration이 없다.
+- projectile/zone ownership 추가는 append-only runtime state다. pool capacity와 team contract는 유지한다.
+- obsolete transition code 삭제는 git에서 복구 가능하고, success transition UI는 이미 runtime에
+  존재하지 않는다. failure report/capture workbench는 별도 owner로 유지한다.
+- task-owned 파일만 stage/commit하며 unrelated user change를 revert, clean, reset하지 않는다.
+- GitHub/itch 배포는 이 계획 완료 조건이 아니며 별도 요청 전에는 실행하지 않는다.
+
+## Risks
+
+| 위험 | 영향 | 완화 |
+| --- | --- | --- |
+| 4배 visible area로 더 많은 actor가 렌더됨 | 기존 고밀도 버벅임 악화 | clean A/B, visible count 기록, 10% stop gate |
+| visible projectile range 증가 | player projectile 수명/cap 압력 증가 | current exact range contract 유지, count/perf validator |
+| 멀리 보이는 적이 낮은 cadence로 점프 | 품질과 조준 공정성 저하 | visible half-diagonal near scheduling |
+| radar scan이 화면보다 짧아짐 | 화면 바로 밖 적 표시 소실 | runtime radar distance = max(current, visible+band) |
+| carry-over 적이 next quota 난이도를 바꿈 | 초반 quota가 기존보다 빨리 진행될 수 있음 | 사용자 요구대로 kill 시 새 quota에 1회 계산, fixture 고정 |
+| 이전 시설 child가 새 counter를 건드림 | 생산 cap/소진 상태 오류 | instance carrier provenance |
+| 보스 zone 문자열 정리가 누락됨 | 보스 사망 뒤 orphan damage | typed owner tag와 mixed fixture |
+| stage-local object 교체가 눈에 보임 | 완전한 세계 지속감 약화 | modal/time stop 없이 같은 frame 교체; 누적 배치는 scope 밖 |
+| 기존 active plan이 old reward를 재도입 | 문서 권위 충돌 | 양 문서에 후속 결정 우선순위 기록 |
+
+## Open Questions
+
+없음. “1/2”는 world screen-space scale, “체력만”은 full heal 외 즉시 혜택 없음,
+“일반 적 유지”는 boss-owned actor를 제외한 이미 태어난 ordinary combat actor 유지로
+결정했다. 이 해석이 바뀌면 구현 전에 본 계약을 개정한다.
+
+## Decision Notes
+
+- 2026-08-11: 개별 visual/collision 축소 대신 `Camera2D.zoom=0.5`를 선택했다.
+- 2026-08-11: HUD는 축소하지 않고 world-space layer만 축소한다.
+- 2026-08-11: collision, speed, map coordinate, world size는 유지한다.
+- 2026-08-11: Stage 1~4 boss reward card, forced XP recall, transition timer, transition
+  invulnerability를 제거한다.
+- 2026-08-11: HP 외 player combat state를 유지하고 mode는 계속 `PLAYING`이다.
+- 2026-08-11: 일반 적과 일반/projectile state는 유지하며 boss add/projectile/zone만 정리한다.
+- 2026-08-11: carry-over countable enemy는 next quota에 계산하고, 기존 수치를 소급 변경하지 않는다.
+- 2026-08-11: run-fixed terrain/gate/exploration은 유지하고 stage-local pickup/device/facility는 교체한다.
+- 2026-08-11: next cue는 즉시 시작하되 공정한 0.9초 arrival warning은 유지한다.
+- 2026-08-11: 기존 dense-combat 계획의 성능 실패는 별도이며 camera 변경으로 해결됐다고
+  주장하지 않는다.
+
+## Progress and Next Steps
+
+- Canonical progress: 이 문서의 task checkbox다.
+- Current phase: Phase 1.
+- Next task: 1.1 gameplay world view를 0.5로 고정한다.
+- Last completed gate: Discovery Closure Gate.
+- Update rule: acceptance가 통과할 때 증거를 해당 task에 기록하고 checkbox와 current pointer를
+  같은 edit에서 갱신한다.
+- Resume rule: worktree에서 checkpoint 입력만 확인한 뒤 첫 unchecked task부터 진행한다.
+
+## Completion and Stop Conditions
+
+Complete when:
+
+- 모든 task acceptance, phase gate, final gate가 통과한다.
+- 제품/시각 명세가 구현과 일치하고 이전 active plan의 충돌 문장이 정리된다.
+- actual native/Web flow에서 world 1/2, HUD 유지, ordinary continuity, HP-only continuation,
+  Stage 5 result를 확인한다.
+- task-owned code quality audit와 clean scoped commit이 완료된다.
+- 그 뒤에만 frontmatter status를 `done`으로 바꾸고 durable spec 반영을 확인한다.
+
+Replan when:
+
+- camera approach가 10% stop gate를 넘거나 collision/world geometry 변경 없이는 요청을
+  만족할 수 없다는 material evidence가 나온다.
+- boss-owned state를 일반 combat과 안정적으로 구분할 ownership seam이 현재 구조에 없다.
+- stage-local object 유지/교체에 관한 사용자의 후속 결정이 이 계약과 다르다.
+
+Do not replan or stop for:
+
+- 이 계약에 이미 포함된 구현 세부.
+- 관련 입력이 바뀌지 않은 passing check.
+- 기존 dense-capacity 성능 gate가 이미 red라는 사실 자체. 새 regression 여부는 이 계획의
+  A/B 규칙으로 판정한다.
