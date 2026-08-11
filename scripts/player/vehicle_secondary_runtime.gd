@@ -8,8 +8,21 @@ extends RefCounted
 const ION_TICK := 0.25
 const ORBIT_HIT_COOLDOWN := 0.55
 const MINE_LIFETIME := 8.0
+const MINE_MAX_RADIUS := 120.0
+const REAR_LASER_LENGTH := 760.0
+const REAR_LASER_HALF_WIDTH := 18.0
+const REAR_LASER_DURATION := 0.14
+const REAR_LASER_COOLDOWN := 0.9
+const STORM_MIN_DISTANCE := 480.0
+const STORM_MAX_DISTANCE := 960.0
+const STORM_TARGET_LIMIT := 12
+const STORM_WARNING_DURATION := 0.55
+const STORM_RADIUS := 140.0
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const SecondaryCatalog = preload("res://scripts/player/vehicle_secondary_catalog.gd")
+const OutgoingDamagePolicy = preload(
+	"res://scripts/player/vehicle_outgoing_damage_policy.gd"
+)
 
 var catalog: RefCounted
 var timers: Dictionary = {}
@@ -17,15 +30,38 @@ var orbit_angle := 0.0
 var orbit_target_cooldowns: Dictionary = {}
 var mines: Array[Dictionary] = []
 var seeker_cooldown := 0.0
+var rear_laser_cooldown := 0.0
+var storm_cooldown := 0.0
+var storm_warning_remaining := 0.0
+var storm_pending := false
+var storm_position := Vector2.ZERO
+var storm_pending_damage := 0.0
+var storm_pending_level := 0
+var storm_pending_attack_serial := 0
 var _candidate_buffer: Array[EnemyState] = []
+var _storm_selected_buffer: Array[EnemyState] = []
+var _beam_target_buffer: Array[EnemyState] = []
 var _expired_cooldown_ids: Array[String] = []
 var _damage_output: Array[Dictionary] = []
 var _projectile_output: Array[Dictionary] = []
 var _detonation_output: Array[Dictionary] = []
+var _beam_output: Array[Dictionary] = []
+var _warning_output: Array[Dictionary] = []
+var _impact_output: Array[Dictionary] = []
 var _damage_intent_pool: Array[Dictionary] = []
 var _detonation_receipt_pool: Array[Dictionary] = []
+var _beam_intent_pool: Array[Dictionary] = []
+var _warning_receipt_pool: Array[Dictionary] = []
+var _impact_receipt_pool: Array[Dictionary] = []
 var _damage_intent_count := 0
 var _detonation_receipt_count := 0
+var _beam_intent_count := 0
+var _warning_receipt_count := 0
+var _impact_receipt_count := 0
+var _attack_serial := 0
+var _primary_success_pending := false
+var _primary_success_origin := Vector2.ZERO
+var _primary_success_direction := Vector2.RIGHT
 var _result: Dictionary = {}
 
 
@@ -35,13 +71,41 @@ func _init() -> void:
 		"damage":_damage_output,
 		"projectiles":_projectile_output,
 		"detonations":_detonation_output,
+		"beams":_beam_output,
+		"warnings":_warning_output,
+		"impacts":_impact_output,
 	}
 func reset(player_position: Vector2) -> void:
 	timers.clear()
 	orbit_target_cooldowns.clear()
 	mines.clear()
+	_storm_selected_buffer.clear()
+	_beam_target_buffer.clear()
 	orbit_angle = 0.0
 	seeker_cooldown = 0.0
+	rear_laser_cooldown = 0.0
+	storm_cooldown = 0.0
+	storm_warning_remaining = 0.0
+	storm_pending = false
+	storm_position = player_position
+	storm_pending_damage = 0.0
+	storm_pending_level = 0
+	storm_pending_attack_serial = 0
+	_primary_success_pending = false
+	_primary_success_origin = player_position
+	_primary_success_direction = Vector2.RIGHT
+	_attack_serial = 0
+
+
+func record_primary_success(origin: Vector2, aim_direction: Vector2) -> void:
+	## Queue one successful primary event for the next secondary update.
+	_primary_success_pending = true
+	_primary_success_origin = origin
+	_primary_success_direction = (
+		aim_direction.normalized()
+		if not aim_direction.is_zero_approx()
+		else Vector2.RIGHT
+	)
 
 
 func _definition(secondary_id: StringName) -> VehicleSecondaryDefinition:
@@ -59,16 +123,42 @@ func update(
 	query_radius: Callable = Callable(),
 	find_seeker_targets: Callable = Callable(),
 	seeker_blocked: bool = false,
-	seeker_cooldown_multiplier: float = 1.0
+	seeker_cooldown_multiplier: float = 1.0,
+	attack_path_end: Callable = Callable(),
+	aim_direction: Vector2 = Vector2.RIGHT
 ) -> Dictionary:
 	# The returned result and damage intents are borrowed scratch storage and
 	# remain valid only until the next update call.
 	_damage_output.clear()
 	_projectile_output.clear()
 	_detonation_output.clear()
+	_beam_output.clear()
+	_warning_output.clear()
+	_impact_output.clear()
 	_damage_intent_count = 0
 	_detonation_receipt_count = 0
+	_beam_intent_count = 0
+	_warning_receipt_count = 0
+	_impact_receipt_count = 0
 	seeker_cooldown = maxf(0.0, seeker_cooldown - delta)
+	rear_laser_cooldown = maxf(0.0, rear_laser_cooldown - delta)
+	storm_cooldown = maxf(0.0, storm_cooldown - delta)
+	_update_rear_laser(
+		player_position,
+		build,
+		enemies,
+		line_of_sight,
+		query_radius,
+		attack_path_end
+	)
+	_update_storm_barrage(
+		delta,
+		player_position,
+		aim_direction,
+		build,
+		enemies,
+		query_radius
+	)
 	_update_seeker(
 		delta,
 		player_position,
@@ -117,6 +207,7 @@ func update(
 		_damage_output,
 		_detonation_output
 	)
+	_primary_success_pending = false
 	return _result
 
 
@@ -137,6 +228,11 @@ func snapshot(build: VehicleRunBuild) -> Dictionary:
 		"orbit_angle":orbit_angle,
 		"mines":mines.duplicate(true),
 		"seeker_cooldown":seeker_cooldown,
+		"rear_laser_cooldown":rear_laser_cooldown,
+		"storm_cooldown":storm_cooldown,
+		"storm_pending":storm_pending,
+		"storm_position":storm_position,
+		"storm_warning_remaining":storm_warning_remaining,
 		"electric_field_radius":_electric_field_radius(build),
 	}
 
@@ -150,6 +246,10 @@ func fill_presentation_snapshot(
 	output["orbit_angle"] = orbit_angle
 	output["mines"] = mines
 	output["electric_field_radius"] = _electric_field_radius(build)
+	output["rear_laser_cooldown"] = rear_laser_cooldown
+	output["storm_pending"] = storm_pending
+	output["storm_position"] = storm_position
+	output["storm_warning_remaining"] = storm_warning_remaining
 	return output
 
 
@@ -169,7 +269,10 @@ func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 		"name_key":seeker.name_key if seeker != null else "SECONDARY_HOMING_MISSILES_NAME",
 		"slot_kind":&"built_in",
 	}]
-	for secondary_id in [&"electric_field", &"orbiting_blades", &"drop_mines"]:
+	for secondary_id in [
+		&"electric_field", &"orbiting_blades", &"drop_mines",
+		&"rear_laser", &"storm_barrage",
+	]:
 		var definition := _definition(secondary_id)
 		if definition == null:
 			continue
@@ -177,6 +280,257 @@ func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 		if level > 0:
 			result.append({"id":secondary_id, "level":level, "name_key":definition.name_key, "slot_kind":&"optional"})
 	return result
+
+
+func _update_rear_laser(
+	origin: Vector2,
+	build: VehicleRunBuild,
+	enemies: Array[EnemyState],
+	line_of_sight: Callable,
+	query_radius: Callable,
+	attack_path_end: Callable
+) -> void:
+	if not _primary_success_pending:
+		return
+	var definition := _definition(&"rear_laser")
+	var level := build.level_of(&"rear_laser") if definition != null else 0
+	if level <= 0 or rear_laser_cooldown > 0.0:
+		return
+	var beam_origin := (
+		_primary_success_origin if _primary_success_pending else origin
+	)
+	var direction := -_primary_success_direction.normalized()
+	if direction.is_zero_approx():
+		direction = Vector2.LEFT
+	var beam_end := beam_origin + direction * REAR_LASER_LENGTH
+	if attack_path_end.is_valid():
+		var path_end_variant: Variant = attack_path_end.call(
+			beam_origin, direction, REAR_LASER_LENGTH, REAR_LASER_HALF_WIDTH
+		)
+		if path_end_variant is Vector2:
+			beam_end = path_end_variant
+	var beam_length := beam_origin.distance_to(beam_end)
+	var attack_serial := _next_attack_serial()
+	rear_laser_cooldown = maxf(
+		REAR_LASER_COOLDOWN,
+		definition.auxiliary(level)
+	)
+	_append_beam_intent(
+		beam_origin,
+		beam_end,
+		direction,
+		beam_length,
+		definition.value(level),
+		attack_serial
+	)
+	_beam_target_buffer.clear()
+	if beam_length <= 0.001:
+		return
+	_query_candidates(
+		(beam_origin + beam_end) * 0.5,
+		beam_length * 0.5 + REAR_LASER_HALF_WIDTH,
+		enemies,
+		query_radius
+	)
+	for enemy in _candidate_buffer:
+		if not _beam_target_is_in_corridor(
+			enemy, beam_origin, direction, beam_length, line_of_sight
+		):
+			continue
+		_beam_target_buffer.append(enemy)
+	for enemy in _beam_target_buffer:
+		_append_damage_intent(
+			_damage_output,
+			enemy,
+			definition.value(level),
+			"Rear Laser",
+			OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE,
+			beam_origin,
+			attack_serial
+		)
+
+
+func _beam_target_is_in_corridor(
+	enemy: EnemyState,
+	origin: Vector2,
+	direction: Vector2,
+	beam_length: float,
+	line_of_sight: Callable
+) -> bool:
+	if not _eligible(enemy):
+		return false
+	var offset := enemy.pos - origin
+	var along := offset.dot(direction)
+	if along < -enemy.radius or along > beam_length + enemy.radius:
+		return false
+	var closest := origin + direction * clampf(along, 0.0, beam_length)
+	var corridor_radius := REAR_LASER_HALF_WIDTH + enemy.radius
+	if enemy.pos.distance_squared_to(closest) > corridor_radius * corridor_radius:
+		return false
+	return (
+		not line_of_sight.is_valid()
+		or line_of_sight.call(origin, enemy.pos, REAR_LASER_HALF_WIDTH)
+	)
+
+
+func _update_storm_barrage(
+	delta: float,
+	origin: Vector2,
+	aim_direction: Vector2,
+	build: VehicleRunBuild,
+	enemies: Array[EnemyState],
+	query_radius: Callable
+) -> void:
+	var definition := _definition(&"storm_barrage")
+	var level := build.level_of(&"storm_barrage") if definition != null else 0
+	if level <= 0:
+		return
+	if storm_pending:
+		storm_warning_remaining = maxf(0.0, storm_warning_remaining - delta)
+		if storm_warning_remaining > 0.000001:
+			return
+		_resolve_storm_barrage(enemies, query_radius)
+		storm_pending = false
+		storm_warning_remaining = 0.0
+		_storm_selected_buffer.clear()
+		return
+	if storm_cooldown > 0.0:
+		return
+	_query_candidates(origin, STORM_MAX_DISTANCE, enemies, query_radius)
+	_storm_selected_buffer.clear()
+	var normalized_aim := (
+		aim_direction.normalized()
+		if not aim_direction.is_zero_approx()
+		else Vector2.RIGHT
+	)
+	for enemy in _candidate_buffer:
+		if not _storm_candidate_is_eligible(enemy, origin):
+			continue
+		enemy.target_score = _storm_candidate_score(
+			enemy, origin, normalized_aim
+		)
+		_insert_storm_candidate(enemy)
+	if _storm_selected_buffer.is_empty():
+		return
+	storm_position = _storm_selected_buffer[0].pos
+	storm_pending = true
+	storm_warning_remaining = STORM_WARNING_DURATION
+	storm_cooldown = maxf(STORM_WARNING_DURATION, definition.auxiliary(level))
+	storm_pending_damage = definition.value(level)
+	storm_pending_level = level
+	storm_pending_attack_serial = _next_attack_serial()
+	_append_warning_receipt(
+		storm_position,
+		STORM_RADIUS,
+		STORM_WARNING_DURATION,
+		storm_pending_attack_serial
+	)
+
+
+func _resolve_storm_barrage(
+	enemies: Array[EnemyState],
+	query_radius: Callable
+) -> void:
+	_query_candidates(storm_position, STORM_RADIUS, enemies, query_radius)
+	_storm_selected_buffer.clear()
+	for enemy in _candidate_buffer:
+		if not _storm_impact_target_is_eligible(enemy, storm_position):
+			continue
+		enemy.target_score = _storm_impact_score(enemy, storm_position)
+		_insert_storm_candidate(enemy)
+	for enemy in _storm_selected_buffer:
+		_append_damage_intent(
+			_damage_output,
+			enemy,
+			storm_pending_damage,
+			"Storm Barrage",
+			OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE,
+			storm_position,
+			storm_pending_attack_serial
+		)
+	_append_impact_receipt(
+		storm_position,
+		STORM_RADIUS,
+		storm_pending_level,
+		storm_pending_attack_serial
+	)
+
+
+func _storm_candidate_is_eligible(enemy: EnemyState, origin: Vector2) -> bool:
+	if not _eligible(enemy) or enemy.role == &"stage_boss":
+		return false
+	var distance := origin.distance_to(enemy.pos)
+	return distance >= STORM_MIN_DISTANCE and distance <= STORM_MAX_DISTANCE
+
+
+func _storm_impact_target_is_eligible(enemy: EnemyState, center: Vector2) -> bool:
+	return (
+		_eligible(enemy)
+		and enemy.role != &"stage_boss"
+		and enemy.pos.distance_to(center) <= STORM_RADIUS + enemy.radius
+	)
+
+
+func _storm_impact_score(enemy: EnemyState, center: Vector2) -> float:
+	var role_priority := _storm_role_priority(enemy.role)
+	var distance := center.distance_to(enemy.pos)
+	return role_priority * 1000.0 - distance
+
+
+func _storm_candidate_score(
+	enemy: EnemyState,
+	origin: Vector2,
+	aim_direction: Vector2
+) -> float:
+	var cluster_count := 0
+	var cluster_radius_squared := STORM_RADIUS * STORM_RADIUS
+	for neighbor in _candidate_buffer:
+		if neighbor == enemy or not _storm_candidate_is_eligible(neighbor, origin):
+			continue
+		if enemy.pos.distance_squared_to(neighbor.pos) <= cluster_radius_squared:
+			cluster_count += 1
+	var offset := enemy.pos - origin
+	var alignment := 0.0
+	if not offset.is_zero_approx():
+		alignment = maxf(0.0, aim_direction.dot(offset.normalized()))
+	var distance := origin.distance_to(enemy.pos)
+	return (
+		float(cluster_count) * 100000.0
+		+ _storm_role_priority(enemy.role) * 1000.0
+		+ alignment * 100.0
+		- distance * 0.001
+	)
+
+
+func _storm_role_priority(role: StringName) -> float:
+	match role:
+		&"controller", &"artillery_spotter", &"shooter":
+			return 4.0
+		&"repair_tender", &"drone_carrier":
+			return 3.0
+		&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel":
+			return 2.0
+	return 1.0
+
+
+func _insert_storm_candidate(enemy: EnemyState) -> void:
+	var insert_at := _storm_selected_buffer.size()
+	for index in _storm_selected_buffer.size():
+		var existing := _storm_selected_buffer[index]
+		if _storm_candidate_precedes(enemy, existing):
+			insert_at = index
+			break
+	if insert_at >= STORM_TARGET_LIMIT and _storm_selected_buffer.size() >= STORM_TARGET_LIMIT:
+		return
+	_storm_selected_buffer.insert(insert_at, enemy)
+	if _storm_selected_buffer.size() > STORM_TARGET_LIMIT:
+		_storm_selected_buffer.pop_back()
+
+
+func _storm_candidate_precedes(first: EnemyState, second: EnemyState) -> bool:
+	if not is_equal_approx(first.target_score, second.target_score):
+		return first.target_score > second.target_score
+	return String(first.id) < String(second.id)
 
 
 func _update_seeker(
@@ -193,7 +547,7 @@ func _update_seeker(
 	var definition := _definition(&"seeker")
 	if definition == null:
 		return
-	var missile_level := clampi(build.level_of(&"homing_missiles"), 0, 2)
+	var missile_level := clampi(build.level_of(&"homing_missiles"), 0, 3)
 	var definition_level := missile_level + 1
 	var seeker_count := definition.cap(definition_level)
 	var targets_variant: Variant = find_targets.call(seeker_count)
@@ -206,11 +560,16 @@ func _update_seeker(
 		if target == null:
 			continue
 		var direction := (target.pos - origin).normalized()
+		var attack_serial := _next_attack_serial()
 		output.append({
 			"pos": origin + direction * 33.0,
+			"spawn_origin": origin,
 			"velocity": direction * 490.0,
 			"radius": 8.0,
 			"damage": seeker_damage,
+			"damage_flags": OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE,
+			"attack_origin": origin,
+			"attack_serial": attack_serial,
 			"life": 1.8,
 			"color": Color("8ae9dc"),
 			"owner": "seeker",
@@ -234,10 +593,19 @@ func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuil
 		return
 	var radius := definition.auxiliary(level)
 	_query_candidates(origin, radius, enemies, query_radius)
+	var attack_serial := _next_attack_serial()
 	for enemy in _candidate_buffer:
 		var contact_radius := radius + enemy.radius
 		if _eligible(enemy) and origin.distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(origin, enemy.pos, 3.0):
-			_append_damage_intent(output, enemy, definition.value(level) * ION_TICK, "Electric Field")
+			_append_damage_intent(
+				output,
+				enemy,
+				definition.value(level) * ION_TICK,
+				"Electric Field",
+				OutgoingDamagePolicy.DAMAGE_PERIODIC,
+				origin,
+				attack_serial
+			)
 
 
 func _update_orbit(
@@ -263,7 +631,15 @@ func _update_orbit(
 			var contact_radius := 22.0 + enemy.radius
 			if blade_position.distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(blade_position, enemy.pos, 2.0):
 				orbit_target_cooldowns[enemy_id] = ORBIT_HIT_COOLDOWN
-				_append_damage_intent(output, enemy, definition.value(level), "Orbiting Blades")
+				_append_damage_intent(
+					output,
+					enemy,
+					definition.value(level),
+					"Orbiting Blades",
+					OutgoingDamagePolicy.DAMAGE_DIRECT,
+					blade_position,
+					_next_attack_serial()
+				)
 
 
 func _update_mines(
@@ -299,13 +675,20 @@ func _update_mines(
 					break
 		if not detonate:
 			continue
-		var radius := 84.0 + float(level) * 12.0
+		var radius := minf(MINE_MAX_RADIUS, 84.0 + float(level) * 12.0)
 		_query_candidates(Vector2(mine["pos"]), radius, enemies, query_radius)
+		var attack_serial := _next_attack_serial()
 		for enemy in _candidate_buffer:
 			var contact_radius := radius + enemy.radius
 			if _eligible(enemy) and Vector2(mine["pos"]).distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(Vector2(mine["pos"]), enemy.pos, 3.0):
 				_append_damage_intent(
-					damage_output, enemy, definition.value(level), "Drop Mine"
+					damage_output,
+					enemy,
+					definition.value(level),
+					"Drop Mine",
+					OutgoingDamagePolicy.DAMAGE_DIRECT,
+					Vector2(mine["pos"]),
+					attack_serial
 				)
 		_append_detonation_receipt(
 			detonation_output, Vector2(mine["pos"]), radius, level
@@ -326,11 +709,19 @@ func _eligible(enemy: EnemyState) -> bool:
 	return enemy.alive and enemy.active
 
 
+func _next_attack_serial() -> int:
+	_attack_serial += 1
+	return _attack_serial
+
+
 func _append_damage_intent(
 	output: Array[Dictionary],
 	enemy: EnemyState,
 	damage: float,
-	source: String
+	source: String,
+	damage_flags: int,
+	attack_origin: Vector2,
+	attack_serial: int
 ) -> void:
 	if _damage_intent_count >= _damage_intent_pool.size():
 		_damage_intent_pool.append({})
@@ -340,6 +731,9 @@ func _append_damage_intent(
 	intent["enemy_id"] = enemy.id
 	intent["damage"] = damage
 	intent["source"] = source
+	intent["damage_flags"] = damage_flags
+	intent["attack_origin"] = attack_origin
+	intent["attack_serial"] = attack_serial
 	output.append(intent)
 
 
@@ -357,6 +751,71 @@ func _append_detonation_receipt(
 	receipt["radius"] = radius
 	receipt["level"] = level
 	output.append(receipt)
+
+
+func _append_beam_intent(
+	origin: Vector2,
+	beam_end: Vector2,
+	direction: Vector2,
+	beam_length: float,
+	damage: float,
+	attack_serial: int
+) -> void:
+	if _beam_intent_count >= _beam_intent_pool.size():
+		_beam_intent_pool.append({})
+	var intent := _beam_intent_pool[_beam_intent_count]
+	_beam_intent_count += 1
+	intent["origin"] = origin
+	intent["end"] = beam_end
+	intent["direction"] = direction
+	intent["length"] = beam_length
+	intent["max_length"] = REAR_LASER_LENGTH
+	intent["half_width"] = REAR_LASER_HALF_WIDTH
+	intent["duration"] = REAR_LASER_DURATION
+	intent["damage"] = damage
+	intent["source"] = "Rear Laser"
+	intent["damage_flags"] = OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE
+	intent["attack_origin"] = origin
+	intent["attack_serial"] = attack_serial
+	intent["stop_at_cover"] = true
+	_beam_output.append(intent)
+
+
+func _append_warning_receipt(
+	position: Vector2,
+	radius: float,
+	duration: float,
+	attack_serial: int
+) -> void:
+	if _warning_receipt_count >= _warning_receipt_pool.size():
+		_warning_receipt_pool.append({})
+	var receipt := _warning_receipt_pool[_warning_receipt_count]
+	_warning_receipt_count += 1
+	receipt["kind"] = &"storm_barrage"
+	receipt["position"] = position
+	receipt["radius"] = radius
+	receipt["duration"] = duration
+	receipt["remaining"] = duration
+	receipt["attack_serial"] = attack_serial
+	_warning_output.append(receipt)
+
+
+func _append_impact_receipt(
+	position: Vector2,
+	radius: float,
+	level: int,
+	attack_serial: int
+) -> void:
+	if _impact_receipt_count >= _impact_receipt_pool.size():
+		_impact_receipt_pool.append({})
+	var receipt := _impact_receipt_pool[_impact_receipt_count]
+	_impact_receipt_count += 1
+	receipt["kind"] = &"storm_barrage"
+	receipt["position"] = position
+	receipt["radius"] = radius
+	receipt["level"] = level
+	receipt["attack_serial"] = attack_serial
+	_impact_output.append(receipt)
 
 
 func _query_candidates(center: Vector2, radius: float, enemies: Array[EnemyState], query_radius: Callable) -> void:

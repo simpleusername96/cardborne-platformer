@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="VehicleSecondaryDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/vehicle_secondary_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"storm_barrage"
+upgrade_id = &"storm_barrage"
+name_key = "SECONDARY_STORM_BARRAGE_NAME"
+description_key = "SECONDARY_STORM_BARRAGE_DESC"
+behavior = &"storm_barrage"
+values_by_level = Array[float]([70.0, 95.0, 125.0])
+auxiliary_by_level = Array[float]([4.5, 4.5, 4.5])
+cap_by_level = Array[int]([1, 1, 1])
