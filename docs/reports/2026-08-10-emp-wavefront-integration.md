@@ -8,16 +8,16 @@ topic: Option 2 EMP wavefront extraction, outward release motion, exact approval
 scope: Player EMP charge/release presentation, selected authored raster evidence, focused runtime validation, and production asset promotion
 related:
   - ../../AGENTS.md
-  - ../AGENTS.md
-  - ../PLANS.md
+  - ../../.agents/AGENTS.md
+  - ../../.agents/PLANS.md
   - ./2026-08-10-non-boss-combat-and-upgrade-integrity.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/cardborne-universal-art-style-reference.png
   - ../../docs/design/visual-replacement-workbench/README.md
   - ../../docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/candidate-metadata.json
-  - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../../.agents/cardborne-performance-engineering-policy.md
+  - ../../.agents/cardborne-runtime-architecture-audit.md
 ---
 
 # EMP Wavefront Integration - Execution Contract

@@ -79,7 +79,7 @@ try {
 
   $productSpec = Get-Content -Raw -LiteralPath 'docs/product/vehicle_game_spec.md'
   $visualSpec = Get-Content -Raw -LiteralPath 'docs/design/VISUAL_SYSTEM.md'
-  if (-not $productSpec.Contains('### Inner walls, Transit Gates, and Mystery Devices')) {
+  if (-not $productSpec.Contains('### Inner walls, Transit Gates, and Anomaly Devices')) {
     Add-Failure 'Product spec is missing the gameplay/collision terrain owner section'
   }
   if (-not $visualSpec.Contains('### Semantic categories')) {
@@ -88,7 +88,9 @@ try {
 
   $trackedMarkdown = @(
     git ls-files --cached --others --exclude-standard -- '*.md' '*.mdx'
-  ) | Where-Object { $_ }
+  ) | Where-Object {
+    $_ -and (Test-Path -LiteralPath (Join-Path $repoRoot $_) -PathType Leaf)
+  }
   $allowedCanonical = @(
     '.agents/PLANS.md',
     '.agents/cardborne-performance-engineering-policy.md',

@@ -9,14 +9,14 @@ scope: Five-stage Cardborne run; combat presentation, bounded runtime fixes, ord
 supersedes: ./2026-08-10-non-boss-combat-and-upgrade-integrity.md
 related:
   - ../../AGENTS.md
-  - ../AGENTS.md
-  - ../PLANS.md
-  - ../combat-clarity-runtime-difficulty-analysis.md
+  - ../../.agents/AGENTS.md
+  - ../../.agents/PLANS.md
+  - ../../.agents/combat-clarity-runtime-difficulty-analysis.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
-  - ../design/DESIGN.md
-  - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../../.agents/design/DESIGN.md
+  - ../../.agents/cardborne-performance-engineering-policy.md
+  - ../../.agents/cardborne-runtime-architecture-audit.md
 ---
 
 # Combat Clarity, Smoothness, and Difficulty - Execution Contract

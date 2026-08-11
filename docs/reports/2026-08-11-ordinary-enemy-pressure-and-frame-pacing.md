@@ -8,16 +8,16 @@ topic: Ordinary-enemy interception, firing-position recovery, forward pressure s
 scope: Five-stage Cardborne run; ordinary enemy targeting, movement, attack commitment, spawn arrival order, radar and guidebook hot paths, specification updates, validation, Web export, rendered QA, and bounded performance evidence
 related:
   - ../../AGENTS.md
-  - ../AGENTS.md
-  - ../PLANS.md
-  - ../design/DESIGN.md
+  - ../../.agents/AGENTS.md
+  - ../../.agents/PLANS.md
+  - ../../.agents/design/DESIGN.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/cardborne-universal-art-style-reference.png
   - ./2026-08-11-combat-clarity-smoothness-difficulty.md
   - ./2026-08-11-dash-radar-boss-scaling-guidebook-flow.md
-  - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../../.agents/cardborne-performance-engineering-policy.md
+  - ../../.agents/cardborne-runtime-architecture-audit.md
 ---
 
 # Ordinary Enemy Pressure and Frame Pacing - Execution Contract

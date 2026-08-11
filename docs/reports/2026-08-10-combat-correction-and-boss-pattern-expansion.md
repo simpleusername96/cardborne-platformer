@@ -12,14 +12,14 @@ supersedes:
   - ../../docs/reports/2026-08-08-combat-pressure-and-surface-depth.md
 related:
   - ../../AGENTS.md
-  - ../AGENTS.md
-  - ../PLANS.md
+  - ../../.agents/AGENTS.md
+  - ../../.agents/PLANS.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/visual-replacement-workbench/candidates/boss-signature-pattern-concepts-v1/README.md
-  - ../design/DESIGN.md
-  - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../../.agents/design/DESIGN.md
+  - ../../.agents/cardborne-performance-engineering-policy.md
+  - ../../.agents/cardborne-runtime-architecture-audit.md
 ---
 
 # Combat Correction and Boss Pattern Expansion - Execution Contract

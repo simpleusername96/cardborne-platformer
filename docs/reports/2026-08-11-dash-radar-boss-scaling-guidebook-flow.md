@@ -8,16 +8,16 @@ topic: Dash-coherent threat radar, monotonic stage and boss pressure, guidebook 
 scope: Five-stage Cardborne run; threat-radar presentation, ordinary and boss difficulty profiles, boss autonomous pattern execution, guidebook information architecture, modal routing, focused validation, Web export, rendered QA, and bounded performance evidence
 related:
   - ../../AGENTS.md
-  - ../AGENTS.md
-  - ../PLANS.md
-  - ../design/DESIGN.md
+  - ../../.agents/AGENTS.md
+  - ../../.agents/PLANS.md
+  - ../../.agents/design/DESIGN.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/cardborne-universal-art-style-reference.png
   - ./2026-08-11-combat-clarity-smoothness-difficulty.md
-  - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
-  - ../semantic-v2-runtime-acceptance-evidence.md
+  - ../../.agents/cardborne-performance-engineering-policy.md
+  - ../../.agents/cardborne-runtime-architecture-audit.md
+  - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
 # Dash Radar, Boss Scaling, Guidebook, and Flow - Execution Contract

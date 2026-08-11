@@ -9,15 +9,15 @@ scope: Upgrade-card progression copy and values, ordinary melee contact reliabil
 supersedes: ./2026-08-10-combat-correction-and-boss-pattern-expansion.md
 related:
   - ../../AGENTS.md
-  - ../AGENTS.md
-  - ../PLANS.md
+  - ../../.agents/AGENTS.md
+  - ../../.agents/PLANS.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/cardborne-universal-art-style-reference.png
-  - ../design/DESIGN.md
-  - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../../.agents/design/DESIGN.md
+  - ../../.agents/cardborne-performance-engineering-policy.md
+  - ../../.agents/cardborne-runtime-architecture-audit.md
   - ./2026-08-10-emp-wavefront-integration.md
   - ./2026-08-11-combat-clarity-smoothness-difficulty.md
 ---
@@ -911,7 +911,7 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   native GPU time is `1.62/1.75 ms`. The current Web peak workload is correct but release-
   ineligible because the automation browser is headless and scheduler-throttled. Exact
   payloads and the narrow non-causal diagnosis are recorded in
-  `../semantic-v2-runtime-acceptance-evidence.md`.
+  `../../.agents/semantic-v2-runtime-acceptance-evidence.md`.
 - Verified source baseline: clean commit `04839774` preceded the Task 0.1/0.2 work. The
   former crate-warning failure was fixture contamination from generated cover; the isolated
   one-crate clear-path fixture passes without a runtime geometry change. Per user direction,
