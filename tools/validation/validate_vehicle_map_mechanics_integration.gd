@@ -157,7 +157,9 @@ func _validate_effect_targeting(run) -> void:
 	run.call("_prepare_mystery_device_effects", 0.1)
 	run.call("_refresh_enemy_presentation_facing", ordinary)
 	_expect(
-		ordinary.presentation_facing.is_equal_approx((center - ordinary.pos).normalized()),
+		ordinary.presentation_facing.normalized().is_equal_approx(
+			(center - ordinary.pos).normalized()
+		),
 		"decoy signal publishes its redirected target through enemy facing"
 	)
 	var ordinary_before: Vector2 = ordinary.pos
