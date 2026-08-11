@@ -27,6 +27,8 @@ func _run() -> void:
 	if run != null:
 		run.set_process(false)
 		run.set_physics_process(false)
+		run.set("_layout_seed_override", 0xC4A2B0)
+		run.set("_has_layout_seed_override", true)
 		run.call("_reset_run", false)
 		run.mode = run.RunMode.PLAYING
 		_validate_device_collision_and_damage_authority(run)
