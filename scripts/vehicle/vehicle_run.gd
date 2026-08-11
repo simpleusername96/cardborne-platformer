@@ -3729,6 +3729,10 @@ func _update_projectile_buffer(
 				projectile.velocity = steered * projectile.velocity.length()
 		var to := from + projectile.velocity * simulation_delta
 		var radius := projectile.radius
+		var structure_query_started := (
+			Time.get_ticks_usec()
+			if _performance_detail_sample_active and not hostile else 0
+		)
 		var mystery_hit := (
 			not hostile
 			and projectile.owner == "player_primary"
@@ -3742,11 +3746,22 @@ func _update_projectile_buffer(
 				from, to, radius, _reinforcement_facility_hit_receipt
 			)
 		)
+		if not hostile:
+			_performance_accumulate_enemy_section(
+				"projectile_structure_query", structure_query_started
+			)
 		var facility_is_first_structure := facility_hit and _reinforcement_facility_hit_is_first(
 			from, to, radius, projectile.wall_piercing, mystery_hit
 		)
 		if not projectile.wall_piercing and not facility_is_first_structure:
+			var cover_query_started := (
+				Time.get_ticks_usec()
+				if _performance_detail_sample_active else 0
+			)
 			var cover_hit := _runtime_first_cover_hit(from, to, radius)
+			_performance_accumulate_enemy_section(
+				"projectile_cover_query", cover_query_started
+			)
 			if (
 				mystery_hit
 				and (
