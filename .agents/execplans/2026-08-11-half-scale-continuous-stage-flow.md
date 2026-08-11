@@ -27,8 +27,8 @@ related:
 다음 스테이지를 즉시 시작한다. 이미 태어난 일반 적과 일반 전투 상태는 남기고,
 보스에게 종속된 위협만 제거한다. 5스테이지 보스는 빈 화면 없이 즉시 최종 결과를 연다.
 동시에 HP/EXP를 화면 최상단에 빈틈 없는 full-width meter로 두고, 그 아래 중앙에
-현재 stage·run 누적 격파와 Dash/Seeker/EMP cooldown을 한 의미당 한 icon만 쓰는
-centered tactical rail로 묶는다.
+현재 stage·run 누적 격파와 Dash/Seeker/EMP cooldown을 한 의미당 한 작은 icon만 쓰는
+panel-free centered cluster로 묶는다.
 
 ## Purpose
 
@@ -107,7 +107,7 @@ production asset이 아니고 layout·정보·semantic 관계만 구현 계약�
   따라 1/2로 줄지 않으며 접근성을 유지한다.
 - 체력과 EXP meter를 viewport 최상단에서 각각 100% 폭으로 만들고 세로로 맞붙인다.
 - 두 meter 아래 중앙에 현재 stage, run 누적 격파, Dash/Seeker/EMP cooldown을 최종안의
-  centered icon rail로 배치하고 미니맵은 우측에 유지한다.
+  panel-free icon/value cluster로 배치하고 미니맵은 우측에 유지한다.
 - zoom에 따라 가시 영역, 스폰 배제, boss arrival, 위협 레이더, renderer culling,
   원거리 simulation cadence, 주무기 visible range가 같은 좌표계를 사용하게 한다.
 - Stage 1~4 보스 처치 시 같은 프레임에 full heal과 다음 stage configure를 완료하고
@@ -164,22 +164,24 @@ production asset이 아니고 layout·정보·semantic 관계만 구현 계약�
   고정한다. 순서는 항상 HP 위, EXP 아래다.
 - HP 중앙은 모든 언어에서 `HP current / max`, EXP 중앙은 `LV N · EXP current / required`
   또는 `LV N · EXP MAX`를 보인다. label과 값은 meter 전체 기준으로 중앙 정렬한다.
-- tactical rail은 meter 아래 compact/standard/large `4/6/8px` 간격으로 viewport 중앙에 둔다.
-  한 개의 restrained backing과 한 개의 group divider만 허용하며 cell별 card/frame은 만들지 않는다.
-- rail은 `stage_progress`, `total_defeats`, divider, `dash`, `seeker`, `emp` 순서다.
+- status icon cluster는 meter 아래 compact/standard/large `4/6/8px` 간격으로 viewport 중앙에 둔다.
+  cluster와 각 item은 layout만 소유하며 visible backing, panel, section, surface, border, divider,
+  card, frame, rail, line, blur 또는 shadow plate geometry는 정확히 0개다.
+- cluster는 `stage_progress`, `total_defeats`, `dash`, `seeker`, `emp` 순서다.
   stage는 offset deck plate stack, 누적 격파는 custom skull silhouette를 새
   `VehicleUiStatusGlyphRenderer` code-native recipe로 추가하고, cooldown은 기존 action glyph를
   사용한다. OS emoji, flag, star, generic diamond,
   lightning, crosshair는 이 두 새 의미에 사용하지 않는다.
 - 각 glyph는 게임 전체에서 정확히 한 semantic ID만 소유한다. 같은 image/emoji/icon을 다른
   의미로 재사용하지 않고, 같은 의미에도 다른 glyph를 병행하지 않는다.
-- 모든 slot은 icon, value, cooldown rail을 각각 중앙 정렬한다. stage는 `N / 5`, 누적은 숫자만,
-  ready action은 `READY`, cooldown 중 action은 0.1초 단위 `N.Ns`를 표시한다. cooldown 상태는
-  얇은 straight progress rail과 숫자를 함께 써 color만으로 전달하지 않는다.
-- slot은 compact/standard/large에서 `48×48/56×54/64×60px`, 200% text에서 `88×72px`다.
-  다섯 slot은 지원 viewport에서 한 줄 중앙 정렬을 유지하며 글자나 glyph를 최소치 아래로 줄이거나
-  cell 밖으로 clip하지 않는다.
-- minimap은 meter 아래 우측에 유지한다. status toast는 meter와 tactical rail/minimap의
+- 모든 item은 작은 icon과 필요한 value만 각각 중앙 정렬한다. stage는 `N / 5`, 누적은 숫자만,
+  ready action은 `READY`, cooldown 중 action은 0.1초 단위 `N.Ns`를 표시한다. 별도 label과
+  cooldown progress geometry는 만들지 않으며 숫자/READY가 color-independent state cue다.
+- icon optical size는 compact/standard/large에서 `16/18/20px`, 200% text에서 `20px`다.
+  invisible layout slot은 `36×36/40×40/44×44px`, 200% text에서 `72×64px`이며 background를
+  그리지 않는다. 다섯 item은 지원 viewport에서 약 `220–300px` 폭의 한 줄 중앙 정렬을 유지하고
+  글자나 glyph를 최소치 아래로 줄이거나 slot 밖으로 clip하지 않는다.
+- minimap은 meter 아래 우측에 유지한다. status toast는 meter와 icon cluster/minimap의
   가장 낮은 경계 아래에 두어 겹치지 않게 한다. player-anchored threat radar는 영향을 받지 않는다.
 
 ## Assumptions and Locked Behavior
@@ -204,7 +206,7 @@ full heal이라는 뜻으로 고정한다. 무적, cooldown 초기화, 무료 EM
 | 정적 필드 | field layout, run-fixed wall/gate, gate cooldown, 탐사 유지 |
 | stage-local object | 이전 pickup/device/facility를 retire하고 다음 stage 배치로 교체 |
 | 시설 자식 | 살아 있는 actor는 유지, 이전 시설 provenance로 분리해 새 counter와 무관 |
-| HUD | full-width HP/EXP와 tactical rail 유지, stage 번호와 run 누적 격파만 즉시 갱신 |
+| HUD | full-width HP/EXP와 panel-free icon cluster 유지, stage 번호와 run 누적 격파만 즉시 갱신 |
 
 Stage 5는 next-stage full heal을 하지 않고, 보스 소유 상태를 정리하고 stage report history를
 완성한 뒤 같은 frame boundary에서 `RunMode.RESULT`와 결과 모달을 연다.
@@ -228,8 +230,9 @@ Stage 5는 next-stage full heal을 하지 않고, 보스 소유 상태를 정리
    상단 점유가 과해 기각한다. C의 28/14px meter는 낮지만 stage 한 줄과 filled cooldown
    card 둘째 줄의 대비가 강해 전투보다 먼저 읽히므로 기각한다. 수정 B의 32/16px full-width
    meter와 compact rail을 잠정 선택했지만 visible label과 좌측 정렬이 최신 피드백과 충돌해
-   최종안으로 대체한다. 최종안은 32/22px meter, centered universal terms, 다섯 equal-width
-   semantic icon cell과 one-icon/one-meaning catalog를 선택한다.
+   최종안으로 대체한다. 이후 공통 dark panel과 큰 icon을 둔 label-free refinement도
+   사용자 피드백으로 기각한다. 최종안은 32/22px meter, centered universal terms,
+   standard 18px의 다섯 panel-free semantic icon/value item과 one-icon/one-meaning catalog다.
 
 ## Proposed Design
 
@@ -303,7 +306,7 @@ ID를 넣고, defeat 시 현재 facility instance와 일치할 때만 `note_chil
 다음 stage 계약으로 갱신하고, 보존된 enemy store를 clear하지 않은 채 grid와 coordination
 index만 rebuild/reconcile한다.
 
-### E. 최종 HUD — full-width dual meter와 centered semantic icon rail
+### E. 최종 HUD — full-width dual meter와 panel-free semantic icon cluster
 
 `VehicleGameplayHud`의 top band를 하나의 responsive owner로 만든다. HP와 EXP는 각각
 viewport의 x=0부터 width=viewport width까지 채우고 y=0부터 gap 없이 연속 배치한다.
@@ -311,28 +314,30 @@ meter fill은 semantic color를 사용하되 값은 항상 텍스트로도 제�
 industrial border 한 겹만 쓰며 double frame, 중첩 원형 gauge, 장식용 badge를 추가하지 않는다.
 
 HP는 `HP current / max`, EXP는 `LV N · EXP current / required` 또는 `LV N · EXP MAX`를
-각 track 전체 기준으로 중앙 정렬한다. 두 meter 바로 아래 중앙에는 다섯 equal-width cell을
-한 줄로 둔다. cell 순서는 offset deck plate stack `stage_progress`, custom skull
-`total_defeats`, divider, 기존 double-thrust `dash`, guided-triad `seeker`, radial-pulse
+각 track 전체 기준으로 중앙 정렬한다. 두 meter 바로 아래 중앙에는 다섯 작은 icon/value item을
+한 줄로 둔다. 순서는 offset deck plate stack `stage_progress`, custom skull
+`total_defeats`, 기존 double-thrust `dash`, guided-triad `seeker`, radial-pulse
 `emp`다. 앞의 두 glyph는 새
 `scripts/presentation/components/vehicle_ui_status_glyph_renderer.gd`의 code-native recipe로
 소유하고 `VehicleUiGlyphCatalog`가 노출한다. 뒤의 세 glyph는 기존
 `VehicleUiActionGlyphRenderer` recipe를 재사용한다. OS emoji나 raster/SVG는 추가하지 않는다.
 
-각 cell은 glyph, 값, 얇은 straight progress rail을 광학적으로 중앙 정렬한다. stage는
-`N / 5`, 누적 격파는 숫자만, action은 `READY` 또는 0.1초 단위 `N.Ns`만 보여 준다.
+각 item은 작은 glyph와 값을 광학적으로 중앙 정렬한다. stage는 `N / 5`, 누적 격파는 숫자만,
+action은 `READY` 또는 0.1초 단위 `N.Ns`만 보여 준다.
 visible `STAGE`, `누적 격파`, `TOTAL DEFEATED`, Dash/Seeker/EMP label은 만들지 않는다.
-rail 전체에는 contrast가 필요할 때만 한 개의 restrained backing과 한 개의 outer boundary를
-허용하고 cell별 card/frame은 금지한다. 모든 glyph ID는 catalog에서 하나의 의미만 소유하며
+cluster와 item 뒤에는 contrast 목적까지 포함해 visible geometry를 전혀 만들지 않는다.
+panel, section, surface, backing, border, divider, card, frame, line, progress rail, cooldown ring,
+blur와 shadow plate는 모두 금지한다. icon/text 자체의 1px dark outline 또는 text shadow만
+world contrast를 위해 허용한다. 모든 glyph ID는 catalog에서 하나의 의미만 소유하며
 같은 silhouette를 다른 HUD, minimap, 조준, 속성 의미로 재사용하지 않는다.
 
 `VehicleRun`은 기존 `stats_enemies_defeated`를 `cumulative_defeated` snapshot field로
-내보낸다. 현재 stage quota 진행값은 encounter 내부 진실로 남지만 이 rail에는 표시하지
+내보낸다. 현재 stage quota 진행값은 encounter 내부 진실로 남지만 이 cluster에는 표시하지
 않는다. stage 전환이 일반 적을 보존하므로 carry-over 적을 다음 stage에서 처치해도 누적은
 run 전체에서 정확히 한 번 증가한다. 기존 bottom-center EMP slot은 제거해 정보 중복과
 시선 이동을 없앤다.
 
-미니맵은 top band 아래 우측에 그대로 남는다. toast와 buff 문구는 rail/minimap과 충돌하지
+미니맵은 top band 아래 우측에 그대로 남는다. toast와 buff 문구는 icon cluster/minimap과 충돌하지
 않는 중앙 상단 안전 영역으로 이동하고, safe-area 및 text-scale 변경 때 clip/overflow를
 validator가 검사한다.
 
@@ -357,12 +362,13 @@ validator가 검사한다.
   네 reference를 실제 입력으로 받았다. 최종안은 current target, canonical sheet, layout-only
   capture를 실제 입력으로 다시 생성한 뒤 EXP fill truth만 두 번의 targeted edit로 교정했다.
   프롬프트 텍스트 참조만 사용하지 않았다.
-- Final preview: `C:/Users/BK/.codex/generated_images/019fee3c-67a2-78a0-a7db-bcd99b681d92/exec-8bc74f32-60d4-45a7-8e13-0398d91501e5.png`,
+- Final preview: `C:/Users/BK/.codex/generated_images/019fee3c-67a2-78a0-a7db-bcd99b681d92/exec-885b8afd-362a-4084-915d-4caf874ccee8.png`,
   `1672×941`, SHA-256
-  `530c2d327c41353b63facd599faad1a58dcb837635bc6663997ca99b141149be`.
+  `089b0ef5f1c37e4b58b235de86276ebe7c9a55213fb804bc27d178d9fb86779b`.
 - Selected rendered relation: HP와 EXP track이 각각 x=0에서 viewport right까지 이어지고 gap 0,
-  두 meter의 visible value는 전체 중앙 정렬이다. 아래 중앙 rail은 stacked-stage `4 / 5`, skull
-  `418`, divider, Dash `2.4s`, Seeker `READY`, EMP `8.1s` 순서이며 모든 cell을 중앙 정렬한다.
+  두 meter의 visible value는 전체 중앙 정렬이다. 아래 중앙 cluster는 작은 stacked-stage
+  `4 / 5`, skull `418`, Dash `2.4s`, Seeker `READY`, EMP `8.1s` 순서이며 icon/value 외
+  visible background geometry는 0개다.
 - Status: A/B/C, 수정 B와 최종안은 preview-only layout evidence다. 최종안의 정보 구조,
   크기 관계와 semantic mapping만 선택했으며 생성 pixel은 승인·승격·manifest 편입 대상이 아니다.
 
@@ -380,10 +386,10 @@ validator가 검사한다.
 | next-stage 시작 시각 | transition packet cue 0.35, birth 1.35 | `_transition_packets()` | cue 0.0, birth 0.9, mode PLAYING | 2.5 |
 | stage-local object | transition이 pickup/device/facility를 전량 재구성 | map runtime helpers | 다음 stage 배치로 교체, terrain/gate는 보존 | 2.6 |
 | HP/EXP 배치 | `HealthPips`가 520×44 고정, bar 사이 4px | `vehicle_gameplay_hud.gd` | responsive 100% width, top=0, gap=0 dual meter | 3.2 |
-| 누적 격파 | `stats_enemies_defeated`는 존재하지만 HUD가 stage defeated/quota만 받음 | `vehicle_run.gd`, presenter fast cluster | `cumulative_defeated` snapshot을 rail에 표시 | 3.1~3.3 |
+| 누적 격파 | `stats_enemies_defeated`는 존재하지만 HUD가 stage defeated/quota만 받음 | `vehicle_run.gd`, presenter fast cluster | `cumulative_defeated` snapshot을 panel-free cluster에 표시 | 3.1~3.3 |
 | cooldown | presenter는 Dash/Seeker/EMP를 모두 발행하나 UI는 bottom EMP만 표시 | presenter, HUD, action glyph renderer | 기존 glyph로 세 slot, bottom EMP 제거 | 3.3 |
 | icon 의미 | action catalog는 Seeker/Dash/EMP를 소유하지만 stage/누적 격파 glyph가 없고 기존 minimap/target glyph는 별도 의미를 소유함 | `vehicle_ui_glyph_catalog.gd`, action renderer, minimap marker contract | 새 `vehicle_ui_status_glyph_renderer.gd`가 `stage_progress` deck stack과 `total_defeats` skull을 소유하고 catalog가 모든 icon을 one-ID/one-meaning으로 검증 | 3.3 |
-| 시안 선택 | 현재 Cardborne capture에서 A는 과점유, C는 cooldown card 대비가 과함, 수정 B는 visible label과 좌측 정렬이 최신 피드백과 충돌함 | current HEAD capture+canonical sheet+layout-only user reference를 실제 입력한 A/B/C, 수정 B와 최종안 | 최종 centered semantic icon rail만 구현, 생성 pixel은 미승인 | 3.2~3.3 |
+| 시안 선택 | current capture 기반 label-free 시안도 icon과 공통 panel이 지나치게 컸음 | current HEAD capture+canonical sheet를 실제 입력한 panel-free refinement | 작은 panel-free semantic icon/value cluster만 구현, 생성 pixel은 미승인 | 3.2~3.3 |
 | 제품/시각 문서 | full heal+1.2s protection+boss reward와 이전 HUD footprint 명시 | product/upgrade/visual docs | 연속 계약, screen/world 단위, 최종 HUD로 갱신 | 3.4 |
 | 성능 | 기존 320적 capacity가 이미 red, zoom은 visible workload를 바꿈 | active performance plan/policy | 새 결과를 별도 baseline으로 표시, 기존 실패를 해결로 주장하지 않음 | 4.2 |
 
@@ -491,9 +497,9 @@ Phase gate:
   `validate_vehicle_rewards_ui_audio.gd`, `validate_vehicle_enemy_contact.gd`,
   `validate_vehicle_stage_telemetry.gd`가 통과한다.
 
-### Phase 3: 최종 centered semantic gameplay HUD와 활성 계약 정리
+### Phase 3: 최종 panel-free semantic gameplay HUD와 활성 계약 정리
 
-Goal: full-width meter와 tactical rail을 구현하고 코드, 사용자 문서, 현지화 검증이
+Goal: full-width meter와 panel-free icon/value cluster를 구현하고 코드, 사용자 문서, 현지화 검증이
 새 동작만 설명하게 한다.
 
 Preconditions: Phase 2 gate 통과.
@@ -510,7 +516,7 @@ Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_hud_present
 - [ ] **3.1** 누적 격파와 세 cooldown을 HUD data contract에 연결한다.
   - Change: `VehicleRun.stats_enemies_defeated`를 `cumulative_defeated` snapshot/presenter
     cluster에 추가하고 Dash/Seeker/EMP ready·ratio·remaining을 하나의 HUD view model로 만든다.
-  - Accept: stage 1에서 5회, carry-over 포함 stage 2에서 3회 처치한 fixture가 rail에 8을
+  - Accept: stage 1에서 5회, carry-over 포함 stage 2에서 3회 처치한 fixture가 cluster에 8을
     표시하고 stage quota reset과 무관하다. 세 cooldown은 runtime 값과 0.05 이내로 일치한다.
   - Guard: UI가 gameplay timer를 다시 계산하거나 quota를 누적으로 오인하지 않는다.
 - [ ] **3.2** HP/EXP를 top full-width dual meter로 재구성한다.
@@ -520,18 +526,20 @@ Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/ui/vehicle_hud_present
     HP top=0, EXP top=HP bottom이며 1px 넘는 gap/overlap이 없다. `HP current / max`와
     `LV N · EXP current / required|MAX`가 track 전체 중앙에 있고 fill ratio와 실제 값 차이는
     1px 이하다.
-- [ ] **3.3** 최종 centered semantic icon rail을 구현한다.
+- [ ] **3.3** 최종 panel-free semantic icon/value cluster를 구현한다.
   - Change: 새 `vehicle_ui_status_glyph_renderer.gd`에 `stage_progress` deck stack과
     `total_defeats` skull code-native recipe를 추가하고 `VehicleUiGlyphCatalog`가 이를 노출한다.
-    divider 하나, 기존 Dash/Seeker/EMP glyph slot, top-right minimap,
-    non-overlapping toast를 배치한다. 모든 glyph/value/progress rail을 cell 중앙에 맞추고
+    기존 Dash/Seeker/EMP glyph slot, top-right minimap, non-overlapping toast를 배치한다.
+    모든 작은 glyph/value를 invisible slot 중앙에 맞추고
     bottom-center EMP 중복 slot을 제거한다.
-  - Accept: 모든 viewport에서 한 줄 순서가 stage icon→skull→divider→Dash→Seeker→EMP이며
-    stage `N / 5`, 누적 숫자, action `READY|N.Ns` 외 visible label은 0개다. compact slot은
-    최소 `48×48px`, 200% slot은 `88×72px`이며 minimap/toast와 겹치거나 viewport 밖으로
-    나가는 node가 0개다. catalog ID coverage와 duplicate semantic owner는 각각 complete/0이다.
-  - Guard: OS emoji, 새 raster/SVG, cell별 frame, nested ring, 설명 panel, 네 번째 cooldown,
-    기존 minimap/target/affinity silhouette 재사용을 추가하지 않는다.
+  - Accept: 모든 viewport에서 한 줄 순서가 stage icon→skull→Dash→Seeker→EMP이며 stage
+    `N / 5`, 누적 숫자, action `READY|N.Ns` 외 visible label은 0개다. standard icon optical
+    size는 `18px`, 전체 cluster는 `220–300px`이고 minimap/toast와 겹치거나 viewport 밖으로
+    나가는 node가 0개다. cluster/item background draw count와 cooldown progress geometry는
+    각각 0이며 catalog ID coverage와 duplicate semantic owner는 각각 complete/0이다.
+  - Guard: OS emoji, 새 raster/SVG, panel, section, surface, backing, border, divider, card,
+    frame, progress rail, cooldown ring, blur, shadow plate, 네 번째 cooldown 또는 기존
+    minimap/target/affinity silhouette 재사용을 추가하지 않는다.
 - [ ] **3.4** 제품·시각 명세와 obsolete transition surface를 갱신한다.
   - Change: boss reward/1.2s protection/1.6s transition을 immediate continuation으로 바꾸고
     world-unit/0.5 screen presentation, full-width HUD, 누적 격파, 세 cooldown을 명시한다.
@@ -618,7 +626,7 @@ Validation rules:
 | boss-owned damage를 typed ownership으로 구분할 수 없음 | 해당 state에 명시적 owner tag를 추가 | pattern 문자열 추론으로 ship 금지 |
 | native A/B가 10% 이상 악화 | release 중단, evidence를 보존하고 이 계획의 visible scheduling을 개정 | threshold 약화나 workload 축소는 사용자 승인 필요 |
 | Stage 5 result가 같은 frame에 열리지 않음 | result owner만 수정하고 실제 boss-defeat fixture 재실행 | 보스 보상/대기 gate 재도입 금지 |
-| 200% text에서 tactical rail과 minimap clearance가 부족함 | rail은 88×72px cell과 한 줄 중앙 정렬을 유지하고 inter-cell gap을 4px까지 줄인 뒤 minimap을 같은 top band 안에서 아래로 이동 | 글자·glyph 축소, rail wrap, viewport 밖 clip 금지 |
+| 200% text에서 icon cluster와 minimap clearance가 부족함 | cluster는 72×64px invisible slot과 한 줄 중앙 정렬을 유지하고 inter-item gap을 4px까지 줄인 뒤 minimap을 같은 top band 안에서 아래로 이동 | visible backing 추가, icon 확대, cluster wrap, viewport 밖 clip 금지 |
 | cooldown 표시가 runtime과 어긋남 | presenter snapshot의 ready/ratio/remaining만 사용하고 fixture로 비교 | HUD 자체 timer나 추정 cooldown 금지 |
 | material fact가 계약과 충돌 | 영향 branch를 중단하고 계약 수정 | executor의 제품/구조 재선택 금지 |
 
@@ -650,14 +658,14 @@ Validation rules:
 | stage-local object 교체가 눈에 보임 | 완전한 세계 지속감 약화 | modal/time stop 없이 같은 frame 교체; 누적 배치는 scope 밖 |
 | 기존 active plan이 old reward를 재도입 | 문서 권위 충돌 | 양 문서에 후속 결정 우선순위 기록 |
 | full-width meter가 전투 화면을 과도하게 가림 | 상단 시야 감소 | 최종 responsive 높이, 단일 얇은 border, meter별 추가 배경판 금지 |
-| cooldown glyph/value가 작거나 색에만 의존 | 전투 중 판독 실패 | 최소 48px slot, 기존 action glyph, 숫자 시간, READY와 straight progress rail을 함께 표시 |
+| 작은 cooldown glyph에서 상태값이 흐려짐 | 전투 중 판독 실패 | standard 18px glyph와 14px value, 1px contrast outline, 숫자 시간 또는 READY를 유지; backing/progress geometry는 추가하지 않음 |
 | 한 glyph가 HUD·미니맵·조준에서 다른 뜻으로 재사용됨 | 학습한 의미가 깨지고 전투 중 오판 | catalog one-ID/one-meaning validator, stage deck stack과 total-defeats skull의 exclusive owner 고정 |
 
 ## Open Questions
 
 없음. “1/2”는 world screen-space scale, “체력만”은 full heal 외 즉시 혜택 없음,
 “일반 적 유지”는 boss-owned actor를 제외한 이미 태어난 ordinary combat actor 유지로
-결정했다. HUD는 최종 centered semantic icon rail, 누적은 run 전체의
+결정했다. HUD는 최종 panel-free semantic icon/value cluster, 누적은 run 전체의
 `stats_enemies_defeated`, cooldown은 현재 runtime이 제공하는 Dash/Seeker/EMP 세 개로
 결정했다. visible HUD 용어는 `HP/EXP/LV/READY`로 고정하며 icon 하나는 게임 전체에서
 하나의 의미만 소유한다. 이 해석이 바뀌면 구현 전에 본 계약을 개정한다.
@@ -680,16 +688,20 @@ Validation rules:
   오류를 폐기했다. 현재 HEAD의 Korean 1279×720 capture를 새로 생성해 모든 교정 시안의
   edit target으로 사용했고, canonical sheet와 layout-only 사용자 캡처도 실제 reference로 전달했다.
 - 2026-08-11: 교정 A/B/C와 full-width meter 수정 B를 실제 Cardborne 화면에서 비교해
-  수정 B를 잠정 선택했으나, 최신 피드백 뒤 visible label과 좌측 rail은 최종 centered
-  semantic icon rail로 대체했다.
+  수정 B를 잠정 선택했으나, 최신 피드백 뒤 visible label과 좌측 rail은 panel-free
+  semantic icon/value cluster로 대체했다.
 - 2026-08-11: HP/EXP는 standard 32/22px를 포함한 responsive 높이로 top full-width, gap 0이며
   `HP current / max`, `LV N · EXP current / required`를 track 전체 중앙에 둔다.
-- 2026-08-11: 수정 B의 visible label과 좌측 rail을 최신 사용자 피드백으로 대체했다. meter 아래
-  중앙에 stage deck stack, total-defeats skull, Dash, Seeker, EMP 다섯 cell을 두며 모든 icon과
-  값은 중앙 정렬한다. 각 glyph는 catalog에서 정확히 하나의 semantic owner만 가진다.
+- 2026-08-11: meter 아래 중앙에 stage deck stack, total-defeats skull, Dash, Seeker, EMP
+  다섯 작은 icon/value item을 두며 모든 icon과 값은 중앙 정렬한다. 공통/개별 panel, section,
+  divider와 cooldown progress geometry는 0개다. 각 glyph는 catalog에서 정확히 하나의
+  semantic owner만 가진다.
 - 2026-08-11: 최종 preview는 현재 Cardborne capture를 edit target으로 사용했고 EXP 73/112
   fill을 약 65.2%로 교정했다. preview pixel은 runtime asset이 아니며 구현은 code-native
   meter/glyph로 재현한다.
+- 2026-08-11: panel-bearing preview를 폐기하고, 동일한 edit target에서 dark panel과 모든
+  section geometry를 제거한 `exec-885b8afd-362a-4084-915d-4caf874ccee8.png`를 최종 관계로
+  선택했다. 아이콘은 이전 시안의 약 1/3 optical size다.
 - 2026-08-11: 시안의 생성 actor/background/icon/ring은 preview-only이며 production asset
   approval이나 manifest 편입으로 간주하지 않는다.
 
@@ -710,7 +722,7 @@ Complete when:
 - 모든 task acceptance, phase gate, final gate가 통과한다.
 - 제품/시각 명세가 구현과 일치하고 이전 active plan의 충돌 문장이 정리된다.
 - actual native/Web flow에서 world 1/2, HUD 유지, ordinary continuity, HP-only continuation,
-  Stage 5 result와 최종 full-width centered meter/semantic icon rail/세 cooldown을 확인한다.
+  Stage 5 result와 최종 full-width centered meter/panel-free semantic icon cluster/세 cooldown을 확인한다.
 - task-owned code quality audit와 clean scoped commit이 완료된다.
 - 그 뒤에만 frontmatter status를 `done`으로 바꾸고 durable spec 반영을 확인한다.
 
