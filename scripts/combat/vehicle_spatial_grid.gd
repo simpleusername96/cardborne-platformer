@@ -53,7 +53,7 @@ var _nearest_query_distances := PackedFloat32Array()
 var _maximum_local_body_radius := 0.0
 var _generation_rejects := 0
 var _local_overlap_generations := PackedInt32Array()
-var _local_overlap_valid := PackedByteArray()
+var _local_overlap_valid := PackedInt32Array()
 var _local_overlap_counts := PackedByteArray()
 var _local_overlap_neighbor_slots := PackedInt32Array()
 var _local_overlap_distances := PackedFloat64Array()
@@ -61,7 +61,8 @@ var _local_snapshot_positions := PackedVector2Array()
 var _local_snapshot_body_radii := PackedFloat64Array()
 var _local_snapshot_actor_ids := PackedStringArray()
 var _local_snapshot_generations := PackedInt32Array()
-var _local_snapshot_valid := PackedByteArray()
+var _local_snapshot_valid := PackedInt32Array()
+var _local_overlap_build_serial := 0
 var _local_overlap_builds := 0
 var _legacy_nearest_query_calls := 0
 var last_overlap_snapshot_ms := 0.0
@@ -132,6 +133,7 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_local_snapshot_generations.fill(0)
 	_local_snapshot_valid.resize(MAX_TRACKED_ACTORS)
 	_local_snapshot_valid.fill(0)
+	_local_overlap_build_serial = 0
 	_maximum_local_body_radius = 0.0
 	_query_id = 0
 	_generation_rejects = 0
@@ -343,19 +345,25 @@ func rebuild_local_overlap_cache(
 	## rows from cells that can contain a body overlap. The candidate loop stays
 	## inline because dispatching once per dense-cell candidate is a measured hot path.
 	_local_overlap_builds += 1
+	_local_overlap_build_serial += 1
+	if _local_overlap_build_serial >= 0x7ffffffe:
+		_local_overlap_valid.fill(0)
+		_local_snapshot_valid.fill(0)
+		_local_overlap_build_serial = 1
 	var section_started := Time.get_ticks_usec() if measure_sections else 0
-	_local_overlap_valid.fill(0)
-	_local_overlap_counts.fill(0)
-	_local_snapshot_valid.fill(0)
 	for slot in MAX_TRACKED_ACTORS:
 		var enemy: EnemyState = _actors[slot]
 		if not _local_cache_actor_is_valid(slot, enemy):
 			continue
-		_local_snapshot_valid[slot] = 1
+		_local_snapshot_valid[slot] = _local_overlap_build_serial
 		_local_snapshot_positions[slot] = _positions[slot]
-		_local_snapshot_body_radii[slot] = maxf(0.0, enemy.radius)
-		_local_snapshot_actor_ids[slot] = String(enemy.id)
-		_local_snapshot_generations[slot] = _member_generations[slot]
+		var generation := _member_generations[slot]
+		if _local_snapshot_generations[slot] != generation:
+			# Identity and body radius are immutable within one pooled generation.
+			# Reuse them while only the position snapshot changes every tick.
+			_local_snapshot_body_radii[slot] = maxf(0.0, enemy.radius)
+			_local_snapshot_actor_ids[slot] = String(enemy.id)
+			_local_snapshot_generations[slot] = generation
 	if measure_sections:
 		last_overlap_snapshot_ms = (
 			float(Time.get_ticks_usec() - section_started) / 1000.0
@@ -366,9 +374,12 @@ func rebuild_local_overlap_cache(
 		last_overlap_query_ms = 0.0
 	var owner_limit := mini(refresh_slots.size(), MAX_TRACKED_ACTORS)
 	for owner_slot in owner_limit:
-		if refresh_slots[owner_slot] == 0 or _local_snapshot_valid[owner_slot] == 0:
+		if (
+			refresh_slots[owner_slot] == 0
+			or _local_snapshot_valid[owner_slot] != _local_overlap_build_serial
+		):
 			continue
-		_local_overlap_valid[owner_slot] = 1
+		_local_overlap_valid[owner_slot] = _local_overlap_build_serial
 		_local_overlap_generations[owner_slot] = _local_snapshot_generations[owner_slot]
 		var owner_position := _local_snapshot_positions[owner_slot]
 		var owner_radius := float(_local_snapshot_body_radii[owner_slot])
@@ -392,7 +403,8 @@ func rebuild_local_overlap_cache(
 						candidate_slot < 0
 						or candidate_slot >= MAX_TRACKED_ACTORS
 						or owner_slot == candidate_slot
-						or _local_snapshot_valid[candidate_slot] == 0
+						or _local_snapshot_valid[candidate_slot]
+							!= _local_overlap_build_serial
 					):
 						continue
 					var distance_squared := owner_position.distance_squared_to(
@@ -501,7 +513,11 @@ func cached_local_overlap_distance_squared(owner: EnemyState, index: int) -> flo
 func cached_local_position(slot: int) -> Vector2:
 	return (
 		_local_snapshot_positions[slot]
-		if slot >= 0 and slot < MAX_TRACKED_ACTORS and _local_snapshot_valid[slot] != 0
+		if (
+			slot >= 0
+			and slot < MAX_TRACKED_ACTORS
+			and _local_snapshot_valid[slot] == _local_overlap_build_serial
+		)
 		else Vector2.ZERO
 	)
 
@@ -509,7 +525,11 @@ func cached_local_position(slot: int) -> Vector2:
 func cached_local_body_radius(slot: int) -> float:
 	return (
 		float(_local_snapshot_body_radii[slot])
-		if slot >= 0 and slot < MAX_TRACKED_ACTORS and _local_snapshot_valid[slot] != 0
+		if (
+			slot >= 0
+			and slot < MAX_TRACKED_ACTORS
+			and _local_snapshot_valid[slot] == _local_overlap_build_serial
+		)
 		else 0.0
 	)
 
@@ -517,7 +537,11 @@ func cached_local_body_radius(slot: int) -> float:
 func cached_local_actor_id(slot: int) -> String:
 	return (
 		String(_local_snapshot_actor_ids[slot])
-		if slot >= 0 and slot < MAX_TRACKED_ACTORS and _local_snapshot_valid[slot] != 0
+		if (
+			slot >= 0
+			and slot < MAX_TRACKED_ACTORS
+			and _local_snapshot_valid[slot] == _local_overlap_build_serial
+		)
 		else ""
 	)
 
@@ -757,7 +781,7 @@ func _local_overlap_owner_is_valid(owner: EnemyState, slot: int) -> bool:
 		owner != null
 		and slot >= 0
 		and slot < MAX_TRACKED_ACTORS
-		and _local_overlap_valid[slot] != 0
+		and _local_overlap_valid[slot] == _local_overlap_build_serial
 		and _local_overlap_generations[slot] == maxi(1, owner.runtime_generation)
 	)
 

@@ -250,6 +250,9 @@ var completed_stage_reports: Array[Dictionary] = []
 var enemy_store := EnemyStore.new()
 var _enemy_update_schedule := EnemyUpdateSchedule.new()
 var _enemy_contact_runtime := EnemyContactRuntime.new()
+var _enemy_frame_aggregate_valid := false
+var _enemy_frame_active_mobile_count := 0
+var _enemy_frame_attack_families: Array[StringName] = []
 var enemy_grid := SpatialGrid.new()
 var enemies: Array[EnemyState] = enemy_store.live
 var _enemy_query_buffer: Array[EnemyState] = []
@@ -266,6 +269,7 @@ var effects: Array[VehicleEffectState] = effect_store.live
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
 var _motion_cover_query: Array[Rect2] = []
+var _los_cover_query: Array[Rect2] = []
 var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
 var _mystery_device_hit_receipt: Dictionary = {}
@@ -1109,10 +1113,12 @@ func _append_enemy(enemy: EnemyState) -> bool:
 	if added:
 		collective_tactics.register_enemy(enemy)
 		enemy_grid.update_actor(enemy)
+		_note_enemy_frame_aggregate_added(enemy)
 	return added
 
 
 func _clear_enemies() -> void:
+	_enemy_frame_aggregate_valid = false
 	collective_tactics.reset()
 	enemy_store.clear()
 	enemy_grid.rebuild(enemies)
@@ -1136,20 +1142,13 @@ func _simulation_active() -> bool:
 
 
 func _update_encounter(delta: float) -> void:
+	_refresh_enemy_frame_aggregate()
 	_advance_ordinary_arrival_cues(delta)
 	_refresh_elite_reservations()
-	var aggregate_started := (
-		Time.get_ticks_usec() if _performance_detail_sample_active else 0
-	)
-	var active_mobile_count := _active_mobile_count()
-	var active_attack_families := _active_attack_families()
-	_performance_accumulate_enemy_section(
-		"encounter_aggregate_scans", aggregate_started
-	)
 	var requests := encounter_runtime.tick(
 		delta,
-		active_mobile_count,
-		active_attack_families,
+		_enemy_frame_active_mobile_count,
+		_enemy_frame_attack_families,
 		player_position,
 		_visible_world_rect(0.0),
 		enemies,
@@ -1220,16 +1219,11 @@ func _update_reinforcement_facility(delta: float) -> void:
 				tr("NOTIFY_REINFORCEMENT_FACILITY"), 3.5, Art.MUSTARD
 			)
 		_play_sound(&"boss", 0.82)
-	var facility_count_started := (
-		Time.get_ticks_usec() if _performance_detail_sample_active else 0
-	)
-	var active_mobile_count := _active_mobile_count()
-	_performance_accumulate_enemy_section(
-		"facility_active_scan", facility_count_started
-	)
 	var spawn_spec := reinforcement_facility_runtime.advance(
 		delta,
-		encounter_runtime.available_active_slots(active_mobile_count)
+		encounter_runtime.available_active_slots(
+			_enemy_frame_active_mobile_count
+		)
 	)
 	if spawn_spec.is_empty():
 		return
@@ -1319,16 +1313,46 @@ func _active_mobile_count() -> int:
 	return count
 
 
-func _active_attack_families() -> Array[StringName]:
-	var families: Array[StringName] = []
+func _refresh_enemy_frame_aggregate() -> void:
+	var aggregate_started := (
+		Time.get_ticks_usec() if _performance_detail_sample_active else 0
+	)
+	_enemy_frame_active_mobile_count = 0
+	_enemy_frame_attack_families.clear()
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active:
 			continue
+		if enemy.counts_active_cap:
+			_enemy_frame_active_mobile_count += 1
 		var family := enemy.threat_kind
-		if family in [&"support", &"boss"] or family in families:
+		if (
+			family in [&"support", &"boss"]
+			or family in _enemy_frame_attack_families
+		):
 			continue
-		families.append(family)
-	return families
+		_enemy_frame_attack_families.append(family)
+	_enemy_frame_aggregate_valid = true
+	_performance_accumulate_enemy_section(
+		"encounter_aggregate_scans", aggregate_started
+	)
+
+
+func _note_enemy_frame_aggregate_added(enemy: EnemyState) -> void:
+	if (
+		not _enemy_frame_aggregate_valid
+		or enemy == null
+		or not enemy.alive
+		or not enemy.active
+	):
+		return
+	if enemy.counts_active_cap:
+		_enemy_frame_active_mobile_count += 1
+	var family := enemy.threat_kind
+	if (
+		family not in [&"support", &"boss"]
+		and family not in _enemy_frame_attack_families
+	):
+		_enemy_frame_attack_families.append(family)
 
 
 func _on_deployment_selected(primary_id: StringName) -> void:
@@ -1770,7 +1794,10 @@ func _runtime_cover_has_line_of_sight(
 		Time.get_ticks_usec() if _performance_detail_sample_active else 0
 	)
 	if field_layout != null:
-		for blocker in _active_tactical_layout.cover_rects:
+		_active_tactical_layout.covers_near_motion_into(
+			from, to, padding, _los_cover_query
+		)
+		for blocker in _los_cover_query:
 			if (
 				swept.intersects(blocker.grow(padding), true)
 				and Rules.segment_rect_intersects(from, to, blocker, padding)
