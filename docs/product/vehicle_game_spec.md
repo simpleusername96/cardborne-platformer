@@ -724,8 +724,11 @@ no credit or stored charge.
   damage by stable source, plus a second partition by kinetic, thermal, toxin,
   cryo, or arc attribute. Both outgoing totals agree within 0.01. A failed
   attempt opens the report in failure mode with the last hit and the three
-  largest incoming sources, then returns directly to Deployment. The final result
-  and Pause abort action also return directly to Deployment.
+  largest incoming sources, then returns directly to Deployment. Every retained
+  stage record, failure report, and final result shows cumulative active gameplay
+  time from run start; stage transitions never reset or replace it with a
+  stage-local duration. The final result and Pause abort action also return
+  directly to Deployment.
 - Deployment, upgrade, pause/settings, guidebook, result, and report are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
 - One upgrade offer contains one to three unique compatible card IDs. The

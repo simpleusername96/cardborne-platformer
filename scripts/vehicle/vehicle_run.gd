@@ -5446,7 +5446,7 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 		"number":int(profile["number"]),
 		"title_key":String(profile["title_key"]),
 		"has_next_stage":has_next_stage,
-		"clear_time":maxf(0.0, run_time - stage_started_at),
+		"run_time_seconds":maxf(0.0, run_time),
 		"hull":player_health,
 		"max_hull":_player_max_health(),
 	}
@@ -5565,7 +5565,7 @@ func _show_final_result() -> void:
 		"stage_title_key": String(profile["title_key"]),
 		"has_next_stage": false,
 		"next_stage_key": "",
-		"time": _format_time(run_time),
+		"run_time_seconds": maxf(0.0, run_time),
 		"health_ratio": player_health / _player_max_health(),
 		"upgrade": selected_upgrade_title_key,
 		"primary_hits": stats_primary_hits,
@@ -5575,12 +5575,6 @@ func _show_final_result() -> void:
 	})
 	_play_sound(&"card", 0.72)
 	_set_mouse_for_mode()
-
-
-func _format_time(seconds: float) -> String:
-	var minutes := floori(seconds / 60.0)
-	var remainder := floori(seconds) % 60
-	return "%d:%02d" % [minutes, remainder]
 
 
 func _mark_visited() -> void:

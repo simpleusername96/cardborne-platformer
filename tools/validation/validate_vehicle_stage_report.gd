@@ -31,7 +31,7 @@ func _init() -> void:
 			"number":2,
 			"title_key":"STAGE_DROWNED_RUINS_2",
 			"has_next_stage":true,
-			"clear_time":83.0,
+			"run_time_seconds":183.0,
 			"hull":72.0,
 			"max_hull":120.0,
 		}
@@ -58,9 +58,9 @@ func _init() -> void:
 		"elite count is nested under the defeated base archetype"
 	)
 	_expect(
-		is_equal_approx(float(report["clear_time"]), 83.0)
+		is_equal_approx(float(report["run_time_seconds"]), 183.0)
 			and is_equal_approx(float(report["hull"]), 72.0),
-		"report freezes clear time and remaining hull"
+		"report freezes total run time and remaining hull"
 	)
 	_expect(report["incoming"].size() == 2, "incoming recap is bounded and present")
 	var failure_telemetry := telemetry.duplicate(true)
@@ -77,7 +77,7 @@ func _init() -> void:
 			"number":2,
 			"title_key":"STAGE_DROWNED_RUINS_2",
 			"has_next_stage":false,
-			"clear_time":83.0,
+			"run_time_seconds":183.0,
 			"hull":0.0,
 			"max_hull":120.0,
 		},
@@ -116,6 +116,7 @@ func _init() -> void:
 	_expect(int(contract["semantic_icons"]) > 0, "report preserves semantic enemy and affinity icons")
 	_expect(not bool(contract["incoming_visible"]), "successful report omits the failure-only incoming section")
 	_expect(int(contract["fixed_actions"]) == 1, "report exposes exactly one fixed action")
+	_expect("03:03" in String(contract["summary_text"]), "report formats cumulative run time")
 	panel.call("_process", 0.36)
 	panel.call("_on_continue")
 	_expect(continued[0] == 1, "successful report emits its single continue intent")
@@ -140,7 +141,7 @@ func _init() -> void:
 		"stage_number":5,
 		"stage_title_key":"STAGE_DROWNED_RUINS_5",
 		"has_next_stage":false,
-		"time":"4:18",
+		"run_time_seconds":258.0,
 		"health_ratio":0.72,
 		"upgrade":"UPGRADE_SPLIT_MUZZLE_TITLE",
 		"primary_hits":41,
@@ -158,7 +159,7 @@ func _init() -> void:
 	_expect(bool(result_contract["initial_focus_is_deployment"]), "final result initially focuses Deployment")
 	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Deployment is the primary command")
 	var joined_summary := " ".join(PackedStringArray(result_contract["summary_texts"]))
-	_expect("4:18" in joined_summary and "72" in joined_summary, "final summary preserves time and hull values")
+	_expect("4:18" in joined_summary and "72" in joined_summary, "final summary preserves total run time and hull values")
 	_expect("41" in String(result_contract["performance_text"]) and "7" in String(result_contract["performance_text"]) and "3" in String(result_contract["performance_text"]), "performance section preserves all three counters")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)

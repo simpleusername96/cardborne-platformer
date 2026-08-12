@@ -56,6 +56,8 @@ func _check_stage_one_continuation(run) -> void:
 	run.secondary_runtime.seeker_cooldown = 0.8
 	run.run_build.apply(&"chassis_speed")
 	run.visited_cells[explored_cell] = true
+	run.run_time = 125.0
+	run.stage_started_at = 100.0
 	var field_fingerprint := int(run.field_layout.fingerprint)
 	var terrain_before := hash(var_to_str(run.terrain_runtime.snapshot()))
 	var ordinary := _append_enemy(run, {
@@ -132,9 +134,12 @@ func _check_stage_one_continuation(run) -> void:
 	)
 	_expect(
 		run.completed_stage_reports.size() == 1
+			and is_equal_approx(
+				float(run.completed_stage_reports[0]["run_time_seconds"]), 125.0
+			)
 			and run._ui.debug_hud_visible()
 			and not run._ui.debug_surface_visible("report"),
-		"stage history is recorded without opening a reward or report modal"
+		"stage history records cumulative run time without opening a report modal"
 	)
 	run.call("_update_encounter", 0.0)
 	var cue_snapshot: Dictionary = run.encounter_runtime.debug_snapshot()

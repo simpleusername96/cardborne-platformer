@@ -77,7 +77,9 @@ func open(snapshot: Dictionary) -> void:
 	).replace(
 		"%s", tr(String(_snapshot.get("stage_title_key", "")))
 	)
-	var seconds := maxi(0, roundi(float(_snapshot.get("clear_time", 0.0))))
+	var seconds := maxi(
+		0, roundi(float(_snapshot.get("run_time_seconds", 0.0)))
+	)
 	_summary.text = tr("REPORT_SUMMARY").replace(
 		"%time%", "%02d:%02d" % [floori(float(seconds) / 60.0), seconds % 60]
 	).replace(
@@ -418,6 +420,7 @@ func debug_contract() -> Dictionary:
 		"incoming_rows":_snapshot.get("incoming", []).size(),
 		"last_hit_present":not StringName(_snapshot.get("last_incoming_source", &"")).is_empty(),
 		"fixed_actions":find_children("*", "Button", true, false).size(),
+		"summary_text":_summary.text,
 		"semantic_icons":_count_semantic_icons(self),
 		"shared_text_rows":_count_shared_text_rows(self),
 		"decorated_metric_rows":_count_decorated_metric_rows(self),

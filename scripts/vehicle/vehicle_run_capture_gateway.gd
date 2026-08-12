@@ -229,7 +229,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 				"stage_title_key":_stage_title_key(0),
 				"has_next_stage":true,
 				"next_stage_key":_stage_title_key(1),
-				"time":"4:18",
+				"run_time_seconds":258.0,
 				"health_ratio":0.76,
 				"upgrade":"UPGRADE_PICKUP_RADIUS_TITLE",
 				"primary_hits":42,
@@ -328,7 +328,7 @@ func _show_stage_report(failed: bool) -> void:
 		"number":1,
 		"title_key":_stage_title_key(0),
 		"has_next_stage":not failed,
-		"clear_time":74.8,
+		"run_time_seconds":74.8,
 		"hull":0.0 if failed else 88.0,
 		"max_hull":120.0,
 	}

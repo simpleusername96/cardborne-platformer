@@ -31,7 +31,9 @@ static func build(
 		"stage_number":int(stage_data.get("number", 1)),
 		"stage_title_key":String(stage_data.get("title_key", "")),
 		"has_next_stage":bool(stage_data.get("has_next_stage", false)),
-		"clear_time":maxf(0.0, float(stage_data.get("clear_time", 0.0))),
+		"run_time_seconds":maxf(
+			0.0, float(stage_data.get("run_time_seconds", 0.0))
+		),
 		"hull":maxf(0.0, float(stage_data.get("hull", 0.0))),
 		"max_hull":maxf(0.0, float(stage_data.get("max_hull", 0.0))),
 		"defeats":defeat_rows,

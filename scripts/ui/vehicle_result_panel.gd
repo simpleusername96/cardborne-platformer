@@ -137,8 +137,11 @@ func refresh_localized_content() -> void:
 	_performance_title.text = tr("RESULT_PERFORMANCE")
 	_reward_title.text = tr("RESULT_REWARD")
 	_first_button.text = tr("RESULT_DEPLOYMENT")
-	_metric_labels[0].text = tr("RESULT_CLEAR_TIME") % String(
-		_summary.get("time", "0:00")
+	var run_time_seconds := maxi(
+		0, roundi(float(_summary.get("run_time_seconds", 0.0)))
+	)
+	_metric_labels[0].text = tr("RESULT_TOTAL_PLAY_TIME") % (
+		"%d:%02d" % [floori(float(run_time_seconds) / 60.0), run_time_seconds % 60]
 	)
 	_metric_labels[1].text = tr("RESULT_HULL") % roundi(
 		float(_summary.get("health_ratio", 0.0)) * 100.0

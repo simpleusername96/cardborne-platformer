@@ -711,7 +711,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - Report는 wide three-column, compact keyboard tab과 fixed bottom primary를
   사용한다.
 - Result는 metric과 build/loadout를 요약하고 하나의 Deployment action을 제공한다.
-  Failure Report도 Deployment로 직접 돌아간다.
+  Result와 Failure Report의 시간 metric은 stage-local time이 아니라 run 시작부터
+  누적된 active gameplay time을 표시한다. Failure Report도 Deployment로 직접 돌아간다.
 
 ### 접근성 및 상태
 
