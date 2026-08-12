@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-07
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-12
 canonical_for: Cardborne live vehicle upgrade categories, cards, levels, effects, and offer rules
 scope: Run-scoped vehicle upgrade catalog and secondary-slot ownership
 related:
@@ -139,8 +139,14 @@ EMP를 직접 강화하는 카드는 없다. 모든 카드는 런 한정이고 �
 
 ## 카드 표시 계약
 
-- 카드 UI는 분류, 제목, 의미 이미지, 다음 레벨, 실제 수치 변화 1~2줄과 최대 두 줄
-  설명만 표시한다.
+- 업그레이드 화면은 왼쪽 current-build summary와 오른쪽 세 개의 선택 row를 사용한다.
+  summary의 슬롯 수는 표시 계약이며 새로운 gameplay 장착 제한이 아니다.
+- 각 선택 row는 왼쪽 의미 이미지 하나, 중앙의 분류·제목·실제 수치 변화 1~2개·최대
+  한 줄 설명, 오른쪽의 `NEW` 또는 `레벨 N → M`만 표시한다.
+- 수치는 `피해 4 → 6   범위 72 → 84`처럼 label과 변화값을 inline phrase로 묶는다.
+  label과 값을 좌우 끝으로 벌리거나 별도 표 column으로 나누지 않는다.
+- summary의 채워진 슬롯은 hover/focus/click에서 제목·현재 레벨·현재 수치·한 줄
+  설명을 popover로 보여준다. 빈 슬롯은 focus를 받지 않는다.
 - `unlock`은 없던 동작의 첫 획득, `enhance`는 보유 동작의 강화다. 기본 추적
   미사일의 첫 카드는 `enhance`다.
 - UI는 수치를 다시 계산하지 않고 gameplay owner가 만든 frozen snapshot을 쓴다.

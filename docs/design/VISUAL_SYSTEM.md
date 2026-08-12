@@ -574,28 +574,45 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 
 - layout breakpoint는 width `1100`, large upgrade breakpoint는 `1600`,
   guide/report three-column breakpoint는 `1180`이다.
-- upgrade card는 compact에서 `280×410`, gap `12`, standard에서 `360×488`,
-  gap `16`, large에서 `420×512`, gap `24`를 사용한다. 최대 세 카드 container는
-  최대 세 개의 visible card를 중앙 정렬하고 사용 가능한 공간에 맞춰 확장하며
-  standard에서 좁은 352px 카드를 유지하지
-  않는다. 순서는 centered family, title, artwork, level, 실제 effect row,
-  localized 최대 두 줄 설명의 vertical stack이다. 내부 가로 separator는 사용하지
-  않는다. dossier uses compact `88×88`, standard `112×112`, and large
-  `128×128` centered artwork. 설명은 항상 변화 수치 아래 마지막에 두고
-  `text_primary` 색상과 compact/standard/large 각각 `32/34/36 px`을 사용한다.
-  한국어는 공백 포함
-  약 10자, 영어는 2–5단어를 기준으로 하며
-  supported viewport에서 두 줄을 넘지 않는다. change-kind 문장, description
-  footer와 split column은 표시하지 않는다. 첫 획득의 change-kind 의미는
-  접근성 이름에만 유지하며 별도 unlock diamond나 `+` 아이콘은 사용하지 않는다.
-  title 위 반복 image, badge와 level text를 반복하는 단계 pip는 사용하지
-  않는다. Seeker와 선택형 secondary upgrade는 같은 `보조 무기 / Secondary
-  Weapons` family label을 사용하고 title이 실제 subtype을 식별한다.
-- upgrade card 자체는 scroll을 사용하지 않는다. 200% text scale에서만 visible
-  card를 담는 offer body가 하나의 outer vertical scroll을 가질 수 있으며,
-  card는 `520×920`을 사용하고 Equip primary action은 fixed 상태를 유지한다.
-  settings, guidebook, report는 지정 content region만 scroll하고 primary
-  action은 고정한다.
+- Upgrade modal은 compact에서 `928×508` 안에 맞추고 standard/large에서는 각각
+  약 `1080×600`/`1120×620`의 centered body를 사용한다. 넓어진 viewport는 카드나
+  글자를 늘리는 대신 바깥 여백으로 흡수한다. 승인된 배치 참고 이미지는
+  `visual-replacement-workbench/previews/upgrade-choice-compact-layout-v1/upgrade-choice-compact-layout-reference.png`다.
+  이 이미지는 placement reference일 뿐 runtime UI raster나 gameplay asset 승인이
+  아니며, 이 문서의 텍스트 계약과 canonical authority pair가 우선한다.
+- modal body는 왼쪽 current-build summary rail과 오른쪽 offer list의 두 column이다.
+  rail 폭은 compact/standard/large 약 `216/248/264 px`, offer list 폭은
+  `656/760/780 px`이다. rail은 `주무기` 속성 1칸+강화 2칸, `보조무기` 3칸,
+  `발동무기` 종류 1칸+강화 2칸, `선체` 4칸을 보여준다. 이 슬롯은 현재 빌드의
+  요약·탐색 표면일 뿐 새 장착 제한이 아니다. 실제 속성 독점과 선택형 보조 무기
+  제한은 gameplay owner가 계속 결정한다.
+- 슬롯은 compact/standard/large에서 `44/52/56 px`, artwork는 `36/44/48 px`다.
+  채워진 슬롯만 focus를 받고 hover/focus에서 한 개의 detail popover를 연다.
+  click/accept는 popover를 고정하고 `Esc`, 바깥 click 또는 다른 슬롯 focus는 닫거나
+  교체한다. 빈 슬롯은 focus 순서에서 제외한다. popover는 flat Surface 하나와
+  system-color rail, `제목 · Lv.N`, inline stat 1~2개, 한 줄 설명만 사용하며
+  gameplay owner의 frozen snapshot을 표시한다. 선택 row와 fixed action을 가리지
+  않도록 위·아래 방향을 자동 전환한다.
+- 오른쪽에는 정확히 세 개의 horizontal Selectable row를 gap `8–10 px`로 세로
+  배치한다. row 높이는 compact/standard/large `116/132/136 px`, 왼쪽 artwork는
+  `56/72/72 px`다. 본문 순서는 category, title, inline stat phrase 1~2개, 최대 한 줄
+  설명이며 맨 오른쪽 state column은 첫 획득 `NEW` 또는 `레벨 N → M`만 표시한다.
+  category/title/stat/description/state 글자 크기는 각각 compact `13/22/15/14/16`,
+  standard와 large `14/24/16/15/18 px`다.
+- stat은 `피해 4 → 6   범위 72 → 84`처럼 label과 변화값을 하나의 inline phrase로
+  묶는다. label과 value를 `space-between`, 별도 표 column 또는 넓은 blank 영역으로
+  분리하지 않는다. title·level·artwork를 반복하는 badge나 pip도 사용하지 않는다.
+  Seeker와 선택형 secondary upgrade는 같은 `보조 무기 / Secondary Weapons`
+  category를 쓰고 title이 subtype을 식별한다.
+- 선택 row는 왼쪽 `3 px` amber rail, keyboard/controller focus는 별도 `2 px` cyan
+  outline으로 색 외 상태도 전달한다. `모듈 장착` fixed primary는 compact에서
+  `240×48`, standard/large에서 `280×52 px`이며 선택 전에는 disabled다. Skip,
+  Reroll, Leave와 decline action은 없다.
+- row 자체는 scroll을 사용하지 않는다. 200% text scale에서는 두 column을 한
+  column으로 접어 current-build summary 뒤에 offer list를 두고, popover는 대상 슬롯
+  아래 inline detail로 바뀐다. 이때만 body가 하나의 outer vertical scroll을 가지며
+  fixed primary action은 유지한다. settings, guidebook, report는 지정 content region만
+  scroll하고 primary action은 고정한다.
 - `clip_contents`는 safety guard일 뿐 layout 해결책이 아니다.
 - Korean과 English의 title, body, dynamic value, control label은 지원
   viewport에서 겹치거나 잘리거나 container 밖으로 나갈 수 없다.
@@ -675,10 +692,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   two-column body를 사용한다. Deploy primary, Settings secondary와 debug-only
   Boss Practice secondary는 한 개의 flat horizontal action row에 놓는다.
   difficulty selector나 lock explanation은 없다.
-- Upgrade는 별도 kicker, screen title 또는 instruction header 없이 세
-  structured Selectable card와 explicit selection, Equip confirm만 사용한다.
-  각 card는 title 아래 관련 artwork 한 개만 가지며 Leave, Exit, Skip 또는
-  decline action은 없다.
+- Upgrade는 별도 kicker, screen title 또는 instruction header 없이 왼쪽
+  current-build summary와 오른쪽 세 개의 vertical Selectable row, explicit
+  selection, Equip confirm만 사용한다. offer artwork는 각 row 왼쪽에 한 개만 두고
+  Leave, Exit, Skip 또는 decline action은 없다.
 - Pause는 Resume, Restart, Settings, Abort Run의 equal-width vertical stack을
   사용한다. Resume만 filled primary이고 Abort Run은 restrained danger다. Abort
   Run은 중간 화면 없이 Deployment로 돌아간다.
@@ -717,8 +734,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 - approved reference와 runtime actor를 같은 scale로 비교한 sheet에서
   player, 8 role grammar와 boss proportion hierarchy가 같은 family로 판독
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
-- all 10 shared upgrade semantic artwork identities resolve with no missing slot,
-  no image appears above a card title, and every card body has exactly one artwork
+- all 10 shared upgrade semantic artwork identities resolve with no missing slot;
+  current-build summary의 채워진 slot만 popover를 열고, 세 offer row는 각각 왼쪽에
+  artwork 하나만 가지며 stat label과 value 사이에 distributed blank column이 없음
 - every displayed circular area has a continuous full-area body from center to exact
   gameplay radius, instant areas use final radius on their first frame, EMP preserves a
   full `285` damage/stun disk plus a separately readable `285–325` utility fringe, and
