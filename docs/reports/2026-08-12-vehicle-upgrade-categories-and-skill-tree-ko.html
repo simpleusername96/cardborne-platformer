@@ -366,7 +366,7 @@
 
     <section id="catalog">
       <h2>카테고리별 카드 카탈로그</h2>
-      <p class="section-lede">현재 구현은 라이브 동작을 요약한다. 제안 항목은 의도만 정의하며 아직 코드·데이터에 없다. 각 행에서 승인 여부와 추가 메모를 기록할 수 있으며, 내용은 이 브라우저에 자동 저장된다.</p>
+      <p class="section-lede">현재 구현은 기본 승인 상태다. 제안 항목은 의도만 정의하며 아직 코드·데이터에 없다. 각 행에서 승인 여부와 추가 메모를 기록할 수 있으며, 내용은 이 브라우저에 자동 저장된다.</p>
 
       <div class="controls" role="search">
         <input id="search" type="search" placeholder="카드명·효과 검색" aria-label="카드명과 효과 검색">
@@ -387,7 +387,7 @@
         <button type="button" data-status-filter="proposed" aria-pressed="false">우선 제안</button>
         <button type="button" data-status-filter="experiment" aria-pressed="false">후속 실험</button>
         <span id="result-count" aria-live="polite">47개 표시</span>
-        <span id="approval-count" aria-live="polite">승인 0 / 47</span>
+        <span id="approval-count" aria-live="polite">승인 21 / 47</span>
         <span id="save-status" role="status">브라우저 자동 저장</span>
       </div>
 
@@ -566,7 +566,11 @@
         row.dataset.searchText = row.textContent.toLocaleLowerCase('ko-KR');
         const cardId = row.querySelector('code').textContent.trim();
         const cardName = row.children[1].childNodes[0].textContent.trim();
-        const saved = reviewState[cardId] || {};
+        const storedReview = reviewState[cardId];
+        const hasSavedReview = storedReview
+          && typeof storedReview === 'object'
+          && !Array.isArray(storedReview);
+        const saved = hasSavedReview ? storedReview : {};
         const cell = document.createElement('td');
         cell.className = 'review-cell';
         const reviewControls = document.createElement('div');
@@ -588,7 +592,9 @@
         note.setAttribute('aria-label', `${cardName} 추가 메모`);
         reviewControls.append(approvalLabel, note);
         cell.append(reviewControls);
-        checkbox.checked = Boolean(saved.approved);
+        checkbox.checked = Object.prototype.hasOwnProperty.call(saved, 'approved')
+          ? Boolean(saved.approved)
+          : row.dataset.status === 'current';
         note.value = typeof saved.note === 'string' ? saved.note : '';
         checkbox.addEventListener('change', () => {
           reviewState[cardId] = { approved: checkbox.checked, note: note.value };
