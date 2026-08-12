@@ -166,7 +166,8 @@
       gap: 10px;
       margin: 26px 0 16px;
     }
-    .controls input, .controls select, .controls button, .status-filter button {
+    .controls input, .controls select, .controls button, .status-filter button,
+    .review-actions button {
       min-height: 44px;
       border: 1px solid var(--line-strong);
       border-radius: 5px;
@@ -174,10 +175,23 @@
       color: var(--text);
     }
     .controls input, .controls select { padding: 9px 12px; }
-    .controls button, .status-filter button { padding: 8px 14px; cursor: pointer; font-weight: 750; }
-    .controls button:hover, .status-filter button:hover { border-color: var(--cyan); }
+    .controls button, .status-filter button, .review-actions button {
+      padding: 8px 14px;
+      cursor: pointer;
+      font-weight: 750;
+    }
+    .controls button:hover, .status-filter button:hover, .review-actions button:hover {
+      border-color: var(--cyan);
+    }
     .status-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
     .status-filter button[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
+    .review-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: -10px 0 26px;
+    }
     #result-count { margin-left: auto; }
     #result-count, #approval-count, #save-status { align-self: center; color: var(--muted); font-size: 13px; }
     #approval-count { color: var(--green); }
@@ -256,7 +270,7 @@
     @media print {
       :root { --bg: #fff; --surface: #fff; --surface-2: #f3f5f6; --line: #cdd4d8; --line-strong: #87959d; --text: #101619; --muted: #44545d; }
       body { background: #fff; }
-      nav, .controls, .status-filter { display: none; }
+      nav, .controls, .status-filter, .review-actions { display: none; }
       header { padding-top: 24px; }
       section { break-inside: avoid; }
       a { color: #075b7d; }
@@ -366,7 +380,7 @@
 
     <section id="catalog">
       <h2>카테고리별 카드 카탈로그</h2>
-      <p class="section-lede">현재 구현은 기본 승인 상태다. 제안 항목은 의도만 정의하며 아직 코드·데이터에 없다. 각 행에서 승인 여부와 추가 메모를 기록할 수 있으며, 내용은 이 브라우저에 자동 저장된다.</p>
+      <p class="section-lede">현재 구현은 기본 승인 상태다. 제안 항목은 의도만 정의하며 아직 코드·데이터에 없다. 각 행의 승인 여부와 추가 메모는 이 브라우저에 자동 저장된다. 브라우저 데이터 삭제나 다른 PC로 이동할 때는 피드백 백업 파일을 사용한다.</p>
 
       <div class="controls" role="search">
         <input id="search" type="search" placeholder="카드명·효과 검색" aria-label="카드명과 효과 검색">
@@ -389,6 +403,11 @@
         <span id="result-count" aria-live="polite">47개 표시</span>
         <span id="approval-count" aria-live="polite">승인 21 / 47</span>
         <span id="save-status" role="status">브라우저 자동 저장</span>
+      </div>
+      <div class="review-actions" aria-label="피드백 백업과 복원">
+        <button id="export-reviews" type="button">피드백 백업</button>
+        <button id="import-reviews" type="button">백업 불러오기</button>
+        <input id="review-backup-file" type="file" accept=".json,application/json" hidden>
       </div>
 
       <div class="catalog-section" data-category-section="primary">
@@ -523,12 +542,17 @@
       const count = document.querySelector('#result-count');
       const approvalCount = document.querySelector('#approval-count');
       const saveStatus = document.querySelector('#save-status');
+      const exportReviews = document.querySelector('#export-reviews');
+      const importReviews = document.querySelector('#import-reviews');
+      const backupFile = document.querySelector('#review-backup-file');
       const rows = [...document.querySelectorAll('tbody tr[data-category]')];
       const sections = [...document.querySelectorAll('[data-category-section]')];
       const statusButtons = [...document.querySelectorAll('[data-status-filter]')];
       const storageKey = 'cardborne-upgrade-review-v1';
+      const backupSchema = 'cardborne-upgrade-review';
       let status = 'all';
       let reviewState = {};
+      const rowByCardId = new Map();
 
       try {
         const parsed = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -565,6 +589,8 @@
       rows.forEach((row) => {
         row.dataset.searchText = row.textContent.toLocaleLowerCase('ko-KR');
         const cardId = row.querySelector('code').textContent.trim();
+        row.dataset.cardId = cardId;
+        rowByCardId.set(cardId, row);
         const cardName = row.children[1].childNodes[0].textContent.trim();
         const storedReview = reviewState[cardId];
         const hasSavedReview = storedReview
@@ -606,6 +632,93 @@
           saveReviews();
         });
         row.append(cell);
+      });
+
+      const snapshotReviews = () => {
+        const reviews = {};
+        rows.forEach((row) => {
+          reviews[row.dataset.cardId] = {
+            approved: row.querySelector('.review-approved').checked,
+            note: row.querySelector('.review-note').value,
+          };
+        });
+        return reviews;
+      };
+
+      exportReviews.addEventListener('click', () => {
+        const payload = {
+          schema: backupSchema,
+          version: 1,
+          exported_at: new Date().toISOString(),
+          reviews: snapshotReviews(),
+        };
+        const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], {
+          type: 'application/json',
+        });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = 'cardborne-upgrade-feedback.json';
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
+        saveStatus.textContent = '백업 파일 저장됨';
+        saveStatus.dataset.state = 'saved';
+      });
+
+      importReviews.addEventListener('click', () => backupFile.click());
+      backupFile.addEventListener('change', async () => {
+        const file = backupFile.files && backupFile.files[0];
+        if (!file) return;
+        try {
+          const payload = JSON.parse(await file.text());
+          if (
+            !payload
+            || payload.schema !== backupSchema
+            || payload.version !== 1
+            || !payload.reviews
+            || typeof payload.reviews !== 'object'
+            || Array.isArray(payload.reviews)
+          ) {
+            throw new Error('invalid backup format');
+          }
+          const acceptedReviews = [];
+          Object.entries(payload.reviews).forEach(([cardId, imported]) => {
+            const row = rowByCardId.get(cardId);
+            if (!row || !imported || typeof imported !== 'object' || Array.isArray(imported)) {
+              return;
+            }
+            if (
+              typeof imported.approved !== 'boolean'
+              || typeof imported.note !== 'string'
+              || imported.note.length > 1000
+            ) {
+              throw new Error(`invalid review: ${cardId}`);
+            }
+            acceptedReviews.push({ cardId, imported, row });
+          });
+          if (acceptedReviews.length === 0) throw new Error('no matching reviews');
+          acceptedReviews.forEach(({ cardId, imported, row }) => {
+            const checkbox = row.querySelector('.review-approved');
+            const note = row.querySelector('.review-note');
+            checkbox.checked = imported.approved;
+            note.value = imported.note;
+            reviewState[cardId] = {
+              approved: imported.approved,
+              note: imported.note,
+            };
+          });
+          updateApprovalCount();
+          saveReviews();
+          saveStatus.textContent = `백업 ${acceptedReviews.length}개 불러옴`;
+          saveStatus.dataset.state = 'saved';
+        } catch (error) {
+          saveStatus.textContent = '백업 파일을 읽을 수 없음';
+          saveStatus.dataset.state = 'error';
+        } finally {
+          backupFile.value = '';
+        }
       });
 
       const apply = () => {
