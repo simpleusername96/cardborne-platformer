@@ -119,7 +119,13 @@ func _validate_dash_path_runtime() -> void:
 	)
 	var ticks := 0
 	for _step in 6:
-		ticks += runtime.advance(0.5).size()
+		var due := runtime.advance(0.5)
+		ticks += due.size()
+		if not due.is_empty():
+			_expect(
+				due[0].tick_index == ticks,
+				"each dash field tick owns a stable increasing periodic identity"
+			)
 	_expect(
 		ticks == 6 and runtime.trails.is_empty(),
 		"three-second field produces six half-second ticks then retires"

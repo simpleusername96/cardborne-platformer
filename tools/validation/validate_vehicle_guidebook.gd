@@ -36,7 +36,7 @@ func _run() -> void:
 		)
 	for entry_id in [
 		&"boss_stage_2", &"object_transit_gate", &"object_mystery_device",
-		&"object_reinforcement_facility", &"object_elite_armored",
+		&"object_elite_armored",
 	]:
 		_expect(store.discover(entry_id), "%s unlocks" % entry_id)
 	_validate_catalog_partition()
@@ -104,9 +104,8 @@ func _run() -> void:
 	loaded.load_discovery()
 	_expect(
 		loaded.known.has(&"mobile_chaser")
-			and loaded.known.has(&"object_reinforcement_facility")
 			and not loaded.known.has(&"object_crate")
-			and loaded.known.size() == 11,
+			and loaded.known.size() == 10,
 		"schema-v1 load ignores the retired crate ID and preserves live IDs"
 	)
 
@@ -276,20 +275,6 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 			and String(Dictionary(Array(anomaly["stat_rows"])[0])["value_key"])
 				== "GUIDE_VALUE_HP",
 		"Anomaly Device exposes HP and all four exact runtime outcomes"
-	)
-	var facility := _entry(
-		active, &"objects", &"object_reinforcement_facility"
-	)
-	var facility_rows := Array(facility["stat_rows"])
-	_expect(
-		facility_rows.size() == 4
-			and int(Array(Dictionary(facility_rows[0])["value_args"])[0]) == 390
-			and is_equal_approx(
-				float(Array(Dictionary(facility_rows[1])["value_args"])[0]), 7.0
-			)
-			and int(Array(Dictionary(facility_rows[2])["value_args"])[0]) == 3
-			and int(Array(Dictionary(facility_rows[3])["value_args"])[0]) == 3,
-		"Reinforcement Facility exposes Stage 2 HP, cadence, live cap, and charges"
 	)
 
 

@@ -59,7 +59,6 @@ static func dynamic_colors() -> Array[Color]:
 		Art.TEXT_MUTED,
 		Art.DANGER,
 		Art.BOSS_COMMAND,
-		Art.MUSTARD_DARK,
 	]
 
 
@@ -164,11 +163,6 @@ static func _append_markers(
 				_append_priority_enemy_marker(vertices, colors, indices, point)
 			&"boss":
 				_append_boss_marker(vertices, colors, indices, point)
-			&"reinforcement_facility":
-				_append_facility_marker(
-					vertices, colors, indices, point,
-					float(marker.get("emphasis", 1.0))
-				)
 
 
 static func _append_player(
@@ -281,26 +275,6 @@ static func _append_boss_marker(
 	var inner := _boss_notched_mass(center, BOSS_INNER_RADIUS)
 	_append_polygon(vertices, colors, indices, outer, Art.SPACE_BLACK)
 	_append_polygon(vertices, colors, indices, inner, Art.BOSS_COMMAND)
-
-
-static func _append_facility_marker(
-	vertices: Array[Vector3],
-	colors: Array[Color],
-	indices: Array[int],
-	center: Vector2,
-	emphasis: float
-) -> void:
-	var face := Art.MUSTARD if emphasis >= 0.8 else Art.TEXT_MUTED
-	_append_regular_polygon(
-		vertices, colors, indices, center, 8.0, 4, 0.0, Art.SPACE_BLACK
-	)
-	_append_regular_polygon(
-		vertices, colors, indices, center, 6.2, 4, 0.0, face
-	)
-	_append_rect(
-		vertices, colors, indices, Rect2(center - Vector2(2.0, 2.0), Vector2(4.0, 4.0)),
-		Art.MUSTARD_DARK if emphasis >= 0.8 else Art.SPACE_BLACK
-	)
 
 
 static func _append_regular_polygon(

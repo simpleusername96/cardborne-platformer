@@ -49,8 +49,7 @@ const CUSTOM_BUFFER_FLOATS_PER_INSTANCE := 16
 const CUSTOM_BATCH_AABB := AABB(Vector3(-8192.0, -8192.0, -1.0), Vector3(16384.0, 16384.0, 2.0))
 const MAX_INSTALLATION_HEALTH_BARS := 12
 const MAX_BOSS_HEALTH_BARS := 1
-const MAX_FACILITY_HEALTH_BARS := 1
-const HEALTH_BAR_INSTANCE_CAPACITY := 28
+const HEALTH_BAR_INSTANCE_CAPACITY := 26
 const MAX_REPAIR_LINKS := 16
 const REPAIR_LINK_SEGMENTS := 5
 const PRESENTATION_MIN_INTERVAL := 1.0 / 60.0
@@ -218,7 +217,6 @@ var _enemy_status_material: ShaderMaterial
 var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
 var _mystery_device_batches: Dictionary = {}
-var _reinforcement_facility_batch: BatchHandle
 var _mystery_effect_ring_batch: BatchHandle
 var _electric_field_batch: BatchHandle
 var _overlay_batches: Dictionary = {}
@@ -227,7 +225,6 @@ var _player_craft_body_batch: BatchHandle
 var _last_health_bar_count := 0
 var _installation_health_bar_count := 0
 var _boss_health_bar_count := 0
-var _facility_health_bar_count := 0
 var _semantic_texture_draws: Array[SemanticTextureDraw] = []
 var _semantic_texture_draw_count := 0
 var _semantic_texture_specs: Dictionary = {}
@@ -313,12 +310,10 @@ func sync(
 		)
 		_sync_world_overlays(presentation, visible_world)
 		_sync_mystery_devices(presentation, visible_world)
-		_sync_reinforcement_facility(presentation, visible_world)
 		_sync_mystery_effects(presentation, visible_world)
 		_last_health_bar_count = (
 			_installation_health_bar_count
 			+ _boss_health_bar_count
-			+ _facility_health_bar_count
 		)
 	else:
 		_reset_enemy_presentation()
@@ -411,7 +406,6 @@ func debug_snapshot() -> Dictionary:
 		"installation_health_bar_count": _installation_health_bar_count,
 		"ordinary_health_bar_count": 0,
 		"boss_health_bar_count": _boss_health_bar_count,
-		"facility_health_bar_count": _facility_health_bar_count,
 		"mystery_health_bar_count": 0,
 		"priority_marker_count": 0,
 		"repair_link_count":_last_repair_link_count,
@@ -525,19 +519,6 @@ func _build_batches() -> void:
 			).get("asset", &"")
 		),
 		MYSTERY_DEVICE_CAPACITY, 2, &"mystery_device_resolved", MYSTERY_DEVICE_CAPACITY
-	)
-	_reinforcement_facility_batch = _create_asset_batch(
-		"ReinforcementFacility",
-		StringName(
-			WorldCatalog.world_object_descriptor(
-				&"reinforcement_fabricator"
-			).get("asset", &"")
-		),
-		1,
-		2,
-		&"reinforcement_fabricator",
-		-1,
-		true
 	)
 	_mystery_effect_ring_batch = _create_batch(
 		"MysteryEffect_ring",
@@ -1945,64 +1926,6 @@ func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 		)
 
 
-func _sync_reinforcement_facility(
-	state: Dictionary,
-	visible_world: Rect2
-) -> void:
-	var facility_variant: Variant = state.get("reinforcement_facility")
-	if not facility_variant is Dictionary:
-		return
-	var facility := Dictionary(facility_variant)
-	if not bool(facility.get("visible", false)):
-		return
-	var position := Vector2(facility.get("position", Vector2.ZERO))
-	var radius := float(facility.get("radius", 112.0))
-	if not visible_world.grow(radius).has_point(position):
-		return
-	var facility_state := StringName(facility.get("state", &"offline"))
-	var facility_modulate := Color.WHITE
-	if facility_state == &"offline":
-		facility_modulate = Color(Art.TEXT_MUTED, 0.62)
-	elif facility_state == &"spent":
-		facility_modulate = Color(Art.TEXT_MUTED, 0.42)
-	_write_instance(
-		_reinforcement_facility_batch,
-		position,
-		0.0,
-		Vector2.ONE * radius,
-		facility_modulate
-	)
-	if facility_state != &"active":
-		return
-	_sync_health_bar(
-		position,
-		radius,
-		float(facility.get("health", 0.0)),
-		float(facility.get("max_health", 1.0)),
-		1.65,
-		88.0,
-		112.0,
-		16.0,
-		16.0,
-		Art.CORAL,
-		visible_world
-	)
-	_sync_health_bar(
-		position,
-		radius + 26.0,
-		1.0 - float(facility.get("spawn_ratio", 1.0)),
-		1.0,
-		1.15,
-		72.0,
-		96.0,
-		8.0,
-		12.0,
-		Art.MUSTARD,
-		visible_world
-	)
-	_facility_health_bar_count = 1
-
-
 func _queue_semantic_texture(
 	asset_id: StringName,
 	position: Vector2,
@@ -2183,7 +2106,6 @@ func _reset_counts() -> void:
 	_last_health_bar_count = 0
 	_installation_health_bar_count = 0
 	_boss_health_bar_count = 0
-	_facility_health_bar_count = 0
 	for batch in _batches:
 		batch.reset()
 

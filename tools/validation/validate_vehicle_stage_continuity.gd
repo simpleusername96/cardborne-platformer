@@ -58,24 +58,11 @@ func _check_stage_one_continuation(run) -> void:
 	run.visited_cells[explored_cell] = true
 	var field_fingerprint := int(run.field_layout.fingerprint)
 	var terrain_before := hash(var_to_str(run.terrain_runtime.snapshot()))
-	var old_facility_carrier := String(
-		run.reinforcement_facility_runtime.snapshot()["carrier_id"]
-	)
-
 	var ordinary := _append_enemy(run, {
 		"id":"continuity_ordinary",
 		"role":&"chaser",
 		"pos":preserved_position + Vector2(220.0, 0.0),
 		"active":true,
-	})
-	var facility_child := _append_enemy(run, {
-		"id":"continuity_old_facility_child",
-		"role":&"chaser",
-		"pos":preserved_position + Vector2(260.0, 0.0),
-		"active":true,
-		"summoned":true,
-		"carrier_id":old_facility_carrier,
-		"zone":&"reinforcement_facility",
 	})
 	var boss_add := _append_enemy(run, {
 		"id":"continuity_boss_add",
@@ -119,8 +106,8 @@ func _check_stage_one_continuation(run) -> void:
 		"boss clear changes only HP and preserves every active cooldown/protection timer"
 	)
 	_expect(
-		ordinary.alive and facility_child.alive and not boss_add.alive,
-		"ordinary and old-facility actors survive while boss-owned actors retire"
+		ordinary.alive and not boss_add.alive,
+		"ordinary actors survive while boss-owned actors retire"
 	)
 	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
 	_expect(
@@ -144,12 +131,6 @@ func _check_stage_one_continuation(run) -> void:
 		"XP, build, exploration, field identity, and run-fixed terrain survive"
 	)
 	_expect(
-		not run.reinforcement_facility_runtime.owns_child(old_facility_carrier)
-			and run.reinforcement_facility_runtime.snapshot()["carrier_id"] != old_facility_carrier
-			and run.debug_reinforcement_facility_count_matches(),
-		"new facility ownership excludes the previous stage child"
-	)
-	_expect(
 		run.completed_stage_reports.size() == 1
 			and run._ui.debug_hud_visible()
 			and not run._ui.debug_surface_visible("report"),
@@ -159,6 +140,7 @@ func _check_stage_one_continuation(run) -> void:
 	var cue_snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
 	_expect(
 		is_equal_approx(float(cue_snapshot["first_cue_time"]), 0.0)
+			and run.encounter_runtime.spawning_enabled()
 			and not String(cue_snapshot["activated_packets"][0]).contains("scout"),
 		"next-stage cue starts immediately and skips the deployment packet"
 	)

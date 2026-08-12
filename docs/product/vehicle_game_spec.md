@@ -9,6 +9,7 @@ scope: Current run-selected-field five-stage vehicle campaign
 related:
   - ../design/VISUAL_SYSTEM.md
   - ./vehicle_upgrade_catalog.md
+  - ./vehicle_weapon_balance_spec.md
   - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
 ---
 
@@ -222,9 +223,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   and `--field-id=<id>`; their default layout seed is `0xC4A2B0`, and
   debug/performance snapshots expose the selected field, seed, and fingerprint.
 - The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed.
-  Dynamic markers expose exactly seven tactical roles: player craft, field
+  Dynamic markers expose exactly six tactical roles: player craft, field
   pickup, intact Anomaly Device, mobile enemy, priority enemy, boss, and
-  reinforcement facility. The pickup marker is `12 x 7.6`. The Anomaly Device silhouette scales every outer
+  no separate objective marker. The pickup marker is `12 x 7.6`. The Anomaly Device silhouette scales every outer
   point by `1.20`. Elite distinctions, stage-specific boss identity, and the
   Mystery outcome are not separate minimap markers.
 
@@ -351,20 +352,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    `280 px/s`; explicitly committed charges remain exceptions.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
    or stage completion and summons do not count toward the quota.
-   At 35% quota progress, one separate reinforcement facility activates at a
-   clear distant anchor. It is not an enemy actor and does not count toward the
-   quota. While alive it spawns an existing stage-scaled role every `8/7/6/5/4`
-   seconds, respects both the global active cap and a per-facility live-child cap
-   of `2/3/4/5/6`, and resets its interval after every accepted spawn. It owns
-   the same finite total of `2/3/4/5/6` production charges by stage. An accepted
-   birth consumes one charge; a retired child releases one live-child slot. A
-   full child or global cap holds a completed interval at zero and resumes as
-   soon as a slot is free. After the final charge and final child are gone, the
-   facility enters `spent` for 0.8 seconds and retires. Destruction, explicit
-   retirement, or stage completion also stops production permanently. Only
-   living summoned actors whose `carrier_id` is `reinforcement_facility` count
-   against its child cap.
-6. On reaching the quota, ordinary spawning stops and a 1.5-second boss warning
+   Reaching quota starts boss eligibility only; it does not stop the authored
+   encounter scheduler or remove living ordinary enemies.
+6. On reaching the quota, a 1.5-second boss warning
    identifies a reachable arrival anchor at least 1200 pixels from the player
    when the field permits it. Boss creation and boss-defeat completion reject
    calls unless the quota has been reached and the warning has resolved. If the
@@ -387,8 +377,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    ordinary and player projectiles, XP shards, position, velocity, facing, aim,
    cooldowns, build, fixed Hard state, exploration, and run-fixed terrain remain.
    There is no boss reward card, forced XP recall, transition protection, banner,
-   success report, timer, or continue input. Stage-local pickups, Anomaly Devices,
-   and the reinforcement facility refresh for the new stage. Stage 5 opens the final result;
+   success report, timer, or continue input. Stage-local pickups and Anomaly Devices
+   refresh for the new stage. Stage 5 opens the final result;
    failures still open the failure report.
 
 | Stage | Fixed Hard quota | Authored mobile population | Boss |
@@ -399,9 +389,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 | 4 | 250 | 1026 | Switchyard Behemoth |
 | 5 | 291 | 1260 | Crown Engine |
 
-The reinforcement facility is the only map-spawned stationary hostile facility;
-it is managed outside the enemy actor store and appears as a dedicated minimap
-objective. Ordinary hostile projectiles
+Ordinary hostile projectiles
 stop at 96 so 24 of the global 120-shot cap remain reserved for boss attacks.
 Stage 1 ordinary health and damage pressure is `1.15/0.98`, approximately 15%
 below the previous `1.35/1.15`. Stage 2–5 ordinary health pressure is
@@ -416,11 +404,13 @@ every direct pattern remains committed after its warning appears.
 
 Each boss owns one body-attached shield and no external objective actor.
 Stage 1–5 boss profiles use target HP `5250/5805/6380/6975/7590`, damage
-multipliers `1.35/1.42/1.50/1.58/1.70`, shield-up received-damage multipliers
+multipliers `1.50/1.60/1.70/1.80/1.90`, shield-up received-damage multipliers
 `0.110/0.105/0.100/0.095/0.090`, cadence scales
 `0.95/0.90/0.85/0.80/0.75`, and coverage scales
-`1.05/1.10/1.15/1.20/1.25`. Cadence scales only the read gap, initial autonomous
-delay, and autonomous interval. Coverage scales each pattern's applicable radius,
+`1.05/1.10/1.15/1.20/1.25`. Phase 1–3 direct read gaps are
+`0.45/0.34/0.26s`; autonomous base intervals are `5.4/4.4/3.5s`; authored direct
+recovery is multiplied by `0.80`. Cadence scales only the read gap, initial
+autonomous delay, and autonomous interval. Coverage scales each pattern's applicable radius,
 beam width, lane spacing, and fan spread. Projectile count and speed, startup,
 active duration, recovery, and caps remain pattern-owned. Autonomous `area`,
 `lanes`, `beam`, and `summon` attacks execute their authored shape rather than a
@@ -468,7 +458,7 @@ does not produce a transient message.
 - Every legal card state publishes one or two gameplay-owned effect rows. The
   extended attack sequences preserve existing object counts: Split Muzzle ends
   at three projectiles and `180%` volley damage; Piercing Rounds ends at four
-  additional penetrations; Homing Missiles ends at three missiles and `38`
+  additional penetrations; Homing Missiles starts at two missiles and ends at four missiles and `38`
   damage; Electric Field ends at `22 DPS` and radius `160`; Orbiting Blades ends
   at four blades and `28` damage; Drop Mines ends at `88` damage, `2.4 s`
   interval, and five live mines; Auto Laser ends at `86` damage; Thermal Burst
@@ -487,7 +477,7 @@ does not produce a transient message.
   Thermal Burst and Bio Toxin compete for the damage slot; Cryo Slow and Shock
   compete for the utility slot. One choice from each slot can coexist on the same
   primary projectile. Thermal radius is `72/84/96/96` with burst damage
-  `4/6/8/11`; Toxin damage per stack is `2/3/4/5.5` with `5/6/7/7s` duration;
+  `4/5.75/8/11`; Toxin damage per stack is `2/2.85/4/5.5` with `5/6/7/7s` duration;
   Cryo slow per stack is `6/8/10%` with `2/2.5/3s` duration. Shock blocks only
   new enemy attack commitments for `0.6/0.8/1.0s`, has a three-second reapply
   lockout, does not alter movement, and never cancels an already warned or active
@@ -532,7 +522,7 @@ that intersects the most targets. It deals `48/66/86`, uses a 760-long corridor
 with half-width 18, and stops at the first tactical wall. Storm Barrage checks
 threats from 480 to 960 pixels every `4.5 s`, warns for `0.55 s`, then deals
 `70/95/125` inside radius 140 to at most twelve eligible targets. It can damage
-ordinary enemies, the reinforcement facility, and an Anomaly Device.
+ordinary enemies and an Anomaly Device.
 
 Secondary Cooldown applies one shared `0.90/0.82/0.75` cooldown multiplier to
 Seeker, Electric Field, Orbiting Blades, Drop Mines, Auto Laser, and Storm
@@ -545,7 +535,7 @@ kinetic burst to other enemies inside `95` world units. The direct target is not
 damaged twice. Damage resolves before the bounded Explosive Seeker impact receipt;
 missing or recycled feedback never cancels or repeats gameplay damage.
 
-The fifth HUD action always represents the equipped active weapon. EMP is the
+The third action slot always represents the equipped active weapon. EMP is the
 default. One Black Hole, Shockwave, or Cross Beam card may replace it for the
 run; shared active cooldown and damage cards apply to whichever weapon is
 equipped. Active weapon state belongs to `VehicleActiveWeaponRuntime`, while
@@ -557,9 +547,19 @@ bounded cadence, then deals `60/85/115/150` in radius `150/175/200/225`; it has 
 `12s` cooldown and never displaces bosses or structures. Shockwave starts in
 `0.20s`, deals `45/65/90/120` in radius `180/210/240/270`, and pushes non-boss
 mobile enemies up to 180 without stun or projectile clearing; it has a `9s`
-cooldown. Cross Beam starts in `0.35s` and deals `70/95/125/160` once per target
+cooldown. Cross Beam starts in `0.30s` and deals `80/110/145/185` once per target
 through the union of two map-spanning, cover-ignoring corridors with half-width
-`14/18/22/26`; it has a `12s` cooldown.
+`24/32/40/48`; it has a `10.5s` cooldown. Startup presentation and collision use
+the same exact half-width.
+
+Accepted combat actions reduce the equipped active weapon's remaining cooldown.
+One direct primary, secondary, or dash action removes `0.10s` once for its stable
+action identity; periodic field or dash damage removes `0.025s` once per tick
+identity. Outgoing recharge is limited to `0.40s` per real second with a `0.10s`
+periodic sub-limit. One hostile hit that removes barrier or Hull removes `0.20s`
+and starts a `1.25s` lockout. Active self-damage, status ticks, derived Thermal
+Burst, reflection, structures, devices, zero damage, and ready-state events give
+no credit or stored charge.
 
 ### UI, guidebook, and persistence
 
@@ -619,19 +619,19 @@ through the union of two map-spanning, cover-ignoring corridors with half-width
   minimap. No bottom-center action, live upgrade icon, edge boss/target health,
   mission surface, objective text, or ornamental dock is present.
 - The normal top-center toast is `320×36` compact or `360×40` standard/large and
-  sits four pixels below the lower edge of the status-cluster/minimap band. Only facility active/destroyed, boss inbound, barrier depleted, Mystery
+  sits four pixels below the lower edge of the status-cluster/minimap band. Only boss inbound, barrier depleted, Mystery
   Device result, boss shield-down, and progression-complete events may enqueue
   gameplay toasts. Stage
   transitions use no banner.
-- Bosses, active reinforcement facilities, and fixed combat installations
+- Bosses and fixed combat installations
   (`turret`, `interceptor_tower`, `beam_sentinel`, and `generator`) own thick,
   backed health bars above their world bodies. Mobile enemies, mines, and
   Anomaly Devices never receive world health bars. Installation bars
   use a deterministic 12-actor cap. Fill left edges remain fixed at every health
-  ratio. Installation, boss, and facility half-widths clamp to `42–72`,
-  `96–120`, and `88–112` world units; complete bars prefer the body top, move
+  ratio. Installation and boss half-widths clamp to `42–72` and
+  `96–120` world units; complete bars prefer the body top, move
   below when the top edge would clip, and clamp inside the visible world. All
-  world health bars share one retained batch with a fixed 28-instance ceiling.
+  world health bars share one retained batch with a fixed 26-instance ceiling.
 - The threat radar samples at five hertz and atomically publishes its sampled
   player origin, generation, and at most 12 directional sector records. The HUD
   rebases those bounded records against the live player world position and draws
@@ -649,14 +649,12 @@ through the union of two map-spanning, cover-ignoring corridors with half-width
   contacts share a sector; only the winning role owns that sector's color and
   triangle. A single attack never appears as both a world route and a radar
   contact.
-- The minimap publishes exactly seven semantic roles: player, field pickup,
-  intact Anomaly Device, mobile enemy, priority enemy, boss, and
-  reinforcement facility. `turret`, `interceptor_tower`, `beam_sentinel`, and
+- The minimap publishes exactly six semantic roles: player, field pickup,
+  intact Anomaly Device, mobile enemy, priority enemy, and boss. `turret`, `interceptor_tower`, `beam_sentinel`, and
   `generator` are priority enemies; other active non-boss enemies are mobile
   enemies. An intact Anomaly Device uses one neutral marker that never leaks its
   hidden result, and resolved or retired devices disappear. Bosses use one
-  command-magenta notched marker independent of stage. The reinforcement
-  facility keeps its dedicated two-tone diamond. All roles share the existing
+  command-magenta notched marker independent of stage. All roles share the existing
   marker capacity, borrowed buffers, explored geometry, fog, and one retained
   minimap mesh. The Anomaly Device uses the `1.20` silhouette scale.
 - Electric Field displays its complete selected damage radius of 120, 140, or
@@ -705,10 +703,8 @@ through the union of two map-spanning, cover-ignoring corridors with half-width
 - Pause and settings expose a `?` entry to the guidebook. The guidebook has ship,
   enemies, bosses, and field objects categories. Enemies contains every non-boss
   hostile actor, including stationary installations and elite modifiers. Field
-  Objects contains interaction, traversal, direct reward objects, the Anomaly
-  Device, and the separately managed reinforcement facility. The facility is a
-  destructible hostile objective but not an enemy actor; it therefore never
-  appears in the enemy list.
+  Objects contains interaction, traversal, direct reward objects, and the Anomaly
+  Device.
 - The current ship page shows derived stats and equipped secondaries. Encountered
   enemy and boss entries show ordered combat statistics derived from gameplay
   owners, not duplicated movement/attack/counter prose. An active run shows exact
@@ -814,7 +810,7 @@ through the union of two map-spanning, cover-ignoring corridors with half-width
   radii, five deterministic tactical children, exact-retry identity, and
   adjacent-stage variation pass validation.
 - The first cue/scout timing, stage quotas, distributed eight-squad surge
-  growth, arrival fairness, spawn stop, 1.5-second boss warning, roaming boss,
+  growth, arrival fairness, continued ordinary spawning, 1.5-second boss warning, roaming boss,
   preserved build/exploration, automatic stages 1–4 transition, and stage 5
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same

@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-08-11
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-12
 topic: Dense-enemy performance research and Cardborne bottleneck selection
 scope: Native and Web five-stage runtime at high ordinary-enemy occupancy
 source: Current code inspection, committed profiler evidence, and primary technical references
@@ -34,7 +34,6 @@ quality.
 - `scripts/vehicle/vehicle_run.gd`
 - `scripts/enemies/vehicle_enemy_update_schedule.gd`
 - `scripts/vehicle/vehicle_spatial_grid.gd`
-- `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd`
 - `scripts/encounters/vehicle_encounter_runtime.gd`
 - `scripts/presentation/vehicle_combat_renderer.gd`
 - `scripts/ui/vehicle_hud_presenter.gd`
@@ -115,10 +114,8 @@ The runtime stores enemies in fixed-capacity arrays, but “bounded” is not th
 4. alive/status processing scans again;
 5. overlap-cache rebuild snapshots and clears capacity-sized storage;
 6. contact resolution scans active enemies;
-7. the reinforcement facility scans all enemies to count its own children and asks for
-   another full active count;
-8. presentation sync scans the enemy store after the physics serial changes;
-9. radar/minimap scan at 5 Hz, although their visible output is bounded.
+7. presentation sync scans the enemy store after the physics serial changes;
+8. radar/minimap scan at 5 Hz, although their visible output is bounded.
 
 Each individual scan is linear. Their sum is still O(N), but the constant is the number of
 passes and the work performed inside each pass. In addition, each due ordinary enemy can
@@ -333,9 +330,7 @@ under the requested density.
    checkpoint, confirm process quiescence, then capture the native scaling/ablation matrix.
    Do not claim the historical `66f78582` run as current qualification.
 2. **Remove redundant ownership scans.** Reuse scheduler/frame aggregates for active count
-   and attack families. Give the reinforcement runtime an incremental live-child count,
-   updated only on accepted spawn and child defeat/retirement, with a debug reconciliation
-   assertion. This removes obvious repeated O(N) work without changing enemy behavior.
+   and attack families. This removes obvious repeated O(N) work without changing enemy behavior.
 3. **Fix the selected ordinary hot path.** If LOS/movement is material by the rule above,
    build a reusable static-blocker broad phase and query only candidate cells before exact
    segment tests. Crate removal makes this easier because moving/destructible cover no longer

@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-08-05
-last_reviewed: 2026-08-08
+last_reviewed: 2026-08-12
 topic: Cardborne runtime architecture and stutter attribution
 scope: Repository history through the 2026-08-08 combat-readability implementation, retained local performance evidence, gameplay raster pack, and current Godot 4.7 guidance
 source: Official Godot 4.7 documentation and Cardborne repository evidence through the 2026-08-08 combat-readability implementation based on 6339795d
@@ -297,7 +297,7 @@ One narrow hot-path cleanup was safe without attribution: crates no longer have 
 bars, so `VehicleRun` no longer builds or retains `crate_health_overlays` on every combat
 presentation snapshot. This removes obsolete recurring dictionary writes. It is a code-
 contract cleanup, not evidence that the visible stutter is fixed. The visual workload also
-changed: the world-health batch ceiling fell from 50 to 28 instances, hostile projectile
+changed: the world-health batch ceiling fell from 50 to 26 instances, hostile projectile
 thickness changed only through the existing transform, and a visible Beam Sentinel now
 uses two startup planes and three active planes. These bounded changes require the same
 clean requalification as any other current workload; historical timing cannot qualify them.

@@ -72,7 +72,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 63, "all 60 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 62, "all 59 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in RETIRED_PRIMITIVE_IDS:
@@ -109,9 +109,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 63
+		int(manifest.get("final_asset_count", 0)) == 62
 			and not manifest.has("animations"),
-		"manifest declares 63 static semantic images and no frame animations"
+		"manifest declares 62 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	_validate_normalized_content_rects()
@@ -145,7 +145,6 @@ func _validate_normalized_content_rects() -> void:
 	var expected := {
 		&"world/mystery_device_intact":Rect2i(6, 5, 372, 374),
 		&"world/mystery_device_resolved":Rect2i(6, 5, 372, 374),
-		&"world/facility_reinforcement_fabricator":Rect2i(16, 43, 224, 170),
 	}
 	for asset_id in expected:
 		var descriptor := AssetProvider.descriptor(asset_id)

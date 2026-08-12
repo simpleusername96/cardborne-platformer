@@ -10,8 +10,9 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 
-const PHASE_GAPS := [0.55, 0.42, 0.32]
-const AUTONOMOUS_INTERVALS := [6.0, 4.9, 3.9]
+const PHASE_GAPS := [0.45, 0.34, 0.26]
+const AUTONOMOUS_INTERVALS := [5.4, 4.4, 3.5]
+const DIRECT_RECOVERY_SCALE := 0.80
 
 var stage_id: StringName = &"stage_1"
 var stage_index := 0
@@ -172,7 +173,7 @@ func update_active(
 	if boss.phase_time <= 0.0:
 		services.call("_on_boss_direct_attack_complete", boss)
 		boss.phase = &"boss_recovery"
-		boss.phase_time = Patterns.recovery_seconds(pattern)
+		boss.phase_time = Patterns.recovery_seconds(pattern) * DIRECT_RECOVERY_SCALE
 		boss.vulnerable = 1.55 if kind in [&"charge", &"area"] else 0.65
 		boss.last_pattern = pattern
 		boss.pattern = &"recovery_window"

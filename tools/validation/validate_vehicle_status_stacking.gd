@@ -169,8 +169,8 @@ func _validate_shock(catalog: Catalog) -> void:
 
 func _validate_level_progression(catalog: Catalog) -> void:
 	var thermal_radius := [72.0, 84.0, 96.0]
-	var thermal_damage := [4.0, 6.0, 8.0]
-	var poison_dps := [2.0, 3.0, 4.0]
+	var thermal_damage := [4.0, 5.75, 8.0]
+	var poison_dps := [2.0, 2.85, 4.0]
 	var poison_duration := [5.0, 6.0, 7.0]
 	var chill_magnitude := [0.06, 0.08, 0.10]
 	var chill_duration := [2.0, 2.5, 3.0]

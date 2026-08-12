@@ -39,6 +39,12 @@ class BossServiceStub:
 
 func _init() -> void:
 	var runtime := BossRuntime.new()
+	_expect(
+		BossRuntime.PHASE_GAPS == [0.45, 0.34, 0.26]
+			and BossRuntime.AUTONOMOUS_INTERVALS == [5.4, 4.4, 3.5]
+			and is_equal_approx(BossRuntime.DIRECT_RECOVERY_SCALE, 0.80),
+		"boss offense owns the exact read gaps, autonomous intervals, and recovery scale"
+	)
 	var previous_gap := INF
 	var previous_initial_delay := INF
 	for stage_index in 5:
@@ -60,6 +66,27 @@ func _init() -> void:
 		previous_gap = runtime.read_gap(1)
 		previous_initial_delay = float(configured["autonomous_timer"])
 		var boss := _boss()
+		for phase in range(1, 4):
+			_expect(
+				is_equal_approx(
+					runtime.read_gap(phase),
+					float(BossRuntime.PHASE_GAPS[phase - 1])
+						* StageDifficulty.boss_cadence_scale(stage_index)
+				),
+				"%s phase %d applies the exact direct read gap" % [stage_id, phase]
+			)
+			boss.boss_phase = phase
+			runtime.autonomous_timer = 0.0
+			runtime.advance_autonomous(0.0, boss, Vector2(320.0, 180.0))
+			_expect(
+				is_equal_approx(
+					float(runtime.snapshot()["autonomous_timer"]),
+					float(BossRuntime.AUTONOMOUS_INTERVALS[phase - 1])
+						* StageDifficulty.boss_cadence_scale(stage_index)
+				),
+				"%s phase %d applies the exact autonomous interval" % [stage_id, phase]
+			)
+		boss.boss_phase = 1
 		var cycle: Array[String] = []
 		for _index in 4:
 			cycle.append(runtime.select_direct(boss))
@@ -114,6 +141,7 @@ func _init() -> void:
 		"direct-pattern read cadence escalates without owning semantic phase floors"
 	)
 	_validate_late_stage_direct_area_coverage(runtime)
+	_validate_direct_recovery_scale(runtime)
 	_finish()
 
 
@@ -135,6 +163,27 @@ func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
 	_expect(
 		services.damage_calls == 1,
 		"stage 5 direct area damage reaches beyond the default boss footprint"
+	)
+
+
+func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
+	runtime.configure(&"stage_1")
+	var services := BossServiceStub.new()
+	var boss := _boss()
+	boss.pattern = &"furnace_ring"
+	boss.phase = &"boss_active"
+	boss.phase_time = 0.01
+	boss.pattern_volleys = 1
+	boss.hit_committed = true
+	boss.committed_target = Vector2.ZERO
+	runtime.update_active(boss, 0.02, services)
+	_expect(
+		boss.phase == &"boss_recovery"
+			and is_equal_approx(
+				boss.phase_time,
+				BossPatterns.recovery_seconds("furnace_ring") * 0.80
+			),
+		"direct attack recovery applies the exact 0.80 offense scale once"
 	)
 
 

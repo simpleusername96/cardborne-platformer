@@ -58,7 +58,7 @@ func _initialize() -> void:
 		seeker != null
 			and seeker.upgrade_id == &"homing_missiles"
 			and seeker.values_by_level == [25.0, 28.0, 32.0, 38.0]
-			and seeker.cap_by_level == [1, 2, 3, 3],
+			and seeker.cap_by_level == [2, 3, 4, 4],
 		"Seeker definition owns its base and three upgrade states"
 	)
 	_expect(build.active_optional_secondaries() == 2, "two optional weapons fill the slot cap")
@@ -255,6 +255,32 @@ func _validate_electric_field_radius(catalog: Catalog) -> void:
 			"Electric Field level %d publishes its exact definition radius"
 			% (level_index + 1)
 		)
+	var action_build := RunBuild.new(catalog)
+	action_build.apply(&"electric_field")
+	var action_runtime := Runtime.new()
+	var targets: Array[EnemyState] = [
+		_make_target("field_action_a", Vector2(60.0, 0.0)),
+		_make_target("field_action_b", Vector2(90.0, 0.0)),
+	]
+	var action_damage: Array = action_runtime.update(
+		0.25,
+		Vector2.ZERO,
+		Vector2.RIGHT,
+		Vector2.RIGHT,
+		action_build,
+		targets,
+		Callable(self, "_los")
+	)["damage"]
+	_expect(
+			action_damage.size() == 2
+			and _shared_action_serial(action_damage) > 0
+			and action_damage.all(
+				func(intent_variant: Variant) -> bool: return int(
+					Dictionary(intent_variant)["damage_flags"]
+				) == OutgoingDamagePolicy.DAMAGE_PERIODIC
+			),
+		"one Electric Field tick shares one periodic action identity across targets"
+	)
 
 
 func _validate_homing_progression(catalog: Catalog) -> void:
@@ -286,14 +312,18 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 			Callable(self, "_find_seeker_targets")
 		)
 		var projectiles: Array = result["projectiles"]
-		var expected_count := mini(upgrade_level + 1, 3)
+		var expected_count := mini(upgrade_level + 2, 4)
 		_expect(
 			_requested_seeker_count == expected_count
 				and projectiles.size() == expected_count,
 			"homing level %d requests and fires exactly %d distinct missiles"
 			% [upgrade_level, expected_count]
 		)
+		var volley_action_serial := 0
 		for projectile in projectiles:
+			var action_serial := int(projectile.get("combat_action_serial", 0))
+			if volley_action_serial <= 0:
+				volley_action_serial = action_serial
 			_expect(
 				is_equal_approx(float(projectile["damage"]), expected_damage[upgrade_level]),
 				"homing level %d uses %.0f damage per missile"
@@ -303,8 +333,10 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 				projectile.get("damage_flags", -1)
 					== OutgoingDamagePolicy.DAMAGE_DIRECT
 					and projectile.has("spawn_origin")
-					and int(projectile.get("attack_serial", 0)) > 0,
-				"homing projectiles carry direct flags, spawn origin, and stable serial"
+					and int(projectile.get("attack_serial", 0)) > 0
+					and projectile.get("combat_action_family", &"") == &"secondary"
+					and action_serial == volley_action_serial,
+				"one Seeker volley shares one direct secondary combat-action identity"
 			)
 			_expect(
 				bool(projectile["explosive"]),
@@ -378,7 +410,11 @@ func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
 		target.active = true
 		target.pos = origin - Vector2.RIGHT * 48.0
 		target.radius = 18.0
-		var targets: Array[EnemyState] = [target]
+		var second_target := _make_target(
+			"mine_second_target_%d" % level_index,
+			target.pos + Vector2(28.0, 0.0)
+		)
+		var targets: Array[EnemyState] = [target, second_target]
 		var result := runtime.update(
 			0.1,
 			origin,
@@ -400,10 +436,10 @@ func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
 				float(detonations[0]["radius"])
 			)
 		_expect(
-			damage.size() == 1
+			damage.size() == 2
 			and is_equal_approx(float(damage[0]["damage"]), expected_damage[level_index])
 			and damage[0].get("damage_flags", -1) == OutgoingDamagePolicy.DAMAGE_DIRECT
-			and int(damage[0].get("attack_serial", 0)) > 0
+			and _shared_action_serial(damage) > 0
 			and detonations.size() == 1
 			and Vector2(detonations[0]["position"]) == target.pos
 			and is_equal_approx(float(detonations[0]["radius"]), expected_radius[level_index])
@@ -412,7 +448,7 @@ func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
 			and is_equal_approx(
 				float(detonation_effect.radius), expected_radius[level_index]
 			),
-			"Drop Mine level %d resolves damage and publishes one exact-radius effect receipt"
+			"Drop Mine level %d shares one action across targets and publishes one exact-radius effect receipt"
 			% (level_index + 1)
 		)
 
@@ -445,7 +481,10 @@ func _validate_auto_laser(catalog: Catalog) -> void:
 	var runtime := Runtime.new()
 	var origin := Vector2(900.0, 640.0)
 	var target := _make_target("rear_target", origin + Vector2.LEFT * 300.0)
-	var targets: Array[EnemyState] = [target]
+	var second_target := _make_target(
+		"rear_target_second", origin + Vector2.LEFT * 520.0
+	)
+	var targets: Array[EnemyState] = [target, second_target]
 	runtime.reset(origin)
 	runtime.record_primary_success(origin, Vector2.RIGHT)
 	var result := runtime.update(
@@ -470,13 +509,13 @@ func _validate_auto_laser(catalog: Catalog) -> void:
 		"auto laser emits one best-direction 760-unit beam intent without a projectile"
 	)
 	_expect(
-		damage.size() == 1
+		damage.size() == 2
 			and damage[0]["source"] == "Auto Laser"
 			and damage[0].get("damage_flags", -1)
 				== OutgoingDamagePolicy.DAMAGE_DIRECT
-			and int(damage[0].get("attack_serial", 0)) > 0
+			and _shared_action_serial(damage) > 0
 			and is_equal_approx(float(runtime.auto_laser_cooldown), 0.9),
-		"auto laser emits one direct damage intent and owns a 0.9-second cooldown"
+		"one Auto Laser beam shares one direct action identity and owns a 0.9-second cooldown"
 	)
 	runtime.record_primary_success(origin, Vector2.RIGHT)
 	var blocked := runtime.update(
@@ -502,6 +541,7 @@ func _validate_auto_laser(catalog: Catalog) -> void:
 	_expect(Array(ready["beams"]).size() == 1, "auto laser fires again after its exact cooldown")
 	runtime.reset(origin)
 	target.pos = origin + Vector2.LEFT * 500.0
+	second_target.pos = origin + Vector2.LEFT * 620.0
 	runtime.record_primary_success(origin, Vector2.RIGHT)
 	var clipped := runtime.update(
 		0.1,
@@ -606,6 +646,10 @@ func _validate_storm_barrage(catalog: Catalog) -> void:
 			and int(intent.get("attack_serial", 0)) > 0,
 			"storm damage intent carries direct flags and a stable serial"
 		)
+	_expect(
+		_shared_action_serial(impact_damage) > 0,
+		"one Storm Barrage impact shares one direct action identity across twelve targets"
+	)
 	var empty_runtime := Runtime.new()
 	empty_runtime.reset(origin)
 	_storm_targets.clear()
@@ -636,6 +680,18 @@ func _make_target(target_id: String, position: Vector2, role: StringName = &"cha
 	target.pos = position
 	target.radius = 18.0
 	return target
+
+
+func _shared_action_serial(intents: Array) -> int:
+	if intents.is_empty():
+		return 0
+	var serial := int(Dictionary(intents[0]).get("attack_serial", 0))
+	if serial <= 0:
+		return 0
+	for intent_variant in intents:
+		if int(Dictionary(intent_variant).get("attack_serial", 0)) != serial:
+			return 0
+	return serial
 
 
 func _query_storm_targets(

@@ -47,7 +47,7 @@ func _validate_replacement_values(catalog: ActiveCatalog) -> void:
 	var cases := [
 		{"card":&"gravity_collapse", "id":&"black_hole", "damage":[60.0, 85.0, 115.0, 150.0], "size":[150.0, 175.0, 200.0, 225.0], "startup":0.35, "cooldown":12.0},
 		{"card":&"kinetic_shockwave", "id":&"shockwave", "damage":[45.0, 65.0, 90.0, 120.0], "size":[180.0, 210.0, 240.0, 270.0], "startup":0.20, "cooldown":9.0},
-		{"card":&"piercing_lance", "id":&"cross_beam", "damage":[70.0, 95.0, 125.0, 160.0], "size":[14.0, 18.0, 22.0, 26.0], "startup":0.35, "cooldown":12.0},
+		{"card":&"piercing_lance", "id":&"cross_beam", "damage":[80.0, 110.0, 145.0, 185.0], "size":[24.0, 32.0, 40.0, 48.0], "startup":0.30, "cooldown":10.5},
 	]
 	for case_variant in cases:
 		var case := Dictionary(case_variant)

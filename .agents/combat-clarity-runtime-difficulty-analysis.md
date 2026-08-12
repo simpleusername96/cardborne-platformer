@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-08-10
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-12
 topic: Combat effect clarity, runtime smoothness, health bars, and difficulty
 scope: Current five-stage Cardborne run; analysis and recommendations only
 source: Local source/capture/trace inspection plus official external references
@@ -412,7 +412,6 @@ without exceeding the `320` hostile capacity.
 Approved bars are currently limited to:
 
 - one stage boss;
-- one reinforcement facility;
 - up to twelve fixed installations with roles `turret`,
   `interceptor_tower`, `beam_sentinel`, and `generator`.
 
@@ -681,7 +680,7 @@ Avoid the following changes:
    and generator, and proves zero bars for excluded entities.
 3. Edge fixtures cover top, bottom, left, and right safe-area placement without
    clipping or body detachment.
-4. Capacity remains `28` instances unless the approved entity policy changes.
+4. Capacity is `26` instances after removal of the obsolete spawn structure.
 
 ### Difficulty and performance
 

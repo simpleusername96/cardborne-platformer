@@ -77,7 +77,7 @@ func _initialize() -> void:
 		)
 	_expect(
 		Difficulty.BOSS_HEALTH_MULTIPLIERS == [4.20, 4.30, 4.40, 4.50, 4.60]
-			and Difficulty.BOSS_DAMAGE_MULTIPLIERS == [1.35, 1.42, 1.50, 1.58, 1.70]
+			and Difficulty.BOSS_DAMAGE_MULTIPLIERS == [1.50, 1.60, 1.70, 1.80, 1.90]
 			and Difficulty.BOSS_SHIELDED_DAMAGE_MULTIPLIERS == [0.110, 0.105, 0.100, 0.095, 0.090]
 			and Difficulty.BOSS_CADENCE_SCALES == [0.95, 0.90, 0.85, 0.80, 0.75]
 			and Difficulty.BOSS_COVERAGE_SCALES == [1.05, 1.10, 1.15, 1.20, 1.25],
@@ -87,8 +87,9 @@ func _initialize() -> void:
 		is_equal_approx(
 				float(Patterns.definition("furnace_gates")["damage"]), 22.0
 			)
-			and is_equal_approx(Patterns.damage("furnace_gates", 0), 29.7)
-			and is_equal_approx(Patterns.damage("furnace_gates", 4), 37.4),
+			and is_equal_approx(Patterns.damage("furnace_gates", 0), 33.0)
+			and is_equal_approx(Patterns.damage("furnace_gates", 4), 41.8)
+			and is_equal_approx(Patterns.damage("breaker_charge", 4), 68.4),
 		"boss patterns preserve authored base damage and apply the stage-owned multiplier"
 	)
 	_expect(

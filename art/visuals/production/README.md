@@ -10,7 +10,7 @@ style reference only, never asset approval.
 
 ## Ownership
 
-- `gameplay/asset-manifest.json` explicitly indexes 63 gameplay images: 60
+- `gameplay/asset-manifest.json` explicitly indexes 62 gameplay images: 59
   approved semantic PNGs plus 3 approved deterministic SurfaceDetail SVGs.
 - All non-beam projectiles reuse `projectile/energy_teardrop`. Runtime owns
   rotation, scale, faction or affinity tint, collision, cadence, range, homing,

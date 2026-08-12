@@ -152,7 +152,7 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
 5. semantic accent는 상태나 방향을 설명하는 한 곳에만 사용한다.
 6. 최종 크기와 grayscale에서 silhouette, facing과 state를 다시 검증한다.
 
-actor, facility, projectile와 UI에는 작은 원과 rivet, 기능 없는 panel seam,
+actor, fixed installation, projectile와 UI에는 작은 원과 rivet, 기능 없는 panel seam,
 반복 lamp, 동심원, nested frame, 무작위 scratch와 설명할 수 없는 greeble을
 넣지 않는다. 이동 surface의 작은 환경 흔적은 아래 `SurfaceDetail` 범주만
 따른다. 경계선은 서로 다른 mass를 분리하거나 실제 상태를 표시할 때만
@@ -183,7 +183,7 @@ world, combat, minimap, Theme와 sheet는 literal role color를 다시 선언하
 | `space_black` | `#070B11` | exterior/absolute void |
 | `world_canvas` | `#101923` | walkable base |
 | `surface` | `#182431` | panel과 floor plate |
-| `raised` | `#243445` | inner structure, facility, raised UI |
+| `raised` | `#243445` | inner structure, fixed installation, raised UI |
 | `line` | `#465A6E` | non-semantic boundary |
 | `text_primary` | `#EEF3F7` | primary text/live highlight |
 | `text_muted` | `#9EADBC` | secondary text |
@@ -215,7 +215,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored direct-pickup and shard visual ID plus value-scale mapping | spawn, value, collection |
 | effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, Dash Afterburn, Storm Barrage, and Mystery purge presentation modes within fixed capacity | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
-| world catalog | authored Transit Gate, Anomaly Device, reinforcement facility, SurfaceDetail, and state descriptor | topology, collision, health, spawn cadence, outcome |
+| world catalog | authored Transit Gate, Anomaly Device, SurfaceDetail, and state descriptor | topology, collision, health, outcome |
 | secondary catalog | authored seeker, field, blade, mine presentation identity plus code-native rear-beam and storm-footprint state | targeting, cadence, damage |
 | defense catalog | shared code-native support boundary plus Toxin/Cryo actor-overlay recipe | protection, Electric Field damage area, damage, slow, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
@@ -234,8 +234,7 @@ collision.
 #### Media ownership boundary
 
 - player, ordinary enemy, boss, secondary body, three projectile roles,
-  direct pickup, Transit Gate, Anomaly Device, reinforcement
-  facility, common boss
+  direct pickup, Transit Gate, Anomaly Device, common boss
   node처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된 authored
   PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와 state
   선택만 소유한다. field topology와 정확히 같은 surface/outer-wall/inner-wall
@@ -324,13 +323,11 @@ collision.
 | 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
 | 변칙 장치 | 큰 neutral mechanical body; 파괴 전 결과를 숨기고 파괴 후 resolved state만 표시 | device health와 hidden outcome |
-| 적 생성 시설 | 넓은 적대 시설 body와 상시 체력 표시; 일반 적과 다른 미니맵 표식 | 별도 facility health, 가동 임계점, 소환 주기와 상한 |
 | 직접 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
 
 별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad와
-Breakable Bulkhead는 현재 product category가 아니다. 적 생성 시설은 승인된
-별도 stationary facility category다. 내부 구조벽·위험 지대·게이트·변칙
-장치·적 생성 시설·직접 픽업을 서로
+Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·위험 지대·게이트·변칙
+장치·직접 픽업을 서로
 바꿔 부르거나 같은 silhouette로 합치지 않는다.
 
 ### World
@@ -374,9 +371,6 @@ Breakable Bulkhead는 현재 product category가 아니다. 적 생성 시설은
   shared ring은 boundary accent로만 사용하며 별도 raster를 추가하지 않는다.
 - Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
   Anomaly Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
-- reinforcement facility는 enemy actor catalog를 재사용하지 않는 완성된
-  `256×256` authored body다. 가동 중에만 world에 나타나고, 시설 체력 bar와
-  two-tone diamond minimap marker가 사용자의 파괴 목표를 전달한다.
 - direct pickup과 Anomaly Device는 넓은 role-color 면과 dark contour를 사용해
   서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
   표시하지 않는다.
@@ -646,11 +640,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 적 생성 시설은
   edge boss/target health, objective와 mission Surface는 사용하지 않는다. full upgrade name,
   level과 effective value는 paused Ship Status만 소유한다.
 - minimap의 dynamic marker는 player, `field_pickup`, `mystery_device`,
-  `mobile_enemy`, `priority_enemy`, `boss`, `reinforcement_facility` 정확히 일곱
+  `mobile_enemy`, `priority_enemy`, `boss` 정확히 여섯
   역할만 사용한다. pickup은 lozenge, intact Anomaly Device는 hidden result를 전혀 암시하지 않는
   neutral cut marker, mobile enemy는 wedge/round mass, 고정 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`는 square/cut priority mass,
-  boss는 command-magenta notched mass, facility는 two-tone diamond다. resolved/retired
+  boss는 command-magenta notched mass다. resolved/retired
   device는 사라지고 elite, stage별 boss color, hidden outcome과 그 밖의 subtype은
   표시하지 않는다. marker capacity, borrowed buffer, explored static geometry와 fog,
   player facing, 한 retained minimap Surface를 유지한다. pickup outer size는
@@ -663,27 +657,27 @@ Breakable Bulkhead는 현재 product category가 아니다. 적 생성 시설은
   사용하지 않는다.
 - normal ToastSurface는 compact `320×36`, standard/large `360×40`이며 center
   status band의 가장 낮은 경계 아래 4px에 붙고 좌상단 cluster 및 minimap과 겹치지 않는다.
-  gameplay toast는 reinforcement facility active/destroyed, boss inbound,
-  barrier depleted, Anomaly Device first-hit reveal, Anomaly Device triggered result,
+  gameplay toast는 boss inbound, barrier depleted, Anomaly Device first-hit reveal,
+  Anomaly Device triggered result,
   boss shield-down과 progression complete event만 허용한다.
   stage transition banner는 사용하지 않는다.
-- stage boss, active reinforcement facility, 고정 전투 시설 `turret`,
+- stage boss와 고정 전투 설치물 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed
   health bar를 둔다. mobile enemy, mine, Anomaly Device에는 표시하지
-  않는다. 시설 bar는 최대 12개이며 fill 높이는 16 world unit, boss fill 높이는
-  18 world unit이다. installation half-width는 `42–72`, boss는 `96–120`,
-  facility는 `88–112` world unit로 제한한다. fill은 모든 비율에서 왼쪽 edge를
+  않는다. installation bar는 최대 12개이며 fill 높이는 16 world unit, boss fill 높이는
+  18 world unit이다. installation half-width는 `42–72`, boss는 `96–120`
+  world unit로 제한한다. fill은 모든 비율에서 왼쪽 edge를
   고정하고 backing은 fill보다 상하좌우 2 world unit씩 크다. body 위 공간이
   viewport top을 넘으면 아래로 옮기고, complete backing을 visible world 안에
   clamp한다. 모두 기존
   `Overlay_health` retained batch를 공유하며 backing/fill을 합친 fixed capacity는
-  28 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
+  26 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
 - shield와 barrier는 보호받는 body에 붙은 하나의 closed boundary만 사용한다.
   damaging beam은 startup과 active 모두 exact filled corridor를 사용한다. Repair
   Tender healing은 source에서 recipient로 향하는 segmented mint packet과 recipient
   쪽 open chevron을 사용한다. heal은 continuous solid beam이나 closed ring을
   사용하지 않으며 reduced motion에서는 packet travel만 멈춘다.
-- HUD off-screen threat와 여덟 종류 minimap marker는 기존 code-native retained
+- HUD off-screen threat와 여섯 종류 minimap marker는 기존 code-native retained
   mesh를 유지한다. world-space crosshair는 shared authored PNG retained textured
   batch로 배치한다. persistent-status orbit과 support timer는 사용하지 않으며
   Toxin/Cryo 상태는 하나의 shared compositor와 기존 actor batch 내부의 same-size
@@ -748,9 +742,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 적 생성 시설은
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- final gameplay manifest가 정확히 63 image를 색인함: semantic PNG 60개와
+- final gameplay manifest가 정확히 62 image를 색인함: semantic PNG 59개와
   user-approved SurfaceDetail SVG 3개다. Shape/color-only effect/cue raster는 0이다.
-  전용 hostile bolt와 reinforcement facility를 포함하며, candidate/intermediate와
+  전용 hostile bolt를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음
 - HUD/minimap/UI PNG와 effect/cue raster 및 frame animation raster가 0이며, 모든
   외부-source derivative의 license/source/hash 기록이 완전함

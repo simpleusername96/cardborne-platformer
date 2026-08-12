@@ -90,10 +90,6 @@ func _add_facility(facility_id: StringName) -> void:
 			_add_asset(&"world/facility_repair_pad", 126.0)
 		&"overdrive_field":
 			_add_asset(&"world/facility_overdrive_pad", 126.0)
-		&"reinforcement_fabricator":
-			_add_asset(
-				&"world/facility_reinforcement_fabricator", 156.0
-			)
 		_:
 			_add_asset(&"world/terrain_solid_cover_block", 96.0)
 

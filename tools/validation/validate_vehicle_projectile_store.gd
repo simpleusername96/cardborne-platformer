@@ -50,16 +50,22 @@ func _initialize() -> void:
 	var reuse_store := ProjectileStore.new()
 	var elite_projectile := _projectile(Vector2(10.0, 10.0))
 	elite_projectile["threat_tier"] = AttackContract.THREAT_ELITE
+	elite_projectile["combat_action_family"] = &"primary"
+	elite_projectile["combat_action_serial"] = 77
 	reuse_store.add_hostile(elite_projectile)
 	_expect(
-		reuse_store.hostile_live[0].threat_tier == AttackContract.THREAT_ELITE,
-		"hostile projectile retains its configured threat tier"
+		reuse_store.hostile_live[0].threat_tier == AttackContract.THREAT_ELITE
+			and reuse_store.hostile_live[0].combat_action_family == &"primary"
+			and reuse_store.hostile_live[0].combat_action_serial == 77,
+		"a projectile retains its configured threat tier and combat-action identity"
 	)
 	reuse_store.remove_hostile_at_swap(0)
 	reuse_store.add_hostile(_projectile(Vector2(20.0, 10.0)))
 	_expect(
-		reuse_store.hostile_live[0].threat_tier == AttackContract.THREAT_ORDINARY,
-		"pooled projectile reuse resets a stale threat tier"
+		reuse_store.hostile_live[0].threat_tier == AttackContract.THREAT_ORDINARY
+			and reuse_store.hostile_live[0].combat_action_family == &""
+			and reuse_store.hostile_live[0].combat_action_serial == 0,
+		"pooled projectile reuse resets stale threat and combat-action fields"
 	)
 
 	var before_clear := store.hostile_count()

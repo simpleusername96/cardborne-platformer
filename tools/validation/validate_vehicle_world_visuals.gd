@@ -60,7 +60,6 @@ func _validate_catalog() -> void:
 		&"transit_gate": [ &"world/facility_transit_gate", &"round_portal" ],
 		&"mystery_device_intact": [ &"world/mystery_device_intact", &"neutral_mechanical_body" ],
 		&"mystery_device_resolved": [ &"world/mystery_device_resolved", &"resolved_wreck" ],
-		&"reinforcement_fabricator": [ &"world/facility_reinforcement_fabricator", &"wide_static_fabricator" ],
 	}
 	_expect(
 		WorldCatalog.WORLD_OBJECT_DESCRIPTORS.size() == expected_objects.size(),
@@ -435,7 +434,6 @@ func _validate_minimap_tokens() -> void:
 			{"kind":&"mystery_device", "position":Vector2(2600,800), "discovered":true},
 			{"kind":&"mobile_enemy", "position":Vector2(3200,800), "discovered":true},
 			{"kind":&"priority_enemy", "position":Vector2(3800,800), "discovered":true},
-			{"kind":&"reinforcement_facility", "position":Vector2(4400,800), "discovered":true},
 			{
 				"kind":&"objective",
 				"position":Vector2(5000,800),
@@ -445,7 +443,7 @@ func _validate_minimap_tokens() -> void:
 		],
 	}
 	var mesh := MinimapBuilder.build(snapshot, Vector2(260.0, 120.0))
-	_expect(mesh != null, "minimap compiles all seven bounded semantic roles")
+	_expect(mesh != null, "minimap compiles all six bounded semantic roles")
 	if mesh == null:
 		return
 	_expect(mesh.get_surface_count() == 1, "minimap stays in one vertex-colored batch")

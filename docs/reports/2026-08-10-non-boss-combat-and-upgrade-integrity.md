@@ -3,9 +3,9 @@ type: plan
 status: superseded
 owner: BK
 created: 2026-08-10
-last_reviewed: 2026-08-11
-topic: Upgrade truth, contact damage, exact area-effect presentation, reinforcement recurrence, balance evidence, and final qualification
-scope: Upgrade-card progression copy and values, ordinary melee contact reliability, exact gameplay-footprint presentation for every displayed area effect, reinforcement-facility recurrence proof, locked enemy balance verification, and release qualification
+last_reviewed: 2026-08-12
+topic: Upgrade truth, contact damage, exact area-effect presentation, balance evidence, and final qualification
+scope: Upgrade-card progression copy and values, ordinary melee contact reliability, exact gameplay-footprint presentation for every displayed area effect, locked enemy balance verification, and release qualification
 supersedes: ./2026-08-10-combat-correction-and-boss-pattern-expansion.md
 related:
   - ../../AGENTS.md
@@ -30,8 +30,8 @@ related:
 > runtime, health-bar, boss-entry, and difficulty changes.
 
 The completed non-boss work remains in production. This contract finishes the newly
-verified progression and contact defects, proves the already-authored reinforcement and
-balance behavior, corrects every displayed area effect so its visible body covers its exact
+verified progression and contact defects, proves the accepted balance behavior, corrects
+every displayed area effect so its visible body covers its exact
 gameplay footprint, carries the still-required capture/export gates, and qualifies the
 resulting workload. Boss attack patterns and values remain excluded, but their shared
 circular area presentation follows the same footprint rule. The user rejected raster
@@ -43,7 +43,7 @@ outward-only EMP wavefront and its decorative raster are removed from runtime.
 
 - Objective: make every upgrade offer state truthful, make intended melee contact damage
   reliable during normal movement, make every displayed area effect match its complete
-  gameplay footprint, prove reinforcement recurrence, and verify rather than silently
+  gameplay footprint, and verify rather than silently
   retune the accepted enemy health and damage curves.
 - Deliverable: gameplay-owned upgrade preview data, level-aware Korean/English card copy,
   a bounded swept-contact runtime, gameplay-owned area-effect footprint data, full-area
@@ -68,9 +68,6 @@ outward-only EMP wavefront and its decorative raster are removed from runtime.
 - The accepted ordinary health curve, final ordinary/boss health multipliers, and ordinary
   outgoing-damage multiplier are already implemented and validated. Increasing them again
   would hide the separate contact-detection defect and compound balance without evidence.
-- The reinforcement facility already advances on elapsed time and can spawn repeatedly,
-  but its validator proves only the first spawn and capacity blocking. It does not prove a
-  second interval, a freed child/global slot, or the run integration's `carrier_id` count.
 - Player movement is updated before enemies. Chaser and Rammer contact checks compare only
   the final positions of an active step; Bulkhead Guard and Splitter Barge check contact
   only on their scheduled decision path. Relative movement can cross between those checks,
@@ -89,7 +86,7 @@ outward-only EMP wavefront and its decorative raster are removed from runtime.
 - Current clean HEAD `6494563f` contains the completed EMP wavefront integration. Its
   closeout records passing renderer, effect-store, capture, asset, workbench, visual-
   authority, import, export, and built-product visual checks. The earlier upgrade-system,
-  upgrade-UI, reinforcement-facility, and run-difficulty baseline remains recorded; the
+  upgrade-UI and run-difficulty baseline remains recorded; the
   pre-existing world-layout-dependent crate-warning assertion still requires Task 0.2
   isolation. No current-HEAD native or Web release-performance result is qualified.
 
@@ -107,7 +104,6 @@ In scope:
 - Explicit EMP damage/stun radius `285` and projectile-clear radius `325` presentation
   without delayed radius growth or an authored-raster accent.
 - Regression proof that beam startup/active continues to fill its exact damage corridor.
-- Repeated reinforcement-facility lifecycle and run-integration validation.
 - Verification of the accepted ordinary health curve
   `[0.85, 1.00, 1.15, 1.30, 1.45]`, final ordinary and boss health multipliers `2.60`,
   ordinary damage multiplier `1.755`, and damage stage curve
@@ -124,7 +120,7 @@ Out of scope:
 - Boss attack patterns, boss contact rules, boss damage, boss health, boss shielding, or
   boss body work. Only the shared presentation of an existing circular gameplay footprint
   may change.
-- New enemy roles, new reinforcement roles, changed spawn intervals/caps, more actor or
+- New enemy roles, changed spawn intervals/caps, more actor or
   projectile capacity, changed XP values, new cards, or a save-data migration.
 - Further enemy-stat increases before the contact correction and final evidence are
   complete. Any later balance change requires a separate user decision.
@@ -182,8 +178,6 @@ Exact actions requiring owner or user approval:
   are retired.
 - The six missing card rows are a presentation-boundary defect, not authorization to change
   their gameplay values.
-- Reinforcement recurrence code is expected to be correct; tests determine whether any
-  production correction is necessary. Do not rewrite a passing lifecycle.
 - Ordinary health and damage values are accepted constants. Perceived weakness is
   re-evaluated only after contact hit opportunities are fixed.
 - The pre-existing crate-warning validator failure is a fixture-isolation defect unless a
@@ -241,7 +235,6 @@ belongs in `vehicle_game_spec.md` and `VISUAL_SYSTEM.md`; no new glossary file i
 | Upgrade source truth | Split/Pierce values live in `VehicleRun`; Seeker upgrades are hardcoded in secondary runtime; optional secondary values live in `.tres` definitions. | `scripts/vehicle/vehicle_run.gd:1575`, `scripts/player/vehicle_secondary_runtime.gd:205`, `data/weapons/vehicle/secondary/*.tres` | Centralize primary rules and secondary definition loading, then make both runtime and previews consume them. | 1.1 |
 | Card semantics and layout | Built-in Seeker is misclassified; element copy is static. Runtime already renders level, effect rows, then summary with zero dividers, while product prose lists summary before values. | `scripts/cards/vehicle_upgrade_offer_presenter.gd:30`, `scripts/ui/vehicle_upgrade_choice_card.gd:243`, `docs/product/vehicle_game_spec.md:550`, `docs/design/VISUAL_SYSTEM.md` | Correct change-kind semantics, add enhancement summaries, and reconcile product prose to the binding visual order. | 0.1, 1.2-1.4 |
 | Enemy health and damage | Accepted curves and multipliers are already in source and focused tests. | `scripts/enemies/vehicle_stage_difficulty.gd`, `scripts/encounters/vehicle_encounter_director.gd`, `tools/validation/validate_vehicle_run_difficulty.gd` | Preserve all values; rerun exact effective-value checks after contact changes and report them plainly. | 3.2 |
-| Reinforcement recurrence | Runtime resets its interval after each accepted spawn and retains zero while capacity-blocked; current test stops after first spawn/cap checks. | `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd:45`, `tools/validation/validate_vehicle_reinforcement_facility.gd:20` | Extend lifecycle and run-integration tests; change production only if those exact tests expose a defect. | 3.1 |
 | Missing player contact damage | Player and enemy endpoints are checked at different cadences; there is no relative swept contact owner. | `scripts/vehicle/vehicle_run.gd:1423`, `:2628`, `:2967`, `:3021`; `scripts/enemies/vehicle_enemy_update_schedule.gd` | Add one fixed-cap 60 Hz contact runtime using relative swept circles and explicit role semantics; remove legacy endpoint/decision-only checks. | 2.1-2.4 |
 | Hit protection semantics | `_damage_player()` returns no receipt; one-shot attacks commit before an invulnerability rejection. | `scripts/vehicle/vehicle_run.gd:4169`, `tools/validation/validate_vehicle_damage_feedback.gd` | Return accepted/not-accepted while preserving every caller; barrier absorption is accepted, invulnerability rejection is not. One-shot attacks remain consumed; persistent hull contact retries while overlap remains. | 2.1-2.4 |
 | Hot-path risk | Current runtime already has a bounded active worklist, reusable effect state, retained overlay batches, and reusable render buffers; current HEAD lacks a comparable pre-change release baseline. | `.agents/cardborne-performance-engineering-policy.md`, `.agents/cardborne-runtime-architecture-audit.md`, `scripts/vehicle/vehicle_run.gd`, `scripts/presentation/vehicle_combat_renderer.gd` | Preserve batch capacities, replace textures with startup-built meshes, remove two obsolete effect batches, add no per-frame allocation, and qualify only after all fixes. Without a comparable pre-change baseline, make no causal regression claim. | 0.3, 2.2-2.4, 4.1-4.4, 5.3 |
@@ -375,13 +368,7 @@ instrumentation. If measured contact cost is material, the only in-contract opti
 is a fixed retained melee-contact worklist maintained by the existing update schedule; do
 not weaken the collision rule or lower cadence.
 
-### Reinforcement and balance evidence
-
-The facility validator must prove two sequential intervals below cap, blocking at child
-and global caps, immediate spawn when a zeroed timer gains a slot, and permanent stop after
-destroy/retire/stage completion. A run integration check must count only living children
-with `summoned == true` and `carrier_id == "reinforcement_facility"` and prove the spawned
-spec preserves that identity.
+### Balance evidence
 
 The difficulty validator remains the executable balance oracle. It must continue to prove:
 
@@ -417,7 +404,7 @@ Source owners: `docs/product/vehicle_game_spec.md`,
 
 - [x] **0.1 Reconcile durable product contracts.**
   - Change: add the effect-row matrix, unlock/enhance rules, element summary transition,
-    relative melee-contact matrix, reinforcement recurrence acceptance, and exact area-
+    relative melee-contact matrix and exact area-
     footprint matrix. Correct the product card order so effect rows precede the final
     summary. Replace the obsolete EMP outward-wavefront and hollow-area rules in
     `VISUAL_SYSTEM.md`; record EMP `285` damage/stun and `325` projectile-clear envelopes in
@@ -541,7 +528,7 @@ Batch gate:
   run, dash/protection, difficulty, performance-scenario structural validator, Godot import,
   and `git diff --check` pass.
 
-### Phase 3: Prove reinforcement and accepted balance
+### Phase 3: Prove accepted balance
 
 Goal: convert “it seems” into deterministic evidence without changing already-accepted
 spawn or balance values.
@@ -550,15 +537,9 @@ Preconditions:
 
 - Phase 2 contact gate passes so post-contact damage opportunities are representative.
 
-Source owners: `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd`,
-`scripts/vehicle/vehicle_run.gd`, `scripts/enemies/vehicle_stage_difficulty.gd`,
+Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/enemies/vehicle_stage_difficulty.gd`,
 `scripts/encounters/vehicle_encounter_director.gd`, focused validators
 
-- [x] **3.1 Prove the complete reinforcement lifecycle.**
-  - Change: extend the focused runtime validator and add run-integration coverage for two
-    intervals, both caps, released slots, destroy/retire/stage-complete, and carrier identity.
-  - Accept: stages 1-5 preserve `8/7/6/5/4s`, `2/3/4/5/6` children, stage roles, and
-    time-driven recurrence. If current production code already passes, leave it unchanged.
 - [x] **3.2 Re-verify and report enemy balance without retuning.**
   - Change: retain the existing difficulty oracle, add only missing exact effective examples
     if needed, and run it after contact integration.
@@ -572,7 +553,7 @@ Source owners: `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd`,
 
 Batch gate:
 
-- Reinforcement facility, run difficulty, enemy contact, damage feedback, stage report,
+- Run difficulty, enemy contact, damage feedback, stage report,
   localization, capture driver, and main run validators pass.
 
 ### Phase 4: Make every displayed area footprint truthful
@@ -656,7 +637,7 @@ Source owners: `scripts/vehicle/vehicle_run_capture_driver.gd`,
 - [x] **5.1 Inspect rendered UI and consolidated combat evidence.**
   - Change: capture Korean/English supported viewports and 200% text for upgrade cards;
     reuse the passing Phase 4 effect evidence unless an owned input changed; inspect upgrade,
-    contact, reinforcement, effect, and player/enemy priority at 1x and grayscale.
+    contact, effect, and player/enemy priority at 1x and grayscale.
   - Accept: card values/copy/layout, every area-footprint mapping, player/enemy priority,
     and existing visual contracts are correct with zero overflow or horizontal dividers.
 - [x] **5.2 Build and smoke the production Web artifact.**
@@ -664,7 +645,7 @@ Source owners: `scripts/vehicle/vehicle_run_capture_driver.gd`,
     `tools/export_web.ps1`, and a production-style built start through the `npjt-port-guard`
     codex lane.
   - Accept: `WEB_EXPORT_OK`, required Web files, Korean/English navigation, upgrade selection,
-    ordinary contact, complete area effects, reinforcement recurrence, and stage progression
+    ordinary contact, complete area effects, and stage progression
     work in the build.
 - [ ] **5.3 Qualify final runtime and diagnose the user's stutter report.**
   - Change: after all fixes and the production Web build are complete, state the approved
@@ -708,7 +689,6 @@ Focused commands use the repository wrapper and run sequentially:
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_attack_route_readability.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_enemy_contact.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_damage_feedback.gd
-.\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_reinforcement_facility.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run_difficulty.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run.gd
 .\tools\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_performance_scenarios.gd
@@ -763,7 +743,7 @@ For built Web, first load `npjt-port-guard`, resolve the `codex` lane, serve onl
 | Inner loop | Changed owner's one focused validator plus `git diff --check` | After the task compiles and direct examples exist | Relevant implementation input changes |
 | Upgrade phase gate | Upgrade system/UI, secondary weapons, localization, capture-driver, visual authority, import | Tasks 1.1-1.4 pass | Card data, preview, UI, localization, or layout changes |
 | Contact phase gate | Enemy contact, damage feedback, attack contract, schedule/store, difficulty, Run, performance-scenario structure | Tasks 2.1-2.4 pass | Contact/damage/state/schedule inputs change |
-| Gameplay evidence gate | Reinforcement, difficulty, contact, damage, report, capture, Run | Tasks 3.1-3.3 pass | Facility, balance, contact, or fixture inputs change |
+| Gameplay evidence gate | Difficulty, contact, damage, report, capture, Run | Tasks 3.2-3.3 pass | Balance, contact, or fixture inputs change |
 | Area-effect phase gate | Effect store, renderer, attack route, secondary weapons, damage feedback, capture, visual authority, import, exact-radius review | Tasks 4.1-4.4 pass | Effect state/catalog/renderer/cue/capture/spec input changes |
 | Export gate | Visual authority, import, `tools/export_web.ps1`, built smoke | All feature phases and rendered inspection pass | Imported/export/runtime input changes |
 | Native release gate | Exact clean native pair with workload and isolation metadata | Once on final code after all feature, render, export, and built-smoke work | Runtime/workload/instrumentation changes or sample invalidation |
@@ -811,8 +791,8 @@ Validation rules:
   a causal regression claim.
 - Card copy can overflow Korean or English even when logic tests pass. Rendered supported-
   viewport and 200% evidence is mandatory.
-- Repeated facility tests may pass while the run counts the wrong children. The integration
-  test separately locks `summoned` plus `carrier_id` identity.
+- A boss unlock must not stop the ordinary scheduler. Integration tests lock an accepted
+  ordinary arrival after the boss becomes active while preserving the boss reserve.
 - A visible perimeter can still dominate a technically nonzero fill. Exact-radius color and
   grayscale review must prove center, middle, and edge read as one area.
 - EMP has two gameplay envelopes. Collapsing them into one radius would misstate either
@@ -827,7 +807,6 @@ Validation rules:
 | --- | --- | --- |
 | A verified gameplay value differs from the locked matrix | Stop that branch, correct the owning product/gameplay source or amend this contract with user approval | Do not let UI or tests invent a replacement value |
 | Crate baseline failure is a real runtime geometry defect | Preserve evidence and amend scope before editing combat geometry | Task 0.2 authorizes fixture isolation only |
-| Reinforcement recurrence test fails | Fix only timer/cap/child-identity lifecycle to the already-authored values | Do not change cadence, roles, caps, quota, or rewards |
 | Post-contact play still feels weak while exact hit tests pass | Report the evidence and request a separate balance decision | Do not increase health/damage inside this contract |
 | Final contact section exceeds its qualified budget | Preserve evidence and create a measured-owner contact optimization contract | No causal regression claim and no cadence/collision/workload reduction inside this plan |
 | Final full-area presentation exceeds its qualified fill budget | Preserve evidence and present a measured-owner follow-up for explicit user approval | Do not remove the body, reduce resolution, shrink radius, or change gameplay inside this plan |
@@ -919,7 +898,7 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 - Implementation completed under this contract: Tasks 0.1-5.2. Primary Split/Pierce
   and secondary definitions own runtime/preview values; all 36 offer states expose one or two
   rows; built-in Seeker begins as `enhance`; ordinary melee contact has one bounded relative-
-  sweep owner; reinforcement recurrence and locked balance values are proven; every area
+  sweep owner; locked balance values are proven; every area
   state publishes gameplay-owned exact footprints, shape/color-only runtime rasters are
   retired, and the revised code-native renderer has current native capture and built-Web
   evidence. The prior final qualification remains historical and does not qualify the revised
@@ -937,8 +916,8 @@ Complete when:
 
 - Every task acceptance check and phase/final gate passes.
 - Every legal card state has truthful values/copy, every contact case has one owner,
-  every displayed area has a truthful center-to-boundary footprint, facility recurrence and
-  accepted balance are proven, and the built artifact is inspected.
+  every displayed area has a truthful center-to-boundary footprint, ordinary scheduling
+  continues after boss unlock, accepted balance is proven, and the built artifact is inspected.
 - Performance claims use exact eligible labels and evidence; any measured red external
   owner has an explicit successor contract rather than a hidden workaround.
 - The nine shape/color-only runtime raster IDs and files are retired; all remaining authored

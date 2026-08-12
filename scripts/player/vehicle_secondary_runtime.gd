@@ -665,12 +665,12 @@ func _update_seeker(
 		return
 	seeker_cooldown = definition.auxiliary(definition_level) * cooldown_multiplier
 	var seeker_damage := definition.value(definition_level) * damage_multiplier
+	var attack_serial := _next_attack_serial()
 	for target_variant in targets_variant:
 		var target := target_variant as EnemyState
 		if target == null:
 			continue
 		var direction := (target.pos - origin).normalized()
-		var attack_serial := _next_attack_serial()
 		output.append({
 			"pos": origin + direction * 33.0,
 			"spawn_origin": origin,
@@ -679,6 +679,8 @@ func _update_seeker(
 			"damage": seeker_damage,
 			"damage_flags": OutgoingDamagePolicy.DAMAGE_DIRECT,
 			"attack_serial": attack_serial,
+			"combat_action_family": &"secondary",
+			"combat_action_serial": attack_serial,
 			"life": 1.8,
 			"color": Color("8ae9dc"),
 			"owner": "seeker",
@@ -734,6 +736,7 @@ func _update_orbit(
 	for blade_index in count:
 		var blade_position := origin + Vector2.RIGHT.rotated(orbit_angle + TAU * float(blade_index) / float(count)) * ORBIT_RADIUS
 		_query_candidates(blade_position, ORBIT_BLADE_RADIUS, enemies, query_radius)
+		var blade_attack_serial := 0
 		for enemy in _candidate_buffer:
 			var enemy_id := enemy.id
 			if not _eligible(enemy) or float(orbit_target_cooldowns.get(enemy_id, 0.0)) > 0.0:
@@ -741,13 +744,15 @@ func _update_orbit(
 			var contact_radius := ORBIT_BLADE_RADIUS + enemy.radius
 			if blade_position.distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(blade_position, enemy.pos, 2.0):
 				orbit_target_cooldowns[enemy_id] = ORBIT_HIT_COOLDOWN * cooldown_multiplier
+				if blade_attack_serial <= 0:
+					blade_attack_serial = _next_attack_serial()
 				_append_damage_intent(
 					output,
 					enemy,
 					definition.value(level) * damage_multiplier,
 					"Orbiting Blades",
 					OutgoingDamagePolicy.DAMAGE_DIRECT,
-					_next_attack_serial()
+					blade_attack_serial
 				)
 
 

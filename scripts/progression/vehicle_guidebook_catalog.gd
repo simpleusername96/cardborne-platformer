@@ -60,7 +60,6 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"object_repair", "category":&"objects", "entry_kind":&"object", "object_kind":&"repair", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "preview":{"kind":&"pickup", "id":&"repair"}},
 	{"id":&"object_recall", "category":&"objects", "entry_kind":&"object", "object_kind":&"recall", "name_key":"GUIDE_OBJECT_RECALL_NAME", "preview":{"kind":&"pickup", "id":&"experience_recall"}},
 	{"id":&"object_mystery_device", "category":&"objects", "entry_kind":&"object", "object_kind":&"mystery_device", "name_key":"GUIDE_OBJECT_MYSTERY_DEVICE_NAME", "preview":{"kind":&"mystery_device"}},
-	{"id":&"object_reinforcement_facility", "category":&"objects", "entry_kind":&"object", "object_kind":&"reinforcement_facility", "name_key":"GUIDE_OBJECT_REINFORCEMENT_FACILITY_NAME", "preview":{"kind":&"facility", "id":&"reinforcement_fabricator"}},
 	{"id":&"object_transit_gate", "category":&"objects", "entry_kind":&"object", "object_kind":&"transit_gate", "name_key":"GUIDE_FACILITY_GATE_NAME", "preview":{"kind":&"facility", "id":&"transit_gate"}},
 ]
 

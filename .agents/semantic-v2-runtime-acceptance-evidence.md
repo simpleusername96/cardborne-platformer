@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-07-31
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-12
 topic: Semantic-v2 runtime integration, UI acceptance, boss guidance, and final performance
 scope: Non-map semantic-v2 runtime switch and its post-acceptance validation
 related:
@@ -437,7 +437,7 @@ functional and visual evidence only; it does not qualify performance.
 
 Commit `0d220ae2604dd62110badd07fd584a8a0bfa41b5` contains the final feature
 checkpoint for the active combat-integrity plan. Nineteen focused upgrade,
-contact, reinforcement, area-effect, capture, fixed-capacity, and performance-
+contact, area-effect, capture, fixed-capacity, and performance-
 structure validators passed. Godot import, visual authority, and Web export also
 passed. The built Web product loaded through the guarded Codex lane, switched
 from Korean to English, rendered the complete EMP footprint, and produced an
@@ -515,6 +515,10 @@ approved `SurfaceDetail` SVGs. It contains zero cue, EMP, Thermal Burst, or Drop
 Mine raster IDs. The retirement unit preserves all 18 deleted paths and their
 provenance in the workbench; git history and the prior TO-BE copies remain the
 recovery path.
+
+This paragraph records the 2026-08-10 checkpoint. The current 2026-08-12 pack
+contains 62 images: 59 PNGs and the same three approved SVGs. The later reduction
+is intentional and belongs to the current product and visual specifications.
 
 ### Revised rendered and build evidence
 

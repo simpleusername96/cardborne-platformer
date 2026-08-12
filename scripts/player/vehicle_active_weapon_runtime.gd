@@ -133,6 +133,12 @@ func is_ready() -> bool:
 	return cooldown_remaining <= 0.0 and startup_remaining <= 0.0 and active_remaining <= 0.0
 
 
+func reduce_cooldown(seconds: float) -> float:
+	var credited := minf(maxf(0.0, seconds), cooldown_remaining)
+	cooldown_remaining -= credited
+	return credited
+
+
 func cooldown_max(build: VehicleRunBuild, emp_relay_reduction := 0.0) -> float:
 	configure(build)
 	var definition := catalog.get_definition(equipped_id)

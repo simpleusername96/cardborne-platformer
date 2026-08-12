@@ -29,6 +29,8 @@ var condition_mask := 0
 var primary_payload: VehiclePrimaryPayloadProfile
 var team: StringName = &""
 var spawn_serial := 0
+var combat_action_family: StringName = &""
+var combat_action_serial := 0
 var uses_boss_reserve := false
 
 
@@ -63,4 +65,6 @@ func configure(
 	primary_payload = spec.get("primary_payload") as VehiclePrimaryPayloadProfile
 	team = team_value
 	spawn_serial = serial
+	combat_action_family = StringName(spec.get("combat_action_family", &""))
+	combat_action_serial = int(spec.get("combat_action_serial", 0))
 	uses_boss_reserve = boss_reserve

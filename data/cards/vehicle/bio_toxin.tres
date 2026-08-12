@@ -7,7 +7,7 @@
 script = ExtResource("2_mod")
 stat_id = &"toxin_dps_per_stack"
 operation = "add"
-values_by_level = Array[float]([2.0, 3.0, 4.0, 5.5])
+values_by_level = Array[float]([2.0, 2.85, 4.0, 5.5])
 
 [sub_resource type="Resource" id="Modifier_duration"]
 script = ExtResource("2_mod")

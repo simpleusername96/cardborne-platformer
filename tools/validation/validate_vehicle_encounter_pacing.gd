@@ -116,7 +116,7 @@ func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary],
 		not runtime.spawning_enabled()
 			and runtime.debug_snapshot()["queued_spawns"] == 0
 			and runtime.debug_snapshot()["reserved_arrival_slots"] == 0,
-		"%s quota can stop future arrivals" % stage_id
+		"%s explicit teardown can stop future arrivals" % stage_id
 	)
 
 

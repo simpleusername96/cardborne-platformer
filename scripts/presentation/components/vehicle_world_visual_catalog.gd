@@ -1,7 +1,7 @@
 class_name VehicleWorldVisualCatalog
 extends RefCounted
 
-## Field surface and facility descriptors. Geometry, collision,
+## Field surface and world-object descriptors. Geometry, collision,
 ## navigation, placement, schedules, and deterministic layout stay authoritative.
 
 const FIELD_DESCRIPTORS := {
@@ -30,12 +30,6 @@ const WORLD_OBJECT_DESCRIPTORS := {
 		"state": &"resolved",
 		"shape": &"resolved_wreck",
 		"color": &"raised",
-	},
-	&"reinforcement_fabricator": {
-		"asset": &"world/facility_reinforcement_fabricator",
-		"kind": &"reinforcement_facility",
-		"shape": &"wide_static_fabricator",
-		"color": &"danger",
 	},
 }
 

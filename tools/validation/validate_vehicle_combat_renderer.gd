@@ -550,7 +550,7 @@ func _run() -> void:
 	_expect(
 		int(snapshot["batch_allocations"]["Overlay_health"])
 			== Renderer.HEALTH_BAR_INSTANCE_CAPACITY,
-		"the structural world-health batch preallocates its exact twenty-eight-instance ceiling"
+		"the structural world-health batch preallocates its exact twenty-six-instance ceiling"
 	)
 	_expect(
 		int(snapshot["priority_marker_count"]) == 0,
@@ -1309,8 +1309,8 @@ func _validate_active_weapon_presentation(renderer: Renderer) -> void:
 	var ring_batch := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
 	presentation["active_weapon"] = {
 		"weapon_id":&"cross_beam", "center":center,
-		"direction":Vector2.RIGHT, "size":26.0,
-		"startup_remaining":0.35, "active_remaining":0.0,
+		"direction":Vector2.RIGHT, "size":48.0,
+		"startup_remaining":0.30, "active_remaining":0.0,
 		"release_remaining":0.0,
 	}
 	renderer.sync(
@@ -1323,11 +1323,11 @@ func _validate_active_weapon_presentation(renderer: Renderer) -> void:
 		var offset := index * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
 		cross_widths_match = cross_widths_match and is_equal_approx(
 			Vector2(beam_buffer[offset + 1], beam_buffer[offset + 5]).length(),
-			26.0
+			48.0
 		)
 	_expect(
 		cross_widths_match,
-		"Cross Beam startup renders both exact half-width-26 corridors"
+		"Cross Beam startup renders both exact half-width-48 corridors"
 	)
 	presentation["active_weapon"] = {
 		"weapon_id":&"black_hole", "center":center,
@@ -1424,14 +1424,6 @@ func _validate_mystery_device_presentation(
 		{"state":&"resolved", "visible":true, "position":resolved_position},
 		{"state":&"retired", "visible":true, "position":Vector2(760.0, 260.0)},
 	]
-	presentation["reinforcement_facility"] = {
-		"visible":true,
-		"state":&"active",
-		"position":Vector2(900.0, 360.0),
-		"radius":112.0,
-		"health":120.0,
-		"max_health":240.0,
-	}
 	presentation["mystery_effects"] = [
 		{"effect_id":&"gravity_pull", "position":device_position, "radius":480.0},
 		{"effect_id":&"cryo_lock", "position":resolved_position, "radius":360.0},
@@ -1470,21 +1462,8 @@ func _validate_mystery_device_presentation(
 	var health_snapshot := renderer.debug_snapshot()
 	_expect(
 		int(health_snapshot["mystery_health_bar_count"]) == 0
-			and int(health_snapshot["facility_health_bar_count"]) == 1
-			and int(health_snapshot["health_bar_count"]) == 1,
-		"devices omit health bars while the active facility owns its status meters"
-	)
-	var health_buffer := (
-		(renderer.get_node("Overlay_health") as MultiMeshInstance2D).multimesh.buffer
-	)
-	_expect(
-		health_buffer[7] < 360.0
-			and is_equal_approx(absf(health_buffer[5]), 20.0)
-			and is_equal_approx(
-				absf(health_buffer[Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE + 5]),
-				16.0
-			),
-		"the code-native facility health rectangles preserve the authored-frame aspect"
+			and int(health_snapshot["health_bar_count"]) == 0,
+		"Anomaly Devices omit combat health bars"
 	)
 	var expected_radii := [480.0, 360.0, 900.0]
 	var expected_alphas := [0.10, 0.12, 0.08]
@@ -1522,7 +1501,6 @@ func _validate_mystery_device_presentation(
 	)
 	presentation["mystery_devices"] = []
 	presentation["mystery_effects"] = []
-	presentation["reinforcement_facility"] = {}
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation

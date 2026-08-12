@@ -29,8 +29,6 @@ func _initialize() -> void:
 			"GUIDE_CATEGORY_ENEMIES",
 			"HUD_STAGE_LABEL",
 			"HUD_DEFEATED_LABEL",
-			"NOTIFY_REINFORCEMENT_FACILITY",
-			"NOTIFY_REINFORCEMENT_FACILITY_DESTROYED",
 			"NOTIFY_BOSS_INBOUND",
 			"NOTIFY_BARRIER_DEPLETED",
 			"NOTIFY_MYSTERY_DEVICE_REVEALED",
@@ -185,20 +183,16 @@ func _initialize() -> void:
 		"DEPLOY_FOOTER",
 		"SETTINGS_OPEN",
 		"PAUSE_SETTINGS",
-		"HUD_FACILITY_OFFLINE",
-		"HUD_FACILITY_STATUS",
 	]:
 		_expect(
 			not localization_source.contains("\n%s," % removed_key),
 			"obsolete user-facing localization key is removed: %s" % removed_key
 		)
 	_expect(
-		run_source.count("_ui.notify(") == 7,
-		"gameplay runtime has exactly seven essential notification producers"
+		run_source.count("_ui.notify(") == 6,
+		"gameplay runtime has exactly six essential notification producers"
 	)
 	for retained_key in [
-		"NOTIFY_REINFORCEMENT_FACILITY",
-		"NOTIFY_REINFORCEMENT_FACILITY_DESTROYED",
 		"NOTIFY_BOSS_INBOUND",
 		"NOTIFY_BARRIER_DEPLETED",
 		"NOTIFY_MYSTERY_DEVICE_REVEALED",

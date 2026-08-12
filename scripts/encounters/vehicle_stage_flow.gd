@@ -57,10 +57,6 @@ func record_boss_defeat() -> bool:
 	return true
 
 
-func stop_ordinary_spawning() -> bool:
-	return state != State.ORDINARY
-
-
 func snapshot() -> Dictionary:
 	return {
 		"stage_index":stage_index,

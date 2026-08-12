@@ -3,7 +3,7 @@ type: plan
 status: done
 owner: BK
 created: 2026-08-11
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-12
 topic: Unified combat-effect grammar, smooth enemy presentation, health-bar correctness, boss entry reliability, and difficulty escalation
 scope: Five-stage Cardborne run; combat presentation, bounded runtime fixes, ordinary-enemy and boss tuning, focused validation, Web export, and runtime QA
 supersedes: ./2026-08-10-non-boss-combat-and-upgrade-integrity.md
@@ -74,7 +74,7 @@ In scope:
 - Exact area footprints and unified short impulse envelopes.
 - Renderer-owned, fixed-capacity enemy transform interpolation keyed by pool slot and
   generation, including spawn/reuse/discontinuity resets.
-- Boss/facility/installation health-bar geometry, placement, selection, and capacity.
+- Boss and fixed-installation health-bar geometry, placement, selection, and capacity.
 - Retryable boss entry under the existing reserved-capacity guard.
 - Role-specific ordinary movement bases, staged ordinary health/damage pressure, boss
   health/damage, and shield-up mitigation.
@@ -148,12 +148,12 @@ Out of scope:
 - Use a health quad with normalized bounds `x=-1..1`, `y=-0.5..0.5`.
 - Keep the fill's left edge invariant at ratios `0`, `0.25`, `0.5`, `0.75`, and `1` by
   offsetting it `-half_width * (1-ratio)`.
-- Clamp installation half-width to `42..72`, boss to `96..120`, and facility to `88..112`
-  world units. Preserve nominal fill heights `16` and `18`.
+- Clamp installation half-width to `42..72` and boss to `96..120` world units.
+  Preserve nominal fill heights `16` and `18`.
 - Prefer the bar above its owner. If the backing would cross the visible top edge, place it
   below; then clamp the complete backing rectangle inside the visible world rect.
-- Preserve the approved capacity: boss `1`, facility `1`, installations `12`, total
-  instances `28`. Ordinary enemies, crates, and Mystery Devices receive no bar.
+- Preserve the approved capacity: boss `1`, installations `12`, total instances `26`.
+  Ordinary enemies, crates, and Mystery Devices receive no bar.
 
 ### Runtime reliability and difficulty
 
@@ -183,7 +183,7 @@ Out of scope:
 | What distinguishes shield, beam, and heal? | boundary, corridor, segmented link | renderer/visual spec | semantic batch tests and capture |
 | Is enemy stepping a frame collapse? | trace says no sustained collapse; renderer lacks interpolation | renderer only | low-cadence interpolation test and trace |
 | Why can the boss fail to appear? | one-shot state transition plus reserve refusal | progression owner | capacity refusal/recovery validator |
-| Which bars are allowed? | boss, facility, and fixed installations only | renderer/spec | class/capacity/edge tests |
+| Which bars are allowed? | boss and fixed installations only | renderer/spec | class/capacity/edge tests |
 | How is difficulty raised safely? | role bases plus staged pressure, unchanged reaction windows | archetypes/difficulty/boss owners | numeric contract tests |
 
 ## Milestones and Tasks

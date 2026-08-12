@@ -1,7 +1,9 @@
 ---
 type: evidence
 status: active
+owner: BK
 created: 2026-08-09
+last_reviewed: 2026-08-12
 source: Current Cardborne production capture geometry at 655e0ee2 plus three independent built-in ImageGen edits grounded by the canonical visual authority pair
 topic: HUD progression-density alternatives before user selection
 related:
@@ -21,7 +23,7 @@ contract until the user chooses or requests a revision.
 
 ## Sources
 
-- Edit target: `build/visual-captures/beam-production-655e0ee2/05b-reinforcement-facility.png`,
+- Edit target: the Korean 1280×720 production combat capture referenced by this candidate set.
   Korean `1280x720` production capture.
 - Problem reference:
   `../progression-feedback-combat-readability-v1/gameplay-hud-minimap-to-be.png`.

@@ -104,8 +104,6 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_radar_minimap_roles()
 		&"field_items":
 			await _capture_field_item_evidence()
-		&"reinforcement_facility":
-			await _capture_reinforcement_facility_evidence()
 		&"structural_health_bars":
 			await _capture_structural_health_bar_evidence()
 		&"level_up":
@@ -740,7 +738,6 @@ func _capture_radar_minimap_roles() -> void:
 		{"kind":&"mobile_enemy", "position":world_size * Vector2(0.61, 0.25), "discovered":true},
 		{"kind":&"priority_enemy", "position":world_size * Vector2(0.74, 0.25), "discovered":true},
 		{"kind":&"boss", "position":world_size * Vector2(0.88, 0.25), "discovered":true},
-		{"kind":&"reinforcement_facility", "position":world_size * Vector2(0.78, 0.72), "discovered":true},
 	]
 	var contacts: Array[Dictionary] = [
 		{"offset":Vector2(-940.0, -220.0), "kind":&"nearby_enemy", "readiness":0.0},
@@ -838,21 +835,6 @@ func _capture_field_item_evidence() -> void:
 	_save_capture("05-two-field-items.png")
 
 
-func _capture_reinforcement_facility_evidence() -> void:
-	prepare_stage(0)
-	_run._clear_enemies()
-	_run.pickups.clear()
-	_run.reinforcement_facility_runtime.configure(
-		0, _run.player_position + Vector2(360.0, 0.0)
-	)
-	_run.reinforcement_facility_runtime.activate_if_ready(35, 100)
-	_run.reinforcement_facility_runtime.receive_damage(72.0, &"player", &"direct")
-	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
-	_run._ui.notify(tr("NOTIFY_REINFORCEMENT_FACILITY"), 2.4, Art.DANGER)
-	await _settle_capture()
-	_save_capture("05b-reinforcement-facility.png")
-
-
 func _capture_structural_health_bar_evidence() -> void:
 	prepare_stage(2)
 	_run._clear_enemies()
@@ -896,11 +878,6 @@ func _capture_structural_health_bar_evidence() -> void:
 	if boss != null:
 		boss.health = boss.max_health * 0.5
 		_run._append_enemy(boss)
-	_run.reinforcement_facility_runtime.configure(
-		2, _run.player_position + Vector2(20.0, 250.0)
-	)
-	_run.reinforcement_facility_runtime.activate_if_ready(70, 100)
-	_run.reinforcement_facility_runtime.receive_damage(72.0, &"player", &"direct")
 	_run.capture_set_mode(&"paused")
 	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 	await _settle_capture()

@@ -14,9 +14,6 @@ const EliteTraits = preload("res://scripts/enemies/vehicle_elite_trait_catalog.g
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const MysteryDeviceRuntime = preload("res://scripts/vehicle/vehicle_mystery_device_runtime.gd")
-const ReinforcementFacilityRuntime = preload(
-	"res://scripts/vehicle/vehicle_reinforcement_facility_runtime.gd"
-)
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
@@ -215,8 +212,6 @@ static func object_rows(
 					&"effect"
 				))
 			return result
-		&"reinforcement_facility":
-			return _reinforcement_facility_rows(context)
 		&"transit_gate":
 			return [
 				_row(
@@ -229,66 +224,6 @@ static func object_rows(
 				),
 			]
 	return []
-
-
-static func _reinforcement_facility_rows(
-	context: Dictionary
-) -> Array[Dictionary]:
-	var active_stage := int(context.get("active_stage_index", -1))
-	if active_stage >= 0:
-		var index := clampi(active_stage, 0, 4)
-		return [
-			_row(
-				"GUIDE_STAT_HEALTH", "GUIDE_VALUE_HP",
-				[roundi(ReinforcementFacilityRuntime.HEALTH_BY_STAGE[index])],
-				&"health"
-			),
-			_row(
-				"GUIDE_STAT_CADENCE", "GUIDE_VALUE_SECONDS",
-				[ReinforcementFacilityRuntime.INTERVAL_BY_STAGE[index]],
-				&"cadence"
-			),
-			_row(
-				"GUIDE_STAT_LIVE_CAP", "GUIDE_VALUE_COUNT",
-				[ReinforcementFacilityRuntime.LIVE_CHILD_CAP_BY_STAGE[index]],
-				&"support"
-			),
-			_row(
-				"GUIDE_STAT_TOTAL_CHARGE", "GUIDE_VALUE_COUNT",
-				[ReinforcementFacilityRuntime.TOTAL_CHARGES_BY_STAGE[index]],
-				&"support"
-			),
-		]
-	return [
-		_row(
-			"GUIDE_STAT_HEALTH", "GUIDE_VALUE_HP_RANGE",
-			[
-				roundi(ReinforcementFacilityRuntime.HEALTH_BY_STAGE[0]),
-				roundi(ReinforcementFacilityRuntime.HEALTH_BY_STAGE[-1]),
-			], &"health"
-		),
-		_row(
-			"GUIDE_STAT_CADENCE", "GUIDE_VALUE_SECONDS_RANGE",
-			[
-				ReinforcementFacilityRuntime.INTERVAL_BY_STAGE[-1],
-				ReinforcementFacilityRuntime.INTERVAL_BY_STAGE[0],
-			], &"cadence"
-		),
-		_row(
-			"GUIDE_STAT_LIVE_CAP", "GUIDE_VALUE_COUNT_RANGE",
-			[
-				ReinforcementFacilityRuntime.LIVE_CHILD_CAP_BY_STAGE[0],
-				ReinforcementFacilityRuntime.LIVE_CHILD_CAP_BY_STAGE[-1],
-			], &"support"
-		),
-		_row(
-			"GUIDE_STAT_TOTAL_CHARGE", "GUIDE_VALUE_COUNT_RANGE",
-			[
-				ReinforcementFacilityRuntime.TOTAL_CHARGES_BY_STAGE[0],
-				ReinforcementFacilityRuntime.TOTAL_CHARGES_BY_STAGE[-1],
-			], &"support"
-		),
-	]
 
 
 static func _enemy_health(archetype: StringName, stage_index: int) -> float:

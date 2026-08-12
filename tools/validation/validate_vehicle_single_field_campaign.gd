@@ -46,7 +46,6 @@ func _check_stage_flow() -> void:
 		for defeat in flow.quota:
 			var triggered := flow.record_countable_defeat()
 			_expect(triggered == (defeat == flow.quota - 1), "boss warning starts on exact quota")
-		_expect(flow.stop_ordinary_spawning(), "quota stops ordinary spawning")
 		_expect(flow.tick(1.5), "warning resolves after 1.5 seconds")
 		_expect(flow.boss_entry_ready(), "boss entry requires the exact defeat quota")
 		_expect(flow.record_boss_defeat(), "active boss defeat completes the stage")

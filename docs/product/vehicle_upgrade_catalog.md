@@ -8,6 +8,7 @@ canonical_for: Cardborne live vehicle upgrade categories, cards, levels, effects
 scope: Run-scoped vehicle upgrade catalog, attribute and active-weapon ownership, and secondary-slot ownership
 related:
   - ./vehicle_game_spec.md
+  - ./vehicle_weapon_balance_spec.md
   - ../design/VISUAL_SYSTEM.md
   - ../reports/2026-08-11-vehicle-upgrade-idea-catalog.md
 ---
@@ -68,12 +69,12 @@ Dash, 추적 미사일, EMP는 기본 액션이다. 발동무기 카드를 고�
 
 | ID | 한국어 / English | 슬롯 | 최대 | 레벨별 정확한 효과 |
 | --- | --- | --- | ---: | --- |
-| `homing_missiles` | 추적 미사일 / Homing Missiles | 기본 | 3 | 기본 1발·25 피해. L1: 2발·28. L2: 3발·32. L3: 3발·38. 가능한 한 서로 다른 표적을 고른다. |
-| `electric_field` | 전기장 / Electric Field | 선택 | 4 | L1~L4: 8/12/16/22 DPS. 반지름 120/140/160/160, 판정 간격 0.25초. |
+| `homing_missiles` | 추적 미사일 / Homing Missiles | 기본 | 3 | 기본 2발·25 피해. L1: 3발·28. L2: 4발·32. L3: 4발·38. 가능한 한 서로 다른 표적을 고른다. |
+| `electric_field` | 전기장 / Electric Field | 선택 | 4 | L1~L4: 8/11.5/16/22 DPS. 반지름 120/140/160/160, 판정 간격 0.25초. |
 | `orbiting_blades` | 회전 날개 / Orbiting Blades | 선택 | 4 | L1~L4: 날개 2/3/4/4개, 날개당 14/18/22/28 피해. 회전 반지름 88, 접촉 반지름 52, 대상별 재타격 0.55초. |
 | `drop_mines` | 후방 기뢰 / Drop Mines | 선택 | 4 | 획득 뒤 첫 업데이트에 1개를 즉시 놓고, 이후 이동 방향의 뒤쪽에 자동 설치한다. 이동 입력이 없으면 기수 반대편을 쓴다. L1~L4: 피해 48/60/72/88, 간격 3.2/2.8/2.4/2.4초, 최대 3/4/5/5개. 수명 8초, 감지 반지름 54, 폭발 반지름 96/108/120/120. |
 | `auto_laser` | 자동 레이저 / Auto Laser | 선택 | 3 | 최대 24개 후보를 비교해 가장 많은 적을 관통하는 방향으로 0.9초마다 발사한다. L1~L3 피해 48/66/86, 길이 760, 판정 반폭 18, 표시 0.14초. 첫 단단한 엄폐물에서 멈춘다. |
-| `storm_barrage` | 원거리 전격포 / Storm Barrage | 선택 | 3 | 4.5초마다 기체에서 480~960 떨어진 위협 밀집 지점에 0.55초 경고 후 낙뢰. L1~L3 피해 70/95/125, 반지름 140, 최대 12개 대상. 일반 적·증원 시설·미확인 장치를 공격할 수 있다. |
+| `storm_barrage` | 원거리 전격포 / Storm Barrage | 선택 | 3 | 4.5초마다 기체에서 480~960 떨어진 위협 밀집 지점에 0.55초 경고 후 낙뢰. L1~L3 피해 70/95/125, 반지름 140, 최대 12개 대상. 일반 적과 변칙 장치를 공격할 수 있다. |
 | `secondary_coolant` | 보조무기 재사용 / Secondary Cooldown | 공용 | 3 | 모든 보조무기의 재사용 시간을 ×0.90/0.82/0.75로 줄인다. |
 | `secondary_amplifier` | 보조무기 피해 / Secondary Damage | 공용 | 3 | 모든 보조무기의 피해를 ×1.12/1.25/1.40으로 높인다. |
 
@@ -84,8 +85,8 @@ Dash, 추적 미사일, EMP는 기본 액션이다. 발동무기 카드를 고�
 
 | ID | 한국어 / English | 최대 | 레벨별 정확한 효과 |
 | --- | --- | ---: | --- |
-| `thermal_burst` | 열폭발 / Thermal Burst | 4 | 주무기 직접 명중 시 주변 적에게 폭발. L1~L4 반경 72/84/96/96, 피해 4/6/8/11. |
-| `bio_toxin` | 독 부여 / Bio Toxin | 4 | 적격 공격이 최대 3중첩. L1~L4 중첩당 2/3/4/5.5 DPS, 지속 5/6/7/7초. |
+| `thermal_burst` | 열폭발 / Thermal Burst | 4 | 주무기 직접 명중 시 주변 적에게 폭발. L1~L4 반경 72/84/96/96, 피해 4/5.75/8/11. |
+| `bio_toxin` | 독 부여 / Bio Toxin | 4 | 적격 공격이 최대 3중첩. L1~L4 중첩당 2/2.85/4/5.5 DPS, 지속 5/6/7/7초. |
 | `cryo_slow` | 냉기 부여 / Cryo Slow | 3 | 적격 공격이 최대 3중첩. L1~L3 중첩당 이동·공격 속도 6/8/10% 감소, 지속 2/2.5/3초. 보스는 감속량과 지속 시간이 절반. |
 | `shock_disruption` | 감전 / Shock | 3 | 새 공격의 시작만 0.6/0.8/1.0초 막는다. 진행 중인 예고·공격은 취소하지 않고 이동도 막지 않는다. 재적용 잠금 3초, 보스 지속 절반. |
 
@@ -98,7 +99,7 @@ Dash, 추적 미사일, EMP는 기본 액션이다. 발동무기 카드를 고�
 | --- | --- | ---: | --- |
 | `gravity_collapse` | 블랙홀 / Black Hole | 4 | EMP를 블랙홀로 교체한다. 조준 방향 480 지점에 0.35초 후 생성, 1.2초 동안 10 Hz로 일반 이동 적을 360 px/s로 끌어당기고 끝날 때 60/85/115/150 피해. 반지름 150/175/200/225, 재사용 12초. 보스·구조물은 이동하지 않고 피해만 받는다. |
 | `kinetic_shockwave` | 충격파 / Shockwave | 4 | EMP를 충격파로 교체한다. 0.20초 후 주변에 45/65/90/120 피해, 반지름 180/210/240/270. 일반 이동 적을 최대 180 밀고, 기절·탄환 제거는 없다. 재사용 9초. |
-| `piercing_lance` | 십자 광선 / Cross Beam | 4 | EMP를 십자 광선으로 교체한다. 0.35초 후 기체를 지나는 조준축·수직축 광선이 엄폐물을 무시하고 적을 합집합 기준 한 번 타격한다. 피해 70/95/125/160, 반폭 14/18/22/26, 재사용 12초. |
+| `piercing_lance` | 십자 광선 / Cross Beam | 4 | EMP를 십자 광선으로 교체한다. 0.30초 후 기체를 지나는 조준축·수직축 광선이 엄폐물을 무시하고 적을 합집합 기준 한 번 타격한다. 피해 80/110/145/185, 반폭 24/32/40/48, 재사용 10.5초. 예고와 판정 폭이 같다. |
 | `active_coolant` | 발동무기 재사용 / Active Cooldown | 3 | 장착한 발동무기의 재사용 시간을 ×0.90/0.82/0.75로 줄인다. |
 | `active_amplifier` | 발동무기 피해 / Active Damage | 3 | 장착한 발동무기의 피해를 ×1.15/1.30/1.50으로 높인다. |
 

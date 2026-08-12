@@ -134,7 +134,9 @@ func _initialize() -> void:
 		var status_items := Array(contract["status_item_contracts"])
 		var expected_ids := [&"stage_progress", &"total_defeats", &"dash", &"seeker", &"emp"]
 		_expect(
-			status_items.size() == 5 and int(contract["action_slot_count"]) == 3,
+			status_items.size() == 5
+				and int(contract["action_slot_count"]) == 3
+				and not bool(contract["shows_primary_slot"]),
 			"HUD owns five status items and exactly three cooldown actions at %d" % width
 		)
 		for item_index in status_items.size():
@@ -540,7 +542,6 @@ func _initialize() -> void:
 			{"kind":&"mobile_enemy", "position":Vector2(2700.0, 650.0), "discovered":true},
 			{"kind":&"priority_enemy", "position":Vector2(3300.0, 650.0), "discovered":true},
 			{"kind":&"boss", "position":Vector2(3900.0, 650.0), "discovered":true},
-			{"kind":&"reinforcement_facility", "position":Vector2(4500.0, 1500.0), "discovered":true},
 		],
 	}, Vector2(176.0, 108.0))
 	_expect(tactical_mesh != null, "tactical minimap compiles a dynamic marker mesh")
@@ -566,9 +567,8 @@ func _initialize() -> void:
 		UiGlyphCatalog.minimap_ids() == [
 			&"player", &"field_pickup", &"mystery_device",
 			&"mobile_enemy", &"priority_enemy", &"boss",
-			&"reinforcement_facility",
 		],
-		"minimap exposes exactly seven bounded semantic roles"
+		"minimap exposes exactly six bounded semantic roles"
 	)
 	var retained_snapshot := {
 		"cols":13,
@@ -583,7 +583,6 @@ func _initialize() -> void:
 			{"kind":&"mobile_enemy", "position":Vector2(2700.0, 700.0), "discovered":true},
 			{"kind":&"priority_enemy", "position":Vector2(3300.0, 700.0), "discovered":true},
 			{"kind":&"boss", "position":Vector2(3900.0, 700.0), "discovered":true},
-			{"kind":&"reinforcement_facility", "position":Vector2(4500.0, 1400.0), "discovered":true},
 		],
 	}
 	var retained_map := RetainedMinimapMesh.new(Vector2(176.0, 108.0))
@@ -606,8 +605,7 @@ func _initialize() -> void:
 		int(cleared_counts.get(Art.DANGER.to_rgba32(), 0)) == 0
 			and int(cleared_counts.get(Art.SUPPORT.to_rgba32(), 0)) == 0
 			and int(cleared_counts.get(Art.TEXT_MUTED.to_rgba32(), 0)) == 0
-			and int(cleared_counts.get(Art.BOSS_COMMAND.to_rgba32(), 0)) == 0
-			and int(cleared_counts.get(Art.MUSTARD_DARK.to_rgba32(), 0)) == 0,
+			and int(cleared_counts.get(Art.BOSS_COMMAND.to_rgba32(), 0)) == 0,
 		"retained minimap clears channels that leave the snapshot"
 	)
 	var pressure_markers: Array[Dictionary] = []

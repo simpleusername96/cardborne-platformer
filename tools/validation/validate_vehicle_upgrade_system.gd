@@ -137,15 +137,15 @@ func _validate_behavior_previews(catalog: Catalog) -> void:
 		{
 			"id":&"homing_missiles",
 			"keys":["UPGRADE_EFFECT_MISSILES_PER_VOLLEY", "UPGRADE_EFFECT_DAMAGE_PER_MISSILE"],
-			"current":[[1.0, 2.0, 3.0], [25.0, 28.0, 32.0]],
-			"next":[[2.0, 3.0, 3.0], [28.0, 32.0, 38.0]],
+			"current":[[2.0, 3.0, 4.0], [25.0, 28.0, 32.0]],
+			"next":[[3.0, 4.0, 4.0], [28.0, 32.0, 38.0]],
 			"show":[true, true, true],
 		},
 		{
 			"id":&"electric_field",
 			"keys":["UPGRADE_EFFECT_DPS", "UPGRADE_EFFECT_RADIUS"],
-			"current":[[8.0, 8.0, 12.0, 16.0], [120.0, 120.0, 140.0, 160.0]],
-			"next":[[8.0, 12.0, 16.0, 22.0], [120.0, 140.0, 160.0, 160.0]],
+			"current":[[8.0, 8.0, 11.5, 16.0], [120.0, 120.0, 140.0, 160.0]],
+			"next":[[8.0, 11.5, 16.0, 22.0], [120.0, 140.0, 160.0, 160.0]],
 			"show":[false, true, true, true],
 		},
 		{
@@ -427,11 +427,11 @@ func _validate_element_stats(catalog: Catalog) -> void:
 		{
 			"id":&"thermal_burst",
 			"stat_a":&"thermal_burst_radius", "a":[72.0, 84.0, 96.0, 96.0],
-			"stat_b":&"thermal_burst_damage", "b":[4.0, 6.0, 8.0, 11.0],
+			"stat_b":&"thermal_burst_damage", "b":[4.0, 5.75, 8.0, 11.0],
 		},
 		{
 			"id":&"bio_toxin",
-			"stat_a":&"toxin_dps_per_stack", "a":[2.0, 3.0, 4.0, 5.5],
+			"stat_a":&"toxin_dps_per_stack", "a":[2.0, 2.85, 4.0, 5.5],
 			"stat_b":&"toxin_duration", "b":[5.0, 6.0, 7.0, 7.0],
 		},
 		{

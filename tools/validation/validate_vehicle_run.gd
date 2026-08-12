@@ -16,6 +16,9 @@ const EnemyUpdateSchedule = preload("res://scripts/enemies/vehicle_enemy_update_
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
+const OutgoingDamagePolicy = preload(
+	"res://scripts/player/vehicle_outgoing_damage_policy.gd"
+)
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
 var failures: Array[String] = []
@@ -79,6 +82,8 @@ func _run() -> void:
 		)
 		_check_upgrade_transaction_contract(run)
 		_check_progression_completion_contract(run)
+		_check_primary_action_identity(run)
+		_check_active_recharge_integration(run)
 		run.call("_reset_run", false)
 		_check_lifesteal_contract(run)
 		_check_status_damage_feedback(run)
@@ -435,7 +440,7 @@ func _check_visual_collision_separation(run) -> void:
 		)
 		run.enemy_store.release_untracked(enemy)
 	var ordering_enemy := EnemyState.new()
-	ordering_enemy.id = "facility_order_probe"
+	ordering_enemy.id = "structure_limit_probe"
 	ordering_enemy.role = &"chaser"
 	ordering_enemy.archetype = &"chaser"
 	ordering_enemy.alive = true
@@ -458,7 +463,7 @@ func _check_visual_collision_separation(run) -> void:
 			PackedFloat32Array(),
 			0.40
 		) == null,
-		"a nearer facility limit excludes enemies behind it from direct contact"
+		"a nearer structure limit excludes enemies behind it from direct contact"
 	)
 	_expect(
 		run.call(
@@ -472,7 +477,7 @@ func _check_visual_collision_separation(run) -> void:
 			PackedFloat32Array(),
 			0.80
 		) == ordering_enemy,
-		"an enemy before the facility remains the first direct contact"
+		"an enemy before the structure limit remains the first direct contact"
 	)
 
 
@@ -614,6 +619,65 @@ func _check_ordinary_predicted_commitment(run) -> void:
 	run.enemy_store.release_untracked(shooter)
 
 
+func _check_primary_action_identity(run) -> void:
+	run.call("_clear_projectiles")
+	for _level in 3:
+		run.run_build.apply(&"split_muzzle")
+	run.call("_fire_primary")
+	var projectiles: Array = run.projectile_store.player_live
+	var shared_serial: int = (
+		projectiles[0].combat_action_serial if not projectiles.is_empty() else 0
+	)
+	_expect(
+		projectiles.size() == 3
+			and shared_serial > 0
+			and projectiles.all(
+				func(projectile) -> bool: return (
+					projectile.combat_action_family == &"primary"
+					and projectile.combat_action_serial == shared_serial
+				)
+			),
+		"one Split Muzzle volley shares one primary combat-action identity"
+	)
+
+
+func _check_active_recharge_integration(run) -> void:
+	run.active_recharge_runtime.reset()
+	run.active_weapon_runtime.cooldown_remaining = 5.0
+	var first: EnemyState = run.call("_make_enemy", {
+		"id":"recharge_direct_first",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(300.0, 0.0),
+		"active":true,
+	})
+	var second: EnemyState = run.call("_make_enemy", {
+		"id":"recharge_direct_second",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(340.0, 0.0),
+		"active":true,
+	})
+	run.call(
+		"_damage_enemy", first, 1.0, "player_primary", &"kinetic", true,
+		false, true, OutgoingDamagePolicy.DAMAGE_DIRECT, 901, &"primary"
+	)
+	run.call(
+		"_damage_enemy", second, 1.0, "player_primary", &"kinetic", true,
+		false, true, OutgoingDamagePolicy.DAMAGE_DIRECT, 901, &"primary"
+	)
+	var after_direct: float = run.active_weapon_runtime.cooldown_remaining
+	run.call(
+		"_damage_enemy", second, 1.0, "thermal_burst", &"thermal", true,
+		false, false, 0, 902
+	)
+	_expect(
+		is_equal_approx(after_direct, 4.9)
+			and is_equal_approx(run.active_weapon_runtime.cooldown_remaining, 4.9),
+		"Run credits one direct action once and excludes derived damage without an action family"
+	)
+	run.enemy_store.release_untracked(first)
+	run.enemy_store.release_untracked(second)
+
+
 func _check_boss_progression_gate(run) -> void:
 	run.call("_start_stage_boss")
 	_expect(run.call("_find_enemy_by_id", "stage_boss") == null, "boss cannot spawn before ordinary defeats")
@@ -621,6 +685,10 @@ func _check_boss_progression_gate(run) -> void:
 	run.call("_start_stage_boss")
 	_expect(run.call("_find_enemy_by_id", "stage_boss") == null, "boss remains blocked one defeat before quota")
 	_expect(run.stage_flow.record_countable_defeat(), "final ordinary defeat begins the boss warning")
+	_expect(
+		run.encounter_runtime.spawning_enabled(),
+		"quota keeps the authored ordinary scheduler enabled"
+	)
 	var blocked_live_count := (
 		EnemyStore.MAX_LIVE_HOSTILES
 		- BossPhaseCatalog.BOSS_ENTRY_SLOT_RESERVE
@@ -665,6 +733,19 @@ func _check_boss_progression_gate(run) -> void:
 		filler_enemy.alive = false
 		run.enemy_store.queue_defeat(filler_enemy)
 	run.enemy_store.flush_defeated()
+	var live_before_post_boss_arrival: int = run.enemy_store.live_count()
+	run.call("_clear_ordinary_arrival_cues")
+	run.call("_update_encounter", 5.1)
+	_expect(
+		run.encounter_runtime.spawning_enabled()
+			and run._ordinary_arrival_cue_count > 0,
+		"an authored ordinary cue remains observable after the boss becomes active"
+	)
+	run.call("_update_encounter", 0.9)
+	_expect(
+		run.enemy_store.live_count() > live_before_post_boss_arrival,
+		"an authored ordinary birth remains admissible during the boss encounter"
+	)
 
 
 func _check_boss_damage_and_guidance(run, ui) -> void:
@@ -719,7 +800,6 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 		if StringName(Dictionary(marker_variant).get("kind", &"")) not in [
 			&"field_pickup", &"mystery_device",
 			&"mobile_enemy", &"priority_enemy", &"boss",
-			&"reinforcement_facility",
 		]:
 			only_shared_minimap_roles = false
 			break
@@ -1138,9 +1218,7 @@ func _presentation_snapshots_match(
 	]:
 		if expected.get(key) != actual.get(key):
 			return false
-	for key in [
-		"mystery_devices", "mystery_effects", "reinforcement_facility",
-	]:
+	for key in ["mystery_devices", "mystery_effects"]:
 		if expected.get(key) != actual.get(key):
 			return false
 	var expected_secondary := Dictionary(expected.get("secondary", {}))

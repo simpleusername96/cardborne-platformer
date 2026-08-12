@@ -20,6 +20,7 @@ class TrailState:
 	var end := Vector2.ZERO
 	var remaining := 0.0
 	var tick_remaining := TRAIL_TICK
+	var tick_index := 0
 	var level := 0
 	var serial := 0
 
@@ -63,6 +64,7 @@ func complete_dash(
 	trail.end = position
 	trail.remaining = TRAIL_DURATION
 	trail.tick_remaining = TRAIL_TICK
+	trail.tick_index = 0
 	trail.level = clampi(trail_level, 1, 3)
 	trail.serial = _next_serial
 	_next_serial += 1
@@ -80,6 +82,7 @@ func advance(delta: float) -> Array[TrailState]:
 		trail.tick_remaining -= maxf(0.0, delta)
 		if trail.tick_remaining <= 0.0:
 			trail.tick_remaining += TRAIL_TICK
+			trail.tick_index += 1
 			_due_trails.append(trail)
 		if trail.remaining <= 0.0:
 			trails.remove_at(index)

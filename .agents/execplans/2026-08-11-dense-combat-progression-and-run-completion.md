@@ -18,8 +18,8 @@ related:
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/reports/2026-08-11-vehicle-upgrade-idea-catalog.md
-  - ../../docs/reports/2026-08-11-reinforcement-facility-and-anomaly-device-runtime.md
-  - ./2026-08-12-active-recharge-weapon-balance-and-continuous-boss-pressure.md
+  - ../../docs/reports/2026-08-11-anomaly-device-runtime.md
+  - ../../docs/product/vehicle_weapon_balance_spec.md
 ---
 
 # 고밀도 전투·성장·런 종료 정상화 실행 계획
@@ -34,16 +34,13 @@ related:
 > 이 문서는 미해결 고밀도 성능 게이트와 이미 완료된 성장·시설·장치 작업의 기록으로
 > 계속 active다. 이후 executor는 이 문서의 이전 stage-transition 문장을 근거로 제거된
 > 보상 또는 전환 경계를 다시 도입하지 않는다.
-> `2026-08-12-active-recharge-weapon-balance-and-continuous-boss-pressure.md`가
-> 증원 시설 유지, 할당량 도달 시 일반 spawn 중지, 무기 재조정, 보스 공격력·빈도와
-> 상단 action cooldown 범위의 현재 실행 계약이다. 이 문서의 시설 구현 기록은 과거 기록일
-> 뿐이며 시설을 복원하거나 새 spawn owner로 유지하는 근거가 아니다.
+> 현재 무기 수치와 전투 재충전 규칙은 `docs/product/vehicle_weapon_balance_spec.md`가
+> 소유한다. 일반 적 scheduler는 보스와 무관하게 계속 실행된다.
 
 이 계획은 적이 많을 때 발생하는 극심한 물리 프레임 지연을 실제 비용 소유자부터
 줄이고, 5스테이지 보스 처치 후 빈 화면에 머무는 종료 결함을 고친다. 동시에 후반
 화력 성장, 조건부 전투 카드 5종, 초과 회복 방어막, 선택 보조 무기 2종, 직접 아이템
-배치, 증원 조립소와 변칙 장치의 역할·정보 전달을 하나의 검증 가능한 제품 계약으로
-정리한다.
+배치와 변칙 장치의 역할·정보 전달을 하나의 검증 가능한 제품 계약으로 정리한다.
 
 완료 조건은 “코드가 바뀜”이 아니다. 실제 보스 처치 경로가 결과 모달까지 도달하고,
 4~5스테이지 공격 빌드가 새 레벨을 정상 제안·적용하며, 상자 런타임이 완전히 사라지고,
@@ -63,7 +60,7 @@ related:
 
 가장 큰 기록 구간은 `enemies_and_grid`와 `scheduled_ordinary`다. 스케줄러 자체보다
 일반 적의 실제 판단·이동·공격(`ordinary_due`)이 크다. 같은 물리 틱 안에서 active
-count, attack family, scheduler rebuild, status, overlap, contact, 시설 자식 수를 각각
+count, attack family, scheduler rebuild, status, overlap, contact를 각각
 전체 적 배열에서 다시 계산하는 구조도 있다. 정적 장애물 시야 검사는 일반 적마다
 모든 runtime blocker를 훑을 수 있다.
 
@@ -99,11 +96,7 @@ repair 10개, repair 총량 490이다. 상자는 체력 24, 이동 충돌, 양 �
 플레이어 피해, 파괴 효과, 미니맵, 가이드북, 시각 asset 역할을 가진다. 직접 아이템
 전환은 보상 blueprint만 바꾸는 작업이 아니라 이 런타임과 계약을 모두 제거하는 작업이다.
 
-### 5. 두 필드 오브젝트는 전투 목적과 상태가 잘 전달되지 않는다
-
-- 증원 조립소는 35% 진행 시 갑자기 나타나며 총 생산량 상한 없이 비할당량 적과 XP를
-  반복 생산한다. 시설 한 개를 위해 매 물리 틱 전체 적을 다시 세고, 다음 생산·자식 수를
-  화면에서 알 수 없고, 가이드북 전용 항목도 없다.
+### 5. 변칙 장치는 전투 목적과 상태가 잘 전달되지 않는다
 - 변칙 장치는 첫 타격으로 결과를 공개하지만 외형과 미니맵 상태가 그대로라 잠깐의
   알림을 놓치면 다시 확인하기 어렵다. 네 결과는 모두 유리하지만 타이밍이 나쁘면 영향
   대상이 0일 수 있다.
@@ -124,8 +117,6 @@ repair 10개, repair 총량 490이다. 상자는 체력 24, 이동 충돌, 양 �
 - 3~5스테이지 보상에 호환 가능한 공격 카드 최소 1장을 결정적으로 보장한다.
 - 상자 8개를 같은 보상·결정적 위치의 직접 픽업으로 바꾸고 상자 런타임, 엄폐,
   렌더, 미니맵, 가이드북, 활성 시각 역할을 제거한다.
-- 증원 조립소를 시작부터 식별 가능하고 총 생산량이 유한한 시설로 바꾸며 자식 수를
-  이벤트로 소유한다.
 - 변칙 장치의 첫 타격 공개 결과와 현재 유효 대상 수를 월드·미니맵에서 계속 확인하게
   한다. 기존 결과와 발동 규칙은 유지한다.
 - 현재 HEAD에서 동일 수·동일 시드 성능 기준을 만들고, 정해진 분기 기준에 따라 중복
@@ -364,30 +355,7 @@ catalog/glyph/minimap polygon/guide preview/guide entry도 active contract에서
 validator와 workbench 역사 계약을 함께 만족하는지 확인한 뒤 별도 recoverable commit에서만
 한다. 기능 완료에는 PNG 물리 삭제가 필요하지 않다.
 
-### D. 증원 조립소와 변칙 장치
-
-#### 증원 조립소
-
-시설 runtime state는 `offline → active → spent/retired` 또는
-`offline/active → destroyed`로 명시한다.
-
-- stage 시작부터 기존 시설 asset을 낮은 강조의 offline 상태로 표시한다.
-- offline은 충돌·피해·생산이 없고, 35% 진행 시 active가 된다.
-- stage별 HP, interval, role은 유지한다.
-- 총 생산 충전과 동시 생존 상한은 각각 `[2,3,4,5,6]`이다.
-- accepted spawn 때 remaining charge를 1 줄이고 live child를 1 늘린다.
-- 자식 defeat/retire 때 facility callback으로 live child를 1 줄인다.
-- 마지막 충전 후 live child가 0이면 spent가 되고 0.8초 종료 표현 뒤 retired된다.
-- 시설이 먼저 파괴되면 추가 생산만 중단하고 이미 나온 자식은 남는다.
-- 자식은 quota 제외, 정상 XP 유지, 시설 직접 보상 없음이다.
-- 정상 update는 전체 적을 세지 않는다. debug validator가 주기적으로 실제 배열과
-  incremental count를 대조한다.
-
-renderer/HUD는 기존 facility asset, health treatment, theme meter를 사용해 offline,
-spawn progress, remaining charge, live child를 표시한다. 새 raster나 procedural glyph를
-만들지 않는다. 미니맵은 offline부터 기존 facility silhouette을 낮은 강조로 보여 준다.
-
-#### 변칙 장치
+### D. 변칙 장치
 
 배치, HP 90, 결과 4종 중 3종, 시드 순서, 첫 유효 타격 공개, 파괴 발동, 효과 범위·시간,
 보스/고정 구조물 제외 규칙은 바꾸지 않는다.
@@ -398,9 +366,8 @@ spawn progress, remaining charge, live child를 표시한다. 새 raster나 proc
 작은 count badge로 보여 준다. purge는 범위 안 hostile projectile, 나머지는 실제 효과
 대상 ordinary enemy를 센다. 결과를 다시 뽑거나 효과를 자동 발동하지 않는다.
 
-가이드북은 둘을 `필드 오브젝트`로만 분류한다. 시설은 HP, interval, live cap, total
-charge를, 장치는 HP와 결과별 radius/duration을 runtime adapter에서 읽는다. 적 목록에는
-시설과 장치가 들어가지 않는다.
+가이드북은 장치를 `필드 오브젝트`로 분류하고 HP와 결과별 radius/duration을 runtime
+adapter에서 읽는다. 적 목록에는 장치가 들어가지 않는다.
 
 ### E. 성능 계측과 최적화 분기
 
@@ -411,15 +378,14 @@ capacity에서는 decision off, attack/projectile off, presentation off, overlap
 ablation을 각 한 번만 실행한다.
 
 측정 구간은 ordinary movement policy, static LOS, dynamic cover LOS, pursuit sampling,
-attack commit, active/family/facility scans, overlap snapshot/clear/query, projectile
+attack commit, active/family scans, overlap snapshot/clear/query, projectile
 integration/query/hit/effect다. `median >= 1ms` 또는 `p95 >= 2ms`이면서 recorded physics의
 10% 이상인 구간을 material owner로 정의한다.
 
 분기는 미리 고정한다.
 
 1. **항상 적용:** scheduler/frame aggregate를 encounter의 active count와 attack family에
-   재사용하고, facility child를 이벤트 카운터로 바꾼다. debug reconciliation으로 누락을
-   잡는다.
+   재사용하고 debug reconciliation으로 누락을 잡는다.
 2. **ordinary LOS/movement가 material:** 정적 blocker를 cell broad phase에 한 번 넣고
    segment가 통과하는 cell 후보만 exact 검사한다. crate 제거 후 dynamic cover path는
    bulkhead 등 실제 변동 owner만 유지한다. 결과 cache는 기존 decision interval까지만
@@ -449,7 +415,6 @@ authoritative pair를 실행하고 기존 release gate를 그대로 사용한다
 | passive secondaries | `scripts/player/vehicle_secondary_runtime.gd`, secondary definitions | rear beam corridor, storm target selection, cooldown/pending caps |
 | offer policy | `scripts/cards/vehicle_upgrade_catalog.gd` | upgrade-system validator |
 | direct field items | `scripts/vehicle/vehicle_field_layout_generator.gd`, `scripts/vehicle/vehicle_run.gd` | field layout, pickup contact, map/destructible validators |
-| facility | `scripts/vehicle/vehicle_reinforcement_facility_runtime.gd` | run integration, renderer snapshot, guide stats |
 | anomaly device | `scripts/vehicle/vehicle_mystery_device_runtime.gd` | renderer/UI snapshot, map mechanics, guide stats |
 | active presentation | renderer, minimap builder, world/reward/glyph catalogs, guide preview | visual system, localization, layout/UI validators |
 | performance | `vehicle_run`, enemy schedule, spatial grid, performance recorder/scenarios | raw clean JSON and performance report |
@@ -585,8 +550,7 @@ console 무오류를 확인했다. 3초 비권위 `peak_horde` smoke도 고착 �
 - Pickup/crate removal: `validate_vehicle_field_layout_generation.gd`,
   `validate_vehicle_destructible_terrain_flow.gd`, `validate_vehicle_damage_feedback.gd`,
   `validate_vehicle_run.gd`.
-- Facility/device: `validate_vehicle_reinforcement_facility.gd`,
-  `validate_vehicle_mystery_device_runtime.gd`, `validate_vehicle_map_mechanics_integration.gd`.
+- Device: `validate_vehicle_mystery_device_runtime.gd`, `validate_vehicle_map_mechanics_integration.gd`.
 - Guide/UI: `validate_vehicle_guidebook.gd`, `validate_vehicle_stage_ui_layout.gd`, localization
   and semantic asset coverage validators.
 - Visual authority: `tools/validation/validate_cardborne_visual_authority.ps1`.

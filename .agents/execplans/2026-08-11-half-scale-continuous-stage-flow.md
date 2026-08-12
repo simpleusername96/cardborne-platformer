@@ -14,7 +14,7 @@ related:
   - ../cardborne-performance-engineering-policy.md
   - ../cardborne-runtime-architecture-audit.md
   - ./2026-08-11-dense-combat-progression-and-run-completion.md
-  - ./2026-08-12-active-recharge-weapon-balance-and-continuous-boss-pressure.md
+  - ../../docs/product/vehicle_weapon_balance_spec.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
@@ -82,11 +82,9 @@ cadence를 쓰므로, 그대로 두면 새 화면 안에서 보이는 원거리 
 이번 후속 사용자 결정으로 대체한다. 이 문서가 카메라 배율과 스테이지 연속성 범위의
 현재 실행 소스다. 기존 문서가 보스 보상/전환 동작을 다시 도입하는 근거가 되어서는 안 된다.
 
-`2026-08-12-active-recharge-weapon-balance-and-continuous-boss-pressure.md`가
-후속 사용자 결정에 따라 증원 시설 유지·시설 자식 provenance 계약을 대체한다. 또한 현재
-세 action slot을 Dash/내장 보조 무기 Seeker/장착 발동 무기로 해석하고 기본 공격 cooldown은
-계속 표시하지 않는다. 이 문서의 카메라, 무중단 스테이지 전환, 일반 적 보존, HUD 배치 계약은
-계속 유효하지만, 증원 시설을 복원하는 근거로 사용해서는 안 된다.
+`docs/product/vehicle_weapon_balance_spec.md`가 현재 세 action slot을 Dash/내장 보조 무기
+Seeker/장착 발동 무기로 해석하고 기본 공격 cooldown은 계속 표시하지 않는다. 이 문서의
+카메라, 무중단 스테이지 전환, 일반 적 보존, HUD 배치 계약은 계속 유효하다.
 
 ### 현재 HUD는 요청한 정보 구조와 다르다
 
@@ -123,9 +121,7 @@ production asset이 아니고 layout·정보·semantic 관계만 구현 계약�
 - 이미 생성된 일반 적, 일반 적 탄환, 플레이어 탄환, player-owned zone/effect,
   XP 조각, 빌드, 레벨, 위치, 방향, 속도, cooldown, 대시 상태를 유지한다.
 - 보스 본체, 보스 소환물, 보스 reserve 탄환, 보스 공격 telegraph/denied zone만 정리한다.
-- 이전 스테이지 시설 자식은 유지하되 새 시설의 자식 수와 섞이지 않게 시설 instance
-  provenance를 부여한다.
-- 다음 스테이지의 stage-local 픽업, 변칙 장치, 증원 시설은 현재 설계처럼 새 배치로
+- 다음 스테이지의 stage-local 픽업과 변칙 장치는 현재 설계처럼 새 배치로
   교체한다. run-fixed 지형, transit gate cooldown, 탐사 상태는 유지한다.
 - Stage 5 보스 처치 직후 최종 결과 모달을 연다.
 - 현재 동작과 충돌하는 제품·업그레이드·시각 명세, dead transition enum/상수/검증을 갱신한다.
@@ -215,8 +211,7 @@ full heal이라는 뜻으로 고정한다. 무적, cooldown 초기화, 무료 EM
 | encounter | 이전 queue/cue는 폐기, 다음 stage continuation packet을 즉시 cue |
 | quota | 다음 stage 0으로 초기화, carry-over countable 처치부터 새 quota에 반영 |
 | 정적 필드 | field layout, run-fixed wall/gate, gate cooldown, 탐사 유지 |
-| stage-local object | 이전 pickup/device/facility를 retire하고 다음 stage 배치로 교체 |
-| 시설 자식 | 살아 있는 actor는 유지, 이전 시설 provenance로 분리해 새 counter와 무관 |
+| stage-local object | 이전 pickup/device를 retire하고 다음 stage 배치로 교체 |
 | HUD | full-width HP/EXP와 좌상단 panel-free compact icon cluster 유지, stage 번호와 run 누적 격파만 즉시 갱신 |
 
 Stage 5는 next-stage full heal을 하지 않고, 보스 소유 상태를 정리하고 stage report history를
@@ -297,10 +292,6 @@ retire하고 `collective_tactics`, `enemy_grid`, `enemy_store`를 정상 갱신�
 player projectile/effect는 보존한다. 짧은 presentation-only effect는 damage를 소유하지
 않으므로 자연 만료시킨다.
 
-증원 시설은 stage별 instance ID를 제공한다. spawned child의 `carrier_id`에 그 instance
-ID를 넣고, defeat 시 현재 facility instance와 일치할 때만 `note_child_retired()`를 호출한다.
-이전 stage 시설 자식은 actor로 남지만 다음 stage 시설의 live-child cap을 차지하지 않는다.
-
 ### D. stage-local refresh와 run-state 보존 분리
 
 현재 `_begin_stage_transition()`을 복사하지 않고 다음 책임으로 나눈다.
@@ -308,7 +299,7 @@ ID를 넣고, defeat 시 현재 facility instance와 일치할 때만 `note_chil
 - telemetry/history 종료
 - boss-owned combat retirement
 - stage metadata/layout/encounter/stage-flow 설정
-- stage-local pickup/device/facility refresh
+- stage-local pickup/device refresh
 - run-fixed terrain/gate/exploration과 live ordinary combat 보존
 - HUD dirty/reset 최소 갱신
 
@@ -395,9 +386,8 @@ validator가 검사한다.
 | 현재 보스 종료 | 모든 적/적 탄 제거, XP recall, boss card claim 필요 | `_complete_stage()`, `_advance_reward_queue()` | boss card와 pending gate 제거, 즉시 분기 | 2.1~2.2 |
 | 일반 적 유지 | `_begin_stage_transition()`이 `_clear_enemies()` 호출 | `vehicle_run.gd` | non-boss, non-boss-owned actor 상태 보존 | 2.3 |
 | orphan boss damage | projectile에 boss reserve, zone에는 불안정한 pattern 문자열 | projectile store, denied zone builders | typed retirement API와 owner tag | 2.3 |
-| 시설 자식 carry-over | 고정 carrier ID가 한 stage counter만 가정 | reinforcement runtime/defeat path | stage instance provenance | 2.4 |
 | next-stage 시작 시각 | transition packet cue 0.35, birth 1.35 | `_transition_packets()` | cue 0.0, birth 0.9, mode PLAYING | 2.5 |
-| stage-local object | transition이 pickup/device/facility를 전량 재구성 | map runtime helpers | 다음 stage 배치로 교체, terrain/gate는 보존 | 2.6 |
+| stage-local object | transition이 pickup/device를 전량 재구성 | map runtime helpers | 다음 stage 배치로 교체, terrain/gate는 보존 | 2.6 |
 | HP/EXP 배치 | `HealthPips`가 520×44 고정, bar 사이 4px | `vehicle_gameplay_hud.gd` | responsive 100% width, top=0, gap=0 dual meter | 3.2 |
 | 누적 격파 | `stats_enemies_defeated`는 존재하지만 HUD가 stage defeated/quota만 받음 | `vehicle_run.gd`, presenter fast cluster | `cumulative_defeated` snapshot을 panel-free cluster에 표시 | 3.1~3.3 |
 | cooldown | presenter는 Dash/Seeker/EMP를 모두 발행하나 UI는 bottom EMP만 표시 | presenter, HUD, action glyph renderer | 기존 glyph로 세 slot, bottom EMP 제거 | 3.3 |
@@ -467,7 +457,6 @@ Preconditions: Phase 1 gate 통과.
 
 Source owners: `scripts/encounters/vehicle_stage_flow.gd`,
 `scripts/vehicle/vehicle_run.gd`, `scripts/combat/vehicle_projectile_store.gd`,
-`scripts/vehicle/vehicle_reinforcement_facility_runtime.gd`,
 `scripts/encounters/vehicle_encounter_runtime.gd`
 
 - [x] **2.1** reward/transition state를 stage-flow에서 제거한다.
@@ -483,30 +472,26 @@ Source owners: `scripts/encounters/vehicle_stage_flow.gd`,
   - Guard: 자연 level-up pending/claim과 failure report는 기존대로 동작한다.
 - [x] **2.3** 보스 소유 위협만 선택적으로 retire한다.
   - Change: boss-owned actor helper, projectile-store boss retirement, denied-zone owner tag를 추가한다.
-  - Accept: mixed fixture에서 ordinary 3, facility child 1, ordinary hostile projectile 2,
+  - Accept: mixed fixture에서 ordinary 3, ordinary hostile projectile 2,
     player projectile 2는 동일 object/state로 남고 boss add 2, boss projectile 2, boss zone 2만 사라진다.
   - Guard: projectile pool 합계와 ordinary/boss counter invariant가 통과한다.
-- [x] **2.4** 시설 자식 provenance를 stage instance별로 분리한다.
-  - Change: facility runtime이 instance carrier ID를 발급하고 spawn/defeat가 그 ID로 count한다.
-  - Accept: Stage 1 facility child가 Stage 2까지 살아 있다가 죽어도 Stage 2 facility
-    `live_children`이 감소하지 않고 debug reconciliation이 두 stage case에서 맞는다.
 - [x] **2.5** next encounter를 cue 즉시, birth 0.9초로 시작한다.
   - Change: `_transition_packets()`을 continuation packet builder로 바꾸고 deployment first
     packet을 제외한 상대 시각을 cue 0에 맞춘다.
   - Accept: stage advance 직후 첫 cue time 0.0, 0.89초까지 birth 0, 0.9초에 authored first
     group이 최대 tick admission cap 안에서 태어난다. carry-over ordinary는 그 동안 계속 공격한다.
 - [x] **2.6** run-state와 stage-local refresh를 명시적으로 분리한다.
-  - Change: player combat/XP/ordinary store/terrain gate를 보존하고 pickup/device/facility,
+  - Change: player combat/XP/ordinary store/terrain gate를 보존하고 pickup/device,
     stage metadata/layout/blocker/pursuit/HUD만 다음 stage로 갱신한다.
   - Accept: 전환 전후 player 위치·속도·aim·dash/cooldown·build·XP shard identity·ordinary
-    HP/phase가 같고, terrain gate cooldown과 visited cell이 유지된다. next stage pickup 14,
-    mystery device 3, offline facility 1은 새 stage ID/수치를 가진다.
+    HP/phase가 같고, terrain gate cooldown과 visited cell이 유지된다. next stage pickup 14와
+    mystery device 3은 새 stage ID/수치를 가진다.
 
 Phase gate:
 
 - 기존 `validate_vehicle_stage_transition.gd`를
   `validate_vehicle_stage_continuity.gd`로 대체하고 1→2, 2→3, 4→5, 5→RESULT를 검증한다.
-- `validate_vehicle_reinforcement_facility.gd`, `validate_vehicle_experience.gd`,
+- `validate_vehicle_experience.gd`,
   `validate_vehicle_rewards_ui_audio.gd`, `validate_vehicle_enemy_contact.gd`,
   `validate_vehicle_stage_telemetry.gd`가 통과한다.
 
@@ -615,7 +600,7 @@ Final gate:
 | Inner loop | `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_view_scale.gd` | camera/visible consumer 변경 | 관련 입력 변경 |
 | Inner loop | `./tools/godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_stage_continuity.gd` | stage/boss cleanup 변경 | 관련 입력 변경 |
 | Phase 1 | world-view, spawn, run, renderer, performance-scenario validator 묶음 | Phase 1 task 통과 | Phase 1 owner 변경 |
-| Phase 2 | continuity, facility, XP/reward, contact, telemetry validator 묶음 | Phase 2 task 통과 | Phase 2 owner 변경 |
+| Phase 2 | continuity, XP/reward, contact, telemetry validator 묶음 | Phase 2 task 통과 | Phase 2 owner 변경 |
 | Phase 3 | HUD presenter/layout/component/localization/guidebook/visual/document authority | Phase 3 task 통과 | UI/doc/visual contract 변경 |
 | Final | `./tools/godot.ps1 --path . --headless --import`; `./tools/export_web.ps1`; built Web QA; declared native A/B | 모든 phase 통과 | final input 변경 |
 
@@ -650,7 +635,6 @@ Validation rules:
 
 - camera authority는 단일 상수라 revert가 명확하다. 개별 asset을 변형하거나 삭제하지 않는다.
 - collision/world constants와 save schema는 바꾸지 않는다.
-- facility carrier provenance는 run-scoped 문자열이며 영구 save migration이 없다.
 - projectile/zone ownership 추가는 append-only runtime state다. pool capacity와 team contract는 유지한다.
 - obsolete transition code 삭제는 git에서 복구 가능하고, success transition UI는 이미 runtime에
   존재하지 않는다. failure report/capture workbench는 별도 owner로 유지한다.
@@ -693,7 +677,7 @@ Validation rules:
 - 2026-08-11: HP 외 player combat state를 유지하고 mode는 계속 `PLAYING`이다.
 - 2026-08-11: 일반 적과 일반/projectile state는 유지하며 boss add/projectile/zone만 정리한다.
 - 2026-08-11: carry-over countable enemy는 next quota에 계산하고, 기존 수치를 소급 변경하지 않는다.
-- 2026-08-11: run-fixed terrain/gate/exploration은 유지하고 stage-local pickup/device/facility는 교체한다.
+- 2026-08-11: run-fixed terrain/gate/exploration은 유지하고 stage-local pickup/device는 교체한다.
 - 2026-08-11: next cue는 즉시 시작하되 공정한 0.9초 arrival warning은 유지한다.
 - 2026-08-11: 기존 dense-combat 계획의 성능 실패는 별도이며 camera 변경으로 해결됐다고
   주장하지 않는다.
@@ -738,9 +722,9 @@ Validation rules:
 - Phase 1: `validate_vehicle_world_view_scale`, spawn allocation, Run, combat renderer,
   performance-scenario validator가 통과했다. 1280×720 current capture와 새 0.5 camera capture를
   original detail로 비교했고 collision/world 상수는 바꾸지 않았다.
-- Phase 2: 새 `validate_vehicle_stage_continuity`가 ordinary/facility actor, ordinary/player
+- Phase 2: 새 `validate_vehicle_stage_continuity`가 ordinary actor, ordinary/player
   projectile, XP/build/player combat state 유지와 boss actor/projectile/zone 선택 정리,
-  Stage 1→2 same-call continuation, Stage 5 same-call result를 통과했다. facility, projectile
+  Stage 1→2 same-call continuation, Stage 5 same-call result를 통과했다. projectile
   store, XP/reward, contact, telemetry, arrival 검증도 통과했다.
 - Phase 3: HUD presenter/layout/component/localization/guidebook 검증과 visual/document authority
   검증이 통과했다. 최종 캡처는

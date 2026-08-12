@@ -207,6 +207,7 @@ func _run() -> void:
 	_expect(
 		Vector2(ui_contract["action_rail_size"]) == Vector2.ZERO
 			and int(ui_contract["action_slot_count"]) == 3
+			and not bool(ui_contract["shows_primary_slot"])
 			and Vector2(ui_contract["status_cluster_size"]) == Vector2(246.0, 40.0)
 			and int(ui_contract["status_cluster_background_geometry_count"]) == 0,
 		"top-left panel-free cluster owns Dash, Seeker, and the active weapon without a bottom rail"

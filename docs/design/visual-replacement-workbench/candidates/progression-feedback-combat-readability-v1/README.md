@@ -1,7 +1,9 @@
 ---
 type: evidence
 status: active
+owner: BK
 created: 2026-08-09
+last_reviewed: 2026-08-12
 source: Current Cardborne production capture geometry at 655e0ee2 plus built-in ImageGen edits grounded by the canonical visual authority pair
 topic: Progression feedback, combat readability, and HUD TO-BE direction
 related:
@@ -44,7 +46,7 @@ to replace existing authored actor art.
 
 | TO-BE image | AS-IS edit target | Prompt set and intended decision | SHA-256 |
 | --- | --- | --- | --- |
-| `gameplay-hud-minimap-to-be.png` | `05b-reinforcement-facility.png` | Preserve the gameplay scene; add an unmistakable panel-free rail with `Lv. 7` and literal `EXP 84 / 160`, low-priority nearby-enemy direction arcs, one higher-priority incoming-attack triangle, and shape-distinct minimap roles. Electric Field is intentionally absent because its scale question is isolated below. | `1b580319c552eb2e0868a841b7e7b368e2ce3d0de9a4d293c46d1c86a7c13665` |
+| `gameplay-hud-minimap-to-be.png` | Korean 1280×720 production combat capture | Preserve the gameplay scene; add an unmistakable panel-free rail with `Lv. 7` and literal `EXP 84 / 160`, low-priority nearby-enemy direction arcs, one higher-priority incoming-attack triangle, and shape-distinct minimap roles. Electric Field is intentionally absent because its scale question is isolated below. | `1b580319c552eb2e0868a841b7e7b368e2ce3d0de9a4d293c46d1c86a7c13665` |
 | `electric-field-to-be.png` | `30-boss-04-stage-4-active.png` | Remove the current Mint hollow donut while preserving its outer gameplay radius; show one ground-attached low-alpha Arc-purple disk whose complete interior is visible, distinct beside the unchanged magenta boss shield. | `fbdaa7425e2fb7a3d7eec38f532d058daf29549eacbae088b8cc3e98a3990ff5` |
 | `element-upgrade-enhance-to-be.png` | `06b-level-up-selected.png` | Preserve the three-card modal; show Thermal Burst `Lv.1 -> 2` with exact current-to-next radius and damage rows. The card uses vertical spacing only and contains no horizontal separator, divider, underline, rule, or row bar. | `ed69ca1c5be25700208322b722c772ac1a95c1c112b01b95342fb75745c7108a` |
 | `elemental-hit-feedback-to-be.png` | `03-peak-horde.png` | Three-state visual QA board: one bounded Thermal impact and same-size Toxin/Cryo translucent layers clipped to the enemy body silhouette, with affinity-colored primary projectiles. | `2204d77a9eeff115b4d595b77c72dd8ce0774f7f96e21b3b51cef795aee3c85f` |

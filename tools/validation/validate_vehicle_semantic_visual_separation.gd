@@ -43,7 +43,6 @@ func _validate_active_world_roles() -> void:
 	var expected := [
 		&"mystery_device_intact",
 		&"mystery_device_resolved",
-		&"reinforcement_fabricator",
 		&"transit_gate",
 	]
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()

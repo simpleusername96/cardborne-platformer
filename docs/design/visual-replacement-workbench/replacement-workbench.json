@@ -2951,21 +2951,7 @@
           "external_source_ids": [
             "kenney_structure_closed"
           ]
-        },
-        {
-          "target_path": "art/visuals/production/gameplay/world/world_facility_reinforcement_fabricator.png",
-          "width": 256,
-          "height": 256,
-          "pivot": [128, 128],
-          "patch_margin": null,
-          "safe_inset": null,
-          "frame_count": null,
-          "fps": null,
-          "loop": null,
-          "blend": null,
-          "brief_en": "One complete top-down hostile reinforcement fabricator with a broad stationary mechanical mass, red threat plane, dark perimeter, readable production mouth, transparent background, and no decorative micro-detail.",
-          "external_source_ids": []
-        }
+		}
       ],
       "final_paths": [
         "art/visuals/production/gameplay/world/facility_arc_surge_strip.png",
@@ -2975,8 +2961,7 @@
         "art/visuals/production/gameplay/world/terrain_solid_cover_block.png",
         "art/visuals/production/gameplay/world/world_bulkhead_damaged.png",
         "art/visuals/production/gameplay/world/world_bulkhead_intact.png",
-        "art/visuals/production/gameplay/world/world_bulkhead_open.png",
-        "art/visuals/production/gameplay/world/world_facility_reinforcement_fabricator.png"
+        "art/visuals/production/gameplay/world/world_bulkhead_open.png"
       ],
       "reuse_paths": [
         "art/visuals/production/gameplay/world/terrain_solid_cover_block.png"
@@ -3019,8 +3004,7 @@
           "art/visuals/production/gameplay/world/facility_transit_gate.png": "8cd361f68f95802ca802d668f20dae9040e0ae2a534d893ac68c7e26961dd090",
           "art/visuals/production/gameplay/world/world_bulkhead_damaged.png": "c4a3471e4539c9fa3acd06fd11c4ceac31ac7d6f422340d3dc91dc9a94e35c01",
           "art/visuals/production/gameplay/world/world_bulkhead_intact.png": "d1911187be70c6bac940c70f12681c400d0a32ef4f02e138b09601d635452a17",
-          "art/visuals/production/gameplay/world/world_bulkhead_open.png": "fa635dfb78682728bc134fb77d6fc66aca769035338b595233d1a498bdf73e8b",
-          "art/visuals/production/gameplay/world/world_facility_reinforcement_fabricator.png": "08cf6c2086b16bfc07029e1726b5c1fbc9b5b3c4bd3a8145ca9ce904e77c8b78"
+          "art/visuals/production/gameplay/world/world_bulkhead_open.png": "fa635dfb78682728bc134fb77d6fc66aca769035338b595233d1a498bdf73e8b"
         },
         "retire_paths": [
           "art/visuals/production/gameplay/world/facility_overdrive_lane.png",
