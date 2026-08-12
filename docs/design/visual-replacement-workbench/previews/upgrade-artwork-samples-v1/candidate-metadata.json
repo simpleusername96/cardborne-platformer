@@ -1,0 +1,152 @@
+{
+  "schema": "cardborne-upgrade-artwork-candidate-batch",
+  "version": 1,
+  "batch_id": "upgrade-artwork-samples-v1",
+  "created_at": "2026-08-13T02:00:00+09:00",
+  "status": "candidate_review_only",
+  "runtime_integration": false,
+  "approval": null,
+  "visual_authority_evidence": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "required_sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "document_read_complete": true,
+    "sheet_inspected_original": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "image_gen.referenced_image_paths",
+    "original_artifact_provenance": "C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png",
+    "original_artifact_timestamp": "2026-08-02 12:13:44 KST"
+  },
+  "input_references": [
+    {
+      "path": "docs/design/cardborne-universal-art-style-reference.png",
+      "role": "mandatory style grammar only; no depicted object or layout copied"
+    },
+    {
+      "path": "D:/Program Files/ImageMagick-7.1.1-Q16-HDRI/captures/2026-08-13 01 01 12.png",
+      "bundled_copy": "references/user-modifier-plus.png",
+      "role": "user composition sketch for a bottom-right plus modifier only"
+    },
+    {
+      "path": "D:/Program Files/ImageMagick-7.1.1-Q16-HDRI/captures/2026-08-13 01 01 32.png",
+      "bundled_copy": "references/user-modifier-stat-up.png",
+      "role": "user composition sketch for a bottom-right stat-up modifier only"
+    }
+  ],
+  "generation": {
+    "tool_mode": "built-in image_gen",
+    "use_case": "stylized-concept",
+    "transparent_workflow": "flat chroma-key generation followed by the installed imagegen remove_chroma_key.py helper",
+    "prompt_contract": [
+      {
+        "category": "primary",
+        "source": "sources/01-primary-sheet.png",
+        "prompt": "Two invisible equal cells on flat #FF00FF. Left: Split Muzzle, a compact top-down muzzle firing exactly three separated amber rounds in a shallow fan. Right: Piercing Rounds, one amber round visibly continuing through exactly two neutral armor plates. Cardborne style-reference grammar only; 3-5 large matte planes, dark separation, no text, frame, shadow, glow, particles, microtexture, rings, or copied objects."
+      },
+      {
+        "category": "secondary",
+        "source": "sources/02-secondary-sheet.png",
+        "prompt": "Two invisible equal cells on flat #FF00FF. Left: Homing Missiles, exactly three compact missiles on converging headings toward one target wedge. Right: Secondary Damage, a neutral three-output auxiliary pod with a separate bold amber upward modifier at bottom right. Cardborne style-reference grammar and the user modifier-placement sketch only; no text, frame, shadow, glow, particles, or copied objects."
+      },
+      {
+        "category": "element",
+        "source": "sources/03-element-sheet.png",
+        "prompt": "Two invisible equal cells on flat #FF00FF. Left: Thermal Burst, one amber projectile impacting a neutral mass inside one broad hard-edged orange burst. Right: Cryo Slow, a moving neutral target firmly caught between exactly three large cyan ice facets. Cardborne style-reference grammar only; no smoke, wisps, particles, rings, text, frame, shadow, glow, or copied objects."
+      },
+      {
+        "category": "activated",
+        "source": "sources/04-activated-sheet.png",
+        "prompt": "Two invisible equal cells on flat #FF00FF. Left: Cross Beam, four thick cyan filled corridors extending from a small central emitter. Right: Active Cooldown, one activation core with one open cyan timing arc and a separate amber double-speed chevron at bottom right. Cardborne style-reference grammar and user modifier-placement sketch only; no text, frame, shadow, glow, particles, concentric rings, or copied objects."
+      },
+      {
+        "category": "chassis",
+        "source": "sources/05-chassis-sheet.png",
+        "prompt": "Two invisible equal cells on flat #FF00FF. Left: Hull Integrity, a new long forward-tapered neutral hull clamped by two amber reinforcement plates with a pale plus modifier at bottom right. Right: Pickup Radius, a dark horseshoe magnet pulling exactly three amber pickup shards inward. Cardborne style-reference grammar and user modifier-placement sketch only; no text, frame, shadow, glow, particles, ring, or copied objects."
+      },
+      {
+        "category": "combat",
+        "source": "sources/06-combat-sheet.png",
+        "prompt": "Two invisible equal cells on flat #FF00FF. Left: Critical Hit, one neutral armor mass with a pale weak-point fracture inside four separated amber target brackets. Right: an initial Dash Overdrive candidate. Cardborne style-reference grammar and user modifier-placement sketch only; no text, frame, shadow, glow, particles, rings, or copied objects. The right cell was rejected after inspection because its afterimage contained magenta gradient content."
+      },
+      {
+        "category": "combat_dash_replacement",
+        "source": "sources/06b-dash-overdrive-source.png",
+        "prompt": "One square Dash Overdrive candidate on flat #00FF00: a new dark long forward-tapered craft, exactly one broad solid amber afterimage behind it, one compact amber weapon-output wedge at the nose, and a separate bold amber double upward chevron at bottom right. Cardborne style-reference grammar and user modifier-placement sketch only; absolutely no pink, magenta, red, purple, gradients, text, frame, shadow, glow, particles, rings, or copied objects. This replacement was later rejected because the detached nose wedge read as a warning mark."
+      },
+      {
+        "category": "semantic_corrections",
+        "source": "sources/07-semantic-corrections-source.png",
+        "prompt": "Two invisible equal cells on flat #00FF00. Left: Pickup Radius, one broad horseshoe magnet pulling exactly three amber shards inward, with no plus, arrow, ring, or modifier. Right: Dash Overdrive, a new dark long forward-tapered craft with exactly one attached solid amber afterimage and a separate amber double upward chevron at bottom right, with nothing floating in front of the craft. Cardborne style-reference grammar and user modifier-placement sketch only; no gradients, text, frame, shadow, glow, particles, rings, or copied objects."
+      }
+    ]
+  },
+  "post_processing": {
+    "authoring": "none",
+    "chroma_helper": "C:/Users/BK/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
+    "chroma_options": "--auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill --edge-contract 1",
+    "imagemagick_operations": [
+      "exact half-sheet crop",
+      "alpha-bounds trim",
+      "transparent square extent",
+      "Lanczos resize to 512x512",
+      "dimension and channel inspection"
+    ],
+    "creative_imagemagick_operations": false
+  },
+  "review_artifacts": [
+    {
+      "file": "runtime-48-contact-sheet.png",
+      "sha256": "14e6462ce04d77e07b968891870c638237190995b260653ca0f4314fd0625c4a",
+      "operation": "placement of already-authored 48x48 icon rasters plus plain filename labels"
+    },
+    {
+      "file": "runtime-48-contact-sheet-grayscale.png",
+      "sha256": "25ec497cfedfafa425f9b8e7e8e558fac5b6842cad17950426a64e6f2b52646e",
+      "operation": "non-creative grayscale conversion of the 48x48 contact sheet"
+    }
+  ],
+  "rejected_sources": [
+    {
+      "source": "sources/06-combat-sheet.png",
+      "region": "right cell",
+      "reason": "The generated Dash Overdrive afterimage contained magenta gradient content that conflicted with the chroma key and the flat-plane visual contract.",
+      "replacement": "sources/06b-dash-overdrive-source.png"
+    },
+    {
+      "source": "sources/05-chassis-sheet.png",
+      "region": "right cell",
+      "reason": "The generated Pickup Radius included an unrequested plus modifier that could imply pickup quantity rather than collection radius.",
+      "replacement": "sources/07-semantic-corrections-source.png"
+    },
+    {
+      "source": "sources/06b-dash-overdrive-source.png",
+      "region": "full image",
+      "reason": "The detached nose wedge read as an exclamation or warning mark rather than stronger attacks after a dash.",
+      "replacement": "sources/07-semantic-corrections-source.png"
+    }
+  ],
+  "candidates": [
+    {"id":"split_muzzle","category":"primary","file":"icons/split_muzzle.png","sha256":"2cb9d3c4433342abfc9353bb344778ab8936cf03186573df6ffcaa6fd0a5821c","source":"sources/01-primary-sheet.png","approval":null},
+    {"id":"piercing_rounds","category":"primary","file":"icons/piercing_rounds.png","sha256":"357a7d4198a1ec2bb8d5033f9c3adf195a99a2f42857715f0abee7a0fbd1bdb0","source":"sources/01-primary-sheet.png","approval":null},
+    {"id":"homing_missiles","category":"secondary","file":"icons/homing_missiles.png","sha256":"4e19c20e4f2bc43d55bccf2e2ae5ed0dabbf1379bd1241d9b398787428e0a221","source":"sources/02-secondary-sheet.png","approval":null},
+    {"id":"secondary_amplifier","category":"secondary","file":"icons/secondary_amplifier.png","sha256":"ba1d654bee8dc80e38140ed40ad73bc879717a5c0c5b8ffd4698df52ad0a56e8","source":"sources/02-secondary-sheet.png","approval":null},
+    {"id":"thermal_burst","category":"element","file":"icons/thermal_burst.png","sha256":"801b8512f14aea06315b1638e8c3b84d6c73122739278a0cba0dee86550402d3","source":"sources/03-element-sheet.png","approval":null},
+    {"id":"cryo_slow","category":"element","file":"icons/cryo_slow.png","sha256":"b2e1a9ede4deb22c07d8cf94c9aa2ed1b17e9d0ebd3df48310e6138de5021abd","source":"sources/03-element-sheet.png","approval":null},
+    {"id":"piercing_lance","category":"activated","file":"icons/piercing_lance.png","sha256":"c0cb093e67cb63b65c9f244aa55475305f2cd7d5e97947f05e3da1d564a6b9a1","source":"sources/04-activated-sheet.png","approval":null},
+    {"id":"active_coolant","category":"activated","file":"icons/active_coolant.png","sha256":"2c31e909d803917a3a51d170263d01d9b110d0825583507ced0f2a4f6346e797","source":"sources/04-activated-sheet.png","approval":null},
+    {"id":"hull_integrity","category":"chassis","file":"icons/hull_integrity.png","sha256":"bcf3627a2986867bb36ae9cb7a4fe63b3fd6d81a76af1a6071027b478e190f4f","source":"sources/05-chassis-sheet.png","approval":null},
+    {"id":"pickup_radius","category":"chassis","file":"icons/pickup_radius.png","sha256":"f636285f427d4df8e39d5eeb5fa3de1e128579c51191a51a36bbeb55fcae0934","source":"sources/07-semantic-corrections-source.png","approval":null},
+    {"id":"critical_targeting","category":"combat","file":"icons/critical_targeting.png","sha256":"51c64ea1305c615d6317f9eb5ddb1fb58e1cbf0c1a55f4fbbc341f3ed0b83d93","source":"sources/06-combat-sheet.png","approval":null},
+    {"id":"dash_overdrive","category":"combat","file":"icons/dash_overdrive.png","sha256":"eb4879077553acc2e17441909bbe4923c7eb9d7629a447add5a3cb80b7c9ab7f","source":"sources/07-semantic-corrections-source.png","approval":null}
+  ],
+  "research_sources": [
+    "https://fluent2.microsoft.design/iconography",
+    "https://developers.google.com/fonts/docs/material_symbols",
+    "https://www.pathofexile.com/forum/view-thread/2034078/page/1",
+    "https://www.supergiantgames.com/blog/hades-updates/",
+    "https://www.warframe.com/en/patch-notes/pc/40-0-0",
+    "https://store.steampowered.com/app/858210/Nova_Drift/",
+    "https://store.steampowered.com/app/1794680/Vampire_Survivors/"
+  ]
+}

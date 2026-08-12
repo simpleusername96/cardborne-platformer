@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cardborne 업그레이드 고유 이미지 카테고리별 2종 승인 리포트">
+  <meta name="color-scheme" content="dark">
+  <meta name="document-type" content="report">
+  <meta name="document-status" content="active">
+  <title>Cardborne 업그레이드 이미지 후보 · 12종</title>
+  <style>
+    @font-face {
+      font-family: "Noto Sans KR";
+      src: url("../../../../../art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    :root {
+      --space: #070b11;
+      --canvas: #101923;
+      --surface: #182431;
+      --raised: #243445;
+      --line: #465a6e;
+      --text: #eef3f7;
+      --muted: #9eadbc;
+      --amber: #f2b735;
+      --danger: #f05a5f;
+      --support: #72d6c4;
+      --system: #58bfea;
+      --thermal: #f47a3c;
+      --cryo: #55bfe9;
+      --max: 1320px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--space);
+      color: var(--text);
+      font-family: "Noto Sans KR", system-ui, sans-serif;
+      line-height: 1.55;
+    }
+    a { color: var(--system); }
+    a:hover { color: #a8e6ff; }
+    button, textarea, select { font: inherit; }
+    button, a.download-link { min-height: 44px; }
+    :focus-visible { outline: 2px solid var(--system); outline-offset: 3px; }
+    .wrap { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+
+    header { padding: 56px 0 30px; border-bottom: 1px solid var(--line); }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--system);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    h1 { max-width: 900px; margin: 0; font-size: clamp(34px, 6vw, 62px); line-height: 1.06; letter-spacing: -.04em; }
+    .lede { max-width: 900px; margin: 18px 0 0; color: var(--muted); font-size: clamp(16px, 2vw, 20px); }
+    .header-meta { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 22px; color: var(--muted); font-size: 13px; }
+
+    nav {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7, 11, 17, .94);
+      backdrop-filter: blur(10px);
+    }
+    nav .wrap { display: flex; gap: 22px; overflow-x: auto; }
+    nav a { padding: 14px 0; color: var(--muted); font-size: 14px; font-weight: 800; text-decoration: none; white-space: nowrap; }
+    nav a:hover { color: var(--text); }
+
+    main { padding-bottom: 80px; }
+    section { padding: 42px 0; border-bottom: 1px solid var(--line); }
+    h2 { margin: 0 0 12px; font-size: clamp(26px, 4vw, 38px); letter-spacing: -.025em; }
+    h3 { margin: 0; font-size: 22px; }
+    p { margin: 0; }
+    .section-lede { max-width: 920px; color: var(--muted); }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 28px; border-block: 1px solid var(--line); }
+    .summary-item { min-height: 112px; padding: 20px; border-right: 1px solid var(--line); }
+    .summary-item:last-child { border-right: 0; }
+    .summary-item strong { display: block; color: var(--amber); font-size: 34px; line-height: 1; }
+    .summary-item span { display: block; margin-top: 9px; color: var(--muted); font-size: 14px; }
+
+    .decision {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, .72fr);
+      gap: 28px;
+      margin-top: 28px;
+      align-items: start;
+    }
+    .rule-list, .reference-list { margin: 0; padding: 0; list-style: none; }
+    .rule-list { display: grid; gap: 14px; }
+    .rule-list li { display: grid; grid-template-columns: 34px 1fr; gap: 10px; color: var(--muted); }
+    .rule-index { color: var(--amber); font-weight: 850; }
+    .rule-list strong { color: var(--text); }
+    .reference-list { border-top: 1px solid var(--line); }
+    .reference-list li { padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+
+    .sketches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+    .sketch { margin: 0; }
+    .sketch img { display: block; width: 100%; max-height: 280px; object-fit: contain; background: #fff; }
+    .sketch figcaption { margin-top: 8px; color: var(--muted); font-size: 13px; }
+    .scale-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+    .scale-checks figure { margin: 0; }
+    .scale-checks img { display: block; width: 100%; height: auto; border: 1px solid var(--line); background: var(--surface); image-rendering: auto; }
+    .scale-checks figcaption { margin-top: 8px; color: var(--muted); font-size: 13px; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+      padding-block: 14px;
+      border-block: 1px solid var(--line);
+    }
+    .toolbar button, .toolbar .download-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 780;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .toolbar button:hover, .toolbar .download-link:hover { border-color: var(--system); }
+    .toolbar .primary { border-color: var(--amber); color: var(--amber); }
+    .toolbar-status { margin-left: auto; color: var(--muted); font-size: 13px; }
+    .toolbar-status[data-state="saved"] { color: var(--support); }
+    .toolbar-status[data-state="error"] { color: var(--danger); }
+    #review-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    .category { padding: 34px 0; }
+    .category-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin-bottom: 18px; }
+    .category-head p { color: var(--muted); font-size: 14px; }
+    .candidate-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .candidate { background: var(--canvas); border: 1px solid var(--line); }
+    .candidate[data-status="approved"] { border-color: var(--support); }
+    .candidate[data-status="revise"] { border-color: var(--danger); }
+    .candidate-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
+    .candidate-id { display: block; margin-top: 4px; color: var(--muted); font: 12px/1.4 ui-monospace, Consolas, monospace; }
+    .kind {
+      display: inline-flex;
+      padding: 3px 8px;
+      border: 1px solid currentColor;
+      color: var(--system);
+      font-size: 12px;
+      font-weight: 820;
+      white-space: nowrap;
+    }
+    .kind.shared { color: var(--amber); }
+    .visuals { display: grid; grid-template-columns: 96px minmax(0, 1fr) 76px; gap: 18px; align-items: center; padding: 18px 20px; }
+    .visual-block { min-width: 0; }
+    .visual-label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .as-is-well, .candidate-well, .runtime-well { display: grid; place-items: center; overflow: hidden; }
+    .as-is-well { width: 88px; height: 88px; background: var(--surface); }
+    .as-is-well img { width: 68px; height: 68px; object-fit: contain; image-rendering: auto; }
+    .candidate-well { min-height: 222px; background: var(--surface); }
+    .candidate-well[data-bg="light"] { background: #e4e8eb; }
+    .candidate-well img { width: min(100%, 222px); height: auto; object-fit: contain; }
+    .runtime-well { width: 64px; height: 64px; background: var(--surface); }
+    .runtime-well img { width: 48px; height: 48px; object-fit: contain; }
+    .candidate-copy { display: grid; gap: 12px; padding: 0 20px 18px; }
+    .candidate-copy dl { display: grid; grid-template-columns: 86px 1fr; gap: 8px 12px; margin: 0; font-size: 14px; }
+    .candidate-copy dt { color: var(--muted); font-weight: 800; }
+    .candidate-copy dd { margin: 0; color: var(--text); }
+    .asset-links { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; }
+    .review { display: grid; gap: 12px; padding: 18px 20px 20px; border-top: 1px solid var(--line); background: var(--surface); }
+    .status-group { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+    .status-button {
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .status-button[aria-pressed="true"][data-value="pending"] { color: var(--system); border-color: var(--system); }
+    .status-button[aria-pressed="true"][data-value="approved"] { color: var(--support); border-color: var(--support); }
+    .status-button[aria-pressed="true"][data-value="revise"] { color: var(--danger); border-color: var(--danger); }
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      color: var(--text);
+    }
+    textarea::placeholder { color: var(--muted); }
+
+    .evidence { overflow-x: auto; margin-top: 24px; border-top: 1px solid var(--line); }
+    table { width: 100%; min-width: 820px; border-collapse: collapse; }
+    th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; }
+    td { color: var(--muted); font-size: 14px; }
+    td strong { color: var(--text); }
+    code { color: var(--support); font-family: ui-monospace, Consolas, monospace; }
+    .callout { margin-top: 22px; padding: 14px 16px; border-left: 3px solid var(--amber); background: var(--surface); color: var(--muted); }
+    .callout strong { color: var(--text); }
+
+    footer { padding: 30px 0 48px; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 980px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .summary-item:nth-child(2) { border-right: 0; }
+      .summary-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .decision, .candidate-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 660px) {
+      .wrap { width: min(calc(100% - 28px), var(--max)); }
+      header { padding-top: 38px; }
+      .summary-grid, .sketches, .scale-checks { grid-template-columns: 1fr; }
+      .summary-item { border-right: 0; border-bottom: 1px solid var(--line); }
+      .summary-item:last-child { border-bottom: 0; }
+      .toolbar { align-items: stretch; }
+      .toolbar > * { flex: 1 1 150px; }
+      .toolbar-status { margin-left: 0; flex-basis: 100%; }
+      .visuals { grid-template-columns: 72px minmax(0, 1fr); gap: 12px; }
+      .as-is-well { width: 68px; height: 68px; }
+      .as-is-well img { width: 54px; height: 54px; }
+      .runtime-block { grid-column: 1 / -1; }
+      .runtime-well { width: 100%; }
+      .candidate-copy dl { grid-template-columns: 1fr; gap: 4px; }
+      .candidate-copy dd { margin-bottom: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="eyebrow">Cardborne · Upgrade artwork review · 2026.08.13</p>
+      <h1>업그레이드 고유 이미지 후보 12종</h1>
+      <p class="lede">현재 6개 카테고리에서 2개씩 골라, 고유 행동은 사물과 결과를 직접 그리고 공통 수치 강화는 우측 하단 modifier를 붙이는 방향을 비교합니다. 모두 투명 512×512 PNG이며 아직 런타임에 연결하지 않은 승인 전 후보입니다.</p>
+      <div class="header-meta">
+        <span>ImageGen 생성 · 스크립트/SVG 도형 제작 없음</span>
+        <span>실제 슬롯 확인 48×48</span>
+        <a href="candidate-metadata.json">생성·해시·권한 증거</a>
+      </div>
+    </div>
+  </header>
+
+  <nav aria-label="문서 목차">
+    <div class="wrap">
+      <a href="#direction">판단 기준</a>
+      <a href="#candidates">후보 12종</a>
+      <a href="#evidence">레퍼런스</a>
+      <a href="#authority">권한·출력</a>
+    </div>
+  </nav>
+
+  <main>
+    <section id="direction">
+      <div class="wrap">
+        <h2>무엇을 먼저 읽게 할 것인가</h2>
+        <p class="section-lede">단독 `+`나 위 화살표는 빠르지만 “무엇이 늘어나는지”를 설명하지 못합니다. 그래서 고유 업그레이드는 동작 자체를, 여러 무기에 공통 적용되는 강화만 기존 계열 본체와 modifier의 조합으로 표현했습니다.</p>
+        <div class="summary-grid">
+          <div class="summary-item"><strong>6</strong><span>현재 카테고리</span></div>
+          <div class="summary-item"><strong>12</strong><span>이번 검토 후보</span></div>
+          <div class="summary-item"><strong>512</strong><span>투명 PNG 한 변</span></div>
+          <div class="summary-item"><strong>0</strong><span>런타임 반영 수</span></div>
+        </div>
+
+        <div class="decision">
+          <ol class="rule-list">
+            <li><span class="rule-index">01</span><span><strong>고유 무기·효과:</strong> 미사일 3발, 관통 중인 탄환, 폭발, 얼음 구속, 십자 광선처럼 결과를 그대로 보입니다.</span></li>
+            <li><span class="rule-index">02</span><span><strong>공통 강화:</strong> 대상 계열의 기계 본체를 먼저 보이고, 우측 하단에 큰 화살표·고속 chevron을 하나만 둡니다.</span></li>
+            <li><span class="rule-index">03</span><span><strong>수치는 굽지 않음:</strong> 레벨과 정확한 증가량은 기존 텍스트 UI가 소유하므로 이미지에는 숫자를 넣지 않습니다.</span></li>
+            <li><span class="rule-index">04</span><span><strong>48px 우선:</strong> 작은 원·입자·글자 대신 1개 dominant silhouette와 1–2개 보조 의미만 남깁니다.</span></li>
+            <li><span class="rule-index">05</span><span><strong>색은 보조:</strong> 원소색과 amber는 의미를 강화하지만, 탄환 수·관통·얼음·광선·자석 형상만으로도 구분합니다.</span></li>
+          </ol>
+          <ul class="reference-list">
+            <li><a href="https://fluent2.microsoft.design/iconography">Microsoft Fluent 2 Iconography</a> — literal metaphor를 우선하고, modifier는 필요할 때 우측 하단에 두며 복잡해지면 쓰지 말라는 원칙.</li>
+            <li><a href="https://developers.google.com/fonts/docs/material_symbols">Google Material Symbols</a> — 작은 크기에서도 optical size와 weight를 조절해 인지성을 유지하는 사례.</li>
+            <li><a href="https://www.pathofexile.com/forum/view-thread/2034078/page/1">Path of Exile · Skill/Support interactions</a> — 추가 투사체와 volley를 실제 투사체 수·배치로 구별하는 사례.</li>
+            <li><a href="https://www.supergiantgames.com/blog/hades-updates/">Hades 공식 업데이트</a> — 공격력·속도·범위·지속시간을 서로 다른 효과 축으로 취급.</li>
+            <li><a href="https://www.warframe.com/en/patch-notes/pc/40-0-0">Warframe 공식 패치 노트</a> — 유도 미사일·궤도 무기·범위 효과처럼 행동이 다른 무기를 독립적으로 설명.</li>
+          </ul>
+        </div>
+
+        <div class="sketches">
+          <figure class="sketch">
+            <img src="references/user-modifier-plus.png" alt="사용자가 제시한 기존 이미지 우측 하단 더하기 표시 스케치">
+            <figcaption>사용자 레퍼런스 A · 기존 이미지 + 우측 하단 `+` 배치 아이디어</figcaption>
+          </figure>
+          <figure class="sketch">
+            <img src="references/user-modifier-stat-up.png" alt="사용자가 제시한 기존 이미지 우측 하단 공격력 상승 화살표 스케치">
+            <figcaption>사용자 레퍼런스 B · 기존 이미지 + 우측 하단 stat-up modifier 아이디어</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="candidates">
+      <div class="wrap">
+        <h2>카테고리별 후보</h2>
+        <p class="section-lede">`미검토 / 승인 / 수정 필요`와 메모는 이 브라우저에 즉시 저장됩니다. 이전 업그레이드 밸런스 피드백과 다른 저장 키·JSON 스키마를 사용하므로 기존 내용은 덮어쓰지 않습니다.</p>
+        <div class="toolbar" aria-label="검토 도구">
+          <button class="primary" type="button" id="export-reviews">검토 JSON 내보내기</button>
+          <button type="button" id="import-reviews">검토 JSON 불러오기</button>
+          <input type="file" id="review-file" accept="application/json,.json">
+          <button type="button" id="toggle-background">후보 배경: 어둡게</button>
+          <a class="download-link" href="candidate-metadata.json" download>메타데이터 저장</a>
+          <span class="toolbar-status" id="save-status" aria-live="polite">미검토 12 · 승인 0 · 수정 0</span>
+        </div>
+
+        <div class="scale-checks">
+          <figure><img src="runtime-48-contact-sheet.png" alt="12개 후보의 실제 48픽셀 컬러 비교 시트"><figcaption>실제 슬롯 크기 · 48×48 color</figcaption></figure>
+          <figure><img src="runtime-48-contact-sheet-grayscale.png" alt="12개 후보의 실제 48픽셀 흑백 비교 시트"><figcaption>실제 슬롯 크기 · grayscale silhouette</figcaption></figure>
+        </div>
+
+        <div id="candidate-sections"></div>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <div class="wrap">
+        <h2>레퍼런스에서 가져온 것과 가져오지 않은 것</h2>
+        <p class="section-lede">외부 레퍼런스는 인지 관례만 정했습니다. 다른 게임의 아이콘, 실루엣, 색 배치나 장식은 복제하지 않았습니다.</p>
+        <div class="evidence">
+          <table>
+            <thead><tr><th>의미</th><th>보편적 관례</th><th>이번 Cardborne 적용</th><th>피한 표현</th></tr></thead>
+            <tbody>
+              <tr><td><strong>탄환 수</strong></td><td>실제 투사체를 여러 개 보임</td><td>3발 fan, 3발 유도 대형</td><td>숫자 `+2`, 작은 점 묶음</td></tr>
+              <tr><td><strong>관통</strong></td><td>동일 경로가 대상 뒤로 계속됨</td><td>2개 장갑판을 지나 남은 탄환</td><td>일반 속도 화살표</td></tr>
+              <tr><td><strong>원소</strong></td><td>원소의 물리적 결과가 먼저 보임</td><td>hard-edge 폭발, 큰 얼음 facet</td><td>색 원, 입자 구름, 작은 snowflake만 사용</td></tr>
+              <tr><td><strong>공통 피해</strong></td><td>대상 본체 + 증가 modifier</td><td>보조 모듈 + amber 위 chevron</td><td>설명 없는 단독 `ATK` 글자</td></tr>
+              <tr><td><strong>재사용</strong></td><td>열린 timing arc + 빠름</td><td>발동 core + cyan arc + double chevron</td><td>완전한 동심원, 숫자 초</td></tr>
+              <tr><td><strong>조건부 강화</strong></td><td>조건 행동 + 강화 modifier</td><td>dash craft/wake + 별도 위 chevron</td><td>이동 속도와 같은 단독 화살표</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout"><strong>한계:</strong> `대시 후 공격력 증가`처럼 시간 순서가 있는 조건은 이미지 한 장만으로 완전히 설명할 수 없습니다. 후보 이미지는 빠른 식별을 담당하고, 현재 카드 제목·수치·한 줄 설명이 정확한 조건을 계속 담당해야 합니다.</div>
+      </div>
+    </section>
+
+    <section id="authority">
+      <div class="wrap">
+        <h2>생성·출력 상태</h2>
+        <p class="section-lede">정본 문서와 스타일 시트를 모두 사용했지만, 이는 스타일 적합성 증거일 뿐 개별 에셋 승인이나 런타임 적용을 뜻하지 않습니다.</p>
+        <div class="evidence">
+          <table>
+            <tbody>
+              <tr><th>정본 문서</th><td><code>docs/design/VISUAL_SYSTEM.md</code> 전체 확인</td></tr>
+              <tr><th>스타일 시트</th><td><code>docs/design/cardborne-universal-art-style-reference.png</code> 원본 확인 및 모든 ImageGen 호출에 실제 이미지 입력</td></tr>
+              <tr><th>SHA-256</th><td><code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code></td></tr>
+              <tr><th>생성</th><td>built-in ImageGen · 카테고리 묶음 생성</td></tr>
+              <tr><th>투명화</th><td>ImageGen 전용 chroma-key 제거 도구 · 알파 PNG</td></tr>
+              <tr><th>ImageMagick</th><td>정확 crop, trim, 투명 extent, resize, 채널·크기 검사만 사용 · 새 형상 제작 없음</td></tr>
+              <tr><th>출력</th><td>후보마다 <code>512×512 sRGBA PNG</code> · 소스·프롬프트·해시는 <a href="candidate-metadata.json">candidate-metadata.json</a>에 기록</td></tr>
+              <tr><th>승인 상태</th><td>모두 미승인 후보 · production manifest와 카드 리소스 미변경</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="wrap">Cardborne visual replacement workbench · approval candidates only · no runtime integration</div></footer>
+
+  <script>
+    (() => {
+      const categories = [
+        { id: 'primary', title: '주무기 개조', desc: '탄환 수와 관통 규칙을 행동 그대로 비교', items: [
+          { id:'split_muzzle', title:'확산 총구', kind:'고유 행동', current:'energy', intent:'한 번에 탄환 3발', rationale:'정확히 3발을 얕은 fan으로 배치해 투사체 증가를 숫자 없이 전달합니다.', risk:'48px에서 하단 총구보다 탄환 3발이 먼저 읽혀야 합니다.' },
+          { id:'piercing_rounds', title:'관통 탄환', kind:'고유 행동', current:'energy', intent:'여러 적을 연속 관통', rationale:'같은 탄환이 장갑판 2개를 지나 뒤까지 남는 한 경로로 관통을 설명합니다.', risk:'장갑판이 월드 장애물 아이콘처럼 보이지 않는지 확인이 필요합니다.' }
+        ]},
+        { id: 'secondary', title: '보조 무기 체계', desc: '무기 본체와 공통 피해 modifier를 함께 시험', items: [
+          { id:'homing_missiles', title:'추적 미사일', kind:'고유 무기', current:'seeker', intent:'서로 다른 표적을 추적하는 다발 미사일', rationale:'3개 미사일의 서로 다른 기수 방향과 하나의 target wedge로 유도를 표현합니다.', risk:'굽은 궤적이 없어 일반 3연장 미사일로도 읽힐 수 있습니다.' },
+          { id:'secondary_amplifier', title:'보조무기 피해', kind:'공통 강화', current:'relay', intent:'모든 보조무기의 공격력 증가', rationale:'보조 모듈 본체를 유지하고 우측 하단 amber 위 chevron만 modifier로 분리했습니다.', risk:'중앙 모듈이 방어 장치처럼 보이는지 확인이 필요합니다.' }
+        ]},
+        { id: 'element', title: '공격 속성', desc: '색 원 대신 폭발과 얼음 구속이라는 결과를 직접 표시', items: [
+          { id:'thermal_burst', title:'열폭발', kind:'고유 속성', current:'thermal', intent:'주무기 명중 지점의 범위 폭발', rationale:'탄환 충돌 뒤의 큰 hard-edge orange burst로 폭발을 즉시 읽게 합니다.', risk:'폭발 면적이 커서 일반 공격력 증가 아이콘으로 오인되는지 확인합니다.' },
+          { id:'cryo_slow', title:'냉기 부여', kind:'고유 속성', current:'cryo', intent:'적의 이동·공격 속도 감소', rationale:'움직이는 target wedge를 3개 큰 얼음 facet이 붙잡는 관계로 냉기와 감속을 함께 보입니다.', risk:'중앙 snow accent는 48px에서 사라져도 의미가 유지되어야 합니다.' }
+        ]},
+        { id: 'activated', title: '발동무기', desc: '무기 종류와 장착 무기 공통 재사용 강화를 분리', items: [
+          { id:'piercing_lance', title:'십자 광선', kind:'고유 무기', current:'energy', intent:'기체 중심의 가로·세로 관통 광선', rationale:'중앙 emitter에서 네 방향으로 이어지는 두 개의 굵은 filled corridor가 십자 공격을 그대로 만듭니다.', risk:'단순 의료용 plus로 보이지 않도록 dark emitter와 corridor end가 유지되어야 합니다.' },
+          { id:'active_coolant', title:'발동무기 재사용', kind:'공통 강화', current:'relay', intent:'장착 발동무기의 쿨다운 단축', rationale:'activation core, 열린 timing arc, double-speed chevron을 한 계층으로 조합했습니다.', risk:'재사용 단축이 단순 이동 속도로 읽히지 않는지 확인이 필요합니다.' }
+        ]},
+        { id: 'chassis', title: '차체 및 지원', desc: '최대 내구도와 수거 범위를 서로 다른 사물 비유로 구분', items: [
+          { id:'hull_integrity', title:'장갑 내구도', kind:'공통 강화', current:'hull', intent:'최대 내구도 증가', rationale:'긴 차체에 두 장의 amber 보강판을 물리고 우측 하단 plus를 보조 modifier로 뒀습니다.', risk:'plus가 즉시 회복만 뜻한다고 읽히지 않도록 보강판이 먼저 보여야 합니다.' },
+          { id:'pickup_radius', title:'수거 범위', kind:'고유 지원', current:'magnet', intent:'더 먼 경험치 조각을 끌어당김', rationale:'horseshoe magnet과 서로 다른 위치의 shard 3개만으로 끌어당김을 직접 표현합니다.', risk:'반경 자체는 보이지 않으므로 기존 수치 문구가 증가량을 계속 담당합니다.' }
+        ]},
+        { id: 'combat', title: '전투 조건', desc: '약점 타격과 대시 후 강화처럼 조건이 있는 공격을 시험', items: [
+          { id:'critical_targeting', title:'치명타', kind:'고유 조건', current:'relay', intent:'직접 피해가 확률적으로 2배', rationale:'armor weak point와 네 개의 분리된 amber bracket으로 정밀 약점 타격을 표현합니다.', risk:'일반 조준 UI로 보이지 않도록 중앙 fracture가 먼저 읽혀야 합니다.' },
+          { id:'dash_overdrive', title:'대시 강화', kind:'조건 + 강화', current:'dash', intent:'대시 종료 후 일정 시간 공격력 증가', rationale:'attached dash wake가 조건을, 별도 double up chevron이 피해 증가를 담당합니다.', risk:'시간 순서는 이미지 하나로 완전하지 않으므로 카드 설명과 함께 평가해야 합니다.' }
+        ]}
+      ];
+
+      const currentImages = {
+        energy: '../../../../../art/visuals/production/gameplay/weapons/projectiles/projectile_energy_teardrop.png',
+        seeker: '../../../../../art/visuals/production/gameplay/weapons/secondaries/secondary_seeker.png',
+        relay: '../../../../../art/visuals/production/gameplay/upgrades/system_relay.png',
+        thermal: '../../../../../art/visuals/production/gameplay/upgrades/element_thermal.png',
+        cryo: '../../../../../art/visuals/production/gameplay/upgrades/element_cryo.png',
+        hull: '../../../../../art/visuals/production/gameplay/upgrades/hull_reinforcement.png',
+        magnet: '../../../../../art/visuals/production/gameplay/upgrades/pickup_magnet.png',
+        dash: '../../../../../art/visuals/production/gameplay/upgrades/dash_wake.png'
+      };
+      const storageKey = 'cardborne-upgrade-artwork-review-v1';
+      const schema = 'cardborne-upgrade-artwork-review';
+      const container = document.querySelector('#candidate-sections');
+      const saveStatus = document.querySelector('#save-status');
+      const reviewFile = document.querySelector('#review-file');
+      const cards = new Map();
+      let state = {};
+      let lightBackground = false;
+
+      try {
+        const parsed = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        state = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch (error) {
+        state = {};
+        saveStatus.textContent = '이 브라우저 저장소를 읽을 수 없음';
+        saveStatus.dataset.state = 'error';
+      }
+
+      const escapeText = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+      })[char]);
+
+      categories.forEach((category) => {
+        const section = document.createElement('section');
+        section.className = 'category';
+        section.dataset.category = category.id;
+        section.innerHTML = `<div class="category-head"><h3>${escapeText(category.title)}</h3><p>${escapeText(category.desc)}</p></div><div class="candidate-grid"></div>`;
+        const grid = section.querySelector('.candidate-grid');
+        category.items.forEach((item) => {
+          const stored = state[item.id] && typeof state[item.id] === 'object' ? state[item.id] : {};
+          const status = ['pending','approved','revise'].includes(stored.status) ? stored.status : 'pending';
+          const note = typeof stored.note === 'string' ? stored.note : '';
+          const article = document.createElement('article');
+          article.className = 'candidate';
+          article.dataset.id = item.id;
+          article.dataset.status = status;
+          const kindClass = item.kind.includes('공통') || item.kind.includes('강화') ? 'kind shared' : 'kind';
+          article.innerHTML = `
+            <div class="candidate-head">
+              <div><h3>${escapeText(item.title)}</h3><code class="candidate-id">${escapeText(item.id)}</code></div>
+              <span class="${kindClass}">${escapeText(item.kind)}</span>
+            </div>
+            <div class="visuals">
+              <div class="visual-block"><span class="visual-label">현재 공용 이미지</span><div class="as-is-well"><img src="${currentImages[item.current]}" alt="${escapeText(item.title)} 현재 공용 이미지"></div></div>
+              <div class="visual-block"><span class="visual-label">새 후보 · 512px</span><div class="candidate-well"><img src="icons/${item.id}.png" alt="${escapeText(item.title)} 새 투명 PNG 후보"></div></div>
+              <div class="visual-block runtime-block"><span class="visual-label">슬롯 48px</span><div class="runtime-well"><img src="icons/${item.id}.png" alt="${escapeText(item.title)} 48픽셀 미리보기"></div></div>
+            </div>
+            <div class="candidate-copy">
+              <dl><dt>의미</dt><dd>${escapeText(item.intent)}</dd><dt>구성</dt><dd>${escapeText(item.rationale)}</dd><dt>검토점</dt><dd>${escapeText(item.risk)}</dd></dl>
+              <div class="asset-links"><a href="icons/${item.id}.png" download>PNG 저장</a><a href="icons/${item.id}.png" target="_blank" rel="noopener">원본 열기</a></div>
+            </div>
+            <div class="review">
+              <div class="status-group" role="group" aria-label="${escapeText(item.title)} 검토 상태">
+                <button class="status-button" type="button" data-value="pending">미검토</button>
+                <button class="status-button" type="button" data-value="approved">승인</button>
+                <button class="status-button" type="button" data-value="revise">수정 필요</button>
+              </div>
+              <textarea maxlength="1200" placeholder="수정할 점이나 승인 메모" aria-label="${escapeText(item.title)} 검토 메모">${escapeText(note)}</textarea>
+            </div>`;
+          grid.append(article);
+          cards.set(item.id, { article, item });
+          article.querySelectorAll('.status-button').forEach((button) => {
+            button.setAttribute('aria-pressed', String(button.dataset.value === status));
+            button.addEventListener('click', () => setStatus(item.id, button.dataset.value));
+          });
+          article.querySelector('textarea').addEventListener('input', (event) => {
+            const current = state[item.id] || { status: article.dataset.status };
+            state[item.id] = { status: current.status || 'pending', note: event.target.value };
+            persist();
+          });
+        });
+        container.append(section);
+      });
+
+      function setStatus(id, status) {
+        const card = cards.get(id);
+        const note = card.article.querySelector('textarea').value;
+        state[id] = { status, note };
+        card.article.dataset.status = status;
+        card.article.querySelectorAll('.status-button').forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.value === status));
+        });
+        persist();
+      }
+
+      function snapshot() {
+        const reviews = {};
+        cards.forEach(({ article }, id) => {
+          reviews[id] = { status: article.dataset.status, note: article.querySelector('textarea').value };
+        });
+        return reviews;
+      }
+
+      function updateCounts(message = '') {
+        const values = [...cards.values()].map(({ article }) => article.dataset.status);
+        const pending = values.filter((value) => value === 'pending').length;
+        const approved = values.filter((value) => value === 'approved').length;
+        const revise = values.filter((value) => value === 'revise').length;
+        saveStatus.textContent = message || `미검토 ${pending} · 승인 ${approved} · 수정 ${revise}`;
+      }
+
+      function persist() {
+        state = snapshot();
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(state));
+          updateCounts();
+          saveStatus.dataset.state = 'saved';
+        } catch (error) {
+          saveStatus.textContent = '브라우저 저장 실패 · JSON으로 내보내 주세요';
+          saveStatus.dataset.state = 'error';
+        }
+      }
+
+      document.querySelector('#export-reviews').addEventListener('click', () => {
+        const payload = { schema, version: 1, batch_id: 'upgrade-artwork-samples-v1', exported_at: new Date().toISOString(), reviews: snapshot() };
+        const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type:'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'cardborne-upgrade-artwork-feedback.json';
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+        updateCounts('검토 JSON 저장됨');
+        saveStatus.dataset.state = 'saved';
+      });
+
+      document.querySelector('#import-reviews').addEventListener('click', () => reviewFile.click());
+      reviewFile.addEventListener('change', async () => {
+        const file = reviewFile.files && reviewFile.files[0];
+        if (!file) return;
+        try {
+          const payload = JSON.parse(await file.text());
+          if (!payload || payload.schema !== schema || payload.version !== 1 || payload.batch_id !== 'upgrade-artwork-samples-v1' || !payload.reviews || typeof payload.reviews !== 'object') throw new Error('invalid schema');
+          let imported = 0;
+          Object.entries(payload.reviews).forEach(([id, review]) => {
+            if (!cards.has(id) || !review || !['pending','approved','revise'].includes(review.status) || typeof review.note !== 'string' || review.note.length > 1200) return;
+            const card = cards.get(id).article;
+            card.dataset.status = review.status;
+            card.querySelector('textarea').value = review.note;
+            card.querySelectorAll('.status-button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.value === review.status)));
+            imported += 1;
+          });
+          if (imported === 0) throw new Error('no matching review');
+          persist();
+          updateCounts(`${imported}개 검토 불러옴`);
+          saveStatus.dataset.state = 'saved';
+        } catch (error) {
+          saveStatus.textContent = '이 리포트의 검토 JSON이 아님';
+          saveStatus.dataset.state = 'error';
+        } finally {
+          reviewFile.value = '';
+        }
+      });
+
+      document.querySelector('#toggle-background').addEventListener('click', (event) => {
+        lightBackground = !lightBackground;
+        document.querySelectorAll('.candidate-well').forEach((well) => well.dataset.bg = lightBackground ? 'light' : 'dark');
+        event.currentTarget.textContent = `후보 배경: ${lightBackground ? '밝게' : '어둡게'}`;
+      });
+
+      updateCounts();
+    })();
+  </script>
+</body>
+</html>
