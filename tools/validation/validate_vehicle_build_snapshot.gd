@@ -26,7 +26,7 @@ func _run() -> void:
 		[{"id":&"seeker", "level":1, "name_key":"SECONDARY_HOMING_MISSILES_NAME"}],
 		{
 			"health":100.0, "max_health":120.0, "level":2,
-			"experience":4, "experience_required":16,
+			"experience":4, "experience_required":8,
 			"experience_complete":false,
 		}
 	)

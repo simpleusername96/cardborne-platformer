@@ -6,6 +6,10 @@ extends RefCounted
 const MAX_SHARDS := 192
 const BASE_PICKUP_RADIUS := 34.0
 const ATTRACT_SPEED := 520.0
+const BASE_LEVEL_REQUIREMENT := 6
+const LINEAR_LEVEL_GROWTH := 1.5
+const QUADRATIC_LEVEL_GROWTH := 0.32
+const MAX_LEVEL_REQUIREMENT := 96
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 
 var run_level := 1
@@ -46,10 +50,10 @@ func clear_shards() -> void:
 func required_experience() -> int:
 	var progression_index := run_level - 1
 	return mini(
-		160,
-		12 + roundi(
-			3.0 * float(progression_index)
-			+ 0.55 * float(progression_index * progression_index)
+		MAX_LEVEL_REQUIREMENT,
+		BASE_LEVEL_REQUIREMENT + roundi(
+			LINEAR_LEVEL_GROWTH * float(progression_index)
+			+ QUADRATIC_LEVEL_GROWTH * float(progression_index * progression_index)
 		)
 	)
 

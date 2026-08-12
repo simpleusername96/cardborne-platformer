@@ -74,7 +74,7 @@ func _run() -> void:
 			"health":88.0,
 			"max_health":120.0,
 			"experience":4,
-			"experience_required":12,
+			"experience_required":6,
 		},
 		"stats":[],
 		"secondaries":[],

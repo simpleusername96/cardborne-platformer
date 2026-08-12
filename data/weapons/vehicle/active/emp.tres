@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="VehicleActiveWeaponDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/vehicle_active_weapon_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"emp"
+name_key = "ACTIVE_WEAPON_EMP_NAME"
+startup_seconds = 0.42
+cooldown_seconds = 13.0
+damage_by_level = Array[float]([62.0])
+size_by_level = Array[float]([285.0])
+auxiliary_size = 325.0

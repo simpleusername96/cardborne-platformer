@@ -1,7 +1,7 @@
 class_name VehiclePrimaryWeapon
 extends RefCounted
 
-## Owns the neutral Pulse Cannon's held-fire cadence.
+## Owns the built-in primary weapon's held-fire cadence.
 ## Releasing fire stops the cadence but never changes the next shot.
 
 const BASE_INTERVAL := 0.12

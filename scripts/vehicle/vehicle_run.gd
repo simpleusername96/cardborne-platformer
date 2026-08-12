@@ -24,7 +24,7 @@ const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const LifestealRuntime = preload("res://scripts/cards/vehicle_lifesteal_runtime.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
-const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
@@ -50,6 +50,7 @@ const EnemyTargetingPolicy = preload(
 	"res://scripts/enemies/vehicle_enemy_targeting_policy.gd"
 )
 const SecondaryRuntime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
+const ActiveWeaponRuntime = preload("res://scripts/player/vehicle_active_weapon_runtime.gd")
 const GuidebookCatalog = preload("res://scripts/progression/vehicle_guidebook_catalog.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
@@ -123,10 +124,6 @@ const DASH_COOLDOWN := 1.25
 const MAX_DASH_AFTERIMAGES := 1
 const SEEKER_RANGE := 560.0
 const SEEKER_COOLDOWN := 1.35
-const EMP_COOLDOWN := 13.0
-const EMP_STARTUP := 0.42
-const EMP_RADIUS := 285.0
-const EMP_PROJECTILE_CLEAR_RADIUS := 325.0
 const MINIMAP_COLS := 20
 const MINIMAP_ROWS := 12
 const MINIMAP_FRAME_COUNT := 2
@@ -189,6 +186,7 @@ var collective_tactics := CollectiveTacticRuntime.new()
 var stage_flow := StageFlow.new()
 var pursuit_field := PursuitField.new()
 var secondary_runtime := SecondaryRuntime.new()
+var active_weapon_runtime := ActiveWeaponRuntime.new()
 var terrain_runtime := TerrainRuntime.new()
 var mystery_device_runtime := MysteryDeviceRuntime.new()
 var reinforcement_facility_runtime := ReinforcementFacilityRuntime.new()
@@ -217,8 +215,6 @@ var player_dash_cooldown := 0.0
 var player_dash_timer := 0.0
 var player_dash_direction := Vector2.RIGHT
 var player_dash_trail_timer := 0.0
-var player_emp_cooldown := 0.0
-var player_emp_startup := 0.0
 var player_barrier_strength := 0.0
 var player_barrier_timer := 0.0
 var _aim_target_id := ""
@@ -231,7 +227,7 @@ var upgrade_catalog := UpgradeCatalog.new()
 var run_build := RunBuild.new(upgrade_catalog)
 var lifesteal_runtime := LifestealRuntime.new()
 var dash_upgrade_runtime := DashUpgradeRuntime.new()
-var _element_profile: VehicleElementProfile = ElementProfile.from_build(run_build)
+var _primary_payload: VehiclePrimaryPayloadProfile = PrimaryPayload.from_build(run_build)
 var experience_runtime := ExperienceRuntime.new()
 var applied_upgrades: Dictionary = run_build.levels
 var current_card_offer: Array[Dictionary] = []
@@ -795,8 +791,6 @@ func _reset_run(
 	_damage_receipt_serial = 0
 	player_dash_cooldown = 0.0
 	player_dash_timer = 0.0
-	player_emp_cooldown = 0.0
-	player_emp_startup = 0.0
 	player_barrier_strength = 0.0
 	player_barrier_timer = 0.0
 	_aim_target_id = ""
@@ -817,9 +811,11 @@ func _reset_run(
 		experience_runtime.clear_shards()
 		experience_runtime.clear_pending_levels()
 		reward_runtime.reset_stage()
-	_element_profile = ElementProfile.from_build(run_build)
+	_primary_payload = PrimaryPayload.from_build(run_build)
 	lifesteal_runtime.reset(run_build.stat(&"lifesteal_percent", 0.0))
 	secondary_runtime.reset(player_position)
+	active_weapon_runtime.reset(player_position)
+	active_weapon_runtime.configure(run_build)
 	dash_upgrade_runtime.reset()
 	experience_recall_timer = 0.0
 	player_health = _player_max_health()
@@ -890,8 +886,6 @@ func _reset_run(
 		stats_damage_taken = 0.0
 		stats_enemies_defeated = 0
 	_mark_visited()
-	if persistent_relay_module:
-		player_emp_cooldown = 0.0
 	if persistent_field_module:
 		secondary_runtime.seeker_cooldown = 0.0
 	enemy_grid.configure(Rules.world_rect(current_stage_id), SpatialGrid.DEFAULT_CELL_SIZE)
@@ -1461,7 +1455,6 @@ func _update_player(delta: float) -> void:
 	var primary_held := Input.is_action_pressed("primary_fire")
 	player_primary_weapon.tick(delta, primary_held)
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
-	player_emp_cooldown = maxf(0.0, player_emp_cooldown - delta)
 	player_barrier_timer = maxf(0.0, player_barrier_timer - delta)
 	if player_barrier_timer <= 0.0:
 		player_barrier_strength = 0.0
@@ -1495,13 +1488,9 @@ func _update_player(delta: float) -> void:
 	if primary_held:
 		_try_fire_primary()
 
-	if Input.is_action_just_pressed("active_skill") and player_emp_cooldown <= 0.0 and player_emp_startup <= 0.0:
-		_start_emp()
-
-	if player_emp_startup > 0.0:
-		player_emp_startup = maxf(0.0, player_emp_startup - delta)
-		if player_emp_startup <= 0.0:
-			_release_emp()
+	if Input.is_action_just_pressed("active_skill"):
+		_start_active_weapon()
+	_advance_active_weapon(delta)
 
 	_update_aim_target()
 	_mark_visited()
@@ -1629,7 +1618,6 @@ func _update_dash_upgrade_effects(delta: float) -> void:
 					false,
 					true,
 					OutgoingDamagePolicy.DAMAGE_PERIODIC,
-					trail.start,
 					trail.serial
 				)
 func _live_effect_count(kind: StringName) -> int:
@@ -1660,7 +1648,7 @@ func _fire_primary() -> void:
 			PRIMARY_PROJECTILE_RADIUS,
 			18.0 * scale,
 			projectile_range,
-			_element_profile,
+			_primary_payload,
 			false
 		)
 	secondary_runtime.record_primary_success(origin, player_aim_direction)
@@ -1876,13 +1864,13 @@ func _spawn_player_projectile(
 	radius: float = PRIMARY_PROJECTILE_RADIUS,
 	structure_damage: float = -1.0,
 	projectile_range: float = PRIMARY_RANGE,
-	element_profile: VehicleElementProfile = null,
+	primary_payload: VehiclePrimaryPayloadProfile = null,
 	wall_piercing: bool = false
 ) -> void:
-	var condition_mask := AttackContract.condition_mask_for_profile(element_profile)
+	var condition_mask := AttackContract.condition_mask_for_profile(primary_payload)
 	var affinity := (
-		AttackContract.normalize_affinity(element_profile.affinity())
-		if element_profile != null
+		AttackContract.normalize_affinity(primary_payload.affinity())
+		if primary_payload != null
 		else AttackContract.KINETIC
 	)
 	projectile_store.add_player({
@@ -1906,7 +1894,7 @@ func _spawn_player_projectile(
 		"condition_mask": condition_mask,
 		"reflector_lock": &"",
 		"reflector_lock_time": 0.0,
-		"element_profile": element_profile,
+		"primary_payload": primary_payload,
 	})
 
 
@@ -1921,7 +1909,8 @@ func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
 		_runtime_line_of_sight_callable,
 		_query_enemy_radius_callable,
 		_find_seeker_targets,
-		player_emp_startup > 0.0,
+		active_weapon_runtime.equipped_id == &"emp"
+			and active_weapon_runtime.startup_remaining > 0.0,
 		0.85 if persistent_field_module else 1.0,
 		_runtime_attack_path_callable,
 		player_aim_direction
@@ -1946,7 +1935,6 @@ func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
 				false,
 				true,
 				int(intent.get("damage_flags", 0)),
-				Vector2(intent.get("attack_origin", player_position)),
 				int(intent.get("attack_serial", 0))
 			)
 	# Mine gameplay resolves before its one origin receipt becomes visible.
@@ -2010,61 +1998,197 @@ func _query_enemy_radius_into(center: Vector2, radius: float, output: Array[Enem
 	output.resize(write_index)
 
 
-func _start_emp() -> void:
-	player_emp_startup = EMP_STARTUP
-	player_emp_cooldown = _emp_cooldown_max()
-	_grant_player_protection(0.24, &"emp")
+func _start_active_weapon() -> void:
+	var event := active_weapon_runtime.try_start(
+		player_position,
+		player_aim_direction,
+		Rules.world_rect(current_stage_id),
+		run_build,
+		1.5 if persistent_relay_module else 0.0
+	)
+	if not bool(event.get("started", false)):
+		return
+	var weapon_id := StringName(event["weapon_id"])
 	_play_sound(&"emp_start")
-	_add_effect(
-		&"player_emp_charge",
-		player_position,
-		Art.SYSTEM,
-		EMP_STARTUP,
-		_emp_radius(),
-		Vector2.ZERO,
-		0.0,
-		1.0,
-		EMP_PROJECTILE_CLEAR_RADIUS
-	)
+	if weapon_id == &"emp":
+		_grant_player_protection(0.24, &"emp")
+		_add_effect(
+			EffectStore.EMP_CHARGE_KIND,
+			Vector2(event["center"]),
+			Art.SYSTEM,
+			float(event["startup"]),
+			float(event["size"]),
+			Vector2.ZERO,
+			0.0,
+			1.0,
+			float(event["auxiliary_size"])
+		)
 
 
-func _release_emp() -> void:
-	var radius := _emp_radius()
+func _advance_active_weapon(delta: float) -> void:
+	var event := active_weapon_runtime.advance(delta, run_build)
+	for _step in int(event.get("pull_steps", 0)):
+		_apply_black_hole_pull()
+	if bool(event.get("collapse", false)):
+		_release_active_weapon(&"black_hole")
+	elif bool(event.get("released", false)):
+		_release_active_weapon(active_weapon_runtime.equipped_id)
+
+
+func _release_active_weapon(weapon_id: StringName) -> void:
+	match weapon_id:
+		&"emp":
+			_release_emp_weapon()
+		&"black_hole":
+			_damage_enemies_in_radius(
+				active_weapon_runtime.center,
+				active_weapon_runtime.size,
+				active_weapon_runtime.damage,
+				"Black Hole",
+				&"arc",
+				true
+			)
+			camera_shake = maxf(camera_shake, 8.0)
+			_play_sound(&"emp")
+		&"shockwave":
+			_release_shockwave()
+		&"cross_beam":
+			_release_cross_beam()
+
+
+func _release_emp_weapon() -> void:
+	var center := active_weapon_runtime.center
+	var radius := active_weapon_runtime.size
+	var clear_radius := active_weapon_runtime.catalog.get_definition(&"emp").auxiliary_size
 	_damage_enemies_in_radius(
-		player_position,
-		radius,
-		62.0,
-		"EMP Nova",
-		&"arc",
-		true
+		center, radius, active_weapon_runtime.damage, "EMP Nova", &"arc", true
 	)
-	_clear_hostile_projectiles(player_position, EMP_PROJECTILE_CLEAR_RADIUS)
-	enemy_grid.query_radius_into(player_position, radius, enemies, _enemy_query_buffer)
+	_clear_hostile_projectiles(center, clear_radius)
+	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
-		if Vector2(enemy.pos).distance_to(player_position) <= radius:
+		if Vector2(enemy.pos).distance_to(center) <= radius:
 			enemy.stun = maxf(float(enemy.stun), 2.1)
 	_add_effect(
-		&"player_emp_release",
-		player_position,
+		EffectStore.EMP_RELEASE_KIND,
+		center,
 		Color.WHITE,
 		0.55,
 		radius,
 		Vector2.ZERO,
 		0.0,
 		1.0,
-		EMP_PROJECTILE_CLEAR_RADIUS
+		clear_radius
 	)
 	camera_shake = maxf(camera_shake, 11.0)
 	_play_sound(&"emp")
 
 
-func _emp_cooldown_max() -> float:
-	var base := EMP_COOLDOWN - (1.5 if persistent_relay_module else 0.0)
-	return base
+func _apply_black_hole_pull() -> void:
+	var center := active_weapon_runtime.center
+	var radius := active_weapon_runtime.size
+	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
+	for enemy in _enemy_query_buffer:
+		if (
+			not _is_player_targetable_enemy(enemy)
+			or enemy.role == &"stage_boss"
+			or _is_fixed_structure_enemy(enemy)
+		):
+			continue
+		var offset := center - enemy.pos
+		if offset.length() > radius + enemy.radius and offset.length_squared() > 0.01:
+			continue
+		enemy.pos = _move_actor(
+			enemy.pos,
+			offset.normalized() * VehicleActiveWeaponRuntime.BLACK_HOLE_PULL_INTERVAL * 360.0,
+			enemy.radius,
+			false
+		)
+		enemy_grid.update_actor(enemy)
 
 
-func _emp_radius() -> float:
-	return EMP_RADIUS
+func _release_shockwave() -> void:
+	var center := active_weapon_runtime.center
+	var radius := active_weapon_runtime.size
+	_damage_enemies_in_radius(
+		center, radius, active_weapon_runtime.damage, "Shockwave", &"kinetic", true
+	)
+	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
+	for enemy in _enemy_query_buffer:
+		if (
+			not _is_player_targetable_enemy(enemy)
+			or enemy.role == &"stage_boss"
+			or _is_fixed_structure_enemy(enemy)
+		):
+			continue
+		var offset := enemy.pos - center
+		if offset.length() > radius + enemy.radius or offset.length_squared() <= 0.01:
+			continue
+		enemy.pos = _move_actor(enemy.pos, offset.normalized() * 180.0, enemy.radius, false)
+		enemy_grid.update_actor(enemy)
+	camera_shake = maxf(camera_shake, 8.0)
+	_play_sound(&"impact", 0.86)
+
+
+func _release_cross_beam() -> void:
+	var center := active_weapon_runtime.center
+	var direction := active_weapon_runtime.direction.normalized()
+	var side := direction.rotated(PI * 0.5)
+	var half_width := active_weapon_runtime.size
+	for enemy in enemies:
+		if not _is_player_targetable_enemy(enemy):
+			continue
+		var offset := enemy.pos - center
+		if (
+			absf(offset.dot(side)) > half_width + enemy.radius
+			and absf(offset.dot(direction)) > half_width + enemy.radius
+		):
+			continue
+		_damage_enemy(
+			enemy,
+			active_weapon_runtime.damage,
+			"Cross Beam",
+			&"kinetic",
+			true,
+			false,
+			true,
+			OutgoingDamagePolicy.DAMAGE_DIRECT,
+			active_weapon_runtime.action_serial
+		)
+	_damage_cross_beam_structures(center, direction, side, half_width)
+	camera_shake = maxf(camera_shake, 9.0)
+	_play_sound(&"emp", 1.08)
+
+
+func _damage_cross_beam_structures(
+	center: Vector2,
+	direction: Vector2,
+	side: Vector2,
+	half_width: float
+) -> void:
+	mystery_device_runtime.fill_device_snapshot(_mystery_device_snapshot_buffer)
+	for device in _mystery_device_snapshot_buffer:
+		if StringName(device["state"]) != &"intact":
+			continue
+		var device_position := Vector2(device["position"])
+		var offset := device_position - center
+		if (
+			absf(offset.dot(side)) > half_width + MysteryDeviceRuntime.DEVICE_RADIUS
+			and absf(offset.dot(direction)) > half_width + MysteryDeviceRuntime.DEVICE_RADIUS
+		):
+			continue
+		_damage_mystery_device(
+			StringName(device["id"]), active_weapon_runtime.damage, &"beam",
+			device_position, Art.SYSTEM, direction
+		)
+	var facility := reinforcement_facility_runtime.snapshot()
+	if StringName(facility.get("state", &"")) == &"active":
+		var facility_position := Vector2(facility["position"])
+		var facility_offset := facility_position - center
+		if (
+			absf(facility_offset.dot(side)) <= half_width + ReinforcementFacilityRuntime.COLLISION_RADIUS
+			or absf(facility_offset.dot(direction)) <= half_width + ReinforcementFacilityRuntime.COLLISION_RADIUS
+		):
+			_damage_reinforcement_facility(active_weapon_runtime.damage, &"beam")
 
 
 func _player_move_speed() -> float:
@@ -2873,7 +2997,12 @@ func _update_ordinary_enemy(
 		return false
 
 	_move_enemy_role(enemy, motion_delta, false, decision_due)
-	if not decision_due or not can_commit or enemy.attack_cooldown > 0.0:
+	if (
+		not decision_due
+		or not can_commit
+		or enemy.attack_cooldown > 0.0
+		or StatusRuntime.attack_commit_blocked(enemy)
+	):
 		return false
 	var attack_started := (
 		Time.get_ticks_usec() if _performance_detail_sample_active else 0
@@ -3553,8 +3682,7 @@ func _explode_mine(enemy: EnemyState) -> void:
 					OutgoingDamagePolicy.DAMAGE_DIRECT
 					if enemy.mine_armed_by_player
 					else 0
-				),
-				origin
+				)
 			)
 	_arm_chain_mines(enemy, origin, mobile)
 	_defeat_enemy(enemy, source)
@@ -3865,16 +3993,14 @@ func _update_projectile_buffer(
 					true,
 					false,
 					true,
-					OutgoingDamagePolicy.DAMAGE_DIRECT
-						| OutgoingDamagePolicy.RANGE_ELIGIBLE,
-					projectile.spawn_origin,
+					OutgoingDamagePolicy.DAMAGE_DIRECT,
 					projectile.spawn_serial
 				)
-				StatusRuntime.apply(hit_enemy, projectile.element_profile)
-				_record_status_applications(projectile.element_profile)
+				StatusRuntime.apply(hit_enemy, projectile.primary_payload)
+				_record_status_applications(projectile.primary_payload)
 				if (
-					projectile.element_profile != null
-					and projectile.element_profile.can_trigger_thermal_burst(
+					projectile.primary_payload != null
+					and projectile.primary_payload.can_trigger_thermal_burst(
 						projectile.owner, projectile.reflected
 					)
 					and not _is_fixed_structure_enemy(hit_enemy)
@@ -3882,7 +4008,7 @@ func _update_projectile_buffer(
 					_apply_thermal_burst(
 						hit_enemy,
 						hit_position,
-						projectile.element_profile
+						projectile.primary_payload
 					)
 				stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
 				_play_sound(&"impact", _rng.randf_range(0.92, 1.08))
@@ -4133,7 +4259,6 @@ func _damage_enemy(
 	final_effective: bool = false,
 	show_hit_flash: bool = true,
 	damage_flags: int = 0,
-	attack_origin: Vector2 = Vector2.INF,
 	attack_serial: int = 0
 ) -> float:
 	if not enemy.alive:
@@ -4142,16 +4267,13 @@ func _damage_enemy(
 		if attack_serial <= 0:
 			_damage_receipt_serial += 1
 			attack_serial = _damage_receipt_serial
-		var origin := enemy.pos if not attack_origin.is_finite() else attack_origin
 		amount = OutgoingDamagePolicy.resolve_damage(
 			amount,
 			run_build.level_of(&"critical_targeting"),
-			run_build.level_of(&"range_polarization"),
 			run_build.level_of(&"dash_overdrive"),
 			run_build.level_of(&"last_stand_amplifier"),
 			player_health / maxf(1.0, _player_max_health()),
 			dash_upgrade_runtime.overdrive_active(),
-			origin.distance_to(enemy.pos),
 			damage_flags,
 			field_layout.seed if field_layout != null else run_index,
 			attack_serial,
@@ -4291,13 +4413,15 @@ func _telemetry_attribute_for_affinity(affinity: StringName) -> StringName:
 	return &"kinetic"
 
 
-func _record_status_applications(profile: ElementProfile) -> void:
+func _record_status_applications(profile: VehiclePrimaryPayloadProfile) -> void:
 	if profile == null:
 		return
 	if profile.poison_enabled:
 		stage_telemetry.record_status_application(&"poison")
 	if profile.chill_enabled:
 		stage_telemetry.record_status_application(&"chill")
+	if profile.shock_enabled:
+		stage_telemetry.record_status_application(&"shock")
 
 
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
@@ -4504,8 +4628,7 @@ func _apply_dash_collision() -> void:
 			enemy.ram_cooldown = 0.35
 			_damage_enemy(
 				enemy, 16.0, "Dash impact", &"kinetic", true,
-				false, true, OutgoingDamagePolicy.DAMAGE_DIRECT,
-				player_position
+				false, true, OutgoingDamagePolicy.DAMAGE_DIRECT
 			)
 			var push := (enemy.pos - player_position).normalized()
 			enemy.pos = _move_actor(enemy.pos, push * 45.0, enemy.radius, false)
@@ -4542,8 +4665,7 @@ func _damage_enemies_in_radius(
 			_damage_enemy(
 				enemy, damage, source, attribute, player_owned,
 				false, true,
-				OutgoingDamagePolicy.DAMAGE_DIRECT if player_owned else 0,
-				center
+				OutgoingDamagePolicy.DAMAGE_DIRECT if player_owned else 0
 			)
 	if player_owned:
 		_damage_mystery_devices_in_radius(center, radius, damage)
@@ -4559,7 +4681,7 @@ func _damage_enemies_in_radius(
 func _apply_thermal_burst(
 	direct_target: EnemyState,
 	center: Vector2,
-	profile: VehicleElementProfile
+	profile: VehiclePrimaryPayloadProfile
 ) -> void:
 	## One bounded splash query per eligible primary contact. Splash never
 	## targets its direct hit, fixed structures, devices, or facilities.
@@ -4590,8 +4712,7 @@ func _apply_thermal_burst(
 				true,
 				false,
 				true,
-				OutgoingDamagePolicy.DAMAGE_DIRECT,
-				center
+				OutgoingDamagePolicy.DAMAGE_DIRECT
 			)
 
 
@@ -4880,7 +5001,7 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 	upgrade_offer_error.clear()
 	mode = RunMode.UPGRADE
 	upgrade_selection_applied = false
-	_ui.show_upgrade(current_card_offer)
+	_ui.show_upgrade(current_card_offer, _build_snapshot())
 	_play_sound(&"card", 0.9)
 	_set_mouse_for_mode()
 
@@ -4904,7 +5025,7 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 	if upgrade_id == &"hull_integrity":
 		player_health = minf(_player_max_health(), player_health + 15.0)
 	lifesteal_runtime.configure(run_build.stat(&"lifesteal_percent", 0.0))
-	_element_profile = ElementProfile.from_build(run_build)
+	_primary_payload = PrimaryPayload.from_build(run_build)
 	_hud_presenter.mark_guidebook_dirty()
 	upgrade_selection_applied = true
 	return true
@@ -5052,14 +5173,16 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 	boss_shield_runtime.advance(delta)
 	boss.boss_shield_state = boss_shield_runtime.state()
 	_show_pending_boss_state_hint()
-	for event in boss_runtime.advance_autonomous(delta, boss, player_position):
-		_execute_boss_autonomous(event)
+	var attack_commit_blocked := StatusRuntime.attack_commit_blocked(boss)
+	if not attack_commit_blocked:
+		for event in boss_runtime.advance_autonomous(delta, boss, player_position):
+			_execute_boss_autonomous(event)
 
 	var phase := String(boss.phase)
 	if phase == "boss_read":
 		boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
 		_boss_reposition(boss, delta)
-		if float(boss.phase_time) <= 0.0:
+		if float(boss.phase_time) <= 0.0 and not attack_commit_blocked:
 			_boss_select_pattern(boss)
 		return
 	if phase == "boss_startup":
@@ -5646,16 +5769,12 @@ func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 	snapshot["seeker_remaining"] = maxf(
 		0.0, secondary_runtime.seeker_cooldown
 	)
-	snapshot["skill_available"] = (
-		player_emp_startup <= 0.0 and player_emp_cooldown <= 0.0
+	var active_weapon := active_weapon_runtime.snapshot(
+		run_build, 1.5 if persistent_relay_module else 0.0
 	)
-	snapshot["skill_remaining"] = maxf(
-		player_emp_startup, player_emp_cooldown
-	)
-	if dash_upgrade_runtime.overdrive_active():
-		snapshot["buff_text"] = tr("HUD_BUFF_DASH_OVERDRIVE")
-	else:
-		snapshot["buff_text"] = ""
+	snapshot["skill_available"] = bool(active_weapon["available"])
+	snapshot["skill_remaining"] = float(active_weapon["remaining"])
+	snapshot["active_weapon_id"] = StringName(active_weapon["weapon_id"])
 	return snapshot
 
 
@@ -5676,6 +5795,9 @@ func _guidebook_snapshot(build_snapshot: Dictionary = {}) -> Dictionary:
 
 func _build_snapshot() -> Dictionary:
 	var experience := experience_runtime.snapshot()
+	var active_weapon := active_weapon_runtime.snapshot(
+		run_build, 1.5 if persistent_relay_module else 0.0
+	)
 	var effective_stats: Array[Dictionary] = [
 		{"id":&"hull", "label_key":"SHIP_STAT_HULL", "value":_player_max_health(), "decimals":0, "unit_key":"SHIP_UNIT_HP"},
 		{"id":&"speed", "label_key":"SHIP_STAT_SPEED", "value":_player_move_speed(), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
@@ -5683,8 +5805,8 @@ func _build_snapshot() -> Dictionary:
 		{"id":&"fire_rate", "label_key":"SHIP_STAT_FIRE_RATE", "value":1.0 / PrimaryWeapon.BASE_INTERVAL, "decimals":2, "unit_key":"SHIP_UNIT_PER_SECOND"},
 		{"id":&"projectile_speed", "label_key":"SHIP_STAT_PROJECTILE_SPEED", "value":run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
 		{"id":&"dash_cooldown", "label_key":"SHIP_STAT_DASH_COOLDOWN", "value":_dash_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
-		{"id":&"emp_damage", "label_key":"SHIP_STAT_EMP_DAMAGE", "value":62.0 * run_build.stat(&"emp_damage_multiplier", 1.0), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
-		{"id":&"emp_cooldown", "label_key":"SHIP_STAT_EMP_COOLDOWN", "value":_emp_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
+		{"id":&"active_damage", "label_key":"SHIP_STAT_ACTIVE_DAMAGE", "value":float(active_weapon["damage"]), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
+		{"id":&"active_cooldown", "label_key":"SHIP_STAT_ACTIVE_COOLDOWN", "value":float(active_weapon["cooldown_max"]), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
 	]
 	return BuildSnapshotBuilder.build(
 		run_build,
@@ -5972,6 +6094,11 @@ func _fill_combat_presentation_snapshot(
 	snapshot["orbiting_blade_level"] = run_build.level_of(&"orbiting_blades")
 	snapshot["secondary"] = secondary
 	snapshot["dash_afterburn_trails"] = dash_upgrade_runtime.trails
+	snapshot["dash_boost_active"] = dash_upgrade_runtime.overdrive_active()
+	snapshot["dash_boost_remaining"] = dash_upgrade_runtime.overdrive_remaining
+	snapshot["active_weapon"] = active_weapon_runtime.snapshot(
+		run_build, 1.5 if persistent_relay_module else 0.0
+	)
 	mystery_device_runtime.fill_device_snapshot(mystery_devices)
 	for device in mystery_devices:
 		var revealed_outcome := StringName(

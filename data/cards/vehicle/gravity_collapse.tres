@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1_def")
-id = &"rear_laser"
-title_key = "UPGRADE_REAR_LASER_TITLE"
-description_key = "UPGRADE_REAR_LASER_DESC"
-category = &"secondary"
-secondary_slot_kind = &"optional"
-artwork_asset_id = &"projectile/energy_teardrop"
-max_level = 3
+id = &"gravity_collapse"
+title_key = "UPGRADE_GRAVITY_COLLAPSE_TITLE"
+description_key = "UPGRADE_GRAVITY_COLLAPSE_DESC"
+category = &"activated"
+active_slot_kind = &"kind"
+artwork_asset_id = &"upgrade/ion_field"
+max_level = 4

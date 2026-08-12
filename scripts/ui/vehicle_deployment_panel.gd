@@ -120,7 +120,7 @@ func _build_body() -> void:
 		&"dash"
 	)
 	_add_control_row(
-		"ACTION_EMP",
+		"ACTION_ACTIVE_WEAPON",
 		"DEPLOY_CONTROL_ACTION_BINDING",
 		&"active_skill"
 	)

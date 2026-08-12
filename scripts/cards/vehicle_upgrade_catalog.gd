@@ -2,13 +2,15 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 21
-const EXPECTED_LEVEL_STATES := 68
+const EXPECTED_COUNT := 28
+const EXPECTED_LEVEL_STATES := 92
 const OPTIONAL_SECONDARY_SLOTS := 2
 const CATEGORIES: Array[StringName] = [
-	&"primary", &"secondary", &"element", &"chassis", &"combat",
+	&"primary", &"secondary", &"element", &"activated", &"chassis", &"combat",
 ]
 const SECONDARY_SLOT_KINDS: Array[StringName] = [&"", &"built_in", &"optional"]
+const ATTRIBUTE_SLOT_KINDS: Array[StringName] = [&"", &"damage", &"utility"]
+const ACTIVE_SLOT_KINDS: Array[StringName] = [&"", &"kind", &"enhancement"]
 const MODIFIER_OPERATIONS: Array[String] = ["add", "multiply"]
 const MODIFIER_DISPLAY_UNITS: Array[String] = ["none", "percent", "seconds"]
 const STAT_IDS: Array[StringName] = [
@@ -22,15 +24,23 @@ const STAT_IDS: Array[StringName] = [
 	&"toxin_duration",
 	&"cryo_slow_per_stack",
 	&"cryo_duration",
+	&"shock_lock_duration",
+	&"secondary_cooldown_multiplier",
+	&"secondary_damage_multiplier",
+	&"active_cooldown_multiplier",
+	&"active_damage_multiplier",
 ]
 const EXPECTED_IDS: Array[StringName] = [
-	&"bio_toxin", &"chassis_speed", &"critical_targeting", &"cryo_slow",
+	&"active_amplifier", &"active_coolant", &"bio_toxin", &"chassis_speed",
+	&"critical_targeting", &"cryo_slow",
 	&"dash_afterburn_field", &"dash_overdrive", &"drop_mines",
-	&"electric_field", &"homing_missiles", &"hull_integrity",
+	&"electric_field", &"gravity_collapse", &"homing_missiles", &"hull_integrity",
+	&"kinetic_shockwave",
 	&"last_stand_amplifier", &"lifesteal", &"orbiting_blades",
 	&"overflow_barrier", &"pickup_radius", &"piercing_rounds",
-	&"range_polarization", &"rear_laser", &"split_muzzle",
-	&"storm_barrage", &"thermal_burst",
+	&"piercing_lance", &"secondary_amplifier", &"secondary_coolant",
+	&"shock_disruption", &"split_muzzle", &"storm_barrage", &"thermal_burst",
+	&"auto_laser",
 ]
 const ATTACK_UPGRADE_IDS := {
 	&"split_muzzle":true,
@@ -39,15 +49,19 @@ const ATTACK_UPGRADE_IDS := {
 	&"electric_field":true,
 	&"orbiting_blades":true,
 	&"drop_mines":true,
+	&"auto_laser":true,
 	&"thermal_burst":true,
 	&"bio_toxin":true,
 	&"critical_targeting":true,
-	&"range_polarization":true,
 	&"dash_overdrive":true,
 	&"dash_afterburn_field":true,
 	&"last_stand_amplifier":true,
-	&"rear_laser":true,
 	&"storm_barrage":true,
+	&"secondary_amplifier":true,
+	&"gravity_collapse":true,
+	&"kinetic_shockwave":true,
+	&"piercing_lance":true,
+	&"active_amplifier":true,
 }
 
 var definitions: Dictionary = {}
@@ -117,9 +131,16 @@ func validate_contract() -> PackedStringArray:
 			errors.append("%s has invalid category %s" % [definition.id, definition.category])
 		if definition.secondary_slot_kind not in SECONDARY_SLOT_KINDS:
 			errors.append("%s has invalid secondary slot kind" % definition.id)
-		var is_secondary := definition.category == &"secondary"
-		if is_secondary != (definition.secondary_slot_kind != &""):
-			errors.append("%s category and secondary slot kind disagree" % definition.id)
+		if definition.secondary_slot_kind != &"" and definition.category != &"secondary":
+			errors.append("%s secondary slot kind is outside the secondary category" % definition.id)
+		if definition.attribute_slot_kind not in ATTRIBUTE_SLOT_KINDS:
+			errors.append("%s has invalid attribute slot kind" % definition.id)
+		if definition.attribute_slot_kind != &"" and definition.category != &"element":
+			errors.append("%s attribute slot kind is outside the element category" % definition.id)
+		if definition.active_slot_kind not in ACTIVE_SLOT_KINDS:
+			errors.append("%s has invalid active slot kind" % definition.id)
+		if (definition.active_slot_kind != &"") != (definition.category == &"activated"):
+			errors.append("%s category and active slot kind disagree" % definition.id)
 		for modifier in definition.modifiers:
 			if modifier.operation not in MODIFIER_OPERATIONS:
 				errors.append("%s has invalid modifier operation %s" % [definition.id, modifier.operation])
@@ -135,9 +156,13 @@ func validate_contract() -> PackedStringArray:
 func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) -> bool:
 	if definition == null or build.level_of(definition.id) >= definition.max_level:
 		return false
-	if definition.category == &"element":
-		var active_element := build.active_element_id()
-		if not active_element.is_empty() and definition.id != active_element:
+	if definition.attribute_slot_kind != &"":
+		var active_attribute := build.active_attribute_id(definition.attribute_slot_kind)
+		if not active_attribute.is_empty() and definition.id != active_attribute:
+			return false
+	if definition.active_slot_kind == &"kind":
+		var active_kind := build.active_weapon_card_id()
+		if not active_kind.is_empty() and definition.id != active_kind:
 			return false
 	if (
 		definition.category == &"secondary"

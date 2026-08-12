@@ -52,7 +52,7 @@ func _check_stage_one_continuation(run) -> void:
 	run.player_invulnerable = 0.23
 	run.player_dash_cooldown = 0.7
 	run.player_dash_timer = 0.11
-	run.player_emp_cooldown = 6.4
+	run.active_weapon_runtime.cooldown_remaining = 6.4
 	run.secondary_runtime.seeker_cooldown = 0.8
 	run.run_build.apply(&"chassis_speed")
 	run.visited_cells[explored_cell] = true
@@ -114,7 +114,7 @@ func _check_stage_one_continuation(run) -> void:
 			and is_equal_approx(run.player_invulnerable, 0.23)
 			and is_equal_approx(run.player_dash_cooldown, 0.7)
 			and is_equal_approx(run.player_dash_timer, 0.11)
-			and is_equal_approx(run.player_emp_cooldown, 6.4)
+			and is_equal_approx(run.active_weapon_runtime.cooldown_remaining, 6.4)
 			and is_equal_approx(run.secondary_runtime.seeker_cooldown, 0.8),
 		"boss clear changes only HP and preserves every active cooldown/protection timer"
 	)

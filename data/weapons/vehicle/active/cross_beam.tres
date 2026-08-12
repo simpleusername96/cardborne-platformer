@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="VehicleActiveWeaponDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/vehicle_active_weapon_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cross_beam"
+upgrade_id = &"piercing_lance"
+name_key = "ACTIVE_WEAPON_CROSS_BEAM_NAME"
+startup_seconds = 0.35
+cooldown_seconds = 12.0
+damage_by_level = Array[float]([70.0, 95.0, 125.0, 160.0])
+size_by_level = Array[float]([14.0, 18.0, 22.0, 26.0])

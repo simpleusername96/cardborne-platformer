@@ -4,7 +4,6 @@ extends RefCounted
 ## Center basin, broad perimeter loops, and diagonal drydock approaches.
 
 const FIELD_ID := &"storm_drydock_field"
-const NAME_KEY := "FIELD_STORM_DRYDOCK"
 const WORLD_RECT := Rect2(0.0, 0.0, 7200.0, 4320.0)
 const CENTER := Vector2(3600.0, 2160.0)
 const START_CLEARANCE := 560.0
@@ -41,7 +40,7 @@ const ITEM_SOCKET_CANDIDATES: Array[Vector2] = [
 
 static func definition() -> Dictionary:
 	return {
-		"id":FIELD_ID, "name_key":NAME_KEY, "world_rect":WORLD_RECT,
+		"id":FIELD_ID, "world_rect":WORLD_RECT,
 		"player_start":CENTER, "start_clearance":START_CLEARANCE,
 		"walkable_regions":_walkable_regions(), "cover_rects":[],
 		"void_rects":_void_rects(),

@@ -1052,18 +1052,24 @@ func _enemy_status_custom_data(
 		enemy.cryo_application_pulse,
 		reduced_motion
 	)
+	var shock_mix := _status_overlay_mix(
+		enemy.shock_stack_ratio,
+		enemy.shock_application_pulse,
+		reduced_motion
+	)
 	if enemy.mystery_cryo_remaining > 0.0:
 		cryo_mix = maxf(cryo_mix, STATUS_STACK_MIX[1])
-	var total_mix := toxin_mix + cryo_mix
+	var total_mix := toxin_mix + cryo_mix + shock_mix
 	if total_mix <= 0.0:
 		return Color.TRANSPARENT
 	var toxin_color := Color(Art.TOXIN, 1.0)
 	var cryo_color := Color(Art.CRYO, 1.0)
+	var shock_color := Color(Art.ARC, 1.0)
 	var semantic_color := Color(
-		(toxin_color.r * toxin_mix + cryo_color.r * cryo_mix) / total_mix,
-		(toxin_color.g * toxin_mix + cryo_color.g * cryo_mix) / total_mix,
-		(toxin_color.b * toxin_mix + cryo_color.b * cryo_mix) / total_mix,
-		maxf(toxin_mix, cryo_mix)
+		(toxin_color.r * toxin_mix + cryo_color.r * cryo_mix + shock_color.r * shock_mix) / total_mix,
+		(toxin_color.g * toxin_mix + cryo_color.g * cryo_mix + shock_color.g * shock_mix) / total_mix,
+		(toxin_color.b * toxin_mix + cryo_color.b * cryo_mix + shock_color.b * shock_mix) / total_mix,
+		maxf(toxin_mix, maxf(cryo_mix, shock_mix))
 	)
 	return semantic_color
 
@@ -1531,9 +1537,62 @@ func _write_emp_utility_fringe(
 		)
 
 
+func _sync_active_weapon(active: Dictionary, visible_world: Rect2) -> void:
+	var weapon_id := StringName(active.get("weapon_id", &"emp"))
+	if weapon_id == &"emp":
+		return
+	var center := Vector2(active.get("center", Vector2.ZERO))
+	var direction := Vector2(active.get("direction", Vector2.RIGHT)).normalized()
+	var size := float(active.get("size", 0.0))
+	var startup := float(active.get("startup_remaining", 0.0))
+	var active_remaining := float(active.get("active_remaining", 0.0))
+	var release_remaining := float(active.get("release_remaining", 0.0))
+	var color := Art.SYSTEM
+	match weapon_id:
+		&"black_hole": color = Color(0.56, 0.42, 0.94, 1.0)
+		&"shockwave": color = Art.MINT
+		&"cross_beam": color = Art.MUSTARD
+	if startup > 0.0:
+		var startup_alpha := 0.18 + 0.18 * sin(startup * 26.0)
+		if weapon_id == &"cross_beam":
+			_write_active_cross(center, direction, size * 2.0, Color(color, startup_alpha), visible_world)
+		else:
+			_write_ring(center, maxf(12.0, size), Color(color, startup_alpha + 0.30))
+	if weapon_id == &"black_hole" and active_remaining > 0.0:
+		_write_disk(center, size, Color(color, 0.16))
+		_write_ring(center, size, Color(color, 0.78))
+		_write_ring(center, size * 0.42, Color(Art.INK, 0.90))
+	if release_remaining <= 0.0:
+		return
+	var release_alpha := clampf(release_remaining / 0.18, 0.0, 1.0)
+	if weapon_id == &"cross_beam":
+		_write_active_cross(center, direction, size * 2.0, Color(color, release_alpha), visible_world)
+	elif weapon_id == &"shockwave":
+		_write_disk(center, size, Color(color, release_alpha * 0.16))
+		_write_ring(center, size, Color(color, release_alpha))
+	else:
+		_write_ring(center, size, Color(color, release_alpha))
+
+
+func _write_active_cross(
+	center: Vector2,
+	direction: Vector2,
+	width: float,
+	color: Color,
+	visible_world: Rect2
+) -> void:
+	var half_length := visible_world.size.length()
+	var side := direction.rotated(PI * 0.5)
+	_write_beam(center - direction * half_length, center + direction * half_length, width, color)
+	_write_beam(center - side * half_length, center + side * half_length, width, color)
+
+
 func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	if state.is_empty():
 		return
+	var active_weapon_variant: Variant = state.get("active_weapon")
+	if active_weapon_variant is Dictionary:
+		_sync_active_weapon(active_weapon_variant, visible_world)
 	var zones_variant: Variant = state.get("zones")
 	if zones_variant is Array:
 		for zone_variant in zones_variant:
@@ -1642,6 +1701,16 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		Vector2.ONE * Art.PLAYER_VISUAL_RADIUS,
 		hull_color
 	)
+	if bool(state.get("dash_boost_active", false)):
+		var front_rail_center := (
+			displayed_player_position + hull_direction.normalized() * 24.0
+		)
+		_write_beam(
+			front_rail_center - side * 13.0,
+			front_rail_center + side * 13.0,
+			6.0,
+			Color(Art.MUSTARD, 0.92)
+		)
 	if float(state.get("muzzle_flash", 0.0)) > 0.0:
 		_write_diamond(
 			displayed_player_position + aim_direction * (Art.PLAYER_VISUAL_RADIUS * 1.28),
@@ -1680,16 +1749,16 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			Color(Art.MINT, lerpf(0.78, 1.0, barrier_flash))
 		)
 	var secondary: Dictionary = state.get("secondary", {})
-	var rear_laser_remaining := float(
-		secondary.get("rear_laser_active_remaining", 0.0)
+	var auto_laser_remaining := float(
+		secondary.get("auto_laser_active_remaining", 0.0)
 	)
-	if rear_laser_remaining > 0.0:
+	if auto_laser_remaining > 0.0:
 		var laser_alpha := clampf(
-			rear_laser_remaining / 0.14, 0.0, 1.0
+			auto_laser_remaining / 0.14, 0.0, 1.0
 		)
 		_write_beam(
-			Vector2(secondary.get("rear_laser_origin", player_position)),
-			Vector2(secondary.get("rear_laser_end", player_position)),
+			Vector2(secondary.get("auto_laser_origin", player_position)),
+			Vector2(secondary.get("auto_laser_end", player_position)),
 			36.0,
 			Color(Art.SYSTEM, 0.50 + 0.35 * laser_alpha)
 		)
@@ -1736,11 +1805,15 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 		)
 	var orbiting_blade_level := int(state.get("orbiting_blade_level", 0))
 	if orbiting_blade_level > 0:
-		var blade_count: int = [2, 3, 4][orbiting_blade_level - 1]
+		var blade_count := int(secondary.get("blade_count", 0))
+		var orbit_radius := float(secondary.get("orbit_radius", 88.0))
+		var blade_radius := float(secondary.get(
+			"blade_radius", Art.PLAYER_ORBIT_BLADE_HALF_SIZE
+		))
 		for blade_index in blade_count:
 			var blade_position := player_position + Vector2.RIGHT.rotated(
 				float(secondary.get("orbit_angle", 0.0)) + TAU * float(blade_index) / float(blade_count)
-			) * 78.0
+			) * orbit_radius
 			var blade_direction := radial_outward_direction(
 				player_position,
 				blade_position
@@ -1749,7 +1822,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				StringName(_secondary_asset_ids.get(&"orbit_blade", &"")),
 				blade_position,
 				blade_direction.angle(),
-				Art.PLAYER_ORBIT_BLADE_HALF_SIZE,
+				blade_radius,
 				Color.WHITE
 			)
 	var mines_variant: Variant = secondary.get("mines")

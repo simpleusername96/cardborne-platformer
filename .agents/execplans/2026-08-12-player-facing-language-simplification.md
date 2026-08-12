@@ -1,13 +1,15 @@
 ---
 type: plan
 status: active
+owner: BK
 created: 2026-08-12
+last_reviewed: 2026-08-12
+topic: Function-first Korean and English player-facing terminology
 scope: Decide the canonical Korean and English names for Cardborne enemies, bosses, field objects, upgrades, and shared combat concepts
 related:
   - ../../docs/reports/2026-08-12-player-facing-terminology-audit.md
   - ../../docs/reports/2026-08-12-vehicle-upgrade-categories-and-skill-tree-ko.html
   - ../../docs/reports/2026-08-12-cardborne-upgrade-feedback.json
-  - ./2026-08-12-approved-upgrade-feedback-implementation.md
   - ../../localization/vehicle_stage.csv
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
@@ -34,7 +36,7 @@ related:
 
 | Evidence category | Primary source | Freshness requirement | What it must establish | Sufficient evidence |
 | --- | --- | --- | --- | --- |
-| Current visible vocabulary | `localization/vehicle_stage.csv` | Current worktree | Every live Korean-English label and collision | All 392 current rows grouped and reviewed |
+| Current visible vocabulary | `localization/vehicle_stage.csv` | Current worktree | Every live Korean-English label and collision | All 421 current rows grouped and reviewed |
 | Runtime meaning | Gameplay owners and guidebook adapter | Current worktree | What each ambiguous label actually does | Each rename candidate maps to one observed mechanic |
 | Product language | Product and upgrade specs | Active revisions | Intended public concepts and preserved distinctions | No recommendation collapses two real mechanics |
 | Owner preference | BK review | Current decision | Allowed balance of clarity and flavor | One option selected and exceptions recorded |
@@ -57,11 +59,11 @@ related:
 
 Phase gate:
 
-- Complete. The active terminology audit records the 392-row inventory, current collisions, immediate safe changes, and unresolved naming groups.
+- Complete. The active terminology audit records the 421-row inventory, current collisions, immediate safe changes, and unresolved naming groups.
 
 ### Phase 2: Gather decisive evidence
 
-- [ ] BK reviews the audit's canonical shared-term table and selects function-first or hybrid naming.
+- [x] BK selects function-first naming: prefer direct, common terms over invented or flavor-heavy labels.
 - [x] BK checks approved upgrade candidates and saves notes in the interactive upgrade HTML report.
 - [ ] Convert the selected option into one bilingual candidate table for enemies, bosses, field objects, and upgrade cards.
 - [ ] Record explicit exceptions where a flavor name is worth keeping.
@@ -85,11 +87,13 @@ Phase gate:
 ## Progress and Next Steps
 
 - Canonical progress: The task checkboxes in this checklist.
-- Current phase: Phase 2.
-- Next task: BK reviews the audit's shared-term table and selects function-first or hybrid naming.
+- Current phase: Phase 2. The naming direction is function-first; the full bilingual
+  candidate table and explicit exceptions are not yet approved.
+- Next task: Convert the audit into one bilingual candidate table for enemies,
+  bosses, field objects, and remaining upgrade labels without changing internal IDs.
 - Last completed gate: Current terminology and ownership are established from local primary sources.
 - Upgrade-review evidence is preserved in `docs/reports/2026-08-12-cardborne-upgrade-feedback.json`;
-  its implementation contract is the separate active approved-upgrade ExecPlan.
+  the implemented upgrade vocabulary is now owned by the active product specifications.
 - Update rule: Check an item only when its evidence exists, and do not repeat the audit unless live localization or the decision criteria change.
 
 ## Completion and Stop Conditions

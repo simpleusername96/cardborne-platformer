@@ -68,10 +68,10 @@ func record_outgoing(
 
 
 func record_status_application(kind: StringName) -> void:
-	if kind not in [&"poison", &"chill"]:
+	if kind not in [&"poison", &"chill", &"shock"]:
 		return
-	_add_bounded(stage_status_applications, kind, 1, 2)
-	_add_bounded(run_status_applications, kind, 1, 2)
+	_add_bounded(stage_status_applications, kind, 1, 3)
+	_add_bounded(run_status_applications, kind, 1, 3)
 
 
 func record_incoming(source_id: StringName, applied_damage: float) -> void:

@@ -24,7 +24,7 @@ class HealthPips:
 	var trailing_health := 120.0
 	var run_level := 1
 	var experience := 0.0
-	var experience_required := 12.0
+	var experience_required := 6.0
 	var experience_complete := false
 	var reduced_motion := false
 	var _health_track_height := 32.0
@@ -439,8 +439,6 @@ var _minimap_panel: PanelContainer
 var _health_bar: HealthPips
 var _status_items: Dictionary = {}
 var _accessibility_text_scale := 1.0
-var _last_buff_text := ""
-var _buff_label: Label
 var _minimap: StageMinimap
 var _notification_panel: PanelContainer
 var _notification: Label
@@ -491,7 +489,7 @@ func _build() -> void:
 	_add_status_item(&"defeats", &"total_defeats", &"status", Art.DANGER, "0")
 	_add_status_item(&"dash", &"dash", &"action", Art.SYSTEM, "READY")
 	_add_status_item(&"seeker", &"seeker", &"action", Art.PLAYER_REWARD, "READY")
-	_add_status_item(&"emp", &"emp", &"action", Art.BOSS_COMMAND, "READY")
+	_add_status_item(&"active", &"emp", &"action", Art.BOSS_COMMAND, "READY")
 
 	_minimap_panel = Factory.surface(
 		Factory.SURFACE_HUD,
@@ -507,13 +505,6 @@ func _build() -> void:
 	_minimap = StageMinimap.new()
 	_minimap.custom_minimum_size = Vector2(168.0, 100.0)
 	minimap_zone.add_child(_minimap)
-
-	_buff_label = Factory.label("", 14, Art.TEXT_PRIMARY)
-	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_buff_label.size = Vector2(600.0, 28.0)
-	_shadow_label(_buff_label)
-	add_child(_buff_label)
-	_buff_label.visible = false
 
 	_notification_panel = Factory.surface(
 		Factory.SURFACE_TOAST,
@@ -550,7 +541,7 @@ func update_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.has("health"):
 		var required_experience := maxf(
 			1.0,
-			float(snapshot.get("experience_required", 12.0))
+			float(snapshot.get("experience_required", 6.0))
 		)
 		_health_bar.set_values(
 			float(snapshot["health"]),
@@ -572,13 +563,14 @@ func update_snapshot(snapshot: Dictionary) -> void:
 		)
 	_update_action_status(snapshot, &"dash", "dash_available", "dash_remaining")
 	_update_action_status(snapshot, &"seeker", "seeker_available", "seeker_remaining")
-	_update_action_status(snapshot, &"emp", "skill_available", "skill_remaining")
-	if snapshot.has("buff_text"):
-		var next_buff_text := String(snapshot.get("buff_text", ""))
-		if next_buff_text != _last_buff_text:
-			_last_buff_text = next_buff_text
-			_buff_label.text = next_buff_text
-			_buff_label.visible = not next_buff_text.is_empty()
+	if snapshot.has("active_weapon_id"):
+		var active_id := StringName(snapshot.get("active_weapon_id", &"emp"))
+		_status_item(&"active").configure(
+			active_id,
+			&"action",
+			_active_weapon_accent(active_id)
+		)
+	_update_action_status(snapshot, &"active", "skill_available", "skill_remaining")
 	if snapshot.has("minimap"):
 		_minimap.set_snapshot(snapshot["minimap"])
 	if snapshot.has("threat_radar"):
@@ -587,6 +579,14 @@ func update_snapshot(snapshot: Dictionary) -> void:
 
 func _status_item(item_id: StringName) -> StatusGlyphItem:
 	return _status_items[item_id] as StatusGlyphItem
+
+
+func _active_weapon_accent(active_id: StringName) -> Color:
+	match active_id:
+		&"black_hole": return Color(0.68, 0.50, 1.0)
+		&"shockwave": return Art.MINT
+		&"cross_beam": return Art.MUSTARD
+	return Art.BOSS_COMMAND
 
 
 func _update_action_status(
@@ -753,7 +753,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		)
 	var item_contracts: Array[Dictionary] = []
 	var status_values: Array[String] = []
-	for item_id in [&"stage", &"defeats", &"dash", &"seeker", &"emp"]:
+	for item_id in [&"stage", &"defeats", &"dash", &"seeker", &"active"]:
 		var item := _status_item(item_id)
 		item_contracts.append(item.debug_contract())
 		status_values.append(String(item._value_label.text))
@@ -865,13 +865,6 @@ func _apply_responsive_layout() -> void:
 		(size.x - _notification_panel.size.x) * 0.5,
 		top_band_bottom + 4.0
 	)
-	_buff_label.size.x = minf(600.0, size.x - safe_margin * 2.0)
-	_buff_label.position = Vector2(
-		(size.x - _buff_label.size.x) * 0.5,
-		_notification_panel.position.y + _notification_panel.size.y + TOP_STATUS_GAP
-	)
-
-
 func _safe_margin(viewport_width: float) -> float:
 	if viewport_width < 1100.0:
 		return 16.0

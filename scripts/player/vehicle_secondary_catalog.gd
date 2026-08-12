@@ -5,7 +5,7 @@ extends RefCounted
 
 const DEFINITION_PATH := "res://data/weapons/vehicle/secondary"
 const EXPECTED_IDS: Array[StringName] = [
-	&"drop_mines", &"electric_field", &"orbiting_blades", &"rear_laser",
+	&"auto_laser", &"drop_mines", &"electric_field", &"orbiting_blades",
 	&"seeker", &"storm_barrage",
 ]
 

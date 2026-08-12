@@ -21,7 +21,8 @@ const MINIMAP_GLYPHS: Array[StringName] = [
 	&"reinforcement_facility",
 ]
 const CORE_GLYPHS: Array[StringName] = [
-	&"primary", &"seeker", &"dash", &"emp", &"secondary", &"breach_ready",
+	&"primary", &"seeker", &"dash", &"emp", &"black_hole", &"shockwave",
+	&"cross_beam", &"secondary", &"breach_ready",
 	&"stage_progress", &"total_defeats",
 	&"player", &"field_pickup", &"mystery_device",
 	&"mobile_enemy", &"priority_enemy", &"boss", &"reinforcement_facility",

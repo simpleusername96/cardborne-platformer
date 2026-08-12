@@ -28,7 +28,8 @@ const AFFINITIES: Array[StringName] = [
 
 const CONDITION_POISON := 1
 const CONDITION_CHILL := 2
-const CONDITION_MASK := CONDITION_POISON | CONDITION_CHILL
+const CONDITION_SHOCK := 4
+const CONDITION_MASK := CONDITION_POISON | CONDITION_CHILL | CONDITION_SHOCK
 
 const HOSTILE_PROJECTILE_LIFETIME := 2.2
 const PROJECTILE_TELEGRAPH_LEAD_SECONDS := 0.36
@@ -169,6 +170,8 @@ static func condition_mask_for_profile(profile: Variant) -> int:
 		result |= CONDITION_POISON
 	if bool(profile.chill_enabled):
 		result |= CONDITION_CHILL
+	if bool(profile.shock_enabled):
+		result |= CONDITION_SHOCK
 	return result
 
 
@@ -178,7 +181,7 @@ static func affinity_for_condition_mask(mask: int) -> StringName:
 		return TOXIN
 	if normalized == CONDITION_CHILL:
 		return CRYO
-	if normalized == CONDITION_MASK:
+	if normalized & (normalized - 1) != 0:
 		return HYBRID
 	return KINETIC
 

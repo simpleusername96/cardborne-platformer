@@ -44,36 +44,18 @@ func _validate_primary_final_levels() -> void:
 func _validate_conditional_damage() -> void:
 	_expect(
 		is_zero_approx(DamagePolicy.crisis_bonus(3, 0.60))
-			and is_equal_approx(DamagePolicy.crisis_bonus(3, 0.25), 0.35)
-			and is_equal_approx(DamagePolicy.crisis_bonus(3, 0.425), 0.175),
+			and is_equal_approx(DamagePolicy.crisis_bonus(3, 0.25), 0.20)
+			and is_equal_approx(DamagePolicy.crisis_bonus(3, 0.425), 0.10),
 		"crisis bonus follows the exact 60-to-25-percent linear curve"
 	)
-	_expect(
-		is_equal_approx(
-			DamagePolicy.distance_bonus(
-				3, 260.0, DamagePolicy.RANGE_ELIGIBLE
-			),
-			0.30
-		)
-			and is_zero_approx(DamagePolicy.distance_bonus(
-				3, 440.0, DamagePolicy.RANGE_ELIGIBLE
-			))
-			and is_equal_approx(
-				DamagePolicy.distance_bonus(
-					3, 620.0, DamagePolicy.RANGE_ELIGIBLE
-				),
-				0.30
-			),
-		"range bonus includes 260 and 620 while excluding the middle band"
-	)
-	var capped := DamagePolicy.resolve_damage(
-		100.0, 0, 3, 3, 3, 0.25, true, 200.0,
-		DamagePolicy.DAMAGE_DIRECT | DamagePolicy.RANGE_ELIGIBLE,
+	var combined := DamagePolicy.resolve_damage(
+		100.0, 0, 3, 3, 0.25, true,
+		DamagePolicy.DAMAGE_DIRECT,
 		7, 9, 11, 13
 	)
 	_expect(
-		is_equal_approx(capped, 200.0),
-		"non-critical conditional bonuses add before the plus-100-percent cap"
+		is_equal_approx(combined, 155.0),
+		"dash and low-hull bonuses add before damage resolution"
 	)
 	var critical_serial := 0
 	for serial in range(1, 512):
@@ -83,11 +65,11 @@ func _validate_conditional_damage() -> void:
 	_expect(critical_serial > 0, "deterministic fixture finds a critical receipt")
 	if critical_serial > 0:
 		var direct := DamagePolicy.resolve_damage(
-			10.0, 3, 0, 0, 0, 1.0, false, 400.0,
+			10.0, 3, 0, 0, 1.0, false,
 			DamagePolicy.DAMAGE_DIRECT, 17, critical_serial, 23, 29
 		)
 		var periodic := DamagePolicy.resolve_damage(
-			10.0, 3, 0, 0, 0, 1.0, false, 400.0,
+			10.0, 3, 0, 0, 1.0, false,
 			DamagePolicy.DAMAGE_PERIODIC, 17, critical_serial, 23, 29
 		)
 		_expect(

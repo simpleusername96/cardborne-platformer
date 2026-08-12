@@ -1058,7 +1058,7 @@ func _check_combat_presentation_frame(run) -> void:
 		"combat presentation borrows synchronous live collections without duplication"
 	)
 	_expect(
-		secondary.size() == 11
+		secondary.size() == 14
 			and not secondary.has("equipped")
 			and not secondary.has("seeker_cooldown")
 			and not secondary.has("storm_cooldown"),
@@ -1469,7 +1469,10 @@ func _check_hot_path_guards(run) -> void:
 
 func _check_effect_store(run) -> void:
 	run.call("_clear_effects")
-	run.call("_release_emp")
+	run.active_weapon_runtime.reset(run.player_position)
+	run.call("_start_active_weapon")
+	run.call("_clear_effects")
+	run.call("_advance_active_weapon", 0.42)
 	_expect(
 		run.effect_store.count_kind(&"player_emp_release") == 1,
 		"base EMP emits one release visual"

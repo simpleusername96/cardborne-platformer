@@ -4,7 +4,7 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
-const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
 
 var failures: Array[String] = []
 
@@ -108,7 +108,7 @@ func _initialize() -> void:
 		"path clipping leaves a missed circle untouched"
 	)
 
-	var profile := ElementProfile.new()
+	var profile := PrimaryPayload.new()
 	profile.thermal_enabled = true
 	_expect(
 		AttackContract.condition_mask_for_profile(profile) == 0

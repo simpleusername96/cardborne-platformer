@@ -45,6 +45,19 @@ func _validate_stage_items() -> void:
 
 func _validate_experience_runtime() -> void:
 	var runtime := ExperienceRuntime.new()
+	var expected_requirements := [
+		6, 8, 10, 13, 17, 22, 27, 32, 38, 45,
+		53, 61, 70, 80, 90, 96, 96, 96, 96, 96,
+	]
+	for level_index in expected_requirements.size():
+		runtime.run_level = level_index + 1
+		_expect(
+			runtime.required_experience() == expected_requirements[level_index],
+			"level %d requirement is %d" % [
+				level_index + 1, expected_requirements[level_index]
+			]
+		)
+	runtime.reset()
 	var empty_receipt := runtime.advance(0.0, Vector2.ZERO, 0.0, 0.0)
 	var source_buffer: Array = empty_receipt["reward_sources"]
 	var repeated_empty_receipt := runtime.advance(
@@ -66,18 +79,18 @@ func _validate_experience_runtime() -> void:
 		and int(runtime.snapshot()["shard_pool"]) == ExperienceRuntime.MAX_SHARDS,
 		"reset retires every shard to the preallocated pool"
 	)
-	runtime.spawn_shard(Vector2.ZERO, 13, &"boss")
+	runtime.spawn_shard(Vector2.ZERO, 7, &"boss")
 	var result := runtime.advance(0.016, Vector2.ZERO, 100.0, 0.0)
 	_expect(
 		is_same(result, empty_receipt)
 		and is_same(result["reward_sources"], source_buffer),
 		"non-empty XP collection reuses the borrowed receipt identity"
 	)
-	_expect(runtime.run_level == 2 and runtime.experience == 1, "level threshold carries excess XP")
+	_expect(runtime.run_level == 2 and runtime.experience == 1, "7 XP reaches level two and carries 1 XP")
 	_expect(runtime.pending_level_ups == 1 and int(result["levels"]) == 1, "collected XP queues a level")
 	_expect(&"boss" in result["reward_sources"], "boss reward source survives shard collection")
 	_expect(runtime.consume_pending_level() and runtime.pending_level_ups == 0, "one confirmed card consumes one queued level")
-	_expect(runtime.required_experience() == 16, "level two requirement follows the locked curve")
+	_expect(runtime.required_experience() == 8, "level two requirement follows the locked curve")
 	runtime.reset()
 	runtime.spawn_shard(Vector2(900.0, 0.0), 2)
 	_expect(int(runtime.advance(0.1, Vector2.ZERO, 92.0, 0.0)["experience"]) == 0, "distant XP is not awarded before collection")
@@ -104,9 +117,15 @@ func _validate_experience_runtime() -> void:
 		recalled_experience == 2 and runtime.shards.is_empty(),
 		"experience recall reaches the ship's current position through dash-like movement"
 	)
+	runtime.reset()
 	runtime.spawn_shard(Vector2.ZERO, 100, &"boss")
 	result = runtime.advance(0.0, Vector2.ZERO, 92.0, 0.0)
-	_expect(int(result["levels"]) == 4 and runtime.pending_level_ups == 4, "one collection safely queues multiple level-ups")
+	_expect(
+		int(result["levels"]) == 6
+			and runtime.pending_level_ups == 6
+			and runtime.experience == 24,
+		"100 XP safely queues six level-ups and carries 24 XP"
+	)
 	_expect(&"boss" in result["reward_sources"], "boss reward remains queued behind simultaneous levels")
 	runtime.spawn_shard(Vector2(120.0, 0.0), 12)
 	_expect(runtime.complete_progression(), "catalog exhaustion marks progression complete once")
@@ -139,7 +158,7 @@ func _validate_experience_runtime() -> void:
 
 func _validate_route_level_cadence() -> void:
 	var runtime := ExperienceRuntime.new()
-	var expected_levels := [7, 4, 2, 4, 3]
+	var expected_levels := [9, 5, 4, 5, 6]
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
 		var stage_experience := 24 # Stage-boss core plus the minimum quota path.
@@ -166,7 +185,7 @@ func _validate_route_level_cadence() -> void:
 		)
 		while runtime.consume_pending_level():
 			pass
-	_expect(runtime.run_level == 21, "the authored quota path ends at run level twenty-one")
+	_expect(runtime.run_level == 30, "the authored quota path ends at run level thirty")
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:

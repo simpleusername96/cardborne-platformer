@@ -50,8 +50,8 @@ responsible owner. Do not blend them or resolve the disagreement in this map.
 ## Product and Surface Intent
 
 - Preserve the connected five-stage run, manual aim, held primary fire, dash,
-  passive secondary weapons, EMP, authored encounters, map pickups, card upgrades,
-  and quota-gated bosses.
+  passive secondary weapons, the default EMP or its run-scoped active-weapon
+  replacement, authored encounters, map pickups, card upgrades, and quota-gated bosses.
 - Keep Korean as the default language and keep Korean and English complete on every
   user-facing surface.
 - Optimize first-clear readability, fair pressure, target priority, responsive

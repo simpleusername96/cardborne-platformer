@@ -14,8 +14,11 @@ const OUTGOING: Dictionary = {
 	&"elemental_status": "REPORT_SOURCE_STATUS",
 	&"thermal_burst": "REPORT_SOURCE_THERMAL_BURST",
 	&"dash_afterburn": "REPORT_SOURCE_DASH_AFTERBURN",
-	&"rear_laser": "REPORT_SOURCE_REAR_LASER",
+	&"auto_laser": "REPORT_SOURCE_AUTO_LASER",
 	&"storm_barrage": "REPORT_SOURCE_STORM_BARRAGE",
+	&"black_hole": "REPORT_SOURCE_BLACK_HOLE",
+	&"shockwave": "REPORT_SOURCE_SHOCKWAVE",
+	&"cross_beam": "REPORT_SOURCE_CROSS_BEAM",
 	&"arc_mine": "REPORT_SOURCE_ARC_MINE",
 	&"reflected": "REPORT_SOURCE_REFLECTED",
 	&"other": "REPORT_SOURCE_OTHER",
@@ -56,10 +59,16 @@ static func outgoing_id(source: String) -> StringName:
 			return &"thermal_burst"
 		"dash_afterburn":
 			return &"dash_afterburn"
-		"rear_laser":
-			return &"rear_laser"
+		"auto_laser":
+			return &"auto_laser"
 		"storm_barrage":
 			return &"storm_barrage"
+		"black hole":
+			return &"black_hole"
+		"shockwave":
+			return &"shockwave"
+		"cross beam":
+			return &"cross_beam"
 		"enemy_mine", "arc proximity burst", "player_arc_mine", "player_spark_minelet":
 			return &"arc_mine"
 		"seeker burst":

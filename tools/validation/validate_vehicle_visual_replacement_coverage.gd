@@ -25,7 +25,7 @@ const WorldCatalog = preload(
 )
 const CODE_NATIVE_UI_STATE_OWNERS := [
 	"res://scripts/ui/vehicle_gameplay_hud.gd",
-	"res://scripts/ui/vehicle_upgrade_choice_card.gd",
+	"res://scripts/ui/vehicle_upgrade_choice_row.gd",
 ]
 
 const EXPECTED_EVENT_IDS := [
@@ -154,16 +154,15 @@ func _validate_event_producers() -> void:
 			"VehicleRun emits an unmapped visual event: %s" % event_id
 		)
 	for event_id in EXPECTED_EVENT_IDS:
-		if event_id in [
-			"drop_mine_detonation",
-			"explosive_seeker_impact",
-			"mystery_projectile_purge",
-		]:
-			var constant_name := "MYSTERY_PURGE_PULSE_KIND"
-			if event_id == "drop_mine_detonation":
-				constant_name = "DROP_MINE_DETONATION_KIND"
-			elif event_id == "explosive_seeker_impact":
-				constant_name = "EXPLOSIVE_SEEKER_IMPACT_KIND"
+		var constant_events := {
+			"player_emp_charge":"EMP_CHARGE_KIND",
+			"player_emp_release":"EMP_RELEASE_KIND",
+			"drop_mine_detonation":"DROP_MINE_DETONATION_KIND",
+			"explosive_seeker_impact":"EXPLOSIVE_SEEKER_IMPACT_KIND",
+			"mystery_projectile_purge":"MYSTERY_PURGE_PULSE_KIND",
+		}
+		if constant_events.has(event_id):
+			var constant_name := String(constant_events[event_id])
 			_expect(
 				run_source.contains("EffectStore.%s" % constant_name),
 				"VehicleRun does not emit the constant-owned event: %s" % event_id
@@ -174,8 +173,8 @@ func _validate_event_producers() -> void:
 			"VehicleRun does not emit required transient event: %s" % event_id
 		)
 	_expect(
-		produced.size() == EXPECTED_EVENT_IDS.size() - 3,
-		"VehicleRun emits exactly the four reviewed direct transient event IDs"
+		produced.size() == EXPECTED_EVENT_IDS.size() - 5,
+		"VehicleRun emits exactly the two reviewed direct transient event IDs"
 	)
 	var secondary_source := FileAccess.get_file_as_string(SECONDARY_PATH)
 	_expect(

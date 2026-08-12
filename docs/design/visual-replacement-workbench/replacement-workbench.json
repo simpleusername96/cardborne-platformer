@@ -145,7 +145,7 @@
         "art/visuals/production/gameplay/asset-manifest.json",
         "scripts/cards/vehicle_upgrade_offer_presenter.gd",
         "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
-        "scripts/ui/vehicle_upgrade_choice_card.gd",
+        "scripts/ui/vehicle_upgrade_choice_row.gd",
         "tools/validation/validate_vehicle_semantic_asset_provider.gd",
         "tools/validation/validate_vehicle_upgrade_ui.gd"
       ],
@@ -325,7 +325,7 @@
         "art/visuals/production/gameplay/asset-manifest.json",
         "scripts/cards/vehicle_upgrade_offer_presenter.gd",
         "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
-        "scripts/ui/vehicle_upgrade_choice_card.gd",
+        "scripts/ui/vehicle_upgrade_choice_row.gd",
         "tools/validation/validate_vehicle_semantic_asset_provider.gd",
         "tools/validation/validate_vehicle_upgrade_ui.gd"
       ],

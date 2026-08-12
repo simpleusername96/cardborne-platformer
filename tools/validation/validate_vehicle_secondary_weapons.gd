@@ -35,7 +35,7 @@ func _initialize() -> void:
 	var runtime := Runtime.new()
 	var expected_secondary_ids: Array[StringName] = [
 		&"drop_mines", &"electric_field", &"orbiting_blades", &"seeker",
-		&"rear_laser", &"storm_barrage",
+		&"auto_laser", &"storm_barrage",
 	]
 	_expect(
 		runtime.catalog.definitions.size() == expected_secondary_ids.size(),
@@ -92,9 +92,8 @@ func _initialize() -> void:
 		var intent: Dictionary = intent_variant
 		_expect(
 			intent.get("damage_flags", -1) is int
-				and intent.has("attack_origin")
 				and int(intent.get("attack_serial", 0)) > 0,
-			"secondary damage intent carries numeric flags, origin, and stable serial"
+			"secondary damage intent carries numeric flags and stable serial"
 		)
 	_validate_homing_progression(catalog)
 	var oracle := runtime.snapshot(build)
@@ -123,9 +122,121 @@ func _initialize() -> void:
 	_validate_electric_field_radius(catalog)
 	_validate_mine_direction(catalog)
 	_validate_mine_detonation_receipts(catalog)
-	_validate_rear_laser(catalog)
+	_validate_auto_laser(catalog)
 	_validate_storm_barrage(catalog)
+	_validate_shared_modifiers(catalog)
 	_finish()
+
+
+func _validate_shared_modifiers(catalog: Catalog) -> void:
+	var target := EnemyState.new()
+	target.id = "shared_modifier_target"
+	target.alive = true
+	target.active = true
+	target.radius = 18.0
+
+	var seeker_build := _shared_build(catalog, &"homing_missiles", 3)
+	var seeker_runtime := Runtime.new()
+	_seeker_targets.assign([target])
+	target.pos = Vector2(120.0, 0.0)
+	var result := seeker_runtime.update(
+		0.0, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		seeker_build, [target], Callable(self, "_los"), Callable(),
+		Callable(self, "_find_seeker_targets")
+	)
+	var seeker_projectile := Dictionary(Array(result["projectiles"])[0])
+	_expect(
+		is_equal_approx(float(seeker_projectile["damage"]), 53.2)
+			and is_equal_approx(seeker_runtime.seeker_cooldown, 1.35 * 0.75),
+		"shared secondary modifiers apply once to Seeker damage and cooldown"
+	)
+
+	var field_build := _shared_build(catalog, &"electric_field", 1)
+	var field_runtime := Runtime.new()
+	target.pos = Vector2(100.0, 0.0)
+	result = field_runtime.update(
+		0.0, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		field_build, [target], Callable(self, "_los")
+	)
+	_expect(
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 2.8)
+			and is_equal_approx(float(field_runtime.timers[&"electric_field"]), 0.1875),
+		"shared secondary modifiers apply once to Electric Field damage and cadence"
+	)
+
+	var orbit_build := _shared_build(catalog, &"orbiting_blades", 1)
+	var orbit_runtime := Runtime.new()
+	target.pos = Vector2(Runtime.ORBIT_RADIUS, 0.0)
+	result = orbit_runtime.update(
+		0.0, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		orbit_build, [target], Callable(self, "_los")
+	)
+	_expect(
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 19.6)
+			and is_equal_approx(
+				float(orbit_runtime.orbit_target_cooldowns[target.id]), 0.4125
+			),
+		"shared secondary modifiers apply once to Orbiting Blades damage and cadence"
+	)
+
+	var mine_build := _shared_build(catalog, &"drop_mines", 1)
+	var mine_runtime := Runtime.new()
+	target.pos = Vector2(-48.0, 0.0)
+	result = mine_runtime.update(
+		0.0, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		mine_build, [target], Callable(self, "_los")
+	)
+	_expect(
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 67.2)
+			and is_equal_approx(float(mine_runtime.timers[&"drop_mines"]), 2.4),
+		"shared secondary modifiers apply once to Drop Mine damage and cadence"
+	)
+
+	var laser_build := _shared_build(catalog, &"auto_laser", 1)
+	var laser_runtime := Runtime.new()
+	target.pos = Vector2(120.0, 0.0)
+	laser_runtime.record_primary_success(Vector2.ZERO, Vector2.RIGHT)
+	result = laser_runtime.update(
+		0.0, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		laser_build, [target], Callable(self, "_los")
+	)
+	_expect(
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 67.2)
+			and is_equal_approx(laser_runtime.auto_laser_cooldown, 0.675),
+		"shared secondary modifiers apply once to Auto Laser damage and cooldown"
+	)
+
+	var storm_build := _shared_build(catalog, &"storm_barrage", 1)
+	var storm_runtime := Runtime.new()
+	target.pos = Vector2(600.0, 0.0)
+	storm_runtime.update(
+		0.0, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		storm_build, [target], Callable(self, "_los")
+	)
+	result = storm_runtime.update(
+		Runtime.STORM_WARNING_DURATION, Vector2.ZERO,
+		Vector2.RIGHT, Vector2.RIGHT, storm_build, [target],
+		Callable(self, "_los")
+	)
+	_expect(
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 98.0)
+			and is_equal_approx(storm_runtime.storm_cooldown, 2.825),
+		"shared secondary modifiers apply once to Storm Barrage damage and cooldown"
+	)
+
+
+func _shared_build(
+	catalog: Catalog,
+	weapon_card_id: StringName,
+	weapon_level: int
+) -> RunBuild:
+	var build := RunBuild.new(catalog)
+	for _level in weapon_level:
+		build.apply(weapon_card_id)
+	for _level in 3:
+		build.apply(&"secondary_coolant")
+		build.apply(&"secondary_amplifier")
+	return build
 
 
 func _validate_electric_field_radius(catalog: Catalog) -> void:
@@ -190,11 +301,10 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 			)
 			_expect(
 				projectile.get("damage_flags", -1)
-					== OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE
+					== OutgoingDamagePolicy.DAMAGE_DIRECT
 					and projectile.has("spawn_origin")
-					and projectile.has("attack_origin")
 					and int(projectile.get("attack_serial", 0)) > 0,
-				"homing projectiles carry direct/range flags, spawn origin, and stable serial"
+				"homing projectiles carry direct flags, spawn origin, and stable serial"
 			)
 			_expect(
 				bool(projectile["explosive"]),
@@ -293,7 +403,6 @@ func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
 			damage.size() == 1
 			and is_equal_approx(float(damage[0]["damage"]), expected_damage[level_index])
 			and damage[0].get("damage_flags", -1) == OutgoingDamagePolicy.DAMAGE_DIRECT
-			and Vector2(damage[0]["attack_origin"]) == target.pos
 			and int(damage[0].get("attack_serial", 0)) > 0
 			and detonations.size() == 1
 			and Vector2(detonations[0]["position"]) == target.pos
@@ -330,9 +439,9 @@ func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
 	)
 
 
-func _validate_rear_laser(catalog: Catalog) -> void:
+func _validate_auto_laser(catalog: Catalog) -> void:
 	var build := RunBuild.new(catalog)
-	build.levels[&"rear_laser"] = 1
+	build.levels[&"auto_laser"] = 1
 	var runtime := Runtime.new()
 	var origin := Vector2(900.0, 640.0)
 	var target := _make_target("rear_target", origin + Vector2.LEFT * 300.0)
@@ -358,17 +467,16 @@ func _validate_rear_laser(catalog: Catalog) -> void:
 			and is_equal_approx(float(beams[0]["half_width"]), 18.0)
 			and is_equal_approx(float(beams[0]["duration"]), 0.14)
 			and Array(result["projectiles"]).is_empty(),
-		"rear laser emits one opposite 760-unit beam intent without a projectile"
+		"auto laser emits one best-direction 760-unit beam intent without a projectile"
 	)
 	_expect(
 		damage.size() == 1
-			and damage[0]["source"] == "Rear Laser"
+			and damage[0]["source"] == "Auto Laser"
 			and damage[0].get("damage_flags", -1)
-				== OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE
-			and Vector2(damage[0]["attack_origin"]) == origin
+				== OutgoingDamagePolicy.DAMAGE_DIRECT
 			and int(damage[0].get("attack_serial", 0)) > 0
-			and is_equal_approx(float(runtime.rear_laser_cooldown), 0.9),
-		"rear laser emits one direct/range damage intent and owns a 0.9-second cooldown"
+			and is_equal_approx(float(runtime.auto_laser_cooldown), 0.9),
+		"auto laser emits one direct damage intent and owns a 0.9-second cooldown"
 	)
 	runtime.record_primary_success(origin, Vector2.RIGHT)
 	var blocked := runtime.update(
@@ -380,7 +488,7 @@ func _validate_rear_laser(catalog: Catalog) -> void:
 		targets,
 		Callable(self, "_los")
 	)
-	_expect(Array(blocked["beams"]).is_empty(), "rear laser ignores primary success during cooldown")
+	_expect(Array(blocked["beams"]).is_empty(), "auto laser ignores primary success during cooldown")
 	runtime.record_primary_success(origin, Vector2.RIGHT)
 	var ready := runtime.update(
 		0.9,
@@ -391,7 +499,7 @@ func _validate_rear_laser(catalog: Catalog) -> void:
 		targets,
 		Callable(self, "_los")
 	)
-	_expect(Array(ready["beams"]).size() == 1, "rear laser fires again after its exact cooldown")
+	_expect(Array(ready["beams"]).size() == 1, "auto laser fires again after its exact cooldown")
 	runtime.reset(origin)
 	target.pos = origin + Vector2.LEFT * 500.0
 	runtime.record_primary_success(origin, Vector2.RIGHT)
@@ -411,10 +519,9 @@ func _validate_rear_laser(catalog: Catalog) -> void:
 		Vector2.RIGHT
 	)
 	_expect(
-		Array(clipped["beams"]).size() == 1
-			and is_equal_approx(float(Array(clipped["beams"])[0]["length"]), 320.0)
+		Array(clipped["beams"]).is_empty()
 			and Array(clipped["damage"]).is_empty(),
-		"rear laser respects the first-solid-cover endpoint supplied by the runtime"
+		"auto laser rejects a direction whose targets are behind the first solid cover"
 	)
 
 
@@ -495,10 +602,9 @@ func _validate_storm_barrage(catalog: Catalog) -> void:
 		var intent: Dictionary = intent_variant
 		_expect(
 			intent.get("damage_flags", -1)
-				== OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE
-			and Vector2(intent["attack_origin"]) == runtime.storm_position
+				== OutgoingDamagePolicy.DAMAGE_DIRECT
 			and int(intent.get("attack_serial", 0)) > 0,
-			"storm damage intent carries direct/range flags, fixed ground origin, and serial"
+			"storm damage intent carries direct flags and a stable serial"
 		)
 	var empty_runtime := Runtime.new()
 	empty_runtime.reset(origin)

@@ -8,8 +8,8 @@ const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const OfferPresenter = preload(
 	"res://scripts/cards/vehicle_upgrade_offer_presenter.gd"
 )
-const UpgradeChoiceCard = preload(
-	"res://scripts/ui/vehicle_upgrade_choice_card.gd"
+const UpgradeChoiceRow = preload(
+	"res://scripts/ui/vehicle_upgrade_choice_row.gd"
 )
 const UpgradeChoicePanel = preload(
 	"res://scripts/ui/vehicle_upgrade_choice_panel.gd"
@@ -26,9 +26,9 @@ const WORST_TEXT_TRIPLETS := {
 		{"id":&"drop_mines", "current_level":3},
 	],
 	"en":[
-		{"id":&"last_stand_amplifier", "current_level":2},
-		{"id":&"range_polarization", "current_level":2},
-		{"id":&"critical_targeting", "current_level":2},
+		{"id":&"secondary_coolant", "current_level":2},
+		{"id":&"orbiting_blades", "current_level":3},
+		{"id":&"overflow_barrier", "current_level":2},
 	],
 }
 const DENSE_STAT_TRIPLET := [
@@ -169,7 +169,7 @@ func _validate_authored_artwork() -> void:
 
 
 func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
-	var card := UpgradeChoiceCard.new()
+	var card := UpgradeChoiceRow.new()
 	card.theme = _theme
 	get_root().add_child(card)
 	await process_frame
@@ -192,28 +192,26 @@ func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
 			% category
 		)
 		_expect(
-			Vector2(contract["body_art_size"]) == Vector2(88.0, 88.0)
+			Vector2(contract["body_art_size"]) == Vector2(72.0, 72.0)
 				and StringName(contract["body_art_asset_id"])
 					!= &""
 				and Array(contract["body_order"]) == [
-					"category",
-					"title",
-					"dossier:art/level/effects/summary",
+					"art", "category/title/summary/effects", "level",
 				]
 				and not bool(contract["dossier_split"])
-				and bool(contract["vertical_dossier"])
+				and not bool(contract["vertical_dossier"])
 				and int(contract["body_divider_count"]) == 0,
-			"%s uses the compact centered vertical artwork contract" % category
+			"%s uses the compact horizontal offer-row contract" % category
 		)
 		_expect(
-			int(Dictionary(contract["type_sizes"])["summary"]) == 32
+			int(Dictionary(contract["type_sizes"])["summary"]) == 13
 				and not bool(contract["footer_visible"])
 				and not bool(contract["description_in_comparison"])
 				and bool(contract["description_visible"])
-				and int(contract["summary_max_lines"]) == 2
+				and int(contract["summary_max_lines"]) == 1
 				and Color(contract["summary_color"]).is_equal_approx(Art.TEXT_PRIMARY)
 				and not contract.has("unlock_icon_visible"),
-			"%s shows one large primary-color effect summary without an unlock icon"
+			"%s shows one restrained primary-color summary without an unlock icon"
 			% category
 		)
 		var geometry := card.debug_geometry_contract()
@@ -316,7 +314,7 @@ func _validate_intent_contract(catalog: VehicleUpgradeCatalog) -> void:
 		"res://scripts/ui/vehicle_upgrade_choice_panel.gd"
 	)
 	var card_source := FileAccess.get_file_as_string(
-		"res://scripts/ui/vehicle_upgrade_choice_card.gd"
+		"res://scripts/ui/vehicle_upgrade_choice_row.gd"
 	)
 	for forbidden_panel_token in [
 		"signal declined",
@@ -356,7 +354,7 @@ func _validate_triplet_matrix(catalog: VehicleUpgradeCatalog) -> void:
 	var snapshot_count := 0
 	for definition in catalog.all_definitions():
 		snapshot_count += definition.max_level
-	_expect(snapshot_count == 68, "worst-case fixture is grounded in all 68 card states")
+	_expect(snapshot_count == 92, "worst-case fixture is grounded in all 92 card states")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		_validate_longest_fixture(catalog, locale)
@@ -426,30 +424,27 @@ func _validate_panel(
 	var row_rect := Rect2(geometry["row_rect"]).grow(0.75)
 	var surface_rect := surface.get_global_rect().grow(0.75)
 	_expect(surface_rect.encloses(panel_rect), "%s panel stays inside its surface" % context)
-	var expected_size := (
-		Vector2(280.0, 410.0)
-		if compact
-		else Vector2(360.0, 488.0)
-	)
-	var expected_gap := 12.0 if compact else 16.0
+	var expected_minimum := Vector2(540.0, 112.0) if compact else Vector2(820.0, 140.0)
+	var expected_gap := 6.0 if compact else 10.0
 	var prior_card := Rect2()
 	var card_count := 0
 	for card_variant in geometry["cards"]:
 		var card := Dictionary(card_variant)
 		var card_rect := Rect2(card["rect"])
 		_expect(
-			card_rect.size.is_equal_approx(expected_size),
-			"%s card uses %s geometry, got %s"
-			% [context, expected_size, card_rect.size]
+			card_rect.size.x >= expected_minimum.x
+				and is_equal_approx(card_rect.size.y, expected_minimum.y),
+			"%s row uses at least %s geometry, got %s"
+			% [context, expected_minimum, card_rect.size]
 		)
 		_expect(row_rect.encloses(card_rect), "%s card stays inside the choice row" % context)
 		if prior_card.has_area():
 			_expect(
 				is_equal_approx(
-					card_rect.position.x - prior_card.end.x,
+					card_rect.position.y - prior_card.end.y,
 					expected_gap
 				),
-				"%s cards keep the %d px gap" % [context, int(expected_gap)]
+				"%s rows keep the %d px gap" % [context, int(expected_gap)]
 			)
 		prior_card = card_rect
 		card_count += 1
@@ -470,8 +465,8 @@ func _validate_panel(
 		"%s shows one to three unique frozen offers and one Equip command" % context
 	)
 	_expect(
-		String(contract["row_type"]) == "HFlowContainer",
-		"%s uses one responsive non-scrolling card flow" % context
+		String(contract["row_type"]) == "VBoxContainer",
+		"%s uses one responsive vertical offer-row flow" % context
 	)
 	for card_contract_variant in Array(contract["cards"]):
 		var card_contract := Dictionary(card_contract_variant)
@@ -482,18 +477,18 @@ func _validate_panel(
 				and int(card_contract["body_art_count"]) == 1
 				and int(card_contract["category_badge_count"]) == 0
 				and Vector2(card_contract["body_art_size"]) == (
-					Vector2(88.0, 88.0)
+					Vector2(72.0, 72.0)
 					if compact
-					else Vector2(128.0, 128.0)
+					else Vector2(88.0, 88.0)
 				),
-			"%s card keeps one correctly sized lower artwork" % context
+			"%s row keeps one correctly sized artwork" % context
 		)
 		_expect(
 			int(Dictionary(card_contract["type_sizes"])["summary"])
-				== (32 if compact else 34)
-				and int(card_contract["summary_max_lines"]) == 2
+				== (13 if compact else 15)
+				and int(card_contract["summary_max_lines"]) == 1
 				and Color(card_contract["summary_color"]).is_equal_approx(Art.TEXT_PRIMARY),
-			"%s card uses the doubled primary-color two-line summary contract" % context
+			"%s row uses one restrained primary-color summary line" % context
 		)
 		_expect(
 			bool(card_contract["level_visible"])

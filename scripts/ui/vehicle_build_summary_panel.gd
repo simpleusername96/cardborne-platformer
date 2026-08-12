@@ -10,7 +10,7 @@ const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const STAT_GROUPS: Array[Dictionary] = [
 	{"key":"SHIP_STATUS_GROUP_MOBILITY", "ids":[&"hull", &"speed", &"dash_cooldown"]},
 	{"key":"SHIP_STATUS_GROUP_PRIMARY", "ids":[&"primary_damage", &"fire_rate", &"projectile_speed"]},
-	{"key":"SHIP_STATUS_GROUP_EMP", "ids":[&"emp_damage", &"emp_cooldown"]},
+	{"key":"SHIP_STATUS_GROUP_ACTIVE", "ids":[&"active_damage", &"active_cooldown"]},
 ]
 
 var _snapshot: Dictionary = {}

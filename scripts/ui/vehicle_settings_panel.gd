@@ -25,7 +25,7 @@ const CATEGORY_KEYS := {
 const ACTION_TITLE_KEYS := {
 	&"primary_fire":"ACTION_PRIMARY",
 	&"dash":"ACTION_DASH",
-	&"active_skill":"ACTION_EMP",
+	&"active_skill":"ACTION_ACTIVE_WEAPON",
 	&"move_left":"SETTINGS_MOVEMENT_RESERVED",
 	&"move_right":"SETTINGS_MOVEMENT_RESERVED",
 	&"move_up":"SETTINGS_MOVEMENT_RESERVED",

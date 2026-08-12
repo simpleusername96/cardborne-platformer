@@ -19,7 +19,7 @@ const FAST_CLUSTERS := [
 	[
 		"dash_available", "dash_remaining",
 		"seeker_available", "seeker_remaining",
-		"skill_available", "skill_remaining", "buff_text",
+		"skill_available", "skill_remaining", "active_weapon_id",
 	],
 ]
 

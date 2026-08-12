@@ -65,7 +65,7 @@ five-stage run.
   damage, size, pierce, structure damage, status payload, or counter behavior.
 - Dash is a fast defensive repositioning action. EMP is the sole explicit skill
   button. Secondary weapons operate automatically.
-- Primary fire, dash, and EMP are rebindable. Conflicting bindings are rejected.
+- Primary fire, dash, and the active weapon are rebindable. Conflicting bindings are rejected.
 - Korean is the default locale. Korean and English, audio, reduced motion, and
   input settings persist.
 
@@ -177,7 +177,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 - An intact Anomaly Device blocks actors and player projectiles. Hostile
   projectiles pass through it and enemy AI never targets it, so a neutral
   interaction cannot become an unintended shield against enemy fire.
-- The unmodified Pulse Cannon has an authored 1600-pixel range. At runtime its
+- The built-in primary weapon has an authored 1600-pixel range. At runtime its
   effective range is never shorter than the current visible world rectangle's
   diagonal plus 80 pixels, so an unobstructed target visible from any
   camera-clamped player position remains reachable.
@@ -446,19 +446,20 @@ does not produce a transient message.
   `490 HP` field-repair budget. Repair collection clamps at the ship's current
   maximum Hull unless Overflow Barrier converts eligible excess recovery.
 - Level thresholds use
-  `min(160, 12 + round(3n + 0.55n²))`, where `n` is the zero-based level
-  progression index. This makes early choices frequent while restoring a rising
-  late-run requirement. Each level opens a guarded selection
+  `min(96, 6 + round(1.5n + 0.32n²))`, where `n` is the zero-based level
+  progression index. The first requirement is 6 XP, the first five requirements
+  total 54 XP, and the late-run requirement is capped at 96 XP. The authored
+  minimum-quota path ends at level 30. Each level opens a guarded selection
   of every legal offer card up to three and requires an explicit choice and
   confirm. When no compatible upgrade remains, one localized completion receipt
   marks XP as `MAX`, clears queued levels and live shards, and suppresses future
   shard spawning and XP awards for that run.
-- The live catalog is the 21-card, 68-level-state contract in
-  `vehicle_upgrade_catalog.md`. It uses five player-facing categories: Primary
-  Weapon Mods, Secondary Weapon Systems, Attack Elements, Chassis & Support,
-  and Combat Conditions. Category is separate from change kind and optional
-  weapon-slot ownership. Dash and EMP remain base actions; Dash has two
-  extension cards and EMP has no upgrade card.
+- The live catalog is the 28-card, 92-level-state contract in
+  `vehicle_upgrade_catalog.md`. It uses six player-facing categories: Primary
+  Weapon Mods, Secondary Weapon Systems, Attack Attributes, Active Weapons,
+  Chassis & Support, and Combat Conditions. Category is separate from change
+  kind and slot ownership. Dash, Seeker, and EMP remain base actions; one active
+  weapon kind may replace EMP, and shared cards can modify all active weapons.
 - A first acquisition is an `unlock` only when it creates a previously absent
   behavior: Split Muzzle, Piercing Rounds, an optional secondary, or an element.
   Homing Missiles is an `enhance` offer from its first card because Seeker starts
@@ -470,9 +471,10 @@ does not produce a transient message.
   additional penetrations; Homing Missiles ends at three missiles and `38`
   damage; Electric Field ends at `22 DPS` and radius `160`; Orbiting Blades ends
   at four blades and `28` damage; Drop Mines ends at `88` damage, `2.4 s`
-  interval, and five live mines; Thermal Burst ends at `11` damage and radius
-  `96`; Bio Toxin ends at `5.5 DPS` per stack for seven seconds. Optional-secondary
-  and element unlocks show acquired values without a false zero comparison.
+  interval, and five live mines; Auto Laser ends at `86` damage; Thermal Burst
+  ends at `11` damage and radius `96`; Bio Toxin ends at `5.5 DPS` per stack for
+  seven seconds. Optional-secondary, attribute, and active-weapon unlocks show
+  acquired values without a false zero comparison.
 - `Movement Speed`, `Pickup Radius`, `Hull Integrity`, `Lifesteal`, and
   `Overflow Barrier` form Chassis & Support. Pickup Radius preserves the former
   Pickup Magnet card's three-level collection effect. Every run starts with
@@ -481,22 +483,21 @@ does not produce a transient message.
   per second. Overflow Barrier applies Hull recovery first, then converts
   eligible excess at `50/75/100%` into an eight-second barrier capped at
   `15/25/35%` of maximum Hull.
-- Thermal Burst, Bio Toxin, and Cryo Slow are mutually exclusive complete packages.
-  The first selected root locks the other two out of future offers, and only that
-  root's later levels remain eligible. Its affinity changes player-primary projectile
-  color. The selected condition accumulates bounded stacks and Korean/English
-  target text exposes its count. There are no intermediate element branch cards.
-  Their card values and runtime payload share one build-owned source: Thermal
-  radius is `72/84/96/96` with burst damage `4/6/8/11`; Toxin damage per stack is
-  `2/3/4/5.5` with `5/6/7/7s` duration; Cryo slow per stack is `6/8/10%` with
-  `2/2.5/3s` duration. Boss Chill retains its existing half-effect rule.
-- Combat Conditions contains Critical Targeting, Range Polarization, Dash
-  Overdrive, Dash Afterburn Field, and Last Stand Amplifier. Direct attacks have
-  a deterministic `8/12/16%` critical chance for `2x` damage. Eligible attacks
-  gain `12/20/30%` at 260 pixels or nearer and 620 pixels or farther. Dash
-  Overdrive grants `15/25/35%` for two seconds after Dash. Last Stand scales from
-  zero below 60% Hull to `15/25/35%` at 25% Hull. These non-critical bonuses add
-  and cap at `+100%`; critical multiplication happens afterward.
+- Primary payloads have one damage-attribute slot and one utility-attribute slot.
+  Thermal Burst and Bio Toxin compete for the damage slot; Cryo Slow and Shock
+  compete for the utility slot. One choice from each slot can coexist on the same
+  primary projectile. Thermal radius is `72/84/96/96` with burst damage
+  `4/6/8/11`; Toxin damage per stack is `2/3/4/5.5` with `5/6/7/7s` duration;
+  Cryo slow per stack is `6/8/10%` with `2/2.5/3s` duration. Shock blocks only
+  new enemy attack commitments for `0.6/0.8/1.0s`, has a three-second reapply
+  lockout, does not alter movement, and never cancels an already warned or active
+  attack. Boss Chill and Shock duration are halved.
+- Combat Conditions contains Critical Hit, Dash Boost, Dash Afterburn Field, and
+  Low-Hull Damage. Direct attacks have a
+  deterministic `8/12/16%` critical chance for `2x` damage. Dash Boost grants
+  `15/25/35%` for two seconds after Dash. Low-Hull Damage scales from zero below
+  60% Hull to `5/10/20%` at 25% Hull. These non-critical bonuses add and cap at
+  `+100%`; critical multiplication happens afterward.
 - Dash Afterburn Field creates one exact capsule from the Dash start to the
   actual Dash end, including an end shortened by cover. Its half-width is 72,
   lifetime is three seconds, tick interval is 0.5 seconds, tick damage is
@@ -513,9 +514,9 @@ does not produce a transient message.
 | --- | --- |
 | Homing Missiles | Periodic targeted projectiles; upgrades increase count and damage |
 | Electric Field | Damage over time near the ship |
-| Orbiting Blades | Close orbiting contact damage |
+| Orbiting Blades | Close orbiting contact damage at radius 88 |
 | Drop Mines | One immediate mine, then timed mines behind movement or the stopped hull |
-| Rear Laser | A cover-clipped beam opposite a successful primary shot |
+| Auto Laser | A cover-clipped beam toward the direction that intersects the most enemies |
 | Storm Barrage | A warned area strike on a distant threat cluster |
 
 Drop Mine is distinct from Thermal Burst. At levels 1–4 it applies one
@@ -525,17 +526,40 @@ publishes one origin receipt only after damage resolution. Its cosmetic has a
 store. When saturated, it may recycle only another Drop Mine cosmetic; missing
 feedback never cancels or duplicates damage.
 
-Rear Laser fires at most every `0.9 s` on a successful primary shot, exactly
-opposite the primary direction. It deals `48/66/86`, uses a 760-long corridor
+Auto Laser fires at most every `0.9 s` on a successful primary shot. It scores
+up to 24 nearby candidates against that same bounded set and picks the direction
+that intersects the most targets. It deals `48/66/86`, uses a 760-long corridor
 with half-width 18, and stops at the first tactical wall. Storm Barrage checks
 threats from 480 to 960 pixels every `4.5 s`, warns for `0.55 s`, then deals
 `70/95/125` inside radius 140 to at most twelve eligible targets. It can damage
 ordinary enemies, the reinforcement facility, and an Anomaly Device.
 
+Secondary Cooldown applies one shared `0.90/0.82/0.75` cooldown multiplier to
+Seeker, Electric Field, Orbiting Blades, Drop Mines, Auto Laser, and Storm
+Barrage. Secondary Damage applies one shared `1.12/1.25/1.40` damage multiplier
+to those same six families, including Seeker structure damage. These cards do
+not consume an optional-secondary slot or raise an object or target cap.
+
 Each Seeker missile applies its level-owned direct damage, then one `12` damage
 kinetic burst to other enemies inside `95` world units. The direct target is not
 damaged twice. Damage resolves before the bounded Explosive Seeker impact receipt;
 missing or recycled feedback never cancels or repeats gameplay damage.
+
+The fifth HUD action always represents the equipped active weapon. EMP is the
+default. One Black Hole, Shockwave, or Cross Beam card may replace it for the
+run; shared active cooldown and damage cards apply to whichever weapon is
+equipped. Active weapon state belongs to `VehicleActiveWeaponRuntime`, while
+enemy, structure, and projectile mutation stays with the existing run owners.
+EMP starts in `0.42s`, deals `62` in radius `285`, clears hostile projectiles in
+radius `325`, stuns for `2.1s`, and has a `13s` cooldown. Black Hole starts in
+`0.35s`, pulls non-boss mobile enemies at `360 px/s` for `1.2s` with a 10 Hz
+bounded cadence, then deals `60/85/115/150` in radius `150/175/200/225`; it has a
+`12s` cooldown and never displaces bosses or structures. Shockwave starts in
+`0.20s`, deals `45/65/90/120` in radius `180/210/240/270`, and pushes non-boss
+mobile enemies up to 180 without stun or projectile clearing; it has a `9s`
+cooldown. Cross Beam starts in `0.35s` and deals `70/95/125/160` once per target
+through the union of two map-spanning, cover-ignoring corridors with half-width
+`14/18/22/26`; it has a `12s` cooldown.
 
 ### UI, guidebook, and persistence
 
@@ -561,9 +585,9 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   ceiling, at most 24 live Thermal impacts, and at most eight live Drop Mine
   receipts; saturated Thermal
   feedback may recycle the oldest Thermal impact or drop the new cosmetic
-  receipt but never evicts EMP or changes damage. Toxin and Chill do not create
-  effect objects. Existing enemy and boss batches share one status compositor;
-  per-instance custom data composes a same-size translucent green or blue layer
+  receipt but never evicts EMP or changes damage. Toxin, Chill, and Shock do not
+  create effect objects. Existing enemy and boss batches share one status compositor;
+  per-instance custom data composes a same-size translucent green, blue, or violet layer
   inside the authored body alpha without another draw, batch, actor, texture, or
   per-enemy material. Stack levels use ordered `0.66/0.76/0.84` colorization
   weights. The bounded 0.16-second application pulse reaches at most `0.94` only
@@ -588,7 +612,8 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   200% text respectively. Immediately below, a panel-free one-line cluster at
   left margin `16/24/32 px` shows exactly five icon/value items in this order:
   stage deck stack `N / 5`, total-defeats skull with the run-cumulative count,
-  Dash, Seeker, and EMP. Action values are `READY` or remaining time to 0.1 s.
+  Dash, Seeker, and the equipped active weapon. Action values are `READY` or
+  remaining time to 0.1 s.
   Every icon owns one meaning; the cluster has no labels, panels, sections,
   borders, dividers, cooldown rings, or progress rails. Top-right owns only the
   minimap. No bottom-center action, live upgrade icon, edge boss/target health,
@@ -666,6 +691,9 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   - Mystery Gravity Pull, Cryo Lock, and Decoy Signal keep full disks at their
     exact respective radii `480`, `360`, and `900` for their complete active
     durations; their single boundaries remain accents.
+  - Black Hole, Shockwave, and Cross Beam use retained code-native disks, rings,
+    and beam corridors from gameplay-owned active-weapon snapshots. They add no
+    raster asset, per-target node, or collision query to presentation.
   - Every boss circular damaging startup/window fills the complete committed
     radius with a restrained thermal body plus its single outer boundary. Beam
     startup and active continue to fill their exact clipped damage rectangle.
@@ -692,7 +720,7 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   displayed as Anomaly Device / 변칙 장치. Guidebook navigation uses one 48-pixel
   left-arrow command with a localized accessible name, tooltip, and input hint.
 - Settings places read-only Ship Status first. During a paused run it shows
-  effective movement, defense, primary, EMP, secondary, level, and
+  effective movement, defense, primary, equipped active weapon, secondary, level, and
   acquired-upgrade values from one frozen gameplay-owned snapshot. Outside a
   run it shows one localized empty state.
 - Stage 1–4 success history is retained for later inspection but does not open a
@@ -718,22 +746,23 @@ missing or recycled feedback never cancels or repeats gameplay damage.
 - From Stage 3 onward, every offer includes at least one compatible unfinished
   attack card when one exists. This guarantee preserves all optional-secondary,
   element, unique-ID, and frozen-transaction rules.
-- The upgrade modal starts directly with its one to three visible cards: it has no separate
-  kicker, screen title, or instruction header. Every card shows its real current
+- The upgrade modal starts directly with a frozen current-build rail on the left
+  and one to three visible offer rows on the right. It has no separate kicker,
+  screen title, or instruction header. Every offer shows its real current
   and next level; cards backed by numeric stat modifiers also show the real
   current-to-next stat value. A first element acquisition shows its initial
   values without a false zero-to-value comparison; later levels show the real
   current-to-next values.
-- Each card follows one centered vertical information order: category, upgrade
-  name, large semantic artwork, `Lv.current → next`, one or two real effect rows,
-  then one short localized effect summary. Korean summaries target
+- Each offer row follows one horizontal information order: semantic artwork;
+  category, upgrade name, one short summary, and one or two real effect rows;
+  then `Lv.current → next`. Korean summaries target
   roughly ten characters and English summaries use two to five words. Visible
   change-kind text remains omitted while unlock/enhance meaning stays in its
-  accessibility name. The card uses
+  accessibility name. The row uses
   one shared artwork identity per mechanic group; UI code does not draw
   mechanic-specific glyph geometry.
-- Upgrade cards never scroll independently. At 200% text scale only, the offer
-  body may provide one outer vertical scroll while all visible cards remain
+- Upgrade offers never scroll independently. At 200% text scale only, the offer
+  body may provide one outer vertical scroll while all visible rows remain
   non-scrolling and the Equip action remains fixed.
 - Deployment presents the craft, one short primary-weapon explanation, complete
   control information, and one Deploy primary action. Settings is a localized,
@@ -790,15 +819,15 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same
   profile, and no UI or saved preference can change difficulty.
-- The exact 21-card and 68-state catalog loads, Pickup Radius retains the former
+- The exact 28-card and 92-state catalog loads, Pickup Radius retains the former
   Pickup Magnet card's three values, baseline Lifesteal restores `0.5%`, the
-  Lifesteal card raises the total rate to `2%`/`3.5%`, the six secondary weapon
-  types load, no more than three are active, and their bounded simulations pass
-  tests.
+  Lifesteal card raises the total rate to `2%`/`3.5%`, six secondary weapon
+  types and four active weapon types load, no more than three secondary families
+  are active, and their bounded simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
   default-inner-wall collision, explicit wall-piercing, separate projectile roles,
   doubled hostile-projectile presentation thickness, structural-only health
-  bars, Beam Sentinel startup/active corridors, status-stack, element
+  bars, Beam Sentinel startup/active corridors, status-stack, two-slot attribute
   exclusivity, and XP-cadence contracts pass focused tests.
 - Held primary fire uses one uniform shot contract, reaches the complete
   unobstructed visible field, hits the enlarged visible enemy target through
@@ -822,8 +851,8 @@ missing or recycled feedback never cancels or repeats gameplay damage.
 - More than three simultaneous secondary families.
 - Unconstrained procedural topology, per-stage layout rerolls, a chore-filled
   base, or exploration puzzles in this run.
-- Growth systems beyond the current 21-card catalog and six secondary weapon
-  types require an explicit product-spec revision.
+- Growth systems beyond the current 28-card catalog, six secondary weapon types,
+  and four active weapon types require an explicit product-spec revision.
 - A selectable, adaptive, or meta-progression difficulty model is inactive and
   requires an explicit product-spec revision.
 - Additional map-generation systems, coordinated-enemy tactics, or new boss

@@ -1,17 +1,17 @@
 class_name VehicleStatusRuntime
 extends RefCounted
 
-## Applies bounded persistent Toxin/Chill stacks and returns explicit toxin DOT.
+## Applies bounded Toxin, Chill, and Shock state and returns explicit toxin DOT.
 
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
-const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
 
 const TICK_SECONDS := 0.25
 const APPLICATION_PULSE_SECONDS := 0.16
 const DOT_KINDS: Array[StringName] = [&"poison"]
 
 
-static func apply(enemy: EnemyState, profile: VehicleElementProfile) -> void:
+static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> void:
 	if profile == null:
 		return
 	if profile.poison_enabled:
@@ -42,6 +42,14 @@ static func apply(enemy: EnemyState, profile: VehicleElementProfile) -> void:
 			enemy.cryo_application_delay,
 			enemy.flash
 		)
+	if profile.shock_enabled and not enemy.statuses.has(&"shock"):
+		var shock_boss_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
+		enemy.statuses[&"shock"] = {
+			"time":profile.shock_lock_duration * shock_boss_scale,
+			"lockout":profile.shock_reapply_seconds,
+		}
+		enemy.shock_application_pulse = 1.0
+		enemy.shock_application_delay = maxf(enemy.shock_application_delay, enemy.flash)
 	_sync_presentation_scalars(enemy)
 
 
@@ -62,6 +70,13 @@ static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 	)
 	enemy.cryo_application_pulse = cryo_timing.x
 	enemy.cryo_application_delay = cryo_timing.y
+	var shock_timing := _advance_application_pulse(
+		enemy.shock_application_pulse,
+		enemy.shock_application_delay,
+		delta
+	)
+	enemy.shock_application_pulse = shock_timing.x
+	enemy.shock_application_delay = shock_timing.y
 	if statuses.is_empty():
 		_sync_presentation_scalars(enemy)
 		return damage
@@ -89,6 +104,14 @@ static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 			statuses.erase(&"chill")
 		else:
 			statuses[&"chill"] = chill
+	if statuses.has(&"shock"):
+		var shock: Dictionary = statuses[&"shock"]
+		shock["time"] = maxf(0.0, float(shock["time"]) - delta)
+		shock["lockout"] = maxf(0.0, float(shock["lockout"]) - delta)
+		if float(shock["lockout"]) <= 0.0:
+			statuses.erase(&"shock")
+		else:
+			statuses[&"shock"] = shock
 	_sync_presentation_scalars(enemy)
 	return damage
 
@@ -101,6 +124,12 @@ static func speed_multiplier(enemy: EnemyState) -> float:
 		0.50,
 		1.0 - float(chill["magnitude_per_stack"]) * float(chill["stacks"])
 	)
+
+
+static func attack_commit_blocked(enemy: EnemyState) -> bool:
+	if not enemy.statuses.has(&"shock"):
+		return false
+	return float(Dictionary(enemy.statuses[&"shock"]).get("time", 0.0)) > 0.0
 
 
 static func stack_count(enemy: EnemyState, kind: StringName) -> int:
@@ -135,6 +164,7 @@ static func _add_stack(
 static func _sync_presentation_scalars(enemy: EnemyState) -> void:
 	enemy.toxin_stack_ratio = _stack_ratio(enemy.statuses, &"poison")
 	enemy.cryo_stack_ratio = _stack_ratio(enemy.statuses, &"chill")
+	enemy.shock_stack_ratio = 1.0 if attack_commit_blocked(enemy) else 0.0
 
 
 static func _stack_ratio(statuses: Dictionary, kind: StringName) -> float:

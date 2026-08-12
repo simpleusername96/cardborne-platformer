@@ -2,7 +2,7 @@ extends SceneTree
 
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
-const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
@@ -13,22 +13,26 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	var catalog := Catalog.new()
 	var build := RunBuild.new(catalog)
-	_expect(bool(build.apply(&"thermal_burst").get("applied", false)), "one elemental root can be selected")
+	_expect(bool(build.apply(&"thermal_burst").get("applied", false)), "one damage attribute can be selected")
 	_expect(
 		not bool(build.apply(&"bio_toxin").get("applied", false))
-			and not bool(build.apply(&"cryo_slow").get("applied", false)),
-		"the first elemental root excludes the other two"
+			and bool(build.apply(&"cryo_slow").get("applied", false))
+			and not bool(build.apply(&"shock_disruption").get("applied", false)),
+		"damage and utility slots each accept one independent attribute"
 	)
-	_expect(build.active_element_id() == &"thermal_burst", "the build exposes its selected element")
-	var profile := ElementProfile.from_build(build)
 	_expect(
-		profile.thermal_enabled and not profile.poison_enabled and not profile.chill_enabled,
-		"one immutable profile carries only the selected root"
+		build.active_damage_attribute_id() == &"thermal_burst"
+			and build.active_utility_attribute_id() == &"cryo_slow",
+		"the build exposes both selected attribute slots"
+	)
+	var profile := PrimaryPayload.from_build(build)
+	_expect(
+		profile.thermal_enabled and not profile.poison_enabled and profile.chill_enabled,
+		"one immutable payload carries both selected slot effects"
 	)
 	_expect(
 		profile.thermal_burst_radius == 72.0
-			and profile.thermal_burst_damage == 4.0
-			and not profile.has_persistent_status(),
+			and profile.thermal_burst_damage == 4.0,
 		"Thermal Burst uses the exact level-one immediate package"
 	)
 	_expect(
@@ -38,21 +42,22 @@ func _initialize() -> void:
 		"only non-reflected primary contacts can trigger Thermal Burst"
 	)
 	_validate_level_progression(catalog)
+	_validate_shock(catalog)
 
 	var projectile := ProjectileState.new()
-	projectile.configure({"element_profile":profile}, &"player", 1)
+	projectile.configure({"primary_payload":profile}, &"player", 1)
 	var later_build := RunBuild.new(catalog)
 	later_build.apply(&"thermal_burst")
-	var later_profile := ElementProfile.from_build(later_build)
+	var later_profile := PrimaryPayload.from_build(later_build)
 	_expect(
-		projectile.element_profile == profile
-			and projectile.element_profile != later_profile,
+		projectile.primary_payload == profile
+			and projectile.primary_payload != later_profile,
 		"an in-flight projectile retains its fired build profile"
 	)
 
 	var toxin_build := RunBuild.new(catalog)
 	toxin_build.apply(&"bio_toxin")
-	var toxin_profile := ElementProfile.from_build(toxin_build)
+	var toxin_profile := PrimaryPayload.from_build(toxin_build)
 	var enemy := EnemyState.new()
 	enemy.role = &"chaser"
 	for _hit in 3:
@@ -72,7 +77,7 @@ func _initialize() -> void:
 	)
 	var chill_build := RunBuild.new(catalog)
 	chill_build.apply(&"cryo_slow")
-	var chill_profile := ElementProfile.from_build(chill_build)
+	var chill_profile := PrimaryPayload.from_build(chill_build)
 	var boss := EnemyState.new()
 	boss.role = &"stage_boss"
 	StatusRuntime.apply(boss, chill_profile)
@@ -123,6 +128,45 @@ func _initialize() -> void:
 	_finish()
 
 
+func _validate_shock(catalog: Catalog) -> void:
+	var build := RunBuild.new(catalog)
+	for _level in 3:
+		build.apply(&"shock_disruption")
+	var profile := PrimaryPayload.from_build(build)
+	var enemy := EnemyState.new()
+	StatusRuntime.apply(enemy, profile)
+	_expect(
+		profile.shock_enabled
+			and is_equal_approx(profile.shock_lock_duration, 1.0)
+			and StatusRuntime.attack_commit_blocked(enemy)
+			and is_equal_approx(StatusRuntime.speed_multiplier(enemy), 1.0),
+		"Shock level three blocks new attacks for one second without changing movement"
+	)
+	StatusRuntime.tick(enemy, 1.0)
+	_expect(
+		not StatusRuntime.attack_commit_blocked(enemy) and enemy.statuses.has(&"shock"),
+		"Shock stops blocking attacks after one second but keeps its reapply lockout"
+	)
+	StatusRuntime.apply(enemy, profile)
+	_expect(
+		not StatusRuntime.attack_commit_blocked(enemy),
+		"Shock cannot be reapplied during its three-second lockout"
+	)
+	StatusRuntime.tick(enemy, 2.0)
+	StatusRuntime.apply(enemy, profile)
+	_expect(
+		StatusRuntime.attack_commit_blocked(enemy),
+		"Shock can be applied again after the exact lockout"
+	)
+	var boss := EnemyState.new()
+	boss.role = &"stage_boss"
+	StatusRuntime.apply(boss, profile)
+	_expect(
+		is_equal_approx(float(Dictionary(boss.statuses[&"shock"])["time"]), 0.5),
+		"boss Shock attack lock is half duration"
+	)
+
+
 func _validate_level_progression(catalog: Catalog) -> void:
 	var thermal_radius := [72.0, 84.0, 96.0]
 	var thermal_damage := [4.0, 6.0, 8.0]
@@ -138,9 +182,9 @@ func _validate_level_progression(catalog: Catalog) -> void:
 			thermal_build.apply(&"thermal_burst")
 			toxin_build.apply(&"bio_toxin")
 			cryo_build.apply(&"cryo_slow")
-		var thermal_profile := ElementProfile.from_build(thermal_build)
-		var toxin_profile := ElementProfile.from_build(toxin_build)
-		var cryo_profile := ElementProfile.from_build(cryo_build)
+		var thermal_profile := PrimaryPayload.from_build(thermal_build)
+		var toxin_profile := PrimaryPayload.from_build(toxin_build)
+		var cryo_profile := PrimaryPayload.from_build(cryo_build)
 		_expect(
 			thermal_profile.thermal_burst_radius == thermal_radius[level_index]
 				and thermal_profile.thermal_burst_damage == thermal_damage[level_index],

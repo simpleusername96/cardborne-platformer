@@ -4,7 +4,7 @@ const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
-const UpgradeChoiceCard = preload("res://scripts/ui/vehicle_upgrade_choice_card.gd")
+const UpgradeChoiceRow = preload("res://scripts/ui/vehicle_upgrade_choice_row.gd")
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 
 var failures: Array[String] = []
@@ -17,7 +17,7 @@ func _initialize() -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 68, "upgrade catalog produces 68 selectable level states")
+	_expect(snapshots.size() == 92, "upgrade catalog produces 92 selectable level states")
 
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
@@ -82,8 +82,8 @@ func _initialize() -> void:
 		ui.queue_free()
 		await process_frame
 
-	var card := UpgradeChoiceCard.new()
-	get_root().add_child(card)
+	var row := UpgradeChoiceRow.new()
+	get_root().add_child(row)
 	await process_frame
 	var additive_preview := {
 		"stat_key":"UPGRADE_STAT_PICKUP_RADIUS_BONUS",
@@ -92,13 +92,13 @@ func _initialize() -> void:
 		"next":18.0,
 	}
 	_expect(
-		String(card.call("_preview_value", additive_preview)) == "+0 → +18",
-		"additive card preview renders ordinary values directly"
+		String(row.call("_preview_value", additive_preview)) == "+0 → +18",
+		"additive offer preview renders ordinary values directly"
 	)
 	additive_preview["current"] = 18.0
 	additive_preview["next"] = 36.0
 	_expect(
-		String(card.call("_preview_value", additive_preview)) == "+18 → +36",
+		String(row.call("_preview_value", additive_preview)) == "+18 → +36",
 		"second additive level keeps the same preview semantics"
 	)
 	var percent_preview := {
@@ -109,16 +109,16 @@ func _initialize() -> void:
 		"next":3.5,
 	}
 	_expect(
-		String(card.call("_preview_value", percent_preview)) == "2% → 3.5%",
-		"percentage card preview preserves its unit and fractional level value"
+		String(row.call("_preview_value", percent_preview)) == "2% → 3.5%",
+		"percentage offer preview preserves its unit and fractional level value"
 	)
 	percent_preview["current"] = 0.5
 	percent_preview["next"] = 2.0
 	_expect(
-		String(card.call("_preview_value", percent_preview)) == "0.5% → 2%",
+		String(row.call("_preview_value", percent_preview)) == "0.5% → 2%",
 		"percentage card preview exposes the built-in Lifesteal floor"
 	)
-	card.queue_free()
+	row.queue_free()
 	var localization_source := FileAccess.get_file_as_string(
 		"res://localization/vehicle_stage.csv"
 	)

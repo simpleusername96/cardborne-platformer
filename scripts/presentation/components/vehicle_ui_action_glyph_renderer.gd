@@ -1,13 +1,15 @@
 class_name VehicleUiActionGlyphRenderer
 extends RefCounted
 
-## Shared normalized recipes for the three auxiliary gameplay actions. Callers
+## Shared normalized recipes for auxiliary gameplay actions. Callers
 ## append the geometry into their own retained mesh so action identity does not
 ## add a CanvasItem or draw batch.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
-const ACTION_IDS: Array[StringName] = [&"seeker", &"dash", &"emp"]
+const ACTION_IDS: Array[StringName] = [
+	&"seeker", &"dash", &"emp", &"black_hole", &"shockwave", &"cross_beam",
+]
 
 const ACTION_RECIPES := {
 	&"seeker":{
@@ -120,6 +122,32 @@ const ACTION_RECIPES := {
 			},
 		],
 	},
+	&"black_hole":{
+		"shape":&"gravity_well",
+		"commands":[
+			{"tone":&"secondary", "points":[Vector2(-0.92, -0.28), Vector2(-0.28, -0.92), Vector2(0.02, -0.54), Vector2(-0.54, 0.02)]},
+			{"tone":&"secondary", "points":[Vector2(0.92, 0.28), Vector2(0.28, 0.92), Vector2(-0.02, 0.54), Vector2(0.54, -0.02)]},
+			{"tone":&"primary", "points":[Vector2(0.00, -0.52), Vector2(0.52, 0.00), Vector2(0.00, 0.52), Vector2(-0.52, 0.00)]},
+			{"tone":&"highlight", "points":[Vector2(0.00, -0.16), Vector2(0.16, 0.00), Vector2(0.00, 0.16), Vector2(-0.16, 0.00)]},
+		],
+	},
+	&"shockwave":{
+		"shape":&"expanding_wave",
+		"commands":[
+			{"tone":&"primary", "points":[Vector2(-0.94, -0.16), Vector2(-0.34, -0.34), Vector2(-0.34, 0.34), Vector2(-0.94, 0.16)]},
+			{"tone":&"primary", "points":[Vector2(0.94, -0.16), Vector2(0.34, -0.34), Vector2(0.34, 0.34), Vector2(0.94, 0.16)]},
+			{"tone":&"secondary", "points":[Vector2(-0.18, -0.82), Vector2(0.18, -0.82), Vector2(0.34, -0.26), Vector2(-0.34, -0.26)]},
+			{"tone":&"highlight", "points":[Vector2(-0.22, -0.22), Vector2(0.22, -0.22), Vector2(0.22, 0.22), Vector2(-0.22, 0.22)]},
+		],
+	},
+	&"cross_beam":{
+		"shape":&"piercing_cross",
+		"commands":[
+			{"tone":&"primary", "points":[Vector2(-0.94, -0.14), Vector2(0.94, -0.14), Vector2(0.94, 0.14), Vector2(-0.94, 0.14)]},
+			{"tone":&"secondary", "points":[Vector2(-0.14, -0.94), Vector2(0.14, -0.94), Vector2(0.14, 0.94), Vector2(-0.14, 0.94)]},
+			{"tone":&"highlight", "points":[Vector2(-0.30, -0.30), Vector2(0.30, -0.30), Vector2(0.30, 0.30), Vector2(-0.30, 0.30)]},
+		],
+	},
 }
 
 
@@ -206,7 +234,7 @@ static func normalized_bounds(action_id: StringName) -> Rect2:
 static func validate_recipes() -> PackedStringArray:
 	var errors := PackedStringArray()
 	if ACTION_RECIPES.size() != ACTION_IDS.size():
-		errors.append("action glyph recipe count must match the three action IDs")
+		errors.append("action glyph recipe count must match the action IDs")
 	for action_id in ACTION_IDS:
 		if not ACTION_RECIPES.has(action_id):
 			errors.append("missing action glyph recipe: %s" % action_id)

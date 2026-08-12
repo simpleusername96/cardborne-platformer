@@ -1,6 +1,6 @@
 extends SceneTree
 
-const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
 const Scene = preload("res://scenes/run/VehicleRun.tscn")
 
 var failures: Array[String] = []
@@ -22,7 +22,7 @@ func _run() -> void:
 	var boss = _append(run, &"stage_boss", "burst_boss", center + Vector2(60.0, 0.0))
 	var structure = _append(run, &"turret", "burst_structure", center + Vector2(40.0, 0.0))
 	var far = _append(run, &"controller", "burst_far", center + Vector2(120.0, 0.0))
-	var profile := ElementProfile.new()
+	var profile := PrimaryPayload.new()
 	profile.thermal_enabled = true
 	profile.thermal_burst_radius = 72.0
 	profile.thermal_burst_damage = 4.0

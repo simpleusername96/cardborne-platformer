@@ -505,11 +505,16 @@ Breakable Bulkhead는 현재 product category가 아니다. 적 생성 시설은
   clear가 끝난 뒤 radius를 키우지 않는다.
 - Dash Afterburn은 대시 시작점부터 엄폐물에 의해 줄어든 실제 종료점까지 전체 선분을
   반너비 `72`의 filled capsule 하나로 표시한다. 첫 frame부터 전체 판정 크기이며 장판
-  수명 `3s`, 동시 최대 2개를 그대로 따른다. Rear Laser는 조준 반대 방향의 실제
-  엄폐물 절단 지점까지 반너비 `18`인 filled corridor 하나로 `0.14s` 표시한다. Storm
+  수명 `3s`, 동시 최대 2개를 그대로 따른다. Auto Laser는 선택된 최다 관통 방향에서
+  실제 엄폐물 절단 지점까지 반너비 `18`인 filled corridor 하나로 `0.14s` 표시한다. Storm
   Barrage는 impact 전 `0.55s` 동안 반지름 `140`의 filled warning disk와 boundary 하나를
   사용하고, impact 뒤 radius를 확장하지 않는다. 세 표현은 반복 ring, particle spray,
   새 raster asset이나 별도 collision truth를 만들지 않는다.
+- Black Hole, Shockwave, Cross Beam은 기존 retained disk/ring/beam batch에 code-native
+  geometry만 추가한다. Black Hole은 실제 영향 반지름의 full disk와 단일 boundary,
+  Shockwave는 release frame의 full disk와 단일 boundary, Cross Beam은 실제 반폭의
+  두 map-spanning corridor를 사용한다. startup은 같은 geometry의 낮은 alpha 예고만
+  허용한다. 새 raster asset, particle node, 별도 collision geometry를 만들지 않는다.
 - Mystery Gravity Pull은 radius `480`에 alpha `0.10` full system disk를 `1.2s`, Cryo
   Lock은 radius `360`에 alpha `0.12` full cryo disk를 `0.8s`, Decoy Signal은 radius
   `900`에 alpha `0.08` full system disk를 `6s` 동안 유지한다. 세 effect 모두 device

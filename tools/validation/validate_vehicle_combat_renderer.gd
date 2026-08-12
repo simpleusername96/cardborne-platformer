@@ -39,6 +39,7 @@ func _run() -> void:
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
 	_validate_primitive_batches(renderer)
 	_validate_emp_presentation(renderer)
+	_validate_active_weapon_presentation(renderer)
 	_validate_health_bar_geometry(renderer)
 	_validate_enemy_presentation(renderer)
 	_expect(
@@ -1285,19 +1286,94 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 		),
 		"the EMP charge disk and utility fringe follow the current player center"
 	)
-	var run_source := FileAccess.get_file_as_string(
-		"res://scripts/vehicle/vehicle_run.gd"
+	var emp_source := FileAccess.get_file_as_string(
+		"res://data/weapons/vehicle/active/emp.tres"
 	)
-	var emp_source := run_source.get_slice(
-		"func _start_emp()", 1
-	).get_slice("func _emp_cooldown_max()", 0)
 	_expect(
-		emp_source.contains("Art.SYSTEM")
-			and emp_source.contains("Color.WHITE")
-			and emp_source.contains("EMP_PROJECTILE_CLEAR_RADIUS")
-			and not emp_source.contains("radius + 40.0")
-			and not emp_source.contains("Art.BOSS_MAGENTA"),
-		"EMP runtime publishes its named clear radius without renderer or call-site arithmetic"
+		emp_source.contains("startup_seconds = 0.42")
+			and emp_source.contains("size_by_level = Array[float]([285.0])")
+			and emp_source.contains("auxiliary_size = 325.0"),
+		"EMP definition publishes its exact damage and projectile-clear footprints"
+	)
+
+
+func _validate_active_weapon_presentation(renderer: Renderer) -> void:
+	var no_enemies: Array[EnemyState] = []
+	var no_projectiles: Array[ProjectileState] = []
+	var no_shards: Array[ExperienceShard] = []
+	var center := Vector2(640.0, 360.0)
+	var presentation := _player_presentation(center, false)
+	var visible_world := Rect2(0.0, 0.0, 1280.0, 720.0)
+	var beam_batch := renderer.get_node("Overlay_beam") as MultiMeshInstance2D
+	var disk_batch := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
+	var ring_batch := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
+	presentation["active_weapon"] = {
+		"weapon_id":&"cross_beam", "center":center,
+		"direction":Vector2.RIGHT, "size":26.0,
+		"startup_remaining":0.35, "active_remaining":0.0,
+		"release_remaining":0.0,
+	}
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		visible_world, center, 0.0, true, "", presentation
+	)
+	var beam_buffer := beam_batch.multimesh.buffer
+	var cross_widths_match := beam_batch.multimesh.visible_instance_count == 2
+	for index in beam_batch.multimesh.visible_instance_count:
+		var offset := index * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
+		cross_widths_match = cross_widths_match and is_equal_approx(
+			Vector2(beam_buffer[offset + 1], beam_buffer[offset + 5]).length(),
+			26.0
+		)
+	_expect(
+		cross_widths_match,
+		"Cross Beam startup renders both exact half-width-26 corridors"
+	)
+	presentation["active_weapon"] = {
+		"weapon_id":&"black_hole", "center":center,
+		"direction":Vector2.RIGHT, "size":225.0,
+		"startup_remaining":0.0, "active_remaining":1.0,
+		"release_remaining":0.0,
+	}
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		visible_world, center, 0.0, true, "", presentation
+	)
+	var disk_buffer := disk_batch.multimesh.buffer
+	var ring_buffer := ring_batch.multimesh.buffer
+	var second_ring_offset := Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
+	_expect(
+		disk_batch.multimesh.visible_instance_count == 1
+			and ring_batch.multimesh.visible_instance_count == 2
+			and is_equal_approx(Vector2(disk_buffer[0], disk_buffer[4]).length(), 225.0)
+			and is_equal_approx(Vector2(ring_buffer[0], ring_buffer[4]).length(), 225.0)
+			and is_equal_approx(
+				Vector2(
+					ring_buffer[second_ring_offset],
+					ring_buffer[second_ring_offset + 4]
+				).length(),
+				94.5
+			),
+		"Black Hole active phase renders its exact full disk and bounded core"
+	)
+	presentation["active_weapon"] = {
+		"weapon_id":&"shockwave", "center":center,
+		"direction":Vector2.RIGHT, "size":270.0,
+		"startup_remaining":0.0, "active_remaining":0.0,
+		"release_remaining":0.18,
+	}
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		visible_world, center, 0.0, true, "", presentation
+	)
+	disk_buffer = disk_batch.multimesh.buffer
+	ring_buffer = ring_batch.multimesh.buffer
+	_expect(
+		disk_batch.multimesh.visible_instance_count == 1
+			and ring_batch.multimesh.visible_instance_count == 1
+			and is_equal_approx(Vector2(disk_buffer[0], disk_buffer[4]).length(), 270.0)
+			and is_equal_approx(Vector2(ring_buffer[0], ring_buffer[4]).length(), 270.0),
+		"Shockwave release renders one complete radius-270 footprint"
 	)
 
 
@@ -1550,9 +1626,9 @@ func _validate_conditional_attack_footprints(
 	presentation["secondary"] = {
 		"mines":[],
 		"electric_field_radius":0.0,
-		"rear_laser_active_remaining":0.14,
-		"rear_laser_origin":Vector2(600.0, 360.0),
-		"rear_laser_end":Vector2(200.0, 360.0),
+		"auto_laser_active_remaining":0.14,
+		"auto_laser_origin":Vector2(600.0, 360.0),
+		"auto_laser_end":Vector2(200.0, 360.0),
 		"storm_pending":false,
 		"storm_impact_remaining":0.0,
 	}
@@ -1571,11 +1647,11 @@ func _validate_conditional_attack_footprints(
 			)
 			and Vector2(beam_buffer[3], beam_buffer[7])
 				== Vector2(400.0, 360.0),
-		"rear laser renders its exact corridor without a startup ring"
+		"auto laser renders its exact corridor without a startup ring"
 	)
 
 	var storm_position := Vector2(900.0, 360.0)
-	presentation["secondary"]["rear_laser_active_remaining"] = 0.0
+	presentation["secondary"]["auto_laser_active_remaining"] = 0.0
 	presentation["secondary"]["storm_pending"] = true
 	presentation["secondary"]["storm_position"] = storm_position
 	presentation["secondary"]["storm_warning_remaining"] = 0.55
@@ -1805,6 +1881,9 @@ func _player_presentation(
 		"orbiting_blade_level":1,
 		"secondary":{
 			"orbit_angle":0.37,
+			"orbit_radius":88.0,
+			"blade_radius":Art.PLAYER_ORBIT_BLADE_HALF_SIZE,
+			"blade_count":2,
 			"mines":[],
 			"electric_field_radius":0.0,
 		},

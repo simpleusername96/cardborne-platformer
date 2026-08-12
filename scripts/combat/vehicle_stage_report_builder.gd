@@ -61,6 +61,8 @@ static func _attribute_rows(
 				applications = int(status_applications.get(&"poison", 0))
 			&"cryo":
 				applications = int(status_applications.get(&"chill", 0))
+			&"arc":
+				applications = int(status_applications.get(&"shock", 0))
 		if damage <= 0.0 and applications <= 0:
 			continue
 		rows.append({

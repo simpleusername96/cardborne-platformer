@@ -1,8 +1,10 @@
 class_name VehicleRunBuild
 extends RefCounted
 
-const ELEMENT_UPGRADE_IDS: Array[StringName] = [
-	&"thermal_burst", &"bio_toxin", &"cryo_slow",
+const DAMAGE_ATTRIBUTE_IDS: Array[StringName] = [&"thermal_burst", &"bio_toxin"]
+const UTILITY_ATTRIBUTE_IDS: Array[StringName] = [&"cryo_slow", &"shock_disruption"]
+const ACTIVE_WEAPON_CARD_IDS: Array[StringName] = [
+	&"gravity_collapse", &"kinetic_shockwave", &"piercing_lance",
 ]
 
 var catalog: VehicleUpgradeCatalog
@@ -44,11 +46,40 @@ func active_optional_secondaries() -> int:
 	return count
 
 
-func active_element_id() -> StringName:
-	for upgrade_id in ELEMENT_UPGRADE_IDS:
+func active_damage_attribute_id() -> StringName:
+	for upgrade_id in DAMAGE_ATTRIBUTE_IDS:
 		if has(upgrade_id):
 			return upgrade_id
 	return &""
+
+
+func active_utility_attribute_id() -> StringName:
+	for upgrade_id in UTILITY_ATTRIBUTE_IDS:
+		if has(upgrade_id):
+			return upgrade_id
+	return &""
+
+
+func active_attribute_id(slot_kind: StringName) -> StringName:
+	match slot_kind:
+		&"damage": return active_damage_attribute_id()
+		&"utility": return active_utility_attribute_id()
+		_: return &""
+
+
+func active_weapon_card_id() -> StringName:
+	for upgrade_id in ACTIVE_WEAPON_CARD_IDS:
+		if has(upgrade_id):
+			return upgrade_id
+	return &""
+
+
+func active_weapon_id() -> StringName:
+	match active_weapon_card_id():
+		&"gravity_collapse": return &"black_hole"
+		&"kinetic_shockwave": return &"shockwave"
+		&"piercing_lance": return &"cross_beam"
+		_: return &"emp"
 
 
 func stat(stat_id: StringName, base_value: float) -> float:

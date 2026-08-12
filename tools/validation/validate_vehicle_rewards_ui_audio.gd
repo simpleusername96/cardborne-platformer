@@ -133,10 +133,10 @@ func _run() -> void:
 			and bool(card["level_visible"])
 			and int(card["value_rows"]) >= 2
 			and not bool(card["dossier_split"])
-			and bool(card["vertical_dossier"])
+			and not bool(card["vertical_dossier"])
 			and not bool(card["footer_visible"])
 			and bool(card["description_visible"])
-			and int(card["summary_max_lines"]) == 2
+			and int(card["summary_max_lines"]) == 1
 			and int(card["body_divider_count"]) == 0
 			and int(card["pip_slots"]) == 0
 			and int(card["stage_pip_count"]) == 0
@@ -144,7 +144,7 @@ func _run() -> void:
 		)
 	_expect(
 		card_contracts_valid,
-		"every card exposes level plus one numeric delta in the dossier, no stage pips, and parent-owned pointer input"
+		"every offer row exposes a one-line summary, one numeric delta, no stage pips, and parent-owned pointer input"
 	)
 	_expect((panel.get("_confirm") as Button).disabled, "upgrade confirm begins disabled")
 	panel.call("_process", 0.36)
@@ -186,7 +186,7 @@ func _run() -> void:
 	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")
-	_expect(int(experience_runtime.call("required_experience")) == 12, "a fresh run starts with a 12-XP level threshold")
+	_expect(int(experience_runtime.call("required_experience")) == 6, "a fresh run starts with a 6-XP level threshold")
 	var recall_start := Vector2(stage.get("player_position"))
 	experience_runtime.call("spawn_shard", recall_start + Vector2(900.0, 0.0), 2)
 	for recall_frame in 40:
@@ -209,7 +209,7 @@ func _run() -> void:
 			and int(ui_contract["action_slot_count"]) == 3
 			and Vector2(ui_contract["status_cluster_size"]) == Vector2(246.0, 40.0)
 			and int(ui_contract["status_cluster_background_geometry_count"]) == 0,
-		"top-left panel-free cluster owns Dash, Seeker, and EMP without a bottom rail"
+		"top-left panel-free cluster owns Dash, Seeker, and the active weapon without a bottom rail"
 	)
 	_expect(
 		Vector2(ui_contract["health_cluster_size"]) == Vector2(1280.0, 54.0)

@@ -3,7 +3,7 @@ extends SceneTree
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
-const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
 const PrimaryRules = preload("res://scripts/player/vehicle_primary_upgrade_rules.gd")
 
 const RETIRED_IDS: Array[StringName] = [
@@ -39,11 +39,12 @@ func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract():
 		failures.append(error)
-	_expect(catalog.definitions.size() == 21, "catalog contains exactly 21 upgrades")
+	_expect(catalog.definitions.size() == 28, "catalog contains exactly 28 upgrades")
 	_validate_presentation(catalog)
 	_validate_behavior_previews(catalog)
 	_validate_secondary_slots(catalog)
 	_validate_element_lock(catalog)
+	_validate_active_lock(catalog)
 	_validate_offers(catalog)
 	_validate_stats(catalog)
 	for retired_id in RETIRED_IDS:
@@ -95,13 +96,13 @@ func _validate_presentation(catalog: Catalog) -> void:
 					"%s behavior level has a localized change label" % definition.id
 				)
 			state_count += 1
-	_expect(state_count == 68, "upgrade presentation covers all 68 level states")
+	_expect(state_count == 92, "upgrade presentation covers all 92 level states")
 	_expect(
 		category_counts == {
-			&"primary":2, &"secondary":6, &"element":3, &"chassis":5,
-			&"combat":5,
+			&"primary":2, &"secondary":8, &"element":4, &"activated":5,
+			&"chassis":5, &"combat":4,
 		},
-		"five player-facing categories own the exact expanded roster"
+		"six player-facing categories own the exact approved roster"
 	)
 
 
@@ -219,7 +220,7 @@ func _validate_secondary_slots(catalog: Catalog) -> void:
 	optional_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	built_in_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	_expect(
-		_id_key(optional_ids) == "drop_mines|electric_field|orbiting_blades|rear_laser|storm_barrage",
+		_id_key(optional_ids) == "auto_laser|drop_mines|electric_field|orbiting_blades|storm_barrage",
 		"five optional secondary identities support a choose-two decision: %s"
 		% _id_key(optional_ids)
 	)
@@ -243,27 +244,65 @@ func _validate_secondary_slots(catalog: Catalog) -> void:
 
 
 func _validate_element_lock(catalog: Catalog) -> void:
+	for pair_variant in [
+		[&"thermal_burst", &"cryo_slow"],
+		[&"thermal_burst", &"shock_disruption"],
+		[&"bio_toxin", &"cryo_slow"],
+		[&"bio_toxin", &"shock_disruption"],
+	]:
+		var pair := Array(pair_variant)
+		var pair_build := RunBuild.new(catalog)
+		_expect(
+			bool(pair_build.apply(StringName(pair[0])).get("applied", false))
+				and bool(pair_build.apply(StringName(pair[1])).get("applied", false))
+				and pair_build.active_damage_attribute_id() == StringName(pair[0])
+				and pair_build.active_utility_attribute_id() == StringName(pair[1]),
+			"damage and utility attribute pairing is legal: %s + %s" % pair
+		)
 	var build := RunBuild.new(catalog)
 	_expect(
 		catalog.compatible(catalog.get_definition(&"thermal_burst"), build)
 			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
-			and catalog.compatible(catalog.get_definition(&"cryo_slow"), build),
-		"all three elemental roots are legal before selection"
+			and catalog.compatible(catalog.get_definition(&"cryo_slow"), build)
+			and catalog.compatible(catalog.get_definition(&"shock_disruption"), build),
+		"both damage and both utility attributes are legal before selection"
 	)
-	_expect(bool(build.apply(&"bio_toxin").get("applied", false)), "one element can be selected")
+	_expect(bool(build.apply(&"bio_toxin").get("applied", false)), "one damage attribute can be selected")
 	_expect(
-		build.active_element_id() == &"bio_toxin"
+		build.active_damage_attribute_id() == &"bio_toxin"
 			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
 			and not catalog.compatible(catalog.get_definition(&"thermal_burst"), build)
-			and not catalog.compatible(catalog.get_definition(&"cryo_slow"), build),
-		"the selected element remains levelable and excludes other roots"
+			and catalog.compatible(catalog.get_definition(&"cryo_slow"), build)
+			and catalog.compatible(catalog.get_definition(&"shock_disruption"), build),
+		"the selected damage attribute excludes only the other damage root"
+	)
+	_expect(bool(build.apply(&"cryo_slow").get("applied", false)), "one utility attribute can coexist")
+	_expect(
+		build.active_utility_attribute_id() == &"cryo_slow"
+			and not catalog.compatible(catalog.get_definition(&"shock_disruption"), build),
+		"the selected utility attribute excludes only the other utility root"
 	)
 	for serial in 12:
 		for definition in catalog.offer(build, 1701, 3, &"level_up", serial):
 			_expect(
-				definition.category != &"element" or definition.id == &"bio_toxin",
-				"post-selection offers contain only the active element"
+				definition.category != &"element"
+					or definition.id in [&"bio_toxin", &"cryo_slow"],
+				"post-selection offers contain only the two active attributes"
 			)
+
+
+func _validate_active_lock(catalog: Catalog) -> void:
+	var build := RunBuild.new(catalog)
+	_expect(build.active_weapon_id() == &"emp", "EMP is the default active weapon")
+	_expect(bool(build.apply(&"gravity_collapse").get("applied", false)), "one active kind can replace EMP")
+	_expect(
+		build.active_weapon_id() == &"black_hole"
+			and catalog.compatible(catalog.get_definition(&"gravity_collapse"), build)
+			and not catalog.compatible(catalog.get_definition(&"kinetic_shockwave"), build)
+			and not catalog.compatible(catalog.get_definition(&"piercing_lance"), build)
+			and catalog.compatible(catalog.get_definition(&"active_coolant"), build),
+		"one selected active kind remains levelable while shared enhancements stay legal"
+	)
 
 
 func _validate_offers(catalog: Catalog) -> void:
@@ -294,7 +333,7 @@ func _validate_offers(catalog: Catalog) -> void:
 		var build := RunBuild.new(catalog)
 		var legal_choices := 0
 		var observed_sizes := {}
-		for choice_index in 60:
+		for choice_index in 72:
 			var source_id := &"boss" if choice_index in [4, 9, 14, 19, 24] else &"level_up"
 			var offer := catalog.offer(
 				build,
@@ -314,8 +353,8 @@ func _validate_offers(catalog: Catalog) -> void:
 			legal_choices += 1
 			build.apply(offer[run_seed % offer.size()].id)
 		_expect(
-			legal_choices >= 48
-				and legal_choices <= 51
+			legal_choices >= 65
+				and legal_choices <= 67
 				and catalog.compatible_definitions(build).is_empty(),
 			(
 				"seed %d reaches catalog exhaustion after all legal choices "
@@ -416,7 +455,7 @@ func _validate_element_stats(catalog: Catalog) -> void:
 		)
 		for level in definition.max_level:
 			build.apply(StringName(case["id"]))
-			var profile := ElementProfile.from_build(build)
+			var profile := PrimaryPayload.from_build(build)
 			_expect(
 				is_equal_approx(build.stat(StringName(case["stat_a"]), 0.0), float(case["a"][level]))
 					and is_equal_approx(build.stat(StringName(case["stat_b"]), 0.0), float(case["b"][level])),

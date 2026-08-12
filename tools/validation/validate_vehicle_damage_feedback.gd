@@ -237,7 +237,9 @@ func _check_emp_footprint_results(stage: Node) -> void:
 		false
 	)
 	stage.call("_clear_effects")
-	stage.call("_release_emp")
+	stage.call("_start_active_weapon")
+	stage.call("_clear_effects")
+	stage.call("_advance_active_weapon", 0.42)
 	var hostile_projectiles: Array = projectile_store.get("hostile_live")
 	var effects: Array = stage.get("effects")
 	_expect(

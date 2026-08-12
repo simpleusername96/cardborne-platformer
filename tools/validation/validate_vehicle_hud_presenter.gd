@@ -166,7 +166,7 @@ func _fast() -> Dictionary:
 		"seeker_remaining":0.0,
 		"skill_available":true,
 		"skill_remaining":0.0,
-		"buff_text":"",
+		"active_weapon_id":&"emp",
 	}
 
 
@@ -184,7 +184,7 @@ func _all_action_fields_present(update: Dictionary) -> bool:
 	for key in [
 		"dash_available", "dash_remaining",
 		"seeker_available", "seeker_remaining",
-		"skill_available", "skill_remaining", "buff_text",
+		"skill_available", "skill_remaining", "active_weapon_id",
 	]:
 		if not update.has(key):
 			return false

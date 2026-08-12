@@ -103,10 +103,13 @@ var statuses: Dictionary = {}
 # the live status Dictionary on the frame hot path; pulse values are normalized.
 var toxin_stack_ratio := 0.0
 var cryo_stack_ratio := 0.0
+var shock_stack_ratio := 0.0
 var toxin_application_pulse := 0.0
 var cryo_application_pulse := 0.0
+var shock_application_pulse := 0.0
 var toxin_application_delay := 0.0
 var cryo_application_delay := 0.0
+var shock_application_delay := 0.0
 # Mystery Cryo reuses the shared body compositor without becoming a Chill stack.
 var mystery_cryo_remaining := 0.0
 var runtime_slot := -1
@@ -126,10 +129,13 @@ func reset_runtime_collections() -> void:
 	contact_attack = &""
 	toxin_stack_ratio = 0.0
 	cryo_stack_ratio = 0.0
+	shock_stack_ratio = 0.0
 	toxin_application_pulse = 0.0
 	cryo_application_pulse = 0.0
+	shock_application_pulse = 0.0
 	toxin_application_delay = 0.0
 	cryo_application_delay = 0.0
+	shock_application_delay = 0.0
 	mystery_cryo_remaining = 0.0
 	lane_centers.clear()
 	attack_telegraphs.clear()

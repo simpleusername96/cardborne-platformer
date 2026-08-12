@@ -4,11 +4,11 @@
 
 [resource]
 script = ExtResource("1")
-id = &"rear_laser"
-upgrade_id = &"rear_laser"
-name_key = "SECONDARY_REAR_LASER_NAME"
-description_key = "SECONDARY_REAR_LASER_DESC"
-behavior = &"rear_beam"
+id = &"auto_laser"
+upgrade_id = &"auto_laser"
+name_key = "SECONDARY_AUTO_LASER_NAME"
+description_key = "SECONDARY_AUTO_LASER_DESC"
+behavior = &"auto_beam"
 values_by_level = Array[float]([48.0, 66.0, 86.0])
 auxiliary_by_level = Array[float]([0.9, 0.9, 0.9])
 cap_by_level = Array[int]([1, 1, 1])

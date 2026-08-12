@@ -14,6 +14,12 @@ extends Resource
 ## Optional weapon slot ownership. Built-in Seeker upgrades never consume a
 ## slot; optional secondary weapons consume one slot on first acquisition.
 @export var secondary_slot_kind: StringName = &""
+## Primary payload ownership. Damage and utility attributes each allow one
+## selected root, so the UI never has to infer exclusivity from category text.
+@export var attribute_slot_kind: StringName = &""
+## Active weapon ownership. A kind replaces the default EMP for the run;
+## enhancements affect whichever kind is equipped without consuming the kind slot.
+@export var active_slot_kind: StringName = &""
 @export var max_level := 1
 @export var modifiers: Array[VehicleStatModifier] = []
 

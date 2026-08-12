@@ -166,11 +166,11 @@ func _initialize() -> void:
 			"upgrade confirmation uses the supported command contract at %d" % width
 		)
 		_expect(
-			String(upgrade_contract["row_type"]) == "HFlowContainer"
+			String(upgrade_contract["row_type"]) == "VBoxContainer"
 				and int(upgrade_contract["row_separation"]) == (
-					12 if width < 1100.0 else (16 if width < 1600.0 else 24)
+					6 if width < 1100.0 else (10 if width < 1600.0 else 12)
 				),
-			"upgrade cards use the approved responsive flow and gap at %d" % width
+			"upgrade offers use the approved vertical row flow and gap at %d" % width
 		)
 		var panel_type_sizes := Dictionary(upgrade_contract["type_sizes"])
 		_expect(
@@ -200,12 +200,12 @@ func _initialize() -> void:
 			var card_size := Vector2(card["minimum_size"])
 			_expect(
 				(
-					card_size == Vector2(280.0, 410.0)
+					card_size == Vector2(540.0, 112.0)
 					if width < 1100.0
 					else (
-						card_size == Vector2(360.0, 488.0)
+						card_size == Vector2(820.0, 140.0)
 						if width < 1600.0
-						else card_size == Vector2(420.0, 512.0)
+						else card_size == Vector2(900.0, 152.0)
 					)
 				),
 				"upgrade cards use the supported hierarchy at %d" % width
@@ -213,25 +213,25 @@ func _initialize() -> void:
 			_expect(
 				Dictionary(card["type_sizes"]) == (
 					{
-						"category":13,
-						"level":15,
-						"title":22,
-						"summary":32,
+						"category":12,
+						"level":14,
+						"title":18,
+						"summary":13,
 					}
 					if width < 1100.0
 					else (
 						{
-							"category":16,
-							"level":18,
-							"title":28,
-							"summary":34,
+							"category":13,
+							"level":16,
+							"title":22,
+							"summary":15,
 						}
 						if width < 1600.0
 						else {
-							"category":18,
+							"category":15,
 							"level":18,
-							"title":32,
-							"summary":36,
+							"title":25,
+							"summary":17,
 						}
 					)
 				),
@@ -251,16 +251,16 @@ func _initialize() -> void:
 			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
 			_expect(
 				not bool(card["dossier_split"])
-					and bool(card["vertical_dossier"])
+					and not bool(card["vertical_dossier"])
 					and int(card["body_divider_count"]) == 0,
-				"upgrade card uses one centered vertical dossier without separator lines"
+				"upgrade offer uses one horizontal row without separator lines"
 			)
 			_expect(
 				not bool(card["footer_visible"])
 					and not bool(card["description_in_comparison"])
 					and bool(card["description_visible"])
-					and int(card["summary_max_lines"]) == 2,
-				"upgrade card shows one large two-line description outside stat comparison"
+					and int(card["summary_max_lines"]) == 1,
+				"upgrade row keeps one short explanatory line outside stat comparison"
 			)
 			_expect(
 				bool(card["level_visible"])
@@ -835,9 +835,9 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	)
 	for card_variant in upgrade["cards"]:
 		_expect(
-			int(Dictionary(card_variant)["type_sizes"]["title"]) == 56
-				and int(Dictionary(card_variant)["type_sizes"]["level"]) == 36,
-			"200%% probe doubles dynamically created card typography; got %s"
+			Dictionary(card_variant)["type_sizes"]
+				== {"category":36, "level":44, "title":60, "summary":44},
+			"200%% probe doubles dynamically created offer-row typography; got %s"
 			% Dictionary(card_variant)["type_sizes"]
 		)
 	_expect_upgrade_geometry(
@@ -964,18 +964,9 @@ func _expect_upgrade_geometry(
 	for card_variant in panel["cards"]:
 		var card := Dictionary(card_variant)
 		var card_rect := Rect2(card["rect"])
-		var expected_card_size := (
-			Vector2(520.0, 920.0)
-			if card_rect.size.x > 500.0
-			else (
-				Vector2(280.0, 410.0)
-				if card_rect.size.x < 300.0
-				else (
-					Vector2(420.0, 512.0)
-					if card_rect.size.x > 400.0
-					else Vector2(360.0, 488.0)
-				)
-			)
+		var expected_height := (
+			210.0 if allow_vertical_scroll
+			else (112.0 if card_rect.size.y < 120.0 else (152.0 if card_rect.size.y > 145.0 else 140.0))
 		)
 		_expect(
 			(
@@ -988,8 +979,9 @@ func _expect_upgrade_geometry(
 			"%s card stays inside its available flow bounds" % context
 		)
 		_expect(
-			card_rect.size.is_equal_approx(expected_card_size),
-			"%s card uses approved compact/wide geometry: %s"
+			is_equal_approx(card_rect.size.y, expected_height)
+				and card_rect.size.x >= 540.0,
+			"%s row uses approved responsive geometry: %s"
 			% [context, card_rect.size]
 		)
 		if prior_card.has_area():

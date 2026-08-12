@@ -8,7 +8,8 @@ signal confirmed(upgrade_id: StringName)
 signal selected(upgrade_id: StringName)
 
 const GUARD_SECONDS := 0.35
-const UpgradeChoiceCard = preload("res://scripts/ui/vehicle_upgrade_choice_card.gd")
+const UpgradeChoiceRow = preload("res://scripts/ui/vehicle_upgrade_choice_row.gd")
+const UpgradeBuildRail = preload("res://scripts/ui/vehicle_upgrade_build_rail.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 
@@ -21,10 +22,13 @@ var _compact := false
 var _large := false
 
 var _row_scroll: ScrollContainer
-var _row: HFlowContainer
+var _row: VBoxContainer
 var _message: Label
 var _command_lane: CenterContainer
 var _confirm: Button
+var _build_rail: VehicleUpgradeBuildRail
+var _content: HBoxContainer
+var _offer_column: VBoxContainer
 
 
 func _ready() -> void:
@@ -34,24 +38,34 @@ func _ready() -> void:
 
 
 func _build() -> void:
+	_content = HBoxContainer.new()
+	_content.add_theme_constant_override("separation", 18)
+	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_content)
+	_build_rail = UpgradeBuildRail.new()
+	_content.add_child(_build_rail)
+	_content.add_child(VSeparator.new())
+	_offer_column = VBoxContainer.new()
+	_offer_column.add_theme_constant_override("separation", 10)
+	_offer_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_offer_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content.add_child(_offer_column)
 	_row_scroll = ScrollContainer.new()
 	_row_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_row_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_row_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_row_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_row_scroll)
-	_row = HFlowContainer.new()
+	_offer_column.add_child(_row_scroll)
+	_row = VBoxContainer.new()
 	_row.name = "UpgradeButtons"
-	_row.add_theme_constant_override("h_separation", 16)
-	_row.add_theme_constant_override("v_separation", 16)
-	_row.alignment = FlowContainer.ALIGNMENT_CENTER
-	_row.last_wrap_alignment = FlowContainer.LAST_WRAP_ALIGNMENT_CENTER
+	_row.add_theme_constant_override("separation", 10)
 	_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_row.custom_minimum_size.y = 488.0
+	_row.custom_minimum_size.y = 440.0
 	_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_row_scroll.add_child(_row)
 	for index in 3:
-		var button := UpgradeChoiceCard.new()
+		var button := UpgradeChoiceRow.new()
 		button.name = "UpgradeCard%d" % (index + 1)
 		button.pressed.connect(_select.bind(index))
 		_row.add_child(button)
@@ -60,9 +74,9 @@ func _build() -> void:
 	_message = _label("", 16, Art.DANGER)
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message.custom_minimum_size.y = 20.0
-	add_child(_message)
+	_offer_column.add_child(_message)
 	_command_lane = CenterContainer.new()
-	add_child(_command_lane)
+	_offer_column.add_child(_command_lane)
 	_confirm = Factory.command_button("UPGRADE_EQUIP", Factory.COMMAND_PRIMARY)
 	_confirm.custom_minimum_size = Vector2(360.0, 56.0)
 	Factory.apply_font_size(_confirm, 24)
@@ -76,9 +90,10 @@ func set_compact_mode(value: bool) -> void:
 	add_theme_constant_override("separation", 6 if value else 10)
 	if not is_node_ready():
 		return
-	_row.add_theme_constant_override("h_separation", 12 if value else 16)
-	_row.add_theme_constant_override("v_separation", 12 if value else 16)
-	_row.custom_minimum_size.y = 410.0 if value else 488.0
+	_build_rail.set_compact_mode(value)
+	_content.add_theme_constant_override("separation", 10 if value else 18)
+	_row.add_theme_constant_override("separation", 6 if value else 10)
+	_row.custom_minimum_size.y = 342.0 if value else 440.0
 	_message.custom_minimum_size.y = 20.0 if value else 22.0
 	Factory.apply_font_size(
 		_message,
@@ -94,24 +109,17 @@ func set_compact_mode(value: bool) -> void:
 		int(Art.TYPE_SCALE_COMPACT[3] if value else Art.TYPE_SCALE_WIDE[3])
 	)
 	for button in _buttons:
-		(button as VehicleUpgradeChoiceCard).set_compact_mode(value)
-		(button as VehicleUpgradeChoiceCard).set_large_mode(_large)
+		(button as VehicleUpgradeChoiceRow).set_compact_mode(value)
+		(button as VehicleUpgradeChoiceRow).set_large_mode(_large)
 
 
 func set_large_mode(value: bool) -> void:
 	_large = value and not _compact
 	if not is_node_ready():
 		return
-	_row.add_theme_constant_override(
-		"h_separation",
-		24 if _large else (12 if _compact else 16)
-	)
-	_row.add_theme_constant_override(
-		"v_separation",
-		24 if _large else (12 if _compact else 16)
-	)
+	_row.add_theme_constant_override("separation", 12 if _large else (6 if _compact else 10))
 	_row.custom_minimum_size.y = (
-		512.0 if _large else (410.0 if _compact else 488.0)
+		480.0 if _large else (342.0 if _compact else 440.0)
 	)
 	_message.custom_minimum_size.y = (
 		24.0 if _large else (20.0 if _compact else 22.0)
@@ -138,7 +146,7 @@ func set_large_mode(value: bool) -> void:
 		else int(Art.TYPE_SCALE_COMPACT[3] if _compact else Art.TYPE_SCALE_WIDE[3])
 	)
 	for button in _buttons:
-		(button as VehicleUpgradeChoiceCard).set_large_mode(_large)
+		(button as VehicleUpgradeChoiceRow).set_large_mode(_large)
 
 
 func set_accessibility_mode(enabled: bool) -> void:
@@ -150,9 +158,9 @@ func set_accessibility_mode(enabled: bool) -> void:
 	if enabled:
 		set_compact_mode(false)
 	for button in _buttons:
-		(button as VehicleUpgradeChoiceCard).set_accessibility_mode(enabled)
+		(button as VehicleUpgradeChoiceRow).set_accessibility_mode(enabled)
 		if enabled:
-			(button as VehicleUpgradeChoiceCard).set_large_mode(false)
+			(button as VehicleUpgradeChoiceRow).set_large_mode(false)
 	_row.custom_minimum_size.y = (
 		920.0
 		if enabled
@@ -164,8 +172,9 @@ func accessibility_preferred_size() -> Vector2:
 	return Vector2(1200.0, 680.0)
 
 
-func open(cards: Array[Dictionary]) -> void:
+func open(cards: Array[Dictionary], build_snapshot: Dictionary = {}) -> void:
 	_cards = cards.duplicate(true)
+	_build_rail.set_snapshot(build_snapshot)
 	_selected_index = -1
 	_guard_remaining = GUARD_SECONDS
 	_pending = false
@@ -176,8 +185,8 @@ func open(cards: Array[Dictionary]) -> void:
 		button.disabled = true
 		if button.visible:
 			var card: Dictionary = _cards[index]
-			(button as VehicleUpgradeChoiceCard).set_offer(card)
-			(button as VehicleUpgradeChoiceCard).set_selected_state(false)
+			(button as VehicleUpgradeChoiceRow).set_offer(card)
+			(button as VehicleUpgradeChoiceRow).set_selected_state(false)
 	_refresh_controls()
 
 
@@ -243,7 +252,7 @@ func _refresh_controls() -> void:
 		# Cards stay visually readable during the guard; selection handlers discard
 		# carried input until the guard expires.
 		button.disabled = _pending or not button.visible
-		(button as VehicleUpgradeChoiceCard).set_selected_state(index == _selected_index)
+		(button as VehicleUpgradeChoiceRow).set_selected_state(index == _selected_index)
 	_confirm.disabled = guarded or _pending or _selected_index < 0
 
 
@@ -254,8 +263,8 @@ func debug_contract() -> Dictionary:
 	var state_variations: Array[StringName] = []
 	var visible_card_count := 0
 	for button in _buttons:
-		if button is VehicleUpgradeChoiceCard:
-			var card := button as VehicleUpgradeChoiceCard
+		if button is VehicleUpgradeChoiceRow:
+			var card := button as VehicleUpgradeChoiceRow
 			card_contracts.append(card.debug_contract())
 			state_variations.append(card.theme_type_variation)
 			if card.visible:
@@ -267,7 +276,7 @@ func debug_contract() -> Dictionary:
 		"structured_cards":structured,
 		"card_count":_buttons.size(),
 		"confirm_size":_confirm.custom_minimum_size,
-		"row_separation":_row.get_theme_constant("h_separation"),
+		"row_separation":_row.get_theme_constant("separation"),
 		"row_type":_row.get_class(),
 		"row_minimum_height":_row.custom_minimum_size.y,
 		"guard_seconds":GUARD_SECONDS,
@@ -290,6 +299,7 @@ func debug_contract() -> Dictionary:
 		},
 		"message_color":_message.get_theme_color("font_color"),
 		"cards":card_contracts,
+		"build_rail":_build_rail.debug_contract(),
 	}
 
 
@@ -298,7 +308,7 @@ func debug_geometry_contract() -> Dictionary:
 	for button in _buttons:
 		if button.visible:
 			card_contracts.append(
-				(button as VehicleUpgradeChoiceCard).debug_geometry_contract()
+				(button as VehicleUpgradeChoiceRow).debug_geometry_contract()
 			)
 	return {
 		"rect":get_global_rect(),

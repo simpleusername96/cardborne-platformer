@@ -7,12 +7,15 @@ extends RefCounted
 
 const ION_TICK := 0.25
 const ORBIT_HIT_COOLDOWN := 0.55
+const ORBIT_RADIUS := 88.0
+const ORBIT_BLADE_RADIUS := 52.0
 const MINE_LIFETIME := 8.0
 const MINE_MAX_RADIUS := 120.0
-const REAR_LASER_LENGTH := 760.0
-const REAR_LASER_HALF_WIDTH := 18.0
-const REAR_LASER_DURATION := 0.14
-const REAR_LASER_COOLDOWN := 0.9
+const AUTO_LASER_LENGTH := 760.0
+const AUTO_LASER_HALF_WIDTH := 18.0
+const AUTO_LASER_DURATION := 0.14
+const AUTO_LASER_COOLDOWN := 0.9
+const AUTO_LASER_CANDIDATE_LIMIT := 24
 const STORM_MIN_DISTANCE := 480.0
 const STORM_MAX_DISTANCE := 960.0
 const STORM_TARGET_LIMIT := 12
@@ -31,10 +34,10 @@ var orbit_angle := 0.0
 var orbit_target_cooldowns: Dictionary = {}
 var mines: Array[Dictionary] = []
 var seeker_cooldown := 0.0
-var rear_laser_cooldown := 0.0
-var rear_laser_active_remaining := 0.0
-var rear_laser_active_origin := Vector2.ZERO
-var rear_laser_active_end := Vector2.ZERO
+var auto_laser_cooldown := 0.0
+var auto_laser_active_remaining := 0.0
+var auto_laser_active_origin := Vector2.ZERO
+var auto_laser_active_end := Vector2.ZERO
 var storm_cooldown := 0.0
 var storm_warning_remaining := 0.0
 var storm_impact_remaining := 0.0
@@ -46,6 +49,7 @@ var storm_pending_attack_serial := 0
 var _candidate_buffer: Array[EnemyState] = []
 var _storm_selected_buffer: Array[EnemyState] = []
 var _beam_target_buffer: Array[EnemyState] = []
+var _auto_laser_candidate_buffer: Array[EnemyState] = []
 var _expired_cooldown_ids: Array[String] = []
 var _damage_output: Array[Dictionary] = []
 var _projectile_output: Array[Dictionary] = []
@@ -88,10 +92,10 @@ func reset(player_position: Vector2) -> void:
 	_beam_target_buffer.clear()
 	orbit_angle = 0.0
 	seeker_cooldown = 0.0
-	rear_laser_cooldown = 0.0
-	rear_laser_active_remaining = 0.0
-	rear_laser_active_origin = player_position
-	rear_laser_active_end = player_position
+	auto_laser_cooldown = 0.0
+	auto_laser_active_remaining = 0.0
+	auto_laser_active_origin = player_position
+	auto_laser_active_end = player_position
 	storm_cooldown = 0.0
 	storm_warning_remaining = 0.0
 	storm_impact_remaining = 0.0
@@ -149,20 +153,24 @@ func update(
 	_beam_intent_count = 0
 	_warning_receipt_count = 0
 	_impact_receipt_count = 0
+	var shared_cooldown_multiplier := build.stat(&"secondary_cooldown_multiplier", 1.0)
+	var shared_damage_multiplier := build.stat(&"secondary_damage_multiplier", 1.0)
 	seeker_cooldown = maxf(0.0, seeker_cooldown - delta)
-	rear_laser_cooldown = maxf(0.0, rear_laser_cooldown - delta)
-	rear_laser_active_remaining = maxf(
-		0.0, rear_laser_active_remaining - delta
+	auto_laser_cooldown = maxf(0.0, auto_laser_cooldown - delta)
+	auto_laser_active_remaining = maxf(
+		0.0, auto_laser_active_remaining - delta
 	)
 	storm_cooldown = maxf(0.0, storm_cooldown - delta)
 	storm_impact_remaining = maxf(0.0, storm_impact_remaining - delta)
-	_update_rear_laser(
+	_update_auto_laser(
 		player_position,
 		build,
 		enemies,
 		line_of_sight,
 		query_radius,
-		attack_path_end
+		attack_path_end,
+		shared_cooldown_multiplier,
+		shared_damage_multiplier
 	)
 	_update_storm_barrage(
 		delta,
@@ -170,7 +178,9 @@ func update(
 		aim_direction,
 		build,
 		enemies,
-		query_radius
+		query_radius,
+		shared_cooldown_multiplier,
+		shared_damage_multiplier
 	)
 	_update_seeker(
 		delta,
@@ -179,7 +189,8 @@ func update(
 		find_seeker_targets,
 		seeker_blocked,
 		_projectile_output,
-		seeker_cooldown_multiplier
+		seeker_cooldown_multiplier * shared_cooldown_multiplier,
+		shared_damage_multiplier
 	)
 	orbit_angle = fmod(orbit_angle + delta * 2.45, TAU)
 	_expired_cooldown_ids.clear()
@@ -199,7 +210,9 @@ func update(
 		enemies,
 		line_of_sight,
 		query_radius,
-		_damage_output
+		_damage_output,
+		shared_cooldown_multiplier,
+		shared_damage_multiplier
 	)
 	_update_orbit(
 		player_position,
@@ -207,7 +220,9 @@ func update(
 		enemies,
 		line_of_sight,
 		query_radius,
-		_damage_output
+		_damage_output,
+		shared_cooldown_multiplier,
+		shared_damage_multiplier
 	)
 	_update_mines(
 		delta,
@@ -218,7 +233,9 @@ func update(
 		line_of_sight,
 		query_radius,
 		_damage_output,
-		_detonation_output
+		_detonation_output,
+		shared_cooldown_multiplier,
+		shared_damage_multiplier
 	)
 	_primary_success_pending = false
 	return _result
@@ -241,16 +258,19 @@ func snapshot(build: VehicleRunBuild) -> Dictionary:
 		"orbit_angle":orbit_angle,
 		"mines":mines.duplicate(true),
 		"seeker_cooldown":seeker_cooldown,
-		"rear_laser_cooldown":rear_laser_cooldown,
-		"rear_laser_active_remaining":rear_laser_active_remaining,
-		"rear_laser_origin":rear_laser_active_origin,
-		"rear_laser_end":rear_laser_active_end,
+		"auto_laser_cooldown":auto_laser_cooldown,
+		"auto_laser_active_remaining":auto_laser_active_remaining,
+		"auto_laser_origin":auto_laser_active_origin,
+		"auto_laser_end":auto_laser_active_end,
 		"storm_cooldown":storm_cooldown,
 		"storm_pending":storm_pending,
 		"storm_position":storm_position,
 		"storm_warning_remaining":storm_warning_remaining,
 		"storm_impact_remaining":storm_impact_remaining,
 		"electric_field_radius":_electric_field_radius(build),
+		"orbit_radius":ORBIT_RADIUS,
+		"blade_radius":ORBIT_BLADE_RADIUS,
+		"blade_count":_orbit_blade_count(build),
 	}
 
 
@@ -263,10 +283,13 @@ func fill_presentation_snapshot(
 	output["orbit_angle"] = orbit_angle
 	output["mines"] = mines
 	output["electric_field_radius"] = _electric_field_radius(build)
-	output["rear_laser_cooldown"] = rear_laser_cooldown
-	output["rear_laser_active_remaining"] = rear_laser_active_remaining
-	output["rear_laser_origin"] = rear_laser_active_origin
-	output["rear_laser_end"] = rear_laser_active_end
+	output["auto_laser_cooldown"] = auto_laser_cooldown
+	output["auto_laser_active_remaining"] = auto_laser_active_remaining
+	output["auto_laser_origin"] = auto_laser_active_origin
+	output["auto_laser_end"] = auto_laser_active_end
+	output["orbit_radius"] = ORBIT_RADIUS
+	output["blade_radius"] = ORBIT_BLADE_RADIUS
+	output["blade_count"] = _orbit_blade_count(build)
 	output["storm_pending"] = storm_pending
 	output["storm_position"] = storm_position
 	output["storm_warning_remaining"] = storm_warning_remaining
@@ -282,6 +305,12 @@ func _electric_field_radius(build: VehicleRunBuild) -> float:
 	return definition.auxiliary(level) if level > 0 else 0.0
 
 
+func _orbit_blade_count(build: VehicleRunBuild) -> int:
+	var definition := _definition(&"orbiting_blades")
+	var level := build.level_of(&"orbiting_blades") if definition != null else 0
+	return definition.cap(level) if level > 0 else 0
+
+
 func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 	var seeker := _definition(&"seeker")
 	var result: Array[Dictionary] = [{
@@ -292,7 +321,7 @@ func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 	}]
 	for secondary_id in [
 		&"electric_field", &"orbiting_blades", &"drop_mines",
-		&"rear_laser", &"storm_barrage",
+		&"auto_laser", &"storm_barrage",
 	]:
 		var definition := _definition(secondary_id)
 		if definition == null:
@@ -303,48 +332,102 @@ func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 	return result
 
 
-func _update_rear_laser(
+func _update_auto_laser(
 	origin: Vector2,
 	build: VehicleRunBuild,
 	enemies: Array[EnemyState],
 	line_of_sight: Callable,
 	query_radius: Callable,
-	attack_path_end: Callable
+	attack_path_end: Callable,
+	cooldown_multiplier: float,
+	damage_multiplier: float
 ) -> void:
 	if not _primary_success_pending:
 		return
-	var definition := _definition(&"rear_laser")
-	var level := build.level_of(&"rear_laser") if definition != null else 0
-	if level <= 0 or rear_laser_cooldown > 0.0:
+	var definition := _definition(&"auto_laser")
+	var level := build.level_of(&"auto_laser") if definition != null else 0
+	if level <= 0 or auto_laser_cooldown > 0.0:
 		return
 	var beam_origin := (
 		_primary_success_origin if _primary_success_pending else origin
 	)
-	var direction := -_primary_success_direction.normalized()
-	if direction.is_zero_approx():
-		direction = Vector2.LEFT
-	var beam_end := beam_origin + direction * REAR_LASER_LENGTH
-	if attack_path_end.is_valid():
-		var path_end_variant: Variant = attack_path_end.call(
-			beam_origin, direction, REAR_LASER_LENGTH, REAR_LASER_HALF_WIDTH
+	_query_candidates(beam_origin, AUTO_LASER_LENGTH, enemies, query_radius)
+	_auto_laser_candidate_buffer.clear()
+	for enemy in _candidate_buffer:
+		if _eligible(enemy):
+			_auto_laser_candidate_buffer.append(enemy)
+	_auto_laser_candidate_buffer.sort_custom(
+		func(a: EnemyState, b: EnemyState) -> bool:
+			var a_distance := beam_origin.distance_squared_to(a.pos)
+			var b_distance := beam_origin.distance_squared_to(b.pos)
+			return a_distance < b_distance or (
+				is_equal_approx(a_distance, b_distance) and String(a.id) < String(b.id)
+			)
+	)
+	if _auto_laser_candidate_buffer.size() > AUTO_LASER_CANDIDATE_LIMIT:
+		_auto_laser_candidate_buffer.resize(AUTO_LASER_CANDIDATE_LIMIT)
+	if _auto_laser_candidate_buffer.is_empty():
+		return
+	var direction := Vector2.ZERO
+	var beam_end := beam_origin
+	var best_count := 0
+	var best_priority := -1.0
+	var best_nearest := INF
+	var best_id := ""
+	for candidate in _auto_laser_candidate_buffer:
+		var candidate_direction := (candidate.pos - beam_origin).normalized()
+		if candidate_direction.is_zero_approx():
+			continue
+		var candidate_end := beam_origin + candidate_direction * AUTO_LASER_LENGTH
+		if attack_path_end.is_valid():
+			var candidate_end_variant: Variant = attack_path_end.call(
+				beam_origin, candidate_direction, AUTO_LASER_LENGTH, AUTO_LASER_HALF_WIDTH
+			)
+			if candidate_end_variant is Vector2:
+				candidate_end = candidate_end_variant
+		var candidate_length := beam_origin.distance_to(candidate_end)
+		var hit_count := 0
+		var priority_sum := 0.0
+		var nearest := INF
+		var nearest_id := ""
+		for scored_enemy in _auto_laser_candidate_buffer:
+			if not _beam_target_is_in_corridor(
+				scored_enemy, beam_origin, candidate_direction, candidate_length, line_of_sight
+			):
+				continue
+			hit_count += 1
+			priority_sum += _storm_role_priority(scored_enemy.role)
+			var distance := beam_origin.distance_squared_to(scored_enemy.pos)
+			if distance < nearest or (is_equal_approx(distance, nearest) and String(scored_enemy.id) < nearest_id):
+				nearest = distance
+				nearest_id = String(scored_enemy.id)
+		var better := (
+			hit_count > best_count
+			or (hit_count == best_count and priority_sum > best_priority)
+			or (hit_count == best_count and is_equal_approx(priority_sum, best_priority) and nearest < best_nearest)
+			or (hit_count == best_count and is_equal_approx(priority_sum, best_priority) and is_equal_approx(nearest, best_nearest) and nearest_id < best_id)
 		)
-		if path_end_variant is Vector2:
-			beam_end = path_end_variant
+		if better:
+			best_count = hit_count
+			best_priority = priority_sum
+			best_nearest = nearest
+			best_id = nearest_id
+			direction = candidate_direction
+			beam_end = candidate_end
+	if best_count <= 0 or direction.is_zero_approx():
+		return
 	var beam_length := beam_origin.distance_to(beam_end)
 	var attack_serial := _next_attack_serial()
-	rear_laser_active_origin = beam_origin
-	rear_laser_active_end = beam_end
-	rear_laser_active_remaining = REAR_LASER_DURATION
-	rear_laser_cooldown = maxf(
-		REAR_LASER_COOLDOWN,
-		definition.auxiliary(level)
-	)
+	auto_laser_active_origin = beam_origin
+	auto_laser_active_end = beam_end
+	auto_laser_active_remaining = AUTO_LASER_DURATION
+	auto_laser_cooldown = maxf(AUTO_LASER_COOLDOWN, definition.auxiliary(level)) * cooldown_multiplier
 	_append_beam_intent(
 		beam_origin,
 		beam_end,
 		direction,
 		beam_length,
-		definition.value(level),
+		definition.value(level) * damage_multiplier,
 		attack_serial
 	)
 	_beam_target_buffer.clear()
@@ -352,7 +435,7 @@ func _update_rear_laser(
 		return
 	_query_candidates(
 		(beam_origin + beam_end) * 0.5,
-		beam_length * 0.5 + REAR_LASER_HALF_WIDTH,
+		beam_length * 0.5 + AUTO_LASER_HALF_WIDTH,
 		enemies,
 		query_radius
 	)
@@ -366,10 +449,9 @@ func _update_rear_laser(
 		_append_damage_intent(
 			_damage_output,
 			enemy,
-			definition.value(level),
-			"Rear Laser",
-			OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE,
-			beam_origin,
+			definition.value(level) * damage_multiplier,
+			"Auto Laser",
+			OutgoingDamagePolicy.DAMAGE_DIRECT,
 			attack_serial
 		)
 
@@ -388,12 +470,12 @@ func _beam_target_is_in_corridor(
 	if along < -enemy.radius or along > beam_length + enemy.radius:
 		return false
 	var closest := origin + direction * clampf(along, 0.0, beam_length)
-	var corridor_radius := REAR_LASER_HALF_WIDTH + enemy.radius
+	var corridor_radius := AUTO_LASER_HALF_WIDTH + enemy.radius
 	if enemy.pos.distance_squared_to(closest) > corridor_radius * corridor_radius:
 		return false
 	return (
 		not line_of_sight.is_valid()
-		or line_of_sight.call(origin, enemy.pos, REAR_LASER_HALF_WIDTH)
+		or line_of_sight.call(origin, enemy.pos, AUTO_LASER_HALF_WIDTH)
 	)
 
 
@@ -403,7 +485,9 @@ func _update_storm_barrage(
 	aim_direction: Vector2,
 	build: VehicleRunBuild,
 	enemies: Array[EnemyState],
-	query_radius: Callable
+	query_radius: Callable,
+	cooldown_multiplier: float,
+	damage_multiplier: float
 ) -> void:
 	var definition := _definition(&"storm_barrage")
 	var level := build.level_of(&"storm_barrage") if definition != null else 0
@@ -439,8 +523,8 @@ func _update_storm_barrage(
 	storm_position = _storm_selected_buffer[0].pos
 	storm_pending = true
 	storm_warning_remaining = STORM_WARNING_DURATION
-	storm_cooldown = maxf(STORM_WARNING_DURATION, definition.auxiliary(level))
-	storm_pending_damage = definition.value(level)
+	storm_cooldown = maxf(STORM_WARNING_DURATION, definition.auxiliary(level) * cooldown_multiplier)
+	storm_pending_damage = definition.value(level) * damage_multiplier
 	storm_pending_level = level
 	storm_pending_attack_serial = _next_attack_serial()
 	_append_warning_receipt(
@@ -468,8 +552,7 @@ func _resolve_storm_barrage(
 			enemy,
 			storm_pending_damage,
 			"Storm Barrage",
-			OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE,
-			storm_position,
+			OutgoingDamagePolicy.DAMAGE_DIRECT,
 			storm_pending_attack_serial
 		)
 	_append_impact_receipt(
@@ -566,7 +649,8 @@ func _update_seeker(
 	find_targets: Callable,
 	blocked: bool,
 	output: Array[Dictionary],
-	cooldown_multiplier: float
+	cooldown_multiplier: float,
+	damage_multiplier: float
 ) -> void:
 	if blocked or seeker_cooldown > 0.0 or not find_targets.is_valid():
 		return
@@ -580,7 +664,7 @@ func _update_seeker(
 	if not targets_variant is Array or targets_variant.is_empty():
 		return
 	seeker_cooldown = definition.auxiliary(definition_level) * cooldown_multiplier
-	var seeker_damage := definition.value(definition_level)
+	var seeker_damage := definition.value(definition_level) * damage_multiplier
 	for target_variant in targets_variant:
 		var target := target_variant as EnemyState
 		if target == null:
@@ -593,8 +677,7 @@ func _update_seeker(
 			"velocity": direction * 490.0,
 			"radius": 8.0,
 			"damage": seeker_damage,
-			"damage_flags": OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE,
-			"attack_origin": origin,
+			"damage_flags": OutgoingDamagePolicy.DAMAGE_DIRECT,
 			"attack_serial": attack_serial,
 			"life": 1.8,
 			"color": Color("8ae9dc"),
@@ -604,18 +687,18 @@ func _update_seeker(
 			"homing": true,
 			"target_id": target.id,
 			"explosive": true,
-			"structure_damage": 25.0,
-			"element_profile": null,
+			"structure_damage": 25.0 * damage_multiplier,
+			"primary_payload": null,
 			"wall_piercing": false,
 		})
 
 
-func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
+func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary], cooldown_multiplier: float, damage_multiplier: float) -> void:
 	var definition := _definition(&"electric_field")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		return
-	if not _timer_ready(&"electric_field", delta, ION_TICK):
+	if not _timer_ready(&"electric_field", delta, ION_TICK * cooldown_multiplier):
 		return
 	var radius := definition.auxiliary(level)
 	_query_candidates(origin, radius, enemies, query_radius)
@@ -626,10 +709,9 @@ func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuil
 			_append_damage_intent(
 				output,
 				enemy,
-				definition.value(level) * ION_TICK,
+				definition.value(level) * ION_TICK * damage_multiplier,
 				"Electric Field",
 				OutgoingDamagePolicy.DAMAGE_PERIODIC,
-				origin,
 				attack_serial
 			)
 
@@ -640,7 +722,9 @@ func _update_orbit(
 	enemies: Array[EnemyState],
 	line_of_sight: Callable,
 	query_radius: Callable,
-	output: Array[Dictionary]
+	output: Array[Dictionary],
+	cooldown_multiplier: float,
+	damage_multiplier: float
 ) -> void:
 	var definition := _definition(&"orbiting_blades")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
@@ -648,22 +732,21 @@ func _update_orbit(
 		return
 	var count := definition.cap(level)
 	for blade_index in count:
-		var blade_position := origin + Vector2.RIGHT.rotated(orbit_angle + TAU * float(blade_index) / float(count)) * 78.0
-		_query_candidates(blade_position, 22.0, enemies, query_radius)
+		var blade_position := origin + Vector2.RIGHT.rotated(orbit_angle + TAU * float(blade_index) / float(count)) * ORBIT_RADIUS
+		_query_candidates(blade_position, ORBIT_BLADE_RADIUS, enemies, query_radius)
 		for enemy in _candidate_buffer:
 			var enemy_id := enemy.id
 			if not _eligible(enemy) or float(orbit_target_cooldowns.get(enemy_id, 0.0)) > 0.0:
 				continue
-			var contact_radius := 22.0 + enemy.radius
+			var contact_radius := ORBIT_BLADE_RADIUS + enemy.radius
 			if blade_position.distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(blade_position, enemy.pos, 2.0):
-				orbit_target_cooldowns[enemy_id] = ORBIT_HIT_COOLDOWN
+				orbit_target_cooldowns[enemy_id] = ORBIT_HIT_COOLDOWN * cooldown_multiplier
 				_append_damage_intent(
 					output,
 					enemy,
-					definition.value(level),
+					definition.value(level) * damage_multiplier,
 					"Orbiting Blades",
 					OutgoingDamagePolicy.DAMAGE_DIRECT,
-					blade_position,
 					_next_attack_serial()
 				)
 
@@ -677,14 +760,16 @@ func _update_mines(
 	line_of_sight: Callable,
 	query_radius: Callable,
 	damage_output: Array[Dictionary],
-	detonation_output: Array[Dictionary]
+	detonation_output: Array[Dictionary],
+	cooldown_multiplier: float,
+	damage_multiplier: float
 ) -> void:
 	var definition := _definition(&"drop_mines")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		mines.clear()
 		return
-	if _timer_ready(&"drop_mines", delta, definition.auxiliary(level)):
+	if _timer_ready(&"drop_mines", delta, definition.auxiliary(level) * cooldown_multiplier):
 		mines.append({"pos":origin - direction.normalized() * 48.0, "life":MINE_LIFETIME})
 		while mines.size() > definition.cap(level):
 			mines.pop_front()
@@ -710,10 +795,9 @@ func _update_mines(
 				_append_damage_intent(
 					damage_output,
 					enemy,
-					definition.value(level),
+					definition.value(level) * damage_multiplier,
 					"Drop Mine",
 					OutgoingDamagePolicy.DAMAGE_DIRECT,
-					Vector2(mine["pos"]),
 					attack_serial
 				)
 		_append_detonation_receipt(
@@ -746,7 +830,6 @@ func _append_damage_intent(
 	damage: float,
 	source: String,
 	damage_flags: int,
-	attack_origin: Vector2,
 	attack_serial: int
 ) -> void:
 	if _damage_intent_count >= _damage_intent_pool.size():
@@ -758,7 +841,6 @@ func _append_damage_intent(
 	intent["damage"] = damage
 	intent["source"] = source
 	intent["damage_flags"] = damage_flags
-	intent["attack_origin"] = attack_origin
 	intent["attack_serial"] = attack_serial
 	output.append(intent)
 
@@ -795,13 +877,12 @@ func _append_beam_intent(
 	intent["end"] = beam_end
 	intent["direction"] = direction
 	intent["length"] = beam_length
-	intent["max_length"] = REAR_LASER_LENGTH
-	intent["half_width"] = REAR_LASER_HALF_WIDTH
-	intent["duration"] = REAR_LASER_DURATION
+	intent["max_length"] = AUTO_LASER_LENGTH
+	intent["half_width"] = AUTO_LASER_HALF_WIDTH
+	intent["duration"] = AUTO_LASER_DURATION
 	intent["damage"] = damage
-	intent["source"] = "Rear Laser"
-	intent["damage_flags"] = OutgoingDamagePolicy.DAMAGE_DIRECT | OutgoingDamagePolicy.RANGE_ELIGIBLE
-	intent["attack_origin"] = origin
+	intent["source"] = "Auto Laser"
+	intent["damage_flags"] = OutgoingDamagePolicy.DAMAGE_DIRECT
 	intent["attack_serial"] = attack_serial
 	intent["stop_at_cover"] = true
 	_beam_output.append(intent)

@@ -6,26 +6,18 @@ extends RefCounted
 
 const DAMAGE_DIRECT := 1
 const DAMAGE_PERIODIC := 2
-const RANGE_ELIGIBLE := 4
 
 const CRITICAL_CHANCES := [0.0, 0.08, 0.12, 0.16]
-const RANGE_BONUSES := [0.0, 0.12, 0.20, 0.30]
 const DASH_BONUSES := [0.0, 0.15, 0.25, 0.35]
-const CRISIS_MAX_BONUSES := [0.0, 0.15, 0.25, 0.35]
+const CRISIS_MAX_BONUSES := [0.0, 0.05, 0.10, 0.20]
 const CRITICAL_MULTIPLIER := 2.0
 const CONDITIONAL_BONUS_CAP := 1.0
-const NEAR_DISTANCE := 260.0
-const FAR_DISTANCE := 620.0
 const CRISIS_START_RATIO := 0.60
 const CRISIS_FULL_RATIO := 0.25
 
 
 static func critical_chance(level: int) -> float:
 	return float(CRITICAL_CHANCES[clampi(level, 0, 3)])
-
-
-static func range_bonus(level: int) -> float:
-	return float(RANGE_BONUSES[clampi(level, 0, 3)])
 
 
 static func dash_bonus(level: int) -> float:
@@ -46,23 +38,13 @@ static func crisis_bonus(level: int, hull_ratio: float) -> float:
 	return maximum * clampf(weight, 0.0, 1.0)
 
 
-static func distance_bonus(level: int, attack_distance: float, flags: int) -> float:
-	if level <= 0 or (flags & RANGE_ELIGIBLE) == 0:
-		return 0.0
-	if attack_distance <= NEAR_DISTANCE or attack_distance >= FAR_DISTANCE:
-		return range_bonus(level)
-	return 0.0
-
-
 static func resolve_damage(
 	base_damage: float,
 	critical_level: int,
-	range_level: int,
 	dash_level: int,
 	crisis_level: int,
 	hull_ratio: float,
 	dash_overdrive_active: bool,
-	attack_distance: float,
 	flags: int,
 	run_seed: int,
 	attack_serial: int,
@@ -71,7 +53,7 @@ static func resolve_damage(
 ) -> float:
 	if base_damage <= 0.0:
 		return 0.0
-	var bonus := distance_bonus(range_level, attack_distance, flags)
+	var bonus := 0.0
 	if dash_overdrive_active:
 		bonus += dash_bonus(dash_level)
 	bonus += crisis_bonus(crisis_level, hull_ratio)

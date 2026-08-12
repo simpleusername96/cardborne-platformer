@@ -33,7 +33,7 @@ const GuidebookCatalog = preload(
 	"res://scripts/progression/vehicle_guidebook_catalog.gd"
 )
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
-const ElementProfile = preload("res://scripts/combat/vehicle_element_profile.gd")
+const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
@@ -75,12 +75,16 @@ func set_player_fixture(fixture: Dictionary) -> void:
 		&"cooldowns":
 			_run.player_dash_cooldown = _run._dash_cooldown_max() * 0.75
 			_run.secondary_runtime.seeker_cooldown = _run.SEEKER_COOLDOWN * 0.5
-			_run.player_emp_cooldown = _run._emp_cooldown_max()
+			_run.active_weapon_runtime.cooldown_remaining = (
+				_run.active_weapon_runtime.cooldown_max(
+					_run.run_build, 1.5 if _run.persistent_relay_module else 0.0
+				)
+			)
 			_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 		&"cooldowns_clear":
 			_run.player_dash_cooldown = 0.0
 			_run.secondary_runtime.seeker_cooldown = 0.0
-			_run.player_emp_cooldown = 0.0
+			_run.active_weapon_runtime.cooldown_remaining = 0.0
 			_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 
 
@@ -691,7 +695,7 @@ func _capture_build_state_evidence() -> void:
 	]
 	_publish_threat_fixture(threat_contacts)
 	_run.experience_runtime.run_level = 12
-	_run.experience_runtime.experience = 73
+	_run.experience_runtime.experience = 37
 	var hud_snapshot: Dictionary = _run._build_hud_snapshot(false, false)
 	hud_snapshot["threat_radar"] = _run._runtime_threat_radar_snapshot()
 	_run._ui.update_hud(hud_snapshot)
@@ -1035,8 +1039,8 @@ func _capture_elemental_status_evidence() -> void:
 	var cryo_build := RunBuild.new(_run.upgrade_catalog)
 	toxin_build.apply(&"bio_toxin")
 	cryo_build.apply(&"cryo_slow")
-	var toxin_profile := ElementProfile.from_build(toxin_build)
-	var cryo_profile := ElementProfile.from_build(cryo_build)
+	var toxin_profile := PrimaryPayload.from_build(toxin_build)
+	var cryo_profile := PrimaryPayload.from_build(cryo_build)
 	var status_enemies: Array[EnemyState] = []
 	for row in 2:
 		for stack_index in 3:
@@ -1160,7 +1164,7 @@ func _capture_thermal_burst_evidence() -> void:
 		_run.run_build.reset()
 		for _level in level_index + 1:
 			_run.run_build.apply(&"thermal_burst")
-		var profile := ElementProfile.from_build(_run.run_build)
+		var profile := PrimaryPayload.from_build(_run.run_build)
 		var center: Vector2 = _run.player_position + Vector2(290.0, 0.0)
 		var direct: EnemyState = _run._make_enemy({
 			"id":"capture_thermal_direct_%d" % (level_index + 1),
@@ -1196,8 +1200,8 @@ func _capture_thermal_burst_evidence() -> void:
 	_run._clear_effects()
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
-	_run._start_emp()
-	_run._release_emp()
+	_run._start_active_weapon()
+	_run._advance_active_weapon(0.42)
 	for impact_index in EffectStore.MAX_LIVE_THERMAL_IMPACTS:
 		var column := impact_index % 6
 		var row := impact_index / 6
@@ -1307,7 +1311,7 @@ func _capture_exact_area_effect_evidence() -> void:
 		if settings != null:
 			settings.reduced_motion = reduced_motion
 		var center := _prepare_exact_area_scene(0.90)
-		_run._start_emp()
+		_run._start_active_weapon()
 		var emp_effect = _run.effects[-1]
 		emp_effect.time = emp_effect.duration
 		_add_exact_area_reference_markers(
@@ -1322,7 +1326,9 @@ func _capture_exact_area_effect_evidence() -> void:
 		)
 
 		center = _prepare_exact_area_scene(0.90)
-		_run._release_emp()
+		_run._start_active_weapon()
+		_run._clear_effects()
+		_run._advance_active_weapon(0.42)
 		emp_effect = _run.effects[-1]
 		emp_effect.time = emp_effect.duration
 		_add_exact_area_reference_markers(

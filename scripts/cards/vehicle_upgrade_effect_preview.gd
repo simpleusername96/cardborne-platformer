@@ -5,6 +5,7 @@ extends RefCounted
 
 const PrimaryRules = preload("res://scripts/player/vehicle_primary_upgrade_rules.gd")
 const SecondaryCatalog = preload("res://scripts/player/vehicle_secondary_catalog.gd")
+const ActiveWeaponCatalog = preload("res://scripts/player/vehicle_active_weapon_catalog.gd")
 const OutgoingDamagePolicy = preload(
 	"res://scripts/player/vehicle_outgoing_damage_policy.gd"
 )
@@ -16,6 +17,7 @@ const DashRuntime = preload(
 )
 
 static var _secondary_catalog: RefCounted
+static var _active_weapon_catalog: RefCounted
 
 
 static func rows(
@@ -86,13 +88,6 @@ static func rows(
 					OutgoingDamagePolicy.CRITICAL_MULTIPLIER
 				),
 			]
-		&"range_polarization":
-			return [_row(
-				"UPGRADE_EFFECT_CONDITIONAL_DAMAGE",
-				OutgoingDamagePolicy.range_bonus(current_level) * 100.0,
-				OutgoingDamagePolicy.range_bonus(current_level + 1) * 100.0,
-				"percent"
-			)]
 		&"dash_overdrive":
 			return [
 				_row(
@@ -144,7 +139,7 @@ static func rows(
 					"percent"
 				),
 			]
-		&"rear_laser":
+		&"auto_laser":
 			return _optional_secondary_rows(
 				definition.id, current_level,
 				"UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_COOLDOWN",
@@ -156,6 +151,8 @@ static func rows(
 				"UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_COOLDOWN",
 				false, "seconds"
 			)
+		&"gravity_collapse", &"kinetic_shockwave", &"piercing_lance":
+			return _active_weapon_rows(definition.id, current_level)
 	return []
 
 
@@ -234,6 +231,44 @@ static func _secondary_def(upgrade_id: StringName) -> VehicleSecondaryDefinition
 	if _secondary_catalog == null:
 		_secondary_catalog = SecondaryCatalog.new()
 	return _secondary_catalog.get_by_upgrade_id(upgrade_id)
+
+
+static func _active_weapon_rows(
+	upgrade_id: StringName,
+	current_level: int
+) -> Array[Dictionary]:
+	if _active_weapon_catalog == null:
+		_active_weapon_catalog = ActiveWeaponCatalog.new()
+	var active_id := StringName({
+		&"gravity_collapse":&"black_hole",
+		&"kinetic_shockwave":&"shockwave",
+		&"piercing_lance":&"cross_beam",
+	}.get(upgrade_id, &""))
+	var active: VehicleActiveWeaponDefinition = (
+		_active_weapon_catalog.get_definition(active_id)
+	)
+	if active == null:
+		return []
+	var current_state := maxi(1, current_level)
+	var next_state := current_level + 1
+	return [
+		_row(
+			"UPGRADE_EFFECT_DAMAGE",
+			active.damage(current_state),
+			active.damage(next_state),
+			"none",
+			current_level > 0
+		),
+		_row(
+			"UPGRADE_EFFECT_HALF_WIDTH"
+				if active_id == &"cross_beam"
+				else "UPGRADE_EFFECT_RADIUS",
+			active.size(current_state),
+			active.size(next_state),
+			"none",
+			current_level > 0
+		),
+	]
 
 
 static func _row(

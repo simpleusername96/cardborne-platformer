@@ -196,10 +196,12 @@ func show_deployment(selected: StringName = &"pulse_cannon") -> void:
 	_show_modal("deployment")
 
 
-func show_upgrade(cards: Array[Dictionary]) -> void:
+func show_upgrade(cards: Array[Dictionary], build_snapshot: Dictionary = {}) -> void:
 	hide_all_modals()
 	_latest_upgrade_cards = cards.duplicate(true)
-	_upgrade_panel.open(cards)
+	if not build_snapshot.is_empty():
+		_latest_build_snapshot = build_snapshot.duplicate(true)
+	_upgrade_panel.open(cards, _latest_build_snapshot)
 	_show_modal("upgrade")
 
 
@@ -652,7 +654,7 @@ func _refresh_localized_content() -> void:
 	_guide_panel.refresh_localized_content()
 	_hud.refresh_localized_content()
 	if not _latest_upgrade_cards.is_empty() and _host_visible("upgrade"):
-		_upgrade_panel.open(_latest_upgrade_cards)
+		_upgrade_panel.open(_latest_upgrade_cards, _latest_build_snapshot)
 
 
 func _on_controls_changed(_action: StringName) -> void:
