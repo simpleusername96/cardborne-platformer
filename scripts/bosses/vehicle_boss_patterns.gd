@@ -69,65 +69,6 @@ const AUTONOMOUS_SEQUENCES := {
 	&"stage_5":[&"crown_lattice", &"relay_pulse_rings"],
 }
 
-const DISPLAY_KEYS := {
-	&"lane_barrage":"PATTERN_LANE_BARRAGE",
-	&"charge":"PATTERN_CHARGE",
-	&"pylons":"PATTERN_PYLONS",
-	&"overload_combo":"PATTERN_OVERLOAD_COMBO",
-	&"fan":"PATTERN_FAN",
-	&"system_wake":"PATTERN_SYSTEM_WAKE",
-	&"phase_two":"PATTERN_PHASE_TWO",
-	&"recovering_control":"PATTERN_RECOVERING_CONTROL",
-	&"reading_arena":"PATTERN_READING_ARENA",
-	&"recovery_window":"PATTERN_RECOVERY_WINDOW",
-	&"twin_foundry_lanes":"PATTERN_TWIN_FOUNDRY_LANES",
-	&"foundry_ram":"PATTERN_FOUNDRY_RAM",
-	&"furnace_ring":"PATTERN_FURNACE_RING",
-	&"furnace_gates":"PATTERN_FURNACE_GATES",
-	&"foundry_burst":"PATTERN_FOUNDRY_BURST",
-	&"slag_ring":"PATTERN_SLAG_RING",
-	&"forge_vent":"PATTERN_FORGE_VENT",
-	&"current_fan":"PATTERN_CURRENT_FAN",
-	&"archive_lunge":"PATTERN_ARCHIVE_LUNGE",
-	&"archive_cross":"PATTERN_ARCHIVE_CROSS",
-	&"archive_depth":"PATTERN_ARCHIVE_DEPTH",
-	&"undertow_lanes":"PATTERN_UNDERTOW_LANES",
-	&"depth_charges":"PATTERN_DEPTH_CHARGES",
-	&"undertow_sweep":"PATTERN_UNDERTOW_SWEEP",
-	&"depth_charge":"PATTERN_DEPTH_CHARGE",
-	&"archive_ram":"PATTERN_ARCHIVE_RAM",
-	&"arc_lanes":"PATTERN_ARC_LANES",
-	&"grounded_ring":"PATTERN_GROUNDED_RING",
-	&"thunder_drop":"PATTERN_THUNDER_DROP",
-	&"grounding_grid":"PATTERN_GROUNDING_GRID",
-	&"titan_pulse":"PATTERN_TITAN_PULSE",
-	&"titan_burst":"PATTERN_TITAN_BURST",
-	&"titan_ram":"PATTERN_TITAN_RAM",
-	&"thunder_chain":"PATTERN_THUNDER_CHAIN",
-	&"beam_sentinel_call":"PATTERN_BEAM_SENTINEL_CALL",
-	&"escort_surge":"PATTERN_ESCORT_SURGE",
-	&"open_lane_charge":"PATTERN_OPEN_LANE_CHARGE",
-	&"breaker_charge":"PATTERN_BREAKER_CHARGE",
-	&"gate_shockwave":"PATTERN_GATE_SHOCKWAVE",
-	&"ricochet_volley":"PATTERN_RICOCHET_VOLLEY",
-	&"switch_sweep":"PATTERN_SWITCH_SWEEP",
-	&"switchyard_mines":"PATTERN_SWITCHYARD_MINES",
-	&"switch_sweeps":"PATTERN_SWITCH_SWEEPS",
-	&"crown_beam":"PATTERN_CROWN_BEAM",
-	&"mirror_cross":"PATTERN_MIRROR_CROSS",
-	&"carrier_wave":"PATTERN_CARRIER_WAVE",
-	&"relay_pulse":"PATTERN_RELAY_PULSE",
-	&"crown_burst":"PATTERN_CROWN_BURST",
-	&"crown_lattice":"PATTERN_CROWN_LATTICE",
-	&"relay_pulse_rings":"PATTERN_RELAY_PULSE_RINGS",
-	&"phase_transition":"PATTERN_PHASE_TRANSITION",
-}
-
-const COMMIT_MODE_KEYS := {
-	&"committed":"BOSS_PRACTICE_MODE_COMMITTED",
-	&"autonomous":"BOSS_PRACTICE_MODE_AUTONOMOUS",
-}
-
 static func sequence(stage_id: StringName, phase_value: Variant = 1) -> Array[String]:
 	var base: Array = STAGE_SEQUENCES.get(stage_id, STAGE_SEQUENCES[&"stage_1"])
 	var phase := (
@@ -183,14 +124,6 @@ static func affinity(pattern: String) -> StringName:
 
 static func commit_mode(pattern: String) -> StringName:
 	return StringName(definition(pattern).get("commit_mode", &""))
-
-
-static func display_key(pattern: String) -> String:
-	return String(DISPLAY_KEYS.get(StringName(pattern), ""))
-
-
-static func commit_mode_display_key(mode: StringName) -> String:
-	return String(COMMIT_MODE_KEYS.get(mode, ""))
 
 
 static func radius(pattern: String, stage_index: int = 0) -> float:

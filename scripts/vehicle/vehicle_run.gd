@@ -36,7 +36,6 @@ const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalo
 const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
 const UpgradeOfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
-const BossPracticeSession = preload("res://scripts/bosses/vehicle_boss_practice_session.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.gd")
@@ -196,7 +195,6 @@ var reinforcement_facility_runtime := ReinforcementFacilityRuntime.new()
 var stage_telemetry := StageTelemetry.new()
 var boss_runtime := BossRuntime.new()
 var boss_shield_runtime := BossShieldRuntime.new()
-var boss_practice := BossPracticeSession.new()
 var _runtime_blockers: Array[Rect2] = []
 var _runtime_structural_walls: Array[Rect2] = []
 var _motion_cover_static_safe := false
@@ -371,8 +369,6 @@ var _manual_performance_request: Dictionary = {}
 var _manual_performance_trace: ManualPerformanceTrace
 var _manual_performance_pressure: Dictionary = {}
 var _manual_performance_context: Dictionary = {}
-var _practice_request: Dictionary = {}
-var _practice_request_invalid := false
 var _pending_stage_report: Dictionary = {}
 
 
@@ -414,14 +410,9 @@ func _ready() -> void:
 			_field_id_override = _capture_driver.field_id_override
 	_performance_request = _parse_performance_request()
 	_manual_performance_request = _parse_manual_performance_request()
-	_practice_request = _parse_boss_practice_request()
-	if _practice_request_invalid and DisplayServer.get_name() == "headless":
-		get_tree().quit(2)
-		return
 	if (
 		_capture_mode
 		or not _performance_request.is_empty()
-		or not _practice_request.is_empty()
 	) and not _has_layout_seed_override:
 		_layout_seed_override = FIXED_LAYOUT_SEED
 		_has_layout_seed_override = true
@@ -430,8 +421,7 @@ func _ready() -> void:
 	_build_camera()
 	_build_ui()
 	_build_audio()
-	if _practice_request.is_empty():
-		_load_persistence()
+	_load_persistence()
 	selected_run_difficulty = RunDifficulty.HARD
 	_reset_run(false)
 	_present_deployment()
@@ -440,8 +430,6 @@ func _ready() -> void:
 	_prepare_manual_performance_trace()
 	if _capture_mode:
 		call_deferred("_start_capture")
-	elif not _practice_request.is_empty():
-		call_deferred("_start_boss_practice")
 	elif not _performance_request.is_empty():
 		call_deferred("_start_performance_scenario")
 
@@ -745,13 +733,10 @@ func _build_ui() -> void:
 	_ui.name = "VehicleStageUI"
 	add_child(_ui)
 	_ui.deployment_selected.connect(_on_deployment_selected)
-	if _ui.has_signal("boss_practice_selected"):
-		_ui.boss_practice_selected.connect(_on_boss_practice_selected)
 	_ui.upgrade_selected.connect(_on_upgrade_selected)
 	_ui.upgrade_previewed.connect(func(_upgrade_id: StringName) -> void: _play_sound(&"upgrade_select"))
 	_ui.pause_requested.connect(_pause_run)
 	_ui.resume_requested.connect(_resume_run)
-	_ui.restart_requested.connect(_restart_stage)
 	_ui.deployment_requested.connect(_return_to_deployment)
 	_ui.stage_report_continued.connect(_continue_stage_report)
 
@@ -1371,13 +1356,6 @@ func _on_deployment_selected(primary_id: StringName) -> void:
 	_start_deployed_run(primary_id)
 
 
-func _on_boss_practice_selected(request: Dictionary) -> void:
-	if not OS.is_debug_build():
-		return
-	_practice_request = request.duplicate(true)
-	_start_boss_practice()
-
-
 func _start_deployed_run(primary_id: StringName) -> void:
 	selected_primary = primary_id
 	selected_run_difficulty = RunDifficulty.HARD
@@ -1430,16 +1408,6 @@ func _resume_run() -> void:
 	_set_mouse_for_mode()
 
 
-func _restart_stage() -> void:
-	_release_tree_pause()
-	var primary := selected_primary
-	_reset_run(false, true, true)
-	selected_primary = primary
-	mode = RunMode.PLAYING
-	_ui.show_gameplay()
-	_set_mouse_for_mode()
-
-
 func _return_to_deployment() -> void:
 	_release_tree_pause()
 	_reset_run(true)
@@ -1453,10 +1421,7 @@ func _present_deployment() -> void:
 		"build_snapshot":build_snapshot,
 		"guidebook":_guidebook_snapshot(build_snapshot),
 	})
-	_ui.show_deployment(
-		selected_primary,
-		String(field_layout.field_definition["name_key"])
-	)
+	_ui.show_deployment(selected_primary)
 
 
 func _advance_stage() -> void:
@@ -4215,7 +4180,7 @@ func _damage_enemy(
 			enemy.flash = 0.11
 		enemy.health_visible_timer = 1.5
 		_arm_mine(enemy, 0.75, true)
-		if player_owned and not boss_practice.active and source != "validation":
+		if player_owned and source != "validation":
 			stage_telemetry.record_outgoing(
 				DamageSourceCatalog.outgoing_id(source), attribute, mine_applied
 			)
@@ -4225,7 +4190,7 @@ func _damage_enemy(
 	if applied_damage <= 0.0:
 		return 0.0
 	enemy.health = health_before - applied_damage
-	if player_owned and not boss_practice.active and source != "validation":
+	if player_owned and source != "validation":
 		stage_telemetry.record_outgoing(
 			DamageSourceCatalog.outgoing_id(source),
 			attribute,
@@ -4235,11 +4200,7 @@ func _damage_enemy(
 		enemy.flash = 0.11
 	enemy.health_visible_timer = 1.0 if enemy.health_class == &"swarm" else 1.5
 	_apply_lifesteal(applied_damage, source, player_owned)
-	if (
-		role == &"stage_boss"
-		and enemy.health > 0.0
-		and not boss_practice.active
-	):
+	if role == &"stage_boss" and enemy.health > 0.0:
 		var transition := boss_shield_runtime.try_advance_phase(
 			enemy.health,
 			enemy.max_health
@@ -4331,7 +4292,7 @@ func _telemetry_attribute_for_affinity(affinity: StringName) -> StringName:
 
 
 func _record_status_applications(profile: ElementProfile) -> void:
-	if profile == null or boss_practice.active:
+	if profile == null:
 		return
 	if profile.poison_enabled:
 		stage_telemetry.record_status_application(&"poison")
@@ -4346,12 +4307,6 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if reinforcement_facility_runtime.owns_child(enemy.carrier_id):
 		reinforcement_facility_runtime.note_child_retired()
 	var role := enemy.role
-	if boss_practice.active:
-		enemy.alive = false
-		enemy.active = false
-		enemy_grid.update_actor(enemy)
-		enemy_store.queue_defeat(enemy)
-		return
 	var split_on_defeat := (
 		enemy.archetype == &"splitter_barge"
 		and not enemy.summoned
@@ -4478,16 +4433,12 @@ func _damage_player(
 		return accepted
 	accepted = true
 	encounter_runtime.record_player_damage(_damage_source_family(source, enemy_source))
-	player_health = maxf(
-		1.0 if boss_practice.active and boss_practice.invulnerable else 0.0,
-		player_health - remaining
-	)
+	player_health = maxf(0.0, player_health - remaining)
 	stats_damage_taken += remaining
-	if not boss_practice.active:
-		stage_telemetry.record_incoming(
-			DamageSourceCatalog.incoming_id(source, enemy_source),
-			remaining
-		)
+	stage_telemetry.record_incoming(
+		DamageSourceCatalog.incoming_id(source, enemy_source),
+		remaining
+	)
 	player_hit_flash = PLAYER_HIT_FLASH_DURATION
 	if grant_hit_protection:
 		_grant_player_protection(PLAYER_HIT_INVULNERABILITY, &"hit")
@@ -4530,12 +4481,6 @@ func _damage_source_family(source: String, enemy_source: bool) -> StringName:
 func _handle_player_defeat() -> void:
 	_clear_projectiles()
 	denied_zones.clear()
-	if boss_practice.active:
-		boss_practice.stop()
-		mode = RunMode.DEPLOYMENT
-		_ui.show_boss_practice()
-		_set_mouse_for_mode()
-		return
 	mode = RunMode.FAILURE_REPORT
 	_pending_stage_report = StageReportBuilder.build(
 		stage_telemetry.freeze_stage(),
@@ -5107,23 +5052,8 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 	boss_shield_runtime.advance(delta)
 	boss.boss_shield_state = boss_shield_runtime.state()
 	_show_pending_boss_state_hint()
-	if (
-		boss_practice.is_pattern_loop()
-		and BossPatterns.commit_mode(boss_practice.pattern) == &"autonomous"
-	):
-		boss_practice.loop_wait -= delta
-		_boss_reposition(boss, delta)
-		if boss_practice.loop_wait <= 0.0:
-			_execute_boss_autonomous(_practice_autonomous_event(boss))
-			boss_practice.loop_wait = (
-				BossPatterns.startup_seconds(boss_practice.pattern)
-				+ BossPatterns.active_seconds(boss_practice.pattern)
-				+ 1.5
-			)
-		return
-	if not boss_practice.is_pattern_loop():
-		for event in boss_runtime.advance_autonomous(delta, boss, player_position):
-			_execute_boss_autonomous(event)
+	for event in boss_runtime.advance_autonomous(delta, boss, player_position):
+		_execute_boss_autonomous(event)
 
 	var phase := String(boss.phase)
 	if phase == "boss_read":
@@ -5146,20 +5076,12 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 		_boss_reposition(boss, delta)
 		if float(boss.phase_time) <= 0.0:
 			boss.phase = "boss_read"
-			boss.phase_time = (
-				1.5
-				if boss_practice.is_pattern_loop()
-				else boss_runtime.read_gap(boss.boss_phase)
-			)
+			boss.phase_time = boss_runtime.read_gap(boss.boss_phase)
 			boss.pattern = "reading_arena"
 
 
 func _boss_select_pattern(boss: EnemyState) -> void:
-	var pattern := (
-		boss_practice.pattern
-		if boss_practice.is_pattern_loop()
-		else boss_runtime.select_direct(boss)
-	)
+	var pattern := boss_runtime.select_direct(boss)
 	boss.pattern = pattern
 	boss.phase = "boss_startup"
 	boss.phase_time = BossPatterns.startup_seconds(pattern)
@@ -5192,25 +5114,6 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 		_runtime_charge_path_callable,
 		current_stage_index
 	)
-
-
-func _practice_autonomous_event(boss: EnemyState) -> Dictionary:
-	var pattern := boss_practice.pattern
-	return {
-		"id":"practice_system",
-		"pattern":pattern,
-		"kind":BossPatterns.kind(pattern),
-		"origin":boss.pos,
-		"target":player_position,
-		"startup":BossPatterns.startup_seconds(pattern),
-		"duration":BossPatterns.active_seconds(pattern),
-		"damage":BossPatterns.damage(pattern, current_stage_index),
-		"radius":BossPatterns.radius(pattern, current_stage_index),
-		"width":BossPatterns.width(pattern, current_stage_index),
-		"lane_spacing":BossPatterns.lane_spacing(current_stage_index),
-		"affinity":BossPatterns.affinity(pattern),
-		"commit_mode":&"autonomous",
-	}
 
 
 func _boss_begin_active(boss: EnemyState) -> void:
@@ -5396,12 +5299,11 @@ func _begin_boss_shield_phase(boss: EnemyState, next_phase: int) -> void:
 	boss.boss_shield_state = &"shield_up"
 	boss.attack_telegraphs.clear()
 	var payload := boss_shield_runtime.begin_phase(boss.boss_phase)
-	if not boss_practice.is_pattern_loop():
-		_spawn_boss_phase_adds(
-			boss,
-			Array(payload.get("add_roles", [])),
-			StringName(payload.get("tactic_id", &""))
-		)
+	_spawn_boss_phase_adds(
+		boss,
+		Array(payload.get("add_roles", [])),
+		StringName(payload.get("tactic_id", &""))
+	)
 	_show_pending_boss_state_hint()
 	if boss.boss_phase > 1:
 		boss_phase_two_announced = true
@@ -5750,19 +5652,8 @@ func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 	snapshot["skill_remaining"] = maxf(
 		player_emp_startup, player_emp_cooldown
 	)
-	var facility := reinforcement_facility_runtime.snapshot()
 	if dash_upgrade_runtime.overdrive_active():
 		snapshot["buff_text"] = tr("HUD_BUFF_DASH_OVERDRIVE")
-	elif StringName(facility.get("state", &"")) == &"active":
-		snapshot["buff_text"] = tr("HUD_FACILITY_STATUS") % [
-			int(facility.get("remaining_charges", 0)),
-			int(facility.get("total_charges", 0)),
-			int(facility.get("live_children", 0)),
-			int(facility.get("live_child_cap", 0)),
-			roundi((1.0 - float(facility.get("spawn_ratio", 1.0))) * 100.0),
-		]
-	elif StringName(facility.get("state", &"")) == &"offline":
-		snapshot["buff_text"] = tr("HUD_FACILITY_OFFLINE")
 	else:
 		snapshot["buff_text"] = ""
 	return snapshot
@@ -5812,7 +5703,7 @@ func _build_snapshot() -> Dictionary:
 
 
 func _discover_guide(entry_id: StringName) -> void:
-	if boss_practice.active or entry_id.is_empty():
+	if entry_id.is_empty():
 		return
 	var store := get_node_or_null("/root/VehicleGuidebookStore")
 	if store != null and bool(store.discover(entry_id)):
@@ -6438,7 +6329,7 @@ func _load_persistence() -> void:
 
 
 func _save_persistence() -> void:
-	if _capture_mode or boss_practice.active:
+	if _capture_mode:
 		return
 	var config := ConfigFile.new()
 	config.set_value("progress", "clear_count", persistent_clear_count)
@@ -6464,79 +6355,6 @@ func _performance_accumulate_enemy_section(
 		float(_performance_enemy_sections.get(section_name, 0.0))
 		+ _elapsed_ms(started_usec)
 	)
-
-
-func _parse_boss_practice_request() -> Dictionary:
-	if not OS.is_debug_build():
-		return {}
-	var values := {}
-	var arguments := OS.get_cmdline_args()
-	arguments.append_array(OS.get_cmdline_user_args())
-	for argument in arguments:
-		if argument.begins_with("--boss-practice="):
-			values["stage_id"] = StringName(argument.trim_prefix("--boss-practice="))
-		elif argument.begins_with("--practice-field="):
-			values["field_id"] = StringName(argument.trim_prefix("--practice-field="))
-		elif argument.begins_with("--practice-phase="):
-			values["phase"] = int(argument.trim_prefix("--practice-phase="))
-		elif argument.begins_with("--practice-pattern="):
-			values["pattern"] = argument.trim_prefix("--practice-pattern=")
-		elif argument == "--practice-invulnerable":
-			values["invulnerable"] = true
-	if not values.has("stage_id"):
-		return {}
-	values["field_id"] = values.get("field_id", &"drowned_ruin_field")
-	values["phase"] = values.get("phase", 1)
-	values["pattern"] = values.get("pattern", "full")
-	values["invulnerable"] = values.get("invulnerable", false)
-	var validator := BossPracticeSession.new()
-	var errors := validator.configure(values)
-	if not errors.is_empty():
-		_practice_request_invalid = true
-		for message in errors:
-			push_error(message)
-		return {}
-	return values
-
-
-func _start_boss_practice() -> void:
-	var errors := boss_practice.configure(_practice_request)
-	if not errors.is_empty():
-		return
-	current_stage_index = StageCatalog.STAGE_IDS.find(boss_practice.stage_id)
-	current_stage_id = boss_practice.stage_id
-	_field_id_override = boss_practice.field_id
-	field_layout = null
-	_reset_run(false, true, false, false)
-	encounter_runtime.stop_spawning()
-	_clear_enemies()
-	_clear_projectiles()
-	mode = RunMode.PLAYING
-	_ui.show_gameplay()
-	player_position = Rules.player_start(current_stage_id)
-	boss_runtime.configure(current_stage_id)
-	boss_shield_runtime.configure(current_stage_id, boss_practice.phase)
-	var boss := _make_enemy({
-		"id":"stage_boss",
-		"role":&"stage_boss",
-		"pos":_choose_boss_arrival_anchor(),
-		"zone":"practice",
-		"name_key":StageCatalog.profile(current_stage_id)["boss_name_key"],
-		"boss_variant":boss_shield_runtime.variant(),
-		"boss_shield_state":&"shield_up",
-		"active":true,
-	})
-	boss.active = true
-	boss.boss_phase = boss_practice.phase
-	boss.health = boss.max_health * boss_practice.health_ratio()
-	boss.phase = &"boss_read"
-	boss.phase_time = 0.8
-	boss.pattern = &"reading_arena"
-	_append_enemy(boss)
-	boss_started = true
-	stage_flow.state = StageFlow.State.BOSS_ACTIVE
-	_begin_boss_shield_phase(boss, boss_practice.phase)
-	_set_mouse_for_mode()
 
 
 func _parse_manual_performance_request() -> Dictionary:
@@ -6570,11 +6388,10 @@ func _prepare_manual_performance_trace() -> void:
 	if (
 		_capture_mode
 		or not _performance_request.is_empty()
-		or not _practice_request.is_empty()
 	):
 		push_warning(
-			"Manual performance tracing cannot be combined with capture, practice, "
-			+ "or synthetic performance modes."
+			"Manual performance tracing cannot be combined with capture or "
+			+ "synthetic performance modes."
 		)
 		_manual_performance_request.clear()
 		return

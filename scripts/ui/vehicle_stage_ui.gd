@@ -5,12 +5,10 @@ extends CanvasLayer
 ## modal components. Screen layout construction belongs to those components.
 
 signal deployment_selected(primary_id: StringName)
-signal boss_practice_selected(request: Dictionary)
 signal upgrade_selected(upgrade_id: StringName)
 signal upgrade_previewed(upgrade_id: StringName)
 signal pause_requested
 signal resume_requested
-signal restart_requested
 signal deployment_requested
 signal stage_report_continued
 
@@ -25,9 +23,6 @@ const DeploymentPanel = preload(
 )
 const PausePanel = preload("res://scripts/ui/vehicle_pause_panel.gd")
 const ResultPanel = preload("res://scripts/ui/vehicle_result_panel.gd")
-const BossPracticePanel = preload(
-	"res://scripts/ui/vehicle_boss_practice_panel.gd"
-)
 const UpgradeChoicePanel = preload(
 	"res://scripts/ui/vehicle_upgrade_choice_panel.gd"
 )
@@ -40,12 +35,11 @@ const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const MODAL_MINIMUMS := {
 	"deployment":Vector2(1176.0, 636.0),
 	"upgrade":Vector2(1376.0, 616.0),
-	"pause":Vector2(520.0, 430.0),
+	"pause":Vector2(520.0, 330.0),
 	"result":Vector2(900.0, 560.0),
 	"report":Vector2(1200.0, 640.0),
 	"settings":Vector2(920.0, 570.0),
 	"guidebook":Vector2(1160.0, 636.0),
-	"practice":Vector2(720.0, 610.0),
 }
 
 var _root: Control
@@ -60,10 +54,8 @@ var _result_panel: VehicleResultPanel
 var _report_panel: VehicleStageReportPanel
 var _settings_panel: VehicleSettingsPanel
 var _guide_panel: VehicleGuidebookPanel
-var _practice_panel: VehicleBossPracticePanel
 
 var _selected_primary := &"pulse_cannon"
-var _selected_field_name_key := "FIELD_DROWNED_RUIN"
 var _settings_return_surface := "deployment"
 var _guide_return_surface := "pause"
 var _latest_guidebook_snapshot: Dictionary = {}
@@ -124,7 +116,6 @@ func _install_components() -> void:
 	_deployment_panel.settings_requested.connect(
 		_show_settings.bind("deployment")
 	)
-	_deployment_panel.practice_requested.connect(show_boss_practice)
 
 	_upgrade_panel = UpgradeChoicePanel.new()
 	_mount_modal("upgrade", _upgrade_panel)
@@ -141,9 +132,6 @@ func _install_components() -> void:
 	_mount_modal("pause", _pause_panel)
 	_pause_panel.resume_requested.connect(
 		func() -> void: resume_requested.emit()
-	)
-	_pause_panel.restart_requested.connect(
-		func() -> void: restart_requested.emit()
 	)
 	_pause_panel.abort_requested.connect(
 		func() -> void: deployment_requested.emit()
@@ -173,20 +161,6 @@ func _install_components() -> void:
 	_guide_panel = GuidebookPanel.new()
 	_mount_modal("guidebook", _guide_panel)
 	_guide_panel.close_requested.connect(_close_guidebook)
-
-	if OS.is_debug_build():
-		_practice_panel = BossPracticePanel.new()
-		_mount_modal("practice", _practice_panel)
-		_practice_panel.selected.connect(
-			func(request: Dictionary) -> void:
-				boss_practice_selected.emit(request)
-		)
-		_practice_panel.back_requested.connect(show_deployment.bind(
-			_selected_primary,
-			_selected_field_name_key
-		))
-
-
 func _mount_modal(surface: String, content: Control) -> void:
 	var host := ModalHost.new()
 	host.name = "%sHost" % surface.capitalize().replace(" ", "")
@@ -215,14 +189,10 @@ func update_threat_anchor(
 	_hud.update_threat_anchor(world_position, screen_position, is_visible)
 
 
-func show_deployment(
-	selected: StringName = &"pulse_cannon",
-	field_name_key: String = "FIELD_DROWNED_RUIN"
-) -> void:
+func show_deployment(selected: StringName = &"pulse_cannon") -> void:
 	hide_all_modals()
 	_selected_primary = &"pulse_cannon" if selected.is_empty() else selected
-	_selected_field_name_key = field_name_key
-	_deployment_panel.open(_selected_field_name_key)
+	_deployment_panel.open()
 	_show_modal("deployment")
 
 
@@ -439,6 +409,9 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		"deployment_action_count":deployment_contract["action_count"],
 		"deployment_action_order":deployment_contract["action_order"],
 		"deployment_action_variations":deployment_contract["action_variations"],
+		"deployment_settings_in_header":deployment_contract["settings_in_header"],
+		"deployment_settings_size":deployment_contract["settings_size"],
+		"deployment_settings_accessibility_name":deployment_contract["settings_accessibility_name"],
 		"deployment_compact":deployment_contract["compact"],
 		"deployment_primary_size":deployment_contract["primary_size"],
 		"deployment_surface_size":deployment_surface_size,
@@ -472,6 +445,10 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 		"pause_command_stack_type":pause_contract["command_stack_type"],
 		"pause_command_order":pause_contract["command_order"],
 		"pause_command_widths":pause_contract["command_widths"],
+		"pause_header_actions":pause_contract["header_actions"],
+		"pause_settings_in_header":pause_contract["settings_in_header"],
+		"pause_settings_size":pause_contract["settings_size"],
+		"pause_settings_accessibility_name":pause_contract["settings_accessibility_name"],
 		"result_focusables":result_contract["focusables"],
 		"locale":TranslationServer.get_locale().left(2),
 		"settings":_settings_panel.debug_contract(),
@@ -481,11 +458,6 @@ func debug_ui_contract(viewport_width: float = 1280.0) -> Dictionary:
 			"pause":_pause_panel.get_script().resource_path,
 			"guidebook":_guide_panel.get_script().resource_path,
 			"result":_result_panel.get_script().resource_path,
-			"practice":(
-				_practice_panel.get_script().resource_path
-				if _practice_panel != null
-				else ""
-			),
 		},
 	}
 	contract.merge(hud_contract, true)
@@ -553,10 +525,7 @@ func debug_modal_contract(
 ) -> Dictionary:
 	match surface:
 		"deployment":
-			show_deployment(
-				_selected_primary,
-				_selected_field_name_key
-			)
+			show_deployment(_selected_primary)
 		"upgrade":
 			show_upgrade([])
 		"pause":
@@ -574,8 +543,6 @@ func debug_modal_contract(
 			_show_settings("deployment")
 		"guidebook":
 			_show_guidebook("settings")
-		"practice":
-			show_boss_practice()
 	return {
 		"surface":surface,
 		"hud_hidden":not _hud.visible,
@@ -623,14 +590,6 @@ func debug_upgrade_geometry() -> Dictionary:
 	}
 
 
-func debug_practice_option_texts() -> PackedStringArray:
-	return (
-		_practice_panel.debug_option_texts()
-		if _practice_panel != null
-		else PackedStringArray()
-	)
-
-
 func debug_threat_radar_contract() -> Dictionary:
 	return _hud.debug_threat_radar_contract()
 
@@ -660,10 +619,7 @@ func _close_settings() -> void:
 		"pause":
 			show_pause()
 		_:
-			show_deployment(
-				_selected_primary,
-				_selected_field_name_key
-			)
+			show_deployment(_selected_primary)
 
 
 func _show_guidebook(return_surface: String) -> void:
@@ -680,14 +636,6 @@ func _close_guidebook() -> void:
 		show_pause()
 
 
-func show_boss_practice() -> void:
-	if _practice_panel == null:
-		return
-	hide_all_modals()
-	_practice_panel.open()
-	_show_modal("practice")
-
-
 func _on_deployment_selected(primary_id: StringName) -> void:
 	_selected_primary = primary_id
 	deployment_selected.emit(primary_id)
@@ -699,11 +647,10 @@ func _on_locale_changed(_locale: String) -> void:
 
 func _refresh_localized_content() -> void:
 	_deployment_panel.refresh_localized_content()
+	_pause_panel.refresh_localized_content()
 	_result_panel.refresh_localized_content()
 	_guide_panel.refresh_localized_content()
 	_hud.refresh_localized_content()
-	if _practice_panel != null:
-		_practice_panel.refresh_localized_content()
 	if not _latest_upgrade_cards.is_empty() and _host_visible("upgrade"):
 		_upgrade_panel.open(_latest_upgrade_cards)
 

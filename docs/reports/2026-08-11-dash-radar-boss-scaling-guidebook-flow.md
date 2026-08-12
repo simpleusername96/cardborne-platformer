@@ -3,7 +3,7 @@ type: plan
 status: done
 owner: BK
 created: 2026-08-11
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-12
 topic: Dash-coherent threat radar, monotonic stage and boss pressure, guidebook stat ownership, and Garage removal
 scope: Five-stage Cardborne run; threat-radar presentation, ordinary and boss difficulty profiles, boss autonomous pattern execution, guidebook information architecture, modal routing, focused validation, Web export, rendered QA, and bounded performance evidence
 related:
@@ -134,7 +134,7 @@ In scope:
 - Guidebook category structure, read-only stat adapter, active-stage/range context, locked
   summary behavior, Mystery Device display name, and the Guidebook Back command.
 - Removal of Garage UI, mode/routes/signals/localization/capture fixtures, and direct
-  routing to Deployment or Boss Practice as appropriate.
+  routing to Deployment.
 - Product/design documentation, focused validators, deterministic captures, Web export,
   built runtime QA, and one final bounded performance comparison.
 
@@ -460,7 +460,7 @@ For Guidebook Back:
   remains the final predictable focus stop.
 
 This task changes only the Guidebook's visible Back command. The helper is reusable, but
-unrelated Settings and Boss Practice buttons are not migrated without a separate reason.
+unrelated Settings controls are not migrated without a separate reason.
 Dangerous commands such as abandoning a run remain visible text.
 
 ### 6. Garage removal and direct routing
@@ -478,7 +478,6 @@ return context. Replace callers as follows:
 | Pause `Abandon run` | Garage -> Deployment | Deployment directly |
 | Failure report primary | Garage -> Deployment | Deployment directly |
 | Final result Garage/Replay | two commands that converge | one `New Run` / `새 런` primary -> Deployment |
-| Boss Practice defeat | empty Garage | Boss Practice selection |
 | Garage Settings return | Garage | removed |
 
 The Deployment screen remains the sole owner of launch setup and general Settings access.
@@ -559,7 +558,7 @@ save keys remain intact and receive parity tests.
 - [x] 3.6 Extend boss pattern/runtime/exam validators for effective shape, telegraph-hit
   parity, Stage 1-to-5 profile monotonicity, add/projectile/effect caps, and arena-safe
   target placement.
-- [x] 3.7 Inspect all five bosses in Boss Practice at phase 1 and later phase for startup,
+- [x] 3.7 Inspect all five bosses in deterministic runtime fixtures at phase 1 and later phase for startup,
   active, recovery, shield-up/exposed, autonomous/direct overlap, safe space, and actual
   map coverage.
 
@@ -587,8 +586,7 @@ save keys remain intact and receive parity tests.
 
 - [x] 5.1 Add one explicit return-to-Deployment lifecycle route and use it from Pause,
   failure report, and final result.
-- [x] 5.2 Route Boss Practice defeat to Boss Practice selection and prove normal-run and
-  practice-run teardown do not cross.
+- [x] 5.2 Prove normal-run defeat teardown returns directly to Deployment.
 - [x] 5.3 Remove Garage panel/UID, runtime mode/branch, Stage UI host, signals, Settings
   return context, localization, debug/capture surface, and manifest entry `94-garage.png`.
 - [x] 5.4 Replace result/report command labels and focus contracts with one useful next
@@ -803,7 +801,7 @@ Anti-rework rules:
 | --- | --- |
 | Live radar correction creates a new hot path | fixed 12-sector rebase, retained arrays/mesh, cadence/allocation tests, final comparable performance pair |
 | Sector summaries lose exact individual regrouping after a very large dash | preserve nearest representative world positions, reaggregate the bounded summaries, add begin/mid/end and sector-crossing fixtures |
-| HP plus stronger shield produces excessive boss TTK | keep exposed multiplier/time unchanged, use moderate target curves, validate Boss Practice phase timing, hand subjective TTK to user QA |
+| HP plus stronger shield produces excessive boss TTK | keep exposed multiplier/time unchanged, use moderate target curves, validate deterministic boss phase timing, hand subjective TTK to user QA |
 | Larger/faster attacks remove fair escape space | never shorten startup/recovery, enforce `radius + 40`, inspect warning-hit parity and overlapping direct/autonomous layers |
 | Stage-wide ordinary scalar over-buffs support/priority roles | exact role examples and run-level playtest; no role-base edits in the same pass |
 | Guidebook stats drift from combat | read-only adapter plus parity validators; no copied numbers in UI/catalog/localization |
@@ -818,7 +816,6 @@ No implementation-blocking product decision remains. The plan selects:
 
 - exact current-stage stats during a run and Stage 1-to-5 ranges outside a run;
 - direct Deployment routing after normal run termination;
-- Boss Practice selection after practice defeat;
 - display-only rename to Anomaly Device/변칙 장치;
 - Guidebook-only migration to the shared icon Back command.
 

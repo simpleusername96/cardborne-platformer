@@ -4,7 +4,6 @@ extends VBoxContainer
 ## Pause composition. It emits navigation intents and owns no run state.
 
 signal resume_requested
-signal restart_requested
 signal abort_requested
 signal settings_requested
 signal guide_requested
@@ -14,7 +13,10 @@ const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 
 var first_button: Button
 var abort_button: Button
+var _header: HBoxContainer
 var _command_stack: VBoxContainer
+var _guide_button: Button
+var _settings_button: Button
 
 
 func _ready() -> void:
@@ -26,19 +28,25 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 12)
-	add_child(header)
+	_header = HBoxContainer.new()
+	_header.add_theme_constant_override("separation", 12)
+	add_child(_header)
 	var title := Factory.label("PAUSE_TITLE", 38, Art.IVORY_BRIGHT)
 	title.theme_type_variation = &"TitleLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-	var guide := Factory.command_button("?", Factory.COMMAND_SECONDARY)
-	guide.tooltip_text = tr("GUIDE_TITLE")
-	guide.accessibility_name = tr("GUIDE_TITLE")
-	guide.custom_minimum_size = Vector2(48.0, 48.0)
-	guide.pressed.connect(func() -> void: guide_requested.emit())
-	header.add_child(guide)
+	_header.add_child(title)
+	_guide_button = Factory.icon_command_button(
+		"?", "GUIDE_TITLE", Factory.COMMAND_SECONDARY
+	)
+	_guide_button.name = "GuideButton"
+	_guide_button.pressed.connect(func() -> void: guide_requested.emit())
+	_header.add_child(_guide_button)
+	_settings_button = Factory.icon_command_button(
+		"⚙", "SETTINGS_TITLE", Factory.COMMAND_SECONDARY
+	)
+	_settings_button.name = "SettingsButton"
+	_settings_button.pressed.connect(func() -> void: settings_requested.emit())
+	_header.add_child(_settings_button)
 	var command_center := CenterContainer.new()
 	command_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	command_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -56,20 +64,6 @@ func _build() -> void:
 	Factory.apply_font_size(first_button, 22)
 	first_button.pressed.connect(func() -> void: resume_requested.emit())
 	_command_stack.add_child(first_button)
-	var restart := Factory.command_button(
-		"PAUSE_RESTART",
-		Factory.COMMAND_SECONDARY
-	)
-	restart.custom_minimum_size = Vector2(360.0, 48.0)
-	restart.pressed.connect(func() -> void: restart_requested.emit())
-	_command_stack.add_child(restart)
-	var settings := Factory.command_button(
-		"PAUSE_SETTINGS",
-		Factory.COMMAND_SECONDARY
-	)
-	settings.custom_minimum_size = Vector2(360.0, 48.0)
-	settings.pressed.connect(func() -> void: settings_requested.emit())
-	_command_stack.add_child(settings)
 	abort_button = Factory.command_button(
 		"PAUSE_ABORT",
 		Factory.COMMAND_DANGER
@@ -80,7 +74,13 @@ func _build() -> void:
 
 
 func open() -> void:
+	refresh_localized_content()
 	first_button.grab_focus()
+
+
+func refresh_localized_content() -> void:
+	Factory.refresh_icon_command_button(_guide_button)
+	Factory.refresh_icon_command_button(_settings_button)
 
 
 func set_compact_mode(compact: bool) -> void:
@@ -104,6 +104,10 @@ func debug_contract() -> Dictionary:
 		"command_widths":_command_stack.get_children().map(
 			func(control: Control) -> float: return control.custom_minimum_size.x
 		),
+		"header_actions":[String(_guide_button.name), String(_settings_button.name)],
+		"settings_in_header":_settings_button.get_parent() == _header,
+		"settings_size":_settings_button.custom_minimum_size,
+		"settings_accessibility_name":_settings_button.accessibility_name,
 	}
 
 

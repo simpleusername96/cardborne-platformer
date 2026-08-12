@@ -139,10 +139,7 @@ func set_world_fixture(fixture: Dictionary) -> void:
 func show_ui_fixture(fixture: Dictionary) -> void:
 	match StringName(fixture.get("kind", &"")):
 		&"deployment":
-			_run._ui.show_deployment(
-				_run.selected_primary,
-				String(_run.field_layout.field_definition["name_key"])
-			)
+			_run._ui.show_deployment(_run.selected_primary)
 		&"settings":
 			_run._ui.debug_modal_contract("settings")
 		&"gameplay_settings":
@@ -202,8 +199,6 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 				&"enemies",
 				&"mobile_chaser"
 			)
-		&"boss_practice":
-			_run._ui.debug_modal_contract("practice")
 		&"ship_status_active":
 			var active_build: Dictionary = _run._build_snapshot()
 			_run._ui.update_hud({

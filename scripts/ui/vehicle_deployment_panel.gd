@@ -6,7 +6,6 @@ extends VBoxContainer
 
 signal deploy_requested(primary_id: StringName)
 signal settings_requested
-signal practice_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
@@ -18,8 +17,9 @@ const SemanticAssets = preload(
 const CRAFT_ASSET_ID := &"attachment/player_craft_body"
 const CRAFT_NOSE_UP_ROTATION := -PI / 2.0
 
-var _field_label: Label
+var _header: HBoxContainer
 var _title: Label
+var _settings_button: Button
 var _body_scroll: ScrollContainer
 var _body: HBoxContainer
 var _identity_box: VBoxContainer
@@ -31,7 +31,6 @@ var _control_rows: Array[HBoxContainer] = []
 var _binding_labels: Dictionary = {}
 var _command: Button
 var _actions: HBoxContainer
-var _field_name_key := "FIELD_DROWNED_RUIN"
 var _bindings: Dictionary = {}
 var _compact := false
 
@@ -51,14 +50,20 @@ func _build() -> void:
 
 
 func _build_header() -> void:
-	_field_label = Factory.label("DEPLOY_FIELD_TEMPLATE", 16, Art.SYSTEM)
-	_field_label.theme_type_variation = &"MetricLabel"
-	_field_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	add_child(_field_label)
+	_header = HBoxContainer.new()
+	_header.add_theme_constant_override("separation", 12)
+	add_child(_header)
 	_title = Factory.label("DEPLOY_TITLE", 42, Art.TEXT_PRIMARY)
 	_title.theme_type_variation = &"DisplayLabel"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	add_child(_title)
+	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_header.add_child(_title)
+	_settings_button = Factory.icon_command_button(
+		"⚙", "SETTINGS_TITLE", Factory.COMMAND_SECONDARY
+	)
+	_settings_button.name = "SettingsButton"
+	_settings_button.pressed.connect(func() -> void: settings_requested.emit())
+	_header.add_child(_settings_button)
 
 
 func _build_body() -> void:
@@ -80,7 +85,6 @@ func _build_body() -> void:
 	_identity_box.size_flags_stretch_ratio = 0.4
 	_identity_box.add_theme_constant_override("separation", 8)
 	_body.add_child(_identity_box)
-	_identity_box.add_child(Factory.section_heading("DEPLOY_PRIMARY_HEADING"))
 	var weapon_name := Factory.label("PRIMARY_PULSE_CANNON", 20, Art.MUSTARD)
 	weapon_name.theme_type_variation = &"MetricLabel"
 	_identity_box.add_child(weapon_name)
@@ -156,27 +160,9 @@ func _build_footer() -> void:
 		func() -> void: deploy_requested.emit(&"pulse_cannon")
 	)
 	_actions.add_child(_command)
-	var settings := Factory.command_button(
-		"SETTINGS_OPEN",
-		Factory.COMMAND_SECONDARY
-	)
-	settings.name = "SettingsButton"
-	settings.custom_minimum_size.x = 140.0
-	settings.pressed.connect(func() -> void: settings_requested.emit())
-	_actions.add_child(settings)
-	if OS.is_debug_build():
-		var practice := Factory.command_button(
-			"BOSS_PRACTICE_OPEN",
-			Factory.COMMAND_SECONDARY
-		)
-		practice.name = "BossPracticeButton"
-		practice.custom_minimum_size.x = 180.0
-		practice.pressed.connect(func() -> void: practice_requested.emit())
-		_actions.add_child(practice)
 
 
-func open(field_name_key: String) -> void:
-	_field_name_key = field_name_key
+func open() -> void:
 	refresh_localized_content()
 	_command.grab_focus()
 
@@ -190,7 +176,6 @@ func set_compact_mode(compact: bool) -> void:
 	_identity_box.add_theme_constant_override("separation", 5 if compact else 8)
 	_controls_box.add_theme_constant_override("separation", 6 if compact else 10)
 	Factory.apply_font_size(_title, 30 if compact else 42)
-	Factory.apply_font_size(_field_label, 14 if compact else 16)
 	_craft_preview.custom_minimum_size = (
 		Vector2(104.0, 104.0) if compact else Vector2(150.0, 150.0)
 	)
@@ -219,17 +204,8 @@ func set_compact_mode(compact: bool) -> void:
 
 
 func refresh_localized_content() -> void:
-	var field_text := tr("DEPLOY_FIELD_TEMPLATE").replace(
-		"%s",
-		tr(_field_name_key)
-	)
-	_field_label.text = field_text
-	_title.text = (
-		"%s · %s" % [tr("DEPLOY_TITLE"), tr(_field_name_key)]
-		if _compact
-		else tr("DEPLOY_TITLE")
-	)
-	_field_label.visible = not _compact
+	_title.text = tr("DEPLOY_TITLE")
+	Factory.refresh_icon_command_button(_settings_button)
 	refresh_input_bindings(_bindings)
 
 
@@ -267,13 +243,16 @@ func debug_contract() -> Dictionary:
 			_identity_box.size_flags_stretch_ratio,
 			_controls_box.size_flags_stretch_ratio,
 		],
-		"fixed_header":_field_label.get_parent() == self,
+		"fixed_header":_header.get_parent() == self,
 		"fixed_footer":_actions.get_parent() == self,
 		"primary_size":_command.custom_minimum_size,
 		"action_row_type":_actions.get_class(),
 		"action_count":_actions.get_child_count(),
 		"action_order":action_order,
 		"action_variations":action_variations,
+		"settings_in_header":_settings_button.get_parent() == _header,
+		"settings_size":_settings_button.custom_minimum_size,
+		"settings_accessibility_name":_settings_button.accessibility_name,
 		"compact":_compact,
 	}
 

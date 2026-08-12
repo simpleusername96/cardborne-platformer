@@ -41,7 +41,7 @@ func _initialize() -> void:
 		var foundation := Dictionary(contract["ui_foundation"])
 		_expect(bool(foundation["loaded"]), "shared UI foundation loads at %d" % width)
 		_expect(
-			int(foundation["modal_surface_count"]) >= 8,
+			int(foundation["modal_surface_count"]) >= 7,
 			"all modals use the shared root surface at %d" % width
 		)
 		var modal_frame := Dictionary(foundation["modal_frame"])
@@ -341,22 +341,20 @@ func _initialize() -> void:
 		var deployment_action_variations := Array(
 			contract["deployment_action_variations"]
 		)
-		var expected_deployment_actions := ["DeployButton", "SettingsButton"]
-		if OS.is_debug_build():
-			expected_deployment_actions.append("BossPracticeButton")
-		var secondary_roles_only := true
-		for variation in deployment_action_variations.slice(1):
-			secondary_roles_only = (
-				secondary_roles_only and String(variation) == "SecondaryButton"
-			)
+		var expected_deployment_actions := ["DeployButton"]
 		_expect(
 			String(contract["deployment_action_row_type"]) == "HBoxContainer"
 				and int(contract["deployment_action_count"])
 					== expected_deployment_actions.size()
 				and deployment_action_order == expected_deployment_actions
 				and deployment_action_variations[0] == "PrimaryButton"
-				and secondary_roles_only,
-			"deployment flattens all visible actions into one ordered row at %d"
+				and bool(contract["deployment_settings_in_header"])
+				and Vector2(contract["deployment_settings_size"])
+					== Vector2(48.0, 48.0)
+				and not String(
+					contract["deployment_settings_accessibility_name"]
+				).is_empty(),
+			"deployment keeps only Deploy in the footer and Settings in the header at %d"
 			% width
 		)
 		var deployment_surface := Vector2(contract["deployment_surface_size"])
@@ -372,7 +370,7 @@ func _initialize() -> void:
 			)
 			var modal_minimums := Dictionary(contract["modal_minimums"])
 			_expect(Vector2(modal_minimums["upgrade"]) == Vector2(1376.0, 616.0), "upgrade modal fits the responsive dossier card flow without a header")
-			_expect(Vector2(modal_minimums["pause"]) == Vector2(520.0, 430.0), "pause modal uses the compact vertical-stack contract")
+			_expect(Vector2(modal_minimums["pause"]) == Vector2(520.0, 330.0), "pause modal fits the reduced command stack")
 			_expect(Vector2(modal_minimums["settings"]) == Vector2(920.0, 570.0), "settings modal keeps approved scale")
 			_expect(Vector2(modal_minimums["guidebook"]) == Vector2(1160.0, 636.0), "guidebook modal keeps approved scale")
 			_expect(Vector2(modal_minimums["report"]) == Vector2(1200.0, 640.0), "report modal keeps all three metric columns visible")
@@ -384,11 +382,19 @@ func _initialize() -> void:
 			String(contract["pause_command_stack_type"]) == "VBoxContainer"
 				and Array(contract["pause_command_order"]) == [
 					"PAUSE_RESUME",
-					"PAUSE_RESTART",
-					"PAUSE_SETTINGS",
 					"PAUSE_ABORT",
-				],
-			"pause commands keep the required vertical order at %d" % width
+				]
+				and Array(contract["pause_header_actions"]) == [
+					"GuideButton", "SettingsButton",
+				]
+				and bool(contract["pause_settings_in_header"])
+				and Vector2(contract["pause_settings_size"])
+					== Vector2(48.0, 48.0)
+				and not String(
+					contract["pause_settings_accessibility_name"]
+				).is_empty(),
+			"pause keeps Resume/Abort in the stack and Settings in the header at %d"
+			% width
 		)
 		for command_width in Array(contract["pause_command_widths"]):
 			_expect(
@@ -722,7 +728,6 @@ func _validate_modal_matrix(ui: VehicleStageUI) -> void:
 				"report",
 				"settings",
 				"guidebook",
-				"practice",
 			]:
 				var modal := ui.debug_modal_contract(surface)
 				await _settle_ui()

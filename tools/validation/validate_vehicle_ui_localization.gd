@@ -1,6 +1,5 @@
 extends SceneTree
 
-const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
@@ -64,10 +63,6 @@ func _initialize() -> void:
 					String(Dictionary(preview_variant)["stat_key"]),
 					locale
 				)
-		for pattern_key in BossPatterns.DISPLAY_KEYS.values():
-			_expect_translated(String(pattern_key), locale)
-		for mode_key in BossPatterns.COMMIT_MODE_KEYS.values():
-			_expect_translated(String(mode_key), locale)
 		var ui := StageUI.new()
 		get_root().add_child(ui)
 		await process_frame
@@ -82,17 +77,6 @@ func _initialize() -> void:
 				),
 				"%s result summary uses current stage title %s" % [
 					locale, stage_title_key,
-				]
-			)
-		for option_text in ui.debug_practice_option_texts():
-			_expect(
-				not option_text.is_empty()
-					and not option_text.contains("_")
-					and option_text.to_lower() not in [
-						"committed", "interruptible signature", "autonomous",
-					],
-				"%s boss-practice option uses localized presentation: %s" % [
-					locale, option_text,
 				]
 			)
 		ui.queue_free()
@@ -196,6 +180,13 @@ func _initialize() -> void:
 		"GARAGE_RUN_BUILD",
 		"GARAGE_LAUNCH",
 		"GARAGE_SETTINGS",
+		"DEPLOY_FIELD_TEMPLATE",
+		"DEPLOY_PRIMARY_HEADING",
+		"DEPLOY_FOOTER",
+		"SETTINGS_OPEN",
+		"PAUSE_SETTINGS",
+		"HUD_FACILITY_OFFLINE",
+		"HUD_FACILITY_STATUS",
 	]:
 		_expect(
 			not localization_source.contains("\n%s," % removed_key),

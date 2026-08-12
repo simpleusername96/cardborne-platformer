@@ -152,7 +152,7 @@ func _validate_factory() -> void:
 func _validate_pause() -> void:
 	var root_control := Control.new()
 	root_control.theme = _theme
-	root_control.size = Vector2(520.0, 430.0)
+	root_control.size = Vector2(520.0, 330.0)
 	get_root().add_child(root_control)
 	var pause := PausePanel.new()
 	root_control.add_child(pause)
@@ -165,11 +165,22 @@ func _validate_pause() -> void:
 	_expect(
 		Array(contract["command_order"]) == [
 			"PAUSE_RESUME",
-			"PAUSE_RESTART",
-			"PAUSE_SETTINGS",
 			"PAUSE_ABORT",
 		],
-		"Pause command order is Resume, Restart, Settings, Abort"
+		"Pause command order is Resume, Abort"
+	)
+	_expect(
+		Array(contract["header_actions"]) == ["GuideButton", "SettingsButton"],
+		"Pause keeps Guide and Settings as header icons"
+	)
+	_expect(bool(contract["settings_in_header"]), "Pause Settings icon is in the header")
+	_expect(
+		Vector2(contract["settings_size"]) == Vector2(48.0, 48.0),
+		"Pause Settings icon keeps a 48 px target"
+	)
+	_expect(
+		not String(contract["settings_accessibility_name"]).is_empty(),
+		"Pause Settings icon has an accessible name"
 	)
 	for width in Array(contract["command_widths"]):
 		_expect(is_equal_approx(float(width), 360.0), "Pause commands share one width")

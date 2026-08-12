@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-12
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -74,7 +74,7 @@ five-stage run.
 - Every run uses the existing Hard combat profile. Deployment exposes no
   difficulty selector, description, lock explanation, or saved preference.
 - Confirming deployment starts the complete five-stage run with that fixed
-  profile. Stage transitions and stage restarts preserve it internally.
+  profile. Stage transitions preserve it internally.
 - The fixed profile composes with the shallow stage curve. It does not alter
   attack cadence, telegraph duration, hostile projectile speed, threat budgets,
   drops, experience value, or reward quality.
@@ -701,9 +701,8 @@ missing or recycled feedback never cancels or repeats gameplay damage.
   cryo, or arc attribute. Both outgoing totals agree within 0.01. A failed
   attempt opens the report in failure mode with the last hit and the three
   largest incoming sources, then returns directly to Deployment. The final result
-  and Pause abort action also return directly to Deployment. A Boss Practice defeat
-  returns to Boss Practice selection.
-- Deployment, upgrade, pause/settings, guidebook, result, report, and Boss Practice are modal
+  and Pause abort action also return directly to Deployment.
+- Deployment, upgrade, pause/settings, guidebook, result, and report are modal
   focus layers. They block carried input and provide deterministic keyboard focus.
 - One upgrade offer contains one to three unique compatible card IDs. The
   deterministic first pass prefers distinct categories, then fills from the
@@ -736,10 +735,15 @@ missing or recycled feedback never cancels or repeats gameplay damage.
 - Upgrade cards never scroll independently. At 200% text scale only, the offer
   body may provide one outer vertical scroll while all visible cards remain
   non-scrolling and the Equip action remains fixed.
-- Deployment presents loadout and complete control information with one Deploy
-  primary action. Deploy, Settings, and the debug-only Boss Practice action share
-  one horizontal action row while retaining their primary/secondary roles.
-  Every deployment starts the fixed Hard run and exposes no difficulty choice.
+- Deployment presents the craft, one short primary-weapon explanation, complete
+  control information, and one Deploy primary action. Settings is a localized,
+  accessible icon in the top-right header. Field flavor, build philosophy, and
+  other meta commentary are not shown. Every deployment starts the fixed Hard
+  run and exposes no difficulty choice.
+- Player-facing stage titles use only Stage 1 through Stage 5. Field and encounter
+  identifiers remain internal until a later naming decision changes that contract.
+- Pause provides Resume and Abort Run only. Guidebook and Settings are localized,
+  accessible header icons.
 
 ### Runtime capacity and performance
 

@@ -3,7 +3,7 @@ type: plan
 status: superseded
 owner: BK
 created: 2026-08-10
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-12
 superseded_by: ./2026-08-10-non-boss-combat-and-upgrade-integrity.md
 topic: Remaining combat presentation, pressure, boss-pattern, Mystery Device, and release-qualification corrections
 scope: Dash-stable presentation, truthful facing, distinct Drop Mine feedback, minimap scale, ordinary damage, diverse bounded boss maneuvers, Mystery Device readability, and final performance qualification
@@ -190,7 +190,7 @@ decisions and chained commitments, not hidden tracking or higher boss damage.
   dispatcher, add one allocation-stable step state, freeze targets after startup, and serialize
   steps under the existing capacities.
 - [ ] **2.3 Deferred: implement the five signature maneuvers.** Replace one autonomous slot per boss
-  with the locked matrix. Add deterministic seeds and boss-practice coverage for every step,
+  with the locked matrix. Add deterministic seeds and boss-pattern coverage for every step,
   phase, cover interaction, safe route, and cap boundary.
 - [x] **2.4 Make Mystery outcomes legible.** Implement reveal-on-first-hit, break activation,
   affected-count receipts, shared Cryo compositor input, post-clear purge pulse, and

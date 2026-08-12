@@ -37,7 +37,7 @@ func _run() -> void:
 	root.add_child(stage)
 	await process_frame
 	var stage_ui = stage.get("_ui")
-	stage_ui.call("show_deployment", &"pulse_cannon", "FIELD_DROWNED_RUIN")
+	stage_ui.call("show_deployment", &"pulse_cannon")
 	stage_ui.call("debug_submit_deployment")
 	_expect(stage.selected_run_difficulty == RunDifficulty.HARD, "deployment starts the fixed Hard run")
 	_expect(stage.encounter_runtime.difficulty == RunDifficulty.HARD, "encounter runtime starts at fixed Hard")
@@ -208,9 +208,6 @@ func _run() -> void:
 	_expect(stage.stage_flow.quota == StageCatalog.quota(&"stage_1"), "retired identifiers cannot alter stage quota")
 	stage.call("_start_deployed_run", &"pulse_cannon")
 	_expect(stage.selected_run_difficulty == RunDifficulty.HARD, "new runs restore the fixed Hard telemetry field")
-	stage.call("_reset_run", false, true, true)
-	_expect(stage.encounter_runtime.difficulty == RunDifficulty.HARD, "stage restart preserves fixed Hard")
-	_expect(stage.stage_flow.quota == StageCatalog.quota(&"stage_1"), "stage restart preserves the previous Hard quota")
 	stage.queue_free()
 	await process_frame
 	_finish()

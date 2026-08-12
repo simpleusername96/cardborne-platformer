@@ -14,7 +14,6 @@ const CORE_CAPTURE_FILES := [
 	"01i-guidebook-elite-stats.png",
 	"01j-guidebook-field-objects.png",
 	"01k-guidebook-enemy-stage-range.png",
-	"01h-boss-practice.png",
 	"02-safe-arrival.png",
 	"02b-first-contact-cue.png",
 	"02c-ship-status-active.png",
@@ -59,7 +58,6 @@ const FULL_CAPTURE_FILES := [
 	"01i-guidebook-elite-stats.png",
 	"01j-guidebook-field-objects.png",
 	"01k-guidebook-enemy-stage-range.png",
-	"01h-boss-practice.png",
 	"02-safe-arrival.png",
 	"02b-first-contact-cue.png",
 	"02c-ship-status-active.png",
@@ -262,9 +260,6 @@ func run(gateway: RefCounted) -> void:
 		return
 	if not await _capture_ui(gateway, &"guidebook_enemy_range", "01k-guidebook-enemy-stage-range.png"):
 		return
-	if not await _capture_ui(gateway, &"boss_practice", "01h-boss-practice.png"):
-		return
-
 	gateway.prepare_stage(0)
 	if not await _capture_viewport(gateway, "02-safe-arrival.png"):
 		return

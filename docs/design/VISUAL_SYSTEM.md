@@ -95,8 +95,8 @@ effect, actor, icon, or asset stand-ins.
 
 ## Scope
 
-world, actor, projectile, reward, effect, HUD, modal, minimap, guidebook preview와
-debug boss practice를 포함한 모든 player-facing surface에 적용한다. gameplay
+world, actor, projectile, reward, effect, HUD, modal, minimap, guidebook preview를
+포함한 모든 player-facing surface에 적용한다. gameplay
 rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현만 정의한다.
 
 ## Requirements
@@ -324,13 +324,13 @@ collision.
 | 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
 | 변칙 장치 | 큰 neutral mechanical body; 파괴 전 결과를 숨기고 파괴 후 resolved state만 표시 | device health와 hidden outcome |
-| 증원 조립소 | 넓은 적대 시설 body와 상시 체력 표시; 일반 적과 다른 미니맵 표식 | 별도 facility health, 가동 임계점, 소환 주기와 상한 |
+| 적 생성 시설 | 넓은 적대 시설 body와 상시 체력 표시; 일반 적과 다른 미니맵 표식 | 별도 facility health, 가동 임계점, 소환 주기와 상한 |
 | 직접 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
 
 별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad와
-Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 승인된
+Breakable Bulkhead는 현재 product category가 아니다. 적 생성 시설은 승인된
 별도 stationary facility category다. 내부 구조벽·위험 지대·게이트·변칙
-장치·증원 조립소·직접 픽업을 서로
+장치·적 생성 시설·직접 픽업을 서로
 바꿔 부르거나 같은 silhouette로 합치지 않는다.
 
 ### World
@@ -688,17 +688,18 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
 
 - 모든 modal은 live HUD와 gameplay input을 차단하고 title, content,
   primary action 순서가 한 번에 읽혀야 한다.
-- Deployment는 loadout/ship preview와 complete control information의
-  two-column body를 사용한다. Deploy primary, Settings secondary와 debug-only
-  Boss Practice secondary는 한 개의 flat horizontal action row에 놓는다.
-  difficulty selector나 lock explanation은 없다.
+- Deployment는 craft preview, 한 줄 primary-weapon 설명과 complete control
+  information의 two-column body를 사용한다. footer에는 Deploy primary 한 개만
+  두고 Settings는 localized accessible name을 가진 48×48 top-right icon으로 둔다.
+  field flavor, build philosophy, difficulty selector나 lock explanation은 없다.
 - Upgrade는 별도 kicker, screen title 또는 instruction header 없이 왼쪽
   current-build summary와 오른쪽 세 개의 vertical Selectable row, explicit
   selection, Equip confirm만 사용한다. offer artwork는 각 row 왼쪽에 한 개만 두고
   Leave, Exit, Skip 또는 decline action은 없다.
-- Pause는 Resume, Restart, Settings, Abort Run의 equal-width vertical stack을
-  사용한다. Resume만 filled primary이고 Abort Run은 restrained danger다. Abort
-  Run은 중간 화면 없이 Deployment로 돌아간다.
+- Pause는 Resume과 Abort Run의 equal-width vertical stack을 사용한다. Resume만
+  filled primary이고 Abort Run은 restrained danger다. Guidebook과 Settings는
+  localized accessible name을 가진 48×48 top-right icon으로 둔다. Abort Run은
+  중간 화면 없이 Deployment로 돌아간다.
 - Settings는 category rail + content이며 Ship Status, audio, controls,
   motion, language 순서를 유지한다.
 - Guidebook은 wide에서 category/list/detail 세 column, compact에서 category
@@ -712,8 +713,6 @@ Breakable Bulkhead는 현재 product category가 아니다. 증원 조립소는 
   사용한다.
 - Result는 metric과 build/loadout를 요약하고 하나의 Deployment action을 제공한다.
   Failure Report도 Deployment로 직접 돌아간다.
-- Boss Practice는 debug-only이지만 production boss descriptor와 Theme를
-  재사용한다.
 
 ### 접근성 및 상태
 

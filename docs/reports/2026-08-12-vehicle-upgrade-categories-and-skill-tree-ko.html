@@ -45,7 +45,7 @@
     }
     a { color: var(--cyan); }
     a:hover { color: #9fe5ff; }
-    button, input, select { font: inherit; }
+    button, input, select, textarea { font: inherit; }
     :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
     .wrap { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
 
@@ -178,20 +178,39 @@
     .controls button:hover, .status-filter button:hover { border-color: var(--cyan); }
     .status-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
     .status-filter button[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
-    #result-count { margin-left: auto; align-self: center; color: var(--muted); font-size: 13px; }
+    #result-count { margin-left: auto; }
+    #result-count, #approval-count, #save-status { align-self: center; color: var(--muted); font-size: 13px; }
+    #approval-count { color: var(--green); }
+    #save-status[data-state="error"] { color: var(--amber); }
 
     .catalog-section { padding: 30px 0; border-bottom: 1px solid var(--line); }
     .catalog-section:last-child { border-bottom: 0; }
     .catalog-heading { display: flex; gap: 12px; align-items: baseline; margin-bottom: 13px; }
     .catalog-heading span { color: var(--muted); font-size: 13px; }
     .table-wrap { overflow-x: auto; border-top: 1px solid var(--line-strong); }
-    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    table { width: 100%; border-collapse: collapse; min-width: 1040px; }
     th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
     th { color: var(--muted); font-size: 12px; letter-spacing: .05em; }
     td { color: var(--muted); font-size: 14px; }
     td:nth-child(1) { width: 104px; }
     td:nth-child(2) { width: 210px; color: var(--text); font-weight: 750; }
     td:nth-child(4) { width: 92px; }
+    td.review-cell { width: 260px; color: var(--text); }
+    .review-controls { display: grid; gap: 9px; }
+    .review-approval { display: flex; align-items: center; gap: 8px; font-weight: 750; }
+    .review-approval input { width: 18px; height: 18px; accent-color: var(--green); }
+    .review-note {
+      width: 100%;
+      min-height: 74px;
+      resize: vertical;
+      padding: 8px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .review-note::placeholder { color: var(--muted); }
     tr:hover td { background: rgba(85, 201, 244, .035); }
     tr[hidden], .catalog-section[hidden] { display: none; }
     code { color: #bfd4e1; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; }
@@ -347,7 +366,7 @@
 
     <section id="catalog">
       <h2>카테고리별 카드 카탈로그</h2>
-      <p class="section-lede">현재 구현은 라이브 동작을 요약한다. 제안 항목은 의도만 정의하며 아직 코드·데이터에 없다. 검색과 필터는 결과를 숨길 뿐 문서 데이터를 바꾸지 않는다.</p>
+      <p class="section-lede">현재 구현은 라이브 동작을 요약한다. 제안 항목은 의도만 정의하며 아직 코드·데이터에 없다. 각 행에서 승인 여부와 추가 메모를 기록할 수 있으며, 내용은 이 브라우저에 자동 저장된다.</p>
 
       <div class="controls" role="search">
         <input id="search" type="search" placeholder="카드명·효과 검색" aria-label="카드명과 효과 검색">
@@ -368,6 +387,8 @@
         <button type="button" data-status-filter="proposed" aria-pressed="false">우선 제안</button>
         <button type="button" data-status-filter="experiment" aria-pressed="false">후속 실험</button>
         <span id="result-count" aria-live="polite">47개 표시</span>
+        <span id="approval-count" aria-live="polite">승인 0 / 47</span>
+        <span id="save-status" role="status">브라우저 자동 저장</span>
       </div>
 
       <div class="catalog-section" data-category-section="primary">
@@ -500,10 +521,86 @@
       const category = document.querySelector('#category-filter');
       const reset = document.querySelector('#reset');
       const count = document.querySelector('#result-count');
+      const approvalCount = document.querySelector('#approval-count');
+      const saveStatus = document.querySelector('#save-status');
       const rows = [...document.querySelectorAll('tbody tr[data-category]')];
       const sections = [...document.querySelectorAll('[data-category-section]')];
       const statusButtons = [...document.querySelectorAll('[data-status-filter]')];
+      const storageKey = 'cardborne-upgrade-review-v1';
       let status = 'all';
+      let reviewState = {};
+
+      try {
+        const parsed = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        reviewState = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch (error) {
+        reviewState = {};
+        saveStatus.textContent = '저장소를 읽을 수 없음';
+        saveStatus.dataset.state = 'error';
+      }
+
+      const updateApprovalCount = () => {
+        const approved = rows.filter((row) => row.querySelector('.review-approved').checked).length;
+        approvalCount.textContent = `승인 ${approved} / ${rows.length}`;
+      };
+
+      const saveReviews = () => {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(reviewState));
+          saveStatus.textContent = '저장됨';
+          saveStatus.dataset.state = 'saved';
+        } catch (error) {
+          saveStatus.textContent = '이 페이지에서만 유지됨';
+          saveStatus.dataset.state = 'error';
+        }
+      };
+
+      document.querySelectorAll('thead tr').forEach((headerRow) => {
+        const heading = document.createElement('th');
+        heading.scope = 'col';
+        heading.textContent = '승인·메모';
+        headerRow.append(heading);
+      });
+
+      rows.forEach((row) => {
+        row.dataset.searchText = row.textContent.toLocaleLowerCase('ko-KR');
+        const cardId = row.querySelector('code').textContent.trim();
+        const cardName = row.children[1].childNodes[0].textContent.trim();
+        const saved = reviewState[cardId] || {};
+        const cell = document.createElement('td');
+        cell.className = 'review-cell';
+        const reviewControls = document.createElement('div');
+        reviewControls.className = 'review-controls';
+        const approvalLabel = document.createElement('label');
+        approvalLabel.className = 'review-approval';
+        const checkbox = document.createElement('input');
+        checkbox.className = 'review-approved';
+        checkbox.type = 'checkbox';
+        checkbox.setAttribute('aria-label', `${cardName} 승인`);
+        const approvalText = document.createElement('span');
+        approvalText.textContent = '승인';
+        approvalLabel.append(checkbox, approvalText);
+        const note = document.createElement('textarea');
+        note.className = 'review-note';
+        note.rows = 3;
+        note.maxLength = 1000;
+        note.placeholder = '추가 메모';
+        note.setAttribute('aria-label', `${cardName} 추가 메모`);
+        reviewControls.append(approvalLabel, note);
+        cell.append(reviewControls);
+        checkbox.checked = Boolean(saved.approved);
+        note.value = typeof saved.note === 'string' ? saved.note : '';
+        checkbox.addEventListener('change', () => {
+          reviewState[cardId] = { approved: checkbox.checked, note: note.value };
+          updateApprovalCount();
+          saveReviews();
+        });
+        note.addEventListener('input', () => {
+          reviewState[cardId] = { approved: checkbox.checked, note: note.value };
+          saveReviews();
+        });
+        row.append(cell);
+      });
 
       const apply = () => {
         const query = search.value.trim().toLocaleLowerCase('ko-KR');
@@ -511,7 +608,7 @@
         rows.forEach((row) => {
           const categoryMatch = category.value === 'all' || row.dataset.category === category.value;
           const statusMatch = status === 'all' || row.dataset.status === status;
-          const queryMatch = !query || row.textContent.toLocaleLowerCase('ko-KR').includes(query);
+          const queryMatch = !query || row.dataset.searchText.includes(query);
           row.hidden = !(categoryMatch && statusMatch && queryMatch);
           if (!row.hidden) visible += 1;
         });
@@ -538,6 +635,7 @@
         apply();
         search.focus();
       });
+      updateApprovalCount();
       apply();
     })();
   </script>
