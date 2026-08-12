@@ -14,6 +14,7 @@ related:
   - ../cardborne-performance-engineering-policy.md
   - ../cardborne-runtime-architecture-audit.md
   - ./2026-08-11-dense-combat-progression-and-run-completion.md
+  - ./2026-08-12-active-recharge-weapon-balance-and-continuous-boss-pressure.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
@@ -80,6 +81,12 @@ cadence를 쓰므로, 그대로 두면 새 화면 안에서 보이는 원거리 
 유효하다. 다만 그 문서의 “스테이지마다 보스 보상 카드를 claim한 뒤 전환한다”는 계약은
 이번 후속 사용자 결정으로 대체한다. 이 문서가 카메라 배율과 스테이지 연속성 범위의
 현재 실행 소스다. 기존 문서가 보스 보상/전환 동작을 다시 도입하는 근거가 되어서는 안 된다.
+
+`2026-08-12-active-recharge-weapon-balance-and-continuous-boss-pressure.md`가
+후속 사용자 결정에 따라 증원 시설 유지·시설 자식 provenance 계약을 대체한다. 또한 현재
+세 action slot을 Dash/내장 보조 무기 Seeker/장착 발동 무기로 해석하고 기본 공격 cooldown은
+계속 표시하지 않는다. 이 문서의 카메라, 무중단 스테이지 전환, 일반 적 보존, HUD 배치 계약은
+계속 유효하지만, 증원 시설을 복원하는 근거로 사용해서는 안 된다.
 
 ### 현재 HUD는 요청한 정보 구조와 다르다
 

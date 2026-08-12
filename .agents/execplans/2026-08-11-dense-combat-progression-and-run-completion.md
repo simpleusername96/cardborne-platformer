@@ -19,6 +19,7 @@ related:
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/reports/2026-08-11-vehicle-upgrade-idea-catalog.md
   - ../../docs/reports/2026-08-11-reinforcement-facility-and-anomaly-device-runtime.md
+  - ./2026-08-12-active-recharge-weapon-balance-and-continuous-boss-pressure.md
 ---
 
 # 고밀도 전투·성장·런 종료 정상화 실행 계획
@@ -33,6 +34,10 @@ related:
 > 이 문서는 미해결 고밀도 성능 게이트와 이미 완료된 성장·시설·장치 작업의 기록으로
 > 계속 active다. 이후 executor는 이 문서의 이전 stage-transition 문장을 근거로 제거된
 > 보상 또는 전환 경계를 다시 도입하지 않는다.
+> `2026-08-12-active-recharge-weapon-balance-and-continuous-boss-pressure.md`가
+> 증원 시설 유지, 할당량 도달 시 일반 spawn 중지, 무기 재조정, 보스 공격력·빈도와
+> 상단 action cooldown 범위의 현재 실행 계약이다. 이 문서의 시설 구현 기록은 과거 기록일
+> 뿐이며 시설을 복원하거나 새 spawn owner로 유지하는 근거가 아니다.
 
 이 계획은 적이 많을 때 발생하는 극심한 물리 프레임 지연을 실제 비용 소유자부터
 줄이고, 5스테이지 보스 처치 후 빈 화면에 머무는 종료 결함을 고친다. 동시에 후반
