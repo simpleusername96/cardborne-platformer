@@ -6,6 +6,8 @@ scope: Decide the canonical Korean and English names for Cardborne enemies, boss
 related:
   - ../../docs/reports/2026-08-12-player-facing-terminology-audit.md
   - ../../docs/reports/2026-08-12-vehicle-upgrade-categories-and-skill-tree-ko.html
+  - ../../docs/reports/2026-08-12-cardborne-upgrade-feedback.json
+  - ./2026-08-12-approved-upgrade-feedback-implementation.md
   - ../../localization/vehicle_stage.csv
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
@@ -60,7 +62,7 @@ Phase gate:
 ### Phase 2: Gather decisive evidence
 
 - [ ] BK reviews the audit's canonical shared-term table and selects function-first or hybrid naming.
-- [ ] BK checks approved upgrade candidates and saves notes in the interactive upgrade HTML report.
+- [x] BK checks approved upgrade candidates and saves notes in the interactive upgrade HTML report.
 - [ ] Convert the selected option into one bilingual candidate table for enemies, bosses, field objects, and upgrade cards.
 - [ ] Record explicit exceptions where a flavor name is worth keeping.
 
@@ -86,6 +88,8 @@ Phase gate:
 - Current phase: Phase 2.
 - Next task: BK reviews the audit's shared-term table and selects function-first or hybrid naming.
 - Last completed gate: Current terminology and ownership are established from local primary sources.
+- Upgrade-review evidence is preserved in `docs/reports/2026-08-12-cardborne-upgrade-feedback.json`;
+  its implementation contract is the separate active approved-upgrade ExecPlan.
 - Update rule: Check an item only when its evidence exists, and do not repeat the audit unless live localization or the decision criteria change.
 
 ## Completion and Stop Conditions

@@ -26,6 +26,10 @@ related:
 > 범위 우선순위: 후속 사용자 결정과
 > `2026-08-11-half-scale-continuous-stage-flow.md`가 Stage 1~4 보스 보상 카드,
 > XP 회수 대기, transition mode/protection, 일반 적 일괄 정리 계약을 대체한다.
+> 또한 `2026-08-12-approved-upgrade-feedback-implementation.md`가 이 문서의
+> 거리 극화, 역방향 레이저, 단일 원소 독점, EMP 카드 부재, 21장·68상태 수치와
+> 그에 종속된 acceptance를 대체한다. 이 문서의 미완료 실행 범위는 고밀도 성능
+> M8/M9 검증과 종료뿐이며, 이전 업그레이드 규칙을 다시 구현하지 않는다.
 > 이 문서는 미해결 고밀도 성능 게이트와 이미 완료된 성장·시설·장치 작업의 기록으로
 > 계속 active다. 이후 executor는 이 문서의 이전 stage-transition 문장을 근거로 제거된
 > 보상 또는 전환 경계를 다시 도입하지 않는다.
