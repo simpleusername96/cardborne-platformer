@@ -4,7 +4,6 @@ status: active
 owner: BK
 created: 2026-08-12
 last_reviewed: 2026-08-12
-canonical_for: Cardborne vehicle weapon roles, authored balance values, and deterministic comparison rules
 scope: Primary fire, damage and utility attributes, built-in and optional secondary weapons, and active weapons
 related:
   - ./vehicle_game_spec.md
