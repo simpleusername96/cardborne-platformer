@@ -255,6 +255,7 @@ var enemies: Array[EnemyState] = enemy_store.live
 var _enemy_query_buffer: Array[EnemyState] = []
 var _enemy_query_group_ends := PackedInt32Array()
 var _enemy_query_group_exit_t := PackedFloat32Array()
+var _status_damage_receipt := {&"poison":0.0}
 var _support_query_buffer: Array[EnemyState] = []
 var projectile_store := ProjectileStore.new()
 var player_projectiles: Array[ProjectileState] = projectile_store.player_live
@@ -2365,13 +2366,23 @@ func _update_enemies(
 	if performance_active:
 		_performance_enemy_sections["coordination"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
-	for enemy in _enemy_update_schedule.active:
-		if not enemy.statuses.is_empty():
-			var status_damage := StatusRuntime.tick(enemy, delta)
-			if float(status_damage["poison"]) > 0.0:
+	var status_index := 0
+	while status_index < enemy_store.status_slots.size():
+		var status_slot := enemy_store.status_slots[status_index]
+		var status_enemy := enemy_store.enemy_for_status_slot(status_slot)
+		if status_enemy == null:
+			status_index += 1
+			continue
+		if not status_enemy.alive or not status_enemy.active:
+			enemy_store.set_status_membership(status_enemy, false)
+			continue
+		StatusRuntime.tick_into(
+			status_enemy, delta, _status_damage_receipt, enemy_store
+		)
+		if float(_status_damage_receipt[&"poison"]) > 0.0:
 				_damage_enemy(
-					enemy,
-					float(status_damage["poison"]),
+					status_enemy,
+					float(_status_damage_receipt[&"poison"]),
 					"status",
 					&"toxin",
 					true,
@@ -2379,8 +2390,9 @@ func _update_enemies(
 					false,
 					OutgoingDamagePolicy.DAMAGE_PERIODIC
 				)
-				if not enemy.alive:
-					continue
+		if status_index < enemy_store.status_slots.size() and enemy_store.status_slots[status_index] == status_slot:
+			status_index += 1
+	for enemy in _enemy_update_schedule.active:
 		var role := enemy.role
 		if role == &"stage_boss":
 			_refresh_enemy_presentation_facing(enemy)
@@ -3870,6 +3882,7 @@ func _update_projectile_buffer(
 		var simulation_delta := delta
 		if player_position.distance_squared_to(from) > _near_simulation_distance_squared:
 			if projectile.spawn_serial % 2 != _simulation_lod_bucket:
+				_sync_projectile_at(hostile, index)
 				index += 1
 				continue
 			simulation_delta = delta * 2.0
@@ -3935,6 +3948,7 @@ func _update_projectile_buffer(
 					var normal: Vector2 = cover_hit["normal"]
 					projectile.velocity = projectile.velocity.bounce(normal)
 					projectile.pos = Vector2(cover_hit["point"]) + normal * (radius + 2.0)
+					_sync_projectile_at(hostile, index)
 					index += 1
 					continue
 				_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
@@ -4009,6 +4023,7 @@ func _update_projectile_buffer(
 					else:
 						projectile_store.remove_player_at_swap(index)
 						continue
+					_sync_projectile_at(hostile, index)
 					index += 1
 					continue
 				var enemy_damage := projectile.damage
@@ -4036,7 +4051,9 @@ func _update_projectile_buffer(
 						else &""
 					)
 				)
-				StatusRuntime.apply(hit_enemy, projectile.primary_payload)
+				StatusRuntime.apply(
+					hit_enemy, projectile.primary_payload, enemy_store
+				)
 				_record_status_applications(projectile.primary_payload)
 				if (
 					projectile.primary_payload != null
@@ -4070,7 +4087,15 @@ func _update_projectile_buffer(
 				else:
 					projectile_store.remove_player_at_swap(index)
 					continue
+		_sync_projectile_at(hostile, index)
 		index += 1
+
+
+func _sync_projectile_at(hostile: bool, index: int) -> void:
+	if hostile:
+		projectile_store.sync_hostile_at(index)
+	else:
+		projectile_store.sync_player_at(index)
 
 
 func _try_absorb_protective_structure(
