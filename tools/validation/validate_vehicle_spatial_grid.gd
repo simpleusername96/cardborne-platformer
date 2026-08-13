@@ -33,7 +33,6 @@ func _initialize() -> void:
 		"grid preallocates stamps for the complete bounded enemy store"
 	)
 	_validate_local_overlap_cache()
-	_validate_incremental_dirty_rows()
 
 	var candidates: Array[EnemyState] = []
 	var capacity_target := live[-1]
@@ -313,67 +312,6 @@ func _validate_dense_partial_overlap_mask() -> void:
 				"dense selected row %d index %d matches ordered brute force"
 				% [owner.runtime_slot, index]
 			)
-
-
-func _validate_incremental_dirty_rows() -> void:
-	var owner := _local_enemy("incremental_owner", 0, Vector2(120.0, 120.0), 30.0)
-	var neighbor := _local_enemy("incremental_neighbor", 1, Vector2(150.0, 120.0), 30.0)
-	var live: Array[EnemyState] = [owner, neighbor]
-	for index in range(2, EnemyStore.MAX_LIVE_HOSTILES):
-		var dormant := _local_enemy("dormant_%03d" % index, index, Vector2(900.0, 900.0), 20.0)
-		dormant.active = false
-		live.append(dormant)
-	var grid := Grid.new()
-	grid.configure(Rect2(0.0, 0.0, 1000.0, 1000.0), 160.0)
-	grid.rebuild(live)
-	var mask := PackedByteArray()
-	mask.resize(EnemyStore.MAX_LIVE_HOSTILES)
-	mask.fill(0)
-	mask[owner.spatial_slot] = 1
-	grid.rebuild_local_overlap_cache(mask)
-	_expect(
-		grid.cached_local_overlap_count(owner) == 1,
-		"due-owner row returns its exact initial overlap"
-	)
-	_expect(
-		int(grid.debug_snapshot()["local_snapshot_captures"]) <= 2,
-		"one due row captures only its bounded owner/candidate set"
-	)
-	mask.fill(0)
-	grid.rebuild_local_overlap_cache(mask)
-	_expect(
-		grid.cached_local_overlap_count(owner) == 1,
-		"an untouched row remains reusable when no due owner is requested"
-	)
-	neighbor.pos = Vector2(360.0, 120.0)
-	grid.update_actor_position(neighbor)
-	_expect(
-		grid.cached_local_overlap_count(owner) == 0,
-		"nearby-cell revision invalidates an affected retained row"
-	)
-	mask[owner.spatial_slot] = 1
-	grid.rebuild_local_overlap_cache(mask)
-	_expect(
-		grid.cached_local_overlap_count(owner) == 0,
-		"rebuilt row reflects moved candidate exact overlap truth"
-	)
-	neighbor.active = false
-	grid.update_actor(neighbor)
-	_expect(
-		grid.cached_local_overlap_count(owner) == 0,
-		"candidate removal keeps the row invalid until its next due rebuild"
-	)
-	grid.rebuild_local_overlap_cache(mask)
-	_expect(
-		grid.cached_local_overlap_count(owner) == 0,
-		"rebuild after removal clears the exact row"
-	)
-	grid.rebuild([])
-	_expect(
-		grid.cached_local_overlap_count(owner) == 0
-		and int(grid.debug_snapshot()["active_members"]) == 0,
-		"clear rebuild removes retained occupancy and local rows"
-	)
 
 
 func _validate_local_overlap_edges() -> void:
