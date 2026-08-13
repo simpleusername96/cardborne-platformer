@@ -39,6 +39,26 @@ func _run() -> void:
 		scenario.activate(run)
 		print("Activated performance scenario: %s" % String(scenario_id))
 		if scenario_id == &"production_replay":
+			var stable_population := true
+			var stabilized_count := 0
+			for enemy in run.enemies:
+				if not enemy.alive or not enemy.active or not enemy.counts_active_cap:
+					continue
+				stabilized_count += 1
+				stable_population = (
+					stable_population
+					and enemy.health >= Scenario.PERFORMANCE_ENEMY_HEALTH
+					and enemy.max_health >= Scenario.PERFORMANCE_ENEMY_HEALTH
+				)
+			_expect(
+				stable_population
+					and stabilized_count
+						>= floori(
+							float(run.encounter_runtime.active_cap())
+							* Scenario.PRODUCTION_REPLAY_MIN_ACTIVE_RATIO
+						),
+				"production replay stabilizes its timed peak without disabling attacks"
+			)
 			# This is a scheduler contract replay, not a frame benchmark. Ten-Hz
 			# steps preserve the production decision cadence. Packet fences can defer
 			# a later authored beat while the preceding population enters in windows,

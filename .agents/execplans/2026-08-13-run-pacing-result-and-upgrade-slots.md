@@ -464,6 +464,15 @@ documents.
   grid. It replaces the inconsistent 12/13-cell draft and never becomes a gameplay limit.
 - 2026-08-13: no new upgrade artwork is needed. The defect is a text-only consumer that predates the
   already-applied 28-image artwork system.
+- 2026-08-13: clean commit `b0285329` produced an authority-eligible native result, but the replay
+  workload decayed from its primed 48 actors to a 39-actor median because this one fixed-pressure
+  scenario left production enemies at shipping health. Scenario counts therefore failed before the
+  result could qualify the release. Physics p95/p99 were `5.178/11.737 ms`; the p99 is consistent
+  with the pre-size-change `72883f0d` diagnostic (`5.375/11.871 ms`), so there is no evidence for the
+  predetermined 48-to-44 radius rollback. Preserve
+  `build/performance/run-pacing-result-slots-production-replay-rerun.json`, keep radius 48, and make
+  the replay stabilize its timed population exactly as the other fixed-pressure fixtures do while
+  retaining real attacks and collisions.
 
 ## Open Questions
 
@@ -483,7 +492,13 @@ continues.
 - [x] Phase 0.1 updated the product, upgrade, and visual contracts plus the older dense-plan
   supersession note. `validate_document_authority.ps1`,
   `validate_cardborne_visual_authority.ps1`, and `git diff --check` passed.
-- [ ] Phase 0 is active. Next: record the clean short native `production_replay` baseline.
+- [x] Phases 1-5 are implemented and their focused source, localization, and rendered KO/EN matrix
+  checks pass. The final Result uses five frozen stage records, and the build rail shows progressive
+  four-column semantic artwork with a working detail popover.
+- [ ] Phase 6.4 is active. The first clean native attempt exposed replay population decay rather than
+  a valid shipping workload. Next: validate the stabilized replay, commit it, and repeat the clean
+  native gate once. If p99 remains above 8 ms with valid counts, preserve the result and stop before
+  Web as required, naming the pre-existing ordinary simulation/scheduling tail owner.
 
 ## Completion and Stop Conditions
 

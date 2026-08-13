@@ -24,6 +24,7 @@ const ORDINARY_CAPACITY_LOAD := PressureFixture.CAPACITY_ORDINARY_COUNT
 const BOSS_PRESSURE_TARGET := PressureFixture.BOSS_ORDINARY_COUNT + 1
 const PRODUCTION_REPLAY_PRIME_SECONDS := 240.0
 const PRODUCTION_REPLAY_MIN_ACTIVE_RATIO := 0.90
+const PERFORMANCE_ENEMY_HEALTH := 1000000.0
 
 const VALID_SCENARIOS: Array[StringName] = [
 	&"production_replay", &"peak_horde", &"capacity_pressure",
@@ -316,8 +317,8 @@ func _fill_enemies(run: Node) -> void:
 			break
 		enemy.active = true
 		enemy.counts_active_cap = bool(descriptor["counts_active_cap"])
-		enemy.health = 1000000.0
-		enemy.max_health = 1000000.0
+		enemy.health = PERFORMANCE_ENEMY_HEALTH
+		enemy.max_health = PERFORMANCE_ENEMY_HEALTH
 		if enemy.role == &"stage_boss":
 			enemy.phase = &"boss_read"
 			enemy.phase_time = 0.0
@@ -344,8 +345,8 @@ func _maintain_enemy_pressure(run: Node) -> void:
 			break
 		enemy.active = true
 		enemy.counts_active_cap = true
-		enemy.health = 1000000.0
-		enemy.max_health = 1000000.0
+		enemy.health = PERFORMANCE_ENEMY_HEALTH
+		enemy.max_health = PERFORMANCE_ENEMY_HEALTH
 		run.call("_append_enemy", enemy)
 
 
@@ -405,8 +406,8 @@ func _churn_one_enemy(run: Node) -> void:
 	_lifecycle_serial += 1
 	replacement.active = true
 	replacement.counts_active_cap = counts_active_cap
-	replacement.health = 1000000.0
-	replacement.max_health = 1000000.0
+	replacement.health = PERFORMANCE_ENEMY_HEALTH
+	replacement.max_health = PERFORMANCE_ENEMY_HEALTH
 	if run.call("_append_enemy", replacement):
 		lifecycle_cycles += 1
 
@@ -706,6 +707,18 @@ func _prime_production_replay(run: Node) -> void:
 	var telemetry: Variant = run.get("_engagement_telemetry")
 	if is_instance_valid(telemetry) and telemetry.has_method("reset"):
 		telemetry.reset()
+	_stabilize_production_population(run)
+
+
+func _stabilize_production_population(run: Node) -> void:
+	# Production replay keeps real attacks and collisions active, but its peak
+	# population must not decay during the timed sample. This matches the other
+	# fixed-pressure fixtures without changing any ordinary run.
+	for enemy in run.enemies:
+		if not enemy.alive or not enemy.active or not enemy.counts_active_cap:
+			continue
+		enemy.health = PERFORMANCE_ENEMY_HEALTH
+		enemy.max_health = PERFORMANCE_ENEMY_HEALTH
 
 
 func _make_room_for_production_window(run: Node, include_peak_beat: bool) -> void:
