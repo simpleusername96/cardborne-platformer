@@ -473,8 +473,17 @@ func _fill_experience(run: Node, target: int) -> void:
 
 func _maintain_experience(run: Node) -> void:
 	var target := _experience_target()
+	var remaining_adjustments := ExperienceRuntime.MAX_SHARDS
+	while (
+		run.experience_runtime.shards.size() > target
+		and remaining_adjustments > 0
+	):
+		run.experience_runtime.call(
+			"_swap_remove", run.experience_runtime.shards.size() - 1
+		)
+		remaining_adjustments -= 1
 	var missing: int = target - run.experience_runtime.shards.size()
-	for offset in mini(maxi(0, missing), ExperienceRuntime.MAX_SHARDS):
+	for offset in mini(maxi(0, missing), remaining_adjustments):
 		var index := (_shot_serial + offset) % _spawn_points.size()
 		run.experience_runtime.spawn_shard(_spawn_points[index], 1 + index % 7)
 

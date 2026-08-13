@@ -157,6 +157,13 @@ func _run() -> void:
 				not PressureFixture.peak_qualification_passes(one_sided),
 				"one-sided peak placement fails qualification"
 			)
+			run.experience_runtime.spawn_shard(Vector2.ZERO, 1)
+			scenario.after_physics(run)
+			snapshot = scenario.validation_snapshot(run)
+			_expect(
+				int(snapshot["experience"]) == int(snapshot["experience_target"]),
+				"measured after-physics maintenance trims excess shard pressure"
+			)
 		_expect(
 			PackedInt32Array(snapshot["pressure"]["sector_histogram"]).size() == 8,
 			"%s publishes an eight-sector pressure histogram" % String(scenario_id)
