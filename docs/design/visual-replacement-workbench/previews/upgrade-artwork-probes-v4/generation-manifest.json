@@ -1,0 +1,101 @@
+{
+  "schema": "cardborne-imagegen-candidate-evidence/v1",
+  "report_id": "upgrade-artwork-probes-v4",
+  "generated_at": "2026-08-13T12:24:32+09:00",
+  "approval_status": "pending_user_review",
+  "runtime_integrated": false,
+  "authoring": {
+    "creative_tool": "OpenAI built-in ImageGen",
+    "creative_calls": 6,
+    "post_processing": [
+      "flat chroma-key alpha removal with the installed imagegen helper",
+      "Lanczos resize to 192x192",
+      "dimension, channel, transparent-corner, and SHA-256 checks"
+    ],
+    "prohibited_geometry_authoring_used": false
+  },
+  "visual_authority": {
+    "text_contract": "docs/design/VISUAL_SYSTEM.md",
+    "text_contract_read_completely": true,
+    "style_reference": "docs/design/cardborne-universal-art-style-reference.png",
+    "expected_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "original_detail_inspected": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "referenced_image_paths in each built-in ImageGen call",
+    "reference_role": "style grammar only; no depicted object, silhouette, icon, card shell, or layout approved or copied",
+    "recorded_original_provenance": "C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png",
+    "recorded_original_timestamp": "2026-08-02T12:13:44+09:00"
+  },
+  "common_constraints": [
+    "transparent 192x192 PNG candidate",
+    "one dominant silhouette",
+    "maximum two supporting functional elements",
+    "three to five broad filled planes",
+    "hard antialiased edges and dark separation",
+    "no text, numbers, card frame, UI chrome, background scene, tiny greebles, repeated lamps, nested outlines, or decorative seams",
+    "must remain readable at 72, 88, and 104 pixels and in grayscale"
+  ],
+  "candidates": [
+    {
+      "id": "cross-beam-a",
+      "upgrade_id": "piercing_lance",
+      "variant": "A",
+      "source_path": "sources/cross-beam-a.png",
+      "master_alpha_path": "masters/cross-beam-a.png",
+      "candidate_path": "candidates/cross-beam-a.png",
+      "candidate_sha256": "edbcd111b8df236933f7c64333a1ab53eb6de9f89b662d948e91e658ac20a90a",
+      "prompt": "Use case: stylized-concept. Asset type: Cardborne upgrade-card artwork candidate, Cross Beam variant A. Input image is the canonical Cardborne style-grammar reference only; use large silhouette cuts, 3-5 broad matte planes, dark perimeter, hard beveled separation, sparse functional detail, and restrained accents, without reproducing any depicted object or layout. Create one extremely simple top-down Cross Beam action: a compact central mechanical energy emitter emitting two thick mutually perpendicular straight corridors through the center, making four long arms, rotated about 15 degrees. Cyan-blue outer beam plane, ivory-hot core, tiny amber emitter accent. No vehicle, enemy, target, projectile, arrows, circles, rings, badges, frames, UI, text, numbers, watermark, greebles, repeated lamps, nested outlines, seams, photorealism, or gloss. Use a perfectly flat #FF00FF chroma-key background with no shadow, gradient, texture, floor, reflection, or lighting variation; do not use magenta in the subject."
+    },
+    {
+      "id": "cross-beam-b",
+      "upgrade_id": "piercing_lance",
+      "variant": "B",
+      "source_path": "sources/cross-beam-b.png",
+      "master_alpha_path": "masters/cross-beam-b.png",
+      "candidate_path": "candidates/cross-beam-b.png",
+      "candidate_sha256": "1abf73ffc33bd32e525b20363d15f70410523b162342c657dffade5fcbd67115",
+      "prompt": "Use case: stylized-concept. Asset type: Cardborne upgrade-card artwork candidate, Cross Beam variant B. Use the canonical sheet for Cardborne style grammar only and do not copy its objects or layout. Create two uninterrupted thick perpendicular laser corridors crossing through one tiny central mechanical projector, producing exactly four equal arms, rotated about 12 degrees. Open beam ends, central projector no more than 16 percent of image width, dark navy separation, ivory cores, cyan outer planes, one amber notch. No vehicle, enemy, target, arrows, circles, rings, frames, UI, text, numbers, watermark, greebles, repeated lamps, nested outlines, seams, perspective, photorealism, or gloss. Use a perfectly flat #FF00FF chroma-key background with no shadow, gradient, texture, floor, reflection, variation, or halo; do not use magenta in the subject."
+    },
+    {
+      "id": "secondary-damage-a",
+      "upgrade_id": "secondary_amplifier",
+      "variant": "A",
+      "source_path": "sources/secondary-damage-a.png",
+      "master_alpha_path": "masters/secondary-damage-a.png",
+      "candidate_path": "candidates/secondary-damage-a.png",
+      "candidate_sha256": "daeeabb5578aa60b211f272dd7dcbd14f14ca8bbe15bc19a3165c6be90b2b136",
+      "prompt": "Use case: stylized-concept. Asset type: Cardborne upgrade-card artwork candidate, Secondary Damage variant A. Use the canonical sheet for Cardborne broad industrial masses, 3-5 planes, matte bevels, dark perimeter, sparse detail, and restrained semantic color only; do not copy its objects or layout. Show one compact autonomous side-weapon module firing one oversized cyan bolt into one bold amber-white impact, with one small upward damage chevron integrated at the module lower-right. Only three readable masses. No player vehicle, multi-weapon collage, multiple missiles, mines or blades, target body, circles, rings, clocks, gauges, plus signs, badges, frames, UI, text, numbers, watermark, repeated lamps, nested borders, greebles, seams, photorealism, or gloss. Use a perfectly flat #FF00FF chroma-key background with no shadow, gradient, texture, floor, reflection, variation, or halo; do not use magenta in the subject."
+    },
+    {
+      "id": "secondary-damage-b",
+      "upgrade_id": "secondary_amplifier",
+      "variant": "B",
+      "source_path": "sources/secondary-damage-b.png",
+      "master_alpha_path": "masters/secondary-damage-b.png",
+      "candidate_path": "candidates/secondary-damage-b.png",
+      "candidate_sha256": "5ae00282e4f4c726441bef7c4daae839a8f4345d008bef3cd428eb80cbeba245",
+      "prompt": "Use case: stylized-concept. Asset type: Cardborne upgrade-card artwork candidate, Secondary Damage variant B. Use the canonical sheet for dominant silhouette, 3-5 broad matte planes, dark perimeter, sparse functional detail, and restrained accents only; do not copy its objects or layout. Show one large top-down side-mounted weapon pod pointing right, one broad high-impact shot, and one large amber upward chevron physically attached at the pod lower-right. Exactly three major masses. No base platform, player craft, enemy, target, weapon collage, multiple missiles, mines, blades or drones, explosion starburst, extra chevrons, circles, rings, clocks, gauges, plus signs, frames, UI, text, numbers, watermark, greebles, repeated lamps, nested outlines, seams, photorealism, or gloss. Use a perfectly flat #FF00FF chroma-key background with no shadow, gradient, texture, floor, reflection, variation, or halo; do not use magenta in the subject."
+    },
+    {
+      "id": "pickup-radius-a",
+      "upgrade_id": "pickup_radius",
+      "variant": "A",
+      "source_path": "sources/pickup-radius-a.png",
+      "master_alpha_path": "masters/pickup-radius-a.png",
+      "candidate_path": "candidates/pickup-radius-a.png",
+      "candidate_sha256": "38807f9d034c99931243866dd759a0b840cf1cc130500ccf3ce25233b4ff064d",
+      "prompt": "Use case: stylized-concept. Asset type: Cardborne upgrade-card artwork candidate, Pickup Radius variant A. Use the canonical sheet for large readable masses, 3-5 broad matte planes, hard bevels, dark perimeter, sparse detail, and restrained accents only; do not copy its objects or layout. Show one oversized industrial horseshoe magnet on the right pulling exactly one large faceted amber experience shard from far left, joined by one broad straight cyan attraction streak. Exactly three main masses. No player, multiple collectibles, orbit, circle, range ring, radar, crosshair, arrows, hands, hose, badges, frames, UI, text, numbers, watermark, greebles, repeated lamps, nested outlines, seams, photorealism, or gloss. Use a perfectly flat #FF00FF chroma-key background with no shadow, gradient, texture, floor, reflection, variation, or halo; do not use magenta in the subject."
+    },
+    {
+      "id": "pickup-radius-b",
+      "upgrade_id": "pickup_radius",
+      "variant": "B",
+      "source_path": "sources/pickup-radius-b.png",
+      "master_alpha_path": "masters/pickup-radius-b.png",
+      "candidate_path": "candidates/pickup-radius-b.png",
+      "candidate_sha256": "fd6569b857e2036e60267c90ef729a98bdf7b02a2eb978cdcdcae7a44386a616",
+      "prompt": "Use case: stylized-concept. Asset type: Cardborne upgrade-card artwork candidate, Pickup Radius variant B. Use the canonical sheet for dominant silhouettes, 3-5 broad matte planes, hard beveled separation, dark perimeter, sparse detail, and restrained accents only; do not copy its objects or layout. Show one large industrial horseshoe magnet low-right and exactly one faceted amber experience shard pulled into its mouth from upper-left, with exactly two short broad cyan motion streaks behind the shard. No player, multiple collectibles, circles, range rings, orbit, radar, crosshair, arrows, hands, hose, badges, frames, UI, text, numbers, watermark, greebles, repeated lamps, nested outlines, seams, photorealism, or gloss. Use a perfectly flat #FF00FF chroma-key background with no shadow, gradient, texture, floor, reflection, variation, or halo; do not use magenta in the subject."
+    }
+  ]
+}

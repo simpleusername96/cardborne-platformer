@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne 업그레이드 이미지 대표 3종 검토</title>
+  <meta name="description" content="십자 광선, 보조무기 피해, 수거 범위 업그레이드 이미지 A/B 검토 보고서">
+  <style>
+    :root {
+      color-scheme: dark;
+      --void: #070b11;
+      --canvas: #101923;
+      --surface: #182431;
+      --raised: #243445;
+      --line: #465a6e;
+      --text: #eef3f7;
+      --muted: #9eadbc;
+      --amber: #f2b735;
+      --danger: #f05a5f;
+      --support: #72d6c4;
+      --system: #58bfea;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--void);
+      color: var(--text);
+      font-family: "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+      line-height: 1.55;
+    }
+    button, textarea, input { font: inherit; }
+    button { min-height: 44px; }
+    a { color: #8edbf4; }
+    .shell { width: min(1460px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 64px; }
+    .eyebrow { margin: 0 0 6px; color: var(--system); font-size: .78rem; font-weight: 800; letter-spacing: .12em; }
+    h1 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.6rem); line-height: 1.2; }
+    h2, h3 { line-height: 1.28; }
+    .lede { max-width: 920px; margin: 12px 0 0; color: var(--muted); }
+    .notice {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-left: 4px solid var(--amber);
+      background: var(--surface);
+    }
+    .notice strong { color: var(--amber); }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 24px 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(16, 25, 35, .96);
+    }
+    .toolbar button, .file-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--raised);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .toolbar .primary { border-color: var(--system); color: #bcecff; }
+    .file-button input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+    .save-status { margin-left: auto; color: var(--muted); }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .summary div { padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+    .summary strong { display: block; font-size: 1.1rem; }
+    .summary span { color: var(--muted); font-size: .82rem; }
+    .group {
+      margin-top: 26px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--canvas);
+    }
+    .group-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: start; }
+    .group-head h2 { margin: 0; font-size: 1.35rem; }
+    .group-head p { max-width: 780px; margin: 5px 0 0; color: var(--muted); }
+    .grammar { padding: 4px 9px; border: 1px solid var(--system); border-radius: 999px; color: #a8e7fa; font-size: .78rem; }
+    .comparison {
+      display: grid;
+      grid-template-columns: minmax(190px, .72fr) repeat(2, minmax(300px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .current, .candidate {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface);
+    }
+    .current h3, .candidate h3 { margin: 0; font-size: 1rem; }
+    .current .reason { margin: 9px 0 0; color: var(--muted); font-size: .88rem; }
+    .candidate[data-status="approved"] { border-color: var(--support); }
+    .candidate[data-status="revise"] { border-color: var(--amber); }
+    .candidate[data-status="rejected"] { border-color: var(--danger); }
+    .image-stage {
+      display: grid;
+      place-items: center;
+      min-height: 230px;
+      margin-top: 11px;
+      border: 1px solid #34475a;
+      border-radius: 7px;
+      background: #111b25;
+      overflow: hidden;
+    }
+    .image-stage img { width: 192px; height: 192px; object-fit: contain; image-rendering: auto; }
+    .current .image-stage img { width: 104px; height: 104px; }
+    .scale-tests {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 8px;
+    }
+    .scale-test { display: grid; place-items: center; min-height: 126px; padding: 6px; border: 1px solid #34475a; border-radius: 7px; background: #111b25; }
+    .scale-test span { align-self: start; color: var(--muted); font-size: .7rem; }
+    .scale-test img { object-fit: contain; }
+    .scale-test.grayscale img { filter: grayscale(1); }
+    .status-set { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+    .status-button {
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #17222e;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .status-button[aria-pressed="true"][data-value="pending"] { color: var(--text); border-color: var(--text); }
+    .status-button[aria-pressed="true"][data-value="approved"] { color: var(--support); border-color: var(--support); }
+    .status-button[aria-pressed="true"][data-value="revise"] { color: var(--amber); border-color: var(--amber); }
+    .status-button[aria-pressed="true"][data-value="rejected"] { color: #ff9ca0; border-color: var(--danger); }
+    textarea {
+      width: 100%;
+      min-height: 96px;
+      margin-top: 8px;
+      padding: 10px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #101923;
+      color: var(--text);
+    }
+    .asset-meta { margin: 10px 0 0; color: var(--muted); font-size: .78rem; overflow-wrap: anywhere; }
+    .evidence { margin-top: 28px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+    .evidence h2 { margin-top: 0; }
+    .evidence dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; }
+    .evidence dt { color: var(--muted); }
+    .evidence dd { margin: 0; overflow-wrap: anywhere; }
+    code { color: #bcecff; }
+    @media (max-width: 1050px) {
+      .comparison { grid-template-columns: 1fr 1fr; }
+      .current { grid-column: 1 / -1; }
+      .current .image-stage { min-height: 150px; }
+    }
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 20px, 1460px); padding-top: 20px; }
+      .toolbar { position: static; }
+      .save-status { width: 100%; margin-left: 0; }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .comparison { grid-template-columns: 1fr; }
+      .current { grid-column: auto; }
+      .scale-tests { grid-template-columns: 1fr 1fr; }
+      .status-set { grid-template-columns: 1fr 1fr; }
+      .evidence dl { grid-template-columns: 1fr; gap: 2px; }
+      .evidence dd { margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <p class="eyebrow">UPGRADE ARTWORK · GRAMMAR PROBE V4</p>
+      <h1>업그레이드 이미지 대표 3종 A/B 검토</h1>
+      <p class="lede">28장을 한꺼번에 확장하기 전에 고유 무기, 공용 강화, 지원 능력의 세 가지 표현 문법을 검증합니다. 각 후보는 실제 카드 표시 크기에서 확인한 뒤 승인·수정·거절과 메모를 남길 수 있습니다.</p>
+      <div class="notice"><strong>아직 게임에 적용되지 않았습니다.</strong> 이 보고서의 후보는 개별 승인을 위한 검토용 PNG이며 production manifest와 카드 리소스는 변경하지 않았습니다.</div>
+    </header>
+
+    <section class="toolbar" aria-label="검토 데이터 도구">
+      <button class="primary" type="button" id="export-reviews">검토 JSON 내보내기</button>
+      <label class="file-button">검토 JSON 가져오기<input type="file" id="import-reviews" accept="application/json,.json"></label>
+      <a href="generation-manifest.json">생성 근거·프롬프트</a>
+      <a href="../../../../reports/2026-08-13-upgrade-artwork-reference-analysis-ko.md">레퍼런스 분석 문서</a>
+      <span class="save-status" id="save-status" aria-live="polite">미검토 6 · 승인 0 · 수정 0 · 거절 0</span>
+    </section>
+
+    <section class="summary" aria-label="보고서 요약">
+      <div><strong>3</strong><span>대표 업그레이드</span></div>
+      <div><strong>6</strong><span>ImageGen 후보</span></div>
+      <div><strong>72 / 88 / 104px</strong><span>실제 카드 표시 검사</span></div>
+      <div><strong>0</strong><span>runtime 변경</span></div>
+    </section>
+
+    <div id="groups"></div>
+
+    <section class="evidence">
+      <h2>제작·검토 근거</h2>
+      <dl>
+        <dt>정본 문서</dt><dd><a href="../../../VISUAL_SYSTEM.md"><code>docs/design/VISUAL_SYSTEM.md</code></a> 전체 확인</dd>
+        <dt>스타일 참조</dt><dd><a href="../../../cardborne-universal-art-style-reference.png"><code>cardborne-universal-art-style-reference.png</code></a> 원본 상세 확인</dd>
+        <dt>참조 SHA-256</dt><dd><code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code></dd>
+        <dt>ImageGen 입력</dt><dd>6회 모두 위 정본 PNG를 실제 이미지 참조로 전달. 시트는 스타일 문법에만 사용하고 그 안의 물체·아이콘·레이아웃은 복제하지 않도록 명시.</dd>
+        <dt>창작 방식</dt><dd>ImageGen raster 생성. 단색 배경 제거와 192×192 축소만 기계 처리. SVG·ImageMagick 도형 창작과 실루엣 보정 없음.</dd>
+        <dt>승인 상태</dt><dd>6개 모두 신규 후보이므로 기본값은 미검토. 이 페이지의 선택은 사용자 검토 기록이며 자동으로 production 승인을 만들지 않음.</dd>
+        <dt>피드백 보존</dt><dd>별도 localStorage 키와 <code>cardborne-upgrade-artwork-review/v4</code> 스키마를 사용하므로 기존 업그레이드 피드백을 덮어쓰지 않음.</dd>
+      </dl>
+    </section>
+  </main>
+
+  <script>
+    const reportId = 'upgrade-artwork-probes-v4';
+    const schema = 'cardborne-upgrade-artwork-review/v4';
+    const storageKey = 'cardborne.upgrade-artwork.probes-v4.review';
+    const statusLabels = { pending: '미검토', approved: '승인', revise: '수정 필요', rejected: '거절' };
+    const groups = [
+      {
+        id: 'cross-beam',
+        title: '십자 광선 / Cross Beam',
+        grammar: 'A · 고유 무기 행동',
+        description: '중앙 발사점을 통과하는 두 개의 직교 광선이 네 방향을 동시에 타격한다.',
+        current: '../../../../../art/visuals/production/gameplay/weapons/projectiles/projectile_energy_teardrop.png',
+        currentReason: '현재는 일반 탄환 이미지라서 네 방향 광선의 범위와 무기 정체성이 보이지 않습니다.',
+        candidates: [
+          { id: 'cross-beam-a', label: 'A · 기계식 종단부', image: 'candidates/cross-beam-a.png', hash: 'edbcd111b8df236933f7c64333a1ab53eb6de9f89b662d948e91e658ac20a90a' },
+          { id: 'cross-beam-b', label: 'B · 열린 광선 통로', image: 'candidates/cross-beam-b.png', hash: '1abf73ffc33bd32e525b20363d15f70410523b162342c657dffade5fcbd67115' }
+        ]
+      },
+      {
+        id: 'secondary-damage',
+        title: '보조무기 피해 / Secondary Damage',
+        grammar: 'B · 무기 계열 + 강화 표식',
+        description: '현재 장착한 모든 보조무기의 피해를 높인다.',
+        current: '../../../../../art/visuals/production/gameplay/upgrades/system_relay.png',
+        currentReason: '현재 공용 릴레이 이미지는 보조무기와 피해 증가 중 어느 의미도 직접 보여주지 않습니다.',
+        candidates: [
+          { id: 'secondary-damage-a', label: 'A · 포탑과 강한 명중', image: 'candidates/secondary-damage-a.png', hash: 'daeeabb5578aa60b211f272dd7dcbd14f14ca8bbe15bc19a3165c6be90b2b136' },
+          { id: 'secondary-damage-b', label: 'B · 무기 모듈과 상승 표식', image: 'candidates/secondary-damage-b.png', hash: '5ae00282e4f4c726441bef7c4daae839a8f4345d008bef3cd428eb80cbeba245' }
+        ]
+      },
+      {
+        id: 'pickup-radius',
+        title: '수거 범위 / Pickup Radius',
+        grammar: 'C · 지원 능력의 직접 대상',
+        description: '멀리 있는 경험치 조각을 끌어당기는 반지름을 늘린다.',
+        current: '../../../../../art/visuals/production/gameplay/upgrades/pickup_magnet.png',
+        currentReason: '현재 자석 정체성은 있으나 경험치 조각과 장거리 흡인 관계가 작게 표시될 때 불분명합니다.',
+        candidates: [
+          { id: 'pickup-radius-a', label: 'A · 직선 흡인', image: 'candidates/pickup-radius-a.png', hash: '38807f9d034c99931243866dd759a0b840cf1cc130500ccf3ce25233b4ff064d' },
+          { id: 'pickup-radius-b', label: 'B · 이동 흔적 흡인', image: 'candidates/pickup-radius-b.png', hash: 'fd6569b857e2036e60267c90ef729a98bdf7b02a2eb978cdcdcae7a44386a616' }
+        ]
+      }
+    ];
+    const candidateIds = new Set(groups.flatMap((group) => group.candidates.map((item) => item.id)));
+
+    function escapeText(value) {
+      return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+    }
+
+    function loadState() {
+      try {
+        const value = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      } catch {
+        return {};
+      }
+    }
+
+    const state = loadState();
+    for (const id of candidateIds) {
+      const saved = state[id];
+      state[id] = {
+        status: saved && Object.keys(statusLabels).includes(saved.status) ? saved.status : 'pending',
+        note: saved && typeof saved.note === 'string' ? saved.note.slice(0, 1600) : ''
+      };
+    }
+
+    function currentMarkup(group) {
+      return `<article class="current">
+        <h3>AS-IS · 현재 이미지</h3>
+        <div class="image-stage"><img src="${group.current}" alt="${escapeText(group.title)} 현재 production 이미지"></div>
+        <p class="reason">${escapeText(group.currentReason)}</p>
+      </article>`;
+    }
+
+    function scaleMarkup(candidate) {
+      return [72, 88, 104].map((size) => `<div class="scale-test"><span>${size}px</span><img src="${candidate.image}" width="${size}" height="${size}" alt=""></div>`).join('') +
+        `<div class="scale-test grayscale"><span>88px · 흑백</span><img src="${candidate.image}" width="88" height="88" alt=""></div>`;
+    }
+
+    function candidateMarkup(candidate) {
+      const review = state[candidate.id];
+      const buttons = Object.entries(statusLabels).map(([value, label]) =>
+        `<button type="button" class="status-button" data-id="${candidate.id}" data-value="${value}" aria-pressed="${review.status === value}">${label}</button>`
+      ).join('');
+      return `<article class="candidate" data-id="${candidate.id}" data-status="${review.status}">
+        <h3>${escapeText(candidate.label)}</h3>
+        <div class="image-stage"><img src="${candidate.image}" alt="${escapeText(candidate.label)} 192픽셀 투명 PNG 후보"></div>
+        <div class="scale-tests" aria-label="실제 크기 및 흑백 검사">${scaleMarkup(candidate)}</div>
+        <div class="status-set" role="group" aria-label="${escapeText(candidate.label)} 검토 상태">${buttons}</div>
+        <textarea id="note-${candidate.id}" name="note-${candidate.id}" maxlength="1600" data-note-id="${candidate.id}" placeholder="좋은 점, 이상한 점, 수정할 내용" aria-label="${escapeText(candidate.label)} 검토 메모">${escapeText(review.note)}</textarea>
+        <p class="asset-meta"><code>${escapeText(candidate.image)}</code><br>SHA-256 ${candidate.hash}</p>
+      </article>`;
+    }
+
+    function render() {
+      document.getElementById('groups').innerHTML = groups.map((group) => `<section class="group" id="${group.id}">
+        <div class="group-head"><div><h2>${escapeText(group.title)}</h2><p>${escapeText(group.description)}</p></div><span class="grammar">${escapeText(group.grammar)}</span></div>
+        <div class="comparison">${currentMarkup(group)}${group.candidates.map(candidateMarkup).join('')}</div>
+      </section>`).join('');
+      bindControls();
+      updateSummary();
+    }
+
+    function save(message = '') {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+        updateSummary(message);
+      } catch {
+        updateSummary('브라우저 자동 저장 실패 · JSON으로 내보내세요.');
+      }
+    }
+
+    function updateSummary(message = '') {
+      const counts = { pending: 0, approved: 0, revise: 0, rejected: 0 };
+      for (const id of candidateIds) counts[state[id].status] += 1;
+      document.getElementById('save-status').textContent = message || `미검토 ${counts.pending} · 승인 ${counts.approved} · 수정 ${counts.revise} · 거절 ${counts.rejected}`;
+    }
+
+    function bindControls() {
+      document.querySelectorAll('.status-button').forEach((button) => {
+        button.addEventListener('click', () => {
+          const id = button.dataset.id;
+          state[id].status = button.dataset.value;
+          const card = document.querySelector(`.candidate[data-id="${id}"]`);
+          card.dataset.status = button.dataset.value;
+          card.querySelectorAll('.status-button').forEach((peer) => peer.setAttribute('aria-pressed', String(peer === button)));
+          save();
+        });
+      });
+      document.querySelectorAll('textarea[data-note-id]').forEach((field) => {
+        field.addEventListener('input', () => {
+          state[field.dataset.noteId].note = field.value;
+          save('메모 자동 저장됨');
+        });
+      });
+    }
+
+    document.getElementById('export-reviews').addEventListener('click', () => {
+      const payload = { schema, report_id: reportId, exported_at: new Date().toISOString(), reviews: state };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'cardborne-upgrade-artwork-feedback-v4.json';
+      link.click();
+      URL.revokeObjectURL(link.href);
+      updateSummary('검토 JSON을 내보냈습니다.');
+    });
+
+    document.getElementById('import-reviews').addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const payload = JSON.parse(await file.text());
+        if (payload.schema !== schema || !payload.reviews || typeof payload.reviews !== 'object') throw new Error('schema');
+        for (const [id, review] of Object.entries(payload.reviews)) {
+          if (!candidateIds.has(id) || !review || !Object.keys(statusLabels).includes(review.status) || typeof review.note !== 'string') continue;
+          state[id] = { status: review.status, note: review.note.slice(0, 1600) };
+        }
+        save();
+        render();
+        updateSummary('검토 JSON을 가져왔습니다.');
+      } catch {
+        updateSummary('이 보고서용 v4 검토 JSON이 아닙니다.');
+      } finally {
+        event.target.value = '';
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
