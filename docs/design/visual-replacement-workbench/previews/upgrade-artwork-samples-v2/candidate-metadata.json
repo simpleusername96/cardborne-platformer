@@ -3,10 +3,22 @@
   "version": 2,
   "batch_id": "upgrade-artwork-samples-v2",
   "created_at": "2026-08-13T03:00:00+09:00",
-  "status": "candidate_review_only",
+  "status": "partially_rejected_by_user",
   "supersedes": "upgrade-artwork-samples-v1",
   "runtime_integration": false,
-  "approval": null,
+  "approval": {
+    "status": "partial_rejection",
+    "recorded_at": "2026-08-13",
+    "rejected_ids": [
+      "homing_missiles",
+      "secondary_amplifier",
+      "critical_targeting",
+      "dash_overdrive",
+      "piercing_lance",
+      "pickup_radius"
+    ],
+    "replacement_batch": "../upgrade-artwork-revisions-v3/index.html"
+  },
   "direction": {
     "user_feedback": "All v1 candidates were rejected as too complex and insufficiently intuitive.",
     "rule": "One icon communicates one meaning with one dominant silhouette and no more than two large semantic shapes.",
@@ -110,15 +122,15 @@
   "candidates": [
     { "id": "split_muzzle", "category": "primary", "file": "icons/split_muzzle.png", "sha256": "0583f80919fe83cf20bcadb787f6cf59cce4910de112f03646107eb047b25e85", "approval": null },
     { "id": "piercing_rounds", "category": "primary", "file": "icons/piercing_rounds.png", "sha256": "0674d0aee19602b7fcff304b81e537af6fb132e7ee594011b8ace1ca9f849f7e", "approval": null },
-    { "id": "homing_missiles", "category": "secondary", "file": "icons/homing_missiles.png", "sha256": "4bfdd76d3bbc4c2351df76894962006813954f7c0e748b80d2e65530b84d2513", "approval": null },
-    { "id": "secondary_amplifier", "category": "secondary", "file": "icons/secondary_amplifier.png", "sha256": "c425260c3fc5544f5c8abc92e1e5f7291fc93ceee073890b82974c5d3245b7a6", "approval": null },
+    { "id": "homing_missiles", "category": "secondary", "file": "icons/homing_missiles.png", "sha256": "4bfdd76d3bbc4c2351df76894962006813954f7c0e748b80d2e65530b84d2513", "approval": "rejected", "replacement_batch": "../upgrade-artwork-revisions-v3/index.html" },
+    { "id": "secondary_amplifier", "category": "secondary", "file": "icons/secondary_amplifier.png", "sha256": "c425260c3fc5544f5c8abc92e1e5f7291fc93ceee073890b82974c5d3245b7a6", "approval": "rejected", "replacement_batch": "../upgrade-artwork-revisions-v3/index.html" },
     { "id": "thermal_burst", "category": "element", "file": "icons/thermal_burst.png", "sha256": "f5a0639af5ae774feb8cdf6ece366ecf145e9509586163fa094b811124f153d8", "approval": null },
     { "id": "cryo_slow", "category": "element", "file": "icons/cryo_slow.png", "sha256": "66abe290459ded5e49bf93b71ffdd5f105c0d7caffab4db88c0810089ed53d27", "approval": null },
-    { "id": "piercing_lance", "category": "activated", "file": "icons/piercing_lance.png", "sha256": "c9f529813b89def55e8bc28f1ebaace770a6385e5351128273eea4d5096c63bf", "approval": null },
+    { "id": "piercing_lance", "category": "activated", "file": "icons/piercing_lance.png", "sha256": "c9f529813b89def55e8bc28f1ebaace770a6385e5351128273eea4d5096c63bf", "approval": "rejected", "replacement_batch": "../upgrade-artwork-revisions-v3/index.html" },
     { "id": "active_coolant", "category": "activated", "file": "icons/active_coolant.png", "sha256": "5ad2c61263e12c05c0ac8e68454b81a9cbdf88805621025b5c707f6da28588a8", "approval": null },
     { "id": "hull_integrity", "category": "chassis", "file": "icons/hull_integrity.png", "sha256": "770af0c8333a018230845e7dcaf0ada207347f3bfc555e2eb762779759befe47", "approval": null },
-    { "id": "pickup_radius", "category": "chassis", "file": "icons/pickup_radius.png", "sha256": "5e9daeede510a15cfc06d6d419f4881f2838c83cd2c0a9d068ad8032a9636c69", "approval": null },
-    { "id": "critical_targeting", "category": "combat", "file": "icons/critical_targeting.png", "sha256": "5e6927e1a8b48cb3a9de44fcb4a5aab574aaae6c9cc38428c08cbd9a01607488", "approval": null },
-    { "id": "dash_overdrive", "category": "combat", "file": "icons/dash_overdrive.png", "sha256": "cf67c8d7beacfec19a8c5fc346a97566f972f7ed75e7826d536563609f478858", "approval": null }
+    { "id": "pickup_radius", "category": "chassis", "file": "icons/pickup_radius.png", "sha256": "5e9daeede510a15cfc06d6d419f4881f2838c83cd2c0a9d068ad8032a9636c69", "approval": "rejected", "replacement_batch": "../upgrade-artwork-revisions-v3/index.html" },
+    { "id": "critical_targeting", "category": "combat", "file": "icons/critical_targeting.png", "sha256": "5e6927e1a8b48cb3a9de44fcb4a5aab574aaae6c9cc38428c08cbd9a01607488", "approval": "rejected", "replacement_batch": "../upgrade-artwork-revisions-v3/index.html" },
+    { "id": "dash_overdrive", "category": "combat", "file": "icons/dash_overdrive.png", "sha256": "cf67c8d7beacfec19a8c5fc346a97566f972f7ed75e7826d536563609f478858", "approval": "rejected", "replacement_batch": "../upgrade-artwork-revisions-v3/index.html" }
   ]
 }

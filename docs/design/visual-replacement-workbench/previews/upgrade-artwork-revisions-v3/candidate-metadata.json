@@ -1,0 +1,102 @@
+{
+  "schema": "cardborne-upgrade-artwork-candidate-batch",
+  "version": 3,
+  "batch_id": "upgrade-artwork-revisions-v3",
+  "created_at": "2026-08-13T04:00:00+09:00",
+  "status": "candidate_review_only",
+  "revises_batch": "../upgrade-artwork-samples-v2/index.html",
+  "runtime_integration": false,
+  "approval": null,
+  "revision_scope": {
+    "user_feedback": "The user rejected both secondary-weapon candidates, both combat candidates, Cross Beam, and Pickup Radius from v2.",
+    "revised_ids": [
+      "homing_missiles",
+      "secondary_amplifier",
+      "critical_targeting",
+      "dash_overdrive",
+      "piercing_lance",
+      "pickup_radius"
+    ],
+    "preserved_v2_ids": [
+      "split_muzzle",
+      "piercing_rounds",
+      "thermal_burst",
+      "cryo_slow",
+      "active_coolant",
+      "hull_integrity"
+    ]
+  },
+  "visual_authority_evidence": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "required_sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "document_read_complete": true,
+    "sheet_inspected_original": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "image_gen.referenced_image_paths on every generation call",
+    "original_artifact_provenance": "C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png",
+    "original_artifact_timestamp": "2026-08-02 12:13:44 KST",
+    "task_constraints": [
+      "The sheet supplied style grammar only; no depicted object or layout was copied.",
+      "VISUAL_SYSTEM.md was binding.",
+      "Meaning relationships take priority over an arbitrary two-shape limit.",
+      "Candidates remain separate from runtime approval and production integration.",
+      "Every candidate was inspected at 48x48 in color and grayscale."
+    ]
+  },
+  "generation": {
+    "tool_mode": "built-in image_gen",
+    "use_case": "stylized-concept",
+    "transparent_workflow": "flat #00FF00 chroma-key generation followed by the installed imagegen remove_chroma_key.py helper",
+    "prompts": [
+      {
+        "source": "sources/01-secondary-revisions.png",
+        "subjects": ["homing_missiles", "secondary_amplifier"],
+        "semantic_request": "Two missiles following broad curved paths into one hostile target; missile, circular blade, and mine grouped around one dominant upward arrow."
+      },
+      {
+        "source": "sources/02-combat-revisions.png",
+        "subjects": ["critical_targeting", "dash_overdrive"],
+        "semantic_request": "A bullet causing a severe fracture through an armor plate; a left-to-right dash-then-bullet-impact sequence."
+      },
+      {
+        "source": "sources/03-beam-pickup-revisions.png",
+        "subjects": ["piercing_lance", "pickup_radius"],
+        "semantic_request": "Four very thick filled laser corridors with hot cores; one filled collection field pulling four outer pickups into one center pickup."
+      }
+    ]
+  },
+  "post_processing": {
+    "authoring": "none",
+    "chroma_helper": "C:/Users/BK/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
+    "chroma_options": "--auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill --edge-contract 1",
+    "imagemagick_operations": [
+      "exact half-sheet crop",
+      "alpha-bounds trim",
+      "transparent square extent",
+      "Lanczos resize to 512x512",
+      "48x48 contact-sheet placement",
+      "grayscale conversion for evidence",
+      "dimension, alpha, corner-pixel, and hash checks"
+    ],
+    "creative_imagemagick_operations": false
+  },
+  "sources": [
+    { "file": "sources/01-secondary-revisions.png", "sha256": "6219444ac77f014f0cb1608836457d826edd48b73fb7dd2ccd67c7cff2849f8c" },
+    { "file": "sources/02-combat-revisions.png", "sha256": "9c90aac3435af8269c2e266a7387315e6a816a5ecaa12c6afdf169f677384d7f" },
+    { "file": "sources/03-beam-pickup-revisions.png", "sha256": "3bd919436dcbac590849243c8008340efa221980a01aef11d4e2631f89803ef3" }
+  ],
+  "review_artifacts": [
+    { "file": "runtime-48-contact-sheet.png", "sha256": "03b1d65a695a18fb0766b3ba747e7a0d9e69f9e1b6a46733b43afdcc5150870e" },
+    { "file": "runtime-48-contact-sheet-grayscale.png", "sha256": "f351ba61b5e9dbeede4014f2e0e9a3ce9a3edc1c73f7ace07ae3632e5b8cb50b" }
+  ],
+  "candidates": [
+    { "id": "homing_missiles", "category": "secondary", "file": "icons/homing_missiles.png", "sha256": "91e58abb74b33981a4761d6ee7c7d6628aa08855f974abd2b24bd48779a7acf0", "approval": null },
+    { "id": "secondary_amplifier", "category": "secondary", "file": "icons/secondary_amplifier.png", "sha256": "e19a0775e7e2a51bd5cf2915872cbbc6503a69aca6f8cab511d5cb933dcfab5c", "approval": null },
+    { "id": "critical_targeting", "category": "combat", "file": "icons/critical_targeting.png", "sha256": "94c209766ba42e763325d796dec32d2bfe3af8132818880a01c7a00a60288abe", "approval": null },
+    { "id": "dash_overdrive", "category": "combat", "file": "icons/dash_overdrive.png", "sha256": "c6be535a060dff01af6f8fe6b7d9158079de04d269637bc4e16b4b0d9baa3d80", "approval": null },
+    { "id": "piercing_lance", "category": "activated", "file": "icons/piercing_lance.png", "sha256": "a65a817913c7a75e6dafb0223f544c7849c6b6165198ee62c5c7f0e38f81c09d", "approval": null },
+    { "id": "pickup_radius", "category": "chassis", "file": "icons/pickup_radius.png", "sha256": "c91cec4da6e8df859788aa4e4b6a7cec8b8eb0dae8a92c94590910e1474696a2", "approval": null }
+  ]
+}

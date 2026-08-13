@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Cardborne 단순 업그레이드 이미지 v2 승인 리포트">
+  <meta name="description" content="Cardborne 업그레이드 이미지 선택 재작업 v3 승인 리포트">
   <meta name="color-scheme" content="dark">
   <meta name="document-type" content="report">
   <meta name="document-status" content="active">
-  <title>Cardborne 단순 업그레이드 아이콘 v2</title>
+  <title>Cardborne 업그레이드 아이콘 재작업 v3</title>
   <style>
     @font-face {
       font-family: "Noto Sans KR";
@@ -72,6 +72,7 @@
     .category-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
     .category-head span { color: var(--muted); font-size: 13px; }
     .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .grid.single { max-width: calc((100% - 16px) / 2); grid-template-columns: 1fr; }
     .candidate { border: 1px solid var(--line); background: var(--canvas); }
     .candidate[data-status="approved"] { border-color: var(--support); }
     .candidate[data-status="rejected"] { border-color: var(--danger); }
@@ -106,6 +107,7 @@
     footer { padding: 28px 0 44px; color: var(--muted); font-size: 13px; }
     @media (max-width: 820px) {
       .rules, .grid { grid-template-columns: 1fr; }
+      .grid.single { max-width: none; }
       .rule { border-right: 0; border-bottom: 1px solid var(--line); }
       .rule:last-child { border-bottom: 0; }
     }
@@ -123,23 +125,22 @@
 <body>
   <header>
     <div class="wrap">
-      <p class="eyebrow">CARDBORNE · UPGRADE ARTWORK V2</p>
-      <h1>단순 아이콘 12종</h1>
-      <p class="lede">장비처럼 보이는 본체와 장식을 없앴습니다. 각 이미지는 업그레이드 의미 하나만 큰 기호 1–2개로 보여줍니다.</p>
-      <p class="version-note"><strong>v1 전체 거절 반영.</strong> v1 이미지와 기존 메모는 별도 기록으로 보존되며, 이 리포트의 저장 데이터와 섞이지 않습니다. <a href="../upgrade-artwork-samples-v1/index.html">거절된 v1 보기</a></p>
-      <p class="version-note"><strong>이후 6개 항목이 추가 거절됐습니다.</strong> 보조무기 2개, 전투 2개, 십자 광선, 수거 범위는 이 화면에서 잠겼습니다. 기존 메모는 보존됩니다. <a href="../upgrade-artwork-revisions-v3/index.html">재작업 v3 열기</a></p>
+      <p class="eyebrow">CARDBORNE · UPGRADE ARTWORK V3</p>
+      <h1>선택 재작업 6종</h1>
+      <p class="lede">보조무기·전투 전체와 십자 광선·수거 범위를 다시 만들었습니다. 단독 기호 대신 원인과 결과가 함께 읽히도록 구성했습니다.</p>
+      <p class="version-note"><strong>v2의 해당 6개 거절 반영.</strong> v2 이미지와 기존 메모는 보존되며 이 리포트의 저장 데이터와 섞이지 않습니다. <a href="../upgrade-artwork-samples-v2/index.html">v2 기록 보기</a></p>
     </div>
   </header>
 
   <main>
     <section>
       <div class="wrap">
-        <h2>이번 기준</h2>
+        <h2>재작업 기준</h2>
         <div class="rules">
-          <div class="rule"><strong>한 아이콘 = 한 의미</strong><span>무기나 효과의 핵심만 남김</span></div>
-          <div class="rule"><strong>큰 형상 2개 이하</strong><span>작은 장식과 기계 본체 제거</span></div>
-          <div class="rule"><strong>문자와 숫자 없음</strong><span>정확한 수치는 카드 본문이 담당</span></div>
-          <div class="rule"><strong>48px 우선</strong><span>컬러와 흑백에서 실루엣 확인</span></div>
+          <div class="rule"><strong>원인 → 결과</strong><span>유도·치명타·대시 조건을 관계로 표시</span></div>
+          <div class="rule"><strong>공통 대상 명시</strong><span>보조무기 종류를 묶어서 표시</span></div>
+          <div class="rule"><strong>범위는 면으로</strong><span>광선 폭과 수거 범위를 실제 면적으로 표시</span></div>
+          <div class="rule"><strong>48px 우선</strong><span>컬러와 흑백에서 관계 확인</span></div>
         </div>
       </div>
     </section>
@@ -154,12 +155,12 @@
           <input type="file" id="review-file" accept="application/json,.json">
           <button type="button" id="toggle-background">아이콘 배경: 어둡게</button>
           <a href="candidate-metadata.json" download>생성 기록 저장</a>
-          <span class="toolbar-status" id="save-status" aria-live="polite">미검토 12 · 승인 0 · 거절 0</span>
+          <span class="toolbar-status" id="save-status" aria-live="polite">미검토 6 · 승인 0 · 거절 0</span>
         </div>
-        <p class="safety">저장 키: <code>cardborne-upgrade-artwork-review-v2</code> · v1과 업그레이드 밸런스 리포트 데이터는 변경하지 않습니다.</p>
+        <p class="safety">저장 키: <code>cardborne-upgrade-artwork-review-v3</code> · v1, v2와 업그레이드 밸런스 리포트 데이터는 변경하지 않습니다.</p>
         <div class="scale-checks">
-          <figure><img src="runtime-48-contact-sheet.png" alt="12개 단순 아이콘의 48픽셀 컬러 비교"><figcaption>실제 슬롯 크기 · 48×48 컬러</figcaption></figure>
-          <figure><img src="runtime-48-contact-sheet-grayscale.png" alt="12개 단순 아이콘의 48픽셀 흑백 비교"><figcaption>실제 슬롯 크기 · 48×48 흑백</figcaption></figure>
+          <figure><img src="runtime-48-contact-sheet.png" alt="6개 재작업 아이콘의 48픽셀 컬러 비교"><figcaption>실제 슬롯 크기 · 48×48 컬러</figcaption></figure>
+          <figure><img src="runtime-48-contact-sheet-grayscale.png" alt="6개 재작업 아이콘의 48픽셀 흑백 비교"><figcaption>실제 슬롯 크기 · 48×48 흑백</figcaption></figure>
         </div>
         <div id="candidate-sections"></div>
       </div>
@@ -170,7 +171,7 @@
         <h2>생성 상태</h2>
         <div class="evidence">
           <table><tbody>
-            <tr><th>출력</th><td>투명 512×512 PNG 12개 · 아직 게임에 적용하지 않은 승인 전 후보</td></tr>
+            <tr><th>출력</th><td>투명 512×512 PNG 6개 · 아직 게임에 적용하지 않은 승인 전 후보</td></tr>
             <tr><th>생성</th><td>built-in ImageGen · 카테고리별 묶음 생성</td></tr>
             <tr><th>시각 기준</th><td><code>docs/design/VISUAL_SYSTEM.md</code> 전체 확인 · 정본 스타일 시트를 모든 ImageGen 호출의 실제 이미지 레퍼런스로 사용</td></tr>
             <tr><th>정본 시트 해시</th><td><code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code></td></tr>
@@ -187,39 +188,28 @@
   <script>
     (() => {
       const categories = [
-        { title: '주무기', items: [
-          { id: 'split_muzzle', title: '탄환 수 증가', meaning: '탄환 3개', read: '한 번에 발사되는 탄환이 늘어남' },
-          { id: 'piercing_rounds', title: '관통', meaning: '탄환 + 벽', read: '탄환이 장갑을 뚫고 계속 진행' }
-        ]},
         { title: '보조무기', items: [
-          { id: 'homing_missiles', title: '유도 미사일', meaning: '미사일 + 곡선 화살표', read: '미사일이 방향을 바꾸며 추적' },
-          { id: 'secondary_amplifier', title: '보조무기 공격력', meaning: '충격 + 위 화살표', read: '보조무기의 피해 증가' }
-        ]},
-        { title: '속성', items: [
-          { id: 'thermal_burst', title: '폭발', meaning: '큰 폭발', read: '명중 지점에서 범위 폭발' },
-          { id: 'cryo_slow', title: '냉기 감속', meaning: '눈송이 + 아래 화살표', read: '냉기로 적의 속도를 낮춤' }
+          { id: 'homing_missiles', title: '유도 미사일', meaning: '두 경로가 적에게 수렴', read: '서로 떨어진 미사일이 경로를 굽혀 한 적을 추적' },
+          { id: 'secondary_amplifier', title: '보조무기 공격력', meaning: '미사일·회전날·지뢰 + 상승', read: '여러 보조무기 종류의 피해가 함께 증가' }
         ]},
         { title: '발동무기', items: [
-          { id: 'piercing_lance', title: '십자 광선', meaning: '네 방향 광선', read: '가로와 세로로 뻗는 관통 광선' },
-          { id: 'active_coolant', title: '재사용 대기시간', meaning: '시계 + 아래 화살표', read: '발동무기 쿨다운 감소' }
+          { id: 'piercing_lance', title: '십자 광선', meaning: '굵은 외곽 광선 + 밝은 코어', read: '가로와 세로 전체를 덮는 넓은 관통 광선' }
         ]},
         { title: '차체', items: [
-          { id: 'hull_integrity', title: '최대 내구도', meaning: '방패 + 더하기', read: '최대 내구도 증가' },
-          { id: 'pickup_radius', title: '수거 범위', meaning: '자석 + 조각', read: '더 먼 경험치 조각을 끌어당김' }
+          { id: 'pickup_radius', title: '수거 범위', meaning: '넓은 수거장 + 외부 조각 유입', read: '현재 범위 밖의 경험치 조각까지 중심으로 끌어당김' }
         ]},
         { title: '전투', items: [
-          { id: 'critical_targeting', title: '치명타', meaning: '조준점 + 충격', read: '정확한 타격으로 치명타 발생' },
-          { id: 'dash_overdrive', title: '대시 후 공격력', meaning: '대시 + 위 화살표', read: '대시 뒤 공격력 증가' }
+          { id: 'critical_targeting', title: '치명타', meaning: '탄환 + 크게 파손된 장갑', read: '일반 타격보다 훨씬 큰 피해로 장갑을 파괴' },
+          { id: 'dash_overdrive', title: '대시 후 공격력', meaning: '대시 → 강한 탄환 충돌', read: '대시한 다음 공격의 피해가 증가' }
         ]}
       ];
-      const storageKey = 'cardborne-upgrade-artwork-review-v2';
+      const storageKey = 'cardborne-upgrade-artwork-review-v3';
       const schema = 'cardborne-upgrade-artwork-review';
-      const batchId = 'upgrade-artwork-samples-v2';
+      const batchId = 'upgrade-artwork-revisions-v3';
       const container = document.querySelector('#candidate-sections');
       const saveStatus = document.querySelector('#save-status');
       const reviewFile = document.querySelector('#review-file');
       const cards = new Map();
-      const revisedIds = new Set(['homing_missiles', 'secondary_amplifier', 'critical_targeting', 'dash_overdrive', 'piercing_lance', 'pickup_radius']);
       let state = {};
       let lightBackground = false;
 
@@ -238,11 +228,12 @@
       categories.forEach((category) => {
         const section = document.createElement('div');
         section.className = 'category';
-        section.innerHTML = `<div class="category-head"><h3>${escapeText(category.title)}</h3><span>2개</span></div><div class="grid"></div>`;
+        section.innerHTML = `<div class="category-head"><h3>${escapeText(category.title)}</h3><span>${category.items.length}개</span></div><div class="grid"></div>`;
         const grid = section.querySelector('.grid');
+        grid.classList.toggle('single', category.items.length === 1);
         category.items.forEach((item) => {
           const stored = state[item.id] && typeof state[item.id] === 'object' ? state[item.id] : {};
-          const status = revisedIds.has(item.id) ? 'rejected' : (['pending', 'approved', 'rejected'].includes(stored.status) ? stored.status : 'pending');
+          const status = ['pending', 'approved', 'rejected'].includes(stored.status) ? stored.status : 'pending';
           const note = typeof stored.note === 'string' ? stored.note : '';
           const article = document.createElement('article');
           article.className = 'candidate';
@@ -268,17 +259,14 @@
           cards.set(item.id, article);
           article.querySelectorAll('.status-button').forEach((button) => {
             button.setAttribute('aria-pressed', String(button.dataset.value === status));
-            button.disabled = revisedIds.has(item.id);
             button.addEventListener('click', () => setStatus(item.id, button.dataset.value));
           });
-          article.querySelector('textarea').readOnly = revisedIds.has(item.id);
           article.querySelector('textarea').addEventListener('input', persist);
         });
         container.append(section);
       });
 
       function setStatus(id, status) {
-        if (revisedIds.has(id)) return;
         const card = cards.get(id);
         card.dataset.status = status;
         card.querySelectorAll('.status-button').forEach((button) => {
@@ -316,12 +304,12 @@
       }
 
       document.querySelector('#export-reviews').addEventListener('click', () => {
-        const payload = { schema, version: 2, batch_id: batchId, exported_at: new Date().toISOString(), reviews: snapshot() };
+        const payload = { schema, version: 3, batch_id: batchId, exported_at: new Date().toISOString(), reviews: snapshot() };
         const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'cardborne-upgrade-artwork-feedback-v2.json';
+        link.download = 'cardborne-upgrade-artwork-feedback-v3.json';
         document.body.append(link);
         link.click();
         link.remove();
@@ -336,14 +324,14 @@
         if (!file) return;
         try {
           const payload = JSON.parse(await file.text());
-          if (!payload || payload.schema !== schema || payload.version !== 2 || payload.batch_id !== batchId || !payload.reviews || typeof payload.reviews !== 'object') throw new Error('invalid schema');
+          if (!payload || payload.schema !== schema || payload.version !== 3 || payload.batch_id !== batchId || !payload.reviews || typeof payload.reviews !== 'object') throw new Error('invalid schema');
           let imported = 0;
           Object.entries(payload.reviews).forEach(([id, review]) => {
             if (!cards.has(id) || !review || !['pending', 'approved', 'rejected'].includes(review.status) || typeof review.note !== 'string' || review.note.length > 1200) return;
             const card = cards.get(id);
-            card.dataset.status = revisedIds.has(id) ? 'rejected' : review.status;
+            card.dataset.status = review.status;
             card.querySelector('textarea').value = review.note;
-            card.querySelectorAll('.status-button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.value === card.dataset.status)));
+            card.querySelectorAll('.status-button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.value === review.status)));
             imported += 1;
           });
           if (imported === 0) throw new Error('no matching review');
@@ -351,7 +339,7 @@
           updateCounts(`${imported}개 검토 불러옴`);
           saveStatus.dataset.state = 'saved';
         } catch (error) {
-          saveStatus.textContent = '이 v2 리포트의 검토 JSON이 아님';
+          saveStatus.textContent = '이 v3 리포트의 검토 JSON이 아님';
           saveStatus.dataset.state = 'error';
         } finally {
           reviewFile.value = '';
