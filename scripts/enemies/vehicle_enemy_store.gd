@@ -46,6 +46,8 @@ var packed_cell := PackedVector2Array()
 var packed_role := PackedInt32Array()
 var packed_family := PackedInt32Array()
 var family_counts := PackedInt32Array()
+var packed_threat_family := PackedInt32Array()
+var threat_family_counts := PackedInt32Array()
 
 var active_count := 0
 var active_cap_count := 0
@@ -59,6 +61,7 @@ var status_slots := PackedInt32Array()
 
 var _by_id: Dictionary = {}
 var _pending_ids: PackedStringArray = []
+var pending_defeated: Array[EnemyState] = []
 var _pending_set: Dictionary = {}
 var _pool: Array[EnemyState] = []
 var _status_slot_index := PackedInt32Array()
@@ -88,6 +91,7 @@ func clear() -> void:
 		_pool.append(enemy)
 	_by_id.clear()
 	_pending_ids.clear()
+	pending_defeated.clear()
 	_pending_set.clear()
 	clear_relocations()
 	_reset_counters()
@@ -128,6 +132,8 @@ func add(enemy: EnemyState) -> bool:
 	_by_id[enemy.id] = enemy
 	_slot_enemy[enemy.spatial_slot] = enemy
 	_sync_slot(enemy)
+	if not enemy.carrier_id.is_empty():
+		carrier_child_count += 1
 	membership_revision += 1
 	return true
 
@@ -232,6 +238,7 @@ func queue_defeat(enemy: EnemyState) -> void:
 		return
 	_pending_set[enemy.id] = true
 	_pending_ids.append(enemy.id)
+	pending_defeated.append(enemy)
 
 
 func flush_defeated() -> int:
@@ -263,6 +270,7 @@ func flush_defeated() -> int:
 		_pool.append(enemy)
 		removed += 1
 	_pending_ids.clear()
+	pending_defeated.clear()
 	_pending_set.clear()
 	if removed > 0:
 		membership_revision += 1
@@ -332,6 +340,8 @@ func _resize_columns() -> void:
 	packed_role.resize(MAX_LIVE_HOSTILES)
 	packed_family.resize(MAX_LIVE_HOSTILES)
 	family_counts.resize(8)
+	packed_threat_family.resize(MAX_LIVE_HOSTILES)
+	threat_family_counts.resize(8)
 	_status_slot_index.resize(MAX_LIVE_HOSTILES)
 	_status_slot_index.fill(-1)
 
@@ -360,6 +370,10 @@ func _sync_slot(enemy: EnemyState) -> void:
 	packed_family[slot] = family
 	if (old_flags & FLAG_LIVE) != 0: family_counts[old_family] -= 1
 	if enemy.alive: family_counts[family] += 1
+	var old_threat_family := packed_threat_family[slot]
+	var threat_family := _threat_family_code(enemy.threat_kind)
+	packed_threat_family[slot] = threat_family
+	if (old_flags & FLAG_ACTIVE) != 0: threat_family_counts[old_threat_family] -= 1
 	var flags := FLAG_LIVE if enemy.alive else 0
 	if enemy.alive and enemy.active: flags |= FLAG_ACTIVE
 	if enemy.alive and enemy.active and enemy.counts_active_cap: flags |= FLAG_ACTIVE_CAP
@@ -368,6 +382,7 @@ func _sync_slot(enemy: EnemyState) -> void:
 	if enemy.alive and enemy.archetype == &"spark_minelet" and enemy.phase == &"mine_armed": flags |= FLAG_ARMED_MINELET
 	if (old_flags & FLAG_COMMITTED) != 0: flags |= FLAG_COMMITTED
 	packed_flags[slot] = flags
+	if (flags & FLAG_ACTIVE) != 0: threat_family_counts[threat_family] += 1
 	_apply_counter_delta(old_flags, flags)
 
 
@@ -384,13 +399,17 @@ func _deactivate_slot(enemy: EnemyState) -> void:
 		_status_slot_index[slot] = -1
 		status_bearing_count -= 1
 	var old_flags := packed_flags[slot]
+	if (old_flags & FLAG_LIVE) != 0 and not enemy.carrier_id.is_empty():
+		carrier_child_count = maxi(0, carrier_child_count - 1)
 	packed_flags[slot] = 0
 	_slot_enemy[slot] = null
 	packed_phase[slot] = 0
 	packed_lane[slot] = LANE_NONE
 	if (old_flags & FLAG_LIVE) != 0: family_counts[packed_family[slot]] -= 1
+	if (old_flags & FLAG_ACTIVE) != 0: threat_family_counts[packed_threat_family[slot]] -= 1
 	packed_role[slot] = 0
 	packed_family[slot] = 0
+	packed_threat_family[slot] = 0
 	_apply_counter_delta(old_flags, 0)
 
 
@@ -410,6 +429,8 @@ func _reset_counters() -> void:
 	packed_role.fill(0)
 	packed_family.fill(0)
 	family_counts.fill(0)
+	packed_threat_family.fill(0)
+	threat_family_counts.fill(0)
 	_status_slot_index.fill(-1)
 	status_slots.clear()
 	active_count = 0
@@ -446,6 +467,16 @@ func _family_code(family: StringName) -> int:
 		&"escort": return 3
 		&"support": return 4
 		&"stationary": return 5
+	return 0
+
+
+func _threat_family_code(family: StringName) -> int:
+	match family:
+		&"melee": return 1
+		&"ranged": return 2
+		&"denial": return 3
+		&"support": return 4
+		&"boss": return 5
 	return 0
 
 

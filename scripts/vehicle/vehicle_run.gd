@@ -39,6 +39,9 @@ const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const EnemySpeedProfile = preload("res://scripts/enemies/vehicle_enemy_speed_profile.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
+const ACTIVE_ATTACK_FAMILIES: Array[StringName] = [
+	&"", &"melee", &"ranged", &"denial",
+]
 const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.gd")
 const RewardRuntime = preload("res://scripts/rewards/vehicle_reward_runtime.gd")
 const PickupContact = preload("res://scripts/rewards/vehicle_pickup_contact.gd")
@@ -1097,6 +1100,11 @@ func _append_enemy(enemy: EnemyState) -> bool:
 			encounter_runtime.confirm_engagement(engagement_handle)
 		collective_tactics.register_enemy(enemy)
 		enemy_grid.update_actor(enemy)
+		_enemy_update_schedule.register(
+			enemy,
+			player_position.distance_squared_to(enemy.pos)
+				> _near_simulation_distance_squared
+		)
 		_note_enemy_frame_aggregate_added(enemy)
 	elif not engagement_handle.is_empty():
 		encounter_runtime.cancel_engagement(engagement_handle)
@@ -1129,12 +1137,23 @@ func _clear_enemies() -> void:
 	collective_tactics.reset()
 	for enemy in enemies:
 		_release_enemy_engagement(enemy)
+	_enemy_update_schedule.reset_persistent()
 	enemy_store.clear()
 	enemy_grid.rebuild(enemies)
 
 
 func _flush_defeated_enemies() -> int:
-	return enemy_store.flush_defeated()
+	for enemy in enemy_store.pending_defeated:
+		_enemy_update_schedule.unregister(enemy)
+	var removed := enemy_store.flush_defeated()
+	for index in enemy_store.relocated_enemies.size():
+		_enemy_update_schedule.relocate(
+			enemy_store.relocated_enemies[index],
+			enemy_store.relocated_from_slots[index],
+			enemy_store.relocated_to_slots[index]
+		)
+	enemy_store.clear_relocations()
+	return removed
 
 
 func _clear_projectiles() -> void:
@@ -1144,6 +1163,13 @@ func _clear_projectiles() -> void:
 func _rebuild_enemy_runtime_indexes() -> void:
 	enemy_store.rebuild_index()
 	enemy_grid.rebuild(enemies)
+	_enemy_update_schedule.reset_persistent()
+	for enemy in enemies:
+		_enemy_update_schedule.register(
+			enemy,
+			player_position.distance_squared_to(enemy.pos)
+				> _near_simulation_distance_squared
+		)
 
 
 func _simulation_active() -> bool:
@@ -1254,11 +1280,7 @@ func _apply_pending_elite(enemy: EnemyState) -> void:
 
 
 func _live_elite_count() -> int:
-	var count := 0
-	for enemy in enemies:
-		if enemy.alive and not enemy.elite_trait.is_empty():
-			count += 1
-	return count
+	return enemy_store.elite_count
 
 
 func _bounded_spawn_spec(spec: Dictionary) -> Dictionary:
@@ -1282,31 +1304,18 @@ func _bounded_spawn_spec(spec: Dictionary) -> Dictionary:
 
 
 func _active_mobile_count() -> int:
-	var count := 0
-	for enemy in enemies:
-		if enemy.alive and enemy.active and enemy.counts_active_cap:
-			count += 1
-	return count
+	return enemy_store.active_cap_count
 
 
 func _refresh_enemy_frame_aggregate() -> void:
 	var aggregate_started := (
 		Time.get_ticks_usec() if _performance_detail_sample_active else 0
 	)
-	_enemy_frame_active_mobile_count = 0
+	_enemy_frame_active_mobile_count = enemy_store.active_cap_count
 	_enemy_frame_attack_families.clear()
-	for enemy in enemies:
-		if not enemy.alive or not enemy.active:
-			continue
-		if enemy.counts_active_cap:
-			_enemy_frame_active_mobile_count += 1
-		var family := enemy.threat_kind
-		if (
-			family in [&"support", &"boss"]
-			or family in _enemy_frame_attack_families
-		):
-			continue
-		_enemy_frame_attack_families.append(family)
+	for family_code in range(1, ACTIVE_ATTACK_FAMILIES.size()):
+		if enemy_store.threat_family_counts[family_code] > 0:
+			_enemy_frame_attack_families.append(ACTIVE_ATTACK_FAMILIES[family_code])
 	_enemy_frame_aggregate_valid = true
 	_performance_accumulate_enemy_section(
 		"encounter_aggregate_scans", aggregate_started
@@ -2258,19 +2267,15 @@ func _update_enemies(
 	_enemy_decision_bucket = (_enemy_decision_bucket + 1) % ORDINARY_DECISION_BUCKET_COUNT
 	if decision_bucket == 0:
 		_enemy_decision_cycle_epoch += 1
-	# Rebuild on every physics tick so motion-only buckets are published at
-	# 30/20 Hz and each decision bucket gets its own 10 Hz opportunity. The
-	# scheduler accumulators are lane-owned; rebuilding only on bucket zero
-	# would discard five-sixths of decision/motion cadence.
-	_enemy_update_schedule.rebuild(
-		enemies, delta, player_position, _near_simulation_distance_squared,
-		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket,
-		enemy_store.membership_revision
+	_enemy_update_schedule.consume_persistent(
+		delta,
+		decision_bucket,
+		_simulation_lod_bucket,
+		_far_enemy_simulation_bucket
 	)
-	var active_capped := _enemy_update_schedule.active_cap_count
+	var active_capped := enemy_store.active_cap_count
 	if _enforce_active_enemy_cap(active_capped):
-		_enemy_update_schedule.prune_inactive()
-		active_capped = _enemy_update_schedule.active_cap_count
+		active_capped = enemy_store.active_cap_count
 	if performance_active:
 		_performance_enemy_sections["budget_scan"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
@@ -2606,6 +2611,7 @@ func _update_scheduled_ordinary_enemy(
 	var previous_position := enemy.pos
 	var previous_alive := enemy.alive
 	var previous_active := enemy.active
+	var previous_phase := enemy.phase
 	var can_commit := (
 		critical_delta < 0.0
 		and decision_due
@@ -2640,6 +2646,7 @@ func _update_scheduled_ordinary_enemy(
 			enemy_grid.update_actor_position(enemy)
 		else:
 			enemy_grid.update_actor(enemy)
+	_sync_enemy_hot_state(enemy, previous_active, previous_phase)
 	_refresh_enemy_presentation_facing(enemy)
 
 
@@ -2664,8 +2671,11 @@ func _update_motion_only_ordinary_enemy(
 	## Motion-only ticks consume cached intent and never perform decision queries.
 	var previous_position := enemy.pos
 	var previous_active := enemy.active
+	var previous_phase := enemy.phase
 	if _update_collective_enemy(enemy, motion_delta):
-		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+		_record_motion_only_enemy_change(
+			enemy, previous_position, previous_active, previous_phase
+		)
 		return
 	var leash := enemy.leash_rect
 	if leash.has_area() and not leash.has_point(player_position):
@@ -2674,24 +2684,32 @@ func _update_motion_only_ordinary_enemy(
 		var to_home := enemy.home - enemy.pos
 		if to_home.length() <= 18.0:
 			enemy.pos = enemy.home
-			enemy.active = false
+			_set_enemy_active(enemy, false)
 		else:
 			_move_enemy_with_recovery(enemy, to_home.normalized() * enemy.speed, motion_delta)
-		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+		_record_motion_only_enemy_change(
+			enemy, previous_position, previous_active, previous_phase
+		)
 		return
 	if enemy.role in [
 		&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
 	]:
-		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+		_record_motion_only_enemy_change(
+			enemy, previous_position, previous_active, previous_phase
+		)
 		return
 	if enemy.role == &"mine":
 		if enemy.archetype == &"spark_minelet" and enemy.phase != &"mine_armed":
 			_move_cached_enemy_role(enemy, motion_delta)
-		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+		_record_motion_only_enemy_change(
+			enemy, previous_position, previous_active, previous_phase
+		)
 		return
 	if enemy.phase == &"move" or enemy.role in [&"repair_tender", &"bulkhead_guard", &"splitter_barge"]:
 		_move_cached_enemy_role(enemy, motion_delta)
-	_record_motion_only_enemy_change(enemy, previous_position, previous_active)
+	_record_motion_only_enemy_change(
+		enemy, previous_position, previous_active, previous_phase
+	)
 
 
 func _move_cached_enemy_role(enemy: EnemyState, delta: float) -> void:
@@ -2707,7 +2725,8 @@ func _move_cached_enemy_role(enemy: EnemyState, delta: float) -> void:
 func _record_motion_only_enemy_change(
 	enemy: EnemyState,
 	previous_position: Vector2,
-	previous_active: bool
+	previous_active: bool,
+	previous_phase: StringName
 ) -> void:
 	if (
 		enemy.pos != previous_position
@@ -2717,6 +2736,7 @@ func _record_motion_only_enemy_change(
 			enemy_grid.update_actor_position(enemy)
 		else:
 			enemy_grid.update_actor(enemy)
+	_sync_enemy_hot_state(enemy, previous_active, previous_phase)
 	_refresh_enemy_presentation_facing(enemy)
 
 
@@ -2743,9 +2763,11 @@ func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
 	)
 	for index in range(cap, active_mobile.size()):
 		var enemy := active_mobile[index]
-		enemy.active = false
+		var previous_phase := enemy.phase
+		_set_enemy_active(enemy, false)
 		enemy.velocity = Vector2.ZERO
 		enemy.phase = &"move"
+		_sync_enemy_hot_state(enemy, true, previous_phase)
 		enemy_grid.update_actor(enemy)
 	return true
 
@@ -2755,8 +2777,36 @@ func _update_enemy_activation(enemy: EnemyState, capacity_available: bool) -> bo
 		return false
 	if not capacity_available and enemy.counts_active_cap:
 		return false
-	enemy.active = true
+	_set_enemy_active(enemy, true)
+	_sync_enemy_hot_state(enemy, false, enemy.phase)
 	return true
+
+
+func _set_enemy_active(enemy: EnemyState, active: bool) -> void:
+	if enemy_store.contains(enemy):
+		enemy_store.transition_active(enemy, active)
+	else:
+		enemy.active = active
+
+
+func _sync_enemy_hot_state(
+	enemy: EnemyState,
+	previous_active: bool,
+	previous_phase: StringName
+) -> void:
+	if enemy == null or not enemy_store.contains(enemy):
+		return
+	enemy_store.sync_hot_state(enemy)
+	var is_far := (
+		player_position.distance_squared_to(enemy.pos)
+		> _near_simulation_distance_squared
+	)
+	if (
+		previous_active != enemy.active
+		or previous_phase != enemy.phase
+		or _enemy_update_schedule.classified_far(enemy) != is_far
+	):
+		_enemy_update_schedule.classify(enemy, is_far)
 
 
 func _build_enemy_shield_assignments() -> Dictionary:
@@ -2878,6 +2928,7 @@ func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool
 		enemy.repair_target_id = ""
 		return
 	target.health = minf(target.max_health, target.health + SpecialistRuntime.REPAIR_PER_SECOND * delta)
+	enemy_store.sync_hot_state(target)
 	enemy.support_tick = maxf(0.0, enemy.support_tick - delta)
 	if enemy.support_tick <= 0.0:
 		enemy.support_tick = 0.32
@@ -2910,8 +2961,7 @@ func _spawn_carrier_child(carrier: EnemyState) -> void:
 		"group_id":carrier.group_id,
 		"leash_rect":carrier.leash_rect,
 	})
-	if _append_enemy(child):
-		_enemy_update_schedule.note_carrier_child(carrier.id)
+	_append_enemy(child)
 
 
 func _update_ordinary_enemy(
@@ -2932,7 +2982,7 @@ func _update_ordinary_enemy(
 		var to_home := enemy.home - enemy.pos
 		if to_home.length() <= 18.0:
 			enemy.pos = enemy.home
-			enemy.active = false
+			_set_enemy_active(enemy, false)
 		else:
 			_move_enemy_with_recovery(enemy, to_home.normalized() * enemy.speed, motion_delta)
 		return false
@@ -3607,15 +3657,7 @@ func _update_mine(
 
 
 func _armed_minelet_count() -> int:
-	var count := 0
-	for enemy in enemies:
-		if (
-			enemy.alive
-			and enemy.archetype == &"spark_minelet"
-			and enemy.phase == &"mine_armed"
-		):
-			count += 1
-	return count
+	return enemy_store.armed_minelet_count
 
 
 func _arm_mine(enemy: EnemyState, fuse: float, player_owned: bool) -> void:
@@ -4290,6 +4332,7 @@ func _damage_enemy(
 			enemy.flash = 0.11
 		enemy.health_visible_timer = 1.5
 		_arm_mine(enemy, 0.75, true)
+		enemy_store.sync_hot_state(enemy)
 		if player_owned and source != "validation":
 			stage_telemetry.record_outgoing(
 				DamageSourceCatalog.outgoing_id(source), attribute, mine_applied
@@ -4325,6 +4368,8 @@ func _damage_enemy(
 			_begin_boss_shield_phase(enemy, int(transition["phase"]))
 	if enemy.health <= 0.0:
 		_defeat_enemy(enemy, source)
+	else:
+		enemy_store.sync_hot_state(enemy)
 	return applied_damage
 
 
@@ -4450,6 +4495,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		_spawn_splitter_children(enemy)
 	enemy.alive = false
 	enemy.active = false
+	enemy_store.sync_hot_state(enemy)
 	enemy_grid.update_actor(enemy)
 	enemy_store.queue_defeat(enemy)
 	stats_enemies_defeated += 1
@@ -5441,11 +5487,7 @@ func _spawn_boss_phase_adds(
 
 
 func _live_boss_add_count() -> int:
-	var count := 0
-	for enemy in enemies:
-		if enemy.alive and enemy.active and _is_boss_owned_enemy(enemy):
-			count += 1
-	return count
+	return enemy_store.boss_add_count
 
 
 func _show_pending_boss_state_hint() -> void:
@@ -5496,6 +5538,7 @@ func _retire_boss_owned_enemies() -> void:
 		collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
 		enemy.alive = false
 		enemy.active = false
+		enemy_store.sync_hot_state(enemy)
 		enemy_grid.update_actor(enemy)
 		enemy_store.queue_defeat(enemy)
 	_enemy_frame_aggregate_valid = false

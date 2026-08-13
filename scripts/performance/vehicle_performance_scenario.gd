@@ -373,7 +373,7 @@ func _run_lifecycle_cycles(run: Node, count: int) -> void:
 		if run.call("_append_enemy", enemy):
 			enemy.alive = false
 			run.enemy_store.queue_defeat(enemy)
-			run.enemy_store.flush_defeated()
+			run.call("_flush_defeated_enemies")
 			lifecycle_cycles += 1
 
 
@@ -390,7 +390,7 @@ func _churn_one_enemy(run: Node) -> void:
 	var counts_active_cap := retired.counts_active_cap
 	retired.alive = false
 	run.enemy_store.queue_defeat(retired)
-	if run.enemy_store.flush_defeated() != 1:
+	if int(run.call("_flush_defeated_enemies")) != 1:
 		return
 	var replacement: EnemyState = run.call("_make_enemy", {
 		"id": "performance_churn_%06d" % _lifecycle_serial,
@@ -691,7 +691,7 @@ func _retire_production_batch(run: Node, budget: int) -> void:
 		run.enemy_store.queue_defeat(enemy)
 		retired += 1
 	if retired > 0:
-		run.enemy_store.flush_defeated()
+		run.call("_flush_defeated_enemies")
 		run.call("_rebuild_enemy_runtime_indexes")
 
 
