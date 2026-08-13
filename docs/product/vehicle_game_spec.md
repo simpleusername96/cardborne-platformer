@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field five-stage vehicle campaign
 related:
@@ -290,8 +290,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    or below the hard separation floor. Canonical windows use all eight sectors
    with sector counts differing by at most one; runtime edge cases require at
    least two safe sectors or retry the whole window after 0.25 seconds.
-   Each window exposes at most four exact-position cues and reserves those four
-   first arrivals against the global cap before showing them. Ordinary cues
+   Each window exposes at most four exact-position cues and reserves every
+   materialized arrival slot in that window against the global cap before showing
+   them. Ordinary cues
    lead the first atomic round by 0.90 seconds; windows begin at least 1.20
    seconds apart and tail rounds preserve 0.16-second unit spacing. Due rounds
    contain at most four enemies and later packets wait for the current packet's
@@ -309,8 +310,18 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    Projectile-firing mobile roles remain at or below 15% of authored mobile
    population; only three ranged attackers and two denial attackers may commit
    at once. Ordinary hostile fire cannot consume the 24-shot boss reserve.
-   Fixed-Hard active ordinary caps progress through `1/124/172/224/276`.
-   Excess enemies remain in the deterministic scheduler queue. Player-centered 600
+   Fixed-Hard authored ordinary pressure caps progress through
+   `1/124/172/224/276`; these are the logical encounter-pressure targets, not
+   simultaneously simulated actors. Exact materialized ordinary caps progress
+   through `1/40/48/48/48`. The 40-actor second beat leaves room for one complete
+   32-unit arrival window while a small prior-stage survivor group remains. Scheduled
+   authored units above that exact cap remain
+   in the deterministic virtual reserve. A virtual-reserve unit has no world
+   position, collider, health, status, target, attack, or other combat state
+   until its capacity-reserved arrival is cued and it materializes into an exact
+   ordinary actor. Materialization uses the same safe cue-time birth, role,
+   packet order, quota, and arrival-spacing rules; it never teleports, despawns,
+   or silently converts a live actor. Player-centered 600
    and 900 pixel occupancy are observation telemetry only and never impose a
    local admission cap, hold band, lateral detour, or despawn rule.
    Birth is a safe world-position fact and remains separate from engagement.

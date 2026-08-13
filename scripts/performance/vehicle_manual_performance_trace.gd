@@ -13,8 +13,11 @@ const SLOW_FRAME_MIN_MS := 20.0
 
 const PRESSURE_FIELDS := [
 	"enemy_live",
-	"ordinary_active",
-	"ordinary_active_cap",
+	"ordinary_authored_pressure_cap",
+	"ordinary_materialized_cap",
+	"ordinary_virtual_reserve",
+	"ordinary_reserved_arrival_slots",
+	"ordinary_materialized",
 	"ordinary_center_in_viewport",
 	"ordinary_offscreen_active",
 	"ordinary_near_600",
@@ -27,6 +30,19 @@ const PRESSURE_FIELDS := [
 	"effects",
 	"denied_zones",
 ]
+
+## These names deliberately distinguish logical encounter pressure from exact
+## instantiated actors. This trace is diagnostic evidence, never a release gate.
+const PRESSURE_FIELD_DEFINITIONS := {
+	"enemy_live":"All currently instantiated enemy-store actors, including non-ordinary actors.",
+	"ordinary_authored_pressure_cap":"The stage's logical authored ordinary-pressure target; it is not an instantiated-actor count.",
+	"ordinary_materialized_cap":"The maximum concurrently instantiated ordinary actors for the current stage.",
+	"ordinary_virtual_reserve":"Scheduled authored ordinary units that are not instantiated and therefore have no combat state.",
+	"ordinary_reserved_arrival_slots":"Materialized-cap slots held by already-cued arrivals that have not instantiated yet.",
+	"ordinary_materialized":"Currently instantiated ordinary actors with exact simulation and combat state.",
+	"ordinary_center_in_viewport":"Materialized ordinary actors whose center is inside the visible world rectangle.",
+	"ordinary_offscreen_active":"ordinary_materialized minus ordinary_center_in_viewport.",
+}
 
 var output_path := ""
 
@@ -318,7 +334,7 @@ func finish(reason: String = "manual_stop") -> Dictionary:
 		Performance.get_monitor(Performance.MEMORY_STATIC)
 	)
 	var result := {
-		"schema":1,
+		"schema":2,
 		"kind":"manual_play_trace",
 		"diagnostic_only":true,
 		"authoritative":false,
@@ -341,6 +357,7 @@ func finish(reason: String = "manual_stop") -> Dictionary:
 			"file_io_during_recording":false,
 		},
 		"session":_session_metadata.duplicate(true),
+		"pressure_field_definitions":PRESSURE_FIELD_DEFINITIONS.duplicate(true),
 		"environment":_environment_metadata(),
 		"viewport":_viewport_metadata(),
 		"git":{

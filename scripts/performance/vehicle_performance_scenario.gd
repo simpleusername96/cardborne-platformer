@@ -22,6 +22,7 @@ const PEAK_HORDE_TARGET := PressureFixture.PEAK_ORDINARY_COUNT
 const CAPACITY_PRESSURE_TARGET := EnemyStore.MAX_LIVE_HOSTILES
 const ORDINARY_CAPACITY_LOAD := PressureFixture.CAPACITY_ORDINARY_COUNT
 const BOSS_PRESSURE_TARGET := PressureFixture.BOSS_ORDINARY_COUNT + 1
+const PRODUCTION_REPLAY_MAX_WINDOW_SIZE := 32
 
 const VALID_SCENARIOS: Array[StringName] = [
 	&"production_replay", &"peak_horde", &"capacity_pressure",
@@ -641,13 +642,23 @@ func _final_authored_beat_trigger_time(stage_id: StringName) -> float:
 
 
 func _drive_production_replay(run: Node) -> void:
-	# Production packets are fenced until their full authored population has
-	# entered. The replay must model ordinary defeats before the peak beat so
-	# earlier populations release global admission slots as they do in play.
+	# Production packets are fenced until their next complete arrival window has
+	# room. The replay models ordinary defeats before the peak beat so an atomic
+	# window can materialize exactly as it would during ordinary play.
 	if run.encounter_runtime.current_beat < 4:
 		var active_count := int(run.call("_active_mobile_count"))
-		if run.encounter_runtime.available_active_slots(active_count) < 4:
-			_retire_production_batch(run, 12)
+		var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
+		var population := _production_population_accounting(
+			scheduler,
+			run.current_stage_id
+		)
+		var required_slots := mini(
+			PRODUCTION_REPLAY_MAX_WINDOW_SIZE,
+			int(population["materialized_cap"])
+		)
+		var available_slots: int = run.encounter_runtime.available_active_slots(active_count)
+		if available_slots < required_slots:
+			_retire_production_batch(run, required_slots - available_slots)
 	if _dash_release_pending:
 		_set_action(&"dash", false)
 		_dash_release_pending = false
@@ -697,6 +708,7 @@ func _retire_production_batch(run: Node, budget: int) -> void:
 
 func _production_validation_snapshot(run: Node) -> Dictionary:
 	var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
+	var population := _production_population_accounting(scheduler, run.current_stage_id)
 	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
 	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
 	var effect_store_snapshot := _effect_store_qualification(run)
@@ -705,7 +717,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		scheduler.get("spawned_by_squad", {})
 	).is_empty()
 	var allocation_qualification := _production_allocation_qualification(scheduler)
-	var active_cap := int(scheduler.get("active_cap", 0))
+	var active_cap := int(population["active_cap"])
 	var median_active := _production_sample_median(&"active")
 	var maximum_ranged := _production_sample_maximum(&"ranged_commits")
 	var maximum_denial := _production_sample_maximum(&"denial_commits")
@@ -755,6 +767,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		"boss_active":false,
 		"scheduler_spawn_seen":scheduler_spawned,
 		"scheduler":scheduler,
+		"population":population,
 		"pressure":scheduler.get("pressure", {}),
 		"health_overlay_capacity":int(
 			Dictionary(renderer_snapshot["batch_allocations"]).get(
@@ -786,11 +799,18 @@ func _record_production_pressure(run: Node, scheduler: Dictionary) -> void:
 	var pressure := Dictionary(scheduler.get("pressure", {}))
 	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
 	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
+	var population := _production_population_accounting(scheduler, run.current_stage_id)
 	_production_pressure_samples.append({
 		"time":elapsed,
-		"authored_reserve":StageCatalog.packet_enemy_blueprint(
-			run.current_stage_id
-		).size(),
+		# Keep all population classes in the replay evidence. `active` is the
+		# exact simulation population; it must not be mistaken for the authored
+		# pressure that is still waiting in the far reserve.
+		"authored_population":int(population["authored_population"]),
+		"materialized_spawned":int(population["materialized_spawned"]),
+		"virtual_reserve":int(population["virtual_reserve"]),
+		"materialized_cap":int(population["materialized_cap"]),
+		"active_cap":int(population["active_cap"]),
+		"scheduler_queues":Dictionary(population["scheduler_queues"]).duplicate(true),
 		"live":int(enemy_snapshot.get("live", 0)),
 		"active":int(pressure.get("active", 0)),
 		"visible":int(pressure.get("visible", 0)),
@@ -810,6 +830,50 @@ func _record_production_pressure(run: Node, scheduler: Dictionary) -> void:
 		_production_pressure_samples.pop_front()
 	_production_last_sample_spawned = spawned_total
 	_production_next_sample = elapsed + 1.0
+
+
+func _production_population_accounting(
+	scheduler: Dictionary,
+	stage_id: StringName
+) -> Dictionary:
+	# The runtime owns the authoritative reserve accounting. The fallbacks keep
+	# this replay readable while an older runtime snapshot is inspected, without
+	# presenting an absent reserve as a measured value.
+	var authored_population := int(scheduler.get(
+		"authored_population",
+		StageCatalog.packet_enemy_blueprint(stage_id).size()
+	))
+	var materialized_spawned := int(scheduler.get(
+		"materialized_spawned",
+		_production_spawned_total(scheduler)
+	))
+	var virtual_reserve := int(scheduler.get(
+		"virtual_reserve",
+		maxi(0, authored_population - materialized_spawned)
+	))
+	var active_cap := int(scheduler.get("active_cap", 0))
+	var materialized_cap := int(scheduler.get(
+		"materialized_cap",
+		scheduler.get("materialized_active_cap", active_cap)
+	))
+	return {
+		"authored_population":authored_population,
+		"materialized_spawned":materialized_spawned,
+		"virtual_reserve":virtual_reserve,
+		"materialized_cap":materialized_cap,
+		"active_cap":active_cap,
+		"scheduler_queues":{
+			"windows":int(scheduler.get(
+				"queued_windows",
+				Array(scheduler.get("window_queue", [])).size()
+			)),
+			"spawned":int(scheduler.get(
+				"queued_spawns",
+				Array(scheduler.get("spawn_queue", [])).size()
+			)),
+			"reserved_arrival_slots":int(scheduler.get("reserved_arrival_slots", 0)),
+		},
+	}
 
 
 func _production_spawned_total(scheduler: Dictionary) -> int:

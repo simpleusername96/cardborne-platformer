@@ -115,6 +115,7 @@ func _run() -> void:
 		if scenario_id == &"production_replay":
 			_expect(bool(snapshot["scheduler_spawn_seen"]), "production replay creates actors through the real scheduler")
 			var qualification := Dictionary(snapshot["production_qualification"])
+			var population := Dictionary(snapshot.get("population", {}))
 			_expect(
 				int(qualification["sample_count"]) == 10,
 				"production replay retains a rolling ten-second peak window"
@@ -122,8 +123,29 @@ func _run() -> void:
 			var production_samples: Array = qualification["samples"]
 			_expect(
 				not production_samples.is_empty()
-				and int(Dictionary(production_samples[0]).get("authored_reserve", -1)) == 1260,
-				"production replay reports the Stage 5 ordinary authored reserve"
+				and int(Dictionary(production_samples[0]).get("authored_population", -1)) == 1260,
+				"production replay reports the Stage 5 authored population"
+			)
+			_expect(
+				int(population.get("authored_population", -1)) == 1260
+				and int(population.get("materialized_spawned", -1)) >= 0
+				and int(population.get("virtual_reserve", -1)) >= 0
+				and int(population.get("materialized_cap", -1)) > 0
+				and int(population.get("active_cap", -1)) > 0,
+				"production replay publishes authored, materialized, reserve, and cap populations"
+			)
+			_expect(
+				int(population["authored_population"])
+					== int(population["materialized_spawned"])
+						+ int(population["virtual_reserve"]),
+				"production replay population accounting balances authored and remaining reserve"
+			)
+			var scheduler_queues := Dictionary(population.get("scheduler_queues", {}))
+			_expect(
+				int(scheduler_queues.get("windows", -1)) >= 0
+				and int(scheduler_queues.get("spawned", -1)) >= 0
+				and int(scheduler_queues.get("reserved_arrival_slots", -1)) >= 0,
+				"production replay includes scheduler queue accounting with population evidence"
 			)
 			_expect(
 				int(qualification["median_active"])
@@ -331,6 +353,19 @@ func _validate_threshold_contract() -> void:
 	_expect(bool(recorder._threshold_result(capacity)["passed"]), "capacity simulation accepts exact 6/8 ms bounds")
 	capacity["physics"]["p95"] = 6.01
 	_expect(not bool(recorder._threshold_result(capacity)["passed"]), "capacity simulation p95 above 6 ms fails")
+
+	recorder.scenario_id = &"production_replay"
+	recorder._max_consecutive_over_33 = 1
+	var production_replay := _threshold_fixture("native", Vector2i(1280, 720))
+	_expect(
+		bool(recorder._threshold_result(production_replay)["passed"]),
+		"production replay applies the same exact 6/8 ms capacity limits"
+	)
+	production_replay["physics"]["p99"] = 8.01
+	_expect(
+		not bool(recorder._threshold_result(production_replay)["passed"]),
+		"production replay p99 above 8 ms fails the shipping capacity contract"
+	)
 
 	recorder.scenario_id = &"lifecycle_pressure"
 	var lifecycle := _threshold_fixture("native", Vector2i(1280, 720))

@@ -31,24 +31,26 @@ validated checkpoints and ends only after gameplay, deterministic, native, and b
 ## Measured outcome revision
 
 The engagement-flow half of this contract succeeded through deterministic validation. The portable
-typed-GDScript performance migration did not. Its persistent schedule, packed compatibility and
-incremental overlap paths made the full 320-enemy workload slower, so those owners were removed.
-The final native diagnostic remains far above the unchanged capacity gate. This plan is blocked
-before authoritative native/Web qualification until BK chooses one previously approval-gated path:
-virtual far-offscreen reserves, a Web-capable GDExtension/custom template, or reduced supported exact
-density/cadence. No executor may infer that choice from the original implementation authorization.
+typed-GDScript attempt to simulate every authored ordinary enemy as an exact live actor did not.
+BK approved the recommended virtual-reserve product change on 2026-08-13. Authored packets, roles,
+order, quotas, rewards, and boss eligibility remain exact, but ordinary units that have not received
+an arrival cue remain lightweight scheduler data rather than live combat actors. The shipping
+materialized caps are `1/40/48/48/48`; the authored pressure progression remains
+`1/124/172/224/276`. A whole arrival window is admitted only when every unit in that window fits,
+so a cue can never promise a tail that then waits indefinitely for capacity.
 
 ## Purpose
 
 - Objective: remove the high-count physics backlog and the common rear-tail enemy mass while
   preserving Cardborne's authored five-stage pressure and fair, readable combat.
-- Deliverable: a low-frequency engagement reservation owner; incremental enemy storage, scheduling,
-  spatial, status, projectile, and snapshot paths; updated product/validator contracts; retained
-  native/Web evidence; and removal of replaced hot-path owners.
-- Completion state: the engagement replay meets its distribution and fairness checks; every focused
-  behavior validator passes; the exact 276-enemy peak and 320-enemy capacity workloads remain valid;
-  clean native thresholds pass; the same-commit Web export, static release contract, and focused
-  built-Web run pass; and no old/new competing runtime authority remains.
+- Deliverable: the retained engagement director plus a virtual ordinary-enemy reserve owned by the
+  encounter scheduler, whole-window admission, explicit reserve/materialized telemetry, updated
+  product and validator contracts, and same-commit native/Web qualification.
+- Completion state: authored stage totals and quota/boss flow remain valid; no more than the locked
+  exact materialized cap is simulated; a cued window always completes without later capacity delay;
+  the production replay meets fairness and performance gates; the same-commit Web export and built
+  Web smoke pass; and no validator or release check treats the rejected exact-320 workload as the
+  shipping game contract.
 
 ## Scope and Boundaries
 
@@ -68,6 +70,8 @@ In scope:
 - Publish immutable current/previous presentation frames to renderer, HUD, radar, and minimap.
 - Update observation telemetry, deterministic validators, the product specification, performance
   fixtures, Web export/static validation, and durable evidence.
+- Keep not-yet-cued ordinary units as deterministic packet/window reserve data and materialize them
+  only when a complete arrival window fits the current exact-actor budget.
 
 Out of scope:
 
@@ -78,8 +82,8 @@ Out of scope:
   direct Server ownership, or GPU compute.
 - Lower physics tick rate, changed catch-up ceiling, reduced actor/projectile/effect counts, reduced
   collision accuracy, reduced attack activity, reduced visual quality, or weaker thresholds.
-- Far-enemy aggregate/impostor simulation, silent teleportation, or despawn/respawn used to repair
-  engagement balance.
+- Approximate combat for reserve units, reserve-unit damage, invisible kills, silent teleportation,
+  or despawn/respawn used to repair engagement balance. Reserve units do not exist in combat yet.
 - Re-authoring stage quotas, enemy stats, upgrade behavior, boss behavior, or global difficulty.
 - GitHub push, itch.io publication, or changes to the deployment repositories. A later publish will
   inherit local fixes only after the normal export/commit/deployment workflow is run.
@@ -89,12 +93,16 @@ Constraints and invariants:
 - Godot `4.7.1.stable.official.a13da4feb`, GDScript, GL Compatibility, and repository-owned
   `./tools/godot.ps1` remain the implementation/runtime contract.
 - The current no-thread/no-extension Web preset remains unchanged.
-- Preserve ordinary active caps `1/124/172/224/276`, enemy store capacity 320, player projectile
-  capacity 240, hostile projectile capacity 120 with its 24-shot boss reserve, and effect capacity 96.
+- Preserve authored pressure progression `1/124/172/224/276` while limiting exact materialized
+  ordinary actors to `1/40/48/48/48`. Preserve enemy store capacity 320 for bosses, structures,
+  temporary actors, and safety headroom; preserve player projectile capacity 240, hostile projectile
+  capacity 120 with its 24-shot boss reserve, and effect capacity 96.
 - Preserve manual aim, held primary fire, dash, seekers, EMP, pickups, cards, authored encounter
   packets, quota-gated bosses, continuous stages, and Korean/English completeness.
 - Preserve 0.90-second cue lead, at least 1.20 seconds between windows, 0.16-second unit rounds,
   maximum four births per tick, deterministic packet fencing, cap reservation, and retry behavior.
+- Admission reserves every unit in a window before its cue. All rounds of that window consume the
+  reservation; no later round may wait on capacity after the cue.
 - Preserve off-screen birth distance 900-2400 pixels, deterministic 2800-pixel relaxation,
   220-pixel visible margin, 320-pixel hard separation, and balanced use of all eight birth sectors.
 - Preserve 60-Hz critical phases, 30-Hz near motion, 20-Hz far motion, and 10-Hz ordinary decisions.
@@ -478,6 +486,122 @@ Batch gate:
 - All Phase 2 focused checks pass and the user-visible tail mechanism is corrected without changing
   counts, cadence, collision, or attack limits.
 
+### Phase V1: Lock the virtual-reserve product and runtime contract
+
+Goal: replace the failed exact-population assumption with one explicit shipping truth.
+
+Source owners: `scripts/encounters/vehicle_encounter_director.gd`,
+`docs/product/vehicle_game_spec.md`, arrival/pacing validators, and this plan
+
+- [x] **V1.1** Separate authored pressure from exact materialized capacity.
+  - Change: retain `1/124/172/224/276` as authored pressure metadata and add exact ordinary caps
+    `1/40/48/48/48`. `active_cap()` and admission use the exact cap; diagnostics expose both names.
+  - Accept: validators prove the arrays, difficulty behavior, and stage-five exact cap `48`.
+- [x] **V1.2** Define reserve truth in the product specification.
+  - Change: not-yet-cued packet/window roles are the virtual reserve. They have deterministic
+    identity/order but no world position, health, collision, attacks, status, rewards, or rendering
+    until materialization. Ordinary defeats remain the only quota progress.
+  - Accept: document authority passes and no current spec still promises 276 simultaneous live
+    ordinary actors.
+
+Batch gate: source and product terminology consistently distinguish `authored pressure`,
+`virtual reserve`, `reserved arrival slots`, and `materialized ordinary actors`.
+
+### Phase V2: Make whole arrival windows atomic
+
+Goal: keep reserve units cheap and ensure every visible cue is a truthful promise.
+
+Source owners: `scripts/encounters/vehicle_encounter_runtime.gd`,
+`tools/validation/validate_vehicle_arrival_scheduler.gd`, encounter pacing/replay validators
+
+- [x] **V2.1** Admit only a complete window.
+  - Change: calculate the allocation's complete unit count before cue emission; retry without cue
+    until that count fits the exact cap; reserve the complete count once admitted.
+  - Accept: a 32-unit stage window can enter at an empty stage-five cap, but cannot enter with only
+    31 free slots. The blocked window remains deterministic reserve data.
+- [x] **V2.2** Consume reservations across every unit round.
+  - Change: mark every generated round as reserved and decrement by its exact size at emission.
+    Later rounds never run a second capacity check.
+  - Accept: after one cue, all units materialize at the existing 0.16-second spacing and maximum
+    four births per physics tick; the reservation returns to zero exactly.
+- [x] **V2.3** Make cancellation and stage transition exact.
+  - Change: reset/stop clears queued windows, rounds, engagement handles, and arrival reservations
+    without manufacturing defeats or rewards. Living exact actors retain the existing stage
+    continuation behavior.
+  - Accept: stop, boss retirement, rejected store materialization, and reconfigure validators pass.
+
+Batch gate: allocation, arrival, encounter pacing, engagement replay, stage continuity, and Run
+validators pass with no changed collision, attack, quota, reward, or boss behavior.
+
+### Phase V3: Expose and qualify the shipping workload
+
+Goal: prevent future green checks from testing the rejected 320-exact workload instead of the game.
+
+Source owners: performance scenario/recorder/manual trace, their validators, CI workflow, and the
+durable performance evidence
+
+- [x] **V3.1** Publish unambiguous pressure counts.
+  - Change: snapshots and trace records expose authored pressure cap, exact materialized cap,
+    current materialized count, reserved arrival slots, and queued virtual-reserve count. Existing
+    ambiguous `ordinary_active_cap` output is migrated with validator coverage.
+  - Accept: production replay samples prove current exact actors never exceed 48 and that queued
+    reserve data exists while authored stage pressure continues.
+- [x] **V3.2** Make production replay the shipping capacity gate.
+  - Change: classify `production_replay` as capacity-sensitive in the recorder and keep
+    `capacity_pressure` only as an explicitly named exact-store diagnostic. Do not lower the 6/8 ms
+    physics or frame/render limits.
+  - Accept: recorder validator rejects a slow or invalid production replay; exact-320 evidence can
+    remain red without blocking a product whose supported shipping workload is different.
+- [x] **V3.3** Keep the reserve regression in the blocking CI validator batch.
+  - Change: `validate_vehicle_performance_scenarios.gd` runs the production scheduler workload in
+    the existing hard `Validate current vehicle contracts` step and requires valid population
+    accounting, exact cap compliance, reserve observability, and no rejected materialization. The
+    hosted micro-profiler remains explicitly nonblocking diagnostic evidence.
+  - Accept: CI fails on count/reserve/scheduler regressions instead of continuing on error.
+
+Batch gate: focused performance-structure tests pass and the CI workflow stores only one-day logs;
+the GitHub Pages deployment artifact remains the unavoidable one-day transport artifact.
+
+### Phase V4: Validate, audit, and measure
+
+Goal: prove correctness first, then measure the final workload once on a quiescent machine.
+
+- [x] **V4.1** Run the changed-owner focused batch and headless import.
+  - Accept: director, arrival, pacing, replay, stage continuity, Run, manual trace, performance
+    scenario/recorder, document authority, import, and `git diff --check` pass.
+- [x] **V4.2** Run the diff-scoped codebase quality audit and repair only task-owned findings.
+  - Accept: no high-impact ownership, reset, capacity, telemetry, or reachable-failure finding remains.
+- [ ] **V4.3** Run one authoritative native `production_replay`.
+  - Preconditions: user receives cost/impact notice; no unrelated Godot/browser/heavy process is
+    active; source is committed and clean. Run 10-second warmup plus 60-second sample at 1280x720.
+  - Accept: scenario/count/reserve/focus/viewport state is valid; physics p95/p99 <=6/8 ms; frame
+    p95/p99 <=18/25 ms; median >=59 FPS; 1% low >=55 FPS; draw p95 <=200; batches <=50.
+  - Guard: preserve a valid red result and replan its measured owner. Do not reduce cap, cadence,
+    collision, attacks, projectiles, visual quality, or thresholds without new user approval.
+- [ ] **V4.4** Export and test the same commit as Web.
+  - Change: export and statically validate Web, boot the built artifact, and perform focused movement,
+    fire, dash, EMP, stage continuation, cue, and reserve-refill smoke QA. Use `npjt-port-guard` for
+    any local server and stop only task-owned helpers.
+  - Accept: no parser, console, input, catch-up, deployment-contract, or gameplay-blocking failure.
+
+Batch gate: native performance passes and the built Web artifact passes its release/smoke contract
+from the same clean commit.
+
+### Phase V5: Publish durable truth and close
+
+- [ ] **V5.1** Record exact native/Web results, workload labels, limitations, and commit in the
+  durable performance evidence; remove stale claims that exact 276/320 actors are the shipping gate.
+- [ ] **V5.2** Commit only task-owned changes, push the verified branch, and verify GitHub Actions,
+  GitHub Pages, itch.io, and zero unexpected long-lived Actions artifacts.
+- [ ] **V5.3** Mark this plan done and retire it only after canonical spec/evidence contain every
+  durable decision required by `.agents/PLANS.md`.
+
+## Historical rejected exact-actor path — do not execute
+
+The unchecked Phase 3-9 tasks below record the rejected typed-GDScript/exact-320 experiment and its
+old qualification route. They are retained only as failure evidence. Only Phase V1-V5 checkboxes are
+canonical after BK's 2026-08-13 virtual-reserve approval.
+
 ### Phase 3: Event-owned enemy state and persistent due lanes
 
 Goal: eliminate schedule/aggregate full scans and establish the packed compatibility boundary.
@@ -737,8 +861,15 @@ dense-combat plan, this plan
 
 ## Validation and Rework Controls
 
+The Phase V rows below are canonical. Rows that mention the old exact-320 phase names are retained
+only to explain the rejected experiment and must not be used as completion gates.
+
 | Cadence | Exact check | Run when | Do not rerun until |
 | --- | --- | --- | --- |
+| Reserve inner loop | director/arrival/pacing validator plus `git diff --check` | admission or count behavior changes | the same input changes again |
+| Reserve integration | replay, stage continuity, Run, trace, performance structures, docs, import | V1-V3 complete | a relevant runtime/spec input changes |
+| Shipping native | one 10+60-second `production_replay` | V4 focused checks pass, clean commit, quiescent machine | an invalid environment or material runtime change |
+| Shipping Web | export/static validation and one focused built-Web smoke | native passes on the same commit | export/runtime/hosting input changes |
 | Inner loop | the focused validator named by the current task, invoked through `./tools/godot.ps1 --path . --headless --script`, plus `git diff --check` | direct behavior exists | relevant implementation input changes |
 | Engagement phase gate | director, allocation, multi-sector, arrival, pacing, targeting, movement, schedule, contact | Phase 1/2 tasks pass | reservation/pattern/gate/cadence input changes |
 | Storage/schedule gate | store, schedule, dense simulation, Run, status/carrier owners, `profile_vehicle_pressure.gd` | Phase 3 tasks pass | packed transition or queue input changes |
@@ -776,6 +907,8 @@ Validation rules:
 | Phase diagnostic fails to improve its named owner | revert only the ineffective phase if behavior-neutral, preserve evidence, and revise the contract | no speculative cache pile-up |
 | Final native threshold remains red | preserve JSON, profile the named final owner, revise the plan | GDExtension/threads/workload/threshold change requires explicit approval |
 | Native passes but Web remains materially red | preserve separate labels and profile built Web | custom templates, threads, extensions, or hosting headers require explicit approval |
+| Complete arrival window is larger than its beat's exact cap | stop and revise the cap or packet contract with user approval | never partially cue a window or silently drop units |
+| Materialization fails after a reserved cue | cancel its engagement handle, record the failure, fail validation | never convert the missing actor into a defeat/reward |
 
 Implementation-local discoveries may be handled inside the locked contract when they cannot change
 scope, visible behavior, ownership, architecture, safety, or acceptance.
@@ -809,9 +942,10 @@ scope, visible behavior, ownership, architecture, safety, or acceptance.
 
 ## Open Questions
 
-None. Product behavior, first calibration, architecture, dependencies, ownership, validation,
-fallbacks, and approval boundaries are locked. Measured failure uses the contingency table; it does
-not grant the executor discretion to change workload, thresholds, or release architecture.
+None. BK approved the virtual reserve and first exact-cap calibration. Product behavior, architecture,
+ownership, validation, fallbacks, and approval boundaries are locked. Measured failure uses the
+contingency table; it does not grant the executor discretion to change workload, thresholds, or
+release architecture.
 
 ## Decision Notes
 
@@ -826,16 +960,20 @@ not grant the executor discretion to change workload, thresholds, or release arc
   escalation paths because the current Web preset excludes both.
 - 2026-08-13: preserve existing exact density and combat gates. Better arrival distribution is not
   accepted as a substitute for the dense-simulation performance fix.
+- 2026-08-13: BK approved the virtual far reserve after the exact-actor GDScript path remained red.
+  Keep future authored enemies as packet/window data until cue-time admission, use exact ordinary
+  caps `1/40/48/48/48`, and make `production_replay` the shipping capacity gate. The exact-320
+  workload remains a store/engine diagnostic, not a promise about simultaneous gameplay actors.
 - 2026-08-13: this contract supersedes only the unresolved dense-performance M8/M9 portion of
   `2026-08-11-dense-combat-progression-and-run-completion.md`; it does not rewrite that plan's
   completed progression, upgrade, pickup, facility, device, or product history.
 
 ## Progress and Next Steps
 
-- Canonical progress: the task checkboxes in this contract.
-- Current phase: blocked at the Phase 8 native performance gate after rejected Phase 3-6 trials.
-- Next task: BK chooses virtual far reserve (recommended), Web-capable GDExtension, or lower exact
-  workload/cadence; then this contract must be revised before implementation resumes.
+- Canonical progress: only Phase V1-V5 task checkboxes after the virtual-reserve revision.
+- Current phase: V4, clean native and built-Web qualification.
+- Next task: commit the validated implementation checkpoint, confirm a quiescent machine, then run
+  the single authoritative 10+60-second native `production_replay`.
 - Last completed gate: Phase 2 deterministic engagement replay plus the retained Phase 4.2 wall
   broad-phase validator. Phase 7 focused integration checks pass for the retained code, but the full
   Phase 7/8 completion preconditions do not.
@@ -901,6 +1039,13 @@ Checkpoint evidence:
   median/p95/p99 `133.333/143.333/148.510 ms` and 1% low `6.734 FPS`. Render CPU/GPU
   `0.715/1.562 ms`, draw p95 `98` and batches `38` remained green. The unchanged 6/8 ms capacity
   gate failed, so authoritative native and Web performance runs stopped as required.
+- 2026-08-13, virtual-reserve implementation: separated authored pressure
+  `1/124/172/224/276` from exact admission `1/40/48/48/48`, admitted and reserved complete windows,
+  retained already-materialized actors across lower stage-entry caps, and made reserve counters
+  event-owned. Arrival, pacing, engagement replay, stage continuity, Run, manual trace, performance
+  scenario, document authority, headless import, and diff checks passed. The diff-scoped quality
+  audit corrected stale trace terminology, removed live-actor deactivation, restored the public
+  tuning alias, and added explicit lost-work conservation checks.
 
 ## Completion and Stop Conditions
 

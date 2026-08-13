@@ -10,7 +10,8 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const EXPECTED_MOBILE_COUNTS := [520, 660, 816, 1026, 1260]
 const EXPECTED_QUOTAS := [125, 166, 208, 250, 291]
-const EXPECTED_HARD_CAPS := [1, 124, 172, 224, 276]
+const EXPECTED_HARD_MATERIALIZED_CAPS := [1, 40, 48, 48, 48]
+const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [1, 124, 172, 224, 276]
 
 var failures: Array[String] = []
 
@@ -39,7 +40,7 @@ func _initialize() -> void:
 			_validate_surge_packet(packets[packet_index], stage_id)
 		_validate_composition(blueprint, stage_id)
 		_validate_opening_runtime(stage_id, packets, tactical)
-	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_CAPS)
+	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_MATERIALIZED_CAPS, EXPECTED_HARD_AUTHORED_PRESSURE_CAPS)
 	_expect(Director.MAX_RANGED_COMMITS == 3, "ranged commit cap remains three")
 	_expect(Director.MAX_DENIAL_COMMITS == 2, "denial commit cap remains two")
 	_finish()
@@ -120,10 +121,12 @@ func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary],
 	)
 
 
-func _validate_cap_curve(difficulty: StringName, expected: Array) -> void:
-	for beat in expected.size():
-		var actual := RunDifficulty.scaled_active_cap(Director.active_cap_for(beat), difficulty)
-		_expect(actual == int(expected[beat]), "%s beat %d active cap is locked" % [difficulty, beat])
+func _validate_cap_curve(difficulty: StringName, expected_materialized: Array, expected_authored_pressure: Array) -> void:
+	for beat in expected_materialized.size():
+		var materialized := RunDifficulty.scaled_active_cap(Director.materialized_active_cap_for(beat), difficulty)
+		var authored_pressure := RunDifficulty.scaled_active_cap(Director.authored_pressure_cap_for(beat), difficulty)
+		_expect(materialized == int(expected_materialized[beat]), "%s beat %d materialized cap is locked" % [difficulty, beat])
+		_expect(authored_pressure == int(expected_authored_pressure[beat]), "%s beat %d authored pressure cap is locked" % [difficulty, beat])
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -50,6 +50,9 @@ var _packet_fence_blocked_seconds := 0.0
 var _birth_capacity_blocked := 0
 var _scheduler_starvation := 0
 var _spawn_materialization_failures := 0
+var _authored_population := 0
+var _virtual_reserve_units := 0
+var _materialized_spawned := 0
 var _next_metric_sample := 0.0
 var _spawning_enabled := true
 var _spawn_allocator := SpawnAllocator.new()
@@ -86,6 +89,10 @@ func configure(
 		var packet := packets[packet_index].duplicate(true)
 		packet["_packet_index"] = packet_index
 		_packets.append(packet)
+	_authored_population = 0
+	for packet in _packets:
+		_authored_population += _packet_unit_count(packet)
+	_virtual_reserve_units = _authored_population
 	_activated_packets.clear()
 	_events.clear()
 	_window_queue.clear()
@@ -109,6 +116,7 @@ func configure(
 	_birth_capacity_blocked = 0
 	_scheduler_starvation = 0
 	_spawn_materialization_failures = 0
+	_materialized_spawned = 0
 	_next_metric_sample = 0.0
 	_spawning_enabled = true
 	_allocation_debug.clear()
@@ -134,6 +142,7 @@ func stop_spawning() -> void:
 	for _index in unclaimed:
 		note_engagement_cancellation()
 	_reserved_arrival_slots = 0
+	_virtual_reserve_units = 0
 	_packet_inflight = false
 
 
@@ -245,7 +254,15 @@ func tick(
 
 
 func active_cap() -> int:
-	return RunDifficulty.scaled_active_cap(Director.active_cap_for(current_beat), difficulty)
+	return materialized_active_cap()
+
+
+func materialized_active_cap() -> int:
+	return RunDifficulty.scaled_active_cap(Director.materialized_active_cap_for(current_beat), difficulty)
+
+
+func authored_pressure_cap() -> int:
+	return RunDifficulty.scaled_active_cap(Director.authored_pressure_cap_for(current_beat), difficulty)
 
 
 func reserved_active_slots() -> int:
@@ -288,6 +305,14 @@ func debug_snapshot() -> Dictionary:
 		"elapsed":elapsed,
 		"beat":current_beat,
 		"active_cap":active_cap(),
+		"materialized_cap":materialized_active_cap(),
+		"materialized_active_cap":materialized_active_cap(),
+		"authored_pressure_cap":authored_pressure_cap(),
+		"authored_population":_authored_population,
+		"materialized_spawned":_materialized_spawned,
+		"virtual_reserve":_authored_reserve_count(),
+		"materialized_active_count":int(_pressure_snapshot.get("active", 0)),
+		"authored_reserve_units":_authored_reserve_count(),
 		"threat_budget":threat_budget(),
 		"queued_spawns":_queued_spawn_count(),
 		"queued_windows":_window_queue.size(),
@@ -324,7 +349,17 @@ func fill_current_pressure(output: Dictionary) -> void:
 	var active := int(_pressure_snapshot.get("active", 0))
 	var center_in_viewport := int(_pressure_snapshot.get("visible", 0))
 	output["ordinary_active"] = active
-	output["ordinary_active_cap"] = active_cap()
+	output["ordinary_authored_pressure_cap"] = authored_pressure_cap()
+	output["ordinary_materialized_cap"] = materialized_active_cap()
+	output["ordinary_virtual_reserve"] = _authored_reserve_count()
+	output["ordinary_reserved_arrival_slots"] = _reserved_arrival_slots
+	output["ordinary_materialized"] = active
+	# Existing probes still use these names; the explicit fields above are the
+	# release telemetry contract.
+	output["ordinary_materialized_active"] = active
+	output["ordinary_materialized_active_cap"] = materialized_active_cap()
+	output["ordinary_authored_reserve"] = _authored_reserve_count()
+	output["ordinary_active_cap"] = materialized_active_cap()
 	output["ordinary_center_in_viewport"] = center_in_viewport
 	output["ordinary_offscreen_active"] = maxi(0, active - center_in_viewport)
 	output["ordinary_near_600"] = int(_pressure_snapshot.get("near_600", 0))
@@ -484,10 +519,6 @@ func _admit_due_window(
 		packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)
 	)
 	var first_squad := int(request["arrival_window"]) * squads_per_window
-	var first_round_size := mini(squads.size(), first_squad + squads_per_window) - first_squad
-	if available_active_slots(active_mobile_count) < first_round_size:
-		_capacity_blocked_seconds += delta
-		return
 	var recent_positions := _recent_birth_positions()
 	var allocations := _spawn_allocator.allocate_window(
 		packet,
@@ -503,13 +534,20 @@ func _admit_due_window(
 		request["retry_at"] = elapsed + RETRY_INTERVAL
 		_window_queue[0] = request
 		return
-	first_round_size = allocations.size()
+	var window_unit_count := 0
+	for allocation in allocations:
+		window_unit_count += Array(allocation["roles"]).size()
+	if available_active_slots(active_mobile_count) < window_unit_count:
+		_capacity_blocked_seconds += delta
+		return
 	_window_queue.pop_front()
 	var cue_at := elapsed
 	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
 	var unit_spacing := float(packet.get("unit_spacing", 0.16))
 	_last_cue_at = cue_at
-	_reserved_arrival_slots += first_round_size
+	# A cue promises this entire window. Reserve every future birth now so no
+	# later round waits for capacity after the player has seen that warning.
+	_reserved_arrival_slots += window_unit_count
 	var maximum_size := 0
 	for allocation in allocations:
 		maximum_size = maxi(maximum_size, Array(allocation["roles"]).size())
@@ -580,7 +618,7 @@ func _admit_due_window(
 			"packet_index":int(packet["_packet_index"]),
 			"arrival_window":int(request["arrival_window"]),
 			"unit_index":unit_index,
-			"reserved":unit_index == 0,
+			"reserved":true,
 			"specs":specs,
 		})
 	_spawn_queue.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -701,15 +739,14 @@ func _process_due_round(active_mobile_count: int, delta: float, spawns: Array[Di
 	if specs.size() > MAX_SPAWNS_PER_TICK:
 		_scheduler_starvation += 1
 		return
-	if not bool(round["reserved"]) and available_active_slots(active_mobile_count) < specs.size():
-		_capacity_blocked_seconds += delta
-		return
 	_spawn_queue.pop_front()
 	if bool(round["reserved"]):
 		_reserved_arrival_slots = maxi(0, _reserved_arrival_slots - specs.size())
 	for spec_variant in specs:
 		var spec := Dictionary(spec_variant)
 		spawns.append(spec)
+		_virtual_reserve_units = maxi(0, _virtual_reserve_units - 1)
+		_materialized_spawned += 1
 		var squad_id := String(spec["squad_id"])
 		_spawned_by_squad[squad_id] = int(_spawned_by_squad.get(squad_id, 0)) + 1
 		_recent_births.append({"id":String(spec["id"]), "time":elapsed, "position":Vector2(spec["pos"])})
@@ -730,6 +767,7 @@ func note_spawn_materialization_failed(spec: Dictionary) -> void:
 	## The scheduler emits a birth before the external enemy store admits it.
 	## Roll back that optimistic record if the bounded store rejects the actor.
 	_spawn_materialization_failures += 1
+	_materialized_spawned = maxi(0, _materialized_spawned - 1)
 	var handle: Dictionary = spec.get("engagement_handle", {})
 	if not handle.is_empty():
 		cancel_engagement(handle)
@@ -787,6 +825,30 @@ func _queued_spawn_count() -> int:
 	for round in _spawn_queue:
 		result += Array(round["specs"]).size()
 	return result
+
+
+func _authored_reserve_count() -> int:
+	## Event-owned count: reserve units have no world or combat state.
+	return _virtual_reserve_units
+
+
+static func _packet_unit_count(packet: Dictionary) -> int:
+	var total := 0
+	for squad in Array(packet.get("squads", [])):
+		total += Array(squad).size()
+	return total
+
+
+static func _window_unit_count(request: Dictionary) -> int:
+	var packet: Dictionary = request.get("packet", {})
+	var squads: Array = packet.get("squads", [])
+	var squads_per_window := int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW))
+	var first_squad := int(request.get("arrival_window", 0)) * squads_per_window
+	var end_squad := mini(squads.size(), first_squad + squads_per_window)
+	var total := 0
+	for squad_index in range(first_squad, end_squad):
+		total += Array(squads[squad_index]).size()
+	return total
 
 
 func _round_sort_key(round: Dictionary) -> String:

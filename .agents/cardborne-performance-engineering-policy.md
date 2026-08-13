@@ -3,7 +3,7 @@ type: policy
 status: active
 owner: BK
 created: 2026-08-05
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-13
 canonical_for: Cardborne runtime performance diagnosis, optimization, and performance claims
 scope: Runtime hot paths, visual and asset integration, performance fixtures, profiling, and release qualification
 related:
@@ -175,10 +175,14 @@ user decisions.
 - The manual trace is debug-only, bounded, and diagnostic-only. It preserves persistence,
   layout randomness, gameplay rules, counts, collision, cadence, and UI; it never produces
   a release pass or fail result.
-- Read `ordinary_active` as map-wide simulated cap-counting ordinary enemies,
-  `ordinary_center_in_viewport` as the subset whose body center is inside the visible
-  world rectangle, and `ordinary_offscreen_active` as their difference. Do not equate any
-  of these with total live actors.
+- Read `ordinary_authored_pressure_cap` as logical authored pressure,
+  `ordinary_materialized_cap` as the current exact-admission ceiling,
+  `ordinary_virtual_reserve` as not-yet-materialized scheduler data, and
+  `ordinary_materialized` as map-wide exact ordinary combat actors. Read
+  `ordinary_center_in_viewport` as the visible-center subset and
+  `ordinary_offscreen_active` as their difference. Do not equate any of these with total
+  live actors. Already-materialized stage survivors may temporarily exceed a lower next-beat
+  admission ceiling; they remain exact until defeated and block new admission meanwhile.
 - Use `physics_ticks` greater than one on a rendered frame as physics catch-up evidence.
   Correlate slow frames and approximately one-second buckets with subsystem,
   presentation, HUD, render, focus, projectile, effect, and pressure fields before

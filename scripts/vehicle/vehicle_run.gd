@@ -2272,10 +2272,10 @@ func _update_enemies(
 		decision_bucket, _simulation_lod_bucket, _far_enemy_simulation_bucket,
 		enemy_store.membership_revision
 	)
+	# Already-materialized actors remain exact across stage changes. If their
+	# count exceeds a newly lowered beat cap, encounter admission stays blocked
+	# until defeats create room; live actors are never hidden to repair the cap.
 	var active_capped := _enemy_update_schedule.active_cap_count
-	if _enforce_active_enemy_cap(active_capped):
-		_enemy_update_schedule.prune_inactive()
-		active_capped = _enemy_update_schedule.active_cap_count
 	if performance_active:
 		_performance_enemy_sections["budget_scan"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
@@ -2723,36 +2723,6 @@ func _record_motion_only_enemy_change(
 		else:
 			enemy_grid.update_actor(enemy)
 	_refresh_enemy_presentation_facing(enemy)
-
-
-func _enforce_active_enemy_cap(known_active_count: int = -1) -> bool:
-	var active_count := known_active_count
-	if active_count < 0:
-		active_count = 0
-		for enemy in enemies:
-			if enemy.alive and enemy.active and enemy.counts_active_cap:
-				active_count += 1
-	var cap := encounter_runtime.active_cap()
-	if active_count <= cap:
-		return false
-	var active_mobile: Array[EnemyState] = []
-	for enemy in enemies:
-		if enemy.alive and enemy.active and enemy.counts_active_cap:
-			active_mobile.append(enemy)
-	active_mobile.sort_custom(func(a: EnemyState, b: EnemyState) -> bool:
-		var a_committed := a.phase in [&"startup", &"active"]
-		var b_committed := b.phase in [&"startup", &"active"]
-		if a_committed != b_committed:
-			return a_committed
-		return player_position.distance_squared_to(a.pos) < player_position.distance_squared_to(b.pos)
-	)
-	for index in range(cap, active_mobile.size()):
-		var enemy := active_mobile[index]
-		enemy.active = false
-		enemy.velocity = Vector2.ZERO
-		enemy.phase = &"move"
-		enemy_grid.update_actor(enemy)
-	return true
 
 
 func _update_enemy_activation(enemy: EnemyState, capacity_available: bool) -> bool:
@@ -6475,9 +6445,13 @@ func _prepare_manual_performance_trace() -> void:
 				"viewport_set_measure_render_time"
 			),
 			"pressure_definitions":{
-				"ordinary_active":"Map-wide simulated cap-counting ordinary enemies.",
+				"ordinary_authored_pressure_cap":"Logical authored ordinary pressure target for the current beat.",
+				"ordinary_materialized_cap":"Maximum exact ordinary combat actors for the current beat.",
+				"ordinary_virtual_reserve":"Authored ordinary units held as scheduler data without combat state.",
+				"ordinary_reserved_arrival_slots":"Exact slots promised by cues whose births are still pending.",
+				"ordinary_materialized":"Map-wide exact cap-counting ordinary combat actors.",
 				"ordinary_center_in_viewport":"Ordinary enemy bodies whose center is inside the visible world rectangle.",
-				"ordinary_offscreen_active":"ordinary_active minus ordinary_center_in_viewport.",
+				"ordinary_offscreen_active":"ordinary_materialized minus ordinary_center_in_viewport.",
 			},
 		}
 	):

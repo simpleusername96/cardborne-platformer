@@ -19,12 +19,24 @@ const HOSTILE_PROJECTILE_CAP := 120
 const BOSS_PROJECTILE_RESERVE := 24
 const EFFECT_CAP := 96
 
-const ACTIVE_CAPS := [1, 124, 172, 224, 276]
+## Authored pressure remains the pacing contract. Only the smaller materialized
+## cap becomes live combat actors; the scheduler keeps the rest as packet data.
+const AUTHORED_PRESSURE_CAPS := [1, 124, 172, 224, 276]
+const MATERIALIZED_ACTIVE_CAPS := [1, 40, 48, 48, 48]
+const ACTIVE_CAPS := MATERIALIZED_ACTIVE_CAPS
 const THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
 
 
 static func active_cap_for(beat: int) -> int:
-	return int(ACTIVE_CAPS[clampi(beat, 0, ACTIVE_CAPS.size() - 1)])
+	return materialized_active_cap_for(beat)
+
+
+static func materialized_active_cap_for(beat: int) -> int:
+	return int(MATERIALIZED_ACTIVE_CAPS[clampi(beat, 0, MATERIALIZED_ACTIVE_CAPS.size() - 1)])
+
+
+static func authored_pressure_cap_for(beat: int) -> int:
+	return int(AUTHORED_PRESSURE_CAPS[clampi(beat, 0, AUTHORED_PRESSURE_CAPS.size() - 1)])
 
 
 static func active_cap(_stage_id: StringName = &"stage_1") -> int:
@@ -64,7 +76,9 @@ static func can_commit(current_points: float, ranged_count: int, denial_count: i
 static func tuning_contract() -> Dictionary:
 	return {
 		"threat_budget": THREAT_BUDGET,
-		"active_caps": ACTIVE_CAPS,
+		"active_caps": MATERIALIZED_ACTIVE_CAPS,
+		"materialized_active_caps": MATERIALIZED_ACTIVE_CAPS,
+		"authored_pressure_caps": AUTHORED_PRESSURE_CAPS,
 		"threat_budgets": THREAT_BUDGETS,
 		"max_ranged": MAX_RANGED_COMMITS,
 		"max_denial": MAX_DENIAL_COMMITS,

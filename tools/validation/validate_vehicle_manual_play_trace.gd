@@ -88,8 +88,11 @@ func _run() -> void:
 		var visible := 30 + frame_index % 10
 		var pressure := {
 			"enemy_live":active + 4,
-			"ordinary_active":active,
-			"ordinary_active_cap":276,
+			"ordinary_authored_pressure_cap":276,
+			"ordinary_materialized_cap":48,
+			"ordinary_virtual_reserve":176,
+			"ordinary_reserved_arrival_slots":12,
+			"ordinary_materialized":active,
 			"ordinary_center_in_viewport":visible,
 			"ordinary_offscreen_active":active - visible,
 			"ordinary_near_600":20,
@@ -122,11 +125,21 @@ func _run() -> void:
 	)
 	var result := trace.finish("validation_complete")
 	_expect(
-		String(result.get("kind", "")) == "manual_play_trace"
+		int(result.get("schema", 0)) == 2
+			and String(result.get("kind", "")) == "manual_play_trace"
 			and bool(result.get("diagnostic_only", false))
 			and not bool(result.get("authoritative", true))
 			and not result.has("thresholds"),
 		"manual output cannot impersonate release qualification"
+	)
+	var pressure_definitions := Dictionary(result.get("pressure_field_definitions", {}))
+	_expect(
+		pressure_definitions.has("ordinary_authored_pressure_cap")
+			and pressure_definitions.has("ordinary_materialized_cap")
+			and pressure_definitions.has("ordinary_virtual_reserve")
+			and pressure_definitions.has("ordinary_reserved_arrival_slots")
+			and pressure_definitions.has("ordinary_materialized"),
+		"schema names authored pressure, exact materialization, virtual reserve, and cued slots separately"
 	)
 	var sampling := Dictionary(result.get("sampling", {}))
 	_expect(
@@ -157,10 +170,14 @@ func _run() -> void:
 	var slowest_pressure := Dictionary(slowest.get("pressure", {}))
 	_expect(
 		int(slowest.get("physics_ticks", 0)) == 2
-			and int(slowest_pressure.get("ordinary_active", 0)) == 169
+			and int(slowest_pressure.get("ordinary_authored_pressure_cap", 0)) == 276
+			and int(slowest_pressure.get("ordinary_materialized_cap", 0)) == 48
+			and int(slowest_pressure.get("ordinary_virtual_reserve", 0)) == 176
+			and int(slowest_pressure.get("ordinary_reserved_arrival_slots", 0)) == 12
+			and int(slowest_pressure.get("ordinary_materialized", 0)) == 169
 			and int(slowest_pressure.get("ordinary_center_in_viewport", 0)) == 39
 			and int(slowest_pressure.get("ordinary_offscreen_active", 0)) == 130,
-		"the slowest frame retains the caller-provided active/visible/offscreen split"
+		"the slowest frame retains the caller-provided authored/materialized/reserve split"
 	)
 	_expect(
 		slowest.get("render_cpu_ms") == null
@@ -228,7 +245,14 @@ func _run() -> void:
 		0.2,
 		0.1,
 		get_root(),
-		{"ordinary_active":3, "ordinary_center_in_viewport":2},
+		{
+			"ordinary_authored_pressure_cap":124,
+			"ordinary_materialized_cap":32,
+			"ordinary_virtual_reserve":121,
+			"ordinary_reserved_arrival_slots":0,
+			"ordinary_materialized":3,
+			"ordinary_center_in_viewport":2,
+		},
 		{"stage_id":"stage_1", "run_mode":"playing"},
 		true
 	)

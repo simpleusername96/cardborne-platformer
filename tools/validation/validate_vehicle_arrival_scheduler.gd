@@ -24,6 +24,7 @@ func _initialize() -> void:
 	packet["trigger"] = {"kind":&"time", "at":0.0}
 	_validate_truthful_rounds(stage_id, packet, tactical)
 	_validate_capacity_reservation(stage_id, packet, tactical)
+	_validate_cued_window_never_reblocks(stage_id, packet, tactical)
 	_validate_engagement_capacity_fallback(stage_id, packet, tactical)
 	_validate_materialization_failure_accounting(stage_id, packet, tactical)
 	_validate_continuation_lead(stage_id, packet, tactical)
@@ -77,15 +78,45 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 func _validate_capacity_reservation(stage_id: StringName, packet: Dictionary, tactical) -> void:
 	var runtime := _runtime(stage_id, [packet], tactical)
 	var packet_cap := RunDifficulty.scaled_active_cap(
-		Director.active_cap_for(int(packet["beat"])),
+		Director.materialized_active_cap_for(int(packet["beat"])),
 		RunDifficulty.HARD
 	)
-	var blocked := runtime.tick(0.1, packet_cap - 3, [], tactical.geometry_snapshot.player_start, _visible(tactical))
-	_expect(Array(blocked["cues"]).is_empty(), "cue admission waits until four first-round slots exist")
+	var window_units := _window_unit_count(packet, 0)
+	var blocked := runtime.tick(0.1, packet_cap - window_units + 1, [], tactical.geometry_snapshot.player_start, _visible(tactical))
+	_expect(Array(blocked["cues"]).is_empty(), "cue admission waits until the complete window fits")
 	_expect(int(runtime.debug_snapshot()["reserved_arrival_slots"]) == 0, "blocked cue does not reserve partial capacity")
 	var admitted := runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 	_expect(Array(admitted["cues"]).size() == 4, "capacity recovery admits one complete cue window")
-	_expect(int(runtime.debug_snapshot()["reserved_arrival_slots"]) == 4, "admitted cue reserves its complete first round")
+	_expect(int(runtime.debug_snapshot()["reserved_arrival_slots"]) == window_units, "admitted cue reserves every unit in its window")
+
+
+func _validate_cued_window_never_reblocks(stage_id: StringName, packet: Dictionary, tactical) -> void:
+	var runtime := _runtime(stage_id, [packet], tactical)
+	var authored_units := _packet_unit_count(packet)
+	var packet_cap := RunDifficulty.scaled_active_cap(
+		Director.materialized_active_cap_for(int(packet["beat"])),
+		RunDifficulty.HARD
+	)
+	var window_units := _window_unit_count(packet, 0)
+	var admission := runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
+	_expect(Array(admission["cues"]).size() == 4, "whole-window fixture receives one cue set")
+	var emitted := 0
+	for _step in 80:
+		var result := runtime.tick(0.05, packet_cap, [], tactical.geometry_snapshot.player_start, _visible(tactical))
+		var spawns: Array = result["spawns"]
+		_expect(spawns.size() <= Runtime.MAX_SPAWNS_PER_TICK, "reserved rounds keep the four-birth tick limit")
+		emitted += spawns.size()
+		if emitted >= window_units:
+			break
+	_expect(emitted == window_units, "every round of a cued window emits despite later capacity pressure")
+	var snapshot := runtime.debug_snapshot()
+	_expect(int(snapshot["reserved_arrival_slots"]) == 0, "whole-window reservation clears only after its final birth")
+	_expect(
+		int(snapshot["authored_population"]) == authored_units
+			and int(snapshot["materialized_spawned"]) == window_units
+			and int(snapshot["virtual_reserve"]) == authored_units - window_units,
+		"event-owned reserve accounting conserves every authored unit after emission"
+	)
 
 
 func _validate_engagement_capacity_fallback(stage_id: StringName, packet: Dictionary, tactical) -> void:
@@ -136,6 +167,11 @@ func _validate_materialization_failure_accounting(stage_id: StringName, packet: 
 	runtime.note_spawn_materialization_failed(rejected)
 	var after := runtime.debug_snapshot()
 	_expect(int(after["spawn_materialization_failures"]) == 1, "store rejection is counted explicitly")
+	_expect(
+		int(after["authored_population"])
+			!= int(after["materialized_spawned"]) + int(after["virtual_reserve"]),
+		"a rejected materialization remains visible as lost authored work"
+	)
 	_expect(int(Dictionary(after["spawned_by_squad"]).get(squad_id, 0)) == before_squad_count - 1, "rejected actor is removed from successful squad births")
 	var retains_spawn := false
 	for entry in Array(after["timeline"]):
@@ -176,6 +212,24 @@ func _runtime(stage_id: StringName, packets: Array[Dictionary], tactical) -> Veh
 
 func _visible(tactical) -> Rect2:
 	return Rect2(tactical.geometry_snapshot.player_start - Vector2(640.0, 360.0), Vector2(1280.0, 720.0))
+
+
+func _window_unit_count(packet: Dictionary, arrival_window: int) -> int:
+	var squads: Array = packet["squads"]
+	var squads_per_window := int(packet.get("squads_per_window", 4))
+	var first_squad := arrival_window * squads_per_window
+	var end_squad := mini(squads.size(), first_squad + squads_per_window)
+	var total := 0
+	for squad_index in range(first_squad, end_squad):
+		total += Array(squads[squad_index]).size()
+	return total
+
+
+func _packet_unit_count(packet: Dictionary) -> int:
+	var total := 0
+	for squad in Array(packet.get("squads", [])):
+		total += Array(squad).size()
+	return total
 
 
 func _expect(condition: bool, message: String) -> void:

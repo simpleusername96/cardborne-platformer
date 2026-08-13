@@ -271,7 +271,12 @@ func _threshold_result(result: Dictionary) -> Dictionary:
 	var consecutive_over_33_limit: Variant = null if high_resolution_native else (2 if is_web else 1)
 	var median_frame_ms := _metric_or(frames, "median", INF)
 	var median_fps := 1000.0 / median_frame_ms if median_frame_ms > 0.0 and median_frame_ms < INF else 0.0
-	var capacity_scenario := scenario_id in [&"capacity_pressure", &"lifecycle_pressure"]
+	# Production replay is the release workload that exercises the scheduler,
+	# exact materialization cap, and virtual far reserve together. The fixture
+	# capacity tests remain diagnostic controls, not substitutes for it.
+	var capacity_scenario := scenario_id in [
+		&"production_replay", &"capacity_pressure", &"lifecycle_pressure",
+	]
 	var lifecycle_scenario := scenario_id == &"lifecycle_pressure"
 	var lifecycle_soak_complete := (
 		not lifecycle_scenario

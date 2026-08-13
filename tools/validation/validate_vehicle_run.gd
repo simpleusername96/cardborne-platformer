@@ -49,15 +49,19 @@ func _run() -> void:
 		var pressure_probe := {}
 		run.encounter_runtime.fill_current_pressure(pressure_probe)
 		_expect(
-			pressure_probe.has("ordinary_active")
+			pressure_probe.has("ordinary_authored_pressure_cap")
+				and pressure_probe.has("ordinary_materialized_cap")
+				and pressure_probe.has("ordinary_virtual_reserve")
+				and pressure_probe.has("ordinary_reserved_arrival_slots")
+				and pressure_probe.has("ordinary_materialized")
 				and pressure_probe.has("ordinary_center_in_viewport")
 				and int(pressure_probe["ordinary_offscreen_active"])
 					== maxi(
 						0,
-						int(pressure_probe["ordinary_active"])
+						int(pressure_probe["ordinary_materialized"])
 							- int(pressure_probe["ordinary_center_in_viewport"])
 					),
-			"manual diagnostics borrow a scan-free active/visible/offscreen pressure split"
+			"manual diagnostics expose a scan-free authored/materialized/reserve pressure split"
 		)
 		_expect(run.current_stage_id == &"stage_1" and run.player_position == Vector2(3600,2160), "run begins at shared center")
 		_expect(run.PLAYER_BASE_SPEED == 280.0, "player base speed remains 280 px/s")
