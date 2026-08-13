@@ -9,6 +9,9 @@ const ACTIVE_WEAPON_CARD_IDS: Array[StringName] = [
 
 var catalog: VehicleUpgradeCatalog
 var levels: Dictionary = {}
+## First-acquisition order is run truth for read-only build summaries. It is not
+## an equipment limit and never changes when an existing card levels up.
+var acquisition_order: Array[StringName] = []
 
 
 func _init(source_catalog: VehicleUpgradeCatalog = null) -> void:
@@ -17,6 +20,7 @@ func _init(source_catalog: VehicleUpgradeCatalog = null) -> void:
 
 func reset() -> void:
 	levels.clear()
+	acquisition_order.clear()
 
 
 func level_of(upgrade_id: StringName) -> int:
@@ -114,6 +118,9 @@ func preview(upgrade_id: StringName) -> Dictionary:
 func apply(upgrade_id: StringName) -> Dictionary:
 	var receipt := preview(upgrade_id)
 	if not bool(receipt.get("valid", false)): return receipt
+	var first_acquisition := not has(upgrade_id)
 	levels[upgrade_id] = int(receipt["new_level"])
+	if first_acquisition:
+		acquisition_order.append(upgrade_id)
 	receipt["applied"] = true
 	return receipt

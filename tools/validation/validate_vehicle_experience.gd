@@ -27,11 +27,11 @@ func _initialize() -> void:
 
 
 func _validate_drop_values() -> void:
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser")) == 1, "swarm XP is 1")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"standard", &"chaser")) == 2, "standard XP is 2")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"turret")) == 4, "priority XP is 4")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser")) == 3, "swarm XP is 3")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"standard", &"chaser")) == 5, "standard XP is 5")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"turret")) == 10, "priority XP is 10")
 	_expect(FieldDropRules.experience_for_enemy(_enemy(&"boss", &"stage_boss")) == 24, "stage boss XP is 24")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser", "carrier")) == 1, "summoned carrier children grant their normal XP")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser", "carrier")) == 3, "summoned carrier children grant their normal XP")
 
 
 func _validate_stage_items() -> void:

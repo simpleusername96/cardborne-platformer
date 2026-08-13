@@ -62,7 +62,7 @@ const FOCUS_WIDTH := 2
 const SELECTED_RAIL_WIDTH := 3
 
 const PLAYER_VISUAL_RADIUS := 35.0
-const ORDINARY_ENEMY_RADIUS := 44.0
+const ORDINARY_ENEMY_RADIUS := 48.0
 const INSTALLATION_RADIUS := 62.0
 const STAGE_BOSS_RADIUS := 146.0
 const PICKUP_PLINTH_RADIUS := 42.0
@@ -212,8 +212,8 @@ static func validate_contract() -> PackedStringArray:
 			errors.append("attack affinity color must remain opaque: %s" % affinity)
 	if not is_equal_approx(PLAYER_VISUAL_RADIUS, 35.0):
 		errors.append("player visual radius must remain 35 px")
-	if not is_equal_approx(ORDINARY_ENEMY_RADIUS, 44.0):
-		errors.append("ordinary enemy visual radius must remain 44 px")
+	if not is_equal_approx(ORDINARY_ENEMY_RADIUS, 48.0):
+		errors.append("ordinary enemy visual radius must remain 48 px")
 	if not is_equal_approx(INSTALLATION_RADIUS, 62.0):
 		errors.append("installation visual radius must remain 62 px")
 	if not is_equal_approx(PICKUP_PLINTH_RADIUS, 42.0):

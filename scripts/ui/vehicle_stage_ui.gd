@@ -199,8 +199,7 @@ func show_deployment(selected: StringName = &"pulse_cannon") -> void:
 func show_upgrade(cards: Array[Dictionary], build_snapshot: Dictionary = {}) -> void:
 	hide_all_modals()
 	_latest_upgrade_cards = cards.duplicate(true)
-	if not build_snapshot.is_empty():
-		_latest_build_snapshot = build_snapshot.duplicate(true)
+	_latest_build_snapshot = build_snapshot.duplicate(true)
 	_upgrade_panel.open(cards, _latest_build_snapshot)
 	_show_modal("upgrade")
 
@@ -521,10 +520,7 @@ func _scale_local_font_overrides(node: Node, scale: float) -> void:
 		_scale_local_font_overrides(child, scale)
 
 
-func debug_modal_contract(
-	surface: String,
-	result_stage_title_key: String = "STAGE_DROWNED_RUINS_1"
-) -> Dictionary:
+func debug_modal_contract(surface: String) -> Dictionary:
 	match surface:
 		"deployment":
 			show_deployment(_selected_primary)
@@ -534,10 +530,20 @@ func debug_modal_contract(
 			show_pause()
 		"result":
 			show_result({
-				"stage_number":1,
-				"stage_title_key":result_stage_title_key,
-				"has_next_stage":true,
-				"upgrade":"UPGRADE_NONE",
+				"stage_count":5,
+				"complete_run":true,
+				"final_stage_number":5,
+				"has_next_stage":false,
+				"active_run_elapsed_seconds":258.0,
+				"hull":86.0,
+				"max_hull":120.0,
+				"health_ratio":0.72,
+				"defeats":[],
+				"outgoing":[],
+				"attributes":[],
+				"total_defeats":0,
+				"build_snapshot":{"upgrades":[]},
+				"loadout":{},
 			})
 		"report":
 			show_stage_report({})
@@ -582,6 +588,10 @@ func debug_guide_entry(
 func debug_select_upgrade(index: int) -> void:
 	_upgrade_panel.call("_process", 0.36)
 	_upgrade_panel.call("_select", index)
+
+
+func debug_open_first_build_preview() -> bool:
+	return _upgrade_panel.debug_open_first_build_preview()
 
 
 func debug_upgrade_geometry() -> Dictionary:
@@ -651,6 +661,7 @@ func _refresh_localized_content() -> void:
 	_deployment_panel.refresh_localized_content()
 	_pause_panel.refresh_localized_content()
 	_result_panel.refresh_localized_content()
+	_report_panel.refresh_localized_content()
 	_guide_panel.refresh_localized_content()
 	_hud.refresh_localized_content()
 	if not _latest_upgrade_cards.is_empty() and _host_visible("upgrade"):

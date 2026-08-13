@@ -71,6 +71,10 @@ func _run() -> void:
 		"ordinary health applies the revised five-stage pressure curve"
 	)
 	_expect(
+		is_equal_approx(StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER, 1.20),
+		"all non-boss hostiles use one final 20 percent durability policy"
+	)
+	_expect(
 		_near(health_pressure[0] / previous_health_pressure[0], 0.85, 0.01),
 		"Stage 1 ordinary health pressure is approximately 15 percent lower"
 	)
@@ -103,7 +107,8 @@ func _run() -> void:
 				48.0 * EncounterDirector.ENEMY_HEALTH_MULTIPLIER
 					* health_curve[stage_index]
 					* health_pressure[stage_index]
-					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER,
+					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
+					* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER,
 				0.001
 			),
 			"Stage %d applies class and stage factors to standard health"
@@ -114,7 +119,8 @@ func _run() -> void:
 				priority_enemy.health,
 				74.0 * health_curve[stage_index]
 					* health_pressure[stage_index]
-					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER,
+					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
+					* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER,
 				0.001
 			),
 			"Stage %d applies only the stage factor to priority health"

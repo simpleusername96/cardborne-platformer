@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Builder = preload("res://scripts/combat/vehicle_stage_report_builder.gd")
+const ResultBuilder = preload("res://scripts/combat/vehicle_run_result_builder.gd")
 const ReportPanel = preload("res://scripts/ui/vehicle_stage_report_panel.gd")
 const ResultPanel = preload("res://scripts/ui/vehicle_result_panel.gd")
 
@@ -137,37 +138,40 @@ func _init() -> void:
 	await process_frame
 	var deployment_requested := [0]
 	result.deployment_requested.connect(func() -> void: deployment_requested[0] += 1)
-	_expect(result.open({
-		"stage_number":5,
-		"stage_title_key":"STAGE_DROWNED_RUINS_5",
-		"has_next_stage":false,
-		"run_time_seconds":258.0,
+	var final_records: Array = []
+	for stage_index in 5:
+		var stage_record := report.duplicate(true)
+		stage_record["stage_number"] = stage_index + 1
+		stage_record["has_next_stage"] = stage_index < 4
+		final_records.append(stage_record)
+	var final_result := ResultBuilder.build(final_records, {
+		"active_run_elapsed_seconds":258.0,
+		"hull":86.0,
+		"max_hull":120.0,
 		"health_ratio":0.72,
-		"upgrade":"UPGRADE_SPLIT_MUZZLE_TITLE",
 		"primary_hits":41,
 		"dash_uses":7,
 		"installations":3,
-	}), "final result accepts a complete summary")
+		"build_snapshot":{"upgrades":[]},
+		"loadout":{},
+	})
+	_expect(result.open(final_result), "final result accepts a complete aggregate")
 	await process_frame
 	var result_contract := result.debug_contract()
-	_expect(int(result_contract["summary_text_rows"]) == 1, "final result uses one summary TextRow")
-	_expect(int(result_contract["summary_values"]) == 3, "final summary preserves all three values")
-	_expect(int(result_contract["summary_surfaces"]) == 0, "final summary and detail sections remain unboxed")
 	_expect(int(result_contract["focusables"]) == 1, "final result exposes one direct Deployment action")
-	_expect(bool(result_contract["performance_visible"]), "final result preserves performance values")
-	_expect(bool(result_contract["reward_visible"]), "final result preserves reward values")
 	_expect(bool(result_contract["initial_focus_is_deployment"]), "final result initially focuses Deployment")
 	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Deployment is the primary command")
-	var joined_summary := " ".join(PackedStringArray(result_contract["summary_texts"]))
-	_expect("4:18" in joined_summary and "72" in joined_summary, "final summary preserves total run time and hull values")
-	_expect("41" in String(result_contract["performance_text"]) and "7" in String(result_contract["performance_text"]) and "3" in String(result_contract["performance_text"]), "performance section preserves all three counters")
+	_expect(int(result_contract["wide_columns"]) == 3 and int(result_contract["compact_tabs"]) == 3, "final result reuses responsive report body")
+	_expect(bool(result_contract["build_visible"]), "final result displays the frozen build rail")
+	_expect("4:18" in String(result_contract["summary_text"]), "final summary preserves cumulative active time")
+	_expect("86 / 120" in String(result_contract["summary_text"]), "final summary displays exact current and maximum Hull")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		result.refresh_localized_content()
 		result_contract = result.debug_contract()
-		var visible_text := " ".join(PackedStringArray(result_contract["summary_texts"])) + " " + String(result_contract["performance_text"]) + " " + String(result_contract["reward_text"]) + " " + String(result_contract["primary_action"])
-		_expect("RESULT_" not in visible_text and "UPGRADE_" not in visible_text, "%s final result contains no raw localization key" % locale)
-	(result.get("_first_button") as Button).pressed.emit()
+		var visible_text := String(result_contract["summary_text"]) + " " + String(result_contract["loadout_text"]) + " " + String(result_contract["reward_text"]) + " " + String(result_contract["primary_action"])
+		_expect("RESULT_" not in visible_text, "%s final result contains no raw localization key" % locale)
+	(result.get("_deployment") as Button).pressed.emit()
 	_expect(deployment_requested[0] == 1, "final command routes directly to Deployment")
 	result.queue_free()
 	await process_frame

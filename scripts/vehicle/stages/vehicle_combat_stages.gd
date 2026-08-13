@@ -10,7 +10,7 @@ const TacticCatalog = preload(
 )
 
 const STAGE_IDS: Array[StringName] = [&"stage_1", &"stage_2", &"stage_3", &"stage_4", &"stage_5"]
-const QUOTAS := [125, 166, 208, 250, 291]
+const QUOTAS := [48, 64, 80, 96, 112]
 const AUTHORED_COUNTS := [520, 660, 816, 1026, 1260]
 const ARRIVAL_WINDOWS := 3
 const SQUADS_PER_WINDOW := 4

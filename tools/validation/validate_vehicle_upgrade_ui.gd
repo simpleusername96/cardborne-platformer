@@ -14,6 +14,9 @@ const UpgradeChoiceRow = preload(
 const UpgradeChoicePanel = preload(
 	"res://scripts/ui/vehicle_upgrade_choice_panel.gd"
 )
+const UpgradeBuildRail = preload(
+	"res://scripts/ui/vehicle_upgrade_build_rail.gd"
+)
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
@@ -52,10 +55,78 @@ func _initialize() -> void:
 	_validate_authored_artwork()
 	var catalog := Catalog.new()
 	_validate_description_density(catalog)
+	await _validate_build_rail(catalog)
 	await _validate_intent_contract(catalog)
 	await _validate_category_body_art(catalog)
 	await _validate_triplet_matrix(catalog)
 	_finish()
+
+
+func _validate_build_rail(catalog: Catalog) -> void:
+	var rail := UpgradeBuildRail.new()
+	rail.theme = _theme
+	get_root().add_child(rail)
+	await _settle_ui()
+	rail.set_snapshot({"upgrades":[]})
+	var empty := rail.debug_contract()
+	_expect(
+		int(empty["columns"]) == 4
+			and int(empty["cell_count"]) == 4
+			and int(empty["filled_count"]) == 0
+			and int(empty["focusable_count"]) == 0
+			and bool(empty["scroll_enabled"]),
+		"empty build rail exposes exactly four outlined non-focusable cells"
+	)
+	var records: Array[Dictionary] = []
+	for definition in catalog.all_definitions().slice(0, 21):
+		var offer := OfferPresenter.snapshot(definition, 0)
+		records.append({
+			"id":definition.id,
+			"title_key":definition.title_key,
+			"description_key":offer["description_key"],
+			"artwork_asset_id":definition.artwork_asset_id,
+			"level":1,
+			"effect_rows":Array(offer["effect_rows"]).duplicate(true),
+		})
+	rail.set_snapshot({"upgrades":records.slice(0, 1)})
+	var first := rail.debug_contract()
+	_expect(
+		int(first["cell_count"]) == 4
+			and int(first["filled_count"]) == 1
+			and int(first["focusable_count"]) == 1
+			and Array(first["artwork_ids"]).size() == 1,
+		"first acquisition fills one image cell without changing the four-cell capacity"
+	)
+	_expect(rail.debug_open_first_preview(), "filled build cell opens the shared detail popover")
+	await _settle_ui()
+	_expect(bool(rail.debug_contract()["popover_visible"]), "one build detail popover becomes visible")
+	var cancel := InputEventAction.new()
+	cancel.action = &"ui_cancel"
+	cancel.pressed = true
+	rail.call("_input", cancel)
+	_expect(not bool(rail.debug_contract()["popover_visible"]), "Escape closes the build detail popover")
+	rail.set_snapshot({"upgrades":records.slice(0, 4)})
+	_expect(
+		int(rail.debug_contract()["cell_count"]) == 8,
+		"four filled cells reserve one spare four-column row"
+	)
+	rail.set_snapshot({"upgrades":records})
+	var dense := rail.debug_contract()
+	_expect(
+		int(dense["cell_count"]) == 24
+			and int(dense["filled_count"]) == 21
+			and int(dense["focusable_count"]) == 21
+			and Array(dense["artwork_ids"]).size() == 21,
+		"dense build rail caps at 24 cells and only filled image cells receive focus"
+	)
+	rail.set_compact_mode(true)
+	_expect(is_equal_approx(float(rail.debug_contract()["minimum_width"]), 216.0), "compact rail uses 216px width")
+	rail.set_compact_mode(false)
+	_expect(is_equal_approx(float(rail.debug_contract()["minimum_width"]), 248.0), "standard rail uses 248px width")
+	rail.set_large_mode(true)
+	_expect(is_equal_approx(float(rail.debug_contract()["minimum_width"]), 264.0), "large rail uses 264px width")
+	rail.queue_free()
+	await process_frame
 
 
 func _validate_description_density(catalog: VehicleUpgradeCatalog) -> void:

@@ -25,6 +25,12 @@ func _initialize() -> void:
 			"DEPLOY_CONTROL_AIM_FIRE",
 			"DEPLOY_CONTROL_AIM_PRIMARY_BINDING",
 			"RESULT_DEPLOYMENT",
+			"RESULT_ALL_STAGES",
+			"RESULT_HULL_EXACT",
+			"RESULT_TOTAL_DEFEATS",
+			"RESULT_BUILD_LOADOUT",
+			"RESULT_LOADOUT",
+			"RESULT_LOADOUT_NONE",
 			"REPORT_DEPLOYMENT",
 			"GUIDE_CATEGORY_ENEMIES",
 			"HUD_STAGE_LABEL",
@@ -64,19 +70,13 @@ func _initialize() -> void:
 		var ui := StageUI.new()
 		get_root().add_child(ui)
 		await process_frame
-		for stage_title_key in field_stage_titles:
-			var result_contract := ui.debug_modal_contract(
-				"result",
-				String(stage_title_key)
-			)
-			_expect(
-				String(result_contract["result_kicker"]).contains(
-					TranslationServer.translate(String(stage_title_key))
-				),
-				"%s result summary uses current stage title %s" % [
-					locale, stage_title_key,
-				]
-			)
+		var result_contract := ui.debug_modal_contract("result")
+		_expect(
+			String(result_contract["result_kicker"]).contains(
+				TranslationServer.translate("RESULT_ALL_STAGES")
+			),
+			"%s final result names the complete five-stage run" % locale
+		)
 		ui.queue_free()
 		await process_frame
 

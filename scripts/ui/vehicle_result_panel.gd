@@ -1,31 +1,86 @@
 class_name VehicleResultPanel
 extends VBoxContainer
 
-## Stage/final result composition. It formats a supplied summary and emits only
-## deployment intent.
+## Terminal report surface. Gameplay sends a frozen aggregate; this class only presents it.
 
 signal deployment_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
+const ReportBody = preload("res://scripts/ui/vehicle_combat_report_body.gd")
+const BuildRail = preload("res://scripts/ui/vehicle_upgrade_build_rail.gd")
 
 var _kicker: Label
 var _title: Label
-var _metric_labels: Array[Label] = []
-var _performance_title: Label
-var _performance_label: Label
-var _reward_title: Label
-var _reward_label: Label
-var _first_button: Button
-var _summary: Dictionary = {}
+var _summary: Label
+var _report_body
+var _build_rail
+var _loadout: Label
+var _counters: Label
+var _build_heading: Label
+var _reward: Label
+var _deployment: Button
+var _snapshot: Dictionary = {}
+var _force_compact := false
 
 
 func _ready() -> void:
 	name = "ResultPanel"
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_theme_constant_override("separation", 14)
+	add_theme_constant_override("separation", 10)
 	_build()
+
+
+func open(snapshot: Dictionary) -> bool:
+	if (
+		not bool(snapshot.get("complete_run", false))
+		or int(snapshot.get("stage_count", 0)) != 5
+		or int(snapshot.get("final_stage_number", 0)) != 5
+		or bool(snapshot.get("has_next_stage", true))
+	):
+		push_error("VehicleResultPanel.open requires a complete terminal five-stage aggregate.")
+		return false
+	_snapshot = snapshot.duplicate(true)
+	refresh_localized_content()
+	_deployment.grab_focus()
+	return true
+
+
+func refresh_localized_content() -> void:
+	if _snapshot.is_empty(): return
+	_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(_snapshot.get("stage_count", 5)))).replace("%s", tr("RESULT_ALL_STAGES"))
+	_title.text = tr("RESULT_TITLE_FINAL")
+	var seconds := maxi(0, roundi(float(_snapshot.get("active_run_elapsed_seconds", _snapshot.get("run_time_seconds", 0.0)))))
+	var hull := roundi(float(_snapshot.get("hull", 0.0)))
+	var max_hull := roundi(float(_snapshot.get("max_hull", 0.0)))
+	_summary.text = "%s  ·  %s  ·  %s" % [
+		tr("RESULT_TOTAL_PLAY_TIME") % ("%d:%02d" % [floori(seconds / 60.0), seconds % 60]),
+		tr("RESULT_HULL_EXACT").replace("%current%", str(hull)).replace("%max%", str(max_hull)),
+		tr("RESULT_TOTAL_DEFEATS") % int(_snapshot.get("total_defeats", 0)),
+	]
+	_report_body.set_snapshot(_snapshot)
+	_build_rail.set_snapshot(Dictionary(_snapshot.get("build_snapshot", {})))
+	_build_rail.refresh_localized_content()
+	_loadout.text = _loadout_text()
+	_counters.text = "%s  ·  %s  ·  %s" % [
+		tr("RESULT_PRIMARY_HITS") % int(_snapshot.get("primary_hits", 0)),
+		tr("RESULT_DASH_USES") % int(_snapshot.get("dash_uses", 0)),
+		tr("RESULT_INSTALLATIONS") % int(_snapshot.get("installations", 0)),
+	]
+	_build_heading.text = tr("RESULT_BUILD_LOADOUT")
+	_reward.text = "%s\n%s" % [tr(String(_snapshot.get("permanent_reward_key", "RESULT_RELAY_MODULE"))), tr(String(_snapshot.get("permanent_reward_detail_key", "RESULT_ROUTE_CONTINUES")))]
+	_deployment.text = tr("RESULT_DEPLOYMENT")
+	_apply_responsive_layout()
+
+
+func set_compact_mode(compact: bool) -> void:
+	_force_compact = compact
+	_apply_responsive_layout()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED: _apply_responsive_layout()
 
 
 func _build() -> void:
@@ -37,135 +92,67 @@ func _build() -> void:
 	_title.theme_type_variation = &"TitleLabel"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_title)
-	add_child(HSeparator.new())
-	var summary_row := Factory.text_row("", "", {
-		"separation":16,
-		"label_min_width":0.0,
-		"label_size":17,
-		"value_size":17,
-		"label_color":Art.TEXT_PRIMARY,
-		"value_color":Art.TEXT_PRIMARY,
-	})
-	summary_row.name = "SummaryTextRow"
-	summary_row.set_meta("shared_component", "TextRow")
-	add_child(summary_row)
-	var left_metric := summary_row.get_child(0) as Label
-	var right_metric := summary_row.get_child(1) as Label
-	var center_metric := Factory.label("", 17, Art.TEXT_PRIMARY)
-	center_metric.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	center_metric.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	center_metric.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary_row.add_child(center_metric)
-	summary_row.move_child(center_metric, 1)
-	left_metric.theme_type_variation = &"MetricLabel"
-	left_metric.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	right_metric.theme_type_variation = &"MetricLabel"
-	right_metric.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	center_metric.theme_type_variation = &"MetricLabel"
-	_metric_labels.assign([left_metric, center_metric, right_metric])
-	var detail_row := HBoxContainer.new()
-	detail_row.add_theme_constant_override("separation", 22)
-	detail_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(detail_row)
-	var performance_box := VBoxContainer.new()
-	performance_box.add_theme_constant_override("separation", 10)
-	performance_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_row.add_child(performance_box)
-	_performance_title = Factory.label(
-		tr("RESULT_PERFORMANCE"),
-		20,
-		Art.MUSTARD
-	)
-	_performance_title.theme_type_variation = &"SectionLabel"
-	performance_box.add_child(_performance_title)
-	_performance_label = Factory.label("", 18, Art.IVORY_BRIGHT)
-	_performance_label.theme_type_variation = &"MetricLabel"
-	_performance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	performance_box.add_child(_performance_label)
-	detail_row.add_child(VSeparator.new())
-	var reward_box := VBoxContainer.new()
-	reward_box.add_theme_constant_override("separation", 10)
-	reward_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_row.add_child(reward_box)
-	_reward_title = Factory.label(tr("RESULT_REWARD"), 20, Art.MUSTARD)
-	_reward_title.theme_type_variation = &"SectionLabel"
-	reward_box.add_child(_reward_title)
-	_reward_label = Factory.label("", 18, Art.IVORY_BRIGHT)
-	_reward_label.theme_type_variation = &"MetricLabel"
-	_reward_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	reward_box.add_child(_reward_label)
-	var actions := HBoxContainer.new()
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 14)
+	_summary = Factory.label("", 17, Art.MINT_SOFT)
+	_summary.theme_type_variation = &"MetricLabel"
+	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_summary)
+	var scroll := ScrollContainer.new()
+	scroll.name = "ResultContentScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(scroll)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 12)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	_report_body = ReportBody.new()
+	_report_body.custom_minimum_size.y = 170.0
+	content.add_child(_report_body)
+	_build_heading = Factory.section_heading("")
+	content.add_child(_build_heading)
+	_build_rail = BuildRail.new()
+	_build_rail.custom_minimum_size.y = 96.0
+	content.add_child(_build_rail)
+	_loadout = Factory.label("", 16, Art.TEXT_PRIMARY)
+	_loadout.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(_loadout)
+	_counters = Factory.label("", 16, Art.TEXT_PRIMARY)
+	_counters.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(_counters)
+	_reward = Factory.label("", 16, Art.MINT_SOFT)
+	_reward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(_reward)
+	var actions := CenterContainer.new()
 	add_child(actions)
-	_first_button = Factory.command_button(
-		tr("RESULT_DEPLOYMENT"),
-		Factory.COMMAND_PRIMARY
-	)
-	_first_button.custom_minimum_size = Vector2(300.0, 48.0)
-	Factory.apply_font_size(_first_button, 22)
-	_first_button.pressed.connect(func() -> void: deployment_requested.emit())
-	actions.add_child(_first_button)
+	_deployment = Factory.command_button("", Factory.COMMAND_PRIMARY)
+	_deployment.custom_minimum_size = Vector2(300.0, 48.0)
+	Factory.apply_font_size(_deployment, 22)
+	_deployment.pressed.connect(func() -> void: deployment_requested.emit())
+	actions.add_child(_deployment)
 
 
-func open(summary: Dictionary) -> bool:
-	var stage_title_key := String(summary.get("stage_title_key", ""))
-	if stage_title_key.is_empty():
-		push_error("VehicleResultPanel.open requires stage_title_key.")
-		return false
-	_summary = summary.duplicate(true)
-	refresh_localized_content()
-	_first_button.grab_focus()
-	return true
+func _loadout_text() -> String:
+	var loadout := Dictionary(_snapshot.get("loadout", {}))
+	var labels: Array[String] = []
+	for key in ["primary_title_key", "active_title_key"]:
+		var title_key := String(loadout.get(key, ""))
+		if not title_key.is_empty(): labels.append(tr(title_key))
+	for title_key_variant in Array(loadout.get("secondary_title_keys", [])):
+		var title_key := String(title_key_variant)
+		if not title_key.is_empty(): labels.append(tr(title_key))
+	if labels.is_empty(): return tr("RESULT_LOADOUT_NONE")
+	return tr("RESULT_LOADOUT") % " · ".join(labels)
 
 
-func refresh_localized_content() -> void:
-	if _summary.is_empty():
-		return
-	var stage_title_key := String(_summary["stage_title_key"])
-	var has_next := bool(_summary.get("has_next_stage", false))
-	_kicker.text = (
-		tr("RESULT_STAGE_COMPLETE")
-		.replace("%d", str(int(_summary.get("stage_number", 1))))
-		.replace("%s", tr(stage_title_key))
-	)
-	_title.text = tr(
-		"RESULT_TITLE_CONTINUE"
-		if has_next
-		else "RESULT_TITLE_FINAL"
-	)
-	_performance_title.text = tr("RESULT_PERFORMANCE")
-	_reward_title.text = tr("RESULT_REWARD")
-	_first_button.text = tr("RESULT_DEPLOYMENT")
-	var run_time_seconds := maxi(
-		0, roundi(float(_summary.get("run_time_seconds", 0.0)))
-	)
-	_metric_labels[0].text = tr("RESULT_TOTAL_PLAY_TIME") % (
-		"%d:%02d" % [floori(float(run_time_seconds) / 60.0), run_time_seconds % 60]
-	)
-	_metric_labels[1].text = tr("RESULT_HULL") % roundi(
-		float(_summary.get("health_ratio", 0.0)) * 100.0
-	)
-	_metric_labels[2].text = tr("RESULT_UPGRADE") % tr(
-		String(_summary.get("upgrade", "UPGRADE_NONE"))
-	)
-	_performance_label.text = "%s\n%s\n%s" % [
-		tr("RESULT_PRIMARY_HITS") % int(_summary.get("primary_hits", 0)),
-		tr("RESULT_DASH_USES") % int(_summary.get("dash_uses", 0)),
-		tr("RESULT_INSTALLATIONS") % int(
-			_summary.get("installations", 0)
-		),
-	]
-	_reward_label.text = "%s\n%s" % [
-		tr("RESULT_RELAY_MODULE"),
-		tr("RESULT_ROUTE_CONTINUES"),
-	]
-
-
-func set_compact_mode(compact: bool) -> void:
-	add_theme_constant_override("separation", 9 if compact else 14)
-	Factory.apply_font_size(_title, 30 if compact else 40)
-	_first_button.custom_minimum_size.y = 44.0 if compact else 48.0
+func _apply_responsive_layout() -> void:
+	var compact := _force_compact or (is_inside_tree() and get_window().size.x < 1180)
+	if is_instance_valid(_report_body):
+		_report_body.custom_minimum_size.y = 150.0 if compact else 170.0
+		_report_body.set_compact_mode(compact)
+	if is_instance_valid(_build_rail): _build_rail.set_compact_mode(compact)
+	if is_instance_valid(_title): Factory.apply_font_size(_title, 30 if compact else 40)
+	if is_instance_valid(_deployment): _deployment.custom_minimum_size.y = 44.0 if compact else 48.0
 
 
 func kicker_text() -> String:
@@ -173,21 +160,28 @@ func kicker_text() -> String:
 
 
 func debug_contract() -> Dictionary:
-	var summary_texts: Array[String] = []
-	for label in _metric_labels:
-		summary_texts.append(label.text)
 	return {
-		"focusables":find_children("*", "Button", true, false).size(),
-		"primary_size":_first_button.custom_minimum_size,
-		"summary_text_rows":find_children("SummaryTextRow", "HBoxContainer", true, false).size(),
-		"summary_surfaces":find_children("*", "PanelContainer", true, false).size(),
-		"summary_values":_metric_labels.size(),
-		"performance_visible":not _performance_label.text.is_empty(),
-		"reward_visible":not _reward_label.text.is_empty(),
-		"initial_focus_is_deployment":_first_button.has_focus(),
-		"summary_texts":summary_texts,
-		"performance_text":_performance_label.text,
-		"reward_text":_reward_label.text,
-		"primary_action":_first_button.text,
-		"primary_variation":_first_button.theme_type_variation,
+		"focusables": _focusable_button_count(),
+		"fixed_actions": 1,
+		"primary_size": _deployment.custom_minimum_size,
+		"summary_text": _summary.text,
+		"wide_columns": _report_body.debug_contract()["wide_columns"],
+		"compact_tabs": _report_body.debug_contract()["compact_tabs"],
+		"scroll_views": _report_body.debug_contract()["scroll_views"],
+		"build_visible": _build_rail.visible,
+		"loadout_text": _loadout.text,
+		"counter_text": _counters.text,
+		"reward_text": _reward.text,
+		"primary_action": _deployment.text,
+		"primary_variation": _deployment.theme_type_variation,
+		"initial_focus_is_deployment": _deployment.has_focus(),
 	}
+
+
+func _focusable_button_count() -> int:
+	var count := 0
+	for node in find_children("*", "Button", true, false):
+		var button := node as Button
+		if button.focus_mode != Control.FOCUS_NONE and not button.disabled:
+			count += 1
+	return count

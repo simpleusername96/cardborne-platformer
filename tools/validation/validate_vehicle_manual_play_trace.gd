@@ -91,6 +91,7 @@ func _run() -> void:
 			"ordinary_authored_pressure_cap":276,
 			"ordinary_materialized_cap":48,
 			"ordinary_virtual_reserve":176,
+			"ordinary_quota_canceled_reserve":52,
 			"ordinary_reserved_arrival_slots":12,
 			"ordinary_materialized":active,
 			"ordinary_center_in_viewport":visible,
@@ -137,6 +138,7 @@ func _run() -> void:
 		pressure_definitions.has("ordinary_authored_pressure_cap")
 			and pressure_definitions.has("ordinary_materialized_cap")
 			and pressure_definitions.has("ordinary_virtual_reserve")
+			and pressure_definitions.has("ordinary_quota_canceled_reserve")
 			and pressure_definitions.has("ordinary_reserved_arrival_slots")
 			and pressure_definitions.has("ordinary_materialized"),
 		"schema names authored pressure, exact materialization, virtual reserve, and cued slots separately"
@@ -173,11 +175,12 @@ func _run() -> void:
 			and int(slowest_pressure.get("ordinary_authored_pressure_cap", 0)) == 276
 			and int(slowest_pressure.get("ordinary_materialized_cap", 0)) == 48
 			and int(slowest_pressure.get("ordinary_virtual_reserve", 0)) == 176
+			and int(slowest_pressure.get("ordinary_quota_canceled_reserve", 0)) == 52
 			and int(slowest_pressure.get("ordinary_reserved_arrival_slots", 0)) == 12
 			and int(slowest_pressure.get("ordinary_materialized", 0)) == 169
 			and int(slowest_pressure.get("ordinary_center_in_viewport", 0)) == 39
 			and int(slowest_pressure.get("ordinary_offscreen_active", 0)) == 130,
-		"the slowest frame retains the caller-provided authored/materialized/reserve split"
+		"the slowest frame retains the authored/materialized/reserve/quota split"
 	)
 	_expect(
 		slowest.get("render_cpu_ms") == null
@@ -249,6 +252,7 @@ func _run() -> void:
 			"ordinary_authored_pressure_cap":124,
 			"ordinary_materialized_cap":32,
 			"ordinary_virtual_reserve":121,
+			"ordinary_quota_canceled_reserve":0,
 			"ordinary_reserved_arrival_slots":0,
 			"ordinary_materialized":3,
 			"ordinary_center_in_viewport":2,

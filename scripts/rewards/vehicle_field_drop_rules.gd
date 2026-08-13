@@ -12,10 +12,10 @@ static func experience_for_enemy(enemy: EnemyState) -> int:
 	var role := enemy.role
 	if role == &"stage_boss":
 		return 24
-	var base := 2
+	var base := 5
 	match enemy.health_class:
-		&"swarm": base = 1
-		&"priority": base = 4
+		&"swarm": base = 3
+		&"priority": base = 10
 	return ceili(float(base) * (1.5 if not enemy.elite_trait.is_empty() else 1.0))
 
 

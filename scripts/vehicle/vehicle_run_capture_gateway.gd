@@ -37,8 +37,13 @@ const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_pro
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
+const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
+const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const StageReportBuilder = preload(
 	"res://scripts/combat/vehicle_stage_report_builder.gd"
+)
+const RunResultBuilder = preload(
+	"res://scripts/combat/vehicle_run_result_builder.gd"
 )
 const VisualEventCaptureFixture = preload(
 	"res://scripts/presentation/components/vehicle_visual_event_capture_fixture.gd"
@@ -224,18 +229,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 			_show_stage_report(true)
 		&"result":
 			_run.capture_set_mode(&"result")
-			_run._ui.show_result({
-				"stage_number":1,
-				"stage_title_key":_stage_title_key(0),
-				"has_next_stage":true,
-				"next_stage_key":_stage_title_key(1),
-				"run_time_seconds":258.0,
-				"health_ratio":0.76,
-				"upgrade":"UPGRADE_PICKUP_RADIUS_TITLE",
-				"primary_hits":42,
-				"dash_uses":11,
-				"installations":5,
-			})
+			_run._ui.show_result(_final_result_fixture())
 
 
 func snapshot(kind: StringName) -> Variant:
@@ -337,6 +331,47 @@ func _show_stage_report(failed: bool) -> void:
 		report_data,
 		failed
 	))
+
+
+func _final_result_fixture() -> Dictionary:
+	var stage_records: Array = []
+	for stage_index in StageCatalog.STAGE_IDS.size():
+		var telemetry := StageTelemetry.new()
+		telemetry.record_outgoing(&"primary", &"kinetic", 180.0 + stage_index * 30.0)
+		telemetry.record_outgoing(&"seeker", &"kinetic", 72.0 + stage_index * 12.0)
+		telemetry.record_outgoing(&"thermal_burst", &"thermal", 24.0 + stage_index * 6.0)
+		telemetry.record_status_application(&"chill")
+		telemetry.record_defeat(&"scrap_drone")
+		telemetry.record_defeat(&"scrap_drone")
+		telemetry.record_defeat(&"needle_drone", &"armored" if stage_index % 2 == 0 else &"")
+		stage_records.append(StageReportBuilder.build(telemetry.freeze_stage(), {
+			"number":stage_index + 1,
+			"title_key":_stage_title_key(stage_index),
+			"has_next_stage":stage_index < StageCatalog.STAGE_IDS.size() - 1,
+			"run_time_seconds":64.0 * (stage_index + 1),
+			"hull":120.0 - stage_index * 9.0,
+			"max_hull":120.0,
+		}))
+	var fixture_build := RunBuild.new(UpgradeCatalog.new())
+	fixture_build.apply(&"pickup_radius")
+	fixture_build.apply(&"thermal_burst")
+	fixture_build.apply(&"homing_missiles")
+	fixture_build.apply(&"homing_missiles")
+	return RunResultBuilder.build(stage_records, {
+		"active_run_elapsed_seconds":320.0,
+		"hull":84.0,
+		"max_hull":120.0,
+		"health_ratio":0.7,
+		"primary_hits":184,
+		"dash_uses":24,
+		"installations":11,
+		"build_snapshot":BuildSnapshotBuilder.build(fixture_build, fixture_build.catalog, [], [], {}),
+		"loadout":{
+			"primary_title_key":"PRIMARY_PULSE_CANNON",
+			"secondary_title_keys":["UPGRADE_HOMING_MISSILES_TITLE"],
+			"active_title_key":"ACTIVE_WEAPON_EMP_NAME",
+		},
+	})
 
 
 func prepare_stage(stage_index: int, preserve_upgrades: bool = false) -> void:
@@ -909,6 +944,14 @@ func _capture_level_up_evidence() -> void:
 	_run._ui.show_upgrade(enhancement.slice(0, 2))
 	await _settle_capture()
 	_save_capture("06d-two-card-tail.png")
+	for upgrade_id in [&"pickup_radius", &"thermal_burst", &"homing_missiles"]:
+		_run.run_build.apply(upgrade_id)
+	_run.run_build.apply(&"homing_missiles")
+	_run._ui.show_upgrade(enhancement, _run._build_snapshot())
+	await _settle_capture()
+	_run._ui.debug_open_first_build_preview()
+	await _settle_capture()
+	_save_capture("06e-partial-build-popover.png")
 
 
 func _upgrade_offer_fixture(records: Array) -> Array[Dictionary]:
@@ -1790,7 +1833,7 @@ func _refresh_combat_capture() -> void:
 		_run.effects,
 		_run._visible_world_rect(0.0),
 		_run.player_position,
-		_run.run_time,
+		_run.active_run_elapsed_seconds,
 		true,
 		_run._aim_target_id,
 		_run._runtime_combat_presentation_snapshot()

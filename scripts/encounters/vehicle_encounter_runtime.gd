@@ -55,6 +55,8 @@ var _virtual_reserve_units := 0
 var _materialized_spawned := 0
 var _next_metric_sample := 0.0
 var _spawning_enabled := true
+var _quota_sealed := false
+var _quota_canceled_reserve := 0
 var _spawn_allocator := SpawnAllocator.new()
 var _engagement_director := EngagementDirector.new()
 var _geometry_snapshot: Variant
@@ -119,6 +121,8 @@ func configure(
 	_materialized_spawned = 0
 	_next_metric_sample = 0.0
 	_spawning_enabled = true
+	_quota_sealed = false
+	_quota_canceled_reserve = 0
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
 	_geometry_snapshot = geometry_snapshot
@@ -144,6 +148,31 @@ func stop_spawning() -> void:
 	_reserved_arrival_slots = 0
 	_virtual_reserve_units = 0
 	_packet_inflight = false
+
+
+func seal_for_quota() -> void:
+	## A visible cue is a promise: keep its reserved births, but cancel every
+	## not-yet-cued authored unit before the boss transition begins.
+	if _quota_sealed:
+		return
+	_quota_sealed = true
+	_spawning_enabled = false
+	_window_queue.clear()
+	var admitted_units := _queued_spawn_count()
+	var canceled_units := maxi(0, _virtual_reserve_units - admitted_units)
+	_quota_canceled_reserve += canceled_units
+	_virtual_reserve_units = admitted_units
+	_packet_inflight = not _spawn_queue.is_empty()
+	_timeline.append({
+		"kind":&"quota_seal",
+		"time":elapsed,
+		"canceled_reserve":canceled_units,
+		"admitted_units":admitted_units,
+	})
+
+
+func quota_sealed() -> bool:
+	return _quota_sealed
 
 
 func spawning_enabled() -> bool:
@@ -234,8 +263,8 @@ func tick(
 	_max_attack_family_overlap = maxi(_max_attack_family_overlap, active_attack_families.size())
 	var cues: Array[Dictionary] = []
 	var spawns: Array[Dictionary] = []
+	_process_due_round(active_mobile_count, step, spawns)
 	if _spawning_enabled:
-		_process_due_round(active_mobile_count, step, spawns)
 		_complete_inflight_packet_if_ready()
 		if _packet_inflight and _has_ready_unactivated_packet():
 			_packet_fence_blocked_seconds += step
@@ -249,6 +278,8 @@ func tick(
 			visible_world,
 			cues
 		)
+		_complete_inflight_packet_if_ready()
+	else:
 		_complete_inflight_packet_if_ready()
 	return {"cues":cues, "spawns":spawns}
 
@@ -311,6 +342,8 @@ func debug_snapshot() -> Dictionary:
 		"authored_population":_authored_population,
 		"materialized_spawned":_materialized_spawned,
 		"virtual_reserve":_authored_reserve_count(),
+		"quota_sealed":_quota_sealed,
+		"quota_canceled_reserve":_quota_canceled_reserve,
 		"materialized_active_count":int(_pressure_snapshot.get("active", 0)),
 		"authored_reserve_units":_authored_reserve_count(),
 		"threat_budget":threat_budget(),
@@ -352,6 +385,7 @@ func fill_current_pressure(output: Dictionary) -> void:
 	output["ordinary_authored_pressure_cap"] = authored_pressure_cap()
 	output["ordinary_materialized_cap"] = materialized_active_cap()
 	output["ordinary_virtual_reserve"] = _authored_reserve_count()
+	output["ordinary_quota_canceled_reserve"] = _quota_canceled_reserve
 	output["ordinary_reserved_arrival_slots"] = _reserved_arrival_slots
 	output["ordinary_materialized"] = active
 	# Existing probes still use these names; the explicit fields above are the

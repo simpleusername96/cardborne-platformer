@@ -56,8 +56,8 @@ func _check_stage_one_continuation(run) -> void:
 	run.secondary_runtime.seeker_cooldown = 0.8
 	run.run_build.apply(&"chassis_speed")
 	run.visited_cells[explored_cell] = true
-	run.run_time = 125.0
-	run.stage_started_at = 100.0
+	run.active_run_elapsed_seconds = 125.0
+	run.stage_started_at_active_run_seconds = 100.0
 	var field_fingerprint := int(run.field_layout.fingerprint)
 	var terrain_before := hash(var_to_str(run.terrain_runtime.snapshot()))
 	var ordinary := _append_enemy(run, {

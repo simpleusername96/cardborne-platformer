@@ -9,7 +9,7 @@ const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const EXPECTED_MOBILE_COUNTS := [520, 660, 816, 1026, 1260]
-const EXPECTED_QUOTAS := [125, 166, 208, 250, 291]
+const EXPECTED_QUOTAS := [48, 64, 80, 96, 112]
 const EXPECTED_HARD_MATERIALIZED_CAPS := [1, 40, 48, 48, 48]
 const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [1, 124, 172, 224, 276]
 

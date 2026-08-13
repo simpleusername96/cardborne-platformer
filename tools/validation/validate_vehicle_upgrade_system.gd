@@ -47,6 +47,7 @@ func _initialize() -> void:
 	_validate_active_lock(catalog)
 	_validate_offers(catalog)
 	_validate_stats(catalog)
+	_validate_acquisition_order(catalog)
 	for retired_id in RETIRED_IDS:
 		_expect(
 			catalog.get_definition(retired_id) == null,
@@ -432,6 +433,28 @@ func _validate_stats(catalog: Catalog) -> void:
 			"Lifesteal exposes its exact damage-healing percentage"
 		)
 	_validate_element_stats(catalog)
+
+
+func _validate_acquisition_order(catalog: Catalog) -> void:
+	var build := RunBuild.new(catalog)
+	_expect(
+		bool(build.apply(&"chassis_speed").get("applied", false))
+			and bool(build.apply(&"lifesteal").get("applied", false))
+			and bool(build.apply(&"chassis_speed").get("applied", false)),
+		"fixture accepts first acquisitions and an owned-card level-up"
+	)
+	_expect(
+		build.acquisition_order == [&"chassis_speed", &"lifesteal"],
+		"first-acquisition order is stable and does not duplicate an upgraded card"
+	)
+	var rejected := build.apply(&"missing_upgrade")
+	_expect(
+		not bool(rejected.get("applied", false))
+			and build.acquisition_order == [&"chassis_speed", &"lifesteal"],
+		"rejected applications do not append a build-grid record"
+	)
+	build.reset()
+	_expect(build.acquisition_order.is_empty(), "run reset clears build-grid acquisition order")
 
 
 func _validate_element_stats(catalog: Catalog) -> void:

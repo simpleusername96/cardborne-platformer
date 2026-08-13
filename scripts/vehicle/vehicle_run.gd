@@ -100,6 +100,7 @@ const DashUpgradeRuntime = preload(
 	"res://scripts/player/vehicle_dash_upgrade_runtime.gd"
 )
 const StageReportBuilder = preload("res://scripts/combat/vehicle_stage_report_builder.gd")
+const RunResultBuilder = preload("res://scripts/combat/vehicle_run_result_builder.gd")
 const CaptureDriver = preload("res://scripts/vehicle/vehicle_run_capture_driver.gd")
 const CaptureGateway = preload("res://scripts/vehicle/vehicle_run_capture_gateway.gd")
 
@@ -317,8 +318,8 @@ var boss_started := false
 var boss_phase_two_announced := false
 var boss_arrival_position := Vector2.ZERO
 var stage_complete := false
-var run_time := 0.0
-var stage_started_at := 0.0
+var active_run_elapsed_seconds := 0.0
+var stage_started_at_active_run_seconds := 0.0
 var run_index := 0
 var current_stage_index := 0
 var current_stage_id: StringName = StageCatalog.STAGE_IDS[0]
@@ -501,6 +502,7 @@ func capture_set_mode(mode_name: StringName) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_advance_active_run_clock(delta)
 	var performance_active := is_instance_valid(_performance_recorder)
 	var manual_trace_active := (
 		is_instance_valid(_manual_performance_trace)
@@ -525,7 +527,6 @@ func _physics_process(delta: float) -> void:
 			(_far_enemy_simulation_bucket + 1)
 			% FAR_ENEMY_SIMULATION_BUCKET_COUNT
 		)
-		run_time += delta
 		var section_started := Time.get_ticks_usec() if _performance_detail_sample_active else 0
 		_update_player(delta)
 		_refresh_visible_world_runtime_ranges()
@@ -664,7 +665,7 @@ func _process(delta: float) -> void:
 			effects,
 			_visible_world_rect(0.0),
 			player_position,
-			run_time,
+			active_run_elapsed_seconds,
 			presentation_active,
 			_aim_target_id,
 			_runtime_combat_presentation_snapshot(),
@@ -878,8 +879,8 @@ func _reset_run(
 	completed_group_rewards.clear()
 	_pending_stage_report.clear()
 	if not preserve_upgrades:
-		run_time = 0.0
-	stage_started_at = run_time
+		_reset_active_run_clock()
+	stage_started_at_active_run_seconds = active_run_elapsed_seconds
 	if not preserve_upgrades:
 		visited_cells.clear()
 	discovered_markers.clear()
@@ -979,6 +980,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 			* float(stage_curve["ordinary_health_pressure"])
 			* float(difficulty_profile["health"])
 			* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
+			* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER
 		)
 	var position: Vector2 = spec["pos"]
 	var speed := EnemySpeedProfile.effective_speed(archetype, current_stage_index, selected_run_difficulty)
@@ -1000,7 +1002,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.speed = speed
 	enemy.radius = float(definition["radius"])
 	enemy.visual_radius = Art.enemy_visual_radius(archetype)
-	enemy.projectile_hit_radius = enemy.visual_radius
+	enemy.projectile_hit_radius = EnemyArchetypes.projectile_target_radius(archetype)
 	enemy.health_class = health_class
 	enemy.health_visible_timer = 0.0
 	enemy.threat_cost = float(definition["threat_cost"])
@@ -1151,6 +1153,20 @@ func _rebuild_enemy_runtime_indexes() -> void:
 
 func _simulation_active() -> bool:
 	return mode == RunMode.PLAYING
+
+
+func _run_clock_active() -> bool:
+	return mode in [RunMode.PLAYING, RunMode.UPGRADE]
+
+
+func _advance_active_run_clock(delta: float) -> void:
+	if _run_clock_active():
+		active_run_elapsed_seconds += maxf(0.0, delta)
+
+
+func _reset_active_run_clock() -> void:
+	active_run_elapsed_seconds = 0.0
+	stage_started_at_active_run_seconds = 0.0
 
 
 func _update_encounter(delta: float) -> void:
@@ -4436,6 +4452,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	)
 	if _is_countable_stage_enemy(enemy):
 		if stage_flow.record_countable_defeat():
+			encounter_runtime.seal_for_quota()
 			boss_arrival_position = _choose_boss_arrival_anchor()
 			discovered_markers["boss_warning"] = true
 			_discover_guide(StringName("boss_stage_%d" % (current_stage_index + 1)))
@@ -5496,7 +5513,7 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 		"number":int(profile["number"]),
 		"title_key":String(profile["title_key"]),
 		"has_next_stage":has_next_stage,
-		"run_time_seconds":maxf(0.0, run_time),
+		"run_time_seconds":maxf(0.0, active_run_elapsed_seconds),
 		"hull":player_health,
 		"max_hull":_player_max_health(),
 	}
@@ -5581,7 +5598,7 @@ func _begin_next_stage_continuation() -> void:
 		SpatialGrid.DEFAULT_CELL_SIZE
 	)
 	enemy_grid.rebuild(enemies)
-	stage_started_at = run_time
+	stage_started_at_active_run_seconds = active_run_elapsed_seconds
 	mode = RunMode.PLAYING
 	_hud_presenter.reset()
 	_ui.show_gameplay()
@@ -5614,20 +5631,34 @@ func _continuation_packets(stage_id: StringName) -> Array[Dictionary]:
 
 func _show_final_result() -> void:
 	mode = RunMode.RESULT
-	var profile := StageCatalog.profile(current_stage_id)
-	_ui.show_result({
-		"stage_number": int(profile["number"]),
-		"stage_title_key": String(profile["title_key"]),
-		"has_next_stage": false,
-		"next_stage_key": "",
-		"run_time_seconds": maxf(0.0, run_time),
-		"health_ratio": player_health / _player_max_health(),
-		"upgrade": selected_upgrade_title_key,
-		"primary_hits": stats_primary_hits,
-		"dash_uses": stats_dash_uses,
-		"installations": stats_installations,
-		"stage_history": completed_stage_reports.duplicate(true),
-	})
+	var active_weapon_snapshot := active_weapon_runtime.snapshot(
+		run_build, 1.5 if persistent_relay_module else 0.0
+	)
+	var active_weapon_definition = active_weapon_runtime.catalog.get_definition(
+		StringName(active_weapon_snapshot.get("weapon_id", &"emp"))
+	)
+	var secondary_titles: Array[String] = []
+	for secondary in secondary_runtime.equipped_families(run_build):
+		secondary_titles.append(String(secondary.get("name_key", "")))
+	_ui.show_result(RunResultBuilder.build(completed_stage_reports, {
+		"active_run_elapsed_seconds":active_run_elapsed_seconds,
+		"hull":player_health,
+		"max_hull":_player_max_health(),
+		"health_ratio":player_health / _player_max_health(),
+		"primary_hits":stats_primary_hits,
+		"dash_uses":stats_dash_uses,
+		"installations":stats_installations,
+		"build_snapshot":_build_snapshot(),
+		"loadout":{
+			"primary_title_key":"PRIMARY_PULSE_CANNON",
+			"secondary_title_keys":secondary_titles,
+			"active_title_key":(
+				String(active_weapon_definition.name_key)
+				if active_weapon_definition != null
+				else "ACTIVE_WEAPON_EMP_NAME"
+			),
+		},
+	}))
 	_play_sound(&"card", 0.72)
 	_set_mouse_for_mode()
 
@@ -6002,7 +6033,7 @@ func _fill_combat_presentation_snapshot(
 	snapshot["muzzle_flash"] = player_muzzle_flash
 	snapshot["barrier_strength"] = player_barrier_strength
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
-	snapshot["run_time"] = run_time
+	snapshot["run_time"] = active_run_elapsed_seconds
 	snapshot["secondary_visual_tier"] = 0
 	snapshot["orbiting_blade_level"] = run_build.level_of(&"orbiting_blades")
 	snapshot["secondary"] = secondary
@@ -6448,6 +6479,7 @@ func _prepare_manual_performance_trace() -> void:
 				"ordinary_authored_pressure_cap":"Logical authored ordinary pressure target for the current beat.",
 				"ordinary_materialized_cap":"Maximum exact ordinary combat actors for the current beat.",
 				"ordinary_virtual_reserve":"Authored ordinary units held as scheduler data without combat state.",
+				"ordinary_quota_canceled_reserve":"Authored ordinary units canceled when the defeat quota sealed new admissions.",
 				"ordinary_reserved_arrival_slots":"Exact slots promised by cues whose births are still pending.",
 				"ordinary_materialized":"Map-wide exact cap-counting ordinary combat actors.",
 				"ordinary_center_in_viewport":"Ordinary enemy bodies whose center is inside the visible world rectangle.",
@@ -6520,9 +6552,10 @@ func _fill_manual_performance_frame() -> void:
 	_manual_performance_context["stage_id"] = String(current_stage_id)
 	_manual_performance_context["stage_index"] = current_stage_index
 	_manual_performance_context["encounter_beat"] = encounter_runtime.current_beat
-	_manual_performance_context["run_time_seconds"] = run_time
+	_manual_performance_context["run_time_seconds"] = active_run_elapsed_seconds
 	_manual_performance_context["stage_time_seconds"] = maxf(
-		0.0, run_time - stage_started_at
+		0.0,
+		active_run_elapsed_seconds - stage_started_at_active_run_seconds
 	)
 	_manual_performance_context["run_mode"] = "playing"
 

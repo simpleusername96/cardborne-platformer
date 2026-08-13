@@ -12,6 +12,9 @@ const SPEED := [1.0, 1.01, 1.02, 1.03, 1.04]
 const ORDINARY_HEALTH_PRESSURE := [1.15, 1.55, 1.70, 1.85, 2.00]
 const ORDINARY_DAMAGE_PRESSURE := [0.98, 1.30, 1.42, 1.54, 1.66]
 const ORDINARY_HEALTH_MULTIPLIER := 2.60
+# The reduced materialized population uses one final durability policy instead
+# of duplicating a 20% change across every archetype row.
+const ORDINARY_DURABILITY_MULTIPLIER := 1.20
 
 const BOSS_BASE_HEALTH := [1250.0, 1350.0, 1450.0, 1550.0, 1650.0]
 const BOSS_HEALTH_MULTIPLIERS := [4.20, 4.30, 4.40, 4.50, 4.60]
@@ -78,6 +81,7 @@ static func debug_contract() -> Dictionary:
 		"ordinary_health_pressure":ORDINARY_HEALTH_PRESSURE.duplicate(),
 		"ordinary_damage_pressure":ORDINARY_DAMAGE_PRESSURE.duplicate(),
 		"ordinary_health_multiplier":ORDINARY_HEALTH_MULTIPLIER,
+		"ordinary_durability_multiplier":ORDINARY_DURABILITY_MULTIPLIER,
 		"boss_base_health":BOSS_BASE_HEALTH.duplicate(),
 		"boss_health_multipliers":BOSS_HEALTH_MULTIPLIERS.duplicate(),
 		"boss_damage_multipliers":BOSS_DAMAGE_MULTIPLIERS.duplicate(),

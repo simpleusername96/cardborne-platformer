@@ -249,6 +249,7 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 		* float(stage_two_curve["health"])
 		* float(stage_two_curve["ordinary_health_pressure"])
 		* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
+		* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER
 	)
 	_expect(
 		String(outside_health["value_key"]) == "GUIDE_VALUE_HP_RANGE"

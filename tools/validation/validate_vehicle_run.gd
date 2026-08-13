@@ -7,6 +7,7 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyTargetingPolicy = preload(
@@ -425,7 +426,7 @@ func _check_status_damage_feedback(run) -> void:
 
 func _check_visual_collision_separation(run) -> void:
 	for fixture in [
-		[&"chaser", 18.0, 44.0],
+		[&"chaser", 18.0, 48.0],
 		[&"turret", 30.0, 62.0],
 		[&"stage_boss", 76.0, 146.0],
 	]:
@@ -440,7 +441,7 @@ func _check_visual_collision_separation(run) -> void:
 				and is_equal_approx(enemy.radius, float(fixture[1]))
 				and is_equal_approx(enemy.projectile_hit_radius, float(fixture[2]))
 				and is_equal_approx(enemy.visual_radius, float(fixture[2])),
-			"%s keeps movement compact while its projectile hit radius matches the art" % fixture[0]
+			"%s keeps compact movement plus explicit visual and projectile target radii" % fixture[0]
 		)
 		run.enemy_store.release_untracked(enemy)
 	var ordering_enemy := EnemyState.new()
@@ -688,10 +689,23 @@ func _check_boss_progression_gate(run) -> void:
 	run.stage_flow.defeats = run.stage_flow.quota - 1
 	run.call("_start_stage_boss")
 	_expect(run.call("_find_enemy_by_id", "stage_boss") == null, "boss remains blocked one defeat before quota")
-	_expect(run.stage_flow.record_countable_defeat(), "final ordinary defeat begins the boss warning")
+	var quota_enemy: EnemyState = run.call("_make_enemy", {
+		"id":"quota_transition_probe",
+		"role":&"chaser",
+		"pos":run.player_position + Vector2(600.0, 0.0),
+		"active":true,
+	})
 	_expect(
-		run.encounter_runtime.spawning_enabled(),
-		"quota keeps the authored ordinary scheduler enabled"
+		quota_enemy != null and run.call("_append_enemy", quota_enemy),
+		"quota transition fixture materializes one countable ordinary enemy"
+	)
+	run.call("_defeat_enemy", quota_enemy, "validation")
+	run.enemy_store.flush_defeated()
+	_expect(
+		run.stage_flow.state == StageFlow.State.BOSS_WARNING
+			and run.encounter_runtime.quota_sealed()
+			and not run.encounter_runtime.spawning_enabled(),
+		"the exact final countable defeat starts warning and seals new admissions"
 	)
 	var blocked_live_count := (
 		EnemyStore.MAX_LIVE_HOSTILES
@@ -737,18 +751,10 @@ func _check_boss_progression_gate(run) -> void:
 		filler_enemy.alive = false
 		run.enemy_store.queue_defeat(filler_enemy)
 	run.enemy_store.flush_defeated()
-	var live_before_post_boss_arrival: int = run.enemy_store.live_count()
-	run.call("_clear_ordinary_arrival_cues")
-	run.call("_update_encounter", 5.1)
 	_expect(
-		run.encounter_runtime.spawning_enabled()
-			and run._ordinary_arrival_cue_count > 0,
-		"an authored ordinary cue remains observable after the boss becomes active"
-	)
-	run.call("_update_encounter", 0.9)
-	_expect(
-		run.enemy_store.live_count() > live_before_post_boss_arrival,
-		"an authored ordinary birth remains admissible during the boss encounter"
+		run.encounter_runtime.quota_sealed()
+			and not run.encounter_runtime.spawning_enabled(),
+		"ordinary admission stays sealed throughout the boss encounter"
 	)
 
 

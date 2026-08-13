@@ -324,6 +324,10 @@ func debug_geometry_contract() -> Dictionary:
 	}
 
 
+func debug_open_first_build_preview() -> bool:
+	return _build_rail.debug_open_first_preview()
+
+
 func _label(key: String, size: int, color: Color) -> Label:
 	var label := Label.new()
 	label.text = tr(key) if not key.is_empty() else ""
