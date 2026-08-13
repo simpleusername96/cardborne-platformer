@@ -24,6 +24,11 @@ var _cover_cells: Dictionary = {}
 var _cover_seen_serial := PackedInt32Array()
 var _cover_query_serial := 0
 var _empty_cover_indices: Array[int] = []
+var _runtime_wall_rects: Array[Rect2] = []
+var _runtime_wall_cells: Dictionary = {}
+var _runtime_wall_seen_serial := PackedInt32Array()
+var _runtime_wall_query_serial := 0
+var _empty_runtime_wall_indices: Array[int] = []
 var _safe_motion_cells_36: Dictionary = {}
 var _fast_motion_min_cell := Vector2i.ZERO
 var _fast_motion_width := 0
@@ -53,6 +58,7 @@ func configure(
 	geometry_snapshot.configure(field_definition, cover_rects)
 	_build_fast_motion_clearance_mask()
 	_build_cover_broadphase()
+	_build_runtime_wall_broadphase()
 	fingerprint = hash(var_to_str(canonical_blueprint()))
 
 
@@ -92,6 +98,36 @@ func covers_near_motion_into(
 	return result
 
 
+func runtime_walls_near_motion_into(
+	from: Vector2,
+	to: Vector2,
+	radius: float,
+	result: Array[Rect2]
+) -> Array[Rect2]:
+	result.clear()
+	_runtime_wall_query_serial += 1
+	if _runtime_wall_query_serial == 2147483647:
+		_runtime_wall_seen_serial.fill(0)
+		_runtime_wall_query_serial = 1
+	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
+	var min_cell := _world_to_cell(swept.position)
+	var max_cell := _world_to_cell(swept.end)
+	for y in range(min_cell.y, max_cell.y + 1):
+		for x in range(min_cell.x, max_cell.x + 1):
+			var bucket: Array = _runtime_wall_cells.get(
+				Vector2i(x, y), _empty_runtime_wall_indices
+			)
+			for index_value in bucket:
+				var index := int(index_value)
+				if _runtime_wall_seen_serial[index] == _runtime_wall_query_serial:
+					continue
+				_runtime_wall_seen_serial[index] = _runtime_wall_query_serial
+				var rectangle := _runtime_wall_rects[index]
+				if swept.intersects(rectangle.grow(radius), true):
+					result.append(rectangle)
+	return result
+
+
 func is_fast_motion_clear(from: Vector2, to: Vector2, radius: float) -> bool:
 	## Returns true only for a same-cell sweep certified against this run's
 	## selected covers and functional terrain. Larger actors and cross-cell
@@ -125,6 +161,7 @@ func debug_snapshot() -> Dictionary:
 		"fingerprint":fingerprint,
 		"cover_ids":cover_ids.duplicate(),
 		"cover_count":cover_rects.size(),
+		"runtime_wall_count":_runtime_wall_rects.size(),
 		"ordinary_anchor_count":ordinary_spawn_anchors.size(),
 		"boss_anchor_count":boss_arrival_anchors.size(),
 		"encounter_seed":encounter_seed,
@@ -166,6 +203,33 @@ func _build_cover_broadphase() -> void:
 				if not _cover_cells.has(cell):
 					_cover_cells[cell] = []
 				_cover_cells[cell].append(index)
+
+
+func _build_runtime_wall_broadphase() -> void:
+	_runtime_wall_rects.clear()
+	_runtime_wall_cells.clear()
+	_runtime_wall_query_serial = 0
+	if geometry_snapshot == null:
+		_runtime_wall_seen_serial.resize(0)
+		return
+	for feature in geometry_snapshot.terrain_zones:
+		if StringName(feature.get("kind", &"")) != &"structural_wall":
+			continue
+		var rectangle := Rect2(feature.get("rect", Rect2()))
+		if rectangle.has_area():
+			_runtime_wall_rects.append(rectangle)
+	_runtime_wall_seen_serial.resize(_runtime_wall_rects.size())
+	_runtime_wall_seen_serial.fill(0)
+	for index in _runtime_wall_rects.size():
+		var expanded := _runtime_wall_rects[index].grow(BROADPHASE_MARGIN)
+		var min_cell := _world_to_cell(expanded.position)
+		var max_cell := _world_to_cell(expanded.end)
+		for y in range(min_cell.y, max_cell.y + 1):
+			for x in range(min_cell.x, max_cell.x + 1):
+				var cell := Vector2i(x, y)
+				if not _runtime_wall_cells.has(cell):
+					_runtime_wall_cells[cell] = []
+				_runtime_wall_cells[cell].append(index)
 
 
 func _build_fast_motion_clearance_mask() -> void:

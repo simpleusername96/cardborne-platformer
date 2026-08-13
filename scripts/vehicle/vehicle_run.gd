@@ -266,8 +266,11 @@ var effects: Array[VehicleEffectState] = effect_store.live
 var _empty_cover_rects: Array[Rect2] = []
 var _projectile_cover_query: Array[Rect2] = []
 var _projectile_runtime_cover_query: Array[Rect2] = []
+var _projectile_runtime_wall_query: Array[Rect2] = []
 var _motion_cover_query: Array[Rect2] = []
+var _motion_runtime_wall_query: Array[Rect2] = []
 var _los_cover_query: Array[Rect2] = []
+var _los_runtime_wall_query: Array[Rect2] = []
 var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
 var _mystery_device_hit_receipt: Dictionary = {}
@@ -1690,9 +1693,11 @@ func _runtime_projectile_cover_rects(from: Vector2, to: Vector2, radius: float) 
 		_projectile_cover_query.append_array(
 			_projectile_runtime_cover_query
 		)
-	for wall in _runtime_structural_walls:
-		if swept.intersects(wall.grow(radius), true):
-			_projectile_cover_query.append(wall)
+	if _active_tactical_layout != null:
+		_active_tactical_layout.runtime_walls_near_motion_into(
+			from, to, radius, _projectile_runtime_wall_query
+		)
+		_projectile_cover_query.append_array(_projectile_runtime_wall_query)
 	return _projectile_cover_query
 
 
@@ -1722,10 +1727,11 @@ func _runtime_motion_cover_rects(
 			from, to, radius, _motion_cover_query
 		)
 		_motion_cover_static_cover_clear = _motion_cover_query.is_empty()
-	var swept := Rect2(from, Vector2.ZERO).expand(to).grow(radius)
-	for wall in _runtime_structural_walls:
-		if swept.intersects(wall.grow(radius), true):
-			_motion_cover_query.append(wall)
+	if _active_tactical_layout != null:
+		_active_tactical_layout.runtime_walls_near_motion_into(
+			from, to, radius, _motion_runtime_wall_query
+		)
+		_motion_cover_query.append_array(_motion_runtime_wall_query)
 	return _motion_cover_query
 
 
@@ -1785,7 +1791,12 @@ func _runtime_cover_has_line_of_sight(
 	var dynamic_started := (
 		Time.get_ticks_usec() if _performance_detail_sample_active else 0
 	)
-	for blocker in _runtime_structural_walls:
+	_los_runtime_wall_query.clear()
+	if _active_tactical_layout != null:
+		_active_tactical_layout.runtime_walls_near_motion_into(
+			from, to, padding, _los_runtime_wall_query
+		)
+	for blocker in _los_runtime_wall_query:
 		if (
 			swept.intersects(blocker.grow(padding), true)
 			and Rules.segment_rect_intersects(from, to, blocker, padding)
