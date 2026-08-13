@@ -28,6 +28,16 @@ time. The implementation keeps the current eight-sector off-screen birth contrac
 counts, combat truth, and single-threaded native/Web release shape. Work proceeds in independently
 validated checkpoints and ends only after gameplay, deterministic, native, and built-Web gates pass.
 
+## Measured outcome revision
+
+The engagement-flow half of this contract succeeded through deterministic validation. The portable
+typed-GDScript performance migration did not. Its persistent schedule, packed compatibility and
+incremental overlap paths made the full 320-enemy workload slower, so those owners were removed.
+The final native diagnostic remains far above the unchanged capacity gate. This plan is blocked
+before authoritative native/Web qualification until BK chooses one previously approval-gated path:
+virtual far-offscreen reserves, a Web-capable GDExtension/custom template, or reduced supported exact
+density/cadence. No executor may infer that choice from the original implementation authorization.
+
 ## Purpose
 
 - Objective: remove the high-count physics backlog and the common rear-tail enemy mass while
@@ -429,25 +439,25 @@ Source owners: `scripts/encounters/vehicle_encounter_runtime.gd`,
 `tools/validation/validate_vehicle_enemy_movement_policy.gd`,
 `tools/validation/validate_vehicle_enemy_contact.gd`
 
-- [ ] **2.1** Reserve engagement gates when a window is admitted.
+- [x] **2.1** Reserve engagement gates when a window is admitted.
   - Change: `_admit_due_window` requests reservations after birth allocation; spawn specs carry a
     handle and immutable gate scalars; spawn failure cancels; accepted append confirms; stop/reset
     cancels queues. `_process_due_round` remains the only birth emitter.
   - Accept: arrival scheduler proves 12 cues, first-birth cue identity, 0.90/1.20/0.16 timing,
     maximum four births/tick, cap reservation, packet fence, starvation, cancellation, and reset.
-- [ ] **2.2** Persist and safely reset approach state.
+- [x] **2.2** Persist and safely reset approach state.
   - Change: add typed reservation/gate scalars to pooled enemy state and clear every field on reuse.
     All defeat, retirement, stage reset, carrier/splitter spawn, and rejected-add paths release or
     omit reservations exactly once.
   - Accept: enemy store and new director tests pass repeated pool reuse, stale generations, swap
     retirement, boss-only retirement, and full clear with zero reservation debt.
-- [ ] **2.3** Apply gate-first movement at the existing decision cadence.
+- [x] **2.3** Apply gate-first movement at the existing decision cadence.
   - Change: use the fixed gate as movement focus until the 96-pixel completion or locked expiry;
     existing committed/decoy/recovery priorities and exact collision paths stay intact.
   - Accept: targeting/movement/update-schedule validators prove stable gate, no per-frame retarget,
     10/30/20/60-Hz cadence, unchanged speed/turn/band behavior after release, and deterministic
     expiry on reversal or unreachable geometry.
-- [ ] **2.4** Prove fairness and distribution in a deterministic moving-player replay.
+- [x] **2.4** Prove fairness and distribution in a deterministic moving-player replay.
   - Change: add a replay fixture that runs births, approach, gate lifecycle, collision, and attack
     admission for both patterns across representative fields and seeds.
   - Accept: within each 12-second steady-travel sample, at least three engagement sectors complete;
@@ -533,7 +543,7 @@ Source owners: `scripts/combat/vehicle_spatial_grid.gd`,
     by generation, position revision, active state, radius, or nearby cell revision.
   - Accept: randomized brute-force oracle passes radius/segment/boundary/zero-distance/reuse cases;
     eight-neighbor ordering and deterministic separation are byte-for-byte stable.
-- [ ] **4.2** Add bounded runtime-wall candidate preparation.
+- [x] **4.2** Add bounded runtime-wall candidate preparation.
   - Change: index dynamic structural walls by existing field cells and fill caller-owned candidates;
     retain exact segment/circle checks as final truth.
   - Accept: navigation, attack-route readability, destructible terrain, spatial grid, movement, and
@@ -634,7 +644,7 @@ Source owners: all task-owned runtime/spec/validator files and this plan
     debug reconciliation only behind explicit validator/performance activation.
   - Accept: `rg` assertions in the dense-simulation validator find one shipping owner for each
     storage/schedule/spatial/projectile/snapshot responsibility.
-- [ ] **7.2** Run the diff-scoped codebase quality audit and apply only small task-owned corrections.
+- [x] **7.2** Run the diff-scoped codebase quality audit and apply only small task-owned corrections.
   - Change: check responsibility creep, public contracts, stale comments, reachable invalid/reset/
     capacity/reuse paths, and missing focused validation.
   - Accept: no high-impact finding remains; broad pre-existing debt is reported, not absorbed.
@@ -823,9 +833,12 @@ not grant the executor discretion to change workload, thresholds, or release arc
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 2.
-- Next task: 2.1, wire reservations into admitted arrival windows.
-- Last completed gate: Phase 1 deterministic engagement-director gate.
+- Current phase: blocked at the Phase 8 native performance gate after rejected Phase 3-6 trials.
+- Next task: BK chooses virtual far reserve (recommended), Web-capable GDExtension, or lower exact
+  workload/cadence; then this contract must be revised before implementation resumes.
+- Last completed gate: Phase 2 deterministic engagement replay plus the retained Phase 4.2 wall
+  broad-phase validator. Phase 7 focused integration checks pass for the retained code, but the full
+  Phase 7/8 completion preconditions do not.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit. Do not mirror progress into a second plan.
 - Anti-rework: on start or resume, read this contract and inspect the worktree only enough to confirm
@@ -862,6 +875,30 @@ Checkpoint evidence:
   their valid partner before advancing to the next pair. Engagement-director, spawn-allocation,
   multi-sector, encounter-pacing validators and `git diff --check` passed. Live movement is still
   unchanged at this checkpoint.
+- 2026-08-13, tasks 2.1-2.4: wired reservation lifecycle into admitted windows and pooled enemy
+  state, applied one-shot gate-first movement without teleport or attack permission, and added a
+  deterministic moving-player replay. Director, replay, arrival, allocation, targeting, movement,
+  contact and import checks passed. The replay completes at least three directions, never reserves
+  a rear approach, keeps the three-sector escape arc and caps a 0.5-second burst at four. Task 2.5
+  remains open because no representative human play trace was recorded.
+- 2026-08-13, Phase 3-6 trials: implemented persistent enemy scheduling/packed state, incremental
+  overlap rows, packed projectile/sparse status owners and an immutable-frame prototype. The live
+  320-enemy diagnostic regressed to physics p95 `58.95 ms`. Removing overlap revisions reduced it
+  to `27.05 ms`, removing unused projectile mirrors to `25.02 ms`, while the same-time baseline was
+  `19.37 ms`. The regressive runtime owners were removed. The frame prototype was rejected before
+  integration because consumers could mutate its packed buffers. Only the exact runtime-wall broad
+  phase was retained; its randomized brute-force oracle passes.
+- 2026-08-13, quality/integration: a diff-scoped audit found two reachable encounter edge cases.
+  Reservation-capacity overflow now falls back to an ungated safe birth, and enemy-store rejection
+  rolls back optimistic spawn accounting and records an explicit materialization failure. Focused
+  engagement telemetry/director/replay, arrival, spawn allocation, movement, contact, wall,
+  spatial-grid, Run and performance-scenario validators passed in a clean worktree; Godot import
+  passed on its second settling run.
+- 2026-08-13, final native stop: clean commit `91ab9968` produced a valid focused 5+10-second
+  320-enemy diagnostic with physics median/p95/p99 `18.218/28.787/34.841 ms`, frame
+  median/p95/p99 `133.333/143.333/148.510 ms` and 1% low `6.734 FPS`. Render CPU/GPU
+  `0.715/1.562 ms`, draw p95 `98` and batches `38` remained green. The unchanged 6/8 ms capacity
+  gate failed, so authoritative native and Web performance runs stopped as required.
 
 ## Completion and Stop Conditions
 

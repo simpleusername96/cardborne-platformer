@@ -546,7 +546,14 @@ does not own the moving player's later engagement distribution. The solution dir
 clear: schedule role-aware approach sectors and engagement times, keep an escape gap, and then hand
 actors back to their current combat roles.
 
-What remains uncertain is calibration, not mechanism. A deterministic replay and observation-only
-baseline must quantify the current rear bias and confirm whether spatial/temporal spreading reduces
-bursts without increasing near-player simulation cost. The dense-simulation architecture work from
-the companion performance report is still required for the high-count frame-time failure.
+The targeted prototype is now the shipping local implementation. It preserves all-eight-sector safe
+births, reserves fixed front/side approach gates, uses broad-crescent and two-offset-stream patterns,
+keeps a three-sector rear escape arc, applies role-aware distance lanes, and releases actors to their
+existing behavior at completion or expiry. A deterministic moving-player replay across representative
+seeds passed count, cue, direction, burst, speed, no-teleport and attack-admission checks.
+
+What remains uncertain is manual-play calibration, not mechanism. A representative human play trace
+must tune pressure ratios and timing. The final dense performance diagnostic remained red, so the
+engagement spread is not evidence that the high-count frame-time problem is solved; that companion
+problem now requires the explicit architecture choice recorded in
+`2026-08-13-dense-enemy-architecture-options.md`.

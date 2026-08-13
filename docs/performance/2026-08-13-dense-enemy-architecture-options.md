@@ -35,9 +35,28 @@ threading, custom engine-template, fixed-timestep or gameplay-density change.
 
 ## Findings
 
-The measured gap is large enough to justify a new dense-simulation boundary. The best first
-architecture is a portable typed-GDScript core that removes repeated full-population passes and
-indirect object reads. Native code and threads remain escalation paths, not prerequisites.
+The measured gap justified a new dense-simulation boundary, but the first portable typed-GDScript
+migration failed its live trend gate. Persistent queue maintenance, compatibility synchronization
+and revision-driven overlap caching cost more than the object scans they replaced in Cardborne's
+current full runtime. The regressive owners were removed. Native code or a product-level reduction
+in exact far-offscreen work is now the next decision, not a later theoretical fallback.
+
+### Measured implementation outcome
+
+The migration was not stopped at design. Packed enemy columns, event-owned counters, persistent due
+lanes, incremental overlap rows, packed projectile mirrors, sparse status membership and an
+immutable-frame prototype were built and validated in focused isolation.
+
+Full-game profiling rejected them:
+
+- combined migration, 320 enemies: physics p95 `58.95 ms`;
+- after removing incremental overlap revisions: `27.05 ms`;
+- after removing unused projectile mirrors: `25.02 ms`;
+- same-time original baseline: `19.37 ms`.
+
+The immutable-frame prototype was not integrated because a consumer could mutate its exposed
+packed arrays. Renderer CPU/GPU and batches were already within limits, so completing that migration
+would not address the established primary owner.
 
 ## Decision constraints
 
@@ -57,17 +76,21 @@ whole passes and indirect work, not only shave fractions of a millisecond.
 
 ## Recommended direction
 
-Build a small Cardborne-specific data-oriented simulation core in typed GDScript first. It should
-own fixed-capacity packed arrays, stable generation handles, incremental schedule queues, sparse
-components and the dynamic spatial index. Existing encounter, card, combat and presentation owners
-should communicate with it through commands, events and immutable snapshots.
+For the current itch.io/Web product, use an **exact-near plus virtual-far reserve**. Actors that are
+visible, engaged, attacking, damaged, status-bearing, required, boss-related or close enough to
+affect combat keep exact current simulation. Distant ordinary reserves keep only authored identity,
+role, health and scheduled engagement information. The engagement director materializes them into
+safe front/side approaches before they can affect the player.
 
-This is not a general-purpose ECS and should not become another catch-all. The new boundary owns
-dense combat state and hot-loop execution. It does not own UI, card definitions, encounter content,
-audio, localization or authored stage data.
+This option best connects the gameplay improvement with the performance constraint: the game does
+not spend full AI, movement, overlap and collision work on actors that cannot yet affect the current
+fight. It changes far-offscreen individual simulation truth and therefore requires explicit product
+approval plus transition, damage, quota and replay validators.
 
-The same pure-data core creates an escape hatch: if packed typed GDScript still misses the gate, its
-hot kernels can move behind the same API to a C++ GDExtension compiled for desktop and WebAssembly.
+If exact individual simulation for all 320 actors is non-negotiable, the next candidate is a small
+C++ GDExtension kernel behind a narrow command/receipt API. Web support, custom export templates and
+CI/deployment checks are part of that option, not follow-up polish. Do not combine it with threads
+in the first experiment.
 
 ## Target runtime shape
 
@@ -369,15 +392,20 @@ The implementation contract should require:
 
 ## Immediate decision
 
-Approve investigation and planning around the data-oriented typed GDScript core. Do not yet approve
-an external dependency, GDExtension, custom Web template, threading, global physics-rate change or
-far-enemy approximation. Those decisions become evidence-backed only after Gate 0 and the packed
-kernel spike.
+The typed-GDScript live migration has been measured and rejected. Choose one next contract before
+more runtime implementation:
+
+1. approve exact-near plus virtual-far reserve for the Web-first product (recommended);
+2. require exact 320-actor truth and approve a Web-capable GDExtension/custom-template spike; or
+3. approve a lower supported exact density or cadence.
+
+Threads, global physics-rate changes, weaker thresholds and hidden count reductions remain
+unapproved.
 
 ## Limitations
 
 - Effort and gains are relative estimates, not schedules or promises.
-- No prototype was built in this analysis, so packed-core gains remain to be measured.
+- The prototype and live migration were built; their negative full-game result is retained above.
 - Web browser behavior can vary by browser, device, iframe embedding and focus state even when the
   same GDScript is deployed.
 - A data-oriented layout improves locality and pass ownership but does not automatically make a

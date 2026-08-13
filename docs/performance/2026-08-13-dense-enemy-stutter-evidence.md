@@ -42,7 +42,47 @@ The prior two weeks of work were not ineffective. They removed allocations, boun
 introduced cadence lanes, cached immutable values, and improved the stable 320-enemy physics
 median by about 8% and p95 by about 11%. Those are real gains, but the remaining gap to the existing
 capacity gate is too large for more scalar-expression or small allocation changes to be the main
-strategy. A data-oriented simulation boundary is now justified.
+strategy. A portable data-oriented GDScript migration was therefore implemented and measured. Its
+management overhead made the full runtime slower, so the regressive owners were removed rather
+than shipped. The remaining performance fix now requires a product or deployment architecture
+choice.
+
+## Implementation and final diagnostic outcome
+
+The execution pass started from clean baseline commit `4eb3eef3`. Its eligible 60-second records
+measured:
+
+| Scenario | Physics p95 / p99 | Frame p95 / p99 | 1% low | Result |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `peak_horde`, 276 ordinary | 26.286 / 32.383 ms | 140.505 / 145.688 ms | 6.799 FPS | failed |
+| `capacity_pressure`, 320 ordinary | 24.597 / 29.728 ms | 143.240 / 146.266 ms | 6.805 FPS | failed |
+
+The first full GDScript migration combined persistent enemy scheduling, packed enemy state,
+incremental overlap rows, packed projectile mirrors and sparse status membership. A valid short
+320-enemy sample at `d1982491` measured physics p95 `58.95 ms`; `enemy_scheduled_ordinary` p95 was
+`39.44 ms` and overlap p95 was `17.23 ms`. This was a regression, not an acceptable partial result.
+
+Successive same-workload removals established the main costs:
+
+- removing incremental overlap revisions reduced 320-enemy physics p95 to `27.05 ms`;
+- removing unused projectile mirrors reduced it to `25.02 ms`;
+- a direct same-time baseline recheck at `4eb3eef3` measured `19.37 ms` p95, showing that the
+  persistent enemy migration itself still cost about 30% more in the full game.
+
+The regressive enemy, schedule, overlap, projectile and sparse-status migrations were removed.
+An experimental immutable presentation frame was also rejected before integration because its
+public packed arrays could be mutated by consumers and presentation/rendering was already green.
+The retained runtime work is limited to the engagement flow and a bounded runtime-wall broad phase
+whose exact collision/LOS narrow phase remains authoritative.
+
+Final clean commit `91ab9968` was checked with a focused validator batch and one valid, focused
+5-second warmup + 10-second 320-enemy diagnostic. It measured physics median/p95/p99
+`18.218/28.787/34.841 ms`, displayed-frame median/p95/p99
+`133.333/143.333/148.510 ms`, and 1% low `6.734 FPS`. Renderer CPU/GPU remained
+`0.715/1.562 ms`, draw-call p95 remained `98`, and combat batches remained `38`. The workload was
+valid and exact, but the short duration makes it diagnostic rather than authoritative. It failed
+the unchanged 6/8 ms capacity physics gate, so the planned authoritative and Web performance runs
+were stopped.
 
 ## Sources
 
@@ -358,32 +398,30 @@ session and its workload were active.
 
 ## Recommendations
 
-1. Do not spend another cycle on isolated scalar caching without a measured owner and a material
-   acceptance threshold.
-2. After the concurrent UI/design work is quiescent, record one current-HEAD native baseline and
-   one built-Web Chrome trace using the same deterministic peak and capacity fixtures.
-3. Preserve the existing counts, attacks, collision truth, effects and 1280x720 viewport in the
-   qualification fixtures.
-4. Replace the repeated object-oriented enemy passes with a fixed-capacity, data-oriented combat
-   simulation boundary. Use packed state, event-owned counters, timing-wheel/lane queues, sparse
-   status sets and an incremental spatial index.
-5. Keep presentation as a consumer of immutable current/previous simulation snapshots. Interpolate
-   visuals without increasing AI or collision cadence.
-6. Keep the first rewrite portable to the current single-threaded Web export. Escalate the same
-   pure-data hot loop to a Web-capable GDExtension only if the packed GDScript path still fails the
-   existing 6 ms p95 / 8 ms p99 capacity gate.
-7. Treat threads, direct Servers, reduced physics rate and cohort/impostor simulation as explicit
-   architecture or product decisions, not hidden optimizations.
+1. Do not repeat the rejected GDScript packed/persistent migration without a new causal hypothesis
+   and an isolated kernel benchmark that clears a material trend gate before live integration.
+2. Choose one explicit next architecture: exact simulation in a Web-capable GDExtension, exact
+   simulation at a lower supported density/cadence, or exact near/engaged simulation plus a virtual
+   far reserve.
+3. Prefer the virtual far-reserve option for the current itch.io/Web product: keep visible and
+   engaged combat exact, then use the new engagement director to materialize distant reserve actors
+   into varied front/side approaches. This is a product-truth change and requires user approval.
+4. If exact individual truth for all 320 actors is mandatory, prototype the dominant pure-data loop
+   behind a GDExtension API and budget the custom Web template and deployment validation together.
+5. Preserve the existing exact fixtures as comparison evidence. Do not weaken thresholds or relabel
+   a changed workload as a performance pass.
+6. Keep renderer/HUD work out of the next performance pass until profiling shows that the already
+   green presentation path became dominant.
 
 The compared architectures and a migration sequence are in
 `2026-08-13-dense-enemy-architecture-options.md`.
 
 ## Limitations
 
-- No new native or Web performance run was executed. Concurrent work would invalidate an
-  authoritative baseline, and the request was analysis rather than implementation.
-- The strongest current numerical evidence is from `98b39a11` and `405fd3c1`, before later runtime
-  changes in `a1af4287`.
+- A new eligible 60-second baseline and a valid final 10-second native diagnostic were executed.
+  The final diagnostic is not an authoritative 60-second release qualification.
+- No final built-Web trace was run because the native capacity gate failed first. The deployed Web
+  build therefore remains unqualified and should be assumed unfixed.
 - The half-scale comparison changes several systems at once; it cannot isolate camera/range cost.
 - The retained Web smoke run was headless and non-authoritative. It supports a hypothesis but does
   not qualify a published browser build.
