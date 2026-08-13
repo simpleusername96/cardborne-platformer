@@ -3882,7 +3882,6 @@ func _update_projectile_buffer(
 		var simulation_delta := delta
 		if player_position.distance_squared_to(from) > _near_simulation_distance_squared:
 			if projectile.spawn_serial % 2 != _simulation_lod_bucket:
-				_sync_projectile_at(hostile, index)
 				index += 1
 				continue
 			simulation_delta = delta * 2.0
@@ -3948,7 +3947,6 @@ func _update_projectile_buffer(
 					var normal: Vector2 = cover_hit["normal"]
 					projectile.velocity = projectile.velocity.bounce(normal)
 					projectile.pos = Vector2(cover_hit["point"]) + normal * (radius + 2.0)
-					_sync_projectile_at(hostile, index)
 					index += 1
 					continue
 				_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
@@ -4023,7 +4021,6 @@ func _update_projectile_buffer(
 					else:
 						projectile_store.remove_player_at_swap(index)
 						continue
-					_sync_projectile_at(hostile, index)
 					index += 1
 					continue
 				var enemy_damage := projectile.damage
@@ -4087,15 +4084,7 @@ func _update_projectile_buffer(
 				else:
 					projectile_store.remove_player_at_swap(index)
 					continue
-		_sync_projectile_at(hostile, index)
 		index += 1
-
-
-func _sync_projectile_at(hostile: bool, index: int) -> void:
-	if hostile:
-		projectile_store.sync_hostile_at(index)
-	else:
-		projectile_store.sync_player_at(index)
 
 
 func _try_absorb_protective_structure(
