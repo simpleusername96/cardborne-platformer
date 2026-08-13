@@ -349,7 +349,7 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
     ordinary play without a recorder performs no debug JSON duplication.
   - Guard: existing performance scenario counts, thresholds, and output schema remain backward
     readable; new fields are additive.
-- [ ] **0.2** Capture the current clean native baseline when the machine is quiescent.
+- [x] **0.2** Capture the current clean native baseline when the machine is quiescent.
   - Change: commit 0.1, set exact commit/dirty metadata, and run one 10-second warmup + 60-second
     `peak_horde` and `capacity_pressure` pair at 1280x720 GL Compatibility with VSync disabled.
     Also run one 5-second warmup + 10-second 64/128/192/256/320 scaling sweep. Store ignored JSON
@@ -823,9 +823,9 @@ not grant the executor discretion to change workload, thresholds, or release arc
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 0.
-- Next task: 0.2, clean native baseline and scaling sweep.
-- Last completed gate: Discovery Closure Gate.
+- Current phase: Phase 1.
+- Next task: 1.1, promote the birth/engagement contract into the product spec.
+- Last completed gate: Phase 0 baseline and observation gate.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit. Do not mirror progress into a second plan.
 - Anti-rework: on start or resume, read this contract and inspect the worktree only enough to confirm
@@ -842,6 +842,19 @@ Checkpoint evidence:
   attempts exceeded their wrappers and left exact task-owned Godot children; those children were
   identified by full command line and stopped, and the same manual-trace validator passed after the
   import completed.
+- 2026-08-13, task 0.2: fixed two diagnostic-only workload escapes discovered by measurement:
+  performance XP could open the card modal and shard pressure could drift above/below its declared
+  target. The fixture now remains in PLAYING with exact shard/effect counts, and native qualification
+  reclaims transient focus before recorder observation. `validate_vehicle_performance_scenarios.gd`
+  and import passed. On clean commit `4eb3eef3a20423b131bdc3b93c52d08a62ead5c6`, focused,
+  scenario-valid 1280x720 GL Compatibility samples recorded `peak_horde` physics p95/p99
+  `26.286/32.383 ms` and frame p95/p99 `140.505/145.688 ms`; `capacity_pressure` recorded
+  physics p95/p99 `24.597/29.728 ms` and frame p95/p99 `143.240/146.266 ms`. Both correctly fail
+  release thresholds while draw p95 `98` and combat batches `38` stay green. The 5+10-second
+  scaling sweep recorded physics p95 `8.740, 12.910, 18.680, 24.610, 21.490 ms` at
+  `64, 128, 192, 256, 320` enemies respectively, with the frame-pacing cliff beginning at 192.
+  Raw JSON is retained under ignored `build/performance/dense-engagement/`; four rejected samples
+  are explicitly named `*invalid*` for pre-fixture-fix, shard-drift, or unfocused contamination.
 
 ## Completion and Stop Conditions
 
