@@ -323,16 +323,7 @@ jobs:
           name: vehicle-run-evidence
           path: build/vehicle-run
           if-no-files-found: warn
-          retention-days: 30
-
-      - name: Upload playable Web build
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: vehicle-run-web
-          path: build/web
-          if-no-files-found: warn
-          retention-days: 30
+          retention-days: 1
 
   deploy-pages:
     name: Deploy Web build to GitHub Pages
