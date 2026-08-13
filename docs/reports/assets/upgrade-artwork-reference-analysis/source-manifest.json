@@ -1,0 +1,149 @@
+{
+  "schema": "cardborne-reference-resource-manifest",
+  "version": 1,
+  "retrieved_at": "2026-08-13",
+  "purpose": "Internal visual-analysis evidence for Cardborne upgrade artwork. These files are not production assets and do not grant permission to copy source artwork.",
+  "visual_authority": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "required_sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "document_read_complete": true,
+    "sheet_inspected_original": true,
+    "note": "The authority pair governs Cardborne. External images below are evidence only."
+  },
+  "resources": [
+    {
+      "id": "nova_drift_upgrade_choice",
+      "file": "official-game-screenshots/nova-drift-upgrade-choice.jpg",
+      "source_page": "https://store.steampowered.com/app/858210/Nova_Drift/",
+      "direct_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/858210/ss_5842db4af4f9508b35254dc83aad0161c650b2fa.1920x1080.jpg",
+      "publisher_source": "Official Steam store media supplied by Chimeric/Pixeljam",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "0e3ecef7879016269b7cdbec737d39310181a96b68e4a52e9cf22a5ace0ea132",
+      "usage_boundary": "Internal reference analysis only; no extraction, tracing, or production reuse."
+    },
+    {
+      "id": "nova_drift_upgrade_tree",
+      "file": "official-game-screenshots/nova-drift-upgrade-tree.jpg",
+      "source_page": "https://novadrift.io/presskit.html",
+      "direct_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/858210/ss_91016069fd206a5090a612e7a2fb028b0e8fa0f3.1920x1080.jpg",
+      "publisher_source": "Official Steam store media; developer press kit confirms a downloadable screenshot set",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "563a836d1da7251d6a949be4c087c8535490ca03850cc8a1385ccc8b8add5985",
+      "usage_boundary": "Internal reference analysis only; no extraction, tracing, or production reuse."
+    },
+    {
+      "id": "drg_survivor_level_up",
+      "file": "official-game-screenshots/drg-survivor-level-up.jpg",
+      "source_page": "https://store.steampowered.com/app/2321470/Deep_Rock_Galactic_Survivor/",
+      "direct_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2321470/ss_cc4f43ee2737dd2ff19865b0acf864021c2b2309.1920x1080.jpg",
+      "publisher_source": "Official Steam store media supplied by Funday Games/Ghost Ship Publishing",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "4b6c90acfd04efaaf86c90976d5ad949b625427f422892921bda65e9f82cdfed",
+      "usage_boundary": "Internal reference analysis only; no extraction, tracing, or production reuse."
+    },
+    {
+      "id": "drg_survivor_shop",
+      "file": "official-game-screenshots/drg-survivor-shop.jpg",
+      "source_page": "https://store.steampowered.com/app/2321470/Deep_Rock_Galactic_Survivor/",
+      "direct_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2321470/573913f0793a21135d0bfd9c8581027f43f543b8/ss_573913f0793a21135d0bfd9c8581027f43f543b8.1920x1080.jpg",
+      "publisher_source": "Official Steam store media supplied by Funday Games/Ghost Ship Publishing",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "f9948de5b77cf2e406b445e93d9e96659614113a384ab850d058c6bd73374472",
+      "usage_boundary": "Internal reference analysis only; no extraction, tracing, or production reuse."
+    },
+    {
+      "id": "twenty_minutes_upgrade_choice",
+      "file": "official-game-screenshots/20-minutes-till-dawn-upgrade-choice.jpg",
+      "source_page": "https://store.steampowered.com/app/1966900/20_Minutes_Till_Dawn/",
+      "direct_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1966900/ss_9c6155d820182d5f2e3298f38011e61cbd5f5966.1920x1080.jpg",
+      "publisher_source": "Official Steam store media supplied by flanne/Erabit",
+      "width": 1920,
+      "height": 1075,
+      "sha256": "21d4a134bc3ee3866ba46afa474bf40fe9743774e9d989eb187bf5e503449452",
+      "usage_boundary": "Internal reference analysis only; no extraction, tracing, or production reuse."
+    },
+    {
+      "id": "twenty_minutes_rune_grid",
+      "file": "official-game-screenshots/20-minutes-till-dawn-rune-grid.jpg",
+      "source_page": "https://store.steampowered.com/app/1966900/20_Minutes_Till_Dawn/",
+      "direct_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1966900/ss_66b8a57cfb1e17e5365ec599eabf66a81ba27307.1920x1080.jpg",
+      "publisher_source": "Official Steam store media supplied by flanne/Erabit",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "8da6275fbd00da9db5dc53cadd0ebac7b69702abe95f6fc853b2d25a352911dc",
+      "usage_boundary": "Internal reference analysis only; no extraction, tracing, or production reuse."
+    },
+    {
+      "id": "windows_progressive_abstraction",
+      "file": "official-icon-guidelines/windows-progressive-abstraction.png",
+      "source_page": "https://learn.microsoft.com/en-us/windows/apps/design/iconography/app-icon-design",
+      "direct_url": "https://learn.microsoft.com/en-us/windows/apps/design/iconography/images/icon-progressive-abstraction.png",
+      "publisher_source": "Microsoft Learn",
+      "width": 1464,
+      "height": 412,
+      "sha256": "2a290cfc49a6d35a70f5d40f9a71dba43b631e025bfa2f8c6204fcb6248ee6b9",
+      "usage_boundary": "Documentation illustration retained with source attribution for internal analysis."
+    },
+    {
+      "id": "windows_48px_grid",
+      "file": "official-icon-guidelines/windows-48px-grid.png",
+      "source_page": "https://learn.microsoft.com/en-us/windows/apps/design/iconography/app-icon-design",
+      "direct_url": "https://learn.microsoft.com/en-us/windows/apps/design/iconography/images/icon-design-grid.png",
+      "publisher_source": "Microsoft Learn",
+      "width": 1452,
+      "height": 504,
+      "sha256": "29bc4a964ec1d87ac12ebc613ab85d99ae34b326560a40ae4bedbe30660c1011",
+      "usage_boundary": "Documentation illustration retained with source attribution for internal analysis."
+    },
+    {
+      "id": "windows_silhouette_alignment",
+      "file": "official-icon-guidelines/windows-silhouette-alignment.png",
+      "source_page": "https://learn.microsoft.com/en-us/windows/apps/design/iconography/app-icon-design",
+      "direct_url": "https://learn.microsoft.com/en-us/windows/apps/design/iconography/images/icons-aligned-in-grid.png",
+      "publisher_source": "Microsoft Learn",
+      "width": 1456,
+      "height": 286,
+      "sha256": "bc52a04e3b532f2c1906c51375f824b80d6f27b51ddc7d7c3d842d20749fe0ec",
+      "usage_boundary": "Documentation illustration retained with source attribution for internal analysis."
+    },
+    {
+      "id": "office_base_modifier",
+      "file": "official-icon-guidelines/office-base-modifier.png",
+      "source_page": "https://learn.microsoft.com/en-us/office/dev/add-ins/design/add-in-icons",
+      "direct_url": "https://learn.microsoft.com/en-us/office/dev/add-ins/images/monolineicon1.png",
+      "publisher_source": "Microsoft Learn",
+      "width": 161,
+      "height": 161,
+      "sha256": "594a977c576e92f4c0cba911562d779d96559c660b92100bb13296f4d6b5f273",
+      "usage_boundary": "Documentation illustration retained with source attribution for internal analysis."
+    },
+    {
+      "id": "office_base_modifier_grid",
+      "file": "official-icon-guidelines/office-base-modifier-grid.png",
+      "source_page": "https://learn.microsoft.com/en-us/office/dev/add-ins/design/add-in-icons",
+      "direct_url": "https://learn.microsoft.com/en-us/office/dev/add-ins/images/monolineicon2.png",
+      "publisher_source": "Microsoft Learn",
+      "width": 353,
+      "height": 161,
+      "sha256": "194384cbe9865f350455ba01c9bd90d5899b71c81785436f1ad71b84b663006b",
+      "usage_boundary": "Documentation illustration retained with source attribution for internal analysis."
+    },
+    {
+      "id": "material_symbols_grade",
+      "file": "official-icon-guidelines/material-symbols-grade.png",
+      "source_page": "https://developers.google.com/fonts/docs/material_symbols?hl=en",
+      "direct_url": "https://www.gstatic.com/images/icons/material/apps/fonts/1x/material-symbols/grade.png",
+      "publisher_source": "Google for Developers",
+      "width": 640,
+      "height": 430,
+      "sha256": "e789edf125574ca4dba7603ef545838494670544e4d7c09ae5bd7388fae8c643",
+      "usage_boundary": "Documentation illustration retained with source attribution for internal analysis; Material Symbols are Apache-2.0, but this evidence image is not a Cardborne production asset."
+    }
+  ]
+}
