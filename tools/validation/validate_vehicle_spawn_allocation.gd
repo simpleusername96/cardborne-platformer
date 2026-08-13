@@ -57,6 +57,7 @@ func _initialize() -> void:
 				allocations = prewarmed
 		_validate_unit_allocation(allocations, packet, tactical.geometry_snapshot, player_position, visible_world, String(stage_id))
 		_validate_role_multiset(allocations, packet, String(stage_id))
+		_validate_role_distances(allocations, player_position, String(stage_id))
 	_finish()
 
 
@@ -133,6 +134,21 @@ func _validate_role_multiset(allocations: Array[Dictionary], packet: Dictionary,
 	authored.sort()
 	allocated.sort()
 	_expect(authored == allocated, "%s preserves the authored role multiset" % context)
+
+
+func _validate_role_distances(allocations: Array[Dictionary], player_position: Vector2, context: String) -> void:
+	for allocation in allocations:
+		var roles: Array = allocation.get("roles", [])
+		var lanes: Array = allocation.get("unit_distance_lanes", [])
+		_expect(lanes.size() == roles.size(), "%s records every role-aware distance lane" % context)
+		for index in roles.size():
+			var behavior := StringName(EnemyArchetypes.definition(StringName(roles[index]))["behavior"])
+			if behavior in [&"chaser", &"rammer", &"mine"]:
+				_expect(int(lanes[index]) in [1, 2], "%s pursuit selects 1650/2100 role lanes" % context)
+			elif behavior in [&"shooter", &"controller", &"artillery_spotter"]:
+				_expect(int(lanes[index]) in [0, 1], "%s standoff selects 1200/1650 role lanes" % context)
+			elif behavior in [&"shield_escort", &"repair_tender", &"drone_carrier"]:
+				_expect(int(lanes[index]) == 0, "%s standoff/support selects 1200 role lane" % context)
 
 
 func _expect(condition: bool, message: String) -> void:

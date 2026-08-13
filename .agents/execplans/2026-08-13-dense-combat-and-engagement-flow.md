@@ -380,13 +380,13 @@ Source owners: `docs/product/vehicle_game_spec.md`,
 `tools/validation/validate_vehicle_spawn_allocation.gd`,
 `tools/validation/validate_vehicle_multi_sector_spawns.gd`
 
-- [ ] **1.1** Promote the accepted birth/engagement distinction into the product spec.
+- [x] **1.1** Promote the accepted birth/engagement distinction into the product spec.
   - Change: preserve all-eight birth clauses and define reservation lifecycle, two patterns, escape
     arc, role-aware distance preference, one-shot gate, fallback, unchanged attack permission, and
     acceptance metrics.
   - Accept: document authority validation passes for task-owned docs and existing spawn-contract
     validator constants have an exact corresponding spec clause.
-- [ ] **1.2** Add the fixed-capacity engagement director.
+- [x] **1.2** Add the fixed-capacity engagement director.
   - Change: implement configure/reset/reserve/confirm/complete/expire/cancel/release and fill-into
     debug/telemetry APIs with 320 stable generation slots and packed sector/ETA counters.
   - Accept: new focused validator proves deterministic fingerprints, two-choice selection, bounded
@@ -394,13 +394,13 @@ Source owners: `docs/product/vehicle_game_spec.md`,
     rejection, and counter reconciliation.
   - Guard: validator source scan confirms the production reserve path accepts no `enemies` array
     and performs no full-population reconciliation.
-- [ ] **1.3** Make allocation role-aware without weakening birth geometry.
+- [x] **1.3** Make allocation role-aware without weakening birth geometry.
   - Change: select target distance by movement family and effective speed input; attach reservation
     request data while preserving existing allocation order and geometry tiers.
   - Accept: direct and prewarmed allocation fingerprints match; every role multiset, distance,
     off-screen margin, clearance, deterministic seed, all-eight birth-sector balance, and edge-field
     fallback remains valid.
-- [ ] **1.4** Add only the two locked authored pattern identifiers to stage packet data.
+- [x] **1.4** Add only the two locked authored pattern identifiers to stage packet data.
   - Change: assign broad-crescent/two-stream sequence to multi-window surge packets; opening
     singletons have no gate.
   - Accept: encounter pacing validator proves counts, roles, windows, cues, caps, and packet timing
@@ -823,9 +823,9 @@ not grant the executor discretion to change workload, thresholds, or release arc
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: 1.1, promote the birth/engagement contract into the product spec.
-- Last completed gate: Phase 0 baseline and observation gate.
+- Current phase: Phase 2.
+- Next task: 2.1, wire reservations into admitted arrival windows.
+- Last completed gate: Phase 1 deterministic engagement-director gate.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit. Do not mirror progress into a second plan.
 - Anti-rework: on start or resume, read this contract and inspect the worktree only enough to confirm
@@ -855,6 +855,13 @@ Checkpoint evidence:
   `64, 128, 192, 256, 320` enemies respectively, with the frame-pacing cliff beginning at 192.
   Raw JSON is retained under ignored `build/performance/dense-engagement/`; four rejected samples
   are explicitly named `*invalid*` for pre-fixture-fix, shard-drift, or unfocused contamination.
+- 2026-08-13, tasks 1.1-1.4: specified the safe-birth versus target-relative engagement contract,
+  added the packed 320-slot deterministic director, preserved all-eight birth geometry while making
+  role distance lanes actor-identity deterministic, and authored only the locked crescent/offset
+  stream sequence. Selected sectors now own distinct fixed gates; invalid sampled candidates check
+  their valid partner before advancing to the next pair. Engagement-director, spawn-allocation,
+  multi-sector, encounter-pacing validators and `git diff --check` passed. Live movement is still
+  unchanged at this checkpoint.
 
 ## Completion and Stop Conditions
 

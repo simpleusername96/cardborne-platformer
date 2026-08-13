@@ -31,8 +31,16 @@ func _validate_field(field_id: StringName) -> void:
 			var packet: Dictionary = CombatStages.definition(stage_id, definition)["packets"][1]
 			var context := "%s %s seed %d" % [field_id, stage_id, seed_offset]
 			_validate_packet(packet, tactical, canonical_player, visible, context)
+			_validate_patterns(CombatStages.definition(stage_id, definition)["packets"], String(stage_id))
 			if seed_offset == 0:
 				_validate_field_edges(packet, tactical, context)
+
+
+func _validate_patterns(packets: Array, context: String) -> void:
+	_expect(StringName(packets[0].get("engagement_pattern", &"")) == &"none", "%s opening singleton has no gate pattern" % context)
+	for packet in packets.slice(1):
+		_expect(StringName(packet.get("engagement_pattern", &"")) == &"broad_crescent", "%s multi-window packet declares its first pattern" % context)
+		_expect(Array(packet.get("engagement_patterns", [])) == [&"broad_crescent", &"two_offset_streams", &"broad_crescent"], "%s keeps the locked window pattern sequence" % context)
 
 
 func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, visible_world: Rect2, context: String) -> void:

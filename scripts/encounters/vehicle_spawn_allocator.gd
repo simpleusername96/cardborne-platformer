@@ -190,11 +190,7 @@ func _try_allocate_requests(
 			arrival_window,
 			request
 		)
-		var distance_lane := wrapi(
-			hash(score_identity + ":distance"),
-			0,
-			TARGET_DISTANCES.size()
-		)
+		var distance_lane := _role_distance_lane(score_identity, role)
 		var best := Vector2.INF
 		var best_score := INF
 		var best_clearance := INF
@@ -227,6 +223,7 @@ func _try_allocate_requests(
 			"position":best,
 			"clearance":best_clearance,
 			"sector":desired_sector,
+			"distance_lane":distance_lane,
 		})
 	return result
 
@@ -252,6 +249,7 @@ func _build_window_allocations(
 			"unit_positions":[],
 			"unit_clearances":[],
 			"unit_sectors":[],
+			"unit_distance_lanes":[],
 			"relaxation_tier":StringName(tier["id"]),
 			"relaxation_tier_index":tier_index,
 		})
@@ -262,6 +260,7 @@ func _build_window_allocations(
 		target["unit_positions"].append(Vector2(selected["position"]))
 		target["unit_clearances"].append(float(selected["clearance"]))
 		target["unit_sectors"].append(int(selected["sector"]))
+		target["unit_distance_lanes"].append(int(selected["distance_lane"]))
 	for allocation in result:
 		var birth_position := Vector2(allocation["unit_positions"][0])
 		allocation["anchor"] = birth_position
@@ -430,6 +429,21 @@ func _candidate_score_identity(
 		int(request["window_slot"]),
 		int(request["unit_index"]),
 	]
+
+
+func _role_distance_lane(score_identity: String, role: StringName) -> int:
+	## Allocation chooses only an existing role-appropriate distance lane; the
+	## runtime remains the sole owner of effective speed scaling.
+	var definition := EnemyArchetypes.definition(role)
+	var behavior := StringName(definition.get("behavior", &""))
+	if role in [&"scrap_drone", &"chaser", &"rammer", &"bulkhead_guard", &"splitter_barge", &"spark_minelet"]:
+		return 1 + posmod(hash(score_identity + ":pursuit-distance"), 2)
+	if behavior in [&"shooter", &"controller", &"artillery_spotter"]:
+		return posmod(hash(score_identity + ":standoff-distance"), 2)
+	if behavior in [&"shield_escort", &"repair_tender", &"drone_carrier"]:
+		return 0 # escort/support prefers 1200px.
+	# Stationary and specialist births retain the previous all-lane choice.
+	return posmod(hash(score_identity + ":distance"), TARGET_DISTANCES.size())
 
 
 func _minimum_clearance(candidate: Vector2, positions: Array[Vector2]) -> float:

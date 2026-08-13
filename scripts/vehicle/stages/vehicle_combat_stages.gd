@@ -107,6 +107,8 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 		"squads":[[&"scrap_drone"]],
 		"unit_spacing":0.16,
 		"cue_lead":0.9,
+		"engagement_pattern":&"none",
+		"engagement_patterns":[&"none"],
 		"zone":"field",
 		"leash":Rect2(field_definition["world_rect"]),
 	})
@@ -135,6 +137,8 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 			"window_gap":1.20,
 			"unit_spacing":0.16,
 			"cue_lead":0.9,
+			"engagement_pattern":&"broad_crescent",
+			"engagement_patterns":[&"broad_crescent", &"two_offset_streams", &"broad_crescent"],
 			"zone":"field",
 			"leash":Rect2(field_definition["world_rect"]),
 		})

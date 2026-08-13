@@ -313,6 +313,26 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    Excess enemies remain in the deterministic scheduler queue. Player-centered 600
    and 900 pixel occupancy are observation telemetry only and never impose a
    local admission cap, hold band, lateral detour, or despawn rule.
+   Birth is a safe world-position fact and remains separate from engagement.
+   An ordinary multi-window unit may receive one bounded engagement reservation:
+   a target-relative sector, a 0.5-second ETA bucket in a 32-bucket ring, a
+   fixed predicted-player anchor, a fixed approach gate, and an expiry. The
+   reservation is allocated from exactly two deterministic eligible sector
+   candidates using incremental sector/ETA load and bounded sector debt; it
+   never rescans the live enemy population. Birth still uses every world sector
+   and all existing floor, off-screen, clearance, fingerprint, cue, and retry
+   truth. Pursuit prefers 1650 or 2100 pixel birth lanes; standoff prefers
+   1200 or 1650, escort/support prefers 1200, and stationary/special roles keep
+   their authored path with no ordinary gate. A gate is sampled once, completes
+   within 96 pixels, and expires at birth plus `clamp(transit ETA + 2s, 4s, 18s)`;
+   it never retargets or grants attack permission. Invalid gates try remaining
+   eligible sectors in deterministic order, then preserve a valid birth and
+   immediately return to ordinary role movement without retry or teleport.
+   The only ordinary engagement patterns are `broad_crescent` (relative sectors
+   `-2,-1,0,+1,+2`) and `two_offset_streams` (alternating `-2,-1` and `+1,+2`).
+   Both leave the rear three-sector escape arc open; the second also leaves the
+   forward center unreserved. Windows 0 and 2 use the crescent and window 1
+   uses offset streams. Opening single-unit packets have no approach gate.
 4. Ordinary mobile movement applies one 1.40 multiplier after role base speed
    and before the fixed Hard profile, stage, and elite factors. Boss,
    committed charge, and projectile speeds are unchanged. After birth, each
