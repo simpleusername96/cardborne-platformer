@@ -119,7 +119,16 @@ func _advance_gate(spec: Dictionary, runtime, schedule, slot: int) -> bool:
 	enemy.threat_cost = float(definition["threat_cost"])
 	enemy.pos = Vector2(spec["pos"])
 	enemy.engagement_gate = Vector2(spec["engagement_gate"])
-	schedule.register(enemy)
+	var replay_enemies: Array[EnemyState] = [enemy]
+	schedule.rebuild(
+		replay_enemies,
+		0.0,
+		enemy.engagement_gate,
+		INF,
+		enemy.decision_bucket,
+		posmod(enemy.runtime_slot, 2),
+		posmod(enemy.runtime_slot, 3)
+	)
 	_expect(schedule.can_commit(enemy, 2.0, 2, 1), "approach reservation does not consume attack admission")
 	var elapsed := 0.0
 	while enemy.pos.distance_to(enemy.engagement_gate) > Director.GATE_COMPLETE_RADIUS and elapsed < 18.0:
@@ -134,7 +143,6 @@ func _advance_gate(spec: Dictionary, runtime, schedule, slot: int) -> bool:
 	# Reversal/expiry is an explicit release path, not a retarget: the fixed gate remains unchanged.
 	var fixed_gate := enemy.engagement_gate
 	_expect(enemy.engagement_gate == fixed_gate, "reversal leaves the one-shot gate immutable")
-	schedule.unregister(enemy)
 	return enemy.pos.distance_to(enemy.engagement_gate) <= Director.GATE_COMPLETE_RADIUS
 
 
