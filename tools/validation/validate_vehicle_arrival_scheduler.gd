@@ -85,7 +85,12 @@ func _validate_capacity_reservation(stage_id: StringName, packet: Dictionary, ta
 	var window_units := _window_unit_count(packet, 0)
 	var blocked := runtime.tick(0.1, packet_cap - window_units + 1, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 	_expect(Array(blocked["cues"]).is_empty(), "cue admission waits until the complete window fits")
-	_expect(int(runtime.debug_snapshot()["reserved_arrival_slots"]) == 0, "blocked cue does not reserve partial capacity")
+	var blocked_snapshot := runtime.debug_snapshot()
+	_expect(int(blocked_snapshot["reserved_arrival_slots"]) == 0, "blocked cue does not reserve partial capacity")
+	_expect(
+		int(blocked_snapshot["next_window_units"]) == window_units,
+		"blocked cue reports the exact pending window size for diagnostics"
+	)
 	var admitted := runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 	_expect(Array(admitted["cues"]).size() == 4, "capacity recovery admits one complete cue window")
 	_expect(int(runtime.debug_snapshot()["reserved_arrival_slots"]) == window_units, "admitted cue reserves every unit in its window")

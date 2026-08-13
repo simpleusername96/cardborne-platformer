@@ -349,6 +349,9 @@ func debug_snapshot() -> Dictionary:
 		"threat_budget":threat_budget(),
 		"queued_spawns":_queued_spawn_count(),
 		"queued_windows":_window_queue.size(),
+		"next_window_units":(
+			_window_unit_count(_window_queue[0]) if not _window_queue.is_empty() else 0
+		),
 		"reserved_arrival_slots":_reserved_arrival_slots,
 		"capacity_blocked_seconds":_capacity_blocked_seconds,
 		"packet_fence_blocked_seconds":_packet_fence_blocked_seconds,

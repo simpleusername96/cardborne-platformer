@@ -22,7 +22,6 @@ const PEAK_HORDE_TARGET := PressureFixture.PEAK_ORDINARY_COUNT
 const CAPACITY_PRESSURE_TARGET := EnemyStore.MAX_LIVE_HOSTILES
 const ORDINARY_CAPACITY_LOAD := PressureFixture.CAPACITY_ORDINARY_COUNT
 const BOSS_PRESSURE_TARGET := PressureFixture.BOSS_ORDINARY_COUNT + 1
-const PRODUCTION_REPLAY_MAX_WINDOW_SIZE := 32
 const PRODUCTION_REPLAY_PRIME_SECONDS := 240.0
 const PRODUCTION_REPLAY_MIN_ACTIVE_RATIO := 0.90
 
@@ -721,14 +720,12 @@ func _make_room_for_production_window(run: Node, include_peak_beat: bool) -> voi
 	):
 		return
 	var active_count := int(run.call("_active_mobile_count"))
-	var population := _production_population_accounting(
-		scheduler,
-		run.current_stage_id
-	)
-	var required_slots := mini(
-		PRODUCTION_REPLAY_MAX_WINDOW_SIZE,
-		int(population["materialized_cap"])
-	)
+	# Retire only the deficit for the exact pending authored window. A fixed
+	# worst-case allowance can over-retire actors before a smaller final window
+	# and make the measured peak less representative than ordinary play.
+	var required_slots := int(scheduler.get("next_window_units", 0))
+	if required_slots <= 0:
+		return
 	var available_slots: int = run.encounter_runtime.available_active_slots(active_count)
 	if available_slots < required_slots:
 		_retire_production_batch(run, required_slots - available_slots)
