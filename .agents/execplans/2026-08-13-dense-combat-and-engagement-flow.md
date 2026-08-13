@@ -893,7 +893,9 @@ Checkpoint evidence:
   rolls back optimistic spawn accounting and records an explicit materialization failure. Focused
   engagement telemetry/director/replay, arrival, spawn allocation, movement, contact, wall,
   spatial-grid, Run and performance-scenario validators passed in a clean worktree; Godot import
-  passed on its second settling run.
+  passed on its second settling run. The replay validator emits its success sentinel with no
+  assertion or engine error, but this Godot console process still returns exit code 1; this isolated
+  automation anomaly remains explicit rather than being relabeled as a clean process exit.
 - 2026-08-13, final native stop: clean commit `91ab9968` produced a valid focused 5+10-second
   320-enemy diagnostic with physics median/p95/p99 `18.218/28.787/34.841 ms`, frame
   median/p95/p99 `133.333/143.333/148.510 ms` and 1% low `6.734 FPS`. Render CPU/GPU
