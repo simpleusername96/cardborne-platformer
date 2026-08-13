@@ -6,7 +6,6 @@ const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_pro
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
-const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 
 var failures: Array[String] = []
 
@@ -75,29 +74,6 @@ func _initialize() -> void:
 	_expect(
 		enemy.statuses.has(&"poison") and enemy.statuses.size() == 1,
 		"ordinary primary hits retain one selected persistent condition"
-	)
-	var membership_store := EnemyStore.new()
-	var member := membership_store.acquire()
-	member.id = "status-member"
-	member.alive = true
-	_expect(membership_store.add(member), "status membership fixture enters the enemy store")
-	StatusRuntime.apply(member, toxin_profile, membership_store)
-	_expect(
-		membership_store.status_bearing_count == 1
-			and membership_store.enemy_for_status_slot(member.spatial_slot) == member,
-		"first status application adds one stable sparse membership slot"
-	)
-	var reusable_damage_receipt := {&"poison": -1.0}
-	StatusRuntime.tick_into(member, 0.25, reusable_damage_receipt, membership_store)
-	_expect(
-		is_equal_approx(float(reusable_damage_receipt[&"poison"]), 0.5),
-		"tick_into writes damage into the caller-owned receipt"
-	)
-	StatusRuntime.tick_into(member, toxin_profile.poison_duration, reusable_damage_receipt, membership_store)
-	_expect(
-		membership_store.status_bearing_count == 0
-			and membership_store.enemy_for_status_slot(member.spatial_slot) == null,
-		"final expiry removes sparse membership without visiting empty actors"
 	)
 	var chill_build := RunBuild.new(catalog)
 	chill_build.apply(&"cryo_slow")

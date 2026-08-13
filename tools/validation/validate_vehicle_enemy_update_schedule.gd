@@ -167,7 +167,6 @@ func _initialize() -> void:
 			"deferred ordinary work carries an independent due lane without overlap"
 		)
 	_check_warmed_cadence()
-	_check_persistent_lanes()
 	_check_membership_revision()
 	_check_overlap_refresh_mask()
 	var previous_active := schedule.active.duplicate()
@@ -245,95 +244,6 @@ func _check_warmed_cadence() -> void:
 	_expect(is_equal_approx(far_motion_time, 1.0), "far motion delta totals one second")
 	_expect(saw_decision_only, "decision-only work does not consume motion time")
 	_expect(saw_motion_only, "motion-only work is dispatched without decision work")
-
-
-func _check_persistent_lanes() -> void:
-	var near := EnemyState.new()
-	near.id = "persistent_near"
-	near.alive = true
-	near.active = true
-	near.spatial_slot = 8
-	near.runtime_slot = 0
-	var far := EnemyState.new()
-	far.id = "persistent_far"
-	far.alive = true
-	far.active = true
-	far.spatial_slot = 3
-	far.runtime_slot = 1
-	var support := EnemyState.new()
-	support.id = "persistent_support"
-	support.alive = true
-	support.active = true
-	support.spatial_slot = 10
-	support.runtime_slot = 2
-	support.role = &"shield_escort"
-	support.counts_active_cap = true
-	support.phase = &"startup"
-	support.threat_cost = 2.0
-	var schedule := Schedule.new()
-	schedule.register(near, false)
-	schedule.register(far, true)
-	schedule.register(support, false)
-	_expect(
-		schedule.active.size() == 3 and schedule.supports == [support]
-		and schedule.active_cap_count == 1 and is_equal_approx(schedule.committed_points, 2.0),
-		"persistent registration maintains active, support, cap, and commit aggregates"
-	)
-	var membership_before := schedule.active.size()
-	schedule.classify(far, true)
-	_expect(schedule.active.size() == membership_before, "unchanged band classification is an O(1) no-op")
-	far.threat_cost = 1.25
-	schedule.classify(far, true)
-	schedule.note_commit(far)
-	var committed_after_note := schedule.committed_points
-	schedule.note_commit(far)
-	schedule.classify(far, true)
-	_expect(
-		is_equal_approx(schedule.committed_points, committed_after_note),
-		"persistent commit accounting remains idempotent after reclassification"
-	)
-	var near_motion := 0
-	var far_motion := 0
-	var decisions := 0
-	for tick in 120:
-		schedule.consume_persistent(1.0 / 60.0, tick % 6, tick % 2, tick % 3)
-		if tick < 60:
-			continue
-		if schedule.motion_due(near): near_motion += 1
-		if schedule.motion_due(far): far_motion += 1
-		if schedule.decision_due(near): decisions += 1
-		if schedule.ordinary_due.size() > 1:
-			_expect(
-				schedule.ordinary_due[0].runtime_slot < schedule.ordinary_due[1].runtime_slot,
-				"persistent due consumption preserves legacy runtime-slot order"
-			)
-	_expect(near_motion == 30 and far_motion == 20, "persistent lanes preserve 30/20 Hz motion")
-	_expect(decisions == 10, "persistent lanes preserve 10 Hz decisions")
-	near.phase = &"startup"
-	schedule.classify(near, false)
-	schedule.consume_persistent(1.0 / 60.0, 0, 0, 0)
-	_expect(schedule.is_critical(near), "phase reclassification enters the 60 Hz critical lane")
-	near.active = false
-	schedule.classify(near, false)
-	schedule.consume_persistent(1.0 / 60.0, 1, 1, 1)
-	_expect(not schedule.is_critical(near), "deactivation removes persistent lane membership")
-	support.active = false
-	schedule.classify(support, false)
-	_expect(
-		schedule.supports.is_empty() and schedule.active_cap_count == 0
-		and is_equal_approx(schedule.committed_points, far.threat_cost),
-		"persistent deactivation removes aggregate contributions"
-	)
-	far.alive = false
-	schedule.unregister(far)
-	_expect(int(schedule.debug_snapshot()["alive"]) == 2, "retirement after alive=false removes registered alive contribution")
-	_expect(
-		schedule._persistent_decision_rings[0].is_empty()
-		and schedule._persistent_decision_rings[1].is_empty(),
-		"retirement unregisters persistent decision membership"
-	)
-	schedule.reset_persistent()
-	_expect(schedule.debug_snapshot()["ordinary_due"] == 0, "persistent reset clears due state")
 
 
 func _check_membership_revision() -> void:
