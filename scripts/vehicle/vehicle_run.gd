@@ -78,6 +78,7 @@ const ThreatRadarFeed = preload(
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const ManualPerformanceTrace = preload("res://scripts/performance/vehicle_manual_performance_trace.gd")
+const EngagementTelemetry = preload("res://scripts/performance/vehicle_engagement_telemetry.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const StageTacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
@@ -363,6 +364,7 @@ var _performance_enemy_sections: Dictionary = {}
 var _performance_detail_sample_active := false
 var _manual_performance_request: Dictionary = {}
 var _manual_performance_trace: ManualPerformanceTrace
+var _engagement_telemetry: VehicleEngagementTelemetry
 var _manual_performance_pressure: Dictionary = {}
 var _manual_performance_context: Dictionary = {}
 var _pending_stage_report: Dictionary = {}
@@ -564,6 +566,10 @@ func _physics_process(delta: float) -> void:
 		_update_stage_progression(delta)
 		if _flush_defeated_enemies() > 0:
 			enemy_grid.sync(enemies)
+		if is_instance_valid(_engagement_telemetry):
+			_engagement_telemetry.advance(
+				delta, encounter_runtime, enemies, player_position, player_velocity
+			)
 		if _performance_detail_sample_active:
 			subsystem_ms["progression_and_cleanup"] = _elapsed_ms(section_started)
 	else:
@@ -6405,6 +6411,7 @@ func _start_manual_performance_trace() -> void:
 		return
 	if not _manual_performance_trace.start():
 		return
+	_start_engagement_telemetry()
 	if RenderingServer.has_method("viewport_set_measure_render_time"):
 		RenderingServer.viewport_set_measure_render_time(
 			get_viewport().get_viewport_rid(), true
@@ -6418,11 +6425,28 @@ func _start_manual_performance_trace() -> void:
 func _finish_manual_performance_trace(reason: String) -> void:
 	if not is_instance_valid(_manual_performance_trace):
 		return
+	if is_instance_valid(_engagement_telemetry):
+		_manual_performance_trace.set_engagement_telemetry(_engagement_telemetry.snapshot())
+		_stop_engagement_telemetry()
 	_manual_performance_trace.finish(reason)
 	if RenderingServer.has_method("viewport_set_measure_render_time"):
 		RenderingServer.viewport_set_measure_render_time(
 			get_viewport().get_viewport_rid(), false
 		)
+
+
+func _start_engagement_telemetry() -> void:
+	if is_instance_valid(_engagement_telemetry):
+		return
+	_engagement_telemetry = EngagementTelemetry.new()
+	if is_instance_valid(encounter_runtime):
+		encounter_runtime.set_engagement_telemetry_enabled(true)
+
+
+func _stop_engagement_telemetry() -> void:
+	if is_instance_valid(encounter_runtime):
+		encounter_runtime.set_engagement_telemetry_enabled(false)
+	_engagement_telemetry = null
 
 
 func _fill_manual_performance_frame() -> void:
@@ -6534,6 +6558,7 @@ func _start_performance_scenario() -> void:
 		float(_performance_request["warmup"]),
 		float(_performance_request["duration"])
 	)
+	_start_engagement_telemetry()
 	if RenderingServer.has_method("viewport_set_measure_render_time"):
 		RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	_performance_scenario.activate(self)
@@ -6550,8 +6575,10 @@ func _finish_performance_scenario() -> void:
 		validation,
 		_performance_counts(),
 		_combat_renderer.debug_snapshot(),
-		enemy_grid.debug_snapshot()
+		enemy_grid.debug_snapshot(),
+		_engagement_telemetry.snapshot() if is_instance_valid(_engagement_telemetry) else {}
 	)
+	_stop_engagement_telemetry()
 	if OS.has_feature("web"):
 		mode = RunMode.PAUSED
 		set_physics_process(false)

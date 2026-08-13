@@ -340,7 +340,7 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
 `tools/validation/validate_vehicle_performance_scenarios.gd`,
 `tools/validation/validate_vehicle_manual_play_trace.gd`
 
-- [ ] **0.1** Add bounded engagement-distribution telemetry.
+- [x] **0.1** Add bounded engagement-distribution telemetry.
   - Change: record at 4 Hz the rear-hemisphere engaged share relative to player velocity, eight
     engagement-sector counts, largest empty gap, births and gate completions per 0.5-second bucket,
     longest rear-tail interval, active reservations, expiry/cancel counts, and director CPU. Use
@@ -824,13 +824,24 @@ not grant the executor discretion to change workload, thresholds, or release arc
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 0.
-- Next task: 0.1, bounded engagement-distribution telemetry.
+- Next task: 0.2, clean native baseline and scaling sweep.
 - Last completed gate: Discovery Closure Gate.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this
   pointer in the same edit. Do not mirror progress into a second plan.
 - Anti-rework: on start or resume, read this contract and inspect the worktree only enough to confirm
   the next checkpoint inputs. Treat checked tasks and passing evidence as complete unless their
   relevant input changed. Run each check only at its declared cadence.
+
+Checkpoint evidence:
+
+- 2026-08-13, task 0.1: added recorder-only 4 Hz engagement telemetry with a stable 900-pixel
+  observation shell, eight-sector aggregates, meaningful rear-tail detection, bounded event buckets,
+  and forward lifecycle/director hooks. `validate_vehicle_engagement_telemetry.gd`,
+  `validate_vehicle_arrival_scheduler.gd`, `validate_vehicle_manual_play_trace.gd`, headless import,
+  and `git diff --check` passed. Ordinary play keeps the collector absent. Two pre-import validator
+  attempts exceeded their wrappers and left exact task-owned Godot children; those children were
+  identified by full command line and stopped, and the same manual-trace validator passed after the
+  import completed.
 
 ## Completion and Stop Conditions
 

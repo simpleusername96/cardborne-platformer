@@ -100,7 +100,8 @@ func finish(
 	validation: Dictionary = {},
 	counts: Dictionary = {},
 	renderer: Dictionary = {},
-	grid: Dictionary = {}
+	grid: Dictionary = {},
+	engagement_telemetry: Dictionary = {}
 ) -> Dictionary:
 	if _finished:
 		return {}
@@ -163,6 +164,7 @@ func finish(
 		"counts": counts.duplicate(true),
 		"combat_renderer": renderer.duplicate(true),
 		"spatial_grid": grid.duplicate(true),
+		"engagement_telemetry": engagement_telemetry.duplicate(true),
 		"memory": {
 			"initial_static_bytes": _initial_static_memory,
 			"final_static_bytes": float(Performance.get_monitor(Performance.MEMORY_STATIC)),
@@ -464,6 +466,7 @@ func _publish_web_summary(result: Dictionary) -> void:
 		"subsystems": result["subsystems"],
 		"counts": result["counts"],
 		"combat_renderer": result["combat_renderer"],
+		"engagement_telemetry": result["engagement_telemetry"],
 		"scenario_validation": result["scenario_validation"],
 		"thresholds": result["thresholds"],
 	}

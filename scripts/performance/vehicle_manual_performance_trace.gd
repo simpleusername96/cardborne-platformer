@@ -36,6 +36,7 @@ var _finished := false
 var _detail_sample_stride := DETAIL_SAMPLE_STRIDE_DEFAULT
 var _session_metadata: Dictionary = {}
 var _finished_result: Dictionary = {}
+var _engagement_telemetry: Dictionary = {}
 var _viewport: Viewport
 
 var _started_unix_time := 0.0
@@ -182,6 +183,10 @@ func is_recording() -> bool:
 
 func has_pending_physics() -> bool:
 	return _pending_physics_ticks > 0
+
+
+func set_engagement_telemetry(telemetry: Dictionary) -> void:
+	_engagement_telemetry = telemetry.duplicate(true)
 
 
 func debug_retained_counts() -> Dictionary:
@@ -344,6 +349,7 @@ func finish(reason: String = "manual_stop") -> Dictionary:
 		},
 		"summary":_summary(),
 		"subsystems":_subsystem_summary(),
+		"engagement_telemetry":_engagement_telemetry.duplicate(true),
 		"frame_buckets":_ordered_buckets(),
 		"slow_frames":_slow_frames.duplicate(true),
 		"memory":{

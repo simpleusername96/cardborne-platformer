@@ -49,6 +49,12 @@ var _spawning_enabled := true
 var _spawn_allocator := SpawnAllocator.new()
 var _allocation_debug: Array[Dictionary] = []
 var _pressure_snapshot := {}
+var _engagement_telemetry_enabled := false
+var _telemetry_births := 0
+var _telemetry_gate_completions := 0
+var _telemetry_expiries := 0
+var _telemetry_cancellations := 0
+var _telemetry_director_cpu_us := 0
 
 
 func configure(
@@ -95,6 +101,11 @@ func configure(
 	_spawning_enabled = true
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
+	_telemetry_births = 0
+	_telemetry_gate_completions = 0
+	_telemetry_expiries = 0
+	_telemetry_cancellations = 0
+	_telemetry_director_cpu_us = 0
 	_spawn_allocator.configure(encounter_seed, spawn_anchors, geometry_snapshot)
 	_spawn_allocator.prewarm_for_packets(_packets)
 
@@ -109,6 +120,53 @@ func stop_spawning() -> void:
 
 func spawning_enabled() -> bool:
 	return _spawning_enabled
+
+
+func set_engagement_telemetry_enabled(enabled: bool) -> void:
+	_engagement_telemetry_enabled = enabled
+	if not enabled:
+		_telemetry_births = 0
+		_telemetry_gate_completions = 0
+		_telemetry_expiries = 0
+		_telemetry_cancellations = 0
+		_telemetry_director_cpu_us = 0
+
+
+func consume_engagement_telemetry(output: Dictionary) -> void:
+	## Diagnostic counters are consumed only by an explicitly active recorder/trace.
+	output.clear()
+	output["births"] = _telemetry_births
+	output["gate_completions"] = _telemetry_gate_completions
+	output["active_reservations"] = 0
+	output["expiries"] = _telemetry_expiries
+	output["cancellations"] = _telemetry_cancellations
+	output["director_cpu_ms"] = float(_telemetry_director_cpu_us) / 1000.0
+	_telemetry_births = 0
+	_telemetry_gate_completions = 0
+	_telemetry_expiries = 0
+	_telemetry_cancellations = 0
+	_telemetry_director_cpu_us = 0
+
+
+func note_engagement_gate_completion() -> void:
+	if _engagement_telemetry_enabled:
+		_telemetry_gate_completions += 1
+
+
+func note_engagement_expiry() -> void:
+	if _engagement_telemetry_enabled:
+		_telemetry_expiries += 1
+
+
+func note_engagement_cancellation() -> void:
+	if _engagement_telemetry_enabled:
+		_telemetry_cancellations += 1
+
+
+func note_engagement_director_cpu_usec(cpu_us: int) -> void:
+	## Phase 2 calls this around the dedicated director only; Phase 0 remains zero.
+	if _engagement_telemetry_enabled:
+		_telemetry_director_cpu_us += maxi(0, cpu_us)
 
 
 func signal_event(event_id: StringName) -> void:
@@ -531,6 +589,8 @@ func _process_due_round(active_mobile_count: int, delta: float, spawns: Array[Di
 			"time":elapsed,
 			"nominal_due":round["nominal_due"],
 		})
+		if _engagement_telemetry_enabled:
+			_telemetry_births += 1
 
 
 func _complete_inflight_packet_if_ready() -> void:
