@@ -1,0 +1,125 @@
+{
+  "batch": "upgrade-artwork-all-cards-v6/chassis-combat",
+  "runtime_integrated": false,
+  "approval_status": "pending_user_review",
+  "visual_authority_evidence": {
+    "visual_system_path": "docs/design/VISUAL_SYSTEM.md",
+    "visual_system_read_completely": true,
+    "style_reference_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "style_reference_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "style_reference_inspected_at_original_detail": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "built_in_imagegen.referenced_image_paths",
+    "style_reference_role": "style grammar only; objects and layout were not copied"
+  },
+  "assets": [
+    {
+      "id": "chassis_speed",
+      "label_ko": "주행 속도",
+      "label_en": "Movement Speed",
+      "source_path": "sources/chassis_speed.png",
+      "candidate_path": "candidates/chassis_speed.png",
+      "source_sha256": "663684e995a6de00f8b6e78f64f995ffaa6ec9997e98f31a50577ad8684611d0",
+      "candidate_sha256": "87fb4ba6dc63c4092016f5160911eb8af709b4c2415cb2c0b99847da2c7075ad",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for chassis_speed / 주행 속도 / Movement Speed: one dominant industrial SF vector-thruster assembly, dark graphite engine nozzle with one broad amber exhaust wedge and at most one stabilizer mass; reads as increased mobility without a vehicle. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation, restrained system-cyan accent, small-size readability. Perfectly flat #FF00FF chroma-key background; no magenta subject, text, numbers, UI, card shell, badge, frame, arrow, ring, scene, vehicle, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    },
+    {
+      "id": "hull_integrity",
+      "label_ko": "장갑 내구도",
+      "label_en": "Hull Integrity",
+      "source_path": "sources/hull_integrity.png",
+      "candidate_path": "candidates/hull_integrity.png",
+      "source_sha256": "2f15cf8d639b1be084a674770add713605c01df7a098729384c46fc3fb4d0762",
+      "candidate_sha256": "a3f68117204d1931e3ff263d773d0bde40e3ad1c7b756d49dab97efe96c666d8",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for hull_integrity / 장갑 내구도 / Hull Integrity: one dominant reinforced hull armor plate, compact faceted dark graphite bulkhead with a broad amber inset plate and one pale maintenance plate; reads as extra maximum hull and immediate reinforcement without a vehicle. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation, small-size readability. Perfectly flat #FF00FF chroma-key background; no magenta subject, text, numbers, UI, card shell, badge, frame, arrow, ring, scene, vehicle, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    },
+    {
+      "id": "lifesteal",
+      "label_ko": "흡혈",
+      "label_en": "Lifesteal",
+      "source_path": "sources/lifesteal.png",
+      "candidate_path": "candidates/lifesteal.png",
+      "source_sha256": "c9333a65495435a0c7f53c9e7c1c31301d4ea6c820d2e477911e5df93adb68f8",
+      "candidate_sha256": "fafd79b788377523757d54b38fb3394ee4ec7968a94c98649d00f6773b666d32",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for lifesteal / 흡혈 / Lifesteal: one dominant compact repair intake module, dark graphite armored intake with a single mint support-energy reservoir flowing into its center as one solid tapered mint insert; communicates healing from real damage without blood, characters, or a vehicle. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation. Perfectly flat #FF00FF chroma-key background; no magenta subject, text, numbers, UI, card shell, badge, frame, arrow, ring, scene, vehicle, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    },
+    {
+      "id": "overflow_barrier",
+      "label_ko": "과잉 회복 실드",
+      "label_en": "Overflow Barrier",
+      "source_path": "sources/overflow_barrier.png",
+      "candidate_path": "candidates/overflow_barrier.png",
+      "source_sha256": "abe6f02433bd2230482aec285a9e0e5192d769037646490b6979d79bff178000",
+      "candidate_sha256": "2329c1234d6cb6369d326424745bb363ba6e172c3b9fb3650ef092da1665064b",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for overflow_barrier / 과잉 회복 실드 / Overflow Barrier: one dominant dark graphite overflow converter with a broad mint energy chamber spilling into one attached angular mint protective plate; excess healing becomes temporary protection, without a ring, bubble, vehicle, or UI. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation, restrained amber accent. Perfectly flat #FF00FF chroma-key background; no magenta subject, text, numbers, UI, card shell, badge, frame, arrow, ring, scene, vehicle, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    },
+    {
+      "id": "pickup_radius",
+      "label_ko": "수거 범위",
+      "label_en": "Pickup Radius",
+      "source_path": "sources/pickup_radius.png",
+      "candidate_path": "candidates/pickup_radius.png",
+      "source_sha256": "515ae9f005a5209b850a57f436c91eede27639a577cb37af0c246b72dc69d560",
+      "candidate_sha256": "091d8184606515cbb2574f6abbaaef8c86f0eec620b3b5f85a7a63d78b79cc9a",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for pickup_radius / 수거 범위 / Pickup Radius: one dominant dark graphite industrial magnetic collector prism with a wide system-cyan concave intake face pulling one small amber pickup shard toward it; no circular range diagram, ring, or vehicle. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation. Perfectly flat #FF00FF chroma-key background; no magenta subject, text, numbers, UI, card shell, badge, frame, arrow, ring, scene, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    },
+    {
+      "id": "critical_targeting",
+      "label_ko": "치명타",
+      "label_en": "Critical Hit",
+      "source_path": "sources/critical_targeting.png",
+      "candidate_path": "candidates/critical_targeting.png",
+      "source_sha256": "bee0625ea227a020449553cfd2acdffb3261622c9a8adcf0f282752ff8f718ca",
+      "candidate_sha256": "d69451655e96bb3391f12e96959986a0cdf31e2ee422809db98a6b9eac5bbe77",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for critical_targeting / 치명타 / Critical Hit: one dominant precision targeting core, dark graphite angular optic housing with one exposed bright ivory weak-point lens struck by a single amber projectile wedge; deterministic direct-damage critical impact without target bracket, crosshair, ring, arrow, vehicle, or text. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation. Perfectly flat #FF00FF chroma-key background; no magenta subject, text, numbers, UI, card shell, badge, frame, arrow, ring, scene, vehicle, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    },
+    {
+      "id": "dash_afterburn_field",
+      "label_ko": "대시 잔류장",
+      "label_en": "Dash Afterburn Field",
+      "source_path": "sources/dash_afterburn_field.png",
+      "candidate_path": "candidates/dash_afterburn_field.png",
+      "source_sha256": "7c32017aaf749d76919aea073002171fdc44073b0f9f3fe38b559c8c9c4da228",
+      "candidate_sha256": "a6ec50ac069b856f6624acbd5ad0612f57a7c39a930f63963fbf9c215c073376",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for dash_afterburn_field / 대시 잔류장 / Dash Afterburn Field: one dominant long horizontal filled thermal-orange capsule wake with dark graphite end caps and one small departing amber engine-flare mass at one end; reads as a damage field across the complete dash path, not arrow, ring, beam, or vehicle. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation. Perfectly flat #FF00FF chroma-key background; no magenta subject, text, numbers, UI, card shell, badge, frame, arrow, ring, scene, vehicle, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    },
+    {
+      "id": "dash_overdrive",
+      "label_ko": "대시 강화",
+      "label_en": "Dash Boost",
+      "source_path": "sources/dash_overdrive.png",
+      "candidate_path": "candidates/dash_overdrive.png",
+      "source_sha256": "2eb29f06cbdf5a57cd20893407b3255a6c06fcceb8049af0a78fe5431f076a23",
+      "candidate_sha256": "b37bcf45de6d2f4935ad400ba33d9f2a6ea60ec196592d46c223fee61bc533b0",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for dash_overdrive / 대시 강화 / Dash Boost: one dominant compact post-dash overdrive power rail, forward-facing dark graphite drive module with a wide amber energized rail emerging from its nose and one small system-cyan regulator; conveys a short damage boost after dash without vehicle, arrow, beam corridor, ring, or text. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation. Perfectly flat #FF00FF chroma-key background; no magenta subject, text, numbers, UI, card shell, badge, frame, arrow, ring, scene, vehicle, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    },
+    {
+      "id": "last_stand_amplifier",
+      "label_ko": "저체력 피해",
+      "label_en": "Low-Hull Damage",
+      "source_path": "sources/last_stand_amplifier.png",
+      "candidate_path": "candidates/last_stand_amplifier.png",
+      "source_sha256": "6f1ab9fc8933ba4eb0d9a8b991d7da11095656113ea97bdab5db612ab6d7d2f6",
+      "candidate_sha256": "6439ba95a01e66a2a50a0e4fe4c64f40a035f9c614c38857e06546db837e9b77",
+      "prompt": "Use case: stylized-concept. Review-only Cardborne upgrade-card content artwork for last_stand_amplifier / 저체력 피해 / Low-Hull Damage: one dominant battle-damaged dark graphite power amplifier block with one deep red danger plane below and a single strong amber output plane above; communicates more damage at low hull without blood, vehicle, health bar, text, numbers, arrow, ring, or target. Image 1 is the canonical Cardborne style reference, supplying style grammar only; do not copy its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding constraints. Top-down asset, 3–5 broad matte planes, dark separation. Perfectly flat #FF00FF chroma-key background; no magenta subject, UI, card shell, badge, frame, scene, lamps, nested outlines, greebles, shadow, reflection, or watermark.",
+      "runtime_integrated": false,
+      "approval_status": "pending_user_review"
+    }
+  ]
+}

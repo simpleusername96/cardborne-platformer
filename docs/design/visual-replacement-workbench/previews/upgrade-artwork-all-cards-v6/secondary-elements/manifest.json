@@ -1,0 +1,88 @@
+{
+  "batch": "upgrade-artwork-all-cards-v6-secondary-elements",
+  "runtime_integrated": false,
+  "approval_status": "pending_user_review",
+  "visual_authority_evidence": {
+    "visual_system_path": "docs/design/VISUAL_SYSTEM.md",
+    "visual_system_read_completely": true,
+    "reference_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "reference_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "reference_inspected_at_original_detail": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "built_in_imagegen_referenced_image_paths",
+    "reference_scope": "style grammar only; its objects and layout were not copied"
+  },
+  "mechanical_postprocess": "Flat chroma-key removal followed by Lanczos resize to 192x192; no creative geometry was added.",
+  "cards": [
+    {
+      "id": "auto_laser", "label_ko": "자동 레이저", "label_en": "Auto Laser",
+      "source_path": "sources/auto_laser.png", "source_sha256": "a3a3449735598bb741e4e5c24f31731e67bce04c585446a14c5ca59b86e9cd39",
+      "candidate_path": "candidates/auto_laser.png", "candidate_sha256": "7acf82dbab336f6a737ea65ad2e19fe38b0479ac63db9f3d1998a9401b099329",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: AUTO LASER / 자동 레이저. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. Depict one dominant industrial SF auto-targeting laser emitter: a compact forward-facing rectangular beam projector with a single wide open aperture, two max supporting functional masses (a side heat sink and rear power block), a short bright cyan-white beam stub exiting the aperture only as a directional cue. It must read as auto laser, not a vehicle, UI icon, card, badge, frame, or scene. Top-down three-quarter game asset, centered, generous background margin. Use 3–5 broad matte planes, dark separation perimeter, restrained system-cyan accent, familiar industrial science fiction, hard-edged antialiased geometry, sparse detail, small-size readability. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "drop_mines", "label_ko": "후방 기뢰", "label_en": "Drop Mines",
+      "source_path": "sources/drop_mines.png", "source_sha256": "7c7ee37362f6c8e478f116b3ea9080ef58007c3c398ee5c7e70d12a5a8211641",
+      "candidate_path": "candidates/drop_mines.png", "candidate_sha256": "4a65cd87b0cfa2f9db64c1797dbf185b09da31eecb47495db42e43b8638f619a",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: DROP MINES / 후방 기뢰. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant compact industrial SF proximity mine silhouette viewed top-down: flattened hexagonal armored mine with one central amber arming core and two short stabilizer fins pointing backward, implying automated rear deployment. At most two supporting functional masses. It must read as a deployable rear mine, not a vehicle, UI icon, card, badge, frame, or scene. Centered with generous background margin. Use 3–5 broad matte planes, dark separation perimeter, restrained amber accent, familiar industrial science fiction, hard-edged antialiased geometry, sparse detail, small-size readability. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "electric_field", "label_ko": "전기장", "label_en": "Electric Field",
+      "source_path": "sources/electric_field.png", "source_sha256": "7a23304607a8d12553c23a0fba5ab3dab86c90a621928a35001a18d9484e9a3d",
+      "candidate_path": "candidates/electric_field.png", "candidate_sha256": "8d83b2cf4f4305f9d69302d6387c8f2c8c729337cd0a1093aeea27c8fc748daa",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: ELECTRIC FIELD / 전기장. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant top-down industrial SF electric field emitter: a squat four-pronged generator hub with a continuous filled arc-purple energy field mass visibly extending beneath it as one broad irregular disk, not a hollow ring. One small inset power core allowed. The field is the mechanic and must read as a damaging area, distinct from barrier/shield. Centered with generous margin. Use 3–5 broad matte planes, dark separation, restrained arc-purple accent, familiar industrial SF, hard-edged antialiased geometry, sparse detail, readable small. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, soft glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "homing_missiles", "label_ko": "추적 미사일", "label_en": "Homing Missiles",
+      "source_path": "sources/homing_missiles.png", "source_sha256": "39be377e76f12a291b60755601648b37b1b6af37a5a81c6edde974a235275442",
+      "candidate_path": "candidates/homing_missiles.png", "candidate_sha256": "f1b044b41b1640920a69862ac9c84b0215a1cbd5c23d555d3f67e2deaa25d1fe",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: HOMING MISSILES / 추적 미사일. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant asymmetric three-missile salvo silhouette: three compact teal-and-dark industrial seeker missiles in a shallow fan, each with a distinct pointed nose and one shared rear launch cradle mass; they imply selecting different targets without arrows or trails. At most two supporting functional masses. Not a vehicle, UI icon, card, badge, frame, or scene. Centered with generous margin. Use 3–5 broad matte planes, dark separation perimeter, restrained system-cyan accent, familiar industrial SF, hard-edged antialiased geometry, sparse detail, readable small. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "orbiting_blades", "label_ko": "회전 날개", "label_en": "Orbiting Blades",
+      "source_path": "sources/orbiting_blades.png", "source_sha256": "bd6760d85eb6c71fba59b5d28c37e22a93082ef8cc460b617788002e4846c8b0",
+      "candidate_path": "candidates/orbiting_blades.png", "candidate_sha256": "ee307a1c22b9b5912a3350d2113c4ef001d0b7a1b1ff801912c437e6566142d7",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: ORBITING BLADES / 회전 날개. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant mechanic silhouette: a dark central rotor hub with four broad curved industrial cutting blades at cardinal offsets, each blade clearly separate and sweeping clockwise. Use a tiny amber core only, no circular ring or trail. It must read as contact-damage orbiting blades, not a vehicle, UI icon, card, badge, frame, or scene. Centered with generous margin. Use 3–5 broad matte planes overall, dark separation, restrained amber accent, familiar industrial SF, hard-edged antialiased geometry, sparse detail, readable small. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "secondary_amplifier", "label_ko": "보조무기 피해", "label_en": "Secondary Damage",
+      "source_path": "sources/secondary_amplifier.png", "source_sha256": "1960a4864b99503c04ceab0a007454b6c0f5e99073b7b0d697f86311370e282f",
+      "candidate_path": "candidates/secondary_amplifier.png", "candidate_sha256": "279b4dcd111f6262866bdb0533d198cc2523f13b1f14d2e092958f3ae7dc4490",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: SECONDARY AMPLIFIER / 보조무기 피해. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant industrial SF power amplification module: an angular dark power coupler with one large amber energy core embedded between two thick output fins, visually suggesting boosted secondary weapon damage. At most two supporting functional masses. Do not depict a gun, vehicle, UI icon, card, badge, frame, or scene. Centered with generous margin. Use 3–5 broad matte planes, dark separation perimeter, one restrained amber power accent, familiar industrial SF, hard-edged antialiased geometry, sparse detail, readable small. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "secondary_coolant", "label_ko": "보조무기 재사용", "label_en": "Secondary Cooldown",
+      "source_path": "sources/secondary_coolant.png", "source_sha256": "7d9f90f4f2717452700f7bbbcaf248676759a95b1b365691b301de73c0f7cf08",
+      "candidate_path": "candidates/secondary_coolant.png", "candidate_sha256": "511753f1bba8f681f9c9b4e6ffbf44c4f106100bf55a00be5cdbcb286654df09",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: SECONDARY COOLDOWN / 보조무기 재사용. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant industrial SF thermal coolant relay: a compact rectangular coolant exchanger with one broad ice-blue central reservoir and two asymmetrical cooling vent blocks, visually distinct from a power amplifier and implying faster recharge. At most two supporting functional masses. Not a vehicle, UI icon, card, badge, frame, or scene. Centered with generous margin. Use 3–5 broad matte planes, dark separation perimeter, restrained cryo-blue accent, familiar industrial SF, hard-edged antialiased geometry, sparse detail, readable small. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "storm_barrage", "label_ko": "원거리 전격포", "label_en": "Storm Barrage",
+      "source_path": "sources/storm_barrage.png", "source_sha256": "27cfd95156468fdb8a5d2d9afb908b5dd9774bfda588e1e98774ae6c5815d22d",
+      "candidate_path": "candidates/storm_barrage.png", "candidate_sha256": "42213ad1bd5445a53ec261335fa85a5f8db79c94f33a77ce961b6fb3dcee1377",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: STORM BARRAGE / 원거리 전격포. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant industrial SF remote lightning strike design: a thick vertical arc-purple lightning bolt descending into a single broad flattened impact plate, with one compact targeting capacitor at the upper side. The bolt and impact plate must read as long-range barrage, not a shield, vehicle, UI icon, card, badge, frame, or scene. No hollow circular warning ring. Centered with generous margin. Use 3–5 broad matte planes, dark separation, restrained arc-purple accent, familiar industrial SF, hard-edged antialiased geometry, sparse detail, readable small. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, soft glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "cryo_slow", "label_ko": "냉기 부여", "label_en": "Cryo Slow",
+      "source_path": "sources/cryo_slow.png", "source_sha256": "c4e745d6d899d8a17e675b0837704addb1f8f6484c8ca6c9bb14b431acab8b39",
+      "candidate_path": "candidates/cryo_slow.png", "candidate_sha256": "a718bb4e93ffb55a37dc5209df6c1a86dfd77a149ad55c69ee14f588ff17e154",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: CRYO SLOW / 냉기 부여. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant industrial SF cryo injector module: a dark tapered cartridge with a single large icy-blue coolant chamber and a frosted broad wedge nozzle, implying a slowing cold application. At most two functional masses; no area ring or enemy body. It must read as cryo status application, visually distinct from the coolant relay. Centered with generous margin. Use 3–5 broad matte planes, dark separation perimeter, restrained cryo-blue accent, familiar industrial SF, hard-edged antialiased geometry, sparse detail, readable small. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    },
+    {
+      "id": "shock_disruption", "label_ko": "감전", "label_en": "Shock",
+      "source_path": "sources/shock_disruption.png", "source_sha256": "d23938f60b5d03f4be5c69d99fabd5be8a7b9321e19ee1f422be8dfd762f2ebd",
+      "candidate_path": "candidates/shock_disruption.png", "candidate_sha256": "d80d5ccff76df4f2031dea20c6a2def55cd731a17536350f60899e4b61e335b5",
+      "runtime_integrated": false, "approval_status": "pending_user_review",
+      "prompt": "Create a newly authored 1:1 review-only game upgrade artwork for Cardborne: SHOCK DISRUPTION / 감전. Transparent-ready isolated subject on a perfectly flat solid #FF00FF chroma-key background; no magenta anywhere in the subject. One dominant industrial SF disruption prong: a split two-jaw arc emitter with a central violet capacitor and a short jagged arc trapped between the jaws, mechanically suggesting interruption of a newly started attack. At most two supporting functional masses; no target body, area ring, or blast. It must read as shock disruption, not a vehicle, UI icon, card, badge, frame, or scene. Centered with generous margin. Use 3–5 broad matte planes, dark separation perimeter, restrained arc-purple accent, familiar industrial SF, hard-edged antialiased geometry, sparse detail, readable small. No text, numbers, logos, UI chrome, arrows, rings, repeated lamps, nested outlines, tiny greebles, particles, glow, scenery, characters, or vehicle body. The supplied Cardborne universal art style reference is style grammar only; do not copy, reproduce, trace, crop, or reuse any of its objects, silhouettes, modules, glyphs, or layout. VISUAL_SYSTEM.md supplies binding task constraints."
+    }
+  ]
+}

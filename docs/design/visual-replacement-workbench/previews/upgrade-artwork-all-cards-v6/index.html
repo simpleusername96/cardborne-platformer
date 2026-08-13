@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne 전체 업그레이드 아트워크 v6</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1119; --panel:#141d29; --line:#2b3b4e; --text:#eef4f8; --muted:#9dabb9; --cyan:#58bfea; --green:#72d69a; --amber:#f2b735; --red:#f05a5f; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 50% -20%,#20364b 0,var(--bg) 42rem); color:var(--text); font-family:Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif; line-height:1.5; }
+    button,textarea,input,select { font:inherit; }
+    .wrap { width:min(1400px,calc(100% - 32px)); margin:auto; padding:44px 0 80px; }
+    header { display:grid; gap:14px; margin-bottom:24px; }
+    h1,h2,h3,p { margin:0; }
+    h1 { font-size:clamp(30px,5vw,52px); line-height:1.08; letter-spacing:-.04em; }
+    .lede,.muted { color:var(--muted); }
+    .notice { border:1px solid #326178; background:#102633; border-radius:14px; padding:14px 16px; }
+    .toolbar { position:sticky; top:0; z-index:10; display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 -8px 24px; padding:10px 8px; background:#0b1119e8; backdrop-filter:blur(14px); }
+    .toolbar button,.import-label,select { border:1px solid var(--line); border-radius:9px; color:var(--text); background:#182433; padding:9px 12px; cursor:pointer; }
+    .import-label input { display:none; }
+    #save-state { margin-left:auto; color:var(--muted); font-size:13px; }
+    .summary { display:flex; flex-wrap:wrap; gap:9px; margin-bottom:28px; }
+    .summary span { border:1px solid var(--line); border-radius:999px; background:#111925; padding:6px 10px; color:var(--muted); }
+    .group { margin:32px 0; }
+    .group h2 { margin-bottom:12px; font-size:23px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(350px,1fr)); gap:16px; }
+    .card { border:1px solid var(--line); border-radius:16px; background:linear-gradient(145deg,var(--panel),#0f1722); padding:16px; box-shadow:0 14px 36px #0005; }
+    .head { display:flex; justify-content:space-between; align-items:start; gap:10px; margin-bottom:12px; }
+    .head h3 { font-size:19px; }
+    .head small { display:block; color:var(--muted); font-weight:400; }
+    .category { border:1px solid #36526b; border-radius:999px; padding:4px 8px; color:var(--cyan); font-size:12px; white-space:nowrap; }
+    .compare { display:grid; grid-template-columns:1fr 1.25fr; gap:10px; }
+    figure { margin:0; border:1px solid var(--line); border-radius:11px; background:#0a1018; padding:9px; }
+    figcaption { display:flex; justify-content:space-between; gap:6px; color:var(--muted); font-size:12px; }
+    .stage { min-height:178px; display:grid; place-items:center; margin-top:7px; border-radius:8px; background-color:#101925; background-image:linear-gradient(45deg,#192431 25%,transparent 25%),linear-gradient(-45deg,#192431 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#192431 75%),linear-gradient(-45deg,transparent 75%,#192431 75%); background-size:18px 18px; background-position:0 0,0 9px,9px -9px,-9px 0; }
+    .current img { max-width:104px; max-height:104px; }
+    .candidate img { width:168px; height:168px; object-fit:contain; }
+    .current-approved { color:var(--green); font-weight:700; }
+    .review { display:grid; gap:9px; margin-top:12px; }
+    .statuses { display:flex; flex-wrap:wrap; gap:6px; }
+    .statuses button { border:1px solid var(--line); border-radius:999px; background:#182331; color:var(--text); padding:6px 10px; cursor:pointer; }
+    .statuses button[aria-pressed="true"] { border-color:var(--cyan); background:#173340; }
+    .statuses button[data-status="approved"][aria-pressed="true"] { border-color:var(--green); background:#173524; }
+    .statuses button[data-status="revise"][aria-pressed="true"] { border-color:var(--amber); background:#3c2d15; }
+    .statuses button[data-status="rejected"][aria-pressed="true"] { border-color:var(--red); background:#3b1c21; }
+    textarea { width:100%; min-height:74px; resize:vertical; border:1px solid var(--line); border-radius:9px; background:#0a111a; color:var(--text); padding:9px 10px; }
+    .global { display:grid; gap:8px; margin-top:28px; }
+    footer { margin-top:28px; color:var(--muted); font-size:13px; }
+    a { color:var(--cyan); }
+    @media(max-width:720px) { .wrap{width:min(100% - 20px,1400px);padding-top:28px}.toolbar{position:static}#save-state{width:100%;margin-left:0}.grid{grid-template-columns:1fr}.compare{grid-template-columns:1fr}.stage{min-height:196px} }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p>ALL UPGRADE CARDS · IMAGEGEN v6</p>
+      <h1>전체 업그레이드 카드 전용 이미지</h1>
+      <p class="lede">현재 28개 카드마다 새로 생성한 서로 다른 검토 후보입니다. 이번 단계의 목적은 전용 이미지 전체 확보이며, 아직 게임에는 적용하지 않았습니다.</p>
+      <p class="notice"><strong>저장:</strong> 선택과 메모는 이 v6 보고서 전용 저장 키에 즉시 저장됩니다. v4/v5 피드백을 덮어쓰지 않습니다. 다른 환경으로 옮길 때는 JSON을 내보내세요.</p>
+    </header>
+
+    <div class="toolbar">
+      <select id="filter" aria-label="카테고리 필터"><option value="all">전체 카테고리</option></select>
+      <button type="button" id="export">JSON 내보내기</button>
+      <label class="import-label">JSON 불러오기<input type="file" id="import" accept="application/json,.json"></label>
+      <button type="button" id="clear">v6 입력 초기화</button>
+      <span id="save-state" role="status">자동 저장 준비</span>
+    </div>
+
+    <div class="summary" id="summary"></div>
+    <div id="catalog"></div>
+
+    <section class="global">
+      <label for="global-note"><strong>전체 메모</strong></label>
+      <textarea id="global-note" placeholder="전체 세트에 적용할 공통 수정 방향을 적으세요."></textarea>
+    </section>
+
+    <footer>
+      <p>창작: OpenAI ImageGen · 후처리: 크로마키 알파 제거 및 192×192 리사이즈 · 기준: <a href="../../../VISUAL_SYSTEM.md">VISUAL_SYSTEM.md</a> + 정본 스타일 시트</p>
+    </footer>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "cardborne.upgrade-artwork.all-cards-v6.review";
+    const SCHEMA = "cardborne-upgrade-artwork-review/v6";
+    const PRODUCTION_ROOT = "../../../../../art/visuals/production/gameplay/";
+    const categoryLabels = { activated:"발동무기", primary:"주무기", secondary:"보조무기", element:"속성", chassis:"차체", combat:"전투" };
+    const groupOrder = ["activated","primary","secondary","element","chassis","combat"];
+    const items = [
+      {id:"active_amplifier",category:"activated",ko:"발동무기 피해",en:"Active Damage",currentId:"upgrade/system_relay",current:"upgrades/system_relay.png",batch:"activated-primary"},
+      {id:"active_coolant",category:"activated",ko:"발동무기 재사용",en:"Active Cooldown",currentId:"upgrade/system_relay",current:"upgrades/system_relay.png",batch:"activated-primary"},
+      {id:"gravity_collapse",category:"activated",ko:"블랙홀",en:"Black Hole",currentId:"upgrade/ion_field",current:"upgrades/ion_field.png",batch:"activated-primary"},
+      {id:"kinetic_shockwave",category:"activated",ko:"충격파",en:"Shockwave",currentId:"upgrade/defense_matrix",current:"upgrades/defense_matrix.png",batch:"activated-primary"},
+      {id:"piercing_lance",category:"activated",ko:"십자 광선",en:"Cross Beam",currentId:"upgrade/cross_beam",current:"upgrades/cross_beam.png",batch:"activated-primary"},
+      {id:"piercing_rounds",category:"primary",ko:"관통 탄환",en:"Piercing Rounds",currentId:"projectile/energy_teardrop",current:"weapons/projectiles/projectile_energy_teardrop.png",batch:"activated-primary"},
+      {id:"split_muzzle",category:"primary",ko:"확산 총구",en:"Split Muzzle",currentId:"projectile/energy_teardrop",current:"weapons/projectiles/projectile_energy_teardrop.png",batch:"activated-primary"},
+      {id:"auto_laser",category:"secondary",ko:"자동 레이저",en:"Auto Laser",currentId:"projectile/energy_teardrop",current:"weapons/projectiles/projectile_energy_teardrop.png",batch:"secondary-elements"},
+      {id:"drop_mines",category:"secondary",ko:"후방 기뢰",en:"Drop Mines",currentId:"secondary/wake_mine",current:"weapons/secondaries/secondary_wake_mine.png",batch:"secondary-elements"},
+      {id:"electric_field",category:"secondary",ko:"전기장",en:"Electric Field",currentId:"upgrade/ion_field",current:"upgrades/ion_field.png",batch:"secondary-elements"},
+      {id:"homing_missiles",category:"secondary",ko:"추적 미사일",en:"Homing Missiles",currentId:"secondary/seeker",current:"weapons/secondaries/secondary_seeker.png",batch:"secondary-elements"},
+      {id:"orbiting_blades",category:"secondary",ko:"회전 날개",en:"Orbiting Blades",currentId:"secondary/orbit_blade",current:"weapons/secondaries/secondary_orbit_blade.png",batch:"secondary-elements"},
+      {id:"secondary_amplifier",category:"secondary",ko:"보조무기 피해",en:"Secondary Damage",currentId:"upgrade/secondary_damage",current:"upgrades/secondary_damage.png",batch:"secondary-elements"},
+      {id:"secondary_coolant",category:"secondary",ko:"보조무기 재사용",en:"Secondary Cooldown",currentId:"upgrade/system_relay",current:"upgrades/system_relay.png",batch:"secondary-elements"},
+      {id:"storm_barrage",category:"secondary",ko:"원거리 전격포",en:"Storm Barrage",currentId:"upgrade/ion_field",current:"upgrades/ion_field.png",batch:"secondary-elements"},
+      {id:"thermal_burst",category:"element",ko:"열폭발",en:"Thermal Burst",currentId:"upgrade/element_thermal",current:"upgrades/element_thermal.png",batch:"activated-primary"},
+      {id:"bio_toxin",category:"element",ko:"독 부여",en:"Bio Toxin",currentId:"upgrade/element_toxin",current:"upgrades/element_toxin.png",batch:"activated-primary"},
+      {id:"cryo_slow",category:"element",ko:"냉기 부여",en:"Cryo Slow",currentId:"upgrade/element_cryo",current:"upgrades/element_cryo.png",batch:"secondary-elements"},
+      {id:"shock_disruption",category:"element",ko:"감전",en:"Shock",currentId:"upgrade/ion_field",current:"upgrades/ion_field.png",batch:"secondary-elements"},
+      {id:"chassis_speed",category:"chassis",ko:"주행 속도",en:"Movement Speed",currentId:"upgrade/mobility_thruster",current:"upgrades/mobility_thruster.png",batch:"chassis-combat"},
+      {id:"hull_integrity",category:"chassis",ko:"장갑 내구도",en:"Hull Integrity",currentId:"upgrade/hull_reinforcement",current:"upgrades/hull_reinforcement.png",batch:"chassis-combat"},
+      {id:"lifesteal",category:"chassis",ko:"흡혈",en:"Lifesteal",currentId:"upgrade/defense_matrix",current:"upgrades/defense_matrix.png",batch:"chassis-combat"},
+      {id:"overflow_barrier",category:"chassis",ko:"초과 회복막",en:"Overflow Barrier",currentId:"upgrade/defense_matrix",current:"upgrades/defense_matrix.png",batch:"chassis-combat"},
+      {id:"pickup_radius",category:"chassis",ko:"수거 범위",en:"Pickup Radius",currentId:"upgrade/pickup_magnet",current:"upgrades/pickup_magnet.png",batch:"chassis-combat"},
+      {id:"critical_targeting",category:"combat",ko:"치명타",en:"Critical Hit",currentId:"upgrade/system_relay",current:"upgrades/system_relay.png",batch:"chassis-combat"},
+      {id:"dash_afterburn_field",category:"combat",ko:"잔류 열흔",en:"Afterburn Wake",currentId:"upgrade/dash_wake",current:"upgrades/dash_wake.png",batch:"chassis-combat"},
+      {id:"dash_overdrive",category:"combat",ko:"대시 강화",en:"Dash Boost",currentId:"upgrade/dash_wake",current:"upgrades/dash_wake.png",batch:"chassis-combat"},
+      {id:"last_stand_amplifier",category:"combat",ko:"저체력 피해",en:"Low-Hull Damage",currentId:"upgrade/system_relay",current:"upgrades/system_relay.png",batch:"chassis-combat"}
+    ];
+    const statusLabels = {pending:"대기",approved:"승인",revise:"수정",rejected:"반려"};
+    const blankState = () => ({schema:SCHEMA,reportId:"upgrade-artwork-all-cards-v6",globalNote:"",reviews:Object.fromEntries(items.map(item=>[item.id,{status:"pending",note:""}]))});
+    const escapeHtml = value => value.replace(/[&<>\"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#039;"}[char]));
+    function normalize(value) { const next=blankState(); if(!value||value.schema!==SCHEMA)return next; next.globalNote=typeof value.globalNote==="string"?value.globalNote:""; for(const item of items){const review=value.reviews?.[item.id];if(!review)continue;if(statusLabels[review.status])next.reviews[item.id].status=review.status;if(typeof review.note==="string")next.reviews[item.id].note=review.note} return next; }
+    function load(){try{return normalize(JSON.parse(localStorage.getItem(STORAGE_KEY)))}catch{return blankState()}}
+    let state=load();
+    function save(message="자동 저장됨"){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));document.querySelector("#save-state").textContent=`${message} · ${new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})}`;renderSummary()}
+    function card(item){const review=state.reviews[item.id];const candidate=`${item.batch}/candidates/${item.id}.png`;return `<article class="card" data-id="${item.id}"><div class="head"><h3>${item.ko}<small>${item.en} · ${item.id}</small></h3><span class="category">${categoryLabels[item.category]}</span></div><div class="compare"><figure class="current"><figcaption><span>현재</span><span class="current-approved">적용 중</span></figcaption><div class="stage"><img src="${PRODUCTION_ROOT+item.current}" alt="${item.ko} 현재 이미지"></div><figcaption><span>${item.currentId}</span></figcaption></figure><figure class="candidate"><figcaption><span>새 ImageGen 후보</span><span>192px</span></figcaption><div class="stage"><img src="${candidate}" alt="${item.ko} 새 후보"></div></figure></div><div class="review"><div class="statuses" role="group" aria-label="${item.ko} 상태">${Object.entries(statusLabels).map(([status,label])=>`<button type="button" data-status="${status}" aria-pressed="${review.status===status}">${label}</button>`).join("")}</div><textarea aria-label="${item.ko} 메모" placeholder="수정점이나 승인 이유">${escapeHtml(review.note)}</textarea></div></article>`}
+    function render(filter="all"){const root=document.querySelector("#catalog");root.innerHTML=groupOrder.filter(group=>filter==="all"||filter===group).map(group=>{const groupItems=items.filter(item=>item.category===group);return `<section class="group"><h2>${categoryLabels[group]} <span class="muted">${groupItems.length}</span></h2><div class="grid">${groupItems.map(card).join("")}</div></section>`}).join("");document.querySelector("#global-note").value=state.globalNote}
+    function renderSummary(){const counts=Object.fromEntries(Object.keys(statusLabels).map(status=>[status,items.filter(item=>state.reviews[item.id].status===status).length]));document.querySelector("#summary").innerHTML=`<span>전체 ${items.length}</span>${Object.entries(statusLabels).map(([status,label])=>`<span>${label} ${counts[status]}</span>`).join("")}`}
+    const filter=document.querySelector("#filter");for(const group of groupOrder)filter.insertAdjacentHTML("beforeend",`<option value="${group}">${categoryLabels[group]}</option>`);filter.addEventListener("change",()=>render(filter.value));
+    document.querySelector("#catalog").addEventListener("click",event=>{const button=event.target.closest("button[data-status]");if(!button)return;const cardNode=button.closest(".card");state.reviews[cardNode.dataset.id].status=button.dataset.status;cardNode.querySelectorAll("button[data-status]").forEach(node=>node.setAttribute("aria-pressed",node===button));save()});
+    document.querySelector("#catalog").addEventListener("input",event=>{if(event.target.tagName!=="TEXTAREA")return;state.reviews[event.target.closest(".card").dataset.id].note=event.target.value;save()});
+    document.querySelector("#global-note").addEventListener("input",event=>{state.globalNote=event.target.value;save()});
+    document.querySelector("#export").addEventListener("click",()=>{const payload={...state,exportedAt:new Date().toISOString(),candidateCount:items.length};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="cardborne-upgrade-artwork-feedback-v6.json";link.click();URL.revokeObjectURL(link.href)});
+    document.querySelector("#import").addEventListener("change",async event=>{const file=event.target.files[0];if(!file)return;try{const value=JSON.parse(await file.text());if(value.schema!==SCHEMA)throw new Error("지원하지 않는 JSON 형식입니다.");state=normalize(value);render(filter.value);save("JSON 불러옴")}catch(error){document.querySelector("#save-state").textContent=`불러오기 실패: ${error.message}`}finally{event.target.value=""}});
+    document.querySelector("#clear").addEventListener("click",()=>{if(!confirm("v6에 저장된 입력만 초기화할까요?"))return;state=blankState();localStorage.removeItem(STORAGE_KEY);render(filter.value);save("v6 입력 초기화됨")});
+    render();renderSummary();save("자동 저장 준비");
+  </script>
+</body>
+</html>

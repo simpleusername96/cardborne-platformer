@@ -1,0 +1,70 @@
+{
+  "schema": "cardborne-imagegen-candidate-evidence/v1",
+  "report_id": "upgrade-artwork-all-cards-v6",
+  "generated_at": "2026-08-13",
+  "catalog_card_count": 28,
+  "candidate_count": 28,
+  "approval_status": "pending_user_review",
+  "runtime_integrated": false,
+  "authoring": {
+    "creative_tool": "OpenAI built-in ImageGen",
+    "creative_calls": 28,
+    "parallel_batches": 3,
+    "post_processing": [
+      "mechanical chroma-key alpha removal",
+      "mechanical Lanczos resize to 192x192"
+    ],
+    "prohibited_geometry_authoring_used": false
+  },
+  "visual_authority": {
+    "text_contract": "docs/design/VISUAL_SYSTEM.md",
+    "text_contract_read_completely": true,
+    "style_reference": "docs/design/cardborne-universal-art-style-reference.png",
+    "expected_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "original_detail_inspected": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "referenced_image_paths in all 28 built-in ImageGen calls",
+    "reference_role": "style grammar only; no depicted object, silhouette, icon, card shell, or layout approved or copied"
+  },
+  "batch_manifests": [
+    "activated-primary/manifest.json",
+    "secondary-elements/manifest.json",
+    "chassis-combat/manifest.json"
+  ],
+  "review_notes": [
+    "Every candidate is newly generated for this batch and remains outside production.",
+    "secondary_coolant did not retain the requested chroma background and required an additional mechanical background-key pass; it remains pending user review.",
+    "Full prompts and per-call evidence are preserved in the owning batch manifests."
+  ],
+  "candidates": [
+    {"id":"active_amplifier","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/active_amplifier.png","source_sha256":"73de7547ab3bcae16ab86cd3818eaddf2f793d4f44486c7e040b4bdeab01deea","candidate_path":"activated-primary/candidates/active_amplifier.png","candidate_sha256":"bfbe09ebf051f3f4e26c828ccb96e3339ad436872f0c5a74657fe3598624e690"},
+    {"id":"active_coolant","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/active_coolant.png","source_sha256":"6380fdf56e034f0144169070d0a52c63e3701a114e67d7da34f01efb58f6e644","candidate_path":"activated-primary/candidates/active_coolant.png","candidate_sha256":"fa0250002d0e29ab00ce9bca3c8febdf5acfb448367e53f8793c645c648dbfd2"},
+    {"id":"auto_laser","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/auto_laser.png","source_sha256":"a3a3449735598bb741e4e5c24f31731e67bce04c585446a14c5ca59b86e9cd39","candidate_path":"secondary-elements/candidates/auto_laser.png","candidate_sha256":"7acf82dbab336f6a737ea65ad2e19fe38b0479ac63db9f3d1998a9401b099329"},
+    {"id":"bio_toxin","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/bio_toxin.png","source_sha256":"0cd6269426310f4804c117eec30691468779a942a172d7dff2ad09740ca3c2ba","candidate_path":"activated-primary/candidates/bio_toxin.png","candidate_sha256":"c08e80cd8d6edc7769bfc1ad65c17880b846beeebe97d112db85b75673278800"},
+    {"id":"chassis_speed","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/chassis_speed.png","source_sha256":"663684e995a6de00f8b6e78f64f995ffaa6ec9997e98f31a50577ad8684611d0","candidate_path":"chassis-combat/candidates/chassis_speed.png","candidate_sha256":"87fb4ba6dc63c4092016f5160911eb8af709b4c2415cb2c0b99847da2c7075ad"},
+    {"id":"critical_targeting","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/critical_targeting.png","source_sha256":"bee0625ea227a020449553cfd2acdffb3261622c9a8adcf0f282752ff8f718ca","candidate_path":"chassis-combat/candidates/critical_targeting.png","candidate_sha256":"d69451655e96bb3391f12e96959986a0cdf31e2ee422809db98a6b9eac5bbe77"},
+    {"id":"cryo_slow","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/cryo_slow.png","source_sha256":"c4e745d6d899d8a17e675b0837704addb1f8f6484c8ca6c9bb14b431acab8b39","candidate_path":"secondary-elements/candidates/cryo_slow.png","candidate_sha256":"a718bb4e93ffb55a37dc5209df6c1a86dfd77a149ad55c69ee14f588ff17e154"},
+    {"id":"dash_afterburn_field","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/dash_afterburn_field.png","source_sha256":"7c32017aaf749d76919aea073002171fdc44073b0f9f3fe38b559c8c9c4da228","candidate_path":"chassis-combat/candidates/dash_afterburn_field.png","candidate_sha256":"a6ec50ac069b856f6624acbd5ad0612f57a7c39a930f63963fbf9c215c073376"},
+    {"id":"dash_overdrive","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/dash_overdrive.png","source_sha256":"2eb29f06cbdf5a57cd20893407b3255a6c06fcceb8049af0a78fe5431f076a23","candidate_path":"chassis-combat/candidates/dash_overdrive.png","candidate_sha256":"b37bcf45de6d2f4935ad400ba33d9f2a6ea60ec196592d46c223fee61bc533b0"},
+    {"id":"drop_mines","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/drop_mines.png","source_sha256":"7c7ee37362f6c8e478f116b3ea9080ef58007c3c398ee5c7e70d12a5a8211641","candidate_path":"secondary-elements/candidates/drop_mines.png","candidate_sha256":"4a65cd87b0cfa2f9db64c1797dbf185b09da31eecb47495db42e43b8638f619a"},
+    {"id":"electric_field","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/electric_field.png","source_sha256":"7a23304607a8d12553c23a0fba5ab3dab86c90a621928a35001a18d9484e9a3d","candidate_path":"secondary-elements/candidates/electric_field.png","candidate_sha256":"8d83b2cf4f4305f9d69302d6387c8f2c8c729337cd0a1093aeea27c8fc748daa"},
+    {"id":"gravity_collapse","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/gravity_collapse.png","source_sha256":"3fbab20bd897b360a6e88aa77cb7541ae0ff88fb103d7e12f7ff30d73b4a7fbd","candidate_path":"activated-primary/candidates/gravity_collapse.png","candidate_sha256":"b1327fb87a83764abe72dba7376517d03ca9d7e1ba5c6aa564caef19ba97f6d1"},
+    {"id":"homing_missiles","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/homing_missiles.png","source_sha256":"39be377e76f12a291b60755601648b37b1b6af37a5a81c6edde974a235275442","candidate_path":"secondary-elements/candidates/homing_missiles.png","candidate_sha256":"f1b044b41b1640920a69862ac9c84b0215a1cbd5c23d555d3f67e2deaa25d1fe"},
+    {"id":"hull_integrity","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/hull_integrity.png","source_sha256":"2f15cf8d639b1be084a674770add713605c01df7a098729384c46fc3fb4d0762","candidate_path":"chassis-combat/candidates/hull_integrity.png","candidate_sha256":"a3f68117204d1931e3ff263d773d0bde40e3ad1c7b756d49dab97efe96c666d8"},
+    {"id":"kinetic_shockwave","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/kinetic_shockwave.png","source_sha256":"ae38f75983c033b302a5bdcd6378d398e146c922278ab586813a8de033bc032e","candidate_path":"activated-primary/candidates/kinetic_shockwave.png","candidate_sha256":"0350997c5ed909259fdcf59e1711029c4697b612a3a48b4416fa6d30a66cd979"},
+    {"id":"last_stand_amplifier","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/last_stand_amplifier.png","source_sha256":"6f1ab9fc8933ba4eb0d9a8b991d7da11095656113ea97bdab5db612ab6d7d2f6","candidate_path":"chassis-combat/candidates/last_stand_amplifier.png","candidate_sha256":"6439ba95a01e66a2a50a0e4fe4c64f40a035f9c614c38857e06546db837e9b77"},
+    {"id":"lifesteal","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/lifesteal.png","source_sha256":"c9333a65495435a0c7f53c9e7c1c31301d4ea6c820d2e477911e5df93adb68f8","candidate_path":"chassis-combat/candidates/lifesteal.png","candidate_sha256":"fafd79b788377523757d54b38fb3394ee4ec7968a94c98649d00f6773b666d32"},
+    {"id":"orbiting_blades","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/orbiting_blades.png","source_sha256":"bd6760d85eb6c71fba59b5d28c37e22a93082ef8cc460b617788002e4846c8b0","candidate_path":"secondary-elements/candidates/orbiting_blades.png","candidate_sha256":"ee307a1c22b9b5912a3350d2113c4ef001d0b7a1b1ff801912c437e6566142d7"},
+    {"id":"overflow_barrier","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/overflow_barrier.png","source_sha256":"abe6f02433bd2230482aec285a9e0e5192d769037646490b6979d79bff178000","candidate_path":"chassis-combat/candidates/overflow_barrier.png","candidate_sha256":"2329c1234d6cb6369d326424745bb363ba6e172c3b9fb3650ef092da1665064b"},
+    {"id":"pickup_radius","batch_manifest":"chassis-combat/manifest.json","source_path":"chassis-combat/sources/pickup_radius.png","source_sha256":"515ae9f005a5209b850a57f436c91eede27639a577cb37af0c246b72dc69d560","candidate_path":"chassis-combat/candidates/pickup_radius.png","candidate_sha256":"091d8184606515cbb2574f6abbaaef8c86f0eec620b3b5f85a7a63d78b79cc9a"},
+    {"id":"piercing_lance","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/piercing_lance.png","source_sha256":"7452b938c517ecdde7d2370fd1208374cc929a4b4364d55b13fcd321878aa820","candidate_path":"activated-primary/candidates/piercing_lance.png","candidate_sha256":"1055fe14c3e83df06de57d14bb3f866f077a369468348b78bed07854addfee3b"},
+    {"id":"piercing_rounds","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/piercing_rounds.png","source_sha256":"c71569905f5d9a4d97347839c8686618e3b4ac4072defb7aaa930caf324659a0","candidate_path":"activated-primary/candidates/piercing_rounds.png","candidate_sha256":"4d201f80eba3161a1d9e5eeba6d4c3e75bb1c1dd6bae021a09e3aa96a154c8b9"},
+    {"id":"secondary_amplifier","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/secondary_amplifier.png","source_sha256":"1960a4864b99503c04ceab0a007454b6c0f5e99073b7b0d697f86311370e282f","candidate_path":"secondary-elements/candidates/secondary_amplifier.png","candidate_sha256":"279b4dcd111f6262866bdb0533d198cc2523f13b1f14d2e092958f3ae7dc4490"},
+    {"id":"secondary_coolant","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/secondary_coolant.png","source_sha256":"7d9f90f4f2717452700f7bbbcaf248676759a95b1b365691b301de73c0f7cf08","candidate_path":"secondary-elements/candidates/secondary_coolant.png","candidate_sha256":"511753f1bba8f681f9c9b4e6ffbf44c4f106100bf55a00be5cdbcb286654df09"},
+    {"id":"shock_disruption","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/shock_disruption.png","source_sha256":"d23938f60b5d03f4be5c69d99fabd5be8a7b9321e19ee1f422be8dfd762f2ebd","candidate_path":"secondary-elements/candidates/shock_disruption.png","candidate_sha256":"d80d5ccff76df4f2031dea20c6a2def55cd731a17536350f60899e4b61e335b5"},
+    {"id":"split_muzzle","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/split_muzzle.png","source_sha256":"a5bbac81090ec14a6553e1f502018595ed4d9404b27c220b0a60399efc9c6ce7","candidate_path":"activated-primary/candidates/split_muzzle.png","candidate_sha256":"e6404994c7e13db3d0aca6d79ddf6270dd153c3dab4689a9b911520d2167ad09"},
+    {"id":"storm_barrage","batch_manifest":"secondary-elements/manifest.json","source_path":"secondary-elements/sources/storm_barrage.png","source_sha256":"27cfd95156468fdb8a5d2d9afb908b5dd9774bfda588e1e98774ae6c5815d22d","candidate_path":"secondary-elements/candidates/storm_barrage.png","candidate_sha256":"42213ad1bd5445a53ec261335fa85a5f8db79c94f33a77ce961b6fb3dcee1377"},
+    {"id":"thermal_burst","batch_manifest":"activated-primary/manifest.json","source_path":"activated-primary/sources/thermal_burst.png","source_sha256":"80cfaa927a6e38a73105c70f7805259d8e6b3803193a7bf70f60972477ea7737","candidate_path":"activated-primary/candidates/thermal_burst.png","candidate_sha256":"256fd54bafb2ad2e51d36d5d8730efcb073dc8c55166e1b628bbd357a999f977"}
+  ]
+}
