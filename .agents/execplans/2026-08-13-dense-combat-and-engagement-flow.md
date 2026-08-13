@@ -964,6 +964,10 @@ release architecture.
   Keep future authored enemies as packet/window data until cue-time admission, use exact ordinary
   caps `1/40/48/48/48`, and make `production_replay` the shipping capacity gate. The exact-320
   workload remains a store/engine diagnostic, not a promise about simultaneous gameplay actors.
+- 2026-08-13: the later active run-pacing contract
+  `2026-08-13-run-pacing-result-and-upgrade-slots.md` supersedes this plan only for fixed boss-trigger
+  quotas, quota-time reserve cancellation, and reward preservation. Virtual reserve, exact caps,
+  engagement flow, and performance gates here remain authoritative.
 - 2026-08-13: this contract supersedes only the unresolved dense-performance M8/M9 portion of
   `2026-08-11-dense-combat-progression-and-run-completion.md`; it does not rewrite that plan's
   completed progression, upgrade, pickup, facility, device, or product history.

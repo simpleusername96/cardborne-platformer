@@ -254,7 +254,7 @@ Source owners: this plan, `docs/product/vehicle_game_spec.md`,
 `docs/product/vehicle_upgrade_catalog.md`, `docs/design/VISUAL_SYSTEM.md`, the active dense-combat
 plan, capture tooling, and performance evidence.
 
-- [ ] **0.1** Update product/visual terminology and acceptance numbers.
+- [x] **0.1** Update product/visual terminology and acceptance numbers.
   - Change: record new quotas, quota seal, XP values, clock states, 48 radius, 1.20 health, 4-column
     progressive grid, 28 upgrade images/80 manifest entries, and complete Result fields.
   - Accept: document-authority and visual-authority validators pass; no active document still claims
@@ -480,7 +480,10 @@ continues.
   audited read-only and synthesized here.
 - [x] Product decisions, ownership, values, acceptance checks, stop conditions, and contingencies are
   closed.
-- [ ] Implementation has not started. Begin with Phase 0 only after BK asks to execute this plan.
+- [x] Phase 0.1 updated the product, upgrade, and visual contracts plus the older dense-plan
+  supersession note. `validate_document_authority.ps1`,
+  `validate_cardborne_visual_authority.ps1`, and `git diff --check` passed.
+- [ ] Phase 0 is active. Next: record the clean short native `production_replay` baseline.
 
 ## Completion and Stop Conditions
 

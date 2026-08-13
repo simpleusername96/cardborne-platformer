@@ -84,12 +84,14 @@ five-stage run.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
-All non-boss enemy archetypes receive the existing final `2.60` health
-multiplier after the fixed profile and shallow stage curve, then the stage
-pressure `[1.15, 1.55, 1.70, 1.85, 2.00]`. The five ordinary health curve values
+All non-boss enemy archetypes receive the existing `2.60` health multiplier
+after the fixed profile and shallow stage curve, then the stage pressure
+`[1.15, 1.55, 1.70, 1.85, 2.00]`, followed by one final ordinary-durability
+multiplier of `1.20` before elite modifiers. The five ordinary health curve values
 remain `[0.85, 1.00, 1.15, 1.30, 1.45]`. Stage 1 pressure is approximately 15%
 lower than its previous value; Stage 2–5 pressure is higher. Boss health uses
-the separate stage profile defined below.
+the separate stage profile defined below and never receives the `1.20`
+ordinary-durability multiplier.
 Ordinary enemy-sourced damage applies the shared `1.755` multiplier, the stage
 curve `[1.00, 1.03, 1.06, 1.09, 1.12]`, and the additional stage pressure
 `[0.98, 1.30, 1.42, 1.54, 1.66]`. For one authored damage point these compose
@@ -126,8 +128,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   Cannon's unmodified projectile uses a seven-pixel collision radius, and
   upgrades scale from that base.
 - An enemy's compact movement/contact radius remains independent from its
-  player-projectile hit radius. The latter matches the enlarged visible target,
-  and swept collision chooses the earliest intersected enemy. A round without
+  player-projectile hit radius. Moving non-boss ordinary enemies use an explicit
+  `48`-pixel visible radius and a separately owned `48`-pixel projectile target
+  radius. Fixed installations remain `62` and bosses remain `146`; movement,
+  contact, crowd, and wall radii do not change. Swept collision chooses the earliest intersected enemy. A round without
   explicit pierce is retired at that first enemy instead of crossing the
   visible body.
 - Ordinary hull contact uses the relative swept path between the player's and
@@ -383,8 +387,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    `280 px/s`; explicitly committed charges remain exceptions.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
    or stage completion and summons do not count toward the quota.
-   Reaching quota starts boss eligibility only; it does not stop the authored
-   encounter scheduler or remove living ordinary enemies.
+   Reaching quota seals new ordinary admission. An arrival window whose cue is
+   already visible completes every reserved round, while uncued packets and
+   virtual reserve are canceled with explicit `quota_canceled_reserve`
+   accounting. Materialized ordinary enemies remain in combat and are never
+   despawned by the seal.
 6. On reaching the quota, a 1.5-second boss warning
    identifies a reachable arrival anchor at least 1200 pixels from the player
    when the field permits it. Boss creation and boss-defeat completion reject
@@ -414,11 +421,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 | Stage | Fixed Hard quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | --- |
-| 1 | 125 | 520 | Foundry Colossus |
-| 2 | 166 | 660 | Archive Leviathan |
-| 3 | 208 | 816 | Drydock Titan |
-| 4 | 250 | 1026 | Switchyard Behemoth |
-| 5 | 291 | 1260 | Crown Engine |
+| 1 | 48 | 520 | Foundry Colossus |
+| 2 | 64 | 660 | Archive Leviathan |
+| 3 | 80 | 816 | Drydock Titan |
+| 4 | 96 | 1026 | Switchyard Behemoth |
+| 5 | 112 | 1260 | Crown Engine |
 
 Ordinary hostile projectiles
 stop at 96 so 24 of the global 120-shot cap remain reserved for boss attacks.
@@ -457,6 +464,9 @@ does not produce a transient message.
 - Enemy defeats leave collectible geometric experience shards. Experience is
   granted only when a shard is collected; summoned enemies grant the normal XP
   for their health class.
+- Swarm, standard, priority, and stage-boss defeats award `3/5/10/24` XP before
+  the existing elite rule. On the authored minimum-quota path this preserves
+  stage level-up counts `9/5/4/5/6` and finishes the run at level 30.
 - Exactly two field item behaviors exist: repair restores hull and experience
   recall pulls all live shards toward the player. Both spawn directly on the
   field. Recall retargets the ship's current position every physics
@@ -756,8 +766,10 @@ no credit or stored charge.
   cryo, or arc attribute. Both outgoing totals agree within 0.01. A failed
   attempt opens the report in failure mode with the last hit and the three
   largest incoming sources, then returns directly to Deployment. Every retained
-  stage record, failure report, and final result shows cumulative active gameplay
-  time from run start; stage transitions never reset or replace it with a
+  stage record, failure report, and final result shows cumulative active run time
+  from deployment. The clock counts live play and mandatory upgrade decisions,
+  but excludes Deployment, explicit Pause/Settings/Guidebook time, Failure
+  Report, and final Result. Stage transitions never reset or replace it with a
   stage-local duration. The final result and Pause abort action also return
   directly to Deployment.
 - Deployment, upgrade, pause/settings, guidebook, result, and report are modal
@@ -783,6 +795,13 @@ no credit or stored charge.
   current-to-next stat value. A first element acquisition shows its initial
   values without a false zero-to-value comparison; later levels show the real
   current-to-next values.
+- The current-build rail is a four-column progressive image grid. An empty run
+  shows exactly four outlined, non-focusable cells. A first acquisition fills
+  the next cell in stable acquisition order with its existing `upgrade/<id>`
+  artwork; another level updates that cell. Visible capacity grows by one spare
+  four-cell row up to 24 cells. Filled cells alone can focus and open one frozen
+  detail popover. These cells summarize the build and never create a gameplay
+  equipment limit.
 - Each offer row follows one horizontal information order: semantic artwork;
   category, upgrade name, one short summary, and one or two real effect rows;
   then `Lv.current → next`. Korean summaries target

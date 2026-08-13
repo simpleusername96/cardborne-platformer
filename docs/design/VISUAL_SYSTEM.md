@@ -409,6 +409,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   effect event로 복제하지 않는다.
 - ordinary enemy role은 외곽선과 negative space로 먼저 구분한다. command와
   boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
+- moving non-boss ordinary body는 shared visible radius `48`을 사용한다. installation은
+  `62`, boss는 `146`을 유지한다. 이 값은 presentation scale이며 compact movement/contact
+  radius와 분리된다. projectile target radius는 같은 `48` 값을 별도 gameplay owner에서
+  명시한다.
 - directional enemy는 simulation이 publish한 effective facing을 사용한다. startup/
   active에서는 committed direction, 그 밖에는 player 또는 active Decoy target을
   향한다. Controller spin과 nondirectional mine/generator는 예외이며 renderer는
@@ -588,10 +592,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   아니며, 이 문서의 텍스트 계약과 canonical authority pair가 우선한다.
 - modal body는 왼쪽 current-build summary rail과 오른쪽 offer list의 두 column이다.
   rail 폭은 compact/standard/large 약 `216/248/264 px`, offer list 폭은
-  `656/760/780 px`이다. rail은 `주무기` 속성 1칸+강화 2칸, `보조무기` 3칸,
-  `발동무기` 종류 1칸+강화 2칸, `선체` 4칸을 보여준다. 이 슬롯은 현재 빌드의
-  요약·탐색 표면일 뿐 새 장착 제한이 아니다. 실제 속성 독점과 선택형 보조 무기
-  제한은 gameplay owner가 계속 결정한다.
+  `656/760/780 px`이다. rail은 모든 viewport에서 4열인 progressive grid다.
+  획득이 0개면 정확히 4개의 빈 outline cell을 보여주고, 첫 획득은 run-owned
+  acquisition order의 다음 cell에 기존 `upgrade/<id>` artwork를 채운다. 같은 ID의
+  레벨 상승은 기존 cell을 갱신한다. 표시 capacity는
+  `min(24, max(4, ceil((filled_count + 1) / 4) * 4))`로 한 spare row씩 늘어난다.
+  이 cell은 현재 빌드의 요약·탐색 표면일 뿐 새 장착 제한이 아니다. 실제 속성 독점과
+  선택형 보조 무기 제한은 gameplay owner가 계속 결정한다.
 - 슬롯은 compact/standard/large에서 `44/52/56 px`, artwork는 `36/44/48 px`다.
   채워진 슬롯만 focus를 받고 hover/focus에서 한 개의 detail popover를 연다.
   click/accept는 popover를 고정하고 `Esc`, 바깥 click 또는 다른 슬롯 focus는 닫거나
@@ -717,9 +724,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   accessible name, tooltip과 input hint를 가진 48×48 left-arrow command다.
 - Report는 wide three-column, compact keyboard tab과 fixed bottom primary를
   사용한다.
-- Result는 metric과 build/loadout를 요약하고 하나의 Deployment action을 제공한다.
+- Result는 다섯 stage record의 실제 격파/elite, outgoing damage, damage attribute,
+  누적 active run time, final Hull, 주요 action counter와 전체 image build/loadout를
+  요약하고 하나의 고정 Deployment action을 제공한다. wide는 shared three-column
+  report body, compact는 keyboard/controller tab을 사용하고 content region만 scroll한다.
   Result와 Failure Report의 시간 metric은 stage-local time이 아니라 run 시작부터
-  누적된 active gameplay time을 표시한다. Failure Report도 Deployment로 직접 돌아간다.
+  누적된 active run time을 표시한다. 이 시간은 PLAYING과 mandatory UPGRADE를 포함하고
+  explicit Pause와 terminal screen은 제외한다. Failure Report도 Deployment로 직접 돌아간다.
 
 ### 접근성 및 상태
 
@@ -740,7 +751,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - approved reference와 runtime actor를 같은 scale로 비교한 sheet에서
   player, 8 role grammar와 boss proportion hierarchy가 같은 family로 판독
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
-- all 12 registered upgrade semantic artwork identities resolve with no missing slot;
+- all 28 registered upgrade semantic artwork identities resolve with no missing slot;
   current-build summary의 채워진 slot만 popover를 열고, 세 offer row는 각각 왼쪽에
   artwork 하나만 가지며 stat label과 value 사이에 distributed blank column이 없음
 - every displayed circular area has a continuous full-area body from center to exact
@@ -750,7 +761,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- final gameplay manifest가 정확히 64 image를 색인함: semantic PNG 61개와
+- final gameplay manifest가 정확히 80 image를 색인함: semantic PNG 77개와
   user-approved SurfaceDetail SVG 3개다. Shape/color-only effect/cue raster는 0이다.
   전용 hostile bolt를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음

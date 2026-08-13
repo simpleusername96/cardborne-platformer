@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-07
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 canonical_for: Cardborne live vehicle upgrade categories, cards, levels, effects, and offer rules
 scope: Run-scoped vehicle upgrade catalog, attribute and active-weapon ownership, and secondary-slot ownership
 related:
@@ -155,6 +155,10 @@ Dash, 추적 미사일, EMP는 기본 액션이다. 발동무기 카드를 고�
 
 - 업그레이드 화면은 왼쪽 current-build summary와 오른쪽 세 개의 선택 row를 사용한다.
   summary의 슬롯 수는 표시 계약이며 새로운 gameplay 장착 제한이 아니다.
+- current-build summary는 항상 4열이다. 획득한 카드가 없으면 비어 있는 outline cell
+  4개를 보여준다. 첫 획득은 안정적인 획득 순서의 다음 cell에 기존 `upgrade/<id>`
+  이미지를 채우고, 같은 카드의 레벨 상승은 새 cell을 쓰지 않고 기존 cell을 갱신한다.
+  표시 capacity는 `min(24, max(4, ceil((filled_count + 1) / 4) * 4))`로 늘어난다.
 - 각 선택 row는 왼쪽 의미 이미지 하나, 중앙의 분류·제목·실제 수치 변화 1~2개·최대
   한 줄 설명, 오른쪽의 `NEW` 또는 `레벨 N → M`만 표시한다.
 - 수치는 `피해 4 → 6   범위 72 → 84`처럼 label과 변화값을 inline phrase로 묶는다.
@@ -179,6 +183,8 @@ Dash, 추적 미사일, EMP는 기본 액션이다. 발동무기 카드를 고�
 - 모든 카드 레벨의 한국어·영어 설명과 표시 수치가 실제 gameplay 수치와 일치한다.
 - 가장 긴 카드 조합이 960×540, 1280×720, 1920×1080에서 잘리지 않는다.
 - 업그레이드 시스템, 조건부 피해, 보조 무기, 카드 UI 집중 검증이 통과한다.
+- 빈 빌드는 정확히 4개의 비어 있는 cell을 보이고, 획득한 업그레이드만 이미지가
+  채워지고 focus를 받으며, 합법적인 최대 고유 획득 경로도 24개 표시 capacity 안에 든다.
 
 ## 구현 근거
 
