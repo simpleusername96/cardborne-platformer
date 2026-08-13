@@ -18,6 +18,43 @@ func _initialize() -> void:
 		and store.player_live.any(func(item) -> bool: return item.pos == Vector2(999.0, 0.0)),
 		"player overflow retires the oldest uniform round"
 	)
+	var retired_handle := store.player_handle_at(0)
+	store.remove_player_at_swap(0)
+	_expect(
+		not store.resolves_player_handle(retired_handle.x, retired_handle.y),
+		"swap retirement invalidates the old player handle"
+	)
+	store.add_player(_projectile(Vector2(1001.0, 0.0)))
+	var reused_handle := store.player_handle_at(store.player_count() - 1)
+	_expect(
+		reused_handle.x == retired_handle.x
+			and reused_handle.y != retired_handle.y
+			and store.resolves_player_handle(reused_handle.x, reused_handle.y),
+		"reused player slots keep their slot and advance generation"
+	)
+	var candidate_slots := PackedInt32Array()
+	var candidate_generations := PackedInt32Array()
+	var candidate_count := store.fill_player_candidate_handles_into(candidate_slots, candidate_generations)
+	_expect(
+		candidate_count == store.player_count()
+			and candidate_slots.size() == candidate_count
+			and candidate_generations.size() == candidate_count,
+		"caller-owned candidate handles are filled without a store-owned receipt"
+	)
+	var hit_receipt := {}
+	_expect(
+		store.write_hit_receipt(hit_receipt, false, 0, 0.25, 19)
+			and is_equal_approx(float(hit_receipt[&"contact_t"]), 0.25)
+			and int(hit_receipt[&"target_slot"]) == 19,
+		"caller-owned hit receipt records stable projectile identity"
+	)
+	store.player_live[0].pos = Vector2(432.0, 123.0)
+	store.sync_player_at(0)
+	var synced_handle := store.player_handle_at(0)
+	_expect(
+		store.player_position[synced_handle.x] == Vector2(432.0, 123.0),
+		"explicit facade sync keeps packed player columns current"
+	)
 
 	var ordinary_limit := ProjectileStore.HOSTILE_CAPACITY - ProjectileStore.HOSTILE_BOSS_RESERVE
 	for index in ordinary_limit + 8:

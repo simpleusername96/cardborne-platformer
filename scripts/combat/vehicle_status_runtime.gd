@@ -11,7 +11,9 @@ const APPLICATION_PULSE_SECONDS := 0.16
 const DOT_KINDS: Array[StringName] = [&"poison"]
 
 
-static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> void:
+static func apply(
+	enemy: EnemyState, profile: VehiclePrimaryPayloadProfile, membership_owner: Object = null
+) -> void:
 	if profile == null:
 		return
 	if profile.poison_enabled:
@@ -51,11 +53,22 @@ static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> v
 		enemy.shock_application_pulse = 1.0
 		enemy.shock_application_delay = maxf(enemy.shock_application_delay, enemy.flash)
 	_sync_presentation_scalars(enemy)
+	_sync_membership(enemy, membership_owner)
 
 
 static func tick(enemy: EnemyState, delta: float) -> Dictionary:
-	var statuses := enemy.statuses
 	var damage := {"poison":0.0}
+	tick_into(enemy, delta, damage)
+	return damage
+
+
+## `damage_receipt` is caller-owned. Reset its poison value before use when a
+## caller needs to retain another tick's result; this method allocates nothing.
+static func tick_into(
+	enemy: EnemyState, delta: float, damage_receipt: Dictionary, membership_owner: Object = null
+) -> void:
+	var statuses := enemy.statuses
+	damage_receipt[&"poison"] = 0.0
 	var toxin_timing := _advance_application_pulse(
 		enemy.toxin_application_pulse,
 		enemy.toxin_application_delay,
@@ -79,7 +92,8 @@ static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 	enemy.shock_application_delay = shock_timing.y
 	if statuses.is_empty():
 		_sync_presentation_scalars(enemy)
-		return damage
+		_sync_membership(enemy, membership_owner)
+		return
 	for kind in DOT_KINDS:
 		if not statuses.has(kind):
 			continue
@@ -88,7 +102,7 @@ static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 		status["tick"] = float(status["tick"]) - delta
 		while float(status["tick"]) <= 0.0 and float(status["time"]) > 0.0:
 			status["tick"] = float(status["tick"]) + TICK_SECONDS
-			damage[kind] = float(damage[kind]) + (
+			damage_receipt[kind] = float(damage_receipt.get(kind, 0.0)) + (
 				float(status["dps_per_stack"])
 				* float(status["stacks"])
 				* TICK_SECONDS
@@ -113,7 +127,7 @@ static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 		else:
 			statuses[&"shock"] = shock
 	_sync_presentation_scalars(enemy)
-	return damage
+	_sync_membership(enemy, membership_owner)
 
 
 static func speed_multiplier(enemy: EnemyState) -> float:
@@ -165,6 +179,11 @@ static func _sync_presentation_scalars(enemy: EnemyState) -> void:
 	enemy.toxin_stack_ratio = _stack_ratio(enemy.statuses, &"poison")
 	enemy.cryo_stack_ratio = _stack_ratio(enemy.statuses, &"chill")
 	enemy.shock_stack_ratio = 1.0 if attack_commit_blocked(enemy) else 0.0
+
+
+static func _sync_membership(enemy: EnemyState, membership_owner: Object) -> void:
+	if membership_owner != null and membership_owner.has_method(&"set_status_membership"):
+		membership_owner.call(&"set_status_membership", enemy, not enemy.statuses.is_empty())
 
 
 static func _stack_ratio(statuses: Dictionary, kind: StringName) -> float:

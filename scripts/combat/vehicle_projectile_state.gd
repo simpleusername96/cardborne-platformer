@@ -32,6 +32,10 @@ var spawn_serial := 0
 var combat_action_family: StringName = &""
 var combat_action_serial := 0
 var uses_boss_reserve := false
+# Stable storage identity is assigned by VehicleProjectileStore. It survives
+# swap retirement and changes generation whenever this pooled state is reused.
+var storage_slot := -1
+var storage_generation := 0
 
 
 func configure(

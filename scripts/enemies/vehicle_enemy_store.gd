@@ -172,6 +172,13 @@ func enemy_for_handle(slot: int, generation: int) -> EnemyState:
 	return _slot_enemy[slot]
 
 
+## Status iteration uses immutable spatial slots, not the swap-retired live index.
+func enemy_for_status_slot(slot: int) -> EnemyState:
+	if slot < 0 or slot >= MAX_LIVE_HOSTILES or _status_slot_index[slot] < 0:
+		return null
+	return _slot_enemy[slot]
+
+
 func transition_active(enemy: EnemyState, becomes_active: bool) -> void:
 	if not contains(enemy):
 		return
