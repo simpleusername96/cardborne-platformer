@@ -277,16 +277,16 @@ Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`,
 `scripts/vehicle/vehicle_run.gd`, `scripts/rewards/vehicle_field_drop_rules.gd`, reserve telemetry,
 and encounter/experience validators.
 
-- [ ] **1.1** Replace stage quotas with `48/64/80/96/112` and update every exact oracle.
+- [x] **1.1** Replace stage quotas with `48/64/80/96/112` and update every exact oracle.
   - Accept: a real packet-materialization/defeat integration fixture reaches warning on the exact
     final required kill and never one kill early.
   - Guard: summoned enemies remain non-counting; carry-over countable actors keep the current
     continuous-stage rule.
-- [ ] **1.2** Add the one-way quota seal.
+- [x] **1.2** Add the one-way quota seal.
   - Accept: no new window is admitted after quota; an already-cued window fulfills every promised
     round; uncued reserve becomes `quota_canceled_reserve`; materialized enemies are not despawned.
   - Guard: reservation totals, generations, boss slot reserve, and cue truth remain exact.
-- [ ] **1.3** Change XP to `3/5/10/24` and update the quota-path fixture.
+- [x] **1.3** Change XP to `3/5/10/24` and update the quota-path fixture.
   - Accept: stage level-ups are exactly `9/5/4/5/6`, final run level is 30, elite XP remains bounded,
     and shard/pool capacity invariants pass.
   - Guard: do not add stage-clear XP or change the level requirement curve.
@@ -298,11 +298,11 @@ Goal: make every mandatory part of a live run count once and only once.
 Source owners: `scripts/vehicle/vehicle_run.gd`, stage report/result builders, capture gateway, and
 run/stage-continuity/report validators.
 
-- [ ] **2.1** Separate run-clock activity from simulation activity and rename the value.
+- [x] **2.1** Separate run-clock activity from simulation activity and rename the value.
   - Accept: a deterministic lifecycle fixture proves PLAYING counts, UPGRADE counts, PAUSED does not,
     continuation preserves, and FAILURE_REPORT/RESULT freeze the same final value.
   - Guard: gameplay simulation, cooldowns, attacks, effects, and physics remain stopped in UPGRADE.
-- [ ] **2.2** Route the canonical value to retained stage reports, failure report, Result, capture,
+- [x] **2.2** Route the canonical value to retained stage reports, failure report, Result, capture,
   debug context, and persistence-facing snapshots that display time.
   - Accept: every surface shows the same rounded cumulative time and no stage-local label remains.
   - Guard: do not persist elapsed time across separate runs.
@@ -315,11 +315,11 @@ changes.
 Source owners: enemy combat tuning policy/archetypes, `vehicle_stage_visual_profile.gd`, enemy
 construction, renderer target samples, spatial-grid target radius, and focused actor/contact tests.
 
-- [ ] **3.1** Add the final ordinary-health `1.20` multiplier as one named gameplay policy.
+- [x] **3.1** Add the final ordinary-health `1.20` multiplier as one named gameplay policy.
   - Accept: all non-boss fixtures receive exactly +20% after existing stage/difficulty factors and
     before elite modifiers; boss fixtures are byte-for-byte numerically unchanged.
   - Guard: no role base table is hand-edited to duplicate the multiplier.
-- [ ] **3.2** Set moving ordinary visual and projectile target radii to separate explicit 48 values.
+- [x] **3.2** Set moving ordinary visual and projectile target radii to separate explicit 48 values.
   - Accept: rendered size and swept projectile target truth are 48; movement/contact/wall radii remain
     each archetype's old value; installations/boss remain 62/146.
   - Guard: the dead archetype `visual_radius` field is removed or made authoritative; do not retain
@@ -337,16 +337,16 @@ Source owners: `VehicleRunBuild`, `VehicleBuildSnapshotBuilder`, a new responsib
 `VehicleUpgradeBuildCell`, `VehicleUpgradeBuildRail`, semantic asset provider, shared UI components,
 and upgrade/UI/localization validators.
 
-- [ ] **4.1** Record stable first-acquisition order and publish frozen cell data.
+- [x] **4.1** Record stable first-acquisition order and publish frozen cell data.
   - Accept: first acquisition appends once; level-ups preserve position; reset clears order; save-free
     run ownership remains unchanged; snapshot includes artwork and current effect text.
   - Guard: UI never reads or mutates `VehicleRunBuild` directly.
-- [ ] **4.2** Implement empty, filled, focused, pinned, and popover cell states.
+- [x] **4.2** Implement empty, filled, focused, pinned, and popover cell states.
   - Accept: empty/partial/21-unique fixtures produce the locked progressive capacities, exactly one
     image per filled cell, zero focusable empty cells, stable focus order, and one open popover.
   - Guard: no new raster/SVG asset, text substitute, mechanic-specific drawn glyph, or gameplay slot
     limit is introduced.
-- [ ] **4.3** Integrate the rail without changing the three offer rows.
+- [x] **4.3** Integrate the rail without changing the three offer rows.
   - Accept: rail widths `216/248/264`, four columns, slot/art sizes, scroll behavior, fixed Equip,
     three offer images, and Korean/English text fit all supported matrices.
 
@@ -358,15 +358,15 @@ Source owners: new `scripts/combat/vehicle_run_result_builder.gd`, shared report
 `vehicle_stage_report_panel.gd`, `vehicle_result_panel.gd`, `vehicle_stage_ui.gd`, Run, capture
 gateway/driver, localization, and report/result validators.
 
-- [ ] **5.1** Aggregate five frozen stage records in gameplay space.
+- [x] **5.1** Aggregate five frozen stage records in gameplay space.
   - Accept: stable defeat/elite counts sum exactly; outgoing-source and attribute totals agree within
     `0.01`; row ordering and percentage rounding are deterministic; input records are not mutated.
   - Guard: UI does not calculate damage, attributes, or totals.
-- [ ] **5.2** Extract and reuse the responsive report body, then add the build grid to Result.
+- [x] **5.2** Extract and reuse the responsive report body, then add the build grid to Result.
   - Accept: wide three columns, compact tabs, scrollable content, fixed Deployment, one primary action,
     final build/loadout, and no clipped/blank required section.
   - Guard: failure last-hit/top-three incoming remains failure-only; Stage 1-4 stay modal-free.
-- [ ] **5.3** Correct live/capture final-state semantics and locale refresh.
+- [x] **5.3** Correct live/capture final-state semantics and locale refresh.
   - Accept: final fixture is Stage 5 with `has_next_stage: false`; report/result refresh in Korean and
     English; deterministic initial focus; capture primary actions match reachable modes.
   - Guard: visual-only fixtures are never used as evidence that an interaction works.
@@ -378,16 +378,16 @@ Goal: prove the complete change in source, rendered UI, native runtime, and the 
 Source owners: all task-owned files, focused validators, capture output, export tooling, itch release
 validator, performance evidence, and this plan.
 
-- [ ] **6.1** Run the changed-owner focused batch and headless import once after integration.
+- [x] **6.1** Run the changed-owner focused batch and headless import once after integration.
   - Required: encounter pacing, arrival scheduler, stage flow/continuity, experience, Run, stage report,
     stage UI layout, upgrade system/UI, semantic asset provider, actor visuals, enemy expansion,
     contact, spatial grid, renderer, localization, capture driver, document authority, visual authority,
     and `git diff --check`.
   - Accept: all commands exit successfully with no parser/runtime/assertion error.
-- [ ] **6.2** Run the diff-scoped codebase-quality audit and repair only task-owned findings.
+- [x] **6.2** Run the diff-scoped codebase-quality audit and repair only task-owned findings.
   - Accept: no competing quota, clock, health, scale, build-slot, or result owner; no reachable stale
     text rail or simplified final Result path; no public schema lacks a consumer/test.
-- [ ] **6.3** Produce rendered evidence.
+- [x] **6.3** Produce rendered evidence.
   - Accept: Korean and English at `960x540`, `1280x720`, `1920x1080`, plus 200% text, covering empty
     rail, partial rail/popover, dense final Result, and failure report. Overlap, overflow, and clipping
     are zero; only filled slots focus.
@@ -473,6 +473,16 @@ documents.
   `build/performance/run-pacing-result-slots-production-replay-rerun.json`, keep radius 48, and make
   the replay stabilize its timed population exactly as the other fixed-pressure fixtures do while
   retaining real attacks and collisions.
+- 2026-08-13: clean commit `4f7f7acd` produced the final valid native stop. The replay held the exact
+  discrete 90-percent pressure floor at 43 actors for all ten retained peak samples, scenario counts
+  passed, focus remained valid, and frame p95/p99 were `2.381/4.718 ms` at 660 median FPS. Draw p95
+  was 95 and combat batches were 38. Physics p95 passed at `5.211 ms`, but p99 remained red at
+  `11.593 ms` against the unchanged 8 ms gate. The largest detailed tails remain ordinary simulation
+  and scheduling (`enemies_and_grid` p99 `3.430 ms`, `encounter_and_pursuit` p99 `2.870 ms`) rather
+  than rendering. Preserve
+  `build/performance/run-pacing-result-slots-production-replay-final.json`; Phase 6.4 remains red and
+  Phase 6.5 Web qualification must not start until the pre-existing ordinary-simulation tail owner is
+  replanned and passes.
 
 ## Open Questions
 
@@ -495,10 +505,10 @@ continues.
 - [x] Phases 1-5 are implemented and their focused source, localization, and rendered KO/EN matrix
   checks pass. The final Result uses five frozen stage records, and the build rail shows progressive
   four-column semantic artwork with a working detail popover.
-- [ ] Phase 6.4 is active. The first clean native attempt exposed replay population decay rather than
-  a valid shipping workload. Next: validate the stabilized replay, commit it, and repeat the clean
-  native gate once. If p99 remains above 8 ms with valid counts, preserve the result and stop before
-  Web as required, naming the pre-existing ordinary simulation/scheduling tail owner.
+- [ ] Phase 6.4 is the active stop. The stabilized replay is valid and every release check except
+  capacity physics p99 passed. The measured remaining owner is the pre-existing combined ordinary
+  simulation/scheduling tail; Web export and qualification were intentionally not run. The next task
+  is a separate measured replan of that owner, not a threshold, cap, cadence, or radius change.
 
 ## Completion and Stop Conditions
 
