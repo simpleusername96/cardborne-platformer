@@ -1,0 +1,43 @@
+{
+  "status": "review_only",
+  "production_integrated": false,
+  "generated_with": "OpenAI ImageGen",
+  "canonical_reference": "docs/design/cardborne-universal-art-style-reference.png",
+  "canonical_reference_role": "semantic color discipline, familiar sci-fi vocabulary, and small-size readability only; no object or layout copying",
+  "existing_external_reference_assets_added": false,
+  "reference_analysis": "docs/reports/2026-08-13-upgrade-artwork-reference-analysis-ko.md",
+  "external_reference_use": "analysis principles only; official screenshots and icon-guide images were not supplied to ImageGen",
+  "previous_upgrade_assets_supplied_to_initial_generation": false,
+  "directions": [
+    {
+      "id": "flat_signal_pictogram",
+      "file": "direction-a-flat-signal-pictogram.png",
+      "principle": "literal focal metaphor, at most one supporting element, thick outline"
+    },
+    {
+      "id": "flat_action_vignette",
+      "file": "direction-b-flat-action-vignette.png",
+      "principle": "one visible gameplay event per artwork, large cropped silhouettes"
+    },
+    {
+      "id": "flat_cutout_emblem",
+      "file": "direction-c-flat-cutout-emblem.png",
+      "principle": "unique dominant silhouette unified by broad notches and negative-space cuts"
+    }
+  ],
+  "shared_cell_order": [
+    "projectile_count",
+    "cross_beam",
+    "homing_missiles",
+    "thermal_burst",
+    "pickup_radius",
+    "cooldown_reduction"
+  ],
+  "notes": [
+    "The final ImageGen edit used each newly generated direction as input 1 only to flatten its own shading.",
+    "The canonical Cardborne reference remained input 2 in the final edit.",
+    "No existing project upgrade artwork was supplied to either initial generation or final edit.",
+    "ImageMagick was used only for permitted mechanical alpha handling: near-white neutral checkerboard background pixels were made transparent; authored colored shapes were not redrawn.",
+    "No runtime or production asset was changed."
+  ]
+}
