@@ -588,6 +588,15 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	var performance_active := is_instance_valid(_performance_recorder)
+	if (
+		performance_active
+		and not OS.has_feature("web")
+		and not DisplayServer.window_is_focused()
+		and DisplayServer.has_method("window_move_to_foreground")
+	):
+		# Native qualification rejects even transient background samples. Reclaim
+		# focus before the recorder observes this rendered frame.
+		DisplayServer.window_move_to_foreground()
 	var manual_trace_recording := (
 		is_instance_valid(_manual_performance_trace)
 		and _manual_performance_trace.is_recording()
