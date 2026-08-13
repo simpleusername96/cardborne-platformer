@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-11
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 topic: Dense-combat performance, final-run completion, conditional upgrade depth, secondary weapons, direct pickups, and field-object correction
 scope: Five-stage Cardborne run, native and Web runtime, product/UI contracts, validators, and performance evidence
 related:
@@ -23,6 +23,12 @@ related:
 ---
 
 # 고밀도 전투·성장·런 종료 정상화 실행 계획
+
+> Current follow-up authority: use
+> `2026-08-13-evidence-category-slots-and-scalable-swarm.md` for performance provenance,
+> the category-owned build-slot correction, the current cap-48 p99 work, and capacity exploration.
+> This plan remains active as the implementation record and contract for its other completed or
+> unresolved gameplay scope.
 
 > 범위 우선순위: 후속 사용자 결정과
 > `2026-08-11-half-scale-continuous-stage-flow.md`가 Stage 1~4 보스 보상 카드,

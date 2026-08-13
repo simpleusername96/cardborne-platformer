@@ -22,6 +22,12 @@ related:
 
 # Dense Combat and Engagement Flow - Execution Contract
 
+> Current follow-up authority: use
+> `2026-08-13-evidence-category-slots-and-scalable-swarm.md` for performance provenance,
+> the category-owned build-slot correction, the current cap-48 p99 work, and capacity exploration.
+> This plan remains active as the implementation record and contract for its other completed or
+> unresolved engagement-flow scope.
+
 Replace Cardborne's repeated dense-enemy scans with bounded, incremental typed-GDScript owners and
 add a deterministic engagement director that spreads actual combat arrivals across direction and
 time. The implementation keeps the current eight-sector off-screen birth contract, authored enemy

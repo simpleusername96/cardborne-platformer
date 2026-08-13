@@ -21,6 +21,12 @@ related:
 
 # Run Pacing, Result, and Upgrade Slots - Execution Contract
 
+> Current follow-up authority: use
+> `2026-08-13-evidence-category-slots-and-scalable-swarm.md` for performance provenance,
+> the category-owned build-slot correction, the current cap-48 p99 work, and capacity exploration.
+> This plan remains active as the implementation record and contract for its other completed or
+> unresolved run-pacing and Result scope.
+
 Correct the five-stage run after the exact ordinary-enemy population was reduced. Bosses must arrive
 after a deliberately smaller defeat path, the existing upgrade cadence must survive the shorter run,
 the run clock must include mandatory upgrade decisions, and the final Result must show the complete
