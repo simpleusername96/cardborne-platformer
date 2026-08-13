@@ -18,6 +18,6 @@ description_key = "UPGRADE_SHOCK_DISRUPTION_DESC"
 enhance_description_key = "UPGRADE_SHOCK_DISRUPTION_ENHANCE_DESC"
 category = &"element"
 attribute_slot_kind = &"utility"
-artwork_asset_id = &"upgrade/ion_field"
+artwork_asset_id = &"upgrade/shock_disruption"
 max_level = 3
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_duration")])

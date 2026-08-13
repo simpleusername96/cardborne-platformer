@@ -58,7 +58,18 @@ func _initialize() -> void:
 func _validate_presentation(catalog: Catalog) -> void:
 	var state_count := 0
 	var category_counts := {}
+	var artwork_ids := {}
 	for definition in catalog.all_definitions():
+		var expected_artwork_id := StringName("upgrade/%s" % definition.id)
+		_expect(
+			definition.artwork_asset_id == expected_artwork_id,
+			"%s owns its card-specific artwork ID" % definition.id
+		)
+		_expect(
+			not artwork_ids.has(definition.artwork_asset_id),
+			"%s does not share artwork with another card" % definition.id
+		)
+		artwork_ids[definition.artwork_asset_id] = true
 		category_counts[definition.category] = int(
 			category_counts.get(definition.category, 0)
 		) + 1
@@ -97,6 +108,7 @@ func _validate_presentation(catalog: Catalog) -> void:
 				)
 			state_count += 1
 	_expect(state_count == 92, "upgrade presentation covers all 92 level states")
+	_expect(artwork_ids.size() == 28, "all 28 upgrades own unique artwork")
 	_expect(
 		category_counts == {
 			&"primary":2, &"secondary":8, &"element":4, &"activated":5,

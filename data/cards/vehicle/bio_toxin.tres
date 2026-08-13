@@ -24,6 +24,6 @@ description_key = "UPGRADE_BIO_TOXIN_DESC"
 enhance_description_key = "UPGRADE_BIO_TOXIN_ENHANCE_DESC"
 category = &"element"
 attribute_slot_kind = &"damage"
-artwork_asset_id = &"upgrade/element_toxin"
+artwork_asset_id = &"upgrade/bio_toxin"
 max_level = 4
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_damage"), SubResource("Modifier_duration")])

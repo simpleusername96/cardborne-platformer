@@ -15,6 +15,6 @@ id = &"hull_integrity"
 title_key = "UPGRADE_HULL_INTEGRITY_TITLE"
 description_key = "UPGRADE_HULL_INTEGRITY_DESC"
 category = &"chassis"
-artwork_asset_id = &"upgrade/hull_reinforcement"
+artwork_asset_id = &"upgrade/hull_integrity"
 max_level = 3
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1")])

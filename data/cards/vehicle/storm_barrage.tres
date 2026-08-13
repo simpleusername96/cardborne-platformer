@@ -9,5 +9,5 @@ title_key = "UPGRADE_STORM_BARRAGE_TITLE"
 description_key = "UPGRADE_STORM_BARRAGE_DESC"
 category = &"secondary"
 secondary_slot_kind = &"optional"
-artwork_asset_id = &"upgrade/ion_field"
+artwork_asset_id = &"upgrade/storm_barrage"
 max_level = 3

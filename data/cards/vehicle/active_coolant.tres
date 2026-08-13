@@ -16,6 +16,6 @@ title_key = "UPGRADE_ACTIVE_COOLANT_TITLE"
 description_key = "UPGRADE_ACTIVE_COOLANT_DESC"
 category = &"activated"
 active_slot_kind = &"enhancement"
-artwork_asset_id = &"upgrade/system_relay"
+artwork_asset_id = &"upgrade/active_coolant"
 max_level = 3
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_cooldown")])

@@ -135,8 +135,8 @@
       "id": "upgrade_content_artwork",
       "category_id": "combat",
       "order": 7,
-      "title_en": "Shared Upgrade Content Artwork",
-      "title_ko": "공용 업그레이드 콘텐츠 아트워크",
+      "title_en": "Upgrade Card Artwork",
+      "title_ko": "업그레이드 카드 아트워크",
       "owner": "gameplay_manifest",
       "switch_kind": "consolidate",
       "status": "applied",
@@ -150,21 +150,12 @@
         "tools/validation/validate_vehicle_upgrade_ui.gd"
       ],
       "consumer_asset_ids": [
-        "upgrade/dash_wake",
-        "upgrade/defense_matrix",
-        "upgrade/element_cryo",
-        "upgrade/element_thermal",
-        "upgrade/element_toxin",
-        "upgrade/hull_reinforcement",
-        "upgrade/ion_field",
-        "upgrade/mobility_thruster",
-        "upgrade/pickup_magnet",
-        "upgrade/system_relay"
+        "upgrade/active_amplifier", "upgrade/active_coolant", "upgrade/auto_laser", "upgrade/bio_toxin", "upgrade/chassis_speed", "upgrade/critical_targeting", "upgrade/cryo_slow", "upgrade/dash_afterburn_field", "upgrade/dash_overdrive", "upgrade/drop_mines", "upgrade/electric_field", "upgrade/gravity_collapse", "upgrade/homing_missiles", "upgrade/hull_integrity", "upgrade/kinetic_shockwave", "upgrade/last_stand_amplifier", "upgrade/lifesteal", "upgrade/orbiting_blades", "upgrade/overflow_barrier", "upgrade/pickup_radius", "upgrade/piercing_lance", "upgrade/piercing_rounds", "upgrade/secondary_amplifier", "upgrade/secondary_coolant", "upgrade/shock_disruption", "upgrade/split_muzzle", "upgrade/storm_barrage", "upgrade/thermal_burst"
       ],
-      "direction_en": "Add ten reusable authored upgrade identities for the card content layer. Keep card chrome, spacing, typography, level transitions, and selection behavior code-owned; each identity is a complete transparent PNG with one readable silhouette and no decorative micro-detail.",
+      "direction_en": "BK approved the 2026-08-13 Direction C migration: one authored transparent 192x192 PNG per live upgrade card, reused across its levels. Use a compact flat stencil system with one warm-off-white dominant silhouette, one semantic accent, and one short near-black offset shadow; no gradients, text, badges, card frame, decorative background, glow, texture, or material rendering. The canonical authority sheet remains binding; the additional task reference is previews/upgrade-artwork-flat-style-parallel-v2/direction-c.png.",
       "deliverables": [
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/dash_wake.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/active_amplifier.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -174,11 +165,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color cyan dash-wake identity with a compact directional silhouette, dark perimeter, transparent background, and no tail particles or micro-detail.",
+          "brief_en": "Compact flat stencil for activated weapon amplifier: warm-off-white power burst, one amber accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/defense_matrix.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/active_coolant.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -188,11 +179,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color cyan defensive matrix identity formed from a single shield mass and dark perimeter, transparent background, without nested ornament.",
+          "brief_en": "Compact flat stencil for activated weapon coolant: warm-off-white cooling module, one cyan accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/element_cryo.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/auto_laser.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -202,11 +193,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color cyan cryo-core identity with a broad angular energy silhouette, dark perimeter, transparent background, and no glow or detached parts.",
+          "brief_en": "Compact flat stencil for automatic laser: warm-off-white laser emitter, one cyan beam accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/element_thermal.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/bio_toxin.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -216,11 +207,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color amber thermal-core identity with a compact angular energy silhouette, dark perimeter, transparent background, and no flame particles.",
+          "brief_en": "Compact flat stencil for toxin: warm-off-white hazard burst, one green toxin accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/element_toxin.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/chassis_speed.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -230,11 +221,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color green toxin-core identity with a compact angular energy silhouette, dark perimeter, transparent background, and no droplets or fumes.",
+          "brief_en": "Compact flat stencil for chassis speed: warm-off-white thruster, one cyan motion accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/hull_reinforcement.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/critical_targeting.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -244,11 +235,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color ivory hull reinforcement identity built from a single reinforced plate mass, dark perimeter, transparent background, and no bolts or texture noise.",
+          "brief_en": "Compact flat stencil for critical targeting: warm-off-white target reticle, one red critical accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/ion_field.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/cryo_slow.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -258,11 +249,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color mint ion-field identity with a compact circular energy mass, dark perimeter, transparent background, and no concentric ornament.",
+          "brief_en": "Compact flat stencil for cryo slow: warm-off-white ice burst, one cyan cold accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/mobility_thruster.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/dash_afterburn_field.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -272,11 +263,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color cyan mobility-thruster identity with a compact directional engine silhouette, dark perimeter, transparent background, and no exhaust trail.",
+          "brief_en": "Compact flat stencil for dash afterburn field: warm-off-white dash wake, one orange afterburn accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/pickup_magnet.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/dash_overdrive.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -286,11 +277,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color cobalt pickup-magnet identity with a simple horseshoe field silhouette, dark perimeter, transparent background, and no detached sparks.",
+          "brief_en": "Compact flat stencil for dash overdrive: warm-off-white engine bolt, one orange speed accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/system_relay.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/drop_mines.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -300,25 +291,61 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "One flat-color amber system-relay identity with a single compact module silhouette, dark perimeter, transparent background, and no circuit decoration.",
+          "brief_en": "Compact flat stencil for drop mines: warm-off-white mine cluster, one amber danger accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
           "external_source_ids": []
-        }
+        },
+        { "target_path": "art/visuals/production/gameplay/upgrades/electric_field.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for electric field: warm-off-white field core, one cyan electric accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/gravity_collapse.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for gravity collapse: warm-off-white collapse star, one violet gravity accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/homing_missiles.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for homing missiles: warm-off-white missile pair, one cyan tracking accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/hull_integrity.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for hull integrity: warm-off-white armor plate, one mint repair accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/kinetic_shockwave.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for kinetic shockwave: warm-off-white impact burst, one amber kinetic accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/last_stand_amplifier.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for last stand amplifier: warm-off-white emergency core, one red danger accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/lifesteal.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for lifesteal: warm-off-white extraction point, one red health accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/orbiting_blades.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for orbiting blades: warm-off-white blade trio, one cyan orbit accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/overflow_barrier.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for overflow barrier: warm-off-white shield shell, one cyan barrier accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/pickup_radius.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for pickup radius: warm-off-white magnet, one amber pickup accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/piercing_lance.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for piercing lance: warm-off-white cross beam, one cyan laser accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/piercing_rounds.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for piercing rounds: warm-off-white piercing bullets, one amber trail accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/secondary_amplifier.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for secondary amplifier: warm-off-white secondary module, one amber power accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/secondary_coolant.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for secondary coolant: warm-off-white secondary module, one cyan cooling accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/shock_disruption.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for shock disruption: warm-off-white lightning fork, one cyan shock accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/split_muzzle.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for split muzzle: warm-off-white triple muzzle, one amber bullet accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/storm_barrage.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for storm barrage: warm-off-white missile rain, one cyan storm accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
+        { "target_path": "art/visuals/production/gameplay/upgrades/thermal_burst.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for thermal burst: warm-off-white flame burst, one orange thermal accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] }
       ],
       "final_paths": [
-        "art/visuals/production/gameplay/upgrades/dash_wake.png",
-        "art/visuals/production/gameplay/upgrades/defense_matrix.png",
-        "art/visuals/production/gameplay/upgrades/element_cryo.png",
-        "art/visuals/production/gameplay/upgrades/element_thermal.png",
-        "art/visuals/production/gameplay/upgrades/element_toxin.png",
-        "art/visuals/production/gameplay/upgrades/hull_reinforcement.png",
-        "art/visuals/production/gameplay/upgrades/ion_field.png",
-        "art/visuals/production/gameplay/upgrades/mobility_thruster.png",
-        "art/visuals/production/gameplay/upgrades/pickup_magnet.png",
-        "art/visuals/production/gameplay/upgrades/system_relay.png"
+        "art/visuals/production/gameplay/upgrades/active_amplifier.png",
+        "art/visuals/production/gameplay/upgrades/active_coolant.png",
+        "art/visuals/production/gameplay/upgrades/auto_laser.png",
+        "art/visuals/production/gameplay/upgrades/bio_toxin.png",
+        "art/visuals/production/gameplay/upgrades/chassis_speed.png",
+        "art/visuals/production/gameplay/upgrades/critical_targeting.png",
+        "art/visuals/production/gameplay/upgrades/cryo_slow.png",
+        "art/visuals/production/gameplay/upgrades/dash_afterburn_field.png",
+        "art/visuals/production/gameplay/upgrades/dash_overdrive.png",
+        "art/visuals/production/gameplay/upgrades/drop_mines.png",
+        "art/visuals/production/gameplay/upgrades/electric_field.png",
+        "art/visuals/production/gameplay/upgrades/gravity_collapse.png",
+        "art/visuals/production/gameplay/upgrades/homing_missiles.png",
+        "art/visuals/production/gameplay/upgrades/hull_integrity.png",
+        "art/visuals/production/gameplay/upgrades/kinetic_shockwave.png",
+        "art/visuals/production/gameplay/upgrades/last_stand_amplifier.png",
+        "art/visuals/production/gameplay/upgrades/lifesteal.png",
+        "art/visuals/production/gameplay/upgrades/orbiting_blades.png",
+        "art/visuals/production/gameplay/upgrades/overflow_barrier.png",
+        "art/visuals/production/gameplay/upgrades/pickup_radius.png",
+        "art/visuals/production/gameplay/upgrades/piercing_lance.png",
+        "art/visuals/production/gameplay/upgrades/piercing_rounds.png",
+        "art/visuals/production/gameplay/upgrades/secondary_amplifier.png",
+        "art/visuals/production/gameplay/upgrades/secondary_coolant.png",
+        "art/visuals/production/gameplay/upgrades/shock_disruption.png",
+        "art/visuals/production/gameplay/upgrades/split_muzzle.png",
+        "art/visuals/production/gameplay/upgrades/storm_barrage.png",
+        "art/visuals/production/gameplay/upgrades/thermal_burst.png"
       ],
       "reuse_paths": [],
       "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/urgent-runtime-stabilization/index.html"
+        "docs/design/visual-replacement-workbench/previews/upgrade-artwork-flat-style-parallel-v2/direction-c.png"
       ],
       "retire_paths": [],
       "runtime_change_paths": [
@@ -331,9 +358,7 @@
       ],
       "acceptance_commands": [
         ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
-        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
-        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
-        ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_ui.gd"
+        ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
       ],
       "visual_authority_evidence": {
         "spec_path": "docs/design/VISUAL_SYSTEM.md",
@@ -342,33 +367,50 @@
         "document_read_complete": true,
         "sheet_inspected_original": true,
         "actual_image_reference_used": true,
-        "reference_input_method": "image_gen.referenced_image_paths"
+        "reference_input_method": "image_gen.referenced_image_paths (canonical sheet plus Direction C task reference)"
       },
       "approval": {
-        "approved_by": "autonomous-executor",
-        "approved_at": "2026-08-04T19:00:00+09:00",
-        "baseline_commit": "9c66a8bfa303e7e90a61af04e18535f7c654ee8b",
+        "approved_by": "BK",
+        "approved_at": "2026-08-13T00:00:00+09:00",
+        "baseline_commit": "4278cd2ffaf5f438634f07920be152fe3b8635d8",
         "deliverable_sha256": {
-          "art/visuals/production/gameplay/upgrades/dash_wake.png": "36f2c7b18c87327b7faebf01b1775e38bbbb4350450ddb4adddf5253b4ffa1b9",
-          "art/visuals/production/gameplay/upgrades/defense_matrix.png": "279212ad6d5292d2785feda4f5a884cb1bcb5edee4e78e21bb20850c063ec96d",
-          "art/visuals/production/gameplay/upgrades/element_cryo.png": "42b4ab4a5e33dc0dcd2802555ca2a74c66935dfcfdc265294af85c81c364c184",
-          "art/visuals/production/gameplay/upgrades/element_thermal.png": "82e2c65c512852ea9cb465938a8d9b771866aae9eebf30e3439d64a0ba2a3774",
-          "art/visuals/production/gameplay/upgrades/element_toxin.png": "902a5406a3fcfb8b2e86954dc65072bd092bfa5abf6c9928a5418ea90e9e3df5",
-          "art/visuals/production/gameplay/upgrades/hull_reinforcement.png": "5a36894ef1da2057b5575bbb291093ad4b3d1bec03e72840907e4a18eaef3988",
-          "art/visuals/production/gameplay/upgrades/ion_field.png": "d6e24f33c11bcd1220680f0bb75364ce4f097e23c3f937030a759ed57d2cc8fb",
-          "art/visuals/production/gameplay/upgrades/mobility_thruster.png": "9b3482fc9e10679814e771e033e18a64286a448dfcd2f6c1f507e9d584cc7453",
-          "art/visuals/production/gameplay/upgrades/pickup_magnet.png": "81a6d7f057f62906f5a0e582246f850a6eb5221e7e8f3f04e8681177f25a2782",
-          "art/visuals/production/gameplay/upgrades/system_relay.png": "18c9f8d63223f6b3a76a09b8771fde8ef9b77c58e03bb746a9e72019e722b4f3"
+          "art/visuals/production/gameplay/upgrades/active_amplifier.png": "b4e9f578e948f684d8381e447baa88a71a339ada633e97bf3db13fbb6105d913",
+          "art/visuals/production/gameplay/upgrades/active_coolant.png": "171db1a2c87bd825088f9b2e9bad403836fcc53863d7c9d1b3c5750e269abc95",
+          "art/visuals/production/gameplay/upgrades/auto_laser.png": "cd626b2715c07d06e4195701ad2342e6a7687b0c2069b24ac54b2416bcab56c2",
+          "art/visuals/production/gameplay/upgrades/bio_toxin.png": "8700541cd1442c340cf2474d3e835ad0a396e17fbe5f0be4162c4e02b76d6e39",
+          "art/visuals/production/gameplay/upgrades/chassis_speed.png": "376da48778279d6f99cc9251986d84a5178918fbfd3a247791a3a532ebffa8f2",
+          "art/visuals/production/gameplay/upgrades/critical_targeting.png": "269809a91155018a6114ba49b6beeda451b0524f0072afba87af64d00933b1ad",
+          "art/visuals/production/gameplay/upgrades/cryo_slow.png": "029c61979b0ef0a0c94a3b3e0be4e1cb9940cc4cdacc66c8e2d25cb34e0d9e3b",
+          "art/visuals/production/gameplay/upgrades/dash_afterburn_field.png": "11a6fa76c55fdfa5674cb77589dd56da2363b5b71a3de1dcd6976aa68dfa98dd",
+          "art/visuals/production/gameplay/upgrades/dash_overdrive.png": "ffdee11f3731ddb97f14b646f391ebf6d5d2df3cf7612d7c38dcacf774579ba0",
+          "art/visuals/production/gameplay/upgrades/drop_mines.png": "6fc87e63bdfe71aad135b1fca6094a2320749503050ecb61bb0fd2ee72998d80",
+          "art/visuals/production/gameplay/upgrades/electric_field.png": "3db5fef8a0e1be3f091101ecffef613239db481f16b91fe279e508128ffc65f4",
+          "art/visuals/production/gameplay/upgrades/gravity_collapse.png": "7c27216b62c872b5510349ff11b68f2bf411afaa59d912f581ae31d5444b779c",
+          "art/visuals/production/gameplay/upgrades/homing_missiles.png": "8fbd674f9cd84c24a1fcd2bfc0ea669905dd0ad16d9a1fb3e1f428a527cd60af",
+          "art/visuals/production/gameplay/upgrades/hull_integrity.png": "f034711255a18cc6910fc0d6d31e7616555d547544ee243a3f7270ac4309aa58",
+          "art/visuals/production/gameplay/upgrades/kinetic_shockwave.png": "971de33534c238c242c3286fabe891b6ca2c0fcb08d09ca98d0b1f86ca841134",
+          "art/visuals/production/gameplay/upgrades/last_stand_amplifier.png": "812c236187330ff80615445d0f495c632295e66c8da705880f4ab973ea133c00",
+          "art/visuals/production/gameplay/upgrades/lifesteal.png": "0361e30f3c6bc62843a262d1508ff8eb1d25dd16df3983854958a0d72cb49132",
+          "art/visuals/production/gameplay/upgrades/orbiting_blades.png": "fc0e1a6fb47deb2550f188771cf7536ffb08b13be8c170460250e90a2f7169c3",
+          "art/visuals/production/gameplay/upgrades/overflow_barrier.png": "b84d3a8b847a82b6082a3c75f3d0a8a9611443a1a06b68eb23bb6db608b02cb8",
+          "art/visuals/production/gameplay/upgrades/pickup_radius.png": "57f42658e77d905362d0fbd8c9dc4d62ad13490b2376293b6896c572bcf6501e",
+          "art/visuals/production/gameplay/upgrades/piercing_lance.png": "1bd251b12cc9fcbc5b02ae039bca126ec5055fe048092cdda1b42a0fe37e05f7",
+          "art/visuals/production/gameplay/upgrades/piercing_rounds.png": "342d6190bc36e014bd6a2d4549708162ebf4d4194fdf7d0ab5f2f4327617e31f",
+          "art/visuals/production/gameplay/upgrades/secondary_amplifier.png": "c5b2567388b7834bb823552855c9cc854287c10dc15d3e93cd48c3595d3520e4",
+          "art/visuals/production/gameplay/upgrades/secondary_coolant.png": "d1a60e6ab2440a9c8c971946c5ff4b778a31578f5fb77f42e0853f6add5404b8",
+          "art/visuals/production/gameplay/upgrades/shock_disruption.png": "6969789cb87cdb41a665fe1a15b46770827c3718ecd8a0b8d11844cd56bbfff7",
+          "art/visuals/production/gameplay/upgrades/split_muzzle.png": "33486bb516b6c620be73fd5c8c51ddcf17f4621f7f4c5f3e5fa3725eaf9ee8de",
+          "art/visuals/production/gameplay/upgrades/storm_barrage.png": "2371d1d0a502b40bc53a866f37d86a66af0426ead92fff21684629fc09b820ae",
+          "art/visuals/production/gameplay/upgrades/thermal_burst.png": "d421235fea80fce04bdc708f7799c34b157105de97ea29a017ad52560006975c"
         },
         "retire_paths": []
       },
       "application": {
-        "commit": "9c66a8bfa303e7e90a61af04e18535f7c654ee8b",
-        "applied_at": "2026-08-04T19:00:00+09:00",
+        "commit": "4278cd2ffaf5f438634f07920be152fe3b8635d8",
+        "applied_at": "2026-08-13T00:00:00+09:00",
         "validation_evidence": [
           ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
-          ".\\tools\\validation\\validate_vehicle_visual_replacement_coverage.gd",
-          "asset generation and alpha-bound report: docs/design/visual-replacement-workbench/previews/urgent-runtime-stabilization/index.html"
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
         ]
       }
     },

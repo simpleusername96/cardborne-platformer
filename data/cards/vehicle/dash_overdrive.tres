@@ -8,5 +8,5 @@ id = &"dash_overdrive"
 title_key = "UPGRADE_DASH_OVERDRIVE_TITLE"
 description_key = "UPGRADE_DASH_OVERDRIVE_DESC"
 category = &"combat"
-artwork_asset_id = &"upgrade/dash_wake"
+artwork_asset_id = &"upgrade/dash_overdrive"
 max_level = 3

@@ -9,5 +9,5 @@ title_key = "UPGRADE_DROP_MINES_TITLE"
 description_key = "UPGRADE_DROP_MINES_DESC"
 category = &"secondary"
 secondary_slot_kind = &"optional"
-artwork_asset_id = &"secondary/wake_mine"
+artwork_asset_id = &"upgrade/drop_mines"
 max_level = 4

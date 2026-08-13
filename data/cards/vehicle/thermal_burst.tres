@@ -23,6 +23,6 @@ description_key = "UPGRADE_THERMAL_BURST_DESC"
 enhance_description_key = "UPGRADE_THERMAL_BURST_ENHANCE_DESC"
 category = &"element"
 attribute_slot_kind = &"damage"
-artwork_asset_id = &"upgrade/element_thermal"
+artwork_asset_id = &"upgrade/thermal_burst"
 max_level = 4
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_radius"), SubResource("Modifier_damage")])

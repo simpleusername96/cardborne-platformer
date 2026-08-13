@@ -118,7 +118,7 @@ func _run() -> void:
 			}],
 			"change_kind":&"stats",
 			"change_label_key":"",
-			"artwork_asset_id":&"upgrade/mobility_thruster",
+			"artwork_asset_id":&"upgrade/chassis_speed",
 		})
 	panel.confirmed.connect(func(_id: StringName) -> void: confirmed_count += 1)
 	panel.open(cards)

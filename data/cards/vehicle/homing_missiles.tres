@@ -9,5 +9,5 @@ title_key = "UPGRADE_HOMING_MISSILES_TITLE"
 description_key = "UPGRADE_HOMING_MISSILES_DESC"
 category = &"secondary"
 secondary_slot_kind = &"built_in"
-artwork_asset_id = &"secondary/seeker"
+artwork_asset_id = &"upgrade/homing_missiles"
 max_level = 3

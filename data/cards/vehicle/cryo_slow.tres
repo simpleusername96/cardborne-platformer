@@ -25,6 +25,6 @@ description_key = "UPGRADE_CRYO_SLOW_DESC"
 enhance_description_key = "UPGRADE_CRYO_SLOW_ENHANCE_DESC"
 category = &"element"
 attribute_slot_kind = &"utility"
-artwork_asset_id = &"upgrade/element_cryo"
+artwork_asset_id = &"upgrade/cryo_slow"
 max_level = 3
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_slow"), SubResource("Modifier_duration")])

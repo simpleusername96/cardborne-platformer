@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -245,9 +245,16 @@ collision.
   embedded chip image의 deterministic transform, scale, rotation과 batching만
   소유한다. 이 image는 collision, navigation, topology, pickup, cover,
   objective 또는 damage truth를 만들지 않는다.
-- Upgrade-card content artwork is also authored PNG content. It is one reusable
-  semantic identity per shared mechanic group and is rendered by the semantic
-  asset provider; the card never draws a mechanic glyph procedurally.
+- Upgrade-card content artwork is one authored PNG semantic identity per live
+  card ID. Every level of the same card reuses that image, and the semantic
+  asset provider renders it; the card never draws a mechanic glyph
+  procedurally.
+- Upgrade artwork alone uses a compact flat-stencil substyle: one dominant
+  warm-off-white silhouette, one mechanic-specific accent, and one short
+  near-black offset shadow. Keep one familiar visual metaphor and no more than
+  three visible color roles. Do not add gradients, bevels, texture, glow,
+  material rendering, a card frame, text, numbers, enclosing badges, or a
+  decorative background. Exact values and conditions remain card text.
 - HUD action glyph, minimap marker, preview marker, combat disk/ring, target bracket,
   telegraph boundary, beam corridor, health rectangle, and simple diamond remain shared
   code-native geometry. Runtime owns their live position, length, width, radius, rotation,

@@ -155,17 +155,27 @@ func _validate_theme_contract() -> void:
 
 
 func _validate_authored_artwork() -> void:
-	for asset_id in [
-		&"upgrade/ion_field",
-		&"upgrade/element_thermal",
-		&"upgrade/element_toxin",
-		&"upgrade/element_cryo",
-		&"upgrade/mobility_thruster",
-		&"upgrade/pickup_magnet",
-		&"upgrade/hull_reinforcement",
-	]:
+	var catalog := Catalog.new()
+	var unique_ids := {}
+	for definition in catalog.all_definitions():
+		var asset_id := StringName("upgrade/%s" % definition.id)
+		_expect(
+			definition.artwork_asset_id == asset_id,
+			"%s owns its card-specific artwork ID" % definition.id
+		)
+		_expect(
+			not unique_ids.has(asset_id),
+			"%s does not share upgrade artwork" % definition.id
+		)
+		unique_ids[asset_id] = true
 		_expect(SemanticAssets.has_asset(asset_id), "%s authored upgrade art is indexed" % asset_id)
-		_expect(SemanticAssets.texture(asset_id) != null, "%s authored upgrade art loads" % asset_id)
+		var texture := SemanticAssets.texture(asset_id)
+		_expect(texture != null, "%s authored upgrade art loads" % asset_id)
+		_expect(
+			texture != null and Vector2i(texture.get_size()) == Vector2i(192, 192),
+			"%s uses the fixed 192px upgrade canvas" % asset_id
+		)
+	_expect(unique_ids.size() == 28, "all 28 cards own unique authored artwork")
 
 
 func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:

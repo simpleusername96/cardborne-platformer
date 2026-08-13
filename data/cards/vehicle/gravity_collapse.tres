@@ -9,5 +9,5 @@ title_key = "UPGRADE_GRAVITY_COLLAPSE_TITLE"
 description_key = "UPGRADE_GRAVITY_COLLAPSE_DESC"
 category = &"activated"
 active_slot_kind = &"kind"
-artwork_asset_id = &"upgrade/ion_field"
+artwork_asset_id = &"upgrade/gravity_collapse"
 max_level = 4

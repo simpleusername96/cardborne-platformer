@@ -8,5 +8,5 @@ id = &"critical_targeting"
 title_key = "UPGRADE_CRITICAL_TARGETING_TITLE"
 description_key = "UPGRADE_CRITICAL_TARGETING_DESC"
 category = &"combat"
-artwork_asset_id = &"upgrade/system_relay"
+artwork_asset_id = &"upgrade/critical_targeting"
 max_level = 3

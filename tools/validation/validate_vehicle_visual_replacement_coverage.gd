@@ -44,11 +44,14 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 64,
-		"gameplay manifest declares 61 semantic PNGs plus three approved SurfaceDetail SVGs"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 80,
+		"gameplay manifest declares 77 semantic PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
-	_expect(int(family_counts.get("upgrade", 0)) == 10, "gameplay manifest declares ten shared upgrade rasters")
+	_expect(
+		int(family_counts.get("upgrade", 0)) == 28,
+		"gameplay manifest declares one raster per live upgrade card"
+	)
 	var world_asset_count := 0
 	for asset_variant in Array(gameplay_manifest.get("assets", [])):
 		if StringName(Dictionary(asset_variant).get("category", &"")) == &"world":

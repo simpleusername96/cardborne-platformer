@@ -18,6 +18,6 @@ id = &"lifesteal"
 title_key = "UPGRADE_LIFESTEAL_TITLE"
 description_key = "UPGRADE_LIFESTEAL_DESC"
 category = &"chassis"
-artwork_asset_id = &"upgrade/defense_matrix"
+artwork_asset_id = &"upgrade/lifesteal"
 max_level = 2
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1")])

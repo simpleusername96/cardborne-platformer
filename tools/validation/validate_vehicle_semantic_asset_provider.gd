@@ -16,6 +16,49 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"secondary/wake_mine",
 	&"projectile/energy_teardrop",
 	&"projectile/hostile_barbed_bolt",
+	&"pickup/experience_master",
+	&"pickup/repair",
+	&"pickup/experience_recall",
+	&"world/facility_transit_gate",
+	&"world/mystery_device_intact",
+	&"world/mystery_device_resolved",
+	&"world/surface_detail_crack",
+	&"world/surface_detail_stain",
+	&"world/surface_detail_embedded_chip",
+]
+
+const REQUIRED_UPGRADE_IDS: Array[StringName] = [
+	&"upgrade/split_muzzle",
+	&"upgrade/piercing_rounds",
+	&"upgrade/homing_missiles",
+	&"upgrade/electric_field",
+	&"upgrade/orbiting_blades",
+	&"upgrade/drop_mines",
+	&"upgrade/auto_laser",
+	&"upgrade/storm_barrage",
+	&"upgrade/secondary_coolant",
+	&"upgrade/secondary_amplifier",
+	&"upgrade/thermal_burst",
+	&"upgrade/bio_toxin",
+	&"upgrade/cryo_slow",
+	&"upgrade/shock_disruption",
+	&"upgrade/gravity_collapse",
+	&"upgrade/kinetic_shockwave",
+	&"upgrade/piercing_lance",
+	&"upgrade/active_coolant",
+	&"upgrade/active_amplifier",
+	&"upgrade/chassis_speed",
+	&"upgrade/pickup_radius",
+	&"upgrade/hull_integrity",
+	&"upgrade/lifesteal",
+	&"upgrade/overflow_barrier",
+	&"upgrade/critical_targeting",
+	&"upgrade/dash_overdrive",
+	&"upgrade/dash_afterburn_field",
+	&"upgrade/last_stand_amplifier",
+]
+
+const RETIRED_SHARED_UPGRADE_IDS: Array[StringName] = [
 	&"upgrade/ion_field",
 	&"upgrade/element_thermal",
 	&"upgrade/element_toxin",
@@ -28,15 +71,6 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"upgrade/hull_reinforcement",
 	&"upgrade/cross_beam",
 	&"upgrade/secondary_damage",
-	&"pickup/experience_master",
-	&"pickup/repair",
-	&"pickup/experience_recall",
-	&"world/facility_transit_gate",
-	&"world/mystery_device_intact",
-	&"world/mystery_device_resolved",
-	&"world/surface_detail_crack",
-	&"world/surface_detail_stain",
-	&"world/surface_detail_embedded_chip",
 ]
 
 const RETIRED_PRIMITIVE_IDS: Array[StringName] = [
@@ -74,9 +108,13 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 64, "all 61 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 80, "all 77 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
+	for asset_id in REQUIRED_UPGRADE_IDS:
+		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
+	for asset_id in RETIRED_SHARED_UPGRADE_IDS:
+		_expect(not AssetProvider.has_asset(asset_id), "%s stays retired" % asset_id)
 	for asset_id in RETIRED_PRIMITIVE_IDS:
 		_expect(not AssetProvider.has_asset(asset_id), "%s stays retired from the runtime pack" % asset_id)
 	for path in RETIRED_PRIMITIVE_PATHS:
@@ -111,28 +149,15 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 64
+		int(manifest.get("final_asset_count", 0)) == 80
 			and not manifest.has("animations"),
-		"manifest declares 64 static semantic images and no frame animations"
+		"manifest declares 80 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	_validate_normalized_content_rects()
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)
-	for upgrade_id in [
-		&"upgrade/ion_field",
-		&"upgrade/element_thermal",
-		&"upgrade/element_toxin",
-		&"upgrade/element_cryo",
-		&"upgrade/dash_wake",
-		&"upgrade/defense_matrix",
-		&"upgrade/system_relay",
-		&"upgrade/mobility_thruster",
-		&"upgrade/pickup_magnet",
-		&"upgrade/hull_reinforcement",
-		&"upgrade/cross_beam",
-		&"upgrade/secondary_damage",
-	]:
+	for upgrade_id in REQUIRED_UPGRADE_IDS:
 		var texture := AssetProvider.texture(upgrade_id)
 		if texture == null:
 			continue
