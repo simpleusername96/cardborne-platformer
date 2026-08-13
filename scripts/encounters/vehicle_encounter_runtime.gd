@@ -49,6 +49,7 @@ var _capacity_blocked_seconds := 0.0
 var _packet_fence_blocked_seconds := 0.0
 var _birth_capacity_blocked := 0
 var _scheduler_starvation := 0
+var _spawn_materialization_failures := 0
 var _next_metric_sample := 0.0
 var _spawning_enabled := true
 var _spawn_allocator := SpawnAllocator.new()
@@ -107,6 +108,7 @@ func configure(
 	_packet_fence_blocked_seconds = 0.0
 	_birth_capacity_blocked = 0
 	_scheduler_starvation = 0
+	_spawn_materialization_failures = 0
 	_next_metric_sample = 0.0
 	_spawning_enabled = true
 	_allocation_debug.clear()
@@ -294,6 +296,7 @@ func debug_snapshot() -> Dictionary:
 		"packet_fence_blocked_seconds":_packet_fence_blocked_seconds,
 		"birth_capacity_blocked":_birth_capacity_blocked,
 		"scheduler_starvation":_scheduler_starvation,
+		"spawn_materialization_failures":_spawn_materialization_failures,
 		"activated_packets":_activated_packets.keys(),
 		"events":_events.duplicate(true),
 		"first_cue_time":_first_cue_time,
@@ -631,9 +634,18 @@ func _attach_engagement_reservation(
 	})
 	if _engagement_telemetry_enabled:
 		note_engagement_director_cpu_usec(Time.get_ticks_usec() - start)
-	if bool(handle.get("no_gate", false)):
+	if handle.is_empty() or bool(handle.get("no_gate", false)):
 		return
 	var reservation := _engagement_director.reservation(handle)
+	if (
+		reservation.is_empty()
+		or not reservation.has("gate")
+		or not reservation.has("expected_time")
+		or not reservation.has("expiry_time")
+		or not reservation.has("sector")
+	):
+		cancel_engagement(handle)
+		return
 	spec["engagement_handle"] = handle
 	spec["engagement_gate"] = Vector2(reservation["gate"])
 	spec["engagement_expected_time"] = float(reservation["expected_time"])
@@ -700,7 +712,7 @@ func _process_due_round(active_mobile_count: int, delta: float, spawns: Array[Di
 		spawns.append(spec)
 		var squad_id := String(spec["squad_id"])
 		_spawned_by_squad[squad_id] = int(_spawned_by_squad.get(squad_id, 0)) + 1
-		_recent_births.append({"time":elapsed, "position":Vector2(spec["pos"])})
+		_recent_births.append({"id":String(spec["id"]), "time":elapsed, "position":Vector2(spec["pos"])})
 		if _first_spawn_time < 0.0:
 			_first_spawn_time = elapsed
 		_timeline.append({
@@ -712,6 +724,44 @@ func _process_due_round(active_mobile_count: int, delta: float, spawns: Array[Di
 		})
 		if _engagement_telemetry_enabled:
 			_telemetry_births += 1
+
+
+func note_spawn_materialization_failed(spec: Dictionary) -> void:
+	## The scheduler emits a birth before the external enemy store admits it.
+	## Roll back that optimistic record if the bounded store rejects the actor.
+	_spawn_materialization_failures += 1
+	var handle: Dictionary = spec.get("engagement_handle", {})
+	if not handle.is_empty():
+		cancel_engagement(handle)
+	var id := String(spec.get("id", ""))
+	var squad_id := String(spec.get("squad_id", ""))
+	var squad_count := int(_spawned_by_squad.get(squad_id, 0))
+	if squad_count <= 1:
+		_spawned_by_squad.erase(squad_id)
+	else:
+		_spawned_by_squad[squad_id] = squad_count - 1
+	for index in range(_recent_births.size() - 1, -1, -1):
+		if String(_recent_births[index].get("id", "")) == id:
+			_recent_births.remove_at(index)
+			break
+	for index in range(_timeline.size() - 1, -1, -1):
+		var entry: Dictionary = _timeline[index]
+		if StringName(entry.get("kind", &"")) == &"spawn" and String(entry.get("id", "")) == id:
+			_timeline.remove_at(index)
+			break
+	_timeline.append({
+		"kind":&"spawn_materialization_failed",
+		"id":id,
+		"squad_id":squad_id,
+		"time":elapsed,
+	})
+	_first_spawn_time = -1.0
+	for entry in _timeline:
+		if StringName(entry.get("kind", &"")) == &"spawn":
+			_first_spawn_time = float(entry.get("time", -1.0))
+			break
+	if _engagement_telemetry_enabled:
+		_telemetry_births = maxi(0, _telemetry_births - 1)
 
 
 func _complete_inflight_packet_if_ready() -> void:

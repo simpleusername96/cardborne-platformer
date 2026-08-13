@@ -5,6 +5,7 @@ const Generator = preload("res://scripts/vehicle/vehicle_field_layout_generator.
 const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const EngagementDirector = preload("res://scripts/encounters/vehicle_engagement_director.gd")
 
 const FIXED_SEED := 0xC4A2B0
 
@@ -23,6 +24,8 @@ func _initialize() -> void:
 	packet["trigger"] = {"kind":&"time", "at":0.0}
 	_validate_truthful_rounds(stage_id, packet, tactical)
 	_validate_capacity_reservation(stage_id, packet, tactical)
+	_validate_engagement_capacity_fallback(stage_id, packet, tactical)
+	_validate_materialization_failure_accounting(stage_id, packet, tactical)
 	_validate_continuation_lead(stage_id, packet, tactical)
 	_finish()
 
@@ -83,6 +86,63 @@ func _validate_capacity_reservation(stage_id: StringName, packet: Dictionary, ta
 	var admitted := runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 	_expect(Array(admitted["cues"]).size() == 4, "capacity recovery admits one complete cue window")
 	_expect(int(runtime.debug_snapshot()["reserved_arrival_slots"]) == 4, "admitted cue reserves its complete first round")
+
+
+func _validate_engagement_capacity_fallback(stage_id: StringName, packet: Dictionary, tactical) -> void:
+	var runtime := _runtime(stage_id, [packet], tactical)
+	var engagement: VehicleEngagementDirector = runtime.get("_engagement_director")
+	for ordinal in EngagementDirector.CAPACITY:
+		var expected := 100.0 + float(ordinal) * 0.5
+		var request := {
+			"id":"capacity_%03d" % ordinal,
+			"ordinal":ordinal,
+			"eligible_sectors":[0, 1, 2, 3, 4],
+			"heading_sector":0,
+			"expected_time":expected,
+			"expiry_time":expected + 5.0,
+			"anchor":Vector2(10.0, 20.0),
+			"gate_radius":520.0,
+			"validation_allow_eta_saturation":true,
+		}
+		_expect(not engagement.reserve(request).is_empty(), "engagement capacity prefill succeeds")
+	var emitted := []
+	for _step in 80:
+		var result := runtime.tick(0.05, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
+		emitted = Array(result["spawns"])
+		if not emitted.is_empty():
+			break
+	_expect(not emitted.is_empty(), "reservation overflow still permits safe births")
+	for spec in emitted:
+		_expect(not Dictionary(spec).has("engagement_handle"), "reservation overflow uses the documented no-gate fallback")
+	runtime.stop_spawning()
+
+
+func _validate_materialization_failure_accounting(stage_id: StringName, packet: Dictionary, tactical) -> void:
+	var runtime := _runtime(stage_id, [packet], tactical)
+	var emitted := []
+	for _step in 80:
+		var result := runtime.tick(0.05, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
+		emitted = Array(result["spawns"])
+		if not emitted.is_empty():
+			break
+	_expect(not emitted.is_empty(), "materialization failure fixture emits a birth")
+	if emitted.is_empty():
+		return
+	var rejected := Dictionary(emitted[0])
+	var id := String(rejected["id"])
+	var squad_id := String(rejected["squad_id"])
+	var before := runtime.debug_snapshot()
+	var before_squad_count := int(Dictionary(before["spawned_by_squad"]).get(squad_id, 0))
+	runtime.note_spawn_materialization_failed(rejected)
+	var after := runtime.debug_snapshot()
+	_expect(int(after["spawn_materialization_failures"]) == 1, "store rejection is counted explicitly")
+	_expect(int(Dictionary(after["spawned_by_squad"]).get(squad_id, 0)) == before_squad_count - 1, "rejected actor is removed from successful squad births")
+	var retains_spawn := false
+	for entry in Array(after["timeline"]):
+		var item := Dictionary(entry)
+		if StringName(item.get("kind", &"")) == &"spawn" and String(item.get("id", "")) == id:
+			retains_spawn = true
+	_expect(not retains_spawn, "rejected actor is not retained as a successful timeline birth")
 
 
 func _validate_continuation_lead(stage_id: StringName, source_packet: Dictionary, tactical) -> void:

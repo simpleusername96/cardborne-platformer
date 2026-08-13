@@ -1174,17 +1174,11 @@ func _update_encounter(delta: float) -> void:
 		var bounded_spec := _bounded_spawn_spec(Dictionary(spawn_spec))
 		var enemy := _make_enemy(bounded_spec)
 		if enemy == null:
-			_cancel_spawn_engagement(bounded_spec)
+			encounter_runtime.note_spawn_materialization_failed(bounded_spec)
 			continue
 		_apply_pending_elite(enemy)
-		_append_enemy(enemy)
-
-
-func _cancel_spawn_engagement(spec: Dictionary) -> void:
-	var handle: Dictionary = spec.get("engagement_handle", {})
-	if not handle.is_empty():
-		encounter_runtime.cancel_engagement(handle)
-
+		if not _append_enemy(enemy):
+			encounter_runtime.note_spawn_materialization_failed(bounded_spec)
 
 func _record_ordinary_arrival_cue(cue: Dictionary) -> void:
 	if not cue.has("birth_position"):
