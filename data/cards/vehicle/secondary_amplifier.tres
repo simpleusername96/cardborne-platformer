@@ -15,6 +15,6 @@ id = &"secondary_amplifier"
 title_key = "UPGRADE_SECONDARY_AMPLIFIER_TITLE"
 description_key = "UPGRADE_SECONDARY_AMPLIFIER_DESC"
 category = &"secondary"
-artwork_asset_id = &"upgrade/system_relay"
+artwork_asset_id = &"upgrade/secondary_damage"
 max_level = 3
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_damage")])

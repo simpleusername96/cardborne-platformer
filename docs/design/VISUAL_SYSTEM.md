@@ -733,7 +733,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - approved reference와 runtime actor를 같은 scale로 비교한 sheet에서
   player, 8 role grammar와 boss proportion hierarchy가 같은 family로 판독
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
-- all 10 shared upgrade semantic artwork identities resolve with no missing slot;
+- all 12 registered upgrade semantic artwork identities resolve with no missing slot;
   current-build summary의 채워진 slot만 popover를 열고, 세 offer row는 각각 왼쪽에
   artwork 하나만 가지며 stat label과 value 사이에 distributed blank column이 없음
 - every displayed circular area has a continuous full-area body from center to exact
@@ -743,7 +743,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- final gameplay manifest가 정확히 62 image를 색인함: semantic PNG 59개와
+- final gameplay manifest가 정확히 64 image를 색인함: semantic PNG 61개와
   user-approved SurfaceDetail SVG 3개다. Shape/color-only effect/cue raster는 0이다.
   전용 hostile bolt를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음

@@ -26,6 +26,8 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"upgrade/mobility_thruster",
 	&"upgrade/pickup_magnet",
 	&"upgrade/hull_reinforcement",
+	&"upgrade/cross_beam",
+	&"upgrade/secondary_damage",
 	&"pickup/experience_master",
 	&"pickup/repair",
 	&"pickup/experience_recall",
@@ -72,7 +74,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 62, "all 59 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 64, "all 61 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in RETIRED_PRIMITIVE_IDS:
@@ -109,9 +111,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 62
+		int(manifest.get("final_asset_count", 0)) == 64
 			and not manifest.has("animations"),
-		"manifest declares 62 static semantic images and no frame animations"
+		"manifest declares 64 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	_validate_normalized_content_rects()
@@ -128,6 +130,8 @@ func _initialize() -> void:
 		&"upgrade/mobility_thruster",
 		&"upgrade/pickup_magnet",
 		&"upgrade/hull_reinforcement",
+		&"upgrade/cross_beam",
+		&"upgrade/secondary_damage",
 	]:
 		var texture := AssetProvider.texture(upgrade_id)
 		if texture == null:

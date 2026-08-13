@@ -1,0 +1,130 @@
+{
+  "schema": "cardborne-imagegen-candidate-evidence/v1",
+  "report_id": "upgrade-artwork-batch-v5",
+  "generated_at": "2026-08-13",
+  "approval_status": "pending_user_review",
+  "runtime_integrated": false,
+  "authoring": {
+    "creative_tool": "OpenAI built-in ImageGen",
+    "creative_calls": 10,
+    "post_processing": [
+      "flat chroma-key alpha removal with the installed imagegen helper",
+      "Lanczos resize to 192x192"
+    ],
+    "prohibited_geometry_authoring_used": false
+  },
+  "visual_authority": {
+    "text_contract": "docs/design/VISUAL_SYSTEM.md",
+    "text_contract_read_completely": true,
+    "style_reference": "docs/design/cardborne-universal-art-style-reference.png",
+    "expected_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "original_detail_inspected": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "referenced_image_paths in every built-in ImageGen call",
+    "reference_role": "style grammar only; no depicted object, silhouette, icon, card shell, or layout approved or copied"
+  },
+  "common_prompt": "Use case: stylized-concept. Create one Cardborne upgrade-card artwork candidate. Use the supplied canonical sheet only for broad industrial masses, three to five matte color planes, hard antialiased edges, dark separation, sparse functional detail, and restrained semantic color. Do not copy any depicted object or layout. Use one dominant silhouette and at most two supporting functional elements. No text, numbers, card frame, UI chrome, badges, background scene, tiny greebles, repeated lamps, nested outlines, decorative seams, photorealism, or gloss. Use a perfectly flat #FF00FF chroma-key background with no shadow, texture, floor, reflection, halo, or lighting variation; do not use magenta in the subject.",
+  "candidates": [
+    {
+      "id": "split-muzzle",
+      "upgrade_id": "split_muzzle",
+      "label_ko": "확산 총구",
+      "source_path": "sources/split-muzzle.png",
+      "master_alpha_path": "masters/split-muzzle.png",
+      "candidate_path": "candidates/split-muzzle.png",
+      "candidate_sha256": "2dd0e8d055dd1cc687c96782fc5673025b6271919b52b383d8c6e004315bd32e",
+      "subject_prompt": "One compact muzzle at the lower center fires exactly three large ivory-core cyan rounds in a wide upward fan. The count and spread are the dominant read."
+    },
+    {
+      "id": "piercing-rounds",
+      "upgrade_id": "piercing_rounds",
+      "label_ko": "관통 탄환",
+      "source_path": "sources/piercing-rounds.png",
+      "master_alpha_path": "masters/piercing-rounds.png",
+      "candidate_path": "candidates/piercing-rounds.png",
+      "candidate_sha256": "4bc6d2db14dda5314483f6c6c67b73530f3c4ec3f3e308c35893641b039f3e68",
+      "subject_prompt": "One oversized cyan projectile travels through exactly two thick dark armor plates in one straight line. Keep the holes and uninterrupted motion path obvious."
+    },
+    {
+      "id": "homing-missiles",
+      "upgrade_id": "homing_missiles",
+      "label_ko": "추적 미사일",
+      "source_path": "sources/homing-missiles.png",
+      "master_alpha_path": "masters/homing-missiles.png",
+      "candidate_path": "candidates/homing-missiles.png",
+      "candidate_sha256": "2c4537cfa6cc196d6739e3b9c5c7ba525e0ba1b1e828147cd8873a858891b33b",
+      "subject_prompt": "Exactly two compact missiles follow two broad curved cyan trails toward two simple dark target plates. Curving trajectories must communicate tracking immediately."
+    },
+    {
+      "id": "electric-field",
+      "upgrade_id": "electric_field",
+      "label_ko": "전기장",
+      "source_path": "sources/electric-field.png",
+      "master_alpha_path": "masters/electric-field.png",
+      "candidate_path": "candidates/electric-field.png",
+      "candidate_sha256": "b5b6a29fbfd1d381d5bc44ad8ed31fe4de9116ac31545be80f1f821ae541b4aa",
+      "subject_prompt": "One tiny central field core inside one large irregular violet energy area, cut by exactly three broad white lightning shapes. No circle or range ring."
+    },
+    {
+      "id": "orbiting-blades",
+      "upgrade_id": "orbiting_blades",
+      "label_ko": "회전 날개",
+      "source_path": "sources/orbiting-blades.png",
+      "master_alpha_path": "masters/orbiting-blades.png",
+      "candidate_path": "candidates/orbiting-blades.png",
+      "candidate_sha256": "c7f82f1e5431a37b1e970aedb17995317023559aa0c0840fa41020859764aeb4",
+      "subject_prompt": "Exactly two oversized amber-edged crescent blades sweep around one small dark central hub. The opposing blade positions imply orbit without an orbit ring."
+    },
+    {
+      "id": "drop-mines",
+      "upgrade_id": "drop_mines",
+      "label_ko": "후방 기뢰",
+      "source_path": "sources/drop-mines.png",
+      "master_alpha_path": "masters/drop-mines.png",
+      "candidate_path": "candidates/drop-mines.png",
+      "candidate_sha256": "3eb9f1d424ce996a8ca35bb3050de8e941e815e0668ddf65bb24d3136e939c19",
+      "subject_prompt": "One small forward-moving craft at upper right leaves one large planted amber mine behind at lower left, connected only by two short cyan motion streaks."
+    },
+    {
+      "id": "auto-laser",
+      "upgrade_id": "auto_laser",
+      "label_ko": "자동 레이저",
+      "source_path": "sources/auto-laser.png",
+      "master_alpha_path": "masters/auto-laser.png",
+      "candidate_path": "candidates/auto-laser.png",
+      "candidate_sha256": "95679d44661fab73aa121deef192e7a3f307f9a06e490e146a6138ffdbc86508",
+      "subject_prompt": "One compact autonomous laser module at lower left projects one long thick ivory-core cyan beam through exactly three dark target plates."
+    },
+    {
+      "id": "storm-barrage",
+      "upgrade_id": "storm_barrage",
+      "label_ko": "원거리 전격포",
+      "source_path": "sources/storm-barrage.png",
+      "master_alpha_path": "masters/storm-barrage.png",
+      "candidate_path": "candidates/storm-barrage.png",
+      "candidate_sha256": "9f364974be9cd41dfb104edff41c4fcc5739f1eb8981ba27f16bf1347a54e04f",
+      "subject_prompt": "One huge violet-white lightning bolt descends onto a tight cluster of exactly three dark target masses with one compact amber impact."
+    },
+    {
+      "id": "thermal-burst",
+      "upgrade_id": "thermal_burst",
+      "label_ko": "열폭발",
+      "source_path": "sources/thermal-burst.png",
+      "master_alpha_path": "masters/thermal-burst.png",
+      "candidate_path": "candidates/thermal-burst.png",
+      "candidate_sha256": "8216e50924204ae26651e802af55b51e0ab034522ff3adfe83599af991e811a8",
+      "subject_prompt": "One large cyan projectile strikes one dark armor plate, producing one dominant compact orange-white burst at the impact point."
+    },
+    {
+      "id": "bio-toxin",
+      "upgrade_id": "bio_toxin",
+      "label_ko": "독 부여",
+      "source_path": "sources/bio-toxin.png",
+      "master_alpha_path": "masters/bio-toxin.png",
+      "candidate_path": "candidates/bio-toxin.png",
+      "candidate_sha256": "73b3fe76af200498a0b4ae0d7aca34a1b279d0c88f6bef95901cf6f90e0aba13",
+      "subject_prompt": "One oversized toxin-green droplet hits one dark armor plate and leaves exactly two broad luminous green corrosive cuts."
+    }
+  ]
+}

@@ -27,7 +27,7 @@
     "shared_world_cue_rule": "Fixed world surface and wall identities remain authored PNGs. The three approved SurfaceDetail identities are exact deterministic SVG sources. Dynamic health rectangles, rings, beam corridors, disks, and simple markers are code-native geometry.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, live timing, and shape/color-only dynamic primitives remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 62,
+  "final_asset_count": 64,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -99,6 +99,8 @@
     {"id": "upgrade/mobility_thruster", "path": "upgrades/mobility_thruster.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
     {"id": "upgrade/pickup_magnet", "path": "upgrades/pickup_magnet.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
     {"id": "upgrade/hull_reinforcement", "path": "upgrades/hull_reinforcement.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/cross_beam", "path": "upgrades/cross_beam.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
+    {"id": "upgrade/secondary_damage", "path": "upgrades/secondary_damage.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
 
     {"id": "pickup/experience_master", "path": "pickups/pickup_experience_master.png", "canvas": [64, 64], "pivot": [32, 32], "category": "pickup"},
     {"id": "pickup/reward_crate", "path": "pickups/pickup_reward_crate.png", "canvas": [64, 64], "pivot": [32, 32], "category": "pickup"},

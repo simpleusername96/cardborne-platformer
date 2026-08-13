@@ -2,8 +2,22 @@
   "schema": "cardborne-imagegen-candidate-evidence/v1",
   "report_id": "upgrade-artwork-probes-v4",
   "generated_at": "2026-08-13T12:24:32+09:00",
-  "approval_status": "pending_user_review",
-  "runtime_integrated": false,
+  "approval_status": "selected_and_integrated",
+  "runtime_integrated": true,
+  "user_selection": {
+    "selection_code": "BAB",
+    "recorded_at": "2026-08-13",
+    "selected_candidate_ids": [
+      "cross-beam-b",
+      "secondary-damage-a",
+      "pickup-radius-b"
+    ],
+    "production_asset_ids": [
+      "upgrade/cross_beam",
+      "upgrade/secondary_damage",
+      "upgrade/pickup_magnet"
+    ]
+  },
   "authoring": {
     "creative_tool": "OpenAI built-in ImageGen",
     "creative_calls": 6,

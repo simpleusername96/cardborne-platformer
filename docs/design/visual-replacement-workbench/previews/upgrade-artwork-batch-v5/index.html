@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne 업그레이드 아트워크 후보 v5</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c1119;
+      --panel: #151d29;
+      --panel-2: #101722;
+      --line: #2b394b;
+      --text: #eef4fb;
+      --muted: #9baabd;
+      --cyan: #39d4e8;
+      --amber: #ffb64d;
+      --green: #69d68b;
+      --red: #ff7676;
+      --violet: #b795ff;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 50% -20%, #1d3044 0, var(--bg) 42rem);
+      color: var(--text);
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, sans-serif;
+      line-height: 1.55;
+    }
+    button, textarea, input { font: inherit; }
+    button { color: inherit; }
+    .wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 80px; }
+    header { display: grid; gap: 16px; margin-bottom: 28px; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(28px, 5vw, 48px); line-height: 1.1; letter-spacing: -.035em; }
+    .lede { max-width: 850px; color: var(--muted); }
+    .notice {
+      border: 1px solid #336878;
+      background: #112733;
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+    .notice strong { color: var(--cyan); }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 0 -8px 28px;
+      padding: 12px 8px;
+      background: color-mix(in srgb, var(--bg) 90%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .toolbar button, .import-label {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #1a2635;
+      padding: 9px 13px;
+      cursor: pointer;
+    }
+    .toolbar button:hover, .import-label:hover { border-color: var(--cyan); }
+    .import-label input { display: none; }
+    #save-state { margin-left: auto; color: var(--muted); font-size: 14px; }
+    .applied {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .applied-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid #2e6040;
+      border-radius: 12px;
+      background: #14251c;
+      padding: 12px 14px;
+    }
+    .approved { color: var(--green); font-weight: 700; white-space: nowrap; }
+    .section-title { margin: 0 0 14px; }
+    .cards { display: grid; gap: 20px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(145deg, var(--panel), var(--panel-2));
+      padding: 20px;
+      box-shadow: 0 16px 40px #0005;
+    }
+    .card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; }
+    .card-head h3 { font-size: 22px; }
+    .card-head code { color: var(--muted); }
+    .comparison {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(360px, 1.6fr);
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    figure {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #0b111a;
+      padding: 14px;
+    }
+    figcaption { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 14px; }
+    .asset-stage {
+      min-height: 224px;
+      display: grid;
+      place-items: center;
+      background-image: linear-gradient(45deg, #18212d 25%, transparent 25%), linear-gradient(-45deg, #18212d 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #18212d 75%), linear-gradient(-45deg, transparent 75%, #18212d 75%);
+      background-size: 22px 22px;
+      background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    .current .asset-stage img { max-width: 120px; max-height: 120px; image-rendering: auto; }
+    .candidate .asset-stage img { width: 192px; height: 192px; object-fit: contain; }
+    .sizes { display: flex; align-items: end; justify-content: center; gap: 18px; min-height: 116px; padding-top: 10px; }
+    .sizes div { display: grid; justify-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+    .sizes img { object-fit: contain; }
+    .review { display: grid; gap: 12px; }
+    .status-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .status-row button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #182231;
+      padding: 7px 12px;
+      cursor: pointer;
+    }
+    .status-row button[aria-pressed="true"] { border-color: var(--cyan); background: #163642; }
+    .status-row button[data-status="approved"][aria-pressed="true"] { border-color: var(--green); background: #173522; }
+    .status-row button[data-status="revise"][aria-pressed="true"] { border-color: var(--amber); background: #3b2b16; }
+    .status-row button[data-status="rejected"][aria-pressed="true"] { border-color: var(--red); background: #3c1d22; }
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0c131d;
+      color: var(--text);
+      padding: 11px 12px;
+    }
+    textarea:focus { outline: 2px solid #39d4e866; border-color: var(--cyan); }
+    .global-note { margin: 28px 0; }
+    .global-note label { display: block; margin-bottom: 8px; font-weight: 700; }
+    footer { color: var(--muted); font-size: 14px; }
+    a { color: var(--cyan); }
+    @media (max-width: 760px) {
+      .wrap { width: min(100% - 20px, 1180px); padding-top: 28px; }
+      .applied, .comparison { grid-template-columns: 1fr; }
+      .toolbar { position: static; }
+      #save-state { width: 100%; margin-left: 0; }
+      .card { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p>UPGRADE ARTWORK · IMAGEGEN BATCH v5</p>
+      <h1>추가 업그레이드 아트워크 10종</h1>
+      <p class="lede">한 장에 한 행동만 보이도록 만든 192×192 투명 PNG 후보입니다. 새 후보는 아직 게임에 적용하지 않았습니다.</p>
+      <div class="notice"><strong>피드백 보존:</strong> 입력 즉시 이 보고서 전용 저장공간에 자동 저장합니다. 이전 v4 보고서의 저장값은 건드리지 않습니다. 다른 브라우저나 PC로 옮길 때는 JSON으로 내보내세요.</div>
+    </header>
+
+    <div class="toolbar">
+      <button id="export" type="button">JSON 내보내기</button>
+      <label class="import-label">JSON 불러오기<input id="import" type="file" accept="application/json,.json"></label>
+      <button id="clear" type="button">v5 입력 초기화</button>
+      <span id="save-state" role="status">자동 저장 준비</span>
+    </div>
+
+    <h2 class="section-title">이번에 적용한 BAB</h2>
+    <section class="applied" aria-label="적용 완료 자산">
+      <div class="applied-item"><span>십자 광선 B</span><span class="approved">적용됨</span></div>
+      <div class="applied-item"><span>보조무기 피해 A</span><span class="approved">적용됨</span></div>
+      <div class="applied-item"><span>수거 범위 B</span><span class="approved">적용됨</span></div>
+    </section>
+
+    <h2 class="section-title">새 후보 검토</h2>
+    <section class="cards" id="cards"></section>
+
+    <section class="global-note">
+      <label for="global-note">전체 메모</label>
+      <textarea id="global-note" placeholder="후보 전체에 적용할 방향이나 다음 생성 요청을 적으세요."></textarea>
+    </section>
+
+    <footer>
+      <p>창작: OpenAI ImageGen · 후처리: 크로마키 알파 제거와 192×192 리사이즈만 사용 · 기준 문서: <a href="../../../VISUAL_SYSTEM.md">VISUAL_SYSTEM.md</a></p>
+    </footer>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "cardborne.upgrade-artwork.batch-v5.review";
+    const SCHEMA = "cardborne-upgrade-artwork-review/v5";
+    const ROOT = "../../../../../art/visuals/production/gameplay/";
+    const items = [
+      { id: "split-muzzle", ko: "확산 총구", current: "weapons/projectiles/projectile_energy_teardrop.png", currentId: "projectile/energy_teardrop" },
+      { id: "piercing-rounds", ko: "관통 탄환", current: "weapons/projectiles/projectile_energy_teardrop.png", currentId: "projectile/energy_teardrop" },
+      { id: "homing-missiles", ko: "추적 미사일", current: "weapons/secondaries/secondary_seeker.png", currentId: "secondary/seeker" },
+      { id: "electric-field", ko: "전기장", current: "upgrades/ion_field.png", currentId: "upgrade/ion_field" },
+      { id: "orbiting-blades", ko: "회전 날개", current: "weapons/secondaries/secondary_orbit_blade.png", currentId: "secondary/orbit_blade" },
+      { id: "drop-mines", ko: "후방 기뢰", current: "weapons/secondaries/secondary_wake_mine.png", currentId: "secondary/wake_mine" },
+      { id: "auto-laser", ko: "자동 레이저", current: "weapons/projectiles/projectile_energy_teardrop.png", currentId: "projectile/energy_teardrop" },
+      { id: "storm-barrage", ko: "원거리 전격포", current: "upgrades/ion_field.png", currentId: "upgrade/ion_field" },
+      { id: "thermal-burst", ko: "열폭발", current: "upgrades/element_thermal.png", currentId: "upgrade/element_thermal" },
+      { id: "bio-toxin", ko: "독 부여", current: "upgrades/element_toxin.png", currentId: "upgrade/element_toxin" }
+    ];
+    const statusLabels = { pending: "대기", approved: "승인", revise: "수정", rejected: "반려" };
+    const blankState = () => ({
+      schema: SCHEMA,
+      reportId: "upgrade-artwork-batch-v5",
+      globalNote: "",
+      reviews: Object.fromEntries(items.map(item => [item.id, { status: "pending", note: "" }]))
+    });
+    let state = load();
+
+    function normalized(value) {
+      const next = blankState();
+      if (!value || value.schema !== SCHEMA) return next;
+      next.globalNote = typeof value.globalNote === "string" ? value.globalNote : "";
+      for (const item of items) {
+        const review = value.reviews?.[item.id];
+        if (!review) continue;
+        if (statusLabels[review.status]) next.reviews[item.id].status = review.status;
+        if (typeof review.note === "string") next.reviews[item.id].note = review.note;
+      }
+      return next;
+    }
+
+    function load() {
+      try { return normalized(JSON.parse(localStorage.getItem(STORAGE_KEY))); }
+      catch { return blankState(); }
+    }
+
+    function save(message = "자동 저장됨") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const status = document.querySelector("#save-state");
+      status.textContent = `${message} · ${new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}`;
+    }
+
+    function cardMarkup(item) {
+      const review = state.reviews[item.id];
+      const candidate = `candidates/${item.id}.png`;
+      return `
+        <article class="card" data-id="${item.id}">
+          <div class="card-head"><h3>${item.ko}</h3><code>${item.id}</code></div>
+          <div class="comparison">
+            <figure class="current">
+              <figcaption><span>현재 자산</span><span class="approved">승인됨</span></figcaption>
+              <div class="asset-stage"><img src="${ROOT + item.current}" alt="${item.ko} 현재 자산"></div>
+              <figcaption><code>${item.currentId}</code></figcaption>
+            </figure>
+            <figure class="candidate">
+              <figcaption><span>ImageGen 교체 후보</span><span>192×192 PNG</span></figcaption>
+              <div class="asset-stage"><img src="${candidate}" alt="${item.ko} 새 후보"></div>
+              <div class="sizes" aria-label="축소 크기 비교">
+                ${[72, 88, 104].map(size => `<div><img src="${candidate}" width="${size}" height="${size}" alt=""><span>${size}px</span></div>`).join("")}
+              </div>
+            </figure>
+          </div>
+          <div class="review">
+            <div class="status-row" role="group" aria-label="${item.ko} 검토 상태">
+              ${Object.entries(statusLabels).map(([status, label]) => `<button type="button" data-status="${status}" aria-pressed="${review.status === status}">${label}</button>`).join("")}
+            </div>
+            <textarea aria-label="${item.ko} 메모" placeholder="이 후보에 대한 수정점이나 승인 이유를 적으세요.">${escapeHtml(review.note)}</textarea>
+          </div>
+        </article>`;
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>\"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '\"': "&quot;", "'": "&#039;" }[char]));
+    }
+
+    function render() {
+      document.querySelector("#cards").innerHTML = items.map(cardMarkup).join("");
+      document.querySelector("#global-note").value = state.globalNote;
+    }
+
+    document.querySelector("#cards").addEventListener("click", event => {
+      const button = event.target.closest("button[data-status]");
+      if (!button) return;
+      const card = button.closest(".card");
+      state.reviews[card.dataset.id].status = button.dataset.status;
+      card.querySelectorAll("button[data-status]").forEach(node => node.setAttribute("aria-pressed", node === button));
+      save();
+    });
+
+    document.querySelector("#cards").addEventListener("input", event => {
+      if (event.target.tagName !== "TEXTAREA") return;
+      state.reviews[event.target.closest(".card").dataset.id].note = event.target.value;
+      save();
+    });
+
+    document.querySelector("#global-note").addEventListener("input", event => {
+      state.globalNote = event.target.value;
+      save();
+    });
+
+    document.querySelector("#export").addEventListener("click", () => {
+      const payload = { ...state, exportedAt: new Date().toISOString(), appliedSelection: ["cross-beam-b", "secondary-damage-a", "pickup-radius-b"] };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "cardborne-upgrade-artwork-feedback-v5.json";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    document.querySelector("#import").addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const value = JSON.parse(await file.text());
+        if (value.schema !== SCHEMA) throw new Error("지원하지 않는 JSON 형식입니다.");
+        state = normalized(value);
+        render();
+        save("JSON 불러옴");
+      } catch (error) {
+        document.querySelector("#save-state").textContent = `불러오기 실패: ${error.message}`;
+      } finally {
+        event.target.value = "";
+      }
+    });
+
+    document.querySelector("#clear").addEventListener("click", () => {
+      if (!confirm("이 보고서 v5에 자동 저장된 입력만 초기화할까요?")) return;
+      state = blankState();
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+      save("v5 입력 초기화됨");
+    });
+
+    render();
+    save("자동 저장 준비");
+  </script>
+</body>
+</html>
