@@ -31,6 +31,7 @@ var _anchor_y := PackedFloat32Array()
 var _gate_x := PackedFloat32Array()
 var _gate_y := PackedFloat32Array()
 var _sector_eta_load := PackedInt32Array()
+var _eta_load := PackedInt32Array()
 var _sector_debt := PackedByteArray()
 
 
@@ -47,6 +48,7 @@ func _init() -> void:
 	_gate_x.resize(CAPACITY)
 	_gate_y.resize(CAPACITY)
 	_sector_eta_load.resize(SECTOR_COUNT * ETA_BUCKET_COUNT)
+	_eta_load.resize(ETA_BUCKET_COUNT)
 	_sector_debt.resize(SECTOR_COUNT)
 
 
@@ -59,6 +61,7 @@ func reset() -> void:
 	_next_slot = 0
 	_state.fill(STATE_FREE)
 	_sector_eta_load.fill(0)
+	_eta_load.fill(0)
 	_sector_debt.fill(0)
 
 
@@ -79,8 +82,10 @@ func reserve(request: Dictionary) -> Dictionary:
 		chosen = _next_valid_candidate(eligible, candidates, request)
 	if chosen < 0:
 		return {"fallback":true, "no_gate":true}
-	var expected := float(request.get("expected_time", 0.0))
+	var expected := _expected_for_sector(chosen, request)
 	var bucket := posmod(floori(expected / ETA_BUCKET_SECONDS), ETA_BUCKET_COUNT)
+	if _eta_load[bucket] >= 4 and not bool(request.get("validation_allow_eta_saturation", false)):
+		return {"fallback":true, "no_gate":true}
 	var epoch := floori(expected / (ETA_BUCKET_SECONDS * ETA_BUCKET_COUNT))
 	_generation[slot] += 1
 	if _generation[slot] <= 0:
@@ -90,7 +95,7 @@ func reserve(request: Dictionary) -> Dictionary:
 	_eta_bucket[slot] = bucket
 	_eta_epoch[slot] = epoch
 	_expected_time[slot] = expected
-	_expiry_time[slot] = float(request.get("expiry_time", expected + 4.0))
+	_expiry_time[slot] = float(request.get("expiry_time", expiry_time(float(request.get("birth_time", expected)), expected - float(request.get("birth_time", expected)))))
 	var anchor := Vector2(request.get("anchor", Vector2.ZERO))
 	var gate := _gate_for_sector(chosen, anchor, request)
 	_anchor_x[slot] = anchor.x
@@ -129,6 +134,15 @@ func cancel(handle: Dictionary) -> bool:
 	if _state[slot] != STATE_RESERVED:
 		return false
 	return _release(handle, STATE_RESERVED)
+
+
+func cancel_all_reserved() -> int:
+	## Stage-stop/reset path only; ordinary reservation decisions never scan slots.
+	var cancelled := 0
+	for slot in CAPACITY:
+		if _state[slot] == STATE_RESERVED and _release(_handle(slot), STATE_RESERVED):
+			cancelled += 1
+	return cancelled
 
 
 func release(handle: Dictionary) -> bool:
@@ -174,6 +188,7 @@ static func expiry_time(birth_time: float, transit_eta: float) -> float:
 func fill_debug(into: Dictionary) -> void:
 	into["capacity"] = CAPACITY
 	into["reserved_load"] = _sector_eta_load.duplicate()
+	into["eta_load"] = _eta_load.duplicate()
 	into["sector_debt"] = _sector_debt.duplicate()
 	into["live_count"] = _live_count()
 
@@ -197,12 +212,11 @@ func _two_candidates(eligible: Array[int], request: Dictionary) -> Array[int]:
 
 
 func _choose_candidate(candidates: Array[int], request: Dictionary) -> int:
-	var expected := float(request.get("expected_time", 0.0))
-	var bucket := posmod(floori(expected / ETA_BUCKET_SECONDS), ETA_BUCKET_COUNT)
 	var heading_sector := posmod(int(request.get("heading_sector", 0)), SECTOR_COUNT)
 	var best := -1
 	var best_score := INF
 	for sector in candidates:
+		var bucket := posmod(floori(_expected_for_sector(sector, request) / ETA_BUCKET_SECONDS), ETA_BUCKET_COUNT)
 		var angular := mini(posmod(sector - heading_sector, SECTOR_COUNT), posmod(heading_sector - sector, SECTOR_COUNT))
 		var tie := float(posmod(hash("%d:%s:%d" % [_seed, String(request.get("id", "")), sector]), 10000)) / 10000.0
 		var score := float(_sector_eta_load[sector * ETA_BUCKET_COUNT + bucket]) * 16.0 + float(_sector_debt[sector]) + float(angular) + tie
@@ -210,6 +224,11 @@ func _choose_candidate(candidates: Array[int], request: Dictionary) -> int:
 			best_score = score
 			best = sector
 	return best
+
+
+func _expected_for_sector(sector: int, request: Dictionary) -> float:
+	var values: Dictionary = request.get("candidate_expected_times", {})
+	return float(values.get(sector, request.get("expected_time", 0.0)))
 
 
 func _next_valid_candidate(eligible: Array[int], sampled: Array[int], request: Dictionary) -> int:
@@ -243,8 +262,8 @@ func _gate_for_sector(sector: int, anchor: Vector2, request: Dictionary) -> Vect
 		return Vector2(gates[sector])
 	var radius := maxf(0.0, float(request.get("gate_radius", 0.0)))
 	if radius > 0.0:
-		return anchor + Vector2.RIGHT.rotated(
-			float(sector - 4) * TAU / float(SECTOR_COUNT)
+		return anchor + Vector2.from_angle(
+			(float(sector) + 0.5) * TAU / float(SECTOR_COUNT) - PI
 		) * radius
 	return Vector2(request.get("gate", anchor))
 
@@ -288,6 +307,7 @@ func _handle(slot: int) -> Dictionary:
 func _add_counter(sector: int, bucket: int, delta: int) -> void:
 	var index := sector * ETA_BUCKET_COUNT + bucket
 	_sector_eta_load[index] = maxi(0, _sector_eta_load[index] + delta)
+	_eta_load[bucket] = maxi(0, _eta_load[bucket] + delta)
 
 
 func _live_count() -> int:

@@ -37,6 +37,7 @@ const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runt
 const UpgradeOfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const EnemySpeedProfile = preload("res://scripts/enemies/vehicle_enemy_speed_profile.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.gd")
 const RewardRuntime = preload("res://scripts/rewards/vehicle_reward_runtime.gd")
@@ -849,7 +850,8 @@ func _reset_run(
 		selected_run_difficulty,
 		_active_tactical_layout.ordinary_spawn_anchors,
 		_active_tactical_layout.encounter_seed,
-		_active_tactical_layout.geometry_snapshot
+		_active_tactical_layout.geometry_snapshot,
+		current_stage_index
 	)
 	stage_flow.configure(
 		current_stage_index,
@@ -976,18 +978,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 			* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
 		)
 	var position: Vector2 = spec["pos"]
-	var movement_multiplier := (
-		EncounterDirector.ENEMY_SPEED_MULTIPLIER
-		if archetype == &"stage_boss"
-		else EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER
-	)
-	var speed := (
-		float(definition["speed"])
-		* movement_multiplier
-		* float(difficulty_profile["speed"])
-	)
-	if archetype not in [&"stage_boss"]:
-		speed *= float(stage_curve["speed"])
+	var speed := EnemySpeedProfile.effective_speed(archetype, current_stage_index, selected_run_difficulty)
 	enemy.id = String(spec.get("id", role))
 	enemy.role = role
 	enemy.archetype = archetype
@@ -1081,22 +1072,63 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.mine_fast_cue_played = false
 	enemy.splitter_spawned = false
 	enemy.reset_runtime_collections()
+	var engagement_handle: Dictionary = spec.get("engagement_handle", {})
+	if not engagement_handle.is_empty():
+		enemy.engagement_slot = int(engagement_handle.get("slot", -1))
+		enemy.engagement_generation = int(engagement_handle.get("generation", 0))
+		enemy.engagement_gate = Vector2(spec.get("engagement_gate", position))
+		enemy.engagement_expiry = float(spec.get("engagement_expiry", 0.0))
+		enemy.engagement_active = enemy.engagement_slot >= 0
 	enemy.decision_bucket = absi(enemy.id.hash()) % ORDINARY_DECISION_BUCKET_COUNT
 	return enemy
 
 
 func _append_enemy(enemy: EnemyState) -> bool:
+	if enemy == null:
+		return false
+	# VehicleEnemyStore returns rejected pooled actors immediately, which clears
+	# their scalar fields. Retain the cold reservation handle before admission.
+	var engagement_handle := (
+		_enemy_engagement_handle(enemy) if enemy.engagement_active else {}
+	)
 	var added := enemy_store.add(enemy)
 	if added:
+		if enemy.engagement_active:
+			encounter_runtime.confirm_engagement(engagement_handle)
 		collective_tactics.register_enemy(enemy)
 		enemy_grid.update_actor(enemy)
 		_note_enemy_frame_aggregate_added(enemy)
+	elif not engagement_handle.is_empty():
+		encounter_runtime.cancel_engagement(engagement_handle)
 	return added
+
+
+func _enemy_engagement_handle(enemy: EnemyState) -> Dictionary:
+	return {"slot":enemy.engagement_slot, "generation":enemy.engagement_generation}
+
+
+func _release_enemy_engagement(enemy: EnemyState, outcome: StringName = &"release") -> void:
+	if enemy == null or not enemy.engagement_active:
+		return
+	var handle := _enemy_engagement_handle(enemy)
+	if outcome == &"complete":
+		encounter_runtime.complete_engagement(handle)
+	elif outcome == &"expire":
+		encounter_runtime.expire_engagement(handle, encounter_runtime.elapsed)
+	else:
+		encounter_runtime.release_engagement(handle)
+	enemy.engagement_active = false
+	enemy.engagement_slot = -1
+	enemy.engagement_generation = 0
+	enemy.engagement_gate = Vector2.ZERO
+	enemy.engagement_expiry = 0.0
 
 
 func _clear_enemies() -> void:
 	_enemy_frame_aggregate_valid = false
 	collective_tactics.reset()
+	for enemy in enemies:
+		_release_enemy_engagement(enemy)
 	enemy_store.clear()
 	enemy_grid.rebuild(enemies)
 
@@ -1138,8 +1170,17 @@ func _update_encounter(delta: float) -> void:
 	for spawn_spec in requests["spawns"]:
 		var bounded_spec := _bounded_spawn_spec(Dictionary(spawn_spec))
 		var enemy := _make_enemy(bounded_spec)
+		if enemy == null:
+			_cancel_spawn_engagement(bounded_spec)
+			continue
 		_apply_pending_elite(enemy)
 		_append_enemy(enemy)
+
+
+func _cancel_spawn_engagement(spec: Dictionary) -> void:
+	var handle: Dictionary = spec.get("engagement_handle", {})
+	if not handle.is_empty():
+		encounter_runtime.cancel_engagement(handle)
 
 
 func _record_ordinary_arrival_cue(cue: Dictionary) -> void:
@@ -3409,6 +3450,15 @@ func _desired_enemy_velocity(
 		enemy.speed,
 		_mystery_decoy_targets.has(enemy.id)
 	)
+	var engagement_focus := false
+	if enemy.engagement_active and enemy.phase == &"move" and not recovering and not _mystery_decoy_targets.has(enemy.id):
+		if enemy.pos.distance_to(enemy.engagement_gate) <= 96.0:
+			_release_enemy_engagement(enemy, &"complete")
+		elif encounter_runtime.elapsed >= enemy.engagement_expiry:
+			_release_enemy_engagement(enemy, &"expire")
+		else:
+			movement_focus = enemy.engagement_gate
+			engagement_focus = true
 	var movement_path_blocked := not _runtime_has_line_of_sight(
 		position, movement_focus, enemy.radius * 0.45
 	)
@@ -3438,6 +3488,9 @@ func _desired_enemy_velocity(
 		recovering,
 		line_recovery
 	)
+	if engagement_focus:
+		# The gate is a one-shot approach point, not the role's final range band.
+		desired = (movement_focus - position).normalized()
 	var requests_approach := EnemyMovementPolicy.requests_approach_for_profile(
 		movement_family,
 		enemy.role,
@@ -4384,6 +4437,7 @@ func _record_status_applications(profile: VehiclePrimaryPayloadProfile) -> void:
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
+	_release_enemy_engagement(enemy)
 	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
 	var role := enemy.role
 	var split_on_defeat := (
@@ -5438,6 +5492,7 @@ func _retire_boss_owned_enemies() -> void:
 	for enemy in enemies:
 		if not enemy.alive or not _is_boss_owned_enemy(enemy):
 			continue
+		_release_enemy_engagement(enemy)
 		collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
 		enemy.alive = false
 		enemy.active = false
@@ -5505,13 +5560,18 @@ func _begin_next_stage_continuation() -> void:
 		_apply_camera_stage_limits()
 	player_health = _player_max_health()
 	stage_telemetry.reset_stage()
+	# Surviving ordinary actors continue into the next field, but a fixed gate is
+	# stage-local. Release it before the director is reconfigured with a new seed.
+	for enemy in enemies:
+		_release_enemy_engagement(enemy)
 	encounter_runtime.configure(
 		current_stage_id,
 		_continuation_packets(current_stage_id),
 		selected_run_difficulty,
 		_active_tactical_layout.ordinary_spawn_anchors,
 		_active_tactical_layout.encounter_seed,
-		_active_tactical_layout.geometry_snapshot
+		_active_tactical_layout.geometry_snapshot,
+		current_stage_index
 	)
 	stage_flow.configure(
 		current_stage_index,

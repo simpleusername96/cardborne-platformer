@@ -33,6 +33,7 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 	var cue_times: Array[float] = []
 	var total_cues := 0
 	var total_spawns := 0
+	var gated_spawns := 0
 	for _step in 240:
 		var result := runtime.tick(0.05, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 		var cues: Array = result["cues"]
@@ -46,6 +47,9 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 			cue_positions[String(cue["squad_id"])] = Vector2(cue["birth_position"])
 		for spec in spawns:
 			total_spawns += 1
+			if spec.has("engagement_handle"):
+				gated_spawns += 1
+				_expect(not Vector2(spec.get("engagement_gate", Vector2.INF)).is_equal_approx(Vector2.INF), "reserved spawn carries a fixed gate")
 			if int(spec["unit_index"]) == 0:
 				_expect(cue_positions.has(String(spec["squad_id"])), "every first birth has a prior exact cue")
 				_expect(Vector2(spec["pos"]) == Vector2(cue_positions.get(String(spec["squad_id"]), Vector2.INF)), "first birth uses its exact cue position")
@@ -56,6 +60,7 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 	for squad in packet["squads"]:
 		authored_units += Array(squad).size()
 	_expect(total_spawns == authored_units, "scheduler emits the complete authored packet")
+	_expect(gated_spawns > 0, "multi-window packet attaches live engagement reservations")
 	for index in range(1, cue_times.size()):
 		_expect(cue_times[index] - cue_times[index - 1] >= 1.20 - 0.001, "actual cue windows stay at least 1.20 seconds apart")
 	var snapshot := runtime.debug_snapshot()
@@ -63,6 +68,7 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 	_expect(int(snapshot["reserved_arrival_slots"]) == 0, "first-round reservations clear after emission")
 	runtime.stop_spawning()
 	_expect(int(runtime.debug_snapshot()["reserved_arrival_slots"]) == 0, "stop_spawning clears reservations")
+	_expect(int(Dictionary(runtime.debug_snapshot()["engagement"])["live_count"]) == 0, "stop_spawning cancels queued engagement reservations")
 
 
 func _validate_capacity_reservation(stage_id: StringName, packet: Dictionary, tactical) -> void:

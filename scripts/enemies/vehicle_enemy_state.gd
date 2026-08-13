@@ -120,6 +120,13 @@ var runtime_generation := 0
 var target_score := 0.0
 var decision_elapsed := 0.0
 var motion_elapsed := 0.0
+# Immutable director reservation copied at materialization; no actor reference
+# crosses this boundary, and pooled reuse clears every scalar below.
+var engagement_slot := -1
+var engagement_generation := 0
+var engagement_gate := Vector2.ZERO
+var engagement_expiry := 0.0
+var engagement_active := false
 
 
 func reset_runtime_collections() -> void:
@@ -142,3 +149,8 @@ func reset_runtime_collections() -> void:
 	target_score = 0.0
 	decision_elapsed = 0.0
 	motion_elapsed = 0.0
+	engagement_slot = -1
+	engagement_generation = 0
+	engagement_gate = Vector2.ZERO
+	engagement_expiry = 0.0
+	engagement_active = false

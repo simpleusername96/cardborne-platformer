@@ -29,8 +29,8 @@ func _validate_patterns_and_gates() -> void:
 	var gated := director.reserve(_request("sector_gate", 0))
 	var gated_reservation := director.reservation(gated)
 	var selected_sector := int(gated_reservation["sector"])
-	var expected_gate := Vector2(10.0, 20.0) + Vector2.RIGHT.rotated(
-		float(selected_sector - 4) * TAU / 8.0
+	var expected_gate := Vector2(10.0, 20.0) + Vector2.from_angle(
+		(float(selected_sector) + 0.5) * TAU / 8.0 - PI
 	) * 520.0
 	_expect(
 		Vector2(gated_reservation["gate"]).is_equal_approx(expected_gate),
@@ -83,7 +83,9 @@ func _validate_capacity_and_reset() -> void:
 	var director := Director.new()
 	director.configure(7)
 	for ordinal in Director.CAPACITY:
-		_expect(not director.reserve(_request("capacity", ordinal)).is_empty(), "capacity slot %d reserves" % ordinal)
+		var request := _request("capacity", ordinal, 100.0 + float(ordinal) * 0.5)
+		request["validation_allow_eta_saturation"] = true
+		_expect(not director.reserve(request).is_empty(), "capacity slot %d reserves" % ordinal)
 	_expect(director.reserve(_request("overflow", 321)).is_empty(), "capacity rejects overflow")
 	director.reset()
 	var debug := {}

@@ -7,6 +7,11 @@ extends RefCounted
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const SpawnAllocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
+const EngagementDirector = preload("res://scripts/encounters/vehicle_engagement_director.gd")
+const MovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
+const TargetingPolicy = preload("res://scripts/enemies/vehicle_enemy_targeting_policy.gd")
+const SpeedProfile = preload("res://scripts/enemies/vehicle_enemy_speed_profile.gd")
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
 
 const CUE_LEAD := 0.9
@@ -47,6 +52,9 @@ var _scheduler_starvation := 0
 var _next_metric_sample := 0.0
 var _spawning_enabled := true
 var _spawn_allocator := SpawnAllocator.new()
+var _engagement_director := EngagementDirector.new()
+var _geometry_snapshot: Variant
+var _stage_index := 0
 var _allocation_debug: Array[Dictionary] = []
 var _pressure_snapshot := {}
 var _engagement_telemetry_enabled := false
@@ -63,7 +71,8 @@ func configure(
 	_run_difficulty: StringName,
 	spawn_anchors: Array[Vector2] = Field.ORDINARY_SPAWN_CANDIDATES,
 	encounter_seed: int = 0,
-	geometry_snapshot: Variant = null
+	geometry_snapshot: Variant = null,
+	stage_index: int = 0
 ) -> void:
 	stage_id = next_stage_id
 	# The argument is retained temporarily for fixture compatibility; encounters
@@ -79,6 +88,7 @@ func configure(
 	_activated_packets.clear()
 	_events.clear()
 	_window_queue.clear()
+	_cancel_queued_engagements()
 	_spawn_queue.clear()
 	_timeline.clear()
 	_spawned_by_squad.clear()
@@ -101,19 +111,26 @@ func configure(
 	_spawning_enabled = true
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
+	_geometry_snapshot = geometry_snapshot
+	_stage_index = maxi(0, stage_index)
 	_telemetry_births = 0
 	_telemetry_gate_completions = 0
 	_telemetry_expiries = 0
 	_telemetry_cancellations = 0
 	_telemetry_director_cpu_us = 0
 	_spawn_allocator.configure(encounter_seed, spawn_anchors, geometry_snapshot)
+	_engagement_director.configure(encounter_seed)
 	_spawn_allocator.prewarm_for_packets(_packets)
 
 
 func stop_spawning() -> void:
 	_spawning_enabled = false
 	_window_queue.clear()
+	_cancel_queued_engagements()
 	_spawn_queue.clear()
+	var unclaimed := _engagement_director.cancel_all_reserved()
+	for _index in unclaimed:
+		note_engagement_cancellation()
 	_reserved_arrival_slots = 0
 	_packet_inflight = false
 
@@ -137,7 +154,9 @@ func consume_engagement_telemetry(output: Dictionary) -> void:
 	output.clear()
 	output["births"] = _telemetry_births
 	output["gate_completions"] = _telemetry_gate_completions
-	output["active_reservations"] = 0
+	var director_debug := {}
+	_engagement_director.fill_debug(director_debug)
+	output["active_reservations"] = int(director_debug.get("live_count", 0))
 	output["expiries"] = _telemetry_expiries
 	output["cancellations"] = _telemetry_cancellations
 	output["director_cpu_ms"] = float(_telemetry_director_cpu_us) / 1000.0
@@ -259,6 +278,8 @@ func record_reward() -> void:
 
 
 func debug_snapshot() -> Dictionary:
+	var engagement_debug := {}
+	_engagement_director.fill_debug(engagement_debug)
 	return {
 		"stage_id":stage_id,
 		"difficulty":difficulty,
@@ -289,6 +310,7 @@ func debug_snapshot() -> Dictionary:
 		"spawning_enabled":_spawning_enabled,
 		"allocations":_allocation_debug.duplicate(true),
 		"pressure":_pressure_snapshot.duplicate(true),
+		"engagement":engagement_debug,
 	}
 
 
@@ -523,7 +545,7 @@ func _admit_due_window(
 			var squad_id := "%s_s%02d" % [String(packet["id"]), squad_index + 1]
 			var collective_tactic := Dictionary(packet.get("collective_tactic", {}))
 			var tactic_squad_index := int(collective_tactic.get("squad_index", -1))
-			specs.append({
+			var spec := {
 				"id":"%s_u%02d" % [squad_id, unit_index + 1],
 				"role":StringName(roles[unit_index]),
 				"pos":Vector2(allocation["unit_positions"][unit_index]),
@@ -544,7 +566,12 @@ func _admit_due_window(
 				"packet_beat":int(packet["beat"]),
 				"collective_tactic_id":StringName(collective_tactic.get("id", &"")) if squad_index == tactic_squad_index else &"",
 				"collective_beat_kind":StringName(collective_tactic.get("beat_kind", &"")) if squad_index == tactic_squad_index else &"",
-			})
+			}
+			_attach_engagement_reservation(
+				spec, packet, int(request["arrival_window"]), player_position, player_velocity,
+				cue_at + cue_lead + float(unit_index) * unit_spacing
+			)
+			specs.append(spec)
 		_spawn_queue.append({
 			"nominal_due":cue_at + cue_lead + float(unit_index) * unit_spacing,
 			"packet_index":int(packet["_packet_index"]),
@@ -556,6 +583,100 @@ func _admit_due_window(
 	_spawn_queue.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return _round_sort_key(a) < _round_sort_key(b)
 	)
+
+
+func _attach_engagement_reservation(
+	spec: Dictionary,
+	packet: Dictionary,
+	arrival_window: int,
+	player_position: Vector2,
+	player_velocity: Vector2,
+	birth_time: float
+) -> void:
+	var patterns: Array = packet.get("engagement_patterns", [])
+	if patterns.is_empty() or arrival_window < 0 or arrival_window >= patterns.size():
+		return
+	if StringName(patterns[arrival_window]) == &"none":
+		return
+	var archetype := StringName(spec["role"])
+	var definition := EnemyArchetypes.definition(archetype)
+	var role := StringName(definition["behavior"])
+	var family := MovementPolicy.family(archetype, role)
+	if family == MovementPolicy.STATIONARY:
+		return
+	var speed := SpeedProfile.effective_speed(archetype, _stage_index, difficulty)
+	if speed <= 0.001:
+		return
+	var birth := Vector2(spec["birth_position"])
+	var anchor := TargetingPolicy.movement_focus(family, birth, player_position, player_velocity, speed)
+	var radius := EngagementDirector.gate_radius(family, MovementPolicy.distance_band(role))
+	if radius <= 0.001:
+		return
+	var heading := _sector_for_offset(player_velocity) if player_velocity.length() >= TargetingPolicy.MIN_TARGET_SPEED else posmod(hash("%s:%d" % [String(packet["id"]), arrival_window]), EngagementDirector.SECTOR_COUNT)
+	var sectors := EngagementDirector.pattern_sectors(StringName(patterns[arrival_window]), heading, int(spec["unit_index"]))
+	var gates := {}
+	var expected := {}
+	var validity := {}
+	for sector in sectors:
+		var angle := (float(sector) + 0.5) * TAU / float(EngagementDirector.SECTOR_COUNT) - PI
+		var gate := anchor + Vector2.from_angle(angle) * radius
+		gates[sector] = gate
+		expected[sector] = birth_time + birth.distance_to(gate) / speed
+		validity[sector] = _geometry_snapshot == null or bool(_geometry_snapshot.is_spawnable_disc(gate, float(definition["radius"])))
+	var start := Time.get_ticks_usec() if _engagement_telemetry_enabled else 0
+	var handle := _engagement_director.reserve({
+		"id":spec["id"], "ordinal":int(spec["unit_index"]), "eligible_sectors":sectors,
+		"heading_sector":heading, "candidate_expected_times":expected,
+		"gate_valid_by_sector":validity, "gate_by_sector":gates, "anchor":anchor, "birth_time":birth_time,
+	})
+	if _engagement_telemetry_enabled:
+		note_engagement_director_cpu_usec(Time.get_ticks_usec() - start)
+	if bool(handle.get("no_gate", false)):
+		return
+	var reservation := _engagement_director.reservation(handle)
+	spec["engagement_handle"] = handle
+	spec["engagement_gate"] = Vector2(reservation["gate"])
+	spec["engagement_expected_time"] = float(reservation["expected_time"])
+	spec["engagement_expiry"] = float(reservation["expiry_time"])
+	spec["engagement_sector"] = int(reservation["sector"])
+
+
+func confirm_engagement(handle: Dictionary) -> bool:
+	return _engagement_director.confirm(handle)
+
+
+func complete_engagement(handle: Dictionary) -> bool:
+	var released := _engagement_director.complete(handle)
+	if released:
+		note_engagement_gate_completion()
+	return released
+
+
+func expire_engagement(handle: Dictionary, now: float) -> bool:
+	var released := _engagement_director.expire(handle, now)
+	if released:
+		note_engagement_expiry()
+	return released
+
+
+func release_engagement(handle: Dictionary) -> bool:
+	var released := _engagement_director.release(handle)
+	return released
+
+
+func cancel_engagement(handle: Dictionary) -> bool:
+	var cancelled := _engagement_director.cancel(handle)
+	if cancelled:
+		note_engagement_cancellation()
+	return cancelled
+
+
+func _cancel_queued_engagements() -> void:
+	for round in _spawn_queue:
+		for spec in Array(round.get("specs", [])):
+			var handle: Dictionary = Dictionary(spec).get("engagement_handle", {})
+			if not handle.is_empty():
+				cancel_engagement(handle)
 
 
 func _process_due_round(active_mobile_count: int, delta: float, spawns: Array[Dictionary]) -> void:
