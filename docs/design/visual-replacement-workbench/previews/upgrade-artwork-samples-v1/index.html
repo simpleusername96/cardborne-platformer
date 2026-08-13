@@ -6,8 +6,8 @@
   <meta name="description" content="Cardborne 업그레이드 고유 이미지 카테고리별 2종 승인 리포트">
   <meta name="color-scheme" content="dark">
   <meta name="document-type" content="report">
-  <meta name="document-status" content="active">
-  <title>Cardborne 업그레이드 이미지 후보 · 12종</title>
+  <meta name="document-status" content="archived">
+  <title>거절됨 · Cardborne 업그레이드 이미지 후보 v1</title>
   <style>
     @font-face {
       font-family: "Noto Sans KR";
@@ -240,8 +240,8 @@
   <header>
     <div class="wrap">
       <p class="eyebrow">Cardborne · Upgrade artwork review · 2026.08.13</p>
-      <h1>업그레이드 고유 이미지 후보 12종</h1>
-      <p class="lede">현재 6개 카테고리에서 2개씩 골라, 고유 행동은 사물과 결과를 직접 그리고 공통 수치 강화는 우측 하단 modifier를 붙이는 방향을 비교합니다. 모두 투명 512×512 PNG이며 아직 런타임에 연결하지 않은 승인 전 후보입니다.</p>
+      <h1>거절된 업그레이드 이미지 v1</h1>
+      <p class="lede"><strong>이 12개 후보는 사용자가 전부 거절했습니다.</strong> 장비 본체와 장식이 많아 의미가 바로 읽히지 않았습니다. 기록만 보존하며 더 이상 승인 대상으로 사용하지 않습니다. <a href="../upgrade-artwork-samples-v2/index.html">단순화한 v2 리포트 열기</a></p>
       <div class="header-meta">
         <span>ImageGen 생성 · 스크립트/SVG 도형 제작 없음</span>
         <span>실제 슬롯 확인 48×48</span>
@@ -358,7 +358,7 @@
               <tr><th>투명화</th><td>ImageGen 전용 chroma-key 제거 도구 · 알파 PNG</td></tr>
               <tr><th>ImageMagick</th><td>정확 crop, trim, 투명 extent, resize, 채널·크기 검사만 사용 · 새 형상 제작 없음</td></tr>
               <tr><th>출력</th><td>후보마다 <code>512×512 sRGBA PNG</code> · 소스·프롬프트·해시는 <a href="candidate-metadata.json">candidate-metadata.json</a>에 기록</td></tr>
-              <tr><th>승인 상태</th><td>모두 미승인 후보 · production manifest와 카드 리소스 미변경</td></tr>
+              <tr><th>승인 상태</th><td>12개 전체 사용자 거절 · 기록 보존용 · production manifest와 카드 리소스 미변경</td></tr>
             </tbody>
           </table>
         </div>
@@ -366,7 +366,7 @@
     </section>
   </main>
 
-  <footer><div class="wrap">Cardborne visual replacement workbench · approval candidates only · no runtime integration</div></footer>
+  <footer><div class="wrap">Cardborne visual replacement workbench · rejected v1 archive · no runtime integration</div></footer>
 
   <script>
     (() => {
@@ -415,6 +415,7 @@
       const cards = new Map();
       let state = {};
       let lightBackground = false;
+      const batchRejected = true;
 
       try {
         const parsed = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -437,7 +438,7 @@
         const grid = section.querySelector('.candidate-grid');
         category.items.forEach((item) => {
           const stored = state[item.id] && typeof state[item.id] === 'object' ? state[item.id] : {};
-          const status = ['pending','approved','revise'].includes(stored.status) ? stored.status : 'pending';
+          const status = batchRejected ? 'revise' : (['pending','approved','revise'].includes(stored.status) ? stored.status : 'pending');
           const note = typeof stored.note === 'string' ? stored.note : '';
           const article = document.createElement('article');
           article.className = 'candidate';
@@ -470,8 +471,10 @@
           cards.set(item.id, { article, item });
           article.querySelectorAll('.status-button').forEach((button) => {
             button.setAttribute('aria-pressed', String(button.dataset.value === status));
+            button.disabled = batchRejected;
             button.addEventListener('click', () => setStatus(item.id, button.dataset.value));
           });
+          article.querySelector('textarea').readOnly = batchRejected;
           article.querySelector('textarea').addEventListener('input', (event) => {
             const current = state[item.id] || { status: article.dataset.status };
             state[item.id] = { status: current.status || 'pending', note: event.target.value };
@@ -482,6 +485,7 @@
       });
 
       function setStatus(id, status) {
+        if (batchRejected) return;
         const card = cards.get(id);
         const note = card.article.querySelector('textarea').value;
         state[id] = { status, note };
@@ -537,6 +541,12 @@
 
       document.querySelector('#import-reviews').addEventListener('click', () => reviewFile.click());
       reviewFile.addEventListener('change', async () => {
+        if (batchRejected) {
+          saveStatus.textContent = 'v1은 전체 거절 상태로 고정됨';
+          saveStatus.dataset.state = 'error';
+          reviewFile.value = '';
+          return;
+        }
         const file = reviewFile.files && reviewFile.files[0];
         if (!file) return;
         try {

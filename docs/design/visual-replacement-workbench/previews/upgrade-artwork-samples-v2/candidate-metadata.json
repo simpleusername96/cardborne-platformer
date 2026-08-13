@@ -1,0 +1,124 @@
+{
+  "schema": "cardborne-upgrade-artwork-candidate-batch",
+  "version": 2,
+  "batch_id": "upgrade-artwork-samples-v2",
+  "created_at": "2026-08-13T03:00:00+09:00",
+  "status": "candidate_review_only",
+  "supersedes": "upgrade-artwork-samples-v1",
+  "runtime_integration": false,
+  "approval": null,
+  "direction": {
+    "user_feedback": "All v1 candidates were rejected as too complex and insufficiently intuitive.",
+    "rule": "One icon communicates one meaning with one dominant silhouette and no more than two large semantic shapes.",
+    "removed_from_v1": [
+      "mechanical equipment bodies",
+      "decorative modules and housings",
+      "small secondary details",
+      "3D-style depth as the primary read",
+      "ambiguous bottom-right modifiers attached to unknown devices"
+    ]
+  },
+  "visual_authority_evidence": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "required_sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sheet_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "document_read_complete": true,
+    "sheet_inspected_original": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "image_gen.referenced_image_paths on every generation call",
+    "original_artifact_provenance": "C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png",
+    "original_artifact_timestamp": "2026-08-02 12:13:44 KST",
+    "task_constraints": [
+      "The sheet supplied style grammar only; no depicted object or layout was copied.",
+      "VISUAL_SYSTEM.md was binding.",
+      "The candidates are authored PNG content and are not runtime-approved.",
+      "Each candidate was inspected at 48x48 color and grayscale."
+    ]
+  },
+  "generation": {
+    "tool_mode": "built-in image_gen",
+    "use_case": "stylized-concept",
+    "transparent_workflow": "flat #00FF00 chroma-key generation followed by the installed imagegen remove_chroma_key.py helper",
+    "shared_prompt_contract": "Flat 2D universal pictogram; one dominant silhouette; at most two large semantic shapes; no device housing, perspective, bevel, gradients, glow, particles, decoration, text, or micro-detail; clear at 48x48 and in grayscale.",
+    "prompts": [
+      {
+        "source": "sources/01-primary-sheet.png",
+        "subjects": ["split_muzzle", "piercing_rounds"],
+        "semantic_request": "Exactly three amber bullets in a shallow fan; one amber bullet passing through one split neutral armor plate."
+      },
+      {
+        "source": "sources/02-secondary-sheet.png",
+        "subjects": ["homing_missiles", "secondary_amplifier"],
+        "semantic_request": "One missile plus one curved direction arrow; one impact star plus one upward stat arrow."
+      },
+      {
+        "source": "sources/03-element-sheet.png",
+        "subjects": ["thermal_burst", "cryo_slow"],
+        "semantic_request": "One orange explosion symbol; one cyan snowflake plus one downward arrow."
+      },
+      {
+        "source": "sources/04-activated-sheet.png",
+        "subjects": ["active_coolant"],
+        "semantic_request": "One cyan clock plus one downward arrow. The Cross Beam half was replaced because its rounded plus shape could read as medical."
+      },
+      {
+        "source": "sources/04b-cross-beam-source.png",
+        "subjects": ["piercing_lance"],
+        "semantic_request": "Four long straight cyan laser rays with pointed outward tips, extending from one small center diamond."
+      },
+      {
+        "source": "sources/05-chassis-sheet.png",
+        "subjects": ["hull_integrity", "pickup_radius"],
+        "semantic_request": "One shield plus one centered plus; one horseshoe magnet pulling one amber diamond."
+      },
+      {
+        "source": "sources/06-combat-sheet.png",
+        "subjects": ["critical_targeting", "dash_overdrive"],
+        "semantic_request": "Four target brackets plus one impact star; one double dash chevron plus one upward stat arrow."
+      }
+    ]
+  },
+  "post_processing": {
+    "authoring": "none",
+    "chroma_helper": "C:/Users/BK/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
+    "chroma_options": "--auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill --edge-contract 1",
+    "imagemagick_operations": [
+      "exact half-sheet crop where applicable",
+      "alpha-bounds trim",
+      "transparent square extent",
+      "Lanczos resize to 512x512",
+      "48x48 contact-sheet placement",
+      "grayscale conversion for evidence",
+      "dimension, alpha, corner-pixel, and hash checks"
+    ],
+    "creative_imagemagick_operations": false
+  },
+  "sources": [
+    { "file": "sources/01-primary-sheet.png", "sha256": "f7cd61c085bd7f8a72d1c79795895ddde9aee7c35d7fb001f415216971017ab5" },
+    { "file": "sources/02-secondary-sheet.png", "sha256": "94dd7e6fa438eca9ad74de19187bcc2bafa65cdadd968e485cac031f66925590" },
+    { "file": "sources/03-element-sheet.png", "sha256": "a95ef22af2e5822012c0693fb335c977c33ac738e2d66fcacfcacd7b06702acc" },
+    { "file": "sources/04-activated-sheet.png", "sha256": "ece54d8cf92fca201889a3fca3aba134408e278fe7bb6dce5959c9c276cceb1f" },
+    { "file": "sources/04b-cross-beam-source.png", "sha256": "c29789f4308bdc1f490c9f540f2609ceb1e7f324d2dd09d7d36d0ec9c76d2ec2" },
+    { "file": "sources/05-chassis-sheet.png", "sha256": "af053a9a5da6259f41e5ad4d867418a7f50aa8ca8bc7ef5890c9594b914ef64d" },
+    { "file": "sources/06-combat-sheet.png", "sha256": "a163757e4730857691a136eaf82b9b6e491acbfae1553cd55db2d02ed0e30636" }
+  ],
+  "review_artifacts": [
+    { "file": "runtime-48-contact-sheet.png", "sha256": "6190c191834b85ac205d0213ecd5239fa2dcb6ee1146869e83d912b8de9336d1" },
+    { "file": "runtime-48-contact-sheet-grayscale.png", "sha256": "995c66f6baf2a104f114221a6039e59e774c8691ea90e31e58aab60b38acdd92" }
+  ],
+  "candidates": [
+    { "id": "split_muzzle", "category": "primary", "file": "icons/split_muzzle.png", "sha256": "0583f80919fe83cf20bcadb787f6cf59cce4910de112f03646107eb047b25e85", "approval": null },
+    { "id": "piercing_rounds", "category": "primary", "file": "icons/piercing_rounds.png", "sha256": "0674d0aee19602b7fcff304b81e537af6fb132e7ee594011b8ace1ca9f849f7e", "approval": null },
+    { "id": "homing_missiles", "category": "secondary", "file": "icons/homing_missiles.png", "sha256": "4bfdd76d3bbc4c2351df76894962006813954f7c0e748b80d2e65530b84d2513", "approval": null },
+    { "id": "secondary_amplifier", "category": "secondary", "file": "icons/secondary_amplifier.png", "sha256": "c425260c3fc5544f5c8abc92e1e5f7291fc93ceee073890b82974c5d3245b7a6", "approval": null },
+    { "id": "thermal_burst", "category": "element", "file": "icons/thermal_burst.png", "sha256": "f5a0639af5ae774feb8cdf6ece366ecf145e9509586163fa094b811124f153d8", "approval": null },
+    { "id": "cryo_slow", "category": "element", "file": "icons/cryo_slow.png", "sha256": "66abe290459ded5e49bf93b71ffdd5f105c0d7caffab4db88c0810089ed53d27", "approval": null },
+    { "id": "piercing_lance", "category": "activated", "file": "icons/piercing_lance.png", "sha256": "c9f529813b89def55e8bc28f1ebaace770a6385e5351128273eea4d5096c63bf", "approval": null },
+    { "id": "active_coolant", "category": "activated", "file": "icons/active_coolant.png", "sha256": "5ad2c61263e12c05c0ac8e68454b81a9cbdf88805621025b5c707f6da28588a8", "approval": null },
+    { "id": "hull_integrity", "category": "chassis", "file": "icons/hull_integrity.png", "sha256": "770af0c8333a018230845e7dcaf0ada207347f3bfc555e2eb762779759befe47", "approval": null },
+    { "id": "pickup_radius", "category": "chassis", "file": "icons/pickup_radius.png", "sha256": "5e9daeede510a15cfc06d6d419f4881f2838c83cd2c0a9d068ad8032a9636c69", "approval": null },
+    { "id": "critical_targeting", "category": "combat", "file": "icons/critical_targeting.png", "sha256": "5e6927e1a8b48cb3a9de44fcb4a5aab574aaae6c9cc38428c08cbd9a01607488", "approval": null },
+    { "id": "dash_overdrive", "category": "combat", "file": "icons/dash_overdrive.png", "sha256": "cf67c8d7beacfec19a8c5fc346a97566f972f7ed75e7826d536563609f478858", "approval": null }
+  ]
+}

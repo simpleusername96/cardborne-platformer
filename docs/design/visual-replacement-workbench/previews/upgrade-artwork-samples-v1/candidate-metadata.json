@@ -3,9 +3,15 @@
   "version": 1,
   "batch_id": "upgrade-artwork-samples-v1",
   "created_at": "2026-08-13T02:00:00+09:00",
-  "status": "candidate_review_only",
+  "status": "rejected_by_user",
   "runtime_integration": false,
-  "approval": null,
+  "approval": {
+    "status": "rejected",
+    "scope": "all_candidates",
+    "recorded_at": "2026-08-13",
+    "reason": "The user rejected the complete v1 batch as too complex and insufficiently intuitive.",
+    "replacement_batch": "../upgrade-artwork-samples-v2/index.html"
+  },
   "visual_authority_evidence": {
     "spec_path": "docs/design/VISUAL_SYSTEM.md",
     "sheet_path": "docs/design/cardborne-universal-art-style-reference.png",
