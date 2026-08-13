@@ -304,8 +304,8 @@ func _check_persistent_lanes() -> void:
 		if schedule.decision_due(near): decisions += 1
 		if schedule.ordinary_due.size() > 1:
 			_expect(
-				schedule.ordinary_due[0].spatial_slot < schedule.ordinary_due[1].spatial_slot,
-				"persistent due consumption preserves ascending stable-slot order"
+				schedule.ordinary_due[0].runtime_slot < schedule.ordinary_due[1].runtime_slot,
+				"persistent due consumption preserves legacy runtime-slot order"
 			)
 	_expect(near_motion == 30 and far_motion == 20, "persistent lanes preserve 30/20 Hz motion")
 	_expect(decisions == 10, "persistent lanes preserve 10 Hz decisions")

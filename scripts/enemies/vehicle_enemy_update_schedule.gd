@@ -132,9 +132,7 @@ func reset_persistent() -> void:
 func register(enemy: EnemyState, is_far: bool = false) -> void:
 	if enemy == null:
 		return
-	var slot := enemy.spatial_slot
-	if slot < 0 or slot >= EnemyStore.MAX_LIVE_HOSTILES:
-		slot = enemy.runtime_slot
+	var slot := enemy.runtime_slot
 	if slot < 0 or slot >= EnemyStore.MAX_LIVE_HOSTILES:
 		return
 	if _registered[slot] != 0:
@@ -154,7 +152,7 @@ func register(enemy: EnemyState, is_far: bool = false) -> void:
 func unregister(enemy: EnemyState) -> void:
 	if enemy == null:
 		return
-	var slot := enemy.spatial_slot if enemy.spatial_slot >= 0 else enemy.runtime_slot
+	var slot := enemy.runtime_slot
 	if slot < 0 or slot >= EnemyStore.MAX_LIVE_HOSTILES or _registered[slot] == 0:
 		return
 	_remove_membership(enemy, slot)
@@ -175,7 +173,7 @@ func classify(enemy: EnemyState, is_far: bool) -> void:
 	## Reclassify only on a caller-observed lifecycle, phase, or distance-band change.
 	if enemy == null:
 		return
-	var slot := enemy.spatial_slot if enemy.spatial_slot >= 0 else enemy.runtime_slot
+	var slot := enemy.runtime_slot
 	if slot < 0 or slot >= EnemyStore.MAX_LIVE_HOSTILES or _registered[slot] == 0:
 		return
 	var signature := _classification_signature_for(enemy, is_far)
@@ -226,6 +224,8 @@ func consume_persistent(delta: float, decision_bucket: int, near_bucket: int, fa
 			continue
 		_motion_starts[slot] = enemy.pos
 		var decision_delta_value := _persistent_time - _last_decision_time[slot]
+		if decision_delta_value + 0.00001 < DECISION_INTERVAL:
+			continue
 		_last_decision_time[slot] = _persistent_time
 		_mark_due(enemy, false, true, false, decision_delta_value, 0.0)
 		_insert_due_enemy(enemy)
@@ -237,7 +237,7 @@ func _mark_due(
 	enemy: EnemyState, critical_due: bool, decision_now: bool, motion_now: bool,
 	decision_delta_value: float, motion_delta_value: float
 ) -> void:
-	var slot := enemy.spatial_slot if enemy.spatial_slot >= 0 else enemy.runtime_slot
+	var slot := enemy.runtime_slot
 	var same_tick := _due_stamps[slot] == _schedule_id
 	_due_stamps[slot] = _schedule_id
 	_critical_due[slot] = 1 if critical_due else 0
@@ -256,6 +256,9 @@ func _consume_motion_ring(ring: Array) -> void:
 			continue
 		_motion_starts[slot] = enemy.pos
 		var motion_delta_value := _persistent_time - _last_motion_time[slot]
+		var interval := FAR_MOTION_INTERVAL if _persistent_far[slot] != 0 else NEAR_MOTION_INTERVAL
+		if motion_delta_value + 0.00001 < interval:
+			continue
 		_last_motion_time[slot] = _persistent_time
 		_mark_due(enemy, false, false, true, 0.0, motion_delta_value)
 		_insert_due_enemy(enemy)
@@ -264,9 +267,9 @@ func _consume_motion_ring(ring: Array) -> void:
 func _insert_due_enemy(enemy: EnemyState) -> void:
 	if enemy in ordinary_due:
 		return
-	var slot := enemy.spatial_slot if enemy.spatial_slot >= 0 else enemy.runtime_slot
+	var slot := enemy.runtime_slot
 	var index := 0
-	while index < ordinary_due.size() and ordinary_due[index].spatial_slot < slot:
+	while index < ordinary_due.size() and ordinary_due[index].runtime_slot < slot:
 		index += 1
 	ordinary_due.insert(index, enemy)
 
@@ -329,9 +332,9 @@ func _add_accounting(enemy: EnemyState, slot: int) -> void:
 
 
 func _insert_enemy(worklist: Array[EnemyState], enemy: EnemyState) -> void:
-	var slot := enemy.spatial_slot if enemy.spatial_slot >= 0 else enemy.runtime_slot
+	var slot := enemy.runtime_slot
 	var index := 0
-	while index < worklist.size() and worklist[index].spatial_slot < slot:
+	while index < worklist.size() and worklist[index].runtime_slot < slot:
 		index += 1
 	worklist.insert(index, enemy)
 
@@ -357,13 +360,53 @@ func _remove_slot(lane: Array, slot: int) -> void:
 func _schedule_slot(enemy: EnemyState) -> int:
 	if enemy == null:
 		return -1
-	if (
-		enemy.spatial_slot >= 0
-		and enemy.spatial_slot < EnemyStore.MAX_LIVE_HOSTILES
-		and _registered[enemy.spatial_slot] != 0
-	):
-		return enemy.spatial_slot
 	return enemy.runtime_slot
+
+
+func classified_far(enemy: EnemyState) -> bool:
+	var slot := _schedule_slot(enemy)
+	return slot >= 0 and slot < EnemyStore.MAX_LIVE_HOSTILES and _registered[slot] != 0 and _persistent_far[slot] != 0
+
+
+func relocate(enemy: EnemyState, from_slot: int, to_slot: int) -> void:
+	## Call after VehicleEnemyStore swap retirement, before the next consume.
+	if enemy == null or from_slot == to_slot or from_slot < 0 or to_slot < 0:
+		return
+	if from_slot >= EnemyStore.MAX_LIVE_HOSTILES or to_slot >= EnemyStore.MAX_LIVE_HOSTILES:
+		return
+	if _registered[from_slot] == 0:
+		return
+	var was_far := _persistent_far[from_slot] != 0
+	_unregister_slot_without_accounting(from_slot)
+	_move_accounted_flag(_accounted_active, from_slot, to_slot)
+	_move_accounted_flag(_accounted_cap, from_slot, to_slot)
+	_move_accounted_flag(_accounted_support, from_slot, to_slot)
+	_move_accounted_flag(_accounted_commit, from_slot, to_slot)
+	_move_accounted_flag(_accounted_ranged, from_slot, to_slot)
+	_move_accounted_flag(_accounted_denial, from_slot, to_slot)
+	_move_accounted_flag(_accounted_rammer, from_slot, to_slot)
+	_slot_enemy[to_slot] = enemy
+	_registered[to_slot] = 1
+	_registered_alive[to_slot] = _registered_alive[from_slot]
+	_last_decision_time[to_slot] = _persistent_time
+	_last_motion_time[to_slot] = _persistent_time
+	_registered[from_slot] = 0
+	_registered_alive[from_slot] = 0
+	_slot_enemy[from_slot] = null
+	_classification_signature[from_slot] = 0
+	classify(enemy, was_far)
+
+
+func _unregister_slot_without_accounting(slot: int) -> void:
+	_remove_slot(_persistent_critical, slot)
+	for ring in _persistent_decision_rings: _remove_slot(ring, slot)
+	for ring in _persistent_near_rings: _remove_slot(ring, slot)
+	for ring in _persistent_far_rings: _remove_slot(ring, slot)
+
+
+func _move_accounted_flag(column: PackedByteArray, from_slot: int, to_slot: int) -> void:
+	column[to_slot] = column[from_slot]
+	column[from_slot] = 0
 
 
 func rebuild(

@@ -63,6 +63,9 @@ var _pending_set: Dictionary = {}
 var _pool: Array[EnemyState] = []
 var _status_slot_index := PackedInt32Array()
 var _slot_enemy: Array[EnemyState] = []
+var relocated_enemies: Array[EnemyState] = []
+var relocated_from_slots := PackedInt32Array()
+var relocated_to_slots := PackedInt32Array()
 
 
 func _init() -> void:
@@ -86,6 +89,7 @@ func clear() -> void:
 	_by_id.clear()
 	_pending_ids.clear()
 	_pending_set.clear()
+	clear_relocations()
 	_reset_counters()
 	membership_revision += 1
 	rejected_spawns = 0
@@ -246,6 +250,9 @@ func flush_defeated() -> int:
 		if slot != last_index:
 			var moved: EnemyState = live[last_index]
 			live[slot] = moved
+			relocated_enemies.append(moved)
+			relocated_from_slots.append(last_index)
+			relocated_to_slots.append(slot)
 			moved.runtime_slot = slot
 		live.pop_back()
 		_by_id.erase(enemy_id)
@@ -298,6 +305,12 @@ func debug_snapshot() -> Dictionary:
 		"armed_minelet_count": armed_minelet_count, "committed_count": committed_count,
 		"carrier_child_count": carrier_child_count, "status_bearing_count": status_bearing_count,
 	}
+
+
+func clear_relocations() -> void:
+	relocated_enemies.clear()
+	relocated_from_slots.clear()
+	relocated_to_slots.clear()
 
 
 func _resize_columns() -> void:
