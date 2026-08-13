@@ -123,7 +123,7 @@ func activate(run: Node) -> void:
 	if scenario_id == &"lifecycle_pressure":
 		_run_lifecycle_cycles(run, 300)
 	_fill_enemies(run)
-	_fill_experience(run, 96 if scenario_id in [&"peak_horde", &"boss_pressure"] else ExperienceRuntime.MAX_SHARDS)
+	_fill_experience(run, _experience_target())
 	_fill_effects(run, _effect_target())
 	_fill_damage_zones(run, 8 if scenario_id in [&"peak_horde", &"boss_pressure"] else 16)
 	run.run_build.apply(&"electric_field")
@@ -165,6 +165,7 @@ func after_physics(run: Node) -> void:
 	_maintain_enemy_pressure(run)
 	_maintain_damage_zone_pressure(run)
 	_fill_projectiles(run, false)
+	_maintain_experience(run)
 	_maintain_effects(run)
 
 
@@ -179,6 +180,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 	var player_target := 140 if scenario_id in [&"peak_horde", &"boss_pressure"] else ProjectileStore.PLAYER_CAPACITY
 	var hostile_target := 72 if scenario_id == &"peak_horde" else ProjectileStore.HOSTILE_CAPACITY
 	var effect_target := _effect_target()
+	var experience_target := _experience_target()
 	if scenario_id == &"boss_pressure":
 		hostile_target = 100
 	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
@@ -227,7 +229,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and int(projectile_snapshot["player"]) == player_target
 		and int(projectile_snapshot["hostile"]) == hostile_target
 		and run.projectile_store.validate_counts()
-		and run.experience_runtime.shards.size() <= ExperienceRuntime.MAX_SHARDS
+		and run.experience_runtime.shards.size() == experience_target
 		and run.experience_runtime.validate_capacity()
 		and run.effects.size() == effect_target
 		and bool(effect_store_snapshot["valid"])
@@ -259,6 +261,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"enemies": enemy_snapshot,
 		"projectiles": projectile_snapshot,
 		"experience": run.experience_runtime.shards.size(),
+		"experience_target":experience_target,
 		"effects": run.effects.size(),
 		"effect_target":effect_target,
 		"effect_store":effect_store_snapshot,
@@ -466,6 +469,18 @@ func _performance_projectile_origin(index: int) -> Vector2:
 func _fill_experience(run: Node, target: int) -> void:
 	for index in target:
 		run.experience_runtime.spawn_shard(_spawn_points[index % _spawn_points.size()], 1 + index % 7)
+
+
+func _maintain_experience(run: Node) -> void:
+	var target := _experience_target()
+	var missing: int = target - run.experience_runtime.shards.size()
+	for offset in mini(maxi(0, missing), ExperienceRuntime.MAX_SHARDS):
+		var index := (_shot_serial + offset) % _spawn_points.size()
+		run.experience_runtime.spawn_shard(_spawn_points[index], 1 + index % 7)
+
+
+func _experience_target() -> int:
+	return 96 if scenario_id in [&"peak_horde", &"boss_pressure"] else ExperienceRuntime.MAX_SHARDS
 
 
 func _fill_effects(run: Node, target: int) -> void:

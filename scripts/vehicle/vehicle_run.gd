@@ -2187,6 +2187,11 @@ func _update_experience(delta: float) -> void:
 	if int(result["experience"]) > 0:
 		_discover_guide(&"object_experience")
 		_play_sound(&"pickup", 1.22)
+	if is_instance_valid(_performance_scenario):
+		# Synthetic and production-replay fixtures exercise shard motion/collection,
+		# but a card-modal transition would end the declared PLAYING workload.
+		experience_runtime.clear_pending_levels()
+		return
 	for source in result["reward_sources"]:
 		reward_runtime.enqueue(StringName(source))
 	_advance_reward_queue()

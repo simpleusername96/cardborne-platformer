@@ -163,6 +163,11 @@ func _run() -> void:
 		)
 		if scenario_id != &"production_replay":
 			_expect(
+				int(snapshot["experience"]) == int(snapshot["experience_target"]),
+				"%s sustains its exact experience-shard workload" % String(scenario_id)
+			)
+		if scenario_id != &"production_replay":
+			_expect(
 				int(snapshot["pressure"]["hostile_projectiles"]) == int(snapshot["expected_hostile_projectiles"]),
 				"%s pressure snapshot exposes hostile projectile occupancy" % String(scenario_id)
 			)
@@ -199,6 +204,22 @@ func _run() -> void:
 			_expect(
 				int(snapshot["effects"]) == effect_target and bool(snapshot["valid"]),
 				"measured after-physics maintenance restores exact effect pressure"
+			)
+			run.experience_runtime.call(
+				"_swap_remove", run.experience_runtime.shards.size() - 1
+			)
+			snapshot = scenario.validation_snapshot(run)
+			_expect(
+				int(snapshot["experience"]) == int(snapshot["experience_target"]) - 1
+				and not bool(snapshot["valid"]),
+				"terminal shard depletion invalidates the declared exact workload"
+			)
+			scenario.after_physics(run)
+			snapshot = scenario.validation_snapshot(run)
+			_expect(
+				int(snapshot["experience"]) == int(snapshot["experience_target"])
+				and bool(snapshot["valid"]),
+				"measured after-physics maintenance restores exact shard pressure"
 			)
 			run.denied_zones.append({
 				"source":"authored_fixture_probe",
