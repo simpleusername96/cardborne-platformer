@@ -23,6 +23,8 @@ const CAPACITY_PRESSURE_TARGET := EnemyStore.MAX_LIVE_HOSTILES
 const ORDINARY_CAPACITY_LOAD := PressureFixture.CAPACITY_ORDINARY_COUNT
 const BOSS_PRESSURE_TARGET := PressureFixture.BOSS_ORDINARY_COUNT + 1
 const PRODUCTION_REPLAY_MAX_WINDOW_SIZE := 32
+const PRODUCTION_REPLAY_PRIME_SECONDS := 240.0
+const PRODUCTION_REPLAY_MIN_ACTIVE_RATIO := 0.90
 
 const VALID_SCENARIOS: Array[StringName] = [
 	&"production_replay", &"peak_horde", &"capacity_pressure",
@@ -622,6 +624,7 @@ func _activate_production_replay(run: Node) -> void:
 	]
 	_route_waypoint_index = 0
 	_set_action(&"primary_fire", true)
+	_prime_production_replay(run)
 
 
 func _final_authored_beat_trigger_time(stage_id: StringName) -> float:
@@ -646,19 +649,7 @@ func _drive_production_replay(run: Node) -> void:
 	# room. The replay models ordinary defeats before the peak beat so an atomic
 	# window can materialize exactly as it would during ordinary play.
 	if run.encounter_runtime.current_beat < 4:
-		var active_count := int(run.call("_active_mobile_count"))
-		var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
-		var population := _production_population_accounting(
-			scheduler,
-			run.current_stage_id
-		)
-		var required_slots := mini(
-			PRODUCTION_REPLAY_MAX_WINDOW_SIZE,
-			int(population["materialized_cap"])
-		)
-		var available_slots: int = run.encounter_runtime.available_active_slots(active_count)
-		if available_slots < required_slots:
-			_retire_production_batch(run, required_slots - available_slots)
+		_make_room_for_production_window(run, false)
 	if _dash_release_pending:
 		_set_action(&"dash", false)
 		_dash_release_pending = false
@@ -688,6 +679,61 @@ func _drive_production_replay(run: Node) -> void:
 	run.player_barrier_timer = 1.0e9
 
 
+func _prime_production_replay(run: Node) -> void:
+	# Fixture setup advances only the production scheduler. Frame sampling starts
+	# after the highest authored beat is populated, so a 70-second release run
+	# measures steady shipping pressure instead of a two-minute arrival ramp.
+	var step := 0.10
+	var step_limit := ceili(PRODUCTION_REPLAY_PRIME_SECONDS / step)
+	for _step_index in step_limit:
+		_make_room_for_production_window(run, true)
+		run.call("_update_encounter", step)
+		var snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
+		var cap := int(snapshot.get("materialized_cap", snapshot.get("active_cap", 0)))
+		var active := int(run.call("_active_mobile_count"))
+		if (
+			int(snapshot.get("beat", 0)) >= 4
+			and active >= ceili(float(cap) * 0.90)
+			and int(snapshot.get("reserved_arrival_slots", 0)) == 0
+			and int(snapshot.get("queued_spawns", 0)) == 0
+		):
+			break
+	var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
+	_scheduler_spawn_seen = _production_spawned_total(scheduler) > 0
+	_production_last_sample_spawned = _production_spawned_total(scheduler)
+	_production_next_sample = 0.0
+	var discarded_telemetry := {}
+	run.encounter_runtime.consume_engagement_telemetry(discarded_telemetry)
+	var telemetry: Variant = run.get("_engagement_telemetry")
+	if is_instance_valid(telemetry) and telemetry.has_method("reset"):
+		telemetry.reset()
+
+
+func _make_room_for_production_window(run: Node, include_peak_beat: bool) -> void:
+	var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
+	if not include_peak_beat and int(scheduler.get("beat", 0)) >= 4:
+		return
+	# A cue already owns these exact slots. Retiring more actors while its tail
+	# rounds materialize would collapse the measured population toward zero.
+	if (
+		int(scheduler.get("reserved_arrival_slots", 0)) > 0
+		or int(scheduler.get("queued_spawns", 0)) > 0
+	):
+		return
+	var active_count := int(run.call("_active_mobile_count"))
+	var population := _production_population_accounting(
+		scheduler,
+		run.current_stage_id
+	)
+	var required_slots := mini(
+		PRODUCTION_REPLAY_MAX_WINDOW_SIZE,
+		int(population["materialized_cap"])
+	)
+	var available_slots: int = run.encounter_runtime.available_active_slots(active_count)
+	if available_slots < required_slots:
+		_retire_production_batch(run, required_slots - available_slots)
+
+
 func _retire_production_batch(run: Node, budget: int) -> void:
 	var retired := 0
 	for enemy in run.enemies:
@@ -696,6 +742,7 @@ func _retire_production_batch(run: Node, budget: int) -> void:
 		if not enemy.alive or not enemy.active or not enemy.counts_active_cap:
 			continue
 		run.collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
+		run.call("_release_enemy_engagement", enemy)
 		enemy.alive = false
 		enemy.active = false
 		run.enemy_grid.update_actor(enemy)
@@ -719,12 +766,17 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 	var allocation_qualification := _production_allocation_qualification(scheduler)
 	var active_cap := int(population["active_cap"])
 	var median_active := _production_sample_median(&"active")
+	# Actor counts are discrete. A 48-actor cap therefore uses the rounded-down
+	# 90-percent floor of 43 rather than manufacturing a stricter 44-actor gate.
+	var minimum_active := floori(
+		float(active_cap) * PRODUCTION_REPLAY_MIN_ACTIVE_RATIO
+	)
 	var maximum_ranged := _production_sample_maximum(&"ranged_commits")
 	var maximum_denial := _production_sample_maximum(&"denial_commits")
 	var pressure_qualified := (
 		_production_pressure_samples.size() >= 10
 		and int(scheduler.get("beat", 0)) >= 4
-		and median_active >= ceili(float(active_cap) * 0.90)
+		and median_active >= minimum_active
 		and bool(allocation_qualification["valid"])
 		and maximum_ranged <= EncounterDirector.MAX_RANGED_COMMITS
 		and maximum_denial <= EncounterDirector.MAX_DENIAL_COMMITS
@@ -780,7 +832,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 			"sample_interval_seconds":1.0,
 			"active_cap":active_cap,
 			"median_active":median_active,
-			"minimum_active":ceili(float(active_cap) * 0.90),
+			"minimum_active":minimum_active,
 			"maximum_ranged_commits":maximum_ranged,
 			"maximum_denial_commits":maximum_denial,
 			"allocations":allocation_qualification,

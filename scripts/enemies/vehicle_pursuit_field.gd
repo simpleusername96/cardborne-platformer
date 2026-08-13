@@ -11,7 +11,9 @@ const GRID_WIDTH := 75
 const GRID_HEIGHT := 45
 const CELL_COUNT := GRID_WIDTH * GRID_HEIGHT
 const REBUILD_INTERVAL := 0.20
-const MAX_REBUILD_CELLS_PER_TICK := 1024
+# Spread one exact 75x45 reverse field over at most seven 60 Hz ticks. This
+# remains inside the 0.20-second refresh contract without a 1,024-cell spike.
+const MAX_REBUILD_CELLS_PER_TICK := 512
 const UNREACHABLE := 1 << 28
 const CARDINALS: Array[Vector2i] = [
 	Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN,

@@ -514,11 +514,10 @@ func _admit_due_window(
 	if elapsed + 0.0001 < _last_cue_at + WINDOW_GAP:
 		return
 	var packet: Dictionary = request["packet"]
-	var squads: Array = packet["squads"]
-	var squads_per_window := int(
-		packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)
-	)
-	var first_squad := int(request["arrival_window"]) * squads_per_window
+	var requested_window_units := _window_unit_count(request)
+	if available_active_slots(active_mobile_count) < requested_window_units:
+		_capacity_blocked_seconds += delta
+		return
 	var recent_positions := _recent_birth_positions()
 	var allocations := _spawn_allocator.allocate_window(
 		packet,

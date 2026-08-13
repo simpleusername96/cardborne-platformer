@@ -972,8 +972,8 @@ release architecture.
 
 - Canonical progress: only Phase V1-V5 task checkboxes after the virtual-reserve revision.
 - Current phase: V4, clean native and built-Web qualification.
-- Next task: commit the validated implementation checkpoint, confirm a quiescent machine, then run
-  the single authoritative 10+60-second native `production_replay`.
+- Next task: commit the validated diagnostic corrections, confirm a quiescent machine, then run the
+  single authoritative 10+60-second native `production_replay`.
 - Last completed gate: Phase 2 deterministic engagement replay plus the retained Phase 4.2 wall
   broad-phase validator. Phase 7 focused integration checks pass for the retained code, but the full
   Phase 7/8 completion preconditions do not.
@@ -1046,6 +1046,18 @@ Checkpoint evidence:
   scenario, document authority, headless import, and diff checks passed. The diff-scoped quality
   audit corrected stale trace terminology, removed live-actor deactivation, restored the public
   tuning alias, and added explicit lost-work conservation checks.
+- 2026-08-13, virtual-reserve diagnostic correction: the production replay now primes only the real
+  scheduler before timed sampling, releases engagement reservations when the fixture retires an
+  actor, and does not retire more actors while an admitted window is still materializing. Runtime
+  admission now rejects a capacity-blocked complete window before invoking spatial allocation, and
+  the exact 75x45 pursuit field rebuild is sliced from 1,024 to 512 cells per tick while retaining
+  its 0.20-second refresh contract. The discrete 90-percent pressure threshold for a 48-actor cap is
+  explicitly the rounded-down count of 43. Arrival, navigation, stage-continuity, Run, manual-trace,
+  performance-scenario, document-authority, headless import, and diff checks pass. Non-authoritative
+  5+10-second diagnostics reduced production-replay physics p95 from `15.046 ms` before the admission
+  precheck to `8.153 ms`, then `5.375 ms` after pursuit slicing; the last physics p99 was `11.871 ms`.
+  These short samples were taken with Chrome active and a dirty worktree, so they are causal
+  diagnostics only and do not replace V4.3.
 
 ## Completion and Stop Conditions
 

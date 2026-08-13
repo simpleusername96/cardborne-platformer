@@ -89,7 +89,7 @@ func _initialize() -> void:
 	_expect(
 		is_equal_approx(float(snapshot["cell_size"]), 96.0)
 		and Vector2i(snapshot["grid_size"]) == Vector2i(75,45)
-		and int(snapshot["max_rebuild_cells_per_tick"]) == 1024
+		and int(snapshot["max_rebuild_cells_per_tick"]) == 512
 		and is_equal_approx(float(snapshot["rebuild_interval"]), 0.2),
 		"shared pursuit uses a bounded packed 75x45 field"
 	)

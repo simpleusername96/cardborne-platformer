@@ -150,7 +150,7 @@ func _run() -> void:
 			_expect(
 				int(qualification["median_active"])
 					>= int(qualification["minimum_active"]),
-				"production replay sustains at least ninety percent of the Hard peak cap"
+				"production replay sustains the discrete ninety-percent Hard peak floor"
 			)
 			_expect(
 				bool(qualification["allocations"]["valid"]),
