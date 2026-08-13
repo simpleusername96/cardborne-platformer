@@ -51,12 +51,12 @@ func _profile_difficulty(difficulty: StringName) -> bool:
 	for shard_index in 192:
 		stage.experience_runtime.spawn_shard(Vector2(4200.0 + float(shard_index % 12), 2600.0 + float(shard_index / 12)), 1)
 	for _index in WARMUP_STEPS:
-		stage.call("_update_enemies", FIXED_DELTA)
+		stage.call("_update_enemies", FIXED_DELTA, stage.player_position)
 		stage.call("_update_projectiles", FIXED_DELTA)
 		stage.call("_update_experience", FIXED_DELTA)
 
 	var moving_ms := _measure_steps(func() -> void:
-		stage.call("_update_enemies", FIXED_DELTA)
+		stage.call("_update_enemies", FIXED_DELTA, stage.player_position)
 		stage.call("_update_projectiles", FIXED_DELTA)
 		stage.call("_update_experience", FIXED_DELTA)
 	)
