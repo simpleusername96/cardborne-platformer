@@ -155,6 +155,7 @@ func _finish() -> void:
 	if failures.is_empty():
 		print("VEHICLE_ENGAGEMENT_REPLAY_VALIDATION_OK")
 		quit(0)
+		return
 	for failure in failures:
 		push_error(failure)
 	quit(1)
