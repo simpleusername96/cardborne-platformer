@@ -1148,7 +1148,11 @@ Validation rules:
   centered `44/52/56 px` cells to a shared left edge and `36/40/44 px` cells. Focused renderer,
   Upgrade, Result, layout, map, capture, world, runtime, visual-separation, workbench,
   visual-authority, and headless-import checks pass; a Korean 1280x720, 100%-text rendered pass
-  confirms both corrected compositions. No performance scenario was run for this visual correction.
+  confirms both corrected compositions. Clean commit-linked evidence is in
+  `build/captures/standalone-symbol-left-slots-2dbc6191-ko-1280`; its manifest resolves commit
+  `2dbc61914773bd9f1a6f1471b346ae5eabf52231`, fingerprint
+  `dc53096757d6ebe578b0c0a2bb36f4fc35b62756e4beefb79ec9cfb06cd2e2a6`, and clean source. The
+  isolated Web export also completes. No performance scenario was run for this visual correction.
 
 ## Open Questions
 
