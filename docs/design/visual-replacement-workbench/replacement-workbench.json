@@ -3102,12 +3102,12 @@
       ],
       "consumer_asset_ids": [
         "world/mystery_device_intact",
-        "world/mystery_device_resolved",
+        "world/mystery_device_damaged",
         "world/mystery_device_gravity",
         "world/mystery_device_cryo",
         "world/mystery_device_weakpoint"
       ],
-      "direction_en": "Keep one neutral attack-triggered Mystery Device with intact and resolved authored states. After the first accepted hit, exactly one approved 72-world-unit outcome symbol appears through active-effect retirement. Gameplay collision, health, radii, and random effects remain code-owned.",
+      "direction_en": "Keep one neutral attack-triggered Mystery Device with pristine and broad-cracked damaged authored states. The first accepted hit switches to the damaged body while health remains; destruction replaces every body with exactly one approved 288-world-unit outcome symbol through active-effect retirement. Gameplay collision, health, radii, and random effects remain code-owned.",
       "deliverables": [
         {
           "target_path": "art/visuals/production/gameplay/world/mystery_device_intact.png",
@@ -3127,7 +3127,7 @@
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/world/mystery_device_resolved.png",
+          "target_path": "art/visuals/production/gameplay/world/mystery_device_damaged.png",
           "width": 384,
           "height": 384,
           "pivot": [
@@ -3140,7 +3140,7 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "The same mystery-device footprint in a clearly spent and broken resolved state, with the active center removed, restrained debris, and transparent background.",
+          "brief_en": "The same mystery-device footprint in a clearly attacked but still intact neutral state, with two or three broad central fractures, one displaced plate edge, no outcome clue, and transparent background.",
           "external_source_ids": []
         },
         {
@@ -3154,7 +3154,7 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Approved centered Gravity Pull outcome symbol; render only after reveal at 72 world units.",
+          "brief_en": "Approved centered Gravity Pull outcome symbol; render only after destruction at 288 world units.",
           "external_source_ids": []
         },
         {
@@ -3168,7 +3168,7 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Approved centered Cryo Lock outcome symbol; render only after reveal at 72 world units.",
+          "brief_en": "Approved centered Cryo Lock outcome symbol; render only after destruction at 288 world units.",
           "external_source_ids": []
         },
         {
@@ -3182,19 +3182,23 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Approved centered Weakpoint Expose outcome symbol; render only after reveal at 72 world units.",
+          "brief_en": "Approved centered Weakpoint Expose outcome symbol; render only after destruction at 288 world units.",
           "external_source_ids": []
         }
       ],
       "final_paths": [
         "art/visuals/production/gameplay/world/mystery_device_intact.png",
-        "art/visuals/production/gameplay/world/mystery_device_resolved.png",
+        "art/visuals/production/gameplay/world/mystery_device_damaged.png",
         "art/visuals/production/gameplay/world/mystery_device_gravity.png",
         "art/visuals/production/gameplay/world/mystery_device_cryo.png",
         "art/visuals/production/gameplay/world/mystery_device_weakpoint.png"
       ],
       "reuse_paths": [],
-      "preview_paths": [],
+      "preview_paths": [
+        "docs/design/visual-replacement-workbench/previews/mystery-device-damaged-v1/mystery-device-damaged.png",
+        "docs/design/visual-replacement-workbench/previews/mystery-device-damaged-v1/comparison.png",
+        "docs/design/visual-replacement-workbench/previews/mystery-device-damaged-v1/candidate-evidence.md"
+      ],
       "retire_paths": [],
       "runtime_change_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
@@ -3222,11 +3226,11 @@
       ],
       "approval": {
         "approved_by": "BK",
-        "approved_at": "2026-08-07T01:32:28+09:00",
-        "baseline_commit": "580cde2c67efbcf1ce15a2671ddca716a3eb92b1",
+        "approved_at": "2026-08-14T17:18:03+09:00",
+        "baseline_commit": "9050e3b862d65b8d00840ea06de37d338fe2d9e5",
         "deliverable_sha256": {
           "art/visuals/production/gameplay/world/mystery_device_intact.png": "cfbbc2b42a747c2e0859137c5a7230a7d812203f719e4e9ffeea033b98d5950c",
-          "art/visuals/production/gameplay/world/mystery_device_resolved.png": "551cc82e34d5caf244c02981906bd84234a8bd8762ce59ef0bca0dff7bf9825e",
+          "art/visuals/production/gameplay/world/mystery_device_damaged.png": "57dd2919f4dea40864a51fcfee01caacfdcf46eec47045300f052285b022fb9f",
           "art/visuals/production/gameplay/world/mystery_device_gravity.png": "171afbb022e322e2c5630394079fb167637b819d3da3e114a38d376f15f40a34",
           "art/visuals/production/gameplay/world/mystery_device_cryo.png": "7262d3ba378e18c734fbdcb82122595749ab481802fc37fc7e1993cf6bce0dd9",
           "art/visuals/production/gameplay/world/mystery_device_weakpoint.png": "15e585cd55fdfc423d1addc20c89c69c7e5cc079b1d288c364dafc7b20a153ff"
@@ -3234,22 +3238,20 @@
         "retire_paths": []
       },
       "application": {
-        "commit": "13ed37989e73465457f89d2e4e114ad4b4ce2f10",
-        "applied_at": "2026-08-07T01:32:28+09:00",
+        "commit": "e5f1a5caf3eca0bd945808c69ab711b3be65dc37",
+        "applied_at": "2026-08-14T17:30:59+09:00",
         "validation_evidence": [
           ".\\tools\\validation\\validate_cardborne_visual_authority.ps1",
           ".\\tools\\godot.ps1 --path . --headless --import",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
-          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_visual_separation.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_visuals.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
-          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_mystery_device_runtime.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
           ".\\tools\\export_web.ps1",
-          "runtime capture matrix: build/captures/map-assets-qa-en-1280",
-          "resolved-state capture: build/captures/map-device-state-qa-v2-en-1280/05-two-field-items.png",
-          "built-Web resource smoke: http://127.0.0.1:13029/build/web/"
+          "runtime capture pending on the clean documentation checkpoint"
         ]
       },
       "visual_authority_evidence": {

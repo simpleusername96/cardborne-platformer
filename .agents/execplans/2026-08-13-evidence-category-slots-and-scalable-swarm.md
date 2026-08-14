@@ -239,13 +239,14 @@ global progressive capacity. Positions are semantic rather than a loose per-cate
 - Chassis and Combat own fixed catalog-order card positions.
 
 Leveling a card updates the same position. A new acquisition in another category never shifts an
-existing image. Empty positions are outlined and not focusable. Filled positions use the existing
-semantic image, level marker, keyboard/controller focus, hover/pin behavior, and one shared popover.
+existing image. Empty positions are outlined and not focusable. Filled positions use only the
+existing semantic image in the cell; level text stays in the shared popover with keyboard/controller
+focus and hover/pin behavior.
 
 The rail uses category heading plus a left-aligned maximum four-column slot grid. Five-slot categories wrap the
-fifth position to a second row. The build rail remains vertically scrollable; it never makes the
-three offer rows or mandatory action area scroll. Compact mode uses the existing compact cell size,
-and the Result reuses the same rail component and frozen snapshot.
+fifth position to a second row. The build rail has no internal scrollbar; all six categories fit in
+the supported modal body. Cells are `26/28/30 px` and artwork is `20/22/24 px` in
+compact/standard/large modes. The Result reuses the same rail component and frozen snapshot.
 
 `VehicleRunBuild.acquisition_order` remains only to keep the two generic optional-secondary
 positions stable when the second optional weapon is acquired. It does not decide category order,
@@ -345,10 +346,11 @@ Anomaly outcome contract:
   the remaining field lifetime and multiplies player-owned received damage by `1.25`. It does not
   change movement or targeting and excludes bosses and fixed hostile structures. Gameplay state and
   the visible footprint retire on the same tick.
-- Keep one neutral `192x192` intact device body only until the first accepted player hit. That hit
-  reveals the outcome, removes the neutral/resolved body presentation, and enables exactly one
-  centered authored symbol at `72` world-unit optical size as the sole authored device image. The
-  symbol persists through the active effect and retires with it. Exact effect radii
+- Keep one neutral `384x384` pristine device body until the first accepted player hit. That hit
+  reveals the outcome in text and switches the still-live device to a same-footprint neutral
+  `384x384` damaged body with broad central fractures. Destruction removes every body and enables
+  exactly one centered authored symbol at `288` world-unit optical size as the sole authored device
+  image. The symbol persists through the active effect and retires with it. Exact effect radii
   remain code-native gameplay geometry.
 - The review candidates are
   `docs/design/visual-replacement-workbench/previews/mystery-device-outcomes-v4-symbols/candidates/`
@@ -357,8 +359,9 @@ Anomaly outcome contract:
   `art/visuals/production/gameplay/world/`, with semantic IDs
   `world/mystery_device_gravity`, `world/mystery_device_cryo`, and
   `world/mystery_device_weakpoint`. Promotion requires exact user approval.
-- Hidden intact devices keep one neutral image. Revealed devices show only their outcome symbol,
-  without another authored body underneath. The minimap remains neutral before and after reveal;
+- Hidden pristine devices and revealed-but-unbroken damaged devices keep one neutral image.
+  Destroyed devices show only their outcome symbol, without another authored body underneath. The
+  minimap remains neutral before and after reveal;
   it does not leak outcome through tint. Outcome differences use the centered symbol, localized
   text, full-area effect, enemy same-size compositor state, and semantic color rather than hue alone.
 - Replace `facility_transit_gate.png` only with the approved candidate at
@@ -607,9 +610,9 @@ specs, and focused upgrade/capture validators
     stable, a level-up updates in place, and occupancy never exceeds capacity.
 - [x] **2.3 Render grouped sections in the shared rail.**
   - Change: replace the global progressive capacity with six labeled grids. Use at most four
-    columns per group; five-slot groups wrap from one shared left edge. Use `36/40/44 px` cells and
-    `30/34/38 px` artwork in compact/standard/large modes. Keep filled-only focus, one popover, and
-    scroll containment.
+    columns per group; five-slot groups wrap from one shared left edge. Use `26/28/30 px` cells and
+    `20/22/24 px` artwork in compact/standard/large modes, no in-cell level text, and no internal
+    scrollbar. Keep filled-only focus and one popover.
   - Accept: zero upgrades shows all 21 empty categorized positions; a mixed fixture fills the exact
     category positions with existing artwork; headings distinguish automatic weapons, attack-added
     effects, direct activation, and conditional perks; no image or popover is clipped.
@@ -799,7 +802,7 @@ capture/workbench, and focused validators
     `docs/design/visual-replacement-workbench/previews/mystery-device-outcomes-v4-symbols/` and
     `docs/design/visual-replacement-workbench/previews/transit-gate-v2-clean/`. Archive the rejected
     Decoy V3 evidence. Do not use SVG or ImageMagick drawing.
-  - Accept: the three symbols read as converge/freeze/open-armor at 72-world-unit scale and in
+  - Accept: the three symbols read as converge/freeze/open-armor at the original comparison scale and in
     grayscale; the gate is a smooth uniform circle at 192x192; all candidates have transparent alpha,
     recorded hashes, canonical-reference evidence, and remain outside production. Evidence passed on
     2026-08-14; production approval is intentionally separate.
@@ -818,9 +821,10 @@ capture/workbench, and focused validators
     existing Transit Gate ID resolve once; the manifest contains 80 semantic PNGs plus three approved
     SurfaceDetail SVGs; rejected/intermediate/chroma files remain outside production.
 - [x] **5.5 Integrate revealed symbols, Weakpoint feedback, and the clean Gate.**
-  - Change: keep the neutral body only before reveal, then render exactly one approved symbol alone
-    at 72 world units after first-hit reveal through active-effect retirement. Never draw the
-    intact/resolved body under a revealed symbol. Reuse the existing enemy
+  - Change: keep the pristine neutral body before the first hit, use the cracked neutral body while
+    health remains, then render exactly one approved symbol alone at `288` world units after
+    destruction through active-effect retirement. Never draw the pristine/damaged body under a
+    triggered symbol. Reuse the existing enemy
     status compositor for a restrained same-size Weakpoint danger layer. Keep the full code-native
     Gravity/Cryo/Weakpoint disks at exact `480/360/420` radii for `5/3/5s`. Preserve the neutral
     minimap marker and Transit Gate geometry/behavior. Update capture fixtures, guidebook preview,
@@ -979,7 +983,7 @@ Validation rules:
 | --- | --- | --- |
 | A retained raw artifact lacks a full commit or required workload fields | Import it as `diagnostic` or `invalid`, never authoritative | Do not repair provenance by trusting the filename |
 | Category occupancy exceeds the proposed capacity | Stop Phase 2 and correct the catalog-derived capacity | Do not silently hide an acquired card or add scrolling inside one category |
-| Five-slot category cannot fit at a supported width | Left-align every row, wrap after four positions, use `36/40/44 px` cells, and keep the existing rail scroll | Do not move offer actions into scroll |
+| Five-slot category cannot fit at a supported width | Left-align every row, wrap after four positions, use `26/28/30 px` cells, and remove the rail's internal scrollbar | Do not move offer actions into scroll |
 | Renderer becomes a measured failing owner | Record the contradiction and replan that owner | Do not preemptively replace the renderer or assets |
 | Opening visibility passes but first commitment remains late | Adjust only nearest safe approach placement/entry gate within the locked `8s` acceptance | Do not spawn on-screen or raise attack-commit caps |
 | Boss maintenance makes the boss unreadable or violates slot margin | Stop new maintenance admission and correct the low/high-watermark policy | Do not remove existing exact ordinary actors or bypass boss reservation |
@@ -1061,9 +1065,9 @@ Validation rules:
 - 2026-08-14: replace Decoy Signal with Weakpoint Expose at `420px/5s/1.25x` player-owned received
   damage because Decoy and Gravity produced overlapping player perception. Preserve movement and
   targeting under Weakpoint and exclude bosses/fixed structures.
-- 2026-08-14: use three centered revealed-state PNG symbols after the hidden neutral state rather than
-  three full replacement bodies. Generate converge/freeze/open-armor candidates at 192x192 for a
-  72-world-unit display, and separately generate a clean same-footprint Transit Gate replacement.
+- 2026-08-14: use three centered triggered-state PNG symbols after the hidden neutral state rather than
+  three full replacement bodies. Generate converge/freeze/open-armor candidates at 192x192 and
+  separately generate a clean same-footprint Transit Gate replacement.
   The user approved the complete V4 symbol comparison and clean Transit Gate AS-IS/TO-BE comparison
   on 2026-08-14; the exact reviewed bytes may now be promoted together.
 - 2026-08-14: one text-only HUD queue owns gameplay announcements. Map repair/recall pickups and
@@ -1153,6 +1157,13 @@ Validation rules:
   `2dbc61914773bd9f1a6f1471b346ae5eabf52231`, fingerprint
   `dc53096757d6ebe578b0c0a2bb36f4fc35b62756e4beefb79ec9cfb06cd2e2a6`, and clean source. The
   isolated Web export also completes. No performance scenario was run for this visual correction.
+- 2026-08-14: BK further clarified that an attacked-but-unbroken Anomaly Device needs an obvious
+  cracked middle state, and that the standalone outcome symbol must be at least four times the
+  previous linear size. The final state sequence is pristine neutral body → broad-cracked neutral
+  body → body-free `288`-world-unit outcome symbol. The shared build rail is corrected again to
+  image-only `26/28/30 px` cells with `20/22/24 px` art and no internal scrollbar so all six
+  categories fit without the oversized text/slot stack. Final focused/rendered evidence is pending
+  this correction; performance scenarios remain deferred until all feature and image work is done.
 
 ## Open Questions
 

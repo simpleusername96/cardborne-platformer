@@ -215,7 +215,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored direct-pickup and shard visual ID plus value-scale mapping | spawn, value, collection |
 | effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, Dash Afterburn, Storm Barrage, and Mystery outcome presentation within fixed capacity | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
-| world catalog | authored Transit Gate, neutral pre-reveal Anomaly Device body, three standalone revealed-state outcome symbols, SurfaceDetail, and state descriptor | topology, collision, health, outcome |
+| world catalog | authored Transit Gate, pristine and cracked neutral Anomaly Device bodies, three standalone triggered-outcome symbols, SurfaceDetail, and state descriptor | topology, collision, health, outcome |
 | secondary catalog | authored seeker, field, blade, mine presentation identity plus code-native rear-beam and storm-footprint state | targeting, cadence, damage |
 | defense catalog | shared code-native support boundary plus Toxin/Cryo/Weakpoint actor-overlay recipe | protection, Electric Field damage area, damage, slow, received-damage multiplier, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
@@ -283,11 +283,13 @@ collision.
   각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
   크기에서 약 30% 줄인 값이다. repair pickup과 experience recall은 gameplay
   역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
-- Anomaly Device는 결과를 숨기는 exact `192×192` neutral body를 첫 accepted
-  hit 전까지만 표시한다. 결과 종류는 그 전 image, 색, lamp, glyph로 암시하지
-  않는다. 첫 hit는 localized text로 결과를 식별하고 neutral/resolved body 표시를
-  끝낸 뒤, 정확히 한 개의 authored outcome-symbol PNG만 `72` world-unit optical
-  size로 표시한다. 다른 authored device image를 symbol 아래에 합성하지 않는다.
+- Anomaly Device는 결과를 숨기는 neutral body를 파괴 전까지 표시한다. 첫
+  accepted hit 전에는 pristine body, 첫 hit 뒤 health가 남아 있는 동안에는 같은
+  footprint의 broad central fracture가 있는 damaged body를 사용한다. 두 body 모두
+  결과 종류를 image, 색, lamp, glyph로 암시하지 않는다. 첫 hit는 localized text로
+  결과를 식별하지만 outcome symbol은 파괴 뒤에만 표시한다. 파괴 뒤에는 다른
+  authored device image를 끝내고, 정확히 한 개의 authored outcome-symbol PNG만
+  `288` world-unit optical size로 표시한다. 다른 body를 symbol 아래에 합성하지 않는다.
   Minimap marker는 바꾸지 않는다. 이 symbol은 HUD glyph나 독립 gameplay object가 아니라 revealed
   world-state label이며 exact radius와 lifetime은 계속 code-native footprint가
   소유한다.
@@ -339,7 +341,7 @@ collision.
 | 외곽 경계벽 | `#070B11` 단색 black mass | field boundary와 collision |
 | 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
-| 변칙 장치 | 첫 hit 전에는 큰 neutral mechanical body로 결과를 숨기고, reveal 뒤에는 다른 body 없이 한 개의 centered outcome symbol만 표시 | device health와 hidden outcome |
+| 변칙 장치 | pristine neutral body → broad-cracked damaged neutral body → 파괴 뒤 다른 body 없이 한 개의 큰 centered outcome symbol | device health와 hidden outcome |
 | 직접 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
 
 별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad와
@@ -378,11 +380,14 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   presentation-only이며 damage, collision, danger telegraph 또는 objective 의미를
   가질 수 없다.
 - Anomaly Device는 첫 accepted hit 전 neutral/dark mechanical mass가 지배하는
-  exact `192×192` authored body다. 한 개의 restrained system accent만 허용하며
-  첫 accepted hit 전에는 세 결과의 색, glyph, 방향, animation을 노출하지 않는다.
-  첫 hit의 localized text가 결과를 식별하며 그 순간 neutral body를 제거한다.
-  reveal 뒤에는 Gravity의 inward arrows, Cryo의 broad snowflake, Weakpoint의
-  opened armor와 exposed core 중 하나만 단독으로 표시한다. 파괴 뒤 효과 anchor가
+  exact `384×384` pristine authored body다. 한 개의 restrained system accent만
+  허용하며 첫 accepted hit 전에는 세 결과의 색, glyph, 방향, animation을 노출하지
+  않는다. 첫 hit의 localized text가 결과를 식별하며, health가 남아 있는 동안에는
+  same-footprint `384×384` damaged authored body가 중앙을 가로지르는 2–3개의 broad
+  fracture와 displaced plate edge로 공격받은 상태를 표시한다. tiny scratch와 결과
+  색은 사용하지 않는다. 파괴 뒤에는 Gravity의 inward arrows, Cryo의 broad
+  snowflake, Weakpoint의 opened armor와 exposed core 중 하나만 `288` world-unit로
+  단독 표시한다. 파괴 뒤 효과 anchor가
   필요한 동안에도 resolved wreck나 다른 authored body를 아래에 표시하지 않는다.
   발동 text는 실제 영향 대상 수를 함께 전달한다. 색이 없어도 세
   shape verb가 달라야 하며 enclosing badge, text, number, target ring과 nested
@@ -616,8 +621,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   요약·탐색 표면일 뿐 새 장착 제한이 아니다. 실제 속성 독점과 선택형 보조 무기 제한은
   gameplay owner가 계속 결정한다. Upgrade와 Result는 같은 frozen grouped snapshot과
   rail component를 사용한다.
-- 모든 category grid는 같은 왼쪽 기준선에 정렬한다. 슬롯은
-  compact/standard/large에서 `36/40/44 px`, artwork는 `30/34/38 px`다.
+- 모든 category grid는 같은 왼쪽 기준선에 정렬하고 rail 내부에는 scrollbar를
+  만들지 않는다. 슬롯은 compact/standard/large에서 `26/28/30 px`, artwork는
+  `20/22/24 px`다. rail heading은 `16/17/18 px`, category label은 `13/14/14 px`이며
+  slot 안에는 artwork 외 level text를 중복 표시하지 않는다.
   채워진 슬롯만 focus를 받고 hover/focus에서 한 개의 detail popover를 연다.
   click/accept는 popover를 고정하고 `Esc`, 바깥 click 또는 다른 슬롯 focus는 닫거나
   교체한다. 빈 슬롯은 focus 순서에서 제외한다. popover는 flat Surface 하나와
@@ -639,7 +646,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   outline으로 색 외 상태도 전달한다. `모듈 장착` fixed primary는 compact에서
   `240×48`, standard/large에서 `280×52 px`이며 선택 전에는 disabled다. Skip,
   Reroll, Leave와 decline action은 없다.
-- row 자체는 scroll을 사용하지 않는다. 200% text scale에서는 두 column을 한
+- offer row와 current-build rail 자체는 scroll을 사용하지 않는다. 200% text scale에서는 두 column을 한
   column으로 접어 current-build summary 뒤에 offer list를 두고, popover는 대상 슬롯
   아래 inline detail로 바뀐다. 이때만 body가 하나의 outer vertical scroll을 가지며
   fixed primary action은 유지한다. settings, guidebook, report는 지정 content region만
@@ -813,9 +820,10 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - Beam Sentinel and boss straight beams share one code-native unit quad. Runtime tint,
   alpha, live corridor size, and the two-plane startup/three-plane active hierarchy remain
   presentation-owned.
-- Anomaly Device gameplay, its neutral hidden body, and the three approved
-  Gravity/Cryo/Weakpoint outcome symbols are production-integrated. A revealed
-  symbol replaces the body and renders alone at 72 world units through active-effect retirement; the full
+- Anomaly Device gameplay, its pristine and cracked neutral bodies, and the three
+  Gravity/Cryo/Weakpoint outcome symbols are production-integrated. Damage swaps the
+  neutral body to its cracked state; breaking it replaces every body with one symbol
+  rendered alone at 288 world units through active-effect retirement; the full
   area footprint and gameplay truth remain code-owned.
 - Drop Mine gameplay receipts remain fixed-capacity effect-store state. The shared
   code-native disk batch displays radius `96/108/120`; standard and reduced motion both

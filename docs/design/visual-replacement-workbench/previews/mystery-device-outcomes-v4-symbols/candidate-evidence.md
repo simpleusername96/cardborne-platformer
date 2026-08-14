@@ -21,9 +21,10 @@ related:
 
 Retain the grounded PNG sources, exact hashes, runtime-scale comparisons, and
 review state for the three Anomaly Device symbols. The neutral device body keeps
-the outcome hidden until the first accepted player hit. After reveal, the neutral
-body is removed and one centered symbol is the sole authored device image while the code-native full-area footprint
-continues to communicate exact range and lifetime.
+the outcome hidden until the first accepted player hit. That hit changes the still-live
+device to its separate cracked body; after destruction, one centered symbol is the sole
+authored device image while the code-native full-area footprint continues to communicate
+exact range and lifetime.
 
 ## Sources
 
@@ -51,7 +52,7 @@ continues to communicate exact range and lifetime.
   verb is **open armor**.
 - [`comparison.png`](./comparison.png) verifies the full candidate shapes.
   [`runtime-scale-comparison.png`](./runtime-scale-comparison.png) verifies the
-  intended 72-world-unit standalone size. [`grayscale-comparison.png`](./grayscale-comparison.png)
+  superseded 72-world-unit review size. [`grayscale-comparison.png`](./grayscale-comparison.png)
   verifies separation without hue. [`device-overlay-preview.png`](./device-overlay-preview.png)
   is superseded review-only placement evidence; it is not the approved runtime composition.
 - BK explicitly approved the V4 comparison on 2026-08-14. The candidates were
@@ -69,7 +70,8 @@ continues to communicate exact range and lifetime.
   enemies take `1.25x` player-owned damage. It changes neither movement nor AI
   targeting and excludes bosses and fixed hostile structures.
 - Before reveal, no image, minimap marker, color, or text leaks the assigned
-  outcome. The symbol appears only after the first accepted hit.
+  outcome. The first accepted hit identifies the result in text and switches to the
+  neutral cracked body. The symbol appears only after destruction, at `288` world units.
 
 ## Candidate Records
 
@@ -115,12 +117,13 @@ inputs:
 ## Recommendations
 
 - The production owner registers the three world-state semantic PNGs and renders
-  exactly one centered 72-world-unit standalone symbol after reveal. Preserve the
-  neutral body only before reveal and preserve the code-native effect footprint.
+  exactly one centered `288`-world-unit standalone symbol after destruction. Preserve
+  the pristine/cracked neutral body sequence before destruction and preserve the
+  code-native effect footprint.
 
 ## Limitations
 
-- The candidates have not yet been tested in a dense live battlefield or Web
-  export.
+- The original comparison has not been regenerated at the corrected `288`-world-unit
+  runtime size; real runtime capture is the current composition evidence.
 - Image generation produced limited bevel planes. The user approved the resulting
   symbols and later clarified their standalone runtime composition.
