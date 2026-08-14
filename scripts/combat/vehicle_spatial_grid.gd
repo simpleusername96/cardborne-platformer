@@ -43,6 +43,8 @@ var _member_positions := PackedInt32Array()
 var _local_member_active := PackedByteArray()
 var _local_member_cells := PackedInt32Array()
 var _local_member_positions := PackedInt32Array()
+var _local_active_slots := PackedInt32Array()
+var _local_active_positions := PackedInt32Array()
 var _seen_sync := PackedInt32Array()
 var _positions := PackedVector2Array()
 var _radii := PackedFloat32Array()
@@ -67,6 +69,7 @@ var _local_overlap_build_serial := 0
 var _local_overlap_builds := 0
 var _last_local_overlap_owner_count := 0
 var _last_local_overlap_candidate_count := 0
+var _last_local_overlap_snapshot_count := 0
 var _legacy_nearest_query_calls := 0
 var last_overlap_snapshot_ms := 0.0
 var last_overlap_query_ms := 0.0
@@ -108,6 +111,9 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_local_member_active.fill(0)
 	_local_member_cells.resize(MAX_TRACKED_ACTORS)
 	_local_member_positions.resize(MAX_TRACKED_ACTORS)
+	_local_active_slots.clear()
+	_local_active_positions.resize(MAX_TRACKED_ACTORS)
+	_local_active_positions.fill(-1)
 	_seen_sync.resize(MAX_TRACKED_ACTORS)
 	_seen_sync.fill(0)
 	_positions.resize(MAX_TRACKED_ACTORS)
@@ -142,6 +148,7 @@ func configure(world_bounds: Rect2, requested_cell_size: float = DEFAULT_CELL_SI
 	_query_id = 0
 	_generation_rejects = 0
 	_local_overlap_builds = 0
+	_last_local_overlap_snapshot_count = 0
 	_legacy_nearest_query_calls = 0
 	last_overlap_snapshot_ms = 0.0
 	last_overlap_query_ms = 0.0
@@ -158,6 +165,8 @@ func rebuild(live: Array[EnemyState]) -> void:
 		bucket.clear()
 	_member_active.fill(0)
 	_local_member_active.fill(0)
+	_local_active_slots.clear()
+	_local_active_positions.fill(-1)
 	_member_generations.fill(0)
 	_member_counts.fill(0)
 	_local_overlap_valid.fill(0)
@@ -359,10 +368,12 @@ func rebuild_local_overlap_cache(
 		_local_snapshot_valid.fill(0)
 		_local_overlap_build_serial = 1
 	var section_started := Time.get_ticks_usec() if measure_sections else 0
-	for slot in MAX_TRACKED_ACTORS:
+	_last_local_overlap_snapshot_count = 0
+	for slot in _local_active_slots:
 		var enemy: EnemyState = _actors[slot]
 		if not _local_cache_actor_is_valid(slot, enemy):
 			continue
+		_last_local_overlap_snapshot_count += 1
 		_local_snapshot_valid[slot] = _local_overlap_build_serial
 		_local_snapshot_positions[slot] = _positions[slot]
 		var generation := _member_generations[slot]
@@ -380,10 +391,10 @@ func rebuild_local_overlap_cache(
 	else:
 		last_overlap_snapshot_ms = 0.0
 		last_overlap_query_ms = 0.0
-	var owner_limit := mini(refresh_slots.size(), MAX_TRACKED_ACTORS)
-	for owner_slot in owner_limit:
+	for owner_slot in _local_active_slots:
 		if (
-			refresh_slots[owner_slot] == 0
+			owner_slot >= refresh_slots.size()
+			or refresh_slots[owner_slot] == 0
 			or _local_snapshot_valid[owner_slot] != _local_overlap_build_serial
 		):
 			continue
@@ -670,6 +681,7 @@ func debug_snapshot() -> Dictionary:
 		"local_overlap_limit": LOCAL_OVERLAP_LIMIT,
 		"local_overlap_capacity": _local_overlap_neighbor_slots.size(),
 		"local_overlap_builds": _local_overlap_builds,
+		"local_overlap_snapshot_slots": _last_local_overlap_snapshot_count,
 		"legacy_nearest_query_calls": _legacy_nearest_query_calls,
 	}
 
@@ -952,6 +964,8 @@ func _update_local_membership(slot: int, enemy: EnemyState) -> void:
 	var bucket: Array = _local_cells[next_cell_index]
 	_local_member_positions[slot] = bucket.size()
 	bucket.append(slot)
+	_local_active_positions[slot] = _local_active_slots.size()
+	_local_active_slots.append(slot)
 
 
 func _remove_local_membership(slot: int) -> void:
@@ -968,6 +982,15 @@ func _remove_local_membership(slot: int) -> void:
 			_local_member_positions[moved_slot] = position
 		bucket.pop_back()
 	_local_member_active[slot] = 0
+	var active_position := _local_active_positions[slot]
+	var active_last_position := _local_active_slots.size() - 1
+	if active_position >= 0 and active_position <= active_last_position:
+		var moved_active_slot := _local_active_slots[active_last_position]
+		if active_position != active_last_position:
+			_local_active_slots[active_position] = moved_active_slot
+			_local_active_positions[moved_active_slot] = active_position
+		_local_active_slots.remove_at(active_last_position)
+	_local_active_positions[slot] = -1
 
 
 func _replace_member_position(

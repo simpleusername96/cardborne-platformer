@@ -253,6 +253,11 @@ func _validate_local_overlap_cache() -> void:
 		int(snapshot["legacy_nearest_query_calls"]) == 0,
 		"batched cache construction performs no legacy per-owner query"
 	)
+	_expect(
+		int(snapshot["local_overlap_snapshot_slots"])
+			== EnemyStore.MAX_LIVE_HOSTILES - 4,
+		"overlap snapshots visit only indexed valid local actors"
+	)
 	var fixed_capacity := int(snapshot["local_overlap_capacity"])
 	for _iteration in 8:
 		grid.rebuild_local_overlap_cache(refresh_mask)
@@ -283,6 +288,10 @@ func _validate_dense_partial_overlap_mask() -> void:
 	for owner in selected:
 		mask[owner.spatial_slot] = 1
 	grid.rebuild_local_overlap_cache(mask)
+	_expect(
+		int(grid.debug_snapshot()["local_overlap_snapshot_slots"]) == live.size(),
+		"partial owner masks retain every indexed local candidate snapshot"
+	)
 	for owner in live:
 		if owner not in selected:
 			_expect(
