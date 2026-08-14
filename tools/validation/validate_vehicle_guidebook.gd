@@ -272,10 +272,10 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 	var anomaly := _entry(active, &"objects", &"object_mystery_device")
 	_expect(
 		String(anomaly["name_key"]) == "GUIDE_OBJECT_MYSTERY_DEVICE_NAME"
-			and Array(anomaly["stat_rows"]).size() == 5
+			and Array(anomaly["stat_rows"]).size() == 4
 			and String(Dictionary(Array(anomaly["stat_rows"])[0])["value_key"])
 				== "GUIDE_VALUE_HP",
-		"Anomaly Device exposes HP and all four exact runtime outcomes"
+		"Anomaly Device exposes HP and all three exact runtime outcomes"
 	)
 
 

@@ -236,6 +236,7 @@ var _boss_health_bar_count := 0
 var _semantic_texture_draws: Array[SemanticTextureDraw] = []
 var _semantic_texture_draw_count := 0
 var _semantic_texture_specs: Dictionary = {}
+var _semantic_texture_layer: Node2D
 var _secondary_asset_ids: Dictionary = {}
 var _player_rear_anchor := Vector2(-0.84, 0.0)
 var _installation_health_candidates: Array[EnemyState] = []
@@ -275,6 +276,14 @@ func _ready() -> void:
 	_presented_durations.resize(ENEMY_CAPACITY)
 	_cache_catalog_asset_ids()
 	_build_batches()
+	# One retained draw layer keeps semantic textures above z=2 body batches and
+	# below z=3 combat overlays without adding per-object CanvasItems.
+	_semantic_texture_layer = Node2D.new()
+	_semantic_texture_layer.name = "SemanticTextureLayer"
+	_semantic_texture_layer.z_index = 2
+	_semantic_texture_layer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_semantic_texture_layer.draw.connect(_draw_semantic_textures)
+	add_child(_semantic_texture_layer)
 
 
 func sync(
@@ -322,10 +331,10 @@ func sync(
 	else:
 		_reset_enemy_presentation()
 	_apply_visible_counts()
-	queue_redraw()
+	_semantic_texture_layer.queue_redraw()
 
 
-func _draw() -> void:
+func _draw_semantic_textures() -> void:
 	for index in _semantic_texture_draw_count:
 		_draw_semantic_texture(_semantic_texture_draws[index])
 
@@ -1085,17 +1094,21 @@ func _enemy_status_custom_data(
 	)
 	if enemy.mystery_cryo_remaining > 0.0:
 		cryo_mix = maxf(cryo_mix, STATUS_STACK_MIX[1])
-	var total_mix := toxin_mix + cryo_mix + shock_mix
+	var weakpoint_mix := (
+		STATUS_STACK_MIX[0] if enemy.mystery_weakpoint_remaining > 0.0 else 0.0
+	)
+	var total_mix := toxin_mix + cryo_mix + shock_mix + weakpoint_mix
 	if total_mix <= 0.0:
 		return Color.TRANSPARENT
 	var toxin_color := Color(Art.TOXIN, 1.0)
 	var cryo_color := Color(Art.CRYO, 1.0)
 	var shock_color := Color(Art.ARC, 1.0)
+	var weakpoint_color := Color(Art.DANGER, 1.0)
 	var semantic_color := Color(
-		(toxin_color.r * toxin_mix + cryo_color.r * cryo_mix + shock_color.r * shock_mix) / total_mix,
-		(toxin_color.g * toxin_mix + cryo_color.g * cryo_mix + shock_color.g * shock_mix) / total_mix,
-		(toxin_color.b * toxin_mix + cryo_color.b * cryo_mix + shock_color.b * shock_mix) / total_mix,
-		maxf(toxin_mix, maxf(cryo_mix, shock_mix))
+		(toxin_color.r * toxin_mix + cryo_color.r * cryo_mix + shock_color.r * shock_mix + weakpoint_color.r * weakpoint_mix) / total_mix,
+		(toxin_color.g * toxin_mix + cryo_color.g * cryo_mix + shock_color.g * shock_mix + weakpoint_color.g * weakpoint_mix) / total_mix,
+		(toxin_color.b * toxin_mix + cryo_color.b * cryo_mix + shock_color.b * shock_mix + weakpoint_color.b * weakpoint_mix) / total_mix,
+		maxf(weakpoint_mix, maxf(toxin_mix, maxf(cryo_mix, shock_mix)))
 	)
 	return semantic_color
 
@@ -1941,6 +1954,19 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			Vector2.ONE * MYSTERY_DEVICE_VISUAL_RADIUS,
 			Color.WHITE
 		)
+		var revealed_outcome := StringName(device.get("revealed_outcome", &""))
+		var symbol_descriptor := StringName({
+			&"gravity_pull": &"mystery_device_gravity",
+			&"cryo_lock": &"mystery_device_cryo",
+			&"weakpoint_expose": &"mystery_device_weakpoint",
+		}.get(revealed_outcome, &""))
+		var symbol_asset := StringName(
+			WorldCatalog.world_object_descriptor(symbol_descriptor).get("asset", &"")
+		)
+		if symbol_asset != &"":
+			# Semantic texture draws receive a half-size radius; this yields the
+			# required 72-world-unit symbol canvas.
+			_queue_semantic_texture(symbol_asset, position, 0.0, 36.0, Color.WHITE)
 
 
 static func _stable_interaction_phase(identity: Variant) -> float:
@@ -1971,17 +1997,17 @@ func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 	for effect_variant in effects_variant:
 		var effect := Dictionary(effect_variant)
 		var effect_id := StringName(effect.get("effect_id", &""))
-		if effect_id not in [&"gravity_pull", &"cryo_lock", &"decoy_signal"]:
+		if effect_id not in [&"gravity_pull", &"cryo_lock", &"weakpoint_expose"]:
 			continue
 		var position := Vector2(effect.get("position", Vector2.ZERO))
 		var radius := float(effect.get("radius", 0.0))
 		if radius <= 0.0 or not visible_world.grow(radius).has_point(position):
 			continue
-		var color := Art.CRYO if effect_id == &"cryo_lock" else Art.SYSTEM
+		var color := Art.CRYO if effect_id == &"cryo_lock" else (Art.DANGER if effect_id == &"weakpoint_expose" else Art.SYSTEM)
 		var body_alpha := (
 			0.12
 			if effect_id == &"cryo_lock"
-			else (0.10 if effect_id == &"gravity_pull" else 0.08)
+			else 0.10
 		)
 		_write_disk(position, radius, Color(color, body_alpha))
 		_write_instance(
@@ -2025,18 +2051,18 @@ func _draw_semantic_texture(texture_draw: SemanticTextureDraw) -> void:
 	var scale := texture_draw.radius / (
 		maxf(spec.canvas.x, spec.canvas.y) * 0.5
 	)
-	draw_set_transform(
+	_semantic_texture_layer.draw_set_transform(
 		texture_draw.position,
 		texture_draw.angle,
 		Vector2.ONE
 	)
-	draw_texture_rect(
+	_semantic_texture_layer.draw_texture_rect(
 		spec.texture,
 		Rect2(-spec.pivot * scale, spec.canvas * scale),
 		false,
 		texture_draw.modulate
 	)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_semantic_texture_layer.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _semantic_texture_spec(

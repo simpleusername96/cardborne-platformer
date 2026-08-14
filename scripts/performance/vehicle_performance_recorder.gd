@@ -155,6 +155,10 @@ func finish(
 		hud_stats
 	)
 	var build_identity := BuildIdentity.evidence_identity()
+	var workload_fingerprint := int(validation.get(
+		"workload_fingerprint",
+		validation.get("fixture_fingerprint", 0)
+	))
 	var authoritative := (
 		warmup_seconds >= 10.0
 		and sample_seconds >= 60.0
@@ -179,6 +183,12 @@ func finish(
 			"gpu_render_ms": _optional_viewport_time(viewport, false),
 		},
 		"build_identity": build_identity,
+		"diagnostic_capacity": {
+			"diagnostic_only": bool(validation.get("diagnostic_only", false)),
+			"exact_ordinary_count": int(validation.get("exact_ordinary_count", -1)),
+			"authored_reserve": int(validation.get("authored_reserve", -1)),
+			"workload_fingerprint": workload_fingerprint,
+		},
 		"provenance": {
 			"schema_version": 1,
 			"artifact_kind": "synthetic_performance",
@@ -186,10 +196,7 @@ func finish(
 			"command": OS.get_cmdline_args(),
 			"scenario": String(scenario_id),
 			"seed": 0xC4A2B0,
-			"workload_fingerprint": int(validation.get(
-				"workload_fingerprint",
-				validation.get("fixture_fingerprint", 0)
-			)),
+			"workload_fingerprint": workload_fingerprint,
 			"warmup_seconds": warmup_seconds,
 			"sample_seconds": sample_seconds,
 			"scenario_valid": bool(validation.get("valid", false)),

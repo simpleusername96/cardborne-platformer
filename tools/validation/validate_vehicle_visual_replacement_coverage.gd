@@ -43,8 +43,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 80,
-		"gameplay manifest declares 77 semantic PNGs plus three approved SurfaceDetail SVGs"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 83,
+		"gameplay manifest declares 80 semantic PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(
@@ -55,7 +55,7 @@ func _initialize() -> void:
 	for asset_variant in Array(gameplay_manifest.get("assets", [])):
 		if StringName(Dictionary(asset_variant).get("category", &"")) == &"world":
 			world_asset_count += 1
-	_expect(world_asset_count == 18, "gameplay manifest declares fifteen world PNGs and three SurfaceDetail SVGs")
+	_expect(world_asset_count == 21, "gameplay manifest declares eighteen world PNGs and three SurfaceDetail SVGs")
 	_validate_active_world_catalog()
 	_expect(
 		not gameplay_manifest.has("animations"),
@@ -92,6 +92,7 @@ func _validate_active_world_catalog() -> void:
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
 	var expected := [
 		&"mystery_device_intact", &"mystery_device_resolved",
+		&"mystery_device_gravity", &"mystery_device_cryo", &"mystery_device_weakpoint",
 		&"transit_gate",
 	]
 	var matches := active_ids.size() == expected.size()

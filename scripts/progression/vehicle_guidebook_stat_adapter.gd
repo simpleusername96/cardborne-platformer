@@ -207,7 +207,11 @@ static func object_rows(
 				)
 				result.append(_row(
 					"MYSTERY_OUTCOME_%s" % String(outcome).to_upper(),
-					"GUIDE_VALUE_ANOMALY_PROFILE",
+					(
+						"GUIDE_VALUE_ANOMALY_WEAKPOINT"
+						if outcome == &"weakpoint_expose"
+						else "GUIDE_VALUE_ANOMALY_PROFILE"
+					),
 					[roundi(float(profile["radius"])), float(profile["duration"])],
 					&"effect"
 				))

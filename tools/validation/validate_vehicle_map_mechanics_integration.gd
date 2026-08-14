@@ -50,7 +50,7 @@ func _configure_devices(run, outcomes: Array[StringName]) -> Array:
 
 
 func _validate_device_collision_and_damage_authority(run) -> void:
-	var devices := _configure_devices(run, [&"gravity_pull", &"cryo_lock", &"decoy_signal"])
+	var devices := _configure_devices(run, [&"gravity_pull", &"cryo_lock", &"weakpoint_expose"])
 	_expect(devices.size() == 3, "live run configures three mystery devices")
 	var outcomes: Dictionary = {}
 	for device in devices:
@@ -89,7 +89,7 @@ func _append_enemy(run, archetype: StringName, id: String, position: Vector2):
 
 func _validate_effect_targeting(run) -> void:
 	run.call("_clear_enemies")
-	var devices := _configure_devices(run, [&"cryo_lock", &"gravity_pull", &"decoy_signal"])
+	var devices := _configure_devices(run, [&"cryo_lock", &"gravity_pull", &"weakpoint_expose"])
 	var center := Vector2(devices[0]["position"])
 	var movable = _append_enemy(run, &"chaser", "validation_cryo_movable", center + Vector2(120.0, 0.0))
 	var startup = _append_enemy(run, &"chaser", "validation_cryo_startup", center + Vector2(160.0, 0.0))
@@ -111,7 +111,7 @@ func _validate_effect_targeting(run) -> void:
 	_expect(startup.stun == 0.0 and startup.velocity == Vector2(10.0, 0.0), "cryo preserves warned startup attacks")
 
 	run.call("_clear_enemies")
-	devices = _configure_devices(run, [&"gravity_pull", &"decoy_signal", &"cryo_lock"])
+	devices = _configure_devices(run, [&"gravity_pull", &"weakpoint_expose", &"cryo_lock"])
 	center = Vector2(devices[0]["position"])
 	var ordinary = _append_enemy(run, &"chaser", "validation_gravity_ordinary", center + Vector2(300.0, 0.0))
 	var boss = _append_enemy(run, &"stage_boss", "validation_gravity_boss", center + Vector2(300.0, 80.0))
@@ -125,32 +125,34 @@ func _validate_effect_targeting(run) -> void:
 	_expect(boss.pos == boss_before and structure.pos == structure_before, "gravity pull ignores bosses and structures")
 
 	run.call("_clear_enemies")
-	devices = _configure_devices(run, [&"decoy_signal", &"gravity_pull", &"cryo_lock"])
+	devices = _configure_devices(run, [&"weakpoint_expose", &"gravity_pull", &"cryo_lock"])
 	center = Vector2(devices[0]["position"])
-	ordinary = _append_enemy(run, &"chaser", "validation_decoy_ordinary", center + Vector2(300.0, 0.0))
-	boss = _append_enemy(run, &"stage_boss", "validation_decoy_boss", center + Vector2(300.0, 80.0))
-	structure = _append_enemy(run, &"generator", "validation_decoy_structure", center + Vector2(300.0, -80.0))
+	ordinary = _append_enemy(run, &"chaser", "validation_weakpoint_ordinary", center + Vector2(300.0, 0.0))
+	boss = _append_enemy(run, &"stage_boss", "validation_weakpoint_boss", center + Vector2(300.0, 80.0))
+	structure = _append_enemy(run, &"generator", "validation_weakpoint_structure", center + Vector2(300.0, -80.0))
 	boss_before = boss.pos
 	structure_before = structure.pos
 	run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"direct", center, Color.WHITE, Vector2.RIGHT)
 	run.call("_prepare_mystery_device_effects", 0.1)
-	run.call("_refresh_enemy_presentation_facing", ordinary)
-	_expect(
-		ordinary.presentation_facing.is_equal_approx((center - ordinary.pos).normalized()),
-		"decoy signal publishes its redirected target through enemy facing"
-	)
 	var ordinary_before: Vector2 = ordinary.pos
 	run.call("_move_enemy_role", ordinary, 0.1, false, true)
 	_expect(
-		ordinary.pos.distance_to(center) < ordinary_before.distance_to(center),
-		"decoy signal steers ordinary enemies toward its anchor"
+		ordinary.pos.distance_to(center) >= ordinary_before.distance_to(center),
+		"weakpoint leaves ordinary movement unchanged"
 	)
-	run.call("_start_enemy_attack", ordinary)
+	var ordinary_health_before: float = ordinary.health
+	run.call("_damage_enemy", ordinary, 10.0, "validation", &"kinetic", true)
 	_expect(
-		ordinary.committed_target == center,
-		"decoy signal redirects a fresh enemy attack toward its anchor"
+		is_equal_approx(ordinary_health_before - ordinary.health, 12.5),
+		"weakpoint multiplies player-owned ordinary damage by exactly 1.25"
 	)
-	_expect(boss.pos == boss_before and structure.pos == structure_before, "decoy signal ignores bosses and structures")
+	_expect(
+		boss.pos == boss_before
+		and structure.pos == structure_before
+		and boss.mystery_weakpoint_remaining == 0.0
+		and structure.mystery_weakpoint_remaining == 0.0,
+		"weakpoint excludes bosses and structures"
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

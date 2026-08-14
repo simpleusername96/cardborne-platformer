@@ -5,7 +5,7 @@ owner: BK
 created: 2026-08-14
 last_reviewed: 2026-08-14
 topic: Transit Gate clean-edge replacement candidate
-scope: Review-only 192x192 transparent PNG replacement awaiting exact user approval
+scope: User-approved 192x192 transparent PNG replacement promoted byte-for-byte
 source: User request to preserve the current Transit Gate identity while removing its uneven edge
 related:
   - ../../../VISUAL_SYSTEM.md
@@ -47,7 +47,9 @@ and footprint while removing the visibly uneven outer contour.
 - [`comparison.png`](./comparison.png) shows the current and candidate assets at
   the same 192x192 scale. [`grayscale-comparison.png`](./grayscale-comparison.png)
   confirms the ring remains legible without color.
-- The candidate remains outside production and is not yet approved for switch.
+- BK explicitly approved the V2 comparison on 2026-08-14. The candidate was
+  copied byte-for-byte over the production Transit Gate target; its production
+  SHA-256 matches the record below.
 
 ## Candidate Record
 
@@ -66,10 +68,8 @@ Retained generation-source hashes:
 
 ## Recommendations
 
-- Obtain exact user approval from the AS-IS/TO-BE comparison before replacing
-  `art/visuals/production/gameplay/world/facility_transit_gate.png`.
-- On approval, preserve the existing 192x192 canvas, pivot, semantic ID, runtime
-  footprint, Transit Gate behavior, and guidebook ownership.
+- Preserve the existing 192x192 canvas, pivot, semantic ID, runtime footprint,
+  Transit Gate behavior, and guidebook ownership.
 
 ## Limitations
 

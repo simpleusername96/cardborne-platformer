@@ -43,8 +43,8 @@ func _validate_configure_and_hidden_outcomes() -> void:
 	)
 	var explicit := Runtime.new()
 	explicit.configure([
-		{"id":&"a", "position":Vector2.ZERO, "outcome":&"decoy_signal"},
-		{"id":&"b", "position":Vector2(1.0, 0.0), "outcome":&"decoy_signal"},
+		{"id":&"a", "position":Vector2.ZERO, "outcome":&"weakpoint_expose"},
+		{"id":&"b", "position":Vector2(1.0, 0.0), "outcome":&"weakpoint_expose"},
 		{"id":&"c", "position":Vector2(2.0, 0.0)},
 	], 1, &"stage_1")
 	var outcome_ids: Dictionary = {}
@@ -55,14 +55,15 @@ func _validate_configure_and_hidden_outcomes() -> void:
 		Runtime.OUTCOME_IDS.size() == 3
 		and Runtime.OUTCOME_IDS.has(&"gravity_pull")
 		and Runtime.OUTCOME_IDS.has(&"cryo_lock")
-		and Runtime.OUTCOME_IDS.has(&"decoy_signal"),
-		"each stage has exactly Gravity, Cryo, and Decoy outcomes"
+		and Runtime.OUTCOME_IDS.has(&"weakpoint_expose"),
+		"each stage has exactly Gravity, Cryo, and Weakpoint outcomes"
 	)
 	_expect(
 		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity_pull"]["duration"]), 5.0)
 		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo_lock"]["duration"]), 3.0)
-		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"decoy_signal"]["duration"]), 6.0),
-		"mystery outcomes retain the authored 5/3/6 second durations"
+		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint_expose"]["duration"]), 5.0)
+		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint_expose"]["radius"]), 420.0),
+		"mystery outcomes retain the authored 5/3/5 second durations and 420 Weakpoint radius"
 	)
 
 
@@ -142,7 +143,7 @@ func _validate_hot_path_queries_and_reused_output() -> void:
 	var runtime := Runtime.new()
 	runtime.configure([
 		{"id":&"near", "pos":Vector2(200.0, 0.0), "outcome":&"gravity_pull"},
-		{"id":&"far", "pos":Vector2(400.0, 0.0), "outcome":&"decoy_signal"},
+		{"id":&"far", "pos":Vector2(400.0, 0.0), "outcome":&"weakpoint_expose"},
 		{"id":&"side", "pos":Vector2(400.0, 400.0), "outcome":&"cryo_lock"},
 	], 9, &"stage_3")
 	_expect(not runtime.is_position_clear(Vector2(116.0, 0.0), 0.0), "actor position collision detects intact device")
@@ -175,7 +176,7 @@ func _validate_hot_path_queries_and_reused_output() -> void:
 func _blueprint() -> Array:
 	return [
 		{"id":&"a", "pos":Vector2(100.0, 200.0), "outcome":&"gravity_pull"},
-		{"id":&"b", "pos":Vector2(300.0, 400.0), "outcome":&"decoy_signal"},
+		{"id":&"b", "pos":Vector2(300.0, 400.0), "outcome":&"weakpoint_expose"},
 		{"id":&"c", "position":Vector2(500.0, 600.0), "outcome":&"cryo_lock"},
 	]
 

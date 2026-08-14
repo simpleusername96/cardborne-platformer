@@ -291,14 +291,13 @@ var _mystery_device_hit_receipt: Dictionary = {}
 var _mystery_device_snapshot_buffer: Array[Dictionary] = []
 var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
 var _mystery_retired_event_buffer: Array[Dictionary] = []
-var _mystery_decoy_targets: Dictionary = {}
 var _mystery_device_result_receipt: Dictionary = {}
 var _mystery_gravity_members: Array[EnemyState] = []
 var _mystery_cryo_members: Array[EnemyState] = []
-var _mystery_decoy_members: Array[EnemyState] = []
+var _mystery_weakpoint_members: Array[EnemyState] = []
 var _mystery_gravity_refresh_remaining := 0.0
 var _mystery_cryo_refresh_remaining := 0.0
-var _mystery_decoy_refresh_remaining := 0.0
+var _mystery_weakpoint_refresh_remaining := 0.0
 var _runtime_fast_hud_frame: Dictionary = {}
 var _runtime_minimap_frames: Array[Dictionary] = []
 var _runtime_minimap_visited_buffers: Array = []
@@ -1249,15 +1248,14 @@ func _configure_stage_local_runtime() -> void:
 		current_stage_id
 	)
 	_refresh_pressure_observation_mode()
-	_mystery_decoy_targets.clear()
 	_mystery_device_result_receipt.clear()
 	_reset_stage_diagnostic_signals()
 	_mystery_gravity_members.clear()
 	_mystery_cryo_members.clear()
-	_mystery_decoy_members.clear()
+	_mystery_weakpoint_members.clear()
 	_mystery_gravity_refresh_remaining = 0.0
 	_mystery_cryo_refresh_remaining = 0.0
-	_mystery_decoy_refresh_remaining = 0.0
+	_mystery_weakpoint_refresh_remaining = 0.0
 
 
 func _populate_stage_items() -> void:
@@ -2650,6 +2648,10 @@ func _update_enemies(
 			enemy.mystery_cryo_remaining = maxf(
 				0.0, enemy.mystery_cryo_remaining - delta
 			)
+		if enemy.mystery_weakpoint_remaining > 0.0:
+			enemy.mystery_weakpoint_remaining = maxf(
+				0.0, enemy.mystery_weakpoint_remaining - delta
+			)
 		var health_visible_timer := enemy.health_visible_timer
 		if health_visible_timer > 0.0:
 			enemy.health_visible_timer = maxf(0.0, health_visible_timer - delta)
@@ -2782,7 +2784,6 @@ func _prepare_mystery_device_effects(delta: float) -> void:
 	mystery_device_runtime.fill_active_effect_snapshot(
 		_mystery_effect_snapshot_buffer
 	)
-	_mystery_decoy_targets.clear()
 	for effect in _mystery_effect_snapshot_buffer:
 		var effect_id := StringName(effect["effect_id"])
 		var center := Vector2(effect["position"])
@@ -2794,8 +2795,8 @@ func _prepare_mystery_device_effects(delta: float) -> void:
 		match effect_id:
 			&"cryo_lock":
 				members = _mystery_cryo_members
-			&"decoy_signal":
-				members = _mystery_decoy_members
+			&"weakpoint_expose":
+				members = _mystery_weakpoint_members
 			_:
 				continue
 		for enemy in members:
@@ -2815,9 +2816,11 @@ func _prepare_mystery_device_effects(delta: float) -> void:
 					if enemy.phase not in [&"startup", &"active"]:
 						enemy.stun = maxf(enemy.stun, delta + 0.001)
 						enemy.velocity = Vector2.ZERO
-				&"decoy_signal":
-					if enemy.phase not in [&"startup", &"active"]:
-						_mystery_decoy_targets[enemy.id] = center
+				&"weakpoint_expose":
+					enemy.mystery_weakpoint_remaining = maxf(
+						enemy.mystery_weakpoint_remaining,
+						float(effect["remaining_seconds"])
+					)
 
 
 func _apply_mystery_device_forced_motion(delta: float) -> void:
@@ -2853,9 +2856,9 @@ func _refresh_mystery_effect_membership(
 		&"cryo_lock":
 			members = _mystery_cryo_members
 			refresh_remaining = _mystery_cryo_refresh_remaining
-		&"decoy_signal":
-			members = _mystery_decoy_members
-			refresh_remaining = _mystery_decoy_refresh_remaining
+		&"weakpoint_expose":
+			members = _mystery_weakpoint_members
+			refresh_remaining = _mystery_weakpoint_refresh_remaining
 		_:
 			return
 	refresh_remaining -= maxf(0.0, delta)
@@ -2879,8 +2882,8 @@ func _refresh_mystery_effect_membership(
 			_mystery_gravity_refresh_remaining = refresh_remaining
 		&"cryo_lock":
 			_mystery_cryo_refresh_remaining = refresh_remaining
-		&"decoy_signal":
-			_mystery_decoy_refresh_remaining = refresh_remaining
+		&"weakpoint_expose":
+			_mystery_weakpoint_refresh_remaining = refresh_remaining
 
 
 func _clear_mystery_effect_membership(effect_id: StringName) -> void:
@@ -2891,9 +2894,9 @@ func _clear_mystery_effect_membership(effect_id: StringName) -> void:
 		&"cryo_lock":
 			_mystery_cryo_members.clear()
 			_mystery_cryo_refresh_remaining = 0.0
-		&"decoy_signal":
-			_mystery_decoy_members.clear()
-			_mystery_decoy_refresh_remaining = 0.0
+		&"weakpoint_expose":
+			_mystery_weakpoint_members.clear()
+			_mystery_weakpoint_refresh_remaining = 0.0
 
 
 func _steer_enemy_toward_mystery_anchor(
@@ -3035,7 +3038,7 @@ func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
 	if enemy.phase in [&"startup", &"active", &"boss_startup", &"boss_active"]:
 		facing = enemy.committed_dir
 	else:
-		facing = _mystery_enemy_target(enemy) - enemy.pos
+		facing = player_position - enemy.pos
 	if not facing.is_zero_approx():
 		enemy.presentation_facing = facing.normalized()
 
@@ -3466,7 +3469,7 @@ func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
 
 func _enemy_can_attack(enemy: EnemyState) -> bool:
 	var role := enemy.role
-	var target := _mystery_enemy_target(enemy)
+	var target := player_position
 	var distance := enemy.pos.distance_to(target)
 	match role:
 		&"chaser":
@@ -3502,7 +3505,7 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 
 func _start_enemy_attack(enemy: EnemyState) -> void:
 	var role := enemy.role
-	var pressure_focus := _mystery_enemy_target(enemy)
+	var pressure_focus := player_position
 	var attack := AttackContract.ordinary_attack(role)
 	var startup := 0.0
 	var attack_speed := 0.0
@@ -3529,8 +3532,7 @@ func _start_enemy_attack(enemy: EnemyState) -> void:
 		pressure_focus,
 		player_velocity,
 		startup,
-		attack_speed,
-		_mystery_decoy_targets.has(enemy.id)
+		attack_speed
 	)
 	if (
 		not target.is_equal_approx(pressure_focus)
@@ -3789,7 +3791,7 @@ func _desired_enemy_velocity(
 	recovering: bool
 ) -> Vector2:
 	var position := enemy.pos
-	var pressure_focus := _mystery_enemy_target(enemy)
+	var pressure_focus := player_position
 	var movement_family := enemy.movement_family
 	if movement_family.is_empty():
 		movement_family = EnemyMovementPolicy.family(enemy.archetype, enemy.role)
@@ -3800,11 +3802,10 @@ func _desired_enemy_velocity(
 		position,
 		pressure_focus,
 		player_velocity,
-		enemy.speed,
-		_mystery_decoy_targets.has(enemy.id)
+		enemy.speed
 	)
 	var engagement_focus := false
-	if enemy.engagement_active and enemy.phase == &"move" and not recovering and not _mystery_decoy_targets.has(enemy.id):
+	if enemy.engagement_active and enemy.phase == &"move" and not recovering:
 		if enemy.pos.distance_to(enemy.engagement_gate) <= 96.0:
 			_release_enemy_engagement(enemy, &"complete")
 		elif encounter_runtime.elapsed >= enemy.engagement_expiry:
@@ -3857,7 +3858,7 @@ func _desired_enemy_velocity(
 		movement_path_blocked,
 		line_recovery
 	)
-	if route_requested and not _mystery_decoy_targets.has(enemy.id):
+	if route_requested:
 		var pursuit_started := (
 			Time.get_ticks_usec() if _performance_detail_sample_active else 0
 		)
@@ -4618,6 +4619,8 @@ func _damage_enemy(
 		)
 	var role := enemy.role
 	var multiplier := 1.0
+	if not final_effective and player_owned and enemy.mystery_weakpoint_remaining > 0.0:
+		multiplier *= 1.25
 	if not final_effective and enemy.shielded:
 		multiplier *= SpecialistRuntime.SHIELDED_RECEIVED_DAMAGE_MULTIPLIER
 	if not final_effective and role == &"rammer" and enemy.vulnerable > 0.0:
@@ -4726,12 +4729,6 @@ func _apply_player_recovery(gross_recovery: float) -> float:
 		player_barrier_strength += split.y
 		player_barrier_timer = PlayerRecoveryPolicy.BARRIER_DURATION
 	return split.z
-
-
-func _mystery_enemy_target(enemy: EnemyState) -> Vector2:
-	if _mystery_decoy_targets.is_empty():
-		return player_position
-	return Vector2(_mystery_decoy_targets.get(enemy.id, player_position))
 
 
 func _enemy_attack_line_padding(enemy: EnemyState) -> float:
@@ -5203,7 +5200,7 @@ func _mystery_outcome_key(effect_id: StringName) -> String:
 	return String({
 		&"gravity_pull":"MYSTERY_OUTCOME_GRAVITY_PULL",
 		&"cryo_lock":"MYSTERY_OUTCOME_CRYO_LOCK",
-		&"decoy_signal":"MYSTERY_OUTCOME_DECOY_SIGNAL",
+		&"weakpoint_expose":"MYSTERY_OUTCOME_WEAKPOINT_EXPOSE",
 	}.get(effect_id, ""))
 
 
@@ -5212,7 +5209,7 @@ func _count_mystery_effect_targets(
 	center: Vector2,
 	radius: float
 ) -> int:
-	if effect_id not in [&"gravity_pull", &"cryo_lock", &"decoy_signal"]:
+	if effect_id not in [&"gravity_pull", &"cryo_lock", &"weakpoint_expose"]:
 		return 0
 	var count := 0
 	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)

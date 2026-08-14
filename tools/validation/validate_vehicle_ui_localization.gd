@@ -189,7 +189,8 @@ func _initialize() -> void:
 			"obsolete user-facing localization key is removed: %s" % removed_key
 		)
 	_expect(
-		run_source.count("_ui.notify(") == 6,
+		run_source.count("_ui.notify(")
+			+ run_source.count("_ui.notify_immediate(") == 6,
 		"gameplay runtime has exactly six essential notification producers"
 	)
 	for retained_key in [

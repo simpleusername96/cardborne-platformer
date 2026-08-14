@@ -5,7 +5,7 @@ owner: BK
 created: 2026-08-14
 last_reviewed: 2026-08-14
 topic: Anomaly Device revealed-state symbol candidates
-scope: Review-only Gravity Pull, Cryo Lock, and Weakpoint Expose PNG symbols awaiting exact user approval
+scope: User-approved Gravity Pull, Cryo Lock, and Weakpoint Expose PNG symbols promoted byte-for-byte
 source: User-selected replacement of Decoy Signal with Weakpoint Expose on 2026-08-14
 related:
   - ../../../VISUAL_SYSTEM.md
@@ -55,8 +55,9 @@ continues to communicate exact range and lifetime.
   verifies separation without hue. [`device-overlay-preview.png`](./device-overlay-preview.png)
   is a review-only placement of each already-authored symbol over the current
   neutral device; it is not a production composite.
-- The three candidates remain outside the gameplay manifest, semantic provider,
-  renderer, and production asset tree. They are not yet approved for promotion.
+- BK explicitly approved the V4 comparison on 2026-08-14. The candidates were
+  promoted byte-for-byte to the matching production world PNG targets; their
+  approved production SHA-256 values match the records below.
 
 ## Locked Product Semantics
 
@@ -111,11 +112,9 @@ inputs:
 
 ## Recommendations
 
-- Obtain exact user approval from the comparison and device-overlay preview
-  before copying any candidate into `art/visuals/production`.
-- On approval, register the three symbols as world-state semantic PNGs and
-  render exactly one centered 72-world-unit overlay after reveal. Preserve the
-  complete neutral device body and code-native effect footprint.
+- The production owner registers the three world-state semantic PNGs and renders
+  exactly one centered 72-world-unit overlay after reveal. Preserve the complete
+  neutral device body and code-native effect footprint.
 
 ## Limitations
 

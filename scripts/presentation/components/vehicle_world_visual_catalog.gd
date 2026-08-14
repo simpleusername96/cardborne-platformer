@@ -31,6 +31,15 @@ const WORLD_OBJECT_DESCRIPTORS := {
 		"shape": &"resolved_wreck",
 		"color": &"raised",
 	},
+	&"mystery_device_gravity": {
+		"asset": &"world/mystery_device_gravity", "kind": &"mystery_device_symbol", "shape": &"inward_arrows",
+	},
+	&"mystery_device_cryo": {
+		"asset": &"world/mystery_device_cryo", "kind": &"mystery_device_symbol", "shape": &"broad_snowflake",
+	},
+	&"mystery_device_weakpoint": {
+		"asset": &"world/mystery_device_weakpoint", "kind": &"mystery_device_symbol", "shape": &"opened_armor",
+	},
 }
 
 const SURFACE_DETAIL_DESCRIPTORS := {

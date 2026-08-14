@@ -36,6 +36,11 @@ func _run() -> void:
 		int(snapshot["allocated_instances"]) < int(snapshot["maximum_instances"]),
 		"component batches reserve bounded working buffers and retain their full growth ceiling"
 	)
+	var semantic_layer := renderer.get_node_or_null("SemanticTextureLayer") as Node2D
+	_expect(
+		semantic_layer != null and semantic_layer.z_index == 2,
+		"one shared semantic layer draws symbols above body batches without per-object nodes"
+	)
 	_expect(Art.validate_contract().is_empty(), "combat visual profile satisfies the locked readability contract")
 	_validate_primitive_batches(renderer)
 	_validate_emp_presentation(renderer)
@@ -133,6 +138,16 @@ func _run() -> void:
 			mystery_cryo_color.b
 		).distance_to(Vector3(Art.CRYO.r, Art.CRYO.g, Art.CRYO.b)) <= 0.001,
 		"Mystery Cryo uses the same exact-size blue enemy-body compositor"
+	)
+	var mystery_weakpoint_enemy := EnemyState.new()
+	mystery_weakpoint_enemy.mystery_weakpoint_remaining = 1.0
+	var mystery_weakpoint_color: Color = renderer.call(
+		"_enemy_status_custom_data", mystery_weakpoint_enemy, true
+	)
+	_expect(
+		mystery_weakpoint_color.a > 0.0
+		and Vector3(mystery_weakpoint_color.r, mystery_weakpoint_color.g, mystery_weakpoint_color.b).distance_to(Vector3(Art.DANGER.r, Art.DANGER.g, Art.DANGER.b)) <= 0.001,
+		"Mystery Weakpoint uses the same exact-size danger enemy-body compositor"
 	)
 	enemy.attack_telegraphs = [{
 		"shape":&"corridor",
@@ -1422,14 +1437,15 @@ func _validate_mystery_device_presentation(
 			"health":45.0,
 			"max_health":90.0,
 			"health_visible_timer":1.0,
+			"revealed_outcome":&"gravity_pull",
 		},
-		{"id":"device-b", "state":&"resolved", "visible":true, "position":resolved_position},
+		{"id":"device-b", "state":&"resolved", "visible":true, "position":resolved_position, "revealed_outcome":&"cryo_lock"},
 		{"id":"device-c", "state":&"retired", "visible":true, "position":Vector2(760.0, 260.0)},
 	]
 	presentation["mystery_effects"] = [
 		{"effect_id":&"gravity_pull", "position":device_position, "radius":480.0},
 		{"effect_id":&"cryo_lock", "position":resolved_position, "radius":360.0},
-		{"effect_id":&"decoy_signal", "position":Vector2(760.0, 260.0), "radius":900.0},
+		{"effect_id":&"weakpoint_expose", "position":Vector2(760.0, 260.0), "radius":420.0},
 	]
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
@@ -1478,11 +1494,22 @@ func _validate_mystery_device_presentation(
 		),
 		"mystery devices reuse one static reduced-motion silhouette contour"
 	)
+	var gravity_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
+	var cryo_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_cryo")
+	_expect(
+		gravity_symbols.size() == 1
+		and cryo_symbols.size() == 1
+		and Vector2(gravity_symbols[0]["position"]).is_equal_approx(device_position)
+		and Vector2(cryo_symbols[0]["position"]).is_equal_approx(resolved_position)
+		and is_equal_approx(float(gravity_symbols[0]["radius"]), 36.0)
+		and is_equal_approx(float(cryo_symbols[0]["radius"]), 36.0),
+		"revealed symbols retain their 72-world-unit canvas through resolved-state retirement"
+	)
 	_expect(
 		rings.z_index == -1
 			and rings.multimesh.visible_instance_count == 3
 			and disks.multimesh.visible_instance_count == 3,
-		"gravity, cryo, and decoy each publish one full body plus a boundary accent"
+		"gravity, cryo, and weakpoint each publish one full body plus a boundary accent"
 	)
 	var health_snapshot := renderer.debug_snapshot()
 	_expect(
@@ -1490,8 +1517,8 @@ func _validate_mystery_device_presentation(
 			and int(health_snapshot["health_bar_count"]) == 0,
 		"Anomaly Devices omit combat health bars"
 	)
-	var expected_radii := [480.0, 360.0, 900.0]
-	var expected_alphas := [0.10, 0.12, 0.08]
+	var expected_radii := [480.0, 360.0, 420.0]
+	var expected_alphas := [0.10, 0.12, 0.10]
 	for index in expected_radii.size():
 		var offset := index * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
 		_expect(

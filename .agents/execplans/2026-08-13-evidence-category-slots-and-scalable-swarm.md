@@ -528,8 +528,11 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
   - Change: copy authoritative pass/fail JSON and any diagnostic explicitly cited by a durable plan
     into `docs/performance/evidence/<evidence-id>.json`; keep routine logs, screenshots, invalid
     experiments, and repeated raw output ignored. The ledger hashes both tracked and local raw data.
-  - Accept: the latest `4f7f7acd` red result is imported with its original hash and an explicit
-    `authoritative_fail` status; its retained file remains readable without Actions artifacts.
+  - Accept: if the original `4f7f7acd` raw result is present, import it with its original hash and
+    explicit `authoritative_fail` status. If it remains unavailable, the final same-release-source
+    authority evidence records its own evidence ID, SHA-256 and full commit plus
+    `supersedes: 4f7f7acd historical checkpoint unavailable`; never reconstruct the missing bytes
+    from prose.
   - Guard: no bulk import of all 163 historical files and no CI retention increase.
 - [x] **1.4 Make all producers use the envelope.**
   - Change: synthetic recorder, manual wrapper, capture manifest, Web build info, and evidence
@@ -656,7 +659,7 @@ recorder, scenario fixtures, engagement telemetry, and their validators
     boss-warning, boss-active, boss-defeat, and three-second post-boss checkpoints.
   - Accept: the baseline demonstrates current behavior without using the stage-5 steady-state
     `production_replay` as proof of opening or boss pacing. Capture output is one session/evidence ID.
-- [ ] **3.4 Record clean performance and UI/Anomaly baselines.**
+- [x] **3.4 Record clean performance and UI/Anomaly baselines.**
   - Change: run one 10-second warmup plus 30-second diagnostic `production_replay` at `1280x720`,
     native Compatibility, cap 48. Record Upgrade decision fixture, announcement burst fixture, and
     each current Anomaly outcome under the same schema family.
@@ -709,13 +712,17 @@ and enemy store
     cadence until parity proves a safe index.
   - Accept: normal play performs no diagnostic pressure scan; authoritative cap/admission/commit
     counts remain exact; pressure signals keep their schema/cadence when recording is enabled.
-- [ ] **4.5 Make pursuit rebuild cost explicit and phase-bounded when selected.**
+- [x] **4.5 Make pursuit rebuild cost explicit and phase-bounded when selected.**
   - Change: preserve exact walkability and the `0.20s` refresh contract, but give each rebuild a hard
     per-tick work budget and stable phase that does not coincide with session sampling or the largest
     ordinary-decision group. Never discard a pending player target. Record `not selected` if receipts
     do not choose this owner.
   - Accept: reachability/direction oracles pass and top-32 receipts contain no pursuit burst above its
     selected budget.
+  - Result: not selected. The clean cap-48 deep-pursuit diagnostic reports p95/p99
+    `0.969/1.339 ms`; the current owner already preserves the `0.20s` refresh, pending target and a
+    hard `512`-cell-per-tick budget. The larger selected costs remain scheduled ordinary/enemy work,
+    so adding another pursuit phase owner would not satisfy the candidate gate.
 - [x] **4.6 Snapshot only live local-overlap members when selected.**
   - Change: maintain a compact active-slot list on membership changes and snapshot only those slots;
     rebuild only marked owner rows. Keep exact distance/body predicates, stable tie order, maximum
@@ -764,7 +771,7 @@ capture/workbench, and focused validators
   - Accept: Gravity/Cryo state and footprints retire on the same tick; boss/fixed-structure
     exclusions remain; no purge event/asset/string/capture branch remains; five-second Gravity adds
     no per-tick allocation or unbounded radius scan.
-- [ ] **5.2 Replace Decoy Signal with Weakpoint Expose.**
+- [x] **5.2 Replace Decoy Signal with Weakpoint Expose.**
   - Change: update `VehicleMysteryDeviceRuntime.OUTCOME_IDS` and `OUTCOME_PROFILE` to
     `weakpoint_expose` at radius `420` for `5.0s`. Replace VehicleRun's `_mystery_decoy_*` target and
     membership state with a reused Weakpoint membership buffer. Add and pool-reset
@@ -793,9 +800,10 @@ capture/workbench, and focused validators
     grayscale; the gate is a smooth uniform circle at 192x192; all candidates have transparent alpha,
     recorded hashes, canonical-reference evidence, and remain outside production. Evidence passed on
     2026-08-14; production approval is intentionally separate.
-- [ ] **5.4 Obtain exact approval and promote the four PNGs.**
+- [x] **5.4 Obtain exact approval and promote the four PNGs.**
   - Change: present `device-overlay-preview.png`, Anomaly full/runtime/grayscale comparisons, and the
-    Transit Gate AS-IS/TO-BE comparison. After explicit user approval, copy the three symbols to
+    Transit Gate AS-IS/TO-BE comparison. The user explicitly approved both complete comparison sets
+    on 2026-08-14. Copy the three symbols to
     `art/visuals/production/gameplay/world/mystery_device_gravity.png`,
     `art/visuals/production/gameplay/world/mystery_device_cryo.png`, and
     `art/visuals/production/gameplay/world/mystery_device_weakpoint.png`; replace
@@ -806,7 +814,7 @@ capture/workbench, and focused validators
   - Accept: approved bytes and ledger hashes match production exactly; the three new symbol IDs and
     existing Transit Gate ID resolve once; the manifest contains 80 semantic PNGs plus three approved
     SurfaceDetail SVGs; rejected/intermediate/chroma files remain outside production.
-- [ ] **5.5 Integrate revealed symbols, Weakpoint feedback, and the clean Gate.**
+- [x] **5.5 Integrate revealed symbols, Weakpoint feedback, and the clean Gate.**
   - Change: keep the intact/resolved body batches and render exactly one approved symbol centered at
     72 world units after first-hit reveal through active-effect retirement. Reuse the existing enemy
     status compositor for a restrained same-size Weakpoint danger layer. Keep the full code-native
@@ -849,13 +857,15 @@ without changing the shipping balance.
 
 Preconditions:
 
-- The cap-48 authoritative gate passes.
+- Tasks through 6.1 and the final focused source batch pass. Run the clean cap-48 native authority
+  gate from the release-source commit before starting the staircase; that one result also satisfies
+  Task 7.2. Do not rerun it after the staircase unless a release-source input changes.
 - No design, capture, export, browser, or unrelated Godot process contaminates timing.
 
 Source owners: performance scenario overrides and evidence ledger only; production stage caps remain
 unchanged
 
-- [ ] **6.1 Add non-shipping exact-cap overrides.**
+- [x] **6.1 Add non-shipping exact-cap overrides.**
   - Change: performance scenario can request 48, 64, 96, or 128 exact ordinary actors while keeping
     the same role mix, deterministic seed, combat truth, viewport, and timing gates. The override is
     unreachable from normal play and excluded from saved product data.
@@ -883,20 +893,23 @@ Goal: prove the corrected source behaves in the local editor/runtime and in both
 
 Preconditions:
 
-- Phases 1-5 pass and Phase 6 passes or stops normally after recording the capacity boundary.
-- All source, UI, documentation, and evidence changes are committed; worktree source is clean.
+- Phases 1-5 and Task 6.1 pass. Run 7.1 and 7.2 first; their clean release-source checkpoint unlocks
+  Tasks 6.2-6.3, followed by 7.3-7.4. This dependency order avoids a second unchanged authority run.
+- All release source, UI and runtime documentation changes are committed; worktree source is clean.
+  Staircase and authority evidence are appended afterward without changing the release-source tree.
 
 Source owners: focused validators, capture driver, `tools/export_web.ps1`, export preset, GitHub
 workflow, evidence ledger, deployment build info
 
-- [ ] **7.1 Run the final focused and integration batches.**
+- [x] **7.1 Run the final focused and integration batches.**
   - Change: run affected performance, evidence/session, encounter opening/boss/continuity, pursuit,
     schedule, spatial, combat, Anomaly, upgrade, result, HUD, localization, accessibility, capture,
     asset, and document-authority validators; then headless import and diff checks.
   - Accept: all pass with no parser error or new warning attributable to this work.
 - [ ] **7.2 Run final native authority once.**
-  - Change: on the final clean commit, run the 10-second warmup plus 60-second cap-48
-    `production_replay`; promote raw JSON and ledger entry.
+  - Change: on the final clean release-source commit, run the 10-second warmup plus 60-second cap-48
+    `production_replay`; preserve raw JSON for later promotion and ledger entry. This result is also
+    the Phase 6 cap-48 prerequisite and is not repeated when the source tree is unchanged.
   - Accept: scenario/authority/count checks pass; physics p95/p99 pass `6/8 ms`; frame, render,
     memory, draw-call, and batch gates pass.
 - [ ] **7.3 Export and test the built Web game.**
@@ -909,7 +922,8 @@ workflow, evidence ledger, deployment build info
     pass with no console/runtime error. A headless, hidden, throttled, or incomplete run is diagnostic
     only and cannot satisfy this task.
 - [ ] **7.4 Verify GitHub Pages and itch.io from the same build.**
-  - Change: deploy only after 7.1-7.3 pass. Verify both public surfaces report the same commit/build
+  - Change: deploy only after 7.1-7.3 pass. Deploy the exact release-source commit qualified by 7.2
+    and verify both public surfaces report the same commit/build
     hash and complete a short manual combat smoke including early visibility, boss overlap or its
     deterministic fixture, Upgrade category slots, Anomaly/messages/motion, diagnostics export, and
     Result.
@@ -920,9 +934,12 @@ Final gate:
 
 - Run the diff-scoped codebase-quality audit. Correct only small task-owned ownership, unreachable
   failure, competing-owner, or contract gaps.
-- Update durable product/visual/performance specs and the evidence ledger. Mark this plan `done` only
-  when final source commit, evidence IDs, native result, built-Web result, and both deployment hashes
-  are recorded.
+- After public verification, append durable product/visual/performance findings, promoted evidence,
+  ledger rows and final plan state in one record-only commit. That commit may follow the deployed
+  release-source commit because evidence cannot include its own future commit hash. Do not rebuild or
+  redeploy the unchanged game for the record-only commit. Mark this plan `done` only when the release
+  source commit, record commit, evidence IDs, native result, built-Web result and both deployment
+  hashes are recorded.
 
 ## Validation and Rework Controls
 
@@ -1038,7 +1055,8 @@ Validation rules:
 - 2026-08-14: use three centered revealed-state PNG symbols over the neutral device body rather than
   three full replacement bodies. Generate converge/freeze/open-armor candidates at 192x192 for a
   72-world-unit display, and separately generate a clean same-footprint Transit Gate replacement.
-  Both visual sets remain approval-gated before production.
+  The user approved the complete V4 symbol comparison and clean Transit Gate AS-IS/TO-BE comparison
+  on 2026-08-14; the exact reviewed bytes may now be promoted together.
 - 2026-08-14: one text-only HUD queue owns gameplay announcements. Map repair/recall pickups and
   Anomaly Devices use restrained time-based bob plus one shared contour; gameplay positions remain
   stationary and Reduced Motion uses a static contour.
@@ -1062,26 +1080,43 @@ Validation rules:
   `934c0d72-production-replay-native-30s-deep-pursuit.json` is scenario-valid, focused, and carries
   workload fingerprint `627232438`. Physics p95/p99 are `4.598/5.741ms`; deep pursuit p95/p99 are
   `0.969/1.339ms`. It is diagnostic because the sample is 30 seconds, not a final authority run.
+- 2026-08-14: the pre-switch `run-pacing-result-slots` fixture set and approved V4/Gate review
+  comparisons preserve the Korean/English Upgrade, announcement, Anomaly, and Result baselines. The
+  post-switch Korean 1280x720 full capture at
+  `build/captures/execplan-2026-08-14-weakpoint-gate-ko-1280` provides the matching corrected
+  diagnostic comparison without treating capture output as release authority.
 - 2026-08-14: local-overlap snapshot work is not selected: its measured p99 is `0.584ms` at cap 48.
   Full schedule/contact reconstruction is also not selected: budget scan p99 is `0.316ms` and
   contact resolution p99 is `0.176ms`. The larger scheduled-ordinary bucket is actor policy work,
   not evidence that these two reconstruction paths should gain another mutable membership owner.
+- 2026-08-14: the approved Gravity/Cryo/Weakpoint and clean Transit Gate PNG bytes are promoted with
+  matching production/workbench hashes. A real-render capture found that parent CanvasItem drawing
+  placed outcome symbols behind the device batch; one retained z=2 semantic layer now keeps them
+  above the body and below combat overlays. The Korean 1280x720 full capture renders all three
+  distinct symbols, their full `480/360/420` footprints, and the clean circular Gate.
+- 2026-08-14: exact-cap overrides are accepted only for diagnostic `capacity_pressure` targets
+  `48/64/96/128`. Results label the observed ordinary count, authored reserve, workload fingerprint,
+  and diagnostic-only state; normal play and saved product data cannot reach the override.
+- 2026-08-14: the final source batch passed affected evidence, encounter, pursuit, schedule, spatial,
+  combat, Anomaly, Upgrade, Result, HUD, localization, capture, asset, workbench, visual-authority,
+  headless-import, and diff checks. The diff-scoped quality audit found no competing gameplay owner,
+  unbounded hot-path work, stale Decoy branch, or reachable exact-cap override in normal play.
 
 ## Open Questions
 
-No material implementation question remains open. Expected later approval gates are the three
-Phase 5 Anomaly symbol candidates and clean Transit Gate candidate, any remote telemetry service, a
-native kernel if Phase 4 cannot pass, and a higher shipping cap if Phase 6 proves technical headroom.
+No material implementation question remains open. Expected later approval gates are any remote
+telemetry service, a native kernel if Phase 4 cannot pass, and a higher shipping cap if Phase 6 proves
+technical headroom. The three Phase 5 symbols and clean Transit Gate are approved.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4 qualification and Phase 5 Weakpoint/visual integration.
-- Next task: implement Task 5.2's Decoy-to-Weakpoint behavior replacement, then obtain explicit
-  approval for the completed V4 symbol and Transit Gate comparisons before production promotion.
-- Last completed gate: clean commit-linked opening/boss/post-boss capture plus a focused cap-48
-  diagnostic below the `6/8ms` physics limits. Final authority, visual promotion, capacity staircase,
-  Web proof, and deployment remain open.
+- Current phase: release-source qualification and capacity staircase.
+- Next task: commit the validated release source, run the single clean cap-48 native authority gate,
+  then run the diagnostic 48/64/96/128 staircase with its declared early stop.
+- Last completed gate: Weakpoint behavior, all four approved PNG promotions, exact-cap diagnostic
+  isolation, focused validators, headless import, and Korean 1280x720 full rendered capture pass.
+  Clean native authority, staircase, built-Web proof, and deployment remain open.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance
   this pointer in the same edit.
 

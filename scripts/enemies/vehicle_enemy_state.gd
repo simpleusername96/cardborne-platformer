@@ -112,6 +112,8 @@ var cryo_application_delay := 0.0
 var shock_application_delay := 0.0
 # Mystery Cryo reuses the shared body compositor without becoming a Chill stack.
 var mystery_cryo_remaining := 0.0
+# Mystery Weakpoint uses the same compositor and a scalar lifetime only.
+var mystery_weakpoint_remaining := 0.0
 var runtime_slot := -1
 # Stable pool identity and reuse generation let spatial membership reject stale
 # cell entries after swap retirement or pooled actor reuse.
@@ -144,6 +146,7 @@ func reset_runtime_collections() -> void:
 	cryo_application_delay = 0.0
 	shock_application_delay = 0.0
 	mystery_cryo_remaining = 0.0
+	mystery_weakpoint_remaining = 0.0
 	lane_centers.clear()
 	attack_telegraphs.clear()
 	target_score = 0.0

@@ -25,6 +25,8 @@ const BOSS_PRESSURE_TARGET := PressureFixture.BOSS_ORDINARY_COUNT + 1
 const PRODUCTION_REPLAY_PRIME_SECONDS := 240.0
 const PRODUCTION_REPLAY_MIN_ACTIVE_RATIO := 0.90
 const PERFORMANCE_ENEMY_HEALTH := 1000000.0
+## These are test-only staircase points. Shipping encounter caps never read this list.
+const DIAGNOSTIC_EXACT_CAPS: Array[int] = [48, 64, 96, 128]
 
 const VALID_SCENARIOS: Array[StringName] = [
 	&"production_replay", &"peak_horde", &"capacity_pressure",
@@ -60,6 +62,7 @@ var _production_pressure_samples: Array[Dictionary] = []
 var _production_next_sample := 0.0
 var _production_last_sample_spawned := 0
 var _production_scheduler_state: Dictionary = {}
+var _diagnostic_authored_reserve := 0
 
 
 func configure(id: StringName, enemy_count_override: int = -1) -> bool:
@@ -69,7 +72,7 @@ func configure(id: StringName, enemy_count_override: int = -1) -> bool:
 		enemy_count_override > 0
 		and (
 			id != &"capacity_pressure"
-			or enemy_count_override > CAPACITY_PRESSURE_TARGET
+			or enemy_count_override not in DIAGNOSTIC_EXACT_CAPS
 		)
 	):
 		return false
@@ -80,6 +83,9 @@ func configure(id: StringName, enemy_count_override: int = -1) -> bool:
 
 func activate(run: Node) -> void:
 	_prepare_stage_five(run)
+	_diagnostic_authored_reserve = int(
+		run.encounter_runtime.debug_snapshot().get("authored_reserve_units", 0)
+	)
 	if scenario_id == &"production_replay":
 		_activate_production_replay(run)
 		return
@@ -216,6 +222,10 @@ func validation_snapshot(run: Node) -> Dictionary:
 			expected_enemies - (1 if scenario_id == &"boss_pressure" else 0)
 		)
 	)
+	var exact_target_matched := (
+		diagnostic_enemy_count <= 0
+		or ordinary_count == diagnostic_enemy_count
+	)
 	var boss_valid := true
 	if scenario_id == &"boss_pressure":
 		var boss: EnemyState = run.call("_find_enemy_by_id", "performance_boss")
@@ -239,6 +249,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 	var valid: bool = (
 		int(enemy_snapshot["live"]) == expected_enemies
 		and ordinary_count == expected_ordinary
+		and exact_target_matched
 		and boss_count == (1 if scenario_id == &"boss_pressure" else 0)
 		and int(projectile_snapshot["player"]) == player_target
 		and int(projectile_snapshot["hostile"]) == hostile_target
@@ -263,6 +274,11 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"scenario_origin":&"fixture",
 		"load_class":_load_class(),
 		"diagnostic_enemy_count":diagnostic_enemy_count,
+		"diagnostic_only":diagnostic_enemy_count > 0,
+		"exact_ordinary_count":ordinary_count,
+		"authored_reserve":_diagnostic_authored_reserve,
+		"role_mix_fingerprint":hash(var_to_str(_production_roles)),
+		"exact_target_matched":exact_target_matched,
 		"fixture_seed":int(_fixture["seed"]),
 		"fixture_fingerprint":int(_fixture["fingerprint"]),
 		"workload_fingerprint":int(_fixture["fingerprint"]),

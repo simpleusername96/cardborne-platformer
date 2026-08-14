@@ -1385,7 +1385,7 @@ func _capture_exact_area_effect_evidence() -> void:
 	var mystery_profiles := [
 		[&"gravity_pull", 0.60, "09v-mystery-gravity-pull.png"],
 		[&"cryo_lock", 0.80, "09w-mystery-cryo-lock.png"],
-		[&"decoy_signal", 0.35, "09y-mystery-decoy-signal.png"],
+		[&"weakpoint_expose", 0.35, "09y-mystery-weakpoint-expose.png"],
 	]
 	if settings != null:
 		settings.reduced_motion = false
@@ -1393,6 +1393,9 @@ func _capture_exact_area_effect_evidence() -> void:
 		var profile := Array(profile_variant)
 		var outcome := StringName(profile[0])
 		var center := _prepare_exact_area_scene(float(profile[1]))
+		# Keep the player visible but off the device center so the reviewed outcome
+		# symbol remains inspectable in deterministic capture evidence.
+		_run.player_position = center + Vector2(0.0, -130.0)
 		_run.mystery_device_runtime.configure(
 			[{"id":&"capture_mystery", "pos":center, "outcome":outcome}],
 			1701,

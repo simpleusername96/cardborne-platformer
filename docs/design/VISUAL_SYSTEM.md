@@ -811,9 +811,10 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - Beam Sentinel and boss straight beams share one code-native unit quad. Runtime tint,
   alpha, live corridor size, and the two-plane startup/three-plane active hierarchy remain
   presentation-owned.
-- Anomaly Device gameplay and its two approved body states are integrated. The
-  three outcome-symbol candidates remain outside the production manifest until
-  exact approval and the active ExecPlan's behavior/renderer switch.
+- Anomaly Device gameplay, its two approved body states, and the three approved
+  Gravity/Cryo/Weakpoint outcome symbols are production-integrated. A revealed
+  symbol renders at 72 world units through active-effect retirement; the full
+  area footprint and gameplay truth remain code-owned.
 - Drop Mine gameplay receipts remain fixed-capacity effect-store state. The shared
   code-native disk batch displays radius `96/108/120`; standard and reduced motion both
   start at final radius and only fade, with no dedicated texture or batch.

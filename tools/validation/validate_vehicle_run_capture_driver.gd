@@ -136,7 +136,7 @@ func _initialize() -> void:
 		"09z-explosive-seeker-impact.png",
 		"09v-mystery-gravity-pull.png",
 		"09w-mystery-cryo-lock.png",
-		"09y-mystery-decoy-signal.png",
+		"09y-mystery-weakpoint-expose.png",
 		"30-boss-01-stage-1-arc-area-startup.png",
 		"30-boss-05-stage-5-crown-beam-startup.png",
 		"30-boss-05-stage-5-crown-beam-active.png",

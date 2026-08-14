@@ -38,10 +38,9 @@ static func movement_focus(
 	origin: Vector2,
 	pressure_focus: Vector2,
 	target_velocity: Vector2,
-	movement_speed: float,
-	exact_focus: bool = false
+	movement_speed: float
 ) -> Vector2:
-	if exact_focus or target_velocity.length() < MIN_TARGET_SPEED:
+	if target_velocity.length() < MIN_TARGET_SPEED:
 		return pressure_focus
 	var maximum_seconds := float(MOVEMENT_MAX_SECONDS.get(movement_family, 0.0))
 	var maximum_distance := float(MOVEMENT_MAX_DISTANCE.get(movement_family, 0.0))
@@ -58,13 +57,11 @@ static func attack_target(
 	pressure_focus: Vector2,
 	target_velocity: Vector2,
 	startup_seconds: float,
-	attack_speed: float,
-	exact_focus: bool = false
+	attack_speed: float
 ) -> Vector2:
 	var maximum_distance := float(ATTACK_MAX_LEAD_DISTANCE.get(role, 0.0))
 	if (
-		exact_focus
-		or maximum_distance <= 0.0
+		maximum_distance <= 0.0
 		or target_velocity.length() < MIN_TARGET_SPEED
 	):
 		return pressure_focus

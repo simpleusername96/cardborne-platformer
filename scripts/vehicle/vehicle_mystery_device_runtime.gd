@@ -10,12 +10,12 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const OUTCOME_IDS: Array[StringName] = [
 	&"gravity_pull",
 	&"cryo_lock",
-	&"decoy_signal",
+	&"weakpoint_expose",
 ]
 const OUTCOME_PROFILE := {
 	&"gravity_pull":{"radius":480.0, "duration":5.0},
 	&"cryo_lock":{"radius":360.0, "duration":3.0},
-	&"decoy_signal":{"radius":900.0, "duration":6.0},
+	&"weakpoint_expose":{"radius":420.0, "duration":5.0},
 }
 
 var devices: Array[Dictionary] = []

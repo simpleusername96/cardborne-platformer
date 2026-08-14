@@ -13,7 +13,7 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	_validate_movement_focus()
 	_validate_attack_target()
-	_validate_exact_and_deterministic_focus()
+	_validate_deterministic_focus()
 	_finish()
 
 
@@ -90,29 +90,8 @@ func _validate_attack_target() -> void:
 	)
 
 
-func _validate_exact_and_deterministic_focus() -> void:
+func _validate_deterministic_focus() -> void:
 	var focus := Vector2(420.0, 170.0)
-	var exact_movement := Policy.movement_focus(
-		MovementPolicy.PURSUIT,
-		Vector2.ZERO,
-		focus,
-		Vector2(900.0, 400.0),
-		180.0,
-		true
-	)
-	var exact_attack := Policy.attack_target(
-		&"rammer",
-		Vector2.ZERO,
-		focus,
-		Vector2(900.0, 400.0),
-		0.9,
-		760.0,
-		true
-	)
-	_expect(
-		exact_movement == focus and exact_attack == focus,
-		"decoy focus remains exact for movement and attacks"
-	)
 	var first := Policy.attack_target(
 		&"shooter", Vector2.ZERO, focus, Vector2(120.0, -40.0), 0.62, 410.0
 	)

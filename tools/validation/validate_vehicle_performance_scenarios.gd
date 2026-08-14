@@ -331,27 +331,35 @@ func _run() -> void:
 		scenario.deactivate()
 		if scenario_id == &"production_replay":
 			run.encounter_runtime.set_pressure_observation_enabled(false)
-	var scaling := Scenario.new()
-	_expect(
-		scaling.configure(&"capacity_pressure", 64),
-		"capacity diagnostics accept an explicit bounded enemy count"
-	)
+	for target in Scenario.DIAGNOSTIC_EXACT_CAPS:
+		var scaling := Scenario.new()
+		_expect(
+			scaling.configure(&"capacity_pressure", target),
+			"capacity diagnostics accept exact %d-enemy target" % target
+		)
+		scaling.activate(run)
+		scaling.after_physics(run)
+		var scaling_snapshot := scaling.validation_snapshot(run)
+		_expect(
+			bool(scaling_snapshot["valid"])
+				and bool(scaling_snapshot["diagnostic_only"])
+				and bool(scaling_snapshot["exact_target_matched"])
+				and int(scaling_snapshot["expected_enemies"]) == target
+				and int(scaling_snapshot["ordinary_enemies"]) == target
+				and int(scaling_snapshot["exact_ordinary_count"]) == target
+				and int(scaling_snapshot["diagnostic_enemy_count"]) == target
+				and int(scaling_snapshot["authored_reserve"]) >= 0
+				and int(scaling_snapshot["role_mix_fingerprint"]) != 0,
+			"%d-enemy diagnostic labels its exact count, reserve, role mix, and combat workload"
+			% target
+		)
+		scaling.deactivate()
 	_expect(
 		not Scenario.new().configure(&"peak_horde", 64)
+			and not Scenario.new().configure(&"capacity_pressure", 63)
 			and not Scenario.new().configure(&"capacity_pressure", 321),
-		"enemy-count overrides remain diagnostic-only and capacity bounded"
+		"enemy-count overrides remain diagnostic-only and limited to the declared staircase"
 	)
-	scaling.activate(run)
-	scaling.after_physics(run)
-	var scaling_snapshot := scaling.validation_snapshot(run)
-	_expect(
-		bool(scaling_snapshot["valid"])
-			and int(scaling_snapshot["expected_enemies"]) == 64
-			and int(scaling_snapshot["ordinary_enemies"]) == 64
-			and int(scaling_snapshot["diagnostic_enemy_count"]) == 64,
-		"64-enemy diagnostic preserves every non-enemy capacity workload"
-	)
-	scaling.deactivate()
 	_expect(peak_fingerprint != 0, "peak workload has a stable nonzero fingerprint")
 	_validate_threshold_contract()
 	run.queue_free()
