@@ -148,7 +148,8 @@ func _build() -> void:
 	build_column.add_child(_build_heading)
 	_build_rail = BuildRail.new()
 	_build_rail.set_heading_visible(false)
-	_build_rail.set_viewport_minimum_height(340.0)
+	_build_rail.set_compact_mode(true)
+	_build_rail.set_viewport_minimum_height(250.0)
 	build_column.add_child(_build_rail)
 	var actions := CenterContainer.new()
 	add_child(actions)
@@ -179,8 +180,10 @@ func _apply_responsive_layout() -> void:
 		_report_body.set_compact_mode(compact)
 	if is_instance_valid(_content_grid): _content_grid.columns = 1 if compact else 2
 	if is_instance_valid(_build_rail):
-		_build_rail.set_compact_mode(compact)
-		_build_rail.set_viewport_minimum_height(360.0 if compact else 340.0)
+		# The terminal report has less vertical room than the upgrade choice panel.
+		# Keep its read-only grid dense so all six categories remain visible at 720p.
+		_build_rail.set_compact_mode(true)
+		_build_rail.set_viewport_minimum_height(280.0 if compact else 250.0)
 	if is_instance_valid(_title): Factory.apply_font_size(_title, 30 if compact else 40)
 	if is_instance_valid(_deployment): _deployment.custom_minimum_size.y = 44.0 if compact else 48.0
 

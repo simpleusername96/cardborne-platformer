@@ -168,8 +168,8 @@ func _init() -> void:
 	await process_frame
 	var result_contract := result.debug_contract()
 	_expect(
-		int(result_contract["focusables"]) == 5,
-		"final result exposes three filled build cells, diagnostic export, and Deployment"
+		int(result_contract["focusables"]) == 6,
+		"final result exposes EMP, three acquired cells, diagnostic export, and Deployment"
 	)
 	_expect(bool(result_contract["initial_focus_is_deployment"]), "final result initially focuses Deployment")
 	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Deployment is the primary command")
@@ -179,13 +179,14 @@ func _init() -> void:
 	_expect(
 		int(result_rail["section_count"]) == 6
 			and int(result_rail["cell_count"]) == 21
-			and int(result_rail["filled_count"]) == 3,
-		"final result reuses all six grouped category sections and the frozen build"
+			and int(result_rail["filled_count"]) == 4,
+		"final result reuses all six grouped categories, EMP, and the frozen build"
 	)
 	_expect(
 		not bool(result_rail["heading_visible"])
-			and float(result_rail["viewport_minimum_height"]) >= 340.0,
-		"final result gives the shared rail a usable side-by-side viewport instead of clipping it"
+			and float(result_rail["viewport_minimum_height"]) <= 280.0
+			and is_equal_approx(float(result_rail["cell_size"]), 22.0),
+		"final result uses the dense rail needed to show all categories at 720p"
 	)
 	_expect("4:18" in String(result_contract["summary_text"]), "final summary preserves cumulative active time")
 	_expect("86 / 120" in String(result_contract["summary_text"]), "final summary displays exact current and maximum Hull")
