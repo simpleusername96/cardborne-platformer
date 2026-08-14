@@ -5,7 +5,7 @@ owner: BK
 created: 2026-08-13
 last_reviewed: 2026-08-14
 topic: Versioned play evidence, intuitive category slots, continuous enemy pressure, readable world feedback, and a scalable exact-enemy runtime
-scope: Cardborne performance and session provenance, upgrade build summaries, encounter continuity, Anomaly outcomes and symbols, Transit Gate replacement, gameplay announcements, collectible feedback, ordinary-enemy scheduling and spatial work, native/Web qualification, and capacity exploration
+scope: Cardborne performance and session provenance, upgrade build summaries and EMP legibility, encounter continuity and boss-transition pacing, secondary-weapon footprints, Anomaly outcomes and symbols, Transit Gate replacement, gameplay announcements, collectible feedback, ordinary-enemy scheduling and spatial work, native/Web qualification, and capacity exploration
 related:
   - ../../AGENTS.md
   - ../PLANS.md
@@ -955,6 +955,104 @@ Final gate:
   source commit, record commit, evidence IDs, native result, built-Web result and both deployment
   hashes are recorded.
 
+### Phase 8: Player-visible combat and build corrections before release proof
+
+Goal: correct the remaining live-play regressions before any further performance qualification or
+public release. This phase supersedes Phase 2's fixed visual slot positions while preserving its six
+category capacities and compatibility rules. It also reopens Phase 4's visible-pressure acceptance
+because live play still reports empty intervals despite the earlier deterministic fixture passing.
+
+Execution order: 8.1-8.2 may land together; 8.3 must land before 8.4; 8.5 lands after gameplay radii
+are authoritative; 8.6 is the final source and rendered gate. Do not run a performance scenario
+until every Phase 8 source, visual, and focused validation task is complete on one clean commit.
+
+Source owners: upgrade catalog/build snapshot/shared build rail and localization; encounter
+runtime/director/stage-flow integration; one narrow stage-transition coordinator owned by
+`VehicleRun`; secondary definitions/runtime/renderer; product and visual contracts; focused
+validators and the existing capture gateways.
+
+- [ ] **8.1 Make acquired category records fill from the left.**
+  - Change: keep category capacities `2/5/2/3/5/4` and gameplay compatibility unchanged, but stop
+    exposing compatibility slot keys as visual gaps. Pack acquired records from index zero in stable
+    first-acquisition order inside each category. A level-up updates the same record and never moves
+    it; empty cells follow all filled cells.
+  - Change: preserve a deterministic fallback for old in-memory builds without acquisition history,
+    and use the same packed snapshot in Upgrade and Result. The rail remains image-only,
+    left-aligned, four columns at most, `22/24/26 px`, without internal scrolling or empty-cell focus.
+  - Accept: mixed-category fixtures prove no empty cell precedes a filled cell, the newest
+    acquisition appends at the right in its category, a level-up does not reorder cells, and
+    Korean/English Upgrade and Result layouts fit without clipping or scrolling.
+
+- [ ] **8.2 Make the existing EMP growth path unmistakable.**
+  - Change: keep EMP as a base action, not a fake acquired upgrade. Publish a display-only equipped
+    action record in the first Active Skill cell using the existing EMP action glyph; it never enters
+    `levels`, `acquisition_order`, or the flat acquired-upgrade projection. An EMP replacement swaps
+    that same display record.
+  - Change: retain `active_coolant` and `active_amplifier`, their approved artwork, mechanics, and
+    maximum levels. Rename Korean/English player copy so it explicitly states that each affects the
+    default EMP and follows an EMP replacement. The first Stage 1 level-up offer while EMP is still
+    equipped must contain exactly one unfinished Active enhancement, selected deterministically;
+    later offers keep the normal catalog rules.
+  - Accept: a fresh run shows EMP but counts zero acquired upgrades; the first eligible offer exposes
+    one EMP-relevant enhancement; authored damage `62 -> 93` and cooldown `13s -> 9.75s` remain true
+    at maximum enhancement; a replacement receives each shared modifier exactly once.
+
+- [ ] **8.3 Remove ordinary-enemy visibility gaps.**
+  - Change: treat visible pressure as a maintained invariant, not only a cue/queue invariant. Keep
+    the authored time-zero opening, but select the nearest valid offscreen approach anchors so the
+    first ordinary actor becomes visible by `3.0s`. During boss warning/active, when no ordinary is
+    visible and authored maintenance reserve remains, admit the smallest authored reinforcement
+    group without waiting for the current four-second maintenance interval.
+  - Change: after boss defeat, preserve surviving ordinary actors and require next-stage ordinary
+    visibility by `1.5s`; if none survived, the next authored opening group uses the same nearest
+    valid offscreen approach path immediately. Preserve exact cap, boss-entry margin, attack-commit
+    gate, quota identity, and offscreen birth rules. Do not fabricate population or spawn on camera.
+  - Change: extend diagnostic-only pacing receipts with explicit reasons: no authored reserve,
+    offscreen travel, queued window/spawn, capacity block, maintenance cooldown, boss warning, and
+    stage transition. Normal play must not add a new whole-store scan.
+  - Accept: deterministic opening, long-boss, zero-survivor, and post-boss fixtures meet the limits;
+    maintenance actors never advance quota; every gap is either below the limit or has one recorded
+    bounded reason; irrelevant scheduler/maintenance work stops with its lifecycle.
+
+- [ ] **8.4 Remove duplicate boss-defeat boundary work and bound the remaining transition.**
+  - Change: first add diagnostic-only receipts around boss teardown, stage-report freeze, continuation
+    setup, enemy flush/grid synchronization, and final Result construction. The source already proves
+    that stages 1-4 call `enemy_grid.rebuild(enemies)` before queued boss defeats flush and later sync
+    the grid again; replace this with one authoritative post-flush grid update.
+  - Change: the lethal-damage call stack only seals the completed stage and schedules transition
+    work. A small idempotent `VehicleRun` transition state performs boss teardown/report capture,
+    gameplay continuation configuration, and presentation refresh in separate bounded steps if the
+    receipts show they cannot safely share one frame. Surviving ordinary actors remain valid.
+  - Change: final-stage Result construction is a separate step from enemy defeat and opens exactly
+    once. No step scans or allocates diagnostics in normal play.
+  - Accept: one boss defeat produces one report and one next-stage setup; no enemy/grid operation is
+    duplicated; repeated callbacks cannot duplicate rewards or transitions; focused receipts name
+    every remaining transition owner without running a broad performance scenario.
+
+- [ ] **8.5 Double optional area-secondary footprints and improve Orbiting Blades motion.**
+  - Change: double linear gameplay and presentation radii for Electric Field
+    (`240/280/320/320`), Drop Mines (`192/216/240/240`), and Storm Barrage (`280`). Collision,
+    spatial query, telegraph, impact, snapshot, localized copy, and product/visual contracts use the
+    same values. Do not change EMP, Thermal Burst, Dash Afterburn, or active replacements.
+  - Change: Orbiting Blades are the only rotating optional secondary and already repeat contact
+    damage. Increase angular speed from `2.45` to `3.4 rad/s` and orbit radius from `88` to `112`;
+    retain blade radius `52`, per-target cooldown `0.55s`, damage, count, and authored image.
+  - Guard: larger areas may increase candidate counts, but query/target/object caps, damage, cooldown,
+    and update cadence do not change. This task makes no performance claim.
+  - Accept: boundary tests hit at each new exact radius and miss immediately outside it; renderer
+    snapshots match; mine/storm warnings match impact truth; orbit positions, angular speed, and
+    per-target cooldown are deterministic.
+
+- [ ] **8.6 Run the correction gate, then defer broad performance proof.**
+  - Change: run affected catalog/build/Upgrade/Result, active-weapon, secondary, encounter,
+    boss-transition, renderer, localization, visual-authority, headless import, and Web-export checks.
+    Capture supported Korean and English Upgrade/Result views at normal text scale and inspect
+    alignment, empty-before-filled gaps, clipping, and scroll state.
+  - Accept: all focused checks pass on one clean commit and rendered evidence shows the intended
+    result. Only then decide whether all remaining feature/image work is complete enough to authorize
+    the final native/Web performance run.
+  - Stop: do not run `production_replay`, capacity tiers, or any performance scenario in Phase 8.
+
 ## Validation and Rework Controls
 
 | Cadence | Exact check | Run when | Do not rerun until |
@@ -1183,19 +1281,18 @@ Validation rules:
 
 ## Open Questions
 
-One material approval is now required: authorize a bounded single-truth packed native-kernel spike
-with a Web-capable custom export template, or explicitly choose a product-truth alternative such as
-lower Web exact density. The current plan does not authorize a production dependency, custom Web
-template, threading, threshold weakening, or hidden enemy-count reduction. The three Phase 5 symbols
-and clean Transit Gate remain approved.
+No Phase 8 product decision remains open. The earlier packed native-kernel/custom-Web-template
+approval question is deferred until Phase 8 is complete and its final focused/Web-export gate is
+green. This plan still does not authorize a production dependency, custom Web template, threading,
+threshold weakening, or hidden enemy-count reduction. The three Phase 5 symbols and clean Transit
+Gate remain approved.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: UI/visual corrective gate complete; architecture approval stop resumes after the
-  valid built-Web authority failure.
-- Next task: obtain approval for the narrow single-truth packed-kernel/custom-Web-template spike,
-  then implement it under a new decision-complete contract and rerun native plus built-Web gates.
+- Current phase: Phase 8 player-visible combat and build corrections are approved for execution.
+- Next task: implement 8.1-8.2, then 8.3-8.5, and finish with the focused/rendered 8.6 gate. Resume
+  the architecture approval stop only after these changes are complete.
 - Last completed gate: final source validation, promoted decision evidence, cap-48 native authority,
   and the 48-pass/64-fail capacity envelope are complete. Built-Web capture is valid but red; public
   deployment remains intentionally blocked.
