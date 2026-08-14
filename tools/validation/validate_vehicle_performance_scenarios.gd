@@ -151,6 +151,12 @@ func _run() -> void:
 		)
 		if scenario_id == &"production_replay":
 			_expect(bool(snapshot["scheduler_spawn_seen"]), "production replay creates actors through the real scheduler")
+			_expect(
+				int(snapshot["workload_fingerprint"]) != 0
+					and int(snapshot["fixture_fingerprint"])
+						== int(snapshot["workload_fingerprint"]),
+				"production replay publishes a nonzero authored workload fingerprint"
+			)
 			var qualification := Dictionary(snapshot["production_qualification"])
 			var population := Dictionary(snapshot.get("population", {}))
 			_expect(

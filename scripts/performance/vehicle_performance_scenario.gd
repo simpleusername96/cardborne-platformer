@@ -265,6 +265,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"diagnostic_enemy_count":diagnostic_enemy_count,
 		"fixture_seed":int(_fixture["seed"]),
 		"fixture_fingerprint":int(_fixture["fingerprint"]),
+		"workload_fingerprint":int(_fixture["fingerprint"]),
 		"fixture_qualification":_fixture_qualification.duplicate(true),
 		"expected_enemies": expected_enemies,
 		"ordinary_enemies": ordinary_count,
@@ -783,6 +784,7 @@ func _retire_production_batch(run: Node, budget: int) -> void:
 func _production_validation_snapshot(run: Node) -> Dictionary:
 	var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
 	var population := _production_population_accounting(scheduler, run.current_stage_id)
+	var workload_fingerprint := _production_workload_fingerprint(run, population)
 	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
 	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
 	var effect_store_snapshot := _effect_store_qualification(run)
@@ -827,7 +829,8 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		"scenario_origin":&"production_scheduler",
 		"load_class":&"production",
 		"fixture_seed":0,
-		"fixture_fingerprint":0,
+		"fixture_fingerprint":workload_fingerprint,
+		"workload_fingerprint":workload_fingerprint,
 		"fixture_qualification":{},
 		"expected_enemies":-1,
 		"ordinary_enemies":run.call("_active_mobile_count"),
@@ -866,6 +869,29 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 			"samples":_production_pressure_samples.duplicate(true),
 		},
 	}
+
+
+func _production_workload_fingerprint(run: Node, population: Dictionary) -> int:
+	# Keep the replay identity independent from runtime counters. Any authored
+	# pressure, cap, route, loadout, or input-contract change produces a new key.
+	return hash(var_to_str([
+		"production_replay_v1",
+		String(run.current_stage_id),
+		String(run.selected_run_difficulty),
+		String(run.selected_primary),
+		StageCatalog.packets(run.current_stage_id),
+		int(population.get("authored_population", -1)),
+		int(population.get("materialized_cap", -1)),
+		int(population.get("active_cap", -1)),
+		[
+			Vector2(640.0, 0.0),
+			Vector2(0.0, 360.0),
+			Vector2(-640.0, 0.0),
+			Vector2(0.0, -360.0),
+		],
+		[&"primary_fire", &"move", &"dash"],
+		PERFORMANCE_ENEMY_HEALTH,
+	]))
 
 
 func _record_production_pressure(run: Node, scheduler: Dictionary) -> void:

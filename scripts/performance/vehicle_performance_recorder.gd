@@ -186,7 +186,10 @@ func finish(
 			"command": OS.get_cmdline_args(),
 			"scenario": String(scenario_id),
 			"seed": 0xC4A2B0,
-			"workload_fingerprint": int(validation.get("fixture_fingerprint", 0)),
+			"workload_fingerprint": int(validation.get(
+				"workload_fingerprint",
+				validation.get("fixture_fingerprint", 0)
+			)),
 			"warmup_seconds": warmup_seconds,
 			"sample_seconds": sample_seconds,
 			"scenario_valid": bool(validation.get("valid", false)),
