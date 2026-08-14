@@ -1306,8 +1306,12 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 	)
 	_expect(
 		emp_source.contains("startup_seconds = 0.42")
-			and emp_source.contains("size_by_level = Array[float]([285.0])")
-			and emp_source.contains("auxiliary_size = 325.0"),
+			and emp_source.contains(
+				"size_by_level = Array[float]([285.0, 285.0, 285.0, 285.0])"
+			)
+			and emp_source.contains(
+				"auxiliary_size_by_level = Array[float]([325.0, 325.0, 325.0, 325.0])"
+			),
 		"EMP definition publishes its exact damage and projectile-clear footprints"
 	)
 

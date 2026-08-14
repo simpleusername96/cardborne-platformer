@@ -449,15 +449,20 @@ func _capture_pressure_evidence() -> void:
 
 
 func _capture_collective_tactic_evidence() -> void:
-	prepare_stage(0)
+	prepare_stage(2)
 	_run._clear_enemies()
 	var direction := Vector2.LEFT
+	var formation_targets: Array[Vector2] = []
 	for index in 6:
-		var row := floori((float(index) + 1.0) * 0.5)
-		var sign_value := -1.0 if index % 2 == 0 else 1.0
-		var position: Vector2 = (
+		var centered := float(index) - 2.5
+		var target: Vector2 = (
 			_run.player_position
-			+ Vector2(330.0 + float(row) * 48.0, sign_value * float(row) * 42.0)
+			+ Vector2(420.0 - centered * 54.0, 0.0)
+		)
+		formation_targets.append(target)
+		var position: Vector2 = _run.player_position + Vector2(
+			290.0 + float(index % 3) * 155.0,
+			-170.0 + float(index / 3) * 340.0 + float(index % 2) * 46.0
 		)
 		var enemy: VehicleEnemyState = _run._make_enemy({
 			"id":"capture_tactic_%02d" % index,
@@ -469,28 +474,58 @@ func _capture_collective_tactic_evidence() -> void:
 			"squad_leader":index == 0,
 			"formation_slot":index,
 			"formation_size":6,
-			"collective_tactic_id":&"spearhead",
-			"collective_beat_kind":&"teach",
+			"collective_tactic_id":&"shielded_column",
+			"collective_beat_kind":&"combine",
 		})
 		if enemy == null:
 			break
-		enemy.collective_phase = &"lock"
-		enemy.collective_mode = &"charge"
+		enemy.collective_phase = &"dormant"
+		enemy.collective_mode = &"shield"
 		enemy.collective_direction = direction
-		enemy.collective_target = position
+		enemy.collective_target = target
 		enemy.health_visible_timer = 99.0 if index == 0 else 0.0
 		_run._append_enemy(enemy)
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
+	_save_capture("03a-collective-dormant.png")
+	for enemy_variant in _run.enemies:
+		var enemy: VehicleEnemyState = enemy_variant
+		if enemy.squad_id != "capture_tactic":
+			continue
+		enemy.collective_phase = &"gather"
+		var gather_target := Vector2(formation_targets[enemy.formation_slot])
+		enemy.pos = enemy.pos.lerp(gather_target, 0.55)
+		_run._update_collective_enemy(enemy, 0.0)
+		_run._apply_enemy_shield(enemy, {})
+	await _settle_capture()
+	_save_capture("03aa-collective-gather.png")
+	for enemy_variant in _run.enemies:
+		var enemy: VehicleEnemyState = enemy_variant
+		if enemy.squad_id != "capture_tactic":
+			continue
+		enemy.collective_phase = &"lock"
+		enemy.pos = formation_targets[enemy.formation_slot]
+		_run._update_collective_enemy(enemy, 0.0)
+		_run._apply_enemy_shield(enemy, {})
+	await _settle_capture()
 	_save_capture("03b-collective-lock.png")
-	for enemy in _run.enemies:
+	for enemy_variant in _run.enemies:
+		var enemy: VehicleEnemyState = enemy_variant
 		if enemy.squad_id != "capture_tactic":
 			continue
 		enemy.collective_phase = &"break"
 		enemy.vulnerable = 1.0
+		_run._apply_enemy_shield(enemy, {})
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("03c-collective-break.png")
+	print(JSON.stringify({
+		"capture":"collective_tactic_transition",
+		"states":["dormant", "gather", "lock", "break"],
+		"dormant_shield_source":"none",
+		"gather_shield_source":"none",
+		"lock_shield_source":"collective_tactic",
+	}))
 
 
 func _capture_movement_policy_evidence() -> void:

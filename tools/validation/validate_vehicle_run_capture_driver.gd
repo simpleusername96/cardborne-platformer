@@ -124,12 +124,14 @@ func _initialize() -> void:
 			and not gateway_source.contains("&\"capture_mystery_damaged\""),
 		"ready-device capture shows the assigned symbol before any hit"
 	)
-	_expect(Driver.CORE_CAPTURE_FILES.size() == 41, "core manifest has 41 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 126, "full manifest has 126 captures")
+	_expect(Driver.CORE_CAPTURE_FILES.size() == 43, "core manifest has 43 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 128, "full manifest has 128 captures")
 	for required_capture in [
 		"01i-guidebook-elite-stats.png",
 		"01j-guidebook-field-objects.png",
 		"01k-guidebook-enemy-stage-range.png",
+		"03a-collective-dormant.png",
+		"03aa-collective-gather.png",
 		"03d-movement-cover-approach.png",
 		"03e-movement-cover-turn.png",
 		"03f-movement-cover-standoff.png",
