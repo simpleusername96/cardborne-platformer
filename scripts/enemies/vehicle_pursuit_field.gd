@@ -222,16 +222,43 @@ func _advance_rebuild(field: CostField, budget: int) -> int:
 		var current_index := field.queue[field.cursor]
 		field.cursor += 1
 		processed += 1
-		var current_cell := _cell(current_index)
 		var next_cost := field.build_costs[current_index] + 1
-		for offset in CARDINALS:
-			var next_index := _index(current_cell + offset)
-			if (
-				next_index < 0
-				or field.walkable[next_index] == 0
-				or field.build_costs[next_index] >= 0
-			):
-				continue
+		# Preserve the canonical left/right/up/down queue order without creating
+		# Vector2i values or repeating coordinate-to-index conversion per edge.
+		var x := current_index % GRID_WIDTH
+		var next_index := current_index - 1
+		if (
+			x > 0
+			and field.walkable[next_index] != 0
+			and field.build_costs[next_index] < 0
+		):
+			field.build_costs[next_index] = next_cost
+			field.queue[field.queue_size] = next_index
+			field.queue_size += 1
+		next_index = current_index + 1
+		if (
+			x + 1 < GRID_WIDTH
+			and field.walkable[next_index] != 0
+			and field.build_costs[next_index] < 0
+		):
+			field.build_costs[next_index] = next_cost
+			field.queue[field.queue_size] = next_index
+			field.queue_size += 1
+		next_index = current_index - GRID_WIDTH
+		if (
+			current_index >= GRID_WIDTH
+			and field.walkable[next_index] != 0
+			and field.build_costs[next_index] < 0
+		):
+			field.build_costs[next_index] = next_cost
+			field.queue[field.queue_size] = next_index
+			field.queue_size += 1
+		next_index = current_index + GRID_WIDTH
+		if (
+			next_index < CELL_COUNT
+			and field.walkable[next_index] != 0
+			and field.build_costs[next_index] < 0
+		):
 			field.build_costs[next_index] = next_cost
 			field.queue[field.queue_size] = next_index
 			field.queue_size += 1
