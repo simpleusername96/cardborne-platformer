@@ -1,10 +1,10 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-08-14
 last_reviewed: 2026-08-14
-scope: Review-only simplified Gravity, Cryo, and Decoy Mystery Device raster candidates awaiting explicit user approval
+scope: Rejected simplified Gravity, Cryo, and Decoy Mystery Device raster candidates retained only as visual history
 source: User rejection of mystery-device-outcomes-v1 for excessive detail on 2026-08-14
 related:
   - ../../../VISUAL_SYSTEM.md
@@ -17,9 +17,12 @@ related:
 
 ## Purpose
 
-Retain the review evidence for a second Mystery Device outcome set that matches
-the low part count and small-scale readability of Cardborne's existing world
-assets. This is advisory visual evidence, not approval or a production switch.
+Retain the historical evidence for a second Mystery Device outcome set. The user
+rejected it on 2026-08-14 because the three silhouettes did not communicate
+their functions distinctly enough. It is not an approval or production switch.
+
+The replacement review set is
+[`../mystery-device-outcomes-v3-semantic/candidate-evidence.md`](../mystery-device-outcomes-v3-semantic/candidate-evidence.md).
 
 ## Sources
 
