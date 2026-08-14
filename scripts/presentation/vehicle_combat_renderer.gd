@@ -1934,27 +1934,29 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			MYSTERY_DEVICE_VISUAL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS
 		).has_point(position):
 			continue
-		var edge_alpha := _interaction_edge_alpha(
-			run_time, phase_offset, reduced_motion
-		)
-		_write_instance(
-			_mystery_device_contour_batches[device_state] as BatchHandle,
-			position,
-			0.0,
-			Vector2.ONE * (
-				MYSTERY_DEVICE_VISUAL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS
-			),
-			Color.WHITE,
-			Color(1.0, 1.0, 1.0, edge_alpha)
-		)
-		_write_instance(
-			_mystery_device_batches[device_state] as BatchHandle,
-			position,
-			0.0,
-			Vector2.ONE * MYSTERY_DEVICE_VISUAL_RADIUS,
-			Color.WHITE
-		)
 		var revealed_outcome := StringName(device.get("revealed_outcome", &""))
+		if revealed_outcome == &"":
+			var edge_alpha := _interaction_edge_alpha(
+				run_time, phase_offset, reduced_motion
+			)
+			_write_instance(
+				_mystery_device_contour_batches[device_state] as BatchHandle,
+				position,
+				0.0,
+				Vector2.ONE * (
+					MYSTERY_DEVICE_VISUAL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS
+				),
+				Color.WHITE,
+				Color(1.0, 1.0, 1.0, edge_alpha)
+			)
+			_write_instance(
+				_mystery_device_batches[device_state] as BatchHandle,
+				position,
+				0.0,
+				Vector2.ONE * MYSTERY_DEVICE_VISUAL_RADIUS,
+				Color.WHITE
+			)
+			continue
 		var symbol_descriptor := StringName({
 			&"gravity_pull": &"mystery_device_gravity",
 			&"cryo_lock": &"mystery_device_cryo",
@@ -1964,8 +1966,8 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			WorldCatalog.world_object_descriptor(symbol_descriptor).get("asset", &"")
 		)
 		if symbol_asset != &"":
-			# Semantic texture draws receive a half-size radius; this yields the
-			# required 72-world-unit symbol canvas.
+			# Once revealed, the approved symbol is the complete authored visual.
+			# Do not composite the neutral or resolved body underneath it.
 			_queue_semantic_texture(symbol_asset, position, 0.0, 36.0, Color.WHITE)
 
 

@@ -134,7 +134,7 @@ func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void
 	section.add_child(heading)
 	var grid := GridContainer.new()
 	grid.columns = 4
-	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	grid.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	grid.add_theme_constant_override("h_separation", 4 if _compact else 6)
 	grid.add_theme_constant_override("v_separation", 4 if _compact else 6)
 	section.add_child(grid)
@@ -150,10 +150,10 @@ func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void
 
 func _dimensions() -> Dictionary:
 	if _compact:
-		return {"cell":44.0, "art":36.0}
+		return {"cell":36.0, "art":30.0}
 	if _large:
-		return {"cell":56.0, "art":48.0}
-	return {"cell":52.0, "art":44.0}
+		return {"cell":44.0, "art":38.0}
+	return {"cell":40.0, "art":34.0}
 
 
 func _show_preview(record: Dictionary, cell: Control) -> void:
@@ -291,6 +291,13 @@ func debug_contract() -> Dictionary:
 					filled += 1
 					focusable += 1
 					artwork_ids.append(StringName(Dictionary(child.call("record")).get("artwork_asset_id", &"")))
+	var dimensions := _dimensions()
+	var grids_left_aligned := true
+	for grid in _grids():
+		grids_left_aligned = (
+			grids_left_aligned
+			and grid.size_flags_horizontal == Control.SIZE_SHRINK_BEGIN
+		)
 	return {
 		"minimum_width":custom_minimum_size.x,
 		"columns":4,
@@ -306,6 +313,9 @@ func debug_contract() -> Dictionary:
 		"heading_visible":_heading.visible if is_instance_valid(_heading) else false,
 		"minimum_height":custom_minimum_size.y,
 		"viewport_minimum_height":_viewport_minimum_height,
+		"cell_size":dimensions["cell"],
+		"artwork_size":dimensions["art"],
+		"grids_left_aligned":grids_left_aligned,
 	}
 
 

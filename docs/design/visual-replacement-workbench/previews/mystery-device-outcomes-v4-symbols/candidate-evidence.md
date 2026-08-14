@@ -21,8 +21,8 @@ related:
 
 Retain the grounded PNG sources, exact hashes, runtime-scale comparisons, and
 review state for the three Anomaly Device symbols. The neutral device body keeps
-the outcome hidden until the first accepted player hit. After reveal, one centered
-symbol communicates the known result while the code-native full-area footprint
+the outcome hidden until the first accepted player hit. After reveal, the neutral
+body is removed and one centered symbol is the sole authored device image while the code-native full-area footprint
 continues to communicate exact range and lifetime.
 
 ## Sources
@@ -51,13 +51,15 @@ continues to communicate exact range and lifetime.
   verb is **open armor**.
 - [`comparison.png`](./comparison.png) verifies the full candidate shapes.
   [`runtime-scale-comparison.png`](./runtime-scale-comparison.png) verifies the
-  intended 72-world-unit overlay size. [`grayscale-comparison.png`](./grayscale-comparison.png)
+  intended 72-world-unit standalone size. [`grayscale-comparison.png`](./grayscale-comparison.png)
   verifies separation without hue. [`device-overlay-preview.png`](./device-overlay-preview.png)
-  is a review-only placement of each already-authored symbol over the current
-  neutral device; it is not a production composite.
+  is superseded review-only placement evidence; it is not the approved runtime composition.
 - BK explicitly approved the V4 comparison on 2026-08-14. The candidates were
   promoted byte-for-byte to the matching production world PNG targets; their
   approved production SHA-256 values match the records below.
+- BK clarified on 2026-08-14 that the three comparison symbols must appear alone
+  after reveal, not over another device image. This clarification supersedes the
+  earlier overlay interpretation without changing any approved PNG bytes.
 
 ## Locked Product Semantics
 
@@ -113,12 +115,12 @@ inputs:
 ## Recommendations
 
 - The production owner registers the three world-state semantic PNGs and renders
-  exactly one centered 72-world-unit overlay after reveal. Preserve the complete
-  neutral device body and code-native effect footprint.
+  exactly one centered 72-world-unit standalone symbol after reveal. Preserve the
+  neutral body only before reveal and preserve the code-native effect footprint.
 
 ## Limitations
 
 - The candidates have not yet been tested in a dense live battlefield or Web
   export.
-- Image generation produced limited bevel planes. They remain readable at the
-  intended small size, but user approval is still required before production.
+- Image generation produced limited bevel planes. The user approved the resulting
+  symbols and later clarified their standalone runtime composition.

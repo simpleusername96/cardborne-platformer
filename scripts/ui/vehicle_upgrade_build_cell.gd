@@ -57,7 +57,7 @@ func is_filled() -> bool:
 
 
 func _build() -> void:
-	custom_minimum_size = Vector2(52.0, 52.0)
+	custom_minimum_size = Vector2(40.0, 40.0)
 	theme_type_variation = &"PreviewFrame"
 	_button = Button.new()
 	_button.flat = true

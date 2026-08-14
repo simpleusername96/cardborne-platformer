@@ -1426,6 +1426,7 @@ func _validate_mystery_device_presentation(
 ) -> void:
 	var device_position := Vector2(420.0, 260.0)
 	var resolved_position := Vector2(620.0, 260.0)
+	var unrevealed_position := Vector2(820.0, 260.0)
 	var presentation := _player_presentation(Vector2(260.0, 300.0), false)
 	presentation["reduced_motion"] = true
 	presentation["mystery_devices"] = [
@@ -1440,7 +1441,8 @@ func _validate_mystery_device_presentation(
 			"revealed_outcome":&"gravity_pull",
 		},
 		{"id":"device-b", "state":&"resolved", "visible":true, "position":resolved_position, "revealed_outcome":&"cryo_lock"},
-		{"id":"device-c", "state":&"retired", "visible":true, "position":Vector2(760.0, 260.0)},
+		{"id":"device-c", "state":&"intact", "visible":true, "position":unrevealed_position},
+		{"id":"device-d", "state":&"retired", "visible":true, "position":Vector2(960.0, 260.0)},
 	]
 	presentation["mystery_effects"] = [
 		{"effect_id":&"gravity_pull", "position":device_position, "radius":480.0},
@@ -1461,23 +1463,24 @@ func _validate_mystery_device_presentation(
 	) as MultiMeshInstance2D
 	var rings := renderer.get_node("MysteryEffect_ring") as MultiMeshInstance2D
 	var disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
+	var gravity_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
+	var cryo_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_cryo")
 	_expect(
 		intact.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
 			and resolved.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
 			and intact.multimesh.visible_instance_count == 1
-			and resolved.multimesh.visible_instance_count == 1
+			and resolved.multimesh.visible_instance_count == 0
 			and intact_contour.multimesh.visible_instance_count == 1
-			and resolved_contour.multimesh.visible_instance_count == 1,
-		"intact and resolved mystery devices use capacity-three retained batches while retired devices stay omitted"
+			and resolved_contour.multimesh.visible_instance_count == 0,
+		"only the unrevealed Anomaly Device keeps the neutral authored body and contour"
 	)
 	var intact_buffer := intact.multimesh.buffer
-	var resolved_buffer := resolved.multimesh.buffer
 	_expect(
-		Vector2(intact_buffer[3], intact_buffer[7]).is_equal_approx(device_position)
+		Vector2(intact_buffer[3], intact_buffer[7]).is_equal_approx(unrevealed_position)
 			and Vector2(intact_buffer[0], intact_buffer[4]).length() == Renderer.MYSTERY_DEVICE_VISUAL_RADIUS
-			and Vector2(resolved_buffer[3], resolved_buffer[7]).is_equal_approx(resolved_position)
-			and Vector2(resolved_buffer[0], resolved_buffer[4]).length() == Renderer.MYSTERY_DEVICE_VISUAL_RADIUS,
-		"reduced-motion mystery devices preserve gameplay positions at the 84-unit visual scale"
+			and gravity_symbols.size() == 1
+			and cryo_symbols.size() == 1,
+		"revealed devices replace the base body with one standalone outcome symbol"
 	)
 	_expect(
 		is_equal_approx(
@@ -1494,8 +1497,6 @@ func _validate_mystery_device_presentation(
 		),
 		"mystery devices reuse one static reduced-motion silhouette contour"
 	)
-	var gravity_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
-	var cryo_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_cryo")
 	_expect(
 		gravity_symbols.size() == 1
 		and cryo_symbols.size() == 1
@@ -1509,7 +1510,7 @@ func _validate_mystery_device_presentation(
 		rings.z_index == -1
 			and rings.multimesh.visible_instance_count == 3
 			and disks.multimesh.visible_instance_count == 3,
-		"gravity, cryo, and weakpoint each publish one full body plus a boundary accent"
+		"gravity, cryo, and weakpoint each publish one full effect body plus a boundary accent"
 	)
 	var health_snapshot := renderer.debug_snapshot()
 	_expect(
@@ -1583,12 +1584,12 @@ func _validate_mystery_device_presentation(
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
 	var pickup_phase := Renderer._stable_interaction_phase("repair-a")
-	var device_phase := Renderer._stable_interaction_phase("device-a")
+	var device_phase := Renderer._stable_interaction_phase("device-c")
 	var expected_pickup_position := pickup_position + Vector2.DOWN * (
 		sin(float(presentation["run_time"]) * TAU / Renderer.MAP_PICKUP_BOB_PERIOD + pickup_phase)
 		* Renderer.MAP_PICKUP_BOB_AMPLITUDE
 	)
-	var expected_device_position := device_position + Vector2.DOWN * (
+	var expected_device_position := unrevealed_position + Vector2.DOWN * (
 		sin(float(presentation["run_time"]) * TAU / Renderer.MYSTERY_DEVICE_BOB_PERIOD + device_phase)
 		* Renderer.MYSTERY_DEVICE_BOB_AMPLITUDE
 	)
@@ -1620,6 +1621,8 @@ func _validate_mystery_device_presentation(
 	_expect(
 		intact.multimesh.visible_instance_count == 0
 			and resolved.multimesh.visible_instance_count == 0
+			and intact_contour.multimesh.visible_instance_count == 0
+			and resolved_contour.multimesh.visible_instance_count == 0
 			and rings.multimesh.visible_instance_count == 0
 			and disks.multimesh.visible_instance_count == 0,
 		"inactive mystery device and timed-effect inputs clear their retained instances"
