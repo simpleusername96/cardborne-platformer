@@ -1390,6 +1390,23 @@ func _capture_exact_area_effect_evidence() -> void:
 	]
 	if settings != null:
 		settings.reduced_motion = false
+	var damaged_center := _prepare_exact_area_scene(1.0)
+	_run.player_position = damaged_center + Vector2(0.0, -130.0)
+	_run.mystery_device_runtime.configure(
+		[{"id":&"capture_mystery_damaged", "pos":damaged_center, "outcome":&"gravity_pull"}],
+		1701,
+		_run.current_stage_id
+	)
+	var damaged_receipt: Dictionary = _run.mystery_device_runtime.receive_damage(
+		&"capture_mystery_damaged", 45.0, &"player", &"primary"
+	)
+	if bool(damaged_receipt.get("accepted", false)) and not bool(damaged_receipt.get("broken", false)):
+		_run.capture_set_mode(&"paused")
+		_refresh_combat_capture()
+		await _run.get_tree().process_frame
+		_save_capture("09x-mystery-device-damaged.png")
+	else:
+		push_error("damaged Mystery fixture did not remain attackable")
 	for profile_variant in mystery_profiles:
 		var profile := Array(profile_variant)
 		var outcome := StringName(profile[0])

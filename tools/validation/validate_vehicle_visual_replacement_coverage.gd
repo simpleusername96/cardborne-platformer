@@ -91,7 +91,7 @@ func _initialize() -> void:
 func _validate_active_world_catalog() -> void:
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
 	var expected := [
-		&"mystery_device_intact", &"mystery_device_resolved",
+		&"mystery_device_intact", &"mystery_device_damaged",
 		&"mystery_device_gravity", &"mystery_device_cryo", &"mystery_device_weakpoint",
 		&"transit_gate",
 	]
@@ -100,7 +100,7 @@ func _validate_active_world_catalog() -> void:
 		matches = matches and active_ids.has(expected_id)
 	_expect(
 		matches,
-		"runtime world catalog switches the transit gate and both Anomaly Device states"
+		"runtime world catalog switches the transit gate and both attackable Anomaly Device states"
 	)
 
 

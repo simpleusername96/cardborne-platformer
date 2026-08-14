@@ -79,11 +79,11 @@ func _validate_build_rail(catalog: Catalog) -> void:
 			and int(empty["cell_count"]) == 21
 			and int(empty["filled_count"]) == 0
 			and int(empty["focusable_count"]) == 0
-			and bool(empty["scroll_enabled"])
+			and not bool(empty["scroll_enabled"])
 			and bool(empty["grids_left_aligned"])
-			and is_equal_approx(float(empty["cell_size"]), 40.0)
-			and is_equal_approx(float(empty["artwork_size"]), 34.0),
-		"empty build rail exposes 21 compact, left-aligned, non-focusable image slots"
+			and is_equal_approx(float(empty["cell_size"]), 28.0)
+			and is_equal_approx(float(empty["artwork_size"]), 22.0),
+		"empty build rail exposes 21 compact, left-aligned image-only slots without internal scrolling"
 	)
 	var original_locale := TranslationServer.get_locale()
 	TranslationServer.set_locale("ko")
@@ -134,8 +134,8 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	var compact := rail.debug_contract()
 	_expect(
 		is_equal_approx(float(compact["minimum_width"]), 216.0)
-			and is_equal_approx(float(compact["cell_size"]), 36.0)
-			and is_equal_approx(float(compact["artwork_size"]), 30.0)
+			and is_equal_approx(float(compact["cell_size"]), 26.0)
+			and is_equal_approx(float(compact["artwork_size"]), 20.0)
 			and bool(compact["grids_left_aligned"]),
 		"compact rail uses small left-aligned slots"
 	)
@@ -143,8 +143,8 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	var standard := rail.debug_contract()
 	_expect(
 		is_equal_approx(float(standard["minimum_width"]), 248.0)
-			and is_equal_approx(float(standard["cell_size"]), 40.0)
-			and is_equal_approx(float(standard["artwork_size"]), 34.0)
+			and is_equal_approx(float(standard["cell_size"]), 28.0)
+			and is_equal_approx(float(standard["artwork_size"]), 22.0)
 			and bool(standard["grids_left_aligned"]),
 		"standard rail uses small left-aligned slots"
 	)
@@ -152,8 +152,8 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	var large := rail.debug_contract()
 	_expect(
 		is_equal_approx(float(large["minimum_width"]), 264.0)
-			and is_equal_approx(float(large["cell_size"]), 44.0)
-			and is_equal_approx(float(large["artwork_size"]), 38.0)
+			and is_equal_approx(float(large["cell_size"]), 30.0)
+			and is_equal_approx(float(large["artwork_size"]), 24.0)
 			and bool(large["grids_left_aligned"]),
 		"large rail keeps bounded left-aligned slots"
 	)

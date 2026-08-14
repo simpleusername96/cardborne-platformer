@@ -15,7 +15,6 @@ const SemanticAssets = preload(
 var _record: Dictionary = {}
 var _button: Button
 var _artwork: TextureRect
-var _level: Label
 
 
 func _ready() -> void:
@@ -35,7 +34,6 @@ func set_record(record: Dictionary, cell_size: float, artwork_size: float) -> vo
 		_button.disabled = true
 		_button.accessibility_name = ""
 		_artwork.texture = null
-		_level.text = ""
 		return
 	theme_type_variation = &"PreviewFrame"
 	_button.focus_mode = Control.FOCUS_ALL
@@ -45,7 +43,6 @@ func set_record(record: Dictionary, cell_size: float, artwork_size: float) -> vo
 	_artwork.texture = SemanticAssets.texture(
 		StringName(_record.get("artwork_asset_id", &""))
 	)
-	_level.text = "Lv.%d" % int(_record.get("level", 0))
 
 
 func record() -> Dictionary:
@@ -57,7 +54,7 @@ func is_filled() -> bool:
 
 
 func _build() -> void:
-	custom_minimum_size = Vector2(40.0, 40.0)
+	custom_minimum_size = Vector2(28.0, 28.0)
 	theme_type_variation = &"PreviewFrame"
 	_button = Button.new()
 	_button.flat = true
@@ -79,13 +76,6 @@ func _build() -> void:
 	_artwork.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	center.add_child(_artwork)
-	_level = Label.new()
-	_level.theme_type_variation = &"MetricLabel"
-	_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_level.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	_level.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_level.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_button.add_child(_level)
 
 
 func _request_preview() -> void:

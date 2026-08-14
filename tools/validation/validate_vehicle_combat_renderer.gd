@@ -1454,12 +1454,12 @@ func _validate_mystery_device_presentation(
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
 	var intact := renderer.get_node("MysteryDevice_intact") as MultiMeshInstance2D
-	var resolved := renderer.get_node("MysteryDevice_resolved") as MultiMeshInstance2D
+	var damaged := renderer.get_node("MysteryDevice_damaged") as MultiMeshInstance2D
 	var intact_contour := renderer.get_node(
 		"MysteryDeviceContour_intact"
 	) as MultiMeshInstance2D
-	var resolved_contour := renderer.get_node(
-		"MysteryDeviceContour_resolved"
+	var damaged_contour := renderer.get_node(
+		"MysteryDeviceContour_damaged"
 	) as MultiMeshInstance2D
 	var rings := renderer.get_node("MysteryEffect_ring") as MultiMeshInstance2D
 	var disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
@@ -1467,20 +1467,23 @@ func _validate_mystery_device_presentation(
 	var cryo_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_cryo")
 	_expect(
 		intact.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
-			and resolved.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
+			and damaged.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
 			and intact.multimesh.visible_instance_count == 1
-			and resolved.multimesh.visible_instance_count == 0
+			and damaged.multimesh.visible_instance_count == 1
 			and intact_contour.multimesh.visible_instance_count == 1
-			and resolved_contour.multimesh.visible_instance_count == 0,
-		"only the unrevealed Anomaly Device keeps the neutral authored body and contour"
+			and damaged_contour.multimesh.visible_instance_count == 1,
+		"pristine and attacked Anomaly Devices use separate neutral body states"
 	)
 	var intact_buffer := intact.multimesh.buffer
+	var damaged_buffer := damaged.multimesh.buffer
 	_expect(
 		Vector2(intact_buffer[3], intact_buffer[7]).is_equal_approx(unrevealed_position)
+			and Vector2(damaged_buffer[3], damaged_buffer[7]).is_equal_approx(device_position)
 			and Vector2(intact_buffer[0], intact_buffer[4]).length() == Renderer.MYSTERY_DEVICE_VISUAL_RADIUS
-			and gravity_symbols.size() == 1
+			and Vector2(damaged_buffer[0], damaged_buffer[4]).length() == Renderer.MYSTERY_DEVICE_VISUAL_RADIUS
+			and gravity_symbols.is_empty()
 			and cryo_symbols.size() == 1,
-		"revealed devices replace the base body with one standalone outcome symbol"
+		"damage reveals the cracked body while only a broken device shows its outcome symbol"
 	)
 	_expect(
 		is_equal_approx(
@@ -1497,14 +1500,26 @@ func _validate_mystery_device_presentation(
 		),
 		"mystery devices reuse one static reduced-motion silhouette contour"
 	)
+	presentation["mystery_devices"][0]["state"] = &"resolved"
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+	)
+	gravity_symbols = renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
+	cryo_symbols = renderer.debug_semantic_texture_draws(&"world/mystery_device_cryo")
 	_expect(
 		gravity_symbols.size() == 1
 		and cryo_symbols.size() == 1
+		and damaged.multimesh.visible_instance_count == 0
 		and Vector2(gravity_symbols[0]["position"]).is_equal_approx(device_position)
 		and Vector2(cryo_symbols[0]["position"]).is_equal_approx(resolved_position)
-		and is_equal_approx(float(gravity_symbols[0]["radius"]), 36.0)
-		and is_equal_approx(float(cryo_symbols[0]["radius"]), 36.0),
-		"revealed symbols retain their 72-world-unit canvas through resolved-state retirement"
+		and is_equal_approx(
+			float(gravity_symbols[0]["radius"]), Renderer.MYSTERY_DEVICE_SYMBOL_RADIUS
+		)
+		and is_equal_approx(
+			float(cryo_symbols[0]["radius"]), Renderer.MYSTERY_DEVICE_SYMBOL_RADIUS
+		),
+		"broken devices replace every body with one standalone 288-world-unit symbol"
 	)
 	_expect(
 		rings.z_index == -1
@@ -1612,17 +1627,37 @@ func _validate_mystery_device_presentation(
 			),
 		"standard motion applies each pickup/device bob period and breathing-contour alpha"
 	)
-	presentation["mystery_devices"] = []
+	presentation["reduced_motion"] = true
+	presentation["mystery_devices"] = [
+		{
+			"id":"device-edge",
+			"state":&"resolved",
+			"visible":true,
+			"position":Vector2(-120.0, 260.0),
+			"revealed_outcome":&"gravity_pull",
+		},
+	]
 	presentation["mystery_effects"] = []
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+	)
+	var edge_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
+	_expect(
+		edge_symbols.size() == 1
+			and Vector2(edge_symbols[0]["position"]).is_equal_approx(Vector2(-120.0, 260.0)),
+		"large outcome symbols stay rendered while their visible edge intersects the viewport"
+	)
+	presentation["mystery_devices"] = []
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
 	_expect(
 		intact.multimesh.visible_instance_count == 0
-			and resolved.multimesh.visible_instance_count == 0
+			and damaged.multimesh.visible_instance_count == 0
 			and intact_contour.multimesh.visible_instance_count == 0
-			and resolved_contour.multimesh.visible_instance_count == 0
+			and damaged_contour.multimesh.visible_instance_count == 0
 			and rings.multimesh.visible_instance_count == 0
 			and disks.multimesh.visible_instance_count == 0,
 		"inactive mystery device and timed-effect inputs clear their retained instances"

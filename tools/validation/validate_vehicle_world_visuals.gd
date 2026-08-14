@@ -59,7 +59,7 @@ func _validate_catalog() -> void:
 	var expected_objects := {
 		&"transit_gate": [ &"world/facility_transit_gate", &"round_portal" ],
 		&"mystery_device_intact": [ &"world/mystery_device_intact", &"neutral_mechanical_body" ],
-		&"mystery_device_resolved": [ &"world/mystery_device_resolved", &"resolved_wreck" ],
+		&"mystery_device_damaged": [ &"world/mystery_device_damaged", &"cracked_neutral_body" ],
 		&"mystery_device_gravity": [ &"world/mystery_device_gravity", &"inward_arrows" ],
 		&"mystery_device_cryo": [ &"world/mystery_device_cryo", &"broad_snowflake" ],
 		&"mystery_device_weakpoint": [ &"world/mystery_device_weakpoint", &"opened_armor" ],

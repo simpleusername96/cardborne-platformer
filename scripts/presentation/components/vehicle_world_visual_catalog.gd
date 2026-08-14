@@ -24,11 +24,11 @@ const WORLD_OBJECT_DESCRIPTORS := {
 		"shape": &"neutral_mechanical_body",
 		"color": &"system",
 	},
-	&"mystery_device_resolved": {
-		"asset": &"world/mystery_device_resolved",
+	&"mystery_device_damaged": {
+		"asset": &"world/mystery_device_damaged",
 		"kind": &"mystery_device",
-		"state": &"resolved",
-		"shape": &"resolved_wreck",
+		"state": &"damaged",
+		"shape": &"cracked_neutral_body",
 		"color": &"raised",
 	},
 	&"mystery_device_gravity": {

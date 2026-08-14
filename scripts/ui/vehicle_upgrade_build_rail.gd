@@ -8,7 +8,6 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const BuildCell = preload("res://scripts/ui/vehicle_upgrade_build_cell.gd")
 
-var _scroll: ScrollContainer
 var _sections: VBoxContainer
 var _heading: Label
 var _popover_layer: Control
@@ -25,20 +24,15 @@ var _snapshot: Dictionary = {}
 
 func _ready() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_theme_constant_override("separation", 8)
+	add_theme_constant_override("separation", 4)
 	_heading = Factory.section_heading(tr("UPGRADE_CURRENT_BUILD"))
 	_heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_heading.max_lines_visible = 2
 	add_child(_heading)
-	_scroll = ScrollContainer.new()
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_scroll)
 	_sections = VBoxContainer.new()
 	_sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_sections.add_theme_constant_override("separation", 8)
-	_scroll.add_child(_sections)
+	_sections.add_theme_constant_override("separation", 4)
+	add_child(_sections)
 	# Keep the floating detail surface outside VBox sizing so opening it cannot
 	# push the fixed offer/action region or create modal overflow.
 	_popover_layer = Control.new()
@@ -113,30 +107,32 @@ func _apply_size_mode() -> void:
 	custom_minimum_size.y = _viewport_minimum_height
 	if is_instance_valid(_heading):
 		_heading.visible = _show_heading
+		_heading.add_theme_font_size_override(
+			"font_size", 16 if _compact else (18 if _large else 17)
+		)
 	if is_instance_valid(_sections):
-		_sections.add_theme_constant_override("separation", 6 if _compact else 8)
+		_sections.add_theme_constant_override("separation", 3 if _compact else 4)
 
 
 func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void:
 	var section := VBoxContainer.new()
-	section.add_theme_constant_override("separation", 4)
+	section.add_theme_constant_override("separation", 2)
 	_sections.add_child(section)
 	var heading := Factory.label(
 		tr(String(category.get("heading_key", ""))),
-		16 if _compact else (18 if _large else 17),
+		13 if _compact else 14,
 		Art.MUSTARD
 	)
 	heading.theme_type_variation = &"MetricLabel"
-	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	heading.max_lines_visible = 2
+	heading.max_lines_visible = 1
 	heading.tooltip_text = tr(String(category.get("description_key", "")))
 	heading.accessibility_description = tr(String(category.get("description_key", "")))
 	section.add_child(heading)
 	var grid := GridContainer.new()
 	grid.columns = 4
 	grid.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	grid.add_theme_constant_override("h_separation", 4 if _compact else 6)
-	grid.add_theme_constant_override("v_separation", 4 if _compact else 6)
+	grid.add_theme_constant_override("h_separation", 2 if _compact else 3)
+	grid.add_theme_constant_override("v_separation", 2 if _compact else 3)
 	section.add_child(grid)
 	for slot_variant in Array(category.get("slots", [])):
 		var slot := Dictionary(slot_variant)
@@ -150,10 +146,10 @@ func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void
 
 func _dimensions() -> Dictionary:
 	if _compact:
-		return {"cell":36.0, "art":30.0}
+		return {"cell":26.0, "art":20.0}
 	if _large:
-		return {"cell":44.0, "art":38.0}
-	return {"cell":40.0, "art":34.0}
+		return {"cell":30.0, "art":24.0}
+	return {"cell":28.0, "art":22.0}
 
 
 func _show_preview(record: Dictionary, cell: Control) -> void:
@@ -309,7 +305,8 @@ func debug_contract() -> Dictionary:
 		"focusable_count":focusable,
 		"artwork_ids":artwork_ids,
 		"popover_visible":_popover.visible if is_instance_valid(_popover) else false,
-		"scroll_enabled":is_instance_valid(_scroll),
+		"scroll_enabled":false,
+		"sections_minimum_height":_sections.get_combined_minimum_size().y if is_instance_valid(_sections) else 0.0,
 		"heading_visible":_heading.visible if is_instance_valid(_heading) else false,
 		"minimum_height":custom_minimum_size.y,
 		"viewport_minimum_height":_viewport_minimum_height,

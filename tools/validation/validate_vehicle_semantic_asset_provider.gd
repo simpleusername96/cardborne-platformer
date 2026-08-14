@@ -21,7 +21,7 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"pickup/experience_recall",
 	&"world/facility_transit_gate",
 	&"world/mystery_device_intact",
-	&"world/mystery_device_resolved",
+	&"world/mystery_device_damaged",
 	&"world/surface_detail_crack",
 	&"world/surface_detail_stain",
 	&"world/surface_detail_embedded_chip",
@@ -173,7 +173,7 @@ func _initialize() -> void:
 func _validate_normalized_content_rects() -> void:
 	var expected := {
 		&"world/mystery_device_intact":Rect2i(6, 5, 372, 374),
-		&"world/mystery_device_resolved":Rect2i(6, 5, 372, 374),
+		&"world/mystery_device_damaged":Rect2i(8, 5, 368, 374),
 	}
 	for asset_id in expected:
 		var descriptor := AssetProvider.descriptor(asset_id)
