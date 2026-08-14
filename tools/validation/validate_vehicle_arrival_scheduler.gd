@@ -18,7 +18,10 @@ func _initialize() -> void:
 	if layout == null:
 		_finish()
 		return
-	var stage_id := CombatStages.STAGE_IDS[0]
+	# Stage 1 deliberately uses one-squad windows so its exact six-unit live cap
+	# can preserve atomic admission. Exercise the shared three-by-four scheduler
+	# contract with the first standard packet shape instead.
+	var stage_id := CombatStages.STAGE_IDS[1]
 	var tactical = layout.tactical_layout(stage_id)
 	var packet: Dictionary = CombatStages.definition(stage_id)["packets"][1].duplicate(true)
 	packet["trigger"] = {"kind":&"time", "at":0.0}

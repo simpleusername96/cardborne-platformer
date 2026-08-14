@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-04
-last_reviewed: 2026-08-14
+last_reviewed: 2026-08-15
 canonical_for: Agent-facing map of Cardborne product and surface intent, authority order, preserved experience contracts, and production design owners
 scope: Substantial user-facing UI and visual work across gameplay, HUD, modals, menus, guidebook, reports, and visual replacement
 related:
@@ -49,7 +49,7 @@ responsible owner. Do not blend them or resolve the disagreement in this map.
 
 ## Product and Surface Intent
 
-- Preserve the connected five-stage run, manual aim, held primary fire, dash,
+- Preserve the connected ten-stage paired run, manual aim, held primary fire, dash,
   card-acquired automatic and active weapons, authored encounters, map pickups,
   card upgrades, and quota-gated bosses.
 - Keep Korean as the default language and keep Korean and English complete on every

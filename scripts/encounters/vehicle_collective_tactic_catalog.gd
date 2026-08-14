@@ -115,9 +115,14 @@ const RECIPES := {
 
 const STAGE_ROLLOUT := [
 	{"teach": &"spearhead", "combine": &"swarm_screen"},
+	{"teach": &"spearhead", "combine": &"swarm_screen"},
+	{"teach": &"shepherd_pack", "combine": &"shielded_column"},
 	{"teach": &"shepherd_pack", "combine": &"shielded_column"},
 	{"teach": &"fuse_pack", "combine": &"bulwark_fuse"},
+	{"teach": &"fuse_pack", "combine": &"bulwark_fuse"},
 	{"teach": &"repair_network", "combine": &"crossfire_convoy"},
+	{"teach": &"repair_network", "combine": &"crossfire_convoy"},
+	{"teach": &"learned_remix", "combine": &"learned_remix"},
 	{"teach": &"learned_remix", "combine": &"learned_remix"},
 ]
 
@@ -134,7 +139,9 @@ static func assignment_for(
 ) -> Dictionary:
 	if squad_count <= 0 or surge_count <= 0:
 		return {}
-	var normalized_stage := clampi(stage_index, 0, STAGE_ROLLOUT.size() - 1)
+	if stage_index < 0 or stage_index >= STAGE_ROLLOUT.size():
+		return {}
+	var normalized_stage := stage_index
 	var normalized_progress := float(surge_index) / float(maxi(1, surge_count - 1))
 	var beat_kind := (
 		&"teach"

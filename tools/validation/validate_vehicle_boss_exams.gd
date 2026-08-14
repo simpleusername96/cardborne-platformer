@@ -24,8 +24,9 @@ func _validate_catalog() -> void:
 	)
 	var variants := {}
 	var signatures := {}
-	for stage_number in 5:
-		var stage_id := StringName("stage_%d" % (stage_number + 1))
+	for boss_index in 5:
+		var stage_number := (boss_index + 1) * 2
+		var stage_id := StringName("stage_%d" % stage_number)
 		var variant := Catalog.variant(stage_id)
 		variants[variant] = true
 		var signature := String(
@@ -48,8 +49,9 @@ func _validate_catalog() -> void:
 
 
 func _validate_shield_cycle() -> void:
-	for stage_number in 5:
-		var stage_id := StringName("stage_%d" % (stage_number + 1))
+	for boss_index in 5:
+		var stage_index := boss_index * 2 + 1
+		var stage_id := StringName("stage_%d" % (stage_index + 1))
 		var runtime := Runtime.new()
 		runtime.configure(stage_id)
 		var payload := runtime.begin_phase(1)
@@ -57,7 +59,7 @@ func _validate_shield_cycle() -> void:
 			runtime.state() == &"shield_up"
 				and is_equal_approx(
 					runtime.boss_damage_multiplier(),
-					StageDifficulty.boss_shielded_damage_multiplier(stage_number)
+					StageDifficulty.boss_shielded_damage_multiplier(stage_index)
 				)
 				and not payload.has("modules"),
 			"%s starts with its stage-owned boss shield and no external objective" % stage_id
@@ -79,7 +81,7 @@ func _validate_shield_cycle() -> void:
 			runtime.state() == &"shield_up"
 				and is_equal_approx(
 					runtime.boss_damage_multiplier(),
-					StageDifficulty.boss_shielded_damage_multiplier(stage_number)
+					StageDifficulty.boss_shielded_damage_multiplier(stage_index)
 				),
 			"%s shield returns after the bounded window" % stage_id
 		)

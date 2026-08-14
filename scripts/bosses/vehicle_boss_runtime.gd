@@ -9,6 +9,7 @@ const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 
 const PHASE_GAPS := [0.45, 0.34, 0.26]
 const AUTONOMOUS_INTERVALS := [5.4, 4.4, 3.5]
@@ -38,7 +39,10 @@ var finite_summons_remaining := 6
 
 func configure(next_stage_id: StringName) -> void:
 	stage_id = next_stage_id
-	stage_index = StageDifficulty.stage_index_from_id(stage_id)
+	stage_index = (
+		StageDifficulty.stage_index_from_id(stage_id)
+		if CombatStages.has_boss(stage_id) else -1
+	)
 	autonomous_timer = 3.2 * StageDifficulty.boss_cadence_scale(stage_index)
 	autonomous_index = 0
 	autonomous_serial = 0
@@ -54,6 +58,8 @@ func read_gap(phase: int) -> float:
 
 func select_direct(boss: VehicleEnemyState) -> String:
 	var sequence := Patterns.sequence(stage_id, boss.boss_phase)
+	if sequence.is_empty():
+		return ""
 	var candidate := String(sequence[boss.pattern_index % sequence.size()])
 	boss.pattern_index += 1
 	if candidate == String(boss.last_pattern):
@@ -249,6 +255,8 @@ func advance_autonomous(
 	if autonomous_timer > 0.0:
 		return events
 	var sequence := Patterns.autonomous_sequence(stage_id)
+	if sequence.is_empty():
+		return events
 	var pattern := String(sequence[autonomous_index % sequence.size()])
 	autonomous_index += 1
 	autonomous_serial += 1

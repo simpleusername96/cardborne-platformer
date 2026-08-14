@@ -49,7 +49,7 @@ func _validate_field(field_id: StringName) -> void:
 	)
 	for stage_id in Catalog.STAGE_IDS:
 		var pickups := layout.pickup_blueprint(stage_id)
-		_expect(pickups.size() == 14, "%s/%s exposes fourteen direct pickups" % [field_id, stage_id])
+		_expect(pickups.size() == 7, "%s/%s exposes seven direct pickups" % [field_id, stage_id])
 		for pickup in pickups:
 			_expect(not Dictionary(pickup).has("guarded_by"), "%s/%s pickup has no terrain guard" % [field_id, stage_id])
 

@@ -60,30 +60,20 @@ func _run() -> void:
 		),
 		"boss movement preserves the committed-attack multiplier"
 	)
-	var health_curve := [0.85, 1.00, 1.15, 1.30, 1.45]
-	var health_pressure := [1.15, 1.55, 1.70, 1.85, 2.00]
-	var previous_health_pressure := [1.35, 1.45, 1.55, 1.65, 1.75]
-	var boss_bases := [1250.0, 1350.0, 1450.0, 1550.0, 1650.0]
-	var boss_health_multipliers := [4.20, 4.30, 4.40, 4.50, 4.60]
-	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health uses the locked five-stage curve")
+	var health_curve := [0.85, 0.917, 0.983, 1.05, 1.117, 1.183, 1.25, 1.317, 1.383, 1.45]
+	var health_pressure := [1.15, 1.244, 1.339, 1.433, 1.528, 1.622, 1.717, 1.811, 1.906, 2.0]
+	var boss_bases := [1250.0, 1294.444, 1338.889, 1383.333, 1427.778, 1472.222, 1516.667, 1561.111, 1605.556, 1650.0]
+	var boss_health_multipliers := [4.20, 4.244, 4.289, 4.333, 4.378, 4.422, 4.467, 4.511, 4.556, 4.60]
+	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health uses the locked ten-stage curve")
 	_expect(
 		StageDifficulty.ORDINARY_HEALTH_PRESSURE == health_pressure,
-		"ordinary health applies the revised five-stage pressure curve"
+		"ordinary health applies the interpolated ten-stage pressure curve"
 	)
 	_expect(
 		is_equal_approx(StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER, 1.20),
 		"all non-boss hostiles use one final 20 percent durability policy"
 	)
-	_expect(
-		_near(health_pressure[0] / previous_health_pressure[0], 0.85, 0.01),
-		"Stage 1 ordinary health pressure is approximately 15 percent lower"
-	)
-	for stage_index in range(1, health_pressure.size()):
-		_expect(
-			health_pressure[stage_index] > previous_health_pressure[stage_index],
-			"Stage %d ordinary health pressure is higher than the previous curve"
-				% (stage_index + 1)
-		)
+	_expect(health_pressure[-1] == 2.0, "Stage 10 retains the previous final health-pressure endpoint")
 	for stage_index in health_curve.size():
 		stage.current_stage_index = stage_index
 		var standard_enemy = stage.call("_make_enemy", {
@@ -136,30 +126,22 @@ func _run() -> void:
 			"Stage %d applies the exact monotonic boss-health profile"
 				% (stage_index + 1)
 		)
-	var damage_curve := [1.00, 1.03, 1.06, 1.09, 1.12]
-	var damage_pressure := [0.98, 1.30, 1.42, 1.54, 1.66]
-	var previous_damage_pressure := [1.15, 1.24, 1.33, 1.42, 1.50]
-	var expected_damage := [17.199, 23.49945, 26.41626, 29.45943, 32.62896]
+	var damage_curve := [1.00, 1.013, 1.027, 1.04, 1.053, 1.067, 1.08, 1.093, 1.107, 1.12]
+	var damage_pressure := [0.98, 1.056, 1.131, 1.207, 1.282, 1.358, 1.433, 1.509, 1.584, 1.66]
 	_expect(
 		StageDifficulty.ORDINARY_DAMAGE_PRESSURE == damage_pressure,
-		"ordinary damage applies the revised five-stage pressure curve"
+		"ordinary damage applies the interpolated ten-stage pressure curve"
 	)
-	_expect(
-		_near(damage_pressure[0] / previous_damage_pressure[0], 0.85, 0.01),
-		"Stage 1 ordinary damage pressure is approximately 15 percent lower"
-	)
-	for stage_index in range(1, damage_pressure.size()):
-		_expect(
-			damage_pressure[stage_index] > previous_damage_pressure[stage_index],
-			"Stage %d ordinary damage pressure is higher than the previous curve"
-				% (stage_index + 1)
-		)
 	for stage_index in damage_curve.size():
 		stage.current_stage_index = stage_index
+		var expected_damage: float = (
+			10.0 * EncounterDirector.ENEMY_DAMAGE_MULTIPLIER
+			* damage_curve[stage_index] * damage_pressure[stage_index]
+		)
 		_expect(
 			_near(
 				float(stage.call("_scaled_incoming_damage", 10.0, true)),
-				expected_damage[stage_index],
+				expected_damage,
 				0.001
 			),
 			"Stage %d applies the exact ordinary outgoing-damage curve"
@@ -198,15 +180,15 @@ func _run() -> void:
 		var base_speed := float(
 			EnemyArchetypes.definition(StringName(archetype))["speed"]
 		)
-		var stage_five_speed := (
+		var stage_ten_speed := (
 			base_speed
 			* EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER
-			* float(StageDifficulty.SPEED[4])
+			* float(StageDifficulty.SPEED[9])
 		)
 		_expect(
 			_near(base_speed, float(tuned_mobile_bases[archetype]), 0.001)
-				and stage_five_speed < 280.0,
-			"%s keeps its tuned base and stays below player speed at Stage 5"
+				and stage_ten_speed < 280.0,
+			"%s keeps its tuned base and stays below player speed at Stage 10"
 			% String(archetype)
 		)
 	stage.call("_reset_run", false, true, true)

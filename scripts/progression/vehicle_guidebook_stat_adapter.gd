@@ -38,6 +38,7 @@ static func enemy_rows(
 ) -> Array[Dictionary]:
 	var definition := Archetypes.definition(archetype)
 	var active_stage := int(context.get("active_stage_index", -1))
+	var final_stage := StageDifficulty.HEALTH.size() - 1
 	var rows: Array[Dictionary] = []
 	if active_stage >= 0:
 		rows.append(_row(
@@ -49,7 +50,7 @@ static func enemy_rows(
 			"GUIDE_STAT_HEALTH", "GUIDE_VALUE_HP_RANGE",
 			[
 				roundi(_enemy_health(archetype, 0)),
-				roundi(_enemy_health(archetype, 4)),
+				roundi(_enemy_health(archetype, final_stage)),
 			], &"health"
 		))
 	var attack := _enemy_attack(archetype, definition)
@@ -73,7 +74,7 @@ static func enemy_rows(
 		else:
 			rows.append(_damage_row(
 				_enemy_damage(base_damage, 0),
-				_enemy_damage(base_damage, 4),
+				_enemy_damage(base_damage, final_stage),
 				attack_range,
 				true
 			))
@@ -92,7 +93,7 @@ static func enemy_rows(
 			"GUIDE_STAT_SPEED", "GUIDE_VALUE_SPEED_RANGE",
 			[
 				roundi(_enemy_speed(base_speed, 0)),
-				roundi(_enemy_speed(base_speed, 4)),
+				roundi(_enemy_speed(base_speed, final_stage)),
 			], &"speed"
 		))
 	if archetype == &"bulkhead_guard":
@@ -125,11 +126,15 @@ static func elite_rows(elite_trait: StringName) -> Array[Dictionary]:
 
 
 static func boss_rows(stage_index: int) -> Array[Dictionary]:
-	var index := clampi(stage_index, 0, 4)
+	if stage_index < 0 or stage_index >= StageDifficulty.BOSS_BASE_HEALTH.size():
+		return []
+	var index := stage_index
 	var stage_id := StringName("stage_%d" % (index + 1))
 	var patterns: Array[String] = BossPatterns.sequence(stage_id, 1)
 	for autonomous in BossPatterns.autonomous_sequence(stage_id):
 		patterns.append(String(autonomous))
+	if patterns.is_empty():
+		return []
 	var minimum_damage := INF
 	var maximum_damage := 0.0
 	var maximum_radius := 0.0

@@ -71,7 +71,7 @@ func _validate_catalog_and_stage_rollout() -> void:
 		_expect(beat_kinds.has(&"combine"), "%s includes a Combine beat" % stage_id)
 		_expect(beat_kinds.has(&"power_test"), "%s includes a Power Test beat" % stage_id)
 		_expect(
-			tactic_ids.size() == (1 if stage_index == 4 else 2),
+			tactic_ids.size() == (1 if stage_index >= 8 else 2),
 			"%s exposes the planned tactic family count" % stage_id
 		)
 

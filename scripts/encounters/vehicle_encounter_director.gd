@@ -26,6 +26,13 @@ const MATERIALIZED_ACTIVE_CAPS := [6, 40, 48, 48, 48]
 const ACTIVE_CAPS := MATERIALIZED_ACTIVE_CAPS
 const THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
 
+## Stage pressure is deliberately separate from packet beats. Beats choose the
+## shape and timing of an encounter; stages set the run's bounded live pressure.
+const STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
+const STAGE_MATERIALIZED_ACTIVE_CAPS := [6, 32, 40, 40, 48, 48, 48, 48, 48, 48]
+const STAGE_MAX_RANGED_COMMITS := [3, 3, 3, 3, 3, 4, 4, 4, 4, 4]
+const STAGE_MAX_DENIAL_COMMITS := [2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
+
 
 static func active_cap_for(beat: int) -> int:
 	return materialized_active_cap_for(beat)
@@ -45,6 +52,38 @@ static func active_cap(_stage_id: StringName = &"stage_1") -> int:
 
 static func threat_budget_for(beat: int) -> float:
 	return float(THREAT_BUDGETS[clampi(beat, 0, THREAT_BUDGETS.size() - 1)])
+
+
+static func stage_materialized_active_cap(stage_index: int) -> int:
+	return (
+		int(STAGE_MATERIALIZED_ACTIVE_CAPS[stage_index])
+		if stage_index >= 0 and stage_index < STAGE_MATERIALIZED_ACTIVE_CAPS.size()
+		else 0
+	)
+
+
+static func stage_threat_budget(stage_index: int) -> float:
+	return (
+		float(STAGE_THREAT_BUDGETS[stage_index])
+		if stage_index >= 0 and stage_index < STAGE_THREAT_BUDGETS.size()
+		else 0.0
+	)
+
+
+static func stage_ranged_commit_cap(stage_index: int) -> int:
+	return (
+		int(STAGE_MAX_RANGED_COMMITS[stage_index])
+		if stage_index >= 0 and stage_index < STAGE_MAX_RANGED_COMMITS.size()
+		else 0
+	)
+
+
+static func stage_denial_commit_cap(stage_index: int) -> int:
+	return (
+		int(STAGE_MAX_DENIAL_COMMITS[stage_index])
+		if stage_index >= 0 and stage_index < STAGE_MAX_DENIAL_COMMITS.size()
+		else 0
+	)
 
 
 static func squad_gap_multiplier(beat: int) -> float:
@@ -80,6 +119,10 @@ static func tuning_contract() -> Dictionary:
 		"materialized_active_caps": MATERIALIZED_ACTIVE_CAPS,
 		"authored_pressure_caps": AUTHORED_PRESSURE_CAPS,
 		"threat_budgets": THREAT_BUDGETS,
+		"stage_threat_budgets": STAGE_THREAT_BUDGETS,
+		"stage_materialized_active_caps": STAGE_MATERIALIZED_ACTIVE_CAPS,
+		"stage_max_ranged_commits": STAGE_MAX_RANGED_COMMITS,
+		"stage_max_denial_commits": STAGE_MAX_DENIAL_COMMITS,
 		"max_ranged": MAX_RANGED_COMMITS,
 		"max_denial": MAX_DENIAL_COMMITS,
 		"enemy_health_multiplier": ENEMY_HEALTH_MULTIPLIER,

@@ -488,7 +488,7 @@ func _build() -> void:
 	_status_cluster.name = "CompactStatusCluster"
 	_status_cluster.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_status_cluster)
-	_add_status_item(&"stage", &"stage_progress", &"status", Art.SYSTEM, "1 / 5")
+	_add_status_item(&"stage", &"stage_progress", &"status", Art.SYSTEM, "1 / 10")
 	_add_status_item(&"defeats", &"total_defeats", &"status", Art.DANGER, "0")
 	_add_status_item(&"dash", &"dash", &"action", Art.SYSTEM, "READY")
 	_add_status_item(&"active", &"active", &"action", Art.BOSS_COMMAND, tr("HUD_ACTION_LOCKED"))
@@ -562,7 +562,7 @@ func update_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.has("stage_number") or snapshot.has("stage_total"):
 		_status_item(&"stage").set_value("%d / %d" % [
 			int(snapshot.get("stage_number", 1)),
-			maxi(1, int(snapshot.get("stage_total", 5))),
+			maxi(1, int(snapshot.get("stage_total", 10))),
 		])
 	if snapshot.has("cumulative_defeated"):
 		_status_item(&"defeats").set_value(

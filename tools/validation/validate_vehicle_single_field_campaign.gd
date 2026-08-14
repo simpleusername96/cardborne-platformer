@@ -18,7 +18,7 @@ func _initialize() -> void:
 		_expect(Catalog.validate_definition(definition, stage_id).is_empty(), "%s schema" % stage_id)
 		_expect(Catalog.authored_population(stage_id) >= Catalog.quota(stage_id) + 32, "%s finite population exceeds quota plus active cap" % stage_id)
 		fingerprints[Catalog.geometry_fingerprint(stage_id)] = true
-	_expect(fingerprints.size() == 1, "all five stages share one geometry fingerprint")
+	_expect(fingerprints.size() == 1, "all ten stages share one geometry fingerprint")
 	_expect(Catalog.world_rect() == Rect2(0, 0, 7200, 4320), "world is exactly 7200x4320")
 	_expect(Catalog.player_start() == Vector2(3600, 2160), "start is exact field center")
 	_expect(Catalog.walkable_regions().size() >= 20, "field has at least twenty broad regions")
@@ -40,7 +40,9 @@ func _initialize() -> void:
 func _check_stage_flow() -> void:
 	for index in Catalog.STAGE_IDS.size():
 		var flow := StageFlow.new()
-		flow.configure(index, Catalog.quota(Catalog.STAGE_IDS[index]))
+		var stage_id := Catalog.STAGE_IDS[index]
+		var has_boss := Catalog.has_boss(stage_id)
+		flow.configure(index, Catalog.quota(stage_id), has_boss)
 		_expect(
 			StringName(flow.advance(999.0)["command"]).is_empty(),
 			"elapsed time alone cannot start a boss warning"
@@ -53,31 +55,27 @@ func _check_stage_flow() -> void:
 			var receipt := flow.record_countable_defeat()
 			_expect(StageFlow.valid_receipt(receipt), "quota receipt shape is valid")
 			_expect(
-				(StringName(receipt["command"]) == StageFlow.COMMAND_BEGIN_BOSS_WARNING)
+				(StringName(receipt["command"]) in [
+					StageFlow.COMMAND_BEGIN_BOSS_WARNING,
+					StageFlow.COMMAND_COMPLETE_WITHOUT_BOSS,
+				])
 					== (defeat == flow.quota - 1),
-				"boss warning starts on exact quota"
+				"the stage completion command starts on exact quota"
 			)
-		_expect(
-			StringName(flow.advance(1.5)["command"]) == StageFlow.COMMAND_ENTER_BOSS,
-			"warning resolves after 1.5 seconds"
-		)
-		_expect(flow.boss_entry_ready(), "boss entry requires the exact defeat quota")
-		_expect(
-			StringName(flow.record_boss_defeat()["command"])
-				== StageFlow.COMMAND_COMPLETE_AFTER_BOSS,
-			"active boss defeat completes the stage"
-		)
+		if has_boss:
+			_expect(
+				StringName(flow.advance(1.5)["command"]) == StageFlow.COMMAND_ENTER_BOSS,
+				"warning resolves after 1.5 seconds"
+			)
+			_expect(flow.boss_entry_ready(), "boss entry requires the exact defeat quota")
+			_expect(
+				StringName(flow.record_boss_defeat()["command"])
+					== StageFlow.COMMAND_COMPLETE_AFTER_BOSS,
+				"active boss defeat completes the stage"
+			)
+		else:
+			_expect(flow.state == StageFlow.State.COMPLETE, "odd stage completes without a boss warning")
 		_expect(flow.state == StageFlow.State.COMPLETE, "stage flow reaches complete without reward or transition states")
-	var odd_flow := StageFlow.new()
-	odd_flow.configure(0, 1, false)
-	var odd_receipt := odd_flow.record_countable_defeat()
-	_expect(
-		StageFlow.valid_receipt(odd_receipt)
-			and StringName(odd_receipt["command"])
-				== StageFlow.COMMAND_COMPLETE_WITHOUT_BOSS
-			and odd_flow.state == StageFlow.State.COMPLETE,
-		"a no-boss stage completes directly on its exact quota"
-	)
 
 
 func _expect(condition: bool, message: String) -> void:

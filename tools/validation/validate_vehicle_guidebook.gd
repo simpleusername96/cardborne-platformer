@@ -4,6 +4,7 @@ const Archetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const Catalog = preload("res://scripts/progression/vehicle_guidebook_catalog.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const GuidePanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
+const StatAdapter = preload("res://scripts/progression/vehicle_guidebook_stat_adapter.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const Store = preload("res://scripts/autoload/vehicle_guidebook_store.gd")
 
@@ -35,7 +36,7 @@ func _run() -> void:
 			"%s has a discoverable stable enemy entry" % stationary
 		)
 	for entry_id in [
-		&"boss_stage_2", &"object_transit_gate", &"object_mystery_device",
+		&"boss_stage_1", &"object_transit_gate", &"object_mystery_device",
 		&"object_elite_armored",
 	]:
 		_expect(store.discover(entry_id), "%s unlocks" % entry_id)
@@ -144,7 +145,7 @@ func _run() -> void:
 			and int(build_contract["text_row_count"]) >= 5,
 		"active ship summary keeps its useful build rows"
 	)
-	_expect(panel.debug_select_entry(&"bosses", &"boss_stage_2"), "discovered boss detail is selectable")
+	_expect(panel.debug_select_entry(&"bosses", &"boss_stage_1"), "discovered boss detail is selectable")
 	contract = panel.debug_contract()
 	_expect(
 		bool(contract["entry_column_visible"])
@@ -235,6 +236,14 @@ func _validate_catalog_partition() -> void:
 		Catalog.ENEMY_ENTRY_IDS.size() == Archetypes.DEFINITIONS.size() - 1,
 		"constant enemy discovery mapping covers every non-boss archetype"
 	)
+	var boss_stage_indices: Array[int] = []
+	for entry in Catalog.ENTRIES:
+		if StringName(entry["entry_kind"]) == &"boss":
+			boss_stage_indices.append(int(entry["boss_stage_index"]))
+	_expect(
+		boss_stage_indices == [1, 3, 5, 7, 9],
+		"five guidebook bosses map to the five even campaign stages"
+	)
 	_expect(
 		not entries_by_id.has(&"object_crate")
 			and not Catalog.valid_ids().has(&"object_crate"),
@@ -270,17 +279,23 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 			and String(active_health["value_key"]) == "GUIDE_VALUE_HP"
 			and int(Array(active_health["value_args"])[0])
 				== roundi(expected_stage_two_health),
-		"enemy health row derives the Stage 2 exact value and outside-run Stage 1–5 range"
+		"enemy health row derives the Stage 2 exact value and outside-run Stage 1–10 range"
 	)
-	var boss := _entry(active, &"bosses", &"boss_stage_2")
+	var boss := _entry(active, &"bosses", &"boss_stage_1")
 	var boss_rows := Array(boss["stat_rows"])
 	_expect(
 		boss_rows.size() == 6
 			and int(Array(Dictionary(boss_rows[0])["value_args"])[0])
 				== roundi(StageDifficulty.boss_health(1))
 			and float(Array(Dictionary(boss_rows[1])["value_args"])[0]) > 0.0
-			and int(Array(Dictionary(boss_rows[2])["value_args"])[0]) == 90,
+			and int(Array(Dictionary(boss_rows[2])["value_args"])[0]) == 89,
 		"boss rows derive exact HP, positive damage, and Stage 2 shield reduction"
+	)
+	_expect(
+		StatAdapter.boss_rows(-1).is_empty()
+			and StatAdapter.boss_rows(0).is_empty()
+			and StatAdapter.boss_rows(10).is_empty(),
+		"boss rows fail closed for invalid and boss-free campaign stages"
 	)
 	var anomaly := _entry(active, &"objects", &"object_mystery_device")
 	_expect(

@@ -125,7 +125,7 @@ func _initialize() -> void:
 		"ready-device capture shows the assigned symbol before any hit"
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 41, "core manifest has 41 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 121, "full manifest has 121 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 126, "full manifest has 126 captures")
 	for required_capture in [
 		"01i-guidebook-elite-stats.png",
 		"01j-guidebook-field-objects.png",
@@ -179,14 +179,20 @@ func _initialize() -> void:
 		"09w-mystery-cryo-lock.png",
 		"09x-mystery-device-ready.png",
 		"09y-mystery-weakpoint-expose.png",
-		"30-boss-01-stage-1-arc-area-startup.png",
-		"30-boss-05-stage-5-crown-beam-startup.png",
-		"30-boss-05-stage-5-crown-beam-active.png",
+		"20-collision-10-stage-10-default.png",
+		"30-boss-01-stage-2-arc-area-startup.png",
+		"30-boss-05-stage-10-crown-beam-startup.png",
+		"30-boss-05-stage-10-crown-beam-active.png",
 	]:
 		_expect(required_capture in Driver.FULL_CAPTURE_FILES, "full manifest includes %s" % required_capture)
 	_expect(
 		_unique_count(Driver.FULL_CAPTURE_FILES) == Driver.FULL_CAPTURE_FILES.size(),
 		"full manifest has no duplicate filenames"
+	)
+	_expect(
+		gateway_source.contains("if (stage_index + 1) % 2 != 0:")
+			and gateway_source.contains("var boss_number := stage_index / 2 + 1"),
+		"boss capture skips odd stages and numbers the five even-stage bosses"
 	)
 	for file_name in Driver.CORE_CAPTURE_FILES:
 		_expect(file_name in Driver.FULL_CAPTURE_FILES, "full manifest includes %s" % file_name)

@@ -5,6 +5,7 @@ extends RefCounted
 ## the allocator owns unit birth positions and combat actors remain external.
 
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const SpawnAllocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
 const EngagementDirector = preload("res://scripts/encounters/vehicle_engagement_director.gd")
@@ -90,7 +91,7 @@ func configure(
 	spawn_anchors: Array[Vector2] = Field.ORDINARY_SPAWN_CANDIDATES,
 	encounter_seed: int = 0,
 	geometry_snapshot: Variant = null,
-	stage_index: int = 0
+	stage_index: int = -1
 ) -> void:
 	stage_id = next_stage_id
 	# The argument is retained temporarily for fixture compatibility; encounters
@@ -148,7 +149,7 @@ func configure(
 	_pressure_observation_enabled = false
 	_pressure_scan_happened = false
 	_geometry_snapshot = geometry_snapshot
-	_stage_index = maxi(0, stage_index)
+	_stage_index = CombatStages.index_of(next_stage_id) if stage_index < 0 else stage_index
 	_telemetry_births = 0
 	_telemetry_gate_completions = 0
 	_telemetry_expiries = 0
@@ -369,7 +370,7 @@ func active_cap() -> int:
 
 
 func materialized_active_cap() -> int:
-	return RunDifficulty.scaled_active_cap(Director.materialized_active_cap_for(current_beat), difficulty)
+	return RunDifficulty.scaled_active_cap(Director.stage_materialized_active_cap(_stage_index), difficulty)
 
 
 func authored_pressure_cap() -> int:
@@ -385,15 +386,15 @@ func available_active_slots(active_mobile_count: int) -> int:
 
 
 func threat_budget() -> float:
-	return Director.threat_budget_for(current_beat)
+	return Director.stage_threat_budget(_stage_index)
 
 
 func ranged_commit_cap() -> int:
-	return 2 if current_beat < 4 else Director.MAX_RANGED_COMMITS
+	return 2 if current_beat < 4 else Director.stage_ranged_commit_cap(_stage_index)
 
 
 func denial_commit_cap() -> int:
-	return 1 if current_beat < 4 else Director.MAX_DENIAL_COMMITS
+	return 1 if current_beat < 4 else Director.stage_denial_commit_cap(_stage_index)
 
 
 func record_player_damage(source_family: StringName = &"unknown") -> void:

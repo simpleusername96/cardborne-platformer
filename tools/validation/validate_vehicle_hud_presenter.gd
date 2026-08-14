@@ -16,7 +16,7 @@ var fast_experience_required := 27
 var fast_experience_complete := false
 var fast_reduced_motion := false
 var fast_stage_number := 2
-var fast_stage_total := 5
+var fast_stage_total := 10
 var fast_cumulative_defeated := 86
 var fast_dash_available := true
 var fast_dash_remaining := 0.0
@@ -117,7 +117,7 @@ func _initialize() -> void:
 	_expect(
 		_all_stage_progress_fields_present(progress_update)
 		and int(progress_update["stage_number"]) == 2
-		and int(progress_update["stage_total"]) == 5
+		and int(progress_update["stage_total"]) == 10
 		and int(progress_update["cumulative_defeated"]) == 87
 		and not progress_update.has("health"),
 		"one defeat republishes the complete numeric stage-progress cluster only"

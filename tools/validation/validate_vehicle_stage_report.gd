@@ -142,10 +142,11 @@ func _init() -> void:
 	var deployment_requested := [0]
 	result.deployment_requested.connect(func() -> void: deployment_requested[0] += 1)
 	var final_records: Array = []
-	for stage_index in 5:
+	for stage_index in 10:
 		var stage_record := report.duplicate(true)
 		stage_record["stage_number"] = stage_index + 1
-		stage_record["has_next_stage"] = stage_index < 4
+		stage_record["has_boss"] = (stage_index + 1) % 2 == 0
+		stage_record["has_next_stage"] = stage_index < 9
 		final_records.append(stage_record)
 	var result_catalog := UpgradeCatalog.new()
 	var result_build := RunBuild.new(result_catalog)

@@ -162,19 +162,19 @@ Preconditions:
 
 Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`, `scripts/enemies/vehicle_stage_difficulty.gd`, `scripts/encounters/vehicle_encounter_director.gd`, `scripts/encounters/vehicle_collective_tactic_catalog.gd`, boss catalogs, campaign runtime owners, field drops, experience, Result/HUD/guidebook, localization, captures, specs, and focused validators.
 
-- [ ] **3.1 Make ten-stage data complete and fail-closed.**
+- [x] **3.1 Make ten-stage data complete and fail-closed.**
   - Change: add all ten IDs and exact quota/pressure/difficulty/title/boss-option entries. Odd profiles explicitly have no boss; even profiles explicitly reference one of the five existing bosses. Replace five-wide clamps with exact lookup validation.
   - Accept: all ten profiles load, every array/map has ten intentional entries where required, invalid or missing Stage 6-10 data fails validation rather than borrowing Stage 5.
-- [ ] **3.2 Split authored encounters and item/XP budgets.**
+- [x] **3.2 Split authored encounters and item/XP budgets.**
   - Change: deterministically split each current role sequence across its arc; implement the locked pickup distribution and preserve pair-total XP/quota economics.
   - Accept: same seed reproduces role/order/window data; ten quotas total 400; each arc retains ten repairs/four recalls; minimum path still ends at level 30.
-- [ ] **3.3 Implement no-boss and boss-stage completion.**
+- [x] **3.3 Implement no-boss and boss-stage completion.**
   - Change: odd quota completion performs the continuous transition without boss warning; even completion preserves warning, boss, report capture, and terminal Stage 10 Result.
   - Accept: Stage 1-9 preserve live ordinary actors, projectiles, XP, build, cooldowns, exploration, position/facing/aim, and active time; only the declared transition recovery and stage-local refresh occur.
-- [ ] **3.4 Apply fixed-Hard attrition and concurrency.**
+- [x] **3.4 Apply fixed-Hard attrition and concurrency.**
   - Change: use the locked recovery, interpolation, threat-budget, commitment, and exact-cap curves. Preserve telegraph and boss/projectile reserve contracts.
   - Accept: deterministic tests prove recovery amounts, commit ceilings, startup truth, projectile reserve, escape corridor, and exact actor ceilings at every stage.
-- [ ] **3.5 Update every player-facing and retained consumer.**
+- [x] **3.5 Update every player-facing and retained consumer.**
   - Change: HUD uses `N / 10`; guidebook ranges use Stage 1-10; Result requires ten records and marks bosses only on even stages; Korean/English copy and captures remove Stage 1-5 assumptions.
   - Accept: a deterministic complete run reaches one terminal Result after Stage 10 with ten ordered records, five bosses, cumulative active time, and complete localized labels.
 
@@ -293,6 +293,9 @@ Implementation-local discoveries may be handled inside the locked contract only 
 - 2026-08-14: treat `VehicleRun` as a facade target, not a file-size target. Campaign ownership is extracted before ten-stage work; the current measured hot owner is extracted before any higher-cap claim.
 - 2026-08-14: Phase 2 established validated command/receipt ownership in StageFlow, StageTransitionRuntime, BossRuntime, and RewardRuntime; capture-only mutation now uses VehicleCampaignFixtureFacade. Ten focused campaign/report/reward/capture validators passed. `VehicleRun` is 7,306 lines and 286 functions after removing its duplicate direct continuation path; file size remains a secondary signal for the later measured extraction.
 - 2026-08-14: the visual authority pair was completed before screenshot review: `docs/design/VISUAL_SYSTEM.md` was read in full; the canonical sheet was inspected at original 1448x1086 detail; observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889` matched the required value. No raster was created or edited, so actual image-reference input is not applicable and no asset approval is claimed.
+- 2026-08-15: Stage 1 uses twelve one-squad arrival windows, each bounded to six units, because its exact live cap cannot truthfully reserve a standard four-squad window atomically. Stages 2-10 retain the shared three-window/four-squad structure; the generic scheduler validator uses Stage 2 while Stage 1's special contract is checked by encounter-pacing and catalog validators.
+- 2026-08-15: each stage owns two recalls and five repairs. Odd stages provide 250 Hull and even stages 240 Hull, so every pair preserves the previous 490-Hull supply without hidden transition compensation.
+- 2026-08-15: Phase 3 completed all ten-stage data, paired encounter/economy, odd/even completion, attrition/concurrency, and retained-consumer migrations. Focused source checks prove ten profiles, quota 400, XP 1968, 29 upgrades/final level 30, five even-stage bosses, ten ordered Result records, recovery and cap contracts, Korean/English copy, guidebook compatibility IDs, capture fixtures, and integrated run ownership.
 
 ## Open Questions
 
@@ -301,9 +304,9 @@ No material implementation decision remains open. A future weapon-policy change,
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3, paired ten-stage campaign implementation.
-- Next task: 3.1, make ten-stage data complete and fail-closed.
-- Last completed gate: Phase 2 campaign ownership matrix (10 focused validators plus `git diff --check`).
+- Current phase: Phase 4 prerequisite checkpoint; broad performance evidence requires current user alignment.
+- Next task: 4.1, run the declared native and built-Web Stage-10 baseline only after reporting duration, process impact, and early-stop conditions.
+- Last completed gate: Phase 3 focused ten-stage source matrix, Godot import, responsibility audit, and `git diff --check`.
 - Update rule: after a task acceptance check passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

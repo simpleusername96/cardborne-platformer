@@ -35,7 +35,9 @@ func _run() -> void:
 		run.set_process(false)
 		_check_stage_one_continuation(run)
 		run.call("_reset_run", false)
-		_check_stage_five_immediate_result(run)
+		_check_stage_two_recovery(run)
+		run.call("_reset_run", false)
+		_check_stage_ten_immediate_result(run)
 	scene.queue_free()
 	await process_frame
 	_finish()
@@ -91,15 +93,15 @@ func _check_stage_one_continuation(run) -> void:
 	var campaign_fixture := CampaignFixtureFacade.new(run)
 	_expect(
 		campaign_fixture.complete_current_stage(
-			TransitionRuntime.COMPLETION_AFTER_BOSS
+			TransitionRuntime.COMPLETION_WITHOUT_BOSS
 		),
-		"campaign fixture completes Stage 1 through production receipts"
+		"campaign fixture completes no-boss Stage 1 through production receipts"
 	)
 	_expect(
 		run.current_stage_id == &"stage_1"
 			and run.completed_stage_reports.is_empty()
 			and run.stage_transition_runtime.active(),
-		"boss defeat schedules continuation without rebuilding the next stage in the lethal call stack"
+		"quota completion schedules continuation without rebuilding the next stage in the lethal call stack"
 	)
 	campaign_fixture.drain_transition(5)
 
@@ -117,13 +119,13 @@ func _check_stage_one_continuation(run) -> void:
 		"continuation preserves position, motion, hull facing, and manual aim"
 	)
 	_expect(
-		is_equal_approx(run.player_health, run.call("_player_max_health"))
+		is_equal_approx(run.player_health, 17.0)
 			and is_equal_approx(run.player_invulnerable, 0.23)
 			and is_equal_approx(run.player_dash_cooldown, 0.7)
 			and is_equal_approx(run.player_dash_timer, 0.11)
 			and is_equal_approx(run.active_weapon_runtime.cooldown_remaining, 6.4)
 			and is_equal_approx(run.secondary_runtime.seeker_cooldown, 0.8),
-		"boss clear changes only HP and preserves every active cooldown/protection timer"
+		"odd-to-even continuation does not heal and preserves every active cooldown/protection timer"
 	)
 	_expect(
 		ordinary.alive and not boss_add.alive,
@@ -182,14 +184,38 @@ func _check_stage_one_continuation(run) -> void:
 	_expect(run.mode == run.RunMode.PLAYING, "pause resumes directly to continuous play")
 
 
-func _check_stage_five_immediate_result(run) -> void:
+func _check_stage_two_recovery(run) -> void:
+	run.current_stage_index = 1
+	run.current_stage_id = Catalog.STAGE_IDS[1]
+	run.call("_reset_run", false, true, true)
+	run.mode = run.RunMode.PLAYING
+	run.player_health = 20.0
+	var max_hull: float = run.call("_player_max_health")
+	var expected_hull := 20.0 + (max_hull - 20.0) * 0.40
+	var campaign_fixture := CampaignFixtureFacade.new(run)
+	_expect(
+		campaign_fixture.complete_current_stage(
+			TransitionRuntime.COMPLETION_AFTER_BOSS
+		),
+		"campaign fixture completes boss Stage 2 through production receipts"
+	)
+	campaign_fixture.drain_transition(5)
+	_expect(
+		run.current_stage_id == &"stage_3"
+			and is_equal_approx(run.player_health, expected_hull),
+		"even-to-next-odd continuation restores 40 percent of missing Hull"
+	)
+
+
+func _check_stage_ten_immediate_result(run) -> void:
 	run.current_stage_index = Catalog.STAGE_IDS.size() - 1
 	run.current_stage_id = Catalog.STAGE_IDS[run.current_stage_index]
 	run.call("_reset_run", false, true, true)
 	run.completed_stage_reports.clear()
-	for stage_number in range(1, 5):
+	for stage_number in range(1, 10):
 		run.completed_stage_reports.append({
 			"stage_number":stage_number,
+			"has_boss":stage_number % 2 == 0,
 			"has_next_stage":true,
 			"defeats":[],
 			"outgoing":[],
@@ -201,12 +227,12 @@ func _check_stage_five_immediate_result(run) -> void:
 	run.stage_flow.defeats = 1
 	run.stage_flow.state = StageFlow.State.BOSS_ACTIVE
 	var boss: EnemyState = run.call("_make_enemy", {
-		"id":"stage_5_continuity_boss",
+		"id":"stage_10_continuity_boss",
 		"role":&"stage_boss",
 		"pos":run.player_position,
 		"active":true,
 	})
-	_expect(boss != null and run.call("_append_enemy", boss), "Stage 5 boss fixture registers")
+	_expect(boss != null and run.call("_append_enemy", boss), "Stage 10 boss fixture registers")
 	if boss == null:
 		return
 	run.call(
@@ -226,7 +252,7 @@ func _check_stage_five_immediate_result(run) -> void:
 			and run.stage_flow.state == StageFlow.State.COMPLETE
 			and run._ui.debug_surface_visible("result")
 			and not run.reward_runtime.has_pending(),
-		"Stage 5 boss defeat opens one clear result after bounded report steps"
+		"Stage 10 boss defeat opens one clear result after bounded report steps"
 	)
 
 

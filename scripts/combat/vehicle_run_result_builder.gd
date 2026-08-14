@@ -4,23 +4,25 @@ extends RefCounted
 ## Reduces immutable completed-stage report records into the final run record.
 ## It deliberately owns no locale formatting or live gameplay references.
 
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const ATTRIBUTE_ORDER: Array[StringName] = [
 	&"kinetic", &"thermal", &"toxin", &"cryo", &"arc",
 ]
-const REQUIRED_STAGE_COUNT := 5
 
 
 static func build(stage_records: Array, final_state: Dictionary) -> Dictionary:
 	if not _is_complete_run(stage_records):
-		push_error("VehicleRunResultBuilder requires ordered Stage 1-5 records with a terminal Stage 5.")
+		push_error("VehicleRunResultBuilder requires ordered Stage 1-10 records with a terminal Stage 10.")
 		return {}
+	var required_stage_count := CombatStages.STAGE_IDS.size()
 	var defeats := _merge_defeats(stage_records)
 	var outgoing := _merge_damage(stage_records, &"outgoing")
 	var attributes := _merge_attributes(stage_records)
 	return {
 		"stage_count": stage_records.size(),
 		"complete_run": true,
-		"final_stage_number": REQUIRED_STAGE_COUNT,
+		"final_stage_number": required_stage_count,
+		"boss_stage_count": _boss_stage_count(),
 		"has_next_stage": false,
 		"active_run_elapsed_seconds": maxf(0.0, float(final_state.get("active_run_elapsed_seconds", final_state.get("run_time_seconds", 0.0)))),
 		# Kept for the existing report UI contract during the clock migration.
@@ -45,15 +47,26 @@ static func build(stage_records: Array, final_state: Dictionary) -> Dictionary:
 
 
 static func _is_complete_run(stage_records: Array) -> bool:
-	if stage_records.size() != REQUIRED_STAGE_COUNT:
+	var required_stage_count := CombatStages.STAGE_IDS.size()
+	if stage_records.size() != required_stage_count:
 		return false
-	for index in REQUIRED_STAGE_COUNT:
+	for index in required_stage_count:
 		var record := Dictionary(stage_records[index])
 		if int(record.get("stage_number", 0)) != index + 1:
 			return false
-		if bool(record.get("has_next_stage", false)) != (index < REQUIRED_STAGE_COUNT - 1):
+		if bool(record.get("has_next_stage", false)) != (index < required_stage_count - 1):
+			return false
+		if bool(record.get("has_boss", false)) != CombatStages.has_boss(CombatStages.STAGE_IDS[index]):
 			return false
 	return true
+
+
+static func _boss_stage_count() -> int:
+	var total := 0
+	for stage_id in CombatStages.STAGE_IDS:
+		if CombatStages.has_boss(stage_id):
+			total += 1
+	return total
 
 
 static func _merge_defeats(records: Array) -> Array[Dictionary]:

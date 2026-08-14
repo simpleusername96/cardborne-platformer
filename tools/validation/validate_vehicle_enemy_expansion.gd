@@ -11,12 +11,12 @@ var _failures: Array[String] = []
 func _init() -> void:
 	_expect(Archetypes.DEFINITIONS.has(&"bulkhead_guard"), "Bulkhead Guard is registered")
 	_expect(Archetypes.DEFINITIONS.has(&"splitter_barge"), "Splitter Barge is registered")
-	_expect(&"spark_minelet" in Stages.MOBILE_ROLES[1], "Spark Minelet starts in Stage 2")
-	_expect(&"bulkhead_guard" in Stages.MOBILE_ROLES[2], "Bulkhead Guard starts in Stage 3")
-	_expect(&"splitter_barge" in Stages.MOBILE_ROLES[4], "Splitter Barge starts in Stage 5")
-	for stage_index in 5:
+	_expect(&"spark_minelet" in Stages.MOBILE_ROLES[2], "Spark Minelet starts in Stage 3")
+	_expect(&"bulkhead_guard" in Stages.MOBILE_ROLES[4], "Bulkhead Guard starts in Stage 5")
+	_expect(&"splitter_barge" in Stages.MOBILE_ROLES[8], "Splitter Barge starts in Stage 9")
+	for stage_index in 10:
 		_expect(
-			EliteTraits.thresholds(stage_index).size() == stage_index + 1,
+			EliteTraits.thresholds(stage_index).size() == stage_index / 2 + 1,
 			"Stage %d has an exact elite reservation schedule" % (stage_index + 1)
 		)
 		var roles: Array = Stages.MOBILE_ROLES[stage_index]

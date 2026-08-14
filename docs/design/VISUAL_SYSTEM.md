@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-15
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -662,7 +662,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   `46×36/50×40/54×44 px`, item gap은 `4/6/8 px`다.
   200% text는 `20 px` icon, `72×64 px` status slot, `92×64 px` action slot,
   `6 px` gap을 사용한다. 각 item 내부의
-  icon과 값만 중앙 정렬하고 cluster 자체는 좌측 정렬한다. stage는 `N / 5`, 누적 격파는
+  icon과 값만 중앙 정렬하고 cluster 자체는 좌측 정렬한다. stage는 `N / 10`, 누적 격파는
   숫자, Dash는 `READY` 또는 `N.Ns`, Active는 미획득 시 `LOCKED`이고 획득 뒤
   `READY` 또는 `N.Ns`를 표시한다. generic Active glyph는 획득 뒤 해당 무기 glyph로
   바뀐다. visible label, backing, panel, section,
@@ -742,7 +742,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   accessible name, tooltip과 input hint를 가진 48×48 left-arrow command다.
 - Report는 wide three-column, compact keyboard tab과 fixed bottom primary를
   사용한다.
-- Result는 다섯 stage record의 실제 격파/elite, outgoing damage, damage attribute,
+- Result는 열 stage record의 실제 격파/elite, outgoing damage, damage attribute,
   누적 active run time, final Hull, 주요 action counter와 전체 image build/loadout를
   요약하고 하나의 고정 Deployment action을 제공한다. wide는 shared three-column
   report body, compact는 keyboard/controller tab을 사용하고 content region만 scroll한다.

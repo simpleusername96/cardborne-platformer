@@ -1,10 +1,11 @@
 class_name VehicleBossPhaseCatalog
 extends RefCounted
 
-## Owns five-stage boss identity, health floors, and bounded phase add packets.
+## Owns the five boss identities, health floors, and bounded phase add packets.
 ## Shield timing and damage response belong to VehicleBossShieldRuntime.
 
 const MAX_LIVE_ADDS := 12
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const BOSS_ENTRY_SLOT_RESERVE := 1 + MAX_LIVE_ADDS
 const PHASE_FLOORS := [0.65, 0.30, 0.0]
 
@@ -53,7 +54,8 @@ const PHASES := {
 
 
 static func definition(stage_id: StringName) -> Dictionary:
-	return Dictionary(PHASES.get(stage_id, {})).duplicate(true)
+	var profile_id := CombatStages.boss_profile_id(stage_id)
+	return Dictionary(PHASES.get(profile_id, {})).duplicate(true)
 
 
 static func phase_floor(phase: int) -> float:
@@ -73,13 +75,13 @@ static func tactic_id(stage_id: StringName, phase: int) -> StringName:
 
 
 static func variant(stage_id: StringName) -> StringName:
-	return StringName(definition(stage_id).get("variant", &"colossus"))
+	return StringName(definition(stage_id).get("variant", &""))
 
 
 static func validate_contract() -> PackedStringArray:
 	var errors := PackedStringArray()
-	for stage_number in 5:
-		var stage_id := StringName("stage_%d" % (stage_number + 1))
+	for stage_number in [2, 4, 6, 8, 10]:
+		var stage_id := StringName("stage_%d" % stage_number)
 		if definition(stage_id).is_empty():
 			errors.append("missing boss phase definition: %s" % stage_id)
 			continue

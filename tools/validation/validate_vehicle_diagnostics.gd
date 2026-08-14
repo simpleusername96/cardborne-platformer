@@ -33,7 +33,7 @@ func _initialize() -> void:
 		{"kind":"upgrade_focused", "fields":{"upgrade_id":&"thermal_burst"}},
 		{"kind":"announcement_shown", "fields":{"semantic_id":&"boss_inbound"}},
 		{"kind":"anomaly_activated", "fields":{"effect_id":&"gravity_pull", "affected_count":4}},
-		{"kind":"result_shown", "fields":{"stage_count":5}},
+		{"kind":"result_shown", "fields":{"stage_count":10}},
 	]:
 		_expect(
 			recorder.emit_event(

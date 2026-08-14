@@ -945,7 +945,8 @@ func _check_boss_committed_recovery(run) -> void:
 
 
 func _check_boss_autonomous_shapes(run) -> void:
-	for stage_index in 5:
+	for boss_index in 5:
+		var stage_index := boss_index * 2 + 1
 		var stage_id := StringName("stage_%d" % (stage_index + 1))
 		for pattern_name in BossPatterns.autonomous_sequence(stage_id):
 			var pattern := String(pattern_name)

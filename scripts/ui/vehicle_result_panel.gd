@@ -39,11 +39,11 @@ func _ready() -> void:
 func open(snapshot: Dictionary) -> bool:
 	if (
 		not bool(snapshot.get("complete_run", false))
-		or int(snapshot.get("stage_count", 0)) != 5
-		or int(snapshot.get("final_stage_number", 0)) != 5
+		or int(snapshot.get("stage_count", 0)) != 10
+		or int(snapshot.get("final_stage_number", 0)) != 10
 		or bool(snapshot.get("has_next_stage", true))
 	):
-		push_error("VehicleResultPanel.open requires a complete terminal five-stage aggregate.")
+		push_error("VehicleResultPanel.open requires a complete terminal ten-stage aggregate.")
 		return false
 	_snapshot = snapshot.duplicate(true)
 	refresh_localized_content()
@@ -53,7 +53,7 @@ func open(snapshot: Dictionary) -> bool:
 
 func refresh_localized_content() -> void:
 	if _snapshot.is_empty(): return
-	_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(_snapshot.get("stage_count", 5)))).replace("%s", tr("RESULT_ALL_STAGES"))
+	_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(_snapshot.get("stage_count", 10)))).replace("%s", tr("RESULT_ALL_STAGES"))
 	_title.text = tr("RESULT_TITLE_FINAL")
 	var seconds := maxi(0, roundi(float(_snapshot.get("active_run_elapsed_seconds", _snapshot.get("run_time_seconds", 0.0)))))
 	var hull := roundi(float(_snapshot.get("hull", 0.0)))

@@ -1,7 +1,7 @@
 class_name VehicleStageCatalog
 extends RefCounted
 
-## Validated facade joining the active run field with five combat profiles.
+## Validated facade joining the active run field with ten combat profiles.
 
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
@@ -9,7 +9,7 @@ const Geometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 
 const STAGE_IDS: Array[StringName] = CombatStages.STAGE_IDS
 const REQUIRED_FIELDS := [
-	"id", "field_id", "title_key", "number", "boss_name_key", "quota",
+	"id", "field_id", "title_key", "number", "boss_name_key", "has_boss", "boss_profile_id", "quota",
 	"world_rect", "player_start", "start_clearance", "walkable_regions",
 	"cover_rects", "void_rects", "ordinary_spawn_anchors",
 	"boss_arrival_anchors", "packets",
@@ -45,6 +45,8 @@ static func index_of(stage_id: StringName) -> int:
 
 static func definition(stage_id: StringName) -> Dictionary:
 	var normalized := normalized_id(stage_id)
+	if normalized.is_empty():
+		return {}
 	if _definition_cache.has(normalized):
 		return _definition_cache[normalized]
 	var result := CombatStages.definition(normalized, _active_field)
@@ -74,6 +76,8 @@ static func validate_definition(value: Dictionary, expected_id: StringName = &""
 		errors.append("player_start differs from the shared center")
 	if int(value["quota"]) <= 0:
 		errors.append("quota must be positive")
+	if bool(value["has_boss"]) != not StringName(value["boss_profile_id"]).is_empty():
+		errors.append("boss availability and profile id disagree")
 	if not value["walkable_regions"] is Array or value["walkable_regions"].is_empty():
 		errors.append("walkable_regions must not be empty")
 	if Array(value["ordinary_spawn_anchors"]).size() != 32:
@@ -104,7 +108,16 @@ static func start_clearance(_stage_id: StringName = &"stage_1") -> float:
 
 
 static func quota(stage_id: StringName) -> int:
-	return int(profile(stage_id)["quota"])
+	var stage := profile(stage_id)
+	return int(stage.get("quota", 0))
+
+
+static func has_boss(stage_id: StringName) -> bool:
+	return CombatStages.has_boss(stage_id)
+
+
+static func boss_profile_id(stage_id: StringName) -> StringName:
+	return CombatStages.boss_profile_id(stage_id)
 
 
 static func ordinary_spawn_anchors(_stage_id: StringName = &"stage_1") -> Array[Vector2]:

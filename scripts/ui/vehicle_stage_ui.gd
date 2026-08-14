@@ -566,9 +566,9 @@ func debug_modal_contract(surface: String) -> Dictionary:
 			show_pause()
 		"result":
 			show_result({
-				"stage_count":5,
+				"stage_count":10,
 				"complete_run":true,
-				"final_stage_number":5,
+				"final_stage_number":10,
 				"has_next_stage":false,
 				"active_run_elapsed_seconds":258.0,
 				"hull":86.0,

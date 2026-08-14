@@ -8,10 +8,14 @@ const Allocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
-const EXPECTED_MOBILE_COUNTS := [520, 660, 816, 1026, 1260]
-const EXPECTED_QUOTAS := [48, 64, 80, 96, 112]
+const EXPECTED_MOBILE_COUNTS := [260, 260, 330, 330, 408, 408, 513, 513, 630, 630]
+const EXPECTED_QUOTAS := [24, 24, 32, 32, 40, 40, 48, 48, 56, 56]
 const EXPECTED_HARD_MATERIALIZED_CAPS := [6, 40, 48, 48, 48]
 const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [6, 124, 172, 224, 276]
+const EXPECTED_STAGE_MATERIALIZED_CAPS := [6, 32, 40, 40, 48, 48, 48, 48, 48, 48]
+const EXPECTED_STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
+const EXPECTED_STAGE_RANGED_CAPS := [3, 3, 3, 3, 3, 4, 4, 4, 4, 4]
+const EXPECTED_STAGE_DENIAL_CAPS := [2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
 
 var failures: Array[String] = []
 
@@ -22,6 +26,7 @@ func _initialize() -> void:
 	if layout == null:
 		_finish()
 		return
+	var pair_blueprint: Array = []
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
 		var tactical = layout.tactical_layout(stage_id)
@@ -43,9 +48,19 @@ func _initialize() -> void:
 			_expect(not EnemyArchetypes.fires_projectiles(role) and StringName(EnemyArchetypes.definition(role)["threat_kind"]) not in [&"denial", &"support"], "%s opening uses only low-risk pursuit roles" % stage_id)
 		for packet_index in range(1, packets.size()):
 			_validate_surge_packet(packets[packet_index], stage_id)
-		_validate_composition(blueprint, stage_id)
-		_validate_opening_runtime(stage_id, packets, tactical)
+		pair_blueprint.append_array(blueprint)
+		if stage_index % 2 == 1:
+			_validate_composition(
+				pair_blueprint, "arc_%d" % ((stage_index + 1) / 2)
+			)
+			pair_blueprint.clear()
+		_validate_opening_runtime(stage_id, stage_index, packets, tactical)
 	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_MATERIALIZED_CAPS, EXPECTED_HARD_AUTHORED_PRESSURE_CAPS)
+	_expect(Director.STAGE_MATERIALIZED_ACTIVE_CAPS == EXPECTED_STAGE_MATERIALIZED_CAPS, "stage materialized caps remain independent from encounter beats")
+	_expect(Director.STAGE_THREAT_BUDGETS == EXPECTED_STAGE_THREAT_BUDGETS, "stage threat budgets remain independent from encounter beats")
+	_expect(Director.STAGE_MAX_RANGED_COMMITS == EXPECTED_STAGE_RANGED_CAPS, "late-stage ranged commit ceilings are explicit")
+	_expect(Director.STAGE_MAX_DENIAL_COMMITS == EXPECTED_STAGE_DENIAL_CAPS, "late-stage denial commit ceilings are explicit")
+	_expect(Director.stage_materialized_active_cap(10) == 0 and is_zero_approx(Director.stage_threat_budget(10)), "invalid stage pressure lookup fails closed")
 	_expect(Director.MAX_RANGED_COMMITS == 3, "ranged commit cap remains three")
 	_expect(Director.MAX_DENIAL_COMMITS == 2, "denial commit cap remains two")
 	_finish()
@@ -53,15 +68,16 @@ func _initialize() -> void:
 
 func _validate_surge_packet(packet: Dictionary, stage_id: StringName) -> void:
 	var squads: Array = packet["squads"]
-	_expect(int(packet.get("arrival_windows", 0)) == 3, "%s surge declares three timing windows" % stage_id)
-	_expect(int(packet.get("squads_per_window", 0)) == 4, "%s surge declares four logical squads per window" % stage_id)
+	var stage_one := stage_id == &"stage_1"
+	_expect(int(packet.get("arrival_windows", 0)) == (12 if stage_one else 3), "%s declares its exact timing-window count" % stage_id)
+	_expect(int(packet.get("squads_per_window", 0)) == (1 if stage_one else 4), "%s declares its exact logical squads per window" % stage_id)
 	_expect(float(packet.get("window_gap", 0.0)) == 1.20, "%s locks the 1.20-second window gap" % stage_id)
 	_expect(float(packet.get("unit_spacing", 0.0)) == 0.16, "%s locks 0.16-second unit rounds" % stage_id)
 	_expect(squads.size() == 12, "%s surge contains twelve squads" % stage_id)
 	_expect(float(packet.get("cue_lead", 0.0)) >= 0.9, "%s cue lead is at least 0.9 seconds" % stage_id)
 	for squad in squads:
 		var size := Array(squad).size()
-		_expect(size >= 4 and size <= 8, "%s squad size stays within four to eight" % stage_id)
+		_expect(size >= 4 and size <= (6 if stage_one else 8), "%s squad size stays within its exact-cap-safe range" % stage_id)
 
 
 func _validate_composition(blueprint: Array, stage_id: StringName) -> void:
@@ -87,7 +103,7 @@ func _validate_composition(blueprint: Array, stage_id: StringName) -> void:
 	_expect(float(support) / total <= 0.12, "%s caps support roles at 12%%" % stage_id)
 
 
-func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary], tactical) -> void:
+func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: Array[Dictionary], tactical) -> void:
 	var runtime := Runtime.new()
 	runtime.configure(
 		stage_id,
@@ -95,8 +111,15 @@ func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary],
 		RunDifficulty.HARD,
 		tactical.ordinary_spawn_anchors,
 		tactical.encounter_seed,
-		tactical.geometry_snapshot
+		tactical.geometry_snapshot,
+		stage_index
 	)
+	_expect(runtime.materialized_active_cap() == EXPECTED_STAGE_MATERIALIZED_CAPS[stage_index], "%s applies its stage-owned materialized cap" % stage_id)
+	_expect(is_equal_approx(runtime.threat_budget(), EXPECTED_STAGE_THREAT_BUDGETS[stage_index]), "%s applies its stage-owned threat budget" % stage_id)
+	runtime.current_beat = 4
+	_expect(runtime.ranged_commit_cap() == EXPECTED_STAGE_RANGED_CAPS[stage_index], "%s applies its stage ranged ceiling" % stage_id)
+	_expect(runtime.denial_commit_cap() == EXPECTED_STAGE_DENIAL_CAPS[stage_index], "%s applies its stage denial ceiling" % stage_id)
+	runtime.current_beat = 0
 	var visible_world := Rect2(tactical.geometry_snapshot.player_start - Vector2(640.0, 360.0), Vector2(1280.0, 720.0))
 	var opening_cue := runtime.tick(0.0, 0, [], tactical.geometry_snapshot.player_start, visible_world)
 	_expect(opening_cue["cues"].size() == 1 and opening_cue["spawns"].is_empty(), "%s cues the six-unit opening immediately" % stage_id)
@@ -118,7 +141,7 @@ func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary],
 	var cue_count := 0
 	var maximum_tick_spawns := 0
 	var first_surge_prefix := String(packets[1]["id"])
-	for _step in 100:
+	for _step in 300:
 		var result := runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, visible_world)
 		for cue in result["cues"]:
 			if String(cue.get("cue_id", "")).begins_with(first_surge_prefix):

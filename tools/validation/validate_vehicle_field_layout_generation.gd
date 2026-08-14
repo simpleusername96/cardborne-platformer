@@ -57,7 +57,7 @@ func _validate_field(field_id: StringName) -> void:
 		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s/%s retains at least 20 ordinary anchors" % [field_id, stage_id])
 		_expect(tactical.boss_arrival_anchors.size() >= 8, "%s/%s retains at least eight boss anchors" % [field_id, stage_id])
 		_expect(fixed.mystery_device_blueprint(stage_id).size() == 3, "%s/%s has three mystery devices" % [field_id, stage_id])
-		_expect(fixed.pickup_blueprint(stage_id).size() == 14, "%s/%s has fourteen direct pickups" % [field_id, stage_id])
+		_expect(fixed.pickup_blueprint(stage_id).size() == 7, "%s/%s has seven direct pickups" % [field_id, stage_id])
 		_validate_stage_objects(fixed, stage_id)
 		_validate_stage_spacing(fixed, stage_id)
 
@@ -131,27 +131,28 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 	for first in positions.size():
 		for second in range(first + 1, positions.size()):
 			_expect(positions[first].distance_to(positions[second]) >= 180.0, "%s item sockets keep pair clearance" % stage_id)
-	_expect(occupied_sectors.size() >= 4, "%s items occupy at least four field sectors" % stage_id)
-	_expect(recall_count == 4, "%s keeps four direct recall pickups" % stage_id)
+	_expect(occupied_sectors.size() >= 3, "%s items occupy at least three field sectors" % stage_id)
+	_expect(recall_count == 2, "%s keeps two direct recall pickups" % stage_id)
 	var fifty_count := repair_values.count(50.0)
 	var forty_count := repair_values.count(40.0)
+	var even_stage: bool = (Catalog.index_of(stage_id) + 1) % 2 == 0
 	var repair_total := 0.0
 	for value in repair_values:
 		repair_total += value
 	_expect(
-		repair_values.size() == 10
-			and fifty_count == 9
-			and forty_count == 1
-			and is_equal_approx(repair_total, 490.0),
-		"%s keeps ten repair events and the doubled 490-hull budget" % stage_id
+		repair_values.size() == 5
+			and fifty_count == (4 if even_stage else 5)
+			and forty_count == (1 if even_stage else 0)
+			and is_equal_approx(repair_total, 240.0 if even_stage else 250.0),
+		"%s keeps five repair events and its pair-preserving Hull budget" % stage_id
 	)
 	var recall_positions: Array[Vector2] = []
 	for spec in layout.pickup_blueprint(stage_id):
 		if StringName(spec["kind"]) == &"experience_recall":
 			recall_positions.append(Vector2(spec["pos"]))
 	_expect(
-		recall_positions.size() == 4 and _maximum_pair_distance(recall_positions) >= 1200.0,
-		"%s four recall sources include a separated pair" % stage_id
+		recall_positions.size() == 2 and _maximum_pair_distance(recall_positions) >= 1200.0,
+		"%s two recall sources include a separated pair" % stage_id
 	)
 
 
@@ -173,7 +174,7 @@ func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -
 			_expect(pickup_pos.distance_to(Vector2(pickups[second]["pos"])) >= 384.0, "%s pickups keep 384 spacing" % stage_id)
 		for device in devices:
 			_expect(pickup_pos.distance_to(Vector2(device["pos"])) >= 480.0, "%s pickup avoids device" % stage_id)
-	for first in range(6, pickups.size()):
+	for first in range(3, pickups.size()):
 		var reward_pickup_pos := Vector2(pickups[first]["pos"])
 		for second in range(first + 1, pickups.size()):
 			_expect(reward_pickup_pos.distance_to(Vector2(pickups[second]["pos"])) >= 672.0, "%s converted reward pickups keep their authored spacing" % stage_id)

@@ -1200,7 +1200,8 @@ func _reset_run(
 	)
 	stage_flow.configure(
 		current_stage_index,
-		RunDifficulty.scaled_quota(StageCatalog.quota(current_stage_id), selected_run_difficulty)
+		RunDifficulty.scaled_quota(StageCatalog.quota(current_stage_id), selected_run_difficulty),
+		StageCatalog.has_boss(current_stage_id)
 	)
 	_configure_stage_map_runtime()
 	_rebuild_runtime_blockers()
@@ -4847,7 +4848,9 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 			})
 			boss_arrival_position = _choose_boss_arrival_anchor()
 			discovered_markers["boss_warning"] = true
-			_discover_guide(StringName("boss_stage_%d" % (current_stage_index + 1)))
+			var boss_profile_id := StageCatalog.boss_profile_id(current_stage_id)
+			var boss_number := String(boss_profile_id).trim_prefix("stage_").to_int()
+			_discover_guide(StringName("boss_stage_%d" % boss_number))
 			_ui.notify_immediate(
 				tr("NOTIFY_BOSS_INBOUND"), 1.5, Rules.CORAL, &"boss_inbound"
 			)
@@ -5954,6 +5957,7 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 	return {
 		"number":int(profile["number"]),
 		"title_key":String(profile["title_key"]),
+		"has_boss":bool(profile.get("has_boss", false)),
 		"has_next_stage":has_next_stage,
 		"run_time_seconds":maxf(0.0, active_run_elapsed_seconds),
 		"hull":player_health,
@@ -6007,7 +6011,13 @@ func _configure_next_stage_world() -> void:
 func _finalize_next_stage_continuation() -> void:
 	if _pending_continuation_layout == null:
 		return
-	player_health = _player_max_health()
+	# Pair starts (Stages 3/5/7/9) recover part of missing Hull. The first
+	# half of each arc flows into its boss stage without a free heal.
+	if current_stage_index > 0 and current_stage_index % 2 == 0:
+		var missing_hull := maxf(0.0, _player_max_health() - player_health)
+		player_health = minf(
+			_player_max_health(), player_health + missing_hull * 0.40
+		)
 	stage_telemetry.reset_stage()
 	# Surviving ordinary actors continue into the next field, but their old
 	# stage-local engagement gates must not cross the stage boundary.
@@ -6028,7 +6038,8 @@ func _finalize_next_stage_continuation() -> void:
 		RunDifficulty.scaled_quota(
 			StageCatalog.quota(current_stage_id),
 			selected_run_difficulty
-		)
+		),
+		StageCatalog.has_boss(current_stage_id)
 	)
 	boss_started = false
 	boss_shield_runtime.configure(current_stage_id)

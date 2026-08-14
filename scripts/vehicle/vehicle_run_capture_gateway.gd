@@ -166,7 +166,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 					{"active_stage_index":_run.current_stage_index}
 				),
 				&"bosses",
-				&"boss_stage_2"
+				&"boss_stage_1"
 			)
 		&"guidebook_locked":
 			_run._ui.debug_guide_entry(
@@ -351,6 +351,7 @@ func _final_result_fixture() -> Dictionary:
 		stage_records.append(StageReportBuilder.build(telemetry.freeze_stage(), {
 			"number":stage_index + 1,
 			"title_key":_stage_title_key(stage_index),
+			"has_boss":StageCatalog.has_boss(StageCatalog.STAGE_IDS[stage_index]),
 			"has_next_stage":stage_index < StageCatalog.STAGE_IDS.size() - 1,
 			"run_time_seconds":64.0 * (stage_index + 1),
 			"hull":120.0 - stage_index * 9.0,
@@ -975,7 +976,7 @@ func _upgrade_offer_fixture(records: Array) -> Array[Dictionary]:
 
 
 func _capture_boss_preview() -> void:
-	var boss := prepare_boss(0)
+	var boss := prepare_boss(1)
 	if boss == null:
 		return
 	_run._boss_select_pattern(boss)
@@ -1645,7 +1646,7 @@ func _capture_arc_area_telegraph_evidence() -> void:
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("09-effects-arc-mine-startup.png")
-	var boss := prepare_boss(0)
+	var boss := prepare_boss(1)
 	if boss == null:
 		push_error("arc area telegraph capture fixture could not create stage boss")
 		return
@@ -1662,7 +1663,7 @@ func _capture_arc_area_telegraph_evidence() -> void:
 	)
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
-	_save_capture("30-boss-01-stage-1-arc-area-startup.png")
+	_save_capture("30-boss-01-stage-2-arc-area-startup.png")
 
 
 func _capture_collision_overlay_evidence() -> void:
@@ -1682,11 +1683,14 @@ func _capture_collision_overlay_evidence() -> void:
 
 func _capture_all_boss_evidence() -> void:
 	for stage_index in StageCatalog.STAGE_IDS.size():
+		if (stage_index + 1) % 2 != 0:
+			continue
 		var boss := prepare_boss(stage_index)
 		if boss == null:
 			continue
 		var stage_slug := String(_run.current_stage_id).replace("_", "-")
-		if stage_index == 0:
+		var boss_number := stage_index / 2 + 1
+		if stage_index == 1:
 			_run._damage_enemy(
 				boss,
 				100.0,
@@ -1696,19 +1700,19 @@ func _capture_all_boss_evidence() -> void:
 			)
 			_run.capture_set_mode(&"paused")
 			await _settle_capture()
-			_save_capture("30-boss-01-stage-1-shield-up-hit.png")
+			_save_capture("30-boss-01-stage-2-shield-up-hit.png")
 			_run.call("_clear_effects")
 		_run._boss_select_pattern(boss)
 		_run.capture_set_mode(&"paused")
 		await _settle_capture()
-		_save_capture("30-boss-%02d-%s-startup.png" % [stage_index + 1, stage_slug])
+		_save_capture("30-boss-%02d-%s-startup.png" % [boss_number, stage_slug])
 
 		boss.phase_time = BossPatterns.startup_seconds(String(boss.pattern)) * 0.12
 		AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
 		await _settle_capture()
 		_save_capture(
 			"30-boss-%02d-%s-startup-imminent.png"
-			% [stage_index + 1, stage_slug]
+			% [boss_number, stage_slug]
 		)
 
 		boss.phase_time = 0.0
@@ -1716,7 +1720,7 @@ func _capture_all_boss_evidence() -> void:
 		_run._boss_begin_active(boss)
 		_run._boss_update_active(boss, 0.05)
 		await _settle_capture()
-		_save_capture("30-boss-%02d-%s-active.png" % [stage_index + 1, stage_slug])
+		_save_capture("30-boss-%02d-%s-active.png" % [boss_number, stage_slug])
 
 		_run._clear_projectiles()
 		_run.denied_zones.clear()
@@ -1728,12 +1732,12 @@ func _capture_all_boss_evidence() -> void:
 		boss.last_pattern = boss.pattern
 		boss.pattern = "recovery_window"
 		await _settle_capture()
-		_save_capture("30-boss-%02d-%s-recovery.png" % [stage_index + 1, stage_slug])
+		_save_capture("30-boss-%02d-%s-recovery.png" % [boss_number, stage_slug])
 		_run.boss_shield_runtime.advance(BossShieldRuntime.SHIELD_DOWN_SECONDS + 0.1)
 		boss.boss_shield_state = _run.boss_shield_runtime.state()
 		await _settle_capture()
 		_save_capture(
-			"30-boss-%02d-%s-shield-restored.png" % [stage_index + 1, stage_slug]
+			"30-boss-%02d-%s-shield-restored.png" % [boss_number, stage_slug]
 		)
 
 		boss.health = float(boss.max_health) * 0.48
@@ -1741,8 +1745,8 @@ func _capture_all_boss_evidence() -> void:
 		_run._begin_boss_shield_phase(boss, 2)
 		_run._boss_select_pattern(boss)
 		await _settle_capture()
-		_save_capture("30-boss-%02d-%s-phase-two.png" % [stage_index + 1, stage_slug])
-		if stage_index == 0:
+		_save_capture("30-boss-%02d-%s-phase-two.png" % [boss_number, stage_slug])
+		if stage_index == 1:
 			boss.pos = _run.player_position + Vector2(920.0, 0.0)
 			boss.phase = &"boss_startup"
 			boss.phase_time = BossPatterns.startup_seconds("furnace_ring")
@@ -1757,12 +1761,12 @@ func _capture_all_boss_evidence() -> void:
 			)
 			_run._camera.position = _run.player_position
 			await _settle_capture()
-			_save_capture("30-boss-01-stage-1-offscreen-furnace.png")
+			_save_capture("30-boss-01-stage-2-offscreen-furnace.png")
 			boss.phase_time = BossPatterns.startup_seconds("furnace_ring") * 0.12
 			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
 			await _settle_capture()
 			_save_capture(
-				"30-boss-01-stage-1-offscreen-furnace-imminent.png"
+				"30-boss-01-stage-2-offscreen-furnace-imminent.png"
 			)
 			boss.phase_time = 0.0
 			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
@@ -1770,9 +1774,9 @@ func _capture_all_boss_evidence() -> void:
 			_run._boss_update_active(boss, 0.05)
 			await _settle_capture()
 			_save_capture(
-				"30-boss-01-stage-1-offscreen-furnace-active.png"
+				"30-boss-01-stage-2-offscreen-furnace-active.png"
 			)
-		elif stage_index == 4:
+		elif stage_index == 9:
 			boss.pos = _run.player_position + Vector2(420.0, 0.0)
 			boss.phase = &"boss_startup"
 			boss.phase_time = BossPatterns.startup_seconds("crown_beam") * 0.5
@@ -1787,13 +1791,13 @@ func _capture_all_boss_evidence() -> void:
 			)
 			_run._camera.position = _run.player_position
 			await _settle_capture()
-			_save_capture("30-boss-05-stage-5-crown-beam-startup.png")
+			_save_capture("30-boss-05-stage-10-crown-beam-startup.png")
 			boss.phase_time = 0.0
 			AttackTelegraphs.update_boss_readiness(boss, "crown_beam")
 			_run._boss_begin_active(boss)
 			_run._boss_update_active(boss, 0.05)
 			await _settle_capture()
-			_save_capture("30-boss-05-stage-5-crown-beam-active.png")
+			_save_capture("30-boss-05-stage-10-crown-beam-active.png")
 
 
 func prepare_boss(stage_index: int) -> EnemyState:

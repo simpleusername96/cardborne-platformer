@@ -13,6 +13,13 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
+		if not Catalog.has_boss(stage_id):
+			_expect(
+				Patterns.sequence(stage_id, false).is_empty()
+					and Patterns.autonomous_sequence(stage_id).is_empty(),
+				"%s fails closed without boss patterns" % stage_id
+			)
+			continue
 		var phase_one := Patterns.sequence(stage_id, false)
 		var phase_two := Patterns.sequence(stage_id, true)
 		var phase_three := Patterns.sequence(stage_id, 3)
@@ -76,33 +83,36 @@ func _initialize() -> void:
 			"%s applies its exact boss-health profile" % stage_id
 		)
 	_expect(
-		Difficulty.BOSS_HEALTH_MULTIPLIERS == [4.20, 4.30, 4.40, 4.50, 4.60]
-			and Difficulty.BOSS_DAMAGE_MULTIPLIERS == [1.50, 1.60, 1.70, 1.80, 1.90]
-			and Difficulty.BOSS_SHIELDED_DAMAGE_MULTIPLIERS == [0.110, 0.105, 0.100, 0.095, 0.090]
-			and Difficulty.BOSS_CADENCE_SCALES == [0.95, 0.90, 0.85, 0.80, 0.75]
-			and Difficulty.BOSS_COVERAGE_SCALES == [1.05, 1.10, 1.15, 1.20, 1.25],
-		"boss profile exposes the accepted aligned five-stage curves"
+		Difficulty.BOSS_HEALTH_MULTIPLIERS.size() == 10
+			and Difficulty.BOSS_DAMAGE_MULTIPLIERS.size() == 10
+			and Difficulty.BOSS_SHIELDED_DAMAGE_MULTIPLIERS.size() == 10
+			and Difficulty.BOSS_CADENCE_SCALES.size() == 10
+			and Difficulty.BOSS_COVERAGE_SCALES.size() == 10
+			and is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIERS[-1], 4.60)
+			and is_equal_approx(Difficulty.BOSS_DAMAGE_MULTIPLIERS[-1], 1.90)
+			and is_equal_approx(Difficulty.BOSS_COVERAGE_SCALES[-1], 1.25),
+		"boss profile exposes ten explicit interpolated curves with the old final endpoint"
 	)
 	_expect(
 		is_equal_approx(
 				float(Patterns.definition("furnace_gates")["damage"]), 22.0
 			)
-			and is_equal_approx(Patterns.damage("furnace_gates", 0), 33.0)
-			and is_equal_approx(Patterns.damage("furnace_gates", 4), 41.8)
-			and is_equal_approx(Patterns.damage("breaker_charge", 4), 68.4),
+			and is_equal_approx(Patterns.damage("furnace_gates", 1), 22.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[1])
+			and is_equal_approx(Patterns.damage("furnace_gates", 9), 41.8)
+			and is_equal_approx(Patterns.damage("breaker_charge", 9), 68.4),
 		"boss patterns preserve authored base damage and apply the stage-owned multiplier"
 	)
 	_expect(
-		is_equal_approx(Patterns.radius("furnace_ring", 0), 241.5)
-			and is_equal_approx(Patterns.radius("archive_depth", 1), 203.5)
-			and is_equal_approx(Patterns.radius("titan_pulse", 2), 270.25)
-			and is_equal_approx(Patterns.radius("gate_shockwave", 3), 288.0)
-			and is_equal_approx(Patterns.width("switch_sweep", 3), 93.6)
-			and is_equal_approx(Patterns.width("crown_beam", 4), 102.5)
-			and is_equal_approx(Patterns.radius("relay_pulse_rings", 4), 281.25),
+		is_equal_approx(Patterns.radius("furnace_ring", 1), 230.0 * Difficulty.BOSS_COVERAGE_SCALES[1])
+			and is_equal_approx(Patterns.radius("archive_depth", 3), 185.0 * Difficulty.BOSS_COVERAGE_SCALES[3])
+			and is_equal_approx(Patterns.radius("titan_pulse", 5), 235.0 * Difficulty.BOSS_COVERAGE_SCALES[5])
+			and is_equal_approx(Patterns.radius("gate_shockwave", 7), 240.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
+			and is_equal_approx(Patterns.width("switch_sweep", 7), 78.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
+			and is_equal_approx(Patterns.width("crown_beam", 9), 102.5)
+			and is_equal_approx(Patterns.radius("relay_pulse_rings", 9), 281.25),
 		"representative boss attacks apply exact stage coverage"
 	)
-	for stage_index in 4:
+	for stage_index in 9:
 		_expect(
 			Difficulty.boss_health(stage_index + 1) > Difficulty.boss_health(stage_index)
 				and Difficulty.boss_damage_multiplier(stage_index + 1)

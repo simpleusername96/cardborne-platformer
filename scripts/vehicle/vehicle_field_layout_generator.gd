@@ -311,35 +311,36 @@ static func _try_build_stage_objects(
 			"pos":point,
 		})
 	for value in candidates:
-		if reward_pickup_positions.size() == 8:
+		if reward_pickup_positions.size() == 4:
 			break
 		var point := _snap_to_grid(Vector2(value))
 		if _stage_point_valid(point, reachable, devices, reward_pickup_positions, pickup_positions, &"reward_pickup"):
 			reward_pickup_positions.append(point)
 	for value in candidates:
-		if pickup_positions.size() == 6:
+		if pickup_positions.size() == 3:
 			break
 		var point := _snap_to_grid(Vector2(value))
 		if _stage_point_valid(point, reachable, devices, reward_pickup_positions, pickup_positions, &"pickup"):
 			pickup_positions.append(point)
-	if devices.size() != MYSTERY_DEVICE_COUNT or reward_pickup_positions.size() != 8 or pickup_positions.size() != 6:
+	if devices.size() != MYSTERY_DEVICE_COUNT or reward_pickup_positions.size() != 4 or pickup_positions.size() != 3:
 		return {}
 	_prioritize_separated_recalls(reward_pickup_positions, pickup_positions)
 	var pickups: Array[Dictionary] = []
-	for index in 6:
+	var uses_small_repair := CombatStages.index_of(stage_id) % 2 == 1
+	for index in 3:
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + 1],
-			"kind":&"experience_recall" if index < 2 else &"repair",
-			"heal_amount":0.0 if index < 2 else REPAIR_HEAL_MAX,
+			"kind":&"experience_recall" if index < 1 else &"repair",
+			"heal_amount":0.0 if index < 1 else REPAIR_HEAL_MAX,
 			"pos":pickup_positions[index],
 		})
-	for index in 8:
-		var recall := index < 2
+	for index in 4:
+		var recall := index < 1
 		pickups.append({
-			"id":"%s_pickup_%02d" % [String(stage_id), index + 7],
+			"id":"%s_pickup_%02d" % [String(stage_id), index + 4],
 			"kind":&"experience_recall" if recall else &"repair",
 			"heal_amount":0.0 if recall else (
-				REPAIR_HEAL_MIN if index == 7 else REPAIR_HEAL_MAX
+				REPAIR_HEAL_MIN if uses_small_repair and index == 3 else REPAIR_HEAL_MAX
 			),
 			"pos":reward_pickup_positions[index],
 		})

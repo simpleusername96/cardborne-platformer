@@ -50,8 +50,8 @@ func _initialize() -> void:
 				_expect_translated(title_key, locale)
 				field_stage_titles[title_key] = true
 		_expect(
-			field_stage_titles.size() == 15,
-			"%s resolves a distinct title for all three fields and five stages"
+			field_stage_titles.size() == 30,
+			"%s resolves a distinct title for all three fields and ten stages"
 				% locale
 		)
 		for snapshot in snapshots:
@@ -74,7 +74,7 @@ func _initialize() -> void:
 			String(result_contract["result_kicker"]).contains(
 				TranslationServer.translate("RESULT_ALL_STAGES")
 			),
-			"%s final result names the complete five-stage run" % locale
+			"%s final result names the complete ten-stage run" % locale
 		)
 		ui.queue_free()
 		await process_frame

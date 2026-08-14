@@ -37,6 +37,12 @@ func prepare_stage(stage_index: int, preserve_upgrades: bool = false) -> bool:
 
 
 func prepare_boss_entry(stage_index: int) -> VehicleEnemyState:
+	if (
+		stage_index < 0
+		or stage_index >= StageCatalog.STAGE_IDS.size()
+		or not StageCatalog.has_boss(StageCatalog.STAGE_IDS[stage_index])
+	):
+		return null
 	if not prepare_stage(stage_index, true):
 		return null
 	_run._clear_enemies()
@@ -67,6 +73,12 @@ func prepare_boss_entry(stage_index: int) -> VehicleEnemyState:
 
 
 func complete_current_stage(completion_kind: StringName) -> bool:
+	var stage_has_boss := StageCatalog.has_boss(_run.current_stage_id)
+	if (
+		(completion_kind == TransitionRuntime.COMPLETION_WITHOUT_BOSS and stage_has_boss)
+		or (completion_kind == TransitionRuntime.COMPLETION_AFTER_BOSS and not stage_has_boss)
+	):
+		return false
 	if completion_kind == TransitionRuntime.COMPLETION_WITHOUT_BOSS:
 		_run.stage_flow.configure(_run.current_stage_index, 1, false)
 		var quota_receipt: Dictionary = _run.stage_flow.record_countable_defeat()

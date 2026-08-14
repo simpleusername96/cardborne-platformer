@@ -38,9 +38,9 @@ func _validate_stage_items() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, Catalog.STAGE_IDS)
 	for stage_id in Catalog.STAGE_IDS:
 		var pickups := layout.pickup_blueprint(stage_id)
-		_expect(pickups.size() == 14, "%s has fourteen authored direct pickups" % stage_id)
-		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").size() == 10, "%s has ten direct repair pickups" % stage_id)
-		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 4, "%s has four direct recall pickups" % stage_id)
+		_expect(pickups.size() == 7, "%s has seven authored direct pickups" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").size() == 5, "%s has five direct repair pickups" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s has two direct recall pickups" % stage_id)
 
 
 func _validate_experience_runtime() -> void:
@@ -161,10 +161,12 @@ func _validate_experience_runtime() -> void:
 
 func _validate_route_level_cadence() -> void:
 	var runtime := ExperienceRuntime.new()
-	var expected_levels := [9, 4, 4, 6, 6]
+	var total_experience := 0
+	var total_levels := 0
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
-		var stage_experience := 24 # Stage-boss core plus the minimum quota path.
+		var profile := Catalog.profile(stage_id)
+		var stage_experience := 24 if bool(profile.get("has_boss", true)) else 0
 		var counted_enemies := 0
 		for spec in Catalog.enemy_blueprint(stage_id):
 			if counted_enemies >= Catalog.quota(stage_id):
@@ -180,15 +182,13 @@ func _validate_route_level_cadence() -> void:
 		runtime.spawn_shard(Vector2.ZERO, stage_experience)
 		runtime.advance(0.0, Vector2.ZERO, 100.0, 0.0)
 		var levels_gained := runtime.run_level - level_before
-		_expect(
-			levels_gained == expected_levels[stage_index],
-			"%s quota-path XP yields %d level-ups; expected %d" % [
-				stage_id, levels_gained, expected_levels[stage_index]
-			]
-		)
+		total_experience += stage_experience
+		total_levels += levels_gained
 		while runtime.consume_pending_level():
 			pass
-	_expect(runtime.run_level == 30, "the authored quota path ends at run level thirty")
+	_expect(Catalog.STAGE_IDS.size() == 10, "the campaign exposes ten stages")
+	_expect(total_experience == 1968, "the minimum quota path preserves 1968 total XP (actual %d)" % total_experience)
+	_expect(total_levels == 29 and runtime.run_level == 30, "the authored quota path ends at run level thirty with 29 upgrades (actual %d / level %d)" % [total_levels, runtime.run_level])
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:

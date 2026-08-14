@@ -16,6 +16,7 @@ const BASE_LANE_SPACING := 135.0
 const BASE_FAN_OFFSETS := [-0.34, -0.17, 0.0, 0.17, 0.34]
 
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 
 const PATTERNS := {
 	&"furnace_gates":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.90, "recovery":0.90, "damage":22.0},
@@ -70,7 +71,10 @@ const AUTONOMOUS_SEQUENCES := {
 }
 
 static func sequence(stage_id: StringName, phase_value: Variant = 1) -> Array[String]:
-	var base: Array = STAGE_SEQUENCES.get(stage_id, STAGE_SEQUENCES[&"stage_1"])
+	var profile_id := CombatStages.boss_profile_id(stage_id)
+	var base: Array = STAGE_SEQUENCES.get(profile_id, [])
+	if base.is_empty():
+		return []
 	var phase := (
 		2
 		if phase_value is bool and bool(phase_value)
@@ -86,7 +90,8 @@ static func sequence(stage_id: StringName, phase_value: Variant = 1) -> Array[St
 
 static func autonomous_sequence(stage_id: StringName) -> Array[StringName]:
 	var result: Array[StringName] = []
-	for value in Array(AUTONOMOUS_SEQUENCES.get(stage_id, AUTONOMOUS_SEQUENCES[&"stage_1"])):
+	var profile_id := CombatStages.boss_profile_id(stage_id)
+	for value in Array(AUTONOMOUS_SEQUENCES.get(profile_id, [])):
 		result.append(StringName(value))
 	return result
 

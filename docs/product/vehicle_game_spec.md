@@ -3,9 +3,9 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-15
 canonical_for: Cardborne gameplay and product behavior
-scope: Current run-selected-field five-stage vehicle campaign
+scope: Current run-selected-field ten-stage paired vehicle campaign
 related:
   - ../design/VISUAL_SYSTEM.md
   - ./vehicle_upgrade_catalog.md
@@ -20,10 +20,10 @@ related:
 Cardborne is a top-down vehicle action shooter about steering through one large
 run-selected field while manually aiming a held primary weapon, dashing through
 pressure, and building a compact set of automatic secondary weapons. A new run
-selects one of three registered macro fields plus five deterministic
-stage-tactical content arrangements. All five combat stages reuse that field's
+selects one of three registered macro fields plus ten deterministic
+stage-tactical content arrangements. All ten combat stages reuse that field's
 floor, boundary, five inner-wall groups, and two Transit Gate routes. Each
-stage scatters its own three Anomaly Devices and fourteen direct pickups.
+stage scatters its own three Anomaly Devices and seven direct pickups.
 
 This is the canonical product contract for the current executable.
 
@@ -33,7 +33,7 @@ This specification covers controls, the run-selected field, stage flow, enemies,
 bosses, items, upgrades, HUD and modal flows, the guidebook, localization,
 settings, persistence, and release validation. It does not promise unconstrained
 procedural topology, a base stage, exploration puzzles, or content beyond the
-five-stage run.
+ten-stage paired run.
 
 ### Delivery target
 
@@ -42,7 +42,7 @@ five-stage run.
 - The repository is the source of truth. A generated Web export is a release
   artifact and must not become a separately hand-maintained version of the game.
 - A browser release is not qualified by a successful boot alone. The complete
-  five-stage loop, keyboard and mouse input, pause and pointer behavior, audio
+  ten-stage loop, keyboard and mouse input, pause and pointer behavior, audio
   startup, persistence, Korean and English surfaces, and browser runtime
   performance must pass release validation.
 - Mobile-browser controls, responsive touch play, hosting provider selection,
@@ -74,7 +74,7 @@ five-stage run.
 
 - Every run uses the existing Hard combat profile. Deployment exposes no
   difficulty selector, description, lock explanation, or saved preference.
-- Confirming deployment starts the complete five-stage run with that fixed
+- Confirming deployment starts the complete ten-stage run with that fixed
   profile. Stage transitions preserve it internally.
 - The fixed profile composes with the shallow stage curve. It does not alter
   attack cadence, telegraph duration, hostile projectile speed, threat budgets,
@@ -85,17 +85,16 @@ five-stage run.
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
 All non-boss enemy archetypes receive the existing `2.60` health multiplier
-after the fixed profile and shallow stage curve, then the stage pressure
-`[1.15, 1.55, 1.70, 1.85, 2.00]`, followed by one final ordinary-durability
-multiplier of `1.20` before elite modifiers. The five ordinary health curve values
-remain `[0.85, 1.00, 1.15, 1.30, 1.45]`. Stage 1 pressure is approximately 15%
-lower than its previous value; Stage 2–5 pressure is higher. Boss health uses
+after the fixed profile and shallow stage curve, then the ten-stage pressure
+curves defined in the campaign section, followed by one final ordinary-durability
+multiplier of `1.20` before elite modifiers. The ordinary health curve is
+`[0.85, 0.917, 0.983, 1.05, 1.117, 1.183, 1.25, 1.317, 1.383, 1.45]`.
+Boss health uses
 the separate stage profile defined below and never receives the `1.20`
 ordinary-durability multiplier.
 Ordinary enemy-sourced damage applies the shared `1.755` multiplier, the stage
-curve `[1.00, 1.03, 1.06, 1.09, 1.12]`, and the additional stage pressure
-`[0.98, 1.30, 1.42, 1.54, 1.66]`. For one authored damage point these compose
-to `1.7199/2.349945/2.641626/2.945943/3.262896`. Boss `final-effective` attacks
+curve `[1.00, 1.013, 1.027, 1.04, 1.053, 1.067, 1.08, 1.093, 1.107,
+1.12]`, and the additional stage pressure defined below. Boss `final-effective` attacks
 use their separate stage profile and bypass the ordinary multiplier and ordinary
 stage pressure. Friendly or environmental damage bypasses both.
 Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
@@ -212,11 +211,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   enemy and boss attacks can create hostile damage areas on the field.
 - Rendering, movement, projectile collision, line of sight, pursuit, minimap,
   and validation consume the same active tactical layout. Exact retries
-  reproduce it, and the inner-wall geometry remains fixed through all five
-  stages so a run reads as one continuous field rather than five reset maps.
+  reproduce it, and the inner-wall geometry remains fixed through all ten
+  stages so a run reads as one continuous field rather than ten reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
   least thirty-two content candidates are reusable authored sources. Each
-  stage selects three Anomaly Devices and fourteen direct pickups with explicit
+  stage selects three Anomaly Devices and seven direct pickups with explicit
   separation. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Pickup contact uses the swept player path with the 24-pixel player radius and
@@ -288,12 +287,14 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 2. Every stage opens with six low-risk pursuit identities from its authored
    sequence. The cue begins at `0.0 s`, births begin after `0.9 s` with `0.16 s`
    spacing, and the normal surge begins at `4.0 s`. Births remain outside the
-   visible world and use the nearest safe offscreen allocation. After Stage 1–4,
+   visible world and use the nearest safe offscreen allocation. After Stages 1–9,
    surviving ordinary actors count toward the six-actor beat-zero cap; only the
    available portion of the next six identities is admitted immediately and the
    remainder stays in that stage's authored reserve.
-3. Main-combat packets retain twelve logical role squads but schedule them as
-   three arrival windows of four squads. Every ordinary unit receives an
+3. Main-combat packets retain twelve logical role squads. Stage 1 schedules
+   twelve one-squad windows whose squads contain at most six units, so every
+   visible cue can reserve its complete group under the six-actor exact cap.
+   Stages 2–10 schedule three arrival windows of four squads. Every ordinary unit receives an
    independent birth position: 900–2400 pixels from the cue-time player
    position, at least 220 pixels outside the visible view, and at least 320
    pixels from other positions in its window and births from the previous two
@@ -318,13 +319,16 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    deterministic distribution. At lower speed the seeded start sector is
    unchanged. This rule changes arrival order only; it never changes packet
    membership, count, cue timing, geometry, distance, or separation truth.
-   Projectile-firing mobile roles remain at or below 15% of authored mobile
-   population; only three ranged attackers and two denial attackers may commit
-   at once. Ordinary hostile fire cannot consume the 24-shot boss reserve.
+   Projectile-firing mobile roles remain at or below 15% of each paired arc's
+   authored mobile population. Stages 1–5 allow at most three ranged and two
+   denial commitments; Stages 6–10 allow at most four ranged and three denial
+   commitments. Ordinary hostile fire cannot consume the 24-shot boss reserve.
    Fixed-Hard authored ordinary pressure caps progress through
    `6/124/172/224/276`; these are the logical encounter-pressure targets, not
-   simultaneously simulated actors. Exact materialized ordinary caps progress
-   through `6/40/48/48/48`. The 40-actor second beat leaves room for one complete
+   simultaneously simulated actors. Encounter-beat materialized caps remain
+   `6/40/48/48/48`; stage-owned exact ceilings are
+   `6/32/40/40/48/48/48/48/48/48`. Stage threat budgets are
+   `1/2/3/3.75/4.5/5/5.5/6/6.5/7`. The 32-actor Stage 2 ceiling leaves room for one complete
    32-unit arrival window while a small prior-stage survivor group remains. Scheduled
    authored units above that exact cap remain
    in the deterministic virtual reserve. A virtual-reserve unit has no world
@@ -389,7 +393,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    base speeds are Scrap Drone/Chaser/Rammer `190`, Needle Drone `176`, Shield
    Escort `170`, Shooter `166`, Bulkhead Guard `164`, Repair Tender `159`,
    Splitter Barge `157`, Controller `150`, Artillery Spotter `140`, Drone Carrier
-   `136`, and Spark Minelet `100` pixels per second. With the Stage 5 `1.04`
+   `136`, and Spark Minelet `100` pixels per second. With the Stage 10 `1.04`
    curve, every ordinary continuous movement speed remains below the player's
    `280 px/s`; explicitly committed charges remain exceptions.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
@@ -401,7 +405,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    the count is below eight and waits at least four seconds before another group.
    This cannot increase the reached quota, fabricate identities, exceed the
    exact cap, or despawn a materialized ordinary enemy.
-6. On reaching the quota, a 1.5-second boss warning
+6. On odd-numbered stages, reaching the quota completes that stage immediately.
+   On even-numbered stages, reaching the quota starts a 1.5-second boss warning that
    identifies a reachable arrival anchor at least 1200 pixels from the player
    when the field permits it. Boss creation and boss-defeat completion reject
    calls unless the quota has been reached and the warning has resolved. If the
@@ -418,31 +423,37 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    aimed lane and repeat volleys along it; charge, area, autonomous bombardment, and damaging
    summon patterns add one aimed three-shot pressure burst. Recovery resumes
    repositioning only after the committed attack ends.
-8. Boss defeat records the completed-stage telemetry and removes only boss-owned
-   adds, hostile projectiles, and damage zones. Stages 1–4 full-heal the ship and
-   stop old-stage maintenance and begin the next encounter in the same gameplay
-   frame. Existing ordinary enemies,
+8. Every stage completion records telemetry. Boss defeat additionally removes only
+   boss-owned adds, hostile projectiles, and damage zones. Odd-to-even transitions
+   do not heal; even-to-next-odd transitions restore 40% of missing Hull. Stage
+   transition steps stop old-stage maintenance and begin the next encounter without
+   a modal report. Existing ordinary enemies,
    ordinary and player projectiles, XP shards, position, velocity, facing, aim,
    cooldowns, build, fixed Hard state, exploration, and run-fixed terrain remain.
    There is no boss reward card, forced XP recall, transition protection, banner,
    success report, timer, or continue input. Stage-local pickups and Anomaly Devices
-   refresh for the new stage. Stage 5 opens the final result;
+   refresh for the new stage. Stage 10 opens the final result;
    failures still open the failure report.
 
 | Stage | Fixed Hard quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | --- |
-| 1 | 48 | 520 | Foundry Colossus |
-| 2 | 64 | 660 | Archive Leviathan |
-| 3 | 80 | 816 | Drydock Titan |
-| 4 | 96 | 1026 | Switchyard Behemoth |
-| 5 | 112 | 1260 | Crown Engine |
+| 1 | 24 | 260 | — |
+| 2 | 24 | 260 | Foundry Colossus |
+| 3 | 32 | 330 | — |
+| 4 | 32 | 330 | Archive Leviathan |
+| 5 | 40 | 408 | — |
+| 6 | 40 | 408 | Drydock Titan |
+| 7 | 48 | 513 | — |
+| 8 | 48 | 513 | Switchyard Behemoth |
+| 9 | 56 | 630 | — |
+| 10 | 56 | 630 | Crown Engine |
 
 Ordinary hostile projectiles
 stop at 96 so 24 of the global 120-shot cap remain reserved for boss attacks.
-Stage 1 ordinary health and damage pressure is `1.15/0.98`, approximately 15%
-below the previous `1.35/1.15`. Stage 2–5 ordinary health pressure is
-`1.55/1.70/1.85/2.00` and damage pressure is `1.30/1.42/1.54/1.66`; each is
-higher than its previous value. These multiply the existing stage, class,
+Stage 1 ordinary health and damage pressure is `1.15/0.98`. The ten-stage
+health-pressure curve is `[1.15, 1.244, 1.339, 1.433, 1.528, 1.622, 1.717,
+1.811, 1.906, 2.00]`; the damage-pressure curve is `[0.98, 1.056, 1.131,
+1.207, 1.282, 1.358, 1.433, 1.509, 1.584, 1.66]`. These multiply the existing stage, class,
 fixed-Hard, and global factors without changing speed, cadence, projectile speed,
 count, quota, or cap. Each
 boss uses a distinct three-phase direct-pattern sequence plus independently
@@ -451,11 +462,10 @@ active window, and recovery. Routine hits never interrupt or stop the boss, and
 every direct pattern remains committed after its warning appears.
 
 Each boss owns one body-attached shield and no external objective actor.
-Stage 1–5 boss profiles use target HP `5250/5805/6380/6975/7590`, damage
-multipliers `1.50/1.60/1.70/1.80/1.90`, shield-up received-damage multipliers
-`0.110/0.105/0.100/0.095/0.090`, cadence scales
-`0.95/0.90/0.85/0.80/0.75`, and coverage scales
-`1.05/1.10/1.15/1.20/1.25`. Phase 1–3 direct read gaps are
+The five bosses appear on Stages 2/4/6/8/10. Their health, damage, shield-up
+received-damage, cadence, and coverage values use those stages' points on the
+ten-entry interpolated difficulty curves; Stage 10 equals the previous Stage 5
+endpoint. Phase 1–3 direct read gaps are
 `0.45/0.34/0.26s`; autonomous base intervals are `5.4/4.4/3.5s`; authored direct
 recovery is multiplied by `0.80`. Cadence scales only the read gap, initial
 autonomous delay, and autonomous interval. Coverage scales each pattern's applicable radius,
@@ -475,16 +485,16 @@ does not produce a transient message.
   granted only when a shard is collected; summoned enemies grant the normal XP
   for their health class.
 - Swarm, standard, priority, and stage-boss defeats award `3/5/10/24` XP before
-  the existing elite rule. On the authored minimum-quota path this preserves
-  stage level-up counts `9/5/4/5/6` and finishes the run at level 30.
+  the existing elite rule. Boss XP occurs only on even stages. The authored
+  minimum-quota path preserves `1968 XP`, 29 upgrade selections, and level 30.
 - Exactly two field item behaviors exist: repair restores hull and experience
   recall pulls all live shards toward the player. Both spawn directly on the
   field. Recall retargets the ship's current position every physics
   frame and guarantees all live shards reach it before the 0.65-second recall
   window expires, including while the ship dashes.
-- Each stage places fourteen direct pickups: four experience recalls and ten
-  repairs. Nine repairs restore `50 HP` and one restores `40 HP`, for an exact
-  `490 HP` field-repair budget. Repair collection clamps at the ship's current
+- Each stage places seven direct pickups: two experience recalls and five
+  repairs. Across each adjacent stage pair, nine repairs restore `50 HP` and one
+  restores `40 HP`, preserving the exact `490 HP` arc-repair budget. Repair collection clamps at the ship's current
   maximum Hull unless Overflow Barrier converts eligible excess recovery.
 - Level thresholds use
   `min(96, 6 + round(1.5n + 0.32n²)) + 4` for progression indices `0–9`, then
@@ -660,7 +670,7 @@ no credit or stored charge.
   `28/18`, `32/22`, `40/26`, and `52/32 px` for compact, standard, large, and
   200% text respectively. Immediately below, a panel-free one-line cluster at
   left margin `16/24/32 px` shows exactly four icon/value items in this order:
-  stage deck stack `N / 5`, total-defeats skull with the run-cumulative count,
+  stage deck stack `N / 10`, total-defeats skull with the run-cumulative count,
   Dash and the active weapon. The active slot shows `LOCKED` before acquisition;
   owned action values are `READY` or remaining time to 0.1 s.
   Every icon owns one meaning; the cluster has no labels, panels, sections,
@@ -756,7 +766,7 @@ no credit or stored charge.
   enemy and boss entries show ordered combat statistics derived from gameplay
   owners, not duplicated movement/attack/counter prose. An active run shows exact
   effective values for its current stage; outside a run ordinary enemies show an
-  explicit Stage 1–5 range. Encountered entries persist across runs and reuse the
+  explicit Stage 1–10 range. Encountered entries persist across runs and reuse the
   same combat previews for identification. Each category summarizes undiscovered
   content with one non-selectable count; it never creates selectable `???` entries
   or leaks a name, preview, or statistic. The existing `mystery_device` mechanic is
@@ -766,8 +776,8 @@ no credit or stored charge.
   effective movement, defense, primary, equipped active weapon, secondary, level, and
   acquired-upgrade values from one frozen gameplay-owned snapshot. Outside a
   run it shows one localized empty state.
-- Stage 1–4 success history is retained for later inspection but does not open a
-  modal report. Stage 5 result lists actual defeat counts and effective outgoing
+- Stage 1–9 success history is retained for later inspection but does not open a
+  modal report. Stage 10 result lists actual defeat counts and effective outgoing
   damage by stable source, plus a second partition by kinetic, thermal, toxin,
   cryo, or arc attribute. Both outgoing totals agree within 0.01. A failed
   attempt opens the report in failure mode with the last hit and the three
@@ -789,7 +799,7 @@ no credit or stored charge.
   stale, or double-submitted ID without mutating the build. An opened reward
   transaction has no Leave, Exit, Skip, or decline action. If no legal ID remains,
   the explicit `MAX` progression-complete receipt resolves the transaction and
-  cannot block Stage 5 completion. A zero-card offer while a compatible definition
+  cannot block Stage 10 completion. A zero-card offer while a compatible definition
   remains is an invariant failure and never resolves silently.
 - From Stage 3 onward, every offer includes at least one compatible unfinished
   attack card when one exists. This guarantee preserves all optional-secondary,
@@ -826,7 +836,7 @@ no credit or stored charge.
   accessible icon in the top-right header. Field flavor, build philosophy, and
   other meta commentary are not shown. Every deployment starts the fixed Hard
   run and exposes no difficulty choice.
-- Player-facing stage titles use only Stage 1 through Stage 5. Field and encounter
+- Player-facing stage titles use only Stage 1 through Stage 10. Field and encounter
   identifiers remain internal until a later naming decision changes that contract.
 - Pause provides Resume and Abort Run only. Guidebook and Settings are localized,
   accessible header icons.
@@ -868,11 +878,11 @@ no credit or stored charge.
 ## Acceptance Criteria
 
 - All three immutable macro fields, the 560-pixel start clearance, both actor
-  radii, five deterministic tactical children, exact-retry identity, and
+  radii, ten deterministic tactical children, exact-retry identity, and
   adjacent-stage variation pass validation.
 - The immediate six-unit opening, stage quotas, distributed eight-squad surge
   growth, arrival fairness, 8–12 boss maintenance, 1.5-second boss warning, roaming boss,
-  preserved build/exploration, automatic stages 1–4 transition, and stage 5
+  preserved build/exploration, automatic stages 1–9 transition, and stage 10
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same
   profile, and no UI or saved preference can change difficulty.

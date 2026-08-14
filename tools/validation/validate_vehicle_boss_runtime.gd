@@ -47,7 +47,8 @@ func _init() -> void:
 	)
 	var previous_gap := INF
 	var previous_initial_delay := INF
-	for stage_index in 5:
+	for boss_index in 5:
+		var stage_index := boss_index * 2 + 1
 		var stage_id := StringName("stage_%d" % (stage_index + 1))
 		runtime.configure(stage_id)
 		var configured := runtime.snapshot()
@@ -147,7 +148,7 @@ func _init() -> void:
 
 
 func _validate_phase_receipts(runtime: BossRuntime) -> void:
-	runtime.configure(&"stage_1")
+	runtime.configure(&"stage_2")
 	var boss := _boss()
 	boss.phase = &"boss_read"
 	boss.phase_time = 0.0
@@ -187,10 +188,10 @@ func _validate_phase_receipts(runtime: BossRuntime) -> void:
 
 
 func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
-	runtime.configure(&"stage_5")
+	runtime.configure(&"stage_10")
 	var pattern := "furnace_ring"
 	var default_radius := BossPatterns.radius(pattern)
-	var stage_radius := BossPatterns.radius(pattern, 4)
+	var stage_radius := BossPatterns.radius(pattern, 9)
 	var services := BossServiceStub.new()
 	services.player_position = Vector2((default_radius + stage_radius) * 0.5, 0.0)
 	var boss := _boss()
@@ -203,12 +204,12 @@ func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
 	runtime.update_active(boss, 0.01, services)
 	_expect(
 		services.damage_calls == 1,
-		"stage 5 direct area damage reaches beyond the default boss footprint"
+		"Stage 10 direct area damage reaches beyond the default boss footprint"
 	)
 
 
 func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
-	runtime.configure(&"stage_1")
+	runtime.configure(&"stage_2")
 	var services := BossServiceStub.new()
 	var boss := _boss()
 	boss.pattern = &"furnace_ring"

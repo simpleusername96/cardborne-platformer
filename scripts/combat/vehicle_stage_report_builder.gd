@@ -30,6 +30,7 @@ static func build(
 		"failure":failure,
 		"stage_number":int(stage_data.get("number", 1)),
 		"stage_title_key":String(stage_data.get("title_key", "")),
+		"has_boss":bool(stage_data.get("has_boss", false)),
 		"has_next_stage":bool(stage_data.get("has_next_stage", false)),
 		"run_time_seconds":maxf(
 			0.0, float(stage_data.get("run_time_seconds", 0.0))
