@@ -1,6 +1,8 @@
 class_name VehicleManualPerformanceTrace
 extends RefCounted
 
+const BuildIdentity = preload("res://scripts/diagnostics/vehicle_build_identity.gd")
+
 ## Bounded, diagnostic-only frame correlation for user-controlled native play.
 ## It never owns gameplay state, release thresholds, synthetic fixtures, or input.
 
@@ -362,9 +364,17 @@ func finish(reason: String = "manual_stop") -> Dictionary:
 		"pressure_field_definitions":PRESSURE_FIELD_DEFINITIONS.duplicate(true),
 		"environment":_environment_metadata(),
 		"viewport":_viewport_metadata(),
-		"git":{
-			"commit":OS.get_environment("PERFORMANCE_COMMIT"),
-			"dirty":OS.get_environment("PERFORMANCE_DIRTY") == "1",
+		"build_identity":BuildIdentity.evidence_identity(),
+		"provenance":{
+			"schema_version":1,
+			"artifact_kind":"manual_play_trace",
+			"utc_started":Time.get_datetime_string_from_unix_time(int(_started_unix_time), true),
+			"utc_finished":Time.get_datetime_string_from_system(true, true),
+			"scenario_valid":false,
+			"authority_eligible":false,
+			"thresholds_passed":false,
+			"status":"diagnostic",
+			"command":OS.get_cmdline_args(),
 		},
 		"summary":_summary(),
 		"subsystems":_subsystem_summary(),

@@ -47,12 +47,8 @@ try {
     throw "Refusing to overwrite an existing manual trace: $absoluteOutput"
   }
 
-  $trackedChanges = @(git status --porcelain --untracked-files=no)
-  if ($LASTEXITCODE -ne 0) {
-    throw "Could not inspect the tracked worktree state."
-  }
-  $env:PERFORMANCE_COMMIT = $commit
-  $env:PERFORMANCE_DIRTY = if ($trackedChanges.Count -eq 0) { '0' } else { '1' }
+  & .\tools\diagnostics\write_vehicle_build_identity.ps1 | Out-Host
+  if ($LASTEXITCODE -ne 0) { throw "Could not generate the build identity." }
 
   Write-Host "수동 성능 기록을 켠 채 게임을 시작합니다. 평소처럼 플레이해 주세요."
   Write-Host "버벅임을 확인한 뒤 게임 창을 정상적으로 닫으면 JSON이 저장됩니다."

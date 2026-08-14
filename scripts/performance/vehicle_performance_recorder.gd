@@ -1,6 +1,8 @@
 class_name VehiclePerformanceRecorder
 extends RefCounted
 
+const BuildIdentity = preload("res://scripts/diagnostics/vehicle_build_identity.gd")
+
 ## Records complete rendered-frame distributions only when an explicit
 ## performance scenario is active. Ordinary play allocates no sample arrays.
 
@@ -35,6 +37,7 @@ var _monitor_sample_timer := 0.0
 var _browser_user_agent := ""
 var _native_focus_samples := 0
 var _native_unfocused_samples := 0
+var _started_utc := ""
 
 
 func configure(id: StringName, path: String, warmup: float = 10.0, duration: float = 60.0) -> void:
@@ -43,6 +46,7 @@ func configure(id: StringName, path: String, warmup: float = 10.0, duration: flo
 	warmup_seconds = maxf(0.0, warmup)
 	sample_seconds = maxf(0.25, duration)
 	_initial_static_memory = float(Performance.get_monitor(Performance.MEMORY_STATIC))
+	_started_utc = Time.get_datetime_string_from_system(true, true)
 	_prepare_web_environment_probe()
 
 
@@ -121,9 +125,11 @@ func finish(
 		presentation_stats,
 		hud_stats
 	)
+	var build_identity := BuildIdentity.evidence_identity()
 	var authoritative := (
 		warmup_seconds >= 10.0
 		and sample_seconds >= 60.0
+		and BuildIdentity.is_complete(build_identity)
 		and bool(execution_environment["authority_eligible"])
 	)
 	var result := {
@@ -143,9 +149,19 @@ func finish(
 			"cpu_render_ms": _optional_viewport_time(viewport, true),
 			"gpu_render_ms": _optional_viewport_time(viewport, false),
 		},
-		"git": {
-			"commit": OS.get_environment("PERFORMANCE_COMMIT"),
-			"dirty": OS.get_environment("PERFORMANCE_DIRTY") == "1",
+		"build_identity": build_identity,
+		"provenance": {
+			"schema_version": 1,
+			"artifact_kind": "synthetic_performance",
+			"utc_started": _started_utc,
+			"command": OS.get_cmdline_args(),
+			"scenario": String(scenario_id),
+			"seed": 0xC4A2B0,
+			"workload_fingerprint": int(validation.get("fixture_fingerprint", 0)),
+			"warmup_seconds": warmup_seconds,
+			"sample_seconds": sample_seconds,
+			"scenario_valid": bool(validation.get("valid", false)),
+			"authority_eligible": authoritative,
 		},
 		"frames": frame_stats,
 		"physics": physics_stats,
@@ -175,6 +191,12 @@ func finish(
 		"scenario_validation": validation,
 	}
 	result["thresholds"] = _threshold_result(result)
+	result["provenance"]["utc_finished"] = Time.get_datetime_string_from_system(true, true)
+	result["provenance"]["thresholds_passed"] = bool(result["thresholds"].get("passed", false))
+	result["provenance"]["status"] = (
+		"authoritative_pass" if bool(result["thresholds"].get("passed", false))
+		else ("authoritative_fail" if authoritative else "diagnostic")
+	)
 	var encoded := JSON.stringify(result)
 	if OS.has_feature("web"):
 		_publish_web_summary(result)

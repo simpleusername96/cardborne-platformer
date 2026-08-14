@@ -22,6 +22,7 @@ dist/
 exports/
 /build/*
 !/build/.gdignore
+/data/generated/
 
 # Godot import metadata for generated documentation images
 docs/**/*.import

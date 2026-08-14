@@ -1,6 +1,8 @@
 class_name VehicleRunCaptureDriver
 extends RefCounted
 
+const BuildIdentity = preload("res://scripts/diagnostics/vehicle_build_identity.gd")
+
 ## Owns capture requests, sequence, exact output contract, and terminal cleanup.
 
 const CORE_CAPTURE_FILES := [
@@ -182,6 +184,7 @@ var failed := false
 var _original_locale := ""
 var _saved_counts: Dictionary = {}
 var _finished := false
+var _started_utc := ""
 
 
 static func is_requested_from_command_line() -> bool:
@@ -232,6 +235,7 @@ func apply_locale() -> void:
 
 
 func run(gateway: RefCounted) -> void:
+	_started_utc = Time.get_datetime_string_from_system(true, true)
 	if not prepare_output():
 		finish_capture(gateway, 1)
 		return
@@ -460,7 +464,19 @@ func _write_manifest(gateway: RefCounted) -> bool:
 	var full_evidence := is_full_evidence(gateway.snapshot(&"viewport"))
 	var files: Array = FULL_CAPTURE_FILES if full_evidence else CORE_CAPTURE_FILES
 	var manifest := {
-		"schema_version":1,
+		"schema_version":2,
+		"build_identity":BuildIdentity.evidence_identity(),
+		"provenance":{
+			"schema_version":1,
+			"artifact_kind":"visual_capture",
+			"scenario_valid":true,
+			"authority_eligible":false,
+			"thresholds_passed":false,
+			"status":"diagnostic",
+			"utc_started":_started_utc,
+			"utc_finished":Time.get_datetime_string_from_system(true, true),
+			"command":OS.get_cmdline_args(),
+		},
 		"locale":locale,
 		"viewport_size":[viewport_size.x, viewport_size.y],
 		"text_scale":text_scale,
