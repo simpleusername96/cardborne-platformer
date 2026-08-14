@@ -5,6 +5,7 @@ extends RefCounted
 ## and writes one pacing bundle; normal play never creates this object.
 
 const Capture = preload("res://scripts/diagnostics/vehicle_encounter_pacing_capture.gd")
+const BuildIdentity = preload("res://scripts/diagnostics/vehicle_build_identity.gd")
 const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
@@ -33,10 +34,35 @@ static func is_safe_output_path(path: String) -> bool:
 	)
 
 
-func configure(output_path: String, evidence_id: String) -> bool:
+static func identity_matches_expected(
+	identity: Dictionary,
+	expected_commit: String,
+	expected_fingerprint: String
+) -> bool:
+	return (
+		BuildIdentity.is_complete(identity)
+		and expected_commit.length() == 40
+		and expected_commit.is_valid_hex_number()
+		and expected_fingerprint.length() == 64
+		and expected_fingerprint.is_valid_hex_number()
+		and String(identity.get("commit", "")).to_lower() == expected_commit.to_lower()
+		and String(identity.get("content_fingerprint", "")).to_lower()
+			== expected_fingerprint.to_lower()
+	)
+
+
+func configure(
+	output_path: String,
+	evidence_id: String,
+	expected_commit: String,
+	expected_fingerprint: String
+) -> bool:
 	if not is_safe_output_path(output_path) or FileAccess.file_exists(ProjectSettings.globalize_path(output_path)):
 		return false
-	if not _capture.begin(evidence_id):
+	var identity := BuildIdentity.evidence_identity()
+	if not identity_matches_expected(identity, expected_commit, expected_fingerprint):
+		return false
+	if not _capture.begin(evidence_id, identity):
 		return false
 	_output_path = output_path
 	return true

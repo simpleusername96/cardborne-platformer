@@ -80,9 +80,20 @@ func _initialize() -> void:
 	_expect(
 		run_source.contains("--encounter-pacing-output=")
 			and run_source.contains("--encounter-pacing-evidence-id=")
+			and run_source.contains("--encounter-pacing-expected-commit=")
+			and run_source.contains("--encounter-pacing-expected-fingerprint=")
 			and run_source.contains("_start_encounter_pacing_capture"),
-		"explicit diagnostic request owns the bounded capture entry path"
+		"explicit diagnostic request owns the bounded versioned capture entry path"
 )
+	_expect(
+		CaptureDriver.identity_matches_expected(
+			identity, "a".repeat(40), "b".repeat(64)
+		)
+			and not CaptureDriver.identity_matches_expected(
+				identity, "c".repeat(40), "b".repeat(64)
+			),
+		"capture refuses a stale generated build identity"
+	)
 	_expect(
 		CaptureDriver.is_safe_output_path("res://build/performance/pacing.json")
 			and not CaptureDriver.is_safe_output_path("user://unsafe.json")

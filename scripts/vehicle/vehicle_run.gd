@@ -6968,25 +6968,53 @@ func _parse_encounter_pacing_capture_request() -> Dictionary:
 static func _encounter_pacing_capture_request_from_arguments(arguments: Array) -> Dictionary:
 	var output_path := ""
 	var evidence_id := ""
+	var expected_commit := ""
+	var expected_fingerprint := ""
 	for argument in arguments:
 		if argument.begins_with("--encounter-pacing-output="):
 			output_path = argument.trim_prefix("--encounter-pacing-output=")
 		elif argument.begins_with("--encounter-pacing-evidence-id="):
 			evidence_id = argument.trim_prefix("--encounter-pacing-evidence-id=")
-	if output_path.is_empty() and evidence_id.is_empty():
+		elif argument.begins_with("--encounter-pacing-expected-commit="):
+			expected_commit = argument.trim_prefix("--encounter-pacing-expected-commit=")
+		elif argument.begins_with("--encounter-pacing-expected-fingerprint="):
+			expected_fingerprint = argument.trim_prefix(
+				"--encounter-pacing-expected-fingerprint="
+			)
+	var any_requested := (
+		not output_path.is_empty()
+		or not evidence_id.is_empty()
+		or not expected_commit.is_empty()
+		or not expected_fingerprint.is_empty()
+	)
+	if not any_requested:
 		return {}
 	if (
 		output_path.is_empty()
 		or evidence_id.is_empty()
+		or expected_commit.length() != 40
+		or not expected_commit.is_valid_hex_number()
+		or expected_fingerprint.length() != 64
+		or not expected_fingerprint.is_valid_hex_number()
 		or not EncounterPacingCaptureDriver.is_safe_output_path(output_path)
 		or OS.has_feature("web")
 	):
-		push_error("Encounter pacing capture requires a native safe output and evidence ID.")
-		return {}
-	return {"output":output_path, "evidence_id":evidence_id}
+		return {"invalid":true}
+	return {
+		"output":output_path,
+		"evidence_id":evidence_id,
+		"expected_commit":expected_commit.to_lower(),
+		"expected_fingerprint":expected_fingerprint.to_lower(),
+	}
 
 
 func _start_encounter_pacing_capture() -> void:
+	if bool(_encounter_pacing_capture_request.get("invalid", false)):
+		push_error(
+			"Encounter pacing capture requires native output, evidence ID, commit, and fingerprint."
+		)
+		get_tree().quit(1)
+		return
 	if (
 		_capture_mode
 		or not _performance_request.is_empty()
@@ -6998,7 +7026,9 @@ func _start_encounter_pacing_capture() -> void:
 	_encounter_pacing_capture_driver = EncounterPacingCaptureDriver.new()
 	if not _encounter_pacing_capture_driver.configure(
 		String(_encounter_pacing_capture_request["output"]),
-		String(_encounter_pacing_capture_request["evidence_id"])
+		String(_encounter_pacing_capture_request["evidence_id"]),
+		String(_encounter_pacing_capture_request["expected_commit"]),
+		String(_encounter_pacing_capture_request["expected_fingerprint"])
 	):
 		push_error("Could not configure encounter pacing capture.")
 		get_tree().quit(1)
