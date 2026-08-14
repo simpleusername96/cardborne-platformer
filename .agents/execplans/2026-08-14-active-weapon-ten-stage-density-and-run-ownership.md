@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-14
-scope: Active-weapon upgrade UX, ten-stage campaign pacing, dense-enemy capacity, and VehicleRun responsibility reduction
+scope: Ten-stage campaign pacing, dense-enemy capacity, and VehicleRun responsibility reduction after the weapon/progression migration
 related:
   - ../../AGENTS.md
   - ../PLANS.md
@@ -11,6 +11,7 @@ related:
   - ../cardborne-performance-engineering-policy.md
   - ../cardborne-runtime-architecture-audit.md
   - ./2026-08-13-evidence-category-slots-and-scalable-swarm.md
+  - ./2026-08-14-weapon-unlocks-and-early-level-pacing.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
@@ -18,22 +19,19 @@ related:
   - ../../docs/performance/2026-08-13-dense-enemy-architecture-options.md
 ---
 
-# Active Weapon, Ten-Stage Pressure, and VehicleRun Ownership - Execution Contract
+# Ten-Stage Pressure and VehicleRun Ownership - Execution Contract
 
-Cardborne will present one equipped active-weapon slot, keep its two cross-weapon enhancement cards as nested build state rather than fake equipment cells, extend the run to ten shorter stages with the five existing bosses at pair ends, increase challenge through continuity, threat concurrency, and attrition before raising exact actor counts, and reduce `VehicleRun` one measured responsibility at a time before the campaign expansion lands.
+After the focused weapon/progression migration completes, Cardborne will extend the run to ten shorter stages with the five existing bosses at pair ends, increase challenge through continuity, threat concurrency, and attrition before raising exact actor counts, and reduce `VehicleRun` one measured responsibility at a time before the campaign expansion lands.
 
 ## Purpose
 
-- Objective: correct active-weapon upgrade semantics, make the fixed-Hard run materially harder and longer without doubling content or hiding performance regressions, and stop new campaign/density work from further expanding the oversized run orchestrator.
-- Deliverable: updated product/design contracts, active-weapon build UI and localization, a real ten-stage paired campaign, proportionate difficulty changes, measured density headroom, and responsibility-shaped runtime owners behind a smaller `VehicleRun` facade.
+- Objective: make the fixed-Hard run materially harder and longer without doubling content or hiding performance regressions, and stop new campaign/density work from further expanding the oversized run orchestrator.
+- Deliverable: a real ten-stage paired campaign, proportionate difficulty changes, measured density headroom, and responsibility-shaped runtime owners behind a smaller `VehicleRun` facade.
 - Completion state: one clean commit lineage passes focused gameplay/UI contracts, Korean/English rendered checks, a production Web export and interaction smoke, and the separately authorized native/Web performance gates; the final product uses ten player-facing stages and never claims a higher exact-enemy cap without same-build evidence.
 
 ## Why and Verified Starting Point
 
-- `scripts/cards/vehicle_upgrade_catalog.gd` defines the Active category display positions as `kind`, `active_coolant`, and `active_amplifier`. Runtime equipment is nevertheless singular: `VehicleRunBuild.active_weapon_card_id()` resolves one kind and `VehicleActiveWeaponRuntime` owns one `equipped_id`.
-- The current rail therefore shows three visual cells for one equipment slot. The latest Korean capture, `build/captures/phase8-b404f310-ko/06-thermal-first-acquisition.png`, makes those cells read like three equipment positions. The later partial-build and Result captures confirm that this is a summary-model problem, not evidence of three active weapons.
-- `localization/vehicle_stage.csv` names the shared cards `EMP·교체 발동 재사용` and `EMP·교체 발동 피해`. The cards actually follow whichever active weapon is equipped, so `EMP` in those titles is inaccurate and noisy.
-- The current compatibility rule locks the first acquired active kind for the run. There is no card-level delete, unequip, replacement, or reset API. Allowing several active kinds without a replacement transaction would make the build's fixed-priority lookup choose an unintended weapon.
+- The prerequisite contract `.agents/execplans/2026-08-14-weapon-unlocks-and-early-level-pacing.md` owns removal of default EMP/Seeker, shared weapon cards, weapon-owned curves, 17-cell build UI, and the early XP surcharge. This plan consumes that completed state and must not redesign it.
 - The five-stage campaign is hard-coded across stage, difficulty, boss, tactic, Result, localization, capture, and validation owners. Quotas are `48/64/80/96/112`; authored populations are `520/660/816/1026/1260`.
 - Logical authored pressure and exact live simulation are already separate. The encounter director uses logical caps `6/124/172/224/276` but exact materialized caps `6/40/48/48/48`. Stage 3 onward therefore stops increasing simultaneous exact ordinary actors.
 - Historical same-checkpoint evidence passed native exact cap 48 and failed 64; the same Web cap-48 build was red. Current `HEAD` is newer, so those numbers select risk and test order but do not qualify current performance.
@@ -44,7 +42,6 @@ Cardborne will present one equipped active-weapon slot, keep its two cross-weapo
 
 In scope:
 
-- Active category summary semantics, common active-card copy, popover state, offer accessibility, and Korean/English completeness.
 - Ten player-facing stages arranged as five two-stage arcs, with the five existing boss encounters at Stages 2, 4, 6, 8, and 10.
 - Quota, authored reserve, item distribution, transition recovery, threat budget, stage/difficulty arrays, reports, HUD, guidebook ranges, captures, and validators required by that campaign.
 - Current-HEAD native/Web performance qualification, density diagnostics, and one measured hot-owner extraction at a time.
@@ -54,24 +51,22 @@ Out of scope:
 
 - A difficulty selector, adaptive difficulty, permanent progression, or a second campaign mode.
 - New bosses, enemy roles, boss pattern families, maps, production dependencies, engine changes, Web threads, custom export templates, or GDExtension work.
-- Free card deletion, an empty active slot, repeated Lv.0 active-weapon offers after commitment, rerolls, skip, or decline actions.
+- Weapon-card policy, default weapon state, weapon curves, upgrade/HUD slot semantics, and early XP pacing owned by the prerequisite contract.
 - Raising the shipping hostile, projectile, XP, effect, render-batch, or draw-call ceilings without the declared evidence and approval gates.
 - A big-bang `VehicleRun` rewrite, pass-through files created only to reduce line count, or renderer decomposition while render ownership is not measured as material.
 
 Constraints and invariants:
 
-- Preserve manual aim, held primary fire, Dash, Seeker, one directly activated weapon, authored encounter identities, map pickups, card upgrades, quota-gated boss encounters, deterministic offers, exact earliest projectile contact, and fixed Hard.
+- Preserve manual aim, held primary fire, Dash, the prerequisite contract's acquired automatic/active weapons, authored encounter identities, map pickups, card upgrades, quota-gated boss encounters, deterministic offers, exact earliest projectile contact, and fixed Hard.
 - Korean remains default; Korean and English stay complete on every changed surface.
-- One active weapon is equipped at all times. EMP is the default and is not counted as an acquired card.
-- `active_coolant` and `active_amplifier` remain ordinary run-scoped cards and keep their current three levels and gameplay values. They modify the currently equipped active weapon exactly once.
-- The one visible Active cell is presentation state, not a new inventory or save-data owner. Gameplay compatibility stays in the catalog and build owners.
+- Do not begin this plan until the prerequisite weapon/progression contract's functional and focused rendered gates pass.
 - The ten-stage run keeps the current five bosses and current total ordinary defeat quota of 400. More stages must not silently double runtime, XP, repair supply, or boss content.
 - The shipping exact ordinary cap remains 48 unless the same clean native and built-Web source passes the locked higher-cap branch.
 - Player intent, damage, collision, committed attacks, boss windows, and their visible truth remain 60 Hz. No tick-rate or catch-up-ceiling change is an optimization.
 
 Destructive or irreversible actions:
 
-- None. Card IDs, save schema, and production dependencies remain stable.
+- None. Production dependencies remain stable.
 
 Exact actions requiring owner or user approval:
 
@@ -84,22 +79,14 @@ Use these terms consistently:
 
 | Term | Meaning | Owner |
 | --- | --- | --- |
-| Equipped active weapon | The one action currently bound to the active input; EMP by default or one acquired replacement | `VehicleRunBuild` and `VehicleActiveWeaponRuntime` |
-| Active summary cell | The one build-rail cell that shows the equipped active weapon and opens its complete nested state | Build snapshot and shared rail UI |
-| Active enhancement | `active_coolant` or `active_amplifier`; a card level that follows the equipped weapon but is not another equipment slot | Upgrade catalog and build stats |
 | Reward offer | One frozen transaction containing one to three compatible cards | Upgrade catalog and reward runtime |
 | Logical authored population | Deterministic encounter identities that may remain in virtual reserve | Combat stages and encounter runtime |
 | Exact materialized actor | A live world actor with position, collision, health, status, and update work | Enemy store and simulation owners |
 | Runtime pool slot | A bounded storage index; never a UI or equipment slot | Enemy/projectile/effect stores |
 
-### Active weapon decision
+### Weapon/progression prerequisite
 
-1. The build rail shows exactly one Active summary cell.
-2. That cell uses the EMP glyph until a replacement is acquired, then changes to the replacement glyph. Its popover lists the equipped weapon level/effective values plus `Active Damage Lv.N` and `Active Cooldown Lv.N` when acquired.
-3. `active_amplifier` becomes `발동무기 피해 / Active Damage`; `active_coolant` becomes `발동무기 재사용 / Active Cooldown`. Descriptions say that the card affects the equipped active weapon. No shared-card title contains `EMP`.
-4. The two enhancement cards remain in the offer pool because they preserve six meaningful growth selections, work before and after the active-kind decision, and prevent the ten-stage run from exhausting growth earlier. They do not receive visible rail cells.
-5. Active-kind commitment remains run-scoped and exclusive. Do not add a delete button or continually reintroduce other active kinds as `Lv.0 -> 1` cards. Those designs create sunk-level traps, ambiguous build history, and offer dilution.
-6. If later play evidence shows commitment regret is material, revise this contract for one explicit midpoint refit transaction. Do not smuggle free replacement into ordinary reward compatibility.
+The related focused contract is the sole owner of weapon acquisition, upgrade curves, build cells, HUD weapon state, and the early XP formula. This plan starts only after that contract passes. Ten-stage XP distribution must use its `1968 XP`, Level-30, 29-upgrade, and `9/4/4/6/6` five-stage baseline rather than restoring the previous `9/5/4/5/6` distribution.
 
 ### Ten-stage decision
 
@@ -124,10 +111,7 @@ Use these terms consistently:
 
 | Requirement or concern | Verified current owner and behavior | Evidence | Locked decision | Task IDs |
 | --- | --- | --- | --- | --- |
-| Why does Active show three cells? | Catalog exposes `kind` plus two enhancement positions while runtime equips one weapon | Catalog, RunBuild, ActiveWeaponRuntime, latest Upgrade captures | One summary cell; enhancement levels live inside its detail | 1.1-1.4 |
-| Are all EMP titles correct? | Shared enhancement titles mention EMP although they follow any equipped weapon | Localization and active-weapon validators | Remove EMP from shared titles/descriptions | 1.2 |
-| Should common cards be removed? | They provide six selectable levels and keep their value across the one kind decision | 28-card/92-state catalog and level-path validators | Retain them, but stop rendering them as equipment cells | 1.1-1.4 |
-| Should players delete or freely replace an active? | No delete/replace API exists; multiple kind levels conflict with fixed-priority resolution | RunBuild, compatibility rules, tests | Keep exclusive run commitment; no ordinary Lv.0 reoffers | 1.3 |
+| What owns weapon and early-XP changes? | The focused contract maps the complete card/runtime/UI/XP surface | Related active plan and current source audit | Consume it as a completed prerequisite; do not duplicate its work here | prerequisite |
 | How can five bosses support ten stages? | Boss content and many arrays are exactly five-wide | Stage/boss catalogs and Result contracts | Five two-stage arcs; boss at each even stage | 2.1-3.5 |
 | Why can the game feel easy despite large authored counts? | Exact actors stop at 48, transition heal is full, pickups are generous, and no current normal-play outcome data exists | Product spec, encounter director, captures | Increase attrition and concurrency before durability or exact cap | 3.1-3.5 |
 | Can exact actor count rise safely now? | Historical cap 48 passed native while 64 and Web were red; current HEAD is unqualified | Active plan and performance evidence | Ship 48 first; remeasure and gate 64 separately | 4.1-4.5 |
@@ -135,34 +119,15 @@ Use these terms consistently:
 
 Readiness statement:
 
-- Product, UX, ownership, dependency, and initial shipping-cap decisions are closed.
+- Campaign, performance, ownership, dependency, and initial shipping-cap decisions are closed; weapon/early-XP work is an external prerequisite with its own progress source.
 - The broad performance run is an explicit approval checkpoint, not an implementation decision left to the executor.
 - The only conditional branch is metric-selected and predetermined: cap 64 ships only if the named native and Web gates pass; otherwise exact 48 remains and pressure uses reserve/concurrency.
 
 ## Tasks
 
-### Phase 1: Make one active slot truthful
+### External prerequisite (former Phase 1; progress is tracked only in the related contract)
 
-Goal: show one equipped active weapon without erasing the two shared enhancement growth paths.
-
-Preconditions:
-
-- Preserve the current five-stage gameplay while this isolated surface/model correction is implemented.
-
-Source owners: `scripts/cards/vehicle_upgrade_catalog.gd`, `scripts/cards/vehicle_build_snapshot_builder.gd`, `scripts/cards/vehicle_run_build.gd`, `scripts/ui/vehicle_upgrade_build_rail.gd`, `scripts/ui/vehicle_upgrade_build_cell.gd`, `localization/vehicle_stage.csv`, active/upgrade validators, product and visual specs.
-
-- [ ] **1.1 Publish one composite Active summary record.**
-  - Change: Active category display capacity becomes one. The snapshot publishes equipped weapon identity, effective damage/range/cooldown, weapon level, and nested enhancement levels. Keep compatibility and acquired-card projections separate from the one-cell UI model.
-  - Accept: empty build shows EMP in one Active cell and zero acquired cards; replacement changes that cell; enhancement acquisition changes detail values without adding cells.
-- [ ] **1.2 Correct bilingual card language.**
-  - Change: apply the locked generic titles/descriptions and update category accessibility copy to explain replacement or enhancement without calling every card EMP.
-  - Accept: Korean/English localization validation finds no `EMP` in the two shared card titles and gameplay-owned values remain unchanged.
-- [ ] **1.3 Preserve exclusive compatibility and transaction safety.**
-  - Change: make the one-kind invariant explicit in RunBuild/catalog validation; do not add deletion or reoffer behavior.
-  - Accept: zero or one active kind is reachable, unoffered/stale/double submissions remain rejected, and another kind is incompatible after commitment.
-- [ ] **1.4 Render and inspect the complete state matrix.**
-  - Change: capture Korean/English at 960x540, 1280x720, 1920x1080 plus 200% text for default EMP, each replacement, each enhancement-only state, mixed levels, popover, and Result.
-  - Accept: one cell is visible, all values fit, focus reaches only the filled cell, the popover does not cover the selected offer/action, and no text clips or implies three equipped weapons.
+Do not mirror its checkboxes here. Begin Phase 2 only after `.agents/execplans/2026-08-14-weapon-unlocks-and-early-level-pacing.md` is `done` and its final gate remains valid at the Phase-2 starting commit.
 
 ### Phase 2: Move campaign policy out of VehicleRun
 
@@ -170,7 +135,7 @@ Goal: give the ten-stage change one canonical campaign owner before multiplying 
 
 Preconditions:
 
-- Phase 1 acceptance passes.
+- The complete weapon/progression prerequisite contract passes.
 
 Source owners: `scripts/vehicle/vehicle_run.gd` functions `_update_stage_progression` through `_ordinary_active_count`, `scripts/encounters/vehicle_stage_flow.gd`, `scripts/vehicle/vehicle_stage_transition_runtime.gd`, `scripts/bosses/vehicle_boss_runtime.gd`, `scripts/rewards/vehicle_reward_runtime.gd`, `scripts/combat/vehicle_stage_report_builder.gd`, `scripts/combat/vehicle_run_result_builder.gd`.
 
@@ -246,10 +211,10 @@ Goal: prove the complete product at supported surfaces and retire temporary plan
 
 - [ ] **5.1 Run focused source and document gates.**
   - Change: run changed-owner validators, `./tools/validation/validate_cardborne_visual_authority.ps1`, Godot import, `git diff --check`, and active plan/schema checks.
-  - Accept: all relevant focused checks pass and no spec still claims five stages, three Active equipment cells, or full inter-stage healing.
+  - Accept: all relevant focused checks pass and no spec still claims five stages or full inter-stage healing; the completed weapon/progression contract remains unchanged.
 - [ ] **5.2 Capture and interact with the built product.**
   - Change: export with `./tools/export_web.ps1`, start only through the approved fastrun Codex lane, and inspect Korean/English Upgrade, HUD, odd/even transitions, boss entry, Stage 10 Result, narrow/wide layouts, 200% text, and one real complete-run path.
-  - Accept: no clipping, focus loss, unsupported action, stale Stage 5 copy, hidden transition, or active-slot ambiguity remains; console errors are zero.
+  - Accept: no clipping, focus loss, unsupported action, stale Stage 5 copy, or hidden transition remains; console errors are zero.
 - [ ] **5.3 Record narrow verdicts and retire the plan only after implementation.**
   - Change: update product/visual/performance owners with accepted durable behavior, record exact pass/fail labels, and change this plan to `done` only when every task and gate passes.
   - Accept: no performance result is described more broadly than its evidence and no active predecessor is silently treated as current authority for this scope.
@@ -259,7 +224,6 @@ Goal: prove the complete product at supported surfaces and retire temporary plan
 | Cadence | Exact check | Run when | Do not rerun until |
 | --- | --- | --- | --- |
 | Inner loop | One changed-owner validator plus `git diff --check` | After a coherent local change | Relevant source changes |
-| Active UI gate | Upgrade system/UI/active weapon/localization validators plus selected rendered states | Phase 1 tasks pass | Catalog/snapshot/UI/copy inputs change |
 | Campaign equivalence | Stage continuity/transition/report/boss/reward/capture validators | Phase 2 and each Phase 3 slice pass | Campaign owner or data changes |
 | Rendered flow gate | Korean/English supported sizes, 200% text, odd/even transition, Stage 10 Result | Phase 3 integration passes | UI/snapshot/theme/localization changes |
 | Performance diagnostic | One 10-second warmup + 30-second same-scenario comparison | A measured candidate is coherent | Candidate or hypothesis changes |
@@ -286,8 +250,6 @@ Verified command shapes:
 
 | Trigger | Required response | Boundary or escalation point |
 | --- | --- | --- |
-| Composite Active detail cannot fit at 200% text | Use the existing one outer modal scroll and inline detail form | Do not restore enhancement equipment cells or add nested scrolls |
-| Common active enhancement no longer applies exactly once after replacement | Stop Phase 1 and repair build/runtime ownership | Do not duplicate the modifier in UI or active definitions |
 | Odd-stage no-boss completion leaves partial boss state | Reject the transition slice and restore the last passing campaign checkpoint | Do not add special-case cleanup in UI |
 | Ten-stage total quota, XP, or pickup supply differs from the locked budget | Stop and correct data generation/spec together | Do not compensate with hidden runtime multipliers |
 | Current-HEAD cap 48 fails | Keep shipping cap 48 blocked and fix only the measured owner | Do not attempt 64 or weaken thresholds |
@@ -303,16 +265,15 @@ Implementation-local discoveries may be handled inside the locked contract only 
 
 - Ten stage labels can falsely imply twice the content. The paired structure must be communicated through pacing, not flavor text or invented stage names.
 - Stronger threat concurrency can become unreadable before it becomes difficult. Startup, attack-cap, radar, and escape-corridor checks are mandatory.
-- Retaining common active enhancements but hiding their cells can make them undiscoverable; the one-cell popover and offer accessibility copy must expose their levels plainly.
 - A campaign extraction can become another shallow manager. Existing domain owners must receive policy; the facade must not merely forward every private field.
 - Exact-near plus virtual-far increases authored pressure without representing distant individuals as live actors. Specs and telemetry must keep those terms distinct.
-- Current active plans overlap this scope. This document is the progress source for this user request; lifecycle cleanup of predecessor plans requires separate explicit approval.
+- The focused weapon/progression plan intentionally precedes this contract and owns a disjoint progress source. Other active-plan overlap remains lifecycle debt and is not changed without separate approval.
 
 ## Rollback and Safety
 
 - Commit each phase coherently and keep task-owned changes separate from unrelated work.
 - Roll back one rejected performance candidate without reverting accepted product/UI phases.
-- Preserve current card IDs and enhancement stats so Phase 1 needs no migration.
+- Preserve the completed prerequisite's card IDs, weapon-owned stats, build cells, HUD contract, and early-XP curve.
 - Keep five-stage behavior passing until the Phase 3 ten-stage data and transition path are complete; do not maintain both campaign modes in production afterward.
 - Do not delete old evidence or active plans during implementation without explicit approval.
 
@@ -326,8 +287,7 @@ Implementation-local discoveries may be handled inside the locked contract only 
 
 ## Decision Notes
 
-- 2026-08-14: choose one composite Active summary cell. Keep shared damage/cooldown cards because they are real growth state, not equipment slots.
-- 2026-08-14: reject free deletion and continuous alternative Lv.0 offers. They add loss-heavy replacement state and dilute frozen offers without evidence that commitment regret is the core problem.
+- 2026-08-14: split weapon/default/shared-card/early-XP work into `2026-08-14-weapon-unlocks-and-early-level-pacing.md`; this contract begins only after that plan passes.
 - 2026-08-14: choose ten short stages with bosses on even stages. This reaches Stage 10 without requiring ten bosses or doubling the total defeat/XP/item budget.
 - 2026-08-14: keep initial exact density at 48. Increase challenge first through attrition, continuity, and bounded attack concurrency.
 - 2026-08-14: treat `VehicleRun` as a facade target, not a file-size target. Campaign ownership is extracted before ten-stage work; the current measured hot owner is extracted before any higher-cap claim.
@@ -335,13 +295,13 @@ Implementation-local discoveries may be handled inside the locked contract only 
 
 ## Open Questions
 
-No material implementation decision remains open. A future midpoint active-weapon refit, new bosses, or a shipping cap above the gated 64 branch requires a contract revision and explicit approval.
+No material implementation decision remains open. A future weapon-policy change, new boss, or shipping cap above the gated 64 branch requires a contract revision and explicit approval.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: 1.1, publish one composite Active summary record.
+- Current phase: waiting for the related weapon/progression prerequisite, then Phase 2.
+- Next task: after the prerequisite passes, 2.1, freeze the campaign command/receipt contract.
 - Last completed gate: Discovery Closure Gate.
 - Update rule: after a task acceptance check passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
@@ -350,7 +310,7 @@ No material implementation decision remains open. A future midpoint active-weapo
 Complete when:
 
 - Every task acceptance check and named guard/gate passes.
-- Active shows one truthful cell in Korean/English and shared titles no longer misuse EMP.
+- The related weapon/progression contract is complete and remains passing.
 - A deterministic run contains ten stages, five even-stage bosses, ten Result records, total quota 400, final level target 30, and the locked recovery/item budgets.
 - Fixed Hard is demonstrably harder through the locked attrition/concurrency changes without an unreadable or unfair attack state.
 - Shipping density has an exact native/Web evidence label and never exceeds the last passing gated cap.
