@@ -2779,8 +2779,14 @@ func _update_enemies(
 	if performance_active:
 		_performance_enemy_sections["critical"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
-	for enemy in _enemy_update_schedule.ordinary_due:
-		_update_scheduled_ordinary_enemy(enemy)
+	for due_index in _enemy_update_schedule.ordinary_due.size():
+		_update_scheduled_ordinary_enemy(
+			_enemy_update_schedule.ordinary_due[due_index],
+			-1.0,
+			_enemy_update_schedule.ordinary_due_flags[due_index],
+			_enemy_update_schedule.ordinary_due_decision_deltas[due_index],
+			_enemy_update_schedule.ordinary_due_motion_deltas[due_index]
+		)
 	if performance_active:
 		_performance_enemy_sections["ordinary_due"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
@@ -2957,8 +2963,12 @@ func _prepare_enemy_local_overlap_cache() -> void:
 	_enemy_overlap_refresh_mask.fill(0)
 	for enemy in _enemy_update_schedule.critical:
 		_mark_enemy_overlap_refresh(enemy)
-	for enemy in _enemy_update_schedule.ordinary_due:
-		if _enemy_update_schedule.decision_due(enemy):
+	for due_index in _enemy_update_schedule.ordinary_due.size():
+		if (
+			_enemy_update_schedule.ordinary_due_flags[due_index]
+			& EnemyUpdateSchedule.WORK_DECISION_DUE
+		) != 0:
+			var enemy := _enemy_update_schedule.ordinary_due[due_index]
 			_mark_enemy_overlap_refresh(enemy)
 	enemy_grid.rebuild_local_overlap_cache(
 		_enemy_overlap_refresh_mask,
@@ -2986,30 +2996,27 @@ func _mark_enemy_overlap_refresh(enemy: EnemyState) -> void:
 
 func _update_scheduled_ordinary_enemy(
 	enemy: EnemyState,
-	critical_delta: float = -1.0
+	critical_delta: float = -1.0,
+	work_flags: int = 0,
+	decision_delta_receipt: float = 0.0,
+	motion_delta_receipt: float = 0.0
 ) -> void:
 	if not enemy.alive or not enemy.active or enemy.stun > 0.0:
 		return
-	var motion_delta := (
-		critical_delta
-		if critical_delta >= 0.0
-		else _enemy_update_schedule.motion_delta(enemy)
-	)
-	var decision_delta := (
-		critical_delta
-		if critical_delta >= 0.0
-		else _enemy_update_schedule.decision_delta(enemy)
-	)
+	var critical := critical_delta >= 0.0
+	var decision_due := critical or (
+		work_flags & EnemyUpdateSchedule.WORK_DECISION_DUE
+	) != 0
+	var motion_due := critical or (
+		work_flags & EnemyUpdateSchedule.WORK_MOTION_DUE
+	) != 0
+	var motion_delta := critical_delta if critical else motion_delta_receipt
+	var decision_delta := critical_delta if critical else decision_delta_receipt
 	# Critical actors stay on the full update path so startup/active/recovery
 	# timers advance at 60 Hz. They are not granted a new commitment budget;
 	# `can_commit` remains false for this path below.
-	var decision_due := (
-		critical_delta >= 0.0
-		or _enemy_update_schedule.decision_due(enemy)
-	)
-	if _performance_ablation == &"decision" and critical_delta < 0.0:
+	if _performance_ablation == &"decision" and not critical:
 		decision_due = false
-	var motion_due := critical_delta >= 0.0 or _enemy_update_schedule.motion_due(enemy)
 	if not motion_due and not decision_due:
 		return
 	if motion_due and not decision_due:
@@ -3026,7 +3033,7 @@ func _update_scheduled_ordinary_enemy(
 	var previous_alive := enemy.alive
 	var previous_active := enemy.active
 	var can_commit := (
-		critical_delta < 0.0
+		not critical
 		and decision_due
 		and _performance_ablation != &"attacks"
 		and _enemy_update_schedule.can_commit(

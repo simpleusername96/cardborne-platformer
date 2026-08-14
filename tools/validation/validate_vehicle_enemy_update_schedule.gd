@@ -161,11 +161,25 @@ func _initialize() -> void:
 		"ordinary behavior dispatch visits only scheduled worklists"
 	)
 	for due in schedule.ordinary_due:
+		var due_index := schedule.ordinary_due.find(due)
+		var flags := int(schedule.ordinary_due_flags[due_index])
 		_expect(
 			due not in schedule.critical
-			and (schedule.motion_due(due) or schedule.decision_due(due)),
+			and (schedule.motion_due(due) or schedule.decision_due(due))
+			and ((flags & Schedule.WORK_DECISION_DUE) != 0) == schedule.decision_due(due)
+			and ((flags & Schedule.WORK_MOTION_DUE) != 0) == schedule.motion_due(due)
+			and is_equal_approx(
+				float(schedule.ordinary_due_decision_deltas[due_index]),
+				schedule.decision_delta(due)
+			)
+			and is_equal_approx(
+				float(schedule.ordinary_due_motion_deltas[due_index]),
+				schedule.motion_delta(due)
+			),
 			"deferred ordinary work carries an independent due lane without overlap"
 		)
+	_check_receipt_capacity_counts()
+	_check_receipt_pruning()
 	_check_warmed_cadence()
 	_check_membership_revision()
 	_check_overlap_refresh_mask()
@@ -244,6 +258,75 @@ func _check_warmed_cadence() -> void:
 	_expect(is_equal_approx(far_motion_time, 1.0), "far motion delta totals one second")
 	_expect(saw_decision_only, "decision-only work does not consume motion time")
 	_expect(saw_motion_only, "motion-only work is dispatched without decision work")
+
+
+func _check_receipt_capacity_counts() -> void:
+	for actor_count in [6, 32, 40, 48]:
+		var fixtures: Array[EnemyState] = []
+		for index in actor_count:
+			var enemy := EnemyState.new()
+			enemy.id = "receipt_%02d_%02d" % [actor_count, index]
+			enemy.alive = true
+			enemy.active = true
+			enemy.runtime_slot = index
+			enemy.decision_bucket = index % 6
+			enemy.pos = Vector2(float(index) * 30.0, 0.0)
+			fixtures.append(enemy)
+		var schedule := Schedule.new()
+		for tick in 12:
+			schedule.rebuild(
+				fixtures,
+				1.0 / 60.0,
+				Vector2.ZERO,
+				820.0 * 820.0,
+				tick % 6,
+				tick % 2,
+				tick % 3
+			)
+			for due_index in schedule.ordinary_due.size():
+				var due := schedule.ordinary_due[due_index]
+				var flags := int(schedule.ordinary_due_flags[due_index])
+				_expect(
+					((flags & Schedule.WORK_DECISION_DUE) != 0)
+						== schedule.decision_due(due),
+					"%d actors preserve decision receipt at tick %d" % [actor_count, tick]
+				)
+				_expect(
+					((flags & Schedule.WORK_MOTION_DUE) != 0)
+						== schedule.motion_due(due),
+					"%d actors preserve motion receipt at tick %d" % [actor_count, tick]
+				)
+
+
+func _check_receipt_pruning() -> void:
+	var fixtures: Array[EnemyState] = []
+	for index in 6:
+		var enemy := EnemyState.new()
+		enemy.id = "prune_%02d" % index
+		enemy.alive = true
+		enemy.active = true
+		enemy.runtime_slot = index
+		enemy.decision_bucket = index
+		enemy.decision_elapsed = Schedule.DECISION_INTERVAL
+		enemy.motion_elapsed = Schedule.NEAR_MOTION_INTERVAL
+		fixtures.append(enemy)
+	var schedule := Schedule.new()
+	schedule.rebuild(
+		fixtures, 0.0, Vector2.ZERO, 820.0 * 820.0, 0, 0, 0
+	)
+	fixtures[0].active = false
+	schedule.prune_inactive()
+	for due_index in schedule.ordinary_due.size():
+		var due := schedule.ordinary_due[due_index]
+		var flags := int(schedule.ordinary_due_flags[due_index])
+		_expect(
+			due.active
+			and ((flags & Schedule.WORK_DECISION_DUE) != 0)
+				== schedule.decision_due(due)
+			and ((flags & Schedule.WORK_MOTION_DUE) != 0)
+				== schedule.motion_due(due),
+			"pruning keeps ordinary receipt columns aligned"
+		)
 
 
 func _check_membership_revision() -> void:

@@ -22,11 +22,18 @@ const SPECIAL_ROLES: Array[StringName] = [
 const SUPPORT_ROLES: Array[StringName] = [
 	&"generator", &"shield_escort",
 ]
+const WORK_DECISION_DUE := 1
+const WORK_MOTION_DUE := 2
 
 var active: Array[EnemyState] = []
 var supports: Array[EnemyState] = []
 var critical: Array[EnemyState] = []
 var ordinary_due: Array[EnemyState] = []
+## Parallel, reusable receipts for `ordinary_due`. Consumers iterate by index
+## and reuse the scheduler's cadence result instead of querying each actor again.
+var ordinary_due_flags := PackedByteArray()
+var ordinary_due_decision_deltas := PackedFloat32Array()
+var ordinary_due_motion_deltas := PackedFloat32Array()
 
 var active_cap_count := 0
 var committed_points := 0.0
@@ -56,6 +63,9 @@ func _init() -> void:
 	_motion_delta.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_motion_starts.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_due_stamps.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	ordinary_due_flags.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	ordinary_due_decision_deltas.resize(EnemyStore.MAX_LIVE_HOSTILES)
+	ordinary_due_motion_deltas.resize(EnemyStore.MAX_LIVE_HOSTILES)
 	_due_stamps.fill(0)
 
 
@@ -166,7 +176,18 @@ func rebuild(
 			enemy.decision_elapsed = 0.0
 		if motion_now:
 			enemy.motion_elapsed = 0.0
+		var due_index := ordinary_due.size()
 		ordinary_due.append(enemy)
+		ordinary_due_flags[due_index] = (
+			(WORK_DECISION_DUE if decision_now else 0)
+			| (WORK_MOTION_DUE if motion_now else 0)
+		)
+		ordinary_due_decision_deltas[due_index] = (
+			_decision_delta[slot] if decision_now else 0.0
+		)
+		ordinary_due_motion_deltas[due_index] = (
+			_motion_delta[slot] if motion_now else 0.0
+		)
 
 
 func decision_due(enemy: EnemyState) -> bool:
@@ -284,7 +305,7 @@ func prune_inactive() -> void:
 	_prune_worklist(active)
 	_prune_worklist(supports)
 	_prune_worklist(critical)
-	_prune_worklist(ordinary_due)
+	_prune_ordinary_due()
 	active_cap_count = 0
 	committed_points = 0.0
 	committed_ranged = 0
@@ -333,3 +354,23 @@ func _prune_worklist(worklist: Array[EnemyState]) -> void:
 		var enemy := worklist[index]
 		if enemy == null or not enemy.alive or not enemy.active:
 			worklist.remove_at(index)
+
+
+func _prune_ordinary_due() -> void:
+	## Compact the actor list and its parallel receipt columns as one unit.
+	var write_index := 0
+	for read_index in ordinary_due.size():
+		var enemy := ordinary_due[read_index]
+		if enemy == null or not enemy.alive or not enemy.active:
+			continue
+		if write_index != read_index:
+			ordinary_due[write_index] = enemy
+			ordinary_due_flags[write_index] = ordinary_due_flags[read_index]
+			ordinary_due_decision_deltas[write_index] = (
+				ordinary_due_decision_deltas[read_index]
+			)
+			ordinary_due_motion_deltas[write_index] = (
+				ordinary_due_motion_deltas[read_index]
+			)
+		write_index += 1
+	ordinary_due.resize(write_index)
