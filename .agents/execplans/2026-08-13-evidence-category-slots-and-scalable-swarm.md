@@ -1128,10 +1128,13 @@ Validation rules:
   2.3, 2.4, and 5.5 were reopened. The corrected runtime always captures real grouped snapshots,
   shows the wide Result report and build rail side by side, uses a vertical-scroll offer layout at
   200% text, and draws only the approved neutral Gate PNG across the full 192-world-unit footprint
-  with dynamic progress/cooldown overlays. Rendered Korean 1280x720 evidence is in
-  `build/captures/category-gate-correction-v2-ko-1280`; English 960x540 at 200% is in
-  `build/captures/category-gate-correction-en-960-text200-v3`. Focused Upgrade, Result, layout,
-  localization, map, capture, visual-authority, headless-import, and isolated Web export checks pass.
+  with dynamic progress/cooldown overlays. Clean commit-linked Korean 1280x720 evidence is in
+  `build/captures/category-gate-26d90690-ko-1280-final`; the supported English 960x540, 200% text
+  accessibility check is in `build/captures/category-gate-26d90690-en-960-text200-final`. Both
+  manifests resolve commit `26d90690e4ea8756e227cf2b1c9486ee9a3ac12f`, content fingerprint
+  `a408a416811a056d0d3b62e0016f3a83237ef9556bfc05e6919201f79dc5e2a6`, and clean source. Focused
+  Upgrade, Result, layout, localization, map, capture, visual-authority, headless-import, and the
+  refreshed isolated Web export checks pass.
   The unrelated rewards/UI/audio validator still reports its pre-existing announcement-queue
   assertion and is not used as evidence for this correction.
 
