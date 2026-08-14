@@ -820,18 +820,19 @@ capture/workbench, and focused validators
   - Accept: approved bytes and ledger hashes match production exactly; the three new symbol IDs and
     existing Transit Gate ID resolve once; the manifest contains 80 semantic PNGs plus three approved
     SurfaceDetail SVGs; rejected/intermediate/chroma files remain outside production.
-- [x] **5.5 Integrate revealed symbols, Weakpoint feedback, and the clean Gate.**
-  - Change: keep the pristine neutral body before the first hit, use the cracked neutral body while
-    health remains, then render exactly one approved symbol alone at `288` world units after
-    destruction through active-effect retirement. Never draw the pristine/damaged body under a
-    triggered symbol. Reuse the existing enemy
+- [x] **5.5 Integrate visible attackable symbols, Weakpoint feedback, and the clean Gate.**
+  - Change: render exactly one assigned approved Gravity/Cryo/Weakpoint symbol alone at `288`
+    world units from initial placement through active-effect retirement. The symbol itself is the
+    attackable facility. Never draw a black casing, pristine/damaged body, wreck, or first-hit
+    reveal. Reuse the existing enemy
     status compositor for a restrained same-size Weakpoint danger layer. Keep the full code-native
     Gravity/Cryo/Weakpoint disks at exact `480/360/420` radii for `5/3/5s`. Preserve the neutral
     minimap marker and Transit Gate geometry/behavior. Update capture fixtures, guidebook preview,
     asset coverage, accessibility, localization, map integration, renderer, and visual-authority
     validators.
-  - Accept: the hidden outcome never leaks before reveal; revealed authored-image count is exactly
-    one; symbol/effect lifetimes are correct;
+  - Accept: the assigned outcome is visible before any hit; visible authored-image count is exactly
+    one; the symbol bobs with one thin breathing contour while collision stays fixed; destruction
+    alone activates the effect; symbol/effect lifetimes are correct;
     full areas remain visible; color-blind and reduced-motion captures retain shape/text/footprint
     cues; the Gate has no wobble at actual size; no asset is stretched or clipped; no per-enemy node,
     material, batch, allocation, or extra radius scan is added.
@@ -1168,6 +1169,17 @@ Validation rules:
   resolves commit `01184b25c0b983a9b009e7ebcf4957c01304e237`, fingerprint
   `7ef053cfac1215fd742cfde1b4e35dbe9d7d27a2b4c520d34415547abaf5cbab`, clean source, and a valid
   scenario. Performance scenarios remain deferred until all feature and image work is done.
+- 2026-08-14: BK superseded the neutral-body sequence completely. The black pristine/damaged casing
+  is retired from production; its approved outcome symbol is visible and attackable immediately,
+  bobs with a thin breathing contour like a direct pickup, and remains the only authored image until
+  effect retirement. Hits only reduce health. Destruction alone starts the already visible
+  Gravity/Cryo/Weakpoint effect and its trigger announcement. Historical damaged-device workbench
+  evidence remains an explicitly superseded record, not an active production candidate. No
+  performance scenario is authorized before the remaining feature and image work is complete.
+  Runtime/assets landed in `90d3beb6de78f65f849725ee75fe57ee0f904b8a`; headless import and the focused
+  runtime, map, renderer, world, asset, guidebook, localization, capture, run, workbench, and
+  visual-authority validators pass. Web export and performance scenarios were intentionally
+  deferred.
 
 ## Open Questions
 

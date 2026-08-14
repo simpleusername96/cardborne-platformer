@@ -1,12 +1,13 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-08-14
 last_reviewed: 2026-08-14
 topic: Anomaly Device attacked-but-unbroken raster state
 scope: ImageGen source, alpha conversion, exact production candidate, and runtime-state contract
 source: BK request on 2026-08-14 for a visibly cracked destructible intermediate state
+superseded_by: ../mystery-device-outcomes-v4-symbols/candidate-evidence.md
 related:
   - ../../../VISUAL_SYSTEM.md
   - ../../../cardborne-universal-art-style-reference.png
@@ -15,6 +16,11 @@ related:
 ---
 
 # Anomaly Device Damaged-State Evidence
+
+This is a historical record only. BK's later 2026-08-14 direction removed every black,
+neutral, and damaged casing from production. The attacked-state PNG and comparison remain
+as provenance for the rejected intermediate direction and must not be restored as current
+runtime art.
 
 ## Decision
 

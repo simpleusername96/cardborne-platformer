@@ -3087,8 +3087,8 @@
       "id": "mystery_device_family",
       "category_id": "world",
       "order": 3,
-      "title_en": "Mystery Devices",
-      "title_ko": "미확인 장치",
+      "title_en": "Visible Anomaly Facilities",
+      "title_ko": "노출형 변칙 시설",
       "owner": "composite",
       "switch_kind": "consolidate",
       "status": "applied",
@@ -3101,48 +3101,12 @@
         "scripts/vehicle/vehicle_run.gd"
       ],
       "consumer_asset_ids": [
-        "world/mystery_device_intact",
-        "world/mystery_device_damaged",
         "world/mystery_device_gravity",
         "world/mystery_device_cryo",
         "world/mystery_device_weakpoint"
       ],
-      "direction_en": "Keep one neutral attack-triggered Mystery Device with pristine and broad-cracked damaged authored states. The first accepted hit switches to the damaged body while health remains; destruction replaces every body with exactly one approved 288-world-unit outcome symbol through active-effect retirement. Gameplay collision, health, radii, and random effects remain code-owned.",
+      "direction_en": "Show exactly one assigned Gravity, Cryo, or Weakpoint symbol from initial placement through effect retirement. The symbol itself is the attackable facility at 288 world units, with a bounded bob and thin breathing contour. Never add a black casing, neutral body, damaged body, wreck, or first-hit reveal. Destruction alone activates the already visible effect; gameplay collision, health, radii, and effect duration remain code-owned.",
       "deliverables": [
-        {
-          "target_path": "art/visuals/production/gameplay/world/mystery_device_intact.png",
-          "width": 384,
-          "height": 384,
-          "pivot": [
-            192,
-            192
-          ],
-          "patch_margin": null,
-          "safe_inset": null,
-          "frame_count": null,
-          "fps": null,
-          "loop": null,
-          "blend": null,
-          "brief_en": "One large neutral mechanical device in its intact attackable state, with a clear top-down silhouette, dark outer mass, restrained cyan system accent, and transparent background.",
-          "external_source_ids": []
-        },
-        {
-          "target_path": "art/visuals/production/gameplay/world/mystery_device_damaged.png",
-          "width": 384,
-          "height": 384,
-          "pivot": [
-            192,
-            192
-          ],
-          "patch_margin": null,
-          "safe_inset": null,
-          "frame_count": null,
-          "fps": null,
-          "loop": null,
-          "blend": null,
-          "brief_en": "The same mystery-device footprint in a clearly attacked but still intact neutral state, with two or three broad central fractures, one displaced plate edge, no outcome clue, and transparent background.",
-          "external_source_ids": []
-        },
         {
           "target_path": "art/visuals/production/gameplay/world/mystery_device_gravity.png",
           "width": 192,
@@ -3154,7 +3118,7 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Approved centered Gravity Pull outcome symbol; render only after destruction at 288 world units.",
+          "brief_en": "Approved Gravity Pull facility symbol; render from initial placement through effect retirement at 288 world units.",
           "external_source_ids": []
         },
         {
@@ -3168,7 +3132,7 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Approved centered Cryo Lock outcome symbol; render only after destruction at 288 world units.",
+          "brief_en": "Approved Cryo Lock facility symbol; render from initial placement through effect retirement at 288 world units.",
           "external_source_ids": []
         },
         {
@@ -3182,24 +3146,26 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Approved centered Weakpoint Expose outcome symbol; render only after destruction at 288 world units.",
+          "brief_en": "Approved Weakpoint Expose facility symbol; render from initial placement through effect retirement at 288 world units.",
           "external_source_ids": []
         }
       ],
       "final_paths": [
-        "art/visuals/production/gameplay/world/mystery_device_intact.png",
-        "art/visuals/production/gameplay/world/mystery_device_damaged.png",
         "art/visuals/production/gameplay/world/mystery_device_gravity.png",
         "art/visuals/production/gameplay/world/mystery_device_cryo.png",
         "art/visuals/production/gameplay/world/mystery_device_weakpoint.png"
       ],
       "reuse_paths": [],
       "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/mystery-device-damaged-v1/mystery-device-damaged.png",
-        "docs/design/visual-replacement-workbench/previews/mystery-device-damaged-v1/comparison.png",
-        "docs/design/visual-replacement-workbench/previews/mystery-device-damaged-v1/candidate-evidence.md"
+        "docs/design/visual-replacement-workbench/previews/mystery-device-outcomes-v4-symbols/comparison.png",
+        "docs/design/visual-replacement-workbench/previews/mystery-device-outcomes-v4-symbols/candidate-evidence.md"
       ],
-      "retire_paths": [],
+      "retire_paths": [
+        "art/visuals/production/gameplay/world/mystery_device_intact.png",
+        "art/visuals/production/gameplay/world/mystery_device_intact.png.import",
+        "art/visuals/production/gameplay/world/mystery_device_damaged.png",
+        "art/visuals/production/gameplay/world/mystery_device_damaged.png.import"
+      ],
       "runtime_change_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
         "scripts/presentation/components/vehicle_semantic_asset_provider.gd",
@@ -3226,20 +3192,23 @@
       ],
       "approval": {
         "approved_by": "BK",
-        "approved_at": "2026-08-14T17:18:03+09:00",
-        "baseline_commit": "9050e3b862d65b8d00840ea06de37d338fe2d9e5",
+        "approved_at": "2026-08-14T18:03:25+09:00",
+        "baseline_commit": "6df9006a171383f399d4c12dfd6fec5b7d7c4128",
         "deliverable_sha256": {
-          "art/visuals/production/gameplay/world/mystery_device_intact.png": "cfbbc2b42a747c2e0859137c5a7230a7d812203f719e4e9ffeea033b98d5950c",
-          "art/visuals/production/gameplay/world/mystery_device_damaged.png": "57dd2919f4dea40864a51fcfee01caacfdcf46eec47045300f052285b022fb9f",
           "art/visuals/production/gameplay/world/mystery_device_gravity.png": "171afbb022e322e2c5630394079fb167637b819d3da3e114a38d376f15f40a34",
           "art/visuals/production/gameplay/world/mystery_device_cryo.png": "7262d3ba378e18c734fbdcb82122595749ab481802fc37fc7e1993cf6bce0dd9",
           "art/visuals/production/gameplay/world/mystery_device_weakpoint.png": "15e585cd55fdfc423d1addc20c89c69c7e5cc079b1d288c364dafc7b20a153ff"
         },
-        "retire_paths": []
+        "retire_paths": [
+          "art/visuals/production/gameplay/world/mystery_device_intact.png",
+          "art/visuals/production/gameplay/world/mystery_device_intact.png.import",
+          "art/visuals/production/gameplay/world/mystery_device_damaged.png",
+          "art/visuals/production/gameplay/world/mystery_device_damaged.png.import"
+        ]
       },
       "application": {
-        "commit": "e5f1a5caf3eca0bd945808c69ab711b3be65dc37",
-        "applied_at": "2026-08-14T17:30:59+09:00",
+        "commit": "90d3beb6de78f65f849725ee75fe57ee0f904b8a",
+        "applied_at": "2026-08-14T18:10:12+09:00",
         "validation_evidence": [
           ".\\tools\\validation\\validate_cardborne_visual_authority.ps1",
           ".\\tools\\godot.ps1 --path . --headless --import",
@@ -3249,9 +3218,12 @@
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_visuals.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_combat_renderer.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_mystery_device_runtime.gd",
-          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
-          ".\\tools\\export_web.ps1",
-          "build/captures/damaged-anomaly-compact-rail-01184b25-ko-1280-final (121/121 files, clean commit 01184b25c0b983a9b009e7ebcf4957c01304e237, valid scenario)"
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_map_mechanics_integration.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_guidebook.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_ui_localization.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run_capture_driver.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_run.gd",
+          "No performance scenario or Web export was run; both remain deferred until all feature and image work is complete."
         ]
       },
       "visual_authority_evidence": {

@@ -245,14 +245,17 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   dwell, preserve aim, clear velocity, share a ten-second pair cooldown, grant
   the existing short transfer protection, and move only the player. They never
   damage actors.
-- Every stage places exactly three Anomaly Devices. Each is a neutral 192-pixel
-  body with an 84-pixel collision/target radius and 90 structure health, equal
+- Every stage places exactly three Anomaly Devices. Each displays its assigned
+  288-pixel Gravity, Cryo, or Weakpoint symbol immediately; no black casing,
+  neutral body, damaged body, or wreck is drawn. The symbol itself is the
+  attackable facility, with an 84-pixel collision/target radius and 90 structure health, equal
   to five unmodified 18-damage primary hits. Player direct and area damage may
   break it; enemy AI and hostile attacks ignore it. It is not an enemy, never
   counts toward quota, and drops no XP or item.
 - A stage assigns exactly one each of `gravity_pull`, `cryo_lock`, and
-  `weakpoint_expose`. The first accepted player hit reveals the assigned outcome
-  without triggering it; breaking the device applies it and reports affected
+  `weakpoint_expose`, and publishes that outcome from placement. Accepted hits
+  only reduce health without changing the visible identity; breaking the device
+  applies the shown outcome and reports affected
   ordinary enemies. Pull affects non-boss enemies within 480 pixels for 5
   seconds. Cryo lock stops non-boss movement and new attack starts within 360
   pixels for 3 seconds but does not cancel a committed warned attack. Weakpoint
@@ -265,7 +268,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   same-size danger layer through that existing compositor without adding a
   target ring, bracket, per-enemy node, material, or batch. The minimap never
   reveals the outcome.
-- Every revealed Mystery effect shows its complete gameplay footprint from the
+- Every activated Mystery effect shows its complete gameplay footprint from the
   device position: Gravity Pull radius `480` for `5 s`, Cryo Lock radius `360`
   for `3 s`, and Weakpoint Expose radius `420` for `5 s`. A boundary accent never
   substitutes for the filled area.

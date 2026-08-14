@@ -4,8 +4,8 @@ status: active
 owner: BK
 created: 2026-08-14
 last_reviewed: 2026-08-14
-topic: Anomaly Device revealed-state symbol candidates
-scope: User-approved Gravity Pull, Cryo Lock, and Weakpoint Expose PNG symbols promoted byte-for-byte
+topic: Anomaly Device visible attackable facility symbols
+scope: User-approved Gravity Pull, Cryo Lock, and Weakpoint Expose PNG symbols promoted byte-for-byte and visible from placement
 source: User-selected replacement of Decoy Signal with Weakpoint Expose on 2026-08-14
 related:
   - ../../../VISUAL_SYSTEM.md
@@ -20,11 +20,10 @@ related:
 ## Purpose
 
 Retain the grounded PNG sources, exact hashes, runtime-scale comparisons, and
-review state for the three Anomaly Device symbols. The neutral device body keeps
-the outcome hidden until the first accepted player hit. That hit changes the still-live
-device to its separate cracked body; after destruction, one centered symbol is the sole
-authored device image while the code-native full-area footprint continues to communicate
-exact range and lifetime.
+review state for the three Anomaly Device symbols. One assigned symbol is visible from
+initial placement and is itself the attackable facility. It remains the sole authored
+device image through effect retirement; destruction starts the code-native full-area
+effect without changing the symbol.
 
 ## Sources
 
@@ -61,6 +60,9 @@ exact range and lifetime.
 - BK clarified on 2026-08-14 that the three comparison symbols must appear alone
   after reveal, not over another device image. This clarification supersedes the
   earlier overlay interpretation without changing any approved PNG bytes.
+- BK later clarified on 2026-08-14 that the symbol must be visible and attackable
+  immediately. This retires the black intact/damaged bodies and first-hit reveal while
+  preserving the three approved PNG bytes exactly.
 
 ## Locked Product Semantics
 
@@ -69,9 +71,9 @@ exact range and lifetime.
 - Weakpoint Expose: radius `420`, duration `5.0 s`; affected ordinary mobile
   enemies take `1.25x` player-owned damage. It changes neither movement nor AI
   targeting and excludes bosses and fixed hostile structures.
-- Before reveal, no image, minimap marker, color, or text leaks the assigned
-  outcome. The first accepted hit identifies the result in text and switches to the
-  neutral cracked body. The symbol appears only after destruction, at `288` world units.
+- The assigned symbol appears immediately at `288` world units, bobs with a thin breathing
+  contour, and keeps fixed collision truth. Hits reduce health without changing identity.
+  Destruction alone activates the shown effect. The minimap keeps one neutral role marker.
 
 ## Candidate Records
 
@@ -117,9 +119,9 @@ inputs:
 ## Recommendations
 
 - The production owner registers the three world-state semantic PNGs and renders
-  exactly one centered `288`-world-unit standalone symbol after destruction. Preserve
-  the pristine/cracked neutral body sequence before destruction and preserve the
-  code-native effect footprint.
+  exactly one centered `288`-world-unit standalone symbol from placement through effect
+  retirement. Retire every black/neutral casing and preserve the code-native effect
+  footprint, collision, health, and timing.
 
 ## Limitations
 
