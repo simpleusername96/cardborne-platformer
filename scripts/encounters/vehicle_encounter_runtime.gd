@@ -439,6 +439,40 @@ func debug_snapshot() -> Dictionary:
 	}
 
 
+func fill_performance_state(output: Dictionary) -> void:
+	## Publishes only the bounded scheduler/pressure fields sampled by performance
+	## replay. Unlike debug_snapshot(), this never duplicates authored timelines,
+	## allocation histories, or event records inside a measured physics tick.
+	output.clear()
+	output["stage_id"] = stage_id
+	output["difficulty"] = difficulty
+	output["beat"] = current_beat
+	output["active_cap"] = active_cap()
+	output["materialized_cap"] = materialized_active_cap()
+	output["authored_population"] = _authored_population
+	output["materialized_spawned"] = _materialized_spawned
+	output["virtual_reserve"] = _authored_reserve_count()
+	output["spawning_enabled"] = _spawning_enabled
+	output["queued_spawns"] = _queued_spawn_count()
+	output["queued_windows"] = _window_queue.size()
+	output["next_window_units"] = (
+		_window_unit_count(_window_queue[0]) if not _window_queue.is_empty() else 0
+	)
+	output["reserved_arrival_slots"] = _reserved_arrival_slots
+	output["pressure_active"] = int(_pressure_snapshot.get("active", 0))
+	output["pressure_visible"] = int(_pressure_snapshot.get("visible", 0))
+	output["pressure_near_900"] = int(_pressure_snapshot.get("near_900", 0))
+	output["pressure_sector_histogram"] = PackedInt32Array(
+		_pressure_snapshot.get("sector_histogram", PackedInt32Array())
+	)
+	output["pressure_ranged_commits"] = int(
+		_pressure_snapshot.get("ranged_commits", 0)
+	)
+	output["pressure_denial_commits"] = int(
+		_pressure_snapshot.get("denial_commits", 0)
+	)
+
+
 func fill_current_pressure(output: Dictionary) -> void:
 	## Copies the already-computed pressure scalars into caller-owned diagnostic storage.
 	## This must stay scan-free so observing a slow frame does not add another enemy pass.

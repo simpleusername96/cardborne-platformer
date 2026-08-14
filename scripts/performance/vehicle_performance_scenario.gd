@@ -59,6 +59,7 @@ var _scheduler_spawn_seen := false
 var _production_pressure_samples: Array[Dictionary] = []
 var _production_next_sample := 0.0
 var _production_last_sample_spawned := 0
+var _production_scheduler_state: Dictionary = {}
 
 
 func configure(id: StringName, enemy_count_override: int = -1) -> bool:
@@ -159,11 +160,14 @@ func after_physics(run: Node) -> void:
 	if scenario_id == &"production_replay":
 		if elapsed + 0.0001 < _production_next_sample:
 			return
-		var scheduler_snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
-		_scheduler_spawn_seen = _scheduler_spawn_seen or not Dictionary(
-			scheduler_snapshot.get("spawned_by_squad", {})
-		).is_empty()
-		_record_production_pressure(run, scheduler_snapshot)
+		run.encounter_runtime.fill_performance_state(
+			_production_scheduler_state
+		)
+		_scheduler_spawn_seen = (
+			_scheduler_spawn_seen
+			or _production_spawned_total(_production_scheduler_state) > 0
+		)
+		_record_production_pressure(run, _production_scheduler_state)
 		return
 	_maintain_enemy_pressure(run)
 	_maintain_damage_zone_pressure(run)
@@ -606,6 +610,7 @@ func _prepare_stage_five(run: Node) -> void:
 
 func _activate_production_replay(run: Node) -> void:
 	_production_pressure_samples.clear()
+	_production_scheduler_state.clear()
 	_production_next_sample = 0.0
 	_production_last_sample_spawned = 0
 	# The recorder's short retention warmup must measure the authored maximum
@@ -688,7 +693,10 @@ func _prime_production_replay(run: Node) -> void:
 	for _step_index in step_limit:
 		_make_room_for_production_window(run, true)
 		run.call("_update_encounter", step)
-		var snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
+		run.encounter_runtime.fill_performance_state(
+			_production_scheduler_state
+		)
+		var snapshot := _production_scheduler_state
 		var cap := int(snapshot.get("materialized_cap", snapshot.get("active_cap", 0)))
 		var active := int(run.call("_active_mobile_count"))
 		if (
@@ -698,7 +706,8 @@ func _prime_production_replay(run: Node) -> void:
 			and int(snapshot.get("queued_spawns", 0)) == 0
 		):
 			break
-	var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
+	run.encounter_runtime.fill_performance_state(_production_scheduler_state)
+	var scheduler := _production_scheduler_state
 	_scheduler_spawn_seen = _production_spawned_total(scheduler) > 0
 	_production_last_sample_spawned = _production_spawned_total(scheduler)
 	_production_next_sample = 0.0
@@ -722,7 +731,8 @@ func _stabilize_production_population(run: Node) -> void:
 
 
 func _make_room_for_production_window(run: Node, include_peak_beat: bool) -> void:
-	var scheduler: Dictionary = run.encounter_runtime.debug_snapshot()
+	run.encounter_runtime.fill_performance_state(_production_scheduler_state)
+	var scheduler := _production_scheduler_state
 	if not include_peak_beat and int(scheduler.get("beat", 0)) >= 4:
 		return
 	# A cue already owns these exact slots. Retiring more actors while its tail
@@ -858,7 +868,6 @@ func _record_production_pressure(run: Node, scheduler: Dictionary) -> void:
 		return
 	if elapsed + 0.0001 < _production_next_sample:
 		return
-	var pressure := Dictionary(scheduler.get("pressure", {}))
 	var enemy_snapshot: Dictionary = run.enemy_store.debug_snapshot()
 	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
 	var population := _production_population_accounting(scheduler, run.current_stage_id)
@@ -874,17 +883,17 @@ func _record_production_pressure(run: Node, scheduler: Dictionary) -> void:
 		"active_cap":int(population["active_cap"]),
 		"scheduler_queues":Dictionary(population["scheduler_queues"]).duplicate(true),
 		"live":int(enemy_snapshot.get("live", 0)),
-		"active":int(pressure.get("active", 0)),
-		"visible":int(pressure.get("visible", 0)),
-		"near_900":int(pressure.get("near_900", 0)),
+		"active":int(scheduler.get("pressure_active", 0)),
+		"visible":int(scheduler.get("pressure_visible", 0)),
+		"near_900":int(scheduler.get("pressure_near_900", 0)),
 		"sector_histogram":PackedInt32Array(
-			pressure.get("sector_histogram", PackedInt32Array())
+			scheduler.get("pressure_sector_histogram", PackedInt32Array())
 		),
 		"spawned_last_second":maxi(
 			0, spawned_total - _production_last_sample_spawned
 		),
-		"ranged_commits":int(pressure.get("ranged_commits", 0)),
-		"denial_commits":int(pressure.get("denial_commits", 0)),
+		"ranged_commits":int(scheduler.get("pressure_ranged_commits", 0)),
+		"denial_commits":int(scheduler.get("pressure_denial_commits", 0)),
 		"player_projectiles":int(projectile_snapshot.get("player", 0)),
 		"hostile_projectiles":int(projectile_snapshot.get("hostile", 0)),
 	})
@@ -939,6 +948,8 @@ func _production_population_accounting(
 
 
 func _production_spawned_total(scheduler: Dictionary) -> int:
+	if scheduler.has("materialized_spawned"):
+		return maxi(0, int(scheduler["materialized_spawned"]))
 	var total := 0
 	for value in Dictionary(scheduler.get("spawned_by_squad", {})).values():
 		total += int(value)

@@ -41,6 +41,15 @@ func _run() -> void:
 			run.encounter_runtime.set_pressure_observation_enabled(true)
 		print("Activated performance scenario: %s" % String(scenario_id))
 		if scenario_id == &"production_replay":
+			var performance_state := {}
+			run.encounter_runtime.fill_performance_state(performance_state)
+			_expect(
+				performance_state.has("materialized_spawned")
+					and performance_state.has("pressure_active")
+					and not performance_state.has("timeline")
+					and not performance_state.has("allocations"),
+				"production replay uses the bounded scheduler sample instead of full debug history"
+			)
 			var stable_population := true
 			var stabilized_count := 0
 			for enemy in run.enemies:
