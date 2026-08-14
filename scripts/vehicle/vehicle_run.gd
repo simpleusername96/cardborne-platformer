@@ -1368,6 +1368,8 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.stun = 0.0
 	enemy.flash = 0.0
 	enemy.shielded = false
+	enemy.movement_reason = &"none"
+	enemy.shield_source = &"none"
 	enemy.support_tick = 0.0
 	enemy.repair_target_id = ""
 	enemy.intercept_charges = 3 if role == &"interceptor_tower" else 0
@@ -3001,7 +3003,10 @@ func _update_scheduled_ordinary_enemy(
 	decision_delta_receipt: float = 0.0,
 	motion_delta_receipt: float = 0.0
 ) -> void:
-	if not enemy.alive or not enemy.active or enemy.stun > 0.0:
+	if not enemy.alive or not enemy.active:
+		return
+	if enemy.stun > 0.0:
+		enemy.movement_reason = &"stunned"
 		return
 	var critical := critical_delta >= 0.0
 	var decision_due := critical or (
@@ -3095,6 +3100,7 @@ func _update_motion_only_ordinary_enemy(
 		return
 	var leash := enemy.leash_rect
 	if leash.has_area() and not leash.has_point(player_position):
+		enemy.movement_reason = &"leash_home"
 		enemy.phase = &"move"
 		enemy.attack_cooldown = maxf(enemy.attack_cooldown, 0.35)
 		var to_home := enemy.home - enemy.pos
@@ -3108,9 +3114,11 @@ func _update_motion_only_ordinary_enemy(
 	if enemy.role in [
 		&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
 	]:
+		enemy.movement_reason = &"stationary_role"
 		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
 		return
 	if enemy.role == &"mine":
+		enemy.movement_reason = &"mine_role"
 		if enemy.archetype == &"spark_minelet" and enemy.phase != &"mine_armed":
 			_move_cached_enemy_role(enemy, motion_delta)
 		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
@@ -3196,7 +3204,7 @@ func _append_enemy_shield_assignments(
 			for candidate in _support_query_buffer:
 				var candidate_role := candidate.role
 				if candidate != support and candidate_role not in [&"generator", &"shield_escort", &"stage_boss"] and support_position.distance_squared_to(candidate.pos) <= SpecialistRuntime.GENERATOR_RANGE * SpecialistRuntime.GENERATOR_RANGE:
-					shielded_ids[candidate.id] = true
+					shielded_ids[candidate.id] = &"generator"
 			continue
 		var closest_id := ""
 		var closest_distance_squared := (
@@ -3212,7 +3220,9 @@ func _append_enemy_shield_assignments(
 				closest_distance_squared = distance_squared
 				closest_id = candidate.id
 		if not closest_id.is_empty():
-			shielded_ids[closest_id] = true
+			# Generator protection keeps precedence if both support types overlap.
+			if not shielded_ids.has(closest_id):
+				shielded_ids[closest_id] = &"shield_escort"
 
 
 func _apply_enemy_shield(enemy: EnemyState, shielded_ids: Dictionary) -> void:
@@ -3220,7 +3230,13 @@ func _apply_enemy_shield(enemy: EnemyState, shielded_ids: Dictionary) -> void:
 		enemy.collective_mode in [&"shield", &"support", &"escort"]
 		and enemy.collective_phase in [&"lock", &"execute"]
 	)
-	var shielded := bool(shielded_ids.get(enemy.id, false)) or tactic_shield
+	var shield_source: StringName = (
+		&"collective_tactic"
+		if tactic_shield
+		else StringName(shielded_ids.get(enemy.id, &"none"))
+	)
+	var shielded := shield_source != &"none"
+	enemy.shield_source = shield_source
 	if enemy.shielded != shielded:
 		enemy.shielded = shielded
 
@@ -3323,6 +3339,7 @@ func _update_ordinary_enemy(
 		return false
 	var leash := enemy.leash_rect
 	if leash.has_area() and not leash.has_point(player_position):
+		enemy.movement_reason = &"leash_home"
 		enemy.phase = &"move"
 		enemy.attack_cooldown = maxf(enemy.attack_cooldown, 0.35)
 		var to_home := enemy.home - enemy.pos
@@ -3333,10 +3350,12 @@ func _update_ordinary_enemy(
 			_move_enemy_with_recovery(enemy, to_home.normalized() * enemy.speed, motion_delta)
 		return false
 	if enemy.role == &"repair_tender":
+		enemy.movement_reason = &"repair_role"
 		_update_repair_tender(enemy, delta, decision_due)
 		_move_enemy_role(enemy, motion_delta, false, decision_due)
 		return false
 	if enemy.role == &"mine":
+		enemy.movement_reason = &"mine_role"
 		_update_mine(enemy, delta, motion_delta, decision_due)
 		return false
 	if enemy.role == &"interceptor_tower":
@@ -3350,6 +3369,7 @@ func _update_ordinary_enemy(
 		return false
 	var phase := enemy.phase
 	if phase == &"interrupted_recovery":
+		enemy.movement_reason = &"interrupted_recovery"
 		enemy.phase_time = maxf(0.0, enemy.phase_time - delta)
 		enemy.velocity = Vector2.ZERO
 		if enemy.phase_time <= 0.0:
@@ -3357,6 +3377,7 @@ func _update_ordinary_enemy(
 			enemy.attack_cooldown = _enemy_recovery_cooldown(enemy)
 		return false
 	if phase == &"startup":
+		enemy.movement_reason = &"attack_startup"
 		if (
 			enemy.role == &"artillery_spotter"
 			and not _runtime_has_line_of_sight(
@@ -3372,6 +3393,7 @@ func _update_ordinary_enemy(
 			_begin_enemy_active(enemy)
 		return false
 	if phase == &"active":
+		enemy.movement_reason = &"attack_active"
 		_update_enemy_active(enemy, delta)
 		return false
 	if phase == &"recovery":
@@ -3411,6 +3433,7 @@ func _update_collective_enemy(
 ) -> bool:
 	match enemy.collective_phase:
 		&"gather":
+			enemy.movement_reason = &"collective_gather"
 			var to_slot := enemy.collective_target - enemy.pos
 			if to_slot.length_squared() > 4.0:
 				_move_enemy_with_recovery(
@@ -3422,9 +3445,11 @@ func _update_collective_enemy(
 				enemy.velocity = Vector2.ZERO
 			return true
 		&"lock":
+			enemy.movement_reason = &"collective_lock"
 			enemy.velocity = Vector2.ZERO
 			return true
 		&"execute":
+			enemy.movement_reason = &"collective_execute"
 			if enemy.collective_mode in [&"charge", &"fuse"]:
 				enemy.contact_attack = EnemyContactRuntime.ATTACK_COLLECTIVE
 				var before := enemy.pos
@@ -3912,6 +3937,18 @@ func _desired_enemy_velocity(
 				route_direction * route_weight
 				+ desired * (1.0 - route_weight)
 			).normalized()
+	if engagement_focus:
+		enemy.movement_reason = &"engagement_gate"
+	elif route_requested:
+		enemy.movement_reason = &"pursuit_route"
+	elif recovering:
+		enemy.movement_reason = &"recovery"
+	elif enemy.role == &"repair_tender":
+		enemy.movement_reason = &"repair_role"
+	elif movement_family == EnemyMovementPolicy.PURSUIT:
+		enemy.movement_reason = &"pursuit_role"
+	else:
+		enemy.movement_reason = &"role_movement"
 	return desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
 
 
@@ -3941,6 +3978,7 @@ func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: floa
 	if delta <= 0.0:
 		return
 	if enemy.reposition_time > 0.0:
+		enemy.movement_reason = &"wall_reposition"
 		enemy.reposition_time = maxf(0.0, enemy.reposition_time - delta)
 		velocity = enemy.reposition_dir * enemy.speed
 	var before := enemy.pos
@@ -3966,6 +4004,7 @@ func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: floa
 			enemy.strafe_sign = -enemy.strafe_sign
 			enemy.reposition_time = 0.85
 			enemy.reposition_dir = velocity.normalized().rotated(enemy.strafe_sign * PI * 0.5)
+			enemy.movement_reason = &"wall_reposition"
 			if enemy.phase == &"startup":
 				enemy.phase = &"move"
 				enemy.attack_cooldown = 0.4

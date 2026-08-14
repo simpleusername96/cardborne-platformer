@@ -235,16 +235,16 @@ Preconditions:
 
 Source owners: `scripts/encounters/vehicle_collective_tactic_runtime.gd`, `scripts/encounters/vehicle_collective_tactic_catalog.gd`, `scripts/enemies/vehicle_enemy_movement_policy.gd`, `scripts/enemies/vehicle_enemy_contact_runtime.gd`, `scripts/vehicle/vehicle_run.gd` only for existing orchestration callbacks, `docs/product/vehicle_game_spec.md`, focused validators, and existing capture fixtures.
 
-- [ ] **6.1 Freeze a causal state matrix before changing behavior.**
+- [x] **6.1 Freeze a causal state matrix before changing behavior.**
   - Change: extend focused deterministic fixtures to distinguish independent birth, Dormant, visible eligibility, Gather, Lock, Execute, Break, ordinary Move, Chaser recovery, Rammer recovery, wall reposition, support shield, tactic shield, warned contact, and passive ranged hull contact. Record the shield source and movement reason in debug receipts; do not add player-facing debug UI.
   - Accept: fixtures prove births are independently separated, new enemies are not spawn-invulnerable, pursuit Move closes distance, and each observed non-pursuit direction maps to one named state. The pre-fix fixture reproduces offscreen Gather and damage-inert mobile-ranged overlap.
-- [ ] **6.2 Arm collective tactics only after readable engagement.**
+- [x] **6.2 Arm collective tactics only after readable engagement.**
   - Change: add a bounded per-squad continuous-visible eligibility timer. Dormant squads follow ordinary role movement and cannot claim the Gather permission until at least four members plus the leader have remained visible for `0.75 s`. Losing visibility before Gather resets eligibility. Existing Gather/Lock/Execute timings, one-Gather/one-active permissions, formation geometry, interruption, offscreen cancellation, tactic IDs, shield multiplier, and attack execution remain unchanged.
   - Accept: an offscreen complete squad stays Dormant and unshielded indefinitely; `0.74 s` visible is insufficient; `0.75 s` continuous visibility permits Gather; the first shield-capable Lock occurs only after the visible dwell plus authored Gather time. No additional live-enemy scan or dynamic per-frame container is introduced.
-- [ ] **6.3 Keep pursuit pressure during Chaser recovery.**
+- [x] **6.3 Keep pursuit pressure during Chaser recovery.**
   - Change: replace only Chaser's mostly reverse recovery vector with a deterministic lateral peel that has no negative radial component. Keep Rammer reverse recovery, standoff retreat bands, engagement gates, wall recovery, local overlap separation, speeds, response constants, attack ranges, and cooldowns unchanged.
   - Accept: ordinary pursuit closes distance; Chaser recovery moves laterally rather than away; Rammer still creates reset distance; exact direction is deterministic for both strafe signs; speed and cadence ceilings remain unchanged.
-- [ ] **6.4 Give mobile ranged hull overlap a low, explicit consequence.**
+- [x] **6.4 Give mobile ranged hull overlap a low, explicit consequence.**
   - Change: revise the contact contract so mobile `shooter`, `controller`, and `artillery_spotter` behavior roles use the existing relative swept-contact owner for `6` damage with a `1.0 s` per-enemy accepted-hit cooldown and existing player damage feedback. This includes their archetype variants such as Needle Drone through behavior-role mapping. Support roles, fixed structures, ordinary mines, ordinary Chaser movement outside its warned lunge, Rammer outside charge, and boss contact remain unchanged. A rejected hit leaves contact armed, matching persistent-contact receipt semantics.
   - Accept: endpoint, tangent, tunneling, rejected-hit, accepted-hit, cooldown, and pool-reuse fixtures pass; ranged projectile damage and commitment limits are unchanged; no duplicate contact owner or second full enemy scan appears.
 - [ ] **6.5 Integrate, inspect, and record the changed contract.**
@@ -344,6 +344,7 @@ Implementation-local discoveries may be handled inside the locked contract only 
 - 2026-08-15: new enemies begin unshielded. The apparent spawn shield is support or collective Lock/Execute state already active at first sight; tactic arming is corrected at the simulation owner and no new visual asset or arrival bubble is added.
 - 2026-08-15: Chaser recovery changes from reverse movement to a deterministic lateral peel; Rammer reverse, ranged standoff retreat, wall recovery, engagement gates, and overlap separation remain distinct and unchanged.
 - 2026-08-15: mobile ranged hull overlap changes from damage-inert to a low `6`-damage, `1.0 s` accepted-hit cooldown contract in the existing relative-sweep owner. This is an explicit product revision, not a claim that the former implementation violated its tests. Full CharacterBody/NavigationAgent conversion and RVO avoidance were rejected because Godot's collision/avoidance path adds per-agent physics/navigation work and current Web cap-48 physics already fails its release threshold.
+- 2026-08-15: Tasks 6.1-6.4 are implemented in their existing owners. Seven focused validators pass: collective tactics, movement policy, local steering, enemy contact, causal diagnostics, encounter pacing, and update schedule. The post-pass caught and corrected an intermediate regression that had replaced Guard/Splitter contact; their original `12` damage and `0.8 s` cooldown remain intact beside the new ranged contract.
 
 ## Open Questions
 
@@ -353,8 +354,8 @@ No material implementation decision remains open. A future weapon-policy change,
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 6 ordinary-enemy first-contact correction. Phase 5 lifecycle debt remains blocked only on predecessor retirement approval and the named human complete-run release playtest.
-- Next task: implement Task 6.1's focused causal fixtures, then execute Tasks 6.2-6.6 without reopening the completed campaign or density branches.
-- Last completed gate: Phase 6 discovery closure across source, spec, git history, existing focused validators, Stage 3-8 captures, and the mandatory visual-authority pair.
+- Next task: complete Task 6.5's tactic transition capture and trajectory/contact receipts, then run Task 6.6's bounded integration gates without reopening the density staircase.
+- Last completed gate: seven focused Phase 6 behavior validators after the Guard/Splitter preservation correction.
 - Update rule: after a task acceptance check passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

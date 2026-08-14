@@ -135,7 +135,9 @@ static func direction_for_profile(
 		return Vector2.ZERO
 	if movement_family == PURSUIT:
 		if recovering and role == &"chaser":
-			return -radial.rotated(signf(strafe_sign) * 0.35)
+			# A recovering Chaser peels sideways. It must not keep backing away,
+			# because recovery is a short reposition rather than a retreat order.
+			return radial.rotated(signf(strafe_sign) * PI * 0.5)
 		if recovering and role == &"rammer":
 			return -radial
 		return radial

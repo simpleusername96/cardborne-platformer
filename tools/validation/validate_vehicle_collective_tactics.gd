@@ -21,6 +21,7 @@ var _lookup: Dictionary = {}
 func _initialize() -> void:
 	_validate_catalog_and_stage_rollout()
 	_validate_role_signatures()
+	_validate_runtime_visibility_arming()
 	_validate_runtime_permissions()
 	_validate_source_boundaries()
 	_finish()
@@ -60,8 +61,16 @@ func _validate_catalog_and_stage_rollout() -> void:
 			)
 			tactic_ids[tactic_id] = true
 			beat_kinds[StringName(tactic.get("beat_kind", &""))] = true
-			_expect(int(packet.get("arrival_windows", 0)) == 3, "%s tactic packet preserves three timing windows" % stage_id)
-			_expect(int(packet.get("squads_per_window", 0)) == 4, "%s tactic packet preserves four logical squads per window" % stage_id)
+			var expected_arrival_windows := 12 if stage_index == 0 else 3
+			var expected_squads_per_window := 1 if stage_index == 0 else 4
+			_expect(
+				int(packet.get("arrival_windows", 0)) == expected_arrival_windows,
+				"%s tactic packet preserves its planned timing windows" % stage_id
+			)
+			_expect(
+				int(packet.get("squads_per_window", 0)) == expected_squads_per_window,
+				"%s tactic packet preserves its planned logical squads per window" % stage_id
+			)
 		_expect(
 			unit_count == int(CombatStages.AUTHORED_COUNTS[stage_index]),
 			"%s authored unit count is unchanged" % stage_id
@@ -109,7 +118,7 @@ func _validate_runtime_permissions() -> void:
 			_lookup[enemy.id] = enemy
 			runtime.register_enemy(enemy)
 	var visible := Rect2(0.0, 0.0, 1200.0, 800.0)
-	runtime.advance(0.01, Vector2(800.0, 400.0), visible, Callable(self, "_find_enemy"))
+	runtime.advance(0.75, Vector2(800.0, 400.0), visible, Callable(self, "_find_enemy"))
 	var snapshot := runtime.debug_snapshot()
 	_expect(int(snapshot["gather_permission_count"]) == 1, "only one squad gathers at first")
 	_expect(int(snapshot["active_permission_count"]) == 0, "Gather does not spend active permission")
@@ -152,7 +161,7 @@ func _validate_runtime_permissions() -> void:
 		_lookup[enemy.id] = enemy
 		external_runtime.register_enemy(enemy)
 	external_runtime.advance(
-		0.01,
+		0.75,
 		Vector2(800.0, 400.0),
 		visible,
 		Callable(self, "_find_enemy")
@@ -173,6 +182,72 @@ func _validate_runtime_permissions() -> void:
 	_expect(
 		external_break_seen,
 		"external Break events survive until the next event handoff"
+	)
+
+
+func _validate_runtime_visibility_arming() -> void:
+	_lookup.clear()
+	var runtime := Runtime.new()
+	for member_index in 4:
+		var enemy := _enemy(
+			"arming_member_%d" % member_index,
+			"arming_squad",
+			&"spearhead",
+			member_index,
+			Vector2(1800.0, 1200.0 + float(member_index) * 24.0)
+		)
+		_lookup[enemy.id] = enemy
+		runtime.register_enemy(enemy)
+	var visible := Rect2(0.0, 0.0, 1200.0, 800.0)
+	runtime.advance(12.0, Vector2(800.0, 400.0), visible, Callable(self, "_find_enemy"))
+	var snapshot := runtime.debug_snapshot()
+	var eligibility: Dictionary = Dictionary(snapshot["eligibility"]).get("arming_squad", {})
+	_expect(int(snapshot["gather_permission_count"]) == 0, "offscreen complete squad cannot claim Gather")
+	_expect(
+		int(Dictionary(snapshot["phases"]).get(&"dormant", 0)) == 1,
+		"offscreen complete squad remains Dormant"
+	)
+	_expect(
+		not bool(Dictionary(eligibility).get("visible_eligible", true))
+			and is_zero_approx(float(Dictionary(eligibility).get("visible_dwell", -1.0))),
+		"offscreen visibility resets dormant eligibility dwell"
+	)
+	var visible_index := 0
+	for enemy_variant in _lookup.values():
+		var enemy: EnemyState = enemy_variant
+		enemy.pos = Vector2(360.0, 260.0 + float(visible_index) * 24.0)
+		visible_index += 1
+	runtime.advance(0.40, Vector2(800.0, 400.0), visible, Callable(self, "_find_enemy"))
+	for enemy_variant in _lookup.values():
+		var enemy: EnemyState = enemy_variant
+		enemy.pos = Vector2(1800.0, 1200.0)
+	runtime.advance(0.01, Vector2(800.0, 400.0), visible, Callable(self, "_find_enemy"))
+	snapshot = runtime.debug_snapshot()
+	eligibility = Dictionary(snapshot["eligibility"]).get("arming_squad", {})
+	_expect(
+		is_zero_approx(float(Dictionary(eligibility).get("visible_dwell", -1.0))),
+		"visibility loss resets partially armed dormant dwell"
+	)
+	visible_index = 0
+	for enemy_variant in _lookup.values():
+		var enemy: EnemyState = enemy_variant
+		enemy.pos = Vector2(360.0, 260.0 + float(visible_index) * 24.0)
+		visible_index += 1
+	runtime.advance(0.74, Vector2(800.0, 400.0), visible, Callable(self, "_find_enemy"))
+	snapshot = runtime.debug_snapshot()
+	eligibility = Dictionary(snapshot["eligibility"]).get("arming_squad", {})
+	_expect(int(snapshot["gather_permission_count"]) == 0, "0.74 seconds visible is insufficient for Gather")
+	_expect(
+		bool(Dictionary(eligibility).get("visible_eligible", false))
+			and is_equal_approx(float(Dictionary(eligibility).get("visible_dwell", 0.0)), 0.74),
+		"debug snapshot reports active but incomplete visible eligibility"
+	)
+	runtime.advance(0.01, Vector2(800.0, 400.0), visible, Callable(self, "_find_enemy"))
+	snapshot = runtime.debug_snapshot()
+	_expect(int(snapshot["gather_permission_count"]) == 1, "0.75 seconds continuous visibility permits Gather")
+	_expect(
+		int(Dictionary(snapshot["phases"]).get(&"gather", 0)) == 1,
+		"visible dwell transitions only to Gather"
 	)
 
 

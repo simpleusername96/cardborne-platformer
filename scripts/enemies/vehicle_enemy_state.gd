@@ -47,6 +47,10 @@ var burst_timer := 0.0
 var stun := 0.0
 var flash := 0.0
 var shielded := false
+# Causal diagnostics are fixed scalar values so normal simulation does not
+# allocate when explaining the current movement or shield state.
+var movement_reason: StringName = &"none"
+var shield_source: StringName = &"none"
 var support_tick := 0.0
 var repair_target_id := ""
 var intercept_charges := 0
@@ -133,6 +137,9 @@ var engagement_active := false
 
 func reset_runtime_collections() -> void:
 	statuses.clear()
+	shielded = false
+	movement_reason = &"none"
+	shield_source = &"none"
 	contact_previous_position = pos
 	contact_cooldown = 0.0
 	contact_attack = &""
@@ -157,3 +164,10 @@ func reset_runtime_collections() -> void:
 	engagement_gate = Vector2.ZERO
 	engagement_expiry = 0.0
 	engagement_active = false
+
+
+func behavior_diagnostics() -> Dictionary:
+	return {
+		"movement_reason": movement_reason,
+		"shield_source": shield_source,
+	}

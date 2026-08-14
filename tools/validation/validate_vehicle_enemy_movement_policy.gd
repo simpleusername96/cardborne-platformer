@@ -109,14 +109,18 @@ func _validate_continuity_and_recovery() -> void:
 		positive == replay and positive.y > 0.99 and negative.y < -0.99,
 		"strafe sign is deterministic"
 	)
-	var chaser_recovery := Policy.intent(
-		&"chaser", &"chaser", Vector2.ZERO, Vector2(200.0, 0.0), 1.0, true
-	)
-	_expect(
-		Vector2(chaser_recovery["direction"]).x < 0.0
-			and not bool(chaser_recovery["requests_approach"]),
-		"pursuit recovery backs out without requesting a route"
-	)
+	for strafe_sign in [-1.0, 1.0]:
+		var chaser_recovery := Policy.intent(
+			&"chaser", &"chaser", Vector2.ZERO, Vector2(200.0, 0.0), strafe_sign, true
+		)
+		var chaser_direction := Vector2(chaser_recovery["direction"])
+		_expect(
+			absf(chaser_direction.x) <= 0.001
+				and absf(chaser_direction.y) > 0.99
+				and chaser_direction.y * strafe_sign > 0.99
+				and not bool(chaser_recovery["requests_approach"]),
+			"Chaser recovery peels laterally without negative radial motion for either strafe sign"
+		)
 	var rammer_recovery := Policy.intent(
 		&"rammer", &"rammer", Vector2.ZERO, Vector2(200.0, 0.0), -1.0, true
 	)

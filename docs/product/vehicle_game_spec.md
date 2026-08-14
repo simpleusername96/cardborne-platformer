@@ -139,9 +139,13 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   collective execution contact can damage at most once per warned active
   attack. Bulkhead Guard and Splitter Barge use persistent hull contact with a
   `0.8 s` per-enemy retry cooldown that starts only when barrier or hull accepts
-  damage; an invulnerability rejection leaves the contact armed. Ranged,
-  support, fixed-structure, and ordinary-mine hull overlap never deals contact
-  damage. Boss contact remains independently authored.
+  damage; an invulnerability rejection leaves the contact armed. Mobile Shooter,
+  Controller, and Artillery Spotter behavior roles, including their swarm
+  archetype variants, use low hull-scrape contact for `6` damage with a `1.0 s`
+  per-enemy accepted-hit cooldown. A rejected scrape remains armed. Support,
+  fixed-structure, ordinary-mine, and ordinary Chaser/Rammer hull overlap outside
+  their warned contact attacks remains damage-inert. Boss contact remains
+  independently authored.
 - Every hostile attack has a startup descriptor produced from simulation
   values. Its `danger footprint` is the exact set of player-center positions
   that can receive damage: projectile radius plus player radius, contact
@@ -384,6 +388,16 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    maximum from 880 to 650, within the unchanged shell speed and 2.2-second lifetime;
    other attack distance contracts remain unchanged. In all cases,
    logical squad anchors and centroid cohesion do not steer ordinary movement.
+   A complete authored collective-tactic squad remains Dormant and follows these
+   ordinary role rules until its leader and at least four members have stayed
+   visible continuously for `0.75 s`. Losing visibility before Gather resets that
+   eligibility time. Only then may the squad claim the single Gather permission
+   and move toward its authored spear, column, screen, escort, network, convoy, or
+   fuse slots. Existing Gather, Lock, Execute, Break, and cooldown timings remain
+   authored. Shield/support/escort tactic protection begins only during visible
+   Lock or Execute; birth and Dormant/Gather do not grant tactic protection.
+   Chaser recovery uses a deterministic lateral peel with no away-from-player
+   radial component. Rammer reverse recovery remains its heavy-charge reset.
    Bounded local separation runs only during actual body overlap, checks at
    most eight nearby actors within 120 pixels, blends role/separation velocity
    at 0.55/0.45, and never exceeds the role's original speed. With no overlap,

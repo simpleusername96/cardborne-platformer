@@ -13,6 +13,7 @@ var failures: Array[String] = []
 var _probe_accept := true
 var _probe_calls := 0
 var _probe_last_source := ""
+var _probe_last_amount := 0.0
 
 
 func _initialize() -> void:
@@ -28,6 +29,16 @@ func _run() -> void:
 
 
 func _validate_relative_sweep() -> void:
+	_expect(
+		ContactRuntime.relative_sweep_hits(
+			Vector2(-100.0, 0.0),
+			Vector2.ZERO,
+			Vector2(100.0, 0.0),
+			Vector2(40.0, 0.0),
+			40.0
+		),
+		"relative sweep accepts endpoint contact"
+	)
 	_expect(
 		ContactRuntime.relative_sweep_hits(
 			Vector2(-100.0, 0.0),
@@ -108,35 +119,64 @@ func _validate_role_and_repeat_contracts() -> void:
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.1)
 	_expect(
 		_probe_calls == 1 and is_zero_approx(guard.contact_cooldown),
-		"invulnerability rejection leaves persistent hull contact armed"
+		"guard persistent contact rejection stays armed"
 	)
 	_probe_accept = true
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.1)
 	_expect(
 		_probe_calls == 2
-			and is_equal_approx(
-				guard.contact_cooldown,
-				ContactRuntime.PERSISTENT_CONTACT_COOLDOWN
-			),
-		"accepted persistent hull contact starts the per-enemy cooldown"
+			and is_equal_approx(_probe_last_amount, 12.0)
+			and is_equal_approx(guard.contact_cooldown, ContactRuntime.PERSISTENT_CONTACT_COOLDOWN),
+		"guard persistent contact preserves twelve damage and its cooldown"
 	)
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.79)
-	_expect(_probe_calls == 2, "persistent contact cannot repeat inside cooldown")
+	_expect(_probe_calls == 2, "guard persistent contact cannot repeat inside cooldown")
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.02)
-	_expect(
-		_probe_calls == 3,
-		"continued overlap retries when accepted-contact cooldown expires"
-	)
+	_expect(_probe_calls == 3, "guard persistent contact retries after its cooldown expires")
 
 	var shooter := _enemy(&"shooter", Vector2.ZERO, Vector2.ZERO)
+	var controller := _enemy(&"controller", Vector2.ZERO, Vector2.ZERO)
+	var artillery := _enemy(&"artillery_spotter", Vector2.ZERO, Vector2.ZERO)
+	active.assign([shooter, controller, artillery])
+	_probe_accept = false
+	_reset_probe()
+	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.1)
+	_expect(
+		_probe_calls == 3
+			and is_zero_approx(shooter.contact_cooldown)
+			and is_zero_approx(controller.contact_cooldown)
+			and is_zero_approx(artillery.contact_cooldown),
+		"mobile ranged protection rejection leaves every hull contact armed"
+	)
+	_probe_accept = true
+	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.1)
+	_expect(
+		_probe_calls == 6
+			and is_equal_approx(_probe_last_amount, 6.0)
+			and is_equal_approx(shooter.contact_cooldown, ContactRuntime.MOBILE_RANGED_CONTACT_COOLDOWN)
+			and is_equal_approx(controller.contact_cooldown, ContactRuntime.MOBILE_RANGED_CONTACT_COOLDOWN)
+			and is_equal_approx(artillery.contact_cooldown, ContactRuntime.MOBILE_RANGED_CONTACT_COOLDOWN),
+		"accepted mobile ranged hull contact deals six damage and starts the per-enemy cooldown"
+	)
+	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.99)
+	_expect(_probe_calls == 6, "mobile ranged persistent contact cannot repeat inside cooldown")
+	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.02)
+	_expect(
+		_probe_calls == 9,
+		"continued mobile ranged overlap retries when accepted-contact cooldown expires"
+	)
+
+	var ordinary_chaser := _enemy(&"chaser", Vector2.ZERO, Vector2.ZERO)
+	var ordinary_rammer := _enemy(&"rammer", Vector2.ZERO, Vector2.ZERO)
 	var mine := _enemy(&"mine", Vector2.ZERO, Vector2.ZERO)
 	var support := _enemy(&"repair_tender", Vector2.ZERO, Vector2.ZERO)
-	active.assign([shooter, mine, support])
+	var fixed := _enemy(&"turret", Vector2.ZERO, Vector2.ZERO)
+	active.assign([ordinary_chaser, ordinary_rammer, mine, support, fixed])
 	_reset_probe()
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0)
 	_expect(
 		_probe_calls == 0,
-		"ranged, support, and mine body overlap never deals contact damage"
+		"unwarned pursuit, fixed, support, and mine body overlap never deals contact damage"
 	)
 
 
@@ -312,7 +352,8 @@ func _validate_run_damage_receipts_and_integration() -> void:
 		"integrated Rammer sweep damages once and publishes normal hit feedback"
 	)
 
-	# A ranged body is crossed by the player but remains damage-inert.
+	# A ranged body is crossed by the player. Relative sweep must apply one hull
+	# contact even when both endpoints finish outside the combined radius.
 	run.call("_clear_enemies")
 	var shooter: EnemyState = run.call("_make_enemy", {
 		"id": "contact_integration_ranged_control",
@@ -331,8 +372,12 @@ func _validate_run_damage_receipts_and_integration() -> void:
 		player_center - Vector2(100.0, 0.0)
 	)
 	_expect(
-		is_equal_approx(run.player_health, health_before),
-		"crossing a ranged enemy body produces no hull-contact damage"
+		run.player_health < health_before
+			and is_equal_approx(
+				shooter.contact_cooldown,
+				ContactRuntime.MOBILE_RANGED_CONTACT_COOLDOWN
+			),
+		"crossing a ranged enemy body resolves one persistent swept hull contact"
 	)
 	run.player_position = player_center
 
@@ -352,7 +397,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	_expect(
 		is_zero_approx(guard.contact_cooldown)
 			and is_equal_approx(run.player_barrier_strength, 100.0),
-		"integrated persistent contact stays armed after protection rejection"
+		"integrated guard persistent contact stays armed after protection rejection"
 	)
 	run.player_invulnerable = 0.0
 	run.player_barrier_hit_flash = 0.0
@@ -366,7 +411,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 				guard.contact_cooldown,
 				ContactRuntime.PERSISTENT_CONTACT_COOLDOWN
 			),
-		"integrated persistent contact accepts the next overlap through barrier feedback"
+		"integrated guard persistent contact accepts the next overlap through barrier feedback"
 	)
 
 	root.queue_free()
@@ -405,6 +450,7 @@ func _damage_player_probe(
 ) -> bool:
 	_probe_calls += 1
 	_probe_last_source = source
+	_probe_last_amount = _amount
 	return _probe_accept
 
 
@@ -418,6 +464,7 @@ func _enemy_contact_damage_probe(
 func _reset_probe() -> void:
 	_probe_calls = 0
 	_probe_last_source = ""
+	_probe_last_amount = 0.0
 
 
 func _expect(condition: bool, message: String) -> void:

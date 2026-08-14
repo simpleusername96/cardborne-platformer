@@ -10,6 +10,7 @@ const Catalog = preload(
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
 const MAX_REGISTERED_SQUADS := 32
+const DORMANT_VISIBLE_DWELL_SECONDS := 0.75
 
 var _squads: Dictionary = {}
 var _active_permission_id := ""
@@ -60,6 +61,8 @@ func register_enemy(enemy: EnemyState) -> void:
 			"leader_id": "",
 			"phase": Catalog.PHASE_DORMANT,
 			"timer": 0.0,
+			"visible_dwell": 0.0,
+			"visible_eligible": false,
 			"direction": Vector2.RIGHT,
 			"centroid": enemy.pos,
 			"cycle": 0,
@@ -130,6 +133,11 @@ func advance(
 			visible_world.has_point(centroid)
 			and visible_members >= minimum_members
 		)
+		state["visible_eligible"] = (
+			members.size() >= minimum_members
+			and leader_present
+			and visible
+		)
 		if (
 			phase in [Catalog.PHASE_GATHER, Catalog.PHASE_LOCK, Catalog.PHASE_EXECUTE]
 			and (
@@ -151,9 +159,19 @@ func advance(
 			phase = StringName(state["phase"])
 		match phase:
 			Catalog.PHASE_DORMANT:
+				state["visible_dwell"] = (
+					minf(
+						DORMANT_VISIBLE_DWELL_SECONDS,
+						float(state["visible_dwell"]) + delta
+					)
+					if (
+						bool(state["visible_eligible"])
+					)
+					else 0.0
+				)
 				if (
-					members.size() >= minimum_members
-					and leader_present
+					bool(state["visible_eligible"])
+					and float(state["visible_dwell"]) >= DORMANT_VISIBLE_DWELL_SECONDS
 					and _gather_permission_id.is_empty()
 				):
 					_gather_permission_id = squad_id
@@ -209,12 +227,19 @@ func break_squad(squad_id: String, reason: StringName) -> void:
 
 func debug_snapshot() -> Dictionary:
 	var phases := {}
+	var eligibility := {}
 	var member_count := 0
 	for state_variant in _squads.values():
 		var state := Dictionary(state_variant)
 		var phase := StringName(state["phase"])
 		phases[phase] = int(phases.get(phase, 0)) + 1
 		member_count += PackedStringArray(state["member_ids"]).size()
+		eligibility[String(state["id"])] = {
+			"phase": phase,
+			"visible_eligible": bool(state["visible_eligible"]),
+			"visible_dwell": float(state["visible_dwell"]),
+			"visible_dwell_ready": float(state["visible_dwell"]) >= DORMANT_VISIBLE_DWELL_SECONDS,
+		}
 	return {
 		"squad_count": _squads.size(),
 		"member_count": member_count,
@@ -227,6 +252,8 @@ func debug_snapshot() -> Dictionary:
 		"offscreen_cancellations": _offscreen_cancellations,
 		"stale_member_count": 0,
 		"stale_members_removed": _stale_members_removed,
+		"dormant_visible_dwell_seconds": DORMANT_VISIBLE_DWELL_SECONDS,
+		"eligibility": eligibility,
 		"phases": phases,
 		"phase_counts": _phase_counts.duplicate(true),
 		"break_reasons": _break_reasons.duplicate(true),
@@ -314,6 +341,7 @@ func _enter_phase(state: Dictionary, phase: StringName) -> void:
 	state["timer"] = float(recipe.get(String(phase), 0.0))
 	if phase == Catalog.PHASE_DORMANT:
 		state["timer"] = 0.0
+		state["visible_dwell"] = 0.0
 	if phase == Catalog.PHASE_EXECUTE:
 		state["cycle"] = int(state["cycle"]) + 1
 	_phase_counts[phase] = int(_phase_counts.get(phase, 0)) + 1

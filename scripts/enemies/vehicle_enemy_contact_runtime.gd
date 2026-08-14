@@ -19,10 +19,16 @@ const ATTACK_COLLECTIVE: StringName = &"collective"
 const PERSISTENT_CONTACT_COOLDOWN := 0.8
 const PERSISTENT_CONTACT_PADDING := 12.0
 const PERSISTENT_CONTACT_DAMAGE := 12.0
+const MOBILE_RANGED_CONTACT_COOLDOWN := 1.0
+const MOBILE_RANGED_CONTACT_PADDING := 12.0
+const MOBILE_RANGED_CONTACT_DAMAGE := 6.0
 const COLLECTIVE_CONTACT_PADDING := 10.0
 const COLLECTIVE_CONTACT_DAMAGE := 12.0
 const PERSISTENT_ROLES: Array[StringName] = [
 	&"bulkhead_guard", &"splitter_barge",
+]
+const MOBILE_RANGED_CONTACT_ROLES: Array[StringName] = [
+	&"shooter", &"controller", &"artillery_spotter",
 ]
 
 var _damage_player: Callable
@@ -83,7 +89,25 @@ func advance(
 				)
 			_:
 				if enemy.role in PERSISTENT_ROLES:
-					_resolve_persistent(enemy, player_from, player_to)
+					_resolve_persistent(
+						enemy,
+						player_from,
+						player_to,
+						PERSISTENT_CONTACT_PADDING,
+						PERSISTENT_CONTACT_DAMAGE,
+						PERSISTENT_CONTACT_COOLDOWN,
+						"Enemy hull impact"
+					)
+				elif enemy.role in MOBILE_RANGED_CONTACT_ROLES:
+					_resolve_persistent(
+						enemy,
+						player_from,
+						player_to,
+						MOBILE_RANGED_CONTACT_PADDING,
+						MOBILE_RANGED_CONTACT_DAMAGE,
+						MOBILE_RANGED_CONTACT_COOLDOWN,
+						"Mobile ranged hull impact"
+					)
 	return _last_contact_attempts
 
 
@@ -134,20 +158,24 @@ func _resolve_one_shot(
 func _resolve_persistent(
 	enemy: EnemyState,
 	player_from: Vector2,
-	player_to: Vector2
+	player_to: Vector2,
+	padding: float,
+	base_damage: float,
+	cooldown: float,
+	source: String
 ) -> void:
 	if enemy.contact_cooldown > 0.0 or not _sweep_hits(
-		enemy, player_from, player_to, PERSISTENT_CONTACT_PADDING
+		enemy, player_from, player_to, padding
 	):
 		return
 	_last_contact_attempts += 1
 	var accepted := bool(_damage_player.call(
-		float(_enemy_contact_damage.call(enemy, PERSISTENT_CONTACT_DAMAGE)),
-		"Enemy hull impact",
+		float(_enemy_contact_damage.call(enemy, base_damage)),
+		source,
 		true
 	))
 	if accepted:
-		enemy.contact_cooldown = PERSISTENT_CONTACT_COOLDOWN
+		enemy.contact_cooldown = cooldown
 
 
 func _sweep_hits(
