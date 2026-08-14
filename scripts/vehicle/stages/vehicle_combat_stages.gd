@@ -100,11 +100,12 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 	var result: Array[Dictionary] = []
 	var target_count: int = int(AUTHORED_COUNTS[stage_index])
 	var sequence := _role_sequence(stage_index, target_count)
+	var opening_roles: Array[StringName] = sequence.slice(0, 6)
 	result.append({
 		"id":"stage_%d_packet_01" % [stage_index + 1],
 		"beat":0,
-		"trigger":{"kind":&"time", "at":5.1},
-		"squads":[[&"scrap_drone"]],
+		"trigger":{"kind":&"time", "at":0.0},
+		"squads":[opening_roles],
 		"unit_spacing":0.16,
 		"cue_lead":0.9,
 		"engagement_pattern":&"none",
@@ -112,11 +113,11 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 		"zone":"field",
 		"leash":Rect2(field_definition["world_rect"]),
 	})
-	var remaining := target_count - 1
+	var remaining := target_count - opening_roles.size()
 	var surge_count := ceili(float(remaining) / float(MAX_SURGE_UNITS))
 	var base_surge_size := remaining / surge_count
 	var extra_surges := remaining % surge_count
-	var cursor := 1
+	var cursor := opening_roles.size()
 	for surge_index in surge_count:
 		var surge_size := base_surge_size + (1 if surge_index < extra_surges else 0)
 		var beat := mini(4, 1 + floori(4.0 * float(surge_index) / float(surge_count)))
@@ -124,7 +125,7 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 		result.append({
 			"id":"stage_%d_packet_%02d" % [stage_index + 1, surge_index + 2],
 			"beat":beat,
-			"trigger":{"kind":&"time", "at":8.0 + float(surge_index) * 2.4},
+			"trigger":{"kind":&"time", "at":4.0 + float(surge_index) * 2.4},
 			"squads":squads,
 			"collective_tactic":TacticCatalog.assignment_for(
 				stage_index,

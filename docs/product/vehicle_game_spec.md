@@ -282,9 +282,13 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 1. Stage 1 deployment begins at the shared center. Stages 2–5 begin at the
    player's current position and facing without reopening deployment.
-2. Stage 1 keeps its initial arrival cadence. After a successful Stage 1–4 transition,
-   the next arrival cue begins after 0.35 seconds and the first hostile arrival
-   begins within 1.35 seconds.
+2. Every stage opens with six low-risk pursuit identities from its authored
+   sequence. The cue begins at `0.0 s`, births begin after `0.9 s` with `0.16 s`
+   spacing, and the normal surge begins at `4.0 s`. Births remain outside the
+   visible world and use the nearest safe offscreen allocation. After Stage 1–4,
+   surviving ordinary actors count toward the six-actor beat-zero cap; only the
+   available portion of the next six identities is admitted immediately and the
+   remainder stays in that stage's authored reserve.
 3. Main-combat packets retain twelve logical role squads but schedule them as
    three arrival windows of four squads. Every ordinary unit receives an
    independent birth position: 900–2400 pixels from the cue-time player
@@ -315,9 +319,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    population; only three ranged attackers and two denial attackers may commit
    at once. Ordinary hostile fire cannot consume the 24-shot boss reserve.
    Fixed-Hard authored ordinary pressure caps progress through
-   `1/124/172/224/276`; these are the logical encounter-pressure targets, not
+   `6/124/172/224/276`; these are the logical encounter-pressure targets, not
    simultaneously simulated actors. Exact materialized ordinary caps progress
-   through `1/40/48/48/48`. The 40-actor second beat leaves room for one complete
+   through `6/40/48/48/48`. The 40-actor second beat leaves room for one complete
    32-unit arrival window while a small prior-stage survivor group remains. Scheduled
    authored units above that exact cap remain
    in the deterministic virtual reserve. A virtual-reserve unit has no world
@@ -347,7 +351,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    `-2,-1,0,+1,+2`) and `two_offset_streams` (alternating `-2,-1` and `+1,+2`).
    Both leave the rear three-sector escape arc open; the second also leaves the
    forward center unreserved. Windows 0 and 2 use the crescent and window 1
-   uses offset streams. Opening single-unit packets have no approach gate.
+   uses offset streams. The six-unit opening packet has no approach gate.
 4. Ordinary mobile movement applies one 1.40 multiplier after role base speed
    and before the fixed Hard profile, stage, and elite factors. Boss,
    committed charge, and projectile speeds are unchanged. After birth, each
@@ -387,11 +391,13 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    `280 px/s`; explicitly committed charges remain exceptions.
 5. Ordinary defeats advance the stage quota. Living enemies never block travel
    or stage completion and summons do not count toward the quota.
-   Reaching quota seals new ordinary admission. An arrival window whose cue is
-   already visible completes every reserved round, while uncued packets and
-   virtual reserve are canceled with explicit `quota_canceled_reserve`
-   accounting. Materialized ordinary enemies remain in combat and are never
-   despawned by the seal.
+   Reaching quota seals quota progression, not ordinary presence. An arrival
+   window whose cue is already visible completes every reserved round. During
+   boss warning and boss combat, the runtime consumes only remaining authored
+   identities to maintain 8–12 exact ordinary actors: it cues at most four when
+   the count is below eight and waits at least four seconds before another group.
+   This cannot increase the reached quota, fabricate identities, exceed the
+   exact cap, or despawn a materialized ordinary enemy.
 6. On reaching the quota, a 1.5-second boss warning
    identifies a reachable arrival anchor at least 1200 pixels from the player
    when the field permits it. Boss creation and boss-defeat completion reject
@@ -411,7 +417,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    repositioning only after the committed attack ends.
 8. Boss defeat records the completed-stage telemetry and removes only boss-owned
    adds, hostile projectiles, and damage zones. Stages 1–4 full-heal the ship and
-   begin the next encounter in the same gameplay frame. Existing ordinary enemies,
+   stop old-stage maintenance and begin the next encounter in the same gameplay
+   frame. Existing ordinary enemies,
    ordinary and player projectiles, XP shards, position, velocity, facing, aim,
    cooldowns, build, fixed Hard state, exploration, and run-fixed terrain remain.
    There is no boss reward card, forced XP recall, transition protection, banner,
@@ -863,8 +870,8 @@ no credit or stored charge.
 - All three immutable macro fields, the 560-pixel start clearance, both actor
   radii, five deterministic tactical children, exact-retry identity, and
   adjacent-stage variation pass validation.
-- The first cue/scout timing, stage quotas, distributed eight-squad surge
-  growth, arrival fairness, continued ordinary spawning, 1.5-second boss warning, roaming boss,
+- The immediate six-unit opening, stage quotas, distributed eight-squad surge
+  growth, arrival fairness, 8–12 boss maintenance, 1.5-second boss warning, roaming boss,
   preserved build/exploration, automatic stages 1–4 transition, and stage 5
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same

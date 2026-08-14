@@ -150,10 +150,14 @@ func _check_stage_one_continuation(run) -> void:
 		"next-stage cue starts immediately and skips the deployment packet"
 	)
 	run.call("_update_encounter", 0.9)
+	for _birth_index in 4:
+		run.call("_update_encounter", 0.16)
 	var spawn_snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
 	_expect(
-		is_equal_approx(float(spawn_snapshot["first_spawn_time"]), 0.9),
-		"first continuation birth retains the fair 0.9 second warning"
+		is_equal_approx(float(spawn_snapshot["first_spawn_time"]), 0.9)
+			and int(spawn_snapshot["materialized_spawned"]) == 5
+			and int(spawn_snapshot["virtual_reserve"]) > 0,
+		"continuation admits only the five free opening slots and keeps the sixth authored identity reserved"
 	)
 	run.call("_pause_run")
 	run.call("_resume_run")
@@ -164,6 +168,15 @@ func _check_stage_five_immediate_result(run) -> void:
 	run.current_stage_index = Catalog.STAGE_IDS.size() - 1
 	run.current_stage_id = Catalog.STAGE_IDS[run.current_stage_index]
 	run.call("_reset_run", false, true, true)
+	run.completed_stage_reports.clear()
+	for stage_number in range(1, 5):
+		run.completed_stage_reports.append({
+			"stage_number":stage_number,
+			"has_next_stage":true,
+			"defeats":[],
+			"outgoing":[],
+			"attributes":[],
+		})
 	run._capture_mode = true
 	run.mode = run.RunMode.PLAYING
 	run.stage_flow.quota = 1

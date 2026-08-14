@@ -5460,6 +5460,7 @@ func _complete_stage() -> void:
 	if stage_complete:
 		return
 	stage_complete = true
+	encounter_runtime.stop_boss_maintenance()
 	encounter_runtime.stop_spawning()
 	_retire_boss_owned_enemies()
 	projectile_store.retire_boss_hostiles()
@@ -5556,9 +5557,10 @@ func _begin_next_stage_continuation() -> void:
 	# stage-local. Release it before the director is reconfigured with a new seed.
 	for enemy in enemies:
 		_release_enemy_engagement(enemy)
+	var continuation_slots := maxi(0, 6 - _ordinary_active_count())
 	encounter_runtime.configure(
 		current_stage_id,
-		_continuation_packets(current_stage_id),
+		_continuation_packets(current_stage_id, continuation_slots),
 		selected_run_difficulty,
 		_active_tactical_layout.ordinary_spawn_anchors,
 		_active_tactical_layout.encounter_seed,
@@ -5605,12 +5607,31 @@ func _begin_next_stage_continuation() -> void:
 	_set_mouse_for_mode()
 
 
-func _continuation_packets(stage_id: StringName) -> Array[Dictionary]:
+func _ordinary_active_count() -> int:
+	var count := 0
+	for enemy in enemies:
+		if enemy.alive and enemy.active and enemy.counts_active_cap and not _is_boss_owned_enemy(enemy):
+			count += 1
+	return count
+
+
+func _continuation_packets(stage_id: StringName, opening_slots: int = 6) -> Array[Dictionary]:
 	var authored := StageCatalog.packets(stage_id)
 	var result: Array[Dictionary] = []
-	if authored.size() <= 1:
+	if authored.is_empty():
 		return result
-	var authored_first_time := float(authored[1]["trigger"]["at"])
+	var opening: Dictionary = authored[0].duplicate(true)
+	var opening_roles: Array = Array(opening["squads"])[0]
+	var admitted_roles: Array = opening_roles.slice(0, clampi(opening_slots, 0, opening_roles.size()))
+	var reserve_roles: Array = opening_roles.slice(admitted_roles.size())
+	if not admitted_roles.is_empty():
+		opening["squads"] = [admitted_roles]
+		opening["trigger"] = {"kind":&"time", "at":CONTINUATION_FIRST_CUE_AT}
+		opening["cue_lead"] = CONTINUATION_FIRST_SPAWN_AT - CONTINUATION_FIRST_CUE_AT
+		result.append(opening)
+	if not reserve_roles.is_empty():
+		result.append({"id":"%s_continuation_reserve" % stage_id, "beat":1, "trigger":{"kind":&"time", "at":4.0}, "squads":[reserve_roles], "unit_spacing":0.16, "cue_lead":0.9, "engagement_patterns":[&"none"], "zone":"field", "leash":Rect2(Rules.world_rect(stage_id))})
+	var authored_first_time := float(authored[1]["trigger"]["at"]) if authored.size() > 1 else 4.0
 	for packet_index in range(1, authored.size()):
 		var packet := authored[packet_index].duplicate(true)
 		var trigger := Dictionary(packet["trigger"]).duplicate(true)

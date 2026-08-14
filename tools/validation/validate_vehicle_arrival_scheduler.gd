@@ -132,20 +132,20 @@ func _validate_quota_seal_preserves_cued_window(stage_id: StringName, packet: Di
 	var authored_units := _packet_unit_count(packet)
 	_expect(Array(admission["cues"]).size() == 4, "quota seal fixture first admits one visible cue window")
 	runtime.seal_for_quota()
-	_expect(runtime.quota_sealed() and not runtime.spawning_enabled(), "quota seal blocks new ordinary admission")
+	_expect(runtime.quota_sealed() and runtime.spawning_enabled(), "quota seal preserves bounded boss maintenance admission")
 	var emitted := 0
-	var extra_cues := 0
+	var maintenance_cues := 0
 	for _step in 160:
 		var result := runtime.tick(0.05, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 		emitted += Array(result["spawns"]).size()
-		extra_cues += Array(result["cues"]).size()
-		if runtime.debug_snapshot()["queued_spawns"] == 0:
+		maintenance_cues += Array(result["cues"]).size()
+		if runtime.debug_snapshot()["queued_spawns"] == 0 and maintenance_cues > 0:
 			break
 	var snapshot := runtime.debug_snapshot()
-	_expect(emitted == admitted_units, "quota seal fulfills every round from the already-cued window")
-	_expect(extra_cues == 0, "quota seal emits no new cue after the admitted window")
-	_expect(int(snapshot["quota_canceled_reserve"]) == authored_units - admitted_units, "quota seal explicitly accounts for uncued authored reserve")
-	_expect(int(snapshot["virtual_reserve"]) == 0 and int(snapshot["reserved_arrival_slots"]) == 0, "quota seal clears only uncued reserve after the visible window fulfills")
+	_expect(emitted >= admitted_units, "quota seal fulfills every round from the already-cued window")
+	_expect(maintenance_cues == 1, "boss maintenance admits one bounded group only after the promised window drains")
+	_expect(bool(snapshot["boss_maintenance_active"]) and int(snapshot["boss_maintenance_reserve"]) < authored_units - admitted_units, "boss maintenance preserves and consumes uncued authored identities")
+	_expect(int(snapshot["quota_canceled_reserve"]) == 0 and int(snapshot["reserved_arrival_slots"]) == 0, "quota seal no longer cancels authored reserve and clears fulfilled reservations")
 
 
 func _validate_engagement_capacity_fallback(stage_id: StringName, packet: Dictionary, tactical) -> void:

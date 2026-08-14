@@ -21,8 +21,8 @@ const EFFECT_CAP := 96
 
 ## Authored pressure remains the pacing contract. Only the smaller materialized
 ## cap becomes live combat actors; the scheduler keeps the rest as packet data.
-const AUTHORED_PRESSURE_CAPS := [1, 124, 172, 224, 276]
-const MATERIALIZED_ACTIVE_CAPS := [1, 40, 48, 48, 48]
+const AUTHORED_PRESSURE_CAPS := [6, 124, 172, 224, 276]
+const MATERIALIZED_ACTIVE_CAPS := [6, 40, 48, 48, 48]
 const ACTIVE_CAPS := MATERIALIZED_ACTIVE_CAPS
 const THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
 

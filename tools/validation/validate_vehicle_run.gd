@@ -704,8 +704,8 @@ func _check_boss_progression_gate(run) -> void:
 	_expect(
 		run.stage_flow.state == StageFlow.State.BOSS_WARNING
 			and run.encounter_runtime.quota_sealed()
-			and not run.encounter_runtime.spawning_enabled(),
-		"the exact final countable defeat starts warning and seals new admissions"
+			and run.encounter_runtime.spawning_enabled(),
+		"the exact final countable defeat seals quota progression but keeps boss maintenance available"
 	)
 	var blocked_live_count := (
 		EnemyStore.MAX_LIVE_HOSTILES
@@ -753,8 +753,8 @@ func _check_boss_progression_gate(run) -> void:
 	run.enemy_store.flush_defeated()
 	_expect(
 		run.encounter_runtime.quota_sealed()
-			and not run.encounter_runtime.spawning_enabled(),
-		"ordinary admission stays sealed throughout the boss encounter"
+			and run.encounter_runtime.spawning_enabled(),
+		"boss maintenance keeps ordinary admission available without reopening quota progression"
 	)
 
 

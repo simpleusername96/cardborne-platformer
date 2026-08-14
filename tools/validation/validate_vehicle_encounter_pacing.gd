@@ -10,8 +10,8 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const EXPECTED_MOBILE_COUNTS := [520, 660, 816, 1026, 1260]
 const EXPECTED_QUOTAS := [48, 64, 80, 96, 112]
-const EXPECTED_HARD_MATERIALIZED_CAPS := [1, 40, 48, 48, 48]
-const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [1, 124, 172, 224, 276]
+const EXPECTED_HARD_MATERIALIZED_CAPS := [6, 40, 48, 48, 48]
+const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [6, 124, 172, 224, 276]
 
 var failures: Array[String] = []
 
@@ -35,7 +35,11 @@ func _initialize() -> void:
 			Catalog.quota(stage_id) == EXPECTED_QUOTAS[stage_index],
 			"%s preserves the defeat quota" % stage_id
 		)
-		_expect(Array(packets[0]["squads"]) == [[&"scrap_drone"]], "%s opens with one scout" % stage_id)
+		var opening_roles: Array = Array(packets[0]["squads"])[0]
+		_expect(opening_roles.size() == 6, "%s opens with six authored pursuit identities" % stage_id)
+		for role_variant in opening_roles:
+			var role := StringName(role_variant)
+			_expect(not EnemyArchetypes.fires_projectiles(role) and StringName(EnemyArchetypes.definition(role)["threat_kind"]) not in [&"denial", &"support"], "%s opening uses only low-risk pursuit roles" % stage_id)
 		for packet_index in range(1, packets.size()):
 			_validate_surge_packet(packets[packet_index], stage_id)
 		_validate_composition(blueprint, stage_id)
@@ -92,15 +96,21 @@ func _validate_opening_runtime(stage_id: StringName, packets: Array[Dictionary],
 		tactical.encounter_seed,
 		tactical.geometry_snapshot
 	)
-	var before := runtime.tick(5.0, 0)
-	_expect(before["cues"].is_empty() and before["spawns"].is_empty(), "%s keeps a five-second safe opening" % stage_id)
-	_expect(runtime.tick(0.1, 0)["cues"].size() == 1, "%s cues the scout at 5.1 seconds" % stage_id)
+	var opening_cue := runtime.tick(0.0, 0)
+	_expect(opening_cue["cues"].size() == 1 and opening_cue["spawns"].is_empty(), "%s cues the six-unit opening immediately" % stage_id)
 	runtime.tick(0.8, 0)
-	var first := runtime.tick(0.1, 0)
-	_expect(
-		first["spawns"].size() == 1 and StringName(first["spawns"][0]["role"]) == &"scrap_drone",
-		"%s spawns one scout at six seconds" % stage_id
-	)
+	var first := runtime.tick(0.11, 0)
+	_expect(first["spawns"].size() == 1, "%s begins with exactly one due birth (actual %d)" % [stage_id, Array(first["spawns"]).size()])
+	if not first["spawns"].is_empty():
+		var first_role := StringName(first["spawns"][0]["role"])
+		_expect(not EnemyArchetypes.fires_projectiles(first_role) and StringName(EnemyArchetypes.definition(first_role)["threat_kind"]) not in [&"denial", &"support"], "%s begins with a low-risk pursuit identity" % stage_id)
+	_expect(float(runtime.debug_snapshot()["first_spawn_time"]) <= 0.911, "%s begins the offscreen opening births within the configured 0.9-second lead" % stage_id)
+	var opening_spawns := Array(first["spawns"]).size()
+	for _opening_step in 20:
+		opening_spawns += Array(runtime.tick(0.1, 0)["spawns"]).size()
+		if opening_spawns == 6:
+			break
+	_expect(opening_spawns == 6, "%s emits all six opening identities before the normal surge" % stage_id)
 	var cue_count := 0
 	var maximum_tick_spawns := 0
 	var first_surge_prefix := String(packets[1]["id"])

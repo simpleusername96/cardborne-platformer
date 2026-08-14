@@ -21,6 +21,10 @@ const RECENT_BIRTH_SECONDS := 2.0
 const METRIC_SAMPLE_INTERVAL := 0.10
 const MAX_ACTIVE_COUNT_SAMPLES := 4096
 const MAX_SPAWNS_PER_TICK := 4
+const BOSS_MAINTENANCE_LOW_WATERMARK := 8
+const BOSS_MAINTENANCE_HIGH_WATERMARK := 12
+const BOSS_MAINTENANCE_MAX_GROUP := 4
+const BOSS_MAINTENANCE_INTERVAL := 4.0
 
 var stage_id: StringName = &"stage_1"
 var difficulty: StringName = RunDifficulty.DEFAULT
@@ -57,6 +61,9 @@ var _next_metric_sample := 0.0
 var _spawning_enabled := true
 var _quota_sealed := false
 var _quota_canceled_reserve := 0
+var _boss_maintenance_active := false
+var _last_boss_maintenance_cue_at := -INF
+var _maintenance_roles: Array[StringName] = []
 var _spawn_allocator := SpawnAllocator.new()
 var _engagement_director := EngagementDirector.new()
 var _geometry_snapshot: Variant
@@ -123,6 +130,9 @@ func configure(
 	_spawning_enabled = true
 	_quota_sealed = false
 	_quota_canceled_reserve = 0
+	_boss_maintenance_active = false
+	_last_boss_maintenance_cue_at = -INF
+	_maintenance_roles.clear()
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
 	_geometry_snapshot = geometry_snapshot
@@ -151,24 +161,44 @@ func stop_spawning() -> void:
 
 
 func seal_for_quota() -> void:
-	## A visible cue is a promise: keep its reserved births, but cancel every
-	## not-yet-cued authored unit before the boss transition begins.
+	## Quota seals progression but not ordinary presence. Cued rounds drain;
+	## maintenance admits only identities still held by later authored packets.
 	if _quota_sealed:
 		return
 	_quota_sealed = true
-	_spawning_enabled = false
+	for request_variant in _window_queue:
+		_append_maintenance_window_roles(Dictionary(request_variant))
 	_window_queue.clear()
-	var admitted_units := _queued_spawn_count()
-	var canceled_units := maxi(0, _virtual_reserve_units - admitted_units)
-	_quota_canceled_reserve += canceled_units
-	_virtual_reserve_units = admitted_units
+	_boss_maintenance_active = true
+	for packet in _packets:
+		if _activated_packets.has(String(packet["id"])):
+			continue
+		for squad in Array(packet.get("squads", [])):
+			for role in Array(squad):
+				_maintenance_roles.append(StringName(role))
 	_packet_inflight = not _spawn_queue.is_empty()
 	_timeline.append({
 		"kind":&"quota_seal",
 		"time":elapsed,
-		"canceled_reserve":canceled_units,
-		"admitted_units":admitted_units,
+		"canceled_reserve":0,
+		"admitted_units":_queued_spawn_count(),
 	})
+
+
+func stop_boss_maintenance() -> void:
+	_boss_maintenance_active = false
+	_maintenance_roles.clear()
+
+
+func _append_maintenance_window_roles(request: Dictionary) -> void:
+	var packet := Dictionary(request.get("packet", {}))
+	var squads: Array = packet.get("squads", [])
+	var squads_per_window := int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW))
+	var first := int(request.get("arrival_window", 0)) * squads_per_window
+	var end := mini(first + squads_per_window, squads.size())
+	for squad_index in range(first, end):
+		for role in Array(squads[squad_index]):
+			_maintenance_roles.append(StringName(role))
 
 
 func quota_sealed() -> bool:
@@ -264,7 +294,7 @@ func tick(
 	var cues: Array[Dictionary] = []
 	var spawns: Array[Dictionary] = []
 	_process_due_round(active_mobile_count, step, spawns)
-	if _spawning_enabled:
+	if _spawning_enabled and not _quota_sealed:
 		_complete_inflight_packet_if_ready()
 		if _packet_inflight and _has_ready_unactivated_packet():
 			_packet_fence_blocked_seconds += step
@@ -281,6 +311,7 @@ func tick(
 		_complete_inflight_packet_if_ready()
 	else:
 		_complete_inflight_packet_if_ready()
+		_admit_boss_maintenance(active_mobile_count, player_position, player_velocity, visible_world, cues)
 	return {"cues":cues, "spawns":spawns}
 
 
@@ -344,6 +375,9 @@ func debug_snapshot() -> Dictionary:
 		"virtual_reserve":_authored_reserve_count(),
 		"quota_sealed":_quota_sealed,
 		"quota_canceled_reserve":_quota_canceled_reserve,
+		"boss_maintenance_active":_boss_maintenance_active,
+		"boss_maintenance_reserve":_maintenance_roles.size(),
+		"last_boss_maintenance_cue_at":_last_boss_maintenance_cue_at,
 		"materialized_active_count":int(_pressure_snapshot.get("active", 0)),
 		"authored_reserve_units":_authored_reserve_count(),
 		"threat_budget":threat_budget(),
@@ -531,6 +565,32 @@ func _schedule_packet(packet: Dictionary) -> void:
 			"requested_cue_at":elapsed + float(arrival_window) * window_gap,
 			"retry_at":elapsed + float(arrival_window) * window_gap,
 		})
+
+
+func _admit_boss_maintenance(active_mobile_count: int, player_position: Vector2, player_velocity: Vector2, visible_world: Rect2, cues: Array[Dictionary]) -> void:
+	if not _boss_maintenance_active or not _spawn_queue.is_empty() or not _window_queue.is_empty():
+		return
+	if active_mobile_count >= BOSS_MAINTENANCE_LOW_WATERMARK or _maintenance_roles.is_empty():
+		return
+	if elapsed + 0.0001 < _last_boss_maintenance_cue_at + BOSS_MAINTENANCE_INTERVAL:
+		return
+	var count := mini(
+		BOSS_MAINTENANCE_MAX_GROUP,
+		mini(BOSS_MAINTENANCE_HIGH_WATERMARK - active_mobile_count, _maintenance_roles.size())
+	)
+	var roles: Array[StringName] = []
+	for _index in count:
+		roles.append(_maintenance_roles.pop_front())
+	var packet := {
+		"id":"%s_boss_maintenance_%03d" % [String(stage_id), floori(elapsed)],
+		"_packet_index":_packets.size(), "beat":current_beat, "squads":[roles],
+		"cue_lead":CUE_LEAD, "unit_spacing":0.16, "nearest_safe_offscreen":true,
+		"zone":"field", "leash":Rect2(Field.WORLD_RECT),
+	}
+	_window_queue.append({"packet":packet, "arrival_window":0, "requested_cue_at":elapsed, "retry_at":elapsed})
+	_packet_inflight = true
+	_last_boss_maintenance_cue_at = elapsed
+	_admit_due_window(active_mobile_count, 0.0, player_position, player_velocity, visible_world, cues)
 
 
 func _admit_due_window(

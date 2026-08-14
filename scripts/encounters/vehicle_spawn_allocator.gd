@@ -124,6 +124,7 @@ func allocate_window(
 				"window_slot":squad_index - first_squad,
 				"unit_index":unit_index,
 				"role":StringName(reordered[squad_index][unit_index]),
+				"nearest_safe_offscreen":bool(packet.get("nearest_safe_offscreen", false)),
 			})
 	var separation_truth := reserved_positions.duplicate()
 	for position in recent_birth_positions:
@@ -210,7 +211,8 @@ func _try_allocate_requests(
 				candidate,
 				player_position,
 				score_identity,
-				distance_lane
+				distance_lane,
+				bool(request.get("nearest_safe_offscreen", false))
 			)
 			if score < best_score:
 				best = candidate
@@ -407,13 +409,16 @@ func _candidate_score(
 	candidate: Vector2,
 	player_position: Vector2,
 	identity: String,
-	distance_lane: int
+	distance_lane: int,
+	nearest_safe_offscreen: bool = false
 ) -> float:
 	var candidate_identity := identity + ":%d:%d" % [
 		roundi(candidate.x),
 		roundi(candidate.y),
 	]
 	var tie_break := float(absi(hash(candidate_identity)) % 10000) / 10000.0
+	if nearest_safe_offscreen:
+		return candidate.distance_to(player_position) + tie_break
 	return absf(candidate.distance_to(player_position) - TARGET_DISTANCES[distance_lane]) + tie_break
 
 
