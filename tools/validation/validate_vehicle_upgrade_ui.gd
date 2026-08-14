@@ -5,6 +5,8 @@ const FONT_PATH := (
 	"res://art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf"
 )
 const Catalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
+const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
+const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
 const OfferPresenter = preload(
 	"res://scripts/cards/vehicle_upgrade_offer_presenter.gd"
 )
@@ -67,35 +69,43 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	rail.theme = _theme
 	get_root().add_child(rail)
 	await _settle_ui()
-	rail.set_snapshot({"upgrades":[]})
+	var empty_build := RunBuild.new(catalog)
+	rail.set_snapshot(BuildSnapshotBuilder.build(empty_build, catalog, [], [], {}))
 	var empty := rail.debug_contract()
 	_expect(
 		int(empty["columns"]) == 4
-			and int(empty["cell_count"]) == 4
+			and int(empty["section_count"]) == 6
+			and Array(empty["category_capacities"]) == [2, 5, 2, 3, 5, 4]
+			and int(empty["cell_count"]) == 21
 			and int(empty["filled_count"]) == 0
 			and int(empty["focusable_count"]) == 0
 			and bool(empty["scroll_enabled"]),
 		"empty build rail exposes exactly four outlined non-focusable cells"
 	)
-	var records: Array[Dictionary] = []
-	for definition in catalog.all_definitions().slice(0, 21):
-		var offer := OfferPresenter.snapshot(definition, 0)
-		records.append({
-			"id":definition.id,
-			"title_key":definition.title_key,
-			"description_key":offer["description_key"],
-			"artwork_asset_id":definition.artwork_asset_id,
-			"level":1,
-			"effect_rows":Array(offer["effect_rows"]).duplicate(true),
-		})
-	rail.set_snapshot({"upgrades":records.slice(0, 1)})
+	var original_locale := TranslationServer.get_locale()
+	TranslationServer.set_locale("ko")
+	rail.refresh_localized_content()
+	_expect(
+		Array(rail.debug_contract()["heading_texts"]) == ["주무장", "자동 무장", "공격 효과", "직접 발동", "차체 강화", "전술 특성"],
+		"grouped rail renders the locked Korean category headings"
+	)
+	TranslationServer.set_locale("en")
+	rail.refresh_localized_content()
+	_expect(
+		Array(rail.debug_contract()["heading_texts"]) == ["Main Gun", "Auto Weapons", "Attack Effects", "Active Skill", "Chassis", "Combat Perks"],
+		"grouped rail refreshes English category headings"
+	)
+	TranslationServer.set_locale(original_locale)
+	var first_build := RunBuild.new(catalog)
+	first_build.apply(&"split_muzzle")
+	rail.set_snapshot(BuildSnapshotBuilder.build(first_build, catalog, [], [], {}))
 	var first := rail.debug_contract()
 	_expect(
-		int(first["cell_count"]) == 4
+		int(first["cell_count"]) == 21
 			and int(first["filled_count"]) == 1
 			and int(first["focusable_count"]) == 1
 			and Array(first["artwork_ids"]).size() == 1,
-		"first acquisition fills one image cell without changing the four-cell capacity"
+		"first acquisition fills its semantic position without changing category capacities"
 	)
 	_expect(rail.debug_open_first_preview(), "filled build cell opens the shared detail popover")
 	await _settle_ui()
@@ -105,15 +115,13 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	cancel.pressed = true
 	rail.call("_input", cancel)
 	_expect(not bool(rail.debug_contract()["popover_visible"]), "Escape closes the build detail popover")
-	rail.set_snapshot({"upgrades":records.slice(0, 4)})
-	_expect(
-		int(rail.debug_contract()["cell_count"]) == 8,
-		"four filled cells reserve one spare four-column row"
-	)
-	rail.set_snapshot({"upgrades":records})
+	var dense_build := RunBuild.new(catalog)
+	for upgrade_id in [&"split_muzzle", &"piercing_rounds", &"homing_missiles", &"electric_field", &"orbiting_blades", &"secondary_coolant", &"secondary_amplifier", &"thermal_burst", &"cryo_slow", &"gravity_collapse", &"active_coolant", &"active_amplifier", &"chassis_speed", &"pickup_radius", &"hull_integrity", &"lifesteal", &"overflow_barrier", &"critical_targeting", &"dash_overdrive", &"dash_afterburn_field", &"last_stand_amplifier"]:
+		dense_build.apply(upgrade_id)
+	rail.set_snapshot(BuildSnapshotBuilder.build(dense_build, catalog, [], [], {}))
 	var dense := rail.debug_contract()
 	_expect(
-		int(dense["cell_count"]) == 24
+		int(dense["cell_count"]) == 21
 			and int(dense["filled_count"]) == 21
 			and int(dense["focusable_count"]) == 21
 			and Array(dense["artwork_ids"]).size() == 21,

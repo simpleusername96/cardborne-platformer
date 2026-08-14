@@ -1,7 +1,7 @@
 class_name VehicleUpgradeBuildRail
 extends VBoxContainer
 
-## Progressive image grid beside mandatory upgrade offers. It consumes only a
+## Category-owned image grids beside mandatory upgrade offers. It consumes only a
 ## frozen gameplay snapshot and never decides what a player can equip.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
@@ -9,7 +9,7 @@ const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const BuildCell = preload("res://scripts/ui/vehicle_upgrade_build_cell.gd")
 
 var _scroll: ScrollContainer
-var _grid: GridContainer
+var _sections: VBoxContainer
 var _heading: Label
 var _popover_layer: Control
 var _popover: PanelContainer
@@ -18,6 +18,7 @@ var _active_cell: Control
 var _pinned := false
 var _compact := false
 var _large := false
+var _snapshot: Dictionary = {}
 
 
 func _ready() -> void:
@@ -30,12 +31,10 @@ func _ready() -> void:
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(_scroll)
-	_grid = GridContainer.new()
-	_grid.columns = 4
-	_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_grid.add_theme_constant_override("h_separation", 6)
-	_grid.add_theme_constant_override("v_separation", 6)
-	_scroll.add_child(_grid)
+	_sections = VBoxContainer.new()
+	_sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sections.add_theme_constant_override("separation", 8)
+	_scroll.add_child(_sections)
 	# Keep the floating detail surface outside VBox sizing so opening it cannot
 	# push the fixed offer/action region or create modal overflow.
 	_popover_layer = Control.new()
@@ -52,34 +51,28 @@ func _ready() -> void:
 	_popover.add_child(_popover_text)
 	_popover_layer.add_child(_popover)
 	_apply_size_mode()
-	set_snapshot({})
+	set_snapshot(_snapshot)
 
 
 func set_snapshot(snapshot: Dictionary) -> void:
+	_snapshot = snapshot.duplicate(true)
 	if not is_node_ready():
 		return
-	for child in _grid.get_children():
-		_grid.remove_child(child)
+	for child in _sections.get_children():
+		_sections.remove_child(child)
 		child.queue_free()
 	_active_cell = null
 	_pinned = false
 	_hide_popover()
-	var upgrades: Array = snapshot.get("upgrades", [])
-	var capacity := mini(24, maxi(4, ceili(float(upgrades.size() + 1) / 4.0) * 4))
 	var dimensions := _dimensions()
-	for index in capacity:
-		var cell := BuildCell.new()
-		_grid.add_child(cell)
-		cell.preview_requested.connect(_show_preview)
-		cell.pin_requested.connect(_pin_preview)
-		cell.preview_closed.connect(_close_preview)
-		var record := Dictionary(upgrades[index]) if index < upgrades.size() else {}
-		cell.set_record(record, dimensions["cell"], dimensions["art"])
+	for category_variant in Array(snapshot.get("categories", [])):
+		var category := Dictionary(category_variant)
+		_add_category_section(category, dimensions)
 
 
 func refresh_localized_content() -> void:
 	_heading.text = tr("UPGRADE_CURRENT_BUILD")
-	set_snapshot(_snapshot_from_cells())
+	set_snapshot(_snapshot)
 
 
 func set_compact_mode(compact: bool) -> void:
@@ -87,20 +80,44 @@ func set_compact_mode(compact: bool) -> void:
 	_large = false
 	if is_node_ready():
 		_apply_size_mode()
-		set_snapshot(_snapshot_from_cells())
+		set_snapshot(_snapshot)
 
 
 func set_large_mode(large: bool) -> void:
 	_large = large and not _compact
 	if is_node_ready():
 		_apply_size_mode()
-		set_snapshot(_snapshot_from_cells())
+		set_snapshot(_snapshot)
 
 
 func _apply_size_mode() -> void:
 	custom_minimum_size.x = 216.0 if _compact else (264.0 if _large else 248.0)
-	_grid.add_theme_constant_override("h_separation", 4 if _compact else 6)
-	_grid.add_theme_constant_override("v_separation", 4 if _compact else 6)
+	if is_instance_valid(_sections):
+		_sections.add_theme_constant_override("separation", 6 if _compact else 8)
+
+
+func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void:
+	var section := VBoxContainer.new()
+	section.add_theme_constant_override("separation", 4)
+	_sections.add_child(section)
+	var heading := Factory.section_heading(tr(String(category.get("heading_key", ""))))
+	heading.tooltip_text = tr(String(category.get("description_key", "")))
+	heading.accessibility_description = tr(String(category.get("description_key", "")))
+	section.add_child(heading)
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	grid.add_theme_constant_override("h_separation", 4 if _compact else 6)
+	grid.add_theme_constant_override("v_separation", 4 if _compact else 6)
+	section.add_child(grid)
+	for slot_variant in Array(category.get("slots", [])):
+		var slot := Dictionary(slot_variant)
+		var cell := BuildCell.new()
+		grid.add_child(cell)
+		cell.preview_requested.connect(_show_preview)
+		cell.pin_requested.connect(_pin_preview)
+		cell.preview_closed.connect(_close_preview)
+		cell.set_record(Dictionary(slot.get("record", {})), dimensions["cell"], dimensions["art"])
 
 
 func _dimensions() -> Dictionary:
@@ -217,22 +234,14 @@ func _input(event: InputEvent) -> void:
 			_hide_popover()
 
 
-func _snapshot_from_cells() -> Dictionary:
-	var upgrades: Array[Dictionary] = []
-	if is_instance_valid(_grid):
-		for child in _grid.get_children():
-			if child.has_method("is_filled") and bool(child.call("is_filled")):
-				upgrades.append(Dictionary(child.call("record")))
-	return {"upgrades":upgrades}
-
-
 func debug_open_first_preview() -> bool:
-	if not is_instance_valid(_grid):
+	if not is_instance_valid(_sections):
 		return false
-	for child in _grid.get_children():
-		if child.has_method("is_filled") and bool(child.call("is_filled")):
-			_show_preview(Dictionary(child.call("record")), child as Control)
-			return true
+	for grid in _grids():
+		for child in grid.get_children():
+			if child.has_method("is_filled") and bool(child.call("is_filled")):
+				_show_preview(Dictionary(child.call("record")), child as Control)
+				return true
 	return false
 
 
@@ -240,8 +249,14 @@ func debug_contract() -> Dictionary:
 	var filled := 0
 	var focusable := 0
 	var artwork_ids: Array[StringName] = []
-	if is_instance_valid(_grid):
-		for child in _grid.get_children():
+	var heading_texts: Array[String] = []
+	if is_instance_valid(_sections):
+		for section in _sections.get_children():
+			for child in section.get_children():
+				if child is Label:
+					heading_texts.append((child as Label).text)
+	for grid in _grids():
+		for child in grid.get_children():
 			if child.has_method("is_filled"):
 				var cell := child as Control
 				if bool(child.call("is_filled")):
@@ -250,11 +265,39 @@ func debug_contract() -> Dictionary:
 					artwork_ids.append(StringName(Dictionary(child.call("record")).get("artwork_asset_id", &"")))
 	return {
 		"minimum_width":custom_minimum_size.x,
-		"columns":_grid.columns if is_instance_valid(_grid) else 0,
-		"cell_count":_grid.get_child_count() if is_instance_valid(_grid) else 0,
+		"columns":4,
+		"cell_count":_cell_count(),
+		"section_count":_sections.get_child_count() if is_instance_valid(_sections) else 0,
+		"category_capacities":_category_capacities(),
+		"heading_texts":heading_texts,
 		"filled_count":filled,
 		"focusable_count":focusable,
 		"artwork_ids":artwork_ids,
 		"popover_visible":_popover.visible if is_instance_valid(_popover) else false,
 		"scroll_enabled":is_instance_valid(_scroll),
 	}
+
+
+func _grids() -> Array[GridContainer]:
+	var grids: Array[GridContainer] = []
+	if not is_instance_valid(_sections):
+		return grids
+	for section in _sections.get_children():
+		for child in section.get_children():
+			if child is GridContainer:
+				grids.append(child as GridContainer)
+	return grids
+
+
+func _cell_count() -> int:
+	var count := 0
+	for grid in _grids():
+		count += grid.get_child_count()
+	return count
+
+
+func _category_capacities() -> Array[int]:
+	var capacities: Array[int] = []
+	for grid in _grids():
+		capacities.append(grid.get_child_count())
+	return capacities

@@ -33,6 +33,30 @@ func _run() -> void:
 	_expect(bool(snapshot["active"]), "build snapshot is explicitly active")
 	_expect(snapshot["stats"].size() == 1, "effective stats are preserved")
 	_expect(snapshot["upgrades"].size() == 1, "acquired upgrade appears once")
+	_expect(Array(snapshot["categories"]).size() == 6, "snapshot freezes all six category groups")
+	var capacities: Array[int] = []
+	for category_variant in Array(snapshot["categories"]):
+		capacities.append(int(Dictionary(category_variant)["capacity"]))
+	_expect(capacities == [2, 5, 2, 3, 5, 4], "snapshot keeps locked category capacities")
+	var chassis_category := Dictionary(Array(snapshot["categories"])[4])
+	var chassis_slots: Array = chassis_category["slots"]
+	_expect(
+		StringName(Dictionary(chassis_slots[0])["slot_key"]) == &"chassis_speed"
+			and StringName(Dictionary(chassis_slots[0])["record"].get("id", &"")) == &"chassis_speed",
+		"snapshot maps an acquired card to its fixed semantic position"
+	)
+	var optional_build := RunBuild.new(catalog)
+	optional_build.apply(&"orbiting_blades")
+	optional_build.apply(&"electric_field")
+	optional_build.apply(&"orbiting_blades")
+	var optional_snapshot := Builder.build(optional_build, catalog, [], [], {})
+	var secondary_slots: Array = Dictionary(Array(optional_snapshot["categories"])[1])["slots"]
+	_expect(
+		StringName(Dictionary(secondary_slots[1])["record"].get("id", &"")) == &"orbiting_blades"
+			and StringName(Dictionary(secondary_slots[2])["record"].get("id", &"")) == &"electric_field"
+			and Array(optional_snapshot["upgrades"]).size() == 2,
+		"optional-secondary acquisition order only assigns stable optional positions and flat projection remains unique"
+	)
 	var upgrade := Dictionary(snapshot["upgrades"][0])
 	_expect(StringName(upgrade["id"]) == &"chassis_speed", "upgrade uses stable ID")
 	_expect(

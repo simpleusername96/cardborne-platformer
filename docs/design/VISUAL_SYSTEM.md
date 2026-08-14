@@ -591,14 +591,16 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   이 이미지는 placement reference일 뿐 runtime UI raster나 gameplay asset 승인이
   아니며, 이 문서의 텍스트 계약과 canonical authority pair가 우선한다.
 - modal body는 왼쪽 current-build summary rail과 오른쪽 offer list의 두 column이다.
+
   rail 폭은 compact/standard/large 약 `216/248/264 px`, offer list 폭은
-  `656/760/780 px`이다. rail은 모든 viewport에서 4열인 progressive grid다.
-  획득이 0개면 정확히 4개의 빈 outline cell을 보여주고, 첫 획득은 run-owned
-  acquisition order의 다음 cell에 기존 `upgrade/<id>` artwork를 채운다. 같은 ID의
-  레벨 상승은 기존 cell을 갱신한다. 표시 capacity는
-  `min(24, max(4, ceil((filled_count + 1) / 4) * 4))`로 한 spare row씩 늘어난다.
-  이 cell은 현재 빌드의 요약·탐색 표면일 뿐 새 장착 제한이 아니다. 실제 속성 독점과
-  선택형 보조 무기 제한은 gameplay owner가 계속 결정한다.
+  `656/760/780 px`이다. rail은 catalog 순서의 여섯 category section과
+  `2/5/2/3/5/4`개의 semantic slot을 사용하며, 각 section은 최대 4열이다. 획득이
+  0개여도 21개 위치를 모두 빈 outline으로 표시한다. Secondary의 `optional_0/1`만
+  run-owned optional-weapon acquisition order를 유지하고, 나머지 record는 고정 semantic
+  위치를 사용한다. 같은 ID의 레벨 상승은 기존 cell을 갱신한다. 이 cell은 현재 빌드의
+  요약·탐색 표면일 뿐 새 장착 제한이 아니다. 실제 속성 독점과 선택형 보조 무기 제한은
+  gameplay owner가 계속 결정한다. Upgrade와 Result는 같은 frozen grouped snapshot과
+  rail component를 사용한다.
 - 슬롯은 compact/standard/large에서 `44/52/56 px`, artwork는 `36/44/48 px`다.
   채워진 슬롯만 focus를 받고 hover/focus에서 한 개의 detail popover를 연다.
   click/accept는 popover를 고정하고 `Esc`, 바깥 click 또는 다른 슬롯 focus는 닫거나

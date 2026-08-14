@@ -31,12 +31,12 @@ Dash, 추적 미사일, EMP는 기본 액션이다. 발동무기 카드를 고�
 
 | 분류 ID | 한국어 / English | 카드 수 | 역할 |
 | --- | --- | ---: | --- |
-| `primary` | 주무기 개조 / Primary Weapon Mods | 2 | 기본 탄환의 수와 관통 규칙 |
-| `secondary` | 보조 무기 체계 / Secondary Weapon Systems | 8 | 기본 추적 미사일, 자율 보조 무기와 공용 강화 |
-| `element` | 공격 속성 / Attack Attributes | 4 | 피해 속성 하나와 보조 속성 하나 |
-| `activated` | 발동무기 / Active Weapons | 5 | EMP를 교체하는 무기 하나와 공용 강화 |
-| `chassis` | 차체 및 지원 / Chassis & Support | 5 | 이동·수거·내구·회복·실드 |
-| `combat` | 전투 조건 / Combat Conditions | 4 | 치명타·대시·저체력 화력 |
+| `primary` | 주무장 / Main Gun | 2 | 기본 탄환의 수와 관통 규칙 |
+| `secondary` | 자동 무장 / Auto Weapons | 8 | 기본 추적 미사일, 자율 보조 무기와 공용 강화 |
+| `element` | 공격 효과 / Attack Effects | 4 | 피해 속성 하나와 보조 속성 하나 |
+| `activated` | 직접 발동 / Active Skill | 5 | EMP를 교체하는 무기 하나와 공용 강화 |
+| `chassis` | 차체 강화 / Chassis | 5 | 이동·수거·내구·회복·실드 |
+| `combat` | 전술 특성 / Combat Perks | 4 | 치명타·대시·저체력 화력 |
 
 - 추적 미사일은 `built_in`이고 선택 슬롯을 쓰지 않는다.
 - 전기장, 회전 날개, 후방 기뢰, 자동 레이저, 원거리 전격포는 `optional`이다.
@@ -155,10 +155,14 @@ Dash, 추적 미사일, EMP는 기본 액션이다. 발동무기 카드를 고�
 
 - 업그레이드 화면은 왼쪽 current-build summary와 오른쪽 세 개의 선택 row를 사용한다.
   summary의 슬롯 수는 표시 계약이며 새로운 gameplay 장착 제한이 아니다.
-- current-build summary는 항상 4열이다. 획득한 카드가 없으면 비어 있는 outline cell
-  4개를 보여준다. 첫 획득은 안정적인 획득 순서의 다음 cell에 기존 `upgrade/<id>`
-  이미지를 채우고, 같은 카드의 레벨 상승은 새 cell을 쓰지 않고 기존 cell을 갱신한다.
-  표시 capacity는 `min(24, max(4, ceil((filled_count + 1) / 4) * 4))`로 늘어난다.
+- current-build summary는 catalog 순서의 여섯 section과 고정 capacity
+  `2/5/2/3/5/4`를 사용하고 section별 최대 4열로 표시한다. 획득한 카드가 없어도 21개
+  semantic position을 모두 빈 outline으로 보여준다. Primary는 `split_muzzle`/
+  `piercing_rounds`, Secondary는 `homing_missiles`, `optional_0`, `optional_1`,
+  `secondary_coolant`, `secondary_amplifier`, Element는 damage/utility, Activated는
+  kind/coolant/amplifier를 사용한다. Chassis와 Combat는 catalog의 고정 position을
+  사용한다. optional secondary의 획득 순서만 `optional_0/1`을 정하고 다른 record는
+  이동하지 않는다. 같은 카드의 레벨 상승은 새 cell을 쓰지 않고 기존 cell을 갱신한다.
 - 각 선택 row는 왼쪽 의미 이미지 하나, 중앙의 분류·제목·실제 수치 변화 1~2개·최대
   한 줄 설명, 오른쪽의 `NEW` 또는 `레벨 N → M`만 표시한다.
 - 수치는 `피해 4 → 6   범위 72 → 84`처럼 label과 변화값을 inline phrase로 묶는다.

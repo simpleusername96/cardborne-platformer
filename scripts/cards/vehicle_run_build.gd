@@ -50,6 +50,41 @@ func active_optional_secondaries() -> int:
 	return count
 
 
+## Acquisition order is used only to keep the two generic optional-weapon
+## presentation positions stable. It does not control category or card order.
+func optional_secondary_slot_key(upgrade_id: StringName) -> StringName:
+	var optional_ids: Array[StringName] = []
+	for acquired_id in acquisition_order:
+		var definition := catalog.get_definition(acquired_id)
+		if (
+			definition != null
+			and definition.category == &"secondary"
+			and definition.secondary_slot_kind == &"optional"
+			and has(acquired_id)
+			and not optional_ids.has(acquired_id)
+		):
+			optional_ids.append(acquired_id)
+	# Older in-memory builds can lack acquisition history. Keep their fallback
+	# deterministic without letting arbitrary Dictionary order choose a position.
+	if optional_ids.size() < 2:
+		var legacy_optional_ids: Array[StringName] = []
+		for level_id_variant in levels.keys():
+			var level_id := StringName(level_id_variant)
+			var legacy_definition := catalog.get_definition(level_id)
+			if (
+				legacy_definition != null
+				and legacy_definition.category == &"secondary"
+				and legacy_definition.secondary_slot_kind == &"optional"
+				and has(level_id)
+				and not optional_ids.has(level_id)
+			):
+				legacy_optional_ids.append(level_id)
+		legacy_optional_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
+		optional_ids.append_array(legacy_optional_ids)
+	var index := optional_ids.find(upgrade_id)
+	return StringName("optional_%d" % index) if index >= 0 and index < 2 else &""
+
+
 func active_damage_attribute_id() -> StringName:
 	for upgrade_id in DAMAGE_ATTRIBUTE_IDS:
 		if has(upgrade_id):

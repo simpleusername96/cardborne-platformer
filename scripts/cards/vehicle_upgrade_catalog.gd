@@ -8,6 +8,16 @@ const OPTIONAL_SECONDARY_SLOTS := 2
 const CATEGORIES: Array[StringName] = [
 	&"primary", &"secondary", &"element", &"activated", &"chassis", &"combat",
 ]
+## Presentation positions mirror compatibility capacity. They never grant, replace,
+## or restrict an upgrade; gameplay compatibility remains owned by this catalog.
+const CATEGORY_DESCRIPTORS: Array[Dictionary] = [
+	{"id":&"primary", "heading_key":"UPGRADE_CATEGORY_PRIMARY", "description_key":"UPGRADE_CATEGORY_PRIMARY_DESCRIPTION", "slot_keys":[&"split_muzzle", &"piercing_rounds"]},
+	{"id":&"secondary", "heading_key":"UPGRADE_CATEGORY_SECONDARY", "description_key":"UPGRADE_CATEGORY_SECONDARY_DESCRIPTION", "slot_keys":[&"homing_missiles", &"optional_0", &"optional_1", &"secondary_coolant", &"secondary_amplifier"]},
+	{"id":&"element", "heading_key":"UPGRADE_CATEGORY_ELEMENT", "description_key":"UPGRADE_CATEGORY_ELEMENT_DESCRIPTION", "slot_keys":[&"damage", &"utility"]},
+	{"id":&"activated", "heading_key":"UPGRADE_CATEGORY_ACTIVATED", "description_key":"UPGRADE_CATEGORY_ACTIVATED_DESCRIPTION", "slot_keys":[&"kind", &"active_coolant", &"active_amplifier"]},
+	{"id":&"chassis", "heading_key":"UPGRADE_CATEGORY_CHASSIS", "description_key":"UPGRADE_CATEGORY_CHASSIS_DESCRIPTION", "slot_keys":[&"chassis_speed", &"pickup_radius", &"hull_integrity", &"lifesteal", &"overflow_barrier"]},
+	{"id":&"combat", "heading_key":"UPGRADE_CATEGORY_COMBAT", "description_key":"UPGRADE_CATEGORY_COMBAT_DESCRIPTION", "slot_keys":[&"critical_targeting", &"dash_overdrive", &"dash_afterburn_field", &"last_stand_amplifier"]},
+]
 const SECONDARY_SLOT_KINDS: Array[StringName] = [&"", &"built_in", &"optional"]
 const ATTRIBUTE_SLOT_KINDS: Array[StringName] = [&"", &"damage", &"utility"]
 const ACTIVE_SLOT_KINDS: Array[StringName] = [&"", &"kind", &"enhancement"]
@@ -150,6 +160,67 @@ func validate_contract() -> PackedStringArray:
 				errors.append("%s has unknown stat id %s" % [definition.id, modifier.stat_id])
 	if level_states != EXPECTED_LEVEL_STATES:
 		errors.append("vehicle upgrade catalog expected %d level states, found %d" % [EXPECTED_LEVEL_STATES, level_states])
+	errors.append_array(_validate_category_descriptors())
+	return errors
+
+
+func category_descriptors() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for descriptor in CATEGORY_DESCRIPTORS:
+		var copy := descriptor.duplicate(true)
+		copy["capacity"] = Array(copy["slot_keys"]).size()
+		result.append(copy)
+	return result
+
+
+func category_descriptor(category_id: StringName) -> Dictionary:
+	for descriptor in category_descriptors():
+		if StringName(descriptor["id"]) == category_id:
+			return descriptor
+	return {}
+
+
+func category_slot_key(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) -> StringName:
+	if definition == null:
+		return &""
+	match definition.category:
+		&"primary", &"chassis", &"combat": return definition.id
+		&"secondary":
+			if definition.secondary_slot_kind == &"optional":
+				return build.optional_secondary_slot_key(definition.id)
+			return definition.id
+		&"element": return definition.attribute_slot_kind
+		&"activated": return definition.id if definition.active_slot_kind == &"enhancement" else definition.active_slot_kind
+	return &""
+
+
+func _validate_category_descriptors() -> PackedStringArray:
+	var errors := PackedStringArray()
+	var descriptor_categories: Array[StringName] = []
+	var fixed_card_ids := {}
+	for descriptor in category_descriptors():
+		var category_id := StringName(descriptor["id"])
+		descriptor_categories.append(category_id)
+		var slots: Array = descriptor["slot_keys"]
+		if slots.is_empty():
+			errors.append("%s has no category build positions" % category_id)
+		for slot_variant in slots:
+			var slot_key := StringName(slot_variant)
+			if slot_key not in [&"optional_0", &"optional_1", &"damage", &"utility", &"kind"]:
+				if fixed_card_ids.has(slot_key):
+					errors.append("duplicate category build position %s" % slot_key)
+				fixed_card_ids[slot_key] = true
+	if descriptor_categories != CATEGORIES:
+		errors.append("category descriptors must retain catalog category order")
+	for definition in all_definitions():
+		if definition.category == &"secondary" and definition.secondary_slot_kind == &"optional":
+			continue
+		if definition.category == &"element" and definition.attribute_slot_kind != &"":
+			continue
+		if definition.category == &"activated" and definition.active_slot_kind == &"kind":
+			continue
+		if not fixed_card_ids.has(definition.id):
+			errors.append("%s has no fixed category build position" % definition.id)
 	return errors
 
 

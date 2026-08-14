@@ -795,13 +795,14 @@ no credit or stored charge.
   current-to-next stat value. A first element acquisition shows its initial
   values without a false zero-to-value comparison; later levels show the real
   current-to-next values.
-- The current-build rail is a four-column progressive image grid. An empty run
-  shows exactly four outlined, non-focusable cells. A first acquisition fills
-  the next cell in stable acquisition order with its existing `upgrade/<id>`
-  artwork; another level updates that cell. Visible capacity grows by one spare
-  four-cell row up to 24 cells. Filled cells alone can focus and open one frozen
-  detail popover. These cells summarize the build and never create a gameplay
-  equipment limit.
+- The current-build rail has six catalog-ordered category grids with fixed
+  capacities `2/5/2/3/5/4` and at most four columns per grid. An empty run shows
+  all 21 outlined, non-focusable semantic positions. Every card has a fixed
+  position except optional secondary weapons, whose `optional_0/1` positions
+  retain their acquisition order. Another level updates the same cell. Filled
+  cells alone can focus and open one frozen detail popover. Upgrade and Result
+  consume the same grouped snapshot and rail. These cells summarize the build
+  and never create a gameplay equipment limit.
 - Each offer row follows one horizontal information order: semantic artwork;
   category, upgrade name, one short summary, and one or two real effect rows;
   then `Lv.current → next`. Korean summaries target

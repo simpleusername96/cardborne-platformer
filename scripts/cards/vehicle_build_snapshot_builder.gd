@@ -13,7 +13,7 @@ static func build(
 	secondaries: Array[Dictionary],
 	run_state: Dictionary
 ) -> Dictionary:
-	var upgrades: Array[Dictionary] = []
+	var records_by_slot := {}
 	var upgrade_ids: Array[StringName] = []
 	for upgrade_id in run_build.acquisition_order:
 		if run_build.has(upgrade_id) and not upgrade_ids.has(upgrade_id):
@@ -42,7 +42,7 @@ static func build(
 			effect_row["next"] = effect_row["current"]
 			effect_row["show_current"] = true
 			current_effect_rows.append(effect_row)
-		upgrades.append({
+		var record := {
 			"id":upgrade_id,
 			"title_key":definition.title_key,
 			"description_key":acquisition_offer["description_key"],
@@ -51,11 +51,33 @@ static func build(
 			"level":level,
 			"max_level":definition.max_level,
 			"effect_rows":current_effect_rows,
+		}
+		var slot_key := catalog.category_slot_key(definition, run_build)
+		if not slot_key.is_empty():
+			records_by_slot["%s/%s" % [definition.category, slot_key]] = record
+	var categories: Array[Dictionary] = []
+	var upgrades: Array[Dictionary] = []
+	for descriptor in catalog.category_descriptors():
+		var category_id := StringName(descriptor["id"])
+		var slots: Array[Dictionary] = []
+		for slot_key_variant in Array(descriptor["slot_keys"]):
+			var slot_key := StringName(slot_key_variant)
+			var record := Dictionary(records_by_slot.get("%s/%s" % [category_id, slot_key], {})).duplicate(true)
+			slots.append({"slot_key":slot_key, "record":record})
+			if not record.is_empty():
+				upgrades.append(record.duplicate(true))
+		categories.append({
+			"id":category_id,
+			"heading_key":String(descriptor["heading_key"]),
+			"description_key":String(descriptor["description_key"]),
+			"capacity":int(descriptor["capacity"]),
+			"slots":slots,
 		})
 	return {
 		"active":true,
 		"stats":effective_stats.duplicate(true),
 		"secondaries":secondaries.duplicate(true),
 		"upgrades":upgrades,
+		"categories":categories,
 		"run_state":run_state.duplicate(true),
 	}
