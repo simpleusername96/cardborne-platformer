@@ -17,7 +17,6 @@ const GROUPS := [
 			&"thermal_burst_impact",
 			&"drop_mine_detonation",
 			&"explosive_seeker_impact",
-			&"mystery_projectile_purge",
 		],
 	},
 ]

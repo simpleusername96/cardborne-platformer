@@ -214,7 +214,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | actor catalog | authored body role, state, anchor, silhouette | health, AI, attack |
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored direct-pickup and shard visual ID plus value-scale mapping | spawn, value, collection |
-| effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, Dash Afterburn, Storm Barrage, and Mystery purge presentation modes within fixed capacity | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
+| effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, Dash Afterburn, Storm Barrage, and Mystery outcome presentation within fixed capacity | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
 | world catalog | authored Transit Gate, Anomaly Device, SurfaceDetail, and state descriptor | topology, collision, health, outcome |
 | secondary catalog | authored seeker, field, blade, mine presentation identity plus code-native rear-beam and storm-footprint state | targeting, cadence, damage |
 | defense catalog | shared code-native support boundary plus Toxin/Cryo actor-overlay recipe | protection, Electric Field damage area, damage, slow, stack, timer |
@@ -285,6 +285,10 @@ collision.
   필요로 할 때만 유지하는 `resolved` wreck state를 가진다. 결과 종류는 첫
   accepted hit 전 image, 색, lamp, glyph로 암시하지 않는다. 첫 hit는 localized
   text로 결과를 식별하며 body asset이나 minimap marker를 바꾸지 않는다.
+- repair/recall pickup과 Anomaly Device는 availability를 알리는 작은 time-based
+  vertical bob과 얇은 breathing contour를 사용한다. Reduced Motion에서는 같은
+  contour를 static으로 유지하고 bob과 blinking을 멈춘다. 이 motion은 collision,
+  radius, minimap position, or effect anchor를 바꾸지 않는다.
 - boss objective module art와 shared node art는 모두 production에서 제외한다.
   방어막 상태는 boss body와 HUD의 직접 상태 표현이 소유한다.
 - EMP는 damage/stun `285`를 하나의 code-native full disk로 즉시 표시한다.
@@ -372,9 +376,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   첫 accepted hit 전에는 네 결과의 색, glyph, 방향, animation을 노출하지 않는다.
   첫 hit의 localized text가 결과를 식별하고, 파괴 후 anchor가 필요한 동안만
   resolved wreck를 표시한다. 발동 text는 실제 영향 대상 수를 함께 전달한다.
-  네 결과는 모두 device position과 gameplay radius가 일치하는 full-area body를
-  표시한다. Projectile Purge는 clear 뒤 짧게 pulse하고, Gravity Pull, Cryo Lock,
-  Decoy Signal은 실제 영향 지속시간 전체에 exact footprint를 유지한다. Existing
+  세 결과는 모두 device position과 gameplay radius가 일치하는 full-area body를
+  표시한다. Gravity Pull, Cryo Lock, Decoy Signal은 실제 영향 지속시간 전체에
+  exact footprint를 유지한다. Existing
   shared ring은 boundary accent로만 사용하며 별도 raster를 추가하지 않는다.
 - Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
   Anomaly Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
@@ -504,10 +508,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   sprite sequence를 추가하지 않는다.
 - Drop Mine detonation은 mine origin과 gameplay radius `96/108/120/120`에 alpha `0.16`
   full player-reward disk를 첫 frame부터 최종 크기로 표시하고 `0.18s` 동안 fade한다.
-  별도 raster accent는 없다. Mystery Projectile Purge도 device
-  position의 projectile-clear radius `420`을 alpha `0.14` full system disk로 즉시
-  표시하며 existing single perimeter는 accent로만 fade한다. 두 effect 모두 damage나
-  clear가 끝난 뒤 radius를 키우지 않는다.
+  별도 raster accent는 없다.
 - Dash Afterburn은 대시 시작점부터 엄폐물에 의해 줄어든 실제 종료점까지 전체 선분을
   반너비 `72`의 filled capsule 하나로 표시한다. 첫 frame부터 전체 판정 크기이며 장판
   수명 `3s`, 동시 최대 2개를 그대로 따른다. Auto Laser는 선택된 최다 관통 방향에서
@@ -520,8 +521,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   Shockwave는 release frame의 full disk와 단일 boundary, Cross Beam은 실제 반폭의
   두 map-spanning corridor를 사용한다. startup은 같은 geometry의 낮은 alpha 예고만
   허용한다. 새 raster asset, particle node, 별도 collision geometry를 만들지 않는다.
-- Mystery Gravity Pull은 radius `480`에 alpha `0.10` full system disk를 `1.2s`, Cryo
-  Lock은 radius `360`에 alpha `0.12` full cryo disk를 `0.8s`, Decoy Signal은 radius
+- Mystery Gravity Pull은 radius `480`에 alpha `0.10` full system disk를 `5s`, Cryo
+  Lock은 radius `360`에 alpha `0.12` full cryo disk를 `3s`, Decoy Signal은 radius
   `900`에 alpha `0.08` full system disk를 `6s` 동안 유지한다. 세 effect 모두 device
   position을 중심으로 하고 existing perimeter는 boundary accent일 뿐 영향 범위의
   유일한 표현이 아니다.
@@ -671,9 +672,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   panel-free다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는
   사용하지 않는다.
-- normal ToastSurface는 compact `320×36`, standard/large `360×40`이며 center
-  status band의 가장 낮은 경계 아래 4px에 붙고 좌상단 cluster 및 minimap과 겹치지 않는다.
-  gameplay toast는 boss inbound, barrier depleted, Anomaly Device first-hit reveal,
+- normal top-center announcement는 text-only `22px` bold이며 center status band의
+  가장 낮은 경계 아래 4px에 붙고 좌상단 cluster 및 minimap과 겹치지 않는다. bounded
+  priority queue는 duplicate를 coalesce하고 semantic color로 종류를 구분한다.
+  gameplay announcement는 boss inbound, barrier depleted, Anomaly Device first-hit reveal,
   Anomaly Device triggered result,
   boss shield-down과 progression complete event만 허용한다.
   stage transition banner는 사용하지 않는다.

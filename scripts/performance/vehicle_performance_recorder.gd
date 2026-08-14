@@ -2,6 +2,7 @@ class_name VehiclePerformanceRecorder
 extends RefCounted
 
 const BuildIdentity = preload("res://scripts/diagnostics/vehicle_build_identity.gd")
+const SlowTickReceiptBuffer = preload("res://scripts/performance/vehicle_slow_tick_receipt_buffer.gd")
 
 ## Records complete rendered-frame distributions only when an explicit
 ## performance scenario is active. Ordinary play allocates no sample arrays.
@@ -38,6 +39,7 @@ var _browser_user_agent := ""
 var _native_focus_samples := 0
 var _native_unfocused_samples := 0
 var _started_utc := ""
+var _slow_tick_receipts := SlowTickReceiptBuffer.new()
 
 
 func configure(id: StringName, path: String, warmup: float = 10.0, duration: float = 60.0) -> void:
@@ -47,6 +49,7 @@ func configure(id: StringName, path: String, warmup: float = 10.0, duration: flo
 	sample_seconds = maxf(0.25, duration)
 	_initial_static_memory = float(Performance.get_monitor(Performance.MEMORY_STATIC))
 	_started_utc = Time.get_datetime_string_from_system(true, true)
+	_slow_tick_receipts.clear()
 	_prepare_web_environment_probe()
 
 
@@ -61,6 +64,16 @@ func record_physics(total_ms: float, subsystem_ms: Dictionary) -> void:
 		var samples: Array = _subsystem_samples[key]
 		samples.append(float(subsystem_ms[key]))
 		_frame_subsystems[key] = float(_frame_subsystems.get(key, 0.0)) + float(subsystem_ms[key])
+
+
+func record_slow_tick_receipt(
+	physics_serial: int,
+	total_ms: float,
+	coarse_ms: PackedFloat64Array,
+	scalars: PackedInt32Array
+) -> void:
+	if _is_sampling():
+		_slow_tick_receipts.record(physics_serial, total_ms, coarse_ms, scalars)
 
 
 func advance_frame(
@@ -175,6 +188,7 @@ func finish(
 			"slow_frame_samples": _slow_frame_samples.duplicate(true),
 			"p99_hitch": _p99_attribution(),
 		},
+		"slow_tick_receipts":_slow_tick_receipts.finalized_receipts(),
 		"subsystems": subsystem_stats,
 		"max_consecutive_frames_over_33_3_ms": _max_consecutive_over_33,
 		"counts": counts.duplicate(true),

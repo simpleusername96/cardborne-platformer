@@ -3,7 +3,6 @@ extends SceneTree
 ## Focused live-run coverage for the map mechanics that only VehicleRun owns.
 
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
-const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 
 var failures: Array[String] = []
 
@@ -32,7 +31,6 @@ func _run() -> void:
 		run.call("_reset_run", false)
 		run.mode = run.RunMode.PLAYING
 		_validate_device_collision_and_damage_authority(run)
-		_validate_projectile_purge_scope(run)
 		_validate_effect_targeting(run)
 	game_root.queue_free()
 	await process_frame
@@ -52,7 +50,7 @@ func _configure_devices(run, outcomes: Array[StringName]) -> Array:
 
 
 func _validate_device_collision_and_damage_authority(run) -> void:
-	var devices := _configure_devices(run, [&"gravity_pull", &"cryo_lock", &"projectile_purge"])
+	var devices := _configure_devices(run, [&"gravity_pull", &"cryo_lock", &"decoy_signal"])
 	_expect(devices.size() == 3, "live run configures three mystery devices")
 	var outcomes: Dictionary = {}
 	for device in devices:
@@ -80,27 +78,6 @@ func _validate_device_collision_and_damage_authority(run) -> void:
 	_expect(bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 45.0, &"direct", position, Color.WHITE, Vector2.RIGHT)), "the second player hit breaks the device")
 	_expect(int(run.stage_flow.defeats) == quota_before and int(run.experience_runtime.experience) == experience_before, "device break changes neither quota nor XP")
 	_expect(bool(run.mystery_device_runtime.is_position_clear(position, 0.0)), "resolved device no longer blocks actor collision")
-
-
-func _validate_projectile_purge_scope(run) -> void:
-	var devices := _configure_devices(run, [&"projectile_purge", &"gravity_pull", &"cryo_lock"])
-	var center := Vector2(devices[0]["position"])
-	run.call("_clear_projectiles")
-	run.projectile_store.add_player({"pos":center, "velocity":Vector2.RIGHT, "radius":4.0, "damage":1.0, "life":2.0})
-	run.projectile_store.add_hostile({"pos":center + Vector2(100.0, 0.0), "velocity":Vector2.RIGHT, "radius":4.0, "damage":1.0, "life":2.0})
-	run.projectile_store.add_hostile({"pos":center + Vector2(500.0, 0.0), "velocity":Vector2.RIGHT, "radius":4.0, "damage":1.0, "life":2.0})
-	run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"area", center, Color.WHITE, Vector2.RIGHT)
-	_expect(run.projectile_store.player_count() == 1 and run.projectile_store.hostile_count() == 1, "projectile purge clears only hostile projectiles inside its radius")
-	_expect(
-		StringName(run._mystery_device_result_receipt["effect_id"])
-			== &"projectile_purge"
-		and int(run._mystery_device_result_receipt["affected_count"]) == 1,
-		"Mystery result receipt reports the one cleared hostile projectile"
-	)
-	_expect(
-		run.effect_store.count_kind(EffectStore.MYSTERY_PURGE_PULSE_KIND) == 1,
-		"projectile purge publishes one short System pulse after the clear"
-	)
 
 
 func _append_enemy(run, archetype: StringName, id: String, position: Vector2):

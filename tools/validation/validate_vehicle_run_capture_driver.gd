@@ -84,7 +84,7 @@ func _initialize() -> void:
 		"capture gateway does not reference the retired crate runtime"
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 41, "core manifest has 41 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 121, "full manifest has 121 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 120, "full manifest has 120 captures")
 	for required_capture in [
 		"01i-guidebook-elite-stats.png",
 		"01j-guidebook-field-objects.png",
@@ -136,7 +136,6 @@ func _initialize() -> void:
 		"09z-explosive-seeker-impact.png",
 		"09v-mystery-gravity-pull.png",
 		"09w-mystery-cryo-lock.png",
-		"09x-mystery-projectile-purge.png",
 		"09y-mystery-decoy-signal.png",
 		"30-boss-01-stage-1-arc-area-startup.png",
 		"30-boss-05-stage-5-crown-beam-startup.png",

@@ -79,6 +79,9 @@ const ThreatRadarFeed = preload(
 const PerformanceRecorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const PerformanceScenario = preload("res://scripts/performance/vehicle_performance_scenario.gd")
 const ManualPerformanceTrace = preload("res://scripts/performance/vehicle_manual_performance_trace.gd")
+const SlowTickReceiptBuffer = preload(
+	"res://scripts/performance/vehicle_slow_tick_receipt_buffer.gd"
+)
 const EngagementTelemetry = preload("res://scripts/performance/vehicle_engagement_telemetry.gd")
 const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const StageTacticalLayout = preload("res://scripts/vehicle/vehicle_stage_tactical_layout.gd")
@@ -156,7 +159,6 @@ const BOSS_ARRIVAL_PREFERRED_MAX_DISTANCE := 1500.0
 # cadence is five hertz. Keep the cache on that same boundary so peak hordes do
 # not pay a duplicate full-enemy scan between HUD world updates.
 const THREAT_SAMPLE_INTERVAL := 0.20
-const MYSTERY_TARGET_SAMPLE_INTERVAL := 0.20
 const LOW_COUNT_OVERLAY_INTERVAL := 0.05
 const ORDINARY_DECISION_BUCKET_COUNT := 6
 const FAR_SIMULATION_DISTANCE := 820.0
@@ -166,6 +168,7 @@ const THREAT_OFFSCREEN_BAND := 480.0
 const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
 const PICKUP_BODY_RADIUS := Art.PICKUP_PLINTH_RADIUS
 const MYSTERY_GRAVITY_PULL_SPEED := 380.0
+const MYSTERY_EFFECT_MEMBERSHIP_REFRESH := 0.12
 const CHARGE_PATH_SAMPLE_STEP := 8.0
 const CHARGE_PATH_BINARY_STEPS := 8
 # Prime relative to the six-way enemy decision buckets so profiling eventually
@@ -287,8 +290,12 @@ var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
 var _mystery_retired_event_buffer: Array[Dictionary] = []
 var _mystery_decoy_targets: Dictionary = {}
 var _mystery_device_result_receipt: Dictionary = {}
-var _mystery_target_counts: Dictionary = {}
-var _mystery_target_sample_timer := 0.0
+var _mystery_gravity_members: Array[EnemyState] = []
+var _mystery_cryo_members: Array[EnemyState] = []
+var _mystery_decoy_members: Array[EnemyState] = []
+var _mystery_gravity_refresh_remaining := 0.0
+var _mystery_cryo_refresh_remaining := 0.0
+var _mystery_decoy_refresh_remaining := 0.0
 var _runtime_fast_hud_frame: Dictionary = {}
 var _runtime_minimap_frames: Array[Dictionary] = []
 var _runtime_minimap_visited_buffers: Array = []
@@ -377,6 +384,13 @@ var _performance_finishing := false
 var _performance_ablation: StringName = &"none"
 var _performance_enemy_sections: Dictionary = {}
 var _performance_detail_sample_active := false
+var _slow_tick_coarse_ms := PackedFloat64Array()
+var _slow_tick_scalars := PackedInt32Array()
+var _slow_tick_spawn_count := 0
+var _slow_tick_cue_count := 0
+var _slow_tick_anomaly_scan_count := 0
+var _slow_tick_recording_active := false
+var _performance_subsystem_ms: Dictionary = {}
 var _manual_performance_request: Dictionary = {}
 var _manual_performance_trace: ManualPerformanceTrace
 var _engagement_telemetry: VehicleEngagementTelemetry
@@ -385,10 +399,19 @@ var _manual_performance_context: Dictionary = {}
 var _pending_stage_report: Dictionary = {}
 var _session_diagnostics := SessionSignalRecorder.new()
 var _latest_session_diagnostic: Dictionary = {}
+var _diagnostic_arrivals_began: Dictionary = {}
+var _diagnostic_first_visible := false
+var _diagnostic_first_commit := false
+var _diagnostic_visible_threat_current := false
+var _diagnostic_visible_gap_active := false
+var _diagnostic_visible_gap_started := 0.0
+var _diagnostic_visible_gap_event_count := 0
 
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_slow_tick_coarse_ms.resize(SlowTickReceiptBuffer.coarse_field_count())
+	_slow_tick_scalars.resize(SlowTickReceiptBuffer.scalar_field_count())
 	_initialize_hud_staging()
 	_build_fast_hud_snapshot_callable = Callable(
 		self, "_runtime_fast_hud_snapshot"
@@ -523,12 +546,20 @@ func _physics_process(delta: float) -> void:
 		and _simulation_active()
 	)
 	var timing_active := performance_active or manual_trace_active
+	_slow_tick_recording_active = timing_active
 	_performance_detail_sample_active = (
 		timing_active
 		and _physics_serial % PERFORMANCE_DETAIL_SAMPLE_STRIDE == 0
 	)
 	var physics_started := Time.get_ticks_usec() if timing_active else 0
-	var subsystem_ms := {}
+	var subsystem_ms := _performance_subsystem_ms
+	if timing_active:
+		subsystem_ms.clear()
+		_slow_tick_coarse_ms.fill(0.0)
+		_slow_tick_scalars.fill(0)
+		_slow_tick_spawn_count = 0
+		_slow_tick_cue_count = 0
+		_slow_tick_anomaly_scan_count = 0
 	if _performance_detail_sample_active:
 		_performance_enemy_sections.clear()
 	if is_instance_valid(_performance_scenario) and mode == RunMode.PLAYING:
@@ -540,7 +571,7 @@ func _physics_process(delta: float) -> void:
 			(_far_enemy_simulation_bucket + 1)
 			% FAR_ENEMY_SIMULATION_BUCKET_COUNT
 		)
-		var section_started := Time.get_ticks_usec() if _performance_detail_sample_active else 0
+		var section_started := Time.get_ticks_usec() if timing_active else 0
 		_update_player(delta)
 		_refresh_visible_world_runtime_ranges()
 		var pickup_motion_end := player_position
@@ -550,18 +581,29 @@ func _physics_process(delta: float) -> void:
 			_update_experience(delta)
 		elif _simulation_lod_bucket == 0:
 			_update_experience(delta * 2.0)
+		if timing_active:
+			_slow_tick_coarse_ms[0] = _elapsed_ms(section_started)
 		if _performance_detail_sample_active:
-			subsystem_ms["player_and_rewards"] = _elapsed_ms(section_started)
+			subsystem_ms["player_and_rewards"] = _slow_tick_coarse_ms[0]
+		if timing_active:
 			section_started = Time.get_ticks_usec()
 		_update_encounter(delta)
-		pursuit_field.update(delta, player_position)
+		pursuit_field.update(
+			delta, player_position, _slow_tick_recording_active
+		)
+		if timing_active:
+			_slow_tick_coarse_ms[1] = _elapsed_ms(section_started)
 		if _performance_detail_sample_active:
-			subsystem_ms["encounter_and_pursuit"] = _elapsed_ms(section_started)
+			subsystem_ms["encounter_and_pursuit"] = _slow_tick_coarse_ms[1]
+		if timing_active:
 			section_started = Time.get_ticks_usec()
 		_update_enemies(delta, pickup_motion_start)
 		_update_threat_contacts(delta)
+		if timing_active:
+			_slow_tick_coarse_ms[2] = _elapsed_ms(section_started)
 		if _performance_detail_sample_active:
-			subsystem_ms["enemies_and_grid"] = _elapsed_ms(section_started)
+			subsystem_ms["enemies_and_grid"] = _slow_tick_coarse_ms[2]
+		if timing_active:
 			section_started = Time.get_ticks_usec()
 		if _performance_ablation != &"attacks":
 			_update_projectiles(delta)
@@ -579,7 +621,11 @@ func _physics_process(delta: float) -> void:
 				subsystem_ms["enemy_%s" % String(section_name)] = (
 					_performance_enemy_sections[section_name]
 				)
-			subsystem_ms["combat_and_effects"] = _elapsed_ms(section_started)
+		if timing_active:
+			_slow_tick_coarse_ms[3] = _elapsed_ms(section_started)
+		if _performance_detail_sample_active:
+			subsystem_ms["combat_and_effects"] = _slow_tick_coarse_ms[3]
+		if timing_active:
 			section_started = Time.get_ticks_usec()
 		_update_stage_progression(delta)
 		if _flush_defeated_enemies() > 0:
@@ -588,20 +634,38 @@ func _physics_process(delta: float) -> void:
 			_engagement_telemetry.advance(
 				delta, encounter_runtime, enemies, player_position, player_velocity
 			)
+		if timing_active:
+			_slow_tick_coarse_ms[4] = _elapsed_ms(section_started)
 		if _performance_detail_sample_active:
-			subsystem_ms["progression_and_cleanup"] = _elapsed_ms(section_started)
+			subsystem_ms["progression_and_cleanup"] = _slow_tick_coarse_ms[4]
 	else:
 		_update_effects(delta)
 	_update_camera(delta)
 	if is_instance_valid(_performance_scenario) and mode == RunMode.PLAYING:
 		_performance_scenario.after_physics(self)
+	var physics_total_ms := _elapsed_ms(physics_started) if timing_active else 0.0
+	if timing_active:
+		_fill_slow_tick_receipt_scalars()
 	if performance_active:
-		_performance_recorder.record_physics(_elapsed_ms(physics_started), subsystem_ms)
+		_performance_recorder.record_physics(physics_total_ms, subsystem_ms)
+		_performance_recorder.record_slow_tick_receipt(
+			_physics_serial,
+			physics_total_ms,
+			_slow_tick_coarse_ms,
+			_slow_tick_scalars
+		)
 	if manual_trace_active:
 		_manual_performance_trace.record_physics(
-			_elapsed_ms(physics_started), subsystem_ms
+			physics_total_ms, subsystem_ms
+		)
+		_manual_performance_trace.record_slow_tick_receipt(
+			_physics_serial,
+			physics_total_ms,
+			_slow_tick_coarse_ms,
+			_slow_tick_scalars
 		)
 	_physics_serial += 1
+	_slow_tick_recording_active = false
 
 
 func _process(delta: float) -> void:
@@ -722,7 +786,14 @@ func _process(delta: float) -> void:
 			active_simulation
 		)
 	if _run_clock_active():
-		_session_diagnostics.advance_frame(delta, delta * 1000.0)
+		_session_diagnostics.advance_frame(
+			delta,
+			delta * 1000.0,
+			enemy_store.live_count(),
+			_diagnostic_visible_threat_current,
+			current_stage_index,
+			_diagnostic_run_mode_id()
+		)
 
 
 func _build_camera() -> void:
@@ -764,12 +835,93 @@ func _build_ui() -> void:
 	add_child(_ui)
 	_ui.deployment_selected.connect(_on_deployment_selected)
 	_ui.upgrade_selected.connect(_on_upgrade_selected)
-	_ui.upgrade_previewed.connect(func(_upgrade_id: StringName) -> void: _play_sound(&"upgrade_select"))
+	_ui.upgrade_previewed.connect(_on_upgrade_previewed)
 	_ui.pause_requested.connect(_pause_run)
 	_ui.resume_requested.connect(_resume_run)
 	_ui.deployment_requested.connect(_return_to_deployment)
 	_ui.stage_report_continued.connect(_continue_stage_report)
 	_ui.diagnostic_export_requested.connect(_export_session_diagnostics)
+	_ui.gameplay_announcement_receipt.connect(_on_gameplay_announcement_receipt)
+
+
+func _on_upgrade_previewed(upgrade_id: StringName) -> void:
+	_play_sound(&"upgrade_select")
+	_session_diagnostics.emit_event("upgrade_focused", {
+		"upgrade_id":upgrade_id,
+		"stage_index":current_stage_index,
+	})
+
+
+func _on_gameplay_announcement_receipt(receipt: Dictionary) -> void:
+	var status := StringName(receipt.get("status", &""))
+	if status not in [&"queued", &"shown", &"interrupted", &"dropped"]:
+		return
+	_session_diagnostics.emit_event("announcement_%s" % status, {
+		"semantic_id":StringName(receipt.get("semantic_id", &"system")),
+		"priority":int(receipt.get("priority", 1)),
+		"reason":StringName(receipt.get("reason", &"")),
+	})
+
+
+func _reset_stage_diagnostic_signals() -> void:
+	_diagnostic_arrivals_began.clear()
+	_diagnostic_first_visible = false
+	_diagnostic_first_commit = false
+	_diagnostic_visible_threat_current = false
+	_diagnostic_visible_gap_active = true
+	_diagnostic_visible_gap_started = active_run_elapsed_seconds
+	_diagnostic_visible_gap_event_count = 0
+
+
+func _record_diagnostic_arrival_began(enemy: EnemyState) -> void:
+	if not _session_diagnostics.is_active():
+		return
+	var arrival_id := StringName(enemy.squad_id)
+	if arrival_id.is_empty() or _diagnostic_arrivals_began.has(arrival_id):
+		return
+	_diagnostic_arrivals_began[arrival_id] = true
+	_session_diagnostics.emit_event("arrival_began", {
+		"arrival_id":arrival_id,
+		"stage_index":current_stage_index,
+	})
+
+
+func _record_diagnostic_threat_sample(
+	visible_threat: bool,
+	ordinary_commit: bool
+) -> void:
+	_diagnostic_visible_threat_current = visible_threat
+	if not _session_diagnostics.is_active():
+		return
+	if visible_threat and not _diagnostic_first_visible:
+		_diagnostic_first_visible = true
+		_session_diagnostics.emit_event("first_visible", {
+			"stage_index":current_stage_index,
+		})
+	if ordinary_commit and not _diagnostic_first_commit:
+		_diagnostic_first_commit = true
+		_session_diagnostics.emit_event("first_commit", {
+			"stage_index":current_stage_index,
+		})
+	if not visible_threat:
+		if not _diagnostic_visible_gap_active:
+			_diagnostic_visible_gap_active = true
+			_diagnostic_visible_gap_started = active_run_elapsed_seconds
+		return
+	if not _diagnostic_visible_gap_active:
+		return
+	var gap_seconds := maxf(
+		0.0,
+		active_run_elapsed_seconds - _diagnostic_visible_gap_started
+	)
+	_diagnostic_visible_gap_active = false
+	if gap_seconds < 0.4 or _diagnostic_visible_gap_event_count >= 16:
+		return
+	_diagnostic_visible_gap_event_count += 1
+	_session_diagnostics.emit_event("visible_gap_closed", {
+		"stage_index":current_stage_index,
+		"gap_seconds":gap_seconds,
+	})
 
 
 func _begin_session_diagnostics() -> void:
@@ -779,13 +931,49 @@ func _begin_session_diagnostics() -> void:
 		run_index,
 	]
 	if not _session_diagnostics.begin(
-		session_id, BuildIdentity.evidence_identity()
+		session_id,
+		BuildIdentity.evidence_identity(),
+		_diagnostic_session_context()
 	):
 		return
 	_session_diagnostics.emit_event("stage_started", {
 		"stage_id":current_stage_id,
 		"stage_index":current_stage_index,
 	})
+
+
+func _diagnostic_session_context() -> Dictionary:
+	var settings := get_node_or_null("/root/SettingsStore")
+	var viewport_width := get_viewport_rect().size.x
+	return {
+		"locale":StringName(TranslationServer.get_locale().left(2)),
+		"viewport_class":StringName(
+			"compact"
+			if viewport_width < 1100.0
+			else ("large" if viewport_width >= 1600.0 else "standard")
+		),
+		"reduced_motion":(
+			bool(settings.reduced_motion) if settings != null else false
+		),
+		"renderer":StringName(RenderingServer.get_current_rendering_method()),
+	}
+
+
+func _diagnostic_run_mode_id() -> StringName:
+	match mode:
+		RunMode.PLAYING:
+			return &"playing"
+		RunMode.PAUSED:
+			return &"paused"
+		RunMode.UPGRADE:
+			return &"upgrade"
+		RunMode.STAGE_REPORT:
+			return &"stage_report"
+		RunMode.FAILURE_REPORT:
+			return &"failure_report"
+		RunMode.RESULT:
+			return &"result"
+	return &"deployment"
 
 
 func _checkpoint_session_diagnostics(reason: String) -> void:
@@ -1027,10 +1215,16 @@ func _configure_stage_local_runtime() -> void:
 		field_layout.seed,
 		current_stage_id
 	)
+	_refresh_pressure_observation_mode()
 	_mystery_decoy_targets.clear()
 	_mystery_device_result_receipt.clear()
-	_mystery_target_counts.clear()
-	_mystery_target_sample_timer = 0.0
+	_reset_stage_diagnostic_signals()
+	_mystery_gravity_members.clear()
+	_mystery_cryo_members.clear()
+	_mystery_decoy_members.clear()
+	_mystery_gravity_refresh_remaining = 0.0
+	_mystery_cryo_refresh_remaining = 0.0
+	_mystery_decoy_refresh_remaining = 0.0
 
 
 func _populate_stage_items() -> void:
@@ -1271,11 +1465,14 @@ func _update_encounter(delta: float) -> void:
 		projectile_store.hostile_count(),
 		player_velocity
 	)
+	if _slow_tick_recording_active:
+		_slow_tick_cue_count = Array(requests["cues"]).size()
+		_slow_tick_spawn_count = Array(requests["spawns"]).size()
 	for cue in requests["cues"]:
 		var cue_record := Dictionary(cue)
 		_record_ordinary_arrival_cue(cue_record)
 		_session_diagnostics.emit_event("arrival_cued", {
-			"arrival_id":StringName(cue_record.get("id", &"")),
+			"arrival_id":StringName(cue_record.get("squad_id", &"")),
 			"stage_index":current_stage_index,
 			"unit_count":int(cue_record.get("unit_count", 0)),
 		})
@@ -1287,7 +1484,9 @@ func _update_encounter(delta: float) -> void:
 			encounter_runtime.note_spawn_materialization_failed(bounded_spec)
 			continue
 		_apply_pending_elite(enemy)
-		if not _append_enemy(enemy):
+		if _append_enemy(enemy):
+			_record_diagnostic_arrival_began(enemy)
+		else:
 			encounter_runtime.note_spawn_materialization_failed(bounded_spec)
 
 func _record_ordinary_arrival_cue(cue: Dictionary) -> void:
@@ -2179,7 +2378,7 @@ func _release_emp_weapon() -> void:
 	_damage_enemies_in_radius(
 		center, radius, active_weapon_runtime.damage, "EMP Nova", &"arc", true
 	)
-	_clear_hostile_projectiles(center, clear_radius)
+	projectile_store.clear_hostiles_in_radius(center, clear_radius)
 	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
 		if Vector2(enemy.pos).distance_to(center) <= radius:
@@ -2318,7 +2517,6 @@ func _update_pickups(
 	for pickup in pickups:
 		if not bool(pickup["active"]):
 			continue
-		pickup["pulse"] = float(pickup["pulse"]) + 0.06
 		var pickup_position := Vector2(pickup["pos"])
 		var crossed_during_motion := PickupContact.should_collect(
 			true,
@@ -2540,24 +2738,37 @@ func _update_enemies(
 func _prepare_mystery_device_effects(delta: float) -> void:
 	## Advances effect lifetime and publishes control state before AI decisions.
 	mystery_device_runtime.advance_into(delta, _mystery_retired_event_buffer)
+	for retired_event in _mystery_retired_event_buffer:
+		_clear_mystery_effect_membership(StringName(
+			retired_event.get("effect_id", &"")
+		))
+		_session_diagnostics.emit_event("anomaly_retired", {
+			"effect_id":StringName(retired_event.get("effect_id", &"")),
+			"duration":float(retired_event.get("duration", 0.0)),
+		})
 	mystery_device_runtime.fill_active_effect_snapshot(
 		_mystery_effect_snapshot_buffer
 	)
 	_mystery_decoy_targets.clear()
 	for effect in _mystery_effect_snapshot_buffer:
 		var effect_id := StringName(effect["effect_id"])
-		if effect_id not in [&"cryo_lock", &"decoy_signal"]:
-			continue
 		var center := Vector2(effect["position"])
 		var radius := float(effect["radius"])
-		enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
-		for enemy in _enemy_query_buffer:
+		_refresh_mystery_effect_membership(
+			effect_id, center, radius, delta
+		)
+		var members: Array[EnemyState]
+		match effect_id:
+			&"cryo_lock":
+				members = _mystery_cryo_members
+			&"decoy_signal":
+				members = _mystery_decoy_members
+			_:
+				continue
+		for enemy in members:
 			if (
 				not enemy.alive
 				or not enemy.active
-				or enemy.role == &"stage_boss"
-				or _is_fixed_structure_enemy(enemy)
-				or enemy.pos.distance_to(center) > radius + enemy.radius
 			):
 				continue
 			match effect_id:
@@ -2574,43 +2785,6 @@ func _prepare_mystery_device_effects(delta: float) -> void:
 				&"decoy_signal":
 					if enemy.phase not in [&"startup", &"active"]:
 						_mystery_decoy_targets[enemy.id] = center
-	_sample_mystery_device_target_counts(delta)
-
-
-func _sample_mystery_device_target_counts(delta: float) -> void:
-	_mystery_target_sample_timer -= maxf(0.0, delta)
-	if _mystery_target_sample_timer > 0.0:
-		return
-	_mystery_target_sample_timer = MYSTERY_TARGET_SAMPLE_INTERVAL
-	_mystery_target_counts.clear()
-	mystery_device_runtime.fill_device_snapshot(_mystery_device_snapshot_buffer)
-	for device in _mystery_device_snapshot_buffer:
-		var outcome := StringName(device.get("revealed_outcome", &""))
-		if outcome.is_empty() or StringName(device["state"]) != &"intact":
-			continue
-		var profile := Dictionary(MysteryDeviceRuntime.OUTCOME_PROFILE[outcome])
-		var center := Vector2(device["position"])
-		var radius := float(profile["radius"])
-		var count := 0
-		if outcome == &"projectile_purge":
-			var radius_squared := radius * radius
-			for projectile in hostile_projectiles:
-				if projectile.pos.distance_squared_to(center) <= radius_squared:
-					count += 1
-		else:
-			enemy_grid.query_radius_into(
-				center, radius, enemies, _enemy_query_buffer
-			)
-			for enemy in _enemy_query_buffer:
-				if (
-					enemy.alive
-					and enemy.active
-					and enemy.role != &"stage_boss"
-					and not _is_fixed_structure_enemy(enemy)
-					and enemy.pos.distance_to(center) <= radius + enemy.radius
-				):
-					count += 1
-		_mystery_target_counts[StringName(device["id"])] = count
 
 
 func _apply_mystery_device_forced_motion(delta: float) -> void:
@@ -2620,20 +2794,73 @@ func _apply_mystery_device_forced_motion(delta: float) -> void:
 		if StringName(effect["effect_id"]) != &"gravity_pull":
 			continue
 		var center := Vector2(effect["position"])
-		var radius := float(effect["radius"])
-		enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
-		for enemy in _enemy_query_buffer:
+		for enemy in _mystery_gravity_members:
 			if (
 				not enemy.alive
 				or not enemy.active
-				or enemy.role == &"stage_boss"
-				or _is_fixed_structure_enemy(enemy)
-				or enemy.pos.distance_to(center) > radius + enemy.radius
 			):
 				continue
 			_steer_enemy_toward_mystery_anchor(
 				enemy, center, MYSTERY_GRAVITY_PULL_SPEED, delta
 			)
+
+
+func _refresh_mystery_effect_membership(
+	effect_id: StringName,
+	center: Vector2,
+	radius: float,
+	delta: float
+) -> void:
+	var members: Array[EnemyState]
+	var refresh_remaining := 0.0
+	match effect_id:
+		&"gravity_pull":
+			members = _mystery_gravity_members
+			refresh_remaining = _mystery_gravity_refresh_remaining
+		&"cryo_lock":
+			members = _mystery_cryo_members
+			refresh_remaining = _mystery_cryo_refresh_remaining
+		&"decoy_signal":
+			members = _mystery_decoy_members
+			refresh_remaining = _mystery_decoy_refresh_remaining
+		_:
+			return
+	refresh_remaining -= maxf(0.0, delta)
+	if refresh_remaining <= 0.0:
+		members.clear()
+		enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
+		if _slow_tick_recording_active:
+			_slow_tick_anomaly_scan_count += 1
+		for enemy in _enemy_query_buffer:
+			if (
+				enemy.alive
+				and enemy.active
+				and enemy.role != &"stage_boss"
+				and not _is_fixed_structure_enemy(enemy)
+				and enemy.pos.distance_to(center) <= radius + enemy.radius
+			):
+				members.append(enemy)
+		refresh_remaining = MYSTERY_EFFECT_MEMBERSHIP_REFRESH
+	match effect_id:
+		&"gravity_pull":
+			_mystery_gravity_refresh_remaining = refresh_remaining
+		&"cryo_lock":
+			_mystery_cryo_refresh_remaining = refresh_remaining
+		&"decoy_signal":
+			_mystery_decoy_refresh_remaining = refresh_remaining
+
+
+func _clear_mystery_effect_membership(effect_id: StringName) -> void:
+	match effect_id:
+		&"gravity_pull":
+			_mystery_gravity_members.clear()
+			_mystery_gravity_refresh_remaining = 0.0
+		&"cryo_lock":
+			_mystery_cryo_members.clear()
+			_mystery_cryo_refresh_remaining = 0.0
+		&"decoy_signal":
+			_mystery_decoy_members.clear()
+			_mystery_decoy_refresh_remaining = 0.0
 
 
 func _steer_enemy_toward_mystery_anchor(
@@ -2666,7 +2893,8 @@ func _prepare_enemy_local_overlap_cache() -> void:
 			_mark_enemy_overlap_refresh(enemy)
 	enemy_grid.rebuild_local_overlap_cache(
 		_enemy_overlap_refresh_mask,
-		_performance_detail_sample_active
+		_performance_detail_sample_active,
+		_slow_tick_recording_active
 	)
 	if _performance_detail_sample_active:
 		_performance_enemy_sections["overlap_snapshot_clear"] = (
@@ -4307,11 +4535,6 @@ func _add_effect(
 			position, color, duration, radius
 		)
 		return
-	if kind == EffectStore.MYSTERY_PURGE_PULSE_KIND:
-		effect_store.add_mystery_purge_pulse(
-			position, color, duration, radius
-		)
-		return
 	if kind == EffectStore.EMP_CHARGE_KIND or kind == EffectStore.EMP_RELEASE_KIND:
 		effect_store.add_emp_footprint(
 			kind, position, color, duration, radius, secondary_radius
@@ -4561,7 +4784,9 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 			boss_arrival_position = _choose_boss_arrival_anchor()
 			discovered_markers["boss_warning"] = true
 			_discover_guide(StringName("boss_stage_%d" % (current_stage_index + 1)))
-			_ui.notify(tr("NOTIFY_BOSS_INBOUND"), 1.5, Rules.CORAL)
+			_ui.notify(
+				tr("NOTIFY_BOSS_INBOUND"), 1.5, Rules.CORAL, 3, &"boss_inbound"
+			)
 			_play_sound(&"boss", 0.82)
 	if role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel"]:
 		stats_installations += 1
@@ -4662,7 +4887,13 @@ func _damage_player(
 			player_barrier_hit_flash = PLAYER_BARRIER_HIT_FLASH_DURATION
 			_play_sound(&"cover", 1.04)
 		if player_barrier_strength <= 0.0:
-			_ui.notify(tr("NOTIFY_BARRIER_DEPLETED"), 1.6, Rules.CORAL)
+			_ui.notify(
+				tr("NOTIFY_BARRIER_DEPLETED"),
+				1.6,
+				Rules.CORAL,
+				3,
+				&"barrier_depleted"
+			)
 	if remaining <= 0.0:
 		_credit_active_recharge_for_incoming(barrier_loss, 0.0, enemy_source)
 		return accepted
@@ -4895,36 +5126,30 @@ func _damage_mystery_device(
 
 func _handle_mystery_device_break(event: Dictionary) -> Dictionary:
 	var effect_id := StringName(event["effect_id"])
-	var affected_count := 0
-	if effect_id == &"projectile_purge":
-		affected_count = _clear_hostile_projectiles(
-			Vector2(event["position"]), float(event["radius"])
-		)
-		_add_effect(
-			EffectStore.MYSTERY_PURGE_PULSE_KIND,
-			Vector2(event["position"]),
-			Art.SYSTEM,
-			0.18,
-			float(event["radius"])
-		)
-	else:
-		affected_count = _count_mystery_effect_targets(
-			effect_id,
-			Vector2(event["position"]),
-			float(event["radius"])
-		)
+	var affected_count := _count_mystery_effect_targets(
+		effect_id,
+		Vector2(event["position"]),
+		float(event["radius"])
+	)
 	var outcome_key := _mystery_outcome_key(effect_id)
 	if not outcome_key.is_empty():
 		_ui.notify(
 			tr("NOTIFY_MYSTERY_DEVICE_TRIGGERED")
 				% [tr(outcome_key), affected_count],
 			2.4,
-			Art.SYSTEM
+			Art.SYSTEM,
+			2,
+			&"anomaly_activated"
 		)
 	_play_sound(&"destroy_priority", 1.02)
 	_mystery_device_result_receipt.clear()
 	_mystery_device_result_receipt["effect_id"] = effect_id
 	_mystery_device_result_receipt["affected_count"] = affected_count
+	_session_diagnostics.emit_event("anomaly_activated", {
+		"effect_id":effect_id,
+		"affected_count": affected_count,
+		"duration":float(event.get("duration", 0.0)),
+	})
 	return _mystery_device_result_receipt
 
 
@@ -4935,25 +5160,18 @@ func _notify_mystery_device_reveal(effect_id: StringName) -> void:
 	_ui.notify(
 		tr("NOTIFY_MYSTERY_DEVICE_REVEALED") % tr(outcome_key),
 		2.0,
-		Art.SYSTEM
+		Art.SYSTEM,
+		1,
+		&"anomaly_revealed"
 	)
+	_session_diagnostics.emit_event("anomaly_revealed", {"effect_id":effect_id})
 
 
 func _mystery_outcome_key(effect_id: StringName) -> String:
 	return String({
 		&"gravity_pull":"MYSTERY_OUTCOME_GRAVITY_PULL",
 		&"cryo_lock":"MYSTERY_OUTCOME_CRYO_LOCK",
-		&"projectile_purge":"MYSTERY_OUTCOME_PROJECTILE_PURGE",
 		&"decoy_signal":"MYSTERY_OUTCOME_DECOY_SIGNAL",
-	}.get(effect_id, ""))
-
-
-func _mystery_chip_key(effect_id: StringName) -> String:
-	return String({
-		&"gravity_pull":"MYSTERY_CHIP_GRAVITY",
-		&"cryo_lock":"MYSTERY_CHIP_CRYO",
-		&"projectile_purge":"MYSTERY_CHIP_PURGE",
-		&"decoy_signal":"MYSTERY_CHIP_DECOY",
 	}.get(effect_id, ""))
 
 
@@ -4976,10 +5194,6 @@ func _count_mystery_effect_targets(
 		):
 			count += 1
 	return count
-
-
-func _clear_hostile_projectiles(center: Vector2, radius: float) -> int:
-	return projectile_store.clear_hostiles_in_radius(center, radius)
 
 
 func _update_aim_target() -> void:
@@ -5059,7 +5273,9 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 			_ui.notify(
 				tr("NOTIFY_ALL_UPGRADES_COMPLETE"),
 				2.4,
-				Art.SYSTEM
+				Art.SYSTEM,
+				1,
+				&"all_upgrades_complete"
 			)
 		_resolve_reward_transaction()
 		return
@@ -5566,7 +5782,7 @@ func _show_pending_boss_state_hint() -> void:
 	var hint_key := boss_shield_runtime.take_state_entry_hint()
 	if hint_key != "BOSS_SHIELD_DOWN_HINT":
 		return
-	_ui.notify(tr(hint_key), 2.6, Art.SYSTEM)
+	_ui.notify(tr(hint_key), 2.6, Art.SYSTEM, 2, &"boss_shield_down")
 
 
 func _on_boss_direct_attack_complete(boss: EnemyState) -> void:
@@ -5999,9 +6215,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 				"kind":&"mystery_device",
 				"position":Vector2(device["position"]),
 				"discovered":true,
-				"tint":_mystery_minimap_tint(StringName(
-					device.get("revealed_outcome", &"")
-				)),
+				"tint":Art.TEXT_MUTED,
 			})
 	var snapshot := {
 		"cols": MINIMAP_COLS,
@@ -6063,9 +6277,7 @@ func _runtime_minimap_snapshot(
 				&"mystery_device",
 				Vector2(device["position"]),
 				1.0,
-				_mystery_minimap_tint(StringName(
-					device.get("revealed_outcome", &"")
-				))
+				Art.TEXT_MUTED
 			)
 	snapshot["player"] = player_position
 	snapshot["player_facing"] = player_hull_direction
@@ -6100,19 +6312,6 @@ func _append_runtime_minimap_marker(
 	else:
 		marker.erase("tint")
 	markers.append(marker)
-
-
-func _mystery_minimap_tint(outcome: StringName) -> Color:
-	match outcome:
-		&"gravity_pull":
-			return Art.SYSTEM
-		&"cryo_lock":
-			return Art.CRYO
-		&"projectile_purge":
-			return Art.MINT
-		&"decoy_signal":
-			return Art.MUSTARD
-	return Art.TEXT_MUTED
 
 
 func _minimap_role_for_enemy(enemy: EnemyState) -> StringName:
@@ -6204,19 +6403,8 @@ func _fill_combat_presentation_snapshot(
 	snapshot["active_weapon"] = active_weapon_runtime.snapshot(
 		run_build, 1.5 if persistent_relay_module else 0.0
 	)
+	snapshot["map_pickups"] = pickups
 	mystery_device_runtime.fill_device_snapshot(mystery_devices)
-	for device in mystery_devices:
-		var revealed_outcome := StringName(
-			device.get("revealed_outcome", &"")
-		)
-		if revealed_outcome.is_empty():
-			continue
-		device["target_count"] = int(_mystery_target_counts.get(
-			StringName(device["id"]), 0
-		))
-		device["outcome_label"] = tr(
-			_mystery_chip_key(revealed_outcome)
-		)
 	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)
 	snapshot["mystery_devices"] = mystery_devices
 	snapshot["mystery_effects"] = mystery_effects
@@ -6284,10 +6472,22 @@ func _update_threat_contacts(delta: float) -> void:
 				CombatCuePolicy.CONTACT_NEARBY_ENEMY,
 				0.0
 			)
+	var diagnostic_visible_threat := false
+	var diagnostic_ordinary_commit := false
 	for enemy in enemies:
 		if not bool(enemy.alive) or not bool(enemy.active):
 			continue
 		var enemy_screen := canvas_transform * Vector2(enemy.pos)
+		if (
+			(enemy.counts_active_cap or enemy.role == &"stage_boss")
+			and visible_world.has_point(enemy.pos)
+		):
+			diagnostic_visible_threat = true
+		if (
+			enemy.counts_active_cap
+			and enemy.phase in [&"startup", &"active"]
+		):
+			diagnostic_ordinary_commit = true
 		if safe_viewport.has_point(enemy_screen):
 			_discover_guide(GuidebookCatalog.entry_id_for_enemy(enemy.archetype, enemy.role))
 			if enemy.elite_trait != &"":
@@ -6323,6 +6523,10 @@ func _update_threat_contacts(delta: float) -> void:
 			CombatCuePolicy.CONTACT_BOSS_ARRIVAL,
 			1.0
 		)
+	_record_diagnostic_threat_sample(
+		diagnostic_visible_threat,
+		diagnostic_ordinary_commit
+	)
 	_threat_radar_feed.commit_sample()
 
 
@@ -6370,7 +6574,6 @@ func _reset_threat_radar_feed() -> void:
 
 func _draw() -> void:
 	_draw_terrain()
-	_draw_pickups()
 	if _debug_collision_overlay:
 		_draw_debug_collision_overlay()
 
@@ -6429,34 +6632,6 @@ func _draw_closed_polyline(polygon: PackedVector2Array, color: Color, width: flo
 	draw_polyline(loop, color, width, true)
 
 
-func _draw_pickups() -> void:
-	for pickup in pickups:
-		if not bool(pickup["active"]):
-			continue
-		var position := Vector2(pickup["pos"])
-		var kind := StringName(pickup["kind"])
-		var bob := 0.0 if _reduced_motion_enabled() else sin(float(pickup["pulse"])) * 3.0
-		position.y += bob
-		var is_experience := kind in [
-			&"experience_small", &"experience_medium", &"experience_large"
-		]
-		var visual_radius := Art.PICKUP_PLINTH_RADIUS
-		if kind == &"experience_small":
-			visual_radius *= 0.72
-		elif kind == &"experience_medium":
-			visual_radius *= 0.90
-		elif kind == &"experience_large":
-			visual_radius *= 1.12
-		_draw_semantic_asset(
-			(
-				&"pickup/experience_master"
-				if is_experience
-				else StringName("pickup/%s" % kind)
-			),
-			position,
-			visual_radius,
-			Art.PLAYER_REWARD if is_experience else Color.WHITE
-		)
 func _draw_semantic_asset(
 	asset_id: StringName,
 	center: Vector2,
@@ -6576,6 +6751,35 @@ func _elapsed_ms(started_usec: int) -> float:
 	return float(Time.get_ticks_usec() - started_usec) / 1000.0
 
 
+func _fill_slow_tick_receipt_scalars() -> void:
+	var simulation_active := _simulation_active()
+	_slow_tick_scalars[0] = enemy_store.live_count()
+	_slow_tick_scalars[1] = encounter_runtime.pressure_visible_count()
+	_slow_tick_scalars[2] = _enemy_update_schedule.ordinary_due.size()
+	_slow_tick_scalars[3] = _enemy_update_schedule.critical.size()
+	_slow_tick_scalars[4] = posmod(
+		_enemy_decision_bucket - 1, ORDINARY_DECISION_BUCKET_COUNT
+	)
+	_slow_tick_scalars[5] = _simulation_lod_bucket
+	_slow_tick_scalars[6] = 1 if pursuit_field.rebuild_active() else 0
+	_slow_tick_scalars[7] = pursuit_field.last_processed_cells()
+	_slow_tick_scalars[8] = enemy_grid.last_local_overlap_owner_count()
+	_slow_tick_scalars[9] = enemy_grid.last_local_overlap_candidate_count()
+	_slow_tick_scalars[10] = _slow_tick_spawn_count
+	_slow_tick_scalars[11] = _slow_tick_cue_count
+	_slow_tick_scalars[12] = projectile_store.player_count()
+	_slow_tick_scalars[13] = projectile_store.hostile_count()
+	_slow_tick_scalars[14] = effects.size()
+	_slow_tick_scalars[15] = 1 if simulation_active else 0
+	_slow_tick_scalars[16] = (
+		1 if encounter_runtime.pressure_scan_happened() else 0
+	)
+	_slow_tick_scalars[17] = 1 if simulation_active else 0
+	_slow_tick_scalars[18] = 1 if simulation_active else 0
+	_slow_tick_scalars[19] = 1 if simulation_active else 0
+	_slow_tick_scalars[20] = _slow_tick_anomaly_scan_count
+
+
 func _performance_accumulate_enemy_section(
 	section_name: String,
 	started_usec: int
@@ -6657,6 +6861,7 @@ func _start_manual_performance_trace() -> void:
 		return
 	if not _manual_performance_trace.start():
 		return
+	_refresh_pressure_observation_mode()
 	_start_engagement_telemetry()
 	if RenderingServer.has_method("viewport_set_measure_render_time"):
 		RenderingServer.viewport_set_measure_render_time(
@@ -6675,6 +6880,7 @@ func _finish_manual_performance_trace(reason: String) -> void:
 		_manual_performance_trace.set_engagement_telemetry(_engagement_telemetry.snapshot())
 		_stop_engagement_telemetry()
 	_manual_performance_trace.finish(reason)
+	_refresh_pressure_observation_mode()
 	if RenderingServer.has_method("viewport_set_measure_render_time"):
 		RenderingServer.viewport_set_measure_render_time(
 			get_viewport().get_viewport_rid(), false
@@ -6809,12 +7015,14 @@ func _start_performance_scenario() -> void:
 	if RenderingServer.has_method("viewport_set_measure_render_time"):
 		RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	_performance_scenario.activate(self)
+	_refresh_pressure_observation_mode()
 	_ui.show_gameplay()
 	_set_mouse_for_mode()
 
 
 func _finish_performance_scenario() -> void:
 	_performance_finishing = true
+	_refresh_pressure_observation_mode()
 	var validation := _performance_scenario.validation_snapshot(self)
 	_performance_scenario.deactivate()
 	_performance_recorder.finish(
@@ -6832,6 +7040,22 @@ func _finish_performance_scenario() -> void:
 		set_process(false)
 	else:
 		get_tree().quit(0 if bool(validation.get("valid", false)) else 1)
+
+
+func _refresh_pressure_observation_mode() -> void:
+	if not is_instance_valid(encounter_runtime):
+		return
+	var performance_recording := (
+		is_instance_valid(_performance_recorder)
+		and not _performance_finishing
+	)
+	var manual_recording := (
+		is_instance_valid(_manual_performance_trace)
+		and _manual_performance_trace.is_recording()
+	)
+	encounter_runtime.set_pressure_observation_enabled(
+		performance_recording or manual_recording
+	)
 
 
 func _performance_counts() -> Dictionary:

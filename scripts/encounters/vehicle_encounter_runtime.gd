@@ -70,6 +70,8 @@ var _geometry_snapshot: Variant
 var _stage_index := 0
 var _allocation_debug: Array[Dictionary] = []
 var _pressure_snapshot := {}
+var _pressure_observation_enabled := false
+var _pressure_scan_happened := false
 var _engagement_telemetry_enabled := false
 var _telemetry_births := 0
 var _telemetry_gate_completions := 0
@@ -135,6 +137,8 @@ func configure(
 	_maintenance_roles.clear()
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
+	_pressure_observation_enabled = false
+	_pressure_scan_happened = false
 	_geometry_snapshot = geometry_snapshot
 	_stage_index = maxi(0, stage_index)
 	_telemetry_births = 0
@@ -219,6 +223,26 @@ func set_engagement_telemetry_enabled(enabled: bool) -> void:
 		_telemetry_director_cpu_us = 0
 
 
+func set_pressure_observation_enabled(enabled: bool) -> void:
+	## Pressure sectors are diagnostic-only. Admission and attack decisions never use them.
+	_pressure_observation_enabled = enabled
+	if not enabled:
+		_pressure_snapshot = _empty_pressure_snapshot()
+		_pressure_scan_happened = false
+
+
+func pressure_observation_enabled() -> bool:
+	return _pressure_observation_enabled
+
+
+func pressure_scan_happened() -> bool:
+	return _pressure_scan_happened
+
+
+func pressure_visible_count() -> int:
+	return int(_pressure_snapshot.get("visible", 0))
+
+
 func consume_engagement_telemetry(output: Dictionary) -> void:
 	## Diagnostic counters are consumed only by an explicitly active recorder/trace.
 	output.clear()
@@ -280,16 +304,19 @@ func tick(
 	player_velocity: Vector2 = Vector2.ZERO
 ) -> Dictionary:
 	var step := maxf(0.0, delta)
+	_pressure_scan_happened = false
 	elapsed += step
 	_prune_recent_births()
 	_record_active_count_sample(active_mobile_count)
-	_pressure_snapshot = build_pressure_snapshot(
-		active_mobile_count,
-		active_enemies,
-		player_position,
-		visible_world,
-		hostile_projectile_count
-	)
+	if _pressure_observation_enabled:
+		_pressure_scan_happened = true
+		_pressure_snapshot = build_pressure_snapshot(
+			active_mobile_count,
+			active_enemies,
+			player_position,
+			visible_world,
+			hostile_projectile_count
+		)
 	_max_attack_family_overlap = maxi(_max_attack_family_overlap, active_attack_families.size())
 	var cues: Array[Dictionary] = []
 	var spawns: Array[Dictionary] = []

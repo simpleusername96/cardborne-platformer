@@ -51,6 +51,19 @@ func _validate_configure_and_hidden_outcomes() -> void:
 	for device in explicit.devices:
 		outcome_ids[StringName(device["outcome"])] = true
 	_expect(outcome_ids.size() == 3, "stage outcomes stay unique when blueprint requests a duplicate")
+	_expect(
+		Runtime.OUTCOME_IDS.size() == 3
+		and Runtime.OUTCOME_IDS.has(&"gravity_pull")
+		and Runtime.OUTCOME_IDS.has(&"cryo_lock")
+		and Runtime.OUTCOME_IDS.has(&"decoy_signal"),
+		"each stage has exactly Gravity, Cryo, and Decoy outcomes"
+	)
+	_expect(
+		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity_pull"]["duration"]), 5.0)
+		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo_lock"]["duration"]), 3.0)
+		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"decoy_signal"]["duration"]), 6.0),
+		"mystery outcomes retain the authored 5/3/6 second durations"
+	)
 
 
 func _validate_damage_authority_and_break_event() -> void:
@@ -97,7 +110,7 @@ func _validate_damage_authority_and_break_event() -> void:
 		StringName(event["effect_id"]) == &"gravity_pull"
 		and Vector2(event["position"]) == Vector2(100.0, 200.0)
 		and is_equal_approx(float(event["radius"]), 480.0)
-		and is_equal_approx(float(event["duration"]), 1.2),
+		and is_equal_approx(float(event["duration"]), 5.0),
 		"break event carries exact effect id, position, radius, and duration"
 	)
 	_expect(
@@ -116,18 +129,11 @@ func _validate_effect_retirement_and_stage_reset() -> void:
 	var runtime := Runtime.new()
 	runtime.configure(_blueprint(), 3, &"stage_1")
 	runtime.receive_damage(&"a", 90.0, &"player", &"direct")
-	_expect(runtime.advance(1.19).is_empty(), "effect remains active before its duration ends")
+	_expect(runtime.advance(4.99).is_empty(), "effect remains active before its duration ends")
 	var retired := runtime.advance(0.02)
 	_expect(retired.size() == 1 and StringName(retired[0]["effect_id"]) == &"gravity_pull", "effect retires at its duration")
 	var retired_device: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
 	_expect(StringName(retired_device["state"]) == &"retired" and not bool(retired_device["visible"]), "resolved device retires and becomes invisible with its effect")
-	runtime.configure(_blueprint(), 3, &"stage_1")
-	var purge := runtime.receive_damage(&"b", 90.0, &"player", &"area")
-	var purge_event: Dictionary = Dictionary(purge["break_event"])
-	_expect(StringName(purge_event["effect_id"]) == &"projectile_purge" and is_zero_approx(float(purge_event["duration"])), "projectile purge is an immediate exact event")
-	_expect(Array(runtime.snapshot()["active_effects"]).is_empty(), "immediate projectile purge never enters active effects")
-	var purge_device: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[1])
-	_expect(StringName(purge_device["state"]) == &"retired" and not bool(purge_device["visible"]), "immediate effect retires its device immediately")
 	runtime.configure(_blueprint(), 3, &"stage_2")
 	_expect(Array(runtime.snapshot()["active_effects"]).is_empty(), "stage configure clears active effects")
 
@@ -162,14 +168,14 @@ func _validate_hot_path_queries_and_reused_output() -> void:
 	var filled_effects := runtime.fill_active_effect_snapshot(effect_output)
 	var first_effect_record: Dictionary = effect_output[0]
 	_expect(is_same(filled_effects, runtime.fill_active_effect_snapshot(effect_output)) and is_same(first_effect_record, effect_output[0]), "active-effect snapshot reuses caller-owned array and records")
-	runtime.advance(1.2)
+	runtime.advance(5.0)
 	_expect(runtime.is_position_clear(Vector2(200.0, 0.0), 0.0), "retired device remains ignored by collision")
 
 
 func _blueprint() -> Array:
 	return [
 		{"id":&"a", "pos":Vector2(100.0, 200.0), "outcome":&"gravity_pull"},
-		{"id":&"b", "pos":Vector2(300.0, 400.0), "outcome":&"projectile_purge"},
+		{"id":&"b", "pos":Vector2(300.0, 400.0), "outcome":&"decoy_signal"},
 		{"id":&"c", "position":Vector2(500.0, 600.0), "outcome":&"cryo_lock"},
 	]
 

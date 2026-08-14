@@ -741,7 +741,10 @@ func _capture_build_state_evidence() -> void:
 	_run.experience_runtime.complete_progression()
 	_run._ui.update_hud(_run._build_hud_snapshot(false, false))
 	_run._ui.notify_immediate(
-		tr("NOTIFY_ALL_UPGRADES_COMPLETE"), 2.4, Art.SYSTEM
+		tr("NOTIFY_ALL_UPGRADES_COMPLETE"),
+		2.4,
+		Art.SYSTEM,
+		&"all_upgrades_complete"
 	)
 	await _settle_capture()
 	_save_capture("04c-progression-max.png")
@@ -1382,8 +1385,7 @@ func _capture_exact_area_effect_evidence() -> void:
 	var mystery_profiles := [
 		[&"gravity_pull", 0.60, "09v-mystery-gravity-pull.png"],
 		[&"cryo_lock", 0.80, "09w-mystery-cryo-lock.png"],
-		[&"projectile_purge", 0.70, "09x-mystery-projectile-purge.png"],
-		[&"decoy_signal", 0.35, "09y-mystery-decoy-signal.png"],
+		[&"decoy_signal", 0.35, "09x-mystery-decoy-signal.png"],
 	]
 	if settings != null:
 		settings.reduced_motion = false
@@ -1405,8 +1407,6 @@ func _capture_exact_area_effect_evidence() -> void:
 		var event := Dictionary(receipt["break_event"])
 		var radius := float(event["radius"])
 		_run._handle_mystery_device_break(event)
-		if outcome == &"projectile_purge" and not _run.effects.is_empty():
-			_run.effects[-1].time = _run.effects[-1].duration
 		_add_exact_area_reference_markers(center, radius, radius)
 		_run.capture_set_mode(&"paused")
 		_refresh_combat_capture()
@@ -1509,9 +1509,6 @@ func _capture_visual_event_evidence() -> void:
 					duration = 0.18
 				EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND:
 					radius = 95.0
-					duration = 0.18
-				EffectStore.MYSTERY_PURGE_PULSE_KIND:
-					radius = 420.0
 					duration = 0.18
 			_run._add_effect(
 				event_id,

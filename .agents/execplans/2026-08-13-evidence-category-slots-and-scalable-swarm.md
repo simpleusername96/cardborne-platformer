@@ -484,7 +484,7 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
 `tools/performance/`, new `tools/diagnostics/`, new `docs/performance/evidence/`, and new
 `docs/performance/vehicle-performance-evidence.jsonl`
 
-- [ ] **1.1 Define and validate one provenance envelope.**
+- [x] **1.1 Define and validate one provenance envelope.**
   - Change: add an evidence ID and common fields for full commit, source cleanliness including
     untracked source files, branch/ref, UTC start/end, command, artifact kind, schema/tool version,
     scenario, seed/fingerprint, warmup/sample duration, OS/Godot/GPU/renderer, logical/window
@@ -497,7 +497,7 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
   - Accept: a validator rejects a missing/short commit, unknown cleanliness, absent workload,
     unsupported viewport, missing authority data, or a status inferred only from a filename.
   - Guard: generated output under ignored `build/` does not itself make source cleanliness dirty.
-- [ ] **1.2 Add the tracked append-only ledger.**
+- [x] **1.2 Add the tracked append-only ledger.**
   - Change: add one JSON Lines entry per retained evidence set. Store metrics, raw artifact paths,
     SHA-256, byte size, plan checkpoint, and supersedes relation. Plans cite evidence IDs.
   - Accept: tooling can select comparable records by scenario and reject different seeds,
@@ -509,13 +509,13 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
   - Accept: the latest `4f7f7acd` red result is imported with its original hash and an explicit
     `authoritative_fail` status; its retained file remains readable without Actions artifacts.
   - Guard: no bulk import of all 163 historical files and no CI retention increase.
-- [ ] **1.4 Make all producers use the envelope.**
+- [x] **1.4 Make all producers use the envelope.**
   - Change: synthetic recorder, manual wrapper, capture manifest, Web build info, and evidence
     promotion command share one evidence ID. Remove optional environment-only commit provenance;
     the wrapper resolves it and the recorder refuses release authority when it is missing.
   - Accept: a synthetic run, manual diagnostic, capture, and Web build each pass focused provenance
     validators and emit linked metadata.
-- [ ] **1.5 Add a versioned bounded session signal recorder.**
+- [x] **1.5 Add a versioned bounded session signal recorder.**
   - Change: add the immutable event envelope and registry from the logging research report. Record
     only declared lifecycle events; accumulate 1 Hz encounter state, Upgrade focus behavior,
     announcement delivery, Anomaly results, and performance context into bounded stage/run summaries.
@@ -523,20 +523,20 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
   - Accept: reset/reuse tests prove no state leaks between runs; event/schema versions are explicit;
     a fixture reproduces opening, boss, Upgrade, announcement, Anomaly, and Result summaries; normal
     play allocates no per-frame event Dictionary and performs no event file I/O.
-- [ ] **1.6 Persist a capped local session ring.**
+- [x] **1.6 Persist a capped local session ring.**
   - Change: write completed session bundles under `user://diagnostics/`, retaining the newest 20
     completed sessions subject to 25 MB and 14 days. Flush at safe lifecycle boundaries and normal
     exit. Record incomplete termination when it can be detected; never touch saves or settings.
   - Accept: native and Web storage round trips pass; oldest-first eviction is deterministic; a
     corrupt/incompatible record is quarantined or skipped without blocking the game.
-- [ ] **1.7 Add explicit redacted export, not upload.**
+- [x] **1.7 Add explicit redacted export, not upload.**
   - Change: add one localized `Export Diagnostics` action in Settings and Result. Native writes a
     chosen bundle; Web downloads it. The bundle contains selected session JSONL, summary, registry
     version, and build identity. It excludes raw paths, free-form text, stable device/player IDs,
     exact routes, IP/browser fingerprinting, and secrets.
   - Accept: export is user-triggered, works in Korean/English and supported layouts, and no
     `HTTPRequest`, analytics SDK, background retry, or automatic network path is reachable.
-- [ ] **1.8 Add comparison and interpretation tooling.**
+- [x] **1.8 Add comparison and interpretation tooling.**
   - Change: validate a diagnostic bundle, summarize the signal-to-hypothesis table, and compare only
     records with compatible schema, content fingerprint, scenario/phase, viewport class, locale/UI
     configuration, renderer, and sampling mode. Preserve sample weights when sampling exists.
@@ -564,13 +564,13 @@ Source owners: `scripts/cards/vehicle_upgrade_catalog.gd`, `scripts/cards/vehicl
 `scripts/ui/vehicle_upgrade_build_cell.gd`, Upgrade/Result consumers, localization, product/visual
 specs, and focused upgrade/capture validators
 
-- [ ] **2.1 Put capacity truth beside compatibility truth.**
+- [x] **2.1 Put capacity truth beside compatibility truth.**
   - Change: publish catalog-order category descriptors and simultaneous capacities
     `2/5/2/3/5/4`, including the exact semantic position keys, selected localized heading keys, and
     accessible description keys defined above. Validate them against the 28-card roster and
     optional-secondary, attribute, and active-kind compatibility rules.
   - Accept: no UI file counts cards or infers compatibility from localized category text.
-- [ ] **2.2 Freeze grouped build records.**
+- [x] **2.2 Freeze grouped build records.**
   - Change: snapshot builder emits ordered category records with category ID/key, capacity, and
     fixed slot entries `{slot_key, record}`. Optional-secondary acquisition order assigns only
     `optional_0/1`; every other record maps by catalog ID or existing slot-kind metadata. Preserve a
@@ -578,14 +578,14 @@ specs, and focused upgrade/capture validators
     summary; it is not a rail-layout source.
   - Accept: every unique card appears once, fixed positions never move, optional positions remain
     stable, a level-up updates in place, and occupancy never exceeds capacity.
-- [ ] **2.3 Render grouped sections in the shared rail.**
+- [x] **2.3 Render grouped sections in the shared rail.**
   - Change: replace the global progressive capacity with six labeled grids. Use at most four
     columns per group; five-slot groups wrap. Keep filled-only focus, one popover, scroll containment,
     and existing compact/large sizing.
   - Accept: zero upgrades shows all 21 empty categorized positions; a mixed fixture fills the exact
     category positions with existing artwork; headings distinguish automatic weapons, attack-added
     effects, direct activation, and conditional perks; no image or popover is clipped.
-- [ ] **2.4 Reuse and localize the corrected rail everywhere.**
+- [x] **2.4 Reuse and localize the corrected rail everywhere.**
   - Change: Upgrade and Result use the same grouped snapshot/rail. Update Korean/English strings only
     to the locked label/description set; update `DESIGN.md`, `VISUAL_SYSTEM.md`, product and upgrade
     specs to retire the global progressive-grid and old category-copy contracts.
@@ -613,7 +613,7 @@ Preconditions:
 Source owners: `scripts/vehicle/vehicle_run.gd`, performance recorder/manual trace, session signal
 recorder, scenario fixtures, engagement telemetry, and their validators
 
-- [ ] **3.1 Add bounded slow-tick receipts.**
+- [x] **3.1 Add bounded slow-tick receipts.**
   - Change: while a recorder/manual trace is active, measure the five coarse physics sections on
     every tick. Retain only the top 32 ticks in fixed preallocated columns. Each receipt includes
     physics serial, total and coarse section times, exact/visible counts, due/critical counts,
@@ -662,25 +662,25 @@ Source owners: stage packet data, encounter director/runtime, spawn allocator, s
 `VehicleRun`, and the selected subset of pursuit field, enemy update schedule, spatial grid, contact,
 and enemy store
 
-- [ ] **4.1 Replace the delayed one-unit opening.**
+- [x] **4.1 Replace the delayed one-unit opening.**
   - Change: implement the locked six-unit `0.0s` cue/`0.9s` birth opening, beat-zero caps of six,
     `4.0s` normal surge start, nearest safe offscreen placement, and authored-sequence subtraction.
   - Accept: deterministic no-input first visible at most `3.5s`, at least three visible by `6s`, and
     first commitment/contact at most `8s`; no on-screen birth, authored total, quota, role identity,
     or max-four-births-per-tick invariant changes.
-- [ ] **4.2 Replace quota seal with boss maintenance pressure.**
+- [x] **4.2 Replace quota seal with boss maintenance pressure.**
   - Change: add the locked 8/12 low/high watermark mode. It drains admitted rounds, consumes next
     authored reserve identities in groups of at most four no more frequently than every four seconds,
     holds the boss slot margin, and stops when the boss phase ends.
   - Accept: boss and ordinary actors coexist; quota remains sealed at its reached value; exact count
     and attack commits stay bounded; a long boss fixture never fabricates identities or deadlocks the
     boss arrival.
-- [ ] **4.3 Guarantee immediate post-boss continuation.**
+- [x] **4.3 Guarantee immediate post-boss continuation.**
   - Change: preserve surviving ordinary state, stop old-stage maintenance, configure the next stage,
     and cue its six-unit continuation opening in the same gameplay frame.
   - Accept: if no survivor is visible, an ordinary center enters view within `3.0s`; player state,
     projectiles, XP, active-run clock, ordinary survivors, and Result timing retain their contracts.
-- [ ] **4.4 Remove unconsumed scans and event-own cheap aggregates.**
+- [x] **4.4 Remove unconsumed scans and event-own cheap aggregates.**
   - Change: stop building diagnostic pressure sectors/near/visible data at 60 Hz when no recorder or
     HUD consumer needs it. Replace unconditional frame count/family recounts with spawn/death/
     activation-owned counters where receipts select them. Keep threat radar readiness on its declared
@@ -734,7 +734,7 @@ Source owners: Mystery Device runtime, outcome assignment/spec, asset manifest/c
 combat renderer, HUD notification queue, map-pickup presentation, localization, accessibility,
 capture/workbench, and focused validators
 
-- [ ] **5.1 Simplify and lengthen Anomaly outcomes.**
+- [x] **5.1 Simplify and lengthen Anomaly outcomes.**
   - Change: remove Projectile Purge from assignment/runtime/presentation/localization/guidebook and
     set Gravity/Cryo/Decoy to `5.0/3.0/6.0s`. Each stage assigns the three remaining outcomes once.
     Use reused membership buffers and a bounded entrant refresh for long effects; keep Gravity force
@@ -760,14 +760,14 @@ capture/workbench, and focused validators
   - Accept: presentation matches collision while intact; full Gravity/Cryo/Decoy lifetimes remain
     visible; color-blind and reduced-motion captures retain shape/text/footprint cues; no asset is
     stretched, clipped, or used outside its approved semantic role.
-- [ ] **5.4 Collapse gameplay announcements into one text-only queue.**
+- [x] **5.4 Collapse gameplay announcements into one text-only queue.**
   - Change: remove ToastSurface chrome and renderer world chips; render one 22 px weight-800 centered
     HUD label with semantic color and restrained contrast treatment. Add semantic kind, priority,
     dedup/coalescing, and queue receipts; compute Anomaly affected count once at activation.
   - Accept: boss, danger, system, reveal, activation, barrier, upgrade-complete, and shield-down
     messages all use one structure; priority is deterministic; no 5 Hz target-count scan or duplicate
     text remains; Korean/English and 200% text do not clip.
-- [ ] **5.5 Add bounded time-based interaction motion.**
+- [x] **5.5 Add bounded time-based interaction motion.**
   - Change: implement the locked bob amplitudes/periods and one reused alpha-mask contour material for
     map repair/recall pickups and Anomaly Devices only. Stable ID phase offsets drive presentation
     from elapsed run time.
@@ -978,6 +978,13 @@ Validation rules:
 - 2026-08-14: one text-only HUD queue owns gameplay announcements. Map repair/recall pickups and
   Anomaly Devices use restrained time-based bob plus one shared contour; gameplay positions remain
   stationary and Reduced Motion uses a static contour.
+- 2026-08-14: the raw `4f7f7acd` artifact is absent from both retained and ignored evidence roots.
+  Promotion tooling must not reconstruct it from prose; task 1.3 remains open until a real hashable
+  source exists or the final same-commit authority evidence supersedes that historical checkpoint.
+- 2026-08-14: focused import, diagnostics, comparison, slow-receipt, arrival, encounter, run,
+  continuity, Anomaly, HUD, renderer, map, localization, capture, and visual-authority validators
+  pass on the integrated source. The final performance, rendered-evidence, Web, and deployment gates
+  remain open.
 
 ## Open Questions
 
@@ -988,9 +995,11 @@ pass, and a higher shipping cap if Phase 6 proves technical headroom.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1, durable commit-linked evidence and bounded local session diagnostics.
-- Next task: 1.1, define and validate the provenance envelope.
-- Last completed gate: Discovery Closure Gate.
+- Current phase: Phase 3, clean tail-correlated baseline and final performance qualification.
+- Next task: 3.2-3.4, run the bounded performance scenario and use its top-32 receipts to decide
+  whether any Phase 4 hot-owner correction remains necessary.
+- Last completed gate: integrated focused source validation through Phase 5, excluding rendered
+  approval evidence and final timing.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance
   this pointer in the same edit.
 

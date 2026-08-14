@@ -36,8 +36,8 @@ const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 const ENEMY_STATUS_SHADER = preload(
 	"res://scripts/presentation/shaders/vehicle_enemy_status_overlay.gdshader"
 )
-const WORLD_CHIP_FONT = preload(
-	"res://art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf"
+const INTERACTION_EDGE_SHADER = preload(
+	"res://scripts/presentation/shaders/vehicle_interaction_edge.gdshader"
 )
 
 const ENEMY_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES
@@ -61,9 +61,18 @@ const HEALTH_BAR_INSTALLATION_ROLES: Array[StringName] = [
 const ENEMY_BATCH_INITIAL_CAPACITY := 64
 const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
 const MYSTERY_DEVICE_CAPACITY := 3
-const MYSTERY_DEVICE_VISUAL_RADIUS := 96.0
+const MAP_PICKUP_CAPACITY := 14
+const MYSTERY_DEVICE_VISUAL_RADIUS := 84.0
+const INTERACTION_CONTOUR_WORLD_UNITS := 2.0
+const INTERACTION_EDGE_ALPHA_MIN := 0.32
+const INTERACTION_EDGE_ALPHA_MAX := 0.52
+const INTERACTION_EDGE_ALPHA_REDUCED := 0.42
+const INTERACTION_EDGE_PERIOD := 2.4
+const MAP_PICKUP_BOB_AMPLITUDE := 6.0
+const MAP_PICKUP_BOB_PERIOD := 1.8
+const MYSTERY_DEVICE_BOB_AMPLITUDE := 4.0
+const MYSTERY_DEVICE_BOB_PERIOD := 2.2
 const SEMANTIC_TEXTURE_DRAW_CAPACITY := 512
-const WORLD_CHIP_CAPACITY := 3
 const CARDINAL_DIRECTIONS := [
 	Vector2.LEFT,
 	Vector2.RIGHT,
@@ -205,18 +214,17 @@ class SemanticTextureSpec:
 	var pivot := Vector2.ZERO
 
 
-class WorldChipDraw:
-	var text := ""
-	var position := Vector2.ZERO
-	var color := Color.WHITE
-
-
 var _enemy_batches: Dictionary = {}
 var _boss_variant_batches: Dictionary = {}
 var _enemy_status_material: ShaderMaterial
+var _pickup_edge_material: ShaderMaterial
+var _mystery_edge_material: ShaderMaterial
 var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
+var _map_pickup_batches: Dictionary = {}
+var _map_pickup_contour_batches: Dictionary = {}
 var _mystery_device_batches: Dictionary = {}
+var _mystery_device_contour_batches: Dictionary = {}
 var _mystery_effect_ring_batch: BatchHandle
 var _electric_field_batch: BatchHandle
 var _overlay_batches: Dictionary = {}
@@ -228,8 +236,6 @@ var _boss_health_bar_count := 0
 var _semantic_texture_draws: Array[SemanticTextureDraw] = []
 var _semantic_texture_draw_count := 0
 var _semantic_texture_specs: Dictionary = {}
-var _world_chip_draws: Array[WorldChipDraw] = []
-var _world_chip_draw_count := 0
 var _secondary_asset_ids: Dictionary = {}
 var _player_rear_anchor := Vector2(-0.84, 0.0)
 var _installation_health_candidates: Array[EnemyState] = []
@@ -254,8 +260,6 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	for _index in SEMANTIC_TEXTURE_DRAW_CAPACITY:
 		_semantic_texture_draws.append(SemanticTextureDraw.new())
-	for _index in WORLD_CHIP_CAPACITY:
-		_world_chip_draws.append(WorldChipDraw.new())
 	_installation_health_candidates.resize(MAX_INSTALLATION_HEALTH_BARS)
 	_installation_health_scores.resize(MAX_INSTALLATION_HEALTH_BARS)
 	_repair_link_candidates.resize(MAX_REPAIR_LINKS)
@@ -291,7 +295,6 @@ func sync(
 	_reset_counts()
 	_last_repair_link_count = 0
 	_semantic_texture_draw_count = 0
-	_world_chip_draw_count = 0
 	if active:
 		_presentation_sync_serial += 1
 		_sync_enemies(
@@ -309,6 +312,7 @@ func sync(
 			bool(presentation.get("reduced_motion", false))
 		)
 		_sync_world_overlays(presentation, visible_world)
+		_sync_map_pickups(presentation, visible_world)
 		_sync_mystery_devices(presentation, visible_world)
 		_sync_mystery_effects(presentation, visible_world)
 		_last_health_bar_count = (
@@ -324,8 +328,6 @@ func sync(
 func _draw() -> void:
 	for index in _semantic_texture_draw_count:
 		_draw_semantic_texture(_semantic_texture_draws[index])
-	for index in _world_chip_draw_count:
-		_draw_world_chip(_world_chip_draws[index])
 
 
 static func player_rear_anchors(
@@ -440,6 +442,12 @@ func debug_semantic_texture_draws(asset_id: StringName = &"") -> Array[Dictionar
 func _build_batches() -> void:
 	_enemy_status_material = ShaderMaterial.new()
 	_enemy_status_material.shader = ENEMY_STATUS_SHADER
+	_pickup_edge_material = ShaderMaterial.new()
+	_pickup_edge_material.shader = INTERACTION_EDGE_SHADER
+	_pickup_edge_material.set_shader_parameter("edge_color", Art.PLAYER_REWARD)
+	_mystery_edge_material = ShaderMaterial.new()
+	_mystery_edge_material.shader = INTERACTION_EDGE_SHADER
+	_mystery_edge_material.set_shader_parameter("edge_color", Art.SYSTEM)
 	var unit_quad_mesh := _build_unit_quad_mesh()
 	var health_rect_mesh := _build_unit_quad_mesh(0.5)
 	var unit_ring_mesh := _build_unit_ring_mesh()
@@ -502,6 +510,27 @@ func _build_batches() -> void:
 		&"experience_master",
 		EXPERIENCE_BATCH_INITIAL_CAPACITY
 	)
+	for pickup_kind in [&"repair", &"experience_recall"]:
+		var pickup_asset := StringName("pickup/%s" % pickup_kind)
+		_map_pickup_batches[pickup_kind] = _create_asset_batch(
+			"MapPickup_%s" % String(pickup_kind),
+			pickup_asset,
+			MAP_PICKUP_CAPACITY,
+			2,
+			StringName("map_pickup_%s" % pickup_kind),
+			MAP_PICKUP_CAPACITY
+		)
+		_map_pickup_contour_batches[pickup_kind] = _create_asset_batch(
+			"MapPickupContour_%s" % String(pickup_kind),
+			pickup_asset,
+			MAP_PICKUP_CAPACITY,
+			1,
+			StringName("map_pickup_contour_%s" % pickup_kind),
+			MAP_PICKUP_CAPACITY,
+			false,
+			_pickup_edge_material,
+			true
+		)
 	_mystery_device_batches[&"intact"] = _create_asset_batch(
 		"MysteryDevice_intact",
 		StringName(
@@ -520,6 +549,22 @@ func _build_batches() -> void:
 		),
 		MYSTERY_DEVICE_CAPACITY, 2, &"mystery_device_resolved", MYSTERY_DEVICE_CAPACITY
 	)
+	for device_state in [&"intact", &"resolved"]:
+		var descriptor_id := StringName("mystery_device_%s" % device_state)
+		var device_asset := StringName(
+			WorldCatalog.world_object_descriptor(descriptor_id).get("asset", &"")
+		)
+		_mystery_device_contour_batches[device_state] = _create_asset_batch(
+			"MysteryDeviceContour_%s" % String(device_state),
+			device_asset,
+			MYSTERY_DEVICE_CAPACITY,
+			1,
+			StringName("mystery_device_contour_%s" % device_state),
+			MYSTERY_DEVICE_CAPACITY,
+			false,
+			_mystery_edge_material,
+			true
+		)
 	_mystery_effect_ring_batch = _create_batch(
 		"MysteryEffect_ring",
 		unit_ring_mesh,
@@ -1470,18 +1515,6 @@ func _sync_effects(
 				Color(effect.color, 0.18 * _instant_impact_alpha(progress))
 			)
 			continue
-		if mode == &"mystery_purge_pulse":
-			_write_disk(
-				position,
-				radius,
-				Color(Art.SYSTEM, 0.14 * (1.0 - progress))
-			)
-			_write_ring(
-				position,
-				radius,
-				Color(Art.SYSTEM, color.a * 0.14)
-			)
-			continue
 
 
 static func _instant_impact_alpha(progress: float) -> float:
@@ -1823,10 +1856,54 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	_write_diamond(cursor_position, 4.0, Art.IVORY_BRIGHT)
 
 
+func _sync_map_pickups(state: Dictionary, visible_world: Rect2) -> void:
+	var pickups_variant: Variant = state.get("map_pickups")
+	if not pickups_variant is Array:
+		return
+	var reduced_motion := bool(state.get("reduced_motion", false))
+	var run_time := float(state.get("run_time", 0.0))
+	for pickup_variant in pickups_variant:
+		var pickup := Dictionary(pickup_variant)
+		if not bool(pickup.get("active", false)):
+			continue
+		var kind := StringName(pickup.get("kind", &""))
+		if kind not in [&"repair", &"experience_recall"]:
+			continue
+		var radius := float(Art.PICKUP_PLINTH_RADIUS)
+		var position := Vector2(pickup.get("pos", Vector2.ZERO))
+		var phase_offset := _stable_interaction_phase(pickup.get("id", ""))
+		if not reduced_motion:
+			position.y += sin(
+				run_time * TAU / MAP_PICKUP_BOB_PERIOD + phase_offset
+			) * MAP_PICKUP_BOB_AMPLITUDE
+		if not visible_world.grow(radius + INTERACTION_CONTOUR_WORLD_UNITS).has_point(position):
+			continue
+		var edge_alpha := _interaction_edge_alpha(
+			run_time, phase_offset, reduced_motion
+		)
+		_write_instance(
+			_map_pickup_contour_batches[kind] as BatchHandle,
+			position,
+			0.0,
+			Vector2.ONE * (radius + INTERACTION_CONTOUR_WORLD_UNITS),
+			Color.WHITE,
+			Color(1.0, 1.0, 1.0, edge_alpha)
+		)
+		_write_instance(
+			_map_pickup_batches[kind] as BatchHandle,
+			position,
+			0.0,
+			Vector2.ONE * radius,
+			Color.WHITE
+		)
+
+
 func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 	var devices_variant: Variant = state.get("mystery_devices")
 	if not devices_variant is Array:
 		return
+	var reduced_motion := bool(state.get("reduced_motion", false))
+	var run_time := float(state.get("run_time", 0.0))
 	for device_variant in devices_variant:
 		var device := Dictionary(device_variant)
 		if not bool(device.get("visible", false)):
@@ -1835,8 +1912,28 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		if device_state not in [&"intact", &"resolved"]:
 			continue
 		var position := Vector2(device.get("position", Vector2.ZERO))
-		if not visible_world.grow(MYSTERY_DEVICE_VISUAL_RADIUS).has_point(position):
+		var phase_offset := _stable_interaction_phase(device.get("id", ""))
+		if not reduced_motion:
+			position.y += sin(
+				run_time * TAU / MYSTERY_DEVICE_BOB_PERIOD + phase_offset
+			) * MYSTERY_DEVICE_BOB_AMPLITUDE
+		if not visible_world.grow(
+			MYSTERY_DEVICE_VISUAL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS
+		).has_point(position):
 			continue
+		var edge_alpha := _interaction_edge_alpha(
+			run_time, phase_offset, reduced_motion
+		)
+		_write_instance(
+			_mystery_device_contour_batches[device_state] as BatchHandle,
+			position,
+			0.0,
+			Vector2.ONE * (
+				MYSTERY_DEVICE_VISUAL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS
+			),
+			Color.WHITE,
+			Color(1.0, 1.0, 1.0, edge_alpha)
+		)
 		_write_instance(
 			_mystery_device_batches[device_state] as BatchHandle,
 			position,
@@ -1844,59 +1941,29 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			Vector2.ONE * MYSTERY_DEVICE_VISUAL_RADIUS,
 			Color.WHITE
 		)
-		var outcome_label := String(device.get("outcome_label", ""))
-		if not outcome_label.is_empty():
-			_queue_world_chip(
-				"%s · %d" % [
-					outcome_label,
-					int(device.get("target_count", 0)),
-				],
-				position - Vector2(0.0, MYSTERY_DEVICE_VISUAL_RADIUS + 18.0),
-				_mystery_outcome_color(StringName(
-					device.get("revealed_outcome", &"")
-				))
-			)
 
 
-func _mystery_outcome_color(outcome: StringName) -> Color:
-	match outcome:
-		&"cryo_lock":
-			return Art.CRYO
-		&"projectile_purge":
-			return Art.MINT
-		&"decoy_signal":
-			return Art.MUSTARD
-	return Art.SYSTEM
+static func _stable_interaction_phase(identity: Variant) -> float:
+	return float(posmod(String(identity).hash(), 4096)) / 4096.0 * TAU
 
 
-func _queue_world_chip(text_value: String, position: Vector2, color: Color) -> void:
-	if text_value.is_empty() or _world_chip_draw_count >= WORLD_CHIP_CAPACITY:
-		return
-	var chip := _world_chip_draws[_world_chip_draw_count]
-	chip.text = text_value
-	chip.position = position
-	chip.color = color
-	_world_chip_draw_count += 1
-
-
-func _draw_world_chip(chip: WorldChipDraw) -> void:
-	var font_size := 14
-	var text_size := WORLD_CHIP_FONT.get_string_size(
-		chip.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size
+static func _interaction_edge_alpha(
+	run_time: float,
+	phase_offset: float,
+	reduced_motion: bool
+) -> float:
+	if reduced_motion:
+		return INTERACTION_EDGE_ALPHA_REDUCED
+	var normalized := (
+		sin(run_time * TAU / INTERACTION_EDGE_PERIOD + phase_offset) + 1.0
+	) * 0.5
+	return lerpf(
+		INTERACTION_EDGE_ALPHA_MIN,
+		INTERACTION_EDGE_ALPHA_MAX,
+		normalized
 	)
-	var size := text_size + Vector2(14.0, 8.0)
-	var rectangle := Rect2(chip.position - size * 0.5, size)
-	draw_rect(rectangle, Color(Art.SPACE_BLACK, 0.90), true)
-	draw_rect(rectangle, Color(chip.color, 0.86), false, 2.0)
-	draw_string(
-		WORLD_CHIP_FONT,
-		chip.position + Vector2(-text_size.x * 0.5, text_size.y * 0.32),
-		chip.text,
-		HORIZONTAL_ALIGNMENT_LEFT,
-		-1.0,
-		font_size,
-		Art.TEXT_PRIMARY
-	)
+
+
 func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 	var effects_variant: Variant = state.get("mystery_effects")
 	if not effects_variant is Array:

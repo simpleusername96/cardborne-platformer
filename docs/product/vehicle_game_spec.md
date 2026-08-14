@@ -250,25 +250,22 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   to five unmodified 18-damage primary hits. Player direct and area damage may
   break it; enemy AI and hostile attacks ignore it. It is not an enemy, never
   counts toward quota, and drops no XP or item.
-- A stage assigns three different outcomes from `gravity_pull`, `cryo_lock`,
-  `projectile_purge`, and `decoy_signal`. The first accepted player hit reveals
-  the assigned outcome without triggering it; breaking the device applies it
-  and reports the number of affected enemies or cleared hostile projectiles.
-  Pull affects non-boss enemies within 480 pixels for
-  1.2 seconds. Cryo lock stops non-boss movement and new attack starts within
-  360 pixels for 0.8 seconds but does not cancel a committed warned attack.
-  Projectile purge retires hostile projectiles within 420 pixels immediately.
-  Decoy signal redirects nearby enemy movement/aim toward the wreck within 900
-  pixels for 6 seconds without making the wreck an attack target.
+- A stage assigns exactly one each of `gravity_pull`, `cryo_lock`, and
+  `decoy_signal`. The first accepted player hit reveals the assigned outcome
+  without triggering it; breaking the device applies it and reports affected
+  ordinary enemies. Pull affects non-boss enemies within 480 pixels for 5
+  seconds. Cryo lock stops non-boss movement and new attack starts within 360
+  pixels for 3 seconds but does not cancel a committed warned attack. Decoy
+  signal redirects nearby enemy movement/aim toward the wreck within 900 pixels
+  for 6 seconds without making the wreck an attack target.
 - Cryo lock feeds the same exact-size translucent blue enemy-body compositor as
-  Chill without creating a Chill stack. Projectile purge emits one short System
-  pulse after the clear. Decoy redirection is visible because affected enemies
+  Chill without creating a Chill stack. Decoy redirection is visible because affected enemies
   face its target outside already committed attacks. The minimap never reveals
   the outcome.
 - Every revealed Mystery effect shows its complete gameplay footprint from the
-  device position: Gravity Pull radius `480` for `1.2 s`, Cryo Lock radius `360`
-  for `0.8 s`, Projectile Purge radius `420` for its short pulse, and Decoy Signal
-  radius `900` for `6 s`. A boundary accent never substitutes for the filled area.
+  device position: Gravity Pull radius `480` for `5 s`, Cryo Lock radius `360`
+  for `3 s`, and Decoy Signal radius `900` for `6 s`. A boundary accent never
+  substitutes for the filled area.
 - Primary rounds apply the same per-shot structure damage at every point in the
   firing cadence. Structure upgrades change the repeated-hit result for Mystery
   Devices, Bulkhead Guard plates, and armored-elite shells without introducing
@@ -628,7 +625,7 @@ no credit or stored charge.
   spawn counts, and map dimensions remain unchanged. HUD and modal CanvasLayers
   do not inherit this world scale.
 - The fixed-capacity transient effect buffer contains dash afterimage, EMP
-  charge/release, Thermal Burst, bounded Mystery purge pulses, Drop Mine, and
+  charge/release, Thermal Burst, Drop Mine, and
   Explosive Seeker impact receipts. It keeps its 96-effect
   ceiling, at most 24 live Thermal impacts, and at most eight live Drop Mine
   receipts; saturated Thermal
@@ -666,10 +663,11 @@ no credit or stored charge.
   borders, dividers, cooldown rings, or progress rails. Top-right owns only the
   minimap. No bottom-center action, live upgrade icon, edge boss/target health,
   mission surface, objective text, or ornamental dock is present.
-- The normal top-center toast is `320×36` compact or `360×40` standard/large and
-  sits four pixels below the lower edge of the status-cluster/minimap band. Only boss inbound, barrier depleted, Mystery
-  Device result, boss shield-down, and progression-complete events may enqueue
-  gameplay toasts. Stage
+- The normal top-center announcement is text-only, 22 px bold, and sits four
+  pixels below the lower edge of the status-cluster/minimap band. It uses a
+  bounded priority queue with duplicate coalescing; semantic color changes by
+  message type. Only boss inbound, barrier depleted, Mystery Device result,
+  boss shield-down, and progression-complete events may enqueue it. Stage
   transitions use no banner.
 - Bosses and fixed combat installations
   (`turret`, `interceptor_tower`, `beam_sentinel`, and `generator`) own thick,
@@ -731,9 +729,6 @@ no credit or stored charge.
     Seeker shows its full `95` radius at the impact point. Each complete footprint
     uses one synchronized `0.18 s` attack/hold/fade envelope with no independently
     shrinking or disappearing middle shape.
-  - Mystery Projectile Purge shows its full `420` hostile-projectile-clear disk
-    immediately at the device position; its single boundary may remain as an
-    accent.
   - Mystery Gravity Pull, Cryo Lock, and Decoy Signal keep full disks at their
     exact respective radii `480`, `360`, and `900` for their complete active
     durations; their single boundaries remain accents.

@@ -35,7 +35,6 @@ const EXPECTED_EVENT_IDS := [
 	"thermal_burst_impact",
 	"drop_mine_detonation",
 	"explosive_seeker_impact",
-	"mystery_projectile_purge",
 ]
 
 var _failures: Array[String] = []
@@ -113,7 +112,6 @@ func _validate_event_catalog() -> void:
 		&"thermal_area":1,
 		&"drop_mine_area":1,
 		&"explosive_seeker_area":1,
-		&"mystery_purge_pulse":1,
 	}
 	var mode_counts := {}
 	_expect(
@@ -162,7 +160,6 @@ func _validate_event_producers() -> void:
 			"player_emp_release":"EMP_RELEASE_KIND",
 			"drop_mine_detonation":"DROP_MINE_DETONATION_KIND",
 			"explosive_seeker_impact":"EXPLOSIVE_SEEKER_IMPACT_KIND",
-			"mystery_projectile_purge":"MYSTERY_PURGE_PULSE_KIND",
 		}
 		if constant_events.has(event_id):
 			var constant_name := String(constant_events[event_id])
@@ -176,7 +173,7 @@ func _validate_event_producers() -> void:
 			"VehicleRun does not emit required transient event: %s" % event_id
 		)
 	_expect(
-		produced.size() == EXPECTED_EVENT_IDS.size() - 5,
+		produced.size() == EXPECTED_EVENT_IDS.size() - 4,
 		"VehicleRun emits exactly the two reviewed direct transient event IDs"
 	)
 	var secondary_source := FileAccess.get_file_as_string(SECONDARY_PATH)

@@ -18,14 +18,45 @@ func _initialize() -> void:
 	_expect(BuildIdentity.is_complete(identity), "complete commit identity is accepted")
 	_expect(BuildIdentity.is_session_usable(BuildIdentity.dev_unknown()), "editor sessions retain explicit dev_unknown identity")
 	var recorder := SignalRecorder.new()
-	_expect(recorder.begin("fixture-session", identity), "session recorder starts with complete identity")
+	_expect(
+		recorder.begin("fixture-session", identity, {
+			"locale":&"ko", "viewport_class":&"standard",
+			"reduced_motion":false, "renderer":&"gl_compatibility",
+		}),
+		"session recorder starts with complete identity and UI context"
+	)
 	_expect(not recorder.emit_event("localized event", {}), "dynamic event names are rejected")
 	_expect(recorder.emit_event("stage_started", {"stage_id": &"stage_1", "localized_text": "ignored"}), "declared lifecycle event records semantic fields")
+	for fixture_event in [
+		{"kind":"first_visible", "fields":{"stage_index":0}},
+		{"kind":"boss_warning", "fields":{"stage_index":0}},
+		{"kind":"upgrade_focused", "fields":{"upgrade_id":&"thermal_burst"}},
+		{"kind":"announcement_shown", "fields":{"semantic_id":&"boss_inbound"}},
+		{"kind":"anomaly_activated", "fields":{"effect_id":&"gravity_pull", "affected_count":4}},
+		{"kind":"result_shown", "fields":{"stage_count":5}},
+	]:
+		_expect(
+			recorder.emit_event(
+				String(fixture_event["kind"]),
+				Dictionary(fixture_event["fields"])
+			),
+			"canonical diagnostic fixture records %s" % fixture_event["kind"]
+		)
 	for index in 4:
-		recorder.advance_frame(0.3, 16.0 + index)
+		recorder.advance_frame(
+			0.3, 16.0 + index, 10 + index, true, 0, &"playing"
+		)
 	var bundle := recorder.finish("fixture_complete")
-	_expect(Array(bundle.get("events", [])).size() == 2, "bounded lifecycle events retain start and declared event")
+	_expect(Array(bundle.get("events", [])).size() == 8, "bounded lifecycle fixture retains opening, boss, Upgrade, announcement, Anomaly, and Result events")
 	_expect(Array(bundle.get("one_hz", [])).size() == 1, "frame sampling produces bounded one-hertz summary")
+	var second := Dictionary(Array(bundle.get("one_hz", []))[0])
+	_expect(
+		int(second.get("max_exact_enemy_count", 0)) == 13
+			and is_equal_approx(float(second.get("visible_threat_frame_ratio", 0.0)), 1.0)
+			and StringName(second.get("run_mode", &"")) == &"playing"
+			and StringName(Dictionary(bundle.get("session_context", {})).get("locale", &"")) == &"ko",
+		"one-hertz summary retains bounded pressure and supported UI context"
+	)
 	_expect(recorder.finish("second_finish").is_empty(), "completed recorder cannot leak state into a second run")
 	var checkpoint_recorder := SignalRecorder.new()
 	_expect(checkpoint_recorder.begin("checkpoint-session", BuildIdentity.dev_unknown()), "editor diagnostic session starts with dev_unknown identity")
@@ -34,6 +65,7 @@ func _initialize() -> void:
 	_expect(int(checkpoint.get("started_unix", 0)) > 0 and int(checkpoint.get("saved_unix", 0)) > 0, "bundle records comparable local lifecycle timestamps")
 	var redacted := Exporter.make_redacted_bundle({
 		"registry_version": 1, "build_identity": identity, "completed_reason": "done",
+		"session_context":{"locale":&"ko", "viewport_class":&"standard", "reduced_motion":false, "renderer":&"gl_compatibility"},
 		"events": [{"session_id": "private", "kind": "stage_started", "fields": {"route": "private", "stage_id": "stage_1", "access_token": "private", "deviceId": "private", "rawPath": "private", "userAgent": "private"}}],
 		"one_hz": [],
 	})
@@ -47,6 +79,10 @@ func _initialize() -> void:
 		and not redacted_fields.has("rawPath")
 		and not redacted_fields.has("userAgent"),
 		"export redacts stable IDs, routes, paths, browser fields, and secret-like keys"
+	)
+	_expect(
+		StringName(Dictionary(redacted.get("session_context", {})).get("locale", &"")) == &"ko",
+		"explicit export preserves non-identifying comparison context"
 	)
 	_expect(DiagnosticStore.MAX_SESSIONS == 20 and DiagnosticStore.MAX_BYTES == 25 * 1024 * 1024 and DiagnosticStore.MAX_AGE_SECONDS == 14 * 24 * 60 * 60, "store retention contract remains 20 sessions / 25 MiB / 14 days")
 	_validate_store_and_native_export(bundle)

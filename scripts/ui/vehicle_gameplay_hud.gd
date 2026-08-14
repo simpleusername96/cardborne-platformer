@@ -15,6 +15,8 @@ const UiGlyphCatalog = preload(
 
 const TOP_STATUS_GAP := 8.0
 
+signal announcement_receipt(receipt: Dictionary)
+
 
 class HealthPips:
 	extends Control
@@ -440,7 +442,7 @@ var _health_bar: HealthPips
 var _status_items: Dictionary = {}
 var _accessibility_text_scale := 1.0
 var _minimap: StageMinimap
-var _notification_panel: PanelContainer
+var _notification_panel: Control
 var _notification: Label
 var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
@@ -506,18 +508,18 @@ func _build() -> void:
 	_minimap.custom_minimum_size = Vector2(168.0, 100.0)
 	minimap_zone.add_child(_minimap)
 
-	_notification_panel = Factory.surface(
-		Factory.SURFACE_TOAST,
-		Vector2(360.0, 44.0)
-	)
-	_notification_panel.name = "NotificationPanel"
+	_notification_panel = Control.new()
+	_notification_panel.name = "TextAnnouncement"
 	_notification_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_notification_panel.size = Vector2(360.0, 40.0)
 	add_child(_notification_panel)
-	_notification = Factory.label("", 18, Art.IVORY_BRIGHT)
+	_notification = Factory.label("", 22, Art.IVORY_BRIGHT)
 	_notification.name = "Notification"
+	_notification.theme_type_variation = &"SectionLabel"
 	_notification.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_notification.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_notification.add_theme_font_size_override("font_size", 22)
+	_notification.add_theme_constant_override("outline_size", 2)
 	_shadow_label(_notification)
 	_notification_panel.add_child(_notification)
 	_notification_panel.visible = false
@@ -616,12 +618,29 @@ func update_threat_anchor(
 func notify(
 	message: String,
 	duration: float = 2.4,
-	color: Color = Art.IVORY_BRIGHT
+	color: Color = Art.IVORY_BRIGHT,
+	priority: int = 1,
+	semantic_id: StringName = &"system"
 ) -> void:
-	var entry := {"message":message, "duration":duration, "color":color}
+	var entry := {
+		"message":message,
+		"duration":duration,
+		"color":color,
+		"priority":clampi(priority, 0, 3),
+		"semantic_id":semantic_id,
+	}
+	if _coalesce_notification(entry):
+		return
+	_emit_announcement_receipt(&"queued", entry)
 	if _notification_timer > 0.0:
-		if _notification_queue.size() >= 5:
-			_notification_queue.pop_front()
+		if _notification_queue.size() >= 4:
+			var lowest_index := _lowest_priority_index()
+			var lowest := Dictionary(_notification_queue[lowest_index])
+			if int(entry["priority"]) <= int(lowest.get("priority", 0)):
+				_emit_announcement_receipt(&"dropped", entry, &"queue_full")
+				return
+			_notification_queue.pop_at(lowest_index)
+			_emit_announcement_receipt(&"dropped", lowest, &"queue_full")
 		_notification_queue.append(entry)
 		return
 	_show_notification(entry)
@@ -630,15 +649,30 @@ func notify(
 func notify_immediate(
 	message: String,
 	duration: float = 2.4,
-	color: Color = Art.IVORY_BRIGHT
+	color: Color = Art.IVORY_BRIGHT,
+	semantic_id: StringName = &"danger"
 ) -> void:
+	var entry := {
+		"message":message,
+		"duration":duration,
+		"color":color,
+		"priority":3,
+		"semantic_id":semantic_id,
+	}
+	if _coalesce_notification(entry):
+		return
+	_emit_announcement_receipt(&"queued", entry)
 	if _notification_timer > 0.0 and not _active_notification_entry.is_empty():
 		var interrupted := _active_notification_entry.duplicate(true)
 		interrupted["duration"] = _notification_timer
-		if _notification_queue.size() >= 5:
-			_notification_queue.pop_back()
+		_emit_announcement_receipt(&"interrupted", interrupted, &"priority")
+		if _notification_queue.size() >= 4:
+			var dropped := Dictionary(
+				_notification_queue.pop_at(_lowest_priority_index())
+			)
+			_emit_announcement_receipt(&"dropped", dropped, &"queue_full")
 		_notification_queue.push_front(interrupted)
-	_show_notification({"message":message, "duration":duration, "color":color})
+	_show_notification(entry)
 
 
 func clear_notifications() -> void:
@@ -657,8 +691,9 @@ func debug_notification_contract() -> Dictionary:
 		"active_message":_notification.text,
 		"queued_messages":queued_messages,
 		"queue_size":_notification_queue.size(),
-		"queue_cap":5,
-		"surface_variation":_notification_panel.theme_type_variation,
+		"queue_cap":4,
+		"text_only":true,
+		"font_size":_notification.get_theme_font_size("font_size"),
 		"input_passthrough":(
 			_notification_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE
 		),
@@ -792,7 +827,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"zone_surface_variations":[
 			_minimap_panel.theme_type_variation,
 		],
-		"toast_surface_variation":_notification_panel.theme_type_variation,
+		"toast_surface_variation":&"text_only",
 		"toast_size":toast_size,
 		"toast_position":toast_position,
 		"toast_center_attached":is_equal_approx(
@@ -865,6 +900,8 @@ func _apply_responsive_layout() -> void:
 		(size.x - _notification_panel.size.x) * 0.5,
 		top_band_bottom + 4.0
 	)
+	_notification.position = Vector2.ZERO
+	_notification.size = _notification_panel.size
 func _safe_margin(viewport_width: float) -> float:
 	if viewport_width < 1100.0:
 		return 16.0
@@ -923,7 +960,9 @@ func set_accessibility_text_scale(scale: float) -> void:
 
 func _show_next_notification() -> void:
 	if not _notification_queue.is_empty():
-		_show_notification(_notification_queue.pop_front())
+		_show_notification(Dictionary(
+			_notification_queue.pop_at(_highest_priority_index())
+		))
 
 
 func _show_notification(entry: Dictionary) -> void:
@@ -936,7 +975,63 @@ func _show_notification(entry: Dictionary) -> void:
 	_notification_panel.modulate.a = 1.0
 	_notification_panel.visible = true
 	_notification_timer = float(entry["duration"])
+	_emit_announcement_receipt(&"shown", entry)
 	set_process(true)
+
+
+func _coalesce_notification(entry: Dictionary) -> bool:
+	var message := String(entry.get("message", ""))
+	if message.is_empty():
+		_emit_announcement_receipt(&"dropped", entry, &"empty")
+		return true
+	if not _active_notification_entry.is_empty() and String(_active_notification_entry.get("message", "")) == message:
+		_notification_timer = maxf(_notification_timer, float(entry.get("duration", 0.0)))
+		_emit_announcement_receipt(&"dropped", entry, &"coalesced")
+		return true
+	for index in _notification_queue.size():
+		var queued_entry := Dictionary(_notification_queue[index])
+		if String(queued_entry.get("message", "")) == message:
+			queued_entry["duration"] = maxf(float(queued_entry.get("duration", 0.0)), float(entry.get("duration", 0.0)))
+			queued_entry["priority"] = maxi(int(queued_entry.get("priority", 0)), int(entry.get("priority", 0)))
+			_notification_queue[index] = queued_entry
+			_emit_announcement_receipt(&"dropped", entry, &"coalesced")
+			return true
+	return false
+
+
+func _lowest_priority_index() -> int:
+	var lowest_index := 0
+	var lowest_priority := 4
+	for index in _notification_queue.size():
+		var priority := int(Dictionary(_notification_queue[index]).get("priority", 0))
+		if priority < lowest_priority:
+			lowest_priority = priority
+			lowest_index = index
+	return lowest_index
+
+
+func _highest_priority_index() -> int:
+	var highest_index := 0
+	var highest_priority := -1
+	for index in _notification_queue.size():
+		var priority := int(Dictionary(_notification_queue[index]).get("priority", 0))
+		if priority > highest_priority:
+			highest_priority = priority
+			highest_index = index
+	return highest_index
+
+
+func _emit_announcement_receipt(
+	status: StringName,
+	entry: Dictionary,
+	reason: StringName = &""
+) -> void:
+	announcement_receipt.emit({
+		"status":status,
+		"semantic_id":StringName(entry.get("semantic_id", &"system")),
+		"priority":int(entry.get("priority", 1)),
+		"reason":reason,
+	})
 
 
 func _shadow_label(label: Label) -> void:

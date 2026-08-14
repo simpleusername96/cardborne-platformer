@@ -2,6 +2,7 @@ class_name VehicleManualPerformanceTrace
 extends RefCounted
 
 const BuildIdentity = preload("res://scripts/diagnostics/vehicle_build_identity.gd")
+const SlowTickReceiptBuffer = preload("res://scripts/performance/vehicle_slow_tick_receipt_buffer.gd")
 
 ## Bounded, diagnostic-only frame correlation for user-controlled native play.
 ## It never owns gameplay state, release thresholds, synthetic fixtures, or input.
@@ -150,6 +151,7 @@ var _bucket_subsystem_samples: Dictionary = {}
 var _buckets: Array[Dictionary] = []
 var _bucket_write_index := 0
 var _buckets_dropped := 0
+var _slow_tick_receipts := SlowTickReceiptBuffer.new()
 
 
 static func is_safe_output_path(path: String) -> bool:
@@ -233,6 +235,16 @@ func record_physics(
 			float(_pending_subsystems.get(key, 0.0))
 			+ maxf(0.0, float(subsystem_ms[key]))
 		)
+
+
+func record_slow_tick_receipt(
+	physics_serial: int,
+	total_ms: float,
+	coarse_ms: PackedFloat64Array,
+	scalars: PackedInt32Array
+) -> void:
+	if _recording:
+		_slow_tick_receipts.record(physics_serial, total_ms, coarse_ms, scalars)
 
 
 func advance_frame(
@@ -377,6 +389,7 @@ func finish(reason: String = "manual_stop") -> Dictionary:
 			"command":OS.get_cmdline_args(),
 		},
 		"summary":_summary(),
+		"slow_tick_receipts":_slow_tick_receipts.finalized_receipts(),
 		"subsystems":_subsystem_summary(),
 		"engagement_telemetry":_engagement_telemetry.duplicate(true),
 		"frame_buckets":_ordered_buckets(),

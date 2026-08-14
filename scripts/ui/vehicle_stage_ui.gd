@@ -12,6 +12,7 @@ signal resume_requested
 signal deployment_requested
 signal stage_report_continued
 signal diagnostic_export_requested(absolute_path: String)
+signal gameplay_announcement_receipt(receipt: Dictionary)
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload(
@@ -101,6 +102,9 @@ func _create_root() -> void:
 	add_child(_root)
 
 	_hud = GameplayHud.new()
+	_hud.announcement_receipt.connect(
+		func(receipt: Dictionary) -> void: gameplay_announcement_receipt.emit(receipt)
+	)
 	_root.add_child(_hud)
 
 	_dim = ColorRect.new()
@@ -280,17 +284,20 @@ func hide_all_modals() -> void:
 func notify(
 	message: String,
 	duration: float = 2.4,
-	color: Color = Art.IVORY_BRIGHT
+	color: Color = Art.IVORY_BRIGHT,
+	priority: int = 1,
+	semantic_id: StringName = &"system"
 ) -> void:
-	_hud.notify(message, duration, color)
+	_hud.notify(message, duration, color, priority, semantic_id)
 
 
 func notify_immediate(
 	message: String,
 	duration: float = 2.4,
-	color: Color = Art.IVORY_BRIGHT
+	color: Color = Art.IVORY_BRIGHT,
+	semantic_id: StringName = &"danger"
 ) -> void:
-	_hud.notify_immediate(message, duration, color)
+	_hud.notify_immediate(message, duration, color, semantic_id)
 
 
 func clear_notifications() -> void:

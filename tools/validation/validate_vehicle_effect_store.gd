@@ -286,18 +286,6 @@ func _initialize() -> void:
 	)
 
 	store.clear()
-	for index in EffectStore.MAX_LIVE_MYSTERY_PURGE_PULSES + 1:
-		store.add_mystery_purge_pulse(
-			Vector2(float(index), 70.0), Color.WHITE, 0.18, 420.0
-		)
-	_expect(
-		store.count_kind(EffectStore.MYSTERY_PURGE_PULSE_KIND)
-			== EffectStore.MAX_LIVE_MYSTERY_PURGE_PULSES
-		and int(store.debug_snapshot()["mystery_purge_recycles"]) == 1,
-		"Mystery purge feedback stays inside its three-pulse cosmetic subcap"
-	)
-
-	store.clear()
 	for iteration in 2048:
 		store.add(
 			&"soak",

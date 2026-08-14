@@ -65,6 +65,8 @@ var _local_snapshot_generations := PackedInt32Array()
 var _local_snapshot_valid := PackedInt32Array()
 var _local_overlap_build_serial := 0
 var _local_overlap_builds := 0
+var _last_local_overlap_owner_count := 0
+var _last_local_overlap_candidate_count := 0
 var _legacy_nearest_query_calls := 0
 var last_overlap_snapshot_ms := 0.0
 var last_overlap_query_ms := 0.0
@@ -341,12 +343,16 @@ func query_nearest_overlaps_into(
 
 func rebuild_local_overlap_cache(
 	refresh_slots: PackedByteArray,
-	measure_sections: bool = false
+	measure_sections: bool = false,
+	record_counts: bool = false
 ) -> void:
 	## Captures one immutable boundary snapshot, then rebuilds only marked owner
 	## rows from cells that can contain a body overlap. The candidate loop stays
 	## inline because dispatching once per dense-cell candidate is a measured hot path.
 	_local_overlap_builds += 1
+	if record_counts:
+		_last_local_overlap_owner_count = 0
+		_last_local_overlap_candidate_count = 0
 	_local_overlap_build_serial += 1
 	if _local_overlap_build_serial >= 0x7ffffffe:
 		_local_overlap_valid.fill(0)
@@ -381,6 +387,8 @@ func rebuild_local_overlap_cache(
 			or _local_snapshot_valid[owner_slot] != _local_overlap_build_serial
 		):
 			continue
+		if record_counts:
+			_last_local_overlap_owner_count += 1
 		_local_overlap_valid[owner_slot] = _local_overlap_build_serial
 		_local_overlap_generations[owner_slot] = _local_snapshot_generations[owner_slot]
 		var owner_position := _local_snapshot_positions[owner_slot]
@@ -400,6 +408,8 @@ func rebuild_local_overlap_cache(
 					cell_y * _local_columns + cell_x
 				]
 				for candidate_slot_value in bucket:
+					if record_counts:
+						_last_local_overlap_candidate_count += 1
 					var candidate_slot := int(candidate_slot_value)
 					if (
 						candidate_slot < 0
@@ -486,6 +496,14 @@ func rebuild_local_overlap_cache(
 		last_overlap_query_ms = (
 			float(Time.get_ticks_usec() - section_started) / 1000.0
 		)
+
+
+func last_local_overlap_owner_count() -> int:
+	return _last_local_overlap_owner_count
+
+
+func last_local_overlap_candidate_count() -> int:
+	return _last_local_overlap_candidate_count
 
 
 func cached_local_overlap_count(owner: EnemyState) -> int:

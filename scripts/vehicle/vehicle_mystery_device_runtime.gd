@@ -10,13 +10,11 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const OUTCOME_IDS: Array[StringName] = [
 	&"gravity_pull",
 	&"cryo_lock",
-	&"projectile_purge",
 	&"decoy_signal",
 ]
 const OUTCOME_PROFILE := {
-	&"gravity_pull":{"radius":480.0, "duration":1.2},
-	&"cryo_lock":{"radius":360.0, "duration":0.8},
-	&"projectile_purge":{"radius":420.0, "duration":0.0},
+	&"gravity_pull":{"radius":480.0, "duration":5.0},
+	&"cryo_lock":{"radius":360.0, "duration":3.0},
 	&"decoy_signal":{"radius":900.0, "duration":6.0},
 }
 
@@ -86,10 +84,7 @@ func receive_damage(
 		return receipt
 	device["state"] = &"resolved"
 	var event := _break_event(device)
-	if float(event["duration"]) > 0.0:
-		active_effects.append(event.duplicate(true))
-	else:
-		device["state"] = &"retired"
+	active_effects.append(event)
 	receipt["broken"] = true
 	receipt["break_event"] = event
 	return receipt

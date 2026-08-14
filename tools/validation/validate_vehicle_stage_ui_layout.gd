@@ -106,8 +106,8 @@ func _initialize() -> void:
 				and Array(contract["zone_surface_variations"]) == [
 					&"HudSurface",
 				]
-				and StringName(contract["toast_surface_variation"]) == &"ToastSurface",
-			"only the minimap keeps a backed HUD surface at %d" % width
+				and StringName(contract["toast_surface_variation"]) == &"text_only",
+			"only the minimap keeps a backed HUD surface and announcements stay text-only at %d" % width
 		)
 		_expect(
 			bool(contract["status_cluster_panel_free"])
@@ -656,6 +656,29 @@ func _initialize() -> void:
 			and int(retained_contract["visible_vertices"]) > 0
 			and int(retained_contract["vertices_per_color"]) % 3 == 0,
 		"retained minimap publishes aligned bounded triangle channels"
+	)
+	var announcement_receipts: Array[Dictionary] = []
+	ui.gameplay_announcement_receipt.connect(
+		func(receipt: Dictionary) -> void:
+			announcement_receipts.append(receipt.duplicate(true))
+	)
+	ui.clear_notifications()
+	ui.notify("System message", 10.0, Art.SYSTEM, 1, &"system_message")
+	ui.notify("System message", 10.0, Art.SYSTEM, 1, &"system_message")
+	ui.notify("Boss warning", 10.0, Art.DANGER, 3, &"boss_warning")
+	ui.notify_immediate("Immediate danger", 10.0, Art.DANGER, &"danger")
+	var receipt_kinds: Array[StringName] = []
+	var semantic_only := true
+	for receipt in announcement_receipts:
+		receipt_kinds.append(StringName(receipt.get("status", &"")))
+		semantic_only = semantic_only and not receipt.has("message")
+	_expect(
+		&"queued" in receipt_kinds
+			and &"shown" in receipt_kinds
+			and &"interrupted" in receipt_kinds
+			and &"dropped" in receipt_kinds
+			and semantic_only,
+		"announcement priority flow emits semantic-only queue receipts"
 	)
 	ui.queue_free()
 	await process_frame

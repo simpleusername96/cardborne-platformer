@@ -1412,8 +1412,10 @@ func _validate_mystery_device_presentation(
 	var device_position := Vector2(420.0, 260.0)
 	var resolved_position := Vector2(620.0, 260.0)
 	var presentation := _player_presentation(Vector2(260.0, 300.0), false)
+	presentation["reduced_motion"] = true
 	presentation["mystery_devices"] = [
 		{
+			"id":"device-a",
 			"state":&"intact",
 			"visible":true,
 			"position":device_position,
@@ -1421,8 +1423,8 @@ func _validate_mystery_device_presentation(
 			"max_health":90.0,
 			"health_visible_timer":1.0,
 		},
-		{"state":&"resolved", "visible":true, "position":resolved_position},
-		{"state":&"retired", "visible":true, "position":Vector2(760.0, 260.0)},
+		{"id":"device-b", "state":&"resolved", "visible":true, "position":resolved_position},
+		{"id":"device-c", "state":&"retired", "visible":true, "position":Vector2(760.0, 260.0)},
 	]
 	presentation["mystery_effects"] = [
 		{"effect_id":&"gravity_pull", "position":device_position, "radius":480.0},
@@ -1435,13 +1437,21 @@ func _validate_mystery_device_presentation(
 	)
 	var intact := renderer.get_node("MysteryDevice_intact") as MultiMeshInstance2D
 	var resolved := renderer.get_node("MysteryDevice_resolved") as MultiMeshInstance2D
+	var intact_contour := renderer.get_node(
+		"MysteryDeviceContour_intact"
+	) as MultiMeshInstance2D
+	var resolved_contour := renderer.get_node(
+		"MysteryDeviceContour_resolved"
+	) as MultiMeshInstance2D
 	var rings := renderer.get_node("MysteryEffect_ring") as MultiMeshInstance2D
 	var disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	_expect(
 		intact.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
 			and resolved.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
 			and intact.multimesh.visible_instance_count == 1
-			and resolved.multimesh.visible_instance_count == 1,
+			and resolved.multimesh.visible_instance_count == 1
+			and intact_contour.multimesh.visible_instance_count == 1
+			and resolved_contour.multimesh.visible_instance_count == 1,
 		"intact and resolved mystery devices use capacity-three retained batches while retired devices stay omitted"
 	)
 	var intact_buffer := intact.multimesh.buffer
@@ -1451,7 +1461,22 @@ func _validate_mystery_device_presentation(
 			and Vector2(intact_buffer[0], intact_buffer[4]).length() == Renderer.MYSTERY_DEVICE_VISUAL_RADIUS
 			and Vector2(resolved_buffer[3], resolved_buffer[7]).is_equal_approx(resolved_position)
 			and Vector2(resolved_buffer[0], resolved_buffer[4]).length() == Renderer.MYSTERY_DEVICE_VISUAL_RADIUS,
-		"mystery device batches preserve gameplay positions and the 96-unit visual scale"
+		"reduced-motion mystery devices preserve gameplay positions at the 84-unit visual scale"
+	)
+	_expect(
+		is_equal_approx(
+			intact_contour.multimesh.buffer[15],
+			Renderer.INTERACTION_EDGE_ALPHA_REDUCED
+		)
+		and is_equal_approx(
+			Vector2(
+				intact_contour.multimesh.buffer[0],
+				intact_contour.multimesh.buffer[4]
+			).length(),
+			Renderer.MYSTERY_DEVICE_VISUAL_RADIUS
+				+ Renderer.INTERACTION_CONTOUR_WORLD_UNITS
+		),
+		"mystery devices reuse one static reduced-motion silhouette contour"
 	)
 	_expect(
 		rings.z_index == -1
@@ -1488,6 +1513,31 @@ func _validate_mystery_device_presentation(
 			"mystery effect %d preserves its exact full-area radius and locked alpha"
 			% (index + 1)
 		)
+	var pickup_position := Vector2(340.0, 420.0)
+	presentation["map_pickups"] = [
+		{"id":"repair-a", "kind":&"repair", "pos":pickup_position, "active":true},
+		{"id":"xp-ignored", "kind":&"experience_small", "pos":Vector2(500.0, 420.0), "active":true},
+	]
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+	)
+	var repair := renderer.get_node("MapPickup_repair") as MultiMeshInstance2D
+	var repair_contour := renderer.get_node(
+		"MapPickupContour_repair"
+	) as MultiMeshInstance2D
+	_expect(
+		repair.multimesh.visible_instance_count == 1
+			and repair_contour.multimesh.visible_instance_count == 1
+			and Vector2(
+				repair.multimesh.buffer[3], repair.multimesh.buffer[7]
+			).is_equal_approx(pickup_position)
+			and is_equal_approx(
+				repair_contour.multimesh.buffer[15],
+				Renderer.INTERACTION_EDGE_ALPHA_REDUCED
+			),
+		"only bounded map pickups receive the static reduced-motion contour"
+	)
 	var first := renderer.debug_snapshot()
 	for _sync_index in 16:
 		renderer.sync(
@@ -1512,55 +1562,6 @@ func _validate_mystery_device_presentation(
 			and disks.multimesh.visible_instance_count == 0,
 		"inactive mystery device and timed-effect inputs clear their retained instances"
 	)
-	var purge_store := EffectStore.new()
-	var purge := purge_store.add_mystery_purge_pulse(
-		Vector2(540.0, 320.0), Art.SYSTEM, 0.18, 420.0
-	)
-	purge.time = 0.18
-	presentation["reduced_motion"] = true
-	renderer.sync(
-		no_enemies, no_projectiles, no_projectiles, no_shards, purge_store.live,
-		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
-	)
-	var purge_ring := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
-	var purge_disk := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
-	_expect(
-		purge_ring.multimesh.visible_instance_count == 1
-		and purge_disk.multimesh.visible_instance_count == 1
-		and is_equal_approx(
-			Vector2(
-				purge_ring.multimesh.buffer[0],
-				purge_ring.multimesh.buffer[4]
-			).length(),
-			420.0
-		)
-		and is_equal_approx(
-			Vector2(
-				purge_disk.multimesh.buffer[0],
-				purge_disk.multimesh.buffer[4]
-			).length(),
-			420.0
-		)
-		and is_equal_approx(purge_disk.multimesh.buffer[11], 0.14),
-		"reduced motion renders Mystery purge as a complete final-radius disk plus accent"
-	)
-	presentation["reduced_motion"] = false
-	renderer.sync(
-		no_enemies, no_projectiles, no_projectiles, no_shards, purge_store.live,
-		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
-	)
-	_expect(
-		is_equal_approx(
-			Vector2(
-				purge_disk.multimesh.buffer[0],
-				purge_disk.multimesh.buffer[4]
-			).length(),
-			420.0
-		),
-		"standard and reduced motion keep the same Mystery purge footprint"
-	)
-
-
 func _validate_conditional_attack_footprints(
 	renderer: Renderer,
 	no_enemies: Array[EnemyState],

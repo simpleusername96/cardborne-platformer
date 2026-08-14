@@ -53,6 +53,8 @@ var _rebuild_cooldown := 0.0
 var _ordinary := CostField.new(36.0)
 var _boss := CostField.new(76.0)
 var _rebuild_count := 0
+var _last_processed_cells := 0
+var _last_rebuild_active := false
 var _runtime_cover_rects: Array[Rect2] = []
 
 
@@ -63,13 +65,21 @@ func reset(stage_id: StringName, runtime_cover_rects: Array[Rect2] = []) -> void
 	_player_position = Vector2.ZERO
 	_rebuild_cooldown = 0.0
 	_rebuild_count = 0
+	_last_processed_cells = 0
+	_last_rebuild_active = false
 	_compile_walkability(_ordinary)
 	_compile_walkability(_boss)
 	_clear_cost_field(_ordinary)
 	_clear_cost_field(_boss)
 
 
-func update(delta: float, player_position: Vector2) -> void:
+func update(
+	delta: float,
+	player_position: Vector2,
+	record_receipt: bool = false
+) -> void:
+	if record_receipt:
+		_last_processed_cells = 0
 	_player_position = player_position
 	_rebuild_cooldown = maxf(0.0, _rebuild_cooldown - maxf(0.0, delta))
 	var next_cell := _world_to_cell(player_position)
@@ -83,11 +93,26 @@ func update(delta: float, player_position: Vector2) -> void:
 		_begin_rebuild(_ordinary, _ordinary.pending_index)
 		_rebuild_cooldown = REBUILD_INTERVAL
 	var remaining := MAX_REBUILD_CELLS_PER_TICK
-	remaining -= _advance_rebuild(_ordinary, remaining)
+	var ordinary_processed := _advance_rebuild(_ordinary, remaining)
+	remaining -= ordinary_processed
+	if record_receipt:
+		_last_processed_cells += ordinary_processed
 	if _boss.requested and not _boss.building and _boss.pending_index >= 0:
 		_begin_rebuild(_boss, _boss.pending_index)
 	if remaining > 0 and _boss.requested:
-		_advance_rebuild(_boss, remaining)
+		var boss_processed := _advance_rebuild(_boss, remaining)
+		if record_receipt:
+			_last_processed_cells += boss_processed
+	if record_receipt:
+		_last_rebuild_active = _ordinary.building or _boss.building
+
+
+func last_processed_cells() -> int:
+	return _last_processed_cells
+
+
+func rebuild_active() -> bool:
+	return _last_rebuild_active
 
 
 func request_rebuild() -> void:
