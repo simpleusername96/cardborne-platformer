@@ -621,14 +621,14 @@ recorder, scenario fixtures, engagement telemetry, and their validators
     spawn/cue counts, projectile/effect counts, and scan counts by owner.
   - Accept: no per-tick Dictionary/Array allocation is added to shipping play; output Dictionaries
     are created only when the report is finalized.
-- [ ] **3.2 Keep deep attribution opt-in and reproducible.**
+- [x] **3.2 Keep deep attribution opt-in and reproducible.**
   - Change: retain current low-rate detailed timers for the first run. Add a named deep mode that
     times only the selected coarse owner on every tick in a same-seed rerun.
   - Accept: a receipt identifies whether current p99 aligns with pursuit rebuild, frame aggregate,
     pressure scan, schedule/due phase, contact scan, overlap snapshot/query, spawn materialization,
     Anomaly query, or a non-enemy section.
   - Guard: no profiler mode may change actor cadence, spawn order, collision, or decisions.
-- [ ] **3.3 Add deterministic opening and boss-overlap captures.**
+- [x] **3.3 Add deterministic opening and boss-overlap captures.**
   - Change: capture cue, birth, first-visible, first-commit/damage, visible-gap state, exact/active
     counts, reserve/queue, boss slot margin, and scan counts at `0/1/3.5/5/6/8/15/30s`; add quota,
     boss-warning, boss-active, boss-defeat, and three-second post-boss checkpoints.
@@ -694,13 +694,13 @@ and enemy store
     do not choose this owner.
   - Accept: reachability/direction oracles pass and top-32 receipts contain no pursuit burst above its
     selected budget.
-- [ ] **4.6 Snapshot only live local-overlap members when selected.**
+- [x] **4.6 Snapshot only live local-overlap members when selected.**
   - Change: maintain a compact active-slot list on membership changes and snapshot only those slots;
     rebuild only marked owner rows. Keep exact distance/body predicates, stable tie order, maximum
     eight neighbors, and stale-generation rejection. Record `not selected` if appropriate.
   - Accept: 320-slot capacity buffers remain fixed but work scales with live members; grid and
     steering parity fixtures pass.
-- [ ] **4.7 Replace full schedule/contact reconstruction only when receipts still select it.**
+- [x] **4.7 Replace full schedule/contact reconstruction only when receipts still select it.**
   - Change: use persistent membership plus due stamps for existing `60/30/20/10 Hz` lanes and/or a
     revision-driven active contact list only for the owner that remains material after 4.4-4.6. One
     canonical enemy truth remains; do not mirror a second complete mutable state.
@@ -985,6 +985,23 @@ Validation rules:
   continuity, Anomaly, HUD, renderer, map, localization, capture, and visual-authority validators
   pass on the integrated source. The final performance, rendered-evidence, Web, and deployment gates
   remain open.
+- 2026-08-14: direct pacing capture initially exposed a stale generated build identity. Commit
+  `934c0d72` added the canonical clean-tree wrapper and requires the runtime to match both the full
+  commit and content fingerprint before recording, so a stale identity now fails instead of being
+  mislabeled.
+- 2026-08-14: clean pacing evidence `encounter-pacing-7ae1e2b5.json` passes all declared gates:
+  cue `0.017s`, birth `0.917s`, first visible `3.05s`, five visible ordinary actors at `6s`, first
+  commitment `7.17s`, and nine visible ordinary actors three seconds after boss defeat. The capture
+  re-enables its diagnostic-only pressure observation after stage reconfiguration; normal play
+  keeps that scan disabled.
+- 2026-08-14: clean focused cap-48 diagnostic
+  `934c0d72-production-replay-native-30s-deep-pursuit.json` is scenario-valid, focused, and carries
+  workload fingerprint `627232438`. Physics p95/p99 are `4.598/5.741ms`; deep pursuit p95/p99 are
+  `0.969/1.339ms`. It is diagnostic because the sample is 30 seconds, not a final authority run.
+- 2026-08-14: local-overlap snapshot work is not selected: its measured p99 is `0.584ms` at cap 48.
+  Full schedule/contact reconstruction is also not selected: budget scan p99 is `0.316ms` and
+  contact resolution p99 is `0.176ms`. The larger scheduled-ordinary bucket is actor policy work,
+  not evidence that these two reconstruction paths should gain another mutable membership owner.
 
 ## Open Questions
 
@@ -995,11 +1012,12 @@ pass, and a higher shipping cap if Phase 6 proves technical headroom.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3, clean tail-correlated baseline and final performance qualification.
-- Next task: 3.2-3.4, run the bounded performance scenario and use its top-32 receipts to decide
-  whether any Phase 4 hot-owner correction remains necessary.
-- Last completed gate: integrated focused source validation through Phase 5, excluding rendered
-  approval evidence and final timing.
+- Current phase: Phase 4 qualification and the Phase 5 visual approval gate.
+- Next task: finish the current UI/Anomaly rendered evidence, obtain explicit approval for the three
+  outcome-specific device candidates, then run the final same-commit 60-second native gate.
+- Last completed gate: clean commit-linked opening/boss/post-boss capture plus a focused cap-48
+  diagnostic below the `6/8ms` physics limits. Final authority, visual promotion, capacity staircase,
+  Web proof, and deployment remain open.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance
   this pointer in the same edit.
 
