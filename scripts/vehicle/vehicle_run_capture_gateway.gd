@@ -1398,7 +1398,7 @@ func _capture_exact_area_effect_evidence() -> void:
 		_run.current_stage_id
 	)
 	var damaged_receipt: Dictionary = _run.mystery_device_runtime.receive_damage(
-		&"capture_mystery_damaged", 45.0, &"player", &"primary"
+		&"capture_mystery_damaged", 45.0, &"player", &"direct"
 	)
 	if bool(damaged_receipt.get("accepted", false)) and not bool(damaged_receipt.get("broken", false)):
 		_run.capture_set_mode(&"paused")

@@ -92,6 +92,12 @@ func _initialize() -> void:
 			),
 		"upgrade captures use the real grouped build snapshot instead of a blank legacy payload"
 	)
+	_expect(
+		gateway_source.contains(
+			"&\"capture_mystery_damaged\", 45.0, &\"player\", &\"direct\""
+		),
+		"damaged-device capture uses one accepted nonlethal direct hit"
+	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 41, "core manifest has 41 captures")
 	_expect(Driver.FULL_CAPTURE_FILES.size() == 121, "full manifest has 121 captures")
 	for required_capture in [
