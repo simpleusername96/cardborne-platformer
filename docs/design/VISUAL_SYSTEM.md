@@ -215,9 +215,9 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored direct-pickup and shard visual ID plus value-scale mapping | spawn, value, collection |
 | effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, Dash Afterburn, Storm Barrage, and Mystery outcome presentation within fixed capacity | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
-| world catalog | authored Transit Gate, Anomaly Device, SurfaceDetail, and state descriptor | topology, collision, health, outcome |
+| world catalog | authored Transit Gate, Anomaly Device body, three revealed-state outcome symbols, SurfaceDetail, and state descriptor | topology, collision, health, outcome |
 | secondary catalog | authored seeker, field, blade, mine presentation identity plus code-native rear-beam and storm-footprint state | targeting, cadence, damage |
-| defense catalog | shared code-native support boundary plus Toxin/Cryo actor-overlay recipe | protection, Electric Field damage area, damage, slow, stack, timer |
+| defense catalog | shared code-native support boundary plus Toxin/Cryo/Weakpoint actor-overlay recipe | protection, Electric Field damage area, damage, slow, received-damage multiplier, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
 | semantic asset provider | approved persistent gameplay image texture, including upgrade content art and the exact `SurfaceDetail` SVG exception, pivot, and attachment | collision, behavior, map topology, live descriptor |
 
@@ -276,7 +276,9 @@ collision.
   actor instance 또는 texture를 추가하지 않는다. damage number와 cosmetic emitter,
   plate, orbit icon은 만들지 않는다.
   Anomaly Device의 Cryo Lock도 Chill stack을 만들지 않은 채 같은 blue
-  same-size compositor input을 사용한다.
+  same-size compositor input을 사용한다. Weakpoint Expose는 같은 compositor에
+  restrained danger layer만 전달하며 ring, bracket, per-enemy material 또는 새
+  batch를 만들지 않는다.
 - 경험치 pickup의 small/medium/large는 하나의 authored XP master PNG를
   각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
   크기에서 약 30% 줄인 값이다. repair pickup과 experience recall은 gameplay
@@ -284,7 +286,11 @@ collision.
 - Anomaly Device는 exact `192×192` `intact` body와 효과가 anchor를
   필요로 할 때만 유지하는 `resolved` wreck state를 가진다. 결과 종류는 첫
   accepted hit 전 image, 색, lamp, glyph로 암시하지 않는다. 첫 hit는 localized
-  text로 결과를 식별하며 body asset이나 minimap marker를 바꾸지 않는다.
+  text로 결과를 식별하고 body 중심에 정확히 한 개의 authored outcome-symbol
+  PNG를 `72` world-unit optical size로 표시한다. Body와 minimap marker는 바꾸지
+  않는다. 이 symbol은 HUD glyph나 독립 gameplay object가 아니라 revealed
+  world-state label이며 exact radius와 lifetime은 계속 code-native footprint가
+  소유한다.
 - repair/recall pickup과 Anomaly Device는 availability를 알리는 작은 time-based
   vertical bob과 얇은 breathing contour를 사용한다. Reduced Motion에서는 같은
   contour를 static으로 유지하고 bob과 blinking을 멈춘다. 이 motion은 collision,
@@ -333,7 +339,7 @@ collision.
 | 외곽 경계벽 | `#070B11` 단색 black mass | field boundary와 collision |
 | 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
-| 변칙 장치 | 큰 neutral mechanical body; 파괴 전 결과를 숨기고 파괴 후 resolved state만 표시 | device health와 hidden outcome |
+| 변칙 장치 | 큰 neutral mechanical body; 첫 hit 전 결과를 숨기고 reveal 뒤 한 개의 centered outcome symbol, 파괴 뒤 resolved body를 표시 | device health와 hidden outcome |
 | 직접 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
 
 별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad와
@@ -373,14 +379,20 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   가질 수 없다.
 - Anomaly Device는 neutral/dark mechanical mass가 지배하는
   exact `192×192` authored body다. 한 개의 restrained system accent만 허용하며
-  첫 accepted hit 전에는 네 결과의 색, glyph, 방향, animation을 노출하지 않는다.
+  첫 accepted hit 전에는 세 결과의 색, glyph, 방향, animation을 노출하지 않는다.
   첫 hit의 localized text가 결과를 식별하고, 파괴 후 anchor가 필요한 동안만
   resolved wreck를 표시한다. 발동 text는 실제 영향 대상 수를 함께 전달한다.
-  세 결과는 모두 device position과 gameplay radius가 일치하는 full-area body를
-  표시한다. Gravity Pull, Cryo Lock, Decoy Signal은 실제 영향 지속시간 전체에
-  exact footprint를 유지한다. Existing
+  reveal 뒤에는 Gravity의 inward arrows, Cryo의 broad snowflake, Weakpoint의
+  opened armor와 exposed core 중 하나만 body 중심에 표시한다. 색이 없어도 세
+  shape verb가 달라야 하며 enclosing badge, text, number, target ring과 nested
+  ornament를 넣지 않는다. 세 결과는 모두 device position과 gameplay radius가
+  일치하는 full-area body를 표시한다. Gravity Pull, Cryo Lock, Weakpoint Expose는
+  실제 영향 지속시간 전체에 exact footprint를 유지한다. Existing
   shared ring은 boundary accent로만 사용하며 별도 raster를 추가하지 않는다.
-- Transit Gate는 complete circular floor portal을 유지한다. gate는 movement-only,
+- Transit Gate는 antialiased outer contour, uniform radial thickness, one dark
+  body ring, one broad system-cyan active plane과 one short live highlight를 가진
+  complete circular floor portal을 유지한다. Uneven edge, notch, lamp, panel seam과
+  decorative concentric ring은 사용하지 않는다. gate는 movement-only,
   Anomaly Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
 - direct pickup과 Anomaly Device는 넓은 role-color 면과 dark contour를 사용해
   서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
@@ -418,8 +430,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   radius와 분리된다. projectile target radius는 같은 `48` 값을 별도 gameplay owner에서
   명시한다.
 - directional enemy는 simulation이 publish한 effective facing을 사용한다. startup/
-  active에서는 committed direction, 그 밖에는 player 또는 active Decoy target을
-  향한다. Controller spin과 nondirectional mine/generator는 예외이며 renderer는
+  active에서는 committed direction, 그 밖에는 player를 향한다. Controller spin과
+  nondirectional mine/generator는 예외이며 renderer는
   target이나 AI phase를 추론하지 않는다.
 - 비-beam projectile은 player primary energy teardrop, built-in Seeker, hostile
   barbed bolt 세 identity를 사용한다. 세 identity는 서로 재사용하지 않으며,
@@ -522,10 +534,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   두 map-spanning corridor를 사용한다. startup은 같은 geometry의 낮은 alpha 예고만
   허용한다. 새 raster asset, particle node, 별도 collision geometry를 만들지 않는다.
 - Mystery Gravity Pull은 radius `480`에 alpha `0.10` full system disk를 `5s`, Cryo
-  Lock은 radius `360`에 alpha `0.12` full cryo disk를 `3s`, Decoy Signal은 radius
-  `900`에 alpha `0.08` full system disk를 `6s` 동안 유지한다. 세 effect 모두 device
-  position을 중심으로 하고 existing perimeter는 boundary accent일 뿐 영향 범위의
-  유일한 표현이 아니다.
+  Lock은 radius `360`에 alpha `0.12` full cryo disk를 `3s`, Weakpoint Expose는
+  radius `420`에 alpha `0.10` full danger disk를 `5s` 동안 유지한다. 세 effect 모두
+  device position을 중심으로 하고 existing perimeter는 boundary accent일 뿐 영향
+  범위의 유일한 표현이 아니다. Weakpoint는 movement나 targeting을 바꾸지 않고
+  affected ordinary mobile enemy의 player-owned received damage를 `1.25x`로 만든다.
 
 ### Typography, spacing 및 control
 
@@ -765,7 +778,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- final gameplay manifest가 정확히 80 image를 색인함: semantic PNG 77개와
+- final gameplay manifest가 정확히 83 image를 색인함: semantic PNG 80개와
   user-approved SurfaceDetail SVG 3개다. Shape/color-only effect/cue raster는 0이다.
   전용 hostile bolt를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음
@@ -798,8 +811,9 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - Beam Sentinel and boss straight beams share one code-native unit quad. Runtime tint,
   alpha, live corridor size, and the two-plane startup/three-plane active hierarchy remain
   presentation-owned.
-- Anomaly Device gameplay and its two approved raster states are integrated.
-  Candidate and intermediate files stay outside the production manifest.
+- Anomaly Device gameplay and its two approved body states are integrated. The
+  three outcome-symbol candidates remain outside the production manifest until
+  exact approval and the active ExecPlan's behavior/renderer switch.
 - Drop Mine gameplay receipts remain fixed-capacity effect-store state. The shared
   code-native disk batch displays radius `96/108/120`; standard and reduced motion both
   start at final radius and only fade, with no dedicated texture or batch.

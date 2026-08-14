@@ -251,20 +251,23 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   break it; enemy AI and hostile attacks ignore it. It is not an enemy, never
   counts toward quota, and drops no XP or item.
 - A stage assigns exactly one each of `gravity_pull`, `cryo_lock`, and
-  `decoy_signal`. The first accepted player hit reveals the assigned outcome
+  `weakpoint_expose`. The first accepted player hit reveals the assigned outcome
   without triggering it; breaking the device applies it and reports affected
   ordinary enemies. Pull affects non-boss enemies within 480 pixels for 5
   seconds. Cryo lock stops non-boss movement and new attack starts within 360
-  pixels for 3 seconds but does not cancel a committed warned attack. Decoy
-  signal redirects nearby enemy movement/aim toward the wreck within 900 pixels
-  for 6 seconds without making the wreck an attack target.
+  pixels for 3 seconds but does not cancel a committed warned attack. Weakpoint
+  Expose marks ordinary mobile enemies within 420 pixels for the remaining
+  5-second effect lifetime. Marked enemies take `1.25x` player-owned damage;
+  their movement and targeting do not change. Bosses and fixed hostile
+  structures are excluded.
 - Cryo lock feeds the same exact-size translucent blue enemy-body compositor as
-  Chill without creating a Chill stack. Decoy redirection is visible because affected enemies
-  face its target outside already committed attacks. The minimap never reveals
-  the outcome.
+  Chill without creating a Chill stack. Weakpoint Expose feeds one restrained
+  same-size danger layer through that existing compositor without adding a
+  target ring, bracket, per-enemy node, material, or batch. The minimap never
+  reveals the outcome.
 - Every revealed Mystery effect shows its complete gameplay footprint from the
   device position: Gravity Pull radius `480` for `5 s`, Cryo Lock radius `360`
-  for `3 s`, and Decoy Signal radius `900` for `6 s`. A boundary accent never
+  for `3 s`, and Weakpoint Expose radius `420` for `5 s`. A boundary accent never
   substitutes for the filled area.
 - Primary rounds apply the same per-shot structure damage at every point in the
   firing cadence. Structure upgrades change the repeated-hit result for Mystery
@@ -358,11 +361,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    tangential movement peaks at the midpoint. Turn response is `9/s` for
    pursuit, `6/s` for standoff, and `5/s` for escort/support. Ordinary targeting
    separates pressure focus, movement focus, and committed attack target. The
-   pressure focus is the current player or exact active Decoy position. At the
+   pressure focus is the current player. At the
    existing decision cadence, a moving-player movement focus may lead pursuit by
    at most `1.20 s / 280 px`, standoff by `0.85 s / 200 px`, and escort/support by
-   `0.60 s / 140 px`; movement below 80 pixels per second and Decoy focus receive
-   no prediction. Shared route guidance is sampled only when a direct approach is
+   `0.60 s / 140 px`; movement below 80 pixels per second receives no prediction.
+   Shared route guidance is sampled only when a direct approach is
    blocked or a ranged actor in or beyond its safe band must recover a
    blocked firing lane. It never becomes a squad anchor or overrides a necessary
    close-range retreat. Ordinary attacks predict once when startup begins, include
@@ -641,7 +644,7 @@ no credit or stored charge.
   Floating damage numbers remain absent.
 - Every directional enemy publishes one simulation-owned effective facing.
   During startup and active attack phases this is the committed direction;
-  otherwise it points to the player or an active Decoy target. Controller spin
+  otherwise it points to the player. Controller spin
   and nondirectional mine/generator bodies are the only exceptions. The renderer
   consumes this field and does not infer AI targets.
 - The renderer keeps one fixed-capacity presentation sample for each enemy pool
@@ -729,8 +732,8 @@ no credit or stored charge.
     Seeker shows its full `95` radius at the impact point. Each complete footprint
     uses one synchronized `0.18 s` attack/hold/fade envelope with no independently
     shrinking or disappearing middle shape.
-  - Mystery Gravity Pull, Cryo Lock, and Decoy Signal keep full disks at their
-    exact respective radii `480`, `360`, and `900` for their complete active
+  - Mystery Gravity Pull, Cryo Lock, and Weakpoint Expose keep full disks at their
+    exact respective radii `480`, `360`, and `420` for their complete active
     durations; their single boundaries remain accents.
   - Black Hole, Shockwave, and Cross Beam use retained code-native disks, rings,
     and beam corridors from gameplay-owned active-weapon snapshots. They add no

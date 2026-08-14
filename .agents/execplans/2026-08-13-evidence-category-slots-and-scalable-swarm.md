@@ -5,7 +5,7 @@ owner: BK
 created: 2026-08-13
 last_reviewed: 2026-08-14
 topic: Versioned play evidence, intuitive category slots, continuous enemy pressure, readable world feedback, and a scalable exact-enemy runtime
-scope: Cardborne performance and session provenance, upgrade build summaries, encounter continuity, Anomaly outcomes, gameplay announcements, collectible feedback, ordinary-enemy scheduling and spatial work, native/Web qualification, and capacity exploration
+scope: Cardborne performance and session provenance, upgrade build summaries, encounter continuity, Anomaly outcomes and symbols, Transit Gate replacement, gameplay announcements, collectible feedback, ordinary-enemy scheduling and spatial work, native/Web qualification, and capacity exploration
 related:
   - ../../AGENTS.md
   - ../PLANS.md
@@ -19,6 +19,8 @@ related:
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
+  - ../../docs/design/visual-replacement-workbench/previews/mystery-device-outcomes-v4-symbols/candidate-evidence.md
+  - ../../docs/design/visual-replacement-workbench/previews/transit-gate-v2-clean/candidate-evidence.md
   - ../../docs/performance/2026-08-13-dense-enemy-stutter-evidence.md
   - ../../docs/performance/2026-08-13-dense-enemy-architecture-options.md
   - ../../docs/performance/2026-08-13-enemy-arrival-and-engagement-research.md
@@ -30,8 +32,9 @@ related:
 
 Make performance and play-session evidence reproducible from an exact source build, replace the
 acquisition-order upgrade grid with six intuitive category-owned slot groups, remove long empty
-enemy intervals around stage start and bosses, and give Anomaly Devices, announcements, and map
-pickups one readable feedback language. Then remove the remaining production-replay p99 spikes
+enemy intervals around stage start and bosses, and give Anomaly Devices, the Transit Gate,
+announcements, and map pickups one readable feedback language. Then remove the remaining
+production-replay p99 spikes
 before exploring higher exact-enemy capacities. Keep the approved virtual reserve and current 48
 exact-ordinary ceiling during optimization. Do not simulate fake visible enemies, weaken combat
 truth, or raise shipping difficulty merely to claim a larger crowd.
@@ -79,9 +82,11 @@ outside the camera. After the quota is reached, `seal_for_quota()` stops new ord
 after boss defeat the next stage cues immediately but its actors still begin offscreen. The game can
 therefore be doing scheduler work while the player sees no threat.
 
-The Anomaly and message complaints are also concrete. Gravity Pull lasts `1.2s`, Cryo Lock `0.8s`,
-Projectile Purge is an immediate clear followed by only a `0.18s` visual pulse, and Decoy Signal
-lasts `6s`. Three effects share the same device image family. The HUD announcement uses an 18 px
+The Anomaly and message complaints were also concrete. Gravity Pull lasted `1.2s`, Cryo Lock `0.8s`,
+Projectile Purge was an immediate clear followed by only a `0.18s` visual pulse, and Decoy Signal
+lasted `6s`. The user subsequently rejected Decoy because its visible result overlapped Gravity and
+selected Weakpoint Expose as the third outcome. Three effects currently share the same device image
+family. The HUD announcement uses an 18 px
 label inside a thin ToastSurface, while the renderer adds a separate world-chip text path and a
 5 Hz target-count scan. Map pickups already bob, but their phase advances by update count instead of
 elapsed time; Anomaly Devices have no equivalent idle cue.
@@ -129,9 +134,9 @@ In scope:
   Chassis, and Combat.
 - Opening pressure, bounded ordinary maintenance during boss play, and immediate post-boss
   continuation without on-screen spawning or extra fabricated authored population.
-- Removal of the unclear Projectile Purge outcome, exact Gravity/Cryo/Decoy lifetimes, three
-  outcome-specific raster states, a single text-only announcement queue, and bounded
-  interaction/collectible motion.
+- Removal of the unclear Projectile Purge and Decoy outcomes; exact Gravity/Cryo/Weakpoint
+  lifetimes and radii; three outcome-specific PNG symbols; a clean Transit Gate replacement;
+  a single text-only announcement queue; and bounded interaction/collectible motion.
 - Tail-correlated profiling of the existing shipping workload.
 - Removal or staggering of measured repeated scans, pursuit rebuild work, schedule construction,
   and overlap snapshot work.
@@ -165,9 +170,10 @@ Constraints and invariants:
   `124/172/224/276`.
 - Renderer, batching, and pooling are not selected as primary work unless new evidence contradicts
   the current green measurements.
-- Existing upgrade art is reorganized, not regenerated. Three Anomaly outcome images are a separate
-  approved visual replacement unit and require canonical-sheet-grounded raster generation plus
-  technical/user approval before promotion.
+- Existing upgrade art is reorganized, not regenerated. Three Anomaly outcome-symbol PNGs and the
+  Transit Gate replacement are separate visual replacement units. Their current review candidates
+  were generated with the canonical sheet as actual ImageGen input and still require exact user
+  approval plus technical validation before production promotion.
 - Korean and English remain complete at `960x540`, `1280x720`, `1920x1080`, and 200% text scale.
 - Performance comparisons use the same scenario, seed, viewport, renderer, warmup, sample duration,
   process-isolation rules, and authority checks.
@@ -178,6 +184,8 @@ Destructive or irreversible actions:
 
 Exact actions requiring owner or user approval:
 
+- Promotion of the three Anomaly outcome symbols or the Transit Gate candidate from the review
+  workbench into `art/visuals/production`.
 - A Web-capable GDExtension, custom Web export templates, Web threads/COOP/COEP deployment, engine
   change, or a higher shipping enemy cap.
 - Any remote telemetry endpoint/vendor or automatic upload, including its consent, retention,
@@ -328,21 +336,34 @@ Cardborne's current product request is continuous visible pressure.
 
 Anomaly outcome contract:
 
-- Remove `projectile_purge`. It duplicates the base EMP projectile-clear idea, has no gameplay
-  duration, retires immediately, and its `0.18s` pulse does not explain its value. Each stage now
-  assigns Gravity Pull, Cryo Lock, and Decoy Signal exactly once.
-- Gravity Pull lasts exactly `5.0s`, Cryo Lock exactly `3.0s`, and Decoy Signal remains `6.0s`.
-  Gameplay state and the visible footprint share the same lifetime. Effect target membership may be
-  refreshed at a bounded cadence, but continuous movement/control must remain correct between
-  refreshes.
-- Generate three separate canonical-sheet-grounded PNGs for the revealed/resolved Gravity, Cryo,
-  and Decoy devices. Use the canonical reference image as actual ImageGen input, record provenance,
-  and promote only after AS-IS/TO-BE comparison and user approval. Render the authored device body at
-  radius `84`, down from `96`, matching the intact collision truth; exact effect radii remain
-  code-native gameplay geometry.
+- `projectile_purge` remains removed. It duplicated the base EMP projectile-clear idea, had no
+  gameplay duration, and its `0.18s` pulse did not explain its value. `decoy_signal` is also removed:
+  its movement/aim redirection read too similarly to Gravity Pull during normal play.
+- Each stage assigns Gravity Pull, Cryo Lock, and Weakpoint Expose exactly once. Gravity lasts
+  `5.0s` at radius `480`; Cryo lasts `3.0s` at radius `360`; Weakpoint lasts `5.0s` at radius `420`.
+  Weakpoint marks ordinary mobile enemies admitted by the existing bounded membership refresh for
+  the remaining field lifetime and multiplies player-owned received damage by `1.25`. It does not
+  change movement or targeting and excludes bosses and fixed hostile structures. Gameplay state and
+  the visible footprint retire on the same tick.
+- Keep one neutral `192x192` intact device body and the existing resolved wreck. The first accepted
+  player hit reveals the outcome and enables exactly one centered authored symbol at `72` world-unit
+  optical size. The symbol persists through the active effect and retires with it. Exact effect radii
+  remain code-native gameplay geometry.
+- The review candidates are
+  `docs/design/visual-replacement-workbench/previews/mystery-device-outcomes-v4-symbols/candidates/`
+  `mystery_device_gravity.png`, `mystery_device_cryo.png`, and
+  `mystery_device_weakpoint.png`. Their production targets are the matching filenames under
+  `art/visuals/production/gameplay/world/`, with semantic IDs
+  `world/mystery_device_gravity`, `world/mystery_device_cryo`, and
+  `world/mystery_device_weakpoint`. Promotion requires exact user approval.
 - Hidden intact devices keep one neutral image. The minimap remains neutral before and after reveal;
-  it does not leak outcome through tint. Outcome differences use image silhouette/details,
-  localized text, effect shape/behavior, and semantic color rather than color alone.
+  it does not leak outcome through tint. Outcome differences use the centered symbol, localized
+  text, full-area effect, enemy same-size compositor state, and semantic color rather than hue alone.
+- Replace `facility_transit_gate.png` only with the approved candidate at
+  `docs/design/visual-replacement-workbench/previews/transit-gate-v2-clean/candidates/`
+  `facility_transit_gate.png`. Preserve the existing `192x192` canvas, pivot, semantic ID, runtime
+  footprint, behavior, guidebook owner, and circular identity. The replacement changes only edge
+  smoothness and broad-plane clarity.
 
 Announcement contract:
 
@@ -443,9 +464,10 @@ Primary references:
 | Why can the opening feel empty? | First cue is `5.1s`, birth is `6.0s`, and births remain offscreen at long distance. | Stage packets, pacing validator, allocator | Six-unit immediate offscreen opening; visible by `3.5s`, three visible by `6s`. | 3.1, 4.1 |
 | Do ordinary enemies continue through the boss? | Existing actors do, but quota seal blocks all new ordinary admission. Post-boss cue is immediate yet still offscreen. | `VehicleRun`, encounter runtime, continuity validator | Maintain 8-12 ordinary exact actors from authored reserve during boss; immediate next-stage refill. | 3.2, 4.2-4.3 |
 | Are irrelevant enemy-related calculations still running? | Yes. Full aggregate, schedule, pressure, contact, and capacity scans repeat; a 5 Hz Anomaly target-count scan exists only for world-chip text. | Runtime trace and current performance evidence | Instrument scan counts, remove the world-chip scan, disable diagnostic pressure work when unconsumed, then optimize only measured owners. | 3.3, 4.4-4.7 |
-| Are Anomaly effects and images readable? | Gravity is `1.2s`, Cryo `0.8s`, Purge has no duration, and the same device image family carries all outcomes. | Mystery runtime/renderer/spec | Remove Purge; set Gravity/Cryo/Decoy to `5/3/6s`; generate three smaller outcome-specific states. | 5.1-5.3 |
-| Why do gameplay messages look inconsistent? | HUD uses an 18 px label inside ToastSurface; renderer owns separate world-chip text and continuous target counts. | HUD/renderer/run trace | One 22 px bold text-only HUD queue with semantic colors; remove world chips. | 5.4 |
-| Which objects should hover/pulse? | Map pickups have frame-rate-dependent bob; Anomaly Devices have none. XP shards and effects can be numerous. | Pickup/device renderer trace and accessibility references | Time-based bounded motion for map pickups and Anomaly only; shared subtle contour and static reduced-motion replacement. | 5.5 |
+| Are Anomaly effects and images readable? | Purge is removed and Gravity/Cryo now last `5/3s`, but Decoy still overlaps Gravity semantically and all outcomes share body art. | Mystery runtime/renderer/spec plus user decision | Remove Decoy; add Weakpoint `420px/5s/1.25x`; approve and integrate three centered PNG symbols after reveal. | 5.1-5.5 |
+| Is the Transit Gate visually clean? | The current 192x192 PNG has an uneven stepped outer contour while its circular identity and runtime footprint are correct. | Production asset, original-detail inspection, workbench comparison | Approve one cleaner same-size PNG and replace only the visual asset without changing behavior or geometry. | 5.3-5.5 |
+| Why do gameplay messages look inconsistent? | HUD uses an 18 px label inside ToastSurface; renderer owns separate world-chip text and continuous target counts. | HUD/renderer/run trace | One 22 px bold text-only HUD queue with semantic colors; remove world chips. | 5.6 |
+| Which objects should hover/pulse? | Map pickups have frame-rate-dependent bob; Anomaly Devices have none. XP shards and effects can be numerous. | Pickup/device renderer trace and accessibility references | Time-based bounded motion for map pickups and Anomaly only; shared subtle contour and static reduced-motion replacement. | 5.7 |
 | Is rendering the current crowd bottleneck? | No. Latest draw/frame/render values pass while physics p99 fails. | `4f7f7acd` production replay and dense-enemy evidence | Do not prioritize MultiMesh, art reduction, or renderer replacement. | 3.1, 4.4-4.7 |
 | Why does p99 fail at only 43 actors? | Several rich exact-simulation jobs coincide; current detailed timing samples every seventh physics tick and is not inherently correlated with the slowest ticks. | `VehicleRun`, recorder JSON | Add low-overhead every-tick coarse attribution and a bounded top-32 slow-tick receipt before choosing more code. | 3.1-3.3 |
 | Which current owners deserve first inspection? | Enemy/grid, encounter/pursuit, and scheduled ordinary are the three largest named p99 owners. Schedule, pressure, and overlap code still include repeated or capacity-wide work. | Current source and JSON | Correct one measured owner at a time; keep exact narrow phase and deterministic behavior. | 4.4-4.7 |
@@ -457,8 +479,8 @@ Readiness statement:
 - Product behavior, category capacity, evidence retention, hot-owner selection, escalation, and
   validation decisions are closed.
 - The existing Godot runtime, PowerShell, Git, capture/export tooling, and current assets are enough
-  for Phases 1-4 and 6-7. Phase 5 adds three approved raster assets through the existing visual
-  workflow. No new dependency is authorized.
+  for Phases 1-4 and 6-7. Phase 5 may promote three new outcome-symbol PNGs and one replacement
+  Transit Gate PNG through the existing visual workflow. No new dependency is authorized.
 - The only conditional implementation branch is evidence-driven owner selection in Phase 4; its
   allowed responses and rejection rules are fixed below.
 
@@ -730,44 +752,80 @@ Preconditions:
 - The canonical visual authority pair has been re-read and its reference image hash verified before
   generating or reviewing any Anomaly raster.
 
-Source owners: Mystery Device runtime, outcome assignment/spec, asset manifest/catalog/provider,
-combat renderer, HUD notification queue, map-pickup presentation, localization, accessibility,
+Source owners: Mystery Device runtime, `VehicleEnemyState`, VehicleRun damage and targeting,
+outcome assignment/spec, world asset manifest/catalog/provider, combat renderer, Transit Gate
+presentation, HUD notification queue, map-pickup presentation, localization, accessibility,
 capture/workbench, and focused validators
 
-- [x] **5.1 Simplify and lengthen Anomaly outcomes.**
-  - Change: remove Projectile Purge from assignment/runtime/presentation/localization/guidebook and
-    set Gravity/Cryo/Decoy to `5.0/3.0/6.0s`. Each stage assigns the three remaining outcomes once.
-    Use reused membership buffers and a bounded entrant refresh for long effects; keep Gravity force
-    and Cryo/Decoy control exact between refreshes.
-  - Accept: effects and footprints retire on the same tick; boss/fixed-structure exclusions remain;
-    no purge event/asset/string/capture branch remains; five-second Gravity does not add a per-tick
-    allocation or unbounded radius scan.
-- [ ] **5.2 Generate and approve three outcome-specific raster states.**
-  - Change: use the canonical reference PNG as actual ImageGen reference input to create separate
-    Gravity, Cryo, and Decoy revealed/resolved device candidates. Record tool/model/date/reference,
-    prompt, output hash, and AS-IS/TO-BE comparison in the visual workbench. Do not use SVG,
-    ImageMagick drawing, or a generated style sheet. Approved production targets are
+- [x] **5.1 Remove Projectile Purge and lengthen Gravity/Cryo.**
+  - Change: remove Projectile Purge from assignment/runtime/presentation/localization/guidebook;
+    set Gravity Pull to `5.0s` and Cryo Lock to `3.0s`; keep reused membership buffers and the
+    bounded entrant refresh.
+  - Accept: Gravity/Cryo state and footprints retire on the same tick; boss/fixed-structure
+    exclusions remain; no purge event/asset/string/capture branch remains; five-second Gravity adds
+    no per-tick allocation or unbounded radius scan.
+- [ ] **5.2 Replace Decoy Signal with Weakpoint Expose.**
+  - Change: update `VehicleMysteryDeviceRuntime.OUTCOME_IDS` and `OUTCOME_PROFILE` to
+    `weakpoint_expose` at radius `420` for `5.0s`. Replace VehicleRun's `_mystery_decoy_*` target and
+    membership state with a reused Weakpoint membership buffer. Add and pool-reset
+    `VehicleEnemyState.mystery_weakpoint_remaining`; refresh it from current field membership and
+    decrement it with the other scalar enemy timers. In `_damage_enemy`, multiply non-final,
+    player-owned damage to an affected ordinary mobile enemy by `1.25`; preserve existing shield and
+    rammer multipliers, boss damage rules, telemetry, lifesteal, recharge, and mine behavior. Remove
+    Decoy-only pressure-focus, movement-focus, route-bypass, attack-target, facing, capture,
+    localization, guidebook, and validator branches. Add Korean `약점 노출` and English
+    `Weakpoint Expose` strings and describe `받는 피해 +25% / Damage taken +25%`.
+  - Accept: each stage assigns Gravity/Cryo/Weakpoint exactly once; enemies inside radius at
+    activation or a bounded refresh retain Weakpoint for the remaining field lifetime; player-owned
+    direct, area, secondary, active, and status damage receive the same multiplier; hostile and
+    environmental damage do not; bosses/fixed structures do not; movement, targeting, attack timing,
+    quota, XP, drops, and collision remain unchanged; no `decoy_signal` runtime/string/capture/test
+    branch remains.
+- [x] **5.3 Generate grounded symbol and Transit Gate review PNGs.**
+  - Change: use the canonical reference PNG as actual ImageGen reference input to generate Gravity,
+    Cryo, and Weakpoint centered symbols plus one clean Transit Gate replacement. Store transparent
+    192x192 candidates, source/provenance hashes, exact prompts, grayscale views, runtime-scale views,
+    and AS-IS/TO-BE comparisons under
+    `docs/design/visual-replacement-workbench/previews/mystery-device-outcomes-v4-symbols/` and
+    `docs/design/visual-replacement-workbench/previews/transit-gate-v2-clean/`. Archive the rejected
+    Decoy V3 evidence. Do not use SVG or ImageMagick drawing.
+  - Accept: the three symbols read as converge/freeze/open-armor at 72-world-unit scale and in
+    grayscale; the gate is a smooth uniform circle at 192x192; all candidates have transparent alpha,
+    recorded hashes, canonical-reference evidence, and remain outside production. Evidence passed on
+    2026-08-14; production approval is intentionally separate.
+- [ ] **5.4 Obtain exact approval and promote the four PNGs.**
+  - Change: present `device-overlay-preview.png`, Anomaly full/runtime/grayscale comparisons, and the
+    Transit Gate AS-IS/TO-BE comparison. After explicit user approval, copy the three symbols to
     `art/visuals/production/gameplay/world/mystery_device_gravity.png`,
-    `mystery_device_cryo.png`, and `mystery_device_decoy.png`; their semantic IDs use the matching
-    `world/...` names. Retire the generic `mystery_device_resolved` only after all consumers switch.
-  - Accept: all three read as familiar science-fiction devices at gameplay size, differ by shape and
-    mechanism rather than hue alone, use transparent PNGs, and receive explicit user approval before
-    asset promotion. Rejected candidates remain outside production manifests.
-- [ ] **5.3 Integrate smaller truthful device and effect presentation.**
-  - Change: render device bodies at radius `84`, route revealed/resolved outcomes to the approved
-    semantic assets, keep exact code-native footprint radii, and remove outcome tint from minimap
-    markers.
-  - Accept: presentation matches collision while intact; full Gravity/Cryo/Decoy lifetimes remain
-    visible; color-blind and reduced-motion captures retain shape/text/footprint cues; no asset is
-    stretched, clipped, or used outside its approved semantic role.
-- [x] **5.4 Collapse gameplay announcements into one text-only queue.**
+    `art/visuals/production/gameplay/world/mystery_device_cryo.png`, and
+    `art/visuals/production/gameplay/world/mystery_device_weakpoint.png`; replace
+    `art/visuals/production/gameplay/world/facility_transit_gate.png`; add the three semantic
+    manifest/provider/catalog descriptors; and update workbench technical ledgers with exact
+    production hashes. Do not promote a partial or modified set without refreshing the comparison
+    and approval evidence.
+  - Accept: approved bytes and ledger hashes match production exactly; the three new symbol IDs and
+    existing Transit Gate ID resolve once; the manifest contains 80 semantic PNGs plus three approved
+    SurfaceDetail SVGs; rejected/intermediate/chroma files remain outside production.
+- [ ] **5.5 Integrate revealed symbols, Weakpoint feedback, and the clean Gate.**
+  - Change: keep the intact/resolved body batches and render exactly one approved symbol centered at
+    72 world units after first-hit reveal through active-effect retirement. Reuse the existing enemy
+    status compositor for a restrained same-size Weakpoint danger layer. Keep the full code-native
+    Gravity/Cryo/Weakpoint disks at exact `480/360/420` radii for `5/3/5s`. Preserve the neutral
+    minimap marker and Transit Gate geometry/behavior. Update capture fixtures, guidebook preview,
+    asset coverage, accessibility, localization, map integration, renderer, and visual-authority
+    validators.
+  - Accept: the hidden outcome never leaks before reveal; symbol/body/effect lifetimes are correct;
+    full areas remain visible; color-blind and reduced-motion captures retain shape/text/footprint
+    cues; the Gate has no wobble at actual size; no asset is stretched or clipped; no per-enemy node,
+    material, batch, allocation, or extra radius scan is added.
+- [x] **5.6 Collapse gameplay announcements into one text-only queue.**
   - Change: remove ToastSurface chrome and renderer world chips; render one 22 px weight-800 centered
     HUD label with semantic color and restrained contrast treatment. Add semantic kind, priority,
     dedup/coalescing, and queue receipts; compute Anomaly affected count once at activation.
   - Accept: boss, danger, system, reveal, activation, barrier, upgrade-complete, and shield-down
     messages all use one structure; priority is deterministic; no 5 Hz target-count scan or duplicate
     text remains; Korean/English and 200% text do not clip.
-- [x] **5.5 Add bounded time-based interaction motion.**
+- [x] **5.7 Add bounded time-based interaction motion.**
   - Change: implement the locked bob amplitudes/periods and one reused alpha-mask contour material for
     map repair/recall pickups and Anomaly Devices only. Stable ID phase offsets drive presentation
     from elapsed run time.
@@ -973,8 +1031,14 @@ Validation rules:
 - 2026-08-14: replace the delayed one-actor opening with six low-risk authored actors and preserve a
   48-actor ceiling. Maintain 8-12 authored-reserve ordinary actors during boss play and begin the
   next stage refill immediately after boss defeat.
-- 2026-08-14: remove Projectile Purge, set Gravity/Cryo/Decoy durations to `5/3/6s`, and replace the
-  generic revealed state with three smaller outcome-specific approved rasters.
+- 2026-08-14: remove Projectile Purge and lengthen Gravity/Cryo to `5/3s`.
+- 2026-08-14: replace Decoy Signal with Weakpoint Expose at `420px/5s/1.25x` player-owned received
+  damage because Decoy and Gravity produced overlapping player perception. Preserve movement and
+  targeting under Weakpoint and exclude bosses/fixed structures.
+- 2026-08-14: use three centered revealed-state PNG symbols over the neutral device body rather than
+  three full replacement bodies. Generate converge/freeze/open-armor candidates at 192x192 for a
+  72-world-unit display, and separately generate a clean same-footprint Transit Gate replacement.
+  Both visual sets remain approval-gated before production.
 - 2026-08-14: one text-only HUD queue owns gameplay announcements. Map repair/recall pickups and
   Anomaly Devices use restrained time-based bob plus one shared contour; gameplay positions remain
   stationary and Reduced Motion uses a static contour.
@@ -1006,15 +1070,15 @@ Validation rules:
 ## Open Questions
 
 No material implementation question remains open. Expected later approval gates are the three
-Phase 5 Anomaly raster candidates, any remote telemetry service, a native kernel if Phase 4 cannot
-pass, and a higher shipping cap if Phase 6 proves technical headroom.
+Phase 5 Anomaly symbol candidates and clean Transit Gate candidate, any remote telemetry service, a
+native kernel if Phase 4 cannot pass, and a higher shipping cap if Phase 6 proves technical headroom.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4 qualification and the Phase 5 visual approval gate.
-- Next task: finish the current UI/Anomaly rendered evidence, obtain explicit approval for the three
-  outcome-specific device candidates, then run the final same-commit 60-second native gate.
+- Current phase: Phase 4 qualification and Phase 5 Weakpoint/visual integration.
+- Next task: implement Task 5.2's Decoy-to-Weakpoint behavior replacement, then obtain explicit
+  approval for the completed V4 symbol and Transit Gate comparisons before production promotion.
 - Last completed gate: clean commit-linked opening/boss/post-boss capture plus a focused cap-48
   diagnostic below the `6/8ms` physics limits. Final authority, visual promotion, capacity staircase,
   Web proof, and deployment remain open.
@@ -1029,8 +1093,10 @@ Complete when:
 - Category slots are correct on Upgrade and Result in both locales and supported layouts.
 - Opening, boss, and post-boss visible-pressure gates pass without on-screen births or fabricated
   population.
-- Gravity/Cryo/Decoy use approved distinct images and exact `5/3/6s` lifetimes; one text-only message
-  queue and bounded pickup/device interaction motion pass accessibility and performance gates.
+- Gravity/Cryo/Weakpoint use approved distinct symbols and exact `480/360/420` radii with `5/3/5s`
+  lifetimes; Weakpoint applies exactly `1.25x` player-owned damage without changing enemy movement or
+  targeting; the approved Transit Gate has a smooth circular edge; one text-only message queue and
+  bounded pickup/device interaction motion pass accessibility and performance gates.
 - The final cap-48 native p95/p99 are at most `6/8 ms` and built Web is valid.
 - The evidence ledger can reconstruct the final claim from full commit and artifact hashes.
 - A redacted native/Web session bundle can be exported and compared without remote upload.

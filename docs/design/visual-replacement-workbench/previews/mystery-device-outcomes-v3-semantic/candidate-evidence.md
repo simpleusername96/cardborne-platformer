@@ -1,11 +1,11 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-08-14
 last_reviewed: 2026-08-14
 topic: Anomaly Device outcome silhouette references and review candidates
-scope: Review-only Gravity Pull, Cryo Lock, and Decoy Signal raster candidates awaiting explicit user approval
+scope: Rejected Gravity Pull, Cryo Lock, and Decoy Signal raster candidates retained for comparison history
 source: User rejection of mystery-device-outcomes-v2-simple for weak functional distinction on 2026-08-14
 related:
   - ../../../VISUAL_SYSTEM.md
@@ -16,6 +16,10 @@ related:
 ---
 
 # Semantic Anomaly Device Candidate Evidence
+
+This set was archived on 2026-08-14 after the user replaced Decoy Signal with
+Weakpoint Expose. It is not a current approval candidate. The active replacement
+evidence is `../mystery-device-outcomes-v4-symbols/candidate-evidence.md`.
 
 ## Purpose
 
