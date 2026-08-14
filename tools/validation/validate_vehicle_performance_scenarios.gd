@@ -36,6 +36,12 @@ func _run() -> void:
 		print("Validating performance scenario: %s" % String(scenario_id))
 		var scenario := Scenario.new()
 		_expect(scenario.configure(scenario_id), "%s configures" % String(scenario_id))
+		_expect(
+			scenario.after_physics_is_diagnostic_only()
+				== (scenario_id == &"production_replay"),
+			"%s declares whether after-physics work is diagnostic-only"
+			% String(scenario_id)
+		)
 		scenario.activate(run)
 		if scenario_id == &"production_replay":
 			run.encounter_runtime.set_pressure_observation_enabled(true)

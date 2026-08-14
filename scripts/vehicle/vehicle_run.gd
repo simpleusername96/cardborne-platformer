@@ -641,9 +641,16 @@ func _physics_process(delta: float) -> void:
 	else:
 		_update_effects(delta)
 	_update_camera(delta)
+	var deferred_scenario_diagnostic := false
 	if is_instance_valid(_performance_scenario) and mode == RunMode.PLAYING:
-		_performance_scenario.after_physics(self)
+		deferred_scenario_diagnostic = (
+			_performance_scenario.after_physics_is_diagnostic_only()
+		)
+		if not deferred_scenario_diagnostic:
+			_performance_scenario.after_physics(self)
 	var physics_total_ms := _elapsed_ms(physics_started) if timing_active else 0.0
+	if deferred_scenario_diagnostic:
+		_performance_scenario.after_physics(self)
 	if timing_active:
 		_fill_slow_tick_receipt_scalars()
 	if performance_active:

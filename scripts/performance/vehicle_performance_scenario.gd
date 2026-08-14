@@ -176,6 +176,13 @@ func after_physics(run: Node) -> void:
 	_maintain_effects(run)
 
 
+func after_physics_is_diagnostic_only() -> bool:
+	## Production replay's after-step only retains bounded evidence. Other
+	## scenarios maintain their declared workload there and must remain inside
+	## measured physics time.
+	return scenario_id == &"production_replay"
+
+
 func validation_snapshot(run: Node) -> Dictionary:
 	if scenario_id == &"production_replay":
 		return _production_validation_snapshot(run)
