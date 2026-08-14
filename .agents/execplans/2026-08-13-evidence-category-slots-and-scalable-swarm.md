@@ -1043,7 +1043,7 @@ validators and the existing capture gateways.
     snapshots match; mine/storm warnings match impact truth; orbit positions, angular speed, and
     per-target cooldown are deterministic.
 
-- [ ] **8.6 Run the correction gate, then defer broad performance proof.**
+- [x] **8.6 Run the correction gate, then defer broad performance proof.**
   - Change: run affected catalog/build/Upgrade/Result, active-weapon, secondary, encounter,
     boss-transition, renderer, localization, visual-authority, headless import, and Web-export checks.
     Capture supported Korean and English Upgrade/Result views at normal text scale and inspect
@@ -1290,17 +1290,18 @@ Gate remain approved.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 8 player-visible combat and build corrections are approved for execution.
-- Next task: implement 8.1-8.2, then 8.3-8.5, and finish with the focused/rendered 8.6 gate. Resume
-  the architecture approval stop only after these changes are complete.
+- Current phase: Phase 8 player-visible combat and build corrections are complete.
+- Next task: retain the architecture approval stop. Run the deferred final native/Web performance
+  qualification only after the user confirms that remaining feature and image work is complete.
 - Last completed gate: final source validation, promoted decision evidence, cap-48 native authority,
   and the 48-pass/64-fail capacity envelope are complete. Built-Web capture is valid but red; public
   deployment remains intentionally blocked.
-- 2026-08-14 Phase 8 source progress: Tasks 8.1-8.5 are implemented. Focused upgrade/build/active,
+- 2026-08-14 Phase 8 completion: Tasks 8.1-8.6 are implemented. Focused upgrade/build/active,
   secondary/renderer/balance, encounter/arrival/allocation, transition/continuity/result,
   localization, capture-driver, visual-authority, headless import, and Web export checks pass. No
-  performance scenario ran. Task 8.6 still requires normal-scale Korean/English rendered inspection
-  and the final diff-scoped quality/commit gate.
+  performance scenario ran. Normal-scale 1280x720 Korean and English evidence from clean commit
+  `b404f310` confirms left-packed category cells, the equipped EMP glyph, all six Result build
+  categories, and no build-grid clipping. Evidence is under `build/captures/phase8-b404f310-{ko,en}`.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance
   this pointer in the same edit.
 
