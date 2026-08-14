@@ -25,6 +25,8 @@ const REQUIRED_VARIATIONS := {
 	&"PreviewFrame": &"PanelContainer",
 	&"PreviewLocked": &"PanelContainer",
 	&"PreviewFocused": &"PanelContainer",
+	&"BuildCellFrame": &"PanelContainer",
+	&"BuildCellFocused": &"PanelContainer",
 	&"DisplayLabel": &"Label",
 	&"TitleLabel": &"Label",
 	&"SectionLabel": &"Label",

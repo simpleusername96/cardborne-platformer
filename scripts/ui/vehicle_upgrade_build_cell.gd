@@ -19,8 +19,6 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 var _record: Dictionary = {}
 var _button: Button
 var _artwork: TextureRect
-var _normal_frame: StyleBoxFlat
-var _focused_frame: StyleBoxFlat
 var _action_glyph_id: StringName = &""
 
 
@@ -37,14 +35,14 @@ func set_record(record: Dictionary, cell_size: float, artwork_size: float) -> vo
 	_action_glyph_id = StringName(_record.get("action_glyph_id", &""))
 	visible = true
 	if not filled:
-		theme_type_variation = &"PreviewFrame"
+		theme_type_variation = &"BuildCellFrame"
 		_button.focus_mode = Control.FOCUS_NONE
 		_button.disabled = true
 		_button.accessibility_name = ""
 		_artwork.texture = null
 		queue_redraw()
 		return
-	theme_type_variation = &"PreviewFrame"
+	theme_type_variation = &"BuildCellFrame"
 	_button.focus_mode = Control.FOCUS_ALL
 	_button.disabled = false
 	_button.accessibility_name = tr(String(_record.get("title_key", "")))
@@ -66,10 +64,7 @@ func is_filled() -> bool:
 
 func _build() -> void:
 	custom_minimum_size = Vector2(24.0, 24.0)
-	theme_type_variation = &"PreviewFrame"
-	_normal_frame = _make_frame(false)
-	_focused_frame = _make_frame(true)
-	add_theme_stylebox_override("panel", _normal_frame)
+	theme_type_variation = &"BuildCellFrame"
 	_button = Button.new()
 	_button.flat = true
 	_button.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -94,17 +89,6 @@ func _build() -> void:
 	_artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	center.add_child(_artwork)
 
-
-func _make_frame(focused: bool) -> StyleBoxFlat:
-	var frame := StyleBoxFlat.new()
-	frame.bg_color = Color(Art.SPACE_BLACK, 0.60)
-	frame.border_color = Art.IVORY_BRIGHT if focused else Art.LINE
-	var border_width := Art.FOCUS_WIDTH if focused else Art.BORDER_WIDTH
-	frame.set_border_width_all(border_width)
-	frame.set_content_margin_all(1.0)
-	return frame
-
-
 func _draw() -> void:
 	if _action_glyph_id.is_empty():
 		return
@@ -124,8 +108,7 @@ func _draw() -> void:
 
 func _request_preview() -> void:
 	if is_filled():
-		theme_type_variation = &"PreviewFocused"
-		add_theme_stylebox_override("panel", _focused_frame)
+		theme_type_variation = &"BuildCellFocused"
 		preview_requested.emit(record(), self)
 
 
@@ -140,5 +123,4 @@ func _request_close() -> void:
 
 
 func clear_focus_state() -> void:
-	theme_type_variation = &"PreviewFrame"
-	add_theme_stylebox_override("panel", _normal_frame)
+	theme_type_variation = &"BuildCellFrame"

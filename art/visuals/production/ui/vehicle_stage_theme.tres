@@ -294,6 +294,30 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(1, 0.94902, 0.658824, 1)
 
+[sub_resource type="StyleBoxFlat" id="BuildCellFrame"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.027451, 0.0431373, 0.0666667, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.27451, 0.352941, 0.431373, 1)
+
+[sub_resource type="StyleBoxFlat" id="BuildCellFocused"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.027451, 0.0431373, 0.0666667, 0.6)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.933333, 0.952941, 0.968627, 1)
+
 [sub_resource type="StyleBoxFlat" id="MeterBackground"]
 bg_color = Color(0.027451, 0.0431373, 0.0666667, 1)
 border_width_left = 1
@@ -500,6 +524,10 @@ PreviewLocked/base_type = &"PanelContainer"
 PreviewLocked/styles/panel = SubResource("PreviewLocked")
 PreviewFocused/base_type = &"PanelContainer"
 PreviewFocused/styles/panel = SubResource("PreviewFocused")
+BuildCellFrame/base_type = &"PanelContainer"
+BuildCellFrame/styles/panel = SubResource("BuildCellFrame")
+BuildCellFocused/base_type = &"PanelContainer"
+BuildCellFocused/styles/panel = SubResource("BuildCellFocused")
 DisplayLabel/base_type = &"Label"
 DisplayLabel/fonts/font = SubResource("FontStrong")
 DisplayLabel/font_sizes/font_size = 40
