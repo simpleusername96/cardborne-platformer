@@ -250,7 +250,7 @@ Source owners: `scripts/encounters/vehicle_collective_tactic_runtime.gd`, `scrip
 - [x] **6.5 Integrate, inspect, and record the changed contract.**
   - Change: update the product spec and focused source tests, then capture a deterministic Stage 3 representative Dormant -> Gather -> Lock -> Break tactic transition. Use deterministic trajectory and damage receipts for Chaser lunge/recovery and ranged hull impact because still screenshots cannot prove motion or collision causality. Review the changed standard-motion tactic output against the existing visual system; create no new raster, ring, label, or formation overlay. Reduced-motion presentation is unchanged and remains covered by its existing contract rather than a newly claimed rendered proof.
   - Accept: the state sequence first shows scattered, unshielded ordinary enemies before Gather and the shielded formation Lock; shields remain one body-attached mint boundary and never appear as a separate arrival bubble; deterministic receipts prove Chaser recovery has no retreat component and ranged hull impact produces normal damage feedback; Korean/English surfaces and draw/batch ceilings are unchanged.
-- [ ] **6.6 Run bounded regression and quality gates.**
+- [x] **6.6 Run bounded regression and quality gates.**
   - Change: run collective-tactic, movement-policy, local-steering, enemy-contact, encounter-pacing, update-schedule, actor-visual, combat-renderer, source/import, visual-authority, Web export/smoke, and `git diff --check` gates. Run one short same-workload Stage-10 performance diagnostic only if the contact/tactic diff changes measured hot-path work; do not reopen the density staircase.
   - Accept: focused behavior checks pass, no new recurring allocation or per-enemy SceneTree/NavigationAgent owner exists, cap 48 workload truth is preserved, and any performance verdict is labeled only for the exact tested build and scenario.
 
@@ -346,6 +346,8 @@ Implementation-local discoveries may be handled inside the locked contract only 
 - 2026-08-15: mobile ranged hull overlap changes from damage-inert to a low `6`-damage, `1.0 s` accepted-hit cooldown contract in the existing relative-sweep owner. This is an explicit product revision, not a claim that the former implementation violated its tests. Full CharacterBody/NavigationAgent conversion and RVO avoidance were rejected because Godot's collision/avoidance path adds per-agent physics/navigation work and current Web cap-48 physics already fails its release threshold.
 - 2026-08-15: Tasks 6.1-6.4 are implemented in their existing owners. Seven focused validators pass: collective tactics, movement policy, local steering, enemy contact, causal diagnostics, encounter pacing, and update schedule. The post-pass caught and corrected an intermediate regression that had replaced Guard/Splitter contact; their original `12` damage and `0.8 s` cooldown remain intact beside the new ranged contract.
 - 2026-08-15: Task 6.5's Korean 1280x720 full capture completed with 128 files. Original-detail inspection of the deterministic Stage 3 transition shows scattered, unshielded Dormant enemies; unshielded Gather; body-attached mint shields only in the line-shaped Lock; and shield removal in Break. The manifest and transition receipt agree. Motion and collision claims remain grounded in the deterministic movement/contact validators, not inferred from still images. Actor-visual, combat-renderer, capture-driver, and visual-authority checks pass; no raster or visual geometry changed.
+- 2026-08-15: Task 6.6's ten focused Godot validators, visual-authority gate, editor/import parse, Web export, and `git diff --check` pass. The built Web export loaded through the registered Codex port at 1280x720: HTML, JS, WASM, and PCK returned 200, the Korean Deployment screen rendered, and the browser console had zero warnings or errors; the task-owned page/server were then closed.
+- 2026-08-15: the clean current-commit 10-second warmup plus 30-second native Stage-10 `production_replay` diagnostic preserved exact cap 48 and valid production qualification. Physics p95/p99 was `3.976/4.861 ms`, enemy/grid p95 was `2.361 ms`, and every individual unchanged threshold check passed. The recorder correctly labels the 30-second diagnostic `authoritative=false`; it is not presented as a replacement for the retained 60-second native authority or as a new Web performance claim. The first attempted sample was discarded because its generated build identity still named the previous commit.
 
 ## Open Questions
 
@@ -354,9 +356,9 @@ No material implementation decision remains open. A future weapon-policy change,
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 6 ordinary-enemy first-contact correction. Phase 5 lifecycle debt remains blocked only on predecessor retirement approval and the named human complete-run release playtest.
-- Next task: run Task 6.6's bounded Web export/smoke and one same-workload native performance diagnostic without reopening the density staircase.
-- Last completed gate: Task 6.5's 128-file Korean capture, original-detail transition inspection, and focused actor/render/authority checks.
+- Current phase: Phase 6 ordinary-enemy first-contact correction is complete. Phase 5 lifecycle debt remains blocked only on predecessor retirement approval and the named human complete-run release playtest.
+- Next task: obtain explicit approval before retiring the completed predecessor plan, and perform the named human ten-stage clear as a release playtest; neither is silently substituted by automated evidence.
+- Last completed gate: Task 6.6 focused source/visual/Web gates and clean-current-commit 30-second Stage-10 diagnostic.
 - Update rule: after a task acceptance check passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions
