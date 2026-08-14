@@ -244,11 +244,11 @@ func _run() -> void:
 			and int(notification_contract["queue_cap"]) == 4
 			and int(notification_contract["queue_size"]) == 4
 			and Array(notification_contract["queued_messages"]) == [
-				"fourth", "fifth", "sixth", "seventh",
+				"second", "third", "fourth", "fifth",
 			]
 			and bool(notification_contract["text_only"])
 			and bool(notification_contract["input_passthrough"]),
-		"notification queue preserves order and cap on the input-transparent text-only announcement"
+		"notification queue preserves equal-priority arrival order and cap on the input-transparent text-only announcement"
 	)
 	stage_ui.call("clear_notifications")
 	experience_runtime.set("pending_level_ups", 1)
