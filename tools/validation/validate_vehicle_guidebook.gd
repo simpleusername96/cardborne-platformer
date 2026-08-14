@@ -161,6 +161,19 @@ func _run() -> void:
 			and int(contract["locked_summary_count"]) == 3,
 		"enemy detail shows health, attack, and speed while locks stay summarized"
 	)
+	_expect(
+		panel.debug_select_entry(&"objects", &"object_mystery_device"),
+		"Anomaly Device detail is selectable"
+	)
+	contract = panel.debug_contract()
+	_expect(
+		Array(Dictionary(contract["preview"])["asset_ids"]) == [
+			&"world/mystery_device_gravity",
+			&"world/mystery_device_cryo",
+			&"world/mystery_device_weakpoint",
+		],
+		"Anomaly Device preview shows the three visible attackable symbols without a casing"
+	)
 
 	panel.set_compact_mode(true)
 	panel.open(active)

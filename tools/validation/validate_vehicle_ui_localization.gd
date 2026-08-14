@@ -37,7 +37,6 @@ func _initialize() -> void:
 			"HUD_DEFEATED_LABEL",
 			"NOTIFY_BOSS_INBOUND",
 			"NOTIFY_BARRIER_DEPLETED",
-			"NOTIFY_MYSTERY_DEVICE_REVEALED",
 			"NOTIFY_MYSTERY_DEVICE_TRIGGERED",
 			"BOSS_SHIELD_DOWN_HINT",
 		]:
@@ -155,6 +154,7 @@ func _initialize() -> void:
 		"NOTIFY_EXPERIENCE_RECALL",
 		"NOTIFY_LEVEL_UP",
 		"NOTIFY_BOSS_SHARD",
+		"NOTIFY_MYSTERY_DEVICE_REVEALED",
 		"BOSS_SHIELD_UP_HINT",
 		"BOSS_SHIELD_UP_STATUS",
 		"BOSS_SHIELD_DOWN_STATUS",
@@ -190,13 +190,12 @@ func _initialize() -> void:
 		)
 	_expect(
 		run_source.count("_ui.notify(")
-			+ run_source.count("_ui.notify_immediate(") == 6,
-		"gameplay runtime has exactly six essential notification producers"
+			+ run_source.count("_ui.notify_immediate(") == 5,
+		"gameplay runtime has exactly five essential notification producers"
 	)
 	for retained_key in [
 		"NOTIFY_BOSS_INBOUND",
 		"NOTIFY_BARRIER_DEPLETED",
-		"NOTIFY_MYSTERY_DEVICE_REVEALED",
 		"NOTIFY_MYSTERY_DEVICE_TRIGGERED",
 		"BOSS_SHIELD_DOWN_HINT",
 	]:

@@ -20,8 +20,6 @@ const DISTINCT_GROUPS := {
 		&"pickup/experience_recall",
 	],
 	"mystery_device_states":[
-		&"world/mystery_device_intact",
-	&"world/mystery_device_damaged",
 		&"world/mystery_device_gravity",
 		&"world/mystery_device_cryo",
 		&"world/mystery_device_weakpoint",
@@ -44,8 +42,6 @@ func _initialize() -> void:
 
 func _validate_active_world_roles() -> void:
 	var expected := [
-		&"mystery_device_intact",
-		&"mystery_device_damaged",
 		&"mystery_device_gravity",
 		&"mystery_device_cryo",
 		&"mystery_device_weakpoint",

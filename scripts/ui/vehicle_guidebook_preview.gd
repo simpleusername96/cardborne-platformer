@@ -46,7 +46,9 @@ func show_preview(preview: Dictionary) -> void:
 		&"boss":
 			_add_asset(StringName("boss/%s" % preview_id), 220.0)
 		&"mystery_device":
-			_add_asset(&"world/mystery_device_intact", 150.0)
+			_add_asset(&"world/mystery_device_gravity", 68.0, Vector2(-72.0, 0.0))
+			_add_asset(&"world/mystery_device_cryo", 68.0)
+			_add_asset(&"world/mystery_device_weakpoint", 68.0, Vector2(72.0, 0.0))
 		&"terrain":
 			_add_terrain(preview_id)
 		&"facility":

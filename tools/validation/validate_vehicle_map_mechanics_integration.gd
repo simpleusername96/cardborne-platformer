@@ -70,9 +70,9 @@ func _validate_device_collision_and_damage_authority(run) -> void:
 	_expect(devices.size() == 3, "live run configures three mystery devices")
 	var outcomes: Dictionary = {}
 	for device in devices:
-		outcomes[StringName(device.get("revealed_outcome", &""))] = true
-		_expect(StringName(device["state"]) == &"intact" and not device.has("revealed_outcome"), "intact device keeps its outcome hidden")
-	_expect(outcomes.size() == 1 and outcomes.has(&""), "all intact outcomes remain hidden in the live snapshot")
+		outcomes[StringName(device.get("outcome", &""))] = true
+		_expect(StringName(device["state"]) == &"intact" and device.has("outcome"), "intact device publishes its assigned outcome")
+	_expect(outcomes.size() == 3, "all three intact outcomes are visible in the live snapshot")
 	var position := Vector2(devices[0]["position"])
 	_expect(not bool(run.call("_position_clear_of_stage_objects", position, 24.0)), "intact device blocks live actor collision")
 	var blocked := Vector2(run.call("_move_actor", position - Vector2(160.0, 0.0), Vector2(160.0, 0.0), 24.0, false))
@@ -85,11 +85,13 @@ func _validate_device_collision_and_damage_authority(run) -> void:
 	var experience_before := int(run.experience_runtime.experience)
 	_expect(not bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"contact", position, Color.WHITE, Vector2.RIGHT)), "contact damage cannot break a device")
 	_expect(bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 45.0, &"direct", position, Color.WHITE, Vector2.RIGHT)), "the first player hit is accepted")
-	var revealed_devices := Array(run.mystery_device_runtime.snapshot()["devices"])
+	var hit_devices := Array(run.mystery_device_runtime.snapshot()["devices"])
 	_expect(
-		StringName(revealed_devices[0]["state"]) == &"intact"
-		and StringName(revealed_devices[0]["revealed_outcome"]) == &"gravity_pull",
-		"the first player hit reveals the device outcome before break"
+		StringName(hit_devices[0]["state"]) == &"intact"
+		and StringName(hit_devices[0]["outcome"]) == &"gravity_pull"
+		and is_equal_approx(float(hit_devices[0]["health"]), 45.0)
+		and run._mystery_device_result_receipt.is_empty(),
+		"the first player hit preserves the visible outcome and does not activate it"
 	)
 	_expect(bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 45.0, &"direct", position, Color.WHITE, Vector2.RIGHT)), "the second player hit breaks the device")
 	_expect(int(run.stage_flow.defeats) == quota_before and int(run.experience_runtime.experience) == experience_before, "device break changes neither quota nor XP")

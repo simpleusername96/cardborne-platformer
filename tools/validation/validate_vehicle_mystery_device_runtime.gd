@@ -6,7 +6,7 @@ var failures := PackedStringArray()
 
 
 func _initialize() -> void:
-	_validate_configure_and_hidden_outcomes()
+	_validate_configure_and_visible_outcomes()
 	_validate_damage_authority_and_break_event()
 	_validate_effect_retirement_and_stage_reset()
 	_validate_hot_path_queries_and_reused_output()
@@ -19,7 +19,7 @@ func _initialize() -> void:
 		quit(1)
 
 
-func _validate_configure_and_hidden_outcomes() -> void:
+func _validate_configure_and_visible_outcomes() -> void:
 	var first := Runtime.new()
 	var second := Runtime.new()
 	var blueprint := _blueprint()
@@ -27,6 +27,7 @@ func _validate_configure_and_hidden_outcomes() -> void:
 	second.configure(blueprint, 771, &"stage_2")
 	var snapshot := first.snapshot()
 	_expect(Array(snapshot["devices"]).size() == 3, "configure keeps exactly three devices")
+	var visible_outcomes := {}
 	for device in Array(snapshot["devices"]):
 		_expect(is_equal_approx(float(device["health"]), 90.0), "intact device has 90 health")
 		_expect(is_equal_approx(float(device["max_health"]), 90.0), "device snapshot publishes max health")
@@ -36,7 +37,9 @@ func _validate_configure_and_hidden_outcomes() -> void:
 		)
 		_expect(is_equal_approx(float(device["radius"]), 84.0), "intact device has radius 84")
 		_expect(StringName(device["state"]) == &"intact" and bool(device["visible"]), "intact device is visible")
-		_expect(not Dictionary(device).has("revealed_outcome"), "intact snapshot hides the outcome")
+		visible_outcomes[StringName(device["outcome"])] = true
+		_expect(not Dictionary(device).has("revealed_outcome"), "snapshot uses one public outcome field")
+	_expect(visible_outcomes.size() == 3, "all three assigned outcomes are visible before any hit")
 	_expect(
 		var_to_str(first.snapshot()) == var_to_str(second.snapshot()),
 		"same seed and stage assign outcomes deterministically"
@@ -79,9 +82,10 @@ func _validate_damage_authority_and_break_event() -> void:
 	_expect(
 		bool(partial["accepted"])
 		and not bool(partial["broken"])
-		and bool(partial["revealed_now"])
-		and StringName(partial["revealed_outcome"]) == &"gravity_pull",
-		"the first authorized hit reduces health and reveals the assigned outcome once"
+		and is_equal_approx(float(partial["remaining_health"]), 45.0)
+		and not partial.has("revealed_now")
+		and not partial.has("revealed_outcome"),
+		"the first authorized hit only reduces health"
 	)
 	var damaged: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
 	_expect(
@@ -89,9 +93,9 @@ func _validate_damage_authority_and_break_event() -> void:
 		"authorized damage does not publish forbidden device health-bar state"
 	)
 	_expect(
-		StringName(damaged["revealed_outcome"]) == &"gravity_pull"
+		StringName(damaged["outcome"]) == &"gravity_pull"
 		and StringName(damaged["state"]) == &"intact",
-		"the revealed outcome remains visible while the damaged device is intact"
+		"the public outcome remains stable while the damaged device is intact"
 	)
 	runtime.advance(0.5)
 	damaged = Dictionary(Array(runtime.snapshot()["devices"])[0])
@@ -103,9 +107,9 @@ func _validate_damage_authority_and_break_event() -> void:
 	var event := Dictionary(broken["break_event"])
 	_expect(
 		bool(broken["broken"])
-		and not bool(broken["revealed_now"])
+		and not broken.has("revealed_now")
 		and not event.is_empty(),
-		"later lethal damage triggers one break event without repeating the reveal"
+		"later lethal damage triggers one break event without a reveal receipt"
 	)
 	_expect(
 		StringName(event["effect_id"]) == &"gravity_pull"
@@ -120,9 +124,9 @@ func _validate_damage_authority_and_break_event() -> void:
 		and StringName(event["drop"]) == &"",
 		"break event explicitly grants no quota, XP, or drop"
 	)
-	var revealed: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
-	_expect(StringName(revealed["revealed_outcome"]) == &"gravity_pull", "resolved state retains the first-hit outcome")
-	_expect(StringName(revealed["state"]) == &"resolved" and bool(revealed["visible"]), "broken device stays resolved while effect is active")
+	var resolved: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
+	_expect(StringName(resolved["outcome"]) == &"gravity_pull", "resolved state retains its initial public outcome")
+	_expect(StringName(resolved["state"]) == &"resolved" and bool(resolved["visible"]), "broken device stays resolved while effect is active")
 	_expect(not runtime.is_intact(&"a") and runtime.intact_devices_snapshot().size() == 2, "broken device is no longer intact or damageable")
 
 
@@ -155,7 +159,7 @@ func _validate_hot_path_queries_and_reused_output() -> void:
 		and is_equal_approx(float(hit_receipt["t"]), 116.0 / 600.0)
 		and Vector2(hit_receipt["position"]) == Vector2(116.0, 0.0)
 		and not hit_receipt.has("outcome"),
-		"segment receipt returns nearest intersection without leaking outcome"
+		"segment receipt returns only the narrow collision result"
 	)
 	var device_output: Array[Dictionary] = []
 	var filled_devices := runtime.fill_device_snapshot(device_output)

@@ -62,8 +62,12 @@ const ENEMY_BATCH_INITIAL_CAPACITY := 64
 const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
 const MYSTERY_DEVICE_CAPACITY := 3
 const MAP_PICKUP_CAPACITY := 14
-const MYSTERY_DEVICE_VISUAL_RADIUS := 84.0
 const MYSTERY_DEVICE_SYMBOL_RADIUS := 144.0
+const MYSTERY_SYMBOL_DESCRIPTORS := {
+	&"gravity_pull": &"mystery_device_gravity",
+	&"cryo_lock": &"mystery_device_cryo",
+	&"weakpoint_expose": &"mystery_device_weakpoint",
+}
 const INTERACTION_CONTOUR_WORLD_UNITS := 2.0
 const INTERACTION_EDGE_ALPHA_MIN := 0.32
 const INTERACTION_EDGE_ALPHA_MAX := 0.52
@@ -224,7 +228,6 @@ var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
 var _map_pickup_batches: Dictionary = {}
 var _map_pickup_contour_batches: Dictionary = {}
-var _mystery_device_batches: Dictionary = {}
 var _mystery_device_contour_batches: Dictionary = {}
 var _mystery_effect_ring_batch: BatchHandle
 var _electric_field_batch: BatchHandle
@@ -541,35 +544,15 @@ func _build_batches() -> void:
 			_pickup_edge_material,
 			true
 		)
-	_mystery_device_batches[&"intact"] = _create_asset_batch(
-		"MysteryDevice_intact",
-		StringName(
-			WorldCatalog.world_object_descriptor(
-				&"mystery_device_intact"
-			).get("asset", &"")
-		),
-		MYSTERY_DEVICE_CAPACITY, 2, &"mystery_device_intact", MYSTERY_DEVICE_CAPACITY
-	)
-	_mystery_device_batches[&"damaged"] = _create_asset_batch(
-		"MysteryDevice_damaged",
-		StringName(
-			WorldCatalog.world_object_descriptor(
-				&"mystery_device_damaged"
-			).get("asset", &"")
-		),
-		MYSTERY_DEVICE_CAPACITY, 2, &"mystery_device_damaged", MYSTERY_DEVICE_CAPACITY
-	)
-	for device_state in [&"intact", &"damaged"]:
-		var descriptor_id := StringName("mystery_device_%s" % device_state)
-		var device_asset := StringName(
-			WorldCatalog.world_object_descriptor(descriptor_id).get("asset", &"")
-		)
-		_mystery_device_contour_batches[device_state] = _create_asset_batch(
-			"MysteryDeviceContour_%s" % String(device_state),
-			device_asset,
+	for outcome_id in [&"gravity_pull", &"cryo_lock", &"weakpoint_expose"]:
+		var descriptor_id := _mystery_symbol_descriptor(outcome_id)
+		var symbol_asset := StringName(WorldCatalog.world_object_descriptor(descriptor_id).get("asset", &""))
+		_mystery_device_contour_batches[outcome_id] = _create_asset_batch(
+			"MysteryDeviceContour_%s" % String(outcome_id),
+			symbol_asset,
 			MYSTERY_DEVICE_CAPACITY,
 			1,
-			StringName("mystery_device_contour_%s" % device_state),
+			StringName("mystery_device_contour_%s" % outcome_id),
 			MYSTERY_DEVICE_CAPACITY,
 			false,
 			_mystery_edge_material,
@@ -1925,59 +1908,41 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		var device_state := StringName(device.get("state", &""))
 		if device_state not in [&"intact", &"resolved"]:
 			continue
+		var outcome_id := StringName(device.get("outcome", &""))
+		var symbol_descriptor := _mystery_symbol_descriptor(outcome_id)
+		var symbol_asset := StringName(
+			WorldCatalog.world_object_descriptor(symbol_descriptor).get("asset", &"")
+		)
+		if symbol_asset == &"":
+			continue
 		var position := Vector2(device.get("position", Vector2.ZERO))
 		var phase_offset := _stable_interaction_phase(device.get("id", ""))
 		if not reduced_motion:
 			position.y += sin(
 				run_time * TAU / MYSTERY_DEVICE_BOB_PERIOD + phase_offset
 			) * MYSTERY_DEVICE_BOB_AMPLITUDE
-		var revealed_outcome := StringName(device.get("revealed_outcome", &""))
-		var cull_radius := (
-			MYSTERY_DEVICE_SYMBOL_RADIUS
-			if device_state == &"resolved" and revealed_outcome != &""
-			else MYSTERY_DEVICE_VISUAL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS
-		)
-		if not visible_world.grow(cull_radius).has_point(position):
+		if not visible_world.grow(
+			MYSTERY_DEVICE_SYMBOL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS
+		).has_point(position):
 			continue
-		if device_state == &"intact":
-			var health := float(device.get("health", 0.0))
-			var max_health := float(device.get("max_health", 0.0))
-			var visual_state := &"damaged" if max_health > 0.0 and health < max_health else &"intact"
-			var edge_alpha := _interaction_edge_alpha(
-				run_time, phase_offset, reduced_motion
-			)
-			_write_instance(
-				_mystery_device_contour_batches[visual_state] as BatchHandle,
-				position,
-				0.0,
-				Vector2.ONE * (
-					MYSTERY_DEVICE_VISUAL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS
-				),
-				Color.WHITE,
-				Color(1.0, 1.0, 1.0, edge_alpha)
-			)
-			_write_instance(
-				_mystery_device_batches[visual_state] as BatchHandle,
-				position,
-				0.0,
-				Vector2.ONE * MYSTERY_DEVICE_VISUAL_RADIUS,
-				Color.WHITE
-			)
-			continue
-		var symbol_descriptor := StringName({
-			&"gravity_pull": &"mystery_device_gravity",
-			&"cryo_lock": &"mystery_device_cryo",
-			&"weakpoint_expose": &"mystery_device_weakpoint",
-		}.get(revealed_outcome, &""))
-		var symbol_asset := StringName(
-			WorldCatalog.world_object_descriptor(symbol_descriptor).get("asset", &"")
+		var edge_alpha := _interaction_edge_alpha(run_time, phase_offset, reduced_motion)
+		_write_instance(
+			_mystery_device_contour_batches[outcome_id] as BatchHandle,
+			position,
+			0.0,
+			Vector2.ONE * (MYSTERY_DEVICE_SYMBOL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS),
+			Color.WHITE,
+			Color(1.0, 1.0, 1.0, edge_alpha)
 		)
-		if device_state == &"resolved" and symbol_asset != &"":
-			# A broken device becomes one large standalone outcome symbol. The
-			# pristine and cracked neutral bodies never remain underneath it.
-			_queue_semantic_texture(
-				symbol_asset, position, 0.0, MYSTERY_DEVICE_SYMBOL_RADIUS, Color.WHITE
-			)
+		# The visible outcome symbol is the facility for its complete lifecycle.
+		# Destruction starts an effect separately; it never swaps or layers a body.
+		_queue_semantic_texture(
+			symbol_asset, position, 0.0, MYSTERY_DEVICE_SYMBOL_RADIUS, Color.WHITE
+		)
+
+
+static func _mystery_symbol_descriptor(outcome_id: StringName) -> StringName:
+	return StringName(MYSTERY_SYMBOL_DESCRIPTORS.get(outcome_id, &""))
 
 
 static func _stable_interaction_phase(identity: Variant) -> float:

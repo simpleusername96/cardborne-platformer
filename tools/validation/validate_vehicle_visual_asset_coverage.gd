@@ -11,7 +11,7 @@ const EXPECTED_CATEGORY_COUNTS := {
 	&"secondary":4,
 	&"projectile":2,
 	&"pickup":4,
-	&"world":18,
+	&"world":19,
 	&"upgrade":28,
 }
 
@@ -36,8 +36,8 @@ func _initialize() -> void:
 			]
 		)
 	_expect(
-		AssetProvider.asset_ids().size() == 80,
-		"final production coverage totals 77 semantic PNGs plus three approved SVGs"
+		AssetProvider.asset_ids().size() == 81,
+		"final production coverage totals 78 semantic PNGs plus three approved SVGs"
 	)
 	var unique_paths := {}
 	for asset_id in AssetProvider.asset_ids():

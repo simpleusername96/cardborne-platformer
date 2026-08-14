@@ -20,8 +20,9 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"pickup/repair",
 	&"pickup/experience_recall",
 	&"world/facility_transit_gate",
-	&"world/mystery_device_intact",
-	&"world/mystery_device_damaged",
+	&"world/mystery_device_gravity",
+	&"world/mystery_device_cryo",
+	&"world/mystery_device_weakpoint",
 	&"world/surface_detail_crack",
 	&"world/surface_detail_stain",
 	&"world/surface_detail_embedded_chip",
@@ -97,6 +98,16 @@ const RETIRED_PRIMITIVE_PATHS := [
 	"res://art/visuals/production/gameplay/effects/cues/cue_crosshair.png",
 ]
 
+const RETIRED_MYSTERY_BODY_IDS: Array[StringName] = [
+	&"world/mystery_device_intact",
+	&"world/mystery_device_damaged",
+]
+
+const RETIRED_MYSTERY_BODY_PATHS := [
+	"res://art/visuals/production/gameplay/world/mystery_device_intact.png",
+	"res://art/visuals/production/gameplay/world/mystery_device_damaged.png",
+]
+
 const FORBIDDEN_ID_PREFIXES := [
 	"boss_module/",
 	"state/",
@@ -108,7 +119,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 83, "all 80 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 81, "all 78 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in REQUIRED_UPGRADE_IDS:
@@ -121,6 +132,13 @@ func _initialize() -> void:
 		_expect(
 			not FileAccess.file_exists(path) and not FileAccess.file_exists("%s.import" % path),
 			"shape/color-only production source and import sidecar stay retired: %s" % path
+		)
+	for asset_id in RETIRED_MYSTERY_BODY_IDS:
+		_expect(not AssetProvider.has_asset(asset_id), "%s black casing stays retired" % asset_id)
+	for path in RETIRED_MYSTERY_BODY_PATHS:
+		_expect(
+			not FileAccess.file_exists(path) and not FileAccess.file_exists("%s.import" % path),
+			"black Anomaly Device casing source and import stay retired: %s" % path
 		)
 	for asset_id in ids:
 		var id_text := String(asset_id)
@@ -149,12 +167,11 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 83
+		int(manifest.get("final_asset_count", 0)) == 81
 			and not manifest.has("animations"),
-		"manifest declares 83 static semantic images and no frame animations"
+		"manifest declares 81 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
-	_validate_normalized_content_rects()
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)
 	for upgrade_id in REQUIRED_UPGRADE_IDS:
@@ -168,52 +185,6 @@ func _initialize() -> void:
 			"%s keeps a transparent raster exterior" % upgrade_id
 		)
 	_finish()
-
-
-func _validate_normalized_content_rects() -> void:
-	var expected := {
-		&"world/mystery_device_intact":Rect2i(6, 5, 372, 374),
-		&"world/mystery_device_damaged":Rect2i(8, 5, 368, 374),
-	}
-	for asset_id in expected:
-		var descriptor := AssetProvider.descriptor(asset_id)
-		var expected_rect: Rect2i = expected[asset_id]
-		_expect(
-			Rect2i(descriptor.get("content_rect", Rect2i())) == expected_rect,
-			"%s preserves its approved alpha-content bounds" % asset_id
-		)
-		var texture := AssetProvider.texture(asset_id)
-		var image := texture.get_image() if texture != null else null
-		var expected_canvas := Vector2i(descriptor.get("canvas", Vector2i.ZERO))
-		_expect(
-			image != null and image.get_size() == expected_canvas,
-			"%s actual PNG canvas matches its semantic descriptor" % asset_id
-		)
-		if image != null:
-			_expect(
-				image.get_used_rect() == expected_rect,
-				"%s actual alpha content matches its approved content rect" % asset_id
-			)
-			for corner in [
-				Vector2i.ZERO,
-				Vector2i(image.get_width() - 1, 0),
-				Vector2i(0, image.get_height() - 1),
-				Vector2i(image.get_width() - 1, image.get_height() - 1),
-			]:
-				_expect(
-					image.get_pixelv(corner).a <= 0.001,
-					"%s keeps transparent canvas corners" % asset_id
-				)
-		var mesh := AssetProvider.normalized_mesh(asset_id)
-		var content_size: Vector2 = Vector2(expected_rect.size)
-		var canvas_size := Vector2(descriptor.get("canvas", Vector2i.ZERO))
-		var unit_radius := maxf(content_size.x, content_size.y) * 0.5
-		_expect(
-			mesh != null
-				and mesh.size.is_equal_approx(canvas_size / unit_radius),
-			"%s normalizes from visible content instead of transparent canvas padding"
-			% asset_id
-		)
 
 
 func _validate_surface_details() -> void:

@@ -5146,10 +5146,6 @@ func _damage_mystery_device(
 	_play_sound(&"cover", _rng.randf_range(0.96, 1.04))
 	if bool(receipt["broken"]):
 		_handle_mystery_device_break(Dictionary(receipt["break_event"]))
-	elif bool(receipt.get("revealed_now", false)):
-		_notify_mystery_device_reveal(
-			StringName(receipt.get("revealed_outcome", &""))
-		)
 	queue_redraw()
 	return true
 
@@ -5181,20 +5177,6 @@ func _handle_mystery_device_break(event: Dictionary) -> Dictionary:
 		"duration":float(event.get("duration", 0.0)),
 	})
 	return _mystery_device_result_receipt
-
-
-func _notify_mystery_device_reveal(effect_id: StringName) -> void:
-	var outcome_key := _mystery_outcome_key(effect_id)
-	if outcome_key.is_empty():
-		return
-	_ui.notify(
-		tr("NOTIFY_MYSTERY_DEVICE_REVEALED") % tr(outcome_key),
-		2.0,
-		Art.SYSTEM,
-		1,
-		&"anomaly_revealed"
-	)
-	_session_diagnostics.emit_event("anomaly_revealed", {"effect_id":effect_id})
 
 
 func _mystery_outcome_key(effect_id: StringName) -> String:

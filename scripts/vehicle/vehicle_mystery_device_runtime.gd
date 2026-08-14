@@ -39,7 +39,6 @@ func configure(device_blueprint: Array, layout_seed: int, stage_id: StringName) 
 			"position":Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))),
 			"health":DEVICE_HEALTH,
 			"outcome":outcome,
-			"revealed":false,
 			"state":&"intact",
 		})
 
@@ -60,8 +59,6 @@ func receive_damage(
 		"broken":false,
 		"device_id":device_id,
 		"remaining_health":0.0,
-		"revealed_now":false,
-		"revealed_outcome":&"",
 		"break_event":{},
 	}
 	var device := _device_by_id(device_id)
@@ -74,12 +71,8 @@ func receive_damage(
 	if applied <= 0.0:
 		return receipt
 	device["health"] = maxf(0.0, float(device["health"]) - applied)
-	var revealed_now := not bool(device.get("revealed", false))
-	device["revealed"] = true
 	receipt["accepted"] = true
 	receipt["remaining_health"] = float(device["health"])
-	receipt["revealed_now"] = revealed_now
-	receipt["revealed_outcome"] = StringName(device["outcome"])
 	if float(device["health"]) > 0.0:
 		return receipt
 	device["state"] = &"resolved"
@@ -135,7 +128,7 @@ func first_intact_segment_hit(
 	padding: float,
 	receipt: Dictionary
 ) -> bool:
-	## Fills caller-owned receipt with id/t/position; never exposes the hidden outcome.
+	## Fills a narrow collision receipt; outcome presentation uses the public snapshot.
 	receipt.clear()
 	var first_t := INF
 	var first_device_index := -1
@@ -180,10 +173,9 @@ func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 		record["radius"] = DEVICE_RADIUS
 		record["health"] = float(device["health"])
 		record["max_health"] = DEVICE_HEALTH
+		record["outcome"] = StringName(device["outcome"])
 		record["state"] = StringName(device["state"])
 		record["visible"] = StringName(device["state"]) != &"retired"
-		if bool(device.get("revealed", false)):
-			record["revealed_outcome"] = StringName(device["outcome"])
 	return output
 
 

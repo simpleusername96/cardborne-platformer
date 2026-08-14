@@ -17,20 +17,6 @@ const WORLD_OBJECT_DESCRIPTORS := {
 		"shape": &"round_portal",
 		"color": &"system",
 	},
-	&"mystery_device_intact": {
-		"asset": &"world/mystery_device_intact",
-		"kind": &"mystery_device",
-		"state": &"intact",
-		"shape": &"neutral_mechanical_body",
-		"color": &"system",
-	},
-	&"mystery_device_damaged": {
-		"asset": &"world/mystery_device_damaged",
-		"kind": &"mystery_device",
-		"state": &"damaged",
-		"shape": &"cracked_neutral_body",
-		"color": &"raised",
-	},
 	&"mystery_device_gravity": {
 		"asset": &"world/mystery_device_gravity", "kind": &"mystery_device_symbol", "shape": &"inward_arrows",
 	},

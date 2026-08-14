@@ -93,10 +93,9 @@ func _initialize() -> void:
 		"upgrade captures use the real grouped build snapshot instead of a blank legacy payload"
 	)
 	_expect(
-		gateway_source.contains(
-			"&\"capture_mystery_damaged\", 45.0, &\"player\", &\"direct\""
-		),
-		"damaged-device capture uses one accepted nonlethal direct hit"
+		gateway_source.contains("&\"capture_mystery_ready\"")
+			and not gateway_source.contains("&\"capture_mystery_damaged\""),
+		"ready-device capture shows the assigned symbol before any hit"
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 41, "core manifest has 41 captures")
 	_expect(Driver.FULL_CAPTURE_FILES.size() == 121, "full manifest has 121 captures")
@@ -151,7 +150,7 @@ func _initialize() -> void:
 		"09z-explosive-seeker-impact.png",
 		"09v-mystery-gravity-pull.png",
 		"09w-mystery-cryo-lock.png",
-		"09x-mystery-device-damaged.png",
+		"09x-mystery-device-ready.png",
 		"09y-mystery-weakpoint-expose.png",
 		"30-boss-01-stage-1-arc-area-startup.png",
 		"30-boss-05-stage-5-crown-beam-startup.png",
