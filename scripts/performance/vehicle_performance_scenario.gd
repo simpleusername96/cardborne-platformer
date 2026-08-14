@@ -82,7 +82,7 @@ func configure(id: StringName, enemy_count_override: int = -1) -> bool:
 
 
 func activate(run: Node) -> void:
-	_prepare_stage_five(run)
+	_prepare_final_stage(run)
 	_diagnostic_authored_reserve = int(
 		run.encounter_runtime.debug_snapshot().get("authored_reserve_units", 0)
 	)
@@ -623,7 +623,7 @@ func _maintain_damage_zone_pressure(run: Node) -> void:
 	_fill_damage_zones(run, target)
 
 
-func _prepare_stage_five(run: Node) -> void:
+func _prepare_final_stage(run: Node) -> void:
 	run.selected_primary = &"pulse_cannon"
 	run.selected_run_difficulty = RunDifficulty.HARD
 	run.current_stage_index = StageCatalog.STAGE_IDS.size() - 1

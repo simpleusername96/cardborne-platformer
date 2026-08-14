@@ -20,7 +20,7 @@ func _initialize() -> void:
 	var scenario := Scenario.new()
 	var run := ReplayContract.new()
 	var population := {
-		"authored_population":1260,
+		"authored_population":StageCatalog.authored_population(StageCatalog.STAGE_IDS[-1]),
 		"materialized_cap":48,
 		"active_cap":48,
 	}

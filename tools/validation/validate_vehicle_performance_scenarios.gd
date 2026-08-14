@@ -150,6 +150,9 @@ func _run() -> void:
 			"%s reports its workload origin" % String(scenario_id)
 		)
 		if scenario_id == &"production_replay":
+			var final_authored_population := StageCatalog.authored_population(
+				StageCatalog.STAGE_IDS[-1]
+			)
 			_expect(bool(snapshot["scheduler_spawn_seen"]), "production replay creates actors through the real scheduler")
 			_expect(
 				int(snapshot["workload_fingerprint"]) != 0
@@ -166,11 +169,12 @@ func _run() -> void:
 			var production_samples: Array = qualification["samples"]
 			_expect(
 				not production_samples.is_empty()
-				and int(Dictionary(production_samples[0]).get("authored_population", -1)) == 1260,
-				"production replay reports the Stage 5 authored population"
+				and int(Dictionary(production_samples[0]).get("authored_population", -1))
+					== final_authored_population,
+				"production replay reports the final Stage 10 authored population"
 			)
 			_expect(
-				int(population.get("authored_population", -1)) == 1260
+				int(population.get("authored_population", -1)) == final_authored_population
 				and int(population.get("materialized_spawned", -1)) >= 0
 				and int(population.get("virtual_reserve", -1)) >= 0
 				and int(population.get("materialized_cap", -1)) > 0
