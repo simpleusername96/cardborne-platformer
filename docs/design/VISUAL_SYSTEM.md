@@ -612,7 +612,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   아니며, 이 문서의 텍스트 계약과 canonical authority pair가 우선한다.
 - modal body는 왼쪽 current-build summary rail과 오른쪽 offer list의 두 column이다.
 
-  rail 폭은 compact/standard/large 약 `216/248/264 px`, offer list 폭은
+  rail 폭은 compact/standard/large 약 `168/180/196 px`, offer list 폭은
   `656/760/780 px`이다. rail은 catalog 순서의 여섯 category section과
   `2/5/2/3/5/4`개의 semantic slot을 사용하며, 각 section은 최대 4열이다. 획득이
   0개여도 21개 위치를 모두 빈 outline으로 표시한다. Secondary의 `optional_0/1`만
@@ -622,8 +622,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   gameplay owner가 계속 결정한다. Upgrade와 Result는 같은 frozen grouped snapshot과
   rail component를 사용한다.
 - 모든 category grid는 같은 왼쪽 기준선에 정렬하고 rail 내부에는 scrollbar를
-  만들지 않는다. 슬롯은 compact/standard/large에서 `26/28/30 px`, artwork는
-  `20/22/24 px`다. rail heading은 `16/17/18 px`, category label은 `13/14/14 px`이며
+  만들지 않는다. 슬롯은 compact/standard/large에서 `22/24/26 px`, artwork는
+  `16/18/20 px`다. rail heading은 `13/14/15 px`, category label은 `11/12/12 px`이며
   slot 안에는 artwork 외 level text를 중복 표시하지 않는다.
   채워진 슬롯만 focus를 받고 hover/focus에서 한 개의 detail popover를 연다.
   click/accept는 popover를 고정하고 `Esc`, 바깥 click 또는 다른 슬롯 focus는 닫거나

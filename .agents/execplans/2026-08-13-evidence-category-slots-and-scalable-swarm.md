@@ -245,7 +245,7 @@ focus and hover/pin behavior.
 
 The rail uses category heading plus a left-aligned maximum four-column slot grid. Five-slot categories wrap the
 fifth position to a second row. The build rail has no internal scrollbar; all six categories fit in
-the supported modal body. Cells are `26/28/30 px` and artwork is `20/22/24 px` in
+the supported modal body. Cells are `22/24/26 px` and artwork is `16/18/20 px` in
 compact/standard/large modes. The Result reuses the same rail component and frozen snapshot.
 
 `VehicleRunBuild.acquisition_order` remains only to keep the two generic optional-secondary
@@ -610,8 +610,8 @@ specs, and focused upgrade/capture validators
     stable, a level-up updates in place, and occupancy never exceeds capacity.
 - [x] **2.3 Render grouped sections in the shared rail.**
   - Change: replace the global progressive capacity with six labeled grids. Use at most four
-    columns per group; five-slot groups wrap from one shared left edge. Use `26/28/30 px` cells and
-    `20/22/24 px` artwork in compact/standard/large modes, no in-cell level text, and no internal
+    columns per group; five-slot groups wrap from one shared left edge. Use `22/24/26 px` cells and
+    `16/18/20 px` artwork in compact/standard/large modes, no in-cell level text, and no internal
     scrollbar. Keep filled-only focus and one popover.
   - Accept: zero upgrades shows all 21 empty categorized positions; a mixed fixture fills the exact
     category positions with existing artwork; headings distinguish automatic weapons, attack-added
@@ -983,7 +983,7 @@ Validation rules:
 | --- | --- | --- |
 | A retained raw artifact lacks a full commit or required workload fields | Import it as `diagnostic` or `invalid`, never authoritative | Do not repair provenance by trusting the filename |
 | Category occupancy exceeds the proposed capacity | Stop Phase 2 and correct the catalog-derived capacity | Do not silently hide an acquired card or add scrolling inside one category |
-| Five-slot category cannot fit at a supported width | Left-align every row, wrap after four positions, use `26/28/30 px` cells, and remove the rail's internal scrollbar | Do not move offer actions into scroll |
+| Five-slot category cannot fit at a supported width | Left-align every row, wrap after four positions, use `22/24/26 px` cells, and remove the rail's internal scrollbar | Do not move offer actions into scroll |
 | Renderer becomes a measured failing owner | Record the contradiction and replan that owner | Do not preemptively replace the renderer or assets |
 | Opening visibility passes but first commitment remains late | Adjust only nearest safe approach placement/entry gate within the locked `8s` acceptance | Do not spawn on-screen or raise attack-commit caps |
 | Boss maintenance makes the boss unreadable or violates slot margin | Stop new maintenance admission and correct the low/high-watermark policy | Do not remove existing exact ordinary actors or bypass boss reservation |
@@ -1161,7 +1161,7 @@ Validation rules:
   cracked middle state, and that the standalone outcome symbol must be at least four times the
   previous linear size. The final state sequence is pristine neutral body → broad-cracked neutral
   body → body-free `288`-world-unit outcome symbol. The shared build rail is corrected again to
-  image-only `26/28/30 px` cells with `20/22/24 px` art and no internal scrollbar so all six
+  image-only `22/24/26 px` cells with `16/18/20 px` art and no internal scrollbar so all six
   categories fit without the oversized text/slot stack. Final focused/rendered evidence is pending
   this correction; performance scenarios remain deferred until all feature and image work is done.
 

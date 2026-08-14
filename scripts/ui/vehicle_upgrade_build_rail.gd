@@ -24,14 +24,14 @@ var _snapshot: Dictionary = {}
 
 func _ready() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_theme_constant_override("separation", 4)
+	add_theme_constant_override("separation", 2)
 	_heading = Factory.section_heading(tr("UPGRADE_CURRENT_BUILD"))
 	_heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_heading.max_lines_visible = 2
+	_heading.max_lines_visible = 1
 	add_child(_heading)
 	_sections = VBoxContainer.new()
-	_sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_sections.add_theme_constant_override("separation", 4)
+	_sections.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_sections.add_theme_constant_override("separation", 2)
 	add_child(_sections)
 	# Keep the floating detail surface outside VBox sizing so opening it cannot
 	# push the fixed offer/action region or create modal overflow.
@@ -103,24 +103,25 @@ func set_viewport_minimum_height(value: float) -> void:
 
 
 func _apply_size_mode() -> void:
-	custom_minimum_size.x = 216.0 if _compact else (264.0 if _large else 248.0)
+	custom_minimum_size.x = 168.0 if _compact else (196.0 if _large else 180.0)
 	custom_minimum_size.y = _viewport_minimum_height
 	if is_instance_valid(_heading):
 		_heading.visible = _show_heading
 		_heading.add_theme_font_size_override(
-			"font_size", 16 if _compact else (18 if _large else 17)
+			"font_size", 13 if _compact else (15 if _large else 14)
 		)
 	if is_instance_valid(_sections):
-		_sections.add_theme_constant_override("separation", 3 if _compact else 4)
+		_sections.add_theme_constant_override("separation", 1 if _compact else 2)
 
 
 func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void:
 	var section := VBoxContainer.new()
-	section.add_theme_constant_override("separation", 2)
+	section.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	section.add_theme_constant_override("separation", 1)
 	_sections.add_child(section)
 	var heading := Factory.label(
 		tr(String(category.get("heading_key", ""))),
-		13 if _compact else 14,
+		11 if _compact else 12,
 		Art.MUSTARD
 	)
 	heading.theme_type_variation = &"MetricLabel"
@@ -131,8 +132,8 @@ func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void
 	var grid := GridContainer.new()
 	grid.columns = 4
 	grid.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	grid.add_theme_constant_override("h_separation", 2 if _compact else 3)
-	grid.add_theme_constant_override("v_separation", 2 if _compact else 3)
+	grid.add_theme_constant_override("h_separation", 2)
+	grid.add_theme_constant_override("v_separation", 2)
 	section.add_child(grid)
 	for slot_variant in Array(category.get("slots", [])):
 		var slot := Dictionary(slot_variant)
@@ -146,10 +147,10 @@ func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void
 
 func _dimensions() -> Dictionary:
 	if _compact:
-		return {"cell":26.0, "art":20.0}
+		return {"cell":22.0, "art":16.0}
 	if _large:
-		return {"cell":30.0, "art":24.0}
-	return {"cell":28.0, "art":22.0}
+		return {"cell":26.0, "art":20.0}
+	return {"cell":24.0, "art":18.0}
 
 
 func _show_preview(record: Dictionary, cell: Control) -> void:
@@ -289,11 +290,17 @@ func debug_contract() -> Dictionary:
 					artwork_ids.append(StringName(Dictionary(child.call("record")).get("artwork_asset_id", &"")))
 	var dimensions := _dimensions()
 	var grids_left_aligned := true
+	var largest_rendered_cell := Vector2.ZERO
 	for grid in _grids():
 		grids_left_aligned = (
 			grids_left_aligned
 			and grid.size_flags_horizontal == Control.SIZE_SHRINK_BEGIN
 		)
+		for child in grid.get_children():
+			if child is Control:
+				var rendered_size := (child as Control).size
+				largest_rendered_cell.x = maxf(largest_rendered_cell.x, rendered_size.x)
+				largest_rendered_cell.y = maxf(largest_rendered_cell.y, rendered_size.y)
 	return {
 		"minimum_width":custom_minimum_size.x,
 		"columns":4,
@@ -312,6 +319,7 @@ func debug_contract() -> Dictionary:
 		"viewport_minimum_height":_viewport_minimum_height,
 		"cell_size":dimensions["cell"],
 		"artwork_size":dimensions["art"],
+		"largest_rendered_cell":largest_rendered_cell,
 		"grids_left_aligned":grids_left_aligned,
 	}
 

@@ -11,10 +11,13 @@ signal preview_closed(anchor: Control)
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
+const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 var _record: Dictionary = {}
 var _button: Button
 var _artwork: TextureRect
+var _normal_frame: StyleBoxFlat
+var _focused_frame: StyleBoxFlat
 
 
 func _ready() -> void:
@@ -54,8 +57,11 @@ func is_filled() -> bool:
 
 
 func _build() -> void:
-	custom_minimum_size = Vector2(28.0, 28.0)
+	custom_minimum_size = Vector2(24.0, 24.0)
 	theme_type_variation = &"PreviewFrame"
+	_normal_frame = _make_frame(false)
+	_focused_frame = _make_frame(true)
+	add_theme_stylebox_override("panel", _normal_frame)
 	_button = Button.new()
 	_button.flat = true
 	_button.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -66,6 +72,9 @@ func _build() -> void:
 	_button.mouse_entered.connect(_request_preview)
 	_button.mouse_exited.connect(_request_close)
 	_button.pressed.connect(_request_pin)
+	var empty_style := StyleBoxEmpty.new()
+	for style_name in [&"normal", &"hover", &"pressed", &"focus", &"disabled"]:
+		_button.add_theme_stylebox_override(style_name, empty_style)
 	add_child(_button)
 	var center := CenterContainer.new()
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -78,9 +87,20 @@ func _build() -> void:
 	center.add_child(_artwork)
 
 
+func _make_frame(focused: bool) -> StyleBoxFlat:
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = Color(Art.SPACE_BLACK, 0.60)
+	frame.border_color = Art.IVORY_BRIGHT if focused else Art.LINE
+	var border_width := Art.FOCUS_WIDTH if focused else Art.BORDER_WIDTH
+	frame.set_border_width_all(border_width)
+	frame.set_content_margin_all(1.0)
+	return frame
+
+
 func _request_preview() -> void:
 	if is_filled():
 		theme_type_variation = &"PreviewFocused"
+		add_theme_stylebox_override("panel", _focused_frame)
 		preview_requested.emit(record(), self)
 
 
@@ -96,3 +116,4 @@ func _request_close() -> void:
 
 func clear_focus_state() -> void:
 	theme_type_variation = &"PreviewFrame"
+	add_theme_stylebox_override("panel", _normal_frame)

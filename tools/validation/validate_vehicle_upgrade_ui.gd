@@ -81,8 +81,9 @@ func _validate_build_rail(catalog: Catalog) -> void:
 			and int(empty["focusable_count"]) == 0
 			and not bool(empty["scroll_enabled"])
 			and bool(empty["grids_left_aligned"])
-			and is_equal_approx(float(empty["cell_size"]), 28.0)
-			and is_equal_approx(float(empty["artwork_size"]), 22.0),
+			and is_equal_approx(float(empty["cell_size"]), 24.0)
+			and is_equal_approx(float(empty["artwork_size"]), 18.0)
+			and Vector2(empty["largest_rendered_cell"]).x <= 24.0,
 		"empty build rail exposes 21 compact, left-aligned image-only slots without internal scrolling"
 	)
 	var original_locale := TranslationServer.get_locale()
@@ -131,29 +132,35 @@ func _validate_build_rail(catalog: Catalog) -> void:
 		"dense build rail caps at 24 cells and only filled image cells receive focus"
 	)
 	rail.set_compact_mode(true)
+	await _settle_ui()
 	var compact := rail.debug_contract()
 	_expect(
-		is_equal_approx(float(compact["minimum_width"]), 216.0)
-			and is_equal_approx(float(compact["cell_size"]), 26.0)
-			and is_equal_approx(float(compact["artwork_size"]), 20.0)
+		is_equal_approx(float(compact["minimum_width"]), 168.0)
+			and is_equal_approx(float(compact["cell_size"]), 22.0)
+			and is_equal_approx(float(compact["artwork_size"]), 16.0)
+			and Vector2(compact["largest_rendered_cell"]).x <= 22.0
 			and bool(compact["grids_left_aligned"]),
 		"compact rail uses small left-aligned slots"
 	)
 	rail.set_compact_mode(false)
+	await _settle_ui()
 	var standard := rail.debug_contract()
 	_expect(
-		is_equal_approx(float(standard["minimum_width"]), 248.0)
-			and is_equal_approx(float(standard["cell_size"]), 28.0)
-			and is_equal_approx(float(standard["artwork_size"]), 22.0)
+		is_equal_approx(float(standard["minimum_width"]), 180.0)
+			and is_equal_approx(float(standard["cell_size"]), 24.0)
+			and is_equal_approx(float(standard["artwork_size"]), 18.0)
+			and Vector2(standard["largest_rendered_cell"]).x <= 24.0
 			and bool(standard["grids_left_aligned"]),
 		"standard rail uses small left-aligned slots"
 	)
 	rail.set_large_mode(true)
+	await _settle_ui()
 	var large := rail.debug_contract()
 	_expect(
-		is_equal_approx(float(large["minimum_width"]), 264.0)
-			and is_equal_approx(float(large["cell_size"]), 30.0)
-			and is_equal_approx(float(large["artwork_size"]), 24.0)
+		is_equal_approx(float(large["minimum_width"]), 196.0)
+			and is_equal_approx(float(large["cell_size"]), 26.0)
+			and is_equal_approx(float(large["artwork_size"]), 20.0)
+			and Vector2(large["largest_rendered_cell"]).x <= 26.0
 			and bool(large["grids_left_aligned"]),
 		"large rail keeps bounded left-aligned slots"
 	)
