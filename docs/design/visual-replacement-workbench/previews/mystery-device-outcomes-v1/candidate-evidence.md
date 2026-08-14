@@ -1,10 +1,10 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-08-14
 last_reviewed: 2026-08-14
-scope: Review-only Gravity, Cryo, and Decoy Mystery Device raster candidates awaiting explicit user approval
+scope: Rejected Gravity, Cryo, and Decoy Mystery Device raster candidates retained only as visual history
 related:
   - ../../../VISUAL_SYSTEM.md
   - ../../../cardborne-universal-art-style-reference.png
@@ -17,9 +17,13 @@ related:
 
 ## Status
 
-These files are review candidates only. They are not production assets, are not
-listed in the gameplay manifest, and must not be promoted until the user
-explicitly approves the three-image set.
+The user rejected this set on 2026-08-14 because its mechanisms carried much
+more detail than Cardborne's existing world assets. These files remain only as
+historical evidence. They are not production assets, are not listed in the
+gameplay manifest, and must not be promoted.
+
+The simpler replacement review set is
+[`../mystery-device-outcomes-v2-simple/candidate-evidence.md`](../mystery-device-outcomes-v2-simple/candidate-evidence.md).
 
 [`comparison.png`](./comparison.png) is the mechanical AS-IS/TO-BE contact
 sheet. It places the current generic resolved device beside the three proposed
