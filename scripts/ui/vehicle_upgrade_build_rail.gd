@@ -18,6 +18,8 @@ var _active_cell: Control
 var _pinned := false
 var _compact := false
 var _large := false
+var _show_heading := true
+var _viewport_minimum_height := 0.0
 var _snapshot: Dictionary = {}
 
 
@@ -25,6 +27,8 @@ func _ready() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 8)
 	_heading = Factory.section_heading(tr("UPGRADE_CURRENT_BUILD"))
+	_heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_heading.max_lines_visible = 2
 	add_child(_heading)
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -58,6 +62,7 @@ func set_snapshot(snapshot: Dictionary) -> void:
 	_snapshot = snapshot.duplicate(true)
 	if not is_node_ready():
 		return
+	_apply_size_mode()
 	for child in _sections.get_children():
 		_sections.remove_child(child)
 		child.queue_free()
@@ -90,8 +95,24 @@ func set_large_mode(large: bool) -> void:
 		set_snapshot(_snapshot)
 
 
+func set_heading_visible(visible: bool) -> void:
+	_show_heading = visible
+	if not is_node_ready():
+		return
+	_apply_size_mode()
+
+
+func set_viewport_minimum_height(value: float) -> void:
+	_viewport_minimum_height = maxf(0.0, value)
+	if is_node_ready():
+		_apply_size_mode()
+
+
 func _apply_size_mode() -> void:
 	custom_minimum_size.x = 216.0 if _compact else (264.0 if _large else 248.0)
+	custom_minimum_size.y = _viewport_minimum_height
+	if is_instance_valid(_heading):
+		_heading.visible = _show_heading
 	if is_instance_valid(_sections):
 		_sections.add_theme_constant_override("separation", 6 if _compact else 8)
 
@@ -100,7 +121,14 @@ func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void
 	var section := VBoxContainer.new()
 	section.add_theme_constant_override("separation", 4)
 	_sections.add_child(section)
-	var heading := Factory.section_heading(tr(String(category.get("heading_key", ""))))
+	var heading := Factory.label(
+		tr(String(category.get("heading_key", ""))),
+		16 if _compact else (18 if _large else 17),
+		Art.MUSTARD
+	)
+	heading.theme_type_variation = &"MetricLabel"
+	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	heading.max_lines_visible = 2
 	heading.tooltip_text = tr(String(category.get("description_key", "")))
 	heading.accessibility_description = tr(String(category.get("description_key", "")))
 	section.add_child(heading)
@@ -275,6 +303,9 @@ func debug_contract() -> Dictionary:
 		"artwork_ids":artwork_ids,
 		"popover_visible":_popover.visible if is_instance_valid(_popover) else false,
 		"scroll_enabled":is_instance_valid(_scroll),
+		"heading_visible":_heading.visible if is_instance_valid(_heading) else false,
+		"minimum_height":custom_minimum_size.y,
+		"viewport_minimum_height":_viewport_minimum_height,
 	}
 
 

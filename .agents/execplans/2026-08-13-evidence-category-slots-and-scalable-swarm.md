@@ -1122,6 +1122,18 @@ Validation rules:
   failure, the live-overlap-index diagnostic, both same-commit native authority observations, the
   exact-64 early-stop failure, and the visible built-Web failure. The passing native record
   explicitly supersedes the unavailable `4f7f7acd` checkpoint without reconstructing its bytes.
+- 2026-08-14: direct inspection of the post-switch capture contradicted the checked Phase 2/5
+  state: initial Upgrade captures omitted the grouped snapshot, Result constrained the shared rail
+  to 96 pixels, and VehicleRun drew a legacy ring over a half-scale tinted Transit Gate PNG. Tasks
+  2.3, 2.4, and 5.5 were reopened. The corrected runtime always captures real grouped snapshots,
+  shows the wide Result report and build rail side by side, uses a vertical-scroll offer layout at
+  200% text, and draws only the approved neutral Gate PNG across the full 192-world-unit footprint
+  with dynamic progress/cooldown overlays. Rendered Korean 1280x720 evidence is in
+  `build/captures/category-gate-correction-v2-ko-1280`; English 960x540 at 200% is in
+  `build/captures/category-gate-correction-en-960-text200-v3`. Focused Upgrade, Result, layout,
+  localization, map, capture, visual-authority, headless-import, and isolated Web export checks pass.
+  The unrelated rewards/UI/audio validator still reports its pre-existing announcement-queue
+  assertion and is not used as evidence for this correction.
 
 ## Open Questions
 
@@ -1134,7 +1146,8 @@ and clean Transit Gate remain approved.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: architecture approval stop after a valid built-Web authority failure.
+- Current phase: UI/visual corrective gate complete; architecture approval stop resumes after the
+  valid built-Web authority failure.
 - Next task: obtain approval for the narrow single-truth packed-kernel/custom-Web-template spike,
   then implement it under a new decision-complete contract and rerun native plus built-Web gates.
 - Last completed gate: final source validation, promoted decision evidence, cap-48 native authority,

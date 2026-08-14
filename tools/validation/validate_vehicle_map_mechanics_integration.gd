@@ -30,11 +30,27 @@ func _run() -> void:
 		run.set("_has_layout_seed_override", true)
 		run.call("_reset_run", false)
 		run.mode = run.RunMode.PLAYING
+		_validate_transit_gate_visual(run)
 		_validate_device_collision_and_damage_authority(run)
 		_validate_effect_targeting(run)
 	game_root.queue_free()
 	await process_frame
 	_finish()
+
+
+func _validate_transit_gate_visual(run) -> void:
+	var contract := Dictionary(run.call("debug_transit_gate_visual_contract"))
+	_expect(
+		StringName(contract.get("asset_id", &"")) == &"world/facility_transit_gate"
+			and is_equal_approx(float(contract.get("asset_radius", 0.0)), 96.0)
+			and Color(contract.get("neutral_modulate", Color.TRANSPARENT)).is_equal_approx(Color.WHITE),
+		"Transit Gate uses the approved authored PNG at its full 192-world-unit footprint"
+	)
+	_expect(
+		not bool(contract.get("legacy_ring", true))
+			and not bool(contract.get("zero_progress_visible", true)),
+		"Transit Gate retires the legacy duplicate ring and the zero-progress dot"
+	)
 
 
 func _configure_devices(run, outcomes: Array[StringName]) -> Array:

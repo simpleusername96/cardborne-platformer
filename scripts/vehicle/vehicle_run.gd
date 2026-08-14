@@ -131,6 +131,7 @@ enum RunMode {
 }
 
 const SAVE_PATH := "user://vehicle-run.cfg"
+const TRANSIT_GATE_ASSET_ID := &"world/facility_transit_gate"
 const PLAYER_MAX_HEALTH := 120.0
 const PLAYER_BASE_SPEED := 280.0
 const PRIMARY_RANGE := 1600.0
@@ -6616,27 +6617,26 @@ func _draw_terrain() -> void:
 				var center := Vector2(feature["pos"])
 				var progress := clampf(float(feature.get("progress", 0.0)), 0.0, 1.0)
 				var cooldown := float(feature.get("cooldown", 0.0))
-				var available := cooldown <= 0.0
-				var gate_color := Art.SYSTEM if available else Art.TEXT_MUTED
-				draw_arc(
+				_draw_semantic_asset(
+					TRANSIT_GATE_ASSET_ID,
 					center,
 					TerrainRuntime.GATE_RADIUS,
-					0.0,
-					TAU,
-					64,
-					gate_color,
-					8.0,
-					true
+					Color.WHITE
 				)
-				_draw_semantic_asset(
-					&"world/facility_transit_gate",
-					center,
-					54.0,
-					gate_color
-				)
-				draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.TEXT_PRIMARY, 10.0)
+				if progress > 0.0:
+					draw_arc(center, TerrainRuntime.GATE_RADIUS - 18.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 40, Art.TEXT_PRIMARY, 10.0)
 				if cooldown > 0.0:
 					draw_arc(center, 72.0, 0.0, TAU * (1.0 - cooldown / TerrainRuntime.GATE_COOLDOWN), 32, Art.TEXT_MUTED, 10.0)
+
+
+func debug_transit_gate_visual_contract() -> Dictionary:
+	return {
+		"asset_id":TRANSIT_GATE_ASSET_ID,
+		"asset_radius":TerrainRuntime.GATE_RADIUS,
+		"neutral_modulate":Color.WHITE,
+		"legacy_ring":false,
+		"zero_progress_visible":false,
+	}
 
 
 func _draw_debug_collision_overlay() -> void:

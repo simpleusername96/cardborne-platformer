@@ -893,6 +893,11 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 			"200%% probe doubles dynamically created offer-row typography; got %s"
 			% Dictionary(card_variant)["type_sizes"]
 		)
+		_expect(
+			bool(Dictionary(card_variant)["vertical_dossier"])
+				and int(Dictionary(card_variant)["summary_max_lines"]) == 2,
+			"200%% probe stacks each offer vertically and preserves two summary lines"
+		)
 	_expect_upgrade_geometry(
 		ui.debug_upgrade_geometry(),
 		"ko 1280x720 200% text"
@@ -1026,7 +1031,7 @@ func _expect_upgrade_geometry(
 		var card := Dictionary(card_variant)
 		var card_rect := Rect2(card["rect"])
 		var expected_height := (
-			210.0 if allow_vertical_scroll
+			600.0 if allow_vertical_scroll
 			else (112.0 if card_rect.size.y < 120.0 else (152.0 if card_rect.size.y > 145.0 else 140.0))
 		)
 		_expect(

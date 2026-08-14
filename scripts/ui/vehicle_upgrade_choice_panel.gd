@@ -61,6 +61,7 @@ func _build() -> void:
 	_row.name = "UpgradeButtons"
 	_row.add_theme_constant_override("separation", 10)
 	_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_row.custom_minimum_size.y = 440.0
 	_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_row_scroll.add_child(_row)
@@ -162,7 +163,7 @@ func set_accessibility_mode(enabled: bool) -> void:
 		if enabled:
 			(button as VehicleUpgradeChoiceRow).set_large_mode(false)
 	_row.custom_minimum_size.y = (
-		920.0
+		1840.0
 		if enabled
 		else (410.0 if _compact else 488.0)
 	)

@@ -38,7 +38,7 @@ const MODAL_MINIMUMS := {
 	"deployment":Vector2(1176.0, 636.0),
 	"upgrade":Vector2(1376.0, 616.0),
 	"pause":Vector2(520.0, 330.0),
-	"result":Vector2(900.0, 560.0),
+	"result":Vector2(1176.0, 560.0),
 	"report":Vector2(1200.0, 640.0),
 	"settings":Vector2(920.0, 570.0),
 	"guidebook":Vector2(1160.0, 636.0),
@@ -578,7 +578,7 @@ func debug_modal_contract(surface: String) -> Dictionary:
 				"outgoing":[],
 				"attributes":[],
 				"total_defeats":0,
-				"build_snapshot":{"upgrades":[]},
+				"build_snapshot":_latest_build_snapshot,
 				"loadout":{},
 			})
 		"report":

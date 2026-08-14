@@ -83,6 +83,15 @@ func _initialize() -> void:
 		not gateway_source.contains("_run.crates"),
 		"capture gateway does not reference the retired crate runtime"
 	)
+	_expect(
+		gateway_source.contains(
+			"show_upgrade(first_acquisition, _run._build_snapshot())"
+		)
+			and gateway_source.contains(
+				"show_upgrade(enhancement, _run._build_snapshot())"
+			),
+		"upgrade captures use the real grouped build snapshot instead of a blank legacy payload"
+	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 41, "core manifest has 41 captures")
 	_expect(Driver.FULL_CAPTURE_FILES.size() == 120, "full manifest has 120 captures")
 	for required_capture in [

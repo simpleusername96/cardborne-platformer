@@ -929,25 +929,26 @@ func _capture_level_up_evidence() -> void:
 		[&"split_muzzle", 0],
 		[&"electric_field", 0],
 	])
-	_run._ui.show_upgrade(first_acquisition)
+	_run._ui.show_upgrade(first_acquisition, _run._build_snapshot())
 	await _settle_capture()
 	_save_capture("06-thermal-first-acquisition.png")
 	_run._ui.debug_select_upgrade(0)
 	await _settle_capture()
 	_save_capture("06b-thermal-first-selected.png")
+	_run.run_build.apply(&"thermal_burst")
 	var enhancement := _upgrade_offer_fixture([
 		[&"thermal_burst", 1],
 		[&"drop_mines", 1],
 		[&"homing_missiles", 1],
 	])
-	_run._ui.show_upgrade(enhancement)
+	_run._ui.show_upgrade(enhancement, _run._build_snapshot())
 	_run._ui.debug_select_upgrade(0)
 	await _settle_capture()
 	_save_capture("06c-thermal-enhancement.png")
-	_run._ui.show_upgrade(enhancement.slice(0, 2))
+	_run._ui.show_upgrade(enhancement.slice(0, 2), _run._build_snapshot())
 	await _settle_capture()
 	_save_capture("06d-two-card-tail.png")
-	for upgrade_id in [&"pickup_radius", &"thermal_burst", &"homing_missiles"]:
+	for upgrade_id in [&"pickup_radius", &"homing_missiles"]:
 		_run.run_build.apply(upgrade_id)
 	_run.run_build.apply(&"homing_missiles")
 	_run._ui.show_upgrade(enhancement, _run._build_snapshot())

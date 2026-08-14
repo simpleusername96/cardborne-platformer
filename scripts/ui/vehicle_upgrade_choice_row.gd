@@ -13,7 +13,7 @@ const SemanticAssets = preload(
 const WIDE_SIZE := Vector2(820.0, 140.0)
 const COMPACT_SIZE := Vector2(540.0, 112.0)
 const LARGE_SIZE := Vector2(900.0, 152.0)
-const ACCESSIBILITY_SIZE := Vector2(900.0, 210.0)
+const ACCESSIBILITY_SIZE := Vector2(0.0, 600.0)
 
 var _offer: Dictionary = {}
 var _selected := false
@@ -21,14 +21,14 @@ var _compact := false
 var _large := false
 var _accessibility_mode := false
 var _margin: MarginContainer
-var _content: HBoxContainer
+var _content: GridContainer
 var _art_lane: CenterContainer
 var _artwork: TextureRect
 var _copy: VBoxContainer
 var _category: Label
 var _title: Label
 var _summary: Label
-var _effects: HBoxContainer
+var _effects: GridContainer
 var _level: Label
 
 
@@ -49,7 +49,8 @@ func _build() -> void:
 	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_margin)
-	_content = HBoxContainer.new()
+	_content = GridContainer.new()
+	_content.columns = 3
 	_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_content.add_theme_constant_override("separation", 14)
@@ -85,7 +86,8 @@ func _build() -> void:
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_summary.max_lines_visible = 1
 	_copy.add_child(_summary)
-	_effects = HBoxContainer.new()
+	_effects = GridContainer.new()
+	_effects.columns = 2
 	_effects.add_theme_constant_override("separation", 16)
 	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_copy.add_child(_effects)
@@ -144,15 +146,26 @@ func _apply_layout_profile() -> void:
 	var title_size := 22
 	var summary_size := 15
 	var level_size := 16
+	_content.columns = 3
+	_effects.columns = 2
+	_title.max_lines_visible = 1
+	_summary.max_lines_visible = 1
+	_level.custom_minimum_size.x = 112.0
+	_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	if _accessibility_mode:
 		custom_minimum_size = ACCESSIBILITY_SIZE
-		artwork_size = Vector2(150.0, 150.0)
-		margin = 20
+		artwork_size = Vector2(96.0, 96.0)
+		margin = 12
 		category_size = 18
 		title_size = 30
 		summary_size = 22
 		level_size = 22
+		_content.columns = 1
+		_effects.columns = 1
+		_title.max_lines_visible = 2
 		_summary.max_lines_visible = 2
+		_level.custom_minimum_size.x = 0.0
+		_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	elif _large:
 		custom_minimum_size = LARGE_SIZE
 		artwork_size = Vector2(104.0, 104.0)
@@ -207,7 +220,13 @@ func _refresh() -> void:
 		var label := _label(effect_size, Art.MINT_SOFT)
 		label.name = "EffectLabel%d" % (_effects.get_child_count() + 1)
 		label.text = phrase
-		label.max_lines_visible = 1
+		label.autowrap_mode = (
+			TextServer.AUTOWRAP_WORD_SMART
+			if _accessibility_mode
+			else TextServer.AUTOWRAP_OFF
+		)
+		label.max_lines_visible = 2 if _accessibility_mode else 1
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_effects.add_child(label)
 		accessible_effects.append(phrase)
 	accessibility_name = " · ".join(PackedStringArray([
@@ -269,7 +288,7 @@ func debug_contract() -> Dictionary:
 		"pip_slots":0, "stage_pip_count":0,
 		"selected":_selected, "compact":_compact, "large":_large,
 		"accessibility_mode":_accessibility_mode,
-		"dossier_split":false, "vertical_dossier":false,
+		"dossier_split":false, "vertical_dossier":_accessibility_mode,
 		"body_divider_count":0, "description_in_comparison":false,
 		"description_visible":_summary.visible,
 		"summary_color":_summary.get_theme_color("font_color"),

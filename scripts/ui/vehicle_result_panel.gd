@@ -23,6 +23,7 @@ var _reward: Label
 var _deployment: Button
 var _diagnostic_export: Button
 var _diagnostic_status: Label
+var _content_grid: GridContainer
 var _snapshot: Dictionary = {}
 var _force_compact := false
 
@@ -107,36 +108,48 @@ func _build() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(scroll)
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 12)
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(content)
+	_content_grid = GridContainer.new()
+	_content_grid.columns = 2
+	_content_grid.add_theme_constant_override("h_separation", 24)
+	_content_grid.add_theme_constant_override("v_separation", 18)
+	_content_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_content_grid)
+	var report_column := VBoxContainer.new()
+	report_column.add_theme_constant_override("separation", 12)
+	report_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content_grid.add_child(report_column)
 	_report_body = ReportBody.new()
 	_report_body.custom_minimum_size.y = 170.0
-	content.add_child(_report_body)
-	_build_heading = Factory.section_heading("")
-	content.add_child(_build_heading)
-	_build_rail = BuildRail.new()
-	_build_rail.custom_minimum_size.y = 96.0
-	content.add_child(_build_rail)
+	report_column.add_child(_report_body)
 	_loadout = Factory.label("", 16, Art.TEXT_PRIMARY)
 	_loadout.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	content.add_child(_loadout)
+	report_column.add_child(_loadout)
 	_counters = Factory.label("", 16, Art.TEXT_PRIMARY)
 	_counters.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	content.add_child(_counters)
+	report_column.add_child(_counters)
 	_reward = Factory.label("", 16, Art.MINT_SOFT)
 	_reward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	content.add_child(_reward)
+	report_column.add_child(_reward)
 	_diagnostic_export = Factory.command_button(tr("DIAGNOSTICS_EXPORT"), Factory.COMMAND_SECONDARY)
 	_diagnostic_export.custom_minimum_size = Vector2(260.0, 44.0)
 	_diagnostic_export.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_diagnostic_export.pressed.connect(func() -> void: diagnostic_export_requested.emit())
-	content.add_child(_diagnostic_export)
+	report_column.add_child(_diagnostic_export)
 	_diagnostic_status = Factory.label("", 14, Art.MINT_SOFT)
 	_diagnostic_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_diagnostic_status.visible = false
-	content.add_child(_diagnostic_status)
+	report_column.add_child(_diagnostic_status)
+	var build_column := VBoxContainer.new()
+	build_column.add_theme_constant_override("separation", 8)
+	build_column.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	build_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content_grid.add_child(build_column)
+	_build_heading = Factory.section_heading("")
+	build_column.add_child(_build_heading)
+	_build_rail = BuildRail.new()
+	_build_rail.set_heading_visible(false)
+	_build_rail.set_viewport_minimum_height(340.0)
+	build_column.add_child(_build_rail)
 	var actions := CenterContainer.new()
 	add_child(actions)
 	_deployment = Factory.command_button("", Factory.COMMAND_PRIMARY)
@@ -164,7 +177,10 @@ func _apply_responsive_layout() -> void:
 	if is_instance_valid(_report_body):
 		_report_body.custom_minimum_size.y = 150.0 if compact else 170.0
 		_report_body.set_compact_mode(compact)
-	if is_instance_valid(_build_rail): _build_rail.set_compact_mode(compact)
+	if is_instance_valid(_content_grid): _content_grid.columns = 1 if compact else 2
+	if is_instance_valid(_build_rail):
+		_build_rail.set_compact_mode(compact)
+		_build_rail.set_viewport_minimum_height(360.0 if compact else 340.0)
 	if is_instance_valid(_title): Factory.apply_font_size(_title, 30 if compact else 40)
 	if is_instance_valid(_deployment): _deployment.custom_minimum_size.y = 44.0 if compact else 48.0
 
@@ -183,6 +199,7 @@ func debug_contract() -> Dictionary:
 		"compact_tabs": _report_body.debug_contract()["compact_tabs"],
 		"scroll_views": _report_body.debug_contract()["scroll_views"],
 		"build_visible": _build_rail.visible,
+		"build_rail": _build_rail.debug_contract(),
 		"loadout_text": _loadout.text,
 		"counter_text": _counters.text,
 		"reward_text": _reward.text,

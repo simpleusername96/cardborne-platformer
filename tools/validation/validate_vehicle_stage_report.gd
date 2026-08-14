@@ -4,6 +4,9 @@ const Builder = preload("res://scripts/combat/vehicle_stage_report_builder.gd")
 const ResultBuilder = preload("res://scripts/combat/vehicle_run_result_builder.gd")
 const ReportPanel = preload("res://scripts/ui/vehicle_stage_report_panel.gd")
 const ResultPanel = preload("res://scripts/ui/vehicle_result_panel.gd")
+const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
+const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
+const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
 
 var _failures: Array[String] = []
 
@@ -144,6 +147,10 @@ func _init() -> void:
 		stage_record["stage_number"] = stage_index + 1
 		stage_record["has_next_stage"] = stage_index < 4
 		final_records.append(stage_record)
+	var result_catalog := UpgradeCatalog.new()
+	var result_build := RunBuild.new(result_catalog)
+	for upgrade_id in [&"pickup_radius", &"thermal_burst", &"homing_missiles"]:
+		result_build.apply(upgrade_id)
 	var final_result := ResultBuilder.build(final_records, {
 		"active_run_elapsed_seconds":258.0,
 		"hull":86.0,
@@ -152,17 +159,34 @@ func _init() -> void:
 		"primary_hits":41,
 		"dash_uses":7,
 		"installations":3,
-		"build_snapshot":{"upgrades":[]},
+		"build_snapshot":BuildSnapshotBuilder.build(
+			result_build, result_catalog, [], [], {}
+		),
 		"loadout":{},
 	})
 	_expect(result.open(final_result), "final result accepts a complete aggregate")
 	await process_frame
 	var result_contract := result.debug_contract()
-	_expect(int(result_contract["focusables"]) == 2, "final result exposes one diagnostic export plus the direct Deployment action")
+	_expect(
+		int(result_contract["focusables"]) == 5,
+		"final result exposes three filled build cells, diagnostic export, and Deployment"
+	)
 	_expect(bool(result_contract["initial_focus_is_deployment"]), "final result initially focuses Deployment")
 	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Deployment is the primary command")
 	_expect(int(result_contract["wide_columns"]) == 3 and int(result_contract["compact_tabs"]) == 3, "final result reuses responsive report body")
 	_expect(bool(result_contract["build_visible"]), "final result displays the frozen build rail")
+	var result_rail := Dictionary(result_contract["build_rail"])
+	_expect(
+		int(result_rail["section_count"]) == 6
+			and int(result_rail["cell_count"]) == 21
+			and int(result_rail["filled_count"]) == 3,
+		"final result reuses all six grouped category sections and the frozen build"
+	)
+	_expect(
+		not bool(result_rail["heading_visible"])
+			and float(result_rail["viewport_minimum_height"]) >= 340.0,
+		"final result gives the shared rail a usable side-by-side viewport instead of clipping it"
+	)
 	_expect("4:18" in String(result_contract["summary_text"]), "final summary preserves cumulative active time")
 	_expect("86 / 120" in String(result_contract["summary_text"]), "final summary displays exact current and maximum Hull")
 	for locale in ["ko", "en"]:
