@@ -37,6 +37,8 @@ func _run() -> void:
 		var scenario := Scenario.new()
 		_expect(scenario.configure(scenario_id), "%s configures" % String(scenario_id))
 		scenario.activate(run)
+		if scenario_id == &"production_replay":
+			run.encounter_runtime.set_pressure_observation_enabled(true)
 		print("Activated performance scenario: %s" % String(scenario_id))
 		if scenario_id == &"production_replay":
 			var stable_population := true
@@ -306,6 +308,8 @@ func _run() -> void:
 			_expect(int(snapshot["lifecycle_cycles"]) >= 305, "lifecycle scenario keeps retiring and replacing actors during sampling")
 			_expect(bool(snapshot["valid"]), "lifecycle churn preserves the declared live composition")
 		scenario.deactivate()
+		if scenario_id == &"production_replay":
+			run.encounter_runtime.set_pressure_observation_enabled(false)
 	var scaling := Scenario.new()
 	_expect(
 		scaling.configure(&"capacity_pressure", 64),
