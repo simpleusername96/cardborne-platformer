@@ -241,15 +241,14 @@ func _run() -> void:
 	_expect(
 		bool(notification_contract["active"])
 			and String(notification_contract["active_message"]) == "first"
-			and int(notification_contract["queue_cap"]) == 5
-			and int(notification_contract["queue_size"]) == 5
+			and int(notification_contract["queue_cap"]) == 4
+			and int(notification_contract["queue_size"]) == 4
 			and Array(notification_contract["queued_messages"]) == [
-				"third", "fourth", "fifth", "sixth", "seventh",
+				"fourth", "fifth", "sixth", "seventh",
 			]
-			and StringName(notification_contract["surface_variation"])
-				== &"ToastSurface"
+			and bool(notification_contract["text_only"])
 			and bool(notification_contract["input_passthrough"]),
-		"notification queue preserves order and cap on one input-transparent Toast surface"
+		"notification queue preserves order and cap on the input-transparent text-only announcement"
 	)
 	stage_ui.call("clear_notifications")
 	experience_runtime.set("pending_level_ups", 1)

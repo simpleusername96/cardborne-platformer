@@ -10,7 +10,6 @@ const ModalSurface = preload("res://scripts/ui/vehicle_modal_surface.gd")
 const SURFACE_MODAL := &"modal"
 const SURFACE_CONTENT := &"content"
 const SURFACE_HUD := &"hud"
-const SURFACE_TOAST := &"toast"
 const COMMAND_PRIMARY := &"primary"
 const COMMAND_SECONDARY := &"secondary"
 const COMMAND_DANGER := &"danger"
@@ -26,7 +25,6 @@ const SURFACE_VARIATIONS := {
 	SURFACE_MODAL: &"ModalSurface",
 	SURFACE_CONTENT: &"ContentSurface",
 	SURFACE_HUD: &"HudSurface",
-	SURFACE_TOAST: &"ToastSurface",
 }
 
 const COMMAND_VARIATIONS := {

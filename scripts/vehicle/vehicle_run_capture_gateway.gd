@@ -1385,7 +1385,7 @@ func _capture_exact_area_effect_evidence() -> void:
 	var mystery_profiles := [
 		[&"gravity_pull", 0.60, "09v-mystery-gravity-pull.png"],
 		[&"cryo_lock", 0.80, "09w-mystery-cryo-lock.png"],
-		[&"decoy_signal", 0.35, "09x-mystery-decoy-signal.png"],
+		[&"decoy_signal", 0.35, "09y-mystery-decoy-signal.png"],
 	]
 	if settings != null:
 		settings.reduced_motion = false

@@ -113,6 +113,9 @@ const SessionSignalRecorder = preload(
 const SessionDiagnosticStore = preload(
 	"res://scripts/diagnostics/vehicle_session_diagnostic_store.gd"
 )
+const EncounterPacingCaptureDriver = preload(
+	"res://scripts/diagnostics/vehicle_encounter_pacing_capture_driver.gd"
+)
 const DiagnosticExporter = preload(
 	"res://scripts/diagnostics/vehicle_diagnostic_exporter.gd"
 )
@@ -394,6 +397,8 @@ var _slow_tick_recording_active := false
 var _performance_subsystem_ms: Dictionary = {}
 var _manual_performance_request: Dictionary = {}
 var _manual_performance_trace: ManualPerformanceTrace
+var _encounter_pacing_capture_request: Dictionary = {}
+var _encounter_pacing_capture_driver: VehicleEncounterPacingCaptureDriver
 var _engagement_telemetry: VehicleEngagementTelemetry
 var _manual_performance_pressure: Dictionary = {}
 var _manual_performance_context: Dictionary = {}
@@ -449,9 +454,11 @@ func _ready() -> void:
 			_field_id_override = _capture_driver.field_id_override
 	_performance_request = _parse_performance_request()
 	_manual_performance_request = _parse_manual_performance_request()
+	_encounter_pacing_capture_request = _parse_encounter_pacing_capture_request()
 	if (
 		_capture_mode
 		or not _performance_request.is_empty()
+		or not _encounter_pacing_capture_request.is_empty()
 	) and not _has_layout_seed_override:
 		_layout_seed_override = FIXED_LAYOUT_SEED
 		_has_layout_seed_override = true
@@ -471,6 +478,8 @@ func _ready() -> void:
 		call_deferred("_start_capture")
 	elif not _performance_request.is_empty():
 		call_deferred("_start_performance_scenario")
+	elif not _encounter_pacing_capture_request.is_empty():
+		call_deferred("_start_encounter_pacing_capture")
 
 
 func _initialize_hud_staging() -> void:
@@ -659,6 +668,9 @@ func _physics_process(delta: float) -> void:
 	var physics_total_ms := _elapsed_ms(physics_started) if timing_active else 0.0
 	if deferred_scenario_diagnostic:
 		_performance_scenario.after_physics(self)
+	if is_instance_valid(_encounter_pacing_capture_driver):
+		if _encounter_pacing_capture_driver.after_physics(self):
+			get_tree().quit(0 if _encounter_pacing_capture_driver.succeeded() else 1)
 	if timing_active:
 		_fill_slow_tick_receipt_scalars()
 	if performance_active:
@@ -906,18 +918,23 @@ func _record_diagnostic_threat_sample(
 	ordinary_commit: bool
 ) -> void:
 	_diagnostic_visible_threat_current = visible_threat
-	if not _session_diagnostics.is_active():
+	var retain_pacing_capture_flags := is_instance_valid(
+		_encounter_pacing_capture_driver
+	)
+	if not _session_diagnostics.is_active() and not retain_pacing_capture_flags:
 		return
 	if visible_threat and not _diagnostic_first_visible:
 		_diagnostic_first_visible = true
-		_session_diagnostics.emit_event("first_visible", {
-			"stage_index":current_stage_index,
-		})
+		if _session_diagnostics.is_active():
+			_session_diagnostics.emit_event("first_visible", {
+				"stage_index":current_stage_index,
+			})
 	if ordinary_commit and not _diagnostic_first_commit:
 		_diagnostic_first_commit = true
-		_session_diagnostics.emit_event("first_commit", {
-			"stage_index":current_stage_index,
-		})
+		if _session_diagnostics.is_active():
+			_session_diagnostics.emit_event("first_commit", {
+				"stage_index":current_stage_index,
+			})
 	if not visible_threat:
 		if not _diagnostic_visible_gap_active:
 			_diagnostic_visible_gap_active = true
@@ -933,10 +950,11 @@ func _record_diagnostic_threat_sample(
 	if gap_seconds < 0.4 or _diagnostic_visible_gap_event_count >= 16:
 		return
 	_diagnostic_visible_gap_event_count += 1
-	_session_diagnostics.emit_event("visible_gap_closed", {
-		"stage_index":current_stage_index,
-		"gap_seconds":gap_seconds,
-	})
+	if _session_diagnostics.is_active():
+		_session_diagnostics.emit_event("visible_gap_closed", {
+			"stage_index":current_stage_index,
+			"gap_seconds":gap_seconds,
+		})
 
 
 func _begin_session_diagnostics() -> void:
@@ -4799,8 +4817,8 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 			boss_arrival_position = _choose_boss_arrival_anchor()
 			discovered_markers["boss_warning"] = true
 			_discover_guide(StringName("boss_stage_%d" % (current_stage_index + 1)))
-			_ui.notify(
-				tr("NOTIFY_BOSS_INBOUND"), 1.5, Rules.CORAL, 3, &"boss_inbound"
+			_ui.notify_immediate(
+				tr("NOTIFY_BOSS_INBOUND"), 1.5, Rules.CORAL, &"boss_inbound"
 			)
 			_play_sound(&"boss", 0.82)
 	if role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel"]:
@@ -4902,11 +4920,10 @@ func _damage_player(
 			player_barrier_hit_flash = PLAYER_BARRIER_HIT_FLASH_DURATION
 			_play_sound(&"cover", 1.04)
 		if player_barrier_strength <= 0.0:
-			_ui.notify(
+			_ui.notify_immediate(
 				tr("NOTIFY_BARRIER_DEPLETED"),
 				1.6,
 				Rules.CORAL,
-				3,
 				&"barrier_depleted"
 			)
 	if remaining <= 0.0:
@@ -6940,6 +6957,55 @@ func _fill_manual_performance_frame() -> void:
 		active_run_elapsed_seconds - stage_started_at_active_run_seconds
 	)
 	_manual_performance_context["run_mode"] = "playing"
+
+
+func _parse_encounter_pacing_capture_request() -> Dictionary:
+	var arguments := OS.get_cmdline_args()
+	arguments.append_array(OS.get_cmdline_user_args())
+	return _encounter_pacing_capture_request_from_arguments(arguments)
+
+
+static func _encounter_pacing_capture_request_from_arguments(arguments: Array) -> Dictionary:
+	var output_path := ""
+	var evidence_id := ""
+	for argument in arguments:
+		if argument.begins_with("--encounter-pacing-output="):
+			output_path = argument.trim_prefix("--encounter-pacing-output=")
+		elif argument.begins_with("--encounter-pacing-evidence-id="):
+			evidence_id = argument.trim_prefix("--encounter-pacing-evidence-id=")
+	if output_path.is_empty() and evidence_id.is_empty():
+		return {}
+	if (
+		output_path.is_empty()
+		or evidence_id.is_empty()
+		or not EncounterPacingCaptureDriver.is_safe_output_path(output_path)
+		or OS.has_feature("web")
+	):
+		push_error("Encounter pacing capture requires a native safe output and evidence ID.")
+		return {}
+	return {"output":output_path, "evidence_id":evidence_id}
+
+
+func _start_encounter_pacing_capture() -> void:
+	if (
+		_capture_mode
+		or not _performance_request.is_empty()
+		or not _manual_performance_request.is_empty()
+	):
+		push_error("Encounter pacing capture cannot be combined with other capture or performance modes.")
+		get_tree().quit(1)
+		return
+	_encounter_pacing_capture_driver = EncounterPacingCaptureDriver.new()
+	if not _encounter_pacing_capture_driver.configure(
+		String(_encounter_pacing_capture_request["output"]),
+		String(_encounter_pacing_capture_request["evidence_id"])
+	):
+		push_error("Could not configure encounter pacing capture.")
+		get_tree().quit(1)
+		return
+	_encounter_pacing_capture_driver.start(self)
+	_ui.show_gameplay()
+	_set_mouse_for_mode()
 
 
 func _parse_performance_request() -> Dictionary:

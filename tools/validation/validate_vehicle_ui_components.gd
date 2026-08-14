@@ -12,7 +12,6 @@ const REQUIRED_VARIATIONS := {
 	&"ModalSurfaceCompact": &"PanelContainer",
 	&"ContentSurface": &"PanelContainer",
 	&"HudSurface": &"PanelContainer",
-	&"ToastSurface": &"PanelContainer",
 	&"PrimaryButton": &"Button",
 	&"SecondaryButton": &"Button",
 	&"DangerButton": &"Button",
@@ -51,7 +50,6 @@ const RETIRED_VARIATIONS := [
 	&"HudObjectiveBoss",
 	&"HudMinimapTarget",
 	&"HudActionRail",
-	&"HudToast",
 ]
 
 var failures: Array[String] = []

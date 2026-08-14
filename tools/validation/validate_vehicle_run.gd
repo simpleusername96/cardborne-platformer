@@ -21,6 +21,7 @@ const OutgoingDamagePolicy = preload(
 	"res://scripts/player/vehicle_outgoing_damage_policy.gd"
 )
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
+const RUN_SOURCE := "res://scripts/vehicle/vehicle_run.gd"
 
 var failures: Array[String] = []
 
@@ -30,6 +31,12 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	var run_source := FileAccess.get_file_as_string(RUN_SOURCE)
+	_expect(
+		run_source.contains('_ui.notify_immediate(\n\t\t\t\ttr("NOTIFY_BOSS_INBOUND")')
+			and run_source.contains('_ui.notify_immediate(\n\t\t\t\ttr("NOTIFY_BARRIER_DEPLETED")'),
+		"live boss-inbound and barrier-depleted danger messages interrupt lower-priority text"
+	)
 	var packed := load(MAIN_SCENE) as PackedScene
 	_expect(packed != null, "main scene loads")
 	if packed == null:

@@ -213,7 +213,6 @@ func _validate_ui_runtime_contract() -> void:
 		'[sub_resource type="StyleBoxFlat"',
 		'ContentSurface/styles/panel',
 		'HudSurface/styles/panel',
-		'ToastSurface/styles/panel',
 		'SelectableButton/styles/normal',
 		'SelectedSelectableButton/styles/normal',
 		'PreviewFrame/styles/panel',

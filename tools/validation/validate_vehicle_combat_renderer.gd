@@ -1549,6 +1549,41 @@ func _validate_mystery_device_presentation(
 		first["batch_counts"] == repeated["batch_counts"],
 		"repeated mystery-device syncs keep retained batch counts stable"
 	)
+	presentation["reduced_motion"] = false
+	presentation["run_time"] = 0.37
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+	)
+	var pickup_phase := Renderer._stable_interaction_phase("repair-a")
+	var device_phase := Renderer._stable_interaction_phase("device-a")
+	var expected_pickup_position := pickup_position + Vector2.DOWN * (
+		sin(float(presentation["run_time"]) * TAU / Renderer.MAP_PICKUP_BOB_PERIOD + pickup_phase)
+		* Renderer.MAP_PICKUP_BOB_AMPLITUDE
+	)
+	var expected_device_position := device_position + Vector2.DOWN * (
+		sin(float(presentation["run_time"]) * TAU / Renderer.MYSTERY_DEVICE_BOB_PERIOD + device_phase)
+		* Renderer.MYSTERY_DEVICE_BOB_AMPLITUDE
+	)
+	_expect(
+		Vector2(repair.multimesh.buffer[3], repair.multimesh.buffer[7])
+			.is_equal_approx(expected_pickup_position)
+			and Vector2(intact.multimesh.buffer[3], intact.multimesh.buffer[7])
+			.is_equal_approx(expected_device_position)
+			and is_equal_approx(
+				repair_contour.multimesh.buffer[15],
+				Renderer._interaction_edge_alpha(
+					float(presentation["run_time"]), pickup_phase, false
+				)
+			)
+			and is_equal_approx(
+				intact_contour.multimesh.buffer[15],
+				Renderer._interaction_edge_alpha(
+					float(presentation["run_time"]), device_phase, false
+				)
+			),
+		"standard motion applies each pickup/device bob period and breathing-contour alpha"
+	)
 	presentation["mystery_devices"] = []
 	presentation["mystery_effects"] = []
 	renderer.sync(

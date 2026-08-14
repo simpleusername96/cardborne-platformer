@@ -664,8 +664,14 @@ func _initialize() -> void:
 	)
 	ui.clear_notifications()
 	ui.notify("System message", 10.0, Art.SYSTEM, 1, &"system_message")
-	ui.notify("System message", 10.0, Art.SYSTEM, 1, &"system_message")
-	ui.notify("Boss warning", 10.0, Art.DANGER, 3, &"boss_warning")
+	for index in 5:
+		ui.notify(
+			"Queued warning %d" % index,
+			10.0,
+			Art.DANGER,
+			1,
+			StringName("queued_warning_%d" % index)
+		)
 	ui.notify_immediate("Immediate danger", 10.0, Art.DANGER, &"danger")
 	var receipt_kinds: Array[StringName] = []
 	var semantic_only := true
@@ -679,6 +685,22 @@ func _initialize() -> void:
 			and &"dropped" in receipt_kinds
 			and semantic_only,
 		"announcement priority flow emits semantic-only queue receipts"
+	)
+	var hud := ui.get_node("VehicleStageUIRoot/GameplayHUD") as VehicleGameplayHud
+	ui.notify("Localized transient", 10.0, Art.SYSTEM, 1, &"localized_transient")
+	hud.refresh_localized_content()
+	var refreshed_notifications := hud.debug_notification_contract()
+	_expect(
+		not bool(refreshed_notifications["active"])
+			and int(refreshed_notifications["queue_size"]) == 0
+			and int(refreshed_notifications["autowrap_mode"])
+				== TextServer.AUTOWRAP_WORD_SMART
+			and int(refreshed_notifications["text_overrun_behavior"])
+				== TextServer.OVERRUN_TRIM_WORD_ELLIPSIS
+			and int(refreshed_notifications["max_lines_visible"]) == 2
+			and bool(refreshed_notifications["clip_text"])
+			and bool(refreshed_notifications["panel_clips_contents"]),
+		"locale refresh discards localized transient announcements instead of retaining stale copy"
 	)
 	ui.queue_free()
 	await process_frame
@@ -839,6 +861,15 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 			and bool(contract["top_clusters_do_not_overlap"]),
 		"200% probe preserves full-width meters and a single unclipped status row"
 	)
+	var hud := ui.get_node("VehicleStageUIRoot/GameplayHUD") as VehicleGameplayHud
+	var announcement := hud.debug_contract(1280.0)
+	_expect(
+		Vector2(announcement["toast_size"]).x <= 1232.0
+			and Vector2(announcement["toast_size"]).x == 720.0
+			and Vector2(announcement["toast_size"]).y == 112.0
+			and bool(announcement["toast_center_attached"]),
+		"200% announcement stays centered in a bounded two-line standard surface"
+	)
 	for item_variant in Array(contract["status_item_contracts"]):
 		var item := Dictionary(item_variant)
 		_expect(
@@ -874,6 +905,14 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	await _settle_ui()
 	ui.debug_set_text_scale(2.0)
 	await _settle_ui()
+	announcement = hud.debug_contract(960.0)
+	_expect(
+		Vector2(announcement["toast_size"]).x <= 928.0
+			and Vector2(announcement["toast_size"]).x == 720.0
+			and Vector2(announcement["toast_size"]).y == 112.0
+			and bool(announcement["toast_center_attached"]),
+		"200% announcement stays inside the compact supported two-line safe width"
+	)
 	_expect_upgrade_geometry(
 		ui.debug_upgrade_geometry(),
 		"ko 960x540 200% text",

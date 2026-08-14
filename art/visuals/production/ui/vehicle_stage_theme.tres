@@ -74,15 +74,6 @@ border_width_left = 1
 border_width_bottom = 1
 border_color = Color(0.27451, 0.352941, 0.431373, 0.88)
 
-[sub_resource type="StyleBoxFlat" id="Toast"]
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-bg_color = Color(0.0627451, 0.0980392, 0.137255, 0.94)
-border_width_left = 3
-border_color = Color(0.345098, 0.74902, 0.917647, 1)
-
 [sub_resource type="StyleBoxFlat" id="ButtonNormal"]
 content_margin_left = 16.0
 content_margin_top = 10.0
@@ -488,8 +479,6 @@ ContentSurface/base_type = &"PanelContainer"
 ContentSurface/styles/panel = SubResource("Surface")
 HudSurface/base_type = &"PanelContainer"
 HudSurface/styles/panel = SubResource("Hud")
-ToastSurface/base_type = &"PanelContainer"
-ToastSurface/styles/panel = SubResource("Toast")
 HealthMeter/base_type = &"ProgressBar"
 HealthMeter/styles/background = SubResource("MeterBackground")
 HealthMeter/styles/fill = SubResource("MeterHealth")

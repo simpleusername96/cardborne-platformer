@@ -511,6 +511,7 @@ func _build() -> void:
 	_notification_panel = Control.new()
 	_notification_panel.name = "TextAnnouncement"
 	_notification_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_notification_panel.clip_contents = true
 	_notification_panel.size = Vector2(360.0, 40.0)
 	add_child(_notification_panel)
 	_notification = Factory.label("", 22, Art.IVORY_BRIGHT)
@@ -518,6 +519,10 @@ func _build() -> void:
 	_notification.theme_type_variation = &"SectionLabel"
 	_notification.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_notification.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_notification.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_notification.text_overrun_behavior = TextServer.OVERRUN_TRIM_WORD_ELLIPSIS
+	_notification.max_lines_visible = 2
+	_notification.clip_text = true
 	_notification.add_theme_font_size_override("font_size", 22)
 	_notification.add_theme_constant_override("outline_size", 2)
 	_shadow_label(_notification)
@@ -631,7 +636,6 @@ func notify(
 	}
 	if _coalesce_notification(entry):
 		return
-	_emit_announcement_receipt(&"queued", entry)
 	if _notification_timer > 0.0:
 		if _notification_queue.size() >= 4:
 			var lowest_index := _lowest_priority_index()
@@ -642,6 +646,7 @@ func notify(
 			_notification_queue.pop_at(lowest_index)
 			_emit_announcement_receipt(&"dropped", lowest, &"queue_full")
 		_notification_queue.append(entry)
+		_emit_announcement_receipt(&"queued", entry)
 		return
 	_show_notification(entry)
 
@@ -661,7 +666,6 @@ func notify_immediate(
 	}
 	if _coalesce_notification(entry):
 		return
-	_emit_announcement_receipt(&"queued", entry)
 	if _notification_timer > 0.0 and not _active_notification_entry.is_empty():
 		var interrupted := _active_notification_entry.duplicate(true)
 		interrupted["duration"] = _notification_timer
@@ -672,6 +676,7 @@ func notify_immediate(
 			)
 			_emit_announcement_receipt(&"dropped", dropped, &"queue_full")
 		_notification_queue.push_front(interrupted)
+		_emit_announcement_receipt(&"queued", interrupted)
 	_show_notification(entry)
 
 
@@ -694,6 +699,11 @@ func debug_notification_contract() -> Dictionary:
 		"queue_cap":4,
 		"text_only":true,
 		"font_size":_notification.get_theme_font_size("font_size"),
+		"autowrap_mode":_notification.autowrap_mode,
+		"text_overrun_behavior":_notification.text_overrun_behavior,
+		"max_lines_visible":_notification.max_lines_visible,
+		"clip_text":_notification.clip_text,
+		"panel_clips_contents":_notification_panel.clip_contents,
 		"input_passthrough":(
 			_notification_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE
 		),
@@ -701,6 +711,9 @@ func debug_notification_contract() -> Dictionary:
 
 
 func refresh_localized_content() -> void:
+	# Announcement text is already localized at publication time. It is transient
+	# feedback, so discard it rather than displaying the prior locale after refresh.
+	clear_notifications()
 	for item in _status_items.values():
 		(item as StatusGlyphItem).queue_redraw()
 
@@ -764,8 +777,11 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		status_size.y, minimap_base_size.y
 	)
 	var toast_size := Vector2(
-		720.0 if accessibility else (320.0 if compact else 360.0),
-		80.0 if accessibility else (36.0 if compact else 40.0)
+		minf(
+			720.0,
+			maxf(0.0, viewport_width - safe_margin * 2.0)
+		),
+		112.0 if accessibility else 52.0
 	)
 	var toast_position := Vector2(
 		(viewport_width - toast_size.x) * 0.5,
@@ -892,9 +908,10 @@ func _apply_responsive_layout() -> void:
 	var top_band_bottom := meter_height + status_top_gap + maxf(
 		status_size.y, minimap_base_size.y
 	)
+	var announcement_width := 720.0
 	_notification_panel.size = Vector2(
-		720.0 if accessibility else (320.0 if compact else 360.0),
-		80.0 if accessibility else (36.0 if compact else 40.0)
+		minf(announcement_width, maxf(0.0, size.x - safe_margin * 2.0)),
+		112.0 if accessibility else 52.0
 	)
 	_notification_panel.position = Vector2(
 		(size.x - _notification_panel.size.x) * 0.5,
