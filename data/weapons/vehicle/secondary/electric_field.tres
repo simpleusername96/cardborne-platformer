@@ -10,5 +10,5 @@ name_key = "SECONDARY_ELECTRIC_FIELD_NAME"
 description_key = "SECONDARY_ELECTRIC_FIELD_DESC"
 behavior = &"field"
 values_by_level = Array[float]([8.0, 11.5, 16.0, 22.0])
-auxiliary_by_level = Array[float]([120.0, 140.0, 160.0, 160.0])
+auxiliary_by_level = Array[float]([240.0, 280.0, 320.0, 320.0])
 cap_by_level = Array[int]([1, 1, 1, 1])

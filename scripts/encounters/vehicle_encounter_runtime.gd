@@ -25,6 +25,7 @@ const BOSS_MAINTENANCE_LOW_WATERMARK := 8
 const BOSS_MAINTENANCE_HIGH_WATERMARK := 12
 const BOSS_MAINTENANCE_MAX_GROUP := 4
 const BOSS_MAINTENANCE_INTERVAL := 4.0
+const BOSS_VISIBILITY_GAP_INTERVAL := 0.75
 
 var stage_id: StringName = &"stage_1"
 var difficulty: StringName = RunDifficulty.DEFAULT
@@ -242,6 +243,8 @@ func set_pressure_observation_enabled(enabled: bool) -> void:
 	if not enabled:
 		_pressure_snapshot = _empty_pressure_snapshot()
 		_pressure_scan_happened = false
+		_diagnostic_gap_reason = &"none"
+		_diagnostic_gap_started_at = -1.0
 
 
 func pressure_observation_enabled() -> bool:
@@ -314,7 +317,8 @@ func tick(
 	visible_world: Rect2 = Rect2(),
 	active_enemies: Array = [],
 	hostile_projectile_count: int = 0,
-	player_velocity: Vector2 = Vector2.ZERO
+	player_velocity: Vector2 = Vector2.ZERO,
+	visible_ordinary_threat: bool = true
 ) -> Dictionary:
 	var step := maxf(0.0, delta)
 	_pressure_scan_happened = false
@@ -351,8 +355,12 @@ func tick(
 		_complete_inflight_packet_if_ready()
 	else:
 		_complete_inflight_packet_if_ready()
-		_admit_boss_maintenance(active_mobile_count, player_position, player_velocity, visible_world, cues)
-	_update_diagnostic_gap_reason(active_mobile_count)
+		_admit_boss_maintenance(
+			active_mobile_count, player_position, player_velocity,
+			visible_world, cues, visible_ordinary_threat
+		)
+	if _pressure_observation_enabled:
+		_update_diagnostic_gap_reason(active_mobile_count)
 	return {"cues":cues, "spawns":spawns}
 
 
@@ -685,12 +693,29 @@ func _diagnostic_gap_seconds() -> float:
 	return maxf(0.0, elapsed - _diagnostic_gap_started_at)
 
 
-func _admit_boss_maintenance(active_mobile_count: int, player_position: Vector2, player_velocity: Vector2, visible_world: Rect2, cues: Array[Dictionary]) -> void:
+func _admit_boss_maintenance(
+	active_mobile_count: int,
+	player_position: Vector2,
+	player_velocity: Vector2,
+	visible_world: Rect2,
+	cues: Array[Dictionary],
+	visible_ordinary_threat: bool
+) -> void:
 	if not _boss_maintenance_active or not _spawn_queue.is_empty() or not _window_queue.is_empty():
 		return
-	if active_mobile_count >= BOSS_MAINTENANCE_LOW_WATERMARK or _maintenance_roles.is_empty():
+	if (
+		_maintenance_roles.is_empty()
+		or active_mobile_count >= BOSS_MAINTENANCE_HIGH_WATERMARK
+	):
 		return
-	if elapsed + 0.0001 < _last_boss_maintenance_cue_at + BOSS_MAINTENANCE_INTERVAL:
+	if visible_ordinary_threat and active_mobile_count >= BOSS_MAINTENANCE_LOW_WATERMARK:
+		return
+	var interval := (
+		BOSS_MAINTENANCE_INTERVAL
+		if visible_ordinary_threat
+		else BOSS_VISIBILITY_GAP_INTERVAL
+	)
+	if elapsed + 0.0001 < _last_boss_maintenance_cue_at + interval:
 		return
 	var count := mini(
 		BOSS_MAINTENANCE_MAX_GROUP,

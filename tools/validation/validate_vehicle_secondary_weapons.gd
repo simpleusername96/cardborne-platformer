@@ -178,6 +178,17 @@ func _validate_shared_modifiers(catalog: Catalog) -> void:
 			),
 		"shared secondary modifiers apply once to Orbiting Blades damage and cadence"
 	)
+	orbit_runtime.update(
+		0.5, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
+		orbit_build, [target], Callable(self, "_los")
+	)
+	_expect(
+		is_equal_approx(orbit_runtime.orbit_angle, 1.7)
+			and is_equal_approx(Runtime.ORBIT_RADIUS, 112.0)
+			and is_equal_approx(Runtime.ORBIT_BLADE_RADIUS, 52.0)
+			and is_equal_approx(Runtime.ORBIT_HIT_COOLDOWN, 0.55),
+		"Orbiting Blades uses the authored 3.4 rad/s wide orbit without changing hit size or cadence"
+	)
 
 	var mine_build := _shared_build(catalog, &"drop_mines", 1)
 	var mine_runtime := Runtime.new()
@@ -240,7 +251,7 @@ func _shared_build(
 
 
 func _validate_electric_field_radius(catalog: Catalog) -> void:
-	var expected_radii := [120.0, 140.0, 160.0, 160.0]
+	var expected_radii := [240.0, 280.0, 320.0, 320.0]
 	var build := RunBuild.new(catalog)
 	var runtime := Runtime.new()
 	var frame: Dictionary = {}
@@ -397,7 +408,7 @@ func _validate_mine_direction(catalog: Catalog) -> void:
 
 func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
 	var expected_damage := [48.0, 60.0, 72.0, 88.0]
-	var expected_radius := [96.0, 108.0, 120.0, 120.0]
+	var expected_radius := [192.0, 216.0, 240.0, 240.0]
 	for level_index in 4:
 		var build := RunBuild.new(catalog)
 		for _level in level_index + 1:
@@ -469,7 +480,7 @@ func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
 		Array(timeout_result["damage"]).is_empty()
 		and Array(timeout_result["detonations"]).size() == 1
 		and is_equal_approx(
-			float(Array(timeout_result["detonations"])[0]["radius"]), 96.0
+			float(Array(timeout_result["detonations"])[0]["radius"]), 192.0
 		),
 		"Drop Mine timeout emits its receipt even when it damages no target"
 	)
@@ -597,6 +608,7 @@ func _validate_storm_barrage(catalog: Catalog) -> void:
 	_expect(
 		Array(reserved["warnings"]).size() == 1
 			and Array(reserved["damage"]).is_empty()
+			and is_equal_approx(float(Dictionary(Array(reserved["warnings"])[0])["radius"]), 280.0)
 			and runtime.storm_pending
 			and is_equal_approx(runtime.storm_warning_remaining, 0.55)
 			and is_equal_approx(runtime.storm_cooldown, 4.5)
@@ -634,6 +646,7 @@ func _validate_storm_barrage(catalog: Catalog) -> void:
 	_expect(
 		not runtime.storm_pending
 			and Array(impact["impacts"]).size() == 1
+			and is_equal_approx(float(Dictionary(Array(impact["impacts"])[0])["radius"]), 280.0)
 			and impact_damage.size() == 12
 			and _storm_query_calls == 2,
 		"storm barrage performs one impact query and caps damage intents at twelve targets"

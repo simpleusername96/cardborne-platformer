@@ -114,8 +114,8 @@ func _validate_authored_values() -> void:
 	_expect(_secondary.validate_contract().is_empty(), "secondary catalog remains complete")
 	_expect(_active.validate_contract().is_empty(), "active catalog remains complete")
 	_validate_secondary(&"seeker", [25.0, 28.0, 32.0, 38.0], [1.35, 1.35, 1.35, 1.35], [2, 3, 4, 4])
-	_validate_secondary(&"electric_field", [8.0, 11.5, 16.0, 22.0], [120.0, 140.0, 160.0, 160.0], [1, 1, 1, 1])
-	_validate_secondary(&"orbiting_blades", [14.0, 18.0, 22.0, 28.0], [88.0, 88.0, 88.0, 88.0], [2, 3, 4, 4])
+	_validate_secondary(&"electric_field", [8.0, 11.5, 16.0, 22.0], [240.0, 280.0, 320.0, 320.0], [1, 1, 1, 1])
+	_validate_secondary(&"orbiting_blades", [14.0, 18.0, 22.0, 28.0], [112.0, 112.0, 112.0, 112.0], [2, 3, 4, 4])
 	_validate_secondary(&"drop_mines", [48.0, 60.0, 72.0, 88.0], [3.2, 2.8, 2.4, 2.4], [3, 4, 5, 5])
 	_validate_secondary(&"auto_laser", [48.0, 66.0, 86.0], [0.9, 0.9, 0.9], [1, 1, 1])
 	_validate_secondary(&"storm_barrage", [70.0, 95.0, 125.0], [4.5, 4.5, 4.5], [1, 1, 1])
@@ -310,14 +310,14 @@ func _secondary_metrics(family: StringName, state: int) -> Dictionary:
 		coverage = 52.0
 		exposure = 5.0
 	elif family == &"drop_mines":
-		contacts = _count_within(Array(_fixtures()[&"close_12"]), minf(120.0, 84.0 + state * 12.0))
-		coverage = minf(120.0, 84.0 + state * 12.0)
+		contacts = _count_within(Array(_fixtures()[&"close_12"]), minf(240.0, 168.0 + state * 24.0))
+		coverage = minf(240.0, 168.0 + state * 24.0)
 	elif family == &"auto_laser":
 		contacts = 8
 		coverage = 36.0
 	elif family == &"storm_barrage":
 		contacts = 4
-		coverage = 140.0
+		coverage = 280.0
 	var damage_per_use := damage * float(maxi(1, contacts))
 	return {"damage_per_use":damage_per_use, "damage_10s":damage_per_use / maxf(0.001, cooldown) * 10.0, "contacts":contacts, "cooldown":cooldown, "coverage":coverage, "targeting_burden":0.0, "exposure":exposure}
 

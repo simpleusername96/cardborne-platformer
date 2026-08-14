@@ -7,10 +7,10 @@ extends RefCounted
 
 const ION_TICK := 0.25
 const ORBIT_HIT_COOLDOWN := 0.55
-const ORBIT_RADIUS := 88.0
+const ORBIT_RADIUS := 112.0
 const ORBIT_BLADE_RADIUS := 52.0
 const MINE_LIFETIME := 8.0
-const MINE_MAX_RADIUS := 120.0
+const MINE_MAX_RADIUS := 240.0
 const AUTO_LASER_LENGTH := 760.0
 const AUTO_LASER_HALF_WIDTH := 18.0
 const AUTO_LASER_DURATION := 0.14
@@ -20,7 +20,7 @@ const STORM_MIN_DISTANCE := 480.0
 const STORM_MAX_DISTANCE := 960.0
 const STORM_TARGET_LIMIT := 12
 const STORM_WARNING_DURATION := 0.55
-const STORM_RADIUS := 140.0
+const STORM_RADIUS := 280.0
 const STORM_IMPACT_DURATION := 0.18
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const SecondaryCatalog = preload("res://scripts/player/vehicle_secondary_catalog.gd")
@@ -192,7 +192,7 @@ func update(
 		seeker_cooldown_multiplier * shared_cooldown_multiplier,
 		shared_damage_multiplier
 	)
-	orbit_angle = fmod(orbit_angle + delta * 2.45, TAU)
+	orbit_angle = fmod(orbit_angle + delta * 3.4, TAU)
 	_expired_cooldown_ids.clear()
 	for enemy_id_variant in orbit_target_cooldowns:
 		var enemy_id := String(enemy_id_variant)
@@ -265,6 +265,7 @@ func snapshot(build: VehicleRunBuild) -> Dictionary:
 		"storm_cooldown":storm_cooldown,
 		"storm_pending":storm_pending,
 		"storm_position":storm_position,
+		"storm_radius":STORM_RADIUS,
 		"storm_warning_remaining":storm_warning_remaining,
 		"storm_impact_remaining":storm_impact_remaining,
 		"electric_field_radius":_electric_field_radius(build),
@@ -292,6 +293,7 @@ func fill_presentation_snapshot(
 	output["blade_count"] = _orbit_blade_count(build)
 	output["storm_pending"] = storm_pending
 	output["storm_position"] = storm_position
+	output["storm_radius"] = STORM_RADIUS
 	output["storm_warning_remaining"] = storm_warning_remaining
 	output["storm_impact_remaining"] = storm_impact_remaining
 	return output
@@ -791,7 +793,7 @@ func _update_mines(
 					break
 		if not detonate:
 			continue
-		var radius := minf(MINE_MAX_RADIUS, 84.0 + float(level) * 12.0)
+		var radius := minf(MINE_MAX_RADIUS, 168.0 + float(level) * 24.0)
 		_query_candidates(Vector2(mine["pos"]), radius, enemies, query_radius)
 		var attack_serial := _next_attack_serial()
 		for enemy in _candidate_buffer:

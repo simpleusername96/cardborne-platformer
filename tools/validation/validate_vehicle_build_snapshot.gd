@@ -41,9 +41,9 @@ func _run() -> void:
 	var chassis_category := Dictionary(Array(snapshot["categories"])[4])
 	var chassis_slots: Array = chassis_category["slots"]
 	_expect(
-		StringName(Dictionary(chassis_slots[0])["slot_key"]) == &"chassis_speed"
+		StringName(Dictionary(chassis_slots[0])["slot_key"]) == &"slot_0"
 			and StringName(Dictionary(chassis_slots[0])["record"].get("id", &"")) == &"chassis_speed",
-		"snapshot maps an acquired card to its fixed semantic position"
+		"snapshot packs the first acquired category card into its leftmost position"
 	)
 	var optional_build := RunBuild.new(catalog)
 	optional_build.apply(&"orbiting_blades")
@@ -52,10 +52,10 @@ func _run() -> void:
 	var optional_snapshot := Builder.build(optional_build, catalog, [], [], {})
 	var secondary_slots: Array = Dictionary(Array(optional_snapshot["categories"])[1])["slots"]
 	_expect(
-		StringName(Dictionary(secondary_slots[1])["record"].get("id", &"")) == &"orbiting_blades"
-			and StringName(Dictionary(secondary_slots[2])["record"].get("id", &"")) == &"electric_field"
+		StringName(Dictionary(secondary_slots[0])["record"].get("id", &"")) == &"orbiting_blades"
+			and StringName(Dictionary(secondary_slots[1])["record"].get("id", &"")) == &"electric_field"
 			and Array(optional_snapshot["upgrades"]).size() == 2,
-		"optional-secondary acquisition order only assigns stable optional positions and flat projection remains unique"
+		"optional-secondary acquisition order packs from the left and flat projection remains unique"
 	)
 	var upgrade := Dictionary(snapshot["upgrades"][0])
 	_expect(StringName(upgrade["id"]) == &"chassis_speed", "upgrade uses stable ID")

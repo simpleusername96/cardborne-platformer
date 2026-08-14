@@ -7,6 +7,8 @@ const LEVEL_UP_SOURCE: StringName = &"level_up"
 
 var _current_source: StringName = &""
 var _offer_serial := 0
+var _level_up_offer_count := 0
+var _current_level_up_offer_index := -1
 var _terminal_outcomes: Dictionary = {}
 var _pending_sources: Array[StringName] = []
 
@@ -14,6 +16,7 @@ var _pending_sources: Array[StringName] = []
 func reset_run() -> void:
 	_clear_active()
 	_offer_serial = 0
+	_level_up_offer_count = 0
 	_terminal_outcomes.clear()
 	_pending_sources.clear()
 
@@ -49,6 +52,10 @@ func begin(stage_id: StringName, source_id: StringName) -> int:
 	var serial := _offer_serial
 	_offer_serial += 1
 	_current_source = source_id
+	_current_level_up_offer_index = -1
+	if source_id == LEVEL_UP_SOURCE:
+		_current_level_up_offer_index = _level_up_offer_count
+		_level_up_offer_count += 1
 	return serial
 
 
@@ -78,12 +85,17 @@ func current_source() -> StringName:
 	return _current_source
 
 
+func current_level_up_offer_index() -> int:
+	return _current_level_up_offer_index
+
+
 func is_idle() -> bool:
 	return _current_source.is_empty()
 
 
 func _clear_active() -> void:
 	_current_source = &""
+	_current_level_up_offer_index = -1
 
 
 func _transaction_id(stage_id: StringName, source_id: StringName) -> StringName:

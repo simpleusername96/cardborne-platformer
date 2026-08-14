@@ -45,6 +45,9 @@ const PickupContact = preload("res://scripts/rewards/vehicle_pickup_contact.gd")
 const ExperienceRuntime = preload("res://scripts/progression/vehicle_experience_runtime.gd")
 const StageGeometry = preload("res://scripts/vehicle/vehicle_stage_geometry.gd")
 const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
+const StageTransitionRuntime = preload(
+	"res://scripts/vehicle/vehicle_stage_transition_runtime.gd"
+)
 const PursuitField = preload("res://scripts/enemies/vehicle_pursuit_field.gd")
 const EnemyMovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
 const EnemyTargetingPolicy = preload(
@@ -204,6 +207,7 @@ var _active_tactical_layout: StageTacticalLayout
 var encounter_runtime := EncounterRuntime.new()
 var collective_tactics := CollectiveTacticRuntime.new()
 var stage_flow := StageFlow.new()
+var stage_transition_runtime := StageTransitionRuntime.new()
 var pursuit_field := PursuitField.new()
 var secondary_runtime := SecondaryRuntime.new()
 var active_weapon_runtime := ActiveWeaponRuntime.new()
@@ -338,6 +342,10 @@ var boss_started := false
 var boss_phase_two_announced := false
 var boss_arrival_position := Vector2.ZERO
 var stage_complete := false
+var _pending_continuation_layout: Variant
+var _pending_continuation_stage_index := -1
+var _pending_continuation_stage_id: StringName = &""
+var _pending_final_result_snapshot: Dictionary = {}
 var active_run_elapsed_seconds := 0.0
 var stage_started_at_active_run_seconds := 0.0
 var run_index := 0
@@ -409,6 +417,7 @@ var _diagnostic_arrivals_began: Dictionary = {}
 var _diagnostic_first_visible := false
 var _diagnostic_first_commit := false
 var _diagnostic_visible_threat_current := false
+var _visible_ordinary_threat_current := false
 var _diagnostic_visible_gap_active := false
 var _diagnostic_visible_gap_started := 0.0
 var _diagnostic_visible_gap_event_count := 0
@@ -645,8 +654,25 @@ func _physics_process(delta: float) -> void:
 		if timing_active:
 			section_started = Time.get_ticks_usec()
 		_update_stage_progression(delta)
-		if _flush_defeated_enemies() > 0:
+		var transition_flush_diagnostics := (
+			stage_transition_runtime.active()
+			and _session_diagnostics.is_active()
+		)
+		var transition_flush_started := (
+			Time.get_ticks_usec() if transition_flush_diagnostics else 0
+		)
+		var flushed_defeats := _flush_defeated_enemies()
+		if flushed_defeats > 0:
 			enemy_grid.sync(enemies)
+		if transition_flush_diagnostics:
+			_session_diagnostics.emit_event("stage_transition_flush", {
+				"elapsed_ms":float(
+					Time.get_ticks_usec() - transition_flush_started
+				) / 1000.0,
+				"flushed_defeats":flushed_defeats,
+				"live_enemies":enemy_store.live_count(),
+			})
+		_advance_stage_transition()
 		if is_instance_valid(_engagement_telemetry):
 			_engagement_telemetry.advance(
 				delta, encounter_runtime, enemies, player_position, player_velocity
@@ -895,6 +921,7 @@ func _reset_stage_diagnostic_signals() -> void:
 	_diagnostic_first_visible = false
 	_diagnostic_first_commit = false
 	_diagnostic_visible_threat_current = false
+	_visible_ordinary_threat_current = false
 	_diagnostic_visible_gap_active = true
 	_diagnostic_visible_gap_started = active_run_elapsed_seconds
 	_diagnostic_visible_gap_event_count = 0
@@ -1105,6 +1132,11 @@ func _reset_run(
 	if is_instance_valid(_ui):
 		_ui.clear_notifications()
 	mode = RunMode.DEPLOYMENT
+	stage_transition_runtime.reset()
+	_pending_continuation_layout = null
+	_pending_continuation_stage_index = -1
+	_pending_continuation_stage_id = &""
+	_pending_final_result_snapshot.clear()
 	player_position = Rules.player_start(current_stage_id)
 	player_velocity = Vector2.ZERO
 	player_hull_direction = Vector2.RIGHT
@@ -1495,7 +1527,8 @@ func _update_encounter(delta: float) -> void:
 		_visible_world_rect(0.0),
 		enemies,
 		projectile_store.hostile_count(),
-		player_velocity
+		player_velocity,
+		_visible_ordinary_threat_current
 	)
 	if _slow_tick_recording_active:
 		_slow_tick_cue_count = Array(requests["cues"]).size()
@@ -5371,7 +5404,8 @@ func _build_card_offer(
 		run_seed,
 		current_stage_index,
 		source_id,
-		offer_serial
+		offer_serial,
+		reward_runtime.current_level_up_offer_index() == 0
 	):
 		var current_level := run_build.level_of(definition.id)
 		cards.append(UpgradeOfferPresenter.snapshot(definition, current_level))
@@ -5809,7 +5843,10 @@ func _on_boss_direct_attack_complete(boss: EnemyState) -> void:
 func _complete_stage() -> void:
 	if stage_complete:
 		return
+	var diagnostics_active := _session_diagnostics.is_active()
+	var teardown_started := Time.get_ticks_usec() if diagnostics_active else 0
 	stage_complete = true
+	var has_next_stage := current_stage_index < StageCatalog.STAGE_IDS.size() - 1
 	_session_diagnostics.emit_event("stage_ended", {
 		"stage_id":current_stage_id,
 		"stage_index":current_stage_index,
@@ -5819,20 +5856,55 @@ func _complete_stage() -> void:
 	_retire_boss_owned_enemies()
 	projectile_store.retire_boss_hostiles()
 	_retire_denied_zones_by_owner(&"stage_boss")
+	if not stage_transition_runtime.begin(has_next_stage, _physics_serial):
+		push_error("Stage transition was already active at boss defeat")
+	if diagnostics_active:
+		_session_diagnostics.emit_event("stage_transition_boss_teardown", {
+			"elapsed_ms":float(Time.get_ticks_usec() - teardown_started) / 1000.0,
+			"stage_index":current_stage_index,
+			"has_next_stage":has_next_stage,
+		})
+
+
+func _advance_stage_transition() -> void:
+	if not stage_transition_runtime.active():
+		return
+	var command := stage_transition_runtime.advance(_physics_serial)
+	if command.is_empty() or command == &"defeat_flush_complete":
+		return
+	var diagnostics_active := _session_diagnostics.is_active()
+	var started_usec := Time.get_ticks_usec() if diagnostics_active else 0
+	match command:
+		&"capture_report":
+			_freeze_completed_stage_report()
+		&"prepare_continuation":
+			_prepare_next_stage_continuation()
+		&"configure_world":
+			_configure_next_stage_world()
+		&"finalize_continuation":
+			_finalize_next_stage_continuation()
+		&"build_final_result":
+			persistent_clear_count += 1
+			persistent_relay_module = true
+			_save_persistence()
+			_pending_final_result_snapshot = _build_final_result_snapshot()
+		&"show_final_result":
+			_present_final_result(_pending_final_result_snapshot)
+	if diagnostics_active:
+		_session_diagnostics.emit_event("stage_transition_step", {
+			"step":command,
+			"elapsed_ms":float(Time.get_ticks_usec() - started_usec) / 1000.0,
+			"stage_index":current_stage_index,
+		})
+
+
+func _freeze_completed_stage_report() -> void:
+	var has_next_stage := current_stage_index < StageCatalog.STAGE_IDS.size() - 1
 	_pending_stage_report = StageReportBuilder.build(
 		stage_telemetry.freeze_stage(),
-		_stage_report_context(
-			current_stage_index < StageCatalog.STAGE_IDS.size() - 1
-		)
+		_stage_report_context(has_next_stage)
 	)
 	completed_stage_reports.append(_pending_stage_report.duplicate(true))
-	if current_stage_index < StageCatalog.STAGE_IDS.size() - 1:
-		_begin_next_stage_continuation()
-		return
-	persistent_clear_count += 1
-	persistent_relay_module = true
-	_save_persistence()
-	_show_final_result()
 
 
 func _retire_boss_owned_enemies() -> void:
@@ -5890,6 +5962,14 @@ func _continue_stage_report() -> void:
 
 
 func _begin_next_stage_continuation() -> void:
+	# Legacy/capture entry point. Live boss defeats use the bounded transition
+	# runtime and never execute all three owners from the lethal-damage stack.
+	_prepare_next_stage_continuation()
+	_configure_next_stage_world()
+	_finalize_next_stage_continuation()
+
+
+func _prepare_next_stage_continuation() -> void:
 	if current_stage_index >= StageCatalog.STAGE_IDS.size() - 1:
 		return
 	var next_stage_index := current_stage_index + 1
@@ -5898,17 +5978,39 @@ func _begin_next_stage_continuation() -> void:
 	if next_tactical_layout == null:
 		push_error("Missing tactical layout for %s" % next_stage_id)
 		return
-	current_stage_index = next_stage_index
-	current_stage_id = next_stage_id
-	_active_tactical_layout = next_tactical_layout
+	_pending_continuation_layout = next_tactical_layout
+	_pending_continuation_stage_index = next_stage_index
+	_pending_continuation_stage_id = next_stage_id
+
+
+func _configure_next_stage_world() -> void:
+	if _pending_continuation_layout == null:
+		return
+	current_stage_index = _pending_continuation_stage_index
+	current_stage_id = _pending_continuation_stage_id
+	_active_tactical_layout = _pending_continuation_layout
 	if is_instance_valid(_backdrop):
 		_backdrop.configure(current_stage_id, _active_tactical_layout)
 	if is_instance_valid(_camera):
 		_apply_camera_stage_limits()
+	_configure_stage_local_runtime()
+	_rebuild_runtime_blockers()
+	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
+	_populate_stage_items()
+	enemy_grid.configure(
+		Rules.world_rect(current_stage_id),
+		SpatialGrid.DEFAULT_CELL_SIZE
+	)
+	enemy_grid.rebuild(enemies)
+
+
+func _finalize_next_stage_continuation() -> void:
+	if _pending_continuation_layout == null:
+		return
 	player_health = _player_max_health()
 	stage_telemetry.reset_stage()
-	# Surviving ordinary actors continue into the next field, but a fixed gate is
-	# stage-local. Release it before the director is reconfigured with a new seed.
+	# Surviving ordinary actors continue into the next field, but their old
+	# stage-local engagement gates must not cross the stage boundary.
 	for enemy in enemies:
 		_release_enemy_engagement(enemy)
 	var continuation_slots := maxi(0, 6 - _ordinary_active_count())
@@ -5928,10 +6030,6 @@ func _begin_next_stage_continuation() -> void:
 			selected_run_difficulty
 		)
 	)
-	_configure_stage_local_runtime()
-	_rebuild_runtime_blockers()
-	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
-	_populate_stage_items()
 	boss_started = false
 	boss_shield_runtime.configure(current_stage_id)
 	boss_phase_two_announced = false
@@ -5949,11 +6047,6 @@ func _begin_next_stage_continuation() -> void:
 	_shield_supports.clear()
 	_enemy_coordination_initialized = false
 	_aim_target_id = ""
-	enemy_grid.configure(
-		Rules.world_rect(current_stage_id),
-		SpatialGrid.DEFAULT_CELL_SIZE
-	)
-	enemy_grid.rebuild(enemies)
 	stage_started_at_active_run_seconds = active_run_elapsed_seconds
 	mode = RunMode.PLAYING
 	_session_diagnostics.emit_event("stage_started", {
@@ -5963,6 +6056,9 @@ func _begin_next_stage_continuation() -> void:
 	_hud_presenter.reset()
 	_ui.show_gameplay()
 	_set_mouse_for_mode()
+	_pending_continuation_layout = null
+	_pending_continuation_stage_index = -1
+	_pending_continuation_stage_id = &""
 
 
 func _ordinary_active_count() -> int:
@@ -6009,7 +6105,10 @@ func _continuation_packets(stage_id: StringName, opening_slots: int = 6) -> Arra
 
 
 func _show_final_result() -> void:
-	mode = RunMode.RESULT
+	_present_final_result(_build_final_result_snapshot())
+
+
+func _build_final_result_snapshot() -> Dictionary:
 	var active_weapon_snapshot := active_weapon_runtime.snapshot(
 		run_build, 1.5 if persistent_relay_module else 0.0
 	)
@@ -6019,7 +6118,7 @@ func _show_final_result() -> void:
 	var secondary_titles: Array[String] = []
 	for secondary in secondary_runtime.equipped_families(run_build):
 		secondary_titles.append(String(secondary.get("name_key", "")))
-	var result_snapshot := RunResultBuilder.build(completed_stage_reports, {
+	return RunResultBuilder.build(completed_stage_reports, {
 		"active_run_elapsed_seconds":active_run_elapsed_seconds,
 		"hull":player_health,
 		"max_hull":_player_max_health(),
@@ -6038,6 +6137,13 @@ func _show_final_result() -> void:
 			),
 		},
 	})
+
+
+func _present_final_result(result_snapshot: Dictionary) -> void:
+	if result_snapshot.is_empty():
+		push_error("Final Result cannot open without a complete run snapshot")
+		return
+	mode = RunMode.RESULT
 	_ui.show_result(result_snapshot)
 	_session_diagnostics.emit_event("result_shown", {
 		"stage_count":completed_stage_reports.size(),
@@ -6050,6 +6156,7 @@ func _show_final_result() -> void:
 	_finish_session_diagnostics("run_completed")
 	_play_sound(&"card", 0.72)
 	_set_mouse_for_mode()
+	_pending_final_result_snapshot.clear()
 
 
 func _mark_visited() -> void:
@@ -6485,6 +6592,7 @@ func _update_threat_contacts(delta: float) -> void:
 				0.0
 			)
 	var diagnostic_visible_threat := false
+	var visible_ordinary_threat := false
 	var diagnostic_ordinary_commit := false
 	for enemy in enemies:
 		if not bool(enemy.alive) or not bool(enemy.active):
@@ -6495,6 +6603,8 @@ func _update_threat_contacts(delta: float) -> void:
 			and visible_world.has_point(enemy.pos)
 		):
 			diagnostic_visible_threat = true
+		if enemy.counts_active_cap and visible_world.has_point(enemy.pos):
+			visible_ordinary_threat = true
 		if (
 			enemy.counts_active_cap
 			and enemy.phase in [&"startup", &"active"]
@@ -6539,6 +6649,7 @@ func _update_threat_contacts(delta: float) -> void:
 		diagnostic_visible_threat,
 		diagnostic_ordinary_commit
 	)
+	_visible_ordinary_threat_current = visible_ordinary_threat
 	_threat_radar_feed.commit_sample()
 
 

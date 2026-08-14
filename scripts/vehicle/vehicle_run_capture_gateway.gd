@@ -1272,7 +1272,7 @@ func _capture_thermal_burst_evidence() -> void:
 
 func _capture_drop_mine_evidence() -> void:
 	var file_prefixes := ["09n", "09o", "09p"]
-	var radii := [96.0, 108.0, 120.0]
+	var radii := [192.0, 216.0, 240.0]
 	for level_index in 3:
 		prepare_stage(0)
 		_run._clear_enemies()

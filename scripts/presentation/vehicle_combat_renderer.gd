@@ -1773,7 +1773,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 			36.0,
 			Color(Art.SYSTEM, 0.50 + 0.35 * laser_alpha)
 		)
-	var storm_radius := 140.0
+	var storm_radius := float(secondary.get("storm_radius", 280.0))
 	var storm_position := Vector2(
 		secondary.get("storm_position", player_position)
 	)
@@ -1817,7 +1817,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 	var orbiting_blade_level := int(state.get("orbiting_blade_level", 0))
 	if orbiting_blade_level > 0:
 		var blade_count := int(secondary.get("blade_count", 0))
-		var orbit_radius := float(secondary.get("orbit_radius", 88.0))
+		var orbit_radius := float(secondary.get("orbit_radius", 112.0))
 		var blade_radius := float(secondary.get(
 			"blade_radius", Art.PLAYER_ORBIT_BLADE_HALF_SIZE
 		))

@@ -8,8 +8,8 @@ const OPTIONAL_SECONDARY_SLOTS := 2
 const CATEGORIES: Array[StringName] = [
 	&"primary", &"secondary", &"element", &"activated", &"chassis", &"combat",
 ]
-## Presentation positions mirror compatibility capacity. They never grant, replace,
-## or restrict an upgrade; gameplay compatibility remains owned by this catalog.
+## Category capacities constrain only the read-only build rail. Records pack in
+## acquisition order; gameplay compatibility remains owned by this catalog.
 const CATEGORY_DESCRIPTORS: Array[Dictionary] = [
 	{"id":&"primary", "heading_key":"UPGRADE_CATEGORY_PRIMARY", "description_key":"UPGRADE_CATEGORY_PRIMARY_DESCRIPTION", "slot_keys":[&"split_muzzle", &"piercing_rounds"]},
 	{"id":&"secondary", "heading_key":"UPGRADE_CATEGORY_SECONDARY", "description_key":"UPGRADE_CATEGORY_SECONDARY_DESCRIPTION", "slot_keys":[&"homing_missiles", &"optional_0", &"optional_1", &"secondary_coolant", &"secondary_amplifier"]},
@@ -260,7 +260,8 @@ func offer(
 	run_seed: int,
 	stage_index: int,
 	source_id: StringName,
-	offer_serial: int
+	offer_serial: int,
+	opening_emp_enhancement_required := false
 ) -> Array[VehicleUpgradeDefinition]:
 	var available := compatible_definitions(build)
 	var seed_value := hash(
@@ -275,7 +276,15 @@ func offer(
 		available[index] = available[swap_index]
 		available[swap_index] = temporary
 	var result: Array[VehicleUpgradeDefinition] = []
+	var opening_emp_enhancement := _opening_emp_enhancement(
+		available, build, stage_index, source_id,
+		opening_emp_enhancement_required
+	)
+	if opening_emp_enhancement != null:
+		result.append(opening_emp_enhancement)
 	var used_categories := {}
+	if opening_emp_enhancement != null:
+		used_categories[opening_emp_enhancement.category] = true
 	if stage_index >= 2:
 		for definition in available:
 			if ATTACK_UPGRADE_IDS.has(definition.id):
@@ -285,6 +294,8 @@ func offer(
 	for definition in available:
 		if result.size() >= 3:
 			break
+		if opening_emp_enhancement != null and definition.category == &"activated":
+			continue
 		if used_categories.has(definition.category):
 			continue
 		_append_unique(result, definition)
@@ -292,8 +303,32 @@ func offer(
 	for definition in available:
 		if result.size() >= 3:
 			break
+		if opening_emp_enhancement != null and definition.category == &"activated":
+			continue
 		_append_unique(result, definition)
 	return result
+
+
+func _opening_emp_enhancement(
+	available: Array[VehicleUpgradeDefinition],
+	build: VehicleRunBuild,
+	stage_index: int,
+	source_id: StringName,
+	opening_emp_enhancement_required: bool
+) -> VehicleUpgradeDefinition:
+	if (
+		not opening_emp_enhancement_required
+		or
+		stage_index != 0
+		or source_id != &"level_up"
+		or build.active_weapon_id() != &"emp"
+	):
+		return null
+	for upgrade_id in [&"active_amplifier", &"active_coolant"]:
+		for definition in available:
+			if definition.id == upgrade_id:
+				return definition
+	return null
 
 
 func _append_unique(

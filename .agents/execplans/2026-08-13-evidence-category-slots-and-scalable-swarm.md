@@ -971,7 +971,7 @@ runtime/director/stage-flow integration; one narrow stage-transition coordinator
 `VehicleRun`; secondary definitions/runtime/renderer; product and visual contracts; focused
 validators and the existing capture gateways.
 
-- [ ] **8.1 Make acquired category records fill from the left.**
+- [x] **8.1 Make acquired category records fill from the left.**
   - Change: keep category capacities `2/5/2/3/5/4` and gameplay compatibility unchanged, but stop
     exposing compatibility slot keys as visual gaps. Pack acquired records from index zero in stable
     first-acquisition order inside each category. A level-up updates the same record and never moves
@@ -983,7 +983,7 @@ validators and the existing capture gateways.
     acquisition appends at the right in its category, a level-up does not reorder cells, and
     Korean/English Upgrade and Result layouts fit without clipping or scrolling.
 
-- [ ] **8.2 Make the existing EMP growth path unmistakable.**
+- [x] **8.2 Make the existing EMP growth path unmistakable.**
   - Change: keep EMP as a base action, not a fake acquired upgrade. Publish a display-only equipped
     action record in the first Active Skill cell using the existing EMP action glyph; it never enters
     `levels`, `acquisition_order`, or the flat acquired-upgrade projection. An EMP replacement swaps
@@ -997,7 +997,7 @@ validators and the existing capture gateways.
     one EMP-relevant enhancement; authored damage `62 -> 93` and cooldown `13s -> 9.75s` remain true
     at maximum enhancement; a replacement receives each shared modifier exactly once.
 
-- [ ] **8.3 Remove ordinary-enemy visibility gaps.**
+- [x] **8.3 Remove ordinary-enemy visibility gaps.**
   - Change: treat visible pressure as a maintained invariant, not only a cue/queue invariant. Keep
     the authored time-zero opening, but select the nearest valid offscreen approach anchors so the
     first ordinary actor becomes visible by `3.0s`. During boss warning/active, when no ordinary is
@@ -1014,7 +1014,7 @@ validators and the existing capture gateways.
     maintenance actors never advance quota; every gap is either below the limit or has one recorded
     bounded reason; irrelevant scheduler/maintenance work stops with its lifecycle.
 
-- [ ] **8.4 Remove duplicate boss-defeat boundary work and bound the remaining transition.**
+- [x] **8.4 Remove duplicate boss-defeat boundary work and bound the remaining transition.**
   - Change: first add diagnostic-only receipts around boss teardown, stage-report freeze, continuation
     setup, enemy flush/grid synchronization, and final Result construction. The source already proves
     that stages 1-4 call `enemy_grid.rebuild(enemies)` before queued boss defeats flush and later sync
@@ -1029,7 +1029,7 @@ validators and the existing capture gateways.
     duplicated; repeated callbacks cannot duplicate rewards or transitions; focused receipts name
     every remaining transition owner without running a broad performance scenario.
 
-- [ ] **8.5 Double optional area-secondary footprints and improve Orbiting Blades motion.**
+- [x] **8.5 Double optional area-secondary footprints and improve Orbiting Blades motion.**
   - Change: double linear gameplay and presentation radii for Electric Field
     (`240/280/320/320`), Drop Mines (`192/216/240/240`), and Storm Barrage (`280`). Collision,
     spatial query, telegraph, impact, snapshot, localized copy, and product/visual contracts use the
@@ -1296,6 +1296,11 @@ Gate remain approved.
 - Last completed gate: final source validation, promoted decision evidence, cap-48 native authority,
   and the 48-pass/64-fail capacity envelope are complete. Built-Web capture is valid but red; public
   deployment remains intentionally blocked.
+- 2026-08-14 Phase 8 source progress: Tasks 8.1-8.5 are implemented. Focused upgrade/build/active,
+  secondary/renderer/balance, encounter/arrival/allocation, transition/continuity/result,
+  localization, capture-driver, visual-authority, headless import, and Web export checks pass. No
+  performance scenario ran. Task 8.6 still requires normal-scale Korean/English rendered inspection
+  and the final diff-scoped quality/commit gate.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance
   this pointer in the same edit.
 

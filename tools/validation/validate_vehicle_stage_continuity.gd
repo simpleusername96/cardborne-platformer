@@ -84,12 +84,19 @@ func _check_stage_one_continuation(run) -> void:
 	var shard_count: int = run.experience_runtime.shards.size()
 	run.stage_flow.state = StageFlow.State.COMPLETE
 	run.call("_complete_stage")
+	_expect(
+		run.current_stage_id == &"stage_1"
+			and run.completed_stage_reports.is_empty()
+			and run.stage_transition_runtime.active(),
+		"boss defeat schedules continuation without rebuilding the next stage in the lethal call stack"
+	)
+	_drain_stage_transition(run, 5)
 
 	_expect(
 		run.current_stage_id == &"stage_2"
 			and run.mode == run.RunMode.PLAYING
 			and run.stage_flow.state == StageFlow.State.ORDINARY,
-		"Stage 1 boss completion enters Stage 2 ordinary play in the same call stack"
+		"Stage 1 boss completion enters Stage 2 ordinary play through bounded steps"
 	)
 	_expect(
 		run.player_position.is_equal_approx(preserved_position)
@@ -196,13 +203,28 @@ func _check_stage_five_immediate_result(run) -> void:
 		&"kinetic", true, true, false
 	)
 	_expect(
+		run.mode == run.RunMode.PLAYING
+			and not run._ui.debug_surface_visible("result")
+			and run.stage_transition_runtime.active(),
+		"final boss lethal stack schedules rather than constructs the Result"
+	)
+	_drain_stage_transition(run, 4)
+	_expect(
 		run.mode == run.RunMode.RESULT
 			and run.stage_complete
 			and run.stage_flow.state == StageFlow.State.COMPLETE
 			and run._ui.debug_surface_visible("result")
 			and not run.reward_runtime.has_pending(),
-		"Stage 5 boss defeat opens the clear result immediately without a boss card gate"
+		"Stage 5 boss defeat opens one clear result after bounded report steps"
 	)
+
+
+func _drain_stage_transition(run, step_count: int) -> void:
+	if run.call("_flush_defeated_enemies") > 0:
+		run.enemy_grid.sync(run.enemies)
+	for _step in step_count:
+		run._physics_serial += 1
+		run.call("_advance_stage_transition")
 
 
 func _append_enemy(run, spec: Dictionary) -> EnemyState:

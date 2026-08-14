@@ -5,6 +5,7 @@ const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const OfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
 const PrimaryRules = preload("res://scripts/player/vehicle_primary_upgrade_rules.gd")
+const RewardRuntime = preload("res://scripts/rewards/vehicle_reward_runtime.gd")
 
 const RETIRED_IDS: Array[StringName] = [
 	&"accelerator_coil", &"aegis_cycle", &"concentrated_toxin", &"contagion",
@@ -157,8 +158,8 @@ func _validate_behavior_previews(catalog: Catalog) -> void:
 		{
 			"id":&"electric_field",
 			"keys":["UPGRADE_EFFECT_DPS", "UPGRADE_EFFECT_RADIUS"],
-			"current":[[8.0, 8.0, 11.5, 16.0], [120.0, 120.0, 140.0, 160.0]],
-			"next":[[8.0, 11.5, 16.0, 22.0], [120.0, 140.0, 160.0, 160.0]],
+			"current":[[8.0, 8.0, 11.5, 16.0], [240.0, 240.0, 280.0, 320.0]],
+			"next":[[8.0, 11.5, 16.0, 22.0], [240.0, 280.0, 320.0, 320.0]],
 			"show":[false, true, true, true],
 		},
 		{
@@ -307,6 +308,28 @@ func _validate_element_lock(catalog: Catalog) -> void:
 func _validate_active_lock(catalog: Catalog) -> void:
 	var build := RunBuild.new(catalog)
 	_expect(build.active_weapon_id() == &"emp", "EMP is the default active weapon")
+	var rewards := RewardRuntime.new()
+	var field_offer_serial := rewards.begin(&"stage_1", &"field_reward")
+	_expect(field_offer_serial == 0, "a field reward can precede the first level-up")
+	rewards.claim(&"stage_1")
+	var level_offer_serial := rewards.begin(&"stage_1", &"level_up")
+	_expect(
+		level_offer_serial == 1 and rewards.current_level_up_offer_index() == 0,
+		"reward runtime identifies the first level-up independently of global offer order"
+	)
+	var opening_offer := catalog.offer(
+		build, 0xCA4D, 0, &"level_up", level_offer_serial,
+		rewards.current_level_up_offer_index() == 0
+	)
+	var opening_active_ids: Array[StringName] = []
+	for definition in opening_offer:
+		if definition.category == &"activated":
+			opening_active_ids.append(definition.id)
+	_expect(
+		opening_offer.any(func(definition: VehicleUpgradeDefinition) -> bool: return definition.id == &"active_amplifier")
+			and opening_active_ids == [&"active_amplifier"],
+		"the first Stage 1 level-up deterministically offers exactly one unfinished EMP enhancement"
+	)
 	_expect(bool(build.apply(&"gravity_collapse").get("applied", false)), "one active kind can replace EMP")
 	_expect(
 		build.active_weapon_id() == &"black_hole"

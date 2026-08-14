@@ -1749,9 +1749,9 @@ func _validate_conditional_attack_footprints(
 	_expect(
 		disk_batch.multimesh.visible_instance_count == 1
 			and Vector2(disk_buffer[3], disk_buffer[7]) == storm_position
-			and is_equal_approx(disk_buffer[0], 140.0)
-			and is_equal_approx(disk_buffer[5], 140.0),
-		"storm warning shows its full radius-140 footprint on the first frame"
+			and is_equal_approx(disk_buffer[0], 280.0)
+			and is_equal_approx(disk_buffer[5], 280.0),
+		"storm warning shows its full radius-280 footprint on the first frame"
 	)
 
 	presentation["secondary"]["storm_pending"] = false
@@ -1766,7 +1766,7 @@ func _validate_conditional_attack_footprints(
 		disk_batch.multimesh.visible_instance_count == 1
 			and beam_batch.multimesh.visible_instance_count == 1
 			and is_equal_approx(
-				Vector2(beam_buffer[0], beam_buffer[4]).length(), 140.0
+				Vector2(beam_buffer[0], beam_buffer[4]).length(), 280.0
 			)
 			and is_equal_approx(
 				Vector2(beam_buffer[1], beam_buffer[5]).length(), 12.0
@@ -1848,7 +1848,7 @@ func _validate_player_directional_cues(
 		"absorbed barrier damage uses one direct player-state ring flash"
 	)
 	presentation["player_barrier_hit_remaining"] = 0.0
-	presentation["secondary"]["electric_field_radius"] = 140.0
+	presentation["secondary"]["electric_field_radius"] = 280.0
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), player_position, 0.0, true, "",
@@ -1885,8 +1885,8 @@ func _validate_player_directional_cues(
 			and Vector2(field_buffer[3], field_buffer[7]).is_equal_approx(
 				player_position
 			)
-			and is_equal_approx(float(field_buffer[0]), 140.0)
-			and is_equal_approx(float(field_buffer[5]), 140.0)
+			and is_equal_approx(float(field_buffer[0]), 280.0)
+			and is_equal_approx(float(field_buffer[5]), 280.0)
 			and is_equal_approx(field_mesh_bounds.position.x, -1.0)
 			and is_equal_approx(field_mesh_bounds.position.y, -1.0)
 			and is_equal_approx(field_mesh_bounds.size.x, 2.0)
@@ -1897,7 +1897,7 @@ func _validate_player_directional_cues(
 			and field_alpha_contract.values().all(func(value): return bool(value)),
 		"one below-actor Electric Field instance fills its exact radius without a perimeter"
 	)
-	for expected_radius in [120.0, 140.0, 160.0]:
+	for expected_radius in [240.0, 280.0, 320.0]:
 		presentation["secondary"]["electric_field_radius"] = expected_radius
 		renderer.sync(
 			no_enemies, no_projectiles, no_projectiles, no_shards, [],
@@ -1967,7 +1967,7 @@ func _player_presentation(
 		"orbiting_blade_level":1,
 		"secondary":{
 			"orbit_angle":0.37,
-			"orbit_radius":88.0,
+			"orbit_radius":112.0,
 			"blade_radius":Art.PLAYER_ORBIT_BLADE_HALF_SIZE,
 			"blade_count":2,
 			"mines":[],

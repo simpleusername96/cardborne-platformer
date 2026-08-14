@@ -1155,7 +1155,8 @@ func _check_combat_presentation_frame(run) -> void:
 		"combat presentation borrows synchronous live collections without duplication"
 	)
 	_expect(
-		secondary.size() == 14
+		secondary.size() == 15
+			and is_equal_approx(float(secondary["storm_radius"]), 280.0)
 			and not secondary.has("equipped")
 			and not secondary.has("seeker_cooldown")
 			and not secondary.has("storm_cooldown"),

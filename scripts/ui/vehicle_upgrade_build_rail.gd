@@ -274,6 +274,7 @@ func debug_contract() -> Dictionary:
 	var filled := 0
 	var focusable := 0
 	var artwork_ids: Array[StringName] = []
+	var action_glyph_ids: Array[StringName] = []
 	var heading_texts: Array[String] = []
 	if is_instance_valid(_sections):
 		for section in _sections.get_children():
@@ -287,7 +288,9 @@ func debug_contract() -> Dictionary:
 				if bool(child.call("is_filled")):
 					filled += 1
 					focusable += 1
-					artwork_ids.append(StringName(Dictionary(child.call("record")).get("artwork_asset_id", &"")))
+					var record := Dictionary(child.call("record"))
+					artwork_ids.append(StringName(record.get("artwork_asset_id", &"")))
+					action_glyph_ids.append(StringName(record.get("action_glyph_id", &"")))
 	var dimensions := _dimensions()
 	var grids_left_aligned := true
 	var largest_rendered_cell := Vector2.ZERO
@@ -311,6 +314,7 @@ func debug_contract() -> Dictionary:
 		"filled_count":filled,
 		"focusable_count":focusable,
 		"artwork_ids":artwork_ids,
+		"action_glyph_ids":action_glyph_ids,
 		"popover_visible":_popover.visible if is_instance_valid(_popover) else false,
 		"scroll_enabled":false,
 		"sections_minimum_height":_sections.get_combined_minimum_size().y if is_instance_valid(_sections) else 0.0,

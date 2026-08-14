@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 scope: Primary fire, damage and utility attributes, built-in and optional secondary weapons, and active weapons
 related:
   - ./vehicle_game_spec.md
@@ -64,11 +64,11 @@ must match.
 | Weapon | States | Damage | Cadence | Coverage or count |
 | --- | --- | --- | --- | --- |
 | Seeker | Base, L1-L3 | 25 / 28 / 32 / 38 per missile | 1.35 seconds | 2 / 3 / 4 / 4 missiles |
-| Electric Field | L1-L4 | 8 / 11.5 / 16 / 22 DPS | 0.25-second ticks | Radius 120 / 140 / 160 / 160 |
-| Orbiting Blades | L1-L4 | 14 / 18 / 22 / 28 per blade contact | 0.55-second target lockout | 2 / 3 / 4 / 4 blades; orbit radius 88 |
-| Drop Mines | L1-L4 | 48 / 60 / 72 / 88 per target | 3.2 / 2.8 / 2.4 / 2.4 seconds | 3 / 4 / 5 / 5 live mines; blast radius 96 / 108 / 120 / 120 |
+| Electric Field | L1-L4 | 8 / 11.5 / 16 / 22 DPS | 0.25-second ticks | Radius 240 / 280 / 320 / 320 |
+| Orbiting Blades | L1-L4 | 14 / 18 / 22 / 28 per blade contact | 0.55-second target lockout | 2 / 3 / 4 / 4 blades; orbit radius 112; angular speed 3.4 rad/s |
+| Drop Mines | L1-L4 | 48 / 60 / 72 / 88 per target | 3.2 / 2.8 / 2.4 / 2.4 seconds | 3 / 4 / 5 / 5 live mines; blast radius 192 / 216 / 240 / 240 |
 | Auto Laser | L1-L3 | 48 / 66 / 86 per target on the selected line | 0.9 seconds | Length 760; half-width 18 |
-| Storm Barrage | L1-L3 | 70 / 95 / 125 per target | 4.5 seconds | Radius 140; targets clusters 480-960 units away |
+| Storm Barrage | L1-L3 | 70 / 95 / 125 per target | 4.5 seconds | Radius 280; targets clusters 480-960 units away |
 
 ### Active weapons
 

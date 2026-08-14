@@ -26,14 +26,14 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const WORST_TEXT_TRIPLETS := {
 	"ko":[
+		{"id":&"active_coolant", "current_level":2},
+		{"id":&"active_amplifier", "current_level":2},
 		{"id":&"hull_integrity", "current_level":2},
-		{"id":&"cryo_slow", "current_level":2},
-		{"id":&"drop_mines", "current_level":3},
 	],
 	"en":[
+		{"id":&"active_coolant", "current_level":2},
+		{"id":&"active_amplifier", "current_level":2},
 		{"id":&"secondary_coolant", "current_level":2},
-		{"id":&"orbiting_blades", "current_level":3},
-		{"id":&"overflow_barrier", "current_level":2},
 	],
 }
 const DENSE_STAT_TRIPLET := [
@@ -70,21 +70,27 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	get_root().add_child(rail)
 	await _settle_ui()
 	var empty_build := RunBuild.new(catalog)
-	rail.set_snapshot(BuildSnapshotBuilder.build(empty_build, catalog, [], [], {}))
+	var empty_snapshot := BuildSnapshotBuilder.build(empty_build, catalog, [], [], {})
+	rail.set_snapshot(empty_snapshot)
 	var empty := rail.debug_contract()
 	_expect(
 		int(empty["columns"]) == 4
 			and int(empty["section_count"]) == 6
 			and Array(empty["category_capacities"]) == [2, 5, 2, 3, 5, 4]
 			and int(empty["cell_count"]) == 21
-			and int(empty["filled_count"]) == 0
-			and int(empty["focusable_count"]) == 0
+			and int(empty["filled_count"]) == 1
+			and int(empty["focusable_count"]) == 1
+			and Array(empty["action_glyph_ids"]) == [&"emp"]
 			and not bool(empty["scroll_enabled"])
 			and bool(empty["grids_left_aligned"])
 			and is_equal_approx(float(empty["cell_size"]), 24.0)
 			and is_equal_approx(float(empty["artwork_size"]), 18.0)
 			and Vector2(empty["largest_rendered_cell"]).x <= 24.0,
-		"empty build rail exposes 21 compact, left-aligned image-only slots without internal scrolling"
+		"empty build rail exposes the equipped EMP glyph plus 20 compact, left-aligned empty slots without internal scrolling"
+	)
+	_expect(
+		Array(empty_snapshot["upgrades"]).is_empty(),
+		"display-only EMP action does not become an acquired upgrade record"
 	)
 	var original_locale := TranslationServer.get_locale()
 	TranslationServer.set_locale("ko")
@@ -106,10 +112,41 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	var first := rail.debug_contract()
 	_expect(
 		int(first["cell_count"]) == 21
-			and int(first["filled_count"]) == 1
-			and int(first["focusable_count"]) == 1
-			and Array(first["artwork_ids"]).size() == 1,
-		"first acquisition fills its semantic position without changing category capacities"
+			and int(first["filled_count"]) == 2
+			and int(first["focusable_count"]) == 2
+			and Array(first["artwork_ids"]).has(&"upgrade/split_muzzle"),
+		"first acquisition packs after the equipped EMP without changing category capacities"
+	)
+	var packed_build := RunBuild.new(catalog)
+	packed_build.apply(&"lifesteal")
+	packed_build.apply(&"chassis_speed")
+	var packed_snapshot := BuildSnapshotBuilder.build(packed_build, catalog, [], [], {})
+	var chassis_slots: Array = Dictionary(Array(packed_snapshot["categories"])[4])["slots"]
+	_expect(
+		StringName(Dictionary(chassis_slots[0])["record"].get("id", &"")) == &"lifesteal"
+			and StringName(Dictionary(chassis_slots[1])["record"].get("id", &"")) == &"chassis_speed"
+			and Dictionary(Dictionary(chassis_slots[2]).get("record", {})).is_empty(),
+		"each category packs acquired records from the left in acquisition order"
+	)
+	var replacement_build := RunBuild.new(catalog)
+	replacement_build.apply(&"gravity_collapse")
+	replacement_build.apply(&"active_coolant")
+	var replacement_snapshot := BuildSnapshotBuilder.build(replacement_build, catalog, [], [], {})
+	var active_slots: Array = Dictionary(Array(replacement_snapshot["categories"])[3])["slots"]
+	_expect(
+		StringName(Dictionary(active_slots[0])["record"].get("action_glyph_id", &"")) == &"black_hole"
+			and StringName(Dictionary(active_slots[1])["record"].get("id", &"")) == &"active_coolant"
+			and Dictionary(Dictionary(active_slots[2]).get("record", {})).is_empty(),
+		"a replacement action glyph remains first and its enhancements pack immediately after it"
+	)
+	var flat_has_replacement := false
+	for flat_record_variant in Array(replacement_snapshot["upgrades"]):
+		var flat_record := Dictionary(flat_record_variant)
+		if StringName(flat_record.get("id", &"")) == &"gravity_collapse":
+			flat_has_replacement = true
+	_expect(
+		flat_has_replacement,
+		"display-only replacement glyph does not remove its acquired card from flat summaries"
 	)
 	_expect(rail.debug_open_first_preview(), "filled build cell opens the shared detail popover")
 	await _settle_ui()

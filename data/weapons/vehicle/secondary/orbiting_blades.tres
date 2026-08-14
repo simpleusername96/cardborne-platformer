@@ -10,5 +10,5 @@ name_key = "SECONDARY_ORBITING_BLADES_NAME"
 description_key = "SECONDARY_ORBITING_BLADES_DESC"
 behavior = &"orbit"
 values_by_level = Array[float]([14.0, 18.0, 22.0, 28.0])
-auxiliary_by_level = Array[float]([88.0, 88.0, 88.0, 88.0])
+auxiliary_by_level = Array[float]([112.0, 112.0, 112.0, 112.0])
 cap_by_level = Array[int]([2, 3, 4, 4])

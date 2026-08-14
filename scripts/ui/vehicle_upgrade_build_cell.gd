@@ -11,6 +11,9 @@ signal preview_closed(anchor: Control)
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
+const UiGlyphCatalog = preload(
+	"res://scripts/presentation/components/vehicle_ui_glyph_catalog.gd"
+)
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 var _record: Dictionary = {}
@@ -18,6 +21,7 @@ var _button: Button
 var _artwork: TextureRect
 var _normal_frame: StyleBoxFlat
 var _focused_frame: StyleBoxFlat
+var _action_glyph_id: StringName = &""
 
 
 func _ready() -> void:
@@ -30,6 +34,7 @@ func set_record(record: Dictionary, cell_size: float, artwork_size: float) -> vo
 		return
 	custom_minimum_size = Vector2(cell_size, cell_size)
 	var filled := not _record.is_empty()
+	_action_glyph_id = StringName(_record.get("action_glyph_id", &""))
 	visible = true
 	if not filled:
 		theme_type_variation = &"PreviewFrame"
@@ -37,15 +42,18 @@ func set_record(record: Dictionary, cell_size: float, artwork_size: float) -> vo
 		_button.disabled = true
 		_button.accessibility_name = ""
 		_artwork.texture = null
+		queue_redraw()
 		return
 	theme_type_variation = &"PreviewFrame"
 	_button.focus_mode = Control.FOCUS_ALL
 	_button.disabled = false
 	_button.accessibility_name = tr(String(_record.get("title_key", "")))
 	_artwork.custom_minimum_size = Vector2(artwork_size, artwork_size)
-	_artwork.texture = SemanticAssets.texture(
-		StringName(_record.get("artwork_asset_id", &""))
+	_artwork.texture = (
+		null if not _action_glyph_id.is_empty()
+		else SemanticAssets.texture(StringName(_record.get("artwork_asset_id", &"")))
 	)
+	queue_redraw()
 
 
 func record() -> Dictionary:
@@ -95,6 +103,23 @@ func _make_frame(focused: bool) -> StyleBoxFlat:
 	frame.set_border_width_all(border_width)
 	frame.set_content_margin_all(1.0)
 	return frame
+
+
+func _draw() -> void:
+	if _action_glyph_id.is_empty():
+		return
+	var glyph_scale := minf(size.x, size.y) * 0.34
+	UiGlyphCatalog.draw_action_glyph(
+		self,
+		_action_glyph_id,
+		size * 0.5,
+		glyph_scale,
+		{
+			&"primary":Art.SYSTEM,
+			&"secondary":Color(Art.SYSTEM, 0.72),
+			&"highlight":Art.IVORY_BRIGHT,
+		}
+	)
 
 
 func _request_preview() -> void:

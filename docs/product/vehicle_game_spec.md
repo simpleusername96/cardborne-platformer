@@ -510,8 +510,8 @@ does not produce a transient message.
   extended attack sequences preserve existing object counts: Split Muzzle ends
   at three projectiles and `180%` volley damage; Piercing Rounds ends at four
   additional penetrations; Homing Missiles starts at two missiles and ends at four missiles and `38`
-  damage; Electric Field ends at `22 DPS` and radius `160`; Orbiting Blades ends
-  at four blades and `28` damage; Drop Mines ends at `88` damage, `2.4 s`
+  damage; Electric Field ends at `22 DPS` and radius `320`; Orbiting Blades ends
+  at four blades, `28` damage, and orbit radius `112`; Drop Mines ends at `88` damage, `2.4 s`
   interval, and five live mines; Auto Laser ends at `86` damage; Thermal Burst
   ends at `11` damage and radius `96`; Bio Toxin ends at `5.5 DPS` per stack for
   seven seconds. Optional-secondary, attribute, and active-weapon unlocks show
@@ -555,13 +555,13 @@ does not produce a transient message.
 | --- | --- |
 | Homing Missiles | Periodic targeted projectiles; upgrades increase count and damage |
 | Electric Field | Damage over time near the ship |
-| Orbiting Blades | Close orbiting contact damage at radius 88 |
+| Orbiting Blades | Fast orbiting contact damage at radius 112 |
 | Drop Mines | One immediate mine, then timed mines behind movement or the stopped hull |
 | Auto Laser | A cover-clipped beam toward the direction that intersects the most enemies |
 | Storm Barrage | A warned area strike on a distant threat cluster |
 
 Drop Mine is distinct from Thermal Burst. At levels 1–4 it applies one
-`48/60/72/88` area hit at radius `96/108/120/120` after proximity or timeout, then
+`48/60/72/88` area hit at radius `192/216/240/240` after proximity or timeout, then
 publishes one origin receipt only after damage resolution. Its cosmetic has a
 `0.18 s` lifetime and an eight-instance subcap inside the unchanged 96-effect
 store. When saturated, it may recycle only another Drop Mine cosmetic; missing
@@ -572,7 +572,7 @@ up to 24 nearby candidates against that same bounded set and picks the direction
 that intersects the most targets. It deals `48/66/86`, uses a 760-long corridor
 with half-width 18, and stops at the first tactical wall. Storm Barrage checks
 threats from 480 to 960 pixels every `4.5 s`, warns for `0.55 s`, then deals
-`70/95/125` inside radius 140 to at most twelve eligible targets. It can damage
+`70/95/125` inside radius 280 to at most twelve eligible targets. It can damage
 ordinary enemies and an Anomaly Device.
 
 Secondary Cooldown applies one shared `0.90/0.82/0.75` cooldown multiplier to
@@ -709,8 +709,8 @@ no credit or stored charge.
   command-magenta notched marker independent of stage. All roles share the existing
   marker capacity, borrowed buffers, explored geometry, fog, and one retained
   minimap mesh. The Anomaly Device uses the `1.20` silhouette scale.
-- Electric Field displays its complete selected damage radius of 120, 140, or
-  160 world units as one ground-attached arc-purple area below actors. The area
+- Electric Field displays its complete selected damage radius of 240, 280, or
+  320 world units as one ground-attached arc-purple area below actors. The area
   uses a restrained fill and at most two broad low-contrast internal planes. It
   has no perimeter, is not a shield, and owns no collision or damage query. Gameplay
   retains the 0.25-second tick, line-of-sight rule, and enemy-body overlap test.
@@ -723,7 +723,7 @@ no credit or stored charge.
   timing and never performs collision or damage queries.
 - The exact area presentation contract is:
   - Electric Field follows the player for its complete active interval at radius
-    `120/140/160` with a full arc-purple disk and at most two low-contrast internal
+    `240/280/320` with a full arc-purple disk and at most two low-contrast internal
     planes, all clipped inside the live damage radius and with no perimeter.
   - EMP charge follows the player and previews a full inner `285` damage/stun disk
     plus a sparse segmented `285–325` hostile-projectile-clear utility fringe. On
@@ -731,7 +731,7 @@ no credit or stored charge.
     size for the `0.55 s` fade. Neither standard nor reduced motion uses an
     outward-moving damage front or shape-only image accent.
   - Thermal Burst shows a full radius `72/84/96` disk from its direct-hit center.
-    Drop Mine shows a full radius `96/108/120` disk at the mine origin. Explosive
+    Drop Mine shows a full radius `192/216/240` disk at the mine origin. Explosive
     Seeker shows its full `95` radius at the impact point. Each complete footprint
     uses one synchronized `0.18 s` attack/hold/fade envelope with no independently
     shrinking or disappearing middle shape.
@@ -804,13 +804,16 @@ no credit or stored charge.
   values without a false zero-to-value comparison; later levels show the real
   current-to-next values.
 - The current-build rail has six catalog-ordered category grids with fixed
-  capacities `2/5/2/3/5/4` and at most four columns per grid. An empty run shows
-  all 21 outlined, non-focusable semantic positions. Every card has a fixed
-  position except optional secondary weapons, whose `optional_0/1` positions
-  retain their acquisition order. Another level updates the same cell. Filled
-  cells alone can focus and open one frozen detail popover. Upgrade and Result
-  consume the same grouped snapshot and rail. These cells summarize the build
-  and never create a gameplay equipment limit.
+  capacities `2/5/2/3/5/4` and at most four columns per grid. The equipped active
+  weapon always occupies the first Active cell: EMP uses its shared action glyph,
+  and a replacement uses its own shared action glyph. Every acquired card then
+  packs left-to-right within its category in first-acquisition order; another level
+  updates that same record. Empty cells never precede a filled cell. Filled cells
+  alone can focus and open one frozen detail popover. Upgrade and Result consume
+  the same grouped snapshot and rail. These cells summarize the build and never
+  create a gameplay equipment limit. The first Stage 1 level-up while EMP remains
+  equipped includes exactly one deterministic unfinished EMP enhancement; later
+  offers keep their seeded offer rules.
 - Each offer row follows one horizontal information order: semantic artwork;
   category, upgrade name, one short summary, and one or two real effect rows;
   then `Lv.current → next`. Korean summaries target

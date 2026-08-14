@@ -300,7 +300,7 @@ collision.
   sparse segmented utility fringe로 구분한다. 둘은 같은 release frame에 완전한
   크기로 나타나 함께 사라지며 outward damage propagation을 암시하지 않는다.
   Thermal Burst는 direct primary hit 위치의 exact splash radius를 하나의 thermal
-  disk로, Drop Mine은 mine origin의 exact radius `96/108/120`을 하나의
+  disk로, Drop Mine은 mine origin의 exact radius `192/216/240`을 하나의
   player-reward disk로, Explosive Seeker는 hit 위치의 exact `95` radius를 하나의
   kinetic disk로 `0.18s` 동안 표시한다. 세 effect는 footprint 전체가 같은
   attack/hold/fade envelope를 사용한다. 별도 raster, texture, material, node 또는
@@ -501,7 +501,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   structure-only와 EMP damage에는 생성하지 않는다. live Thermal impact는 최대
   24개이고 전체 effect store 96 capacity와 EMP 우선권을 유지한다.
 - Electric Field는 player actor 아래 한 retained code-native batch로 실제 damage
-  radius `120/140/160` 전체를 표시한다. arc-purple fill alpha `0.18`, broken
+  radius `240/280/320` 전체를 표시한다. arc-purple fill alpha `0.18`, broken
   perimeter alpha `0.30`, 최대 네 broad internal plane alpha `0.06`만 사용하고 모든
   geometry는 radius 안에 둔다. Mint barrier/enemy shield와 색·ground attachment·
   silhouette가 다르며 hollow donut, body-hugging bubble, glow, particle spray,
@@ -515,14 +515,14 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   즉시 적용되므로 standard/reduced motion 모두 radius interpolation이나 바깥으로
   퍼지는 파면을 사용하지 않는다. 여러 ring, spark, dot, noise와 frame-by-frame
   sprite sequence를 추가하지 않는다.
-- Drop Mine detonation은 mine origin과 gameplay radius `96/108/120/120`에 alpha `0.16`
+- Drop Mine detonation은 mine origin과 gameplay radius `192/216/240/240`에 alpha `0.16`
   full player-reward disk를 첫 frame부터 최종 크기로 표시하고 `0.18s` 동안 fade한다.
   별도 raster accent는 없다.
 - Dash Afterburn은 대시 시작점부터 엄폐물에 의해 줄어든 실제 종료점까지 전체 선분을
   반너비 `72`의 filled capsule 하나로 표시한다. 첫 frame부터 전체 판정 크기이며 장판
   수명 `3s`, 동시 최대 2개를 그대로 따른다. Auto Laser는 선택된 최다 관통 방향에서
   실제 엄폐물 절단 지점까지 반너비 `18`인 filled corridor 하나로 `0.14s` 표시한다. Storm
-  Barrage는 impact 전 `0.55s` 동안 반지름 `140`의 filled warning disk와 boundary 하나를
+  Barrage는 impact 전 `0.55s` 동안 반지름 `280`의 filled warning disk와 boundary 하나를
   사용하고, impact 뒤 radius를 확장하지 않는다. 세 표현은 반복 ring, particle spray,
   새 raster asset이나 별도 collision truth를 만들지 않는다.
 - Black Hole, Shockwave, Cross Beam은 기존 retained disk/ring/beam batch에 code-native
@@ -816,7 +816,7 @@ Web export만으로 interactive built-Web smoke나 release performance를
   contour. Damage never swaps its identity; destruction alone starts the full-area
   effect, while collision, health, footprint, and duration remain code-owned.
 - Drop Mine gameplay receipts remain fixed-capacity effect-store state. The shared
-  code-native disk batch displays radius `96/108/120`; standard and reduced motion both
+  code-native disk batch displays radius `192/216/240`; standard and reduced motion both
   start at final radius and only fade, with no dedicated texture or batch.
 - Every non-beam projectile resolves one of the three exclusive player-primary,
   player-seeker, or hostile-bolt identities; runtime owns scale, rotation,

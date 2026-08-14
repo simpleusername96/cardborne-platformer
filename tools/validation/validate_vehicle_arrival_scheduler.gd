@@ -27,6 +27,7 @@ func _initialize() -> void:
 	_validate_cued_window_never_reblocks(stage_id, packet, tactical)
 	_validate_quota_seal_preserves_cued_window(stage_id, packet, tactical)
 	_validate_quota_seal_cues_nearest_reserve_immediately(stage_id, packet, tactical)
+	_validate_invisible_boss_pressure_bypasses_low_watermark(stage_id, packet, tactical)
 	_validate_engagement_capacity_fallback(stage_id, packet, tactical)
 	_validate_materialization_failure_accounting(stage_id, packet, tactical)
 	_validate_continuation_lead(stage_id, packet, tactical)
@@ -151,6 +152,7 @@ func _validate_quota_seal_preserves_cued_window(stage_id: StringName, packet: Di
 
 func _validate_quota_seal_cues_nearest_reserve_immediately(stage_id: StringName, packet: Dictionary, tactical) -> void:
 	var runtime := _runtime(stage_id, [packet], tactical)
+	runtime.set_pressure_observation_enabled(true)
 	runtime.seal_for_quota()
 	var result := runtime.tick(0.0, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 	var cues: Array = result["cues"]
@@ -161,6 +163,24 @@ func _validate_quota_seal_cues_nearest_reserve_immediately(stage_id: StringName,
 	_expect(
 		StringName(snapshot.get("scheduler_gap_reason", &"")) == &"awaiting_birth",
 		"diagnostic gap reason identifies the cue-to-birth lead without changing admission"
+	)
+
+
+func _validate_invisible_boss_pressure_bypasses_low_watermark(
+	stage_id: StringName,
+	packet: Dictionary,
+	tactical
+) -> void:
+	var runtime := _runtime(stage_id, [packet], tactical)
+	runtime.current_beat = 2
+	runtime.seal_for_quota()
+	var result := runtime.tick(
+		0.0, 9, [], tactical.geometry_snapshot.player_start, _visible(tactical),
+		[], 0, Vector2.ZERO, false
+	)
+	_expect(
+		Array(result["cues"]).size() == 1,
+		"an empty boss viewport admits nearest reserve even above the ordinary low watermark"
 	)
 
 

@@ -13,7 +13,8 @@ static func build(
 	secondaries: Array[Dictionary],
 	run_state: Dictionary
 ) -> Dictionary:
-	var records_by_slot := {}
+	var records_by_category := {}
+	var acquired_records_by_category := {}
 	var upgrade_ids: Array[StringName] = []
 	for upgrade_id in run_build.acquisition_order:
 		if run_build.has(upgrade_id) and not upgrade_ids.has(upgrade_id):
@@ -52,20 +53,34 @@ static func build(
 			"max_level":definition.max_level,
 			"effect_rows":current_effect_rows,
 		}
-		var slot_key := catalog.category_slot_key(definition, run_build)
-		if not slot_key.is_empty():
-			records_by_slot["%s/%s" % [definition.category, slot_key]] = record
+		var acquired_records: Array = acquired_records_by_category.get(
+			definition.category, []
+		)
+		acquired_records.append(record)
+		acquired_records_by_category[definition.category] = acquired_records
+		if definition.category == &"activated" and definition.active_slot_kind == &"kind":
+			# The equipped action glyph replaces this card only in the grouped rail.
+			# The flat acquired-upgrade projection still retains the actual card.
+			continue
+		var category_records: Array = records_by_category.get(definition.category, [])
+		category_records.append(record)
+		records_by_category[definition.category] = category_records
 	var categories: Array[Dictionary] = []
 	var upgrades: Array[Dictionary] = []
 	for descriptor in catalog.category_descriptors():
 		var category_id := StringName(descriptor["id"])
+		for acquired_record in Array(acquired_records_by_category.get(category_id, [])):
+			upgrades.append(Dictionary(acquired_record).duplicate(true))
+		var category_records: Array = records_by_category.get(category_id, [])
+		if category_id == &"activated":
+			category_records.push_front(_equipped_active_record(run_build))
 		var slots: Array[Dictionary] = []
-		for slot_key_variant in Array(descriptor["slot_keys"]):
-			var slot_key := StringName(slot_key_variant)
-			var record := Dictionary(records_by_slot.get("%s/%s" % [category_id, slot_key], {})).duplicate(true)
-			slots.append({"slot_key":slot_key, "record":record})
-			if not record.is_empty():
-				upgrades.append(record.duplicate(true))
+		for slot_index in int(descriptor["capacity"]):
+			var record := (
+				Dictionary(category_records[slot_index]).duplicate(true)
+				if slot_index < category_records.size() else {}
+			)
+			slots.append({"slot_key":StringName("slot_%d" % slot_index), "record":record})
 		categories.append({
 			"id":category_id,
 			"heading_key":String(descriptor["heading_key"]),
@@ -80,4 +95,31 @@ static func build(
 		"upgrades":upgrades,
 		"categories":categories,
 		"run_state":run_state.duplicate(true),
+	}
+
+
+static func _equipped_active_record(run_build: VehicleRunBuild) -> Dictionary:
+	var active_weapon_id := run_build.active_weapon_id()
+	var title_key := &"UPGRADE_ACTIVE_EMP_TITLE"
+	var description_key := &"UPGRADE_ACTIVE_EMP_DESC"
+	var level := 1
+	var max_level := 1
+	var active_card_id := run_build.active_weapon_card_id()
+	if not active_card_id.is_empty():
+		var definition := run_build.catalog.get_definition(active_card_id)
+		if definition != null:
+			title_key = definition.title_key
+			description_key = definition.description_key
+			level = run_build.level_of(active_card_id)
+			max_level = definition.max_level
+	return {
+		"id":active_weapon_id,
+		"title_key":title_key,
+		"description_key":description_key,
+		"category":&"activated",
+		"action_glyph_id":active_weapon_id,
+		"display_only":true,
+		"level":level,
+		"max_level":max_level,
+		"effect_rows":[],
 	}
