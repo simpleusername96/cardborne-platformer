@@ -6,6 +6,7 @@ extends VBoxContainer
 
 signal close_requested
 signal guide_requested
+signal diagnostic_export_requested
 
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
@@ -45,6 +46,7 @@ var _binding_buttons: Dictionary = {}
 var _master_slider: HSlider
 var _sfx_slider: HSlider
 var _reduced_motion_toggle: CheckButton
+var _diagnostic_export_button: Button
 var _language_buttons: Dictionary = {}
 var _status_label: Label
 var _build_summary: VehicleBuildSummaryPanel
@@ -125,6 +127,7 @@ func debug_contract() -> Dictionary:
 		).size(),
 		"capturing":is_capturing_binding(),
 		"reduced_motion_control":is_instance_valid(_reduced_motion_toggle) and _reduced_motion_toggle.custom_minimum_size.y >= 44.0,
+		"diagnostic_export_visible":is_instance_valid(_diagnostic_export_button) and _diagnostic_export_button.visible,
 		"difficulty_controls":0,
 		"difficulty_copy_visible":false,
 		"ship_status":_build_summary.debug_contract() if is_instance_valid(_build_summary) else {},
@@ -275,6 +278,11 @@ func _build_gameplay_page() -> void:
 	_reduced_motion_toggle.focus_mode = Control.FOCUS_ALL
 	_reduced_motion_toggle.toggled.connect(_on_reduced_motion_toggled)
 	page.add_child(_control_row("SETTINGS_REDUCED_MOTION", _reduced_motion_toggle))
+	_diagnostic_export_button = Factory.command_button("DIAGNOSTICS_EXPORT", Factory.COMMAND_SECONDARY)
+	_diagnostic_export_button.custom_minimum_size = Vector2(260.0, 44.0)
+	_diagnostic_export_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_diagnostic_export_button.pressed.connect(func() -> void: diagnostic_export_requested.emit())
+	page.add_child(_diagnostic_export_button)
 
 
 func _build_language_page() -> void:
@@ -453,6 +461,8 @@ func _refresh_localized_content() -> void:
 	for category_id in CATEGORY_IDS:
 		(_category_buttons[category_id] as Button).text = tr(String(CATEGORY_KEYS[category_id]))
 	_reduced_motion_toggle.accessibility_name = tr("SETTINGS_REDUCED_MOTION")
+	_diagnostic_export_button.text = tr("DIAGNOSTICS_EXPORT")
+	_diagnostic_export_button.accessibility_name = tr("DIAGNOSTICS_EXPORT")
 	var settings := _settings_store()
 	if settings != null:
 		for locale in _language_buttons:
@@ -460,3 +470,8 @@ func _refresh_localized_content() -> void:
 			var selected: bool = String(locale) == String(settings.ui_locale)
 			button.button_pressed = selected
 			button.theme_type_variation = &"SelectedSelectableButton" if selected else &"SelectableButton"
+
+
+func set_diagnostic_status(message_key: String) -> void:
+	_status_label.text = tr(message_key)
+	_status_label.visible = not message_key.is_empty()

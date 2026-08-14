@@ -27,15 +27,78 @@ func _initialize() -> void:
 	_expect(Array(bundle.get("events", [])).size() == 2, "bounded lifecycle events retain start and declared event")
 	_expect(Array(bundle.get("one_hz", [])).size() == 1, "frame sampling produces bounded one-hertz summary")
 	_expect(recorder.finish("second_finish").is_empty(), "completed recorder cannot leak state into a second run")
+	var checkpoint_recorder := SignalRecorder.new()
+	_expect(checkpoint_recorder.begin("checkpoint-session", BuildIdentity.dev_unknown()), "editor diagnostic session starts with dev_unknown identity")
+	var checkpoint := checkpoint_recorder.checkpoint("settled_pause")
+	_expect(not checkpoint.is_empty() and checkpoint_recorder.is_active() and not checkpoint_recorder.finish("normal_exit").is_empty(), "pause checkpoint does not finish the live recorder")
+	_expect(int(checkpoint.get("started_unix", 0)) > 0 and int(checkpoint.get("saved_unix", 0)) > 0, "bundle records comparable local lifecycle timestamps")
 	var redacted := Exporter.make_redacted_bundle({
 		"registry_version": 1, "build_identity": identity, "completed_reason": "done",
-		"events": [{"session_id": "private", "kind": "stage_started", "fields": {"route": "private", "stage_id": "stage_1", "access_token": "private"}}],
+		"events": [{"session_id": "private", "kind": "stage_started", "fields": {"route": "private", "stage_id": "stage_1", "access_token": "private", "deviceId": "private", "rawPath": "private", "userAgent": "private"}}],
 		"one_hz": [],
 	})
 	var event := Dictionary(Array(redacted.get("events", []))[0])
-	_expect(not event.has("session_id") and not Dictionary(event.get("fields", {})).has("route") and not Dictionary(event.get("fields", {})).has("access_token"), "export redacts stable IDs, routes, and secret-like keys")
+	var redacted_fields := Dictionary(event.get("fields", {}))
+	_expect(
+		not event.has("session_id")
+		and not redacted_fields.has("route")
+		and not redacted_fields.has("access_token")
+		and not redacted_fields.has("deviceId")
+		and not redacted_fields.has("rawPath")
+		and not redacted_fields.has("userAgent"),
+		"export redacts stable IDs, routes, paths, browser fields, and secret-like keys"
+	)
 	_expect(DiagnosticStore.MAX_SESSIONS == 20 and DiagnosticStore.MAX_BYTES == 25 * 1024 * 1024 and DiagnosticStore.MAX_AGE_SECONDS == 14 * 24 * 60 * 60, "store retention contract remains 20 sessions / 25 MiB / 14 days")
+	_validate_store_and_native_export(bundle)
 	_finish()
+
+
+func _validate_store_and_native_export(source_bundle: Dictionary) -> void:
+	const TEST_DIRECTORY := "user://diagnostics-validation"
+	var directory := ProjectSettings.globalize_path(TEST_DIRECTORY)
+	_clear_test_directory(directory)
+	_expect(DirAccess.make_dir_recursive_absolute(directory) == OK, "isolated diagnostic test directory is available")
+	var corrupt := FileAccess.open(directory.path_join("corrupt.json"), FileAccess.WRITE)
+	_expect(corrupt != null, "corrupt fixture can be written")
+	if corrupt != null:
+		corrupt.store_string("not-json")
+		corrupt.close()
+	for index in 2:
+		var retained := source_bundle.duplicate(true)
+		retained["session_id"] = "store-%02d" % index
+		retained["saved_unix"] = index + 1
+		_expect(
+			DiagnosticStore.persist_completed(retained, TEST_DIRECTORY) == OK,
+			"isolated store accepts retained session %d" % index
+		)
+	DiagnosticStore._evict(
+		directory, 1, DiagnosticStore.MAX_BYTES, DiagnosticStore.MAX_AGE_SECONDS
+	)
+	var loaded := DiagnosticStore.load_completed(TEST_DIRECTORY)
+	_expect(
+		loaded.size() == 1
+		and String(loaded.front().get("session_id", "")) == "store-01",
+		"store deterministically evicts oldest-first and loads newest order"
+	)
+	_expect(
+		FileAccess.file_exists(directory.path_join("corrupt.json.quarantine")),
+		"corrupt store records are quarantined without blocking later sessions"
+	)
+	var export_path := directory.path_join("explicit-export.json")
+	_expect(
+		Exporter.write_native(loaded.back(), export_path) == OK
+		and FileAccess.file_exists(export_path),
+		"native explicit export writes a redacted JSON bundle"
+	)
+	_clear_test_directory(directory)
+
+
+func _clear_test_directory(directory: String) -> void:
+	if not DirAccess.dir_exists_absolute(directory):
+		return
+	for name in DirAccess.get_files_at(directory):
+		DirAccess.remove_absolute(directory.path_join(name))
+	DirAccess.remove_absolute(directory)
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -4,6 +4,7 @@ extends VBoxContainer
 ## Terminal report surface. Gameplay sends a frozen aggregate; this class only presents it.
 
 signal deployment_requested
+signal diagnostic_export_requested
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
@@ -20,6 +21,8 @@ var _counters: Label
 var _build_heading: Label
 var _reward: Label
 var _deployment: Button
+var _diagnostic_export: Button
+var _diagnostic_status: Label
 var _snapshot: Dictionary = {}
 var _force_compact := false
 
@@ -70,6 +73,8 @@ func refresh_localized_content() -> void:
 	]
 	_build_heading.text = tr("RESULT_BUILD_LOADOUT")
 	_reward.text = "%s\n%s" % [tr(String(_snapshot.get("permanent_reward_key", "RESULT_RELAY_MODULE"))), tr(String(_snapshot.get("permanent_reward_detail_key", "RESULT_ROUTE_CONTINUES")))]
+	_diagnostic_export.text = tr("DIAGNOSTICS_EXPORT")
+	_diagnostic_export.accessibility_name = tr("DIAGNOSTICS_EXPORT")
 	_deployment.text = tr("RESULT_DEPLOYMENT")
 	_apply_responsive_layout()
 
@@ -123,6 +128,15 @@ func _build() -> void:
 	_reward = Factory.label("", 16, Art.MINT_SOFT)
 	_reward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(_reward)
+	_diagnostic_export = Factory.command_button(tr("DIAGNOSTICS_EXPORT"), Factory.COMMAND_SECONDARY)
+	_diagnostic_export.custom_minimum_size = Vector2(260.0, 44.0)
+	_diagnostic_export.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_diagnostic_export.pressed.connect(func() -> void: diagnostic_export_requested.emit())
+	content.add_child(_diagnostic_export)
+	_diagnostic_status = Factory.label("", 14, Art.MINT_SOFT)
+	_diagnostic_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_diagnostic_status.visible = false
+	content.add_child(_diagnostic_status)
 	var actions := CenterContainer.new()
 	add_child(actions)
 	_deployment = Factory.command_button("", Factory.COMMAND_PRIMARY)
@@ -175,7 +189,13 @@ func debug_contract() -> Dictionary:
 		"primary_action": _deployment.text,
 		"primary_variation": _deployment.theme_type_variation,
 		"initial_focus_is_deployment": _deployment.has_focus(),
+		"diagnostic_export_visible":is_instance_valid(_diagnostic_export) and _diagnostic_export.visible,
 	}
+
+
+func set_diagnostic_status(message_key: String) -> void:
+	_diagnostic_status.text = tr(message_key)
+	_diagnostic_status.visible = not message_key.is_empty()
 
 
 func _focusable_button_count() -> int:

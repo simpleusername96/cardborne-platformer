@@ -13,6 +13,8 @@ static func make_redacted_bundle(bundle: Dictionary) -> Dictionary:
 		"registry_version": int(bundle.get("registry_version", 0)),
 		"build_identity": _redact_value(bundle.get("build_identity", {})),
 		"summary": {"completed_reason": String(bundle.get("completed_reason", "")),
+			"started_unix": int(bundle.get("started_unix", 0)),
+			"saved_unix": int(bundle.get("saved_unix", 0)),
 			"event_count": Array(bundle.get("events", [])).size(), "one_hz_count": Array(bundle.get("one_hz", [])).size()},
 		"events": _redact_value(bundle.get("events", [])), "one_hz": _redact_value(bundle.get("one_hz", []))}
 
@@ -43,8 +45,16 @@ static func _redact_value(value: Variant) -> Variant:
 
 
 static func _key_is_forbidden(key: String) -> bool:
-	var normalized := key.to_lower()
+	var normalized := key.to_lower().replace("_", "").replace("-", "")
 	for forbidden in FORBIDDEN_KEYS:
-		if normalized == forbidden or normalized.contains("_%s" % forbidden):
+		var forbidden_normalized := forbidden.replace("_", "")
+		if normalized == forbidden_normalized:
 			return true
+		if (
+			forbidden_normalized != "ip"
+			and normalized.ends_with(forbidden_normalized)
+		):
+			return true
+	if normalized in ["ipaddress", "clientip", "remoteip"]:
+		return true
 	return false

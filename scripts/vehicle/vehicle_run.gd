@@ -103,6 +103,16 @@ const StageReportBuilder = preload("res://scripts/combat/vehicle_stage_report_bu
 const RunResultBuilder = preload("res://scripts/combat/vehicle_run_result_builder.gd")
 const CaptureDriver = preload("res://scripts/vehicle/vehicle_run_capture_driver.gd")
 const CaptureGateway = preload("res://scripts/vehicle/vehicle_run_capture_gateway.gd")
+const BuildIdentity = preload("res://scripts/diagnostics/vehicle_build_identity.gd")
+const SessionSignalRecorder = preload(
+	"res://scripts/diagnostics/vehicle_session_signal_recorder.gd"
+)
+const SessionDiagnosticStore = preload(
+	"res://scripts/diagnostics/vehicle_session_diagnostic_store.gd"
+)
+const DiagnosticExporter = preload(
+	"res://scripts/diagnostics/vehicle_diagnostic_exporter.gd"
+)
 
 enum RunMode {
 	DEPLOYMENT,
@@ -373,6 +383,8 @@ var _engagement_telemetry: VehicleEngagementTelemetry
 var _manual_performance_pressure: Dictionary = {}
 var _manual_performance_context: Dictionary = {}
 var _pending_stage_report: Dictionary = {}
+var _session_diagnostics := SessionSignalRecorder.new()
+var _latest_session_diagnostic: Dictionary = {}
 
 
 func _ready() -> void:
@@ -476,6 +488,7 @@ func _initialize_hud_staging() -> void:
 
 
 func _exit_tree() -> void:
+	_finish_session_diagnostics("normal_exit")
 	_finish_manual_performance_trace("normal_exit")
 	if _capture_driver != null and _capture_gateway != null:
 		_capture_driver.restore_on_exit(_capture_gateway)
@@ -708,6 +721,8 @@ func _process(delta: float) -> void:
 			_manual_performance_context,
 			active_simulation
 		)
+	if _run_clock_active():
+		_session_diagnostics.advance_frame(delta, delta * 1000.0)
 
 
 func _build_camera() -> void:
@@ -754,6 +769,79 @@ func _build_ui() -> void:
 	_ui.resume_requested.connect(_resume_run)
 	_ui.deployment_requested.connect(_return_to_deployment)
 	_ui.stage_report_continued.connect(_continue_stage_report)
+	_ui.diagnostic_export_requested.connect(_export_session_diagnostics)
+
+
+func _begin_session_diagnostics() -> void:
+	var session_id := "session-%d-%d-%d" % [
+		int(Time.get_unix_time_from_system()),
+		Time.get_ticks_usec(),
+		run_index,
+	]
+	if not _session_diagnostics.begin(
+		session_id, BuildIdentity.evidence_identity()
+	):
+		return
+	_session_diagnostics.emit_event("stage_started", {
+		"stage_id":current_stage_id,
+		"stage_index":current_stage_index,
+	})
+
+
+func _checkpoint_session_diagnostics(reason: String) -> void:
+	var bundle := _session_diagnostics.checkpoint(reason)
+	if bundle.is_empty():
+		return
+	_latest_session_diagnostic = bundle
+	var error := SessionDiagnosticStore.persist_completed(bundle)
+	if error != OK:
+		push_warning("Session diagnostic checkpoint was not persisted: %s" % error_string(error))
+
+
+func _finish_session_diagnostics(reason: String) -> void:
+	var bundle := _session_diagnostics.finish(reason)
+	if bundle.is_empty():
+		return
+	_latest_session_diagnostic = bundle
+	var error := SessionDiagnosticStore.persist_completed(bundle)
+	if error != OK:
+		push_warning("Session diagnostic result was not persisted: %s" % error_string(error))
+
+
+func _export_session_diagnostics(absolute_path: String) -> void:
+	var bundle := _latest_session_diagnostic
+	if _session_diagnostics.is_active():
+		bundle = _session_diagnostics.checkpoint("explicit_export")
+		if not bundle.is_empty():
+			_latest_session_diagnostic = bundle
+			var persist_error := SessionDiagnosticStore.persist_completed(bundle)
+			if persist_error != OK:
+				push_warning(
+					"Session diagnostic export checkpoint was not persisted: %s"
+					% error_string(persist_error)
+				)
+	if bundle.is_empty():
+		var retained := SessionDiagnosticStore.load_completed()
+		if not retained.is_empty():
+			bundle = retained.back()
+	if bundle.is_empty():
+		_ui.set_diagnostic_export_status("DIAGNOSTICS_EXPORT_NO_DATA")
+		return
+	if OS.has_feature("web"):
+		var redacted := DiagnosticExporter.make_redacted_bundle(bundle)
+		JavaScriptBridge.download_buffer(
+			JSON.stringify(redacted).to_utf8_buffer(),
+			"cardborne-diagnostics.json",
+			"application/json"
+		)
+		_ui.set_diagnostic_export_status("DIAGNOSTICS_EXPORT_SUCCESS")
+		return
+	var error := DiagnosticExporter.write_native(bundle, absolute_path)
+	_ui.set_diagnostic_export_status(
+		"DIAGNOSTICS_EXPORT_SUCCESS"
+		if error == OK
+		else "DIAGNOSTICS_EXPORT_FAILED"
+	)
 
 
 func _build_audio() -> void:
@@ -1184,7 +1272,13 @@ func _update_encounter(delta: float) -> void:
 		player_velocity
 	)
 	for cue in requests["cues"]:
-		_record_ordinary_arrival_cue(Dictionary(cue))
+		var cue_record := Dictionary(cue)
+		_record_ordinary_arrival_cue(cue_record)
+		_session_diagnostics.emit_event("arrival_cued", {
+			"arrival_id":StringName(cue_record.get("id", &"")),
+			"stage_index":current_stage_index,
+			"unit_count":int(cue_record.get("unit_count", 0)),
+		})
 		_play_sound(&"boss", 0.72)
 	for spawn_spec in requests["spawns"]:
 		var bounded_spec := _bounded_spawn_spec(Dictionary(spawn_spec))
@@ -1354,6 +1448,7 @@ func _start_deployed_run(primary_id: StringName) -> void:
 	_save_persistence()
 	_reset_run(false)
 	selected_primary = primary_id
+	_begin_session_diagnostics()
 	mode = RunMode.PLAYING
 	_ui.show_gameplay()
 	_play_sound(&"card", 1.15)
@@ -1367,6 +1462,10 @@ func _on_upgrade_selected(upgrade_id: StringName) -> void:
 	if not apply_upgrade(upgrade_id):
 		_ui.upgrade_apply_failed(tr("UPGRADE_APPLY_FAILED"))
 		return
+	_session_diagnostics.emit_event("upgrade_confirmed", {
+		"upgrade_id":upgrade_id,
+		"stage_index":current_stage_index,
+	})
 	_ui.update_hud({"build_snapshot":_build_snapshot()})
 	_resolve_reward_transaction()
 	mode = RunMode.PLAYING
@@ -1388,6 +1487,7 @@ func _pause_run() -> void:
 	})
 	_ui.show_pause()
 	_acquire_tree_pause()
+	_checkpoint_session_diagnostics("settled_pause")
 	_set_mouse_for_mode()
 
 
@@ -1401,6 +1501,7 @@ func _resume_run() -> void:
 
 
 func _return_to_deployment() -> void:
+	_finish_session_diagnostics("aborted")
 	_release_tree_pause()
 	_reset_run(true)
 	_present_deployment()
@@ -4453,6 +4554,10 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if _is_countable_stage_enemy(enemy):
 		if stage_flow.record_countable_defeat():
 			encounter_runtime.seal_for_quota()
+			_session_diagnostics.emit_event("boss_warning", {
+				"stage_index":current_stage_index,
+				"ordinary_defeats":stage_flow.defeats,
+			})
 			boss_arrival_position = _choose_boss_arrival_anchor()
 			discovered_markers["boss_warning"] = true
 			_discover_guide(StringName("boss_stage_%d" % (current_stage_index + 1)))
@@ -4462,6 +4567,9 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		stats_installations += 1
 	if role == &"stage_boss":
 		if stage_flow.record_boss_defeat():
+			_session_diagnostics.emit_event("boss_ended", {
+				"stage_index":current_stage_index,
+			})
 			_complete_stage()
 	var defeated_group := enemy.group_id
 	if not defeated_group.is_empty():
@@ -4625,12 +4733,17 @@ func _handle_player_defeat() -> void:
 	_clear_projectiles()
 	denied_zones.clear()
 	mode = RunMode.FAILURE_REPORT
+	_session_diagnostics.emit_event("run_failed", {
+		"stage_index":current_stage_index,
+		"ordinary_defeats":stage_flow.defeats,
+	})
 	_pending_stage_report = StageReportBuilder.build(
 		stage_telemetry.freeze_stage(),
 		_stage_report_context(false),
 		true
 	)
 	_ui.show_stage_report(_pending_stage_report)
+	_finish_session_diagnostics("run_failed")
 	_set_mouse_for_mode()
 
 
@@ -4953,6 +5066,11 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 	upgrade_offer_error.clear()
 	mode = RunMode.UPGRADE
 	upgrade_selection_applied = false
+	_session_diagnostics.emit_event("upgrade_opened", {
+		"source_id":source_id,
+		"stage_index":current_stage_index,
+		"offer_count":current_card_offer.size(),
+	})
 	_ui.show_upgrade(current_card_offer, _build_snapshot())
 	_play_sound(&"card", 0.9)
 	_set_mouse_for_mode()
@@ -5066,6 +5184,10 @@ func _start_stage_boss() -> void:
 	if not _append_enemy(boss):
 		boss_started = false
 		return
+	_session_diagnostics.emit_event("boss_started", {
+		"stage_index":current_stage_index,
+		"boss_id":current_stage_id,
+	})
 	_begin_boss_shield_phase(boss, 1)
 	_play_sound(&"boss")
 	camera_shake = 12.0
@@ -5460,6 +5582,10 @@ func _complete_stage() -> void:
 	if stage_complete:
 		return
 	stage_complete = true
+	_session_diagnostics.emit_event("stage_ended", {
+		"stage_id":current_stage_id,
+		"stage_index":current_stage_index,
+	})
 	encounter_runtime.stop_boss_maintenance()
 	encounter_runtime.stop_spawning()
 	_retire_boss_owned_enemies()
@@ -5602,6 +5728,10 @@ func _begin_next_stage_continuation() -> void:
 	enemy_grid.rebuild(enemies)
 	stage_started_at_active_run_seconds = active_run_elapsed_seconds
 	mode = RunMode.PLAYING
+	_session_diagnostics.emit_event("stage_started", {
+		"stage_id":current_stage_id,
+		"stage_index":current_stage_index,
+	})
 	_hud_presenter.reset()
 	_ui.show_gameplay()
 	_set_mouse_for_mode()
@@ -5661,7 +5791,7 @@ func _show_final_result() -> void:
 	var secondary_titles: Array[String] = []
 	for secondary in secondary_runtime.equipped_families(run_build):
 		secondary_titles.append(String(secondary.get("name_key", "")))
-	_ui.show_result(RunResultBuilder.build(completed_stage_reports, {
+	var result_snapshot := RunResultBuilder.build(completed_stage_reports, {
 		"active_run_elapsed_seconds":active_run_elapsed_seconds,
 		"hull":player_health,
 		"max_hull":_player_max_health(),
@@ -5679,7 +5809,17 @@ func _show_final_result() -> void:
 				else "ACTIVE_WEAPON_EMP_NAME"
 			),
 		},
-	}))
+	})
+	_ui.show_result(result_snapshot)
+	_session_diagnostics.emit_event("result_shown", {
+		"stage_count":completed_stage_reports.size(),
+		"total_defeats":int(result_snapshot.get("total_defeats", 0)),
+	})
+	_session_diagnostics.emit_event("run_completed", {
+		"stage_count":completed_stage_reports.size(),
+		"active_seconds":active_run_elapsed_seconds,
+	})
+	_finish_session_diagnostics("run_completed")
 	_play_sound(&"card", 0.72)
 	_set_mouse_for_mode()
 

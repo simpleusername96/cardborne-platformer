@@ -785,7 +785,8 @@ func _validate_modal_matrix(ui: VehicleStageUI) -> void:
 				)
 				_expect(
 					int(host["missing_copy_count"]) == 0,
-					"%s has no untranslated visible copy" % context
+					"%s has no untranslated visible copy: %s"
+					% [context, host.get("missing_copy_nodes", [])]
 				)
 				_expect(
 					bool(modal["hud_hidden"])

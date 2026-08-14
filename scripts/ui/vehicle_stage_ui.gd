@@ -11,6 +11,7 @@ signal pause_requested
 signal resume_requested
 signal deployment_requested
 signal stage_report_continued
+signal diagnostic_export_requested(absolute_path: String)
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const VEHICLE_THEME = preload(
@@ -54,6 +55,7 @@ var _result_panel: VehicleResultPanel
 var _report_panel: VehicleStageReportPanel
 var _settings_panel: VehicleSettingsPanel
 var _guide_panel: VehicleGuidebookPanel
+var _diagnostic_save_dialog: FileDialog
 
 var _selected_primary := &"pulse_cannon"
 var _settings_return_surface := "deployment"
@@ -144,6 +146,7 @@ func _install_components() -> void:
 	_result_panel.deployment_requested.connect(
 		func() -> void: deployment_requested.emit()
 	)
+	_result_panel.diagnostic_export_requested.connect(_request_diagnostic_export)
 
 	_report_panel = StageReportPanel.new()
 	_mount_modal("report", _report_panel)
@@ -157,10 +160,22 @@ func _install_components() -> void:
 	_settings_panel.guide_requested.connect(
 		_show_guidebook.bind("settings")
 	)
+	_settings_panel.diagnostic_export_requested.connect(_request_diagnostic_export)
 
 	_guide_panel = GuidebookPanel.new()
 	_mount_modal("guidebook", _guide_panel)
 	_guide_panel.close_requested.connect(_close_guidebook)
+	_diagnostic_save_dialog = FileDialog.new()
+	_diagnostic_save_dialog.title = tr("DIAGNOSTICS_EXPORT")
+	_diagnostic_save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	_diagnostic_save_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	_diagnostic_save_dialog.filters = PackedStringArray(["*.json ; JSON"])
+	_diagnostic_save_dialog.file_selected.connect(
+		func(path: String) -> void: diagnostic_export_requested.emit(path)
+	)
+	_root.add_child(_diagnostic_save_dialog)
+
+
 func _mount_modal(surface: String, content: Control) -> void:
 	var host := ModalHost.new()
 	host.name = "%sHost" % surface.capitalize().replace(" ", "")
@@ -219,6 +234,20 @@ func show_result(summary: Dictionary) -> void:
 		return
 	hide_all_modals()
 	_show_modal("result")
+
+
+func set_diagnostic_export_status(message_key: String) -> void:
+	_settings_panel.set_diagnostic_status(message_key)
+	_result_panel.set_diagnostic_status(message_key)
+
+
+func _request_diagnostic_export() -> void:
+	if OS.has_feature("web"):
+		diagnostic_export_requested.emit("")
+		return
+	var stamp := Time.get_datetime_string_from_system(false, false).replace(":", "-")
+	_diagnostic_save_dialog.current_file = "cardborne-diagnostics-%s.json" % stamp
+	_diagnostic_save_dialog.popup_centered_ratio(0.72)
 
 
 func show_gameplay() -> void:
@@ -664,6 +693,8 @@ func _refresh_localized_content() -> void:
 	_report_panel.refresh_localized_content()
 	_guide_panel.refresh_localized_content()
 	_hud.refresh_localized_content()
+	if is_instance_valid(_diagnostic_save_dialog):
+		_diagnostic_save_dialog.title = tr("DIAGNOSTICS_EXPORT")
 	if not _latest_upgrade_cards.is_empty() and _host_visible("upgrade"):
 		_upgrade_panel.open(_latest_upgrade_cards, _latest_build_snapshot)
 

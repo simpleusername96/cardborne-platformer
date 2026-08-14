@@ -23,6 +23,7 @@ const EVENT_KINDS := {
 
 var _session_id := ""
 var _build_identity: Dictionary = {}
+var _started_unix := 0
 var _sequence := 0
 var _elapsed_seconds := 0.0
 var _events: Array[Dictionary] = []
@@ -41,6 +42,7 @@ func begin(session_id: String, build_identity: Dictionary) -> bool:
 		return false
 	_session_id = session_id
 	_build_identity = build_identity.duplicate(true)
+	_started_unix = int(Time.get_unix_time_from_system())
 	_active = true
 	emit_event("run_started", {})
 	return true
@@ -49,6 +51,7 @@ func begin(session_id: String, build_identity: Dictionary) -> bool:
 func reset() -> void:
 	_session_id = ""
 	_build_identity.clear()
+	_started_unix = 0
 	_sequence = 0
 	_elapsed_seconds = 0.0
 	_events.clear()
@@ -107,8 +110,24 @@ func finish(reason: String) -> Dictionary:
 		_retain_second({"end_monotonic_seconds": _elapsed_seconds, "frames": _second_frames,
 			"average_frame_ms": _second_frame_ms / float(maxi(1, _second_frames)), "max_frame_ms": _second_max_frame_ms})
 	_active = false
+	return _bundle(reason)
+
+
+func checkpoint(reason: String) -> Dictionary:
+	if not _active:
+		return {}
+	return _bundle(reason)
+
+
+func is_active() -> bool:
+	return _active
+
+
+func _bundle(reason: String) -> Dictionary:
 	return {"schema_version": SCHEMA_VERSION, "kind": "session_diagnostic",
 		"registry_version": REGISTRY_VERSION, "session_id": _session_id,
+		"started_unix": _started_unix,
+		"saved_unix": int(Time.get_unix_time_from_system()),
 		"build_identity": _build_identity.duplicate(true), "completed_reason": reason,
 		"events": _events.duplicate(true), "one_hz": _seconds.duplicate(true),
 		"retention": {"event_cap": MAX_EVENTS, "event_dropped": _event_dropped,

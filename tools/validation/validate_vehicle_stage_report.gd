@@ -158,7 +158,7 @@ func _init() -> void:
 	_expect(result.open(final_result), "final result accepts a complete aggregate")
 	await process_frame
 	var result_contract := result.debug_contract()
-	_expect(int(result_contract["focusables"]) == 1, "final result exposes one direct Deployment action")
+	_expect(int(result_contract["focusables"]) == 2, "final result exposes one diagnostic export plus the direct Deployment action")
 	_expect(bool(result_contract["initial_focus_is_deployment"]), "final result initially focuses Deployment")
 	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Deployment is the primary command")
 	_expect(int(result_contract["wide_columns"]) == 3 and int(result_contract["compact_tabs"]) == 3, "final result reuses responsive report body")

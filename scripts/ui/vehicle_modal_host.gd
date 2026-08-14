@@ -133,6 +133,7 @@ func refresh_layout() -> void:
 
 func debug_contract() -> Dictionary:
 	var overflow_nodes := _visible_overflow_nodes()
+	var missing_copy_nodes := _missing_copy_nodes()
 	return {
 		"preferred_size":preferred_size,
 		"surface_rect":surface_rect(),
@@ -150,7 +151,8 @@ func debug_contract() -> Dictionary:
 		"primary_actions":_primary_action_count(),
 		"overflow_count":overflow_nodes.size(),
 		"overflow_nodes":Array(overflow_nodes),
-		"missing_copy_count":_missing_copy_count(),
+		"missing_copy_count":missing_copy_nodes.size(),
+		"missing_copy_nodes":Array(missing_copy_nodes),
 	}
 
 
@@ -204,9 +206,13 @@ func _visible_overflow_nodes() -> PackedStringArray:
 
 
 func _missing_copy_count() -> int:
+	return _missing_copy_nodes().size()
+
+
+func _missing_copy_nodes() -> PackedStringArray:
+	var result := PackedStringArray()
 	if content == null:
-		return 0
-	var count := 0
+		return result
 	for node in content.find_children("*", "Control", true, false):
 		var control := node as Control
 		if not control.is_visible_in_tree():
@@ -221,8 +227,8 @@ func _missing_copy_count() -> int:
 			and value.contains("_")
 			and tr(value) == value
 		):
-			count += 1
-	return count
+			result.append("%s=%s" % [content.get_path_to(control), value])
+	return result
 
 
 func _inside_scroll_container(control: Control) -> bool:
