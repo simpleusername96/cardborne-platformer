@@ -54,6 +54,12 @@ func _initialize() -> void:
 		"bundle uses the shared build identity and diagnostic provenance envelope"
 	)
 	_expect(Array(bundle.get("checkpoints", [])).size() == 13, "bundle retains eight time and five transition checkpoints")
+	var acceptance := Dictionary(bundle.get("acceptance", {}))
+	_expect(
+		bool(acceptance.get("passed", false))
+			and Dictionary(acceptance.get("checks", {})).size() == 7,
+		"complete fixture passes explicit opening, boss-margin, and post-boss visibility gates"
+	)
 	var first := Dictionary(Array(bundle.get("checkpoints", []))[0])
 	_expect(
 		StringName(first.get("checkpoint_id", &"")) == &"t_0"

@@ -148,7 +148,29 @@ func bundle() -> Dictionary:
 		},
 		"lifecycle": lifecycle,
 		"checkpoints": ordered_checkpoints,
+		"acceptance": acceptance(),
 	}
+
+
+func acceptance() -> Dictionary:
+	if not is_complete():
+		return {"passed":false, "checks":{}}
+	var t_6: Dictionary = _checkpoints[&"t_6"]
+	var boss_active: Dictionary = _checkpoints[&"boss_active"]
+	var post_boss: Dictionary = _checkpoints[&"post_boss_3"]
+	var checks := {
+		"opening_cue_by_0_05s":float(_lifecycle[&"cue"]) <= 0.05,
+		"opening_birth_by_0_92s":float(_lifecycle[&"birth"]) <= 0.92,
+		"first_visible_by_3_5s":float(_lifecycle[&"first_visible"]) <= 3.5,
+		"three_visible_by_6s":int(t_6["visible_ordinary_count"]) >= 3,
+		"first_commit_by_8s":float(_lifecycle[&"first_commit_or_damage"]) <= 8.0,
+		"boss_slot_margin_nonnegative":int(boss_active["boss_slot_margin"]) >= 0,
+		"post_boss_visible_by_3s":int(post_boss["visible_ordinary_count"]) >= 1,
+	}
+	var passed := true
+	for value in checks.values():
+		passed = passed and bool(value)
+	return {"passed":passed, "checks":checks}
 
 
 func _checkpoint_entry(checkpoint_id: StringName) -> Dictionary:

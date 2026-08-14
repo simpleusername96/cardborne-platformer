@@ -94,6 +94,10 @@ func after_physics(run: Node) -> bool:
 		if run.stage_flow.state == StageFlow.State.BOSS_ACTIVE and run.boss_started:
 			_capture_checkpoint(run, &"boss_active", elapsed)
 			_defeat_fixture_boss(run)
+			# Stage continuation reconfigures the encounter runtime and correctly
+			# disables diagnostic scans by default. Re-enable them for this explicit
+			# capture so the post-boss checkpoint observes the new stage.
+			run.encounter_runtime.set_pressure_observation_enabled(true)
 			_boss_defeated = true
 			_boss_defeat_elapsed = elapsed
 			_capture_checkpoint(run, &"boss_defeat", elapsed)
@@ -187,6 +191,9 @@ func _finish() -> bool:
 	var bundle := _capture.bundle()
 	if bundle.is_empty():
 		push_error("Encounter pacing capture did not reach every required checkpoint.")
+		return true
+	if not bool(Dictionary(bundle.get("acceptance", {})).get("passed", false)):
+		push_error("Encounter pacing capture failed one or more gameplay gates.")
 		return true
 	var absolute_path := ProjectSettings.globalize_path(_output_path)
 	if DirAccess.make_dir_recursive_absolute(absolute_path.get_base_dir()) != OK:
