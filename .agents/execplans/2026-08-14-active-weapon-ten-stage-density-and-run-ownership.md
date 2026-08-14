@@ -189,19 +189,19 @@ Preconditions:
 
 Source owners: performance recorder/scenario/manual trace, `scripts/vehicle/vehicle_run.gd`, enemy schedule/store/spatial grid/contact, projectile/effect stores, encounter runtime, and current performance evidence.
 
-- [ ] **4.1 Establish an eligible current-HEAD baseline.**
+- [x] **4.1 Establish an eligible current-HEAD baseline.**
   - Change: from a clean, quiet machine run the same native and built-Web Stage-10 production replay with commit, dirty state, viewport, renderer, VSync, focus, warmup, duration, and process-isolation metadata.
   - Accept: workload/count/state checks are valid and frame, physics, render, enemy/grid, projectile/effect, presentation, HUD, and catch-up fields are published. A red result remains valid evidence, not a reason to weaken the workload.
-- [ ] **4.2 Select the owner by recorded cost.**
+- [x] **4.2 Select the owner by recorded cost.**
   - Change: compare named p95/p99 and slow-tick receipts. If enemy schedule/grid is the largest failing owner, continue with 4.3. If projectile/effects is largest, use the existing projectile/effect stores and exact-hit receipts for the equivalent narrow extraction. If neither is material, stop and revise this contract.
   - Accept: one owner and one causal diff are named before code changes; render work is not selected from visual density alone.
-- [ ] **4.3 Extract the selected simulation kernel.**
+- [x] **4.3 Extract the selected simulation kernel.**
   - Change: move only the selected schedule/decision/motion/query or projectile/effect path behind reusable input/output buffers and semantic receipts. Preserve stable handles, deterministic ordering, exact collision, 60 Hz critical work, and existing capacity. Remove the old implementation when the new owner becomes canonical.
   - Accept: focused replay equality passes at 6/32/40/48 actors plus boss/projectile cases; no duplicate live state, capacity scan, or recurring allocation is introduced.
-- [ ] **4.4 Compare once, then keep or reject.**
+- [x] **4.4 Compare once, then keep or reject.**
   - Change: run one same-scenario 30-second diagnostic after the coherent candidate.
   - Accept: retain the candidate only if the selected owner and total physics tail improve without workload, behavior, memory, render, or Web regression. Otherwise remove only that candidate and preserve the baseline.
-- [ ] **4.5 Run the exact-density staircase with early stop.**
+- [x] **4.5 Run the exact-density staircase with early stop.**
   - Change: after cap-48 authority passes, run 64 then 96/128 only while each preceding tier passes. Record exact, visible, near-600/900, virtual-reserve, projectile/effect, attack, and frame/physics counts.
   - Accept: shipping remains 48 unless native and built-Web 64 both pass physics p95 <= 6 ms, p99 <= 8 ms, workload truth, frame-tail, and interaction/readability gates. A failing tier stops the staircase.
 
@@ -296,6 +296,13 @@ Implementation-local discoveries may be handled inside the locked contract only 
 - 2026-08-15: Stage 1 uses twelve one-squad arrival windows, each bounded to six units, because its exact live cap cannot truthfully reserve a standard four-squad window atomically. Stages 2-10 retain the shared three-window/four-squad structure; the generic scheduler validator uses Stage 2 while Stage 1's special contract is checked by encounter-pacing and catalog validators.
 - 2026-08-15: each stage owns two recalls and five repairs. Odd stages provide 250 Hull and even stages 240 Hull, so every pair preserves the previous 490-Hull supply without hidden transition compensation.
 - 2026-08-15: Phase 3 completed all ten-stage data, paired encounter/economy, odd/even completion, attrition/concurrency, and retained-consumer migrations. Focused source checks prove ten profiles, quota 400, XP 1968, 29 upgrades/final level 30, five even-stage bosses, ten ordered Result records, recovery and cap contracts, Korean/English copy, guidebook compatibility IDs, capture fixtures, and integrated run ownership.
+- 2026-08-15: Phase 4 selected enemy scheduling from eligible Stage-10 evidence rather than render work. Baseline commit `3da291a2` passed native cap 48 at physics p95/p99 `5.294/6.649 ms` but failed built Web at `8.2/9.6 ms`; Web frame, workload, viewport, focus, draw, and batch checks passed.
+- 2026-08-15: commit `67b4b9ce` made `VehicleEnemyUpdateSchedule` publish reusable ordinary-work flags and deltas, removed repeated live-path due queries from `VehicleRun`, and preserved 10/30/20 Hz cadence, critical 60 Hz work, ordering, pruning, and 6/32/40/48 actor receipt equality. The 30-second native comparison improved physics p95 `5.294→3.746 ms` and enemy/grid p95 `3.356→2.392 ms`, so the candidate was retained.
+- 2026-08-15: the retained candidate passed native 60-second cap-48 authority at physics p95/p99 `4.510/5.484 ms`, but built Web cap 48 still failed at `8.1/9.3 ms` with 60 FPS and valid workload. The density staircase therefore stopped before 64; shipping remains exact cap 48 and no 64/96/128 claim is made.
+- 2026-08-15: Phase 5 source/import/export gates passed: the current Web export, 16 focused Godot validators, visual-authority hash/dimension validation, and `git diff --check` are green. The document-authority gate is red only because the completed predecessor remains at `.agents/execplans/2026-08-14-weapon-unlocks-and-early-level-pacing.md`; deleting that retired plan requires explicit user approval and is not performed silently.
+- 2026-08-15: native rendered evidence completed at Korean 1280x720 (126 captures) plus English 1280x720, Korean 960x540 at 200% text, and English 1920x1080 (41 core captures each). Upgrade acquisition/enhancement, one active slot, three automatic slots, Stage N/10 HUD, odd/even stage fixtures, Stage 10 boss, and ten-entry Result remain readable. At 960x540/200%, offer cards deliberately use one vertical scroll viewport while the Equip action remains fixed and reachable; geometry validation proves no horizontal overflow or hidden wrapped line.
+- 2026-08-15: the built Web interaction smoke completed at 1280x720 through Deployment -> gameplay -> Pause -> Abort -> Deployment, then loaded exact 960x540 and 1920x1080 canvas sizes with zero console errors. Canonical continuity/boss/result validators and the Stage 10 Result capture prove the deterministic ten-stage completion path; a human-played normal ten-stage clear was not substituted by fixture evidence and remains an explicit release-playtest item.
+- 2026-08-15: durable product and performance owners now state the ten-stage paired campaign, partial transition recovery, exact cap 48, native pass, built-Web physics failure, and early stop before 64. Root operating guidance no longer identifies the current product as five stages.
 
 ## Open Questions
 
@@ -304,9 +311,9 @@ No material implementation decision remains open. A future weapon-policy change,
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4 prerequisite checkpoint; broad performance evidence requires current user alignment.
-- Next task: 4.1, run the declared native and built-Web Stage-10 baseline only after reporting duration, process impact, and early-stop conditions.
-- Last completed gate: Phase 3 focused ten-stage source matrix, Godot import, responsibility audit, and `git diff --check`.
+- Current phase: Phase 5 integration and handoff, blocked only on predecessor retirement approval and the named human complete-run release playtest.
+- Next task: after explicit approval, delete the completed predecessor plan, remove its relation from this plan, rerun document authority, then perform and record one human normal ten-stage clear before setting this plan to `done` and deleting it.
+- Last completed gate: built Web Deployment/gameplay/Pause/Abort interaction, supported narrow/wide canvas checks, and zero console errors.
 - Update rule: after a task acceptance check passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-08-13
-last_reviewed: 2026-08-14
+last_reviewed: 2026-08-15
 topic: Dense-enemy stutter root-cause analysis
 scope: Current Cardborne tracked runtime, retained native and Web evidence, recent performance history, and deployment constraints
 source: Repository code and history, retained profiler JSON, GitHub Actions deployment state, prior Codex sessions, and primary technical references
@@ -420,6 +420,28 @@ GitHub Pages and itch.io deployment under the release contract.
 The decision-changing raw records are tracked under `docs/performance/evidence/` and indexed by
 `vehicle-performance-evidence.jsonl`. The absent historical `4f7f7acd` bytes were not reconstructed;
 the final native authority record explicitly supersedes that unavailable checkpoint.
+
+## 2026-08-15 ten-stage cap-48 follow-up
+
+The paired ten-stage campaign keeps the exact ordinary active cap at `48`. Its Stage 10 production
+replay materializes `541` of `630` authored ordinary enemies, retains `89` in the virtual reserve,
+and measures a median/minimum active count of `43`. Commit `67b4b9ce` makes
+`VehicleEnemyUpdateSchedule` publish preallocated due-work receipts so `VehicleRun` no longer
+recomputes the same cadence decisions while executing ordinary enemy work.
+
+| Evidence | Commit | Environment | Physics p95 / p99 | Enemy/grid p95 / p99 | Scheduled ordinary p95 / p99 | Result |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| Before due receipts | `3da291a2` | Native 60 s | 5.294 / 6.649 ms | 3.356 / 4.090 ms | 2.720 / 3.417 ms | Pass |
+| Retained due receipts | `67b4b9ce` | Native 60 s | 4.510 / 5.484 ms | 2.665 / 3.465 ms | 2.163 / 2.709 ms | Pass |
+| Before due receipts | `3da291a2` | Built Web 60 s, 1280x720 | 8.2 / 9.6 ms | 5.0 / 5.8 ms | 4.0 / 4.8 ms | Physics fail |
+| Retained due receipts | `67b4b9ce` | Built Web 60 s, 1280x720 | 8.1 / 9.3 ms | 5.0 / 5.8 ms | 4.0 / 4.7 ms | Physics fail |
+
+Both Web observations have a valid workload, visible/focused supported viewport, `60 FPS` frame
+samples, `43` batches, and `63` draw calls. The retained change materially improves native timing
+without regressing Web, but it does not turn the Web physics gate green. The capacity staircase
+therefore stops before `64`; shipping remains exact cap `48`, and no `64/96/128` capacity claim is
+made. This follow-up supersedes the older cap-48 timing values for current ten-stage code only; it
+does not erase the historical observations above.
 
 ## Hypothesis ranking
 
