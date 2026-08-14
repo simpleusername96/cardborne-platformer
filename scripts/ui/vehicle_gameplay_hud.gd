@@ -26,7 +26,7 @@ class HealthPips:
 	var trailing_health := 120.0
 	var run_level := 1
 	var experience := 0.0
-	var experience_required := 6.0
+	var experience_required := 10.0
 	var experience_complete := false
 	var reduced_motion := false
 	var _health_track_height := 32.0
@@ -448,6 +448,7 @@ var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
 var _active_notification_entry: Dictionary = {}
 var _threat_radar: VehicleThreatRadar
+var _active_owned := false
 
 
 func _ready() -> void:
@@ -490,8 +491,7 @@ func _build() -> void:
 	_add_status_item(&"stage", &"stage_progress", &"status", Art.SYSTEM, "1 / 5")
 	_add_status_item(&"defeats", &"total_defeats", &"status", Art.DANGER, "0")
 	_add_status_item(&"dash", &"dash", &"action", Art.SYSTEM, "READY")
-	_add_status_item(&"seeker", &"seeker", &"action", Art.PLAYER_REWARD, "READY")
-	_add_status_item(&"active", &"emp", &"action", Art.BOSS_COMMAND, "READY")
+	_add_status_item(&"active", &"active", &"action", Art.BOSS_COMMAND, tr("HUD_ACTION_LOCKED"))
 
 	_minimap_panel = Factory.surface(
 		Factory.SURFACE_HUD,
@@ -548,7 +548,7 @@ func update_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.has("health"):
 		var required_experience := maxf(
 			1.0,
-			float(snapshot.get("experience_required", 6.0))
+			float(snapshot.get("experience_required", 10.0))
 		)
 		_health_bar.set_values(
 			float(snapshot["health"]),
@@ -569,15 +569,18 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			str(maxi(0, int(snapshot.get("cumulative_defeated", 0))))
 		)
 	_update_action_status(snapshot, &"dash", "dash_available", "dash_remaining")
-	_update_action_status(snapshot, &"seeker", "seeker_available", "seeker_remaining")
 	if snapshot.has("active_weapon_id"):
-		var active_id := StringName(snapshot.get("active_weapon_id", &"emp"))
+		var active_id := StringName(snapshot.get("active_weapon_id", &""))
 		_status_item(&"active").configure(
-			active_id,
+			active_id if not active_id.is_empty() else &"active",
 			&"action",
-			_active_weapon_accent(active_id)
+			_active_weapon_accent(active_id) if not active_id.is_empty() else Art.BOSS_COMMAND
 		)
-	_update_action_status(snapshot, &"active", "skill_available", "skill_remaining")
+	_active_owned = bool(snapshot.get("skill_owned", false))
+	if _active_owned:
+		_update_action_status(snapshot, &"active", "skill_available", "skill_remaining")
+	else:
+		_status_item(&"active").set_value(tr("HUD_ACTION_LOCKED"), false)
 	if snapshot.has("minimap"):
 		_minimap.set_snapshot(snapshot["minimap"])
 	if snapshot.has("threat_radar"):
@@ -714,6 +717,8 @@ func refresh_localized_content() -> void:
 	# Announcement text is already localized at publication time. It is transient
 	# feedback, so discard it rather than displaying the prior locale after refresh.
 	clear_notifications()
+	if not _active_owned:
+		_status_item(&"active").set_value(tr("HUD_ACTION_LOCKED"), false)
 	for item in _status_items.values():
 		(item as StatusGlyphItem).queue_redraw()
 
@@ -760,7 +765,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 	var action_item_size := _status_item_size(compact, accessibility, large, true)
 	var item_gap := _status_item_gap(compact, accessibility, large)
 	var status_size := Vector2(
-		status_item_size.x * 2.0 + action_item_size.x * 3.0 + item_gap * 4.0,
+		status_item_size.x * 2.0 + action_item_size.x * 2.0 + item_gap * 3.0,
 		status_item_size.y
 	)
 	var status_position := Vector2(safe_margin, meter_height + status_top_gap)
@@ -804,16 +809,16 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		)
 	var item_contracts: Array[Dictionary] = []
 	var status_values: Array[String] = []
-	for item_id in [&"stage", &"defeats", &"dash", &"seeker", &"active"]:
+	for item_id in [&"stage", &"defeats", &"dash", &"active"]:
 		var item := _status_item(item_id)
 		item_contracts.append(item.debug_contract())
 		status_values.append(String(item._value_label.text))
 	return {
 		"action_rail_size":Vector2.ZERO,
-		"action_slot_count":3,
+		"action_slot_count":2,
 		"shows_primary_slot":false,
 		"action_slot_contracts":[
-			item_contracts[2], item_contracts[3], item_contracts[4],
+			item_contracts[2], item_contracts[3],
 		],
 		"minimap_size":minimap_base_size,
 		"minimap_zone_size":minimap_base_size,
@@ -889,7 +894,7 @@ func _apply_responsive_layout() -> void:
 	var status_item_size := _status_item_size(compact, accessibility, large, false)
 	var action_item_size := _status_item_size(compact, accessibility, large, true)
 	var status_size := Vector2(
-		status_item_size.x * 2.0 + action_item_size.x * 3.0 + item_gap * 4.0,
+		status_item_size.x * 2.0 + action_item_size.x * 2.0 + item_gap * 3.0,
 		status_item_size.y
 	)
 	_status_cluster.position = Vector2(safe_margin, meter_height + status_top_gap)

@@ -186,7 +186,7 @@ func _run() -> void:
 	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")
-	_expect(int(experience_runtime.call("required_experience")) == 6, "a fresh run starts with a 6-XP level threshold")
+	_expect(int(experience_runtime.call("required_experience")) == 10, "a fresh run starts with a 10-XP level threshold")
 	var recall_start := Vector2(stage.get("player_position"))
 	experience_runtime.call("spawn_shard", recall_start + Vector2(900.0, 0.0), 2)
 	for recall_frame in 40:
@@ -206,11 +206,11 @@ func _run() -> void:
 	var ui_contract: Dictionary = stage_ui.call("debug_ui_contract", 1280.0)
 	_expect(
 		Vector2(ui_contract["action_rail_size"]) == Vector2.ZERO
-			and int(ui_contract["action_slot_count"]) == 3
+			and int(ui_contract["action_slot_count"]) == 2
 			and not bool(ui_contract["shows_primary_slot"])
-			and Vector2(ui_contract["status_cluster_size"]) == Vector2(246.0, 40.0)
+			and Vector2(ui_contract["status_cluster_size"]) == Vector2(190.0, 40.0)
 			and int(ui_contract["status_cluster_background_geometry_count"]) == 0,
-		"top-left panel-free cluster owns Dash, Seeker, and the active weapon without a bottom rail"
+		"top-left panel-free cluster owns Dash and one generic active slot without a bottom rail"
 	)
 	_expect(
 		Vector2(ui_contract["health_cluster_size"]) == Vector2(1280.0, 54.0)

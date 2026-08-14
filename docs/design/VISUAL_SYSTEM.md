@@ -260,7 +260,7 @@ collision.
   code-native geometry. Runtime owns their live position, length, width, radius, rotation,
   tint, alpha, and readiness. A shape/color-only primitive is not promoted to an authored
   image merely to supply those values.
-- A projectile is an independent world object. Player primary, built-in Seeker,
+- A projectile is an independent world object. Player primary, card-acquired Seeker,
   and hostile non-beam shots have separate authored PNG identities. The Seeker
   image is exclusive to homing Seeker shots and the hostile bolt is not reused by
   player weapons. Runtime applies facing, the reduced presentation scale, and
@@ -430,7 +430,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   active에서는 committed direction, 그 밖에는 player를 향한다. Controller spin과
   nondirectional mine/generator는 예외이며 renderer는
   target이나 AI phase를 추론하지 않는다.
-- 비-beam projectile은 player primary energy teardrop, built-in Seeker, hostile
+- 비-beam projectile은 player primary energy teardrop, card-acquired Seeker, hostile
   barbed bolt 세 identity를 사용한다. 세 identity는 서로 재사용하지 않으며,
   불투명 core와 authored contour가 small runtime scale에서도 역할을 구분한다.
 - 모든 기체 탄환의 presentation length는 이전 기준의 `0.70`을 적용한다. player
@@ -605,11 +605,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 
   rail 폭은 compact/standard/large 약 `168/180/196 px`, offer list 폭은
   `656/760/780 px`이다. rail은 catalog 순서의 여섯 category section과
-  `2/5/2/3/5/4`개의 semantic slot을 사용하며, 각 section은 최대 4열이다. 획득이
-  0개여도 21개 위치를 모두 빈 outline으로 표시한다. Secondary의 `optional_0/1`만
-  run-owned optional-weapon acquisition order를 유지하고, 나머지 record는 고정 semantic
-  위치를 사용한다. 같은 ID의 레벨 상승은 기존 cell을 갱신한다. 이 cell은 현재 빌드의
-  요약·탐색 표면일 뿐 새 장착 제한이 아니다. 실제 속성 독점과 선택형 보조 무기 제한은
+  `2/3/2/1/5/4`개의 semantic slot을 사용하며, 각 section은 최대 4열이다. 획득이
+  0개여도 17개 위치를 모두 빈 outline으로 표시한다. Auto의 세 칸은
+  run-owned weapon acquisition order를 유지하고, Active의 한 칸은 획득한 무기 하나만
+  표시한다. 같은 ID의 레벨 상승은 기존 cell을 갱신한다. 이 cell은 현재 빌드의
+  요약·탐색 표면일 뿐 새 장착 제한이 아니다. 실제 속성 독점과 자동 무기 획득 제한은
   gameplay owner가 계속 결정한다. Upgrade와 Result는 같은 frozen grouped snapshot과
   rail component를 사용한다.
 - 모든 category grid는 같은 왼쪽 기준선에 정렬하고 rail 내부에는 scrollbar를
@@ -655,7 +655,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   system-blue fill과 centered `LV N · EXP current / required` 또는 `LV N · EXP MAX`를
   표시한다. 두 meter는 meter별 추가 backing이나 panel을 만들지 않고 필요한 경우 공유
   1 px seam만 사용한다.
-- 두 meter 바로 아래 좌상단에는 `stage_progress`, `total_defeats`, `dash`, `seeker`, `emp`
+- 두 meter 바로 아래 좌상단에는 `stage_progress`, `total_defeats`, `dash`, `active`
   순서의 panel-free compact icon/value cluster를 한 줄로 둔다. top gap은
   compact/standard/large `4/6/8 px`, left margin은 `16/24/32 px`다. icon optical size는
   `16/18/20 px`다. invisible status slot은 `34×36/36×40/40×44 px`, action slot은
@@ -663,7 +663,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   200% text는 `20 px` icon, `72×64 px` status slot, `92×64 px` action slot,
   `6 px` gap을 사용한다. 각 item 내부의
   icon과 값만 중앙 정렬하고 cluster 자체는 좌측 정렬한다. stage는 `N / 5`, 누적 격파는
-  숫자, action은 `READY` 또는 `N.Ns`만 표시한다. visible label, backing, panel, section,
+  숫자, Dash는 `READY` 또는 `N.Ns`, Active는 미획득 시 `LOCKED`이고 획득 뒤
+  `READY` 또는 `N.Ns`를 표시한다. generic Active glyph는 획득 뒤 해당 무기 glyph로
+  바뀐다. visible label, backing, panel, section,
   surface, border, divider, card, frame, rail, line, cooldown progress geometry, blur와 shadow
   plate는 만들지 않는다. 각 glyph는 게임 전체에서 정확히 한 semantic ID만 소유한다.
 - top-right는 두 meter 아래의 `176×108` minimap만 소유한다. live upgrade icon,
@@ -679,8 +681,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   표시하지 않는다. marker capacity, borrowed buffer, explored static geometry와 fog,
   player facing, 한 retained minimap Surface를 유지한다. pickup outer size는
   `12×7.6`이다. Anomaly Device outer point는 기존 neutral cut silhouette의 `1.20×`다.
-- bottom-center EMP indicator는 사용하지 않는다. Dash, Seeker와 EMP 상태는 좌상단 cluster가
-  중복 없이 소유한다.
+- bottom-center active indicator는 사용하지 않는다. Dash와 acquired Active 상태는
+  좌상단 cluster가 중복 없이 소유한다. 자동 무기는 별도 HUD action slot을 만들지 않는다.
 - minimap zone만 한 subtle Surface를 사용한다. 두 full-width meter와 좌상단 cluster는
   panel-free다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는
@@ -767,7 +769,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - approved reference와 runtime actor를 같은 scale로 비교한 sheet에서
   player, 8 role grammar와 boss proportion hierarchy가 같은 family로 판독
 - ko/en × 960/1280/1920의 overflow, overlap, clipping 0
-- all 28 registered upgrade semantic artwork identities resolve with no missing slot;
+- all 25 registered upgrade semantic artwork identities resolve with no missing slot;
   current-build summary의 채워진 slot만 popover를 열고, 세 offer row는 각각 왼쪽에
   artwork 하나만 가지며 stat label과 value 사이에 distributed blank column이 없음
 - every displayed circular area has a continuous full-area body from center to exact

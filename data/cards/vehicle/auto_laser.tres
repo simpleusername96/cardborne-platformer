@@ -8,6 +8,5 @@ id = &"auto_laser"
 title_key = "UPGRADE_AUTO_LASER_TITLE"
 description_key = "UPGRADE_AUTO_LASER_DESC"
 category = &"secondary"
-secondary_slot_kind = &"optional"
 artwork_asset_id = &"upgrade/auto_laser"
 max_level = 3

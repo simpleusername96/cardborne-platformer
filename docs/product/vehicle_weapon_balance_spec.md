@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-12
 last_reviewed: 2026-08-14
-scope: Primary fire, damage and utility attributes, built-in and optional secondary weapons, and active weapons
+scope: Primary fire, damage and utility attributes, automatic weapons, and active weapons
 related:
   - ./vehicle_game_spec.md
   - ./vehicle_upgrade_catalog.md
@@ -35,12 +35,12 @@ must match.
 | Damage attribute | Bio Toxin | Sustained damage after repeated application |
 | Utility attribute | Cryo Slow | Movement control without raw damage |
 | Utility attribute | Shock Disruption | Attack-start control without raw damage |
-| Built-in secondary | Seeker | Reliable automatic ranged damage |
-| Optional secondary | Electric Field | Continuous close area pressure |
-| Optional secondary | Orbiting Blades | High-exposure contact damage and interception |
-| Optional secondary | Drop Mines | Route and pursuit punishment |
-| Optional secondary | Auto Laser | Automatic line selection through dense enemies |
-| Optional secondary | Storm Barrage | Distant clustered ordinary-enemy damage |
+| Auto weapon | Seeker | Reliable automatic ranged damage |
+| Auto weapon | Electric Field | Continuous close area pressure |
+| Auto weapon | Orbiting Blades | High-exposure contact damage and interception |
+| Auto weapon | Drop Mines | Route and pursuit punishment |
+| Auto weapon | Auto Laser | Automatic line selection through dense enemies |
+| Auto weapon | Storm Barrage | Distant clustered ordinary-enemy damage |
 | Active | EMP | Reliable emergency control and projectile clearing |
 | Active | Black Hole | Remote grouping followed by delayed area damage |
 | Active | Shockwave | Frequent close defense and knockback |
@@ -63,21 +63,21 @@ must match.
 
 | Weapon | States | Damage | Cadence | Coverage or count |
 | --- | --- | --- | --- | --- |
-| Seeker | Base, L1-L3 | 25 / 28 / 32 / 38 per missile | 1.35 seconds | 2 / 3 / 4 / 4 missiles |
-| Electric Field | L1-L4 | 8 / 11.5 / 16 / 22 DPS | 0.25-second ticks | Radius 240 / 280 / 320 / 320 |
-| Orbiting Blades | L1-L4 | 14 / 18 / 22 / 28 per blade contact | 0.55-second target lockout | 2 / 3 / 4 / 4 blades; orbit radius 112; angular speed 3.4 rad/s |
-| Drop Mines | L1-L4 | 48 / 60 / 72 / 88 per target | 3.2 / 2.8 / 2.4 / 2.4 seconds | 3 / 4 / 5 / 5 live mines; blast radius 192 / 216 / 240 / 240 |
-| Auto Laser | L1-L3 | 48 / 66 / 86 per target on the selected line | 0.9 seconds | Length 760; half-width 18 |
-| Storm Barrage | L1-L3 | 70 / 95 / 125 per target | 4.5 seconds | Radius 280; targets clusters 480-960 units away |
+| Seeker | L1-L4 | 25 / 31.36 / 40 / 53.2 per missile | 1.35 / 1.215 / 1.107 / 1.0125 seconds | 2 / 3 / 4 / 4 missiles |
+| Electric Field | L1-L4 | 8 / 14.31 / 24.39 / 41.07 effective DPS | 0.25 / 0.225 / 0.205 / 0.1875-second ticks | Radius 240 / 280 / 320 / 320 |
+| Orbiting Blades | L1-L4 | 14 / 20.16 / 27.5 / 39.2 per blade contact | 0.55 / 0.495 / 0.451 / 0.4125-second lockout | 2 / 3 / 4 / 4 blades; orbit radius 112; angular speed 3.4 rad/s |
+| Drop Mines | L1-L4 | 48 / 67.2 / 90 / 123.2 per target | 3.2 / 2.52 / 1.968 / 1.8 seconds | 3 / 4 / 5 / 5 live mines; blast radius 192 / 216 / 240 / 240 |
+| Auto Laser | L1-L3 | 48 / 79.2 / 120.4 per target on the selected line | 0.9 / 0.774 / 0.675 seconds | Length 760; half-width 18 |
+| Storm Barrage | L1-L3 | 70 / 114 / 175 per target | 4.5 / 3.87 / 3.375 seconds | Radius 280; targets clusters 480-960 units away |
 
 ### Active weapons
 
 | Weapon | Levels | Damage | Size | Startup | Cooldown | Reliability and control |
 | --- | --- | --- | --- | --- | --- | --- |
-| EMP | Base | 62 | Damage radius 285; projectile clear 325 | 0.42 | 13.0 | Omnidirectional stun and projectile clear |
-| Black Hole | L1-L4 | 60 / 85 / 115 / 150 | Radius 150 / 175 / 200 / 225 | 0.35 | 12.0 | Remote grouping, 1.2-second active pull, delayed collapse |
-| Shockwave | L1-L4 | 45 / 65 / 90 / 120 | Radius 180 / 210 / 240 / 270 | 0.20 | 9.0 | Close knockback and frequent defensive use |
-| Cross Beam | L1-L4 | 80 / 110 / 145 / 185 | Half-width 24 / 32 / 40 / 48 | 0.30 | 10.5 | Map-spanning, cover-piercing, one hit per target |
+| EMP | L1-L4 | 62 / 71.3 / 80.6 / 93 | Damage radius 285; projectile clear 325 | 0.42 | 13 / 11.7 / 10.66 / 9.75 | Omnidirectional stun and projectile clear |
+| Black Hole | L1-L4 | 60 / 97.75 / 149.5 / 225 | Radius 150 / 175 / 200 / 225 | 0.35 | 12 / 10.8 / 9.84 / 9 | Remote grouping, 1.2-second active pull, delayed collapse |
+| Shockwave | L1-L4 | 45 / 74.75 / 117 / 180 | Radius 180 / 210 / 240 / 270 | 0.20 | 9 / 8.1 / 7.38 / 6.75 | Close knockback and frequent defensive use |
+| Cross Beam | L1-L4 | 80 / 126.5 / 188.5 / 277.5 | Half-width 24 / 32 / 40 / 48 | 0.30 | 10.5 / 9.45 / 8.61 / 7.875 | Map-spanning, cover-piercing, one hit per target |
 
 Cross Beam uses its exact half-width for both the startup cue and collision. Its
 greater damage and shorter cooldown compensate for manual alignment, while its
@@ -110,7 +110,7 @@ converted into hidden damage points.
   or targeting burden explains the gap.
 - A same-slot option cannot equal or exceed another option in damage, coverage,
   reliability, control, safety, and cadence with at least one strict advantage.
-- Shared damage and cooldown modifiers apply once after authored base values.
+- Each weapon level owns its final damage, cadence, and size values; there are no shared weapon modifiers.
 - Reliability problems are corrected in this order: cue/collision agreement, width
   or radius, targeting, cooldown, then damage.
 - Numeric corrections use the smallest practical five-percent step that enters the

@@ -8,6 +8,8 @@ extends Resource
 @export var behavior: StringName
 @export var values_by_level: Array[float] = []
 @export var auxiliary_by_level: Array[float] = []
+@export var cadence_by_level: Array[float] = []
+@export var structure_damage_by_level: Array[float] = []
 @export var cap_by_level: Array[int] = []
 
 
@@ -17,6 +19,14 @@ func value(level: int) -> float:
 
 func auxiliary(level: int) -> float:
 	return auxiliary_by_level[clampi(level - 1, 0, auxiliary_by_level.size() - 1)] if not auxiliary_by_level.is_empty() else 0.0
+
+
+func cadence(level: int) -> float:
+	return cadence_by_level[clampi(level - 1, 0, cadence_by_level.size() - 1)] if not cadence_by_level.is_empty() else 0.0
+
+
+func structure_damage(level: int) -> float:
+	return structure_damage_by_level[clampi(level - 1, 0, structure_damage_by_level.size() - 1)] if not structure_damage_by_level.is_empty() else 0.0
 
 
 func cap(level: int) -> int:

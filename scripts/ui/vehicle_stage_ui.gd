@@ -219,7 +219,7 @@ func show_upgrade(cards: Array[Dictionary], build_snapshot: Dictionary = {}) -> 
 	hide_all_modals()
 	_latest_upgrade_cards = cards.duplicate(true)
 	_latest_build_snapshot = build_snapshot.duplicate(true)
-	_upgrade_panel.open(cards, _latest_build_snapshot)
+	_upgrade_panel.open(_cards_with_input_hints(cards), _latest_build_snapshot)
 	_show_modal("upgrade")
 
 
@@ -703,7 +703,10 @@ func _refresh_localized_content() -> void:
 	if is_instance_valid(_diagnostic_save_dialog):
 		_diagnostic_save_dialog.title = tr("DIAGNOSTICS_EXPORT")
 	if not _latest_upgrade_cards.is_empty() and _host_visible("upgrade"):
-		_upgrade_panel.open(_latest_upgrade_cards, _latest_build_snapshot)
+		_upgrade_panel.open(
+			_cards_with_input_hints(_latest_upgrade_cards),
+			_latest_build_snapshot
+		)
 
 
 func _on_controls_changed(_action: StringName) -> void:
@@ -716,6 +719,36 @@ func _refresh_input_bindings() -> void:
 	if settings != null:
 		bindings = settings.control_bindings
 	_deployment_panel.refresh_input_bindings(bindings)
+	if not _latest_upgrade_cards.is_empty() and _host_visible("upgrade"):
+		_upgrade_panel.open(
+			_cards_with_input_hints(_latest_upgrade_cards),
+			_latest_build_snapshot
+		)
+
+
+func _cards_with_input_hints(cards: Array[Dictionary]) -> Array[Dictionary]:
+	var settings := get_node_or_null("/root/SettingsStore")
+	var bindings := InputProfile.default_descriptors()
+	if settings != null:
+		bindings = settings.control_bindings
+	var result: Array[Dictionary] = []
+	for card_variant in cards:
+		var card := Dictionary(card_variant).duplicate(true)
+		if int(card.get("current_level", 0)) == 0:
+			var base_text := tr(String(card.get("description_key", ""))).strip_edges()
+			match StringName(card.get("activation_mode", &"")):
+				&"manual":
+					var binding := InputProfile.action_display_name(&"active_skill", bindings)
+					card["description_text"] = "%s %s" % [
+						base_text,
+						tr("UPGRADE_ACTIVE_USE_HINT").replace("%s", binding),
+					]
+				&"automatic":
+					card["description_text"] = "%s %s" % [
+						base_text, tr("UPGRADE_AUTOMATIC_USE_HINT"),
+					]
+		result.append(card)
+	return result
 
 
 func _host(surface: String) -> VehicleModalHost:

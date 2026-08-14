@@ -54,9 +54,14 @@ func validate_contract() -> PackedStringArray:
 		var definition := definition_variant as VehicleActiveWeaponDefinition
 		if definition == null:
 			continue
-		var expected_states := 1 if definition.id == &"emp" else 4
-		if definition.damage_by_level.size() != expected_states or definition.size_by_level.size() != expected_states:
+		var expected_states := 4
+		if (
+			definition.damage_by_level.size() != expected_states
+			or definition.size_by_level.size() != expected_states
+			or definition.cooldown_by_level.size() != expected_states
+			or definition.auxiliary_size_by_level.size() != expected_states
+		):
 			errors.append("%s must own exactly %d bounded states" % [definition.id, expected_states])
-		if definition.id != &"emp" and definition.upgrade_id == &"":
+		if definition.upgrade_id == &"":
 			errors.append("%s has no upgrade owner" % definition.id)
 	return errors

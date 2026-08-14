@@ -8,6 +8,5 @@ id = &"electric_field"
 title_key = "UPGRADE_ELECTRIC_FIELD_TITLE"
 description_key = "UPGRADE_ELECTRIC_FIELD_DESC"
 category = &"secondary"
-secondary_slot_kind = &"optional"
 artwork_asset_id = &"upgrade/electric_field"
 max_level = 4

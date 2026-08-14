@@ -5,9 +5,10 @@
 [resource]
 script = ExtResource("1")
 id = &"emp"
+upgrade_id = &"emp"
 name_key = "ACTIVE_WEAPON_EMP_NAME"
 startup_seconds = 0.42
-cooldown_seconds = 13.0
-damage_by_level = Array[float]([62.0])
-size_by_level = Array[float]([285.0])
-auxiliary_size = 325.0
+cooldown_by_level = Array[float]([13.0, 11.7, 10.66, 9.75])
+damage_by_level = Array[float]([62.0, 71.3, 80.6, 93.0])
+size_by_level = Array[float]([285.0, 285.0, 285.0, 285.0])
+auxiliary_size_by_level = Array[float]([325.0, 325.0, 325.0, 325.0])

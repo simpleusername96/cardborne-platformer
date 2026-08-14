@@ -58,10 +58,6 @@ static func build(
 		)
 		acquired_records.append(record)
 		acquired_records_by_category[definition.category] = acquired_records
-		if definition.category == &"activated" and definition.active_slot_kind == &"kind":
-			# The equipped action glyph replaces this card only in the grouped rail.
-			# The flat acquired-upgrade projection still retains the actual card.
-			continue
 		var category_records: Array = records_by_category.get(definition.category, [])
 		category_records.append(record)
 		records_by_category[definition.category] = category_records
@@ -72,8 +68,6 @@ static func build(
 		for acquired_record in Array(acquired_records_by_category.get(category_id, [])):
 			upgrades.append(Dictionary(acquired_record).duplicate(true))
 		var category_records: Array = records_by_category.get(category_id, [])
-		if category_id == &"activated":
-			category_records.push_front(_equipped_active_record(run_build))
 		var slots: Array[Dictionary] = []
 		for slot_index in int(descriptor["capacity"]):
 			var record := (
@@ -95,31 +89,4 @@ static func build(
 		"upgrades":upgrades,
 		"categories":categories,
 		"run_state":run_state.duplicate(true),
-	}
-
-
-static func _equipped_active_record(run_build: VehicleRunBuild) -> Dictionary:
-	var active_weapon_id := run_build.active_weapon_id()
-	var title_key := &"UPGRADE_ACTIVE_EMP_TITLE"
-	var description_key := &"UPGRADE_ACTIVE_EMP_DESC"
-	var level := 1
-	var max_level := 1
-	var active_card_id := run_build.active_weapon_card_id()
-	if not active_card_id.is_empty():
-		var definition := run_build.catalog.get_definition(active_card_id)
-		if definition != null:
-			title_key = definition.title_key
-			description_key = definition.description_key
-			level = run_build.level_of(active_card_id)
-			max_level = definition.max_level
-	return {
-		"id":active_weapon_id,
-		"title_key":title_key,
-		"description_key":description_key,
-		"category":&"activated",
-		"action_glyph_id":active_weapon_id,
-		"display_only":true,
-		"level":level,
-		"max_level":max_level,
-		"effect_rows":[],
 	}

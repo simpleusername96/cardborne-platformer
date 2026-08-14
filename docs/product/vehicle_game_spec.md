@@ -58,14 +58,14 @@ five-stage run.
 | Aim | Mouse position, independent of movement |
 | Primary fire | Hold Mouse 1 |
 | Dash | Space |
-| EMP | Left Shift |
+| Active weapon | Left Shift |
 | Pause and settings | Escape |
 
 - Primary fire repeats uniform rounds while held. Releasing fire only stops the
   cadence; waiting before the next press never changes that next round's
   damage, size, pierce, structure damage, status payload, or counter behavior.
-- Dash is a fast defensive repositioning action. EMP is the sole explicit skill
-  button. Secondary weapons operate automatically.
+- Dash is a fast defensive repositioning action. The acquired active weapon uses
+  the sole explicit skill button. Automatic weapons operate without input.
 - Primary fire, dash, and the active weapon are rebindable. Conflicting bindings are rejected.
 - Korean is the default locale. Korean and English, audio, reduced motion, and
   input settings persist.
@@ -487,32 +487,35 @@ does not produce a transient message.
   `490 HP` field-repair budget. Repair collection clamps at the ship's current
   maximum Hull unless Overflow Barrier converts eligible excess recovery.
 - Level thresholds use
-  `min(96, 6 + round(1.5n + 0.32n²))`, where `n` is the zero-based level
-  progression index. The first requirement is 6 XP, the first five requirements
-  total 54 XP, and the late-run requirement is capped at 96 XP. The authored
+  `min(96, 6 + round(1.5n + 0.32n²)) + 4` for progression indices `0–9`, then
+  the unsurcharged formula afterward. The first twelve requirements are
+  `10/12/14/17/21/26/31/36/42/49/53/61`; the late-run requirement is capped at 96 XP. The authored
   minimum-quota path ends at level 30. Each level opens a guarded selection
   of every legal offer card up to three and requires an explicit choice and
   confirm. When no compatible upgrade remains, one localized completion receipt
   marks XP as `MAX`, clears queued levels and live shards, and suppresses future
   shard spawning and XP awards for that run.
-- The live catalog is the 28-card, 92-level-state contract in
+- The live catalog is the 25-card, 85-level-state contract in
   `vehicle_upgrade_catalog.md`. It uses six player-facing categories: Primary
   Weapon Mods, Secondary Weapon Systems, Attack Attributes, Active Weapons,
   Chassis & Support, and Combat Conditions. Category is separate from change
-  kind and slot ownership. Dash, Seeker, and EMP remain base actions; one active
-  weapon kind may replace EMP, and shared cards can modify all active weapons.
+  kind and slot ownership. Dash is the only base action. All six automatic weapons
+  and all four active weapons begin unowned; up to three automatic families and
+  exactly one active family can be acquired. Weapon levels own their damage,
+  cadence, range, and count growth without shared weapon cards.
 - A first acquisition is an `unlock` only when it creates a previously absent
-  behavior: Split Muzzle, Piercing Rounds, an optional secondary, or an element.
-  Homing Missiles is an `enhance` offer from its first card because Seeker starts
-  equipped; all later behavior-card levels are enhancements. Change kind remains
+  behavior: Split Muzzle, Piercing Rounds, an automatic weapon, an active weapon,
+  or an element. All later behavior-card levels are enhancements. First automatic
+  acquisition copy says it operates automatically; first active acquisition copy
+  names the current Active binding. Change kind remains
   in the frozen offer and localized accessibility name, not visible card chrome.
 - Every legal card state publishes one or two gameplay-owned effect rows. The
   extended attack sequences preserve existing object counts: Split Muzzle ends
   at three projectiles and `180%` volley damage; Piercing Rounds ends at four
-  additional penetrations; Homing Missiles starts at two missiles and ends at four missiles and `38`
-  damage; Electric Field ends at `22 DPS` and radius `320`; Orbiting Blades ends
-  at four blades, `28` damage, and orbit radius `112`; Drop Mines ends at `88` damage, `2.4 s`
-  interval, and five live mines; Auto Laser ends at `86` damage; Thermal Burst
+  additional penetrations; Homing Missiles starts at two missiles and ends at four missiles and `53.2`
+  damage; Electric Field ends at `41.07 effective DPS` and radius `320`; Orbiting Blades ends
+  at four blades, `39.2` damage, and orbit radius `112`; Drop Mines ends at `123.2` damage, `1.8 s`
+  interval, and five live mines; Auto Laser ends at `120.4` damage; Thermal Burst
   ends at `11` damage and radius `96`; Bio Toxin ends at `5.5 DPS` per stack for
   seven seconds. Optional-secondary, attribute, and active-weapon unlocks show
   acquired values without a false zero comparison.
@@ -544,12 +547,9 @@ does not produce a transient message.
   lifetime is three seconds, tick interval is 0.5 seconds, tick damage is
   `10/15/20`, and at most two paths remain active.
 - **Secondary Weapons** is the umbrella category for six automatic weapon
-  types. **Seeker** is its always-equipped built-in subtype; up to two of the
-  other five optional subtypes may be active,
-  for three total. Data expresses this with `secondary_slot_kind` values
-  `built_in` and `optional`; offer eligibility counts only owned optional
-  definitions and never infers slot ownership from a card ID. Seeker remains
-  inside this umbrella category and does not consume an optional slot:
+  types. All six follow the same acquisition policy and begin unowned. Up to
+  three distinct families may be active; after those slots fill, later levels of
+  owned families remain eligible:
 
 | Secondary | Combat role |
 | --- | --- |
@@ -561,46 +561,44 @@ does not produce a transient message.
 | Storm Barrage | A warned area strike on a distant threat cluster |
 
 Drop Mine is distinct from Thermal Burst. At levels 1–4 it applies one
-`48/60/72/88` area hit at radius `192/216/240/240` after proximity or timeout, then
+`48/67.2/90/123.2` area hit at radius `192/216/240/240` after proximity or timeout, then
 publishes one origin receipt only after damage resolution. Its cosmetic has a
 `0.18 s` lifetime and an eight-instance subcap inside the unchanged 96-effect
 store. When saturated, it may recycle only another Drop Mine cosmetic; missing
 feedback never cancels or duplicates damage.
 
-Auto Laser fires at most every `0.9 s` on a successful primary shot. It scores
+Auto Laser fires at most every `0.9/0.774/0.675 s` on a successful primary shot. It scores
 up to 24 nearby candidates against that same bounded set and picks the direction
-that intersects the most targets. It deals `48/66/86`, uses a 760-long corridor
+that intersects the most targets. It deals `48/79.2/120.4`, uses a 760-long corridor
 with half-width 18, and stops at the first tactical wall. Storm Barrage checks
-threats from 480 to 960 pixels every `4.5 s`, warns for `0.55 s`, then deals
-`70/95/125` inside radius 280 to at most twelve eligible targets. It can damage
+threats from 480 to 960 pixels every `4.5/3.87/3.375 s`, warns for `0.55 s`, then deals
+`70/114/175` inside radius 280 to at most twelve eligible targets. It can damage
 ordinary enemies and an Anomaly Device.
 
-Secondary Cooldown applies one shared `0.90/0.82/0.75` cooldown multiplier to
-Seeker, Electric Field, Orbiting Blades, Drop Mines, Auto Laser, and Storm
-Barrage. Secondary Damage applies one shared `1.12/1.25/1.40` damage multiplier
-to those same six families, including Seeker structure damage. These cards do
-not consume an optional-secondary slot or raise an object or target cap.
+Each automatic weapon card owns its final damage and cadence arrays. There are no
+shared automatic-weapon cooldown or damage cards. Seeker structure damage is also
+owned by its weapon definition.
 
 Each Seeker missile applies its level-owned direct damage, then one `12` damage
 kinetic burst to other enemies inside `95` world units. The direct target is not
 damaged twice. Damage resolves before the bounded Explosive Seeker impact receipt;
 missing or recycled feedback never cancels or repeats gameplay damage.
 
-The third action slot always represents the equipped active weapon. EMP is the
-default. One Black Hole, Shockwave, or Cross Beam card may replace it for the
-run; shared active cooldown and damage cards apply to whichever weapon is
-equipped. Active weapon state belongs to `VehicleActiveWeaponRuntime`, while
+The second action slot represents the active weapon. It shows a generic locked
+state before acquisition, then the acquired EMP, Black Hole, Shockwave, or Cross
+Beam. The four cards are mutually exclusive, and later levels improve only the
+acquired family. Active weapon state belongs to `VehicleActiveWeaponRuntime`, while
 enemy, structure, and projectile mutation stays with the existing run owners.
-EMP starts in `0.42s`, deals `62` in radius `285`, clears hostile projectiles in
-radius `325`, stuns for `2.1s`, and has a `13s` cooldown. Black Hole starts in
+EMP starts in `0.42s`, deals `62/71.3/80.6/93` in radius `285`, clears hostile projectiles in
+radius `325`, stuns for `2.1s`, and has a `13/11.7/10.66/9.75s` cooldown. Black Hole starts in
 `0.35s`, pulls non-boss mobile enemies at `360 px/s` for `1.2s` with a 10 Hz
-bounded cadence, then deals `60/85/115/150` in radius `150/175/200/225`; it has a
-`12s` cooldown and never displaces bosses or structures. Shockwave starts in
-`0.20s`, deals `45/65/90/120` in radius `180/210/240/270`, and pushes non-boss
-mobile enemies up to 180 without stun or projectile clearing; it has a `9s`
-cooldown. Cross Beam starts in `0.30s` and deals `80/110/145/185` once per target
+bounded cadence, then deals `60/97.75/149.5/225` in radius `150/175/200/225`; its
+cooldown is `12/10.8/9.84/9s` and it never displaces bosses or structures. Shockwave starts in
+`0.20s`, deals `45/74.75/117/180` in radius `180/210/240/270`, and pushes non-boss
+mobile enemies up to 180 without stun or projectile clearing; its cooldown is
+`9/8.1/7.38/6.75s`. Cross Beam starts in `0.30s` and deals `80/126.5/188.5/277.5` once per target
 through the union of two map-spanning, cover-ignoring corridors with half-width
-`24/32/40/48`; it has a `10.5s` cooldown. Startup presentation and collision use
+`24/32/40/48`; its cooldown is `10.5/9.45/8.61/7.875s`. Startup presentation and collision use
 the same exact half-width.
 
 Accepted combat actions reduce the equipped active weapon's remaining cooldown.
@@ -661,10 +659,10 @@ no credit or stored charge.
   `LV N · EXP current / required` or `LV N · EXP MAX`. HP/EXP heights are
   `28/18`, `32/22`, `40/26`, and `52/32 px` for compact, standard, large, and
   200% text respectively. Immediately below, a panel-free one-line cluster at
-  left margin `16/24/32 px` shows exactly five icon/value items in this order:
+  left margin `16/24/32 px` shows exactly four icon/value items in this order:
   stage deck stack `N / 5`, total-defeats skull with the run-cumulative count,
-  Dash, Seeker, and the equipped active weapon. Action values are `READY` or
-  remaining time to 0.1 s.
+  Dash and the active weapon. The active slot shows `LOCKED` before acquisition;
+  owned action values are `READY` or remaining time to 0.1 s.
   Every icon owns one meaning; the cluster has no labels, panels, sections,
   borders, dividers, cooldown rings, or progress rails. Top-right owns only the
   minimap. No bottom-center action, live upgrade icon, edge boss/target health,
@@ -804,16 +802,14 @@ no credit or stored charge.
   values without a false zero-to-value comparison; later levels show the real
   current-to-next values.
 - The current-build rail has six catalog-ordered category grids with fixed
-  capacities `2/5/2/3/5/4` and at most four columns per grid. The equipped active
-  weapon always occupies the first Active cell: EMP uses its shared action glyph,
-  and a replacement uses its own shared action glyph. Every acquired card then
+  capacities `2/3/2/1/5/4` and at most four columns per grid. The Active section
+  has one empty cell before acquisition and shows only the acquired family. Every acquired card then
   packs left-to-right within its category in first-acquisition order; another level
   updates that same record. Empty cells never precede a filled cell. Filled cells
   alone can focus and open one frozen detail popover. Upgrade and Result consume
   the same grouped snapshot and rail. These cells summarize the build and never
-  create a gameplay equipment limit. The first Stage 1 level-up while EMP remains
-  equipped includes exactly one deterministic unfinished EMP enhancement; later
-  offers keep their seeded offer rules.
+  create a gameplay equipment limit. The first level-up offers exactly one Active,
+  one Auto, and one other compatible card; later offers keep their seeded rules.
 - Each offer row follows one horizontal information order: semantic artwork;
   category, upgrade name, one short summary, and one or two real effect rows;
   then `Lv.current → next`. Korean summaries target
@@ -880,11 +876,12 @@ no credit or stored charge.
   result pass focused tests.
 - Fixed Hard preserves the previous baseline factors, every run uses that same
   profile, and no UI or saved preference can change difficulty.
-- The exact 28-card and 92-state catalog loads, Pickup Radius retains the former
+- The exact 25-card and 85-state catalog loads, Pickup Radius retains the former
   Pickup Magnet card's three values, baseline Lifesteal restores `0.5%`, the
   Lifesteal card raises the total rate to `2%`/`3.5%`, six secondary weapon
-  types and four active weapon types load, no more than three secondary families
-  are active, and their bounded simulations pass tests.
+  types and four active weapon types load, no automatic or active weapon is owned
+  at run start, no more than three automatic families are active, and their bounded
+  simulations pass tests.
 - Accepted-hit, barrier-only, reduced-motion, projectile-size, effective-speed,
   default-inner-wall collision, explicit wall-piercing, separate projectile roles,
   doubled hostile-projectile presentation thickness, structural-only health
@@ -912,7 +909,7 @@ no credit or stored charge.
 - More than three simultaneous secondary families.
 - Unconstrained procedural topology, per-stage layout rerolls, a chore-filled
   base, or exploration puzzles in this run.
-- Growth systems beyond the current 28-card catalog, six secondary weapon types,
+- Growth systems beyond the current 25-card catalog, six automatic weapon types,
   and four active weapon types require an explicit product-spec revision.
 - A selectable, adaptive, or meta-progression difficulty model is inactive and
   requires an explicit product-spec revision.

@@ -163,13 +163,13 @@ Source owners: `data/cards/vehicle/`, `scripts/cards/vehicle_upgrade_definition.
 - [ ] **1.1 Align product and design contracts.**
   - Change: update `docs/product/vehicle_game_spec.md`, `docs/product/vehicle_upgrade_catalog.md`, `docs/product/vehicle_weapon_balance_spec.md`, `.agents/design/DESIGN.md`, and `docs/design/VISUAL_SYSTEM.md` for no defaults, 25/85, one Active, three equal Auto Weapons, 17 build cells, the stable locked-to-equipped Active HUD position, and 78 production images.
   - Accept: targeted searches find no active claim that Seeker/EMP starts equipped, shared weapon cards exist, category capacity is `2/5/2/3/5/4`, the HUD always has five items, or the manifest must contain 81 images.
-- [ ] **1.2 Replace the card/schema contract.**
+- [x] **1.2 Replace the card/schema contract.**
   - Change: delete the four shared resources; add `emp.tres`; make Homing max 4; remove shared modifier stat IDs and built-in/optional/enhancement semantics that no longer represent the categories; set counts to 25/85 and limits to one Active/three Auto Weapons.
   - Accept: catalog validation enumerates exactly the locked IDs, counts, states, category counts, compatibility, and 54-56 legal path.
-- [ ] **1.3 Make offers teach the new start.**
+- [x] **1.3 Make offers teach the new start.**
   - Change: delete the EMP-enhancement special case and implement the locked first Level-up composition without changing frozen transaction safety.
   - Accept: same seed/source/serial repeats the same three IDs; the first offer has one Active, one Auto, one other; stale/unoffered/double submissions remain rejected.
-- [ ] **1.4 Make build transitions explicit.**
+- [x] **1.4 Make build transitions explicit.**
   - Change: `VehicleRunBuild` returns empty active state until acquisition, maps all four active card IDs, counts all six Auto Weapon IDs equally, and rejects a second active or fourth automatic first acquisition.
   - Accept: reset build owns zero weapons; valid transition traces reach one Active/three Auto; same-card levels remain legal; no legacy removed ID is accepted.
 
@@ -187,14 +187,14 @@ Preconditions:
 
 Source owners: `data/weapons/vehicle/active/`, `data/weapons/vehicle/secondary/`, active/secondary definition/catalog/runtime scripts, active recharge, `scripts/cards/vehicle_upgrade_effect_preview.gd`, narrow `VehicleRun` consumers.
 
-- [ ] **2.1 Extend definition resources with level-owned cadence.**
+- [x] **2.1 Extend definition resources with level-owned cadence.**
   - Change: Active definitions own cooldown-by-level and auxiliary-size-by-level where applicable; Secondary definitions own behavior-appropriate interval/re-hit arrays and explicit Homing structure damage. Store the locked effective arrays, not runtime reads of build-wide stats.
   - Accept: definition validators prove every array length equals card max level and every displayed value comes from the same definition used by combat.
-- [ ] **2.2 Remove shared multiplier execution.**
+- [x] **2.2 Remove shared multiplier execution.**
   - Change: delete active/secondary shared-stat reads and parameters, make empty state a no-op, make EMP/Homing require Level 1, and consume only weapon-owned values.
   - Accept: no source reference to the four shared IDs/stat IDs remains; empty state emits no active/Seeker attack; all ten weapon families hit the exact locked Level-1 and max endpoints.
   - Guard: active recharge credits remain ignored while no active weapon exists and apply normally after acquisition.
-- [ ] **2.3 Preserve mutation and capacity ownership.**
+- [x] **2.3 Preserve mutation and capacity ownership.**
   - Change: adapt only the existing weapon event/intent boundary in `VehicleRun`; keep enemy, structure, projectile, effect, collision, and capacity mutation in their current owners.
   - Accept: active/secondary/effect/weapon-balance validators pass with unchanged projectile/effect caps, exact footprints, target caps, and hit rules.
 
@@ -212,13 +212,13 @@ Preconditions:
 
 Source owners: build/offer snapshot presenters, shared Upgrade rail/cells/rows, gameplay HUD/presenter, Deployment, Ship Status, Result, input profile, localization, semantic asset provider/manifest, product visual owners.
 
-- [ ] **3.1 Publish the 17-cell build snapshot.**
+- [x] **3.1 Publish the 17-cell build snapshot.**
   - Change: Auto Weapons uses three acquisition-order cells; Active uses one cell; both are empty before acquisition. Remove synthetic EMP and nested shared records. Upgrade and Result consume the same snapshot.
   - Accept: empty snapshot has 17 empty cells; three Auto families and one Active occupy their exact cells; levels update in place; a maximal legal build fits without truncation.
-- [ ] **3.2 Add input-aware acquisition descriptions.**
+- [x] **3.2 Add input-aware acquisition descriptions.**
   - Change: mark weapon activation mode in gameplay-owned offer data; compose the localized current-binding/manual or automatic suffix only for first acquisition and accessibility text.
   - Accept: default Shift and one remapped key render correctly; every Auto Weapon says it fires automatically; later levels do not repeat tutorial copy; Korean/English text fits.
-- [ ] **3.3 Simplify HUD and Deployment.**
+- [x] **3.3 Simplify HUD and Deployment.**
   - Change: remove the fixed Seeker HUD item, keep one stable generic Active position as `LOCKED` until owned, preserve stage/defeats/Dash and minimap placement, and change Deployment from EMP-specific wording to the acquired-active contract.
   - Accept: run start has no false READY/default weapon; acquiring any active replaces the one placeholder with its glyph/cooldown without reflow; automatic acquisitions do not add arbitrary action items; controls remain complete and remappable.
 - [ ] **3.4 Replace semantic artwork coverage.**
@@ -235,10 +235,10 @@ Goal: require roughly one extra ordinary kill for each of the first ten upgrades
 
 Source owners: `scripts/progression/vehicle_experience_runtime.gd`, `tools/validation/validate_vehicle_experience.gd`, XP copy in product specs and HUD fixtures.
 
-- [ ] **4.1 Implement the bounded surcharge.**
+- [x] **4.1 Implement the bounded surcharge.**
   - Change: add `EARLY_REQUIREMENT_SURCHARGE := 4` and `EARLY_SURCHARGE_LEVEL_COUNT := 10`; apply it after the current capped base formula only for progression indices 0-9.
   - Accept: first twelve requirements are exactly `10/12/14/17/21/26/31/36/42/49/53/61`; Level 11 onward equals the prior formula.
-- [ ] **4.2 Re-lock the authored route cadence.**
+- [x] **4.2 Re-lock the authored route cadence.**
   - Change: update deterministic route expectations to `9/4/4/6/6`, retain total `1968 XP`, Level 30, 29 upgrades, carry behavior, MAX behavior, shard capacity, and recall behavior.
   - Accept: the full experience validator passes and proves all named totals; no XP award or enemy drop value changes.
 
@@ -319,6 +319,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 - 2026-08-14: select endpoint-preserving interpolation because it keeps Level 1 stable while removing global synergy.
 - 2026-08-14: use `+4 XP` for the first ten requirements because Stage-1 ordinary enemies average 4 XP and the minimum route still reaches Level 30.
 - 2026-08-14: keep ten-stage, density/performance, and `VehicleRun` extraction in the related long-term plan; they are not implemented in this batch.
+- 2026-08-14: generated and technically inspected the exact 192×192 EMP candidate at
+  `docs/design/visual-replacement-workbench/previews/emp-upgrade-card-v1/emp-upgrade-card-candidate-v2-192.png`;
+  production integration remains blocked on BK's exact asset approval.
 
 ## Open Questions
 
@@ -327,9 +330,14 @@ No material implementation decision remains open. Exact EMP artwork approval is 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: 1.1, align product and design contracts.
-- Last completed gate: Discovery Closure Gate and passing focused baseline.
+- Current phase: Phase 3 approval gate.
+- Next task: obtain exact approval for the EMP candidate, then finish 1.1 and 3.4,
+  run the rendered/visual/final Web gates, audit, commit, and mark the plan done.
+- Last completed gate: catalog, active weapon, active recharge, automatic weapon,
+  weapon-balance, build snapshot, HUD presenter, localization, input binding,
+  rewards/UI/audio, Result builder, and XP focused validators passed. Upgrade UI
+  and stage-layout validation now fail only because `upgrade/emp` is intentionally
+  absent from production until approval.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

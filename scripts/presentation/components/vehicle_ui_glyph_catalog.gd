@@ -20,7 +20,7 @@ const MINIMAP_GLYPHS: Array[StringName] = [
 	&"boss",
 ]
 const CORE_GLYPHS: Array[StringName] = [
-	&"primary", &"seeker", &"dash", &"emp", &"black_hole", &"shockwave",
+	&"primary", &"seeker", &"dash", &"active", &"emp", &"black_hole", &"shockwave",
 	&"cross_beam", &"secondary", &"breach_ready",
 	&"stage_progress", &"total_defeats",
 	&"player", &"field_pickup", &"mystery_device",

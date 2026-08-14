@@ -4,9 +4,9 @@
 
 [resource]
 script = ExtResource("1_def")
-id = &"piercing_lance"
-title_key = "UPGRADE_PIERCING_LANCE_TITLE"
-description_key = "UPGRADE_PIERCING_LANCE_DESC"
+id = &"emp"
+title_key = "UPGRADE_ACTIVE_EMP_TITLE"
+description_key = "UPGRADE_ACTIVE_EMP_DESC"
 category = &"activated"
-artwork_asset_id = &"upgrade/piercing_lance"
+artwork_asset_id = &"upgrade/emp"
 max_level = 4

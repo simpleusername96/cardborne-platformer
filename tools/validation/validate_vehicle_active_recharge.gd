@@ -12,7 +12,7 @@ func _initialize() -> void:
 	_validate_direct_action_deduplication()
 	_validate_periodic_budget()
 	_validate_incoming_lockout()
-	_validate_ready_discard_and_shared_modifiers()
+	_validate_ready_discard_and_weapon_cooldown()
 	_validate_reset()
 	_finish()
 
@@ -87,10 +87,10 @@ func _validate_incoming_lockout() -> void:
 	)
 
 
-func _validate_ready_discard_and_shared_modifiers() -> void:
+func _validate_ready_discard_and_weapon_cooldown() -> void:
 	var catalog := UpgradeCatalog.new()
 	var build := RunBuild.new(catalog)
-	build.apply(&"active_coolant")
+	build.apply(&"emp")
 	var active := ActiveRuntime.new()
 	var start := active.try_start(
 		Vector2.ZERO,
@@ -101,14 +101,14 @@ func _validate_ready_discard_and_shared_modifiers() -> void:
 	)
 	_expect(
 		bool(start.get("started", false))
-			and is_equal_approx(active.cooldown_remaining, 9.9)
-			and is_equal_approx(active.cooldown_max(build, 2.0), 9.9),
-		"EMP relay reduction applies before the one coolant multiplier"
+			and is_equal_approx(active.cooldown_remaining, 11.0)
+			and is_equal_approx(active.cooldown_max(build, 2.0), 11.0),
+		"EMP relay reduction applies to the weapon-owned Level 1 cooldown"
 	)
 	_expect(
 		is_equal_approx(active.reduce_cooldown(0.10), 0.10)
-			and is_equal_approx(active.cooldown_remaining, 9.8),
-		"combat recharge subtracts its exact seconds after shared cooldown modifiers"
+			and is_equal_approx(active.cooldown_remaining, 10.9),
+		"combat recharge subtracts its exact seconds from the weapon cooldown"
 	)
 	active.cooldown_remaining = 0.0
 	var recharge := RechargeRuntime.new()

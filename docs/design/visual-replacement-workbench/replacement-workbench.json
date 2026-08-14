@@ -139,8 +139,37 @@
       "title_ko": "업그레이드 카드 아트워크",
       "owner": "gameplay_manifest",
       "switch_kind": "consolidate",
-      "status": "applied",
-      "current_paths": [],
+      "status": "approved_for_switch",
+      "current_paths": [
+        "art/visuals/production/gameplay/upgrades/active_amplifier.png",
+        "art/visuals/production/gameplay/upgrades/active_coolant.png",
+        "art/visuals/production/gameplay/upgrades/auto_laser.png",
+        "art/visuals/production/gameplay/upgrades/bio_toxin.png",
+        "art/visuals/production/gameplay/upgrades/chassis_speed.png",
+        "art/visuals/production/gameplay/upgrades/critical_targeting.png",
+        "art/visuals/production/gameplay/upgrades/cryo_slow.png",
+        "art/visuals/production/gameplay/upgrades/dash_afterburn_field.png",
+        "art/visuals/production/gameplay/upgrades/dash_overdrive.png",
+        "art/visuals/production/gameplay/upgrades/drop_mines.png",
+        "art/visuals/production/gameplay/upgrades/electric_field.png",
+        "art/visuals/production/gameplay/upgrades/gravity_collapse.png",
+        "art/visuals/production/gameplay/upgrades/homing_missiles.png",
+        "art/visuals/production/gameplay/upgrades/hull_integrity.png",
+        "art/visuals/production/gameplay/upgrades/kinetic_shockwave.png",
+        "art/visuals/production/gameplay/upgrades/last_stand_amplifier.png",
+        "art/visuals/production/gameplay/upgrades/lifesteal.png",
+        "art/visuals/production/gameplay/upgrades/orbiting_blades.png",
+        "art/visuals/production/gameplay/upgrades/overflow_barrier.png",
+        "art/visuals/production/gameplay/upgrades/pickup_radius.png",
+        "art/visuals/production/gameplay/upgrades/piercing_lance.png",
+        "art/visuals/production/gameplay/upgrades/piercing_rounds.png",
+        "art/visuals/production/gameplay/upgrades/secondary_amplifier.png",
+        "art/visuals/production/gameplay/upgrades/secondary_coolant.png",
+        "art/visuals/production/gameplay/upgrades/shock_disruption.png",
+        "art/visuals/production/gameplay/upgrades/split_muzzle.png",
+        "art/visuals/production/gameplay/upgrades/storm_barrage.png",
+        "art/visuals/production/gameplay/upgrades/thermal_burst.png"
+      ],
       "consumer_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
         "scripts/cards/vehicle_upgrade_offer_presenter.gd",
@@ -150,12 +179,12 @@
         "tools/validation/validate_vehicle_upgrade_ui.gd"
       ],
       "consumer_asset_ids": [
-        "upgrade/active_amplifier", "upgrade/active_coolant", "upgrade/auto_laser", "upgrade/bio_toxin", "upgrade/chassis_speed", "upgrade/critical_targeting", "upgrade/cryo_slow", "upgrade/dash_afterburn_field", "upgrade/dash_overdrive", "upgrade/drop_mines", "upgrade/electric_field", "upgrade/gravity_collapse", "upgrade/homing_missiles", "upgrade/hull_integrity", "upgrade/kinetic_shockwave", "upgrade/last_stand_amplifier", "upgrade/lifesteal", "upgrade/orbiting_blades", "upgrade/overflow_barrier", "upgrade/pickup_radius", "upgrade/piercing_lance", "upgrade/piercing_rounds", "upgrade/secondary_amplifier", "upgrade/secondary_coolant", "upgrade/shock_disruption", "upgrade/split_muzzle", "upgrade/storm_barrage", "upgrade/thermal_burst"
+        "upgrade/auto_laser", "upgrade/bio_toxin", "upgrade/chassis_speed", "upgrade/critical_targeting", "upgrade/cryo_slow", "upgrade/dash_afterburn_field", "upgrade/dash_overdrive", "upgrade/drop_mines", "upgrade/electric_field", "upgrade/emp", "upgrade/gravity_collapse", "upgrade/homing_missiles", "upgrade/hull_integrity", "upgrade/kinetic_shockwave", "upgrade/last_stand_amplifier", "upgrade/lifesteal", "upgrade/orbiting_blades", "upgrade/overflow_barrier", "upgrade/pickup_radius", "upgrade/piercing_lance", "upgrade/piercing_rounds", "upgrade/shock_disruption", "upgrade/split_muzzle", "upgrade/storm_barrage", "upgrade/thermal_burst"
       ],
-      "direction_en": "BK approved the 2026-08-13 Direction C migration: one authored transparent 192x192 PNG per live upgrade card, reused across its levels. Use a compact flat stencil system with one warm-off-white dominant silhouette, one semantic accent, and one short near-black offset shadow; no gradients, text, badges, card frame, decorative background, glow, texture, or material rendering. The canonical authority sheet remains binding; the additional task reference is previews/upgrade-artwork-flat-style-parallel-v2/direction-c.png.",
+      "direction_en": "BK approved the 2026-08-13 Direction C migration and the exact 2026-08-14 EMP addition: one authored transparent 192x192 PNG per live upgrade card, reused across its levels. Use a compact flat stencil system with one warm-off-white dominant silhouette, one semantic accent, and one short near-black offset shadow; no gradients, text, badges, card frame, decorative background, glow, texture, or material rendering. The canonical authority sheet remains binding; the EMP approval evidence is previews/emp-upgrade-card-v1/README.md.",
       "deliverables": [
         {
-          "target_path": "art/visuals/production/gameplay/upgrades/active_amplifier.png",
+          "target_path": "art/visuals/production/gameplay/upgrades/emp.png",
           "width": 192,
           "height": 192,
           "pivot": [96, 96],
@@ -165,21 +194,7 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Compact flat stencil for activated weapon amplifier: warm-off-white power burst, one amber accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
-          "external_source_ids": []
-        },
-        {
-          "target_path": "art/visuals/production/gameplay/upgrades/active_coolant.png",
-          "width": 192,
-          "height": 192,
-          "pivot": [96, 96],
-          "patch_margin": null,
-          "safe_inset": null,
-          "frame_count": null,
-          "fps": null,
-          "loop": null,
-          "blend": null,
-          "brief_en": "Compact flat stencil for activated weapon coolant: warm-off-white cooling module, one cyan accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.",
+          "brief_en": "BK-approved compact flat stencil for EMP: warm-off-white capacitor body, one cyan energy plane, short near-black structural plane, transparent background; no gradients, text, badges, rings, glow, or decorative background.",
           "external_source_ids": []
         },
         {
@@ -306,16 +321,12 @@
         { "target_path": "art/visuals/production/gameplay/upgrades/pickup_radius.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for pickup radius: warm-off-white magnet, one amber pickup accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
         { "target_path": "art/visuals/production/gameplay/upgrades/piercing_lance.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for piercing lance: warm-off-white cross beam, one cyan laser accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
         { "target_path": "art/visuals/production/gameplay/upgrades/piercing_rounds.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for piercing rounds: warm-off-white piercing bullets, one amber trail accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
-        { "target_path": "art/visuals/production/gameplay/upgrades/secondary_amplifier.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for secondary amplifier: warm-off-white secondary module, one amber power accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
-        { "target_path": "art/visuals/production/gameplay/upgrades/secondary_coolant.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for secondary coolant: warm-off-white secondary module, one cyan cooling accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
         { "target_path": "art/visuals/production/gameplay/upgrades/shock_disruption.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for shock disruption: warm-off-white lightning fork, one cyan shock accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
         { "target_path": "art/visuals/production/gameplay/upgrades/split_muzzle.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for split muzzle: warm-off-white triple muzzle, one amber bullet accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
         { "target_path": "art/visuals/production/gameplay/upgrades/storm_barrage.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for storm barrage: warm-off-white missile rain, one cyan storm accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] },
         { "target_path": "art/visuals/production/gameplay/upgrades/thermal_burst.png", "width": 192, "height": 192, "pivot": [96, 96], "patch_margin": null, "safe_inset": null, "frame_count": null, "fps": null, "loop": null, "blend": null, "brief_en": "Compact flat stencil for thermal burst: warm-off-white flame burst, one orange thermal accent, short near-black offset shadow, transparent background; no gradients, text, badges, or background.", "external_source_ids": [] }
       ],
       "final_paths": [
-        "art/visuals/production/gameplay/upgrades/active_amplifier.png",
-        "art/visuals/production/gameplay/upgrades/active_coolant.png",
         "art/visuals/production/gameplay/upgrades/auto_laser.png",
         "art/visuals/production/gameplay/upgrades/bio_toxin.png",
         "art/visuals/production/gameplay/upgrades/chassis_speed.png",
@@ -325,6 +336,7 @@
         "art/visuals/production/gameplay/upgrades/dash_overdrive.png",
         "art/visuals/production/gameplay/upgrades/drop_mines.png",
         "art/visuals/production/gameplay/upgrades/electric_field.png",
+        "art/visuals/production/gameplay/upgrades/emp.png",
         "art/visuals/production/gameplay/upgrades/gravity_collapse.png",
         "art/visuals/production/gameplay/upgrades/homing_missiles.png",
         "art/visuals/production/gameplay/upgrades/hull_integrity.png",
@@ -336,8 +348,6 @@
         "art/visuals/production/gameplay/upgrades/pickup_radius.png",
         "art/visuals/production/gameplay/upgrades/piercing_lance.png",
         "art/visuals/production/gameplay/upgrades/piercing_rounds.png",
-        "art/visuals/production/gameplay/upgrades/secondary_amplifier.png",
-        "art/visuals/production/gameplay/upgrades/secondary_coolant.png",
         "art/visuals/production/gameplay/upgrades/shock_disruption.png",
         "art/visuals/production/gameplay/upgrades/split_muzzle.png",
         "art/visuals/production/gameplay/upgrades/storm_barrage.png",
@@ -345,9 +355,20 @@
       ],
       "reuse_paths": [],
       "preview_paths": [
-        "docs/design/visual-replacement-workbench/previews/upgrade-artwork-flat-style-parallel-v2/direction-c.png"
+        "docs/design/visual-replacement-workbench/previews/upgrade-artwork-flat-style-parallel-v2/direction-c.png",
+        "docs/design/visual-replacement-workbench/previews/emp-upgrade-card-v1/emp-upgrade-card-candidate-v2-192.png",
+        "docs/design/visual-replacement-workbench/previews/emp-upgrade-card-v1/active-family-comparison.png"
       ],
-      "retire_paths": [],
+      "retire_paths": [
+        "art/visuals/production/gameplay/upgrades/active_amplifier.png",
+        "art/visuals/production/gameplay/upgrades/active_amplifier.png.import",
+        "art/visuals/production/gameplay/upgrades/active_coolant.png",
+        "art/visuals/production/gameplay/upgrades/active_coolant.png.import",
+        "art/visuals/production/gameplay/upgrades/secondary_amplifier.png",
+        "art/visuals/production/gameplay/upgrades/secondary_amplifier.png.import",
+        "art/visuals/production/gameplay/upgrades/secondary_coolant.png",
+        "art/visuals/production/gameplay/upgrades/secondary_coolant.png.import"
+      ],
       "runtime_change_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
         "scripts/cards/vehicle_upgrade_offer_presenter.gd",
@@ -367,15 +388,14 @@
         "document_read_complete": true,
         "sheet_inspected_original": true,
         "actual_image_reference_used": true,
-        "reference_input_method": "image_gen.referenced_image_paths (canonical sheet plus Direction C task reference)"
+        "reference_input_method": "image_gen.referenced_image_paths (canonical sheet plus approved EMP iteration input)"
       },
       "approval": {
         "approved_by": "BK",
-        "approved_at": "2026-08-13T00:00:00+09:00",
-        "baseline_commit": "4278cd2ffaf5f438634f07920be152fe3b8635d8",
+        "approved_at": "2026-08-14T22:58:41+09:00",
+        "baseline_commit": "b252ac716fa9e8198fd8ba5bc3dbe18e0176be79",
         "deliverable_sha256": {
-          "art/visuals/production/gameplay/upgrades/active_amplifier.png": "b4e9f578e948f684d8381e447baa88a71a339ada633e97bf3db13fbb6105d913",
-          "art/visuals/production/gameplay/upgrades/active_coolant.png": "171db1a2c87bd825088f9b2e9bad403836fcc53863d7c9d1b3c5750e269abc95",
+          "art/visuals/production/gameplay/upgrades/emp.png": "328e8eba58246c0000e9d6454730531a063db09ba46e1300d7ad31aa744213b6",
           "art/visuals/production/gameplay/upgrades/auto_laser.png": "cd626b2715c07d06e4195701ad2342e6a7687b0c2069b24ac54b2416bcab56c2",
           "art/visuals/production/gameplay/upgrades/bio_toxin.png": "8700541cd1442c340cf2474d3e835ad0a396e17fbe5f0be4162c4e02b76d6e39",
           "art/visuals/production/gameplay/upgrades/chassis_speed.png": "376da48778279d6f99cc9251986d84a5178918fbfd3a247791a3a532ebffa8f2",
@@ -396,23 +416,23 @@
           "art/visuals/production/gameplay/upgrades/pickup_radius.png": "57f42658e77d905362d0fbd8c9dc4d62ad13490b2376293b6896c572bcf6501e",
           "art/visuals/production/gameplay/upgrades/piercing_lance.png": "1bd251b12cc9fcbc5b02ae039bca126ec5055fe048092cdda1b42a0fe37e05f7",
           "art/visuals/production/gameplay/upgrades/piercing_rounds.png": "342d6190bc36e014bd6a2d4549708162ebf4d4194fdf7d0ab5f2f4327617e31f",
-          "art/visuals/production/gameplay/upgrades/secondary_amplifier.png": "c5b2567388b7834bb823552855c9cc854287c10dc15d3e93cd48c3595d3520e4",
-          "art/visuals/production/gameplay/upgrades/secondary_coolant.png": "d1a60e6ab2440a9c8c971946c5ff4b778a31578f5fb77f42e0853f6add5404b8",
           "art/visuals/production/gameplay/upgrades/shock_disruption.png": "6969789cb87cdb41a665fe1a15b46770827c3718ecd8a0b8d11844cd56bbfff7",
           "art/visuals/production/gameplay/upgrades/split_muzzle.png": "33486bb516b6c620be73fd5c8c51ddcf17f4621f7f4c5f3e5fa3725eaf9ee8de",
           "art/visuals/production/gameplay/upgrades/storm_barrage.png": "2371d1d0a502b40bc53a866f37d86a66af0426ead92fff21684629fc09b820ae",
           "art/visuals/production/gameplay/upgrades/thermal_burst.png": "d421235fea80fce04bdc708f7799c34b157105de97ea29a017ad52560006975c"
         },
-        "retire_paths": []
-      },
-      "application": {
-        "commit": "4278cd2ffaf5f438634f07920be152fe3b8635d8",
-        "applied_at": "2026-08-13T00:00:00+09:00",
-        "validation_evidence": [
-          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
-          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"
+        "retire_paths": [
+          "art/visuals/production/gameplay/upgrades/active_amplifier.png",
+          "art/visuals/production/gameplay/upgrades/active_amplifier.png.import",
+          "art/visuals/production/gameplay/upgrades/active_coolant.png",
+          "art/visuals/production/gameplay/upgrades/active_coolant.png.import",
+          "art/visuals/production/gameplay/upgrades/secondary_amplifier.png",
+          "art/visuals/production/gameplay/upgrades/secondary_amplifier.png.import",
+          "art/visuals/production/gameplay/upgrades/secondary_coolant.png",
+          "art/visuals/production/gameplay/upgrades/secondary_coolant.png.import"
         ]
-      }
+      },
+      "application": null
     },
     {
       "id": "projectile_family",

@@ -18,8 +18,7 @@ const FAST_CLUSTERS := [
 	["stage_number", "stage_total", "cumulative_defeated"],
 	[
 		"dash_available", "dash_remaining",
-		"seeker_available", "seeker_remaining",
-		"skill_available", "skill_remaining", "active_weapon_id",
+		"skill_owned", "skill_available", "skill_remaining", "active_weapon_id",
 	],
 ]
 

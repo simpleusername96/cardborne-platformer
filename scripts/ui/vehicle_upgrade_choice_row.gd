@@ -202,7 +202,12 @@ func _refresh() -> void:
 		return
 	_category.text = tr(String(_offer.get("category_key", "")))
 	_title.text = tr(String(_offer.get("title_key", "")))
-	_summary.text = tr(String(_offer.get("description_key", ""))).strip_edges()
+	_summary.text = String(
+		_offer.get(
+			"description_text",
+			tr(String(_offer.get("description_key", "")))
+		)
+	).strip_edges()
 	_summary.visible = not _summary.text.is_empty()
 	_level.text = _level_transition_text()
 	_artwork.texture = SemanticAssets.texture(StringName(_offer.get("artwork_asset_id", &"")))

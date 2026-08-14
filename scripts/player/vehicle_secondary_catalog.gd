@@ -75,7 +75,10 @@ func validate_contract() -> PackedStringArray:
 		if (
 			definition.values_by_level.size() != expected_states
 			or definition.auxiliary_by_level.size() != expected_states
+			or definition.cadence_by_level.size() != expected_states
 			or definition.cap_by_level.size() != expected_states
 		):
 			errors.append("%s must own exactly %d bounded states" % [definition.id, expected_states])
+		if definition.id == &"seeker" and definition.structure_damage_by_level.size() != expected_states:
+			errors.append("seeker must own structure damage for every level")
 	return errors

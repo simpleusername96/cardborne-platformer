@@ -35,6 +35,11 @@ static func snapshot(
 		"max_level":definition.max_level,
 		"change_kind":change_kind,
 		"change_label_key":change_label_key,
+		"activation_mode":(
+			&"manual" if definition.category == &"activated" else (
+				&"automatic" if definition.category == &"secondary" else &""
+			)
+		),
 		"effect_rows":effect_rows,
 		"artwork_asset_id":artwork_asset_id(definition),
 	}
@@ -46,6 +51,4 @@ static func _change_kind(
 ) -> StringName:
 	if not definition.modifiers.is_empty() and definition.category != &"element":
 		return &"stats"
-	if definition.secondary_slot_kind == &"built_in":
-		return &"enhance"
 	return &"unlock" if current_level == 0 else &"enhance"

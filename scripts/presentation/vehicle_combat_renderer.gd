@@ -1549,7 +1549,7 @@ func _write_emp_utility_fringe(
 
 
 func _sync_active_weapon(active: Dictionary, visible_world: Rect2) -> void:
-	var weapon_id := StringName(active.get("weapon_id", &"emp"))
+	var weapon_id := StringName(active.get("weapon_id", &""))
 	if weapon_id == &"emp":
 		return
 	var center := Vector2(active.get("center", Vector2.ZERO))

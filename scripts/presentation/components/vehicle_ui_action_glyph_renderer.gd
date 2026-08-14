@@ -8,7 +8,7 @@ extends RefCounted
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
 const ACTION_IDS: Array[StringName] = [
-	&"seeker", &"dash", &"emp", &"black_hole", &"shockwave", &"cross_beam",
+	&"seeker", &"dash", &"active", &"emp", &"black_hole", &"shockwave", &"cross_beam",
 ]
 
 const ACTION_RECIPES := {
@@ -73,6 +73,14 @@ const ACTION_RECIPES := {
 					Vector2(-0.08, -0.04), Vector2(-0.20, 0.08),
 				],
 			},
+		],
+	},
+	&"active":{
+		"shape":&"active_trigger",
+		"commands":[
+			{"tone":&"primary", "points":[Vector2(-0.82, -0.66), Vector2(-0.18, -0.66), Vector2(0.18, 0.00), Vector2(-0.18, 0.66), Vector2(-0.82, 0.66), Vector2(-0.46, 0.00)]},
+			{"tone":&"secondary", "points":[Vector2(0.10, -0.52), Vector2(0.82, 0.00), Vector2(0.10, 0.52), Vector2(0.34, 0.00)]},
+			{"tone":&"highlight", "points":[Vector2(-0.34, -0.16), Vector2(0.16, -0.16), Vector2(0.30, 0.00), Vector2(0.16, 0.16), Vector2(-0.34, 0.16)]},
 		],
 	},
 	&"emp":{

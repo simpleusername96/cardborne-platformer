@@ -20,7 +20,7 @@ const ROLE_STATE_COUNTS := {
 	&"drop_mines":4,
 	&"auto_laser":3,
 	&"storm_barrage":3,
-	&"emp":1,
+	&"emp":4,
 	&"black_hole":4,
 	&"shockwave":4,
 	&"cross_beam":4,
@@ -59,7 +59,7 @@ func _initialize() -> void:
 	_validate_authored_values()
 	_validate_level_gains()
 	_validate_peer_bands_and_dominance()
-	_validate_shared_modifiers_once()
+	_validate_weapon_owned_curves()
 	_finish()
 
 
@@ -113,16 +113,16 @@ func _validate_role_matrix_and_rows() -> void:
 func _validate_authored_values() -> void:
 	_expect(_secondary.validate_contract().is_empty(), "secondary catalog remains complete")
 	_expect(_active.validate_contract().is_empty(), "active catalog remains complete")
-	_validate_secondary(&"seeker", [25.0, 28.0, 32.0, 38.0], [1.35, 1.35, 1.35, 1.35], [2, 3, 4, 4])
-	_validate_secondary(&"electric_field", [8.0, 11.5, 16.0, 22.0], [240.0, 280.0, 320.0, 320.0], [1, 1, 1, 1])
-	_validate_secondary(&"orbiting_blades", [14.0, 18.0, 22.0, 28.0], [112.0, 112.0, 112.0, 112.0], [2, 3, 4, 4])
-	_validate_secondary(&"drop_mines", [48.0, 60.0, 72.0, 88.0], [3.2, 2.8, 2.4, 2.4], [3, 4, 5, 5])
-	_validate_secondary(&"auto_laser", [48.0, 66.0, 86.0], [0.9, 0.9, 0.9], [1, 1, 1])
-	_validate_secondary(&"storm_barrage", [70.0, 95.0, 125.0], [4.5, 4.5, 4.5], [1, 1, 1])
-	_validate_active(&"emp", [62.0], [285.0], 0.42, 13.0)
-	_validate_active(&"black_hole", [60.0, 85.0, 115.0, 150.0], [150.0, 175.0, 200.0, 225.0], 0.35, 12.0)
-	_validate_active(&"shockwave", [45.0, 65.0, 90.0, 120.0], [180.0, 210.0, 240.0, 270.0], 0.20, 9.0)
-	_validate_active(&"cross_beam", [80.0, 110.0, 145.0, 185.0], [24.0, 32.0, 40.0, 48.0], 0.30, 10.5)
+	_validate_secondary(&"seeker", [25.0, 31.36, 40.0, 53.2], [0.0, 0.0, 0.0, 0.0], [1.35, 1.215, 1.107, 1.0125], [2, 3, 4, 4])
+	_validate_secondary(&"electric_field", [8.0, 12.88, 20.0, 30.8], [240.0, 280.0, 320.0, 320.0], [0.25, 0.225, 0.205, 0.1875], [1, 1, 1, 1])
+	_validate_secondary(&"orbiting_blades", [14.0, 20.16, 27.5, 39.2], [112.0, 112.0, 112.0, 112.0], [0.55, 0.495, 0.451, 0.4125], [2, 3, 4, 4])
+	_validate_secondary(&"drop_mines", [48.0, 67.2, 90.0, 123.2], [192.0, 216.0, 240.0, 240.0], [3.2, 2.52, 1.968, 1.8], [3, 4, 5, 5])
+	_validate_secondary(&"auto_laser", [48.0, 79.2, 120.4], [0.0, 0.0, 0.0], [0.9, 0.774, 0.675], [1, 1, 1])
+	_validate_secondary(&"storm_barrage", [70.0, 114.0, 175.0], [0.0, 0.0, 0.0], [4.5, 3.87, 3.375], [1, 1, 1])
+	_validate_active(&"emp", [62.0, 71.3, 80.6, 93.0], [285.0, 285.0, 285.0, 285.0], 0.42, [13.0, 11.7, 10.66, 9.75])
+	_validate_active(&"black_hole", [60.0, 97.75, 149.5, 225.0], [150.0, 175.0, 200.0, 225.0], 0.35, [12.0, 10.8, 9.84, 9.0])
+	_validate_active(&"shockwave", [45.0, 74.75, 117.0, 180.0], [180.0, 210.0, 240.0, 270.0], 0.20, [9.0, 8.1, 7.38, 6.75])
+	_validate_active(&"cross_beam", [80.0, 126.5, 188.5, 277.5], [24.0, 32.0, 40.0, 48.0], 0.30, [10.5, 9.45, 8.61, 7.875])
 	_validate_attribute_values()
 	_expect(
 		PrimaryRules.projectiles_per_volley(1) == 2
@@ -139,18 +139,14 @@ func _validate_level_gains() -> void:
 	_validate_numeric_progression("Bio Toxin DPS", [2.0, 2.85, 4.0, 5.5])
 	_validate_numeric_progression("Cryo Slow", [6.0, 8.0, 10.0])
 	_validate_numeric_progression("Shock Disruption", [0.6, 0.8, 1.0])
-	_validate_numeric_progression("Electric Field DPS", [8.0, 11.5, 16.0, 22.0])
-	_validate_numeric_progression("Drop Mine damage", [48.0, 60.0, 72.0, 88.0])
-	_validate_numeric_progression("Auto Laser damage", [48.0, 66.0, 86.0])
-	_validate_numeric_progression("Storm Barrage damage", [70.0, 95.0, 125.0])
-	_validate_numeric_progression("Black Hole damage", [60.0, 85.0, 115.0, 150.0])
-	_validate_numeric_progression("Shockwave damage", [45.0, 65.0, 90.0, 120.0])
-	_validate_numeric_progression("Cross Beam damage", [80.0, 110.0, 145.0, 185.0])
+	# Weapon curves deliberately combine authored raw growth with the migrated
+	# per-level damage/cadence factors. Their exact arrays are locked above rather
+	# than forced through the generic single-stat gain band.
 	_validate_numeric_progression("Split Muzzle first totals", [100.0, 140.0, 165.0])
 	_validate_numeric_progression("Split Muzzle final side damage", [32.5, 40.0])
 	_validate_discrete_progression("Piercing contacts", [1, 2, 3, 4, 5], [])
-	_validate_discrete_progression("Seeker missiles", [2, 3, 4, 4], [25.0, 28.0, 32.0, 38.0])
-	_validate_discrete_progression("Orbiting blades", [2, 3, 4, 4], [14.0, 18.0, 22.0, 28.0])
+	_validate_discrete_progression("Seeker missiles", [2, 3, 4, 4], [25.0, 31.36, 40.0, 53.2])
+	_validate_discrete_progression("Orbiting blades", [2, 3, 4, 4], [14.0, 20.16, 27.5, 39.2])
 
 
 func _validate_peer_bands_and_dominance() -> void:
@@ -188,30 +184,19 @@ func _validate_peer_bands_and_dominance() -> void:
 	})
 
 
-func _validate_shared_modifiers_once() -> void:
+func _validate_weapon_owned_curves() -> void:
 	var build := RunBuild.new(UpgradeCatalog.new())
-	for _level in 3:
-		build.apply(&"secondary_amplifier")
-		build.apply(&"secondary_coolant")
-		build.apply(&"active_amplifier")
-		build.apply(&"active_coolant")
-	var secondary_damage := build.stat(&"secondary_damage_multiplier", 1.0)
-	var secondary_cooldown := build.stat(&"secondary_cooldown_multiplier", 1.0)
-	var active_damage := build.stat(&"active_damage_multiplier", 1.0)
-	var active_cooldown := build.stat(&"active_cooldown_multiplier", 1.0)
 	_expect(
-		is_equal_approx(secondary_damage, 1.40)
-			and is_equal_approx(secondary_cooldown, 0.75)
-			and is_equal_approx(48.0 * secondary_damage, 67.2)
-			and is_equal_approx(0.9 * secondary_cooldown, 0.675),
-		"secondary damage and cooldown modifiers apply to base fixture values exactly once"
+		is_equal_approx(build.stat(&"secondary_damage_multiplier", 1.0), 1.0)
+			and is_equal_approx(_secondary.get_definition(&"auto_laser").value(3), 120.4)
+			and is_equal_approx(_secondary.get_definition(&"auto_laser").cadence(3), 0.675),
+		"automatic weapon power is owned by its definition without a shared multiplier"
 	)
 	_expect(
-		is_equal_approx(active_damage, 1.50)
-			and is_equal_approx(active_cooldown, 0.75)
-			and is_equal_approx(80.0 * active_damage, 120.0)
-			and is_equal_approx(10.5 * active_cooldown, 7.875),
-		"active damage and cooldown modifiers apply to base fixture values exactly once"
+		is_equal_approx(build.stat(&"active_damage_multiplier", 1.0), 1.0)
+			and is_equal_approx(_active.get_definition(&"cross_beam").damage(4), 277.5)
+			and is_equal_approx(_active.get_definition(&"cross_beam").cooldown(4), 7.875),
+		"active weapon power is owned by its definition without a shared multiplier"
 	)
 
 
@@ -297,21 +282,21 @@ func _secondary_metrics(family: StringName, state: int) -> Dictionary:
 	var resource_id := &"seeker" if family == &"seeker" else family
 	var definition = _secondary.get_definition(resource_id)
 	var damage := definition.value(state)
-	var cooldown := definition.auxiliary(state)
+	var cooldown := definition.cadence(state)
 	var contacts := definition.cap(state)
 	var coverage := definition.auxiliary(state)
 	var exposure := 1.0
 	if family == &"electric_field":
 		contacts = _count_within(Array(_fixtures()[&"close_12"]), definition.auxiliary(state))
-		cooldown = 0.25
+		cooldown = definition.cadence(state)
 		exposure = 4.0
 	elif family == &"orbiting_blades":
-		cooldown = 0.55
+		cooldown = definition.cadence(state)
 		coverage = 52.0
 		exposure = 5.0
 	elif family == &"drop_mines":
-		contacts = _count_within(Array(_fixtures()[&"close_12"]), minf(240.0, 168.0 + state * 24.0))
-		coverage = minf(240.0, 168.0 + state * 24.0)
+		contacts = _count_within(Array(_fixtures()[&"close_12"]), definition.auxiliary(state))
+		coverage = definition.auxiliary(state)
 	elif family == &"auto_laser":
 		contacts = 8
 		coverage = 36.0
@@ -328,7 +313,7 @@ func _active_metrics(family: StringName, state: int) -> Dictionary:
 	var contacts := 8
 	if family == &"emp":
 		contacts = 12
-	return {"damage_per_use":damage * contacts, "damage_10s":damage * contacts / definition.cooldown_seconds * 10.0, "contacts":contacts, "startup":definition.startup_seconds, "cooldown":definition.cooldown_seconds, "coverage":definition.size(state), "control":4.0 if family in [&"emp", &"black_hole"] else 0.0, "targeting_burden":4.0 if family == &"cross_beam" else 1.0, "exposure":2.0}
+	return {"damage_per_use":damage * contacts, "damage_10s":damage * contacts / definition.cooldown(state) * 10.0, "contacts":contacts, "startup":definition.startup_seconds, "cooldown":definition.cooldown(state), "coverage":definition.size(state), "control":4.0 if family in [&"emp", &"black_hole"] else 0.0, "targeting_burden":4.0 if family == &"cross_beam" else 1.0, "exposure":2.0}
 
 
 func _count_within(points: Array, radius: float) -> int:
@@ -339,25 +324,26 @@ func _count_within(points: Array, radius: float) -> int:
 	return count
 
 
-func _validate_secondary(id: StringName, values: Array, auxiliary: Array, caps: Array) -> void:
+func _validate_secondary(id: StringName, values: Array, auxiliary: Array, cadence: Array, caps: Array) -> void:
 	var definition = _secondary.get_definition(id)
 	_expect(
 		definition != null
 			and definition.values_by_level == values
 			and definition.auxiliary_by_level == auxiliary
+			and definition.cadence_by_level == cadence
 			and definition.cap_by_level == caps,
 		"%s matches the durable balance specification" % id
 	)
 
 
-func _validate_active(id: StringName, damage: Array, size: Array, startup: float, cooldown: float) -> void:
+func _validate_active(id: StringName, damage: Array, size: Array, startup: float, cooldown: Array) -> void:
 	var definition = _active.get_definition(id)
 	_expect(
 		definition != null
 			and definition.damage_by_level == damage
 			and definition.size_by_level == size
 			and is_equal_approx(definition.startup_seconds, startup)
-			and is_equal_approx(definition.cooldown_seconds, cooldown),
+			and definition.cooldown_by_level == cooldown,
 		"%s matches the durable balance specification" % id
 	)
 

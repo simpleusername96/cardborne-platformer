@@ -2439,7 +2439,9 @@ func _release_active_weapon(weapon_id: StringName) -> void:
 func _release_emp_weapon() -> void:
 	var center := active_weapon_runtime.center
 	var radius := active_weapon_runtime.size
-	var clear_radius := active_weapon_runtime.catalog.get_definition(&"emp").auxiliary_size
+	var clear_radius := active_weapon_runtime.catalog.get_definition(&"emp").auxiliary_size(
+		active_weapon_runtime.level
+	)
 	_damage_enemies_in_radius(
 		center, radius, active_weapon_runtime.damage, "EMP Nova", &"arc", true
 	)
@@ -6113,7 +6115,7 @@ func _build_final_result_snapshot() -> Dictionary:
 		run_build, 1.5 if persistent_relay_module else 0.0
 	)
 	var active_weapon_definition = active_weapon_runtime.catalog.get_definition(
-		StringName(active_weapon_snapshot.get("weapon_id", &"emp"))
+		StringName(active_weapon_snapshot.get("weapon_id", &""))
 	)
 	var secondary_titles: Array[String] = []
 	for secondary in secondary_runtime.equipped_families(run_build):
@@ -6133,7 +6135,7 @@ func _build_final_result_snapshot() -> Dictionary:
 			"active_title_key":(
 				String(active_weapon_definition.name_key)
 				if active_weapon_definition != null
-				else "ACTIVE_WEAPON_EMP_NAME"
+				else ""
 			),
 		},
 	})
@@ -6225,13 +6227,10 @@ func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 	snapshot["cumulative_defeated"] = stats_enemies_defeated
 	snapshot["dash_available"] = player_dash_cooldown <= 0.0
 	snapshot["dash_remaining"] = maxf(0.0, player_dash_cooldown)
-	snapshot["seeker_available"] = secondary_runtime.seeker_cooldown <= 0.0
-	snapshot["seeker_remaining"] = maxf(
-		0.0, secondary_runtime.seeker_cooldown
-	)
 	var active_weapon := active_weapon_runtime.snapshot(
 		run_build, 1.5 if persistent_relay_module else 0.0
 	)
+	snapshot["skill_owned"] = not StringName(active_weapon["weapon_id"]).is_empty()
 	snapshot["skill_available"] = bool(active_weapon["available"])
 	snapshot["skill_remaining"] = float(active_weapon["remaining"])
 	snapshot["active_weapon_id"] = StringName(active_weapon["weapon_id"])

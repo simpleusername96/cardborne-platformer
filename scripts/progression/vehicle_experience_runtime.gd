@@ -10,6 +10,8 @@ const BASE_LEVEL_REQUIREMENT := 6
 const LINEAR_LEVEL_GROWTH := 1.5
 const QUADRATIC_LEVEL_GROWTH := 0.32
 const MAX_LEVEL_REQUIREMENT := 96
+const EARLY_REQUIREMENT_SURCHARGE := 4
+const EARLY_SURCHARGE_LEVEL_COUNT := 10
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 
 var run_level := 1
@@ -49,12 +51,17 @@ func clear_shards() -> void:
 
 func required_experience() -> int:
 	var progression_index := run_level - 1
-	return mini(
+	var base_requirement := mini(
 		MAX_LEVEL_REQUIREMENT,
 		BASE_LEVEL_REQUIREMENT + roundi(
 			LINEAR_LEVEL_GROWTH * float(progression_index)
 			+ QUADRATIC_LEVEL_GROWTH * float(progression_index * progression_index)
 		)
+	)
+	return base_requirement + (
+		EARLY_REQUIREMENT_SURCHARGE
+		if progression_index < EARLY_SURCHARGE_LEVEL_COUNT
+		else 0
 	)
 
 

@@ -4,7 +4,11 @@ extends RefCounted
 const DAMAGE_ATTRIBUTE_IDS: Array[StringName] = [&"thermal_burst", &"bio_toxin"]
 const UTILITY_ATTRIBUTE_IDS: Array[StringName] = [&"cryo_slow", &"shock_disruption"]
 const ACTIVE_WEAPON_CARD_IDS: Array[StringName] = [
-	&"gravity_collapse", &"kinetic_shockwave", &"piercing_lance",
+	&"emp", &"gravity_collapse", &"kinetic_shockwave", &"piercing_lance",
+]
+const AUTOMATIC_WEAPON_CARD_IDS: Array[StringName] = [
+	&"homing_missiles", &"electric_field", &"orbiting_blades",
+	&"drop_mines", &"auto_laser", &"storm_barrage",
 ]
 
 var catalog: VehicleUpgradeCatalog
@@ -38,51 +42,41 @@ func total_levels() -> int:
 	return total
 
 
-func active_optional_secondaries() -> int:
+func active_automatic_weapons() -> int:
 	var count := 0
-	for definition in catalog.all_definitions():
-		if (
-			definition.category == &"secondary"
-			and definition.secondary_slot_kind == &"optional"
-			and has(definition.id)
-		):
+	for upgrade_id in AUTOMATIC_WEAPON_CARD_IDS:
+		if has(upgrade_id):
 			count += 1
 	return count
 
 
-## Acquisition order is used only to keep the two generic optional-weapon
-## presentation positions stable. It does not control category or card order.
-func optional_secondary_slot_key(upgrade_id: StringName) -> StringName:
-	var optional_ids: Array[StringName] = []
+## Acquisition order keeps the three equal automatic-weapon presentation cells
+## stable. It does not control firing order or card order.
+func automatic_weapon_slot_key(upgrade_id: StringName) -> StringName:
+	var automatic_ids: Array[StringName] = []
 	for acquired_id in acquisition_order:
-		var definition := catalog.get_definition(acquired_id)
 		if (
-			definition != null
-			and definition.category == &"secondary"
-			and definition.secondary_slot_kind == &"optional"
+			acquired_id in AUTOMATIC_WEAPON_CARD_IDS
 			and has(acquired_id)
-			and not optional_ids.has(acquired_id)
+			and not automatic_ids.has(acquired_id)
 		):
-			optional_ids.append(acquired_id)
+			automatic_ids.append(acquired_id)
 	# Older in-memory builds can lack acquisition history. Keep their fallback
 	# deterministic without letting arbitrary Dictionary order choose a position.
-	if optional_ids.size() < 2:
-		var legacy_optional_ids: Array[StringName] = []
+	if automatic_ids.size() < 3:
+		var legacy_automatic_ids: Array[StringName] = []
 		for level_id_variant in levels.keys():
 			var level_id := StringName(level_id_variant)
-			var legacy_definition := catalog.get_definition(level_id)
 			if (
-				legacy_definition != null
-				and legacy_definition.category == &"secondary"
-				and legacy_definition.secondary_slot_kind == &"optional"
+				level_id in AUTOMATIC_WEAPON_CARD_IDS
 				and has(level_id)
-				and not optional_ids.has(level_id)
+				and not automatic_ids.has(level_id)
 			):
-				legacy_optional_ids.append(level_id)
-		legacy_optional_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
-		optional_ids.append_array(legacy_optional_ids)
-	var index := optional_ids.find(upgrade_id)
-	return StringName("optional_%d" % index) if index >= 0 and index < 2 else &""
+				legacy_automatic_ids.append(level_id)
+		legacy_automatic_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
+		automatic_ids.append_array(legacy_automatic_ids)
+	var index := automatic_ids.find(upgrade_id)
+	return StringName("weapon_%d" % index) if index >= 0 and index < 3 else &""
 
 
 func active_damage_attribute_id() -> StringName:
@@ -115,10 +109,11 @@ func active_weapon_card_id() -> StringName:
 
 func active_weapon_id() -> StringName:
 	match active_weapon_card_id():
+		&"emp": return &"emp"
 		&"gravity_collapse": return &"black_hole"
 		&"kinetic_shockwave": return &"shockwave"
 		&"piercing_lance": return &"cross_beam"
-		_: return &"emp"
+		_: return &""
 
 
 func stat(stat_id: StringName, base_value: float) -> float:

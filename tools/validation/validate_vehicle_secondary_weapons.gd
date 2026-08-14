@@ -39,38 +39,35 @@ func _initialize() -> void:
 	]
 	_expect(
 		runtime.catalog.definitions.size() == expected_secondary_ids.size(),
-		"built-in Seeker and five optional secondary definitions load"
+		"six equal automatic-weapon definitions load"
 	)
 	for secondary_id in expected_secondary_ids:
 		_expect(
 			runtime.catalog.get_definition(secondary_id) != null,
 			"secondary definition %s loads" % secondary_id
 		)
-	for secondary_id in [&"electric_field", &"orbiting_blades", &"drop_mines"]:
-		var definition = runtime.catalog.get_definition(secondary_id)
-		_expect(definition != null and definition.values_by_level.size() == 4, "%s owns four bounded levels" % secondary_id)
-		for level in 4:
-			_expect(bool(build.apply(secondary_id).get("applied", false)), "%s level applies" % secondary_id)
-		if build.active_optional_secondaries() >= 2:
-			break
+	for secondary_id in [&"electric_field", &"orbiting_blades", &"homing_missiles"]:
+		var definition = runtime.catalog.get_by_upgrade_id(secondary_id)
+		_expect(definition != null, "%s owns a runtime definition" % secondary_id)
+		_expect(bool(build.apply(secondary_id).get("applied", false)), "%s acquisition applies" % secondary_id)
 	var seeker = runtime.catalog.get_definition(&"seeker")
 	_expect(
 		seeker != null
 			and seeker.upgrade_id == &"homing_missiles"
-			and seeker.values_by_level == [25.0, 28.0, 32.0, 38.0]
+			and seeker.values_by_level == [25.0, 31.36, 40.0, 53.2]
 			and seeker.cap_by_level == [2, 3, 4, 4],
-		"Seeker definition owns its base and three upgrade states"
+		"Seeker definition owns four acquired card states"
 	)
-	_expect(build.active_optional_secondaries() == 2, "two optional weapons fill the slot cap")
-	var optional_ids: Array[StringName] = []
+	_expect(build.active_automatic_weapons() == 3, "three automatic weapons fill the slot cap")
+	var automatic_ids: Array[StringName] = []
 	for definition in catalog.all_definitions():
-		if definition.category == &"secondary" and definition.secondary_slot_kind == &"optional":
-			optional_ids.append(definition.id)
-	var blocked := optional_ids.filter(func(id: StringName) -> bool: return not build.has(id))
+		if definition.category == &"secondary":
+			automatic_ids.append(definition.id)
+	var blocked := automatic_ids.filter(func(id: StringName) -> bool: return not build.has(id))
 	for upgrade_id in blocked:
-		_expect(not catalog.compatible(catalog.get_definition(upgrade_id), build), "third optional weapon is incompatible")
+		_expect(not catalog.compatible(catalog.get_definition(upgrade_id), build), "fourth automatic weapon is incompatible")
 	var state := runtime.snapshot(build)
-	_expect(Array(state["equipped"]).size() == 3, "runtime reports seeker plus two optional families")
+	_expect(Array(state["equipped"]).size() == 3, "runtime reports exactly three acquired automatic families")
 	var target := EnemyState.new()
 	target.id = "target"
 	target.alive = true
@@ -87,7 +84,7 @@ func _initialize() -> void:
 		enemies,
 		Callable(self, "_los")
 	)
-	_expect(Array(result["damage"]).size() >= 1, "equipped optional secondary emits bounded damage intent")
+	_expect(Array(result["damage"]).size() >= 1, "equipped automatic weapon emits bounded damage intent")
 	for intent_variant in result["damage"]:
 		var intent: Dictionary = intent_variant
 		_expect(
@@ -124,18 +121,18 @@ func _initialize() -> void:
 	_validate_mine_detonation_receipts(catalog)
 	_validate_auto_laser(catalog)
 	_validate_storm_barrage(catalog)
-	_validate_shared_modifiers(catalog)
+	_validate_weapon_owned_endpoints(catalog)
 	_finish()
 
 
-func _validate_shared_modifiers(catalog: Catalog) -> void:
+func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 	var target := EnemyState.new()
-	target.id = "shared_modifier_target"
+	target.id = "weapon_endpoint_target"
 	target.alive = true
 	target.active = true
 	target.radius = 18.0
 
-	var seeker_build := _shared_build(catalog, &"homing_missiles", 3)
+	var seeker_build := _leveled_build(catalog, &"homing_missiles", 4)
 	var seeker_runtime := Runtime.new()
 	_seeker_targets.assign([target])
 	target.pos = Vector2(120.0, 0.0)
@@ -147,11 +144,12 @@ func _validate_shared_modifiers(catalog: Catalog) -> void:
 	var seeker_projectile := Dictionary(Array(result["projectiles"])[0])
 	_expect(
 		is_equal_approx(float(seeker_projectile["damage"]), 53.2)
-			and is_equal_approx(seeker_runtime.seeker_cooldown, 1.35 * 0.75),
-		"shared secondary modifiers apply once to Seeker damage and cooldown"
+			and is_equal_approx(seeker_runtime.seeker_cooldown, 1.0125)
+			and is_equal_approx(float(seeker_projectile["structure_damage"]), 35.0),
+		"Seeker Level 4 owns damage, cadence, and structure damage"
 	)
 
-	var field_build := _shared_build(catalog, &"electric_field", 1)
+	var field_build := _leveled_build(catalog, &"electric_field", 4)
 	var field_runtime := Runtime.new()
 	target.pos = Vector2(100.0, 0.0)
 	result = field_runtime.update(
@@ -159,12 +157,12 @@ func _validate_shared_modifiers(catalog: Catalog) -> void:
 		field_build, [target], Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 2.8)
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 7.7)
 			and is_equal_approx(float(field_runtime.timers[&"electric_field"]), 0.1875),
-		"shared secondary modifiers apply once to Electric Field damage and cadence"
+		"Electric Field Level 4 owns damage and cadence"
 	)
 
-	var orbit_build := _shared_build(catalog, &"orbiting_blades", 1)
+	var orbit_build := _leveled_build(catalog, &"orbiting_blades", 4)
 	var orbit_runtime := Runtime.new()
 	target.pos = Vector2(Runtime.ORBIT_RADIUS, 0.0)
 	result = orbit_runtime.update(
@@ -172,11 +170,11 @@ func _validate_shared_modifiers(catalog: Catalog) -> void:
 		orbit_build, [target], Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 19.6)
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 39.2)
 			and is_equal_approx(
 				float(orbit_runtime.orbit_target_cooldowns[target.id]), 0.4125
 			),
-		"shared secondary modifiers apply once to Orbiting Blades damage and cadence"
+		"Orbiting Blades Level 4 owns damage and cadence"
 	)
 	orbit_runtime.update(
 		0.5, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
@@ -185,12 +183,11 @@ func _validate_shared_modifiers(catalog: Catalog) -> void:
 	_expect(
 		is_equal_approx(orbit_runtime.orbit_angle, 1.7)
 			and is_equal_approx(Runtime.ORBIT_RADIUS, 112.0)
-			and is_equal_approx(Runtime.ORBIT_BLADE_RADIUS, 52.0)
-			and is_equal_approx(Runtime.ORBIT_HIT_COOLDOWN, 0.55),
-		"Orbiting Blades uses the authored 3.4 rad/s wide orbit without changing hit size or cadence"
+			and is_equal_approx(Runtime.ORBIT_BLADE_RADIUS, 52.0),
+		"Orbiting Blades uses the authored 3.4 rad/s wide orbit and fixed geometry"
 	)
 
-	var mine_build := _shared_build(catalog, &"drop_mines", 1)
+	var mine_build := _leveled_build(catalog, &"drop_mines", 4)
 	var mine_runtime := Runtime.new()
 	target.pos = Vector2(-48.0, 0.0)
 	result = mine_runtime.update(
@@ -198,12 +195,12 @@ func _validate_shared_modifiers(catalog: Catalog) -> void:
 		mine_build, [target], Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 67.2)
-			and is_equal_approx(float(mine_runtime.timers[&"drop_mines"]), 2.4),
-		"shared secondary modifiers apply once to Drop Mine damage and cadence"
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 123.2)
+			and is_equal_approx(float(mine_runtime.timers[&"drop_mines"]), 1.8),
+		"Drop Mine Level 4 owns damage and cadence"
 	)
 
-	var laser_build := _shared_build(catalog, &"auto_laser", 1)
+	var laser_build := _leveled_build(catalog, &"auto_laser", 3)
 	var laser_runtime := Runtime.new()
 	target.pos = Vector2(120.0, 0.0)
 	laser_runtime.record_primary_success(Vector2.ZERO, Vector2.RIGHT)
@@ -212,12 +209,12 @@ func _validate_shared_modifiers(catalog: Catalog) -> void:
 		laser_build, [target], Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 67.2)
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 120.4)
 			and is_equal_approx(laser_runtime.auto_laser_cooldown, 0.675),
-		"shared secondary modifiers apply once to Auto Laser damage and cooldown"
+		"Auto Laser Level 3 owns damage and cooldown"
 	)
 
-	var storm_build := _shared_build(catalog, &"storm_barrage", 1)
+	var storm_build := _leveled_build(catalog, &"storm_barrage", 3)
 	var storm_runtime := Runtime.new()
 	target.pos = Vector2(600.0, 0.0)
 	storm_runtime.update(
@@ -230,13 +227,13 @@ func _validate_shared_modifiers(catalog: Catalog) -> void:
 		Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 98.0)
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 175.0)
 			and is_equal_approx(storm_runtime.storm_cooldown, 2.825),
-		"shared secondary modifiers apply once to Storm Barrage damage and cooldown"
+		"Storm Barrage Level 3 owns damage and cooldown"
 	)
 
 
-func _shared_build(
+func _leveled_build(
 	catalog: Catalog,
 	weapon_card_id: StringName,
 	weapon_level: int
@@ -244,9 +241,6 @@ func _shared_build(
 	var build := RunBuild.new(catalog)
 	for _level in weapon_level:
 		build.apply(weapon_card_id)
-	for _level in 3:
-		build.apply(&"secondary_coolant")
-		build.apply(&"secondary_amplifier")
 	return build
 
 
@@ -303,8 +297,8 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 		target.active = true
 		target.pos = Vector2(120.0 + float(index) * 40.0, 20.0 * float(index))
 		_seeker_targets.append(target)
-	var expected_damage := [25.0, 28.0, 32.0, 38.0]
-	for upgrade_level in 4:
+	var expected_damage := [25.0, 31.36, 40.0, 53.2]
+	for upgrade_level in 5:
 		var build := RunBuild.new(catalog)
 		for _level in upgrade_level:
 			build.apply(&"homing_missiles")
@@ -323,7 +317,7 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 			Callable(self, "_find_seeker_targets")
 		)
 		var projectiles: Array = result["projectiles"]
-		var expected_count := mini(upgrade_level + 2, 4)
+		var expected_count: int = 0 if upgrade_level == 0 else int([2, 3, 4, 4][upgrade_level - 1])
 		_expect(
 			_requested_seeker_count == expected_count
 				and projectiles.size() == expected_count,
@@ -336,9 +330,9 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 			if volley_action_serial <= 0:
 				volley_action_serial = action_serial
 			_expect(
-				is_equal_approx(float(projectile["damage"]), expected_damage[upgrade_level]),
+				is_equal_approx(float(projectile["damage"]), expected_damage[upgrade_level - 1]),
 				"homing level %d uses %.0f damage per missile"
-				% [upgrade_level, expected_damage[upgrade_level]]
+				% [upgrade_level, expected_damage[upgrade_level - 1]]
 			)
 			_expect(
 				projectile.get("damage_flags", -1)
@@ -407,7 +401,7 @@ func _validate_mine_direction(catalog: Catalog) -> void:
 
 
 func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
-	var expected_damage := [48.0, 60.0, 72.0, 88.0]
+	var expected_damage := [48.0, 67.2, 90.0, 123.2]
 	var expected_radius := [192.0, 216.0, 240.0, 240.0]
 	for level_index in 4:
 		var build := RunBuild.new(catalog)

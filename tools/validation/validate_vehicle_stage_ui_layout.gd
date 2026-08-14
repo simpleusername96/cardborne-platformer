@@ -119,9 +119,9 @@ func _initialize() -> void:
 			"status cluster is panel-free and toast/edge health contracts remain coherent at %d" % width
 		)
 		var expected_status_size := (
-			Vector2(222.0, 36.0)
+			Vector2(172.0, 36.0)
 			if width < 1100.0
-			else (Vector2(274.0, 44.0) if width >= 1600.0 else Vector2(246.0, 40.0))
+			else (Vector2(212.0, 44.0) if width >= 1600.0 else Vector2(190.0, 40.0))
 		)
 		var expected_status_x := 16.0 if width < 1100.0 else (32.0 if width >= 1600.0 else 24.0)
 		_expect(
@@ -129,15 +129,15 @@ func _initialize() -> void:
 				and is_equal_approx(Vector2(contract["status_cluster_position"]).x, expected_status_x)
 				and bool(contract["status_cluster_one_line"])
 				and int(contract["visible_status_label_count"]) == 0,
-			"five compact icon/value items keep the locked top-left footprint at %d" % width
+			"four compact icon/value items keep the locked top-left footprint at %d" % width
 		)
 		var status_items := Array(contract["status_item_contracts"])
-		var expected_ids := [&"stage_progress", &"total_defeats", &"dash", &"seeker", &"emp"]
+		var expected_ids := [&"stage_progress", &"total_defeats", &"dash", &"active"]
 		_expect(
-			status_items.size() == 5
-				and int(contract["action_slot_count"]) == 3
+			status_items.size() == 4
+				and int(contract["action_slot_count"]) == 2
 				and not bool(contract["shows_primary_slot"]),
-			"HUD owns five status items and exactly three cooldown actions at %d" % width
+			"HUD owns four status items and exactly two action slots at %d" % width
 		)
 		for item_index in status_items.size():
 			var item := Dictionary(status_items[item_index])
@@ -408,8 +408,8 @@ func _initialize() -> void:
 	ui.update_hud({
 		"dash_available":false,
 		"dash_remaining":0.8,
-		"seeker_available":false,
-		"seeker_remaining":0.6,
+		"skill_owned":true,
+		"active_weapon_id":&"emp",
 		"skill_available":false,
 		"skill_remaining":11.4,
 	})
@@ -431,15 +431,15 @@ func _initialize() -> void:
 			"cooldown action items use only a glyph and exact remaining-time text"
 		)
 	_expect(
-		cooldown_glyph_ids == [&"dash", &"seeker", &"emp"]
-			and cooldown_values == ["0.8s", "0.6s", "11.4s"],
-		"top-left action items preserve Dash, Seeker, EMP order and exact cooldown text"
+		cooldown_glyph_ids == [&"dash", &"emp"]
+			and cooldown_values == ["0.8s", "11.4s"],
+		"top-left action items preserve Dash and acquired Active order with exact cooldown text"
 	)
 	ui.update_hud({
 		"dash_available":true,
 		"dash_remaining":0.0,
-		"seeker_available":true,
-		"seeker_remaining":0.0,
+		"skill_owned":true,
+		"active_weapon_id":&"emp",
 		"skill_available":true,
 		"skill_remaining":0.0,
 	})
@@ -857,7 +857,7 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	var contract := ui.debug_ui_contract(1280.0)
 	_expect(
 		Vector2(contract["meter_heights"]) == Vector2(52.0, 32.0)
-			and Vector2(contract["status_cluster_size"]) == Vector2(444.0, 64.0)
+			and Vector2(contract["status_cluster_size"]) == Vector2(346.0, 64.0)
 			and bool(contract["top_clusters_do_not_overlap"]),
 		"200% probe preserves full-width meters and a single unclipped status row"
 	)

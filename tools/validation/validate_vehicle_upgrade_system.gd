@@ -19,6 +19,7 @@ const RETIRED_IDS: Array[StringName] = [
 	&"seeker_warhead", &"siphon_matrix", &"stabilizer", &"static_aegis",
 	&"thermal_compound", &"toxin_core", &"tuned_thrusters", &"twin_seekers",
 	&"wake_mines",
+	&"active_amplifier", &"active_coolant", &"secondary_amplifier", &"secondary_coolant",
 ]
 
 var failures: Array[String] = []
@@ -40,7 +41,7 @@ func _initialize() -> void:
 	var catalog := Catalog.new()
 	for error in catalog.validate_contract():
 		failures.append(error)
-	_expect(catalog.definitions.size() == 28, "catalog contains exactly 28 upgrades")
+	_expect(catalog.definitions.size() == 25, "catalog contains exactly 25 upgrades")
 	_validate_presentation(catalog)
 	_validate_behavior_previews(catalog)
 	_validate_secondary_slots(catalog)
@@ -92,11 +93,7 @@ func _validate_presentation(catalog: Catalog) -> void:
 			var expected_kind := (
 				&"stats"
 				if not definition.modifiers.is_empty() and definition.category != &"element"
-				else (
-					&"enhance"
-					if definition.secondary_slot_kind == &"built_in"
-					else (&"unlock" if current_level == 0 else &"enhance")
-				)
+				else (&"unlock" if current_level == 0 else &"enhance")
 			)
 			_expect(
 				StringName(snapshot["change_kind"]) == expected_kind,
@@ -109,11 +106,11 @@ func _validate_presentation(catalog: Catalog) -> void:
 					"%s behavior level has a localized change label" % definition.id
 				)
 			state_count += 1
-	_expect(state_count == 92, "upgrade presentation covers all 92 level states")
-	_expect(artwork_ids.size() == 28, "all 28 upgrades own unique artwork")
+	_expect(state_count == 85, "upgrade presentation covers all 85 level states")
+	_expect(artwork_ids.size() == 25, "all 25 upgrades own unique artwork")
 	_expect(
 		category_counts == {
-			&"primary":2, &"secondary":8, &"element":4, &"activated":5,
+			&"primary":2, &"secondary":6, &"element":4, &"activated":4,
 			&"chassis":5, &"combat":4,
 		},
 		"six player-facing categories own the exact approved roster"
@@ -151,29 +148,29 @@ func _validate_behavior_previews(catalog: Catalog) -> void:
 		{
 			"id":&"homing_missiles",
 			"keys":["UPGRADE_EFFECT_MISSILES_PER_VOLLEY", "UPGRADE_EFFECT_DAMAGE_PER_MISSILE"],
-			"current":[[2.0, 3.0, 4.0], [25.0, 28.0, 32.0]],
-			"next":[[3.0, 4.0, 4.0], [28.0, 32.0, 38.0]],
-			"show":[true, true, true],
+			"current":[[2.0, 2.0, 3.0, 4.0], [25.0, 25.0, 31.36, 40.0]],
+			"next":[[2.0, 3.0, 4.0, 4.0], [25.0, 31.36, 40.0, 53.2]],
+			"show":[false, true, true, true],
 		},
 		{
 			"id":&"electric_field",
 			"keys":["UPGRADE_EFFECT_DPS", "UPGRADE_EFFECT_RADIUS"],
-			"current":[[8.0, 8.0, 11.5, 16.0], [240.0, 240.0, 280.0, 320.0]],
-			"next":[[8.0, 11.5, 16.0, 22.0], [240.0, 280.0, 320.0, 320.0]],
+			"current":[[8.0, 8.0, 14.311111, 24.390244], [240.0, 240.0, 280.0, 320.0]],
+			"next":[[8.0, 14.311111, 24.390244, 41.066667], [240.0, 280.0, 320.0, 320.0]],
 			"show":[false, true, true, true],
 		},
 		{
 			"id":&"orbiting_blades",
 			"keys":["UPGRADE_EFFECT_BLADE_COUNT", "UPGRADE_EFFECT_DAMAGE_PER_BLADE"],
-			"current":[[2.0, 2.0, 3.0, 4.0], [14.0, 14.0, 18.0, 22.0]],
-			"next":[[2.0, 3.0, 4.0, 4.0], [14.0, 18.0, 22.0, 28.0]],
+			"current":[[2.0, 2.0, 3.0, 4.0], [14.0, 14.0, 20.16, 27.5]],
+			"next":[[2.0, 3.0, 4.0, 4.0], [14.0, 20.16, 27.5, 39.2]],
 			"show":[false, true, true, true],
 		},
 		{
 			"id":&"drop_mines",
 			"keys":["UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_DEPLOYMENT_INTERVAL"],
-			"current":[[48.0, 48.0, 60.0, 72.0], [3.2, 3.2, 2.8, 2.4]],
-			"next":[[48.0, 60.0, 72.0, 88.0], [3.2, 2.8, 2.4, 2.4]],
+			"current":[[48.0, 48.0, 67.2, 90.0], [3.2, 3.2, 2.52, 1.968]],
+			"next":[[48.0, 67.2, 90.0, 123.2], [3.2, 2.52, 1.968, 1.8]],
 			"show":[false, true, true, true],
 		},
 	]
@@ -222,38 +219,29 @@ func _validate_behavior_previews(catalog: Catalog) -> void:
 
 
 func _validate_secondary_slots(catalog: Catalog) -> void:
-	var optional_ids: Array[StringName] = []
-	var built_in_ids: Array[StringName] = []
+	var automatic_ids: Array[StringName] = []
 	for definition in catalog.all_definitions():
 		if definition.category != &"secondary":
 			continue
-		if definition.secondary_slot_kind == &"optional":
-			optional_ids.append(definition.id)
-		elif definition.secondary_slot_kind == &"built_in":
-			built_in_ids.append(definition.id)
-	optional_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
-	built_in_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
+		automatic_ids.append(definition.id)
+	automatic_ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	_expect(
-		_id_key(optional_ids) == "auto_laser|drop_mines|electric_field|orbiting_blades|storm_barrage",
-		"five optional secondary identities support a choose-two decision: %s"
-		% _id_key(optional_ids)
-	)
-	_expect(
-		_id_key(built_in_ids) == "homing_missiles",
-		"one built-in homing behavior card does not consume a slot: %s"
-		% _id_key(built_in_ids)
+		_id_key(automatic_ids) == "auto_laser|drop_mines|electric_field|homing_missiles|orbiting_blades|storm_barrage",
+		"six equal automatic weapons support a choose-three decision: %s"
+		% _id_key(automatic_ids)
 	)
 	var build := RunBuild.new(catalog)
 	build.apply(&"electric_field")
 	build.apply(&"orbiting_blades")
-	_expect(build.active_optional_secondaries() == 2, "two optional slots are occupied")
+	build.apply(&"homing_missiles")
+	_expect(build.active_automatic_weapons() == 3, "three automatic slots are occupied")
 	_expect(
 		not catalog.compatible(catalog.get_definition(&"drop_mines"), build),
-		"a third optional secondary is blocked"
+		"a fourth automatic weapon is blocked"
 	)
 	_expect(
 		catalog.compatible(catalog.get_definition(&"electric_field"), build),
-		"an owned optional secondary remains levelable"
+		"an owned automatic weapon remains levelable"
 	)
 
 
@@ -307,7 +295,7 @@ func _validate_element_lock(catalog: Catalog) -> void:
 
 func _validate_active_lock(catalog: Catalog) -> void:
 	var build := RunBuild.new(catalog)
-	_expect(build.active_weapon_id() == &"emp", "EMP is the default active weapon")
+	_expect(build.active_weapon_id().is_empty(), "a fresh run has no active weapon")
 	var rewards := RewardRuntime.new()
 	var field_offer_serial := rewards.begin(&"stage_1", &"field_reward")
 	_expect(field_offer_serial == 0, "a field reward can precede the first level-up")
@@ -325,19 +313,20 @@ func _validate_active_lock(catalog: Catalog) -> void:
 	for definition in opening_offer:
 		if definition.category == &"activated":
 			opening_active_ids.append(definition.id)
+	var opening_auto_count := opening_offer.filter(func(definition: VehicleUpgradeDefinition) -> bool: return definition.category == &"secondary").size()
 	_expect(
-		opening_offer.any(func(definition: VehicleUpgradeDefinition) -> bool: return definition.id == &"active_amplifier")
-			and opening_active_ids == [&"active_amplifier"],
-		"the first Stage 1 level-up deterministically offers exactly one unfinished EMP enhancement"
+		opening_active_ids.size() == 1 and opening_auto_count == 1
+			and opening_offer.size() == 3,
+		"the first Stage 1 level-up offers one Active, one Auto, and one other card"
 	)
-	_expect(bool(build.apply(&"gravity_collapse").get("applied", false)), "one active kind can replace EMP")
+	_expect(bool(build.apply(&"gravity_collapse").get("applied", false)), "one active weapon can be acquired")
 	_expect(
 		build.active_weapon_id() == &"black_hole"
 			and catalog.compatible(catalog.get_definition(&"gravity_collapse"), build)
 			and not catalog.compatible(catalog.get_definition(&"kinetic_shockwave"), build)
 			and not catalog.compatible(catalog.get_definition(&"piercing_lance"), build)
-			and catalog.compatible(catalog.get_definition(&"active_coolant"), build),
-		"one selected active kind remains levelable while shared enhancements stay legal"
+			and not catalog.compatible(catalog.get_definition(&"emp"), build),
+		"one selected active weapon remains levelable and excludes the other three"
 	)
 
 
@@ -389,8 +378,8 @@ func _validate_offers(catalog: Catalog) -> void:
 			legal_choices += 1
 			build.apply(offer[run_seed % offer.size()].id)
 		_expect(
-			legal_choices >= 65
-				and legal_choices <= 67
+			legal_choices >= 54
+				and legal_choices <= 56
 				and catalog.compatible_definitions(build).is_empty(),
 			(
 				"seed %d reaches catalog exhaustion after all legal choices "

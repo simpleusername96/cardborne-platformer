@@ -37,7 +37,7 @@ func _run() -> void:
 	var capacities: Array[int] = []
 	for category_variant in Array(snapshot["categories"]):
 		capacities.append(int(Dictionary(category_variant)["capacity"]))
-	_expect(capacities == [2, 5, 2, 3, 5, 4], "snapshot keeps locked category capacities")
+	_expect(capacities == [2, 3, 2, 1, 5, 4], "snapshot keeps locked category capacities")
 	var chassis_category := Dictionary(Array(snapshot["categories"])[4])
 	var chassis_slots: Array = chassis_category["slots"]
 	_expect(
@@ -55,7 +55,7 @@ func _run() -> void:
 		StringName(Dictionary(secondary_slots[0])["record"].get("id", &"")) == &"orbiting_blades"
 			and StringName(Dictionary(secondary_slots[1])["record"].get("id", &"")) == &"electric_field"
 			and Array(optional_snapshot["upgrades"]).size() == 2,
-		"optional-secondary acquisition order packs from the left and flat projection remains unique"
+		"automatic-weapon acquisition order packs from the left and flat projection remains unique"
 	)
 	var upgrade := Dictionary(snapshot["upgrades"][0])
 	_expect(StringName(upgrade["id"]) == &"chassis_speed", "upgrade uses stable ID")

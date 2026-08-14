@@ -10,7 +10,7 @@ const BLACK_HOLE_AIM_DISTANCE := 480.0
 const RELEASE_VISUAL_SECONDS := 0.18
 
 var catalog := VehicleActiveWeaponCatalog.new()
-var equipped_id: StringName = &"emp"
+var equipped_id: StringName = &""
 var cooldown_remaining := 0.0
 var startup_remaining := 0.0
 var active_remaining := 0.0
@@ -18,14 +18,14 @@ var release_visual_remaining := 0.0
 var pull_tick_remaining := 0.0
 var center := Vector2.ZERO
 var direction := Vector2.RIGHT
-var level := 1
+var level := 0
 var damage := 0.0
 var size := 0.0
 var action_serial := 0
 
 
 func reset(player_position: Vector2 = Vector2.ZERO) -> void:
-	equipped_id = &"emp"
+	equipped_id = &""
 	cooldown_remaining = 0.0
 	startup_remaining = 0.0
 	active_remaining = 0.0
@@ -33,7 +33,7 @@ func reset(player_position: Vector2 = Vector2.ZERO) -> void:
 	pull_tick_remaining = 0.0
 	center = player_position
 	direction = Vector2.RIGHT
-	level = 1
+	level = 0
 	damage = 0.0
 	size = 0.0
 	action_serial = 0
@@ -64,7 +64,9 @@ func try_start(
 	var definition := catalog.get_definition(equipped_id)
 	if definition == null:
 		return {"started":false}
-	level = 1 if equipped_id == &"emp" else maxi(1, build.level_of(definition.upgrade_id))
+	level = build.level_of(definition.upgrade_id)
+	if level <= 0:
+		return {"started":false}
 	direction = aim_direction.normalized() if aim_direction.length_squared() > 0.0001 else Vector2.RIGHT
 	center = player_position
 	if equipped_id == &"black_hole":
@@ -74,16 +76,16 @@ func try_start(
 			clampf(target.x, play_bounds.position.x + inset, play_bounds.end.x - inset),
 			clampf(target.y, play_bounds.position.y + inset, play_bounds.end.y - inset)
 		)
-	damage = definition.damage(level) * build.stat(&"active_damage_multiplier", 1.0)
+	damage = definition.damage(level)
 	size = definition.size(level)
 	startup_remaining = definition.startup_seconds
 	active_remaining = 0.0
 	release_visual_remaining = 0.0
 	pull_tick_remaining = BLACK_HOLE_PULL_INTERVAL
-	var base_cooldown := definition.cooldown_seconds
+	var base_cooldown := definition.cooldown(level)
 	if equipped_id == &"emp":
 		base_cooldown = maxf(0.0, base_cooldown - emp_relay_reduction)
-	cooldown_remaining = base_cooldown * build.stat(&"active_cooldown_multiplier", 1.0)
+	cooldown_remaining = base_cooldown
 	action_serial += 1
 	return {
 		"started":true,
@@ -92,7 +94,7 @@ func try_start(
 		"center":center,
 		"direction":direction,
 		"size":size,
-		"auxiliary_size":definition.auxiliary_size,
+		"auxiliary_size":definition.auxiliary_size(level),
 	}
 
 
@@ -130,7 +132,12 @@ func advance(delta: float, build: VehicleRunBuild) -> Dictionary:
 
 
 func is_ready() -> bool:
-	return cooldown_remaining <= 0.0 and startup_remaining <= 0.0 and active_remaining <= 0.0
+	return (
+		not equipped_id.is_empty()
+		and cooldown_remaining <= 0.0
+		and startup_remaining <= 0.0
+		and active_remaining <= 0.0
+	)
 
 
 func reduce_cooldown(seconds: float) -> float:
@@ -144,26 +151,25 @@ func cooldown_max(build: VehicleRunBuild, emp_relay_reduction := 0.0) -> float:
 	var definition := catalog.get_definition(equipped_id)
 	if definition == null:
 		return 0.0
-	var base := definition.cooldown_seconds
+	var current_level := build.level_of(definition.upgrade_id)
+	if current_level <= 0:
+		return 0.0
+	var base := definition.cooldown(current_level)
 	if equipped_id == &"emp":
 		base = maxf(0.0, base - emp_relay_reduction)
-	return base * build.stat(&"active_cooldown_multiplier", 1.0)
+	return base
 
 
 func snapshot(build: VehicleRunBuild, emp_relay_reduction := 0.0) -> Dictionary:
 	configure(build)
 	var definition := catalog.get_definition(equipped_id)
-	var current_level := (
-		1
-		if equipped_id == &"emp" or definition == null
-		else maxi(1, build.level_of(definition.upgrade_id))
-	)
+	var current_level := build.level_of(definition.upgrade_id) if definition != null else 0
 	var current_damage := (
-		definition.damage(current_level) * build.stat(&"active_damage_multiplier", 1.0)
+		definition.damage(current_level)
 		if definition != null
 		else 0.0
 	)
-	var current_size := definition.size(current_level) if definition != null else 0.0
+	var current_size := definition.size(current_level) if definition != null and current_level > 0 else 0.0
 	return {
 		"weapon_id":equipped_id,
 		"available":is_ready(),
@@ -176,7 +182,7 @@ func snapshot(build: VehicleRunBuild, emp_relay_reduction := 0.0) -> Dictionary:
 		"direction":direction,
 		"damage":current_damage,
 		"size":current_size,
-		"auxiliary_size":definition.auxiliary_size if definition != null else 0.0,
+		"auxiliary_size":definition.auxiliary_size(current_level) if definition != null and current_level > 0 else 0.0,
 		"level":current_level,
 		"action_serial":action_serial,
 	}

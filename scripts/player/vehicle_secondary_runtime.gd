@@ -1,12 +1,11 @@
 class_name VehicleSecondaryRuntime
 extends RefCounted
 
-## Bounded simulation for the canonical secondary-weapon family. The built-in
-## seeker and optional weapons share one runtime; VehicleRun remains the sole
+## Bounded simulation for the canonical automatic-weapon family. All six
+## weapons share one runtime; VehicleRun remains the sole
 ## projectile-store owner and consumes the borrowed projectile intents.
 
 const ION_TICK := 0.25
-const ORBIT_HIT_COOLDOWN := 0.55
 const ORBIT_RADIUS := 112.0
 const ORBIT_BLADE_RADIUS := 52.0
 const MINE_LIFETIME := 8.0
@@ -14,7 +13,6 @@ const MINE_MAX_RADIUS := 240.0
 const AUTO_LASER_LENGTH := 760.0
 const AUTO_LASER_HALF_WIDTH := 18.0
 const AUTO_LASER_DURATION := 0.14
-const AUTO_LASER_COOLDOWN := 0.9
 const AUTO_LASER_CANDIDATE_LIMIT := 24
 const STORM_MIN_DISTANCE := 480.0
 const STORM_MAX_DISTANCE := 960.0
@@ -153,8 +151,6 @@ func update(
 	_beam_intent_count = 0
 	_warning_receipt_count = 0
 	_impact_receipt_count = 0
-	var shared_cooldown_multiplier := build.stat(&"secondary_cooldown_multiplier", 1.0)
-	var shared_damage_multiplier := build.stat(&"secondary_damage_multiplier", 1.0)
 	seeker_cooldown = maxf(0.0, seeker_cooldown - delta)
 	auto_laser_cooldown = maxf(0.0, auto_laser_cooldown - delta)
 	auto_laser_active_remaining = maxf(
@@ -168,9 +164,7 @@ func update(
 		enemies,
 		line_of_sight,
 		query_radius,
-		attack_path_end,
-		shared_cooldown_multiplier,
-		shared_damage_multiplier
+		attack_path_end
 	)
 	_update_storm_barrage(
 		delta,
@@ -178,9 +172,7 @@ func update(
 		aim_direction,
 		build,
 		enemies,
-		query_radius,
-		shared_cooldown_multiplier,
-		shared_damage_multiplier
+		query_radius
 	)
 	_update_seeker(
 		delta,
@@ -189,8 +181,7 @@ func update(
 		find_seeker_targets,
 		seeker_blocked,
 		_projectile_output,
-		seeker_cooldown_multiplier * shared_cooldown_multiplier,
-		shared_damage_multiplier
+		seeker_cooldown_multiplier
 	)
 	orbit_angle = fmod(orbit_angle + delta * 3.4, TAU)
 	_expired_cooldown_ids.clear()
@@ -210,9 +201,7 @@ func update(
 		enemies,
 		line_of_sight,
 		query_radius,
-		_damage_output,
-		shared_cooldown_multiplier,
-		shared_damage_multiplier
+		_damage_output
 	)
 	_update_orbit(
 		player_position,
@@ -220,9 +209,7 @@ func update(
 		enemies,
 		line_of_sight,
 		query_radius,
-		_damage_output,
-		shared_cooldown_multiplier,
-		shared_damage_multiplier
+		_damage_output
 	)
 	_update_mines(
 		delta,
@@ -233,9 +220,7 @@ func update(
 		line_of_sight,
 		query_radius,
 		_damage_output,
-		_detonation_output,
-		shared_cooldown_multiplier,
-		shared_damage_multiplier
+		_detonation_output
 	)
 	_primary_success_pending = false
 	return _result
@@ -314,15 +299,9 @@ func _orbit_blade_count(build: VehicleRunBuild) -> int:
 
 
 func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
-	var seeker := _definition(&"seeker")
-	var result: Array[Dictionary] = [{
-		"id":&"seeker",
-		"level":1,
-		"name_key":seeker.name_key if seeker != null else "SECONDARY_HOMING_MISSILES_NAME",
-		"slot_kind":&"built_in",
-	}]
+	var result: Array[Dictionary] = []
 	for secondary_id in [
-		&"electric_field", &"orbiting_blades", &"drop_mines",
+		&"seeker", &"electric_field", &"orbiting_blades", &"drop_mines",
 		&"auto_laser", &"storm_barrage",
 	]:
 		var definition := _definition(secondary_id)
@@ -330,7 +309,7 @@ func equipped_families(build: VehicleRunBuild) -> Array[Dictionary]:
 			continue
 		var level := build.level_of(definition.upgrade_id)
 		if level > 0:
-			result.append({"id":secondary_id, "level":level, "name_key":definition.name_key, "slot_kind":&"optional"})
+			result.append({"id":secondary_id, "level":level, "name_key":definition.name_key, "slot_kind":&"weapon"})
 	return result
 
 
@@ -340,9 +319,7 @@ func _update_auto_laser(
 	enemies: Array[EnemyState],
 	line_of_sight: Callable,
 	query_radius: Callable,
-	attack_path_end: Callable,
-	cooldown_multiplier: float,
-	damage_multiplier: float
+	attack_path_end: Callable
 ) -> void:
 	if not _primary_success_pending:
 		return
@@ -423,13 +400,13 @@ func _update_auto_laser(
 	auto_laser_active_origin = beam_origin
 	auto_laser_active_end = beam_end
 	auto_laser_active_remaining = AUTO_LASER_DURATION
-	auto_laser_cooldown = maxf(AUTO_LASER_COOLDOWN, definition.auxiliary(level)) * cooldown_multiplier
+	auto_laser_cooldown = definition.cadence(level)
 	_append_beam_intent(
 		beam_origin,
 		beam_end,
 		direction,
 		beam_length,
-		definition.value(level) * damage_multiplier,
+		definition.value(level),
 		attack_serial
 	)
 	_beam_target_buffer.clear()
@@ -451,7 +428,7 @@ func _update_auto_laser(
 		_append_damage_intent(
 			_damage_output,
 			enemy,
-			definition.value(level) * damage_multiplier,
+			definition.value(level),
 			"Auto Laser",
 			OutgoingDamagePolicy.DAMAGE_DIRECT,
 			attack_serial
@@ -487,9 +464,7 @@ func _update_storm_barrage(
 	aim_direction: Vector2,
 	build: VehicleRunBuild,
 	enemies: Array[EnemyState],
-	query_radius: Callable,
-	cooldown_multiplier: float,
-	damage_multiplier: float
+	query_radius: Callable
 ) -> void:
 	var definition := _definition(&"storm_barrage")
 	var level := build.level_of(&"storm_barrage") if definition != null else 0
@@ -525,8 +500,8 @@ func _update_storm_barrage(
 	storm_position = _storm_selected_buffer[0].pos
 	storm_pending = true
 	storm_warning_remaining = STORM_WARNING_DURATION
-	storm_cooldown = maxf(STORM_WARNING_DURATION, definition.auxiliary(level) * cooldown_multiplier)
-	storm_pending_damage = definition.value(level) * damage_multiplier
+	storm_cooldown = maxf(STORM_WARNING_DURATION, definition.cadence(level))
+	storm_pending_damage = definition.value(level)
 	storm_pending_level = level
 	storm_pending_attack_serial = _next_attack_serial()
 	_append_warning_receipt(
@@ -651,22 +626,22 @@ func _update_seeker(
 	find_targets: Callable,
 	blocked: bool,
 	output: Array[Dictionary],
-	cooldown_multiplier: float,
-	damage_multiplier: float
+	cooldown_multiplier: float
 ) -> void:
 	if blocked or seeker_cooldown > 0.0 or not find_targets.is_valid():
 		return
 	var definition := _definition(&"seeker")
 	if definition == null:
 		return
-	var missile_level := clampi(build.level_of(&"homing_missiles"), 0, 3)
-	var definition_level := missile_level + 1
+	var definition_level := build.level_of(&"homing_missiles")
+	if definition_level <= 0:
+		return
 	var seeker_count := definition.cap(definition_level)
 	var targets_variant: Variant = find_targets.call(seeker_count)
 	if not targets_variant is Array or targets_variant.is_empty():
 		return
-	seeker_cooldown = definition.auxiliary(definition_level) * cooldown_multiplier
-	var seeker_damage := definition.value(definition_level) * damage_multiplier
+	seeker_cooldown = definition.cadence(definition_level) * cooldown_multiplier
+	var seeker_damage := definition.value(definition_level)
 	var attack_serial := _next_attack_serial()
 	for target_variant in targets_variant:
 		var target := target_variant as EnemyState
@@ -691,18 +666,18 @@ func _update_seeker(
 			"homing": true,
 			"target_id": target.id,
 			"explosive": true,
-			"structure_damage": 25.0 * damage_multiplier,
+			"structure_damage": definition.structure_damage(definition_level),
 			"primary_payload": null,
 			"wall_piercing": false,
 		})
 
 
-func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary], cooldown_multiplier: float, damage_multiplier: float) -> void:
+func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuild, enemies: Array[EnemyState], line_of_sight: Callable, query_radius: Callable, output: Array[Dictionary]) -> void:
 	var definition := _definition(&"electric_field")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		return
-	if not _timer_ready(&"electric_field", delta, ION_TICK * cooldown_multiplier):
+	if not _timer_ready(&"electric_field", delta, definition.cadence(level)):
 		return
 	var radius := definition.auxiliary(level)
 	_query_candidates(origin, radius, enemies, query_radius)
@@ -713,7 +688,7 @@ func _update_electric_field(delta: float, origin: Vector2, build: VehicleRunBuil
 			_append_damage_intent(
 				output,
 				enemy,
-				definition.value(level) * ION_TICK * damage_multiplier,
+				definition.value(level) * ION_TICK,
 				"Electric Field",
 				OutgoingDamagePolicy.DAMAGE_PERIODIC,
 				attack_serial
@@ -726,9 +701,7 @@ func _update_orbit(
 	enemies: Array[EnemyState],
 	line_of_sight: Callable,
 	query_radius: Callable,
-	output: Array[Dictionary],
-	cooldown_multiplier: float,
-	damage_multiplier: float
+	output: Array[Dictionary]
 ) -> void:
 	var definition := _definition(&"orbiting_blades")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
@@ -745,13 +718,13 @@ func _update_orbit(
 				continue
 			var contact_radius := ORBIT_BLADE_RADIUS + enemy.radius
 			if blade_position.distance_squared_to(enemy.pos) <= contact_radius * contact_radius and line_of_sight.call(blade_position, enemy.pos, 2.0):
-				orbit_target_cooldowns[enemy_id] = ORBIT_HIT_COOLDOWN * cooldown_multiplier
+				orbit_target_cooldowns[enemy_id] = definition.cadence(level)
 				if blade_attack_serial <= 0:
 					blade_attack_serial = _next_attack_serial()
 				_append_damage_intent(
 					output,
 					enemy,
-					definition.value(level) * damage_multiplier,
+					definition.value(level),
 					"Orbiting Blades",
 					OutgoingDamagePolicy.DAMAGE_DIRECT,
 					blade_attack_serial
@@ -767,16 +740,14 @@ func _update_mines(
 	line_of_sight: Callable,
 	query_radius: Callable,
 	damage_output: Array[Dictionary],
-	detonation_output: Array[Dictionary],
-	cooldown_multiplier: float,
-	damage_multiplier: float
+	detonation_output: Array[Dictionary]
 ) -> void:
 	var definition := _definition(&"drop_mines")
 	var level := build.level_of(definition.upgrade_id) if definition != null else 0
 	if level <= 0:
 		mines.clear()
 		return
-	if _timer_ready(&"drop_mines", delta, definition.auxiliary(level) * cooldown_multiplier):
+	if _timer_ready(&"drop_mines", delta, definition.cadence(level)):
 		mines.append({"pos":origin - direction.normalized() * 48.0, "life":MINE_LIFETIME})
 		while mines.size() > definition.cap(level):
 			mines.pop_front()
@@ -793,7 +764,7 @@ func _update_mines(
 					break
 		if not detonate:
 			continue
-		var radius := minf(MINE_MAX_RADIUS, 168.0 + float(level) * 24.0)
+		var radius := minf(MINE_MAX_RADIUS, definition.auxiliary(level))
 		_query_candidates(Vector2(mine["pos"]), radius, enemies, query_radius)
 		var attack_serial := _next_attack_serial()
 		for enemy in _candidate_buffer:
@@ -802,7 +773,7 @@ func _update_mines(
 				_append_damage_intent(
 					damage_output,
 					enemy,
-					definition.value(level) * damage_multiplier,
+					definition.value(level),
 					"Drop Mine",
 					OutgoingDamagePolicy.DAMAGE_DIRECT,
 					attack_serial

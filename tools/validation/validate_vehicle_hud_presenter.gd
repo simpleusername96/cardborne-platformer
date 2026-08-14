@@ -162,8 +162,7 @@ func _fast() -> Dictionary:
 		"cumulative_defeated":fast_cumulative_defeated,
 		"dash_available":fast_dash_available,
 		"dash_remaining":fast_dash_remaining,
-		"seeker_available":true,
-		"seeker_remaining":0.0,
+		"skill_owned":true,
 		"skill_available":true,
 		"skill_remaining":0.0,
 		"active_weapon_id":&"emp",
@@ -183,8 +182,7 @@ func _all_hull_fields_present(update: Dictionary) -> bool:
 func _all_action_fields_present(update: Dictionary) -> bool:
 	for key in [
 		"dash_available", "dash_remaining",
-		"seeker_available", "seeker_remaining",
-		"skill_available", "skill_remaining", "active_weapon_id",
+		"skill_owned", "skill_available", "skill_remaining", "active_weapon_id",
 	]:
 		if not update.has(key):
 			return false

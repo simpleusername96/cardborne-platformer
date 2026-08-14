@@ -50,13 +50,7 @@ static func rows(
 		&"homing_missiles":
 			return _seeker_rows(current_level)
 		&"electric_field":
-			return _optional_secondary_rows(
-				definition.id,
-				current_level,
-				"UPGRADE_EFFECT_DPS",
-				"UPGRADE_EFFECT_RADIUS",
-				false
-			)
+			return _electric_field_rows(current_level)
 		&"orbiting_blades":
 			return _optional_secondary_rows(
 				definition.id,
@@ -72,7 +66,8 @@ static func rows(
 				"UPGRADE_EFFECT_DAMAGE",
 				"UPGRADE_EFFECT_DEPLOYMENT_INTERVAL",
 				false,
-				"seconds"
+				"seconds",
+				true
 			)
 		&"critical_targeting":
 			return [
@@ -143,15 +138,15 @@ static func rows(
 			return _optional_secondary_rows(
 				definition.id, current_level,
 				"UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_COOLDOWN",
-				false, "seconds"
+				false, "seconds", true
 			)
 		&"storm_barrage":
 			return _optional_secondary_rows(
 				definition.id, current_level,
 				"UPGRADE_EFFECT_DAMAGE", "UPGRADE_EFFECT_COOLDOWN",
-				false, "seconds"
+				false, "seconds", true
 			)
-		&"gravity_collapse", &"kinetic_shockwave", &"piercing_lance":
+		&"emp", &"gravity_collapse", &"kinetic_shockwave", &"piercing_lance":
 			return _active_weapon_rows(definition.id, current_level)
 	return []
 
@@ -180,18 +175,22 @@ static func _seeker_rows(current_level: int) -> Array[Dictionary]:
 	var definition := _secondary_def(&"homing_missiles")
 	if definition == null:
 		return []
-	var current_state := current_level + 1
-	var next_state := current_level + 2
+	var current_state := maxi(1, current_level)
+	var next_state := current_level + 1
 	return [
 		_row(
 			"UPGRADE_EFFECT_MISSILES_PER_VOLLEY",
 			definition.cap(current_state),
-			definition.cap(next_state)
+			definition.cap(next_state),
+			"none",
+			current_level > 0
 		),
 		_row(
 			"UPGRADE_EFFECT_DAMAGE_PER_MISSILE",
 			definition.value(current_state),
-			definition.value(next_state)
+			definition.value(next_state),
+			"none",
+			current_level > 0
 		),
 	]
 
@@ -202,7 +201,8 @@ static func _optional_secondary_rows(
 	value_key: String,
 	auxiliary_key: String,
 	auxiliary_first: bool,
-	auxiliary_unit: String = "none"
+	auxiliary_unit: String = "none",
+	use_cadence: bool = false
 ) -> Array[Dictionary]:
 	var definition := _secondary_def(upgrade_id)
 	if definition == null:
@@ -219,12 +219,36 @@ static func _optional_secondary_rows(
 	)
 	var auxiliary_row := _row(
 		auxiliary_key,
-		definition.cap(current_state) if auxiliary_first else definition.auxiliary(current_state),
-		definition.cap(next_state) if auxiliary_first else definition.auxiliary(next_state),
+		definition.cap(current_state) if auxiliary_first else (
+			definition.cadence(current_state) if use_cadence else definition.auxiliary(current_state)
+		),
+		definition.cap(next_state) if auxiliary_first else (
+			definition.cadence(next_state) if use_cadence else definition.auxiliary(next_state)
+		),
 		auxiliary_unit,
 		show_current
 	)
 	return [auxiliary_row, value_row] if auxiliary_first else [value_row, auxiliary_row]
+
+
+static func _electric_field_rows(current_level: int) -> Array[Dictionary]:
+	var definition := _secondary_def(&"electric_field")
+	if definition == null:
+		return []
+	var current_state := maxi(1, current_level)
+	var next_state := current_level + 1
+	var current_dps := definition.value(current_state) * 0.25 / definition.cadence(current_state)
+	var next_dps := definition.value(next_state) * 0.25 / definition.cadence(next_state)
+	return [
+		_row("UPGRADE_EFFECT_DPS", current_dps, next_dps, "none", current_level > 0),
+		_row(
+			"UPGRADE_EFFECT_RADIUS",
+			definition.auxiliary(current_state),
+			definition.auxiliary(next_state),
+			"none",
+			current_level > 0
+		),
+	]
 
 
 static func _secondary_def(upgrade_id: StringName) -> VehicleSecondaryDefinition:
@@ -240,6 +264,7 @@ static func _active_weapon_rows(
 	if _active_weapon_catalog == null:
 		_active_weapon_catalog = ActiveWeaponCatalog.new()
 	var active_id := StringName({
+		&"emp":&"emp",
 		&"gravity_collapse":&"black_hole",
 		&"kinetic_shockwave":&"shockwave",
 		&"piercing_lance":&"cross_beam",

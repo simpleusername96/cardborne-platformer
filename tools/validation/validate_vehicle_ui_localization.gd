@@ -17,7 +17,7 @@ func _initialize() -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 92, "upgrade catalog produces 92 selectable level states")
+	_expect(snapshots.size() == 85, "upgrade catalog produces 85 selectable level states")
 
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
