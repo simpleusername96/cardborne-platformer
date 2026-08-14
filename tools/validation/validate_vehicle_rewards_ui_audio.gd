@@ -31,6 +31,10 @@ func _validate_reward_runtime() -> void:
 	_expect(not rewards.enqueue(&"boss"), "reward runtime suppresses duplicate pending sources")
 	_expect(rewards.pop_pending() == &"boss", "reward queue preserves its source identity")
 	_expect(not rewards.has_pending(), "popping the only source empties the reward queue")
+	_expect(
+		RewardRuntime.valid_campaign_receipt(rewards.campaign_receipt()),
+		"reward queue publishes one shape-valid campaign receipt"
+	)
 
 	_expect(rewards.begin(&"stage_1", &"boss") == 0, "first mandatory reward offer uses serial zero")
 	_expect(not rewards.enqueue(&"boss"), "active reward sources cannot be queued again")

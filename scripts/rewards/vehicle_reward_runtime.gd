@@ -93,6 +93,42 @@ func is_idle() -> bool:
 	return _current_source.is_empty()
 
 
+func campaign_receipt() -> Dictionary:
+	return {
+		"idle":is_idle(),
+		"current_source":_current_source,
+		"pending_sources":_pending_sources.duplicate(),
+		"offer_serial":_offer_serial,
+		"level_up_offer_count":_level_up_offer_count,
+		"current_level_up_offer_index":_current_level_up_offer_index,
+	}
+
+
+static func valid_campaign_receipt(receipt: Dictionary) -> bool:
+	if not (
+		receipt.has("idle")
+		and receipt.has("current_source")
+		and receipt.has("pending_sources")
+		and receipt.has("offer_serial")
+		and receipt.has("level_up_offer_count")
+		and receipt.has("current_level_up_offer_index")
+	):
+		return false
+	var idle := bool(receipt["idle"])
+	var source := StringName(receipt["current_source"])
+	return (
+		idle == source.is_empty()
+		and receipt["pending_sources"] is Array
+		and int(receipt["offer_serial"]) >= 0
+		and int(receipt["level_up_offer_count"]) >= 0
+		and int(receipt["current_level_up_offer_index"]) >= -1
+		and (
+			int(receipt["current_level_up_offer_index"]) == -1
+			or source == LEVEL_UP_SOURCE
+		)
+	)
+
+
 func _clear_active() -> void:
 	_current_source = &""
 	_current_level_up_offer_index = -1

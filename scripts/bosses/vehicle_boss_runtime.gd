@@ -13,6 +13,20 @@ const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const PHASE_GAPS := [0.45, 0.34, 0.26]
 const AUTONOMOUS_INTERVALS := [5.4, 4.4, 3.5]
 const DIRECT_RECOVERY_SCALE := 0.80
+const ACTION_NONE: StringName = &""
+const ACTION_REPOSITION: StringName = &"reposition"
+const ACTION_SELECT_DIRECT: StringName = &"select_direct"
+const ACTION_REFRESH_STARTUP: StringName = &"refresh_startup"
+const ACTION_BEGIN_ACTIVE: StringName = &"begin_active"
+const ACTION_UPDATE_ACTIVE: StringName = &"update_active"
+const PHASE_ACTIONS: Array[StringName] = [
+	ACTION_NONE,
+	ACTION_REPOSITION,
+	ACTION_SELECT_DIRECT,
+	ACTION_REFRESH_STARTUP,
+	ACTION_BEGIN_ACTIVE,
+	ACTION_UPDATE_ACTIVE,
+]
 
 var stage_id: StringName = &"stage_1"
 var stage_index := 0
@@ -50,6 +64,52 @@ func select_direct(boss: VehicleEnemyState) -> String:
 				boss.pattern_index += offset + 1
 				break
 	return candidate
+
+
+func advance_direct_phase(
+	boss: VehicleEnemyState,
+	delta: float,
+	attack_commit_blocked: bool
+) -> Dictionary:
+	var action := ACTION_NONE
+	match StringName(boss.phase):
+		&"boss_read":
+			boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
+			action = (
+				ACTION_SELECT_DIRECT
+				if boss.phase_time <= 0.0 and not attack_commit_blocked
+				else ACTION_REPOSITION
+			)
+		&"boss_startup":
+			boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
+			action = (
+				ACTION_BEGIN_ACTIVE
+				if boss.phase_time <= 0.0
+				else ACTION_REFRESH_STARTUP
+			)
+		&"boss_active":
+			action = ACTION_UPDATE_ACTIVE
+		&"boss_recovery":
+			boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
+			if boss.phase_time <= 0.0:
+				boss.phase = &"boss_read"
+				boss.phase_time = read_gap(boss.boss_phase)
+				boss.pattern = &"reading_arena"
+			action = ACTION_REPOSITION
+	return {
+		"action":action,
+		"phase":StringName(boss.phase),
+		"attack_commit_blocked":attack_commit_blocked,
+	}
+
+
+static func valid_phase_receipt(receipt: Dictionary) -> bool:
+	return (
+		receipt.has("action")
+		and receipt.has("phase")
+		and receipt.has("attack_commit_blocked")
+		and StringName(receipt["action"]) in PHASE_ACTIONS
+	)
 
 
 func begin_active(boss: VehicleEnemyState, services: Variant) -> void:

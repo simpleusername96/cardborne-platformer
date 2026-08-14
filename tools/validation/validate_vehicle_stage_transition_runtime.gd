@@ -8,8 +8,10 @@ var failures: Array[String] = []
 
 
 func _initialize() -> void:
+	_validate_rejected_begin_is_inert()
 	_validate_continuation_order()
 	_validate_final_order()
+	_validate_no_boss_continuation_order()
 	if failures.is_empty():
 		print("VEHICLE_STAGE_TRANSITION_RUNTIME_VALIDATION_OK")
 		quit(0)
@@ -19,14 +21,33 @@ func _initialize() -> void:
 	quit(1)
 
 
+func _validate_rejected_begin_is_inert() -> void:
+	var runtime := TransitionRuntime.new()
+	var before := runtime.debug_snapshot()
+	var rejected := runtime.begin(0, 5, &"invalid", 4)
+	_expect(
+		not bool(rejected["accepted"])
+			and runtime.debug_snapshot() == before,
+		"an invalid completion kind cannot mutate transition state"
+	)
+
+
 func _validate_continuation_order() -> void:
 	var runtime := TransitionRuntime.new()
-	_expect(runtime.begin(true, 10), "continuation begins once")
-	_expect(not runtime.begin(true, 10), "duplicate begin is rejected")
-	_expect(runtime.advance(10) == &"", "lethal tick performs no transition step")
+	var begin_receipt := runtime.begin(
+		0, 5, TransitionRuntime.COMPLETION_AFTER_BOSS, 10
+	)
+	_expect(bool(begin_receipt["accepted"]), "continuation begins once")
+	_expect(
+		not bool(runtime.begin(0, 5, TransitionRuntime.COMPLETION_AFTER_BOSS, 10)["accepted"]),
+		"duplicate begin is rejected"
+	)
+	_expect(runtime.advance(10).is_empty(), "lethal tick performs no transition step")
 	var commands: Array[StringName] = []
 	for serial in range(11, 16):
-		commands.append(runtime.advance(serial))
+		var receipt := runtime.advance(serial)
+		_expect(TransitionRuntime.valid_command(receipt), "continuation command receipt is valid")
+		commands.append(StringName(receipt["command"]))
 	_expect(
 		commands == [
 			&"defeat_flush_complete",
@@ -42,10 +63,19 @@ func _validate_continuation_order() -> void:
 
 func _validate_final_order() -> void:
 	var runtime := TransitionRuntime.new()
-	_expect(runtime.begin(false, 20), "final transition begins")
+	var begin_receipt := runtime.begin(
+		4, 5, TransitionRuntime.COMPLETION_AFTER_BOSS, 20
+	)
+	_expect(
+		bool(begin_receipt["accepted"])
+			and bool(begin_receipt["has_next_stage"]) == false,
+		"final transition begins"
+	)
 	var commands: Array[StringName] = []
 	for serial in range(21, 25):
-		commands.append(runtime.advance(serial))
+		var receipt := runtime.advance(serial)
+		_expect(TransitionRuntime.valid_command(receipt), "terminal command receipt is valid")
+		commands.append(StringName(receipt["command"]))
 	_expect(
 		commands == [
 			&"defeat_flush_complete", &"capture_report",
@@ -54,6 +84,40 @@ func _validate_final_order() -> void:
 		"final result is separated from defeat and report capture"
 	)
 	_expect(not runtime.active(), "final transition returns to idle")
+
+
+func _validate_no_boss_continuation_order() -> void:
+	var runtime := TransitionRuntime.new()
+	var no_boss_receipt := runtime.begin(
+		0, 5, TransitionRuntime.COMPLETION_WITHOUT_BOSS, 30
+	)
+	_expect(
+		bool(no_boss_receipt["accepted"])
+			and StringName(no_boss_receipt["completion_kind"])
+				== TransitionRuntime.COMPLETION_WITHOUT_BOSS,
+		"no-boss completion uses the same bounded continuation owner"
+	)
+	var commands: Array[StringName] = []
+	for serial in range(31, 36):
+		var receipt := runtime.advance(serial)
+		_expect(
+			TransitionRuntime.valid_command(receipt)
+				and int(receipt["stage_index"]) == 0
+				and int(receipt["next_stage_index"]) == 1
+				and not bool(receipt["terminal"]),
+			"no-boss continuation preserves its stage receipt"
+		)
+		commands.append(StringName(receipt["command"]))
+	_expect(
+		commands == [
+			&"defeat_flush_complete",
+			&"capture_report",
+			&"prepare_continuation",
+			&"configure_world",
+			&"finalize_continuation",
+		],
+		"no-boss completion follows the ordinary continuation sequence"
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

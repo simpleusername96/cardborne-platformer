@@ -142,7 +142,48 @@ func _init() -> void:
 	)
 	_validate_late_stage_direct_area_coverage(runtime)
 	_validate_direct_recovery_scale(runtime)
+	_validate_phase_receipts(runtime)
 	_finish()
+
+
+func _validate_phase_receipts(runtime: BossRuntime) -> void:
+	runtime.configure(&"stage_1")
+	var boss := _boss()
+	boss.phase = &"boss_read"
+	boss.phase_time = 0.0
+	var blocked := runtime.advance_direct_phase(boss, 0.0, true)
+	_expect(
+		BossRuntime.valid_phase_receipt(blocked)
+			and StringName(blocked["action"]) == BossRuntime.ACTION_REPOSITION,
+		"blocked direct commit remains in the read reposition phase"
+	)
+	var selected := runtime.advance_direct_phase(boss, 0.0, false)
+	_expect(
+		BossRuntime.valid_phase_receipt(selected)
+			and StringName(selected["action"]) == BossRuntime.ACTION_SELECT_DIRECT,
+		"unblocked read completion requests one direct selection"
+	)
+	boss.phase = &"boss_startup"
+	boss.phase_time = 0.1
+	_expect(
+		StringName(runtime.advance_direct_phase(boss, 0.01, false)["action"])
+			== BossRuntime.ACTION_REFRESH_STARTUP,
+		"startup remains visible until its authored timer completes"
+	)
+	_expect(
+		StringName(runtime.advance_direct_phase(boss, 0.2, false)["action"])
+			== BossRuntime.ACTION_BEGIN_ACTIVE,
+		"completed startup requests one active transition"
+	)
+	boss.phase = &"boss_recovery"
+	boss.phase_time = 0.0
+	var recovery := runtime.advance_direct_phase(boss, 0.0, false)
+	_expect(
+		StringName(recovery["action"]) == BossRuntime.ACTION_REPOSITION
+			and boss.phase == &"boss_read"
+			and is_equal_approx(boss.phase_time, runtime.read_gap(boss.boss_phase)),
+		"recovery completion returns to one runtime-owned read gap"
+	)
 
 
 func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:

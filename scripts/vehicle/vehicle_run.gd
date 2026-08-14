@@ -1781,10 +1781,6 @@ func _present_deployment() -> void:
 	_ui.show_deployment(selected_primary)
 
 
-func _advance_stage() -> void:
-	_begin_next_stage_continuation()
-
-
 func _set_mouse_for_mode() -> void:
 	if _capture_mode:
 		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
@@ -4841,7 +4837,9 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		&""
 	)
 	if _is_countable_stage_enemy(enemy):
-		if stage_flow.record_countable_defeat():
+		var stage_receipt := stage_flow.record_countable_defeat()
+		var stage_command := StringName(stage_receipt.get("command", &""))
+		if stage_command == StageFlow.COMMAND_BEGIN_BOSS_WARNING:
 			encounter_runtime.seal_for_quota()
 			_session_diagnostics.emit_event("boss_warning", {
 				"stage_index":current_stage_index,
@@ -4854,14 +4852,21 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 				tr("NOTIFY_BOSS_INBOUND"), 1.5, Rules.CORAL, &"boss_inbound"
 			)
 			_play_sound(&"boss", 0.82)
+		elif stage_command == StageFlow.COMMAND_COMPLETE_WITHOUT_BOSS:
+			encounter_runtime.seal_for_quota()
+			_complete_stage(StageTransitionRuntime.COMPLETION_WITHOUT_BOSS)
 	if role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel"]:
 		stats_installations += 1
 	if role == &"stage_boss":
-		if stage_flow.record_boss_defeat():
+		var boss_receipt := stage_flow.record_boss_defeat()
+		if (
+			StringName(boss_receipt.get("command", &""))
+			== StageFlow.COMMAND_COMPLETE_AFTER_BOSS
+		):
 			_session_diagnostics.emit_event("boss_ended", {
 				"stage_index":current_stage_index,
 			})
-			_complete_stage()
+			_complete_stage(StageTransitionRuntime.COMPLETION_AFTER_BOSS)
 	var defeated_group := enemy.group_id
 	if not defeated_group.is_empty():
 		_try_group_completion_reward(defeated_group, enemy.pos)
@@ -5274,9 +5279,12 @@ func _update_aim_target() -> void:
 
 
 func _update_stage_progression(delta: float = 0.0) -> void:
-	if stage_flow.state == StageFlow.State.BOSS_WARNING:
-		stage_flow.tick(delta)
-	if stage_flow.boss_entry_ready() and not boss_started:
+	var receipt := stage_flow.advance(delta)
+	if (
+		StageFlow.valid_receipt(receipt)
+		and StringName(receipt["command"]) == StageFlow.COMMAND_ENTER_BOSS
+		and not boss_started
+	):
 		_start_stage_boss()
 
 
@@ -5515,30 +5523,24 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 	if not attack_commit_blocked:
 		for event in boss_runtime.advance_autonomous(delta, boss, player_position):
 			_execute_boss_autonomous(event)
-
-	var phase := String(boss.phase)
-	if phase == "boss_read":
-		boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
-		_boss_reposition(boss, delta)
-		if float(boss.phase_time) <= 0.0 and not attack_commit_blocked:
+	var receipt := boss_runtime.advance_direct_phase(
+		boss, delta, attack_commit_blocked
+	)
+	if not BossRuntime.valid_phase_receipt(receipt):
+		push_error("Boss runtime emitted an invalid phase receipt")
+		return
+	match StringName(receipt["action"]):
+		BossRuntime.ACTION_REPOSITION:
+			_boss_reposition(boss, delta)
+		BossRuntime.ACTION_SELECT_DIRECT:
 			_boss_select_pattern(boss)
-		return
-	if phase == "boss_startup":
-		boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
-		AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
-		if float(boss.phase_time) <= 0.0:
+		BossRuntime.ACTION_REFRESH_STARTUP:
+			AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
+		BossRuntime.ACTION_BEGIN_ACTIVE:
+			AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
 			_boss_begin_active(boss)
-		return
-	if phase == "boss_active":
-		_boss_update_active(boss, delta)
-		return
-	if phase == "boss_recovery":
-		boss.phase_time = maxf(0.0, float(boss.phase_time) - delta)
-		_boss_reposition(boss, delta)
-		if float(boss.phase_time) <= 0.0:
-			boss.phase = "boss_read"
-			boss.phase_time = boss_runtime.read_gap(boss.boss_phase)
-			boss.pattern = "reading_arena"
+		BossRuntime.ACTION_UPDATE_ACTIVE:
+			_boss_update_active(boss, delta)
 
 
 func _boss_select_pattern(boss: EnemyState) -> void:
@@ -5842,13 +5844,23 @@ func _on_boss_direct_attack_complete(boss: EnemyState) -> void:
 		_play_sound(&"impact", 1.04)
 
 
-func _complete_stage() -> void:
+func _complete_stage(
+	completion_kind: StringName = StageTransitionRuntime.COMPLETION_AFTER_BOSS
+) -> void:
 	if stage_complete:
+		return
+	var transition_receipt := stage_transition_runtime.begin(
+		current_stage_index,
+		StageCatalog.STAGE_IDS.size(),
+		completion_kind,
+		_physics_serial
+	)
+	if not bool(transition_receipt.get("accepted", false)):
+		push_error("Stage transition rejected a completed stage receipt")
 		return
 	var diagnostics_active := _session_diagnostics.is_active()
 	var teardown_started := Time.get_ticks_usec() if diagnostics_active else 0
 	stage_complete = true
-	var has_next_stage := current_stage_index < StageCatalog.STAGE_IDS.size() - 1
 	_session_diagnostics.emit_event("stage_ended", {
 		"stage_id":current_stage_id,
 		"stage_index":current_stage_index,
@@ -5858,29 +5870,31 @@ func _complete_stage() -> void:
 	_retire_boss_owned_enemies()
 	projectile_store.retire_boss_hostiles()
 	_retire_denied_zones_by_owner(&"stage_boss")
-	if not stage_transition_runtime.begin(has_next_stage, _physics_serial):
-		push_error("Stage transition was already active at boss defeat")
 	if diagnostics_active:
 		_session_diagnostics.emit_event("stage_transition_boss_teardown", {
 			"elapsed_ms":float(Time.get_ticks_usec() - teardown_started) / 1000.0,
 			"stage_index":current_stage_index,
-			"has_next_stage":has_next_stage,
+			"has_next_stage":bool(transition_receipt.get("has_next_stage", false)),
+			"completion_kind":completion_kind,
 		})
 
 
 func _advance_stage_transition() -> void:
 	if not stage_transition_runtime.active():
 		return
-	var command := stage_transition_runtime.advance(_physics_serial)
-	if command.is_empty() or command == &"defeat_flush_complete":
+	var receipt := stage_transition_runtime.advance(_physics_serial)
+	if receipt.is_empty() or not StageTransitionRuntime.valid_command(receipt):
+		return
+	var command := StringName(receipt["command"])
+	if command == &"defeat_flush_complete":
 		return
 	var diagnostics_active := _session_diagnostics.is_active()
 	var started_usec := Time.get_ticks_usec() if diagnostics_active else 0
 	match command:
 		&"capture_report":
-			_freeze_completed_stage_report()
+			_freeze_completed_stage_report(bool(receipt["has_next_stage"]))
 		&"prepare_continuation":
-			_prepare_next_stage_continuation()
+			_prepare_next_stage_continuation(int(receipt["next_stage_index"]))
 		&"configure_world":
 			_configure_next_stage_world()
 		&"finalize_continuation":
@@ -5900,8 +5914,7 @@ func _advance_stage_transition() -> void:
 		})
 
 
-func _freeze_completed_stage_report() -> void:
-	var has_next_stage := current_stage_index < StageCatalog.STAGE_IDS.size() - 1
+func _freeze_completed_stage_report(has_next_stage: bool) -> void:
 	_pending_stage_report = StageReportBuilder.build(
 		stage_telemetry.freeze_stage(),
 		_stage_report_context(has_next_stage)
@@ -5951,30 +5964,15 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 func _continue_stage_report() -> void:
 	if mode == RunMode.FAILURE_REPORT:
 		_return_to_deployment()
-		return
-	if mode != RunMode.STAGE_REPORT:
-		return
-	if bool(_pending_stage_report.get("has_next_stage", false)):
-		_advance_stage()
-		return
-	persistent_clear_count += 1
-	persistent_relay_module = true
-	_save_persistence()
-	_show_final_result()
 
 
-func _begin_next_stage_continuation() -> void:
-	# Legacy/capture entry point. Live boss defeats use the bounded transition
-	# runtime and never execute all three owners from the lethal-damage stack.
-	_prepare_next_stage_continuation()
-	_configure_next_stage_world()
-	_finalize_next_stage_continuation()
-
-
-func _prepare_next_stage_continuation() -> void:
-	if current_stage_index >= StageCatalog.STAGE_IDS.size() - 1:
+func _prepare_next_stage_continuation(next_stage_index: int) -> void:
+	if (
+		next_stage_index != current_stage_index + 1
+		or next_stage_index < 0
+		or next_stage_index >= StageCatalog.STAGE_IDS.size()
+	):
 		return
-	var next_stage_index := current_stage_index + 1
 	var next_stage_id: StringName = StageCatalog.STAGE_IDS[next_stage_index]
 	var next_tactical_layout = field_layout.tactical_layout(next_stage_id)
 	if next_tactical_layout == null:

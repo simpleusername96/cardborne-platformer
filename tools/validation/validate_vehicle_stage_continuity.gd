@@ -2,6 +2,12 @@ extends SceneTree
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
+const TransitionRuntime = preload(
+	"res://scripts/vehicle/vehicle_stage_transition_runtime.gd"
+)
+const CampaignFixtureFacade = preload(
+	"res://scripts/vehicle/vehicle_campaign_fixture_facade.gd"
+)
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
@@ -82,15 +88,20 @@ func _check_stage_one_continuation(run) -> void:
 	run.denied_zones.append({"id":"boss_zone", "owner_kind":&"stage_boss"})
 	run.experience_runtime.spawn_shard(preserved_position, 5, &"")
 	var shard_count: int = run.experience_runtime.shards.size()
-	run.stage_flow.state = StageFlow.State.COMPLETE
-	run.call("_complete_stage")
+	var campaign_fixture := CampaignFixtureFacade.new(run)
+	_expect(
+		campaign_fixture.complete_current_stage(
+			TransitionRuntime.COMPLETION_AFTER_BOSS
+		),
+		"campaign fixture completes Stage 1 through production receipts"
+	)
 	_expect(
 		run.current_stage_id == &"stage_1"
 			and run.completed_stage_reports.is_empty()
 			and run.stage_transition_runtime.active(),
 		"boss defeat schedules continuation without rebuilding the next stage in the lethal call stack"
 	)
-	_drain_stage_transition(run, 5)
+	campaign_fixture.drain_transition(5)
 
 	_expect(
 		run.current_stage_id == &"stage_2"
@@ -208,7 +219,7 @@ func _check_stage_five_immediate_result(run) -> void:
 			and run.stage_transition_runtime.active(),
 		"final boss lethal stack schedules rather than constructs the Result"
 	)
-	_drain_stage_transition(run, 4)
+	CampaignFixtureFacade.new(run).drain_transition(4)
 	_expect(
 		run.mode == run.RunMode.RESULT
 			and run.stage_complete
@@ -217,14 +228,6 @@ func _check_stage_five_immediate_result(run) -> void:
 			and not run.reward_runtime.has_pending(),
 		"Stage 5 boss defeat opens one clear result after bounded report steps"
 	)
-
-
-func _drain_stage_transition(run, step_count: int) -> void:
-	if run.call("_flush_defeated_enemies") > 0:
-		run.enemy_grid.sync(run.enemies)
-	for _step in step_count:
-		run._physics_serial += 1
-		run.call("_advance_stage_transition")
 
 
 func _append_enemy(run, spec: Dictionary) -> EnemyState:

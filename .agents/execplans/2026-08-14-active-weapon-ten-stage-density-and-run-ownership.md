@@ -94,7 +94,7 @@ The related focused contract is the sole owner of weapon acquisition, upgrade cu
 2. Use quotas `[24, 24, 32, 32, 40, 40, 48, 48, 56, 56]`. Their sum remains the current 400 ordinary defeats.
 3. Split each current stage's authored role sequence and logical reserve deterministically across its two successor stages. The pair reuses the current field, boss, role availability, and boss pattern family; no Stage 6+ clamp may silently borrow the last array element.
 4. Keep one run-selected field and continuous world/player/build/projectile/XP state. Odd-to-even transitions refresh stage-local objects but do not heal. Even-to-next-odd transitions restore 40% of missing Hull rather than full Hull.
-5. Split each current stage's 14 direct pickups across its pair: each new stage gets two recalls and five repairs. One additional pair-owned repair is assigned to the even stage, preserving ten repairs and four recalls per arc and the existing total run supply rather than doubling it.
+5. Split each current stage's 14 direct pickups across its pair: each new stage gets two recalls and five repairs, preserving ten repairs and four recalls per arc and the existing total run supply rather than doubling it.
 6. Keep the current minimum-quota XP total and target final level 30. Recalculate only the distribution across ten stage reports; do not double XP awards or add filler cards.
 7. Interpolate the current five-stage health, damage, speed, boss, and coverage endpoints across ten entries. The new Stage 10 must equal the current Stage 5 endpoint. Difficulty growth comes first from less free healing, steadier visible pressure, and later threat concurrency, not another durability multiplier.
 8. Use threat budgets `[1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]`. Stages 6-10 may admit at most four ranged and three denial commitments; earlier stages preserve the current three/two ceiling. Existing startup, telegraph, projectile, boss reserve, and escape-corridor rules remain.
@@ -139,16 +139,16 @@ Preconditions:
 
 Source owners: `scripts/vehicle/vehicle_run.gd` functions `_update_stage_progression` through `_ordinary_active_count`, `scripts/encounters/vehicle_stage_flow.gd`, `scripts/vehicle/vehicle_stage_transition_runtime.gd`, `scripts/bosses/vehicle_boss_runtime.gd`, `scripts/rewards/vehicle_reward_runtime.gd`, `scripts/combat/vehicle_stage_report_builder.gd`, `scripts/combat/vehicle_run_result_builder.gd`.
 
-- [ ] **2.1 Freeze the campaign command/receipt contract.**
+- [x] **2.1 Freeze the campaign command/receipt contract.**
   - Change: define typed or shape-validated commands for quota reached, boss warning/entry/defeat, stage-without-boss completion, stage continuation, terminal result, and reward queue state. `VehicleRun` remains the SceneTree/mutation facade.
   - Accept: existing five-stage deterministic traces produce identical state, report, reward, boss, and continuation receipts before and after the boundary.
-- [ ] **2.2 Promote existing owners instead of adding a catch-all manager.**
+- [x] **2.2 Promote existing owners instead of adding a catch-all manager.**
   - Change: move transition policy into `VehicleStageTransitionRuntime`, quota/boss eligibility into `VehicleStageFlow`, boss phase decisions into `VehicleBossRuntime`, and report/result assembly into their current builders. Remove migrated policy from `VehicleRun` in the same task.
   - Accept: no dual authority remains; each migrated invariant has one owner and `VehicleRun` only executes commands and forwards receipts.
-- [ ] **2.3 Replace private capture coupling for the migrated surface.**
+- [x] **2.3 Replace private capture coupling for the migrated surface.**
   - Change: expose a narrow campaign fixture facade consumed by `vehicle_run_capture_gateway.gd` and validators instead of reaching new owners through arbitrary `VehicleRun` private fields.
   - Accept: existing stage continuity, report, capture, boss, and integrated-run fixtures pass without adding test-only policy to production owners.
-- [ ] **2.4 Audit the resulting responsibility boundary.**
+- [x] **2.4 Audit the resulting responsibility boundary.**
   - Change: record lines/functions/dependencies only as secondary signals and review changed owners for policy duplication, pass-through APIs, and reachable partial transitions.
   - Accept: campaign policy no longer lives in `VehicleRun`; a failed receipt cannot leave both old and new owners active.
 
@@ -291,6 +291,7 @@ Implementation-local discoveries may be handled inside the locked contract only 
 - 2026-08-14: choose ten short stages with bosses on even stages. This reaches Stage 10 without requiring ten bosses or doubling the total defeat/XP/item budget.
 - 2026-08-14: keep initial exact density at 48. Increase challenge first through attrition, continuity, and bounded attack concurrency.
 - 2026-08-14: treat `VehicleRun` as a facade target, not a file-size target. Campaign ownership is extracted before ten-stage work; the current measured hot owner is extracted before any higher-cap claim.
+- 2026-08-14: Phase 2 established validated command/receipt ownership in StageFlow, StageTransitionRuntime, BossRuntime, and RewardRuntime; capture-only mutation now uses VehicleCampaignFixtureFacade. Ten focused campaign/report/reward/capture validators passed. `VehicleRun` is 7,306 lines and 286 functions after removing its duplicate direct continuation path; file size remains a secondary signal for the later measured extraction.
 - 2026-08-14: the visual authority pair was completed before screenshot review: `docs/design/VISUAL_SYSTEM.md` was read in full; the canonical sheet was inspected at original 1448x1086 detail; observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889` matched the required value. No raster was created or edited, so actual image-reference input is not applicable and no asset approval is claimed.
 
 ## Open Questions
@@ -300,9 +301,9 @@ No material implementation decision remains open. A future weapon-policy change,
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: waiting for the related weapon/progression prerequisite, then Phase 2.
-- Next task: after the prerequisite passes, 2.1, freeze the campaign command/receipt contract.
-- Last completed gate: Discovery Closure Gate.
+- Current phase: Phase 3, paired ten-stage campaign implementation.
+- Next task: 3.1, make ten-stage data complete and fail-closed.
+- Last completed gate: Phase 2 campaign ownership matrix (10 focused validators plus `git diff --check`).
 - Update rule: after a task acceptance check passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

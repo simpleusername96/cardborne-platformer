@@ -168,8 +168,8 @@ func _init() -> void:
 	await process_frame
 	var result_contract := result.debug_contract()
 	_expect(
-		int(result_contract["focusables"]) == 6,
-		"final result exposes EMP, three acquired cells, diagnostic export, and Deployment"
+		int(result_contract["focusables"]) == 5,
+		"final result exposes three acquired cells, diagnostic export, and Deployment"
 	)
 	_expect(bool(result_contract["initial_focus_is_deployment"]), "final result initially focuses Deployment")
 	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Deployment is the primary command")
@@ -178,9 +178,9 @@ func _init() -> void:
 	var result_rail := Dictionary(result_contract["build_rail"])
 	_expect(
 		int(result_rail["section_count"]) == 6
-			and int(result_rail["cell_count"]) == 21
-			and int(result_rail["filled_count"]) == 4,
-		"final result reuses all six grouped categories, EMP, and the frozen build"
+			and int(result_rail["cell_count"]) == 17
+			and int(result_rail["filled_count"]) == 3,
+		"final result reuses all six grouped categories and the frozen acquired build"
 	)
 	_expect(
 		not bool(result_rail["heading_visible"])

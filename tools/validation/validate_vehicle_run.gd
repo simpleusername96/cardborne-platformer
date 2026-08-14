@@ -1565,18 +1565,21 @@ func _check_hot_path_guards(run) -> void:
 
 func _check_effect_store(run) -> void:
 	run.call("_clear_effects")
+	if not run.run_build.has(&"emp"):
+		run.run_build.apply(&"emp")
 	run.active_weapon_runtime.reset(run.player_position)
+	run.active_weapon_runtime.configure(run.run_build)
 	run.call("_start_active_weapon")
 	run.call("_clear_effects")
 	run.call("_advance_active_weapon", 0.42)
 	_expect(
 		run.effect_store.count_kind(&"player_emp_release") == 1,
-		"base EMP emits one release visual"
+		"acquired EMP emits one release visual"
 	)
 	run.call("_update_effects", 0.56)
 	_expect(
 		run.effect_store.count_kind(&"player_emp_release") == 0,
-		"base EMP release visual retires after its bounded lifetime"
+		"acquired EMP release visual retires after its bounded lifetime"
 	)
 	_expect(
 		run.effect_store.validate_capacity()

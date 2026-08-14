@@ -41,15 +41,43 @@ func _check_stage_flow() -> void:
 	for index in Catalog.STAGE_IDS.size():
 		var flow := StageFlow.new()
 		flow.configure(index, Catalog.quota(Catalog.STAGE_IDS[index]))
-		_expect(not flow.tick(999.0), "elapsed time alone cannot start a boss warning")
-		_expect(not flow.record_boss_defeat(), "boss defeat cannot complete an ordinary encounter")
+		_expect(
+			StringName(flow.advance(999.0)["command"]).is_empty(),
+			"elapsed time alone cannot start a boss warning"
+		)
+		_expect(
+			not bool(flow.record_boss_defeat()["accepted"]),
+			"boss defeat cannot complete an ordinary encounter"
+		)
 		for defeat in flow.quota:
-			var triggered := flow.record_countable_defeat()
-			_expect(triggered == (defeat == flow.quota - 1), "boss warning starts on exact quota")
-		_expect(flow.tick(1.5), "warning resolves after 1.5 seconds")
+			var receipt := flow.record_countable_defeat()
+			_expect(StageFlow.valid_receipt(receipt), "quota receipt shape is valid")
+			_expect(
+				(StringName(receipt["command"]) == StageFlow.COMMAND_BEGIN_BOSS_WARNING)
+					== (defeat == flow.quota - 1),
+				"boss warning starts on exact quota"
+			)
+		_expect(
+			StringName(flow.advance(1.5)["command"]) == StageFlow.COMMAND_ENTER_BOSS,
+			"warning resolves after 1.5 seconds"
+		)
 		_expect(flow.boss_entry_ready(), "boss entry requires the exact defeat quota")
-		_expect(flow.record_boss_defeat(), "active boss defeat completes the stage")
+		_expect(
+			StringName(flow.record_boss_defeat()["command"])
+				== StageFlow.COMMAND_COMPLETE_AFTER_BOSS,
+			"active boss defeat completes the stage"
+		)
 		_expect(flow.state == StageFlow.State.COMPLETE, "stage flow reaches complete without reward or transition states")
+	var odd_flow := StageFlow.new()
+	odd_flow.configure(0, 1, false)
+	var odd_receipt := odd_flow.record_countable_defeat()
+	_expect(
+		StageFlow.valid_receipt(odd_receipt)
+			and StringName(odd_receipt["command"])
+				== StageFlow.COMMAND_COMPLETE_WITHOUT_BOSS
+			and odd_flow.state == StageFlow.State.COMPLETE,
+		"a no-boss stage completes directly on its exact quota"
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

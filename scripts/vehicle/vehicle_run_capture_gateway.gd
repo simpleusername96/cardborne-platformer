@@ -25,7 +25,9 @@ const PerformanceScenario = preload(
 const PressureFixture = preload(
 	"res://scripts/performance/vehicle_pressure_fixture.gd"
 )
-const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
+const CampaignFixtureFacade = preload(
+	"res://scripts/vehicle/vehicle_campaign_fixture_facade.gd"
+)
 const UpgradeOfferPresenter = preload(
 	"res://scripts/cards/vehicle_upgrade_offer_presenter.gd"
 )
@@ -55,10 +57,12 @@ var _runtime_baseline: Dictionary = {}
 var _report_fixture: VehicleStageTelemetry
 var _restored := false
 var _capture_text_scale := 1.0
+var _campaign_fixture: RefCounted
 
 
 func _init(run: Node) -> void:
 	_run = run
+	_campaign_fixture = CampaignFixtureFacade.new(run)
 	var settings := _run.get_node_or_null("/root/SettingsStore")
 	_baseline = {
 		"window_size":_run.get_window().size,
@@ -375,14 +379,8 @@ func _final_result_fixture() -> Dictionary:
 
 
 func prepare_stage(stage_index: int, preserve_upgrades: bool = false) -> void:
-	_run.current_stage_index = clampi(stage_index, 0, StageCatalog.STAGE_IDS.size() - 1)
-	_run.current_stage_id = StageCatalog.STAGE_IDS[_run.current_stage_index]
-	_run._reset_run(false, true, preserve_upgrades)
-	_run.capture_set_mode(&"playing")
-	_run.player_position = Rules.player_start(_run.current_stage_id)
-	_run.player_invulnerable = 99.0
-	_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
-	_run._ui.show_gameplay()
+	if not _campaign_fixture.prepare_stage(stage_index, preserve_upgrades):
+		push_error("Capture requested an invalid campaign stage: %d" % stage_index)
 
 
 func _capture_pressure_evidence() -> void:
@@ -1799,20 +1797,7 @@ func _capture_all_boss_evidence() -> void:
 
 
 func prepare_boss(stage_index: int) -> EnemyState:
-	prepare_stage(stage_index, true)
-	_run._clear_enemies()
-	_run._clear_projectiles()
-	_run.denied_zones.clear()
-	_run.player_position = Rules.player_start(_run.current_stage_id)
-	_run.boss_arrival_position = (
-		_run._active_tactical_layout.boss_arrival_anchors[0]
-		if _run.field_layout != null
-		else StageCatalog.boss_arrival_anchors(_run.current_stage_id)[0]
-	)
-	_run.stage_flow.defeats = _run.stage_flow.quota
-	_run.stage_flow.state = StageFlow.State.BOSS_ACTIVE
-	_run._start_stage_boss()
-	var boss: VehicleEnemyState = _run._find_enemy_by_id("stage_boss")
+	var boss: VehicleEnemyState = _campaign_fixture.prepare_boss_entry(stage_index)
 	if boss == null:
 		return null
 	boss.pos = _run.player_position + Vector2(360.0, 0.0)

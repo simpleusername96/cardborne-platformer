@@ -3,6 +3,9 @@ extends SceneTree
 const RUN_PATH := "res://scripts/vehicle/vehicle_run.gd"
 const DRIVER_PATH := "res://scripts/vehicle/vehicle_run_capture_driver.gd"
 const GATEWAY_PATH := "res://scripts/vehicle/vehicle_run_capture_gateway.gd"
+const CAMPAIGN_FIXTURE_PATH := (
+	"res://scripts/vehicle/vehicle_campaign_fixture_facade.gd"
+)
 const Driver = preload(DRIVER_PATH)
 
 var _failures: Array[String] = []
@@ -12,6 +15,9 @@ func _initialize() -> void:
 	var run_source := FileAccess.get_file_as_string(RUN_PATH)
 	var driver_source := FileAccess.get_file_as_string(DRIVER_PATH)
 	var gateway_source := FileAccess.get_file_as_string(GATEWAY_PATH)
+	var campaign_fixture_source := FileAccess.get_file_as_string(
+		CAMPAIGN_FIXTURE_PATH
+	)
 	_expect(run_source.contains("vehicle_run_capture_driver.gd"), "run composes capture driver")
 	_expect(run_source.contains("vehicle_run_capture_gateway.gd"), "run composes capture gateway")
 	_expect(
@@ -83,6 +89,27 @@ func _initialize() -> void:
 		not gateway_source.contains("_run.crates"),
 		"capture gateway does not reference the retired crate runtime"
 	)
+	_expect(
+		gateway_source.contains("_campaign_fixture.prepare_stage(")
+			and gateway_source.contains("_campaign_fixture.prepare_boss_entry("),
+		"capture gateway delegates campaign setup to one narrow fixture facade"
+	)
+	_expect(
+		not gateway_source.contains("_run.stage_flow.state =")
+			and not gateway_source.contains("_run.stage_flow.defeats ="),
+		"capture gateway does not mutate campaign-owner state directly"
+	)
+	for required_api in [
+		"func prepare_stage(",
+		"func prepare_boss_entry(",
+		"func complete_current_stage(",
+		"func drain_transition(",
+		"func campaign_digest(",
+	]:
+		_expect(
+			campaign_fixture_source.contains(required_api),
+			"campaign fixture facade exposes %s" % required_api.trim_suffix("(")
+		)
 	_expect(
 		gateway_source.contains(
 			"show_upgrade(first_acquisition, _run._build_snapshot())"
