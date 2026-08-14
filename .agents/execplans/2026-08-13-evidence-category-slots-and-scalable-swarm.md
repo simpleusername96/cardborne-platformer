@@ -3,9 +3,9 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-13
-last_reviewed: 2026-08-13
-topic: Commit-linked performance evidence, category-owned upgrade slots, and a scalable exact-enemy runtime
-scope: Cardborne performance provenance, upgrade build summaries, ordinary-enemy scheduling and spatial work, native/Web qualification, and capacity exploration
+last_reviewed: 2026-08-14
+topic: Versioned play evidence, intuitive category slots, continuous enemy pressure, readable world feedback, and a scalable exact-enemy runtime
+scope: Cardborne performance and session provenance, upgrade build summaries, encounter continuity, Anomaly outcomes, gameplay announcements, collectible feedback, ordinary-enemy scheduling and spatial work, native/Web qualification, and capacity exploration
 related:
   - ../../AGENTS.md
   - ../PLANS.md
@@ -22,15 +22,19 @@ related:
   - ../../docs/performance/2026-08-13-dense-enemy-stutter-evidence.md
   - ../../docs/performance/2026-08-13-dense-enemy-architecture-options.md
   - ../../docs/performance/2026-08-13-enemy-arrival-and-engagement-research.md
+  - ../../docs/reports/2026-08-14-game-telemetry-and-feedback-research.md
+  - ../../docs/reports/2026-08-14-upgrade-category-language-review.md
 ---
 
-# Evidence, Category Slots, and Scalable Swarm - Execution Contract
+# Evidence, Continuous Pressure, Readable Feedback, and Scalable Swarm - Execution Contract
 
-Make performance evidence reproducible from an exact source commit, replace the acquisition-order
-upgrade grid with six category-owned slot groups, and remove the remaining production-replay p99
-spikes before exploring higher exact-enemy capacities. Keep the approved virtual reserve and current
-48 exact-ordinary shipping cap during optimization. Do not simulate fake visible enemies, weaken
-combat truth, or raise shipping difficulty merely to claim a larger crowd.
+Make performance and play-session evidence reproducible from an exact source build, replace the
+acquisition-order upgrade grid with six intuitive category-owned slot groups, remove long empty
+enemy intervals around stage start and bosses, and give Anomaly Devices, announcements, and map
+pickups one readable feedback language. Then remove the remaining production-replay p99 spikes
+before exploring higher exact-enemy capacities. Keep the approved virtual reserve and current 48
+exact-ordinary ceiling during optimization. Do not simulate fake visible enemies, weaken combat
+truth, or raise shipping difficulty merely to claim a larger crowd.
 
 For this request, this plan owns the unresolved performance follow-up shared by the three related
 predecessor plans and corrects their flat progressive-grid decision. Their completed gameplay,
@@ -40,17 +44,21 @@ approval, and each now points executors to this plan for the overlapping follow-
 
 ## Purpose
 
-- Objective: make each important performance claim traceable, make the build panel express the
-  actual upgrade categories, and give the exact enemy simulation enough headroom for stable play and
-  later density growth.
-- Deliverable: a tracked evidence ledger and selected raw evidence, grouped category slots reused by
-  Upgrade and Result, tail-correlated profiling, measured hot-owner corrections, native/Web
-  qualification, and a non-shipping 48/64/96/128 capacity envelope.
+- Objective: make each important performance and play-behavior claim traceable, make the build panel
+  express the actual upgrade categories in ordinary player language, keep meaningful enemies
+  present through the opening and boss transitions, and give the exact enemy simulation enough
+  headroom for stable play and later density growth.
+- Deliverable: a tracked evidence ledger, bounded exportable local session diagnostics, selected raw
+  evidence, grouped category slots reused by Upgrade and Result, continuous encounter-pressure
+  rules, outcome-specific Anomaly feedback, one gameplay-announcement channel, restrained
+  collectible/facility motion, tail-correlated profiling, measured hot-owner corrections,
+  native/Web qualification, and a non-shipping 48/64/96/128 capacity envelope.
 - Completion state: the same clean commit passes the existing native `production_replay` physics
   gates (p95 at most `6 ms`, p99 at most `8 ms`), passes built-Web checks, renders all six upgrade
-  categories correctly in Korean and English, and records every final artifact under one evidence
-  ID. A higher shipping cap remains a separate balance approval even if a larger diagnostic tier
-  passes.
+  categories correctly in Korean and English, meets the opening/boss visibility gates, renders the
+  approved Anomaly and interaction feedback without clipping or timing regressions, and records
+  every final artifact under one evidence ID. A higher shipping cap remains a separate balance
+  approval even if a larger diagnostic tier passes.
 
 ## Plain-language Starting Point
 
@@ -64,6 +72,19 @@ truth, swept motion, cover and line-of-sight, local overlap, statuses, contact, 
 authored arrival rules, rewards, and boss quota accounting. The engineering target is therefore not
 "draw more sprites". It is "do less repeated bookkeeping, spread non-urgent work, and keep one
 compact exact truth for actors that can affect combat."
+
+The empty-map complaint has a separate verified cause. The first ordinary cue currently waits until
+`5.1s`, the first actor materializes at `6.0s`, and births are placed `900-2400` world units away and
+outside the camera. After the quota is reached, `seal_for_quota()` stops new ordinary admissions;
+after boss defeat the next stage cues immediately but its actors still begin offscreen. The game can
+therefore be doing scheduler work while the player sees no threat.
+
+The Anomaly and message complaints are also concrete. Gravity Pull lasts `1.2s`, Cryo Lock `0.8s`,
+Projectile Purge is an immediate clear followed by only a `0.18s` visual pulse, and Decoy Signal
+lasts `6s`. Three effects share the same device image family. The HUD announcement uses an 18 px
+label inside a thin ToastSurface, while the renderer adds a separate world-chip text path and a
+5 Hz target-count scan. Map pickups already bob, but their phase advances by update count instead of
+elapsed time; Anomaly Devices have no equivalent idle cue.
 
 The latest clean native evidence is
 `build/performance/run-pacing-result-slots-production-replay-final.json`, produced from commit
@@ -89,6 +110,8 @@ median/minimum exact active actors and 269 virtual-reserve units. Its key values
   equipment system.
 - The current source tree and Git history are authoritative for behavior; ignored local logs are
   evidence only when their embedded provenance and workload are valid.
+- Public GitHub Pages and itch.io builds have no telemetry receiver. Local Web diagnostics stay in
+  browser IndexedDB through `user://` until the player explicitly exports them.
 - There is no persistent mid-run build save that requires a category-slot migration.
 - The current native and single-threaded Web release targets remain required.
 
@@ -99,8 +122,16 @@ In scope:
 - Provenance for synthetic performance JSON, manual traces, visual captures, Web builds, and the
   concise conclusions that future agents use.
 - A tracked append-only evidence ledger plus selected decision-changing raw JSON.
+- Versioned, bounded local session diagnostics for encounter pacing, performance, upgrade choices,
+  announcement delivery, Anomaly use, and supported UI configurations, with explicit export and no
+  background upload.
 - Six localized category groups in the build rail: Primary, Secondary, Element, Activated,
   Chassis, and Combat.
+- Opening pressure, bounded ordinary maintenance during boss play, and immediate post-boss
+  continuation without on-screen spawning or extra fabricated authored population.
+- Removal of the unclear Projectile Purge outcome, exact Gravity/Cryo/Decoy lifetimes, three
+  outcome-specific raster states, a single text-only announcement queue, and bounded
+  interaction/collectible motion.
 - Tail-correlated profiling of the existing shipping workload.
 - Removal or staggering of measured repeated scans, pursuit rebuild work, schedule construction,
   and overlap snapshot work.
@@ -112,12 +143,15 @@ Out of scope:
 - New upgrade artwork; reuse the 28 approved `upgrade/<id>` raster assets.
 - A new equipment, unequip, replacement, inventory, or save-data system.
 - Changing card compatibility, maximum card level, upgrade offer rules, boss quotas, XP, enemy HP,
-  enemy speed, contact damage, attacks, stage geometry, or authored packet order.
+  enemy speed, contact damage, attacks, or stage geometry. This plan may change the timing and
+  admission grouping of existing authored ordinary identities but not their total authored count.
 - Presentation-only enemies that appear attackable but have no hit, damage, status, reward, or
   collision truth.
 - Raising the shipping exact cap during this plan. Higher tiers are capability evidence only.
 - Changing the engine, adding a production dependency, enabling Web threads, or adding a
   GDExtension without a separate explicit user approval.
+- Silent remote analytics, a telemetry vendor, a backend, stable cross-install player identity, raw
+  route recording, or per-frame/per-actor production logging.
 - Retaining CI artifacts longer than one day. Durable evidence belongs in Git, not paid Actions
   artifact storage.
 
@@ -126,11 +160,14 @@ Constraints and invariants:
 - Godot `4.7.1` through `./tools/godot.ps1`; no project-local runtime.
 - Manual aim, held primary fire, dash, seekers, EMP, exact earliest-hit behavior, fair contact,
   authored encounters, pickups, cards, five connected stages, and quota-gated bosses remain intact.
-- Current materialized caps remain `1/40/48/48/48`; authored pressure remains
-  `1/124/172/224/276` while implementation work is evaluated.
+- The overall exact-ordinary ceiling remains 48. The beat-zero opening cap and authored-pressure
+  cap change from `1` to `6`; later beat caps remain `40/48/48/48` and authored-pressure caps remain
+  `124/172/224/276`.
 - Renderer, batching, and pooling are not selected as primary work unless new evidence contradicts
   the current green measurements.
-- Existing semantic art is reorganized, not visually regenerated or modified.
+- Existing upgrade art is reorganized, not regenerated. Three Anomaly outcome images are a separate
+  approved visual replacement unit and require canonical-sheet-grounded raster generation plus
+  technical/user approval before promotion.
 - Korean and English remain complete at `960x540`, `1280x720`, `1920x1080`, and 200% text scale.
 - Performance comparisons use the same scenario, seed, viewport, renderer, warmup, sample duration,
   process-isolation rules, and authority checks.
@@ -143,6 +180,8 @@ Exact actions requiring owner or user approval:
 
 - A Web-capable GDExtension, custom Web export templates, Web threads/COOP/COEP deployment, engine
   change, or a higher shipping enemy cap.
+- Any remote telemetry endpoint/vendor or automatic upload, including its consent, retention,
+  deletion, security, and cost contract.
 
 ## Domain and Ownership Contract
 
@@ -157,6 +196,11 @@ Exact actions requiring owner or user approval:
 | Exact actor | One materialized enemy with authoritative health, position, collision, attacks, status, damage, reward, and quota behavior. | Enemy store and combat runtime |
 | Virtual reserve | Authored ordinary identity and schedule data that has not materialized and cannot affect combat. | Encounter runtime |
 | Capacity envelope | Diagnostic highest exact tier that meets unchanged correctness and timing gates. It is not a shipping balance decision. | Performance evidence |
+| Session diagnostic | A bounded local record of one play session's lifecycle events and stage/run summaries. It is not automatically uploaded and is not a release gate. | New session signal recorder/store |
+| Content fingerprint | Hash of gameplay/configuration inputs used to reject invalid comparisons between behaviorally different builds. | Build identity and evidence tooling |
+| Visible-threat gap | Continuous active-run time with no ordinary or boss center inside the visible world. It is distinct from no live actor and no committed attack. | Encounter signal recorder |
+| Boss maintenance pressure | A low/high-watermark ordinary reinforcement mode that consumes existing authored reserve during boss warning/active without changing quota. | Encounter runtime/director |
+| Interaction motion | Presentation-only bob and edge breathing for bounded map pickups and Anomaly Devices; collision and gameplay positions never move. | Renderer/HUD presentation owners |
 
 Do not use `slot` alone when it is unclear whether it means a category build slot, an optional
 secondary gameplay slot, an attribute slot, an active-weapon slot, or a pooled runtime slot.
@@ -166,14 +210,14 @@ secondary gameplay slot, an attribute slot, an active-weapon slot, or a pooled r
 The build rail contains six sections in existing catalog order. Each section owns a fixed maximum
 simultaneous unique-card capacity derived from current compatibility rules:
 
-| Category | Localized key | Slot count | Why this is the maximum simultaneous occupancy |
-| --- | --- | ---: | --- |
-| Primary | `UPGRADE_CATEGORY_PRIMARY` | 2 | Both primary modification cards can coexist. |
-| Secondary | `UPGRADE_CATEGORY_SECONDARY` | 5 | Built-in Homing Missiles, two optional secondary weapons, and two global secondary enhancements. |
-| Element | `UPGRADE_CATEGORY_ELEMENT` | 2 | One damage attribute and one utility attribute. |
-| Activated | `UPGRADE_CATEGORY_ACTIVATED` | 3 | One active weapon kind and two active enhancements. |
-| Chassis | `UPGRADE_CATEGORY_CHASSIS` | 5 | All five chassis/support cards can coexist. |
-| Combat | `UPGRADE_CATEGORY_COMBAT` | 4 | All four combat-system cards can coexist. |
+| Internal category | Korean / English heading | Localized key | Slot count | Why this is the maximum simultaneous occupancy |
+| --- | --- | --- | ---: | --- |
+| Primary | `주무장 / Main Gun` | `UPGRADE_CATEGORY_PRIMARY` | 2 | Both primary modification cards can coexist. |
+| Secondary | `자동 무장 / Auto Weapons` | `UPGRADE_CATEGORY_SECONDARY` | 5 | Built-in Homing Missiles, two optional automatic weapons, and two global secondary enhancements. |
+| Element | `공격 효과 / Attack Effects` | `UPGRADE_CATEGORY_ELEMENT` | 2 | One damage effect and one utility/control effect. |
+| Activated | `직접 발동 / Active Skill` | `UPGRADE_CATEGORY_ACTIVATED` | 3 | One manually activated EMP replacement and two active enhancements. |
+| Chassis | `차체 강화 / Chassis` | `UPGRADE_CATEGORY_CHASSIS` | 5 | All five chassis/support cards can coexist. |
+| Combat | `전술 특성 / Combat Perks` | `UPGRADE_CATEGORY_COMBAT` | 4 | All four condition-triggered player benefits can coexist. |
 
 There are 21 simultaneous presentation positions, not 28 catalog identity positions and not one
 global progressive capacity. Positions are semantic rather than a loose per-category queue:
@@ -201,9 +245,148 @@ fixed semantic positions, the flat summary order, or gameplay eligibility, and i
 equipment limit. A later save-data contract may replace it with explicit optional-slot assignment;
 this run has no persistent mid-run save that requires migration.
 
-The existing localization keys remain, but their values align with the canonical catalog wording:
-`UPGRADE_CATEGORY_ELEMENT` becomes Korean `공격 속성` / English `Attack Attributes`, and
-`UPGRADE_CATEGORY_COMBAT` becomes Korean `전투 조건` / English `Combat Conditions`.
+The internal IDs and existing localization keys remain. Their player-facing values use the table
+above. Catalog-owned category descriptors also publish localized accessibility descriptions. The
+visible rail uses only the short heading; a tooltip/screen reader can explain automatic fire,
+attack-added effects, direct activation, chassis improvement, or condition-triggered perks without
+adding six permanent explanatory paragraphs.
+
+This wording was reviewed through Antigravity after the requested `Gemini 3.7 Flash (High)` label
+proved unavailable in Antigravity CLI `1.1.11`; `Gemini 3.6 Flash (High)` supplied the external
+review. The selected set corrects that draft against the actual card roster: Bio Toxin makes
+`Element` too narrow, and `직접 발동` communicates the control distinction more clearly than
+`특수 모듈`.
+
+## Locked Local Logging and Evidence Design
+
+Use the three-layer contract documented in
+`docs/reports/2026-08-14-game-telemetry-and-feedback-research.md`:
+
+1. Release evidence promotes only decision-changing artifacts into Git and links them with a full
+   commit, content fingerprint, evidence ID, environment, authority status, path, size, and SHA-256.
+2. A session signal recorder keeps versioned low-cardinality lifecycle events plus bounded stage/run
+   summaries under `user://diagnostics/`. It is local by default on native and Web.
+3. A user-triggered `Export Diagnostics` action produces a redacted bundle. There is no background
+   network request, analytics SDK, telemetry vendor, or stable cross-install player ID in this plan.
+
+The local ring keeps the newest 20 completed sessions subject to a 25 MB total cap and 14-day
+maximum age. It evicts the oldest completed session first. Stage summaries remain in bounded memory;
+flush only on Result, explicit export, a settled pause surface, or normal exit. A continuous stage
+transition is not a safe flush point. Enemy, projectile, collision, renderer, and input hot paths
+never perform file I/O or JSON serialization.
+
+Required signal families are session/run lifecycle, stage/arrival/boss lifecycle, visible-threat
+gap summaries, diagnostic slow-tail receipts, Upgrade offer/confirm summaries, announcement queue
+summaries, Anomaly reveal/activation summaries, and development-only layout faults. Persist semantic
+IDs and numeric aggregates, not localized strings, raw coordinates, pointer trails, free-form text,
+IP addresses, device fingerprints, or one event per frame/actor/projectile/hit.
+
+The build envelope contains full commit when known, dirty state, release version, content
+fingerprint, Godot/renderer/platform, viewport, locale, text scale, input family, and reduced-motion
+state. A direct editor run without injected build identity is labeled `dev_unknown` and cannot be
+used for authoritative cross-version comparison.
+
+The session recorder is an observer, not a competing gameplay or performance owner. Performance
+recorders continue to own thresholds, detailed samples, and slow-tail receipts; stage telemetry
+continues to own combat-report aggregates; the encounter runtime owns arrivals/caps; the Upgrade
+panel owns focus/confirmation; and the HUD owns its queue. Each owner publishes a narrow receipt or
+finalized summary to the session recorder. The recorder never scans enemies, recomputes damage,
+decides admission, changes UI state, or controls gameplay from telemetry.
+
+## Locked Encounter Continuity
+
+Opening pressure and boss pressure are separate policies from quota counting:
+
+- Replace the one-unit `5.1s` opening scout with six low-risk pursuit identities from the existing
+  authored stage sequence. Cue at `0.0s`, begin births at `0.9s`, stagger at the current `0.16s`, and
+  use the nearest safe offscreen perimeter with the existing minimum visibility clearance. Never
+  spawn an actor inside the visible world.
+- Change beat-zero materialized/authored-pressure caps from `1` to `6`. Preserve later caps and the
+  stage-authored total. Begin normal surge cueing at `4.0s`; the opening six are subtracted from the
+  normal sequence.
+- A deterministic no-input opening must show the first ordinary center by `3.5s`, at least three by
+  `6s`, and a meaningful hostile commitment or player contact by `8s`. If geometry prevents one
+  sector, the allocator chooses another nearest safe sector rather than increasing the delay.
+- Reaching quota stops quota progression, not ordinary presence. Replace destructive quota sealing
+  with boss maintenance pressure. Drain any already-cued window, then use existing authored reserve
+  to maintain 8-12 exact ordinary actors during boss warning/active. When the exact ordinary count
+  drops below 8, cue at most four next-authored identities; do not cue another maintenance group for
+  4 seconds and never exceed 12, the global exact cap, or the reserved boss slot margin.
+- Boss maintenance enemies give their normal combat rewards and exact interactions but cannot change
+  the already-reached quota. No extra authored identity is fabricated. Existing attack-commit gates
+  still constrain simultaneous ranged/denial danger.
+- Boss defeat stops maintenance, retires only boss-owned state, preserves ordinary actors,
+  projectiles, XP, player state, and active time, and starts the next stage's six-unit continuation
+  opening immediately. If no ordinary survivor is visible, a new-stage ordinary must enter view
+  within `3.0s` of boss defeat.
+
+This design follows the useful part of Left 4 Dead/AI Director references: placement, visibility,
+and pacing are explicit owner policies. It does not copy their deliberate long quiet periods because
+Cardborne's current product request is continuous visible pressure.
+
+## Locked Anomaly, Announcement, and Interaction Feedback
+
+Anomaly outcome contract:
+
+- Remove `projectile_purge`. It duplicates the base EMP projectile-clear idea, has no gameplay
+  duration, retires immediately, and its `0.18s` pulse does not explain its value. Each stage now
+  assigns Gravity Pull, Cryo Lock, and Decoy Signal exactly once.
+- Gravity Pull lasts exactly `5.0s`, Cryo Lock exactly `3.0s`, and Decoy Signal remains `6.0s`.
+  Gameplay state and the visible footprint share the same lifetime. Effect target membership may be
+  refreshed at a bounded cadence, but continuous movement/control must remain correct between
+  refreshes.
+- Generate three separate canonical-sheet-grounded PNGs for the revealed/resolved Gravity, Cryo,
+  and Decoy devices. Use the canonical reference image as actual ImageGen input, record provenance,
+  and promote only after AS-IS/TO-BE comparison and user approval. Render the authored device body at
+  radius `84`, down from `96`, matching the intact collision truth; exact effect radii remain
+  code-native gameplay geometry.
+- Hidden intact devices keep one neutral image. The minimap remains neutral before and after reveal;
+  it does not leak outcome through tint. Outcome differences use image silhouette/details,
+  localized text, effect shape/behavior, and semantic color rather than color alone.
+
+Announcement contract:
+
+- `VehicleGameplayHUD.notify` remains the sole gameplay text queue. Remove the ToastSurface panel
+  chrome and the renderer world-chip text/continuous target-count path.
+- Use one centered text-only label at 22 px, Noto Sans weight 800, with the existing shadow or one
+  restrained contrast outline. Semantic kinds choose color; they do not choose a different box or
+  font structure.
+- Keep a bounded priority/dedup queue. Boss/danger messages may interrupt system messages; repeated
+  identical messages coalesce; queue/shown/interrupted/dropped counts feed the session summary.
+- Reveal messages name the outcome. Activation messages report the one-time affected count computed
+  at activation. No 5 Hz world-chip target-count scan remains.
+
+Interaction motion contract:
+
+- Apply only to bounded map repair/recall pickups and intact/revealed Anomaly Devices. Do not apply
+  it to XP shards, enemies, projectiles, effects, Transit Gates, or floor structures.
+- Use elapsed-time sine motion: pickups bob by `6` world units over `1.8s`; Anomaly Devices bob by
+  `4` world units over `2.2s`. Stable per-object phase offsets prevent synchronized motion. Collision,
+  hit tests, minimap positions, effect centers, and pickup collection truth remain stationary.
+- Use one shared alpha-mask edge material per presentation family, with a two-world-unit contour and
+  a slow opacity breath from `0.32` to `0.52` over `2.4s`. Do not add a halo, floor ring, scale pulse,
+  or per-instance material allocation.
+- Reduced Motion removes bob and opacity animation but keeps a static `0.42` contour. A finite
+  reveal/hit response may briefly strengthen the same contour; the active effect footprint itself
+  never blinks.
+
+The selected mechanism is the smallest readable combination among three candidates: bob plus a
+breathing silhouette contour, bob plus a floor shadow, and finite reveal pulse only. A floor shadow
+would imply unsupported height and a finite pulse alone would not satisfy persistent findability.
+Godot Tween/sine mechanisms, Unreal interaction outlines, Apple motion guidance, WCAG reduced-motion
+and blinking guidance, and Xbox text/cue accessibility provide the implementation constraints; none
+of them is an art-style reference.
+
+Mechanism and accessibility references:
+
+- [Godot Tween](https://docs.godotengine.org/en/stable/classes/class_tween.html)
+- [Unreal InteractionTargetComponent outline mechanism](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/InteractionTargetComponent.html?application_version=5.7)
+- [Apple Human Interface Guidelines: Motion](https://developer.apple.com/design/human-interface-guidelines/motion)
+- [W3C `prefers-reduced-motion`](https://www.w3.org/TR/mediaqueries-5/)
+- [WCAG 2.2 Pause, Stop, Hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)
+- [WCAG 2.2 Use of Color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color)
+- [Xbox Accessibility Guideline 101: Text display](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/101)
+- [Xbox Accessibility Guideline 103: Additional channels](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/103)
 
 ## Why Survivor-like Games Are Not a Contradiction
 
@@ -242,6 +425,8 @@ Primary references:
 - [SUMO microscopic and mesoscopic models](https://sumo.dlr.de/docs/Theory/Traffic_Simulations.html)
 - [SUMO mesoscopic runtime model](https://sumo.dlr.de/docs/Simulation/Meso.html)
 - [Reynolds, local flocking behavior](https://www.red3d.com/cwr/papers/1987/boids.html)
+- [Valve, The AI Systems of Left 4 Dead](https://steamcdn-a.akamaihd.net/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf)
+- [Riot Games, The Tech Behind Swarm](https://www.riotgames.com/en/news/the-tech-behind-swarm)
 - [poncle development roadmap](https://store.steampowered.com/news/posts/?enddate=1648165599&feed=steam_community_announcements)
 - [Deep Rock Galactic: Survivor, Endless Mode Postponed](https://store.steampowered.com/news/posts/?enddate=1742819828&feed=steam_community_announcements)
 - [Godot Web export constraints](https://docs.godotengine.org/en/4.5/tutorials/export/exporting_for_web.html)
@@ -252,19 +437,28 @@ Primary references:
 | --- | --- | --- | --- | --- |
 | Are all logs commit/version linked and durable? | No. Raw `build/**` is ignored; 163 local performance JSON files include 105 full commits, one short commit, and 57 missing commits. Capture manifests omit commit data. CI evidence expires after one day. | `.gitignore`, recorder/manual wrapper, capture driver, CI workflow, local census | Auto-create common provenance, track a ledger and selected decision-changing raw JSON, keep noisy/local artifacts ignored. | 1.1-1.4 |
 | Can a future agent compare evidence? | Selected metrics are manually pinned in plans, but there is no central machine-readable index or artifact hash. | Current plans and evidence docs | Plans reference evidence IDs; comparison tooling rejects incomplete provenance. | 1.2-1.4 |
+| Can normal play explain performance and UI/UX problems? | No. Combat and engagement telemetry is in-memory, and UI signals are not persisted. No HTTP/analytics/consent path exists. | Runtime signal audit and logging research | Add bounded local session summaries plus explicit export; do not add remote upload. | 1.5-1.8 |
 | What does category slot mean? | The catalog owns six categories and real compatibility subslots; current UI flattens acquisition order into a global grid. | Catalog, RunBuild, snapshot builder, build rail | Six grouped capacities `2/5/2/3/5/4` with semantic positions; no equipment action or rule change. | 2.1-2.4 |
-| Is rendering the current crowd bottleneck? | No. Latest draw/frame/render values pass while physics p99 fails. | `4f7f7acd` production replay and dense-enemy evidence | Do not prioritize MultiMesh, art reduction, or renderer replacement. | 3.1, 4.1-4.3 |
+| Are the current category labels ordinary-player language? | Not fully. Secondary sounds manual, Activated does not explain input, Element is inaccurate for Bio Toxin, and Combat Conditions sounds like a stage rule. | Actual 28-card catalog plus Antigravity 3.6 Flash review | `주무장 / Main Gun`, `자동 무장 / Auto Weapons`, `공격 효과 / Attack Effects`, `직접 발동 / Active Skill`, `차체 강화 / Chassis`, `전술 특성 / Combat Perks`. | 2.1-2.4 |
+| Why can the opening feel empty? | First cue is `5.1s`, birth is `6.0s`, and births remain offscreen at long distance. | Stage packets, pacing validator, allocator | Six-unit immediate offscreen opening; visible by `3.5s`, three visible by `6s`. | 3.1, 4.1 |
+| Do ordinary enemies continue through the boss? | Existing actors do, but quota seal blocks all new ordinary admission. Post-boss cue is immediate yet still offscreen. | `VehicleRun`, encounter runtime, continuity validator | Maintain 8-12 ordinary exact actors from authored reserve during boss; immediate next-stage refill. | 3.2, 4.2-4.3 |
+| Are irrelevant enemy-related calculations still running? | Yes. Full aggregate, schedule, pressure, contact, and capacity scans repeat; a 5 Hz Anomaly target-count scan exists only for world-chip text. | Runtime trace and current performance evidence | Instrument scan counts, remove the world-chip scan, disable diagnostic pressure work when unconsumed, then optimize only measured owners. | 3.3, 4.4-4.7 |
+| Are Anomaly effects and images readable? | Gravity is `1.2s`, Cryo `0.8s`, Purge has no duration, and the same device image family carries all outcomes. | Mystery runtime/renderer/spec | Remove Purge; set Gravity/Cryo/Decoy to `5/3/6s`; generate three smaller outcome-specific states. | 5.1-5.3 |
+| Why do gameplay messages look inconsistent? | HUD uses an 18 px label inside ToastSurface; renderer owns separate world-chip text and continuous target counts. | HUD/renderer/run trace | One 22 px bold text-only HUD queue with semantic colors; remove world chips. | 5.4 |
+| Which objects should hover/pulse? | Map pickups have frame-rate-dependent bob; Anomaly Devices have none. XP shards and effects can be numerous. | Pickup/device renderer trace and accessibility references | Time-based bounded motion for map pickups and Anomaly only; shared subtle contour and static reduced-motion replacement. | 5.5 |
+| Is rendering the current crowd bottleneck? | No. Latest draw/frame/render values pass while physics p99 fails. | `4f7f7acd` production replay and dense-enemy evidence | Do not prioritize MultiMesh, art reduction, or renderer replacement. | 3.1, 4.4-4.7 |
 | Why does p99 fail at only 43 actors? | Several rich exact-simulation jobs coincide; current detailed timing samples every seventh physics tick and is not inherently correlated with the slowest ticks. | `VehicleRun`, recorder JSON | Add low-overhead every-tick coarse attribution and a bounded top-32 slow-tick receipt before choosing more code. | 3.1-3.3 |
-| Which current owners deserve first inspection? | Enemy/grid, encounter/pursuit, and scheduled ordinary are the three largest named p99 owners. Schedule, pressure, and overlap code still include repeated or capacity-wide work. | Current source and JSON | Correct one measured owner at a time; keep exact narrow phase and deterministic behavior. | 4.1-4.4 |
-| Should all 320 authored units become exact again? | The previous dual-state typed-GDScript migration was slower; current virtual reserve fixed catastrophic density but p99 remains red. | Dense architecture option study and implementation history | First make 48 exact stable. Then measure 64/96/128 without shipping them. Native code is an approval-only escalation. | 5.1-5.3 |
-| Do native fixes automatically fix GitHub Pages and itch.io? | Source fixes export to both, but Web is single-threaded WebAssembly/Compatibility and must be measured separately. | Export preset, workflow, Godot Web docs | Same-commit local built-Web and deployed verification are mandatory. | 6.1-6.4 |
+| Which current owners deserve first inspection? | Enemy/grid, encounter/pursuit, and scheduled ordinary are the three largest named p99 owners. Schedule, pressure, and overlap code still include repeated or capacity-wide work. | Current source and JSON | Correct one measured owner at a time; keep exact narrow phase and deterministic behavior. | 4.4-4.7 |
+| Should all 320 authored units become exact again? | The previous dual-state typed-GDScript migration was slower; current virtual reserve fixed catastrophic density but p99 remains red. | Dense architecture option study and implementation history | First make 48 exact stable. Then measure 64/96/128 without shipping them. Native code is an approval-only escalation. | 6.1-6.3 |
+| Do native fixes automatically fix GitHub Pages and itch.io? | Source fixes export to both, but Web is single-threaded WebAssembly/Compatibility and must be measured separately. | Export preset, workflow, Godot Web docs | Same-commit local built-Web and deployed verification are mandatory. | 7.1-7.4 |
 
 Readiness statement:
 
 - Product behavior, category capacity, evidence retention, hot-owner selection, escalation, and
   validation decisions are closed.
 - The existing Godot runtime, PowerShell, Git, capture/export tooling, and current assets are enough
-  for Phases 1-6. No new dependency is authorized.
+  for Phases 1-4 and 6-7. Phase 5 adds three approved raster assets through the existing visual
+  workflow. No new dependency is authorized.
 - The only conditional implementation branch is evidence-driven owner selection in Phase 4; its
   allowed responses and rejection rules are fixed below.
 
@@ -283,7 +477,11 @@ Preconditions:
 Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
 `scripts/performance/vehicle_manual_performance_trace.gd`,
 `scripts/vehicle/vehicle_run_capture_driver.gd`, `tools/run_manual_performance_trace.ps1`, new
-`tools/performance/`, new `docs/performance/evidence/`, new
+`scripts/diagnostics/vehicle_build_identity.gd`,
+`scripts/diagnostics/vehicle_session_signal_recorder.gd`,
+`scripts/diagnostics/vehicle_session_diagnostic_store.gd`,
+`scripts/diagnostics/vehicle_diagnostic_exporter.gd`, Settings/Result export consumers,
+`tools/performance/`, new `tools/diagnostics/`, new `docs/performance/evidence/`, and new
 `docs/performance/vehicle-performance-evidence.jsonl`
 
 - [ ] **1.1 Define and validate one provenance envelope.**
@@ -292,7 +490,10 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
     scenario, seed/fingerprint, warmup/sample duration, OS/Godot/GPU/renderer, logical/window
     viewport, focus/visibility/headless state, Web user agent/build hash when applicable, and
     process-isolation preflight. Record `scenario_valid`, `authority_eligible`,
-    `thresholds_passed`, and final status separately.
+    `thresholds_passed`, and final status separately. Export tooling writes an ignored
+    `data/generated/vehicle_build_identity.json` before packaging; runtime reads it through the
+    build-identity owner. Direct editor play without the generated file or wrapper environment uses
+    `dev_unknown`, never a guessed commit.
   - Accept: a validator rejects a missing/short commit, unknown cleanliness, absent workload,
     unsupported viewport, missing authority data, or a status inferred only from a filename.
   - Guard: generated output under ignored `build/` does not itself make source cleanliness dirty.
@@ -314,11 +515,39 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
     the wrapper resolves it and the recorder refuses release authority when it is missing.
   - Accept: a synthetic run, manual diagnostic, capture, and Web build each pass focused provenance
     validators and emit linked metadata.
+- [ ] **1.5 Add a versioned bounded session signal recorder.**
+  - Change: add the immutable event envelope and registry from the logging research report. Record
+    only declared lifecycle events; accumulate 1 Hz encounter state, Upgrade focus behavior,
+    announcement delivery, Anomaly results, and performance context into bounded stage/run summaries.
+    Use monotonic sequence/time and semantic IDs, never localized text or dynamic event names.
+  - Accept: reset/reuse tests prove no state leaks between runs; event/schema versions are explicit;
+    a fixture reproduces opening, boss, Upgrade, announcement, Anomaly, and Result summaries; normal
+    play allocates no per-frame event Dictionary and performs no event file I/O.
+- [ ] **1.6 Persist a capped local session ring.**
+  - Change: write completed session bundles under `user://diagnostics/`, retaining the newest 20
+    completed sessions subject to 25 MB and 14 days. Flush at safe lifecycle boundaries and normal
+    exit. Record incomplete termination when it can be detected; never touch saves or settings.
+  - Accept: native and Web storage round trips pass; oldest-first eviction is deterministic; a
+    corrupt/incompatible record is quarantined or skipped without blocking the game.
+- [ ] **1.7 Add explicit redacted export, not upload.**
+  - Change: add one localized `Export Diagnostics` action in Settings and Result. Native writes a
+    chosen bundle; Web downloads it. The bundle contains selected session JSONL, summary, registry
+    version, and build identity. It excludes raw paths, free-form text, stable device/player IDs,
+    exact routes, IP/browser fingerprinting, and secrets.
+  - Accept: export is user-triggered, works in Korean/English and supported layouts, and no
+    `HTTPRequest`, analytics SDK, background retry, or automatic network path is reachable.
+- [ ] **1.8 Add comparison and interpretation tooling.**
+  - Change: validate a diagnostic bundle, summarize the signal-to-hypothesis table, and compare only
+    records with compatible schema, content fingerprint, scenario/phase, viewport class, locale/UI
+    configuration, renderer, and sampling mode. Preserve sample weights when sampling exists.
+  - Accept: tooling rejects an incompatible comparison and produces concise opening-gap, boss-gap,
+    slow-tail, category-decision, announcement, and Anomaly summaries from the canonical fixture.
 
 Batch gate:
 
-- Ledger parser, provenance validators, `git diff --check`, and a round-trip test from a temporary
-  raw artifact to a ledger entry pass. No authoritative timing run occurs in this phase.
+- Ledger/session parsers, provenance/privacy/retention/export validators, `git diff --check`, and
+  round trips from temporary raw evidence and local session records pass. No authoritative timing
+  run occurs in this phase.
 
 ### Phase 2: Six category-owned upgrade slot groups
 
@@ -337,8 +566,9 @@ specs, and focused upgrade/capture validators
 
 - [ ] **2.1 Put capacity truth beside compatibility truth.**
   - Change: publish catalog-order category descriptors and simultaneous capacities
-    `2/5/2/3/5/4`, including the exact semantic position keys defined above. Validate them against
-    the 28-card roster and optional-secondary, attribute, and active-kind compatibility rules.
+    `2/5/2/3/5/4`, including the exact semantic position keys, selected localized heading keys, and
+    accessible description keys defined above. Validate them against the 28-card roster and
+    optional-secondary, attribute, and active-kind compatibility rules.
   - Accept: no UI file counts cards or infers compatibility from localized category text.
 - [ ] **2.2 Freeze grouped build records.**
   - Change: snapshot builder emits ordered category records with category ID/key, capacity, and
@@ -353,11 +583,12 @@ specs, and focused upgrade/capture validators
     columns per group; five-slot groups wrap. Keep filled-only focus, one popover, scroll containment,
     and existing compact/large sizing.
   - Accept: zero upgrades shows all 21 empty categorized positions; a mixed fixture fills the exact
-    category positions with existing artwork; no image or popover is clipped at supported sizes.
+    category positions with existing artwork; headings distinguish automatic weapons, attack-added
+    effects, direct activation, and conditional perks; no image or popover is clipped.
 - [ ] **2.4 Reuse and localize the corrected rail everywhere.**
   - Change: Upgrade and Result use the same grouped snapshot/rail. Update Korean/English strings only
-    if shorter category headings are required; update `DESIGN.md`, `VISUAL_SYSTEM.md`, product and
-    upgrade specs to retire the global progressive-grid contract.
+    to the locked label/description set; update `DESIGN.md`, `VISUAL_SYSTEM.md`, product and upgrade
+    specs to retire the global progressive-grid and old category-copy contracts.
   - Accept: keyboard/controller traversal never lands on an empty slot, locale switching refreshes
     headings and popover content, and choice selection remains the only mandatory action owner.
 
@@ -369,97 +600,191 @@ Batch gate:
   200% text states. Inspect alignment, padding, scroll containment, focus, clipping, and popover
   placement.
 
-### Phase 3: Tail-correlated performance evidence
+### Phase 3: Gameplay truth and tail-correlated baselines
 
-Goal: identify what actually happens on the slowest physics ticks instead of optimizing the largest
-average bucket.
+Goal: prove the opening, boss, post-boss, UI, Anomaly, and slow-tick problems under the new evidence
+schema before changing their behavior.
 
 Preconditions:
 
-- Phase 1 provenance is available.
+- Phase 1 provenance/session signals are available.
 - Phase 2 is complete and broad UI/capture work is quiet.
 
-Source owners: `scripts/vehicle/vehicle_run.gd`, performance recorder/manual trace, scenario,
-engagement telemetry, and their validators
+Source owners: `scripts/vehicle/vehicle_run.gd`, performance recorder/manual trace, session signal
+recorder, scenario fixtures, engagement telemetry, and their validators
 
 - [ ] **3.1 Add bounded slow-tick receipts.**
   - Change: while a recorder/manual trace is active, measure the five coarse physics sections on
     every tick. Retain only the top 32 ticks in fixed preallocated columns. Each receipt includes
     physics serial, total and coarse section times, exact/visible counts, due/critical counts,
     decision/motion phase, pursuit rebuild state and processed cells, overlap owners/candidates,
-    spawn/cue counts, and projectile/effect counts.
+    spawn/cue counts, projectile/effect counts, and scan counts by owner.
   - Accept: no per-tick Dictionary/Array allocation is added to shipping play; output Dictionaries
     are created only when the report is finalized.
 - [ ] **3.2 Keep deep attribution opt-in and reproducible.**
   - Change: retain current low-rate detailed timers for the first run. Add a named deep mode that
     times only the selected coarse owner on every tick in a same-seed rerun.
-  - Accept: a receipt identifies whether current p99 aligns with pursuit rebuild, pressure scan,
-    schedule/due phase, overlap snapshot/query, spawn materialization, or a non-enemy section.
+  - Accept: a receipt identifies whether current p99 aligns with pursuit rebuild, frame aggregate,
+    pressure scan, schedule/due phase, contact scan, overlap snapshot/query, spawn materialization,
+    Anomaly query, or a non-enemy section.
   - Guard: no profiler mode may change actor cadence, spawn order, collision, or decisions.
-- [ ] **3.3 Record a clean baseline under the new schema.**
-  - Change: one 10-second warmup plus 30-second diagnostic `production_replay` at `1280x720`, native
-    Compatibility, current cap 48. Promote it through Phase 1 tooling.
-  - Accept: workload and authority fields are valid, top-tick receipts are present, and the selected
-    Phase 4 owner is written into this plan before code changes.
+- [ ] **3.3 Add deterministic opening and boss-overlap captures.**
+  - Change: capture cue, birth, first-visible, first-commit/damage, visible-gap state, exact/active
+    counts, reserve/queue, boss slot margin, and scan counts at `0/1/3.5/5/6/8/15/30s`; add quota,
+    boss-warning, boss-active, boss-defeat, and three-second post-boss checkpoints.
+  - Accept: the baseline demonstrates current behavior without using the stage-5 steady-state
+    `production_replay` as proof of opening or boss pacing. Capture output is one session/evidence ID.
+- [ ] **3.4 Record clean performance and UI/Anomaly baselines.**
+  - Change: run one 10-second warmup plus 30-second diagnostic `production_replay` at `1280x720`,
+    native Compatibility, cap 48. Record Upgrade decision fixture, announcement burst fixture, and
+    each current Anomaly outcome under the same schema family.
+  - Accept: workload/authority fields and top-tick receipts are valid; selected Phase 4 hot owners
+    and Phase 5 visual baselines are written into this plan before behavior/source changes.
 
 Batch gate:
 
-- Performance-recorder and manual-trace validators pass; instrumentation-off normal play has zero
-  receipt work; instrumentation-on fixture counts remain identical.
+- Performance, session-signal, encounter-pacing, boss-overlap, Upgrade, announcement, and Anomaly
+  validators pass. Instrumentation-off normal play has zero receipt/scan-count work;
+  instrumentation-on fixture gameplay counts remain identical.
 
-### Phase 4: Remove measured repeated work
+### Phase 4: Continuous pressure and measured runtime corrections
 
-Goal: bring the current exact-48 production replay below the existing p99 limit without changing
-gameplay.
+Goal: remove the visible empty intervals, keep bounded ordinary pressure during bosses, and bring the
+new exact-48 workload below the existing p99 limit without weakening combat truth.
 
 Preconditions:
 
-- Phase 3 identifies the selected owner and alignment trigger.
-- Only one candidate owner changes between comparable measurements.
+- Phase 3 proves the baseline and identifies selected hot owners.
+- Only one performance candidate owner changes between comparable measurements after the locked
+  encounter behavior lands.
 
-Source owners: the selected subset of encounter runtime, pursuit field, enemy update schedule,
-spatial grid, enemy store, and `VehicleRun` orchestration
+Source owners: stage packet data, encounter director/runtime, spawn allocator, stage flow,
+`VehicleRun`, and the selected subset of pursuit field, enemy update schedule, spatial grid, contact,
+and enemy store
 
-- [ ] **4.1 Remove non-gameplay pressure scans from the 60 Hz path.**
-  - Change: when Phase 3 selects pressure work, update pressure sectors/near/visible telemetry only
-    while consumed and at the declared telemetry cadence. Reuse existing buffers and schedule it
-    away from pursuit rebuild start. Admission counts and threat commitment remain authoritative
-    through their gameplay owners. Otherwise record `not selected` and skip the source change.
-  - Accept: normal play performs no diagnostic pressure scan; recorded pressure retains its schema
-    and sample cadence; encounter order and production qualification counts are identical.
-- [ ] **4.2 Make pursuit rebuild cost explicit and phase-bounded.**
-  - Change: when Phase 3 selects pursuit work, preserve exact walkability and the 0.20-second refresh
-    contract, but give each rebuild a hard per-tick time/work budget and a stable phase that does not
-    coincide with telemetry or the largest ordinary-decision group. Never discard a pending player
-    target. Otherwise record `not selected` and skip the source change.
-  - Accept: reachability/direction oracles pass and the top-32 receipts contain no pursuit burst
-    above its selected budget.
-- [ ] **4.3 Snapshot only live local-overlap members.**
-  - Change: when Phase 3 selects overlap snapshot work, spatial grid maintains a compact active-slot
-    list on membership changes and snapshots only those slots. Rebuild only marked owner rows. Keep
-    exact distance/body predicates, stable tie order, maximum eight neighbors, and stale-generation
-    rejection. Otherwise record `not selected` and skip the source change.
-  - Accept: the 320-slot capacity buffers remain fixed, but snapshot work scales with live members;
-    grid and steering parity fixtures pass.
-- [ ] **4.4 Change schedule construction only if receipts still select it.**
-  - Change: if scheduled ordinary or schedule rebuild remains the largest selected p99 owner after
-    4.1-4.3, replace 60 Hz full-list reconstruction with persistent membership plus due stamps for
-    the existing 60/30/20/10 Hz lanes. One owner must be canonical; do not mirror a second complete
-    mutable enemy state. If it is no longer selected, record the evidence and skip this task.
-  - Accept: membership changes update lanes once, due order and accumulated delta match the oracle,
-    attack commitments and deterministic replay match, and no per-tick sort/Dictionary rebuild is
-    introduced.
+- [ ] **4.1 Replace the delayed one-unit opening.**
+  - Change: implement the locked six-unit `0.0s` cue/`0.9s` birth opening, beat-zero caps of six,
+    `4.0s` normal surge start, nearest safe offscreen placement, and authored-sequence subtraction.
+  - Accept: deterministic no-input first visible at most `3.5s`, at least three visible by `6s`, and
+    first commitment/contact at most `8s`; no on-screen birth, authored total, quota, role identity,
+    or max-four-births-per-tick invariant changes.
+- [ ] **4.2 Replace quota seal with boss maintenance pressure.**
+  - Change: add the locked 8/12 low/high watermark mode. It drains admitted rounds, consumes next
+    authored reserve identities in groups of at most four no more frequently than every four seconds,
+    holds the boss slot margin, and stops when the boss phase ends.
+  - Accept: boss and ordinary actors coexist; quota remains sealed at its reached value; exact count
+    and attack commits stay bounded; a long boss fixture never fabricates identities or deadlocks the
+    boss arrival.
+- [ ] **4.3 Guarantee immediate post-boss continuation.**
+  - Change: preserve surviving ordinary state, stop old-stage maintenance, configure the next stage,
+    and cue its six-unit continuation opening in the same gameplay frame.
+  - Accept: if no survivor is visible, an ordinary center enters view within `3.0s`; player state,
+    projectiles, XP, active-run clock, ordinary survivors, and Result timing retain their contracts.
+- [ ] **4.4 Remove unconsumed scans and event-own cheap aggregates.**
+  - Change: stop building diagnostic pressure sectors/near/visible data at 60 Hz when no recorder or
+    HUD consumer needs it. Replace unconditional frame count/family recounts with spawn/death/
+    activation-owned counters where receipts select them. Keep threat radar readiness on its declared
+    cadence until parity proves a safe index.
+  - Accept: normal play performs no diagnostic pressure scan; authoritative cap/admission/commit
+    counts remain exact; pressure signals keep their schema/cadence when recording is enabled.
+- [ ] **4.5 Make pursuit rebuild cost explicit and phase-bounded when selected.**
+  - Change: preserve exact walkability and the `0.20s` refresh contract, but give each rebuild a hard
+    per-tick work budget and stable phase that does not coincide with session sampling or the largest
+    ordinary-decision group. Never discard a pending player target. Record `not selected` if receipts
+    do not choose this owner.
+  - Accept: reachability/direction oracles pass and top-32 receipts contain no pursuit burst above its
+    selected budget.
+- [ ] **4.6 Snapshot only live local-overlap members when selected.**
+  - Change: maintain a compact active-slot list on membership changes and snapshot only those slots;
+    rebuild only marked owner rows. Keep exact distance/body predicates, stable tie order, maximum
+    eight neighbors, and stale-generation rejection. Record `not selected` if appropriate.
+  - Accept: 320-slot capacity buffers remain fixed but work scales with live members; grid and
+    steering parity fixtures pass.
+- [ ] **4.7 Replace full schedule/contact reconstruction only when receipts still select it.**
+  - Change: use persistent membership plus due stamps for existing `60/30/20/10 Hz` lanes and/or a
+    revision-driven active contact list only for the owner that remains material after 4.4-4.6. One
+    canonical enemy truth remains; do not mirror a second complete mutable state.
+  - Accept: membership updates once, due order/accumulated delta/contact semantics match oracles,
+    deterministic replay matches, and no per-tick sort/Dictionary rebuild is introduced.
 
 Candidate measurement gate:
 
-- Use one same-environment 30-second diagnostic before and after each selected owner change.
+- First record the changed opening/boss workload as the new comparable baseline; do not compare its
+  timing directly with the old sparse workload as an optimization claim.
+- Use one same-environment 30-second diagnostic before and after each selected runtime correction.
 - Retain a candidate only when its named-owner p99 improves at least 15%, overall physics p99 does
   not worsen by more than `0.25 ms`, fixture counts match, and no other coarse owner absorbs the
   removed cost. Otherwise revert only that task-owned candidate before the next hypothesis.
 - After all retained corrections, run one clean 10-second warmup plus 60-second authoritative native
-  `production_replay`. Phase 4 passes only at physics p95 at most `6 ms` and p99 at most `8 ms`.
+  `production_replay`. Phase 4 passes only at physics p95 at most `6 ms` and p99 at most `8 ms`, and
+  the opening/boss/post-boss visibility gates still pass.
 
-### Phase 5: Measure scalable exact-enemy headroom
+### Phase 5: Readable Anomaly, announcement, and interaction feedback
+
+Goal: make neutral objects and gameplay messages readable without creating a second UI language or
+moving gameplay truth.
+
+Preconditions:
+
+- Phase 4 encounter continuity and runtime-owner corrections are stable.
+- The canonical visual authority pair has been re-read and its reference image hash verified before
+  generating or reviewing any Anomaly raster.
+
+Source owners: Mystery Device runtime, outcome assignment/spec, asset manifest/catalog/provider,
+combat renderer, HUD notification queue, map-pickup presentation, localization, accessibility,
+capture/workbench, and focused validators
+
+- [ ] **5.1 Simplify and lengthen Anomaly outcomes.**
+  - Change: remove Projectile Purge from assignment/runtime/presentation/localization/guidebook and
+    set Gravity/Cryo/Decoy to `5.0/3.0/6.0s`. Each stage assigns the three remaining outcomes once.
+    Use reused membership buffers and a bounded entrant refresh for long effects; keep Gravity force
+    and Cryo/Decoy control exact between refreshes.
+  - Accept: effects and footprints retire on the same tick; boss/fixed-structure exclusions remain;
+    no purge event/asset/string/capture branch remains; five-second Gravity does not add a per-tick
+    allocation or unbounded radius scan.
+- [ ] **5.2 Generate and approve three outcome-specific raster states.**
+  - Change: use the canonical reference PNG as actual ImageGen reference input to create separate
+    Gravity, Cryo, and Decoy revealed/resolved device candidates. Record tool/model/date/reference,
+    prompt, output hash, and AS-IS/TO-BE comparison in the visual workbench. Do not use SVG,
+    ImageMagick drawing, or a generated style sheet. Approved production targets are
+    `art/visuals/production/gameplay/world/mystery_device_gravity.png`,
+    `mystery_device_cryo.png`, and `mystery_device_decoy.png`; their semantic IDs use the matching
+    `world/...` names. Retire the generic `mystery_device_resolved` only after all consumers switch.
+  - Accept: all three read as familiar science-fiction devices at gameplay size, differ by shape and
+    mechanism rather than hue alone, use transparent PNGs, and receive explicit user approval before
+    asset promotion. Rejected candidates remain outside production manifests.
+- [ ] **5.3 Integrate smaller truthful device and effect presentation.**
+  - Change: render device bodies at radius `84`, route revealed/resolved outcomes to the approved
+    semantic assets, keep exact code-native footprint radii, and remove outcome tint from minimap
+    markers.
+  - Accept: presentation matches collision while intact; full Gravity/Cryo/Decoy lifetimes remain
+    visible; color-blind and reduced-motion captures retain shape/text/footprint cues; no asset is
+    stretched, clipped, or used outside its approved semantic role.
+- [ ] **5.4 Collapse gameplay announcements into one text-only queue.**
+  - Change: remove ToastSurface chrome and renderer world chips; render one 22 px weight-800 centered
+    HUD label with semantic color and restrained contrast treatment. Add semantic kind, priority,
+    dedup/coalescing, and queue receipts; compute Anomaly affected count once at activation.
+  - Accept: boss, danger, system, reveal, activation, barrier, upgrade-complete, and shield-down
+    messages all use one structure; priority is deterministic; no 5 Hz target-count scan or duplicate
+    text remains; Korean/English and 200% text do not clip.
+- [ ] **5.5 Add bounded time-based interaction motion.**
+  - Change: implement the locked bob amplitudes/periods and one reused alpha-mask contour material for
+    map repair/recall pickups and Anomaly Devices only. Stable ID phase offsets drive presentation
+    from elapsed run time.
+  - Accept: collision, collection, damage, effect, and minimap positions never move; Reduced Motion is
+    static; no XP-shard/enemy/projectile/gate path is added; draw-call, batch, frame, and GPU gates do
+    not regress.
+
+Batch gate:
+
+- Mystery runtime, assignment, facility, projectile store, renderer, HUD notification, pickup,
+  minimap, localization, guidebook, accessibility, capture, asset-manifest, visual-authority,
+  headless import, and diff checks pass.
+- Rendered Korean/English evidence covers hidden, each reveal, each active effect near start/end,
+  message priority burst, pickups/devices in motion, Reduced Motion, compact/large viewports, and
+  200% text. Inspect silhouette, edge restraint, collision/footprint truth, clipping, and contrast.
+
+### Phase 6: Measure scalable exact-enemy headroom
 
 Goal: answer how many rich Cardborne enemies the corrected portable runtime can truly support,
 without changing the shipping balance.
@@ -472,17 +797,17 @@ Preconditions:
 Source owners: performance scenario overrides and evidence ledger only; production stage caps remain
 unchanged
 
-- [ ] **5.1 Add non-shipping exact-cap overrides.**
+- [ ] **6.1 Add non-shipping exact-cap overrides.**
   - Change: performance scenario can request 48, 64, 96, or 128 exact ordinary actors while keeping
     the same role mix, deterministic seed, combat truth, viewport, and timing gates. The override is
     unreachable from normal play and excluded from saved product data.
   - Accept: each result labels exact count, authored reserve, workload fingerprint, and
     `diagnostic_only` status; scenario validation rejects a missed target count.
-- [ ] **5.2 Run the capacity staircase with an early stop.**
+- [ ] **6.2 Run the capacity staircase with an early stop.**
   - Change: run 30-second diagnostics in ascending order. Stop at the first tier whose p95 exceeds
     `6 ms`, p99 exceeds `8 ms`, or correctness/count validation fails. Do not run higher tiers.
   - Accept: ledger records the last passing and first failing tier with comparable provenance.
-- [ ] **5.3 Make the next architecture decision from the envelope.**
+- [ ] **6.3 Make the next architecture decision from the envelope.**
   - Change: if 96 or 128 passes, document the technical headroom and leave shipping cap 48 pending a
     separate gameplay/balance decision. If 64 fails, prepare a narrow approval request for a
     single-truth packed native kernel; do not implement it in this plan.
@@ -494,39 +819,42 @@ Batch gate:
 - The staircase cannot modify product resources or export presets. `git diff` after the run contains
   only ledger/evidence additions.
 
-### Phase 6: Same-commit native and Web release proof
+### Phase 7: Same-commit native and Web release proof
 
 Goal: prove the corrected source behaves in the local editor/runtime and in both deployed Web copies.
 
 Preconditions:
 
-- Phases 1-5 pass or Phase 5 stops normally after recording the capacity boundary.
+- Phases 1-5 pass and Phase 6 passes or stops normally after recording the capacity boundary.
 - All source, UI, documentation, and evidence changes are committed; worktree source is clean.
 
 Source owners: focused validators, capture driver, `tools/export_web.ps1`, export preset, GitHub
 workflow, evidence ledger, deployment build info
 
-- [ ] **6.1 Run the final focused and integration batches.**
-  - Change: run affected performance, encounter, pursuit, schedule, spatial, combat, upgrade, result,
-    localization, accessibility, capture, and document-authority validators; then headless import and
-    diff checks.
+- [ ] **7.1 Run the final focused and integration batches.**
+  - Change: run affected performance, evidence/session, encounter opening/boss/continuity, pursuit,
+    schedule, spatial, combat, Anomaly, upgrade, result, HUD, localization, accessibility, capture,
+    asset, and document-authority validators; then headless import and diff checks.
   - Accept: all pass with no parser error or new warning attributable to this work.
-- [ ] **6.2 Run final native authority once.**
+- [ ] **7.2 Run final native authority once.**
   - Change: on the final clean commit, run the 10-second warmup plus 60-second cap-48
     `production_replay`; promote raw JSON and ledger entry.
   - Accept: scenario/authority/count checks pass; physics p95/p99 pass `6/8 ms`; frame, render,
     memory, draw-call, and batch gates pass.
-- [ ] **6.3 Export and test the built Web game.**
+- [ ] **7.3 Export and test the built Web game.**
   - Change: run the Web export, production-style local host, and one focused/visible 10-second
     warmup plus 60-second `production_replay` at `1280x720`. Read the published Web result, and
     record browser user agent, headless state, Web build/PCK hash, focus, scheduler throttling, and
     exact commit.
   - Accept: the built-Web result is authority-eligible, scenario/count-valid, and
-    `thresholds.passed == true`; controls and UI smoke pass with no console/runtime error. A headless,
-    hidden, throttled, or incomplete run is diagnostic only and cannot satisfy this task.
-- [ ] **6.4 Verify GitHub Pages and itch.io from the same build.**
-  - Change: deploy only after 6.1-6.3 pass. Verify both public surfaces report the same commit/build
-    hash and complete a short manual combat smoke including Upgrade category slots and Result.
+    `thresholds.passed == true`; opening/boss/post-boss, diagnostic export, controls, and UI smoke
+    pass with no console/runtime error. A headless, hidden, throttled, or incomplete run is diagnostic
+    only and cannot satisfy this task.
+- [ ] **7.4 Verify GitHub Pages and itch.io from the same build.**
+  - Change: deploy only after 7.1-7.3 pass. Verify both public surfaces report the same commit/build
+    hash and complete a short manual combat smoke including early visibility, boss overlap or its
+    deterministic fixture, Upgrade category slots, Anomaly/messages/motion, diagnostics export, and
+    Result.
   - Accept: neither deployment uses stale assets/code; observed behavior matches the local built
     Web artifact; evidence IDs and URLs are recorded without increasing artifact retention.
 
@@ -543,7 +871,8 @@ Final gate:
 | Cadence | Exact check | Run when | Do not rerun until |
 | --- | --- | --- | --- |
 | Inner loop | One changed-owner validator plus `git diff --check` | After a coherent local change | Its relevant source changes |
-| UI phase | Upgrade/build/result/localization/accessibility validators and selected rendered states | Phase 2 tasks pass | UI/snapshot/theme/localization input changes |
+| Session phase | Evidence/session/privacy/retention/export validators | Phase 1 tasks pass | Envelope, registry, persistence, or export input changes |
+| UI phase | Upgrade/build/result/HUD/Anomaly/localization/accessibility validators and selected rendered states | Phase 2 or 5 tasks pass | UI/snapshot/theme/localization/asset input changes |
 | Performance diagnostic | One 30-second same-scenario comparison | A measured candidate is ready | The selected owner or hypothesis changes |
 | Native authority | 10-second warmup + 60-second cap-48 production replay | Final source is clean and quiet | A runtime/resource/export input changes |
 | Capacity staircase | Ascending 48/64/96/128 diagnostics with early stop | Native cap-48 authority passes | Runtime or scenario input changes |
@@ -568,10 +897,13 @@ Validation rules:
 | Category occupancy exceeds the proposed capacity | Stop Phase 2 and correct the catalog-derived capacity | Do not silently hide an acquired card or add scrolling inside one category |
 | Five-slot category cannot fit at a supported width | Wrap after four positions and use the existing rail scroll | Do not shrink artwork below current compact size or move offer actions into scroll |
 | Renderer becomes a measured failing owner | Record the contradiction and replan that owner | Do not preemptively replace the renderer or assets |
-| 4.1-4.3 make schedule no longer material | Skip 4.4 and record why | Do not implement a persistent scheduler without selection evidence |
+| Opening visibility passes but first commitment remains late | Adjust only nearest safe approach placement/entry gate within the locked `8s` acceptance | Do not spawn on-screen or raise attack-commit caps |
+| Boss maintenance makes the boss unreadable or violates slot margin | Stop new maintenance admission and correct the low/high-watermark policy | Do not remove existing exact ordinary actors or bypass boss reservation |
+| 4.4-4.6 make schedule/contact no longer material | Skip 4.7 and record why | Do not implement persistent membership without selection evidence |
 | A candidate improves its bucket but worsens total p99 | Reject/revert the candidate and inspect transferred work | Do not keep local-looking wins |
 | Cap 48 remains above p99 8 ms after Phase 4 | Stop before Web release and request approval for a narrow Web-capable native-kernel spike | Do not add threads, GDExtension, or custom templates automatically |
-| 64 fails in Phase 5 | Record 48 as the portable envelope and stop the staircase | Do not lower correctness or timing gates |
+| Anomaly raster candidate is rejected | Keep current approved asset live, revise the candidate through the same workbench | Do not promote or hand-edit the rejected output |
+| 64 fails in Phase 6 | Record 48 as the portable envelope and stop the staircase | Do not lower correctness or timing gates |
 | 96/128 passes | Record technical headroom only | Shipping cap/difficulty requires a separate product decision |
 | Built Web is materially slower or invalid while native passes | Keep release blocked and isolate Web-only environment/runtime cost | Do not publish a native-only performance claim |
 | A verified material fact contradicts this contract | Stop the affected branch, update the plan, and obtain required approval | Executor cannot choose a new product/architecture/dependency contract |
@@ -590,6 +922,13 @@ Validation rules:
   Both public deployments therefore need same-build verification.
 - Selected raw JSON in Git grows repository history. Promotion is limited to authority results and
   decision-changing diagnostics; routine output remains local.
+- Session logging can perturb the game if it serializes in hot paths. The selected recorder
+  accumulates bounded summaries and flushes only at safe lifecycle boundaries; its disabled and
+  enabled overhead must be measured.
+- Five-second Gravity and three-second Cryo increase active-effect work. Membership queries must be
+  reused and bounded, and the new workload must pass the same native/Web timing gates.
+- Continuous edge breathing can distract or violate Reduced Motion intent. It is limited to 17
+  bounded map objects, uses low amplitude/opacity, and has a static reduced-motion replacement.
 
 ## Rollback and Safety
 
@@ -601,8 +940,8 @@ Validation rules:
   moves or deletes the originals.
 - Reject and revert only a task-owned performance candidate that fails its comparison gate; never
   reset the whole worktree or weaken the benchmark.
-- Keep production caps and export settings unchanged throughout candidate work. Diagnostic capacity
-  overrides remain unreachable from normal play.
+- Keep the overall production ceiling and export settings unchanged. Only the declared beat-zero
+  cap changes to six; diagnostic capacity overrides remain unreachable from normal play.
 - Do not deploy until the final native and local built-Web gates pass. A failed public smoke rolls
   forward with a corrected build or uses the repository's existing recoverable deployment path; it
   never force-pushes or rewrites release history.
@@ -625,17 +964,31 @@ Validation rules:
   core must replace one canonical owner and requires approval if it changes deployment shape.
 - 2026-08-13: higher exact capacity is measured only after cap 48 passes, and does not automatically
   ship.
+- 2026-08-14: normal play, UI actions, and capture manifests are not currently durable
+  commit/version-linked evidence. Add a bounded local `user://` session ring plus explicit export;
+  remote upload remains unapproved.
+- 2026-08-14: Antigravity CLI `1.1.11` does not recognize `Gemini 3.7 Flash (High)`. The requested
+  fallback `Gemini 3.6 Flash (High)` reviewed category wording; repository verification selected
+  `주무장`, `자동 무장`, `공격 효과`, `직접 발동`, `차체 강화`, and `전술 특성`.
+- 2026-08-14: replace the delayed one-actor opening with six low-risk authored actors and preserve a
+  48-actor ceiling. Maintain 8-12 authored-reserve ordinary actors during boss play and begin the
+  next stage refill immediately after boss defeat.
+- 2026-08-14: remove Projectile Purge, set Gravity/Cryo/Decoy durations to `5/3/6s`, and replace the
+  generic revealed state with three smaller outcome-specific approved rasters.
+- 2026-08-14: one text-only HUD queue owns gameplay announcements. Map repair/recall pickups and
+  Anomaly Devices use restrained time-based bob plus one shared contour; gameplay positions remain
+  stationary and Reduced Motion uses a static contour.
 
 ## Open Questions
 
-No material implementation question remains open. A future user decision is required only if Phase
-4 proves that a native kernel is necessary or if Phase 5 proves enough headroom to consider raising
-the shipping exact cap.
+No material implementation question remains open. Expected later approval gates are the three
+Phase 5 Anomaly raster candidates, any remote telemetry service, a native kernel if Phase 4 cannot
+pass, and a higher shipping cap if Phase 6 proves technical headroom.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1, durable commit-linked evidence.
+- Current phase: Phase 1, durable commit-linked evidence and bounded local session diagnostics.
 - Next task: 1.1, define and validate the provenance envelope.
 - Last completed gate: Discovery Closure Gate.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance
@@ -647,8 +1000,13 @@ Complete when:
 
 - Every required task acceptance check and final gate passes.
 - Category slots are correct on Upgrade and Result in both locales and supported layouts.
+- Opening, boss, and post-boss visible-pressure gates pass without on-screen births or fabricated
+  population.
+- Gravity/Cryo/Decoy use approved distinct images and exact `5/3/6s` lifetimes; one text-only message
+  queue and bounded pickup/device interaction motion pass accessibility and performance gates.
 - The final cap-48 native p95/p99 are at most `6/8 ms` and built Web is valid.
 - The evidence ledger can reconstruct the final claim from full commit and artifact hashes.
+- A redacted native/Web session bundle can be exported and compared without remote upload.
 - The capacity envelope is recorded without silently changing shipping balance.
 - Durable product, visual, and performance decisions are incorporated into their owning specs.
 
@@ -657,9 +1015,10 @@ Replan when:
 - New tail receipts contradict the selected owner set.
 - Category compatibility changes the maximum simultaneous capacities.
 - A native extension, Web threading, custom template, or higher shipping cap becomes necessary.
+- A remote telemetry endpoint or a different Anomaly outcome roster becomes necessary.
 
 Do not replan or stop for:
 
 - Local implementation mechanics inside the locked category/evidence/runtime boundaries.
 - A rejected measured candidate; revert it and continue with the next selected hypothesis.
-- A normal Phase 5 early stop after the first failing capacity tier.
+- A normal Phase 6 early stop after the first failing capacity tier.
