@@ -185,7 +185,7 @@ func _init() -> void:
 	_expect(
 		not bool(result_rail["heading_visible"])
 			and float(result_rail["viewport_minimum_height"]) <= 280.0
-			and is_equal_approx(float(result_rail["cell_size"]), 22.0),
+			and is_equal_approx(float(result_rail["cell_size"]), 20.0),
 		"final result uses the dense rail needed to show all categories at 720p"
 	)
 	_expect("4:18" in String(result_contract["summary_text"]), "final summary preserves cumulative active time")

@@ -16,6 +16,7 @@ var _popover_text: VBoxContainer
 var _active_cell: Control
 var _pinned := false
 var _compact := false
+var _dense := false
 var _large := false
 var _show_heading := true
 var _viewport_minimum_height := 0.0
@@ -82,6 +83,13 @@ func set_compact_mode(compact: bool) -> void:
 		set_snapshot(_snapshot)
 
 
+func set_dense_mode(dense: bool) -> void:
+	_dense = dense
+	if is_node_ready():
+		_apply_size_mode()
+		set_snapshot(_snapshot)
+
+
 func set_large_mode(large: bool) -> void:
 	_large = large and not _compact
 	if is_node_ready():
@@ -103,15 +111,17 @@ func set_viewport_minimum_height(value: float) -> void:
 
 
 func _apply_size_mode() -> void:
-	custom_minimum_size.x = 168.0 if _compact else (196.0 if _large else 180.0)
+	custom_minimum_size.x = (
+		156.0 if _dense else (168.0 if _compact else (196.0 if _large else 180.0))
+	)
 	custom_minimum_size.y = _viewport_minimum_height
 	if is_instance_valid(_heading):
 		_heading.visible = _show_heading
 		_heading.add_theme_font_size_override(
-			"font_size", 13 if _compact else (15 if _large else 14)
+			"font_size", 11 if _dense else (13 if _compact else (15 if _large else 14))
 		)
 	if is_instance_valid(_sections):
-		_sections.add_theme_constant_override("separation", 1 if _compact else 2)
+		_sections.add_theme_constant_override("separation", 0 if _dense else (1 if _compact else 2))
 
 
 func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void:
@@ -121,7 +131,7 @@ func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void
 	_sections.add_child(section)
 	var heading := Factory.label(
 		tr(String(category.get("heading_key", ""))),
-		11 if _compact else 12,
+		10 if _dense else (11 if _compact else 12),
 		Art.MUSTARD
 	)
 	heading.theme_type_variation = &"MetricLabel"
@@ -146,6 +156,8 @@ func _add_category_section(category: Dictionary, dimensions: Dictionary) -> void
 
 
 func _dimensions() -> Dictionary:
+	if _dense:
+		return {"cell":20.0, "art":14.0}
 	if _compact:
 		return {"cell":22.0, "art":16.0}
 	if _large:
