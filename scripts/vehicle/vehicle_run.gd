@@ -382,6 +382,7 @@ var _performance_recorder: VehiclePerformanceRecorder
 var _performance_scenario: VehiclePerformanceScenario
 var _performance_finishing := false
 var _performance_ablation: StringName = &"none"
+var _performance_deep_owner: StringName = &"none"
 var _performance_enemy_sections: Dictionary = {}
 var _performance_detail_sample_active := false
 var _slow_tick_coarse_ms := PackedFloat64Array()
@@ -588,9 +589,16 @@ func _physics_process(delta: float) -> void:
 		if timing_active:
 			section_started = Time.get_ticks_usec()
 		_update_encounter(delta)
+		var pursuit_started := (
+			Time.get_ticks_usec()
+			if timing_active and _performance_deep_owner == &"pursuit"
+			else 0
+		)
 		pursuit_field.update(
 			delta, player_position, _slow_tick_recording_active
 		)
+		if pursuit_started > 0:
+			subsystem_ms["deep_pursuit"] = _elapsed_ms(pursuit_started)
 		if timing_active:
 			_slow_tick_coarse_ms[1] = _elapsed_ms(section_started)
 		if _performance_detail_sample_active:
@@ -6955,6 +6963,10 @@ func _parse_performance_request() -> Dictionary:
 			values["ablation"] = argument.trim_prefix(
 				"--performance-ablation="
 			)
+		elif argument.begins_with("--performance-deep-owner="):
+			values["deep_owner"] = argument.trim_prefix(
+				"--performance-deep-owner="
+			)
 	if OS.has_feature("web"):
 		var query_value: Variant = JavaScriptBridge.eval("window.location.search", true)
 		if query_value is String:
@@ -6983,6 +6995,10 @@ func _parse_performance_request() -> Dictionary:
 	if ablation not in [&"none", &"decision", &"attacks", &"presentation", &"overlap"]:
 		push_error("Unknown performance ablation: %s" % String(ablation))
 		return {}
+	var deep_owner := StringName(values.get("deep_owner", "none"))
+	if deep_owner not in [&"none", &"pursuit"]:
+		push_error("Unknown performance deep owner: %s" % String(deep_owner))
+		return {}
 	values["output"] = String(values.get(
 		"output",
 		"res://build/performance/%s.json" % String(values["scenario"])
@@ -6991,6 +7007,7 @@ func _parse_performance_request() -> Dictionary:
 	values["duration"] = maxf(0.25, float(values.get("duration", 60.0)))
 	values["enemy_count"] = enemy_count
 	values["ablation"] = ablation
+	values["deep_owner"] = deep_owner
 	return values
 
 
@@ -7004,6 +7021,9 @@ func _start_performance_scenario() -> void:
 	_performance_ablation = StringName(
 		_performance_request.get("ablation", &"none")
 	)
+	_performance_deep_owner = StringName(
+		_performance_request.get("deep_owner", &"none")
+	)
 	if (
 		not OS.has_feature("web")
 		and DisplayServer.has_method("window_move_to_foreground")
@@ -7016,7 +7036,8 @@ func _start_performance_scenario() -> void:
 		StringName(_performance_request["scenario"]),
 		String(_performance_request["output"]),
 		float(_performance_request["warmup"]),
-		float(_performance_request["duration"])
+		float(_performance_request["duration"]),
+		_performance_deep_owner
 	)
 	_start_engagement_telemetry()
 	if RenderingServer.has_method("viewport_set_measure_render_time"):

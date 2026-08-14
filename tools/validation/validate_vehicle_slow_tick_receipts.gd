@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Buffer = preload("res://scripts/performance/vehicle_slow_tick_receipt_buffer.gd")
+const Recorder = preload("res://scripts/performance/vehicle_performance_recorder.gd")
 const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 
 var failures: Array[String] = []
@@ -8,6 +9,7 @@ var failures: Array[String] = []
 
 func _initialize() -> void:
 	_validate_fixed_slow_tail_receipts()
+	_validate_deep_attribution_contract()
 	_validate_pressure_observation_gate()
 	_finish()
 
@@ -79,6 +81,25 @@ func _validate_pressure_observation_gate() -> void:
 		int(Dictionary(runtime.debug_snapshot()["pressure"]).get("active", -1)) == 0
 			and inactive is Dictionary,
 		"disabling observation clears stale diagnostic pressure without changing tick output"
+	)
+
+
+func _validate_deep_attribution_contract() -> void:
+	var recorder := Recorder.new()
+	recorder.configure(&"production_replay", "", 0.0, 0.25, &"pursuit")
+	var contract := recorder.deep_attribution_contract()
+	_expect(
+		bool(contract.get("enabled", false))
+			and StringName(contract.get("owner", "")) == &"pursuit"
+			and String(contract.get("cadence", "")) == "every_physics_tick",
+		"named pursuit deep mode reports its every-tick measurement contract"
+	)
+	recorder.configure(&"production_replay", "", 0.0, 0.25)
+	contract = recorder.deep_attribution_contract()
+	_expect(
+		not bool(contract.get("enabled", true))
+			and StringName(contract.get("owner", "")) == &"none",
+		"deep attribution remains disabled unless explicitly requested"
 	)
 
 

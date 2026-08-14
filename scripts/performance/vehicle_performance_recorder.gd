@@ -16,6 +16,7 @@ var scenario_id: StringName
 var output_path := ""
 var warmup_seconds := 10.0
 var sample_seconds := 60.0
+var deep_attribution_owner: StringName = &"none"
 
 var _elapsed := 0.0
 var _frame_ms: Array[float] = []
@@ -42,11 +43,18 @@ var _started_utc := ""
 var _slow_tick_receipts := SlowTickReceiptBuffer.new()
 
 
-func configure(id: StringName, path: String, warmup: float = 10.0, duration: float = 60.0) -> void:
+func configure(
+	id: StringName,
+	path: String,
+	warmup: float = 10.0,
+	duration: float = 60.0,
+	deep_owner: StringName = &"none"
+) -> void:
 	scenario_id = id
 	output_path = path
 	warmup_seconds = maxf(0.0, warmup)
 	sample_seconds = maxf(0.25, duration)
+	deep_attribution_owner = deep_owner
 	_initial_static_memory = float(Performance.get_monitor(Performance.MEMORY_STATIC))
 	_started_utc = Time.get_datetime_string_from_system(true, true)
 	_slow_tick_receipts.clear()
@@ -74,6 +82,14 @@ func record_slow_tick_receipt(
 ) -> void:
 	if _is_sampling():
 		_slow_tick_receipts.record(physics_serial, total_ms, coarse_ms, scalars)
+
+
+func deep_attribution_contract() -> Dictionary:
+	return {
+		"enabled":deep_attribution_owner != &"none",
+		"owner":String(deep_attribution_owner),
+		"cadence":"every_physics_tick" if deep_attribution_owner != &"none" else "disabled",
+	}
 
 
 func advance_frame(
@@ -189,6 +205,7 @@ func finish(
 			"p99_hitch": _p99_attribution(),
 		},
 		"slow_tick_receipts":_slow_tick_receipts.finalized_receipts(),
+		"deep_attribution":deep_attribution_contract(),
 		"subsystems": subsystem_stats,
 		"max_consecutive_frames_over_33_3_ms": _max_consecutive_over_33,
 		"counts": counts.duplicate(true),
@@ -505,6 +522,7 @@ func _publish_web_summary(result: Dictionary) -> void:
 		"hud": result["hud"],
 		"draw_calls": result["draw_calls"],
 		"subsystems": result["subsystems"],
+		"deep_attribution": result["deep_attribution"],
 		"counts": result["counts"],
 		"combat_renderer": result["combat_renderer"],
 		"engagement_telemetry": result["engagement_telemetry"],
