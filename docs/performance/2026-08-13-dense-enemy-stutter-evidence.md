@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-08-13
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 topic: Dense-enemy stutter root-cause analysis
 scope: Current Cardborne tracked runtime, retained native and Web evidence, recent performance history, and deployment constraints
 source: Repository code and history, retained profiler JSON, GitHub Actions deployment state, prior Codex sessions, and primary technical references
@@ -382,6 +382,45 @@ Another active session has untracked visual work under
 read, edit, stage or include that work. No authoritative performance run was started while that
 session and its workload were active.
 
+### 15. Final same-commit release evidence supersedes the earlier freshness gap
+
+The final portable source commit is `e0962d7e2a8902e1682545ca7b3aa1f74bb0013f`, with content
+fingerprint `b4d7cdbf0751b717b097715acc9e04b2a7729a55ce967fc3f1041d42a9c2b180`.
+All values below use the production scheduler workload fingerprint `627232438` unless noted.
+
+| Evidence | Environment | Ordinary actors | Physics p95 / p99 | Frame p95 / p99 | Result |
+| --- | --- | ---: | ---: | ---: | --- |
+| Pre-optimization authority | Native | 43 | 7.661 / 8.973 ms | 16.667 / 16.667 ms | Fail |
+| Live-overlap-index diagnostic | Native | 43 | 3.434 / 4.317 ms | 16.667 / 16.667 ms | Diagnostic trend pass |
+| First final authority observation | Native | 43 | 3.230 / 3.970 ms | 16.667 / 16.667 ms | Fail only at 1% low 54.03 FPS |
+| Unchanged isolated confirmation | Native | 43 | 3.344 / 4.127 ms | 16.667 / 16.667 ms | Pass; 1% low 58.79 FPS |
+| Capacity early-stop tier | Native | 64 | 9.623 / 12.062 ms | 16.666 / 16.667 ms | Diagnostic fail |
+| Final built Web | Visible Chrome | 43 | 11.0 / 13.6 ms | 47.8 / 63.89 ms | Authority fail |
+
+The optimization replaces overlap-owner scans across all 320 capacity slots with a swap-removed
+index of live local non-boss members. It preserves exact bucket candidates, nearest-eight ordering,
+stale-generation behavior, collision truth, cadence, and public caps. The candidate was retained
+because the named overlap owner and total physics time both improved materially.
+
+The first and second final native authority observations are both retained. The first red result is
+not relabeled or discarded; its isolated tail was dominated by wait/unattributed time rather than a
+repeatable source owner. The unchanged, process-isolated confirmation provides the passing native
+release observation while keeping the variance visible.
+
+The capacity staircase stopped at 64 as predetermined. Therefore the measured technical envelope
+is last-pass 48 and first-fail 64. This does not raise the shipping cap or alter visible pressure,
+authored population, or the virtual reserve.
+
+The Web result is not a headless or hidden diagnostic. It used Chrome 151 at `1280x720`, remained
+visible and focused, reported `headless=false` and `scheduler_throttled=false`, and completed a
+scenario-valid 43-ordinary production replay. The exported PCK SHA-256 is
+`d1d01cedc612f6cc7ec7b471022b97511f0039426fa193c2037ad319c2be9281`. Its failure therefore blocks
+GitHub Pages and itch.io deployment under the release contract.
+
+The decision-changing raw records are tracked under `docs/performance/evidence/` and indexed by
+`vehicle-performance-evidence.jsonl`. The absent historical `4f7f7acd` bytes were not reconstructed;
+the final native authority record explicitly supersedes that unavailable checkpoint.
+
 ## Hypothesis ranking
 
 | Rank | Hypothesis | Verdict | Evidence |
@@ -418,13 +457,12 @@ The compared architectures and a migration sequence are in
 
 ## Limitations
 
-- A new eligible 60-second baseline and a valid final 10-second native diagnostic were executed.
-  The final diagnostic is not an authoritative 60-second release qualification.
-- No final built-Web trace was run because the native capacity gate failed first. The deployed Web
-  build therefore remains unqualified and should be assumed unfixed.
+- The final native conclusion uses one passing authority observation and retains one unchanged
+  same-commit tail failure. This establishes release capability on the measured machine, not a
+  guarantee for every desktop.
+- The final built-Web authority trace is valid and failed. It qualifies the tested Chrome/Web build
+  as unsuitable for release; it does not identify how much a future native kernel will improve.
 - The half-scale comparison changes several systems at once; it cannot isolate camera/range cost.
-- The retained Web smoke run was headless and non-authoritative. It supports a hypothesis but does
-  not qualify a published browser build.
 - Subsystem timers have instrumentation overhead and are sampled on a stride. They are suitable for
   ranking owners, not for adding all medians into an exact frame total.
 - Official documentation establishes engine and platform constraints; expected gains from each

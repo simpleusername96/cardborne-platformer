@@ -3,7 +3,7 @@ type: evidence
 status: active
 owner: BK
 created: 2026-08-13
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 topic: Architecture options for eliminating dense-enemy stutter
 scope: Behavior-preserving and product-changing options for native and Web Cardborne runtimes
 source: Dense-enemy evidence, current code ownership, and official Godot, Emscripten, browser, and itch.io documentation
@@ -389,6 +389,34 @@ The implementation contract should require:
 - per-phase visited-slot, due-slot, query-candidate and receipt counters;
 - explicit authority eligibility and focus/throttling metadata;
 - no background Codex, browser, export or design workload during authoritative runs.
+
+## Final 2026-08-14 gate update
+
+The final portable-GDScript source commit is `e0962d7e`. It passes the isolated native cap-48
+authority gate at physics p95/p99 `3.344/4.127 ms`, but the exact-cap staircase fails at 64 with
+`9.623/12.062 ms`. The same exported build then fails a valid visible Chrome Web run at cap 48:
+physics p95/p99 `11.0/13.6 ms`, frame p95/p99 `47.8/63.89 ms`, and 1% low `14.27 FPS`.
+
+This closes Gate 0 and changes the decision. More local GDScript tuning is not a credible release
+path for the current Web workload, and higher exact-cap experiments are not justified. The narrow
+next experiment is one single-truth packed kernel for the measured ordinary-enemy decision,
+movement, and neighbor-query loop. It must replace, not mirror, the current authoritative state;
+preserve deterministic handles, exact collision/narrow-phase rules, cadence, and receipts; remain
+single-threaded for attribution; and ship through a Web-capable custom template from the same
+commit. This is a production toolchain and deployment-shape change, so it requires explicit user
+approval before implementation.
+
+The first spike boundary is limited to the ordinary-enemy schedule/decision/movement path currently
+coordinated by `vehicle_run.gd`, `vehicle_enemy_update_schedule.gd`, and
+`vehicle_spatial_grid.gd`. Bosses, generators, encounter admission and quota, projectiles, effects,
+damage truth, progression, renderer, HUD, and presentation remain outside it. The packed kernel
+accepts pure data and returns next state plus semantic receipts; it does not call the SceneTree or
+keep a second live `EnemyState` copy.
+
+Acceptance for that spike is deliberately small: a deterministic kernel oracle plus one isolated
+native/Web benchmark must demonstrate at least a material 2x reduction in the migrated owner before
+VehicleRun integration. If the isolated spike misses that trend gate, reject it without changing
+the product runtime or export workflow.
 
 ## Immediate decision
 

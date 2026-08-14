@@ -524,7 +524,7 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
     SHA-256, byte size, plan checkpoint, and supersedes relation. Plans cite evidence IDs.
   - Accept: tooling can select comparable records by scenario and reject different seeds,
     workloads, viewports, renderer modes, or authority classes.
-- [ ] **1.3 Promote only evidence that changes a decision.**
+- [x] **1.3 Promote only evidence that changes a decision.**
   - Change: copy authoritative pass/fail JSON and any diagnostic explicitly cited by a durable plan
     into `docs/performance/evidence/<evidence-id>.json`; keep routine logs, screenshots, invalid
     experiments, and repeated raw output ignored. The ledger hashes both tracked and local raw data.
@@ -871,11 +871,11 @@ unchanged
     unreachable from normal play and excluded from saved product data.
   - Accept: each result labels exact count, authored reserve, workload fingerprint, and
     `diagnostic_only` status; scenario validation rejects a missed target count.
-- [ ] **6.2 Run the capacity staircase with an early stop.**
+- [x] **6.2 Run the capacity staircase with an early stop.**
   - Change: run 30-second diagnostics in ascending order. Stop at the first tier whose p95 exceeds
     `6 ms`, p99 exceeds `8 ms`, or correctness/count validation fails. Do not run higher tiers.
   - Accept: ledger records the last passing and first failing tier with comparable provenance.
-- [ ] **6.3 Make the next architecture decision from the envelope.**
+- [x] **6.3 Make the next architecture decision from the envelope.**
   - Change: if 96 or 128 passes, document the technical headroom and leave shipping cap 48 pending a
     separate gameplay/balance decision. If 64 fails, prepare a narrow approval request for a
     single-truth packed native kernel; do not implement it in this plan.
@@ -906,7 +906,7 @@ workflow, evidence ledger, deployment build info
     schedule, spatial, combat, Anomaly, upgrade, result, HUD, localization, accessibility, capture,
     asset, and document-authority validators; then headless import and diff checks.
   - Accept: all pass with no parser error or new warning attributable to this work.
-- [ ] **7.2 Run final native authority once.**
+- [x] **7.2 Run final native authority once.**
   - Change: on the final clean release-source commit, run the 10-second warmup plus 60-second cap-48
     `production_replay`; preserve raw JSON for later promotion and ledger entry. This result is also
     the Phase 6 cap-48 prerequisite and is not repeated when the source tree is unchanged.
@@ -921,6 +921,10 @@ workflow, evidence ledger, deployment build info
     `thresholds.passed == true`; opening/boss/post-boss, diagnostic export, controls, and UI smoke
     pass with no console/runtime error. A headless, hidden, throttled, or incomplete run is diagnostic
     only and cannot satisfy this task.
+  - Status: the exact `e0962d7e` Web export and authority capture are complete, but the valid visible
+    result failed both simulation and frame thresholds. Per the release stop rule, the remaining
+    manual smoke and Task 7.4 are blocked until an approved architecture change produces a new clean
+    release-source commit.
 - [ ] **7.4 Verify GitHub Pages and itch.io from the same build.**
   - Change: deploy only after 7.1-7.3 pass. Deploy the exact release-source commit qualified by 7.2
     and verify both public surfaces report the same commit/build
@@ -1101,22 +1105,41 @@ Validation rules:
   combat, Anomaly, Upgrade, Result, HUD, localization, capture, asset, workbench, visual-authority,
   headless-import, and diff checks. The diff-scoped quality audit found no competing gameplay owner,
   unbounded hot-path work, stale Decoy branch, or reachable exact-cap override in normal play.
+- 2026-08-14: the first clean cap-48 native authority observation on `e0962d7e` missed only the 1%
+  low gate (`54.03 FPS`) while its slow tail was dominated by OS/vsync wait. One unchanged,
+  process-isolated confirmation is retained rather than hiding the red result; it passed with
+  physics p95/p99 `3.344/4.127ms`, frame p95/p99 `16.667/16.667ms`, and 1% low `58.79 FPS`.
+- 2026-08-14: the capacity staircase used that authority pass as the 48 tier and stopped at 64 as
+  required. The exact-64 diagnostic was count-valid but failed at physics p95/p99
+  `9.623/12.062ms`; 96 and 128 were not run. Technical exact capacity is therefore last-pass 48 and
+  first-fail 64. This does not change the shipping cap, visible-pressure rules, or authored reserve.
+- 2026-08-14: the visible built-Web `e0962d7e` run was `1280x720`, ordinary count 43, normal Chrome
+  (`headless=false`), focused throughout, and not scheduler-throttled. It failed at physics p95/p99
+  `11.0/13.6ms`, frame p95/p99 `47.8/63.89ms`, and 1% low `14.27 FPS`. The exported PCK SHA-256 is
+  `d1d01cedc612f6cc7ec7b471022b97511f0039426fa193c2037ad319c2be9281`. GitHub Pages and itch.io
+  were deliberately not updated with this failing build.
+- 2026-08-14: six decision-changing records are promoted: the pre-optimization native authority
+  failure, the live-overlap-index diagnostic, both same-commit native authority observations, the
+  exact-64 early-stop failure, and the visible built-Web failure. The passing native record
+  explicitly supersedes the unavailable `4f7f7acd` checkpoint without reconstructing its bytes.
 
 ## Open Questions
 
-No material implementation question remains open. Expected later approval gates are any remote
-telemetry service, a native kernel if Phase 4 cannot pass, and a higher shipping cap if Phase 6 proves
-technical headroom. The three Phase 5 symbols and clean Transit Gate are approved.
+One material approval is now required: authorize a bounded single-truth packed native-kernel spike
+with a Web-capable custom export template, or explicitly choose a product-truth alternative such as
+lower Web exact density. The current plan does not authorize a production dependency, custom Web
+template, threading, threshold weakening, or hidden enemy-count reduction. The three Phase 5 symbols
+and clean Transit Gate remain approved.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: release-source qualification and capacity staircase.
-- Next task: commit the validated release source, run the single clean cap-48 native authority gate,
-  then run the diagnostic 48/64/96/128 staircase with its declared early stop.
-- Last completed gate: Weakpoint behavior, all four approved PNG promotions, exact-cap diagnostic
-  isolation, focused validators, headless import, and Korean 1280x720 full rendered capture pass.
-  Clean native authority, staircase, built-Web proof, and deployment remain open.
+- Current phase: architecture approval stop after a valid built-Web authority failure.
+- Next task: obtain approval for the narrow single-truth packed-kernel/custom-Web-template spike,
+  then implement it under a new decision-complete contract and rerun native plus built-Web gates.
+- Last completed gate: final source validation, promoted decision evidence, cap-48 native authority,
+  and the 48-pass/64-fail capacity envelope are complete. Built-Web capture is valid but red; public
+  deployment remains intentionally blocked.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance
   this pointer in the same edit.
 
