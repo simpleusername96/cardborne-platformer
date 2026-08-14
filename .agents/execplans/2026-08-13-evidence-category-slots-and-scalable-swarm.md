@@ -1162,8 +1162,12 @@ Validation rules:
   previous linear size. The final state sequence is pristine neutral body → broad-cracked neutral
   body → body-free `288`-world-unit outcome symbol. The shared build rail is corrected again to
   image-only `22/24/26 px` cells with `16/18/20 px` art and no internal scrollbar so all six
-  categories fit without the oversized text/slot stack. Final focused/rendered evidence is pending
-  this correction; performance scenarios remain deferred until all feature and image work is done.
+  categories fit without the oversized text/slot stack. Focused Upgrade, capture, renderer, runtime,
+  asset, visual-authority, and Web-export checks pass. Clean Korean 1280×720, 100%-text evidence is
+  in `build/captures/damaged-anomaly-compact-rail-01184b25-ko-1280-final`; its 121-file manifest
+  resolves commit `01184b25c0b983a9b009e7ebcf4957c01304e237`, fingerprint
+  `7ef053cfac1215fd742cfde1b4e35dbe9d7d27a2b4c520d34415547abaf5cbab`, clean source, and a valid
+  scenario. Performance scenarios remain deferred until all feature and image work is done.
 
 ## Open Questions
 

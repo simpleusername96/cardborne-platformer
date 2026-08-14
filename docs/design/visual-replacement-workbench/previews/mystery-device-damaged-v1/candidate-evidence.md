@@ -61,6 +61,11 @@ objects, glow, rings, text, and decorative greebles.
 ## Approval and limits
 
 BK directly requested implementation of a clearly cracked attacked state on 2026-08-14.
-The generated result is integrated as that requested intermediate state. Runtime capture,
-focused import, and asset/renderer validation remain required before this evidence is
-closed.
+The generated result is integrated as that requested intermediate state. Clean Korean
+1280×720 evidence is in
+`build/captures/damaged-anomaly-compact-rail-01184b25-ko-1280-final/09x-mystery-device-damaged.png`.
+The capture manifest contains 121/121 files, resolves commit
+`01184b25c0b983a9b009e7ebcf4957c01304e237`, records clean source with fingerprint
+`7ef053cfac1215fd742cfde1b4e35dbe9d7d27a2b4c520d34415547abaf5cbab`, and marks the
+scenario valid. Focused import, asset, renderer, runtime, Upgrade UI, visual-authority,
+and Web-export checks pass.

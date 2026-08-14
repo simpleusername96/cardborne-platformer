@@ -3251,7 +3251,7 @@
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_mystery_device_runtime.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_upgrade_ui.gd",
           ".\\tools\\export_web.ps1",
-          "runtime capture pending on the clean documentation checkpoint"
+          "build/captures/damaged-anomaly-compact-rail-01184b25-ko-1280-final (121/121 files, clean commit 01184b25c0b983a9b009e7ebcf4957c01304e237, valid scenario)"
         ]
       },
       "visual_authority_evidence": {
