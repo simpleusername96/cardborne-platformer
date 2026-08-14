@@ -116,7 +116,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 81, "all 78 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 78, "all 75 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in REQUIRED_UPGRADE_IDS:
@@ -164,9 +164,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 81
+		int(manifest.get("final_asset_count", 0)) == 78
 			and not manifest.has("animations"),
-		"manifest declares 81 static semantic images and no frame animations"
+		"manifest declares 78 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	for error in AssetProvider.validate_pack():

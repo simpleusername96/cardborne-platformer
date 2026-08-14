@@ -694,6 +694,7 @@ func _advance_movement_capture_segment(
 
 func _capture_build_state_evidence() -> void:
 	prepare_stage(3)
+	_run.run_build.apply(&"emp")
 	_run._clear_enemies()
 	for index in 4:
 		var angle := -0.75 + float(index) * 0.5
@@ -749,7 +750,7 @@ func _capture_build_state_evidence() -> void:
 	await _settle_capture()
 	_save_capture("04c-progression-max.png")
 	prepare_stage(3)
-	for upgrade_id in [&"thermal_burst", &"chassis_speed", &"homing_missiles"]:
+	for upgrade_id in [&"emp", &"thermal_burst", &"chassis_speed", &"homing_missiles"]:
 		_run.run_build.apply(upgrade_id)
 	_run.run_build.apply(&"thermal_burst")
 	var build_snapshot: Dictionary = _run._build_snapshot()
@@ -925,26 +926,26 @@ func _capture_structural_health_bar_evidence() -> void:
 func _capture_level_up_evidence() -> void:
 	prepare_stage(0)
 	var first_acquisition := _upgrade_offer_fixture([
-		[&"thermal_burst", 0],
+		[&"emp", 0],
+		[&"homing_missiles", 0],
 		[&"split_muzzle", 0],
-		[&"electric_field", 0],
 	])
 	_run._ui.show_upgrade(first_acquisition, _run._build_snapshot())
 	await _settle_capture()
-	_save_capture("06-thermal-first-acquisition.png")
+	_save_capture("06-first-weapon-acquisition.png")
 	_run._ui.debug_select_upgrade(0)
 	await _settle_capture()
-	_save_capture("06b-thermal-first-selected.png")
-	_run.run_build.apply(&"thermal_burst")
+	_save_capture("06b-first-weapon-selected.png")
+	_run.run_build.apply(&"emp")
 	var enhancement := _upgrade_offer_fixture([
-		[&"thermal_burst", 1],
-		[&"drop_mines", 1],
-		[&"homing_missiles", 1],
+		[&"emp", 1],
+		[&"homing_missiles", 0],
+		[&"drop_mines", 0],
 	])
 	_run._ui.show_upgrade(enhancement, _run._build_snapshot())
 	_run._ui.debug_select_upgrade(0)
 	await _settle_capture()
-	_save_capture("06c-thermal-enhancement.png")
+	_save_capture("06c-weapon-enhancement.png")
 	_run._ui.show_upgrade(enhancement.slice(0, 2), _run._build_snapshot())
 	await _settle_capture()
 	_save_capture("06d-two-card-tail.png")
@@ -1222,6 +1223,7 @@ func _capture_thermal_burst_evidence() -> void:
 	_run._clear_enemies()
 	_run._clear_projectiles()
 	_run._clear_effects()
+	_run.run_build.apply(&"emp")
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_run._start_active_weapon()
@@ -1434,6 +1436,8 @@ func _capture_exact_area_effect_evidence() -> void:
 
 func _prepare_exact_area_scene(camera_zoom: float) -> Vector2:
 	prepare_stage(0, true)
+	if not _run.run_build.has(&"emp"):
+		_run.run_build.apply(&"emp")
 	_run._clear_enemies()
 	_run._clear_projectiles()
 	_run._clear_effects()

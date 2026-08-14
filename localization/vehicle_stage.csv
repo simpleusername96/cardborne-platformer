@@ -269,7 +269,7 @@ UPGRADE_KINETIC_SHOCKWAVE_DESC,"주변 적 피해와 밀치기","Damages and pus
 UPGRADE_PIERCING_LANCE_TITLE,"십자 광선","Cross Beam"
 UPGRADE_PIERCING_LANCE_DESC,"맵 전체 십자 광선","Map-wide cross beams"
 UPGRADE_ACTIVE_EMP_TITLE,"EMP","EMP"
-UPGRADE_ACTIVE_EMP_DESC,"주변 적을 마비시키고 투사체를 제거","Stuns nearby enemies and clears projectiles"
+UPGRADE_ACTIVE_EMP_DESC,"광역 마비·탄환 제거","Stun, projectile purge"
 ACTIVE_WEAPON_EMP_NAME,"EMP","EMP"
 ACTIVE_WEAPON_BLACK_HOLE_NAME,"블랙홀","Black Hole"
 ACTIVE_WEAPON_SHOCKWAVE_NAME,"충격파","Shockwave"

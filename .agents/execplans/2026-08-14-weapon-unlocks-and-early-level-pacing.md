@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-14
 scope: Run-start weapon removal, weapon-owned upgrade progression, upgrade/HUD truth, and early XP pacing
@@ -160,7 +160,7 @@ Goal: make the build model truthful before changing combat behavior or UI.
 
 Source owners: `data/cards/vehicle/`, `scripts/cards/vehicle_upgrade_definition.gd`, `scripts/cards/vehicle_upgrade_catalog.gd`, `scripts/cards/vehicle_run_build.gd`, product specs, upgrade validators.
 
-- [ ] **1.1 Align product and design contracts.**
+- [x] **1.1 Align product and design contracts.**
   - Change: update `docs/product/vehicle_game_spec.md`, `docs/product/vehicle_upgrade_catalog.md`, `docs/product/vehicle_weapon_balance_spec.md`, `.agents/design/DESIGN.md`, and `docs/design/VISUAL_SYSTEM.md` for no defaults, 25/85, one Active, three equal Auto Weapons, 17 build cells, the stable locked-to-equipped Active HUD position, and 78 production images.
   - Accept: targeted searches find no active claim that Seeker/EMP starts equipped, shared weapon cards exist, category capacity is `2/5/2/3/5/4`, the HUD always has five items, or the manifest must contain 81 images.
 - [x] **1.2 Replace the card/schema contract.**
@@ -221,7 +221,7 @@ Source owners: build/offer snapshot presenters, shared Upgrade rail/cells/rows, 
 - [x] **3.3 Simplify HUD and Deployment.**
   - Change: remove the fixed Seeker HUD item, keep one stable generic Active position as `LOCKED` until owned, preserve stage/defeats/Dash and minimap placement, and change Deployment from EMP-specific wording to the acquired-active contract.
   - Accept: run start has no false READY/default weapon; acquiring any active replaces the one placeholder with its glyph/cooldown without reflow; automatic acquisitions do not add arbitrary action items; controls remain complete and remappable.
-- [ ] **3.4 Replace semantic artwork coverage.**
+- [x] **3.4 Replace semantic artwork coverage.**
   - Change: under the canonical authority pair, create one flat-stencil EMP card-art candidate, obtain exact approval, add `upgrade/emp`, remove the four obsolete card entries/images, and update provider/coverage counts. Do not create UI chrome or effect raster.
   - Accept: approved EMP art resolves at card size; every one of 25 card IDs has one artwork identity; no removed ID/file/manifest entry remains; total production image count is exactly 78.
 
@@ -246,13 +246,13 @@ Source owners: `scripts/progression/vehicle_experience_runtime.gd`, `tools/valid
 
 Goal: close cross-module, visual, localization, and production-path regressions without mixing in later campaign work.
 
-- [ ] **5.1 Run focused source gates.**
+- [x] **5.1 Run focused source gates.**
   - Change: run the validation matrix below after all phases cohere.
   - Accept: every focused validator, Godot import, visual-authority validator, asset coverage check, and `git diff --check` passes.
-- [ ] **5.2 Run the production Web path and focused interaction.**
+- [x] **5.2 Run the production Web path and focused interaction.**
   - Change: export with `./tools/export_web.ps1`; if browser interaction is needed, first use `$npjt-port-guard` and the fastrun Codex lane. Exercise no-weapon start, first two level-ups, Active input before/after acquisition, three-Auto limit, Active exclusivity, Upgrade focus/confirm, pause/Result return flow, and remapped binding text.
   - Accept: built Web has zero console/runtime errors, no stale default/shared copy, no clipping or focus loss, and matches the locked transitions.
-- [ ] **5.3 Run the scoped quality audit and commit.**
+- [x] **5.3 Run the scoped quality audit and commit.**
   - Change: use `$codebase-quality-auditor` on changed APIs/shared UI/data owners, correct only small task-owned findings, commit coherent checkpoints, and update this plan's checkboxes/progress evidence.
   - Accept: no removed policy remains as dead code/data/art; no duplicate owner or new `VehicleRun` responsibility appears; task-owned commits are clean.
 
@@ -321,7 +321,8 @@ Implementation-local discoveries may be handled inside the locked contract when 
 - 2026-08-14: keep ten-stage, density/performance, and `VehicleRun` extraction in the related long-term plan; they are not implemented in this batch.
 - 2026-08-14: generated and technically inspected the exact 192×192 EMP candidate at
   `docs/design/visual-replacement-workbench/previews/emp-upgrade-card-v1/emp-upgrade-card-candidate-v2-192.png`;
-  production integration remains blocked on BK's exact asset approval.
+  BK approved those exact bytes, which were promoted to `upgrade/emp` with SHA-256
+  `328e8eba58246c0000e9d6454730531a063db09ba46e1300d7ad31aa744213b6`.
 
 ## Open Questions
 
@@ -330,14 +331,29 @@ No material implementation decision remains open. Exact EMP artwork approval is 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3 approval gate.
-- Next task: obtain exact approval for the EMP candidate, then finish 1.1 and 3.4,
-  run the rendered/visual/final Web gates, audit, commit, and mark the plan done.
-- Last completed gate: catalog, active weapon, active recharge, automatic weapon,
-  weapon-balance, build snapshot, HUD presenter, localization, input binding,
-  rewards/UI/audio, Result builder, and XP focused validators passed. Upgrade UI
-  and stage-layout validation now fail only because `upgrade/emp` is intentionally
-  absent from production until approval.
+- Current phase: complete.
+- Next task: none in this contract. Ten-stage, density/performance, and
+  `VehicleRun` extraction remain owned by the related long-term plan.
+- Last completed gate: the focused catalog, combat, build snapshot, HUD, Upgrade,
+  stage layout, localization, input, Result, XP, semantic asset, capture-driver,
+  visual-workbench, and visual-authority checks passed. Godot 4.7.1 imported the
+  project and `./tools/export_web.ps1` produced the four-file Web build.
+- Rendered evidence: Korean 960×540 and 1280×720, English 960×540 and 1280×720,
+  plus Korean 1280×720 at 200% text were generated under
+  `build/captures/weapon-unlocks/`. Inspection covered empty Active/Auto cells,
+  the locked Active HUD, the first Active/Auto offer, per-weapon enhancement,
+  acquired build details, Deployment, and Result. At 200%, the Upgrade view uses
+  its intended one-card scroll layout without clipped text.
+- Built-Web evidence: the exported build loaded without console warnings or
+  errors; Deployment showed only primary fire, Dash, and the conditional Active
+  binding; the run began at `LV 1 / EXP 0 / 10` with `LOCKED` Active; pressing
+  the Active input before acquisition was a safe no-op; and the failure Result
+  returned to Deployment. Deterministic validators and capture fixtures cover
+  first/second offer confirmation, remapped binding copy, one-Active exclusivity,
+  and the three-Auto limit; the short browser smoke did not reach a live level-up.
+- Quality audit: removed policy IDs remain only in the validator deny-list, the
+  production set is exactly 78 visual files (75 PNG and 3 SVG), no task change
+  expanded `vehicle_run.gd`, and no duplicate combat or UI owner was introduced.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

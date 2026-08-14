@@ -779,7 +779,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - 5개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
-- final gameplay manifest가 정확히 81 image를 색인함: semantic PNG 78개와
+- final gameplay manifest가 정확히 78 image를 색인함: semantic PNG 75개와
   user-approved SurfaceDetail SVG 3개다. Shape/color-only effect/cue raster는 0이다.
   전용 hostile bolt를 포함하며, candidate/intermediate와
   선택되지 않은 SVG variant는 production manifest에 포함하지 않음

@@ -1,6 +1,6 @@
 ---
 type: evidence
-status: active
+status: archived
 owner: BK
 created: 2026-08-14
 topic: EMP upgrade-card artwork approval candidate
@@ -14,8 +14,8 @@ related:
 
 ## Purpose
 
-This evidence package presents the exact EMP upgrade-card artwork candidate for
-BK's approval before any production manifest, provider, or asset retirement change.
+This evidence package records the exact EMP upgrade-card artwork that BK approved
+and that was subsequently promoted into the production gameplay asset set.
 
 ## Sources
 
@@ -52,12 +52,13 @@ Final generation prompt:
 - It uses one familiar capacitor-device silhouette and does not copy a specific
   object from the canonical sheet.
 - BK approved this exact candidate in the active implementation session on
-  2026-08-14. The workbench now records it as `approved_for_switch`.
+  2026-08-14.
+- The approved bytes were promoted to
+  `art/visuals/production/gameplay/upgrades/emp.png` with the same SHA-256. The
+  workbench records the unit as `applied`, and the production manifest resolves
+  the identity as `upgrade/emp`.
 
 ## Limitations
 
-- This preview is evidence only. It is not a production asset and does not make
-  the EMP unit `switch_ready`.
-- Until the approved switch is applied, `upgrade/emp` remains absent from the
-  gameplay manifest, so the semantic-provider and upgrade-card visual validators
-  are expected to fail only for that missing identity.
+- The files in this directory remain historical approval evidence. Runtime code
+  must resolve the promoted production asset rather than load this preview path.

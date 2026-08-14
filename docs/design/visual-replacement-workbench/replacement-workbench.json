@@ -139,37 +139,8 @@
       "title_ko": "업그레이드 카드 아트워크",
       "owner": "gameplay_manifest",
       "switch_kind": "consolidate",
-      "status": "approved_for_switch",
-      "current_paths": [
-        "art/visuals/production/gameplay/upgrades/active_amplifier.png",
-        "art/visuals/production/gameplay/upgrades/active_coolant.png",
-        "art/visuals/production/gameplay/upgrades/auto_laser.png",
-        "art/visuals/production/gameplay/upgrades/bio_toxin.png",
-        "art/visuals/production/gameplay/upgrades/chassis_speed.png",
-        "art/visuals/production/gameplay/upgrades/critical_targeting.png",
-        "art/visuals/production/gameplay/upgrades/cryo_slow.png",
-        "art/visuals/production/gameplay/upgrades/dash_afterburn_field.png",
-        "art/visuals/production/gameplay/upgrades/dash_overdrive.png",
-        "art/visuals/production/gameplay/upgrades/drop_mines.png",
-        "art/visuals/production/gameplay/upgrades/electric_field.png",
-        "art/visuals/production/gameplay/upgrades/gravity_collapse.png",
-        "art/visuals/production/gameplay/upgrades/homing_missiles.png",
-        "art/visuals/production/gameplay/upgrades/hull_integrity.png",
-        "art/visuals/production/gameplay/upgrades/kinetic_shockwave.png",
-        "art/visuals/production/gameplay/upgrades/last_stand_amplifier.png",
-        "art/visuals/production/gameplay/upgrades/lifesteal.png",
-        "art/visuals/production/gameplay/upgrades/orbiting_blades.png",
-        "art/visuals/production/gameplay/upgrades/overflow_barrier.png",
-        "art/visuals/production/gameplay/upgrades/pickup_radius.png",
-        "art/visuals/production/gameplay/upgrades/piercing_lance.png",
-        "art/visuals/production/gameplay/upgrades/piercing_rounds.png",
-        "art/visuals/production/gameplay/upgrades/secondary_amplifier.png",
-        "art/visuals/production/gameplay/upgrades/secondary_coolant.png",
-        "art/visuals/production/gameplay/upgrades/shock_disruption.png",
-        "art/visuals/production/gameplay/upgrades/split_muzzle.png",
-        "art/visuals/production/gameplay/upgrades/storm_barrage.png",
-        "art/visuals/production/gameplay/upgrades/thermal_burst.png"
-      ],
+      "status": "applied",
+      "current_paths": [],
       "consumer_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
         "scripts/cards/vehicle_upgrade_offer_presenter.gd",
@@ -432,7 +403,15 @@
           "art/visuals/production/gameplay/upgrades/secondary_coolant.png.import"
         ]
       },
-      "application": null
+      "application": {
+        "commit": "f93c1f3815085de4870394f0f778c4275a97bbb2",
+        "applied_at": "2026-08-14T23:02:25+09:00",
+        "validation_evidence": [
+          ".\\tools\\design\\promote_visual_replacement_unit.ps1 -UnitId upgrade_content_artwork -Apply",
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
+          ".\\tools\\validation\\validate_cardborne_visual_authority.ps1"
+        ]
+      }
     },
     {
       "id": "projectile_family",
