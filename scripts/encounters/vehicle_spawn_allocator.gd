@@ -7,6 +7,10 @@ extends RefCounted
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
 const MIN_PLAYER_DISTANCE := 900.0
+## Reserve arrivals may use the nearest valid point just beyond the camera margin.
+## They still remain outside the visible world; this only avoids a long empty
+## approach after an opening, quota seal, or stage continuation.
+const NEAREST_SAFE_MIN_PLAYER_DISTANCE := 0.0
 const MAX_PLAYER_DISTANCE := 2400.0
 const RELAXED_MAX_PLAYER_DISTANCE := 2800.0
 const OFFSCREEN_MARGIN := 220.0
@@ -169,7 +173,12 @@ func _try_allocate_requests(
 	arrival_window: int,
 	player_velocity: Vector2
 ) -> Array[Dictionary]:
-	var candidates_by_sector := _candidates_by_sector(player_position, visible_world, tier)
+	var candidates_by_sector := _candidates_by_sector(
+		player_position,
+		visible_world,
+		tier,
+		bool(requests[0].get("nearest_safe_offscreen", false))
+	)
 	var available_sectors := _available_sectors(candidates_by_sector)
 	if available_sectors.size() < MIN_SAFE_SECTORS:
 		return []
@@ -277,7 +286,8 @@ func _build_window_allocations(
 func _candidates_by_sector(
 	player_position: Vector2,
 	visible_world: Rect2,
-	tier: Dictionary
+	tier: Dictionary,
+	nearest_safe_offscreen: bool = false
 ) -> Array[Array]:
 	var result: Array[Array] = []
 	for _sector in SECTOR_COUNT:
@@ -290,7 +300,8 @@ func _candidates_by_sector(
 			CANDIDATE_PREFILTER_RADIUS,
 			player_position,
 			visible_world,
-			tier
+			tier,
+			nearest_safe_offscreen
 		):
 			continue
 		result[_sector_for(candidate - player_position)].append(candidate_index)
@@ -371,10 +382,16 @@ func _candidate_allowed(
 	radius: float,
 	player_position: Vector2,
 	visible_world: Rect2,
-	tier: Dictionary
+	tier: Dictionary,
+	nearest_safe_offscreen: bool = false
 ) -> bool:
 	var distance := candidate.distance_to(player_position)
-	if distance < MIN_PLAYER_DISTANCE or distance > float(tier["maximum"]):
+	var minimum_distance := (
+		NEAREST_SAFE_MIN_PLAYER_DISTANCE
+		if nearest_safe_offscreen
+		else MIN_PLAYER_DISTANCE
+	)
+	if distance < minimum_distance or distance > float(tier["maximum"]):
 		return false
 	if visible_world.grow(OFFSCREEN_MARGIN).has_point(candidate):
 		return false

@@ -172,6 +172,8 @@ func _capture_checkpoint(run: Node, checkpoint_id: StringName, elapsed: float) -
 		"queued_windows":int(scheduler.get("queued_windows", 0)),
 		"queued_spawns":int(scheduler.get("queued_spawns", 0)),
 		"reserved_arrival_slots":int(scheduler.get("reserved_arrival_slots", 0)),
+		"scheduler_gap_reason":StringName(scheduler.get("scheduler_gap_reason", &"none")),
+		"scheduler_gap_seconds":float(scheduler.get("scheduler_gap_seconds", 0.0)),
 		# Free live-store entries remaining after the boss and its reserved add
 		# capacity. This is not the materialized ordinary cap.
 		"boss_slot_margin":maxi(

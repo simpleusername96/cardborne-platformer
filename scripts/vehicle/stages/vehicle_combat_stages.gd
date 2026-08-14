@@ -108,6 +108,7 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 		"squads":[opening_roles],
 		"unit_spacing":0.16,
 		"cue_lead":0.9,
+		"nearest_safe_offscreen":true,
 		"engagement_pattern":&"none",
 		"engagement_patterns":[&"none"],
 		"zone":"field",

@@ -69,6 +69,8 @@ func _initialize() -> void:
 			and first.has("reserve_count")
 			and first.has("queued_spawns")
 			and first.has("boss_slot_margin")
+			and StringName(first.get("scheduler_gap_reason", &"")) == &"none"
+			and is_zero_approx(float(first.get("scheduler_gap_seconds", -1.0)))
 			and Dictionary(first.get("scan_counts", {})).has(&"pressure"),
 		"checkpoint records the required bounded pacing fields"
 	)
@@ -125,6 +127,8 @@ func _snapshot(checkpoint_id: StringName) -> Dictionary:
 		"queued_spawns": 0,
 		"reserved_arrival_slots": 0,
 		"boss_slot_margin": 1,
+		"scheduler_gap_reason": &"none",
+		"scheduler_gap_seconds": 0.0,
 		"scan_counts": {&"pressure": 1, &"contact": 1, &"anomaly": 0},
 	}
 

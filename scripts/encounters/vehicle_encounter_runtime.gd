@@ -78,6 +78,8 @@ var _telemetry_gate_completions := 0
 var _telemetry_expiries := 0
 var _telemetry_cancellations := 0
 var _telemetry_director_cpu_us := 0
+var _diagnostic_gap_reason: StringName = &"none"
+var _diagnostic_gap_started_at := -1.0
 
 
 func configure(
@@ -99,6 +101,11 @@ func configure(
 	for packet_index in packets.size():
 		var packet := packets[packet_index].duplicate(true)
 		packet["_packet_index"] = packet_index
+		# Every stage entry uses the first authored packet as its real opening
+		# reserve. Continuations supply a derived opening packet through the same
+		# configure boundary, so this keeps its approach just beyond the camera too.
+		if packet_index == 0 and StringName(Dictionary(packet.get("trigger", {})).get("kind", &"")) == &"time":
+			packet["nearest_safe_offscreen"] = true
 		_packets.append(packet)
 	_authored_population = 0
 	for packet in _packets:
@@ -146,6 +153,8 @@ func configure(
 	_telemetry_expiries = 0
 	_telemetry_cancellations = 0
 	_telemetry_director_cpu_us = 0
+	_diagnostic_gap_reason = &"none"
+	_diagnostic_gap_started_at = -1.0
 	_spawn_allocator.configure(encounter_seed, spawn_anchors, geometry_snapshot)
 	_engagement_director.configure(encounter_seed)
 	_spawn_allocator.prewarm_for_packets(_packets)
@@ -174,6 +183,10 @@ func seal_for_quota() -> void:
 		_append_maintenance_window_roles(Dictionary(request_variant))
 	_window_queue.clear()
 	_boss_maintenance_active = true
+	# The authored reserve is already available at quota seal. Let the first
+	# low-watermark group cue on the next scheduler tick instead of waiting a
+	# full maintenance interval while the boss is entering.
+	_last_boss_maintenance_cue_at = elapsed - BOSS_MAINTENANCE_INTERVAL
 	for packet in _packets:
 		if _activated_packets.has(String(packet["id"])):
 			continue
@@ -339,6 +352,7 @@ func tick(
 	else:
 		_complete_inflight_packet_if_ready()
 		_admit_boss_maintenance(active_mobile_count, player_position, player_velocity, visible_world, cues)
+	_update_diagnostic_gap_reason(active_mobile_count)
 	return {"cues":cues, "spawns":spawns}
 
 
@@ -436,6 +450,8 @@ func debug_snapshot() -> Dictionary:
 		"allocations":_allocation_debug.duplicate(true),
 		"pressure":_pressure_snapshot.duplicate(true),
 		"engagement":engagement_debug,
+		"scheduler_gap_reason":_diagnostic_gap_reason,
+		"scheduler_gap_seconds":_diagnostic_gap_seconds(),
 	}
 
 
@@ -626,6 +642,47 @@ func _schedule_packet(packet: Dictionary) -> void:
 			"requested_cue_at":elapsed + float(arrival_window) * window_gap,
 			"retry_at":elapsed + float(arrival_window) * window_gap,
 		})
+
+
+func _update_diagnostic_gap_reason(active_mobile_count: int) -> void:
+	## Diagnostic only: this reports why the scheduler has no immediately
+	## materialized pressure. It never changes admission, allocation, or combat.
+	var next_reason: StringName = &"none"
+	if not _spawn_queue.is_empty():
+		next_reason = &"awaiting_birth"
+	elif not _window_queue.is_empty():
+		var request: Dictionary = _window_queue[0]
+		if elapsed + 0.0001 < float(request.get("retry_at", elapsed)):
+			next_reason = &"allocator_retry"
+		elif available_active_slots(active_mobile_count) < _window_unit_count(request):
+			next_reason = &"arrival_capacity"
+		else:
+			next_reason = &"awaiting_cue"
+	elif _boss_maintenance_active:
+		if _maintenance_roles.is_empty():
+			next_reason = &"authored_reserve_exhausted"
+		elif active_mobile_count >= BOSS_MAINTENANCE_LOW_WATERMARK:
+			next_reason = &"maintenance_low_watermark"
+		elif elapsed + 0.0001 < _last_boss_maintenance_cue_at + BOSS_MAINTENANCE_INTERVAL:
+			next_reason = &"maintenance_interval"
+	elif _packet_inflight:
+		next_reason = &"packet_fence"
+	elif not _spawning_enabled:
+		next_reason = &"spawning_stopped"
+	elif _authored_reserve_count() <= 0:
+		next_reason = &"authored_reserve_exhausted"
+	else:
+		next_reason = &"awaiting_packet_trigger"
+	if next_reason == _diagnostic_gap_reason:
+		return
+	_diagnostic_gap_reason = next_reason
+	_diagnostic_gap_started_at = elapsed if next_reason != &"none" else -1.0
+
+
+func _diagnostic_gap_seconds() -> float:
+	if _diagnostic_gap_started_at < 0.0:
+		return 0.0
+	return maxf(0.0, elapsed - _diagnostic_gap_started_at)
 
 
 func _admit_boss_maintenance(active_mobile_count: int, player_position: Vector2, player_velocity: Vector2, visible_world: Rect2, cues: Array[Dictionary]) -> void:

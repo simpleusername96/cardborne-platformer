@@ -24,6 +24,12 @@ const REQUIRED_LIFECYCLE_EVENTS := [
 	&"cue", &"birth", &"first_visible", &"first_commit_or_damage",
 ]
 const MAX_SCAN_OWNERS := 16
+const GAP_REASONS: Array[StringName] = [
+	&"none", &"awaiting_birth", &"allocator_retry", &"arrival_capacity",
+	&"awaiting_cue", &"authored_reserve_exhausted", &"maintenance_low_watermark",
+	&"maintenance_interval", &"packet_fence", &"spawning_stopped",
+	&"awaiting_packet_trigger",
+]
 
 var _evidence_id := ""
 var _build_identity: Dictionary = {}
@@ -100,6 +106,8 @@ func record_checkpoint(
 		"queued_spawns": int(normalized["queued_spawns"]),
 		"reserved_arrival_slots": int(normalized["reserved_arrival_slots"]),
 		"boss_slot_margin": int(normalized["boss_slot_margin"]),
+		"scheduler_gap_reason": StringName(normalized["scheduler_gap_reason"]),
+		"scheduler_gap_seconds": float(normalized["scheduler_gap_seconds"]),
 		"scan_counts": Dictionary(normalized["scan_counts"]),
 	}
 	return true
@@ -187,6 +195,8 @@ func _checkpoint_entry(checkpoint_id: StringName) -> Dictionary:
 		"queued_spawns": int(entry["queued_spawns"]),
 		"reserved_arrival_slots": int(entry["reserved_arrival_slots"]),
 		"boss_slot_margin": int(entry["boss_slot_margin"]),
+		"scheduler_gap_reason": StringName(entry["scheduler_gap_reason"]),
+		"scheduler_gap_seconds": float(entry["scheduler_gap_seconds"]),
 		"scan_counts": Dictionary(entry["scan_counts"]).duplicate(),
 	}
 
@@ -213,7 +223,15 @@ func _normalize_snapshot(snapshot: Dictionary) -> Dictionary:
 	]:
 		if not snapshot.has(field) or int(snapshot[field]) < 0:
 			return {}
-	if not snapshot.has("visible_gap_active") or not snapshot.has("scan_counts"):
+	if (
+		not snapshot.has("visible_gap_active")
+		or not snapshot.has("scan_counts")
+		or not snapshot.has("scheduler_gap_reason")
+		or not snapshot.has("scheduler_gap_seconds")
+	):
+		return {}
+	var gap_reason := StringName(snapshot["scheduler_gap_reason"])
+	if gap_reason not in GAP_REASONS or float(snapshot["scheduler_gap_seconds"]) < 0.0:
 		return {}
 	var scan_counts := Dictionary(snapshot["scan_counts"])
 	if scan_counts.size() > MAX_SCAN_OWNERS:
@@ -234,5 +252,7 @@ func _normalize_snapshot(snapshot: Dictionary) -> Dictionary:
 		"queued_spawns": int(snapshot["queued_spawns"]),
 		"reserved_arrival_slots": int(snapshot["reserved_arrival_slots"]),
 		"boss_slot_margin": int(snapshot["boss_slot_margin"]),
+		"scheduler_gap_reason": gap_reason,
+		"scheduler_gap_seconds": float(snapshot["scheduler_gap_seconds"]),
 		"scan_counts": normalized_scans,
 	}

@@ -26,6 +26,7 @@ func _initialize() -> void:
 	_validate_capacity_reservation(stage_id, packet, tactical)
 	_validate_cued_window_never_reblocks(stage_id, packet, tactical)
 	_validate_quota_seal_preserves_cued_window(stage_id, packet, tactical)
+	_validate_quota_seal_cues_nearest_reserve_immediately(stage_id, packet, tactical)
 	_validate_engagement_capacity_fallback(stage_id, packet, tactical)
 	_validate_materialization_failure_accounting(stage_id, packet, tactical)
 	_validate_continuation_lead(stage_id, packet, tactical)
@@ -146,6 +147,21 @@ func _validate_quota_seal_preserves_cued_window(stage_id: StringName, packet: Di
 	_expect(maintenance_cues == 1, "boss maintenance admits one bounded group only after the promised window drains")
 	_expect(bool(snapshot["boss_maintenance_active"]) and int(snapshot["boss_maintenance_reserve"]) < authored_units - admitted_units, "boss maintenance preserves and consumes uncued authored identities")
 	_expect(int(snapshot["quota_canceled_reserve"]) == 0 and int(snapshot["reserved_arrival_slots"]) == 0, "quota seal no longer cancels authored reserve and clears fulfilled reservations")
+
+
+func _validate_quota_seal_cues_nearest_reserve_immediately(stage_id: StringName, packet: Dictionary, tactical) -> void:
+	var runtime := _runtime(stage_id, [packet], tactical)
+	runtime.seal_for_quota()
+	var result := runtime.tick(0.0, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
+	var cues: Array = result["cues"]
+	_expect(cues.size() == 1, "quota seal cues the existing authored reserve without a maintenance-delay gap")
+	if not cues.is_empty():
+		_expect(bool(Dictionary(cues[0]).get("outside_visible_margin", false)), "quota reserve cue remains offscreen")
+	var snapshot := runtime.debug_snapshot()
+	_expect(
+		StringName(snapshot.get("scheduler_gap_reason", &"")) == &"awaiting_birth",
+		"diagnostic gap reason identifies the cue-to-birth lead without changing admission"
+	)
 
 
 func _validate_engagement_capacity_fallback(stage_id: StringName, packet: Dictionary, tactical) -> void:
