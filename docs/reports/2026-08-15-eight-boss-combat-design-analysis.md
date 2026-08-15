@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-15
 last_reviewed: 2026-08-15
-topic: Decision record for the eight-boss campaign, combat identities, Shock replacement, and boss-death visuals
+topic: Decision record for the eight-boss campaign, combat identities, utility-attribute replacement, and boss-death visuals
 scope: Current runtime evidence, candidate comparison, public VFX asset review, selected combat design, rejected alternatives, and implementation recommendations
 sources:
   - ../../scripts/bosses/vehicle_boss_patterns.gd
@@ -132,14 +132,14 @@ repeated contact. No true instant-kill pattern remains.
 | Texture slicing into debris | Strong body relation | Creates frame/fragment ownership | Higher batching complexity | Rejected |
 | One shared explosion overlay over the existing boss raster | Clear and direct | Strong | One texture, fixed-capacity transforms | Selected |
 
-The selected 2.00-second sequence retires danger immediately, overlays five staggered
-small/medium explosions and one large center explosion on the unchanged boss body,
-then fades that body without slicing or replacing it. Boss-owned adds and facilities
-receive one small overlay before removal. Progression waits for cleanup completion. It
-reuses existing priority-destruction audio with restrained pitch variation. Reduced
-motion keeps timing and opacity changes but removes burst scaling and rotation.
+The selected 2.00-second sequence retires danger immediately and places exactly one
+small explosion overlay at the center of the unchanged boss body. The overlay grows
+from scale 0.20 to 1.20, then the overlay and boss body fade out together without slicing
+or replacing the body. Boss-owned adds and facilities shrink and fade without extra
+explosion instances. Progression waits for cleanup completion. Reduced motion starts at
+the final explosion scale and preserves the synchronized fade.
 
-![Boss-death overlay storyboard](../design/visual-replacement-workbench/candidates/boss-death-explosion-v1/previews/boss-death-explosion-storyboard.png)
+![Boss-death growth-and-fade storyboard](../design/visual-replacement-workbench/candidates/boss-death-explosion-v1/previews/boss-death-explosion-growth-storyboard.png)
 
 ### Ordinary enemy candidates
 
@@ -153,27 +153,33 @@ up to five permanent stacks when eligible ordinary enemies die within 360 units.
 needs no corpse lifetime, scan, or pickup object and makes target priority immediate.
 It keeps a direct attack at zero stacks, so it never idles.
 
-### Shock replacement candidates
+### Utility-slot Shock replacement candidates
+
+The current primary-attribute model has two distinct slots. Thermal Burst or Bio Toxin
+occupies the damage slot; Cryo or the Shock replacement occupies the utility slot. A
+replacement that adds damage would violate that separation.
 
 | Candidate | Difference from current Shock | Result |
 | --- | --- | --- |
-| Chain Lightning | Completes the familiar fire/poison, ice, and lightning elemental set; changes each primary hit directly | Selected |
+| Charged Rounds | Lets primary rounds cancel hostile projectiles without adding hostile damage or a status | Selected |
+| Chain Lightning | Adds damage and therefore competes with Thermal Burst and Bio Toxin instead of replacing a utility attribute | Rejected after slot-model correction |
 | Movement stun | Stronger version of the same control status | Rejected |
 | Vulnerability mark | Readable but overlaps direct damage multipliers | Rejected |
 | Projectile magnet | Novel but can distort manual aim and projectile truth | Rejected |
 | Target Designator | Does not read as a bullet element and delegates its benefit to automatic weapons | Rejected by user feedback |
 
-Chain Lightning replaces Shock while preserving an immediately recognizable elemental
-family. A direct primary hit makes 1/2/3 nearest-target jumps within 180/200/220 world
-units. Each hop deals 30% Arc damage, cannot repeat a target or return to the origin, and
-requires line of sight. This differs from Thermal Burst's compact area damage, Toxin's
-stacking damage over time, and Cryo's slow. Target Designator is removed completely.
+Charged Rounds replaces Shock in the utility slot. A player-primary projectile gains an
+8/12/16-unit interception margin outside the two projectiles' combined collision radii.
+On the first swept contact with an EMP-clearable hostile projectile, both projectiles
+retire and a brief retained Arc spark shows the cancellation. The effect does not enlarge
+the hostile-target hitbox, add damage, apply a status, or affect beams, zones, and
+unclearable projectiles. Target Designator and Chain Lightning are removed completely.
 
 ### Visual asset scope
 
 The selected authored set adds three boss bodies, four ordinary enemy bodies, two
 neutral-facility bodies, three upgrade cards, and one shared boss-death explosion
-overlay. Chain Lightning replaces Shock art without increasing the count. The net
+overlay. Charged Rounds replaces Shock art without increasing the count. The net
 addition is 13 images, changing the declared production target from 78 to 91 after exact
 user approval.
 
@@ -209,7 +215,7 @@ direction-clear for user review; none is production-approved or manifest-integra
   build, so it supports search-gap diagnosis but not a universal completion-time target.
 - The nine boss/enemy/facility candidates and one boss-death explosion candidate are
   direction-clear but review-only. All still require exact user approval. Upgrade-card
-  and Chain Lightning card candidates are not part of this batch.
+  and Charged Rounds card candidates are not part of this batch.
 - Numeric boss damage and cadence values are implementation starting contracts. User
   play evidence may justify a later balance plan, but implementation must first preserve
   the fairness bands and monotonic progression defined here.

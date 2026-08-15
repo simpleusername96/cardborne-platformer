@@ -22,9 +22,9 @@ related:
 Implement the 2026-08-15 feedback as one decision-complete contract. Replace the
 visible ten-stage pairing with eight continuous boss cycles, preserve ordinary-enemy
 quotas before every boss, add three bosses and four active ordinary roles, replace
-Shock with Chain Lightning, add a readable boss-death cleanup, retain only the latest
-ten valid user sessions, and deliver one left-aligned stacked report shared by terminal
-results and Settings.
+Shock with Charged Rounds in the utility-attribute slot, add a readable boss-death
+cleanup, retain only the latest ten valid user sessions, and deliver one left-aligned
+stacked report shared by terminal results and Settings.
 
 This plan contains implementation work only. Candidate generation, comparison, and
 product decisions are closed in the linked design analysis. There is no absolute run-
@@ -128,18 +128,20 @@ The transition starts exactly 2.00 seconds after the lethal receipt.
 | Time | Required behavior |
 | --- | --- |
 | 0.00 s | Disable boss AI, collision, damage intake, spawning, and damage output. Retire boss-owned damaging projectiles and zones. Freeze final facing. |
-| 0.00–0.90 s | Keep the existing boss body intact and visible. Overlay five small or medium instances of the approved shared explosion raster at deterministic body-local anchors, staggered at 0.14 s. Reuse the priority-destruction sound at three restrained pitch offsets. |
-| 0.20–1.10 s | Stagger boss-summoned enemies and facilities at 0.12 s offsets. Each receives one small instance of the shared explosion overlay and fades out, grants no XP/loot/quota, and reports source `boss_cleanup`. |
-| 0.90–1.60 s | Overlay one large center explosion, then fade the unchanged boss body from full opacity to zero. Do not slice, collapse, redraw, or replace the body raster. |
-| 1.60–2.00 s | Clear remaining boss-owned actors and zones, freeze the report snapshot, then permit the cycle transition. |
+| 0.00–0.15 s | Keep the existing boss body intact and visible. Spawn exactly one approved shared explosion overlay at the boss center at scale `0.20`. Reuse the priority-destruction sound once. |
+| 0.15–1.30 s | Grow that single centered overlay from scale `0.20` to `1.20` with an ease-out curve. Keep the unchanged boss body fully visible behind it. |
+| 0.20–1.10 s | Stagger boss-summoned enemies and facilities at 0.12 s offsets. Scale and fade each owned actor to zero without an explosion overlay; grant no XP/loot/quota and report source `boss_cleanup`. |
+| 1.30–1.70 s | Hold the explosion at scale `1.20` and fade the overlay and unchanged boss body together from full opacity to zero. Do not slice, collapse, redraw, or replace the body raster. |
+| 1.70–2.00 s | Clear remaining boss-owned actors and zones, freeze the report snapshot, then permit the cycle transition. |
 
 - The player remains controllable and cannot take damage from boss-owned objects during
   cleanup. No full-screen flash is used.
-- Reduced motion removes hit-stop, camera impulse, burst scaling, and burst rotation;
-  it keeps the same staggered opacity sequence, 2.00-second duration, and state changes.
-- Extend the existing 96-entry effect store with dedicated bounded cosmetic kinds:
-  at most 7 boss explosion overlays and 12 cleanup overlays. These kinds may recycle only their own
-  oldest receipt and must never evict EMP or another functional effect.
+- Reduced motion removes hit-stop, camera impulse, and explosion growth. It shows the
+  single centered overlay at scale `1.20` from 0.15 s and preserves the synchronized
+  1.30–1.70 s fade, 2.00-second duration, and state changes.
+- Extend the existing 96-entry effect store with one dedicated bounded cosmetic kind
+  for at most one boss explosion overlay. It may recycle only its own oldest receipt and
+  must never evict EMP or another functional effect.
 - Use one approved shared `256x256` RGBA explosion overlay raster. Do not add a sprite
   sheet, per-boss death asset, frame animation, particle plugin, or package.
 
@@ -160,24 +162,27 @@ Scavengers. The trigger is the death event and distance at that instant; do not 
 corpse system. Show stacks with one broad body accent per stack and a short pulse, not
 small text. The role is intentionally safest when destroyed early.
 
-## Primary Attribute Replacement
+## Primary Utility Attribute Replacement
 
-Delete Shock Disruption and its attack-lock status. Replace it with the familiar
-elemental primary attribute `chain_lightning`, localized as `연쇄 전격` / `Chain
-Lightning`.
+Preserve the two-slot primary-attribute contract: the damage slot selects exactly one of
+`thermal_burst` or `bio_toxin`, and the utility slot selects exactly one of `cryo_slow`
+or the Shock replacement. Delete Shock Disruption and its attack-lock status. Replace it
+with `charged_rounds`, localized as `전하탄` / `Charged Rounds`, only in the utility
+slot.
 
-- Every direct primary hit starts a chain from the struck hostile to the nearest eligible
-  hostile within 180/200/220 world units at levels 1/2/3.
-- The chain makes 1/2/3 jumps. Each jump deals Arc damage equal to 30% of the originating
-  primary direct-hit payload before the recipient's defense; each recipient resolves its
-  own defense and damage receipt.
-- One chain cannot hit the same target twice, cannot return to its origin, and stops when
-  no eligible line-of-sight target remains. Bosses are eligible; neutral facilities are not.
-- Render each hop as one short segmented Arc connection for 0.12 s in the existing
-  retained effect path. Cap presentation and gameplay at three hops per primary hit;
-  create no nodes and perform no unbounded target scan.
-- Report chain hits and Arc damage. Remove Shock applications, attack-lock duration,
-  designation uptime, and target-transfer reporting.
+- Every player-primary projectile receives a hostile-projectile interception margin of
+  8/12/16 world units at levels 1/2/3, added outside the two projectiles' normal combined
+  collision radii. This margin does not enlarge the projectile's hostile-target hitbox.
+- On the first swept contact with an eligible hostile projectile, retire both projectiles.
+  Use the same clearability contract as EMP. Beams, zones, boss bodies, neutral facilities,
+  and explicitly unclearable projectiles are unaffected.
+- Charged Rounds adds no damage, damage multiplier, status, attack lock, chain hit, or
+  target designation. Consuming the primary projectile makes interception a defensive
+  utility tradeoff rather than a second damage attribute.
+- Render the cancellation as one 0.10-second retained Arc spark at the contact point.
+  Create no nodes, raster asset, persistent field, or unbounded projectile scan.
+- Report `hostile_projectiles_intercepted`. Remove Shock applications, attack-lock
+  duration, designation uptime, target-transfer, chain-hit, and Arc-damage reporting.
 - Replace the existing Shock card image in place after exact visual approval. Remove
   Shock localization, status, report, and validation contracts rather than retaining a
   compatibility alias.
@@ -236,14 +241,14 @@ identities and replaces Shock art without a count increase, producing a 91-image
 | Ordinary enemies | 4 | Rail Sniper, Orbit Gunner, Bombing Runner, Wreck Scavenger; 112x112 unless stationary scale is required by the existing actor contract |
 | Neutral facilities | 2 | Barrier and one missing facility identity; existing suitable facility identities remain reused |
 | Upgrade cards | 3 | Miss Compensation, Hit Chain, Braced Fire; 192x192 |
-| Chain Lightning | 0 net | Replaces the Shock card asset byte-for-byte through the approval workflow |
-| Boss-death explosion | 1 | One shared 256x256 RGBA overlay; repeated by retained transforms over existing boss bodies |
+| Charged Rounds | 0 net | Replaces the Shock card asset byte-for-byte through the approval workflow |
+| Boss-death explosion | 1 | One shared 256x256 RGBA overlay; one centered retained transform grows, then fades with the existing boss body |
 
 Generate every new raster candidate with the exact canonical style sheet as a real
 reference input. Keep candidates outside production. Promote only exact user-approved
 bytes and hashes through the visual workbench and manifest. Revise `VISUAL_SYSTEM.md`
 before integration to authorize eight bosses, the 91-image count, per-boss shields,
-attached Crown hardpoints, Chain Lightning presentation, new role silhouettes, and the
+attached Crown hardpoints, Charged Rounds presentation, new role silhouettes, and the
 single shared boss-death explosion-raster exception. Do not introduce SVG actors, an
 effect sprite sheet, any other effect raster, or a new named theme.
 
@@ -252,12 +257,12 @@ effect sprite sheet, any other effect raster, or a new named theme.
 1. **Update product, design, terminology, and validation contracts.** Revise the product
    spec, visual system, design memory, guidebook terms, localization inventory, and
    campaign validators for eight boss cycles, per-boss defense, the exact combat bands,
-   the 2.00-second cleanup, Chain Lightning, four enemy roles, and 91 approved images.
+   the 2.00-second cleanup, Charged Rounds, four enemy roles, and 91 approved images.
    Rename stage-facing symbols to cycle-facing symbols within their existing owners and
    remove obsolete ten-stage/fourteen-stage acceptance text.
 
 2. **Produce and approve the exact raster set.** Create the 3 boss, 4 enemy, 2 facility,
-   3 upgrade-card, 1 replacement Chain Lightning card, and 1 shared boss-death explosion
+   3 upgrade-card, 1 replacement Charged Rounds card, and 1 shared boss-death explosion
    candidates with the canonical
    reference. Build AS-IS/TO-BE sheets, collect exact user approval, promote approved
    hashes, update the semantic provider/catalog/manifest, and run the visual authority
@@ -276,7 +281,8 @@ effect sprite sheet, any other effect raster, or a new named theme.
    the high-threat escape corridor.
 
 5. **Implement boss-death cleanup.** Add the dedicated runtime/state machine, owner tags,
-   projectile/zone retirement, summon/facility cleanup, fixed-timeline explosion overlays and body fade,
+   projectile/zone retirement, summon/facility cleanup, one growing centered explosion
+   and synchronized body fade,
    reduced-motion branch, bounded effect-store kinds, audio receipts, frozen reporting,
    and transition gate. Validate no damage, loot, quota, or allocation leak during the
    cleanup window.
@@ -287,9 +293,9 @@ effect sprite sheet, any other effect raster, or a new named theme.
    gap limits. Change diagnostics to newest-ten ordering on load and persist while
    preserving protected summaries and existing byte/age caps.
 
-7. **Implement upgrades, Chain Lightning, and offer reservations.** Add the three shot-
-   outcome/movement cards in combat-owned state, replace Shock end to end, add bounded
-   chain targeting, Arc damage, visuals, reporting, localization, and
+7. **Implement upgrades, Charged Rounds, and offer reservations.** Add the three shot-
+   outcome/movement cards in combat-owned state, replace Shock end to end, add swept
+   hostile-projectile interception, Arc cancellation visuals, reporting, localization, and
    validators, and enforce the missing active/secondary offer slots.
 
 8. **Implement neutral facilities and reward changes.** Convert neutral devices to the
@@ -326,8 +332,8 @@ item. Do not combine checkpoints across items.
 - Wreck Scavenger uses exact death-event proximity, caps at five stacks, excludes the
   listed sources, and continues attacking at zero stacks. Shield Breaker is absent.
 - Shock Disruption has no reachable resource, status, copy, report field, or offer.
-  Chain Lightning obeys jump count/range, non-repeat, line-of-sight, boss validity,
-  retained-visual capacity, Arc damage, and separate reporting.
+  Charged Rounds remains utility-slot exclusive with Cryo, obeys its 8/12/16 interception
+  margins and EMP clearability, consumes both projectiles, and reports interceptions.
 - The diagnostic store keeps the newest ten valid sessions after both load and persist,
   using saved time and session ID, while byte/age/quarantine contracts remain valid.
 - Search gaps meet the 4/8/3-second structural contracts without teleporting enemies or
@@ -360,13 +366,13 @@ item. Do not combine checkpoints across items.
   facility 2 review candidates were generated on 2026-08-15 with grounded prompt/hash/
   actual-size evidence; all nine are direction-clear after focused revisions, and none
   has exact user approval or production integration. The shared boss-death explosion
-  candidate now exists and remains review-only; upgrade-card and Chain Lightning card
+  candidate now exists and remains review-only; upgrade-card and Charged Rounds card
   candidates remain unstarted.
 - [ ] 3. Implement the eight-cycle campaign and common boss kit.
 - [ ] 4. Implement all eight boss identities.
 - [ ] 5. Implement boss-death cleanup.
 - [ ] 6. Implement ordinary roles, pacing correction, and ten-session retention.
-- [ ] 7. Implement upgrades, Chain Lightning, and offer reservations.
+- [ ] 7. Implement upgrades, Charged Rounds, and offer reservations.
 - [ ] 8. Implement neutral facilities and reward changes.
 - [ ] 9. Implement the shared stacked report.
 - [ ] 10. Complete integration and release validation.

@@ -14,9 +14,9 @@ related:
 
 ## Purpose
 
-Provide one review-only explosion overlay that can be placed repeatedly over an existing
-boss body. The boss raster remains intact; this candidate does not replace, slice, or
-redraw it.
+Provide one review-only explosion overlay that starts small at the center of an existing
+boss body, grows once, and fades out with that body. The boss raster remains intact; this
+candidate does not replace, slice, or redraw it.
 
 ## Sources
 
@@ -36,17 +36,20 @@ redraw it.
 
 ## Findings
 
-![Explosion overlay storyboard](previews/boss-death-explosion-storyboard.png)
+![Explosion growth-and-fade storyboard](previews/boss-death-explosion-growth-storyboard.png)
 
 - Candidate asset: `assets/boss_explosion_burst_candidate.png`, `256x256` RGBA.
 - Candidate SHA-256:
   `4eaf22c97fcdac6ff50736410e1e3068febcfa79acfc05ba493080c200113c41`.
-- Storyboard SHA-256:
-  `f37749720e03780914ed8072e79098fb22e574f3258c92d05d193198d2be43b3`.
+- Selected storyboard SHA-256:
+  `a5e60c1295df6dfa03b5139b370be8bce49551a0293e91bda50c5d5cd94aee42`.
 - The storyboard uses only mechanical resize, alpha, placement, and plain labels over
   the existing approved `actor_boss_colossus_base.png` body.
-- Runtime intent is repeated placement with bounded scale, rotation, and alpha. It is
-  one shared overlay, not a sprite sheet or per-boss death asset.
+- Runtime intent is exactly one centered instance: scale 0.20 to 1.20, then synchronize
+  its fade with the unchanged boss body. It is one shared overlay, not a sprite sheet or
+  per-boss death asset.
+- `previews/boss-death-explosion-storyboard.png` preserves the rejected multi-burst layout
+  as comparison evidence; it is not the selected runtime direction.
 
 ## Limitations
 
