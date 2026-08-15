@@ -18,10 +18,6 @@ var chill_magnitude_per_stack := 0.06
 var chill_duration := 2.0
 var chill_max_stacks := 3
 
-var shock_enabled := false
-var shock_lock_duration := 0.6
-var shock_reapply_seconds := 3.0
-
 
 static func from_build(build: VehicleRunBuild) -> VehiclePrimaryPayloadProfile:
 	var profile := VehiclePrimaryPayloadProfile.new()
@@ -46,10 +42,6 @@ static func from_build(build: VehicleRunBuild) -> VehiclePrimaryPayloadProfile:
 		profile.chill_magnitude_per_stack = build.stat(&"cryo_slow_per_stack", 0.0) / 100.0
 		profile.chill_duration = build.stat(&"cryo_duration", 0.0)
 
-	var shock_level := build.level_of(&"shock_disruption") if utility_attribute == &"shock_disruption" else 0
-	profile.shock_enabled = shock_level > 0
-	if profile.shock_enabled:
-		profile.shock_lock_duration = build.stat(&"shock_lock_duration", 0.0)
 	return profile
 
 
@@ -62,7 +54,7 @@ func affinity() -> StringName:
 
 
 func has_persistent_status() -> bool:
-	return poison_enabled or chill_enabled or shock_enabled
+	return poison_enabled or chill_enabled
 
 
 func can_trigger_thermal_burst(owner: String, reflected: bool) -> bool:

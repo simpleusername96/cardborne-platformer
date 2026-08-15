@@ -8,14 +8,14 @@ const Allocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
-const EXPECTED_MOBILE_COUNTS := [260, 260, 330, 330, 408, 408, 513, 513, 630, 630]
-const EXPECTED_QUOTAS := [24, 24, 32, 32, 40, 40, 48, 48, 56, 56]
+const EXPECTED_MOBILE_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630]
+const EXPECTED_QUOTAS := [40, 44, 48, 52, 56, 60, 64, 68]
 const EXPECTED_HARD_MATERIALIZED_CAPS := [6, 40, 48, 48, 48]
 const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [6, 124, 172, 224, 276]
-const EXPECTED_STAGE_MATERIALIZED_CAPS := [6, 32, 40, 40, 48, 48, 48, 48, 48, 48]
-const EXPECTED_STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
-const EXPECTED_STAGE_RANGED_CAPS := [3, 3, 3, 3, 3, 4, 4, 4, 4, 4]
-const EXPECTED_STAGE_DENIAL_CAPS := [2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
+const EXPECTED_STAGE_MATERIALIZED_CAPS := [6, 32, 40, 40, 48, 48, 48, 48]
+const EXPECTED_STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0]
+const EXPECTED_STAGE_RANGED_CAPS := [3, 3, 3, 3, 3, 4, 4, 4]
+const EXPECTED_STAGE_DENIAL_CAPS := [2, 2, 2, 2, 2, 3, 3, 3]
 
 var failures: Array[String] = []
 

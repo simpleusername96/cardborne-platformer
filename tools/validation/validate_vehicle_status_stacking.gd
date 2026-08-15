@@ -16,8 +16,7 @@ func _initialize() -> void:
 	_expect(bool(build.apply(&"thermal_burst").get("applied", false)), "one damage attribute can be selected")
 	_expect(
 		not bool(build.apply(&"bio_toxin").get("applied", false))
-			and bool(build.apply(&"cryo_slow").get("applied", false))
-			and not bool(build.apply(&"shock_disruption").get("applied", false)),
+			and bool(build.apply(&"cryo_slow").get("applied", false)),
 		"damage and utility slots each accept one independent attribute"
 	)
 	_expect(
@@ -42,7 +41,6 @@ func _initialize() -> void:
 		"only non-reflected primary contacts can trigger Thermal Burst"
 	)
 	_validate_level_progression(catalog)
-	_validate_shock(catalog)
 
 	var projectile := ProjectileState.new()
 	projectile.configure({"primary_payload":profile}, &"player", 1)
@@ -126,45 +124,6 @@ func _initialize() -> void:
 		"pooled enemy reset clears every status presentation scalar"
 	)
 	_finish()
-
-
-func _validate_shock(catalog: Catalog) -> void:
-	var build := RunBuild.new(catalog)
-	for _level in 3:
-		build.apply(&"shock_disruption")
-	var profile := PrimaryPayload.from_build(build)
-	var enemy := EnemyState.new()
-	StatusRuntime.apply(enemy, profile)
-	_expect(
-		profile.shock_enabled
-			and is_equal_approx(profile.shock_lock_duration, 1.0)
-			and StatusRuntime.attack_commit_blocked(enemy)
-			and is_equal_approx(StatusRuntime.speed_multiplier(enemy), 1.0),
-		"Shock level three blocks new attacks for one second without changing movement"
-	)
-	StatusRuntime.tick(enemy, 1.0)
-	_expect(
-		not StatusRuntime.attack_commit_blocked(enemy) and enemy.statuses.has(&"shock"),
-		"Shock stops blocking attacks after one second but keeps its reapply lockout"
-	)
-	StatusRuntime.apply(enemy, profile)
-	_expect(
-		not StatusRuntime.attack_commit_blocked(enemy),
-		"Shock cannot be reapplied during its three-second lockout"
-	)
-	StatusRuntime.tick(enemy, 2.0)
-	StatusRuntime.apply(enemy, profile)
-	_expect(
-		StatusRuntime.attack_commit_blocked(enemy),
-		"Shock can be applied again after the exact lockout"
-	)
-	var boss := EnemyState.new()
-	boss.role = &"stage_boss"
-	StatusRuntime.apply(boss, profile)
-	_expect(
-		is_equal_approx(float(Dictionary(boss.statuses[&"shock"])["time"]), 0.5),
-		"boss Shock attack lock is half duration"
-	)
 
 
 func _validate_level_progression(catalog: Catalog) -> void:

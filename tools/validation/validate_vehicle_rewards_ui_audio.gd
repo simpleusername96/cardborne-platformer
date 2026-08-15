@@ -91,15 +91,16 @@ func _run() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, StageCatalog.STAGE_IDS)
 	for stage_id in StageCatalog.STAGE_IDS:
 		var stage_pickups := layout.pickup_blueprint(stage_id)
-		_expect(stage_pickups.size() == 7, "%s has five repairs and two experience recalls" % stage_id)
-		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").size() == 5, "%s pickup set contains exactly five repairs" % stage_id)
+		_expect(stage_pickups.size() == 7, "%s has two recalls and five XP shards" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").is_empty(), "%s pickup set contains no repairs" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s pickup set contains exactly two experience recalls" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_shard").size() == 5, "%s pickup set contains exactly five XP shards" % stage_id)
 	var kinds: Dictionary = {}
 	for item in layout.pickup_blueprint(&"stage_1"):
 		kinds[StringName(item["kind"])] = true
-	for required_kind in [&"repair", &"experience_recall"]:
+	for required_kind in [&"experience_recall", &"experience_shard"]:
 		_expect(kinds.has(required_kind), "field catalog exposes %s" % required_kind)
-	_expect(kinds.size() == 2, "field item contract exposes exactly two families")
+	_expect(kinds.size() == 2, "field item contract exposes recall and XP-shard families")
 
 	var panel := UpgradePanel.new()
 	root.add_child(panel)
@@ -184,13 +185,13 @@ func _run() -> void:
 	var stage := StageScene.instantiate()
 	root.add_child(stage)
 	await process_frame
-	stage.set("player_health", 20.0)
-	stage.call("_collect_pickup", {"active": true, "kind": &"repair", "pos": Vector2.ZERO, "heal_amount": 70.0})
-	_expect(is_equal_approx(float(stage.get("player_health")), 90.0), "repair restores its doubled authored hull amount")
+	_expect(stage.get("pickups").size() == 2, "live stage exposes only the two recall pickups")
+	_expect(int(stage.get("experience_runtime").call("snapshot")["shard_count"]) == 5, "live stage materializes five visible authored XP shards")
 	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")
 	_expect(int(experience_runtime.call("required_experience")) == 10, "a fresh run starts with a 10-XP level threshold")
+	experience_runtime.call("clear_shards")
 	var recall_start := Vector2(stage.get("player_position"))
 	experience_runtime.call("spawn_shard", recall_start + Vector2(900.0, 0.0), 2)
 	for recall_frame in 40:

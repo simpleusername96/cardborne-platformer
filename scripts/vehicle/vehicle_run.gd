@@ -25,6 +25,7 @@ const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
 const LifestealRuntime = preload("res://scripts/cards/vehicle_lifesteal_runtime.gd")
 const StatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
+const PrimaryComboRuntime = preload("res://scripts/combat/vehicle_primary_combo_runtime.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const SpatialGrid = preload("res://scripts/combat/vehicle_spatial_grid.gd")
@@ -36,6 +37,7 @@ const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalo
 const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
 const UpgradeOfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
+const BossDeathRuntime = preload("res://scripts/bosses/vehicle_boss_death_runtime.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const EnemySpeedProfile = preload("res://scripts/enemies/vehicle_enemy_speed_profile.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
@@ -171,11 +173,11 @@ const ORDINARY_DECISION_BUCKET_COUNT := 6
 const FAR_SIMULATION_DISTANCE := 820.0
 const FAR_SIMULATION_DISTANCE_SQUARED := FAR_SIMULATION_DISTANCE * FAR_SIMULATION_DISTANCE
 const VISIBLE_SIMULATION_MARGIN := 240.0
+const ENGAGEMENT_GAP_STEER_DELAY := 1.0
+const ENGAGEMENT_GAP_SPEED_MULTIPLIER := 2.2
 const THREAT_OFFSCREEN_BAND := 480.0
 const FAR_ENEMY_SIMULATION_BUCKET_COUNT := 3
 const PICKUP_BODY_RADIUS := Art.PICKUP_PLINTH_RADIUS
-const MYSTERY_GRAVITY_PULL_SPEED := 380.0
-const MYSTERY_EFFECT_MEMBERSHIP_REFRESH := 0.12
 const CHARGE_PATH_SAMPLE_STEP := 8.0
 const CHARGE_PATH_BINARY_STEPS := 8
 # Prime relative to the six-way enemy decision buckets so profiling eventually
@@ -217,6 +219,11 @@ var mystery_device_runtime := MysteryDeviceRuntime.new()
 var stage_telemetry := StageTelemetry.new()
 var boss_runtime := BossRuntime.new()
 var boss_shield_runtime := BossShieldRuntime.new()
+var boss_death_runtime := BossDeathRuntime.new()
+var _dying_boss_id := ""
+# The common barrage schedules exactly three rows and never allocates beyond it.
+var _pending_boss_barrage_rows: Array[Dictionary] = []
+var _boss_barrage_hit_lock_remaining := 0.0
 var _runtime_blockers: Array[Rect2] = []
 var _runtime_structural_walls: Array[Rect2] = []
 var _motion_cover_static_safe := false
@@ -252,6 +259,8 @@ var upgrade_catalog := UpgradeCatalog.new()
 var run_build := RunBuild.new(upgrade_catalog)
 var lifesteal_runtime := LifestealRuntime.new()
 var dash_upgrade_runtime := DashUpgradeRuntime.new()
+var primary_combo_runtime := PrimaryComboRuntime.new()
+var _primary_shot_groups: Dictionary = {}
 var _primary_payload: VehiclePrimaryPayloadProfile = PrimaryPayload.from_build(run_build)
 var experience_runtime := ExperienceRuntime.new()
 var applied_upgrades: Dictionary = run_build.levels
@@ -295,14 +304,8 @@ var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
 var _mystery_device_hit_receipt: Dictionary = {}
 var _mystery_device_snapshot_buffer: Array[Dictionary] = []
 var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
-var _mystery_retired_event_buffer: Array[Dictionary] = []
 var _mystery_device_result_receipt: Dictionary = {}
-var _mystery_gravity_members: Array[EnemyState] = []
-var _mystery_cryo_members: Array[EnemyState] = []
-var _mystery_weakpoint_members: Array[EnemyState] = []
-var _mystery_gravity_refresh_remaining := 0.0
-var _mystery_cryo_refresh_remaining := 0.0
-var _mystery_weakpoint_refresh_remaining := 0.0
+var _facility_modifier_buffer: Array[Dictionary] = []
 var _runtime_fast_hud_frame: Dictionary = {}
 var _runtime_minimap_frames: Array[Dictionary] = []
 var _runtime_minimap_visited_buffers: Array = []
@@ -356,6 +359,9 @@ var visited_cells: Dictionary = {}
 var discovered_markers: Dictionary = {}
 var _threat_sample_timer := 0.0
 var _enemy_local_steering := EnemyLocalSteering.new()
+## Per-actor Wreck Scavenger stacks stay here rather than on pooled enemy state.
+## The specialist runtime owns eligibility and modifier arithmetic.
+var _wreck_scavenger_stacks: Dictionary = {}
 var _enemy_overlap_refresh_mask := PackedByteArray()
 var _shielded_enemy_ids: Dictionary = {}
 var _pending_shielded_enemy_ids: Dictionary = {}
@@ -985,6 +991,8 @@ func _record_diagnostic_threat_sample(
 
 
 func _begin_session_diagnostics() -> void:
+	if DisplayServer.get_name() == "headless" or _capture_mode or not _performance_request.is_empty() or not _encounter_pacing_capture_request.is_empty():
+		return
 	var session_id := "session-%d-%d-%d" % [
 		int(Time.get_unix_time_from_system()),
 		Time.get_ticks_usec(),
@@ -1148,6 +1156,8 @@ func _reset_run(
 	player_barrier_hit_flash = 0.0
 	player_primary_weapon.reset()
 	_primary_shot_serial = 0
+	primary_combo_runtime.reset()
+	_primary_shot_groups.clear()
 	_dash_action_serial = 0
 	_damage_receipt_serial = 0
 	player_dash_cooldown = 0.0
@@ -1185,6 +1195,7 @@ func _reset_run(
 	upgrade_offer_error.clear()
 	upgrade_selection_applied = false
 	_clear_enemies()
+	_wreck_scavenger_stacks.clear()
 	_clear_projectiles()
 	pickups.clear()
 	denied_zones.clear()
@@ -1215,6 +1226,10 @@ func _reset_run(
 	tutorial_announced = false
 	boss_started = false
 	boss_shield_runtime.configure(current_stage_id)
+	boss_death_runtime.reset()
+	_dying_boss_id = ""
+	_pending_boss_barrage_rows.clear()
+	_boss_barrage_hit_lock_remaining = 0.0
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
@@ -1284,17 +1299,16 @@ func _configure_stage_local_runtime() -> void:
 	_refresh_pressure_observation_mode()
 	_mystery_device_result_receipt.clear()
 	_reset_stage_diagnostic_signals()
-	_mystery_gravity_members.clear()
-	_mystery_cryo_members.clear()
-	_mystery_weakpoint_members.clear()
-	_mystery_gravity_refresh_remaining = 0.0
-	_mystery_cryo_refresh_remaining = 0.0
-	_mystery_weakpoint_refresh_remaining = 0.0
 
 
 func _populate_stage_items() -> void:
 	pickups.clear()
 	for spec in _active_tactical_layout.pickup_blueprint():
+		if StringName(spec["kind"]) == &"experience_shard":
+			experience_runtime.spawn_shard(
+				Vector2(spec["pos"]), int(spec.get("experience", 5))
+			)
+			continue
 		pickups.append({
 			"id": String(spec["id"]),
 			"kind": StringName(spec["kind"]),
@@ -1481,6 +1495,7 @@ func _release_enemy_engagement(enemy: EnemyState, outcome: StringName = &"releas
 func _clear_enemies() -> void:
 	_enemy_frame_aggregate_valid = false
 	collective_tactics.reset()
+	_wreck_scavenger_stacks.clear()
 	for enemy in enemies:
 		_release_enemy_engagement(enemy)
 	enemy_store.clear()
@@ -1493,6 +1508,7 @@ func _flush_defeated_enemies() -> int:
 
 func _clear_projectiles() -> void:
 	projectile_store.clear()
+	_primary_shot_groups.clear()
 
 
 func _rebuild_enemy_runtime_indexes() -> void:
@@ -1843,7 +1859,7 @@ func _update_player(delta: float) -> void:
 				run_build.level_of(&"dash_afterburn_field")
 			)
 	else:
-		var motion := move_input * _player_move_speed() * delta
+		var motion := move_input * _player_move_speed() * _player_facility_movement_multiplier() * delta
 		player_position = _move_actor(player_position, motion, Rules.PLAYER_RADIUS, true)
 		if Input.is_action_just_pressed("dash") and player_dash_cooldown <= 0.0:
 			_start_dash(move_input)
@@ -1859,6 +1875,13 @@ func _update_player(delta: float) -> void:
 	_mark_visited()
 	_apply_dash_collision()
 	player_velocity = (player_position - previous_position) / maxf(delta, 0.0001)
+	primary_combo_runtime.advance_motion(
+		delta,
+		player_position.distance_to(previous_position),
+		player_velocity.length(),
+		run_build.level_of(&"braced_fire")
+	)
+	_apply_player_facility_recovery(delta)
 	_update_secondary_weapons(delta, player_velocity)
 
 	if tutorial_move and tutorial_aim and tutorial_fire and tutorial_dash and not tutorial_announced:
@@ -1997,8 +2020,14 @@ func _fire_primary() -> void:
 	_primary_shot_serial += 1
 	var origin := player_position + player_aim_direction * 39.0
 	var fork_level := run_build.level_of(&"split_muzzle")
+	var combo_multiplier := primary_combo_runtime.next_hit_multiplier(
+		run_build.level_of(&"miss_compensation"),
+		run_build.level_of(&"hit_chain")
+	) * primary_combo_runtime.braced_multiplier(run_build.level_of(&"braced_fire"))
+	var volley_count := PrimaryUpgradeRules.projectiles_per_volley(fork_level)
+	_primary_shot_groups[_primary_shot_serial] = {"remaining":volley_count, "hit":false}
 	var projectile_range := _primary_projectile_range()
-	for projectile_index in PrimaryUpgradeRules.projectiles_per_volley(fork_level):
+	for projectile_index in volley_count:
 		var scale := PrimaryUpgradeRules.projectile_damage_scale(
 			fork_level, projectile_index
 		)
@@ -2007,13 +2036,13 @@ func _fire_primary() -> void:
 			player_aim_direction.rotated(PrimaryUpgradeRules.projectile_angle(
 				fork_level, _primary_shot_serial, projectile_index
 			)),
-			18.0 * scale,
+			18.0 * scale * combo_multiplier,
 			PRIMARY_PROJECTILE_SPEED,
 			PrimaryUpgradeRules.additional_penetrations(
 				run_build.level_of(&"piercing_rounds")
 			),
 			PRIMARY_PROJECTILE_RADIUS,
-			18.0 * scale,
+			18.0 * scale * combo_multiplier,
 			projectile_range,
 			_primary_payload,
 			false,
@@ -2252,6 +2281,7 @@ func _spawn_player_projectile(
 		if primary_payload != null
 		else AttackContract.KINETIC
 	)
+	_ensure_player_projectile_capacity()
 	projectile_store.add_player({
 		"pos": origin,
 		"spawn_origin": origin,
@@ -2299,6 +2329,7 @@ func _update_secondary_weapons(delta: float, movement: Vector2) -> void:
 	var emitted_projectiles: Array = secondary_result.get("projectiles", [])
 	if not emitted_projectiles.is_empty():
 		for projectile in emitted_projectiles:
+			_ensure_player_projectile_capacity()
 			projectile_store.add_player(projectile)
 		_play_sound(&"missile")
 	for intent in secondary_result["damage"]:
@@ -2567,6 +2598,70 @@ func _player_move_speed() -> float:
 	return run_build.stat(&"move_speed_multiplier", PLAYER_BASE_SPEED)
 
 
+func _player_facility_movement_multiplier() -> float:
+	var multiplier := 1.0
+	mystery_device_runtime.fill_modifiers_at(player_position, _facility_modifier_buffer)
+	for modifier in _facility_modifier_buffer:
+		var profile := Dictionary(modifier["profile"])
+		multiplier *= float(profile.get(
+			"movement_multiplier", profile.get("max_speed_multiplier", 1.0)
+		))
+	return multiplier
+
+
+func _apply_player_facility_recovery(delta: float) -> void:
+	mystery_device_runtime.fill_modifiers_at(player_position, _facility_modifier_buffer)
+	var maximum_hull := _player_max_health()
+	for modifier in _facility_modifier_buffer:
+		var profile := Dictionary(modifier["profile"])
+		if profile.has("hull_restore_per_second"):
+			player_health = minf(
+				maximum_hull,
+				player_health + maximum_hull * float(profile["hull_restore_per_second"]) * delta
+			)
+		if profile.has("shield_restore_per_second"):
+			var barrier_cap := maximum_hull * float(profile.get("shield_cap_max_hull_ratio", 1.0))
+			player_barrier_strength = minf(
+				barrier_cap,
+				player_barrier_strength + maximum_hull * float(profile["shield_restore_per_second"]) * delta
+			)
+			if player_barrier_strength > 0.0:
+				player_barrier_timer = maxf(player_barrier_timer, 0.25)
+
+
+func _player_facility_received_damage_multiplier() -> float:
+	var multiplier := 1.0
+	mystery_device_runtime.fill_modifiers_at(player_position, _facility_modifier_buffer)
+	for modifier in _facility_modifier_buffer:
+		multiplier *= float(Dictionary(modifier["profile"]).get("received_damage_multiplier", 1.0))
+	return multiplier
+
+
+func _apply_enemy_facility_modifiers(enemy: EnemyState, delta: float) -> void:
+	enemy.facility_movement_multiplier = 1.0
+	enemy.facility_cadence_multiplier = 1.0
+	enemy.facility_received_damage_multiplier = 1.0
+	mystery_device_runtime.fill_modifiers_at(enemy.pos, _facility_modifier_buffer)
+	for modifier in _facility_modifier_buffer:
+		var profile := Dictionary(modifier["profile"])
+		enemy.facility_movement_multiplier *= float(profile.get(
+			"movement_multiplier", profile.get("max_speed_multiplier", 1.0)
+		))
+		enemy.facility_cadence_multiplier *= float(profile.get("attack_cadence_multiplier", 1.0))
+		enemy.facility_received_damage_multiplier *= float(profile.get("received_damage_multiplier", 1.0))
+		if profile.has("hull_restore_per_second"):
+			enemy.health = minf(
+				enemy.max_health,
+				enemy.health + enemy.max_health * float(profile["hull_restore_per_second"]) * delta
+			)
+		if profile.has("shield_restore_per_second"):
+			enemy.facility_barrier_max = enemy.max_health * float(profile.get("shield_cap_max_hull_ratio", 1.0))
+			enemy.facility_barrier_strength = minf(
+				enemy.facility_barrier_max,
+				enemy.facility_barrier_strength + enemy.max_health * float(profile["shield_restore_per_second"]) * delta
+			)
+
+
 func _dash_cooldown_max() -> float:
 	return DASH_COOLDOWN
 
@@ -2602,9 +2697,6 @@ func _collect_pickup(pickup: Dictionary) -> void:
 	pickup["active"] = false
 	var kind := StringName(pickup["kind"])
 	match kind:
-		&"repair":
-			_discover_guide(&"object_repair")
-			_apply_player_recovery(float(pickup.get("heal_amount", 70.0)))
 		&"experience_recall":
 			_discover_guide(&"object_recall")
 			experience_recall_timer = 0.65
@@ -2639,7 +2731,6 @@ func _update_enemies(
 ) -> void:
 	var performance_active := _performance_detail_sample_active
 	var section_started := Time.get_ticks_usec() if performance_active else 0
-	_prepare_mystery_device_effects(delta)
 	var decision_bucket := _enemy_decision_bucket
 	_enemy_decision_bucket = (_enemy_decision_bucket + 1) % ORDINARY_DECISION_BUCKET_COUNT
 	if decision_bucket == 0:
@@ -2664,6 +2755,7 @@ func _update_enemies(
 	for enemy in enemies:
 		if not enemy.alive:
 			continue
+		_apply_enemy_facility_modifiers(enemy, delta)
 		if enemy.active:
 			enemy.contact_previous_position = enemy.pos
 			enemy.contact_attack = &""
@@ -2679,14 +2771,6 @@ func _update_enemies(
 		var vulnerable := enemy.vulnerable
 		if vulnerable > 0.0:
 			enemy.vulnerable = maxf(0.0, vulnerable - delta)
-		if enemy.mystery_cryo_remaining > 0.0:
-			enemy.mystery_cryo_remaining = maxf(
-				0.0, enemy.mystery_cryo_remaining - delta
-			)
-		if enemy.mystery_weakpoint_remaining > 0.0:
-			enemy.mystery_weakpoint_remaining = maxf(
-				0.0, enemy.mystery_weakpoint_remaining - delta
-			)
 		var health_visible_timer := enemy.health_visible_timer
 		if health_visible_timer > 0.0:
 			enemy.health_visible_timer = maxf(0.0, health_visible_timer - delta)
@@ -2792,9 +2876,7 @@ func _update_enemies(
 	if performance_active:
 		_performance_enemy_sections["ordinary_due"] = _elapsed_ms(section_started)
 		section_started = Time.get_ticks_usec()
-	_apply_mystery_device_forced_motion(delta)
 	if performance_active:
-		_performance_enemy_sections["forced_motion"] = _elapsed_ms(section_started)
 		_performance_enemy_sections["scheduled_ordinary"] = _elapsed_ms(
 			scheduled_started
 		)
@@ -2809,154 +2891,6 @@ func _update_enemies(
 		_performance_enemy_sections["contact_resolution"] = _elapsed_ms(
 			section_started
 		)
-
-
-func _prepare_mystery_device_effects(delta: float) -> void:
-	## Advances effect lifetime and publishes control state before AI decisions.
-	mystery_device_runtime.advance_into(delta, _mystery_retired_event_buffer)
-	for retired_event in _mystery_retired_event_buffer:
-		_clear_mystery_effect_membership(StringName(
-			retired_event.get("effect_id", &"")
-		))
-		_session_diagnostics.emit_event("anomaly_retired", {
-			"effect_id":StringName(retired_event.get("effect_id", &"")),
-			"duration":float(retired_event.get("duration", 0.0)),
-		})
-	mystery_device_runtime.fill_active_effect_snapshot(
-		_mystery_effect_snapshot_buffer
-	)
-	for effect in _mystery_effect_snapshot_buffer:
-		var effect_id := StringName(effect["effect_id"])
-		var center := Vector2(effect["position"])
-		var radius := float(effect["radius"])
-		_refresh_mystery_effect_membership(
-			effect_id, center, radius, delta
-		)
-		var members: Array[EnemyState]
-		match effect_id:
-			&"cryo_lock":
-				members = _mystery_cryo_members
-			&"weakpoint_expose":
-				members = _mystery_weakpoint_members
-			_:
-				continue
-		for enemy in members:
-			if (
-				not enemy.alive
-				or not enemy.active
-			):
-				continue
-			match effect_id:
-				&"cryo_lock":
-					enemy.mystery_cryo_remaining = maxf(
-						enemy.mystery_cryo_remaining,
-						float(effect["remaining_seconds"])
-					)
-					# Warned startup/active attacks finish. Every other state is
-					# held long enough to prevent movement or a fresh commitment.
-					if enemy.phase not in [&"startup", &"active"]:
-						enemy.stun = maxf(enemy.stun, delta + 0.001)
-						enemy.velocity = Vector2.ZERO
-				&"weakpoint_expose":
-					enemy.mystery_weakpoint_remaining = maxf(
-						enemy.mystery_weakpoint_remaining,
-						float(effect["remaining_seconds"])
-					)
-
-
-func _apply_mystery_device_forced_motion(delta: float) -> void:
-	## Gravity is applied after scheduled AI motion so it is a readable force,
-	## not movement that the same frame's pursuit step immediately cancels.
-	for effect in _mystery_effect_snapshot_buffer:
-		if StringName(effect["effect_id"]) != &"gravity_pull":
-			continue
-		var center := Vector2(effect["position"])
-		for enemy in _mystery_gravity_members:
-			if (
-				not enemy.alive
-				or not enemy.active
-			):
-				continue
-			_steer_enemy_toward_mystery_anchor(
-				enemy, center, MYSTERY_GRAVITY_PULL_SPEED, delta
-			)
-
-
-func _refresh_mystery_effect_membership(
-	effect_id: StringName,
-	center: Vector2,
-	radius: float,
-	delta: float
-) -> void:
-	var members: Array[EnemyState]
-	var refresh_remaining := 0.0
-	match effect_id:
-		&"gravity_pull":
-			members = _mystery_gravity_members
-			refresh_remaining = _mystery_gravity_refresh_remaining
-		&"cryo_lock":
-			members = _mystery_cryo_members
-			refresh_remaining = _mystery_cryo_refresh_remaining
-		&"weakpoint_expose":
-			members = _mystery_weakpoint_members
-			refresh_remaining = _mystery_weakpoint_refresh_remaining
-		_:
-			return
-	refresh_remaining -= maxf(0.0, delta)
-	if refresh_remaining <= 0.0:
-		members.clear()
-		enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
-		if _slow_tick_recording_active:
-			_slow_tick_anomaly_scan_count += 1
-		for enemy in _enemy_query_buffer:
-			if (
-				enemy.alive
-				and enemy.active
-				and enemy.role != &"stage_boss"
-				and not _is_fixed_structure_enemy(enemy)
-				and enemy.pos.distance_to(center) <= radius + enemy.radius
-			):
-				members.append(enemy)
-		refresh_remaining = MYSTERY_EFFECT_MEMBERSHIP_REFRESH
-	match effect_id:
-		&"gravity_pull":
-			_mystery_gravity_refresh_remaining = refresh_remaining
-		&"cryo_lock":
-			_mystery_cryo_refresh_remaining = refresh_remaining
-		&"weakpoint_expose":
-			_mystery_weakpoint_refresh_remaining = refresh_remaining
-
-
-func _clear_mystery_effect_membership(effect_id: StringName) -> void:
-	match effect_id:
-		&"gravity_pull":
-			_mystery_gravity_members.clear()
-			_mystery_gravity_refresh_remaining = 0.0
-		&"cryo_lock":
-			_mystery_cryo_members.clear()
-			_mystery_cryo_refresh_remaining = 0.0
-		&"weakpoint_expose":
-			_mystery_weakpoint_members.clear()
-			_mystery_weakpoint_refresh_remaining = 0.0
-
-
-func _steer_enemy_toward_mystery_anchor(
-	enemy: EnemyState,
-	anchor: Vector2,
-	speed: float,
-	delta: float
-) -> void:
-	var offset := anchor - enemy.pos
-	if offset.length_squared() <= 1.0 or delta <= 0.0:
-		return
-	var previous_position := enemy.pos
-	var distance := offset.length()
-	var motion := offset / distance * minf(distance, speed * delta)
-	enemy.pos = _move_actor(enemy.pos, motion, enemy.radius, false)
-	if enemy.pos == previous_position:
-		return
-	enemy.velocity = (enemy.pos - previous_position) / delta
-	enemy_grid.update_actor_position(enemy)
 
 
 func _prepare_enemy_local_overlap_cache() -> void:
@@ -3029,6 +2963,7 @@ func _update_scheduled_ordinary_enemy(
 			Time.get_ticks_usec() if _performance_detail_sample_active else 0
 		)
 		_update_motion_only_ordinary_enemy(enemy, motion_delta)
+		_apply_engagement_gap_steering(enemy, motion_delta, true)
 		if _performance_detail_sample_active:
 			_performance_accumulate_enemy_section(
 				"ordinary_motion_policy", motion_started
@@ -3055,6 +2990,7 @@ func _update_scheduled_ordinary_enemy(
 		enemy, decision_delta, can_commit, decision_due, motion_delta
 	):
 		_enemy_update_schedule.note_commit(enemy)
+	_apply_engagement_gap_steering(enemy, motion_delta, false)
 	if _performance_detail_sample_active:
 		_performance_accumulate_enemy_section(
 			"ordinary_decision_policy", policy_started
@@ -3072,6 +3008,40 @@ func _update_scheduled_ordinary_enemy(
 		else:
 			enemy_grid.update_actor(enemy)
 	_refresh_enemy_presentation_facing(enemy)
+
+
+func _apply_engagement_gap_steering(
+	enemy: EnemyState,
+	delta: float,
+	update_spatial_grid: bool
+) -> void:
+	if (
+		delta <= 0.0
+		or not _diagnostic_visible_gap_active
+		or active_run_elapsed_seconds - _diagnostic_visible_gap_started
+			< ENGAGEMENT_GAP_STEER_DELAY
+		or enemy.phase not in [&"move", &"recovery"]
+		or not enemy.counts_active_cap
+		or _visible_world_rect(64.0).has_point(enemy.pos)
+	):
+		return
+	var offset := player_position - enemy.pos
+	if offset.length_squared() <= 1.0:
+		return
+	var previous_position := enemy.pos
+	var extra_speed := enemy.speed * (ENGAGEMENT_GAP_SPEED_MULTIPLIER - 1.0)
+	enemy.pos = _move_actor(
+		enemy.pos,
+		offset.normalized() * extra_speed * delta,
+		enemy.radius,
+		false
+	)
+	if enemy.pos == previous_position:
+		return
+	enemy.velocity = (enemy.pos - previous_position) / delta
+	enemy.movement_reason = &"engagement_gap_regroup"
+	if update_spatial_grid:
+		enemy_grid.update_actor_position(enemy)
 
 
 func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
@@ -3108,7 +3078,7 @@ func _update_motion_only_ordinary_enemy(
 			enemy.pos = enemy.home
 			enemy.active = false
 		else:
-			_move_enemy_with_recovery(enemy, to_home.normalized() * enemy.speed, motion_delta)
+			_move_enemy_with_recovery(enemy, to_home.normalized() * _effective_enemy_speed(enemy), motion_delta)
 		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
 		return
 	if enemy.role in [
@@ -3347,7 +3317,7 @@ func _update_ordinary_enemy(
 			enemy.pos = enemy.home
 			enemy.active = false
 		else:
-			_move_enemy_with_recovery(enemy, to_home.normalized() * enemy.speed, motion_delta)
+			_move_enemy_with_recovery(enemy, to_home.normalized() * _effective_enemy_speed(enemy), motion_delta)
 		return false
 	if enemy.role == &"repair_tender":
 		enemy.movement_reason = &"repair_role"
@@ -3409,7 +3379,6 @@ func _update_ordinary_enemy(
 		not decision_due
 		or not can_commit
 		or enemy.attack_cooldown > 0.0
-		or StatusRuntime.attack_commit_blocked(enemy)
 	):
 		return false
 	var attack_started := (
@@ -3438,7 +3407,7 @@ func _update_collective_enemy(
 			if to_slot.length_squared() > 4.0:
 				_move_enemy_with_recovery(
 					enemy,
-					to_slot.normalized() * enemy.speed,
+					to_slot.normalized() * _effective_enemy_speed(enemy),
 					delta
 				)
 			else:
@@ -3455,7 +3424,7 @@ func _update_collective_enemy(
 				var before := enemy.pos
 				var requested := (
 					enemy.collective_direction
-					* enemy.speed
+					* _effective_enemy_speed(enemy)
 					* enemy.collective_speed_multiplier
 					* delta
 				)
@@ -3480,7 +3449,7 @@ func _update_collective_enemy(
 					_move_enemy_with_recovery(
 						enemy,
 						to_slot.normalized()
-							* enemy.speed
+							* _effective_enemy_speed(enemy)
 							* enemy.collective_speed_multiplier,
 						delta
 					)
@@ -3528,8 +3497,14 @@ func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
 			cooldown = SpecialistRuntime.CARRIER_RECOVERY
 		&"beam_sentinel":
 			cooldown = SpecialistRuntime.BEAM_RECOVERY
+		&"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger":
+			cooldown = float(AttackContract.ordinary_attack(role).get("recovery", cooldown))
+	var scavenger_interval := _wreck_scavenger_attack_interval_multiplier(enemy)
 	var elite_scale := 0.85 if enemy.elite_trait == &"overclocked" else 1.0
-	return cooldown * elite_scale / EncounterDirector.ENEMY_RECOVERY_RATE
+	return cooldown * scavenger_interval * elite_scale / (
+		EncounterDirector.ENEMY_RECOVERY_RATE
+		* maxf(0.01, enemy.facility_cadence_multiplier)
+	)
 
 
 func _enemy_can_attack(enemy: EnemyState) -> bool:
@@ -3565,6 +3540,14 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 			)
 		&"beam_sentinel":
 			return distance <= SpecialistRuntime.BEAM_RANGE and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
+		&"rail_sniper":
+			return distance <= 900.0 and distance >= 300.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
+		&"orbit_gunner":
+			return distance <= 620.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
+		&"bombing_runner":
+			return distance <= 700.0 and distance >= 120.0
+		&"wreck_scavenger":
+			return distance <= 470.0 and distance >= 90.0
 	return false
 
 
@@ -3686,6 +3669,40 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 1.05
+		&"rail_sniper":
+			var rail_attack := AttackContract.ordinary_attack(role)
+			_spawn_hostile_projectile(
+				enemy.pos + enemy.committed_dir * float(rail_attack["origin_offset"]),
+				enemy.committed_dir,
+				float(rail_attack["damage"]),
+				float(rail_attack["speed"]),
+				"Rail Sniper shot",
+				StringName(rail_attack["affinity"]), false, false,
+				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+			)
+			# The recovery relocation breaks the next rail lane without teleporting.
+			enemy.reposition_time = 0.72
+			enemy.reposition_dir = enemy.committed_dir.rotated(enemy.strafe_sign * PI * 0.5)
+			enemy.phase = &"recovery"
+			enemy.phase_time = float(rail_attack["recovery"])
+		&"orbit_gunner":
+			var orbit_attack := AttackContract.ordinary_attack(role)
+			enemy.burst_left = int(orbit_attack["burst_count"])
+			enemy.burst_timer = 0.0
+			enemy.phase_time = float(orbit_attack["burst_count"]) * float(orbit_attack["burst_spacing"]) + 0.08
+		&"bombing_runner":
+			var bombing_attack := AttackContract.ordinary_attack(role)
+			for blast_index in int(bombing_attack["blast_count"]):
+				var blast_position := enemy.committed_target + enemy.committed_dir * float(blast_index) * 64.0
+				denied_zones.append({
+					"id":"%s_bomb_%d" % [enemy.id, blast_index], "owner_kind":&"ordinary",
+					"shape":&"area", "pos":blast_position, "radius":float(bombing_attack["radius"]),
+					"damage":float(bombing_attack["damage"]), "warning":float(bombing_attack["blast_delay"]) + float(blast_index) * float(bombing_attack["blast_spacing"]),
+					"duration":0.22, "tick":0.0, "source":"Bombing Runner ground burst", "final_damage":false,
+				})
+			enemy.phase_time = float(bombing_attack["pass_seconds"])
+		&"wreck_scavenger":
+			enemy.phase_time = float(AttackContract.ordinary_attack(role)["active"])
 		&"interceptor_tower":
 			var interceptor_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
@@ -3762,6 +3779,41 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			if enemy.burst_left <= 0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 0.95
+		&"orbit_gunner":
+			var orbit_attack := AttackContract.ordinary_attack(role)
+			enemy.burst_timer -= delta
+			if enemy.burst_left > 0 and enemy.burst_timer <= 0.0:
+				enemy.burst_timer = float(orbit_attack["burst_spacing"])
+				enemy.burst_left -= 1
+				_spawn_hostile_projectile(
+					enemy.pos + enemy.committed_dir * float(orbit_attack["origin_offset"]),
+					enemy.committed_dir, float(orbit_attack["damage"]), float(orbit_attack["speed"]),
+					"Orbit Gunner burst", StringName(orbit_attack["affinity"]), false, false,
+					AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+				)
+			if enemy.burst_left <= 0:
+				enemy.phase = &"recovery"
+				enemy.phase_time = float(orbit_attack["recovery"])
+		&"bombing_runner":
+			var bombing_attack := AttackContract.ordinary_attack(role)
+			var before := enemy.pos
+			enemy.pos = _runtime_charge_path_end(
+				before, enemy.committed_dir,
+				float(bombing_attack["pass_speed"]) * EncounterDirector.ENEMY_SPEED_MULTIPLIER * delta,
+				enemy.radius
+			)
+			if enemy.phase_time <= 0.0:
+				enemy.phase = &"recovery"
+				enemy.phase_time = float(bombing_attack["recovery"])
+		&"wreck_scavenger":
+			enemy.contact_attack = EnemyContactRuntime.ATTACK_CHASER
+			var scavenger_attack := AttackContract.ordinary_attack(role)
+			var before := enemy.pos
+			var scavenger_speed := float(scavenger_attack["speed"]) * EncounterDirector.ENEMY_SPEED_MULTIPLIER * _wreck_scavenger_speed_multiplier(enemy)
+			enemy.pos = _runtime_charge_path_end(before, enemy.committed_dir, scavenger_speed * delta, enemy.radius)
+			if enemy.phase_time <= 0.0:
+				enemy.phase = &"recovery"
+				enemy.phase_time = _enemy_recovery_cooldown(enemy)
 		&"mine":
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
@@ -3949,7 +4001,7 @@ func _desired_enemy_velocity(
 		enemy.movement_reason = &"pursuit_role"
 	else:
 		enemy.movement_reason = &"role_movement"
-	return desired.normalized() * enemy.speed * StatusRuntime.speed_multiplier(enemy)
+	return desired.normalized() * _effective_enemy_speed(enemy) * StatusRuntime.speed_multiplier(enemy)
 
 
 func _smoothed_enemy_velocity(
@@ -3961,7 +4013,7 @@ func _smoothed_enemy_velocity(
 		enemy.movement_family = EnemyMovementPolicy.family(
 			enemy.archetype, enemy.role
 		)
-	var speed_cap := enemy.speed * StatusRuntime.speed_multiplier(enemy)
+	var speed_cap := _effective_enemy_speed(enemy) * StatusRuntime.speed_multiplier(enemy)
 	var role_velocity := EnemyMovementPolicy.smooth_velocity(
 		enemy.velocity,
 		enemy.desired_velocity,
@@ -3980,7 +4032,7 @@ func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: floa
 	if enemy.reposition_time > 0.0:
 		enemy.movement_reason = &"wall_reposition"
 		enemy.reposition_time = maxf(0.0, enemy.reposition_time - delta)
-		velocity = enemy.reposition_dir * enemy.speed
+		velocity = enemy.reposition_dir * _effective_enemy_speed(enemy)
 	var before := enemy.pos
 	var requested_motion := velocity * delta
 	var requested_destination := before + requested_motion
@@ -3995,7 +4047,7 @@ func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: floa
 	if moved_squared < 0.35 * 0.35 and velocity_squared > 1.0:
 		var side_sign := enemy.strafe_sign
 		var side := velocity.normalized().rotated(side_sign * PI * 0.5)
-		attempt = _move_actor(before, side * enemy.speed * delta, enemy.radius, false)
+		attempt = _move_actor(before, side * _effective_enemy_speed(enemy) * delta, enemy.radius, false)
 		moved_squared = before.distance_squared_to(attempt)
 	if moved_squared < 0.25 * 0.25 and velocity_squared > 1.0:
 		enemy.stuck_time += delta
@@ -4147,7 +4199,48 @@ func _arm_chain_mines(source_mine: EnemyState, origin: Vector2, mobile: bool) ->
 
 
 func _enemy_contact_damage(enemy: EnemyState, base_damage: float) -> float:
-	return base_damage * (1.15 if enemy.elite_trait == &"heavy" else 1.0)
+	var damage := base_damage
+	if enemy.role == &"wreck_scavenger":
+		damage = float(AttackContract.ordinary_attack(&"wreck_scavenger").get("damage", base_damage))
+		damage *= _wreck_scavenger_damage_multiplier(enemy)
+	return damage * (1.15 if enemy.elite_trait == &"heavy" else 1.0)
+
+
+func _wreck_scavenger_stack_count(enemy: EnemyState) -> int:
+	return clampi(int(_wreck_scavenger_stacks.get(enemy.id, 0)), 0, SpecialistRuntime.WRECK_SCAVENGER_MAX_STACKS)
+
+
+func _wreck_scavenger_damage_multiplier(enemy: EnemyState) -> float:
+	return float(SpecialistRuntime.wreck_scavenger_modifiers(_wreck_scavenger_stack_count(enemy)).get("damage_multiplier", 1.0))
+
+
+func _wreck_scavenger_speed_multiplier(enemy: EnemyState) -> float:
+	return float(SpecialistRuntime.wreck_scavenger_modifiers(_wreck_scavenger_stack_count(enemy)).get("speed_multiplier", 1.0))
+
+
+func _wreck_scavenger_attack_interval_multiplier(enemy: EnemyState) -> float:
+	return float(SpecialistRuntime.wreck_scavenger_modifiers(_wreck_scavenger_stack_count(enemy)).get("attack_interval_multiplier", 1.0))
+
+
+func _effective_enemy_speed(enemy: EnemyState) -> float:
+	return (
+		enemy.speed
+		* (_wreck_scavenger_speed_multiplier(enemy) if enemy.role == &"wreck_scavenger" else 1.0)
+		* enemy.facility_movement_multiplier
+	)
+
+
+func _notify_wreck_scavengers_of_defeat(defeated: EnemyState) -> void:
+	for candidate in enemies:
+		if candidate == defeated or not candidate.alive or not candidate.active:
+			continue
+		if candidate.archetype != &"wreck_scavenger":
+			continue
+		var receipt := SpecialistRuntime.wreck_scavenger_defeat_receipt(
+			candidate, defeated, _wreck_scavenger_stack_count(candidate)
+		)
+		if bool(receipt.get("claimed", false)):
+			_wreck_scavenger_stacks[candidate.id] = int(receipt["stacks"])
 
 
 func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: bool) -> Vector2:
@@ -4222,6 +4315,7 @@ func _count_hostile_projectiles() -> int:
 
 
 func _update_projectiles(delta: float) -> void:
+	_boss_barrage_hit_lock_remaining = maxf(0.0, _boss_barrage_hit_lock_remaining - maxf(0.0, delta))
 	var section_started := (
 		Time.get_ticks_usec() if _performance_detail_sample_active else 0
 	)
@@ -4266,6 +4360,22 @@ func _update_projectile_buffer(
 				projectile.velocity = steered * projectile.velocity.length()
 		var to := from + projectile.velocity * simulation_delta
 		var radius := projectile.radius
+		if mystery_device_runtime.first_damageable_segment_hit(
+			from, to, radius, _mystery_device_hit_receipt
+		):
+			var device_index := int(_mystery_device_hit_receipt["device_index"])
+			var device_bit := 1 << device_index
+			if (projectile.facility_hit_mask & device_bit) == 0:
+				projectile.facility_hit_mask |= device_bit
+				_damage_mystery_device(
+					StringName(_mystery_device_hit_receipt["device_id"]),
+					projectile.structure_damage,
+					&"projectile",
+					Vector2(_mystery_device_hit_receipt["position"]),
+					projectile.color,
+					projectile.velocity.normalized(),
+					&"hostile" if hostile else &"player"
+				)
 		var structure_query_started := (
 			Time.get_ticks_usec()
 			if _performance_detail_sample_active and not hostile else 0
@@ -4336,7 +4446,12 @@ func _update_projectile_buffer(
 		projectile.pos = to
 		if hostile:
 			if Rules.point_segment_distance(player_position, from, to) <= Rules.PLAYER_RADIUS + projectile.radius:
+				if projectile.owner.begins_with("boss_barrage:") and _boss_barrage_hit_lock_remaining > 0.0:
+					projectile_store.remove_hostile_at_swap(index)
+					continue
 				_damage_player(projectile.damage, projectile.owner, true, true, projectile.final_damage)
+				if projectile.owner.begins_with("boss_barrage:"):
+					_boss_barrage_hit_lock_remaining = 0.80
 				projectile_store.remove_hostile_at_swap(index)
 				continue
 		else:
@@ -4375,10 +4490,11 @@ func _update_projectile_buffer(
 				"projectile_hit_resolution", hit_started
 			)
 			if contact is bool:
-				projectile_store.remove_player_at_swap(index)
+				_remove_projectile_at(false, index)
 				continue
 			var hit_enemy := contact as EnemyState
 			if hit_enemy != null:
+				_mark_primary_shot_group_hit(projectile)
 				var hit_position := hit_enemy.pos
 				if _try_absorb_protective_structure(hit_enemy, projectile):
 					stats_primary_hits += 1 if projectile.owner == "player_primary" else 0
@@ -4387,7 +4503,7 @@ func _update_projectile_buffer(
 						projectile.pierce -= 1
 						projectile.pos = to + projectile.velocity.normalized() * 8.0
 					else:
-						projectile_store.remove_player_at_swap(index)
+						_remove_projectile_at(false, index)
 						continue
 					index += 1
 					continue
@@ -4448,7 +4564,7 @@ func _update_projectile_buffer(
 					projectile.pierce -= 1
 					projectile.pos = to + projectile.velocity.normalized() * 8.0
 				else:
-					projectile_store.remove_player_at_swap(index)
+					_remove_projectile_at(false, index)
 					continue
 		index += 1
 
@@ -4476,7 +4592,49 @@ func _remove_projectile_at(hostile: bool, index: int) -> void:
 	if hostile:
 		projectile_store.remove_hostile_at_swap(index)
 	else:
+		if index >= 0 and index < player_projectiles.size():
+			_retire_primary_shot_group_projectile(player_projectiles[index])
 		projectile_store.remove_player_at_swap(index)
+
+
+func _ensure_player_projectile_capacity() -> void:
+	if player_projectiles.size() < projectile_store.PLAYER_CAPACITY:
+		return
+	var oldest_index := -1
+	var oldest_serial := 0x7FFFFFFFFFFFFFFF
+	for index in player_projectiles.size():
+		var serial := player_projectiles[index].spawn_serial
+		if serial < oldest_serial:
+			oldest_serial = serial
+			oldest_index = index
+	if oldest_index >= 0:
+		_remove_projectile_at(false, oldest_index)
+
+
+func _mark_primary_shot_group_hit(projectile: ProjectileState) -> void:
+	if projectile.owner != "player_primary" or projectile.combat_action_serial <= 0:
+		return
+	var serial := projectile.combat_action_serial
+	if _primary_shot_groups.has(serial):
+		_primary_shot_groups[serial]["hit"] = true
+
+
+func _retire_primary_shot_group_projectile(projectile: ProjectileState) -> void:
+	if projectile.owner != "player_primary" or projectile.combat_action_serial <= 0:
+		return
+	var serial := projectile.combat_action_serial
+	if not _primary_shot_groups.has(serial):
+		return
+	var group: Dictionary = _primary_shot_groups[serial]
+	group["remaining"] = maxi(0, int(group.get("remaining", 1)) - 1)
+	if int(group["remaining"]) > 0:
+		return
+	primary_combo_runtime.record_shot_group(
+		bool(group.get("hit", false)),
+		run_build.level_of(&"miss_compensation"),
+		run_build.level_of(&"hit_chain")
+	)
+	_primary_shot_groups.erase(serial)
 
 
 func _is_player_targetable_enemy(enemy: EnemyState) -> bool:
@@ -4575,6 +4733,10 @@ func _update_denied_zones(delta: float) -> void:
 			denied_zones.remove_at(index)
 			continue
 		var shape := StringName(zone.get("shape", &"area"))
+		if shape == &"corridor" and zone.has("motion"):
+			var translation := Vector2(zone["motion"]) * delta
+			zone["from"] = Vector2(zone["from"]) + translation
+			zone["to"] = Vector2(zone["to"]) + translation
 		var damage := 0.0
 		if shape == &"area":
 			damage = AttackContract.radial_damage(
@@ -4588,6 +4750,14 @@ func _update_denied_zones(delta: float) -> void:
 				Vector2(zone["from"]),
 				Vector2(zone["to"])
 			) <= Rules.PLAYER_RADIUS + float(zone["width"]) * 0.5:
+				damage = float(zone["damage"])
+		elif shape == &"wedge_ring":
+			var offset := player_position - Vector2(zone["pos"])
+			var ring_distance := offset.length()
+			var safe_axis := Vector2(zone.get("safe_axis", Vector2.RIGHT)).normalized()
+			var within_ring := absf(ring_distance - float(zone["radius"])) <= float(zone["width"]) * 0.5 + Rules.PLAYER_RADIUS
+			var in_safe_wedge := absf(safe_axis.angle_to(offset.normalized())) <= float(zone.get("safe_half_angle", 0.48))
+			if within_ring and not in_safe_wedge:
 				damage = float(zone["damage"])
 		else:
 			push_error("Unsupported denied-zone shape: %s" % String(shape))
@@ -4679,6 +4849,10 @@ func _damage_enemy(
 ) -> float:
 	if not enemy.alive:
 		return 0.0
+	# The body remains renderable during the destruction receipt, but it no
+	# longer participates in combat, score, or life-steal resolution.
+	if enemy.role == &"stage_boss" and boss_death_runtime.active() and enemy.id == _dying_boss_id:
+		return 0.0
 	if player_owned:
 		if attack_serial <= 0:
 			_damage_receipt_serial += 1
@@ -4698,8 +4872,8 @@ func _damage_enemy(
 		)
 	var role := enemy.role
 	var multiplier := 1.0
-	if not final_effective and player_owned and enemy.mystery_weakpoint_remaining > 0.0:
-		multiplier *= 1.25
+	if not final_effective:
+		multiplier *= enemy.facility_received_damage_multiplier
 	if not final_effective and enemy.shielded:
 		multiplier *= SpecialistRuntime.SHIELDED_RECEIVED_DAMAGE_MULTIPLIER
 	if not final_effective and role == &"rammer" and enemy.vulnerable > 0.0:
@@ -4729,10 +4903,14 @@ func _damage_enemy(
 			mine_applied, combat_action_family, attack_serial, damage_flags
 		)
 		return mine_applied
-	var applied_damage := minf(health_before, maxf(0.0, amount * multiplier))
+	var resolved_damage := maxf(0.0, amount * multiplier)
+	var barrier_damage := minf(enemy.facility_barrier_strength, resolved_damage)
+	enemy.facility_barrier_strength -= barrier_damage
+	var health_damage := minf(health_before, maxf(0.0, resolved_damage - barrier_damage))
+	var applied_damage := barrier_damage + health_damage
 	if applied_damage <= 0.0:
 		return 0.0
-	enemy.health = health_before - applied_damage
+	enemy.health = health_before - health_damage
 	if player_owned and source != "validation":
 		stage_telemetry.record_outgoing(
 			DamageSourceCatalog.outgoing_id(source),
@@ -4854,13 +5032,16 @@ func _record_status_applications(profile: VehiclePrimaryPayloadProfile) -> void:
 		stage_telemetry.record_status_application(&"poison")
 	if profile.chill_enabled:
 		stage_telemetry.record_status_application(&"chill")
-	if profile.shock_enabled:
-		stage_telemetry.record_status_application(&"shock")
 
 
 func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	if not enemy.alive:
 		return
+	if enemy.role == &"stage_boss":
+		_begin_boss_destruction(enemy, source)
+		return
+	# Claim before retirement so nearby Scavengers observe a valid live wreck.
+	_notify_wreck_scavengers_of_defeat(enemy)
 	_release_enemy_engagement(enemy)
 	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
 	var role := enemy.role
@@ -4874,6 +5055,7 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		_spawn_splitter_children(enemy)
 	enemy.alive = false
 	enemy.active = false
+	_wreck_scavenger_stacks.erase(enemy.id)
 	enemy_grid.update_actor(enemy)
 	enemy_store.queue_defeat(enemy)
 	stats_enemies_defeated += 1
@@ -4906,26 +5088,97 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 			_complete_stage(StageTransitionRuntime.COMPLETION_WITHOUT_BOSS)
 	if role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel"]:
 		stats_installations += 1
-	if role == &"stage_boss":
-		var boss_receipt := stage_flow.record_boss_defeat()
-		if (
-			StringName(boss_receipt.get("command", &""))
-			== StageFlow.COMMAND_COMPLETE_AFTER_BOSS
-		):
-			_session_diagnostics.emit_event("boss_ended", {
-				"stage_index":current_stage_index,
-			})
-			_complete_stage(StageTransitionRuntime.COMPLETION_AFTER_BOSS)
 	var defeated_group := enemy.group_id
 	if not defeated_group.is_empty():
 		_try_group_completion_reward(defeated_group, enemy.pos)
 	_play_sound(
 		&"destroy_priority"
-		if role in [&"stage_boss", &"generator", &"interceptor_tower", &"repair_tender", &"drone_carrier", &"beam_sentinel"]
+		if role in [&"generator", &"interceptor_tower", &"repair_tender", &"drone_carrier", &"beam_sentinel"]
 		else &"destroy",
 		1.0
 	)
 	_clear_zones_owned_by_defeated_role(role)
+
+
+func _begin_boss_destruction(boss: EnemyState, source: String) -> void:
+	if boss_death_runtime.active() or not boss.alive:
+		return
+	var boss_receipt := stage_flow.record_boss_defeat()
+	if StringName(boss_receipt.get("command", &"")) != StageFlow.COMMAND_BEGIN_BOSS_CLEANUP:
+		return
+	_dying_boss_id = boss.id
+	boss.health = 0.0
+	boss.phase = &"boss_dying"
+	boss.phase_time = 0.0
+	boss.velocity = Vector2.ZERO
+	boss.attack_telegraphs.clear()
+	boss.contact_attack = &""
+	# Hazards stop at the death input. Adds/facilities are retired by staggered
+	# receipts while this boss body remains alive for the presentation snapshot.
+	encounter_runtime.stop_boss_maintenance()
+	projectile_store.retire_boss_hostiles()
+	_retire_denied_zones_by_owner(&"stage_boss")
+	_pending_boss_barrage_rows.clear()
+	var owned_ids: Array[StringName] = []
+	for enemy in enemies:
+		if enemy != boss and enemy.alive and _is_boss_owned_enemy(enemy):
+			owned_ids.append(StringName(enemy.id))
+	var began := boss_death_runtime.begin(owned_ids, _reduced_motion_enabled())
+	if not bool(began.get("accepted", false)):
+		return
+	_session_diagnostics.emit_event("boss_cleanup_started", {
+		"stage_index":current_stage_index,
+		"source":source,
+		"owned_count":owned_ids.size(),
+	})
+	_play_sound(&"destroy_priority", 1.05)
+	camera_shake = maxf(camera_shake, 16.0)
+
+
+func _advance_boss_destruction(delta: float) -> void:
+	if not boss_death_runtime.active():
+		return
+	for receipt in boss_death_runtime.advance(delta):
+		match StringName(receipt.get("kind", &"")):
+			&"retire_owned":
+				_retire_boss_owned_enemy_by_id(String(receipt.get("id", &"")))
+			&"cleanup_complete":
+				_finalize_boss_destruction()
+
+
+func _retire_boss_owned_enemy_by_id(enemy_id: String) -> void:
+	var owned := _find_enemy_by_id(enemy_id)
+	if owned == null or not owned.alive or not _is_boss_owned_enemy(owned):
+		return
+	_release_enemy_engagement(owned)
+	collective_tactics.unregister_enemy(owned.id, owned.squad_id)
+	owned.alive = false
+	owned.active = false
+	enemy_grid.update_actor(owned)
+	enemy_store.queue_defeat(owned)
+	_enemy_frame_aggregate_valid = false
+
+
+func _finalize_boss_destruction() -> void:
+	var boss := _find_enemy_by_id(_dying_boss_id)
+	if boss != null and boss.alive:
+		_release_enemy_engagement(boss)
+		collective_tactics.unregister_enemy(boss.id, boss.squad_id)
+		boss.alive = false
+		boss.active = false
+		enemy_grid.update_actor(boss)
+		enemy_store.queue_defeat(boss)
+		stats_enemies_defeated += 1
+		stage_telemetry.record_defeat(boss.archetype, boss.elite_trait)
+		experience_runtime.spawn_shard(
+			boss.pos, FieldDropRules.experience_for_enemy(boss), &""
+		)
+		_try_group_completion_reward(boss.group_id, boss.pos)
+	_session_diagnostics.emit_event("boss_ended", {"stage_index":current_stage_index})
+	var flow_receipt := stage_flow.record_boss_cleanup_complete()
+	if StringName(flow_receipt.get("command", &"")) == StageFlow.COMMAND_COMPLETE_AFTER_BOSS_CLEANUP:
+		_complete_stage(StageTransitionRuntime.COMPLETION_AFTER_BOSS)
+	_dying_boss_id = ""
 
 
 func _spawn_splitter_children(parent: EnemyState) -> void:
@@ -4992,7 +5245,10 @@ func _damage_player(
 ) -> bool:
 	if not _simulation_active() or player_invulnerable > 0.0 or stage_complete:
 		return false
-	var remaining := _scaled_incoming_damage(amount, enemy_source, final_effective)
+	var remaining := (
+		_scaled_incoming_damage(amount, enemy_source, final_effective)
+		* (1.0 if final_effective else _player_facility_received_damage_multiplier())
+	)
 	if remaining <= 0.0:
 		return false
 	var accepted := false
@@ -5150,8 +5406,9 @@ func _damage_enemies_in_radius(
 				false, true,
 				OutgoingDamagePolicy.DAMAGE_DIRECT if player_owned else 0
 			)
-	if player_owned:
-		_damage_mystery_devices_in_radius(center, radius, damage)
+	_damage_mystery_devices_in_radius(
+		center, radius, damage, &"player" if player_owned else &"hostile"
+	)
 
 
 func _apply_thermal_burst(
@@ -5195,7 +5452,8 @@ func _apply_thermal_burst(
 func _damage_mystery_devices_in_radius(
 	center: Vector2,
 	radius: float,
-	damage: float
+	damage: float,
+	source_team: StringName = &"player"
 ) -> void:
 	mystery_device_runtime.fill_device_snapshot(
 		_mystery_device_snapshot_buffer
@@ -5215,7 +5473,8 @@ func _damage_mystery_devices_in_radius(
 			&"area",
 			device_position,
 			Art.SYSTEM,
-			(device_position - center).normalized()
+			(device_position - center).normalized(),
+			source_team
 		)
 
 
@@ -5225,10 +5484,11 @@ func _damage_mystery_device(
 	attack_kind: StringName,
 	_hit_position: Vector2,
 	_color: Color,
-	_direction: Vector2
+	_direction: Vector2,
+	source_team: StringName = &"player"
 ) -> bool:
 	var receipt := mystery_device_runtime.receive_damage(
-		device_id, damage, &"player", attack_kind
+		device_id, damage, source_team, attack_kind
 	)
 	if not bool(receipt["accepted"]):
 		return false
@@ -5240,61 +5500,21 @@ func _damage_mystery_device(
 
 
 func _handle_mystery_device_break(event: Dictionary) -> Dictionary:
-	var effect_id := StringName(event["effect_id"])
-	var affected_count := _count_mystery_effect_targets(
-		effect_id,
-		Vector2(event["position"]),
-		float(event["radius"])
+	var device_id := StringName(event.get("device_id", &""))
+	_ui.notify(
+		tr("NOTIFY_NEUTRAL_FACILITY_DESTROYED"),
+		1.8,
+		Art.SYSTEM,
+		1,
+		&"neutral_facility_destroyed"
 	)
-	var outcome_key := _mystery_outcome_key(effect_id)
-	if not outcome_key.is_empty():
-		_ui.notify(
-			tr("NOTIFY_MYSTERY_DEVICE_TRIGGERED")
-				% [tr(outcome_key), affected_count],
-			2.4,
-			Art.SYSTEM,
-			2,
-			&"anomaly_activated"
-		)
 	_play_sound(&"destroy_priority", 1.02)
 	_mystery_device_result_receipt.clear()
-	_mystery_device_result_receipt["effect_id"] = effect_id
-	_mystery_device_result_receipt["affected_count"] = affected_count
-	_session_diagnostics.emit_event("anomaly_activated", {
-		"effect_id":effect_id,
-		"affected_count": affected_count,
-		"duration":float(event.get("duration", 0.0)),
+	_mystery_device_result_receipt["device_id"] = device_id
+	_session_diagnostics.emit_event("neutral_facility_destroyed", {
+		"device_id":device_id,
 	})
 	return _mystery_device_result_receipt
-
-
-func _mystery_outcome_key(effect_id: StringName) -> String:
-	return String({
-		&"gravity_pull":"MYSTERY_OUTCOME_GRAVITY_PULL",
-		&"cryo_lock":"MYSTERY_OUTCOME_CRYO_LOCK",
-		&"weakpoint_expose":"MYSTERY_OUTCOME_WEAKPOINT_EXPOSE",
-	}.get(effect_id, ""))
-
-
-func _count_mystery_effect_targets(
-	effect_id: StringName,
-	center: Vector2,
-	radius: float
-) -> int:
-	if effect_id not in [&"gravity_pull", &"cryo_lock", &"weakpoint_expose"]:
-		return 0
-	var count := 0
-	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
-	for enemy in _enemy_query_buffer:
-		if (
-			enemy.alive
-			and enemy.active
-			and enemy.role != &"stage_boss"
-			and not _is_fixed_structure_enemy(enemy)
-			and enemy.pos.distance_to(center) <= radius + enemy.radius
-		):
-			count += 1
-	return count
 
 
 func _update_aim_target() -> void:
@@ -5328,6 +5548,8 @@ func _update_aim_target() -> void:
 
 
 func _update_stage_progression(delta: float = 0.0) -> void:
+	_advance_pending_boss_barrage(delta)
+	_advance_boss_destruction(delta)
 	var receipt := stage_flow.advance(delta)
 	if (
 		StageFlow.valid_receipt(receipt)
@@ -5492,7 +5714,7 @@ func _start_stage_boss() -> void:
 		"zone": "boss",
 		"name_key": StageCatalog.profile(current_stage_id)["boss_name_key"],
 		"boss_variant":boss_shield_runtime.variant(),
-		"boss_shield_state":&"shield_up",
+		"boss_shield_state":boss_shield_runtime.state(),
 	})
 	if boss == null:
 		boss_started = false
@@ -5563,18 +5785,14 @@ func _choose_boss_arrival_anchor() -> Vector2:
 
 
 func _update_stage_boss(boss: EnemyState, delta: float) -> void:
-	if not bool(boss.alive):
+	if not bool(boss.alive) or (boss_death_runtime.active() and boss.id == _dying_boss_id):
 		return
 	boss_shield_runtime.advance(delta)
 	boss.boss_shield_state = boss_shield_runtime.state()
 	_show_pending_boss_state_hint()
-	var attack_commit_blocked := StatusRuntime.attack_commit_blocked(boss)
-	if not attack_commit_blocked:
-		for event in boss_runtime.advance_autonomous(delta, boss, player_position):
-			_execute_boss_autonomous(event)
-	var receipt := boss_runtime.advance_direct_phase(
-		boss, delta, attack_commit_blocked
-	)
+	for event in boss_runtime.advance_autonomous(delta, boss, player_position):
+		_execute_boss_autonomous(event)
+	var receipt := boss_runtime.advance_direct_phase(boss, delta, false)
 	if not BossRuntime.valid_phase_receipt(receipt):
 		push_error("Boss runtime emitted an invalid phase receipt")
 		return
@@ -5659,6 +5877,60 @@ func _boss_fire_aimed_burst(boss: EnemyState, pattern: String, damage: float) ->
 		)
 
 
+func _spawn_boss_broad_barrage(boss: EnemyState, rows: Array[Dictionary]) -> void:
+	if boss == null or not boss.alive or boss_death_runtime.active():
+		return
+	_pending_boss_barrage_rows.clear()
+	for row in rows:
+		if _pending_boss_barrage_rows.size() >= 3:
+			break
+		var scheduled := row.duplicate(true)
+		scheduled["remaining"] = maxf(0.0, float(row.get("at", 0.0)))
+		scheduled["origin"] = Vector2(boss.pos)
+		scheduled["owner"] = "boss_barrage:%s:%d" % [boss.id, int(row.get("row", 0))]
+		_pending_boss_barrage_rows.append(scheduled)
+	_advance_pending_boss_barrage(0.0)
+
+
+func _advance_pending_boss_barrage(delta: float) -> void:
+	for index in range(_pending_boss_barrage_rows.size() - 1, -1, -1):
+		var row := _pending_boss_barrage_rows[index]
+		row["remaining"] = float(row.get("remaining", 0.0)) - maxf(0.0, delta)
+		if float(row["remaining"]) > 0.0:
+			continue
+		_fire_boss_barrage_row(row)
+		_pending_boss_barrage_rows.remove_at(index)
+
+
+func _fire_boss_barrage_row(row: Dictionary) -> void:
+	var count := clampi(int(row.get("count", 4)), 4, 6)
+	var axis := Vector2(row.get("axis", Vector2.RIGHT)).normalized()
+	if axis.is_zero_approx():
+		axis = Vector2.RIGHT
+	var tangent := axis.rotated(PI * 0.5)
+	var mode := StringName(row.get("mode", &"spread"))
+	var origin := Vector2(row.get("origin", Vector2.ZERO))
+	var spacing := float(row.get("spacing", 96.0))
+	for shot_index in count:
+		var centered := float(shot_index) - float(count - 1) * 0.5
+		var direction := axis
+		if mode == &"spread":
+			var ratio := centered / maxf(1.0, float(count - 1) * 0.5)
+			direction = axis.rotated(deg_to_rad(21.0) * ratio)
+		var spawn_position := origin + tangent * spacing * centered + direction * 72.0
+		_spawn_hostile_projectile(
+			spawn_position,
+			direction,
+			float(row.get("damage", 14.0)),
+			BossPatterns.projectile_speed("common_broad_barrage"),
+			String(row.get("owner", "boss_barrage")),
+			BossPatterns.affinity("common_broad_barrage"),
+			true,
+			false,
+			AttackContract.THREAT_BOSS
+		)
+
+
 func _execute_boss_autonomous(event: Dictionary) -> void:
 	var pattern := String(event["pattern"])
 	var kind := StringName(event.get("kind", BossPatterns.kind(pattern)))
@@ -5684,7 +5956,99 @@ func _execute_boss_autonomous(event: Dictionary) -> void:
 	if kind == &"beam":
 		_append_boss_beam_zone(event)
 		return
+	if kind == &"long_banks":
+		_spawn_boss_long_banks(event)
+		return
+	if kind == &"moving_walls":
+		_append_boss_moving_walls(event)
+		return
+	if kind == &"wedge_rings":
+		_append_boss_wedge_ring(event)
+		return
+	if kind == &"spiral":
+		_spawn_boss_sparse_spiral(event)
+		return
 	push_error("Unsupported autonomous boss pattern kind: %s (%s)" % [String(kind), pattern])
+
+
+func _spawn_boss_long_banks(event: Dictionary) -> void:
+	var origin := Vector2(event["origin"])
+	var axis := (Vector2(event["target"]) - origin).normalized()
+	if axis.is_zero_approx():
+		axis = Vector2.RIGHT
+	var tangent := axis.rotated(PI * 0.5)
+	for bank in [-1.0, 1.0]:
+		for shot_index in 5:
+			var position: Vector2 = origin + tangent * float(bank) * 180.0 + axis * (float(shot_index) - 2.0) * 48.0
+			_spawn_hostile_projectile(
+				position, axis, float(event["damage"]), 520.0,
+				String(event["pattern"]), StringName(event["affinity"]), true, false,
+				AttackContract.THREAT_BOSS
+			)
+
+
+func _append_boss_moving_walls(event: Dictionary) -> void:
+	var origin := Vector2(event["origin"])
+	var axis := (Vector2(event["target"]) - origin).normalized()
+	if axis.is_zero_approx():
+		axis = Vector2.RIGHT
+	var tangent := axis.rotated(PI * 0.5)
+	var half_length := 360.0
+	# Each moving wall is split around a collision-true 180-unit opening. The
+	# warning and damage therefore expose the same escape corridor.
+	var gap_half_length := 90.0
+	for wall_index in [-1, 1]:
+		var center := origin + tangent * float(wall_index) * 160.0
+		for segment_index in [-1, 1]:
+			var segment_from := center - tangent * half_length if segment_index < 0 else center + tangent * gap_half_length
+			var segment_to := center - tangent * gap_half_length if segment_index < 0 else center + tangent * half_length
+			denied_zones.append({
+				"id":"%s_wall_%d_segment_%d" % [String(event["id"]), wall_index, segment_index],
+				"shape":&"corridor",
+				"from":segment_from,
+				"to":segment_to,
+				"width":72.0,
+				"motion":axis * (170.0 if wall_index > 0 else -170.0),
+				"warning":float(event["startup"]),
+				"warning_total":float(event["startup"]),
+				"duration":maxf(0.72, float(event["duration"])),
+				"tick":0.0,
+				"damage":float(event["damage"]),
+				"source":String(event["pattern"]),
+				"owner_kind":&"stage_boss",
+				"affinity":StringName(event["affinity"]),
+				"commit_mode":&"autonomous",
+				"final_damage":true,
+				"safe_gap":180.0,
+			})
+
+
+func _append_boss_wedge_ring(event: Dictionary) -> void:
+	var origin := Vector2(event["origin"])
+	var safe_axis := (Vector2(event["target"]) - origin).normalized()
+	if safe_axis.is_zero_approx():
+		safe_axis = Vector2.RIGHT
+	denied_zones.append({
+		"id":event["id"], "shape":&"wedge_ring", "pos":origin,
+		"radius":260.0, "width":62.0, "safe_axis":safe_axis,
+		"safe_half_angle":0.48, "warning":float(event["startup"]),
+		"warning_total":float(event["startup"]), "duration":maxf(0.72, float(event["duration"])),
+		"tick":0.0, "damage":float(event["damage"]), "source":String(event["pattern"]),
+		"owner_kind":&"stage_boss", "affinity":StringName(event["affinity"]),
+		"commit_mode":&"autonomous", "final_damage":true,
+	})
+
+
+func _spawn_boss_sparse_spiral(event: Dictionary) -> void:
+	var origin := Vector2(event["origin"])
+	var base := (Vector2(event["target"]) - origin).angle()
+	for shot_index in 10:
+		var direction := Vector2.RIGHT.rotated(base + float(shot_index) * TAU / 10.0 + float(current_stage_index) * 0.21)
+		_spawn_hostile_projectile(
+			origin + direction * 66.0, direction, float(event["damage"]), 500.0,
+			String(event["pattern"]), StringName(event["affinity"]), true, false,
+			AttackContract.THREAT_BOSS
+		)
 
 
 func _append_boss_area_zone(event: Dictionary) -> void:
@@ -6089,6 +6453,10 @@ func _finalize_next_stage_continuation() -> void:
 	)
 	boss_started = false
 	boss_shield_runtime.configure(current_stage_id)
+	boss_death_runtime.reset()
+	_dying_boss_id = ""
+	_pending_boss_barrage_rows.clear()
+	_boss_barrage_hit_lock_remaining = 0.0
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
@@ -6581,6 +6949,10 @@ func _fill_combat_presentation_snapshot(
 	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)
 	snapshot["mystery_devices"] = mystery_devices
 	snapshot["mystery_effects"] = mystery_effects
+	# Renderer may keep the living boss body visible while this receipt fades it;
+	# combat truth stays disabled by the death runtime above.
+	snapshot["boss_destruction"] = boss_death_runtime.presentation()
+	snapshot["dying_boss_id"] = _dying_boss_id
 	snapshot["cursor_position"] = cursor_position
 	return snapshot
 
@@ -6626,7 +6998,7 @@ func _update_threat_contacts(delta: float) -> void:
 	)
 	for device in _mystery_device_snapshot_buffer:
 		if (
-			bool(device["visible"])
+			StringName(device.get("state", &"destroyed")) == &"intact"
 			and safe_viewport.has_point(
 				canvas_transform * Vector2(device["position"])
 			)

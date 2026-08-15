@@ -11,7 +11,7 @@ signal diagnostic_export_requested
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
-const BuildSummaryPanel = preload("res://scripts/ui/vehicle_build_summary_panel.gd")
+const ReportBody = preload("res://scripts/ui/vehicle_combat_report_body.gd")
 
 const CATEGORY_IDS: Array[StringName] = [
 	&"ship", &"audio", &"controls", &"gameplay", &"language",
@@ -49,7 +49,8 @@ var _reduced_motion_toggle: CheckButton
 var _diagnostic_export_button: Button
 var _language_buttons: Dictionary = {}
 var _status_label: Label
-var _build_summary: VehicleBuildSummaryPanel
+var _ship_report: VehicleCombatReportBody
+var _ship_heading: Label
 var _build_snapshot: Dictionary = {}
 var _capturing_action: StringName = &""
 var _text_rows: Array[HBoxContainer] = []
@@ -71,7 +72,7 @@ func open() -> void:
 	_cancel_capture(false)
 	refresh_from_store()
 	_select_category(&"ship")
-	_build_summary.set_snapshot(_build_snapshot)
+	_ship_report.set_snapshot(_ship_report_snapshot())
 	_close_button.grab_focus()
 
 
@@ -85,8 +86,8 @@ func set_compact_mode(compact: bool) -> void:
 
 func set_build_snapshot(snapshot: Dictionary) -> void:
 	_build_snapshot = snapshot.duplicate(true)
-	if is_instance_valid(_build_summary):
-		_build_summary.set_snapshot(_build_snapshot)
+	if is_instance_valid(_ship_report):
+		_ship_report.set_snapshot(_ship_report_snapshot())
 
 
 func first_focus() -> Control:
@@ -130,7 +131,7 @@ func debug_contract() -> Dictionary:
 		"diagnostic_export_visible":is_instance_valid(_diagnostic_export_button) and _diagnostic_export_button.visible,
 		"difficulty_controls":0,
 		"difficulty_copy_visible":false,
-		"ship_status":_build_summary.debug_contract() if is_instance_valid(_build_summary) else {},
+		"ship_status":_ship_report.debug_contract() if is_instance_valid(_ship_report) else {},
 	}
 
 
@@ -233,9 +234,45 @@ func _build() -> void:
 
 func _build_ship_status_page() -> void:
 	var page := _page(&"ship")
-	page.add_child(Factory.section_heading("SHIP_STATUS_HEADING"))
-	_build_summary = BuildSummaryPanel.new()
-	page.add_child(_build_summary)
+	_ship_heading = Factory.section_heading(tr("SHIP_STATUS_HEADING"))
+	page.add_child(_ship_heading)
+	_ship_report = ReportBody.new()
+	page.add_child(_ship_report)
+	_ship_report.set_snapshot(_ship_report_snapshot())
+
+
+func _ship_report_snapshot() -> Dictionary:
+	if not bool(_build_snapshot.get("active", false)):
+		return {"build_rows":[{"title_key":"SHIP_STATUS_EMPTY", "value":""}]}
+	var rows: Array[Dictionary] = []
+	var run_state := Dictionary(_build_snapshot.get("run_state", {}))
+	rows.append({
+		"title":tr("SHIP_STATUS_SUMMARY_LEVEL").replace("%level%", str(int(run_state.get("level", 1)))),
+	})
+	rows.append({
+		"title":tr("SHIP_STATUS_SUMMARY_HULL").replace("%current%", str(roundi(float(run_state.get("health", 0.0))))).replace("%max%", str(roundi(float(run_state.get("max_health", 0.0))))),
+	})
+	for stat_variant in Array(_build_snapshot.get("stats", [])):
+		var stat := Dictionary(stat_variant)
+		var decimals := int(stat.get("decimals", 0))
+		var value := "%.*f" % [decimals, float(stat.get("value", 0.0))]
+		var unit_key := String(stat.get("unit_key", ""))
+		if not unit_key.is_empty():
+			value = "%s %s" % [value, tr(unit_key)]
+		rows.append({"title_key":String(stat.get("label_key", "")), "value":value})
+	for secondary_variant in Array(_build_snapshot.get("secondaries", [])):
+		var secondary := Dictionary(secondary_variant)
+		rows.append({
+			"title_key":String(secondary.get("name_key", "")),
+			"value":tr("SHIP_STATUS_LEVEL").replace("%d", str(int(secondary.get("level", 1)))),
+		})
+	for upgrade_variant in Array(_build_snapshot.get("upgrades", [])):
+		var upgrade := Dictionary(upgrade_variant)
+		rows.append({
+			"title_key":String(upgrade.get("title_key", "")),
+			"value":tr("SHIP_STATUS_LEVEL_MAX").replace("%level%", str(int(upgrade.get("level", 0)))).replace("%max%", str(int(upgrade.get("max_level", 1)))),
+		})
+	return {"build_rows":rows}
 
 
 func _build_audio_page() -> void:
@@ -447,14 +484,16 @@ func _on_controls_changed(_action: StringName) -> void:
 func _on_locale_changed(_locale: String) -> void:
 	_refresh_localized_content()
 	refresh_from_store()
-	if is_instance_valid(_build_summary):
-		_build_summary.set_snapshot(_build_snapshot)
+	if is_instance_valid(_ship_report):
+		_ship_report.set_snapshot(_ship_report_snapshot())
 
 
 func _refresh_localized_content() -> void:
 	if not is_instance_valid(_title_label):
 		return
 	_title_label.text = tr("SETTINGS_TITLE")
+	if is_instance_valid(_ship_heading):
+		_ship_heading.text = tr("SHIP_STATUS_HEADING")
 	_guide_button.tooltip_text = tr("GUIDE_TITLE")
 	_guide_button.accessibility_name = tr("GUIDE_TITLE")
 	_close_button.text = tr("SETTINGS_CLOSE")

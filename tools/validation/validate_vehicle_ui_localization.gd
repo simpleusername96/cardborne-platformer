@@ -17,7 +17,7 @@ func _initialize() -> void:
 	for definition in catalog.all_definitions():
 		for current_level in definition.max_level:
 			snapshots.append(OfferPresenter.snapshot(definition, current_level))
-	_expect(snapshots.size() == 85, "upgrade catalog produces 85 selectable level states")
+	_expect(snapshots.size() == 91, "upgrade catalog produces 91 selectable level states")
 
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
@@ -37,7 +37,6 @@ func _initialize() -> void:
 			"HUD_DEFEATED_LABEL",
 			"NOTIFY_BOSS_INBOUND",
 			"NOTIFY_BARRIER_DEPLETED",
-			"NOTIFY_MYSTERY_DEVICE_TRIGGERED",
 			"BOSS_SHIELD_DOWN_HINT",
 		]:
 			_expect_translated(entry_key, locale)
@@ -50,8 +49,8 @@ func _initialize() -> void:
 				_expect_translated(title_key, locale)
 				field_stage_titles[title_key] = true
 		_expect(
-			field_stage_titles.size() == 30,
-			"%s resolves a distinct title for all three fields and ten stages"
+			field_stage_titles.size() == 24,
+			"%s resolves a distinct title for all three fields and eight cycles"
 				% locale
 		)
 		for snapshot in snapshots:
@@ -74,7 +73,7 @@ func _initialize() -> void:
 			String(result_contract["result_kicker"]).contains(
 				TranslationServer.translate("RESULT_ALL_STAGES")
 			),
-			"%s final result names the complete ten-stage run" % locale
+			"%s final result names the complete eight-cycle run" % locale
 		)
 		ui.queue_free()
 		await process_frame
@@ -196,7 +195,7 @@ func _initialize() -> void:
 	for retained_key in [
 		"NOTIFY_BOSS_INBOUND",
 		"NOTIFY_BARRIER_DEPLETED",
-		"NOTIFY_MYSTERY_DEVICE_TRIGGERED",
+		"NOTIFY_NEUTRAL_FACILITY_DESTROYED",
 		"BOSS_SHIELD_DOWN_HINT",
 	]:
 		_expect(

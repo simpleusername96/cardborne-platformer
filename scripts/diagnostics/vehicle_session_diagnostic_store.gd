@@ -5,7 +5,7 @@ extends RefCounted
 ## the frame path, and corrupt records are isolated instead of blocking a new session.
 
 const DIRECTORY := "user://diagnostics"
-const MAX_SESSIONS := 20
+const MAX_SESSIONS := 10
 const MAX_BYTES := 25 * 1024 * 1024
 const MAX_AGE_SECONDS := 14 * 24 * 60 * 60
 
@@ -38,21 +38,22 @@ static func load_completed(
 	var directory := ProjectSettings.globalize_path(directory_uri)
 	if not DirAccess.dir_exists_absolute(directory):
 		return result
+	_evict(directory)
 	for name in DirAccess.get_files_at(directory):
 		if not String(name).ends_with(".json"):
 			continue
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join(name)))
+		var parsed: Variant = _parse_json_file(directory.path_join(name))
 		if parsed is Dictionary and _valid_bundle(Dictionary(parsed)):
 			result.append(Dictionary(parsed))
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		var a_saved := int(a.get("saved_unix", 0))
 		var b_saved := int(b.get("saved_unix", 0))
 		return (
-			a_saved < b_saved
+			a_saved > b_saved
 			or (
 				a_saved == b_saved
 				and String(a.get("session_id", ""))
-				< String(b.get("session_id", ""))
+				> String(b.get("session_id", ""))
 			)
 		)
 	)
@@ -71,21 +72,30 @@ static func _evict(
 		if not String(name).ends_with(".json"):
 			continue
 		var path := directory.path_join(name)
-		var modified := FileAccess.get_modified_time(path)
-		if now - modified > max_age_seconds:
-			DirAccess.remove_absolute(path)
-			continue
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+		var parsed: Variant = _parse_json_file(path)
 		if not parsed is Dictionary or not _valid_bundle(Dictionary(parsed)):
 			DirAccess.rename_absolute(path, path + ".quarantine")
 			continue
-		records.append({"path": path, "modified": modified, "bytes": FileAccess.get_file_as_bytes(path).size()})
+		var bundle := Dictionary(parsed)
+		if not _is_meaningful_session(bundle):
+			DirAccess.remove_absolute(path)
+			continue
+		var saved_unix := int(bundle.get("saved_unix", 0))
+		if now - saved_unix > max_age_seconds:
+			DirAccess.remove_absolute(path)
+			continue
+		records.append({
+			"path": path,
+			"saved_unix": saved_unix,
+			"session_id": String(bundle.get("session_id", "")),
+			"bytes": FileAccess.get_file_as_bytes(path).size(),
+		})
 	records.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return (
-			int(a["modified"]) < int(b["modified"])
+			int(a["saved_unix"]) < int(b["saved_unix"])
 			or (
-				int(a["modified"]) == int(b["modified"])
-				and String(a["path"]) < String(b["path"])
+				int(a["saved_unix"]) == int(b["saved_unix"])
+				and String(a["session_id"]) < String(b["session_id"])
 			)
 		)
 	)
@@ -100,3 +110,19 @@ static func _evict(
 
 static func _valid_bundle(bundle: Dictionary) -> bool:
 	return int(bundle.get("schema_version", 0)) == 1 and String(bundle.get("kind", "")) == "session_diagnostic" and not String(bundle.get("session_id", "")).is_empty()
+
+
+static func _parse_json_file(path: String) -> Variant:
+	var parser := JSON.new()
+	if parser.parse(FileAccess.get_file_as_string(path)) != OK:
+		return null
+	return parser.data
+
+
+static func _is_meaningful_session(bundle: Dictionary) -> bool:
+	if String(bundle.get("completed_reason", "")) != "normal_exit":
+		return true
+	var samples: Array = bundle.get("one_hz", [])
+	if samples.size() != 1:
+		return true
+	return float(Dictionary(samples[0]).get("end_monotonic_seconds", 0.0)) >= 1.0

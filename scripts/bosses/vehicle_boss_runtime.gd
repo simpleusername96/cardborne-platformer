@@ -183,6 +183,20 @@ func update_active(
 					false,
 					AttackContract.THREAT_BOSS
 				)
+	elif kind == &"broad_barrage":
+		if boss.pattern_volleys == 0:
+			boss.pattern_volleys = 1
+			# VehicleRun owns projectile allocation; this receipt keeps the three
+			# simultaneous rows outside this state machine and under the fixed cap.
+			services.call(
+				"_spawn_boss_broad_barrage",
+				boss,
+				Patterns.broad_barrage_rows(
+					stage_index,
+					boss.committed_dir,
+					Patterns.barrage_mode(stage_id)
+				)
+			)
 	elif kind == &"charge":
 		if boss.pattern_volleys == 0:
 			services.call("_boss_fire_aimed_burst", boss, pattern, damage * 0.55)

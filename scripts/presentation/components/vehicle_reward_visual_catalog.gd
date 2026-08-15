@@ -23,12 +23,6 @@ const DESCRIPTORS := {
 		"glyph": &"experience",
 		"color": &"player_reward",
 	},
-	&"repair": {
-		"asset": &"pickup/repair",
-		"shape": &"layered_repair_plus_cut",
-		"glyph": &"repair",
-		"color": &"support",
-	},
 	&"experience_recall": {
 		"asset": &"pickup/experience_recall",
 		"shape": &"three_way_inward_chevrons",

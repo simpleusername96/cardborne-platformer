@@ -7,18 +7,23 @@ enum State {
 	ORDINARY,
 	BOSS_WARNING,
 	BOSS_ACTIVE,
+	BOSS_CLEANUP,
 	COMPLETE,
 }
 
 const COMMAND_NONE: StringName = &""
 const COMMAND_BEGIN_BOSS_WARNING: StringName = &"begin_boss_warning"
 const COMMAND_ENTER_BOSS: StringName = &"enter_boss"
+const COMMAND_BEGIN_BOSS_CLEANUP: StringName = &"begin_boss_cleanup"
+const COMMAND_COMPLETE_AFTER_BOSS_CLEANUP: StringName = &"complete_after_boss_cleanup"
 const COMMAND_COMPLETE_WITHOUT_BOSS: StringName = &"complete_without_boss"
 const COMMAND_COMPLETE_AFTER_BOSS: StringName = &"complete_after_boss"
 const VALID_COMMANDS: Array[StringName] = [
 	COMMAND_NONE,
 	COMMAND_BEGIN_BOSS_WARNING,
 	COMMAND_ENTER_BOSS,
+	COMMAND_BEGIN_BOSS_CLEANUP,
+	COMMAND_COMPLETE_AFTER_BOSS_CLEANUP,
 	COMMAND_COMPLETE_WITHOUT_BOSS,
 	COMMAND_COMPLETE_AFTER_BOSS,
 ]
@@ -81,8 +86,15 @@ func boss_entry_ready() -> bool:
 func record_boss_defeat() -> Dictionary:
 	if not boss_entry_ready():
 		return _receipt(false, COMMAND_NONE)
+	state = State.BOSS_CLEANUP
+	return _receipt(true, COMMAND_BEGIN_BOSS_CLEANUP)
+
+
+func record_boss_cleanup_complete() -> Dictionary:
+	if state != State.BOSS_CLEANUP:
+		return _receipt(false, COMMAND_NONE)
 	state = State.COMPLETE
-	return _receipt(true, COMMAND_COMPLETE_AFTER_BOSS)
+	return _receipt(true, COMMAND_COMPLETE_AFTER_BOSS_CLEANUP)
 
 
 static func valid_receipt(receipt: Dictionary) -> bool:
@@ -114,6 +126,10 @@ static func valid_receipt(receipt: Dictionary) -> bool:
 			return receipt_has_boss and receipt_state == State.BOSS_WARNING
 		COMMAND_ENTER_BOSS:
 			return receipt_has_boss and receipt_state == State.BOSS_ACTIVE
+		COMMAND_BEGIN_BOSS_CLEANUP:
+			return receipt_has_boss and receipt_state == State.BOSS_CLEANUP
+		COMMAND_COMPLETE_AFTER_BOSS_CLEANUP:
+			return receipt_has_boss and receipt_state == State.COMPLETE
 		COMMAND_COMPLETE_WITHOUT_BOSS:
 			return not receipt_has_boss and receipt_state == State.COMPLETE
 		COMMAND_COMPLETE_AFTER_BOSS:

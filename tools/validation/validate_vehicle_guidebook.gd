@@ -150,10 +150,10 @@ func _run() -> void:
 	_expect(
 		bool(contract["entry_column_visible"])
 			and bool(contract["structured_stats"])
-			and int(contract["stat_rows"]) == 6
+			and int(contract["stat_rows"]) == 4
 			and int(contract["row_panel_count"]) == 0
 			and bool(Dictionary(contract["preview"])["semantic_provider"]),
-		"boss detail renders six canonical stat rows without generic prose"
+		"unshielded boss detail renders four canonical stat rows without generic prose"
 	)
 	_expect(panel.debug_select_entry(&"enemies", &"mobile_chaser"), "enemy detail is selectable")
 	contract = panel.debug_contract()
@@ -241,8 +241,8 @@ func _validate_catalog_partition() -> void:
 		if StringName(entry["entry_kind"]) == &"boss":
 			boss_stage_indices.append(int(entry["boss_stage_index"]))
 	_expect(
-		boss_stage_indices == [1, 3, 5, 7, 9],
-		"five guidebook bosses map to the five even campaign stages"
+		boss_stage_indices == [0, 1, 2, 3, 4, 5, 6, 7],
+		"eight guidebook bosses map to all eight campaign cycles"
 	)
 	_expect(
 		not entries_by_id.has(&"object_crate")
@@ -279,31 +279,36 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 			and String(active_health["value_key"]) == "GUIDE_VALUE_HP"
 			and int(Array(active_health["value_args"])[0])
 				== roundi(expected_stage_two_health),
-		"enemy health row derives the Stage 2 exact value and outside-run Stage 1–10 range"
+		"enemy health row derives the Cycle 2 exact value and outside-run Cycle 1–8 range"
 	)
 	var boss := _entry(active, &"bosses", &"boss_stage_1")
 	var boss_rows := Array(boss["stat_rows"])
 	_expect(
-		boss_rows.size() == 6
+		boss_rows.size() == 4
 			and int(Array(Dictionary(boss_rows[0])["value_args"])[0])
-				== roundi(StageDifficulty.boss_health(1))
+				== roundi(StageDifficulty.boss_health(0))
 			and float(Array(Dictionary(boss_rows[1])["value_args"])[0]) > 0.0
-			and int(Array(Dictionary(boss_rows[2])["value_args"])[0]) == 89,
-		"boss rows derive exact HP, positive damage, and Stage 2 shield reduction"
+			and String(Dictionary(boss_rows[2])["label_key"]) == "GUIDE_STAT_AUTONOMOUS_CADENCE",
+		"unshielded boss rows derive exact HP, damage, cadence, and coverage"
+	)
+	var shielded_rows := StatAdapter.boss_rows(2)
+	_expect(
+		shielded_rows.size() == 6
+			and int(Array(Dictionary(shielded_rows[2])["value_args"])[0]) == 90,
+		"shield-owning Cycle 3 alone includes shield reduction and exposure rows"
 	)
 	_expect(
 		StatAdapter.boss_rows(-1).is_empty()
-			and StatAdapter.boss_rows(0).is_empty()
-			and StatAdapter.boss_rows(10).is_empty(),
-		"boss rows fail closed for invalid and boss-free campaign stages"
+			and StatAdapter.boss_rows(8).is_empty(),
+		"boss rows fail closed outside the eight-cycle campaign"
 	)
 	var anomaly := _entry(active, &"objects", &"object_mystery_device")
 	_expect(
 		String(anomaly["name_key"]) == "GUIDE_OBJECT_MYSTERY_DEVICE_NAME"
-			and Array(anomaly["stat_rows"]).size() == 4
+			and Array(anomaly["stat_rows"]).size() == 6
 			and String(Dictionary(Array(anomaly["stat_rows"])[0])["value_key"])
 				== "GUIDE_VALUE_HP",
-		"Anomaly Device exposes HP and all three exact runtime outcomes"
+		"Anomaly Device exposes HP and all five persistent facility outcomes"
 	)
 
 

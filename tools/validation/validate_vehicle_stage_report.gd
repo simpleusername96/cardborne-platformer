@@ -111,14 +111,19 @@ func _init() -> void:
 	_expect(int(contract["defeats"]) == 2, "panel receives frozen defeat rows")
 	_expect(int(contract["attributes"]) == 3, "panel receives all attribute rows")
 	_expect(Vector2(contract["continue_size"]) == Vector2(300.0, 48.0), "report continuation uses one compact primary action")
-	_expect(int(contract["wide_dividers"]) == 2, "wide report keeps two restrained column dividers")
-	_expect(int(contract["wide_columns"]) == 3, "wide report preserves three independently scrollable columns")
-	_expect(int(contract["compact_tabs"]) == 3, "compact report preserves three category tabs")
-	_expect(int(contract["scroll_views"]) == 7, "report owns one body scroll plus three wide and three compact metric views")
+	var body_contract := Dictionary(contract["report"])
+	_expect(
+		Array(body_contract["section_order"]) == [
+			&"outcome", &"cycle_progress", &"build", &"damage", &"defense",
+			&"enemies", &"bosses", &"pacing", &"diagnostic_limitations",
+		],
+		"report keeps the fixed nine-section vertical order"
+	)
+	_expect(bool(body_contract["vertical_stack"]), "report uses one left-aligned vertical content stack")
+	_expect(int(body_contract["tab_count"]) == 0 and int(body_contract["nested_scroll_count"]) == 0, "report has no tabs or nested metric scrolls")
+	_expect(bool(contract["single_outer_scroll"]), "stage report owns exactly one outer scroll container")
 	_expect(int(contract["shared_text_rows"]) > 0, "report metrics use shared TextRows")
 	_expect(int(contract["decorated_metric_rows"]) == 0, "report metrics have no decorative panel shell")
-	_expect(int(contract["semantic_icons"]) > 0, "report preserves semantic enemy and affinity icons")
-	_expect(not bool(contract["incoming_visible"]), "successful report omits the failure-only incoming section")
 	_expect(int(contract["fixed_actions"]) == 1, "report exposes exactly one fixed action")
 	_expect("03:03" in String(contract["summary_text"]), "report formats cumulative run time")
 	panel.call("_process", 0.36)
@@ -127,9 +132,8 @@ func _init() -> void:
 	panel.open(failure_report)
 	await process_frame
 	contract = panel.debug_contract()
-	_expect(bool(contract["incoming_visible"]), "failure report reveals incoming damage")
-	_expect(int(contract["incoming_rows"]) == 3, "failure report renders the bounded top-three recap")
-	_expect(bool(contract["last_hit_present"]), "failure report renders the last-hit recap")
+	body_contract = Dictionary(contract["report"])
+	_expect(Array(body_contract["rendered_sections"]).has(&"defense"), "failure report renders its explicit incoming rows in Defense")
 	_expect(int(contract["fixed_actions"]) == 1, "failure report keeps one fixed action")
 	panel.call("_process", 0.36)
 	panel.call("_on_continue")
@@ -142,11 +146,11 @@ func _init() -> void:
 	var deployment_requested := [0]
 	result.deployment_requested.connect(func() -> void: deployment_requested[0] += 1)
 	var final_records: Array = []
-	for stage_index in 10:
+	for stage_index in 8:
 		var stage_record := report.duplicate(true)
 		stage_record["stage_number"] = stage_index + 1
-		stage_record["has_boss"] = (stage_index + 1) % 2 == 0
-		stage_record["has_next_stage"] = stage_index < 9
+		stage_record["has_boss"] = true
+		stage_record["has_next_stage"] = stage_index < 7
 		final_records.append(stage_record)
 	var result_catalog := UpgradeCatalog.new()
 	var result_build := RunBuild.new(result_catalog)
@@ -169,33 +173,21 @@ func _init() -> void:
 	await process_frame
 	var result_contract := result.debug_contract()
 	_expect(
-		int(result_contract["focusables"]) == 5,
-		"final result exposes three acquired cells, diagnostic export, and Deployment"
+		int(result_contract["focusables"]) == 2,
+		"final result exposes diagnostics export and fixed Deployment"
 	)
 	_expect(bool(result_contract["initial_focus_is_deployment"]), "final result initially focuses Deployment")
 	_expect(StringName(result_contract["primary_variation"]) == &"PrimaryButton", "Deployment is the primary command")
-	_expect(int(result_contract["wide_columns"]) == 3 and int(result_contract["compact_tabs"]) == 3, "final result reuses responsive report body")
-	_expect(bool(result_contract["build_visible"]), "final result displays the frozen build rail")
-	var result_rail := Dictionary(result_contract["build_rail"])
-	_expect(
-		int(result_rail["section_count"]) == 6
-			and int(result_rail["cell_count"]) == 17
-			and int(result_rail["filled_count"]) == 3,
-		"final result reuses all six grouped categories and the frozen acquired build"
-	)
-	_expect(
-		not bool(result_rail["heading_visible"])
-			and float(result_rail["viewport_minimum_height"]) <= 280.0
-			and is_equal_approx(float(result_rail["cell_size"]), 20.0),
-		"final result uses the dense rail needed to show all categories at 720p"
-	)
+	_expect(bool(result_contract["single_outer_scroll"]), "final result uses one outer report scroll")
+	var result_body := Dictionary(result_contract["report"])
+	_expect(bool(result_body["vertical_stack"]) and int(result_body["nested_scroll_count"]) == 0, "final result reuses the vertical report body without a build rail")
 	_expect("4:18" in String(result_contract["summary_text"]), "final summary preserves cumulative active time")
 	_expect("86 / 120" in String(result_contract["summary_text"]), "final summary displays exact current and maximum Hull")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		result.refresh_localized_content()
 		result_contract = result.debug_contract()
-		var visible_text := String(result_contract["summary_text"]) + " " + String(result_contract["loadout_text"]) + " " + String(result_contract["reward_text"]) + " " + String(result_contract["primary_action"])
+		var visible_text := String(result_contract["summary_text"]) + " " + String(result_contract["primary_action"])
 		_expect("RESULT_" not in visible_text, "%s final result contains no raw localization key" % locale)
 	(result.get("_deployment") as Button).pressed.emit()
 	_expect(deployment_requested[0] == 1, "final command routes directly to Deployment")

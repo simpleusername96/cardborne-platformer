@@ -1,8 +1,8 @@
 extends SceneTree
 
 ## Compatibility entrypoint for the retired breakable-bulkhead validator.
-## Structural walls are now immutable; Mystery Devices are the sole neutral
-## destructible map interaction.
+## Structural walls are immutable; persistent neutral facilities are the sole
+## destructible map interaction and both factions may damage them.
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
@@ -56,18 +56,20 @@ func _validate_field(field_id: StringName) -> void:
 
 func _validate_mystery_device_authority() -> void:
 	var runtime := MysteryDeviceRuntime.new()
-	runtime.configure([{"id":&"device", "pos":Vector2.ZERO, "outcome":&"gravity_pull"}], 1, &"stage_1")
-	var ignored := runtime.receive_damage(&"device", 90.0, &"hostile", &"direct")
-	_expect(not bool(ignored["accepted"]), "neutral device ignores hostile damage")
-	var resolved := runtime.receive_damage(&"device", 90.0, &"player", &"direct")
+	runtime.configure([{"id":&"device", "pos":Vector2.ZERO}], 1, &"stage_1")
+	var hostile := runtime.receive_damage(&"device", 90.0, &"hostile", &"direct")
+	_expect(bool(hostile["accepted"]), "neutral facility accepts hostile damage")
+	var resolved := runtime.receive_damage(&"device", MysteryDeviceRuntime.DEVICE_HEALTH, &"player", &"direct")
 	_expect(
 		bool(resolved["accepted"]) and bool(resolved["broken"]),
 		"player direct damage is the neutral map destructible interaction"
 	)
 	var event := Dictionary(resolved["break_event"])
 	_expect(
-		not bool(event["device_counts_for_quota"]) and not bool(event["grants_experience"]),
-		"destroying a neutral device grants neither quota nor XP"
+		not bool(event["grants_experience"])
+			and StringName(event["drop"]).is_empty()
+			and not bool(event["projectiles_blocked"]),
+		"destroying a neutral facility grants no XP/drop and does not block projectiles"
 	)
 
 

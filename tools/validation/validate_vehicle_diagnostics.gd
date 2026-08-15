@@ -32,8 +32,8 @@ func _initialize() -> void:
 		{"kind":"boss_warning", "fields":{"stage_index":0}},
 		{"kind":"upgrade_focused", "fields":{"upgrade_id":&"thermal_burst"}},
 		{"kind":"announcement_shown", "fields":{"semantic_id":&"boss_inbound"}},
-		{"kind":"anomaly_activated", "fields":{"effect_id":&"gravity_pull", "affected_count":4}},
-		{"kind":"result_shown", "fields":{"stage_count":10}},
+		{"kind":"neutral_facility_destroyed", "fields":{"device_id":&"facility_a"}},
+		{"kind":"result_shown", "fields":{"stage_count":8}},
 	]:
 		_expect(
 			recorder.emit_event(
@@ -84,7 +84,7 @@ func _initialize() -> void:
 		StringName(Dictionary(redacted.get("session_context", {})).get("locale", &"")) == &"ko",
 		"explicit export preserves non-identifying comparison context"
 	)
-	_expect(DiagnosticStore.MAX_SESSIONS == 20 and DiagnosticStore.MAX_BYTES == 25 * 1024 * 1024 and DiagnosticStore.MAX_AGE_SECONDS == 14 * 24 * 60 * 60, "store retention contract remains 20 sessions / 25 MiB / 14 days")
+	_expect(DiagnosticStore.MAX_SESSIONS == 10 and DiagnosticStore.MAX_BYTES == 25 * 1024 * 1024 and DiagnosticStore.MAX_AGE_SECONDS == 14 * 24 * 60 * 60, "store retention contract remains newest 10 sessions / 25 MiB / 14 days")
 	_validate_store_and_native_export(bundle)
 	_finish()
 
@@ -99,22 +99,34 @@ func _validate_store_and_native_export(source_bundle: Dictionary) -> void:
 	if corrupt != null:
 		corrupt.store_string("not-json")
 		corrupt.close()
-	for index in 2:
+	var saved_now := int(Time.get_unix_time_from_system())
+	for index in 12:
 		var retained := source_bundle.duplicate(true)
 		retained["session_id"] = "store-%02d" % index
-		retained["saved_unix"] = index + 1
+		retained["saved_unix"] = saved_now - (11 - index)
 		_expect(
 			DiagnosticStore.persist_completed(retained, TEST_DIRECTORY) == OK,
 			"isolated store accepts retained session %d" % index
 		)
-	DiagnosticStore._evict(
-		directory, 1, DiagnosticStore.MAX_BYTES, DiagnosticStore.MAX_AGE_SECONDS
-	)
 	var loaded := DiagnosticStore.load_completed(TEST_DIRECTORY)
 	_expect(
-		loaded.size() == 1
-		and String(loaded.front().get("session_id", "")) == "store-01",
-		"store deterministically evicts oldest-first and loads newest order"
+		loaded.size() == 10
+		and String(loaded.front().get("session_id", "")) == "store-11"
+		and String(loaded.back().get("session_id", "")) == "store-02",
+		"store persists and loads only the newest ten sessions by saved_unix descending"
+	)
+	var tied := source_bundle.duplicate(true)
+	tied["session_id"] = "store-zz"
+	tied["saved_unix"] = saved_now
+	_expect(
+		DiagnosticStore.persist_completed(tied, TEST_DIRECTORY) == OK,
+		"store accepts a same-timestamp session for deterministic session-id ordering"
+	)
+	loaded = DiagnosticStore.load_completed(TEST_DIRECTORY)
+	_expect(
+		String(loaded.front().get("session_id", "")) == "store-zz"
+		and loaded.size() == 10,
+		"same-timestamp records use session_id descending without file modification time"
 	)
 	_expect(
 		FileAccess.file_exists(directory.path_join("corrupt.json.quarantine")),

@@ -34,7 +34,6 @@ must match.
 | Damage attribute | Thermal Burst | Immediate damage to a nearby cluster after a primary hit |
 | Damage attribute | Bio Toxin | Sustained damage after repeated application |
 | Utility attribute | Cryo Slow | Movement control without raw damage |
-| Utility attribute | Shock Disruption | Attack-start control without raw damage |
 | Auto weapon | Seeker | Reliable automatic ranged damage |
 | Auto weapon | Electric Field | Continuous close area pressure |
 | Auto weapon | Orbiting Blades | High-exposure contact damage and interception |
@@ -57,7 +56,6 @@ must match.
 | Thermal Burst | L1-L4 | 4 / 5.75 / 8 / 11 damage per affected target | Radius 72 / 84 / 96 / 96 |
 | Bio Toxin | L1-L4 | 2 / 2.85 / 4 / 5.5 DPS per stack | Three stacks; duration 5 / 6 / 7 / 7 seconds |
 | Cryo Slow | L1-L3 | 6% / 8% / 10% slow per stack | Duration 2 / 2.5 / 3 seconds |
-| Shock Disruption | L1-L3 | 0.6 / 0.8 / 1.0 second attack lock | Attack-start control only |
 
 ### Secondary weapons
 

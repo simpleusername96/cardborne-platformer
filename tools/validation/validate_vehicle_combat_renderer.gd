@@ -125,30 +125,6 @@ func _run() -> void:
 		),
 		"enemy rendering consumes the published facing instead of inferring a target"
 	)
-	var mystery_cryo_enemy := EnemyState.new()
-	mystery_cryo_enemy.mystery_cryo_remaining = 1.0
-	var mystery_cryo_color: Color = renderer.call(
-		"_enemy_status_custom_data", mystery_cryo_enemy, true
-	)
-	_expect(
-		mystery_cryo_color.a > 0.0
-		and Vector3(
-			mystery_cryo_color.r,
-			mystery_cryo_color.g,
-			mystery_cryo_color.b
-		).distance_to(Vector3(Art.CRYO.r, Art.CRYO.g, Art.CRYO.b)) <= 0.001,
-		"Mystery Cryo uses the same exact-size blue enemy-body compositor"
-	)
-	var mystery_weakpoint_enemy := EnemyState.new()
-	mystery_weakpoint_enemy.mystery_weakpoint_remaining = 1.0
-	var mystery_weakpoint_color: Color = renderer.call(
-		"_enemy_status_custom_data", mystery_weakpoint_enemy, true
-	)
-	_expect(
-		mystery_weakpoint_color.a > 0.0
-		and Vector3(mystery_weakpoint_color.r, mystery_weakpoint_color.g, mystery_weakpoint_color.b).distance_to(Vector3(Art.DANGER.r, Art.DANGER.g, Art.DANGER.b)) <= 0.001,
-		"Mystery Weakpoint uses the same exact-size danger enemy-body compositor"
-	)
 	enemy.attack_telegraphs = [{
 		"shape":&"corridor",
 		"delivery":&"beam",
@@ -1442,10 +1418,10 @@ func _validate_mystery_device_presentation(
 			"health":45.0,
 			"max_health":90.0,
 			"health_visible_timer":1.0,
-			"outcome":&"gravity_pull",
+			"outcome":&"gravity",
 		},
-		{"id":"device-b", "state":&"resolved", "visible":true, "position":resolved_position, "outcome":&"cryo_lock"},
-		{"id":"device-c", "state":&"intact", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint_expose"},
+		{"id":"device-b", "state":&"resolved", "visible":true, "position":resolved_position, "outcome":&"cryo"},
+		{"id":"device-c", "state":&"intact", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint"},
 		{"id":"device-d", "state":&"retired", "visible":true, "position":Vector2(960.0, 260.0)},
 	]
 	presentation["mystery_effects"] = []
@@ -1454,13 +1430,13 @@ func _validate_mystery_device_presentation(
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
 	var gravity_contour := renderer.get_node(
-		"MysteryDeviceContour_gravity_pull"
+		"MysteryDeviceContour_gravity"
 	) as MultiMeshInstance2D
 	var cryo_contour := renderer.get_node(
-		"MysteryDeviceContour_cryo_lock"
+		"MysteryDeviceContour_cryo"
 	) as MultiMeshInstance2D
 	var weakpoint_contour := renderer.get_node(
-		"MysteryDeviceContour_weakpoint_expose"
+		"MysteryDeviceContour_weakpoint"
 	) as MultiMeshInstance2D
 	var rings := renderer.get_node("MysteryEffect_ring") as MultiMeshInstance2D
 	var disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
@@ -1507,9 +1483,9 @@ func _validate_mystery_device_presentation(
 	)
 	presentation["mystery_devices"][0]["state"] = &"resolved"
 	presentation["mystery_effects"] = [
-		{"effect_id":&"gravity_pull", "position":device_position, "radius":480.0},
-		{"effect_id":&"cryo_lock", "position":resolved_position, "radius":360.0},
-		{"effect_id":&"weakpoint_expose", "position":Vector2(760.0, 260.0), "radius":420.0},
+		{"effect_id":&"gravity", "position":device_position, "radius":480.0},
+		{"effect_id":&"cryo", "position":resolved_position, "radius":360.0},
+		{"effect_id":&"weakpoint", "position":Vector2(760.0, 260.0), "radius":420.0},
 	]
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
@@ -1570,25 +1546,25 @@ func _validate_mystery_device_presentation(
 		)
 	var pickup_position := Vector2(340.0, 420.0)
 	presentation["map_pickups"] = [
-		{"id":"repair-a", "kind":&"repair", "pos":pickup_position, "active":true},
+		{"id":"recall-a", "kind":&"experience_recall", "pos":pickup_position, "active":true},
 		{"id":"xp-ignored", "kind":&"experience_small", "pos":Vector2(500.0, 420.0), "active":true},
 	]
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
-	var repair := renderer.get_node("MapPickup_repair") as MultiMeshInstance2D
-	var repair_contour := renderer.get_node(
-		"MapPickupContour_repair"
+	var recall := renderer.get_node("MapPickup_experience_recall") as MultiMeshInstance2D
+	var recall_contour := renderer.get_node(
+		"MapPickupContour_experience_recall"
 	) as MultiMeshInstance2D
 	_expect(
-		repair.multimesh.visible_instance_count == 1
-			and repair_contour.multimesh.visible_instance_count == 1
+		recall.multimesh.visible_instance_count == 1
+			and recall_contour.multimesh.visible_instance_count == 1
 			and Vector2(
-				repair.multimesh.buffer[3], repair.multimesh.buffer[7]
+				recall.multimesh.buffer[3], recall.multimesh.buffer[7]
 			).is_equal_approx(pickup_position)
 			and is_equal_approx(
-				repair_contour.multimesh.buffer[15],
+				recall_contour.multimesh.buffer[15],
 				Renderer.INTERACTION_EDGE_ALPHA_REDUCED
 			),
 		"only bounded map pickups receive the static reduced-motion contour"
@@ -1610,7 +1586,7 @@ func _validate_mystery_device_presentation(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
-	var pickup_phase := Renderer._stable_interaction_phase("repair-a")
+	var pickup_phase := Renderer._stable_interaction_phase("recall-a")
 	var device_phase := Renderer._stable_interaction_phase("device-c")
 	var expected_pickup_position := pickup_position + Vector2.DOWN * (
 		sin(float(presentation["run_time"]) * TAU / Renderer.MAP_PICKUP_BOB_PERIOD + pickup_phase)
@@ -1621,12 +1597,12 @@ func _validate_mystery_device_presentation(
 		* Renderer.MYSTERY_DEVICE_BOB_AMPLITUDE
 	)
 	_expect(
-		Vector2(repair.multimesh.buffer[3], repair.multimesh.buffer[7])
+		Vector2(recall.multimesh.buffer[3], recall.multimesh.buffer[7])
 			.is_equal_approx(expected_pickup_position)
 			and Vector2(weakpoint_contour.multimesh.buffer[3], weakpoint_contour.multimesh.buffer[7])
 			.is_equal_approx(expected_device_position)
 			and is_equal_approx(
-				repair_contour.multimesh.buffer[15],
+				recall_contour.multimesh.buffer[15],
 				Renderer._interaction_edge_alpha(
 					float(presentation["run_time"]), pickup_phase, false
 				)
@@ -1646,7 +1622,7 @@ func _validate_mystery_device_presentation(
 			"state":&"resolved",
 			"visible":true,
 			"position":Vector2(-120.0, 260.0),
-			"outcome":&"gravity_pull",
+			"outcome":&"gravity",
 		},
 	]
 	presentation["mystery_effects"] = []

@@ -55,25 +55,25 @@ func _run() -> void:
 	_expect(
 		_near(
 			hard_boss.speed,
-			150.0 * EncounterDirector.ENEMY_SPEED_MULTIPLIER,
+			StageDifficulty.BOSS_MOVE_SPEEDS[0],
 			0.001
 		),
-		"boss movement preserves the committed-attack multiplier"
+		"boss movement uses the cycle-owned base speed"
 	)
-	var health_curve := [0.85, 0.917, 0.983, 1.05, 1.117, 1.183, 1.25, 1.317, 1.383, 1.45]
-	var health_pressure := [1.15, 1.244, 1.339, 1.433, 1.528, 1.622, 1.717, 1.811, 1.906, 2.0]
-	var boss_bases := [1250.0, 1294.444, 1338.889, 1383.333, 1427.778, 1472.222, 1516.667, 1561.111, 1605.556, 1650.0]
-	var boss_health_multipliers := [4.20, 4.244, 4.289, 4.333, 4.378, 4.422, 4.467, 4.511, 4.556, 4.60]
-	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health uses the locked ten-stage curve")
+	var health_curve := [0.85, 0.94, 1.03, 1.12, 1.21, 1.30, 1.39, 1.48]
+	var health_pressure := [1.15, 1.27, 1.39, 1.51, 1.63, 1.75, 1.87, 2.0]
+	var boss_bases := [5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0]
+	var boss_health_multipliers := [1.00, 1.12, 1.25, 1.39, 1.54, 1.70, 1.87, 2.05]
+	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health uses the locked eight-cycle curve")
 	_expect(
 		StageDifficulty.ORDINARY_HEALTH_PRESSURE == health_pressure,
-		"ordinary health applies the interpolated ten-stage pressure curve"
+		"ordinary health applies the eight-cycle pressure curve"
 	)
 	_expect(
 		is_equal_approx(StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER, 1.20),
 		"all non-boss hostiles use one final 20 percent durability policy"
 	)
-	_expect(health_pressure[-1] == 2.0, "Stage 10 retains the previous final health-pressure endpoint")
+	_expect(health_pressure[-1] == 2.0, "cycle 8 reaches the final health-pressure endpoint")
 	for stage_index in health_curve.size():
 		stage.current_stage_index = stage_index
 		var standard_enemy = stage.call("_make_enemy", {
@@ -126,11 +126,11 @@ func _run() -> void:
 			"Stage %d applies the exact monotonic boss-health profile"
 				% (stage_index + 1)
 		)
-	var damage_curve := [1.00, 1.013, 1.027, 1.04, 1.053, 1.067, 1.08, 1.093, 1.107, 1.12]
-	var damage_pressure := [0.98, 1.056, 1.131, 1.207, 1.282, 1.358, 1.433, 1.509, 1.584, 1.66]
+	var damage_curve := [1.00, 1.03, 1.06, 1.09, 1.12, 1.15, 1.18, 1.21]
+	var damage_pressure := [0.98, 1.08, 1.18, 1.28, 1.38, 1.48, 1.57, 1.66]
 	_expect(
 		StageDifficulty.ORDINARY_DAMAGE_PRESSURE == damage_pressure,
-		"ordinary damage applies the interpolated ten-stage pressure curve"
+		"ordinary damage applies the eight-cycle pressure curve"
 	)
 	for stage_index in damage_curve.size():
 		stage.current_stage_index = stage_index
@@ -180,15 +180,15 @@ func _run() -> void:
 		var base_speed := float(
 			EnemyArchetypes.definition(StringName(archetype))["speed"]
 		)
-		var stage_ten_speed := (
+		var final_cycle_speed := (
 			base_speed
 			* EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER
-			* float(StageDifficulty.SPEED[9])
+			* float(StageDifficulty.SPEED[7])
 		)
 		_expect(
 			_near(base_speed, float(tuned_mobile_bases[archetype]), 0.001)
-				and stage_ten_speed < 280.0,
-			"%s keeps its tuned base and stays below player speed at Stage 10"
+			and final_cycle_speed < 300.0,
+			"%s keeps its tuned base and remains bounded at cycle 8"
 			% String(archetype)
 		)
 	stage.call("_reset_run", false, true, true)

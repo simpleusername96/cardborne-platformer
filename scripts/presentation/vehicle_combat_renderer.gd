@@ -64,9 +64,9 @@ const MYSTERY_DEVICE_CAPACITY := 3
 const MAP_PICKUP_CAPACITY := 14
 const MYSTERY_DEVICE_SYMBOL_RADIUS := 144.0
 const MYSTERY_SYMBOL_DESCRIPTORS := {
-	&"gravity_pull": &"mystery_device_gravity",
-	&"cryo_lock": &"mystery_device_cryo",
-	&"weakpoint_expose": &"mystery_device_weakpoint",
+	&"gravity": &"mystery_device_gravity",
+	&"cryo": &"mystery_device_cryo",
+	&"weakpoint": &"mystery_device_weakpoint",
 }
 const INTERACTION_CONTOUR_WORLD_UNITS := 2.0
 const INTERACTION_EDGE_ALPHA_MIN := 0.32
@@ -313,7 +313,8 @@ func sync(
 		_sync_enemies(
 			enemies, visible_world, player_position, run_time, aim_target_id,
 			bool(presentation.get("reduced_motion", false)),
-			maxf(0.0, frame_delta)
+			maxf(0.0, frame_delta),
+			presentation
 		)
 		_sync_projectiles(player_projectiles, &"player", visible_world)
 		_sync_projectiles(hostile_projectiles, &"enemy", visible_world)
@@ -523,7 +524,7 @@ func _build_batches() -> void:
 		&"experience_master",
 		EXPERIENCE_BATCH_INITIAL_CAPACITY
 	)
-	for pickup_kind in [&"repair", &"experience_recall"]:
+	for pickup_kind in [&"experience_recall"]:
 		var pickup_asset := StringName("pickup/%s" % pickup_kind)
 		_map_pickup_batches[pickup_kind] = _create_asset_batch(
 			"MapPickup_%s" % String(pickup_kind),
@@ -544,7 +545,7 @@ func _build_batches() -> void:
 			_pickup_edge_material,
 			true
 		)
-	for outcome_id in [&"gravity_pull", &"cryo_lock", &"weakpoint_expose"]:
+	for outcome_id in [&"gravity", &"cryo", &"weakpoint"]:
 		var descriptor_id := _mystery_symbol_descriptor(outcome_id)
 		var symbol_asset := StringName(WorldCatalog.world_object_descriptor(descriptor_id).get("asset", &""))
 		_mystery_device_contour_batches[outcome_id] = _create_asset_batch(
@@ -801,7 +802,8 @@ func _sync_enemies(
 	run_time: float,
 	_aim_target_id: String,
 	reduced_motion: bool,
-	frame_delta: float
+	frame_delta: float,
+	presentation: Dictionary
 ) -> void:
 	_installation_health_candidate_count = 0
 	_repair_link_candidate_count = 0
@@ -822,6 +824,10 @@ func _sync_enemies(
 			continue
 		var role := enemy.role
 		var archetype := enemy.archetype
+		var dying_boss := (
+			role == &"stage_boss"
+			and enemy.id == String(presentation.get("dying_boss_id", ""))
+		)
 		var angle := _enemy_angle(
 			archetype,
 			enemy,
@@ -835,15 +841,22 @@ func _sync_enemies(
 		)
 		if batch == null:
 			continue
+		var body_modulate := _enemy_body_modulate(enemy)
+		if dying_boss:
+			body_modulate.a *= float(
+				Dictionary(presentation.get("boss_destruction", {})).get(
+					"body_alpha", 1.0
+				)
+			)
 		_write_instance(
 			batch,
 			position,
 			angle,
 			Vector2.ONE * radius,
-			_enemy_body_modulate(enemy),
+			body_modulate,
 			_enemy_status_custom_data(enemy, reduced_motion)
 		)
-		if role == &"stage_boss" and _boss_health_bar_count < MAX_BOSS_HEALTH_BARS:
+		if role == &"stage_boss" and not dying_boss and _boss_health_bar_count < MAX_BOSS_HEALTH_BARS:
 			_sync_health_bar(
 				position,
 				radius,
@@ -878,12 +891,13 @@ func _sync_enemies(
 				_repair_link_candidate_count,
 				MAX_REPAIR_LINKS
 			)
-		_sync_enemy_semantic_overlays(
-			enemy,
-			position,
-			radius,
-			angle
-		)
+		if not dying_boss:
+			_sync_enemy_semantic_overlays(
+				enemy,
+				position,
+				radius,
+				angle
+			)
 	for index in _installation_health_candidate_count:
 		_sync_installation_health_bar(
 			_installation_health_candidates[index], visible_world
@@ -1071,28 +1085,16 @@ func _enemy_status_custom_data(
 		enemy.cryo_application_pulse,
 		reduced_motion
 	)
-	var shock_mix := _status_overlay_mix(
-		enemy.shock_stack_ratio,
-		enemy.shock_application_pulse,
-		reduced_motion
-	)
-	if enemy.mystery_cryo_remaining > 0.0:
-		cryo_mix = maxf(cryo_mix, STATUS_STACK_MIX[1])
-	var weakpoint_mix := (
-		STATUS_STACK_MIX[0] if enemy.mystery_weakpoint_remaining > 0.0 else 0.0
-	)
-	var total_mix := toxin_mix + cryo_mix + shock_mix + weakpoint_mix
+	var total_mix := toxin_mix + cryo_mix
 	if total_mix <= 0.0:
 		return Color.TRANSPARENT
 	var toxin_color := Color(Art.TOXIN, 1.0)
 	var cryo_color := Color(Art.CRYO, 1.0)
-	var shock_color := Color(Art.ARC, 1.0)
-	var weakpoint_color := Color(Art.DANGER, 1.0)
 	var semantic_color := Color(
-		(toxin_color.r * toxin_mix + cryo_color.r * cryo_mix + shock_color.r * shock_mix + weakpoint_color.r * weakpoint_mix) / total_mix,
-		(toxin_color.g * toxin_mix + cryo_color.g * cryo_mix + shock_color.g * shock_mix + weakpoint_color.g * weakpoint_mix) / total_mix,
-		(toxin_color.b * toxin_mix + cryo_color.b * cryo_mix + shock_color.b * shock_mix + weakpoint_color.b * weakpoint_mix) / total_mix,
-		maxf(weakpoint_mix, maxf(toxin_mix, maxf(cryo_mix, shock_mix)))
+		(toxin_color.r * toxin_mix + cryo_color.r * cryo_mix) / total_mix,
+		(toxin_color.g * toxin_mix + cryo_color.g * cryo_mix) / total_mix,
+		(toxin_color.b * toxin_mix + cryo_color.b * cryo_mix) / total_mix,
+		maxf(toxin_mix, cryo_mix)
 	)
 	return semantic_color
 
@@ -1864,7 +1866,7 @@ func _sync_map_pickups(state: Dictionary, visible_world: Rect2) -> void:
 		if not bool(pickup.get("active", false)):
 			continue
 		var kind := StringName(pickup.get("kind", &""))
-		if kind not in [&"repair", &"experience_recall"]:
+		if kind != &"experience_recall":
 			continue
 		var radius := float(Art.PICKUP_PLINTH_RADIUS)
 		var position := Vector2(pickup.get("pos", Vector2.ZERO))
@@ -1973,16 +1975,16 @@ func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 	for effect_variant in effects_variant:
 		var effect := Dictionary(effect_variant)
 		var effect_id := StringName(effect.get("effect_id", &""))
-		if effect_id not in [&"gravity_pull", &"cryo_lock", &"weakpoint_expose"]:
+		if effect_id not in [&"gravity", &"cryo", &"weakpoint"]:
 			continue
 		var position := Vector2(effect.get("position", Vector2.ZERO))
 		var radius := float(effect.get("radius", 0.0))
 		if radius <= 0.0 or not visible_world.grow(radius).has_point(position):
 			continue
-		var color := Art.CRYO if effect_id == &"cryo_lock" else (Art.DANGER if effect_id == &"weakpoint_expose" else Art.SYSTEM)
+		var color := Art.CRYO if effect_id == &"cryo" else (Art.DANGER if effect_id == &"weakpoint" else Art.SYSTEM)
 		var body_alpha := (
 			0.12
-			if effect_id == &"cryo_lock"
+			if effect_id == &"cryo"
 			else 0.10
 		)
 		_write_disk(position, radius, Color(color, body_alpha))

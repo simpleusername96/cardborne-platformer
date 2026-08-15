@@ -50,6 +50,9 @@ const CORE_CAPTURE_FILES := [
 	"92-failure-report.png",
 	"93-final-result.png",
 ]
+const REPORT_CAPTURE_FILES := [
+	"91-stage-report.png", "92-failure-report.png", "93-final-result.png",
+]
 
 const FULL_CAPTURE_FILES := [
 	"01-deployment.png",
@@ -121,10 +124,10 @@ const FULL_CAPTURE_FILES := [
 	"09s-emp-charge-reduced.png",
 	"09t-emp-release-standard.png",
 	"09u-emp-release-reduced.png",
-	"09v-mystery-gravity-pull.png",
-	"09w-mystery-cryo-lock.png",
+	"09v-facility-gravity.png",
+	"09w-facility-cryo.png",
 	"09x-mystery-device-ready.png",
-	"09y-mystery-weakpoint-expose.png",
+	"09y-facility-weakpoint.png",
 	"09z-explosive-seeker-impact.png",
 	"10-field-drowned-ruin-field.png",
 	"10-field-storm-drydock-field.png",
@@ -137,45 +140,55 @@ const FULL_CAPTURE_FILES := [
 	"20-collision-06-stage-6-default.png",
 	"20-collision-07-stage-7-default.png",
 	"20-collision-08-stage-8-default.png",
-	"20-collision-09-stage-9-default.png",
-	"20-collision-10-stage-10-default.png",
-	"30-boss-01-stage-2-active.png",
-	"30-boss-01-stage-2-offscreen-furnace-active.png",
-	"30-boss-01-stage-2-offscreen-furnace-imminent.png",
-	"30-boss-01-stage-2-offscreen-furnace.png",
-	"30-boss-01-stage-2-phase-two.png",
-	"30-boss-01-stage-2-recovery.png",
-	"30-boss-01-stage-2-shield-up-hit.png",
-	"30-boss-01-stage-2-shield-restored.png",
-	"30-boss-01-stage-2-startup-imminent.png",
-	"30-boss-01-stage-2-startup.png",
-	"30-boss-01-stage-2-arc-area-startup.png",
-	"30-boss-02-stage-4-active.png",
-	"30-boss-02-stage-4-phase-two.png",
-	"30-boss-02-stage-4-recovery.png",
-	"30-boss-02-stage-4-shield-restored.png",
-	"30-boss-02-stage-4-startup-imminent.png",
-	"30-boss-02-stage-4-startup.png",
-	"30-boss-03-stage-6-active.png",
-	"30-boss-03-stage-6-phase-two.png",
-	"30-boss-03-stage-6-recovery.png",
-	"30-boss-03-stage-6-shield-restored.png",
-	"30-boss-03-stage-6-startup-imminent.png",
-	"30-boss-03-stage-6-startup.png",
-	"30-boss-04-stage-8-active.png",
-	"30-boss-04-stage-8-phase-two.png",
-	"30-boss-04-stage-8-recovery.png",
-	"30-boss-04-stage-8-shield-restored.png",
-	"30-boss-04-stage-8-startup-imminent.png",
-	"30-boss-04-stage-8-startup.png",
-	"30-boss-05-stage-10-active.png",
-	"30-boss-05-stage-10-phase-two.png",
-	"30-boss-05-stage-10-recovery.png",
-	"30-boss-05-stage-10-shield-restored.png",
-	"30-boss-05-stage-10-startup-imminent.png",
-	"30-boss-05-stage-10-startup.png",
-	"30-boss-05-stage-10-crown-beam-startup.png",
-	"30-boss-05-stage-10-crown-beam-active.png",
+	"30-boss-01-stage-1-active.png",
+	"30-boss-01-stage-1-offscreen-furnace-active.png",
+	"30-boss-01-stage-1-offscreen-furnace-imminent.png",
+	"30-boss-01-stage-1-offscreen-furnace.png",
+	"30-boss-01-stage-1-phase-two.png",
+	"30-boss-01-stage-1-recovery.png",
+	"30-boss-01-stage-1-startup-imminent.png",
+	"30-boss-01-stage-1-startup.png",
+	"30-boss-01-stage-1-arc-area-startup.png",
+	"30-boss-02-stage-2-active.png",
+	"30-boss-02-stage-2-phase-two.png",
+	"30-boss-02-stage-2-recovery.png",
+	"30-boss-02-stage-2-startup-imminent.png",
+	"30-boss-02-stage-2-startup.png",
+	"30-boss-03-stage-3-active.png",
+	"30-boss-03-stage-3-phase-two.png",
+	"30-boss-03-stage-3-recovery.png",
+	"30-boss-03-stage-3-shield-up-hit.png",
+	"30-boss-03-stage-3-shield-restored.png",
+	"30-boss-03-stage-3-startup-imminent.png",
+	"30-boss-03-stage-3-startup.png",
+	"30-boss-04-stage-4-active.png",
+	"30-boss-04-stage-4-phase-two.png",
+	"30-boss-04-stage-4-recovery.png",
+	"30-boss-04-stage-4-startup-imminent.png",
+	"30-boss-04-stage-4-startup.png",
+	"30-boss-05-stage-5-active.png",
+	"30-boss-05-stage-5-phase-two.png",
+	"30-boss-05-stage-5-recovery.png",
+	"30-boss-05-stage-5-shield-restored.png",
+	"30-boss-05-stage-5-startup-imminent.png",
+	"30-boss-05-stage-5-startup.png",
+	"30-boss-05-stage-5-crown-beam-startup.png",
+	"30-boss-05-stage-5-crown-beam-active.png",
+	"30-boss-06-stage-6-active.png",
+	"30-boss-06-stage-6-phase-two.png",
+	"30-boss-06-stage-6-recovery.png",
+	"30-boss-06-stage-6-startup-imminent.png",
+	"30-boss-06-stage-6-startup.png",
+	"30-boss-07-stage-7-active.png",
+	"30-boss-07-stage-7-phase-two.png",
+	"30-boss-07-stage-7-recovery.png",
+	"30-boss-07-stage-7-startup-imminent.png",
+	"30-boss-07-stage-7-startup.png",
+	"30-boss-08-stage-8-active.png",
+	"30-boss-08-stage-8-phase-two.png",
+	"30-boss-08-stage-8-recovery.png",
+	"30-boss-08-stage-8-startup-imminent.png",
+	"30-boss-08-stage-8-startup.png",
 	"90-pause.png",
 	"91-stage-report.png",
 	"92-failure-report.png",
@@ -186,6 +199,8 @@ var directory := ""
 var locale := ""
 var viewport_size := Vector2i.ZERO
 var text_scale := 1.0
+var core_only := false
+var report_only := false
 var layout_seed_override: Variant = null
 var field_id_override := &""
 var failed := false
@@ -221,6 +236,10 @@ static func from_command_line() -> VehicleRunCaptureDriver:
 			driver.text_scale = clampf(
 				float(argument.trim_prefix("--capture-text-scale=")), 1.0, 2.0
 			)
+		elif argument == "--capture-core-only":
+			driver.core_only = true
+		elif argument == "--capture-report-only":
+			driver.report_only = true
 		elif argument.begins_with("--layout-seed="):
 			driver.layout_seed_override = int(argument.trim_prefix("--layout-seed="))
 		elif argument.begins_with("--field-id="):
@@ -253,6 +272,16 @@ func run(gateway: RefCounted) -> void:
 		"viewport_size":viewport_size,
 		"text_scale":text_scale,
 	})
+	if report_only:
+		gateway.prepare_stage(0, true)
+		if not await _capture_ui(gateway, &"stage_report", "91-stage-report.png", 0.36):
+			return
+		if not await _capture_ui(gateway, &"failure_report", "92-failure-report.png", 0.36):
+			return
+		if not await _capture_ui(gateway, &"result", "93-final-result.png"):
+			return
+		finish_capture(gateway, 0)
+		return
 	if not await _capture_ui(gateway, &"deployment", "01-deployment.png", 0.0, 2):
 		return
 	if not await _capture_ui(gateway, &"settings", "01b-shared-settings.png"):
@@ -342,6 +371,8 @@ func prepare_output() -> bool:
 
 
 func is_full_evidence(viewport: Viewport) -> bool:
+	if core_only:
+		return false
 	var width := viewport_size.x
 	if width <= 0:
 		width = roundi(viewport.get_visible_rect().size.x)
@@ -444,7 +475,9 @@ func _run_world_fixture(
 
 func _validate_manifest(gateway: RefCounted) -> bool:
 	var expected: Array = (
-		FULL_CAPTURE_FILES
+		REPORT_CAPTURE_FILES
+		if report_only
+		else FULL_CAPTURE_FILES
 		if is_full_evidence(gateway.snapshot(&"viewport"))
 		else CORE_CAPTURE_FILES
 	)
@@ -471,7 +504,11 @@ func _validate_manifest(gateway: RefCounted) -> bool:
 
 func _write_manifest(gateway: RefCounted) -> bool:
 	var full_evidence := is_full_evidence(gateway.snapshot(&"viewport"))
-	var files: Array = FULL_CAPTURE_FILES if full_evidence else CORE_CAPTURE_FILES
+	var files: Array = (
+		REPORT_CAPTURE_FILES
+		if report_only
+		else FULL_CAPTURE_FILES if full_evidence else CORE_CAPTURE_FILES
+	)
 	var manifest := {
 		"schema_version":2,
 		"build_identity":BuildIdentity.evidence_identity(),

@@ -26,17 +26,26 @@ static func build(
 		defeat_rows,
 		Dictionary(telemetry.get("elites", {}))
 	)
+	var incoming_rows := _damage_rows(Dictionary(telemetry.get("incoming", {})), true, 3)
+	var damage_rows: Array[Dictionary] = _damage_rows(outgoing_values, false, 8)
+	damage_rows.append_array(_attribute_rows(
+		attribute_values,
+		Dictionary(telemetry.get("status_applications", {}))
+	))
+	var stage_number := int(stage_data.get("number", 1))
+	var has_boss := bool(stage_data.get("has_boss", false))
+	var run_time_seconds := maxf(0.0, float(stage_data.get("run_time_seconds", 0.0)))
+	var hull := maxf(0.0, float(stage_data.get("hull", 0.0)))
+	var max_hull := maxf(0.0, float(stage_data.get("max_hull", 0.0)))
 	return {
 		"failure":failure,
-		"stage_number":int(stage_data.get("number", 1)),
+		"stage_number":stage_number,
 		"stage_title_key":String(stage_data.get("title_key", "")),
-		"has_boss":bool(stage_data.get("has_boss", false)),
+		"has_boss":has_boss,
 		"has_next_stage":bool(stage_data.get("has_next_stage", false)),
-		"run_time_seconds":maxf(
-			0.0, float(stage_data.get("run_time_seconds", 0.0))
-		),
-		"hull":maxf(0.0, float(stage_data.get("hull", 0.0))),
-		"max_hull":maxf(0.0, float(stage_data.get("max_hull", 0.0))),
+		"run_time_seconds":run_time_seconds,
+		"hull":hull,
+		"max_hull":max_hull,
 		"defeats":defeat_rows,
 		"outgoing":_damage_rows(outgoing_values, false, 8),
 		"total_outgoing":_sum_damage(outgoing_values),
@@ -45,10 +54,37 @@ static func build(
 			Dictionary(telemetry.get("status_applications", {}))
 		),
 		"total_attributes":_sum_damage(attribute_values),
-		"incoming":_damage_rows(Dictionary(telemetry.get("incoming", {})), true, 3),
+		"incoming":incoming_rows,
 		"last_incoming_source":StringName(telemetry.get("last_incoming_source", &"")),
 		"last_incoming_damage":float(telemetry.get("last_incoming_damage", 0.0)),
+		"outcome_rows":[
+			{"title_key":"REPORT_ROW_STATUS", "value_key":"REPORT_VALUE_FAILURE" if failure else "REPORT_VALUE_CLEARED"},
+			{"title_key":"REPORT_ROW_HULL", "value":"%.0f / %.0f" % [hull, max_hull]},
+		],
+		"cycle_progress_rows":[
+			{"title_key":"REPORT_ROW_CYCLE", "value":str(stage_number)},
+			{"title_key":"REPORT_ROW_ACTIVE_TIME", "value":_format_duration(run_time_seconds)},
+		],
+		"build_rows":Array(stage_data.get("build_rows", [])),
+		"damage_rows":damage_rows,
+		"defense_rows":incoming_rows.duplicate(true),
+		"enemy_rows":defeat_rows.duplicate(true),
+		"boss_rows":[{"title_key":"REPORT_ROW_BOSSES_DEFEATED", "count":1 if has_boss and not failure else 0}],
+		"pacing_rows":[{"title_key":"REPORT_ROW_ORDINARY_DEFEATS", "count":_sum_defeats(defeat_rows)}],
+		"diagnostic_limitations":[{"title_key":"REPORT_ROW_DIAGNOSTIC_SCOPE", "value_key":"REPORT_VALUE_LOCAL_LATEST_TEN"}],
 	}
+
+
+static func _format_duration(seconds: float) -> String:
+	var total := maxi(0, floori(seconds))
+	return "%d:%02d" % [total / 60, total % 60]
+
+
+static func _sum_defeats(rows: Array[Dictionary]) -> int:
+	var total := 0
+	for row in rows:
+		total += maxi(0, int(row.get("count", 0)))
+	return total
 
 
 static func _attribute_rows(
@@ -64,8 +100,6 @@ static func _attribute_rows(
 				applications = int(status_applications.get(&"poison", 0))
 			&"cryo":
 				applications = int(status_applications.get(&"chill", 0))
-			&"arc":
-				applications = int(status_applications.get(&"shock", 0))
 		if damage <= 0.0 and applications <= 0:
 			continue
 		rows.append({

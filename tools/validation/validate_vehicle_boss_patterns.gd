@@ -23,21 +23,28 @@ func _initialize() -> void:
 		var phase_one := Patterns.sequence(stage_id, false)
 		var phase_two := Patterns.sequence(stage_id, true)
 		var phase_three := Patterns.sequence(stage_id, 3)
-		_expect(phase_one.size() == 4 and phase_one.duplicate().all(func(pattern): return phase_one.count(pattern) == 1), "%s has four distinct attacks" % stage_id)
-		_expect(phase_two.size() == 4 and phase_two != phase_one, "%s changes order in phase two" % stage_id)
-		_expect(phase_three.size() == 4 and phase_three != phase_two, "%s has an authored phase-three order" % stage_id)
+		_expect(
+			phase_one.size() == 5
+				and phase_one.duplicate().all(func(pattern): return phase_one.count(pattern) == 1)
+				and "common_charge" in phase_one
+				and "common_broad_barrage" in phase_one,
+			"%s has five distinct attacks including both common patterns" % stage_id
+		)
+		_expect(phase_two.size() == 5 and phase_two != phase_one, "%s changes order in phase two" % stage_id)
+		_expect(phase_three.size() == 5 and phase_three != phase_two, "%s has an authored phase-three order" % stage_id)
 		for pattern in phase_one:
-			_expect(Patterns.startup_seconds(pattern) >= 0.8, "%s startup is visible" % pattern)
+			_expect(Patterns.startup_seconds(pattern) >= 0.65, "%s startup is visible" % pattern)
 			_expect(Patterns.active_seconds(pattern) >= 0.4, "%s active window is explicit" % pattern)
-			_expect(Patterns.recovery_seconds(pattern) >= 0.9, "%s recovery is explicit" % pattern)
+			_expect(
+				Patterns.recovery_seconds(pattern) >= 0.9
+					or Patterns.commit_mode(pattern) == &"autonomous",
+				"%s recovery or autonomous ownership is explicit" % pattern
+			)
 			_expect(
 				Patterns.affinity(pattern) in AttackContract.AFFINITIES,
 				"%s declares a supported attack affinity" % pattern
 			)
-			_expect(
-				Patterns.commit_mode(pattern) == &"committed",
-				"%s is a committed direct attack" % pattern
-			)
+			_expect(Patterns.commit_mode(pattern) in [&"committed", &"autonomous"], "%s declares execution ownership" % pattern)
 			if Patterns.damage(pattern, stage_index) > 0.0:
 				_expect(
 					Patterns.affinity(pattern) != AttackContract.SUPPORT,
@@ -64,7 +71,7 @@ func _initialize() -> void:
 				"%s remains independent of boss-body state" % pattern
 			)
 			_expect(
-				Patterns.kind(pattern) in [&"area", &"lanes", &"beam", &"summon"],
+				Patterns.kind(pattern) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"moving_walls", &"wedge_rings", &"spiral"],
 				"%s has an explicitly dispatched autonomous shape" % pattern
 			)
 			if Patterns.kind(pattern) == &"area" and Patterns.damage(pattern, stage_index) > 0.0:
@@ -83,23 +90,23 @@ func _initialize() -> void:
 			"%s applies its exact boss-health profile" % stage_id
 		)
 	_expect(
-		Difficulty.BOSS_HEALTH_MULTIPLIERS.size() == 10
-			and Difficulty.BOSS_DAMAGE_MULTIPLIERS.size() == 10
-			and Difficulty.BOSS_SHIELDED_DAMAGE_MULTIPLIERS.size() == 10
-			and Difficulty.BOSS_CADENCE_SCALES.size() == 10
-			and Difficulty.BOSS_COVERAGE_SCALES.size() == 10
-			and is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIERS[-1], 4.60)
-			and is_equal_approx(Difficulty.BOSS_DAMAGE_MULTIPLIERS[-1], 1.90)
-			and is_equal_approx(Difficulty.BOSS_COVERAGE_SCALES[-1], 1.25),
-		"boss profile exposes ten explicit interpolated curves with the old final endpoint"
+		Difficulty.BOSS_HEALTH_MULTIPLIERS.size() == 8
+			and Difficulty.BOSS_DAMAGE_MULTIPLIERS.size() == 8
+			and Difficulty.BOSS_SHIELDED_DAMAGE_MULTIPLIERS.size() == 8
+			and Difficulty.BOSS_CADENCE_SCALES.size() == 8
+			and Difficulty.BOSS_COVERAGE_SCALES.size() == 8
+		and is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIERS[-1], 2.05)
+		and is_equal_approx(Difficulty.BOSS_DAMAGE_MULTIPLIERS[-1], 1.46)
+		and is_equal_approx(Difficulty.BOSS_COVERAGE_SCALES[-1], 1.28),
+		"boss profile exposes eight explicit strengthening curves"
 	)
 	_expect(
 		is_equal_approx(
 				float(Patterns.definition("furnace_gates")["damage"]), 22.0
 			)
 			and is_equal_approx(Patterns.damage("furnace_gates", 1), 22.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[1])
-			and is_equal_approx(Patterns.damage("furnace_gates", 9), 41.8)
-			and is_equal_approx(Patterns.damage("breaker_charge", 9), 68.4),
+			and is_equal_approx(Patterns.damage("furnace_gates", 7), 22.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[7])
+			and is_equal_approx(Patterns.damage("breaker_charge", 7), 36.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[7]),
 		"boss patterns preserve authored base damage and apply the stage-owned multiplier"
 	)
 	_expect(
@@ -108,11 +115,11 @@ func _initialize() -> void:
 			and is_equal_approx(Patterns.radius("titan_pulse", 5), 235.0 * Difficulty.BOSS_COVERAGE_SCALES[5])
 			and is_equal_approx(Patterns.radius("gate_shockwave", 7), 240.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
 			and is_equal_approx(Patterns.width("switch_sweep", 7), 78.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
-			and is_equal_approx(Patterns.width("crown_beam", 9), 102.5)
-			and is_equal_approx(Patterns.radius("relay_pulse_rings", 9), 281.25),
+			and is_equal_approx(Patterns.width("crown_beam", 7), 82.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
+			and is_equal_approx(Patterns.radius("relay_pulse_rings", 7), 225.0 * Difficulty.BOSS_COVERAGE_SCALES[7]),
 		"representative boss attacks apply exact stage coverage"
 	)
-	for stage_index in 9:
+	for stage_index in 7:
 		_expect(
 			Difficulty.boss_health(stage_index + 1) > Difficulty.boss_health(stage_index)
 				and Difficulty.boss_damage_multiplier(stage_index + 1)

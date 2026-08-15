@@ -7,12 +7,12 @@ extends RefCounted
 const Archetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
 const ContactRuntime = preload("res://scripts/enemies/vehicle_enemy_contact_runtime.gd")
 const EliteTraits = preload("res://scripts/enemies/vehicle_elite_trait_catalog.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
-const FieldLayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const MysteryDeviceRuntime = preload("res://scripts/vehicle/vehicle_mystery_device_runtime.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
@@ -148,7 +148,7 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 				maximum_radius, BossPatterns.radius(pattern, index)
 			)
 	var cadence_scale := StageDifficulty.boss_cadence_scale(index)
-	return [
+	var rows: Array[Dictionary] = [
 		_row(
 			"GUIDE_STAT_HEALTH", "GUIDE_VALUE_HP",
 			[roundi(StageDifficulty.boss_health(index))], &"health"
@@ -156,17 +156,6 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 		_row(
 			"GUIDE_STAT_ATTACK_DAMAGE", "GUIDE_VALUE_DAMAGE_RANGE",
 			[_one_decimal(minimum_damage), _one_decimal(maximum_damage)], &"damage"
-		),
-		_row(
-			"GUIDE_STAT_BOSS_SHIELD", "GUIDE_VALUE_DAMAGE_REDUCTION",
-			[roundi(
-				(1.0 - StageDifficulty.boss_shielded_damage_multiplier(index))
-				* 100.0
-			)], &"protection"
-		),
-		_row(
-			"GUIDE_STAT_EXPOSED", "GUIDE_VALUE_SECONDS",
-			[BossShieldRuntime.SHIELD_DOWN_SECONDS], &"window"
 		),
 		_row(
 			"GUIDE_STAT_AUTONOMOUS_CADENCE", "GUIDE_VALUE_SECONDS_RANGE",
@@ -180,6 +169,19 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 			[roundi(maximum_radius)], &"coverage"
 		),
 	]
+	if BossPhaseCatalog.uses_shield(stage_id):
+		rows.insert(2, _row(
+			"GUIDE_STAT_BOSS_SHIELD", "GUIDE_VALUE_DAMAGE_REDUCTION",
+			[roundi(
+				(1.0 - StageDifficulty.boss_shielded_damage_multiplier(index))
+					* 100.0
+			)], &"protection"
+		))
+		rows.insert(3, _row(
+			"GUIDE_STAT_EXPOSED", "GUIDE_VALUE_SECONDS",
+			[BossShieldRuntime.SHIELD_DOWN_SECONDS], &"window"
+		))
+	return rows
 
 
 static func object_rows(
@@ -189,14 +191,6 @@ static func object_rows(
 	match object_kind:
 		&"experience":
 			return [_row("GUIDE_STAT_EFFECT", "GUIDE_VALUE_EXPERIENCE", [], &"effect")]
-		&"repair":
-			return [_row(
-				"GUIDE_STAT_EFFECT", "GUIDE_VALUE_REPAIR",
-				[
-					roundi(FieldLayoutGenerator.REPAIR_HEAL_MIN),
-					roundi(FieldLayoutGenerator.REPAIR_HEAL_MAX),
-				], &"effect"
-			)]
 		&"recall":
 			return [_row("GUIDE_STAT_EFFECT", "GUIDE_VALUE_RECALL", [], &"effect")]
 		&"mystery_device":
@@ -210,14 +204,25 @@ static func object_rows(
 				var profile := Dictionary(
 					MysteryDeviceRuntime.OUTCOME_PROFILE[outcome]
 				)
+				var value_key := "GUIDE_VALUE_FACILITY_WEAKPOINT"
+				var value_args: Array = [roundi(float(profile["radius"]))]
+				match outcome:
+					&"repair":
+						value_key = "GUIDE_VALUE_FACILITY_REPAIR"
+						value_args.append(roundi(float(profile["hull_restore_per_second"]) * 100.0))
+					&"barrier":
+						value_key = "GUIDE_VALUE_FACILITY_BARRIER"
+						value_args.append(roundi(float(profile["shield_restore_per_second"]) * 100.0))
+					&"gravity":
+						value_key = "GUIDE_VALUE_FACILITY_GRAVITY"
+						value_args.append(roundi(float(profile["max_speed_multiplier"]) * 100.0))
+					&"cryo":
+						value_key = "GUIDE_VALUE_FACILITY_CRYO"
+						value_args.append(roundi(float(profile["movement_multiplier"]) * 100.0))
 				result.append(_row(
 					"MYSTERY_OUTCOME_%s" % String(outcome).to_upper(),
-					(
-						"GUIDE_VALUE_ANOMALY_WEAKPOINT"
-						if outcome == &"weakpoint_expose"
-						else "GUIDE_VALUE_ANOMALY_PROFILE"
-					),
-					[roundi(float(profile["radius"])), float(profile["duration"])],
+					value_key,
+					value_args,
 					&"effect"
 				))
 			return result

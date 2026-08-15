@@ -117,7 +117,7 @@ func _initialize() -> void:
 	_expect(
 		_all_stage_progress_fields_present(progress_update)
 		and int(progress_update["stage_number"]) == 2
-		and int(progress_update["stage_total"]) == 10
+		and int(progress_update["stage_total"]) == 8
 		and int(progress_update["cumulative_defeated"]) == 87
 		and not progress_update.has("health"),
 		"one defeat republishes the complete numeric stage-progress cluster only"

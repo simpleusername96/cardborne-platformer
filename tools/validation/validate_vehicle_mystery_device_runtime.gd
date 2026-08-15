@@ -2,189 +2,67 @@ extends SceneTree
 
 const Runtime = preload("res://scripts/vehicle/vehicle_mystery_device_runtime.gd")
 
-var failures := PackedStringArray()
+var failures: Array[String] = []
 
 
 func _initialize() -> void:
-	_validate_configure_and_visible_outcomes()
-	_validate_damage_authority_and_break_event()
-	_validate_effect_retirement_and_stage_reset()
-	_validate_hot_path_queries_and_reused_output()
-	if failures.is_empty():
-		print("VEHICLE_MYSTERY_DEVICE_RUNTIME_VALIDATION_OK")
-		quit(0)
-	else:
-		for failure in failures:
-			push_error(failure)
-		quit(1)
-
-
-func _validate_configure_and_visible_outcomes() -> void:
-	var first := Runtime.new()
-	var second := Runtime.new()
-	var blueprint := _blueprint()
-	first.configure(blueprint, 771, &"stage_2")
-	second.configure(blueprint, 771, &"stage_2")
-	var snapshot := first.snapshot()
-	_expect(Array(snapshot["devices"]).size() == 3, "configure keeps exactly three devices")
-	var visible_outcomes := {}
-	for device in Array(snapshot["devices"]):
-		_expect(is_equal_approx(float(device["health"]), 90.0), "intact device has 90 health")
-		_expect(is_equal_approx(float(device["max_health"]), 90.0), "device snapshot publishes max health")
-		_expect(
-			not Dictionary(device).has("health_visible_timer"),
-			"device snapshot carries no forbidden world-health-bar timer"
-		)
-		_expect(is_equal_approx(float(device["radius"]), 84.0), "intact device has radius 84")
-		_expect(StringName(device["state"]) == &"intact" and bool(device["visible"]), "intact device is visible")
-		visible_outcomes[StringName(device["outcome"])] = true
-		_expect(not Dictionary(device).has("revealed_outcome"), "snapshot uses one public outcome field")
-	_expect(visible_outcomes.size() == 3, "all three assigned outcomes are visible before any hit")
 	_expect(
-		var_to_str(first.snapshot()) == var_to_str(second.snapshot()),
-		"same seed and stage assign outcomes deterministically"
-	)
-	var explicit := Runtime.new()
-	explicit.configure([
-		{"id":&"a", "position":Vector2.ZERO, "outcome":&"weakpoint_expose"},
-		{"id":&"b", "position":Vector2(1.0, 0.0), "outcome":&"weakpoint_expose"},
-		{"id":&"c", "position":Vector2(2.0, 0.0)},
-	], 1, &"stage_1")
-	var outcome_ids: Dictionary = {}
-	for device in explicit.devices:
-		outcome_ids[StringName(device["outcome"])] = true
-	_expect(outcome_ids.size() == 3, "stage outcomes stay unique when blueprint requests a duplicate")
-	_expect(
-		Runtime.OUTCOME_IDS.size() == 3
-		and Runtime.OUTCOME_IDS.has(&"gravity_pull")
-		and Runtime.OUTCOME_IDS.has(&"cryo_lock")
-		and Runtime.OUTCOME_IDS.has(&"weakpoint_expose"),
-		"each stage has exactly Gravity, Cryo, and Weakpoint outcomes"
+		Runtime.OUTCOME_IDS == [&"repair", &"barrier", &"gravity", &"cryo", &"weakpoint"],
+		"neutral facilities expose the five approved persistent roles"
 	)
 	_expect(
-		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity_pull"]["duration"]), 5.0)
-		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo_lock"]["duration"]), 3.0)
-		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint_expose"]["duration"]), 5.0)
-		and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint_expose"]["radius"]), 420.0),
-		"mystery outcomes retain the authored 5/3/5 second durations and 420 Weakpoint radius"
+		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"repair"]["radius"]), 420.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"barrier"]["shield_cap_max_hull_ratio"]), 1.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["max_speed_multiplier"]), 0.55)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo"]["attack_cadence_multiplier"]), 0.70)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint"]["received_damage_multiplier"]), 1.25),
+		"facility profiles preserve the approved radii and symmetric modifiers"
 	)
-
-
-func _validate_damage_authority_and_break_event() -> void:
-	var runtime := Runtime.new()
-	runtime.configure(_blueprint(), 771, &"stage_2")
-	_expect(not Runtime.accepts_damage(&"hostile", &"direct"), "hostile attacks are ignored")
-	_expect(not Runtime.accepts_damage(&"player", &"contact"), "player contact is ignored")
-	_expect(Runtime.accepts_damage(&"player", &"area"), "player area attacks are accepted")
-	var ignored := runtime.receive_damage(&"a", 90.0, &"hostile", &"direct")
-	_expect(not bool(ignored["accepted"]), "hostile damage receipt is rejected")
-	var partial := runtime.receive_damage(&"a", 45.0, &"player", &"direct")
-	_expect(
-		bool(partial["accepted"])
-		and not bool(partial["broken"])
-		and is_equal_approx(float(partial["remaining_health"]), 45.0)
-		and not partial.has("revealed_now")
-		and not partial.has("revealed_outcome"),
-		"the first authorized hit only reduces health"
-	)
-	var damaged: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
-	_expect(
-		not damaged.has("health_visible_timer"),
-		"authorized damage does not publish forbidden device health-bar state"
-	)
-	_expect(
-		StringName(damaged["outcome"]) == &"gravity_pull"
-		and StringName(damaged["state"]) == &"intact",
-		"the public outcome remains stable while the damaged device is intact"
-	)
-	runtime.advance(0.5)
-	damaged = Dictionary(Array(runtime.snapshot()["devices"])[0])
-	_expect(
-		not damaged.has("health_visible_timer"),
-		"runtime advance keeps device snapshots free of health-bar state"
-	)
-	var broken := runtime.receive_damage(&"a", 45.0, &"player", &"area")
-	var event := Dictionary(broken["break_event"])
-	_expect(
-		bool(broken["broken"])
-		and not broken.has("revealed_now")
-		and not event.is_empty(),
-		"later lethal damage triggers one break event without a reveal receipt"
-	)
-	_expect(
-		StringName(event["effect_id"]) == &"gravity_pull"
-		and Vector2(event["position"]) == Vector2(100.0, 200.0)
-		and is_equal_approx(float(event["radius"]), 480.0)
-		and is_equal_approx(float(event["duration"]), 5.0),
-		"break event carries exact effect id, position, radius, and duration"
-	)
-	_expect(
-		not bool(event["device_counts_for_quota"])
-		and not bool(event["grants_experience"])
-		and StringName(event["drop"]) == &"",
-		"break event explicitly grants no quota, XP, or drop"
-	)
-	var resolved: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
-	_expect(StringName(resolved["outcome"]) == &"gravity_pull", "resolved state retains its initial public outcome")
-	_expect(StringName(resolved["state"]) == &"resolved" and bool(resolved["visible"]), "broken device stays resolved while effect is active")
-	_expect(not runtime.is_intact(&"a") and runtime.intact_devices_snapshot().size() == 2, "broken device is no longer intact or damageable")
-
-
-func _validate_effect_retirement_and_stage_reset() -> void:
-	var runtime := Runtime.new()
-	runtime.configure(_blueprint(), 3, &"stage_1")
-	runtime.receive_damage(&"a", 90.0, &"player", &"direct")
-	_expect(runtime.advance(4.99).is_empty(), "effect remains active before its duration ends")
-	var retired := runtime.advance(0.02)
-	_expect(retired.size() == 1 and StringName(retired[0]["effect_id"]) == &"gravity_pull", "effect retires at its duration")
-	var retired_device: Dictionary = Dictionary(Array(runtime.snapshot()["devices"])[0])
-	_expect(StringName(retired_device["state"]) == &"retired" and not bool(retired_device["visible"]), "resolved device retires and becomes invisible with its effect")
-	runtime.configure(_blueprint(), 3, &"stage_2")
-	_expect(Array(runtime.snapshot()["active_effects"]).is_empty(), "stage configure clears active effects")
-
-
-func _validate_hot_path_queries_and_reused_output() -> void:
-	var runtime := Runtime.new()
-	runtime.configure([
-		{"id":&"near", "pos":Vector2(200.0, 0.0), "outcome":&"gravity_pull"},
-		{"id":&"far", "pos":Vector2(400.0, 0.0), "outcome":&"weakpoint_expose"},
-		{"id":&"side", "pos":Vector2(400.0, 400.0), "outcome":&"cryo_lock"},
-	], 9, &"stage_3")
-	_expect(not runtime.is_position_clear(Vector2(116.0, 0.0), 0.0), "actor position collision detects intact device")
-	_expect(runtime.is_position_clear(Vector2(115.9, 0.0), 0.0), "clear actor position stays outside intact radius")
-	var hit_receipt := {"stale":true}
-	_expect(runtime.first_intact_segment_hit(Vector2.ZERO, Vector2(600.0, 0.0), 0.0, hit_receipt), "segment hit detects intact device")
-	_expect(
-		StringName(hit_receipt["device_id"]) == &"near"
-		and is_equal_approx(float(hit_receipt["t"]), 116.0 / 600.0)
-		and Vector2(hit_receipt["position"]) == Vector2(116.0, 0.0)
-		and not hit_receipt.has("outcome"),
-		"segment receipt returns only the narrow collision result"
-	)
-	var device_output: Array[Dictionary] = []
-	var filled_devices := runtime.fill_device_snapshot(device_output)
-	var first_device_record: Dictionary = device_output[0]
-	_expect(is_same(filled_devices, runtime.fill_device_snapshot(device_output)) and is_same(first_device_record, device_output[0]), "device snapshot reuses caller-owned array and records")
-	runtime.receive_damage(&"near", 90.0, &"player", &"direct")
-	_expect(runtime.is_position_clear(Vector2(200.0, 0.0), 0.0), "resolved device no longer blocks actor collision")
-	hit_receipt["stale"] = true
-	_expect(runtime.first_intact_segment_hit(Vector2.ZERO, Vector2(600.0, 0.0), 0.0, hit_receipt) and StringName(hit_receipt["device_id"]) == &"far", "broken device is ignored by segment hit")
-	var effect_output: Array[Dictionary] = []
-	var filled_effects := runtime.fill_active_effect_snapshot(effect_output)
-	var first_effect_record: Dictionary = effect_output[0]
-	_expect(is_same(filled_effects, runtime.fill_active_effect_snapshot(effect_output)) and is_same(first_effect_record, effect_output[0]), "active-effect snapshot reuses caller-owned array and records")
-	runtime.advance(5.0)
-	_expect(runtime.is_position_clear(Vector2(200.0, 0.0), 0.0), "retired device remains ignored by collision")
-
-
-func _blueprint() -> Array:
-	return [
-		{"id":&"a", "pos":Vector2(100.0, 200.0), "outcome":&"gravity_pull"},
-		{"id":&"b", "pos":Vector2(300.0, 400.0), "outcome":&"weakpoint_expose"},
-		{"id":&"c", "position":Vector2(500.0, 600.0), "outcome":&"cryo_lock"},
+	var blueprint := [
+		{"id":&"a", "pos":Vector2.ZERO},
+		{"id":&"b", "pos":Vector2(900.0, 0.0)},
+		{"id":&"c", "pos":Vector2(1800.0, 0.0)},
 	]
+	var seen := {}
+	for cycle_index in 8:
+		var runtime := Runtime.new()
+		runtime.configure(blueprint, 7100, StringName("stage_%d" % (cycle_index + 1)))
+		var devices: Array = runtime.snapshot()["devices"]
+		_expect(devices.size() == 3, "cycle %d configures three facilities" % (cycle_index + 1))
+		var cycle_roles := {}
+		for device in devices:
+			cycle_roles[StringName(device["outcome"])] = true
+			seen[StringName(device["outcome"])] = true
+		_expect(cycle_roles.size() == 3, "cycle %d facilities have distinct roles" % (cycle_index + 1))
+	_expect(seen.size() == 5, "the deterministic eight-cycle fixture covers every facility role")
+
+	var runtime := Runtime.new()
+	runtime.configure(blueprint, 77, &"stage_1")
+	var first := Dictionary(runtime.snapshot()["devices"][0])
+	var device_id := StringName(first["id"])
+	var inside := runtime.modifiers_at(Vector2(first["position"]))
+	_expect(inside.size() == 1 and StringName(inside[0]["applies_to"]) == &"all_actors", "an intact facility affects either faction inside its radius")
+	_expect(runtime.modifiers_at(Vector2(first["position"]) + Vector2(0.0, 600.0)).is_empty(), "facility effects stop outside their radius")
+	var hit := {}
+	_expect(not runtime.first_intact_segment_hit(Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit), "facilities never block projectiles")
+	_expect(runtime.first_damageable_segment_hit(Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit), "passing projectiles still acquire a facility damage target")
+	_expect(bool(runtime.receive_damage(device_id, 120.0, &"hostile", &"area")["accepted"]), "hostile area damage affects facilities")
+	var broken := runtime.receive_damage(device_id, Runtime.DEVICE_HEALTH, &"player", &"projectile")
+	_expect(bool(broken["broken"]) and not bool(Dictionary(broken["break_event"])["grants_experience"]), "player damage destroys a facility without rewards")
+	_expect(runtime.modifiers_at(Vector2(first["position"])).is_empty(), "destroyed facilities stop their effects immediately")
+	_finish()
 
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+
+func _finish() -> void:
+	if failures.is_empty():
+		print("VEHICLE_MYSTERY_DEVICE_RUNTIME_VALIDATION_OK")
+		quit(0)
+		return
+	for failure in failures:
+		push_error(failure)
+	quit(1)

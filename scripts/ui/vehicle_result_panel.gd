@@ -9,21 +9,15 @@ signal diagnostic_export_requested
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 const ReportBody = preload("res://scripts/ui/vehicle_combat_report_body.gd")
-const BuildRail = preload("res://scripts/ui/vehicle_upgrade_build_rail.gd")
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 
 var _kicker: Label
 var _title: Label
 var _summary: Label
-var _report_body
-var _build_rail
-var _loadout: Label
-var _counters: Label
-var _build_heading: Label
-var _reward: Label
+var _report_body: VehicleCombatReportBody
 var _deployment: Button
 var _diagnostic_export: Button
 var _diagnostic_status: Label
-var _content_grid: GridContainer
 var _snapshot: Dictionary = {}
 var _force_compact := false
 
@@ -37,13 +31,14 @@ func _ready() -> void:
 
 
 func open(snapshot: Dictionary) -> bool:
+	var required_cycle_count := CombatStages.STAGE_IDS.size()
 	if (
 		not bool(snapshot.get("complete_run", false))
-		or int(snapshot.get("stage_count", 0)) != 10
-		or int(snapshot.get("final_stage_number", 0)) != 10
+		or int(snapshot.get("stage_count", 0)) != required_cycle_count
+		or int(snapshot.get("final_stage_number", 0)) != required_cycle_count
 		or bool(snapshot.get("has_next_stage", true))
 	):
-		push_error("VehicleResultPanel.open requires a complete terminal ten-stage aggregate.")
+		push_error("VehicleResultPanel.open requires a complete terminal boss-cycle aggregate.")
 		return false
 	_snapshot = snapshot.duplicate(true)
 	refresh_localized_content()
@@ -52,8 +47,9 @@ func open(snapshot: Dictionary) -> bool:
 
 
 func refresh_localized_content() -> void:
-	if _snapshot.is_empty(): return
-	_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(_snapshot.get("stage_count", 10)))).replace("%s", tr("RESULT_ALL_STAGES"))
+	if _snapshot.is_empty():
+		return
+	_kicker.text = tr("RESULT_STAGE_COMPLETE").replace("%d", str(int(_snapshot.get("stage_count", CombatStages.STAGE_IDS.size())))).replace("%s", tr("RESULT_ALL_STAGES"))
 	_title.text = tr("RESULT_TITLE_FINAL")
 	var seconds := maxi(0, roundi(float(_snapshot.get("active_run_elapsed_seconds", _snapshot.get("run_time_seconds", 0.0)))))
 	var hull := roundi(float(_snapshot.get("hull", 0.0)))
@@ -64,16 +60,6 @@ func refresh_localized_content() -> void:
 		tr("RESULT_TOTAL_DEFEATS") % int(_snapshot.get("total_defeats", 0)),
 	]
 	_report_body.set_snapshot(_snapshot)
-	_build_rail.set_snapshot(Dictionary(_snapshot.get("build_snapshot", {})))
-	_build_rail.refresh_localized_content()
-	_loadout.text = _loadout_text()
-	_counters.text = "%s  ·  %s  ·  %s" % [
-		tr("RESULT_PRIMARY_HITS") % int(_snapshot.get("primary_hits", 0)),
-		tr("RESULT_DASH_USES") % int(_snapshot.get("dash_uses", 0)),
-		tr("RESULT_INSTALLATIONS") % int(_snapshot.get("installations", 0)),
-	]
-	_build_heading.text = tr("RESULT_BUILD_LOADOUT")
-	_reward.text = "%s\n%s" % [tr(String(_snapshot.get("permanent_reward_key", "RESULT_RELAY_MODULE"))), tr(String(_snapshot.get("permanent_reward_detail_key", "RESULT_ROUTE_CONTINUES")))]
 	_diagnostic_export.text = tr("DIAGNOSTICS_EXPORT")
 	_diagnostic_export.accessibility_name = tr("DIAGNOSTICS_EXPORT")
 	_deployment.text = tr("RESULT_DEPLOYMENT")
@@ -86,21 +72,22 @@ func set_compact_mode(compact: bool) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED: _apply_responsive_layout()
+	if what == NOTIFICATION_RESIZED:
+		_apply_responsive_layout()
 
 
 func _build() -> void:
 	_kicker = Factory.label("", 16, Art.MUSTARD)
 	_kicker.theme_type_variation = &"MetricLabel"
-	_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	add_child(_kicker)
 	_title = Factory.label("", 38, Art.IVORY_BRIGHT)
 	_title.theme_type_variation = &"TitleLabel"
-	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	add_child(_title)
 	_summary = Factory.label("", 17, Art.MINT_SOFT)
 	_summary.theme_type_variation = &"MetricLabel"
-	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_summary)
 	var scroll := ScrollContainer.new()
@@ -108,51 +95,23 @@ func _build() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(scroll)
-	_content_grid = GridContainer.new()
-	_content_grid.columns = 2
-	_content_grid.add_theme_constant_override("h_separation", 24)
-	_content_grid.add_theme_constant_override("v_separation", 18)
-	_content_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_content_grid)
-	var report_column := VBoxContainer.new()
-	report_column.add_theme_constant_override("separation", 12)
-	report_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_content_grid.add_child(report_column)
+	var content_stack := VBoxContainer.new()
+	content_stack.add_theme_constant_override("separation", 12)
+	content_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content_stack)
 	_report_body = ReportBody.new()
-	_report_body.custom_minimum_size.y = 170.0
-	report_column.add_child(_report_body)
-	_loadout = Factory.label("", 16, Art.TEXT_PRIMARY)
-	_loadout.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	report_column.add_child(_loadout)
-	_counters = Factory.label("", 16, Art.TEXT_PRIMARY)
-	_counters.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	report_column.add_child(_counters)
-	_reward = Factory.label("", 16, Art.MINT_SOFT)
-	_reward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	report_column.add_child(_reward)
+	content_stack.add_child(_report_body)
 	_diagnostic_export = Factory.command_button(tr("DIAGNOSTICS_EXPORT"), Factory.COMMAND_SECONDARY)
 	_diagnostic_export.custom_minimum_size = Vector2(260.0, 44.0)
 	_diagnostic_export.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_diagnostic_export.pressed.connect(func() -> void: diagnostic_export_requested.emit())
-	report_column.add_child(_diagnostic_export)
+	content_stack.add_child(_diagnostic_export)
 	_diagnostic_status = Factory.label("", 14, Art.MINT_SOFT)
 	_diagnostic_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_diagnostic_status.visible = false
-	report_column.add_child(_diagnostic_status)
-	var build_column := VBoxContainer.new()
-	build_column.add_theme_constant_override("separation", 8)
-	build_column.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	build_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_content_grid.add_child(build_column)
-	_build_heading = Factory.section_heading("")
-	build_column.add_child(_build_heading)
-	_build_rail = BuildRail.new()
-	_build_rail.set_heading_visible(false)
-	_build_rail.set_compact_mode(true)
-	_build_rail.set_dense_mode(true)
-	_build_rail.set_viewport_minimum_height(250.0)
-	build_column.add_child(_build_rail)
-	var actions := CenterContainer.new()
+	content_stack.add_child(_diagnostic_status)
+	var actions := HBoxContainer.new()
+	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(actions)
 	_deployment = Factory.command_button("", Factory.COMMAND_PRIMARY)
 	_deployment.custom_minimum_size = Vector2(300.0, 48.0)
@@ -161,33 +120,14 @@ func _build() -> void:
 	actions.add_child(_deployment)
 
 
-func _loadout_text() -> String:
-	var loadout := Dictionary(_snapshot.get("loadout", {}))
-	var labels: Array[String] = []
-	for key in ["primary_title_key", "active_title_key"]:
-		var title_key := String(loadout.get(key, ""))
-		if not title_key.is_empty(): labels.append(tr(title_key))
-	for title_key_variant in Array(loadout.get("secondary_title_keys", [])):
-		var title_key := String(title_key_variant)
-		if not title_key.is_empty(): labels.append(tr(title_key))
-	if labels.is_empty(): return tr("RESULT_LOADOUT_NONE")
-	return tr("RESULT_LOADOUT") % " · ".join(labels)
-
-
 func _apply_responsive_layout() -> void:
 	var compact := _force_compact or (is_inside_tree() and get_window().size.x < 1180)
 	if is_instance_valid(_report_body):
-		_report_body.custom_minimum_size.y = 150.0 if compact else 170.0
 		_report_body.set_compact_mode(compact)
-	if is_instance_valid(_content_grid): _content_grid.columns = 1 if compact else 2
-	if is_instance_valid(_build_rail):
-		# The terminal report has less vertical room than the upgrade choice panel.
-		# Keep its read-only grid dense so all six categories remain visible at 720p.
-		_build_rail.set_compact_mode(true)
-		_build_rail.set_dense_mode(true)
-		_build_rail.set_viewport_minimum_height(280.0 if compact else 250.0)
-	if is_instance_valid(_title): Factory.apply_font_size(_title, 30 if compact else 40)
-	if is_instance_valid(_deployment): _deployment.custom_minimum_size.y = 44.0 if compact else 48.0
+	if is_instance_valid(_title):
+		Factory.apply_font_size(_title, 30 if compact else 40)
+	if is_instance_valid(_deployment):
+		_deployment.custom_minimum_size.y = 44.0 if compact else 48.0
 
 
 func kicker_text() -> String:
@@ -200,14 +140,8 @@ func debug_contract() -> Dictionary:
 		"fixed_actions": 1,
 		"primary_size": _deployment.custom_minimum_size,
 		"summary_text": _summary.text,
-		"wide_columns": _report_body.debug_contract()["wide_columns"],
-		"compact_tabs": _report_body.debug_contract()["compact_tabs"],
-		"scroll_views": _report_body.debug_contract()["scroll_views"],
-		"build_visible": _build_rail.visible,
-		"build_rail": _build_rail.debug_contract(),
-		"loadout_text": _loadout.text,
-		"counter_text": _counters.text,
-		"reward_text": _reward.text,
+		"report": _report_body.debug_contract(),
+		"single_outer_scroll":find_children("*", "ScrollContainer", true, false).size() == 1,
 		"primary_action": _deployment.text,
 		"primary_variation": _deployment.theme_type_variation,
 		"initial_focus_is_deployment": _deployment.has_focus(),

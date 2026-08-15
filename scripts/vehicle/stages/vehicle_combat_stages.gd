@@ -10,11 +10,12 @@ const TacticCatalog = preload(
 )
 
 const STAGE_IDS: Array[StringName] = [
-	&"stage_1", &"stage_2", &"stage_3", &"stage_4", &"stage_5",
-	&"stage_6", &"stage_7", &"stage_8", &"stage_9", &"stage_10",
+	&"stage_1", &"stage_2", &"stage_3", &"stage_4",
+	&"stage_5", &"stage_6", &"stage_7", &"stage_8",
 ]
-const QUOTAS := [24, 24, 32, 32, 40, 40, 48, 48, 56, 56]
-const AUTHORED_COUNTS := [260, 260, 330, 330, 408, 408, 513, 513, 630, 630]
+# A stage ID is now an internal cycle key. Every cycle has a quota and boss.
+const QUOTAS := [40, 44, 48, 52, 56, 60, 64, 68]
+const AUTHORED_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630]
 const ARRIVAL_WINDOWS := 3
 const SQUADS_PER_WINDOW := 4
 const SURGE_SQUADS := ARRIVAL_WINDOWS * SQUADS_PER_WINDOW
@@ -32,40 +33,40 @@ const PURSUIT_STANDARD_RATIOS := [
 	Vector2i(119, 188),
 	Vector2i(85, 96),
 	Vector2i(85, 96),
-	Vector2i(149, 195),
-	Vector2i(149, 195),
 ]
 const TITLE_KEYS_BY_FIELD := {
 	&"drowned_ruin_field":[
 		"STAGE_DROWNED_RUINS_1", "STAGE_DROWNED_RUINS_2", "STAGE_DROWNED_RUINS_3",
-		"STAGE_DROWNED_RUINS_4", "STAGE_DROWNED_RUINS_5", "STAGE_DROWNED_RUINS_6", "STAGE_DROWNED_RUINS_7", "STAGE_DROWNED_RUINS_8", "STAGE_DROWNED_RUINS_9", "STAGE_DROWNED_RUINS_10",
+		"STAGE_DROWNED_RUINS_4", "STAGE_DROWNED_RUINS_5", "STAGE_DROWNED_RUINS_6", "STAGE_DROWNED_RUINS_7",
+		"STAGE_DROWNED_RUINS_8",
 	],
 	&"tidal_archive_field":[
 		"STAGE_TIDAL_ARCHIVE_1", "STAGE_TIDAL_ARCHIVE_2", "STAGE_TIDAL_ARCHIVE_3",
-		"STAGE_TIDAL_ARCHIVE_4", "STAGE_TIDAL_ARCHIVE_5", "STAGE_TIDAL_ARCHIVE_6", "STAGE_TIDAL_ARCHIVE_7", "STAGE_TIDAL_ARCHIVE_8", "STAGE_TIDAL_ARCHIVE_9", "STAGE_TIDAL_ARCHIVE_10",
+		"STAGE_TIDAL_ARCHIVE_4", "STAGE_TIDAL_ARCHIVE_5", "STAGE_TIDAL_ARCHIVE_6", "STAGE_TIDAL_ARCHIVE_7",
+		"STAGE_TIDAL_ARCHIVE_8",
 	],
 	&"storm_drydock_field":[
 		"STAGE_STORM_DRYDOCK_1", "STAGE_STORM_DRYDOCK_2", "STAGE_STORM_DRYDOCK_3",
-		"STAGE_STORM_DRYDOCK_4", "STAGE_STORM_DRYDOCK_5", "STAGE_STORM_DRYDOCK_6", "STAGE_STORM_DRYDOCK_7", "STAGE_STORM_DRYDOCK_8", "STAGE_STORM_DRYDOCK_9", "STAGE_STORM_DRYDOCK_10",
+		"STAGE_STORM_DRYDOCK_4", "STAGE_STORM_DRYDOCK_5", "STAGE_STORM_DRYDOCK_6", "STAGE_STORM_DRYDOCK_7",
+		"STAGE_STORM_DRYDOCK_8",
 	],
 }
 const BOSS_PROFILE_IDS: Array[StringName] = [
-	&"", &"stage_1", &"", &"stage_2", &"", &"stage_3", &"", &"stage_4", &"", &"stage_5",
+	&"stage_1", &"stage_2", &"stage_3", &"stage_4",
+	&"stage_5", &"stage_6", &"stage_7", &"stage_8",
 ]
 const BOSS_NAME_KEYS := [
-	"", "ENEMY_FOUNDRY_COLOSSUS", "", "ENEMY_ARCHIVE_LEVIATHAN", "", "ENEMY_DRYDOCK_TITAN", "", "ENEMY_SWITCHYARD_BEHEMOTH", "", "ENEMY_CROWN_ENGINE",
+	"ENEMY_FOUNDRY_COLOSSUS", "ENEMY_ARCHIVE_LEVIATHAN", "ENEMY_DRYDOCK_TITAN", "ENEMY_SWITCHYARD_BEHEMOTH", "ENEMY_CROWN_ENGINE", "ENEMY_SIEGE_BATTERY", "ENEMY_VECTOR_LOOM", "ENEMY_PULSE_CORE",
 ]
 const MOBILE_ROLES := [
 	[&"scrap_drone", &"needle_drone", &"chaser", &"shooter"],
-	[&"scrap_drone", &"needle_drone", &"chaser", &"shooter"],
-	[&"scrap_drone", &"spark_minelet", &"controller", &"shield_escort", &"shooter", &"chaser"],
-	[&"scrap_drone", &"spark_minelet", &"controller", &"shield_escort", &"shooter", &"chaser"],
-	[&"spark_minelet", &"chaser", &"artillery_spotter", &"rammer", &"bulkhead_guard", &"scrap_drone"],
-	[&"spark_minelet", &"chaser", &"artillery_spotter", &"rammer", &"bulkhead_guard", &"scrap_drone"],
-	[&"chaser", &"rammer", &"bulkhead_guard", &"repair_tender", &"spark_minelet", &"needle_drone"],
-	[&"chaser", &"rammer", &"bulkhead_guard", &"repair_tender", &"spark_minelet", &"needle_drone"],
-	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone"],
-	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone"],
+	[&"scrap_drone", &"spark_minelet", &"controller", &"shield_escort", &"shooter", &"chaser", &"rail_sniper"],
+	[&"spark_minelet", &"chaser", &"artillery_spotter", &"rammer", &"bulkhead_guard", &"scrap_drone", &"rail_sniper", &"orbit_gunner"],
+	[&"chaser", &"rammer", &"bulkhead_guard", &"repair_tender", &"spark_minelet", &"needle_drone", &"orbit_gunner", &"bombing_runner"],
+	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone", &"rail_sniper", &"bombing_runner", &"wreck_scavenger"],
+	[&"chaser", &"rammer", &"bulkhead_guard", &"repair_tender", &"spark_minelet", &"needle_drone", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger"],
+	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone", &"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger"],
+	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone", &"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger"],
 ]
 
 static func normalized_id(stage_id: StringName) -> StringName:
@@ -191,24 +192,7 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 
 
 static func _role_sequence(stage_index: int, target_count: int) -> Array[StringName]:
-	var pair_start := stage_index - posmod(stage_index, 2)
-	var pair_total: int = AUTHORED_COUNTS[pair_start] + AUTHORED_COUNTS[pair_start + 1]
-	var pair_sequence := _role_sequence_for_arc(pair_start, pair_total)
-	var quota_half: int = QUOTAS[pair_start]
-	var remaining := pair_sequence.slice(quota_half * 2)
-	var result: Array[StringName] = []
-	if stage_index == pair_start:
-		result.assign(pair_sequence.slice(0, quota_half))
-	else:
-		result.assign(pair_sequence.slice(quota_half, quota_half * 2))
-	var remainder_lane := 0 if stage_index == pair_start else 1
-	for remaining_index in remaining.size():
-		if remaining_index % 2 == remainder_lane:
-			result.append(remaining[remaining_index])
-	if result.size() != target_count:
-		push_error("Paired stage role partition produced an invalid authored count")
-		return []
-	return result
+	return _role_sequence_for_arc(stage_index, target_count)
 
 
 static func _role_sequence_for_arc(stage_index: int, target_count: int) -> Array[StringName]:

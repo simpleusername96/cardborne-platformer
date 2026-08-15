@@ -15,8 +15,6 @@ const INNER_WALL_GROUP_COUNT := 5
 const MYSTERY_DEVICE_COUNT := 3
 const WALL_CLEARANCE := 384.0
 const DEVICE_PAIR_CLEARANCE := 960.0
-const REPAIR_HEAL_MIN := 40.0
-const REPAIR_HEAL_MAX := 50.0
 
 static var _field: Dictionary = {}
 static var _walkable_rects_cache: Array[Rect2] = []
@@ -326,22 +324,18 @@ static func _try_build_stage_objects(
 		return {}
 	_prioritize_separated_recalls(reward_pickup_positions, pickup_positions)
 	var pickups: Array[Dictionary] = []
-	var uses_small_repair := CombatStages.index_of(stage_id) % 2 == 1
 	for index in 3:
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + 1],
-			"kind":&"experience_recall" if index < 1 else &"repair",
-			"heal_amount":0.0 if index < 1 else REPAIR_HEAL_MAX,
+			"kind":&"experience_recall" if index == 0 else &"experience_shard",
+			"experience":0 if index == 0 else 5,
 			"pos":pickup_positions[index],
 		})
 	for index in 4:
-		var recall := index < 1
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + 4],
-			"kind":&"experience_recall" if recall else &"repair",
-			"heal_amount":0.0 if recall else (
-				REPAIR_HEAL_MIN if uses_small_repair and index == 3 else REPAIR_HEAL_MAX
-			),
+			"kind":&"experience_recall" if index == 0 else &"experience_shard",
+			"experience":0 if index == 0 else 5,
 			"pos":reward_pickup_positions[index],
 		})
 	return {"mystery_devices":devices, "pickups":pickups}

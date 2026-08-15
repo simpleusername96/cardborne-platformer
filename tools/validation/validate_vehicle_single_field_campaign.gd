@@ -18,7 +18,7 @@ func _initialize() -> void:
 		_expect(Catalog.validate_definition(definition, stage_id).is_empty(), "%s schema" % stage_id)
 		_expect(Catalog.authored_population(stage_id) >= Catalog.quota(stage_id) + 32, "%s finite population exceeds quota plus active cap" % stage_id)
 		fingerprints[Catalog.geometry_fingerprint(stage_id)] = true
-	_expect(fingerprints.size() == 1, "all ten stages share one geometry fingerprint")
+	_expect(fingerprints.size() == 1, "all eight cycles share one geometry fingerprint")
 	_expect(Catalog.world_rect() == Rect2(0, 0, 7200, 4320), "world is exactly 7200x4320")
 	_expect(Catalog.player_start() == Vector2(3600, 2160), "start is exact field center")
 	_expect(Catalog.walkable_regions().size() >= 20, "field has at least twenty broad regions")

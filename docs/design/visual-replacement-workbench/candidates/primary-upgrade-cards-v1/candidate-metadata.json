@@ -1,0 +1,23 @@
+{
+  "unit_id": "primary-upgrade-cards-v1",
+  "review_state": "direction_clear",
+  "switch_ready": false,
+  "production_integrated": false,
+  "user_approval": null,
+  "visual_authority_evidence": {
+    "text_contract": "docs/design/VISUAL_SYSTEM.md",
+    "style_reference": "docs/design/cardborne-universal-art-style-reference.png",
+    "expected_reference_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_reference_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "complete_document_read": true,
+    "original_detail_inspected": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "built_in_imagegen_referenced_image_paths"
+  },
+  "assets": {
+    "upgrade/miss_compensation": "456d7d18c1ff45f94c9c2c9784f6963a0b54c83aa6fce8cb6d0753d09fd0d935",
+    "upgrade/hit_chain": "3c9a9fedd330523e38ceaeaeb0333ef079e525c40c49322f24e26534b3068ac6",
+    "upgrade/braced_fire": "75bf9358bc5e296d15b65c7d01a06f402a5a3ce53f8268c1692e8c32ff674ba2"
+  }
+}
+

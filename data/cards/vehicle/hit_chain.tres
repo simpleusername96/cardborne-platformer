@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/cards/vehicle_upgrade_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"hit_chain"
+title_key = "UPGRADE_HIT_CHAIN_TITLE"
+description_key = "UPGRADE_HIT_CHAIN_DESC"
+category = &"combat"
+artwork_asset_id = &"upgrade/hit_chain"
+max_level = 3

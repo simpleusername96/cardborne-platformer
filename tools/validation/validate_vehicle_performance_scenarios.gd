@@ -171,7 +171,7 @@ func _run() -> void:
 				not production_samples.is_empty()
 				and int(Dictionary(production_samples[0]).get("authored_population", -1))
 					== final_authored_population,
-				"production replay reports the final Stage 10 authored population"
+				"production replay reports the final cycle authored population"
 			)
 			_expect(
 				int(population.get("authored_population", -1)) == final_authored_population

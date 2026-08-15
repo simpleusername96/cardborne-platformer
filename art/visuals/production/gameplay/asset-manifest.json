@@ -27,7 +27,7 @@
     "shared_world_cue_rule": "Fixed world surface and wall identities remain authored PNGs. The three approved SurfaceDetail identities are exact deterministic SVG sources. Dynamic health rectangles, rings, beam corridors, disks, and simple markers are code-native geometry.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, live timing, and shape/color-only dynamic primitives remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 78,
+  "final_asset_count": 77,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 19,
@@ -100,7 +100,6 @@
     {"id": "upgrade/thermal_burst", "path": "upgrades/thermal_burst.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
     {"id": "upgrade/bio_toxin", "path": "upgrades/bio_toxin.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
     {"id": "upgrade/cryo_slow", "path": "upgrades/cryo_slow.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
-    {"id": "upgrade/shock_disruption", "path": "upgrades/shock_disruption.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
     {"id": "upgrade/emp", "path": "upgrades/emp.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
     {"id": "upgrade/gravity_collapse", "path": "upgrades/gravity_collapse.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},
     {"id": "upgrade/kinetic_shockwave", "path": "upgrades/kinetic_shockwave.png", "canvas": [192, 192], "pivot": [96, 96], "category": "upgrade"},

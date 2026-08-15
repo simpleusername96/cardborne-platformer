@@ -194,22 +194,22 @@ Source owners: `docs/product/`, `docs/design/VISUAL_SYSTEM.md`, `.agents/design/
 `scripts/combat/vehicle_status_runtime.gd`, localization catalogs, production manifest,
 and focused validators.
 
-- [ ] **1.1** Replace ten-stage/paired player-facing contracts with eight boss cycles.
+- [x] **1.1** Replace ten-stage/paired player-facing contracts with eight boss cycles.
   - Change: update product specs, design context, localization inventory, guidebook/report
     terminology, and validation expectations. Preserve internal compatibility names only
     within the same migration commit and remove them before acceptance.
   - Accept: repository search finds no reachable `Stage N/10`, odd/even boss-stage rule,
     or five-boss acceptance claim outside archived evidence.
-- [ ] **1.2** Delete Shock end to end with no replacement.
+- [x] **1.2** Delete Shock end to end with no replacement.
   - Change: remove the card resource, build/catalog ID, payload/status fields, offer paths,
     copy, telemetry/report fields, semantic asset registration, production PNG, and Shock-
     specific validator cases. Keep Cryo as the sole utility ID.
-  - Accept: card catalog reports 24 live card IDs and 82 nominal levels; Shock has no
+  - Accept: card catalog reports 27 live card IDs and 91 nominal levels; Shock has no
     reachable resource, offer, runtime state, localized label, report row, provider ID, or
     production file. Damage attributes still choose Thermal or Toxin independently of Cryo.
   - Guard: names `Shockwave`/`kinetic_shockwave` remain because they are unrelated active-
     weapon identities.
-- [ ] **1.3** Update the visual contract for the approved scope and final count.
+- [x] **1.3** Update the visual contract for the approved scope and final count.
   - Change: authorize eight boss bodies, profile-owned shields, attached Crown hardpoints,
     four enemy silhouettes, five facility roles, three new card images, and exactly one
     shared boss explosion raster exception; set final manifest target to 90.
@@ -233,19 +233,19 @@ Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`,
 `scripts/enemies/vehicle_stage_difficulty.gd`, `scripts/bosses/`,
 `scripts/combat/vehicle_effect_store.gd`, and `scripts/vehicle/vehicle_run.gd` orchestration.
 
-- [ ] **2.1** Implement the eight-cycle state flow and cycle-owned quotas/snapshots.
+- [x] **2.1** Implement the eight-cycle state flow and cycle-owned quotas/snapshots.
   - Accept: a deterministic fixture completes exactly eight cycles in order and every
     boss begins only after its ordinary quota; no transition occurs before cleanup.
-- [ ] **2.2** Implement common charge, broad barrage, selection cap, scaling, and damage bands.
+- [x] **2.2** Implement common charge, broad barrage, selection cap, scaling, and damage bands.
   - Accept: validators assert simultaneous row counts/spacing/timing/motion, monotonic
     profiles, at most two common selections per five, and exact hit locks.
-- [ ] **2.3** Implement bosses 1-5 with their revised identity and defense contracts.
+- [x] **2.3** Implement bosses 1-5 with their revised identity and defense contracts.
   - Accept: each identity geometry and state validator passes; only Drydock and Crown have
     shields and their defenses directly emit the locked offense.
-- [ ] **2.4** Implement Siege Battery, Vector Loom, and Pulse Core.
+- [x] **2.4** Implement Siege Battery, Vector Loom, and Pulse Core.
   - Accept: each can charge, barrage, and complete its unique pattern; warning geometry
     equals collision and high-threat escape checks pass.
-- [ ] **2.5** Add `scripts/bosses/vehicle_boss_death_runtime.gd` and bounded explosion state.
+- [x] **2.5** Add `scripts/bosses/vehicle_boss_death_runtime.gd` and bounded explosion state.
   - Accept: frame-step validator proves the exact timeline, safety, ownership retirement,
     no cleanup rewards/quota, one cosmetic receipt maximum, reduced-motion behavior, and
     transition only at 2.00 seconds.
@@ -270,13 +270,13 @@ and `VehicleRun` orchestration hooks.
   - Accept: role-specific fixtures prove attack cadence/geometry and Wreck Scavenger's
     radius-360 death-event stacks, exclusions, maximum five, exact multipliers, and active
     attack at zero stacks; 4/8/3 pacing capture passes without teleport or count reduction.
-- [ ] **3.2** Add the three primary-fire upgrade runtimes and definitions.
+- [x] **3.2** Add the three primary-fire upgrade runtimes and definitions.
   - Accept: shot-group and movement fixtures prove all thresholds, caps, consumption,
     split-child deduplication, and level values with bounded state and no per-tick pair scan.
-- [ ] **3.3** Enforce missing active/secondary offer reservation.
+- [x] **3.3** Enforce missing active/secondary offer reservation.
   - Accept: seeded offer fixtures reserve both categories when both are absent, one when
     one is absent, and none after both are acquired while preserving three legal offers.
-- [ ] **3.4** Replace Mystery outcomes and repair pickups with five symmetric facilities.
+- [x] **3.4** Replace Mystery outcomes and repair pickups with five symmetric facilities.
   - Accept: player/enemy enter/exit tests prove exact radii/effects, both factions can
     destroy facilities, projectiles continue through, deterministic cycle distribution
     covers all types, repair pickups are unreachable, and five added XP shards remain visible.
@@ -299,18 +299,18 @@ Source owners: `scripts/diagnostics/vehicle_session_diagnostic_store.gd`,
 `scripts/ui/vehicle_combat_report_body.gd`, `vehicle_result_panel.gd`,
 `vehicle_stage_report_panel.gd`, `vehicle_settings_panel.gd`, and shared UI primitives.
 
-- [ ] **4.1** Retain the newest ten valid diagnostics on load and persist.
+- [x] **4.1** Retain the newest ten valid diagnostics on load and persist.
   - Accept: validator creates more than ten valid/tied/old/oversize/corrupt bundles and
     proves descending `(saved_unix, session_id)`, ten maximum, quarantine, 25 MiB, 14-day
     caps, and protected cycle/boss/cleanup/report summaries.
-- [ ] **4.2** Recompose the shared report as one stacked outer-scroll body.
+- [x] **4.2** Recompose the shared report as one stacked outer-scroll body.
   - Change: section order is outcome, cycle progress, build, damage, defense, enemies,
     bosses, pacing, diagnostics limitations; remove report tabs, metric sub-scrolls, and
     the side build rail. Keep exactly one fixed Deployment action on terminal surfaces.
   - Accept: the same view model/component instance contract is used by victory, defeat,
     and Settings; focus order follows section order and debug contracts report one scroll,
     zero tabs, zero nested scrolls, zero build rails.
-- [ ] **4.3** Complete Level 3 rendered UI evidence.
+- [x] **4.3** Complete Level 3 rendered UI evidence.
   - Accept: Korean/English captures at 960x540, 1280x720, and 1920x1080 at 100%/200% text
     show zero overflow, clipping, overlap, horizontal scroll, or hidden action; keyboard
     and controller focus traverse every reachable report state.
@@ -332,7 +332,7 @@ Source owners: visual workbench units, `art/visuals/production/gameplay/asset-ma
 `scripts/presentation/components/vehicle_semantic_asset_provider.gd`, actor/effect catalogs,
 renderer batches, and production Web tooling.
 
-- [ ] **5.1** Generate and present the three card-art candidates and exact approval sheet.
+- [x] **5.1** Generate and present the three card-art candidates and exact approval sheet.
   - Change: use ImageGen with the canonical style PNG as an actual reference; combine the
     three card candidates with the existing nine actor/facility and one explosion candidate
     in the Korean approval report with exact paths and hashes.
@@ -391,13 +391,33 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1 - Contracts and Shock removal.
-- Next task: 1.1 - replace ten-stage/paired player-facing contracts with eight boss cycles.
-- Last completed gate: Discovery Closure Gate; Shock deletion with no replacement is the
-  final owner decision that activated this contract.
+- Current phase: Phase 3 pacing qualification and Phase 5 visual approval gate.
+- Next task: commit the independently complete implementation, run the clean 4/8/3 pacing
+  capture, then request exact hash approval for task 5.2.
+- Last completed gate: focused source/runtime/UI validation. The 8-cycle campaign, boss
+  patterns and cleanup, four specialist enemies, 27-card/91-level catalog, five symmetric
+  facilities, newest-ten diagnostics, stacked reports, guidebook, localization, and the
+  960/1280/1920 Korean/English 100%/200% report capture matrix are green.
 - Update rule: after a task passes, record concise evidence, check it, and advance this
   pointer in the same edit. On start/resume, inspect only the current checkpoint inputs.
 - Checked tasks and recorded passing evidence stay complete unless a relevant input changed.
+
+Execution evidence recorded on 2026-08-15:
+
+- Focused validators passed for upgrade system/facilities, eight-boss campaign, boss
+  patterns/runtime, specialist enemies, attack/status contracts, diagnostics, stage/final
+  reports, eight-cycle catalog, engagement steering, localization, guidebook, experience,
+  field layout, renderer, semantic assets, weapon balance, persistent facilities, map
+  integration, destructible terrain, and the full VehicleRun fixture.
+- The shared report capture matrix rendered Korean and English at 960x540, 1280x720, and
+  1920x1080 with 100% and 200% text scale. Inspection found no clipping, overflow, nested
+  scroll, side rail, or hidden terminal action.
+- Three meaningful local sessions were retained after seven exact automated sub-second
+  diagnostics were removed. Their engagement-gap evidence drove bounded off-screen steering;
+  clean 4/8/3 capture remains the acceptance gate for task 3.1.
+- Thirteen exact visual candidates and their SHA-256 hashes are recorded in the Korean
+  approval report and remain outside production. Task 5.2 is intentionally blocked on the
+  user's explicit exact-file approval.
 
 ## Completion and Stop Conditions
 

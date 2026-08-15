@@ -2,8 +2,8 @@ class_name VehicleUpgradeCatalog
 extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
-const EXPECTED_COUNT := 25
-const EXPECTED_LEVEL_STATES := 85
+const EXPECTED_COUNT := 27
+const EXPECTED_LEVEL_STATES := 91
 const AUTOMATIC_WEAPON_SLOTS := 3
 const CATEGORIES: Array[StringName] = [
 	&"primary", &"secondary", &"element", &"activated", &"chassis", &"combat",
@@ -16,7 +16,7 @@ const CATEGORY_DESCRIPTORS: Array[Dictionary] = [
 	{"id":&"element", "heading_key":"UPGRADE_CATEGORY_ELEMENT", "description_key":"UPGRADE_CATEGORY_ELEMENT_DESCRIPTION", "slot_keys":[&"damage", &"utility"]},
 	{"id":&"activated", "heading_key":"UPGRADE_CATEGORY_ACTIVATED", "description_key":"UPGRADE_CATEGORY_ACTIVATED_DESCRIPTION", "slot_keys":[&"weapon"]},
 	{"id":&"chassis", "heading_key":"UPGRADE_CATEGORY_CHASSIS", "description_key":"UPGRADE_CATEGORY_CHASSIS_DESCRIPTION", "slot_keys":[&"chassis_speed", &"pickup_radius", &"hull_integrity", &"lifesteal", &"overflow_barrier"]},
-	{"id":&"combat", "heading_key":"UPGRADE_CATEGORY_COMBAT", "description_key":"UPGRADE_CATEGORY_COMBAT_DESCRIPTION", "slot_keys":[&"critical_targeting", &"dash_overdrive", &"dash_afterburn_field", &"last_stand_amplifier"]},
+	{"id":&"combat", "heading_key":"UPGRADE_CATEGORY_COMBAT", "description_key":"UPGRADE_CATEGORY_COMBAT_DESCRIPTION", "slot_keys":[&"critical_targeting", &"dash_overdrive", &"dash_afterburn_field", &"last_stand_amplifier", &"miss_compensation", &"hit_chain", &"braced_fire"]},
 ]
 const ATTRIBUTE_SLOT_KINDS: Array[StringName] = [&"", &"damage", &"utility"]
 const MODIFIER_OPERATIONS: Array[String] = ["add", "multiply"]
@@ -32,7 +32,6 @@ const STAT_IDS: Array[StringName] = [
 	&"toxin_duration",
 	&"cryo_slow_per_stack",
 	&"cryo_duration",
-	&"shock_lock_duration",
 ]
 const EXPECTED_IDS: Array[StringName] = [
 	&"auto_laser", &"bio_toxin", &"chassis_speed",
@@ -41,9 +40,10 @@ const EXPECTED_IDS: Array[StringName] = [
 	&"electric_field", &"emp", &"gravity_collapse", &"homing_missiles", &"hull_integrity",
 	&"kinetic_shockwave",
 	&"last_stand_amplifier", &"lifesteal", &"orbiting_blades",
+	&"miss_compensation", &"hit_chain", &"braced_fire",
 	&"overflow_barrier", &"pickup_radius", &"piercing_rounds",
 	&"piercing_lance",
-	&"shock_disruption", &"split_muzzle", &"storm_barrage", &"thermal_burst",
+	&"split_muzzle", &"storm_barrage", &"thermal_burst",
 ]
 const ATTACK_UPGRADE_IDS := {
 	&"split_muzzle":true,
@@ -64,6 +64,9 @@ const ATTACK_UPGRADE_IDS := {
 	&"gravity_collapse":true,
 	&"kinetic_shockwave":true,
 	&"piercing_lance":true,
+	&"miss_compensation":true,
+	&"hit_chain":true,
+	&"braced_fire":true,
 }
 
 var definitions: Dictionary = {}
@@ -257,7 +260,13 @@ func offer(
 		available[swap_index] = temporary
 	var result: Array[VehicleUpgradeDefinition] = []
 	var used_categories := {}
-	if opening_weapon_mix_required and stage_index == 0 and source_id == &"level_up":
+	# A missing active weapon and missing automatic weapon each reserve one
+	# independent offer position before ordinary category diversity is applied.
+	if build.active_weapon_card_id().is_empty():
+		_append_first_category(result, available, &"activated")
+	if build.active_automatic_weapons() == 0:
+		_append_first_category(result, available, &"secondary")
+	if result.is_empty() and opening_weapon_mix_required and stage_index == 0 and source_id == &"level_up":
 		_append_first_category(result, available, &"activated")
 		_append_first_category(result, available, &"secondary")
 		for definition in available:

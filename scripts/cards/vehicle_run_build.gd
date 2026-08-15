@@ -2,7 +2,7 @@ class_name VehicleRunBuild
 extends RefCounted
 
 const DAMAGE_ATTRIBUTE_IDS: Array[StringName] = [&"thermal_burst", &"bio_toxin"]
-const UTILITY_ATTRIBUTE_IDS: Array[StringName] = [&"cryo_slow", &"shock_disruption"]
+const UTILITY_ATTRIBUTE_IDS: Array[StringName] = [&"cryo_slow"]
 const ACTIVE_WEAPON_CARD_IDS: Array[StringName] = [
 	&"emp", &"gravity_collapse", &"kinetic_shockwave", &"piercing_lance",
 ]

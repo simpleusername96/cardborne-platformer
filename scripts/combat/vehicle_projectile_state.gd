@@ -32,6 +32,7 @@ var spawn_serial := 0
 var combat_action_family: StringName = &""
 var combat_action_serial := 0
 var uses_boss_reserve := false
+var facility_hit_mask := 0
 
 
 func configure(
@@ -68,3 +69,4 @@ func configure(
 	combat_action_family = StringName(spec.get("combat_action_family", &""))
 	combat_action_serial = int(spec.get("combat_action_serial", 0))
 	uses_boss_reserve = boss_reserve
+	facility_hit_mask = 0

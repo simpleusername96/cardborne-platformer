@@ -12,10 +12,11 @@ const STATIONARY: StringName = &"stationary"
 
 const PURSUIT_ARCHETYPES: Array[StringName] = [
 	&"scrap_drone", &"chaser", &"rammer", &"bulkhead_guard",
-	&"splitter_barge", &"spark_minelet",
+	&"splitter_barge", &"spark_minelet", &"bombing_runner", &"wreck_scavenger",
 ]
 const STANDOFF_ARCHETYPES: Array[StringName] = [
 	&"needle_drone", &"shooter", &"controller", &"artillery_spotter",
+	&"rail_sniper", &"orbit_gunner",
 ]
 const ESCORT_ARCHETYPES: Array[StringName] = [&"shield_escort"]
 const SUPPORT_ARCHETYPES: Array[StringName] = [&"repair_tender", &"drone_carrier"]
@@ -25,6 +26,10 @@ const DISTANCE_BANDS := {
 	&"controller":Vector2(390.0, 540.0),
 	&"shield_escort":Vector2(300.0, 470.0),
 	&"artillery_spotter":Vector2(440.0, 600.0),
+	# Rail Sniper keeps its full warning line outside ordinary brawl range.
+	&"rail_sniper":Vector2(520.0, 680.0),
+	# Orbit Gunner deliberately remains in its tangential pressure band.
+	&"orbit_gunner":Vector2(320.0, 460.0),
 	&"repair_tender":Vector2(430.0, 620.0),
 	&"drone_carrier":Vector2(430.0, 620.0),
 }
@@ -44,9 +49,9 @@ static func family(archetype: StringName, role: StringName) -> StringName:
 	if archetype in SUPPORT_ARCHETYPES:
 		return SUPPORT
 	# Compatibility fixtures can specify a behavior without an archetype.
-	if role in [&"chaser", &"rammer", &"bulkhead_guard", &"splitter_barge"]:
+	if role in [&"chaser", &"rammer", &"bulkhead_guard", &"splitter_barge", &"bombing_runner", &"wreck_scavenger"]:
 		return PURSUIT
-	if role in [&"shooter", &"controller", &"artillery_spotter"]:
+	if role in [&"shooter", &"controller", &"artillery_spotter", &"rail_sniper", &"orbit_gunner"]:
 		return STANDOFF
 	if role == &"shield_escort":
 		return ESCORT

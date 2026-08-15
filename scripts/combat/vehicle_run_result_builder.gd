@@ -12,23 +12,30 @@ const ATTRIBUTE_ORDER: Array[StringName] = [
 
 static func build(stage_records: Array, final_state: Dictionary) -> Dictionary:
 	if not _is_complete_run(stage_records):
-		push_error("VehicleRunResultBuilder requires ordered Stage 1-10 records with a terminal Stage 10.")
+		push_error("VehicleRunResultBuilder requires one ordered record for every configured boss cycle.")
 		return {}
 	var required_stage_count := CombatStages.STAGE_IDS.size()
 	var defeats := _merge_defeats(stage_records)
 	var outgoing := _merge_damage(stage_records, &"outgoing")
 	var attributes := _merge_attributes(stage_records)
+	var incoming := _merge_damage(stage_records, &"incoming")
+	var damage_rows: Array[Dictionary] = outgoing.duplicate(true)
+	damage_rows.append_array(attributes)
+	var active_seconds := maxf(0.0, float(final_state.get("active_run_elapsed_seconds", final_state.get("run_time_seconds", 0.0))))
+	var hull := maxf(0.0, float(final_state.get("hull", 0.0)))
+	var max_hull := maxf(0.0, float(final_state.get("max_hull", 0.0)))
+	var build_snapshot := Dictionary(final_state.get("build_snapshot", {})).duplicate(true)
 	return {
 		"stage_count": stage_records.size(),
 		"complete_run": true,
 		"final_stage_number": required_stage_count,
 		"boss_stage_count": _boss_stage_count(),
 		"has_next_stage": false,
-		"active_run_elapsed_seconds": maxf(0.0, float(final_state.get("active_run_elapsed_seconds", final_state.get("run_time_seconds", 0.0)))),
+		"active_run_elapsed_seconds": active_seconds,
 		# Kept for the existing report UI contract during the clock migration.
-		"run_time_seconds": maxf(0.0, float(final_state.get("active_run_elapsed_seconds", final_state.get("run_time_seconds", 0.0)))),
-		"hull": maxf(0.0, float(final_state.get("hull", 0.0))),
-		"max_hull": maxf(0.0, float(final_state.get("max_hull", 0.0))),
+		"run_time_seconds": active_seconds,
+		"hull": hull,
+		"max_hull": max_hull,
 		"health_ratio": clampf(float(final_state.get("health_ratio", 0.0)), 0.0, 1.0),
 		"defeats": defeats,
 		"total_defeats": _total_defeats(defeats),
@@ -39,11 +46,42 @@ static func build(stage_records: Array, final_state: Dictionary) -> Dictionary:
 		"primary_hits": maxi(0, int(final_state.get("primary_hits", 0))),
 		"dash_uses": maxi(0, int(final_state.get("dash_uses", 0))),
 		"installations": maxi(0, int(final_state.get("installations", 0))),
-		"build_snapshot": Dictionary(final_state.get("build_snapshot", {})).duplicate(true),
+		"build_snapshot": build_snapshot,
 		"loadout": Dictionary(final_state.get("loadout", {})).duplicate(true),
 		"permanent_reward_key": String(final_state.get("permanent_reward_key", "RESULT_RELAY_MODULE")),
 		"permanent_reward_detail_key": String(final_state.get("permanent_reward_detail_key", "RESULT_ROUTE_CONTINUES")),
+		"outcome_rows":[
+			{"title_key":"REPORT_ROW_STATUS", "value_key":"REPORT_VALUE_RUN_CLEARED"},
+			{"title_key":"REPORT_ROW_HULL", "value":"%.0f / %.0f" % [hull, max_hull]},
+		],
+		"cycle_progress_rows":[
+			{"title_key":"REPORT_ROW_CYCLES_CLEARED", "count":stage_records.size()},
+			{"title_key":"REPORT_ROW_ACTIVE_TIME", "value":_format_duration(active_seconds)},
+		],
+		"build_rows":_build_rows(build_snapshot),
+		"damage_rows":damage_rows,
+		"defense_rows":incoming,
+		"enemy_rows":defeats.duplicate(true),
+		"boss_rows":[{"title_key":"REPORT_ROW_BOSSES_DEFEATED", "count":_boss_stage_count()}],
+		"pacing_rows":[{"title_key":"REPORT_ROW_ORDINARY_DEFEATS", "count":_total_defeats(defeats)}],
+		"diagnostic_limitations":[{"title_key":"REPORT_ROW_DIAGNOSTIC_SCOPE", "value_key":"REPORT_VALUE_LOCAL_LATEST_TEN"}],
 	}
+
+
+static func _format_duration(seconds: float) -> String:
+	var total := maxi(0, floori(seconds))
+	return "%d:%02d" % [total / 60, total % 60]
+
+
+static func _build_rows(snapshot: Dictionary) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for upgrade_variant in Array(snapshot.get("upgrades", [])):
+		var upgrade := Dictionary(upgrade_variant)
+		rows.append({
+			"title_key":String(upgrade.get("title_key", "REPORT_SOURCE_OTHER")),
+			"value":"Lv. %d" % maxi(1, int(upgrade.get("level", 1))),
+		})
+	return rows
 
 
 static func _is_complete_run(stage_records: Array) -> bool:

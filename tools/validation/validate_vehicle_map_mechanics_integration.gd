@@ -1,6 +1,6 @@
 extends SceneTree
 
-## Focused live-run coverage for the map mechanics that only VehicleRun owns.
+## Focused live-run coverage for persistent symmetric neutral facilities.
 
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
@@ -31,8 +31,7 @@ func _run() -> void:
 		run.call("_reset_run", false)
 		run.mode = run.RunMode.PLAYING
 		_validate_transit_gate_visual(run)
-		_validate_device_collision_and_damage_authority(run)
-		_validate_effect_targeting(run)
+		_validate_facility_authority(run)
 	game_root.queue_free()
 	await process_frame
 	_finish()
@@ -43,133 +42,47 @@ func _validate_transit_gate_visual(run) -> void:
 	_expect(
 		StringName(contract.get("asset_id", &"")) == &"world/facility_transit_gate"
 			and is_equal_approx(float(contract.get("asset_radius", 0.0)), 96.0)
-			and Color(contract.get("neutral_modulate", Color.TRANSPARENT)).is_equal_approx(Color.WHITE),
-		"Transit Gate uses the approved authored PNG at its full 192-world-unit footprint"
-	)
-	_expect(
-		not bool(contract.get("legacy_ring", true))
-			and not bool(contract.get("zero_progress_visible", true)),
-		"Transit Gate retires the legacy duplicate ring and the zero-progress dot"
+			and not bool(contract.get("legacy_ring", true)),
+		"Transit Gate keeps the approved authored visual without the legacy ring"
 	)
 
 
-func _configure_devices(run, outcomes: Array[StringName]) -> Array:
-	var blueprint: Array = []
-	for index in outcomes.size():
-		blueprint.append({
-			"id": StringName("validation_device_%d" % index),
-			"pos": Vector2(1200.0 + index * 900.0, 1200.0),
-			"outcome": outcomes[index],
-		})
+func _validate_facility_authority(run) -> void:
+	var blueprint := [
+		{"id":&"validation_a", "pos":Vector2(1200.0, 1200.0)},
+		{"id":&"validation_b", "pos":Vector2(2100.0, 1200.0)},
+		{"id":&"validation_c", "pos":Vector2(3000.0, 1200.0)},
+	]
 	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")
-	return Array(run.mystery_device_runtime.snapshot()["devices"])
-
-
-func _validate_device_collision_and_damage_authority(run) -> void:
-	var devices := _configure_devices(run, [&"gravity_pull", &"cryo_lock", &"weakpoint_expose"])
-	_expect(devices.size() == 3, "live run configures three mystery devices")
-	var outcomes: Dictionary = {}
-	for device in devices:
-		outcomes[StringName(device.get("outcome", &""))] = true
-		_expect(StringName(device["state"]) == &"intact" and device.has("outcome"), "intact device publishes its assigned outcome")
-	_expect(outcomes.size() == 3, "all three intact outcomes are visible in the live snapshot")
-	var position := Vector2(devices[0]["position"])
-	_expect(not bool(run.call("_position_clear_of_stage_objects", position, 24.0)), "intact device blocks live actor collision")
-	var blocked := Vector2(run.call("_move_actor", position - Vector2(160.0, 0.0), Vector2(160.0, 0.0), 24.0, false))
-	_expect(blocked != position, "live actor movement cannot enter an intact device")
+	var devices: Array = run.mystery_device_runtime.snapshot()["devices"]
+	_expect(devices.size() == 3, "live run configures three persistent facilities")
+	var first := Dictionary(devices[0])
+	var position := Vector2(first["position"])
+	_expect(not bool(run.call("_position_clear_of_stage_objects", position, 24.0)), "an intact facility blocks actor movement")
 	run.call("_clear_projectiles")
-	run.projectile_store.add_hostile({"pos":position - Vector2(120.0, 0.0), "velocity":Vector2.RIGHT * 600.0, "radius":4.0, "damage":1.0, "life":2.0, "wall_piercing":true})
+	run.projectile_store.add_hostile({"pos":position - Vector2(120.0, 0.0), "velocity":Vector2.RIGHT * 600.0, "radius":4.0, "damage":10.0, "life":2.0, "wall_piercing":true})
 	run.call("_update_projectiles", 0.25)
-	_expect(run.projectile_store.hostile_count() == 1, "hostile projectiles pass through intact mystery devices")
+	_expect(run.projectile_store.hostile_count() == 1, "hostile projectiles continue through facilities")
 	var quota_before := int(run.stage_flow.defeats)
 	var experience_before := int(run.experience_runtime.experience)
-	_expect(not bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"contact", position, Color.WHITE, Vector2.RIGHT)), "contact damage cannot break a device")
-	_expect(bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 45.0, &"direct", position, Color.WHITE, Vector2.RIGHT)), "the first player hit is accepted")
-	var hit_devices := Array(run.mystery_device_runtime.snapshot()["devices"])
-	_expect(
-		StringName(hit_devices[0]["state"]) == &"intact"
-		and StringName(hit_devices[0]["outcome"]) == &"gravity_pull"
-		and is_equal_approx(float(hit_devices[0]["health"]), 45.0)
-		and run._mystery_device_result_receipt.is_empty(),
-		"the first player hit preserves the visible outcome and does not activate it"
-	)
-	_expect(bool(run.call("_damage_mystery_device", StringName(devices[0]["id"]), 45.0, &"direct", position, Color.WHITE, Vector2.RIGHT)), "the second player hit breaks the device")
-	_expect(int(run.stage_flow.defeats) == quota_before and int(run.experience_runtime.experience) == experience_before, "device break changes neither quota nor XP")
-	_expect(bool(run.mystery_device_runtime.is_position_clear(position, 0.0)), "resolved device no longer blocks actor collision")
+	_expect(bool(run.call("_damage_mystery_device", StringName(first["id"]), 120.0, &"area", position, Color.WHITE, Vector2.RIGHT, &"hostile")), "hostile attacks damage facilities")
+	_expect(bool(run.call("_damage_mystery_device", StringName(first["id"]), 300.0, &"projectile", position, Color.WHITE, Vector2.RIGHT, &"player")), "player attacks destroy facilities")
+	_expect(int(run.stage_flow.defeats) == quota_before and int(run.experience_runtime.experience) == experience_before, "facility destruction grants neither quota nor XP")
+	_expect(bool(run.mystery_device_runtime.is_position_clear(position, 0.0)), "destroyed facilities stop blocking movement")
 
-
-func _append_enemy(run, archetype: StringName, id: String, position: Vector2):
-	var enemy = run.call("_make_enemy", {"role":archetype, "id":id, "pos":position, "active":true})
-	if enemy != null:
-		run.call("_append_enemy", enemy)
-	return enemy
-
-
-func _validate_effect_targeting(run) -> void:
-	run.call("_clear_enemies")
-	var devices := _configure_devices(run, [&"cryo_lock", &"gravity_pull", &"weakpoint_expose"])
-	var center := Vector2(devices[0]["position"])
-	var movable = _append_enemy(run, &"chaser", "validation_cryo_movable", center + Vector2(120.0, 0.0))
-	var startup = _append_enemy(run, &"chaser", "validation_cryo_startup", center + Vector2(160.0, 0.0))
-	startup.phase = &"startup"
-	startup.velocity = Vector2(10.0, 0.0)
-	run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"direct", center, Color.WHITE, Vector2.RIGHT)
+	# A live-run enemy receives the same role-specific modifier returned for a player position.
+	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")
+	devices = run.mystery_device_runtime.snapshot()["devices"]
+	var modifier_device := Dictionary(devices[0])
+	var enemy = run.call("_make_enemy", {"role":&"chaser", "id":"facility_target", "pos":Vector2(modifier_device["position"]), "active":true})
+	run.call("_append_enemy", enemy)
+	run.call("_apply_enemy_facility_modifiers", enemy, 0.5)
+	var profile := Dictionary(run.mystery_device_runtime.modifiers_at(enemy.pos)[0]["profile"])
 	_expect(
-		StringName(run._mystery_device_result_receipt["effect_id"]) == &"cryo_lock"
-		and int(run._mystery_device_result_receipt["affected_count"]) == 2,
-		"Mystery result receipt reports both Cryo-affected ordinary enemies"
-	)
-	run.call("_prepare_mystery_device_effects", 0.1)
-	_expect(
-		movable.stun > 0.0
-		and movable.velocity == Vector2.ZERO
-		and movable.mystery_cryo_remaining > 0.0,
-		"cryo blocks fresh movement and publishes the shared blue body-overlay state"
-	)
-	_expect(startup.stun == 0.0 and startup.velocity == Vector2(10.0, 0.0), "cryo preserves warned startup attacks")
-
-	run.call("_clear_enemies")
-	devices = _configure_devices(run, [&"gravity_pull", &"weakpoint_expose", &"cryo_lock"])
-	center = Vector2(devices[0]["position"])
-	var ordinary = _append_enemy(run, &"chaser", "validation_gravity_ordinary", center + Vector2(300.0, 0.0))
-	var boss = _append_enemy(run, &"stage_boss", "validation_gravity_boss", center + Vector2(300.0, 80.0))
-	var structure = _append_enemy(run, &"generator", "validation_gravity_structure", center + Vector2(300.0, -80.0))
-	var boss_before: Vector2 = boss.pos
-	var structure_before: Vector2 = structure.pos
-	run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"direct", center, Color.WHITE, Vector2.RIGHT)
-	run.call("_prepare_mystery_device_effects", 0.1)
-	run.call("_apply_mystery_device_forced_motion", 0.1)
-	_expect(ordinary.pos.distance_to(center) < 300.0, "gravity pull moves ordinary enemies toward its anchor")
-	_expect(boss.pos == boss_before and structure.pos == structure_before, "gravity pull ignores bosses and structures")
-
-	run.call("_clear_enemies")
-	devices = _configure_devices(run, [&"weakpoint_expose", &"gravity_pull", &"cryo_lock"])
-	center = Vector2(devices[0]["position"])
-	ordinary = _append_enemy(run, &"chaser", "validation_weakpoint_ordinary", center + Vector2(300.0, 0.0))
-	boss = _append_enemy(run, &"stage_boss", "validation_weakpoint_boss", center + Vector2(300.0, 80.0))
-	structure = _append_enemy(run, &"generator", "validation_weakpoint_structure", center + Vector2(300.0, -80.0))
-	boss_before = boss.pos
-	structure_before = structure.pos
-	run.call("_damage_mystery_device", StringName(devices[0]["id"]), 90.0, &"direct", center, Color.WHITE, Vector2.RIGHT)
-	run.call("_prepare_mystery_device_effects", 0.1)
-	var ordinary_before: Vector2 = ordinary.pos
-	run.call("_move_enemy_role", ordinary, 0.1, false, true)
-	_expect(
-		ordinary.pos.distance_to(center) >= ordinary_before.distance_to(center),
-		"weakpoint leaves ordinary movement unchanged"
-	)
-	var ordinary_health_before: float = ordinary.health
-	run.call("_damage_enemy", ordinary, 10.0, "validation", &"kinetic", true)
-	_expect(
-		is_equal_approx(ordinary_health_before - ordinary.health, 12.5),
-		"weakpoint multiplies player-owned ordinary damage by exactly 1.25"
-	)
-	_expect(
-		boss.pos == boss_before
-		and structure.pos == structure_before
-		and boss.mystery_weakpoint_remaining == 0.0
-		and structure.mystery_weakpoint_remaining == 0.0,
-		"weakpoint excludes bosses and structures"
+		is_equal_approx(enemy.facility_movement_multiplier, float(profile.get("movement_multiplier", profile.get("max_speed_multiplier", 1.0))))
+			and is_equal_approx(enemy.facility_cadence_multiplier, float(profile.get("attack_cadence_multiplier", 1.0)))
+			and is_equal_approx(enemy.facility_received_damage_multiplier, float(profile.get("received_damage_multiplier", 1.0))),
+		"VehicleRun applies the same persistent facility profile to enemies"
 	)
 
 

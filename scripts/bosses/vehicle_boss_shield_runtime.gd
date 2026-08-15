@@ -34,7 +34,7 @@ func configure(next_stage_id: StringName, starting_phase: int = 1) -> void:
 	stage_id = next_stage_id
 	stage_index = StageDifficulty.stage_index_from_id(stage_id)
 	phase = clampi(starting_phase, 1, 3)
-	shield_up = true
+	shield_up = Catalog.uses_shield(stage_id)
 	shield_down_remaining = 0.0
 	_phase_history = PackedInt32Array([phase])
 	_phase_skip_count = 0
@@ -55,9 +55,10 @@ func begin_phase(requested_phase: int = -1) -> Dictionary:
 		phase = clampi(requested_phase, 1, 3)
 		if _phase_history.is_empty() or _phase_history[-1] != phase:
 			_phase_history.append(phase)
-	shield_up = true
+	shield_up = Catalog.uses_shield(stage_id)
 	shield_down_remaining = 0.0
-	_queue_state_hint("BOSS_SHIELD_UP_HINT")
+	if shield_up:
+		_queue_state_hint("BOSS_SHIELD_UP_HINT")
 	return {
 		"phase":phase,
 		"add_roles":Catalog.add_roles(stage_id, phase),
@@ -68,6 +69,8 @@ func begin_phase(requested_phase: int = -1) -> Dictionary:
 func advance(delta: float) -> void:
 	var bounded_delta := maxf(0.0, delta)
 	_last_hint_elapsed += bounded_delta
+	if not Catalog.uses_shield(stage_id):
+		return
 	if shield_up:
 		_shielded_time += bounded_delta
 		return
@@ -79,7 +82,7 @@ func advance(delta: float) -> void:
 
 
 func lower_after_direct_attack() -> bool:
-	if not shield_up:
+	if not Catalog.uses_shield(stage_id) or not shield_up:
 		return false
 	shield_up = false
 	shield_down_remaining = SHIELD_DOWN_SECONDS
@@ -91,11 +94,13 @@ func lower_after_direct_attack() -> bool:
 func boss_damage_multiplier() -> float:
 	return (
 		StageDifficulty.boss_shielded_damage_multiplier(stage_index)
-		if shield_up else EXPOSED_DAMAGE_MULTIPLIER
+		if Catalog.uses_shield(stage_id) and shield_up else EXPOSED_DAMAGE_MULTIPLIER
 	)
 
 
 func state() -> StringName:
+	if not Catalog.uses_shield(stage_id):
+		return &"none"
 	return &"shield_up" if shield_up else &"shield_down"
 
 
@@ -134,6 +139,7 @@ func snapshot() -> Dictionary:
 		"stage_id":stage_id,
 		"stage_index":stage_index,
 		"variant":variant(),
+		"shield_kind":Catalog.shield_kind(stage_id),
 		"phase":phase,
 		"phase_history":Array(_phase_history),
 		"phase_skip_count":_phase_skip_count,

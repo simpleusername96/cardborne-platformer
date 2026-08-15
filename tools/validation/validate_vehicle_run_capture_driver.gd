@@ -125,7 +125,7 @@ func _initialize() -> void:
 		"ready-device capture shows the assigned symbol before any hit"
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 43, "core manifest has 43 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 128, "full manifest has 128 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 138, "full manifest has 138 captures")
 	for required_capture in [
 		"01i-guidebook-elite-stats.png",
 		"01j-guidebook-field-objects.png",
@@ -177,14 +177,19 @@ func _initialize() -> void:
 		"09t-emp-release-standard.png",
 		"09u-emp-release-reduced.png",
 		"09z-explosive-seeker-impact.png",
-		"09v-mystery-gravity-pull.png",
-		"09w-mystery-cryo-lock.png",
+		"09v-facility-gravity.png",
+		"09w-facility-cryo.png",
 		"09x-mystery-device-ready.png",
-		"09y-mystery-weakpoint-expose.png",
-		"20-collision-10-stage-10-default.png",
-		"30-boss-01-stage-2-arc-area-startup.png",
-		"30-boss-05-stage-10-crown-beam-startup.png",
-		"30-boss-05-stage-10-crown-beam-active.png",
+		"09y-facility-weakpoint.png",
+		"20-collision-08-stage-8-default.png",
+		"30-boss-01-stage-1-arc-area-startup.png",
+		"30-boss-05-stage-5-crown-beam-startup.png",
+		"30-boss-05-stage-5-crown-beam-active.png",
+		"30-boss-03-stage-3-shield-up-hit.png",
+		"30-boss-03-stage-3-shield-restored.png",
+		"30-boss-05-stage-5-shield-restored.png",
+		"30-boss-08-stage-8-startup.png",
+		"30-boss-08-stage-8-phase-two.png",
 	]:
 		_expect(required_capture in Driver.FULL_CAPTURE_FILES, "full manifest includes %s" % required_capture)
 	_expect(
@@ -192,10 +197,18 @@ func _initialize() -> void:
 		"full manifest has no duplicate filenames"
 	)
 	_expect(
-		gateway_source.contains("if (stage_index + 1) % 2 != 0:")
-			and gateway_source.contains("var boss_number := stage_index / 2 + 1"),
-		"boss capture skips odd stages and numbers the five even-stage bosses"
+		gateway_source.contains("for stage_index in StageCatalog.STAGE_IDS.size():")
+			and gateway_source.contains("var boss_number := stage_index + 1")
+			and not gateway_source.contains("if (stage_index + 1) % 2 != 0:"),
+		"boss capture enumerates all eight campaign cycles in catalog order"
 	)
+	for boss_number in [1, 2, 4, 6, 7, 8]:
+		var stage_slug := "stage-%d" % boss_number
+		_expect(
+			"30-boss-%02d-%s-shield-restored.png" % [boss_number, stage_slug]
+				not in Driver.FULL_CAPTURE_FILES,
+			"non-shield boss %d has no shield-restored capture" % boss_number
+		)
 	for file_name in Driver.CORE_CAPTURE_FILES:
 		_expect(file_name in Driver.FULL_CAPTURE_FILES, "full manifest includes %s" % file_name)
 	_finish()

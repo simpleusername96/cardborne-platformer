@@ -1,274 +1,46 @@
 extends SceneTree
 
-const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
-const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
-const TransitionRuntime = preload(
-	"res://scripts/vehicle/vehicle_stage_transition_runtime.gd"
-)
-const CampaignFixtureFacade = preload(
-	"res://scripts/vehicle/vehicle_campaign_fixture_facade.gd"
-)
-const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
-const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
+const Stages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
+const Flow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
+const Transition = preload("res://scripts/vehicle/vehicle_stage_transition_runtime.gd")
+const DeathRuntime = preload("res://scripts/bosses/vehicle_boss_death_runtime.gd")
 
 var failures: Array[String] = []
 
 
 func _initialize() -> void:
-	call_deferred("_run")
-
-
-func _run() -> void:
-	var packed := load(MAIN_SCENE) as PackedScene
-	_expect(packed != null, "main scene loads")
-	if packed == null:
-		_finish()
-		return
-	var scene := packed.instantiate()
-	get_root().add_child(scene)
-	await process_frame
-	await process_frame
-	var run = scene.get_node_or_null("VehicleRun")
-	_expect(run != null, "VehicleRun is active")
-	if run != null:
-		run.set_physics_process(false)
-		run.set_process(false)
-		_check_stage_one_continuation(run)
-		run.call("_reset_run", false)
-		_check_stage_two_recovery(run)
-		run.call("_reset_run", false)
-		_check_stage_ten_immediate_result(run)
-	scene.queue_free()
-	await process_frame
+	var completed_cycles := 0
+	for cycle_index in Stages.STAGE_IDS.size():
+		var flow := Flow.new()
+		flow.configure(cycle_index, Stages.QUOTAS[cycle_index], true)
+		for defeat_index in Stages.QUOTAS[cycle_index]:
+			var receipt := flow.record_countable_defeat()
+			if defeat_index < Stages.QUOTAS[cycle_index] - 1:
+				_expect(StringName(receipt["command"]) == Flow.COMMAND_NONE, "cycle %d stays ordinary before quota" % (cycle_index + 1))
+		_expect(not flow.boss_entry_ready(), "cycle %d waits through the boss warning" % (cycle_index + 1))
+		flow.advance(1.5)
+		_expect(flow.boss_entry_ready(), "cycle %d boss enters only after quota and warning" % (cycle_index + 1))
+		_expect(StringName(flow.record_boss_defeat()["command"]) == Flow.COMMAND_BEGIN_BOSS_CLEANUP, "cycle %d begins cleanup on boss defeat" % (cycle_index + 1))
+		var death := DeathRuntime.new()
+		death.begin([StringName("cycle_%d_add" % (cycle_index + 1))])
+		death.advance(1.99)
+		_expect(not death.complete(), "cycle %d cannot transition before 2.00 seconds" % (cycle_index + 1))
+		death.advance(0.01)
+		_expect(death.complete(), "cycle %d cleanup completes at 2.00 seconds" % (cycle_index + 1))
+		var completion := flow.record_boss_cleanup_complete()
+		_expect(StringName(completion["command"]) == Flow.COMMAND_COMPLETE_AFTER_BOSS_CLEANUP, "cycle %d unlocks after cleanup" % (cycle_index + 1))
+		var transition := Transition.new()
+		var began := transition.begin(cycle_index, Stages.STAGE_IDS.size(), Transition.COMPLETION_AFTER_BOSS, cycle_index * 100)
+		_expect(bool(began["accepted"]), "cycle %d transition accepts one completion" % (cycle_index + 1))
+		var saw_terminal_result := false
+		for serial_offset in 8:
+			var command := transition.advance(cycle_index * 100 + serial_offset)
+			if StringName(command.get("command", &"")) == &"show_final_result":
+				saw_terminal_result = true
+		_expect(saw_terminal_result == (cycle_index == Stages.STAGE_IDS.size() - 1), "only cycle 8 reaches the terminal result")
+		completed_cycles += 1
+	_expect(completed_cycles == 8, "deterministic fixture completes exactly eight cycles")
 	_finish()
-
-
-func _check_stage_one_continuation(run) -> void:
-	run.call("_reset_run", false)
-	run.mode = run.RunMode.PLAYING
-	run.selected_run_difficulty = &"hard"
-	var preserved_position := Vector2(2874.0, 1932.0)
-	var preserved_velocity := Vector2(84.0, -36.0)
-	var preserved_hull_direction := Vector2(0.6, 0.8).normalized()
-	var preserved_aim_direction := Vector2(-0.8, 0.6).normalized()
-	var explored_cell := Vector2i(4, 7)
-	run.player_position = preserved_position
-	run.player_velocity = preserved_velocity
-	run.player_hull_direction = preserved_hull_direction
-	run.player_aim_direction = preserved_aim_direction
-	run.player_health = 17.0
-	run.player_invulnerable = 0.23
-	run.player_dash_cooldown = 0.7
-	run.player_dash_timer = 0.11
-	run.active_weapon_runtime.cooldown_remaining = 6.4
-	run.secondary_runtime.seeker_cooldown = 0.8
-	run.run_build.apply(&"chassis_speed")
-	run.visited_cells[explored_cell] = true
-	run.active_run_elapsed_seconds = 125.0
-	run.stage_started_at_active_run_seconds = 100.0
-	var field_fingerprint := int(run.field_layout.fingerprint)
-	var terrain_before := hash(var_to_str(run.terrain_runtime.snapshot()))
-	var ordinary := _append_enemy(run, {
-		"id":"continuity_ordinary",
-		"role":&"chaser",
-		"pos":preserved_position + Vector2(220.0, 0.0),
-		"active":true,
-	})
-	var boss_add := _append_enemy(run, {
-		"id":"continuity_boss_add",
-		"role":&"beam_sentinel",
-		"pos":preserved_position + Vector2(300.0, 0.0),
-		"active":true,
-		"summoned":true,
-		"zone":&"boss_system",
-	})
-	run.projectile_store.add_player(_projectile(preserved_position, "player_primary"))
-	run.projectile_store.add_hostile(_projectile(preserved_position, "ordinary_enemy"), false)
-	run.projectile_store.add_hostile(_projectile(preserved_position, "boss_pattern"), true)
-	run.denied_zones.clear()
-	run.denied_zones.append({"id":"ordinary_zone", "owner_kind":&"ordinary"})
-	run.denied_zones.append({"id":"boss_zone", "owner_kind":&"stage_boss"})
-	run.experience_runtime.spawn_shard(preserved_position, 5, &"")
-	var shard_count: int = run.experience_runtime.shards.size()
-	var campaign_fixture := CampaignFixtureFacade.new(run)
-	_expect(
-		campaign_fixture.complete_current_stage(
-			TransitionRuntime.COMPLETION_WITHOUT_BOSS
-		),
-		"campaign fixture completes no-boss Stage 1 through production receipts"
-	)
-	_expect(
-		run.current_stage_id == &"stage_1"
-			and run.completed_stage_reports.is_empty()
-			and run.stage_transition_runtime.active(),
-		"quota completion schedules continuation without rebuilding the next stage in the lethal call stack"
-	)
-	campaign_fixture.drain_transition(5)
-
-	_expect(
-		run.current_stage_id == &"stage_2"
-			and run.mode == run.RunMode.PLAYING
-			and run.stage_flow.state == StageFlow.State.ORDINARY,
-		"Stage 1 boss completion enters Stage 2 ordinary play through bounded steps"
-	)
-	_expect(
-		run.player_position.is_equal_approx(preserved_position)
-			and run.player_velocity.is_equal_approx(preserved_velocity)
-			and run.player_hull_direction.is_equal_approx(preserved_hull_direction)
-			and run.player_aim_direction.is_equal_approx(preserved_aim_direction),
-		"continuation preserves position, motion, hull facing, and manual aim"
-	)
-	_expect(
-		is_equal_approx(run.player_health, 17.0)
-			and is_equal_approx(run.player_invulnerable, 0.23)
-			and is_equal_approx(run.player_dash_cooldown, 0.7)
-			and is_equal_approx(run.player_dash_timer, 0.11)
-			and is_equal_approx(run.active_weapon_runtime.cooldown_remaining, 6.4)
-			and is_equal_approx(run.secondary_runtime.seeker_cooldown, 0.8),
-		"odd-to-even continuation does not heal and preserves every active cooldown/protection timer"
-	)
-	_expect(
-		ordinary.alive and not boss_add.alive,
-		"ordinary actors survive while boss-owned actors retire"
-	)
-	var projectile_snapshot: Dictionary = run.projectile_store.debug_snapshot()
-	_expect(
-		int(projectile_snapshot["player"]) == 1
-			and int(projectile_snapshot["ordinary_hostile"]) == 1
-			and int(projectile_snapshot["boss_hostile"]) == 0
-			and run.projectile_store.validate_counts(),
-		"continuation preserves player/ordinary projectiles and retires only boss reserve"
-	)
-	_expect(
-		run.denied_zones.size() == 1
-			and String(run.denied_zones[0]["id"]) == "ordinary_zone",
-		"typed zone retirement removes only stage-boss damage ownership"
-	)
-	_expect(
-		run.experience_runtime.shards.size() == shard_count
-			and run.run_build.has(&"chassis_speed")
-			and run.visited_cells.has(explored_cell)
-			and int(run.field_layout.fingerprint) == field_fingerprint
-			and hash(var_to_str(run.terrain_runtime.snapshot())) == terrain_before,
-		"XP, build, exploration, field identity, and run-fixed terrain survive"
-	)
-	_expect(
-		run.completed_stage_reports.size() == 1
-			and is_equal_approx(
-				float(run.completed_stage_reports[0]["run_time_seconds"]), 125.0
-			)
-			and run._ui.debug_hud_visible()
-			and not run._ui.debug_surface_visible("report"),
-		"stage history records cumulative run time without opening a report modal"
-	)
-	run.call("_update_encounter", 0.0)
-	var cue_snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
-	_expect(
-		is_equal_approx(float(cue_snapshot["first_cue_time"]), 0.0)
-			and run.encounter_runtime.spawning_enabled()
-			and not String(cue_snapshot["activated_packets"][0]).contains("scout"),
-		"next-stage cue starts immediately and skips the deployment packet"
-	)
-	run.call("_update_encounter", 0.9)
-	for _birth_index in 4:
-		run.call("_update_encounter", 0.16)
-	var spawn_snapshot: Dictionary = run.encounter_runtime.debug_snapshot()
-	_expect(
-		is_equal_approx(float(spawn_snapshot["first_spawn_time"]), 0.9)
-			and int(spawn_snapshot["materialized_spawned"]) == 5
-			and int(spawn_snapshot["virtual_reserve"]) > 0,
-		"continuation admits only the five free opening slots and keeps the sixth authored identity reserved"
-	)
-	run.call("_pause_run")
-	run.call("_resume_run")
-	_expect(run.mode == run.RunMode.PLAYING, "pause resumes directly to continuous play")
-
-
-func _check_stage_two_recovery(run) -> void:
-	run.current_stage_index = 1
-	run.current_stage_id = Catalog.STAGE_IDS[1]
-	run.call("_reset_run", false, true, true)
-	run.mode = run.RunMode.PLAYING
-	run.player_health = 20.0
-	var max_hull: float = run.call("_player_max_health")
-	var expected_hull := 20.0 + (max_hull - 20.0) * 0.40
-	var campaign_fixture := CampaignFixtureFacade.new(run)
-	_expect(
-		campaign_fixture.complete_current_stage(
-			TransitionRuntime.COMPLETION_AFTER_BOSS
-		),
-		"campaign fixture completes boss Stage 2 through production receipts"
-	)
-	campaign_fixture.drain_transition(5)
-	_expect(
-		run.current_stage_id == &"stage_3"
-			and is_equal_approx(run.player_health, expected_hull),
-		"even-to-next-odd continuation restores 40 percent of missing Hull"
-	)
-
-
-func _check_stage_ten_immediate_result(run) -> void:
-	run.current_stage_index = Catalog.STAGE_IDS.size() - 1
-	run.current_stage_id = Catalog.STAGE_IDS[run.current_stage_index]
-	run.call("_reset_run", false, true, true)
-	run.completed_stage_reports.clear()
-	for stage_number in range(1, 10):
-		run.completed_stage_reports.append({
-			"stage_number":stage_number,
-			"has_boss":stage_number % 2 == 0,
-			"has_next_stage":true,
-			"defeats":[],
-			"outgoing":[],
-			"attributes":[],
-		})
-	run._capture_mode = true
-	run.mode = run.RunMode.PLAYING
-	run.stage_flow.quota = 1
-	run.stage_flow.defeats = 1
-	run.stage_flow.state = StageFlow.State.BOSS_ACTIVE
-	var boss: EnemyState = run.call("_make_enemy", {
-		"id":"stage_10_continuity_boss",
-		"role":&"stage_boss",
-		"pos":run.player_position,
-		"active":true,
-	})
-	_expect(boss != null and run.call("_append_enemy", boss), "Stage 10 boss fixture registers")
-	if boss == null:
-		return
-	run.call(
-		"_damage_enemy", boss, boss.max_health + 1.0, "validation",
-		&"kinetic", true, true, false
-	)
-	_expect(
-		run.mode == run.RunMode.PLAYING
-			and not run._ui.debug_surface_visible("result")
-			and run.stage_transition_runtime.active(),
-		"final boss lethal stack schedules rather than constructs the Result"
-	)
-	CampaignFixtureFacade.new(run).drain_transition(4)
-	_expect(
-		run.mode == run.RunMode.RESULT
-			and run.stage_complete
-			and run.stage_flow.state == StageFlow.State.COMPLETE
-			and run._ui.debug_surface_visible("result")
-			and not run.reward_runtime.has_pending(),
-		"Stage 10 boss defeat opens one clear result after bounded report steps"
-	)
-
-
-func _append_enemy(run, spec: Dictionary) -> EnemyState:
-	var enemy: EnemyState = run.call("_make_enemy", spec)
-	_expect(enemy != null and run.call("_append_enemy", enemy), "fixture enemy registers: %s" % spec["id"])
-	return enemy
-
-
-func _projectile(position: Vector2, owner: String) -> Dictionary:
-	return {
-		"pos":position,
-		"velocity":Vector2.RIGHT,
-		"radius":5.0,
-		"owner":owner,
-	}
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -38,9 +38,10 @@ func _validate_stage_items() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, Catalog.STAGE_IDS)
 	for stage_id in Catalog.STAGE_IDS:
 		var pickups := layout.pickup_blueprint(stage_id)
-		_expect(pickups.size() == 7, "%s has seven authored direct pickups" % stage_id)
-		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").size() == 5, "%s has five direct repair pickups" % stage_id)
-		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s has two direct recall pickups" % stage_id)
+		_expect(pickups.size() == 7, "%s has two recalls and five authored XP shards" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").is_empty(), "%s has no repair pickups" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s keeps two direct recall pickups" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_shard").size() == 5, "%s adds five visible XP shards" % stage_id)
 
 
 func _validate_experience_runtime() -> void:
@@ -186,9 +187,9 @@ func _validate_route_level_cadence() -> void:
 		total_levels += levels_gained
 		while runtime.consume_pending_level():
 			pass
-	_expect(Catalog.STAGE_IDS.size() == 10, "the campaign exposes ten stages")
-	_expect(total_experience == 1968, "the minimum quota path preserves 1968 total XP (actual %d)" % total_experience)
-	_expect(total_levels == 29 and runtime.run_level == 30, "the authored quota path ends at run level thirty with 29 upgrades (actual %d / level %d)" % [total_levels, runtime.run_level])
+	_expect(Catalog.STAGE_IDS.size() == 8, "the campaign exposes eight boss cycles")
+	_expect(total_experience == 2296, "the eight-cycle minimum quota path yields 2296 total XP (actual %d)" % total_experience)
+	_expect(total_levels == 32 and runtime.run_level == 33, "the authored quota path ends at run level thirty-three with 32 upgrades (actual %d / level %d)" % [total_levels, runtime.run_level])
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:

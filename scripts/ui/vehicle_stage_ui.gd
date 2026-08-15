@@ -34,6 +34,7 @@ const StageReportPanel = preload(
 	"res://scripts/ui/vehicle_stage_report_panel.gd"
 )
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const MODAL_MINIMUMS := {
 	"deployment":Vector2(1176.0, 636.0),
 	"upgrade":Vector2(1376.0, 616.0),
@@ -566,9 +567,9 @@ func debug_modal_contract(surface: String) -> Dictionary:
 			show_pause()
 		"result":
 			show_result({
-				"stage_count":10,
+				"stage_count":CombatStages.STAGE_IDS.size(),
 				"complete_run":true,
-				"final_stage_number":10,
+				"final_stage_number":CombatStages.STAGE_IDS.size(),
 				"has_next_stage":false,
 				"active_run_elapsed_seconds":258.0,
 				"hull":86.0,

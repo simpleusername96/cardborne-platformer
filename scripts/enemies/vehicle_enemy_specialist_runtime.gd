@@ -36,6 +36,18 @@ const MOBILE_MINE_DAMAGE := 14.0
 const STATIC_MINE_RADIUS := 160.0
 const STATIC_MINE_DAMAGE := 26.0
 
+# Wreck Scavenger observes nearby valid enemy deaths. VehicleRun owns the
+# bounded per-actor stack storage; this module owns eligibility and arithmetic.
+const WRECK_SCAVENGER_RANGE := 360.0
+const WRECK_SCAVENGER_MAX_STACKS := 5
+const WRECK_SCAVENGER_DAMAGE_PER_STACK := 0.12
+const WRECK_SCAVENGER_SPEED_PER_STACK := 0.05
+const WRECK_SCAVENGER_INTERVAL_REDUCTION_PER_STACK := 0.04
+const WRECK_SCAVENGER_EXCLUDED_ROLES: Array[StringName] = [
+	&"stage_boss", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel",
+	&"generator", &"wreck_scavenger",
+]
+
 
 static func repair_target_id(tender: EnemyState, enemies: Array[EnemyState], stage_id: StringName, include_dynamic_cover: bool, extra_cover: Array = []) -> String:
 	var best_id := ""
@@ -64,3 +76,53 @@ static func repair_target_id(tender: EnemyState, enemies: Array[EnemyState], sta
 
 static func is_support_or_installation(role: StringName) -> bool:
 	return role in [&"generator", &"shield_escort", &"repair_tender", &"drone_carrier", &"turret", &"interceptor_tower", &"beam_sentinel"]
+
+
+static func wreck_scavenger_defeat_receipt(
+	scavenger: EnemyState,
+	defeated: EnemyState,
+	current_stacks: int
+) -> Dictionary:
+	var bounded_stacks := clampi(current_stacks, 0, WRECK_SCAVENGER_MAX_STACKS)
+	if not _wreck_scavenger_can_claim(scavenger, defeated):
+		return {
+			"claimed":false,
+			"stacks":bounded_stacks,
+			"modifiers":wreck_scavenger_modifiers(bounded_stacks),
+		}
+	var next_stacks := mini(WRECK_SCAVENGER_MAX_STACKS, bounded_stacks + 1)
+	return {
+		"claimed":next_stacks != bounded_stacks,
+		"stacks":next_stacks,
+		"modifiers":wreck_scavenger_modifiers(next_stacks),
+	}
+
+
+static func wreck_scavenger_modifiers(stacks: int) -> Dictionary:
+	var bounded_stacks := clampi(stacks, 0, WRECK_SCAVENGER_MAX_STACKS)
+	return {
+		"damage_multiplier":1.0 + WRECK_SCAVENGER_DAMAGE_PER_STACK * bounded_stacks,
+		"speed_multiplier":1.0 + WRECK_SCAVENGER_SPEED_PER_STACK * bounded_stacks,
+		"attack_interval_multiplier":maxf(
+			0.0,
+			1.0 - WRECK_SCAVENGER_INTERVAL_REDUCTION_PER_STACK * bounded_stacks
+		),
+	}
+
+
+static func _wreck_scavenger_can_claim(
+	scavenger: EnemyState,
+	defeated: EnemyState
+) -> bool:
+	return (
+		scavenger != null
+		and defeated != null
+		and scavenger != defeated
+		and scavenger.alive
+		and scavenger.active
+		and scavenger.archetype == &"wreck_scavenger"
+		and not defeated.summoned
+		and defeated.role not in WRECK_SCAVENGER_EXCLUDED_ROLES
+		and scavenger.pos.distance_squared_to(defeated.pos)
+			<= WRECK_SCAVENGER_RANGE * WRECK_SCAVENGER_RANGE
+	)

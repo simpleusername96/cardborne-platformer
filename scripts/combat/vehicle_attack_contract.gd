@@ -28,8 +28,7 @@ const AFFINITIES: Array[StringName] = [
 
 const CONDITION_POISON := 1
 const CONDITION_CHILL := 2
-const CONDITION_SHOCK := 4
-const CONDITION_MASK := CONDITION_POISON | CONDITION_CHILL | CONDITION_SHOCK
+const CONDITION_MASK := CONDITION_POISON | CONDITION_CHILL
 
 const HOSTILE_PROJECTILE_LIFETIME := 2.2
 const PROJECTILE_TELEGRAPH_LEAD_SECONDS := 0.36
@@ -63,6 +62,27 @@ const ORDINARY_ATTACKS := {
 	&"artillery_spotter":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":1.15,
 		"damage":15.0, "speed":360.0, "origin_offset":36.0,
+	},
+	&"rail_sniper":{
+		"kind":&"projectile", "affinity":KINETIC, "startup":1.40,
+		"damage":30.0, "speed":720.0, "origin_offset":38.0,
+		"recovery":2.20, "relocates_after_attack":true,
+	},
+	&"orbit_gunner":{
+		"kind":&"burst", "affinity":KINETIC, "startup":0.72,
+		"damage":12.0, "speed":520.0, "origin_offset":30.0,
+		"burst_count":3, "burst_spacing":0.12, "recovery":0.92,
+	},
+	&"bombing_runner":{
+		"kind":&"ground_burst", "affinity":KINETIC, "startup":0.76,
+		"damage":24.0, "radius":90.0, "blast_count":3, "blast_delay":0.48,
+		"blast_spacing":0.34, "pass_speed":520.0, "pass_seconds":0.72,
+		"recovery":1.15,
+	},
+	&"wreck_scavenger":{
+		"kind":&"charge", "affinity":KINETIC, "startup":0.55, "active":0.30,
+		"damage":16.0, "speed":540.0, "contact_padding":10.0,
+		"recovery":0.68,
 	},
 	&"interceptor_tower":{
 		"kind":&"projectile", "affinity":ARC, "startup":0.78,
@@ -170,8 +190,6 @@ static func condition_mask_for_profile(profile: Variant) -> int:
 		result |= CONDITION_POISON
 	if bool(profile.chill_enabled):
 		result |= CONDITION_CHILL
-	if bool(profile.shock_enabled):
-		result |= CONDITION_SHOCK
 	return result
 
 
@@ -227,4 +245,24 @@ static func validate_contract() -> PackedStringArray:
 			errors.append("ordinary attack has an unknown affinity: %s" % role)
 		if float(attack.get("startup", 0.0)) < 0.4:
 			errors.append("ordinary attack lacks readable startup: %s" % role)
+	var rail: Dictionary = ordinary_attack(&"rail_sniper")
+	if not (
+		is_equal_approx(float(rail.get("startup", 0.0)), 1.40)
+		and is_equal_approx(float(rail.get("recovery", 0.0)), 2.20)
+		and bool(rail.get("relocates_after_attack", false))
+	):
+		errors.append("rail sniper must expose its exact warning, recovery, and relocation contract")
+	var orbit: Dictionary = ordinary_attack(&"orbit_gunner")
+	if not (
+		StringName(orbit.get("kind", &"")) == &"burst"
+		and int(orbit.get("burst_count", 0)) == 3
+	):
+		errors.append("orbit gunner must expose one three-shot pressure burst")
+	var bombing: Dictionary = ordinary_attack(&"bombing_runner")
+	if not (
+		StringName(bombing.get("kind", &"")) == &"ground_burst"
+		and int(bombing.get("blast_count", 0)) == 3
+		and float(bombing.get("blast_delay", 0.0)) > 0.0
+	):
+		errors.append("bombing runner must expose three delayed ground blasts")
 	return errors

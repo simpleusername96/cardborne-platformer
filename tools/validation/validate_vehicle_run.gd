@@ -782,14 +782,11 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 			false
 		)
 	)
-	var expected_shielded_damage := (
-		100.0
-		* StageDifficulty.boss_shielded_damage_multiplier(run.current_stage_index)
-	)
+	var expected_damage := 100.0
 	_expect(
-		is_equal_approx(applied, expected_shielded_damage)
-			and is_equal_approx(health_before - boss.health, expected_shielded_damage),
-		"current-stage boss shield applies its exact received-damage profile"
+		is_equal_approx(applied, expected_damage)
+			and is_equal_approx(health_before - boss.health, expected_damage),
+		"the unshielded first boss receives full damage"
 	)
 	_expect(
 		run.effects.size() == effect_count_before,
@@ -945,14 +942,15 @@ func _check_boss_committed_recovery(run) -> void:
 
 
 func _check_boss_autonomous_shapes(run) -> void:
-	for boss_index in 5:
-		var stage_index := boss_index * 2 + 1
+	for boss_index in 8:
+		var stage_index := boss_index
 		var stage_id := StringName("stage_%d" % (stage_index + 1))
 		for pattern_name in BossPatterns.autonomous_sequence(stage_id):
 			var pattern := String(pattern_name)
 			var kind := BossPatterns.kind(pattern)
 			run.denied_zones.clear()
 			var enemies_before: int = run.enemy_store.live.size()
+			var projectiles_before: int = run.projectile_store.hostile_count()
 			run.call("_execute_boss_autonomous", {
 				"id":"validation_%d_%s" % [stage_index, pattern],
 				"pattern":pattern,
@@ -1001,8 +999,25 @@ func _check_boss_autonomous_shapes(run) -> void:
 					run.enemy_store.live.size() == enemies_before + 1,
 					"%s executes through the bounded sentinel summon path" % pattern
 				)
+			elif kind == &"long_banks" or kind == &"spiral":
+				_expect(
+					run.projectile_store.hostile_count() > projectiles_before,
+					"%s emits its bounded projectile formation" % pattern
+				)
+			elif kind == &"moving_walls":
+				_expect(
+					run.denied_zones.size() == 4
+						and run.denied_zones.all(func(zone): return StringName(zone["shape"]) == &"corridor" and Vector2(zone["motion"]).length() > 0.0 and is_equal_approx(float(zone["safe_gap"]), 180.0)),
+					"%s creates two translating laser walls with collision-true gaps" % pattern
+				)
+			elif kind == &"wedge_rings":
+				_expect(
+					run.denied_zones.size() == 1
+						and StringName(run.denied_zones[0]["shape"]) == &"wedge_ring",
+					"%s creates one warned ring with an explicit safe wedge" % pattern
+				)
 			else:
-				_expect(false, "%s must fail validation as an unknown autonomous kind" % pattern)
+				_expect(false, "%s has an unsupported autonomous kind" % pattern)
 
 
 func _all_corridors_match(zones: Array, expected_width: float) -> bool:

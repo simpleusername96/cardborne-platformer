@@ -28,10 +28,10 @@ const THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
 
 ## Stage pressure is deliberately separate from packet beats. Beats choose the
 ## shape and timing of an encounter; stages set the run's bounded live pressure.
-const STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
-const STAGE_MATERIALIZED_ACTIVE_CAPS := [6, 32, 40, 40, 48, 48, 48, 48, 48, 48]
-const STAGE_MAX_RANGED_COMMITS := [3, 3, 3, 3, 3, 4, 4, 4, 4, 4]
-const STAGE_MAX_DENIAL_COMMITS := [2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
+const STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0]
+const STAGE_MATERIALIZED_ACTIVE_CAPS := [6, 32, 40, 40, 48, 48, 48, 48]
+const STAGE_MAX_RANGED_COMMITS := [3, 3, 3, 3, 3, 4, 4, 4]
+const STAGE_MAX_DENIAL_COMMITS := [2, 2, 2, 2, 2, 3, 3, 3]
 
 
 static func active_cap_for(beat: int) -> int:

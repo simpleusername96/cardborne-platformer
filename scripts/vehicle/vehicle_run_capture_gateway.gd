@@ -897,9 +897,7 @@ func _capture_field_item_evidence() -> void:
 	prepare_stage(0)
 	_run._clear_enemies()
 	_run.pickups.clear()
-	_run.player_health = 64.0
-	_run.pickups.append({"id":"capture_repair", "kind":&"repair", "pos":_run.player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":70.0})
-	_run.pickups.append({"id":"capture_recall", "kind":&"experience_recall", "pos":_run.player_position + Vector2(150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":0.0})
+	_run.pickups.append({"id":"capture_recall", "kind":&"experience_recall", "pos":_run.player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":0.0})
 	_run.experience_runtime.clear_shards()
 	_run.experience_runtime.spawn_shard(_run.player_position + Vector2(245.0, -90.0), 1)
 	_run.experience_runtime.spawn_shard(_run.player_position + Vector2(300.0, 35.0), 4)
@@ -1011,7 +1009,7 @@ func _upgrade_offer_fixture(records: Array) -> Array[Dictionary]:
 
 
 func _capture_boss_preview() -> void:
-	var boss := prepare_boss(1)
+	var boss := prepare_boss(0)
 	if boss == null:
 		return
 	_run._boss_select_pattern(boss)
@@ -1420,16 +1418,16 @@ func _capture_exact_area_effect_evidence() -> void:
 	_save_capture("09z-explosive-seeker-impact.png")
 
 	var mystery_profiles := [
-		[&"gravity_pull", 0.60, "09v-mystery-gravity-pull.png"],
-		[&"cryo_lock", 0.80, "09w-mystery-cryo-lock.png"],
-		[&"weakpoint_expose", 0.35, "09y-mystery-weakpoint-expose.png"],
+		[&"gravity", 0.60, "09v-facility-gravity.png"],
+		[&"cryo", 0.80, "09w-facility-cryo.png"],
+		[&"weakpoint", 0.35, "09y-facility-weakpoint.png"],
 	]
 	if settings != null:
 		settings.reduced_motion = false
 	var ready_center := _prepare_exact_area_scene(1.0)
 	_run.player_position = ready_center + Vector2(0.0, -130.0)
 	_run.mystery_device_runtime.configure(
-		[{"id":&"capture_mystery_ready", "pos":ready_center, "outcome":&"gravity_pull"}],
+		[{"id":&"capture_mystery_ready", "pos":ready_center}],
 		1701,
 		_run.current_stage_id
 	)
@@ -1445,19 +1443,14 @@ func _capture_exact_area_effect_evidence() -> void:
 		# symbol remains inspectable in deterministic capture evidence.
 		_run.player_position = center + Vector2(0.0, -130.0)
 		_run.mystery_device_runtime.configure(
-			[{"id":&"capture_mystery", "pos":center, "outcome":outcome}],
+			[{"id":&"capture_mystery", "pos":center}],
 			1701,
 			_run.current_stage_id
 		)
-		var receipt: Dictionary = _run.mystery_device_runtime.receive_damage(
-			&"capture_mystery", 90.0, &"player", &"area"
+		_run.mystery_device_runtime.devices[0]["outcome"] = outcome
+		var radius := float(
+			_run.mystery_device_runtime.OUTCOME_PROFILE[outcome]["radius"]
 		)
-		if not bool(receipt.get("broken", false)):
-			push_error("exact-area Mystery fixture did not resolve %s" % outcome)
-			continue
-		var event := Dictionary(receipt["break_event"])
-		var radius := float(event["radius"])
-		_run._handle_mystery_device_break(event)
 		_add_exact_area_reference_markers(center, radius, radius)
 		_run.capture_set_mode(&"paused")
 		_refresh_combat_capture()
@@ -1681,7 +1674,7 @@ func _capture_arc_area_telegraph_evidence() -> void:
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("09-effects-arc-mine-startup.png")
-	var boss := prepare_boss(1)
+	var boss := prepare_boss(0)
 	if boss == null:
 		push_error("arc area telegraph capture fixture could not create stage boss")
 		return
@@ -1698,7 +1691,7 @@ func _capture_arc_area_telegraph_evidence() -> void:
 	)
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
-	_save_capture("30-boss-01-stage-2-arc-area-startup.png")
+	_save_capture("30-boss-01-stage-1-arc-area-startup.png")
 
 
 func _capture_collision_overlay_evidence() -> void:
@@ -1718,14 +1711,12 @@ func _capture_collision_overlay_evidence() -> void:
 
 func _capture_all_boss_evidence() -> void:
 	for stage_index in StageCatalog.STAGE_IDS.size():
-		if (stage_index + 1) % 2 != 0:
-			continue
 		var boss := prepare_boss(stage_index)
 		if boss == null:
 			continue
 		var stage_slug := String(_run.current_stage_id).replace("_", "-")
-		var boss_number := stage_index / 2 + 1
-		if stage_index == 1:
+		var boss_number := stage_index + 1
+		if stage_index == 2:
 			_run._damage_enemy(
 				boss,
 				100.0,
@@ -1735,7 +1726,7 @@ func _capture_all_boss_evidence() -> void:
 			)
 			_run.capture_set_mode(&"paused")
 			await _settle_capture()
-			_save_capture("30-boss-01-stage-2-shield-up-hit.png")
+			_save_capture("30-boss-03-stage-3-shield-up-hit.png")
 			_run.call("_clear_effects")
 		_run._boss_select_pattern(boss)
 		_run.capture_set_mode(&"paused")
@@ -1768,12 +1759,13 @@ func _capture_all_boss_evidence() -> void:
 		boss.pattern = "recovery_window"
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-recovery.png" % [boss_number, stage_slug])
-		_run.boss_shield_runtime.advance(BossShieldRuntime.SHIELD_DOWN_SECONDS + 0.1)
-		boss.boss_shield_state = _run.boss_shield_runtime.state()
-		await _settle_capture()
-		_save_capture(
-			"30-boss-%02d-%s-shield-restored.png" % [boss_number, stage_slug]
-		)
+		if stage_index in [2, 4]:
+			_run.boss_shield_runtime.advance(BossShieldRuntime.SHIELD_DOWN_SECONDS + 0.1)
+			boss.boss_shield_state = _run.boss_shield_runtime.state()
+			await _settle_capture()
+			_save_capture(
+				"30-boss-%02d-%s-shield-restored.png" % [boss_number, stage_slug]
+			)
 
 		boss.health = float(boss.max_health) * 0.48
 		_run._ui.clear_notifications()
@@ -1781,7 +1773,7 @@ func _capture_all_boss_evidence() -> void:
 		_run._boss_select_pattern(boss)
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-phase-two.png" % [boss_number, stage_slug])
-		if stage_index == 1:
+		if stage_index == 0:
 			boss.pos = _run.player_position + Vector2(920.0, 0.0)
 			boss.phase = &"boss_startup"
 			boss.phase_time = BossPatterns.startup_seconds("furnace_ring")
@@ -1796,12 +1788,12 @@ func _capture_all_boss_evidence() -> void:
 			)
 			_run._camera.position = _run.player_position
 			await _settle_capture()
-			_save_capture("30-boss-01-stage-2-offscreen-furnace.png")
+			_save_capture("30-boss-01-stage-1-offscreen-furnace.png")
 			boss.phase_time = BossPatterns.startup_seconds("furnace_ring") * 0.12
 			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
 			await _settle_capture()
 			_save_capture(
-				"30-boss-01-stage-2-offscreen-furnace-imminent.png"
+				"30-boss-01-stage-1-offscreen-furnace-imminent.png"
 			)
 			boss.phase_time = 0.0
 			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
@@ -1809,9 +1801,9 @@ func _capture_all_boss_evidence() -> void:
 			_run._boss_update_active(boss, 0.05)
 			await _settle_capture()
 			_save_capture(
-				"30-boss-01-stage-2-offscreen-furnace-active.png"
+				"30-boss-01-stage-1-offscreen-furnace-active.png"
 			)
-		elif stage_index == 9:
+		elif stage_index == 4:
 			boss.pos = _run.player_position + Vector2(420.0, 0.0)
 			boss.phase = &"boss_startup"
 			boss.phase_time = BossPatterns.startup_seconds("crown_beam") * 0.5
@@ -1826,13 +1818,13 @@ func _capture_all_boss_evidence() -> void:
 			)
 			_run._camera.position = _run.player_position
 			await _settle_capture()
-			_save_capture("30-boss-05-stage-10-crown-beam-startup.png")
+			_save_capture("30-boss-05-stage-5-crown-beam-startup.png")
 			boss.phase_time = 0.0
 			AttackTelegraphs.update_boss_readiness(boss, "crown_beam")
 			_run._boss_begin_active(boss)
 			_run._boss_update_active(boss, 0.05)
 			await _settle_capture()
-			_save_capture("30-boss-05-stage-10-crown-beam-active.png")
+			_save_capture("30-boss-05-stage-5-crown-beam-active.png")
 
 
 func prepare_boss(stage_index: int) -> EnemyState:

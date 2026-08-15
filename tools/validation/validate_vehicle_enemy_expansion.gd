@@ -11,10 +11,18 @@ var _failures: Array[String] = []
 func _init() -> void:
 	_expect(Archetypes.DEFINITIONS.has(&"bulkhead_guard"), "Bulkhead Guard is registered")
 	_expect(Archetypes.DEFINITIONS.has(&"splitter_barge"), "Splitter Barge is registered")
+	for specialist in [&"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger"]:
+		_expect(Archetypes.DEFINITIONS.has(specialist), "%s is registered" % specialist)
+	_expect(
+		Archetypes.fires_projectiles(&"rail_sniper")
+			and Archetypes.fires_projectiles(&"orbit_gunner")
+			and not Archetypes.fires_projectiles(&"bombing_runner"),
+		"ordinary firing roles distinguish direct bolts from delayed ground blasts"
+	)
 	_expect(&"spark_minelet" in Stages.MOBILE_ROLES[2], "Spark Minelet starts in Stage 3")
 	_expect(&"bulkhead_guard" in Stages.MOBILE_ROLES[4], "Bulkhead Guard starts in Stage 5")
-	_expect(&"splitter_barge" in Stages.MOBILE_ROLES[8], "Splitter Barge starts in Stage 9")
-	for stage_index in 10:
+	_expect(&"splitter_barge" in Stages.MOBILE_ROLES[6], "Splitter Barge starts in Cycle 7")
+	for stage_index in Stages.MOBILE_ROLES.size():
 		_expect(
 			EliteTraits.thresholds(stage_index).size() == stage_index / 2 + 1,
 			"Stage %d has an exact elite reservation schedule" % (stage_index + 1)

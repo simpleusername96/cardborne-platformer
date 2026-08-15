@@ -5,7 +5,7 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 ## The field only carries readable recovery and XP affordances. All temporary
 ## combat modifiers belong to the upgrade system instead of random pickups.
 
-const PICKUP_TYPES: Array[StringName] = [&"repair", &"experience_recall"]
+const PICKUP_TYPES: Array[StringName] = [&"experience_recall"]
 
 
 static func experience_for_enemy(enemy: EnemyState) -> int:

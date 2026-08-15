@@ -107,17 +107,15 @@ var statuses: Dictionary = {}
 # the live status Dictionary on the frame hot path; pulse values are normalized.
 var toxin_stack_ratio := 0.0
 var cryo_stack_ratio := 0.0
-var shock_stack_ratio := 0.0
 var toxin_application_pulse := 0.0
 var cryo_application_pulse := 0.0
-var shock_application_pulse := 0.0
 var toxin_application_delay := 0.0
 var cryo_application_delay := 0.0
-var shock_application_delay := 0.0
-# Mystery Cryo reuses the shared body compositor without becoming a Chill stack.
-var mystery_cryo_remaining := 0.0
-# Mystery Weakpoint uses the same compositor and a scalar lifetime only.
-var mystery_weakpoint_remaining := 0.0
+var facility_barrier_strength := 0.0
+var facility_barrier_max := 0.0
+var facility_movement_multiplier := 1.0
+var facility_cadence_multiplier := 1.0
+var facility_received_damage_multiplier := 1.0
 var runtime_slot := -1
 # Stable pool identity and reuse generation let spatial membership reject stale
 # cell entries after swap retirement or pooled actor reuse.
@@ -145,15 +143,15 @@ func reset_runtime_collections() -> void:
 	contact_attack = &""
 	toxin_stack_ratio = 0.0
 	cryo_stack_ratio = 0.0
-	shock_stack_ratio = 0.0
 	toxin_application_pulse = 0.0
 	cryo_application_pulse = 0.0
-	shock_application_pulse = 0.0
 	toxin_application_delay = 0.0
 	cryo_application_delay = 0.0
-	shock_application_delay = 0.0
-	mystery_cryo_remaining = 0.0
-	mystery_weakpoint_remaining = 0.0
+	facility_barrier_strength = 0.0
+	facility_barrier_max = 0.0
+	facility_movement_multiplier = 1.0
+	facility_cadence_multiplier = 1.0
+	facility_received_damage_multiplier = 1.0
 	lane_centers.clear()
 	attack_telegraphs.clear()
 	target_score = 0.0

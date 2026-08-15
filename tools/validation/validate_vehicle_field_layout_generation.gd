@@ -57,7 +57,7 @@ func _validate_field(field_id: StringName) -> void:
 		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s/%s retains at least 20 ordinary anchors" % [field_id, stage_id])
 		_expect(tactical.boss_arrival_anchors.size() >= 8, "%s/%s retains at least eight boss anchors" % [field_id, stage_id])
 		_expect(fixed.mystery_device_blueprint(stage_id).size() == 3, "%s/%s has three mystery devices" % [field_id, stage_id])
-		_expect(fixed.pickup_blueprint(stage_id).size() == 7, "%s/%s has seven direct pickups" % [field_id, stage_id])
+		_expect(fixed.pickup_blueprint(stage_id).size() == 7, "%s/%s has two recalls and five XP shards" % [field_id, stage_id])
 		_validate_stage_objects(fixed, stage_id)
 		_validate_stage_spacing(fixed, stage_id)
 
@@ -116,8 +116,8 @@ func _validate_no_feature_overlaps(
 func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -> void:
 	var positions: Array[Vector2] = []
 	var occupied_sectors := {}
-	var repair_values: Array[float] = []
 	var recall_count := 0
+	var shard_count := 0
 	for spec in layout.pickup_blueprint(stage_id):
 		var position := Vector2(spec["pos"])
 		positions.append(position)
@@ -126,26 +126,13 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 		] = true
 		if StringName(spec["kind"]) == &"experience_recall":
 			recall_count += 1
-		else:
-			repair_values.append(float(spec["heal_amount"]))
+		elif StringName(spec["kind"]) == &"experience_shard":
+			shard_count += 1
 	for first in positions.size():
 		for second in range(first + 1, positions.size()):
 			_expect(positions[first].distance_to(positions[second]) >= 180.0, "%s item sockets keep pair clearance" % stage_id)
 	_expect(occupied_sectors.size() >= 3, "%s items occupy at least three field sectors" % stage_id)
-	_expect(recall_count == 2, "%s keeps two direct recall pickups" % stage_id)
-	var fifty_count := repair_values.count(50.0)
-	var forty_count := repair_values.count(40.0)
-	var even_stage: bool = (Catalog.index_of(stage_id) + 1) % 2 == 0
-	var repair_total := 0.0
-	for value in repair_values:
-		repair_total += value
-	_expect(
-		repair_values.size() == 5
-			and fifty_count == (4 if even_stage else 5)
-			and forty_count == (1 if even_stage else 0)
-			and is_equal_approx(repair_total, 240.0 if even_stage else 250.0),
-		"%s keeps five repair events and its pair-preserving Hull budget" % stage_id
-	)
+	_expect(recall_count == 2 and shard_count == 5, "%s keeps two recalls and replaces repair with five XP shards" % stage_id)
 	var recall_positions: Array[Vector2] = []
 	for spec in layout.pickup_blueprint(stage_id):
 		if StringName(spec["kind"]) == &"experience_recall":

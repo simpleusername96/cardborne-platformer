@@ -13,7 +13,6 @@ const ROLE_STATE_COUNTS := {
 	&"thermal_burst":4,
 	&"bio_toxin":4,
 	&"cryo_slow":3,
-	&"shock_disruption":3,
 	&"seeker":4,
 	&"electric_field":4,
 	&"orbiting_blades":4,
@@ -32,7 +31,6 @@ const FIXTURE_BY_ROLE := {
 	&"thermal_burst":&"close_12",
 	&"bio_toxin":&"boss_480",
 	&"cryo_slow":&"hull_8",
-	&"shock_disruption":&"hull_8",
 	&"seeker":&"dispersed_32",
 	&"electric_field":&"close_12",
 	&"orbiting_blades":&"hull_8",
@@ -138,7 +136,6 @@ func _validate_level_gains() -> void:
 	_validate_numeric_progression("Thermal Burst damage", [4.0, 5.75, 8.0, 11.0])
 	_validate_numeric_progression("Bio Toxin DPS", [2.0, 2.85, 4.0, 5.5])
 	_validate_numeric_progression("Cryo Slow", [6.0, 8.0, 10.0])
-	_validate_numeric_progression("Shock Disruption", [0.6, 0.8, 1.0])
 	# Weapon curves deliberately combine authored raw growth with the migrated
 	# per-level damage/cadence factors. Their exact arrays are locked above rather
 	# than forced through the generic single-stat gain band.
@@ -256,7 +253,7 @@ func _metrics_for(family: StringName, state: int) -> Dictionary:
 		return {"damage_per_use":total, "damage_10s":total / 0.12 * 10.0, "contacts":PrimaryRules.projectiles_per_volley(state), "cooldown":0.12, "coverage":float(PrimaryRules.projectiles_per_volley(state)), "targeting_burden":2.0}
 	if family == &"piercing_rounds":
 		return {"damage_per_use":18.0 * float(state + 1), "damage_10s":1500.0 * float(state + 1), "contacts":state + 1, "cooldown":0.12, "coverage":float(state + 1), "targeting_burden":4.0}
-	if family in [&"thermal_burst", &"bio_toxin", &"cryo_slow", &"shock_disruption"]:
+	if family in [&"thermal_burst", &"bio_toxin", &"cryo_slow"]:
 		return _attribute_metrics(family, state)
 	if family in [&"seeker", &"electric_field", &"orbiting_blades", &"drop_mines", &"auto_laser", &"storm_barrage"]:
 		return _secondary_metrics(family, state)
@@ -268,7 +265,6 @@ func _attribute_metrics(family: StringName, state: int) -> Dictionary:
 		&"thermal_burst":[4.0, 5.75, 8.0, 11.0],
 		&"bio_toxin":[2.0, 2.85, 4.0, 5.5],
 		&"cryo_slow":[6.0, 8.0, 10.0],
-		&"shock_disruption":[0.6, 0.8, 1.0],
 	}
 	var value := float(Array(values[family])[state - 1])
 	if family == &"thermal_burst":
@@ -353,7 +349,6 @@ func _validate_attribute_values() -> void:
 		{"id":&"thermal_burst", "stat_a":&"thermal_burst_damage", "a":[4.0, 5.75, 8.0, 11.0], "stat_b":&"thermal_burst_radius", "b":[72.0, 84.0, 96.0, 96.0]},
 		{"id":&"bio_toxin", "stat_a":&"toxin_dps_per_stack", "a":[2.0, 2.85, 4.0, 5.5], "stat_b":&"toxin_duration", "b":[5.0, 6.0, 7.0, 7.0]},
 		{"id":&"cryo_slow", "stat_a":&"cryo_slow_per_stack", "a":[6.0, 8.0, 10.0], "stat_b":&"cryo_duration", "b":[2.0, 2.5, 3.0]},
-		{"id":&"shock_disruption", "stat_a":&"shock_lock_duration", "a":[0.6, 0.8, 1.0], "stat_b":&"", "b":[]},
 	]
 	var catalog := UpgradeCatalog.new()
 	for case_variant in cases:

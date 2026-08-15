@@ -28,6 +28,10 @@ const ENEMY_ENTRY_IDS := {
 	&"interceptor_tower":&"mobile_interceptor_tower",
 	&"beam_sentinel":&"mobile_beam_sentinel",
 	&"generator":&"mobile_generator",
+	&"rail_sniper":&"mobile_rail_sniper",
+	&"orbit_gunner":&"mobile_orbit_gunner",
+	&"bombing_runner":&"mobile_bombing_runner",
+	&"wreck_scavenger":&"mobile_wreck_scavenger",
 }
 const ENTRIES: Array[Dictionary] = [
 	{"id":&"mobile_scrap_drone", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"scrap_drone", "name_key":"ENEMY_SCRAP_DRONE"},
@@ -48,16 +52,22 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"mobile_interceptor_tower", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"interceptor_tower", "name_key":"ENEMY_INTERCEPTOR_TOWER"},
 	{"id":&"mobile_beam_sentinel", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"beam_sentinel", "name_key":"ENEMY_BEAM_SENTINEL"},
 	{"id":&"mobile_generator", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"generator", "name_key":"ENEMY_BARRIER_GENERATOR"},
+	{"id":&"mobile_rail_sniper", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"rail_sniper", "name_key":"ENEMY_MOBILE_RAIL_SNIPER", "preview":{}},
+	{"id":&"mobile_orbit_gunner", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"orbit_gunner", "name_key":"ENEMY_ORBIT_GUNNER", "preview":{}},
+	{"id":&"mobile_bombing_runner", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"bombing_runner", "name_key":"ENEMY_BOMBING_RUNNER", "preview":{}},
+	{"id":&"mobile_wreck_scavenger", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"wreck_scavenger", "name_key":"ENEMY_WRECK_SCAVENGER", "preview":{}},
 	{"id":&"object_elite_armored", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"armored", "name_key":"ELITE_ARMORED", "preview":{"kind":&"elite", "id":&"armored"}},
 	{"id":&"object_elite_overclocked", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"overclocked", "name_key":"ELITE_OVERCLOCKED", "preview":{"kind":&"elite", "id":&"overclocked"}},
 	{"id":&"object_elite_heavy", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"heavy", "name_key":"ELITE_HEAVY", "preview":{"kind":&"elite", "id":&"heavy"}},
-	{"id":&"boss_stage_1", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":1, "name_key":"ENEMY_FOUNDRY_COLOSSUS", "preview":{"kind":&"boss", "id":&"colossus"}},
-	{"id":&"boss_stage_2", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":3, "name_key":"ENEMY_ARCHIVE_LEVIATHAN", "preview":{"kind":&"boss", "id":&"leviathan"}},
-	{"id":&"boss_stage_3", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":5, "name_key":"ENEMY_DRYDOCK_TITAN", "preview":{"kind":&"boss", "id":&"titan"}},
-	{"id":&"boss_stage_4", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":7, "name_key":"ENEMY_SWITCHYARD_BEHEMOTH", "preview":{"kind":&"boss", "id":&"behemoth"}},
-	{"id":&"boss_stage_5", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":9, "name_key":"ENEMY_CROWN_ENGINE", "preview":{"kind":&"boss", "id":&"crown"}},
+	{"id":&"boss_stage_1", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":0, "name_key":"ENEMY_FOUNDRY_COLOSSUS", "preview":{"kind":&"boss", "id":&"colossus"}},
+	{"id":&"boss_stage_2", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":1, "name_key":"ENEMY_ARCHIVE_LEVIATHAN", "preview":{"kind":&"boss", "id":&"leviathan"}},
+	{"id":&"boss_stage_3", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":2, "name_key":"ENEMY_DRYDOCK_TITAN", "preview":{"kind":&"boss", "id":&"titan"}},
+	{"id":&"boss_stage_4", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":3, "name_key":"ENEMY_SWITCHYARD_BEHEMOTH", "preview":{"kind":&"boss", "id":&"behemoth"}},
+	{"id":&"boss_stage_5", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":4, "name_key":"ENEMY_CROWN_ENGINE", "preview":{"kind":&"boss", "id":&"crown"}},
+	{"id":&"boss_stage_6", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":5, "name_key":"ENEMY_SIEGE_BATTERY", "preview":{}},
+	{"id":&"boss_stage_7", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":6, "name_key":"ENEMY_VECTOR_LOOM", "preview":{}},
+	{"id":&"boss_stage_8", "category":&"bosses", "entry_kind":&"boss", "boss_stage_index":7, "name_key":"ENEMY_PULSE_CORE", "preview":{}},
 	{"id":&"object_experience", "category":&"objects", "entry_kind":&"object", "object_kind":&"experience", "name_key":"GUIDE_OBJECT_EXPERIENCE_NAME", "preview":{"kind":&"pickup", "id":&"experience"}},
-	{"id":&"object_repair", "category":&"objects", "entry_kind":&"object", "object_kind":&"repair", "name_key":"GUIDE_OBJECT_REPAIR_NAME", "preview":{"kind":&"pickup", "id":&"repair"}},
 	{"id":&"object_recall", "category":&"objects", "entry_kind":&"object", "object_kind":&"recall", "name_key":"GUIDE_OBJECT_RECALL_NAME", "preview":{"kind":&"pickup", "id":&"experience_recall"}},
 	{"id":&"object_mystery_device", "category":&"objects", "entry_kind":&"object", "object_kind":&"mystery_device", "name_key":"GUIDE_OBJECT_MYSTERY_DEVICE_NAME", "preview":{"kind":&"mystery_device"}},
 	{"id":&"object_transit_gate", "category":&"objects", "entry_kind":&"object", "object_kind":&"transit_gate", "name_key":"GUIDE_FACILITY_GATE_NAME", "preview":{"kind":&"facility", "id":&"transit_gate"}},
@@ -123,9 +133,8 @@ static func snapshot(
 
 
 static func _preview_for(entry: Dictionary) -> Dictionary:
-	var explicit := Dictionary(entry.get("preview", {}))
-	if not explicit.is_empty():
-		return explicit.duplicate(true)
+	if entry.has("preview"):
+		return Dictionary(entry["preview"]).duplicate(true)
 	if StringName(entry["entry_kind"]) == &"enemy":
 		return {"kind":&"enemy", "id":StringName(entry["archetype"])}
 	return {}

@@ -47,8 +47,8 @@ func _init() -> void:
 	)
 	var previous_gap := INF
 	var previous_initial_delay := INF
-	for boss_index in 5:
-		var stage_index := boss_index * 2 + 1
+	for boss_index in 8:
+		var stage_index := boss_index
 		var stage_id := StringName("stage_%d" % (stage_index + 1))
 		runtime.configure(stage_id)
 		var configured := runtime.snapshot()
@@ -89,16 +89,16 @@ func _init() -> void:
 			)
 		boss.boss_phase = 1
 		var cycle: Array[String] = []
-		for _index in 4:
+		for _index in 5:
 			cycle.append(runtime.select_direct(boss))
 		_expect(
 			cycle.duplicate().all(func(pattern): return cycle.count(pattern) == 1),
-			"%s direct cycle contains four distinct attacks" % stage_id
+			"%s direct cycle contains five distinct attacks" % stage_id
 		)
 		for pattern in cycle:
 			_expect(
-				BossPatterns.commit_mode(pattern) == &"committed",
-				"%s direct selection stays committed" % stage_id
+				BossPatterns.commit_mode(pattern) in [&"committed", &"autonomous"],
+				"%s direct selection declares execution ownership" % stage_id
 			)
 		boss.last_pattern = StringName(BossPatterns.sequence(stage_id, 1)[0])
 		boss.pattern_index = 0
@@ -109,12 +109,12 @@ func _init() -> void:
 		boss.boss_phase = 2
 		boss.pattern_index = 0
 		var later_cycle: Array[String] = []
-		for _index in 4:
+		for _index in 5:
 			later_cycle.append(runtime.select_direct(boss))
 		for pattern in later_cycle:
 			_expect(
-				BossPatterns.commit_mode(pattern) == &"committed",
-				"%s phase-two direct selection stays committed" % stage_id
+				BossPatterns.commit_mode(pattern) in [&"committed", &"autonomous"],
+				"%s phase-two direct selection declares execution ownership" % stage_id
 			)
 		var events := runtime.advance_autonomous(10.0, boss, Vector2(320.0, 180.0))
 		_expect(events.size() == 1, "%s emits its next bounded autonomous attack" % stage_id)
@@ -188,10 +188,10 @@ func _validate_phase_receipts(runtime: BossRuntime) -> void:
 
 
 func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
-	runtime.configure(&"stage_10")
+	runtime.configure(&"stage_8")
 	var pattern := "furnace_ring"
 	var default_radius := BossPatterns.radius(pattern)
-	var stage_radius := BossPatterns.radius(pattern, 9)
+	var stage_radius := BossPatterns.radius(pattern, 7)
 	var services := BossServiceStub.new()
 	services.player_position = Vector2((default_radius + stage_radius) * 0.5, 0.0)
 	var boss := _boss()
@@ -204,7 +204,7 @@ func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
 	runtime.update_active(boss, 0.01, services)
 	_expect(
 		services.damage_calls == 1,
-		"Stage 10 direct area damage reaches beyond the default boss footprint"
+		"Cycle 8 direct area damage reaches beyond the default boss footprint"
 	)
 
 

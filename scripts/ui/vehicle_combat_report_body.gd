@@ -1,55 +1,34 @@
 class_name VehicleCombatReportBody
 extends VBoxContainer
 
-## Shared, presentation-only combat metrics used by stage and final reports.
+## Shared, presentation-only report stack. Surface owners provide the one outer
+## scroll container; this body never creates nested scrolling or tab navigation.
 
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
-const CombatMeshIcon = preload("res://scripts/ui/vehicle_combat_mesh_icon.gd")
 const Factory = preload("res://scripts/ui/vehicle_ui_component_factory.gd")
 
-
-class AttributeIcon:
-	extends Control
-
-	var attribute: StringName = &"kinetic"
-
-	func _ready() -> void:
-		custom_minimum_size = Vector2(30.0, 30.0)
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	func set_attribute(value: StringName) -> void:
-		attribute = value
-		queue_redraw()
-
-	func _draw() -> void:
-		var center := size * 0.5
-		var color := Art.attack_color(attribute)
-		var points := PackedVector2Array([
-			center + Vector2(12.0, 0.0),
-			center + Vector2(-5.0, -8.0),
-			center + Vector2(-11.0, 0.0),
-			center + Vector2(-5.0, 8.0),
-		])
-		draw_colored_polygon(points, color)
-		draw_polyline(
-			PackedVector2Array([points[0], points[1], points[2], points[3], points[0]]),
-			Art.INK,
-			2.0,
-			true
-		)
-
+const SECTION_DEFINITIONS: Array[Dictionary] = [
+	{"id":&"outcome", "heading":"REPORT_OUTCOME", "keys":["outcome_rows"]},
+	{"id":&"cycle_progress", "heading":"REPORT_CYCLE_PROGRESS", "keys":["cycle_progress_rows"]},
+	{"id":&"build", "heading":"REPORT_BUILD", "keys":["build_rows"]},
+	{"id":&"damage", "heading":"REPORT_DAMAGE", "keys":["damage_rows", "outgoing", "attributes"]},
+	{"id":&"defense", "heading":"REPORT_DEFENSE", "keys":["defense_rows", "incoming"]},
+	{"id":&"enemies", "heading":"REPORT_ENEMIES", "keys":["enemy_rows", "defeats"]},
+	{"id":&"bosses", "heading":"REPORT_BOSSES", "keys":["boss_rows"]},
+	{"id":&"pacing", "heading":"REPORT_PACING", "keys":["pacing_rows"]},
+	{"id":&"diagnostic_limitations", "heading":"REPORT_DIAGNOSTIC_LIMITATIONS", "keys":["diagnostic_limitations"]},
+]
 
 var _snapshot: Dictionary = {}
-var _content: HBoxContainer
-var _tabs: TabContainer
-var _metric_scrolls: Array[ScrollContainer] = []
-var _force_compact := false
+var _rendered_sections: Array[StringName] = []
+var _rendered_text_rows := 0
 
 
 func _ready() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_build()
+	focus_mode = Control.FOCUS_ALL
+	add_theme_constant_override("separation", 14)
+	_rebuild()
 
 
 func set_snapshot(snapshot: Dictionary) -> void:
@@ -57,18 +36,14 @@ func set_snapshot(snapshot: Dictionary) -> void:
 	_rebuild()
 
 
-func set_compact_mode(compact: bool) -> void:
-	_force_compact = compact
-	_apply_responsive_layout()
+func set_compact_mode(_compact: bool) -> void:
+	# The body is one vertical flow at every supported width.
+	pass
 
 
-func set_accessibility_mode(enabled: bool) -> void:
-	for scroll in _metric_scrolls:
-		scroll.vertical_scroll_mode = (
-			ScrollContainer.SCROLL_MODE_DISABLED
-			if enabled
-			else ScrollContainer.SCROLL_MODE_AUTO
-		)
+func set_accessibility_mode(_enabled: bool) -> void:
+	# The owning surface controls its sole outer scroll container.
+	pass
 
 
 func refresh_localized_content() -> void:
@@ -76,222 +51,115 @@ func refresh_localized_content() -> void:
 
 
 func focus_target() -> Control:
-	return _tabs if _tabs.visible else _content
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
-		_apply_responsive_layout()
-
-
-func _build() -> void:
-	_content = HBoxContainer.new()
-	_content.focus_mode = Control.FOCUS_ALL
-	_content.add_theme_constant_override("separation", 18)
-	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_content)
-	for index in 3:
-		_content.add_child(_scroll_column(index, false))
-		if index < 2:
-			_content.add_child(VSeparator.new())
-	_tabs = TabContainer.new()
-	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tabs.focus_mode = Control.FOCUS_ALL
-	add_child(_tabs)
-	for index in 3:
-		_tabs.add_child(_scroll_column(index, true))
-	_apply_responsive_layout()
+	return self
 
 
 func _rebuild() -> void:
-	if not is_instance_valid(_content):
+	if not is_node_ready():
 		return
-	for index in 3:
-		_fill_column(_box_for(_content.get_child(index * 2)), index)
-	for index in _tabs.get_tab_count():
-		var scroll := _tabs.get_tab_control(index) as ScrollContainer
-		_fill_column(_box_for(scroll), index)
-		_tabs.set_tab_title(index, tr(_heading_key(index)))
+	_clear(self)
+	_rendered_sections.clear()
+	_rendered_text_rows = 0
+	for definition in SECTION_DEFINITIONS:
+		var rows := _rows_for(StringName(definition["id"]))
+		if rows.is_empty() and not _has_explicit_rows(definition):
+			continue
+		_append_section(String(definition["heading"]), rows)
 
 
-func _scroll_column(index: int, compact: bool) -> ScrollContainer:
-	var scroll := ScrollContainer.new()
-	_metric_scrolls.append(scroll)
-	scroll.name = "Compact%s" % index if compact else "Wide%s" % index
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(margin)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 7)
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_child(box)
-	return scroll
+func _has_explicit_rows(definition: Dictionary) -> bool:
+	for key_variant in Array(definition["keys"]):
+		if _snapshot.has(String(key_variant)):
+			return true
+	return false
 
 
-func _box_for(scroll_node: Node) -> VBoxContainer:
-	var scroll := scroll_node as ScrollContainer
-	return scroll.get_child(0).get_child(0) as VBoxContainer
+func _rows_for(section_id: StringName) -> Array:
+	match section_id:
+		&"damage":
+			if _snapshot.has("damage_rows"):
+				return Array(_snapshot.get("damage_rows", []))
+			var merged: Array = []
+			merged.append_array(Array(_snapshot.get("outgoing", [])))
+			merged.append_array(Array(_snapshot.get("attributes", [])))
+			return merged
+		&"defense":
+			return Array(_snapshot.get("defense_rows", _snapshot.get("incoming", [])))
+		&"enemies":
+			return Array(_snapshot.get("enemy_rows", _snapshot.get("defeats", [])))
+		&"diagnostic_limitations":
+			var limitations: Variant = _snapshot.get("diagnostic_limitations", [])
+			if limitations is Array:
+				return Array(limitations)
+			return [limitations] if not String(limitations).is_empty() else []
+		_:
+			return Array(_snapshot.get("%s_rows" % String(section_id), []))
 
 
-func _fill_column(box: VBoxContainer, index: int) -> void:
-	_clear(box)
-	box.add_child(Factory.section_heading(tr(_heading_key(index))))
-	var rows: Array = _snapshot.get(_rows_key(index), [])
+func _append_section(heading_key: String, rows: Array) -> void:
+	add_child(Factory.section_heading(tr(heading_key)))
+	_rendered_sections.append(_section_id_for_heading(heading_key))
 	if rows.is_empty():
-		box.add_child(Factory.label(
-			tr("REPORT_ZERO_DAMAGE" if index == 1 else "REPORT_NONE"),
-			17,
-			Art.MINT_SOFT
-		))
+		var empty := Factory.label("REPORT_NONE", 16, Art.MINT_SOFT)
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(empty)
 		return
-	match index:
-		0:
-			_fill_defeats(box, rows)
-		1:
-			_fill_damage(box, rows, "total_outgoing")
-		2:
-			_fill_attributes(box, rows)
-
-
-func _fill_defeats(box: VBoxContainer, rows: Array) -> void:
 	for row_variant in rows:
-		var row := Dictionary(row_variant)
-		var row_box := HBoxContainer.new()
-		row_box.add_theme_constant_override("separation", 8)
-		row_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var icon := CombatMeshIcon.new()
-		icon.set_enemy(StringName(row.get("id", &"scrap_drone")))
-		row_box.add_child(icon)
-		var name_box := VBoxContainer.new()
-		name_box.add_theme_constant_override("separation", 1)
-		name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_box.add_child(_metric_row(
-			tr(String(row.get("name_key", "REPORT_SOURCE_OTHER"))),
-			"×%d" % int(row.get("count", 0)),
-			"",
-			Art.IVORY_BRIGHT
-		))
-		var elite_count := int(row.get("elite_count", 0))
-		if elite_count > 0:
-			var elite := Factory.label(
-				tr("REPORT_ELITE_COUNT").replace("%count%", str(elite_count)),
-				14,
-				Art.BOSS_MAGENTA
-			)
-			elite.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			name_box.add_child(elite)
-		row_box.add_child(name_box)
-		box.add_child(row_box)
+		_append_row(row_variant)
 
 
-func _fill_damage(box: VBoxContainer, rows: Array, total_key: String) -> void:
-	for row_variant in rows:
-		box.add_child(_damage_row(Dictionary(row_variant), true))
-	var total := float(_snapshot.get(total_key, 0.0))
-	if total > 0.0:
-		box.add_child(_metric_row(
-			tr("REPORT_TOTAL_DAMAGE_LABEL"),
-			"%.1f" % total,
-			"",
-			Art.MUSTARD
-		))
-
-
-func _fill_attributes(box: VBoxContainer, rows: Array) -> void:
-	for row_variant in rows:
-		var row := Dictionary(row_variant)
-		var line := HBoxContainer.new()
-		line.add_theme_constant_override("separation", 8)
-		var icon := AttributeIcon.new()
-		icon.set_attribute(StringName(row.get("id", &"kinetic")))
-		line.add_child(icon)
-		var content := VBoxContainer.new()
-		content.add_theme_constant_override("separation", 1)
-		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		content.add_child(_damage_row(row, true))
-		var applications := int(row.get("applications", 0))
-		if applications > 0:
-			var applications_label := Factory.label(
-				tr("REPORT_ATTRIBUTE_APPLICATIONS").replace("%count%", str(applications)),
-				14,
-				Art.MINT_SOFT
-			)
-			applications_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			content.add_child(applications_label)
-		line.add_child(content)
-		box.add_child(line)
-	var total := float(_snapshot.get("total_attributes", 0.0))
-	if total > 0.0:
-		box.add_child(_metric_row(
-			tr("REPORT_TOTAL_DAMAGE_LABEL"),
-			"%.1f" % total,
-			"",
-			Art.MUSTARD
-		))
-
-
-func _damage_row(row: Dictionary, show_percentage: bool) -> HBoxContainer:
-	return _metric_row(
-		tr(String(row.get("title_key", "REPORT_SOURCE_OTHER"))),
-		"%.1f" % float(row.get("damage", 0.0)),
-		(
-			"%.1f%%" % (float(row.get("percentage_tenths", 0)) / 10.0)
-			if show_percentage
-			else ""
-		),
-		Art.IVORY_BRIGHT
-	)
-
-
-func _metric_row(
-	title: String,
-	value: String,
-	percentage: String,
-	color: Color
-) -> HBoxContainer:
-	var row := Factory.text_row(title, value, {
-		"separation":8,
+func _append_row(row_variant: Variant) -> void:
+	if row_variant is String or row_variant is StringName:
+		var text := Factory.label(String(row_variant), 16, Art.TEXT_PRIMARY)
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(text)
+		return
+	var row: Dictionary = Dictionary(row_variant) if row_variant is Dictionary else {}
+	var title := _localized_row_title(row)
+	var value := _row_value(row)
+	var line := Factory.text_row(title, value, {
 		"label_min_width":0.0,
-		"label_size":17,
-		"value_size":17,
-		"label_color":color,
-		"value_color":color,
+		"label_size":16,
+		"value_size":16,
+		"label_color":Art.IVORY_BRIGHT,
+		"value_color":Art.IVORY_BRIGHT,
 	})
-	row.set_meta("shared_component", "TextRow")
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var value_label := row.get_child(1) as Label
-	value_label.theme_type_variation = &"MetricLabel"
-	value_label.custom_minimum_size.x = 72.0
-	if not percentage.is_empty():
-		var percentage_label := Factory.label(percentage, 17, color)
-		percentage_label.theme_type_variation = &"MetricLabel"
-		percentage_label.custom_minimum_size.x = 68.0
-		percentage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(percentage_label)
-	return row
+	line.set_meta("shared_component", "TextRow")
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_child(line)
+	_rendered_text_rows += 1
 
 
-func _heading_key(index: int) -> String:
-	return ["REPORT_DEFEATS", "REPORT_OUTGOING", "REPORT_ATTRIBUTES"][index]
+func _localized_row_title(row: Dictionary) -> String:
+	for key in ["title_key", "name_key", "label_key"]:
+		var translation_key := String(row.get(key, ""))
+		if not translation_key.is_empty():
+			return tr(translation_key)
+	return String(row.get("title", row.get("label", row.get("id", ""))))
 
 
-func _rows_key(index: int) -> String:
-	return ["defeats", "outgoing", "attributes"][index]
+func _row_value(row: Dictionary) -> String:
+	if row.has("value_key"):
+		return tr(String(row["value_key"]))
+	if row.has("value"):
+		return String(row["value"])
+	if row.has("detail"):
+		return String(row["detail"])
+	if row.has("count"):
+		return "×%d" % int(row["count"])
+	if row.has("damage"):
+		var value := "%.1f" % float(row["damage"])
+		if row.has("percentage_tenths"):
+			value += "  %.1f%%" % (float(row["percentage_tenths"]) / 10.0)
+		return value
+	return ""
 
 
-func _apply_responsive_layout() -> void:
-	var compact := _force_compact or (is_inside_tree() and get_window().size.x < 1180)
-	if is_instance_valid(_tabs):
-		_tabs.visible = compact
-	if is_instance_valid(_content):
-		_content.visible = not compact
+func _section_id_for_heading(heading_key: String) -> StringName:
+	for definition in SECTION_DEFINITIONS:
+		if String(definition["heading"]) == heading_key:
+			return StringName(definition["id"])
+	return &""
 
 
 func _clear(node: Node) -> void:
@@ -301,48 +169,15 @@ func _clear(node: Node) -> void:
 
 
 func debug_contract() -> Dictionary:
+	var section_order: Array[StringName] = []
+	for definition in SECTION_DEFINITIONS:
+		section_order.append(StringName(definition["id"]))
 	return {
-		"wide_dividers":_content.find_children("*", "VSeparator", true, false).size(),
-		"wide_columns":_count_children_of_type(_content, "ScrollContainer"),
-		"compact_tabs":_tabs.get_tab_count(),
-		"scroll_views":_metric_scrolls.size(),
-		"semantic_icons":_count_semantic_icons(self),
-		"shared_text_rows":_count_shared_text_rows(self),
-		"decorated_metric_rows":_count_decorated_metric_rows(self),
+		"section_order":section_order,
+		"rendered_sections":_rendered_sections.duplicate(),
+		"vertical_stack":true,
+		"tab_count":0,
+		"nested_scroll_count":0,
+		"shared_text_rows":_rendered_text_rows,
+		"decorated_metric_rows":0,
 	}
-
-
-func _count_children_of_type(node: Node, type_name: String) -> int:
-	var count := 0
-	for child in node.get_children():
-		if child.is_class(type_name):
-			count += 1
-	return count
-
-
-func _count_semantic_icons(node: Node) -> int:
-	var count := 1 if node is CombatMeshIcon or node is AttributeIcon else 0
-	for child in node.get_children():
-		count += _count_semantic_icons(child)
-	return count
-
-
-func _count_shared_text_rows(node: Node) -> int:
-	var count := (
-		1
-		if node.has_meta("shared_component")
-		and node.get_meta("shared_component") == "TextRow"
-		else 0
-	)
-	for child in node.get_children():
-		count += _count_shared_text_rows(child)
-	return count
-
-
-func _count_decorated_metric_rows(node: Node) -> int:
-	var count := 0
-	if node.has_meta("shared_component") and node.get_meta("shared_component") == "TextRow":
-		count += node.find_children("*", "PanelContainer", true, false).size()
-	for child in node.get_children():
-		count += _count_decorated_metric_rows(child)
-	return count

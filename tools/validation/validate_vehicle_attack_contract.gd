@@ -64,6 +64,26 @@ func _initialize() -> void:
 				== &"projectile",
 		"ordinary controller and artillery roles never create ranged area bombardments"
 	)
+	var rail: Dictionary = AttackContract.ordinary_attack(&"rail_sniper")
+	var orbit: Dictionary = AttackContract.ordinary_attack(&"orbit_gunner")
+	var bombing: Dictionary = AttackContract.ordinary_attack(&"bombing_runner")
+	_expect(
+		is_equal_approx(float(rail["startup"]), 1.40)
+			and is_equal_approx(float(rail["recovery"]), 2.20)
+			and bool(rail["relocates_after_attack"]),
+		"Mobile Rail Sniper exposes its exact line warning and relocation recovery"
+	)
+	_expect(
+		StringName(orbit["kind"]) == &"burst"
+			and int(orbit["burst_count"]) == 3,
+		"Orbit Gunner exposes a three-shot inward pressure burst"
+	)
+	_expect(
+		StringName(bombing["kind"]) == &"ground_burst"
+			and int(bombing["blast_count"]) == 3
+			and float(bombing["blast_delay"]) > 0.0,
+		"Bombing Runner exposes three delayed normal-damage ground blasts"
+	)
 	_expect(
 		is_zero_approx(AttackContract.warning_readiness(0.8, 0.8))
 			and is_equal_approx(AttackContract.warning_readiness(0.4, 0.8), 0.5)
