@@ -28,6 +28,12 @@ or implement gameplay or visual changes.
 
 ## Executive Verdict
 
+> Owner decision update, 2026-08-15: implementation uses one top-left HUD row, facility
+> duration clips the large effect-footprint perimeter rather than a facility-body contour,
+> every hostile damaging area uses danger-red fill with a thin near-black perimeter, and
+> the exact live ordinary cap is 72. These decisions supersede lower-cap, two-row, and
+> body-contour recommendations below where they conflict.
+
 Four material implementation gaps are confirmed:
 
 1. A defeat report cannot receive build rows because the failure-stage context omits a
