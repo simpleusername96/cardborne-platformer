@@ -293,34 +293,34 @@ Preconditions:
 Source owners: boss phase catalog/runtime/shield/death/pattern owners, attack telegraph
 builder, projectile state/runtime, combat renderer, stage difficulty, focused boss validators
 
-- [ ] **4.1** Implement directional Drydock and Crown defenses.
+- [x] **4.1** Implement directional Drydock and Crown defenses.
   - Change: Drydock blocks 90% damage inside a body-facing frontal 110-degree arc and feeds
     blocked damage into its counterburst charge. Crown owns three 120-degree body-attached
     sector integrity values; only the hit sector intercepts damage and depleted sectors
     stay open. Publish exact arc/sector state for one retained segmented boundary.
   - Accept: front/rear/edge hits, facing lock, sector depletion, bypass, and defense-to-
     offense coupling pass deterministic tests and match rendered boundaries.
-- [ ] **4.2** Restore missing boss attack cues and Archive Cross geometry.
+- [x] **4.2** Restore missing boss attack cues and Archive Cross geometry.
   - Change: broad barrage publishes startup/offscreen descriptors; `wedge_ring` renders its
     exact footprint; Archive Cross uses two committed X corridors rather than four generic
     projectiles.
   - Accept: every boss attack kind has a startup descriptor, exact visible geometry, radar
     policy, one-hit semantics, and no final-commit retarget.
-- [ ] **4.3** Apply axis-specific boss pressure values.
+- [x] **4.3** Apply axis-specific boss pressure values.
   - Change: multiply locomotion by `1.25`, projectile speed by `1.40`, beam/projectile reach
     by `1.45`, charge speed by `1.30`, and circular/wedge radius by `1.25`; keep existing
     stage coverage scaling and add `0.15s` startup when a high-threat footprint exceeds the
     old maximum.
   - Accept: boss balance fixtures assert exact transformed values, monotonic progression,
     minimum warning, and escape corridor.
-- [ ] **4.4** Add Siege Battery distance-accelerating ammunition.
+- [x] **4.4** Add Siege Battery distance-accelerating ammunition.
   - Change: one authored boss projectile kind arms at 360 traveled units and interpolates
     monotonically to its hard cap at 880: speed `0.75x->1.35x`, radius `1.0x->1.5x`, damage
     `1.0x->1.6x`. Size/trail state changes before damage; walls terminate it; threat radar
     covers dangerous offscreen approach.
   - Accept: distance samples, hard caps, collision, warning, pooling/reuse reset, and no
     application to ordinary/global projectiles pass.
-- [ ] **4.5** Remove the boss explosion and retain safe body-only cleanup.
+- [x] **4.5** Remove the boss explosion and retain safe body-only cleanup.
   - Change: delete the shared explosion runtime/asset references and use attack disable,
     restrained hit tint, dim/desaturation, and body fade over exactly 2.00 seconds; reduced
     motion removes growth/impulse/hit-stop.
@@ -425,12 +425,13 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4.
-- Next task: 4.1 finish directional shield snapshots/rendering and deterministic edge tests.
-- Last completed gate: Phase 3; stale and counterproductive gates release without
-  retargeting or teleporting, stage caps reach exactly 72, reserve admission accelerates
-  from the engaged-visible floor while the materialized cap remains authoritative, and
-  first attack preparation is retained in pacing evidence and reports.
+- Current phase: Phase 5.
+- Next task: 5.1 run production integration and rendered capture coverage, then qualify the
+  exact-72 native and built-Web workloads.
+- Last completed gate: Phase 4; Drydock and Crown use body-facing directional defenses,
+  authored boss footprints and Siege distance growth have deterministic coverage, boss
+  pressure uses the locked axis multipliers, and the shared death explosion is retired with
+  its manifest and workbench ledger reconciled to implementation commit `efee2c71`.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
