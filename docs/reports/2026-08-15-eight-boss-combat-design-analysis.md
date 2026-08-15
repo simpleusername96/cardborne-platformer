@@ -168,6 +168,18 @@ without increasing the count. The net addition is 12 images, changing the declar
 production target from 78 to 90 after exact user approval. Boss-death presentation adds
 no raster asset.
 
+### Generated boss, enemy, and facility candidates
+
+The first nine actor/facility candidates now exist in the visual workbench:
+
+![Nine generated candidates](../design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/previews/all-candidates-contact-sheet.png)
+
+The [candidate evidence](../design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/README.md)
+records exact hashes, prompt provenance, transparent target-size files, actual-size and
+grayscale inspection, and approval state. Focused revisions simplified Siege Battery,
+Mobile Rail Sniper, Bombing Runner, and Wreck Scavenger. All nine selected files are now
+direction-clear for user review; none is production-approved or manifest-integrated.
+
 ## Recommendations
 
 - Implement the linked plan in its numbered order. Update product and visual authority
@@ -186,8 +198,9 @@ no raster asset.
 
 - The current local session set is small and was not produced under one controlled user
   build, so it supports search-gap diagnosis but not a universal completion-time target.
-- The new raster candidates do not exist yet. Their descriptions are production briefs,
-  not approval. Exact bytes and hashes require a later user decision.
+- The nine boss/enemy/facility candidates are direction-clear but review-only. All still
+  require exact user approval. Upgrade-card and Target Designator candidates are not part
+  of this batch.
 - Numeric boss damage and cadence values are implementation starting contracts. User
   play evidence may justify a later balance plan, but implementation must first preserve
   the fairness bands and monotonic progression defined here.

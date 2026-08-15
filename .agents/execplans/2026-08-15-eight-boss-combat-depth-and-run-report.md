@@ -353,7 +353,11 @@ item. Do not combine checkpoints across items.
 - [x] Product candidates, public-asset comparison, current runtime inspection, and final
   design decisions were completed in the linked analysis before this plan was written.
 - [ ] 1. Update product, design, terminology, and validation contracts.
-- [ ] 2. Produce and approve the exact raster set.
+- [ ] 2. Produce and approve the exact raster set. Boss 3, ordinary-enemy 4, and neutral-
+  facility 2 review candidates were generated on 2026-08-15 with grounded prompt/hash/
+  actual-size evidence; all nine are direction-clear after focused revisions, and none
+  has exact user approval or production integration. Upgrade-card and Target Designator
+  candidates remain unstarted.
 - [ ] 3. Implement the eight-cycle campaign and common boss kit.
 - [ ] 4. Implement all eight boss identities.
 - [ ] 5. Implement boss-death cleanup.

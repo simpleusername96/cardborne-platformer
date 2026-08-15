@@ -99,7 +99,27 @@ PNG를 넣지 않고 현재 고정 용량 효과 시스템으로 직접 만든�
 최종 목표는 90개다. 모든 새 이미지는 공식 스타일 참조 시트를 실제 입력으로
 사용해 후보를 만들고, 후보별 정확한 이미지와 해시를 다시 승인받은 뒤에만
 제품에 넣는다. 이번 문서는 자산 종류와 역할에 대한 승인을 요청하는 것이며,
-아직 만들어지지 않은 이미지 자체를 승인된 것으로 취급하지 않는다.
+이번에 만든 1차 후보도 별도 확인 없이 승인된 것으로 취급하지 않는다.
+
+### 실제 생성된 1차 후보
+
+보스 3종, 일반 적 4종, 중립 시설 2종의 이미지 후보를 실제로 생성했다.
+
+![신규 이미지 후보 9종](../design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/previews/all-candidates-contact-sheet.png)
+
+- 1차 검사에서 문제가 있던 Siege Battery, Mobile Rail Sniper, Bombing Runner,
+  Wreck Scavenger는 수정본으로 교체했다. 현재 9종 모두 방향 확인이 가능한
+  상태다.
+- 수정된 Siege Battery는 작은 포신 대신 위·아래의 큰 포대와 넓은 사격 채널
+  두 개씩만 남겼다. Rail Sniper는 본체를 넓혔고, Bombing Runner는 폭탄창을
+  하나의 면으로 합쳤다. Wreck Scavenger는 큰 후방 압축부와 열린 집게만 남겼다.
+- 모든 생성 호출에 공식 스타일 시트를 실제 이미지 입력으로 사용했다.
+- 생성 원본의 크로마키만 투명 알파로 바꾸고 기존 캔버스 크기로 축소했다.
+  ImageMagick이나 SVG로 기체 형태를 새로 그리거나 고치지 않았다.
+- 후보별 정확한 PNG, SHA-256, 실제 크기 시트, 흑백 시트와 생성 프롬프트는
+  [후보 근거 문서](../design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/README.md)에 있다.
+- 아직 제품 manifest에는 넣지 않았다. `방향 확인 가능`도 이미지 승인과
+  같은 뜻이 아니다.
 
 ## 함께 반영하는 항목
 
