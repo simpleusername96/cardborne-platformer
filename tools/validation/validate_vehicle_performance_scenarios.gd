@@ -204,11 +204,20 @@ func _run() -> void:
 				"production replay allocation covers four quadrants without one-sided concentration"
 			)
 			_expect(
-				int(qualification["maximum_ranged_commits"])
-					<= EncounterDirector.MAX_RANGED_COMMITS
-					and int(qualification["maximum_denial_commits"])
-					<= EncounterDirector.MAX_DENIAL_COMMITS,
-				"production replay peak window preserves commit caps"
+				int(qualification["ranged_commit_cap"])
+					== EncounterDirector.stage_ranged_commit_cap(StageCatalog.STAGE_IDS.size() - 1)
+					and int(qualification["denial_commit_cap"])
+					== EncounterDirector.stage_denial_commit_cap(StageCatalog.STAGE_IDS.size() - 1),
+				"production replay publishes the active final-stage commit caps"
+			)
+			_expect(
+				Scenario.production_commit_window_within_stage_caps(
+					int(qualification["maximum_ranged_commits"]),
+					int(qualification["maximum_denial_commits"]),
+					int(qualification["ranged_commit_cap"]),
+					int(qualification["denial_commit_cap"])
+				),
+				"production replay peak window preserves its active stage commit caps"
 			)
 		else:
 			_expect(int(snapshot["fixture_fingerprint"]) != 0, "%s publishes a fixture fingerprint" % String(scenario_id))
@@ -365,6 +374,7 @@ func _run() -> void:
 		"enemy-count overrides remain diagnostic-only and limited to the declared staircase"
 	)
 	_expect(peak_fingerprint != 0, "peak workload has a stable nonzero fingerprint")
+	_validate_production_stage_commit_caps()
 	_validate_threshold_contract()
 	run.queue_free()
 	await process_frame
@@ -386,6 +396,34 @@ func _final_authored_trigger_time(stage_id: StringName) -> float:
 		elif beat == final_beat:
 			trigger_time = minf(trigger_time, at)
 	return trigger_time
+
+
+func _validate_production_stage_commit_caps() -> void:
+	var final_stage_index := StageCatalog.STAGE_IDS.size() - 1
+	var ranged_cap := EncounterDirector.stage_ranged_commit_cap(final_stage_index)
+	var denial_cap := EncounterDirector.stage_denial_commit_cap(final_stage_index)
+	_expect(
+		ranged_cap == 4 and denial_cap == 3,
+		"stage_8 retains its authored four-ranged and three-denial caps"
+	)
+	_expect(
+		Scenario.production_commit_window_within_stage_caps(
+			ranged_cap,
+			denial_cap,
+			ranged_cap,
+			denial_cap
+		),
+		"production qualification accepts stage_8 at its authored maximum commits"
+	)
+	_expect(
+		not Scenario.production_commit_window_within_stage_caps(
+			ranged_cap,
+			denial_cap + 1,
+			ranged_cap,
+			denial_cap
+		),
+		"production qualification rejects denial commits above the active stage cap"
+	)
 
 
 func _validate_threshold_contract() -> void:

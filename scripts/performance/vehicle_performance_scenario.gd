@@ -818,13 +818,21 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 	)
 	var maximum_ranged := _production_sample_maximum(&"ranged_commits")
 	var maximum_denial := _production_sample_maximum(&"denial_commits")
+	# The replay runs the final authored stage after beat four. Read the active
+	# runtime ceilings so late-stage pressure is checked against its own contract,
+	# rather than the legacy global defaults used by fixture scenarios.
+	var commit_caps := _production_commit_caps(run)
 	var pressure_qualified := (
 		_production_pressure_samples.size() >= 10
 		and int(scheduler.get("beat", 0)) >= 4
 		and median_active >= minimum_active
 		and bool(allocation_qualification["valid"])
-		and maximum_ranged <= EncounterDirector.MAX_RANGED_COMMITS
-		and maximum_denial <= EncounterDirector.MAX_DENIAL_COMMITS
+		and production_commit_window_within_stage_caps(
+			maximum_ranged,
+			maximum_denial,
+			int(commit_caps["ranged"]),
+			int(commit_caps["denial"])
+		)
 	)
 	var valid: bool = (
 		StringName(scheduler.get("stage_id", &"")) == StageCatalog.STAGE_IDS[-1]
@@ -881,10 +889,28 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 			"minimum_active":minimum_active,
 			"maximum_ranged_commits":maximum_ranged,
 			"maximum_denial_commits":maximum_denial,
+			"ranged_commit_cap":int(commit_caps["ranged"]),
+			"denial_commit_cap":int(commit_caps["denial"]),
 			"allocations":allocation_qualification,
 			"samples":_production_pressure_samples.duplicate(true),
 		},
 	}
+
+
+func _production_commit_caps(run: Node) -> Dictionary:
+	return {
+		"ranged":run.encounter_runtime.ranged_commit_cap(),
+		"denial":run.encounter_runtime.denial_commit_cap(),
+	}
+
+
+static func production_commit_window_within_stage_caps(
+	maximum_ranged: int,
+	maximum_denial: int,
+	ranged_cap: int,
+	denial_cap: int
+) -> bool:
+	return maximum_ranged <= ranged_cap and maximum_denial <= denial_cap
 
 
 func _production_workload_fingerprint(run: Node, population: Dictionary) -> int:
