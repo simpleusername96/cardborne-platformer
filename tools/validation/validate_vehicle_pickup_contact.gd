@@ -46,7 +46,7 @@ func _initialize() -> void:
 		),
 		"0.1 outside contact radius misses"
 	)
-	for kind in [&"repair", &"experience_recall"]:
+	for kind in [&"experience_shard", &"experience_recall"]:
 		_expect(
 			not Contact.should_collect(
 				false, Vector2(-100.0, 0.0), Vector2(100.0, 0.0),

@@ -13,6 +13,9 @@ const EVENT_KINDS := {
 	"arrival_cued": true, "arrival_began": true, "first_visible": true,
 	"first_commit": true, "visible_gap_closed": true,
 	"boss_warning": true, "boss_started": true, "boss_ended": true,
+	"boss_cleanup_started": true,
+	"stage_transition_flush": true, "stage_transition_boss_teardown": true,
+	"stage_transition_step": true,
 	"upgrade_opened": true, "upgrade_focused": true, "upgrade_confirmed": true,
 	"announcement_queued": true, "announcement_shown": true,
 	"announcement_interrupted": true, "announcement_dropped": true,
@@ -164,6 +167,17 @@ func checkpoint(reason: String) -> Dictionary:
 
 func is_active() -> bool:
 	return _active
+
+
+func summary() -> Dictionary:
+	return {
+		"active": _active,
+		"event_count": _events.size(),
+		"event_cap": MAX_EVENTS,
+		"event_dropped": _event_dropped,
+		"sample_count": _seconds.size(),
+		"sample_cap": MAX_SECOND_BUCKETS,
+	}
 
 
 func _bundle(reason: String) -> Dictionary:

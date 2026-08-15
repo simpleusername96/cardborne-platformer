@@ -74,16 +74,31 @@ func _validate_facility_authority(run) -> void:
 	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")
 	devices = run.mystery_device_runtime.snapshot()["devices"]
 	var modifier_device := Dictionary(devices[0])
+	run.mystery_device_runtime.devices[0]["outcome"] = &"gravity"
+	run.player_position = Vector2(modifier_device["position"])
+	_expect(
+		is_equal_approx(float(run.call("_player_facility_movement_multiplier")), 0.55)
+			and is_equal_approx(float(run.call("_player_facility_acceleration_multiplier")), 0.55),
+		"gravity applies the same max-speed and acceleration multipliers to the player"
+	)
 	var enemy = run.call("_make_enemy", {"role":&"chaser", "id":"facility_target", "pos":Vector2(modifier_device["position"]), "active":true})
 	run.call("_append_enemy", enemy)
 	run.call("_apply_enemy_facility_modifiers", enemy, 0.5)
 	var profile := Dictionary(run.mystery_device_runtime.modifiers_at(enemy.pos)[0]["profile"])
 	_expect(
 		is_equal_approx(enemy.facility_movement_multiplier, float(profile.get("movement_multiplier", profile.get("max_speed_multiplier", 1.0))))
+			and is_equal_approx(enemy.facility_acceleration_multiplier, float(profile.get("acceleration_multiplier", 1.0)))
 			and is_equal_approx(enemy.facility_cadence_multiplier, float(profile.get("attack_cadence_multiplier", 1.0)))
 			and is_equal_approx(enemy.facility_received_damage_multiplier, float(profile.get("received_damage_multiplier", 1.0))),
 		"VehicleRun applies the same persistent facility profile to enemies"
 	)
+	run.mystery_device_runtime.devices[0]["outcome"] = &"cryo"
+	_expect(
+		is_equal_approx(float(run.call("_player_facility_attack_cadence_multiplier")), 0.70),
+		"cryo slows player primary and active cooldown cadence through the live-run multiplier"
+	)
+	run.call("_apply_enemy_facility_modifiers", enemy, 0.0)
+	_expect(is_equal_approx(enemy.facility_cadence_multiplier, 0.70), "cryo slows enemy attack cadence through the same facility")
 
 
 func _expect(condition: bool, message: String) -> void:

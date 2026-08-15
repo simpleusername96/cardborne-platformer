@@ -62,9 +62,9 @@ static func build(stage_records: Array, final_state: Dictionary) -> Dictionary:
 		"damage_rows":damage_rows,
 		"defense_rows":incoming,
 		"enemy_rows":defeats.duplicate(true),
-		"boss_rows":[{"title_key":"REPORT_ROW_BOSSES_DEFEATED", "count":_boss_stage_count()}],
-		"pacing_rows":[{"title_key":"REPORT_ROW_ORDINARY_DEFEATS", "count":_total_defeats(defeats)}],
-		"diagnostic_limitations":[{"title_key":"REPORT_ROW_DIAGNOSTIC_SCOPE", "value_key":"REPORT_VALUE_LOCAL_LATEST_TEN"}],
+		"boss_rows":_boss_rows(stage_records),
+		"pacing_rows":_pacing_rows(stage_records, defeats),
+		"diagnostic_limitations":_diagnostic_rows(stage_records),
 	}
 
 
@@ -105,6 +105,56 @@ static func _boss_stage_count() -> int:
 		if CombatStages.has_boss(stage_id):
 			total += 1
 	return total
+
+
+static func _boss_rows(records: Array) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = [{"title_key":"REPORT_ROW_BOSSES_DEFEATED", "count":_boss_stage_count()}]
+	for record_variant in records:
+		var boss := Dictionary(Dictionary(record_variant).get("boss_report", {}))
+		var boss_id := StringName(boss.get("id", &""))
+		if boss_id.is_empty():
+			continue
+		rows.append({"name_key":String(boss_id), "value_key":"REPORT_VALUE_CLEARED"})
+		rows.append({
+			"title_key":"REPORT_ROW_BOSS_CLEANUP",
+			"value_key":"REPORT_VALUE_CLEANUP_COMPLETED" if bool(boss.get("cleanup_completed", false)) else "REPORT_VALUE_CLEANUP_IN_PROGRESS",
+		})
+		if boss.has("owned_count"):
+			rows.append({"title_key":"REPORT_ROW_BOSS_OWNED_RETIREMENTS", "count":maxi(0, int(boss["owned_count"]))})
+	return rows
+
+
+static func _pacing_rows(records: Array, defeats: Array[Dictionary]) -> Array[Dictionary]:
+	var active_seconds := 0.0
+	var visible_gaps := 0
+	var tactics := 0
+	for record_variant in records:
+		var metrics := Dictionary(Dictionary(record_variant).get("pacing_metrics", {}))
+		active_seconds += maxf(0.0, float(metrics.get("active_seconds", 0.0)))
+		visible_gaps += maxi(0, int(metrics.get("visible_gap_count", 0)))
+		tactics += maxi(0, int(metrics.get("tactic_count", 0)))
+	return [
+		{"title_key":"REPORT_ROW_ORDINARY_DEFEATS", "count":_total_defeats(defeats)},
+		{"title_key":"REPORT_ROW_STAGE_PACING_TIME", "value":_format_duration(active_seconds)},
+		{"title_key":"REPORT_ROW_VISIBLE_GAPS", "count":visible_gaps},
+		{"title_key":"REPORT_ROW_ENGAGEMENT_TACTICS", "count":tactics},
+	]
+
+
+static func _diagnostic_rows(records: Array) -> Array[Dictionary]:
+	var latest := {}
+	for record_variant in records:
+		var metrics := Dictionary(Dictionary(record_variant).get("diagnostic_metrics", {}))
+		if not metrics.is_empty():
+			latest = metrics
+	var rows: Array[Dictionary] = [{"title_key":"REPORT_ROW_DIAGNOSTIC_SCOPE", "value_key":"REPORT_VALUE_LOCAL_LATEST_TEN"}]
+	if not bool(latest.get("active", false)):
+		rows.append({"title_key":"REPORT_ROW_DIAGNOSTIC_STATUS", "value_key":"REPORT_VALUE_DIAGNOSTIC_NOT_RECORDED"})
+		return rows
+	rows.append({"title_key":"REPORT_ROW_DIAGNOSTIC_EVENTS", "value":"%d / %d" % [maxi(0, int(latest.get("event_count", 0))), maxi(0, int(latest.get("event_cap", 0)))]})
+	rows.append({"title_key":"REPORT_ROW_DIAGNOSTIC_SAMPLES", "value":"%d / %d" % [maxi(0, int(latest.get("sample_count", 0))), maxi(0, int(latest.get("sample_cap", 0)))]})
+	rows.append({"title_key":"REPORT_ROW_DIAGNOSTIC_DROPPED", "count":maxi(0, int(latest.get("event_dropped", 0)))})
+	return rows
 
 
 static func _merge_defeats(records: Array) -> Array[Dictionary]:

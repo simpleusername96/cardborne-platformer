@@ -43,13 +43,13 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 81,
-		"gameplay manifest declares 78 semantic PNGs plus three approved SurfaceDetail SVGs"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 77,
+		"gameplay manifest declares 74 approved semantic PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(
-		int(family_counts.get("upgrade", 0)) == 28,
-		"gameplay manifest declares one raster per live upgrade card"
+		int(family_counts.get("upgrade", 0)) == 24,
+		"gameplay manifest declares only the 24 approved upgrade rasters before candidate promotion"
 	)
 	var world_asset_count := 0
 	for asset_variant in Array(gameplay_manifest.get("assets", [])):

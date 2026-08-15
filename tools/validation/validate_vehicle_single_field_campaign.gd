@@ -55,26 +55,26 @@ func _check_stage_flow() -> void:
 			var receipt := flow.record_countable_defeat()
 			_expect(StageFlow.valid_receipt(receipt), "quota receipt shape is valid")
 			_expect(
-				(StringName(receipt["command"]) in [
-					StageFlow.COMMAND_BEGIN_BOSS_WARNING,
-					StageFlow.COMMAND_COMPLETE_WITHOUT_BOSS,
-				])
+				(StringName(receipt["command"]) == StageFlow.COMMAND_BEGIN_BOSS_WARNING)
 					== (defeat == flow.quota - 1),
-				"the stage completion command starts on exact quota"
+				"each cycle enters its boss warning on the exact quota"
 			)
-		if has_boss:
-			_expect(
-				StringName(flow.advance(1.5)["command"]) == StageFlow.COMMAND_ENTER_BOSS,
-				"warning resolves after 1.5 seconds"
-			)
-			_expect(flow.boss_entry_ready(), "boss entry requires the exact defeat quota")
-			_expect(
-				StringName(flow.record_boss_defeat()["command"])
-					== StageFlow.COMMAND_COMPLETE_AFTER_BOSS,
-				"active boss defeat completes the stage"
-			)
-		else:
-			_expect(flow.state == StageFlow.State.COMPLETE, "odd stage completes without a boss warning")
+		_expect(has_boss, "%s owns a quota-gated boss" % stage_id)
+		_expect(
+			StringName(flow.advance(1.5)["command"]) == StageFlow.COMMAND_ENTER_BOSS,
+			"warning resolves after 1.5 seconds"
+		)
+		_expect(flow.boss_entry_ready(), "boss entry requires the exact defeat quota")
+		_expect(
+			StringName(flow.record_boss_defeat()["command"])
+				== StageFlow.COMMAND_BEGIN_BOSS_CLEANUP,
+			"boss defeat begins the visible cleanup before stage completion"
+		)
+		_expect(
+			StringName(flow.record_boss_cleanup_complete()["command"])
+				== StageFlow.COMMAND_COMPLETE_AFTER_BOSS_CLEANUP,
+			"cleanup completion advances the campaign"
+		)
 		_expect(flow.state == StageFlow.State.COMPLETE, "stage flow reaches complete without reward or transition states")
 
 

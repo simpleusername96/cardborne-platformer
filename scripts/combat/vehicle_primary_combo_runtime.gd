@@ -64,6 +64,10 @@ func advance_motion(delta: float, moved_distance: float, speed: float, braced_le
 	while braced_distance >= BRACED_SEGMENT_DISTANCE and braced_segments < BRACED_MAX:
 		braced_distance -= BRACED_SEGMENT_DISTANCE
 		braced_segments += 1
+	# Once the five authored segments are armed, retaining unbounded travel
+	# distance has no gameplay value and would let an idle state grow forever.
+	if braced_segments >= BRACED_MAX:
+		braced_distance = minf(braced_distance, BRACED_SEGMENT_DISTANCE)
 	if speed < BRACED_STILL_SPEED and braced_segments > 0:
 		still_seconds += maxf(0.0, delta)
 		if still_seconds >= BRACED_STILL_SECONDS and braced_seconds <= 0.0:
@@ -88,4 +92,4 @@ func braced_multiplier(braced_level: int, _consumed_segments: int = 0) -> float:
 	return 1.0 + float(braced_active_segments) * BRACED_BONUS[clampi(braced_level - 1, 0, 2)]
 
 func snapshot() -> Dictionary:
-	return {"miss_stacks": miss_stacks, "hit_stacks": hit_stacks, "braced_segments": braced_segments, "braced_active_segments": braced_active_segments, "braced_seconds": braced_seconds}
+	return {"miss_stacks": miss_stacks, "hit_stacks": hit_stacks, "braced_segments": braced_segments, "braced_active_segments": braced_active_segments, "braced_distance": braced_distance, "braced_seconds": braced_seconds}

@@ -21,7 +21,7 @@ func _initialize() -> void:
 	_expect(not capture.record_lifecycle(&"unknown", 0.0), "undeclared lifecycle is rejected")
 	_expect(capture.record_lifecycle(&"cue", 0.0), "cue lifecycle is retained")
 	_expect(capture.record_lifecycle(&"birth", 0.9), "birth lifecycle is retained")
-	_expect(capture.record_lifecycle(&"first_visible", 3.5), "first-visible lifecycle is retained")
+	_expect(capture.record_lifecycle(&"first_visible", 4.0), "first-visible lifecycle is retained")
 	_expect(capture.record_lifecycle(&"first_commit_or_damage", 8.0), "commit lifecycle is retained")
 	for checkpoint_id in PacingCapture.REQUIRED_TIME_CHECKPOINTS:
 		_expect(
@@ -33,9 +33,7 @@ func _initialize() -> void:
 			"required time checkpoint %s is retained" % checkpoint_id
 		)
 	for checkpoint_id in PacingCapture.REQUIRED_TRANSITION_CHECKPOINTS:
-		var elapsed_seconds := (
-			33.0 if checkpoint_id == &"post_boss_3" else 30.0
-		)
+		var elapsed_seconds := 35.0 if checkpoint_id == &"post_boss_3" else (32.0 if checkpoint_id == &"boss_cleanup_complete" else 30.0)
 		_expect(
 			capture.record_checkpoint(checkpoint_id, elapsed_seconds, _snapshot(checkpoint_id)),
 			"transition checkpoint %s is retained" % checkpoint_id
@@ -53,12 +51,12 @@ func _initialize() -> void:
 			and not String(provenance.get("utc_started", "")).is_empty(),
 		"bundle uses the shared build identity and diagnostic provenance envelope"
 	)
-	_expect(Array(bundle.get("checkpoints", [])).size() == 13, "bundle retains eight time and five transition checkpoints")
+	_expect(Array(bundle.get("checkpoints", [])).size() == 14, "bundle retains eight time and six transition checkpoints")
 	var acceptance := Dictionary(bundle.get("acceptance", {}))
 	_expect(
 		bool(acceptance.get("passed", false))
-			and Dictionary(acceptance.get("checks", {})).size() == 7,
-		"complete fixture passes explicit opening, boss-margin, and post-boss visibility gates"
+			and Dictionary(acceptance.get("checks", {})).size() == 4,
+		"complete fixture passes the explicit 4/8/3 and boss-margin gates"
 	)
 	var first := Dictionary(Array(bundle.get("checkpoints", []))[0])
 	_expect(
@@ -82,7 +80,7 @@ func _initialize() -> void:
 	_expect(not invalid_time.record_checkpoint(&"t_1", 1.1, _snapshot(&"t_1")), "fixed checkpoints reject timing drift")
 	_expect(
 		not invalid_time.record_checkpoint(&"post_boss_3", 3.0, _snapshot(&"post_boss_3")),
-		"post-boss checkpoint requires the boss-defeat anchor"
+		"post-boss checkpoint requires the cleanup-complete anchor"
 	)
 	var run_source := FileAccess.get_file_as_string(RUN_PATH)
 	_expect(

@@ -9,6 +9,8 @@ const AssetProvider = preload(
 const SecondaryCatalog = preload(
 	"res://scripts/presentation/components/vehicle_secondary_visual_catalog.gd"
 )
+const BossCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
+const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 
 const ORDINARY_ARCHETYPES: Array[StringName] = [
 	&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser",
@@ -17,7 +19,7 @@ const ORDINARY_ARCHETYPES: Array[StringName] = [
 	&"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender",
 	&"drone_carrier", &"beam_sentinel",
 ]
-const BOSS_VARIANTS: Array[StringName] = [
+const PRODUCTION_BOSS_VARIANTS: Array[StringName] = [
 	&"colossus", &"leviathan", &"titan", &"behemoth", &"crown",
 ]
 var _failures: Array[String] = []
@@ -72,12 +74,19 @@ func _validate_actor_images() -> void:
 		"all 18 ordinary actor silhouettes remain distinct"
 	)
 	signatures.clear()
-	for boss in BOSS_VARIANTS:
+	for boss in PRODUCTION_BOSS_VARIANTS:
 		_validate_unique_alpha_signature(
 			StringName("boss/%s" % boss),
 			signatures
 		)
-	_expect(signatures.size() == 5, "all five boss body silhouettes remain distinct")
+	_expect(signatures.size() == 5, "the five approved boss body silhouettes remain distinct")
+	var authored_variants := {}
+	for stage_id in CombatStages.STAGE_IDS:
+		authored_variants[BossCatalog.variant(stage_id)] = true
+	_expect(
+		authored_variants.size() == 8,
+		"eight boss identities are gameplay-authored independently of pending visual approval"
+	)
 
 
 func _validate_secondary_ownership() -> void:

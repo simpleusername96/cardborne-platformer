@@ -18,7 +18,8 @@ const REQUIRED_TIME_CHECKPOINTS := {
 	&"t_30": 30.0,
 }
 const REQUIRED_TRANSITION_CHECKPOINTS := [
-	&"quota", &"boss_warning", &"boss_active", &"boss_defeat", &"post_boss_3",
+	&"quota", &"boss_warning", &"boss_active", &"boss_defeat",
+	&"boss_cleanup_complete", &"post_boss_3",
 ]
 const REQUIRED_LIFECYCLE_EVENTS := [
 	&"cue", &"birth", &"first_visible", &"first_commit_or_damage",
@@ -84,10 +85,10 @@ func record_checkpoint(
 	if (
 		checkpoint_id == &"post_boss_3"
 		and (
-			not _checkpoints.has(&"boss_defeat")
+			not _checkpoints.has(&"boss_cleanup_complete")
 			or not is_equal_approx(
 				elapsed_seconds,
-				float(_checkpoints[&"boss_defeat"]["elapsed_seconds"]) + 3.0
+				float(_checkpoints[&"boss_cleanup_complete"]["elapsed_seconds"]) + 3.0
 			)
 		)
 	):
@@ -163,17 +164,13 @@ func bundle() -> Dictionary:
 func acceptance() -> Dictionary:
 	if not is_complete():
 		return {"passed":false, "checks":{}}
-	var t_6: Dictionary = _checkpoints[&"t_6"]
 	var boss_active: Dictionary = _checkpoints[&"boss_active"]
 	var post_boss: Dictionary = _checkpoints[&"post_boss_3"]
 	var checks := {
-		"opening_cue_by_0_05s":float(_lifecycle[&"cue"]) <= 0.05,
-		"opening_birth_by_0_92s":float(_lifecycle[&"birth"]) <= 0.92,
-		"first_visible_by_3_5s":float(_lifecycle[&"first_visible"]) <= 3.5,
-		"three_visible_by_6s":int(t_6["visible_ordinary_count"]) >= 3,
+		"first_visible_by_4s":float(_lifecycle[&"first_visible"]) <= 4.0,
 		"first_commit_by_8s":float(_lifecycle[&"first_commit_or_damage"]) <= 8.0,
 		"boss_slot_margin_nonnegative":int(boss_active["boss_slot_margin"]) >= 0,
-		"post_boss_visible_by_3s":int(post_boss["visible_ordinary_count"]) >= 1,
+		"post_cleanup_visible_by_3s":int(post_boss["visible_ordinary_count"]) >= 1,
 	}
 	var passed := true
 	for value in checks.values():

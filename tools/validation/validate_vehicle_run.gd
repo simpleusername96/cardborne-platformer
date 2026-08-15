@@ -1166,8 +1166,7 @@ func _check_combat_presentation_frame(run) -> void:
 			and is_same(first["protection_sources"], run.player_protection_sources)
 			and is_same(secondary, run._runtime_secondary_presentation_frame)
 			and is_same(secondary["mines"], run.secondary_runtime.mines)
-			and is_same(first["mystery_devices"], run._mystery_device_snapshot_buffer)
-			and is_same(first["mystery_effects"], run._mystery_effect_snapshot_buffer),
+			and is_same(first["mystery_devices"], run._mystery_device_snapshot_buffer),
 		"combat presentation borrows synchronous live collections without duplication"
 	)
 	_expect(
@@ -1181,8 +1180,7 @@ func _check_combat_presentation_frame(run) -> void:
 	_expect(
 			not is_same(oracle["protection_sources"], run.player_protection_sources)
 			and not is_same(oracle["secondary"]["mines"], run.secondary_runtime.mines)
-			and not is_same(oracle["mystery_devices"], run._mystery_device_snapshot_buffer)
-			and not is_same(oracle["mystery_effects"], run._mystery_effect_snapshot_buffer),
+			and not is_same(oracle["mystery_devices"], run._mystery_device_snapshot_buffer),
 		"cold combat snapshot remains independently owned for validators and capture"
 	)
 	var identities_stable := true
@@ -1194,7 +1192,6 @@ func _check_combat_presentation_frame(run) -> void:
 			is_same(first, repeated)
 			and is_same(secondary, repeated["secondary"])
 			and is_same(first["mystery_devices"], repeated["mystery_devices"])
-			and is_same(first["mystery_effects"], repeated["mystery_effects"])
 		)
 	_expect(
 		identities_stable,
@@ -1252,9 +1249,8 @@ func _presentation_snapshots_match(
 	]:
 		if expected.get(key) != actual.get(key):
 			return false
-	for key in ["mystery_devices", "mystery_effects"]:
-		if expected.get(key) != actual.get(key):
-			return false
+	if expected.get("mystery_devices") != actual.get("mystery_devices"):
+		return false
 	var expected_secondary := Dictionary(expected.get("secondary", {}))
 	var actual_secondary := Dictionary(actual.get("secondary", {}))
 	for key in ["orbit_angle", "mines", "electric_field_radius"]:

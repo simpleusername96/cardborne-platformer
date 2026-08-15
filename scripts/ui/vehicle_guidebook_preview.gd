@@ -99,7 +99,6 @@ func _add_facility(facility_id: StringName) -> void:
 func _add_pickup(pickup_id: StringName) -> void:
 	var asset_id := StringName({
 		&"experience":&"pickup/experience_master",
-		&"repair":&"pickup/repair",
 		&"experience_recall":&"pickup/experience_recall",
 	}.get(pickup_id, &"pickup/experience_master"))
 	_add_asset(asset_id, 72.0)

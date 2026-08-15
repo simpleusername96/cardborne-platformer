@@ -104,7 +104,7 @@ Exact actions requiring user approval:
 | Neutral facilities | `VehicleMysteryDeviceRuntime` owns three destroy-to-trigger outcomes; repair remains a pickup | Runtime, visual spec, and product spec | Five persistent, attackable, pass-through facilities affect player and enemies symmetrically | 3.4 |
 | Diagnostics | Store retains 20 sessions and already sorts by saved time/session ID with 25 MiB/14-day caps and quarantine | Store and validator | Change maximum to newest 10 on both load and persist; keep other caps and quarantine | 4.1 |
 | Report | `VehicleCombatReportBody` is shared but terminal surfaces still use columns/tabs/build rail and nested content regions | UI owners and validators | One left-aligned vertical stack, one outer scroll, fixed primary action, no tabs/sub-scroll/side rail | 4.2 |
-| Visuals | Manifest has 78 images including Shock; ten grounded candidates exist outside production; three new card images do not yet exist | Manifest and workbench evidence | Add 13 approved rasters and remove Shock for exactly 90 production images | 1.3, 5.1, 5.2 |
+| Visuals | Manifest has 77 approved production images after Shock removal; 13 grounded candidates remain outside production pending exact-file approval | Manifest and workbench evidence | Promote the 13 approved rasters for exactly 90 production images | 1.3, 5.1, 5.2 |
 | Performance | Current Web exact-cap-48 physics evidence is red; historical render evidence does not attribute sustained cost to raster size | Performance policy/audit and prior active plan | Preserve workload/capacities; label functional, visual, native, and Web performance verdicts separately | 5.3 |
 
 Readiness statement:

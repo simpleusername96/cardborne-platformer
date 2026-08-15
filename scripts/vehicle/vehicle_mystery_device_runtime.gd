@@ -17,11 +17,8 @@ const OUTCOME_PROFILE := {
 }
 
 var devices: Array[Dictionary] = []
-var active_effects: Array[Dictionary] = []
-
 func configure(device_blueprint: Array, layout_seed: int, stage_id: StringName) -> void:
 	devices.clear()
-	active_effects.clear()
 	var rotation := _rotation(layout_seed, stage_id)
 	for index in mini(DEVICE_COUNT, device_blueprint.size()):
 		var blueprint := Dictionary(device_blueprint[index])
@@ -59,22 +56,11 @@ func fill_modifiers_at(position: Vector2, output: Array[Dictionary]) -> Array[Di
 			output.append({"facility_id": StringName(device["id"]), "kind": StringName(device["outcome"]), "profile": profile, "applies_to": &"all_actors"})
 	return output
 
-func advance(_delta: float) -> Array[Dictionary]:
-	return []
-
-func advance_into(_delta: float, output: Array[Dictionary]) -> Array[Dictionary]:
-	output.clear()
-	return output
-
 func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 	var source: Array = snapshot()["devices"]
 	output.clear()
 	for record in source:
 		output.append(Dictionary(record))
-	return output
-
-func fill_active_effect_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
-	output.clear()
 	return output
 
 func is_position_clear(position: Vector2, actor_radius: float) -> bool:
@@ -107,7 +93,7 @@ func snapshot() -> Dictionary:
 	for device in devices:
 		var profile := Dictionary(OUTCOME_PROFILE[StringName(device["outcome"])])
 		records.append({"id": StringName(device["id"]), "position": Vector2(device["position"]), "radius": DEVICE_RADIUS, "effect_radius": float(profile["radius"]), "health": float(device["health"]), "max_health": DEVICE_HEALTH, "outcome": StringName(device["outcome"]), "state": StringName(device["state"]), "projectiles_blocked": false})
-	return {"devices": records, "active_effects": []}
+	return {"devices": records}
 
 func _rotation(layout_seed: int, stage_id: StringName) -> Array[StringName]:
 	var rng := RandomNumberGenerator.new()

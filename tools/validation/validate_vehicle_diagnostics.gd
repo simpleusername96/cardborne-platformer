@@ -30,6 +30,9 @@ func _initialize() -> void:
 	for fixture_event in [
 		{"kind":"first_visible", "fields":{"stage_index":0}},
 		{"kind":"boss_warning", "fields":{"stage_index":0}},
+		{"kind":"boss_cleanup_started", "fields":{"stage_index":0, "owned_count":2}},
+		{"kind":"stage_transition_boss_teardown", "fields":{"stage_index":0, "elapsed_ms":2.0}},
+		{"kind":"stage_transition_step", "fields":{"stage_index":0, "step":&"capture_report"}},
 		{"kind":"upgrade_focused", "fields":{"upgrade_id":&"thermal_burst"}},
 		{"kind":"announcement_shown", "fields":{"semantic_id":&"boss_inbound"}},
 		{"kind":"neutral_facility_destroyed", "fields":{"device_id":&"facility_a"}},
@@ -47,7 +50,14 @@ func _initialize() -> void:
 			0.3, 16.0 + index, 10 + index, true, 0, &"playing"
 		)
 	var bundle := recorder.finish("fixture_complete")
-	_expect(Array(bundle.get("events", [])).size() == 8, "bounded lifecycle fixture retains opening, boss, Upgrade, announcement, Anomaly, and Result events")
+	_expect(Array(bundle.get("events", [])).size() == 11, "bounded lifecycle fixture retains boss cleanup and transition events alongside core lifecycle events")
+	var summary := recorder.summary()
+	_expect(
+		not bool(summary.get("active", true))
+			and int(summary.get("event_count", 0)) == 11
+			and int(summary.get("event_cap", 0)) == SignalRecorder.MAX_EVENTS,
+		"recorder summary exposes bounded report-safe retention counts"
+	)
 	_expect(Array(bundle.get("one_hz", [])).size() == 1, "frame sampling produces bounded one-hertz summary")
 	var second := Dictionary(Array(bundle.get("one_hz", []))[0])
 	_expect(

@@ -903,7 +903,7 @@ func _validate_primitive_batches(renderer: Renderer) -> void:
 		"Overlay_beam",
 		"Overlay_disk",
 		"Overlay_diamond",
-		"MysteryEffect_ring",
+		"FacilityEffect_ring",
 	]:
 		var batch := renderer.get_node(node_name) as MultiMeshInstance2D
 		_expect(
@@ -1419,12 +1419,12 @@ func _validate_mystery_device_presentation(
 			"max_health":90.0,
 			"health_visible_timer":1.0,
 			"outcome":&"gravity",
+			"effect_radius":480.0,
 		},
-		{"id":"device-b", "state":&"resolved", "visible":true, "position":resolved_position, "outcome":&"cryo"},
-		{"id":"device-c", "state":&"intact", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint"},
+		{"id":"device-b", "state":&"intact", "visible":true, "position":resolved_position, "outcome":&"cryo", "effect_radius":360.0},
+		{"id":"device-c", "state":&"intact", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint", "effect_radius":420.0},
 		{"id":"device-d", "state":&"retired", "visible":true, "position":Vector2(960.0, 260.0)},
 	]
-	presentation["mystery_effects"] = []
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
@@ -1438,7 +1438,7 @@ func _validate_mystery_device_presentation(
 	var weakpoint_contour := renderer.get_node(
 		"MysteryDeviceContour_weakpoint"
 	) as MultiMeshInstance2D
-	var rings := renderer.get_node("MysteryEffect_ring") as MultiMeshInstance2D
+	var rings := renderer.get_node("FacilityEffect_ring") as MultiMeshInstance2D
 	var disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var gravity_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
 	var cryo_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_cryo")
@@ -1477,43 +1477,10 @@ func _validate_mystery_device_presentation(
 		"visible outcome facilities reuse one static reduced-motion silhouette contour"
 	)
 	_expect(
-		rings.multimesh.visible_instance_count == 0
-			and disks.multimesh.visible_instance_count == 0,
-		"a visible facility alone never creates an outcome effect footprint"
-	)
-	presentation["mystery_devices"][0]["state"] = &"resolved"
-	presentation["mystery_effects"] = [
-		{"effect_id":&"gravity", "position":device_position, "radius":480.0},
-		{"effect_id":&"cryo", "position":resolved_position, "radius":360.0},
-		{"effect_id":&"weakpoint", "position":Vector2(760.0, 260.0), "radius":420.0},
-	]
-	renderer.sync(
-		no_enemies, no_projectiles, no_projectiles, no_shards, [],
-		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
-	)
-	gravity_symbols = renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
-	cryo_symbols = renderer.debug_semantic_texture_draws(&"world/mystery_device_cryo")
-	weakpoint_symbols = renderer.debug_semantic_texture_draws(&"world/mystery_device_weakpoint")
-	_expect(
-		gravity_symbols.size() == 1
-		and cryo_symbols.size() == 1
-		and weakpoint_symbols.size() == 1
-		and Vector2(gravity_symbols[0]["position"]).is_equal_approx(device_position)
-		and Vector2(cryo_symbols[0]["position"]).is_equal_approx(resolved_position)
-		and Vector2(weakpoint_symbols[0]["position"]).is_equal_approx(weakpoint_position)
-		and is_equal_approx(
-			float(gravity_symbols[0]["radius"]), Renderer.MYSTERY_DEVICE_SYMBOL_RADIUS
-		)
-		and is_equal_approx(
-			float(cryo_symbols[0]["radius"]), Renderer.MYSTERY_DEVICE_SYMBOL_RADIUS
-		),
-		"resolution preserves each standalone 288-world-unit outcome facility symbol"
-	)
-	_expect(
 		rings.z_index == -1
 			and rings.multimesh.visible_instance_count == 3
 			and disks.multimesh.visible_instance_count == 3,
-		"gravity, cryo, and weakpoint each publish one full effect body plus a boundary accent"
+		"intact gravity, cryo, and weakpoint facilities publish their persistent full-area footprints"
 	)
 	var health_snapshot := renderer.debug_snapshot()
 	_expect(
@@ -1619,13 +1586,13 @@ func _validate_mystery_device_presentation(
 	presentation["mystery_devices"] = [
 		{
 			"id":"device-edge",
-			"state":&"resolved",
+			"state":&"intact",
 			"visible":true,
 			"position":Vector2(-120.0, 260.0),
 			"outcome":&"gravity",
+			"effect_radius":480.0,
 		},
 	]
-	presentation["mystery_effects"] = []
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation

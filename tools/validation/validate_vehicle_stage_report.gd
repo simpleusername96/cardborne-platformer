@@ -26,6 +26,14 @@ func _init() -> void:
 		"incoming":{&"projectile":20.0, &"contact":5.0},
 		"defeats":{&"scrap_drone":12, &"needle_drone":4},
 		"elites":{&"needle_drone:armored":1},
+		"boss":{
+			"id":&"ENEMY_ARCHIVE_LEVIATHAN",
+			"cleanup_started":true,
+			"cleanup_completed":true,
+			"owned_count":3,
+			"cleanup_seconds":2.0,
+		},
+		"tactics":{&"shield_wall:started":1, &"shield_wall:ended":1},
 		"last_incoming_source":&"projectile",
 		"last_incoming_damage":7.0,
 	}
@@ -38,6 +46,8 @@ func _init() -> void:
 			"run_time_seconds":183.0,
 			"hull":72.0,
 			"max_hull":120.0,
+			"pacing":{"active_seconds":92.0, "visible_gap_count":2},
+			"diagnostics":{"active":true, "event_count":17, "event_cap":256, "sample_count":92, "sample_cap":1800, "event_dropped":1},
 		}
 	)
 	var percentage_total := 0
@@ -67,6 +77,13 @@ func _init() -> void:
 		"report freezes total run time and remaining hull"
 	)
 	_expect(report["incoming"].size() == 2, "incoming recap is bounded and present")
+	_expect(
+		Array(report["boss_rows"]).size() >= 4
+			and String(Dictionary(Array(report["boss_rows"])[1]).get("name_key", "")) == "ENEMY_ARCHIVE_LEVIATHAN"
+			and Array(report["pacing_rows"]).size() == 4
+			and Array(report["diagnostic_limitations"]).size() == 4,
+		"stage report carries real boss cleanup, pacing, engagement, and diagnostic retention rows"
+	)
 	var failure_telemetry := telemetry.duplicate(true)
 	failure_telemetry["incoming"] = {
 		&"boss":50.0,
@@ -169,6 +186,12 @@ func _init() -> void:
 		),
 		"loadout":{},
 	})
+	_expect(
+		Array(final_result.get("boss_rows", [])).size() > 1
+			and Array(final_result.get("pacing_rows", [])).size() == 4
+			and Array(final_result.get("diagnostic_limitations", [])).size() == 4,
+		"final report aggregates completed boss identity/cleanup and live report metrics"
+	)
 	_expect(result.open(final_result), "final result accepts a complete aggregate")
 	await process_frame
 	var result_contract := result.debug_contract()

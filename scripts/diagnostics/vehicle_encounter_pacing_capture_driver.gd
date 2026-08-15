@@ -18,7 +18,8 @@ var _capture := Capture.new()
 var _time_index := 0
 var _boss_fixture_started := false
 var _boss_defeated := false
-var _boss_defeat_elapsed := -1.0
+var _boss_cycle_index := -1
+var _boss_cleanup_complete_elapsed := -1.0
 var _succeeded := false
 
 
@@ -94,16 +95,20 @@ func after_physics(run: Node) -> bool:
 		if run.stage_flow.state == StageFlow.State.BOSS_ACTIVE and run.boss_started:
 			_capture_checkpoint(run, &"boss_active", elapsed)
 			_defeat_fixture_boss(run)
-			# Stage continuation reconfigures the encounter runtime and correctly
-			# disables diagnostic scans by default. Re-enable them for this explicit
-			# capture so the post-boss checkpoint observes the new stage.
-			run.encounter_runtime.set_pressure_observation_enabled(true)
 			_boss_defeated = true
-			_boss_defeat_elapsed = elapsed
 			_capture_checkpoint(run, &"boss_defeat", elapsed)
 		return false
-	if _boss_defeated and elapsed + 0.0001 >= _boss_defeat_elapsed + 3.0:
-		_capture_checkpoint(run, &"post_boss_3", _boss_defeat_elapsed + 3.0)
+	if _boss_defeated and _boss_cleanup_complete_elapsed < 0.0:
+		if int(run.current_stage_index) == _boss_cycle_index:
+			return false
+		_boss_cleanup_complete_elapsed = elapsed
+		# Continuation reconfigures the encounter runtime and disables diagnostic
+		# scans. Re-enable them only after the cleanup-gated cycle change.
+		run.encounter_runtime.set_pressure_observation_enabled(true)
+		_capture_checkpoint(run, &"boss_cleanup_complete", elapsed)
+		return false
+	if _boss_defeated and elapsed + 0.0001 >= _boss_cleanup_complete_elapsed + 3.0:
+		_capture_checkpoint(run, &"post_boss_3", _boss_cleanup_complete_elapsed + 3.0)
 		return _finish()
 	return false
 
@@ -128,6 +133,7 @@ func _record_lifecycle(run: Node) -> void:
 
 func _start_boss_overlap_fixture(run: Node, elapsed: float) -> void:
 	_boss_fixture_started = true
+	_boss_cycle_index = int(run.current_stage_index)
 	run.call("_clear_enemies")
 	for index in 8:
 		var enemy = run.call("_make_enemy", {

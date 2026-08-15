@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_expect(
 		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"repair"]["radius"]), 420.0)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"barrier"]["shield_cap_max_hull_ratio"]), 1.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["acceleration_multiplier"]), 0.55)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["max_speed_multiplier"]), 0.55)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo"]["attack_cadence_multiplier"]), 0.70)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint"]["received_damage_multiplier"]), 1.25),
@@ -41,7 +42,12 @@ func _initialize() -> void:
 	var first := Dictionary(runtime.snapshot()["devices"][0])
 	var device_id := StringName(first["id"])
 	var inside := runtime.modifiers_at(Vector2(first["position"]))
-	_expect(inside.size() == 1 and StringName(inside[0]["applies_to"]) == &"all_actors", "an intact facility affects either faction inside its radius")
+	_expect(
+		inside.size() == 1
+			and StringName(inside[0]["applies_to"]) == &"all_actors"
+			and Dictionary(inside[0]["profile"]) == Runtime.OUTCOME_PROFILE[StringName(first["outcome"])],
+		"an intact facility exposes one identical profile to either faction inside its radius"
+	)
 	_expect(runtime.modifiers_at(Vector2(first["position"]) + Vector2(0.0, 600.0)).is_empty(), "facility effects stop outside their radius")
 	var hit := {}
 	_expect(not runtime.first_intact_segment_hit(Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit), "facilities never block projectiles")

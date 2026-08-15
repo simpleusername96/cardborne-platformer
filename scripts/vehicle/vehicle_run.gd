@@ -139,6 +139,7 @@ const SAVE_PATH := "user://vehicle-run.cfg"
 const TRANSIT_GATE_ASSET_ID := &"world/facility_transit_gate"
 const PLAYER_MAX_HEALTH := 120.0
 const PLAYER_BASE_SPEED := 280.0
+const PLAYER_GRAVITY_RESPONSE_SPEED := 2400.0
 const PRIMARY_RANGE := 1600.0
 const PRIMARY_VISIBLE_RANGE_MARGIN := 80.0
 const PRIMARY_PROJECTILE_SPEED := 1120.0
@@ -303,7 +304,6 @@ var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
 var _mystery_device_hit_receipt: Dictionary = {}
 var _mystery_device_snapshot_buffer: Array[Dictionary] = []
-var _mystery_effect_snapshot_buffer: Array[Dictionary] = []
 var _mystery_device_result_receipt: Dictionary = {}
 var _facility_modifier_buffer: Array[Dictionary] = []
 var _runtime_fast_hud_frame: Dictionary = {}
@@ -1832,7 +1832,7 @@ func _update_player(delta: float) -> void:
 	player_invulnerable = maxf(0.0, player_invulnerable - delta)
 	_advance_player_protection_sources(delta)
 	var primary_held := Input.is_action_pressed("primary_fire")
-	player_primary_weapon.tick(delta, primary_held)
+	player_primary_weapon.tick(delta * _player_facility_attack_cadence_multiplier(), primary_held)
 	player_dash_cooldown = maxf(0.0, player_dash_cooldown - delta)
 	player_barrier_timer = maxf(0.0, player_barrier_timer - delta)
 	if player_barrier_timer <= 0.0:
@@ -1859,7 +1859,16 @@ func _update_player(delta: float) -> void:
 				run_build.level_of(&"dash_afterburn_field")
 			)
 	else:
-		var motion := move_input * _player_move_speed() * _player_facility_movement_multiplier() * delta
+		var target_velocity := move_input * _player_move_speed() * _player_facility_movement_multiplier()
+		var acceleration_multiplier := _player_facility_acceleration_multiplier()
+		if acceleration_multiplier < 1.0:
+			player_velocity = player_velocity.move_toward(
+				target_velocity,
+				PLAYER_GRAVITY_RESPONSE_SPEED * acceleration_multiplier * delta
+			)
+		else:
+			player_velocity = target_velocity
+		var motion := player_velocity * delta
 		player_position = _move_actor(player_position, motion, Rules.PLAYER_RADIUS, true)
 		if Input.is_action_just_pressed("dash") and player_dash_cooldown <= 0.0:
 			_start_dash(move_input)
@@ -1869,7 +1878,7 @@ func _update_player(delta: float) -> void:
 
 	if Input.is_action_just_pressed("active_skill"):
 		_start_active_weapon()
-	_advance_active_weapon(delta)
+	_advance_active_weapon(delta * _player_facility_attack_cadence_multiplier())
 
 	_update_aim_target()
 	_mark_visited()
@@ -2609,6 +2618,22 @@ func _player_facility_movement_multiplier() -> float:
 	return multiplier
 
 
+func _player_facility_acceleration_multiplier() -> float:
+	var multiplier := 1.0
+	mystery_device_runtime.fill_modifiers_at(player_position, _facility_modifier_buffer)
+	for modifier in _facility_modifier_buffer:
+		multiplier *= float(Dictionary(modifier["profile"]).get("acceleration_multiplier", 1.0))
+	return multiplier
+
+
+func _player_facility_attack_cadence_multiplier() -> float:
+	var multiplier := 1.0
+	mystery_device_runtime.fill_modifiers_at(player_position, _facility_modifier_buffer)
+	for modifier in _facility_modifier_buffer:
+		multiplier *= float(Dictionary(modifier["profile"]).get("attack_cadence_multiplier", 1.0))
+	return multiplier
+
+
 func _apply_player_facility_recovery(delta: float) -> void:
 	mystery_device_runtime.fill_modifiers_at(player_position, _facility_modifier_buffer)
 	var maximum_hull := _player_max_health()
@@ -2639,6 +2664,7 @@ func _player_facility_received_damage_multiplier() -> float:
 
 func _apply_enemy_facility_modifiers(enemy: EnemyState, delta: float) -> void:
 	enemy.facility_movement_multiplier = 1.0
+	enemy.facility_acceleration_multiplier = 1.0
 	enemy.facility_cadence_multiplier = 1.0
 	enemy.facility_received_damage_multiplier = 1.0
 	mystery_device_runtime.fill_modifiers_at(enemy.pos, _facility_modifier_buffer)
@@ -2647,6 +2673,7 @@ func _apply_enemy_facility_modifiers(enemy: EnemyState, delta: float) -> void:
 		enemy.facility_movement_multiplier *= float(profile.get(
 			"movement_multiplier", profile.get("max_speed_multiplier", 1.0)
 		))
+		enemy.facility_acceleration_multiplier *= float(profile.get("acceleration_multiplier", 1.0))
 		enemy.facility_cadence_multiplier *= float(profile.get("attack_cadence_multiplier", 1.0))
 		enemy.facility_received_damage_multiplier *= float(profile.get("received_damage_multiplier", 1.0))
 		if profile.has("hull_restore_per_second"):
@@ -4017,7 +4044,7 @@ func _smoothed_enemy_velocity(
 	var role_velocity := EnemyMovementPolicy.smooth_velocity(
 		enemy.velocity,
 		enemy.desired_velocity,
-		EnemyMovementPolicy.turn_response(enemy.movement_family),
+		EnemyMovementPolicy.turn_response(enemy.movement_family) * enemy.facility_acceleration_multiplier,
 		delta,
 		speed_cap
 	)
@@ -5131,6 +5158,12 @@ func _begin_boss_destruction(boss: EnemyState, source: String) -> void:
 		"source":source,
 		"owned_count":owned_ids.size(),
 	})
+	stage_telemetry.record_boss_lifecycle(
+		StringName(StageCatalog.profile(current_stage_id).get("boss_name_key", "")),
+		true,
+		false,
+		owned_ids.size()
+	)
 	_play_sound(&"destroy_priority", 1.05)
 	camera_shake = maxf(camera_shake, 16.0)
 
@@ -5175,6 +5208,13 @@ func _finalize_boss_destruction() -> void:
 		)
 		_try_group_completion_reward(boss.group_id, boss.pos)
 	_session_diagnostics.emit_event("boss_ended", {"stage_index":current_stage_index})
+	stage_telemetry.record_boss_lifecycle(
+		StringName(StageCatalog.profile(current_stage_id).get("boss_name_key", "")),
+		true,
+		true,
+		0,
+		float(boss_death_runtime.snapshot().get("elapsed", 0.0))
+	)
 	var flow_receipt := stage_flow.record_boss_cleanup_complete()
 	if StringName(flow_receipt.get("command", &"")) == StageFlow.COMMAND_COMPLETE_AFTER_BOSS_CLEANUP:
 		_complete_stage(StageTransitionRuntime.COMPLETION_AFTER_BOSS)
@@ -6372,6 +6412,11 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 		"run_time_seconds":maxf(0.0, active_run_elapsed_seconds),
 		"hull":player_health,
 		"max_hull":_player_max_health(),
+		"pacing":{
+			"active_seconds":maxf(0.0, active_run_elapsed_seconds - stage_started_at_active_run_seconds),
+			"visible_gap_count":_diagnostic_visible_gap_event_count,
+		},
+		"diagnostics":_session_diagnostics.summary(),
 	}
 
 
@@ -6421,13 +6466,6 @@ func _configure_next_stage_world() -> void:
 func _finalize_next_stage_continuation() -> void:
 	if _pending_continuation_layout == null:
 		return
-	# Pair starts (Stages 3/5/7/9) recover part of missing Hull. The first
-	# half of each arc flows into its boss stage without a free heal.
-	if current_stage_index > 0 and current_stage_index % 2 == 0:
-		var missing_hull := maxf(0.0, _player_max_health() - player_health)
-		player_health = minf(
-			_player_max_health(), player_health + missing_hull * 0.40
-		)
 	stage_telemetry.reset_stage()
 	# Surviving ordinary actors continue into the next field, but their old
 	# stage-local engagement gates must not cross the stage boundary.
@@ -6874,13 +6912,11 @@ func _append_minimap_static_geometry(snapshot: Dictionary) -> void:
 
 func _combat_presentation_snapshot() -> Dictionary:
 	var mystery_devices: Array[Dictionary] = []
-	var mystery_effects: Array[Dictionary] = []
 	return _fill_combat_presentation_snapshot(
 		{},
 		player_protection_sources.duplicate(),
 		secondary_runtime.snapshot(run_build),
-		mystery_devices,
-		mystery_effects
+		mystery_devices
 	)
 
 
@@ -6893,8 +6929,7 @@ func _runtime_combat_presentation_snapshot() -> Dictionary:
 		_runtime_combat_presentation_frame,
 		player_protection_sources,
 		_runtime_secondary_presentation_frame,
-		_mystery_device_snapshot_buffer,
-		_mystery_effect_snapshot_buffer
+		_mystery_device_snapshot_buffer
 	)
 
 
@@ -6902,8 +6937,7 @@ func _fill_combat_presentation_snapshot(
 	snapshot: Dictionary,
 	protection_sources: Dictionary,
 	secondary: Dictionary,
-	mystery_devices: Array[Dictionary],
-	mystery_effects: Array[Dictionary]
+	mystery_devices: Array[Dictionary]
 ) -> Dictionary:
 	var cursor_position := player_position + player_aim_direction * 230.0
 	var mouse_direction := get_global_mouse_position() - player_position
@@ -6946,9 +6980,7 @@ func _fill_combat_presentation_snapshot(
 	)
 	snapshot["map_pickups"] = pickups
 	mystery_device_runtime.fill_device_snapshot(mystery_devices)
-	mystery_device_runtime.fill_active_effect_snapshot(mystery_effects)
 	snapshot["mystery_devices"] = mystery_devices
-	snapshot["mystery_effects"] = mystery_effects
 	# Renderer may keep the living boss body visible while this receipt fades it;
 	# combat truth stays disabled by the death runtime above.
 	snapshot["boss_destruction"] = boss_death_runtime.presentation()

@@ -229,7 +229,7 @@ var _experience_batch: BatchHandle
 var _map_pickup_batches: Dictionary = {}
 var _map_pickup_contour_batches: Dictionary = {}
 var _mystery_device_contour_batches: Dictionary = {}
-var _mystery_effect_ring_batch: BatchHandle
+var _facility_effect_ring_batch: BatchHandle
 var _electric_field_batch: BatchHandle
 var _overlay_batches: Dictionary = {}
 var _batches: Array[BatchHandle] = []
@@ -328,7 +328,7 @@ func sync(
 		_sync_world_overlays(presentation, visible_world)
 		_sync_map_pickups(presentation, visible_world)
 		_sync_mystery_devices(presentation, visible_world)
-		_sync_mystery_effects(presentation, visible_world)
+		_sync_facility_effects(presentation, visible_world)
 		_last_health_bar_count = (
 			_installation_health_bar_count
 			+ _boss_health_bar_count
@@ -559,12 +559,12 @@ func _build_batches() -> void:
 			_mystery_edge_material,
 			true
 		)
-	_mystery_effect_ring_batch = _create_batch(
-		"MysteryEffect_ring",
+	_facility_effect_ring_batch = _create_batch(
+		"FacilityEffect_ring",
 		unit_ring_mesh,
 		MYSTERY_DEVICE_CAPACITY,
 		-1,
-		&"mystery_effect_ring",
+		&"facility_effect_ring",
 		MYSTERY_DEVICE_CAPACITY
 	)
 	_electric_field_batch = _create_batch(
@@ -1908,7 +1908,7 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		if not bool(device.get("visible", false)):
 			continue
 		var device_state := StringName(device.get("state", &""))
-		if device_state not in [&"intact", &"resolved"]:
+		if device_state != &"intact":
 			continue
 		var outcome_id := StringName(device.get("outcome", &""))
 		var symbol_descriptor := _mystery_symbol_descriptor(outcome_id)
@@ -1936,8 +1936,8 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			Color.WHITE,
 			Color(1.0, 1.0, 1.0, edge_alpha)
 		)
-		# The visible outcome symbol is the facility for its complete lifecycle.
-		# Destruction starts an effect separately; it never swaps or layers a body.
+		# The visible outcome symbol and its effect footprint share the intact
+		# facility lifecycle; destruction removes both immediately.
 		_queue_semantic_texture(
 			symbol_asset, position, 0.0, MYSTERY_DEVICE_SYMBOL_RADIUS, Color.WHITE
 		)
@@ -1968,17 +1968,19 @@ static func _interaction_edge_alpha(
 	)
 
 
-func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
-	var effects_variant: Variant = state.get("mystery_effects")
-	if not effects_variant is Array:
+func _sync_facility_effects(state: Dictionary, visible_world: Rect2) -> void:
+	var devices_variant: Variant = state.get("mystery_devices")
+	if not devices_variant is Array:
 		return
-	for effect_variant in effects_variant:
-		var effect := Dictionary(effect_variant)
-		var effect_id := StringName(effect.get("effect_id", &""))
+	for device_variant in devices_variant:
+		var device := Dictionary(device_variant)
+		if StringName(device.get("state", &"")) != &"intact":
+			continue
+		var effect_id := StringName(device.get("outcome", &""))
 		if effect_id not in [&"gravity", &"cryo", &"weakpoint"]:
 			continue
-		var position := Vector2(effect.get("position", Vector2.ZERO))
-		var radius := float(effect.get("radius", 0.0))
+		var position := Vector2(device.get("position", Vector2.ZERO))
+		var radius := float(device.get("effect_radius", 0.0))
 		if radius <= 0.0 or not visible_world.grow(radius).has_point(position):
 			continue
 		var color := Art.CRYO if effect_id == &"cryo" else (Art.DANGER if effect_id == &"weakpoint" else Art.SYSTEM)
@@ -1989,7 +1991,7 @@ func _sync_mystery_effects(state: Dictionary, visible_world: Rect2) -> void:
 		)
 		_write_disk(position, radius, Color(color, body_alpha))
 		_write_instance(
-			_mystery_effect_ring_batch,
+			_facility_effect_ring_batch,
 			position,
 			0.0,
 			Vector2.ONE * radius,

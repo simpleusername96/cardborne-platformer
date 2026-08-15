@@ -1469,7 +1469,6 @@ func _prepare_exact_area_scene(camera_zoom: float) -> Vector2:
 	_run._clear_projectiles()
 	_run._clear_effects()
 	_run.mystery_device_runtime.devices.clear()
-	_run.mystery_device_runtime.active_effects.clear()
 	var center: Vector2 = Rules.world_rect(_run.current_stage_id).get_center()
 	_run.player_position = center
 	_run._camera.position = center

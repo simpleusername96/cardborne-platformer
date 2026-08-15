@@ -114,6 +114,7 @@ var cryo_application_delay := 0.0
 var facility_barrier_strength := 0.0
 var facility_barrier_max := 0.0
 var facility_movement_multiplier := 1.0
+var facility_acceleration_multiplier := 1.0
 var facility_cadence_multiplier := 1.0
 var facility_received_damage_multiplier := 1.0
 var runtime_slot := -1
@@ -150,6 +151,7 @@ func reset_runtime_collections() -> void:
 	facility_barrier_strength = 0.0
 	facility_barrier_max = 0.0
 	facility_movement_multiplier = 1.0
+	facility_acceleration_multiplier = 1.0
 	facility_cadence_multiplier = 1.0
 	facility_received_damage_multiplier = 1.0
 	lane_centers.clear()
