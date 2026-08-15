@@ -1,362 +1,415 @@
 ---
 type: plan
-status: draft
+status: active
 owner: BK
 created: 2026-08-15
 last_reviewed: 2026-08-15
-scope: Eight-boss campaign flow, boss and enemy combat, boss-death cleanup, upgrades, neutral facilities, diagnostics retention, report UI, localization, visual assets, validation, and release evidence
+scope: Eight continuous boss cycles, eight distinct bosses, boss-death cleanup, four ordinary enemies, three combat upgrades, five symmetric neutral facilities, newest-ten diagnostics, stacked run reports, localization, approved visual assets, and release validation
 related:
   - ../../docs/reports/2026-08-15-eight-boss-combat-design-analysis.md
   - ../../docs/reports/2026-08-15-eight-boss-combat-approval-ko.md
   - ../../docs/product/vehicle_game_spec.md
+  - ../../docs/product/vehicle_upgrade_catalog.md
+  - ../../docs/product/vehicle_weapon_balance_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
-  - ./2026-08-13-run-pacing-result-and-upgrade-slots.md
 ---
 
-# Eight-Boss Combat Depth and Run Report
+# Eight-Boss Combat Depth and Run Report - Execution Contract
+
+The shipped run becomes eight continuous quota-gated boss cycles. It removes Shock
+without replacement, adds three bosses, four ordinary enemy roles, three primary-fire
+upgrades, five symmetric neutral facilities, a safe two-second boss-death cleanup, newest-
+ten diagnostics retention, and one stacked report shared by terminal and Settings
+surfaces. The implementation preserves the existing Godot 4.7/GDScript architecture,
+exact enemy workload, manual aim, held primary fire, dash, acquired weapons, and one fixed
+Hard difficulty.
 
 ## Purpose
 
-This file is a non-executable draft. All product decisions below except the primary
-utility-attribute replacement are closed. After the user selects that replacement,
-rewrite this file into the repository's decision-complete execution-contract template,
-add the selected attribute's exact owners and acceptance checks, and only then change
-the lifecycle status to `active`.
+- Objective: deliver the approved combat and run-depth revision as one production-ready,
+  bilingual Cardborne update.
+- Deliverable: gameplay, data, UI, localization, approved production imagery, focused
+  validators, rendered evidence, and a production Web export.
+- Completion state: every checkbox and named gate passes; exact visual candidates are
+  approved by hash before promotion; this document is then marked `done`.
 
-The intended implementation will replace the visible ten-stage pairing with eight
-continuous boss cycles, preserve ordinary-enemy quotas before every boss, add three
-bosses and four active ordinary roles, replace Shock in the utility-attribute slot, add
-a readable boss-death cleanup, retain only the latest ten valid user sessions, and
-deliver one left-aligned stacked report shared by terminal results and Settings.
+## Scope and Boundaries
 
-Do not execute the checklist in this draft. Candidate comparison remains in the linked
-design analysis and must not be copied into the active execution tasks. There is no
-absolute run-duration acceptance target and no agent-simulated “normal completion” cohort.
+In scope:
 
-## Product Contract
+- Eight `boss_cycle` units, each with ordinary quota, warning, boss combat, boss-death
+  cleanup, and continuation.
+- Common boss charge and broad three-row projectile barrage plus eight profile-owned
+  identities and monotonically stronger base statistics.
+- Four ordinary enemy roles, the 4/8/3-second engagement-gap contract, and newest-ten
+  diagnostic retention.
+- Miss Compensation, Hit Chain, Braced Fire, and missing active/secondary offer
+  reservation.
+- Repair, Barrier, Gravity, Cryo, and Weakpoint facilities; repair-pickup replacement and
+  five visible XP shards per cycle.
+- One shared left-aligned vertically stacked report body for victory, defeat, and Settings.
+- Removal of Shock from resources, runtime state, offers, copy, telemetry/reporting,
+  imagery, and validators. Cryo is the only utility primary attribute.
+- Three boss, four enemy, two facility, three upgrade-card, and one boss-explosion raster
+  additions; removal of one Shock raster; final production manifest count `90`.
 
-### Campaign language and flow
+Out of scope:
 
-- The player-facing progression unit is `boss_cycle`, localized as `보스 사이클` and
-  `Boss Cycle`. Do not present separate bossless and boss stages.
-- There are exactly eight cycles. Each cycle executes `ORDINARY_COMBAT -> BOSS_WARNING
-  -> BOSS_COMBAT -> BOSS_DEATH_CLEANUP -> CYCLE_TRANSITION`.
-- Every boss appears after the cycle's ordinary-enemy destruction quota is met. Layout,
-  map pickups, difficulty, and cycle counters refresh only after cleanup completes.
-- HUD progression reads `보스 N/8` / `Boss N/8` and shows the remaining ordinary kill
-  quota. Internal stage identifiers may remain as compatibility-free implementation
-  details only while owners are migrated; no player-facing `Stage N/10` remains.
-- Keep first-visible-hostile and search-gap contracts: first visible hostile within
-  4.0 seconds, first meaningful attack preparation within 8.0 seconds, and no empty or
-  off-screen-only combat gap longer than 3.0 seconds. Do not teleport enemies or lower
-  authored counts to satisfy these limits.
+- A replacement utility attribute, true instant-kill attacks, defense-only bosses, Shield
+  Breaker, corpse objects, separate bossless stages, absolute completion-time targets,
+  new maps, difficulty selection, production dependencies, engine changes, threads,
+  GDExtension, custom Web templates, sprite sheets, particles, or per-boss death art.
 
-### Diagnostics retention
+Constraints and invariants:
 
-- Retain the newest ten valid user session bundles, ordered strictly by
-  `(saved_unix, session_id)` descending. File modification time is not authoritative.
-- Apply the same pruning during load and persistence. Quarantine invalid bundles before
-  selecting the newest ten.
-- Preserve the existing 25 MiB and 14-day safety caps. Whichever cap removes a bundle
-  first wins.
-- Keep cycle time, visible-gap summaries, boss identity, boss cleanup duration, and
-  report outcome in protected summaries even when bounded detail events overflow.
+- Use Godot 4.7.1 through `./tools/godot.ps1`; preserve exact cap 48 and all existing
+  projectile/effect capacities unless a locked task explicitly adds a bounded kind.
+- Keep gameplay rules outside UI and visual geometry outside collision truth. Do not add
+  card-specific state machines to `scripts/vehicle/vehicle_run.gd`; use responsibility-
+  shaped owners and leave `VehicleRun` as orchestration only.
+- Korean remains default and Korean/English coverage must remain complete.
+- Every high-threat attack warns for at least 1.30 seconds, commits collision-matching
+  geometry, leaves one escape corridor at least player diameter + 80 units, applies damage
+  once per execution, and never retargets after final commit.
+- No empty or off-screen-only combat gap may exceed 3.0 seconds; first visible hostile is
+  due within 4.0 seconds and first meaningful attack preparation within 8.0 seconds.
+  Do not teleport hostiles or lower counts/cadence to satisfy this.
+- Total run time is telemetry only, never a pass/fail threshold.
+- Visual authoring and approval follow the canonical authority pair and workbench. Runtime
+  promotion is hash-addressed and never inferred from style alignment.
 
-## Combat Rules Shared by All Bosses
+Destructive or irreversible actions:
 
-Every boss has both baseline attacks below. Identity attacks remain dominant: common
-attacks may occupy at most two of any five direct pattern selections.
+- Delete `data/cards/vehicle/shock_disruption.tres` and the production Shock PNG only
+  after every reference is removed in the same commit. Git history is the recovery path.
 
-| Common pattern | Exact contract |
-| --- | --- |
-| Committed charge | 1.00–1.25 s exact corridor warning; direction locks at commit; 0.55–0.75 s active travel; stops on wall; normal damage |
-| Broad projectile-row barrage | One activation emits three rows at 0.38 s intervals. Every row spawns 4/5/6 projectiles simultaneously in cycles 1–3/4–6/7–8, at 96 world-unit center spacing; it is never a single-file aimed burst. A 0.65 s warning shows the initial row span and motion. The boss profile locks one motion: `SPREAD` distributes the row headings evenly across a 42-degree fan, while `ROTATE` turns the emission axis 22.5 degrees between rows. Fired projectiles keep their committed trajectory. Each projectile deals pressure damage, and the complete activation uses one 0.80 s per-target hit lock. |
+Exact actions requiring user approval:
 
-Baseline statistics increase monotonically. High-threat reaction windows do not shrink
-with cadence.
+- Promote only the exact visual files and SHA-256 hashes presented in the approval report.
+  Existing direction-clear candidates and newly generated upgrade-card candidates remain
+  outside production until that approval is explicit.
 
-| Boss | Health scale | Damage scale | Move speed | Cadence scale | Coverage scale |
-| ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 1.00 | 1.00 | 145 | 1.00 | 1.00 |
-| 2 | 1.12 | 1.06 | 150 | 0.97 | 1.04 |
-| 3 | 1.25 | 1.12 | 155 | 0.94 | 1.08 |
-| 4 | 1.39 | 1.18 | 160 | 0.91 | 1.12 |
-| 5 | 1.54 | 1.24 | 166 | 0.88 | 1.16 |
-| 6 | 1.70 | 1.31 | 172 | 0.85 | 1.20 |
-| 7 | 1.87 | 1.38 | 178 | 0.82 | 1.24 |
-| 8 | 2.05 | 1.46 | 184 | 0.79 | 1.28 |
+## Discovery Closure
 
-Use 5,200 as the health-scale base. A cadence scale below 1.0 shortens only recovery
-and low-threat gaps; it never shortens a high-threat startup.
+| Requirement or concern | Verified current owner and behavior | Evidence | Locked decision | Task IDs |
+| --- | --- | --- | --- | --- |
+| Progression | `vehicle_combat_stages.gd`, `vehicle_stage_catalog.gd`, `vehicle_stage_transition_runtime.gd`, and `vehicle_run.gd` expose ten odd/even stages and only five bosses | Current source and product spec | Replace player-facing stages with eight quota-gated boss cycles; every cycle has a boss | 1.1, 2.1 |
+| Boss combat | `scripts/bosses/` owns patterns, phases, shields, and runtime; `VehicleRun` orchestrates enemy state and receipts | Current boss owners and validators | All bosses keep common charge and broad barrage; identity patterns own at least three of five selections; only bosses 3 and 5 use defense | 2.2-2.4 |
+| Boss death | Current transition advances after boss defeat without the approved cleanup | Transition/runtime source and report evidence | Add `VehicleBossDeathRuntime` with the exact 2.00-second state/timing contract | 2.5 |
+| Ordinary enemies | Archetypes and specialist runtime own existing active roles; no four proposed identities exist | `vehicle_enemy_archetypes.gd`, `vehicle_enemy_specialist_runtime.gd` | Add Rail Sniper, Orbit Gunner, Bombing Runner, and Wreck Scavenger; no Shield Breaker or corpse system | 3.1 |
+| Primary attributes | Build has damage IDs Thermal/Toxin and utility IDs Cryo/Shock; payload/status/validators still reach Shock | Build, payload, status, card resource, manifest, and grep evidence | Delete Shock with no replacement; utility slot contains Cryo only | 1.2 |
+| New upgrades | Shot groups and movement are orchestrated in combat/run code, while definitions and offers are card-owned | Card/runtime owners | Implement the three exact bounded card contracts and reserve missing weapon categories | 3.2, 3.3 |
+| Neutral facilities | `VehicleMysteryDeviceRuntime` owns three destroy-to-trigger outcomes; repair remains a pickup | Runtime, visual spec, and product spec | Five persistent, attackable, pass-through facilities affect player and enemies symmetrically | 3.4 |
+| Diagnostics | Store retains 20 sessions and already sorts by saved time/session ID with 25 MiB/14-day caps and quarantine | Store and validator | Change maximum to newest 10 on both load and persist; keep other caps and quarantine | 4.1 |
+| Report | `VehicleCombatReportBody` is shared but terminal surfaces still use columns/tabs/build rail and nested content regions | UI owners and validators | One left-aligned vertical stack, one outer scroll, fixed primary action, no tabs/sub-scroll/side rail | 4.2 |
+| Visuals | Manifest has 78 images including Shock; ten grounded candidates exist outside production; three new card images do not yet exist | Manifest and workbench evidence | Add 13 approved rasters and remove Shock for exactly 90 production images | 1.3, 5.1, 5.2 |
+| Performance | Current Web exact-cap-48 physics evidence is red; historical render evidence does not attribute sustained cost to raster size | Performance policy/audit and prior active plan | Preserve workload/capacities; label functional, visual, native, and Web performance verdicts separately | 5.3 |
 
-### Damage and fairness bands
+Readiness statement:
 
-| Band | Final player damage | Avoidability contract |
-| --- | ---: | --- |
-| Pressure | 10–18 | May be difficult to avoid; repeated geometry has a 0.6–1.0 s per-target hit lock |
-| Normal | 22–38 | Aimed or committed attack with readable origin and direction |
-| High threat | 60–85 | At least 1.30 s warning, committed collision-matching geometry, and one escape corridor at least player diameter + 80 world units |
+- Every material product, architecture, dependency, data, UX, ownership, safety, and
+  validation decision is closed.
+- Godot 4.7.1, repository wrappers, validators, ImageGen, and the Web export path are
+  available. No dependency bootstrap is authorized or required.
+- Remaining visual approval is an explicit hash gate, not an executor design decision.
+- Remaining unknowns are implementation-local and cannot change this contract.
 
-No boss attack is a true instant kill. A high-threat pattern applies damage once per
-execution, cannot cover every exit, and cannot retarget after its final commit cue.
+## Locked Behavior Tables
 
-## Eight Boss Identities
+### Common boss kit and scaling
 
-All eight bosses retain the common charge and broad projectile-row barrage in addition to these identity
-patterns. Delete the current global rule that lowers one identical shield for four
-seconds after every direct boss attack. Shield policy is owned by each boss profile.
+- Committed charge: exact corridor warning `1.00-1.25 s`, locked direction, active travel
+  `0.55-0.75 s`, wall stop, normal damage.
+- Broad barrage: three rows at `0.38 s` intervals; each row simultaneously emits `4/5/6`
+  projectiles for cycles `1-3/4-6/7-8`, center spacing `96`, warning `0.65 s`, pressure
+  damage, and one `0.80 s` per-target hit lock for the whole activation. `SPREAD` uses a
+  42-degree fan; `ROTATE` turns the emission axis 22.5 degrees between rows.
+- Base health is `5200`. Health scales: `1.00, 1.12, 1.25, 1.39, 1.54, 1.70, 1.87,
+  2.05`; damage: `1.00, 1.06, 1.12, 1.18, 1.24, 1.31, 1.38, 1.46`; move speed:
+  `145, 150, 155, 160, 166, 172, 178, 184`; cadence: `1.00, .97, .94, .91, .88,
+  .85, .82, .79`; coverage: `1.00, 1.04, 1.08, 1.12, 1.16, 1.20, 1.24, 1.28`.
+- Damage bands: pressure `10-18`, normal `22-38`, high threat `60-85`.
 
-| # | Boss | Common barrage motion | Identity patterns and defense/attack link |
+### Boss identities
+
+| # | Boss | Barrage | Identity contract |
 | ---: | --- | --- | --- |
-| 1 | Foundry Colossus | `SPREAD` | `Furnace Gates` closes two warned lanes, then leaves the other lanes open. A wall collision after its common charge creates a 1.4 s vulnerability. It has no shield. |
-| 2 | Archive Leviathan | `ROTATE` | Fires a fixed X-cross laser, alternating its orientation by 45 degrees on the next cast. The exact warned corridors are the damage corridors. It has no shield. |
-| 3 | Drydock Titan | `SPREAD` | Has a permanent 110-degree frontal shield with 90% interception. Facing locks during attacks, exposing sides and rear. Intercepted damage charges a visible frontal counterburst, so defense always produces an attack. |
-| 4 | Switchyard Behemoth | `ROTATE` | Anchors and sweeps one moving beam; below 45% health it follows with a sweep from the opposite side. The beam leaves one continuous escape route. It has no shield. |
-| 5 | Crown Engine | `SPREAD` | Three body-attached relay hardpoints each own one shield sector and one bolt lane. Destroying a hardpoint removes both. The remaining hardpoints fire faster after each loss, linking defense, objective priority, and offense. |
-| 6 | Siege Battery | `SPREAD` | Fires 8–10 long-lived projectiles from alternating banks. Each bank locks direction for its salvo; the next bank attacks a different lane. It has no shield. |
-| 7 | Vector Loom | `ROTATE` | Translates parallel laser walls across the arena, then uses an orthogonal pass. Every wall has an explicit moving gap. It has no shield. |
-| 8 | Pulse Core | `ROTATE` | Alternates expanding and contracting pulse rings with a missing wedge, then adds sparse spiral projectiles. It tests distance control without a shield. |
+| 1 | Foundry Colossus | SPREAD | Furnace Gates closes two warned lanes; wall collision after charge gives 1.4 s vulnerability; no shield |
+| 2 | Archive Leviathan | ROTATE | Fixed X-cross laser alternates orientation by 45 degrees; no shield |
+| 3 | Drydock Titan | SPREAD | Permanent 110-degree frontal 90% interception; facing locks during attacks; blocked damage charges a visible frontal counterburst |
+| 4 | Switchyard Behemoth | ROTATE | One moving beam sweep; below 45% health a sweep follows from the opposite side; no shield |
+| 5 | Crown Engine | SPREAD | Three attached destructible relay hardpoints each own one shield sector and bolt lane; losing one removes both and accelerates remaining relays |
+| 6 | Siege Battery | SPREAD | Alternating banks fire 8-10 long-lived projectiles into different lanes; no shield |
+| 7 | Vector Loom | ROTATE | Translating parallel laser walls followed by an orthogonal pass; each wall has one explicit moving gap; no shield |
+| 8 | Pulse Core | ROTATE | Expanding/contracting rings with a missing wedge followed by sparse spiral shots; no shield |
 
-The Crown hardpoints are attached, destructible boss parts. They are not free-standing
-objective pylons and require no new raster identity; collision and state use three
-clear body anchors and code-native plates. Boss-summoned ordinary enemies and existing
-facility identities may supplement patterns, but every boss keeps direct attacks and
-can finish the fight without surviving summons.
+### Boss-death cleanup
 
-## Boss-Death Cleanup
+- `0.00`: disable AI, collision, intake, spawn, and damage output; retire boss-owned
+  damaging projectiles/zones; freeze facing.
+- `0.00-0.15`: keep body intact; spawn exactly one centered explosion at scale `0.20`;
+  play priority-destruction audio once.
+- `0.15-1.30`: ease-out explosion scale to `1.20`; body remains fully visible.
+- `0.20-1.10`: stagger owned summons/facilities by `0.12 s`; scale/fade to zero; grant no
+  XP, loot, or quota; report source `boss_cleanup`.
+- `1.30-1.70`: hold explosion scale `1.20`; fade explosion and unchanged body together.
+- `1.70-2.00`: clear remaining owned objects, freeze report snapshot, permit transition.
+- Reduced motion starts the explosion at scale `1.20`, removes hit-stop/impulse/growth,
+  and preserves the synchronized fade and 2.00-second duration.
 
-Add one owner, `VehicleBossDeathRuntime`, with `ACTIVE -> DYING -> CLEANUP -> COMPLETE`.
-The transition starts exactly 2.00 seconds after the lethal receipt.
+### Upgrades and facilities
 
-| Time | Required behavior |
-| --- | --- |
-| 0.00 s | Disable boss AI, collision, damage intake, spawning, and damage output. Retire boss-owned damaging projectiles and zones. Freeze final facing. |
-| 0.00–0.15 s | Keep the existing boss body intact and visible. Spawn exactly one approved shared explosion overlay at the boss center at scale `0.20`. Reuse the priority-destruction sound once. |
-| 0.15–1.30 s | Grow that single centered overlay from scale `0.20` to `1.20` with an ease-out curve. Keep the unchanged boss body fully visible behind it. |
-| 0.20–1.10 s | Stagger boss-summoned enemies and facilities at 0.12 s offsets. Scale and fade each owned actor to zero without an explosion overlay; grant no XP/loot/quota and report source `boss_cleanup`. |
-| 1.30–1.70 s | Hold the explosion at scale `1.20` and fade the overlay and unchanged boss body together from full opacity to zero. Do not slice, collapse, redraw, or replace the body raster. |
-| 1.70–2.00 s | Clear remaining boss-owned actors and zones, freeze the report snapshot, then permit the cycle transition. |
+- Miss Compensation: missed retired primary shot groups stack to 5; next hostile hit adds
+  `8/11/14%` damage per stack and consumes all.
+- Hit Chain: consecutive hit shot groups stack to 8; primary damage gains `3/4/5%` per
+  stack; a missed retired group clears it.
+- Braced Fire: each `220` units moved charges a segment to 5; speed below `20` for `0.60 s`
+  consumes charge and grants `6/8/10%` primary damage per segment for `4.0 s`; speed above
+  `60` ends the window. Split children share one shot-group outcome for all three cards.
+- Missing active and secondary categories reserve one offer slot each; reservation ends
+  per category immediately after acquisition.
+- Facilities have `360` health, last until destroyed or cycle cleanup, accept player and
+  hostile damage, do not block projectiles, and affect every eligible actor whose center
+  is inside the radius. Repair/Barrier use radius `420` and restore one third of maximum
+  hull per second; Barrier caps at shield equal to maximum hull. Gravity uses radius `480`
+  and multiplies acceleration and maximum speed by `0.55` without positional pull. Cryo
+  uses radius `360` and multiplies movement and attack cadence by `0.70`. Weakpoint uses
+  radius `420` and multiplies received damage by `1.25`. Effects stop immediately outside
+  the radius or when the facility is destroyed.
+- Spawn three distinct facilities per cycle from a run-seeded deterministic rotation;
+  across eight cycles every type appears at least once. Remove repair pickups, replace
+  their authored sockets with XP shards, and add exactly five visible XP shards per cycle.
 
-- The player remains controllable and cannot take damage from boss-owned objects during
-  cleanup. No full-screen flash is used.
-- Reduced motion removes hit-stop, camera impulse, and explosion growth. It shows the
-  single centered overlay at scale `1.20` from 0.15 s and preserves the synchronized
-  1.30–1.70 s fade, 2.00-second duration, and state changes.
-- Extend the existing 96-entry effect store with one dedicated bounded cosmetic kind
-  for at most one boss explosion overlay. It may recycle only its own oldest receipt and
-  must never evict EMP or another functional effect.
-- Use one approved shared `256x256` RGBA explosion overlay raster. Do not add a sprite
-  sheet, per-boss death asset, frame animation, particle plugin, or package.
+## Tasks
 
-## Ordinary Enemy Additions
+### Phase 1: Contracts and Shock removal
 
-Remove Shield Breaker from the proposal. Add these four roles; every role attacks the
-player directly and has an actionable priority cue.
+Goal: make current product, terminology, data, validation, and visual counts agree before
+new runtime behavior lands.
 
-| Enemy | Behavior |
-| --- | --- |
-| Mobile Rail Sniper | Relocates between shots, shows a 1.40 s exact thin-line warning, fires one high-damage shot, and recovers for 2.20 s. |
-| Orbit Gunner | Moves tangentially around the player and fires a three-shot inward burst. Individual hits are pressure damage. |
-| Bombing Runner | Commits to a visible pass and leaves three delayed normal-damage ground blasts. |
-| Wreck Scavenger | Always attacks. When an eligible ordinary enemy dies within 360 units, gains one permanent stack, up to five. Each stack adds 12% direct damage, 5% move speed, and reduces attack interval by 4%. |
+Source owners: `docs/product/`, `docs/design/VISUAL_SYSTEM.md`, `.agents/design/DESIGN.md`,
+`scripts/cards/`, `scripts/combat/vehicle_primary_payload_profile.gd`,
+`scripts/combat/vehicle_status_runtime.gd`, localization catalogs, production manifest,
+and focused validators.
 
-Wreck Scavenger stacks exclude bosses, facilities, summoned children, and other Wreck
-Scavengers. The trigger is the death event and distance at that instant; do not add a
-corpse system. Show stacks with one broad body accent per stack and a short pulse, not
-small text. The role is intentionally safest when destroyed early.
+- [ ] **1.1** Replace ten-stage/paired player-facing contracts with eight boss cycles.
+  - Change: update product specs, design context, localization inventory, guidebook/report
+    terminology, and validation expectations. Preserve internal compatibility names only
+    within the same migration commit and remove them before acceptance.
+  - Accept: repository search finds no reachable `Stage N/10`, odd/even boss-stage rule,
+    or five-boss acceptance claim outside archived evidence.
+- [ ] **1.2** Delete Shock end to end with no replacement.
+  - Change: remove the card resource, build/catalog ID, payload/status fields, offer paths,
+    copy, telemetry/report fields, semantic asset registration, production PNG, and Shock-
+    specific validator cases. Keep Cryo as the sole utility ID.
+  - Accept: card catalog reports 24 live card IDs and 82 nominal levels; Shock has no
+    reachable resource, offer, runtime state, localized label, report row, provider ID, or
+    production file. Damage attributes still choose Thermal or Toxin independently of Cryo.
+  - Guard: names `Shockwave`/`kinetic_shockwave` remain because they are unrelated active-
+    weapon identities.
+- [ ] **1.3** Update the visual contract for the approved scope and final count.
+  - Change: authorize eight boss bodies, profile-owned shields, attached Crown hardpoints,
+    four enemy silhouettes, five facility roles, three new card images, and exactly one
+    shared boss explosion raster exception; set final manifest target to 90.
+  - Accept: `validate_cardborne_visual_authority.ps1` passes and all numeric/category
+    claims in active design docs agree.
 
-## Other Approved Feedback Work
+Phase gate:
 
-### Upgrade cards and offers
+- Run `git diff --check`, the focused card/status/semantic-provider validators, and
+  `./tools/validation/validate_cardborne_visual_authority.ps1` once after 1.1-1.3 pass.
 
-- `Miss Compensation`: each primary shot group that retires without hitting a hostile
-  grants one stack, maximum 5; the next hostile hit gains +8/+11/+14% damage per stack
-  and consumes all stacks.
-- `Hit Chain`: each consecutive primary shot group that hits a hostile grants one stack,
-  maximum 8; each stack grants +3/+4/+5% primary damage. A missed retired group clears
-  the chain.
-- `Braced Fire`: moving at least 220 units charges one segment, maximum 5. After staying
-  below 20 units/s for 0.60 s, consume the charge and grant +6/+8/+10% primary damage
-  per segment for 4.0 seconds. Moving above 60 units/s ends the firing window.
-- Split projectiles share one shot-group outcome. Child projectiles never add or clear
-  stacks independently.
-- If both an active weapon and a secondary weapon are missing, reserve one offer slot
-  for each category. If one is missing, reserve one slot for it. Stop reservation for a
-  category once that weapon slot is acquired.
+### Phase 2: Eight-cycle boss run
 
-### Neutral facilities and rewards
+Goal: deliver the complete run progression, common kit, eight identities, and safe death
+cleanup without adding unrelated behavior to `VehicleRun`.
 
-- Replace anomaly-on-destruction behavior with Repair, Barrier, Gravity, Cryo, and
-  Weakpoint facilities that affect player and enemies by the same spatial rule.
-- Repair restores one third of maximum hull per second. Barrier restores shield at the
-  same rate up to 100% of maximum hull. Both remain large and long-lived.
-- Gravity strongly changes movement acceleration and maximum speed but does not pull
-  actors into an unavoidable center death. Cryo slows both sides. Weakpoint lowers
-  defense for both sides while inside its radius.
-- Player and hostile attacks can destroy facilities. Projectiles continue through a
-  facility hit so facilities cannot become free projectile walls.
-- Remove repair pickups. Replace their authored placements with experience shards and
-  add five visible experience shards per boss cycle.
+Preconditions: Phase 1 passes.
 
-### Report UI
+Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`,
+`scripts/vehicle/vehicle_stage_catalog.gd`, `scripts/vehicle/vehicle_stage_transition_runtime.gd`,
+`scripts/enemies/vehicle_stage_difficulty.gd`, `scripts/bosses/`,
+`scripts/combat/vehicle_effect_store.gd`, and `scripts/vehicle/vehicle_run.gd` orchestration.
 
-- Reuse one report-body component in victory, defeat, and Settings ship status.
-- Use one left-aligned vertical stack and exactly one outer content scroll. Remove
-  report tabs, metric sub-scrolls, and the narrow side build rail.
-- Keep section order: outcome, cycle progress, build, damage, defense, enemies, bosses,
-  pacing, and diagnostics limitations.
-- Validate Korean and English at 960x540, 1280x720, and 1920x1080 with 100% and 200%
-  text scaling. No text or control may clip or overflow.
+- [ ] **2.1** Implement the eight-cycle state flow and cycle-owned quotas/snapshots.
+  - Accept: a deterministic fixture completes exactly eight cycles in order and every
+    boss begins only after its ordinary quota; no transition occurs before cleanup.
+- [ ] **2.2** Implement common charge, broad barrage, selection cap, scaling, and damage bands.
+  - Accept: validators assert simultaneous row counts/spacing/timing/motion, monotonic
+    profiles, at most two common selections per five, and exact hit locks.
+- [ ] **2.3** Implement bosses 1-5 with their revised identity and defense contracts.
+  - Accept: each identity geometry and state validator passes; only Drydock and Crown have
+    shields and their defenses directly emit the locked offense.
+- [ ] **2.4** Implement Siege Battery, Vector Loom, and Pulse Core.
+  - Accept: each can charge, barrage, and complete its unique pattern; warning geometry
+    equals collision and high-threat escape checks pass.
+- [ ] **2.5** Add `scripts/bosses/vehicle_boss_death_runtime.gd` and bounded explosion state.
+  - Accept: frame-step validator proves the exact timeline, safety, ownership retirement,
+    no cleanup rewards/quota, one cosmetic receipt maximum, reduced-motion behavior, and
+    transition only at 2.00 seconds.
 
-## Visual Asset Contract
+Phase gate:
 
-The current production manifest declares 78 images. This work adds 13 approved raster
-identities and replaces Shock art without a count increase, producing a 91-image target:
+- Run focused campaign, stage transition, boss phase/shield/pattern, attack readability,
+  effect-store, cleanup, localization, and deterministic continuity validators.
 
-| Family | New raster images | Notes |
-| --- | ---: | --- |
-| Boss bodies | 3 | Siege Battery, Vector Loom, Pulse Core; 352x352 |
-| Ordinary enemies | 4 | Rail Sniper, Orbit Gunner, Bombing Runner, Wreck Scavenger; 112x112 unless stationary scale is required by the existing actor contract |
-| Neutral facilities | 2 | Barrier and one missing facility identity; existing suitable facility identities remain reused |
-| Upgrade cards | 3 | Miss Compensation, Hit Chain, Braced Fire; 192x192 |
-| Utility-attribute replacement | 0 net | Replaces the Shock card asset byte-for-byte after the user selects its behavior and approves its exact art |
-| Boss-death explosion | 1 | One shared 256x256 RGBA overlay; one centered retained transform grows, then fades with the existing boss body |
+### Phase 3: Ordinary combat, upgrades, facilities, and pacing
 
-Generate every new raster candidate with the exact canonical style sheet as a real
-reference input. Keep candidates outside production. Promote only exact user-approved
-bytes and hashes through the visual workbench and manifest. Revise `VISUAL_SYSTEM.md`
-before integration to authorize eight bosses, the 91-image count, per-boss shields,
-attached Crown hardpoints, the selected utility-attribute presentation, new role
-silhouettes, and the single shared boss-death explosion-raster exception. Do not
-introduce SVG actors, an effect sprite sheet, any other effect raster, or a new named
-theme.
+Goal: add the approved target-priority roles and player build depth while preserving
+bounded hot paths and continuous engagement.
 
-## Execution Checklist
+Preconditions: Phase 2 passes.
 
-1. **Update product, design, terminology, and validation contracts.** Revise the product
-   spec, visual system, design memory, guidebook terms, localization inventory, and
-   campaign validators for eight boss cycles, per-boss defense, the exact combat bands,
-   the 2.00-second cleanup, the selected utility attribute, four enemy roles, and 91
-   approved images.
-   Rename stage-facing symbols to cycle-facing symbols within their existing owners and
-   remove obsolete ten-stage/fourteen-stage acceptance text.
+Source owners: `scripts/enemies/`, `scripts/cards/`, responsibility-shaped combat runtime
+owners, `scripts/vehicle/vehicle_mystery_device_runtime.gd`, progression/pickup owners,
+and `VehicleRun` orchestration hooks.
 
-2. **Produce and approve the exact raster set.** Create the 3 boss, 4 enemy, 2 facility,
-   3 upgrade-card, 1 replacement utility-attribute card, and 1 shared boss-death explosion
-   candidates with the canonical
-   reference. Build AS-IS/TO-BE sheets, collect exact user approval, promote approved
-   hashes, update the semantic provider/catalog/manifest, and run the visual authority
-   validator. Do not proceed with production asset integration before exact approval.
+- [ ] **3.1** Add the four ordinary enemy roles and engagement-gap correction.
+  - Accept: role-specific fixtures prove attack cadence/geometry and Wreck Scavenger's
+    radius-360 death-event stacks, exclusions, maximum five, exact multipliers, and active
+    attack at zero stacks; 4/8/3 pacing capture passes without teleport or count reduction.
+- [ ] **3.2** Add the three primary-fire upgrade runtimes and definitions.
+  - Accept: shot-group and movement fixtures prove all thresholds, caps, consumption,
+    split-child deduplication, and level values with bounded state and no per-tick pair scan.
+- [ ] **3.3** Enforce missing active/secondary offer reservation.
+  - Accept: seeded offer fixtures reserve both categories when both are absent, one when
+    one is absent, and none after both are acquired while preserving three legal offers.
+- [ ] **3.4** Replace Mystery outcomes and repair pickups with five symmetric facilities.
+  - Accept: player/enemy enter/exit tests prove exact radii/effects, both factions can
+    destroy facilities, projectiles continue through, deterministic cycle distribution
+    covers all types, repair pickups are unreachable, and five added XP shards remain visible.
 
-3. **Implement the eight-cycle campaign and common boss kit.** Convert progression,
-   quotas, warnings, HUD, layouts, pickups, difficulty, guidebook, diagnostics, and
-   report snapshots to eight cycles. Add the monotonic stat table, common committed
-   charge, common three-row broad projectile barrage with profile-locked spread or
-   rotation, identity-selection cap, and exact damage bands.
+Phase gate:
 
-4. **Implement all eight boss identities.** Replace the global shield rule with profile-
-   owned defense. Implement and validate Furnace Gates, alternating X-cross, frontal
-   shield counterburst, moving sweep, attached relays, sustained banks, moving laser
-   walls, and wedge pulse rings. Match every warning to collision geometry and preserve
-   the high-threat escape corridor.
+- Run focused enemy, engagement, upgrade, offer, facility, progression, spatial/collision,
+  and workload/capacity validators.
 
-5. **Implement boss-death cleanup.** Add the dedicated runtime/state machine, owner tags,
-   projectile/zone retirement, summon/facility cleanup, one growing centered explosion
-   and synchronized body fade,
-   reduced-motion branch, bounded effect-store kinds, audio receipts, frozen reporting,
-   and transition gate. Validate no damage, loot, quota, or allocation leak during the
-   cleanup window.
+### Phase 4: Diagnostics and shared stacked report
 
-6. **Implement ordinary roles, pacing correction, and ten-session retention.** Add the
-   four enemy runtimes/catalog entries and Wreck Scavenger death-event stacks. Expedite
-   reserves and redirect nearby mobile hostiles within existing approach paths to meet
-   gap limits. Change diagnostics to newest-ten ordering on load and persist while
-   preserving protected summaries and existing byte/age caps.
+Goal: retain actionable recent evidence and make the same readable report available from
+terminal and Settings surfaces.
 
-7. **Implement upgrades, the selected utility attribute, and offer reservations.** Add
-   the three shot-outcome/movement cards in combat-owned state, replace Shock end to end
-   according to the user-selected contract that will be inserted before activation, and
-   enforce the missing active/secondary offer slots.
+Preconditions: Phase 1 contracts pass; this phase may execute in parallel with Phases 2-3
+when it does not edit shared orchestration files.
 
-8. **Implement neutral facilities and reward changes.** Convert neutral devices to the
-   five symmetric spatial effects, add destruction by both sides, preserve projectile
-   passage, remove repair pickups, and add the exact experience-shard placements.
+Source owners: `scripts/diagnostics/vehicle_session_diagnostic_store.gd`,
+`scripts/combat/vehicle_run_result_builder.gd`, `scripts/combat/vehicle_stage_report_builder.gd`,
+`scripts/ui/vehicle_combat_report_body.gd`, `vehicle_result_panel.gd`,
+`vehicle_stage_report_panel.gd`, `vehicle_settings_panel.gd`, and shared UI primitives.
 
-9. **Implement the shared stacked report.** Extract one report view model and one report-
-   body component, reuse them in result/failure/Settings, remove nested scrolling, and
-   validate alignment, order, localization, scaling, overflow, and clipping.
+- [ ] **4.1** Retain the newest ten valid diagnostics on load and persist.
+  - Accept: validator creates more than ten valid/tied/old/oversize/corrupt bundles and
+    proves descending `(saved_unix, session_id)`, ten maximum, quarantine, 25 MiB, 14-day
+    caps, and protected cycle/boss/cleanup/report summaries.
+- [ ] **4.2** Recompose the shared report as one stacked outer-scroll body.
+  - Change: section order is outcome, cycle progress, build, damage, defense, enemies,
+    bosses, pacing, diagnostics limitations; remove report tabs, metric sub-scrolls, and
+    the side build rail. Keep exactly one fixed Deployment action on terminal surfaces.
+  - Accept: the same view model/component instance contract is used by victory, defeat,
+    and Settings; focus order follows section order and debug contracts report one scroll,
+    zero tabs, zero nested scrolls, zero build rails.
+- [ ] **4.3** Complete Level 3 rendered UI evidence.
+  - Accept: Korean/English captures at 960x540, 1280x720, and 1920x1080 at 100%/200% text
+    show zero overflow, clipping, overlap, horizontal scroll, or hidden action; keyboard
+    and controller focus traverse every reachable report state.
 
-10. **Complete integration and release validation.** Run focused campaign, boss, enemy,
-    upgrade, facility, diagnostics, report, localization, visual-authority, and ownership
-    validators. Run the Web export. Capture clean comparable native/Web performance
-    evidence with the same enemy counts, projectile cadence, effect limits, resolution,
-    and warm-up as the baseline. Stop and fix any behavior, visual, overflow, authority,
-    or capacity failure before handoff.
+Phase gate:
 
-After each numbered item, update this plan's progress and send the user a concise
-checkpoint containing completed scope, decisive evidence, remaining risks, and the next
-item. Do not combine checkpoints across items.
+- Run diagnostic, report builder, report panel, result, Settings, UI component,
+  localization, layout, and accessibility validators once after rendered fixes settle.
 
-## Validation and Acceptance
+### Phase 5: Visual promotion and production qualification
 
-- Exactly eight boss cycles complete in order; every boss follows its ordinary quota
-  and cleanup, and no player-facing stage-pair language remains.
-- Every boss can charge and fire projectiles, identity patterns occupy at least three of
-  five direct selections, and base health/damage/speed/cadence/coverage are monotonic.
-- Every high-threat warning matches collision, lasts at least 1.30 seconds, leaves the
-  required corridor, and applies damage at most once. No true instant kill exists.
-- The frontal shield and relay defenses produce their linked counterattacks. No boss is
-  defense-only and no global shield-down rule remains.
-- Lethal boss damage yields exactly 2.00 seconds of safe cleanup before transition;
-  boss-owned actors cannot damage, reward, or affect quota during cleanup.
-- Wreck Scavenger uses exact death-event proximity, caps at five stacks, excludes the
-  listed sources, and continues attacking at zero stacks. Shield Breaker is absent.
-- Shock Disruption has no reachable resource, status, copy, report field, or offer. The
-  selected replacement remains utility-slot exclusive with Cryo and passes its exact
-  behavior, presentation, report, localization, and performance acceptance checks added
-  before this draft becomes active.
-- The diagnostic store keeps the newest ten valid sessions after both load and persist,
-  using saved time and session ID, while byte/age/quarantine contracts remain valid.
-- Search gaps meet the 4/8/3-second structural contracts without teleporting enemies or
-  reducing workload. Total run duration is observed in logs but is not a pass/fail goal.
-- The report is one vertical left-aligned stack with one scroll and no clipping in all
-  required locale, resolution, and text-scale combinations.
-- The production manifest reaches exactly 91 only through exact approved asset hashes.
-  Boss death uses exactly one shared approved explosion overlay and fixed-capacity transforms.
-- Clean native/Web evidence is comparable to the recorded baseline. Any non-comparable,
-  contaminated, or capacity-failing run is labeled diagnostic-only and cannot support a
-  performance conclusion.
+Goal: promote only approved exact imagery, integrate it without workload drift, and close
+the production build/evidence boundary.
 
-## Rollback Boundaries
+Preconditions: the relevant gameplay identity exists; exact candidate approval is recorded
+before task 5.2.
 
-- Campaign-flow, boss-pattern, death-cleanup, enemy-role, primary-attribute, facilities,
-  report, diagnostics, and visual-asset commits remain separate and revertible.
-- Do not retain compatibility aliases for Shock or player-facing stages. Roll back the
-  whole owning slice if its replacement is not complete.
-- Production visual promotion is hash-addressed. Reverting candidates must restore the
-  prior manifest and bytes together.
-- A failed performance checkpoint rolls back only the implicated runtime slice; it does
-  not authorize lower enemy counts, slower attacks, smaller effects, or weaker visuals.
+Source owners: visual workbench units, `art/visuals/production/gameplay/asset-manifest.json`,
+`scripts/presentation/components/vehicle_semantic_asset_provider.gd`, actor/effect catalogs,
+renderer batches, and production Web tooling.
 
-## Progress
+- [ ] **5.1** Generate and present the three card-art candidates and exact approval sheet.
+  - Change: use ImageGen with the canonical style PNG as an actual reference; combine the
+    three card candidates with the existing nine actor/facility and one explosion candidate
+    in the Korean approval report with exact paths and hashes.
+  - Accept: workbench evidence records prompts, actual-reference use, canvas/alpha/hash,
+    actual-size/grayscale checks, and each candidate remains outside production pending the
+    exact approval gate.
+- [ ] **5.2** Promote the approved set and remove Shock art.
+  - Accept: manifest indexes exactly 90 files; every new semantic ID resolves; Shock does
+    not; canvases/pivots/imports match contracts; one explosion receipt and no sprite sheet,
+    new dependency, extra effect raster, node-per-effect, or collision change exists.
+- [ ] **5.3** Complete source, render, export, interaction, and performance gates.
+  - Change: run focused validators, import/parse, production Web export, built-Web
+    interaction, and only then the declared clean native/Web same-workload performance
+    scenarios. Announce the broad/expensive gate before starting and stop contaminated
+    samples without drawing a verdict.
+  - Accept: functional and rendered gates are green; native/Web verdicts name exact commit,
+    dirty state, workload, viewport, renderer, warmup, duration, focus, isolation, and pass
+    label. A pre-existing Web physics failure is reported truthfully and does not become an
+    asset failure without attribution.
 
-- [x] Every product decision except the primary utility-attribute replacement is closed.
-- [ ] Select the primary utility-attribute replacement outside this draft, then rewrite
-  this file as a decision-complete execution contract before implementation begins.
-- [ ] 1. Update product, design, terminology, and validation contracts.
-- [ ] 2. Produce and approve the exact raster set. Boss 3, ordinary-enemy 4, and neutral-
-  facility 2 review candidates were generated on 2026-08-15 with grounded prompt/hash/
-  actual-size evidence; all nine are direction-clear after focused revisions, and none
-  has exact user approval or production integration. The shared boss-death explosion
-  candidate now exists and remains review-only; upgrade-card and utility-replacement card
-  candidates remain unstarted.
-- [ ] 3. Implement the eight-cycle campaign and common boss kit.
-- [ ] 4. Implement all eight boss identities.
-- [ ] 5. Implement boss-death cleanup.
-- [ ] 6. Implement ordinary roles, pacing correction, and ten-session retention.
-- [ ] 7. Implement upgrades, the selected utility attribute, and offer reservations.
-- [ ] 8. Implement neutral facilities and reward changes.
-- [ ] 9. Implement the shared stacked report.
-- [ ] 10. Complete integration and release validation.
+## Validation and Rework Controls
+
+| Cadence | Exact check | Run when | Do not rerun until |
+| --- | --- | --- | --- |
+| Inner loop | Relevant `./tools/godot.ps1 --headless --path . --script res://tools/validation/<focused>.gd` and `git diff --check` | The owning task changes | Relevant implementation input changes |
+| Visual phase | `./tools/validation/validate_cardborne_visual_authority.ps1` plus manifest/provider/import checks | Visual contract or promoted bytes change | Visual input changes |
+| UI phase | Report/layout validators plus the locked locale/viewport/text-scale capture matrix | Report composition/localization stabilizes | UI or copy input changes |
+| Final source | All task-owned focused validators and Godot import/parse | All phases pass | Source/resource input changes |
+| Final Web | `./tools/export_web.ps1`, static release validation, built-Web interaction | Final source gate passes | Web/runtime/resource input changes |
+| Performance | Active policy's clean same-workload native then Web scenarios | Functional/rendered/Web gates pass and machine is quiescent | Measured input or hypothesis changes |
+
+Validation rules:
+
+- Run the narrowest check that proves the current task and each phase gate once.
+- Do not repeat a passing check unless a relevant input changed.
+- Rerun a failed check only after a relevant implementation change or a new hypothesis.
+- Keep functional, rendered, native performance, and Web performance verdicts separate.
+- Record known non-blocking warnings once. Do not reduce workload, quality, or thresholds
+  to manufacture a pass.
+
+## Predetermined Contingencies and Change Control
+
+| Trigger | Required response | Boundary or escalation point |
+| --- | --- | --- |
+| A verified material fact contradicts this contract | Stop the affected branch and revise this contract before resuming | Executor cannot choose a new product, architecture, dependency, UX, safety, or validation contract |
+| Exact visual approval is missing | Continue independent code/data work; keep bytes outside production and stop task 5.2 | Never infer approval from direction-clear status or plan execution |
+| New visual candidate fails authority/canvas/alpha/readability | Regenerate only that candidate with the canonical image reference and update its hash/evidence | Do not repair geometry with SVG/ImageMagick |
+| Shared `VehicleRun` edit conflicts across workstreams | Root integrator owns the orchestration edit; workers return focused owner modules and required hooks | Do not let parallel workers edit the same orchestrator |
+| Facility or boss state exceeds a fixed store | Add one bounded typed receipt only in the owning store and update capacity validators | Do not add unbounded nodes/arrays or evict functional effects |
+| Performance sample is contaminated or lacks comparable metadata | Reject it as diagnostic-only and wait for a quiet rerun | Do not kill unrelated processes or claim pass/failure |
+| Threads, native code, dependency, engine, template, workload, or threshold change becomes necessary | Stop and request a new approved contract | Not authorized here |
+
+Implementation-local discoveries may be handled inside the locked contract when they
+cannot change scope, visible behavior, ownership, architecture, safety, or acceptance.
+
+## Progress and Next Steps
+
+- Canonical progress: the task checkboxes in this contract.
+- Current phase: Phase 1 - Contracts and Shock removal.
+- Next task: 1.1 - replace ten-stage/paired player-facing contracts with eight boss cycles.
+- Last completed gate: Discovery Closure Gate; Shock deletion with no replacement is the
+  final owner decision that activated this contract.
+- Update rule: after a task passes, record concise evidence, check it, and advance this
+  pointer in the same edit. On start/resume, inspect only the current checkpoint inputs.
+- Checked tasks and recorded passing evidence stay complete unless a relevant input changed.
+
+## Completion and Stop Conditions
+
+Complete when:
+
+- Every task acceptance, guard, phase gate, final gate, and exact visual approval gate passes.
+- No Shock identity, player-facing ten-stage pairing, global boss shield rule, report
+  overflow, nested report scroll, or unapproved production candidate remains.
+- The final manifest count is exactly 90 and the production Web artifact is built and
+  interaction-checked.
+- Durable behavior is incorporated into its owning specs and this plan is marked `done`.
+
+Replan when a material discovery invalidates a locked behavior, owner, safety boundary,
+or acceptance check. Do not replan for implementation-local mechanics or a passing check
+whose inputs have not changed.

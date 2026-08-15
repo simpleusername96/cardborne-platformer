@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-15
 last_reviewed: 2026-08-15
-topic: Decision record for the eight-boss campaign, combat identities, utility-attribute replacement, and boss-death visuals
+topic: Decision record for the eight-boss campaign, combat identities, Shock removal, and boss-death visuals
 scope: Current runtime evidence, candidate comparison, public VFX asset review, selected combat design, rejected alternatives, and implementation recommendations
 sources:
   - ../../scripts/bosses/vehicle_boss_patterns.gd
@@ -26,11 +26,10 @@ related:
 
 ## Purpose
 
-Close the exploratory work before implementation. This record distinguishes current
-behavior, compared candidates, selected rules, rejected directions, and remaining
-evidence limits. The linked plan remains a non-executable draft until the user selects
-the primary utility-attribute replacement; its active rewrite must contain only
-decision-complete work.
+Preserve the discovery and comparison evidence that closed before implementation. This
+record distinguishes current behavior, compared candidates, selected rules, rejected
+directions, and remaining evidence limits. The user subsequently selected complete Shock
+removal with no replacement; the linked decision-complete plan is now active.
 
 ## Sources
 
@@ -160,6 +159,11 @@ It keeps a direct attack at zero stacks, so it never idles.
 
 ### Utility-slot Shock replacement candidates
 
+Decision update, 2026-08-15: the user rejected replacement work and directed complete
+Shock removal. The candidate table below is retained only as decision evidence; none of
+its entries is an implementation task. Thermal Burst/Bio Toxin remain the damage-slot
+choice and Cryo becomes the only utility-slot attribute.
+
 The current primary-attribute model has two distinct slots. Thermal Burst or Bio Toxin
 occupies the damage slot; Cryo or the Shock replacement occupies the utility slot. A
 replacement that adds damage would violate that separation.
@@ -185,9 +189,8 @@ presentation priority, not an implementation decision.
 
 The selected authored set adds three boss bodies, four ordinary enemy bodies, two
 neutral-facility bodies, three upgrade cards, and one shared boss-death explosion
-overlay. The selected utility attribute will replace Shock art without increasing the
-count. The net addition is 13 images, changing the declared production target from 78
-to 91 after exact user approval.
+overlay. Shock art is removed without replacement. Thirteen additions minus that one
+removal change the declared production target from 78 to 90 after exact user approval.
 
 ### Generated boss, enemy, and facility candidates
 
