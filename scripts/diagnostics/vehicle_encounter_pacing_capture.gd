@@ -22,7 +22,7 @@ const REQUIRED_TRANSITION_CHECKPOINTS := [
 	&"boss_cleanup_complete", &"post_boss_3",
 ]
 const REQUIRED_LIFECYCLE_EVENTS := [
-	&"cue", &"birth", &"first_visible", &"first_commit_or_damage",
+	&"cue", &"birth", &"first_visible", &"first_attack_preparation",
 ]
 const MAX_SCAN_OWNERS := 16
 const GAP_REASONS: Array[StringName] = [
@@ -168,7 +168,7 @@ func acceptance() -> Dictionary:
 	var post_boss: Dictionary = _checkpoints[&"post_boss_3"]
 	var checks := {
 		"first_visible_by_4s":float(_lifecycle[&"first_visible"]) <= 4.0,
-		"first_commit_by_8s":float(_lifecycle[&"first_commit_or_damage"]) <= 8.0,
+		"first_attack_preparation_by_8s":float(_lifecycle[&"first_attack_preparation"]) <= 8.0,
 		"boss_slot_margin_nonnegative":int(boss_active["boss_slot_margin"]) >= 0,
 		"post_cleanup_visible_by_3s":int(post_boss["visible_ordinary_count"]) >= 1,
 	}

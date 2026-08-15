@@ -5,13 +5,10 @@ extends RefCounted
 ## returned receipts because it owns enemies, facilities, effects, and audio.
 
 const TOTAL_SECONDS := 2.0
-const EXPLOSION_SPAWN_SECONDS := 0.0
-const EXPLOSION_GROW_BEGIN_SECONDS := 0.15
-const EXPLOSION_GROW_END_SECONDS := 1.30
 const OWNED_CLEANUP_BEGIN_SECONDS := 0.20
 const OWNED_CLEANUP_END_SECONDS := 1.10
 const FADE_BEGIN_SECONDS := 1.30
-const FADE_END_SECONDS := 1.70
+const FADE_END_SECONDS := TOTAL_SECONDS
 const STAGGER_SECONDS := 0.12
 
 enum State { IDLE, ACTIVE, COMPLETE }
@@ -19,7 +16,6 @@ enum State { IDLE, ACTIVE, COMPLETE }
 var _state := State.IDLE
 var _elapsed := 0.0
 var _reduced_motion := false
-var _explosion_emitted := false
 var _safety_emitted := false
 var _completion_emitted := false
 var _owned_ids: Array[StringName] = []
@@ -33,7 +29,7 @@ func begin(owned_ids: Array[StringName], reduced_motion: bool = false) -> Dictio
 	_reduced_motion = reduced_motion
 	_owned_ids = owned_ids.duplicate()
 	_retired_owned.clear()
-	return {"accepted": true, "safety": _safety_receipt(), "explosion": _explosion_receipt()}
+	return {"accepted": true, "safety": _safety_receipt()}
 
 
 func reset() -> void:
@@ -41,7 +37,6 @@ func reset() -> void:
 	_state = State.IDLE
 	_elapsed = 0.0
 	_reduced_motion = false
-	_explosion_emitted = false
 	_safety_emitted = false
 	_completion_emitted = false
 	_owned_ids.clear()
@@ -73,16 +68,11 @@ func advance(delta: float) -> Array[Dictionary]:
 func presentation() -> Dictionary:
 	if _state == State.IDLE:
 		return {}
-	var explosion_scale := 0.20
-	if _reduced_motion:
-		explosion_scale = 1.20
-	elif _elapsed >= EXPLOSION_GROW_BEGIN_SECONDS:
-		var progress := clampf((_elapsed - EXPLOSION_GROW_BEGIN_SECONDS) / (EXPLOSION_GROW_END_SECONDS - EXPLOSION_GROW_BEGIN_SECONDS), 0.0, 1.0)
-		explosion_scale = lerpf(0.20, 1.20, 1.0 - pow(1.0 - progress, 3.0))
 	var alpha := 1.0
 	if _elapsed >= FADE_BEGIN_SECONDS:
 		alpha = 1.0 - clampf((_elapsed - FADE_BEGIN_SECONDS) / (FADE_END_SECONDS - FADE_BEGIN_SECONDS), 0.0, 1.0)
-	return {"elapsed": _elapsed, "explosion_scale": explosion_scale, "body_alpha": alpha, "explosion_alpha": alpha, "reduced_motion": _reduced_motion}
+	var tint := Color(1.0, 0.72, 0.68) if _elapsed < 0.18 else Color(0.48, 0.50, 0.54)
+	return {"elapsed": _elapsed, "body_alpha": alpha, "body_tint":tint, "reduced_motion": _reduced_motion}
 
 func active() -> bool:
 	return _state == State.ACTIVE
@@ -96,7 +86,3 @@ func snapshot() -> Dictionary:
 func _safety_receipt() -> Dictionary:
 	_safety_emitted = true
 	return {"kind": &"disable_boss_danger", "disable_ai": true, "disable_collision": true, "disable_intake": true, "disable_spawn": true, "retire_damaging_owned": true, "freeze_facing": true}
-
-func _explosion_receipt() -> Dictionary:
-	_explosion_emitted = true
-	return {"kind": &"spawn_explosion", "count": 1, "scale": 1.20 if _reduced_motion else 0.20, "audio": &"priority_destruction", "audio_count": 1}

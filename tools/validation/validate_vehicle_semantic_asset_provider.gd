@@ -17,7 +17,6 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"actor/orbit_gunner",
 	&"actor/bombing_runner",
 	&"actor/wreck_scavenger",
-	&"effect/boss_death_explosion",
 	&"secondary/seeker",
 	&"secondary/escort_drone",
 	&"secondary/orbit_blade",
@@ -127,7 +126,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 90, "all 87 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 89, "all 86 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in REQUIRED_UPGRADE_IDS:
@@ -175,9 +174,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 90
+		int(manifest.get("final_asset_count", 0)) == 89
 			and not manifest.has("animations"),
-		"manifest declares 90 static semantic images and no frame animations"
+		"manifest declares 89 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	for error in AssetProvider.validate_pack():

@@ -653,14 +653,23 @@ func _run() -> void:
 	open_boss.max_health = 320.0
 	open_boss.alive = true
 	open_boss.active = true
+	var shield_presentation := _player_presentation(Vector2.ZERO, false)
+	shield_presentation["orbiting_blade_level"] = 0
+	shield_presentation["secondary"]["blade_count"] = 0
+	shield_presentation["boss_shield"] = {
+		"shield_kind":&"frontal_intercept",
+		"state":&"shield_up",
+		"frontal_half_angle":deg_to_rad(55.0),
+	}
 	renderer.sync(
 		[open_boss], no_projectiles, no_projectiles, [], [],
-		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true, "open_boss"
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true, "open_boss",
+		shield_presentation
 	)
 	var diamond_batch := renderer.get_node("Overlay_diamond") as MultiMeshInstance2D
 	_expect(
-		diamond_batch.multimesh.visible_instance_count == 0,
-		"boss shield state does not add a yellow target overlay"
+		diamond_batch.multimesh.visible_instance_count == 5,
+		"boss shield state adds no diamond beyond the shared five-part player cursor"
 	)
 	snapshot = renderer.debug_snapshot()
 	_expect(
@@ -676,22 +685,35 @@ func _run() -> void:
 		"the boss health bar is positioned above its world body"
 	)
 	var boss_ring_batch := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
-	var boss_ring_buffer := boss_ring_batch.multimesh.buffer
 	_expect(
-		boss_ring_batch.multimesh.visible_instance_count == 1
-			and is_equal_approx(
-				float(boss_ring_buffer[0]),
-				Art.STAGE_BOSS_RADIUS + 8.0
-			)
-			and is_equal_approx(float(boss_ring_buffer[11]), 0.38),
-		"boss-only shield boundary uses the exact +8 radius and 0.38 alpha retune"
+		boss_ring_batch.multimesh.visible_instance_count == 0
+			and beam_batch.multimesh.visible_instance_count == 10,
+		"Drydock renders only its body-facing 110-degree shield boundary"
+	)
+	shield_presentation["boss_shield"] = {
+		"shield_kind":&"relay_sectors",
+		"state":&"shield_up",
+		"sector_0_ratio":1.0,
+		"sector_1_ratio":0.0,
+		"sector_2_ratio":0.0,
+	}
+	renderer.sync(
+		[open_boss], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true, "open_boss",
+		shield_presentation
+	)
+	var crown_beam_buffer := beam_batch.multimesh.buffer
+	var first_sector_segment := Vector2(crown_beam_buffer[3], crown_beam_buffer[7]) - open_boss.pos
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 9
+			and absf(first_sector_segment.angle() - deg_to_rad(-53.3333)) < 0.02,
+		"Crown sector zero renders as the collision-owned forward 120-degree sector"
 	)
 	var destruction_presentation := _player_presentation(Vector2.ZERO, false)
 	destruction_presentation["dying_boss_id"] = open_boss.id
 	destruction_presentation["boss_destruction"] = {
-		"explosion_scale":0.20,
 		"body_alpha":0.75,
-		"explosion_alpha":0.75,
+		"body_tint":Color(0.48, 0.50, 0.54),
 	}
 	renderer.sync(
 		[open_boss], no_projectiles, no_projectiles, [], [],
@@ -703,16 +725,10 @@ func _run() -> void:
 	)
 	var dying_boss_batch := renderer.get_node("Boss_colossus") as MultiMeshInstance2D
 	_expect(
-		death_explosions.size() == 1
-			and Vector2(death_explosions[0]["position"]).is_equal_approx(open_boss.pos)
-			and is_equal_approx(
-				float(death_explosions[0]["radius"]),
-				Art.STAGE_BOSS_RADIUS * 0.20
-			)
-			and is_equal_approx(float(death_explosions[0]["modulate"].a), 0.75)
+		death_explosions.is_empty()
 			and is_equal_approx(float(dying_boss_batch.multimesh.buffer[11]), 0.75)
 			and int(renderer.debug_snapshot()["boss_health_bar_count"]) == 0,
-		"one retained shared boss-death explosion follows the runtime snapshot while body fades"
+		"boss death uses only the retained tinted body fade without an explosion overlay"
 	)
 	var run_source := FileAccess.get_file_as_string(
 		"res://scripts/vehicle/vehicle_run.gd"
@@ -832,11 +848,11 @@ func _run() -> void:
 			)
 			and is_equal_approx(early_disk_color.a, 0.10)
 			and is_equal_approx(late_disk_color.a, 0.20)
-			and Color(early_disk_color, 1.0).is_equal_approx(Color(Art.THERMAL, 1.0))
-			and Color(early_area_color, 1.0).is_equal_approx(Color(Art.THERMAL, 1.0))
-			and Color(late_area_color, 1.0).is_equal_approx(Color(Art.THERMAL, 1.0))
+			and Color(early_disk_color, 1.0).is_equal_approx(Color(Art.DANGER, 1.0))
+			and Color(early_area_color, 1.0).is_equal_approx(Color(Art.SPACE_BLACK, 1.0))
+			and Color(late_area_color, 1.0).is_equal_approx(Color(Art.SPACE_BLACK, 1.0))
 			and late_area_color.a > early_area_color.a,
-		"boss startup fills the exact area and strengthens its thermal body and boundary"
+		"hostile startup fills the exact area and strengthens its danger-red body and boundary"
 	)
 	offscreen_enemy.phase = &"boss_active"
 	renderer.sync(
@@ -868,25 +884,25 @@ func _run() -> void:
 	)
 	_expect(
 		beam_batch.multimesh.visible_instance_count == 2,
-		"Beam Sentinel startup draws one exact-width charge plane and one hot core"
+		"hostile startup corridor draws one thin black perimeter and one exact red body"
 	)
 	var startup_beam_buffer := beam_batch.multimesh.buffer
 	var startup_intensity := smoothstep(0.0, 1.0, 0.72)
 	_expect(
-		is_equal_approx(startup_beam_buffer[5], 54.0 * 0.5)
+		is_equal_approx(startup_beam_buffer[5], (54.0 + 6.0) * 0.5)
 			and is_equal_approx(
 				startup_beam_buffer[17],
-				minf(3.5, 54.0 * 0.065) * 0.5
+				54.0 * 0.5
 			)
 			and is_equal_approx(
 				startup_beam_buffer[11],
-				lerpf(0.16, 0.34, startup_intensity)
+				0.72
 			)
 			and is_equal_approx(
 				startup_beam_buffer[23],
-				lerpf(0.32, 0.66, startup_intensity)
+				lerpf(0.16, 0.34, startup_intensity)
 			),
-		"startup beam preserves the full corridor and uses the restrained 3.5-unit filament hierarchy"
+		"startup hostile corridor preserves its exact footprint inside the black perimeter"
 	)
 	offscreen_enemy.phase = &"active"
 	renderer.sync(
@@ -894,18 +910,16 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count == 3,
-		"active off-screen beam draws a three-plane hot damaging body"
+		beam_batch.multimesh.visible_instance_count == 2,
+		"active hostile corridor keeps the two-plane ownership grammar"
 	)
 	var active_beam_buffer := beam_batch.multimesh.buffer
 	_expect(
-		is_equal_approx(active_beam_buffer[5], 54.0 * 0.5)
-			and is_equal_approx(active_beam_buffer[17], minf(20.0, 54.0 * 0.34) * 0.5)
-			and is_equal_approx(active_beam_buffer[29], minf(7.0, 54.0 * 0.10) * 0.5)
-			and is_equal_approx(active_beam_buffer[11], 0.92)
-			and is_equal_approx(active_beam_buffer[23], 0.88)
-			and is_equal_approx(active_beam_buffer[35], 1.0),
-		"active beam keeps the full body visible beneath its narrower inner and ivory core planes"
+		is_equal_approx(active_beam_buffer[5], (54.0 + 6.0) * 0.5)
+			and is_equal_approx(active_beam_buffer[17], 54.0 * 0.5)
+			and is_equal_approx(active_beam_buffer[11], 0.82)
+			and is_equal_approx(active_beam_buffer[23], 0.92),
+		"active hostile corridor keeps an exact red body inside its black perimeter"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	snapshot = renderer.debug_snapshot()

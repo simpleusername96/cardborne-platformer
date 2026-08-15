@@ -87,6 +87,7 @@ var pattern_index := 0
 var boss_phase := 1
 var boss_variant: StringName = &"colossus"
 var boss_shield_state: StringName = &""
+var boss_attack_damage_multiplier := 1.0
 var pattern: StringName = &""
 var last_pattern: StringName = &""
 var pattern_timer := 0.0
@@ -132,6 +133,9 @@ var engagement_generation := 0
 var engagement_gate := Vector2.ZERO
 var engagement_expiry := 0.0
 var engagement_active := false
+var engagement_started_at := 0.0
+var engagement_last_player_distance := -1.0
+var engagement_divergence_started_at := -1.0
 
 
 func reset_runtime_collections() -> void:
@@ -164,6 +168,9 @@ func reset_runtime_collections() -> void:
 	engagement_gate = Vector2.ZERO
 	engagement_expiry = 0.0
 	engagement_active = false
+	engagement_started_at = 0.0
+	engagement_last_player_distance = -1.0
+	engagement_divergence_started_at = -1.0
 
 
 func behavior_diagnostics() -> Dictionary:

@@ -130,8 +130,9 @@ func _record_lifecycle(run: Node) -> void:
 		_capture.record_lifecycle(&"birth", birth_time)
 	if bool(run.get("_diagnostic_first_visible")):
 		_capture.record_lifecycle(&"first_visible", float(run.active_run_elapsed_seconds))
-	if bool(run.get("_diagnostic_first_commit")):
-		_capture.record_lifecycle(&"first_commit_or_damage", float(run.active_run_elapsed_seconds))
+	var preparation_time := float(scheduler.get("first_attack_preparation_time", -1.0))
+	if preparation_time >= 0.0:
+		_capture.record_lifecycle(&"first_attack_preparation", preparation_time)
 
 
 func _start_boss_overlap_fixture(run: Node, elapsed: float) -> void:

@@ -48,27 +48,66 @@ func _validate_shield_owners() -> void:
 		)
 		if not uses_shield:
 			_expect(
-				not runtime.lower_after_direct_attack()
-					and is_equal_approx(runtime.boss_damage_multiplier(), 1.0),
+				is_equal_approx(runtime.boss_damage_multiplier(), 1.0),
 				"%s has no defensive stall window" % stage_id
 			)
 			continue
 		_expect(
-			runtime.boss_damage_multiplier()
-				== StageDifficulty.boss_shielded_damage_multiplier(stage_index)
+			is_equal_approx(runtime.boss_damage_multiplier(), 1.0)
 				and not payload.has("modules"),
-			"%s starts with its boss-attached defense and no external objective" % stage_id
+			"%s starts with boss-attached directional defense while non-directional damage bypasses it" % stage_id
 		)
-		_expect(runtime.lower_after_direct_attack(), "%s direct attack lowers the shield" % stage_id)
-		_expect(
-			runtime.state() == &"shield_down"
-				and is_equal_approx(runtime.shield_down_remaining, Runtime.SHIELD_DOWN_SECONDS),
-			"%s opens one bounded focus-fire window" % stage_id
-		)
-		runtime.advance(Runtime.SHIELD_DOWN_SECONDS + 0.01)
-		_expect(runtime.state() == &"shield_up", "%s shield returns after its bounded window" % stage_id)
+		if stage_id == &"stage_3":
+			_validate_drydock_direction(runtime)
+		elif stage_id == &"stage_5":
+			_validate_crown_sectors(runtime)
 	var shield_owners := CombatStages.STAGE_IDS.filter(Catalog.uses_shield)
 	_expect(shield_owners == [&"stage_3", &"stage_5"], "only Drydock and Crown own defenses")
+
+
+func _validate_drydock_direction(runtime) -> void:
+	var facing := Vector2.RIGHT
+	_expect(
+		is_equal_approx(runtime.boss_damage_multiplier(Vector2.RIGHT, facing, 100.0), Runtime.BLOCKED_DAMAGE_MULTIPLIER)
+			and is_equal_approx(runtime.boss_damage_multiplier(Vector2.LEFT, facing, 100.0), 1.0),
+		"Drydock intercepts only its body-facing frontal arc"
+	)
+	var edge := Vector2.RIGHT.rotated(Runtime.DRYDOCK_FRONTAL_HALF_ANGLE)
+	var outside := Vector2.RIGHT.rotated(Runtime.DRYDOCK_FRONTAL_HALF_ANGLE + 0.01)
+	_expect(
+		is_equal_approx(runtime.boss_damage_multiplier(edge, facing, 10.0), Runtime.BLOCKED_DAMAGE_MULTIPLIER)
+			and is_equal_approx(runtime.boss_damage_multiplier(outside, facing, 10.0), 1.0),
+		"Drydock frontal edge is inclusive and the rear side stays exposed"
+	)
+	_expect(runtime.consume_counterburst_multiplier() > 1.0, "Drydock blocked damage charges its next counterburst")
+	_expect(StringName(runtime.presentation_snapshot()["shield_kind"]) == &"frontal_intercept", "Drydock publishes its exact renderer-facing defense kind")
+
+
+func _validate_crown_sectors(runtime) -> void:
+	var facing := Vector2.RIGHT
+	var first_direction := Vector2.RIGHT
+	var first_sector := Runtime.crown_sector_for_direction(first_direction, facing)
+	var other_direction := Vector2.RIGHT.rotated(TAU / 3.0)
+	var other_sector := Runtime.crown_sector_for_direction(other_direction, facing)
+	_expect(first_sector != other_sector, "Crown directions map to distinct body-attached sectors")
+	_expect(
+		is_equal_approx(runtime.boss_damage_multiplier(first_direction, facing, Runtime.CROWN_SECTOR_INTEGRITY), Runtime.BLOCKED_DAMAGE_MULTIPLIER)
+			and is_equal_approx(runtime.boss_damage_multiplier(first_direction, facing, 1.0), 1.0)
+			and is_equal_approx(runtime.boss_damage_multiplier(other_direction, facing, 1.0), Runtime.BLOCKED_DAMAGE_MULTIPLIER),
+		"Crown depletion opens only the struck sector"
+	)
+	for direction in [Vector2.RIGHT.rotated(TAU / 3.0), Vector2.RIGHT.rotated(-TAU / 3.0)]:
+		runtime.boss_damage_multiplier(direction, facing, Runtime.CROWN_SECTOR_INTEGRITY)
+	_expect(runtime.state() == &"shield_down", "Crown lowers only after all three sectors are depleted")
+	runtime.advance(Runtime.SHIELD_DOWN_SECONDS + 0.01)
+	_expect(runtime.state() == &"shield_down", "depleted Crown sectors stay open until the next authored phase")
+	var presentation: Dictionary = runtime.presentation_snapshot()
+	_expect(
+		is_zero_approx(float(presentation["sector_0_ratio"]))
+			and is_zero_approx(float(presentation["sector_1_ratio"]))
+			and is_zero_approx(float(presentation["sector_2_ratio"])),
+		"Crown publishes all three depleted sector ratios"
+	)
 
 
 func _validate_source_boundaries() -> void:

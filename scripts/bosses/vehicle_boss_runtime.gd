@@ -141,7 +141,7 @@ func update_active(
 	boss.pattern_tick -= delta
 	var pattern := String(boss.pattern)
 	var kind := Patterns.kind(pattern)
-	var damage := Patterns.damage(pattern, stage_index)
+	var damage := Patterns.damage(pattern, stage_index) * boss.boss_attack_damage_multiplier
 	var escalated := boss.boss_phase >= 2
 	if damage <= 0.0:
 		services.call("_boss_combat_move", boss, delta, Patterns.ACTIVE_MOVE_SCALE)
@@ -196,6 +196,15 @@ func update_active(
 					boss.committed_dir,
 					Patterns.barrage_mode(stage_id)
 				)
+			)
+	elif kind == &"cross_corridors":
+		if boss.pattern_volleys == 0:
+			boss.pattern_volleys = 1
+			services.call(
+				"_append_boss_cross_corridors",
+				boss,
+				pattern,
+				damage
 			)
 	elif kind == &"charge":
 		if boss.pattern_volleys == 0:

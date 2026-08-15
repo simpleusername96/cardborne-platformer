@@ -43,8 +43,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 90,
-		"gameplay manifest declares 87 approved semantic PNGs plus three approved SurfaceDetail SVGs"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 89,
+		"gameplay manifest declares 86 approved semantic PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(
@@ -67,9 +67,8 @@ func _initialize() -> void:
 		if StringName(asset.get("category", &"")) == &"effect":
 			authored_effects.append(asset)
 	_expect(
-		authored_effects.size() == 1
-			and StringName(Dictionary(authored_effects[0]).get("id", &"")) == &"effect/boss_death_explosion",
-		"boss death is the one approved authored effect raster identity"
+		authored_effects.is_empty(),
+		"boss death and all transient effects remain code-native without effect rasters"
 	)
 
 	if not FileAccess.file_exists(EVENT_CATALOG_PATH):

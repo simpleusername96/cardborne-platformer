@@ -201,6 +201,9 @@ func _run() -> void:
 
 func _check_emp_footprint_results(stage: Node) -> void:
 	var center := Vector2(1600.0, 1200.0)
+	var run_build = stage.get("run_build")
+	if not run_build.has(&"emp"):
+		run_build.apply(&"emp")
 	stage.set("player_position", center)
 	stage.call("_clear_enemies")
 	var inside_enemy = stage.call("_make_enemy", {

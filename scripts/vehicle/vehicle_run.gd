@@ -6,6 +6,9 @@ extends Node2D
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const StageUI = preload("res://scripts/ui/vehicle_stage_ui.gd")
 const HudPresenter = preload("res://scripts/ui/vehicle_hud_presenter.gd")
+const ConditionalStatusSnapshot = preload(
+	"res://scripts/ui/vehicle_conditional_status_snapshot.gd"
+)
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const SemanticAssets = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
@@ -54,6 +57,9 @@ const PursuitField = preload("res://scripts/enemies/vehicle_pursuit_field.gd")
 const EnemyMovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
 const EnemyTargetingPolicy = preload(
 	"res://scripts/enemies/vehicle_enemy_targeting_policy.gd"
+)
+const EngagementRelevancePolicy = preload(
+	"res://scripts/enemies/vehicle_engagement_relevance_policy.gd"
 )
 const SecondaryRuntime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
 const ActiveWeaponRuntime = preload("res://scripts/player/vehicle_active_weapon_runtime.gd")
@@ -278,6 +284,7 @@ var _enemy_update_schedule := EnemyUpdateSchedule.new()
 var _enemy_contact_runtime := EnemyContactRuntime.new()
 var _enemy_frame_aggregate_valid := false
 var _enemy_frame_active_mobile_count := 0
+var _enemy_frame_visible_ordinary_count := 0
 var _enemy_frame_attack_families: Array[StringName] = []
 var enemy_grid := SpatialGrid.new()
 var enemies: Array[EnemyState] = enemy_store.live
@@ -321,6 +328,7 @@ var _ordinary_arrival_cue_remaining := PackedFloat32Array()
 var _ordinary_arrival_cue_count := 0
 var _runtime_combat_presentation_frame: Dictionary = {}
 var _runtime_secondary_presentation_frame: Dictionary = {}
+var _runtime_boss_shield_presentation_frame: Dictionary = {}
 var _build_fast_hud_snapshot_callable: Callable
 var _minimap_snapshot_callable: Callable
 var _threat_radar_snapshot_callable: Callable
@@ -1424,6 +1432,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.boss_phase = 1
 	enemy.boss_variant = StringName(spec.get("boss_variant", &"colossus"))
 	enemy.boss_shield_state = StringName(spec.get("boss_shield_state", &""))
+	enemy.boss_attack_damage_multiplier = 1.0
 	enemy.pattern = &""
 	enemy.last_pattern = &""
 	enemy.pattern_timer = 0.0
@@ -1446,6 +1455,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 		enemy.engagement_generation = int(engagement_handle.get("generation", 0))
 		enemy.engagement_gate = Vector2(spec.get("engagement_gate", position))
 		enemy.engagement_expiry = float(spec.get("engagement_expiry", 0.0))
+		enemy.engagement_started_at = float(spec.get("engagement_started_at", encounter_runtime.elapsed))
 		enemy.engagement_active = enemy.engagement_slot >= 0
 	enemy.decision_bucket = absi(enemy.id.hash()) % ORDINARY_DECISION_BUCKET_COUNT
 	return enemy
@@ -1490,6 +1500,9 @@ func _release_enemy_engagement(enemy: EnemyState, outcome: StringName = &"releas
 	enemy.engagement_generation = 0
 	enemy.engagement_gate = Vector2.ZERO
 	enemy.engagement_expiry = 0.0
+	enemy.engagement_started_at = 0.0
+	enemy.engagement_last_player_distance = -1.0
+	enemy.engagement_divergence_started_at = -1.0
 
 
 func _clear_enemies() -> void:
@@ -1547,7 +1560,8 @@ func _update_encounter(delta: float) -> void:
 		enemies,
 		projectile_store.hostile_count(),
 		player_velocity,
-		_visible_ordinary_threat_current
+		_visible_ordinary_threat_current,
+		_enemy_frame_visible_ordinary_count
 	)
 	if _slow_tick_recording_active:
 		_slow_tick_cue_count = Array(requests["cues"]).size()
@@ -1684,12 +1698,16 @@ func _refresh_enemy_frame_aggregate() -> void:
 		Time.get_ticks_usec() if _performance_detail_sample_active else 0
 	)
 	_enemy_frame_active_mobile_count = 0
+	_enemy_frame_visible_ordinary_count = 0
 	_enemy_frame_attack_families.clear()
+	var visible_world := _visible_world_rect(0.0)
 	for enemy in enemies:
 		if not enemy.alive or not enemy.active:
 			continue
 		if enemy.counts_active_cap:
 			_enemy_frame_active_mobile_count += 1
+			if visible_world.has_point(enemy.pos):
+				_enemy_frame_visible_ordinary_count += 1
 		var family := enemy.threat_kind
 		if (
 			family in [&"support", &"boss"]
@@ -1713,6 +1731,8 @@ func _note_enemy_frame_aggregate_added(enemy: EnemyState) -> void:
 		return
 	if enemy.counts_active_cap:
 		_enemy_frame_active_mobile_count += 1
+		if _visible_world_rect(0.0).has_point(enemy.pos):
+			_enemy_frame_visible_ordinary_count += 1
 	var family := enemy.threat_kind
 	if (
 		family not in [&"support", &"boss"]
@@ -3074,6 +3094,12 @@ func _apply_engagement_gap_steering(
 func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
 	## Directional actors publish simulation-owned facing. Controller spin and
 	## nondirectional mine/generator bodies remain explicit renderer exceptions.
+	if (
+		enemy.role == &"stage_boss"
+		and boss_death_runtime.active()
+		and enemy.id == _dying_boss_id
+	):
+		return
 	if enemy.role in [&"controller", &"mine", &"generator"]:
 		return
 	var facing := Vector2.ZERO
@@ -3619,6 +3645,7 @@ func _start_enemy_attack(enemy: EnemyState) -> void:
 	):
 		target = pressure_focus
 	enemy.phase = &"startup"
+	encounter_runtime.record_attack_preparation()
 	enemy.hit_committed = false
 	enemy.committed_dir = (target - enemy.pos).normalized()
 	enemy.committed_target = target
@@ -3950,7 +3977,20 @@ func _desired_enemy_velocity(
 	)
 	var engagement_focus := false
 	if enemy.engagement_active and enemy.phase == &"move" and not recovering:
-		if enemy.pos.distance_to(enemy.engagement_gate) <= 96.0:
+		var relevance := EngagementRelevancePolicy.sample(
+			enemy.pos,
+			player_position,
+			enemy.engagement_gate,
+			enemy.engagement_last_player_distance,
+			enemy.engagement_divergence_started_at,
+			encounter_runtime.elapsed,
+			enemy.engagement_started_at
+		)
+		enemy.engagement_last_player_distance = float(relevance["player_distance"])
+		enemy.engagement_divergence_started_at = float(relevance["divergence_started_at"])
+		if bool(relevance["release"]):
+			_release_enemy_engagement(enemy, StringName(relevance["reason"]))
+		elif enemy.pos.distance_to(enemy.engagement_gate) <= 96.0:
 			_release_enemy_engagement(enemy, &"complete")
 		elif encounter_runtime.elapsed >= enemy.engagement_expiry:
 			_release_enemy_engagement(enemy, &"expire")
@@ -4310,7 +4350,8 @@ func _spawn_hostile_projectile(
 	affinity: StringName = AttackContract.KINETIC,
 	final_damage: bool = false,
 	wall_piercing: bool = false,
-	threat_tier: StringName = AttackContract.THREAT_ORDINARY
+	threat_tier: StringName = AttackContract.THREAT_ORDINARY,
+	distance_growth_kind: StringName = &""
 ) -> void:
 	var normalized_affinity := AttackContract.normalize_affinity(affinity)
 	projectile_store.add_hostile({
@@ -4334,6 +4375,7 @@ func _spawn_hostile_projectile(
 		"affinity": normalized_affinity,
 		"threat_tier": AttackContract.normalize_threat_tier(threat_tier),
 		"condition_mask": 0,
+		"distance_growth_kind":distance_growth_kind,
 	}, final_damage)
 
 
@@ -4385,6 +4427,9 @@ func _update_projectile_buffer(
 				var current := projectile.velocity.normalized()
 				var steered := current.lerp(desired, clampf(simulation_delta * 4.2, 0.0, 1.0)).normalized()
 				projectile.velocity = steered * projectile.velocity.length()
+		projectile.advance_distance_growth(
+			projectile.velocity.length() * simulation_delta
+		)
 		var to := from + projectile.velocity * simulation_delta
 		var radius := projectile.radius
 		if mystery_device_runtime.first_damageable_segment_hit(
@@ -4791,7 +4836,10 @@ func _update_denied_zones(delta: float) -> void:
 			denied_zones.remove_at(index)
 			continue
 		if damage > 0.0 and float(zone["tick"]) <= 0.0:
+			if bool(zone.get("single_hit", false)) and bool(zone.get("hit_committed", false)):
+				continue
 			zone["tick"] = 0.62
+			zone["hit_committed"] = true
 			_damage_player(
 				damage,
 				String(zone["source"]),
@@ -4907,7 +4955,16 @@ func _damage_enemy(
 		multiplier *= 1.50
 	var boss_damage_multiplier := 1.0
 	if role == &"stage_boss" and not final_effective:
-		boss_damage_multiplier = boss_shield_runtime.boss_damage_multiplier()
+		var hit_direction := (
+			(player_position - enemy.pos).normalized()
+			if player_owned and (damage_flags & OutgoingDamagePolicy.DAMAGE_DIRECT) != 0
+			else Vector2.ZERO
+		)
+		boss_damage_multiplier = boss_shield_runtime.boss_damage_multiplier(
+			hit_direction,
+			enemy.presentation_facing,
+			amount
+		)
 		multiplier *= boss_damage_multiplier
 	var health_before := enemy.health
 	if (
@@ -5165,7 +5222,8 @@ func _begin_boss_destruction(boss: EnemyState, source: String) -> void:
 		owned_ids.size()
 	)
 	_play_sound(&"destroy_priority", 1.05)
-	camera_shake = maxf(camera_shake, 16.0)
+	if not _reduced_motion_enabled():
+		camera_shake = maxf(camera_shake, 16.0)
 
 
 func _advance_boss_destruction(delta: float) -> void:
@@ -5899,6 +5957,11 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 
 
 func _boss_begin_active(boss: EnemyState) -> void:
+	boss.boss_attack_damage_multiplier = (
+		boss_shield_runtime.consume_counterburst_multiplier()
+		if String(boss.pattern) == "drydock_counterburst"
+		else 1.0
+	)
 	boss_runtime.begin_active(boss, self)
 
 
@@ -5942,6 +6005,44 @@ func _spawn_boss_broad_barrage(boss: EnemyState, rows: Array[Dictionary]) -> voi
 		scheduled["owner"] = "boss_barrage:%s:%d" % [boss.id, int(row.get("row", 0))]
 		_pending_boss_barrage_rows.append(scheduled)
 	_advance_pending_boss_barrage(0.0)
+
+
+func _append_boss_cross_corridors(
+	boss: EnemyState,
+	pattern: String,
+	damage: float
+) -> void:
+	if boss == null or not boss.alive:
+		return
+	var half_width := BossPatterns.width(pattern, current_stage_index) * 0.5
+	for corridor_index in 2:
+		var offset := -PI * 0.25 if corridor_index == 0 else PI * 0.25
+		var axis := Vector2(boss.committed_dir).rotated(offset).normalized()
+		var from := _runtime_attack_path_end(
+			boss.pos, -axis, BossPatterns.BEAM_RANGE, half_width
+		)
+		var to := _runtime_attack_path_end(
+			boss.pos, axis, BossPatterns.BEAM_RANGE, half_width
+		)
+		denied_zones.append({
+			"id":"%s_cross_%d" % [boss.id, corridor_index],
+			"shape":&"corridor",
+			"from":from,
+			"to":to,
+			"width":half_width * 2.0,
+			"warning":0.0,
+			"warning_total":BossPatterns.startup_seconds(pattern),
+			"duration":BossPatterns.active_seconds(pattern),
+			"tick":0.0,
+			"damage":damage,
+			"source":pattern,
+			"owner_kind":&"stage_boss",
+			"affinity":BossPatterns.affinity(pattern),
+			"commit_mode":&"committed",
+			"final_damage":true,
+			"single_hit":true,
+			"hit_committed":false,
+		})
 
 
 func _advance_pending_boss_barrage(delta: float) -> void:
@@ -6035,7 +6136,8 @@ func _spawn_boss_long_banks(event: Dictionary) -> void:
 			_spawn_hostile_projectile(
 				position, axis, float(event["damage"]), 520.0,
 				String(event["pattern"]), StringName(event["affinity"]), true, false,
-				AttackContract.THREAT_BOSS
+				AttackContract.THREAT_BOSS,
+				ProjectileState.SIEGE_GROWTH_KIND
 			)
 
 
@@ -6082,7 +6184,7 @@ func _append_boss_wedge_ring(event: Dictionary) -> void:
 		safe_axis = Vector2.RIGHT
 	denied_zones.append({
 		"id":event["id"], "shape":&"wedge_ring", "pos":origin,
-		"radius":260.0, "width":62.0, "safe_axis":safe_axis,
+		"radius":float(event["radius"]), "width":62.0, "safe_axis":safe_axis,
 		"safe_half_angle":0.48, "warning":float(event["startup"]),
 		"warning_total":float(event["startup"]), "duration":maxf(0.72, float(event["duration"])),
 		"tick":0.0, "damage":float(event["damage"]), "source":String(event["pattern"]),
@@ -6303,10 +6405,7 @@ func _show_pending_boss_state_hint() -> void:
 func _on_boss_direct_attack_complete(boss: EnemyState) -> void:
 	if boss == null or not boss.alive:
 		return
-	if boss_shield_runtime.lower_after_direct_attack():
-		boss.boss_shield_state = boss_shield_runtime.state()
-		_show_pending_boss_state_hint()
-		_play_sound(&"impact", 1.04)
+	boss.boss_attack_damage_multiplier = 1.0
 
 
 func _complete_stage(
@@ -6429,6 +6528,7 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 		"pacing":{
 			"active_seconds":maxf(0.0, active_run_elapsed_seconds - stage_started_at_active_run_seconds),
 			"visible_gap_count":_diagnostic_visible_gap_event_count,
+			"first_attack_preparation_seconds":encounter_runtime.first_attack_preparation_time(),
 		},
 		"diagnostics":_session_diagnostics.summary(),
 	}
@@ -6701,6 +6801,7 @@ func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 	snapshot["reduced_motion"] = _reduced_motion_enabled()
 	snapshot["stage_number"] = int(stage_profile["number"])
 	snapshot["stage_total"] = StageCatalog.STAGE_IDS.size()
+	snapshot["stage_quota_remaining"] = maxi(0, stage_flow.quota - stage_flow.defeats)
 	snapshot["cumulative_defeated"] = stats_enemies_defeated
 	snapshot["dash_available"] = player_dash_cooldown <= 0.0
 	snapshot["dash_remaining"] = maxf(0.0, player_dash_cooldown)
@@ -6711,6 +6812,27 @@ func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 	snapshot["skill_available"] = bool(active_weapon["available"])
 	snapshot["skill_remaining"] = float(active_weapon["remaining"])
 	snapshot["active_weapon_id"] = StringName(active_weapon["weapon_id"])
+	var combo := primary_combo_runtime.snapshot()
+	var max_hull := maxf(1.0, _player_max_health())
+	snapshot["conditional_statuses"] = ConditionalStatusSnapshot.build(
+		run_build.level_of(&"overflow_barrier"),
+		player_barrier_strength,
+		player_barrier_timer,
+		run_build.level_of(&"dash_overdrive"),
+		dash_upgrade_runtime.overdrive_remaining,
+		run_build.level_of(&"braced_fire"),
+		int(combo["braced_active_segments"]),
+		float(combo["braced_seconds"]),
+		run_build.level_of(&"hit_chain"),
+		int(combo["hit_stacks"]),
+		run_build.level_of(&"miss_compensation"),
+		int(combo["miss_stacks"]),
+		run_build.level_of(&"last_stand_amplifier"),
+		OutgoingDamagePolicy.crisis_bonus(
+			run_build.level_of(&"last_stand_amplifier"),
+			player_health / max_hull
+		)
+	)
 	return snapshot
 
 
@@ -6928,11 +7050,13 @@ func _append_minimap_static_geometry(snapshot: Dictionary) -> void:
 
 func _combat_presentation_snapshot() -> Dictionary:
 	var mystery_devices: Array[Dictionary] = []
+	var boss_shield_presentation := boss_shield_runtime.presentation_snapshot()
 	return _fill_combat_presentation_snapshot(
 		{},
 		player_protection_sources.duplicate(),
 		secondary_runtime.snapshot(run_build),
-		mystery_devices
+		mystery_devices,
+		boss_shield_presentation
 	)
 
 
@@ -6941,11 +7065,15 @@ func _runtime_combat_presentation_snapshot() -> Dictionary:
 		_runtime_secondary_presentation_frame,
 		run_build
 	)
+	boss_shield_runtime.fill_presentation_snapshot(
+		_runtime_boss_shield_presentation_frame
+	)
 	return _fill_combat_presentation_snapshot(
 		_runtime_combat_presentation_frame,
 		player_protection_sources,
 		_runtime_secondary_presentation_frame,
-		_mystery_device_snapshot_buffer
+		_mystery_device_snapshot_buffer,
+		_runtime_boss_shield_presentation_frame
 	)
 
 
@@ -6953,7 +7081,8 @@ func _fill_combat_presentation_snapshot(
 	snapshot: Dictionary,
 	protection_sources: Dictionary,
 	secondary: Dictionary,
-	mystery_devices: Array[Dictionary]
+	mystery_devices: Array[Dictionary],
+	boss_shield_presentation: Dictionary
 ) -> Dictionary:
 	var cursor_position := player_position + player_aim_direction * 230.0
 	var mouse_direction := get_global_mouse_position() - player_position
@@ -7001,6 +7130,7 @@ func _fill_combat_presentation_snapshot(
 	# combat truth stays disabled by the death runtime above.
 	snapshot["boss_destruction"] = boss_death_runtime.presentation()
 	snapshot["dying_boss_id"] = _dying_boss_id
+	snapshot["boss_shield"] = boss_shield_presentation
 	snapshot["cursor_position"] = cursor_position
 	return snapshot
 
@@ -7113,6 +7243,22 @@ func _update_threat_contacts(delta: float) -> void:
 			_append_runtime_threat_contact(
 				offset, CombatCuePolicy.CONTACT_NEARBY_ENEMY, 0.0
 			)
+	for projectile in hostile_projectiles:
+		if projectile.distance_growth_kind != ProjectileState.SIEGE_GROWTH_KIND:
+			continue
+		var projectile_offset := projectile.pos - player_position
+		if (
+			visible_world.grow(projectile.radius).has_point(projectile.pos)
+			or projectile_offset.length_squared()
+				> _runtime_threat_scan_distance * _runtime_threat_scan_distance
+			or projectile.velocity.normalized().dot(-projectile_offset.normalized()) < 0.30
+		):
+			continue
+		_append_runtime_threat_contact(
+			projectile_offset,
+			CombatCuePolicy.CONTACT_INCOMING_ATTACK,
+			projectile.distance_growth_ratio
+		)
 	if stage_flow.state == StageFlow.State.BOSS_WARNING:
 		_append_runtime_threat_contact(
 			boss_arrival_position - player_position,

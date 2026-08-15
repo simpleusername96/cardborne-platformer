@@ -17,6 +17,7 @@ const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
 
 const CUE_LEAD := 0.9
 const WINDOW_GAP := 1.20
+const REFILL_WINDOW_GAP := 0.35
 const RETRY_INTERVAL := 0.25
 const RECENT_BIRTH_SECONDS := 2.0
 const METRIC_SAMPLE_INTERVAL := 0.10
@@ -46,6 +47,7 @@ var _reserved_arrival_slots := 0
 var _last_cue_at := -INF
 var _first_cue_time := -1.0
 var _first_spawn_time := -1.0
+var _first_attack_preparation_time := -1.0
 var _first_damage_time := -1.0
 var _first_reward_time := -1.0
 var _active_count_samples: Array[int] = []
@@ -126,6 +128,7 @@ func configure(
 	_last_cue_at = -INF
 	_first_cue_time = -1.0
 	_first_spawn_time = -1.0
+	_first_attack_preparation_time = -1.0
 	_first_damage_time = -1.0
 	_first_reward_time = -1.0
 	_active_count_samples.clear()
@@ -319,7 +322,8 @@ func tick(
 	active_enemies: Array = [],
 	hostile_projectile_count: int = 0,
 	player_velocity: Vector2 = Vector2.ZERO,
-	visible_ordinary_threat: bool = true
+	visible_ordinary_threat: bool = true,
+	visible_ordinary_count: int = -1
 ) -> Dictionary:
 	var step := maxf(0.0, delta)
 	_pressure_scan_happened = false
@@ -351,7 +355,8 @@ func tick(
 			player_position,
 			player_velocity,
 			visible_world,
-			cues
+			cues,
+			active_mobile_count if visible_ordinary_count < 0 else visible_ordinary_count
 		)
 		_complete_inflight_packet_if_ready()
 	else:
@@ -371,6 +376,20 @@ func active_cap() -> int:
 
 func materialized_active_cap() -> int:
 	return RunDifficulty.scaled_active_cap(Director.stage_materialized_active_cap(_stage_index), difficulty)
+
+
+func refill_floor() -> int:
+	## Refill is reserve-backed and never creates unauthored identities. The
+	## scheduler keeps admitting ready windows below this stage pressure floor.
+	return mini(
+		materialized_active_cap(),
+		RunDifficulty.scaled_active_cap(Director.stage_refill_floor(_stage_index), difficulty)
+	)
+
+
+func admission_gap_seconds(active_mobile_count: int, visible_ordinary_count: int = -1) -> float:
+	var observed_visible := active_mobile_count if visible_ordinary_count < 0 else visible_ordinary_count
+	return REFILL_WINDOW_GAP if observed_visible < refill_floor() else WINDOW_GAP
 
 
 func authored_pressure_cap() -> int:
@@ -401,6 +420,16 @@ func record_player_damage(source_family: StringName = &"unknown") -> void:
 	if _first_damage_time < 0.0:
 		_first_damage_time = elapsed
 	_damage_source_families[source_family] = int(_damage_source_families.get(source_family, 0)) + 1
+
+
+func record_attack_preparation() -> void:
+	## The ordinary attack owner calls this when startup commits its target and geometry.
+	if _first_attack_preparation_time < 0.0:
+		_first_attack_preparation_time = elapsed
+
+
+func first_attack_preparation_time() -> float:
+	return _first_attack_preparation_time
 
 
 func record_reward() -> void:
@@ -446,6 +475,7 @@ func debug_snapshot() -> Dictionary:
 		"events":_events.duplicate(true),
 		"first_cue_time":_first_cue_time,
 		"first_spawn_time":_first_spawn_time,
+		"first_attack_preparation_time":_first_attack_preparation_time,
 		"first_damage_time":_first_damage_time,
 		"first_reward_time":_first_reward_time,
 		"active_count_p90":_active_count_percentile(0.90),
@@ -507,6 +537,7 @@ func fill_current_pressure(output: Dictionary) -> void:
 	output["ordinary_active"] = active
 	output["ordinary_authored_pressure_cap"] = authored_pressure_cap()
 	output["ordinary_materialized_cap"] = materialized_active_cap()
+	output["ordinary_refill_floor"] = refill_floor()
 	output["ordinary_virtual_reserve"] = _authored_reserve_count()
 	output["ordinary_quota_canceled_reserve"] = _quota_canceled_reserve
 	output["ordinary_reserved_arrival_slots"] = _reserved_arrival_slots
@@ -743,7 +774,8 @@ func _admit_due_window(
 	player_position: Vector2,
 	player_velocity: Vector2,
 	visible_world: Rect2,
-	cues: Array[Dictionary]
+	cues: Array[Dictionary],
+	visible_ordinary_count: int = -1
 ) -> void:
 	if _window_queue.is_empty():
 		return
@@ -752,7 +784,8 @@ func _admit_due_window(
 		return
 	if not _spawn_queue.is_empty() and float(_spawn_queue[0]["nominal_due"]) <= elapsed + 0.0001:
 		return
-	if elapsed + 0.0001 < _last_cue_at + WINDOW_GAP:
+	var cue_gap := admission_gap_seconds(active_mobile_count, visible_ordinary_count)
+	if elapsed + 0.0001 < _last_cue_at + cue_gap:
 		return
 	var packet: Dictionary = request["packet"]
 	var requested_window_units := _window_unit_count(request)
@@ -929,6 +962,7 @@ func _attach_engagement_reservation(
 	spec["engagement_expected_time"] = float(reservation["expected_time"])
 	spec["engagement_expiry"] = float(reservation["expiry_time"])
 	spec["engagement_sector"] = int(reservation["sector"])
+	spec["engagement_started_at"] = birth_time
 
 
 func confirm_engagement(handle: Dictionary) -> bool:

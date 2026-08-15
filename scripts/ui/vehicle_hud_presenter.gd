@@ -15,10 +15,11 @@ const FAST_CLUSTERS := [
 		"health", "max_health", "level", "experience",
 		"experience_required", "experience_complete", "reduced_motion",
 	],
-	["stage_number", "stage_total", "cumulative_defeated"],
+	["stage_number", "stage_total", "stage_quota_remaining", "cumulative_defeated"],
 	[
 		"dash_available", "dash_remaining",
 		"skill_owned", "skill_available", "skill_remaining", "active_weapon_id",
+		"conditional_statuses",
 	],
 ]
 
@@ -82,6 +83,8 @@ func advance(
 
 func _cluster_changed(snapshot: Dictionary, keys: Array) -> bool:
 	for key in keys:
+		if not snapshot.has(key) and not _last_fast_snapshot.has(key):
+			continue
 		if (
 			not snapshot.has(key)
 			or not _last_fast_snapshot.has(key)
@@ -98,5 +101,7 @@ func _publish_cluster(snapshot: Dictionary, keys: Array) -> void:
 		var value: Variant = snapshot[key]
 		_update_frame[key] = value
 		_last_fast_snapshot[key] = (
-			Dictionary(value).duplicate(true) if value is Dictionary else value
+			Dictionary(value).duplicate(true)
+			if value is Dictionary
+			else (Array(value).duplicate(true) if value is Array else value)
 		)

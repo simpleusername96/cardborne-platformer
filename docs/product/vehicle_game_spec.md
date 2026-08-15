@@ -283,6 +283,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    owns an attack. Drydock intercepts from a body-attached frontal arc; Crown has three
    body-attached defensive sectors. Their collision truth follows those directions. No
    boss is defense-only and no global shield-down rule exists.
+   Drydock blocks 90% inside its body-facing frontal 110-degree arc and converts blocked
+   damage into its counterburst. Crown owns three independent 120-degree sectors; a
+   depleted sector remains open until the next authored phase.
 8. High-threat attacks deal 60-85 damage once per execution, warn for at least 1.30
    seconds, use collision-matching committed geometry, and leave an escape corridor at
    least player diameter + 80 units. Pressure damage is 10-18 and normal damage is 22-38.
@@ -290,9 +293,14 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 9. Boss base health is 5200. Health scales are
    `1.00/1.12/1.25/1.39/1.54/1.70/1.87/2.05`; damage scales
    `1.00/1.06/1.12/1.18/1.24/1.31/1.38/1.46`; move speeds
-   `145/150/155/160/166/172/178/184`; cadence scales
+   `181.25/187.5/193.75/200/207.5/215/222.5/230`; cadence scales
    `1.00/.97/.94/.91/.88/.85/.82/.79`; coverage scales
    `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28`.
+   Boss projectile speed uses `1.40x`, beam reach `1.45x`, committed charge speed
+   `1.30x`, and circular or wedge radius `1.25x`; warning time is never reduced.
+   Archive Cross commits two clipped perpendicular X corridors. Siege Battery alone
+   uses ammunition that arms at 360 traveled units and caps at 880, interpolating speed
+   `0.75x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`.
 10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
     immediately. The boss body receives a restrained hit tint, dim/desaturation, and
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned

@@ -209,13 +209,13 @@ Source owners: visual profile, mystery-device runtime, gameplay presentation sna
 combat renderer and shaders, HUD presenter/component, localization, focused renderer/HUD/
 facility validators
 
-- [ ] **2.1** Apply the hostile-area grammar to every damaging area shape.
+- [x] **2.1** Apply the hostile-area grammar to every damaging area shape.
   - Change: carry owner through descriptors; render circles, wedges, shockwaves, and
     corridors with danger-red full footprint, one thin near-black boundary, and four inward
     notches where the shape permits. Startup remains lighter than active.
   - Accept: renderer fixtures distinguish hostile footprints from player and neutral areas
     in color and grayscale and preserve exact dimensions.
-- [ ] **2.2** Expand and recolor facilities with effect-radius countdowns.
+- [x] **2.2** Expand and recolor facilities with effect-radius countdowns.
   - Change: radii become `1260/1260/1440/1080/1260`; Repair/Barrier restore `1/6` maximum
     hull per second, Gravity multiplier becomes `0.70`, Cryo `0.82`, Weakpoint `1.15`;
     same-kind effects choose the strongest and at most two distinct facility modifiers
@@ -224,13 +224,13 @@ facility validators
     clockwise to `active_ratio`; no symbol countdown remains.
   - Accept: facility/runtime/renderer validators assert exact values, overlap selection,
     role colors, full-area fill, and large-radius countdown geometry.
-- [ ] **2.3** Make pass-through facility hits visible.
+- [x] **2.3** Make pass-through facility hits visible.
   - Change: publish accepted hit position/direction/role and use the fixed effect store for
     one short local core flash/contour compression; the projectile continues and cannot hit
     the same facility twice.
   - Accept: both player and hostile projectiles produce one bounded receipt, preserve
     pass-through, and allocate no unbounded node/effect state.
-- [ ] **2.4** Extend the existing top-left cluster into one conditional-status row.
+- [x] **2.4** Extend the existing top-left cluster into one conditional-status row.
   - Change: gameplay publishes ordered meaningful statuses for Overflow Barrier, Dash
     Overdrive, Braced Fire, Hit Chain or Miss Compensation, and Last Stand. The HUD appends
     icon plus compact value to the existing progress/defeats/dash/active row. Full names and
@@ -258,19 +258,19 @@ Preconditions:
 Source owners: engagement relevance policy/director, enemy movement orchestration,
 encounter director/runtime, stage data, pacing diagnostics and validators
 
-- [ ] **3.1** Release stale engagement gates without erasing role movement.
+- [x] **3.1** Release stale engagement gates without erasing role movement.
   - Change: after at least `0.80s`, release a gate when player distance has increased for
     `0.80s` and gate/current-player directions have dot `< -0.20`, or the gate path adds
     more than `300` units versus immediate role policy. Never retarget or teleport.
   - Accept: deterministic fixtures cover relevant completion, both release conditions,
     pursuit, standoff, recovery, wall reposition, and no speed/teleport violation.
-- [ ] **3.2** Admit and replenish exact 72-count ordinary pressure.
+- [x] **3.2** Admit and replenish exact 72-count ordinary pressure.
   - Change: set caps `32/44/56/64/72/72/72/72`; continuously expedite eligible reserve
     packets when engaged-visible count is below `12/16/20/24/28/32/36/40`; seal admissions
     at boss warning; keep current attack-commit and denial budgets.
   - Accept: deterministic pacing/replay fixtures reach each cap/floor when authored reserve
     exists, never exceed 72, preserve reserve work, and keep first-visible/no-gap contracts.
-- [ ] **3.3** Record first meaningful attack preparation.
+- [x] **3.3** Record first meaningful attack preparation.
   - Change: publish the first committed startup/cue time through pacing snapshots and
     reports without scanning enemies from UI.
   - Accept: all eight stages prepare a meaningful attack within 8.0 seconds in the locked
@@ -425,10 +425,12 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 2.
-- Next task: 2.1 validate hostile-area ownership grammar and integrate the facility/HUD branch.
-- Last completed gate: Phase 1; terminal reports share frozen build rows, boss `CLEARED`
-  requires completed cleanup, and cleanup grants no XP, group reward, or ordinary quota.
+- Current phase: Phase 4.
+- Next task: 4.1 finish directional shield snapshots/rendering and deterministic edge tests.
+- Last completed gate: Phase 3; stale and counterproductive gates release without
+  retargeting or teleporting, stage caps reach exactly 72, reserve admission accelerates
+  from the engaged-visible floor while the materialized cap remains authoritative, and
+  first attack preparation is retained in pacing evidence and reports.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 

@@ -10,9 +10,10 @@ const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
 const EXPECTED_MOBILE_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630]
 const EXPECTED_QUOTAS := [40, 44, 48, 52, 56, 60, 64, 68]
-const EXPECTED_HARD_MATERIALIZED_CAPS := [6, 40, 48, 48, 48]
+const EXPECTED_HARD_MATERIALIZED_CAPS := [6, 44, 56, 64, 72]
 const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [6, 124, 172, 224, 276]
-const EXPECTED_STAGE_MATERIALIZED_CAPS := [18, 32, 40, 40, 48, 48, 48, 48]
+const EXPECTED_STAGE_MATERIALIZED_CAPS := [32, 44, 56, 64, 72, 72, 72, 72]
+const EXPECTED_STAGE_REFILL_FLOORS := [12, 16, 20, 24, 28, 32, 36, 40]
 const EXPECTED_STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0]
 const EXPECTED_STAGE_RANGED_CAPS := [3, 3, 3, 3, 3, 4, 4, 4]
 const EXPECTED_STAGE_DENIAL_CAPS := [2, 2, 2, 2, 2, 3, 3, 3]
@@ -57,6 +58,7 @@ func _initialize() -> void:
 		_validate_opening_runtime(stage_id, stage_index, packets, tactical)
 	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_MATERIALIZED_CAPS, EXPECTED_HARD_AUTHORED_PRESSURE_CAPS)
 	_expect(Director.STAGE_MATERIALIZED_ACTIVE_CAPS == EXPECTED_STAGE_MATERIALIZED_CAPS, "stage materialized caps remain independent from encounter beats")
+	_expect(Director.STAGE_REFILL_FLOORS == EXPECTED_STAGE_REFILL_FLOORS, "stage refill floors preserve a rising reserve-backed pressure baseline")
 	_expect(Director.STAGE_THREAT_BUDGETS == EXPECTED_STAGE_THREAT_BUDGETS, "stage threat budgets remain independent from encounter beats")
 	_expect(Director.STAGE_MAX_RANGED_COMMITS == EXPECTED_STAGE_RANGED_CAPS, "late-stage ranged commit ceilings are explicit")
 	_expect(Director.STAGE_MAX_DENIAL_COMMITS == EXPECTED_STAGE_DENIAL_CAPS, "late-stage denial commit ceilings are explicit")
@@ -115,6 +117,12 @@ func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: 
 		stage_index
 	)
 	_expect(runtime.materialized_active_cap() == EXPECTED_STAGE_MATERIALIZED_CAPS[stage_index], "%s applies its stage-owned materialized cap" % stage_id)
+	_expect(runtime.refill_floor() == EXPECTED_STAGE_REFILL_FLOORS[stage_index], "%s applies its stage-owned refill floor" % stage_id)
+	_expect(
+		is_equal_approx(runtime.admission_gap_seconds(runtime.refill_floor() + 5, 0), Runtime.REFILL_WINDOW_GAP)
+			and is_equal_approx(runtime.admission_gap_seconds(runtime.refill_floor() + 5, runtime.refill_floor()), Runtime.WINDOW_GAP),
+		"%s accelerates reserve admission from engaged-visible count without exceeding the active cap" % stage_id
+	)
 	_expect(is_equal_approx(runtime.threat_budget(), EXPECTED_STAGE_THREAT_BUDGETS[stage_index]), "%s applies its stage-owned threat budget" % stage_id)
 	runtime.current_beat = 4
 	_expect(runtime.ranged_commit_cap() == EXPECTED_STAGE_RANGED_CAPS[stage_index], "%s applies its stage ranged ceiling" % stage_id)
@@ -132,6 +140,9 @@ func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: 
 		var first_role := StringName(first["spawns"][0]["role"])
 		_expect(not EnemyArchetypes.fires_projectiles(first_role) and StringName(EnemyArchetypes.definition(first_role)["threat_kind"]) not in [&"denial", &"support"], "%s begins with a low-risk pursuit identity" % stage_id)
 	_expect(float(runtime.debug_snapshot()["first_spawn_time"]) <= 0.911, "%s begins the offscreen opening births within the configured 0.9-second lead" % stage_id)
+	_expect(runtime.first_attack_preparation_time() < 0.0, "%s has no synthetic preparation before gameplay commits startup" % stage_id)
+	runtime.record_attack_preparation()
+	_expect(runtime.first_attack_preparation_time() <= 0.911, "%s records the first meaningful attack preparation on encounter time" % stage_id)
 	var opening_spawns := Array(first["spawns"]).size()
 	for _opening_step in 20:
 		opening_spawns += Array(runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, visible_world)["spawns"]).size()

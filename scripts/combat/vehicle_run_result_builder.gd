@@ -128,16 +128,19 @@ static func _boss_rows(records: Array) -> Array[Dictionary]:
 static func _pacing_rows(records: Array, defeats: Array[Dictionary]) -> Array[Dictionary]:
 	var active_seconds := 0.0
 	var visible_gaps := 0
+	var slowest_first_preparation := -1.0
 	var tactics := 0
 	for record_variant in records:
 		var metrics := Dictionary(Dictionary(record_variant).get("pacing_metrics", {}))
 		active_seconds += maxf(0.0, float(metrics.get("active_seconds", 0.0)))
 		visible_gaps += maxi(0, int(metrics.get("visible_gap_count", 0)))
+		slowest_first_preparation = maxf(slowest_first_preparation, float(metrics.get("first_attack_preparation_seconds", -1.0)))
 		tactics += maxi(0, int(metrics.get("tactic_count", 0)))
 	return [
 		{"title_key":"REPORT_ROW_ORDINARY_DEFEATS", "count":_total_defeats(defeats)},
 		{"title_key":"REPORT_ROW_STAGE_PACING_TIME", "value":_format_duration(active_seconds)},
 		{"title_key":"REPORT_ROW_VISIBLE_GAPS", "count":visible_gaps},
+		{"title_key":"REPORT_ROW_FIRST_ATTACK_PREPARATION", "value":"%.2fs" % slowest_first_preparation if slowest_first_preparation >= 0.0 else "--"},
 		{"title_key":"REPORT_ROW_ENGAGEMENT_TACTICS", "count":tactics},
 	]
 

@@ -798,10 +798,11 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 			and not hud.has("target")
 			and int(hud["stage_number"]) == run.current_stage_index + 1
 			and int(hud["stage_total"]) == Catalog.STAGE_IDS.size()
+			and int(hud["stage_quota_remaining"]) >= 0
 			and int(hud["cumulative_defeated"]) == run.stats_enemies_defeated
 			and not hud.has("defeated")
 			and not hud.has("quota"),
-		"HUD publishes stage plus cumulative defeats and no quota or edge health"
+		"HUD publishes stage progress, remaining quota, and cumulative defeats without edge health"
 	)
 	var minimap_markers := Array(hud["minimap"]["markers"])
 	var boss_markers := minimap_markers.filter(
@@ -839,9 +840,10 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 	ui.update_hud(hud)
 	_expect(
 		ui._hud._status_cluster.visible
-			and ui._hud._status_item(&"stage")._value_label.text == "%d / %d" % [
+			and ui._hud._status_item(&"stage")._value_label.text == tr("HUD_BOSS_PROGRESS_VALUE") % [
 				run.current_stage_index + 1,
 				Catalog.STAGE_IDS.size(),
+				int(hud["stage_quota_remaining"]),
 			],
 		"panel-free semantic stage item remains visible during the boss encounter"
 	)
@@ -1013,7 +1015,11 @@ func _check_boss_autonomous_shapes(run) -> void:
 			elif kind == &"wedge_rings":
 				_expect(
 					run.denied_zones.size() == 1
-						and StringName(run.denied_zones[0]["shape"]) == &"wedge_ring",
+						and StringName(run.denied_zones[0]["shape"]) == &"wedge_ring"
+						and is_equal_approx(
+							float(run.denied_zones[0]["radius"]),
+							BossPatterns.radius(pattern, stage_index)
+						),
 					"%s creates one warned ring with an explicit safe wedge" % pattern
 				)
 			else:

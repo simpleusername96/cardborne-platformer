@@ -79,6 +79,7 @@ static func build(
 		"pacing_metrics":{
 			"active_seconds":float(pacing.get("active_seconds", 0.0)),
 			"visible_gap_count":maxi(0, int(pacing.get("visible_gap_count", 0))),
+			"first_attack_preparation_seconds":float(pacing.get("first_attack_preparation_seconds", -1.0)),
 			"tactic_count":Dictionary(telemetry.get("tactics", {})).size(),
 		},
 		"diagnostic_metrics":diagnostics.duplicate(true),
@@ -131,6 +132,8 @@ static func _pacing_rows(pacing: Dictionary, defeat_rows: Array[Dictionary], tac
 	var rows: Array[Dictionary] = [{"title_key":"REPORT_ROW_ORDINARY_DEFEATS", "count":_sum_defeats(defeat_rows)}]
 	rows.append({"title_key":"REPORT_ROW_STAGE_PACING_TIME", "value":_format_duration(float(pacing.get("active_seconds", 0.0)))})
 	rows.append({"title_key":"REPORT_ROW_VISIBLE_GAPS", "count":maxi(0, int(pacing.get("visible_gap_count", 0)))})
+	var preparation := float(pacing.get("first_attack_preparation_seconds", -1.0))
+	rows.append({"title_key":"REPORT_ROW_FIRST_ATTACK_PREPARATION", "value":"%.2fs" % preparation if preparation >= 0.0 else "--"})
 	rows.append({"title_key":"REPORT_ROW_ENGAGEMENT_TACTICS", "count":tactics.size()})
 	return rows
 

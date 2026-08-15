@@ -318,10 +318,29 @@ class StatusGlyphItem:
 			UiGlyphCatalog.draw_action_glyph(
 				self, glyph_id, center, _glyph_size * 0.5, palette
 			)
+		elif glyph_family == &"conditional":
+			_draw_conditional_glyph(center, _glyph_size * 0.5, state_color)
 		else:
 			UiGlyphCatalog.draw_status_glyph(
 				self, glyph_id, center, _glyph_size * 0.5, palette
 			)
+
+	func _draw_conditional_glyph(center: Vector2, glyph_radius: float, color: Color) -> void:
+		match glyph_id:
+			&"overflow_barrier":
+				draw_arc(center, glyph_radius * 0.72, 0.0, TAU, 16, color, 2.0)
+				draw_line(center + Vector2(0.0, -glyph_radius * 0.65), center + Vector2(0.0, glyph_radius * 0.65), color, 2.0)
+			&"dash_overdrive":
+				draw_colored_polygon(PackedVector2Array([center + Vector2(-glyph_radius * 0.72, -glyph_radius * 0.18), center + Vector2(0.05, -glyph_radius * 0.18), center + Vector2(-0.14 * glyph_radius, glyph_radius * 0.72), center + Vector2(glyph_radius * 0.72, glyph_radius * 0.10), center + Vector2(-0.04 * glyph_radius, glyph_radius * 0.10), center + Vector2(glyph_radius * 0.14, -glyph_radius * 0.72)]), color)
+			&"braced_fire":
+				draw_rect(Rect2(center - Vector2(glyph_radius * 0.68, glyph_radius * 0.68), Vector2(glyph_radius * 1.36, glyph_radius * 1.36)), color, false, 2.0)
+				draw_line(center + Vector2(-glyph_radius * 0.48, 0), center + Vector2(glyph_radius * 0.48, 0), color, 2.0)
+			&"hit_chain", &"miss_compensation":
+				draw_circle(center + Vector2(-glyph_radius * 0.38, 0), glyph_radius * 0.30, color, false, 2.0)
+				draw_circle(center + Vector2(glyph_radius * 0.38, 0), glyph_radius * 0.30, color, false, 2.0)
+				draw_line(center + Vector2(-glyph_radius * 0.10, 0), center + Vector2(glyph_radius * 0.10, 0), color, 2.0)
+			&"last_stand":
+				draw_colored_polygon(PackedVector2Array([center + Vector2(0, -glyph_radius * 0.76), center + Vector2(glyph_radius * 0.66, glyph_radius * 0.56), center + Vector2(-glyph_radius * 0.66, glyph_radius * 0.56)]), color)
 
 	func debug_contract() -> Dictionary:
 		return {
@@ -440,6 +459,7 @@ var _status_cluster: HBoxContainer
 var _minimap_panel: PanelContainer
 var _health_bar: HealthPips
 var _status_items: Dictionary = {}
+var _conditional_item_ids: Array[StringName] = []
 var _accessibility_text_scale := 1.0
 var _minimap: StageMinimap
 var _notification_panel: Control
@@ -492,6 +512,11 @@ func _build() -> void:
 	_add_status_item(&"defeats", &"total_defeats", &"status", Art.DANGER, "0")
 	_add_status_item(&"dash", &"dash", &"action", Art.SYSTEM, "READY")
 	_add_status_item(&"active", &"active", &"action", Art.BOSS_COMMAND, tr("HUD_ACTION_LOCKED"))
+	for index in 5:
+		var item_id := StringName("conditional_%d" % index)
+		_add_status_item(item_id, &"overflow_barrier", &"conditional", Art.SYSTEM, "")
+		_status_item(item_id).visible = false
+		_conditional_item_ids.append(item_id)
 
 	_minimap_panel = Factory.surface(
 		Factory.SURFACE_HUD,
@@ -559,10 +584,11 @@ func update_snapshot(snapshot: Dictionary) -> void:
 			bool(snapshot.get("reduced_motion", false)),
 			bool(snapshot.get("experience_complete", false))
 		)
-	if snapshot.has("stage_number") or snapshot.has("stage_total"):
-		_status_item(&"stage").set_value("%d / %d" % [
+	if snapshot.has("stage_number") or snapshot.has("stage_total") or snapshot.has("stage_quota_remaining"):
+		_status_item(&"stage").set_value(tr("HUD_BOSS_PROGRESS_VALUE") % [
 			int(snapshot.get("stage_number", 1)),
-			maxi(1, int(snapshot.get("stage_total", 10))),
+			maxi(1, int(snapshot.get("stage_total", 8))),
+			maxi(0, int(snapshot.get("stage_quota_remaining", 0))),
 		])
 	if snapshot.has("cumulative_defeated"):
 		_status_item(&"defeats").set_value(
@@ -581,6 +607,8 @@ func update_snapshot(snapshot: Dictionary) -> void:
 		_update_action_status(snapshot, &"active", "skill_available", "skill_remaining")
 	else:
 		_status_item(&"active").set_value(tr("HUD_ACTION_LOCKED"), false)
+	if snapshot.has("conditional_statuses"):
+		_update_conditional_statuses(Array(snapshot["conditional_statuses"]))
 	if snapshot.has("minimap"):
 		_minimap.set_snapshot(snapshot["minimap"])
 	if snapshot.has("threat_radar"):
@@ -589,6 +617,33 @@ func update_snapshot(snapshot: Dictionary) -> void:
 
 func _status_item(item_id: StringName) -> StatusGlyphItem:
 	return _status_items[item_id] as StatusGlyphItem
+
+
+func _update_conditional_statuses(statuses: Array) -> void:
+	for index in _conditional_item_ids.size():
+		var item := _status_item(_conditional_item_ids[index])
+		if index >= mini(5, statuses.size()):
+			item.visible = false
+			continue
+		var entry := Dictionary(statuses[index])
+		var status_id := StringName(entry.get("id", &""))
+		item.visible = not status_id.is_empty()
+		if not item.visible:
+			continue
+		item.configure(status_id, &"conditional", _conditional_status_accent(status_id))
+		item.set_value(String(entry.get("value", "")), true)
+	_apply_responsive_layout()
+
+
+func _conditional_status_accent(status_id: StringName) -> Color:
+	match status_id:
+		&"overflow_barrier": return Art.SYSTEM
+		&"dash_overdrive": return Art.THERMAL
+		&"braced_fire": return Art.PLAYER_REWARD
+		&"hit_chain": return Art.SUPPORT
+		&"miss_compensation": return Art.TEXT_MUTED
+		&"last_stand": return Art.DANGER
+	return Art.TEXT_MUTED
 
 
 func _active_weapon_accent(active_id: StringName) -> Color:
@@ -765,7 +820,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 	var action_item_size := _status_item_size(compact, accessibility, large, true)
 	var item_gap := _status_item_gap(compact, accessibility, large)
 	var status_size := Vector2(
-		status_item_size.x * 2.0 + action_item_size.x * 2.0 + item_gap * 3.0,
+		_status_cluster_width(status_item_size, action_item_size, item_gap),
 		status_item_size.y
 	)
 	var status_position := Vector2(safe_margin, meter_height + status_top_gap)
@@ -809,7 +864,7 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		)
 	var item_contracts: Array[Dictionary] = []
 	var status_values: Array[String] = []
-	for item_id in [&"stage", &"defeats", &"dash", &"active"]:
+	for item_id in _visible_status_item_ids():
 		var item := _status_item(item_id)
 		item_contracts.append(item.debug_contract())
 		status_values.append(String(item._value_label.text))
@@ -836,6 +891,8 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"status_item_gap":item_gap,
 		"status_item_contracts":item_contracts,
 		"status_values":status_values,
+		"conditional_status_count":_visible_conditional_count(),
+		"conditional_status_capacity":5,
 		"visible_status_label_count":0,
 		"health_panel_free":true,
 		"health_meter":_health_bar.debug_contract(),
@@ -894,7 +951,7 @@ func _apply_responsive_layout() -> void:
 	var status_item_size := _status_item_size(compact, accessibility, large, false)
 	var action_item_size := _status_item_size(compact, accessibility, large, true)
 	var status_size := Vector2(
-		status_item_size.x * 2.0 + action_item_size.x * 2.0 + item_gap * 3.0,
+		_status_cluster_width(status_item_size, action_item_size, item_gap),
 		status_item_size.y
 	)
 	_status_cluster.position = Vector2(safe_margin, meter_height + status_top_gap)
@@ -973,6 +1030,31 @@ func _status_top_gap(compact: bool, accessibility: bool, large: bool) -> float:
 	if large:
 		return 8.0
 	return 6.0
+
+
+func _visible_conditional_count() -> int:
+	var count := 0
+	for item_id in _conditional_item_ids:
+		if _status_item(item_id).visible:
+			count += 1
+	return count
+
+
+func _visible_status_item_ids() -> Array[StringName]:
+	var result: Array[StringName] = [&"stage", &"defeats", &"dash", &"active"]
+	for item_id in _conditional_item_ids:
+		if _status_item(item_id).visible:
+			result.append(item_id)
+	return result
+
+
+func _status_cluster_width(status_size: Vector2, action_size: Vector2, gap: float) -> float:
+	var item_count := 4 + _visible_conditional_count()
+	return (
+		status_size.x * float(2 + _visible_conditional_count())
+		+ action_size.x * 2.0
+		+ gap * float(maxi(0, item_count - 1))
+	)
 
 
 func set_accessibility_text_scale(scale: float) -> void:

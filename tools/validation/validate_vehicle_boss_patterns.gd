@@ -110,13 +110,13 @@ func _initialize() -> void:
 		"boss patterns preserve authored base damage and apply the stage-owned multiplier"
 	)
 	_expect(
-		is_equal_approx(Patterns.radius("furnace_ring", 1), 230.0 * Difficulty.BOSS_COVERAGE_SCALES[1])
-			and is_equal_approx(Patterns.radius("archive_depth", 3), 185.0 * Difficulty.BOSS_COVERAGE_SCALES[3])
-			and is_equal_approx(Patterns.radius("titan_pulse", 5), 235.0 * Difficulty.BOSS_COVERAGE_SCALES[5])
-			and is_equal_approx(Patterns.radius("gate_shockwave", 7), 240.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
+		is_equal_approx(Patterns.radius("furnace_ring", 1), 230.0 * Difficulty.BOSS_COVERAGE_SCALES[1] * Patterns.BOSS_AREA_RADIUS_SCALE)
+			and is_equal_approx(Patterns.radius("archive_depth", 3), 185.0 * Difficulty.BOSS_COVERAGE_SCALES[3] * Patterns.BOSS_AREA_RADIUS_SCALE)
+			and is_equal_approx(Patterns.radius("titan_pulse", 5), 235.0 * Difficulty.BOSS_COVERAGE_SCALES[5] * Patterns.BOSS_AREA_RADIUS_SCALE)
+			and is_equal_approx(Patterns.radius("gate_shockwave", 7), 240.0 * Difficulty.BOSS_COVERAGE_SCALES[7] * Patterns.BOSS_AREA_RADIUS_SCALE)
 			and is_equal_approx(Patterns.width("switch_sweep", 7), 78.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
 			and is_equal_approx(Patterns.width("crown_beam", 7), 82.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
-			and is_equal_approx(Patterns.radius("relay_pulse_rings", 7), 225.0 * Difficulty.BOSS_COVERAGE_SCALES[7]),
+			and is_equal_approx(Patterns.radius("relay_pulse_rings", 7), 225.0 * Difficulty.BOSS_COVERAGE_SCALES[7] * Patterns.BOSS_AREA_RADIUS_SCALE),
 		"representative boss attacks apply exact stage coverage"
 	)
 	for stage_index in 7:

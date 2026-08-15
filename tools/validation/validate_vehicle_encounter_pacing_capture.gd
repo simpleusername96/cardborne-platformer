@@ -22,7 +22,7 @@ func _initialize() -> void:
 	_expect(capture.record_lifecycle(&"cue", 0.0), "cue lifecycle is retained")
 	_expect(capture.record_lifecycle(&"birth", 0.9), "birth lifecycle is retained")
 	_expect(capture.record_lifecycle(&"first_visible", 4.0), "first-visible lifecycle is retained")
-	_expect(capture.record_lifecycle(&"first_commit_or_damage", 8.0), "commit lifecycle is retained")
+	_expect(capture.record_lifecycle(&"first_attack_preparation", 8.0), "attack-preparation lifecycle is retained")
 	for checkpoint_id in PacingCapture.REQUIRED_TIME_CHECKPOINTS:
 		_expect(
 			capture.record_checkpoint(
@@ -109,7 +109,7 @@ func _initialize() -> void:
 	_expect(
 		run_source.contains("retain_pacing_capture_flags")
 			and run_source.contains("not _session_diagnostics.is_active() and not retain_pacing_capture_flags"),
-		"pacing capture retains visibility and commit flags without starting a synthetic session"
+		"pacing capture retains visibility and attack-preparation state without starting a synthetic session"
 	)
 	_finish()
 

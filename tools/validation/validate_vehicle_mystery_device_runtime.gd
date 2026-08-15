@@ -11,12 +11,17 @@ func _initialize() -> void:
 		"neutral facilities expose the five approved activation roles"
 	)
 	_expect(
-		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"repair"]["radius"]), 420.0)
+		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"repair"]["radius"]), 1260.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"barrier"]["radius"]), 1260.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["radius"]), 1440.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo"]["radius"]), 1080.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint"]["radius"]), 1260.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"repair"]["hull_restore_per_second"]), 1.0 / 6.0)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"barrier"]["shield_cap_max_hull_ratio"]), 1.0)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["acceleration_multiplier"]), 0.55)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["max_speed_multiplier"]), 0.55)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo"]["attack_cadence_multiplier"]), 0.70)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint"]["received_damage_multiplier"]), 1.25),
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["acceleration_multiplier"]), 0.70)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["max_speed_multiplier"]), 0.70)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo"]["attack_cadence_multiplier"]), 0.82)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint"]["received_damage_multiplier"]), 1.15),
 		"facility profiles preserve the approved radii and symmetric modifiers"
 	)
 	var blueprint := [
@@ -52,6 +57,7 @@ func _initialize() -> void:
 	_expect(runtime.first_damageable_segment_hit(Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit), "passing projectiles still acquire a facility damage target")
 	_expect(bool(runtime.receive_damage(device_id, 120.0, &"hostile", &"area")["accepted"]), "hostile area damage affects facilities")
 	var broken := runtime.receive_damage(device_id, Runtime.DEVICE_HEALTH, &"player", &"projectile")
+	_expect(float(Dictionary(runtime.snapshot()["devices"][0]).get("hit_flash_remaining", 0.0)) > 0.0, "accepted projectile damage publishes a visible hit receipt")
 	_expect(
 		bool(broken["broken"])
 			and StringName(Dictionary(broken["break_event"])["kind"]) == &"facility_activated"
@@ -65,6 +71,16 @@ func _initialize() -> void:
 			and Dictionary(inside[0]["profile"]) == Runtime.OUTCOME_PROFILE[StringName(first["outcome"])],
 		"an active facility exposes one identical profile to either faction"
 	)
+	var overlap_runtime := Runtime.new()
+	overlap_runtime.configure([
+		{"id":&"z", "pos":Vector2.ZERO}, {"id":&"a", "pos":Vector2.ZERO}, {"id":&"b", "pos":Vector2.ZERO},
+	], 12, &"stage_overlap")
+	for record_variant in overlap_runtime.devices:
+		var record: Dictionary = record_variant
+		record["state"] = &"active"
+		record["active_remaining"] = Runtime.ACTIVE_DURATION_SECONDS
+	var overlap := overlap_runtime.modifiers_at(Vector2.ZERO)
+	_expect(overlap.size() <= 2, "overlapping facilities publish at most two distinct modifiers")
 	var active_snapshot := Dictionary(runtime.snapshot()["devices"][0])
 	_expect(
 		is_equal_approx(float(active_snapshot["active_remaining"]), Runtime.ACTIVE_DURATION_SECONDS)

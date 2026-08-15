@@ -33,11 +33,17 @@ const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.g
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
+const MysteryDeviceRuntime = preload(
+	"res://scripts/vehicle/vehicle_mystery_device_runtime.gd"
+)
 const ENEMY_STATUS_SHADER = preload(
 	"res://scripts/presentation/shaders/vehicle_enemy_status_overlay.gdshader"
 )
 const INTERACTION_EDGE_SHADER = preload(
 	"res://scripts/presentation/shaders/vehicle_interaction_edge.gdshader"
+)
+const FACILITY_COUNTDOWN_EDGE_SHADER = preload(
+	"res://scripts/presentation/shaders/vehicle_facility_countdown_edge.gdshader"
 )
 
 const ENEMY_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES
@@ -229,6 +235,7 @@ var _boss_variant_batches: Dictionary = {}
 var _enemy_status_material: ShaderMaterial
 var _pickup_edge_material: ShaderMaterial
 var _mystery_edge_material: ShaderMaterial
+var _facility_countdown_edge_material: ShaderMaterial
 var _projectile_batches: Dictionary = {}
 var _experience_batch: BatchHandle
 var _map_pickup_batches: Dictionary = {}
@@ -469,6 +476,8 @@ func _build_batches() -> void:
 	_mystery_edge_material.set_shader_parameter("edge_color", Art.SYSTEM)
 	_mystery_edge_material.set_shader_parameter("inactive_edge_color", Art.LINE)
 	_mystery_edge_material.set_shader_parameter("progress_enabled", true)
+	_facility_countdown_edge_material = ShaderMaterial.new()
+	_facility_countdown_edge_material.shader = FACILITY_COUNTDOWN_EDGE_SHADER
 	var unit_quad_mesh := _build_unit_quad_mesh()
 	var health_rect_mesh := _build_unit_quad_mesh(0.5)
 	var unit_ring_mesh := _build_unit_ring_mesh()
@@ -575,7 +584,10 @@ func _build_batches() -> void:
 		MYSTERY_DEVICE_CAPACITY,
 		-1,
 		&"facility_effect_ring",
-		MYSTERY_DEVICE_CAPACITY
+		MYSTERY_DEVICE_CAPACITY,
+		null,
+		_facility_countdown_edge_material,
+		true
 	)
 	_electric_field_batch = _create_batch(
 		"ElectricField_area",
@@ -854,6 +866,11 @@ func _sync_enemies(
 		var body_modulate := _enemy_body_modulate(enemy)
 		var destruction := Dictionary(presentation.get("boss_destruction", {}))
 		if dying_boss:
+			var body_tint := Color(destruction.get("body_tint", Color(0.48, 0.50, 0.54)))
+			body_modulate = body_modulate.lerp(
+				Color(body_tint, body_modulate.a),
+				0.72
+			)
 			body_modulate.a *= float(
 				destruction.get(
 					"body_alpha", 1.0
@@ -867,16 +884,6 @@ func _sync_enemies(
 			body_modulate,
 			_enemy_status_custom_data(enemy, reduced_motion)
 		)
-		if dying_boss:
-			# The death runtime owns the one shared overlay's scale and fade; this
-			# retained draw only follows the still-visible boss body's center.
-			_queue_semantic_texture(
-				&"effect/boss_death_explosion",
-				position,
-				0.0,
-				radius * float(destruction.get("explosion_scale", 0.0)),
-				Color(1.0, 1.0, 1.0, float(destruction.get("explosion_alpha", 0.0)))
-			)
 		if role == &"stage_boss" and not dying_boss and _boss_health_bar_count < MAX_BOSS_HEALTH_BARS:
 			_sync_health_bar(
 				position,
@@ -917,7 +924,8 @@ func _sync_enemies(
 				enemy,
 				position,
 				radius,
-				angle
+				angle,
+				presentation
 			)
 	for index in _installation_health_candidate_count:
 		_sync_installation_health_bar(
@@ -1249,11 +1257,12 @@ func _sync_enemy_semantic_overlays(
 	enemy: EnemyState,
 	position: Vector2,
 	radius: float,
-	angle: float
+	angle: float,
+	presentation: Dictionary
 ) -> void:
 	var forward := Vector2.RIGHT.rotated(angle)
 	if enemy.role == &"stage_boss":
-		_sync_boss_core_overlay(enemy, position, radius)
+		_sync_boss_core_overlay(enemy, position, radius, forward, presentation)
 	if (
 		enemy.elite_trait != &""
 		and (
@@ -1271,11 +1280,58 @@ func _sync_enemy_semantic_overlays(
 func _sync_boss_core_overlay(
 	enemy: EnemyState,
 	position: Vector2,
-	radius: float
+	radius: float,
+	forward: Vector2,
+	presentation: Dictionary
 ) -> void:
 	if enemy.boss_shield_state != &"shield_up":
 		return
-	_write_ring(position, radius + 8.0, Color(Art.BOSS_COMMAND, 0.38))
+	var shield := Dictionary(presentation.get("boss_shield", {}))
+	var shield_radius := radius + 10.0
+	match StringName(shield.get("shield_kind", &"")):
+		&"frontal_intercept":
+			var half_angle := float(shield.get("frontal_half_angle", deg_to_rad(55.0)))
+			_write_arc_segments(
+				position, shield_radius,
+				forward.angle() - half_angle,
+				forward.angle() + half_angle,
+				Color(Art.SYSTEM, 0.90), 10
+			)
+		&"relay_sectors":
+			for sector in 3:
+				var ratio := float(shield.get("sector_%d_ratio" % sector, 0.0))
+				if ratio <= 0.0:
+					continue
+				var sector_offset := (
+					0.0 if sector == 0 else (TAU / 3.0 if sector == 1 else -TAU / 3.0)
+				)
+				var center_angle := forward.angle() + sector_offset
+				var half_sector := PI / 3.0
+				_write_arc_segments(
+					position, shield_radius,
+					center_angle - half_sector,
+					center_angle + half_sector,
+					Color(Art.SYSTEM, lerpf(0.38, 0.92, ratio)), 9
+				)
+		_:
+			_write_ring(position, radius + 8.0, Color(Art.SYSTEM, 0.52))
+
+
+func _write_arc_segments(
+	position: Vector2,
+	radius: float,
+	start_angle: float,
+	end_angle: float,
+	color: Color,
+	segments: int
+) -> void:
+	var count := maxi(1, segments)
+	var previous := position + Vector2.from_angle(start_angle) * radius
+	for index in count:
+		var progress := float(index + 1) / float(count)
+		var current := position + Vector2.from_angle(lerpf(start_angle, end_angle, progress)) * radius
+		_write_beam(previous, current, 3.0, color)
+		previous = current
 
 
 func _sync_projectiles(
@@ -1313,6 +1369,21 @@ func _sync_projectiles(
 				),
 				Color.WHITE
 			)
+			if projectile.distance_growth_kind == ProjectileState.SIEGE_GROWTH_KIND:
+				var trail_length := lerpf(
+					hostile_visual_radius * 1.6,
+					hostile_visual_radius * 4.4,
+					projectile.distance_growth_ratio
+				)
+				_write_beam(
+					position - direction * trail_length,
+					position - direction * hostile_visual_radius,
+					maxf(2.0, hostile_visual_radius * 0.34),
+					Color(
+						Art.DANGER,
+						lerpf(0.28, 0.72, projectile.distance_growth_ratio)
+					)
+				)
 			continue
 		var visual_id := (
 			&"seeker"
@@ -1363,6 +1434,17 @@ func _sync_enemy_attack_telegraphs(
 				_sync_active_beam(telegraph)
 			CombatCuePolicy.MODE_AREA_FOOTPRINT:
 				_sync_area_telegraph(telegraph)
+			CombatCuePolicy.MODE_PROJECTILE_PATH:
+				_sync_projectile_path_telegraph(telegraph)
+
+
+func _sync_projectile_path_telegraph(telegraph: Dictionary) -> void:
+	var from := Vector2(telegraph["from"])
+	var to := Vector2(telegraph["to"])
+	var width := maxf(3.0, float(telegraph.get("half_width", 3.0)) * 2.0)
+	var readiness := clampf(float(telegraph.get("readiness", 0.0)), 0.0, 1.0)
+	_write_beam(from, to, width + 4.0, Color(Art.SPACE_BLACK, lerpf(0.42, 0.70, readiness)))
+	_write_beam(from, to, width, Color(Art.DANGER, lerpf(0.08, 0.22, readiness)))
 
 
 func _sync_beam_startup(telegraph: Dictionary) -> void:
@@ -1371,9 +1453,14 @@ func _sync_beam_startup(telegraph: Dictionary) -> void:
 	var width := maxf(1.0, float(telegraph["active_width"]))
 	var readiness := clampf(float(telegraph.get("readiness", 0.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
-	var color := Art.attack_color(
-		AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
+	var color := (
+		Art.DANGER
+		if StringName(telegraph.get("owner", &"hostile")) == &"hostile"
+		else Art.attack_color(AttackContract.normalize_affinity(StringName(telegraph["affinity"])))
 	)
+	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
+	if hostile:
+		_write_beam(from, to, width + 6.0, Color(Art.SPACE_BLACK, 0.72))
 	_write_beam(
 		from,
 		to,
@@ -1384,7 +1471,8 @@ func _sync_beam_startup(telegraph: Dictionary) -> void:
 			intensity
 		))
 	)
-	_write_beam(
+	if not hostile:
+		_write_beam(
 		from,
 		to,
 		minf(
@@ -1396,7 +1484,7 @@ func _sync_beam_startup(telegraph: Dictionary) -> void:
 			BEAM_STARTUP_FILAMENT_ALPHA.y,
 			intensity
 		))
-	)
+		)
 
 
 func _sync_active_beam(telegraph: Dictionary) -> void:
@@ -1404,8 +1492,17 @@ func _sync_active_beam(telegraph: Dictionary) -> void:
 	var to := Vector2(telegraph["to"])
 	var width := maxf(1.0, float(telegraph["active_width"]))
 	var affinity := AttackContract.normalize_affinity(StringName(telegraph["affinity"]))
-	var color := Art.attack_color(affinity)
+	var color := (
+		Art.DANGER
+		if StringName(telegraph.get("owner", &"hostile")) == &"hostile"
+		else Art.attack_color(affinity)
+	)
+	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
+	if hostile:
+		_write_beam(from, to, width + 6.0, Color(Art.SPACE_BLACK, 0.82))
 	_write_beam(from, to, width, Color(color, BEAM_ACTIVE_BODY_ALPHA))
+	if hostile:
+		return
 	_write_beam(
 		from,
 		to,
@@ -1425,9 +1522,13 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var radius := maxf(1.0, float(telegraph["radius"]))
 	var readiness := clampf(float(telegraph.get("readiness", 1.0)), 0.0, 1.0)
 	var intensity := smoothstep(0.0, 1.0, readiness)
-	var boundary_alpha := lerpf(0.03, 0.06, intensity)
-	_write_disk(center, radius, Color(Art.THERMAL, lerpf(0.10, 0.20, readiness)))
-	_write_danger_ring(center, radius, Color(Art.THERMAL, boundary_alpha))
+	var boundary_alpha := lerpf(0.58, 0.82, intensity)
+	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
+	var fill_color := Art.DANGER if hostile else Art.THERMAL
+	_write_disk(center, radius, Color(fill_color, lerpf(0.10, 0.20, readiness)))
+	_write_danger_ring(center, radius, Color(Art.SPACE_BLACK, boundary_alpha))
+	if hostile:
+		_write_hostile_area_notches(center, radius, readiness)
 
 
 func _sync_experience(shards: Array[ExperienceShard], visible_world: Rect2) -> void:
@@ -1650,12 +1751,16 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 					"affinity":AttackContract.normalize_affinity(
 						StringName(zone.get("affinity", AttackContract.KINETIC))
 					),
+					"owner":StringName(zone.get("owner", &"hostile")),
 					"readiness":readiness,
 				}
 				if warning > 0.0:
 					_sync_beam_startup(corridor)
 				else:
 					_sync_active_beam(corridor)
+				continue
+			if shape == &"wedge_ring":
+				_sync_wedge_ring_zone(zone, readiness)
 				continue
 			if shape != &"area":
 				continue
@@ -1673,6 +1778,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				"damage": damage,
 				"affinity": affinity,
 				"readiness": readiness,
+				"owner": StringName(zone.get("owner", &"hostile")),
 			}
 			_sync_area_telegraph(descriptor)
 	var dash_trails_variant: Variant = state.get("dash_afterburn_trails")
@@ -1972,8 +2078,18 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		)
 		# The authored symbol remains as the source while the activated footprint
 		# and its bounded countdown are live.
+		var hit_ratio := clampf(
+			float(device.get("hit_flash_remaining", 0.0))
+			/ MysteryDeviceRuntime.HIT_FLASH_SECONDS,
+			0.0,
+			1.0
+		)
 		_queue_semantic_texture(
-			symbol_asset, position, 0.0, MYSTERY_DEVICE_SYMBOL_RADIUS, Color.WHITE
+			symbol_asset,
+			position,
+			0.0,
+			MYSTERY_DEVICE_SYMBOL_RADIUS,
+			Color.WHITE.lerp(_facility_effect_edge_color(outcome_id), hit_ratio * 0.72)
 		)
 
 
@@ -2017,11 +2133,7 @@ func _sync_facility_effects(state: Dictionary, visible_world: Rect2) -> void:
 		var radius := float(device.get("effect_radius", 0.0))
 		if radius <= 0.0 or not visible_world.grow(radius).has_point(position):
 			continue
-		var color := (
-			Art.MINT
-			if effect_id in [&"repair", &"barrier"]
-			else (Art.CRYO if effect_id == &"cryo" else (Art.DANGER if effect_id == &"weakpoint" else Art.SYSTEM))
-		)
+		var color := _facility_effect_color(effect_id)
 		var body_alpha := (
 			0.12
 			if effect_id == &"cryo"
@@ -2033,7 +2145,61 @@ func _sync_facility_effects(state: Dictionary, visible_world: Rect2) -> void:
 			position,
 			0.0,
 			Vector2.ONE * radius,
-			Color(color, 0.10)
+			Color(_facility_effect_edge_color(effect_id), 0.78),
+			Color(clampf(float(device.get("active_ratio", 0.0)), 0.0, 1.0), 0.0, 0.0, 1.0)
+		)
+
+
+static func _facility_effect_color(effect_id: StringName) -> Color:
+	match effect_id:
+		&"repair": return Art.SUPPORT
+		&"barrier": return Art.SYSTEM
+		&"gravity": return Art.SPACE_BLACK
+		&"cryo": return Art.CRYO
+		&"weakpoint": return Art.DANGER
+	return Art.LINE
+
+
+static func _facility_effect_edge_color(effect_id: StringName) -> Color:
+	return Art.TEXT_PRIMARY if effect_id == &"gravity" else _facility_effect_color(effect_id)
+
+
+func _write_hostile_area_notches(center: Vector2, radius: float, readiness: float) -> void:
+	var inset := maxf(4.0, radius * 0.11)
+	var notch_radius := clampf(radius * 0.035, 3.0, 9.0)
+	for direction in CARDINAL_DIRECTIONS:
+		_write_diamond(
+			center + direction * (radius - inset),
+			notch_radius,
+			Color(Art.SPACE_BLACK, lerpf(0.30, 0.72, readiness))
+		)
+
+
+func _sync_wedge_ring_zone(zone: Dictionary, readiness: float) -> void:
+	var center := Vector2(zone.get("pos", Vector2.ZERO))
+	var radius := maxf(1.0, float(zone.get("radius", 1.0)))
+	var width := maxf(1.0, float(zone.get("width", 1.0)))
+	var safe_axis := Vector2(zone.get("safe_axis", Vector2.RIGHT)).normalized()
+	if safe_axis.is_zero_approx():
+		safe_axis = Vector2.RIGHT
+	var safe_half_angle := clampf(float(zone.get("safe_half_angle", 0.48)), 0.0, PI - 0.05)
+	var dangerous_angle := TAU - safe_half_angle * 2.0
+	var segment_count := 28
+	var start_angle := safe_axis.angle() + safe_half_angle
+	var body_alpha := lerpf(0.10, 0.20, clampf(readiness, 0.0, 1.0))
+	for segment_index in segment_count:
+		var from_angle := start_angle + dangerous_angle * float(segment_index) / float(segment_count)
+		var to_angle := start_angle + dangerous_angle * float(segment_index + 1) / float(segment_count)
+		var from := center + Vector2.from_angle(from_angle) * radius
+		var to := center + Vector2.from_angle(to_angle) * radius
+		_write_beam(from, to, width + 6.0, Color(Art.SPACE_BLACK, 0.82))
+		_write_beam(from, to, width, Color(Art.DANGER, body_alpha))
+	for notch_index in 4:
+		var angle := start_angle + dangerous_angle * (float(notch_index) + 0.5) / 4.0
+		_write_diamond(
+			center + Vector2.from_angle(angle) * (radius - width * 0.28),
+			clampf(width * 0.10, 4.0, 9.0),
+			Color(Art.SPACE_BLACK, 0.78)
 		)
 
 

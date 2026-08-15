@@ -46,7 +46,7 @@ func _init() -> void:
 			"run_time_seconds":183.0,
 			"hull":72.0,
 			"max_hull":120.0,
-			"pacing":{"active_seconds":92.0, "visible_gap_count":2},
+			"pacing":{"active_seconds":92.0, "visible_gap_count":2, "first_attack_preparation_seconds":5.25},
 			"diagnostics":{"active":true, "event_count":17, "event_cap":256, "sample_count":92, "sample_cap":1800, "event_dropped":1},
 		}
 	)
@@ -112,7 +112,8 @@ func _init() -> void:
 	_expect(
 		Array(report["boss_rows"]).size() >= 4
 			and String(Dictionary(Array(report["boss_rows"])[1]).get("name_key", "")) == "ENEMY_ARCHIVE_LEVIATHAN"
-			and Array(report["pacing_rows"]).size() == 4
+			and Array(report["pacing_rows"]).size() == 5
+			and String(Dictionary(Array(report["pacing_rows"])[3]).get("value", "")) == "5.25s"
 			and Array(report["diagnostic_limitations"]).size() == 4,
 		"stage report carries real boss cleanup, pacing, engagement, and diagnostic retention rows"
 	)
@@ -230,7 +231,7 @@ func _init() -> void:
 	})
 	_expect(
 		Array(final_result.get("boss_rows", [])).size() > 1
-			and Array(final_result.get("pacing_rows", [])).size() == 4
+			and Array(final_result.get("pacing_rows", [])).size() == 5
 			and Array(final_result.get("diagnostic_limitations", [])).size() == 4,
 		"final report aggregates completed boss identity/cleanup and live report metrics"
 	)

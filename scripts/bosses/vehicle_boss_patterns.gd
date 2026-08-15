@@ -8,41 +8,43 @@ extends RefCounted
 const ACTIVE_MOVE_SCALE := 0.62
 const AREA_TARGET_MAX_LEAD := 96.0
 const MIN_BASE_WALK_ESCAPE_MARGIN := 40.0
-const BOSS_CHARGE_SPEED := 790.0
+const BOSS_CHARGE_SPEED := 1027.0
 const BOSS_CONTACT_PADDING := 10.0
-const BEAM_RANGE := 920.0
+const BEAM_RANGE := 1334.0
 const BEAM_COVER_PADDING := 5.0
 const BASE_LANE_SPACING := 135.0
 const BASE_FAN_OFFSETS := [-0.34, -0.17, 0.0, 0.17, 0.34]
+const BOSS_PROJECTILE_SPEED_SCALE := 1.40
+const BOSS_AREA_RADIUS_SCALE := 1.25
 
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 
 const PATTERNS := {
 	&"furnace_gates":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.90, "recovery":0.90, "damage":22.0},
-	&"foundry_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.30, "damage":34.0},
+	&"foundry_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.65, "recovery":1.30, "damage":34.0},
 	&"foundry_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"thermal", "startup":0.85, "active":0.70, "recovery":0.90, "damage":20.0},
-	&"furnace_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.05, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
+	&"furnace_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.20, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
 	&"slag_ring":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"thermal", "startup":1.15, "active":0.70, "recovery":0.0, "damage":20.0, "radius":210.0},
 	&"forge_vent":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.00, "active":2.4, "recovery":0.0, "damage":20.0, "radius":190.0},
 
 	&"current_fan":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":0.90, "active":0.70, "recovery":0.90, "damage":20.0},
-	&"archive_lunge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.65, "recovery":1.25, "damage":34.0},
-	&"archive_cross":{"kind":&"cross", "commit_mode":&"committed", "affinity":&"kinetic", "startup":0.95, "active":0.70, "recovery":0.95, "damage":26.0},
+	&"archive_lunge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.65, "recovery":1.25, "damage":34.0},
+	&"archive_cross":{"kind":&"cross_corridors", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.70, "recovery":0.95, "damage":26.0, "width":84.0},
 	&"archive_depth":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.55, "recovery":1.10, "damage":32.0, "radius":185.0},
 	&"undertow_lanes":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.10, "active":1.4, "recovery":0.0, "damage":20.0},
 	&"depth_charges":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.15, "active":0.60, "recovery":0.0, "damage":30.0, "radius":175.0},
 
 	&"grounding_grid":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"arc", "startup":1.00, "active":0.85, "recovery":0.95, "damage":22.0},
-	&"titan_pulse":{"kind":&"area", "commit_mode":&"committed", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":1.20, "damage":30.0, "radius":235.0},
+	&"titan_pulse":{"kind":&"area", "commit_mode":&"committed", "affinity":&"arc", "startup":1.30, "active":0.60, "recovery":1.20, "damage":30.0, "radius":235.0},
 	&"titan_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
-	&"titan_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.62, "recovery":1.20, "damage":34.0},
+	&"titan_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.62, "recovery":1.20, "damage":34.0},
 	&"thunder_chain":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":0.55, "recovery":0.0, "damage":32.0, "radius":170.0},
 	&"beam_sentinel_call":{"kind":&"summon", "commit_mode":&"autonomous", "affinity":&"support", "startup":1.00, "active":2.5, "recovery":0.0, "damage":0.0},
 
-	&"breaker_charge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.70, "recovery":1.20, "damage":36.0},
+	&"breaker_charge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.70, "recovery":1.20, "damage":36.0},
 	&"ricochet_volley":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.00, "active":0.75, "recovery":1.05, "damage":22.0},
-	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.20, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
+	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.45, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
 	&"switch_sweep":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.05, "active":0.80, "recovery":1.15, "damage":30.0, "width":78.0},
 	&"switchyard_mines":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":0.0, "damage":26.0, "radius":145.0},
 	&"switch_sweeps":{"kind":&"beam", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.75, "recovery":0.0, "damage":28.0, "width":72.0},
@@ -52,12 +54,12 @@ const PATTERNS := {
 	&"crown_beam":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.15, "active":0.80, "recovery":1.25, "damage":34.0, "width":82.0},
 	&"crown_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
 	&"crown_lattice":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":1.4, "recovery":0.0, "damage":22.0},
-	&"relay_pulse_rings":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":0.0, "damage":30.0, "radius":225.0},
+	&"relay_pulse_rings":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.35, "active":0.60, "recovery":0.0, "damage":30.0, "radius":225.0},
 }
 
 const EXTRA_PATTERNS := {
-	&"common_charge": {"kind": &"charge", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.10, "active": 0.65, "recovery": 1.00, "damage": 30.0},
-	&"common_broad_barrage": {"kind": &"broad_barrage", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 0.65, "active": 1.14, "recovery": 0.90, "damage": 14.0},
+	&"common_charge": {"kind": &"charge", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 0.65, "recovery": 1.00, "damage": 30.0},
+	&"common_broad_barrage": {"kind": &"broad_barrage", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 1.14, "recovery": 0.90, "damage": 14.0},
 	&"drydock_counterburst": {"kind": &"fan", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 0.70, "recovery": 1.00, "damage": 32.0},
 	&"battery_long_banks": {"kind": &"long_banks", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.30, "active": 1.30, "recovery": 0.0, "damage": 16.0},
 	&"loom_translating_walls": {"kind": &"moving_walls", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.20, "recovery": 0.0, "damage": 68.0},
@@ -127,6 +129,12 @@ static func barrage_mode(stage_id: StringName) -> StringName:
 	return &"rotate" if stage_id in [&"stage_2", &"stage_4", &"stage_7", &"stage_8"] else &"spread"
 
 
+static func barrage_mode_for_stage_index(stage_index: int) -> StringName:
+	if stage_index < 0 or stage_index >= CombatStages.STAGE_IDS.size():
+		return &"spread"
+	return barrage_mode(CombatStages.STAGE_IDS[stage_index])
+
+
 static func kind(pattern: String) -> StringName:
 	return StringName(definition(pattern)["kind"])
 
@@ -162,6 +170,7 @@ static func radius(pattern: String, stage_index: int = 0) -> float:
 	return (
 		float(definition(pattern).get("radius", 210.0))
 		* StageDifficulty.boss_coverage_scale(stage_index)
+		* BOSS_AREA_RADIUS_SCALE
 	)
 
 
@@ -203,9 +212,10 @@ static func volley_limit(pattern: String, phase_two: bool) -> int:
 
 
 static func projectile_speed(pattern: String) -> float:
+	var base_speed := 590.0
 	match kind(pattern):
 		&"lanes":
-			return 720.0
+			base_speed = 720.0
 		&"fan", &"cross":
-			return 620.0
-	return 590.0
+			base_speed = 620.0
+	return base_speed * BOSS_PROJECTILE_SPEED_SCALE

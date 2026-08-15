@@ -22,14 +22,15 @@ const EFFECT_CAP := 96
 ## Authored pressure remains the pacing contract. Only the smaller materialized
 ## cap becomes live combat actors; the scheduler keeps the rest as packet data.
 const AUTHORED_PRESSURE_CAPS := [6, 124, 172, 224, 276]
-const MATERIALIZED_ACTIVE_CAPS := [6, 40, 48, 48, 48]
+const MATERIALIZED_ACTIVE_CAPS := [6, 44, 56, 64, 72]
 const ACTIVE_CAPS := MATERIALIZED_ACTIVE_CAPS
 const THREAT_BUDGETS := [1.0, 3.0, 4.5, 5.25, 6.25]
 
 ## Stage pressure is deliberately separate from packet beats. Beats choose the
 ## shape and timing of an encounter; stages set the run's bounded live pressure.
 const STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0]
-const STAGE_MATERIALIZED_ACTIVE_CAPS := [18, 32, 40, 40, 48, 48, 48, 48]
+const STAGE_MATERIALIZED_ACTIVE_CAPS := [32, 44, 56, 64, 72, 72, 72, 72]
+const STAGE_REFILL_FLOORS := [12, 16, 20, 24, 28, 32, 36, 40]
 const STAGE_MAX_RANGED_COMMITS := [3, 3, 3, 3, 3, 4, 4, 4]
 const STAGE_MAX_DENIAL_COMMITS := [2, 2, 2, 2, 2, 3, 3, 3]
 
@@ -58,6 +59,14 @@ static func stage_materialized_active_cap(stage_index: int) -> int:
 	return (
 		int(STAGE_MATERIALIZED_ACTIVE_CAPS[stage_index])
 		if stage_index >= 0 and stage_index < STAGE_MATERIALIZED_ACTIVE_CAPS.size()
+		else 0
+	)
+
+
+static func stage_refill_floor(stage_index: int) -> int:
+	return (
+		int(STAGE_REFILL_FLOORS[stage_index])
+		if stage_index >= 0 and stage_index < STAGE_REFILL_FLOORS.size()
 		else 0
 	)
 
@@ -121,6 +130,7 @@ static func tuning_contract() -> Dictionary:
 		"threat_budgets": THREAT_BUDGETS,
 		"stage_threat_budgets": STAGE_THREAT_BUDGETS,
 		"stage_materialized_active_caps": STAGE_MATERIALIZED_ACTIVE_CAPS,
+		"stage_refill_floors": STAGE_REFILL_FLOORS,
 		"stage_max_ranged_commits": STAGE_MAX_RANGED_COMMITS,
 		"stage_max_denial_commits": STAGE_MAX_DENIAL_COMMITS,
 		"max_ranged": MAX_RANGED_COMMITS,

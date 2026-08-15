@@ -8,6 +8,7 @@ const MODE_NONE: StringName = &"none"
 const MODE_BEAM_STARTUP: StringName = &"beam_startup"
 const MODE_ACTIVE_BEAM: StringName = &"active_beam"
 const MODE_AREA_FOOTPRINT: StringName = &"area_footprint"
+const MODE_PROJECTILE_PATH: StringName = &"projectile_path"
 
 const CONTACT_INCOMING_ATTACK: StringName = &"incoming_attack"
 const CONTACT_BOSS_ARRIVAL: StringName = &"boss_arrival"
@@ -62,6 +63,13 @@ static func telegraph_mode(
 		and float(telegraph.get("active_width", 0.0)) > 0.0
 	):
 		return MODE_BEAM_STARTUP
+	if (
+		phase in [&"startup", &"boss_startup"]
+		and shape == &"corridor"
+		and delivery == &"projectile"
+		and bool(telegraph.get("show_path", false))
+	):
+		return MODE_PROJECTILE_PATH
 	if phase == &"boss_startup" and shape == &"area":
 		return MODE_AREA_FOOTPRINT
 	if (

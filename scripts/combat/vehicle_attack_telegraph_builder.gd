@@ -117,6 +117,43 @@ static func refresh_boss(
 				affinity,
 				resolve_path
 			)
+	elif kind == &"cross_corridors":
+		for offset in [-PI * 0.25, PI * 0.25]:
+			var axis := Vector2(enemy.committed_dir).rotated(float(offset))
+			var from := _resolve_path(
+				resolve_path, enemy.pos, -axis, BossPatterns.BEAM_RANGE, BossPatterns.width(pattern, stage_index) * 0.5
+			)
+			var to := _resolve_path(
+				resolve_path, enemy.pos, axis, BossPatterns.BEAM_RANGE, BossPatterns.width(pattern, stage_index) * 0.5
+			)
+			enemy.attack_telegraphs.append(_corridor(
+				from, to,
+				BossPatterns.width(pattern, stage_index) * 0.5,
+				damage, affinity, &"beam",
+				BossPatterns.width(pattern, stage_index)
+			))
+	elif kind == &"broad_barrage":
+		for row in BossPatterns.broad_barrage_rows(
+			stage_index,
+			enemy.committed_dir,
+			BossPatterns.barrage_mode_for_stage_index(stage_index)
+		):
+			var axis := Vector2(row["axis"]).normalized()
+			var tangent := axis.rotated(PI * 0.5)
+			var count := int(row["count"])
+			for shot_index in count:
+				var centered := float(shot_index) - float(count - 1) * 0.5
+				var direction := axis
+				if StringName(row["mode"]) == &"spread":
+					var ratio := centered / maxf(1.0, float(count - 1) * 0.5)
+					direction = axis.rotated(deg_to_rad(21.0) * ratio)
+				var origin := Vector2(enemy.pos) + tangent * float(row["spacing"]) * centered + direction * 72.0
+				_append_projectile(
+					enemy, origin, direction, float(row["damage"]),
+					BossPatterns.projectile_speed(pattern), affinity, resolve_path
+				)
+				enemy.attack_telegraphs[-1]["show_path"] = true
+				enemy.attack_telegraphs[-1]["row_delay"] = float(row["at"])
 	elif kind == &"charge":
 		_append_charge(
 			enemy,

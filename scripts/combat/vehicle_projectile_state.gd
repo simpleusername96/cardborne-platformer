@@ -33,6 +33,19 @@ var combat_action_family: StringName = &""
 var combat_action_serial := 0
 var uses_boss_reserve := false
 var facility_hit_mask := 0
+var distance_growth_kind: StringName = &""
+var distance_traveled := 0.0
+var distance_growth_ratio := 0.0
+var distance_growth_base_speed := 0.0
+var distance_growth_base_radius := 0.0
+var distance_growth_base_damage := 0.0
+
+const SIEGE_GROWTH_KIND: StringName = &"siege_battery"
+const SIEGE_ARM_DISTANCE := 360.0
+const SIEGE_CAP_DISTANCE := 880.0
+const SIEGE_SPEED_SCALE := Vector2(0.75, 1.35)
+const SIEGE_RADIUS_SCALE := Vector2(1.0, 1.5)
+const SIEGE_DAMAGE_SCALE := Vector2(1.0, 1.6)
 
 
 func configure(
@@ -70,3 +83,40 @@ func configure(
 	combat_action_serial = int(spec.get("combat_action_serial", 0))
 	uses_boss_reserve = boss_reserve
 	facility_hit_mask = 0
+	distance_growth_kind = StringName(spec.get("distance_growth_kind", &""))
+	distance_traveled = 0.0
+	distance_growth_ratio = 0.0
+	distance_growth_base_speed = velocity.length()
+	distance_growth_base_radius = radius
+	distance_growth_base_damage = damage
+	_apply_distance_growth()
+
+
+func advance_distance_growth(step_distance: float) -> void:
+	if distance_growth_kind != SIEGE_GROWTH_KIND:
+		return
+	distance_traveled = maxf(0.0, distance_traveled + maxf(0.0, step_distance))
+	_apply_distance_growth()
+
+
+func _apply_distance_growth() -> void:
+	if distance_growth_kind != SIEGE_GROWTH_KIND:
+		return
+	distance_growth_ratio = clampf(
+		(distance_traveled - SIEGE_ARM_DISTANCE)
+			/ (SIEGE_CAP_DISTANCE - SIEGE_ARM_DISTANCE),
+		0.0,
+		1.0
+	)
+	var direction := velocity.normalized()
+	if direction.is_zero_approx():
+		direction = Vector2.RIGHT
+	velocity = direction * distance_growth_base_speed * lerpf(
+		SIEGE_SPEED_SCALE.x, SIEGE_SPEED_SCALE.y, distance_growth_ratio
+	)
+	radius = distance_growth_base_radius * lerpf(
+		SIEGE_RADIUS_SCALE.x, SIEGE_RADIUS_SCALE.y, distance_growth_ratio
+	)
+	damage = distance_growth_base_damage * lerpf(
+		SIEGE_DAMAGE_SCALE.x, SIEGE_DAMAGE_SCALE.y, distance_growth_ratio
+	)
