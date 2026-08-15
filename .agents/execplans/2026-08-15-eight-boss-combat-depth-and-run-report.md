@@ -67,7 +67,7 @@ attacks may occupy at most two of any five direct pattern selections.
 | Common pattern | Exact contract |
 | --- | --- |
 | Committed charge | 1.00–1.25 s exact corridor warning; direction locks at commit; 0.55–0.75 s active travel; stops on wall; normal damage |
-| Aimed volley | 3/4/5 shots in early/mid/late cycles; direction locks per burst; 0.22/0.20/0.18 s shot interval; low per-hit pressure damage |
+| Broad projectile-row barrage | One activation emits three rows at 0.38 s intervals. Every row spawns 4/5/6 projectiles simultaneously in cycles 1–3/4–6/7–8, at 96 world-unit center spacing; it is never a single-file aimed burst. A 0.65 s warning shows the initial row span and motion. The boss profile locks one motion: `SPREAD` distributes the row headings evenly across a 42-degree fan, while `ROTATE` turns the emission axis 22.5 degrees between rows. Fired projectiles keep their committed trajectory. Each projectile deals pressure damage, and the complete activation uses one 0.80 s per-target hit lock. |
 
 Baseline statistics increase monotonically. High-threat reaction windows do not shrink
 with cadence.
@@ -99,20 +99,20 @@ execution, cannot cover every exit, and cannot retarget after its final commit c
 
 ## Eight Boss Identities
 
-All eight bosses retain the common charge and volley in addition to these identity
+All eight bosses retain the common charge and broad projectile-row barrage in addition to these identity
 patterns. Delete the current global rule that lowers one identical shield for four
 seconds after every direct boss attack. Shield policy is owned by each boss profile.
 
-| # | Boss | Identity patterns and defense/attack link |
-| ---: | --- | --- |
-| 1 | Foundry Colossus | `Furnace Gates` closes two warned lanes, then leaves the other lanes open. A wall collision after its common charge creates a 1.4 s vulnerability. It has no shield. |
-| 2 | Archive Leviathan | Fires a fixed X-cross laser, alternating its orientation by 45 degrees on the next cast. The exact warned corridors are the damage corridors. It has no shield. |
-| 3 | Drydock Titan | Has a permanent 110-degree frontal shield with 90% interception. Facing locks during attacks, exposing sides and rear. Intercepted damage charges a visible frontal counterburst, so defense always produces an attack. |
-| 4 | Switchyard Behemoth | Anchors and sweeps one moving beam; below 45% health it follows with a sweep from the opposite side. The beam leaves one continuous escape route. It has no shield. |
-| 5 | Crown Engine | Three body-attached relay hardpoints each own one shield sector and one bolt lane. Destroying a hardpoint removes both. The remaining hardpoints fire faster after each loss, linking defense, objective priority, and offense. |
-| 6 | Siege Battery | Fires 8–10 long-lived projectiles from alternating banks. Each bank locks direction for its salvo; the next bank attacks a different lane. It has no shield. |
-| 7 | Vector Loom | Translates parallel laser walls across the arena, then uses an orthogonal pass. Every wall has an explicit moving gap. It has no shield. |
-| 8 | Pulse Core | Alternates expanding and contracting pulse rings with a missing wedge, then adds sparse spiral projectiles. It tests distance control without a shield. |
+| # | Boss | Common barrage motion | Identity patterns and defense/attack link |
+| ---: | --- | --- | --- |
+| 1 | Foundry Colossus | `SPREAD` | `Furnace Gates` closes two warned lanes, then leaves the other lanes open. A wall collision after its common charge creates a 1.4 s vulnerability. It has no shield. |
+| 2 | Archive Leviathan | `ROTATE` | Fires a fixed X-cross laser, alternating its orientation by 45 degrees on the next cast. The exact warned corridors are the damage corridors. It has no shield. |
+| 3 | Drydock Titan | `SPREAD` | Has a permanent 110-degree frontal shield with 90% interception. Facing locks during attacks, exposing sides and rear. Intercepted damage charges a visible frontal counterburst, so defense always produces an attack. |
+| 4 | Switchyard Behemoth | `ROTATE` | Anchors and sweeps one moving beam; below 45% health it follows with a sweep from the opposite side. The beam leaves one continuous escape route. It has no shield. |
+| 5 | Crown Engine | `SPREAD` | Three body-attached relay hardpoints each own one shield sector and one bolt lane. Destroying a hardpoint removes both. The remaining hardpoints fire faster after each loss, linking defense, objective priority, and offense. |
+| 6 | Siege Battery | `SPREAD` | Fires 8–10 long-lived projectiles from alternating banks. Each bank locks direction for its salvo; the next bank attacks a different lane. It has no shield. |
+| 7 | Vector Loom | `ROTATE` | Translates parallel laser walls across the arena, then uses an orthogonal pass. Every wall has an explicit moving gap. It has no shield. |
+| 8 | Pulse Core | `ROTATE` | Alternates expanding and contracting pulse rings with a missing wedge, then adds sparse spiral projectiles. It tests distance control without a shield. |
 
 The Crown hardpoints are attached, destructible boss parts. They are not free-standing
 objective pylons and require no new raster identity; collision and state use three
@@ -264,7 +264,8 @@ named theme.
 3. **Implement the eight-cycle campaign and common boss kit.** Convert progression,
    quotas, warnings, HUD, layouts, pickups, difficulty, guidebook, diagnostics, and
    report snapshots to eight cycles. Add the monotonic stat table, common committed
-   charge, common aimed volley, identity-selection cap, and exact damage bands.
+   charge, common three-row broad projectile barrage with profile-locked spread or
+   rotation, identity-selection cap, and exact damage bands.
 
 4. **Implement all eight boss identities.** Replace the global shield rule with profile-
    owned defense. Implement and validate Furnace Gates, alternating X-cross, frontal

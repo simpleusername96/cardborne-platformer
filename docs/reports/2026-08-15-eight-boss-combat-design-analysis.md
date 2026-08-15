@@ -99,10 +99,16 @@ current retained renderer.
 | Randomly curving beam | Telegraph cannot reliably match final collision | Rejected |
 | Summon-only commander | Can become defense-only or idle after add failure | Rejected |
 
-All selected bosses receive a committed charge and aimed volley. Those attacks provide
-a learnable baseline, but a selection cap keeps identity patterns dominant. The first
-five bosses are revisions of the existing five; Siege Battery, Vector Loom, and Pulse
-Core are the three new bosses.
+All selected bosses receive a committed charge and a broad projectile-row barrage.
+The barrage is not a sequence of bullets aimed down one line. One activation emits
+three rows, and each row contains at least four simultaneous projectiles distributed
+across the playfield. The selected variants match the two user-sketched motions:
+`SPREAD` opens the projectile headings into a fixed fan, and `ROTATE` turns the emission
+axis between complete rows to sweep an arc. Foundry Colossus, Drydock Titan, Crown
+Engine, and Siege Battery use `SPREAD`; Archive Leviathan, Switchyard Behemoth, Vector
+Loom, and Pulse Core use `ROTATE`. A selection cap keeps these common attacks from
+displacing identity patterns. The first five bosses are revisions of the existing five;
+Siege Battery, Vector Loom, and Pulse Core are the three new bosses.
 
 ### Defense and damage fairness
 
