@@ -1,7 +1,7 @@
 extends SceneTree
 
 ## Compatibility entrypoint for the retired breakable-bulkhead validator.
-## Structural walls are immutable; persistent neutral facilities are the sole
+## Structural walls are immutable; dormant neutral facilities are the sole
 ## destructible map interaction and both factions may damage them.
 
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
@@ -49,7 +49,7 @@ func _validate_field(field_id: StringName) -> void:
 	)
 	for stage_id in Catalog.STAGE_IDS:
 		var pickups := layout.pickup_blueprint(stage_id)
-		_expect(pickups.size() == 7, "%s/%s exposes seven direct pickups" % [field_id, stage_id])
+		_expect(pickups.size() == 12, "%s/%s exposes twelve authored pickups" % [field_id, stage_id])
 		for pickup in pickups:
 			_expect(not Dictionary(pickup).has("guarded_by"), "%s/%s pickup has no terrain guard" % [field_id, stage_id])
 
@@ -62,14 +62,14 @@ func _validate_mystery_device_authority() -> void:
 	var resolved := runtime.receive_damage(&"device", MysteryDeviceRuntime.DEVICE_HEALTH, &"player", &"direct")
 	_expect(
 		bool(resolved["accepted"]) and bool(resolved["broken"]),
-		"player direct damage is the neutral map destructible interaction"
+		"player direct damage activates the neutral map interaction"
 	)
 	var event := Dictionary(resolved["break_event"])
 	_expect(
 		not bool(event["grants_experience"])
 			and StringName(event["drop"]).is_empty()
 			and not bool(event["projectiles_blocked"]),
-		"destroying a neutral facility grants no XP/drop and does not block projectiles"
+		"activating a neutral facility grants no XP/drop and does not block projectiles"
 	)
 
 

@@ -1,13 +1,13 @@
 class_name VehicleStageDifficulty
 extends RefCounted
 
-## Bounded cycle-to-cycle pressure. Ordinary-enemy curves retain their previous
-## owner; boss curves are an explicit eight-cycle contract.
+## Bounded cycle-to-cycle pressure. Ordinary health increases by an exact
+## 30-percent Stage 1 baseline step from Stage 2 onward; bosses own a separate curve.
 
-const HEALTH := [0.85, 0.94, 1.03, 1.12, 1.21, 1.30, 1.39, 1.48]
+const HEALTH := [1.00, 1.30, 1.60, 1.90, 2.20, 2.50, 2.80, 3.10]
 const DAMAGE := [1.0, 1.03, 1.06, 1.09, 1.12, 1.15, 1.18, 1.21]
 const SPEED := [1.0, 1.01, 1.02, 1.03, 1.04, 1.05, 1.06, 1.07]
-const ORDINARY_HEALTH_PRESSURE := [1.15, 1.27, 1.39, 1.51, 1.63, 1.75, 1.87, 2.0]
+const ORDINARY_HEALTH_PRESSURE := [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]
 const ORDINARY_DAMAGE_PRESSURE := [0.98, 1.08, 1.18, 1.28, 1.38, 1.48, 1.57, 1.66]
 const ORDINARY_HEALTH_MULTIPLIER := 2.60
 const ORDINARY_DURABILITY_MULTIPLIER := 1.20
@@ -32,6 +32,10 @@ static func multipliers(cycle_index: int) -> Dictionary:
 static func boss_health(cycle_index: int) -> float:
 	var index := _bounded_stage_index(cycle_index)
 	return BOSS_BASE_HEALTH[index] * BOSS_HEALTH_MULTIPLIERS[index] if index >= 0 else 0.0
+
+static func ordinary_health_multiplier(cycle_index: int) -> float:
+	var index := _bounded_stage_index(cycle_index)
+	return HEALTH[index] if index >= 0 else 0.0
 
 static func boss_damage_multiplier(cycle_index: int) -> float:
 	var index := _bounded_stage_index(cycle_index)

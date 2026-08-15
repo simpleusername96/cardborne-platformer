@@ -91,10 +91,10 @@ func _run() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, StageCatalog.STAGE_IDS)
 	for stage_id in StageCatalog.STAGE_IDS:
 		var stage_pickups := layout.pickup_blueprint(stage_id)
-		_expect(stage_pickups.size() == 7, "%s has two recalls and five XP shards" % stage_id)
+		_expect(stage_pickups.size() == 12, "%s has two recalls and ten XP shards" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").is_empty(), "%s pickup set contains no repairs" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s pickup set contains exactly two experience recalls" % stage_id)
-		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_shard").size() == 5, "%s pickup set contains exactly five XP shards" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_shard").size() == 10, "%s pickup set contains exactly ten XP shards" % stage_id)
 	var kinds: Dictionary = {}
 	for item in layout.pickup_blueprint(&"stage_1"):
 		kinds[StringName(item["kind"])] = true
@@ -186,7 +186,7 @@ func _run() -> void:
 	root.add_child(stage)
 	await process_frame
 	_expect(stage.get("pickups").size() == 2, "live stage exposes only the two recall pickups")
-	_expect(int(stage.get("experience_runtime").call("snapshot")["shard_count"]) == 5, "live stage materializes five visible authored XP shards")
+	_expect(int(stage.get("experience_runtime").call("snapshot")["shard_count"]) == 10, "live stage materializes ten visible authored XP shards")
 	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")

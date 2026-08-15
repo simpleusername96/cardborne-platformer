@@ -48,7 +48,7 @@ In scope:
 - Miss Compensation, Hit Chain, Braced Fire, and missing active/secondary offer
   reservation.
 - Repair, Barrier, Gravity, Cryo, and Weakpoint facilities; repair-pickup replacement and
-  five visible XP shards per cycle.
+  ten visible XP shards per cycle.
 - One shared left-aligned vertically stacked report body for victory, defeat, and Settings.
 - Removal of Shock from resources, runtime state, offers, copy, telemetry/reporting,
   imagery, and validators. Cryo is the only utility primary attribute.
@@ -101,7 +101,7 @@ Exact actions requiring user approval:
 | Ordinary enemies | Archetypes and specialist runtime own existing active roles; no four proposed identities exist | `vehicle_enemy_archetypes.gd`, `vehicle_enemy_specialist_runtime.gd` | Add Rail Sniper, Orbit Gunner, Bombing Runner, and Wreck Scavenger; no Shield Breaker or corpse system | 3.1 |
 | Primary attributes | Build has damage IDs Thermal/Toxin and utility IDs Cryo/Shock; payload/status/validators still reach Shock | Build, payload, status, card resource, manifest, and grep evidence | Delete Shock with no replacement; utility slot contains Cryo only | 1.2 |
 | New upgrades | Shot groups and movement are orchestrated in combat/run code, while definitions and offers are card-owned | Card/runtime owners | Implement the three exact bounded card contracts and reserve missing weapon categories | 3.2, 3.3 |
-| Neutral facilities | `VehicleMysteryDeviceRuntime` owns three destroy-to-trigger outcomes; repair remains a pickup | Runtime, visual spec, and product spec | Five persistent, attackable, pass-through facilities affect player and enemies symmetrically | 3.4 |
+| Neutral facilities | `VehicleMysteryDeviceRuntime` owns three destroy-to-trigger outcomes; repair remains a pickup | Runtime, visual spec, and product spec | Five dormant, attackable, pass-through facilities activate symmetric effects for 12 seconds when destroyed | 3.4 |
 | Diagnostics | Store retains 20 sessions and already sorts by saved time/session ID with 25 MiB/14-day caps and quarantine | Store and validator | Change maximum to newest 10 on both load and persist; keep other caps and quarantine | 4.1 |
 | Report | `VehicleCombatReportBody` is shared but terminal surfaces still use columns/tabs/build rail and nested content regions | UI owners and validators | One left-aligned vertical stack, one outer scroll, fixed primary action, no tabs/sub-scroll/side rail | 4.2 |
 | Visuals | Manifest has 77 approved production images after Shock removal; 13 grounded candidates remain outside production pending exact-file approval | Manifest and workbench evidence | Promote the 13 approved rasters for exactly 90 production images | 1.3, 5.1, 5.2 |
@@ -170,17 +170,18 @@ Readiness statement:
   `60` ends the window. Split children share one shot-group outcome for all three cards.
 - Missing active and secondary categories reserve one offer slot each; reservation ends
   per category immediately after acquisition.
-- Facilities have `360` health, last until destroyed or cycle cleanup, accept player and
-  hostile damage, do not block projectiles, and affect every eligible actor whose center
-  is inside the radius. Repair/Barrier use radius `420` and restore one third of maximum
+- Facilities have `360` health, begin dormant, accept player and hostile damage, and do
+  not block projectiles. Destruction activates the assigned effect for exactly `12s` and
+  affects every eligible actor whose center is inside the radius. Repair/Barrier use
+  radius `420` and restore one third of maximum
   hull per second; Barrier caps at shield equal to maximum hull. Gravity uses radius `480`
   and multiplies acceleration and maximum speed by `0.55` without positional pull. Cryo
   uses radius `360` and multiplies movement and attack cadence by `0.70`. Weakpoint uses
   radius `420` and multiplies received damage by `1.25`. Effects stop immediately outside
-  the radius or when the facility is destroyed.
+  the radius or when the activation expires.
 - Spawn three distinct facilities per cycle from a run-seeded deterministic rotation;
   across eight cycles every type appears at least once. Remove repair pickups, replace
-  their authored sockets with XP shards, and add exactly five visible XP shards per cycle.
+  their authored sockets with XP shards, and add exactly ten visible XP shards per cycle.
 
 ## Tasks
 
@@ -279,7 +280,7 @@ and `VehicleRun` orchestration hooks.
 - [x] **3.4** Replace Mystery outcomes and repair pickups with five symmetric facilities.
   - Accept: player/enemy enter/exit tests prove exact radii/effects, both factions can
     destroy facilities, projectiles continue through, deterministic cycle distribution
-    covers all types, repair pickups are unreachable, and five added XP shards remain visible.
+    covers all types, repair pickups are unreachable, and ten added XP shards remain visible.
 
 Phase gate:
 
@@ -408,7 +409,7 @@ Execution evidence recorded on 2026-08-15:
 - Focused validators passed for upgrade system/facilities, eight-boss campaign, boss
   patterns/runtime, specialist enemies, attack/status contracts, diagnostics, stage/final
   reports, eight-cycle catalog, engagement steering, localization, guidebook, experience,
-  field layout, renderer, semantic assets, weapon balance, persistent facilities, map
+  field layout, renderer, semantic assets, weapon balance, timed facilities, map
   integration, destructible terrain, and the full VehicleRun fixture.
 - The shared report capture matrix rendered Korean and English at 960x540, 1280x720, and
   1920x1080 with 100% and 200% text scale. Inspection found no clipping, overflow, nested
@@ -433,12 +434,21 @@ Execution evidence recorded on 2026-08-15:
   unavailable; no prior Web result is relabeled as current evidence. Task 5.3 remains open.
 - A live-play visibility follow-up found that facility snapshots omitted a redundant
   `visible` field while the renderer defaulted that omission to hidden. Facilities now
-  render from placement through destruction, and their existing silhouette contour clips
-  clockwise to remaining durability. The Stage 1 materialized cap increased from 6 to 18
+  render from placement; the later lifecycle correction below supersedes that checkpoint's
+  contour semantics. The Stage 1 materialized cap increased from 6 to 18
   to remove the unintended six-enemy lock while later caps and the exact 48 ceiling remain
   unchanged. Focused renderer, facility, encounter, campaign, performance-scenario, visual-
   authority, rendered-capture, and Web-export gates passed; evidence is
   `build/captures/neutral-facility-density-fix/05-two-field-items.png`.
+- BK corrected the facility lifecycle after that visibility pass: facilities are dormant
+  and apply no effect until destruction, then remain active for 12 seconds with the
+  muted contour switching to a system-cyan remaining-time edge before expiry. Authored XP shards increase
+  from five to ten per cycle, and ordinary health uses exact Stage 1-relative multipliers
+  `1.0/1.3/1.6/1.9/2.2/2.5/2.8/3.1`; boss health remains independently owned. Facility,
+  renderer, layout, XP, difficulty, guidebook, diagnostics, VehicleRun, and performance-
+  scenario validators pass. Visual evidence is
+  `build/captures/facility-activation-xp-health-fix-muted/05-two-field-items.png`; visual-
+  authority validation and Web export also pass.
 
 ## Completion and Stop Conditions
 

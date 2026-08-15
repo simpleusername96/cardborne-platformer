@@ -38,10 +38,10 @@ func _validate_stage_items() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, Catalog.STAGE_IDS)
 	for stage_id in Catalog.STAGE_IDS:
 		var pickups := layout.pickup_blueprint(stage_id)
-		_expect(pickups.size() == 7, "%s has two recalls and five authored XP shards" % stage_id)
+		_expect(pickups.size() == 12, "%s has two recalls and ten authored XP shards" % stage_id)
 		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").is_empty(), "%s has no repair pickups" % stage_id)
 		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s keeps two direct recall pickups" % stage_id)
-		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_shard").size() == 5, "%s adds five visible XP shards" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_shard").size() == 10, "%s adds ten visible XP shards" % stage_id)
 
 
 func _validate_experience_runtime() -> void:

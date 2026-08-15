@@ -1440,17 +1440,14 @@ func _validate_mystery_device_presentation(
 	presentation["mystery_devices"] = [
 		{
 			"id":"device-a",
-			"state":&"intact",
+			"state":&"dormant",
 			"position":device_position,
-			"health":45.0,
-			"max_health":90.0,
-			"health_visible_timer":1.0,
 			"outcome":&"gravity",
 			"effect_radius":480.0,
 		},
-		{"id":"device-b", "state":&"intact", "visible":true, "position":resolved_position, "outcome":&"cryo", "effect_radius":360.0},
-		{"id":"device-c", "state":&"intact", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint", "effect_radius":420.0},
-		{"id":"device-d", "state":&"retired", "visible":true, "position":Vector2(960.0, 260.0)},
+		{"id":"device-b", "state":&"active", "visible":true, "position":resolved_position, "outcome":&"cryo", "effect_radius":360.0, "active_ratio":0.5},
+		{"id":"device-c", "state":&"active", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint", "effect_radius":420.0, "active_ratio":0.25},
+		{"id":"device-d", "state":&"expired", "visible":true, "position":Vector2(960.0, 260.0)},
 	]
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
@@ -1495,7 +1492,10 @@ func _validate_mystery_device_presentation(
 		"assigned outcome symbols are visible before damage and remain visible after resolution"
 	)
 	_expect(
-		is_equal_approx(gravity_contour.multimesh.buffer[12], 0.5)
+		is_equal_approx(gravity_contour.multimesh.buffer[12], 1.0)
+		and is_equal_approx(gravity_contour.multimesh.buffer[13], 0.0)
+		and is_equal_approx(cryo_contour.multimesh.buffer[12], 0.5)
+		and is_equal_approx(cryo_contour.multimesh.buffer[13], 1.0)
 		and is_equal_approx(
 			gravity_contour.multimesh.buffer[15],
 			Renderer.INTERACTION_EDGE_ALPHA_REDUCED
@@ -1508,13 +1508,13 @@ func _validate_mystery_device_presentation(
 			Renderer.MYSTERY_DEVICE_SYMBOL_RADIUS
 				+ Renderer.INTERACTION_CONTOUR_WORLD_UNITS
 		),
-		"placed facilities default visible and clip their static contour to remaining durability"
+		"dormant facilities show a full contour and active facilities clip it to remaining time"
 	)
 	_expect(
 		rings.z_index == -1
-			and rings.multimesh.visible_instance_count == 3
-			and disks.multimesh.visible_instance_count == 3,
-		"intact gravity, cryo, and weakpoint facilities publish their persistent full-area footprints"
+			and rings.multimesh.visible_instance_count == 2
+			and disks.multimesh.visible_instance_count == 2,
+		"only active cryo and weakpoint facilities publish full-area footprints"
 	)
 	var health_snapshot := renderer.debug_snapshot()
 	_expect(
@@ -1522,8 +1522,8 @@ func _validate_mystery_device_presentation(
 			and int(health_snapshot["health_bar_count"]) == 0,
 		"Anomaly Devices omit combat health bars"
 	)
-	var expected_radii := [480.0, 360.0, 420.0]
-	var expected_alphas := [0.10, 0.12, 0.10]
+	var expected_radii := [360.0, 420.0]
+	var expected_alphas := [0.12, 0.10]
 	for index in expected_radii.size():
 		var offset := index * Renderer.BASE_BUFFER_FLOATS_PER_INSTANCE
 		_expect(
@@ -1546,8 +1546,8 @@ func _validate_mystery_device_presentation(
 			% (index + 1)
 		)
 	presentation["mystery_devices"] = [
-		{"id":"device-repair", "state":&"intact", "visible":true, "position":device_position, "outcome":&"repair", "effect_radius":420.0},
-		{"id":"device-barrier", "state":&"intact", "visible":true, "position":resolved_position, "outcome":&"barrier", "effect_radius":420.0},
+		{"id":"device-repair", "state":&"active", "visible":true, "position":device_position, "outcome":&"repair", "effect_radius":420.0, "active_ratio":1.0},
+		{"id":"device-barrier", "state":&"active", "visible":true, "position":resolved_position, "outcome":&"barrier", "effect_radius":420.0, "active_ratio":0.5},
 	]
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
@@ -1567,9 +1567,9 @@ func _validate_mystery_device_presentation(
 		"repair and barrier facilities use bounded semantic bodies, contours, and full-area support footprints"
 	)
 	presentation["mystery_devices"] = [
-		{"id":"device-a", "state":&"intact", "visible":true, "position":device_position, "outcome":&"gravity", "effect_radius":480.0},
-		{"id":"device-b", "state":&"intact", "visible":true, "position":resolved_position, "outcome":&"cryo", "effect_radius":360.0},
-		{"id":"device-c", "state":&"intact", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint", "effect_radius":420.0},
+		{"id":"device-a", "state":&"dormant", "visible":true, "position":device_position, "outcome":&"gravity", "effect_radius":480.0},
+		{"id":"device-b", "state":&"dormant", "visible":true, "position":resolved_position, "outcome":&"cryo", "effect_radius":360.0},
+		{"id":"device-c", "state":&"dormant", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint", "effect_radius":420.0},
 	]
 	var pickup_position := Vector2(340.0, 420.0)
 	presentation["map_pickups"] = [
@@ -1646,7 +1646,7 @@ func _validate_mystery_device_presentation(
 	presentation["mystery_devices"] = [
 		{
 			"id":"device-edge",
-			"state":&"intact",
+			"state":&"dormant",
 			"visible":true,
 			"position":Vector2(-120.0, 260.0),
 			"outcome":&"gravity",

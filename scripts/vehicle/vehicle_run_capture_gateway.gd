@@ -907,10 +907,15 @@ func _capture_field_item_evidence() -> void:
 		{"id":&"capture_facility_gravity", "pos":facility_positions[2]},
 	], 1701, _run.current_stage_id)
 	var facility_outcomes := [&"repair", &"barrier", &"gravity"]
-	var facility_health := [360.0, 240.0, 120.0]
 	for index in _run.mystery_device_runtime.devices.size():
 		_run.mystery_device_runtime.devices[index]["outcome"] = facility_outcomes[index]
-		_run.mystery_device_runtime.devices[index]["health"] = facility_health[index]
+		if index > 0:
+			_run.mystery_device_runtime.devices[index]["state"] = &"active"
+			_run.mystery_device_runtime.devices[index]["health"] = 0.0
+			_run.mystery_device_runtime.devices[index]["active_remaining"] = (
+				_run.mystery_device_runtime.ACTIVE_DURATION_SECONDS
+				* (0.67 if index == 1 else 0.33)
+			)
 	_run.pickups.clear()
 	_run.pickups.append({"id":"capture_recall", "kind":&"experience_recall", "pos":_run.player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":0.0})
 	_run.experience_runtime.clear_shards()
@@ -1463,6 +1468,11 @@ func _capture_exact_area_effect_evidence() -> void:
 			_run.current_stage_id
 		)
 		_run.mystery_device_runtime.devices[0]["outcome"] = outcome
+		_run.mystery_device_runtime.devices[0]["state"] = &"active"
+		_run.mystery_device_runtime.devices[0]["health"] = 0.0
+		_run.mystery_device_runtime.devices[0]["active_remaining"] = (
+			_run.mystery_device_runtime.ACTIVE_DURATION_SECONDS * 0.65
+		)
 		var radius := float(
 			_run.mystery_device_runtime.OUTCOME_PROFILE[outcome]["radius"]
 		)

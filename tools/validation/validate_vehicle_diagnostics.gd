@@ -35,7 +35,7 @@ func _initialize() -> void:
 		{"kind":"stage_transition_step", "fields":{"stage_index":0, "step":&"capture_report"}},
 		{"kind":"upgrade_focused", "fields":{"upgrade_id":&"thermal_burst"}},
 		{"kind":"announcement_shown", "fields":{"semantic_id":&"boss_inbound"}},
-		{"kind":"neutral_facility_destroyed", "fields":{"device_id":&"facility_a"}},
+		{"kind":"neutral_facility_activated", "fields":{"device_id":&"facility_a"}},
 		{"kind":"result_shown", "fields":{"stage_count":8}},
 	]:
 		_expect(

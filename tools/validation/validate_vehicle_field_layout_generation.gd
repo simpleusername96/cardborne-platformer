@@ -57,7 +57,7 @@ func _validate_field(field_id: StringName) -> void:
 		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s/%s retains at least 20 ordinary anchors" % [field_id, stage_id])
 		_expect(tactical.boss_arrival_anchors.size() >= 8, "%s/%s retains at least eight boss anchors" % [field_id, stage_id])
 		_expect(fixed.mystery_device_blueprint(stage_id).size() == 3, "%s/%s has three mystery devices" % [field_id, stage_id])
-		_expect(fixed.pickup_blueprint(stage_id).size() == 7, "%s/%s has two recalls and five XP shards" % [field_id, stage_id])
+		_expect(fixed.pickup_blueprint(stage_id).size() == 12, "%s/%s has two recalls and ten XP shards" % [field_id, stage_id])
 		_validate_stage_objects(fixed, stage_id)
 		_validate_stage_spacing(fixed, stage_id)
 
@@ -132,7 +132,7 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 		for second in range(first + 1, positions.size()):
 			_expect(positions[first].distance_to(positions[second]) >= 180.0, "%s item sockets keep pair clearance" % stage_id)
 	_expect(occupied_sectors.size() >= 3, "%s items occupy at least three field sectors" % stage_id)
-	_expect(recall_count == 2 and shard_count == 5, "%s keeps two recalls and replaces repair with five XP shards" % stage_id)
+	_expect(recall_count == 2 and shard_count == 10, "%s keeps two recalls and adds ten XP shards" % stage_id)
 	var recall_positions: Array[Vector2] = []
 	for spec in layout.pickup_blueprint(stage_id):
 		if StringName(spec["kind"]) == &"experience_recall":
@@ -161,7 +161,7 @@ func _validate_stage_spacing(layout: VehicleFieldLayout, stage_id: StringName) -
 			_expect(pickup_pos.distance_to(Vector2(pickups[second]["pos"])) >= 384.0, "%s pickups keep 384 spacing" % stage_id)
 		for device in devices:
 			_expect(pickup_pos.distance_to(Vector2(device["pos"])) >= 480.0, "%s pickup avoids device" % stage_id)
-	for first in range(3, pickups.size()):
+	for first in range(Generator.PICKUPS_PER_GROUP, pickups.size()):
 		var reward_pickup_pos := Vector2(pickups[first]["pos"])
 		for second in range(first + 1, pickups.size()):
 			_expect(reward_pickup_pos.distance_to(Vector2(pickups[second]["pos"])) >= 672.0, "%s converted reward pickups keep their authored spacing" % stage_id)

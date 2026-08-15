@@ -280,12 +280,10 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 	var outside_health := Dictionary(Array(outside_chaser["stat_rows"])[0])
 	var active_health := Dictionary(Array(active_chaser["stat_rows"])[0])
 	var definition := Archetypes.definition(&"chaser")
-	var stage_two_curve := StageDifficulty.multipliers(1)
 	var expected_stage_two_health := (
 		float(definition["health"])
 		* EncounterDirector.ENEMY_HEALTH_MULTIPLIER
-		* float(stage_two_curve["health"])
-		* float(stage_two_curve["ordinary_health_pressure"])
+		* StageDifficulty.ordinary_health_multiplier(1)
 		* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
 		* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER
 	)
@@ -324,7 +322,7 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 			and Array(anomaly["stat_rows"]).size() == 6
 			and String(Dictionary(Array(anomaly["stat_rows"])[0])["value_key"])
 				== "GUIDE_VALUE_HP",
-		"Anomaly Device exposes HP and all five persistent facility outcomes"
+		"Anomaly Device exposes HP and all five timed activation outcomes"
 	)
 
 

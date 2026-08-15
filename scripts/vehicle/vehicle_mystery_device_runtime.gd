@@ -1,12 +1,13 @@
 class_name VehicleMysteryDeviceRuntime
 extends RefCounted
 
-## Persistent neutral facilities. They never block projectiles and affect every
-## eligible actor inside their radius; VehicleRun applies the returned modifier.
+## Dormant neutral facilities activate their symmetric area effect when broken.
+## The bounded active timer is advanced here; VehicleRun only applies modifiers.
 
 const DEVICE_COUNT := 3
 const DEVICE_HEALTH := 360.0
 const DEVICE_RADIUS := 84.0
+const ACTIVE_DURATION_SECONDS := 12.0
 const OUTCOME_IDS: Array[StringName] = [&"repair", &"barrier", &"gravity", &"cryo", &"weakpoint"]
 const OUTCOME_PROFILE := {
 	&"repair": {"radius": 420.0, "hull_restore_per_second": 1.0 / 3.0},
@@ -23,7 +24,16 @@ func configure(device_blueprint: Array, layout_seed: int, stage_id: StringName) 
 	for index in mini(DEVICE_COUNT, device_blueprint.size()):
 		var blueprint := Dictionary(device_blueprint[index])
 		var outcome := rotation[index]
-		devices.append({"id": StringName(blueprint.get("id", "facility_%d" % index)), "position": Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))), "health": DEVICE_HEALTH, "outcome": outcome, "state": &"intact"})
+		devices.append({"id": StringName(blueprint.get("id", "facility_%d" % index)), "position": Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))), "health": DEVICE_HEALTH, "outcome": outcome, "state": &"dormant", "active_remaining": 0.0})
+
+func advance(delta: float) -> void:
+	var step := maxf(0.0, delta)
+	for device in devices:
+		if StringName(device["state"]) != &"active":
+			continue
+		device["active_remaining"] = maxf(0.0, float(device["active_remaining"]) - step)
+		if float(device["active_remaining"]) <= 0.0:
+			device["state"] = &"expired"
 
 static func accepts_damage(source_team: StringName, attack_kind: StringName) -> bool:
 	return source_team in [&"player", &"hostile"] and attack_kind in [&"direct", &"area", &"projectile"]
@@ -31,15 +41,16 @@ static func accepts_damage(source_team: StringName, attack_kind: StringName) -> 
 func receive_damage(device_id: StringName, amount: float, source_team: StringName, attack_kind: StringName) -> Dictionary:
 	var device := _device_by_id(device_id)
 	var receipt := {"accepted": false, "broken": false, "device_id": device_id, "remaining_health": float(device.get("health", 0.0)), "break_event": {}}
-	if device.is_empty() or StringName(device["state"]) != &"intact" or not accepts_damage(source_team, attack_kind) or amount <= 0.0:
+	if device.is_empty() or StringName(device["state"]) != &"dormant" or not accepts_damage(source_team, attack_kind) or amount <= 0.0:
 		return receipt
 	device["health"] = maxf(0.0, float(device["health"]) - amount)
 	receipt["accepted"] = true
 	receipt["remaining_health"] = float(device["health"])
 	if float(device["health"]) <= 0.0:
-		device["state"] = &"destroyed"
+		device["state"] = &"active"
+		device["active_remaining"] = ACTIVE_DURATION_SECONDS
 		receipt["broken"] = true
-		receipt["break_event"] = {"kind": &"facility_destroyed", "device_id": device_id, "source": &"neutral_facility", "grants_experience": false, "drop": &"", "projectiles_blocked": false}
+		receipt["break_event"] = {"kind": &"facility_activated", "device_id": device_id, "source": &"neutral_facility", "grants_experience": false, "drop": &"", "projectiles_blocked": false, "duration": ACTIVE_DURATION_SECONDS}
 	return receipt
 
 func modifiers_at(position: Vector2) -> Array[Dictionary]:
@@ -49,7 +60,7 @@ func modifiers_at(position: Vector2) -> Array[Dictionary]:
 func fill_modifiers_at(position: Vector2, output: Array[Dictionary]) -> Array[Dictionary]:
 	output.clear()
 	for device in devices:
-		if StringName(device["state"]) != &"intact":
+		if StringName(device["state"]) != &"active":
 			continue
 		var profile := Dictionary(OUTCOME_PROFILE[StringName(device["outcome"])])
 		if position.distance_to(Vector2(device["position"])) <= float(profile["radius"]):
@@ -65,7 +76,7 @@ func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 
 func is_position_clear(position: Vector2, actor_radius: float) -> bool:
 	for device in devices:
-		if StringName(device["state"]) == &"intact" and position.distance_to(Vector2(device["position"])) < DEVICE_RADIUS + maxf(0.0, actor_radius):
+		if StringName(device["state"]) == &"dormant" and position.distance_to(Vector2(device["position"])) < DEVICE_RADIUS + maxf(0.0, actor_radius):
 			return false
 	return true
 
@@ -78,7 +89,7 @@ func first_damageable_segment_hit(from: Vector2, to: Vector2, padding: float, re
 	receipt.clear()
 	for index in devices.size():
 		var device := devices[index]
-		if StringName(device["state"]) != &"intact":
+		if StringName(device["state"]) != &"dormant":
 			continue
 		var position := Vector2(device["position"])
 		if Geometry2D.get_closest_point_to_segment(position, from, to).distance_to(position) <= DEVICE_RADIUS + maxf(0.0, padding):
@@ -92,7 +103,8 @@ func snapshot() -> Dictionary:
 	var records: Array[Dictionary] = []
 	for device in devices:
 		var profile := Dictionary(OUTCOME_PROFILE[StringName(device["outcome"])])
-		records.append({"id": StringName(device["id"]), "position": Vector2(device["position"]), "radius": DEVICE_RADIUS, "effect_radius": float(profile["radius"]), "health": float(device["health"]), "max_health": DEVICE_HEALTH, "outcome": StringName(device["outcome"]), "state": StringName(device["state"]), "projectiles_blocked": false})
+		var active_remaining := float(device.get("active_remaining", 0.0))
+		records.append({"id": StringName(device["id"]), "position": Vector2(device["position"]), "radius": DEVICE_RADIUS, "effect_radius": float(profile["radius"]), "health": float(device["health"]), "max_health": DEVICE_HEALTH, "outcome": StringName(device["outcome"]), "state": StringName(device["state"]), "active_remaining": active_remaining, "active_duration": ACTIVE_DURATION_SECONDS, "active_ratio": clampf(active_remaining / ACTIVE_DURATION_SECONDS, 0.0, 1.0), "projectiles_blocked": false})
 	return {"devices": records}
 
 func _rotation(layout_seed: int, stage_id: StringName) -> Array[StringName]:

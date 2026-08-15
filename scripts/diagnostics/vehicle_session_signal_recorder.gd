@@ -19,7 +19,7 @@ const EVENT_KINDS := {
 	"upgrade_opened": true, "upgrade_focused": true, "upgrade_confirmed": true,
 	"announcement_queued": true, "announcement_shown": true,
 	"announcement_interrupted": true, "announcement_dropped": true,
-	"neutral_facility_destroyed": true,
+	"neutral_facility_activated": true,
 	"layout_fault": true, "result_shown": true, "run_completed": true,
 	"run_failed": true,
 }

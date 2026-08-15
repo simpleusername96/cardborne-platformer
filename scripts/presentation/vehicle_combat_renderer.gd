@@ -467,6 +467,7 @@ func _build_batches() -> void:
 	_mystery_edge_material = ShaderMaterial.new()
 	_mystery_edge_material.shader = INTERACTION_EDGE_SHADER
 	_mystery_edge_material.set_shader_parameter("edge_color", Art.SYSTEM)
+	_mystery_edge_material.set_shader_parameter("inactive_edge_color", Art.LINE)
 	_mystery_edge_material.set_shader_parameter("progress_enabled", true)
 	var unit_quad_mesh := _build_unit_quad_mesh()
 	var health_rect_mesh := _build_unit_quad_mesh(0.5)
@@ -1930,7 +1931,7 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		if not bool(device.get("visible", true)):
 			continue
 		var device_state := StringName(device.get("state", &""))
-		if device_state != &"intact":
+		if device_state not in [&"dormant", &"active"]:
 			continue
 		var outcome_id := StringName(device.get("outcome", &""))
 		var symbol_descriptor := _mystery_symbol_descriptor(outcome_id)
@@ -1950,12 +1951,12 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		).has_point(position):
 			continue
 		var edge_alpha := _interaction_edge_alpha(run_time, phase_offset, reduced_motion)
-		var maximum_health := maxf(0.001, float(device.get("max_health", 1.0)))
-		var remaining_life_ratio := clampf(
-			float(device.get("health", maximum_health)) / maximum_health,
-			0.0,
-			1.0
-		)
+		var remaining_time_ratio := 1.0
+		var active_flag := 0.0
+		if device_state == &"active":
+			edge_alpha = maxf(edge_alpha, 0.72)
+			remaining_time_ratio = clampf(float(device.get("active_ratio", 0.0)), 0.0, 1.0)
+			active_flag = 1.0
 		var contour_batch := _mystery_device_contour_batches.get(
 			outcome_id
 		) as BatchHandle
@@ -1967,10 +1968,10 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			0.0,
 			Vector2.ONE * (MYSTERY_DEVICE_SYMBOL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS),
 			Color.WHITE,
-			Color(remaining_life_ratio, 0.0, 0.0, edge_alpha)
+			Color(remaining_time_ratio, active_flag, 0.0, edge_alpha)
 		)
-		# The visible outcome symbol and its effect footprint share the intact
-		# facility lifecycle; destruction removes both immediately.
+		# The authored symbol remains as the source while the activated footprint
+		# and its bounded countdown are live.
 		_queue_semantic_texture(
 			symbol_asset, position, 0.0, MYSTERY_DEVICE_SYMBOL_RADIUS, Color.WHITE
 		)
@@ -2007,7 +2008,7 @@ func _sync_facility_effects(state: Dictionary, visible_world: Rect2) -> void:
 		return
 	for device_variant in devices_variant:
 		var device := Dictionary(device_variant)
-		if StringName(device.get("state", &"")) != &"intact":
+		if StringName(device.get("state", &"")) != &"active":
 			continue
 		var effect_id := StringName(device.get("outcome", &""))
 		if effect_id not in MYSTERY_OUTCOME_IDS:

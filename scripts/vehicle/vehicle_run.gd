@@ -591,6 +591,7 @@ func _physics_process(delta: float) -> void:
 		_performance_scenario.before_physics(self, delta)
 	if _simulation_active():
 		var pickup_motion_start := player_position
+		mystery_device_runtime.advance(delta)
 		_simulation_lod_bucket = 1 - _simulation_lod_bucket
 		_far_enemy_simulation_bucket = (
 			(_far_enemy_simulation_bucket + 1)
@@ -1337,8 +1338,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 		health = StageDifficulty.boss_health(current_stage_index) * float(difficulty_profile["boss_health"])
 	else:
 		health *= (
-			float(stage_curve["health"])
-			* float(stage_curve["ordinary_health_pressure"])
+			StageDifficulty.ordinary_health_multiplier(current_stage_index)
 			* float(difficulty_profile["health"])
 			* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
 			* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER
@@ -2588,7 +2588,7 @@ func _damage_cross_beam_structures(
 ) -> void:
 	mystery_device_runtime.fill_device_snapshot(_mystery_device_snapshot_buffer)
 	for device in _mystery_device_snapshot_buffer:
-		if StringName(device["state"]) != &"intact":
+		if StringName(device["state"]) != &"dormant":
 			continue
 		var device_position := Vector2(device["position"])
 		var offset := device_position - center
@@ -5499,7 +5499,7 @@ func _damage_mystery_devices_in_radius(
 		_mystery_device_snapshot_buffer
 	)
 	for device in _mystery_device_snapshot_buffer:
-		if StringName(device["state"]) != &"intact":
+		if StringName(device["state"]) != &"dormant":
 			continue
 		var device_position := Vector2(device["position"])
 		if (
@@ -5542,16 +5542,16 @@ func _damage_mystery_device(
 func _handle_mystery_device_break(event: Dictionary) -> Dictionary:
 	var device_id := StringName(event.get("device_id", &""))
 	_ui.notify(
-		tr("NOTIFY_NEUTRAL_FACILITY_DESTROYED"),
+		tr("NOTIFY_NEUTRAL_FACILITY_ACTIVATED"),
 		1.8,
 		Art.SYSTEM,
 		1,
-		&"neutral_facility_destroyed"
+		&"neutral_facility_activated"
 	)
 	_play_sound(&"destroy_priority", 1.02)
 	_mystery_device_result_receipt.clear()
 	_mystery_device_result_receipt["device_id"] = device_id
-	_session_diagnostics.emit_event("neutral_facility_destroyed", {
+	_session_diagnostics.emit_event("neutral_facility_activated", {
 		"device_id":device_id,
 	})
 	return _mystery_device_result_receipt
@@ -6789,7 +6789,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		_mystery_device_snapshot_buffer
 	)
 	for device in _mystery_device_snapshot_buffer:
-		if StringName(device["state"]) == &"intact":
+		if StringName(device["state"]) in [&"dormant", &"active"]:
 			markers.append({
 				"kind":&"mystery_device",
 				"position":Vector2(device["position"]),
@@ -6849,7 +6849,7 @@ func _runtime_minimap_snapshot(
 		_mystery_device_snapshot_buffer
 	)
 	for device in _mystery_device_snapshot_buffer:
-		if StringName(device["state"]) == &"intact":
+		if StringName(device["state"]) in [&"dormant", &"active"]:
 			_append_runtime_minimap_marker(
 				frame_index,
 				markers,
@@ -7030,7 +7030,7 @@ func _update_threat_contacts(delta: float) -> void:
 	)
 	for device in _mystery_device_snapshot_buffer:
 		if (
-			StringName(device.get("state", &"destroyed")) == &"intact"
+			StringName(device.get("state", &"expired")) in [&"dormant", &"active"]
 			and safe_viewport.has_point(
 				canvas_transform * Vector2(device["position"])
 			)

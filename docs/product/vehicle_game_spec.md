@@ -218,7 +218,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   cycles so a run reads as one continuous field rather than eight reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
   least thirty-two content candidates are reusable authored sources. Each
-  cycle selects three persistent neutral facilities, two experience-recall pickups, and five XP shards with explicit
+  cycle selects three dormant neutral facilities, two experience-recall pickups, and ten XP shards with explicit
   separation. No stage owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Pickup contact uses the swept player path with the 24-pixel player radius and
@@ -241,10 +241,12 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   line-of-sight, dwell, cooldown, and deterministic layout owners.
 - Every cycle places three distinct neutral facilities from a run-seeded rotation. Across
   eight cycles Repair, Barrier, Gravity, Cryo, and Weakpoint each appear at least once.
-- Facilities have 360 health, remain until destroyed or cycle cleanup, accept player and
-  hostile damage, and never block projectiles.
-- Every facility applies one symmetric center-in-radius rule to the player and eligible
-  enemies. Leaving the radius or destroying the facility ends its effect immediately.
+- Facilities have 360 health, begin dormant, accept player and hostile damage, and never
+  block projectiles. Destruction activates the assigned effect for exactly 12 seconds;
+  the facility then expires at the end of that timer or at cycle cleanup.
+- Dormant facilities apply no modifier. While active, every facility applies one symmetric
+  center-in-radius rule to the player and eligible enemies. Leaving the radius or expiry
+  ends its effect immediately.
 - Repair and Barrier use radius 420 and restore one third of maximum hull per second.
   Barrier caps shield at maximum hull. Gravity uses radius 480 and multiplies acceleration
   and maximum speed by 0.55 without positional pull. Cryo uses radius 360 and multiplies
@@ -308,7 +310,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 ### Items, experience, and upgrades
 
 - Enemy defeats leave collectible XP shards; boss-cleanup retirement never grants XP.
-  Each cycle adds exactly five visible XP shards to authored placements.
+  Each cycle adds exactly ten visible XP shards to authored placements.
 - Repair pickups are removed. Their former sockets produce XP shards and Repair facilities
   own high-rate recovery.
 - `vehicle_upgrade_catalog.md` is canonical for 27 cards and 91 nominal level states.
@@ -401,7 +403,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 - Shock has no reachable data, runtime, status, offer, copy, telemetry, or image. Thermal
   and Toxin remain damage alternatives and Cryo is the sole utility attribute.
 - New primary-fire upgrades, missing-category offer reservations, five symmetric
-  facilities, repair-pickup removal, and five added visible XP shards per cycle pass
+  facilities, repair-pickup removal, and ten added visible XP shards per cycle pass
   deterministic fixtures.
 - Diagnostics keep the newest ten valid bundles under age/byte/quarantine rules.
 - Report surfaces share one left-aligned stack, one scroll, exact section order, complete

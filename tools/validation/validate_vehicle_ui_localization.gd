@@ -195,7 +195,7 @@ func _initialize() -> void:
 	for retained_key in [
 		"NOTIFY_BOSS_INBOUND",
 		"NOTIFY_BARRIER_DEPLETED",
-		"NOTIFY_NEUTRAL_FACILITY_DESTROYED",
+		"NOTIFY_NEUTRAL_FACILITY_ACTIVATED",
 		"BOSS_SHIELD_DOWN_HINT",
 	]:
 		_expect(

@@ -8,7 +8,7 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	_expect(
 		Runtime.OUTCOME_IDS == [&"repair", &"barrier", &"gravity", &"cryo", &"weakpoint"],
-		"neutral facilities expose the five approved persistent roles"
+		"neutral facilities expose the five approved activation roles"
 	)
 	_expect(
 		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"repair"]["radius"]), 420.0)
@@ -43,10 +43,8 @@ func _initialize() -> void:
 	var device_id := StringName(first["id"])
 	var inside := runtime.modifiers_at(Vector2(first["position"]))
 	_expect(
-		inside.size() == 1
-			and StringName(inside[0]["applies_to"]) == &"all_actors"
-			and Dictionary(inside[0]["profile"]) == Runtime.OUTCOME_PROFILE[StringName(first["outcome"])],
-		"an intact facility exposes one identical profile to either faction inside its radius"
+		inside.is_empty(),
+		"a dormant facility applies no area modifier before destruction"
 	)
 	_expect(runtime.modifiers_at(Vector2(first["position"]) + Vector2(0.0, 600.0)).is_empty(), "facility effects stop outside their radius")
 	var hit := {}
@@ -54,8 +52,34 @@ func _initialize() -> void:
 	_expect(runtime.first_damageable_segment_hit(Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit), "passing projectiles still acquire a facility damage target")
 	_expect(bool(runtime.receive_damage(device_id, 120.0, &"hostile", &"area")["accepted"]), "hostile area damage affects facilities")
 	var broken := runtime.receive_damage(device_id, Runtime.DEVICE_HEALTH, &"player", &"projectile")
-	_expect(bool(broken["broken"]) and not bool(Dictionary(broken["break_event"])["grants_experience"]), "player damage destroys a facility without rewards")
-	_expect(runtime.modifiers_at(Vector2(first["position"])).is_empty(), "destroyed facilities stop their effects immediately")
+	_expect(
+		bool(broken["broken"])
+			and StringName(Dictionary(broken["break_event"])["kind"]) == &"facility_activated"
+			and not bool(Dictionary(broken["break_event"])["grants_experience"]),
+		"destroying a facility activates it without rewards"
+	)
+	inside = runtime.modifiers_at(Vector2(first["position"]))
+	_expect(
+		inside.size() == 1
+			and StringName(inside[0]["applies_to"]) == &"all_actors"
+			and Dictionary(inside[0]["profile"]) == Runtime.OUTCOME_PROFILE[StringName(first["outcome"])],
+		"an active facility exposes one identical profile to either faction"
+	)
+	var active_snapshot := Dictionary(runtime.snapshot()["devices"][0])
+	_expect(
+		is_equal_approx(float(active_snapshot["active_remaining"]), Runtime.ACTIVE_DURATION_SECONDS)
+			and is_equal_approx(float(active_snapshot["active_ratio"]), 1.0),
+		"activation publishes the full bounded timer"
+	)
+	runtime.advance(Runtime.ACTIVE_DURATION_SECONDS * 0.25)
+	active_snapshot = Dictionary(runtime.snapshot()["devices"][0])
+	_expect(is_equal_approx(float(active_snapshot["active_ratio"]), 0.75), "active timer advances deterministically")
+	runtime.advance(Runtime.ACTIVE_DURATION_SECONDS)
+	_expect(
+		StringName(Dictionary(runtime.snapshot()["devices"][0])["state"]) == &"expired"
+			and runtime.modifiers_at(Vector2(first["position"])).is_empty(),
+		"expired facilities stop their effects"
+	)
 	_finish()
 
 

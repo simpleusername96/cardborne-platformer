@@ -247,12 +247,10 @@ static func _enemy_health(archetype: StringName, stage_index: int) -> float:
 		if StringName(definition["health_class"]) in [&"swarm", &"standard"]
 		else 1.0
 	)
-	var curve := StageDifficulty.multipliers(stage_index)
 	return (
 		float(definition["health"])
 		* class_multiplier
-		* float(curve["health"])
-		* float(curve["ordinary_health_pressure"])
+		* StageDifficulty.ordinary_health_multiplier(stage_index)
 		* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
 		* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER
 	)

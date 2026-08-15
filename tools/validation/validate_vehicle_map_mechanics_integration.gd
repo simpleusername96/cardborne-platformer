@@ -55,10 +55,10 @@ func _validate_facility_authority(run) -> void:
 	]
 	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")
 	var devices: Array = run.mystery_device_runtime.snapshot()["devices"]
-	_expect(devices.size() == 3, "live run configures three persistent facilities")
+	_expect(devices.size() == 3, "live run configures three dormant facilities")
 	var first := Dictionary(devices[0])
 	var position := Vector2(first["position"])
-	_expect(not bool(run.call("_position_clear_of_stage_objects", position, 24.0)), "an intact facility blocks actor movement")
+	_expect(not bool(run.call("_position_clear_of_stage_objects", position, 24.0)), "a dormant facility blocks actor movement")
 	run.call("_clear_projectiles")
 	run.projectile_store.add_hostile({"pos":position - Vector2(120.0, 0.0), "velocity":Vector2.RIGHT * 600.0, "radius":4.0, "damage":10.0, "life":2.0, "wall_piercing":true})
 	run.call("_update_projectiles", 0.25)
@@ -68,13 +68,15 @@ func _validate_facility_authority(run) -> void:
 	_expect(bool(run.call("_damage_mystery_device", StringName(first["id"]), 120.0, &"area", position, Color.WHITE, Vector2.RIGHT, &"hostile")), "hostile attacks damage facilities")
 	_expect(bool(run.call("_damage_mystery_device", StringName(first["id"]), 300.0, &"projectile", position, Color.WHITE, Vector2.RIGHT, &"player")), "player attacks destroy facilities")
 	_expect(int(run.stage_flow.defeats) == quota_before and int(run.experience_runtime.experience) == experience_before, "facility destruction grants neither quota nor XP")
-	_expect(bool(run.mystery_device_runtime.is_position_clear(position, 0.0)), "destroyed facilities stop blocking movement")
+	_expect(bool(run.mystery_device_runtime.is_position_clear(position, 0.0)), "activated facilities stop blocking movement")
 
 	# A live-run enemy receives the same role-specific modifier returned for a player position.
 	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")
 	devices = run.mystery_device_runtime.snapshot()["devices"]
 	var modifier_device := Dictionary(devices[0])
 	run.mystery_device_runtime.devices[0]["outcome"] = &"gravity"
+	run.mystery_device_runtime.devices[0]["state"] = &"active"
+	run.mystery_device_runtime.devices[0]["active_remaining"] = run.mystery_device_runtime.ACTIVE_DURATION_SECONDS
 	run.player_position = Vector2(modifier_device["position"])
 	_expect(
 		is_equal_approx(float(run.call("_player_facility_movement_multiplier")), 0.55)
@@ -90,7 +92,7 @@ func _validate_facility_authority(run) -> void:
 			and is_equal_approx(enemy.facility_acceleration_multiplier, float(profile.get("acceleration_multiplier", 1.0)))
 			and is_equal_approx(enemy.facility_cadence_multiplier, float(profile.get("attack_cadence_multiplier", 1.0)))
 			and is_equal_approx(enemy.facility_received_damage_multiplier, float(profile.get("received_damage_multiplier", 1.0))),
-		"VehicleRun applies the same persistent facility profile to enemies"
+		"VehicleRun applies the same active facility profile to enemies"
 	)
 	run.mystery_device_runtime.devices[0]["outcome"] = &"cryo"
 	_expect(

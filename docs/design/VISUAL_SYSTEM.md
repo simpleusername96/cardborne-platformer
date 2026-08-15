@@ -292,8 +292,8 @@ collision.
   아래의 기존 shape verb를 유지한다. 검은 외피, damaged body, wreck 또는 enclosing
   badge를 symbol 위나 아래에 합성하지 않는다. 이 symbol 자체가 health와 collision을
   가진 공격 가능한 시설이며, 타격 중에도 visual identity를 바꾸지 않는다. 파괴되면
-  지속 효과와 presentation을 함께 종료한다. Minimap marker는 중립 역할 marker를
-  유지한다.
+  같은 symbol이 12초 활성 상태의 effect source로 남고, 시간이 끝나면 effect와 함께
+  사라진다. Minimap marker는 중립 역할 marker를 유지한다.
 - repair/recall pickup과 중립 시설은 availability를 알리는 작은 time-based
   vertical bob과 얇은 breathing contour를 사용한다. Reduced Motion에서는 같은
   contour를 static으로 유지하고 bob과 blinking을 멈춘다. 이 motion은 collision,
@@ -392,8 +392,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   health `360`과 collision radius를 가진 공격 가능한 시설이며, 타격 중에도 같은
   identity를 유지한다. 색이 없어도 다섯 shape verb가 달라야 하며 enclosing badge,
   text, number, target ring과 nested ornament를 넣지 않는다. 다섯 결과는 모두
-  facility position과 gameplay radius가 일치하는 full-area body를 시설이 존재하는
-  동안 표시한다. Repair/Barrier/Weakpoint는 radius `420`, Gravity는 `480`, Cryo는
+  dormant 상태에서는 effect area를 표시하지 않는다. 파괴로 활성화된 12초 동안만
+  facility position과 gameplay radius가 일치하는 full-area body를 표시한다.
+  Repair/Barrier/Weakpoint는 radius `420`, Gravity는 `480`, Cryo는
   `360`을 사용한다. Existing shared ring은 boundary accent로만 사용하며, Repair와
   Barrier의 approved role symbol 외에 effect raster를 추가하지 않는다.
 - Transit Gate는 antialiased outer contour, uniform radial thickness, one dark
@@ -403,9 +404,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   중립 시설은 destructible interaction이므로 두 silhouette를 공유하지 않는다.
 - direct pickup과 중립 시설은 넓은 role-color 면과 얇은 breathing contour를 사용해
   서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
-  표시하지 않는다. 중립 시설 contour는 위쪽에서 시계 방향으로 남은 내구도 비율만
-  표시한다. 시설은 시간제가 아니므로 별도 countdown을 암시하지 않으며, reduced
-  motion에서도 같은 정적 비율을 유지한다.
+  표시하지 않는다. dormant contour는 무채색으로 전체 외곽을 표시하고, 활성화되면 위쪽에서
+  시계 방향으로 남은 12초 비율만 semantic color로 표시한다. reduced motion에서도
+  같은 정적 시간 비율을 유지한다.
 - 세 field의 주요 시각 차이는 실제 walkable topology와 run-selected wall
   arrangement가 소유한다. `SurfaceDetail` 분포는 바닥의 밋밋함만 줄이고 field
   identity, route, 위험도 또는 stage 변화를 암시하지 않는다.
@@ -542,9 +543,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   Shockwave는 release frame의 full disk와 단일 boundary, Cross Beam은 실제 반폭의
   두 map-spanning corridor를 사용한다. startup은 같은 geometry의 낮은 alpha 예고만
   허용한다. 새 raster asset, particle node, 별도 collision geometry를 만들지 않는다.
-- Mystery Gravity Pull은 radius `480`에 alpha `0.10` full system disk를 `5s`, Cryo
-  Lock은 radius `360`에 alpha `0.12` full cryo disk를 `3s`, Weakpoint Expose는
-  radius `420`에 alpha `0.10` full danger disk를 `5s` 동안 유지한다. 세 effect 모두
+- 활성화된 Gravity는 radius `480`에 alpha `0.10` full system disk를, Cryo는 radius
+  `360`에 alpha `0.12` full cryo disk를, Weakpoint는 radius `420`에 alpha `0.10`
+  full danger disk를 공통 `12s` 동안 유지한다. 세 effect 모두
   device position을 중심으로 하고 existing perimeter는 boundary accent일 뿐 영향
   범위의 유일한 표현이 아니다. Weakpoint는 movement나 targeting을 바꾸지 않고
   affected ordinary mobile enemy의 player-owned received damage를 `1.25x`로 만든다.
@@ -830,9 +831,9 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - The five neutral-facility roles are production-integrated. Repair and Barrier use their
   approved role rasters; Gravity, Cryo, and Weakpoint retain their existing authored
   symbols. One assigned symbol is visible alone at 288 world units with a bounded bob and
-  thin breathing contour. Damage never swaps its identity; destruction retires the
-  facility and its symmetric full-area effect, while collision, health, footprint, and
-  duration remain code-owned.
+  thin muted breathing contour. Dormant facilities publish no effect. Destruction activates the
+  symmetric full-area effect for twelve seconds, changes the contour to system cyan, and clips it clockwise to remaining
+  time, and expiry retires both; collision, health, footprint, and duration remain code-owned.
 - Drop Mine gameplay receipts remain fixed-capacity effect-store state. The shared
   code-native disk batch displays radius `192/216/240`; standard and reduced motion both
   start at final radius and only fade, with no dedicated texture or batch.

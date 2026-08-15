@@ -13,6 +13,9 @@ const ORDINARY_RADIUS := 36.0
 const BOSS_RADIUS := 76.0
 const INNER_WALL_GROUP_COUNT := 5
 const MYSTERY_DEVICE_COUNT := 3
+const EXPERIENCE_RECALL_COUNT := 2
+const EXPERIENCE_SHARD_COUNT := 10
+const PICKUPS_PER_GROUP := (EXPERIENCE_RECALL_COUNT + EXPERIENCE_SHARD_COUNT) / 2
 const WALL_CLEARANCE := 384.0
 const DEVICE_PAIR_CLEARANCE := 960.0
 
@@ -309,31 +312,31 @@ static func _try_build_stage_objects(
 			"pos":point,
 		})
 	for value in candidates:
-		if reward_pickup_positions.size() == 4:
+		if reward_pickup_positions.size() == PICKUPS_PER_GROUP:
 			break
 		var point := _snap_to_grid(Vector2(value))
 		if _stage_point_valid(point, reachable, devices, reward_pickup_positions, pickup_positions, &"reward_pickup"):
 			reward_pickup_positions.append(point)
 	for value in candidates:
-		if pickup_positions.size() == 3:
+		if pickup_positions.size() == PICKUPS_PER_GROUP:
 			break
 		var point := _snap_to_grid(Vector2(value))
 		if _stage_point_valid(point, reachable, devices, reward_pickup_positions, pickup_positions, &"pickup"):
 			pickup_positions.append(point)
-	if devices.size() != MYSTERY_DEVICE_COUNT or reward_pickup_positions.size() != 4 or pickup_positions.size() != 3:
+	if devices.size() != MYSTERY_DEVICE_COUNT or reward_pickup_positions.size() != PICKUPS_PER_GROUP or pickup_positions.size() != PICKUPS_PER_GROUP:
 		return {}
 	_prioritize_separated_recalls(reward_pickup_positions, pickup_positions)
 	var pickups: Array[Dictionary] = []
-	for index in 3:
+	for index in PICKUPS_PER_GROUP:
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + 1],
 			"kind":&"experience_recall" if index == 0 else &"experience_shard",
 			"experience":0 if index == 0 else 5,
 			"pos":pickup_positions[index],
 		})
-	for index in 4:
+	for index in PICKUPS_PER_GROUP:
 		pickups.append({
-			"id":"%s_pickup_%02d" % [String(stage_id), index + 4],
+			"id":"%s_pickup_%02d" % [String(stage_id), index + PICKUPS_PER_GROUP + 1],
 			"kind":&"experience_recall" if index == 0 else &"experience_shard",
 			"experience":0 if index == 0 else 5,
 			"pos":reward_pickup_positions[index],
