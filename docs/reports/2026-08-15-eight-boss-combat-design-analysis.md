@@ -130,13 +130,16 @@ repeated contact. No true instant-kill pattern remains.
 | Generic smoke/explosion sheet | Clear convention | Poor | Bounded but adds raster frames | Rejected |
 | Particle plugin | Flexible | Uncontrolled | New dependency and runtime objects | Rejected |
 | Texture slicing into debris | Strong body relation | Creates frame/fragment ownership | Higher batching complexity | Rejected |
-| Existing raster transform plus retained broad planes | Clear and direct | Strong | Fixed-capacity, no nodes | Selected |
+| One shared explosion overlay over the existing boss raster | Clear and direct | Strong | One texture, fixed-capacity transforms | Selected |
 
-The selected 2.00-second sequence retires danger immediately, staggers boss-owned adds
-and facilities, collapses the boss through 4–6 broad planes, and delays progression
-until all boss-owned cleanup is complete. It reuses existing priority-destruction audio
-with restrained pitch variation. Reduced motion keeps the timing and state information
-but removes impact motion.
+The selected 2.00-second sequence retires danger immediately, overlays five staggered
+small/medium explosions and one large center explosion on the unchanged boss body,
+then fades that body without slicing or replacing it. Boss-owned adds and facilities
+receive one small overlay before removal. Progression waits for cleanup completion. It
+reuses existing priority-destruction audio with restrained pitch variation. Reduced
+motion keeps timing and opacity changes but removes burst scaling and rotation.
+
+![Boss-death overlay storyboard](../design/visual-replacement-workbench/candidates/boss-death-explosion-v1/previews/boss-death-explosion-storyboard.png)
 
 ### Ordinary enemy candidates
 
@@ -154,25 +157,25 @@ It keeps a direct attack at zero stacks, so it never idles.
 
 | Candidate | Difference from current Shock | Result |
 | --- | --- | --- |
-| Chain damage | Still electric and overlaps Arc/Electric Field | Rejected |
+| Chain Lightning | Completes the familiar fire/poison, ice, and lightning elemental set; changes each primary hit directly | Selected |
 | Movement stun | Stronger version of the same control status | Rejected |
 | Vulnerability mark | Readable but overlaps direct damage multipliers | Rejected |
 | Projectile magnet | Novel but can distort manual aim and projectile truth | Rejected |
-| Target Designator | Converts a manual hit into automatic-weapon target priority | Selected |
+| Target Designator | Does not read as a bullet element and delegates its benefit to automatic weapons | Rejected by user feedback |
 
-Target Designator is deliberately non-electric. It designates one directly hit target
-for 1.5/2.0/2.5 seconds and transfers on a new hit. Seeker, Auto Laser, and Storm Barrage
-prefer it when valid. Geometry-owned weapons ignore it. The card appears only when one
-compatible automatic weapon is owned, preventing a dead offer. Open chevrons distinguish
-it from shields, areas, and selection rings.
+Chain Lightning replaces Shock while preserving an immediately recognizable elemental
+family. A direct primary hit makes 1/2/3 nearest-target jumps within 180/200/220 world
+units. Each hop deals 30% Arc damage, cannot repeat a target or return to the origin, and
+requires line of sight. This differs from Thermal Burst's compact area damage, Toxin's
+stacking damage over time, and Cryo's slow. Target Designator is removed completely.
 
 ### Visual asset scope
 
 The selected authored set adds three boss bodies, four ordinary enemy bodies, two
-neutral-facility bodies, and three upgrade cards. Target Designator replaces Shock art
-without increasing the count. The net addition is 12 images, changing the declared
-production target from 78 to 90 after exact user approval. Boss-death presentation adds
-no raster asset.
+neutral-facility bodies, three upgrade cards, and one shared boss-death explosion
+overlay. Chain Lightning replaces Shock art without increasing the count. The net
+addition is 13 images, changing the declared production target from 78 to 91 after exact
+user approval.
 
 ### Generated boss, enemy, and facility candidates
 
@@ -204,9 +207,9 @@ direction-clear for user review; none is production-approved or manifest-integra
 
 - The current local session set is small and was not produced under one controlled user
   build, so it supports search-gap diagnosis but not a universal completion-time target.
-- The nine boss/enemy/facility candidates are direction-clear but review-only. All still
-  require exact user approval. Upgrade-card and Target Designator candidates are not part
-  of this batch.
+- The nine boss/enemy/facility candidates and one boss-death explosion candidate are
+  direction-clear but review-only. All still require exact user approval. Upgrade-card
+  and Chain Lightning card candidates are not part of this batch.
 - Numeric boss damage and cadence values are implementation starting contracts. User
   play evidence may justify a later balance plan, but implementation must first preserve
   the fairness bands and monotonic progression defined here.

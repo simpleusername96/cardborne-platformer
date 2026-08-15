@@ -22,7 +22,7 @@ related:
 Implement the 2026-08-15 feedback as one decision-complete contract. Replace the
 visible ten-stage pairing with eight continuous boss cycles, preserve ordinary-enemy
 quotas before every boss, add three bosses and four active ordinary roles, replace
-Shock with Target Designator, add a readable boss-death cleanup, retain only the latest
+Shock with Chain Lightning, add a readable boss-death cleanup, retain only the latest
 ten valid user sessions, and deliver one left-aligned stacked report shared by terminal
 results and Settings.
 
@@ -128,19 +128,20 @@ The transition starts exactly 2.00 seconds after the lethal receipt.
 | Time | Required behavior |
 | --- | --- |
 | 0.00 s | Disable boss AI, collision, damage intake, spawning, and damage output. Retire boss-owned damaging projectiles and zones. Freeze final facing. |
-| 0.00–0.60 s | Draw three body-centered, code-native damage-plane pulses. Reuse the priority-destruction sound at three restrained pitch offsets. |
-| 0.20–1.10 s | Stagger boss-summoned enemies and facilities at 0.12 s offsets. Each contracts and fades, emits one bounded cleanup burst, grants no XP/loot/quota, and reports source `boss_cleanup`. |
-| 0.90–1.60 s | Collapse/fade the boss body as 4–6 broad planes using its approved body raster plus code-native transforms. Emit at most six boss bursts. |
+| 0.00–0.90 s | Keep the existing boss body intact and visible. Overlay five small or medium instances of the approved shared explosion raster at deterministic body-local anchors, staggered at 0.14 s. Reuse the priority-destruction sound at three restrained pitch offsets. |
+| 0.20–1.10 s | Stagger boss-summoned enemies and facilities at 0.12 s offsets. Each receives one small instance of the shared explosion overlay and fades out, grants no XP/loot/quota, and reports source `boss_cleanup`. |
+| 0.90–1.60 s | Overlay one large center explosion, then fade the unchanged boss body from full opacity to zero. Do not slice, collapse, redraw, or replace the body raster. |
 | 1.60–2.00 s | Clear remaining boss-owned actors and zones, freeze the report snapshot, then permit the cycle transition. |
 
 - The player remains controllable and cannot take damage from boss-owned objects during
   cleanup. No full-screen flash is used.
-- Reduced motion removes hit-stop, camera impulse, pulse scaling, and stagger motion;
-  it keeps a static 2.00-second fade and state changes.
+- Reduced motion removes hit-stop, camera impulse, burst scaling, and burst rotation;
+  it keeps the same staggered opacity sequence, 2.00-second duration, and state changes.
 - Extend the existing 96-entry effect store with dedicated bounded cosmetic kinds:
-  at most 8 boss bursts and 12 cleanup bursts. These kinds may recycle only their own
+  at most 7 boss explosion overlays and 12 cleanup overlays. These kinds may recycle only their own
   oldest receipt and must never evict EMP or another functional effect.
-- Do not add an explosion sprite sheet, effect PNG, frame animation, plugin, or package.
+- Use one approved shared `256x256` RGBA explosion overlay raster. Do not add a sprite
+  sheet, per-boss death asset, frame animation, particle plugin, or package.
 
 ## Ordinary Enemy Additions
 
@@ -161,22 +162,22 @@ small text. The role is intentionally safest when destroyed early.
 
 ## Primary Attribute Replacement
 
-Delete Shock Disruption and its attack-lock status. Replace it with the utility primary
-attribute `target_designator`, localized as `표적 지시기` / `Target Designator`.
+Delete Shock Disruption and its attack-lock status. Replace it with the familiar
+elemental primary attribute `chain_lightning`, localized as `연쇄 전격` / `Chain
+Lightning`.
 
-- A direct primary hit designates exactly one hostile target for 1.5/2.0/2.5 seconds.
-- A direct hit on a different valid target transfers the designation immediately.
-- Seeker, Auto Laser, and Storm Barrage prefer the designated target while it remains
-  valid, in range, and in line of sight.
-- Electric Field, Orbiting Blades, and Drop Mines keep geometry-owned targeting and
-  ignore designation. Active weapons are unaffected.
-- Bosses are eligible. Neutral facilities are not.
-- Offer the card only after the player owns at least one compatible automatic weapon.
-  Cryo remains the other utility primary attribute.
-- Render two open code-native chevrons around the target. Do not use a ring or timer
-  text. Reduced motion uses static chevrons.
-- Report successful designation uptime and target transfers separately. Do not mix
-  these values with Arc damage or rejected hit attempts.
+- Every direct primary hit starts a chain from the struck hostile to the nearest eligible
+  hostile within 180/200/220 world units at levels 1/2/3.
+- The chain makes 1/2/3 jumps. Each jump deals Arc damage equal to 30% of the originating
+  primary direct-hit payload before the recipient's defense; each recipient resolves its
+  own defense and damage receipt.
+- One chain cannot hit the same target twice, cannot return to its origin, and stops when
+  no eligible line-of-sight target remains. Bosses are eligible; neutral facilities are not.
+- Render each hop as one short segmented Arc connection for 0.12 s in the existing
+  retained effect path. Cap presentation and gameplay at three hops per primary hit;
+  create no nodes and perform no unbounded target scan.
+- Report chain hits and Arc damage. Remove Shock applications, attack-lock duration,
+  designation uptime, and target-transfer reporting.
 - Replace the existing Shock card image in place after exact visual approval. Remove
   Shock localization, status, report, and validation contracts rather than retaining a
   compatibility alias.
@@ -226,8 +227,8 @@ attribute `target_designator`, localized as `표적 지시기` / `Target Designa
 
 ## Visual Asset Contract
 
-The current production manifest declares 78 images. This work adds 12 approved raster
-identities and replaces Shock art without a count increase, producing a 90-image target:
+The current production manifest declares 78 images. This work adds 13 approved raster
+identities and replaces Shock art without a count increase, producing a 91-image target:
 
 | Family | New raster images | Notes |
 | --- | ---: | --- |
@@ -235,28 +236,29 @@ identities and replaces Shock art without a count increase, producing a 90-image
 | Ordinary enemies | 4 | Rail Sniper, Orbit Gunner, Bombing Runner, Wreck Scavenger; 112x112 unless stationary scale is required by the existing actor contract |
 | Neutral facilities | 2 | Barrier and one missing facility identity; existing suitable facility identities remain reused |
 | Upgrade cards | 3 | Miss Compensation, Hit Chain, Braced Fire; 192x192 |
-| Target Designator | 0 net | Replaces the Shock card asset byte-for-byte through the approval workflow |
-| Death effects | 0 | Existing actor rasters plus bounded code-native geometry |
+| Chain Lightning | 0 net | Replaces the Shock card asset byte-for-byte through the approval workflow |
+| Boss-death explosion | 1 | One shared 256x256 RGBA overlay; repeated by retained transforms over existing boss bodies |
 
 Generate every new raster candidate with the exact canonical style sheet as a real
 reference input. Keep candidates outside production. Promote only exact user-approved
 bytes and hashes through the visual workbench and manifest. Revise `VISUAL_SYSTEM.md`
-before integration to authorize eight bosses, the 90-image count, per-boss shields,
-attached Crown hardpoints, the Target Designator chevrons, new role silhouettes, and
-the boss-death geometry. Do not introduce SVG actors, generated effect raster, or a new
-named theme.
+before integration to authorize eight bosses, the 91-image count, per-boss shields,
+attached Crown hardpoints, Chain Lightning presentation, new role silhouettes, and the
+single shared boss-death explosion-raster exception. Do not introduce SVG actors, an
+effect sprite sheet, any other effect raster, or a new named theme.
 
 ## Execution Checklist
 
 1. **Update product, design, terminology, and validation contracts.** Revise the product
    spec, visual system, design memory, guidebook terms, localization inventory, and
    campaign validators for eight boss cycles, per-boss defense, the exact combat bands,
-   the 2.00-second cleanup, Target Designator, four enemy roles, and 90 approved images.
+   the 2.00-second cleanup, Chain Lightning, four enemy roles, and 91 approved images.
    Rename stage-facing symbols to cycle-facing symbols within their existing owners and
    remove obsolete ten-stage/fourteen-stage acceptance text.
 
 2. **Produce and approve the exact raster set.** Create the 3 boss, 4 enemy, 2 facility,
-   3 upgrade-card, and 1 replacement Target Designator candidates with the canonical
+   3 upgrade-card, 1 replacement Chain Lightning card, and 1 shared boss-death explosion
+   candidates with the canonical
    reference. Build AS-IS/TO-BE sheets, collect exact user approval, promote approved
    hashes, update the semantic provider/catalog/manifest, and run the visual authority
    validator. Do not proceed with production asset integration before exact approval.
@@ -274,7 +276,7 @@ named theme.
    the high-threat escape corridor.
 
 5. **Implement boss-death cleanup.** Add the dedicated runtime/state machine, owner tags,
-   projectile/zone retirement, summon/facility cleanup, fixed-timeline body animation,
+   projectile/zone retirement, summon/facility cleanup, fixed-timeline explosion overlays and body fade,
    reduced-motion branch, bounded effect-store kinds, audio receipts, frozen reporting,
    and transition gate. Validate no damage, loot, quota, or allocation leak during the
    cleanup window.
@@ -285,9 +287,9 @@ named theme.
    gap limits. Change diagnostics to newest-ten ordering on load and persist while
    preserving protected summaries and existing byte/age caps.
 
-7. **Implement upgrades, Target Designator, and offer reservations.** Add the three shot-
-   outcome/movement cards in combat-owned state, replace Shock end to end, add compatible
-   automatic-weapon preference, eligibility, visuals, reporting, localization, and
+7. **Implement upgrades, Chain Lightning, and offer reservations.** Add the three shot-
+   outcome/movement cards in combat-owned state, replace Shock end to end, add bounded
+   chain targeting, Arc damage, visuals, reporting, localization, and
    validators, and enforce the missing active/secondary offer slots.
 
 8. **Implement neutral facilities and reward changes.** Convert neutral devices to the
@@ -324,16 +326,16 @@ item. Do not combine checkpoints across items.
 - Wreck Scavenger uses exact death-event proximity, caps at five stacks, excludes the
   listed sources, and continues attacking at zero stacks. Shield Breaker is absent.
 - Shock Disruption has no reachable resource, status, copy, report field, or offer.
-  Target Designator obeys eligibility, single-target transfer, compatible targeting,
-  boss validity, visuals, and separate reporting.
+  Chain Lightning obeys jump count/range, non-repeat, line-of-sight, boss validity,
+  retained-visual capacity, Arc damage, and separate reporting.
 - The diagnostic store keeps the newest ten valid sessions after both load and persist,
   using saved time and session ID, while byte/age/quarantine contracts remain valid.
 - Search gaps meet the 4/8/3-second structural contracts without teleporting enemies or
   reducing workload. Total run duration is observed in logs but is not a pass/fail goal.
 - The report is one vertical left-aligned stack with one scroll and no clipping in all
   required locale, resolution, and text-scale combinations.
-- The production manifest reaches exactly 90 only through exact approved asset hashes.
-  Death effects remain code-native and fixed-capacity.
+- The production manifest reaches exactly 91 only through exact approved asset hashes.
+  Boss death uses exactly one shared approved explosion overlay and fixed-capacity transforms.
 - Clean native/Web evidence is comparable to the recorded baseline. Any non-comparable,
   contaminated, or capacity-failing run is labeled diagnostic-only and cannot support a
   performance conclusion.
@@ -357,13 +359,14 @@ item. Do not combine checkpoints across items.
 - [ ] 2. Produce and approve the exact raster set. Boss 3, ordinary-enemy 4, and neutral-
   facility 2 review candidates were generated on 2026-08-15 with grounded prompt/hash/
   actual-size evidence; all nine are direction-clear after focused revisions, and none
-  has exact user approval or production integration. Upgrade-card and Target Designator
+  has exact user approval or production integration. The shared boss-death explosion
+  candidate now exists and remains review-only; upgrade-card and Chain Lightning card
   candidates remain unstarted.
 - [ ] 3. Implement the eight-cycle campaign and common boss kit.
 - [ ] 4. Implement all eight boss identities.
 - [ ] 5. Implement boss-death cleanup.
 - [ ] 6. Implement ordinary roles, pacing correction, and ten-session retention.
-- [ ] 7. Implement upgrades, Target Designator, and offer reservations.
+- [ ] 7. Implement upgrades, Chain Lightning, and offer reservations.
 - [ ] 8. Implement neutral facilities and reward changes.
 - [ ] 9. Implement the shared stacked report.
 - [ ] 10. Complete integration and release validation.
