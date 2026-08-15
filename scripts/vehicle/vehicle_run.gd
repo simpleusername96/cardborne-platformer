@@ -1457,7 +1457,9 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 		enemy.engagement_expiry = float(spec.get("engagement_expiry", 0.0))
 		enemy.engagement_started_at = float(spec.get("engagement_started_at", encounter_runtime.elapsed))
 		enemy.engagement_active = enemy.engagement_slot >= 0
-	enemy.decision_bucket = absi(enemy.id.hash()) % ORDINARY_DECISION_BUCKET_COUNT
+	# The store assigns the stable runtime slot during admission. `_append_enemy`
+	# maps that slot to a decision lane so authored ID patterns cannot cluster work.
+	enemy.decision_bucket = 0
 	return enemy
 
 
@@ -1471,6 +1473,11 @@ func _append_enemy(enemy: EnemyState) -> bool:
 	)
 	var added := enemy_store.add(enemy)
 	if added:
+		# Pool slots are dense and recycled, which keeps all six 10 Hz lanes
+		# balanced without reducing any actor's decision cadence or accuracy.
+		enemy.decision_bucket = posmod(
+			enemy.runtime_slot, ORDINARY_DECISION_BUCKET_COUNT
+		)
 		if enemy.engagement_active:
 			encounter_runtime.confirm_engagement(engagement_handle)
 		collective_tactics.register_enemy(enemy)
