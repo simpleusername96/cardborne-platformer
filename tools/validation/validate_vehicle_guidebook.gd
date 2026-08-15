@@ -4,6 +4,7 @@ const Archetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const Catalog = preload("res://scripts/progression/vehicle_guidebook_catalog.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const GuidePanel = preload("res://scripts/ui/vehicle_guidebook_panel.gd")
+const GuidePreview = preload("res://scripts/ui/vehicle_guidebook_preview.gd")
 const StatAdapter = preload("res://scripts/progression/vehicle_guidebook_stat_adapter.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const Store = preload("res://scripts/autoload/vehicle_guidebook_store.gd")
@@ -169,12 +170,27 @@ func _run() -> void:
 	contract = panel.debug_contract()
 	_expect(
 		Array(Dictionary(contract["preview"])["asset_ids"]) == [
+			&"world/facility_repair_beacon",
+			&"world/facility_barrier_projector",
 			&"world/mystery_device_gravity",
 			&"world/mystery_device_cryo",
 			&"world/mystery_device_weakpoint",
 		],
-		"Anomaly Device preview shows the three visible attackable symbols without a casing"
+		"Anomaly Device preview exposes all five reachable facility identities without a casing"
 	)
+	var preview := GuidePreview.new()
+	get_root().add_child(preview)
+	await process_frame
+	for archetype in [
+		&"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger",
+	]:
+		preview.show_preview({"kind":&"enemy", "id":archetype})
+		_expect(
+			Array(preview.debug_contract()["asset_ids"])
+				== [StringName("actor/%s" % String(archetype))],
+			"%s guidebook preview resolves its approved semantic actor image" % archetype
+		)
+	preview.queue_free()
 
 	panel.set_compact_mode(true)
 	panel.open(active)

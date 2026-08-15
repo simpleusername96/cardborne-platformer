@@ -15,8 +15,9 @@ related:
 
 ## Purpose
 
-Preserve review-only raster candidates for Miss Compensation, Hit Chain, and Braced
-Fire. They are outside the production manifest and are not approved for runtime use.
+Preserve the approved raster source files for Miss Compensation, Hit Chain, and Braced
+Fire. On 2026-08-15, the user approved these exact PNG bytes and SHA-256 values for
+production integration.
 
 ![Actual-size candidates](previews/upgrade-cards-actual-size.png)
 
@@ -37,9 +38,9 @@ Fire. They are outside the production manifest and are not approved for runtime 
 
 | Candidate | Canvas | SHA-256 | Review state | Mechanic read |
 | --- | ---: | --- | --- | --- |
-| [`miss_compensation.png`](assets/miss_compensation.png) | 192x192 | `456d7d18c1ff45f94c9c2c9784f6963a0b54c83aa6fce8cb6d0753d09fd0d935` | `direction_clear` | Four misses curve around a gap and feed one enlarged next hit without a target-designator symbol. |
-| [`hit_chain.png`](assets/hit_chain.png) | 192x192 | `3c9a9fedd330523e38ceaeaeb0333ef079e525c40c49322f24e26534b3068ac6` | `direction_clear` | Consecutive impacts increase in size along one forward rhythm; no electric or defense metaphor. |
-| [`braced_fire.png`](assets/braced_fire.png) | 192x192 | `75bf9358bc5e296d15b65c7d01a06f402a5a3ce53f8268c1692e8c32ff674ba2` | `direction_clear` | Two broad feet and a centered barrel read as a stabilized firing stance. |
+| [`miss_compensation.png`](assets/miss_compensation.png) | 192x192 | `456d7d18c1ff45f94c9c2c9784f6963a0b54c83aa6fce8cb6d0753d09fd0d935` | `user_approved` | Four misses curve around a gap and feed one enlarged next hit without a target-designator symbol. |
+| [`hit_chain.png`](assets/hit_chain.png) | 192x192 | `3c9a9fedd330523e38ceaeaeb0333ef079e525c40c49322f24e26534b3068ac6` | `user_approved` | Consecutive impacts increase in size along one forward rhythm; no electric or defense metaphor. |
+| [`braced_fire.png`](assets/braced_fire.png) | 192x192 | `75bf9358bc5e296d15b65c7d01a06f402a5a3ce53f8268c1692e8c32ff674ba2` | `user_approved` | Two broad feet and a centered barrel read as a stabilized firing stance. |
 
 - Actual-size sheet SHA-256:
   `6119a4393114501b67526e78769a1b29245583c274e7018c8cb5487287f81424`.
@@ -52,7 +53,7 @@ Fire. They are outside the production manifest and are not approved for runtime 
 
 ## Limitations
 
-- `direction_clear` means ready for exact user review, not user-approved or switch-ready.
+- The exact listed SHA-256 values are the approval boundary; any byte change requires a
+  new approval.
 - Runtime readability still requires the existing upgrade-row and build-slot rendered
-  checks after approval and promotion.
-
+  checks after promotion.

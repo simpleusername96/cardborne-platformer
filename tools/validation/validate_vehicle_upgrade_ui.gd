@@ -27,13 +27,13 @@ const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const WORST_TEXT_TRIPLETS := {
 	"ko":[
 		{"id":&"hull_integrity", "current_level":2},
+		{"id":&"braced_fire", "current_level":2},
 		{"id":&"cryo_slow", "current_level":2},
-		{"id":&"drop_mines", "current_level":2},
 	],
 	"en":[
+		{"id":&"miss_compensation", "current_level":2},
 		{"id":&"orbiting_blades", "current_level":2},
 		{"id":&"overflow_barrier", "current_level":2},
-		{"id":&"homing_missiles", "current_level":2},
 	],
 }
 const DENSE_STAT_TRIPLET := [
@@ -76,8 +76,8 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	_expect(
 		int(empty["columns"]) == 4
 			and int(empty["section_count"]) == 6
-			and Array(empty["category_capacities"]) == [2, 3, 2, 1, 5, 4]
-			and int(empty["cell_count"]) == 17
+			and Array(empty["category_capacities"]) == [2, 3, 2, 1, 5, 7]
+			and int(empty["cell_count"]) == 20
 			and int(empty["filled_count"]) == 0
 			and int(empty["focusable_count"]) == 0
 			and Array(empty["action_glyph_ids"]).is_empty()
@@ -86,7 +86,7 @@ func _validate_build_rail(catalog: Catalog) -> void:
 			and is_equal_approx(float(empty["cell_size"]), 24.0)
 			and is_equal_approx(float(empty["artwork_size"]), 18.0)
 			and Vector2(empty["largest_rendered_cell"]).x <= 24.0,
-		"empty build rail exposes 17 compact, left-aligned empty slots without internal scrolling"
+		"empty build rail exposes 20 compact, left-aligned empty slots without internal scrolling"
 	)
 	_expect(
 		Array(empty_snapshot["upgrades"]).is_empty(),
@@ -111,7 +111,7 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	rail.set_snapshot(BuildSnapshotBuilder.build(first_build, catalog, [], [], {}))
 	var first := rail.debug_contract()
 	_expect(
-		int(first["cell_count"]) == 17
+		int(first["cell_count"]) == 20
 			and int(first["filled_count"]) == 1
 			and int(first["focusable_count"]) == 1
 			and Array(first["artwork_ids"]).has(&"upgrade/split_muzzle"),
@@ -154,16 +154,16 @@ func _validate_build_rail(catalog: Catalog) -> void:
 	rail.call("_input", cancel)
 	_expect(not bool(rail.debug_contract()["popover_visible"]), "Escape closes the build detail popover")
 	var dense_build := RunBuild.new(catalog)
-	for upgrade_id in [&"split_muzzle", &"piercing_rounds", &"homing_missiles", &"electric_field", &"orbiting_blades", &"thermal_burst", &"cryo_slow", &"gravity_collapse", &"chassis_speed", &"pickup_radius", &"hull_integrity", &"lifesteal", &"overflow_barrier", &"critical_targeting", &"dash_overdrive", &"dash_afterburn_field", &"last_stand_amplifier"]:
+	for upgrade_id in [&"split_muzzle", &"piercing_rounds", &"homing_missiles", &"electric_field", &"orbiting_blades", &"thermal_burst", &"cryo_slow", &"gravity_collapse", &"chassis_speed", &"pickup_radius", &"hull_integrity", &"lifesteal", &"overflow_barrier", &"critical_targeting", &"dash_overdrive", &"dash_afterburn_field", &"last_stand_amplifier", &"miss_compensation", &"hit_chain", &"braced_fire"]:
 		dense_build.apply(upgrade_id)
 	rail.set_snapshot(BuildSnapshotBuilder.build(dense_build, catalog, [], [], {}))
 	var dense := rail.debug_contract()
 	_expect(
-		int(dense["cell_count"]) == 17
-			and int(dense["filled_count"]) == 17
-			and int(dense["focusable_count"]) == 17
-			and Array(dense["artwork_ids"]).size() == 17,
-		"maximal legal build fills 17 cells and only filled image cells receive focus"
+		int(dense["cell_count"]) == 20
+			and int(dense["filled_count"]) == 20
+			and int(dense["focusable_count"]) == 20
+			and Array(dense["artwork_ids"]).size() == 20,
+		"maximal legal build fills 20 cells and only filled image cells receive focus"
 	)
 	rail.set_compact_mode(true)
 	await _settle_ui()
@@ -319,7 +319,7 @@ func _validate_authored_artwork() -> void:
 			texture != null and Vector2i(texture.get_size()) == Vector2i(192, 192),
 			"%s uses the fixed 192px upgrade canvas" % asset_id
 		)
-	_expect(unique_ids.size() == 25, "all 25 cards own unique authored artwork")
+	_expect(unique_ids.size() == 27, "all 27 cards own unique authored artwork")
 
 
 func _validate_category_body_art(catalog: VehicleUpgradeCatalog) -> void:
@@ -508,7 +508,7 @@ func _validate_triplet_matrix(catalog: VehicleUpgradeCatalog) -> void:
 	var snapshot_count := 0
 	for definition in catalog.all_definitions():
 		snapshot_count += definition.max_level
-	_expect(snapshot_count == 85, "worst-case fixture is grounded in all 85 card states")
+	_expect(snapshot_count == 91, "worst-case fixture is grounded in all 91 card states")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		_validate_longest_fixture(catalog, locale)

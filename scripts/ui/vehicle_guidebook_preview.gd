@@ -46,9 +46,11 @@ func show_preview(preview: Dictionary) -> void:
 		&"boss":
 			_add_asset(StringName("boss/%s" % preview_id), 220.0)
 		&"mystery_device":
-			_add_asset(&"world/mystery_device_gravity", 68.0, Vector2(-72.0, 0.0))
-			_add_asset(&"world/mystery_device_cryo", 68.0)
-			_add_asset(&"world/mystery_device_weakpoint", 68.0, Vector2(72.0, 0.0))
+			_add_asset(&"world/facility_repair_beacon", 44.0, Vector2(-80.0, 0.0))
+			_add_asset(&"world/facility_barrier_projector", 44.0, Vector2(-40.0, 0.0))
+			_add_asset(&"world/mystery_device_gravity", 44.0)
+			_add_asset(&"world/mystery_device_cryo", 44.0, Vector2(40.0, 0.0))
+			_add_asset(&"world/mystery_device_weakpoint", 44.0, Vector2(80.0, 0.0))
 		&"terrain":
 			_add_terrain(preview_id)
 		&"facility":
@@ -92,6 +94,10 @@ func _add_facility(facility_id: StringName) -> void:
 			_add_asset(&"world/facility_repair_pad", 126.0)
 		&"overdrive_field":
 			_add_asset(&"world/facility_overdrive_pad", 126.0)
+		&"repair_beacon":
+			_add_asset(&"world/facility_repair_beacon", 126.0)
+		&"barrier_projector":
+			_add_asset(&"world/facility_barrier_projector", 126.0)
 		_:
 			_add_asset(&"world/terrain_solid_cover_block", 96.0)
 

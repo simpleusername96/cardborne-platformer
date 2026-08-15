@@ -1,9 +1,9 @@
 {
   "unit_id": "primary-upgrade-cards-v1",
-  "review_state": "direction_clear",
-  "switch_ready": false,
-  "production_integrated": false,
-  "user_approval": null,
+  "review_state": "user_approved",
+  "switch_ready": true,
+  "production_integrated": true,
+  "user_approval": {"approved_at":"2026-08-15","approval_scope":"exact candidate PNG bytes and SHA-256 values"},
   "visual_authority_evidence": {
     "text_contract": "docs/design/VISUAL_SYSTEM.md",
     "style_reference": "docs/design/cardborne-universal-art-style-reference.png",
@@ -20,4 +20,3 @@
     "upgrade/braced_fire": "75bf9358bc5e296d15b65c7d01a06f402a5a3ce53f8268c1692e8c32ff674ba2"
   }
 }
-

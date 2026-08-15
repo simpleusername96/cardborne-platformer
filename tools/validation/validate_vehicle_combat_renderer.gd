@@ -686,6 +686,34 @@ func _run() -> void:
 			and is_equal_approx(float(boss_ring_buffer[11]), 0.38),
 		"boss-only shield boundary uses the exact +8 radius and 0.38 alpha retune"
 	)
+	var destruction_presentation := _player_presentation(Vector2.ZERO, false)
+	destruction_presentation["dying_boss_id"] = open_boss.id
+	destruction_presentation["boss_destruction"] = {
+		"explosion_scale":0.20,
+		"body_alpha":0.75,
+		"explosion_alpha":0.75,
+	}
+	renderer.sync(
+		[open_boss], no_projectiles, no_projectiles, [], [],
+		Rect2(0, 0, 1280, 720), Vector2.ZERO, 0.0, true, "",
+		destruction_presentation
+	)
+	var death_explosions := renderer.debug_semantic_texture_draws(
+		&"effect/boss_death_explosion"
+	)
+	var dying_boss_batch := renderer.get_node("Boss_colossus") as MultiMeshInstance2D
+	_expect(
+		death_explosions.size() == 1
+			and Vector2(death_explosions[0]["position"]).is_equal_approx(open_boss.pos)
+			and is_equal_approx(
+				float(death_explosions[0]["radius"]),
+				Art.STAGE_BOSS_RADIUS * 0.20
+			)
+			and is_equal_approx(float(death_explosions[0]["modulate"].a), 0.75)
+			and is_equal_approx(float(dying_boss_batch.multimesh.buffer[11]), 0.75)
+			and int(renderer.debug_snapshot()["boss_health_bar_count"]) == 0,
+		"one retained shared boss-death explosion follows the runtime snapshot while body fades"
+	)
 	var run_source := FileAccess.get_file_as_string(
 		"res://scripts/vehicle/vehicle_run.gd"
 	)
@@ -1438,6 +1466,12 @@ func _validate_mystery_device_presentation(
 	var weakpoint_contour := renderer.get_node(
 		"MysteryDeviceContour_weakpoint"
 	) as MultiMeshInstance2D
+	var repair_contour := renderer.get_node(
+		"MysteryDeviceContour_repair"
+	) as MultiMeshInstance2D
+	var barrier_contour := renderer.get_node(
+		"MysteryDeviceContour_barrier"
+	) as MultiMeshInstance2D
 	var rings := renderer.get_node("FacilityEffect_ring") as MultiMeshInstance2D
 	var disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var gravity_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
@@ -1511,6 +1545,32 @@ func _validate_mystery_device_presentation(
 			"mystery effect %d preserves its exact full-area radius and locked alpha"
 			% (index + 1)
 		)
+	presentation["mystery_devices"] = [
+		{"id":"device-repair", "state":&"intact", "visible":true, "position":device_position, "outcome":&"repair", "effect_radius":420.0},
+		{"id":"device-barrier", "state":&"intact", "visible":true, "position":resolved_position, "outcome":&"barrier", "effect_radius":420.0},
+	]
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, [],
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
+	)
+	var repair_symbols := renderer.debug_semantic_texture_draws(&"world/facility_repair_beacon")
+	var barrier_symbols := renderer.debug_semantic_texture_draws(&"world/facility_barrier_projector")
+	_expect(
+		repair_contour.multimesh.visible_instance_count == 1
+			and barrier_contour.multimesh.visible_instance_count == 1
+			and repair_symbols.size() == 1
+			and barrier_symbols.size() == 1
+			and Vector2(repair_symbols[0]["position"]).is_equal_approx(device_position)
+			and Vector2(barrier_symbols[0]["position"]).is_equal_approx(resolved_position)
+			and rings.multimesh.visible_instance_count == 2
+			and disks.multimesh.visible_instance_count == 2,
+		"repair and barrier facilities use bounded semantic bodies, contours, and full-area support footprints"
+	)
+	presentation["mystery_devices"] = [
+		{"id":"device-a", "state":&"intact", "visible":true, "position":device_position, "outcome":&"gravity", "effect_radius":480.0},
+		{"id":"device-b", "state":&"intact", "visible":true, "position":resolved_position, "outcome":&"cryo", "effect_radius":360.0},
+		{"id":"device-c", "state":&"intact", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint", "effect_radius":420.0},
+	]
 	var pickup_position := Vector2(340.0, 420.0)
 	presentation["map_pickups"] = [
 		{"id":"recall-a", "kind":&"experience_recall", "pos":pickup_position, "active":true},

@@ -63,7 +63,12 @@ const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
 const MYSTERY_DEVICE_CAPACITY := 3
 const MAP_PICKUP_CAPACITY := 14
 const MYSTERY_DEVICE_SYMBOL_RADIUS := 144.0
+const MYSTERY_OUTCOME_IDS: Array[StringName] = [
+	&"repair", &"barrier", &"gravity", &"cryo", &"weakpoint",
+]
 const MYSTERY_SYMBOL_DESCRIPTORS := {
+	&"repair": &"repair_beacon",
+	&"barrier": &"barrier_projector",
 	&"gravity": &"mystery_device_gravity",
 	&"cryo": &"mystery_device_cryo",
 	&"weakpoint": &"mystery_device_weakpoint",
@@ -480,7 +485,10 @@ func _build_batches() -> void:
 			_enemy_status_material,
 			true
 		)
-	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
+	for variant in [
+		&"colossus", &"leviathan", &"titan", &"behemoth", &"crown",
+		&"battery", &"loom", &"pulse_core",
+	]:
 		_boss_variant_batches[variant] = _create_asset_batch(
 			"Boss_%s" % String(variant),
 			StringName("boss/%s" % variant),
@@ -545,7 +553,7 @@ func _build_batches() -> void:
 			_pickup_edge_material,
 			true
 		)
-	for outcome_id in [&"gravity", &"cryo", &"weakpoint"]:
+	for outcome_id in MYSTERY_OUTCOME_IDS:
 		var descriptor_id := _mystery_symbol_descriptor(outcome_id)
 		var symbol_asset := StringName(WorldCatalog.world_object_descriptor(descriptor_id).get("asset", &""))
 		_mystery_device_contour_batches[outcome_id] = _create_asset_batch(
@@ -842,9 +850,10 @@ func _sync_enemies(
 		if batch == null:
 			continue
 		var body_modulate := _enemy_body_modulate(enemy)
+		var destruction := Dictionary(presentation.get("boss_destruction", {}))
 		if dying_boss:
 			body_modulate.a *= float(
-				Dictionary(presentation.get("boss_destruction", {})).get(
+				destruction.get(
 					"body_alpha", 1.0
 				)
 			)
@@ -856,6 +865,16 @@ func _sync_enemies(
 			body_modulate,
 			_enemy_status_custom_data(enemy, reduced_motion)
 		)
+		if dying_boss:
+			# The death runtime owns the one shared overlay's scale and fade; this
+			# retained draw only follows the still-visible boss body's center.
+			_queue_semantic_texture(
+				&"effect/boss_death_explosion",
+				position,
+				0.0,
+				radius * float(destruction.get("explosion_scale", 0.0)),
+				Color(1.0, 1.0, 1.0, float(destruction.get("explosion_alpha", 0.0)))
+			)
 		if role == &"stage_boss" and not dying_boss and _boss_health_bar_count < MAX_BOSS_HEALTH_BARS:
 			_sync_health_bar(
 				position,
@@ -1928,8 +1947,13 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		).has_point(position):
 			continue
 		var edge_alpha := _interaction_edge_alpha(run_time, phase_offset, reduced_motion)
+		var contour_batch := _mystery_device_contour_batches.get(
+			outcome_id
+		) as BatchHandle
+		if contour_batch == null:
+			continue
 		_write_instance(
-			_mystery_device_contour_batches[outcome_id] as BatchHandle,
+			contour_batch,
 			position,
 			0.0,
 			Vector2.ONE * (MYSTERY_DEVICE_SYMBOL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS),
@@ -1977,13 +2001,17 @@ func _sync_facility_effects(state: Dictionary, visible_world: Rect2) -> void:
 		if StringName(device.get("state", &"")) != &"intact":
 			continue
 		var effect_id := StringName(device.get("outcome", &""))
-		if effect_id not in [&"gravity", &"cryo", &"weakpoint"]:
+		if effect_id not in MYSTERY_OUTCOME_IDS:
 			continue
 		var position := Vector2(device.get("position", Vector2.ZERO))
 		var radius := float(device.get("effect_radius", 0.0))
 		if radius <= 0.0 or not visible_world.grow(radius).has_point(position):
 			continue
-		var color := Art.CRYO if effect_id == &"cryo" else (Art.DANGER if effect_id == &"weakpoint" else Art.SYSTEM)
+		var color := (
+			Art.MINT
+			if effect_id in [&"repair", &"barrier"]
+			else (Art.CRYO if effect_id == &"cryo" else (Art.DANGER if effect_id == &"weakpoint" else Art.SYSTEM))
+		)
 		var body_alpha := (
 			0.12
 			if effect_id == &"cryo"

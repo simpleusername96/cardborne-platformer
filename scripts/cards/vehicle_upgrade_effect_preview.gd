@@ -15,6 +15,9 @@ const RecoveryPolicy = preload(
 const DashRuntime = preload(
 	"res://scripts/player/vehicle_dash_upgrade_runtime.gd"
 )
+const PrimaryComboRuntime = preload(
+	"res://scripts/combat/vehicle_primary_combo_runtime.gd"
+)
 
 static var _secondary_catalog: RefCounted
 static var _active_weapon_catalog: RefCounted
@@ -119,6 +122,24 @@ static func rows(
 				OutgoingDamagePolicy.crisis_max_bonus(current_level + 1) * 100.0,
 				"percent"
 			)]
+		&"miss_compensation":
+			return [_combo_bonus_row(
+				current_level,
+				PrimaryComboRuntime.MISS_MAX,
+				PrimaryComboRuntime.MISS_BONUS
+			)]
+		&"hit_chain":
+			return [_combo_bonus_row(
+				current_level,
+				PrimaryComboRuntime.HIT_MAX,
+				PrimaryComboRuntime.HIT_BONUS
+			)]
+		&"braced_fire":
+			return [_combo_bonus_row(
+				current_level,
+				PrimaryComboRuntime.BRACED_MAX,
+				PrimaryComboRuntime.BRACED_BONUS
+			)]
 		&"overflow_barrier":
 			return [
 				_row(
@@ -149,6 +170,22 @@ static func rows(
 		&"emp", &"gravity_collapse", &"kinetic_shockwave", &"piercing_lance":
 			return _active_weapon_rows(definition.id, current_level)
 	return []
+
+
+static func _combo_bonus_row(
+	current_level: int,
+	max_stacks: int,
+	bonuses: Array
+) -> Dictionary:
+	var current_index := clampi(maxi(1, current_level) - 1, 0, bonuses.size() - 1)
+	var next_index := clampi(current_level, 0, bonuses.size() - 1)
+	return _row(
+		"UPGRADE_EFFECT_MAX_DAMAGE_BONUS",
+		float(max_stacks) * float(bonuses[current_index]) * 100.0,
+		float(max_stacks) * float(bonuses[next_index]) * 100.0,
+		"percent",
+		current_level > 0
+	)
 
 
 static func _modifier_rows(

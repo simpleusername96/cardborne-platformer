@@ -46,6 +46,8 @@ func _validate_active_world_roles() -> void:
 		&"mystery_device_cryo",
 		&"mystery_device_weakpoint",
 		&"transit_gate",
+		&"repair_beacon",
+		&"barrier_projector",
 	]
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
 	var matches := active_ids.size() == expected.size()
@@ -53,7 +55,7 @@ func _validate_active_world_roles() -> void:
 		matches = matches and active_ids.has(expected_id)
 	_expect(
 		matches,
-		"active world visual roles exclude retired support, wear, and bulkhead identities"
+		"active world visual roles include five facilities and exclude retired identities"
 	)
 
 

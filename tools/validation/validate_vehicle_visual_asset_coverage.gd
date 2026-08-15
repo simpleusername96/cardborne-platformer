@@ -6,13 +6,14 @@ const AssetProvider = preload(
 
 const EXPECTED_CATEGORY_COUNTS := {
 	&"attachment":1,
-	&"actor":18,
-	&"boss":5,
+	&"actor":22,
+	&"boss":8,
 	&"secondary":4,
 	&"projectile":2,
 	&"pickup":4,
-	&"world":19,
-	&"upgrade":28,
+	&"world":21,
+	&"effect":1,
+	&"upgrade":27,
 }
 
 var _failures: Array[String] = []
@@ -36,8 +37,8 @@ func _initialize() -> void:
 			]
 		)
 	_expect(
-		AssetProvider.asset_ids().size() == 81,
-		"final production coverage totals 78 semantic PNGs plus three approved SVGs"
+		AssetProvider.asset_ids().size() == 90,
+		"final production coverage totals 87 semantic PNGs plus three approved SVGs"
 	)
 	var unique_paths := {}
 	for asset_id in AssetProvider.asset_ids():

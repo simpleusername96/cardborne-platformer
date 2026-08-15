@@ -17,10 +17,12 @@ const ORDINARY_ARCHETYPES: Array[StringName] = [
 	&"shooter", &"controller", &"turret", &"mine", &"generator",
 	&"shield_escort", &"artillery_spotter", &"interceptor_tower",
 	&"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender",
-	&"drone_carrier", &"beam_sentinel",
+	&"drone_carrier", &"beam_sentinel", &"rail_sniper", &"orbit_gunner",
+	&"bombing_runner", &"wreck_scavenger",
 ]
 const PRODUCTION_BOSS_VARIANTS: Array[StringName] = [
 	&"colossus", &"leviathan", &"titan", &"behemoth", &"crown",
+	&"battery", &"loom", &"pulse_core",
 ]
 var _failures: Array[String] = []
 
@@ -71,7 +73,7 @@ func _validate_actor_images() -> void:
 		_validate_unique_alpha_signature(asset_id, signatures)
 	_expect(
 		signatures.size() == ORDINARY_ARCHETYPES.size(),
-		"all 18 ordinary actor silhouettes remain distinct"
+		"all 22 ordinary actor silhouettes remain distinct"
 	)
 	signatures.clear()
 	for boss in PRODUCTION_BOSS_VARIANTS:
@@ -79,13 +81,13 @@ func _validate_actor_images() -> void:
 			StringName("boss/%s" % boss),
 			signatures
 		)
-	_expect(signatures.size() == 5, "the five approved boss body silhouettes remain distinct")
+	_expect(signatures.size() == 8, "the eight approved boss body silhouettes remain distinct")
 	var authored_variants := {}
 	for stage_id in CombatStages.STAGE_IDS:
 		authored_variants[BossCatalog.variant(stage_id)] = true
 	_expect(
 		authored_variants.size() == 8,
-		"eight boss identities are gameplay-authored independently of pending visual approval"
+		"all eight gameplay-authored boss identities have approved production silhouettes"
 	)
 
 

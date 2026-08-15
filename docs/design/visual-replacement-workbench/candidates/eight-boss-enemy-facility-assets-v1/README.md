@@ -19,10 +19,9 @@ related:
 
 ## Purpose
 
-Preserve the first grounded raster candidate set for the three new bosses, four
-ordinary enemies, and two neutral facilities selected by the eight-boss plan. These
-files are review evidence only. They are not production assets, are not listed in the
-production manifest, and have not received exact user approval.
+Preserve the grounded raster source set for the three new bosses, four ordinary enemies,
+and two neutral facilities selected by the eight-boss plan. On 2026-08-15, the user
+approved these exact PNG bytes and SHA-256 values for production integration.
 
 ![All nine candidates](./previews/all-candidates-contact-sheet.png)
 
@@ -51,19 +50,18 @@ module, glyph, text, or layout was approved or copied as an asset source.
 
 | Candidate | Canvas | SHA-256 | Review state | Finding |
 | --- | ---: | --- | --- | --- |
-| [`boss_siege_battery.png`](./assets/boss_siege_battery.png) | 352x352 | `78a8740c37176e1150e135388835e83ad66cf698269a0771e0de76dde0ecd4fe` | `direction_clear` | Selected v3 keeps two broad side banks with two large channels each while removing the v1 barrel clutter. The over-simplified v2 remains under `revisions/` as rejected evidence. |
-| [`boss_vector_loom.png`](./assets/boss_vector_loom.png) | 352x352 | `6a14321073406be7c3b3778b1155fa27031fa2144a3fe2342e49e58bc41be26e` | `direction_clear` | Selected v2 keeps perpendicular rails and adds a clear right-facing fork; no beam geometry is baked in. |
-| [`boss_pulse_core.png`](./assets/boss_pulse_core.png) | 352x352 | `ca71f170b1b527559a758540eb5dc10aef7fd6babd1c4f51af1801d8a139a21a` | `direction_clear` | Forward wedge gap and heavy core are readable without drawing the runtime pulse ring. |
-| [`enemy_mobile_rail_sniper.png`](./assets/enemy_mobile_rail_sniper.png) | 112x112 | `4ee8d491a432fa6eeda907eb32bd9b023e7114737daa8f3386543df3795d0a81` | `direction_clear` | Selected v2 shortens the rail and broadens the mobile body to 31.39% opaque canvas coverage. |
-| [`enemy_orbit_gunner.png`](./assets/enemy_orbit_gunner.png) | 112x112 | `25fec951ea0714062feb9ff6d4177c5e3da200b4a5d070be4878c3b6a96cdef7` | `direction_clear` | Crescent motion silhouette and inward muzzle mass remain readable at actual size and in grayscale. |
-| [`enemy_bombing_runner.png`](./assets/enemy_bombing_runner.png) | 112x112 | `90423e781d86330345fe1c4ad9c29ece4f22b8bbbc069cc1d946c4cd5028d1b1` | `direction_clear` | Selected v2 keeps the fast pass silhouette and merges the repeated cells into one broad bomb-bay plane. |
-| [`enemy_wreck_scavenger.png`](./assets/enemy_wreck_scavenger.png) | 112x112 | `6b7be8946dd5af03c5f785dfbec6e6b3500f44587d88b400e36508ff9361cee1` | `direction_clear` | Selected v2 reduces the identity to one heavy rear compression mass and one open collector jaw; stacks remain code-owned. |
-| [`facility_repair_beacon.png`](./assets/facility_repair_beacon.png) | 192x192 | `62b4b1b0240940d09ca0ecb28ade36b811865770b84dd594a7727397f79ce80c` | `direction_clear` | Four-way service structure and mint core distinguish recovery without baking a plus icon or effect radius. |
-| [`facility_barrier_projector.png`](./assets/facility_barrier_projector.png) | 192x192 | `05b188a8def398388f7beec52bfb60086fd33339b9403085b2ea1f1d27a0fe59` | `direction_clear` | Opposed protective vanes and central slab distinguish shielding without a ring or barrier bubble. |
+| [`boss_siege_battery.png`](./assets/boss_siege_battery.png) | 352x352 | `78a8740c37176e1150e135388835e83ad66cf698269a0771e0de76dde0ecd4fe` | `user_approved` | Selected v3 keeps two broad side banks with two large channels each while removing the v1 barrel clutter. The over-simplified v2 remains under `revisions/` as rejected evidence. |
+| [`boss_vector_loom.png`](./assets/boss_vector_loom.png) | 352x352 | `6a14321073406be7c3b3778b1155fa27031fa2144a3fe2342e49e58bc41be26e` | `user_approved` | Selected v2 keeps perpendicular rails and adds a clear right-facing fork; no beam geometry is baked in. |
+| [`boss_pulse_core.png`](./assets/boss_pulse_core.png) | 352x352 | `ca71f170b1b527559a758540eb5dc10aef7fd6babd1c4f51af1801d8a139a21a` | `user_approved` | Forward wedge gap and heavy core are readable without drawing the runtime pulse ring. |
+| [`enemy_mobile_rail_sniper.png`](./assets/enemy_mobile_rail_sniper.png) | 112x112 | `4ee8d491a432fa6eeda907eb32bd9b023e7114737daa8f3386543df3795d0a81` | `user_approved` | Selected v2 shortens the rail and broadens the mobile body to 31.39% opaque canvas coverage. |
+| [`enemy_orbit_gunner.png`](./assets/enemy_orbit_gunner.png) | 112x112 | `25fec951ea0714062feb9ff6d4177c5e3da200b4a5d070be4878c3b6a96cdef7` | `user_approved` | Crescent motion silhouette and inward muzzle mass remain readable at actual size and in grayscale. |
+| [`enemy_bombing_runner.png`](./assets/enemy_bombing_runner.png) | 112x112 | `90423e781d86330345fe1c4ad9c29ece4f22b8bbbc069cc1d946c4cd5028d1b1` | `user_approved` | Selected v2 keeps the fast pass silhouette and merges the repeated cells into one broad bomb-bay plane. |
+| [`enemy_wreck_scavenger.png`](./assets/enemy_wreck_scavenger.png) | 112x112 | `6b7be8946dd5af03c5f785dfbec6e6b3500f44587d88b400e36508ff9361cee1` | `user_approved` | Selected v2 reduces the identity to one heavy rear compression mass and one open collector jaw; stacks remain code-owned. |
+| [`facility_repair_beacon.png`](./assets/facility_repair_beacon.png) | 192x192 | `62b4b1b0240940d09ca0ecb28ade36b811865770b84dd594a7727397f79ce80c` | `user_approved` | Four-way service structure and mint core distinguish recovery without baking a plus icon or effect radius. |
+| [`facility_barrier_projector.png`](./assets/facility_barrier_projector.png) | 192x192 | `05b188a8def398388f7beec52bfb60086fd33339b9403085b2ea1f1d27a0fe59` | `user_approved` | Opposed protective vanes and central slab distinguish shielding without a ring or barrier bubble. |
 
-All nine selected files are `direction_clear`, meaning their visual direction is
-suitable for user review. It does not mean switch-ready, technically approved,
-user-approved, or production-approved.
+All nine selected files are `user_approved` and production-integrated. The listed
+SHA-256 values remain the approval boundary; any byte change requires a new approval.
 
 ### Mechanical post-processing
 
@@ -98,19 +96,15 @@ user-approved, or production-approved.
 
 ## Recommendations
 
-- Ask the user to approve or reject the nine `direction_clear` candidates by exact file
-  and hash.
-- Update the active product and visual specs for eight bosses and the new neutral
-  facilities before adding any approved file to `to-be/assets/` or the production
-  manifest.
 - Keep attack telegraphs, laser walls, pulse fronts, scavenger stacks, repair range, and
   barrier range code-native. Do not bake them into these actor/facility rasters.
 
-## Limitations
+## Promotion state and limitations
 
-- The current visual spec still describes five production bosses and 78 production
-  images. This active-plan candidate batch does not override that spec.
-- There is no runtime capture because the new gameplay actors and facilities are not
-  implemented. Actual-size review is limited to isolated sprite canvases.
-- None of the nine direction-clear files has exact user approval. `switch_ready` remains
-  false.
+- The visual spec now covers all eight bosses and five neutral-facility roles. The
+  production manifest contains 90 approved images after this batch and the four other
+  approved promotion images are included.
+- The new actor and facility semantic IDs are integrated into runtime and Guidebook
+  presentation. The contact sheets remain approval evidence, not runtime captures.
+- The nine approved PNGs retain their reviewed canvases, hashes, and semantic mapping.
+  Runtime integration does not alter their bytes.

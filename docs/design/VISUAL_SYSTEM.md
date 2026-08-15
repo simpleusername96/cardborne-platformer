@@ -218,7 +218,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored direct-pickup and shard visual ID plus value-scale mapping | spawn, value, collection |
 | effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, Dash Afterburn, Storm Barrage, and Mystery outcome presentation within fixed capacity | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
-| world catalog | authored Transit Gate, three visible attackable Anomaly outcome symbols, SurfaceDetail, and state descriptor | topology, collision, health, outcome |
+| world catalog | authored Transit Gate, five visible attackable neutral-facility role symbols, SurfaceDetail, and state descriptor | topology, collision, health, facility role |
 | secondary catalog | authored seeker, field, blade, mine presentation identity plus code-native rear-beam and storm-footprint state | targeting, cadence, damage |
 | defense catalog | shared code-native support boundary plus Toxin/Cryo/Weakpoint actor-overlay recipe | protection, Electric Field damage area, damage, slow, received-damage multiplier, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
@@ -237,7 +237,7 @@ collision.
 #### Media ownership boundary
 
 - player, ordinary enemy, boss, secondary body, three projectile roles,
-  direct pickup, Transit Gate, Anomaly Device, common boss
+  direct pickup, Transit Gate, neutral facility, common boss
   node처럼 **게임 월드에 독립된 대상으로 등장하는 것은 완성된 authored
   PNG**를 사용한다. runtime은 이 image의 transform, scale, tint와 state
   선택만 소유한다. field topology와 정확히 같은 surface/outer-wall/inner-wall
@@ -278,7 +278,7 @@ collision.
   transform·scale·silhouette 안에서 translucent body layer를 합성하며 draw, batch,
   actor instance 또는 texture를 추가하지 않는다. damage number와 cosmetic emitter,
   plate, orbit icon은 만들지 않는다.
-  Anomaly Device의 Cryo Lock도 Chill stack을 만들지 않은 채 같은 blue
+  중립 Cryo 시설도 Chill stack을 만들지 않은 채 같은 blue
   same-size compositor input을 사용한다. Weakpoint Expose는 같은 compositor에
   restrained danger layer만 전달하며 ring, bracket, per-enemy material 또는 새
   batch를 만들지 않는다.
@@ -286,13 +286,15 @@ collision.
   각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
   크기에서 약 30% 줄인 값이다. repair pickup과 experience recall은 gameplay
   역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
-- Anomaly Device는 배치될 때부터 할당된 Gravity/Cryo/Weakpoint authored symbol
-  한 개를 `288` world-unit optical size로 표시한다. 검은 외피, neutral body,
-  damaged body, wreck 또는 enclosing badge를 symbol 위나 아래에 합성하지 않는다.
-  이 symbol 자체가 기존 health와 collision을 가진 공격 가능한 시설이다. 타격은
-  health만 줄이며 visual identity를 바꾸지 않고, 파괴되는 순간에만 표시된 결과의
-  gameplay effect가 시작된다. Minimap marker는 중립 역할 marker를 유지한다.
-- repair/recall pickup과 Anomaly Device는 availability를 알리는 작은 time-based
+- 중립 시설은 배치될 때부터 할당된 Repair/Barrier/Gravity/Cryo/Weakpoint authored
+  symbol 한 개를 `288` world-unit optical size로 표시한다. Repair는 넓은 service
+  cross, Barrier는 서로 마주 보는 projector vane으로 읽혀야 하며, 나머지 세 종류는
+  아래의 기존 shape verb를 유지한다. 검은 외피, damaged body, wreck 또는 enclosing
+  badge를 symbol 위나 아래에 합성하지 않는다. 이 symbol 자체가 health와 collision을
+  가진 공격 가능한 시설이며, 타격 중에도 visual identity를 바꾸지 않는다. 파괴되면
+  지속 효과와 presentation을 함께 종료한다. Minimap marker는 중립 역할 marker를
+  유지한다.
+- repair/recall pickup과 중립 시설은 availability를 알리는 작은 time-based
   vertical bob과 얇은 breathing contour를 사용한다. Reduced Motion에서는 같은
   contour를 static으로 유지하고 bob과 blinking을 멈춘다. 이 motion은 collision,
   radius, minimap position, or effect anchor를 바꾸지 않는다.
@@ -345,7 +347,7 @@ collision.
 | 외곽 경계벽 | `#070B11` 단색 black mass | field boundary와 collision |
 | 내부 구조벽 | `#243445` 단색 dark-gray mass; 직선/L/T/step group을 같은 역할로 표시 | tactical layout, collision와 LOS |
 | 순간이동 게이트 | 완전한 원형 floor portal과 active interior | paired transit dwell/cooldown |
-| 변칙 장치 | 배치 즉시 보이는 큰 centered outcome symbol 한 개; 파괴 전후 visual identity 유지 | device health, assigned outcome과 effect activation |
+| 중립 시설 | 배치 즉시 보이는 큰 centered role symbol 한 개; 타격 중 visual identity 유지 | facility health, assigned role과 symmetric radius effect |
 | 직접 픽업 | 작고 밝은 role-coded silhouette | pickup value와 collection |
 
 별도 엄폐물, Arc Surge, Wear Collapse Tile, repair/overdrive floor pad와
@@ -383,23 +385,23 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - neutral 또는 traversable damage-zone surface는 사용하지 않는다. 바닥 detail은
   presentation-only이며 damage, collision, danger telegraph 또는 objective 의미를
   가질 수 없다.
-- Anomaly Device는 배치 즉시 Gravity의 inward arrows, Cryo의 broad snowflake,
-  Weakpoint의 opened armor와 exposed core 중 하나만 `288` world-unit로 단독
-  표시한다. 검은 외피, neutral/damaged body, resolved wreck와 다른 authored body는
-  사용하지 않는다. 세 symbol은 각각 기존 device health `90`, collision radius `84`를
-  가진 공격 가능한 시설이며, 타격 중에도 같은 identity를 유지한다. 파괴 시에만
-  실제 결과 effect를 시작하고, 발동 text는 실제 영향 대상 수를 함께 전달한다. 색이 없어도 세
-  shape verb가 달라야 하며 enclosing badge, text, number, target ring과 nested
-  ornament를 넣지 않는다. 세 결과는 모두 device position과 gameplay radius가
-  일치하는 full-area body를 표시한다. Gravity Pull, Cryo Lock, Weakpoint Expose는
-  실제 영향 지속시간 전체에 exact footprint를 유지한다. Existing
-  shared ring은 boundary accent로만 사용하며 별도 raster를 추가하지 않는다.
+- 중립 시설은 배치 즉시 Repair의 service cross, Barrier의 opposed projector vanes,
+  Gravity의 inward arrows, Cryo의 broad snowflake, Weakpoint의 opened armor와 exposed
+  core 중 하나만 `288` world-unit로 단독 표시한다. 검은 외피, neutral/damaged body,
+  resolved wreck와 다른 authored body는 사용하지 않는다. 다섯 symbol은 facility
+  health `360`과 collision radius를 가진 공격 가능한 시설이며, 타격 중에도 같은
+  identity를 유지한다. 색이 없어도 다섯 shape verb가 달라야 하며 enclosing badge,
+  text, number, target ring과 nested ornament를 넣지 않는다. 다섯 결과는 모두
+  facility position과 gameplay radius가 일치하는 full-area body를 시설이 존재하는
+  동안 표시한다. Repair/Barrier/Weakpoint는 radius `420`, Gravity는 `480`, Cryo는
+  `360`을 사용한다. Existing shared ring은 boundary accent로만 사용하며, Repair와
+  Barrier의 approved role symbol 외에 effect raster를 추가하지 않는다.
 - Transit Gate는 antialiased outer contour, uniform radial thickness, one dark
   body ring, one broad system-cyan active plane과 one short live highlight를 가진
   complete circular floor portal을 유지한다. Uneven edge, notch, lamp, panel seam과
   decorative concentric ring은 사용하지 않는다. gate는 movement-only,
-  Anomaly Device는 destructible interaction이므로 두 silhouette를 공유하지 않는다.
-- direct pickup과 Anomaly Device는 넓은 role-color 면과 얇은 breathing contour를 사용해
+  중립 시설은 destructible interaction이므로 두 silhouette를 공유하지 않는다.
+- direct pickup과 중립 시설은 넓은 role-color 면과 얇은 breathing contour를 사용해
   서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
   표시하지 않는다.
 - 세 field의 주요 시각 차이는 실제 walkable topology와 run-selected wall
@@ -681,14 +683,14 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   level과 effective value는 paused Ship Status만 소유한다.
 - minimap의 dynamic marker는 player, `field_pickup`, `mystery_device`,
   `mobile_enemy`, `priority_enemy`, `boss` 정확히 여섯
-  역할만 사용한다. pickup은 lozenge, Anomaly Device는 outcome과 무관한 neutral cut
+  역할만 사용한다. pickup은 lozenge, 중립 시설은 role과 무관한 neutral cut
   role marker, mobile enemy는 wedge/round mass, 고정 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`는 square/cut priority mass,
   boss는 command-magenta notched mass다. resolved/retired
   device는 사라지고 elite, stage별 boss color, world outcome과 그 밖의 subtype은
   표시하지 않는다. marker capacity, borrowed buffer, explored static geometry와 fog,
   player facing, 한 retained minimap Surface를 유지한다. pickup outer size는
-  `12×7.6`이다. Anomaly Device outer point는 기존 neutral cut silhouette의 `1.20×`다.
+  `12×7.6`이다. 중립 시설 outer point는 기존 neutral cut silhouette의 `1.20×`다.
 - bottom-center active indicator는 사용하지 않는다. Dash와 acquired Active 상태는
   좌상단 cluster가 중복 없이 소유한다. 자동 무기는 별도 HUD action slot을 만들지 않는다.
 - minimap zone만 한 subtle Surface를 사용한다. 두 full-width meter와 좌상단 cluster는
@@ -698,12 +700,12 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - normal top-center announcement는 text-only `22px` bold이며 center status band의
   가장 낮은 경계 아래 4px에 붙고 좌상단 cluster 및 minimap과 겹치지 않는다. bounded
   priority queue는 duplicate를 coalesce하고 semantic color로 종류를 구분한다.
-  gameplay announcement는 boss inbound, barrier depleted, Anomaly Device triggered result,
-  boss shield-down과 progression complete event만 허용한다.
+  gameplay announcement는 boss inbound, barrier depleted, boss shield-down과
+  progression complete event만 허용한다.
   stage transition banner는 사용하지 않는다.
 - stage boss와 고정 전투 설치물 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed
-  health bar를 둔다. mobile enemy, mine, Anomaly Device에는 표시하지
+  health bar를 둔다. mobile enemy, mine, 중립 시설에는 표시하지
   않는다. installation bar는 최대 12개이며 fill 높이는 16 world unit, boss fill 높이는
   18 world unit이다. installation half-width는 `42–72`, boss는 `96–120`
   world unit로 제한한다. fill은 모든 비율에서 왼쪽 edge를
@@ -823,11 +825,12 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - Beam Sentinel and boss straight beams share one code-native unit quad. Runtime tint,
   alpha, live corridor size, and the two-plane startup/three-plane active hierarchy remain
   presentation-owned.
-- Anomaly Device gameplay and the three Gravity/Cryo/Weakpoint outcome symbols are
-  production-integrated. One assigned symbol is visible alone at 288 world units from
-  placement through active-effect retirement, with a bounded bob and thin breathing
-  contour. Damage never swaps its identity; destruction alone starts the full-area
-  effect, while collision, health, footprint, and duration remain code-owned.
+- The five neutral-facility roles are production-integrated. Repair and Barrier use their
+  approved role rasters; Gravity, Cryo, and Weakpoint retain their existing authored
+  symbols. One assigned symbol is visible alone at 288 world units with a bounded bob and
+  thin breathing contour. Damage never swaps its identity; destruction retires the
+  facility and its symmetric full-area effect, while collision, health, footprint, and
+  duration remain code-owned.
 - Drop Mine gameplay receipts remain fixed-capacity effect-store state. The shared
   code-native disk batch displays radius `192/216/240`; standard and reduced motion both
   start at final radius and only fade, with no dedicated texture or batch.
@@ -835,7 +838,7 @@ Web export만으로 interactive built-Web smoke나 release performance를
   player-seeker, or hostile-bolt identities; runtime owns scale, rotation,
   player-primary affinity tint, collision, speed, and homing.
 - The integrated player craft, XP master, four secondary bodies, three
-  projectile roles, pickups, current approved facilities, the current boss set, three
+  projectile roles, pickups, five approved facility roles, all eight bosses, three
   shared boss-node states and four map assets remain the applied authored set until the active
   eight-boss visual promotion completes. EMP and other transient area effects have no
   authored image identity; boss death alone uses the one shared approved overlay.

@@ -43,19 +43,19 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	var gameplay_manifest := _read_json(GAMEPLAY_MANIFEST_PATH)
 	_expect(
-		int(gameplay_manifest.get("final_asset_count", 0)) == 77,
-		"gameplay manifest declares 74 approved semantic PNGs plus three approved SurfaceDetail SVGs"
+		int(gameplay_manifest.get("final_asset_count", 0)) == 90,
+		"gameplay manifest declares 87 approved semantic PNGs plus three approved SurfaceDetail SVGs"
 	)
 	var family_counts := Dictionary(gameplay_manifest.get("family_counts", {}))
 	_expect(
-		int(family_counts.get("upgrade", 0)) == 24,
-		"gameplay manifest declares only the 24 approved upgrade rasters before candidate promotion"
+		int(family_counts.get("upgrade", 0)) == 27,
+		"gameplay manifest declares one approved raster for each live upgrade card"
 	)
 	var world_asset_count := 0
 	for asset_variant in Array(gameplay_manifest.get("assets", [])):
 		if StringName(Dictionary(asset_variant).get("category", &"")) == &"world":
 			world_asset_count += 1
-	_expect(world_asset_count == 19, "gameplay manifest declares sixteen world PNGs and three SurfaceDetail SVGs")
+	_expect(world_asset_count == 21, "gameplay manifest declares eighteen world PNGs and three SurfaceDetail SVGs")
 	_validate_active_world_catalog()
 	_expect(
 		not gameplay_manifest.has("animations"),
@@ -67,8 +67,9 @@ func _initialize() -> void:
 		if StringName(asset.get("category", &"")) == &"effect":
 			authored_effects.append(asset)
 	_expect(
-		authored_effects.is_empty(),
-		"transient area effects use no authored raster identities"
+		authored_effects.size() == 1
+			and StringName(Dictionary(authored_effects[0]).get("id", &"")) == &"effect/boss_death_explosion",
+		"boss death is the one approved authored effect raster identity"
 	)
 
 	if not FileAccess.file_exists(EVENT_CATALOG_PATH):
@@ -92,14 +93,14 @@ func _validate_active_world_catalog() -> void:
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
 	var expected := [
 		&"mystery_device_gravity", &"mystery_device_cryo", &"mystery_device_weakpoint",
-		&"transit_gate",
+		&"transit_gate", &"repair_beacon", &"barrier_projector",
 	]
 	var matches := active_ids.size() == expected.size()
 	for expected_id in expected:
 		matches = matches and active_ids.has(expected_id)
 	_expect(
 		matches,
-		"runtime world catalog uses the Transit Gate and three visible attackable Anomaly symbols"
+		"runtime world catalog exposes the gate and all five neutral facility identities"
 	)
 
 

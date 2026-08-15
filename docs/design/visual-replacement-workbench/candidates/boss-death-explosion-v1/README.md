@@ -14,9 +14,9 @@ related:
 
 ## Purpose
 
-Provide one review-only explosion overlay that starts small at the center of an existing
-boss body, grows once, and fades out with that body. The boss raster remains intact; this
-candidate does not replace, slice, or redraw it.
+Provide one approved shared explosion overlay that starts small at the center of an
+existing boss body, grows once, and fades out with that body. The boss raster remains
+intact; this asset does not replace, slice, or redraw it.
 
 ## Sources
 
@@ -53,8 +53,18 @@ candidate does not replace, slice, or redraw it.
 
 ## Limitations
 
-- Review-only; it is not user-approved and is not in the production manifest.
-- `VISUAL_SYSTEM.md` currently prohibits effect rasters. Exact user approval plus a
-  deliberate spec amendment are required before production promotion.
-- Runtime timing, reduced-motion behavior, retained-batch capacity, and final-scale
-  readability still require implementation validation.
+- This approval covers only the one shared boss-death overlay. It does not authorize
+  another authored effect raster, sprite sheet, particle system, or per-boss variant.
+- Runtime timing, reduced-motion behavior, retained capacity, and final-scale readability
+  remain subject to the production validation gates.
+
+## Approval and promotion
+
+- On 2026-08-15, BK explicitly approved all 13 files and SHA-256 values listed in
+  `docs/reports/2026-08-15-eight-boss-combat-approval-ko.md`.
+- This file was approved as
+  `4eaf22c97fcdac6ff50736410e1e3068febcfa79acfc05ba493080c200113c41`.
+- The approved bytes were promoted unchanged to
+  `art/visuals/production/gameplay/effects/boss_death_explosion.png`.
+- Runtime integration uses one retained semantic draw; gameplay timing, scale, alpha,
+  collision, and cleanup remain code-owned.

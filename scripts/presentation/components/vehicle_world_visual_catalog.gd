@@ -17,6 +17,18 @@ const WORLD_OBJECT_DESCRIPTORS := {
 		"shape": &"round_portal",
 		"color": &"system",
 	},
+	&"repair_beacon": {
+		"asset": &"world/facility_repair_beacon",
+		"kind": &"neutral_facility",
+		"shape": &"service_cross",
+		"color": &"support",
+	},
+	&"barrier_projector": {
+		"asset": &"world/facility_barrier_projector",
+		"kind": &"neutral_facility",
+		"shape": &"opposed_vanes",
+		"color": &"support",
+	},
 	&"mystery_device_gravity": {
 		"asset": &"world/mystery_device_gravity", "kind": &"mystery_device_symbol", "shape": &"inward_arrows",
 	},

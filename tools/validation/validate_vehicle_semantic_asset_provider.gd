@@ -10,6 +10,14 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"actor/mine",
 	&"boss/colossus",
 	&"boss/crown",
+	&"boss/battery",
+	&"boss/loom",
+	&"boss/pulse_core",
+	&"actor/rail_sniper",
+	&"actor/orbit_gunner",
+	&"actor/bombing_runner",
+	&"actor/wreck_scavenger",
+	&"effect/boss_death_explosion",
 	&"secondary/seeker",
 	&"secondary/escort_drone",
 	&"secondary/orbit_blade",
@@ -19,6 +27,8 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"pickup/experience_master",
 	&"pickup/experience_recall",
 	&"world/facility_transit_gate",
+	&"world/facility_repair_beacon",
+	&"world/facility_barrier_projector",
 	&"world/mystery_device_gravity",
 	&"world/mystery_device_cryo",
 	&"world/mystery_device_weakpoint",
@@ -52,6 +62,9 @@ const REQUIRED_UPGRADE_IDS: Array[StringName] = [
 	&"upgrade/dash_overdrive",
 	&"upgrade/dash_afterburn_field",
 	&"upgrade/last_stand_amplifier",
+	&"upgrade/miss_compensation",
+	&"upgrade/hit_chain",
+	&"upgrade/braced_fire",
 ]
 
 const RETIRED_SHARED_UPGRADE_IDS: Array[StringName] = [
@@ -114,7 +127,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 77, "all 74 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 90, "all 87 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in REQUIRED_UPGRADE_IDS:
@@ -162,9 +175,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 77
+		int(manifest.get("final_asset_count", 0)) == 90
 			and not manifest.has("animations"),
-		"manifest declares 77 static semantic images and no frame animations"
+		"manifest declares 90 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	for error in AssetProvider.validate_pack():

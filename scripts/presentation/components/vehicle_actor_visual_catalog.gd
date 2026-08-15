@@ -30,11 +30,18 @@ const DESCRIPTORS := {
 	&"repair_tender": {"role": &"repair", "asset": &"actor/repair_tender", "color": &"support", "states": [&"base", &"elite", &"collective"]},
 	&"drone_carrier": {"role": &"carrier", "asset": &"actor/drone_carrier", "color": &"boss_command", "states": [&"base", &"elite", &"collective"]},
 	&"beam_sentinel": {"role": &"beam", "asset": &"actor/beam_sentinel", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
+	&"rail_sniper": {"role": &"rail_sniper", "asset": &"actor/rail_sniper", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
+	&"orbit_gunner": {"role": &"orbit_gunner", "asset": &"actor/orbit_gunner", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
+	&"bombing_runner": {"role": &"bombing_runner", "asset": &"actor/bombing_runner", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
+	&"wreck_scavenger": {"role": &"wreck_scavenger", "asset": &"actor/wreck_scavenger", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
 	&"behemoth": {"role": &"boss", "asset": &"boss/behemoth", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
 	&"colossus": {"role": &"boss", "asset": &"boss/colossus", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
 	&"crown": {"role": &"boss", "asset": &"boss/crown", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
 	&"leviathan": {"role": &"boss", "asset": &"boss/leviathan", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
 	&"titan": {"role": &"boss", "asset": &"boss/titan", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
+	&"battery": {"role": &"boss", "asset": &"boss/battery", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
+	&"loom": {"role": &"boss", "asset": &"boss/loom", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
+	&"pulse_core": {"role": &"boss", "asset": &"boss/pulse_core", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
 }
 
 const ENEMY_ARCHETYPES: Array[StringName] = [
@@ -42,7 +49,8 @@ const ENEMY_ARCHETYPES: Array[StringName] = [
 	&"shooter", &"controller", &"turret", &"mine", &"generator",
 	&"shield_escort", &"artillery_spotter", &"interceptor_tower",
 	&"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender",
-	&"drone_carrier", &"beam_sentinel", &"stage_boss",
+	&"drone_carrier", &"beam_sentinel", &"rail_sniper", &"orbit_gunner",
+	&"bombing_runner", &"wreck_scavenger", &"stage_boss",
 ]
 
 
