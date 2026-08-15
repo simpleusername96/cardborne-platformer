@@ -177,5 +177,9 @@ production 파일의 해시도 모두 아래 값과 일치한다.
 
 보스 8종의 역할과 순서, 공용기 2종, 방어 연계, 2초 사망 연출, 일반 적 4종,
 새 이미지 13개와 감전 이미지 삭제 구성을 고정했다. 감전은 대체 없이 삭제했고,
-승인된 13개 이미지는 production에 반영했다. 남은 단계는 production Web 실행과
-동일 작업량 성능 검증이다.
+승인된 13개 이미지는 production에 반영했고, production manifest는 PNG 87개와
+승인된 SurfaceDetail SVG 3개로 총 90개다. 현재 `8fe872c1` Web 빌드는 정적 배포
+검사와 실제 전투 진입을 통과했으며 콘솔 경고·오류가 없었다. 같은 커밋의 native
+`production_replay`도 1280×720, 10초 준비 + 60초 측정에서 scenario와 전체 threshold를
+통과했다. Web의 60초 권위 성능 표본만 아직 남아 있으므로 최종 실행 계획은 그 항목을
+완료하기 전까지 `active` 상태를 유지한다.

@@ -339,7 +339,7 @@ renderer batches, and production Web tooling.
   - Accept: workbench evidence records prompts, actual-reference use, canvas/alpha/hash,
     actual-size/grayscale checks, and each candidate remains outside production pending the
     exact approval gate.
-- [ ] **5.2** Promote the approved set and remove Shock art.
+- [x] **5.2** Promote the approved set and remove Shock art.
   - Accept: manifest indexes exactly 90 files; every new semantic ID resolves; Shock does
     not; canvases/pivots/imports match contracts; one explosion receipt and no sprite sheet,
     new dependency, extra effect raster, node-per-effect, or collision change exists.
@@ -391,10 +391,11 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 5 visual approval gate.
-- Next task: request exact hash approval for task 5.2, then promote only the approved set
-  and run the production Web and performance gates.
-- Last completed gate: focused source/runtime/UI validation. The 8-cycle campaign, boss
+- Current phase: Phase 5 production qualification.
+- Next task: capture and classify the current-commit built-Web 10-second warmup plus
+  60-second `production_replay`; all other task 5.3 gates are complete.
+- Last completed gate: exact visual promotion, built-Web export/interaction, and clean
+  native authority. The 8-cycle campaign, boss
   patterns and cleanup, four specialist enemies, 27-card/91-level catalog, five symmetric
   facilities, newest-ten diagnostics, stacked reports, guidebook, localization, and the
   960/1280/1920 Korean/English 100%/200% report capture matrix are green.
@@ -417,9 +418,19 @@ Execution evidence recorded on 2026-08-15:
   Clean native evidence `build/performance/encounter-pacing-7894797d-20260815-193851.json`
   passed: first visible `1.75s`, first attack `3.70s`, nonnegative boss slot margin, and
   seven visible ordinary enemies three seconds after cleanup. Task 3.1 is complete.
-- Thirteen exact visual candidates and their SHA-256 hashes are recorded in the Korean
-  approval report and remain outside production. Task 5.2 is intentionally blocked on the
-  user's explicit exact-file approval.
+- BK explicitly approved all thirteen visual candidates and their recorded SHA-256 hashes.
+  Promotion commit `069a7aa4` copied those exact bytes into production; application ledger
+  commit `41487314` records five applied workbench units. The manifest contains 87 PNGs
+  plus three approved SurfaceDetail SVGs, and every promoted hash matches the approval.
+- The current `8fe872c1` built Web export passed exact-case/static release validation at
+  `22,679,104` gzip bytes and entered live combat without a console warning or error.
+  The clean native `production_replay` at 1280x720 `gl_compatibility`, VSync disabled,
+  10-second warmup plus 60-second sample, stayed focused and unthrottled; workload
+  fingerprint `3758053376`, scenario validity, and all thresholds passed. Evidence:
+  `build/performance/eight-boss-final/native-8fe872c1-production-replay-60s.json`.
+- The matching current-commit Web authority sample is not yet recorded. The built-Web
+  smoke session was finalized before the native run and the alternate in-app browser was
+  unavailable; no prior Web result is relabeled as current evidence. Task 5.3 remains open.
 
 ## Completion and Stop Conditions
 
