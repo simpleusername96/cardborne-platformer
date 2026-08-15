@@ -202,8 +202,11 @@ func _finish() -> bool:
 		return true
 	if not bool(Dictionary(bundle.get("acceptance", {})).get("passed", false)):
 		push_error(
-			"Encounter pacing capture failed gameplay gates: %s"
-			% JSON.stringify(Dictionary(bundle["acceptance"]).get("checks", {}))
+			"Encounter pacing capture failed gameplay gates: %s; post-cleanup: %s"
+			% [
+				JSON.stringify(Dictionary(bundle["acceptance"]).get("checks", {})),
+				JSON.stringify(Dictionary(bundle["checkpoints"]).get("post_boss_3", {})),
+			]
 		)
 		return true
 	var absolute_path := ProjectSettings.globalize_path(_output_path)
