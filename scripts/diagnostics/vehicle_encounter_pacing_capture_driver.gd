@@ -201,7 +201,10 @@ func _finish() -> bool:
 		push_error("Encounter pacing capture did not reach every required checkpoint.")
 		return true
 	if not bool(Dictionary(bundle.get("acceptance", {})).get("passed", false)):
-		push_error("Encounter pacing capture failed one or more gameplay gates.")
+		push_error(
+			"Encounter pacing capture failed gameplay gates: %s"
+			% JSON.stringify(Dictionary(bundle["acceptance"]).get("checks", {}))
+		)
 		return true
 	var absolute_path := ProjectSettings.globalize_path(_output_path)
 	if DirAccess.make_dir_recursive_absolute(absolute_path.get_base_dir()) != OK:
