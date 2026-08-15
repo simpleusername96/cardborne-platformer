@@ -857,7 +857,7 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	var contract := ui.debug_ui_contract(1280.0)
 	_expect(
 		Vector2(contract["meter_heights"]) == Vector2(52.0, 32.0)
-			and Vector2(contract["status_cluster_size"]) == Vector2(346.0, 64.0)
+			and Vector2(contract["status_cluster_size"]) == Vector2(354.0, 64.0)
 			and bool(contract["top_clusters_do_not_overlap"]),
 		"200% probe preserves full-width meters and a single unclipped status row"
 	)
@@ -872,10 +872,13 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	)
 	for item_variant in Array(contract["status_item_contracts"]):
 		var item := Dictionary(item_variant)
+		var expected_minimum_width := (
+			48.0 if StringName(item["glyph_id"]) == &"total_defeats" else 72.0
+		)
 		_expect(
 			int(item["value_font_size"]) == 28
 				and Vector2(item["minimum_size"]).y == 64.0
-				and Vector2(item["minimum_size"]).x >= 72.0,
+				and Vector2(item["minimum_size"]).x >= expected_minimum_width,
 			"200%% probe keeps each compact HUD value legible without adding a panel"
 		)
 	var upgrade := Dictionary(contract["upgrade_choice"])
@@ -910,6 +913,24 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	await _settle_ui()
 	ui.debug_set_text_scale(2.0)
 	await _settle_ui()
+	ui.update_hud({
+		"stage_number":1,
+		"stage_total":8,
+		"stage_quota_remaining":0,
+		"cumulative_defeated":0,
+		"dash_available":false,
+		"dash_remaining":0.9,
+		"skill_owned":false,
+		"active_weapon_id":&"",
+		"conditional_statuses":[
+			{"id":&"last_stand", "value":"+35%"},
+			{"id":&"overflow_barrier", "value":"2.4s"},
+			{"id":&"dash_overdrive", "value":"1.8s"},
+			{"id":&"braced_fire", "value":"3·1.2s"},
+			{"id":&"hit_chain", "value":"×4"},
+		],
+	})
+	await _settle_ui()
 	announcement = hud.debug_contract(960.0)
 	_expect(
 		Vector2(announcement["toast_size"]).x <= 928.0
@@ -917,6 +938,25 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 			and Vector2(announcement["toast_size"]).y == 112.0
 			and bool(announcement["toast_center_attached"]),
 		"200% announcement stays inside the compact supported two-line safe width"
+	)
+	_expect(
+		bool(announcement["status_cluster_one_line"])
+			and bool(announcement["top_clusters_do_not_overlap"])
+			and int(announcement["conditional_status_count"]) == 5,
+		"960x540 200% keeps all five conditional states in one row before the minimap"
+	)
+	var status_right := 0.0
+	for item_variant in Array(announcement["status_item_contracts"]):
+		var item := Dictionary(item_variant)
+		status_right = maxf(
+			status_right,
+			Vector2(item["position"]).x + Vector2(item["size"]).x
+		)
+	_expect(
+		status_right <= Vector2(announcement["status_cluster_size"]).x
+			and status_right > 700.0,
+		"960x540 200%% lays out every visible status slot inside the one-line cluster; right=%.1f cluster=%.1f"
+		% [status_right, Vector2(announcement["status_cluster_size"]).x]
 	)
 	_expect_upgrade_geometry(
 		ui.debug_upgrade_geometry(),

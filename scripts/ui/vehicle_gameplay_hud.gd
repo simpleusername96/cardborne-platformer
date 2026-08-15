@@ -248,6 +248,8 @@ class StatusGlyphItem:
 	var accent := Art.SYSTEM
 	var available := true
 	var _glyph_size := 18.0
+	var _accessibility := false
+	var _raw_value := ""
 	var _value_label: Label
 
 	func _ready() -> void:
@@ -257,6 +259,7 @@ class StatusGlyphItem:
 		_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_value_label.clip_text = true
 		_value_label.add_theme_color_override("font_color", Art.TEXT_PRIMARY)
 		_value_label.add_theme_color_override("font_shadow_color", Art.COBALT_VOID)
 		_value_label.add_theme_constant_override("shadow_offset_x", 1)
@@ -268,16 +271,19 @@ class StatusGlyphItem:
 		glyph_id = next_id
 		glyph_family = family
 		accent = color
+		_refresh_display_value()
 		queue_redraw()
 
 	func set_value(value: String, is_available: bool = true) -> void:
-		if available == is_available and _value_label.text == value:
+		if available == is_available and _raw_value == value:
 			return
 		available = is_available
-		_value_label.text = value
+		_raw_value = value
+		_refresh_display_value()
 		queue_redraw()
 
 	func set_layout_profile(compact: bool, accessibility: bool, large: bool) -> void:
+		_accessibility = accessibility
 		var slot_size := Vector2(36.0, 40.0)
 		var font_size := 14
 		_glyph_size = 18.0
@@ -303,7 +309,35 @@ class StatusGlyphItem:
 			_value_label.position = Vector2(0.0, _glyph_size + 3.0)
 			_value_label.size = Vector2(slot_size.x, slot_size.y - _glyph_size - 3.0)
 			Factory.apply_font_size(_value_label, font_size)
+			_refresh_display_value()
 		queue_redraw()
+
+	func _refresh_display_value() -> void:
+		if _value_label == null:
+			return
+		_value_label.text = _compact_accessibility_value(_raw_value)
+
+	func _compact_accessibility_value(value: String) -> String:
+		if not _accessibility:
+			return value
+		if glyph_id == &"braced_fire":
+			return value.trim_suffix("s")
+		if glyph_id != &"stage_progress":
+			return value
+		var numbers: Array[String] = []
+		var current := ""
+		for index in value.length():
+			var character := value.substr(index, 1)
+			if character >= "0" and character <= "9":
+				current += character
+			elif not current.is_empty():
+				numbers.append(current)
+				current = ""
+		if not current.is_empty():
+			numbers.append(current)
+		if numbers.size() >= 3:
+			return "%s/%s·%s" % [numbers[0], numbers[1], numbers[2]]
+		return value
 
 	func _draw() -> void:
 		var center := Vector2(size.x * 0.5, _glyph_size * 0.5 + 1.0)
@@ -358,6 +392,9 @@ class StatusGlyphItem:
 			"has_text":true,
 			"value":_value_label.text,
 			"minimum_size":custom_minimum_size,
+			"position":position,
+			"size":size,
+			"visible":visible,
 			"glyph_id":glyph_id,
 			"glyph_family":glyph_family,
 			"glyph_optical_size":_glyph_size,
@@ -460,7 +497,7 @@ class StageMinimap:
 		return mesh
 
 
-var _status_cluster: HBoxContainer
+var _status_cluster: Control
 var _minimap_panel: PanelContainer
 var _health_bar: HealthPips
 var _status_items: Dictionary = {}
@@ -509,7 +546,7 @@ func _build() -> void:
 	_health_bar.name = "FullWidthMeters"
 	add_child(_health_bar)
 
-	_status_cluster = HBoxContainer.new()
+	_status_cluster = Control.new()
 	_status_cluster.name = "CompactStatusCluster"
 	_status_cluster.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_status_cluster)
@@ -825,7 +862,9 @@ func debug_contract(viewport_width: float) -> Dictionary:
 	var action_item_size := _status_item_size(compact, accessibility, large, true)
 	var item_gap := _status_item_gap(compact, accessibility, large)
 	var status_size := Vector2(
-		_status_cluster_width(status_item_size, action_item_size, item_gap),
+		_status_cluster_width(
+			status_item_size, action_item_size, item_gap, accessibility
+		),
 		status_item_size.y
 	)
 	var status_position := Vector2(safe_margin, meter_height + status_top_gap)
@@ -950,18 +989,31 @@ func _apply_responsive_layout() -> void:
 	_health_bar.custom_minimum_size = Vector2(size.x, meter_height)
 	_health_bar.size = Vector2(size.x, meter_height)
 	var item_gap := _status_item_gap(compact, accessibility, large)
-	_status_cluster.add_theme_constant_override("separation", roundi(item_gap))
 	for item in _status_items.values():
 		(item as StatusGlyphItem).set_layout_profile(compact, accessibility, large)
 	var status_item_size := _status_item_size(compact, accessibility, large, false)
 	var action_item_size := _status_item_size(compact, accessibility, large, true)
+	for item_id in _visible_status_item_ids():
+		var item := _status_item(item_id)
+		var item_width := _profile_status_item_width(
+			item_id, status_item_size, action_item_size, accessibility
+		)
+		item.custom_minimum_size.x = item_width
+		item.size.x = item_width
 	var status_size := Vector2(
-		_status_cluster_width(status_item_size, action_item_size, item_gap),
+		_status_cluster_width(
+			status_item_size, action_item_size, item_gap, accessibility
+		),
 		status_item_size.y
 	)
 	_status_cluster.position = Vector2(safe_margin, meter_height + status_top_gap)
 	_status_cluster.custom_minimum_size = status_size
 	_status_cluster.size = status_size
+	var status_cursor := 0.0
+	for item_id in _visible_status_item_ids():
+		var item := _status_item(item_id)
+		item.position = Vector2(status_cursor, 0.0)
+		status_cursor += item.size.x + item_gap
 	_minimap_panel.custom_minimum_size = minimap_base_size
 	_minimap_panel.size = minimap_base_size
 	_minimap_panel.position = Vector2(
@@ -1053,13 +1105,32 @@ func _visible_status_item_ids() -> Array[StringName]:
 	return result
 
 
-func _status_cluster_width(status_size: Vector2, action_size: Vector2, gap: float) -> float:
-	var item_count := 4 + _visible_conditional_count()
-	return (
-		status_size.x * float(2 + _visible_conditional_count())
-		+ action_size.x * 2.0
-		+ gap * float(maxi(0, item_count - 1))
-	)
+func _status_cluster_width(
+	status_size: Vector2,
+	action_size: Vector2,
+	gap: float,
+	accessibility: bool
+) -> float:
+	var item_ids := _visible_status_item_ids()
+	var width := gap * float(maxi(0, item_ids.size() - 1))
+	for item_id in item_ids:
+		width += _profile_status_item_width(
+			item_id, status_size, action_size, accessibility
+		)
+	return width
+
+
+func _profile_status_item_width(
+	item_id: StringName,
+	status_size: Vector2,
+	action_size: Vector2,
+	accessibility: bool
+) -> float:
+	if accessibility and item_id == &"stage":
+		return 104.0
+	if accessibility and item_id == &"defeats":
+		return 48.0
+	return action_size.x if item_id in [&"dash", &"active"] else status_size.x
 
 
 func set_accessibility_text_scale(scale: float) -> void:

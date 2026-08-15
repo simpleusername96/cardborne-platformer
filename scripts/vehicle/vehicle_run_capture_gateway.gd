@@ -82,6 +82,7 @@ func _init(run: Node) -> void:
 func set_player_fixture(fixture: Dictionary) -> void:
 	match StringName(fixture.get("kind", &"")):
 		&"cooldowns":
+			_run.capture_set_mode(&"paused")
 			_run.player_dash_cooldown = _run._dash_cooldown_max() * 0.75
 			_run.secondary_runtime.seeker_cooldown = _run.SEEKER_COOLDOWN * 0.5
 			_run.active_weapon_runtime.cooldown_remaining = (
