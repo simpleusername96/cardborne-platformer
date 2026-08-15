@@ -266,7 +266,7 @@ Source owners: `scripts/enemies/`, `scripts/cards/`, responsibility-shaped comba
 owners, `scripts/vehicle/vehicle_mystery_device_runtime.gd`, progression/pickup owners,
 and `VehicleRun` orchestration hooks.
 
-- [ ] **3.1** Add the four ordinary enemy roles and engagement-gap correction.
+- [x] **3.1** Add the four ordinary enemy roles and engagement-gap correction.
   - Accept: role-specific fixtures prove attack cadence/geometry and Wreck Scavenger's
     radius-360 death-event stacks, exclusions, maximum five, exact multipliers, and active
     attack at zero stacks; 4/8/3 pacing capture passes without teleport or count reduction.
@@ -391,9 +391,9 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3 pacing qualification and Phase 5 visual approval gate.
-- Next task: commit the independently complete implementation, run the clean 4/8/3 pacing
-  capture, then request exact hash approval for task 5.2.
+- Current phase: Phase 5 visual approval gate.
+- Next task: request exact hash approval for task 5.2, then promote only the approved set
+  and run the production Web and performance gates.
 - Last completed gate: focused source/runtime/UI validation. The 8-cycle campaign, boss
   patterns and cleanup, four specialist enemies, 27-card/91-level catalog, five symmetric
   facilities, newest-ten diagnostics, stacked reports, guidebook, localization, and the
@@ -413,8 +413,10 @@ Execution evidence recorded on 2026-08-15:
   1920x1080 with 100% and 200% text scale. Inspection found no clipping, overflow, nested
   scroll, side rail, or hidden terminal action.
 - Three meaningful local sessions were retained after seven exact automated sub-second
-  diagnostics were removed. Their engagement-gap evidence drove bounded off-screen steering;
-  clean 4/8/3 capture remains the acceptance gate for task 3.1.
+  diagnostics were removed. Their engagement-gap evidence drove bounded off-screen steering.
+  Clean native evidence `build/performance/encounter-pacing-7894797d-20260815-193851.json`
+  passed: first visible `1.75s`, first attack `3.70s`, nonnegative boss slot margin, and
+  seven visible ordinary enemies three seconds after cleanup. Task 3.1 is complete.
 - Thirteen exact visual candidates and their SHA-256 hashes are recorded in the Korean
   approval report and remain outside production. Task 5.2 is intentionally blocked on the
   user's explicit exact-file approval.
