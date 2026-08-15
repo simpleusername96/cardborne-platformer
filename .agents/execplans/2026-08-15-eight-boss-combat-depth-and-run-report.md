@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: draft
 owner: BK
 created: 2026-08-15
 last_reviewed: 2026-08-15
@@ -19,16 +19,21 @@ related:
 
 ## Purpose
 
-Implement the 2026-08-15 feedback as one decision-complete contract. Replace the
-visible ten-stage pairing with eight continuous boss cycles, preserve ordinary-enemy
-quotas before every boss, add three bosses and four active ordinary roles, replace
-Shock with Charged Rounds in the utility-attribute slot, add a readable boss-death
-cleanup, retain only the latest ten valid user sessions, and deliver one left-aligned
-stacked report shared by terminal results and Settings.
+This file is a non-executable draft. All product decisions below except the primary
+utility-attribute replacement are closed. After the user selects that replacement,
+rewrite this file into the repository's decision-complete execution-contract template,
+add the selected attribute's exact owners and acceptance checks, and only then change
+the lifecycle status to `active`.
 
-This plan contains implementation work only. Candidate generation, comparison, and
-product decisions are closed in the linked design analysis. There is no absolute run-
-duration acceptance target and no agent-simulated “normal completion” cohort.
+The intended implementation will replace the visible ten-stage pairing with eight
+continuous boss cycles, preserve ordinary-enemy quotas before every boss, add three
+bosses and four active ordinary roles, replace Shock in the utility-attribute slot, add
+a readable boss-death cleanup, retain only the latest ten valid user sessions, and
+deliver one left-aligned stacked report shared by terminal results and Settings.
+
+Do not execute the checklist in this draft. Candidate comparison remains in the linked
+design analysis and must not be copied into the active execution tasks. There is no
+absolute run-duration acceptance target and no agent-simulated “normal completion” cohort.
 
 ## Product Contract
 
@@ -162,31 +167,6 @@ Scavengers. The trigger is the death event and distance at that instant; do not 
 corpse system. Show stacks with one broad body accent per stack and a short pulse, not
 small text. The role is intentionally safest when destroyed early.
 
-## Primary Utility Attribute Replacement
-
-Preserve the two-slot primary-attribute contract: the damage slot selects exactly one of
-`thermal_burst` or `bio_toxin`, and the utility slot selects exactly one of `cryo_slow`
-or the Shock replacement. Delete Shock Disruption and its attack-lock status. Replace it
-with `charged_rounds`, localized as `전하탄` / `Charged Rounds`, only in the utility
-slot.
-
-- Every player-primary projectile receives a hostile-projectile interception margin of
-  8/12/16 world units at levels 1/2/3, added outside the two projectiles' normal combined
-  collision radii. This margin does not enlarge the projectile's hostile-target hitbox.
-- On the first swept contact with an eligible hostile projectile, retire both projectiles.
-  Use the same clearability contract as EMP. Beams, zones, boss bodies, neutral facilities,
-  and explicitly unclearable projectiles are unaffected.
-- Charged Rounds adds no damage, damage multiplier, status, attack lock, chain hit, or
-  target designation. Consuming the primary projectile makes interception a defensive
-  utility tradeoff rather than a second damage attribute.
-- Render the cancellation as one 0.10-second retained Arc spark at the contact point.
-  Create no nodes, raster asset, persistent field, or unbounded projectile scan.
-- Report `hostile_projectiles_intercepted`. Remove Shock applications, attack-lock
-  duration, designation uptime, target-transfer, chain-hit, and Arc-damage reporting.
-- Replace the existing Shock card image in place after exact visual approval. Remove
-  Shock localization, status, report, and validation contracts rather than retaining a
-  compatibility alias.
-
 ## Other Approved Feedback Work
 
 ### Upgrade cards and offers
@@ -241,28 +221,30 @@ identities and replaces Shock art without a count increase, producing a 91-image
 | Ordinary enemies | 4 | Rail Sniper, Orbit Gunner, Bombing Runner, Wreck Scavenger; 112x112 unless stationary scale is required by the existing actor contract |
 | Neutral facilities | 2 | Barrier and one missing facility identity; existing suitable facility identities remain reused |
 | Upgrade cards | 3 | Miss Compensation, Hit Chain, Braced Fire; 192x192 |
-| Charged Rounds | 0 net | Replaces the Shock card asset byte-for-byte through the approval workflow |
+| Utility-attribute replacement | 0 net | Replaces the Shock card asset byte-for-byte after the user selects its behavior and approves its exact art |
 | Boss-death explosion | 1 | One shared 256x256 RGBA overlay; one centered retained transform grows, then fades with the existing boss body |
 
 Generate every new raster candidate with the exact canonical style sheet as a real
 reference input. Keep candidates outside production. Promote only exact user-approved
 bytes and hashes through the visual workbench and manifest. Revise `VISUAL_SYSTEM.md`
 before integration to authorize eight bosses, the 91-image count, per-boss shields,
-attached Crown hardpoints, Charged Rounds presentation, new role silhouettes, and the
-single shared boss-death explosion-raster exception. Do not introduce SVG actors, an
-effect sprite sheet, any other effect raster, or a new named theme.
+attached Crown hardpoints, the selected utility-attribute presentation, new role
+silhouettes, and the single shared boss-death explosion-raster exception. Do not
+introduce SVG actors, an effect sprite sheet, any other effect raster, or a new named
+theme.
 
 ## Execution Checklist
 
 1. **Update product, design, terminology, and validation contracts.** Revise the product
    spec, visual system, design memory, guidebook terms, localization inventory, and
    campaign validators for eight boss cycles, per-boss defense, the exact combat bands,
-   the 2.00-second cleanup, Charged Rounds, four enemy roles, and 91 approved images.
+   the 2.00-second cleanup, the selected utility attribute, four enemy roles, and 91
+   approved images.
    Rename stage-facing symbols to cycle-facing symbols within their existing owners and
    remove obsolete ten-stage/fourteen-stage acceptance text.
 
 2. **Produce and approve the exact raster set.** Create the 3 boss, 4 enemy, 2 facility,
-   3 upgrade-card, 1 replacement Charged Rounds card, and 1 shared boss-death explosion
+   3 upgrade-card, 1 replacement utility-attribute card, and 1 shared boss-death explosion
    candidates with the canonical
    reference. Build AS-IS/TO-BE sheets, collect exact user approval, promote approved
    hashes, update the semantic provider/catalog/manifest, and run the visual authority
@@ -293,10 +275,10 @@ effect sprite sheet, any other effect raster, or a new named theme.
    gap limits. Change diagnostics to newest-ten ordering on load and persist while
    preserving protected summaries and existing byte/age caps.
 
-7. **Implement upgrades, Charged Rounds, and offer reservations.** Add the three shot-
-   outcome/movement cards in combat-owned state, replace Shock end to end, add swept
-   hostile-projectile interception, Arc cancellation visuals, reporting, localization, and
-   validators, and enforce the missing active/secondary offer slots.
+7. **Implement upgrades, the selected utility attribute, and offer reservations.** Add
+   the three shot-outcome/movement cards in combat-owned state, replace Shock end to end
+   according to the user-selected contract that will be inserted before activation, and
+   enforce the missing active/secondary offer slots.
 
 8. **Implement neutral facilities and reward changes.** Convert neutral devices to the
    five symmetric spatial effects, add destruction by both sides, preserve projectile
@@ -331,9 +313,10 @@ item. Do not combine checkpoints across items.
   boss-owned actors cannot damage, reward, or affect quota during cleanup.
 - Wreck Scavenger uses exact death-event proximity, caps at five stacks, excludes the
   listed sources, and continues attacking at zero stacks. Shield Breaker is absent.
-- Shock Disruption has no reachable resource, status, copy, report field, or offer.
-  Charged Rounds remains utility-slot exclusive with Cryo, obeys its 8/12/16 interception
-  margins and EMP clearability, consumes both projectiles, and reports interceptions.
+- Shock Disruption has no reachable resource, status, copy, report field, or offer. The
+  selected replacement remains utility-slot exclusive with Cryo and passes its exact
+  behavior, presentation, report, localization, and performance acceptance checks added
+  before this draft becomes active.
 - The diagnostic store keeps the newest ten valid sessions after both load and persist,
   using saved time and session ID, while byte/age/quarantine contracts remain valid.
 - Search gaps meet the 4/8/3-second structural contracts without teleporting enemies or
@@ -359,20 +342,21 @@ item. Do not combine checkpoints across items.
 
 ## Progress
 
-- [x] Product candidates, public-asset comparison, current runtime inspection, and final
-  design decisions were completed in the linked analysis before this plan was written.
+- [x] Every product decision except the primary utility-attribute replacement is closed.
+- [ ] Select the primary utility-attribute replacement outside this draft, then rewrite
+  this file as a decision-complete execution contract before implementation begins.
 - [ ] 1. Update product, design, terminology, and validation contracts.
 - [ ] 2. Produce and approve the exact raster set. Boss 3, ordinary-enemy 4, and neutral-
   facility 2 review candidates were generated on 2026-08-15 with grounded prompt/hash/
   actual-size evidence; all nine are direction-clear after focused revisions, and none
   has exact user approval or production integration. The shared boss-death explosion
-  candidate now exists and remains review-only; upgrade-card and Charged Rounds card
+  candidate now exists and remains review-only; upgrade-card and utility-replacement card
   candidates remain unstarted.
 - [ ] 3. Implement the eight-cycle campaign and common boss kit.
 - [ ] 4. Implement all eight boss identities.
 - [ ] 5. Implement boss-death cleanup.
 - [ ] 6. Implement ordinary roles, pacing correction, and ten-session retention.
-- [ ] 7. Implement upgrades, Charged Rounds, and offer reservations.
+- [ ] 7. Implement upgrades, the selected utility attribute, and offer reservations.
 - [ ] 8. Implement neutral facilities and reward changes.
 - [ ] 9. Implement the shared stacked report.
 - [ ] 10. Complete integration and release validation.

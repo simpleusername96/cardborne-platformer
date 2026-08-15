@@ -8,6 +8,9 @@ topic: Decision record for the eight-boss campaign, combat identities, utility-a
 scope: Current runtime evidence, candidate comparison, public VFX asset review, selected combat design, rejected alternatives, and implementation recommendations
 sources:
   - ../../scripts/bosses/vehicle_boss_patterns.gd
+  - ../../scripts/combat/vehicle_projectile_store.gd
+  - ../../scripts/cards/vehicle_run_build.gd
+  - ../product/vehicle_weapon_balance_spec.md
   - ../../scripts/bosses/vehicle_boss_shield_runtime.gd
   - ../../scripts/combat/vehicle_effect_store.gd
   - ../../scripts/combat/vehicle_status_runtime.gd
@@ -25,7 +28,9 @@ related:
 
 Close the exploratory work before implementation. This record distinguishes current
 behavior, compared candidates, selected rules, rejected directions, and remaining
-evidence limits. The linked execution plan contains only decision-complete work.
+evidence limits. The linked plan remains a non-executable draft until the user selects
+the primary utility-attribute replacement; its active rewrite must contain only
+decision-complete work.
 
 ## Sources
 
@@ -159,29 +164,30 @@ The current primary-attribute model has two distinct slots. Thermal Burst or Bio
 occupies the damage slot; Cryo or the Shock replacement occupies the utility slot. A
 replacement that adds damage would violate that separation.
 
-| Candidate | Difference from current Shock | Result |
-| --- | --- | --- |
-| Charged Rounds | Lets primary rounds cancel hostile projectiles without adding hostile damage or a status | Selected |
-| Chain Lightning | Adds damage and therefore competes with Thermal Burst and Bio Toxin instead of replacing a utility attribute | Rejected after slot-model correction |
-| Movement stun | Stronger version of the same control status | Rejected |
-| Vulnerability mark | Readable but overlaps direct damage multipliers | Rejected |
-| Projectile magnet | Novel but can distort manual aim and projectile truth | Rejected |
-| Target Designator | Does not read as a bullet element and delegates its benefit to automatic weapons | Rejected by user feedback |
+| Candidate | Exact utility mechanism | Balance risk | Runtime shape |
+| --- | --- | --- | --- |
+| Power Feedback / 전력 환류 | A confirmed primary shot-group hit refunds 0.03/0.045/0.06 s of current Dash cooldown, capped at 0.12/0.18/0.24 s per second | Sustained accuracy also improves mobility; the hard refund budget prevents continuous Dash | O(1) shot-group receipt and one bounded budget; no scan or new effect object |
+| Electromagnetic Interference / 전자기 교란 | A direct hit marks one enemy's next projectile attack within 3 s; that one attack's projectile speed is multiplied by 0.85/0.75/0.65, then the mark is consumed and locked out for 4 s | Strong against projectile specialists but has no effect on beams, contact, areas, or charge | O(1) enemy status plus one multiplier when the attack emits |
+| Inertial Rounds / 관성탄 | A direct hit pushes a movable ordinary enemy 14/20/26 units away from the player, with a 0.50 s per-target lock | Can neutralize close pursuers if the lock or distance is too generous; bosses and structures are immune | O(1) on accepted hit plus the existing exact movement solver |
+| Threat Decode / 위협 해석 | The first hit tags one enemy for 3/4/5 s; its next committed warning begins 0.20/0.30/0.40 s earlier without delaying the attack, then the tag expires | Pure information can feel weak against simple contact enemies | O(1) tag, but requires the attack scheduler to publish the next commitment earlier |
+| Recall Rounds / 회수탄 | Every 12/10/8 confirmed shot-group hits starts the existing 0.65 s XP recall, with a 4 s attribute cooldown and no new XP | Overlaps the recall pickup and accelerates collection convenience | Reuses the bounded 192-shard recall path; no new spatial owner |
+| Charged Rounds / 전하탄 | Primary rounds can destroy hostile projectiles | Continuous held fire can become a free bullet shield and overlaps EMP; not preferred | A naive 240-player-by-120-hostile comparison reaches 28,800 pairs per physics tick and requires a new bounded projectile broadphase |
 
-Charged Rounds replaces Shock in the utility slot. A player-primary projectile gains an
-8/12/16-unit interception margin outside the two projectiles' combined collision radii.
-On the first swept contact with an EMP-clearable hostile projectile, both projectiles
-retire and a brief retained Arc spark shows the cancellation. The effect does not enlarge
-the hostile-target hitbox, add damage, apply a status, or affect beams, zones, and
-unclearable projectiles. Target Designator and Chain Lightning are removed completely.
+Chain Lightning is invalid because it adds damage in the utility slot. Movement stun is a
+stronger version of the current control, vulnerability is a damage amplifier, Target
+Designator was rejected by user feedback, and Aegis-style barriers repeat the exact
+attack-plus-defense concern. No candidate is selected yet. Under the explicit criteria of
+utility-only behavior, bounded power, low hot-path cost, and distinctness from Cryo/EMP,
+Power Feedback and Electromagnetic Interference deserve first review; this is a provisional
+presentation priority, not an implementation decision.
 
 ### Visual asset scope
 
 The selected authored set adds three boss bodies, four ordinary enemy bodies, two
 neutral-facility bodies, three upgrade cards, and one shared boss-death explosion
-overlay. Charged Rounds replaces Shock art without increasing the count. The net
-addition is 13 images, changing the declared production target from 78 to 91 after exact
-user approval.
+overlay. The selected utility attribute will replace Shock art without increasing the
+count. The net addition is 13 images, changing the declared production target from 78
+to 91 after exact user approval.
 
 ### Generated boss, enemy, and facility candidates
 
@@ -215,7 +221,7 @@ direction-clear for user review; none is production-approved or manifest-integra
   build, so it supports search-gap diagnosis but not a universal completion-time target.
 - The nine boss/enemy/facility candidates and one boss-death explosion candidate are
   direction-clear but review-only. All still require exact user approval. Upgrade-card
-  and Charged Rounds card candidates are not part of this batch.
+  and utility-replacement card candidates are not part of this batch.
 - Numeric boss damage and cadence values are implementation starting contracts. User
   play evidence may justify a later balance plan, but implementation must first preserve
   the fairness bands and monotonic progression defined here.
