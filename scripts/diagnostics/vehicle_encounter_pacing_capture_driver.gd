@@ -99,7 +99,10 @@ func after_physics(run: Node) -> bool:
 			_capture_checkpoint(run, &"boss_defeat", elapsed)
 		return false
 	if _boss_defeated and _boss_cleanup_complete_elapsed < 0.0:
-		if int(run.current_stage_index) == _boss_cycle_index:
+		if (
+			int(run.current_stage_index) == _boss_cycle_index
+			or run.get("_pending_continuation_layout") != null
+		):
 			return false
 		_boss_cleanup_complete_elapsed = elapsed
 		# Continuation reconfigures the encounter runtime and disables diagnostic
