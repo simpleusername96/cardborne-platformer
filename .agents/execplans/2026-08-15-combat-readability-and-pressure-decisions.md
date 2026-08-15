@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-15
-last_reviewed: 2026-08-15
+last_reviewed: 2026-08-16
 scope: Implement the approved report-truth, combat-readability, neutral-facility, conditional-status, enemy-engagement, boss-identity, boss-pressure, and 72-ordinary encounter revision and qualify the production Web build
 related:
   - ../../docs/reports/2026-08-15-combat-readability-pressure-review.md
@@ -347,16 +347,24 @@ Preconditions:
 Source owners: project wrappers, capture/export/performance harnesses, active performance
 policy and durable acceptance evidence
 
-- [ ] **5.1** Complete functional and rendered integration gates.
-  - Change: run the relevant full validator set once, import, background capture matrix,
-    and production Web export after feature completion.
-  - Accept: all named checks pass; rendered pixels are inspected at 960/1280/1920, Korean/
-    English, standard/reduced motion, and 100%/200% text where affected.
+- [x] **5.1** Complete functional and rendered integration gates.
+  - Change: run the relevant full validator set once, import, targeted captures for the
+    affected UI/world states, and production Web export after feature completion. Do not
+    reopen unrelated gameplay screens or repeat a broad capture matrix.
+  - Accept: all named checks pass; affected rendered states cover the one-line HUD at its
+    dense 960x540/200% boundary, facility footprints/timers, hostile areas, directional
+    shields, boss cues, and terminal build rows in the languages and motion modes they
+    change.
 - [ ] **5.2** Qualify exact native 72-count workload.
   - Change: run the release performance scenario on a clean, isolated checkpoint with exact
     actor/projectile/effect/attack activity and eligible metadata.
   - Accept: scenario validity passes and native release thresholds pass; report the precise
     label `native release performance passed` only then.
+  - Current evidence: clean commit `65afb5ea`, Godot 4.7.1, focused 1280x720, 10-second
+    warmup and 60-second sample produced a valid exact-72 workload with ten pressure
+    samples, but release physics failed at p95 `7.159 ms` versus `6.0 ms` and p99
+    `9.078 ms` versus `8.0 ms`. All other threshold checks passed. Evidence is retained at
+    `build/performance/combat-readability/65afb5ea-production-replay-native-60s.json`.
 - [ ] **5.3** Qualify the production built-Web 72-count workload.
   - Change: use `npjt-port-guard`, the fastrun manager codex lane, the built export, and the
     same workload/viewport/warmup/duration/focus contract; inspect interaction and pixels.
@@ -426,12 +434,15 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 5.
-- Next task: 5.1 run production integration and rendered capture coverage, then qualify the
-  exact-72 native and built-Web workloads.
-- Last completed gate: Phase 4; Drydock and Crown use body-facing directional defenses,
-  authored boss footprints and Siege distance growth have deterministic coverage, boss
-  pressure uses the locked axis multipliers, and the shared death explosion is retired with
-  its manifest and workbench ledger reconciled to implementation commit `efee2c71`.
+- Next task: optimize the measured `enemies_and_grid` owner without reducing the exact-72
+  workload, decision/motion cadence, collision truth, attack activity, or thresholds; rerun
+  native only after a causal change, then run the same built-Web workload only after native
+  passes.
+- Last completed gate: 5.1; focused validators and affected-state captures pass, and the
+  production Web export succeeds at implementation commit `65afb5ea`. The native scenario
+  is now valid after `c8b8364d` preserved barrier-bypassing denial pressure, and
+  `65afb5ea` balanced 10 Hz decision lanes, but the retained authoritative result remains
+  red in the `enemies_and_grid` physics owner (p95 `5.49 ms`, p99 `6.98 ms`).
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
