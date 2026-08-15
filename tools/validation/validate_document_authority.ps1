@@ -79,7 +79,7 @@ try {
 
   $productSpec = Get-Content -Raw -LiteralPath 'docs/product/vehicle_game_spec.md'
   $visualSpec = Get-Content -Raw -LiteralPath 'docs/design/VISUAL_SYSTEM.md'
-  if (-not $productSpec.Contains('### Inner walls, Transit Gates, and Anomaly Devices')) {
+  if (-not $productSpec.Contains('### Inner walls, Transit Gates, and neutral facilities')) {
     Add-Failure 'Product spec is missing the gameplay/collision terrain owner section'
   }
   if (-not $visualSpec.Contains('### Semantic categories')) {

@@ -1,6 +1,6 @@
 ---
 type: plan
-status: done
+status: archived
 owner: BK
 created: 2026-08-14
 scope: Run-start weapon removal, weapon-owned upgrade progression, upgrade/HUD truth, and early XP pacing

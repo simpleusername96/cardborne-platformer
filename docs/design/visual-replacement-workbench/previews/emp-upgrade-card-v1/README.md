@@ -4,7 +4,7 @@ status: archived
 owner: BK
 created: 2026-08-14
 topic: EMP upgrade-card artwork approval candidate
-source: .agents/execplans/2026-08-14-weapon-unlocks-and-early-level-pacing.md
+source: .agents/completed-plans/2026-08-14-weapon-unlocks-and-early-level-pacing.md
 related:
   - ../../../VISUAL_SYSTEM.md
   - ../../../cardborne-universal-art-style-reference.png

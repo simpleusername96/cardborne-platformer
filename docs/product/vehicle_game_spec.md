@@ -84,16 +84,15 @@ room, or an absolute completion-time target.
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
 All non-boss enemy archetypes receive the existing `2.60` health multiplier
-after the fixed profile and shallow cycle curve, then the eight-cycle pressure
+after the fixed profile and eight-cycle ordinary-health curve, then the eight-cycle pressure
 curves defined in the campaign section, followed by one final ordinary-durability
 multiplier of `1.20` before elite modifiers. The ordinary health curve is
-`[0.85, 0.917, 0.983, 1.05, 1.117, 1.183, 1.25, 1.317, 1.383, 1.45]`.
+`[0.85, 0.936, 1.021, 1.107, 1.193, 1.279, 1.364, 1.45]`.
 Boss health uses
 the separate stage profile defined below and never receives the `1.20`
 ordinary-durability multiplier.
 Ordinary enemy-sourced damage applies the shared `1.755` multiplier, the stage
-curve `[1.00, 1.013, 1.027, 1.04, 1.053, 1.067, 1.08, 1.093, 1.107,
-1.12]`, and the additional stage pressure defined below. Boss `final-effective` attacks
+curve `[1.00, 1.017, 1.034, 1.051, 1.069, 1.086, 1.103, 1.12]`, and the additional stage pressure defined below. Boss `final-effective` attacks
 use their separate stage profile and bypass the ordinary multiplier and ordinary
 stage pressure. Friendly or environmental damage bypasses both.
 Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
@@ -162,9 +161,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   rectangle with a body, inner energy plane, and hot core. Neither state adds
   endpoint caps or a larger predicted route. Non-damaging support descriptors
   create no warning.
-- Only boss attacks may create ranged circular bombardment. Every boss area uses
-  one orange outer boundary for startup and its damaging window, independent of
-  affinity. Controller and Artillery Spotter attacks are projectiles; ordinary
+- All hostile circles, wedges, shockwaves, and damaging corridors use a danger-red full
+  footprint, one thin near-black perimeter, and four inward boundary notches, regardless
+  of affinity. Controller and Artillery Spotter attacks are projectiles; ordinary
   mine proximity damage draws no world range ring. Affinity-specific inner rings,
   diamonds, center lines, tick bars, endpoint caps, and commit markers are absent.
   Circular damage falls linearly from 100% at the center to 45% at the boundary
@@ -241,17 +240,19 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   line-of-sight, dwell, cooldown, and deterministic layout owners.
 - Every cycle places three distinct neutral facilities from a run-seeded rotation. Across
   eight cycles Repair, Barrier, Gravity, Cryo, and Weakpoint each appear at least once.
-- Facilities have 360 health, begin dormant, accept player and hostile damage, and never
-  block projectiles. Destruction activates the assigned effect for exactly 12 seconds;
+- Facilities have 360 health, begin dormant, accept player and hostile damage, and all
+  projectiles pass through them. Destruction activates the assigned effect for exactly 12 seconds;
   the facility then expires at the end of that timer or at cycle cleanup.
 - Dormant facilities apply no modifier. While active, every facility applies one symmetric
   center-in-radius rule to the player and eligible enemies. Leaving the radius or expiry
   ends its effect immediately.
-- Repair and Barrier use radius 420 and restore one third of maximum hull per second.
-  Barrier caps shield at maximum hull. Gravity uses radius 480 and multiplies acceleration
-  and maximum speed by 0.55 without positional pull. Cryo uses radius 360 and multiplies
-  movement and attack cadence by 0.70. Weakpoint uses radius 420 and multiplies received
-  damage by 1.25.
+- Repair and Barrier use radius 1260; Repair restores one sixth of maximum hull per
+  second and Barrier caps shield at maximum hull. Gravity uses radius 1440 and multiplies
+  acceleration and maximum speed by 0.70 without positional pull. Cryo uses radius 1080
+  and multiplies movement and attack cadence by 0.82. Weakpoint uses radius 1260 and
+  multiplies received damage by 1.15. The actual effect-radius perimeter carries the
+  12-second countdown: its colored arc starts at 12 o'clock and drains clockwise over a
+  thin muted spent perimeter; the facility body has no countdown ring.
 - Facilities are neutral tactical priorities, not allies, enemies, pickups, cover, or
   boss shield objectives.
 
@@ -260,8 +261,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 1. Each cycle executes `ORDINARY_COMBAT -> BOSS_WARNING -> BOSS_COMBAT ->
    BOSS_DEATH_CLEANUP -> CYCLE_TRANSITION`.
 2. Ordinary quotas are `40/44/48/52/56/60/64/68`; authored mobile populations are
-   `260/300/340/390/440/500/560/630`. The shipping exact live ordinary cap remains 48.
-   Reserve scheduling preserves authored populations instead of deleting excess work.
+   `260/300/340/390/440/500/560/630`. Exact materialized ordinary caps are
+   `32/44/56/64/72/72/72/72`, and engaged-visible refill floors are
+   `12/16/20/24/28/32/36/40`. Reserve scheduling preserves authored populations instead
+   of deleting excess work.
 3. First visible hostile is due within 4.0 seconds, first meaningful attack preparation
    within 8.0 seconds, and no empty or off-screen-only combat gap may exceed 3.0 seconds.
    The scheduler may expedite eligible reserves and redirect nearby mobile hostiles along
@@ -276,8 +279,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    patterns occupy at most two of any five direct selections. Every barrage emits three
    rows at 0.38-second intervals, with 4/5/6 simultaneous projectiles per row in cycles
    1-3/4-6/7-8 and either a 42-degree spread or 22.5-degree row-axis rotation.
-7. Only Drydock and Crown use defense, and each defense directly charges or owns an
-   attack. No boss is defense-only and no global shield-down rule exists.
+7. Only Drydock and Crown use directional defense, and each defense directly charges or
+   owns an attack. Drydock intercepts from a body-attached frontal arc; Crown has three
+   body-attached defensive sectors. Their collision truth follows those directions. No
+   boss is defense-only and no global shield-down rule exists.
 8. High-threat attacks deal 60-85 damage once per execution, warn for at least 1.30
    seconds, use collision-matching committed geometry, and leave an escape corridor at
    least player diameter + 80 units. Pressure damage is 10-18 and normal damage is 22-38.
@@ -289,9 +294,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    `1.00/.97/.94/.91/.88/.85/.82/.79`; coverage scales
    `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28`.
 10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
-    immediately. One centered explosion grows from scale 0.20 to 1.20, then it and the
-    unchanged boss body fade together from 1.30-1.70 seconds. Owned summons/facilities
-    stagger-shrink/fade without reward or quota. Transition waits for cleanup completion.
+    immediately. The boss body receives a restrained hit tint, dim/desaturation, and
+    fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
+    summons/facilities stagger-shrink/fade without reward or quota. Transition waits for
+    cleanup completion.
 11. Cycle completion refreshes cycle-local facilities and XP placements while preserving
     player position, velocity, aim, projectiles, XP, build, cooldowns, fixed Hard state,
     exploration, and terrain. Cycle 8 opens Result; failure opens Failure Report.
@@ -333,7 +339,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 - Korean is default and Korean/English coverage is complete on every reachable surface.
   Deployment, Pause, Upgrade, Guidebook, Settings, Result, and Failure Report preserve
   their existing flow. Pause abort and terminal primary actions return to Deployment.
-- HUD progression reads `보스 N/8` / `Boss N/8` with remaining ordinary quota. No
+- HUD progression reads `보스 N/8` / `Boss N/8` with remaining ordinary quota. The
+  panel-free top-left row contains progression, total defeats, Dash, and Active, followed
+  by at most five meaningful conditional status icon/value slots; full upgrade names stay
+  in Ship Status. No
   player-facing `Stage N/10`, odd/even pairing, transition banner, boss room, or
   difficulty selector remains.
 - Guidebook categories remain Ship, Enemies, Bosses, and Field Objects. It lists all eight
@@ -408,9 +417,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 - Diagnostics keep the newest ten valid bundles under age/byte/quarantine rules.
 - Report surfaces share one left-aligned stack, one scroll, exact section order, complete
   focus path, and zero clipping/overflow in the locked matrix.
-- The approved production manifest contains exactly 90 images: 87 semantic PNGs and three
-  approved SurfaceDetail SVGs. The shared boss-death explosion is the only authored
-  effect raster.
+- The approved production manifest contains no boss-death explosion or effect raster.
 - Focused validators, Godot import/parse, production Web export, built-Web interaction,
   and separately labeled native/Web same-workload evidence complete truthfully.
 

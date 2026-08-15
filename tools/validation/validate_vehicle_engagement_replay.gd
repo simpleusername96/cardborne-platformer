@@ -46,7 +46,11 @@ func _validate_seed(seed: int) -> void:
 	var first := _run(stage_id, packet, tactical)
 	var second := _run(stage_id, packet, tactical)
 	_expect(var_to_str(first["fingerprint"]) == var_to_str(second["fingerprint"]), "seed %d has exact birth/cue/role replay fingerprint" % seed)
-	_expect(int(first["spawns"]) == int(first["authored"]), "seed %d preserves authored count" % seed)
+	_expect(int(first["spawns"]) <= int(first["cap"]), "seed %d never materializes beyond the active cap" % seed)
+	_expect(
+		int(first["spawns"]) + int(first["virtual_reserve"]) == int(first["authored"]),
+		"seed %d preserves authored units between materialized actors and virtual reserve" % seed
+	)
 	_expect(bool(first["patterns"][Director.BROAD_CRESCENT]), "seed %d exercises broad crescent" % seed)
 	_expect(bool(first["patterns"][Director.TWO_OFFSET_STREAMS]), "seed %d exercises offset streams" % seed)
 	_expect(Dictionary(first["completed"]).size() >= 3, "seed %d completes at least three sectors in the 12-second sample" % seed)
@@ -65,11 +69,12 @@ func _run(stage_id: StringName, packet: Dictionary, tactical) -> Dictionary:
 	var rear := false
 	var rear_arc := true
 	var spawns := 0
+	var virtual_reserve := 0
 	var max_burst := 0
 	var schedule := Schedule.new()
 	var next_slot := 0
 	for _step in 240:
-		var result := runtime.tick(0.05, 0, [], tactical.geometry_snapshot.player_start, visible, [], 0, Vector2(240.0, 0.0))
+		var result := runtime.tick(0.05, spawns, [], tactical.geometry_snapshot.player_start, visible, [], 0, Vector2(240.0, 0.0))
 		var engagement := Dictionary(runtime.debug_snapshot()["engagement"])
 		for count in PackedInt32Array(engagement["eta_load"]):
 			max_burst = maxi(max_burst, int(count))
@@ -101,7 +106,8 @@ func _run(stage_id: StringName, packet: Dictionary, tactical) -> Dictionary:
 	var authored := 0
 	for squad in packet["squads"]:
 		authored += Array(squad).size()
-	return {"fingerprint":fingerprint, "completed":completed, "max_burst":max_burst, "patterns":patterns, "rear":rear, "rear_arc":rear_arc, "spawns":spawns, "authored":authored}
+	virtual_reserve = int(runtime.debug_snapshot()["virtual_reserve"])
+	return {"fingerprint":fingerprint, "completed":completed, "max_burst":max_burst, "patterns":patterns, "rear":rear, "rear_arc":rear_arc, "spawns":spawns, "authored":authored, "cap":runtime.active_cap(), "virtual_reserve":virtual_reserve}
 
 
 func _advance_gate(spec: Dictionary, runtime, schedule, slot: int) -> bool:

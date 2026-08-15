@@ -152,14 +152,14 @@ Preconditions:
 Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`,
 `.agents/design/DESIGN.md`, focused authority and replay validators
 
-- [ ] **0.1** Align canonical product and visual contracts with the locked decisions.
+- [x] **0.1** Align canonical product and visual contracts with the locked decisions.
   - Change: remove ten-stage/no-quota drift, contradictory facility blocking, binary-only
     boss shield and explosion requirements; specify the one-line conditional HUD, hostile
     red footprints, facility-radius timer, exact 72 caps/floors, eight-value curve, and
     body-attached directional defenses.
   - Accept: `validate_document_authority.ps1` and
     `validate_cardborne_visual_authority.ps1` pass.
-- [ ] **0.2** Repair stale deterministic fixtures before feature edits.
+- [x] **0.2** Repair stale deterministic fixtures before feature edits.
   - Change: make engagement replay assert cap-aware deterministic reserve preservation
     rather than full packet materialization in one sample; retain birth/gate fingerprint,
     no-rear, burst, and no-teleport checks.
@@ -425,10 +425,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 0.
-- Next task: 0.1 align canonical product and visual contracts.
-- Last completed gate: Discovery Closure Gate; user decisions recorded, including exact
-  ordinary cap 72, one-line HUD, and effect-radius countdown perimeter.
+- Current phase: Phase 1.
+- Next task: 1.1 publish one frozen build/report snapshot to every terminal surface.
+- Last completed gate: Phase 0; canonical product/visual authority and cap-aware
+  engagement replay pass, and the retired prior plan is outside the active tree.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
