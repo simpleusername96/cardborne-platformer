@@ -201,11 +201,17 @@ func _finish() -> bool:
 		push_error("Encounter pacing capture did not reach every required checkpoint.")
 		return true
 	if not bool(Dictionary(bundle.get("acceptance", {})).get("passed", false)):
+		var post_cleanup := {}
+		for checkpoint_variant in Array(bundle.get("checkpoints", [])):
+			var checkpoint := Dictionary(checkpoint_variant)
+			if StringName(checkpoint.get("checkpoint_id", &"")) == &"post_boss_3":
+				post_cleanup = checkpoint
+				break
 		push_error(
 			"Encounter pacing capture failed gameplay gates: %s; post-cleanup: %s"
 			% [
 				JSON.stringify(Dictionary(bundle["acceptance"]).get("checks", {})),
-				JSON.stringify(Dictionary(bundle["checkpoints"]).get("post_boss_3", {})),
+				JSON.stringify(post_cleanup),
 			]
 		)
 		return true
