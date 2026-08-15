@@ -59,15 +59,15 @@ func advance(delta: float) -> Array[Dictionary]:
 				continue
 			if _elapsed + 0.0001 >= OWNED_CLEANUP_BEGIN_SECONDS + float(index) * STAGGER_SECONDS:
 				_retired_owned[owned_id] = true
-				receipts.append({"kind": &"retire_owned", "id": owned_id, "source": &"boss_cleanup", "grant_rewards": false, "fade_seconds": maxf(0.0, OWNED_CLEANUP_END_SECONDS - _elapsed)})
+				receipts.append({"kind": &"retire_owned", "id": owned_id, "source": &"boss_cleanup", "grant_rewards": false, "grant_experience": false, "grant_group_reward": false, "count_for_quota": false, "fade_seconds": maxf(0.0, OWNED_CLEANUP_END_SECONDS - _elapsed)})
 	if _elapsed >= TOTAL_SECONDS and not _completion_emitted:
 		for owned_id in _owned_ids:
 			if not _retired_owned.has(owned_id):
 				_retired_owned[owned_id] = true
-				receipts.append({"kind": &"retire_owned", "id": owned_id, "source": &"boss_cleanup", "grant_rewards": false, "fade_seconds": 0.0})
+				receipts.append({"kind": &"retire_owned", "id": owned_id, "source": &"boss_cleanup", "grant_rewards": false, "grant_experience": false, "grant_group_reward": false, "count_for_quota": false, "fade_seconds": 0.0})
 		_completion_emitted = true
 		_state = State.COMPLETE
-		receipts.append({"kind": &"cleanup_complete", "elapsed": TOTAL_SECONDS})
+		receipts.append({"kind": &"cleanup_complete", "source": &"boss_cleanup", "grant_rewards": false, "grant_experience": false, "grant_group_reward": false, "count_for_quota": false, "elapsed": TOTAL_SECONDS})
 	return receipts
 
 func presentation() -> Dictionary:

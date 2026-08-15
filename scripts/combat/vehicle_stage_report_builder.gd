@@ -68,11 +68,11 @@ static func build(
 			{"title_key":"REPORT_ROW_CYCLE", "value":str(stage_number)},
 			{"title_key":"REPORT_ROW_ACTIVE_TIME", "value":_format_duration(run_time_seconds)},
 		],
-		"build_rows":Array(stage_data.get("build_rows", [])),
+		"build_rows":Array(stage_data.get("build_rows", [])).duplicate(true),
 		"damage_rows":damage_rows,
 		"defense_rows":incoming_rows.duplicate(true),
 		"enemy_rows":defeat_rows.duplicate(true),
-		"boss_rows":_boss_rows(boss, has_boss, failure),
+		"boss_rows":_boss_rows(boss, has_boss),
 		"pacing_rows":_pacing_rows(pacing, defeat_rows, Dictionary(telemetry.get("tactics", {}))),
 		"diagnostic_limitations":_diagnostic_rows(diagnostics),
 		"boss_report":boss.duplicate(true),
@@ -82,7 +82,18 @@ static func build(
 			"tactic_count":Dictionary(telemetry.get("tactics", {})).size(),
 		},
 		"diagnostic_metrics":diagnostics.duplicate(true),
-	}
+}
+
+
+static func build_rows(build_snapshot: Dictionary) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for upgrade_variant in Array(build_snapshot.get("upgrades", [])):
+		var upgrade := Dictionary(upgrade_variant)
+		rows.append({
+			"title_key":String(upgrade.get("title_key", "REPORT_SOURCE_OTHER")),
+			"value":"Lv. %d" % maxi(1, int(upgrade.get("level", 1))),
+		})
+	return rows
 
 
 static func _format_duration(seconds: float) -> String:
@@ -97,11 +108,15 @@ static func _sum_defeats(rows: Array[Dictionary]) -> int:
 	return total
 
 
-static func _boss_rows(boss: Dictionary, has_boss: bool, failure: bool) -> Array[Dictionary]:
-	var rows: Array[Dictionary] = [{"title_key":"REPORT_ROW_BOSSES_DEFEATED", "count":1 if has_boss and not failure else 0}]
+static func _boss_rows(boss: Dictionary, has_boss: bool) -> Array[Dictionary]:
+	var cleanup_completed := bool(boss.get("cleanup_completed", false))
+	var rows: Array[Dictionary] = [{"title_key":"REPORT_ROW_BOSSES_DEFEATED", "count":1 if has_boss and cleanup_completed else 0}]
 	var boss_id := StringName(boss.get("id", &""))
 	if not boss_id.is_empty():
-		rows.append({"name_key":String(boss_id), "value_key":"REPORT_VALUE_CLEARED"})
+		rows.append({
+			"name_key":String(boss_id),
+			"value_key":"REPORT_VALUE_CLEARED" if cleanup_completed else "REPORT_VALUE_CLEANUP_IN_PROGRESS",
+		})
 	if bool(boss.get("cleanup_started", false)):
 		rows.append({
 			"title_key":"REPORT_ROW_BOSS_CLEANUP",

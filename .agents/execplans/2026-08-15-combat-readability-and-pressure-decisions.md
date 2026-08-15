@@ -181,12 +181,12 @@ Preconditions:
 Source owners: `scripts/vehicle/vehicle_run.gd`, report/result builders, boss death runtime,
 report panels, focused report/campaign validators
 
-- [ ] **1.1** Publish one frozen build/report snapshot to every terminal surface.
+- [x] **1.1** Publish one frozen build/report snapshot to every terminal surface.
   - Change: pass current build rows through failure/stage/final contexts without UI
     calculation; derive boss clear state from completed cleanup.
   - Accept: a focused validator asserts partial and dense builds on defeat in Korean and
     English and rejects premature `CLEARED`.
-- [ ] **1.2** Remove competing boss reward ownership.
+- [x] **1.2** Remove competing boss reward ownership.
   - Change: make the cleanup/flow receipt authoritative and prevent boss retirement from
     adding XP, group rewards, or ordinary quota.
   - Accept: campaign and report validators assert zero boss-owned reward and correct totals.
@@ -425,10 +425,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: 1.1 publish one frozen build/report snapshot to every terminal surface.
-- Last completed gate: Phase 0; canonical product/visual authority and cap-aware
-  engagement replay pass, and the retired prior plan is outside the active tree.
+- Current phase: Phase 2.
+- Next task: 2.1 validate hostile-area ownership grammar and integrate the facility/HUD branch.
+- Last completed gate: Phase 1; terminal reports share frozen build rows, boss `CLEARED`
+  requires completed cleanup, and cleanup grants no XP, group reward, or ordinary quota.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 

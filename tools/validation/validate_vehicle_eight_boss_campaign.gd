@@ -34,8 +34,15 @@ func _initialize() -> void:
 	var death := DeathRuntime.new()
 	var began := death.begin([&"summon_a", &"facility_a"])
 	_expect(bool(began["accepted"]) and Dictionary(began["explosion"])["count"] == 1, "death begins with one explosion receipt")
-	death.advance(1.10)
+	var cleanup_receipts := death.advance(1.10)
 	_expect(death.snapshot()["owned_retired"] == 2, "owned cleanup retires without rewards")
+	for receipt in cleanup_receipts:
+		_expect(
+			not bool(receipt.get("grant_experience", true))
+				and not bool(receipt.get("grant_group_reward", true))
+				and not bool(receipt.get("count_for_quota", true)),
+			"boss cleanup receipts grant no XP, group reward, or quota"
+		)
 	death.advance(0.90)
 	_expect(death.complete(), "death runtime completes exactly at two seconds")
 	death.reset()

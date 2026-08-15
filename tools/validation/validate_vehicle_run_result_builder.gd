@@ -43,6 +43,14 @@ func _init() -> void:
 	_expect(is_equal_approx(float(result["active_run_elapsed_seconds"]), 91.5), "final result preserves active run time")
 	_expect(is_equal_approx(float(result["hull"]), 84.0) and is_equal_approx(float(result["max_hull"]), 120.0), "final result preserves exact current and maximum Hull")
 	_expect(records[0]["defeats"][0]["count"] == 3, "builder does not mutate stage records")
+	var unfinished_records := records.duplicate(true)
+	unfinished_records[0]["boss_report"] = {"id":&"ENEMY_ARCHIVE_LEVIATHAN", "cleanup_started":true, "cleanup_completed":false}
+	var unfinished_result := Builder.build(unfinished_records, {"build_snapshot":{"upgrades":[]}})
+	_expect(
+		int(Dictionary(Array(unfinished_result["boss_rows"])[0]).get("count", -1)) == 0
+			and String(Dictionary(Array(unfinished_result["boss_rows"])[1]).get("value_key", "")) == "REPORT_VALUE_CLEANUP_IN_PROGRESS",
+		"final report derives boss clear state from completed cleanup"
+	)
 	if _failures.is_empty():
 		print("VEHICLE_RUN_RESULT_BUILDER_VALIDATION_OK")
 		quit(0)

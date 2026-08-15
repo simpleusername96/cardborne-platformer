@@ -5174,12 +5174,19 @@ func _advance_boss_destruction(delta: float) -> void:
 	for receipt in boss_death_runtime.advance(delta):
 		match StringName(receipt.get("kind", &"")):
 			&"retire_owned":
-				_retire_boss_owned_enemy_by_id(String(receipt.get("id", &"")))
+				_retire_boss_owned_enemy_by_id(String(receipt.get("id", &"")), receipt)
 			&"cleanup_complete":
-				_finalize_boss_destruction()
+				_finalize_boss_destruction(receipt)
 
 
-func _retire_boss_owned_enemy_by_id(enemy_id: String) -> void:
+func _retire_boss_owned_enemy_by_id(enemy_id: String, cleanup_receipt: Dictionary) -> void:
+	if (
+		bool(cleanup_receipt.get("grant_experience", true))
+		or bool(cleanup_receipt.get("grant_group_reward", true))
+		or bool(cleanup_receipt.get("count_for_quota", true))
+	):
+		push_error("Boss cleanup receipts must not grant progression rewards")
+		return
 	var owned := _find_enemy_by_id(enemy_id)
 	if owned == null or not owned.alive or not _is_boss_owned_enemy(owned):
 		return
@@ -5192,7 +5199,14 @@ func _retire_boss_owned_enemy_by_id(enemy_id: String) -> void:
 	_enemy_frame_aggregate_valid = false
 
 
-func _finalize_boss_destruction() -> void:
+func _finalize_boss_destruction(cleanup_receipt: Dictionary) -> void:
+	if (
+		bool(cleanup_receipt.get("grant_experience", true))
+		or bool(cleanup_receipt.get("grant_group_reward", true))
+		or bool(cleanup_receipt.get("count_for_quota", true))
+	):
+		push_error("Boss cleanup completion must not grant progression rewards")
+		return
 	var boss := _find_enemy_by_id(_dying_boss_id)
 	if boss != null and boss.alive:
 		_release_enemy_engagement(boss)
@@ -5201,12 +5215,10 @@ func _finalize_boss_destruction() -> void:
 		boss.active = false
 		enemy_grid.update_actor(boss)
 		enemy_store.queue_defeat(boss)
+		# The boss remains a truthful combat defeat in reports, but its cleanup
+		# receipt cannot advance the ordinary quota or grant progression rewards.
 		stats_enemies_defeated += 1
 		stage_telemetry.record_defeat(boss.archetype, boss.elite_trait)
-		experience_runtime.spawn_shard(
-			boss.pos, FieldDropRules.experience_for_enemy(boss), &""
-		)
-		_try_group_completion_reward(boss.group_id, boss.pos)
 	_session_diagnostics.emit_event("boss_ended", {"stage_index":current_stage_index})
 	stage_telemetry.record_boss_lifecycle(
 		StringName(StageCatalog.profile(current_stage_id).get("boss_name_key", "")),
@@ -6404,6 +6416,7 @@ func _retire_denied_zones_by_owner(owner_kind: StringName) -> void:
 
 func _stage_report_context(has_next_stage: bool) -> Dictionary:
 	var profile := StageCatalog.profile(current_stage_id)
+	var build_rows := StageReportBuilder.build_rows(_build_snapshot())
 	return {
 		"number":int(profile["number"]),
 		"title_key":String(profile["title_key"]),
@@ -6412,6 +6425,7 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 		"run_time_seconds":maxf(0.0, active_run_elapsed_seconds),
 		"hull":player_health,
 		"max_hull":_player_max_health(),
+		"build_rows":build_rows,
 		"pacing":{
 			"active_seconds":maxf(0.0, active_run_elapsed_seconds - stage_started_at_active_run_seconds),
 			"visible_gap_count":_diagnostic_visible_gap_event_count,
@@ -6572,6 +6586,7 @@ func _show_final_result() -> void:
 
 
 func _build_final_result_snapshot() -> Dictionary:
+	var build_snapshot := _build_snapshot()
 	var active_weapon_snapshot := active_weapon_runtime.snapshot(
 		run_build, 1.5 if persistent_relay_module else 0.0
 	)
@@ -6589,7 +6604,8 @@ func _build_final_result_snapshot() -> Dictionary:
 		"primary_hits":stats_primary_hits,
 		"dash_uses":stats_dash_uses,
 		"installations":stats_installations,
-		"build_snapshot":_build_snapshot(),
+		"build_snapshot":build_snapshot,
+		"build_rows":StageReportBuilder.build_rows(build_snapshot),
 		"loadout":{
 			"primary_title_key":"PRIMARY_PULSE_CANNON",
 			"secondary_title_keys":secondary_titles,

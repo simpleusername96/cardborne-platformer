@@ -5,6 +5,7 @@ extends RefCounted
 ## It deliberately owns no locale formatting or live gameplay references.
 
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
+const StageReportBuilder = preload("res://scripts/combat/vehicle_stage_report_builder.gd")
 const ATTRIBUTE_ORDER: Array[StringName] = [
 	&"kinetic", &"thermal", &"toxin", &"cryo", &"arc",
 ]
@@ -25,6 +26,9 @@ static func build(stage_records: Array, final_state: Dictionary) -> Dictionary:
 	var hull := maxf(0.0, float(final_state.get("hull", 0.0)))
 	var max_hull := maxf(0.0, float(final_state.get("max_hull", 0.0)))
 	var build_snapshot := Dictionary(final_state.get("build_snapshot", {})).duplicate(true)
+	var build_rows := Array(final_state.get("build_rows", []))
+	if build_rows.is_empty():
+		build_rows = StageReportBuilder.build_rows(build_snapshot)
 	return {
 		"stage_count": stage_records.size(),
 		"complete_run": true,
@@ -58,7 +62,7 @@ static func build(stage_records: Array, final_state: Dictionary) -> Dictionary:
 			{"title_key":"REPORT_ROW_CYCLES_CLEARED", "count":stage_records.size()},
 			{"title_key":"REPORT_ROW_ACTIVE_TIME", "value":_format_duration(active_seconds)},
 		],
-		"build_rows":_build_rows(build_snapshot),
+		"build_rows":build_rows.duplicate(true),
 		"damage_rows":damage_rows,
 		"defense_rows":incoming,
 		"enemy_rows":defeats.duplicate(true),
@@ -71,17 +75,6 @@ static func build(stage_records: Array, final_state: Dictionary) -> Dictionary:
 static func _format_duration(seconds: float) -> String:
 	var total := maxi(0, floori(seconds))
 	return "%d:%02d" % [total / 60, total % 60]
-
-
-static func _build_rows(snapshot: Dictionary) -> Array[Dictionary]:
-	var rows: Array[Dictionary] = []
-	for upgrade_variant in Array(snapshot.get("upgrades", [])):
-		var upgrade := Dictionary(upgrade_variant)
-		rows.append({
-			"title_key":String(upgrade.get("title_key", "REPORT_SOURCE_OTHER")),
-			"value":"Lv. %d" % maxi(1, int(upgrade.get("level", 1))),
-		})
-	return rows
 
 
 static func _is_complete_run(stage_records: Array) -> bool:
@@ -108,13 +101,21 @@ static func _boss_stage_count() -> int:
 
 
 static func _boss_rows(records: Array) -> Array[Dictionary]:
-	var rows: Array[Dictionary] = [{"title_key":"REPORT_ROW_BOSSES_DEFEATED", "count":_boss_stage_count()}]
+	var completed_bosses := 0
+	for record_variant in records:
+		var boss := Dictionary(Dictionary(record_variant).get("boss_report", {}))
+		if bool(boss.get("cleanup_completed", false)):
+			completed_bosses += 1
+	var rows: Array[Dictionary] = [{"title_key":"REPORT_ROW_BOSSES_DEFEATED", "count":completed_bosses}]
 	for record_variant in records:
 		var boss := Dictionary(Dictionary(record_variant).get("boss_report", {}))
 		var boss_id := StringName(boss.get("id", &""))
 		if boss_id.is_empty():
 			continue
-		rows.append({"name_key":String(boss_id), "value_key":"REPORT_VALUE_CLEARED"})
+		rows.append({
+			"name_key":String(boss_id),
+			"value_key":"REPORT_VALUE_CLEARED" if bool(boss.get("cleanup_completed", false)) else "REPORT_VALUE_CLEANUP_IN_PROGRESS",
+		})
 		rows.append({
 			"title_key":"REPORT_ROW_BOSS_CLEANUP",
 			"value_key":"REPORT_VALUE_CLEANUP_COMPLETED" if bool(boss.get("cleanup_completed", false)) else "REPORT_VALUE_CLEANUP_IN_PROGRESS",

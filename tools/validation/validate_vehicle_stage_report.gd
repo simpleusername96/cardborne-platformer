@@ -50,6 +50,38 @@ func _init() -> void:
 			"diagnostics":{"active":true, "event_count":17, "event_cap":256, "sample_count":92, "sample_cap":1800, "event_dropped":1},
 		}
 	)
+	var frozen_build_rows: Array[Dictionary] = [
+		{"title_key":"UPGRADE_PICKUP_RADIUS_TITLE", "value":"Lv. 2"},
+		{"title_key":"UPGRADE_THERMAL_BURST_TITLE", "value":"Lv. 1"},
+		{"title_key":"UPGRADE_HOMING_MISSILES_TITLE", "value":"Lv. 1"},
+	]
+	var partial_build_rows: Array[Dictionary] = [frozen_build_rows[0].duplicate(true)]
+	var partial_failure_build_report := Builder.build(
+		{},
+		{"number":2, "title_key":"STAGE_DROWNED_RUINS_2", "build_rows":partial_build_rows},
+		true
+	)
+	var failure_build_report := Builder.build(
+		{},
+		{"number":2, "title_key":"STAGE_DROWNED_RUINS_2", "build_rows":frozen_build_rows},
+		true
+	)
+	frozen_build_rows[0]["value"] = "Lv. 9"
+	_expect(
+		Array(failure_build_report["build_rows"])[0]["value"] == "Lv. 2"
+			and Array(partial_failure_build_report["build_rows"]).size() == 1
+			and Array(failure_build_report["build_rows"]).size() == 3,
+		"failure report preserves gameplay-frozen build rows"
+	)
+	var premature_boss_report := Builder.build(
+		{"boss":{"id":&"ENEMY_ARCHIVE_LEVIATHAN", "cleanup_started":true, "cleanup_completed":false}},
+		{"number":2, "title_key":"STAGE_DROWNED_RUINS_2", "has_boss":true}
+	)
+	_expect(
+		String(Dictionary(Array(premature_boss_report["boss_rows"])[1]).get("value_key", "")) == "REPORT_VALUE_CLEANUP_IN_PROGRESS"
+			and int(Dictionary(Array(premature_boss_report["boss_rows"])[0]).get("count", -1)) == 0,
+		"boss IDs are not cleared until cleanup completes"
+	)
 	var percentage_total := 0
 	for row in report["outgoing"]:
 		percentage_total += int(row["percentage_tenths"])
@@ -143,6 +175,16 @@ func _init() -> void:
 	_expect(int(contract["decorated_metric_rows"]) == 0, "report metrics have no decorative panel shell")
 	_expect(int(contract["fixed_actions"]) == 1, "report exposes exactly one fixed action")
 	_expect("03:03" in String(contract["summary_text"]), "report formats cumulative run time")
+	for build_failure_report in [partial_failure_build_report, failure_build_report]:
+		panel.open(build_failure_report)
+		await process_frame
+		for locale in ["ko", "en"]:
+			TranslationServer.set_locale(locale)
+			panel.refresh_localized_content()
+			_expect(
+				not "UPGRADE_" in _visible_text(panel),
+				"%s failure report localizes %d frozen build rows" % [locale, Array(build_failure_report["build_rows"]).size()]
+			)
 	panel.call("_process", 0.36)
 	panel.call("_on_continue")
 	_expect(continued[0] == 1, "successful report emits its single continue intent")
@@ -222,6 +264,15 @@ func _init() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _visible_text(node: Node) -> String:
+	var text := ""
+	if node is Label:
+		text += (node as Label).text
+	for child in node.get_children():
+		text += _visible_text(child)
+	return text
 
 
 func _finish() -> void:
