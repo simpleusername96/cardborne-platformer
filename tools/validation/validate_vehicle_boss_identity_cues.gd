@@ -32,7 +32,7 @@ func _initialize() -> void:
 	for cue in boss.attack_telegraphs:
 		barrage_contract = barrage_contract and (
 			StringName(cue["delivery"]) == &"projectile"
-			and bool(cue.get("show_path", false))
+			and not cue.has("show_path")
 			and cue.has("row_delay")
 		)
 	_expect(
@@ -44,8 +44,15 @@ func _initialize() -> void:
 			CuePolicy.telegraph_mode(
 				boss.pos, boss.visual_radius, boss.phase,
 				boss.attack_telegraphs[0], Rect2(-2000.0, -2000.0, 4000.0, 4000.0)
-			) == CuePolicy.MODE_PROJECTILE_PATH,
-			"broad barrage startup paths use the hostile projectile-path cue mode"
+			) == CuePolicy.MODE_NONE,
+			"broad barrage relies on muzzle anticipation and projectile bodies"
+		)
+		_expect(
+			CuePolicy.unseen_projectile_attack_readiness(
+				Vector2(-2200.0, 0.0), boss.visual_radius, boss.phase,
+				boss.attack_telegraphs, Rect2(-640.0, -360.0, 1280.0, 720.0)
+			) >= 0.0,
+			"broad barrage descriptors still drive off-screen threat-radar readiness"
 		)
 	var run_source := FileAccess.get_file_as_string("res://scripts/vehicle/vehicle_run.gd")
 	_expect(

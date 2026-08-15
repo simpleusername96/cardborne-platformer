@@ -603,6 +603,7 @@ func _run() -> void:
 		"damage":12.0,
 		"affinity":AttackContract.KINETIC,
 		"readiness":0.7,
+		"show_path":true,
 	}]
 	renderer.sync(
 		[projectile_attacker], no_projectiles, no_projectiles, [], [],

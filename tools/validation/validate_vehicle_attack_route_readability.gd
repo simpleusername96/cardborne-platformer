@@ -220,7 +220,8 @@ func _validate_offscreen_intersection() -> void:
 		"instant area effects contain no renderer-owned radius interpolation"
 	)
 	_expect(
-		not renderer_source.contains("_sync_projectile_telegraph")
+		not renderer_source.contains("_sync_projectile_path_telegraph")
+			and not renderer_source.contains("_sync_projectile_telegraph")
 			and not renderer_source.contains("_sync_incoming_projectile_cue")
 			and not renderer_source.contains("_sync_collective_tactic_module")
 			and not renderer_source.contains("_sync_commit_marker")

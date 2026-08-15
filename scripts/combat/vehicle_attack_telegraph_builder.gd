@@ -152,7 +152,6 @@ static func refresh_boss(
 					enemy, origin, direction, float(row["damage"]),
 					BossPatterns.projectile_speed(pattern), affinity, resolve_path
 				)
-				enemy.attack_telegraphs[-1]["show_path"] = true
 				enemy.attack_telegraphs[-1]["row_delay"] = float(row["at"])
 	elif kind == &"charge":
 		_append_charge(

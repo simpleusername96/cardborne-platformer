@@ -1434,17 +1434,6 @@ func _sync_enemy_attack_telegraphs(
 				_sync_active_beam(telegraph)
 			CombatCuePolicy.MODE_AREA_FOOTPRINT:
 				_sync_area_telegraph(telegraph)
-			CombatCuePolicy.MODE_PROJECTILE_PATH:
-				_sync_projectile_path_telegraph(telegraph)
-
-
-func _sync_projectile_path_telegraph(telegraph: Dictionary) -> void:
-	var from := Vector2(telegraph["from"])
-	var to := Vector2(telegraph["to"])
-	var width := maxf(3.0, float(telegraph.get("half_width", 3.0)) * 2.0)
-	var readiness := clampf(float(telegraph.get("readiness", 0.0)), 0.0, 1.0)
-	_write_beam(from, to, width + 4.0, Color(Art.SPACE_BLACK, lerpf(0.42, 0.70, readiness)))
-	_write_beam(from, to, width, Color(Art.DANGER, lerpf(0.08, 0.22, readiness)))
 
 
 func _sync_beam_startup(telegraph: Dictionary) -> void:

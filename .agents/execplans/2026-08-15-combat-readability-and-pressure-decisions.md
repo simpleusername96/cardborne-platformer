@@ -301,11 +301,15 @@ builder, projectile state/runtime, combat renderer, stage difficulty, focused bo
   - Accept: front/rear/edge hits, facing lock, sector depletion, bypass, and defense-to-
     offense coupling pass deterministic tests and match rendered boundaries.
 - [x] **4.2** Restore missing boss attack cues and Archive Cross geometry.
-  - Change: broad barrage publishes startup/offscreen descriptors; `wedge_ring` renders its
-    exact footprint; Archive Cross uses two committed X corridors rather than four generic
-    projectiles.
-  - Accept: every boss attack kind has a startup descriptor, exact visible geometry, radar
-    policy, one-hit semantics, and no final-commit retarget.
+  - Change: broad barrage publishes startup/offscreen descriptors without a visible
+    projectile route; projectile startup and live shots rely on muzzle anticipation,
+    authored projectile bodies, and off-screen threat-radar direction. `wedge_ring`
+    renders its exact damage footprint; Archive Cross uses two committed X corridors
+    rather than four generic projectiles. Only beam attacks expose an exact corridor.
+  - Accept: every boss attack kind has a startup descriptor and radar policy; projectile
+    descriptors never render predicted paths even if stale input contains `show_path`;
+    beams and delayed areas render only exact committed damage geometry; one-hit semantics
+    and no final-commit retarget remain intact.
 - [x] **4.3** Apply axis-specific boss pressure values.
   - Change: multiply locomotion by `1.25`, projectile speed by `1.40`, beam/projectile reach
     by `1.45`, charge speed by `1.30`, and circular/wedge radius by `1.25`; keep existing
@@ -442,7 +446,10 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   production Web export succeeds at implementation commit `65afb5ea`. The native scenario
   is now valid after `c8b8364d` preserved barrier-bypassing denial pressure, and
   `65afb5ea` balanced 10 Hz decision lanes, but the retained authoritative result remains
-  red in the `enemies_and_grid` physics owner (p95 `5.49 ms`, p99 `6.98 ms`).
+  red in the `enemies_and_grid` physics owner (p95 `5.49 ms`, p99 `6.98 ms`). The reopened
+  4.2 visual regression gate passes: broad-barrage projectile descriptors remain available
+  to threat radar while the cue policy and renderer expose no predicted projectile-path
+  mode, including stale `show_path` input.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
