@@ -331,7 +331,12 @@ class StatusGlyphItem:
 				draw_arc(center, glyph_radius * 0.72, 0.0, TAU, 16, color, 2.0)
 				draw_line(center + Vector2(0.0, -glyph_radius * 0.65), center + Vector2(0.0, glyph_radius * 0.65), color, 2.0)
 			&"dash_overdrive":
-				draw_colored_polygon(PackedVector2Array([center + Vector2(-glyph_radius * 0.72, -glyph_radius * 0.18), center + Vector2(0.05, -glyph_radius * 0.18), center + Vector2(-0.14 * glyph_radius, glyph_radius * 0.72), center + Vector2(glyph_radius * 0.72, glyph_radius * 0.10), center + Vector2(-0.04 * glyph_radius, glyph_radius * 0.10), center + Vector2(glyph_radius * 0.14, -glyph_radius * 0.72)]), color)
+				for offset in [-glyph_radius * 0.30, glyph_radius * 0.24]:
+					draw_polyline(PackedVector2Array([
+						center + Vector2(offset - glyph_radius * 0.34, -glyph_radius * 0.58),
+						center + Vector2(offset + glyph_radius * 0.28, 0.0),
+						center + Vector2(offset - glyph_radius * 0.34, glyph_radius * 0.58),
+					]), color, 2.0)
 			&"braced_fire":
 				draw_rect(Rect2(center - Vector2(glyph_radius * 0.68, glyph_radius * 0.68), Vector2(glyph_radius * 1.36, glyph_radius * 1.36)), color, false, 2.0)
 				draw_line(center + Vector2(-glyph_radius * 0.48, 0), center + Vector2(glyph_radius * 0.48, 0), color, 2.0)
