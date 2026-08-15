@@ -89,7 +89,15 @@ func set_player_fixture(fixture: Dictionary) -> void:
 					_run.run_build, 1.5 if _run.persistent_relay_module else 0.0
 				)
 			)
-			_run._ui.update_hud(_run._build_hud_snapshot(false, false))
+			var hud_snapshot: Dictionary = _run._build_hud_snapshot(false, false)
+			hud_snapshot["conditional_statuses"] = [
+				{"id":&"last_stand", "value":"+35%"},
+				{"id":&"overflow_barrier", "value":"2.4s"},
+				{"id":&"dash_overdrive", "value":"1.8s"},
+				{"id":&"braced_fire", "value":"3·1.2s"},
+				{"id":&"hit_chain", "value":"×4"},
+			]
+			_run._ui.update_hud(hud_snapshot)
 		&"cooldowns_clear":
 			_run.player_dash_cooldown = 0.0
 			_run.secondary_runtime.seeker_cooldown = 0.0
@@ -1438,8 +1446,8 @@ func _capture_exact_area_effect_evidence() -> void:
 	_save_capture("09z-explosive-seeker-impact.png")
 
 	var mystery_profiles := [
-		[&"gravity", 0.60, "09v-facility-gravity.png"],
-		[&"cryo", 0.80, "09w-facility-cryo.png"],
+		[&"gravity", 0.40, "09v-facility-gravity.png"],
+		[&"cryo", 0.50, "09w-facility-cryo.png"],
 		[&"weakpoint", 0.35, "09y-facility-weakpoint.png"],
 	]
 	if settings != null:
