@@ -25,6 +25,7 @@ const BOSS_PRESSURE_TARGET := PressureFixture.BOSS_ORDINARY_COUNT + 1
 const PRODUCTION_REPLAY_PRIME_SECONDS := 240.0
 const PRODUCTION_REPLAY_MIN_ACTIVE_RATIO := 0.90
 const PERFORMANCE_ENEMY_HEALTH := 1000000.0
+const PERFORMANCE_PLAYER_HEALTH := 100000000.0
 ## These are test-only staircase points. Shipping encounter caps never read this list.
 const DIAGNOSTIC_EXACT_CAPS: Array[int] = [48, 64, 96, 128]
 
@@ -644,6 +645,7 @@ func _activate_production_replay(run: Node) -> void:
 	)
 	run.player_barrier_strength = 1.0e9
 	run.player_barrier_timer = 1.0e9
+	run.player_health = PERFORMANCE_PLAYER_HEALTH
 	var center := Rules.player_start(run.current_stage_id)
 	_route_waypoints = [
 		center + Vector2(640.0, 0.0),
@@ -706,6 +708,9 @@ func _drive_production_replay(run: Node) -> void:
 		_set_action(&"move_down", true)
 	run.player_barrier_strength = maxf(run.player_barrier_strength, 1.0e8)
 	run.player_barrier_timer = 1.0e9
+	# Denial footprints intentionally bypass barriers. Keep their full damage path
+	# active without letting the measurement leave PLAYING before its ten samples.
+	run.player_health = maxf(run.player_health, PERFORMANCE_PLAYER_HEALTH)
 
 
 func _prime_production_replay(run: Node) -> void:
