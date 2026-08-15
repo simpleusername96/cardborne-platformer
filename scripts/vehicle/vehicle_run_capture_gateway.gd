@@ -896,6 +896,21 @@ func _publish_threat_fixture(
 func _capture_field_item_evidence() -> void:
 	prepare_stage(0)
 	_run._clear_enemies()
+	var facility_positions := [
+		_run.player_position + Vector2(-310.0, -120.0),
+		_run.player_position + Vector2(0.0, 210.0),
+		_run.player_position + Vector2(330.0, -80.0),
+	]
+	_run.mystery_device_runtime.configure([
+		{"id":&"capture_facility_repair", "pos":facility_positions[0]},
+		{"id":&"capture_facility_barrier", "pos":facility_positions[1]},
+		{"id":&"capture_facility_gravity", "pos":facility_positions[2]},
+	], 1701, _run.current_stage_id)
+	var facility_outcomes := [&"repair", &"barrier", &"gravity"]
+	var facility_health := [360.0, 240.0, 120.0]
+	for index in _run.mystery_device_runtime.devices.size():
+		_run.mystery_device_runtime.devices[index]["outcome"] = facility_outcomes[index]
+		_run.mystery_device_runtime.devices[index]["health"] = facility_health[index]
 	_run.pickups.clear()
 	_run.pickups.append({"id":"capture_recall", "kind":&"experience_recall", "pos":_run.player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":0.0})
 	_run.experience_runtime.clear_shards()

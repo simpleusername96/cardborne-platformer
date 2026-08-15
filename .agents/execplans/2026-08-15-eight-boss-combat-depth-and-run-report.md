@@ -431,6 +431,14 @@ Execution evidence recorded on 2026-08-15:
 - The matching current-commit Web authority sample is not yet recorded. The built-Web
   smoke session was finalized before the native run and the alternate in-app browser was
   unavailable; no prior Web result is relabeled as current evidence. Task 5.3 remains open.
+- A live-play visibility follow-up found that facility snapshots omitted a redundant
+  `visible` field while the renderer defaulted that omission to hidden. Facilities now
+  render from placement through destruction, and their existing silhouette contour clips
+  clockwise to remaining durability. The Stage 1 materialized cap increased from 6 to 18
+  to remove the unintended six-enemy lock while later caps and the exact 48 ceiling remain
+  unchanged. Focused renderer, facility, encounter, campaign, performance-scenario, visual-
+  authority, rendered-capture, and Web-export gates passed; evidence is
+  `build/captures/neutral-facility-density-fix/05-two-field-items.png`.
 
 ## Completion and Stop Conditions
 

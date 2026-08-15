@@ -1441,7 +1441,6 @@ func _validate_mystery_device_presentation(
 		{
 			"id":"device-a",
 			"state":&"intact",
-			"visible":true,
 			"position":device_position,
 			"health":45.0,
 			"max_health":90.0,
@@ -1496,7 +1495,8 @@ func _validate_mystery_device_presentation(
 		"assigned outcome symbols are visible before damage and remain visible after resolution"
 	)
 	_expect(
-		is_equal_approx(
+		is_equal_approx(gravity_contour.multimesh.buffer[12], 0.5)
+		and is_equal_approx(
 			gravity_contour.multimesh.buffer[15],
 			Renderer.INTERACTION_EDGE_ALPHA_REDUCED
 		)
@@ -1508,7 +1508,7 @@ func _validate_mystery_device_presentation(
 			Renderer.MYSTERY_DEVICE_SYMBOL_RADIUS
 				+ Renderer.INTERACTION_CONTOUR_WORLD_UNITS
 		),
-		"visible outcome facilities reuse one static reduced-motion silhouette contour"
+		"placed facilities default visible and clip their static contour to remaining durability"
 	)
 	_expect(
 		rings.z_index == -1

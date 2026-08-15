@@ -403,7 +403,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   중립 시설은 destructible interaction이므로 두 silhouette를 공유하지 않는다.
 - direct pickup과 중립 시설은 넓은 role-color 면과 얇은 breathing contour를 사용해
   서로와 무기 공격을 즉시 구분한다. 작은 accent color만으로 역할을
-  표시하지 않는다.
+  표시하지 않는다. 중립 시설 contour는 위쪽에서 시계 방향으로 남은 내구도 비율만
+  표시한다. 시설은 시간제가 아니므로 별도 countdown을 암시하지 않으며, reduced
+  motion에서도 같은 정적 비율을 유지한다.
 - 세 field의 주요 시각 차이는 실제 walkable topology와 run-selected wall
   arrangement가 소유한다. `SurfaceDetail` 분포는 바닥의 밋밋함만 줄이고 field
   identity, route, 위험도 또는 stage 변화를 암시하지 않는다.

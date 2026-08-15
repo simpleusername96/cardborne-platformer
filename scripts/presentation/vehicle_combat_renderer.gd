@@ -467,6 +467,7 @@ func _build_batches() -> void:
 	_mystery_edge_material = ShaderMaterial.new()
 	_mystery_edge_material.shader = INTERACTION_EDGE_SHADER
 	_mystery_edge_material.set_shader_parameter("edge_color", Art.SYSTEM)
+	_mystery_edge_material.set_shader_parameter("progress_enabled", true)
 	var unit_quad_mesh := _build_unit_quad_mesh()
 	var health_rect_mesh := _build_unit_quad_mesh(0.5)
 	var unit_ring_mesh := _build_unit_ring_mesh()
@@ -1924,7 +1925,9 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 	var run_time := float(state.get("run_time", 0.0))
 	for device_variant in devices_variant:
 		var device := Dictionary(device_variant)
-		if not bool(device.get("visible", false)):
+		# Neutral facilities exist visibly from placement until destruction. Their
+		# runtime snapshot does not need a redundant reveal flag.
+		if not bool(device.get("visible", true)):
 			continue
 		var device_state := StringName(device.get("state", &""))
 		if device_state != &"intact":
@@ -1947,6 +1950,12 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		).has_point(position):
 			continue
 		var edge_alpha := _interaction_edge_alpha(run_time, phase_offset, reduced_motion)
+		var maximum_health := maxf(0.001, float(device.get("max_health", 1.0)))
+		var remaining_life_ratio := clampf(
+			float(device.get("health", maximum_health)) / maximum_health,
+			0.0,
+			1.0
+		)
 		var contour_batch := _mystery_device_contour_batches.get(
 			outcome_id
 		) as BatchHandle
@@ -1958,7 +1967,7 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			0.0,
 			Vector2.ONE * (MYSTERY_DEVICE_SYMBOL_RADIUS + INTERACTION_CONTOUR_WORLD_UNITS),
 			Color.WHITE,
-			Color(1.0, 1.0, 1.0, edge_alpha)
+			Color(remaining_life_ratio, 0.0, 0.0, edge_alpha)
 		)
 		# The visible outcome symbol and its effect footprint share the intact
 		# facility lifecycle; destruction removes both immediately.
