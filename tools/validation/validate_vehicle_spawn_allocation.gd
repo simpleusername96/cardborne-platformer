@@ -113,9 +113,20 @@ func _validate_unit_allocation(
 			maximum = maxi(maximum, count)
 			if count > 0:
 				used += 1
-		_expect(used == 8, "%s window %d uses all eight canonical sectors" % [context, window])
+		_expect(used == mini(8, Array(positions_by_window[window]).size()), "%s window %d maximizes canonical sector coverage" % [context, window])
 		_expect(maximum - minimum <= 1, "%s window %d balances sector population" % [context, window])
-		_expect(Dictionary(first_sectors_by_window[window]).size() == 4, "%s window %d spreads the four cue births" % [context, window])
+		_expect(
+			Dictionary(first_sectors_by_window[window]).size()
+				== mini(int(packet.get("squads_per_window", 4)), Array(positions_by_window[window]).size()),
+			"%s window %d spreads its cue births" % [context, window]
+		)
+	var packet_sectors := {}
+	for histogram_value in sectors_by_window.values():
+		var histogram: PackedInt32Array = histogram_value
+		for sector_index in histogram.size():
+			if histogram[sector_index] > 0:
+				packet_sectors[sector_index] = true
+	_expect(packet_sectors.size() == 8, "%s packet uses all eight canonical sectors" % context)
 	var authored_units := 0
 	for squad in packet["squads"]:
 		authored_units += Array(squad).size()

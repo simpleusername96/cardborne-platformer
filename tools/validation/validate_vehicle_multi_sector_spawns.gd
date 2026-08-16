@@ -40,7 +40,12 @@ func _validate_patterns(packets: Array, context: String) -> void:
 	_expect(StringName(packets[0].get("engagement_pattern", &"")) == &"none", "%s opening singleton has no gate pattern" % context)
 	for packet in packets.slice(1):
 		_expect(StringName(packet.get("engagement_pattern", &"")) == &"broad_crescent", "%s multi-window packet declares its first pattern" % context)
-		_expect(Array(packet.get("engagement_patterns", [])) == [&"broad_crescent", &"two_offset_streams", &"broad_crescent"], "%s keeps the locked window pattern sequence" % context)
+		var expected_patterns: Array[StringName] = []
+		for window_index in int(packet.get("arrival_windows", 3)):
+			expected_patterns.append(
+				&"two_offset_streams" if window_index % 3 == 1 else &"broad_crescent"
+			)
+		_expect(Array(packet.get("engagement_patterns", [])) == expected_patterns, "%s keeps the locked window pattern sequence" % context)
 
 
 func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, visible_world: Rect2, context: String) -> void:
@@ -74,6 +79,7 @@ func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, vi
 	)
 	var positions_by_window := {}
 	var histograms := {}
+	var packet_histogram := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0])
 	for allocation in allocations:
 		var window := int(allocation["arrival_window"])
 		if not positions_by_window.has(window):
@@ -88,6 +94,7 @@ func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, vi
 				_expect(position.distance_to(previous) >= 320.0 - 0.001, "%s keeps the window hard floor" % context)
 			positions_by_window[window].append(position)
 			histogram[int(sectors[index])] += 1
+			packet_histogram[int(sectors[index])] += 1
 	for window in histograms:
 		var histogram: PackedInt32Array = histograms[window]
 		var minimum := 0x7fffffff
@@ -98,8 +105,13 @@ func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, vi
 			maximum = maxi(maximum, count)
 			if count > 0:
 				used += 1
-		_expect(used == 8, "%s window %d covers all canonical sectors" % [context, window])
+		_expect(used == mini(8, Array(positions_by_window[window]).size()), "%s window %d maximizes canonical sector coverage" % [context, window])
 		_expect(maximum - minimum <= 1, "%s window %d balances sector counts" % [context, window])
+	var packet_used := 0
+	for count in packet_histogram:
+		if count > 0:
+			packet_used += 1
+	_expect(packet_used == 8, "%s packet covers all canonical sectors" % context)
 
 
 func _validate_field_edges(packet: Dictionary, tactical, context: String) -> void:
