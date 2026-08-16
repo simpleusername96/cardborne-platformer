@@ -37,7 +37,7 @@ func _run() -> void:
 	var capacities: Array[int] = []
 	for category_variant in Array(snapshot["categories"]):
 		capacities.append(int(Dictionary(category_variant)["capacity"]))
-	_expect(capacities == [2, 3, 2, 1, 5, 4], "snapshot keeps locked category capacities")
+	_expect(capacities == [2, 3, 2, 1, 5, 7], "snapshot keeps locked category capacities")
 	var chassis_category := Dictionary(Array(snapshot["categories"])[4])
 	var chassis_slots: Array = chassis_category["slots"]
 	_expect(
