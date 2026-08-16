@@ -993,8 +993,16 @@ func _check_boss_autonomous_shapes(run) -> void:
 						and is_equal_approx(
 							float(run.denied_zones[0]["width"]),
 							BossPatterns.width(pattern, stage_index)
+						)
+						and is_equal_approx(
+							float(run.denied_zones[0]["beam_growth_seconds"]),
+							AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+						)
+						and is_equal_approx(
+							float(run.denied_zones[0]["duration_total"]),
+							maxf(0.62, BossPatterns.active_seconds(pattern))
 						),
-					"%s executes as its exact scaled beam corridor" % pattern
+					"%s executes as one collision-owned growing straight beam" % pattern
 				)
 			elif kind == &"summon":
 				_expect(

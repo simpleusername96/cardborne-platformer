@@ -107,6 +107,9 @@ const BEAM_ACTIVE_INNER_WIDTH_MAX := 20.0
 const BEAM_ACTIVE_INNER_WIDTH_RATIO := 0.34
 const BEAM_ACTIVE_CORE_WIDTH_MAX := 7.0
 const BEAM_ACTIVE_CORE_WIDTH_RATIO := 0.10
+const STRAIGHT_BEAM_ORB_RADIUS_RATIO := 0.68
+const STRAIGHT_BEAM_ORB_RADIUS_MIN := 18.0
+const STRAIGHT_BEAM_MUZZLE_RADIUS_RATIO := 0.72
 class BatchBuffer:
 	var values := PackedFloat32Array()
 	var floats_per_instance := BASE_BUFFER_FLOATS_PER_INSTANCE
@@ -1429,14 +1432,22 @@ func _sync_enemy_attack_telegraphs(
 			visible_world
 		):
 			CombatCuePolicy.MODE_BEAM_STARTUP:
-				_sync_beam_startup(telegraph)
+				_sync_beam_startup(
+					telegraph, enemy.pos, enemy.visual_radius
+				)
 			CombatCuePolicy.MODE_ACTIVE_BEAM:
-				_sync_active_beam(telegraph)
+				_sync_active_beam(
+					telegraph, enemy.pos, enemy.visual_radius, enemy.phase_time
+				)
 			CombatCuePolicy.MODE_AREA_FOOTPRINT:
 				_sync_area_telegraph(telegraph)
 
 
-func _sync_beam_startup(telegraph: Dictionary) -> void:
+func _sync_beam_startup(
+	telegraph: Dictionary,
+	source_position: Vector2,
+	source_radius: float
+) -> void:
 	var from := Vector2(telegraph["from"])
 	var to := Vector2(telegraph["to"])
 	var width := maxf(1.0, float(telegraph["active_width"]))
@@ -1448,6 +1459,25 @@ func _sync_beam_startup(telegraph: Dictionary) -> void:
 		else Art.attack_color(AttackContract.normalize_affinity(StringName(telegraph["affinity"])))
 	)
 	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
+	if hostile and float(telegraph.get("beam_growth_seconds", 0.0)) > 0.0:
+		var muzzle := _straight_beam_muzzle(
+			source_position, source_radius, from, to, width
+		)
+		var orb_radius := maxf(
+			STRAIGHT_BEAM_ORB_RADIUS_MIN,
+			width * STRAIGHT_BEAM_ORB_RADIUS_RATIO
+		) * lerpf(0.84, 1.0, intensity)
+		_write_disk(
+			muzzle,
+			orb_radius,
+			Color(Art.DANGER, lerpf(0.52, 0.90, intensity))
+		)
+		_write_disk(
+			muzzle,
+			orb_radius * lerpf(0.10, 0.16, intensity),
+			Color(Art.IVORY_BRIGHT, lerpf(0.28, 0.82, intensity))
+		)
+		return
 	if hostile:
 		_write_beam(from, to, width + 6.0, Color(Art.SPACE_BLACK, 0.72))
 	_write_beam(
@@ -1475,7 +1505,12 @@ func _sync_beam_startup(telegraph: Dictionary) -> void:
 	)
 
 
-func _sync_active_beam(telegraph: Dictionary) -> void:
+func _sync_active_beam(
+	telegraph: Dictionary,
+	source_position: Vector2,
+	source_radius: float,
+	active_remaining: float
+) -> void:
 	var from := Vector2(telegraph["from"])
 	var to := Vector2(telegraph["to"])
 	var width := maxf(1.0, float(telegraph["active_width"]))
@@ -1486,6 +1521,37 @@ func _sync_active_beam(telegraph: Dictionary) -> void:
 		else Art.attack_color(affinity)
 	)
 	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
+	var growth_seconds := float(telegraph.get("beam_growth_seconds", 0.0))
+	if hostile and growth_seconds > 0.0:
+		var growth_ratio := AttackContract.straight_beam_growth_ratio(
+			active_remaining,
+			float(telegraph.get("active_seconds", growth_seconds)),
+			growth_seconds
+		)
+		var muzzle := _straight_beam_muzzle(
+			source_position, source_radius, from, to, width
+		)
+		var grown_to := from.lerp(to, growth_ratio)
+		_sync_straight_beam_orb(muzzle, width)
+		var direction := (to - from).normalized()
+		if direction.is_zero_approx() or (grown_to - muzzle).dot(direction) <= 0.001:
+			return
+		_write_growing_beam_plane(
+			muzzle, grown_to, width, Color(Art.DANGER, BEAM_ACTIVE_BODY_ALPHA)
+		)
+		_write_growing_beam_plane(
+			muzzle,
+			grown_to,
+			minf(BEAM_ACTIVE_INNER_WIDTH_MAX, width * BEAM_ACTIVE_INNER_WIDTH_RATIO),
+			Color(Art.DANGER.lerp(Art.IVORY_BRIGHT, 0.62), BEAM_ACTIVE_INNER_ALPHA)
+		)
+		_write_growing_beam_plane(
+			muzzle,
+			grown_to,
+			minf(BEAM_ACTIVE_CORE_WIDTH_MAX, width * BEAM_ACTIVE_CORE_WIDTH_RATIO),
+			Art.IVORY_BRIGHT
+		)
+		return
 	if hostile:
 		_write_beam(from, to, width + 6.0, Color(Art.SPACE_BLACK, 0.82))
 	_write_beam(from, to, width, Color(color, BEAM_ACTIVE_BODY_ALPHA))
@@ -1739,11 +1805,26 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 					),
 					"owner":StringName(zone.get("owner", &"hostile")),
 					"readiness":readiness,
+					"beam_growth_seconds":float(
+						zone.get("beam_growth_seconds", 0.0)
+					),
+					"active_seconds":float(
+						zone.get("duration_total", zone.get("duration", 0.0))
+					),
 				}
 				if warning > 0.0:
-					_sync_beam_startup(corridor)
+					_sync_beam_startup(
+						corridor,
+						Vector2(zone["from"]),
+						float(zone.get("emitter_radius", 0.0))
+					)
 				else:
-					_sync_active_beam(corridor)
+					_sync_active_beam(
+						corridor,
+						Vector2(zone["from"]),
+						float(zone.get("emitter_radius", 0.0)),
+						float(zone.get("duration", 0.0))
+					)
 				continue
 			if shape == &"wedge_ring":
 				_sync_wedge_ring_zone(zone, readiness)
@@ -2279,6 +2360,55 @@ func _write_beam(from: Vector2, to: Vector2, width: float, color: Color) -> void
 		_overlay_batches[&"beam"], from + vector * 0.5,
 		vector / length, Vector2(length * 0.5, width * 0.5), color
 	)
+
+
+func _straight_beam_muzzle(
+	source_position: Vector2,
+	source_radius: float,
+	from: Vector2,
+	to: Vector2,
+	width: float
+) -> Vector2:
+	var vector := to - from
+	var length := vector.length()
+	if length <= 0.001:
+		return source_position
+	var muzzle_offset := maxf(
+		width * 0.5,
+		maxf(0.0, source_radius) * STRAIGHT_BEAM_MUZZLE_RADIUS_RATIO
+	)
+	return source_position + vector / length * minf(muzzle_offset, length)
+
+
+func _sync_straight_beam_orb(position: Vector2, width: float) -> void:
+	var orb_radius := maxf(
+		STRAIGHT_BEAM_ORB_RADIUS_MIN,
+		width * STRAIGHT_BEAM_ORB_RADIUS_RATIO
+	)
+	_write_disk(position, orb_radius, Color(Art.DANGER, BEAM_ACTIVE_BODY_ALPHA))
+	_write_disk(
+		position,
+		orb_radius * 0.36,
+		Color(
+			Art.DANGER.lerp(Art.IVORY_BRIGHT, 0.62),
+			BEAM_ACTIVE_INNER_ALPHA
+		)
+	)
+	_write_disk(
+		position,
+		orb_radius * 0.12,
+		Art.IVORY_BRIGHT
+	)
+
+
+func _write_growing_beam_plane(
+	from: Vector2,
+	to: Vector2,
+	width: float,
+	color: Color
+) -> void:
+	_write_beam(from, to, width, color)
+	_write_disk(to, width * 0.5, color)
 
 
 func _write_ring(position: Vector2, radius: float, color: Color) -> void:

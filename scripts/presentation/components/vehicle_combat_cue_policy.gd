@@ -43,8 +43,8 @@ static func nearby_enemy_is_eligible(
 
 
 static func telegraph_mode(
-	_source_position: Vector2,
-	_source_radius: float,
+	source_position: Vector2,
+	source_radius: float,
 	phase: StringName,
 	telegraph: Dictionary,
 	visible_world: Rect2
@@ -61,6 +61,13 @@ static func telegraph_mode(
 		and delivery == &"beam"
 		and float(telegraph.get("active_width", 0.0)) > 0.0
 	):
+		if (
+			float(telegraph.get("beam_growth_seconds", 0.0)) > 0.0
+			and not source_is_visible(
+				source_position, source_radius, visible_world
+			)
+		):
+			return MODE_NONE
 		return MODE_BEAM_STARTUP
 	if phase == &"boss_startup" and shape == &"area":
 		return MODE_AREA_FOOTPRINT
@@ -76,7 +83,7 @@ static func telegraph_mode(
 	return MODE_NONE
 
 
-static func unseen_projectile_attack_readiness(
+static func unseen_committed_attack_readiness(
 	source_position: Vector2,
 	source_radius: float,
 	phase: StringName,
@@ -90,9 +97,10 @@ static func unseen_projectile_attack_readiness(
 		return -1.0
 	var result := -1.0
 	for telegraph in telegraphs:
+		var delivery := StringName(telegraph.get("delivery", &""))
 		if (
 			_is_damaging(telegraph)
-			and StringName(telegraph.get("delivery", &"")) == &"projectile"
+			and delivery in [&"projectile", &"beam"]
 		):
 			result = maxf(
 				result,

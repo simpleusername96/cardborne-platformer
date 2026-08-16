@@ -142,6 +142,7 @@ func _init() -> void:
 		"direct-pattern read cadence escalates without owning semantic phase floors"
 	)
 	_validate_late_stage_direct_area_coverage(runtime)
+	_validate_direct_beam_growth(runtime)
 	_validate_direct_recovery_scale(runtime)
 	_validate_phase_receipts(runtime)
 	_finish()
@@ -229,12 +230,37 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 	)
 
 
+func _validate_direct_beam_growth(runtime: BossRuntime) -> void:
+	runtime.configure(&"stage_4")
+	var services := BossServiceStub.new()
+	services.player_position = Vector2(400.0, 0.0)
+	var boss := _boss()
+	boss.pos = Vector2.ZERO
+	boss.pattern = &"switch_sweep"
+	boss.phase = &"boss_active"
+	boss.phase_time = BossPatterns.active_seconds("switch_sweep")
+	boss.beam_end = Vector2(1000.0, 0.0)
+	boss.hit_committed = false
+	runtime.update_active(boss, 0.01, services)
+	_expect(
+		services.damage_calls == 0,
+		"direct boss beam cannot damage beyond its first growing segment"
+	)
+	boss.phase_time = BossPatterns.active_seconds("switch_sweep") - 0.15
+	runtime.update_active(boss, 0.0, services)
+	_expect(
+		services.damage_calls == 1,
+		"direct boss beam damage reaches the player when its 0.15-second segment arrives"
+	)
+
+
 func _boss() -> EnemyState:
 	var boss := EnemyState.new()
 	boss.health = 100.0
 	boss.max_health = 100.0
 	boss.boss_phase = 1
 	boss.pattern_index = 0
+	boss.visual_radius = 146.0
 	return boss
 
 

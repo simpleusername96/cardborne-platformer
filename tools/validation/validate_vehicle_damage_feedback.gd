@@ -379,8 +379,16 @@ func _check_attack_telegraphs(stage: Node) -> void:
 				float(beam.attack_telegraphs[0]["active_width"]),
 				SpecialistRuntime.BEAM_WIDTH
 			)
+			and is_equal_approx(
+				float(beam.attack_telegraphs[0]["beam_growth_seconds"]),
+				AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+			)
+			and is_equal_approx(
+				float(beam.attack_telegraphs[0]["active_seconds"]),
+				SpecialistRuntime.BEAM_ACTIVE
+			)
 			and StringName(beam.attack_telegraphs[0]["delivery"]) == &"beam",
-		"beam startup and active body share one exact collision footprint"
+		"beam startup carries orb-only warning and collision-owned growth timing"
 	)
 
 	var mine = stage.call("_make_enemy", {

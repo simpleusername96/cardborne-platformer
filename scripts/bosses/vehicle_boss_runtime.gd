@@ -235,10 +235,15 @@ func update_active(
 		if before.distance_to(boss.pos) + 1.0 < requested.length():
 			boss.phase_time = 0.0
 	elif kind == &"beam":
+		var growth_ratio := AttackContract.straight_beam_growth_ratio(
+			boss.phase_time,
+			Patterns.active_seconds(pattern)
+		)
+		var live_beam_end := boss.pos.lerp(boss.beam_end, growth_ratio)
 		if (
 			not boss.hit_committed
 			and Rules.point_segment_distance(
-				services.player_position, boss.pos, boss.beam_end
+				services.player_position, boss.pos, live_beam_end
 			) <= Rules.PLAYER_RADIUS + Patterns.width(pattern, stage_index) * 0.5
 		):
 			boss.hit_committed = true
@@ -307,6 +312,7 @@ func advance_autonomous(
 		"lane_spacing":Patterns.lane_spacing(stage_index),
 		"affinity":Patterns.affinity(pattern),
 		"commit_mode":&"autonomous",
+		"emitter_radius":boss.visual_radius,
 	})
 	return events
 

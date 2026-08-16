@@ -48,7 +48,7 @@ func _initialize() -> void:
 			"broad barrage relies on muzzle anticipation and projectile bodies"
 		)
 		_expect(
-			CuePolicy.unseen_projectile_attack_readiness(
+			CuePolicy.unseen_committed_attack_readiness(
 				Vector2(-2200.0, 0.0), boss.visual_radius, boss.phase,
 				boss.attack_telegraphs, Rect2(-640.0, -360.0, 1280.0, 720.0)
 			) >= 0.0,

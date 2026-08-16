@@ -3906,7 +3906,17 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.phase_time = SpecialistRuntime.CARRIER_RECOVERY
 		&"beam_sentinel":
 			var beam_end := enemy.beam_end
-			if not enemy.hit_committed and Rules.point_segment_distance(player_position, enemy.pos, beam_end) <= Rules.PLAYER_RADIUS + SpecialistRuntime.BEAM_WIDTH * 0.5:
+			var growth_ratio := AttackContract.straight_beam_growth_ratio(
+				enemy.phase_time,
+				SpecialistRuntime.BEAM_ACTIVE
+			)
+			var live_beam_end := enemy.pos.lerp(beam_end, growth_ratio)
+			if (
+				not enemy.hit_committed
+				and Rules.point_segment_distance(
+					player_position, enemy.pos, live_beam_end
+				) <= Rules.PLAYER_RADIUS + SpecialistRuntime.BEAM_WIDTH * 0.5
+			):
 				enemy.hit_committed = true
 				_damage_player(SpecialistRuntime.BEAM_DAMAGE, "Beam Sentinel sweep", true)
 			if enemy.phase_time <= 0.0:
@@ -4824,10 +4834,22 @@ func _update_denied_zones(delta: float) -> void:
 				float(zone["radius"])
 			)
 		elif shape == &"corridor":
+			var corridor_from := Vector2(zone["from"])
+			var corridor_to := Vector2(zone["to"])
+			var beam_growth_seconds := float(
+				zone.get("beam_growth_seconds", 0.0)
+			)
+			if beam_growth_seconds > 0.0:
+				var growth_ratio := AttackContract.straight_beam_growth_ratio(
+					float(zone["duration"]),
+					float(zone.get("duration_total", zone["duration"])),
+					beam_growth_seconds
+				)
+				corridor_to = corridor_from.lerp(corridor_to, growth_ratio)
 			if Rules.point_segment_distance(
 				player_position,
-				Vector2(zone["from"]),
-				Vector2(zone["to"])
+				corridor_from,
+				corridor_to
 			) <= Rules.PLAYER_RADIUS + float(zone["width"]) * 0.5:
 				damage = float(zone["damage"])
 		elif shape == &"wedge_ring":
@@ -6268,7 +6290,8 @@ func _append_boss_beam_zone(event: Dictionary) -> void:
 			direction,
 			BossPatterns.BEAM_RANGE,
 			float(event["width"]) * 0.5
-		)
+		),
+		true
 	)
 
 
@@ -6276,9 +6299,11 @@ func _append_boss_corridor_zone(
 	event: Dictionary,
 	zone_id: String,
 	from: Vector2,
-	to: Vector2
+	to: Vector2,
+	straight_beam_growth: bool = false
 ) -> void:
-	denied_zones.append({
+	var active_seconds := maxf(0.62, float(event["duration"]))
+	var zone := {
 		"id":zone_id,
 		"shape":&"corridor",
 		"from":from,
@@ -6286,7 +6311,7 @@ func _append_boss_corridor_zone(
 		"width":float(event["width"]),
 		"warning":float(event["startup"]),
 		"warning_total":float(event["startup"]),
-		"duration":maxf(0.62, float(event["duration"])),
+		"duration":active_seconds,
 		"tick":0.0,
 		"damage":float(event["damage"]),
 		"source":String(event["pattern"]),
@@ -6294,7 +6319,12 @@ func _append_boss_corridor_zone(
 		"affinity":StringName(event["affinity"]),
 		"commit_mode":&"autonomous",
 		"final_damage":true,
-	})
+	}
+	if straight_beam_growth:
+		zone["beam_growth_seconds"] = AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+		zone["duration_total"] = active_seconds
+		zone["emitter_radius"] = float(event.get("emitter_radius", 0.0))
+	denied_zones.append(zone)
 
 
 func _boss_reposition(boss: EnemyState, delta: float) -> void:
@@ -7226,7 +7256,7 @@ func _update_threat_contacts(delta: float) -> void:
 			if enemy.elite_trait != &"":
 				_discover_guide(StringName("object_elite_%s" % String(enemy.elite_trait)))
 		var offset := Vector2(enemy.pos) - player_position
-		var readiness := CombatCuePolicy.unseen_projectile_attack_readiness(
+		var readiness := CombatCuePolicy.unseen_committed_attack_readiness(
 			enemy.pos,
 			enemy.visual_radius,
 			enemy.phase,

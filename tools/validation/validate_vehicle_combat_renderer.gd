@@ -867,16 +867,20 @@ func _run() -> void:
 	)
 	offscreen_enemy.phase = &"active"
 	offscreen_enemy.role = &"controller"
+	offscreen_enemy.pos = Vector2(180.0, 360.0)
+	offscreen_enemy.visual_radius = 50.0
 	offscreen_enemy.attack_telegraphs = [{
 		"shape":&"corridor",
 		"delivery":&"beam",
-		"from":Vector2(-120.0, 360.0),
+		"from":Vector2(180.0, 360.0),
 		"to":Vector2(900.0, 360.0),
 		"half_width":58.0,
 		"damage":28.0,
 		"affinity":AttackContract.ARC,
 		"active_width":54.0,
 		"readiness":0.72,
+		"beam_growth_seconds":AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS,
+		"active_seconds":0.60,
 	}]
 	offscreen_enemy.phase = &"startup"
 	renderer.sync(
@@ -884,52 +888,50 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count == 3,
-		"hostile startup corridor adds one restrained hot filament to its exact red footprint"
+		beam_batch.multimesh.visible_instance_count == 0
+			and area_disk.multimesh.visible_instance_count == 2
+			and area_ring.multimesh.visible_instance_count == 0,
+		"straight-beam startup draws only its boss-attached charge orb"
 	)
-	var startup_beam_buffer := beam_batch.multimesh.buffer
+	var startup_disk_buffer := area_disk.multimesh.buffer
 	var startup_intensity := smoothstep(0.0, 1.0, 0.72)
 	_expect(
-		is_equal_approx(startup_beam_buffer[5], (54.0 + 6.0) * 0.5)
+		Vector2(startup_disk_buffer[3], startup_disk_buffer[7])
+			.is_equal_approx(Vector2(216.0, 360.0))
 			and is_equal_approx(
-				startup_beam_buffer[17],
-				54.0 * 0.5
+				Vector2(startup_disk_buffer[0], startup_disk_buffer[4]).length(),
+				54.0 * 0.68 * lerpf(0.84, 1.0, startup_intensity)
 			)
-			and is_equal_approx(
-				startup_beam_buffer[11],
-				0.72
-			)
-			and is_equal_approx(
-				startup_beam_buffer[23],
-				lerpf(0.16, 0.34, startup_intensity)
-			)
-			and is_equal_approx(startup_beam_buffer[29], 3.5 * 0.5)
-			and is_equal_approx(
-				startup_beam_buffer[35],
-				lerpf(0.32, 0.66, startup_intensity)
-			),
-		"startup hostile corridor preserves its footprint and gains one centered readiness filament"
+			and Color(
+				startup_disk_buffer[8], startup_disk_buffer[9],
+				startup_disk_buffer[10], 1.0
+			).is_equal_approx(Color(Art.DANGER, 1.0)),
+		"startup charge orb sits at the committed muzzle without any path geometry"
 	)
 	offscreen_enemy.phase = &"active"
+	offscreen_enemy.phase_time = 0.45
 	renderer.sync(
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count == 4,
-		"active hostile corridor uses perimeter plus the selected three-plane energy hierarchy"
+		beam_batch.multimesh.visible_instance_count == 3
+			and area_disk.multimesh.visible_instance_count == 6,
+		"growing straight beam uses three borderless rounded energy planes"
 	)
 	var active_beam_buffer := beam_batch.multimesh.buffer
 	_expect(
-		is_equal_approx(active_beam_buffer[5], (54.0 + 6.0) * 0.5)
-			and is_equal_approx(active_beam_buffer[17], 54.0 * 0.5)
-			and is_equal_approx(active_beam_buffer[29], minf(20.0, 54.0 * 0.34) * 0.5)
-			and is_equal_approx(active_beam_buffer[41], minf(7.0, 54.0 * 0.10) * 0.5)
-			and is_equal_approx(active_beam_buffer[11], 0.82)
-			and is_equal_approx(active_beam_buffer[23], 0.92)
-			and is_equal_approx(active_beam_buffer[35], 0.88)
-			and is_equal_approx(active_beam_buffer[47], 1.0),
-		"active hostile corridor keeps its exact red body, broad energy spine, and narrow hot core"
+		is_equal_approx(
+			Vector2(active_beam_buffer[0], active_beam_buffer[4]).length(),
+			162.0
+		)
+			and is_equal_approx(active_beam_buffer[5], 54.0 * 0.5)
+			and is_equal_approx(active_beam_buffer[17], minf(20.0, 54.0 * 0.34) * 0.5)
+			and is_equal_approx(active_beam_buffer[29], minf(7.0, 54.0 * 0.10) * 0.5)
+			and is_equal_approx(active_beam_buffer[11], 0.92)
+			and is_equal_approx(active_beam_buffer[23], 0.88)
+			and is_equal_approx(active_beam_buffer[35], 1.0),
+		"at 0.15 seconds the visible beam reaches only the collision-owned half length"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	snapshot = renderer.debug_snapshot()

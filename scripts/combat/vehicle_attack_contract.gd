@@ -32,6 +32,7 @@ const CONDITION_MASK := CONDITION_POISON | CONDITION_CHILL
 
 const HOSTILE_PROJECTILE_LIFETIME := 2.2
 const PROJECTILE_TELEGRAPH_LEAD_SECONDS := 0.36
+const STRAIGHT_BEAM_GROWTH_SECONDS := 0.30
 const LIGHT_DAMAGE_MAX := 10.0
 const HEAVY_DAMAGE_MIN := 20.0
 const LIGHT_PROJECTILE_RADIUS := 5.0
@@ -144,6 +145,18 @@ static func contact_danger_half_width(attacker_radius: float, contact_padding: f
 
 static func beam_danger_half_width(beam_width: float) -> float:
 	return Rules.PLAYER_RADIUS + beam_width * 0.5
+
+
+static func straight_beam_growth_ratio(
+	active_remaining: float,
+	active_total: float,
+	growth_seconds: float = STRAIGHT_BEAM_GROWTH_SECONDS
+) -> float:
+	var bounded_growth := minf(maxf(0.0, growth_seconds), maxf(0.0, active_total))
+	if bounded_growth <= 0.0:
+		return 1.0
+	var elapsed := maxf(0.0, active_total - active_remaining)
+	return clampf(elapsed / bounded_growth, 0.0, 1.0)
 
 
 static func warning_readiness(remaining: float, total: float) -> float:

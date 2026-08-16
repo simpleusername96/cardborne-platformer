@@ -65,6 +65,14 @@ func _validate_ordinary(resolve_path: Callable, resolve_charge: Callable, player
 					expected_origin += enemy.committed_dir * float(attack.get("origin_offset", 0.0))
 				_expect(Vector2(descriptor["from"]) == expected_origin, "%s route origin remains committed" % role)
 				_expect(float(descriptor["half_width"]) > 0.0, "%s route exposes a nonzero danger half-width" % role)
+				if role == &"beam_sentinel":
+					_expect(
+						is_equal_approx(
+							float(descriptor["beam_growth_seconds"]),
+							AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+						),
+						"Beam Sentinel publishes collision-owned straight-beam growth timing"
+					)
 
 
 func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Vector2) -> void:
@@ -100,6 +108,14 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 			elif delivery in [&"projectile", &"beam", &"charge"]:
 				_expect(Vector2(descriptor["from"]).distance_to(enemy.pos) <= 90.0, "boss %s origin stays within the committed muzzle envelope" % delivery)
 				_expect(Vector2(descriptor["to"]) != Vector2(descriptor["from"]), "boss %s endpoint remains visible" % delivery)
+				if delivery == &"beam":
+					_expect(
+						is_equal_approx(
+							float(descriptor["beam_growth_seconds"]),
+							AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+						),
+						"boss straight beam publishes its 0.30-second growth contract"
+					)
 	_validate_offscreen_intersection()
 
 
@@ -138,11 +154,33 @@ func _validate_offscreen_intersection() -> void:
 	beam["delivery"] = &"beam"
 	beam["active_width"] = 54.0
 	beam["affinity"] = AttackContract.ARC
+	beam["beam_growth_seconds"] = AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+	beam["active_seconds"] = 0.60
 	_expect(
 		CombatCuePolicy.telegraph_mode(
 			Vector2(-180.0, 360.0), 50.0, &"startup", beam, visible
+		) == CombatCuePolicy.MODE_NONE,
+		"off-screen straight-beam startup draws no world path or off-screen orb"
+	)
+	_expect(
+		CombatCuePolicy.telegraph_mode(
+			Vector2(300.0, 360.0), 50.0, &"startup", beam, visible
 		) == CombatCuePolicy.MODE_BEAM_STARTUP,
-		"Beam Sentinel startup exposes its exact clipped damage corridor"
+		"visible Beam Sentinel startup selects its source-attached orb mode"
+	)
+	var unseen_beam_descriptors: Array[Dictionary] = [beam]
+	_expect(
+		is_equal_approx(
+			CombatCuePolicy.unseen_committed_attack_readiness(
+				Vector2(-180.0, 360.0),
+				50.0,
+				&"startup",
+				unseen_beam_descriptors,
+				visible
+			),
+			0.5
+		),
+		"off-screen beam charging uses direction-only threat radar instead of a world path"
 	)
 	var ordinary_area := {
 		"shape":&"area", "delivery":&"area",
@@ -161,7 +199,7 @@ func _validate_offscreen_intersection() -> void:
 	var unseen_descriptors: Array[Dictionary] = [projectile]
 	_expect(
 		is_equal_approx(
-			CombatCuePolicy.unseen_projectile_attack_readiness(
+			CombatCuePolicy.unseen_committed_attack_readiness(
 				Vector2(-180.0, 360.0),
 				26.0,
 				&"startup",

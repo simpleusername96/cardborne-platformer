@@ -54,6 +54,10 @@ static func refresh_ordinary(
 			&"beam",
 			SpecialistRuntime.BEAM_WIDTH
 		))
+		enemy.attack_telegraphs[-1]["beam_growth_seconds"] = (
+			AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+		)
+		enemy.attack_telegraphs[-1]["active_seconds"] = SpecialistRuntime.BEAM_ACTIVE
 	_stamp_threat_tier(
 		enemy,
 		AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
@@ -183,6 +187,12 @@ static func refresh_boss(
 			&"beam",
 			BossPatterns.width(pattern, stage_index)
 		))
+		enemy.attack_telegraphs[-1]["beam_growth_seconds"] = (
+			AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+		)
+		enemy.attack_telegraphs[-1]["active_seconds"] = (
+			BossPatterns.active_seconds(pattern)
+		)
 	elif kind in [&"area", &"pylons"]:
 		enemy.attack_telegraphs.append(_area(
 			enemy.committed_target,

@@ -466,14 +466,18 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
   표시한다. charge startup도 이동 경로, endpoint cap, corridor boundary를 표시하지
   않는다.
-- beam은 gameplay corridor가 길이와 폭을 소유한다. Beam Sentinel과 boss beam
-  startup은 그 정확한 damage rectangle을 낮은 강도의 body와 hot core 두 겹으로
-  표시한다. active는 같은 rectangle에 body, inner energy plane, hot core 세 겹을
-  채운다. 모두 shared code-native unit quad를 정확한 corridor dimensions로 scale하며,
-  projectile PNG를 corridor 길이로 늘이거나 endpoint cap·확장 danger boundary를
-  만들지 않는다. startup과 active의 강도 차이는 runtime alpha, plane width와 세 개
-  이하의 hard-edged filled plane만으로 전달한다.
-- hostile circle, wedge, shockwave와 damaging corridor는 affinity와 무관하게 exact
+- Beam Sentinel과 boss straight beam은 gameplay가 committed direction, maximum
+  length, width와 active timing을 소유한다. Startup은 전체 경로를 표시하지 않고
+  source body의 committed muzzle 바로 앞에 붙은 danger-red 충전 구체만 표시한다.
+  predicted line, corridor fill, floor tint, endpoint와 target marker는 startup 동안
+  모두 금지한다. Active 첫 `0.30s`에는 같은 구체에서 borderless filled beam이 실제
+  피해 길이와 함께 maximum endpoint까지 선형으로 자라며, 이후 남은 active window
+  동안 전체 길이를 유지한다. boss-side origin과 움직이는 선단은 둥글고 body, inner
+  energy plane, hot core 최대 세 겹은 모두 같은 성장 비율을 사용한다. 별도 dark
+  perimeter, side outline, raster beam, glow, particle와 future-path ghost를 만들지
+  않는다. Cross-corridor, moving-wall과 lane pattern은 별도 authored pattern grammar를
+  유지하며 이 straight-beam 성장 계약을 사용하지 않는다.
+- hostile circle, wedge, shockwave와 non-straight-beam damaging corridor는 affinity와 무관하게 exact
   committed footprint를 danger-red full area로 채우고 thin near-black perimeter와
   four inward boundary notches를 사용한다. startup body alpha는 readiness에 따라
   `0.10 -> 0.20`, damaging window는 `0.20`을 유지한다. ordinary controller와
@@ -719,7 +723,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   `Overlay_health` retained batch를 공유하며 backing/fill을 합친 fixed capacity는
   26 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
 - shield와 barrier는 보호받는 body에 붙은 하나의 closed boundary만 사용한다.
-  damaging beam은 startup과 active 모두 exact filled corridor를 사용한다. Repair
+  straight damaging beam은 startup에는 source-attached charge orb만 사용하고 active
+  첫 `0.30s`에는 collision-owned 길이와 함께 자라는 borderless filled capsule을 사용한다. Repair
   Tender healing은 source에서 recipient로 향하는 segmented mint packet과 recipient
   쪽 open chevron을 사용한다. heal은 continuous solid beam이나 closed ring을
   사용하지 않으며 reduced motion에서는 packet travel만 멈춘다.
@@ -791,7 +796,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - every displayed circular area has a continuous full-area body from center to exact
   gameplay radius, instant areas use final radius on their first frame, EMP preserves a
   full `285` damage/stun disk plus a separately readable `285–325` utility fringe, and
-  beam corridors remain exact filled rectangles
+  straight beams expose no startup path and their borderless rounded active body matches
+  the collision-owned grown segment and width on every frame
 - 8개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
@@ -825,9 +831,9 @@ Web export만으로 interactive built-Web smoke나 release performance를
   fills without legacy patterned floor or shared-wall rasters. The three approved
   `SurfaceDetail` SVGs are production-integrated as deterministic presentation-only
   72/72/48 retained instances with no collision, navigation, or per-frame update owner.
-- Beam Sentinel and boss straight beams share one code-native unit quad. Runtime tint,
-  alpha, live corridor size, and the two-plane startup/three-plane active hierarchy remain
-  presentation-owned.
+- Beam Sentinel and boss straight beams share the retained code-native beam and disk
+  batches. Runtime tint, charge-orb scale, rounded active planes and the gameplay-owned
+  `0.30s` grown segment remain presentation inputs; startup publishes no path geometry.
 - The five neutral-facility roles are production-integrated. Repair and Barrier use their
   approved role rasters; Gravity, Cryo, and Weakpoint retain their existing authored
   symbols. One assigned symbol is visible alone at 288 world units with a bounded bob and
