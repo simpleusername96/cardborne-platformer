@@ -1,54 +1,36 @@
 ---
 type: policy
 status: active
-owner: BK
-last_reviewed: 2026-07-22
-canonical_for: Repository ExecPlan usage and lifecycle
+canonical_for: Repository planning artifact policy
+scope: .agents/execplans
 ---
 
-# ExecPlan Standard
+# Planning Artifact Policy
 
 ## Purpose
 
-Require durable execution plans only when they materially reduce cross-system or
-operational risk.
+Create durable planning artifacts only when they reduce material uncertainty or execution risk, and give future executors one decision-complete contract and one progress source.
 
 ## Scope
 
-This policy governs plans stored under `.agents/execplans/`. It does not require
-a plan for small, direct, or read-only tasks.
+This policy applies to research checklists and execution contracts under `.agents/execplans/`. It does not make a durable artifact mandatory for every task.
 
 ## Rules
 
-Use an ExecPlan for:
+Use a durable artifact for cross-cutting or multi-phase work; API, save-data, resource-schema, or public-contract changes; operationally risky work; changes spanning more than five files; bounded research or owner decisions; and work for which the user explicitly requests a durable plan.
 
-- cross-cutting work;
-- API, save-data, or resource-schema changes;
-- gameplay systems spanning more than one subsystem;
-- operationally risky work;
-- changes spanning more than five files.
+Do not use one for simple Q&A, single-note placement judgments, small one-file edits, routine note capture, or work where repository instructions and a concise chat update are sufficient.
 
-Do not use an ExecPlan for:
-
-- simple Q&A or classification opinions;
-- single-note placement or linking judgments;
-- small one-file edits;
-- routine raw-note captures;
-- work where the active specifications and a concise chat update are sufficient.
-
-When writing an ExecPlan:
-
-- reference root `AGENTS.md` and the nearest local `AGENTS.md`;
-- ground scope in `docs/product/vehicle_game_spec.md` and current project files;
-- include Why/Context, Scope/Non-scope, Assumptions, Proposed Design,
-  Milestones, Test Plan, Rollback/Safety, Risks, Open Questions, and Decision
-  Notes;
-- keep it active only while its work remains;
-- incorporate accepted product behavior into the active specification and
-  durable operating rules into the appropriate `AGENTS.md` or repo-local skill;
-- delete the completed plan after those durable decisions are incorporated.
+- Store every durable research checklist or execution contract under `.agents/execplans/`.
+- Name it `YYYY-MM-DD-<outcome-slug>.md`; update the existing artifact for the same outcome instead of creating revision copies.
+- Use `$goal-checklist-builder` to author or materially revise it.
+- Keep task-specific findings and decisions in the relevant plan.
+- Put reusable synthesis in `.agents/research/` and record what each consuming plan accepts, rejects, or adapts.
+- Put retained screenshots, logs, measurements, render comparisons, and other proof in `.agents/evidence/` and link them from the consumer.
+- When a research conclusion becomes accepted project truth, update its canonical spec, record, or runbook and keep the research advisory.
+- Use task checkboxes as the only progress ledger. Do not mirror active task state into policy, memory, or a second plan.
+- Mark completed work `done`; archive, move, or delete stale plans only with explicit user approval.
 
 ## Exceptions
 
-The user may explicitly request a plan for smaller work or waive a plan when the
-same risk is controlled by a narrower checklist and immediate validation.
+The user may explicitly request a durable plan for smaller work or waive one when a narrower checklist and immediate validation control the same risk.

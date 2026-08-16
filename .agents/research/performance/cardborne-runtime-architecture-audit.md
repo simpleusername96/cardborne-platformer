@@ -8,10 +8,10 @@ topic: Cardborne runtime architecture and stutter attribution
 scope: Repository history through the 2026-08-08 combat-readability implementation, retained local performance evidence, gameplay raster pack, and current Godot 4.7 guidance
 source: Official Godot 4.7 documentation and Cardborne repository evidence through the 2026-08-08 combat-readability implementation based on 6339795d
 related:
-  - ./cardborne-performance-engineering-policy.md
-  - ../docs/reports/2026-08-02-pre-asset-code-stabilization.md
-  - ./semantic-v2-runtime-acceptance-evidence.md
-  - ../docs/design/VISUAL_SYSTEM.md
+  - ../../cardborne-performance-engineering-policy.md
+  - ../../../docs/reports/2026-08-02-pre-asset-code-stabilization.md
+  - ../../evidence/performance/semantic-v2-runtime-acceptance-evidence.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
 ---
 
 # Cardborne Runtime Architecture Audit
@@ -100,7 +100,7 @@ garbage-collector issue; only the narrower reuse principle is carried into this 
 - `scripts/performance/vehicle_performance_scenario.gd`
 - `scripts/performance/vehicle_performance_recorder.gd`
 - `docs/reports/2026-08-02-pre-asset-code-stabilization.md`
-- `.agents/semantic-v2-runtime-acceptance-evidence.md`
+- `.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md`
 - retained ignored JSON under `build/performance/`
 - relevant git history through `ba8846ed`
 

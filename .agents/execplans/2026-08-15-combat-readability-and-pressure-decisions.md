@@ -6,12 +6,12 @@ created: 2026-08-15
 last_reviewed: 2026-08-16
 scope: Implement the approved report-truth, combat-readability, neutral-facility, conditional-status, enemy-engagement, boss-identity, boss-pressure, and 72-ordinary encounter revision and qualify the production Web build
 related:
-  - ../../docs/reports/2026-08-15-combat-readability-pressure-review.md
+  - ../../.agents/evidence/reports/2026-08-15-combat-readability-pressure-review.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../research/performance/cardborne-runtime-architecture-audit.md
   - ./2026-08-15-eight-boss-combat-depth-and-run-report.md
 ---
 

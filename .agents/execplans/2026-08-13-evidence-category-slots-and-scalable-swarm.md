@@ -11,7 +11,7 @@ related:
   - ../PLANS.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../research/performance/cardborne-runtime-architecture-audit.md
   - ./2026-08-11-dense-combat-progression-and-run-completion.md
   - ./2026-08-13-dense-combat-and-engagement-flow.md
   - ./2026-08-13-run-pacing-result-and-upgrade-slots.md
@@ -21,11 +21,11 @@ related:
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/visual-replacement-workbench/previews/mystery-device-outcomes-v4-symbols/candidate-evidence.md
   - ../../docs/design/visual-replacement-workbench/previews/transit-gate-v2-clean/candidate-evidence.md
-  - ../../docs/performance/2026-08-13-dense-enemy-stutter-evidence.md
-  - ../../docs/performance/2026-08-13-dense-enemy-architecture-options.md
-  - ../../docs/performance/2026-08-13-enemy-arrival-and-engagement-research.md
-  - ../../docs/reports/2026-08-14-game-telemetry-and-feedback-research.md
-  - ../../docs/reports/2026-08-14-upgrade-category-language-review.md
+  - ../../.agents/evidence/performance/2026-08-13-dense-enemy-stutter-evidence.md
+  - ../../.agents/research/performance/2026-08-13-dense-enemy-architecture-options.md
+  - ../../.agents/research/performance/2026-08-13-enemy-arrival-and-engagement-research.md
+  - ../../.agents/research/reports/2026-08-14-game-telemetry-and-feedback-research.md
+  - ../../.agents/research/reports/2026-08-14-upgrade-category-language-review.md
 ---
 
 # Evidence, Continuous Pressure, Readable Feedback, and Scalable Swarm - Execution Contract
@@ -269,7 +269,7 @@ review. The selected set corrects that draft against the actual card roster: Bio
 ## Locked Local Logging and Evidence Design
 
 Use the three-layer contract documented in
-`docs/reports/2026-08-14-game-telemetry-and-feedback-research.md`:
+`.agents/research/reports/2026-08-14-game-telemetry-and-feedback-research.md`:
 
 1. Release evidence promotes only decision-changing artifacts into Git and links them with a full
    commit, content fingerprint, evidence ID, environment, authority status, path, size, and SHA-256.
@@ -508,8 +508,8 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
 `scripts/diagnostics/vehicle_session_signal_recorder.gd`,
 `scripts/diagnostics/vehicle_session_diagnostic_store.gd`,
 `scripts/diagnostics/vehicle_diagnostic_exporter.gd`, Settings/Result export consumers,
-`tools/performance/`, new `tools/diagnostics/`, new `docs/performance/evidence/`, and new
-`docs/performance/vehicle-performance-evidence.jsonl`
+`tools/performance/`, new `tools/diagnostics/`, new `.agents/evidence/performance/evidence/`, and new
+`.agents/evidence/performance/vehicle-performance-evidence.jsonl`
 
 - [x] **1.1 Define and validate one provenance envelope.**
   - Change: add an evidence ID and common fields for full commit, source cleanliness including
@@ -531,7 +531,7 @@ Source owners: `scripts/performance/vehicle_performance_recorder.gd`,
     workloads, viewports, renderer modes, or authority classes.
 - [x] **1.3 Promote only evidence that changes a decision.**
   - Change: copy authoritative pass/fail JSON and any diagnostic explicitly cited by a durable plan
-    into `docs/performance/evidence/<evidence-id>.json`; keep routine logs, screenshots, invalid
+    into `.agents/evidence/performance/evidence/<evidence-id>.json`; keep routine logs, screenshots, invalid
     experiments, and repeated raw output ignored. The ledger hashes both tracked and local raw data.
   - Accept: if the original `4f7f7acd` raw result is present, import it with its original hash and
     explicit `authoritative_fail` status. If it remains unavailable, the final same-release-source

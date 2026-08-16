@@ -8,11 +8,24 @@ topic: 8보스 전투 확장 최종 승인 요약
 scope: 보스 공용/고유 패턴, 사망 연출, 일반 적, 감전 삭제, 자산, 캠페인, 로그와 보고서 결정
 source: Current Cardborne repository and 2026-08-15 design analysis
 related:
-  - ../../.agents/execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
-  - ./2026-08-15-eight-boss-combat-design-analysis.md
+  - ../../execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
+  - ../../research/reports/2026-08-15-eight-boss-combat-design-analysis.md
 ---
 
 # 8보스 전투 확장 최종 실행 승인 보고서
+
+## Purpose
+
+BK가 승인한 8종 보스, 사망 연출, 일반 적, 주무기 속성 및 이미지 자산 방향을 추적 가능한 검토 증거로 기록한다.
+
+## Sources
+
+- [`2026-08-15-eight-boss-combat-design-analysis.md`](../../research/reports/2026-08-15-eight-boss-combat-design-analysis.md)
+- 관련 실행 계약과 당시 코드·렌더 검토 자료
+
+## Findings
+
+승인된 핵심 방향과 구현 경계는 아래와 같다. 이 문서는 승인 증거이며 제품 명세를 대신하지 않는다.
 
 ## 승인할 핵심 방향
 
@@ -64,7 +77,7 @@ related:
 여러 프레임이나 보스별 사망 이미지는 만들지 않는다. 모션 감소에서는 폭발을
 처음부터 최종 크기로 표시하고 본체와 같이 사라지는 타이밍은 유지한다.
 
-![보스 폭발 확대와 동시 페이드아웃 예시](../design/visual-replacement-workbench/candidates/boss-death-explosion-v1/previews/boss-death-explosion-growth-storyboard.png)
+![보스 폭발 확대와 동시 페이드아웃 예시](../../../docs/design/visual-replacement-workbench/candidates/boss-death-explosion-v1/previews/boss-death-explosion-growth-storyboard.png)
 
 왼쪽부터 위험 판정 종료, 20% 크기로 시작, 55% 확대, 120% 최대 크기,
 폭발과 본체의 동시 페이드아웃 예시다. 현재는 검토 후보이며 아직 제품
@@ -113,7 +126,7 @@ related:
 
 보스 3종, 일반 적 4종, 중립 시설 2종의 이미지 후보를 실제로 생성했다.
 
-![신규 이미지 후보 9종](../design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/previews/all-candidates-contact-sheet.png)
+![신규 이미지 후보 9종](../../../docs/design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/previews/all-candidates-contact-sheet.png)
 
 - 1차 검사에서 문제가 있던 Siege Battery, Mobile Rail Sniper, Bombing Runner,
   Wreck Scavenger는 수정본으로 교체했다. 현재 9종 모두 방향 확인이 가능한
@@ -125,7 +138,7 @@ related:
 - 생성 원본의 크로마키만 투명 알파로 바꾸고 기존 캔버스 크기로 축소했다.
   ImageMagick이나 SVG로 기체 형태를 새로 그리거나 고치지 않았다.
 - 후보별 정확한 PNG, SHA-256, 실제 크기 시트, 흑백 시트와 생성 프롬프트는
-  [후보 근거 문서](../design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/README.md)에 있다.
+  [후보 근거 문서](../../../docs/design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/README.md)에 있다.
 - 아래 정확한 해시 승인 후 제품 manifest와 런타임 카탈로그에 반영했다.
 
 ### 새 업그레이드 카드 후보
@@ -133,10 +146,10 @@ related:
 실수 보정, 명중 연쇄, 고정 사격 카드 이미지도 공식 스타일 시트를 실제 입력으로
 사용해 만들었다.
 
-![업그레이드 카드 후보 3종](../design/visual-replacement-workbench/candidates/primary-upgrade-cards-v1/previews/upgrade-cards-actual-size.png)
+![업그레이드 카드 후보 3종](../../../docs/design/visual-replacement-workbench/candidates/primary-upgrade-cards-v1/previews/upgrade-cards-actual-size.png)
 
 왼쪽부터 `실수 보정`, `명중 연쇄`, `고정 사격`이다. 감전 대체 이미지는 만들지
-않았다. [생성·검사 근거](../design/visual-replacement-workbench/candidates/primary-upgrade-cards-v1/README.md)에
+않았다. [생성·검사 근거](../../../docs/design/visual-replacement-workbench/candidates/primary-upgrade-cards-v1/README.md)에
 원본 위치, 프롬프트, 투명화 방식, 실제 크기·흑백 검사와 해시가 있다.
 
 ### 승인·제품 반영된 정확한 이미지 목록

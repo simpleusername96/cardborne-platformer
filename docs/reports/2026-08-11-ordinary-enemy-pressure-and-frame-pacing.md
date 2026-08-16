@@ -17,7 +17,7 @@ related:
   - ./2026-08-11-combat-clarity-smoothness-difficulty.md
   - ./2026-08-11-dash-radar-boss-scaling-guidebook-flow.md
   - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/cardborne-runtime-architecture-audit.md
+  - ../../.agents/research/performance/cardborne-runtime-architecture-audit.md
 ---
 
 # Ordinary Enemy Pressure and Frame Pacing - Execution Contract

@@ -17,7 +17,7 @@ related:
   - ../../docs/design/visual-replacement-workbench/README.md
   - ../../docs/design/visual-replacement-workbench/candidates/emp-release-wavefront-v4/candidate-metadata.json
   - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/cardborne-runtime-architecture-audit.md
+  - ../../.agents/research/performance/cardborne-runtime-architecture-audit.md
 ---
 
 # EMP Wavefront Integration - Execution Contract

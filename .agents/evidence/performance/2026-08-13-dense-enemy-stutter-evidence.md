@@ -8,10 +8,10 @@ topic: Dense-enemy stutter root-cause analysis
 scope: Current Cardborne tracked runtime, retained native and Web evidence, recent performance history, and deployment constraints
 source: Repository code and history, retained profiler JSON, GitHub Actions deployment state, prior Codex sessions, and primary technical references
 related:
-  - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/2026-08-11-enemy-scale-performance-research.md
-  - ../../.agents/cardborne-runtime-architecture-audit.md
-  - ./2026-08-13-dense-enemy-architecture-options.md
+  - ../../cardborne-performance-engineering-policy.md
+  - ../../research/performance/2026-08-11-enemy-scale-performance-research.md
+  - ../../research/performance/cardborne-runtime-architecture-audit.md
+  - ../../research/performance/2026-08-13-dense-enemy-architecture-options.md
   - ./2026-08-13-dense-enemy-conclusion-ko.md
 ---
 
@@ -98,8 +98,8 @@ were stopped.
 - `build/performance/half-scale-continuity/405fd3c1-candidate-capacity_pressure-60s.json`
 - `build/performance/half-scale-continuity/b0be0b86-baseline-peak_horde-60s.json`
 - `build/performance/half-scale-continuity/b0be0b86-baseline2-capacity_pressure-60s.json`
-- `.agents/2026-08-11-enemy-scale-performance-research.md`
-- `.agents/cardborne-runtime-architecture-audit.md`
+- `.agents/research/performance/2026-08-11-enemy-scale-performance-research.md`
+- `.agents/research/performance/cardborne-runtime-architecture-audit.md`
 - `docs/reports/2026-08-11-ordinary-enemy-pressure-and-frame-pacing.md`
 - `scripts/vehicle/vehicle_run.gd`
 - `scripts/enemies/vehicle_enemy_store.gd`
@@ -417,7 +417,7 @@ scenario-valid 43-ordinary production replay. The exported PCK SHA-256 is
 `d1d01cedc612f6cc7ec7b471022b97511f0039426fa193c2037ad319c2be9281`. Its failure therefore blocks
 GitHub Pages and itch.io deployment under the release contract.
 
-The decision-changing raw records are tracked under `docs/performance/evidence/` and indexed by
+The decision-changing raw records are tracked under `.agents/evidence/performance/evidence/` and indexed by
 `vehicle-performance-evidence.jsonl`. The absent historical `4f7f7acd` bytes were not reconstructed;
 the final native authority record explicitly supersedes that unavailable checkpoint.
 

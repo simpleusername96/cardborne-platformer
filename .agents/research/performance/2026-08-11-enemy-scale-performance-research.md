@@ -8,10 +8,10 @@ topic: Dense-enemy performance research and Cardborne bottleneck selection
 scope: Native and Web five-stage runtime at high ordinary-enemy occupancy
 source: Current code inspection, committed profiler evidence, and primary technical references
 related:
-  - ./cardborne-performance-engineering-policy.md
+  - ../../cardborne-performance-engineering-policy.md
   - ./cardborne-runtime-architecture-audit.md
-  - ./execplans/2026-08-11-dense-combat-progression-and-run-completion.md
-  - ../docs/reports/2026-08-11-ordinary-enemy-pressure-and-frame-pacing.md
+  - ../../execplans/2026-08-11-dense-combat-progression-and-run-completion.md
+  - ../../../docs/reports/2026-08-11-ordinary-enemy-pressure-and-frame-pacing.md
 ---
 
 # Dense-enemy performance research
@@ -29,7 +29,7 @@ quality.
 
 - `build/performance/ordinary-enemy-pressure/66f78582-capacity_pressure-60s.json`
 - `.agents/cardborne-performance-engineering-policy.md`
-- `.agents/cardborne-runtime-architecture-audit.md`
+- `.agents/research/performance/cardborne-runtime-architecture-audit.md`
 - `docs/reports/2026-08-11-ordinary-enemy-pressure-and-frame-pacing.md`
 - `scripts/vehicle/vehicle_run.gd`
 - `scripts/enemies/vehicle_enemy_update_schedule.gd`

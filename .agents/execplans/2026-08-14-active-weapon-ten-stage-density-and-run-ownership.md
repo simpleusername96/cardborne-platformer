@@ -9,14 +9,14 @@ related:
   - ../PLANS.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../research/performance/cardborne-runtime-architecture-audit.md
   - ./2026-08-13-evidence-category-slots-and-scalable-swarm.md
-  - ./2026-08-14-weapon-unlocks-and-early-level-pacing.md
+  - ../completed-plans/2026-08-14-weapon-unlocks-and-early-level-pacing.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
-  - ../../docs/performance/2026-08-13-dense-enemy-stutter-evidence.md
-  - ../../docs/performance/2026-08-13-dense-enemy-architecture-options.md
+  - ../../.agents/evidence/performance/2026-08-13-dense-enemy-stutter-evidence.md
+  - ../../.agents/research/performance/2026-08-13-dense-enemy-architecture-options.md
 ---
 
 # Ten-Stage Pressure and VehicleRun Ownership - Execution Contract

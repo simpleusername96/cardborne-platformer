@@ -8,8 +8,8 @@ topic: effects and upgrades AS-IS taxonomy
 scope: Pre-reduction 41-card baseline after the minimal-effect pass
 source: Current repository implementation and canonical visual specification
 related:
-  - ../../design/VISUAL_SYSTEM.md
-  - ../../product/vehicle_upgrade_catalog.md
+  - ../../../../docs/design/VISUAL_SYSTEM.md
+  - ../../../../docs/product/vehicle_upgrade_catalog.md
 ---
 
 # Cardborne 이펙트와 업그레이드 AS-IS 구분

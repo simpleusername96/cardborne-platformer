@@ -8,11 +8,11 @@ topic: Enemy arrival and engagement-distribution research
 scope: Cardborne ordinary-enemy birth, approach, engagement, fairness, tactical variety, and performance interaction
 source: Current product contract and runtime code, direct genre precedents, and cross-domain scheduling, traffic, robotics, crowd, ecology, and sampling research
 related:
-  - ./2026-08-13-enemy-arrival-conclusion-ko.md
-  - ./2026-08-13-dense-enemy-stutter-evidence.md
+  - ../../evidence/performance/2026-08-13-enemy-arrival-conclusion-ko.md
+  - ../../evidence/performance/2026-08-13-dense-enemy-stutter-evidence.md
   - ./2026-08-13-dense-enemy-architecture-options.md
-  - ../product/vehicle_game_spec.md
-  - ../../.agents/cardborne-performance-engineering-policy.md
+  - ../../../docs/product/vehicle_game_spec.md
+  - ../../cardborne-performance-engineering-policy.md
 ---
 
 # Enemy arrival and engagement-distribution research
@@ -27,7 +27,7 @@ CPU cost.
 This is an evidence and option study. It does not authorize a gameplay-contract change or a
 runtime implementation.
 
-## Executive finding
+## Findings
 
 The observed tail is not primarily a random-spawn failure. Cardborne already gives each ordinary
 unit an independent off-screen birth position and balances each canonical arrival window across
@@ -73,6 +73,10 @@ targeting the wrong layer.
 
 The missing responsibility is engagement distribution. Adding more rules to birth placement alone
 cannot reliably own it because the player and enemies continue moving after allocation.
+
+## Sources
+
+The repository implementation, runtime measurements, primary external sources, and comparable systems cited below support this dossier.
 
 ## Current-system evidence
 

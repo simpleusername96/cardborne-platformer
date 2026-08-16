@@ -10,7 +10,7 @@ related:
   - ../design/VISUAL_SYSTEM.md
   - ./vehicle_upgrade_catalog.md
   - ./vehicle_weapon_balance_spec.md
-  - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
+  - ../../.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md
 ---
 
 # Cardborne Vehicle Game Specification
@@ -402,7 +402,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 - Only rendered native/Web scenarios and the complete lifecycle soak can
   establish release performance. Headless subsystem microbenchmarks and short
   focused samples are diagnostic only. Current acceptance and known failures
-  are recorded in `.agents/semantic-v2-runtime-acceptance-evidence.md`.
+  are recorded in `.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md`.
 
 ## Acceptance Criteria
 

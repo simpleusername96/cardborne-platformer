@@ -12,7 +12,7 @@ related:
   - ../PLANS.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../research/performance/cardborne-runtime-architecture-audit.md
   - ./2026-08-11-dense-combat-progression-and-run-completion.md
   - ../../docs/product/vehicle_weapon_balance_spec.md
   - ../../docs/product/vehicle_game_spec.md

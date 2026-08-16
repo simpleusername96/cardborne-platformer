@@ -7,10 +7,10 @@ last_reviewed: 2026-08-12
 topic: Semantic-v2 runtime integration, UI acceptance, boss guidance, and final performance
 scope: Non-map semantic-v2 runtime switch and its post-acceptance validation
 related:
-  - ../docs/design/VISUAL_SYSTEM.md
-  - ../docs/product/vehicle_game_spec.md
-  - ../art/visuals/production/README.md
-  - ./execplans/2026-08-10-non-boss-combat-and-upgrade-integrity.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
+  - ../../../docs/product/vehicle_game_spec.md
+  - ../../../art/visuals/production/README.md
+  - ../../../docs/reports/2026-08-10-non-boss-combat-and-upgrade-integrity.md
 ---
 
 # Semantic-v2 Runtime Acceptance Evidence

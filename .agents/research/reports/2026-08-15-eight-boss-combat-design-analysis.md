@@ -7,19 +7,19 @@ last_reviewed: 2026-08-15
 topic: Decision record for the eight-boss campaign, combat identities, Shock removal, and boss-death visuals
 scope: Current runtime evidence, candidate comparison, public VFX asset review, selected combat design, rejected alternatives, and implementation recommendations
 sources:
-  - ../../scripts/bosses/vehicle_boss_patterns.gd
-  - ../../scripts/combat/vehicle_projectile_store.gd
-  - ../../scripts/cards/vehicle_run_build.gd
-  - ../product/vehicle_weapon_balance_spec.md
-  - ../../scripts/bosses/vehicle_boss_shield_runtime.gd
-  - ../../scripts/combat/vehicle_effect_store.gd
-  - ../../scripts/combat/vehicle_status_runtime.gd
-  - ../../scripts/diagnostics/vehicle_session_diagnostic_store.gd
-  - ../design/VISUAL_SYSTEM.md
-  - ../../art/visuals/production/gameplay/asset-manifest.json
+  - ../../../scripts/bosses/vehicle_boss_patterns.gd
+  - ../../../scripts/combat/vehicle_projectile_store.gd
+  - ../../../scripts/cards/vehicle_run_build.gd
+  - ../../../docs/product/vehicle_weapon_balance_spec.md
+  - ../../../scripts/bosses/vehicle_boss_shield_runtime.gd
+  - ../../../scripts/combat/vehicle_effect_store.gd
+  - ../../../scripts/combat/vehicle_status_runtime.gd
+  - ../../../scripts/diagnostics/vehicle_session_diagnostic_store.gd
+  - ../../../docs/design/VISUAL_SYSTEM.md
+  - ../../../art/visuals/production/gameplay/asset-manifest.json
 related:
-  - ../../.agents/execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
-  - ./2026-08-15-eight-boss-combat-approval-ko.md
+  - ../../execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
+  - ../../evidence/reports/2026-08-15-eight-boss-combat-approval-ko.md
 ---
 
 # Eight-Boss Combat Design Analysis
@@ -143,7 +143,7 @@ or replacing the body. Boss-owned adds and facilities shrink and fade without ex
 explosion instances. Progression waits for cleanup completion. Reduced motion starts at
 the final explosion scale and preserves the synchronized fade.
 
-![Boss-death growth-and-fade storyboard](../design/visual-replacement-workbench/candidates/boss-death-explosion-v1/previews/boss-death-explosion-growth-storyboard.png)
+![Boss-death growth-and-fade storyboard](../../../docs/design/visual-replacement-workbench/candidates/boss-death-explosion-v1/previews/boss-death-explosion-growth-storyboard.png)
 
 ### Ordinary enemy candidates
 
@@ -196,9 +196,9 @@ removal change the declared production target from 78 to 90 after exact user app
 
 The first nine actor/facility candidates now exist in the visual workbench:
 
-![Nine generated candidates](../design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/previews/all-candidates-contact-sheet.png)
+![Nine generated candidates](../../../docs/design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/previews/all-candidates-contact-sheet.png)
 
-The [candidate evidence](../design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/README.md)
+The [candidate evidence](../../../docs/design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/README.md)
 records exact hashes, prompt provenance, transparent target-size files, actual-size and
 grayscale inspection, and approval state. Focused revisions simplified Siege Battery,
 Mobile Rail Sniper, Bombing Runner, and Wreck Scavenger. All nine selected files are now

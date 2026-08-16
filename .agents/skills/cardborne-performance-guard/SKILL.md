@@ -6,7 +6,7 @@ description: Use before Cardborne profiling, performance claims, runtime hot-pat
 # Cardborne Performance Guard
 
 Read `.agents/cardborne-performance-engineering-policy.md` completely before acting.
-Consult `.agents/cardborne-runtime-architecture-audit.md` for the current evidence
+Consult `.agents/research/performance/cardborne-runtime-architecture-audit.md` for the current evidence
 boundary; do not treat its historical numbers as current-HEAD qualification.
 
 If the task creates, edits, reviews, approves, promotes, or switches a player-facing

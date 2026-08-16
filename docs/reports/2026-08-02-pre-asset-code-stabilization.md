@@ -12,7 +12,7 @@ related:
   - ../../.agents/AGENTS.md
   - ../../.agents/PLANS.md
   - ../product/vehicle_game_spec.md
-  - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
+  - ../../.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md
 ---
 
 # Combat Frame-Pacing Stabilization - Execution Contract

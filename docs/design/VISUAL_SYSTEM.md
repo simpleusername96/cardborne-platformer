@@ -10,7 +10,7 @@ related:
   - ../product/vehicle_game_spec.md
   - ./cardborne-universal-art-style-reference.png
   - ./visual-replacement-workbench/external-candidates/README.md
-  - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
+  - ../../.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md
 ---
 
 # Cardborne 비주얼 시스템
@@ -826,7 +826,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - full Godot import, focused validator, native/Web production smoke
 
 현재 semantic-v2 runtime acceptance와 미통과 performance gate는
-`.agents/semantic-v2-runtime-acceptance-evidence.md`에 기록한다. 성공한
+`.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md`에 기록한다. 성공한
 Web export만으로 interactive built-Web smoke나 release performance를
 통과한 것으로 간주하지 않는다.
 

@@ -17,7 +17,7 @@ related:
   - ../../docs/design/cardborne-universal-art-style-reference.png
   - ../../.agents/design/DESIGN.md
   - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/cardborne-runtime-architecture-audit.md
+  - ../../.agents/research/performance/cardborne-runtime-architecture-audit.md
   - ./2026-08-10-emp-wavefront-integration.md
   - ./2026-08-11-combat-clarity-smoothness-difficulty.md
 ---
@@ -237,7 +237,7 @@ belongs in `vehicle_game_spec.md` and `VISUAL_SYSTEM.md`; no new glossary file i
 | Enemy health and damage | Accepted curves and multipliers are already in source and focused tests. | `scripts/enemies/vehicle_stage_difficulty.gd`, `scripts/encounters/vehicle_encounter_director.gd`, `tools/validation/validate_vehicle_run_difficulty.gd` | Preserve all values; rerun exact effective-value checks after contact changes and report them plainly. | 3.2 |
 | Missing player contact damage | Player and enemy endpoints are checked at different cadences; there is no relative swept contact owner. | `scripts/vehicle/vehicle_run.gd:1423`, `:2628`, `:2967`, `:3021`; `scripts/enemies/vehicle_enemy_update_schedule.gd` | Add one fixed-cap 60 Hz contact runtime using relative swept circles and explicit role semantics; remove legacy endpoint/decision-only checks. | 2.1-2.4 |
 | Hit protection semantics | `_damage_player()` returns no receipt; one-shot attacks commit before an invulnerability rejection. | `scripts/vehicle/vehicle_run.gd:4169`, `tools/validation/validate_vehicle_damage_feedback.gd` | Return accepted/not-accepted while preserving every caller; barrier absorption is accepted, invulnerability rejection is not. One-shot attacks remain consumed; persistent hull contact retries while overlap remains. | 2.1-2.4 |
-| Hot-path risk | Current runtime already has a bounded active worklist, reusable effect state, retained overlay batches, and reusable render buffers; current HEAD lacks a comparable pre-change release baseline. | `.agents/cardborne-performance-engineering-policy.md`, `.agents/cardborne-runtime-architecture-audit.md`, `scripts/vehicle/vehicle_run.gd`, `scripts/presentation/vehicle_combat_renderer.gd` | Preserve batch capacities, replace textures with startup-built meshes, remove two obsolete effect batches, add no per-frame allocation, and qualify only after all fixes. Without a comparable pre-change baseline, make no causal regression claim. | 0.3, 2.2-2.4, 4.1-4.4, 5.3 |
+| Hot-path risk | Current runtime already has a bounded active worklist, reusable effect state, retained overlay batches, and reusable render buffers; current HEAD lacks a comparable pre-change release baseline. | `.agents/cardborne-performance-engineering-policy.md`, `.agents/research/performance/cardborne-runtime-architecture-audit.md`, `scripts/vehicle/vehicle_run.gd`, `scripts/presentation/vehicle_combat_renderer.gd` | Preserve batch capacities, replace textures with startup-built meshes, remove two obsolete effect batches, add no per-frame allocation, and qualify only after all fixes. Without a comparable pre-change baseline, make no causal regression claim. | 0.3, 2.2-2.4, 4.1-4.4, 5.3 |
 | Validation baseline | Four focused validators pass; damage feedback has one unrelated crate-warning failure on clean `3eea8434`. | Commands and output recorded during 2026-08-10 discovery | Isolate the crate fixture before using that validator as a gate; never report the current failing script as passed. | 0.2 |
 | Visual authority | Current visual spec was read completely; canonical sheet inspected at 1448x1086 with SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. The sheet is style reference, not asset approval. | `docs/design/VISUAL_SYSTEM.md`, canonical PNG | Add no asset. Dynamic truth uses restrained hard-edged code-native geometry and semantic tokens; exact-radius rendered evidence plus the authority validator remain required. | 1.4, 4.1-4.4, 5.1-5.2 |
 
@@ -632,7 +632,7 @@ Source owners: `scripts/vehicle/vehicle_run_capture_driver.gd`,
 `tools/validation/validate_cardborne_visual_authority.ps1`, `tools/export_web.ps1`,
 `scripts/performance/vehicle_performance_scenario.gd`,
 `scripts/performance/vehicle_performance_recorder.gd`,
-`.agents/semantic-v2-runtime-acceptance-evidence.md`
+`.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md`
 
 - [x] **5.1 Inspect rendered UI and consolidated combat evidence.**
   - Change: capture Korean/English supported viewports and 200% text for upgrade cards;
@@ -890,7 +890,7 @@ cannot change scope, visible behavior, ownership, architecture, safety, or accep
   native GPU time is `1.62/1.75 ms`. The current Web peak workload is correct but release-
   ineligible because the automation browser is headless and scheduler-throttled. Exact
   payloads and the narrow non-causal diagnosis are recorded in
-  `../../.agents/semantic-v2-runtime-acceptance-evidence.md`.
+  `../../.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md`.
 - Verified source baseline: clean commit `04839774` preceded the Task 0.1/0.2 work. The
   former crate-warning failure was fixture contamination from generated cover; the isolated
   one-crate clear-path fixture passes without a runtime geometry change. Per user direction,

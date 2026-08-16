@@ -11,12 +11,12 @@ related:
   - ../../AGENTS.md
   - ../../.agents/AGENTS.md
   - ../../.agents/PLANS.md
-  - ../../.agents/combat-clarity-runtime-difficulty-analysis.md
+  - ../../.agents/research/performance/combat-clarity-runtime-difficulty-analysis.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../.agents/design/DESIGN.md
   - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/cardborne-runtime-architecture-audit.md
+  - ../../.agents/research/performance/cardborne-runtime-architecture-audit.md
 ---
 
 # Combat Clarity, Smoothness, and Difficulty - Execution Contract
@@ -338,7 +338,7 @@ deferred to the user after all deterministic and production-build gates pass.
 ## Progress and Evidence
 
 - Current step: Complete.
-- Evidence baseline: `.agents/combat-clarity-runtime-difficulty-analysis.md`.
+- Evidence baseline: `.agents/research/performance/combat-clarity-runtime-difficulty-analysis.md`.
 - Commands/results: all affected focused Godot validators passed; the visual-authority
   PowerShell validator passed with the canonical style-sheet hash intact. Godot import
   and release Web export passed. The built four-file Web artifact loaded through fastrun's

@@ -5,7 +5,7 @@
   "canonical_reference": "docs/design/cardborne-universal-art-style-reference.png",
   "canonical_reference_role": "semantic color discipline, familiar sci-fi vocabulary, and small-size readability only; no object or layout copying",
   "existing_external_reference_assets_added": false,
-  "reference_analysis": "docs/reports/2026-08-13-upgrade-artwork-reference-analysis-ko.md",
+  "reference_analysis": ".agents/research/reports/2026-08-13-upgrade-artwork-reference-analysis-ko.md",
   "external_reference_use": "analysis principles only; official screenshots and icon-guide images were not supplied to ImageGen",
   "previous_upgrade_assets_supplied_to_initial_generation": false,
   "directions": [

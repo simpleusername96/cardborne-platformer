@@ -16,8 +16,8 @@ related:
   - ../../docs/design/cardborne-universal-art-style-reference.png
   - ./2026-08-11-combat-clarity-smoothness-difficulty.md
   - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/cardborne-runtime-architecture-audit.md
-  - ../../.agents/semantic-v2-runtime-acceptance-evidence.md
+  - ../../.agents/research/performance/cardborne-runtime-architecture-audit.md
+  - ../../.agents/evidence/performance/semantic-v2-runtime-acceptance-evidence.md
 ---
 
 # Dash Radar, Boss Scaling, Guidebook, and Flow - Execution Contract

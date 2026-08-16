@@ -7,12 +7,12 @@ last_reviewed: 2026-08-15
 topic: Combat readability, neutral-facility influence, enemy engagement, boss identity, encounter pressure, and failure-report completeness
 scope: Read-only review of the current eight-cycle Cardborne build at commit ad7d23d6; no gameplay, UI, product-spec, visual-spec, asset, or balance changes
 related:
-  - ../../.agents/execplans/2026-08-15-combat-readability-and-pressure-decisions.md
-  - ../product/vehicle_game_spec.md
-  - ../design/VISUAL_SYSTEM.md
-  - ../../.agents/design/DESIGN.md
-  - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
+  - ../../execplans/2026-08-15-combat-readability-and-pressure-decisions.md
+  - ../../../docs/product/vehicle_game_spec.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
+  - ../../design/DESIGN.md
+  - ../../cardborne-performance-engineering-policy.md
+  - ../../execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
 ---
 
 # Combat Readability and Pressure Review
@@ -26,7 +26,7 @@ sources. It separates confirmed defects from intentional behavior with poor feed
 from requested product changes. It recommends a coherent direction but does not authorize
 or implement gameplay or visual changes.
 
-## Executive Verdict
+## Findings
 
 > Owner decision update, 2026-08-15: implementation uses one top-left HUD row, facility
 > duration clips the large effect-footprint perimeter rather than a facility-body contour,
@@ -113,7 +113,7 @@ validator assertion; the two new documents did not change either file.
   death presentation.
 - `.agents/design/DESIGN.md`: player-facing intent and authority order.
 - `.agents/cardborne-performance-engineering-policy.md` and
-  `.agents/cardborne-runtime-architecture-audit.md`: fixed-capacity and qualification
+  `.agents/research/performance/cardborne-runtime-architecture-audit.md`: fixed-capacity and qualification
   requirements.
 - `scripts/vehicle/vehicle_run.gd`, `scripts/combat/vehicle_stage_report_builder.gd`, and
   `scripts/results/vehicle_run_result_builder.gd`: report data flow.

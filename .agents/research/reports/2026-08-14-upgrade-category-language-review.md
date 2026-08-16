@@ -7,14 +7,18 @@ last_reviewed: 2026-08-14
 topic: Player-facing Korean and English names for Cardborne upgrade category slots
 scope: Antigravity consultation, repository verification, selected labels, descriptions, and terminology boundaries
 related:
-  - ../../.agents/execplans/2026-08-13-evidence-category-slots-and-scalable-swarm.md
-  - ../product/vehicle_upgrade_catalog.md
-  - ../design/VISUAL_SYSTEM.md
+  - ../../execplans/2026-08-13-evidence-category-slots-and-scalable-swarm.md
+  - ../../../docs/product/vehicle_upgrade_catalog.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
 ---
 
 # Upgrade Category Language Review
 
-## Consultation Record
+## Purpose
+
+Preserve the reusable evidence and selected language boundary for player-facing upgrade categories.
+
+## Sources
 
 The requested Antigravity model label `Gemini 3.7 Flash (High)` was tested first with Antigravity
 CLI `1.1.11`. The installed model registry rejected it as unknown. The same read-only question was
@@ -53,6 +57,10 @@ shared player-facing behavior: these cards add an effect to eligible attacks.
 The actual `activated` group contains one manually used EMP replacement plus shared cooldown and
 damage enhancements. The Korean heading should therefore state the interaction, while the English
 heading can use the established genre term `Active Skill`.
+
+## Findings
+
+The selected player-facing set and rejected alternatives below reflect the repository verification and consultation evidence.
 
 ## Selected Player-facing Set
 

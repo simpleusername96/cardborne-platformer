@@ -5,8 +5,8 @@ created: 2026-08-15
 topic: Shared boss-death explosion overlay candidate
 source: Grounded ImageGen generation and mechanical compositing over the approved Colossus body
 related:
-  - ../../../../reports/2026-08-15-eight-boss-combat-approval-ko.md
-  - ../../../../reports/2026-08-15-eight-boss-combat-design-analysis.md
+  - ../../../../../.agents/evidence/reports/2026-08-15-eight-boss-combat-approval-ko.md
+  - ../../../../../.agents/research/reports/2026-08-15-eight-boss-combat-design-analysis.md
   - ../../../../../.agents/execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
 ---
 
@@ -61,7 +61,7 @@ intact; this asset does not replace, slice, or redraw it.
 ## Approval and promotion
 
 - On 2026-08-15, BK explicitly approved all 13 files and SHA-256 values listed in
-  `docs/reports/2026-08-15-eight-boss-combat-approval-ko.md`.
+  `.agents/evidence/reports/2026-08-15-eight-boss-combat-approval-ko.md`.
 - This file was approved as
   `4eaf22c97fcdac6ff50736410e1e3068febcfa79acfc05ba493080c200113c41`.
 - The approved bytes were promoted unchanged to

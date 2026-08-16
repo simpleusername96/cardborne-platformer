@@ -7,7 +7,7 @@ last_reviewed: 2026-08-12
 topic: Function-first Korean and English player-facing terminology
 scope: Decide the canonical Korean and English names for Cardborne enemies, bosses, field objects, upgrades, and shared combat concepts
 related:
-  - ../../docs/reports/2026-08-12-player-facing-terminology-audit.md
+  - ../../.agents/evidence/reports/2026-08-12-player-facing-terminology-audit.md
   - ../../docs/reports/2026-08-12-vehicle-upgrade-categories-and-skill-tree-ko.html
   - ../../docs/reports/2026-08-12-cardborne-upgrade-feedback.json
   - ../../localization/vehicle_stage.csv

@@ -8,9 +8,9 @@ topic: Image-backed reference analysis for Cardborne upgrade artwork
 scope: Upgrade-card artwork semantics, small-size legibility, shared modifiers, and the boundary between artwork and card text
 source: Current Cardborne specifications and UI owners, official publisher screenshots, and official icon-system documentation
 related:
-  - ../product/vehicle_upgrade_catalog.md
-  - ../design/VISUAL_SYSTEM.md
-  - ../design/cardborne-universal-art-style-reference.png
+  - ../../../docs/product/vehicle_upgrade_catalog.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
+  - ../../../docs/design/cardborne-universal-art-style-reference.png
   - ./assets/upgrade-artwork-reference-analysis/source-manifest.json
 ---
 
@@ -56,17 +56,17 @@ related:
 
 ### Cardborne 정본과 현재 구현
 
-- [`vehicle_upgrade_catalog.md`](../product/vehicle_upgrade_catalog.md) — 현재 28장,
+- [`vehicle_upgrade_catalog.md`](../../../docs/product/vehicle_upgrade_catalog.md) — 현재 28장,
   분류, 레벨별 효과와 카드 표시 계약.
-- [`VISUAL_SYSTEM.md`](../design/VISUAL_SYSTEM.md) — 의미 역할, 3–5개 큰 색면,
+- [`VISUAL_SYSTEM.md`](../../../docs/design/VISUAL_SYSTEM.md) — 의미 역할, 3–5개 큰 색면,
   제한된 accent, 실제 크기 검증과 authored PNG 소유권.
-- [`cardborne-universal-art-style-reference.png`](../design/cardborne-universal-art-style-reference.png)
+- [`cardborne-universal-art-style-reference.png`](../../../docs/design/cardborne-universal-art-style-reference.png)
   — 스타일 문법만 제공하며 개별 asset 승인이 아님.
-- [`vehicle_upgrade_choice_row.gd`](../../scripts/ui/vehicle_upgrade_choice_row.gd) — 현재
+- [`vehicle_upgrade_choice_row.gd`](../../../scripts/ui/vehicle_upgrade_choice_row.gd) — 현재
   이미지 `72/88/104px`, 제목, 한 줄 설명, 수치 변화 최대 두 개와 레벨 전이를
   별도로 표시하는 실제 UI owner.
-- [v2 48px 비교 시트](../design/visual-replacement-workbench/previews/upgrade-artwork-samples-v2/runtime-48-contact-sheet.png),
-  [v3 48px 비교 시트](../design/visual-replacement-workbench/previews/upgrade-artwork-revisions-v3/runtime-48-contact-sheet.png)
+- [v2 48px 비교 시트](../../../docs/design/visual-replacement-workbench/previews/upgrade-artwork-samples-v2/runtime-48-contact-sheet.png),
+  [v3 48px 비교 시트](../../../docs/design/visual-replacement-workbench/previews/upgrade-artwork-revisions-v3/runtime-48-contact-sheet.png)
   — 모두 승인되지 않은 실패 근거다.
 
 시각 정본 사전 점검은 완료했다. `VISUAL_SYSTEM.md`를 전체 확인했고, 스타일 시트를

@@ -5,10 +5,10 @@ created: 2026-08-16
 topic: Boss pattern identity, combat visualization, boss cadence, and dense-enemy performance
 scope: Current Cardborne eight-boss production implementation at commit b1d0f605
 related:
-  - ../../.agents/execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
-  - ../../.agents/execplans/2026-08-15-combat-readability-and-pressure-decisions.md
-  - ../product/vehicle_game_spec.md
-  - ../design/VISUAL_SYSTEM.md
+  - ../../execplans/2026-08-15-eight-boss-combat-depth-and-run-report.md
+  - ../../execplans/2026-08-15-combat-readability-and-pressure-decisions.md
+  - ../../../docs/product/vehicle_game_spec.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
 ---
 
 # Boss Pattern, Visualization, and Density Problem Brief

@@ -9,11 +9,25 @@ scope: Cardborne 네이티브 및 Web 런타임의 원인, 최종 측정, 배포
 source: 같은 커밋의 네이티브·Web 성능 기록, 용량 단계 실험, 현재 코드 및 배포 계약
 related:
   - ./2026-08-13-dense-enemy-stutter-evidence.md
-  - ./2026-08-13-dense-enemy-architecture-options.md
-  - ../../.agents/execplans/2026-08-13-evidence-category-slots-and-scalable-swarm.md
+  - ../../research/performance/2026-08-13-dense-enemy-architecture-options.md
+  - ../../execplans/2026-08-13-evidence-category-slots-and-scalable-swarm.md
 ---
 
 # 적 밀집 버벅임: 최종 결론
+
+## Purpose
+
+같은 커밋에서 수집한 네이티브·Web 측정으로 적 밀집 버벅임의 원인, 배포 가능 여부, 다음 승인 경계를 기록한다.
+
+## Sources
+
+- [`2026-08-13-dense-enemy-stutter-evidence.md`](./2026-08-13-dense-enemy-stutter-evidence.md)
+- [`2026-08-13-dense-enemy-architecture-options.md`](../../research/performance/2026-08-13-dense-enemy-architecture-options.md)
+- `.agents/evidence/performance/evidence/`의 네이티브·Web 측정 JSON
+
+## Findings
+
+48마리 상한의 네이티브 실행은 기준을 통과했지만 같은 Web 빌드는 실패했다. 병목은 일반 적의 판단·이동·주변 탐색 및 충돌 계산이며, Web 배포는 성능 기준을 통과할 때까지 보류해야 한다.
 
 ## 한 줄 결론
 
@@ -65,5 +79,5 @@ GDScript를 조금씩 더 고치는 방식만으로는 Web 목표에 도달하�
 ## 기록
 
 결정을 바꾼 네이티브·Web 원본 6개는 커밋, 콘텐츠 지문, 파일 해시와 함께
-`docs/performance/evidence/`에 보존했다. 처음 실패한 네이티브 결과와 같은 커밋의 통과
+`.agents/evidence/performance/evidence/`에 보존했다. 처음 실패한 네이티브 결과와 같은 커밋의 통과
 결과를 모두 남겨 좋은 결과만 고르지 않았다.

@@ -8,10 +8,10 @@ topic: Cardborne player-facing terminology audit
 scope: Korean and English terminology in the five-stage run
 source: localization/vehicle_stage.csv and its runtime consumers
 related:
-  - ../product/vehicle_game_spec.md
-  - ../product/vehicle_upgrade_catalog.md
-  - ../design/VISUAL_SYSTEM.md
-  - ../../.agents/execplans/2026-08-12-player-facing-language-simplification.md
+  - ../../../docs/product/vehicle_game_spec.md
+  - ../../../docs/product/vehicle_upgrade_catalog.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
+  - ../../execplans/2026-08-12-player-facing-language-simplification.md
 ---
 
 # 플레이어 노출 용어 전수 감사

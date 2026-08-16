@@ -11,12 +11,12 @@ related:
   - ../PLANS.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../research/performance/cardborne-runtime-architecture-audit.md
   - ./2026-08-13-dense-combat-and-engagement-flow.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
-  - ../../docs/performance/2026-08-13-dense-enemy-stutter-evidence.md
+  - ../../.agents/evidence/performance/2026-08-13-dense-enemy-stutter-evidence.md
 ---
 
 # Run Pacing, Result, and Upgrade Slots - Execution Contract

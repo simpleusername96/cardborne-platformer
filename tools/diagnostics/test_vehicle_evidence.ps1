@@ -1,6 +1,6 @@
 [CmdletBinding(PositionalBinding = $false)]
 param(
-  [string] $LedgerPath = 'docs/performance/vehicle-performance-evidence.jsonl'
+  [string] $LedgerPath = '.agents/evidence/performance/vehicle-performance-evidence.jsonl'
 )
 
 $ErrorActionPreference = 'Stop'

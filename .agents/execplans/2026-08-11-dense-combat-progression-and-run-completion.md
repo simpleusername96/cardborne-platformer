@@ -12,13 +12,13 @@ related:
   - ../PLANS.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
-  - ../2026-08-11-enemy-scale-performance-research.md
+  - ../research/performance/cardborne-runtime-architecture-audit.md
+  - ../research/performance/2026-08-11-enemy-scale-performance-research.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/design/VISUAL_SYSTEM.md
-  - ../../docs/reports/2026-08-11-vehicle-upgrade-idea-catalog.md
-  - ../../docs/reports/2026-08-11-anomaly-device-runtime.md
+  - ../../.agents/research/reports/2026-08-11-vehicle-upgrade-idea-catalog.md
+  - ../../.agents/evidence/reports/2026-08-11-anomaly-device-runtime.md
   - ../../docs/product/vehicle_weapon_balance_spec.md
 ---
 

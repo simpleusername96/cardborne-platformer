@@ -11,13 +11,13 @@ related:
   - ../AGENTS.md
   - ../PLANS.md
   - ../cardborne-performance-engineering-policy.md
-  - ../cardborne-runtime-architecture-audit.md
+  - ../research/performance/cardborne-runtime-architecture-audit.md
   - ./2026-08-11-dense-combat-progression-and-run-completion.md
   - ../../docs/product/vehicle_game_spec.md
-  - ../../docs/performance/2026-08-13-dense-enemy-stutter-evidence.md
-  - ../../docs/performance/2026-08-13-dense-enemy-architecture-options.md
-  - ../../docs/performance/2026-08-13-enemy-arrival-and-engagement-research.md
-  - ../../docs/performance/2026-08-13-enemy-arrival-conclusion-ko.md
+  - ../../.agents/evidence/performance/2026-08-13-dense-enemy-stutter-evidence.md
+  - ../../.agents/research/performance/2026-08-13-dense-enemy-architecture-options.md
+  - ../../.agents/research/performance/2026-08-13-enemy-arrival-and-engagement-research.md
+  - ../../.agents/evidence/performance/2026-08-13-enemy-arrival-conclusion-ko.md
 ---
 
 # Dense Combat and Engagement Flow - Execution Contract

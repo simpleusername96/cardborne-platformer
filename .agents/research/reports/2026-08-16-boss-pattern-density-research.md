@@ -5,13 +5,17 @@ created: 2026-08-16
 topic: Evidence synthesis for Cardborne boss identity, combat readability, encounter cadence, and dense-enemy performance
 scope: Repository evidence at b1d0f605, retained native evidence at 65afb5ea, primary external references, and pending Claude Code review
 related:
-  - ./2026-08-16-boss-pattern-density-problem-brief.md
-  - ../../.agents/execplans/2026-08-15-combat-readability-and-pressure-decisions.md
-  - ../product/vehicle_game_spec.md
-  - ../design/VISUAL_SYSTEM.md
+  - ../../evidence/reports/2026-08-16-boss-pattern-density-problem-brief.md
+  - ../../execplans/2026-08-15-combat-readability-and-pressure-decisions.md
+  - ../../../docs/product/vehicle_game_spec.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
 ---
 
 # Boss Identity and Dense-Cadence Research
+
+## Purpose
+
+Synthesize code, performance, readability, and comparable-game evidence for recurring boss-pattern density decisions.
 
 ## Decision question
 
@@ -23,7 +27,7 @@ failure?
 This document is evidence and analysis. Exact implementation values become authoritative
 only after they are copied into the active execution contract.
 
-## Evidence boundary
+## Sources
 
 ### Local evidence
 
@@ -86,6 +90,10 @@ only after they are copied into the active execution contract.
 - Microsoft's [Xbox Accessibility Guideline 103](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility-guidelines/103)
   supports redundant critical cues. Danger red is an ownership color, not the only signal;
   exact shape, near-black perimeter, inward notches, timing, and audio carry the same truth.
+
+## Findings
+
+The cross-boss diagnosis and per-boss response contract below summarize the reusable conclusions.
 
 ## Cross-boss diagnosis
 

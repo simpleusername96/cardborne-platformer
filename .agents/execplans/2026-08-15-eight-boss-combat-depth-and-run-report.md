@@ -6,8 +6,8 @@ created: 2026-08-15
 last_reviewed: 2026-08-16
 scope: Eight continuous boss cycles, eight distinct bosses, boss-death cleanup, four ordinary enemies, three combat upgrades, five symmetric neutral facilities, newest-ten diagnostics, stacked run reports, localization, approved visual assets, and release validation
 related:
-  - ../../docs/reports/2026-08-15-eight-boss-combat-design-analysis.md
-  - ../../docs/reports/2026-08-15-eight-boss-combat-approval-ko.md
+  - ../../.agents/research/reports/2026-08-15-eight-boss-combat-design-analysis.md
+  - ../../.agents/evidence/reports/2026-08-15-eight-boss-combat-approval-ko.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/vehicle_upgrade_catalog.md
   - ../../docs/product/vehicle_weapon_balance_spec.md

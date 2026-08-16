@@ -8,24 +8,24 @@ topic: 적 등장 및 전투 진입 전략 구현 결론
 scope: 뒤쫓는 적 무리의 원인, 구현한 해결 구조, 검증 결과와 남은 조정
 source: 현재 명세와 코드, 자동 재생 검증, 유사 장르 및 교통·로봇·군집·분산 시스템 연구
 related:
-  - ./2026-08-13-enemy-arrival-and-engagement-research.md
+  - ../../research/performance/2026-08-13-enemy-arrival-and-engagement-research.md
   - ./2026-08-13-dense-enemy-conclusion-ko.md
   - ./2026-08-13-dense-enemy-stutter-evidence.md
 ---
 
 # 적 등장 전략: 최종 결론
 
-## 목적
+## Purpose
 
 뒤쫓는 적 무리의 원인, 구현한 해결 구조, 검증 결과와 남은 조정을 짧게 정리한다.
 
-## 근거 자료
+## Sources
 
 - `2026-08-13-enemy-arrival-and-engagement-research.md`
 - 현재 제품 명세와 engagement director·runtime 코드
 - director, replay, arrival, allocation, movement, contact focused validator 결과
 
-## Findings / 무엇이 문제였나
+## Findings
 
 적은 처음 생길 때는 8방향에 나뉘어 있었다. 그러나 그 뒤에는 대부분 움직이는
 플레이어 한 점만 계속 쫓았다. 플레이어보다 느린 적들은 결국 뒤쪽 한 덩어리로 합쳐졌다.

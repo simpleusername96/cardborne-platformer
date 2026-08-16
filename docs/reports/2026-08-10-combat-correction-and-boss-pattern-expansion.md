@@ -19,7 +19,7 @@ related:
   - ../../docs/design/visual-replacement-workbench/candidates/boss-signature-pattern-concepts-v1/README.md
   - ../../.agents/design/DESIGN.md
   - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/cardborne-runtime-architecture-audit.md
+  - ../../.agents/research/performance/cardborne-runtime-architecture-audit.md
 ---
 
 # Combat Correction and Boss Pattern Expansion - Execution Contract

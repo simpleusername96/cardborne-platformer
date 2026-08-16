@@ -31,7 +31,7 @@ $entry = [ordered]@{
   authority_eligible = [bool]$provenance.authority_eligible
   thresholds_passed = [bool]$provenance.thresholds_passed
   plan_checkpoint = $PlanCheckpoint
-  artifacts = @([ordered]@{ path = "docs/performance/evidence/$EvidenceId.json"; sha256 = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash.ToLowerInvariant(); bytes = [int64]$artifact.Length })
+  artifacts = @([ordered]@{ path = ".agents/evidence/performance/evidence/$EvidenceId.json"; sha256 = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash.ToLowerInvariant(); bytes = [int64]$artifact.Length })
 }
 Add-Content -LiteralPath $ledger -Value ($entry | ConvertTo-Json -Compress)
 Write-Output "VEHICLE_EVIDENCE_PROMOTED $EvidenceId"

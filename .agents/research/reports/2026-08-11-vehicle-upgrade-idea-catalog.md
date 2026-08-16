@@ -8,9 +8,9 @@ topic: Vehicle upgrade ideas from conventional stat growth to transformative bui
 scope: Cardborne five-stage run upgrade portfolio and late-run damage pacing
 source: Current catalog inspection and official game references
 related:
-  - ../product/vehicle_game_spec.md
-  - ../product/vehicle_upgrade_catalog.md
-  - ../../.agents/execplans/2026-08-11-dense-combat-progression-and-run-completion.md
+  - ../../../docs/product/vehicle_game_spec.md
+  - ../../../docs/product/vehicle_upgrade_catalog.md
+  - ../../execplans/2026-08-11-dense-combat-progression-and-run-completion.md
 ---
 
 # 기체 업그레이드 아이디어 카탈로그

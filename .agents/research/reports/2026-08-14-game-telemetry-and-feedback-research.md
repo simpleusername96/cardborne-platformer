@@ -7,15 +7,23 @@ last_reviewed: 2026-08-14
 topic: Versioned game-session logging for Cardborne performance, encounter pacing, and UI/UX diagnosis
 scope: Local diagnostic capture, durable evidence promotion, event semantics, sampling, retention, comparison, privacy, and a deferred remote-telemetry boundary
 related:
-  - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/execplans/2026-08-13-evidence-category-slots-and-scalable-swarm.md
-  - ../performance/2026-08-13-dense-enemy-stutter-evidence.md
+  - ../../cardborne-performance-engineering-policy.md
+  - ../../execplans/2026-08-13-evidence-category-slots-and-scalable-swarm.md
+  - ../../evidence/performance/2026-08-13-dense-enemy-stutter-evidence.md
   - ../performance/2026-08-13-enemy-arrival-and-engagement-research.md
 ---
 
 # Cardborne Game Telemetry and Feedback Research
 
-## Decision Summary
+## Purpose
+
+Synthesize reusable telemetry and feedback evidence for future Cardborne plans without creating a remote-telemetry requirement.
+
+## Sources
+
+The repository audit, comparable systems, and primary sources cited in the sections below form the evidence boundary.
+
+## Findings
 
 Cardborne should not start with an always-online analytics vendor. The first useful system is a
 versioned, bounded, local diagnostic record that can be exported by the player and promoted into Git

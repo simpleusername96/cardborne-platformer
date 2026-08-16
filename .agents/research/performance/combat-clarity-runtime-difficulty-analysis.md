@@ -8,10 +8,10 @@ topic: Combat effect clarity, runtime smoothness, health bars, and difficulty
 scope: Current five-stage Cardborne run; analysis and recommendations only
 source: Local source/capture/trace inspection plus official external references
 related:
-  - ../docs/product/vehicle_game_spec.md
-  - ../docs/design/VISUAL_SYSTEM.md
+  - ../../../docs/product/vehicle_game_spec.md
+  - ../../../docs/design/VISUAL_SYSTEM.md
   - ./cardborne-runtime-architecture-audit.md
-  - ./semantic-v2-runtime-acceptance-evidence.md
+  - ../../evidence/performance/semantic-v2-runtime-acceptance-evidence.md
   - ./2026-08-02-enemy-movement-spawn-research.md
 ---
 

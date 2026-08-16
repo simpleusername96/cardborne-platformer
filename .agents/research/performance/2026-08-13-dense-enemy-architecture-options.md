@@ -8,10 +8,10 @@ topic: Architecture options for eliminating dense-enemy stutter
 scope: Behavior-preserving and product-changing options for native and Web Cardborne runtimes
 source: Dense-enemy evidence, current code ownership, and official Godot, Emscripten, browser, and itch.io documentation
 related:
-  - ./2026-08-13-dense-enemy-stutter-evidence.md
-  - ./2026-08-13-dense-enemy-conclusion-ko.md
-  - ../../.agents/cardborne-performance-engineering-policy.md
-  - ../../.agents/execplans/2026-08-11-dense-combat-progression-and-run-completion.md
+  - ../../evidence/performance/2026-08-13-dense-enemy-stutter-evidence.md
+  - ../../evidence/performance/2026-08-13-dense-enemy-conclusion-ko.md
+  - ../../cardborne-performance-engineering-policy.md
+  - ../../execplans/2026-08-11-dense-combat-progression-and-run-completion.md
 ---
 
 # Dense-enemy architecture options

@@ -77,8 +77,13 @@
 
 ## Placement Rules
 - Put stable repo-wide guidance in this file.
-- Put subtree-specific placement or operating rules in the nearest local `AGENTS.md`.
+- Put subtree-specific placement or operating rules in the nearest local `AGENTS.md` only after that subtree has a stable distinct responsibility.
+- Put accepted product, design, architecture, and maintained operational knowledge in `docs/` or its established owner; do not hide authoritative constraints in `.agents/*`.
 - Put durable supporting memory and evolving notes in `.agents/*`.
+- Put plan policy in `.agents/PLANS.md` and durable planning artifacts in `.agents/execplans/`.
+- Put reusable synthesized, consult-only research in `.agents/research/`; it supports judgment but does not override project documentation.
+- Put retained screenshots, logs, measurements, render comparisons, and other validation proof in `.agents/evidence/`, linked from the plan or research dossier that uses it.
+- Keep `.agents/design/` as an agent-facing map to approved design authority and production owners; do not use it as an asset or screenshot archive.
 - Prefer purpose-revealing naming over root-level structure prose where naming can carry the meaning.
 - Create a repo-local skill only when a workflow repeats and needs its own trigger, stop conditions, or artifact contract.
 - Do not fill root `AGENTS.md` with directory maps, transient inventories, or guidance that only describes the current layout.

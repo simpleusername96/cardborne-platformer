@@ -8,16 +8,20 @@ topic: Anomaly Device runtime behavior
 scope: Current five-stage Cardborne runtime behavior
 source: Current code inspection and focused validation on 2026-08-11
 related:
-  - ../product/vehicle_game_spec.md
+  - ../../../docs/product/vehicle_game_spec.md
 ---
 
 # 변칙 장치의 현재 동작
 
-## 목적
+## Purpose
 
 현재 실행 코드에서 변칙 장치가 어떻게 배치되고, 피해를 받고, 전투에 영향을
 주며, 언제 사라지는지 설명한다. `mystery_device`는 내부 호환 ID이고 화면과
 가이드북에는 `변칙 장치 / Anomaly Device`로 표시한다.
+
+## Findings
+
+관측된 배치, 결과, 피해, 생명주기, 공개 정보와 직접 픽업 경계를 아래에 기록한다.
 
 ## 배치와 결과
 
@@ -65,7 +69,7 @@ intact(결과 표시) → 파괴 → resolved(효과 활성) → 효과 종료 �
 경험치 조각, 수리, 회수 신호기, 변칙 장치, Transit Gate가 들어간다. 변칙
 장치는 중립이고 모든 효과가 플레이어에게 유리하다.
 
-## 구현 근거
+## Sources
 
 - 장치 상태: `scripts/vehicle/vehicle_mystery_device_runtime.gd`
 - 런 통합: `scripts/vehicle/vehicle_run.gd`
