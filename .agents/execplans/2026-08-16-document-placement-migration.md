@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: draft
 created: 2026-08-16
 scope: Separate authoritative Cardborne project documentation from reusable agent research and retained validation evidence
 ---
