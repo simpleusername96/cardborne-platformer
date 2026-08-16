@@ -1,0 +1,88 @@
+{
+  "id": "hostile-laser-corridor-v1",
+  "purpose": "Review-only reference candidates for the code-native hostile laser corridor. These images are not runtime assets.",
+  "selected_candidate": "candidate-b-broad-energy-spine-selected.png",
+  "selection_reason": "Candidate B preserves the exact red hostile footprint and dark separation while adding a readable active energy spine and narrow hot core without Candidate A's excessive bloom or Candidate C's split-line ambiguity.",
+  "runtime_mapping": {
+    "startup": [
+      "thin near-black perimeter outside the gameplay width",
+      "low-alpha exact-width danger-red body",
+      "narrow warm-white readiness filament"
+    ],
+    "active": [
+      "thin near-black perimeter outside the gameplay width",
+      "exact-width opaque danger-red body",
+      "broad pale-red inner energy spine",
+      "narrow warm-white hot core"
+    ],
+    "forbidden": [
+      "projectile prediction paths",
+      "endpoint caps",
+      "arrows or chevrons",
+      "future sweep ghosts",
+      "soft glow, bloom, particles, and raster beam assets"
+    ]
+  },
+  "candidate_sha256": {
+    "candidate-a-thin-hot-core.png": "f35e7bfc89c9f61994e07e6cac0e45cd7ac5451b9b61ec172e3b202db56fac07",
+    "candidate-b-broad-energy-spine-selected.png": "236cbe91a2b5f6840625c2c4fc6a0c00a50a01204b8b43d776773b33b97f6238",
+    "candidate-c-red-dominant-core.png": "287696f45a28bb17ab985d90f9b91714a12a4a2f0b8fb59cc113064cf963ee42",
+    "candidate-contact-sheet.png": "a1eb56cb47224b35c890e64489d7fd1597663ae614b3d357b6a8fbe52a22b77d"
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "actual_image_references": [
+      "docs/design/cardborne-universal-art-style-reference.png",
+      "build/review/laser-reference-research/laser-visual-reference-board.jpg"
+    ],
+    "common_prompt": "Review-only abstract hostile laser calibration with stacked startup and active swatches. No actors or scenery. The exact collision rectangle remains filled, uses danger red, near-black separation, restrained warm-white live highlight, hard-edged broad planes, square ends, and no endpoint cap, trajectory symbol, soft glow, particles, UI, or text.",
+    "variant_prompts": {
+      "A": "Thin hot core with maximum safe-space contrast.",
+      "B": "Broad pale-red energy spine around one narrow warm-white core.",
+      "C": "Red-dominant inner plane with only a tiny warm-white core."
+    }
+  },
+  "visual_authority_evidence": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "spec_read_completely": true,
+    "style_reference_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "expected_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "style_reference_inspected_at_original_detail": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "image_gen referenced_image_paths",
+    "original_artifact_provenance": "C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png",
+    "asset_approval_status": "review-only selected direction; runtime remains code-native"
+  },
+  "external_references": [
+    {
+      "name": "Furi - The Burst",
+      "url": "https://www.thegamebakers.com/unedited-game-play-video/",
+      "use": "thin source-to-target sniper aim line reserved for laser-class attacks"
+    },
+    {
+      "name": "Returnal Hostiles",
+      "url": "https://blog.playstation.com/2021/04/14/creating-returnals-otherworldly-enemies-vfx-driven-tentacle-tech-and-deep-sea-inspirations/",
+      "use": "filled active beam with a strong energy core"
+    },
+    {
+      "name": "Nex Machina official gameplay",
+      "url": "https://www.youtube.com/watch?v=LlE8QkfAVnA",
+      "use": "beam-to-safe-space contrast and readable gaps between simultaneous beams"
+    }
+  ],
+  "external_asset_evaluation": [
+    {
+      "name": "OpenGameArt Lasers and beams",
+      "url": "https://opengameart.org/content/lasers-and-beams",
+      "license": "CC0",
+      "decision": "not imported; raster beam strips conflict with the required code-native exact corridor and Cardborne plane ownership"
+    },
+    {
+      "name": "Binbun Beam VFX - Godot 3D",
+      "url": "https://binbun3d.itch.io/beam-vfx",
+      "license": "CC0",
+      "decision": "not imported; noise, emission, particles, and flaring conflict with the restrained hard-edged 2D corridor contract"
+    }
+  ]
+}

@@ -1460,8 +1460,7 @@ func _sync_beam_startup(telegraph: Dictionary) -> void:
 			intensity
 		))
 	)
-	if not hostile:
-		_write_beam(
+	_write_beam(
 		from,
 		to,
 		minf(
@@ -1473,7 +1472,7 @@ func _sync_beam_startup(telegraph: Dictionary) -> void:
 			BEAM_STARTUP_FILAMENT_ALPHA.y,
 			intensity
 		))
-		)
+	)
 
 
 func _sync_active_beam(telegraph: Dictionary) -> void:
@@ -1490,8 +1489,6 @@ func _sync_active_beam(telegraph: Dictionary) -> void:
 	if hostile:
 		_write_beam(from, to, width + 6.0, Color(Art.SPACE_BLACK, 0.82))
 	_write_beam(from, to, width, Color(color, BEAM_ACTIVE_BODY_ALPHA))
-	if hostile:
-		return
 	_write_beam(
 		from,
 		to,

@@ -884,8 +884,8 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count == 2,
-		"hostile startup corridor draws one thin black perimeter and one exact red body"
+		beam_batch.multimesh.visible_instance_count == 3,
+		"hostile startup corridor adds one restrained hot filament to its exact red footprint"
 	)
 	var startup_beam_buffer := beam_batch.multimesh.buffer
 	var startup_intensity := smoothstep(0.0, 1.0, 0.72)
@@ -902,8 +902,13 @@ func _run() -> void:
 			and is_equal_approx(
 				startup_beam_buffer[23],
 				lerpf(0.16, 0.34, startup_intensity)
+			)
+			and is_equal_approx(startup_beam_buffer[29], 3.5 * 0.5)
+			and is_equal_approx(
+				startup_beam_buffer[35],
+				lerpf(0.32, 0.66, startup_intensity)
 			),
-		"startup hostile corridor preserves its exact footprint inside the black perimeter"
+		"startup hostile corridor preserves its footprint and gains one centered readiness filament"
 	)
 	offscreen_enemy.phase = &"active"
 	renderer.sync(
@@ -911,16 +916,20 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		beam_batch.multimesh.visible_instance_count == 2,
-		"active hostile corridor keeps the two-plane ownership grammar"
+		beam_batch.multimesh.visible_instance_count == 4,
+		"active hostile corridor uses perimeter plus the selected three-plane energy hierarchy"
 	)
 	var active_beam_buffer := beam_batch.multimesh.buffer
 	_expect(
 		is_equal_approx(active_beam_buffer[5], (54.0 + 6.0) * 0.5)
 			and is_equal_approx(active_beam_buffer[17], 54.0 * 0.5)
+			and is_equal_approx(active_beam_buffer[29], minf(20.0, 54.0 * 0.34) * 0.5)
+			and is_equal_approx(active_beam_buffer[41], minf(7.0, 54.0 * 0.10) * 0.5)
 			and is_equal_approx(active_beam_buffer[11], 0.82)
-			and is_equal_approx(active_beam_buffer[23], 0.92),
-		"active hostile corridor keeps an exact red body inside its black perimeter"
+			and is_equal_approx(active_beam_buffer[23], 0.92)
+			and is_equal_approx(active_beam_buffer[35], 0.88)
+			and is_equal_approx(active_beam_buffer[47], 1.0),
+		"active hostile corridor keeps its exact red body, broad energy spine, and narrow hot core"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	snapshot = renderer.debug_snapshot()
