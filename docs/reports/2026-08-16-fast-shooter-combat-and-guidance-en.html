@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne Combat Reset</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --void:#070b11; --surface:#101923; --raised:#182431; --line:#465a6e;
+      --text:#eef3f7; --muted:#9eadbc; --amber:#f2b735; --danger:#f05a5f;
+      --system:#58bfea; --support:#72d6c4; --boss:#d43f8d;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--void); color:var(--text); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:min(1120px,calc(100% - 32px)); margin:auto; padding:52px 0 72px; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { max-width:900px; margin-bottom:18px; font-size:clamp(42px,8vw,82px); line-height:.98; letter-spacing:-.055em; }
+    h2 { margin-bottom:18px; font-size:clamp(25px,4vw,38px); line-height:1.1; }
+    h3 { margin-bottom:6px; font-size:17px; }
+    a { color:var(--system); }
+    code { color:var(--support); overflow-wrap:anywhere; }
+    .kicker { color:var(--system); font:800 12px/1.2 ui-monospace,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    .lead { max-width:830px; color:#d8e0e6; font-size:clamp(19px,2.4vw,25px); }
+    .thesis { margin-top:30px; padding:18px 22px; border-left:4px solid var(--amber); background:var(--surface); font-size:19px; }
+    section { margin-top:68px; }
+    .facts { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--line); }
+    .fact { min-height:150px; padding:18px; background:var(--surface); border-right:1px solid var(--line); }
+    .fact:last-child { border-right:0; }
+    .value { margin:14px 0 10px; color:var(--amber); font:800 clamp(28px,4vw,44px)/1 ui-monospace,monospace; }
+    .muted { color:var(--muted); }
+    .split { display:grid; grid-template-columns:3fr 2fr; gap:14px; }
+    .panel { padding:22px; border:1px solid var(--line); background:var(--surface); }
+    .survivor { border-top:4px solid var(--support); }
+    .shooter { border-top:4px solid var(--amber); }
+    ul { margin:10px 0 0; padding-left:20px; }
+    li + li { margin-top:6px; }
+    .flow { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+    .step { position:relative; min-height:132px; padding:16px 14px; border:1px solid var(--line); background:var(--surface); }
+    .step:not(:last-child)::after { content:"→"; position:absolute; right:-13px; top:50%; z-index:2; color:var(--amber); font-weight:900; }
+    .index { display:block; margin-bottom:18px; color:var(--system); font:800 12px/1 ui-monospace,monospace; }
+    .arena { display:grid; grid-template-columns:1fr 1.1fr 1fr; grid-template-rows:100px 116px 90px; gap:10px; padding:16px; border:1px solid var(--line); background:#0a1017; }
+    .zone { display:grid; place-items:center; padding:12px; text-align:center; border:1px solid var(--line); background:var(--surface); color:var(--muted); }
+    .intercept { grid-column:1; color:var(--danger); border-color:var(--danger); }
+    .crossfire { grid-column:3; color:var(--danger); border-color:var(--danger); }
+    .player { grid-column:2; grid-row:2; color:var(--amber); border:2px solid var(--amber); font-weight:800; }
+    .escape { grid-column:1 / 4; grid-row:3; color:var(--support); border-color:var(--support); }
+    .rear { grid-column:1; grid-row:2; opacity:.65; }
+    .support { grid-column:3; grid-row:2; color:var(--system); }
+    .table-wrap { overflow-x:auto; border:1px solid var(--line); }
+    table { width:100%; min-width:760px; border-collapse:collapse; background:var(--surface); }
+    th,td { padding:13px 15px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line); }
+    th { color:var(--system); font-size:13px; }
+    tr:last-child td { border-bottom:0; }
+    .upgrade-line { display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr 1.2fr; gap:8px; }
+    .upgrade-line .step { min-height:112px; }
+    .screen { position:relative; min-height:510px; overflow:hidden; padding:14px; border:1px solid var(--line); background:#080d13; }
+    .hp { height:32px; border:1px solid var(--line); background:linear-gradient(90deg,var(--amber) 0 67%,#382d18 67%); }
+    .xp { height:22px; border:1px solid var(--line); border-top:0; background:linear-gradient(90deg,var(--system) 0 42%,#132d3a 42%); }
+    .hud { display:flex; gap:8px; margin-top:8px; }
+    .mission { width:240px; height:56px; padding:8px 12px; border:1px solid var(--line); border-left:4px solid var(--boss); background:var(--surface); font:800 13px/1.35 ui-monospace,monospace; }
+    .mission small { display:block; color:var(--muted); font-size:11px; }
+    .cell { width:56px; height:56px; display:grid; place-items:center; border:1px solid var(--line); background:var(--surface); color:var(--system); font:800 12px/1 ui-monospace,monospace; }
+    .map { position:absolute; top:76px; right:14px; width:176px; height:108px; border:1px solid var(--line); background:radial-gradient(circle at 35% 55%,var(--amber) 0 3px,transparent 4px),radial-gradient(circle at 70% 32%,var(--danger) 0 3px,transparent 4px),var(--surface); }
+    .control { position:absolute; top:194px; right:14px; width:336px; min-height:84px; display:grid; grid-template-columns:54px 1fr; border:1px solid var(--line); border-left:4px solid var(--system); background:var(--surface); }
+    .control-mark { display:grid; place-items:center; margin:10px; border:1px solid var(--system); color:var(--system); font-weight:900; }
+    .control-copy { padding:9px 12px 9px 2px; font-size:13px; line-height:1.35; }
+    .control-copy b { display:block; margin-bottom:4px; color:var(--system); font:800 11px/1 ui-monospace,monospace; letter-spacing:.08em; }
+    .clear { position:absolute; inset:170px 30% 46px 18%; display:grid; place-items:center; border:1px dashed rgba(158,173,188,.35); color:#73808c; text-align:center; }
+    .caption { margin-top:10px; color:var(--muted); font-size:13px; }
+    .rules { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .rule { padding:18px; border-left:3px solid var(--system); background:var(--surface); }
+    .check { color:var(--support); }
+    .sources { columns:2; column-gap:34px; }
+    .sources li { break-inside:avoid; }
+    footer { margin-top:58px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); }
+    @media (max-width:900px) {
+      .facts { grid-template-columns:1fr 1fr; }
+      .fact:nth-child(2) { border-right:0; }
+      .fact:nth-child(-n+2) { border-bottom:1px solid var(--line); }
+      .split,.rules { grid-template-columns:1fr; }
+      .flow,.upgrade-line { grid-template-columns:1fr; }
+      .step:not(:last-child)::after { content:"↓"; top:auto; right:50%; bottom:-17px; }
+      .screen { min-height:580px; }
+      .control { width:min(304px,calc(100% - 28px)); top:250px; }
+      .clear { inset:360px 18px 36px; }
+      .sources { columns:1; }
+    }
+    @media (max-width:560px) {
+      main { width:calc(100% - 20px); padding-top:34px; }
+      .facts { grid-template-columns:1fr; }
+      .fact { border-right:0; border-bottom:1px solid var(--line); }
+      .fact:last-child { border-bottom:0; }
+      .arena { grid-template-columns:1fr 1fr; grid-template-rows:auto; }
+      .zone { grid-column:auto; grid-row:auto; min-height:80px; }
+      .escape { grid-column:1 / 3; }
+      .hud { max-width:280px; flex-wrap:wrap; }
+      .mission { width:212px; height:52px; }
+      .map { width:142px; height:92px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Cardborne / combat reset / planning brief</p>
+    <h1>Stop building a survivor game with manual aim.</h1>
+    <p class="lead">Keep the survivor-like run structure. Rebuild the actual combat as a fast shooter: authored engagements, route interception, short lethal enemies, readable boss tests, and information that teaches without stopping play.</p>
+    <p class="thesis"><strong>The player is not too fast.</strong> The combat is asking speed to solve the wrong problem. Enemies must attack where the vehicle is going, not follow where it was.</p>
+  </header>
+
+  <section>
+    <h2>What the current game is actually doing</h2>
+    <div class="facts">
+      <article class="fact"><span class="kicker">Completed-run mean</span><div class="value">9:50</div><p class="muted">No ten-minute timer exists. Eight raw kill quotas create the practical ceiling.</p></article>
+      <article class="fact"><span class="kicker">Pursuit share</span><div class="value">65%</div><p class="muted">Most authored bodies are trying to follow a vehicle that can already outrun them.</p></article>
+      <article class="fact"><span class="kicker">Upgrade stops</span><div class="value">21.2</div><p class="muted">Median gap: 10.9 seconds. The game repeatedly interrupts its strongest activity.</p></article>
+      <article class="fact"><span class="kicker">Late durability stack</span><div class="value">~11×</div><p class="muted">Several health multipliers stack. More global HP would add time, not better combat.</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>The 60 / 40 genre model</h2>
+    <div class="split">
+      <article class="panel survivor"><p class="kicker">Keep from survivor-like games</p><h3>Macro progression</h3><ul><li>One persistent field</li><li>XP collection and build growth</li><li>Escalating crowds and run reset</li><li>Repeated mastery across attempts</li></ul></article>
+      <article class="panel shooter"><p class="kicker">Let shooter rules dominate</p><h3>Every second of play</h3><ul><li>Manual aim and target priority</li><li>Fast movement and dash</li><li>Telegraphs and committed attacks</li><li>Interception, crossfire, and escape lanes</li></ul></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>The new cycle</h2>
+    <div class="flow">
+      <article class="step"><span class="index">01</span><h3>Teach</h3><p class="muted">One tactic commits clearly.</p></article>
+      <article class="step"><span class="index">02</span><h3>Combine</h3><p class="muted">Two role groups force a new route.</p></article>
+      <article class="step"><span class="index">03</span><h3>Power test</h3><p class="muted">A priority unit anchors the formation.</p></article>
+      <article class="step"><span class="index">04</span><h3>Boss</h3><p class="muted">Signature first, combination second.</p></article>
+      <article class="step"><span class="index">05</span><h3>Service</h3><p class="muted">Spend up to two upgrade charges.</p></article>
+      <article class="step"><span class="index">06</span><h3>Continue</h3><p class="muted">Same field, stronger operation.</p></article>
+    </div>
+    <p class="caption">Each beat has a short build → sustain → recover shape. Cycles 1–2 use Teach → Combine; cycles 3–8 use three ordinary beats. Kills give XP, but the run advances when the authored tactical test resolves.</p>
+  </section>
+
+  <section>
+    <h2>Pressure moves ahead of the player</h2>
+    <div class="arena" role="img" aria-label="Diagram showing interception and crossfire ahead of the player, limited rear pursuit, support on the side, and one open escape lane">
+      <div class="zone intercept"><strong>INTERCEPT</strong><br>predict crossing point</div>
+      <div class="zone crossfire"><strong>CROSSFIRE</strong><br>force aim rotation</div>
+      <div class="zone rear"><strong>REAR PURSUIT</strong><br>maximum 30%</div>
+      <div class="zone player">FAST PLAYER<br>movement stays unchanged</div>
+      <div class="zone support"><strong>DENIAL / SUPPORT</strong><br>create target priority</div>
+      <div class="zone escape"><strong>ONE ESCAPE LANE ALWAYS REMAINS OPEN</strong></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Difficulty changes</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>System</th><th>Current</th><th>Reset</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td>Run progress</td><td>Raw defeat quotas</td><td>2–3 authored tactical beats per cycle</td><td>Stops fast killing from collapsing the campaign.</td></tr>
+          <tr><td>Role mix</td><td>65% pursuit</td><td>25% pursuit; majority intercept/crossfire/denial</td><td>Attacks the route instead of the rear bumper.</td></tr>
+          <tr><td>Enemy HP</td><td>2.60 global; cycle curve to 3.10</td><td>2.10 global; cycle curve to 2.05</td><td>Enemies die faster when correctly targeted.</td></tr>
+          <tr><td>Enemy offense</td><td>Projectile 0.82; recovery 1.28</td><td>Projectile 0.95; recovery 1.45</td><td>Danger rises through attack relevance, not sponge time.</td></tr>
+          <tr><td>Attack participation</td><td>Many bodies, few commits</td><td>6 / 8 / 10 explicit attack slots</td><td>Makes the existing cap tactically useful.</td></tr>
+          <tr><td>Boss adds</td><td>Generic 8–12 refill</td><td>One 4 / 6 / 8 unit escort pulse per phase</td><td>Supports the boss mechanic without constant clutter.</td></tr>
+          <tr><td>Actor cap</td><td>72 late; capacity test is red</td><td>Keep 72</td><td>Do not hide design problems behind more simulation.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Upgrades stop interrupting combat</h2>
+    <div class="upgrade-line">
+      <article class="step"><span class="index">BEFORE RUN</span><h3>Starting choice</h3><p class="muted">One card at Deployment.</p></article>
+      <article class="step"><span class="index">XP</span><h3>Earn charges</h3><p class="muted">No modal. No lost progress.</p></article>
+      <article class="step"><span class="index">CYCLE 1</span><h3>Field resupply</h3><p class="muted">One choice after Teach.</p></article>
+      <article class="step"><span class="index">BOSSES 1–7</span><h3>Service break</h3><p class="muted">Up to two choices per session.</p></article>
+      <article class="step"><span class="index">BOSS 8</span><h3>Result</h3><p class="muted">No useless final upgrade.</p></article>
+    </div>
+    <p class="thesis"><strong>Maximum:</strong> eight in-run upgrade sessions instead of roughly twenty-one.</p>
+  </section>
+
+  <section>
+    <h2>A readable cockpit and a real support presence</h2>
+    <div class="screen" role="img" aria-label="Concept layout with full-width hull and XP meters, a backed mission card, square action cells, top-right minimap, and Tactical Control below it">
+      <div class="hp"></div><div class="xp"></div>
+      <div class="hud">
+        <div class="mission"><small>CYCLE 3 / 8</small>BREAK CROSSFIRE · 1 / 2</div>
+        <div class="cell">DASH</div><div class="cell">EMP<br>4.2</div>
+      </div>
+      <div class="map" aria-label="Minimap"></div>
+      <div class="control">
+        <div class="control-mark">C</div>
+        <div class="control-copy"><b>CONTROL // AUXILIARY AI</b>FRONTAL SHIELD — BREAK CONTACT AND ATTACK FROM THE SIDE.</div>
+      </div>
+      <div class="clear">RETICLE, AIM ROUTES, AND ESCAPE SPACE<br>REMAIN CLEAR</div>
+    </div>
+    <p class="caption">Concept layout only. It approves no portrait or production art. The first release uses the shared Theme, a code-native comms glyph, localized text, and one subtle audio chirp.</p>
+  </section>
+
+  <section>
+    <h2>What CONTROL is allowed to say</h2>
+    <div class="rules">
+      <article class="rule"><p class="kicker">Boss mechanic</p><h3>Observation — action</h3><p>“FRONTAL SHIELD — BREAK CONTACT AND ATTACK FROM THE SIDE.”</p></article>
+      <article class="rule"><p class="kicker">Facility state</p><h3>Exact runtime truth</h3><p>“REPAIR FIELD ONLINE — 12 S REMAIN. STAY INSIDE THE RING.”</p></article>
+      <article class="rule"><p class="kicker">Failure learning</p><h3>Explain after the loss</h3><p>Failure Report shows the two verified mechanics that caused the most damage and their countermeasures.</p></article>
+    </div>
+    <ul>
+      <li>Immediate danger stays in world telegraphs and the threat radar.</li>
+      <li>One message at a time; queue capacity two; stale messages are discarded.</li>
+      <li>A mechanic repeats only after a verified failure, not because a timer expired.</li>
+      <li>The same counterplay text feeds CONTROL, Guidebook, and Failure Report.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Delivery order and proof</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Phase</th><th>Output</th><th>Proof</th></tr></thead>
+        <tbody>
+          <tr><td>1. Contracts</td><td>Product, visual, localization rules</td><td>Eight-cycle, beat, HUD, and bilingual contracts agree.</td></tr>
+          <tr><td>2. Campaign</td><td>Authored beats, boss flow, service break</td><td>No raw quota gate; no empty wait; boss 8 ends cleanly.</td></tr>
+          <tr><td>3. Combat</td><td>Time-to-contact spawn, role mix, attack slots, stats</td><td>Two attack directions, rear-only time below 20%, escape lane intact.</td></tr>
+          <tr><td>4. Progression</td><td>Upgrade charges and scheduled choice sessions</td><td>No combat modal; 6–8 sessions per complete run.</td></tr>
+          <tr><td>5. Information</td><td>Mission card, CONTROL, Guidebook, failure learning</td><td>First-time players can state objective and boss counter after one exposure.</td></tr>
+          <tr><td>6. Release</td><td>Five complete runs, Korean/English renders, native/Web</td><td>Median run 18–22 minutes; exact-72 capacity and built Web smoke pass.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Evidence used</h2>
+    <ul class="sources">
+      <li><a href="https://gdcvault.com/play/1021780/AI-in-the-Awesomepocalypse-Creating">Sunset Overdrive: AI for a high-speed player</a></li>
+      <li><a href="https://www.gamedeveloper.com/design/q-a-evolving-the-combat-design-of-id-software-s-i-doom-eternal-i-">DOOM Eternal: movement, tells, and combat space</a></li>
+      <li><a href="https://www.gamedeveloper.com/design/the-art-and-science-of-pacing-and-sequencing-combat-encounters">Combat encounter pacing and sequencing</a></li>
+      <li><a href="https://steamcdn-a.akamaihd.net/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf">Left 4 Dead: structured encounter pacing</a></li>
+      <li><a href="https://blog.playstation.com/2021/04/14/creating-returnals-otherworldly-enemies-vfx-driven-tentacle-tech-and-deep-sea-inspirations/">Returnal: readable enemy-role combinations</a></li>
+      <li><a href="https://blog.playstation.com/2021/05/11/unpacking-returnals-ux-design-gameplay-first-ui-retro-futuristic-tech-and-accessibility/">Returnal: gameplay-first UX</a></li>
+      <li><a href="https://support.warframe.com/hc/en-us/articles/38801911653517-Mission-Interface">Warframe: objective UI and side transmissions</a></li>
+      <li><a href="https://www.gdcvault.com/play/1020951/A-Context-Aware-Character-Dialog">Context-aware dialogue systems</a></li>
+      <li><a href="https://store.steampowered.com/news/posts/?appids=570&amp;enddate=1747260468&amp;feed=steam_community_announcements">Dota 2 Nest of Thorns: kill chores, pacing, and playtest data</a></li>
+      <li><a href="https://blog.playstation.com/2020/11/25/honoring-the-blade-and-combat-balance-in-ghost-of-tsushima/">Ghost of Tsushima: difficulty without sponge health</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    Full execution contract: <code>.agents/execplans/2026-08-16-fast-shooter-combat-pacing-and-tactical-guidance.md</code>
+  </footer>
+</main>
+</body>
+</html>

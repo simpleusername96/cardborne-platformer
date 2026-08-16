@@ -4,393 +4,464 @@ status: active
 owner: BK
 created: 2026-08-16
 last_reviewed: 2026-08-16
-scope: Fast-vehicle combat pacing, boss readiness, role-based spawn pressure, bounded upgrade cadence, backed top HUD, and bilingual tactical-advisor guidance
+scope: Shooter-first encounter structure, enemy pressure, run length, upgrade cadence, cockpit HUD, and Tactical Control guidance
 related:
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../design/DESIGN.md
   - ../cardborne-performance-engineering-policy.md
   - 2026-08-15-eight-boss-combat-depth-and-run-report.md
-  - ../../docs/reports/2026-08-16-fast-shooter-combat-and-guidance-ko.html
+  - ../../docs/reports/2026-08-16-fast-shooter-combat-and-guidance-en.html
 ---
 
-# Fast-Shooter Combat Pacing and Tactical Guidance — Execution Contract
+# Shooter-First Combat and Tactical Guidance — Execution Contract
 
-Cardborne remains a fast manual-aim vehicle shooter with survivor-like progression, not a
-Vampire-Survivors ruleset with a faster avatar. The implementation keeps player speed and
-dash, replaces tail-following pressure with interception and lane control, makes boss
-readiness depend on demonstrated encounter breadth as well as combat progress, reduces
-modal upgrade decisions, rebuilds the top HUD on compact backed cells, and adds a
-bilingual tactical-advisor channel that explains unfamiliar threats without becoming a
-required reading task.
+Cardborne will keep the macro progression of a survivor-like run—one persistent field,
+XP collection, build growth, escalating crowds, and a run reset—but its moment-to-moment
+rules will become those of a fast manual-aim shooter. The player remains fast. Encounters
+will challenge direction choice, aim priority, and route planning instead of asking a
+fast vehicle to drag a slow crowd behind it.
 
-## Purpose and Completion State
+## Purpose
 
-- Objective: make an eight-boss run sustain readable, varied pressure for an observed
-  controlled-play median of 14–18 minutes without an absolute run timer or player-speed
-  reduction.
-- Deliverable: updated product and visual contracts, encounter/balance/reward runtimes,
-  HUD and tactical-advisor UI, Korean/English copy, diagnostics, focused validators,
-  rendered evidence, native qualification, and a production Web export.
-- Completion: all tasks and gates below pass; the performance contingency resolves to
-  either a proven 80-hostile late-cycle cap or the preserved 72 cap; this plan is then
-  marked `done`.
+- Objective: turn the current ten-minute, kill-quota-driven run into a readable 18–22
+  minute shooter campaign with eight bosses, deliberate combat beats, fewer upgrade
+  interruptions, and enough tactical information for a first-time player to learn from a
+  loss.
+- Deliverable: revised product and visual contracts; encounter-beat, spawn, combat,
+  progression, Tactical Control, HUD, guidebook, failure-report, localization, telemetry,
+  and validation changes; production Web qualification.
+- Completion state: every task and final gate below passes and this plan is marked `done`.
 
-## Scope, Boundaries, and Invariants
+## Scope and Boundaries
 
 In scope:
 
-- Eight existing boss cycles, ordinary pressure before and during bosses, boss signature
-  teaching, enemy role statistics, sector allocation, and collective tactics.
-- XP threshold and reward-opening policy, one fixed Hard difficulty, and run diagnostics.
-- Full-width HP/XP meters, compact backed HUD cells, boss progress, minimap coexistence,
-  and responsive Korean/English/accessibility layouts.
-- A new semantic tactical-advisor runtime and a peripheral, non-modal comms surface for
-  boss mechanics, priority enemies, facilities, and critical state changes.
+- The complete eight-boss campaign structure, ordinary encounter composition, spawn
+  placement, enemy movement/attack pressure, boss teaching, and post-boss flow.
+- XP-to-upgrade cadence and the upgrade modal's placement in the run.
+- The live HUD, minimap relationship, Tactical Control messages, guidebook explanations,
+  and failure-report counterplay summary.
+- Korean/English parity, 100–200% text scale, telemetry, native checks, and Web release
+  qualification.
 
 Out of scope:
 
-- Slower player movement or dash, auto-aim replacing manual aim, adaptive difficulty,
-  difficulty selection, endless mode, a hard minimum/maximum run timer, new maps, new
-  enemy or boss raster art, voice acting, a named/culturally themed officer, production
-  dependencies, engine changes, threads, GDExtension, or a custom Web template.
+- Slowing the player or dash, aim assist replacing manual aim, adaptive difficulty,
+  difficulty selection, endless mode, new maps, a new enemy/boss roster, procedural text,
+  voice acting, a generated character portrait, new production dependencies, engine
+  changes, threads, GDExtension, or a custom Web template.
 
-Invariants:
+Constraints and invariants:
 
-- Player movement, dash distance, manual aim, held primary fire, passive seekers, EMP,
-  eight authored bosses, facility truth, and fixed Hard remain intact.
-- Gameplay events own truth. HUD and advisor code render semantic receipts; they do not
-  infer boss shields, facility timers, attack geometry, or encounter eligibility.
+- Preserve manual aim, held primary fire, dash, passive seekers, EMP, fixed Hard, eight
+  bosses, neutral facilities, one persistent run-selected field, and complete Korean and
+  English UI.
 - A high-threat attack keeps at least 1.30 seconds of collision-matching warning and one
-  escape corridor at least player diameter + 80 units. Spawn allocation never places an
-  unavoidable closed ring around the player.
-- Korean is the default and every new player-facing key is complete in Korean and English.
-- UI uses the shared Theme/factory. No local improvised `StyleBox`, SVG chrome, or
-  unapproved raster portrait enters production.
-- Current workload is preserved until the performance experiment in Task 5.3. No
-  performance claim is valid without comparable clean native and Web evidence.
+  escape corridor at least player diameter + 80 units.
+- Gameplay owners publish semantic receipts. UI never derives shield truth, facility
+  time, encounter completion, damage cause, or counterplay by parsing display text.
+- Use the shared Theme/factory: one flat surface, one 1 px boundary, and at most one
+  semantic rail. No SVG UI, local `StyleBox`, raster HUD chrome, or nested frame.
+- Keep the materialized hostile caps `32/44/56/64/72/72/72/72`. The current exact-72
+  native capacity case is red; this plan does not raise any actor cap or call a lower
+  organic workload a performance optimization.
+- The canonical visual sheet was inspected at original detail and its observed SHA-256
+  matches `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+  It is a style reference, not approval of any depicted UI or asset.
+
+Destructive or irreversible actions:
+
+- None. Replaced count-quota and announcement code remains in Git history and is removed
+  only after its replacement is reachable and validated in the same scoped change.
+
+Exact actions requiring user approval:
+
+- Any later portrait, voice package, new actor art, dependency, engine/native change, or
+  cap increase. None is required by this contract.
 
 ## Discovery Closure
 
-| Concern | Current evidence | Locked decision | Tasks |
-| --- | --- | --- | --- |
-| Ten-minute ceiling | The active clock has no cap, but the run ends after eight count-gated bosses. Four current-schema completed local sessions last 478.5–655.5 seconds, mean 589.9 seconds. | Target 14–18 minutes as an observational controlled-play band, never as a timer gate. Replace raw-kill-only readiness with threat credits plus authored assault breadth. | 1.1, 2.1, 6.2 |
-| Boss gate | `VehicleStageFlow` enters a 1.5-second warning when ordinary defeats reach quota; quotas are `40/44/48/52/56/60/64/68`. | Boss readiness requires cycle threat credits, three distinct assault families, and one priority-role engagement. A fast player accelerates the next assault; the game never waits on an empty clock. | 2.1 |
-| Tail chase | Spawn allocation is velocity-aware, but pursuit-heavy authored ratios and direct pursuit still consume much of the live body count. | Score spawn sectors for projected interception, lateral crossfire, denial usefulness, visibility, and a preserved escape lane. Direct rear pursuit is capped, not removed. | 2.2, 2.3 |
-| Difficulty | Ordinary health already stacks a global `2.60`, director `1.12`, durability `1.20`, and cycle curve up to `3.10`. Projectile speed is globally reduced to `0.82`; recovery is `1.28`. | Do not increase ordinary global HP in the first pass. Raise attack relevance through projectile speed, recovery, selected interceptor mobility, commit budgets, and compositions. Use a bounded priority-HP contingency only if measured time-to-kill is too low. | 2.4, 6.1 |
-| Simultaneous enemies | Materialized cycle caps are `32/44/56/64/72/72/72/72`; pool capacity is 320. Recent sessions peaked at 45–70 live enemies. The latest exact-72 native replay already failed capacity physics p95/p99 (`7.159/9.078 ms` versus `6/8 ms`). | Improve role use inside current caps and make exact 72 pass without reducing workload. Only after that result may a separate 80-cap candidate be tested; otherwise keep 72. | 2.3, 5.3 |
-| Upgrade fatigue | Current sessions opened 20–23 upgrade modals, mean 21.2; median gap 10.9 seconds and minimum 1.3 seconds. The authored minimum path is 2,296 XP and 32 levels. `VehicleRun` immediately opens one modal per pending level. | Cap XP level-up decisions at 16, use a new curve, and open them only at safe cadence points. Pending XP is never lost. Non-XP authored rewards keep source order. | 3.1–3.3 |
-| HUD clipping | Normal stage cells are only 34–40 px wide while they render the full localized boss/quota string with clipping. Current contract and validator require panel-free cells. | Amend the visual contract: one flat backed cell per top-HUD datum, explicit measured widths, and a separate boss-progress cell. Update validators before runtime layout. | 1.2, 4.1 |
-| Messages | One text-only two-line channel has a four-entry queue and currently carries five event families. It can ellipsize Korean/English and would make advisor lines compete with danger alerts. | Split immediate danger from tactical explanation. Existing world telegraphs/radar stay primary; a dedicated advisor runtime publishes bounded, interruptible semantic guidance to a side surface. | 4.2–4.4 |
-| Facility explanation | Facilities have 360 HP and activate for 12 seconds, but only activation is announced and expiration has no dedicated guidance receipt. | Publish discovered, activated, expiring, and ended receipts with exact effect/duration data from `VehicleMysteryDeviceRuntime`. | 4.3 |
-| Visual authority | `VISUAL_SYSTEM.md` and canonical sheet hash `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889` were inspected. Current panel-free wording conflicts with the user's backed-cell direction. | The user request authorizes a contract revision, not an asset approval. Use code-native Theme surfaces first. A future portrait requires a canonical PNG reference, ImageGen, provenance, and exact-file approval. | 1.2, 4.1, 4.4 |
+| Requirement or concern | Verified current owner and behavior | Evidence | Locked decision | Task IDs |
+| --- | --- | --- | --- | --- |
+| Run ends near ten minutes | `VehicleStageFlow` advances after raw defeat quotas `40–68`; the clock has no cap. Four current-schema completed local sessions averaged 589.9 seconds. | `vehicle_stage_flow.gd`, `vehicle_combat_stages.gd`, session diagnostics | Remove raw-kill progression. Run authored combat beats before each boss. Target 18–22 minutes as telemetry, never a hard timer. | 1.1, 2.1, 7.2 |
+| Fast vehicle creates a tail | Player speed is 280 and dash is 1,220; common pursuit actors are roughly 266–285. Current nominal role mix is 65% pursuit and most births start 1,200–2,100 units away. | player/enemy speed owners, stage role builder, spawn allocator | Spawn for time-to-contact around a predicted engagement point. Reduce pursuit share to 25%; make interception/crossfire/denial the majority. | 3.1, 3.2 |
+| Many actors, little danger | Cycle caps reach 72, yet threat budgets and commit caps allow only a small subset to attack; off-screen actors can occupy cap room. | encounter director/runtime, local sessions peaking at 45–70 | Do not add bodies. Give 6/8/10 enemies explicit attack slots across early/mid/late cycles; everyone else repositions or supports a beat. | 3.3 |
+| Durability is already high | Ordinary HP stacks `1.12 × 2.60 × 1.20 × cycle curve up to 3.10`. Hostile projectile speed is reduced to 0.82 and recovery is 1.28. | stage difficulty, encounter director, spawn construction | Reduce late HP inflation, increase projectile relevance and attack recovery, and add committed interceptor bursts. Difficulty comes from decisions and danger, not sponge time. | 3.4 |
+| Bosses are gated by chores | Ordinary kills alone start a 1.5 s boss warning; survivors do not block entry. Boss maintenance then collapses to a generic 8–12 actors. | stage flow, encounter runtime | Boss follows the cycle's authored beat sequence. Replace generic maintenance churn with one mechanic-supporting escort pulse at each phase transition. | 2.1, 3.5 |
+| Upgrade fatigue | Current completed sessions open 20–23 upgrade modals; median gap is 10.9 s and minimum 1.3 s. `VehicleRun` opens one modal for each pending XP level. | diagnostics, experience/reward runtime | XP earns charges without pausing. Choices occur only at one early resupply and after bosses 1–7; maximum eight in-run modal sessions and sixteen total choices including deployment. | 4.1–4.3 |
+| HUD is unreadable | The full boss/quota string is drawn in a 34–40 px clipped panel-free status slot. | gameplay HUD and layout validator | Replace the status strip with one backed mission card plus square action/status cells. Remove total defeats from live HUD. | 5.1 |
+| Messages do not teach | One clipped two-line, four-entry text queue carries danger, boss, facility, shield, and progression events. | gameplay HUD, stage UI, localization validator | Separate immediate danger from explanation. Add a fixed, event-driven `CONTROL` auxiliary AI with one observation and one action per message. | 5.2–5.4 |
+| First-time players cannot diagnose failure | Guidebook is modal reference data; failure report does not identify the mechanic that caused the loss. | guidebook catalog/panel, combat report body | Reuse the same counterplay catalog in Tactical Control, Guidebook, and a top-two failure analysis. | 5.3, 5.5 |
+| Cap increase is unsafe | Latest exact-72 native replay failed capacity physics p95/p99 at 7.159/9.078 ms against 6/8 ms. | retained local performance evidence and performance policy | Keep cap 72. Qualify the redesigned product workload and preserve the exact-72 capacity test as a separate red/green gate. | 6.2, 7.3 |
 
 Readiness statement:
 
-- Product, architecture, data, UI, localization, performance, and validation owners are
-  known. No dependency or visual-asset approval is required for the code-native first
-  release.
-- The 14–18-minute band and the numbers below are initial tuning targets grounded in
-  current local telemetry, not claims that external games provide Cardborne values.
-- The stale root phrase “ten-stage paired run” conflicts with the current canonical
-  eight-cycle spec and code. Do not edit protected `AGENTS.md` within this gameplay task;
-  raise a separate governance correction after implementation.
+- The previous threat-credit proposal is rejected because it was still a kill quota with
+  different arithmetic. The previous conditional cap-80 proposal is also rejected because
+  exact 72 is not yet qualified.
+- All material product, UX, architecture, ownership, dependency, safety, and validation
+  decisions are closed. Remaining choices are implementation-local.
 
-## Locked Behavior Contracts
+## Locked Product Design
 
-### 1. Combat identity and run pacing
+### A. The run is an authored operation, not a kill counter
 
-- Genre rule: survivor-like progression supplies build growth and field persistence;
-  shooter rules own movement, aim, attack tells, interception, space control, and tempo.
-- Controlled reference build: default starting vehicle, fixed Hard, no debug grants,
-  1280×720, current Godot 4.7.1. Record at least five complete runs per tuning candidate.
-- Acceptance band: median completion 14–18 minutes; no more than one of five reference
-  wins below 12 minutes; no hard time gate. A skilled clear can remain faster.
-- Replace raw quota with threat credits `56/64/72/80/88/96/104/112`.
-  - pursuit/standard defeat: 1 credit;
-  - ranged, support, denial, or specialist defeat: 2 credits;
-  - priority/elite defeat: 3 credits;
-  - summons, cleanup, facilities, and non-countable actors: 0 credits.
-- Boss readiness also requires three distinct authored assault families to have begun
-  (`intercept`, `crossfire`, `denial`) and at least one priority unit to have committed an
-  attack. If credits advance early, schedule the missing family at the next legal cue;
-  never hold an empty field to satisfy the contract.
-- Boss warning remains 1.5 seconds. During boss combat, maintain ordinary reinforcement
-  pressure up to 25% of the cycle cap, with at most one ranged and one denial commit and
-  the same escape-corridor rule. Boss death cleanup retires remaining owned danger safely.
+Each cycle consists of combat beats, boss warning, boss combat, boss cleanup, and—except
+after boss 8—a service break.
 
-### 2. Spawn and attack policy
+| Cycle | Ordinary beats | Beat shape | Boss pressure |
+| ---: | ---: | --- | --- |
+| 1–2 | 2 | `teach → combine` | signature attack, then one combination |
+| 3–6 | 3 | `teach → combine → power_test` | signature, combination, phase escalation |
+| 7–8 | 3 | `remix → combine → power_test` | learned patterns combined without a new visual language |
 
-- Every arrival window scores legal off-screen sectors using the player's current
-  velocity and a 1.2-second bounded projection.
-- Sector weights: 35% projected intercept/crossing value, 25% role-compatible standoff or
-  denial geometry, 20% visibility/off-screen legality, 20% escape-lane preservation.
-- Direct rear pursuit may occupy at most 35% of admitted threat cost in a window. At least
-  40% must be intercept/crossfire/denial from cycle 2 onward; support remains bounded by
-  its existing category limits.
-- Never spawn inside the existing 900-unit safe radius or beyond the 2,400-unit useful
-  range. Never choose a sector that closes the last safe lane.
-- Preserve current materialized caps during the behavior pass. Refill floors remain the
-  low-water mark, not a target to fill with irrelevant chasers.
-- First stat pass:
-  - `HOSTILE_PROJECTILE_SPEED_MULTIPLIER`: `0.82 → 0.90`;
-  - `ENEMY_RECOVERY_RATE`: `1.28 → 1.38`;
-  - interceptor/rammer approach speed: +10%; direct pursuit speed unchanged;
-  - cycles 5–8 ranged commit cap: `4 → 5`; denial commit cap stays 3;
-  - global ordinary HP, global enemy damage, player speed, and dash stay unchanged.
-- Priority-HP contingency: only if a default-build reference kills a priority unit before
-  its first committed attack in more than 30% of samples, add +8% health to that role,
-  never to the global ordinary multiplier.
-- Each boss demonstrates its signature attack alone once, then combines it with one
-  learned pressure layer. Do not add new attack languages or random freeform selection.
+- `teach` resolves after the assigned tactic commits once and either completes or is
+  broken by the player.
+- `combine` resolves after two different role groups commit and the tactic's anchor group
+  is defeated.
+- `power_test` resolves after one priority actor commits, the combined tactic resolves,
+  and the priority actor is defeated.
+- Ordinary kills still grant XP and remove danger; they do not directly advance the run.
+- A beat that cannot resolve because its required actor/cue is invalid retries that exact
+  requirement once. If it remains invalid, the runtime ends the beat after 50 seconds,
+  records `beat_fallback`, withdraws its unresolved reserve, and continues. It never waits
+  on an empty field.
+- Every beat uses the same bounded intensity shape: `build` admits and introduces the
+  assigned roles, `sustain` holds the authored attack-slot pressure, and `recover` stops
+  new commits for 3–5 seconds after the resolution condition. The tactic catalog owns
+  composition; this state only controls admission and commit permission and never changes
+  HP, player speed, warning time, or difficulty.
+- Boss warning remains 1.5 seconds. A boss phase transition may call one authored escort
+  pulse of 4/6/8 ordinary actors for cycles 1–2/3–6/7–8. No generic 8–12 refill churn.
+- Target active-run distribution: 15–18 minutes of movement/combat, 2–4 minutes of
+  deployment/resupply/service choices, and 18–22 minutes total. This is an acceptance
+  band for controlled tests, not a player-facing clock or progression gate.
 
-### 3. Upgrade cadence
+### B. Pressure attacks the route, not the rear bumper
 
-- Replace the unbounded 96-cap curve with 16 level-up thresholds:
-  `10,16,24,34,46,60,76,94,114,136,160,186,214,244,276,310`.
-  Run level 17 is XP-complete; field XP then stops spawning/merges through the existing
-  completion path. Authored non-XP rewards remain available.
-- The first two level-up rewards may open immediately only when no committed high-threat
-  attack is active. Later level-ups open at the first safe window satisfying all rules:
-  no boss warning/active boss/high-threat commit, no damage received for 2.5 seconds, and
-  at least 45 seconds since the prior level-up modal.
-- Pending levels accumulate. One modal session resolves at most two pending level choices
-  sequentially, shows `1/2` or `2/2`, and returns to play after the second choice. No two
-  separate level-up modal sessions occur within 45 seconds.
-- If a boss starts first, defer pending level-ups until the 2.0-second boss cleanup ends.
-  Do not discard XP, reorder non-XP sources, or open a modal during aiming pressure.
-- Acceptance: 12–16 level-up modal sessions in a complete reference run, median interval
-  at least 45 seconds after the first two, minimum interval at least 30 seconds, and no
-  `upgrade_opened` event while a high-threat receipt is committed.
+- Replace fixed-distance-first placement with time-to-contact placement. For every unit,
+  select a legal off-screen point expected to produce its first meaningful attack in
+  2.0–3.5 seconds, bounded by the existing 900–2,400 unit placement limits.
+- Predict an engagement point 0.8–1.5 seconds along the player's velocity. Clamp the
+  prediction at walls and discard a candidate that removes the final escape lane.
+- Per-beat admitted threat composition:
+  - pursuit: 25%;
+  - interceptor/rammer: 30%;
+  - ranged/crossfire: 25%;
+  - denial/support: 20%.
+- No more than 30% of threat cost may enter from the rear 120-degree sector. At least one
+  arrival group enters from an ahead-lateral sector in every beat after the first teach.
+- Attack slots are 6/8/10 for cycles 1–2/3–5/6–8. No more than three slots may attack from
+  the same 90-degree sector. Non-slotted enemies reposition, screen, or support; they do
+  not continue perfect homing behind the player.
+- Interceptors receive a +15% approach burst for at most 1.5 seconds, then commit a fixed
+  crossing route. Pursuers remain slower than the player. Rammers and denial actors lock
+  their final vector/zone after the existing warning and do not retarget through a dash.
+- First balance pass:
+  - ordinary global health multiplier `2.60 → 2.10`;
+  - cycle health curve `1.00/1.30/1.60/1.90/2.20/2.50/2.80/3.10 →
+    1.00/1.15/1.30/1.45/1.60/1.75/1.90/2.05`;
+  - hostile projectile speed multiplier `0.82 → 0.95`;
+  - enemy recovery rate `1.28 → 1.45`;
+  - global enemy damage and player movement/dash unchanged;
+  - late ranged commit cap `4 → 5`; denial cap remains 3.
+- Boss HP remains unchanged in the first pass. Phase 1 teaches the signature alone;
+  Phase 2 adds one learned pressure layer; Phase 3 changes cadence/coverage, not visual
+  language. The player must get one clean signature-only read before combination.
 
-### 4. Backed HUD and tactical advisor
+### C. Upgrades happen at service moments
 
-- Keep full-width HP and XP meters. Place a left-aligned row below them using one shared
-  Theme-backed surface per datum: one flat near-black fill, one 1 px boundary, no nested
-  border, no texture chrome.
-- Standard sizes: boss progress `168×48`, total defeats `52×48`, dash `76×48`, active
-  `76×48`, conditional status `52×48`; 8 px gap and 24 px safe margin. Compact sizes use
-  `144×42/46×42/68×42`; 200% uses two rows within the left top band instead of clipping.
-- Boss progress always displays `보스 N/8 · 출현까지 C` / `Boss N/8 · C to contact`.
-  During warning it displays the countdown; during combat it displays the localized boss
-  name and phase. Defeats remain a separate icon/value cell.
-- Use measured localized text bounds in validation. Ellipsis is not acceptance for boss,
-  dash, active, facility time, or advisor action text.
-- Replace the central generic announcement lane with two channels:
-  - `danger cue`: immediate, maximum 1 line, centered below the top meters for at most
-    1.8 seconds; only boss inbound, barrier depleted, and lethal/high-threat warnings;
-  - `tactical advisor`: right side below the minimap, standard `360×76`, compact
-    `300×68`, 200% `440×104`; 48 px identity well plus at most two lines and a small
-    category label. It never pauses play or covers the reticle/escape corridor.
-- Semantic priority is `critical > mechanic > state > flavor`. Queue capacity is 3.
-  Critical lines interrupt; mechanic/state lines coalesce by subject; flavor is dropped
-  under pressure. Repeated lines have a 45-second cooldown unless the player repeats the
-  relevant failure.
-- Guidance is event-driven and knowledge-aware:
-  - first encounter: explain one actionable mechanic;
-  - first failed response: repeat with a more direct verb;
-  - mastered/repeated encounter: show only phase/state changes;
-  - boss mechanics speak at telegraph/recovery boundaries, never over the first required
-    dodge;
-  - facility lines report exact outcome and remaining duration from runtime truth.
-- Required Korean examples and equivalent English keys:
-  - frontal shield: `전면 보호막 감지. 측면으로 돌아 사격하세요.`
-  - repair active: `수리 시설 가동. 12초 동안 범위 내 선체를 복구합니다.`
-  - repair ended: `수리 지원 종료.`
-  - denial enemy first-seen: `진로 차단 신호 감지. 사격 지점을 먼저 제거하세요.`
-- First release uses a semantic comms glyph and identity well, text, and the existing
-  subtle UI audio family. It is portrait-ready but has no generated portrait or VO.
+- Deployment grants one explicit starting-card choice before the run clock starts.
+- XP fills a non-modal `upgrade_charge` ledger with these 15 requirements:
+  `12/20/32/48/66/86/108/132/158/186/216/248/282/318/356`.
+  The current authored minimum path of 2,296 XP can earn all 15 charges; progression then
+  completes through the existing shard-cleanup path.
+- The first earned charge opens once, after cycle 1's `teach` beat resolves and before its
+  `combine` beat begins.
+- Boss cleanup 1–7 enters `SERVICE_BREAK`. One modal session spends up to two available
+  charges as two sequential card choices, then continues. Boss 8 opens Result and never
+  offers a dead-end upgrade.
+- Missing charges do not block continuation. Excess charges carry forward. Source order,
+  card compatibility, reserved active/secondary offers, and one confirmed card per charge
+  remain owned by the reward/card runtimes.
+- There are at most eight in-run upgrade sessions: one field resupply plus seven service
+  breaks. No upgrade modal opens during ordinary combat, boss warning, boss combat, dash,
+  or a committed attack.
+
+### D. The HUD is a cockpit, not a row of clipped glyphs
+
+- Keep full-width HP and XP meters.
+- Replace `stage_progress + total_defeats` with one mission card under the meters:
+  - standard `240×56`, compact `212×52`, large `260×60`, 200% `440×92`;
+  - line 1: `CYCLE 3 / 8` or boss name;
+  - line 2: current verb and progress, for example `BREAK CROSSFIRE · 1 / 2 ANCHORS`;
+  - boss warning: `CONTACT IN 1.5`; boss combat: phase and signature state.
+- Remove total defeats from live play. Keep it in Pause/Report, where it is useful.
+- Dash and Active use `56×56` backed square cells; conditional statuses use `48×48` cells.
+  Each uses the shared surface, 1 px boundary, semantic glyph, value, and no label when the
+  glyph is unambiguous. At 200% they wrap below the mission card instead of shrinking.
+- Keep the minimap at top-right. It remains the location channel; the mission card is the
+  objective channel. They must never overlap at 960, 1,280, 1,920, or 200% text.
+
+### E. `CONTROL` is a gameplay system, not flavor chatter
+
+- Player-facing identity: `CONTROL // AUXILIARY AI` (`CONTROL` remains the callsign in
+  both locales; the role label is localized). First release uses a code-native comms glyph,
+  a consistent audio chirp, and text—no portrait or voice dependency.
+- Layout: a right-side surface directly below the minimap, standard `336×84`, compact
+  `304×78`, large `384×96`, 200% `440×132`. It has a 48 px identity well, a category label,
+  and at most two text lines. It never reaches the central reticle lane.
+- Message grammar is always `OBSERVATION — ACTION` and contains one actionable verb.
+  Examples:
+  - `FRONTAL SHIELD — BREAK CONTACT AND ATTACK FROM THE SIDE.`
+  - `REPAIR FIELD ONLINE — 12 S REMAIN. STAY INSIDE THE RING.`
+  - `ARTILLERY LOCK — CROSS THE AIM LINE BEFORE IT FIRES.`
+  - `REPAIR FIELD OFFLINE.`
+- World telegraphs and threat radar own immediate survival. A one-line danger channel may
+  show boss inbound, barrier depleted, or lethal lock. Tactical Control never duplicates
+  those cues.
+- Queue capacity is 2. A message older than 2.5 seconds is dropped. Mechanic messages show
+  for 4 seconds, coalesce by subject, and repeat at most once per encounter after a verified
+  failure. State messages are replaced by the newest state; flavor messages do not exist.
+- Knowledge states are `unseen`, `introduced`, `failed`, `resolved` and are run-scoped.
+  The gameplay owner publishes success/failure receipts; the advisor catalog only maps a
+  state and subject to localized observation/action keys.
+- Guidebook enemy/boss/facility entries reuse the same observation/action keys in a
+  permanent `Observed Behavior / Countermeasure` section.
+- Failure Report adds `What ended the run`: the two highest-impact verified mechanic
+  receipts and one countermeasure each. It never invents a cause from proximity alone.
 
 ## Tasks
 
-### Phase 1 — Amend authoritative contracts
+### Phase 1: Amend the authoritative contracts
 
-Goal: remove conflicts before runtime work.
+Goal: make the shooter-first model binding before implementation.
 
-- [ ] **1.1 Product contract.** Update `docs/product/vehicle_game_spec.md` with the hybrid
-  fast-shooter identity, observational 14–18-minute band, threat-credit readiness,
-  reinforcement rule, and 16-choice XP cadence. Remove raw-quota-only and “time has no
-  target” claims that conflict with this plan; keep the no-hard-timer invariant.
-  - Accept: product spec, stage data, guidebook terminology, and validators agree on eight
-    cycles, credit labels, and progression cap.
-- [ ] **1.2 Visual contract.** Update `docs/design/VISUAL_SYSTEM.md` and
-  `.agents/design/DESIGN.md` to authorize code-native backed top-HUD cells and the tactical
-  advisor surface. Resolve the omitted facility-announcement contract.
-  - Accept: `validate_cardborne_visual_authority.ps1` passes; document says concept glyph
-    is not raster approval; no panel-free assertion remains for status cells.
-- [ ] **1.3 Localization inventory.** Define stable semantic IDs and Korean/English keys
-  for threat credits, boss states, advisor categories, the required event matrix, and
-  settings/accessibility names.
-  - Accept: localization validator reports complete key parity and no runtime English
-    literals (`READY` included) on the changed HUD path.
+Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`,
+`.agents/design/DESIGN.md`, localization catalogs, focused validators.
 
-### Phase 2 — Rebuild encounter pressure
+- [ ] **1.1 Product contract**
+  - Change: replace raw quota, generic boss maintenance, immediate XP modal, panel-free
+    HUD, and telemetry-only time wording with Sections A–E above.
+  - Accept: product spec and data tables agree on eight cycles, beat counts, service
+    breaks, 18–22 minute acceptance band, and unchanged actor caps.
+- [ ] **1.2 Visual and localization contracts**
+  - Change: authorize the backed mission/action/status cells and CONTROL surface through
+    the shared Theme; define complete Korean/English keys and accessibility names.
+  - Accept: `validate_cardborne_visual_authority.ps1` and localization parity pass; the
+    spec records `actual_image_reference_used=false` and `reference_input_method=not_applicable`.
 
-Goal: make speed create tactical vector choices instead of distance from followers.
+### Phase 2: Replace kill quotas with combat beats
 
-- [ ] **2.1 Boss readiness owner.** Extend `vehicle_stage_flow.gd` with credit totals and
-  assault-family receipts; update stage definitions from quotas to the locked credit table.
-  `VehicleRun` only orchestrates receipts.
-  - Accept: focused fixtures prove credits, three families, priority commit, warning, boss
-    entry, boss cleanup, and zero-credit exclusions.
-- [ ] **2.2 Spawn scoring.** Extend `vehicle_spawn_allocator.gd` to score velocity-projected
-  intercept, role geometry, visibility, and escape lanes. Feed semantic sector decisions
-  from `vehicle_encounter_runtime.gd`; do not add per-frame allocation scans.
-  - Accept: seeded fixtures cover stationary, sustained dash, reversal, wall-edge, and last
-    safe-lane cases; direct-rear share and minimum intercept share remain within contract.
-- [ ] **2.3 Composition and boss maintenance.** Update encounter/tactic catalogs and runtime
-  to enforce role budgets, accelerated missing assault families, and bounded boss escorts.
-  - Accept: no visible-hostile gap exceeds 3 seconds, first meaningful preparation stays
-    within 8 seconds, and boss pressure never exceeds commit/corridor limits.
-- [ ] **2.4 Stat tuning.** Apply the locked projectile/recovery/interceptor/ranged-cap
-  changes in existing balance owners. Add per-role HP contingency without activating it.
-  - Accept: debug contracts, guidebook values, tests, and diagnostics expose exact values;
-    no global ordinary-health or player-mobility value changes.
+Goal: ship one complete cycle flow before broad tuning.
 
-### Phase 3 — Reduce upgrade interruption
+Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`, new
+`scripts/encounters/vehicle_encounter_beat_catalog.gd`,
+`scripts/encounters/vehicle_stage_flow.gd`, `vehicle_encounter_runtime.gd`,
+`vehicle_collective_tactic_catalog.gd`, `vehicle_collective_tactic_runtime.gd`.
 
-Goal: keep build decisions meaningful without repeatedly stopping manual combat.
+- [ ] **2.1 Beat data and receipts**
+  - Change: promote the existing tactic rollout into the exact cycle/beat table; add
+    `build/sustain/recover` state and narrow `started`, `commit`, `broken`, `resolved`,
+    `fallback` receipts. Remove quota as campaign progression truth. Do not add a second
+    generalized difficulty director.
+  - Accept: seeded tests prove teach/combine/power-test completion, one retry, 50-second
+    fallback, zero empty wait, pause/resume, save reset, and boss admission.
+- [ ] **2.2 Boss and service flow**
+  - Change: add phase-transition escort pulses and `SERVICE_BREAK`; remove generic boss
+    maintenance and direct quota-to-warning entry.
+  - Accept: bosses enter only after required beats, escorts match 4/6/8 and commit limits,
+    boss 8 opens Result, and no service break appears after victory.
 
-- [ ] **3.1 XP curve.** Implement the 16-threshold table and XP-complete behavior in
-  `vehicle_experience_runtime.gd`; update drop/placement and guidebook tests as required.
-  - Accept: the authored minimum path reaches exactly 16 choices, pending XP accounting is
-    lossless, and complete progression does not retain hidden shards.
-- [ ] **3.2 Safe-window policy.** Give `VehicleRewardRuntime` a bounded level-up cadence
-  receipt and let `VehicleRun` supply damage/threat/boss state. Preserve source ordering.
-  - Accept: deterministic tests cover early rewards, cooldown, pending accumulation, boss
-    deferral, non-XP rewards, pause/resume, and run end.
-- [ ] **3.3 Batched choice UI.** Let the existing modal resolve at most two choices per
-  session and show progress. Reconcile modal/row geometry with the visual contract,
-  including one outer scroll at 200% and no clipped descendants.
-  - Accept: Korean/English at 960×540, 1280×720, 1920×1080, and 200% have complete text,
-    one focus path, one scroll owner, and no overflow.
+### Phase 3: Make speed create tactical decisions
 
-### Phase 4 — HUD and tactical guidance
+Goal: make every beat pressure at least two directions without creating unavoidable rings.
 
-Goal: expose run truth and unfamiliar mechanics at a glance without obscuring combat.
+Source owners: `vehicle_spawn_allocator.gd`, `vehicle_encounter_runtime.gd`,
+`vehicle_encounter_director.gd`, `vehicle_enemy_movement_policy.gd`,
+`vehicle_enemy_targeting_policy.gd`, stage difficulty and archetype owners.
 
-- [ ] **4.1 Backed status cells.** Extend the shared Theme/factory and refactor
-  `vehicle_gameplay_hud.gd` to use the locked cell sizes, safe margins, boss-progress
-  states, and responsive two-row accessibility layout.
-  - Accept: actual glyph-bound checks pass in both locales; status/minimap never overlap;
-    boss text, defeats, dash, active, and five conditional statuses remain visible.
-- [ ] **4.2 Advisor domain owner.** Add responsibility-shaped `VehicleTacticalAdvisorRuntime`
-  and catalog files. Consume semantic event receipts and own priority, knowledge, failure
-  escalation, coalescing, cooldown, and queue state. Do not put policy in HUD code.
-  - Accept: deterministic tests prove event ordering, interruption, cooldown, first-seen,
-    repeat failure, localization key validity, and bounded queue capacity.
-- [ ] **4.3 Gameplay event adapters.** Publish narrow receipts from stage flow, boss shield/
-  pattern owners, enemy/tactic commits, barrier state, and facility lifecycle. Include
-  exact duration/phase data; never parse display strings.
-  - Accept: boss shield, phase, priority enemy, facility discovered/active/expiring/ended,
-    barrier depleted, and all-upgrades-complete routes have one truth owner each.
-- [ ] **4.4 Advisor presenter.** Add the right-side comms surface to `VehicleGameplayHud`
-  through `VehicleHudPresenter`'s existing invalidation cadence. Add reduced-motion,
-  subtitle visibility, and advisor-detail settings; clear/retranslate safely on locale
-  change.
-  - Accept: combat remains input-pass-through; reticle and escape corridor stay clear;
-    danger and advisor lanes never overlap; no unapproved raster is referenced.
+- [ ] **3.1 Time-to-contact allocator**
+  - Change: add bounded engagement-point prediction, role-speed arrival estimates,
+    ahead-lateral/rear sector budgets, and escape-lane rejection using reusable buffers.
+  - Accept: stationary, sustained movement, dash, reversal, wall-edge, and last-lane
+    fixtures meet 2.0–3.5 seconds and sector limits without per-frame allocation.
+- [ ] **3.2 Role mix and attack slots**
+  - Change: replace the 65% pursuit build with 25/30/25/20 composition and 6/8/10
+    sector-limited attack slots. Non-slotted actors use explicit reposition/support state.
+  - Accept: deterministic traces show at least two attack sectors, no more than three
+    same-sector attackers, no universal tail state, and no visible-threat gap over 3 s.
+- [ ] **3.3 Movement, attacks, and balance**
+  - Change: apply the locked interceptor burst, fixed commits, HP curve, projectile speed,
+    recovery, and ranged-cap changes; update guidebook stat adapters.
+  - Accept: values match debug contracts; player speed/dash, global enemy damage, warning
+    time, collision, and caps are unchanged.
+- [ ] **3.4 Boss teaching**
+  - Change: enforce signature-alone first selection, one learned combination in phase 2,
+    and cadence/coverage escalation in phase 3.
+  - Accept: every boss fixture proves the order, escape corridor, no unannounced pattern
+    language, and one mechanic-supporting escort pulse per transition at most.
 
-### Phase 5 — Diagnostics, quality, and capacity
+### Phase 4: Move progression to service moments
 
-Goal: make pacing claims reproducible and prevent a visually successful change from
-shipping a runtime regression.
+Goal: preserve build depth with no random combat interruption.
 
-- [ ] **5.1 Diagnostics.** Add threat credits, assault families, rear/intercept spawn share,
-  attack commits, safe-lane rejections, upgrade deferral reason/session size, advisor
-  queued/shown/interrupted/dropped, and facility lifecycle to session summaries.
-  - Accept: schema migration preserves newest-ten retention and old sessions remain
-    readable or are explicitly versioned out without quarantine noise.
-- [ ] **5.2 Quality audit.** Run `$codebase-quality-auditor` after multi-module work. Split
-  policy/catalog/presenter responsibilities and remove obsolete generic announcement paths
-  only after replacements are reachable.
-  - Accept: no card behavior in UI, no advisor policy in presenter, no competing quota
-    owner, no catch-all expansion without extraction, and no stale validator contract.
-- [ ] **5.3 Capacity qualification.** Under `$cardborne-performance-guard`, first reproduce
-  and fix the exact-72 native/Web capacity failure without lowering actor count, attack
-  activity, collision truth, cadence, or visual workload. Re-run the same clean scenario.
-  - Gate A: 72 must pass current native and Web policy thresholds with equal functional
-    output, no capacity rejection, and bounded memory/projectile/effect reserves.
-  - Gate B: only after Gate A passes, run a separate cycles-5–8 cap-80 experiment that
-    changes only the active-cap table. Promote 80 only if it passes the same rules;
-    otherwise ship 72. Do not reduce encounter composition to make either gate pass.
+Source owners: `vehicle_experience_runtime.gd`, `vehicle_reward_runtime.gd`,
+`vehicle_run.gd` orchestration, deployment/upgrade panels, card offer owners.
 
-### Phase 6 — Integrated validation and release evidence
+- [ ] **4.1 Upgrade-charge ledger**
+  - Change: implement the 15 requirements, cap, snapshot, carry, spend, and completion
+    receipts; remove XP's direct permission to open UI.
+  - Accept: 2,296 XP yields exactly 15 charges, accounting is lossless, and completed
+    progression clears/merges shards without hidden pending levels.
+- [ ] **4.2 Scheduled choice sessions**
+  - Change: add the deployment choice, cycle-1 resupply, and boss-1–7 two-choice service
+    sessions while preserving source order and offer reservations.
+  - Accept: full campaign fixture has at most eight in-run sessions, at most sixteen total
+    choices, no combat-time modal, and no boss-8 reward.
+- [ ] **4.3 Compact two-choice modal**
+  - Change: show `CHOICE 1 / 2`, update the shared build summary after choice 1, and keep
+    one outer scroll only at 200%.
+  - Accept: keyboard/controller focus and Korean/English rendered text fit at all supported
+    sizes; no clipped scroll descendants.
 
-Goal: prove the complete player experience on the shipped path.
+### Phase 5: Build the cockpit and Tactical Control
 
-- [ ] **6.1 Targeted and broad checks.** Run affected unit/focused validators, script parse,
-  localization, visual authority, campaign flow, reward integrity, UI layout, diagnostics,
-  and combat pressure suites through `./tools/godot.ps1`.
-- [ ] **6.2 Controlled playtest.** Run at least five default-build complete sessions and
-  record completion time, deaths/damage, boss-ready time, role/sector shares, priority unit
-  first-commit survival, upgrade sessions/intervals, and advisor delivery/failure repeats.
-  - Pass: timing and upgrade bands meet the locked contract; no test reports universal
-    tail chase, empty clock waiting, unreadable mechanic, or clipped HUD text.
-- [ ] **6.3 Rendered evidence.** Capture Korean and English at compact/standard/large/200%,
-  including peak horde, boss warning, shield advice, facility activation/expiration,
-  stacked conditional states, upgrade batch 1/2 and 2/2, and pause/resume.
-  - Store evidence in `.agents/evidence/` with build identity and thresholds. Compare exact
-    file provenance; do not call a concept or style reference approved production art.
-- [ ] **6.4 Production Web path.** Export Web, start the built app through the guarded
-  project lane, repeat the critical interaction/visual paths, record the final performance
-  verdict, and stop task-owned helpers.
+Goal: make objective, action readiness, mechanic understanding, and failure learning clear.
 
-## Validation Commands
+Source owners: shared Theme/factory, `vehicle_gameplay_hud.gd`,
+`vehicle_hud_presenter.gd`, new `vehicle_tactical_control_runtime.gd` and catalog,
+guidebook catalog/panel, combat report builder/body.
 
-Use exact existing validator names discovered at implementation time; the minimum command
-families are:
+- [ ] **5.1 Mission and action HUD**
+  - Change: add the backed mission card and square cells, remove live total defeats, and
+    implement responsive wrap and measured localized bounds.
+  - Accept: objective/boss text never ellipsizes; HUD/minimap do not overlap; all reachable
+    states fit at 960/1280/1920 and 100/200%.
+- [ ] **5.2 Tactical Control runtime**
+  - Change: own priority, staleness, coalescing, knowledge state, failure repeat, and the
+    two-entry queue outside UI code.
+  - Accept: deterministic tests prove message grammar keys, ordering, expiry, interruption,
+    duplicate suppression, locale refresh, and no stale state message.
+- [ ] **5.3 Semantic event adapters and presenter**
+  - Change: publish exact boss, tactic, enemy, facility, barrier, and success/failure
+    receipts; present CONTROL below minimap through existing HUD invalidation cadence.
+  - Accept: no display-string parsing, no gameplay polling in UI, input pass-through,
+    central reticle lane clear, and no duplicate danger/advisor message.
+- [ ] **5.4 Guidebook and failure learning**
+  - Change: reuse the counterplay catalog in discovered entries and top-two verified
+    failure analysis.
+  - Accept: every reported cause has a source receipt; unknown causes say evidence was
+    insufficient; both locales have complete observation/action copy.
 
-```powershell
-./tools/validation/validate_cardborne_visual_authority.ps1
-./tools/godot.ps1 --headless --path . --script <affected focused validator>
-./tools/godot.ps1 --headless --path . --editor --quit
-./tools/godot.ps1 --headless --path . --export-release Web build/web/index.html
-```
+### Phase 6: Instrumentation and code quality
 
-Before the production-style start, load `$npjt-port-guard`; before profiling or changing
-the capacity table, load `$cardborne-performance-guard`.
+Goal: make the redesign measurable without creating new hot-path ownership.
 
-## External Evidence and Applicability
+Source owners: session recorder/store, encounter pacing capture, performance scenarios,
+responsibility-shaped gameplay/UI modules.
 
-- [Sunset Overdrive — GDC AI talk](https://gdcvault.com/play/1021780/AI-in-the-Awesomepocalypse-Creating): fast/vertical players invalidate conventional flank-and-chase assumptions; supports interception and role redesign.
-- [DOOM Eternal combat Q&A](https://www.gamedeveloper.com/design/q-a-evolving-the-combat-design-of-id-software-s-i-doom-eternal-i-): player traversal speed required faster reactions/tells and larger usable combat space; supports attack relevance without slowing the player.
-- [Left 4 Dead AI systems paper](https://steamcdn-a.akamaihd.net/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf): supports visibility/flow-aware structured variation, not Cardborne-adaptive difficulty.
-- [F.E.A.R. — Three States and a Plan](https://gdcvault.com/play/1013394/Three-States-and-a-Plan): supports coordinated suppression, advance, and flushing tactics.
-- [Ghost of Tsushima combat balance](https://blog.playstation.com/2020/11/25/honoring-the-blade-and-combat-balance-in-ghost-of-tsushima/): supports aggression, timing, moves, and damage before HP inflation; melee-specific, so numbers do not transfer.
-- [Returnal enemy design](https://blog.playstation.com/2021/04/14/creating-returnals-otherworldly-enemies-vfx-driven-tentacle-tech-and-deep-sea-inspirations/): supports readable role combinations and deliberate defensive maneuvering.
-- [Returnal UX](https://blog.playstation.com/2021/05/11/unpacking-returnals-ux-design-gameplay-first-ui-retro-futuristic-tech-and-accessibility/): supports critical information near focus and explanatory information at the periphery.
-- [Warframe mission interface](https://support.warframe.com/hc/en-us/articles/38801911653517-Mission-Interface): supports side transmissions for objectives, guidance, exposition, and threats while persistent progress stays near the minimap.
-- [Psychonauts 2 modular bosses](https://www.gamedeveloper.com/marketing/using-a-modular-system-of-maneuvers-to-design-i-psychonauts-2-i-s-boss-fights-in-a-hurry): supports telegraph–attack–recovery maneuvers and safe dialogue timing.
-- [Dota 2 Nest of Thorns development](https://store.steampowered.com/news/posts/?appids=570&enddate=1747260468&feed=steam_community_announcements): supports reducing upgrade distraction and preserving breathing room; reverse-bullet-hell context means Cardborne must validate cadence locally.
-- [Firewatch dialogue systems](https://media.gdcvault.com/gdc2017/Presentations/Armstrong_Do_you_copy.pdf): supports event/fact-driven, interruptible contextual lines.
+- [ ] **6.1 Diagnostic schema**
+  - Change: record beat durations/fallbacks, time-to-contact, sector/role shares, attack
+    slot occupancy, tail-state time, upgrade sessions/charges, CONTROL delivery, mechanic
+    success/failure, and service time.
+  - Accept: newest-ten migration is valid; old bundles are versioned safely; no event
+    flood exceeds bounded retention.
+- [ ] **6.2 Quality audit**
+  - Change: run `$codebase-quality-auditor`; make only small task-scoped corrections.
+  - Accept: no beat/reward/advisor policy in `VehicleRun` or UI, no competing progression
+    owner, no catch-all catalog, and obsolete quota/announcement paths are unreachable.
 
-Rejected alternatives:
+### Phase 7: Integrated qualification
 
-- Slow the vehicle, remove dash, or increase turn inertia to let chasers catch up.
-- Spawn mainly behind the player, teleport enemies, or fill every lane.
-- Raise global ordinary HP again or use boss health as the main run-length control.
-- Use adaptive health/difficulty that weakens the fixed-Hard authored contract.
-- Raise simultaneous actor caps before isolated clean capacity evidence.
-- Keep one modal per level, move all upgrades to run end, or discard queued XP.
-- Put tactical advice into the existing four-entry generic announcement queue.
-- Make a portrait/voice package a dependency of the first guidance release.
+Goal: prove the new game, not merely individual systems.
 
-## Progress Ledger
+- [ ] **7.1 Functional and rendered gate**
+  - Accept: affected focused validators, parse/import, campaign, rewards, localization,
+    visual authority, UI layout, and diagnostics pass; Korean/English captures cover peak
+    beat, boss warning, shield guidance, facility online/offline, service choice 1/2 and
+    2/2, failure analysis, compact/standard/large/200%, grayscale, and focus.
+- [ ] **7.2 Controlled play gate**
+  - Accept: at least five default-build complete runs have a median 18–22 minutes; at
+    least 75% of ordinary combat seconds contain a visible committed threat; rear-only
+    attack time is below 20%; median upgrade sessions are 6–8; no modal opens in combat;
+    first-time testers can state the current objective and boss countermeasure after one
+    exposure without developer explanation.
+- [ ] **7.3 Performance and Web gate**
+  - Accept: establish a new clean product-workload native/Web baseline and label it only
+    for that workload. Separately rerun the unchanged exact-72 capacity fixture; it must
+    pass current physics/frame/capacity thresholds before release. Export Web and run the
+    built app through the guarded project lane for input, pointer, audio, persistence,
+    bilingual UI, and critical combat-flow smoke.
 
-- 2026-08-16 — Discovery complete. Inspected product/design authorities, canonical style
-  sheet at original detail and hash, current runtime owners, recent diagnostics, relevant
-  captures, performance policy/audit, recent git history, and primary/official external
-  examples. No runtime or production visual was changed.
-- 2026-08-16 — Plan created. Implementation has not started.
+## Validation and Rework Controls
 
-## Handoff Notes
+| Cadence | Exact check | Run when | Do not rerun until |
+| --- | --- | --- | --- |
+| Inner loop | affected focused GDScript validator through `./tools/godot.ps1` | task implementation changes | relevant owner changes |
+| UI phase | visual-authority validator plus layout/localization validators and named captures | Phase 5 tasks pass | Theme/layout/copy changes |
+| Campaign phase | eight-boss, encounter pacing, experience, rewards, and active-clock validators | Phases 2–4 pass | campaign/reward input changes |
+| Final | clean native/Web product workload, exact-72 capacity, Web export and built smoke | all functional phases pass | final-gate input changes |
 
-- This contract amends pacing, HUD, and guidance portions of the active eight-boss plan;
-  it does not reopen its boss roster, facility roster, map set, or approved production
-  assets.
-- `actual_image_reference_used=false`; `reference_input_method=not_applicable` for this
-  planning/report task. The canonical sheet was inspected as authority, not attached to a
-  generation call. No asset approval is claimed.
-- Do not tune multiple global combat multipliers and actor caps in one benchmark. Preserve
-  the exact workload under comparison and record native/Web verdicts separately.
+Validation rules:
+
+- Run the narrowest check that proves the task. Do not repeat a passing gate without a
+  relevant input change.
+- Load `$cardborne-performance-guard` before profiling and `$npjt-port-guard` before any
+  server. Do not weaken workload or thresholds to manufacture a pass.
+- Treat product-workload and exact-72 capacity results as different claims.
+
+## Predetermined Contingencies and Change Control
+
+| Trigger | Required response | Boundary |
+| --- | --- | --- |
+| A required beat actor/cue cannot materialize twice | Use the locked 50 s fallback, log it, and continue | Replan if more than 1% of beats fall back across controlled runs |
+| 18–22 minute band misses | Change beat packet size or resolution requirement, one owner at a time | Do not add HP, a hidden timer gate, or upgrade delay to pad time |
+| Difficulty remains low | Increase attack-slot occupancy, role mix, or recovery within warning/escape limits | Do not raise global HP first |
+| Difficulty becomes unreadable | Reduce simultaneous commit sectors or combination timing | Do not slow the player or erase authored population |
+| CONTROL text is missed | Improve placement/duration/audio chirp within the locked surface | Do not make it modal or duplicate world danger |
+| Exact-72 remains red | Attribute and fix the measured owner while preserving exact workload | No cap increase, threshold change, or release-performance claim |
+| A material fact contradicts this contract | Stop the affected branch and revise the contract | Executor may not select a new product/UX/architecture contract |
+
+Implementation-local discoveries may be handled inside this contract when they do not
+change visible behavior, ownership, architecture, safety, or acceptance.
+
+## Progress and Next Steps
+
+- Canonical progress: the task checkboxes above.
+- Current phase: Phase 1.
+- Next task: 1.1 Product contract.
+- Last completed gate: Discovery Closure Gate on 2026-08-16.
+- Update rule: record concise evidence, check the task, and advance this pointer together.
+- Research effect: high-speed shooter, encounter-pacing, gameplay-first UI, side
+  transmission, contextual-dialogue, and survivor-upgrade evidence changed the prior plan
+  from weighted kill quotas and random safe windows to explicit combat beats and authored
+  service moments.
+
+## Completion and Stop Conditions
+
+Complete when every task, acceptance check, phase gate, controlled-play gate, exact-72
+capacity gate, and built-Web smoke passes; durable product/design decisions are moved into
+their canonical specs; and frontmatter becomes `status: done`.
+
+Replan when a verified fact invalidates a locked product, UX, ownership, workload, or
+validation decision. Do not replan for contained implementation mechanics or repeat a
+passing check whose inputs did not change.
+
+## Sources and Applicability
+
+- [Sunset Overdrive AI](https://gdcvault.com/play/1021780/AI-in-the-Awesomepocalypse-Creating): high player speed invalidates conventional chase/flank assumptions.
+- [DOOM Eternal combat Q&A](https://www.gamedeveloper.com/design/q-a-evolving-the-combat-design-of-id-software-s-i-doom-eternal-i-): fast traversal required faster reactions/tells and usable combat space.
+- [Combat encounter pacing](https://www.gamedeveloper.com/design/the-art-and-science-of-pacing-and-sequencing-combat-encounters): enemy type, count, location, timing, dialogue, and authored events jointly create intensity.
+- [Left 4 Dead AI systems](https://steamcdn-a.akamaihd.net/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf): structured variation and visibility/flow rules are useful; adaptive difficulty is not imported.
+- [Returnal enemy design](https://blog.playstation.com/2021/04/14/creating-returnals-otherworldly-enemies-vfx-driven-tentacle-tech-and-deep-sea-inspirations/): role combinations and defensive maneuvering matter more than undifferentiated density.
+- [Returnal UX](https://blog.playstation.com/2021/05/11/unpacking-returnals-ux-design-gameplay-first-ui-retro-futuristic-tech-and-accessibility/): immediate survival information belongs near focus; explanation belongs at the periphery.
+- [Warframe mission interface](https://support.warframe.com/hc/en-us/articles/38801911653517-Mission-Interface): side transmissions can carry objectives, updates, guidance, and threats while the minimap owns location.
+- [Context-aware dialogue](https://www.gdcvault.com/play/1020951/A-Context-Aware-Character-Dialog): semantic knowledge and world state should drive contextual lines.
+- [Dota 2 Nest of Thorns](https://store.steampowered.com/news/posts/?appids=570&enddate=1747260468&feed=steam_community_announcements): raw wave clearing became a chore and upgrade/difficulty pacing required playtest data. Its timer-driven survivor solution is deliberately not copied into Cardborne.
+- [Ghost of Tsushima combat balance](https://blog.playstation.com/2020/11/25/honoring-the-blade-and-combat-balance-in-ghost-of-tsushima/): aggression, timing, moves, and damage are preferred before sponge health; its melee numbers do not transfer.
+
+Visual-authority evidence for this planning task: both canonical files were inspected;
+observed sheet hash matched; `actual_image_reference_used=false`;
+`reference_input_method=not_applicable`; no production asset approval is claimed.
