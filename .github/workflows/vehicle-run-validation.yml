@@ -175,7 +175,8 @@ jobs:
           )
           test "${#validators[@]}" -gt 0
           for validator in "${validators[@]}"; do
-            "$GODOT_BIN" --path . --headless \
+            timeout --signal=TERM --kill-after=10s 180s \
+              "$GODOT_BIN" --path . --headless \
               --script "res://$validator" \
               2>&1 | tee "$EVIDENCE_DIR/logs/$(basename "${validator%.gd}").log"
           done
