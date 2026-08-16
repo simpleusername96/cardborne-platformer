@@ -107,9 +107,9 @@ const BEAM_ACTIVE_INNER_WIDTH_MAX := 20.0
 const BEAM_ACTIVE_INNER_WIDTH_RATIO := 0.34
 const BEAM_ACTIVE_CORE_WIDTH_MAX := 7.0
 const BEAM_ACTIVE_CORE_WIDTH_RATIO := 0.10
-const STRAIGHT_BEAM_ORB_RADIUS_RATIO := 0.68
-const STRAIGHT_BEAM_ORB_RADIUS_MIN := 18.0
-const STRAIGHT_BEAM_MUZZLE_RADIUS_RATIO := 0.72
+const EMITTED_BEAM_ORB_RADIUS_RATIO := 0.68
+const EMITTED_BEAM_ORB_RADIUS_MIN := 18.0
+const EMITTED_BEAM_MUZZLE_RADIUS_RATIO := 0.72
 class BatchBuffer:
 	var values := PackedFloat32Array()
 	var floats_per_instance := BASE_BUFFER_FLOATS_PER_INSTANCE
@@ -1460,22 +1460,16 @@ func _sync_beam_startup(
 	)
 	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
 	if hostile and float(telegraph.get("beam_growth_seconds", 0.0)) > 0.0:
-		var muzzle := _straight_beam_muzzle(
-			source_position, source_radius, from, to, width
-		)
-		var orb_radius := maxf(
-			STRAIGHT_BEAM_ORB_RADIUS_MIN,
-			width * STRAIGHT_BEAM_ORB_RADIUS_RATIO
-		) * lerpf(0.84, 1.0, intensity)
-		_write_disk(
-			muzzle,
-			orb_radius,
-			Color(Art.DANGER, lerpf(0.52, 0.90, intensity))
-		)
-		_write_disk(
-			muzzle,
-			orb_radius * lerpf(0.10, 0.16, intensity),
-			Color(Art.IVORY_BRIGHT, lerpf(0.28, 0.82, intensity))
+		_sync_emitted_beam_startup(
+			source_position,
+			source_radius,
+			from,
+			to,
+			width,
+			intensity,
+			StringName(telegraph.get(
+				"beam_emission_mode", AttackContract.EMITTED_BEAM_FORWARD
+			))
 		)
 		return
 	if hostile:
@@ -1523,33 +1517,20 @@ func _sync_active_beam(
 	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
 	var growth_seconds := float(telegraph.get("beam_growth_seconds", 0.0))
 	if hostile and growth_seconds > 0.0:
-		var growth_ratio := AttackContract.straight_beam_growth_ratio(
+		var growth_ratio := AttackContract.emitted_beam_growth_ratio(
 			active_remaining,
 			float(telegraph.get("active_seconds", growth_seconds)),
 			growth_seconds
 		)
-		var muzzle := _straight_beam_muzzle(
-			source_position, source_radius, from, to, width
-		)
-		var grown_to := from.lerp(to, growth_ratio)
-		_sync_straight_beam_orb(muzzle, width)
-		var direction := (to - from).normalized()
-		if direction.is_zero_approx() or (grown_to - muzzle).dot(direction) <= 0.001:
-			return
-		_write_growing_beam_plane(
-			muzzle, grown_to, width, Color(Art.DANGER, BEAM_ACTIVE_BODY_ALPHA)
-		)
-		_write_growing_beam_plane(
-			muzzle,
-			grown_to,
-			minf(BEAM_ACTIVE_INNER_WIDTH_MAX, width * BEAM_ACTIVE_INNER_WIDTH_RATIO),
-			Color(Art.DANGER.lerp(Art.IVORY_BRIGHT, 0.62), BEAM_ACTIVE_INNER_ALPHA)
-		)
-		_write_growing_beam_plane(
-			muzzle,
-			grown_to,
-			minf(BEAM_ACTIVE_CORE_WIDTH_MAX, width * BEAM_ACTIVE_CORE_WIDTH_RATIO),
-			Art.IVORY_BRIGHT
+		var emission_mode := StringName(telegraph.get(
+			"beam_emission_mode", AttackContract.EMITTED_BEAM_FORWARD
+		))
+		if emission_mode == AttackContract.EMITTED_BEAM_BIDIRECTIONAL:
+			_sync_emitted_beam_branch(
+				source_position, source_radius, from, width, growth_ratio
+			)
+		_sync_emitted_beam_branch(
+			source_position, source_radius, to, width, growth_ratio
 		)
 		return
 	if hostile:
@@ -1808,6 +1789,9 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 					"beam_growth_seconds":float(
 						zone.get("beam_growth_seconds", 0.0)
 					),
+					"beam_emission_mode":StringName(zone.get(
+						"beam_emission_mode", AttackContract.EMITTED_BEAM_FORWARD
+					)),
 					"active_seconds":float(
 						zone.get("duration_total", zone.get("duration", 0.0))
 					),
@@ -1815,13 +1799,13 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				if warning > 0.0:
 					_sync_beam_startup(
 						corridor,
-						Vector2(zone["from"]),
+						Vector2(zone.get("beam_emitter", zone["from"])),
 						float(zone.get("emitter_radius", 0.0))
 					)
 				else:
 					_sync_active_beam(
 						corridor,
-						Vector2(zone["from"]),
+						Vector2(zone.get("beam_emitter", zone["from"])),
 						float(zone.get("emitter_radius", 0.0)),
 						float(zone.get("duration", 0.0))
 					)
@@ -2362,28 +2346,71 @@ func _write_beam(from: Vector2, to: Vector2, width: float, color: Color) -> void
 	)
 
 
-func _straight_beam_muzzle(
+func _emitted_beam_muzzle(
 	source_position: Vector2,
 	source_radius: float,
-	from: Vector2,
-	to: Vector2,
+	endpoint: Vector2,
 	width: float
 ) -> Vector2:
-	var vector := to - from
+	var vector := endpoint - source_position
 	var length := vector.length()
 	if length <= 0.001:
 		return source_position
 	var muzzle_offset := maxf(
 		width * 0.5,
-		maxf(0.0, source_radius) * STRAIGHT_BEAM_MUZZLE_RADIUS_RATIO
+		maxf(0.0, source_radius) * EMITTED_BEAM_MUZZLE_RADIUS_RATIO
 	)
 	return source_position + vector / length * minf(muzzle_offset, length)
 
 
-func _sync_straight_beam_orb(position: Vector2, width: float) -> void:
+func _sync_emitted_beam_startup(
+	source_position: Vector2,
+	source_radius: float,
+	from: Vector2,
+	to: Vector2,
+	width: float,
+	intensity: float,
+	emission_mode: StringName
+) -> void:
+	if emission_mode == AttackContract.EMITTED_BEAM_BIDIRECTIONAL:
+		_sync_emitted_beam_startup_orb(
+			source_position, source_radius, from, width, intensity
+		)
+	_sync_emitted_beam_startup_orb(
+		source_position, source_radius, to, width, intensity
+	)
+
+
+func _sync_emitted_beam_startup_orb(
+	source_position: Vector2,
+	source_radius: float,
+	endpoint: Vector2,
+	width: float,
+	intensity: float
+) -> void:
+	var muzzle := _emitted_beam_muzzle(
+		source_position, source_radius, endpoint, width
+	)
 	var orb_radius := maxf(
-		STRAIGHT_BEAM_ORB_RADIUS_MIN,
-		width * STRAIGHT_BEAM_ORB_RADIUS_RATIO
+		EMITTED_BEAM_ORB_RADIUS_MIN,
+		width * EMITTED_BEAM_ORB_RADIUS_RATIO
+	) * lerpf(0.84, 1.0, intensity)
+	_write_disk(
+		muzzle,
+		orb_radius,
+		Color(Art.DANGER, lerpf(0.52, 0.90, intensity))
+	)
+	_write_disk(
+		muzzle,
+		orb_radius * lerpf(0.10, 0.16, intensity),
+		Color(Art.IVORY_BRIGHT, lerpf(0.28, 0.82, intensity))
+	)
+
+
+func _sync_emitted_beam_orb(position: Vector2, width: float) -> void:
+	var orb_radius := maxf(
+		EMITTED_BEAM_ORB_RADIUS_MIN,
+		width * EMITTED_BEAM_ORB_RADIUS_RATIO
 	)
 	_write_disk(position, orb_radius, Color(Art.DANGER, BEAM_ACTIVE_BODY_ALPHA))
 	_write_disk(
@@ -2397,6 +2424,40 @@ func _sync_straight_beam_orb(position: Vector2, width: float) -> void:
 	_write_disk(
 		position,
 		orb_radius * 0.12,
+		Art.IVORY_BRIGHT
+	)
+
+
+func _sync_emitted_beam_branch(
+	source_position: Vector2,
+	source_radius: float,
+	endpoint: Vector2,
+	width: float,
+	growth_ratio: float
+) -> void:
+	var muzzle := _emitted_beam_muzzle(
+		source_position, source_radius, endpoint, width
+	)
+	var grown_to := AttackContract.emitted_beam_live_endpoint(
+		source_position, endpoint, growth_ratio
+	)
+	_sync_emitted_beam_orb(muzzle, width)
+	var direction := (endpoint - source_position).normalized()
+	if direction.is_zero_approx() or (grown_to - muzzle).dot(direction) <= 0.001:
+		return
+	_write_growing_beam_plane(
+		muzzle, grown_to, width, Color(Art.DANGER, BEAM_ACTIVE_BODY_ALPHA)
+	)
+	_write_growing_beam_plane(
+		muzzle,
+		grown_to,
+		minf(BEAM_ACTIVE_INNER_WIDTH_MAX, width * BEAM_ACTIVE_INNER_WIDTH_RATIO),
+		Color(Art.DANGER.lerp(Art.IVORY_BRIGHT, 0.62), BEAM_ACTIVE_INNER_ALPHA)
+	)
+	_write_growing_beam_plane(
+		muzzle,
+		grown_to,
+		minf(BEAM_ACTIVE_CORE_WIDTH_MAX, width * BEAM_ACTIVE_CORE_WIDTH_RATIO),
 		Art.IVORY_BRIGHT
 	)
 

@@ -381,7 +381,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 			)
 			and is_equal_approx(
 				float(beam.attack_telegraphs[0]["beam_growth_seconds"]),
-				AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+				AttackContract.EMITTED_BEAM_GROWTH_SECONDS
 			)
 			and is_equal_approx(
 				float(beam.attack_telegraphs[0]["active_seconds"]),

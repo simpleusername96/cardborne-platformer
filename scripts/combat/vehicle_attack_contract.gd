@@ -32,7 +32,9 @@ const CONDITION_MASK := CONDITION_POISON | CONDITION_CHILL
 
 const HOSTILE_PROJECTILE_LIFETIME := 2.2
 const PROJECTILE_TELEGRAPH_LEAD_SECONDS := 0.36
-const STRAIGHT_BEAM_GROWTH_SECONDS := 0.30
+const EMITTED_BEAM_GROWTH_SECONDS := 0.30
+const EMITTED_BEAM_FORWARD: StringName = &"forward"
+const EMITTED_BEAM_BIDIRECTIONAL: StringName = &"bidirectional"
 const LIGHT_DAMAGE_MAX := 10.0
 const HEAVY_DAMAGE_MIN := 20.0
 const LIGHT_PROJECTILE_RADIUS := 5.0
@@ -147,16 +149,35 @@ static func beam_danger_half_width(beam_width: float) -> float:
 	return Rules.PLAYER_RADIUS + beam_width * 0.5
 
 
-static func straight_beam_growth_ratio(
+static func emitted_beam_growth_ratio(
 	active_remaining: float,
 	active_total: float,
-	growth_seconds: float = STRAIGHT_BEAM_GROWTH_SECONDS
+	growth_seconds: float = EMITTED_BEAM_GROWTH_SECONDS
 ) -> float:
 	var bounded_growth := minf(maxf(0.0, growth_seconds), maxf(0.0, active_total))
 	if bounded_growth <= 0.0:
 		return 1.0
 	var elapsed := maxf(0.0, active_total - active_remaining)
 	return clampf(elapsed / bounded_growth, 0.0, 1.0)
+
+
+static func emitted_beam_live_endpoint(
+	emitter: Vector2,
+	endpoint: Vector2,
+	growth_ratio: float
+) -> Vector2:
+	return emitter.lerp(endpoint, clampf(growth_ratio, 0.0, 1.0))
+
+
+static func emitted_beam_live_origin(
+	full_origin: Vector2,
+	emitter: Vector2,
+	growth_ratio: float,
+	emission_mode: StringName
+) -> Vector2:
+	if emission_mode == EMITTED_BEAM_BIDIRECTIONAL:
+		return emitted_beam_live_endpoint(emitter, full_origin, growth_ratio)
+	return full_origin
 
 
 static func warning_readiness(remaining: float, total: float) -> float:

@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-15
+last_reviewed: 2026-08-16
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -466,18 +466,25 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
   표시한다. charge startup도 이동 경로, endpoint cap, corridor boundary를 표시하지
   않는다.
-- Beam Sentinel과 boss straight beam은 gameplay가 committed direction, maximum
-  length, width와 active timing을 소유한다. Startup은 전체 경로를 표시하지 않고
-  source body의 committed muzzle 바로 앞에 붙은 danger-red 충전 구체만 표시한다.
+- Beam Sentinel과 모든 hostile boss-emitted beam은 gameplay가 committed direction,
+  endpoint, width와 active timing을 소유한다. 여기에는 단방향 `switch_sweep`,
+  `switch_sweeps`, `crown_beam`, 보스 중심에서 네 방향으로 발사되는
+  `archive_cross`, 보스 주변 두 발사점에서 나가는 `undertow_lanes`와
+  `crown_lattice`가 포함된다. Startup은 전체 경로를 표시하지 않고 각 committed
+  muzzle 바로 앞에 붙은 danger-red 충전 구체만 표시한다.
   predicted line, corridor fill, floor tint, endpoint와 target marker는 startup 동안
   모두 금지한다. Active 첫 `0.30s`에는 같은 구체에서 borderless filled beam이 실제
   피해 길이와 함께 maximum endpoint까지 선형으로 자라며, 이후 남은 active window
   동안 전체 길이를 유지한다. boss-side origin과 움직이는 선단은 둥글고 body, inner
   energy plane, hot core 최대 세 겹은 모두 같은 성장 비율을 사용한다. 별도 dark
   perimeter, side outline, raster beam, glow, particle와 future-path ghost를 만들지
-  않는다. Cross-corridor, moving-wall과 lane pattern은 별도 authored pattern grammar를
-  유지하며 이 straight-beam 성장 계약을 사용하지 않는다.
-- hostile circle, wedge, shockwave와 non-straight-beam damaging corridor는 affinity와 무관하게 exact
+  않는다. 양방향 X beam은 반대쪽 두 endpoint가 같은 비율로 동시에 자라며, 병렬 beam은
+  각 muzzle이 독립된 한 방향 branch를 발사한다. Translating laser wall은 보스에서
+  발사되는 beam이 아니라 맵에 배치되어 이동하는 hazard이므로 이 emission 계약을
+  사용하지 않고, collision-true gap과 이동 경로를 startup부터 표시한다. 탄환으로
+  구현된 committed `lanes/cross`와 player-owned Auto Laser/Cross Beam도 이 hostile
+  emission 계약의 대상이 아니다.
+- hostile circle, wedge, shockwave와 non-emitted-beam damaging corridor는 affinity와 무관하게 exact
   committed footprint를 danger-red full area로 채우고 thin near-black perimeter와
   four inward boundary notches를 사용한다. startup body alpha는 readiness에 따라
   `0.10 -> 0.20`, damaging window는 `0.20`을 유지한다. ordinary controller와
@@ -723,7 +730,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   `Overlay_health` retained batch를 공유하며 backing/fill을 합친 fixed capacity는
   26 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
 - shield와 barrier는 보호받는 body에 붙은 하나의 closed boundary만 사용한다.
-  straight damaging beam은 startup에는 source-attached charge orb만 사용하고 active
+  hostile emitted damaging beam은 startup에는 source-attached charge orb만 사용하고 active
   첫 `0.30s`에는 collision-owned 길이와 함께 자라는 borderless filled capsule을 사용한다. Repair
   Tender healing은 source에서 recipient로 향하는 segmented mint packet과 recipient
   쪽 open chevron을 사용한다. heal은 continuous solid beam이나 closed ring을
@@ -796,8 +803,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - every displayed circular area has a continuous full-area body from center to exact
   gameplay radius, instant areas use final radius on their first frame, EMP preserves a
   full `285` damage/stun disk plus a separately readable `285–325` utility fringe, and
-  straight beams expose no startup path and their borderless rounded active body matches
-  the collision-owned grown segment and width on every frame
+  every hostile emitted beam exposes no startup path and its borderless rounded active
+  branch or branches match the collision-owned grown segments and width on every frame;
+  translating laser walls remain explicitly classified as placed moving hazards
 - 8개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
   판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
   `shield_up/shield_down` 상태만 사용됨
@@ -831,9 +839,11 @@ Web export만으로 interactive built-Web smoke나 release performance를
   fills without legacy patterned floor or shared-wall rasters. The three approved
   `SurfaceDetail` SVGs are production-integrated as deterministic presentation-only
   72/72/48 retained instances with no collision, navigation, or per-frame update owner.
-- Beam Sentinel and boss straight beams share the retained code-native beam and disk
-  batches. Runtime tint, charge-orb scale, rounded active planes and the gameplay-owned
-  `0.30s` grown segment remain presentation inputs; startup publishes no path geometry.
+- Beam Sentinel and all hostile boss-emitted beams share the retained code-native beam and
+  disk batches. Runtime tint, per-muzzle charge-orb scale, forward/bidirectional emission
+  mode, rounded active planes and the gameplay-owned `0.30s` grown segments remain
+  presentation inputs; startup publishes no path geometry. Translating laser walls remain
+  placed moving hazards and do not claim a boss muzzle.
 - The five neutral-facility roles are production-integrated. Repair and Barrier use their
   approved role rasters; Gravity, Cryo, and Weakpoint retain their existing authored
   symbols. One assigned symbol is visible alone at 288 world units with a bounded bob and

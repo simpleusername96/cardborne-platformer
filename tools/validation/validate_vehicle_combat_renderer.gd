@@ -879,7 +879,7 @@ func _run() -> void:
 		"affinity":AttackContract.ARC,
 		"active_width":54.0,
 		"readiness":0.72,
-		"beam_growth_seconds":AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS,
+		"beam_growth_seconds":AttackContract.EMITTED_BEAM_GROWTH_SECONDS,
 		"active_seconds":0.60,
 	}]
 	offscreen_enemy.phase = &"startup"
@@ -891,7 +891,7 @@ func _run() -> void:
 		beam_batch.multimesh.visible_instance_count == 0
 			and area_disk.multimesh.visible_instance_count == 2
 			and area_ring.multimesh.visible_instance_count == 0,
-		"straight-beam startup draws only its boss-attached charge orb"
+		"forward-emitted beam startup draws only its source-attached charge orb"
 	)
 	var startup_disk_buffer := area_disk.multimesh.buffer
 	var startup_intensity := smoothstep(0.0, 1.0, 0.72)
@@ -917,7 +917,7 @@ func _run() -> void:
 	_expect(
 		beam_batch.multimesh.visible_instance_count == 3
 			and area_disk.multimesh.visible_instance_count == 6,
-		"growing straight beam uses three borderless rounded energy planes"
+		"growing forward-emitted beam uses three borderless rounded energy planes"
 	)
 	var active_beam_buffer := beam_batch.multimesh.buffer
 	_expect(
@@ -932,6 +932,42 @@ func _run() -> void:
 			and is_equal_approx(active_beam_buffer[23], 0.88)
 			and is_equal_approx(active_beam_buffer[35], 1.0),
 		"at 0.15 seconds the visible beam reaches only the collision-owned half length"
+	)
+	offscreen_enemy.pos = Vector2(540.0, 360.0)
+	offscreen_enemy.attack_telegraphs = [{
+		"shape":&"corridor",
+		"delivery":&"beam",
+		"from":Vector2(180.0, 360.0),
+		"to":Vector2(900.0, 360.0),
+		"half_width":58.0,
+		"damage":28.0,
+		"affinity":AttackContract.ARC,
+		"active_width":54.0,
+		"readiness":0.72,
+		"beam_growth_seconds":AttackContract.EMITTED_BEAM_GROWTH_SECONDS,
+		"beam_emission_mode":AttackContract.EMITTED_BEAM_BIDIRECTIONAL,
+		"active_seconds":0.60,
+	}]
+	offscreen_enemy.phase = &"startup"
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 0
+			and area_disk.multimesh.visible_instance_count == 4,
+		"bidirectional beam startup draws one charge orb at each boss-side muzzle"
+	)
+	offscreen_enemy.phase = &"active"
+	offscreen_enemy.phase_time = 0.45
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	_expect(
+		beam_batch.multimesh.visible_instance_count == 6
+			and area_disk.multimesh.visible_instance_count == 12,
+		"bidirectional beam grows two rounded branches from the boss without a path warning"
 	)
 	renderer.sync([], no_projectiles, no_projectiles, [], [], Rect2(0,0,1280,720), Vector2.ZERO, 0.0, false)
 	snapshot = renderer.debug_snapshot()

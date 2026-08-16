@@ -145,6 +145,7 @@ func _run() -> void:
 		_check_boss_damage_and_guidance(run, ui)
 		run.call("_reset_run", false, true, true)
 		_check_boss_autonomous_shapes(run)
+		_check_boss_emitted_cross(run)
 		run.call("_reset_run", false, true, true)
 		_check_boss_committed_recovery(run)
 		run.call("_reset_run", false, true, true)
@@ -983,8 +984,16 @@ func _check_boss_autonomous_shapes(run) -> void:
 						and _all_corridors_match(
 							run.denied_zones,
 							BossPatterns.width(pattern, stage_index)
-						),
-					"%s executes as two scaled lane corridors" % pattern
+						)
+						and run.denied_zones.all(func(zone): return (
+							is_equal_approx(
+								float(zone["beam_growth_seconds"]),
+								AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+							)
+							and StringName(zone["beam_emission_mode"])
+								== AttackContract.EMITTED_BEAM_FORWARD
+						)),
+					"%s executes as two forward-emitted growing beams" % pattern
 				)
 			elif kind == &"beam":
 				_expect(
@@ -996,13 +1005,15 @@ func _check_boss_autonomous_shapes(run) -> void:
 						)
 						and is_equal_approx(
 							float(run.denied_zones[0]["beam_growth_seconds"]),
-							AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+							AttackContract.EMITTED_BEAM_GROWTH_SECONDS
 						)
 						and is_equal_approx(
 							float(run.denied_zones[0]["duration_total"]),
 							maxf(0.62, BossPatterns.active_seconds(pattern))
-						),
-					"%s executes as one collision-owned growing straight beam" % pattern
+						)
+						and StringName(run.denied_zones[0]["beam_emission_mode"])
+							== AttackContract.EMITTED_BEAM_FORWARD,
+					"%s executes as one collision-owned forward-emitted beam" % pattern
 				)
 			elif kind == &"summon":
 				_expect(
@@ -1017,7 +1028,7 @@ func _check_boss_autonomous_shapes(run) -> void:
 			elif kind == &"moving_walls":
 				_expect(
 					run.denied_zones.size() == 4
-						and run.denied_zones.all(func(zone): return StringName(zone["shape"]) == &"corridor" and Vector2(zone["motion"]).length() > 0.0 and is_equal_approx(float(zone["safe_gap"]), 180.0)),
+						and run.denied_zones.all(func(zone): return StringName(zone["shape"]) == &"corridor" and Vector2(zone["motion"]).length() > 0.0 and is_equal_approx(float(zone["safe_gap"]), 180.0) and not zone.has("beam_emission_mode")),
 					"%s creates two translating laser walls with collision-true gaps" % pattern
 				)
 			elif kind == &"wedge_rings":
@@ -1043,6 +1054,42 @@ func _all_corridors_match(zones: Array, expected_width: float) -> bool:
 		):
 			return false
 	return true
+
+
+func _check_boss_emitted_cross(run) -> void:
+	run.denied_zones.clear()
+	var boss: EnemyState = run.call("_make_enemy", {
+		"id":"validation_cross_boss",
+		"role":&"stage_boss",
+		"pos":run.player_position + Vector2(-480.0, 0.0),
+		"active":true,
+	})
+	boss.committed_dir = Vector2.RIGHT
+	boss.attack_telegraphs = [{"delivery":&"beam"}]
+	run.call(
+		"_append_boss_cross_corridors",
+		boss,
+		"archive_cross",
+		BossPatterns.damage("archive_cross", run.current_stage_index)
+	)
+	_expect(
+		run.denied_zones.size() == 2
+			and run.denied_zones.all(func(zone): return (
+				StringName(zone["shape"]) == &"corridor"
+				and StringName(zone["beam_emission_mode"])
+					== AttackContract.EMITTED_BEAM_BIDIRECTIONAL
+				and Vector2(zone["beam_emitter"]).is_equal_approx(boss.pos)
+				and is_equal_approx(
+					float(zone["beam_growth_seconds"]),
+					AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+				)
+			))
+			and boss.attack_telegraphs.is_empty(),
+		"Archive Cross transfers two bidirectional emitted-beam axes to collision zones"
+	)
+	run.denied_zones.clear()
+	run.enemy_store.release_untracked(boss)
+
 
 func _check_enemy_expansion(run) -> void:
 	var mine: EnemyState = run.call("_make_enemy", {

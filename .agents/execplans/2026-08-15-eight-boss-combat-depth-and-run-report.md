@@ -3,7 +3,7 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-15
-last_reviewed: 2026-08-15
+last_reviewed: 2026-08-16
 scope: Eight continuous boss cycles, eight distinct bosses, boss-death cleanup, four ordinary enemies, three combat upgrades, five symmetric neutral facilities, newest-ten diagnostics, stacked run reports, localization, approved visual assets, and release validation
 related:
   - ../../docs/reports/2026-08-15-eight-boss-combat-design-analysis.md
@@ -72,7 +72,9 @@ Constraints and invariants:
 - Korean remains default and Korean/English coverage must remain complete.
 - Every high-threat attack warns for at least 1.30 seconds, commits collision-matching
   geometry, leaves one escape corridor at least player diameter + 80 units, applies damage
-  once per execution, and never retargets after final commit.
+  once per execution, and never retargets after final commit. Hostile emitted beams replace
+  path warning geometry with one source-attached charge orb per muzzle, then grow their
+  visible and damaging segments together over `0.30 s`.
 - No empty or off-screen-only combat gap may exceed 3.0 seconds; first visible hostile is
   due within 4.0 seconds and first meaningful attack preparation within 8.0 seconds.
   Do not teleport hostiles or lower counts/cadence to satisfy this.
@@ -250,6 +252,17 @@ Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`,
   - Accept: frame-step validator proves the exact timeline, safety, ownership retirement,
     no cleanup rewards/quota, one cosmetic receipt maximum, reduced-motion behavior, and
     transition only at 2.00 seconds.
+- [x] **2.6** Unify every hostile emitted laser under the charge-orb growth contract.
+  - Change: apply the shared forward/bidirectional emission metadata to Beam Sentinel,
+    `switch_sweep`, `switch_sweeps`, `crown_beam`, the four-direction `archive_cross`, and
+    the two-muzzle `undertow_lanes`/`crown_lattice`. Startup exposes no path; active visual
+    and collision segments grow together for `0.30 s`. Keep Vector Loom translating laser
+    walls classified as placed moving hazards, and keep projectile/player laser contracts
+    outside this hostile-emission change.
+  - Accept: focused attack, identity, renderer, boss-runtime, and VehicleRun validators prove
+    zero emitted-beam startup corridors, exact per-muzzle orb counts, forward and
+    bidirectional growth modes, matching collision endpoints, and no emission metadata on
+    moving walls.
 
 Phase gate:
 
@@ -449,6 +462,10 @@ Execution evidence recorded on 2026-08-15:
   scenario validators pass. Visual evidence is
   `build/captures/facility-activation-xp-health-fix-muted/05-two-field-items.png`; visual-
   authority validation and Web export also pass.
+- BK clarified that "all lasers" means every hostile laser emitted from an enemy or boss,
+  not every corridor-shaped hazard. The shared emission contract now covers Beam Sentinel,
+  the three one-direction boss beam patterns, Archive Cross's four directions, and the two
+  autonomous parallel-beam patterns. Vector Loom walls remain placed moving hazards.
 
 ## Completion and Stop Conditions
 

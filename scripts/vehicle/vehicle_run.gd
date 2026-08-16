@@ -3906,11 +3906,13 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.phase_time = SpecialistRuntime.CARRIER_RECOVERY
 		&"beam_sentinel":
 			var beam_end := enemy.beam_end
-			var growth_ratio := AttackContract.straight_beam_growth_ratio(
+			var growth_ratio := AttackContract.emitted_beam_growth_ratio(
 				enemy.phase_time,
 				SpecialistRuntime.BEAM_ACTIVE
 			)
-			var live_beam_end := enemy.pos.lerp(beam_end, growth_ratio)
+			var live_beam_end := AttackContract.emitted_beam_live_endpoint(
+				enemy.pos, beam_end, growth_ratio
+			)
 			if (
 				not enemy.hit_committed
 				and Rules.point_segment_distance(
@@ -4840,12 +4842,21 @@ func _update_denied_zones(delta: float) -> void:
 				zone.get("beam_growth_seconds", 0.0)
 			)
 			if beam_growth_seconds > 0.0:
-				var growth_ratio := AttackContract.straight_beam_growth_ratio(
+				var growth_ratio := AttackContract.emitted_beam_growth_ratio(
 					float(zone["duration"]),
 					float(zone.get("duration_total", zone["duration"])),
 					beam_growth_seconds
 				)
-				corridor_to = corridor_from.lerp(corridor_to, growth_ratio)
+				var emitter := Vector2(zone.get("beam_emitter", corridor_from))
+				var emission_mode := StringName(zone.get(
+					"beam_emission_mode", AttackContract.EMITTED_BEAM_FORWARD
+				))
+				corridor_from = AttackContract.emitted_beam_live_origin(
+					corridor_from, emitter, growth_ratio, emission_mode
+				)
+				corridor_to = AttackContract.emitted_beam_live_endpoint(
+					emitter, corridor_to, growth_ratio
+				)
 			if Rules.point_segment_distance(
 				player_position,
 				corridor_from,
@@ -6071,7 +6082,15 @@ func _append_boss_cross_corridors(
 			"final_damage":true,
 			"single_hit":true,
 			"hit_committed":false,
+			"beam_growth_seconds":AttackContract.EMITTED_BEAM_GROWTH_SECONDS,
+			"beam_emission_mode":AttackContract.EMITTED_BEAM_BIDIRECTIONAL,
+			"beam_emitter":Vector2(boss.pos),
+			"emitter_radius":boss.visual_radius,
+			"duration_total":BossPatterns.active_seconds(pattern),
 		})
+	# Collision and active presentation transfer to the zones above. Retiring the
+	# startup descriptors prevents the same X beams from being submitted twice.
+	boss.attack_telegraphs.clear()
 
 
 func _advance_pending_boss_barrage(delta: float) -> void:
@@ -6272,7 +6291,8 @@ func _append_boss_lane_zones(event: Dictionary) -> void:
 			event,
 			"%s_lane_%d" % [String(event["id"]), lane_index],
 			lane_origin,
-			lane_end
+			lane_end,
+			AttackContract.EMITTED_BEAM_FORWARD
 		)
 
 
@@ -6291,7 +6311,7 @@ func _append_boss_beam_zone(event: Dictionary) -> void:
 			BossPatterns.BEAM_RANGE,
 			float(event["width"]) * 0.5
 		),
-		true
+		AttackContract.EMITTED_BEAM_FORWARD
 	)
 
 
@@ -6300,7 +6320,7 @@ func _append_boss_corridor_zone(
 	zone_id: String,
 	from: Vector2,
 	to: Vector2,
-	straight_beam_growth: bool = false
+	emission_mode: StringName = &""
 ) -> void:
 	var active_seconds := maxf(0.62, float(event["duration"]))
 	var zone := {
@@ -6320,8 +6340,10 @@ func _append_boss_corridor_zone(
 		"commit_mode":&"autonomous",
 		"final_damage":true,
 	}
-	if straight_beam_growth:
-		zone["beam_growth_seconds"] = AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+	if not emission_mode.is_empty():
+		zone["beam_growth_seconds"] = AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+		zone["beam_emission_mode"] = emission_mode
+		zone["beam_emitter"] = from
 		zone["duration_total"] = active_seconds
 		zone["emitter_radius"] = float(event.get("emitter_radius", 0.0))
 	denied_zones.append(zone)

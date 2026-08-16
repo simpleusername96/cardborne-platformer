@@ -4,6 +4,7 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const Telegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const CuePolicy = preload("res://scripts/presentation/components/vehicle_combat_cue_policy.gd")
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 
 var failures: Array[String] = []
 
@@ -17,10 +18,16 @@ func _initialize() -> void:
 			StringName(cue["shape"]) == &"corridor"
 			and StringName(cue["delivery"]) == &"beam"
 			and is_equal_approx(float(cue["active_width"]), Patterns.width("archive_cross", 1))
+			and is_equal_approx(
+				float(cue["beam_growth_seconds"]),
+				AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+			)
+			and StringName(cue["beam_emission_mode"])
+				== AttackContract.EMITTED_BEAM_BIDIRECTIONAL
 		)
 	_expect(
 		cross_contract,
-		"Archive Cross publishes exactly two committed X corridors"
+		"Archive Cross publishes two bidirectionally emitted X-beam axes"
 	)
 	if boss.attack_telegraphs.size() == 2:
 		var first_axis := (Vector2(boss.attack_telegraphs[0]["to"]) - Vector2(boss.attack_telegraphs[0]["from"])).normalized()
@@ -58,8 +65,9 @@ func _initialize() -> void:
 	_expect(
 		run_source.contains("func _append_boss_cross_corridors")
 			and run_source.contains("\"single_hit\":true")
+			and run_source.contains("AttackContract.EMITTED_BEAM_BIDIRECTIONAL")
 			and run_source.contains("BossPatterns.BEAM_RANGE"),
-		"Archive Cross gameplay creates two clipped one-hit corridor zones"
+		"Archive Cross gameplay creates two clipped, growing, one-hit beam axes"
 	)
 	_expect(Patterns.startup_seconds("common_broad_barrage") >= 1.30, "broad barrage keeps the high-threat minimum warning")
 	_finish()

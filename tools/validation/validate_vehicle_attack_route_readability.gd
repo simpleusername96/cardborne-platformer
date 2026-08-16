@@ -69,9 +69,9 @@ func _validate_ordinary(resolve_path: Callable, resolve_charge: Callable, player
 					_expect(
 						is_equal_approx(
 							float(descriptor["beam_growth_seconds"]),
-							AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+							AttackContract.EMITTED_BEAM_GROWTH_SECONDS
 						),
-						"Beam Sentinel publishes collision-owned straight-beam growth timing"
+						"Beam Sentinel publishes collision-owned emitted-beam growth timing"
 					)
 
 
@@ -112,9 +112,9 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 					_expect(
 						is_equal_approx(
 							float(descriptor["beam_growth_seconds"]),
-							AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+							AttackContract.EMITTED_BEAM_GROWTH_SECONDS
 						),
-						"boss straight beam publishes its 0.30-second growth contract"
+						"boss forward-emitted beam publishes its 0.30-second growth contract"
 					)
 	_validate_offscreen_intersection()
 
@@ -154,13 +154,13 @@ func _validate_offscreen_intersection() -> void:
 	beam["delivery"] = &"beam"
 	beam["active_width"] = 54.0
 	beam["affinity"] = AttackContract.ARC
-	beam["beam_growth_seconds"] = AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+	beam["beam_growth_seconds"] = AttackContract.EMITTED_BEAM_GROWTH_SECONDS
 	beam["active_seconds"] = 0.60
 	_expect(
 		CombatCuePolicy.telegraph_mode(
 			Vector2(-180.0, 360.0), 50.0, &"startup", beam, visible
 		) == CombatCuePolicy.MODE_NONE,
-		"off-screen straight-beam startup draws no world path or off-screen orb"
+		"off-screen emitted-beam startup draws no world path or off-screen orb"
 	)
 	_expect(
 		CombatCuePolicy.telegraph_mode(

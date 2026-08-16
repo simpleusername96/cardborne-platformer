@@ -51,17 +51,31 @@ func _initialize() -> void:
 		"beam danger corridor exactly expands by the player radius"
 	)
 	_expect(
-		is_equal_approx(AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS, 0.30)
+		is_equal_approx(AttackContract.EMITTED_BEAM_GROWTH_SECONDS, 0.30)
 			and is_zero_approx(
-				AttackContract.straight_beam_growth_ratio(0.80, 0.80)
+				AttackContract.emitted_beam_growth_ratio(0.80, 0.80)
 			)
 			and is_equal_approx(
-				AttackContract.straight_beam_growth_ratio(0.65, 0.80), 0.50
+				AttackContract.emitted_beam_growth_ratio(0.65, 0.80), 0.50
 			)
 			and is_equal_approx(
-				AttackContract.straight_beam_growth_ratio(0.50, 0.80), 1.0
+				AttackContract.emitted_beam_growth_ratio(0.50, 0.80), 1.0
 			),
-		"straight beams grow from zero to full collision length over exactly 0.30 seconds"
+		"emitted beams grow from zero to full collision length over exactly 0.30 seconds"
+	)
+	_expect(
+		AttackContract.emitted_beam_live_origin(
+			Vector2(-100.0, 0.0), Vector2.ZERO, 0.5,
+			AttackContract.EMITTED_BEAM_BIDIRECTIONAL
+		).is_equal_approx(Vector2(-50.0, 0.0))
+			and AttackContract.emitted_beam_live_endpoint(
+				Vector2.ZERO, Vector2(100.0, 0.0), 0.5
+			).is_equal_approx(Vector2(50.0, 0.0))
+			and AttackContract.emitted_beam_live_origin(
+				Vector2(-100.0, 0.0), Vector2.ZERO, 0.5,
+				AttackContract.EMITTED_BEAM_FORWARD
+			).is_equal_approx(Vector2(-100.0, 0.0)),
+		"emitted-beam endpoints distinguish bidirectional boss fire from forward fire"
 	)
 	_expect(
 		AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS > 0.0

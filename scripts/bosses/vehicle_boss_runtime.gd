@@ -235,11 +235,13 @@ func update_active(
 		if before.distance_to(boss.pos) + 1.0 < requested.length():
 			boss.phase_time = 0.0
 	elif kind == &"beam":
-		var growth_ratio := AttackContract.straight_beam_growth_ratio(
+		var growth_ratio := AttackContract.emitted_beam_growth_ratio(
 			boss.phase_time,
 			Patterns.active_seconds(pattern)
 		)
-		var live_beam_end := boss.pos.lerp(boss.beam_end, growth_ratio)
+		var live_beam_end := AttackContract.emitted_beam_live_endpoint(
+			boss.pos, boss.beam_end, growth_ratio
+		)
 		if (
 			not boss.hit_committed
 			and Rules.point_segment_distance(

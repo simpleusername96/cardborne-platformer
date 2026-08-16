@@ -55,7 +55,10 @@ static func refresh_ordinary(
 			SpecialistRuntime.BEAM_WIDTH
 		))
 		enemy.attack_telegraphs[-1]["beam_growth_seconds"] = (
-			AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+			AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+		)
+		enemy.attack_telegraphs[-1]["beam_emission_mode"] = (
+			AttackContract.EMITTED_BEAM_FORWARD
 		)
 		enemy.attack_telegraphs[-1]["active_seconds"] = SpecialistRuntime.BEAM_ACTIVE
 	_stamp_threat_tier(
@@ -136,6 +139,15 @@ static func refresh_boss(
 				damage, affinity, &"beam",
 				BossPatterns.width(pattern, stage_index)
 			))
+			enemy.attack_telegraphs[-1]["beam_growth_seconds"] = (
+				AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+			)
+			enemy.attack_telegraphs[-1]["beam_emission_mode"] = (
+				AttackContract.EMITTED_BEAM_BIDIRECTIONAL
+			)
+			enemy.attack_telegraphs[-1]["active_seconds"] = (
+				BossPatterns.active_seconds(pattern)
+			)
 	elif kind == &"broad_barrage":
 		for row in BossPatterns.broad_barrage_rows(
 			stage_index,
@@ -188,7 +200,10 @@ static func refresh_boss(
 			BossPatterns.width(pattern, stage_index)
 		))
 		enemy.attack_telegraphs[-1]["beam_growth_seconds"] = (
-			AttackContract.STRAIGHT_BEAM_GROWTH_SECONDS
+			AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+		)
+		enemy.attack_telegraphs[-1]["beam_emission_mode"] = (
+			AttackContract.EMITTED_BEAM_FORWARD
 		)
 		enemy.attack_telegraphs[-1]["active_seconds"] = (
 			BossPatterns.active_seconds(pattern)
