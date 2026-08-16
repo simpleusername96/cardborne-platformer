@@ -1,0 +1,28 @@
+{
+  "id": "boss-laser-orb-growth-v1",
+  "purpose": "Review-only motion reference for replacing full-corridor laser startup with a boss-attached charge orb and a 0.30-second growing active beam.",
+  "artifact": {
+    "path": "docs/design/visual-replacement-workbench/previews/boss-laser-orb-growth-v1/boss-laser-orb-growth-storyboard.png",
+    "sha256": "e7554437616126a6ac95d7228caa7c5d5e327c4a80b23cb8a981233d56211e01",
+    "approval_status": "review-only; not a runtime asset"
+  },
+  "motion_contract": {
+    "charge": "Boss-attached round danger-red orb is the only pre-fire warning; no predicted line, corridor, endpoint, or floor tint.",
+    "emission": "The borderless filled laser grows outward from the orb over approximately 0.30 seconds instead of appearing at full length in one frame.",
+    "shape": "The boss-side origin merges into the orb and the moving tip is rounded; there is no black perimeter or side outline.",
+    "active": "At full extension the beam may hold as the damaging corridor, with its inner core contained inside the red body."
+  },
+  "visual_authority_evidence": {
+    "spec_path": "docs/design/VISUAL_SYSTEM.md",
+    "spec_read_completely": true,
+    "style_reference_path": "docs/design/cardborne-universal-art-style-reference.png",
+    "expected_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "style_reference_inspected_at_original_detail": true,
+    "actual_image_reference_used": true,
+    "reference_input_method": "image_gen referenced_image_paths",
+    "runtime_snapshot_reference": "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-crown-beam-startup.png",
+    "original_artifact_provenance": "C:/Users/BK/.codex/generated_images/01a0058c-ed4e-79b1-b7cd-72c3406cb965/exec-88fde1e9-3402-4d45-ae61-dca0b64c8c43.png"
+  },
+  "known_contract_conflict": "VISUAL_SYSTEM.md currently requires a full exact-width startup corridor. Implementing this user-approved direction requires updating that startup rule while retaining exact collision ownership for the growing and fully active beam."
+}
