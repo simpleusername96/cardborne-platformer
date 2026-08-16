@@ -79,8 +79,8 @@ func _validate_facility_authority(run) -> void:
 	run.mystery_device_runtime.devices[0]["active_remaining"] = run.mystery_device_runtime.ACTIVE_DURATION_SECONDS
 	run.player_position = Vector2(modifier_device["position"])
 	_expect(
-		is_equal_approx(float(run.call("_player_facility_movement_multiplier")), 0.55)
-			and is_equal_approx(float(run.call("_player_facility_acceleration_multiplier")), 0.55),
+		is_equal_approx(float(run.call("_player_facility_movement_multiplier")), 0.70)
+			and is_equal_approx(float(run.call("_player_facility_acceleration_multiplier")), 0.70),
 		"gravity applies the same max-speed and acceleration multipliers to the player"
 	)
 	var enemy = run.call("_make_enemy", {"role":&"chaser", "id":"facility_target", "pos":Vector2(modifier_device["position"]), "active":true})
@@ -96,11 +96,11 @@ func _validate_facility_authority(run) -> void:
 	)
 	run.mystery_device_runtime.devices[0]["outcome"] = &"cryo"
 	_expect(
-		is_equal_approx(float(run.call("_player_facility_attack_cadence_multiplier")), 0.70),
+		is_equal_approx(float(run.call("_player_facility_attack_cadence_multiplier")), 0.82),
 		"cryo slows player primary and active cooldown cadence through the live-run multiplier"
 	)
 	run.call("_apply_enemy_facility_modifiers", enemy, 0.0)
-	_expect(is_equal_approx(enemy.facility_cadence_multiplier, 0.70), "cryo slows enemy attack cadence through the same facility")
+	_expect(is_equal_approx(enemy.facility_cadence_multiplier, 0.82), "cryo slows enemy attack cadence through the same facility")
 
 
 func _expect(condition: bool, message: String) -> void:
