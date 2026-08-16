@@ -96,7 +96,7 @@ func _validate_role_signatures() -> void:
 			"%s has a unique grayscale outer contour" % archetype
 		)
 		signatures[signature] = archetype
-	_expect(signatures.size() == 18, "all 18 ordinary enemy silhouettes are unique")
+	_expect(signatures.size() == 22, "all 22 ordinary enemy silhouettes are unique")
 
 
 func _validate_runtime_permissions() -> void:
