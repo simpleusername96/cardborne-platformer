@@ -98,6 +98,14 @@ func _validate_facility_authority(run) -> void:
 			== tr("NOTIFY_FACILITY_SHUTDOWN") % outcome_name,
 		"the verified expiry event publishes an auxiliary-AI shutdown message"
 	)
+	run._ui.clear_notifications()
+	run.call("_publish_facility_notification", {
+		"kind":&"facility_shutdown", "outcome":&"unknown",
+	})
+	_expect(
+		not bool(run._ui.debug_notification_contract()["active"]),
+		"unknown facility events fail closed instead of naming the wrong outcome"
+	)
 
 	# A live-run enemy receives the same role-specific modifier returned for a player position.
 	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")

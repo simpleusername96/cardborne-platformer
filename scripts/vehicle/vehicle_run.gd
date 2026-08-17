@@ -5680,7 +5680,10 @@ func _publish_facility_notification(event: Dictionary) -> void:
 		return
 	var message := tr(message_key)
 	if kind in [&"facility_expiry_warning", &"facility_shutdown"]:
-		message = message % tr(_facility_outcome_name_key(outcome))
+		var outcome_name_key := _facility_outcome_name_key(outcome)
+		if outcome_name_key.is_empty():
+			return
+		message = message % tr(outcome_name_key)
 	_ui.notify(
 		message,
 		2.4 if kind == &"facility_expiry_warning" else 1.8,
@@ -5713,7 +5716,7 @@ func _facility_outcome_name_key(outcome: StringName) -> String:
 		&"gravity": return "MYSTERY_OUTCOME_GRAVITY"
 		&"cryo": return "MYSTERY_OUTCOME_CRYO"
 		&"weakpoint": return "MYSTERY_OUTCOME_WEAKPOINT"
-	return "MYSTERY_OUTCOME_REPAIR"
+	return ""
 
 
 func _update_aim_target() -> void:
