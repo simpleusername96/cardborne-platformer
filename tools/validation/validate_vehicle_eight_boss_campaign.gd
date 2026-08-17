@@ -23,8 +23,8 @@ func _initialize() -> void:
 		_expect(rows.size() == 3 and int(rows[0]["count"]) == expected_count and is_equal_approx(float(rows[1]["at"]), 0.38), "%s broad barrage has exact rows" % stage_id)
 		if index > 0:
 			_expect(Difficulty.boss_health(index) > Difficulty.boss_health(index - 1) and Difficulty.boss_damage_multiplier(index) > Difficulty.boss_damage_multiplier(index - 1) and Difficulty.boss_move_speed(index) > Difficulty.boss_move_speed(index - 1), "%s strengthens boss base stats" % stage_id)
-	_expect(Phases.uses_shield(&"stage_3") and Phases.uses_shield(&"stage_5"), "Drydock and Crown retain offensive defenses")
-	_expect(not Phases.uses_shield(&"stage_1") and not Phases.uses_shield(&"stage_8"), "other bosses do not inherit a global shield")
+	_expect(Phases.uses_shield(&"stage_3"), "Drydock retains its offensive frontal defense")
+	_expect(not Phases.uses_shield(&"stage_1") and not Phases.uses_shield(&"stage_5") and not Phases.uses_shield(&"stage_8"), "other bosses do not inherit a global shield")
 	var flow := Flow.new()
 	flow.configure(0, 1, true)
 	flow.record_countable_defeat()

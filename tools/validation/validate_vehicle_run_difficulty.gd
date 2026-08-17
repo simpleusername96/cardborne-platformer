@@ -62,7 +62,7 @@ func _run() -> void:
 	)
 	var health_curve := [1.00, 1.30, 1.60, 1.90, 2.20, 2.50, 2.80, 3.10]
 	var health_pressure := [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-	var boss_bases := [5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0]
+	var boss_bases := [26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0]
 	var boss_health_multipliers := [1.00, 1.12, 1.25, 1.39, 1.54, 1.70, 1.87, 2.05]
 	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health increases by 30 percent of the Stage 1 baseline per cycle")
 	_expect(

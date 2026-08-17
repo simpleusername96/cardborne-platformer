@@ -1,8 +1,8 @@
 class_name VehicleBossPhaseCatalog
 extends RefCounted
 
-## Boss identity metadata. Only Drydock and Crown expose defensive systems;
-## both defenses directly feed a counterattack instead of stalling combat.
+## Boss identity metadata. Drydock alone uses a restrained directional defense
+## that directly feeds a counterattack instead of stalling combat.
 
 const MAX_LIVE_ADDS := 12
 const BOSS_ENTRY_SLOT_RESERVE := 1 + MAX_LIVE_ADDS
@@ -14,7 +14,7 @@ const PHASES := {
 	&"stage_2": {"variant": &"leviathan", "shield_kind": &"none", "add_roles": {2: [&"controller", &"chaser", &"scrap_drone"], 3: [&"chaser", &"shield_escort", &"scrap_drone"]}, "tactic_ids": {2: &"shepherd_pack", 3: &"shielded_column"}},
 	&"stage_3": {"variant": &"titan", "shield_kind": &"frontal_intercept", "add_roles": {2: [&"spark_minelet", &"chaser", &"scrap_drone"], 3: [&"bulkhead_guard", &"spark_minelet", &"scrap_drone"]}, "tactic_ids": {2: &"fuse_pack", 3: &"bulwark_fuse"}},
 	&"stage_4": {"variant": &"behemoth", "shield_kind": &"none", "add_roles": {2: [&"repair_tender", &"chaser", &"scrap_drone"], 3: [&"shooter", &"chaser", &"scrap_drone"]}, "tactic_ids": {2: &"repair_network", 3: &"crossfire_convoy"}},
-	&"stage_5": {"variant": &"crown", "shield_kind": &"relay_sectors", "add_roles": {2: [&"controller", &"chaser", &"scrap_drone"], 3: [&"drone_carrier", &"chaser", &"scrap_drone"]}, "tactic_ids": {2: &"learned_remix", 3: &"learned_remix"}},
+	&"stage_5": {"variant": &"crown", "shield_kind": &"none", "add_roles": {2: [&"controller", &"chaser", &"scrap_drone"], 3: [&"drone_carrier", &"chaser", &"scrap_drone"]}, "tactic_ids": {2: &"learned_remix", 3: &"learned_remix"}},
 	&"stage_6": {"variant": &"battery", "shield_kind": &"none", "add_roles": {2: [&"artillery_spotter", &"chaser", &"scrap_drone"], 3: [&"shooter", &"rammer", &"scrap_drone"]}, "tactic_ids": {2: &"crossfire_convoy", 3: &"spearhead"}},
 	&"stage_7": {"variant": &"loom", "shield_kind": &"none", "add_roles": {2: [&"controller", &"rammer", &"scrap_drone"], 3: [&"bulkhead_guard", &"chaser", &"scrap_drone"]}, "tactic_ids": {2: &"shepherd_pack", 3: &"bulwark_fuse"}},
 	&"stage_8": {"variant": &"pulse_core", "shield_kind": &"none", "add_roles": {2: [&"splitter_barge", &"rammer", &"scrap_drone"], 3: [&"drone_carrier", &"controller", &"scrap_drone"]}, "tactic_ids": {2: &"learned_remix", 3: &"crossfire_convoy"}},

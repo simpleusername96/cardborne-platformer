@@ -12,16 +12,16 @@ const ORDINARY_DAMAGE_PRESSURE := [0.98, 1.08, 1.18, 1.28, 1.38, 1.48, 1.57, 1.6
 const ORDINARY_HEALTH_MULTIPLIER := 2.60
 const ORDINARY_DURABILITY_MULTIPLIER := 1.20
 
-const BOSS_BASE_HEALTH := [5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0, 5200.0]
+const BOSS_BASE_HEALTH := [26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0]
 const BOSS_HEALTH_MULTIPLIERS := [1.00, 1.12, 1.25, 1.39, 1.54, 1.70, 1.87, 2.05]
 const BOSS_DAMAGE_MULTIPLIERS := [1.00, 1.06, 1.12, 1.18, 1.24, 1.31, 1.38, 1.46]
-const BOSS_MOVE_SPEEDS := [181.25, 187.5, 193.75, 200.0, 207.5, 215.0, 222.5, 230.0]
+const BOSS_MOVE_SPEEDS := [380.0, 395.0, 410.0, 425.0, 440.0, 455.0, 470.0, 485.0]
 const BOSS_CADENCE_SCALES := [1.00, 0.97, 0.94, 0.91, 0.88, 0.85, 0.82, 0.79]
 const BOSS_COVERAGE_SCALES := [1.00, 1.04, 1.08, 1.12, 1.16, 1.20, 1.24, 1.28]
-const BOSS_SHIELDED_DAMAGE_MULTIPLIER := 0.10
+const BOSS_SHIELDED_DAMAGE_MULTIPLIER := 0.50
 # Compatibility readout for guidebook/legacy validators; only shield-owning
 # profiles consume it at runtime.
-const BOSS_SHIELDED_DAMAGE_MULTIPLIERS := [0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10]
+const BOSS_SHIELDED_DAMAGE_MULTIPLIERS := [0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50]
 
 static func multipliers(cycle_index: int) -> Dictionary:
 	var index := _bounded_stage_index(cycle_index)
