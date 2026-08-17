@@ -6948,7 +6948,8 @@ func _build_snapshot() -> Dictionary:
 		{"id":&"fire_rate", "label_key":"SHIP_STAT_FIRE_RATE", "value":1.0 / PrimaryWeapon.BASE_INTERVAL, "decimals":2, "unit_key":"SHIP_UNIT_PER_SECOND"},
 		{"id":&"projectile_speed", "label_key":"SHIP_STAT_PROJECTILE_SPEED", "value":run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
 		{"id":&"dash_cooldown", "label_key":"SHIP_STAT_DASH_COOLDOWN", "value":_dash_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
-		{"id":&"active_damage", "label_key":"SHIP_STAT_ACTIVE_DAMAGE", "value":float(active_weapon["damage"]), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
+		{"id":&"active_range", "label_key":"SHIP_STAT_ACTIVE_RANGE", "value":float(active_weapon["size"]), "decimals":0, "unit_key":"SHIP_UNIT_PX"},
+		{"id":&"active_duration", "label_key":"SHIP_STAT_ACTIVE_DURATION", "value":float(active_weapon["duration"]), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
 		{"id":&"active_cooldown", "label_key":"SHIP_STAT_ACTIVE_COOLDOWN", "value":float(active_weapon["cooldown_max"]), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
 	]
 	return BuildSnapshotBuilder.build(

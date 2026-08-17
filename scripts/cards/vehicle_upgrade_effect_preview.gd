@@ -315,19 +315,26 @@ static func _active_weapon_rows(
 	var next_state := current_level + 1
 	return [
 		_row(
-			"UPGRADE_EFFECT_DAMAGE",
-			active.damage(current_state),
-			active.damage(next_state),
-			"none",
-			current_level > 0
-		),
-		_row(
 			"UPGRADE_EFFECT_HALF_WIDTH"
 				if active_id == &"cross_beam"
 				else "UPGRADE_EFFECT_RADIUS",
 			active.size(current_state),
 			active.size(next_state),
 			"none",
+			current_level > 0
+		),
+		_row(
+			"UPGRADE_EFFECT_DURATION",
+			active.duration(current_state),
+			active.duration(next_state),
+			"seconds",
+			current_level > 0
+		),
+		_row(
+			"UPGRADE_EFFECT_COOLDOWN",
+			active.cooldown(current_state),
+			active.cooldown(next_state),
+			"seconds",
 			current_level > 0
 		),
 	]

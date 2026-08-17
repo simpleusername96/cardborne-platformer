@@ -253,7 +253,7 @@ func _initialize() -> void:
 				"upgrade card uses shared code-native non-color states at %d"
 				% width
 			)
-			_expect(int(card["effect_rows"]) <= 2, "upgrade card has at most two effect rows")
+			_expect(int(card["effect_rows"]) <= 3, "upgrade card respects the active-weapon three-row maximum")
 			_expect(
 				not bool(card["dossier_split"])
 					and not bool(card["vertical_dossier"])

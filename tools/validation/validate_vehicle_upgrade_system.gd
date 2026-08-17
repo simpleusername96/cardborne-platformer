@@ -85,10 +85,11 @@ func _validate_presentation(catalog: Catalog) -> void:
 				% [definition.id, current_level + 1]
 			)
 			var effect_row_count := Array(snapshot["effect_rows"]).size()
+			var maximum_rows := 3 if definition.category == &"activated" else 2
 			_expect(
-				effect_row_count <= 2
+				effect_row_count <= maximum_rows
 					and (effect_row_count >= 1 or definition.id in [&"miss_compensation", &"hit_chain", &"braced_fire"]),
-				"%s level %d has at most two effect rows or is a runtime-receipt card"
+				"%s level %d respects its effect-row budget or is a runtime-receipt card"
 				% [definition.id, current_level + 1]
 			)
 			var expected_kind := (

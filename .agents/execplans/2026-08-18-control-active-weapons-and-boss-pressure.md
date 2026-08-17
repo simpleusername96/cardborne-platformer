@@ -55,7 +55,7 @@ Make every active weapon a zero-damage crowd-control tool whose upgrades improve
 - [x] Update canonical product/design contracts and active-weapon resource schema; migrate all four resources and runtime snapshots to range, duration, strength, and cooldown.
 - [x] Replace every active-weapon damage path with bounded CC application, including boss resistance and boss stun/slow integration.
 - [x] Increase boss health/speed, change its close-pressure movement band, weaken Drydock shielding, and remove Crown relay shielding.
-- [ ] Update Korean/English descriptions, upgrade previews, and Ship Status rows so all visible claims match the CC-only contract.
+- [x] Update Korean/English descriptions, upgrade previews, and Ship Status rows so all visible claims match the CC-only contract.
 - [ ] Update focused validators and validate imports, runtime contracts, affected rendered UI in Korean and English, visual authority, and Web export without run-result measurement.
 
 ## Validation Contract
@@ -73,3 +73,4 @@ Make every active weapon a zero-damage crowd-control tool whose upgrades improve
 - 2026-08-18: Canonical specs, four active resources, and the active definition/runtime contract now contain no active-weapon damage axis. Godot 4.7.1 imports the migrated resources and scripts successfully.
 - 2026-08-18: EMP, Black Hole, Shockwave, and Cross Beam now mutate only bounded control state or projectile clearance. Boss slow/stagger resistance is integrated, boss behavior pauses during stagger, and no active-weapon enemy/facility damage call remains. Focused active, status, and balance validators pass.
 - 2026-08-18: Boss health is five times the prior baseline, movement exceeds maximum non-dash player speed, and the dedicated movement band now closes to 140–240 px. Drydock alone retains a 70-degree, 50% frontal intercept; Crown relay state is removed. Shield, campaign, difficulty, and boss-pattern validators pass.
+- 2026-08-18: Active offers now show range, control duration, and cooldown as three compact values; Ship Status replaces active damage with range and duration while retaining cooldown. Korean and English layout/localization validators pass. Final 1280x720 captures are retained under `.agents/evidence/2026-08-18-control-active-weapons/{ko-final-1280,en-final-1280}` and show all three offer values without clipping.

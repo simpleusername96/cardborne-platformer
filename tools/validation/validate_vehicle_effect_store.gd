@@ -80,7 +80,7 @@ func _initialize() -> void:
 		and is_equal_approx(emp_charge.secondary_radius, 325.0)
 		and is_equal_approx(emp_release.radius, 285.0)
 		and is_equal_approx(emp_release.secondary_radius, 325.0),
-		"named EMP acquisition publishes exact damage/stun and projectile-clear radii"
+		"named EMP acquisition publishes exact stun and projectile-clear radii"
 	)
 	store.remove_at_swap(0)
 	var reset_emp_state = store.add(

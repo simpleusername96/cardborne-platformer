@@ -1792,7 +1792,7 @@ func _capture_all_boss_evidence() -> void:
 		boss.pattern = "recovery_window"
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-recovery.png" % [boss_number, stage_slug])
-		if stage_index in [2, 4]:
+		if stage_index == 2:
 			_run.boss_shield_runtime.advance(BossShieldRuntime.SHIELD_DOWN_SECONDS + 0.1)
 			boss.boss_shield_state = _run.boss_shield_runtime.state()
 			await _settle_capture()

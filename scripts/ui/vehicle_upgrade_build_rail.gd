@@ -191,7 +191,8 @@ func _show_record(record: Dictionary, cell: Control) -> void:
 	title.theme_type_variation = &"SectionLabel"
 	_popover_text.add_child(title)
 	var rows: Array = record.get("effect_rows", [])
-	for row_variant in rows.slice(0, 2):
+	var maximum_rows := 3 if StringName(record.get("category", &"")) == &"activated" else 2
+	for row_variant in rows.slice(0, maximum_rows):
 		var row := Dictionary(row_variant)
 		var stat := tr(String(row.get("stat_key", "")))
 		var current := float(row.get("current", 0.0))

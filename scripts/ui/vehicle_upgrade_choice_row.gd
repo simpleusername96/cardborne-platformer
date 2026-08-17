@@ -87,7 +87,7 @@ func _build() -> void:
 	_summary.max_lines_visible = 1
 	_copy.add_child(_summary)
 	_effects = GridContainer.new()
-	_effects.columns = 2
+	_effects.columns = 3
 	_effects.add_theme_constant_override("separation", 16)
 	_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_copy.add_child(_effects)
@@ -147,7 +147,7 @@ func _apply_layout_profile() -> void:
 	var summary_size := 15
 	var level_size := 16
 	_content.columns = 3
-	_effects.columns = 2
+	_effects.columns = 3
 	_title.max_lines_visible = 1
 	_summary.max_lines_visible = 1
 	_level.custom_minimum_size.x = 112.0
@@ -215,7 +215,8 @@ func _refresh() -> void:
 		_effects.remove_child(child)
 		child.queue_free()
 	var accessible_effects := PackedStringArray()
-	for preview_variant in Array(_offer.get("effect_rows", [])).slice(0, 2):
+	var maximum_effect_rows := 3 if StringName(_offer.get("category", &"")) == &"activated" else 2
+	for preview_variant in Array(_offer.get("effect_rows", [])).slice(0, maximum_effect_rows):
 		var preview := Dictionary(preview_variant)
 		var phrase := "%s %s" % [
 			tr(String(preview.get("stat_key", ""))),

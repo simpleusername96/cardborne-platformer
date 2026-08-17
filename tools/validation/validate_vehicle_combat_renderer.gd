@@ -660,7 +660,7 @@ func _run() -> void:
 	shield_presentation["boss_shield"] = {
 		"shield_kind":&"frontal_intercept",
 		"state":&"shield_up",
-		"frontal_half_angle":deg_to_rad(55.0),
+		"frontal_half_angle":deg_to_rad(35.0),
 	}
 	renderer.sync(
 		[open_boss], no_projectiles, no_projectiles, [], [],
@@ -689,26 +689,7 @@ func _run() -> void:
 	_expect(
 		boss_ring_batch.multimesh.visible_instance_count == 0
 			and beam_batch.multimesh.visible_instance_count == 10,
-		"Drydock renders only its body-facing 110-degree shield boundary"
-	)
-	shield_presentation["boss_shield"] = {
-		"shield_kind":&"relay_sectors",
-		"state":&"shield_up",
-		"sector_0_ratio":1.0,
-		"sector_1_ratio":0.0,
-		"sector_2_ratio":0.0,
-	}
-	renderer.sync(
-		[open_boss], no_projectiles, no_projectiles, [], [],
-		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true, "open_boss",
-		shield_presentation
-	)
-	var crown_beam_buffer := beam_batch.multimesh.buffer
-	var first_sector_segment := Vector2(crown_beam_buffer[3], crown_beam_buffer[7]) - open_boss.pos
-	_expect(
-		beam_batch.multimesh.visible_instance_count == 9
-			and absf(first_sector_segment.angle() - deg_to_rad(-53.3333)) < 0.02,
-		"Crown sector zero renders as the collision-owned forward 120-degree sector"
+		"Drydock renders only its body-facing 70-degree shield boundary"
 	)
 	var destruction_presentation := _player_presentation(Vector2.ZERO, false)
 	destruction_presentation["dying_boss_id"] = open_boss.id
@@ -1371,14 +1352,14 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 		"res://data/weapons/vehicle/active/emp.tres"
 	)
 	_expect(
-		emp_source.contains("startup_seconds = 0.42")
+		 emp_source.contains("startup_seconds = 0.42")
 			and emp_source.contains(
-				"size_by_level = Array[float]([285.0, 285.0, 285.0, 285.0])"
+				"size_by_level = Array[float]([285.0, 325.0, 365.0, 405.0])"
 			)
 			and emp_source.contains(
-				"auxiliary_size_by_level = Array[float]([325.0, 325.0, 325.0, 325.0])"
+				"auxiliary_size_by_level = Array[float]([325.0, 365.0, 405.0, 445.0])"
 			),
-		"EMP definition publishes its exact damage and projectile-clear footprints"
+		"EMP definition publishes its exact stun and projectile-clear footprints"
 	)
 
 

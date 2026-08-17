@@ -1293,29 +1293,13 @@ func _sync_boss_core_overlay(
 	var shield_radius := radius + 10.0
 	match StringName(shield.get("shield_kind", &"")):
 		&"frontal_intercept":
-			var half_angle := float(shield.get("frontal_half_angle", deg_to_rad(55.0)))
+			var half_angle := float(shield.get("frontal_half_angle", deg_to_rad(35.0)))
 			_write_arc_segments(
 				position, shield_radius,
 				forward.angle() - half_angle,
 				forward.angle() + half_angle,
 				Color(Art.SYSTEM, 0.90), 10
 			)
-		&"relay_sectors":
-			for sector in 3:
-				var ratio := float(shield.get("sector_%d_ratio" % sector, 0.0))
-				if ratio <= 0.0:
-					continue
-				var sector_offset := (
-					0.0 if sector == 0 else (TAU / 3.0 if sector == 1 else -TAU / 3.0)
-				)
-				var center_angle := forward.angle() + sector_offset
-				var half_sector := PI / 3.0
-				_write_arc_segments(
-					position, shield_radius,
-					center_angle - half_sector,
-					center_angle + half_sector,
-					Color(Art.SYSTEM, lerpf(0.38, 0.92, ratio)), 9
-				)
 		_:
 			_write_ring(position, radius + 8.0, Color(Art.SYSTEM, 0.52))
 
