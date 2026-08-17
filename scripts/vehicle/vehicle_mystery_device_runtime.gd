@@ -8,6 +8,7 @@ const DEVICE_COUNT := 3
 const DEVICE_HEALTH := 360.0
 const DEVICE_RADIUS := 84.0
 const ACTIVE_DURATION_SECONDS := 12.0
+const EXPIRY_WARNING_SECONDS := 3.0
 const HIT_FLASH_SECONDS := 0.14
 const OUTCOME_IDS: Array[StringName] = [&"repair", &"barrier", &"gravity", &"cryo", &"weakpoint"]
 const OUTCOME_PROFILE := {
@@ -25,17 +26,27 @@ func configure(device_blueprint: Array, layout_seed: int, stage_id: StringName) 
 	for index in mini(DEVICE_COUNT, device_blueprint.size()):
 		var blueprint := Dictionary(device_blueprint[index])
 		var outcome := rotation[index]
-		devices.append({"id": StringName(blueprint.get("id", "facility_%d" % index)), "position": Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))), "health": DEVICE_HEALTH, "outcome": outcome, "state": &"dormant", "active_remaining": 0.0, "hit_flash_remaining": 0.0})
+		devices.append({"id": StringName(blueprint.get("id", "facility_%d" % index)), "position": Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))), "health": DEVICE_HEALTH, "outcome": outcome, "state": &"dormant", "active_remaining": 0.0, "expiry_warning_sent": false, "hit_flash_remaining": 0.0})
 
-func advance(delta: float) -> void:
+func advance(delta: float, events: Array[Dictionary]) -> void:
+	events.clear()
 	var step := maxf(0.0, delta)
 	for device in devices:
 		device["hit_flash_remaining"] = maxf(0.0, float(device.get("hit_flash_remaining", 0.0)) - step)
 		if StringName(device["state"]) != &"active":
 			continue
+		var previous_remaining := float(device["active_remaining"])
 		device["active_remaining"] = maxf(0.0, float(device["active_remaining"]) - step)
 		if float(device["active_remaining"]) <= 0.0:
 			device["state"] = &"expired"
+			events.append({"kind": &"facility_shutdown", "device_id": StringName(device["id"]), "outcome": StringName(device["outcome"])})
+		elif (
+			previous_remaining > EXPIRY_WARNING_SECONDS
+			and float(device["active_remaining"]) <= EXPIRY_WARNING_SECONDS
+			and not bool(device.get("expiry_warning_sent", false))
+		):
+			device["expiry_warning_sent"] = true
+			events.append({"kind": &"facility_expiry_warning", "device_id": StringName(device["id"]), "outcome": StringName(device["outcome"]), "remaining": float(device["active_remaining"])})
 
 static func accepts_damage(source_team: StringName, attack_kind: StringName) -> bool:
 	return source_team in [&"player", &"hostile"] and attack_kind in [&"direct", &"area", &"projectile"]
@@ -52,8 +63,9 @@ func receive_damage(device_id: StringName, amount: float, source_team: StringNam
 	if float(device["health"]) <= 0.0:
 		device["state"] = &"active"
 		device["active_remaining"] = ACTIVE_DURATION_SECONDS
+		device["expiry_warning_sent"] = false
 		receipt["broken"] = true
-		receipt["break_event"] = {"kind": &"facility_activated", "device_id": device_id, "source": &"neutral_facility", "grants_experience": false, "drop": &"", "projectiles_blocked": false, "duration": ACTIVE_DURATION_SECONDS}
+		receipt["break_event"] = {"kind": &"facility_activated", "device_id": device_id, "outcome": StringName(device["outcome"]), "source": &"neutral_facility", "grants_experience": false, "drop": &"", "projectiles_blocked": false, "duration": ACTIVE_DURATION_SECONDS}
 	return receipt
 
 func modifiers_at(position: Vector2) -> Array[Dictionary]:

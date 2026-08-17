@@ -102,21 +102,24 @@ func _initialize() -> void:
 			% width
 		)
 		_expect(
-			int(contract["zone_surface_count"]) == 1
+			int(contract["zone_surface_count"]) == 2
 				and Array(contract["zone_surface_variations"]) == [
-					&"HudSurface",
+					&"HudSurface", &"HudSurface",
 				]
-				and StringName(contract["toast_surface_variation"]) == &"text_only",
-			"only the minimap keeps a backed HUD surface and announcements stay text-only at %d" % width
+				and StringName(contract["toast_surface_variation"]) == &"HudSurface"
+				and bool(contract["toast_below_minimap"])
+				and bool(contract["toast_right_aligned"])
+				and bool(contract["toast_reticle_clear"]),
+			"minimap and its auxiliary-AI announcement use two aligned shared surfaces at %d" % width
 		)
 		_expect(
 			bool(contract["status_cluster_panel_free"])
 				and int(contract["status_cluster_background_geometry_count"]) == 0
 				and not bool(contract["edge_boss_health_visible"])
 				and not bool(contract["edge_target_health_visible"])
-				and bool(contract["toast_center_attached"])
+				and bool(contract["toast_below_minimap"])
 				and not bool(contract["raster_chrome_consumer"]),
-			"status cluster is panel-free and toast/edge health contracts remain coherent at %d" % width
+			"status cluster is panel-free and minimap announcement/edge health contracts remain coherent at %d" % width
 		)
 		var expected_status_size := (
 			Vector2(172.0, 36.0)
@@ -691,8 +694,12 @@ func _initialize() -> void:
 	hud.refresh_localized_content()
 	var refreshed_notifications := hud.debug_notification_contract()
 	_expect(
-		not bool(refreshed_notifications["active"])
+			not bool(refreshed_notifications["active"])
 			and int(refreshed_notifications["queue_size"]) == 0
+			and bool(refreshed_notifications["auxiliary_ai"])
+			and String(refreshed_notifications["sender_label"]) == "CONTROL"
+			and StringName(refreshed_notifications["surface_variation"])
+				== &"HudSurface"
 			and int(refreshed_notifications["autowrap_mode"])
 				== TextServer.AUTOWRAP_WORD_SMART
 			and int(refreshed_notifications["text_overrun_behavior"])
@@ -864,11 +871,11 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	var hud := ui.get_node("VehicleStageUIRoot/GameplayHUD") as VehicleGameplayHud
 	var announcement := hud.debug_contract(1280.0)
 	_expect(
-		Vector2(announcement["toast_size"]).x <= 1232.0
-			and Vector2(announcement["toast_size"]).x == 720.0
-			and Vector2(announcement["toast_size"]).y == 112.0
-			and bool(announcement["toast_center_attached"]),
-		"200% announcement stays centered in a bounded two-line standard surface"
+		Vector2(announcement["toast_size"]) == Vector2(320.0, 148.0)
+			and bool(announcement["toast_below_minimap"])
+			and bool(announcement["toast_right_aligned"])
+			and bool(announcement["toast_reticle_clear"]),
+		"200% announcement stays below the minimap in a bounded two-line surface"
 	)
 	for item_variant in Array(contract["status_item_contracts"]):
 		var item := Dictionary(item_variant)
@@ -933,11 +940,11 @@ func _validate_text_scale_probe(ui: VehicleStageUI) -> void:
 	await _settle_ui()
 	announcement = hud.debug_contract(960.0)
 	_expect(
-		Vector2(announcement["toast_size"]).x <= 928.0
-			and Vector2(announcement["toast_size"]).x == 720.0
-			and Vector2(announcement["toast_size"]).y == 112.0
-			and bool(announcement["toast_center_attached"]),
-		"200% announcement stays inside the compact supported two-line safe width"
+		Vector2(announcement["toast_size"]) == Vector2(320.0, 148.0)
+			and bool(announcement["toast_below_minimap"])
+			and bool(announcement["toast_right_aligned"])
+			and bool(announcement["toast_reticle_clear"]),
+		"200% announcement stays below the compact minimap without covering the reticle"
 	)
 	_expect(
 		bool(announcement["status_cluster_one_line"])

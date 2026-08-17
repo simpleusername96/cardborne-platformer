@@ -69,6 +69,35 @@ func _validate_facility_authority(run) -> void:
 	_expect(bool(run.call("_damage_mystery_device", StringName(first["id"]), 300.0, &"projectile", position, Color.WHITE, Vector2.RIGHT, &"player")), "player attacks destroy facilities")
 	_expect(int(run.stage_flow.defeats) == quota_before and int(run.experience_runtime.experience) == experience_before, "facility destruction grants neither quota nor XP")
 	_expect(bool(run.mystery_device_runtime.is_position_clear(position, 0.0)), "activated facilities stop blocking movement")
+	var notification := Dictionary(run._ui.debug_notification_contract())
+	var outcome := StringName(first["outcome"])
+	var activation_key := String(run.call("_facility_notification_key", &"facility_activated", outcome))
+	_expect(
+		String(notification["active_message"]) == tr(activation_key),
+		"a verified activation event publishes its role-specific auxiliary-AI message"
+	)
+	run._ui.clear_notifications()
+	var facility_events: Array[Dictionary] = []
+	run.mystery_device_runtime.advance(9.0, facility_events)
+	for event in facility_events:
+		run.call("_handle_mystery_device_event", event)
+	var outcome_name := tr(String(run.call("_facility_outcome_name_key", outcome)))
+	notification = Dictionary(run._ui.debug_notification_contract())
+	_expect(
+		String(notification["active_message"])
+			== tr("NOTIFY_FACILITY_EXPIRY_WARNING") % outcome_name,
+		"the verified three-second event publishes an auxiliary-AI expiry warning"
+	)
+	run._ui.clear_notifications()
+	run.mystery_device_runtime.advance(3.0, facility_events)
+	for event in facility_events:
+		run.call("_handle_mystery_device_event", event)
+	notification = Dictionary(run._ui.debug_notification_contract())
+	_expect(
+		String(notification["active_message"])
+			== tr("NOTIFY_FACILITY_SHUTDOWN") % outcome_name,
+		"the verified expiry event publishes an auxiliary-AI shutdown message"
+	)
 
 	# A live-run enemy receives the same role-specific modifier returned for a player position.
 	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")

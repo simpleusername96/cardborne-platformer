@@ -311,6 +311,7 @@ var _cover_hit_receipt: Dictionary = {"hit":false, "t":2.0}
 var _cover_hit_candidate: Dictionary = {"hit":false, "t":2.0}
 var _mystery_device_hit_receipt: Dictionary = {}
 var _mystery_device_snapshot_buffer: Array[Dictionary] = []
+var _mystery_device_event_buffer: Array[Dictionary] = []
 var _mystery_device_result_receipt: Dictionary = {}
 var _facility_modifier_buffer: Array[Dictionary] = []
 var _runtime_fast_hud_frame: Dictionary = {}
@@ -599,7 +600,9 @@ func _physics_process(delta: float) -> void:
 		_performance_scenario.before_physics(self, delta)
 	if _simulation_active():
 		var pickup_motion_start := player_position
-		mystery_device_runtime.advance(delta)
+		mystery_device_runtime.advance(delta, _mystery_device_event_buffer)
+		for facility_event in _mystery_device_event_buffer:
+			_handle_mystery_device_event(facility_event)
 		_simulation_lod_bucket = 1 - _simulation_lod_bucket
 		_far_enemy_simulation_bucket = (
 			(_far_enemy_simulation_bucket + 1)
@@ -5651,13 +5654,7 @@ func _damage_mystery_device(
 
 func _handle_mystery_device_break(event: Dictionary) -> Dictionary:
 	var device_id := StringName(event.get("device_id", &""))
-	_ui.notify(
-		tr("NOTIFY_NEUTRAL_FACILITY_ACTIVATED"),
-		1.8,
-		Art.SYSTEM,
-		1,
-		&"neutral_facility_activated"
-	)
+	_publish_facility_notification(event)
 	_play_sound(&"destroy_priority", 1.02)
 	_mystery_device_result_receipt.clear()
 	_mystery_device_result_receipt["device_id"] = device_id
@@ -5665,6 +5662,58 @@ func _handle_mystery_device_break(event: Dictionary) -> Dictionary:
 		"device_id":device_id,
 	})
 	return _mystery_device_result_receipt
+
+
+func _handle_mystery_device_event(event: Dictionary) -> void:
+	_publish_facility_notification(event)
+	_session_diagnostics.emit_event(StringName(event.get("kind", &"facility_event")), {
+		"device_id":StringName(event.get("device_id", &"")),
+		"outcome":StringName(event.get("outcome", &"")),
+	})
+
+
+func _publish_facility_notification(event: Dictionary) -> void:
+	var kind := StringName(event.get("kind", &""))
+	var outcome := StringName(event.get("outcome", &""))
+	var message_key := _facility_notification_key(kind, outcome)
+	if message_key.is_empty():
+		return
+	var message := tr(message_key)
+	if kind in [&"facility_expiry_warning", &"facility_shutdown"]:
+		message = message % tr(_facility_outcome_name_key(outcome))
+	_ui.notify(
+		message,
+		2.4 if kind == &"facility_expiry_warning" else 1.8,
+		Art.SYSTEM,
+		2 if kind == &"facility_expiry_warning" else 1,
+		StringName("%s_%s" % [String(kind), String(outcome)])
+	)
+
+
+func _facility_notification_key(kind: StringName, outcome: StringName) -> String:
+	if kind == &"facility_expiry_warning":
+		return "NOTIFY_FACILITY_EXPIRY_WARNING"
+	if kind == &"facility_shutdown":
+		return "NOTIFY_FACILITY_SHUTDOWN"
+	if kind != &"facility_activated":
+		return ""
+	match outcome:
+		&"repair": return "NOTIFY_FACILITY_REPAIR_ACTIVATED"
+		&"barrier": return "NOTIFY_FACILITY_BARRIER_ACTIVATED"
+		&"gravity": return "NOTIFY_FACILITY_GRAVITY_ACTIVATED"
+		&"cryo": return "NOTIFY_FACILITY_CRYO_ACTIVATED"
+		&"weakpoint": return "NOTIFY_FACILITY_WEAKPOINT_ACTIVATED"
+	return ""
+
+
+func _facility_outcome_name_key(outcome: StringName) -> String:
+	match outcome:
+		&"repair": return "MYSTERY_OUTCOME_REPAIR"
+		&"barrier": return "MYSTERY_OUTCOME_BARRIER"
+		&"gravity": return "MYSTERY_OUTCOME_GRAVITY"
+		&"cryo": return "MYSTERY_OUTCOME_CRYO"
+		&"weakpoint": return "MYSTERY_OUTCOME_WEAKPOINT"
+	return "MYSTERY_OUTCOME_REPAIR"
 
 
 func _update_aim_target() -> void:

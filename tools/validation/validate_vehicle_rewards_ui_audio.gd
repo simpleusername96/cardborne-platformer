@@ -251,9 +251,13 @@ func _run() -> void:
 			and Array(notification_contract["queued_messages"]) == [
 				"second", "third", "fourth", "fifth",
 			]
-			and bool(notification_contract["text_only"])
+			and not bool(notification_contract["text_only"])
+			and bool(notification_contract["auxiliary_ai"])
+			and String(notification_contract["sender_label"]) == "CONTROL"
+			and StringName(notification_contract["surface_variation"])
+				== &"HudSurface"
 			and bool(notification_contract["input_passthrough"]),
-		"notification queue preserves equal-priority arrival order and cap on the input-transparent text-only announcement"
+		"notification queue preserves equal-priority arrival order and cap on the input-transparent auxiliary-AI surface"
 	)
 	stage_ui.call("clear_notifications")
 	experience_runtime.set("pending_level_ups", 1)

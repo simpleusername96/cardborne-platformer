@@ -61,6 +61,7 @@ func _initialize() -> void:
 	_expect(
 		bool(broken["broken"])
 			and StringName(Dictionary(broken["break_event"])["kind"]) == &"facility_activated"
+			and StringName(Dictionary(broken["break_event"])["outcome"]) == StringName(first["outcome"])
 			and not bool(Dictionary(broken["break_event"])["grants_experience"]),
 		"destroying a facility activates it without rewards"
 	)
@@ -87,14 +88,24 @@ func _initialize() -> void:
 			and is_equal_approx(float(active_snapshot["active_ratio"]), 1.0),
 		"activation publishes the full bounded timer"
 	)
-	runtime.advance(Runtime.ACTIVE_DURATION_SECONDS * 0.25)
+	var events: Array[Dictionary] = []
+	runtime.advance(Runtime.ACTIVE_DURATION_SECONDS * 0.25, events)
 	active_snapshot = Dictionary(runtime.snapshot()["devices"][0])
-	_expect(is_equal_approx(float(active_snapshot["active_ratio"]), 0.75), "active timer advances deterministically")
-	runtime.advance(Runtime.ACTIVE_DURATION_SECONDS)
+	_expect(is_equal_approx(float(active_snapshot["active_ratio"]), 0.75) and events.is_empty(), "active timer advances deterministically")
+	runtime.advance(Runtime.ACTIVE_DURATION_SECONDS * 0.5, events)
+	_expect(
+		events.size() == 1
+			and StringName(events[0]["kind"]) == &"facility_expiry_warning"
+			and StringName(events[0]["outcome"]) == StringName(first["outcome"]),
+		"active facilities emit one verified three-second expiry warning"
+	)
+	runtime.advance(Runtime.ACTIVE_DURATION_SECONDS, events)
 	_expect(
 		StringName(Dictionary(runtime.snapshot()["devices"][0])["state"]) == &"expired"
-			and runtime.modifiers_at(Vector2(first["position"])).is_empty(),
-		"expired facilities stop their effects"
+			and runtime.modifiers_at(Vector2(first["position"])).is_empty()
+			and events.size() == 1
+			and StringName(events[0]["kind"]) == &"facility_shutdown",
+		"expired facilities stop their effects and emit one shutdown event"
 	)
 	_finish()
 

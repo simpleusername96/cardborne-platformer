@@ -693,9 +693,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   바뀐다. visible label, backing, panel, section,
   surface, border, divider, card, frame, rail, line, cooldown progress geometry, blur와 shadow
   plate는 만들지 않는다. 각 glyph는 게임 전체에서 정확히 한 semantic ID만 소유한다.
-- top-right는 두 meter 아래의 `176×108` minimap만 소유한다. live upgrade icon,
-  edge boss/target health, objective와 mission Surface는 사용하지 않는다. full upgrade name,
-  level과 effective value는 paused Ship Status만 소유한다.
+- top-right는 두 meter 아래의 `176×108` minimap과 그 바로 아래의 보조 AI
+  announcement Surface 한 개만 소유한다. announcement는 minimap의 오른쪽 edge에
+  맞춰 정렬하고 compact/standard/large에서 각각 `6/8/8 px` gap을 둔다. live upgrade
+  icon, edge boss/target health, objective와 mission Surface는 사용하지 않는다. full
+  upgrade name, level과 effective value는 paused Ship Status만 소유한다.
 - minimap의 dynamic marker는 player, `field_pickup`, `mystery_device`,
   `mobile_enemy`, `priority_enemy`, `boss` 정확히 여섯
   역할만 사용한다. pickup은 lozenge, 중립 시설은 role과 무관한 neutral cut
@@ -708,15 +710,18 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   `12×7.6`이다. 중립 시설 outer point는 기존 neutral cut silhouette의 `1.20×`다.
 - bottom-center active indicator는 사용하지 않는다. Dash와 acquired Active 상태는
   좌상단 cluster가 중복 없이 소유한다. 자동 무기는 별도 HUD action slot을 만들지 않는다.
-- minimap zone만 한 subtle Surface를 사용한다. 두 full-width meter와 좌상단 cluster는
-  panel-free다. full-width dock,
+- minimap과 보조 AI announcement만 각각 한 subtle Surface를 사용한다. 두 full-width
+  meter와 좌상단 cluster는 panel-free다. full-width dock,
   ornamental edge frame과 서로 다른 screen-specific panel silhouette는
   사용하지 않는다.
-- normal top-center announcement는 text-only `22px` bold이며 center status band의
-  가장 낮은 경계 아래 4px에 붙고 좌상단 cluster 및 minimap과 겹치지 않는다. bounded
-  priority queue는 duplicate를 coalesce하고 semantic color로 종류를 구분한다.
-  gameplay announcement는 boss inbound, barrier depleted, boss shield-down과
-  progression complete event만 허용한다.
+- normal announcement는 minimap 바로 아래의 compact auxiliary-AI Surface에 표시한다.
+  fixed `CONTROL` sender label은 `12/13/14 px` system color, message는
+  `15/16/18 px` bold이며 최대 두 줄이다. Surface는 minimap의 오른쪽 edge에 맞추고
+  100% text에서 minimap과 같은 폭, 200% text에서 최대 `320 px`까지 왼쪽으로 넓혀
+  Korean/English text를 자르지 않는다. bounded priority queue는 duplicate를
+  coalesce하고 semantic color로 종류를 구분한다. gameplay announcement는 boss
+  inbound, barrier depleted, boss shield-down, progression complete와 verified neutral
+  facility activation, expiry warning, shutdown event만 허용한다.
   stage transition banner는 사용하지 않는다.
 - stage boss와 고정 전투 설치물 `turret`,
   `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed

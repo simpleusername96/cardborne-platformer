@@ -24,9 +24,8 @@ redesign the campaign.
 
 - Objective: make the current run longer, more demanding, less interruption-heavy, and
   easier for a first-time player to read without changing its overall structure.
-- Deliverable: four sequential phases covering HUD and guidance, upgrade cadence, a
-  quota increase plus one spawn-pressure adjustment, and a duration/difficulty
-  observation report.
+- Deliverable: three sequential phases covering auxiliary-AI guidance, upgrade cadence,
+  and a quota increase plus one spawn-pressure adjustment.
 - Completion state: each slice passes its own acceptance checks before the next slice is
   implemented; the final native and built-Web checks pass.
 
@@ -34,15 +33,13 @@ redesign the campaign.
 
 In scope:
 
-- Improve the existing top HUD so boss/quota, Dash, and Active information remains legible.
-- Present boss and facility guidance through the existing announcement pipeline with a
-  fixed auxiliary-AI identity and concise Korean/English text.
+- Keep the existing top HUD unchanged and present boss and facility guidance immediately
+  below the minimap through the existing announcement pipeline with a fixed auxiliary-AI
+  identity and concise Korean/English text.
 - Reduce early upgrade interruptions by tuning the existing XP requirement curve.
 - Increase every cycle's ordinary-defeat requirement before boss entry to exactly `1.5x`
   its current value.
 - Make one small change to existing spawn weighting.
-- Re-measure run duration and difficulty after the earlier slices without automatically
-  changing any other fixed-Hard balance values.
 
 Out of scope:
 
@@ -66,10 +63,10 @@ Constraints and invariants:
 - Tune one concern at a time. Implement and record the quota increase separately from the
   spawn-sector change so duration and difficulty evidence can identify each input.
 - Korean remains the default and Korean/English coverage must remain complete.
-- UI work uses existing shared components. The current visual contract still requires a
-  panel-free HUD row and a text-only, event-limited announcement surface, so Phase 1 must
-  amend only those exact clauses before the proposed backing or facility guidance is
-  implemented. This plan does not override the active visual specification by itself.
+- UI work uses existing shared components. The current visual contract still limits the
+  top-right zone to the minimap and requires a text-only top-center announcement, so
+  Phase 1 must amend only those exact clauses before the auxiliary-AI surface is moved
+  below the minimap. This plan does not override the active visual specification by itself.
 
 Destructive or irreversible actions:
 
@@ -79,10 +76,9 @@ Exact actions requiring user approval:
 
 - Any change outside the boundaries above, including campaign restructuring, new content,
   cap increases, dependencies, or player-control changes.
-- Phase 1's narrow HUD/announcement contract amendment is grounded in the user's prior
-  request for backed fit-square status cells and an auxiliary-AI guidance presence, and in
-  the current instruction to apply that feedback incrementally. Any broader visual-contract
-  amendment requires a new explicit decision.
+- Phase 1's narrow announcement contract amendment is grounded in the user's current
+  instruction to leave the top HUD alone and place auxiliary-AI messages below the minimap.
+  Any broader visual-contract amendment requires a new explicit decision.
 
 ## Discovery Closure
 
@@ -92,8 +88,7 @@ Exact actions requiring user approval:
 | Fast movement can leave enemies trailing | The allocator already distributes arrivals by sector and considers player velocity. | `scripts/encounters/vehicle_spawn_allocator.gd` | Keep the allocator. Adjust only its existing sector/role scoring so the first pass reduces rear pursuit modestly; do not add a new encounter scheduler. | 3.2 |
 | Difficulty became too easy | Ordinary pressure is owned by shared projectile-speed, recovery, threat-budget, stage commit limits, and spawn placement. | `scripts/encounters/vehicle_encounter_director.gd`, `scripts/encounters/vehicle_spawn_allocator.gd` | Keep fixed-Hard numeric values unchanged in this contract. Test whether the one spawn-direction adjustment improves relevant pressure, then report any remaining balance gap. | 3.2, 4.1 |
 | Upgrades interrupt play too often | XP requirements are computed in `VehicleExperienceRuntime`; pending levels and the existing modal already have stable owners. | `scripts/progression/vehicle_experience_runtime.gd`, `scripts/vehicle/vehicle_run.gd` | Keep the modal and reward flow. Change only `EARLY_REQUIREMENT_SURCHARGE` from `4` to `8` for the existing first ten requirement calculations. | 2.1 |
-| Boss progress is clipped and status items lack backing | The gameplay HUD formats boss/quota text and owns the existing status items. The active visual contract currently forbids backing on this row. | `scripts/ui/vehicle_gameplay_hud.gd`, `scripts/ui/vehicle_hud_presenter.gd`, `docs/design/VISUAL_SYSTEM.md` | Preserve the current information and order. First amend the exact HUD clause, then give boss progress a width-aware backed cell and keep Dash/Active in equal backed square cells; do not build a new cockpit layout. | 1.0, 1.1 |
-| Existing messages do not teach mechanics | The gameplay HUD already owns a localized, prioritized announcement queue and emits diagnostics. The active visual contract currently allows only four event families and text-only presentation. | `scripts/ui/vehicle_gameplay_hud.gd`, `scripts/ui/vehicle_stage_ui.gd`, `scripts/vehicle/vehicle_run.gd`, `docs/design/VISUAL_SYSTEM.md` | First amend the exact announcement clause, then add a fixed `CONTROL` label/glyph and verified boss/facility state messages to the existing queue. Preserve queue capacity and priority behavior. | 1.0, 1.2 |
+| Existing messages do not teach mechanics | The gameplay HUD already owns a localized, prioritized announcement queue and emits diagnostics. The active visual contract currently allows only four event families and a text-only top-center presentation. | `scripts/ui/vehicle_gameplay_hud.gd`, `scripts/ui/vehicle_stage_ui.gd`, `scripts/vehicle/vehicle_run.gd`, `docs/design/VISUAL_SYSTEM.md` | Keep the top HUD row unchanged. Amend only the top-right and announcement clauses, dock the existing queue below the minimap, and add a fixed `CONTROL` label with verified boss/facility state messages. Preserve queue capacity and priority behavior. | 1.0, 1.1, 1.2 |
 
 Readiness statement:
 
@@ -107,41 +102,47 @@ Readiness statement:
 
 ### Phase 1: Make current information readable
 
-Goal: fix the visible HUD problem and add the requested assistant-style guidance without
-changing gameplay state or screen structure.
+Goal: add the requested assistant-style guidance below the minimap without changing the
+existing top HUD row or gameplay state.
 
 Preconditions:
 
 - Load `$uiux-gate`, `.agents/design/DESIGN.md`, and `$cardborne-visual-authority` before
   implementation because this phase changes player-facing UI.
 
-Source owners: `scripts/ui/vehicle_gameplay_hud.gd`,
-`scripts/ui/vehicle_hud_presenter.gd`, `scripts/ui/vehicle_stage_ui.gd`,
+Source owners: `scripts/ui/vehicle_gameplay_hud.gd`, `scripts/ui/vehicle_stage_ui.gd`,
 `scripts/vehicle/vehicle_run.gd`, `docs/design/VISUAL_SYSTEM.md`, existing localization
 catalogs, focused HUD validators.
 
-- [ ] **1.0 Reconcile the two narrow visual-contract clauses**
-  - Change: update only the HUD-row and normal-announcement clauses in
-    `docs/design/VISUAL_SYSTEM.md`. Permit one restrained shared-Theme backing for
-    `stage_progress`, `dash`, and `active`, and permit the existing announcement surface
-    to show a fixed `CONTROL` sender label plus verified boss and neutral-facility state
-    events. Preserve the one-row order, minimap ownership, queue behavior, semantic colors,
-    code-native glyph ownership, and ban on screen-specific chrome.
+- [x] **1.0 Reconcile the two narrow visual-contract clauses**
+  - Change: update only the top-right and normal-announcement clauses in
+    `docs/design/VISUAL_SYSTEM.md`. Keep the panel-free top HUD row unchanged; permit one
+    restrained shared-Theme auxiliary-AI Surface immediately below the minimap with a
+    fixed `CONTROL` sender label and verified boss and neutral-facility state events.
+    Preserve minimap ownership, queue behavior, semantic colors, and the ban on
+    screen-specific chrome.
   - Accept: the revised clauses are compatible with the product spec, design map, runtime
     owners, Korean/English requirement, and visual-authority validator.
   - Guard: do not revise modal layouts, world visuals, gameplay rules, or unrelated visual
     contracts.
+  - Evidence: `docs/design/VISUAL_SYSTEM.md` now preserves the top HUD row and permits one
+    shared-Theme auxiliary-AI Surface below the minimap; the visual-authority validator
+    passed with the canonical `1448×1086` sheet and required SHA-256.
 
-- [ ] **1.1 Back the existing HUD status items**
-  - Change: retain boss/quota, total defeats, Dash, and Active in their current order.
-    Replace the clipped boss text slot with a width-aware backed cell and render Dash and
-    Active in equal fit-square backed cells through shared UI primitives.
-  - Accept: Korean and English boss progress is fully visible at 960×540, 1280×720, and
-    1920×1080 at 100% and 200% text scale; no child clips or overflows.
+- [x] **1.1 Dock the existing announcement queue below the minimap**
+  - Change: replace the top-center text-only presentation with one compact right-aligned
+    shared Surface directly below the minimap. Keep the existing queue, priority,
+    coalescing, capacity, timing, and public notification API unchanged.
+  - Accept: Korean and English messages fit without clipping or overlap at 960×540,
+    1280×720, and 1920×1080 at 100% and 200% text scale; the existing top HUD row is
+    unchanged and the panel never covers the reticle.
   - Guard: minimap, threat radar, aiming area, focus behavior, and gameplay snapshot keys
     remain unchanged.
-- [ ] **1.2 Add `CONTROL` to the current announcement surface**
-  - Change: add one restrained code-native sender mark and label to the existing panel.
+  - Evidence: `VehicleGameplayHud` now renders the unchanged bounded queue in a
+    right-aligned shared `HudSurface` below the minimap. The stage-UI layout validator
+    passed at the supported viewport and 200% text-scale matrix.
+- [x] **1.2 Add `CONTROL` to the current announcement surface**
+  - Change: add a fixed `CONTROL` sender label to the existing panel.
     Add concise observation/action copy for boss arrival or phase truth and neutral-facility
     activation, expiry warning, and shutdown. Publish messages only from verified runtime
     events; do not infer state from display text.
@@ -149,12 +150,17 @@ catalogs, focused HUD validators.
     keys exist in Korean and English; the panel does not cover the reticle at the locked
     viewport/text-scale matrix.
   - Guard: immediate danger remains in world telegraphs and the threat radar.
+  - Evidence: the facility runtime emits bounded activation, three-second warning, and
+    shutdown events into a caller-owned buffer; GameRoot integration and Korean/English
+    localization validators passed. Real 960×540 captures at
+    `build/validation/hud-control-20260817-v2/{ko,en}/04c-progression-max.png` show the
+    `CONTROL` message below the minimap without clipping or reticle overlap.
 
 Phase gate:
 
 - Run the focused HUD, stage-UI layout, localization, and visual-authority validators.
-- Capture one Korean and one English gameplay frame showing boss progress and one
-  `CONTROL` message at 960×540.
+- Capture one Korean and one English gameplay frame showing one `CONTROL` message below
+  the minimap at 960×540.
 
 ### Phase 2: Reduce upgrade fatigue within the current progression
 
@@ -219,31 +225,6 @@ Phase gate:
 - Run the focused stage continuity, single-field campaign, run difficulty, spawn allocator,
   encounter pacing, and performance contract validators once after Tasks 3.1 and 3.2 pass.
 
-### Phase 4: Observe duration and report the next bounded decision
-
-Goal: determine whether the four incremental slices improved interruption rate, route
-pressure, difficulty, and duration without silently changing the campaign.
-
-Preconditions:
-
-- Phases 1–3 pass and five complete deterministic runs are captured with the same build and
-  workload settings.
-
-Source owners: campaign and pacing validators, session diagnostics.
-
-- [ ] **4.1 Record matched-run evidence without tuning another system**
-  - Change: calculate the median active run time, per-cycle ordinary-combat duration,
-    upgrade-session count and gap, rear-sector share, accepted damage, and completion result
-    from the five completed runs. Compare them with the prior diagnostic capture and state
-    its provenance and limitations.
-  - Accept: the evidence states whether the four slices improved each concern, records the
-    exact enlarged quota sequence and unchanged remaining fixed-Hard values, and separates
-    observation from recommendation.
-  - Guard: do not further change quotas, fixed-Hard values, HP, damage, projectile speed,
-    recovery, threat budgets, commit caps, actor caps, or campaign flow in this contract. If
-    another numeric balance change is still justified, propose one isolated variable for
-    separate user and product-spec approval.
-
 Final gate:
 
 - Run the focused validators for every touched owner, Godot import/parse, production Web
@@ -272,7 +253,7 @@ Validation rules:
 | Trigger | Required response | Boundary or escalation point |
 | --- | --- | --- |
 | A phase makes readability, difficulty, interruption rate, or performance materially worse | Stop before the next phase and correct or revert only that phase | Do not compensate by redesigning another system |
-| Duration or difficulty remains unsatisfactory after Phase 3 | Record the gap and propose one isolated numeric variable for a separate product-spec decision | Do not make a second quota or balance change in this contract |
+| Duration or difficulty remains unsatisfactory after Phase 3 | Leave evaluation and any follow-up tuning to the user | Do not make a second quota or balance change in this contract |
 | A requested improvement requires a new campaign, scheduler, progression currency, modal, or content family | Stop and revise the contract with explicit user approval | Executor cannot expand scope |
 
 Implementation-local discoveries may be handled inside the locked existing owner when they
@@ -281,9 +262,10 @@ do not change visible behavior, architecture, scope, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: 1.0 Reconcile the two narrow visual-contract clauses.
-- Last completed gate: Discovery Closure Gate.
+- Current phase: Phase 2.
+- Next task: 2.1 Tune the existing early XP curve.
+- Last completed gate: Phase 1 HUD, localization, visual-authority, and bilingual rendered
+  capture gate.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 

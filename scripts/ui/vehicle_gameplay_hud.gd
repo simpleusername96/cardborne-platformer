@@ -504,7 +504,8 @@ var _status_items: Dictionary = {}
 var _conditional_item_ids: Array[StringName] = []
 var _accessibility_text_scale := 1.0
 var _minimap: StageMinimap
-var _notification_panel: Control
+var _notification_panel: PanelContainer
+var _notification_sender: Label
 var _notification: Label
 var _notification_timer := 0.0
 var _notification_queue: Array[Dictionary] = []
@@ -575,25 +576,35 @@ func _build() -> void:
 	_minimap.custom_minimum_size = Vector2(168.0, 100.0)
 	minimap_zone.add_child(_minimap)
 
-	_notification_panel = Control.new()
-	_notification_panel.name = "TextAnnouncement"
+	_notification_panel = Factory.surface(
+		Factory.SURFACE_HUD,
+		Vector2(160.0, 80.0)
+	)
+	_notification_panel.name = "AuxiliaryAiAnnouncement"
 	_notification_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_notification_panel.clip_contents = true
-	_notification_panel.size = Vector2(360.0, 40.0)
+	_notification_panel.size = Vector2(160.0, 80.0)
 	add_child(_notification_panel)
-	_notification = Factory.label("", 22, Art.IVORY_BRIGHT)
+	var notification_content := VBoxContainer.new()
+	notification_content.name = "AnnouncementContent"
+	notification_content.add_theme_constant_override("separation", 2)
+	_notification_panel.add_child(notification_content)
+	_notification_sender = Factory.label("CONTROL", 13, Art.SYSTEM)
+	_notification_sender.name = "Sender"
+	_notification_sender.theme_type_variation = &"SecondaryLabel"
+	notification_content.add_child(_notification_sender)
+	_notification = Factory.label("", 16, Art.IVORY_BRIGHT)
 	_notification.name = "Notification"
 	_notification.theme_type_variation = &"SectionLabel"
-	_notification.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_notification.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_notification.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_notification.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_notification.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_notification.text_overrun_behavior = TextServer.OVERRUN_TRIM_WORD_ELLIPSIS
 	_notification.max_lines_visible = 2
 	_notification.clip_text = true
-	_notification.add_theme_font_size_override("font_size", 22)
-	_notification.add_theme_constant_override("outline_size", 2)
-	_shadow_label(_notification)
-	_notification_panel.add_child(_notification)
+	_notification.custom_minimum_size.y = 44.0
+	_notification.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	notification_content.add_child(_notification)
 	_notification_panel.visible = false
 
 
@@ -797,8 +808,12 @@ func debug_notification_contract() -> Dictionary:
 		"queued_messages":queued_messages,
 		"queue_size":_notification_queue.size(),
 		"queue_cap":4,
-		"text_only":true,
+		"text_only":false,
+		"auxiliary_ai":true,
+		"sender_label":_notification_sender.text,
+		"surface_variation":_notification_panel.theme_type_variation,
 		"font_size":_notification.get_theme_font_size("font_size"),
+		"sender_font_size":_notification_sender.get_theme_font_size("font_size"),
 		"autowrap_mode":_notification.autowrap_mode,
 		"text_overrun_behavior":_notification.text_overrun_behavior,
 		"max_lines_visible":_notification.max_lines_visible,
@@ -877,19 +892,13 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		viewport_width - minimap_base_size.x - safe_margin,
 		meter_height + status_top_gap
 	)
-	var top_band_bottom := meter_height + status_top_gap + maxf(
-		status_size.y, minimap_base_size.y
+	var toast_size := _notification_size(
+		viewport_width, compact, accessibility, large, minimap_base_size
 	)
-	var toast_size := Vector2(
-		minf(
-			720.0,
-			maxf(0.0, viewport_width - safe_margin * 2.0)
-		),
-		112.0 if accessibility else 52.0
-	)
+	var toast_gap := _notification_gap(compact)
 	var toast_position := Vector2(
-		(viewport_width - toast_size.x) * 0.5,
-		top_band_bottom + 4.0
+		viewport_width - toast_size.x - safe_margin,
+		minimap_position.y + minimap_base_size.y + toast_gap
 	)
 	var opaque_rects := [
 		Rect2(minimap_position, minimap_base_size),
@@ -945,16 +954,23 @@ func debug_contract(viewport_width: float) -> Dictionary:
 		"edge_boss_health_visible":false,
 		"edge_target_health_visible":false,
 		"conditional_clusters_have_backing":false,
-		"zone_surface_count":1,
+		"zone_surface_count":2,
 		"zone_surface_variations":[
 			_minimap_panel.theme_type_variation,
+			_notification_panel.theme_type_variation,
 		],
-		"toast_surface_variation":&"text_only",
+		"toast_surface_variation":_notification_panel.theme_type_variation,
 		"toast_size":toast_size,
 		"toast_position":toast_position,
-		"toast_center_attached":is_equal_approx(
-			toast_position.y,
-			top_band_bottom + 4.0
+		"toast_below_minimap":is_equal_approx(
+			toast_position.y, minimap_position.y + minimap_base_size.y + toast_gap
+		),
+		"toast_right_aligned":is_equal_approx(
+			toast_position.x + toast_size.x,
+			minimap_position.x + minimap_base_size.x
+		),
+		"toast_reticle_clear":not Rect2(toast_position, toast_size).has_point(
+			Vector2(viewport_width * 0.5, viewport_height * 0.5)
 		),
 		"raster_chrome_consumer":false,
 		"opaque_combat_area_ratio":(
@@ -1024,20 +1040,45 @@ func _apply_responsive_layout() -> void:
 		minimap_base_size.x - 20.0,
 		minimap_base_size.y - 16.0
 	)
-	var top_band_bottom := meter_height + status_top_gap + maxf(
-		status_size.y, minimap_base_size.y
+	_notification_panel.size = _notification_size(
+		size.x, compact, accessibility, large, minimap_base_size
 	)
-	var announcement_width := 720.0
-	_notification_panel.size = Vector2(
-		minf(announcement_width, maxf(0.0, size.x - safe_margin * 2.0)),
-		112.0 if accessibility else 52.0
-	)
+	_notification_panel.custom_minimum_size = _notification_panel.size
 	_notification_panel.position = Vector2(
-		(size.x - _notification_panel.size.x) * 0.5,
-		top_band_bottom + 4.0
+		size.x - _notification_panel.size.x - safe_margin,
+		_minimap_panel.position.y + minimap_base_size.y
+			+ _notification_gap(compact)
 	)
-	_notification.position = Vector2.ZERO
-	_notification.size = _notification_panel.size
+	_notification_sender.add_theme_font_size_override(
+		"font_size",
+		24 if accessibility else (12 if compact else (14 if large else 13))
+	)
+	_notification.add_theme_font_size_override(
+		"font_size",
+		30 if accessibility else (15 if compact else (18 if large else 16))
+	)
+	_notification.custom_minimum_size.y = (
+		76.0 if accessibility else (38.0 if compact else (50.0 if large else 44.0))
+	)
+
+
+func _notification_size(
+	viewport_width: float,
+	compact: bool,
+	accessibility: bool,
+	large: bool,
+	minimap_size: Vector2
+) -> Vector2:
+	if accessibility:
+		return Vector2(
+			minf(320.0, viewport_width - _safe_margin(viewport_width) * 2.0),
+			148.0
+		)
+	return Vector2(minimap_size.x, 80.0 if compact else (92.0 if large else 86.0))
+
+
+func _notification_gap(compact: bool) -> float:
+	return 6.0 if compact else 8.0
 func _safe_margin(viewport_width: float) -> float:
 	if viewport_width < 1100.0:
 		return 16.0
