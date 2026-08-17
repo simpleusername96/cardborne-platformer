@@ -15,16 +15,18 @@ related:
 # Incremental Fast-Shooter Improvements — Execution Contract
 
 Cardborne keeps its current run structure and combat identity. This contract applies the
-user's feedback through small, separately testable changes to existing systems. It does
-not replace quota progression, rebuild encounters as authored beats, move upgrades to a
-new service loop, or redesign the campaign.
+user's feedback through small, separately testable changes to existing systems. It keeps
+quota progression while increasing every boss-entry ordinary-defeat quota to `1.5x`; it
+does not rebuild encounters as authored beats, move upgrades to a new service loop, or
+redesign the campaign.
 
 ## Purpose
 
 - Objective: make the current run longer, more demanding, less interruption-heavy, and
   easier for a first-time player to read without changing its overall structure.
-- Deliverable: four sequential slices covering HUD and guidance, upgrade cadence, one
-  spawn-pressure adjustment, and a duration/difficulty observation report.
+- Deliverable: four sequential phases covering HUD and guidance, upgrade cadence, a
+  quota increase plus one spawn-pressure adjustment, and a duration/difficulty
+  observation report.
 - Completion state: each slice passes its own acceptance checks before the next slice is
   implemented; the final native and built-Web checks pass.
 
@@ -36,9 +38,11 @@ In scope:
 - Present boss and facility guidance through the existing announcement pipeline with a
   fixed auxiliary-AI identity and concise Korean/English text.
 - Reduce early upgrade interruptions by tuning the existing XP requirement curve.
+- Increase every cycle's ordinary-defeat requirement before boss entry to exactly `1.5x`
+  its current value.
 - Make one small change to existing spawn weighting.
 - Re-measure run duration and difficulty after the earlier slices without automatically
-  changing quotas or fixed-Hard balance values.
+  changing any other fixed-Hard balance values.
 
 Out of scope:
 
@@ -47,18 +51,20 @@ Out of scope:
   bosses, new facilities, a new failure-analysis system, or a new guidebook architecture.
 - Changes to player speed, dash, manual aim, held primary fire, weapons, cards, boss order,
   one-field continuity, active-actor caps, or production dependencies.
-- Quota values, fixed-Hard multipliers, projectile speed, enemy recovery, HP, damage, and
-  a promised duration target. Any later numeric balance change requires a separate,
-  evidence-backed product-spec decision.
+- Fixed-Hard multipliers, projectile speed, enemy recovery, HP, damage, and a promised
+  duration target. Any later numeric balance change beyond the exact quota and XP changes
+  in this contract requires a separate, evidence-backed product-spec decision.
 - A promised final run length. Duration remains measured telemetry, not a timer.
 
 Constraints and invariants:
 
-- Preserve the current eight-cycle quota flow and every existing reachable surface.
+- Preserve the current eight-cycle quota flow and every existing reachable surface. Scale
+  the current quota sequence `40/44/48/52/56/60/64/68` to the exact integer sequence
+  `60/66/72/78/84/90/96/102`; do not apply runtime difficulty scaling or rounding.
 - Preserve the current spawn allocator, encounter director, upgrade modal, announcement
   queue, localization pipeline, Theme, component factory, and performance caps.
-- Tune one concern at a time. This contract does not authorize a quota or fixed-Hard
-  numeric change because that would hide which change affected duration and difficulty.
+- Tune one concern at a time. Implement and record the quota increase separately from the
+  spawn-sector change so duration and difficulty evidence can identify each input.
 - Korean remains the default and Korean/English coverage must remain complete.
 - UI work uses existing shared components. The current visual contract still requires a
   panel-free HUD row and a text-only, event-limited announcement surface, so Phase 1 must
@@ -82,9 +88,9 @@ Exact actions requiring user approval:
 
 | Requirement or concern | Verified current owner and behavior | Evidence | Locked incremental decision | Task IDs |
 | --- | --- | --- | --- | --- |
-| Run ends near ten minutes | `VehicleStageFlow` advances through the current stage quotas; no timer ends the run. | `scripts/encounters/vehicle_stage_flow.gd`, `scripts/vehicle/stages/vehicle_combat_stages.gd`, prior session diagnostics | Keep quota progression and values unchanged. Re-measure after the three implementation slices; any quota proposal is a separate product-spec decision. | 4.1 |
-| Fast movement can leave enemies trailing | The allocator already distributes arrivals by sector and considers player velocity. | `scripts/encounters/vehicle_spawn_allocator.gd` | Keep the allocator. Adjust only its existing sector/role scoring so the first pass reduces rear pursuit modestly; do not add a new encounter scheduler. | 3.1 |
-| Difficulty became too easy | Ordinary pressure is owned by shared projectile-speed, recovery, threat-budget, stage commit limits, and spawn placement. | `scripts/encounters/vehicle_encounter_director.gd`, `scripts/encounters/vehicle_spawn_allocator.gd` | Keep fixed-Hard numeric values unchanged in this contract. Test whether the one spawn-direction adjustment improves relevant pressure, then report any remaining balance gap. | 3.1, 4.1 |
+| Run ends near ten minutes | `VehicleStageFlow` gates each boss on the quota owned by `VehicleCombatStages.QUOTAS`; the current product and runtime sequence is `40/44/48/52/56/60/64/68`, and no timer ends the run. | `scripts/encounters/vehicle_stage_flow.gd`, `scripts/vehicle/stages/vehicle_combat_stages.gd`, `docs/product/vehicle_game_spec.md`, prior session diagnostics | Preserve the gate and multiply each current value by exactly `1.5`, producing `60/66/72/78/84/90/96/102`. Keep authored populations and simultaneous-pressure caps unchanged. | 3.1, 4.1 |
+| Fast movement can leave enemies trailing | The allocator already distributes arrivals by sector and considers player velocity. | `scripts/encounters/vehicle_spawn_allocator.gd` | Keep the allocator. Adjust only its existing sector/role scoring so the first pass reduces rear pursuit modestly; do not add a new encounter scheduler. | 3.2 |
+| Difficulty became too easy | Ordinary pressure is owned by shared projectile-speed, recovery, threat-budget, stage commit limits, and spawn placement. | `scripts/encounters/vehicle_encounter_director.gd`, `scripts/encounters/vehicle_spawn_allocator.gd` | Keep fixed-Hard numeric values unchanged in this contract. Test whether the one spawn-direction adjustment improves relevant pressure, then report any remaining balance gap. | 3.2, 4.1 |
 | Upgrades interrupt play too often | XP requirements are computed in `VehicleExperienceRuntime`; pending levels and the existing modal already have stable owners. | `scripts/progression/vehicle_experience_runtime.gd`, `scripts/vehicle/vehicle_run.gd` | Keep the modal and reward flow. Change only `EARLY_REQUIREMENT_SURCHARGE` from `4` to `8` for the existing first ten requirement calculations. | 2.1 |
 | Boss progress is clipped and status items lack backing | The gameplay HUD formats boss/quota text and owns the existing status items. The active visual contract currently forbids backing on this row. | `scripts/ui/vehicle_gameplay_hud.gd`, `scripts/ui/vehicle_hud_presenter.gd`, `docs/design/VISUAL_SYSTEM.md` | Preserve the current information and order. First amend the exact HUD clause, then give boss progress a width-aware backed cell and keep Dash/Active in equal backed square cells; do not build a new cockpit layout. | 1.0, 1.1 |
 | Existing messages do not teach mechanics | The gameplay HUD already owns a localized, prioritized announcement queue and emits diagnostics. The active visual contract currently allows only four event families and text-only presentation. | `scripts/ui/vehicle_gameplay_hud.gd`, `scripts/ui/vehicle_stage_ui.gd`, `scripts/vehicle/vehicle_run.gd`, `docs/design/VISUAL_SYSTEM.md` | First amend the exact announcement clause, then add a fixed `CONTROL` label/glyph and verified boss/facility state messages to the existing queue. Preserve queue capacity and priority behavior. | 1.0, 1.2 |
@@ -92,8 +98,9 @@ Exact actions requiring user approval:
 Readiness statement:
 
 - Product scope is locked to incremental changes in existing owners.
-- The only numeric progression change is the early XP surcharge. No implementation task
-  selects a new campaign, encounter, progression, balance, or UI architecture.
+- The only numeric progression changes are the locked XP curve change and the exact quota
+  sequence `60/66/72/78/84/90/96/102`. No implementation task selects a new campaign,
+  encounter, progression, balance, or UI architecture.
 - Required tooling and validators already exist in the repository.
 
 ## Tasks
@@ -173,19 +180,34 @@ Phase gate:
 
 - Run `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_system.gd`.
 
-### Phase 3: Increase relevant pressure in one small pass
+### Phase 3: Extend ordinary combat and increase relevant pressure
 
-Goal: make the fast vehicle choose routes more often through one existing allocator change
-while retaining the current enemies, quotas, fixed-Hard values, encounter flow, and capacity.
+Goal: require `1.5x` as many ordinary defeats before every boss and make the fast vehicle
+choose routes more often through one existing allocator change, while retaining the current
+enemies, fixed-Hard values, encounter flow, authored populations, and capacity.
 
 Preconditions:
 
 - Phase 2 checks pass and its telemetry is recorded once.
 
-Source owners: `scripts/encounters/vehicle_spawn_allocator.gd`, existing spawn and pacing
+Source owners: `docs/product/vehicle_game_spec.md`,
+`scripts/vehicle/stages/vehicle_combat_stages.gd`,
+`scripts/vehicle/vehicle_stage_catalog.gd`, `scripts/encounters/vehicle_stage_flow.gd`,
+`scripts/encounters/vehicle_spawn_allocator.gd`, and existing campaign, spawn, and pacing
 validators.
 
-- [ ] **3.1 Reweight existing spawn sectors**
+- [ ] **3.1 Increase every boss-entry quota to `1.5x`**
+  - Change: update the product contract and `VehicleCombatStages.QUOTAS` from
+    `40/44/48/52/56/60/64/68` to `60/66/72/78/84/90/96/102`. Preserve exact-defeat boss
+    gating, quota counting rules, authored populations `260/300/340/390/440/500/560/630`,
+    HUD remaining-quota publication, boss warning timing, and fixed-Hard factor `1.0`.
+  - Accept: catalog and flow fixtures report the exact new sequence; every boss remains
+    blocked through quota minus one and begins its warning on the exact final countable
+    defeat; every authored population remains at least quota plus the required 32-unit
+    margin.
+  - Guard: do not increase simultaneous active caps, authored populations, spawn capacity,
+    boss counts, XP per enemy, enemy stats, or boss warning duration as part of this task.
+- [ ] **3.2 Reweight existing spawn sectors**
   - Change: keep current candidate generation and deterministic sector allocation. In the
     existing scoring pass, prefer ahead/lateral sectors for one additional request before
     reusing a rear sector. Keep every safety, geometry, separation, and fallback check.
@@ -194,12 +216,12 @@ validators.
   - Guard: no new scheduler, beat state, spawn source, or actor is added.
 Phase gate:
 
-- Run the focused spawn allocator, encounter pacing, and performance contract validators
-  once after Task 3.1 passes.
+- Run the focused stage continuity, single-field campaign, run difficulty, spawn allocator,
+  encounter pacing, and performance contract validators once after Tasks 3.1 and 3.2 pass.
 
 ### Phase 4: Observe duration and report the next bounded decision
 
-Goal: determine whether the three incremental slices improved interruption rate, route
+Goal: determine whether the four incremental slices improved interruption rate, route
 pressure, difficulty, and duration without silently changing the campaign.
 
 Preconditions:
@@ -210,15 +232,17 @@ Preconditions:
 Source owners: campaign and pacing validators, session diagnostics.
 
 - [ ] **4.1 Record matched-run evidence without tuning another system**
-  - Change: calculate the median active run time, upgrade-session count and gap, rear-sector
-    share, accepted damage, and completion result from the five completed runs. Compare them
-    with the prior diagnostic capture and state its provenance and limitations.
-  - Accept: the evidence states whether the three slices improved each concern, records the
-    unchanged quota and fixed-Hard values, and separates observation from recommendation.
-  - Guard: do not change quotas, fixed-Hard values, HP, damage, projectile speed, recovery,
-    threat budgets, commit caps, actor caps, or campaign flow in this contract. If a numeric
-    balance change is still justified, propose one isolated variable for separate user and
-    product-spec approval.
+  - Change: calculate the median active run time, per-cycle ordinary-combat duration,
+    upgrade-session count and gap, rear-sector share, accepted damage, and completion result
+    from the five completed runs. Compare them with the prior diagnostic capture and state
+    its provenance and limitations.
+  - Accept: the evidence states whether the four slices improved each concern, records the
+    exact enlarged quota sequence and unchanged remaining fixed-Hard values, and separates
+    observation from recommendation.
+  - Guard: do not further change quotas, fixed-Hard values, HP, damage, projectile speed,
+    recovery, threat budgets, commit caps, actor caps, or campaign flow in this contract. If
+    another numeric balance change is still justified, propose one isolated variable for
+    separate user and product-spec approval.
 
 Final gate:
 
@@ -248,7 +272,7 @@ Validation rules:
 | Trigger | Required response | Boundary or escalation point |
 | --- | --- | --- |
 | A phase makes readability, difficulty, interruption rate, or performance materially worse | Stop before the next phase and correct or revert only that phase | Do not compensate by redesigning another system |
-| Duration or difficulty remains unsatisfactory after Phase 3 | Record the gap and propose one isolated numeric variable for a separate product-spec decision | Do not change balance or quotas in this contract |
+| Duration or difficulty remains unsatisfactory after Phase 3 | Record the gap and propose one isolated numeric variable for a separate product-spec decision | Do not make a second quota or balance change in this contract |
 | A requested improvement requires a new campaign, scheduler, progression currency, modal, or content family | Stop and revise the contract with explicit user approval | Executor cannot expand scope |
 
 Implementation-local discoveries may be handled inside the locked existing owner when they
