@@ -13,12 +13,11 @@ const CATEGORIES: Array[StringName] = [
 const CATEGORY_DESCRIPTORS: Array[Dictionary] = [
 	{"id":&"primary", "heading_key":"UPGRADE_CATEGORY_PRIMARY", "description_key":"UPGRADE_CATEGORY_PRIMARY_DESCRIPTION", "slot_keys":[&"split_muzzle", &"piercing_rounds"]},
 	{"id":&"secondary", "heading_key":"UPGRADE_CATEGORY_SECONDARY", "description_key":"UPGRADE_CATEGORY_SECONDARY_DESCRIPTION", "slot_keys":[&"weapon_0", &"weapon_1", &"weapon_2"]},
-	{"id":&"element", "heading_key":"UPGRADE_CATEGORY_ELEMENT", "description_key":"UPGRADE_CATEGORY_ELEMENT_DESCRIPTION", "slot_keys":[&"damage", &"utility"]},
+	{"id":&"element", "heading_key":"UPGRADE_CATEGORY_ELEMENT", "description_key":"UPGRADE_CATEGORY_ELEMENT_DESCRIPTION", "slot_keys":[&"slot_0", &"slot_1"]},
 	{"id":&"activated", "heading_key":"UPGRADE_CATEGORY_ACTIVATED", "description_key":"UPGRADE_CATEGORY_ACTIVATED_DESCRIPTION", "slot_keys":[&"weapon"]},
 	{"id":&"chassis", "heading_key":"UPGRADE_CATEGORY_CHASSIS", "description_key":"UPGRADE_CATEGORY_CHASSIS_DESCRIPTION", "slot_keys":[&"chassis_speed", &"pickup_radius", &"hull_integrity", &"lifesteal", &"overflow_barrier"]},
 	{"id":&"combat", "heading_key":"UPGRADE_CATEGORY_COMBAT", "description_key":"UPGRADE_CATEGORY_COMBAT_DESCRIPTION", "slot_keys":[&"critical_targeting", &"dash_overdrive", &"dash_afterburn_field", &"last_stand_amplifier", &"miss_compensation", &"hit_chain", &"braced_fire"]},
 ]
-const ATTRIBUTE_SLOT_KINDS: Array[StringName] = [&"", &"damage", &"utility"]
 const MODIFIER_OPERATIONS: Array[String] = ["add", "multiply"]
 const MODIFIER_DISPLAY_UNITS: Array[String] = ["none", "percent", "seconds"]
 const STAT_IDS: Array[StringName] = [
@@ -32,6 +31,7 @@ const STAT_IDS: Array[StringName] = [
 	&"toxin_duration",
 	&"cryo_slow_per_stack",
 	&"cryo_duration",
+	&"cryo_shatter_damage",
 ]
 const EXPECTED_IDS: Array[StringName] = [
 	&"auto_laser", &"bio_toxin", &"chassis_speed",
@@ -134,10 +134,11 @@ func validate_contract() -> PackedStringArray:
 		seen_titles[definition.title_key] = true
 		if definition.category not in CATEGORIES:
 			errors.append("%s has invalid category %s" % [definition.id, definition.category])
-		if definition.attribute_slot_kind not in ATTRIBUTE_SLOT_KINDS:
-			errors.append("%s has invalid attribute slot kind" % definition.id)
-		if definition.attribute_slot_kind != &"" and definition.category != &"element":
-			errors.append("%s attribute slot kind is outside the element category" % definition.id)
+		if (
+			definition.category == &"element"
+			and definition.id not in VehicleRunBuild.ATTRIBUTE_IDS
+		):
+			errors.append("%s is not a supported primary attribute" % definition.id)
 		for modifier in definition.modifiers:
 			if modifier.operation not in MODIFIER_OPERATIONS:
 				errors.append("%s has invalid modifier operation %s" % [definition.id, modifier.operation])
@@ -173,7 +174,7 @@ func category_slot_key(definition: VehicleUpgradeDefinition, build: VehicleRunBu
 	match definition.category:
 		&"primary", &"chassis", &"combat": return definition.id
 		&"secondary": return build.automatic_weapon_slot_key(definition.id)
-		&"element": return definition.attribute_slot_kind
+		&"element": return build.attribute_slot_key(definition.id)
 		&"activated": return &"weapon"
 	return &""
 
@@ -199,7 +200,7 @@ func _validate_category_descriptors() -> PackedStringArray:
 	for definition in all_definitions():
 		if definition.category == &"secondary":
 			continue
-		if definition.category == &"element" and definition.attribute_slot_kind != &"":
+		if definition.category == &"element":
 			continue
 		if definition.category == &"activated":
 			continue
@@ -211,10 +212,12 @@ func _validate_category_descriptors() -> PackedStringArray:
 func compatible(definition: VehicleUpgradeDefinition, build: VehicleRunBuild) -> bool:
 	if definition == null or build.level_of(definition.id) >= definition.max_level:
 		return false
-	if definition.attribute_slot_kind != &"":
-		var active_attribute := build.active_attribute_id(definition.attribute_slot_kind)
-		if not active_attribute.is_empty() and definition.id != active_attribute:
-			return false
+	if (
+		definition.category == &"element"
+		and build.level_of(definition.id) == 0
+		and build.active_attribute_ids().size() >= VehicleRunBuild.ATTRIBUTE_SLOTS
+	):
+		return false
 	if definition.category == &"activated":
 		var active_kind := build.active_weapon_card_id()
 		if not active_kind.is_empty() and definition.id != active_kind:

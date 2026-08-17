@@ -1,8 +1,8 @@
 class_name VehicleRunBuild
 extends RefCounted
 
-const DAMAGE_ATTRIBUTE_IDS: Array[StringName] = [&"thermal_burst", &"bio_toxin"]
-const UTILITY_ATTRIBUTE_IDS: Array[StringName] = [&"cryo_slow"]
+const ATTRIBUTE_IDS: Array[StringName] = [&"thermal_burst", &"bio_toxin", &"cryo_slow"]
+const ATTRIBUTE_SLOTS := 2
 const ACTIVE_WEAPON_CARD_IDS: Array[StringName] = [
 	&"emp", &"gravity_collapse", &"kinetic_shockwave", &"piercing_lance",
 ]
@@ -79,25 +79,23 @@ func automatic_weapon_slot_key(upgrade_id: StringName) -> StringName:
 	return StringName("weapon_%d" % index) if index >= 0 and index < 3 else &""
 
 
-func active_damage_attribute_id() -> StringName:
-	for upgrade_id in DAMAGE_ATTRIBUTE_IDS:
-		if has(upgrade_id):
-			return upgrade_id
-	return &""
+func active_attribute_ids() -> Array[StringName]:
+	var result: Array[StringName] = []
+	for acquired_id in acquisition_order:
+		if acquired_id in ATTRIBUTE_IDS and has(acquired_id) and not result.has(acquired_id):
+			result.append(acquired_id)
+	# Keep injected legacy/test builds deterministic without changing the
+	# acquisition-order contract used by every new run.
+	if result.size() < ATTRIBUTE_SLOTS:
+		for attribute_id in ATTRIBUTE_IDS:
+			if has(attribute_id) and not result.has(attribute_id):
+				result.append(attribute_id)
+	return result
 
 
-func active_utility_attribute_id() -> StringName:
-	for upgrade_id in UTILITY_ATTRIBUTE_IDS:
-		if has(upgrade_id):
-			return upgrade_id
-	return &""
-
-
-func active_attribute_id(slot_kind: StringName) -> StringName:
-	match slot_kind:
-		&"damage": return active_damage_attribute_id()
-		&"utility": return active_utility_attribute_id()
-		_: return &""
+func attribute_slot_key(upgrade_id: StringName) -> StringName:
+	var index := active_attribute_ids().find(upgrade_id)
+	return StringName("slot_%d" % index) if index >= 0 and index < ATTRIBUTE_SLOTS else &""
 
 
 func active_weapon_card_id() -> StringName:

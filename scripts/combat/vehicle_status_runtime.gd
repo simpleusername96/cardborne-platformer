@@ -11,9 +11,10 @@ const APPLICATION_PULSE_SECONDS := 0.16
 const DOT_KINDS: Array[StringName] = [&"poison"]
 
 
-static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> void:
+static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> Dictionary:
+	var receipt := {"cryo_shatter":false, "cryo_shatter_damage":0.0}
 	if profile == null:
-		return
+		return receipt
 	if profile.poison_enabled:
 		_add_stack(
 			enemy, &"poison", profile.poison_dps_per_stack, profile.poison_duration,
@@ -36,13 +37,19 @@ static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> v
 		status["time"] = profile.chill_duration * boss_scale
 		status["stacks"] = mini(profile.chill_max_stacks, int(status["stacks"]) + 1)
 		status["max_stacks"] = profile.chill_max_stacks
-		enemy.statuses[&"chill"] = status
+		if int(status["stacks"]) >= profile.chill_max_stacks:
+			enemy.statuses.erase(&"chill")
+			receipt["cryo_shatter"] = true
+			receipt["cryo_shatter_damage"] = profile.chill_shatter_damage
+		else:
+			enemy.statuses[&"chill"] = status
 		enemy.cryo_application_pulse = 1.0
 		enemy.cryo_application_delay = maxf(
 			enemy.cryo_application_delay,
 			enemy.flash
 		)
 	_sync_presentation_scalars(enemy)
+	return receipt
 
 
 static func apply_active_slow(enemy: EnemyState, magnitude: float, duration: float) -> void:

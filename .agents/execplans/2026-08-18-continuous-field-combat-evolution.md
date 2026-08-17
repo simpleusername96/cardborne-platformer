@@ -191,19 +191,19 @@ Preconditions:
 
 Source owners: `scripts/cards/vehicle_run_build.gd`, `scripts/cards/vehicle_upgrade_catalog.gd`, `scripts/cards/vehicle_upgrade_definition.gd`, `scripts/cards/vehicle_build_snapshot_builder.gd`, `scripts/combat/vehicle_primary_payload_profile.gd`, `scripts/combat/vehicle_status_runtime.gd`, `data/cards/vehicle/*.tres`, localization and upgrade/status validators
 
-- [ ] **4.1** Replace damage/utility ownership with two generic slots.
+- [x] **4.1** Replace damage/utility ownership with two generic slots.
   - Change: derive equipped attributes in first-acquisition order, expose `slot_0/slot_1`, and remove slot-kind compatibility as gameplay truth.
   - Accept: Thermal+Toxin, Thermal+Cryo, and Toxin+Cryo are legal; a third distinct element is rejected; existing attributes remain levelable.
-- [ ] **4.2** Build multi-attribute primary payloads.
+- [x] **4.2** Build multi-attribute primary payloads.
   - Change: enable Thermal, Toxin, and Cryo independently from membership in the two equipped IDs; publish hybrid affinity when two persistent conditions coexist.
   - Accept: every legal pair applies both authored effects once without changing base primary-shot uniformity.
-- [ ] **4.3** Keep the two-slot build UI truthful.
+- [x] **4.3** Keep the two-slot build UI truthful.
   - Change: map element records to acquisition-order slots and update Korean/English category/copy that implies damage/utility exclusivity.
   - Accept: snapshots, Upgrade, Result, and Ship Status show the same two records and never label their slot type.
-- [ ] **4.4** Add the locked Cryo shatter receipt.
+- [x] **4.4** Add the locked Cryo shatter receipt.
   - Change: on the third new Chill stack, return one `cryo_shatter` receipt, clear Chill, and apply `18/28/42` damage through the player Cryo damage route without reapplying statuses.
   - Accept: hits 1/2 slow, hit 3 damages and clears; the next hit starts at one stack; bosses retain the existing half slow/duration resistance but receive the authored shatter damage.
-- [ ] **4.5** Update data, localization, telemetry, and tests.
+- [x] **4.5** Update data, localization, telemetry, and tests.
   - Change: add the shatter damage stat to Cryo's three levels and update catalog/status/offer/readout contracts.
   - Accept: catalog count and level-state totals remain unchanged, all late-level offers remain reachable, and ko/en coverage is complete.
 
@@ -309,9 +309,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4.
-- Next task: 4.1 Replace damage/utility attribute ownership with two acquisition-order slots.
-- Last completed gate: Phase 3 focused gate passed: boss patterns, boss runtime, eight-boss campaign, late-boss identity execution, attack-route readability, boss identity cues, and guidebook validators. Vector Loom now owns two executable crossing-weave selections with eight bounded moving corridor segments and delayed orthogonal gaps. Pulse Core now owns two alternating safe-sector selections whose second pulse emits exactly one bounded twelve-shot radial volley. Direct startup prepares collision truth, active runtime activates it once, autonomous dispatch uses the same handlers, boss-owned cleanup retires the zones, and existing boss image identities remain unchanged.
+- Current phase: Phase 5.
+- Next task: 5.1 Retire Barrier/Gravity outcomes and implement the four-role facility runtime, starting with Lava behavior before asset integration.
+- Last completed gate: Phase 4 focused gate passed: upgrade system, status stacking, Cryo shatter integration, weapon balance, build snapshot, upgrade UI, localization, stage telemetry, result builder, and conditional-status validators. Thermal, Toxin, and Cryo now fill generic `slot_0/slot_1` in acquisition order; every pair is legal, owned roots remain levelable, and only a third distinct root is blocked. Primary payloads combine either pair and Toxin+Cryo publishes hybrid affinity. The third Chill application consumes the stacks, emits exactly one `18/28/42` receipt, applies player-owned Cryo damage without recursive payloads, and records the `cryo_shatter` source and Cryo attribute.
 - Visual authority evidence: `docs/design/VISUAL_SYSTEM.md` read completely; canonical sheet visually inspected at original detail; expected and observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`; original provenance is recorded by `$cardborne-visual-authority`. No raster candidate has been generated yet.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance this pointer in the same edit.
 

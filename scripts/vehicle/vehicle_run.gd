@@ -4599,8 +4599,22 @@ func _update_projectile_buffer(
 						else &""
 					)
 				)
-				StatusRuntime.apply(hit_enemy, projectile.primary_payload)
+				var status_receipt := StatusRuntime.apply(
+					hit_enemy, projectile.primary_payload
+				)
 				_record_status_applications(projectile.primary_payload)
+				if bool(status_receipt.get("cryo_shatter", false)):
+					_damage_enemy(
+						hit_enemy,
+						float(status_receipt["cryo_shatter_damage"]),
+						"cryo_shatter",
+						&"cryo",
+						true,
+						false,
+						true,
+						0,
+						projectile.combat_action_serial
+					)
 				if (
 					projectile.primary_payload != null
 					and projectile.primary_payload.can_trigger_thermal_burst(

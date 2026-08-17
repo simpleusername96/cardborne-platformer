@@ -13,16 +13,16 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	var catalog := Catalog.new()
 	var build := RunBuild.new(catalog)
-	_expect(bool(build.apply(&"thermal_burst").get("applied", false)), "one damage attribute can be selected")
+	_expect(bool(build.apply(&"thermal_burst").get("applied", false)), "one attribute can be selected")
+	var cryo_applied := bool(build.apply(&"cryo_slow").get("applied", false))
+	var toxin_blocked := not bool(build.apply(&"bio_toxin").get("applied", false))
 	_expect(
-		not bool(build.apply(&"bio_toxin").get("applied", false))
-			and bool(build.apply(&"cryo_slow").get("applied", false)),
-		"damage and utility slots each accept one independent attribute"
+		cryo_applied and toxin_blocked,
+		"a second distinct attribute is accepted and a third is blocked"
 	)
 	_expect(
-		build.active_damage_attribute_id() == &"thermal_burst"
-			and build.active_utility_attribute_id() == &"cryo_slow",
-		"the build exposes both selected attribute slots"
+		build.active_attribute_ids() == [&"thermal_burst", &"cryo_slow"],
+		"the build exposes both acquisition-order attribute slots"
 	)
 	var profile := PrimaryPayload.from_build(build)
 	_expect(
@@ -41,6 +41,26 @@ func _initialize() -> void:
 		"only non-reflected primary contacts can trigger Thermal Burst"
 	)
 	_validate_level_progression(catalog)
+	var damage_pair_build := RunBuild.new(catalog)
+	damage_pair_build.apply(&"thermal_burst")
+	damage_pair_build.apply(&"bio_toxin")
+	var damage_pair_profile := PrimaryPayload.from_build(damage_pair_build)
+	_expect(
+		damage_pair_profile.thermal_enabled
+			and damage_pair_profile.poison_enabled
+			and not damage_pair_profile.chill_enabled,
+		"Thermal and Toxin coexist without a hidden damage-slot conflict"
+	)
+	var persistent_pair_build := RunBuild.new(catalog)
+	persistent_pair_build.apply(&"bio_toxin")
+	persistent_pair_build.apply(&"cryo_slow")
+	var persistent_pair_profile := PrimaryPayload.from_build(persistent_pair_build)
+	_expect(
+		persistent_pair_profile.poison_enabled
+			and persistent_pair_profile.chill_enabled
+			and persistent_pair_profile.affinity() == &"hybrid",
+		"Toxin and Cryo publish one hybrid multi-condition projectile affinity"
+	)
 
 	var projectile := ProjectileState.new()
 	projectile.configure({"primary_payload":profile}, &"player", 1)
@@ -76,6 +96,27 @@ func _initialize() -> void:
 	var chill_build := RunBuild.new(catalog)
 	chill_build.apply(&"cryo_slow")
 	var chill_profile := PrimaryPayload.from_build(chill_build)
+	var shatter_enemy := EnemyState.new()
+	var first_chill := StatusRuntime.apply(shatter_enemy, chill_profile)
+	var second_chill := StatusRuntime.apply(shatter_enemy, chill_profile)
+	var shatter := StatusRuntime.apply(shatter_enemy, chill_profile)
+	_expect(
+		not bool(first_chill["cryo_shatter"])
+			and not bool(second_chill["cryo_shatter"])
+			and bool(shatter["cryo_shatter"])
+			and is_equal_approx(float(shatter["cryo_shatter_damage"]), 18.0),
+		"the third Chill application emits one exact level-one shatter receipt"
+	)
+	_expect(
+		not shatter_enemy.statuses.has(&"chill")
+			and is_zero_approx(shatter_enemy.cryo_stack_ratio),
+		"shatter consumes all Chill stacks and clears their presentation ratio"
+	)
+	_expect(
+		not bool(StatusRuntime.apply(shatter_enemy, chill_profile)["cryo_shatter"])
+			and StatusRuntime.stack_count(shatter_enemy, &"chill") == 1,
+		"the next Chill application starts a new bounded stack cycle"
+	)
 	var boss := EnemyState.new()
 	boss.role = &"stage_boss"
 	StatusRuntime.apply(boss, chill_profile)
@@ -141,6 +182,7 @@ func _validate_level_progression(catalog: Catalog) -> void:
 	var poison_duration := [5.0, 6.0, 7.0]
 	var chill_magnitude := [0.06, 0.08, 0.10]
 	var chill_duration := [2.0, 2.5, 3.0]
+	var chill_shatter_damage := [18.0, 28.0, 42.0]
 	for level_index in 3:
 		var thermal_build := RunBuild.new(catalog)
 		var toxin_build := RunBuild.new(catalog)
@@ -164,8 +206,9 @@ func _validate_level_progression(catalog: Catalog) -> void:
 		)
 		_expect(
 			is_equal_approx(cryo_profile.chill_magnitude_per_stack, chill_magnitude[level_index])
-				and is_equal_approx(cryo_profile.chill_duration, chill_duration[level_index]),
-			"Cryo Slow level %d has exact slow and duration" % (level_index + 1)
+				and is_equal_approx(cryo_profile.chill_duration, chill_duration[level_index])
+				and is_equal_approx(cryo_profile.chill_shatter_damage, chill_shatter_damage[level_index]),
+			"Cryo Slow level %d has exact slow, duration, and shatter damage" % (level_index + 1)
 		)
 
 

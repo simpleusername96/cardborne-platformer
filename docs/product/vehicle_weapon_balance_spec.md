@@ -4,7 +4,7 @@ status: active
 owner: BK
 created: 2026-08-12
 last_reviewed: 2026-08-14
-scope: Primary fire, damage and utility attributes, automatic weapons, and active weapons
+scope: Primary fire, two unrestricted attributes, automatic weapons, and active weapons
 related:
   - ./vehicle_game_spec.md
   - ./vehicle_upgrade_catalog.md
@@ -31,9 +31,9 @@ must match.
 | Primary | Base primary | Reliable manual sustained damage to one target |
 | Primary | Split Muzzle | Wider lane coverage with less reliable side shots |
 | Primary | Piercing Rounds | Aligned multi-target damage that rewards positioning |
-| Damage attribute | Thermal Burst | Immediate damage to a nearby cluster after a primary hit |
-| Damage attribute | Bio Toxin | Sustained damage after repeated application |
-| Utility attribute | Cryo Slow | Movement control without raw damage |
+| Attribute | Thermal Burst | Immediate damage to a nearby cluster after a primary hit |
+| Attribute | Bio Toxin | Sustained damage after repeated application |
+| Attribute | Cryo Slow | Stacking movement control followed by a three-stack shatter |
 | Auto weapon | Seeker | Reliable automatic ranged damage |
 | Auto weapon | Electric Field | Continuous close area pressure |
 | Auto weapon | Orbiting Blades | High-exposure contact damage and interception |
@@ -55,7 +55,10 @@ must match.
 | Piercing Rounds | L1-L4 | Base projectile damage is unchanged | 1 / 2 / 3 / 4 additional penetrations |
 | Thermal Burst | L1-L4 | 4 / 5.75 / 8 / 11 damage per affected target | Radius 72 / 84 / 96 / 96 |
 | Bio Toxin | L1-L4 | 2 / 2.85 / 4 / 5.5 DPS per stack | Three stacks; duration 5 / 6 / 7 / 7 seconds |
-| Cryo Slow | L1-L3 | 6% / 8% / 10% slow per stack | Duration 2 / 2.5 / 3 seconds |
+| Cryo Slow | L1-L3 | 6% / 8% / 10% slow per stack; 18 / 28 / 42 damage on third-stack shatter | Duration 2 / 2.5 / 3 seconds |
+
+A run may equip any two distinct attributes in first-acquisition order. A third distinct
+attribute is blocked, while either equipped attribute remains levelable.
 
 ### Secondary weapons
 

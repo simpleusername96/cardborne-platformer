@@ -348,7 +348,7 @@ func _validate_attribute_values() -> void:
 	var cases := [
 		{"id":&"thermal_burst", "stat_a":&"thermal_burst_damage", "a":[4.0, 5.75, 8.0, 11.0], "stat_b":&"thermal_burst_radius", "b":[72.0, 84.0, 96.0, 96.0]},
 		{"id":&"bio_toxin", "stat_a":&"toxin_dps_per_stack", "a":[2.0, 2.85, 4.0, 5.5], "stat_b":&"toxin_duration", "b":[5.0, 6.0, 7.0, 7.0]},
-		{"id":&"cryo_slow", "stat_a":&"cryo_slow_per_stack", "a":[6.0, 8.0, 10.0], "stat_b":&"cryo_duration", "b":[2.0, 2.5, 3.0]},
+		{"id":&"cryo_slow", "stat_a":&"cryo_slow_per_stack", "a":[6.0, 8.0, 10.0], "stat_b":&"cryo_duration", "b":[2.0, 2.5, 3.0], "stat_c":&"cryo_shatter_damage", "c":[18.0, 28.0, 42.0]},
 	]
 	var catalog := UpgradeCatalog.new()
 	for case_variant in cases:
@@ -364,6 +364,11 @@ func _validate_attribute_values() -> void:
 				matches = matches and is_equal_approx(
 					build.stat(StringName(case["stat_b"]), 0.0),
 					float(Array(case["b"])[level_index])
+				)
+			if case.has("stat_c"):
+				matches = matches and is_equal_approx(
+					build.stat(StringName(case["stat_c"]), 0.0),
+					float(Array(case["c"])[level_index])
 				)
 			_expect(
 				matches,

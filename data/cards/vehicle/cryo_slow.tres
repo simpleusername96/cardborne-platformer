@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="VehicleUpgradeDefinition" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/cards/vehicle_upgrade_definition.gd" id="1_def"]
 [ext_resource type="Script" path="res://scripts/cards/vehicle_stat_modifier.gd" id="2_mod"]
@@ -17,6 +17,12 @@ operation = "add"
 display_unit = "seconds"
 values_by_level = Array[float]([2.0, 2.5, 3.0])
 
+[sub_resource type="Resource" id="Modifier_shatter"]
+script = ExtResource("2_mod")
+stat_id = &"cryo_shatter_damage"
+operation = "add"
+values_by_level = Array[float]([18.0, 28.0, 42.0])
+
 [resource]
 script = ExtResource("1_def")
 id = &"cryo_slow"
@@ -24,7 +30,6 @@ title_key = "UPGRADE_CRYO_SLOW_TITLE"
 description_key = "UPGRADE_CRYO_SLOW_DESC"
 enhance_description_key = "UPGRADE_CRYO_SLOW_ENHANCE_DESC"
 category = &"element"
-attribute_slot_kind = &"utility"
 artwork_asset_id = &"upgrade/cryo_slow"
 max_level = 3
-modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_slow"), SubResource("Modifier_duration")])
+modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_slow"), SubResource("Modifier_duration"), SubResource("Modifier_shatter")])

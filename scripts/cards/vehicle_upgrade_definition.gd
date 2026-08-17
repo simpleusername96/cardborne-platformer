@@ -11,9 +11,6 @@ extends Resource
 @export var category: StringName
 ## Canonical semantic artwork id resolved by the shared asset provider.
 @export var artwork_asset_id: StringName = &""
-## Primary payload ownership. Damage and utility attributes each allow one
-## selected root, so the UI never has to infer exclusivity from category text.
-@export var attribute_slot_kind: StringName = &""
 @export var max_level := 1
 @export var modifiers: Array[VehicleStatModifier] = []
 

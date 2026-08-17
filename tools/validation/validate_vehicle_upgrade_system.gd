@@ -248,35 +248,42 @@ func _validate_secondary_slots(catalog: Catalog) -> void:
 
 
 func _validate_element_lock(catalog: Catalog) -> void:
-	for pair_variant in [[&"thermal_burst", &"cryo_slow"], [&"bio_toxin", &"cryo_slow"]]:
+	for pair_variant in [
+		[&"thermal_burst", &"bio_toxin"],
+		[&"thermal_burst", &"cryo_slow"],
+		[&"bio_toxin", &"cryo_slow"],
+	]:
 		var pair := Array(pair_variant)
 		var pair_build := RunBuild.new(catalog)
 		_expect(
 			bool(pair_build.apply(StringName(pair[0])).get("applied", false))
 				and bool(pair_build.apply(StringName(pair[1])).get("applied", false))
-				and pair_build.active_damage_attribute_id() == StringName(pair[0])
-				and pair_build.active_utility_attribute_id() == StringName(pair[1]),
-			"damage and utility attribute pairing is legal: %s + %s" % pair
+				and pair_build.active_attribute_ids() == [pair[0], pair[1]]
+				and pair_build.attribute_slot_key(StringName(pair[0])) == &"slot_0"
+				and pair_build.attribute_slot_key(StringName(pair[1])) == &"slot_1",
+			"any two attributes occupy acquisition-order slots: %s + %s" % pair
 		)
 	var build := RunBuild.new(catalog)
 	_expect(
 		catalog.compatible(catalog.get_definition(&"thermal_burst"), build)
 			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
 			and catalog.compatible(catalog.get_definition(&"cryo_slow"), build),
-		"both damage attributes and the sole utility attribute are legal before selection"
+		"all three attributes are legal before selection"
 	)
-	_expect(bool(build.apply(&"bio_toxin").get("applied", false)), "one damage attribute can be selected")
+	_expect(bool(build.apply(&"bio_toxin").get("applied", false)), "the first attribute can be selected")
 	_expect(
-		build.active_damage_attribute_id() == &"bio_toxin"
-			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
-			and not catalog.compatible(catalog.get_definition(&"thermal_burst"), build)
+		build.active_attribute_ids() == [&"bio_toxin"]
+			and catalog.compatible(catalog.get_definition(&"thermal_burst"), build)
 			and catalog.compatible(catalog.get_definition(&"cryo_slow"), build),
-		"the selected damage attribute excludes only the other damage root"
+		"one selected attribute leaves either remaining attribute available"
 	)
-	_expect(bool(build.apply(&"cryo_slow").get("applied", false)), "one utility attribute can coexist")
+	_expect(bool(build.apply(&"cryo_slow").get("applied", false)), "a second distinct attribute can coexist")
 	_expect(
-		build.active_utility_attribute_id() == &"cryo_slow",
-		"the sole utility attribute remains selected and levelable"
+		build.active_attribute_ids() == [&"bio_toxin", &"cryo_slow"]
+			and catalog.compatible(catalog.get_definition(&"bio_toxin"), build)
+			and catalog.compatible(catalog.get_definition(&"cryo_slow"), build)
+			and not catalog.compatible(catalog.get_definition(&"thermal_burst"), build),
+		"two selected attributes remain levelable and block only the third root"
 	)
 	for serial in 12:
 		for definition in catalog.offer(build, 1701, 3, &"level_up", serial):
@@ -375,7 +382,7 @@ func _validate_offers(catalog: Catalog) -> void:
 			build.apply(offer[run_seed % offer.size()].id)
 		_expect(
 			legal_choices >= 63
-				and legal_choices <= 65
+				and legal_choices <= 66
 				and catalog.compatible_definitions(build).is_empty(),
 			(
 				"seed %d reaches catalog exhaustion after all legal choices "
@@ -480,6 +487,7 @@ func _validate_element_stats(catalog: Catalog) -> void:
 			"id":&"cryo_slow",
 			"stat_a":&"cryo_slow_per_stack", "a":[6.0, 8.0, 10.0],
 			"stat_b":&"cryo_duration", "b":[2.0, 2.5, 3.0],
+			"stat_c":&"cryo_shatter_damage", "c":[18.0, 28.0, 42.0],
 		},
 	]
 	for case_variant in cases:
@@ -498,10 +506,17 @@ func _validate_element_stats(catalog: Catalog) -> void:
 		for level in definition.max_level:
 			build.apply(StringName(case["id"]))
 			var profile := PrimaryPayload.from_build(build)
-			_expect(
+			var authored_values_match := (
 				is_equal_approx(build.stat(StringName(case["stat_a"]), 0.0), float(case["a"][level]))
-					and is_equal_approx(build.stat(StringName(case["stat_b"]), 0.0), float(case["b"][level])),
-				"%s level %d keeps both authored card values" % [case["id"], level + 1]
+				and is_equal_approx(build.stat(StringName(case["stat_b"]), 0.0), float(case["b"][level]))
+			)
+			if case.has("stat_c"):
+				authored_values_match = authored_values_match and is_equal_approx(
+					build.stat(StringName(case["stat_c"]), 0.0), float(case["c"][level])
+				)
+			_expect(
+				authored_values_match,
+				"%s level %d keeps every authored card value" % [case["id"], level + 1]
 			)
 			if StringName(case["id"]) == &"thermal_burst":
 				_expect(
@@ -518,7 +533,8 @@ func _validate_element_stats(catalog: Catalog) -> void:
 			else:
 				_expect(
 					is_equal_approx(profile.chill_magnitude_per_stack, float(case["a"][level]) / 100.0)
-						and is_equal_approx(profile.chill_duration, float(case["b"][level])),
+						and is_equal_approx(profile.chill_duration, float(case["b"][level]))
+						and is_equal_approx(profile.chill_shatter_damage, float(case["c"][level])),
 					"Cryo runtime profile derives from build modifiers"
 				)
 

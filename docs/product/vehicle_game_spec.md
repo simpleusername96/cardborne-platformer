@@ -340,8 +340,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 - Repair pickups are removed. Their former sockets produce XP shards and Repair facilities
   own high-rate recovery.
 - `vehicle_upgrade_catalog.md` is canonical for 27 cards and 91 nominal level states.
-  Thermal Burst or Bio Toxin occupies the damage slot; Cryo is the sole utility attribute.
-  Shock and any replacement utility attribute do not exist.
+  Thermal Burst, Bio Toxin, and Cryo have no damage/utility slot distinction. A run may
+  own any two distinct attributes in acquisition order and may keep leveling either one;
+  a third distinct attribute is incompatible. Cryo consumes its third Chill stack for
+  `18/28/42` shatter damage at levels 1-3. Shock and replacement attributes do not exist.
 - Miss Compensation stores up to five missed shot groups and consumes them on the next
   hostile hit for +8/11/14% damage per stack. Hit Chain stores up to eight consecutive
   hit groups for +3/4/5% primary damage per stack and clears on a miss. Braced Fire charges
@@ -435,8 +437,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   impulse, and hit-stop.
 - The four new ordinary roles attack. Wreck Scavenger uses eligible radius-360 death
   events, caps at five stacks, and creates no corpse.
-- Shock has no reachable data, runtime, status, offer, copy, telemetry, or image. Thermal
-  and Toxin remain damage alternatives and Cryo is the sole utility attribute.
+- Shock has no reachable data, runtime, status, offer, copy, telemetry, or image. Thermal,
+  Toxin, and Cryo may occupy either of two acquisition-order attribute slots; Cryo's third
+  Chill application clears Chill and routes its level-owned shatter damage once.
 - New primary-fire upgrades, missing-category offer reservations, five symmetric
   facilities, repair-pickup removal, and ten added visible XP shards per cycle pass
   deterministic fixtures.

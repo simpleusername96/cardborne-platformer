@@ -13,6 +13,7 @@ const OUTGOING: Dictionary = {
 	&"dash_impact": "REPORT_SOURCE_DASH",
 	&"elemental_status": "REPORT_SOURCE_STATUS",
 	&"thermal_burst": "REPORT_SOURCE_THERMAL_BURST",
+	&"cryo_shatter": "REPORT_SOURCE_CRYO_SHATTER",
 	&"dash_afterburn": "REPORT_SOURCE_DASH_AFTERBURN",
 	&"auto_laser": "REPORT_SOURCE_AUTO_LASER",
 	&"storm_barrage": "REPORT_SOURCE_STORM_BARRAGE",
@@ -57,6 +58,8 @@ static func outgoing_id(source: String) -> StringName:
 			return &"elemental_status"
 		"thermal_burst":
 			return &"thermal_burst"
+		"cryo_shatter":
+			return &"cryo_shatter"
 		"dash_afterburn":
 			return &"dash_afterburn"
 		"auto_laser":
