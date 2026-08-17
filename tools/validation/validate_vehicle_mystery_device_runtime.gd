@@ -7,21 +7,19 @@ var failures: Array[String] = []
 
 func _initialize() -> void:
 	_expect(
-		Runtime.OUTCOME_IDS == [&"repair", &"barrier", &"gravity", &"cryo", &"weakpoint"],
-		"neutral facilities expose the five approved activation roles"
+		Runtime.OUTCOME_IDS == [&"repair", &"cryo", &"weakpoint", &"lava"],
+		"neutral facilities expose the four requested activation roles"
 	)
 	_expect(
 		is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"repair"]["radius"]), 1260.0)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"barrier"]["radius"]), 1260.0)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["radius"]), 1440.0)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo"]["radius"]), 1080.0)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint"]["radius"]), 1260.0)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"lava"]["radius"]), 1080.0)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"repair"]["hull_restore_per_second"]), 1.0 / 6.0)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"barrier"]["shield_cap_max_hull_ratio"]), 1.0)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["acceleration_multiplier"]), 0.70)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"gravity"]["max_speed_multiplier"]), 0.70)
 			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"cryo"]["attack_cadence_multiplier"]), 0.82)
-			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint"]["received_damage_multiplier"]), 1.15),
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"weakpoint"]["received_damage_multiplier"]), 1.15)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"lava"]["tick_seconds"]), 0.50)
+			and is_equal_approx(float(Runtime.OUTCOME_PROFILE[&"lava"]["damage_per_tick"]), 8.0),
 		"facility profiles preserve the approved radii and symmetric modifiers"
 	)
 	var blueprint := [
@@ -40,10 +38,11 @@ func _initialize() -> void:
 			cycle_roles[StringName(device["outcome"])] = true
 			seen[StringName(device["outcome"])] = true
 		_expect(cycle_roles.size() == 3, "cycle %d facilities have distinct roles" % (cycle_index + 1))
-	_expect(seen.size() == 5, "the deterministic eight-cycle fixture covers every facility role")
+	_expect(seen.size() == 4, "the deterministic eight-cycle fixture covers every facility role")
 
 	var runtime := Runtime.new()
 	runtime.configure(blueprint, 77, &"stage_1")
+	runtime.devices[0]["outcome"] = &"repair"
 	var first := Dictionary(runtime.snapshot()["devices"][0])
 	var device_id := StringName(first["id"])
 	var inside := runtime.modifiers_at(Vector2(first["position"]))
@@ -106,6 +105,26 @@ func _initialize() -> void:
 			and events.size() == 1
 			and StringName(events[0]["kind"]) == &"facility_shutdown",
 		"expired facilities stop their effects and emit one shutdown event"
+	)
+	var lava_runtime := Runtime.new()
+	lava_runtime.configure(blueprint, 77, &"stage_1")
+	lava_runtime.devices[0]["outcome"] = &"lava"
+	lava_runtime.devices[0]["state"] = &"active"
+	lava_runtime.devices[0]["active_remaining"] = Runtime.ACTIVE_DURATION_SECONDS
+	lava_runtime.devices[0]["lava_tick_remaining"] = Runtime.LAVA_TICK_SECONDS
+	_expect(
+		lava_runtime.modifiers_at(Vector2.ZERO).is_empty(),
+		"Lava uses tick receipts instead of occupying a modifier slot"
+	)
+	lava_runtime.advance(0.49, events)
+	_expect(events.is_empty(), "Lava does not tick before its exact half-second interval")
+	lava_runtime.advance(0.01, events)
+	_expect(
+		events.size() == 1
+			and StringName(events[0]["kind"]) == &"facility_lava_tick"
+			and int(events[0]["tick_count"]) == 1
+			and is_equal_approx(float(events[0]["damage_per_tick"]), 8.0),
+		"Lava emits one bounded eight-damage receipt every half second"
 	)
 	_finish()
 

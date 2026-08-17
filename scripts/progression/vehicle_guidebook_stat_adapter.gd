@@ -210,15 +210,13 @@ static func object_rows(
 					&"repair":
 						value_key = "GUIDE_VALUE_FACILITY_REPAIR"
 						value_args.append(roundi(float(profile["hull_restore_per_second"]) * 100.0))
-					&"barrier":
-						value_key = "GUIDE_VALUE_FACILITY_BARRIER"
-						value_args.append(roundi(float(profile["shield_restore_per_second"]) * 100.0))
-					&"gravity":
-						value_key = "GUIDE_VALUE_FACILITY_GRAVITY"
-						value_args.append(roundi(float(profile["max_speed_multiplier"]) * 100.0))
 					&"cryo":
 						value_key = "GUIDE_VALUE_FACILITY_CRYO"
 						value_args.append(roundi(float(profile["movement_multiplier"]) * 100.0))
+					&"lava":
+						value_key = "GUIDE_VALUE_FACILITY_LAVA"
+						value_args.append(float(profile["tick_seconds"]))
+						value_args.append(roundi(float(profile["damage_per_tick"])))
 				result.append(_row(
 					"MYSTERY_OUTCOME_%s" % String(outcome).to_upper(),
 					value_key,

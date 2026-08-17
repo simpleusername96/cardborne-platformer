@@ -222,16 +222,16 @@ Preconditions:
 
 Source owners: `scripts/vehicle/vehicle_mystery_device_runtime.gd`, `scripts/vehicle/vehicle_run.gd`, `scripts/presentation/components/vehicle_world_visual_catalog.gd`, `scripts/presentation/vehicle_combat_renderer.gd`, `scripts/progression/vehicle_guidebook_stat_adapter.gd`, `scripts/ui/vehicle_guidebook_preview.gd`, gameplay manifest/assets, specs/localization/capture/validators
 
-- [ ] **5.1** Replace the facility behavior roster.
+- [x] **5.1** Replace the facility behavior roster.
   - Change: remove Barrier and Gravity outcomes from deterministic selection and runtime modifiers; add Lava while retaining exactly three placements.
   - Accept: outcome IDs are exactly Repair/Cryo/Weakpoint/Lava and every ID appears in deterministic coverage without changing placement count.
-- [ ] **5.2** Generate one grounded Lava facility raster candidate.
+- [x] **5.2** Generate one grounded Lava facility raster candidate.
   - Change: use ImageGen with the canonical sheet as the actual image reference and the binding facility constraints; create a 192x192 transparent authored industrial-SF heat-vent symbol with one dominant silhouette, 3-5 broad planes, dark perimeter, thermal accent, and no ring/text/scene.
   - Accept: intended-size and grayscale inspection show a unique heat-vent role distinct from Repair/Cryo/Weakpoint; provenance and reference-input evidence are recorded in this plan.
 - [ ] **5.3** Obtain exact BK approval and integrate only those bytes.
   - Change: present the candidate inline with its hash; after explicit approval, register `world/mystery_device_lava` in the manifest/provider/catalog/renderer/guidebook and retire old runtime semantic references without deleting unrelated source files.
   - Accept: the approved hash is recorded and every runtime consumer resolves the one asset ID.
-- [ ] **5.4** Implement bounded Lava ticks.
+- [x] **5.4** Implement bounded Lava ticks.
   - Change: the facility runtime emits a fixed-capacity tick receipt every 0.50 seconds while active; `VehicleRun` applies 8 neutral damage to the player and every targetable enemy within radius 1080.
   - Accept: player, ordinary enemy, and boss are hit; actors outside the radius, facilities, pickups, structures excluded by targetability, and expired Lava are not; no quota/XP/player damage credit is granted.
 - [ ] **5.5** Update visual/product contracts, copy, fixtures, and focused tests.
@@ -309,9 +309,10 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 5.
-- Next task: 5.1 Retire Barrier/Gravity outcomes and implement the four-role facility runtime, starting with Lava behavior before asset integration.
-- Last completed gate: Phase 4 focused gate passed: upgrade system, status stacking, Cryo shatter integration, weapon balance, build snapshot, upgrade UI, localization, stage telemetry, result builder, and conditional-status validators. Thermal, Toxin, and Cryo now fill generic `slot_0/slot_1` in acquisition order; every pair is legal, owned roots remain levelable, and only a third distinct root is blocked. Primary payloads combine either pair and Toxin+Cryo publishes hybrid affinity. The third Chill application consumes the stacks, emits exactly one `18/28/42` receipt, applies player-owned Cryo damage without recursive payloads, and records the `cryo_shatter` source and Cryo attribute.
+- Current phase: Phase 5 exact-asset approval gate.
+- Next task: 5.3 Obtain BK's approval for `mystery_device_lava-candidate-v1.png`; integrate no production bytes before that approval.
+- Last completed gate: Phase 5 behavior pre-gate passed: mystery-device runtime and live map-mechanics integration validators. The deterministic roster is exactly Repair/Cryo/Weakpoint/Lava at three placements. Active Lava emits at most one fixed receipt per facility per simulation step with a bounded catch-up count, deals exact 8-damage half-second ticks to the player and targetable ordinary/boss actors inside radius 1080, bypasses transient player invulnerability without granting a new protection window, and grants no ordinary quota, XP, defeat statistic, outgoing telemetry, or player damage credit.
+- Lava candidate evidence: built-in ImageGen used the canonical sheet as the actual reference input; observed reference SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. The first machine-body output was rejected before retention for excess casing/detail. Candidate v1 used the normalized prompt “single flat industrial-SF heat-vent role symbol; broad flattened hexagonal hot plate, exactly two vent cuts, one exhaust wedge; 3-5 matte planes; no casing/body/ring/text/effect/scene” on flat `#FF00FF`, followed by the skill's chroma removal with despill/edge contraction and non-creative resize to 192x192. Candidate path `.agents/evidence/visual/lava-facility-candidate/mystery_device_lava-candidate-v1.png`; SHA-256 `8331eca9352470365a2eaed398b853a7dfca19a1c7c2eadc1949f232bc4918ec`. Color and grayscale comparison sheets beside it confirm a distinct silhouette from Repair/Cryo/Weakpoint at 96px. Approval: pending; production manifest/runtime integration: prohibited until approved.
 - Visual authority evidence: `docs/design/VISUAL_SYSTEM.md` read completely; canonical sheet visually inspected at original detail; expected and observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`; original provenance is recorded by `$cardborne-visual-authority`. No raster candidate has been generated yet.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance this pointer in the same edit.
 

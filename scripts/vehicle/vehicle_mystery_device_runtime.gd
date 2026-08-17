@@ -10,13 +10,14 @@ const DEVICE_RADIUS := 84.0
 const ACTIVE_DURATION_SECONDS := 12.0
 const EXPIRY_WARNING_SECONDS := 3.0
 const HIT_FLASH_SECONDS := 0.14
-const OUTCOME_IDS: Array[StringName] = [&"repair", &"barrier", &"gravity", &"cryo", &"weakpoint"]
+const LAVA_TICK_SECONDS := 0.50
+const LAVA_DAMAGE_PER_TICK := 8.0
+const OUTCOME_IDS: Array[StringName] = [&"repair", &"cryo", &"weakpoint", &"lava"]
 const OUTCOME_PROFILE := {
 	&"repair": {"radius": 1260.0, "hull_restore_per_second": 1.0 / 6.0},
-	&"barrier": {"radius": 1260.0, "shield_restore_per_second": 1.0 / 6.0, "shield_cap_max_hull_ratio": 1.0},
-	&"gravity": {"radius": 1440.0, "acceleration_multiplier": 0.70, "max_speed_multiplier": 0.70},
 	&"cryo": {"radius": 1080.0, "movement_multiplier": 0.82, "attack_cadence_multiplier": 0.82},
 	&"weakpoint": {"radius": 1260.0, "received_damage_multiplier": 1.15},
+	&"lava": {"radius": 1080.0, "tick_seconds": LAVA_TICK_SECONDS, "damage_per_tick": LAVA_DAMAGE_PER_TICK},
 }
 
 var devices: Array[Dictionary] = []
@@ -26,7 +27,7 @@ func configure(device_blueprint: Array, layout_seed: int, stage_id: StringName) 
 	for index in mini(DEVICE_COUNT, device_blueprint.size()):
 		var blueprint := Dictionary(device_blueprint[index])
 		var outcome := rotation[index]
-		devices.append({"id": StringName(blueprint.get("id", "facility_%d" % index)), "position": Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))), "health": DEVICE_HEALTH, "outcome": outcome, "state": &"dormant", "active_remaining": 0.0, "expiry_warning_sent": false, "hit_flash_remaining": 0.0})
+		devices.append({"id": StringName(blueprint.get("id", "facility_%d" % index)), "position": Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))), "health": DEVICE_HEALTH, "outcome": outcome, "state": &"dormant", "active_remaining": 0.0, "expiry_warning_sent": false, "hit_flash_remaining": 0.0, "lava_tick_remaining": LAVA_TICK_SECONDS})
 
 func advance(delta: float, events: Array[Dictionary]) -> void:
 	events.clear()
@@ -36,6 +37,20 @@ func advance(delta: float, events: Array[Dictionary]) -> void:
 		if StringName(device["state"]) != &"active":
 			continue
 		var previous_remaining := float(device["active_remaining"])
+		var active_step := minf(step, previous_remaining)
+		if StringName(device["outcome"]) == &"lava" and active_step > 0.0:
+			device["lava_tick_remaining"] = float(device["lava_tick_remaining"]) - active_step
+			var tick_count := 0
+			while float(device["lava_tick_remaining"]) <= 0.000001:
+				device["lava_tick_remaining"] = float(device["lava_tick_remaining"]) + LAVA_TICK_SECONDS
+				tick_count += 1
+			if tick_count > 0:
+				events.append({
+					"kind":&"facility_lava_tick", "device_id":StringName(device["id"]),
+					"outcome":&"lava", "position":Vector2(device["position"]),
+					"radius":float(OUTCOME_PROFILE[&"lava"]["radius"]),
+					"damage_per_tick":LAVA_DAMAGE_PER_TICK, "tick_count":tick_count,
+				})
 		device["active_remaining"] = maxf(0.0, float(device["active_remaining"]) - step)
 		if float(device["active_remaining"]) <= 0.0:
 			device["state"] = &"expired"
@@ -63,6 +78,7 @@ func receive_damage(device_id: StringName, amount: float, source_team: StringNam
 	if float(device["health"]) <= 0.0:
 		device["state"] = &"active"
 		device["active_remaining"] = ACTIVE_DURATION_SECONDS
+		device["lava_tick_remaining"] = LAVA_TICK_SECONDS
 		device["expiry_warning_sent"] = false
 		receipt["broken"] = true
 		receipt["break_event"] = {"kind": &"facility_activated", "device_id": device_id, "outcome": StringName(device["outcome"]), "source": &"neutral_facility", "grants_experience": false, "drop": &"", "projectiles_blocked": false, "duration": ACTIVE_DURATION_SECONDS}
@@ -77,6 +93,8 @@ func fill_modifiers_at(position: Vector2, output: Array[Dictionary]) -> Array[Di
 	var strongest_by_kind: Dictionary = {}
 	for device in devices:
 		if StringName(device["state"]) != &"active":
+			continue
+		if StringName(device["outcome"]) == &"lava":
 			continue
 		var profile := Dictionary(OUTCOME_PROFILE[StringName(device["outcome"])])
 		if position.distance_to(Vector2(device["position"])) <= float(profile["radius"]):

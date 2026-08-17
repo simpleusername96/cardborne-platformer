@@ -602,7 +602,10 @@ func _physics_process(delta: float) -> void:
 		var pickup_motion_start := player_position
 		mystery_device_runtime.advance(delta, _mystery_device_event_buffer)
 		for facility_event in _mystery_device_event_buffer:
-			_handle_mystery_device_event(facility_event)
+			if StringName(facility_event.get("kind", &"")) == &"facility_lava_tick":
+				_apply_lava_facility_tick(facility_event)
+			else:
+				_handle_mystery_device_event(facility_event)
 		_simulation_lod_bucket = 1 - _simulation_lod_bucket
 		_far_enemy_simulation_bucket = (
 			(_far_enemy_simulation_bucket + 1)
@@ -4982,7 +4985,8 @@ func _damage_enemy(
 	show_hit_flash: bool = true,
 	damage_flags: int = 0,
 	attack_serial: int = 0,
-	combat_action_family: StringName = &""
+	combat_action_family: StringName = &"",
+	grant_defeat_credit: bool = true
 ) -> float:
 	if not enemy.alive:
 		return 0.0
@@ -5078,7 +5082,7 @@ func _damage_enemy(
 		if not transition.is_empty():
 			_begin_boss_shield_phase(enemy, int(transition["phase"]))
 	if enemy.health <= 0.0:
-		_defeat_enemy(enemy, source)
+		_defeat_enemy(enemy, source, grant_defeat_credit)
 	return applied_damage
 
 
@@ -5180,7 +5184,11 @@ func _record_status_applications(profile: VehiclePrimaryPayloadProfile) -> void:
 		stage_telemetry.record_status_application(&"chill")
 
 
-func _defeat_enemy(enemy: EnemyState, source: String) -> void:
+func _defeat_enemy(
+	enemy: EnemyState,
+	source: String,
+	grant_defeat_credit: bool = true
+) -> void:
 	if not enemy.alive:
 		return
 	if enemy.role == &"stage_boss":
@@ -5204,14 +5212,15 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 	_wreck_scavenger_stacks.erase(enemy.id)
 	enemy_grid.update_actor(enemy)
 	enemy_store.queue_defeat(enemy)
-	stats_enemies_defeated += 1
-	stage_telemetry.record_defeat(enemy.archetype, enemy.elite_trait)
-	experience_runtime.spawn_shard(
-		enemy.pos,
-		FieldDropRules.experience_for_enemy(enemy),
-		&""
-	)
-	if _is_countable_stage_enemy(enemy):
+	if grant_defeat_credit:
+		stats_enemies_defeated += 1
+		stage_telemetry.record_defeat(enemy.archetype, enemy.elite_trait)
+		experience_runtime.spawn_shard(
+			enemy.pos,
+			FieldDropRules.experience_for_enemy(enemy),
+			&""
+		)
+	if grant_defeat_credit and _is_countable_stage_enemy(enemy):
 		var stage_receipt := stage_flow.record_countable_defeat()
 		var stage_command := StringName(stage_receipt.get("command", &""))
 		if stage_command == StageFlow.COMMAND_BEGIN_BOSS_WARNING:
@@ -5232,10 +5241,13 @@ func _defeat_enemy(enemy: EnemyState, source: String) -> void:
 		elif stage_command == StageFlow.COMMAND_COMPLETE_WITHOUT_BOSS:
 			encounter_runtime.seal_for_quota()
 			_complete_stage(StageTransitionRuntime.COMPLETION_WITHOUT_BOSS)
-	if role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel"]:
+	if (
+		grant_defeat_credit
+		and role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel"]
+	):
 		stats_installations += 1
 	var defeated_group := enemy.group_id
-	if not defeated_group.is_empty():
+	if grant_defeat_credit and not defeated_group.is_empty():
 		_try_group_completion_reward(defeated_group, enemy.pos)
 	_play_sound(
 		&"destroy_priority"
@@ -5413,9 +5425,14 @@ func _damage_player(
 	blockable: bool,
 	enemy_source: bool = true,
 	final_effective: bool = false,
-	grant_hit_protection: bool = true
+	grant_hit_protection: bool = true,
+	bypass_invulnerability: bool = false
 ) -> bool:
-	if not _simulation_active() or player_invulnerable > 0.0 or stage_complete:
+	if (
+		not _simulation_active()
+		or (player_invulnerable > 0.0 and not bypass_invulnerability)
+		or stage_complete
+	):
 		return false
 	var remaining := (
 		_scaled_incoming_damage(amount, enemy_source, final_effective)
@@ -5691,6 +5708,27 @@ func _handle_mystery_device_event(event: Dictionary) -> void:
 	})
 
 
+func _apply_lava_facility_tick(event: Dictionary) -> void:
+	var center := Vector2(event.get("position", Vector2.ZERO))
+	var radius := maxf(0.0, float(event.get("radius", 0.0)))
+	var tick_count := clampi(int(event.get("tick_count", 0)), 0, 24)
+	var damage := maxf(0.0, float(event.get("damage_per_tick", 0.0))) * tick_count
+	if radius <= 0.0 or damage <= 0.0:
+		return
+	if player_position.distance_to(center) <= radius:
+		_damage_player(damage, "lava facility", false, false, true, false, true)
+	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
+	for enemy in _enemy_query_buffer:
+		if not _is_player_targetable_enemy(enemy):
+			continue
+		if Vector2(enemy.pos).distance_to(center) > radius:
+			continue
+		_damage_enemy(
+			enemy, damage, "lava_facility", &"thermal", false,
+			true, false, 0, 0, &"", false
+		)
+
+
 func _publish_facility_notification(event: Dictionary) -> void:
 	var kind := StringName(event.get("kind", &""))
 	var outcome := StringName(event.get("outcome", &""))
@@ -5721,20 +5759,18 @@ func _facility_notification_key(kind: StringName, outcome: StringName) -> String
 		return ""
 	match outcome:
 		&"repair": return "NOTIFY_FACILITY_REPAIR_ACTIVATED"
-		&"barrier": return "NOTIFY_FACILITY_BARRIER_ACTIVATED"
-		&"gravity": return "NOTIFY_FACILITY_GRAVITY_ACTIVATED"
 		&"cryo": return "NOTIFY_FACILITY_CRYO_ACTIVATED"
 		&"weakpoint": return "NOTIFY_FACILITY_WEAKPOINT_ACTIVATED"
+		&"lava": return "NOTIFY_FACILITY_LAVA_ACTIVATED"
 	return ""
 
 
 func _facility_outcome_name_key(outcome: StringName) -> String:
 	match outcome:
 		&"repair": return "MYSTERY_OUTCOME_REPAIR"
-		&"barrier": return "MYSTERY_OUTCOME_BARRIER"
-		&"gravity": return "MYSTERY_OUTCOME_GRAVITY"
 		&"cryo": return "MYSTERY_OUTCOME_CRYO"
 		&"weakpoint": return "MYSTERY_OUTCOME_WEAKPOINT"
+		&"lava": return "MYSTERY_OUTCOME_LAVA"
 	return ""
 
 

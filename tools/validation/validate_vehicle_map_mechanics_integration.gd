@@ -107,29 +107,24 @@ func _validate_facility_authority(run) -> void:
 		"unknown facility events fail closed instead of naming the wrong outcome"
 	)
 
-	# A live-run enemy receives the same role-specific modifier returned for a player position.
+	# Live actors consume the three retained modifier roles symmetrically.
 	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")
 	devices = run.mystery_device_runtime.snapshot()["devices"]
 	var modifier_device := Dictionary(devices[0])
-	run.mystery_device_runtime.devices[0]["outcome"] = &"gravity"
+	run.mystery_device_runtime.devices[0]["outcome"] = &"repair"
 	run.mystery_device_runtime.devices[0]["state"] = &"active"
 	run.mystery_device_runtime.devices[0]["active_remaining"] = run.mystery_device_runtime.ACTIVE_DURATION_SECONDS
 	run.player_position = Vector2(modifier_device["position"])
-	_expect(
-		is_equal_approx(float(run.call("_player_facility_movement_multiplier")), 0.70)
-			and is_equal_approx(float(run.call("_player_facility_acceleration_multiplier")), 0.70),
-		"gravity applies the same max-speed and acceleration multipliers to the player"
-	)
+	run.player_health = 60.0
+	run.call("_apply_player_facility_recovery", 0.5)
+	_expect(run.player_health > 60.0, "repair restores player Hull inside its retained radius")
 	var enemy = run.call("_make_enemy", {"role":&"chaser", "id":"facility_target", "pos":Vector2(modifier_device["position"]), "active":true})
 	run.call("_append_enemy", enemy)
+	enemy.health = enemy.max_health - 10.0
 	run.call("_apply_enemy_facility_modifiers", enemy, 0.5)
-	var profile := Dictionary(run.mystery_device_runtime.modifiers_at(enemy.pos)[0]["profile"])
 	_expect(
-		is_equal_approx(enemy.facility_movement_multiplier, float(profile.get("movement_multiplier", profile.get("max_speed_multiplier", 1.0))))
-			and is_equal_approx(enemy.facility_acceleration_multiplier, float(profile.get("acceleration_multiplier", 1.0)))
-			and is_equal_approx(enemy.facility_cadence_multiplier, float(profile.get("attack_cadence_multiplier", 1.0)))
-			and is_equal_approx(enemy.facility_received_damage_multiplier, float(profile.get("received_damage_multiplier", 1.0))),
-		"VehicleRun applies the same active facility profile to enemies"
+		enemy.health > enemy.max_health - 10.0,
+		"repair restores ordinary-enemy Hull through the same symmetric profile"
 	)
 	run.mystery_device_runtime.devices[0]["outcome"] = &"cryo"
 	_expect(
@@ -138,6 +133,58 @@ func _validate_facility_authority(run) -> void:
 	)
 	run.call("_apply_enemy_facility_modifiers", enemy, 0.0)
 	_expect(is_equal_approx(enemy.facility_cadence_multiplier, 0.82), "cryo slows enemy attack cadence through the same facility")
+	run.mystery_device_runtime.devices[0]["outcome"] = &"weakpoint"
+	run.call("_apply_enemy_facility_modifiers", enemy, 0.0)
+	_expect(
+		is_equal_approx(enemy.facility_received_damage_multiplier, 1.15),
+		"weakpoint applies the retained received-damage multiplier"
+	)
+
+	# Lava is a neutral periodic damage owner, not a modifier or player reward.
+	run.call("_clear_enemies")
+	run.call("_clear_projectiles")
+	run.mystery_device_runtime.devices[0]["outcome"] = &"lava"
+	run.mystery_device_runtime.devices[0]["lava_tick_remaining"] = 0.5
+	var center := Vector2(modifier_device["position"])
+	run.player_position = center
+	run.player_health = 100.0
+	run.player_invulnerable = 1.0
+	var inside_enemy = run.call("_make_enemy", {"role":&"chaser", "id":"lava_inside", "pos":center + Vector2(200.0, 0.0), "active":true})
+	var lethal_enemy = run.call("_make_enemy", {"role":&"chaser", "id":"lava_lethal", "pos":center + Vector2(300.0, 0.0), "active":true})
+	var boss = run.call("_make_enemy", {"role":&"stage_boss", "id":"lava_boss", "pos":center + Vector2(400.0, 0.0), "active":true})
+	var outside_enemy = run.call("_make_enemy", {"role":&"chaser", "id":"lava_outside", "pos":center + Vector2(1200.0, 0.0), "active":true})
+	for target in [inside_enemy, lethal_enemy, boss, outside_enemy]:
+		run.call("_append_enemy", target)
+	inside_enemy.health = 100.0
+	inside_enemy.max_health = 100.0
+	lethal_enemy.health = 8.0
+	lethal_enemy.max_health = 100.0
+	boss.health = 1000.0
+	boss.max_health = 1000.0
+	outside_enemy.health = 100.0
+	outside_enemy.max_health = 100.0
+	run.call("_rebuild_enemy_runtime_indexes")
+	var defeats_before := int(run.stage_flow.defeats)
+	var experience_before_lava := int(run.experience_runtime.experience)
+	var credited_defeats_before := int(run.stats_enemies_defeated)
+	run.call("_apply_lava_facility_tick", {
+		"position":center, "radius":1080.0, "damage_per_tick":8.0, "tick_count":1,
+	})
+	_expect(
+		is_equal_approx(run.player_health, 92.0)
+			and is_equal_approx(inside_enemy.health, 92.0)
+			and is_equal_approx(boss.health, 992.0)
+			and is_equal_approx(outside_enemy.health, 100.0),
+		"one Lava tick damages player, ordinary enemy, and boss inside radius but not outside"
+	)
+	_expect(
+		not lethal_enemy.alive
+			and int(run.stage_flow.defeats) == defeats_before
+			and int(run.experience_runtime.experience) == experience_before_lava
+			and int(run.stats_enemies_defeated) == credited_defeats_before
+			and run.stage_telemetry.stage_snapshot()["outgoing"].is_empty(),
+		"Lava can defeat an ordinary enemy without quota, XP, or player damage credit"
+	)
 
 
 func _expect(condition: bool, message: String) -> void:
