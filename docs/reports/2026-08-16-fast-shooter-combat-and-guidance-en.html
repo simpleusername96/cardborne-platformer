@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cardborne Combat Reset</title>
+  <title>Cardborne Incremental Combat Improvements</title>
   <style>
     :root {
       color-scheme: dark;
@@ -103,20 +103,21 @@
 <body>
 <main>
   <header>
-    <p class="kicker">Cardborne / combat reset / planning brief</p>
-    <h1>Stop building a survivor game with manual aim.</h1>
-    <p class="lead">Keep the survivor-like run structure. Rebuild the actual combat as a fast shooter: authored engagements, route interception, short lethal enemies, readable boss tests, and information that teaches without stopping play.</p>
-    <p class="thesis"><strong>The player is not too fast.</strong> The combat is asking speed to solve the wrong problem. Enemies must attack where the vehicle is going, not follow where it was.</p>
+    <p class="kicker">Cardborne / incremental improvement brief</p>
+    <h1>Improve the shooter without rebuilding Cardborne.</h1>
+    <p class="lead">Keep the current field, eight-cycle quota flow, bosses, cards, upgrade modal, controls, and performance limits. Improve the existing systems in small slices: readable HUD, useful tactical guidance, fewer early interruptions, and slightly more relevant enemy pressure.</p>
+    <p class="thesis"><strong>The player stays fast and the game stays recognizable.</strong> Each change must prove its value before the next one begins.</p>
   </header>
 
   <section>
-    <h2>What the current game is actually doing</h2>
+    <h2>Provisional baseline from the prior diagnostic capture</h2>
     <div class="facts">
       <article class="fact"><span class="kicker">Completed-run mean</span><div class="value">9:50</div><p class="muted">No ten-minute timer exists. Eight raw kill quotas create the practical ceiling.</p></article>
       <article class="fact"><span class="kicker">Pursuit share</span><div class="value">65%</div><p class="muted">Most authored bodies are trying to follow a vehicle that can already outrun them.</p></article>
       <article class="fact"><span class="kicker">Upgrade stops</span><div class="value">21.2</div><p class="muted">Median gap: 10.9 seconds. The game repeatedly interrupts its strongest activity.</p></article>
       <article class="fact"><span class="kicker">Late durability stack</span><div class="value">~11×</div><p class="muted">Several health multipliers stack. More global HP would add time, not better combat.</p></article>
     </div>
+    <p class="caption">These values came from the earlier planning session and must be reproduced before implementation evidence uses them. They order the work; they are not product targets or release gates.</p>
   </section>
 
   <section>
@@ -128,16 +129,16 @@
   </section>
 
   <section>
-    <h2>The new cycle</h2>
+    <h2>The structure that stays</h2>
     <div class="flow">
-      <article class="step"><span class="index">01</span><h3>Teach</h3><p class="muted">One tactic commits clearly.</p></article>
-      <article class="step"><span class="index">02</span><h3>Combine</h3><p class="muted">Two role groups force a new route.</p></article>
-      <article class="step"><span class="index">03</span><h3>Power test</h3><p class="muted">A priority unit anchors the formation.</p></article>
-      <article class="step"><span class="index">04</span><h3>Boss</h3><p class="muted">Signature first, combination second.</p></article>
-      <article class="step"><span class="index">05</span><h3>Service</h3><p class="muted">Spend up to two upgrade charges.</p></article>
-      <article class="step"><span class="index">06</span><h3>Continue</h3><p class="muted">Same field, stronger operation.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>One field</h3><p class="muted">The connected run remains intact.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>Quota gate</h3><p class="muted">Kills still unlock each boss.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>Fast control</h3><p class="muted">Manual aim, held fire, and dash stay.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>Boss order</h3><p class="muted">All eight cycles retain their flow.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>Card modal</h3><p class="muted">Only its frequency is tuned.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>Capacity</h3><p class="muted">No actor or projectile cap increase.</p></article>
     </div>
-    <p class="caption">Each beat has a short build → sustain → recover shape. Cycles 1–2 use Teach → Combine; cycles 3–8 use three ordinary beats. Kills give XP, but the run advances when the authored tactical test resolves.</p>
+    <p class="caption">No authored-beat replacement, service loop, upgrade currency, new map, or new encounter scheduler is introduced.</p>
   </section>
 
   <section>
@@ -145,10 +146,10 @@
     <div class="arena" role="img" aria-label="Diagram showing interception and crossfire ahead of the player, limited rear pursuit, support on the side, and one open escape lane">
       <div class="zone intercept"><strong>INTERCEPT</strong><br>predict crossing point</div>
       <div class="zone crossfire"><strong>CROSSFIRE</strong><br>force aim rotation</div>
-      <div class="zone rear"><strong>REAR PURSUIT</strong><br>maximum 30%</div>
+      <div class="zone rear"><strong>REAR PURSUIT</strong><br>still present, modestly reduced</div>
       <div class="zone player">FAST PLAYER<br>movement stays unchanged</div>
       <div class="zone support"><strong>DENIAL / SUPPORT</strong><br>create target priority</div>
-      <div class="zone escape"><strong>ONE ESCAPE LANE ALWAYS REMAINS OPEN</strong></div>
+      <div class="zone escape"><strong>HIGH-THREAT ATTACKS KEEP THE EXISTING ESCAPE CORRIDOR</strong></div>
     </div>
   </section>
 
@@ -156,38 +157,37 @@
     <h2>Difficulty changes</h2>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>System</th><th>Current</th><th>Reset</th><th>Reason</th></tr></thead>
+        <thead><tr><th>System</th><th>Current</th><th>First pass</th><th>Reason</th></tr></thead>
         <tbody>
-          <tr><td>Run progress</td><td>Raw defeat quotas</td><td>2–3 authored tactical beats per cycle</td><td>Stops fast killing from collapsing the campaign.</td></tr>
-          <tr><td>Role mix</td><td>65% pursuit</td><td>25% pursuit; majority intercept/crossfire/denial</td><td>Attacks the route instead of the rear bumper.</td></tr>
-          <tr><td>Enemy HP</td><td>2.60 global; cycle curve to 3.10</td><td>2.10 global; cycle curve to 2.05</td><td>Enemies die faster when correctly targeted.</td></tr>
-          <tr><td>Enemy offense</td><td>Projectile 0.82; recovery 1.28</td><td>Projectile 0.95; recovery 1.45</td><td>Danger rises through attack relevance, not sponge time.</td></tr>
-          <tr><td>Attack participation</td><td>Many bodies, few commits</td><td>6 / 8 / 10 explicit attack slots</td><td>Makes the existing cap tactically useful.</td></tr>
-          <tr><td>Boss adds</td><td>Generic 8–12 refill</td><td>One 4 / 6 / 8 unit escort pulse per phase</td><td>Supports the boss mechanic without constant clutter.</td></tr>
-          <tr><td>Actor cap</td><td>72 late; capacity test is red</td><td>Keep 72</td><td>Do not hide design problems behind more simulation.</td></tr>
+          <tr><td>Run progress</td><td>Quota-gated bosses</td><td>Keep it unchanged first</td><td>Measure other changes before touching duration.</td></tr>
+          <tr><td>Spawn direction</td><td>Existing sector allocator</td><td>One extra ahead/lateral preference before rear reuse</td><td>Improves interception without a new scheduler.</td></tr>
+          <tr><td>Enemy HP</td><td>Current global and cycle curves</td><td>Keep unchanged</td><td>Avoid adding sponge time while testing offense.</td></tr>
+          <tr><td>Enemy offense</td><td>Current fixed-Hard values</td><td>Keep unchanged</td><td>Measure the spawn change before proposing one separate balance variable.</td></tr>
+          <tr><td>Boss flow</td><td>Current quota, warning, boss, cleanup</td><td>Keep unchanged</td><td>Preserves the established run structure.</td></tr>
+          <tr><td>Actor cap</td><td>Current bounded capacity</td><td>Keep unchanged</td><td>Difficulty must not depend on more live bodies.</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
   <section>
-    <h2>Upgrades stop interrupting combat</h2>
+    <h2>Upgrades interrupt less often</h2>
     <div class="upgrade-line">
-      <article class="step"><span class="index">BEFORE RUN</span><h3>Starting choice</h3><p class="muted">One card at Deployment.</p></article>
-      <article class="step"><span class="index">XP</span><h3>Earn charges</h3><p class="muted">No modal. No lost progress.</p></article>
-      <article class="step"><span class="index">CYCLE 1</span><h3>Field resupply</h3><p class="muted">One choice after Teach.</p></article>
-      <article class="step"><span class="index">BOSSES 1–7</span><h3>Service break</h3><p class="muted">Up to two choices per session.</p></article>
-      <article class="step"><span class="index">BOSS 8</span><h3>Result</h3><p class="muted">No useless final upgrade.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>XP shards</h3><p class="muted">Collection remains unchanged.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>Level queue</h3><p class="muted">Earned levels are still retained.</p></article>
+      <article class="step"><span class="index">TUNE</span><h3>Early requirement</h3><p class="muted">Surcharge changes from 4 to 8.</p></article>
+      <article class="step"><span class="index">KEEP</span><h3>Card choice</h3><p class="muted">Same modal and offer rules.</p></article>
+      <article class="step"><span class="index">CHECK</span><h3>Cadence</h3><p class="muted">Measure before any second change.</p></article>
     </div>
-    <p class="thesis"><strong>Maximum:</strong> eight in-run upgrade sessions instead of roughly twenty-one.</p>
+    <p class="thesis"><strong>One variable first:</strong> increase only the existing first-ten-level XP surcharge. Do not add charges, service breaks, or a replacement modal.</p>
   </section>
 
   <section>
-    <h2>A readable cockpit and a real support presence</h2>
+    <h2>Readable existing HUD and a support presence</h2>
     <div class="screen" role="img" aria-label="Concept layout with full-width hull and XP meters, a backed mission card, square action cells, top-right minimap, and Tactical Control below it">
       <div class="hp"></div><div class="xp"></div>
       <div class="hud">
-        <div class="mission"><small>CYCLE 3 / 8</small>BREAK CROSSFIRE · 1 / 2</div>
+        <div class="mission"><small>BOSS 3 / 8</small>QUOTA REMAINING · 12</div>
         <div class="cell">DASH</div><div class="cell">EMP<br>4.2</div>
       </div>
       <div class="map" aria-label="Minimap"></div>
@@ -197,7 +197,7 @@
       </div>
       <div class="clear">RETICLE, AIM ROUTES, AND ESCAPE SPACE<br>REMAIN CLEAR</div>
     </div>
-    <p class="caption">Concept layout only. It approves no portrait or production art. The first release uses the shared Theme, a code-native comms glyph, localized text, and one subtle audio chirp.</p>
+    <p class="caption">Concept only, not runtime or asset approval. Keep the current information and order. The first slice must reconcile the exact HUD and announcement clauses in the active visual contract before adding shared-Theme backing or a restrained code-native CONTROL label.</p>
   </section>
 
   <section>
@@ -205,13 +205,13 @@
     <div class="rules">
       <article class="rule"><p class="kicker">Boss mechanic</p><h3>Observation — action</h3><p>“FRONTAL SHIELD — BREAK CONTACT AND ATTACK FROM THE SIDE.”</p></article>
       <article class="rule"><p class="kicker">Facility state</p><h3>Exact runtime truth</h3><p>“REPAIR FIELD ONLINE — 12 S REMAIN. STAY INSIDE THE RING.”</p></article>
-      <article class="rule"><p class="kicker">Failure learning</p><h3>Explain after the loss</h3><p>Failure Report shows the two verified mechanics that caused the most damage and their countermeasures.</p></article>
+      <article class="rule"><p class="kicker">Scope</p><h3>Teach only verified state</h3><p>Use the current announcement queue. Do not add a new failure-analysis or Guidebook system in this pass.</p></article>
     </div>
     <ul>
       <li>Immediate danger stays in world telegraphs and the threat radar.</li>
-      <li>One message at a time; queue capacity two; stale messages are discarded.</li>
-      <li>A mechanic repeats only after a verified failure, not because a timer expired.</li>
-      <li>The same counterplay text feeds CONTROL, Guidebook, and Failure Report.</li>
+      <li>Preserve the current priority, coalescing, queue capacity, and stale-message behavior.</li>
+      <li>Publish only from existing verified boss and facility events.</li>
+      <li>Keep Korean and English copy short enough for the existing panel.</li>
     </ul>
   </section>
 
@@ -221,19 +221,19 @@
       <table>
         <thead><tr><th>Phase</th><th>Output</th><th>Proof</th></tr></thead>
         <tbody>
-          <tr><td>1. Contracts</td><td>Product, visual, localization rules</td><td>Eight-cycle, beat, HUD, and bilingual contracts agree.</td></tr>
-          <tr><td>2. Campaign</td><td>Authored beats, boss flow, service break</td><td>No raw quota gate; no empty wait; boss 8 ends cleanly.</td></tr>
-          <tr><td>3. Combat</td><td>Time-to-contact spawn, role mix, attack slots, stats</td><td>Two attack directions, rear-only time below 20%, escape lane intact.</td></tr>
-          <tr><td>4. Progression</td><td>Upgrade charges and scheduled choice sessions</td><td>No combat modal; 6–8 sessions per complete run.</td></tr>
-          <tr><td>5. Information</td><td>Mission card, CONTROL, Guidebook, failure learning</td><td>First-time players can state objective and boss counter after one exposure.</td></tr>
-          <tr><td>6. Release</td><td>Five complete runs, Korean/English renders, native/Web</td><td>Median run 18–22 minutes; exact-72 capacity and built Web smoke pass.</td></tr>
+          <tr><td>1. Information</td><td>Back existing HUD cells; extend current announcements with CONTROL</td><td>No clipping; bilingual boss/facility guidance works.</td></tr>
+          <tr><td>2. Progression</td><td>Raise only the existing early XP surcharge</td><td>Fewer early stops; same modal, cards, and earned levels.</td></tr>
+          <tr><td>3. Combat</td><td>One small spawn-sector adjustment</td><td>Less rear-only pressure; fixed-Hard values and capacity stay unchanged.</td></tr>
+          <tr><td>4. Observation</td><td>Five matched runs with duration, upgrade-gap, route-pressure, damage, and completion evidence</td><td>No automatic quota or balance change; one later variable requires separate approval.</td></tr>
+          <tr><td>5. Slice proof</td><td>Focused validators, Korean/English renders, production Web</td><td>Changed slices pass; complete release qualification remains separate.</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
   <section>
-    <h2>Evidence used</h2>
+    <h2>Design references, not product authority</h2>
+    <p class="caption">These sources help explain pacing and communication patterns. They do not override Cardborne's product specification, visual system, or current runtime owners.</p>
     <ul class="sources">
       <li><a href="https://gdcvault.com/play/1021780/AI-in-the-Awesomepocalypse-Creating">Sunset Overdrive: AI for a high-speed player</a></li>
       <li><a href="https://www.gamedeveloper.com/design/q-a-evolving-the-combat-design-of-id-software-s-i-doom-eternal-i-">DOOM Eternal: movement, tells, and combat space</a></li>
