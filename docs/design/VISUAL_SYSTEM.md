@@ -124,8 +124,8 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
   filled plane과 한 겹의 외곽선으로 제한한다. 미세 panel, 반복 lamp,
   nested outline과 greeble로 boss 등급을 표현하지 않는다.
 - 보스 방어막은 외부 objective나 별도 actor가 아니라 boss body에 붙은 한 겹의
-  command-color directional boundary다. Drydock은 전방 arc, Crown은 세 개의
-  body-attached sector를 사용하며 collision truth도 그 방향을 따른다. `shield_up`과
+  command-color directional boundary다. Drydock만 전방 arc를 사용하며 collision
+  truth도 그 방향을 따른다. `shield_up`과
   `shield_down` 두 상태만 사용하며, 별도 node, pylon, module, objective marker를 만들지 않는다.
 - 짧은 한 방향 shadow, hard edge highlight와 얕은 inset은 승인 시안의
   기계적 깊이를 설명할 때 사용한다. soft glow, photoreal material,
@@ -301,8 +301,8 @@ collision.
 - Boss death keeps one body only for the exact 2.00-second cleanup. It uses restrained
   hit tint, dim/desaturation, and fade; no explosion, effect raster, growth, impulse,
   hit-stop, sprite sheet, particle, fragment body, or burst image is permitted.
-- EMP는 damage/stun `285`를 하나의 code-native full disk로 즉시 표시한다.
-  hostile-projectile clear `325`는 두 번째 damage disk가 아니라 `285–325` 사이의
+- EMP는 zero-damage stun `285/325/365/405`를 하나의 code-native full disk로 즉시 표시한다.
+  hostile-projectile clear `325/365/405/445`는 두 번째 damage disk가 아니라 두 반지름 사이의
   sparse segmented utility fringe로 구분한다. 둘은 같은 release frame에 완전한
   크기로 나타나 함께 사라지며 outward damage propagation을 암시하지 않는다.
   Thermal Burst는 direct primary hit 위치의 exact splash radius를 하나의 thermal
@@ -515,13 +515,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   authored body, HUD와 체력 정보로 전달하고 player-reward overlay를 사용하지 않는다.
 - boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 방어막은
   body에 붙은 한 겹의 directional boundary로만 표시하며 별도 actor나 asset family를
-  사용하지 않는다. Drydock은 frontal arc, Crown은 세 body-attached sector를 보여 주며
-  alpha `0.38`, body radius `+8`를 사용한다. `shield_down`에는 표시하지 않는다.
+  사용하지 않는다. Drydock만 frontal arc를 보여 주며 alpha `0.38`, body radius
+  `+8`를 사용한다. `shield_down`에는 표시하지 않는다.
 - Thermal Burst impact는 direct player-primary hit 위치와 gameplay radius
   `72/84/96`에 alpha `0.16`의 full thermal disk를 첫 frame부터 최종 크기로
   표시하고 `0.18s` 동안 fade한다. 별도 impact raster나 accent를 사용하지 않는다.
   splash, DOT, Seeker, reflected,
-  structure-only와 EMP damage에는 생성하지 않는다. live Thermal impact는 최대
+  structure-only와 EMP control에는 생성하지 않는다. live Thermal impact는 최대
   24개이고 전체 effect store 96 capacity와 EMP 우선권을 유지한다.
 - Electric Field는 player actor 아래 한 retained code-native batch로 실제 damage
   radius `240/280/320` 전체를 표시한다. arc-purple fill alpha `0.18`, broken
@@ -530,11 +530,12 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   silhouette가 다르며 hollow donut, body-hugging bubble, glow, particle spray,
   repeated ring 또는 두 번째 collision truth를 만들지 않는다.
 - EMP charge는 이동 중인 player의 현재 위치를 따라가며 alpha `0.12`의 full inner
-  damage/stun disk `285`, alpha `0.08`의 full outer projectile-clear disk `325`, outer
+  stun disk `285/325/365/405`, alpha `0.08`의 full outer projectile-clear disk
+  `325/365/405/445`, outer
   boundary 하나를 최종 크기로 표시한다. Release는 실제 release 위치에서 inner
   alpha `0.20`, outer alpha `0.10`의 두 full disk를 첫 frame부터 최종 크기로
-  표시하고 기존 `0.55s` 동안 fade한다. 별도 raster accent는 없다. Damage,
-  stun과 hostile projectile clear는 charge 완료 시 각각의 전체 gameplay 범위에
+  표시하고 기존 `0.55s` 동안 fade한다. 별도 raster accent는 없다. Stun과 hostile
+  projectile clear는 charge 완료 시 각각의 전체 gameplay 범위에
   즉시 적용되므로 standard/reduced motion 모두 radius interpolation이나 바깥으로
   퍼지는 파면을 사용하지 않는다. 여러 ring, spark, dot, noise와 frame-by-frame
   sprite sequence를 추가하지 않는다.
@@ -548,7 +549,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   Barrage는 impact 전 `0.55s` 동안 반지름 `280`의 filled warning disk와 boundary 하나를
   사용하고, impact 뒤 radius를 확장하지 않는다. 세 표현은 반복 ring, particle spray,
   새 raster asset이나 별도 collision truth를 만들지 않는다.
-- Black Hole, Shockwave, Cross Beam은 기존 retained disk/ring/beam batch에 code-native
+- Black Hole, Shockwave, Cross Beam은 피해 없는 CC를 기존 retained disk/ring/beam batch에 code-native
   geometry만 추가한다. Black Hole은 실제 영향 반지름의 full disk와 단일 boundary,
   Shockwave는 release frame의 full disk와 단일 boundary, Cross Beam은 실제 반폭의
   두 map-spanning corridor를 사용한다. startup은 같은 geometry의 낮은 alpha 예고만
@@ -807,7 +808,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   artwork 하나만 가지며 stat label과 value 사이에 distributed blank column이 없음
 - every displayed circular area has a continuous full-area body from center to exact
   gameplay radius, instant areas use final radius on their first frame, EMP preserves a
-  full `285` damage/stun disk plus a separately readable `285–325` utility fringe, and
+  full authored stun disk plus a separately readable projectile-clear utility fringe, and
   every hostile emitted beam exposes no startup path and its borderless rounded active
   branch or branches match the collision-owned grown segments and width on every frame;
   translating laser walls remain explicitly classified as placed moving hazards

@@ -279,23 +279,22 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    patterns occupy at most two of any five direct selections. Every barrage emits three
    rows at 0.38-second intervals, with 4/5/6 simultaneous projectiles per row in cycles
    1-3/4-6/7-8 and either a 42-degree spread or 22.5-degree row-axis rotation.
-7. Only Drydock and Crown use directional defense, and each defense directly charges or
-   owns an attack. Drydock intercepts from a body-attached frontal arc; Crown has three
-   body-attached defensive sectors. Their collision truth follows those directions. No
-   boss is defense-only and no global shield-down rule exists.
-   Drydock blocks 90% inside its body-facing frontal 110-degree arc and converts blocked
-   damage into its counterburst. Crown owns three independent 120-degree sectors; a
-   depleted sector remains open until the next authored phase.
+7. Drydock alone uses directional defense, and it directly charges an attack. Its
+   body-attached frontal arc blocks 50% inside a 70-degree arc and converts blocked
+   damage into its counterburst. Crown has no shield. No boss is defense-only and no
+   global shield-down rule exists.
 8. High-threat attacks deal 60-85 damage once per execution, warn for at least 1.30
    seconds, use collision-matching committed geometry, and leave an escape corridor at
    least player diameter + 80 units. Pressure damage is 10-18 and normal damage is 22-38.
    No true instant-kill attack exists.
-9. Boss base health is 5200. Health scales are
+9. Boss base health is 26000. Health scales are
    `1.00/1.12/1.25/1.39/1.54/1.70/1.87/2.05`; damage scales
    `1.00/1.06/1.12/1.18/1.24/1.31/1.38/1.46`; move speeds
-   `181.25/187.5/193.75/200/207.5/215/222.5/230`; cadence scales
+   `380/395/410/425/440/455/470/485`; cadence scales
    `1.00/.97/.94/.91/.88/.85/.82/.79`; coverage scales
-   `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28`.
+   `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28`. Bosses approach above 240 pixels,
+   strafe from 140 through 240 pixels, and retreat only below 140 pixels. Movement slow
+   affects boss movement but not attack timers.
    Boss projectile speed uses `1.40x`, beam reach `1.45x`, committed charge speed
    `1.30x`, and circular or wedge radius `1.25x`; warning time is never reduced.
    Archive Cross commits two clipped perpendicular X corridors. Siege Battery alone
@@ -312,14 +311,14 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 | Boss cycle | Quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | --- |
-| 1 | 40 | 260 | Foundry Colossus |
-| 2 | 44 | 300 | Archive Leviathan |
-| 3 | 48 | 340 | Drydock Titan |
-| 4 | 52 | 390 | Switchyard Behemoth |
-| 5 | 56 | 440 | Crown Engine |
-| 6 | 60 | 500 | Siege Battery |
-| 7 | 64 | 560 | Vector Loom |
-| 8 | 68 | 630 | Pulse Core |
+| 1 | 60 | 260 | Foundry Colossus |
+| 2 | 66 | 300 | Archive Leviathan |
+| 3 | 72 | 340 | Drydock Titan |
+| 4 | 78 | 390 | Switchyard Behemoth |
+| 5 | 84 | 440 | Crown Engine |
+| 6 | 90 | 500 | Siege Battery |
+| 7 | 96 | 560 | Vector Loom |
+| 8 | 102 | 630 | Pulse Core |
 
 ### Items, experience, and upgrades
 
@@ -341,6 +340,12 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   that category's first acquisition.
 - Dash remains the only innate action. Automatic and active weapons require card
   acquisition and preserve their balance/resource owners.
+- Active weapons deal zero damage to enemies, bosses, facilities, and structures.
+  EMP stuns and clears hostile projectiles; Black Hole pulls ordinary mobile enemies
+  and slows all targetable enemies; Shockwave pushes ordinary mobile enemies and
+  staggers all targetable enemies; Cross Beam slows enemies in its two map-spanning
+  corridors. Their four levels improve control reach, duration or strength, and
+  cooldown. Boss control duration is 50% of the authored duration.
 
 ### UI, guidebook, report, and persistence
 
@@ -410,7 +415,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   cleanup, and no player-facing ten-stage/paired language remains.
 - Every boss charges, fires simultaneous multi-projectile rows, and emphasizes its
   identity patterns. Base stats strengthen monotonically.
-- Drydock and Crown alone use defense and link it to offense. No global shield rule,
+- Drydock alone uses defense and links it to offense. No global shield rule,
   defense-only boss, true instant kill, or mismatched high-threat warning remains.
 - Boss death lasts exactly 2.00 seconds and permits no boss-owned damage, reward, quota,
   or early transition. Reduced motion preserves state/timing while removing growth,

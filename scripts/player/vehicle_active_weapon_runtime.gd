@@ -19,8 +19,9 @@ var pull_tick_remaining := 0.0
 var center := Vector2.ZERO
 var direction := Vector2.RIGHT
 var level := 0
-var damage := 0.0
 var size := 0.0
+var duration := 0.0
+var strength := 0.0
 var action_serial := 0
 
 
@@ -34,8 +35,9 @@ func reset(player_position: Vector2 = Vector2.ZERO) -> void:
 	center = player_position
 	direction = Vector2.RIGHT
 	level = 0
-	damage = 0.0
 	size = 0.0
+	duration = 0.0
+	strength = 0.0
 	action_serial = 0
 
 
@@ -76,8 +78,9 @@ func try_start(
 			clampf(target.x, play_bounds.position.x + inset, play_bounds.end.x - inset),
 			clampf(target.y, play_bounds.position.y + inset, play_bounds.end.y - inset)
 		)
-	damage = definition.damage(level)
 	size = definition.size(level)
+	duration = definition.duration(level)
+	strength = definition.strength(level)
 	startup_remaining = definition.startup_seconds
 	active_remaining = 0.0
 	release_visual_remaining = 0.0
@@ -113,7 +116,7 @@ func advance(delta: float, build: VehicleRunBuild) -> Dictionary:
 		if startup_remaining <= 0.0:
 			if equipped_id == &"black_hole":
 				var definition := catalog.get_definition(equipped_id)
-				active_remaining = definition.active_seconds if definition != null else 0.0
+				active_remaining = definition.duration(level) if definition != null else 0.0
 			else:
 				result["released"] = true
 				release_visual_remaining = RELEASE_VISUAL_SECONDS
@@ -164,12 +167,9 @@ func snapshot(build: VehicleRunBuild, emp_relay_reduction := 0.0) -> Dictionary:
 	configure(build)
 	var definition := catalog.get_definition(equipped_id)
 	var current_level := build.level_of(definition.upgrade_id) if definition != null else 0
-	var current_damage := (
-		definition.damage(current_level)
-		if definition != null
-		else 0.0
-	)
 	var current_size := definition.size(current_level) if definition != null and current_level > 0 else 0.0
+	var current_duration := definition.duration(current_level) if definition != null and current_level > 0 else 0.0
+	var current_strength := definition.strength(current_level) if definition != null and current_level > 0 else 0.0
 	return {
 		"weapon_id":equipped_id,
 		"available":is_ready(),
@@ -180,8 +180,9 @@ func snapshot(build: VehicleRunBuild, emp_relay_reduction := 0.0) -> Dictionary:
 		"release_remaining":release_visual_remaining,
 		"center":center,
 		"direction":direction,
-		"damage":current_damage,
 		"size":current_size,
+		"duration":current_duration,
+		"strength":current_strength,
 		"auxiliary_size":definition.auxiliary_size(current_level) if definition != null and current_level > 0 else 0.0,
 		"level":current_level,
 		"action_serial":action_serial,

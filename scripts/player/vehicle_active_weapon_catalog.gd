@@ -56,9 +56,10 @@ func validate_contract() -> PackedStringArray:
 			continue
 		var expected_states := 4
 		if (
-			definition.damage_by_level.size() != expected_states
-			or definition.size_by_level.size() != expected_states
+			definition.size_by_level.size() != expected_states
 			or definition.cooldown_by_level.size() != expected_states
+			or definition.duration_by_level.size() != expected_states
+			or definition.strength_by_level.size() != expected_states
 			or definition.auxiliary_size_by_level.size() != expected_states
 		):
 			errors.append("%s must own exactly %d bounded states" % [definition.id, expected_states])
