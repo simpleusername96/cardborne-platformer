@@ -6557,6 +6557,11 @@ func _complete_stage(
 func _advance_stage_transition() -> void:
 	if not stage_transition_runtime.active():
 		return
+	# XP collection can open a card modal earlier in this physics tick. Keep the
+	# transition command parked until that reward transaction is resolved so a
+	# continuation cannot hide the modal and leave the reward owner busy forever.
+	if mode != RunMode.PLAYING:
+		return
 	var receipt := stage_transition_runtime.advance(_physics_serial)
 	if receipt.is_empty() or not StageTransitionRuntime.valid_command(receipt):
 		return

@@ -93,6 +93,7 @@ func _run() -> void:
 			"primary range covers the full visible field diagonal with margin"
 		)
 		_check_upgrade_transaction_contract(run)
+		_check_upgrade_stage_transition_collision(run)
 		_check_progression_completion_contract(run)
 		_check_primary_action_identity(run)
 		_check_active_recharge_integration(run)
@@ -218,6 +219,45 @@ func _check_upgrade_transaction_contract(run) -> void:
 			and run.run_build.total_levels() == levels_before + 1,
 		"runtime rejects a stale selection after the transaction closes"
 	)
+
+
+func _check_upgrade_stage_transition_collision(run) -> void:
+	var transition = run.stage_transition_runtime
+	transition.reset()
+	run.set("_physics_serial", 200)
+	_expect(
+		bool(transition.begin(0, Catalog.STAGE_IDS.size(), &"after_boss", 200)["accepted"]),
+		"stage transition collision fixture starts a continuation"
+	)
+	for serial in range(201, 205):
+		transition.advance(serial)
+	run.set("_physics_serial", 205)
+	run.experience_runtime.pending_level_ups = 1
+	run.capture_set_mode(&"playing")
+	run.call("_open_upgrade_reward", &"level_up")
+	var offer_id := (
+		StringName(run.current_card_offer[0]["id"])
+		if not run.current_card_offer.is_empty()
+		else &""
+	)
+	var transition_before := Dictionary(transition.debug_snapshot())
+	run.call("_advance_stage_transition")
+	var transition_after := Dictionary(transition.debug_snapshot())
+	_expect(
+		not offer_id.is_empty()
+			and StringName(run.reward_runtime.current_source()) == &"level_up"
+			and transition_after == transition_before,
+		"an upgrade modal parks a same-frame stage transition without losing its transaction"
+	)
+	run.call("_on_upgrade_selected", offer_id)
+	_expect(
+		run.experience_runtime.pending_level_ups == 0
+			and run.reward_runtime.is_idle()
+			and run.current_card_offer.is_empty()
+			and transition.active(),
+		"the level-up reward resolves before the parked transition can resume"
+	)
+	transition.reset()
 
 
 func _check_progression_completion_contract(run) -> void:

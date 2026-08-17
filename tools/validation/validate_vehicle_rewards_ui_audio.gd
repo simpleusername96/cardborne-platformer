@@ -190,7 +190,7 @@ func _run() -> void:
 	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")
-	_expect(int(experience_runtime.call("required_experience")) == 10, "a fresh run starts with a 10-XP level threshold")
+	_expect(int(experience_runtime.call("required_experience")) == 14, "a fresh run starts with a 14-XP level threshold")
 	experience_runtime.call("clear_shards")
 	var recall_start := Vector2(stage.get("player_position"))
 	experience_runtime.call("spawn_shard", recall_start + Vector2(900.0, 0.0), 2)
