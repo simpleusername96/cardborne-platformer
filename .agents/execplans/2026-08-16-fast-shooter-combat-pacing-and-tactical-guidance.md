@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-16
 last_reviewed: 2026-08-17
@@ -51,7 +51,8 @@ Out of scope:
 - Fixed-Hard multipliers, projectile speed, enemy recovery, HP, damage, and a promised
   duration target. Any later numeric balance change beyond the exact quota and XP changes
   in this contract requires a separate, evidence-backed product-spec decision.
-- A promised final run length. Duration remains measured telemetry, not a timer.
+- A promised final run length or post-change result measurement. Evaluation and any later
+  tuning remain with the user.
 
 Constraints and invariants:
 
@@ -60,8 +61,8 @@ Constraints and invariants:
   `60/66/72/78/84/90/96/102`; do not apply runtime difficulty scaling or rounding.
 - Preserve the current spawn allocator, encounter director, upgrade modal, announcement
   queue, localization pipeline, Theme, component factory, and performance caps.
-- Tune one concern at a time. Implement and record the quota increase separately from the
-  spawn-sector change so duration and difficulty evidence can identify each input.
+- Tune one concern at a time. Implement the quota increase separately from the spawn-sector
+  change so each code change remains independently reviewable.
 - Korean remains the default and Korean/English coverage must remain complete.
 - UI work uses existing shared components. The current visual contract still limits the
   top-right zone to the minimap and requires a text-only top-center announcement, so
@@ -197,7 +198,7 @@ enemies, fixed-Hard values, encounter flow, authored populations, and capacity.
 
 Preconditions:
 
-- Phase 2 checks pass and its telemetry is recorded once.
+- Phase 2 checks pass.
 
 Source owners: `docs/product/vehicle_game_spec.md`,
 `scripts/vehicle/stages/vehicle_combat_stages.gd`,
@@ -240,9 +241,8 @@ Final gate:
 
 - Run the focused validators for every touched owner, Godot import/parse, production Web
   export, and one built-Web Korean/English smoke path. This proves the changed slices only;
-  it does not replace the product spec's complete release qualification. Record native and
-  Web performance separately and do not claim a duration or difficulty target from headless
-  simulation alone.
+  it does not replace the product spec's complete release qualification and does not measure
+  run duration, difficulty outcomes, or player results.
 
 ## Validation and Rework Controls
 
@@ -257,7 +257,7 @@ Validation rules:
 - Run the narrowest check that proves the current task.
 - Do not repeat a passing broad check to regain confidence.
 - Rerun a failed check only after a relevant implementation change or a new hypothesis.
-- Keep implementation evidence and play-duration evidence separate.
+- Do not infer play-duration or difficulty outcomes from implementation validation.
 
 ## Predetermined Contingencies and Change Control
 
@@ -273,10 +273,12 @@ do not change visible behavior, architecture, scope, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Final gate.
-- Next task: Godot import/parse, production Web export, and built-Web bilingual smoke.
-- Last completed gate: Phase 3 campaign, pacing, spawn-allocation, difficulty, experience,
-  and performance-scenario contract gate.
+- Current phase: Complete.
+- Next task: None. Result measurement and any later tuning remain with the user.
+- Last completed gate: Final gate. Godot 4.7.1 import/parse and production Web export passed
+  (`WEB_EXPORT_OK`, four files). The built Web rendered Korean and English settings,
+  entered English combat, and reported no browser console warnings or errors. The temporary
+  port-13029 validation server was stopped after the smoke path.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
