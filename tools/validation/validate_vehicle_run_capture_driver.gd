@@ -48,7 +48,6 @@ func _initialize() -> void:
 	for gateway_api in [
 		"prepare_stage",
 		"prepare_boss",
-		"lower_boss_shield",
 		"set_player_fixture",
 		"set_world_fixture",
 		"show_ui_fixture",
@@ -125,7 +124,7 @@ func _initialize() -> void:
 		"ready-device capture shows the assigned symbol before any hit"
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 43, "core manifest has 43 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 137, "full manifest has 137 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 136, "full manifest has 136 captures")
 	for required_capture in [
 		"01i-guidebook-elite-stats.png",
 		"01j-guidebook-field-objects.png",
@@ -186,7 +185,6 @@ func _initialize() -> void:
 		"30-boss-05-stage-5-crown-beam-startup.png",
 		"30-boss-05-stage-5-crown-beam-active.png",
 		"30-boss-03-stage-3-shield-up-hit.png",
-		"30-boss-03-stage-3-shield-restored.png",
 		"30-boss-08-stage-8-startup.png",
 		"30-boss-08-stage-8-phase-two.png",
 	]:
@@ -201,12 +199,12 @@ func _initialize() -> void:
 			and not gateway_source.contains("if (stage_index + 1) % 2 != 0:"),
 		"boss capture enumerates all eight campaign cycles in catalog order"
 	)
-	for boss_number in [1, 2, 4, 5, 6, 7, 8]:
+	for boss_number in [1, 2, 3, 4, 5, 6, 7, 8]:
 		var stage_slug := "stage-%d" % boss_number
 		_expect(
 			"30-boss-%02d-%s-shield-restored.png" % [boss_number, stage_slug]
 				not in Driver.FULL_CAPTURE_FILES,
-			"non-shield boss %d has no shield-restored capture" % boss_number
+			"boss %d has no obsolete shield-restored capture" % boss_number
 		)
 	for file_name in Driver.CORE_CAPTURE_FILES:
 		_expect(file_name in Driver.FULL_CAPTURE_FILES, "full manifest includes %s" % file_name)

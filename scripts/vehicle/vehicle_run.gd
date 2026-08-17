@@ -2508,7 +2508,7 @@ func _release_emp_weapon() -> void:
 	for enemy in _enemy_query_buffer:
 		if (
 			_is_player_targetable_enemy(enemy)
-			and Vector2(enemy.pos).distance_to(center) <= radius + enemy.radius
+			and Vector2(enemy.pos).distance_to(center) <= radius
 		):
 			_apply_active_stagger(enemy, active_weapon_runtime.duration)
 	_add_effect(
@@ -2561,10 +2561,14 @@ func _release_shockwave() -> void:
 		if not _is_player_targetable_enemy(enemy):
 			continue
 		var offset := enemy.pos - center
-		if offset.length() > radius + enemy.radius or offset.length_squared() <= 0.01:
+		if offset.length() > radius + enemy.radius:
 			continue
 		_apply_active_stagger(enemy, active_weapon_runtime.duration)
-		if enemy.role == &"stage_boss" or _is_fixed_structure_enemy(enemy):
+		if (
+			offset.length_squared() <= 0.01
+			or enemy.role == &"stage_boss"
+			or _is_fixed_structure_enemy(enemy)
+		):
 			continue
 		enemy.pos = _move_actor(enemy.pos, offset.normalized() * push_distance, enemy.radius, false)
 		enemy_grid.update_actor(enemy)

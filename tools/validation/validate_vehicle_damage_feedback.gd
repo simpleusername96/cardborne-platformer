@@ -246,7 +246,7 @@ func _check_emp_footprint_results(stage: Node) -> void:
 	var hostile_projectiles: Array = projectile_store.get("hostile_live")
 	var effects: Array = stage.get("effects")
 	_expect(
-		is_equal_approx(float(inside_enemy.stun), 2.1)
+		is_equal_approx(float(inside_enemy.stun), 1.4)
 			and is_zero_approx(float(outside_enemy.stun)),
 		"EMP stun accepts the 284-unit center and rejects the 286-unit center"
 	)

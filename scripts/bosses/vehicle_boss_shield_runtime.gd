@@ -199,4 +199,3 @@ func _queue_state_hint(hint_key: String) -> void:
 	if hint_key == _last_hint_key and _last_hint_elapsed < HINT_REPEAT_COOLDOWN:
 		return
 	_pending_hint_key = hint_key
-

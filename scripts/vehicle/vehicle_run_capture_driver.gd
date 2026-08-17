@@ -158,7 +158,6 @@ const FULL_CAPTURE_FILES := [
 	"30-boss-03-stage-3-phase-two.png",
 	"30-boss-03-stage-3-recovery.png",
 	"30-boss-03-stage-3-shield-up-hit.png",
-	"30-boss-03-stage-3-shield-restored.png",
 	"30-boss-03-stage-3-startup-imminent.png",
 	"30-boss-03-stage-3-startup.png",
 	"30-boss-04-stage-4-active.png",

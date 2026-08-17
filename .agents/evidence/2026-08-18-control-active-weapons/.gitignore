@@ -1,0 +1,10 @@
+*
+!.gitignore
+!ko-final-1280/
+!en-final-1280/
+ko-final-1280/*
+en-final-1280/*
+!ko-final-1280/06-first-weapon-acquisition.png
+!ko-final-1280/04d-ship-status-acquired-build.png
+!en-final-1280/06-first-weapon-acquisition.png
+!en-final-1280/04d-ship-status-acquired-build.png
