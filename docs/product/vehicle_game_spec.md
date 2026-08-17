@@ -20,9 +20,10 @@ related:
 Cardborne is a top-down vehicle action shooter about steering through one large
 run-selected field while manually aiming a held primary weapon, dashing through pressure,
 and building a compact set of automatic and active weapons. A new run selects one of
-three registered macro fields and keeps it through eight deterministic boss cycles. Each
-cycle refreshes an authored tactical arrangement, three neutral facilities, and direct
-experience placements without resetting the player's combat state.
+three registered macro fields, one authored tactical arrangement, three neutral
+facilities, and direct experience placements, then keeps that complete physical field
+through eight deterministic boss cycles. A boss-cycle boundary advances only the future
+ordinary-enemy composition and the next boss profile.
 
 This is the canonical product contract for the current executable eight-boss-cycle run.
 
@@ -191,9 +192,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 ### One run-selected field
 
 - A new run deterministically selects `drowned_ruin_field`,
-  `tidal_archive_field`, or `storm_drydock_field`. Every stage and retry keeps
-  that macro field while each stage resolves one immutable tactical child.
-  Every stage-facing title derives from the selected field in both Korean and
+  `tidal_archive_field`, or `storm_drydock_field`. The run resolves one immutable
+  tactical child and every boss cycle and exact retry keeps it.
+  Every cycle-facing title derives from the selected field in both Korean and
   English rather than reusing another field's label.
 - Every registered field uses a `7200x4320` world rectangle and respawns the
   player at `(3600, 2160)`.
@@ -216,9 +217,9 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   reproduce it, and the inner-wall geometry remains fixed through all eight
   cycles so a run reads as one continuous field rather than eight reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
-  least thirty-two content candidates are reusable authored sources. Each
-  cycle selects three dormant neutral facilities, two experience-recall pickups, and ten XP shards with explicit
-  separation. No stage owns a separate map, boss room,
+  least thirty-two content candidates are reusable authored sources. A new run
+  selects three dormant neutral facilities, two experience-recall pickups, and ten XP shards with explicit
+  separation; boss cleanup never replaces or relocates them. No cycle owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Pickup contact uses the swept player path with the 24-pixel player radius and
   42-pixel pickup body. Endpoint contact, tangent contact, and a complete dash
@@ -305,9 +306,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
     summons/facilities stagger-shrink/fade without reward or quota. Transition waits for
     cleanup completion.
-11. Cycle completion refreshes cycle-local facilities and XP placements while preserving
-    player position, velocity, aim, projectiles, XP, build, cooldowns, fixed Hard state,
-    exploration, and terrain. Cycle 8 opens Result; failure opens Failure Report.
+11. Cycle completion preserves the tactical layout, facilities and their current states,
+    pickups, living ordinary enemies, player position, velocity, aim, projectiles, XP,
+    build, cooldowns, fixed Hard state, exploration, and terrain. It changes only the
+    profile used for future ordinary admissions, the next quota, and the next boss.
+    Cycle 8 opens Result; failure opens Failure Report.
 
 | Boss cycle | Quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | --- |
@@ -323,7 +326,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 ### Items, experience, and upgrades
 
 - Enemy defeats leave collectible XP shards; boss-cleanup retirement never grants XP.
-  Each cycle adds exactly ten visible XP shards to authored placements.
+  A new run adds exactly ten visible XP shards to authored placements; cycle advancement
+  does not repopulate them.
 - Repair pickups are removed. Their former sockets produce XP shards and Repair facilities
   own high-rate recovery.
 - `vehicle_upgrade_catalog.md` is canonical for 27 cards and 91 nominal level states.

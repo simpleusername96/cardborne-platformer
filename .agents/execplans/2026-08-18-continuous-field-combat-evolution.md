@@ -110,16 +110,16 @@ Preconditions:
 
 Source owners: `scripts/vehicle/vehicle_run.gd`, `scripts/vehicle/vehicle_stage_transition_runtime.gd`, `scripts/encounters/vehicle_stage_flow.gd`, `scripts/vehicle/stages/vehicle_combat_stages.gd`, continuity validators
 
-- [ ] **1.1** Separate persistent field state from cycle-profile advancement.
+- [x] **1.1** Separate persistent field state from cycle-profile advancement.
   - Change: remove next-cycle backdrop/layout/facility/pickup/blocker/pursuit/camera reconfiguration from the boss continuation commands.
   - Accept: the field/tactical fingerprint, facility snapshot, pickup snapshot, terrain, exploration, player transform, and live ordinary IDs remain byte/value equal across advancement.
-- [ ] **1.2** Reconfigure future encounter admissions only.
+- [x] **1.2** Reconfigure future encounter admissions only.
   - Change: select next-cycle packets, role pool, quota, and boss profile using the new internal cycle index while reusing the current tactical layout and anchors.
   - Accept: a survivor keeps its role, health/max health, speed, position, and status; the first admitted post-transition enemy comes from the next cycle's packet/role contract.
-- [ ] **1.3** Preserve combat and reward state through advancement.
+- [x] **1.3** Preserve combat and reward state through advancement.
   - Change: retain projectiles, XP, build, cooldowns, facilities, pickups, exploration, player velocity/aim, and active field effects; reset only cycle telemetry/quota/boss owners.
   - Accept: focused continuity fixtures prove no disallowed owner changed and no ordinary actor was retired.
-- [ ] **1.4** Update canonical flow wording and regression validators.
+- [x] **1.4** Update canonical flow wording and regression validators.
   - Change: define cycles as combat profiles over one persistent map in product/design contracts; remove claims that facilities, pickups, or tactical arrangements refresh after boss death.
   - Accept: document authority and single-field/continuity validators agree with runtime behavior.
 
@@ -309,9 +309,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: 1.1 Separate persistent field state from cycle-profile advancement.
-- Last completed gate: Discovery Closure Gate.
+- Current phase: Phase 2.
+- Next task: 2.1 Apply the locked ordinary health/speed curves.
+- Last completed gate: Phase 1 focused gate passed: continuous-field transition, stage continuity, transition runtime, and single-field campaign validators. The new transition oracle preserved the exact tactical-layout object, field/terrain/facility/pickup/XP/exploration snapshots, and survivor identity/stats/status while advancing the encounter profile to cycle 2.
 - Visual authority evidence: `docs/design/VISUAL_SYSTEM.md` read completely; canonical sheet visually inspected at original detail; expected and observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`; original provenance is recorded by `$cardborne-visual-authority`. No raster candidate has been generated yet.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance this pointer in the same edit.
 

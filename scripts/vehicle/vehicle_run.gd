@@ -6636,11 +6636,13 @@ func _prepare_next_stage_continuation(next_stage_index: int) -> void:
 	):
 		return
 	var next_stage_id: StringName = StageCatalog.STAGE_IDS[next_stage_index]
-	var next_tactical_layout = field_layout.tactical_layout(next_stage_id)
-	if next_tactical_layout == null:
-		push_error("Missing tactical layout for %s" % next_stage_id)
+	if _active_tactical_layout == null:
+		push_error("Cannot advance the combat cycle without an active field layout")
 		return
-	_pending_continuation_layout = next_tactical_layout
+	# A boss cycle is a combat-profile boundary, not a physical field boundary.
+	# Keep this guard reference so the ordered transition can reject incomplete
+	# preparation without selecting or applying another tactical child.
+	_pending_continuation_layout = _active_tactical_layout
 	_pending_continuation_stage_index = next_stage_index
 	_pending_continuation_stage_id = next_stage_id
 
@@ -6648,32 +6650,17 @@ func _prepare_next_stage_continuation(next_stage_index: int) -> void:
 func _configure_next_stage_world() -> void:
 	if _pending_continuation_layout == null:
 		return
+	# Only future combat admissions advance. Terrain, facilities, pickups,
+	# exploration, blockers, pursuit geometry, camera limits, and the active
+	# tactical layout remain the same objects for the complete run.
 	current_stage_index = _pending_continuation_stage_index
 	current_stage_id = _pending_continuation_stage_id
-	_active_tactical_layout = _pending_continuation_layout
-	if is_instance_valid(_backdrop):
-		_backdrop.configure(current_stage_id, _active_tactical_layout)
-	if is_instance_valid(_camera):
-		_apply_camera_stage_limits()
-	_configure_stage_local_runtime()
-	_rebuild_runtime_blockers()
-	pursuit_field.reset(current_stage_id, _runtime_cover_rects())
-	_populate_stage_items()
-	enemy_grid.configure(
-		Rules.world_rect(current_stage_id),
-		SpatialGrid.DEFAULT_CELL_SIZE
-	)
-	enemy_grid.rebuild(enemies)
 
 
 func _finalize_next_stage_continuation() -> void:
 	if _pending_continuation_layout == null:
 		return
 	stage_telemetry.reset_stage()
-	# Surviving ordinary actors continue into the next field, but their old
-	# stage-local engagement gates must not cross the stage boundary.
-	for enemy in enemies:
-		_release_enemy_engagement(enemy)
 	var continuation_slots := maxi(0, 6 - _ordinary_active_count())
 	encounter_runtime.configure(
 		current_stage_id,
@@ -6701,18 +6688,9 @@ func _finalize_next_stage_continuation() -> void:
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
-	discovered_markers.clear()
 	_elite_pending = 0
 	_elite_spawned = 0
 	_elite_threshold_cursor = 0
-	_reset_threat_radar_feed()
-	_clear_ordinary_arrival_cues()
-	_threat_sample_timer = 0.0
-	_shielded_enemy_ids.clear()
-	_pending_shielded_enemy_ids.clear()
-	_shield_supports.clear()
-	_enemy_coordination_initialized = false
-	_aim_target_id = ""
 	stage_started_at_active_run_seconds = active_run_elapsed_seconds
 	mode = RunMode.PLAYING
 	_session_diagnostics.emit_event("stage_started", {
