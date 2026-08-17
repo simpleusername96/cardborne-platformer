@@ -206,6 +206,10 @@ func update_active(
 				pattern,
 				damage
 			)
+	elif kind in [&"crossing_weave", &"alternating_pulse"]:
+		if boss.pattern_volleys == 0:
+			boss.pattern_volleys = 1
+			services.call("_activate_boss_identity_pattern", boss, pattern)
 	elif kind == &"charge":
 		if boss.pattern_volleys == 0:
 			services.call("_boss_fire_aimed_burst", boss, pattern, damage * 0.55)

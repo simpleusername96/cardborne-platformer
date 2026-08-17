@@ -62,10 +62,10 @@ const EXTRA_PATTERNS := {
 	&"common_broad_barrage": {"kind": &"broad_barrage", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 1.14, "recovery": 0.90, "damage": 14.0},
 	&"drydock_counterburst": {"kind": &"fan", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 0.70, "recovery": 1.00, "damage": 32.0},
 	&"battery_long_banks": {"kind": &"long_banks", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.30, "active": 1.30, "recovery": 0.0, "damage": 16.0},
-	&"loom_translating_walls": {"kind": &"moving_walls", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.20, "recovery": 0.0, "damage": 68.0},
-	&"loom_orthogonal_pass": {"kind": &"moving_walls", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.20, "recovery": 0.0, "damage": 72.0},
-	&"pulse_missing_wedge": {"kind": &"wedge_rings", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.20, "recovery": 0.0, "damage": 18.0},
-	&"pulse_sparse_spiral": {"kind": &"spiral", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.00, "active": 1.20, "recovery": 0.0, "damage": 16.0},
+	&"loom_crossing_weave": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.55, "recovery": 1.00, "damage": 68.0},
+	&"loom_reverse_weave": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.55, "recovery": 1.00, "damage": 72.0},
+	&"pulse_alternating_sectors": {"kind": &"alternating_pulse", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 18.0, "radius": 300.0},
+	&"pulse_sector_inversion": {"kind": &"alternating_pulse", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 20.0, "radius": 320.0},
 }
 const STAGE_SEQUENCES := {
 	&"stage_1": [&"common_charge", &"furnace_gates", &"common_broad_barrage", &"foundry_burst", &"furnace_ring"],
@@ -74,12 +74,12 @@ const STAGE_SEQUENCES := {
 	&"stage_4": [&"common_charge", &"switch_sweep", &"common_broad_barrage", &"gate_shockwave", &"ricochet_volley"],
 	&"stage_5": [&"common_charge", &"crown_beam", &"common_broad_barrage", &"mirror_cross", &"carrier_wave"],
 	&"stage_6": [&"common_charge", &"battery_long_banks", &"common_broad_barrage", &"ricochet_volley", &"gate_shockwave"],
-	&"stage_7": [&"common_charge", &"loom_translating_walls", &"common_broad_barrage", &"loom_orthogonal_pass", &"archive_cross"],
-	&"stage_8": [&"common_charge", &"pulse_missing_wedge", &"common_broad_barrage", &"pulse_sparse_spiral", &"mirror_cross"],
+	&"stage_7": [&"common_charge", &"loom_crossing_weave", &"common_broad_barrage", &"loom_reverse_weave", &"ricochet_volley"],
+	&"stage_8": [&"common_charge", &"pulse_alternating_sectors", &"common_broad_barrage", &"pulse_sector_inversion", &"crown_beam"],
 }
 const AUTONOMOUS_SEQUENCES := {
 	&"stage_1": [&"slag_ring", &"forge_vent"], &"stage_2": [&"undertow_lanes", &"depth_charges"], &"stage_3": [&"thunder_chain", &"beam_sentinel_call"], &"stage_4": [&"switchyard_mines", &"switch_sweeps"], &"stage_5": [&"crown_lattice", &"relay_pulse_rings"],
-	&"stage_6": [&"battery_long_banks", &"battery_long_banks"], &"stage_7": [&"loom_translating_walls", &"loom_orthogonal_pass"], &"stage_8": [&"pulse_missing_wedge", &"pulse_sparse_spiral"],
+	&"stage_6": [&"battery_long_banks", &"battery_long_banks"], &"stage_7": [&"loom_crossing_weave", &"loom_reverse_weave"], &"stage_8": [&"pulse_alternating_sectors", &"pulse_sector_inversion"],
 }
 
 static func sequence(stage_id: StringName, phase_value: Variant = 1) -> Array[String]:

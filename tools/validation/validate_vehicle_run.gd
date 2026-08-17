@@ -1060,26 +1060,28 @@ func _check_boss_autonomous_shapes(run) -> void:
 					run.enemy_store.live.size() == enemies_before + 1,
 					"%s executes through the bounded sentinel summon path" % pattern
 				)
-			elif kind == &"long_banks" or kind == &"spiral":
+			elif kind == &"long_banks":
 				_expect(
 					run.projectile_store.hostile_count() > projectiles_before,
 					"%s emits its bounded projectile formation" % pattern
 				)
-			elif kind == &"moving_walls":
+			elif kind == &"crossing_weave":
 				_expect(
-					run.denied_zones.size() == 4
-						and run.denied_zones.all(func(zone): return StringName(zone["shape"]) == &"corridor" and Vector2(zone["motion"]).length() > 0.0 and is_equal_approx(float(zone["safe_gap"]), 180.0) and not zone.has("beam_emission_mode")),
-					"%s creates two translating laser walls with collision-true gaps" % pattern
+					run.denied_zones.size() == 8
+						and run.denied_zones.all(func(zone): return StringName(zone["shape"]) == &"corridor" and Vector2(zone["motion"]).length() > 0.0 and is_equal_approx(float(zone["safe_gap"]), 200.0) and not zone.has("beam_emission_mode")),
+					"%s creates crossing translating walls with collision-true gaps" % pattern
 				)
-			elif kind == &"wedge_rings":
+			elif kind == &"alternating_pulse":
 				_expect(
-					run.denied_zones.size() == 1
+					run.denied_zones.size() == 2
 						and StringName(run.denied_zones[0]["shape"]) == &"wedge_ring"
+						and StringName(run.denied_zones[1]["shape"]) == &"wedge_ring"
 						and is_equal_approx(
-							float(run.denied_zones[0]["radius"]),
+							float(run.denied_zones[1]["radius"]),
 							BossPatterns.radius(pattern, stage_index)
-						),
-					"%s creates one warned ring with an explicit safe wedge" % pattern
+						)
+						and StringName(run.denied_zones[1]["activation_kind"]) == &"radial_volley",
+					"%s creates alternating warned safe sectors and one bounded volley" % pattern
 				)
 			else:
 				_expect(false, "%s has an unsupported autonomous kind" % pattern)

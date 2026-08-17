@@ -143,7 +143,7 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 		if damage > 0.0:
 			minimum_damage = minf(minimum_damage, damage)
 			maximum_damage = maxf(maximum_damage, damage)
-		if BossPatterns.kind(pattern) in [&"area", &"pylons"]:
+		if BossPatterns.kind(pattern) in [&"area", &"pylons", &"alternating_pulse"]:
 			maximum_radius = maxf(
 				maximum_radius, BossPatterns.radius(pattern, index)
 			)

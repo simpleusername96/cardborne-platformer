@@ -4793,7 +4793,10 @@ func _update_denied_zones(delta: float) -> void:
 		var zone: Dictionary = denied_zones[index]
 		if float(zone["warning"]) > 0.0:
 			zone["warning"] = maxf(0.0, float(zone["warning"]) - delta)
+			if float(zone["warning"]) <= 0.0:
+				_activate_denied_zone_once(zone)
 			continue
+		_activate_denied_zone_once(zone)
 		zone["duration"] = float(zone["duration"]) - delta
 		zone["tick"] = float(zone["tick"]) - delta
 		if float(zone["duration"]) <= 0.0:
@@ -4863,6 +4866,35 @@ func _update_denied_zones(delta: float) -> void:
 				true,
 				bool(zone.get("final_damage", false))
 			)
+
+
+func _activate_denied_zone_once(zone: Dictionary) -> void:
+	var activation_kind := StringName(zone.get("activation_kind", &""))
+	if activation_kind == &"":
+		return
+	if bool(zone.get("activation_fired", false)):
+		return
+	zone["activation_fired"] = true
+	if activation_kind != &"radial_volley":
+		return
+	var origin := Vector2(zone.get("pos", Vector2.ZERO))
+	var count := clampi(int(zone.get("volley_count", 12)), 6, 16)
+	var rotation := float(zone.get("volley_rotation", 0.0))
+	for shot_index in count:
+		var direction := Vector2.RIGHT.rotated(
+			rotation + TAU * float(shot_index) / float(count)
+		)
+		_spawn_hostile_projectile(
+			origin + direction * 66.0,
+			direction,
+			float(zone.get("volley_damage", 12.0)),
+			540.0,
+			String(zone.get("source", "pulse_radial_volley")),
+			StringName(zone.get("affinity", &"arc")),
+			true,
+			false,
+			AttackContract.THREAT_BOSS
+		)
 
 
 func _update_effects(delta: float) -> void:
@@ -6012,6 +6044,8 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	if kind == &"lanes":
 		var spacing := BossPatterns.lane_spacing(current_stage_index)
 		boss.lane_centers = [-spacing, spacing]
+	if kind in [&"crossing_weave", &"alternating_pulse"]:
+		_prepare_boss_identity_pattern(boss, pattern)
 	AttackTelegraphs.refresh_boss(
 		boss,
 		pattern,
@@ -6032,6 +6066,43 @@ func _boss_begin_active(boss: EnemyState) -> void:
 
 func _boss_update_active(boss: EnemyState, delta: float) -> void:
 	boss_runtime.update_active(boss, delta, self)
+
+
+func _prepare_boss_identity_pattern(boss: EnemyState, pattern: String) -> void:
+	if boss == null or not boss.alive or boss_death_runtime.active():
+		return
+	var event := {
+		"id":"direct_%s_%d" % [boss.id, boss.pattern_index],
+		"pattern":pattern,
+		"kind":BossPatterns.kind(pattern),
+		"origin":Vector2(boss.pos),
+		"target":Vector2(boss.committed_target),
+		"startup":BossPatterns.startup_seconds(pattern),
+		"duration":BossPatterns.active_seconds(pattern),
+		"damage":BossPatterns.damage(pattern, current_stage_index),
+		"radius":BossPatterns.radius(pattern, current_stage_index),
+		"width":BossPatterns.width(pattern, current_stage_index),
+		"lane_spacing":BossPatterns.lane_spacing(current_stage_index),
+		"affinity":BossPatterns.affinity(pattern),
+		"commit_mode":&"committed",
+		"direct_boss_id":boss.id,
+	}
+	_execute_boss_identity_event(event)
+
+
+func _activate_boss_identity_pattern(boss: EnemyState, pattern: String) -> void:
+	if boss == null or not boss.alive:
+		return
+	var prepared := false
+	for zone in denied_zones:
+		if (
+			String(zone.get("direct_boss_id", "")) == boss.id
+			and String(zone.get("source", "")) == pattern
+		):
+			zone["direct_active"] = true
+			prepared = true
+	if not prepared:
+		push_error("Boss identity pattern reached active without prepared geometry: %s" % pattern)
 
 
 func _boss_predicted_target(origin: Vector2, projectile_speed: float) -> Vector2:
@@ -6185,16 +6256,20 @@ func _execute_boss_autonomous(event: Dictionary) -> void:
 	if kind == &"long_banks":
 		_spawn_boss_long_banks(event)
 		return
-	if kind == &"moving_walls":
-		_append_boss_moving_walls(event)
-		return
-	if kind == &"wedge_rings":
-		_append_boss_wedge_ring(event)
-		return
-	if kind == &"spiral":
-		_spawn_boss_sparse_spiral(event)
+	if kind in [&"crossing_weave", &"alternating_pulse"]:
+		_execute_boss_identity_event(event)
 		return
 	push_error("Unsupported autonomous boss pattern kind: %s (%s)" % [String(kind), pattern])
+
+
+func _execute_boss_identity_event(event: Dictionary) -> void:
+	match StringName(event.get("kind", &"")):
+		&"crossing_weave":
+			_append_boss_crossing_weave(event)
+		&"alternating_pulse":
+			_append_boss_alternating_pulse(event)
+		_:
+			push_error("Unsupported boss identity event: %s" % String(event.get("kind", &"")))
 
 
 func _spawn_boss_long_banks(event: Dictionary) -> void:
@@ -6214,68 +6289,97 @@ func _spawn_boss_long_banks(event: Dictionary) -> void:
 			)
 
 
-func _append_boss_moving_walls(event: Dictionary) -> void:
+func _append_boss_crossing_weave(event: Dictionary) -> void:
 	var origin := Vector2(event["origin"])
 	var axis := (Vector2(event["target"]) - origin).normalized()
 	if axis.is_zero_approx():
 		axis = Vector2.RIGHT
+	var reverse := String(event["pattern"]) == "loom_reverse_weave"
+	if reverse:
+		axis = -axis
+	_append_boss_weave_pass(event, axis, 0.0, 120.0, "primary")
+	_append_boss_weave_pass(event, axis.rotated(PI * 0.5), 0.65, -120.0, "orthogonal")
+
+
+func _append_boss_weave_pass(
+	event: Dictionary,
+	axis: Vector2,
+	warning_offset: float,
+	gap_offset: float,
+	pass_id: String
+) -> void:
+	var origin := Vector2(event["origin"])
 	var tangent := axis.rotated(PI * 0.5)
-	var half_length := 360.0
-	# Each moving wall is split around a collision-true 180-unit opening. The
-	# warning and damage therefore expose the same escape corridor.
-	var gap_half_length := 90.0
+	var half_length := 680.0
+	var gap_half_length := 100.0
 	for wall_index in [-1, 1]:
-		var center := origin + tangent * float(wall_index) * 160.0
+		var center := origin + axis * float(wall_index) * 440.0
+		var gap_center := center + tangent * gap_offset * float(wall_index)
 		for segment_index in [-1, 1]:
-			var segment_from := center - tangent * half_length if segment_index < 0 else center + tangent * gap_half_length
-			var segment_to := center - tangent * gap_half_length if segment_index < 0 else center + tangent * half_length
+			var segment_from := gap_center - tangent * half_length if segment_index < 0 else gap_center + tangent * gap_half_length
+			var segment_to := gap_center - tangent * gap_half_length if segment_index < 0 else gap_center + tangent * half_length
 			denied_zones.append({
-				"id":"%s_wall_%d_segment_%d" % [String(event["id"]), wall_index, segment_index],
+				"id":"%s_%s_wall_%d_segment_%d" % [String(event["id"]), pass_id, wall_index, segment_index],
 				"shape":&"corridor",
 				"from":segment_from,
 				"to":segment_to,
 				"width":72.0,
-				"motion":axis * (170.0 if wall_index > 0 else -170.0),
-				"warning":float(event["startup"]),
-				"warning_total":float(event["startup"]),
-				"duration":maxf(0.72, float(event["duration"])),
+				"motion":axis * (-320.0 * float(wall_index)),
+				"warning":float(event["startup"]) + warning_offset,
+				"warning_total":float(event["startup"]) + warning_offset,
+				"duration":1.10,
 				"tick":0.0,
 				"damage":float(event["damage"]),
 				"source":String(event["pattern"]),
 				"owner_kind":&"stage_boss",
 				"affinity":StringName(event["affinity"]),
-				"commit_mode":&"autonomous",
+				"commit_mode":StringName(event.get("commit_mode", &"autonomous")),
 				"final_damage":true,
-				"safe_gap":180.0,
+				"single_hit":true,
+				"hit_committed":false,
+				"safe_gap":gap_half_length * 2.0,
+				"weave_pass":StringName(pass_id),
+				"direct_boss_id":String(event.get("direct_boss_id", "")),
 			})
 
 
-func _append_boss_wedge_ring(event: Dictionary) -> void:
+func _append_boss_alternating_pulse(event: Dictionary) -> void:
 	var origin := Vector2(event["origin"])
 	var safe_axis := (Vector2(event["target"]) - origin).normalized()
 	if safe_axis.is_zero_approx():
 		safe_axis = Vector2.RIGHT
-	denied_zones.append({
-		"id":event["id"], "shape":&"wedge_ring", "pos":origin,
-		"radius":float(event["radius"]), "width":62.0, "safe_axis":safe_axis,
-		"safe_half_angle":0.48, "warning":float(event["startup"]),
-		"warning_total":float(event["startup"]), "duration":maxf(0.72, float(event["duration"])),
-		"tick":0.0, "damage":float(event["damage"]), "source":String(event["pattern"]),
-		"owner_kind":&"stage_boss", "affinity":StringName(event["affinity"]),
-		"commit_mode":&"autonomous", "final_damage":true,
-	})
-
-
-func _spawn_boss_sparse_spiral(event: Dictionary) -> void:
-	var origin := Vector2(event["origin"])
-	var base := (Vector2(event["target"]) - origin).angle()
-	for shot_index in 10:
-		var direction := Vector2.RIGHT.rotated(base + float(shot_index) * TAU / 10.0 + float(current_stage_index) * 0.21)
-		_spawn_hostile_projectile(
-			origin + direction * 66.0, direction, float(event["damage"]), 500.0,
-			String(event["pattern"]), StringName(event["affinity"]), true, false,
-			AttackContract.THREAT_BOSS
-		)
+	var inverted := String(event["pattern"]) == "pulse_sector_inversion"
+	var turn := -1.0 if inverted else 1.0
+	for pulse_index in 2:
+		var pulse_axis := safe_axis.rotated(turn * float(pulse_index) * PI * 0.75)
+		var warning_offset := float(pulse_index) * 0.55
+		denied_zones.append({
+			"id":"%s_pulse_%d" % [String(event["id"]), pulse_index],
+			"shape":&"wedge_ring",
+			"pos":origin,
+			"radius":float(event["radius"]) * (0.72 if pulse_index == 0 else 1.0),
+			"width":72.0,
+			"safe_axis":pulse_axis,
+			"safe_half_angle":0.52,
+			"warning":float(event["startup"]) + warning_offset,
+			"warning_total":float(event["startup"]) + warning_offset,
+			"duration":0.52,
+			"tick":0.0,
+			"damage":float(event["damage"]),
+			"source":String(event["pattern"]),
+			"owner_kind":&"stage_boss",
+			"affinity":StringName(event["affinity"]),
+			"commit_mode":StringName(event.get("commit_mode", &"autonomous")),
+			"final_damage":true,
+			"single_hit":true,
+			"hit_committed":false,
+			"activation_kind":&"radial_volley" if pulse_index == 1 else &"",
+			"activation_fired":false,
+			"volley_count":12,
+			"volley_rotation":turn * 0.18,
+			"volley_damage":maxf(12.0, float(event["damage"]) * 0.75),
+			"direct_boss_id":String(event.get("direct_boss_id", "")),
+		})
 
 
 func _append_boss_area_zone(event: Dictionary) -> void:

@@ -71,7 +71,7 @@ func _initialize() -> void:
 				"%s remains independent of boss-body state" % pattern
 			)
 			_expect(
-				Patterns.kind(pattern) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"moving_walls", &"wedge_rings", &"spiral"],
+				Patterns.kind(pattern) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"crossing_weave", &"alternating_pulse"],
 				"%s has an explicitly dispatched autonomous shape" % pattern
 			)
 			if Patterns.kind(pattern) == &"area" and Patterns.damage(pattern, stage_index) > 0.0:
@@ -89,6 +89,18 @@ func _initialize() -> void:
 			),
 			"%s applies its exact boss-health profile" % stage_id
 		)
+	_expect(
+		Patterns.sequence(&"stage_7").count("loom_crossing_weave") == 1
+			and Patterns.sequence(&"stage_7").count("loom_reverse_weave") == 1
+			and "archive_cross" not in Patterns.sequence(&"stage_7"),
+		"Vector Loom owns two crossing-weave identity selections without Archive Cross"
+	)
+	_expect(
+		Patterns.sequence(&"stage_8").count("pulse_alternating_sectors") == 1
+			and Patterns.sequence(&"stage_8").count("pulse_sector_inversion") == 1
+			and "mirror_cross" not in Patterns.sequence(&"stage_8"),
+		"Pulse Core owns two alternating-pulse identity selections without Mirror Cross"
+	)
 	_expect(
 		Difficulty.BOSS_HEALTH_MULTIPLIERS.size() == 8
 			and Difficulty.BOSS_DAMAGE_MULTIPLIERS.size() == 8

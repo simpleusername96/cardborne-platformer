@@ -484,6 +484,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   사용하지 않고, collision-true gap과 이동 경로를 startup부터 표시한다. 탄환으로
   구현된 committed `lanes/cross`와 player-owned Auto Laser/Cross Beam도 이 hostile
   emission 계약의 대상이 아니다.
+- Vector Loom의 crossing weave는 같은 placed moving hazard 계약을 사용한다. 첫 paired
+  wall pass와 지연된 orthogonal pass는 각각 실제 `200`-unit gap과 이동 방향을 startup
+  footprint로 그대로 표시하며 boss muzzle beam으로 그리지 않는다. Pulse Core의 두
+  alternating pulse는 각 warning에서 실제 wedge-ring 피해 영역과 서로 다른 safe sector를
+  표시한다. 두 번째 pulse가 발동할 때만 12발 radial projectile body가 생성되며, warning
+  단계에서 탄환 경로나 미래 위치를 미리 그리지 않는다. 두 보스의 기존 raster identity는
+  그대로 유지한다.
 - hostile circle, wedge, shockwave와 non-emitted-beam damaging corridor는 affinity와 무관하게 exact
   committed footprint를 danger-red full area로 채우고 thin near-black perimeter와
   four inward boundary notches를 사용한다. startup body alpha는 readiness에 따라

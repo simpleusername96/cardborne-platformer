@@ -13,6 +13,7 @@ class BossServiceStub:
 
 	var player_position := Vector2.ZERO
 	var damage_calls := 0
+	var identity_activation_calls := 0
 
 
 	func _boss_fire_aimed_burst(
@@ -35,6 +36,13 @@ class BossServiceStub:
 
 	func _on_boss_direct_attack_complete(_boss: EnemyState) -> void:
 		pass
+
+
+	func _activate_boss_identity_pattern(
+		_boss: EnemyState,
+		_pattern: String
+	) -> void:
+		identity_activation_calls += 1
 
 
 func _init() -> void:
@@ -143,6 +151,7 @@ func _init() -> void:
 	)
 	_validate_late_stage_direct_area_coverage(runtime)
 	_validate_direct_beam_growth(runtime)
+	_validate_direct_identity_activation(runtime)
 	_validate_direct_recovery_scale(runtime)
 	_validate_phase_receipts(runtime)
 	_finish()
@@ -230,6 +239,31 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 			),
 		"direct recovery applies both its offense scale and the cycle cadence scale"
 	)
+
+
+func _validate_direct_identity_activation(runtime: BossRuntime) -> void:
+	for case in [
+		{&"stage_id":&"stage_7", &"pattern":&"loom_crossing_weave"},
+		{&"stage_id":&"stage_8", &"pattern":&"pulse_alternating_sectors"},
+	]:
+		runtime.configure(StringName(case[&"stage_id"]))
+		var services := BossServiceStub.new()
+		var boss := _boss()
+		boss.pattern = StringName(case[&"pattern"])
+		boss.phase = &"boss_active"
+		boss.phase_time = 0.5
+		boss.pattern_volleys = 0
+		runtime.update_active(boss, 0.01, services)
+		_expect(
+			services.identity_activation_calls == 1 and boss.pattern_volleys == 1,
+			"%s direct identity activates its prepared collision geometry exactly once"
+				% String(case[&"pattern"])
+		)
+		runtime.update_active(boss, 0.01, services)
+		_expect(
+			services.identity_activation_calls == 1,
+			"%s direct identity cannot activate twice" % String(case[&"pattern"])
+		)
 
 
 func _validate_direct_beam_growth(runtime: BossRuntime) -> void:

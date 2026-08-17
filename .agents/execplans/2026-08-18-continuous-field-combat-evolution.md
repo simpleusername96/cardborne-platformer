@@ -164,16 +164,16 @@ Preconditions:
 
 Source owners: `scripts/bosses/vehicle_boss_patterns.gd`, `scripts/bosses/vehicle_boss_runtime.gd`, `scripts/vehicle/vehicle_run.gd`, telegraph/denied-zone presentation owners, boss validators
 
-- [ ] **3.1** Implement Vector Loom's crossing weave.
+- [x] **3.1** Implement Vector Loom's crossing weave.
   - Change: add an explicit event/handler that commits one paired translating wall pass and a later orthogonal pass with distinct collision-true gaps.
   - Accept: both direct and autonomous sequences execute it; safe gaps and warning geometry match damage geometry; no reused Archive Cross remains in Loom's direct identity slots.
-- [ ] **3.2** Implement Pulse Core's alternating pulse.
+- [x] **3.2** Implement Pulse Core's alternating pulse.
   - Change: add an explicit event/handler for alternating safe-sector pulse geometry followed by a rotating sparse radial volley.
   - Accept: direct and autonomous sequences execute it; the safe sector is readable before damage and the projectile volley does not duplicate Mirror Cross.
-- [ ] **3.3** Preserve warning, capacity, and image contracts.
+- [x] **3.3** Preserve warning, capacity, and image contracts.
   - Change: keep boss PNG IDs, fixed stores/batches, minimum warning, escape margin, and boss-owned cleanup.
   - Accept: no new boss raster or unbounded node/projectile/zone owner is introduced.
-- [ ] **3.4** Add execution-level identity tests.
+- [x] **3.4** Add execution-level identity tests.
   - Change: validate service calls/zone receipts, sequence coverage, collision footprints, and cleanup for both bosses.
   - Accept: a test fails if either boss returns to unsupported direct kinds or generic-only identity.
 
@@ -309,9 +309,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3.
-- Next task: 3.1 Implement Vector Loom's crossing weave.
-- Last completed gate: Phase 2 focused gate passed: run difficulty, boss runtime, boss patterns, eight-cycle catalog, guidebook, and continuous-field transition validators. Ordinary curves are exactly health `1.00 -> 2.00` and speed `1.00 -> 1.30`; existing actors retain their spawn snapshot; boss base/stat arrays are unchanged; read, recovery, and autonomous downtime use the new `.67 -> .53` cadence scales while startup/active timing remains authored.
+- Current phase: Phase 4.
+- Next task: 4.1 Replace damage/utility attribute ownership with two acquisition-order slots.
+- Last completed gate: Phase 3 focused gate passed: boss patterns, boss runtime, eight-boss campaign, late-boss identity execution, attack-route readability, boss identity cues, and guidebook validators. Vector Loom now owns two executable crossing-weave selections with eight bounded moving corridor segments and delayed orthogonal gaps. Pulse Core now owns two alternating safe-sector selections whose second pulse emits exactly one bounded twelve-shot radial volley. Direct startup prepares collision truth, active runtime activates it once, autonomous dispatch uses the same handlers, boss-owned cleanup retires the zones, and existing boss image identities remain unchanged.
 - Visual authority evidence: `docs/design/VISUAL_SYSTEM.md` read completely; canonical sheet visually inspected at original detail; expected and observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`; original provenance is recorded by `$cardborne-visual-authority`. No raster candidate has been generated yet.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance this pointer in the same edit.
 

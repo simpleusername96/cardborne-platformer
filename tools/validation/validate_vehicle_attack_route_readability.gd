@@ -88,7 +88,9 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 		var enemy := EnemyState.new()
 		enemy.role = &"stage_boss"
 		enemy.phase = &"boss_startup"
-		enemy.pos = player + Vector2(720.0, 0.0)
+		# Keep the fixture inside the shared field's walkable center so route
+		# resolution tests the authored blocker instead of the outer boundary.
+		enemy.pos = player + Vector2(360.0, 0.0)
 		enemy.committed_dir = Vector2.LEFT
 		enemy.committed_target = player
 		enemy.phase_time = 0.0

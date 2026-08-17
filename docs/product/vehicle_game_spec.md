@@ -305,6 +305,11 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    Archive Cross commits two clipped perpendicular X corridors. Siege Battery alone
    uses ammunition that arms at 360 traveled units and caps at 880, interpolating speed
    `0.75x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`.
+   Vector Loom commits paired translating walls with one collision-true opening, then
+   crosses the field with a delayed orthogonal pass whose opening moves to a different
+   axis. Pulse Core commits two warned ring pulses whose safe sector alternates, then
+   emits one bounded twelve-shot radial volley from the second pulse. These mechanics
+   execute in both direct and autonomous selections and retain the existing boss images.
 10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
     immediately. The boss body receives a restrained hit tint, dim/desaturation, and
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
