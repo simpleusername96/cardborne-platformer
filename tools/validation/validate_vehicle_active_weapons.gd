@@ -40,8 +40,9 @@ func _validate_empty_start_and_emp(catalog: ActiveCatalog) -> void:
 	)
 	_expect(
 		bool(event["started"])
-			and is_equal_approx(runtime.damage, 62.0)
 			and is_equal_approx(runtime.size, 285.0)
+			and is_equal_approx(runtime.duration, 1.4)
+			and is_equal_approx(runtime.strength, 1.0)
 			and is_equal_approx(runtime.cooldown_remaining, 13.0),
 		"EMP Level 1 starts only after card acquisition"
 	)
@@ -54,9 +55,9 @@ func _validate_empty_start_and_emp(catalog: ActiveCatalog) -> void:
 
 func _validate_replacement_values(catalog: ActiveCatalog) -> void:
 	var cases := [
-		{"card":&"gravity_collapse", "id":&"black_hole", "damage":[60.0, 97.75, 149.5, 225.0], "size":[150.0, 175.0, 200.0, 225.0], "startup":0.35, "cooldown":[12.0, 10.8, 9.84, 9.0]},
-		{"card":&"kinetic_shockwave", "id":&"shockwave", "damage":[45.0, 74.75, 117.0, 180.0], "size":[180.0, 210.0, 240.0, 270.0], "startup":0.20, "cooldown":[9.0, 8.1, 7.38, 6.75]},
-		{"card":&"piercing_lance", "id":&"cross_beam", "damage":[80.0, 126.5, 188.5, 277.5], "size":[24.0, 32.0, 40.0, 48.0], "startup":0.30, "cooldown":[10.5, 9.45, 8.61, 7.875]},
+		{"card":&"gravity_collapse", "id":&"black_hole", "duration":[1.6, 2.0, 2.4, 2.8], "strength":[0.25, 0.30, 0.35, 0.40], "size":[180.0, 220.0, 260.0, 300.0], "startup":0.35, "cooldown":[12.0, 10.8, 9.6, 8.4]},
+		{"card":&"kinetic_shockwave", "id":&"shockwave", "duration":[0.35, 0.50, 0.65, 0.80], "strength":[1.0, 1.0, 1.0, 1.0], "size":[200.0, 240.0, 280.0, 320.0], "startup":0.20, "cooldown":[9.0, 8.1, 7.2, 6.3]},
+		{"card":&"piercing_lance", "id":&"cross_beam", "duration":[1.5, 2.0, 2.5, 3.0], "strength":[0.25, 0.30, 0.35, 0.40], "size":[28.0, 40.0, 52.0, 64.0], "startup":0.30, "cooldown":[10.5, 9.4, 8.3, 7.2]},
 	]
 	for case_variant in cases:
 		var case := Dictionary(case_variant)
@@ -67,10 +68,11 @@ func _validate_replacement_values(catalog: ActiveCatalog) -> void:
 		)
 		for level_index in 4:
 			_expect(
-				is_equal_approx(definition.damage(level_index + 1), float(case["damage"][level_index]))
+				is_equal_approx(definition.duration(level_index + 1), float(case["duration"][level_index]))
+					and is_equal_approx(definition.strength(level_index + 1), float(case["strength"][level_index]))
 					and is_equal_approx(definition.size(level_index + 1), float(case["size"][level_index]))
 					and is_equal_approx(definition.cooldown(level_index + 1), float(case["cooldown"][level_index])),
-				"%s level %d owns its exact damage and size" % [case["id"], level_index + 1]
+				"%s level %d owns its exact CC duration, strength, size, and cooldown" % [case["id"], level_index + 1]
 			)
 
 
@@ -85,9 +87,10 @@ func _validate_weapon_owned_endpoints() -> void:
 	)
 	_expect(
 		bool(event["started"])
-			and is_equal_approx(runtime.damage, 93.0)
-			and is_equal_approx(runtime.cooldown_remaining, 9.75),
-		"EMP Level 4 owns the former fully upgraded endpoint"
+			and is_equal_approx(runtime.size, 405.0)
+			and is_equal_approx(runtime.duration, 2.6)
+			and is_equal_approx(runtime.cooldown_remaining, 9.1),
+		"EMP Level 4 owns the fully upgraded control endpoint"
 	)
 
 
@@ -100,23 +103,23 @@ func _validate_black_hole_phases() -> void:
 	_expect(
 		bool(event["started"])
 			and runtime.equipped_id == &"black_hole"
-			and runtime.center == Vector2(850.0, 400.0),
+			and runtime.center == Vector2(820.0, 400.0),
 		"black-hole aim distance clamps its full radius inside the map"
 	)
 	var opened := runtime.advance(0.35, build)
 	_expect(
 		not bool(opened["released"])
-			and is_equal_approx(runtime.active_remaining, 1.2),
-		"black hole opens after startup without applying collapse damage"
+			and is_equal_approx(runtime.active_remaining, 1.6),
+		"black hole opens after startup without publishing damage"
 	)
 	var pull := runtime.advance(0.1, build)
 	_expect(int(pull["pull_steps"]) == 1, "black hole publishes one bounded 10 Hz pull step")
-	var collapse := runtime.advance(1.1, build)
+	var collapse := runtime.advance(1.5, build)
 	_expect(
 		bool(collapse["collapse"])
-			and int(collapse["pull_steps"]) == 11
+			and int(collapse["pull_steps"]) == 15
 			and is_zero_approx(runtime.active_remaining),
-		"black hole publishes exactly twelve pull steps and one collapse over 1.2 seconds"
+		"black hole publishes exactly sixteen pull steps and one collapse over 1.6 seconds"
 	)
 
 

@@ -1,7 +1,7 @@
 class_name VehicleStatusRuntime
 extends RefCounted
 
-## Applies bounded Toxin and Chill state and returns explicit toxin DOT.
+## Applies bounded damage and movement statuses and returns explicit toxin DOT.
 
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
@@ -43,6 +43,14 @@ static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> v
 			enemy.flash
 		)
 	_sync_presentation_scalars(enemy)
+
+
+static func apply_active_slow(enemy: EnemyState, magnitude: float, duration: float) -> void:
+	var duration_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
+	enemy.statuses[&"active_slow"] = {
+		"magnitude":clampf(magnitude, 0.0, 0.50),
+		"time":maxf(0.0, duration) * duration_scale,
+	}
 
 
 static func tick(enemy: EnemyState, delta: float) -> Dictionary:
@@ -89,18 +97,26 @@ static func tick(enemy: EnemyState, delta: float) -> Dictionary:
 			statuses.erase(&"chill")
 		else:
 			statuses[&"chill"] = chill
+	if statuses.has(&"active_slow"):
+		var active_slow: Dictionary = statuses[&"active_slow"]
+		active_slow["time"] = float(active_slow["time"]) - delta
+		if float(active_slow["time"]) <= 0.0:
+			statuses.erase(&"active_slow")
+		else:
+			statuses[&"active_slow"] = active_slow
 	_sync_presentation_scalars(enemy)
 	return damage
 
 
 static func speed_multiplier(enemy: EnemyState) -> float:
-	if not enemy.statuses.has(&"chill"):
-		return 1.0
-	var chill: Dictionary = enemy.statuses[&"chill"]
-	return maxf(
-		0.50,
-		1.0 - float(chill["magnitude_per_stack"]) * float(chill["stacks"])
-	)
+	var multiplier := 1.0
+	if enemy.statuses.has(&"chill"):
+		var chill: Dictionary = enemy.statuses[&"chill"]
+		multiplier = minf(multiplier, 1.0 - float(chill["magnitude_per_stack"]) * float(chill["stacks"]))
+	if enemy.statuses.has(&"active_slow"):
+		var active_slow: Dictionary = enemy.statuses[&"active_slow"]
+		multiplier = minf(multiplier, 1.0 - float(active_slow["magnitude"]))
+	return maxf(0.50, multiplier)
 
 
 static func stack_count(enemy: EnemyState, kind: StringName) -> int:

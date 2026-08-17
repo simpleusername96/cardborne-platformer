@@ -53,7 +53,7 @@ Make every active weapon a zero-damage crowd-control tool whose upgrades improve
 ## Execution Checklist
 
 - [x] Update canonical product/design contracts and active-weapon resource schema; migrate all four resources and runtime snapshots to range, duration, strength, and cooldown.
-- [ ] Replace every active-weapon damage path with bounded CC application, including boss resistance and boss stun/slow integration.
+- [x] Replace every active-weapon damage path with bounded CC application, including boss resistance and boss stun/slow integration.
 - [ ] Increase boss health/speed, change its close-pressure movement band, weaken Drydock shielding, and remove Crown relay shielding.
 - [ ] Update Korean/English descriptions, upgrade previews, and Ship Status rows so all visible claims match the CC-only contract.
 - [ ] Update focused validators and validate imports, runtime contracts, affected rendered UI in Korean and English, visual authority, and Web export without run-result measurement.
@@ -71,3 +71,4 @@ Make every active weapon a zero-damage crowd-control tool whose upgrades improve
 
 - 2026-08-18: Created from current code, product spec, design authority, and the user's revised combat direction. Existing quotas are explicitly outside this implementation.
 - 2026-08-18: Canonical specs, four active resources, and the active definition/runtime contract now contain no active-weapon damage axis. Godot 4.7.1 imports the migrated resources and scripts successfully.
+- 2026-08-18: EMP, Black Hole, Shockwave, and Cross Beam now mutate only bounded control state or projectile clearance. Boss slow/stagger resistance is integrated, boss behavior pauses during stagger, and no active-weapon enemy/facility damage call remains. Focused active, status, and balance validators pass.

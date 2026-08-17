@@ -117,10 +117,10 @@ func _validate_authored_values() -> void:
 	_validate_secondary(&"drop_mines", [48.0, 67.2, 90.0, 123.2], [192.0, 216.0, 240.0, 240.0], [3.2, 2.52, 1.968, 1.8], [3, 4, 5, 5])
 	_validate_secondary(&"auto_laser", [48.0, 79.2, 120.4], [0.0, 0.0, 0.0], [0.9, 0.774, 0.675], [1, 1, 1])
 	_validate_secondary(&"storm_barrage", [70.0, 114.0, 175.0], [0.0, 0.0, 0.0], [4.5, 3.87, 3.375], [1, 1, 1])
-	_validate_active(&"emp", [62.0, 71.3, 80.6, 93.0], [285.0, 285.0, 285.0, 285.0], 0.42, [13.0, 11.7, 10.66, 9.75])
-	_validate_active(&"black_hole", [60.0, 97.75, 149.5, 225.0], [150.0, 175.0, 200.0, 225.0], 0.35, [12.0, 10.8, 9.84, 9.0])
-	_validate_active(&"shockwave", [45.0, 74.75, 117.0, 180.0], [180.0, 210.0, 240.0, 270.0], 0.20, [9.0, 8.1, 7.38, 6.75])
-	_validate_active(&"cross_beam", [80.0, 126.5, 188.5, 277.5], [24.0, 32.0, 40.0, 48.0], 0.30, [10.5, 9.45, 8.61, 7.875])
+	_validate_active(&"emp", [285.0, 325.0, 365.0, 405.0], [1.4, 1.8, 2.2, 2.6], [1.0, 1.0, 1.0, 1.0], 0.42, [13.0, 11.7, 10.4, 9.1])
+	_validate_active(&"black_hole", [180.0, 220.0, 260.0, 300.0], [1.6, 2.0, 2.4, 2.8], [0.25, 0.30, 0.35, 0.40], 0.35, [12.0, 10.8, 9.6, 8.4])
+	_validate_active(&"shockwave", [200.0, 240.0, 280.0, 320.0], [0.35, 0.50, 0.65, 0.80], [1.0, 1.0, 1.0, 1.0], 0.20, [9.0, 8.1, 7.2, 6.3])
+	_validate_active(&"cross_beam", [28.0, 40.0, 52.0, 64.0], [1.5, 2.0, 2.5, 3.0], [0.25, 0.30, 0.35, 0.40], 0.30, [10.5, 9.4, 8.3, 7.2])
 	_validate_attribute_values()
 	_expect(
 		PrimaryRules.projectiles_per_volley(1) == 2
@@ -148,7 +148,7 @@ func _validate_level_gains() -> void:
 
 func _validate_peer_bands_and_dominance() -> void:
 	var peer_checks := [
-		{"label":"active area level 1", "damage":[62.0, 60.0, 45.0], "reason":"Shockwave trades damage for frequency and knockback."},
+		{"label":"active area level 1", "damage":[0.0, 0.0, 0.0], "reason":"Active weapons trade control reach, duration, and cadence without damage."},
 		{"label":"automatic ranged level 1", "damage":[50.0, 48.0, 70.0], "reason":"Seeker, Auto Laser, and Storm differ in target restrictions and cadence."},
 		{"label":"close optional level 1", "damage":[8.0, 14.0], "reason":"Electric Field is continuous and safer; blades require hull contact."},
 	]
@@ -190,10 +190,10 @@ func _validate_weapon_owned_curves() -> void:
 		"automatic weapon power is owned by its definition without a shared multiplier"
 	)
 	_expect(
-		is_equal_approx(build.stat(&"active_damage_multiplier", 1.0), 1.0)
-			and is_equal_approx(_active.get_definition(&"cross_beam").damage(4), 277.5)
-			and is_equal_approx(_active.get_definition(&"cross_beam").cooldown(4), 7.875),
-		"active weapon power is owned by its definition without a shared multiplier"
+		is_equal_approx(_active.get_definition(&"cross_beam").strength(4), 0.40)
+			and is_equal_approx(_active.get_definition(&"cross_beam").duration(4), 3.0)
+			and is_equal_approx(_active.get_definition(&"cross_beam").cooldown(4), 7.2),
+		"active weapon control is owned by its definition without a damage axis"
 	)
 
 
@@ -305,11 +305,10 @@ func _secondary_metrics(family: StringName, state: int) -> Dictionary:
 
 func _active_metrics(family: StringName, state: int) -> Dictionary:
 	var definition = _active.get_definition(family)
-	var damage := definition.damage(state)
 	var contacts := 8
 	if family == &"emp":
 		contacts = 12
-	return {"damage_per_use":damage * contacts, "damage_10s":damage * contacts / definition.cooldown(state) * 10.0, "contacts":contacts, "startup":definition.startup_seconds, "cooldown":definition.cooldown(state), "coverage":definition.size(state), "control":4.0 if family in [&"emp", &"black_hole"] else 0.0, "targeting_burden":4.0 if family == &"cross_beam" else 1.0, "exposure":2.0}
+	return {"damage_per_use":0.0, "damage_10s":0.0, "contacts":contacts, "startup":definition.startup_seconds, "cooldown":definition.cooldown(state), "coverage":definition.size(state), "control":definition.duration(state), "targeting_burden":4.0 if family == &"cross_beam" else 1.0, "exposure":2.0}
 
 
 func _count_within(points: Array, radius: float) -> int:
@@ -332,12 +331,13 @@ func _validate_secondary(id: StringName, values: Array, auxiliary: Array, cadenc
 	)
 
 
-func _validate_active(id: StringName, damage: Array, size: Array, startup: float, cooldown: Array) -> void:
+func _validate_active(id: StringName, size: Array, duration: Array, strength: Array, startup: float, cooldown: Array) -> void:
 	var definition = _active.get_definition(id)
 	_expect(
 		definition != null
-			and definition.damage_by_level == damage
 			and definition.size_by_level == size
+			and definition.duration_by_level == duration
+			and definition.strength_by_level == strength
 			and is_equal_approx(definition.startup_seconds, startup)
 			and definition.cooldown_by_level == cooldown,
 		"%s matches the durable balance specification" % id

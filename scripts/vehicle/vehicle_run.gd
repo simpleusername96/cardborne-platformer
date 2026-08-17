@@ -2489,14 +2489,6 @@ func _release_active_weapon(weapon_id: StringName) -> void:
 		&"emp":
 			_release_emp_weapon()
 		&"black_hole":
-			_damage_enemies_in_radius(
-				active_weapon_runtime.center,
-				active_weapon_runtime.size,
-				active_weapon_runtime.damage,
-				"Black Hole",
-				&"arc",
-				true
-			)
 			camera_shake = maxf(camera_shake, 8.0)
 			_play_sound(&"emp")
 		&"shockwave":
@@ -2511,14 +2503,14 @@ func _release_emp_weapon() -> void:
 	var clear_radius := active_weapon_runtime.catalog.get_definition(&"emp").auxiliary_size(
 		active_weapon_runtime.level
 	)
-	_damage_enemies_in_radius(
-		center, radius, active_weapon_runtime.damage, "EMP Nova", &"arc", true
-	)
 	projectile_store.clear_hostiles_in_radius(center, clear_radius)
 	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
-		if Vector2(enemy.pos).distance_to(center) <= radius:
-			enemy.stun = maxf(float(enemy.stun), 2.1)
+		if (
+			_is_player_targetable_enemy(enemy)
+			and Vector2(enemy.pos).distance_to(center) <= radius + enemy.radius
+		):
+			_apply_active_stagger(enemy, active_weapon_runtime.duration)
 	_add_effect(
 		EffectStore.EMP_RELEASE_KIND,
 		center,
@@ -2539,14 +2531,15 @@ func _apply_black_hole_pull() -> void:
 	var radius := active_weapon_runtime.size
 	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
-		if (
-			not _is_player_targetable_enemy(enemy)
-			or enemy.role == &"stage_boss"
-			or _is_fixed_structure_enemy(enemy)
-		):
+		if not _is_player_targetable_enemy(enemy):
 			continue
 		var offset := center - enemy.pos
 		if offset.length() > radius + enemy.radius and offset.length_squared() > 0.01:
+			continue
+		StatusRuntime.apply_active_slow(
+			enemy, active_weapon_runtime.strength, active_weapon_runtime.duration
+		)
+		if enemy.role == &"stage_boss" or _is_fixed_structure_enemy(enemy):
 			continue
 		enemy.pos = _move_actor(
 			enemy.pos,
@@ -2560,21 +2553,20 @@ func _apply_black_hole_pull() -> void:
 func _release_shockwave() -> void:
 	var center := active_weapon_runtime.center
 	var radius := active_weapon_runtime.size
-	_damage_enemies_in_radius(
-		center, radius, active_weapon_runtime.damage, "Shockwave", &"kinetic", true
+	var push_distance := active_weapon_runtime.catalog.get_definition(&"shockwave").auxiliary_size(
+		active_weapon_runtime.level
 	)
 	enemy_grid.query_radius_into(center, radius, enemies, _enemy_query_buffer)
 	for enemy in _enemy_query_buffer:
-		if (
-			not _is_player_targetable_enemy(enemy)
-			or enemy.role == &"stage_boss"
-			or _is_fixed_structure_enemy(enemy)
-		):
+		if not _is_player_targetable_enemy(enemy):
 			continue
 		var offset := enemy.pos - center
 		if offset.length() > radius + enemy.radius or offset.length_squared() <= 0.01:
 			continue
-		enemy.pos = _move_actor(enemy.pos, offset.normalized() * 180.0, enemy.radius, false)
+		_apply_active_stagger(enemy, active_weapon_runtime.duration)
+		if enemy.role == &"stage_boss" or _is_fixed_structure_enemy(enemy):
+			continue
+		enemy.pos = _move_actor(enemy.pos, offset.normalized() * push_distance, enemy.radius, false)
 		enemy_grid.update_actor(enemy)
 	camera_shake = maxf(camera_shake, 8.0)
 	_play_sound(&"impact", 0.86)
@@ -2594,43 +2586,16 @@ func _release_cross_beam() -> void:
 			and absf(offset.dot(direction)) > half_width + enemy.radius
 		):
 			continue
-		_damage_enemy(
-			enemy,
-			active_weapon_runtime.damage,
-			"Cross Beam",
-			&"kinetic",
-			true,
-			false,
-			true,
-			OutgoingDamagePolicy.DAMAGE_DIRECT,
-			active_weapon_runtime.action_serial
+		StatusRuntime.apply_active_slow(
+			enemy, active_weapon_runtime.strength, active_weapon_runtime.duration
 		)
-	_damage_cross_beam_structures(center, direction, side, half_width)
 	camera_shake = maxf(camera_shake, 9.0)
 	_play_sound(&"emp", 1.08)
 
 
-func _damage_cross_beam_structures(
-	center: Vector2,
-	direction: Vector2,
-	side: Vector2,
-	half_width: float
-) -> void:
-	mystery_device_runtime.fill_device_snapshot(_mystery_device_snapshot_buffer)
-	for device in _mystery_device_snapshot_buffer:
-		if StringName(device["state"]) != &"dormant":
-			continue
-		var device_position := Vector2(device["position"])
-		var offset := device_position - center
-		if (
-			absf(offset.dot(side)) > half_width + MysteryDeviceRuntime.DEVICE_RADIUS
-			and absf(offset.dot(direction)) > half_width + MysteryDeviceRuntime.DEVICE_RADIUS
-		):
-			continue
-		_damage_mystery_device(
-			StringName(device["id"]), active_weapon_runtime.damage, &"beam",
-			device_position, Art.SYSTEM, direction
-		)
+func _apply_active_stagger(enemy: EnemyState, duration: float) -> void:
+	var duration_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
+	enemy.stun = maxf(float(enemy.stun), maxf(0.0, duration) * duration_scale)
 
 
 func _player_move_speed() -> float:
@@ -2898,6 +2863,10 @@ func _update_enemies(
 					continue
 		var role := enemy.role
 		if role == &"stage_boss":
+			if enemy.stun > 0.0:
+				enemy.velocity = Vector2.ZERO
+				enemy_grid.update_actor(enemy)
+				continue
 			_refresh_enemy_presentation_facing(enemy)
 			_update_stage_boss(enemy, delta)
 			_refresh_enemy_presentation_facing(enemy)
@@ -6413,9 +6382,9 @@ func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> vo
 	var direction := pursuit_field.direction_at(position, float(boss.radius))
 	var has_line_of_sight := _runtime_has_line_of_sight(position, player_position, float(boss.radius) * 0.4)
 	if has_line_of_sight:
-		if distance > 560.0:
+		if distance > 240.0:
 			direction = direction_to_player
-		elif distance < 340.0:
+		elif distance < 140.0:
 			direction = -direction_to_player
 		else:
 			var strafe_sign := -1.0 if int(boss.pattern_index) % 2 == 0 else 1.0
@@ -6424,7 +6393,7 @@ func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> vo
 		direction = direction_to_player
 	boss.pos = _move_actor(
 		position,
-		direction * float(boss.speed) * speed_scale * delta,
+		direction * float(boss.speed) * speed_scale * StatusRuntime.speed_multiplier(boss) * delta,
 		float(boss.radius),
 		false
 	)

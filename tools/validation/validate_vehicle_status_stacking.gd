@@ -87,6 +87,14 @@ func _initialize() -> void:
 			and is_equal_approx(boss.cryo_application_pulse, 1.0),
 		"boss Chill keeps gameplay halving separate from its one-stack presentation receipt"
 	)
+	StatusRuntime.apply_active_slow(boss, 0.40, 3.0)
+	_expect(
+		is_equal_approx(float(boss.statuses[&"active_slow"]["time"]), 1.5)
+			and is_equal_approx(StatusRuntime.speed_multiplier(boss), 0.60),
+		"active slow halves boss duration without reducing authored strength"
+	)
+	StatusRuntime.tick(boss, 1.5)
+	_expect(not boss.statuses.has(&"active_slow"), "active slow expires at its bounded duration")
 	var pulse_enemy := EnemyState.new()
 	StatusRuntime.apply(pulse_enemy, chill_profile)
 	StatusRuntime.tick(pulse_enemy, 0.08)
