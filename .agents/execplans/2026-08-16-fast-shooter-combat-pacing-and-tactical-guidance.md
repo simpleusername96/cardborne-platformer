@@ -172,19 +172,22 @@ Preconditions:
 - Phase 1 checks pass.
 
 Source owners: `scripts/progression/vehicle_experience_runtime.gd`,
-`scripts/vehicle/vehicle_run.gd`, `tools/validation/validate_vehicle_upgrade_system.gd`.
+`scripts/vehicle/vehicle_run.gd`, `tools/validation/validate_vehicle_experience.gd`.
 
-- [ ] **2.1 Tune the existing early XP curve**
+- [x] **2.1 Tune the existing early XP curve**
   - Change: set `EARLY_REQUIREMENT_SURCHARGE` from `4` to `8`; preserve the first-ten-level
     boundary, pending-level behavior, modal contents, card rules, shard values, and late
     requirement curve.
   - Accept: the focused progression fixture reports the new first-ten requirements and
     unchanged level 11+ requirements; a deterministic run still grants every earned level.
   - Guard: no upgrade charge, service break, deployment card, or replacement modal exists.
+  - Evidence: `EARLY_REQUIREMENT_SURCHARGE` is `8`; the focused experience validator
+    passed the exact first-ten requirements, unchanged level-11+ values, borrowed receipt
+    reuse, pending-level behavior, and complete authored route cadence.
 
 Phase gate:
 
-- Run `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_upgrade_system.gd`.
+- Run `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_experience.gd`.
 
 ### Phase 3: Extend ordinary combat and increase relevant pressure
 
@@ -262,10 +265,9 @@ do not change visible behavior, architecture, scope, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 2.
-- Next task: 2.1 Tune the existing early XP curve.
-- Last completed gate: Phase 1 HUD, localization, visual-authority, and bilingual rendered
-  capture gate.
+- Current phase: Phase 3.
+- Next task: 3.1 Increase every boss-entry quota to `1.5x`.
+- Last completed gate: Phase 2 focused experience progression gate.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 

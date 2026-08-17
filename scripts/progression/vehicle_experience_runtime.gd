@@ -10,7 +10,7 @@ const BASE_LEVEL_REQUIREMENT := 6
 const LINEAR_LEVEL_GROWTH := 1.5
 const QUADRATIC_LEVEL_GROWTH := 0.32
 const MAX_LEVEL_REQUIREMENT := 96
-const EARLY_REQUIREMENT_SURCHARGE := 4
+const EARLY_REQUIREMENT_SURCHARGE := 8
 const EARLY_SURCHARGE_LEVEL_COUNT := 10
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 

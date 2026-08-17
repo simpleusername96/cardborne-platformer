@@ -47,7 +47,7 @@ func _validate_stage_items() -> void:
 func _validate_experience_runtime() -> void:
 	var runtime := ExperienceRuntime.new()
 	var expected_requirements := [
-		10, 12, 14, 17, 21, 26, 31, 36, 42, 49,
+		14, 16, 18, 21, 25, 30, 35, 40, 46, 53,
 		53, 61, 70, 80, 90, 96, 96, 96, 96, 96,
 	]
 	for level_index in expected_requirements.size():
@@ -87,14 +87,14 @@ func _validate_experience_runtime() -> void:
 		and is_same(result["reward_sources"], source_buffer),
 		"non-empty XP collection reuses the borrowed receipt identity"
 	)
-	_expect(runtime.run_level == 1 and runtime.experience == 7, "7 XP remains below the first 10-XP threshold")
-	runtime.spawn_shard(Vector2.ZERO, 3, &"boss")
+	_expect(runtime.run_level == 1 and runtime.experience == 7, "7 XP remains below the first 14-XP threshold")
+	runtime.spawn_shard(Vector2.ZERO, 7, &"boss")
 	runtime.advance(0.016, Vector2.ZERO, 100.0, 0.0)
-	_expect(runtime.run_level == 2 and runtime.experience == 0, "10 XP reaches level two without overflow")
+	_expect(runtime.run_level == 2 and runtime.experience == 0, "14 XP reaches level two without overflow")
 	_expect(runtime.pending_level_ups == 1 and int(result["levels"]) == 1, "collected XP queues a level")
 	_expect(&"boss" in result["reward_sources"], "boss reward source survives shard collection")
 	_expect(runtime.consume_pending_level() and runtime.pending_level_ups == 0, "one confirmed card consumes one queued level")
-	_expect(runtime.required_experience() == 12, "level two requirement follows the locked curve")
+	_expect(runtime.required_experience() == 16, "level two requirement follows the locked curve")
 	runtime.reset()
 	runtime.spawn_shard(Vector2(900.0, 0.0), 2)
 	_expect(int(runtime.advance(0.1, Vector2.ZERO, 92.0, 0.0)["experience"]) == 0, "distant XP is not awarded before collection")
@@ -125,10 +125,10 @@ func _validate_experience_runtime() -> void:
 	runtime.spawn_shard(Vector2.ZERO, 100, &"boss")
 	result = runtime.advance(0.0, Vector2.ZERO, 92.0, 0.0)
 	_expect(
-		int(result["levels"]) == 6
-			and runtime.pending_level_ups == 6
-			and runtime.experience == 0,
-		"100 XP safely queues six level-ups at the tuned early thresholds"
+		int(result["levels"]) == 5
+			and runtime.pending_level_ups == 5
+			and runtime.experience == 6,
+		"100 XP safely queues five level-ups at the tuned early thresholds"
 	)
 	_expect(&"boss" in result["reward_sources"], "boss reward remains queued behind simultaneous levels")
 	runtime.spawn_shard(Vector2(120.0, 0.0), 12)
