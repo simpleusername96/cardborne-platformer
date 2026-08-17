@@ -16,7 +16,7 @@ func _init() -> void:
 	for number in range(1, 9):
 		ids.append(StringName("stage_%d" % number))
 	_expect(CombatStages.STAGE_IDS == ids, "the canonical registry contains eight internal cycle IDs")
-	_expect(CombatStages.QUOTAS == [40, 44, 48, 52, 56, 60, 64, 68], "quota progression is exact")
+	_expect(CombatStages.QUOTAS == [60, 66, 72, 78, 84, 90, 96, 102], "quota progression is exactly 1.5x the previous sequence")
 	_expect(CombatStages.AUTHORED_COUNTS == [260, 300, 340, 390, 440, 500, 560, 630], "authored populations are exact")
 	for index in ids.size():
 		var stage_id := ids[index]

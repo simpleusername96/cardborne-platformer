@@ -188,8 +188,8 @@ func _validate_route_level_cadence() -> void:
 		while runtime.consume_pending_level():
 			pass
 	_expect(Catalog.STAGE_IDS.size() == 8, "the campaign exposes eight boss cycles")
-	_expect(total_experience == 2296, "the eight-cycle minimum quota path yields 2296 total XP (actual %d)" % total_experience)
-	_expect(total_levels == 32 and runtime.run_level == 33, "the authored quota path ends at run level thirty-three with 32 upgrades (actual %d / level %d)" % [total_levels, runtime.run_level])
+	_expect(total_experience == 3445, "the enlarged eight-cycle minimum quota path yields 3445 total XP (actual %d)" % total_experience)
+	_expect(total_levels == 44 and runtime.run_level == 45, "the enlarged quota path ends at run level forty-five with 44 upgrades (actual %d / level %d)" % [total_levels, runtime.run_level])
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:

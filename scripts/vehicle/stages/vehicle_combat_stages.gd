@@ -14,7 +14,7 @@ const STAGE_IDS: Array[StringName] = [
 	&"stage_5", &"stage_6", &"stage_7", &"stage_8",
 ]
 # A stage ID is now an internal cycle key. Every cycle has a quota and boss.
-const QUOTAS := [40, 44, 48, 52, 56, 60, 64, 68]
+const QUOTAS := [60, 66, 72, 78, 84, 90, 96, 102]
 const AUTHORED_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630]
 const ARRIVAL_WINDOWS := 3
 const SQUADS_PER_WINDOW := 4

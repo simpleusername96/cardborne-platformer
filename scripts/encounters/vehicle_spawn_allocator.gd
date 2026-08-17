@@ -357,6 +357,38 @@ func _maximally_spaced_sector_order(
 				closest_distance = circular_distance
 				closest_tie = tie
 	result.append(remaining.pop_at(start_index))
+	if (
+		player_velocity.length() >= FORWARD_ARRIVAL_SPEED_THRESHOLD
+		and not remaining.is_empty()
+	):
+		var forward_sector := _sector_for(player_velocity)
+		var lateral_index := -1
+		var lateral_distance := -1
+		var lateral_tie := 0x7fffffff
+		for index in remaining.size():
+			var sector := remaining[index]
+			var difference := absi(sector - forward_sector)
+			var circular_distance := mini(
+				difference, SECTOR_COUNT - difference
+			)
+			if circular_distance < 1 or circular_distance > 2:
+				continue
+			var tie := absi(hash(
+				"%d:%s:%d:%d:lateral"
+				% [_seed, packet_id, arrival_window, sector]
+			))
+			if (
+				circular_distance > lateral_distance
+				or (
+					circular_distance == lateral_distance
+					and tie < lateral_tie
+				)
+			):
+				lateral_index = index
+				lateral_distance = circular_distance
+				lateral_tie = tie
+		if lateral_index >= 0:
+			result.append(remaining.pop_at(lateral_index))
 	while not remaining.is_empty():
 		var best_index := 0
 		var best_distance := -1

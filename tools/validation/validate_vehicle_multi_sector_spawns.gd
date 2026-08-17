@@ -77,6 +77,21 @@ func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, vi
 			and int(Array(moving[0]["unit_sectors"])[0]) == 4,
 		"%s starts moving-right arrivals in the forward sector" % context
 	)
+	if moving.size() >= 2:
+		var second_sector := int(Array(moving[1]["unit_sectors"])[0])
+		var second_offset := posmod(second_sector - 4, 8)
+		var second_distance := mini(second_offset, 8 - second_offset)
+		var moving_sectors := {}
+		for allocation in moving:
+			for sector in Array(allocation["unit_sectors"]):
+				moving_sectors[int(sector)] = true
+		_expect(
+			second_distance in [1, 2]
+				and second_sector != 0
+				and moving_sectors.has(0),
+			"%s gives one extra request to a forward/lateral sector before retaining later rear pressure"
+			% context
+		)
 	var positions_by_window := {}
 	var histograms := {}
 	var packet_histogram := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0])

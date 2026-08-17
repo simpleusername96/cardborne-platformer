@@ -260,7 +260,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 1. Each cycle executes `ORDINARY_COMBAT -> BOSS_WARNING -> BOSS_COMBAT ->
    BOSS_DEATH_CLEANUP -> CYCLE_TRANSITION`.
-2. Ordinary quotas are `40/44/48/52/56/60/64/68`; authored mobile populations are
+2. Ordinary quotas are `60/66/72/78/84/90/96/102`; authored mobile populations are
    `260/300/340/390/440/500/560/630`. Exact materialized ordinary caps are
    `32/44/56/64/72/72/72/72`, and engaged-visible refill floors are
    `12/16/20/24/28/32/36/40`. Reserve scheduling preserves authored populations instead

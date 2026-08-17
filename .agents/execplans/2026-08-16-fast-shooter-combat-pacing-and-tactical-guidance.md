@@ -205,7 +205,7 @@ Source owners: `docs/product/vehicle_game_spec.md`,
 `scripts/encounters/vehicle_spawn_allocator.gd`, and existing campaign, spawn, and pacing
 validators.
 
-- [ ] **3.1 Increase every boss-entry quota to `1.5x`**
+- [x] **3.1 Increase every boss-entry quota to `1.5x`**
   - Change: update the product contract and `VehicleCombatStages.QUOTAS` from
     `40/44/48/52/56/60/64/68` to `60/66/72/78/84/90/96/102`. Preserve exact-defeat boss
     gating, quota counting rules, authored populations `260/300/340/390/440/500/560/630`,
@@ -216,13 +216,21 @@ validators.
     margin.
   - Guard: do not increase simultaneous active caps, authored populations, spawn capacity,
     boss counts, XP per enemy, enemy stats, or boss warning duration as part of this task.
-- [ ] **3.2 Reweight existing spawn sectors**
+  - Evidence: product/runtime quotas are exactly `60/66/72/78/84/90/96/102`; catalog,
+    stage-continuity, single-field campaign, encounter-pacing, difficulty, and experience
+    validators passed. The larger minimum route yields 3445 XP and 44 earned upgrades
+    solely from the additional countable enemies; XP values and card rules are unchanged.
+- [x] **3.2 Reweight existing spawn sectors**
   - Change: keep current candidate generation and deterministic sector allocation. In the
     existing scoring pass, prefer ahead/lateral sectors for one additional request before
     reusing a rear sector. Keep every safety, geometry, separation, and fallback check.
   - Accept: deterministic fixtures retain valid allocations and show a lower rear-sector
     share than the current baseline without removing rear pressure or creating a sealed ring.
   - Guard: no new scheduler, beat state, spawn source, or actor is added.
+  - Evidence: moving allocation keeps the first request forward, places one additional
+    request in a forward/lateral sector, then resumes the existing maximal-spacing pass.
+    Spawn-allocation and the 16-seed × three-field × eight-cycle multi-sector validator
+    passed while retaining later rear pressure and all geometry/safety checks.
 Phase gate:
 
 - Run the focused stage continuity, single-field campaign, run difficulty, spawn allocator,
@@ -265,9 +273,10 @@ do not change visible behavior, architecture, scope, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3.
-- Next task: 3.1 Increase every boss-entry quota to `1.5x`.
-- Last completed gate: Phase 2 focused experience progression gate.
+- Current phase: Final gate.
+- Next task: Godot import/parse, production Web export, and built-Web bilingual smoke.
+- Last completed gate: Phase 3 campaign, pacing, spawn-allocation, difficulty, experience,
+  and performance-scenario contract gate.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and
   advance this pointer in the same edit.
 
