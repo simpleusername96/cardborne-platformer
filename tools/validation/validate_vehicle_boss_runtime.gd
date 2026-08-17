@@ -224,9 +224,11 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 		boss.phase == &"boss_recovery"
 			and is_equal_approx(
 				boss.phase_time,
-				BossPatterns.recovery_seconds("furnace_ring") * 0.80
+				BossPatterns.recovery_seconds("furnace_ring")
+					* 0.80
+					* StageDifficulty.boss_cadence_scale(1)
 			),
-		"direct attack recovery applies the exact 0.80 offense scale once"
+		"direct recovery applies both its offense scale and the cycle cadence scale"
 	)
 
 

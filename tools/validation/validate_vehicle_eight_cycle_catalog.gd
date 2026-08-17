@@ -30,7 +30,7 @@ func _init() -> void:
 	_expect(StageCatalog.definition(&"stage_11").is_empty(), "catalog lookup fails closed")
 	_expect(Difficulty.multipliers(8).is_empty(), "difficulty lookup fails closed")
 	_expect(Difficulty.stage_index_from_id(&"stage_11") == -1, "unknown difficulty ID fails closed")
-	_expect(Difficulty.HEALTH.size() == 8 and is_equal_approx(float(Difficulty.HEALTH[7]), 3.10), "cycle 8 has the final ordinary health scale")
+	_expect(Difficulty.HEALTH.size() == 8 and is_equal_approx(float(Difficulty.HEALTH[7]), 2.00), "cycle 8 has the final ordinary health scale")
 	_expect(is_equal_approx(Difficulty.boss_health(7), 53300.0), "cycle 8 has the final boss health")
 	var expected_profiles: Array[StringName] = ids.duplicate()
 	for boss_index in expected_profiles.size():

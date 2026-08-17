@@ -60,11 +60,13 @@ func _run() -> void:
 		),
 		"boss movement uses the cycle-owned base speed"
 	)
-	var health_curve := [1.00, 1.30, 1.60, 1.90, 2.20, 2.50, 2.80, 3.10]
+	var health_curve := [1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00]
+	var speed_curve := [1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30]
 	var health_pressure := [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 	var boss_bases := [26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0]
 	var boss_health_multipliers := [1.00, 1.12, 1.25, 1.39, 1.54, 1.70, 1.87, 2.05]
-	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health increases by 30 percent of the Stage 1 baseline per cycle")
+	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health stays near baseline early and reaches exactly 2.00x in cycle 8")
+	_expect(StageDifficulty.SPEED == speed_curve, "ordinary movement stays bounded by the exact 1.30x cycle curve")
 	_expect(
 		StageDifficulty.ORDINARY_HEALTH_PRESSURE == health_pressure,
 		"ordinary health has no second hidden pressure curve"
@@ -73,7 +75,7 @@ func _run() -> void:
 		is_equal_approx(StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER, 1.20),
 		"all non-boss hostiles use one final 20 percent durability policy"
 	)
-	_expect(health_curve[-1] == 3.10, "cycle 8 reaches 310 percent of Stage 1 ordinary health")
+	_expect(health_curve[2] <= 1.20 and health_curve[-1] == 2.00, "early ordinary health stays within 20 percent and cycle 8 reaches 200 percent")
 	for stage_index in health_curve.size():
 		stage.current_stage_index = stage_index
 		var standard_enemy = stage.call("_make_enemy", {
@@ -185,8 +187,12 @@ func _run() -> void:
 		)
 		_expect(
 			_near(base_speed, float(tuned_mobile_bases[archetype]), 0.001)
-			and final_cycle_speed < 300.0,
-			"%s keeps its tuned base and remains bounded at cycle 8"
+			and _near(
+				final_cycle_speed,
+				base_speed * EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER * 1.30,
+				0.001
+			),
+			"%s keeps its tuned base and uses the exact cycle-8 speed ceiling"
 			% String(archetype)
 		)
 	stage.call("_reset_run", false, true, true)

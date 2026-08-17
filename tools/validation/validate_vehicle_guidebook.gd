@@ -308,7 +308,7 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 	var shielded_rows := StatAdapter.boss_rows(2)
 	_expect(
 		shielded_rows.size() == 6
-			and int(Array(Dictionary(shielded_rows[2])["value_args"])[0]) == 90,
+			and int(Array(Dictionary(shielded_rows[2])["value_args"])[0]) == 50,
 		"shield-owning Cycle 3 alone includes shield reduction and exposure rows"
 	)
 	_expect(

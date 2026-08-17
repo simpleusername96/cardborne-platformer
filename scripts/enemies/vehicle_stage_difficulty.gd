@@ -1,12 +1,12 @@
 class_name VehicleStageDifficulty
 extends RefCounted
 
-## Bounded cycle-to-cycle pressure. Ordinary health increases by an exact
-## 30-percent Stage 1 baseline step from Stage 2 onward; bosses own a separate curve.
+## Bounded cycle-to-cycle pressure. Ordinary durability carries most of the
+## late-run growth while movement reaches a strict 1.30x ceiling.
 
-const HEALTH := [1.00, 1.30, 1.60, 1.90, 2.20, 2.50, 2.80, 3.10]
+const HEALTH := [1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00]
 const DAMAGE := [1.0, 1.03, 1.06, 1.09, 1.12, 1.15, 1.18, 1.21]
-const SPEED := [1.0, 1.01, 1.02, 1.03, 1.04, 1.05, 1.06, 1.07]
+const SPEED := [1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30]
 const ORDINARY_HEALTH_PRESSURE := [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]
 const ORDINARY_DAMAGE_PRESSURE := [0.98, 1.08, 1.18, 1.28, 1.38, 1.48, 1.57, 1.66]
 const ORDINARY_HEALTH_MULTIPLIER := 2.60
@@ -16,7 +16,9 @@ const BOSS_BASE_HEALTH := [26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0,
 const BOSS_HEALTH_MULTIPLIERS := [1.00, 1.12, 1.25, 1.39, 1.54, 1.70, 1.87, 2.05]
 const BOSS_DAMAGE_MULTIPLIERS := [1.00, 1.06, 1.12, 1.18, 1.24, 1.31, 1.38, 1.46]
 const BOSS_MOVE_SPEEDS := [380.0, 395.0, 410.0, 425.0, 440.0, 455.0, 470.0, 485.0]
-const BOSS_CADENCE_SCALES := [1.00, 0.97, 0.94, 0.91, 0.88, 0.85, 0.82, 0.79]
+# Existing cycle cadence arc with every downtime owner reduced to roughly
+# two-thirds of its previous value. Startup and active windows do not consume it.
+const BOSS_CADENCE_SCALES := [0.67, 0.65, 0.63, 0.61, 0.59, 0.57, 0.55, 0.53]
 const BOSS_COVERAGE_SCALES := [1.00, 1.04, 1.08, 1.12, 1.16, 1.20, 1.24, 1.28]
 const BOSS_SHIELDED_DAMAGE_MULTIPLIER := 0.50
 # Compatibility readout for guidebook/legacy validators; only shield-owning

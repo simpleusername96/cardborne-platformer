@@ -88,7 +88,9 @@ All non-boss enemy archetypes receive the existing `2.60` health multiplier
 after the fixed profile and eight-cycle ordinary-health curve, then the eight-cycle pressure
 curves defined in the campaign section, followed by one final ordinary-durability
 multiplier of `1.20` before elite modifiers. The ordinary health curve is
-`[0.85, 0.936, 1.021, 1.107, 1.193, 1.279, 1.364, 1.45]`.
+`[1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00]`, and the ordinary
+movement-speed curve is `[1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30]`.
+Existing actors keep the values captured at spawn when a later cycle begins.
 Boss health uses
 the separate stage profile defined below and never receives the `1.20`
 ordinary-durability multiplier.
@@ -292,11 +294,13 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    `1.00/1.12/1.25/1.39/1.54/1.70/1.87/2.05`; damage scales
    `1.00/1.06/1.12/1.18/1.24/1.31/1.38/1.46`; move speeds
    `380/395/410/425/440/455/470/485`; cadence scales
-   `1.00/.97/.94/.91/.88/.85/.82/.79`; coverage scales
+   `.67/.65/.63/.61/.59/.57/.55/.53`; coverage scales
    `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28`. Bosses approach above 240 pixels,
    strafe from 140 through 240 pixels, and retreat only below 140 pixels. Movement slow
    affects boss movement but not attack timers.
-   Boss projectile speed uses `1.40x`, beam reach `1.45x`, committed charge speed
+   Cadence scales apply to direct read gaps, direct recovery, and autonomous intervals;
+   startup warnings and active windows remain authored and unshortened. Boss projectile
+   speed uses `1.40x`, beam reach `1.45x`, committed charge speed
    `1.30x`, and circular or wedge radius `1.25x`; warning time is never reduced.
    Archive Cross commits two clipped perpendicular X corridors. Siege Battery alone
    uses ammunition that arms at 360 traveled units and caps at 880, interpolating speed

@@ -137,16 +137,16 @@ Preconditions:
 
 Source owners: `scripts/enemies/vehicle_stage_difficulty.gd`, `scripts/enemies/vehicle_enemy_speed_profile.gd`, `scripts/bosses/vehicle_boss_runtime.gd`, difficulty/guidebook validators
 
-- [ ] **2.1** Apply the locked ordinary health/speed curves.
+- [x] **2.1** Apply the locked ordinary health/speed curves.
   - Change: replace current relative curves and their stale descriptions without changing existing ordinary damage progression or capacity.
   - Accept: cycles 1/2/3 are `1.00/1.10/1.20` health and at most `1.08` speed; cycle 8 is exactly `2.00` health and `1.30` speed.
-- [ ] **2.2** Prove spawn-time snapshot behavior.
+- [x] **2.2** Prove spawn-time snapshot behavior.
   - Change: extend validators so a pre-advance survivor retains old stats and a post-advance actor receives new stats.
   - Accept: no loop mutates existing actors when the cycle index changes.
-- [ ] **2.3** Preserve boss stats and scale all downtime owners.
+- [x] **2.3** Preserve boss stats and scale all downtime owners.
   - Change: keep current base/health/damage/speed/coverage arrays; multiply cadence scales by `0.67` and apply them to direct recovery as well as read/autonomous gaps.
   - Accept: startup and active seconds are unchanged; each boss's downtime owners are approximately two-thirds of their prior values.
-- [ ] **2.4** Synchronize guidebook/spec/stat tests.
+- [x] **2.4** Synchronize guidebook/spec/stat tests.
   - Change: update canonical numeric contracts and effective-value adapters.
   - Accept: gameplay data, guidebook rows, and validators expose one curve set.
 
@@ -309,9 +309,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 2.
-- Next task: 2.1 Apply the locked ordinary health/speed curves.
-- Last completed gate: Phase 1 focused gate passed: continuous-field transition, stage continuity, transition runtime, and single-field campaign validators. The new transition oracle preserved the exact tactical-layout object, field/terrain/facility/pickup/XP/exploration snapshots, and survivor identity/stats/status while advancing the encounter profile to cycle 2.
+- Current phase: Phase 3.
+- Next task: 3.1 Implement Vector Loom's crossing weave.
+- Last completed gate: Phase 2 focused gate passed: run difficulty, boss runtime, boss patterns, eight-cycle catalog, guidebook, and continuous-field transition validators. Ordinary curves are exactly health `1.00 -> 2.00` and speed `1.00 -> 1.30`; existing actors retain their spawn snapshot; boss base/stat arrays are unchanged; read, recovery, and autonomous downtime use the new `.67 -> .53` cadence scales while startup/active timing remains authored.
 - Visual authority evidence: `docs/design/VISUAL_SYSTEM.md` read completely; canonical sheet visually inspected at original detail; expected and observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`; original provenance is recorded by `$cardborne-visual-authority`. No raster candidate has been generated yet.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance this pointer in the same edit.
 

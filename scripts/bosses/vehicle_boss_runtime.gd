@@ -269,7 +269,11 @@ func update_active(
 	if boss.phase_time <= 0.0:
 		services.call("_on_boss_direct_attack_complete", boss)
 		boss.phase = &"boss_recovery"
-		boss.phase_time = Patterns.recovery_seconds(pattern) * DIRECT_RECOVERY_SCALE
+		boss.phase_time = (
+			Patterns.recovery_seconds(pattern)
+			* DIRECT_RECOVERY_SCALE
+			* StageDifficulty.boss_cadence_scale(stage_index)
+		)
 		boss.vulnerable = 1.55 if kind in [&"charge", &"area"] else 0.65
 		boss.last_pattern = pattern
 		boss.pattern = &"recovery_window"
