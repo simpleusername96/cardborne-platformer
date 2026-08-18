@@ -75,8 +75,25 @@
     .note strong { color: var(--text); }
     .table-wrap { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; border: 1px solid var(--line); background: var(--surface); }
     table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    .summary-table, .enemy-table, .upgrade-table, .future-table { table-layout: fixed; }
+    .summary-table th:nth-child(1) { width: 220px; }
+    .summary-table th:nth-child(2), .summary-table th:nth-child(3) { width: 100px; }
+    .enemy-table th:nth-child(1) { width: 210px; }
+    .enemy-table th:nth-child(2) { width: 90px; }
+    .enemy-table th:nth-child(3) { width: 100px; }
+    .enemy-table th:nth-child(4) { width: 110px; }
+    .upgrade-table { min-width: 900px; }
+    .upgrade-table th:nth-child(1) { width: 220px; }
+    .upgrade-table th:nth-child(2) { width: 100px; }
+    .upgrade-table th:nth-child(3) { width: 40%; }
+    .future-table { min-width: 900px; }
+    .future-table th:nth-child(1) { width: 7%; }
+    .future-table th:nth-child(2) { width: 15%; }
+    .future-table th:nth-child(3) { width: 38%; }
+    .future-table th:nth-child(4) { width: 26%; }
+    .future-table th:nth-child(5) { width: 14%; }
     th, td { padding: 11px 12px; border-bottom: 1px solid #263b4d; text-align: left; vertical-align: top; }
-    th { position: sticky; top: 58px; background: #16293b; color: var(--cyan); font-size: 13px; z-index: 2; }
+    th { background: #16293b; color: var(--cyan); font-size: 13px; }
     tbody tr:last-child td { border-bottom: 0; }
     tbody tr:hover { background: rgba(121, 231, 229, .04); }
     .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -109,6 +126,7 @@
     .upgrade-section { margin-top: 18px; }
     .upgrade-section h3 { display: flex; justify-content: space-between; gap: 16px; }
     .upgrade-section h3 span { color: var(--muted); font-size: 13px; font-weight: 500; }
+    .upgrade-card-id code { white-space: nowrap; }
     .sources li { margin-block: 8px; }
     footer { border-top: 1px solid var(--line); color: var(--muted); padding: 24px 0 40px; font-size: 13px; }
     @media (max-width: 940px) {
@@ -204,7 +222,7 @@
     <section id="supply">
       <h2>경험치 회수 아이템과 중립시설</h2>
       <p class="lede">현재 생성기는 스테이지마다 회수 아이템 2개와 시설 3개를 만들지만, 지속 전장에서는 첫 배치만 실제 월드에 들어간다.</p>
-      <div class="table-wrap"><table>
+      <div class="table-wrap"><table class="summary-table">
         <thead><tr><th>항목</th><th class="num">현재</th><th class="num">계획</th><th>규칙</th></tr></thead>
         <tbody>
           <tr><td>시작 경험치 회수 아이템</td><td class="num">2</td><td class="num">4</td><td>서로 떨어진 기존 배치 후보 사용</td></tr>
@@ -251,7 +269,7 @@
     <section id="future">
       <h2>9~12보스와 신규 일반 적</h2>
       <p class="lede">전체 공격 경로를 미리 그리지 않는다. 보스 본체·모듈 충전, 음향, 공격이 들어오는 지점의 짧은 신호로 공격 종류를 알리고, 실제 위험물은 발동 뒤에만 보인다.</p>
-      <div class="table-wrap"><table>
+      <div class="table-wrap"><table class="future-table">
         <thead><tr><th>단계</th><th>보스</th><th>핵심 패턴과 대응</th><th>신규 일반 적</th><th>계획 보스 HP</th></tr></thead>
         <tbody>
           <tr><td class="num">9</td><td><strong>위상 절단기</strong><br><code>Phase Cutter</code></td><td>양쪽 가장자리에서 절단 막대가 시차 진입한다. 가장자리 점멸만 보여주고 경로선은 표시하지 않는다. 발동한 막대 사이의 이동 틈을 따라간다.</td><td><strong>위상 척후기</strong><br>HP 76 · 속도 188 · 11피해 3연사</td><td class="num">74,360</td></tr>
@@ -430,7 +448,7 @@
         </tr>`;
       }).join('');
       details.innerHTML = `<summary>${stage.n}단계 · ${bossNames[stageIndex]} · ${all.length}종</summary>
-        <div class="details-body"><div class="table-wrap"><table>
+        <div class="details-body"><div class="table-wrap"><table class="enemy-table">
           <thead><tr><th>일반 적</th><th>등급</th><th class="num">실효 HP</th><th class="num">실효 속도</th><th>공격·지원</th></tr></thead>
           <tbody>${rows}</tbody>
         </table></div></div>`;
@@ -443,10 +461,10 @@
       const section = document.createElement('div');
       section.className = 'upgrade-section';
       section.innerHTML = `<h3>${category}<span>${list.length}장</span></h3>
-        <div class="table-wrap"><table>
+        <div class="table-wrap"><table class="upgrade-table">
           <thead><tr><th>카드</th><th class="num">현재 → 계획</th><th>현재 레벨별 효과</th><th>급등 분석·확장 규칙</th></tr></thead>
           <tbody>${list.map((u) => `<tr>
-            <td><strong>${u.ko}</strong><br><code>${u.id}</code></td>
+            <td class="upgrade-card-id"><strong>${u.ko}</strong><br><code>${u.id}</code></td>
             <td class="num">Lv.${u.max} → Lv.${u.next}</td>
             <td>${u.current}</td>
             <td>${u.issue ? `<span class="tag issue">${u.issue}</span><br>` : ''}${u.plan}</td>
