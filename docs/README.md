@@ -16,6 +16,12 @@
 governance 또는 multi-file planning 작업은 root `AGENTS.md`의 지시에 따라
 `.agents/AGENTS.md`와 `.agents/PLANS.md`도 읽는다.
 
+## Product Decision Records
+
+- [`product/ordinary_enemy_behavior.md`](./product/ordinary_enemy_behavior.md) records the
+  2026-08-19 decision to use direct player pursuit as the default mobile ordinary-enemy
+  movement rule while preserving existing attack ownership.
+
 ## Visual Replacement Workbench
 
 현재 runtime AS-IS와 바로 교체 가능한 TO-BE 대상의 장부 및 검토 화면은

@@ -1,26 +1,12 @@
 class_name VehicleEnemyTargetingPolicy
 extends RefCounted
 
-## Pure, bounded prediction for ordinary-enemy movement and attack commitment.
-## It never owns an actor, queries world geometry, or changes a committed target.
+## Ordinary movement follows the player's current craft position. Predictive
+## targeting remains bounded inside attack commitment, where projectile startup
+## and travel time make it observable and useful.
 
 const MIN_TARGET_SPEED := 80.0
-const MovementPolicy = preload(
-	"res://scripts/enemies/vehicle_enemy_movement_policy.gd"
-)
 
-const MOVEMENT_MAX_SECONDS := {
-	MovementPolicy.PURSUIT:1.20,
-	MovementPolicy.STANDOFF:0.85,
-	MovementPolicy.ESCORT:0.60,
-	MovementPolicy.SUPPORT:0.60,
-}
-const MOVEMENT_MAX_DISTANCE := {
-	MovementPolicy.PURSUIT:280.0,
-	MovementPolicy.STANDOFF:200.0,
-	MovementPolicy.ESCORT:140.0,
-	MovementPolicy.SUPPORT:140.0,
-}
 const ATTACK_MAX_LEAD_DISTANCE := {
 	&"ordinary_edge_01":260.0,
 	&"ordinary_lane_01":260.0,
@@ -34,21 +20,13 @@ const ATTACK_MAX_LEAD_DISTANCE := {
 
 
 static func movement_focus(
-	movement_family: StringName,
-	origin: Vector2,
+	_movement_family: StringName,
+	_origin: Vector2,
 	pressure_focus: Vector2,
-	target_velocity: Vector2,
-	movement_speed: float
+	_target_velocity: Vector2,
+	_movement_speed: float
 ) -> Vector2:
-	if target_velocity.length() < MIN_TARGET_SPEED:
-		return pressure_focus
-	var maximum_seconds := float(MOVEMENT_MAX_SECONDS.get(movement_family, 0.0))
-	var maximum_distance := float(MOVEMENT_MAX_DISTANCE.get(movement_family, 0.0))
-	if maximum_seconds <= 0.0 or maximum_distance <= 0.0:
-		return pressure_focus
-	var travel_seconds := origin.distance_to(pressure_focus) / maxf(1.0, movement_speed)
-	var lead_seconds := minf(maximum_seconds, travel_seconds)
-	return pressure_focus + (target_velocity * lead_seconds).limit_length(maximum_distance)
+	return pressure_focus
 
 
 static func attack_target(

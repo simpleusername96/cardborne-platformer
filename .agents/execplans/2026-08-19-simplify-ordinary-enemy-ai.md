@@ -1,0 +1,99 @@
+---
+type: plan
+status: active
+owner: BK
+created: 2026-08-19
+last_reviewed: 2026-08-19
+topic: Simplify ordinary enemy movement to direct player pursuit
+scope: Ordinary-enemy movement policy, movement targeting, focused validators, and supporting product documentation
+related:
+  - ../../docs/product/vehicle_game_spec.md
+  - ../../docs/product/ordinary_enemy_behavior.md
+  - ../../scripts/enemies/vehicle_enemy_movement_policy.gd
+  - ../../scripts/enemies/vehicle_enemy_targeting_policy.gd
+  - ../../tools/validation/validate_vehicle_enemy_movement_policy.gd
+  - ../../tools/validation/validate_vehicle_enemy_targeting_policy.gd
+---
+
+# Simplify Ordinary Enemy AI - Execution Checklist
+
+## Goal
+
+Replace the overdesigned default movement behavior of ordinary enemies with one
+clear rule: mobile ordinary enemies seek the player's current craft position,
+while the existing attack owners decide when and how an attack can start.
+
+## Scope
+
+In scope:
+
+- Default movement-family resolution for mobile ordinary enemies.
+- Movement direction and movement-target prediction.
+- Blocked-route fallback and local collision separation.
+- Focused validators for movement and targeting.
+- A product decision record that preserves the background and external references.
+
+Out of scope:
+
+- Attack ranges, startup, cooldown, damage, projectile behavior, or telegraphs.
+- Fixed installations, boss behavior, encounter composition, spawn pacing, UI,
+  visuals, localization, progression, or save data.
+- Removing authored committed-attack movement or collective attack execution.
+- Performance claims that require a profiler or full-load benchmark.
+
+## Evidence and Decision
+
+- [x] Read `AGENTS.md` and `.agents/PLANS.md`.
+- [x] Inspect the current movement policy, movement targeting, runtime call path,
+  and focused validators.
+- [x] Confirm that the current policy contains four mobile movement families,
+  role-specific distance bands, tangential strafing, retreat, predictive
+  movement lead, and line-of-fire recovery.
+- [x] Review external references for seek steering, navigation/avoidance
+  separation, and survivor-style direct pursuit.
+- [x] Select direct seek as the default mobile ordinary-enemy behavior.
+- [x] Preserve attack ownership and fixed/boss exceptions.
+
+## Implementation
+
+- [x] Map every mobile ordinary archetype to the pursuit family.
+- [x] Remove active distance-band, retreat, orbit, escort, support-positioning,
+  and line-of-fire-recovery decisions from the default movement policy.
+- [x] Make movement target the player's current position without prediction.
+- [x] Preserve route guidance only when the direct path is blocked.
+- [x] Preserve local separation, velocity smoothing, and speed caps.
+- [x] Keep attack-target prediction unchanged.
+
+## Validation
+
+- [x] Update the movement-policy validator for direct pursuit and fixed actors.
+- [x] Update the targeting-policy validator for unpredicted movement and bounded
+  predictive attacks.
+- [x] Review the branch diff and confirm that task-owned implementation and
+  documentation are isolated from unrelated gameplay/UI work.
+- [ ] Run the repository pull-request validation workflow.
+- [ ] Record the validation result and mark this plan `done`.
+
+## Acceptance Criteria
+
+- Every mobile ordinary archetype resolves to `pursuit`.
+- Fixed ordinary installations and bosses resolve to `stationary`.
+- A mobile ordinary enemy's desired direction is the normalized vector from its
+  position to the player's current position.
+- Strafe sign, old range bands, attack recovery flags, and firing-lane blockage
+  do not change the default seek direction.
+- Blocked direct pursuit may request existing route guidance.
+- Attack contracts, predictive attack aim, fixed threats, bosses, and committed
+  authored attacks remain unchanged.
+- Focused validators and the pull-request workflow pass.
+
+## Progress
+
+- Current phase: Validation.
+- Next task: Run the pull-request validation workflow and resolve only failures
+  caused by this branch.
+- First workflow result: run `32159021913` stopped before Godot import because
+  the previously completed twelve-boss plan remained in `.agents/execplans/`.
+  This branch preserves that document under `.agents/completed-plans/` as the
+  repository lifecycle validator requires.
+- Canonical progress ledger: The checkboxes in this file.
