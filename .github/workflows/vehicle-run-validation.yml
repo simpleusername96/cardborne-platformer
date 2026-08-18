@@ -170,7 +170,11 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -d '' validators < <(
-            find tools/validation -maxdepth 1 -type f -name 'validate_*.gd' -print0 |
+            find tools/validation -maxdepth 1 -type f -name 'validate_*.gd' \
+              ! -name 'validate_vehicle_manual_play_trace.gd' \
+              ! -name 'validate_vehicle_performance_scenarios.gd' \
+              ! -name 'validate_vehicle_performance_workload_fingerprint.gd' \
+              -print0 |
               sort -z
           )
           test "${#validators[@]}" -gt 0

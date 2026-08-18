@@ -51,11 +51,11 @@ must match.
 
 | Family | Levels | Damage or control | Coverage or count |
 | --- | --- | --- | --- |
-| Split Muzzle | L1-L3 | Total volley damage 140% / 165% / 180% | 2 / 3 / 3 projectiles, side angle ±7° |
+| Split Muzzle | L1-L6 | Total volley damage 140% / 155% / 165% / 184% / 204% / 234% | 2 / 2 / 3 / 3 / 3 / 3 projectiles, side angle ±7° |
 | Piercing Rounds | L1-L7 | Base projectile damage 105% / 111% / 118% / 126% / 135% / 145% / 156% | 1 / 1 / 2 / 2 / 3 / 3 / 4 additional penetrations |
-| Thermal Burst | L1-L4 | 4 / 5.75 / 8 / 11 damage per affected target | Radius 72 / 84 / 96 / 96 |
-| Bio Toxin | L1-L4 | 2 / 2.85 / 4 / 5.5 DPS per stack | Three stacks; duration 5 / 6 / 7 / 7 seconds |
-| Cryo Slow | L1-L3 | 6% / 8% / 10% slow per stack; 18 / 28 / 42 damage on third-stack shatter | Duration 2 / 2.5 / 3 seconds |
+| Thermal Burst | L1-L7 | 4 / 6 / 8 / 9 / 11 / 12 / 14 damage per affected target | Radius 72 / 79 / 86 / 93 / 100 / 108 / 115 |
+| Bio Toxin | L1-L7 | 2 / 2.8 / 3.6 / 4.4 / 5.2 / 6.1 / 7 DPS per stack | Three stacks; duration 5 / 5.6 / 6.2 / 6.8 / 7.4 / 8 / 8.4 seconds |
+| Cryo Slow | L1-L6 | 4% / 6% / 8% / 9% / 11% / 12% slow per stack; 18 / 25 / 32 / 39 / 47 / 55 damage on third-stack shatter | Duration 1.8 / 2.2 / 2.6 / 3 / 3.3 / 3.6 seconds |
 
 A run may equip any two distinct attributes in first-acquisition order. A third distinct
 attribute is blocked, while either equipped attribute remains levelable.
@@ -64,21 +64,21 @@ attribute is blocked, while either equipped attribute remains levelable.
 
 | Weapon | States | Damage | Cadence | Coverage or count |
 | --- | --- | --- | --- | --- |
-| Seeker | L1-L4 | 25 / 31.36 / 40 / 53.2 per missile | 1.35 / 1.215 / 1.107 / 1.0125 seconds | 2 / 3 / 4 / 4 missiles |
-| Electric Field | L1-L4 | 8 / 14.31 / 24.39 / 41.07 effective DPS | 0.25 / 0.225 / 0.205 / 0.1875-second ticks | Radius 240 / 280 / 320 / 320 |
-| Orbiting Blades | L1-L4 | 14 / 20.16 / 27.5 / 39.2 per blade contact | 0.55 / 0.495 / 0.451 / 0.4125-second lockout | 2 / 3 / 4 / 4 blades; orbit radius 112; angular speed 3.4 rad/s |
-| Drop Mines | L1-L4 | 48 / 67.2 / 90 / 123.2 per target | 3.2 / 2.52 / 1.968 / 1.8 seconds | 3 / 4 / 5 / 5 live mines; blast radius 192 / 216 / 240 / 240 |
-| Auto Laser | L1-L3 | 48 / 79.2 / 120.4 per target on the selected line | 0.9 / 0.774 / 0.675 seconds | Length 760; half-width 18 |
-| Storm Barrage | L1-L3 | 70 / 114 / 175 per target | 4.5 / 3.87 / 3.375 seconds | Radius 280; targets clusters 480-960 units away |
+| Seeker | L1-L7 | 25 / 31 / 37 / 43 / 50 / 57 / 64 per missile | 1.35 / 1.29 / 1.23 / 1.17 / 1.11 / 1.06 / 1.01 seconds | 2 / 2 / 3 / 3 / 4 / 4 / 4 missiles |
+| Electric Field | L1-L7 | 8 / 13 / 18 / 24 / 29 / 35 / 40 per tick | 0.250 / 0.240 / 0.229 / 0.219 / 0.208 / 0.198 / 0.188-second ticks | Radius 240 / 253 / 267 / 280 / 293 / 307 / 320 |
+| Orbiting Blades | L1-L7 | 14 / 20 / 26 / 32 / 38 / 44 / 51 per blade contact | 0.55 / 0.53 / 0.51 / 0.49 / 0.46 / 0.44 / 0.41-second lockout | 2 / 2 / 3 / 3 / 4 / 4 / 4 blades; orbit radius 112; angular speed 3.4 rad/s |
+| Drop Mines | L1-L7 | 48 / 67 / 86 / 104 / 123 / 142 / 160 per target | 3.20 / 2.97 / 2.73 / 2.50 / 2.27 / 2.03 / 1.80 seconds | 3 / 3 / 4 / 4 / 5 / 5 / 5 live mines; blast radius 192 / 204 / 216 / 228 / 240 / 240 / 240 |
+| Auto Laser | L1-L6 | 48 / 70 / 92 / 114 / 136 / 157 per target on the selected line | 0.90 / 0.84 / 0.78 / 0.72 / 0.66 / 0.60 seconds | Length 760; half-width 18 |
+| Storm Barrage | L1-L6 | 70 / 102 / 133 / 165 / 196 / 228 per target | 4.50 / 4.14 / 3.78 / 3.42 / 3.06 / 2.70 seconds | Radius 280; targets clusters 480-960 units away |
 
 ### Active weapons
 
 | Weapon | Levels | Damage | Size | Startup | Cooldown | Reliability and control |
 | --- | --- | --- | --- | --- | --- | --- |
-| EMP | L1-L4 | 62 / 71.3 / 80.6 / 93 | Damage radius 285; projectile clear 325 | 0.42 | 13 / 11.7 / 10.66 / 9.75 | Omnidirectional stun and projectile clear |
-| Black Hole | L1-L4 | 60 / 97.75 / 149.5 / 225 | Radius 150 / 175 / 200 / 225 | 0.35 | 12 / 10.8 / 9.84 / 9 | Remote grouping, 1.2-second active pull, delayed collapse |
-| Shockwave | L1-L4 | 45 / 74.75 / 117 / 180 | Radius 180 / 210 / 240 / 270 | 0.20 | 9 / 8.1 / 7.38 / 6.75 | Close knockback and frequent defensive use |
-| Cross Beam | L1-L4 | 80 / 126.5 / 188.5 / 277.5 | Half-width 24 / 32 / 40 / 48 | 0.30 | 10.5 / 9.45 / 8.61 / 7.875 | Map-spanning, cover-piercing, one hit per target |
+| EMP | L1-L7 | Runtime-owned | Radius 285 / 315 / 345 / 375 / 405 / 435 / 465 | 0.42 | 13 / 12.3 / 11.6 / 10.9 / 10.2 / 9.5 / 8.8 | Omnidirectional stun and projectile clearing; duration 1.4-2.6 seconds |
+| Black Hole | L1-L7 | Runtime-owned | Radius 180 / 200 / 220 / 240 / 260 / 280 / 300 | 0.35 | 12 / 11.4 / 10.8 / 10.2 / 9.6 / 9 / 8.4 | Remote grouping; duration 1.6-2.8 seconds; strength 0.25-0.40 |
+| Shockwave | L1-L7 | Runtime-owned | Radius 200 / 220 / 240 / 260 / 280 / 300 / 320 | 0.20 | 9 / 8.55 / 8.1 / 7.65 / 7.2 / 6.75 / 6.3 | Close knockback; duration 0.4-1.0 seconds |
+| Cross Beam | L1-L7 | Runtime-owned | Half-width 28 / 34 / 40 / 46 / 52 / 58 / 64 | 0.30 | 10.5 / 9.95 / 9.4 / 8.85 / 8.3 / 7.75 / 7.2 | Map-spanning, cover-piercing; duration 1.5-3.0 seconds |
 
 Cross Beam uses its exact half-width for collision and active presentation. Startup
 shows only source state and does not expose the future map-spanning corridors. Its
@@ -103,10 +103,10 @@ converted into hidden damage points.
 
 ## Adjustment rules
 
-- A numeric level must improve its intended job by at least 15% and at most 45%.
+- A numeric level must improve its intended job by at least 5% and at most 50%.
 - A discrete projectile, blade, mine, target, or penetration breakpoint can replace
   the numeric minimum. The added count cannot exceed 65% of the resulting count and
-  cannot arrive with a separate damage or cadence increase above 45%.
+  cannot arrive with a separate damage or cadence increase above 50%.
 - Equal-investment peers with the same role stay within 20% intended damage unless
   a named restriction, control benefit, reliability difference, safety difference,
   or targeting burden explains the gap.

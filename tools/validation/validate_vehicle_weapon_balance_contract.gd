@@ -8,21 +8,21 @@ const ActiveCatalog = preload("res://scripts/player/vehicle_active_weapon_catalo
 
 const ROLE_STATE_COUNTS := {
 	&"base_primary":1,
-	&"split_muzzle":3,
-	&"piercing_rounds":4,
-	&"thermal_burst":4,
-	&"bio_toxin":4,
-	&"cryo_slow":3,
-	&"seeker":4,
-	&"electric_field":4,
-	&"orbiting_blades":4,
-	&"drop_mines":4,
-	&"auto_laser":3,
-	&"storm_barrage":3,
-	&"emp":4,
-	&"black_hole":4,
-	&"shockwave":4,
-	&"cross_beam":4,
+	&"split_muzzle":6,
+	&"piercing_rounds":7,
+	&"thermal_burst":7,
+	&"bio_toxin":7,
+	&"cryo_slow":6,
+	&"seeker":7,
+	&"electric_field":7,
+	&"orbiting_blades":7,
+	&"drop_mines":7,
+	&"auto_laser":6,
+	&"storm_barrage":6,
+	&"emp":7,
+	&"black_hole":7,
+	&"shockwave":7,
+	&"cross_beam":7,
 }
 const FIXTURE_BY_ROLE := {
 	&"base_primary":&"boss_480",
@@ -42,8 +42,8 @@ const FIXTURE_BY_ROLE := {
 	&"shockwave":&"hull_8",
 	&"cross_beam":&"aim_axis_8",
 }
-const NUMERIC_GAIN_MIN := 0.15
-const NUMERIC_GAIN_MAX := 0.45
+const NUMERIC_GAIN_MIN := 0.05
+const NUMERIC_GAIN_MAX := 0.50
 const DISCRETE_GAIN_MAX := 0.65
 
 var failures: Array[String] = []
@@ -111,39 +111,39 @@ func _validate_role_matrix_and_rows() -> void:
 func _validate_authored_values() -> void:
 	_expect(_secondary.validate_contract().is_empty(), "secondary catalog remains complete")
 	_expect(_active.validate_contract().is_empty(), "active catalog remains complete")
-	_validate_secondary(&"seeker", [25.0, 31.36, 40.0, 53.2], [0.0, 0.0, 0.0, 0.0], [1.35, 1.215, 1.107, 1.0125], [2, 3, 4, 4])
-	_validate_secondary(&"electric_field", [8.0, 12.88, 20.0, 30.8], [240.0, 280.0, 320.0, 320.0], [0.25, 0.225, 0.205, 0.1875], [1, 1, 1, 1])
-	_validate_secondary(&"orbiting_blades", [14.0, 20.16, 27.5, 39.2], [112.0, 112.0, 112.0, 112.0], [0.55, 0.495, 0.451, 0.4125], [2, 3, 4, 4])
-	_validate_secondary(&"drop_mines", [48.0, 67.2, 90.0, 123.2], [192.0, 216.0, 240.0, 240.0], [3.2, 2.52, 1.968, 1.8], [3, 4, 5, 5])
-	_validate_secondary(&"auto_laser", [48.0, 79.2, 120.4], [0.0, 0.0, 0.0], [0.9, 0.774, 0.675], [1, 1, 1])
-	_validate_secondary(&"storm_barrage", [70.0, 114.0, 175.0], [0.0, 0.0, 0.0], [4.5, 3.87, 3.375], [1, 1, 1])
-	_validate_active(&"emp", [285.0, 325.0, 365.0, 405.0], [1.4, 1.8, 2.2, 2.6], [1.0, 1.0, 1.0, 1.0], 0.42, [13.0, 11.7, 10.4, 9.1])
-	_validate_active(&"black_hole", [180.0, 220.0, 260.0, 300.0], [1.6, 2.0, 2.4, 2.8], [0.25, 0.30, 0.35, 0.40], 0.35, [12.0, 10.8, 9.6, 8.4])
-	_validate_active(&"shockwave", [200.0, 240.0, 280.0, 320.0], [0.35, 0.50, 0.65, 0.80], [1.0, 1.0, 1.0, 1.0], 0.20, [9.0, 8.1, 7.2, 6.3])
-	_validate_active(&"cross_beam", [28.0, 40.0, 52.0, 64.0], [1.5, 2.0, 2.5, 3.0], [0.25, 0.30, 0.35, 0.40], 0.30, [10.5, 9.4, 8.3, 7.2])
+	_validate_secondary(&"seeker", [25.0, 31.0, 37.0, 43.0, 50.0, 57.0, 64.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [1.35, 1.29, 1.23, 1.17, 1.11, 1.06, 1.01], [2, 2, 3, 3, 4, 4, 4])
+	_validate_secondary(&"electric_field", [8.0, 13.0, 18.0, 24.0, 29.0, 35.0, 40.0], [240.0, 253.0, 267.0, 280.0, 293.0, 307.0, 320.0], [0.250, 0.240, 0.229, 0.219, 0.208, 0.198, 0.188], [1, 1, 1, 1, 1, 1, 1])
+	_validate_secondary(&"orbiting_blades", [14.0, 20.0, 26.0, 32.0, 38.0, 44.0, 51.0], [112.0, 112.0, 112.0, 112.0, 112.0, 112.0, 112.0], [0.55, 0.53, 0.51, 0.49, 0.46, 0.44, 0.41], [2, 2, 3, 3, 4, 4, 4])
+	_validate_secondary(&"drop_mines", [48.0, 67.0, 86.0, 104.0, 123.0, 142.0, 160.0], [192.0, 204.0, 216.0, 228.0, 240.0, 240.0, 240.0], [3.20, 2.97, 2.73, 2.50, 2.27, 2.03, 1.80], [3, 3, 4, 4, 5, 5, 5])
+	_validate_secondary(&"auto_laser", [48.0, 70.0, 92.0, 114.0, 136.0, 157.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.90, 0.84, 0.78, 0.72, 0.66, 0.60], [1, 1, 1, 1, 1, 1])
+	_validate_secondary(&"storm_barrage", [70.0, 102.0, 133.0, 165.0, 196.0, 228.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [4.50, 4.14, 3.78, 3.42, 3.06, 2.70], [1, 1, 1, 1, 1, 1])
+	_validate_active(&"emp", [285.0, 315.0, 345.0, 375.0, 405.0, 435.0, 465.0], [1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 0.42, [13.0, 12.3, 11.6, 10.9, 10.2, 9.5, 8.8])
+	_validate_active(&"black_hole", [180.0, 200.0, 220.0, 240.0, 260.0, 280.0, 300.0], [1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8], [0.25, 0.28, 0.30, 0.33, 0.35, 0.38, 0.40], 0.35, [12.0, 11.4, 10.8, 10.2, 9.6, 9.0, 8.4])
+	_validate_active(&"shockwave", [200.0, 220.0, 240.0, 260.0, 280.0, 300.0, 320.0], [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 0.20, [9.0, 8.55, 8.1, 7.65, 7.2, 6.75, 6.3])
+	_validate_active(&"cross_beam", [28.0, 34.0, 40.0, 46.0, 52.0, 58.0, 64.0], [1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0], [0.25, 0.28, 0.30, 0.33, 0.35, 0.38, 0.40], 0.30, [10.5, 9.95, 9.4, 8.85, 8.3, 7.75, 7.2])
 	_validate_attribute_values()
 	_expect(
 		PrimaryRules.projectiles_per_volley(1) == 2
-			and PrimaryRules.projectiles_per_volley(2) == 3
+			and PrimaryRules.projectiles_per_volley(3) == 3
 			and is_equal_approx(PrimaryRules.total_volley_damage_percent(1), 140.0)
-			and is_equal_approx(PrimaryRules.total_volley_damage_percent(2), 165.0)
-			and is_equal_approx(PrimaryRules.total_volley_damage_percent(3), 180.0),
+			and is_equal_approx(PrimaryRules.total_volley_damage_percent(2), 155.0)
+			and is_equal_approx(PrimaryRules.total_volley_damage_percent(3), 165.0)
+			and is_equal_approx(PrimaryRules.total_volley_damage_percent(6), 234.0),
 		"Split Muzzle preserves its separate projectile-count and side-damage contract"
 	)
 
 
 func _validate_level_gains() -> void:
-	_validate_numeric_progression("Thermal Burst damage", [4.0, 5.75, 8.0, 11.0])
-	_validate_numeric_progression("Bio Toxin DPS", [2.0, 2.85, 4.0, 5.5])
-	_validate_numeric_progression("Cryo Slow", [6.0, 8.0, 10.0])
+	_validate_numeric_progression("Thermal Burst damage", [4.0, 6.0, 8.0, 9.0, 11.0, 12.0, 14.0])
+	_validate_numeric_progression("Bio Toxin DPS", [2.0, 2.8, 3.6, 4.4, 5.2, 6.1, 7.0])
+	_validate_numeric_progression("Cryo Slow", [4.0, 6.0, 8.0, 9.0, 11.0, 12.0])
 	# Weapon curves deliberately combine authored raw growth with the migrated
 	# per-level damage/cadence factors. Their exact arrays are locked above rather
 	# than forced through the generic single-stat gain band.
-	_validate_numeric_progression("Split Muzzle first totals", [100.0, 140.0, 165.0])
-	_validate_numeric_progression("Split Muzzle final side damage", [32.5, 40.0])
-	_validate_discrete_progression("Piercing contacts", [1, 2, 3, 4, 5], [])
-	_validate_discrete_progression("Seeker missiles", [2, 3, 4, 4], [25.0, 31.36, 40.0, 53.2])
-	_validate_discrete_progression("Orbiting blades", [2, 3, 4, 4], [14.0, 20.16, 27.5, 39.2])
+	_validate_numeric_progression("Split Muzzle volley totals", [140.0, 155.0, 165.0, 184.0, 204.0, 234.0])
+	_validate_discrete_progression("Piercing contacts", [2, 2, 3, 3, 4, 4, 5], [1.05, 1.11, 1.18, 1.26, 1.35, 1.45, 1.56])
+	_validate_discrete_progression("Seeker missiles", [2, 2, 3, 3, 4, 4, 4], [25.0, 31.0, 37.0, 43.0, 50.0, 57.0, 64.0])
+	_validate_discrete_progression("Orbiting blades", [2, 2, 3, 3, 4, 4, 4], [14.0, 20.0, 26.0, 32.0, 38.0, 44.0, 51.0])
 
 
 func _validate_peer_bands_and_dominance() -> void:
@@ -185,14 +185,14 @@ func _validate_weapon_owned_curves() -> void:
 	var build := RunBuild.new(UpgradeCatalog.new())
 	_expect(
 		is_equal_approx(build.stat(&"secondary_damage_multiplier", 1.0), 1.0)
-			and is_equal_approx(_secondary.get_definition(&"auto_laser").value(3), 120.4)
-			and is_equal_approx(_secondary.get_definition(&"auto_laser").cadence(3), 0.675),
+			and is_equal_approx(_secondary.get_definition(&"auto_laser").value(6), 157.0)
+			and is_equal_approx(_secondary.get_definition(&"auto_laser").cadence(6), 0.60),
 		"automatic weapon power is owned by its definition without a shared multiplier"
 	)
 	_expect(
-		is_equal_approx(_active.get_definition(&"cross_beam").strength(4), 0.40)
-			and is_equal_approx(_active.get_definition(&"cross_beam").duration(4), 3.0)
-			and is_equal_approx(_active.get_definition(&"cross_beam").cooldown(4), 7.2),
+		is_equal_approx(_active.get_definition(&"cross_beam").strength(7), 0.40)
+			and is_equal_approx(_active.get_definition(&"cross_beam").duration(7), 3.0)
+			and is_equal_approx(_active.get_definition(&"cross_beam").cooldown(7), 7.2),
 		"active weapon control is owned by its definition without a damage axis"
 	)
 
@@ -252,7 +252,9 @@ func _metrics_for(family: StringName, state: int) -> Dictionary:
 		var total := PrimaryRules.total_volley_damage_percent(state) * 0.18
 		return {"damage_per_use":total, "damage_10s":total / 0.12 * 10.0, "contacts":PrimaryRules.projectiles_per_volley(state), "cooldown":0.12, "coverage":float(PrimaryRules.projectiles_per_volley(state)), "targeting_burden":2.0}
 	if family == &"piercing_rounds":
-		return {"damage_per_use":18.0 * float(state + 1), "damage_10s":1500.0 * float(state + 1), "contacts":state + 1, "cooldown":0.12, "coverage":float(state + 1), "targeting_burden":4.0}
+		var contacts := 1 + PrimaryRules.additional_penetrations(state)
+		var damage_multiplier := PrimaryRules.piercing_damage_multiplier(state)
+		return {"damage_per_use":18.0 * damage_multiplier * contacts, "damage_10s":1500.0 * damage_multiplier * contacts, "contacts":contacts, "cooldown":0.12, "coverage":float(contacts), "targeting_burden":4.0}
 	if family in [&"thermal_burst", &"bio_toxin", &"cryo_slow"]:
 		return _attribute_metrics(family, state)
 	if family in [&"seeker", &"electric_field", &"orbiting_blades", &"drop_mines", &"auto_laser", &"storm_barrage"]:
@@ -262,13 +264,13 @@ func _metrics_for(family: StringName, state: int) -> Dictionary:
 
 func _attribute_metrics(family: StringName, state: int) -> Dictionary:
 	var values := {
-		&"thermal_burst":[4.0, 5.75, 8.0, 11.0],
-		&"bio_toxin":[2.0, 2.85, 4.0, 5.5],
-		&"cryo_slow":[6.0, 8.0, 10.0],
+		&"thermal_burst":[4.0, 6.0, 8.0, 9.0, 11.0, 12.0, 14.0],
+		&"bio_toxin":[2.0, 2.8, 3.6, 4.4, 5.2, 6.1, 7.0],
+		&"cryo_slow":[4.0, 6.0, 8.0, 9.0, 11.0, 12.0],
 	}
 	var value := float(Array(values[family])[state - 1])
 	if family == &"thermal_burst":
-		return {"damage_per_use":value * 4.0, "damage_10s":value * 40.0, "contacts":4, "coverage":float([72, 84, 96, 96][state - 1]), "targeting_burden":2.0}
+		return {"damage_per_use":value * 4.0, "damage_10s":value * 40.0, "contacts":4, "coverage":float([72, 79, 86, 93, 100, 108, 115][state - 1]), "targeting_burden":2.0}
 	if family == &"bio_toxin":
 		return {"damage_per_use":value * 3.0, "damage_10s":value * 30.0, "contacts":1, "coverage":1.0, "targeting_burden":2.0}
 	return {"damage_per_use":0.0, "damage_10s":0.0, "contacts":8, "coverage":8.0, "control":value, "targeting_burden":2.0}
@@ -346,9 +348,9 @@ func _validate_active(id: StringName, size: Array, duration: Array, strength: Ar
 
 func _validate_attribute_values() -> void:
 	var cases := [
-		{"id":&"thermal_burst", "stat_a":&"thermal_burst_damage", "a":[4.0, 5.75, 8.0, 11.0], "stat_b":&"thermal_burst_radius", "b":[72.0, 84.0, 96.0, 96.0]},
-		{"id":&"bio_toxin", "stat_a":&"toxin_dps_per_stack", "a":[2.0, 2.85, 4.0, 5.5], "stat_b":&"toxin_duration", "b":[5.0, 6.0, 7.0, 7.0]},
-		{"id":&"cryo_slow", "stat_a":&"cryo_slow_per_stack", "a":[6.0, 8.0, 10.0], "stat_b":&"cryo_duration", "b":[2.0, 2.5, 3.0], "stat_c":&"cryo_shatter_damage", "c":[18.0, 28.0, 42.0]},
+		{"id":&"thermal_burst", "stat_a":&"thermal_burst_damage", "a":[4.0, 6.0, 8.0, 9.0, 11.0, 12.0, 14.0], "stat_b":&"thermal_burst_radius", "b":[72.0, 79.0, 86.0, 93.0, 100.0, 108.0, 115.0]},
+		{"id":&"bio_toxin", "stat_a":&"toxin_dps_per_stack", "a":[2.0, 2.8, 3.6, 4.4, 5.2, 6.1, 7.0], "stat_b":&"toxin_duration", "b":[5.0, 5.6, 6.2, 6.8, 7.4, 8.0, 8.4]},
+		{"id":&"cryo_slow", "stat_a":&"cryo_slow_per_stack", "a":[4.0, 6.0, 8.0, 9.0, 11.0, 12.0], "stat_b":&"cryo_duration", "b":[1.8, 2.2, 2.6, 3.0, 3.3, 3.6], "stat_c":&"cryo_shatter_damage", "c":[18.0, 25.0, 32.0, 39.0, 47.0, 55.0]},
 	]
 	var catalog := UpgradeCatalog.new()
 	for case_variant in cases:
@@ -382,7 +384,7 @@ func _validate_numeric_progression(label: String, values: Array) -> void:
 		var gain := (float(values[index]) - previous) / maxf(0.001, previous)
 		_expect(
 			gain >= NUMERIC_GAIN_MIN - 0.0001 and gain <= NUMERIC_GAIN_MAX + 0.0001,
-			"%s state %d gain stays in the 15-45%% numeric band" % [label, index + 1]
+			"%s state %d gain stays in the 5-50%% numeric band" % [label, index + 1]
 		)
 
 

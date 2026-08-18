@@ -69,9 +69,9 @@ func validate_contract() -> PackedStringArray:
 		if definition == null or definition.upgrade_id == &"":
 			errors.append("vehicle secondary definition has no upgrade owner")
 			continue
-		var expected_states := 4 if definition.id in [
+		var expected_states := 7 if definition.id in [
 			&"seeker", &"drop_mines", &"electric_field", &"orbiting_blades"
-		] else 3
+		] else 6
 		if (
 			definition.values_by_level.size() != expected_states
 			or definition.auxiliary_by_level.size() != expected_states
