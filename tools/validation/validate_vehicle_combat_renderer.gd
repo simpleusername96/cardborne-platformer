@@ -687,8 +687,8 @@ func _run() -> void:
 	var boss_ring_batch := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
 	_expect(
 		boss_ring_batch.multimesh.visible_instance_count == 0
-			and beam_batch.multimesh.visible_instance_count == 10,
-		"Stage 3 boss renders only its body-facing 70-degree shield boundary"
+			and beam_batch.multimesh.visible_instance_count == 30,
+		"Stage 3 boss renders three separated shield segments without a full ring"
 	)
 	var destruction_presentation := _player_presentation(Vector2.ZERO, false)
 	destruction_presentation["dying_boss_id"] = open_boss.id
@@ -748,7 +748,7 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	var offscreen_enemy_batch := renderer.get_node(
-		"Enemy_controller"
+		"Enemy_ordinary_gap_01"
 	) as MultiMeshInstance2D
 	var area_disk := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var area_ring := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
@@ -1353,10 +1353,10 @@ func _validate_emp_presentation(renderer: Renderer) -> void:
 	_expect(
 		 emp_source.contains("startup_seconds = 0.42")
 			and emp_source.contains(
-				"size_by_level = Array[float]([285.0, 325.0, 365.0, 405.0])"
+				"size_by_level = Array[float]([285.0, 315.0, 345.0, 375.0, 405.0, 435.0, 465.0])"
 			)
 			and emp_source.contains(
-				"auxiliary_size_by_level = Array[float]([325.0, 365.0, 405.0, 445.0])"
+				"auxiliary_size_by_level = Array[float]([325.0, 355.0, 385.0, 415.0, 445.0, 475.0, 505.0])"
 			),
 		"EMP definition publishes its exact stun and projectile-clear footprints"
 	)
