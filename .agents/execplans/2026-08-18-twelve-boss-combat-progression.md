@@ -316,13 +316,13 @@ Source owners: `scripts/vehicle/vehicle_field_layout_generator.gd`,
 `scripts/vehicle/vehicle_run.gd`, pickup/device runtimes, minimap snapshot owners, and focused
 field/reward validators.
 
-- [ ] **1.1** Generate four recall pickups, six facilities, and bounded reserve anchors.
+- [x] **1.1** Generate four recall pickups, six facilities, and bounded reserve anchors.
   - Accept: deterministic layouts for every field contain exactly 4 recalls and 6 facilities,
     all reachable, separated, and outside reserved geometry; reserve anchors are deterministic.
-- [ ] **1.2** Add the 90-second recall replenishment rule.
+- [x] **1.2** Add the 90-second recall replenishment rule.
   - Accept: a frame-step fixture proves active count, timer, pause/modal exclusion, four-active
     cap, anchor reuse safety, and no allocation or scan in the hot path.
-- [ ] **1.3** Preserve boss-death continuity.
+- [x] **1.3** Preserve boss-death continuity.
   - Accept: defeating a boss changes only the future role pool; existing enemies, pickups,
     facilities, structural geometry, and field fingerprint remain unchanged.
 
@@ -346,13 +346,13 @@ Source owners: `scripts/bosses/vehicle_boss_phase_catalog.gd`,
 `scripts/bosses/vehicle_boss_shield_runtime.gd`, boss damage intake, retained renderer shield
 batch, Guidebook stat adapter, localization, and boss-exam validators.
 
-- [ ] **2.1** Implement the exact angular and 8/2-second state machine.
+- [x] **2.1** Implement the exact angular and 8/2-second state machine.
   - Accept: deterministic angle tests prove every arc edge, every gap, independent 18-degree
     rotation, 15% protected damage, 100% gap damage, and exactly 2.0 exposed seconds per cycle.
-- [ ] **2.2** Publish collision-owned scalar presentation state to the retained renderer.
+- [x] **2.2** Publish collision-owned scalar presentation state to the retained renderer.
   - Accept: one code-native shield batch draws three segments that match gameplay intervals at
     representative rotations; no raster, node-per-segment, or full-screen route overlay exists.
-- [ ] **2.3** Update state messages and Guidebook truth.
+- [x] **2.3** Update state messages and Guidebook truth.
   - Accept: Korean/English shield-up and shield-down messages and 85% reduction/2-second exposure
     rows match runtime snapshots without duplicate HUD ownership.
 
@@ -374,30 +374,30 @@ Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`,
 `scripts/enemies/vehicle_stage_difficulty.gd`, encounter director stage arrays, stage transition,
 stage/result/Guidebook snapshots, and campaign validators.
 
-- [ ] **3.1** Replace stage and boss identities with generic ordinal contracts.
+- [x] **3.1** Replace stage and boss identities with generic ordinal contracts.
   - Change: migrate stage/boss catalog IDs, localization keys, runtime variants, pattern prefixes,
     tests, docs, reports, filenames, semantic manifests, capture fixtures, and workbench metadata.
   - Accept: tracked-tree forbidden-name validation reports zero game-owned stage/boss proper nouns;
     all twelve bosses resolve as `boss_stage_01..12` and bilingual ordinal labels.
-- [ ] **3.2** Replace ordinary-enemy identities with generic role-and-level contracts.
+- [x] **3.2** Replace ordinary-enemy identities with generic role-and-level contracts.
   - Accept: every ordinary catalog/Guidebook/result/localization/asset identity uses
     `ordinary_<role>_<level>` and a matching bilingual role label; descriptive mechanic IDs remain
     stable and upgrade-card names are unchanged.
-- [ ] **3.3** Implement the rolling three-role teaching roster.
+- [x] **3.3** Implement the rolling three-role teaching roster.
   - Accept: all twelve pools equal the locked table, each transition changes only future
     admissions, current teaching roles meet their bounded share/minimum exposure, and live actors
     survive unchanged.
-- [ ] **3.4** Implement and verify the twelve one-mechanic teaching links.
+- [x] **3.4** Implement and verify the twelve one-mechanic teaching links.
   - Accept: each role fixture proves its one stated response, lower coverage/damage than the boss,
     no copied multi-phase pattern, and no extra route preview.
-- [ ] **3.5** Extend every stage-owned array and apply the locked ordinary curves.
+- [x] **3.5** Extend every stage-owned array and apply the locked ordinary curves.
   - Accept: cycles 1-3 are byte-for-byte equivalent in computed ordinary health/speed/damage;
     cycle 4 has no extra late multiplier; cycle 12 applies exactly `2.00 * 1.50` before global
     ordinary durability factors; speed never exceeds the 1.30 stage curve.
-- [ ] **3.6** Apply 30% boss health and add cycles 9-12 boss profiles.
+- [x] **3.6** Apply 30% boss health and add cycles 9-12 boss profiles.
   - Accept: computed health matches the locked table for all twelve cycles and no owner clamps
     stage IDs 9-12 to stage 8.
-- [ ] **3.7** Extend quotas, authored counts, reports, and run completion.
+- [x] **3.7** Extend quotas, authored counts, reports, and run completion.
   - Change: raise the boss quota gate to 1.5 times the previous per-position eight-cycle curve,
     rounded to integers, and author cycles 9-12 consistently; boss death changes only future
     composition.
@@ -424,17 +424,17 @@ Preconditions:
 Source owners: `data/cards/vehicle/`, `data/weapons/vehicle/`, card catalog/build/offer owners,
 primary/secondary/active runtimes, effect preview, product catalog, UI snapshots, and validators.
 
-- [ ] **4.1** Generate and review one canonical expanded-curve table from the locked rules.
+- [x] **4.1** Generate and review one canonical expanded-curve table from the locked rules.
   - Accept: all 27 cards have current maximum +3, monotonic values, no missing level,
     preserved L1, exact 130% offense/defense and 120% utility endpoints, exact active-weapon
     curves, unchanged discrete maxima, and one visible scalar change at every new level.
-- [ ] **4.2** Replace authored values with integer and one-decimal-time values.
+- [x] **4.2** Replace authored values with integer and one-decimal-time values.
   - Accept: card and weapon resources contain no fractional damage/health/radius/count/whole
     percent and no time precision beyond one decimal; runtime remains float-based.
-- [ ] **4.3** Separate multiplicative axes on secondary weapon levels.
+- [x] **4.3** Separate multiplicative axes on secondary weapon levels.
   - Accept: a calculated effective-output table has no simultaneous major count/cap and cadence
     jump; paired count bands and unchanged final count/penetration caps are proved independently.
-- [ ] **4.4** Update offers, previews, localization, product truth, and level-state expectations.
+- [x] **4.4** Update offers, previews, localization, product truth, and level-state expectations.
   - Accept: catalog size remains 27, total level states become 172, all legal levels can be
     offered/applied, and Korean/English previews equal gameplay snapshots.
 
@@ -457,16 +457,16 @@ Preconditions:
 Source owners: `scripts/bosses/`, `scripts/enemies/`, combat renderer and effect store,
 `vehicle_combat_stages.gd`, Guidebook catalog/stat adapter, and relevant fixed-cap stores.
 
-- [ ] **5.1** Remove complete startup paths from stage-7 and stage-8 bosses.
+- [x] **5.1** Remove complete startup paths from stage-7 and stage-8 bosses.
   - Accept: startup snapshots contain source/body and local entry cues but zero future corridor,
     wedge, or ring geometry; active collision and presentation remain coincident.
-- [ ] **5.2** Implement the four locked boss identities and profiles.
+- [x] **5.2** Implement the four locked boss identities and profiles.
   - Accept: each boss completes its direct and autonomous sequences, has a distinct counterplay
     fixture, honors fixed capacities, and exposes no full-path startup overlay.
-- [ ] **5.3** Implement the final four generic teaching-role mechanics.
+- [x] **5.3** Implement the final four generic teaching-role mechanics.
   - Accept: role fixtures prove exact base stats, startup, attack/support rules, target priority,
     boss/support exclusions, stage scaling, bounded storage, and the links in the rolling table.
-- [ ] **5.4** Extend boss/add cleanup and report ownership through cycle 12.
+- [x] **5.4** Extend boss/add cleanup and report ownership through cycle 12.
   - Accept: no boss-owned damaging object survives cleanup, ordinary non-owned actors do survive,
     and the final report contains twelve ordered boss records.
 
@@ -496,10 +496,10 @@ and localization catalogs.
     bosses, dark perimeter, restrained accents, and actual-size readability.
   - Accept: provenance, prompt, canonical paths, expected/observed sheet hash, actual reference
     input, and actual-size/grayscale sheets are recorded; no SVG/ImageMagick authoring occurs.
-- [ ] **6.2** Promote the user-fixed candidate hashes and generically rename all actor assets.
+- [x] **6.2** Promote the user-fixed candidate hashes and generically rename all actor assets.
   - Accept: provider, manifest, actor catalog, Guidebook, and runtime resolve the fixed exact-pixel
     files through generic IDs; no old proper-noun filename or semantic ID remains.
-- [ ] **6.3** Complete generic Korean/English names, descriptions, stat rows, reports, and UI.
+- [x] **6.3** Complete generic Korean/English names, descriptions, stat rows, reports, and UI.
   - Accept: localization coverage, text bounds, 200% text, and supported viewport checks pass.
 
 Checkpoint: report approved hashes, runtime semantic IDs, and rendered evidence before Phase 7.
@@ -520,10 +520,10 @@ Preconditions:
 Source owners: repository validators, Web export preset, release workflow, GitHub `master`, and
 itch.io HTML5 channel.
 
-- [ ] **7.1** Run the broad native and deterministic final gate.
+- [x] **7.1** Run the broad native and deterministic final gate.
   - Accept: all focused validators named above, full Godot import, `git diff --check`, and native
     production smoke pass with no new blocker.
-- [ ] **7.2** Run the one deferred heavy performance and Web gate.
+- [x] **7.2** Run the one deferred heavy performance and Web gate.
   - Accept: fixed-cap/capacity checks, production Web export, built-Web smoke, and the existing
     Cardborne performance evidence contract pass or record a truthful blocked verdict.
 - [ ] **7.3** Commit task-owned changes, push `master`, and publish itch.io.
@@ -632,10 +632,15 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: 1.1, generate the increased initial field supply and reserve anchors.
-- Last completed gate: Discovery Closure Gate. The Korean current-state report was created at
-  `docs/reports/2026-08-18-combat-progression-and-upgrades-ko.html`.
+- Current phase: Phase 7 release handoff.
+- Next task: 7.3 remains open only for the itch.io publication job. GitHub `master` contains the
+  complete implementation at `783ebf118cdb979438bfe57d15f3d8aeb8acc9ea`.
+- Last completed gate: local Web export and itch.io static release validation passed. The user
+  explicitly stopped the synthetic maximum-load performance run on 2026-08-18 because its
+  workload is not representative of actual play; it is not used as acceptance evidence.
+- Release note: GitHub Actions run `32108482311` was in progress when execution stopped. Earlier
+  runs exposed and led to repairs for stale generic asset links and obsolete renderer, upgrade,
+  and pickup fixture expectations. Publication remains unclaimed until that job succeeds.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance
   this pointer in the same edit.
 
