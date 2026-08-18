@@ -90,17 +90,35 @@ func _validate_catalog_and_stage_rollout() -> void:
 
 
 func _validate_role_signatures() -> void:
-	var signatures := {}
+	var teaching_assets := {
+		&"ordinary_compression_01": &"actor/ordinary_gap_01",
+		&"ordinary_reflect_01": &"actor/ordinary_shield_01",
+		&"ordinary_resonance_01": &"actor/ordinary_range_01",
+		&"ordinary_overload_01": &"actor/ordinary_pull_01",
+	}
+	var legacy_assets := {}
+	var ordinary_count := 0
 	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
 		if archetype == &"boss_actor":
 			continue
-		var signature := String(archetype)
+		ordinary_count += 1
+		var descriptor := ActorCatalog.descriptor(archetype)
+		var asset := StringName(descriptor.get("asset", &""))
+		if teaching_assets.has(archetype):
+			_expect(
+				asset == StringName(teaching_assets[archetype]),
+				"%s reuses only its approved actor body beneath the mechanic module" % archetype
+			)
+			continue
 		_expect(
-			not signatures.has(signature),
+			not legacy_assets.has(asset),
 			"%s has a unique grayscale outer contour" % archetype
 		)
-		signatures[signature] = archetype
-	_expect(signatures.size() == 22, "all 22 ordinary enemy silhouettes are unique")
+		legacy_assets[asset] = archetype
+	_expect(
+		ordinary_count == 26 and legacy_assets.size() == 22,
+		"22 approved bodies plus four module-distinguished teaching roles are registered"
+	)
 
 
 func _validate_runtime_permissions() -> void:
