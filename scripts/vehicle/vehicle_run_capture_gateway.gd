@@ -1061,7 +1061,10 @@ func _capture_stage_map_evidence() -> void:
 		_run.player_position = bounds.get_center()
 		_fit_camera_to_stage(bounds)
 		await _settle_capture()
-		_save_capture("10-field-%s.png" % String(field_id).replace("_", "-"))
+		_save_capture(
+			"10-field-%s.png"
+			% String(field_id).trim_prefix("field_").replace("_", "-")
+		)
 	_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
 	_run._field_id_override = original_override
 	_run.field_layout = null

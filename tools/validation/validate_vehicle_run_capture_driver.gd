@@ -123,6 +123,10 @@ func _initialize() -> void:
 			and not gateway_source.contains("&\"capture_mystery_damaged\""),
 		"ready-device capture shows the assigned symbol before any hit"
 	)
+	_expect(
+		gateway_source.contains('trim_prefix("field_")'),
+		"field capture filenames remove the registry prefix before manifest matching"
+	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 43, "core manifest has 43 captures")
 	_expect(Driver.FULL_CAPTURE_FILES.size() == 136, "full manifest has 136 captures")
 	for required_capture in [
