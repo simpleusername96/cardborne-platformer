@@ -11,20 +11,20 @@ var failures: Array[String] = []
 
 func _initialize() -> void:
 	var catalog := Catalog.new()
-	_expect(catalog.validate_contract().is_empty(), "catalog has 27 cards and 91 levels")
+	_expect(catalog.validate_contract().is_empty(), "catalog has 27 cards and 172 levels")
 	var build := Build.new(catalog)
 	var offer := catalog.offer(build, 77, 0, &"level_up", 0)
 	_expect(offer.any(func(card): return card.category == &"activated") and offer.any(func(card): return card.category == &"secondary"), "missing weapon categories reserve offers")
 	var combo := Combo.new()
 	for _index in 5: combo.record_shot_group(false, 3, 0)
-	_expect(is_equal_approx(combo.next_hit_multiplier(3, 0), 1.70), "miss compensation applies to the next hit group")
-	_expect(is_equal_approx(float(combo.record_shot_group(true, 3, 0)["damage_multiplier"]), 1.70), "miss compensation caps at five")
+	_expect(is_equal_approx(combo.next_hit_multiplier(3, 0), 1.50), "miss compensation applies to the next hit group")
+	_expect(is_equal_approx(float(combo.record_shot_group(true, 3, 0)["damage_multiplier"]), 1.50), "miss compensation caps at five")
 	combo.reset()
 	combo.record_shot_group(true, 0, 3)
-	_expect(is_equal_approx(combo.next_hit_multiplier(0, 3), 1.10), "hit chain previews the next consecutive hit")
+	_expect(is_equal_approx(combo.next_hit_multiplier(0, 3), 1.08), "hit chain previews the next consecutive hit")
 	combo.advance_motion(1.0, Combo.BRACED_SEGMENT_DISTANCE * 5.0, 100.0, 3)
 	combo.advance_motion(Combo.BRACED_STILL_SECONDS, 0.0, 0.0, 3)
-	_expect(is_equal_approx(combo.braced_multiplier(3), 1.50), "braced fire caps at five movement segments")
+	_expect(is_equal_approx(combo.braced_multiplier(3), 1.40), "braced fire caps at five movement segments")
 	combo.reset()
 	combo.advance_motion(0.0, Combo.BRACED_SEGMENT_DISTANCE * 40.0, 100.0, 3)
 	_expect(
@@ -53,6 +53,13 @@ func _initialize() -> void:
 	var runtime := Facilities.new()
 	runtime.configure([{"id": &"a", "pos": Vector2.ZERO}, {"id": &"b", "pos": Vector2(900, 0)}, {"id": &"c", "pos": Vector2(1800, 0)}], 77, &"stage_1")
 	_expect(runtime.snapshot()["devices"].size() == 3, "three distinct facilities configure")
+	runtime.refresh_publication(Rect2(-640.0, -360.0, 1280.0, 720.0), Vector2.ZERO)
+	_expect(
+		Array(runtime.snapshot()["devices"]).filter(
+			func(device): return bool(device["published"])
+		).size() == 1,
+		"viewport publication exposes one dormant facility"
+	)
 	_expect(Facilities.accepts_damage(&"player", &"projectile") and Facilities.accepts_damage(&"hostile", &"projectile"), "both factions damage facilities")
 	var receipt := {}
 	_expect(not runtime.first_intact_segment_hit(Vector2(-100, 0), Vector2(100, 0), 0.0, receipt), "facilities pass projectiles")
