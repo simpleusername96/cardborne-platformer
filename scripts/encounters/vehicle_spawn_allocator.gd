@@ -30,8 +30,11 @@ const RELAXATION_TIERS: Array[Dictionary] = [
 const PURSUIT_ROLES: Array[StringName] = [
 	&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_area_01",
 	&"ordinary_gap_01", &"ordinary_support_02", &"ordinary_growth_01",
-	&"ordinary_support_01", &"ordinary_support_03",
+	&"ordinary_support_01", &"ordinary_support_03", &"ordinary_reflect_01",
+	&"ordinary_overload_01",
 ]
+const LATE_PURSUIT_ROLES: Array[StringName] = [&"ordinary_reflect_01", &"ordinary_overload_01"]
+const LATE_STANDOFF_ROLES: Array[StringName] = [&"ordinary_compression_01", &"ordinary_resonance_01"]
 const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = EnemyArchetypes.PROJECTILE_FIRING_ARCHETYPES
 
 var _seed := 0
@@ -490,9 +493,9 @@ func _role_distance_lane(score_identity: String, role: StringName) -> int:
 	## runtime remains the sole owner of effective speed scaling.
 	var definition := EnemyArchetypes.definition(role)
 	var behavior := StringName(definition.get("behavior", &""))
-	if role in [&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_area_01"]:
+	if role in [&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_area_01"] or role in LATE_PURSUIT_ROLES:
 		return 1 + posmod(hash(score_identity + ":pursuit-distance"), 2)
-	if behavior in [&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01"]:
+	if behavior in [&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01"] or role in LATE_STANDOFF_ROLES:
 		return posmod(hash(score_identity + ":standoff-distance"), 2)
 	if behavior in [&"ordinary_support_02", &"ordinary_support_01", &"ordinary_support_03"]:
 		return 0 # escort/support prefers 1200px.
