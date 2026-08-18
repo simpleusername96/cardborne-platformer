@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 created: 2026-08-18
 scope: Persistent eight-boss field progression, late-run pressure, boss identities, primary attributes, neutral facilities, and verified Web publication
 related:
@@ -259,13 +259,13 @@ Source owners: task diff, `tools/validation/`, `tools/export_web.ps1`, `.github/
 - [x] **6.2** Run the final local functional and visual gate once.
   - Change: run Godot import, all affected focused validators, the complete headless validator sweep, one native rendered capture set for boss/facility/UI evidence, visual authority validation, Web export, itch static release validation, and one built-Web boot using the guarded `codex` lane.
   - Accept: all checks exit zero; rendered evidence confirms unchanged field across a cycle, distinct boss 7/8 patterns, two generic attribute slots, and Lava readability; report exact partial-pass labels and make no global performance claim.
-- [ ] **6.3** Commit only task-owned changes.
+- [x] **6.3** Commit only task-owned changes.
   - Change: create coherent scoped commits with short explanatory bodies; update this plan's checkboxes/evidence and mark it `done` only after deployment succeeds.
   - Accept: worktree contains no uncommitted task-owned changes and unrelated user changes were neither staged nor altered.
-- [ ] **6.4** Push `master` and monitor the matching workflow.
+- [x] **6.4** Push `master` and monitor the matching workflow.
   - Change: push to `origin/master`; use `gh run` to follow the run for the pushed commit through validation, Web build, built-Web boot, and `Publish verified Web build to itch.io`.
   - Accept: the matching Actions run concludes `success`; if it fails, inspect the exact step, correct only task-owned causes, rerun local relevant checks, commit, and push once more.
-- [ ] **6.5** Verify publication identity and hand off.
+- [x] **6.5** Verify publication identity and hand off.
   - Change: record pushed commit, Actions run URL/ID, itch target/version, and successful publication step in this plan and final response.
   - Accept: `origin/master` equals local HEAD and the workflow summary identifies `itchioprofile1351321/iron-breakthrough:html5` for that commit.
 
@@ -309,8 +309,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 6 release publication.
-- Next task: 6.3-6.5 Commit the settled release evidence, push `master`, and verify the matching GitHub Actions itch.io publication.
+- Current phase: Complete.
+- Next task: None. The release payload and this completion record are on `origin/master`.
+- Phase 6.3-6.5 publication evidence: the settled release payload was committed through `f10e28c11c22833de19f5792766a21ccd8b94a5b` and pushed to `origin/master`. GitHub Actions run `32089144276` (`https://github.com/simpleusername96/cardborne-platformer/actions/runs/32089144276`) completed with conclusion `success`; `Validate current vehicle contracts`, native capture, Web export, itch static validation, built-Web boot, and `Publish verified Web build to itch.io` all passed. The publication step used the pinned target `itchioprofile1351321/iron-breakthrough:html5`. This final plan-only completion commit is excluded from the release workflow by its existing `.agents/**` path filter and does not change the deployed payload.
 - Phase 6.2 final local gate: Godot 4.7.1 import and the complete sorted headless validator sweep passed. The sweep exposed two stale validation fixtures rather than runtime regressions: Thermal Burst now expects the already-approved Drydock 50% frontal mitigation (`2.0` blocked splash and `14.0` aggregate telemetry), and the new Cryo shatter summaries were shortened to the one-line ko/en card density contract before the longest-text fixture was refreshed. The 1280x720 native capture set completed; visual inspection confirmed Lava's central symbol and exact-radius warning remain readable at gameplay scale, boss 7/8 images remain unchanged and unclipped, and the status/element effect surfaces render without overflow. Visual-authority validation passed with the canonical sheet hash, document-authority validation passed with 84 Markdown files, Web export produced the four required files, and itch static release validation passed with 9 files totaling 22,701,448 gzip bytes against a 24,366,950-byte allowance. The built artifact served on guarded codex port `13029`, returned both `index.html` and `index.pck`, produced a non-empty 1280x720 Godot boot capture, and the exact task-owned server PID was stopped. These are functional and rendered release checks only; no global native/Web performance qualification is claimed.
 - Last completed gate: Phase 5 behavior pre-gate passed: mystery-device runtime and live map-mechanics integration validators. The deterministic roster is exactly Repair/Cryo/Weakpoint/Lava at three placements. Active Lava emits at most one fixed receipt per facility per simulation step with a bounded catch-up count, deals exact 8-damage half-second ticks to the player and targetable ordinary/boss actors inside radius 1080, bypasses transient player invulnerability without granting a new protection window, and grants no ordinary quota, XP, defeat statistic, outgoing telemetry, or player damage credit.
 - Phase 5 integration gate: Godot 4.7.1 import passed; semantic provider, visual asset coverage, world visuals, semantic separation, visual replacement coverage, combat renderer, mystery-device runtime, live map mechanics, Guidebook, UI localization, and capture-driver validators all passed. The workbench deterministic build/check and validation report `current=87`, `final=96`, `authored=94`; visual-authority validation passed with the canonical sheet hash. The production PNG and its workbench TO-BE byte both match approved SHA-256 `8cbf4661d5154f3c7a76bfe07d5273e5742748a6e96f045588a9080fe6ce40e6`.
