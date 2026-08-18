@@ -68,7 +68,7 @@ func prepare_boss_entry(stage_index: int) -> VehicleEnemyState:
 		or StringName(entry_receipt["command"]) != StageFlow.COMMAND_ENTER_BOSS
 	):
 		return null
-	_run._start_boss_actor()
+	_run._start_stage_boss()
 	return _run._find_enemy_by_id("boss_actor")
 
 
