@@ -274,6 +274,27 @@ func _check_progression_completion_contract(run) -> void:
 	run.experience_runtime.spawn_shard(run.player_position, 40)
 	run.capture_set_mode(&"playing")
 	run.call("_open_upgrade_reward", &"level_up")
+	_expect(
+		not run.experience_runtime.progression_complete
+			and run.experience_runtime.pending_level_ups == 2
+			and run.current_card_offer.size() == 3
+			and run.current_card_offer.all(func(card): return StringName(card["id"]) in run.run_build.FALLBACK_IDS),
+		"zero compatible cards open the three fallback progression choices"
+	)
+	var selected_fallback := StringName(run.current_card_offer[0]["id"])
+	run.call("_on_upgrade_selected", selected_fallback)
+	_expect(
+		run.experience_runtime.pending_level_ups == 1
+			and run.current_card_offer.size() == 3,
+		"the next pending XP level opens another fallback choice"
+	)
+	run.call("_on_upgrade_selected", StringName(run.current_card_offer[0]["id"]))
+	for fallback_id in run.run_build.FALLBACK_IDS:
+		while bool(run.run_build.fallback_preview(fallback_id).get("valid", false)):
+			run.run_build.apply_fallback(fallback_id)
+	run.experience_runtime.pending_level_ups = 1
+	run.capture_set_mode(&"playing")
+	run.call("_open_upgrade_reward", &"level_up")
 	var notification := Dictionary(run._ui.debug_notification_contract())
 	var fast_snapshot := Dictionary(run.call("_build_fast_hud_snapshot"))
 	_expect(
@@ -283,7 +304,7 @@ func _check_progression_completion_contract(run) -> void:
 			and run.reward_runtime.is_idle()
 			and run.current_card_offer.is_empty()
 			and run.upgrade_offer_error.is_empty(),
-		"zero compatible cards resolve through explicit progression completion"
+		"maxed cards and fallback ranks resolve through explicit progression completion"
 	)
 	_expect(
 		String(notification["active_message"]) == tr("NOTIFY_ALL_UPGRADES_COMPLETE")
@@ -1037,23 +1058,16 @@ func _check_boss_autonomous_shapes(run) -> void:
 				)
 			elif kind == &"beam":
 				_expect(
-					run.denied_zones.size() == 1
-						and StringName(run.denied_zones[0]["shape"]) == &"corridor"
-						and is_equal_approx(
-							float(run.denied_zones[0]["width"]),
-							BossPatterns.width(pattern, stage_index)
-						)
-						and is_equal_approx(
-							float(run.denied_zones[0]["beam_growth_seconds"]),
-							AttackContract.EMITTED_BEAM_GROWTH_SECONDS
-						)
-						and is_equal_approx(
-							float(run.denied_zones[0]["duration_total"]),
-							maxf(0.62, BossPatterns.active_seconds(pattern))
-						)
-						and StringName(run.denied_zones[0]["beam_emission_mode"])
-							== AttackContract.EMITTED_BEAM_FORWARD,
-					"%s executes as one collision-owned forward-emitted beam" % pattern
+					run.denied_zones.size() == 2
+						and run.denied_zones.all(func(zone): return (
+							StringName(zone["shape"]) == &"corridor"
+							and is_equal_approx(float(zone["width"]), BossPatterns.width(pattern, stage_index))
+							and is_equal_approx(float(zone["beam_growth_seconds"]), AttackContract.EMITTED_BEAM_GROWTH_SECONDS)
+							and is_equal_approx(float(zone["duration_total"]), maxf(0.62, BossPatterns.active_seconds(pattern)))
+							and StringName(zone["beam_emission_mode"]) == AttackContract.EMITTED_BEAM_FORWARD
+							and StringName(zone["beam_topology"]) == AttackContract.BEAM_TOPOLOGY_PARALLEL
+						)),
+					"%s executes as two collision-owned forward-emitted beams" % pattern
 				)
 			elif kind == &"summon":
 				_expect(
@@ -1645,15 +1659,27 @@ func _check_hot_path_guards(run) -> void:
 		)
 	else:
 		_expect(false, "stage fixture exposes a structural wall")
+	run.mystery_device_runtime.refresh_publication(
+		run.call("_visible_world_rect", 240.0), run.player_position
+	)
 	var device_rows: Array = run.mystery_device_runtime.snapshot()["devices"]
+	var published_devices := device_rows.filter(func(device): return bool(device["published"]))
+	var hidden_devices := device_rows.filter(func(device): return not bool(device["published"]))
 	_expect(
 		device_rows.size() == 6
+		and published_devices.size() == 1
+		and hidden_devices.size() == 5
 		and not bool(run.call(
 			"_position_clear_of_stage_objects",
-			Vector2(device_rows[0]["position"]),
+			Vector2(published_devices[0]["position"]),
+			24.0
+		))
+		and bool(run.call(
+			"_position_clear_of_stage_objects",
+			Vector2(hidden_devices[0]["position"]),
 			24.0
 		)),
-		"six intact mystery devices participate in exact actor collision"
+		"one published mystery device participates in collision while five stay dormant"
 	)
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")
