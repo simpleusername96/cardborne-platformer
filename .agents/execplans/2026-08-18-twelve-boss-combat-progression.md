@@ -2,7 +2,7 @@
 type: plan
 status: active
 created: 2026-08-18
-scope: Twelve continuous boss cycles, field resource supply, segmented Drydock defense, late-run durability, upgrade-curve expansion, route-safe boss cues, four new bosses, four new ordinary enemy roles, grounded visual production, localization, validation, and release
+scope: Twelve continuous boss cycles, generic stage/enemy/boss naming, rolling boss-introduction enemy rosters, field resource supply, segmented stage-3 boss defense, late-run durability, raised and smoothed upgrade ceilings, route-safe boss cues, fixed visual production, localization, validation, and release
 related:
   - ../../docs/reports/2026-08-18-combat-progression-and-upgrades-ko.html
   - ../../docs/product/vehicle_game_spec.md
@@ -13,14 +13,17 @@ related:
   - 2026-08-15-eight-boss-combat-depth-and-run-report.md
 ---
 
-# Twelve-Boss Combat Progression - Execution Contract
+# Generic Twelve-Boss Learning Progression - Execution Contract
 
 Cardborne expands the current single-field eight-cycle run to twelve boss cycles while
-keeping boss death limited to future ordinary-enemy composition. The change restores
-field-resource availability, replaces Drydock Titan's ineffective frontal defense with a
-timed segmented shield, smooths all 27 upgrade curves across three additional levels,
-removes full-path previews from bosses 7 and 8, adds four new bosses and four new ordinary
-roles, and ships the result through the existing Godot 4.7.1, GitHub, and itch.io paths.
+keeping boss death limited to future ordinary-enemy composition. Every tracked game-owned
+stage, ordinary-enemy, and boss proper noun becomes a generic stage/role identifier and
+bilingual ordinal label. A three-role rolling roster makes the current cycle's teaching
+enemy introduce one essential response used by that cycle's boss without copying the full
+boss pattern. The change also restores field-resource availability, gives the stage-3 boss
+a timed segmented shield, raises and smooths all 27 upgrade curves across three additional
+levels, removes full-path previews from bosses 7 and 8, and ships through the existing
+Godot 4.7.1, GitHub, and itch.io paths.
 
 ## Purpose
 
@@ -38,12 +41,23 @@ In scope:
 
 - Four initial experience-recall pickups, six initial neutral facilities, and a bounded
   time-based recall replenishment independent of boss death.
-- Drydock Titan's three rotating shield segments, three permanent gaps, and exact 8/2-second
+- Repository-wide removal of game-owned proper nouns for stages, ordinary enemies, and bosses,
+  including code IDs, localization keys, tests, docs, reports, asset filenames, manifests, and
+  retained candidate metadata. Git history, third-party/provenance names, and upgrade-card names
+  remain unchanged.
+- A generic identity contract: public/catalog IDs use `ordinary_<role>_<level>` or
+  `boss_stage_<number>`; bilingual labels use `근거리 일반 적 Lv.1` / `Melee Enemy Lv.1` and
+  `스테이지 3 보스` / `Stage 3 Boss`. Mechanic identifiers such as `ram`, `frontal_shield`,
+  and `crossing_wall` remain descriptive and are not actor names.
+- A rolling three-role mobile roster with two initial basics and one teaching role per boss cycle.
+  Only future admissions use the new roster; already-live ordinary enemies survive boss death.
+- The stage-3 boss's three rotating shield segments, three permanent gaps, and exact 8/2-second
   protected/exposed cycle.
 - A twelve-cycle ordinary durability curve with an additional late-pressure multiplier that
   starts at cycle 4 and reaches `1.50` at cycle 12.
 - A global 30% boss-health increase and authored cycles 9-12 boss profiles.
-- Exactly three additional levels for every one of the 27 current upgrade cards.
+- Exactly three additional levels for every one of the 27 current upgrade cards, with raised
+  scalar ceilings and unchanged projectile/count/penetration ceilings.
 - Integer-authored damage, health, radius, count, and whole-percent values where the gameplay
   meaning permits; durations and cooldowns use one-decimal-second authoring.
 - Source-local rather than full-route anticipation for bosses 7 and 8.
@@ -100,15 +114,17 @@ Exact actions requiring owner or user approval:
 | --- | --- | --- | --- | --- |
 | Resource scarcity | `vehicle_field_layout_generator.gd` creates two recalls and three facilities per stage layout, but `vehicle_run.gd::_populate_stage_items()` is called only when the persistent field is initialized | Current source and validators still assert `2` recalls and `3` devices | Start with 4 recalls and 6 facilities. When active recalls fall below 2, replenish one after 90 active-play seconds at a precompiled free pickup anchor, with at most 4 active. Facilities do not respawn | 1.1-1.2 |
 | Boss-death continuity | The run now keeps one field and advances future spawn composition | `vehicle_combat_stages.gd`, transition runtime, completed single-field work | Preserve all existing actors and world objects at boss death; only the future ordinary role pool advances | 1.3 |
-| Drydock defense | Stage 3 uses `frontal_intercept`; blocked hits deal 50%, the shield follows boss facing, and no reachable branch sets `shield_up = false` | `vehicle_boss_phase_catalog.gd`, `vehicle_boss_shield_runtime.gd` | Use three 80-degree protected arcs separated by three 40-degree gaps, rotating independently at 18 degrees/second. Cycle is 8 seconds up and 2 seconds down. Arc hits deal 15%; gaps/down state deal 100% | 2.1-2.3 |
+| Generic naming | Proper nouns are spread through runtime IDs, localization keys, tests, docs, reports, actor filenames, manifests, capture fixtures, and workbench metadata | Tracked-tree search plus `vehicle_combat_stages.gd`, archetype/Guidebook catalogs, localization CSV, semantic manifest, validation fixtures | Remove every game-owned stage/enemy/boss proper noun from the tracked working tree. Use ordinal boss IDs/labels and role-plus-level ordinary IDs/labels. Preserve upgrade names, Git history, external provenance, and descriptive mechanic IDs | 3.1-3.2, 6.2-6.3 |
+| Teaching roster | Current cycles expose 4-13 mobile roles and family weighting; boss association is incidental and boss death already affects only future spawns | `vehicle_combat_stages.gd::MOBILE_ROLES`, `_role_sequence_for_arc`, phase add tables, continuity contract | Use one three-slot queue: cycle 1 is two basics plus teaching role 1; every next cycle evicts the oldest slot and appends that cycle's teaching role. The current teaching role owns 25% of future ordinary admissions (12% for the cycle-12 support role), is encountered at least four times before the quota, and shares exactly one response rule with its boss | 3.3-3.5 |
+| Stage-3 defense | Stage 3 uses `frontal_intercept`; blocked hits deal 50%, the shield follows boss facing, and no reachable branch sets `shield_up = false` | `vehicle_boss_phase_catalog.gd`, `vehicle_boss_shield_runtime.gd` | Use three 80-degree protected arcs separated by three 40-degree gaps, rotating independently at 18 degrees/second. Cycle is 8 seconds up and 2 seconds down. Arc hits deal 15%; gaps/down state deal 100% | 2.1-2.3 |
 | Ordinary durability | Current health curve is `1.00..2.00` across eight cycles and stacks global `2.60 * 1.20`; no separate late pressure exists | `vehicle_stage_difficulty.gd`, `vehicle_run.gd::_make_enemy()` | Extend base curve to 12 with `2.00` capped from cycle 8. Multiply by late pressure `[1,1,1,1,1.06,1.13,1.19,1.25,1.31,1.38,1.44,1.50]` | 3.1 |
 | Boss health | Current health is 26,000 through 53,300 before the requested increase | `vehicle_stage_difficulty.gd`; Korean report snapshot | Multiply every cycle 1-12 boss profile by `1.30`; use pre-increase multipliers `2.20/2.35/2.50/2.70` for cycles 9-12 | 3.2 |
-| Upgrade jumps | Several secondaries improve damage, count, and cadence together; effective step increases exceed 70% and reach roughly 140% | Current weapon resources, card resources, preview rules, and report analysis | Add exactly 3 levels per card. Preserve current L1 and current maximum output as curve anchors, distribute scalar growth monotonically across the expanded level count, and do not raise damage ceilings merely because more levels exist. Discrete behavior unlocks are isolated from simultaneous major damage/cadence jumps | 4.1-4.4 |
+| Upgrade jumps and ceilings | Several secondaries improve damage, count, and cadence together; effective step increases exceed 70% and reach roughly 140%. The previous plan incorrectly froze current maximum output | Current weapon resources, card resources, preview rules, report analysis, and user correction | Add exactly 3 levels per card. Preserve L1, raise direct offense/defense scalar ceilings to 130% of current maximum, utility ceilings to 120%, and CC scalar benefit to approximately 120% using the locked active curves. Keep projectile/count/penetration maxima unchanged and distribute their existing unlocks across paired level bands; every level still raises a scalar | 4.1-4.4 |
 | Numeric authoring | Current resources include values such as `79.2`, `1.968`, and `5.75`; simulation relies on floats | Card/weapon resources and runtime owners | Author damage/health/radius/count/percent as integers and time as 0.1-second values. Keep float simulation and round only presentation; do not add repeated runtime truncation | 4.2 |
 | Boss 7/8 route leaks | `crossing_weave` and `alternating_pulse` publish warning geometry matching the complete future route | Boss identity runtime and renderer | Remove startup route geometry. Keep source/body charge and local edge-entry cues; show hazard geometry only when active | 5.1 |
 | Twelve-cycle expansion | Stage arrays, difficulty arrays, visual catalogs, Guidebook entries, localization, and validators are eight-wide | Current source search and eight-boss validators | Add cycles 9-12 across every owner; no compatibility fallback may silently clamp them to cycle 8 | 5.2-6.3 |
-| New combat roles | Existing ordinary roles already cover chase, ranged, denial, repair, shield, carrier, and scavenger pressure | Archetypes, attack contract, specialist runtime | Add Phase Skirmisher, Anchor Drone, Pulse Guard, and Command Relay with the locked contracts below; do not add cosmetic-only reskins | 5.3 |
-| Visual production | Eight approved boss bodies and current ordinary actors exist; four new bosses/enemies do not | Production asset tree, semantic provider, visual authority pair | Generate candidates with ImageGen using the canonical sheet as actual reference; approve by exact hash before provider/manifest integration | 6.1-6.2 |
+| Combat roles | Existing ordinary roles cover enough mechanics for cycles 1-8; four generated candidate roles cover cycles 9-12 | Archetypes, attack contract, specialist runtime, candidate batch | Normalize to two basics plus twelve teaching roles. Reuse or adapt existing mechanics for teaching roles 1-8 and implement the four already-planned mechanics for 9-12. Retire mobile roles outside the three-slot progression unless a fixed installation or boss-add contract still owns them | 3.3-3.5, 5.3 |
+| Visual production | Existing and generated actor images are not visually preferred but the user explicitly fixed them for this implementation | Production asset tree, candidate batch, user decision | Do not redesign or regenerate visuals. Rename files/semantic IDs generically and promote the existing cycle 9-12 candidates as the fixed inputs while preserving their exact pixels | 6.1-6.2 |
 
 Readiness statement:
 
@@ -137,6 +153,14 @@ Readiness statement:
 - Furi's official material supports boss-specific exams built from learnable rules and responsive
   control. It applies as a comparison point only; no Furi attack, art, or content is copied.
   <https://www.thegamebakers.com/furi/>
+- Itay Keren's GDC boss-design material describes bosses as skill tests and recommends testing
+  recently taught skills. It supports the teaching-role link, but the plan deliberately shares
+  only one response rule so an ordinary enemy cannot disclose or duplicate the full boss exam.
+  <https://media.gdcvault.com/gdc2018/presentations/Keren_Itay_BossUp.pdf>
+- Sébastien Lambottin's combat-design guidance treats enemies as incremental teaching challenges.
+  It supports repeated bounded exposure before each boss and the conservative 25% teaching-role
+  share instead of replacing every encounter with a boss-pattern miniature.
+  <https://www.gamedeveloper.com/design/make-your-enemies-stupider-if-it-helps-your-player-learn>
 - Rejected: repopulating the field at boss death, because it violates continuous-world ownership;
   compounding ordinary HP by 50% every cycle, because it grows exponentially; forcing all runtime
   arithmetic to integers, because movement/timers would accumulate rounding error; keeping 50%
@@ -177,7 +201,7 @@ Readiness statement:
 The generator compiles all replenishment anchors at run creation. Replenishment time advances
 only during active play and is not reset by boss death, upgrade modal, or pause.
 
-### Drydock Titan segmented shield
+### Stage-3 boss segmented shield
 
 | Axis | Required value |
 | --- | --- |
@@ -218,19 +242,22 @@ progression extended through cycle 12 and multiplied by `1.50`; no hidden time g
 ### Upgrade expansion
 
 - New maxima are current maxima plus exactly three: `3 -> 6`, `4 -> 7`, and `2 -> 5`.
-- Damage-producing and defensive scalar curves preserve the current L1 and current maximum as
-  endpoints. For new level `n` of maximum `N`, use linear interpolation at
-  `(n - 1) / (N - 1)`, then round damage/health/radius/whole-percent values to integers and time
-  values to 0.1 seconds. If rounding repeats a level, raise it to the smallest valid next grid
-  value without changing the final endpoint. CC-only active weapons are the explicit exception
-  and use the exact extended curves below.
+- Preserve each current L1. Set the new final scalar endpoint to exactly `1.30` times the current
+  maximum for direct offense and defense, and `1.20` times the current maximum for mobility,
+  pickup, sustain, radius-only utility, and non-damaging control benefit. Round authored
+  damage/health/radius/whole-percent values to integers and times to 0.1 seconds. Interpolate
+  monotonically across all levels in effective-output space; no level may be a dead level.
 - A card with two or more multiplicative axes changes only one major axis on a discrete-unlock
   level. Count/cap unlocks do not also receive a major cadence step.
 - Secondary weapon balancing uses total volley damage or effective DPS as the primary budget,
   not per-projectile damage in isolation.
-- Discrete profiles are fixed as follows: Homing Missiles and Orbiting Blades use counts
-  `2/2/3/3/4/4/4`; Drop Mines uses active caps `3/3/4/4/5/5/5`; Split Muzzle uses projectile
-  counts `2/2/2/3/3/3`; Piercing Rounds alone extends linearly to 1-7 additional penetrations.
+- Projectile, blade, mine-cap, and penetration maxima remain at their current maximum values.
+  Existing discrete unlocks are spread into paired level bands: a six-level curve uses
+  `low/low/mid/mid/high/high`; a seven-level curve uses `low/low/mid/mid/high/high/high`.
+  Within each band, per-projectile damage, interval, duration, radius, or another scalar increases.
+  `split_muzzle` therefore uses total projectile counts `2/2/3/3/3/3`; four-to-seven-level
+  projectile/count cards use their existing low/mid/high count values as
+  `low/low/mid/mid/high/high/high`; `piercing_rounds` ends at its current penetration maximum.
 - Active weapons use these exact seven-level curves:
   - EMP: stun radius `285/315/345/375/405/435/465`, clear radius `325/355/385/415/445/475/505`,
     stun `1.4/1.6/1.8/2.0/2.2/2.4/2.6 s`, cooldown `13.0/12.3/11.6/10.9/10.2/9.5/8.8 s`.
@@ -247,17 +274,31 @@ progression extended through cycle 12 and multiplied by `1.50`; no hidden time g
   `docs/product/vehicle_upgrade_catalog.md` with the generated expanded curves before changing
   resources, so data, preview, and runtime use one reviewed table.
 
-### New cycles 9-12
+### Rolling boss-introduction roster
 
-| Cycle | Boss | Identity and counterplay | New ordinary role |
-| ---: | --- | --- | --- |
-| 9 | 위상 절단기 / Phase Cutter | Two source-paired cutter bars enter from flashed field edges. No route line is shown; the active bars reveal their own bodies. Alternating entry timing creates a readable moving gap | 위상 척후기 / Phase Skirmisher: HP 76, speed 188, radius 20; three-shot lateral burst, 11 damage each, 0.75 s startup, 1.0 s recovery |
-| 10 | 중력 닻 / Gravity Anchor | Three body modules light in order and emit bounded pull pulses; destroying nothing is required. The lit module identifies pulse origin, and the active field is visible only after release | 닻 드론 / Anchor Drone: HP 92, speed 154, radius 23; 180-radius pull zone followed by 18 damage, 0.9 s startup, 1.2 s active |
-| 11 | 공명 반응로 / Resonance Reactor | Core state alternates near and far pulses. Color plus core aperture state communicates which pulse comes next without drawing its final ring footprint | 펄스 수호기 / Pulse Guard: HP 108, speed 168, radius 25; alternating near/far burst, 18 damage, 1.0 s startup |
-| 12 | 지휘 코어 / Command Core | Three body modules run a fixed three-beat sequence that remixes edge entry, pulse, and focused barrage. The active module communicates attack family; no complete path is previewed | 지휘 중계기 / Command Relay: HP 98, speed 150, radius 24; within radius 320 grants ordinary allies +10% damage and 15% shorter recovery; never affects bosses or another relay |
+The roster is a three-slot FIFO queue. Cycle 1 starts with `ordinary_melee_01`,
+`ordinary_ranged_01`, and `ordinary_area_01`. Each later cycle removes the oldest slot and appends
+that cycle's teaching role. The current teaching role receives 25% of future admissions and at
+least four pre-boss encounters; `ordinary_support_01` is capped at 12% because its aura multiplies
+other pressure. Existing live actors never change identity or disappear at transition.
 
-Every new role uses the existing ordinary stage health, speed, and damage multipliers. Their base
-values above are authored values before those multipliers.
+| Cycle | Three future-spawn roles | Teaching role -> one boss response |
+| ---: | --- | --- |
+| 1 | melee 01, ranged 01, area 01 | `ordinary_area_01`: leave a charged circular danger area |
+| 2 | ranged 01, area 01, lane 01 | `ordinary_lane_01`: move through an offset lane gap |
+| 3 | area 01, lane 01, shield 01 | `ordinary_shield_01`: attack through a rotating gap or down window |
+| 4 | lane 01, shield 01, sweep 01 | `ordinary_sweep_01`: cross behind a committed lateral sweep |
+| 5 | shield 01, sweep 01, beam 01 | `ordinary_beam_01`: read source charge and leave its firing axis |
+| 6 | sweep 01, beam 01, growth 01 | `ordinary_growth_01`: avoid a projectile that becomes stronger with travel |
+| 7 | beam 01, growth 01, gap 01 | `ordinary_gap_01`: follow a moving opening in a placed hazard |
+| 8 | growth 01, gap 01, pulse 01 | `ordinary_pulse_01`: alternate near/far safe positioning |
+| 9 | gap 01, pulse 01, edge 01 | `ordinary_edge_01`: react to a local edge-entry signal |
+| 10 | pulse 01, edge 01, pull 01 | `ordinary_pull_01`: escape a bounded pull before impact |
+| 11 | edge 01, pull 01, range 01 | `ordinary_range_01`: read alternating near/far core state |
+| 12 | pull 01, range 01, support 01 | `ordinary_support_01`: prioritize a visible ally-support source |
+
+The boss keeps its full multi-pattern exam. A teaching role shares only the stated response,
+uses lower coverage and damage, and cannot combine the boss's other phases or autonomous pattern.
 
 ## Tasks
 
@@ -293,7 +334,7 @@ Batch gate:
 - Run the field-layout, experience, rewards, pickup-contact, mystery-device, continuous-field,
   and single-field validators once.
 
-### Phase 2: Drydock segmented defense
+### Phase 2: Stage-3 segmented defense
 
 Goal: replace passive damage padding with visible openings and a reliable focus-fire window.
 
@@ -333,14 +374,30 @@ Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`,
 `scripts/enemies/vehicle_stage_difficulty.gd`, encounter director stage arrays, stage transition,
 stage/result/Guidebook snapshots, and campaign validators.
 
-- [ ] **3.1** Extend every stage-owned array and apply the locked ordinary curves.
+- [ ] **3.1** Replace stage and boss identities with generic ordinal contracts.
+  - Change: migrate stage/boss catalog IDs, localization keys, runtime variants, pattern prefixes,
+    tests, docs, reports, filenames, semantic manifests, capture fixtures, and workbench metadata.
+  - Accept: tracked-tree forbidden-name validation reports zero game-owned stage/boss proper nouns;
+    all twelve bosses resolve as `boss_stage_01..12` and bilingual ordinal labels.
+- [ ] **3.2** Replace ordinary-enemy identities with generic role-and-level contracts.
+  - Accept: every ordinary catalog/Guidebook/result/localization/asset identity uses
+    `ordinary_<role>_<level>` and a matching bilingual role label; descriptive mechanic IDs remain
+    stable and upgrade-card names are unchanged.
+- [ ] **3.3** Implement the rolling three-role teaching roster.
+  - Accept: all twelve pools equal the locked table, each transition changes only future
+    admissions, current teaching roles meet their bounded share/minimum exposure, and live actors
+    survive unchanged.
+- [ ] **3.4** Implement and verify the twelve one-mechanic teaching links.
+  - Accept: each role fixture proves its one stated response, lower coverage/damage than the boss,
+    no copied multi-phase pattern, and no extra route preview.
+- [ ] **3.5** Extend every stage-owned array and apply the locked ordinary curves.
   - Accept: cycles 1-3 are byte-for-byte equivalent in computed ordinary health/speed/damage;
     cycle 4 has no extra late multiplier; cycle 12 applies exactly `2.00 * 1.50` before global
     ordinary durability factors; speed never exceeds the 1.30 stage curve.
-- [ ] **3.2** Apply 30% boss health and add cycles 9-12 boss profiles.
+- [ ] **3.6** Apply 30% boss health and add cycles 9-12 boss profiles.
   - Accept: computed health matches the locked table for all twelve cycles and no owner clamps
     stage IDs 9-12 to stage 8.
-- [ ] **3.3** Extend quotas, authored counts, spawn composition, reports, and run completion.
+- [ ] **3.7** Extend quotas, authored counts, reports, and run completion.
   - Change: raise the boss quota gate to 1.5 times the previous per-position eight-cycle curve,
     rounded to integers, and author cycles 9-12 consistently; boss death changes only future
     composition.
@@ -369,14 +426,14 @@ primary/secondary/active runtimes, effect preview, product catalog, UI snapshots
 
 - [ ] **4.1** Generate and review one canonical expanded-curve table from the locked rules.
   - Accept: all 27 cards have current maximum +3, monotonic values, no missing level,
-    damage-producing/defensive L1 and current-maximum endpoint preservation, exact active-weapon
-    curves, and one visible change at every new level.
+    preserved L1, exact 130% offense/defense and 120% utility endpoints, exact active-weapon
+    curves, unchanged discrete maxima, and one visible scalar change at every new level.
 - [ ] **4.2** Replace authored values with integer and one-decimal-time values.
   - Accept: card and weapon resources contain no fractional damage/health/radius/count/whole
     percent and no time precision beyond one decimal; runtime remains float-based.
 - [ ] **4.3** Separate multiplicative axes on secondary weapon levels.
   - Accept: a calculated effective-output table has no simultaneous major count/cap and cadence
-    jump; each discrete unlock is labeled and bounded independently.
+    jump; paired count bands and unchanged final count/penetration caps are proved independently.
 - [ ] **4.4** Update offers, previews, localization, product truth, and level-state expectations.
   - Accept: catalog size remains 27, total level states become 172, all legal levels can be
     offered/applied, and Korean/English previews equal gameplay snapshots.
@@ -390,8 +447,8 @@ Batch gate:
 
 ### Phase 5: Route-safe boss patterns and new combat identities
 
-Goal: refine bosses 7/8 and implement cycles 9-12 with source-readable, route-hidden attacks and
-four distinct ordinary roles.
+Goal: refine bosses 7/8 and implement cycles 9-12 with source-readable, route-hidden attacks while
+the generic teaching-role roster owns pre-boss introductions.
 
 Preconditions:
 
@@ -400,15 +457,15 @@ Preconditions:
 Source owners: `scripts/bosses/`, `scripts/enemies/`, combat renderer and effect store,
 `vehicle_combat_stages.gd`, Guidebook catalog/stat adapter, and relevant fixed-cap stores.
 
-- [ ] **5.1** Remove complete startup paths from Vector Loom and Pulse Core.
+- [ ] **5.1** Remove complete startup paths from stage-7 and stage-8 bosses.
   - Accept: startup snapshots contain source/body and local entry cues but zero future corridor,
     wedge, or ring geometry; active collision and presentation remain coincident.
 - [ ] **5.2** Implement the four locked boss identities and profiles.
   - Accept: each boss completes its direct and autonomous sequences, has a distinct counterplay
     fixture, honors fixed capacities, and exposes no full-path startup overlay.
-- [ ] **5.3** Implement the four locked ordinary roles and cycle compositions.
+- [ ] **5.3** Implement the final four generic teaching-role mechanics.
   - Accept: role fixtures prove exact base stats, startup, attack/support rules, target priority,
-    boss/relay exclusions, stage scaling, and bounded storage.
+    boss/support exclusions, stage scaling, bounded storage, and the links in the rolling table.
 - [ ] **5.4** Extend boss/add cleanup and report ownership through cycle 12.
   - Accept: no boss-owned damaging object survives cleanup, ordinary non-owned actors do survive,
     and the final report contains twelve ordered boss records.
@@ -422,8 +479,8 @@ Batch gate:
 
 ### Phase 6: Grounded visuals and bilingual surfaces
 
-Goal: give the four bosses and four enemies production-ready identities without changing gameplay
-truth or violating the visual authority pair.
+Goal: integrate the fixed existing actor images under generic semantic IDs without changing pixels,
+gameplay truth, or the visual authority pair.
 
 Preconditions:
 
@@ -439,10 +496,10 @@ and localization catalogs.
     bosses, dark perimeter, restrained accents, and actual-size readability.
   - Accept: provenance, prompt, canonical paths, expected/observed sheet hash, actual reference
     input, and actual-size/grayscale sheets are recorded; no SVG/ImageMagick authoring occurs.
-- [ ] **6.2** Present exact candidates for approval and promote only approved hashes.
-  - Accept: provider, manifest, actor catalog, Guidebook, and runtime resolve the approved files;
-    rejected/unapproved files remain outside production.
-- [ ] **6.3** Complete Korean/English names, descriptions, stat rows, reports, and twelve-cycle UI.
+- [ ] **6.2** Promote the user-fixed candidate hashes and generically rename all actor assets.
+  - Accept: provider, manifest, actor catalog, Guidebook, and runtime resolve the fixed exact-pixel
+    files through generic IDs; no old proper-noun filename or semantic ID remains.
+- [ ] **6.3** Complete generic Korean/English names, descriptions, stat rows, reports, and UI.
   - Accept: localization coverage, text bounds, 200% text, and supported viewport checks pass.
 
 Checkpoint: report approved hashes, runtime semantic IDs, and rendered evidence before Phase 7.
