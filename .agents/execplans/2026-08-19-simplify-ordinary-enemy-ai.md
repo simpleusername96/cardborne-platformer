@@ -7,6 +7,7 @@ last_reviewed: 2026-08-19
 topic: Simplify ordinary enemy movement to direct player pursuit
 scope: Ordinary-enemy movement policy, movement targeting, focused validators, and supporting product documentation
 related:
+  - ../../docs/product/vehicle_game_spec.md
   - ../../docs/product/ordinary_enemy_behavior.md
   - ../../scripts/enemies/vehicle_enemy_movement_policy.gd
   - ../../scripts/enemies/vehicle_enemy_targeting_policy.gd
@@ -30,7 +31,7 @@ In scope:
 - Movement direction and movement-target prediction.
 - Blocked-route fallback and local collision separation.
 - Focused validators for movement and targeting.
-- A canonical product note that records the decision and external references.
+- A product decision record that preserves the background and external references.
 
 Out of scope:
 
@@ -55,20 +56,21 @@ Out of scope:
 
 ## Implementation
 
-- [ ] Map every mobile ordinary archetype to the pursuit family.
-- [ ] Remove active distance-band, retreat, orbit, escort, support-positioning,
+- [x] Map every mobile ordinary archetype to the pursuit family.
+- [x] Remove active distance-band, retreat, orbit, escort, support-positioning,
   and line-of-fire-recovery decisions from the default movement policy.
-- [ ] Make movement target the player's current position without prediction.
-- [ ] Preserve route guidance only when the direct path is blocked.
-- [ ] Preserve local separation, velocity smoothing, and speed caps.
-- [ ] Keep attack-target prediction unchanged.
+- [x] Make movement target the player's current position without prediction.
+- [x] Preserve route guidance only when the direct path is blocked.
+- [x] Preserve local separation, velocity smoothing, and speed caps.
+- [x] Keep attack-target prediction unchanged.
 
 ## Validation
 
-- [ ] Update the movement-policy validator for direct pursuit and fixed actors.
-- [ ] Update the targeting-policy validator for unpredicted movement and bounded
+- [x] Update the movement-policy validator for direct pursuit and fixed actors.
+- [x] Update the targeting-policy validator for unpredicted movement and bounded
   predictive attacks.
-- [ ] Run repository diff review and focused contract review.
+- [x] Review the branch diff and confirm that task-owned implementation and
+  documentation are isolated from unrelated gameplay/UI work.
 - [ ] Run the repository pull-request validation workflow.
 - [ ] Record the validation result and mark this plan `done`.
 
@@ -87,7 +89,11 @@ Out of scope:
 
 ## Progress
 
-- Current phase: Implementation.
-- Next task: Replace the movement and movement-target policies, then update the
-  focused validators.
+- Current phase: Validation.
+- Next task: Run the pull-request validation workflow and resolve only failures
+  caused by this branch.
+- First workflow result: run `32159021913` stopped before Godot import because
+  the previously completed twelve-boss plan remained in `.agents/execplans/`.
+  This branch preserves that document under `.agents/completed-plans/` as the
+  repository lifecycle validator requires.
 - Canonical progress ledger: The checkboxes in this file.

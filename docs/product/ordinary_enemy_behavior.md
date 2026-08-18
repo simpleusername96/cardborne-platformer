@@ -1,10 +1,10 @@
 ---
-type: spec
+type: record
 status: active
 owner: BK
 created: 2026-08-19
 last_reviewed: 2026-08-19
-canonical_for: Default ordinary-enemy movement and attack ownership
+topic: Default ordinary-enemy movement and attack ownership decision
 scope: Mobile and fixed ordinary enemies in the current vehicle run
 related:
   - ./vehicle_game_spec.md
@@ -13,7 +13,7 @@ related:
   - ../../.agents/execplans/2026-08-19-simplify-ordinary-enemy-ai.md
 ---
 
-# Ordinary Enemy Behavior
+# Ordinary Enemy Behavior Decision
 
 ## Decision
 
@@ -93,7 +93,7 @@ The implementation adapts these references without copying their architecture:
   contract.
 - Traversal does not require defeating every living ordinary enemy.
 - No UI, visual, localization, progression, encounter, or save-data behavior
-  changes under this specification.
+  changes under this decision.
 
 ## Reassessment Rule
 
