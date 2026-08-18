@@ -233,7 +233,8 @@ class SemanticTextureSpec:
 
 
 var _enemy_batches: Dictionary = {}
-var _boss_variant_batches: Dictionary = {}
+var _boss_batch: BatchHandle
+var _active_boss_variant: StringName = &""
 var _enemy_status_material: ShaderMaterial
 var _pickup_edge_material: ShaderMaterial
 var _mystery_edge_material: ShaderMaterial
@@ -498,22 +499,18 @@ func _build_batches() -> void:
 			_enemy_status_material,
 			true
 		)
-	for variant in [
-		&"boss_stage_01", &"boss_stage_02", &"boss_stage_03", &"boss_stage_04",
-		&"boss_stage_05", &"boss_stage_06", &"boss_stage_07", &"boss_stage_08",
-		&"boss_stage_09", &"boss_stage_10", &"boss_stage_11", &"boss_stage_12",
-	]:
-		_boss_variant_batches[variant] = _create_asset_batch(
-			"Boss_%s" % String(variant),
-			StringName("boss/stage_%s" % String(variant).trim_prefix("boss_stage_")),
-			1,
-			0,
-			StringName("boss_%s" % String(variant)),
-			-1,
-			true,
-			_enemy_status_material,
-			true
-		)
+	_boss_batch = _create_asset_batch(
+		"Boss_active",
+		&"boss/stage_01",
+		1,
+		0,
+		&"boss_active",
+		-1,
+		true,
+		_enemy_status_material,
+		true
+	)
+	_active_boss_variant = &"boss_stage_01"
 	_projectile_batches[ProjectileCatalog.PLAYER_PRIMARY] = _create_asset_batch(
 		"Projectile_player_primary",
 		ProjectileCatalog.asset_id(ProjectileCatalog.PLAYER_PRIMARY),
@@ -806,6 +803,23 @@ func _create_asset_batch(
 	)
 
 
+func _set_active_boss_variant(variant: StringName) -> void:
+	## A run can present only one boss at a time, so all twelve appearances reuse
+	## one retained batch instead of reserving eleven idle draw batches.
+	if _boss_batch == null or variant == _active_boss_variant:
+		return
+	var asset_id := StringName(
+		"boss/stage_%s" % String(variant).trim_prefix("boss_stage_")
+	)
+	var mesh := AssetProvider.normalized_mesh(asset_id)
+	var texture := AssetProvider.texture(asset_id)
+	assert(mesh != null, "Missing semantic mesh: %s" % asset_id)
+	assert(texture != null, "Missing semantic texture: %s" % asset_id)
+	_boss_batch.instance.multimesh.mesh = mesh
+	_boss_batch.instance.texture = texture
+	_active_boss_variant = variant
+
+
 func _cache_catalog_asset_ids() -> void:
 	var player_descriptor := ActorCatalog.descriptor(&"player")
 	var anchors: Array = player_descriptor.get(
@@ -859,11 +873,12 @@ func _sync_enemies(
 			player_position,
 			run_time
 		)
-		var batch: BatchHandle = (
-			_boss_variant_batches.get(enemy.boss_variant)
-			if archetype == &"boss_actor"
-			else _enemy_batches.get(archetype)
-		)
+		var batch: BatchHandle
+		if archetype == &"boss_actor":
+			_set_active_boss_variant(enemy.boss_variant)
+			batch = _boss_batch
+		else:
+			batch = _enemy_batches.get(archetype)
 		if batch == null:
 			continue
 		var body_modulate := _enemy_body_modulate(enemy)

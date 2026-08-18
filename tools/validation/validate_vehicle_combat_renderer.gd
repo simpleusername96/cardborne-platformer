@@ -67,11 +67,10 @@ func _run() -> void:
 			and renderer.get_node_or_null("Player_primary_mount") == null,
 		"one integrated player craft batch replaces fixed sub-parts while thrust reuses the overlay beam"
 	)
-	for variant in [&"boss_stage_01", &"boss_stage_02", &"boss_stage_03", &"boss_stage_04", &"boss_stage_05"]:
-		_expect(
-			renderer.get_node_or_null("Boss_%s" % String(variant)) != null,
-			"%s boss owns a semantic texture batch" % variant
-		)
+	_expect(
+		renderer.get_node_or_null("Boss_active") != null,
+		"all boss appearances reuse one active semantic texture batch"
+	)
 	_expect(
 		renderer.get_node_or_null("Projectile_shared_energy_teardrop") == null
 			and renderer.get_node_or_null("Projectile_enemy_arc") == null,
@@ -705,7 +704,7 @@ func _run() -> void:
 	var death_explosions := renderer.debug_semantic_texture_draws(
 		&"effect/boss_death_explosion"
 	)
-	var dying_boss_batch := renderer.get_node("Boss_boss_stage_01") as MultiMeshInstance2D
+	var dying_boss_batch := renderer.get_node("Boss_active") as MultiMeshInstance2D
 	_expect(
 		death_explosions.is_empty()
 			and is_equal_approx(float(dying_boss_batch.multimesh.buffer[11]), 0.75)
