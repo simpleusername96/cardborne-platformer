@@ -32,5 +32,7 @@ func advance(delta: float, active_run_seconds: float, pickups: Array[Dictionary]
 	for pickup in pickups:
 		if not bool(pickup["active"]) and StringName(pickup["kind"]) == &"experience_recall":
 			pickup["active"] = true
+			pickup["published"] = false
+			pickup["published_elapsed"] = 0.0
 			return true
 	return false

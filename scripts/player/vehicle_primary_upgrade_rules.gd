@@ -6,6 +6,7 @@ extends RefCounted
 const MAX_SPLIT_LEVEL := 6
 const MAX_PIERCE_LEVEL := 7
 const SPLIT_ANGLE := deg_to_rad(7.0)
+const PIERCE_DAMAGE_MULTIPLIERS := [1.0, 1.05, 1.11, 1.18, 1.26, 1.35, 1.45, 1.56]
 
 
 static func projectiles_per_volley(level: int) -> int:
@@ -41,3 +42,7 @@ static func total_volley_damage_percent(level: int) -> float:
 static func additional_penetrations(level: int) -> int:
 	var bounded_level := clampi(level, 0, MAX_PIERCE_LEVEL)
 	return 0 if bounded_level == 0 else mini(4, ceili(float(bounded_level) * 0.5))
+
+
+static func piercing_damage_multiplier(level: int) -> float:
+	return float(PIERCE_DAMAGE_MULTIPLIERS[clampi(level, 0, MAX_PIERCE_LEVEL)])

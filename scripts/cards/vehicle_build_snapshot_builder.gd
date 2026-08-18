@@ -89,4 +89,5 @@ static func build(
 		"upgrades":upgrades,
 		"categories":categories,
 		"run_state":run_state.duplicate(true),
+		"fallback_ranks":run_build.fallback_snapshot(),
 	}

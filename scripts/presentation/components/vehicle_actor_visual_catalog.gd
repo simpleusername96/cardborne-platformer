@@ -34,6 +34,10 @@ const DESCRIPTORS := {
 	&"ordinary_range_01": {"role": &"ordinary_range_01", "asset": &"actor/ordinary_range_01", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
 	&"ordinary_sweep_01": {"role": &"ordinary_sweep_01", "asset": &"actor/ordinary_sweep_01", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
 	&"ordinary_melee_02": {"role": &"ordinary_melee_02", "asset": &"actor/ordinary_melee_02", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
+	&"ordinary_compression_01": {"role": &"compression", "asset": &"actor/ordinary_gap_01", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
+	&"ordinary_reflect_01": {"role": &"reflect", "asset": &"actor/ordinary_shield_01", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
+	&"ordinary_resonance_01": {"role": &"resonance", "asset": &"actor/ordinary_range_01", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
+	&"ordinary_overload_01": {"role": &"overload", "asset": &"actor/ordinary_pull_01", "color": &"danger", "states": [&"base", &"elite", &"collective"]},
 	&"boss_stage_01": {"role": &"boss", "asset": &"boss/stage_01", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
 	&"boss_stage_02": {"role": &"boss", "asset": &"boss/stage_02", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
 	&"boss_stage_03": {"role": &"boss", "asset": &"boss/stage_03", "color": &"boss_command", "states": [&"shield_up", &"shield_down"]},
@@ -55,6 +59,7 @@ const ENEMY_ARCHETYPES: Array[StringName] = [
 	&"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_support_01",
 	&"ordinary_support_03", &"ordinary_fixed_beam_01", &"ordinary_beam_01", &"ordinary_range_01",
 	&"ordinary_sweep_01", &"ordinary_melee_02", &"boss_actor",
+	&"ordinary_compression_01", &"ordinary_reflect_01", &"ordinary_resonance_01", &"ordinary_overload_01",
 ]
 
 

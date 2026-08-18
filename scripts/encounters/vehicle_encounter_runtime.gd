@@ -68,6 +68,7 @@ var _quota_canceled_reserve := 0
 var _boss_maintenance_active := false
 var _last_boss_maintenance_cue_at := -INF
 var _maintenance_roles: Array[StringName] = []
+var _maintenance_roster: Array[StringName] = []
 var _spawn_allocator := SpawnAllocator.new()
 var _engagement_director := EngagementDirector.new()
 var _geometry_snapshot: Variant
@@ -147,6 +148,7 @@ func configure(
 	_boss_maintenance_active = false
 	_last_boss_maintenance_cue_at = -INF
 	_maintenance_roles.clear()
+	_maintenance_roster.clear()
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
 	_pressure_observation_enabled = false
@@ -193,11 +195,13 @@ func seal_for_quota() -> void:
 	# full maintenance interval while the boss is entering.
 	_last_boss_maintenance_cue_at = elapsed - BOSS_MAINTENANCE_INTERVAL
 	for packet in _packets:
-		if _activated_packets.has(String(packet["id"])):
-			continue
 		for squad in Array(packet.get("squads", [])):
 			for role in Array(squad):
-				_maintenance_roles.append(StringName(role))
+				var role_id := StringName(role)
+				if role_id not in _maintenance_roster and _maintenance_roster.size() < 3:
+					_maintenance_roster.append(role_id)
+				if not _activated_packets.has(String(packet["id"])):
+					_maintenance_roles.append(role_id)
 	_packet_inflight = not _spawn_queue.is_empty()
 	_timeline.append({
 		"kind":&"quota_seal",
@@ -210,6 +214,7 @@ func seal_for_quota() -> void:
 func stop_boss_maintenance() -> void:
 	_boss_maintenance_active = false
 	_maintenance_roles.clear()
+	_maintenance_roster.clear()
 
 
 func _append_maintenance_window_roles(request: Dictionary) -> void:
@@ -456,6 +461,7 @@ func debug_snapshot() -> Dictionary:
 		"quota_canceled_reserve":_quota_canceled_reserve,
 		"boss_maintenance_active":_boss_maintenance_active,
 		"boss_maintenance_reserve":_maintenance_roles.size(),
+		"boss_maintenance_roster":_maintenance_roster.duplicate(),
 		"last_boss_maintenance_cue_at":_last_boss_maintenance_cue_at,
 		"materialized_active_count":int(_pressure_snapshot.get("active", 0)),
 		"authored_reserve_units":_authored_reserve_count(),
@@ -699,7 +705,7 @@ func _update_diagnostic_gap_reason(active_mobile_count: int) -> void:
 		else:
 			next_reason = &"awaiting_cue"
 	elif _boss_maintenance_active:
-		if _maintenance_roles.is_empty():
+		if _maintenance_roles.is_empty() and _maintenance_roster.is_empty():
 			next_reason = &"authored_reserve_exhausted"
 		elif active_mobile_count >= BOSS_MAINTENANCE_LOW_WATERMARK:
 			next_reason = &"maintenance_low_watermark"
@@ -735,10 +741,11 @@ func _admit_boss_maintenance(
 ) -> void:
 	if not _boss_maintenance_active or not _spawn_queue.is_empty() or not _window_queue.is_empty():
 		return
-	if (
-		_maintenance_roles.is_empty()
-		or active_mobile_count >= BOSS_MAINTENANCE_HIGH_WATERMARK
-	):
+	if active_mobile_count >= BOSS_MAINTENANCE_HIGH_WATERMARK:
+		return
+	if _maintenance_roles.is_empty():
+		_maintenance_roles.append_array(_maintenance_roster)
+	if _maintenance_roles.is_empty():
 		return
 	if visible_ordinary_threat and active_mobile_count >= BOSS_MAINTENANCE_LOW_WATERMARK:
 		return

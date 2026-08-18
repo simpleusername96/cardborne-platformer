@@ -40,6 +40,7 @@ const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalo
 const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
 const UpgradeOfferPresenter = preload("res://scripts/cards/vehicle_upgrade_offer_presenter.gd")
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
+const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 const BossDeathRuntime = preload("res://scripts/bosses/vehicle_boss_death_runtime.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const EnemySpeedProfile = preload("res://scripts/enemies/vehicle_enemy_speed_profile.gd")
@@ -104,6 +105,7 @@ const MysteryDeviceRuntime = preload(
 const DamageSourceCatalog = preload("res://scripts/combat/vehicle_damage_source_catalog.gd")
 const StageTelemetry = preload("res://scripts/combat/vehicle_stage_telemetry.gd")
 const BuildSnapshotBuilder = preload("res://scripts/cards/vehicle_build_snapshot_builder.gd")
+const ViewportSupplyPolicy = preload("res://scripts/rewards/vehicle_viewport_supply_policy.gd")
 const PrimaryUpgradeRules = preload("res://scripts/player/vehicle_primary_upgrade_rules.gd")
 const OutgoingDamagePolicy = preload(
 	"res://scripts/player/vehicle_outgoing_damage_policy.gd"
@@ -298,6 +300,7 @@ var projectile_store := ProjectileStore.new()
 var player_projectiles: Array[ProjectileState] = projectile_store.player_live
 var hostile_projectiles: Array[ProjectileState] = projectile_store.hostile_live
 var pickups: Array[Dictionary] = []
+var _pickup_validation_anchors: Array[Vector2] = []
 var denied_zones: Array[Dictionary] = []
 var effect_store := EffectStore.new()
 var effects: Array[VehicleEffectState] = effect_store.live
@@ -616,6 +619,7 @@ func _physics_process(delta: float) -> void:
 		var section_started := Time.get_ticks_usec() if timing_active else 0
 		_update_player(delta)
 		_refresh_visible_world_runtime_ranges()
+		_refresh_viewport_supply(delta)
 		var pickup_motion_end := player_position
 		_update_terrain(delta, pickup_motion_start)
 		_update_pickups(delta, pickup_motion_start, pickup_motion_end)
@@ -1322,10 +1326,12 @@ func _configure_stage_local_runtime() -> void:
 
 func _populate_stage_items() -> void:
 	pickups.clear()
+	_pickup_validation_anchors.clear()
 	for spec in _active_tactical_layout.pickup_blueprint():
+		_pickup_validation_anchors.append(Vector2(spec["pos"]))
 		if StringName(spec["kind"]) == &"experience_shard":
 			experience_runtime.spawn_shard(
-				Vector2(spec["pos"]), int(spec.get("experience", 5))
+				Vector2(spec["pos"]), int(spec.get("experience", 5)), &"", true
 			)
 			continue
 		pickups.append({
@@ -1333,6 +1339,8 @@ func _populate_stage_items() -> void:
 			"kind": StringName(spec["kind"]),
 			"pos": Vector2(spec["pos"]),
 			"active": true,
+			"published": false,
+			"published_elapsed": 0.0,
 			"pulse": _rng.randf_range(0.0, TAU),
 			"heal_amount": float(spec.get("heal_amount", 0.0)),
 		})
@@ -1447,6 +1455,10 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.pattern = &""
 	enemy.last_pattern = &""
 	enemy.pattern_timer = 0.0
+	enemy.mechanic_state = &""
+	enemy.mechanic_cue_active = false
+	enemy.mechanic_inner_radius = 0.0
+	enemy.mechanic_outer_radius = 0.0
 	enemy.pattern_tick = 0.0
 	enemy.pattern_volleys = 0
 	enemy.vulnerable = 0.0
@@ -1597,6 +1609,8 @@ func _update_encounter(delta: float) -> void:
 		var bounded_spec := _bounded_spawn_spec(Dictionary(spawn_spec))
 		var enemy := _make_enemy(bounded_spec)
 		if enemy == null:
+			if enemy_store.live_count() >= EnemyStore.MAX_LIVE_HOSTILES:
+				_refresh_nearest_ordinary_pursuit()
 			encounter_runtime.note_spawn_materialization_failed(bounded_spec)
 			continue
 		_apply_pending_elite(enemy)
@@ -1604,6 +1618,24 @@ func _update_encounter(delta: float) -> void:
 			_record_diagnostic_arrival_began(enemy)
 		else:
 			encounter_runtime.note_spawn_materialization_failed(bounded_spec)
+
+
+func _refresh_nearest_ordinary_pursuit() -> void:
+	var nearest: EnemyState = null
+	var nearest_distance := INF
+	for enemy in enemies:
+		if not enemy.alive or enemy.role == &"boss":
+			continue
+		var distance := enemy.pos.distance_squared_to(player_position)
+		if distance < nearest_distance:
+			nearest = enemy
+			nearest_distance = distance
+	if nearest == null:
+		return
+	nearest.active = true
+	var direction := (player_position - nearest.pos).normalized()
+	nearest.desired_velocity = direction * _effective_enemy_speed(nearest)
+	nearest.attack_cooldown = minf(nearest.attack_cooldown, 0.10)
 
 func _record_ordinary_arrival_cue(cue: Dictionary) -> void:
 	if not cue.has("birth_position"):
@@ -2072,6 +2104,13 @@ func _fire_primary() -> void:
 		run_build.level_of(&"hit_chain")
 	) * primary_combo_runtime.braced_multiplier(run_build.level_of(&"braced_fire"))
 	var volley_count := PrimaryUpgradeRules.projectiles_per_volley(fork_level)
+	var primary_base_damage := (
+		18.0
+		* PrimaryUpgradeRules.piercing_damage_multiplier(
+			run_build.level_of(&"piercing_rounds")
+		)
+		* run_build.fallback_primary_damage_multiplier()
+	)
 	_primary_shot_groups[_primary_shot_serial] = {"remaining":volley_count, "hit":false}
 	var projectile_range := _primary_projectile_range()
 	for projectile_index in volley_count:
@@ -2083,13 +2122,13 @@ func _fire_primary() -> void:
 			player_aim_direction.rotated(PrimaryUpgradeRules.projectile_angle(
 				fork_level, _primary_shot_serial, projectile_index
 			)),
-			18.0 * scale * combo_multiplier,
+			primary_base_damage * scale * combo_multiplier,
 			PRIMARY_PROJECTILE_SPEED,
 			PrimaryUpgradeRules.additional_penetrations(
 				run_build.level_of(&"piercing_rounds")
 			),
 			PRIMARY_PROJECTILE_RADIUS,
-			18.0 * scale * combo_multiplier,
+			primary_base_damage * scale * combo_multiplier,
 			projectile_range,
 			_primary_payload,
 			false,
@@ -2697,7 +2736,7 @@ func _apply_enemy_facility_modifiers(enemy: EnemyState, delta: float) -> void:
 
 
 func _dash_cooldown_max() -> float:
-	return DASH_COOLDOWN
+	return DASH_COOLDOWN * run_build.fallback_dash_cooldown_multiplier()
 
 
 func _player_max_health() -> float:
@@ -2710,7 +2749,7 @@ func _update_pickups(
 	motion_end: Vector2
 ) -> void:
 	for pickup in pickups:
-		if not bool(pickup["active"]):
+		if not bool(pickup["active"]) or not bool(pickup.get("published", true)):
 			continue
 		var pickup_position := Vector2(pickup["pos"])
 		var crossed_during_motion := PickupContact.should_collect(
@@ -2725,10 +2764,20 @@ func _update_pickups(
 			_collect_pickup(pickup)
 
 
+func _refresh_viewport_supply(delta: float) -> void:
+	var visible := _visible_world_rect(0.0)
+	ViewportSupplyPolicy.refresh_direct_items(
+		pickups, experience_runtime.shards, _pickup_validation_anchors,
+		visible, player_position, delta
+	)
+	mystery_device_runtime.refresh_publication(visible, player_position)
+
+
 func _collect_pickup(pickup: Dictionary) -> void:
 	if not bool(pickup["active"]):
 		return
 	pickup["active"] = false
+	pickup["published"] = false
 	var kind := StringName(pickup["kind"])
 	match kind:
 		&"experience_recall":
@@ -3646,6 +3695,16 @@ func _start_enemy_attack(enemy: EnemyState) -> void:
 		_runtime_attack_path_callable,
 		_runtime_charge_path_callable
 	)
+	if enemy.archetype == &"ordinary_compression_01":
+		_append_boss_compression_pass({
+			"id":"teaching_%s" % enemy.id,
+			"pattern":"ordinary_compression_01",
+			"duration":1.0,
+			"damage":12.0,
+			"affinity":&"kinetic",
+			"commit_mode":&"committed",
+			"owner_kind":&"ordinary",
+		}, enemy.committed_dir, 0.0, 0.0, "teaching")
 
 
 func _begin_enemy_active(enemy: EnemyState) -> void:
@@ -3670,6 +3729,10 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.72
 		&"ordinary_gap_01":
+			if enemy.archetype == &"ordinary_compression_01":
+				enemy.phase = &"recovery"
+				enemy.phase_time = 1.0
+				return
 			var controller_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
 				enemy.pos + enemy.committed_dir * float(controller_attack["origin_offset"]),
@@ -4270,6 +4333,8 @@ func _arm_chain_mines(source_mine: EnemyState, origin: Vector2, mobile: bool) ->
 
 func _enemy_contact_damage(enemy: EnemyState, base_damage: float) -> float:
 	var damage := base_damage
+	if enemy.archetype == &"ordinary_overload_01" and enemy.phase == &"active":
+		damage *= LateBossMechanics.OVERLOAD_DEALT_DAMAGE_SCALE
 	if enemy.role == &"ordinary_melee_02":
 		damage = float(AttackContract.ordinary_attack(&"ordinary_melee_02").get("damage", base_damage))
 		damage *= _ordinary_melee_02_damage_multiplier(enemy)
@@ -4569,6 +4634,9 @@ func _update_projectile_buffer(
 				continue
 			var hit_enemy := contact as EnemyState
 			if hit_enemy != null:
+				if _try_reflect_direct_projectile(hit_enemy, projectile):
+					_remove_projectile_at(false, index)
+					continue
 				_mark_primary_shot_group_hit(projectile)
 				var hit_position := hit_enemy.pos
 				if _try_absorb_protective_structure(hit_enemy, projectile):
@@ -4674,6 +4742,52 @@ func _try_absorb_protective_structure(
 	enemy.guard_plate_structure = maxf(
 		0.0, enemy.guard_plate_structure - projectile.structure_damage
 	)
+	return true
+
+
+func _try_reflect_direct_projectile(
+	enemy: EnemyState,
+	projectile: ProjectileState
+) -> bool:
+	if projectile.reflected or projectile.owner != "player_primary":
+		return false
+	var is_reflect_boss := enemy.role == &"boss" and current_stage_index == 9
+	var is_teaching_enemy := enemy.archetype == &"ordinary_reflect_01"
+	if not is_reflect_boss and not is_teaching_enemy:
+		return false
+	var elapsed := enemy.pattern_timer if is_reflect_boss else 0.0
+	if not LateBossMechanics.hits_reflection_plate(
+		enemy.presentation_facing,
+		projectile.velocity,
+		elapsed
+	):
+		return false
+	var normal := enemy.presentation_facing.normalized()
+	if normal.is_zero_approx():
+		normal = -projectile.velocity.normalized()
+	var reflected_velocity := projectile.velocity.bounce(normal)
+	projectile_store.add_hostile({
+		"pos":enemy.pos + normal * (enemy.projectile_hit_radius + projectile.radius + 2.0),
+		"spawn_origin":enemy.pos,
+		"velocity":reflected_velocity,
+		"radius":projectile.radius,
+		"damage":LateBossMechanics.reflected_damage(projectile.damage),
+		"structure_damage":0.0,
+		"life":projectile.life,
+		"color":Art.CORAL,
+		"owner":"boss_reflection" if is_reflect_boss else "ordinary_reflection",
+		"pierce":0,
+		"bounces":0,
+		"homing":false,
+		"explosive":false,
+		"reflected":true,
+		"final_damage":true,
+		"affinity":projectile.affinity,
+		"threat_tier":AttackContract.THREAT_BOSS if is_reflect_boss else AttackContract.THREAT_ORDINARY,
+	}, is_reflect_boss)
+	# Capacity rejection still absorbs the shot at the plate and never damages
+	# the owner, as required by the reflection contract.
+	_play_sound(&"cover", 1.12)
 	return true
 
 
@@ -5024,6 +5138,23 @@ func _damage_enemy(
 		multiplier *= SpecialistRuntime.SHIELDED_RECEIVED_DAMAGE_MULTIPLIER
 	if not final_effective and role == &"ordinary_pull_01" and enemy.vulnerable > 0.0:
 		multiplier *= 1.50
+	if not final_effective and player_owned:
+		if role == &"boss" and current_stage_index == 10:
+			multiplier *= LateBossMechanics.resonance_damage_multiplier(
+				player_position.distance_to(enemy.pos), enemy.pattern_timer
+			)
+		elif enemy.archetype == &"ordinary_resonance_01":
+			multiplier *= LateBossMechanics.resonance_damage_multiplier(
+				player_position.distance_to(enemy.pos), 0.0
+			)
+		if enemy.archetype == &"ordinary_overload_01" and enemy.phase == &"active":
+			multiplier *= LateBossMechanics.OVERLOAD_RECEIVED_DAMAGE_SCALE
+		if (
+			role == &"boss"
+			and current_stage_index == 11
+			and LateBossMechanics.overload_active(enemy.pattern_timer)
+		):
+			multiplier *= LateBossMechanics.OVERLOAD_RECEIVED_DAMAGE_SCALE
 	var boss_damage_multiplier := 1.0
 	if role == &"boss" and not final_effective:
 		var hit_direction := (
@@ -5653,7 +5784,7 @@ func _damage_mystery_devices_in_radius(
 		_mystery_device_snapshot_buffer
 	)
 	for device in _mystery_device_snapshot_buffer:
-		if StringName(device["state"]) != &"dormant":
+		if StringName(device["state"]) != &"dormant" or not bool(device.get("published", true)):
 			continue
 		var device_position := Vector2(device["position"])
 		if (
@@ -5857,6 +5988,14 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 			)
 			return
 		upgrade_offer_error.clear()
+		current_card_offer = _build_fallback_offer()
+		if not current_card_offer.is_empty():
+			mode = RunMode.UPGRADE
+			upgrade_selection_applied = false
+			_ui.show_upgrade(current_card_offer, _build_snapshot())
+			_play_sound(&"card", 0.9)
+			_set_mouse_for_mode()
+			return
 		if experience_runtime.complete_progression():
 			_ui.notify(
 				tr("NOTIFY_ALL_UPGRADES_COMPLETE"),
@@ -5891,11 +6030,20 @@ func apply_upgrade(upgrade_id: StringName) -> bool:
 		or not _current_offer_contains(upgrade_id)
 	):
 		return false
-	var receipt := run_build.apply(upgrade_id)
+	var fallback := upgrade_id in VehicleRunBuild.FALLBACK_IDS
+	var receipt := (
+		run_build.apply_fallback(upgrade_id)
+		if fallback else run_build.apply(upgrade_id)
+	)
 	if not bool(receipt.get("applied", false)):
 		return false
 	var definition := upgrade_catalog.get_definition(upgrade_id)
-	selected_upgrade_title_key = definition.title_key
+	selected_upgrade_title_key = (
+		"UPGRADE_%s_TITLE" % String(upgrade_id).to_upper()
+		if fallback else definition.title_key
+	)
+	if fallback and StringName(receipt.get("effect_id", &"")) == &"max_hull":
+		player_health = minf(_player_max_health(), player_health + 3.0)
 	if upgrade_id == &"hull_integrity":
 		player_health = minf(_player_max_health(), player_health + 15.0)
 	lifesteal_runtime.configure(run_build.stat(&"lifesteal_percent", 0.0))
@@ -5953,6 +6101,45 @@ func _build_card_offer(
 		var current_level := run_build.level_of(definition.id)
 		cards.append(UpgradeOfferPresenter.snapshot(definition, current_level))
 	return cards
+
+
+func _build_fallback_offer() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for fallback_id in VehicleRunBuild.FALLBACK_IDS:
+		var preview := run_build.fallback_preview(fallback_id)
+		if not bool(preview.get("valid", false)):
+			continue
+		var representative := StringName({
+			&"fallback_firepower":&"critical_targeting",
+			&"fallback_chassis":&"hull_integrity",
+			&"fallback_operations":&"pickup_radius",
+		}[fallback_id])
+		var representative_definition := upgrade_catalog.get_definition(representative)
+		var effect_id := StringName(preview["effect_id"])
+		result.append({
+			"id":fallback_id,
+			"title_key":"UPGRADE_%s_TITLE" % String(fallback_id).to_upper(),
+			"description_key":"UPGRADE_%s_DESCRIPTION" % String(fallback_id).to_upper(),
+			"category_key":"UPGRADE_CATEGORY_FALLBACK",
+			"category":&"fallback",
+			"current_level":int(preview["old_rank"]),
+			"next_level":int(preview["new_rank"]),
+			"max_level":VehicleRunBuild.FALLBACK_MAX_RANK,
+			"change_kind":&"stats",
+			"change_label_key":"",
+			"activation_mode":&"",
+			"effect_rows":[{
+				"stat_key":"UPGRADE_FALLBACK_EFFECT_%s" % String(effect_id).to_upper(),
+				"operation":"add",
+				"display_unit":"percent" if "percent" in String(effect_id) else "none",
+				"current":0.0,
+				"next":float(preview["value"]),
+				"show_current":false,
+				"absolute_value":true,
+			}],
+			"artwork_asset_id":representative_definition.artwork_asset_id,
+		})
+	return result
 
 
 func _start_stage_boss() -> void:
@@ -6049,12 +6236,27 @@ func _choose_boss_arrival_anchor() -> Vector2:
 func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 	if not bool(boss.alive) or (boss_death_runtime.active() and boss.id == _dying_boss_id):
 		return
+	boss.pattern_timer += maxf(0.0, delta)
+	_refresh_late_boss_mechanic_state(boss)
 	boss_shield_runtime.advance(delta)
 	boss.boss_shield_state = boss_shield_runtime.state()
 	_show_pending_boss_state_hint()
-	for event in boss_runtime.advance_autonomous(delta, boss, player_position):
+	var cadence_delta := delta
+	if (
+		current_stage_index == 11
+		and boss.phase in [&"boss_read", &"boss_recovery"]
+	):
+		cadence_delta = LateBossMechanics.overload_cadence_delta(
+			delta, boss.pattern_timer
+		)
+	for event in boss_runtime.advance_autonomous(
+		LateBossMechanics.overload_cadence_delta(delta, boss.pattern_timer)
+			if current_stage_index == 11 else delta,
+		boss,
+		player_position
+	):
 		_execute_boss_autonomous(event)
-	var receipt := boss_runtime.advance_direct_phase(boss, delta, false)
+	var receipt := boss_runtime.advance_direct_phase(boss, cadence_delta, false)
 	if not BossRuntime.valid_phase_receipt(receipt):
 		push_error("Boss runtime emitted an invalid phase receipt")
 		return
@@ -6064,9 +6266,13 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 		BossRuntime.ACTION_SELECT_DIRECT:
 			_boss_select_pattern(boss)
 		BossRuntime.ACTION_REFRESH_STARTUP:
-			AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
+			AttackTelegraphs.update_boss_readiness(
+				boss, String(boss.pattern), current_stage_index
+			)
 		BossRuntime.ACTION_BEGIN_ACTIVE:
-			AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
+			AttackTelegraphs.update_boss_readiness(
+				boss, String(boss.pattern), current_stage_index
+			)
 			_boss_begin_active(boss)
 		BossRuntime.ACTION_UPDATE_ACTIVE:
 			_boss_update_active(boss, delta)
@@ -6076,7 +6282,7 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	var pattern := boss_runtime.select_direct(boss)
 	boss.pattern = pattern
 	boss.phase = "boss_startup"
-	boss.phase_time = BossPatterns.startup_seconds(pattern)
+	boss.phase_time = BossPatterns.scaled_startup_seconds(pattern, current_stage_index)
 	boss.hit_committed = false
 	var kind := BossPatterns.kind(pattern)
 	var predicted_target := _boss_predicted_target(
@@ -6099,7 +6305,7 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	if kind == &"lanes":
 		var spacing := BossPatterns.lane_spacing(current_stage_index)
 		boss.lane_centers = [-spacing, spacing]
-	if kind in [&"crossing_weave", &"alternating_pulse"]:
+	if kind in [&"crossing_weave", &"alternating_pulse", &"compression"]:
 		_prepare_boss_identity_pattern(boss, pattern)
 	AttackTelegraphs.refresh_boss(
 		boss,
@@ -6116,6 +6322,8 @@ func _boss_begin_active(boss: EnemyState) -> void:
 		if String(boss.pattern) == "shield_counterburst"
 		else 1.0
 	)
+	if current_stage_index == 11 and LateBossMechanics.overload_active(boss.pattern_timer):
+		boss.boss_attack_damage_multiplier *= LateBossMechanics.OVERLOAD_DEALT_DAMAGE_SCALE
 	boss_runtime.begin_active(boss, self)
 
 
@@ -6132,8 +6340,8 @@ func _prepare_boss_identity_pattern(boss: EnemyState, pattern: String) -> void:
 		"kind":BossPatterns.kind(pattern),
 		"origin":Vector2(boss.pos),
 		"target":Vector2(boss.committed_target),
-		"startup":BossPatterns.startup_seconds(pattern),
-		"duration":BossPatterns.active_seconds(pattern),
+		"startup":BossPatterns.scaled_startup_seconds(pattern, current_stage_index),
+		"duration":BossPatterns.scaled_active_seconds(pattern, current_stage_index),
 		"damage":BossPatterns.damage(pattern, current_stage_index),
 		"radius":BossPatterns.radius(pattern, current_stage_index),
 		"width":BossPatterns.width(pattern, current_stage_index),
@@ -6222,8 +6430,8 @@ func _append_boss_cross_corridors(
 			"to":to,
 			"width":half_width * 2.0,
 			"warning":0.0,
-			"warning_total":BossPatterns.startup_seconds(pattern),
-			"duration":BossPatterns.active_seconds(pattern),
+			"warning_total":BossPatterns.scaled_startup_seconds(pattern, current_stage_index),
+			"duration":BossPatterns.scaled_active_seconds(pattern, current_stage_index),
 			"tick":0.0,
 			"damage":damage,
 			"source":pattern,
@@ -6237,7 +6445,7 @@ func _append_boss_cross_corridors(
 			"beam_emission_mode":AttackContract.EMITTED_BEAM_BIDIRECTIONAL,
 			"beam_emitter":Vector2(boss.pos),
 			"emitter_radius":boss.visual_radius,
-			"duration_total":BossPatterns.active_seconds(pattern),
+			"duration_total":BossPatterns.scaled_active_seconds(pattern, current_stage_index),
 		})
 	# Collision and active presentation transfer to the zones above. Retiring the
 	# startup descriptors prevents the same X beams from being submitted twice.
@@ -6311,7 +6519,7 @@ func _execute_boss_autonomous(event: Dictionary) -> void:
 	if kind == &"long_banks":
 		_spawn_boss_long_banks(event)
 		return
-	if kind in [&"crossing_weave", &"alternating_pulse"]:
+	if kind in [&"crossing_weave", &"alternating_pulse", &"compression"]:
 		_execute_boss_identity_event(event)
 		return
 	push_error("Unsupported autonomous boss pattern kind: %s (%s)" % [String(kind), pattern])
@@ -6323,8 +6531,99 @@ func _execute_boss_identity_event(event: Dictionary) -> void:
 			_append_boss_crossing_weave(event)
 		&"alternating_pulse":
 			_append_boss_alternating_pulse(event)
+		&"compression":
+			_append_boss_compression(event)
 		_:
 			push_error("Unsupported boss identity event: %s" % String(event.get("kind", &"")))
+
+
+func _append_boss_compression(event: Dictionary) -> void:
+	var pattern := String(event["pattern"])
+	var primary_axis := Vector2.RIGHT
+	if pattern in ["compression_shift", "compression_reverse"]:
+		primary_axis = Vector2.LEFT
+	var shift := 0.0
+	if pattern == "compression_shift":
+		shift = LateBossMechanics.COMPRESSION_MAX_SHIFT
+	elif pattern == "compression_reverse":
+		shift = -LateBossMechanics.COMPRESSION_MAX_SHIFT
+	_append_boss_compression_pass(event, primary_axis, shift, 0.0, "primary")
+	if pattern == "compression_pair":
+		_append_boss_compression_pass(
+			event,
+			-primary_axis,
+			shift,
+			LateBossMechanics.COMPRESSION_PAIR_DELAY,
+			"paired"
+		)
+
+
+func _append_boss_compression_pass(
+	event: Dictionary,
+	inward_axis: Vector2,
+	gap_offset: float,
+	warning_offset: float,
+	pass_id: String
+) -> void:
+	var visible := _visible_world_rect(0.0)
+	inward_axis = (
+		Vector2(signf(inward_axis.x), 0.0)
+		if absf(inward_axis.x) >= absf(inward_axis.y)
+		else Vector2(0.0, signf(inward_axis.y))
+	)
+	if inward_axis.is_zero_approx():
+		inward_axis = Vector2.RIGHT
+	var horizontal_entry := absf(inward_axis.x) > absf(inward_axis.y)
+	var tangent := inward_axis.rotated(PI * 0.5)
+	var edge_center := visible.get_center()
+	if horizontal_entry:
+		edge_center.x = (
+			visible.position.x - LateBossMechanics.COMPRESSION_DEPTH * 0.5
+			if inward_axis.x > 0.0
+			else visible.end.x + LateBossMechanics.COMPRESSION_DEPTH * 0.5
+		)
+	else:
+		edge_center.y = (
+			visible.position.y - LateBossMechanics.COMPRESSION_DEPTH * 0.5
+			if inward_axis.y > 0.0
+			else visible.end.y + LateBossMechanics.COMPRESSION_DEPTH * 0.5
+		)
+	var span := visible.size.y if horizontal_entry else visible.size.x
+	var gap_center := edge_center + tangent * clampf(
+		gap_offset,
+		-LateBossMechanics.COMPRESSION_MAX_SHIFT,
+		LateBossMechanics.COMPRESSION_MAX_SHIFT
+	)
+	var gap_half := LateBossMechanics.COMPRESSION_GAP * 0.5
+	var motion_speed := 620.0
+	for segment_index in [-1, 1]:
+		var segment_from := gap_center - tangent * span * 0.5 if segment_index < 0 else gap_center + tangent * gap_half
+		var segment_to := gap_center - tangent * gap_half if segment_index < 0 else gap_center + tangent * span * 0.5
+		denied_zones.append({
+			"id":"%s_%s_segment_%d" % [String(event["id"]), pass_id, segment_index],
+			"shape":&"corridor",
+			"from":segment_from,
+			"to":segment_to,
+			"width":LateBossMechanics.COMPRESSION_DEPTH,
+			"motion":inward_axis.normalized() * motion_speed,
+			"warning":LateBossMechanics.COMPRESSION_EDGE_CUE_SECONDS + warning_offset,
+			"warning_total":LateBossMechanics.COMPRESSION_EDGE_CUE_SECONDS + warning_offset,
+			"duration":maxf(1.2, float(event["duration"])),
+			"tick":0.0,
+			"damage":float(event["damage"]),
+			"source":String(event["pattern"]),
+			"owner_kind":StringName(event.get("owner_kind", &"boss_actor")),
+			"affinity":StringName(event["affinity"]),
+			"commit_mode":StringName(event.get("commit_mode", &"autonomous")),
+			"final_damage":true,
+			"single_hit":true,
+			"hit_committed":false,
+			"safe_gap":LateBossMechanics.COMPRESSION_GAP,
+			"compression_slab":true,
+			"edge_axis":inward_axis,
+			"edge_marker_seconds":LateBossMechanics.COMPRESSION_EDGE_CUE_SECONDS,
+			"direct_boss_id":String(event.get("direct_boss_id", "")),
+		})
 
 
 func _spawn_boss_long_banks(event: Dictionary) -> void:
@@ -6485,18 +6784,41 @@ func _append_boss_beam_zone(event: Dictionary) -> void:
 	var direction := (Vector2(event["target"]) - origin).normalized()
 	if direction.is_zero_approx():
 		direction = Vector2.RIGHT
-	_append_boss_corridor_zone(
-		event,
-		String(event["id"]),
-		origin,
-		_runtime_attack_path_end(
-			origin,
-			direction,
-			BossPatterns.BEAM_RANGE,
-			float(event["width"]) * 0.5
-		),
-		AttackContract.EMITTED_BEAM_FORWARD
-	)
+	var topology := StringName(event.get(
+		"beam_topology", AttackContract.BEAM_TOPOLOGY_PARALLEL
+	))
+	var axes: Array[Vector2] = []
+	var emitters: Array[Vector2] = []
+	var emission_mode := AttackContract.EMITTED_BEAM_BIDIRECTIONAL
+	if topology == AttackContract.BEAM_TOPOLOGY_PARALLEL:
+		emission_mode = AttackContract.EMITTED_BEAM_FORWARD
+		var tangent := direction.rotated(PI * 0.5)
+		for offset in [-54.0, 54.0]:
+			axes.append(direction)
+			emitters.append(origin + tangent * offset)
+	elif topology == AttackContract.BEAM_TOPOLOGY_X:
+		axes = [direction.rotated(-PI * 0.25), direction.rotated(PI * 0.25)]
+		emitters = [origin, origin]
+	else:
+		axes = [direction, direction.rotated(PI * 0.5)]
+		emitters = [origin, origin]
+	for branch_index in axes.size():
+		var axis := axes[branch_index]
+		var emitter := emitters[branch_index]
+		var from := emitter
+		if emission_mode == AttackContract.EMITTED_BEAM_BIDIRECTIONAL:
+			from = _runtime_attack_path_end(
+				emitter, -axis, BossPatterns.BEAM_RANGE, float(event["width"]) * 0.5
+			)
+		var to := _runtime_attack_path_end(
+			emitter, axis, BossPatterns.BEAM_RANGE, float(event["width"]) * 0.5
+		)
+		_append_boss_corridor_zone(
+			event, "%s_branch_%d" % [String(event["id"]), branch_index],
+			from, to, emission_mode
+		)
+		denied_zones[-1]["beam_emitter"] = emitter
+		denied_zones[-1]["beam_topology"] = topology
 
 
 func _append_boss_corridor_zone(
@@ -6538,6 +6860,8 @@ func _boss_reposition(boss: EnemyState, delta: float) -> void:
 
 
 func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> void:
+	if current_stage_index == 11 and LateBossMechanics.overload_active(boss.pattern_timer):
+		speed_scale *= LateBossMechanics.OVERLOAD_MOVE_SCALE
 	var position := Vector2(boss.pos)
 	var to_player := player_position - position
 	var distance := maxf(1.0, to_player.length())
@@ -6561,6 +6885,31 @@ func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> vo
 		false
 	)
 	boss.velocity = (Vector2(boss.pos) - position) / maxf(delta, 0.0001)
+
+
+func _refresh_late_boss_mechanic_state(boss: EnemyState) -> void:
+	boss.mechanic_cue_active = false
+	boss.mechanic_inner_radius = 0.0
+	boss.mechanic_outer_radius = 0.0
+	match current_stage_index:
+		8:
+			boss.mechanic_state = &"compression"
+		9:
+			boss.mechanic_state = (
+				&"reflect_active"
+				if LateBossMechanics.reflection_active(boss.pattern_timer)
+				else &"reflect_exposed"
+			)
+		10:
+			var band := LateBossMechanics.resonance_band(boss.pattern_timer)
+			boss.mechanic_state = &"resonance_shifted" if LateBossMechanics.resonance_shifted(boss.pattern_timer) else &"resonance_base"
+			boss.mechanic_cue_active = LateBossMechanics.resonance_cue_active(boss.pattern_timer)
+			boss.mechanic_inner_radius = band.x
+			boss.mechanic_outer_radius = band.y
+		11:
+			boss.mechanic_state = &"overload_active" if LateBossMechanics.overload_active(boss.pattern_timer) else &"overload_cooldown"
+		_:
+			boss.mechanic_state = &""
 
 
 func _begin_boss_shield_phase(boss: EnemyState, next_phase: int) -> void:
@@ -7047,7 +7396,7 @@ func _fill_fast_hud_snapshot(snapshot: Dictionary) -> Dictionary:
 		run_build.level_of(&"dash_overdrive"),
 		dash_upgrade_runtime.overdrive_remaining,
 		run_build.level_of(&"braced_fire"),
-		int(combo["braced_active_segments"]),
+		maxi(int(combo["braced_active_segments"]), int(combo["braced_segments"])),
 		float(combo["braced_seconds"]),
 		run_build.level_of(&"hit_chain"),
 		int(combo["hit_stacks"]),
@@ -7079,13 +7428,27 @@ func _guidebook_snapshot(build_snapshot: Dictionary = {}) -> Dictionary:
 
 func _build_snapshot() -> Dictionary:
 	var experience := experience_runtime.snapshot()
+	var combo := primary_combo_runtime.snapshot()
+	var max_hull := maxf(1.0, _player_max_health())
+	var conditional_statuses := ConditionalStatusSnapshot.build(
+		run_build.level_of(&"overflow_barrier"), player_barrier_strength, player_barrier_timer,
+		run_build.level_of(&"dash_overdrive"), dash_upgrade_runtime.overdrive_remaining,
+		run_build.level_of(&"braced_fire"),
+		maxi(int(combo["braced_active_segments"]), int(combo["braced_segments"])),
+		float(combo["braced_seconds"]), run_build.level_of(&"hit_chain"),
+		int(combo["hit_stacks"]), run_build.level_of(&"miss_compensation"),
+		int(combo["miss_stacks"]), run_build.level_of(&"last_stand_amplifier"),
+		OutgoingDamagePolicy.crisis_bonus(
+			run_build.level_of(&"last_stand_amplifier"), player_health / max_hull
+		)
+	)
 	var active_weapon := active_weapon_runtime.snapshot(
 		run_build, 1.5 if persistent_relay_module else 0.0
 	)
 	var effective_stats: Array[Dictionary] = [
 		{"id":&"hull", "label_key":"SHIP_STAT_HULL", "value":_player_max_health(), "decimals":0, "unit_key":"SHIP_UNIT_HP"},
 		{"id":&"speed", "label_key":"SHIP_STAT_SPEED", "value":_player_move_speed(), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
-		{"id":&"primary_damage", "label_key":"SHIP_STAT_PRIMARY_DAMAGE", "value":18.0, "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
+		{"id":&"primary_damage", "label_key":"SHIP_STAT_PRIMARY_DAMAGE", "value":18.0 * PrimaryUpgradeRules.piercing_damage_multiplier(run_build.level_of(&"piercing_rounds")) * run_build.fallback_primary_damage_multiplier(), "decimals":1, "unit_key":"SHIP_UNIT_DAMAGE"},
 		{"id":&"fire_rate", "label_key":"SHIP_STAT_FIRE_RATE", "value":1.0 / PrimaryWeapon.BASE_INTERVAL, "decimals":2, "unit_key":"SHIP_UNIT_PER_SECOND"},
 		{"id":&"projectile_speed", "label_key":"SHIP_STAT_PROJECTILE_SPEED", "value":run_build.stat(&"primary_projectile_speed", PRIMARY_PROJECTILE_SPEED), "decimals":0, "unit_key":"SHIP_UNIT_PX_S"},
 		{"id":&"dash_cooldown", "label_key":"SHIP_STAT_DASH_COOLDOWN", "value":_dash_cooldown_max(), "decimals":2, "unit_key":"SHIP_UNIT_SECONDS"},
@@ -7105,6 +7468,8 @@ func _build_snapshot() -> Dictionary:
 			"experience":int(experience["experience"]),
 			"experience_required":int(experience["required"]),
 			"experience_complete":bool(experience["complete"]),
+			"fallback_ranks":run_build.fallback_snapshot(),
+			"conditional_statuses":conditional_statuses,
 		}
 	)
 
@@ -7144,7 +7509,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 			"discovered":true,
 		})
 	for pickup in pickups:
-		if bool(pickup["active"]):
+		if bool(pickup["active"]) and bool(pickup.get("published", true)):
 			markers.append({
 				"kind":&"field_pickup",
 				"position":Vector2(pickup["pos"]),
@@ -7154,7 +7519,10 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 		_mystery_device_snapshot_buffer
 	)
 	for device in _mystery_device_snapshot_buffer:
-		if StringName(device["state"]) in [&"dormant", &"active"]:
+		if (
+			StringName(device["state"]) in [&"dormant", &"active"]
+			and (StringName(device["state"]) != &"dormant" or bool(device.get("published", true)))
+		):
 			markers.append({
 				"kind":&"mystery_device",
 				"position":Vector2(device["position"]),
@@ -7206,7 +7574,7 @@ func _runtime_minimap_snapshot(
 			frame_index, markers, _minimap_role_for_enemy(enemy), enemy.pos
 		)
 	for pickup in pickups:
-		if bool(pickup["active"]):
+		if bool(pickup["active"]) and bool(pickup.get("published", true)):
 			_append_runtime_minimap_marker(
 				frame_index, markers, &"field_pickup", Vector2(pickup["pos"])
 			)
@@ -7214,7 +7582,10 @@ func _runtime_minimap_snapshot(
 		_mystery_device_snapshot_buffer
 	)
 	for device in _mystery_device_snapshot_buffer:
-		if StringName(device["state"]) in [&"dormant", &"active"]:
+		if (
+			StringName(device["state"]) in [&"dormant", &"active"]
+			and (StringName(device["state"]) != &"dormant" or bool(device.get("published", true)))
+		):
 			_append_runtime_minimap_marker(
 				frame_index,
 				markers,
@@ -7404,6 +7775,10 @@ func _update_threat_contacts(delta: float) -> void:
 	for device in _mystery_device_snapshot_buffer:
 		if (
 			StringName(device.get("state", &"expired")) in [&"dormant", &"active"]
+			and (
+				StringName(device.get("state", &"expired")) != &"dormant"
+				or bool(device.get("published", true))
+			)
 			and safe_viewport.has_point(
 				canvas_transform * Vector2(device["position"])
 			)

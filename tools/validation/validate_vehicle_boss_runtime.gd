@@ -4,6 +4,7 @@ const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 
 var _failures: Array[String] = []
 
@@ -276,6 +277,13 @@ func _validate_direct_beam_growth(runtime: BossRuntime) -> void:
 	boss.phase = &"boss_active"
 	boss.phase_time = BossPatterns.active_seconds("switch_sweep")
 	boss.beam_end = Vector2(1000.0, 0.0)
+	boss.attack_telegraphs = [{
+		"delivery":&"beam",
+		"from":Vector2.ZERO,
+		"to":Vector2(1000.0, 0.0),
+		"beam_emitter":Vector2.ZERO,
+		"beam_emission_mode":AttackContract.EMITTED_BEAM_FORWARD,
+	}]
 	boss.hit_committed = false
 	runtime.update_active(boss, 0.01, services)
 	_expect(

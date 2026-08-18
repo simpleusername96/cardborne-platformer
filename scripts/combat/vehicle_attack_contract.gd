@@ -35,6 +35,12 @@ const PROJECTILE_TELEGRAPH_LEAD_SECONDS := 0.36
 const EMITTED_BEAM_GROWTH_SECONDS := 0.30
 const EMITTED_BEAM_FORWARD: StringName = &"forward"
 const EMITTED_BEAM_BIDIRECTIONAL: StringName = &"bidirectional"
+const BEAM_TOPOLOGY_PARALLEL: StringName = &"parallel"
+const BEAM_TOPOLOGY_X: StringName = &"x"
+const BEAM_TOPOLOGY_PLUS: StringName = &"plus"
+const HOSTILE_BEAM_TOPOLOGIES: Array[StringName] = [
+	BEAM_TOPOLOGY_PARALLEL, BEAM_TOPOLOGY_X, BEAM_TOPOLOGY_PLUS,
+]
 const LIGHT_DAMAGE_MAX := 10.0
 const HEAVY_DAMAGE_MIN := 20.0
 const LIGHT_PROJECTILE_RADIUS := 5.0

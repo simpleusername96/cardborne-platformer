@@ -508,7 +508,7 @@ func _validate_triplet_matrix(catalog: VehicleUpgradeCatalog) -> void:
 	var snapshot_count := 0
 	for definition in catalog.all_definitions():
 		snapshot_count += definition.max_level
-	_expect(snapshot_count == 91, "worst-case fixture is grounded in all 91 card states")
+	_expect(snapshot_count == 172, "worst-case fixture is grounded in all 172 card states")
 	for locale in ["ko", "en"]:
 		TranslationServer.set_locale(locale)
 		_validate_longest_fixture(catalog, locale)

@@ -65,7 +65,10 @@ func required_experience() -> int:
 	)
 
 
-func spawn_shard(position: Vector2, value: int, reward_source: StringName = &"") -> void:
+func spawn_shard(
+	position: Vector2, value: int, reward_source: StringName = &"",
+	authored := false
+) -> void:
 	if progression_complete or value <= 0:
 		return
 	if shards.size() >= MAX_SHARDS:
@@ -75,7 +78,7 @@ func spawn_shard(position: Vector2, value: int, reward_source: StringName = &"")
 			shards[merge_index].reward_sources.append(reward_source)
 		return
 	var shard: ExperienceShard = _pool.pop_back()
-	shard.configure(_next_shard_id, position, value, reward_source)
+	shard.configure(_next_shard_id, position, value, reward_source, authored)
 	shards.append(shard)
 	_next_shard_id += 1
 
@@ -112,6 +115,9 @@ func advance(
 	var index := 0
 	while index < shards.size():
 		var shard: ExperienceShard = shards[index]
+		if shard.authored and not shard.published:
+			index += 1
+			continue
 		var position := shard.pos
 		var distance_squared := position.distance_squared_to(player_position)
 		if recall_active or distance_squared <= attraction_radius_squared:
@@ -186,9 +192,14 @@ func complete_progression() -> bool:
 
 
 func snapshot() -> Dictionary:
+	var authored_published := 0
+	for shard in shards:
+		if shard.authored and shard.published:
+			authored_published += 1
 	return {
 		"level":run_level, "experience":experience, "required":required_experience(),
 		"pending_levels":pending_level_ups, "shard_count":shards.size(),
+		"authored_published_count":authored_published,
 		"shard_pool":_pool.size(), "complete":progression_complete,
 	}
 

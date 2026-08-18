@@ -59,15 +59,15 @@ const MOBILE_ROLES := [
 	[&"ordinary_sweep_01", &"ordinary_beam_01", &"ordinary_growth_01"],
 	[&"ordinary_beam_01", &"ordinary_growth_01", &"ordinary_gap_01"],
 	[&"ordinary_growth_01", &"ordinary_gap_01", &"ordinary_pulse_01"],
-	[&"ordinary_gap_01", &"ordinary_pulse_01", &"ordinary_edge_01"],
-	[&"ordinary_pulse_01", &"ordinary_edge_01", &"ordinary_pull_01"],
-	[&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_range_01"],
-	[&"ordinary_pull_01", &"ordinary_range_01", &"ordinary_support_01"],
+	[&"ordinary_gap_01", &"ordinary_pulse_01", &"ordinary_compression_01"],
+	[&"ordinary_pulse_01", &"ordinary_compression_01", &"ordinary_reflect_01"],
+	[&"ordinary_compression_01", &"ordinary_reflect_01", &"ordinary_resonance_01"],
+	[&"ordinary_reflect_01", &"ordinary_resonance_01", &"ordinary_overload_01"],
 ]
 const BOSS_TUTOR_ROLES := [
 	&"ordinary_area_01", &"ordinary_lane_01", &"ordinary_shield_01", &"ordinary_sweep_01",
 	&"ordinary_beam_01", &"ordinary_growth_01", &"ordinary_gap_01", &"ordinary_pulse_01",
-	&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_range_01", &"ordinary_support_01",
+	&"ordinary_compression_01", &"ordinary_reflect_01", &"ordinary_resonance_01", &"ordinary_overload_01",
 ]
 
 static func normalized_id(stage_id: StringName) -> StringName:

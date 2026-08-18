@@ -27,7 +27,32 @@ func configure(device_blueprint: Array, layout_seed: int, stage_id: StringName) 
 	for index in mini(DEVICE_COUNT, device_blueprint.size()):
 		var blueprint := Dictionary(device_blueprint[index])
 		var outcome := rotation[index]
-		devices.append({"id": StringName(blueprint.get("id", "facility_%d" % index)), "position": Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))), "health": DEVICE_HEALTH, "outcome": outcome, "state": &"dormant", "active_remaining": 0.0, "expiry_warning_sent": false, "hit_flash_remaining": 0.0, "lava_tick_remaining": LAVA_TICK_SECONDS})
+		devices.append({"id": StringName(blueprint.get("id", "facility_%d" % index)), "position": Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))), "health": DEVICE_HEALTH, "outcome": outcome, "state": &"dormant", "published": false, "active_remaining": 0.0, "expiry_warning_sent": false, "hit_flash_remaining": 0.0, "lava_tick_remaining": LAVA_TICK_SECONDS})
+
+
+func refresh_publication(visible_world: Rect2, player_position: Vector2) -> void:
+	var selected: Dictionary = {}
+	var selected_distance := INF
+	for device in devices:
+		if StringName(device["state"]) != &"dormant":
+			continue
+		var position := Vector2(device["position"])
+		if bool(device.get("published", false)) and visible_world.has_point(position):
+			var distance := player_position.distance_squared_to(position)
+			if distance < selected_distance:
+				selected = device
+				selected_distance = distance
+	if selected.is_empty():
+		for device in devices:
+			if StringName(device["state"]) != &"dormant":
+				continue
+			var distance := player_position.distance_squared_to(Vector2(device["position"]))
+			if distance < selected_distance:
+				selected = device
+				selected_distance = distance
+	for device in devices:
+		if StringName(device["state"]) == &"dormant":
+			device["published"] = device == selected
 
 func advance(delta: float, events: Array[Dictionary]) -> void:
 	events.clear()
@@ -132,7 +157,7 @@ func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 
 func is_position_clear(position: Vector2, actor_radius: float) -> bool:
 	for device in devices:
-		if StringName(device["state"]) == &"dormant" and position.distance_to(Vector2(device["position"])) < DEVICE_RADIUS + maxf(0.0, actor_radius):
+		if StringName(device["state"]) == &"dormant" and bool(device.get("published", true)) and position.distance_to(Vector2(device["position"])) < DEVICE_RADIUS + maxf(0.0, actor_radius):
 			return false
 	return true
 
@@ -145,7 +170,7 @@ func first_damageable_segment_hit(from: Vector2, to: Vector2, padding: float, re
 	receipt.clear()
 	for index in devices.size():
 		var device := devices[index]
-		if StringName(device["state"]) != &"dormant":
+		if StringName(device["state"]) != &"dormant" or not bool(device.get("published", true)):
 			continue
 		var position := Vector2(device["position"])
 		if Geometry2D.get_closest_point_to_segment(position, from, to).distance_to(position) <= DEVICE_RADIUS + maxf(0.0, padding):
@@ -160,7 +185,7 @@ func snapshot() -> Dictionary:
 	for device in devices:
 		var profile := Dictionary(OUTCOME_PROFILE[StringName(device["outcome"])])
 		var active_remaining := float(device.get("active_remaining", 0.0))
-		records.append({"id": StringName(device["id"]), "position": Vector2(device["position"]), "radius": DEVICE_RADIUS, "effect_radius": float(profile["radius"]), "health": float(device["health"]), "max_health": DEVICE_HEALTH, "outcome": StringName(device["outcome"]), "state": StringName(device["state"]), "active_remaining": active_remaining, "active_duration": ACTIVE_DURATION_SECONDS, "active_ratio": clampf(active_remaining / ACTIVE_DURATION_SECONDS, 0.0, 1.0), "hit_flash_remaining":float(device.get("hit_flash_remaining", 0.0)), "projectiles_blocked": false})
+		records.append({"id": StringName(device["id"]), "position": Vector2(device["position"]), "radius": DEVICE_RADIUS, "effect_radius": float(profile["radius"]), "health": float(device["health"]), "max_health": DEVICE_HEALTH, "outcome": StringName(device["outcome"]), "state": StringName(device["state"]), "published": bool(device.get("published", true)), "active_remaining": active_remaining, "active_duration": ACTIVE_DURATION_SECONDS, "active_ratio": clampf(active_remaining / ACTIVE_DURATION_SECONDS, 0.0, 1.0), "hit_flash_remaining":float(device.get("hit_flash_remaining", 0.0)), "projectiles_blocked": false})
 	return {"devices": records}
 
 func _rotation(layout_seed: int, stage_id: StringName) -> Array[StringName]:

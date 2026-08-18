@@ -91,9 +91,9 @@ func _run() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, StageCatalog.STAGE_IDS)
 	for stage_id in StageCatalog.STAGE_IDS:
 		var stage_pickups := layout.pickup_blueprint(stage_id)
-		_expect(stage_pickups.size() == 12, "%s has two recalls and ten XP shards" % stage_id)
+		_expect(stage_pickups.size() == 14, "%s has four recalls and ten XP shards" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"repair").is_empty(), "%s pickup set contains no repairs" % stage_id)
-		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s pickup set contains exactly two experience recalls" % stage_id)
+		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_recall").size() == 4, "%s pickup set contains exactly four experience recalls" % stage_id)
 		_expect(stage_pickups.filter(func(item: Dictionary) -> bool: return StringName(item["kind"]) == &"experience_shard").size() == 10, "%s pickup set contains exactly ten XP shards" % stage_id)
 	var kinds: Dictionary = {}
 	for item in layout.pickup_blueprint(&"stage_1"):
@@ -185,8 +185,19 @@ func _run() -> void:
 	var stage := StageScene.instantiate()
 	root.add_child(stage)
 	await process_frame
-	_expect(stage.get("pickups").size() == 2, "live stage exposes only the two recall pickups")
-	_expect(int(stage.get("experience_runtime").call("snapshot")["shard_count"]) == 10, "live stage materializes ten visible authored XP shards")
+	stage.call("_refresh_viewport_supply", 0.0)
+	var live_pickups: Array = stage.get("pickups")
+	var published_recalls := live_pickups.filter(
+		func(item: Dictionary) -> bool:
+			return bool(item.get("active", false)) and bool(item.get("published", false))
+	).size()
+	var experience_snapshot: Dictionary = stage.get("experience_runtime").call("snapshot")
+	_expect(live_pickups.size() == 4, "live stage retains all four recall pickups")
+	_expect(int(experience_snapshot["shard_count"]) == 10, "live stage retains ten authored XP shards")
+	_expect(
+		published_recalls + int(experience_snapshot["authored_published_count"]) == 1,
+		"live stage publishes at most one recall or authored XP shard"
+	)
 	stage.call("_collect_pickup", {"active": true, "kind": &"experience_recall", "pos": Vector2.ZERO})
 	_expect(float(stage.get("experience_recall_timer")) >= 0.65, "experience recall starts the global shard pull window")
 	var experience_runtime: RefCounted = stage.get("experience_runtime")

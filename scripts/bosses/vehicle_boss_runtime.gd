@@ -10,6 +10,7 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
+const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 
 const PHASE_GAPS := [0.45, 0.34, 0.26]
 const AUTONOMOUS_INTERVALS := [5.4, 4.4, 3.5]
@@ -122,7 +123,7 @@ func begin_active(boss: VehicleEnemyState, services: Variant) -> void:
 	boss.phase = &"boss_active"
 	boss.pattern_tick = 0.0
 	var pattern := String(boss.pattern)
-	boss.phase_time = Patterns.active_seconds(pattern)
+	boss.phase_time = Patterns.scaled_active_seconds(pattern, stage_index)
 	boss.pattern_volleys = 0
 	var kind := Patterns.kind(pattern)
 	if kind == &"summon":
@@ -144,7 +145,12 @@ func update_active(
 	var damage := Patterns.damage(pattern, stage_index) * boss.boss_attack_damage_multiplier
 	var escalated := boss.boss_phase >= 2
 	if damage <= 0.0:
-		services.call("_boss_combat_move", boss, delta, Patterns.ACTIVE_MOVE_SCALE)
+		services.call(
+			"_boss_combat_move",
+			boss,
+			delta,
+			StageDifficulty.boss_attack_move_scale(stage_index)
+		)
 	if (
 		kind in [&"lanes", &"fan", &"cross"]
 		and boss.pattern_tick <= 0.0
@@ -206,7 +212,7 @@ func update_active(
 				pattern,
 				damage
 			)
-	elif kind in [&"crossing_weave", &"alternating_pulse"]:
+	elif kind in [&"crossing_weave", &"alternating_pulse", &"compression"]:
 		if boss.pattern_volleys == 0:
 			boss.pattern_volleys = 1
 			services.call("_activate_boss_identity_pattern", boss, pattern)
@@ -241,19 +247,28 @@ func update_active(
 	elif kind == &"beam":
 		var growth_ratio := AttackContract.emitted_beam_growth_ratio(
 			boss.phase_time,
-			Patterns.active_seconds(pattern)
+			Patterns.scaled_active_seconds(pattern, stage_index)
 		)
-		var live_beam_end := AttackContract.emitted_beam_live_endpoint(
-			boss.pos, boss.beam_end, growth_ratio
-		)
-		if (
-			not boss.hit_committed
-			and Rules.point_segment_distance(
-				services.player_position, boss.pos, live_beam_end
-			) <= Rules.PLAYER_RADIUS + Patterns.width(pattern, stage_index) * 0.5
-		):
-			boss.hit_committed = true
-			services.call("_damage_player", damage, pattern, true, true, true)
+		for telegraph in boss.attack_telegraphs:
+			if StringName(telegraph.get("delivery", &"")) != &"beam":
+				continue
+			var emitter := Vector2(telegraph.get("beam_emitter", boss.pos))
+			var endpoints: Array[Vector2] = [Vector2(telegraph["to"])]
+			if StringName(telegraph.get("beam_emission_mode", &"")) == AttackContract.EMITTED_BEAM_BIDIRECTIONAL:
+				endpoints.push_front(Vector2(telegraph["from"]))
+			for endpoint in endpoints:
+				var live_end := AttackContract.emitted_beam_live_endpoint(
+					emitter, endpoint, growth_ratio
+				)
+				if (
+					not boss.hit_committed
+					and Rules.point_segment_distance(
+						services.player_position, emitter, live_end
+					) <= Rules.PLAYER_RADIUS + Patterns.width(pattern, stage_index) * 0.5
+				):
+					boss.hit_committed = true
+					services.call("_damage_player", damage, pattern, true, true, true)
+					break
 	elif kind in [&"area", &"pylons", &"summon"]:
 		if boss.pattern_volleys == 0:
 			services.call(
@@ -314,15 +329,22 @@ func advance_autonomous(
 		"kind":Patterns.kind(pattern),
 		"origin":boss.pos,
 		"target":player_position + offset,
-		"startup":Patterns.startup_seconds(pattern),
-		"duration":Patterns.active_seconds(pattern),
-		"damage":Patterns.damage(pattern, stage_index),
+		"startup":Patterns.scaled_startup_seconds(pattern, stage_index),
+		"duration":Patterns.scaled_active_seconds(pattern, stage_index),
+		"damage":Patterns.damage(pattern, stage_index) * (
+			LateBossMechanics.OVERLOAD_DEALT_DAMAGE_SCALE
+			if stage_index == 11 and LateBossMechanics.overload_active(boss.pattern_timer)
+			else 1.0
+		),
 		"radius":Patterns.radius(pattern, stage_index),
 		"width":Patterns.width(pattern, stage_index),
 		"lane_spacing":Patterns.lane_spacing(stage_index),
 		"affinity":Patterns.affinity(pattern),
 		"commit_mode":&"autonomous",
 		"emitter_radius":boss.visual_radius,
+		"beam_topology":AttackContract.HOSTILE_BEAM_TOPOLOGIES[
+			posmod(autonomous_serial - 1, AttackContract.HOSTILE_BEAM_TOPOLOGIES.size())
+		],
 	})
 	return events
 
@@ -332,6 +354,8 @@ func snapshot() -> Dictionary:
 		"stage_id":stage_id,
 		"stage_index":stage_index,
 		"cadence_scale":StageDifficulty.boss_cadence_scale(stage_index),
+		"attack_time_scale":StageDifficulty.boss_attack_time_scale(stage_index),
+		"attack_move_scale":StageDifficulty.boss_attack_move_scale(stage_index),
 		"autonomous_timer":autonomous_timer,
 		"autonomous_index":autonomous_index,
 		"finite_summons_remaining":finite_summons_remaining,

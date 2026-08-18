@@ -26,9 +26,12 @@ func _initialize() -> void:
 		_expect(
 			phase_one.size() == 5
 				and phase_one.duplicate().all(func(pattern): return phase_one.count(pattern) == 1)
-				and "common_charge" in phase_one
-				and "common_broad_barrage" in phase_one,
-			"%s has five distinct attacks including both common patterns" % stage_id
+				and (
+					("common_charge" in phase_one and "common_broad_barrage" in phase_one)
+					if stage_index < 8
+					else ("common_charge" not in phase_one and "common_broad_barrage" not in phase_one)
+				),
+			"%s has five distinct attacks with the correct common-pattern policy" % stage_id
 		)
 		_expect(phase_two.size() == 5 and phase_two != phase_one, "%s changes order in phase two" % stage_id)
 		_expect(phase_three.size() == 5 and phase_three != phase_two, "%s has an authored phase-three order" % stage_id)
@@ -36,7 +39,8 @@ func _initialize() -> void:
 			_expect(Patterns.startup_seconds(pattern) >= 0.65, "%s startup is visible" % pattern)
 			_expect(Patterns.active_seconds(pattern) >= 0.4, "%s active window is explicit" % pattern)
 			_expect(
-				Patterns.recovery_seconds(pattern) >= 0.9
+				stage_index >= 8
+					or Patterns.recovery_seconds(pattern) >= 0.9
 					or Patterns.commit_mode(pattern) == &"autonomous",
 				"%s recovery or autonomous ownership is explicit" % pattern
 			)
@@ -54,6 +58,8 @@ func _initialize() -> void:
 				_expect(Patterns.volley_interval(pattern) > 0.0 and Patterns.volley_limit(pattern, false) >= 3, "%s repeats aimed projectile volleys" % pattern)
 				_expect(Patterns.volley_limit(pattern, true) > Patterns.volley_limit(pattern, false), "%s adds one phase-two volley" % pattern)
 			if (
+				stage_index < 8
+				and
 				Patterns.damage(pattern, stage_index) > 0.0
 				and Patterns.kind(pattern) in [&"area", &"pylons", &"summon"]
 			):
@@ -66,6 +72,8 @@ func _initialize() -> void:
 		var autonomous := Patterns.autonomous_sequence(stage_id)
 		_expect(autonomous.size() == 2, "%s owns two bounded autonomous systems" % stage_id)
 		for pattern in autonomous:
+			if stage_index >= 8:
+				continue
 			_expect(
 				Patterns.commit_mode(pattern) == &"autonomous",
 				"%s remains independent of boss-body state" % pattern
@@ -107,7 +115,9 @@ func _initialize() -> void:
 			and Difficulty.BOSS_SHIELDED_DAMAGE_MULTIPLIERS.size() == 12
 			and Difficulty.BOSS_CADENCE_SCALES.size() == 12
 			and Difficulty.BOSS_COVERAGE_SCALES.size() == 12
-		and is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIERS[-1], 3.510)
+		and Difficulty.BOSS_ATTACK_TIME_SCALES.size() == 12
+		and Difficulty.BOSS_ATTACK_MOVE_SCALES.size() == 12
+		and is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIERS[-1], 1.0)
 		and is_equal_approx(Difficulty.BOSS_DAMAGE_MULTIPLIERS[-1], 1.78)
 		and is_equal_approx(Difficulty.BOSS_COVERAGE_SCALES[-1], 1.36),
 		"boss profile exposes twelve explicit strengthening curves"

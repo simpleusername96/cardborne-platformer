@@ -10,12 +10,17 @@ const AUTOMATIC_WEAPON_CARD_IDS: Array[StringName] = [
 	&"homing_missiles", &"electric_field", &"orbiting_blades",
 	&"drop_mines", &"auto_laser", &"storm_barrage",
 ]
+const FALLBACK_IDS: Array[StringName] = [
+	&"fallback_firepower", &"fallback_chassis", &"fallback_operations",
+]
+const FALLBACK_MAX_RANK := 20
 
 var catalog: VehicleUpgradeCatalog
 var levels: Dictionary = {}
 ## First-acquisition order is run truth for read-only build summaries. It is not
 ## an equipment limit and never changes when an existing card levels up.
 var acquisition_order: Array[StringName] = []
+var fallback_ranks: Dictionary = {}
 
 
 func _init(source_catalog: VehicleUpgradeCatalog = null) -> void:
@@ -25,6 +30,7 @@ func _init(source_catalog: VehicleUpgradeCatalog = null) -> void:
 func reset() -> void:
 	levels.clear()
 	acquisition_order.clear()
+	fallback_ranks.clear()
 
 
 func level_of(upgrade_id: StringName) -> int:
@@ -124,7 +130,72 @@ func stat(stat_id: StringName, base_value: float) -> float:
 			var modifier_value := modifier.value_at(level_of(StringName(upgrade_id)))
 			if modifier.operation == "add": value += modifier_value
 			else: value *= modifier_value
+	match stat_id:
+		&"max_health_bonus":
+			value += float(ceili(float(fallback_rank(&"fallback_chassis")) * 0.5)) * 3.0
+		&"move_speed_multiplier":
+			value *= 1.0 + float(floori(float(fallback_rank(&"fallback_chassis")) * 0.5)) * 0.015
+		&"pickup_radius_bonus":
+			value += float(ceili(float(fallback_rank(&"fallback_operations")) * 0.5)) * 18.0
 	return value
+
+
+func fallback_rank(fallback_id: StringName) -> int:
+	return int(fallback_ranks.get(fallback_id, 0))
+
+
+func fallback_complete() -> bool:
+	for fallback_id in FALLBACK_IDS:
+		if fallback_rank(fallback_id) < FALLBACK_MAX_RANK:
+			return false
+	return true
+
+
+func fallback_preview(fallback_id: StringName) -> Dictionary:
+	if fallback_id not in FALLBACK_IDS:
+		return {"valid":false, "reason":&"missing"}
+	var old_rank := fallback_rank(fallback_id)
+	if old_rank >= FALLBACK_MAX_RANK:
+		return {"valid":false, "reason":&"max"}
+	var new_rank := old_rank + 1
+	var effect_id: StringName
+	var value := 0.0
+	match fallback_id:
+		&"fallback_firepower":
+			effect_id = &"primary_damage_percent"
+			value = 3.0
+		&"fallback_chassis":
+			effect_id = &"max_hull" if new_rank % 2 == 1 else &"move_speed_percent"
+			value = 3.0 if new_rank % 2 == 1 else 1.5
+		&"fallback_operations":
+			effect_id = &"pickup_radius" if new_rank % 2 == 1 else &"dash_cooldown_percent"
+			value = 18.0 if new_rank % 2 == 1 else 1.5
+	return {
+		"valid":true, "id":fallback_id, "old_rank":old_rank,
+		"new_rank":new_rank, "max_rank":FALLBACK_MAX_RANK,
+		"effect_id":effect_id, "value":value,
+	}
+
+
+func apply_fallback(fallback_id: StringName) -> Dictionary:
+	var receipt := fallback_preview(fallback_id)
+	if not bool(receipt.get("valid", false)):
+		return receipt
+	fallback_ranks[fallback_id] = int(receipt["new_rank"])
+	receipt["applied"] = true
+	return receipt
+
+
+func fallback_primary_damage_multiplier() -> float:
+	return 1.0 + float(fallback_rank(&"fallback_firepower")) * 0.03
+
+
+func fallback_dash_cooldown_multiplier() -> float:
+	return 1.0 - float(floori(float(fallback_rank(&"fallback_operations")) * 0.5)) * 0.015
+
+
+func fallback_snapshot() -> Dictionary:
+	return fallback_ranks.duplicate(true)
 
 
 func preview(upgrade_id: StringName) -> Dictionary:

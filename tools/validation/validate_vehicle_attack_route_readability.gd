@@ -108,7 +108,10 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 				_expect(Vector2(descriptor["center"]) == enemy.committed_target, "boss area center stays committed")
 				_expect(is_equal_approx(float(descriptor["radius"]), BossPatterns.radius(pattern)), "boss area radius matches pattern")
 			elif delivery in [&"projectile", &"beam", &"charge"]:
-				_expect(Vector2(descriptor["from"]).distance_to(enemy.pos) <= 90.0, "boss %s origin stays within the committed muzzle envelope" % delivery)
+				var committed_origin := Vector2(
+					descriptor.get("beam_emitter", descriptor["from"])
+				)
+				_expect(committed_origin.distance_to(enemy.pos) <= 90.0, "boss %s origin stays within the committed muzzle envelope" % delivery)
 				_expect(Vector2(descriptor["to"]) != Vector2(descriptor["from"]), "boss %s endpoint remains visible" % delivery)
 				if delivery == &"beam":
 					_expect(
@@ -118,7 +121,57 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 						),
 						"boss forward-emitted beam publishes its 0.30-second growth contract"
 					)
+					_expect(
+						StringName(descriptor.get("beam_topology", &""))
+							in AttackContract.HOSTILE_BEAM_TOPOLOGIES,
+						"boss beam declares one of the three collision-owned topologies"
+					)
+	_validate_beam_topology_cycle(resolve_path, resolve_charge, player)
 	_validate_offscreen_intersection()
+
+
+func _validate_beam_topology_cycle(
+	resolve_path: Callable, resolve_charge: Callable, player: Vector2
+) -> void:
+	for cycle_index in AttackContract.HOSTILE_BEAM_TOPOLOGIES.size():
+		var enemy := EnemyState.new()
+		enemy.role = &"boss"
+		enemy.phase = &"boss_startup"
+		enemy.pos = player + Vector2(360.0, 0.0)
+		enemy.committed_dir = Vector2.LEFT
+		enemy.committed_target = player
+		enemy.pattern_index = cycle_index + 1
+		AttackTelegraphs.refresh_boss(
+			enemy, "switch_sweep", resolve_path, resolve_charge
+		)
+		var expected := AttackContract.HOSTILE_BEAM_TOPOLOGIES[cycle_index]
+		var beams := enemy.attack_telegraphs.filter(
+			func(value):
+				return StringName(Dictionary(value).get("delivery", &"")) == &"beam"
+		)
+		_expect(beams.size() == 2, "%s beam topology owns exactly two collision branches" % expected)
+		for descriptor_variant in beams:
+			var descriptor := Dictionary(descriptor_variant)
+			_expect(
+				StringName(descriptor.get("beam_topology", &"")) == expected,
+				"hostile beam cycle preserves the authored II -> X -> plus order"
+			)
+			_expect(
+				is_equal_approx(
+					float(descriptor.get("beam_growth_seconds", 0.0)),
+					AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+				),
+				"%s beam grows its collision length over 0.30 seconds" % expected
+			)
+			var expected_mode := (
+				AttackContract.EMITTED_BEAM_FORWARD
+				if expected == AttackContract.BEAM_TOPOLOGY_PARALLEL
+				else AttackContract.EMITTED_BEAM_BIDIRECTIONAL
+			)
+			_expect(
+				StringName(descriptor.get("beam_emission_mode", &"")) == expected_mode,
+				"%s beam publishes the matching collision emission mode" % expected
+			)
 
 
 func _validate_offscreen_intersection() -> void:

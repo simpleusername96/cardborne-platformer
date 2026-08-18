@@ -17,7 +17,14 @@ func _initialize() -> void:
 		_expect(Stages.has_boss(stage_id), "%s is quota-gated by a boss" % stage_id)
 		_expect(not Phases.definition(stage_id).is_empty(), "%s has a boss identity" % stage_id)
 		_expect(Patterns.sequence(stage_id).size() == 5, "%s selects five direct patterns" % stage_id)
-		_expect(Patterns.sequence(stage_id).count("common_charge") == 1 and Patterns.sequence(stage_id).count("common_broad_barrage") == 1, "%s has no more than two common selections" % stage_id)
+		_expect(
+			(Patterns.sequence(stage_id).count("common_charge") == 1 and Patterns.sequence(stage_id).count("common_broad_barrage") == 1)
+				if index < 8 else (
+					Patterns.sequence(stage_id).count("common_charge") == 0
+					and Patterns.sequence(stage_id).count("common_broad_barrage") == 0
+				),
+			"%s has the authored common-pattern policy" % stage_id
+		)
 		var rows := Patterns.broad_barrage_rows(index, Vector2.RIGHT, Patterns.barrage_mode(stage_id))
 		var expected_count := 4 if index <= 2 else (5 if index <= 5 else 6)
 		_expect(rows.size() == 3 and int(rows[0]["count"]) == expected_count and is_equal_approx(float(rows[1]["at"]), 0.38), "%s broad barrage has exact rows" % stage_id)
@@ -62,7 +69,7 @@ func _initialize() -> void:
 	for stage_id in Stages.STAGE_IDS:
 		for pattern in Patterns.autonomous_sequence(stage_id):
 			_expect(
-				Patterns.kind(String(pattern)) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"crossing_weave", &"alternating_pulse"],
+				Patterns.kind(String(pattern)) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"crossing_weave", &"alternating_pulse", &"compression"],
 				"%s autonomous pattern has a VehicleRun handler" % String(pattern)
 			)
 	_finish()

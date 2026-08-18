@@ -45,11 +45,19 @@ static func rows(
 				),
 			]
 		&"piercing_rounds":
-			return [_row(
-				"UPGRADE_EFFECT_ADDITIONAL_PENETRATIONS",
-				PrimaryRules.additional_penetrations(current_level),
-				PrimaryRules.additional_penetrations(current_level + 1)
-			)]
+			return [
+				_row(
+					"UPGRADE_EFFECT_ADDITIONAL_PENETRATIONS",
+					PrimaryRules.additional_penetrations(current_level),
+					PrimaryRules.additional_penetrations(current_level + 1)
+				),
+				_row(
+					"UPGRADE_EFFECT_PRIMARY_DAMAGE_MULTIPLIER",
+					PrimaryRules.piercing_damage_multiplier(current_level) * 100.0,
+					PrimaryRules.piercing_damage_multiplier(current_level + 1) * 100.0,
+					"percent"
+				),
+			]
 		&"homing_missiles":
 			return _seeker_rows(current_level)
 		&"electric_field":

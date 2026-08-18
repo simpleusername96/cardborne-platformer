@@ -7,6 +7,7 @@ extends RefCounted
 const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = [
 	&"ordinary_ranged_01", &"ordinary_lane_01", &"ordinary_growth_01",
 	&"ordinary_gap_01", &"ordinary_beam_01", &"ordinary_range_01",
+	&"ordinary_compression_01", &"ordinary_resonance_01",
 	&"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02",
 	&"ordinary_fixed_beam_01", &"boss_actor",
 ]
@@ -35,6 +36,10 @@ const DEFINITIONS := {
 	&"ordinary_pull_01": {"behavior": &"ordinary_pull_01", "health": 82.0, "speed": 190.0, "radius": 23.0, "name_key": "ORDINARY_PULL_01", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"melee", "active_cap": true},
 	&"ordinary_range_01": {"behavior": &"ordinary_range_01", "health": 56.0, "speed": 172.0, "radius": 18.0, "name_key": "ORDINARY_RANGE_01", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"ranged", "active_cap": true},
 	&"ordinary_support_01": {"behavior": &"ordinary_support_01", "health": 74.0, "speed": 159.0, "radius": 22.0, "name_key": "ORDINARY_SUPPORT_01", "health_class": &"priority", "threat_cost": 0.0, "threat_kind": &"support", "active_cap": true},
+	&"ordinary_compression_01": {"behavior": &"ordinary_gap_01", "health": 68.0, "speed": 150.0, "radius": 22.0, "name_key": "ORDINARY_COMPRESSION_01", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"denial", "active_cap": true},
+	&"ordinary_reflect_01": {"behavior": &"ordinary_shield_01", "health": 98.0, "speed": 164.0, "radius": 25.0, "name_key": "ORDINARY_REFLECT_01", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"melee", "active_cap": true},
+	&"ordinary_resonance_01": {"behavior": &"ordinary_range_01", "health": 64.0, "speed": 172.0, "radius": 19.0, "name_key": "ORDINARY_RESONANCE_01", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"ranged", "active_cap": true},
+	&"ordinary_overload_01": {"behavior": &"ordinary_pull_01", "health": 88.0, "speed": 190.0, "radius": 23.0, "name_key": "ORDINARY_OVERLOAD_01", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"melee", "active_cap": true},
 	&"ordinary_support_02": {"behavior": &"ordinary_support_02", "health": 86.0, "speed": 165.0, "radius": 23.0, "name_key": "ORDINARY_SUPPORT_02", "health_class": &"priority", "threat_cost": 0.0, "threat_kind": &"support", "active_cap": true},
 	&"ordinary_support_03": {"behavior": &"ordinary_support_03", "health": 104.0, "speed": 150.0, "radius": 26.0, "name_key": "ORDINARY_SUPPORT_03", "health_class": &"priority", "threat_cost": 0.0, "threat_kind": &"support", "active_cap": true},
 	&"ordinary_melee_02": {"behavior": &"ordinary_melee_02", "health": 80.0, "speed": 184.0, "radius": 22.0, "name_key": "ORDINARY_MELEE_02", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"melee", "active_cap": true},

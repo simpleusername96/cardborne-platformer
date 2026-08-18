@@ -507,14 +507,14 @@ func _run() -> void:
 		no_shards
 	)
 	var crowd: Array[EnemyState] = []
-	for index in 110:
+	for index in 320:
 		var crowd_enemy := EnemyState.new()
 		crowd_enemy.id = "crowd_%02d" % index
 		crowd_enemy.role = &"ordinary_edge_01"
 		crowd_enemy.archetype = &"ordinary_edge_01"
 		crowd_enemy.pos = Vector2(
-			120.0 + float(index % 10) * 92.0,
-			80.0 + float(index / 10) * 52.0
+			40.0 + float(index % 20) * 62.0,
+			40.0 + float(index / 20) * 40.0
 		)
 		crowd_enemy.alive = true
 		crowd_enemy.active = true
@@ -532,15 +532,21 @@ func _run() -> void:
 	)
 	snapshot = renderer.debug_snapshot()
 	_expect(
-		int(snapshot["health_bar_count"]) == 0
-			and int(snapshot["ordinary_health_bar_count"]) == 0
-			and int(snapshot["installation_health_bar_count"]) == 0,
-		"mobile enemies never receive world health bars"
+		int(snapshot["health_bar_count"]) == 320
+			and int(snapshot["ordinary_health_bar_count"]) == 320
+			and int(snapshot["fixed_health_bar_count"]) == 0
+			and int(snapshot["health_bar_overflow"]) == 0,
+		"all 320 visible ordinary enemies receive world health bars without overflow"
 	)
 	_expect(
 		int(snapshot["batch_allocations"]["Overlay_health"])
 			== Renderer.HEALTH_BAR_INSTANCE_CAPACITY,
-		"the structural world-health batch preallocates its exact twenty-six-instance ceiling"
+		"the structural world-health batch preallocates two instances for every hostile slot"
+	)
+	var crowd_health := renderer.get_node("Overlay_health") as MultiMeshInstance2D
+	_expect(
+		crowd_health.multimesh.visible_instance_count == 640,
+		"320 visible enemies consume exactly 640 retained health-bar instances"
 	)
 	_expect(
 		int(snapshot["priority_marker_count"]) == 0,
@@ -548,15 +554,20 @@ func _run() -> void:
 	)
 	var crowd_body := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
 	_expect(
-		crowd_body.multimesh.visible_instance_count == 110
-			and crowd_body.multimesh.instance_count >= 110,
+		crowd_body.multimesh.visible_instance_count == 320
+			and crowd_body.multimesh.instance_count >= 320,
 		"adaptive component buffers grow without hiding ordinary enemy bodies"
 	)
 	var installations: Array[EnemyState] = []
+	var installation_roles: Array[StringName] = [
+		&"ordinary_fixed_beam_01",
+		&"ordinary_fixed_area_01",
+		&"ordinary_fixed_support_01",
+	]
 	for index in 16:
 		var installation := EnemyState.new()
-		var role: StringName = Renderer.HEALTH_BAR_INSTALLATION_ROLES[
-			index % Renderer.HEALTH_BAR_INSTALLATION_ROLES.size()
+		var role: StringName = installation_roles[
+			index % installation_roles.size()
 		]
 		installation.id = "installation_%02d" % index
 		installation.role = role
@@ -578,11 +589,10 @@ func _run() -> void:
 	)
 	snapshot = renderer.debug_snapshot()
 	_expect(
-		int(snapshot["installation_health_bar_count"])
-			== Renderer.MAX_INSTALLATION_HEALTH_BARS
-			and int(snapshot["health_bar_count"])
-				== Renderer.MAX_INSTALLATION_HEALTH_BARS,
-		"fixed installations own the deterministic twelve-bar structural budget"
+		int(snapshot["fixed_health_bar_count"]) == 16
+			and int(snapshot["health_bar_count"]) == 16
+			and int(snapshot["health_bar_overflow"]) == 0,
+		"all visible fixed enemies receive world health bars"
 	)
 	var projectile_attacker := EnemyState.new()
 	projectile_attacker.id = "projectile_attacker"
@@ -687,7 +697,8 @@ func _run() -> void:
 	var boss_ring_batch := renderer.get_node("Overlay_ring") as MultiMeshInstance2D
 	_expect(
 		boss_ring_batch.multimesh.visible_instance_count == 0
-			and beam_batch.multimesh.visible_instance_count == 30,
+			and beam_batch.multimesh.visible_instance_count == 30
+			and Renderer.BOSS_SHIELD_SEGMENT_THICKNESS >= 12.0,
 		"Stage 3 boss renders three separated shield segments without a full ring"
 	)
 	var destruction_presentation := _player_presentation(Vector2.ZERO, false)

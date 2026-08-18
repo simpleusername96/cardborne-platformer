@@ -272,7 +272,36 @@ func _ship_report_snapshot() -> Dictionary:
 			"title_key":String(upgrade.get("title_key", "")),
 			"value":tr("SHIP_STATUS_LEVEL_MAX").replace("%level%", str(int(upgrade.get("level", 0)))).replace("%max%", str(int(upgrade.get("max_level", 1)))),
 		})
+	for status_variant in Array(run_state.get("conditional_statuses", [])):
+		var status := Dictionary(status_variant)
+		rows.append({
+			"title_key":_conditional_status_title_key(StringName(status.get("id", &""))),
+			"value":_conditional_status_value(status),
+		})
 	return {"build_rows":rows}
+
+
+func _conditional_status_title_key(status_id: StringName) -> String:
+	if status_id == &"last_stand":
+		return "UPGRADE_LAST_STAND_AMPLIFIER_TITLE"
+	return "UPGRADE_%s_TITLE" % String(status_id).to_upper()
+
+
+func _conditional_status_value(entry: Dictionary) -> String:
+	var status_id := StringName(entry.get("id", &""))
+	var stacks := int(entry.get("current_stacks", 0))
+	var maximum := int(entry.get("max_stacks", 0))
+	var bonus := roundi(float(entry.get("bonus_percent", 0.0)))
+	var remaining := float(entry.get("remaining_seconds", 0.0))
+	var next_bonus := roundi(float(entry.get("next_hit_bonus_percent", 0.0)))
+	match status_id:
+		&"braced_fire": return tr("CONDITIONAL_BRACED_FORMAT") % [stacks, maximum, bonus, remaining]
+		&"hit_chain": return tr("CONDITIONAL_HIT_CHAIN_FORMAT") % [stacks, bonus]
+		&"miss_compensation": return tr("CONDITIONAL_MISS_FORMAT") % [stacks, next_bonus]
+		&"overflow_barrier": return tr("CONDITIONAL_BARRIER_FORMAT") % [stacks, remaining]
+		&"dash_overdrive": return tr("CONDITIONAL_TIMER_FORMAT") % remaining
+		&"last_stand": return tr("CONDITIONAL_BONUS_FORMAT") % bonus
+	return ""
 
 
 func _build_audio_page() -> void:

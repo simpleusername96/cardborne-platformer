@@ -21,6 +21,8 @@ const ENEMY_ENTRY_IDS := {
 	&"ordinary_fixed_beam_01":&"enemy_ordinary_fixed_beam_01", &"ordinary_fixed_support_01":&"enemy_ordinary_fixed_support_01",
 	&"ordinary_beam_01":&"enemy_ordinary_beam_01", &"ordinary_range_01":&"enemy_ordinary_range_01",
 	&"ordinary_sweep_01":&"enemy_ordinary_sweep_01", &"ordinary_melee_02":&"enemy_ordinary_melee_02",
+	&"ordinary_compression_01":&"enemy_ordinary_compression_01", &"ordinary_reflect_01":&"enemy_ordinary_reflect_01",
+	&"ordinary_resonance_01":&"enemy_ordinary_resonance_01", &"ordinary_overload_01":&"enemy_ordinary_overload_01",
 }
 const ENTRIES: Array[Dictionary] = [
 	{"id":&"enemy_ordinary_melee_01", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"ordinary_melee_01", "name_key":"ORDINARY_MELEE_01"},
@@ -45,6 +47,10 @@ const ENTRIES: Array[Dictionary] = [
 	{"id":&"enemy_ordinary_range_01", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"ordinary_range_01", "name_key":"ORDINARY_RANGE_01"},
 	{"id":&"enemy_ordinary_sweep_01", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"ordinary_sweep_01", "name_key":"ORDINARY_SWEEP_01"},
 	{"id":&"enemy_ordinary_melee_02", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"ordinary_melee_02", "name_key":"ORDINARY_MELEE_02"},
+	{"id":&"enemy_ordinary_compression_01", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"ordinary_compression_01", "name_key":"ORDINARY_COMPRESSION_01"},
+	{"id":&"enemy_ordinary_reflect_01", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"ordinary_reflect_01", "name_key":"ORDINARY_REFLECT_01"},
+	{"id":&"enemy_ordinary_resonance_01", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"ordinary_resonance_01", "name_key":"ORDINARY_RESONANCE_01"},
+	{"id":&"enemy_ordinary_overload_01", "category":&"enemies", "entry_kind":&"enemy", "archetype":&"ordinary_overload_01", "name_key":"ORDINARY_OVERLOAD_01"},
 	{"id":&"object_elite_armored", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"armored", "name_key":"ELITE_ARMORED", "preview":{"kind":&"elite", "id":&"armored"}},
 	{"id":&"object_elite_overclocked", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"overclocked", "name_key":"ELITE_OVERCLOCKED", "preview":{"kind":&"elite", "id":&"overclocked"}},
 	{"id":&"object_elite_heavy", "category":&"enemies", "entry_kind":&"elite", "elite_trait":&"heavy", "name_key":"ELITE_HEAVY", "preview":{"kind":&"elite", "id":&"heavy"}},

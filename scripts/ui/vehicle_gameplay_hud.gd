@@ -251,6 +251,8 @@ class StatusGlyphItem:
 	var _accessibility := false
 	var _raw_value := ""
 	var _value_label: Label
+	var _phase_initialized := false
+	var _edge_accent_remaining := 0.0
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -265,6 +267,7 @@ class StatusGlyphItem:
 		_value_label.add_theme_constant_override("shadow_offset_x", 1)
 		_value_label.add_theme_constant_override("shadow_offset_y", 1)
 		add_child(_value_label)
+		set_process(true)
 		set_layout_profile(false, false, false)
 
 	func configure(next_id: StringName, family: StringName, color: Color) -> void:
@@ -274,12 +277,25 @@ class StatusGlyphItem:
 		_refresh_display_value()
 		queue_redraw()
 
-	func set_value(value: String, is_available: bool = true) -> void:
+	func set_value(
+		value: String,
+		is_available: bool = true,
+		reduced_motion: bool = false
+	) -> void:
 		if available == is_available and _raw_value == value:
 			return
+		if _phase_initialized and not available and is_available and not reduced_motion:
+			_edge_accent_remaining = 0.18
+		_phase_initialized = true
 		available = is_available
 		_raw_value = value
 		_refresh_display_value()
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		if _edge_accent_remaining <= 0.0:
+			return
+		_edge_accent_remaining = maxf(0.0, _edge_accent_remaining - delta)
 		queue_redraw()
 
 	func set_layout_profile(compact: bool, accessibility: bool, large: bool) -> void:
@@ -354,6 +370,12 @@ class StatusGlyphItem:
 			)
 		elif glyph_family == &"conditional":
 			_draw_conditional_glyph(center, _glyph_size * 0.5, state_color)
+			if _edge_accent_remaining > 0.0:
+				draw_arc(
+					center, _glyph_size * 0.5 + 2.0, 0.0, TAU, 20,
+					Color(accent, clampf(_edge_accent_remaining / 0.18, 0.0, 1.0)),
+					2.0
+				)
 		else:
 			UiGlyphCatalog.draw_status_glyph(
 				self, glyph_id, center, _glyph_size * 0.5, palette
@@ -398,6 +420,7 @@ class StatusGlyphItem:
 			"glyph_id":glyph_id,
 			"glyph_family":glyph_family,
 			"glyph_optical_size":_glyph_size,
+			"edge_accent_remaining":_edge_accent_remaining,
 			"value_font_size":_value_label.get_theme_font_size("font_size"),
 			"value_centered":_value_label.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER,
 		}
@@ -661,7 +684,10 @@ func update_snapshot(snapshot: Dictionary) -> void:
 	else:
 		_status_item(&"active").set_value(tr("HUD_ACTION_LOCKED"), false)
 	if snapshot.has("conditional_statuses"):
-		_update_conditional_statuses(Array(snapshot["conditional_statuses"]))
+		_update_conditional_statuses(
+			Array(snapshot["conditional_statuses"]),
+			bool(snapshot.get("reduced_motion", false))
+		)
 	if snapshot.has("minimap"):
 		_minimap.set_snapshot(snapshot["minimap"])
 	if snapshot.has("threat_radar"):
@@ -672,7 +698,7 @@ func _status_item(item_id: StringName) -> StatusGlyphItem:
 	return _status_items[item_id] as StatusGlyphItem
 
 
-func _update_conditional_statuses(statuses: Array) -> void:
+func _update_conditional_statuses(statuses: Array, reduced_motion: bool) -> void:
 	for index in _conditional_item_ids.size():
 		var item := _status_item(_conditional_item_ids[index])
 		if index >= mini(5, statuses.size()):
@@ -684,8 +710,35 @@ func _update_conditional_statuses(statuses: Array) -> void:
 		if not item.visible:
 			continue
 		item.configure(status_id, &"conditional", _conditional_status_accent(status_id))
-		item.set_value(String(entry.get("value", "")), true)
+		item.set_value(
+			_conditional_status_value(entry),
+			StringName(entry.get("phase", &"inactive")) == &"active",
+			reduced_motion
+		)
 	_apply_responsive_layout()
+
+
+func _conditional_status_value(entry: Dictionary) -> String:
+	var status_id := StringName(entry.get("id", &""))
+	var stacks := int(entry.get("current_stacks", 0))
+	var maximum := int(entry.get("max_stacks", 0))
+	var bonus := roundi(float(entry.get("bonus_percent", 0.0)))
+	var remaining := float(entry.get("remaining_seconds", 0.0))
+	var next_bonus := roundi(float(entry.get("next_hit_bonus_percent", 0.0)))
+	match status_id:
+		&"braced_fire":
+			return tr("CONDITIONAL_BRACED_FORMAT") % [stacks, maximum, bonus, remaining]
+		&"hit_chain":
+			return tr("CONDITIONAL_HIT_CHAIN_FORMAT") % [stacks, bonus]
+		&"miss_compensation":
+			return tr("CONDITIONAL_MISS_FORMAT") % [stacks, next_bonus]
+		&"overflow_barrier":
+			return tr("CONDITIONAL_BARRIER_FORMAT") % [stacks, remaining]
+		&"dash_overdrive":
+			return tr("CONDITIONAL_TIMER_FORMAT") % remaining
+		&"last_stand":
+			return tr("CONDITIONAL_BONUS_FORMAT") % bonus
+	return ""
 
 
 func _conditional_status_accent(status_id: StringName) -> Color:

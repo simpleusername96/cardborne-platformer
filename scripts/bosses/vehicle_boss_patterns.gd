@@ -74,6 +74,26 @@ const EXTRA_PATTERNS := {
 	&"range_pulse_far": {"kind": &"lanes", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.10, "active": 1.15, "recovery": 0.90, "damage": 22.0},
 	&"remix_three_beat_a": {"kind": &"lanes", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 0.95, "active": 0.75, "recovery": 0.0, "damage": 24.0},
 	&"remix_three_beat_b": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.10, "active": 1.25, "recovery": 0.90, "damage": 64.0},
+	&"compression_single": {"kind": &"compression", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 0.75, "active": 1.20, "recovery": 0.95, "damage": 56.0},
+	&"compression_shift": {"kind": &"compression", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 0.82, "active": 1.30, "recovery": 1.00, "damage": 60.0},
+	&"compression_pair": {"kind": &"compression", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 0.90, "active": 1.45, "recovery": 1.10, "damage": 66.0},
+	&"compression_reverse": {"kind": &"compression", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 0.80, "active": 1.25, "recovery": 0.95, "damage": 58.0},
+	&"compression_break": {"kind": &"fan", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 0.82, "active": 0.62, "recovery": 0.95, "damage": 24.0},
+	&"reflect_lance": {"kind": &"beam", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.88, "active": 0.72, "recovery": 0.95, "damage": 34.0, "width": 84.0},
+	&"reflect_fan": {"kind": &"fan", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 0.80, "active": 0.62, "recovery": 0.90, "damage": 25.0},
+	&"reflect_break": {"kind": &"area", "commit_mode": &"committed", "affinity": &"arc", "startup": 1.00, "active": 0.55, "recovery": 1.00, "damage": 36.0, "radius": 210.0},
+	&"reflect_crossfire": {"kind": &"cross", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 0.86, "active": 0.64, "recovery": 0.92, "damage": 27.0},
+	&"reflect_reposition": {"kind": &"lanes", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 0.82, "active": 0.66, "recovery": 0.90, "damage": 23.0},
+	&"resonance_lanes": {"kind": &"lanes", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.82, "active": 0.68, "recovery": 0.92, "damage": 25.0},
+	&"resonance_pulse": {"kind": &"area", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.96, "active": 0.55, "recovery": 0.95, "damage": 35.0, "radius": 230.0},
+	&"resonance_fan": {"kind": &"fan", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.80, "active": 0.62, "recovery": 0.90, "damage": 24.0},
+	&"resonance_cross": {"kind": &"cross", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.86, "active": 0.64, "recovery": 0.92, "damage": 27.0},
+	&"resonance_break": {"kind": &"beam", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.90, "active": 0.72, "recovery": 1.00, "damage": 36.0, "width": 86.0},
+	&"overload_rush": {"kind": &"charge", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 0.82, "active": 0.58, "recovery": 0.90, "damage": 40.0},
+	&"overload_crossfire": {"kind": &"cross", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.78, "active": 0.62, "recovery": 0.88, "damage": 30.0},
+	&"overload_break": {"kind": &"area", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.92, "active": 0.52, "recovery": 0.92, "damage": 38.0, "radius": 245.0},
+	&"overload_crossfire_shift": {"kind": &"lanes", "commit_mode": &"committed", "affinity": &"arc", "startup": 0.80, "active": 0.64, "recovery": 0.90, "damage": 28.0},
+	&"overload_rush_return": {"kind": &"charge", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 0.86, "active": 0.60, "recovery": 0.94, "damage": 42.0},
 }
 const STAGE_SEQUENCES := {
 	&"stage_1": [&"common_charge", &"thermal_gates", &"common_broad_barrage", &"heated_fan", &"thermal_ring"],
@@ -84,15 +104,15 @@ const STAGE_SEQUENCES := {
 	&"stage_6": [&"common_charge", &"long_bank_barrage", &"common_broad_barrage", &"ricochet_volley", &"gate_shockwave"],
 	&"stage_7": [&"common_charge", &"crossing_weave_a", &"common_broad_barrage", &"crossing_weave_b", &"ricochet_volley"],
 	&"stage_8": [&"common_charge", &"alternating_sectors_a", &"common_broad_barrage", &"alternating_sectors_b", &"focused_beam"],
-	&"stage_9": [&"common_charge", &"edge_bars_a", &"common_broad_barrage", &"edge_bars_b", &"gate_shockwave"],
-	&"stage_10": [&"common_charge", &"pull_pulse_a", &"common_broad_barrage", &"pull_pulse_b", &"focused_beam"],
-	&"stage_11": [&"common_charge", &"range_pulse_near", &"common_broad_barrage", &"range_pulse_far", &"cross_corridors"],
-	&"stage_12": [&"common_charge", &"remix_three_beat_a", &"common_broad_barrage", &"remix_three_beat_b", &"alternating_sectors_b"],
+	&"stage_9": [&"compression_single", &"compression_shift", &"compression_pair", &"compression_reverse", &"compression_break"],
+	&"stage_10": [&"reflect_lance", &"reflect_fan", &"reflect_break", &"reflect_crossfire", &"reflect_reposition"],
+	&"stage_11": [&"resonance_lanes", &"resonance_pulse", &"resonance_fan", &"resonance_cross", &"resonance_break"],
+	&"stage_12": [&"overload_rush", &"overload_crossfire", &"overload_break", &"overload_crossfire_shift", &"overload_rush_return"],
 }
 const AUTONOMOUS_SEQUENCES := {
 	&"stage_1": [&"slag_ring", &"forge_vent"], &"stage_2": [&"opposing_lanes", &"depth_charges"], &"stage_3": [&"thunder_chain", &"ordinary_fixed_beam_01_call"], &"stage_4": [&"switchyard_mines", &"switch_sweeps"], &"stage_5": [&"parallel_beams", &"relay_pulse_rings"],
 	&"stage_6": [&"long_bank_barrage", &"long_bank_barrage"], &"stage_7": [&"crossing_weave_a", &"crossing_weave_b"], &"stage_8": [&"alternating_sectors_a", &"alternating_sectors_b"],
-	&"stage_9": [&"edge_bars_a", &"edge_bars_b"], &"stage_10": [&"pull_pulse_a", &"pull_pulse_b"], &"stage_11": [&"range_pulse_near", &"range_pulse_far"], &"stage_12": [&"remix_three_beat_a", &"remix_three_beat_b"],
+	&"stage_9": [&"compression_single", &"compression_pair"], &"stage_10": [&"reflect_lance", &"reflect_break"], &"stage_11": [&"resonance_lanes", &"resonance_pulse"], &"stage_12": [&"overload_crossfire_shift", &"overload_break"],
 }
 
 static func sequence(stage_id: StringName, phase_value: Variant = 1) -> Array[String]:
@@ -158,6 +178,14 @@ static func startup_seconds(pattern: String) -> float:
 
 static func active_seconds(pattern: String) -> float:
 	return float(definition(pattern)["active"])
+
+
+static func scaled_startup_seconds(pattern: String, stage_index: int) -> float:
+	return StageDifficulty.boss_startup_seconds(startup_seconds(pattern), stage_index)
+
+
+static func scaled_active_seconds(pattern: String, stage_index: int) -> float:
+	return StageDifficulty.boss_active_seconds(active_seconds(pattern), stage_index)
 
 
 static func recovery_seconds(pattern: String) -> float:

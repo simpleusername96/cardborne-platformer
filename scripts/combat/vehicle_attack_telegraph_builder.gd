@@ -146,7 +146,7 @@ static func refresh_boss(
 				AttackContract.EMITTED_BEAM_BIDIRECTIONAL
 			)
 			enemy.attack_telegraphs[-1]["active_seconds"] = (
-				BossPatterns.active_seconds(pattern)
+				BossPatterns.scaled_active_seconds(pattern, stage_index)
 			)
 	elif kind == &"broad_barrage":
 		for row in BossPatterns.broad_barrage_rows(
@@ -174,7 +174,7 @@ static func refresh_boss(
 			enemy,
 			BossPatterns.BOSS_CHARGE_SPEED
 				* EncounterDirector.ENEMY_SPEED_MULTIPLIER
-				* BossPatterns.active_seconds(pattern),
+				* BossPatterns.scaled_active_seconds(pattern, stage_index),
 			BossPatterns.BOSS_CONTACT_PADDING,
 			damage,
 			affinity,
@@ -182,31 +182,16 @@ static func refresh_boss(
 		)
 		_append_boss_aimed_burst(enemy, pattern, damage * 0.55, resolve_path)
 	elif kind == &"beam":
-		var to := _resolve_path(
-			resolve_path,
-			enemy.pos,
-			enemy.committed_dir,
-			BossPatterns.BEAM_RANGE,
-			BossPatterns.BEAM_COVER_PADDING
-		)
-		enemy.beam_end = to
-		enemy.attack_telegraphs.append(_corridor(
-			enemy.pos,
-			to,
-			AttackContract.beam_danger_half_width(BossPatterns.width(pattern, stage_index)),
+		_append_hostile_beam_topology(
+			enemy,
+			pattern,
+			stage_index,
 			damage,
 			affinity,
-			&"beam",
-			BossPatterns.width(pattern, stage_index)
-		))
-		enemy.attack_telegraphs[-1]["beam_growth_seconds"] = (
-			AttackContract.EMITTED_BEAM_GROWTH_SECONDS
-		)
-		enemy.attack_telegraphs[-1]["beam_emission_mode"] = (
-			AttackContract.EMITTED_BEAM_FORWARD
-		)
-		enemy.attack_telegraphs[-1]["active_seconds"] = (
-			BossPatterns.active_seconds(pattern)
+			resolve_path,
+			AttackContract.HOSTILE_BEAM_TOPOLOGIES[
+				posmod(enemy.pattern_index - 1, AttackContract.HOSTILE_BEAM_TOPOLOGIES.size())
+			]
 		)
 	elif kind in [&"area", &"pylons"]:
 		enemy.attack_telegraphs.append(_area(
@@ -239,17 +224,21 @@ static func refresh_boss(
 		})
 	_stamp_threat_tier(enemy, AttackContract.THREAT_BOSS)
 	_stamp_commit_mode(enemy, BossPatterns.commit_mode(pattern))
-	update_boss_readiness(enemy, pattern)
+	update_boss_readiness(enemy, pattern, stage_index)
 
 
-static func update_boss_readiness(enemy: EnemyState, pattern: String) -> void:
+static func update_boss_readiness(
+	enemy: EnemyState,
+	pattern: String,
+	stage_index: int = 0
+) -> void:
 	if enemy.phase != &"boss_startup":
 		return
 	_stamp_readiness(
 		enemy,
 		AttackContract.warning_readiness(
 			enemy.phase_time,
-			BossPatterns.startup_seconds(pattern)
+			BossPatterns.scaled_startup_seconds(pattern, stage_index)
 		)
 	)
 
@@ -346,6 +335,63 @@ static func _append_boss_aimed_burst(
 			BossPatterns.affinity(pattern),
 			resolve_path
 		)
+
+
+static func _append_hostile_beam_topology(
+	enemy: EnemyState,
+	pattern: String,
+	stage_index: int,
+	damage: float,
+	affinity: StringName,
+	resolve_path: Callable,
+	topology: StringName
+) -> void:
+	var width := BossPatterns.width(pattern, stage_index)
+	var axes: Array[Vector2] = []
+	var emitters: Array[Vector2] = []
+	var emission_mode := AttackContract.EMITTED_BEAM_BIDIRECTIONAL
+	if topology == AttackContract.BEAM_TOPOLOGY_PARALLEL:
+		emission_mode = AttackContract.EMITTED_BEAM_FORWARD
+		var tangent := Vector2(enemy.committed_dir).rotated(PI * 0.5)
+		for offset in [-54.0, 54.0]:
+			axes.append(Vector2(enemy.committed_dir))
+			emitters.append(Vector2(enemy.pos) + tangent * offset)
+	elif topology == AttackContract.BEAM_TOPOLOGY_X:
+		axes = [
+			Vector2(enemy.committed_dir).rotated(-PI * 0.25),
+			Vector2(enemy.committed_dir).rotated(PI * 0.25),
+		]
+		emitters = [Vector2(enemy.pos), Vector2(enemy.pos)]
+	else:
+		axes = [
+			Vector2(enemy.committed_dir),
+			Vector2(enemy.committed_dir).rotated(PI * 0.5),
+		]
+		emitters = [Vector2(enemy.pos), Vector2(enemy.pos)]
+	for index in axes.size():
+		var axis := axes[index].normalized()
+		var emitter := emitters[index]
+		var from := emitter
+		if emission_mode == AttackContract.EMITTED_BEAM_BIDIRECTIONAL:
+			from = _resolve_path(
+				resolve_path, emitter, -axis, BossPatterns.BEAM_RANGE,
+				BossPatterns.BEAM_COVER_PADDING
+			)
+		var to := _resolve_path(
+			resolve_path, emitter, axis, BossPatterns.BEAM_RANGE,
+			BossPatterns.BEAM_COVER_PADDING
+		)
+		enemy.beam_end = to
+		var descriptor := _corridor(
+			from, to, AttackContract.beam_danger_half_width(width),
+			damage, affinity, &"beam", width
+		)
+		descriptor["beam_growth_seconds"] = AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+		descriptor["beam_emission_mode"] = emission_mode
+		descriptor["beam_emitter"] = emitter
+		descriptor["beam_topology"] = topology
+		descriptor["active_seconds"] = BossPatterns.scaled_active_seconds(pattern, stage_index)
+		enemy.attack_telegraphs.append(descriptor)
 
 
 static func _append_projectile(
