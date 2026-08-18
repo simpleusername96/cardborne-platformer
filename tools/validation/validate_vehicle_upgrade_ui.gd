@@ -28,7 +28,7 @@ const WORST_TEXT_TRIPLETS := {
 	"ko":[
 		{"id":&"hull_integrity", "current_level":2},
 		{"id":&"braced_fire", "current_level":2},
-		{"id":&"cryo_slow", "current_level":2},
+		{"id":&"drop_mines", "current_level":2},
 	],
 	"en":[
 		{"id":&"miss_compensation", "current_level":2},

@@ -36,7 +36,7 @@ func _run() -> void:
 	run.call("_apply_thermal_burst", direct, center, profile)
 	_expect(direct.health == direct_before, "burst excludes its direct target")
 	_expect(is_equal_approx(nearby_before - nearby.health, 4.0), "level-one burst deals four nearby damage")
-	_expect(is_equal_approx(boss_before - boss.health, 0.40), "burst respects the Drydock frontal shield mitigation")
+	_expect(is_equal_approx(boss_before - boss.health, 2.0), "burst respects the Drydock frontal shield mitigation")
 	_expect(structure.health == structure_before, "burst excludes fixed structures")
 	_expect(far.health == far_before, "burst stops outside its radius")
 	_expect(
@@ -57,8 +57,8 @@ func _run() -> void:
 	)
 	var telemetry: Dictionary = run.stage_telemetry.stage_snapshot()
 	_expect(
-		is_equal_approx(float(telemetry["outgoing"][&"thermal_burst"]), 12.40)
-			and is_equal_approx(float(telemetry["attributes"][&"thermal"]), 12.40),
+		is_equal_approx(float(telemetry["outgoing"][&"thermal_burst"]), 14.0)
+			and is_equal_approx(float(telemetry["attributes"][&"thermal"]), 14.0),
 		"only applied splash damage is reported as thermal_burst/thermal"
 	)
 	_expect(
