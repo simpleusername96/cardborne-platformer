@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 created: 2026-08-18
 scope: Twelve continuous boss cycles, generic stage/enemy/boss naming, rolling boss-introduction enemy rosters, field resource supply, segmented stage-3 boss defense, late-run durability, raised and smoothed upgrade ceilings, route-safe boss cues, fixed visual production, localization, validation, and release
 related:
@@ -633,7 +633,7 @@ Goal: replace the conflicting decisions without duplicating this active contract
 - [x] **15.2** Run production Web export and built-Web functional smoke. Do not run synthetic
   maximum-load, profiler, frame-time, or long performance benchmarks and do not claim performance
   qualification.
-- [ ] **15.3** Commit only task-owned changes in coherent stages, push `master`, and publish the
+- [x] **15.3** Commit only task-owned changes in coherent stages, push `master`, and publish the
   corrected itch.io Web build under the previously approved release scope.
   - Accept: local and remote SHAs agree, release succeeds, and the published payload matches the
     validated build.
@@ -737,8 +737,14 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 15 corrected release.
-- Next task: 15.3 commits task-owned changes, pushes `master`, and waits for the release workflow.
+- Current phase: Complete.
+- Next task: None; reopen only for a new user request or a verified release regression.
+- Phase 15.3 checkpoint: GitHub Actions run `32130238115` succeeded for commit
+  `3f48df33aa57190915f78f17084d8de26dfd9d40`. The remote gate passed all non-performance
+  functional validators, a 160-file native capture manifest, Web export, itch.io static
+  validation, built-Web boot, itch.io publication, and GitHub Pages deployment. itch.io received
+  `alpha.47+3f48df3` on `html5`; the extracted Web payload was 54,541,379 bytes and `index.pck`
+  SHA-256 was `6d8965f282e1d406b3f76f668466a6ba980fcfc7cd6c67618faef1993f84170c`.
 - Phase 15.1-15.2 checkpoint: final focused boss, route, renderer-capacity, viewport-supply,
   progression, maintenance, localization, Guidebook, UI, and visual validators passed with a full
   Godot 4.7.1 import and `git diff --check`. The production Web export passed the itch.io static
@@ -758,9 +764,8 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
   facility anchors.
 - Phase 11 checkpoint: `validate_vehicle_health_bar_capacity.gd` passed 320 visible enemies as
   exactly 640 retained instances with no overflow and correct ordinary/fixed/boss diagnostics.
-  Attack-route, boss-runtime, boss-pattern, and visual-authority focused validators passed. The
-  legacy monolithic combat-renderer validator exceeded its 120-second process limit; focused
-  renderer fixtures replace that non-performance evidence for this correction.
+  Attack-route, boss-runtime, boss-pattern, visual-authority, and monolithic combat-renderer
+  validators passed locally and in the successful remote release gate.
 - Phase 10 checkpoint: `validate_vehicle_late_boss_mechanics_correction.gd` passed under Godot
   4.7.1. It proves dedicated common-free sequences, exact compression slab/gap/pair timing,
   frontal reflection transfer with preserved speed/life and capped damage, live resonance damage,
@@ -772,12 +777,11 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 - Phase 8 checkpoint: the active ExecPlan and four canonical specs now contain the correction;
   `validate_cardborne_visual_authority.ps1` passed with the required PNG hash and
   `git diff --check` passed. No raster asset was created or edited.
-- Last completed gate: the prior local Web export and itch.io static release validation passed,
-  but the user feedback summarized in the 2026-08-18 gap report superseded material combat and
-  progression decisions before publication. That earlier build is not the corrected release.
-- Release note: GitHub Actions run `32108482311` belonged to the superseded release attempt.
-  Corrected publication is owned only by Task 15.3. Synthetic maximum-load, profiler, frame-time,
-  and long-duration performance benchmarks remain explicitly outside this correction.
+- Last completed gate: successful corrected release run `32130238115`, including itch.io and
+  GitHub Pages publication from validated commit `3f48df33`.
+- Release note: GitHub Actions run `32108482311` belonged to the superseded release attempt. The
+  corrected itch.io build is `alpha.47+3f48df3`. Synthetic maximum-load, profiler, frame-time,
+  and long-duration performance benchmarks were not run and remain outside this correction.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance
   this pointer in the same edit.
 
