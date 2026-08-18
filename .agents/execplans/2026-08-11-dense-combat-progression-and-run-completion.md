@@ -210,7 +210,7 @@ repair 10개, repair 총량 490이다. 상자는 체력 24, 이동 충돌, 양 �
 
 ### A. 보스 보상과 최종 결과 전환
 
-`VehicleRun._defeat_enemy()`에서 `stage_boss` 처치를 확정한 순간
+`VehicleRun._defeat_enemy()`에서 `boss_actor` 처치를 확정한 순간
 `reward_runtime.enqueue(&"boss")`를 호출한다. 보스 XP 조각은 다른 적과 같은 XP만
 담고 `reward_source`는 비운다. queue는 같은 source의 current/pending 중복을 이미
 거부하므로 중복 보상은 생기지 않는다.

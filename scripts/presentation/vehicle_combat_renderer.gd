@@ -62,7 +62,7 @@ const PRESENTATION_MIN_INTERVAL := 1.0 / 60.0
 const PRESENTATION_MAX_INTERVAL := 1.0 / 20.0
 const PRESENTATION_SNAP_DISTANCE := 180.0
 const HEALTH_BAR_INSTALLATION_ROLES: Array[StringName] = [
-	&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
+	&"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01", &"ordinary_fixed_support_01",
 ]
 const ENEMY_BATCH_INITIAL_CAPACITY := 64
 const EXPERIENCE_BATCH_INITIAL_CAPACITY := 32
@@ -485,7 +485,7 @@ func _build_batches() -> void:
 	var unit_ring_mesh := _build_unit_ring_mesh()
 	var unit_disk_mesh := _build_unit_disk_mesh()
 	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
-		if archetype == &"stage_boss":
+		if archetype == &"boss_actor":
 			continue
 		_enemy_batches[archetype] = _create_asset_batch(
 			"Enemy_%s" % String(archetype),
@@ -499,12 +499,13 @@ func _build_batches() -> void:
 			true
 		)
 	for variant in [
-		&"colossus", &"leviathan", &"titan", &"behemoth", &"crown",
-		&"battery", &"loom", &"pulse_core",
+		&"boss_stage_01", &"boss_stage_02", &"boss_stage_03", &"boss_stage_04",
+		&"boss_stage_05", &"boss_stage_06", &"boss_stage_07", &"boss_stage_08",
+		&"boss_stage_09", &"boss_stage_10", &"boss_stage_11", &"boss_stage_12",
 	]:
 		_boss_variant_batches[variant] = _create_asset_batch(
 			"Boss_%s" % String(variant),
-			StringName("boss/%s" % variant),
+			StringName("boss/stage_%s" % String(variant).trim_prefix("boss_stage_")),
 			1,
 			0,
 			StringName("boss_%s" % String(variant)),
@@ -849,7 +850,7 @@ func _sync_enemies(
 		var role := enemy.role
 		var archetype := enemy.archetype
 		var dying_boss := (
-			role == &"stage_boss"
+			role == &"boss"
 			and enemy.id == String(presentation.get("dying_boss_id", ""))
 		)
 		var angle := _enemy_angle(
@@ -860,7 +861,7 @@ func _sync_enemies(
 		)
 		var batch: BatchHandle = (
 			_boss_variant_batches.get(enemy.boss_variant)
-			if archetype == &"stage_boss"
+			if archetype == &"boss_actor"
 			else _enemy_batches.get(archetype)
 		)
 		if batch == null:
@@ -886,7 +887,7 @@ func _sync_enemies(
 			body_modulate,
 			_enemy_status_custom_data(enemy, reduced_motion)
 		)
-		if role == &"stage_boss" and not dying_boss and _boss_health_bar_count < MAX_BOSS_HEALTH_BARS:
+		if role == &"boss" and not dying_boss and _boss_health_bar_count < MAX_BOSS_HEALTH_BARS:
 			_sync_health_bar(
 				position,
 				radius,
@@ -912,7 +913,7 @@ func _sync_enemies(
 			)
 		if enemy.shielded:
 			_write_ring(position, radius + 7.0, Color(Art.MINT, 0.78))
-		if enemy.role == &"repair_tender" and not enemy.repair_target_id.is_empty():
+		if enemy.role == &"ordinary_support_01" and not enemy.repair_target_id.is_empty():
 			_repair_link_candidate_count = _offer_overlay_candidate(
 				enemy,
 				_installation_health_score(enemy, player_position),
@@ -1091,7 +1092,7 @@ func _enemy_body_modulate(enemy: EnemyState) -> Color:
 	if enemy.flash > 0.0:
 		return Color(1.0, 0.66, 0.66, 1.0)
 	var body_color := Color.WHITE
-	if enemy.role == &"mine" and enemy.phase == &"mine_armed":
+	if enemy.role == &"ordinary_fixed_area_01" and enemy.phase == &"mine_armed":
 		body_color = Art.IVORY_BRIGHT.lerp(Art.DANGER, 0.42)
 	elif enemy.shielded:
 		body_color = Color(0.72, 1.0, 0.88, 1.0)
@@ -1263,7 +1264,7 @@ func _sync_enemy_semantic_overlays(
 	presentation: Dictionary
 ) -> void:
 	var forward := Vector2.RIGHT.rotated(angle)
-	if enemy.role == &"stage_boss":
+	if enemy.role == &"boss":
 		_sync_boss_core_overlay(enemy, position, radius, forward, presentation)
 	if (
 		enemy.elite_trait != &""
@@ -1292,13 +1293,15 @@ func _sync_boss_core_overlay(
 	var shield_radius := radius + 10.0
 	match StringName(shield.get("shield_kind", &"")):
 		&"frontal_intercept":
-			var half_angle := float(shield.get("frontal_half_angle", deg_to_rad(35.0)))
-			_write_arc_segments(
-				position, shield_radius,
-				forward.angle() - half_angle,
-				forward.angle() + half_angle,
-				Color(Art.SYSTEM, 0.90), 10
-			)
+			var segment_count := int(shield.get("segment_count", 3))
+			var segment_arc := float(shield.get("segment_arc", deg_to_rad(80.0)))
+			var rotation := float(shield.get("rotation", forward.angle()))
+			for segment_index in segment_count:
+				var start_angle := rotation + float(segment_index) * TAU / float(segment_count)
+				_write_arc_segments(
+					position, shield_radius, start_angle, start_angle + segment_arc,
+					Color(Art.SYSTEM, 0.38), 10
+				)
 		_:
 			_write_ring(position, radius + 8.0, Color(Art.SYSTEM, 0.52))
 
@@ -1355,7 +1358,7 @@ func _sync_projectiles(
 				),
 				Color.WHITE
 			)
-			if projectile.distance_growth_kind == ProjectileState.SIEGE_GROWTH_KIND:
+			if projectile.distance_growth_kind == ProjectileState.DISTANCE_GROWTH_GROWTH_KIND:
 				var trail_length := lerpf(
 					hostile_visual_radius * 1.6,
 					hostile_visual_radius * 4.4,
@@ -2495,9 +2498,9 @@ func _enemy_angle(
 	_player_position: Vector2,
 	run_time: float
 ) -> float:
-	if archetype == &"controller":
+	if archetype == &"ordinary_gap_01":
 		return run_time * 0.22
-	if enemy.role in [&"mine", &"generator"]:
+	if enemy.role in [&"ordinary_fixed_area_01", &"ordinary_fixed_support_01"]:
 		return 0.0
 	if not enemy.presentation_facing.is_zero_approx():
 		return enemy.presentation_facing.angle()

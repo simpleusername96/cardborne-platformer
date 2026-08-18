@@ -4,17 +4,17 @@ extends RefCounted
 ## Splits one accepted recovery receipt into Hull first and temporary barrier
 ## second. Vector3 results are (hull gain, barrier gain, consumed gross heal).
 
-const CONVERSION_RATES := [0.0, 0.50, 0.75, 1.00]
-const BARRIER_CAP_RATIOS := [0.0, 0.15, 0.25, 0.35]
+const CONVERSION_RATES := [0.0, 0.60, 0.70, 0.80, 0.90, 1.00, 1.00]
+const BARRIER_CAP_RATIOS := [0.0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42]
 const BARRIER_DURATION := 8.0
 
 
 static func conversion_rate(level: int) -> float:
-	return float(CONVERSION_RATES[clampi(level, 0, 3)])
+	return float(CONVERSION_RATES[clampi(level, 0, CONVERSION_RATES.size() - 1)])
 
 
 static func barrier_cap(level: int, max_hull: float) -> float:
-	return maxf(0.0, max_hull) * float(BARRIER_CAP_RATIOS[clampi(level, 0, 3)])
+	return maxf(0.0, max_hull) * float(BARRIER_CAP_RATIOS[clampi(level, 0, BARRIER_CAP_RATIOS.size() - 1)])
 
 
 static func gross_capacity(

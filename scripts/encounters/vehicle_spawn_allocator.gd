@@ -28,9 +28,9 @@ const RELAXATION_TIERS: Array[Dictionary] = [
 	{"id":&"T3", "maximum":RELAXED_MAX_PLAYER_DISTANCE, "clearance":320.0},
 ]
 const PURSUIT_ROLES: Array[StringName] = [
-	&"scrap_drone", &"chaser", &"rammer", &"spark_minelet",
-	&"controller", &"shield_escort", &"artillery_spotter",
-	&"repair_tender", &"drone_carrier",
+	&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_area_01",
+	&"ordinary_gap_01", &"ordinary_support_02", &"ordinary_growth_01",
+	&"ordinary_support_01", &"ordinary_support_03",
 ]
 const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = EnemyArchetypes.PROJECTILE_FIRING_ARCHETYPES
 
@@ -490,11 +490,11 @@ func _role_distance_lane(score_identity: String, role: StringName) -> int:
 	## runtime remains the sole owner of effective speed scaling.
 	var definition := EnemyArchetypes.definition(role)
 	var behavior := StringName(definition.get("behavior", &""))
-	if role in [&"scrap_drone", &"chaser", &"rammer", &"bulkhead_guard", &"splitter_barge", &"spark_minelet"]:
+	if role in [&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_area_01"]:
 		return 1 + posmod(hash(score_identity + ":pursuit-distance"), 2)
-	if behavior in [&"shooter", &"controller", &"artillery_spotter"]:
+	if behavior in [&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01"]:
 		return posmod(hash(score_identity + ":standoff-distance"), 2)
-	if behavior in [&"shield_escort", &"repair_tender", &"drone_carrier"]:
+	if behavior in [&"ordinary_support_02", &"ordinary_support_01", &"ordinary_support_03"]:
 		return 0 # escort/support prefers 1200px.
 	# Stationary and specialist births retain the previous all-lane choice.
 	return posmod(hash(score_identity + ":distance"), TARGET_DISTANCES.size())

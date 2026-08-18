@@ -56,8 +56,8 @@ func _validate_field(field_id: StringName) -> void:
 		_expect(tactical.cover_rects.is_empty(), "%s/%s retires dedicated cover" % [field_id, stage_id])
 		_expect(tactical.ordinary_spawn_anchors.size() >= 20, "%s/%s retains at least 20 ordinary anchors" % [field_id, stage_id])
 		_expect(tactical.boss_arrival_anchors.size() >= 8, "%s/%s retains at least eight boss anchors" % [field_id, stage_id])
-		_expect(fixed.mystery_device_blueprint(stage_id).size() == 3, "%s/%s has three mystery devices" % [field_id, stage_id])
-		_expect(fixed.pickup_blueprint(stage_id).size() == 12, "%s/%s has two recalls and ten XP shards" % [field_id, stage_id])
+		_expect(fixed.mystery_device_blueprint(stage_id).size() == 6, "%s/%s has six mystery devices" % [field_id, stage_id])
+		_expect(fixed.pickup_blueprint(stage_id).size() == 14, "%s/%s has four recalls and ten XP shards" % [field_id, stage_id])
 		_validate_stage_objects(fixed, stage_id)
 		_validate_stage_spacing(fixed, stage_id)
 
@@ -132,14 +132,14 @@ func _validate_stage_objects(layout: VehicleFieldLayout, stage_id: StringName) -
 		for second in range(first + 1, positions.size()):
 			_expect(positions[first].distance_to(positions[second]) >= 180.0, "%s item sockets keep pair clearance" % stage_id)
 	_expect(occupied_sectors.size() >= 3, "%s items occupy at least three field sectors" % stage_id)
-	_expect(recall_count == 2 and shard_count == 10, "%s keeps two recalls and adds ten XP shards" % stage_id)
+	_expect(recall_count == 4 and shard_count == 10, "%s keeps four recalls and adds ten XP shards" % stage_id)
 	var recall_positions: Array[Vector2] = []
 	for spec in layout.pickup_blueprint(stage_id):
 		if StringName(spec["kind"]) == &"experience_recall":
 			recall_positions.append(Vector2(spec["pos"]))
 	_expect(
-		recall_positions.size() == 2 and _maximum_pair_distance(recall_positions) >= 1200.0,
-		"%s two recall sources include a separated pair" % stage_id
+		recall_positions.size() == 4 and _maximum_pair_distance(recall_positions) >= 1200.0,
+		"%s four recall sources include a separated pair" % stage_id
 	)
 
 

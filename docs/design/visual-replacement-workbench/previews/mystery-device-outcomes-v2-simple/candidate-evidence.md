@@ -32,7 +32,7 @@ The replacement review set is
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
 - Current production simplicity references supplied directly to ImageGen:
   `facility_repair_pad.png`, `facility_transit_gate.png`,
-  `mystery_device_intact.png`, and `actor_enemy_generator_base.png`.
+  `mystery_device_intact.png`, and `actor_enemy_ordinary_fixed_support_01_base.png`.
 - OpenAI ImageGen, used through `image_gen.referenced_image_paths` on
   2026-08-14. The tool did not expose a model revision.
 

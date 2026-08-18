@@ -51,8 +51,8 @@ In scope:
 - Exact ordinary materialized caps `32/44/56/64/72/72/72/72`, continuous engaged-visible
   refill floors `12/16/20/24/28/32/36/40`, unchanged bounded attack-commit/denial budgets,
   and an explicit first-attack-preparation metric.
-- Drydock frontal interception, Crown three body-attached defensive sectors, Archive Cross
-  X corridors, broad-barrage and wedge-ring telegraphs, Siege Battery distance-accelerating
+- Stage 3 boss frontal interception, Stage 5 boss three body-attached defensive sectors, Cross Beam
+  X corridors, broad-barrage and wedge-ring telegraphs, Stage 6 Boss distance-accelerating
   ammunition, axis-specific boss pressure tuning, and body-only boss death cleanup.
 - Current native and built-Web functional, visual, and performance qualification.
 
@@ -121,10 +121,10 @@ Exact actions requiring owner or user approval:
 | Engagement relevance | Role standoff/recovery is intentional; immutable birth gate can remain stale for 18 seconds | movement policy, engagement director, run orchestration | Preserve role behavior; release irrelevant gates without retarget/teleport | 3.1 |
 | Encounter density | Current caps are `18/32/40/40/48/48/48/48`; reserve is virtual | encounter director/runtime/stage data | Caps `32/44/56/64/72/72/72/72`; visible refill floors `12/16/20/24/28/32/36/40` | 3.2 |
 | Pacing evidence | First cue/spawn/damage exist; first attack preparation is not explicit | encounter runtime diagnostics | Record and validate first preparation within 8 seconds | 3.3 |
-| Directional shields | Catalog says frontal/sector; runtime uses one global multiplier/full ring | phase catalog, shield runtime, damage path, renderer | Drydock frontal arc and Crown three body-attached sectors with directional collision truth | 4.1 |
-| Boss identity cues | Broad barrage lacks descriptor; wedge ring is not rendered; Archive Cross fires four shots | telegraph builder, boss patterns/runtime, renderer | Exact descriptors, wedge rendering, and X-shaped committed corridors | 4.2 |
+| Directional shields | Catalog says frontal/sector; runtime uses one global multiplier/full ring | phase catalog, shield runtime, damage path, renderer | Stage 3 boss frontal arc and Stage 5 boss three body-attached sectors with directional collision truth | 4.1 |
+| Boss identity cues | Broad barrage lacks descriptor; wedge ring is not rendered; Cross Beam fires four shots | telegraph builder, boss patterns/runtime, renderer | Exact descriptors, wedge rendering, and X-shaped committed corridors | 4.2 |
 | Boss pressure | Current movement, speed, reach, charge, and AOE values are independently owned | difficulty and pattern owners | Locomotion 1.25x, projectile speed 1.40x, reach 1.45x, charge 1.30x, area radius 1.25x; warning never reduced | 4.3 |
-| Distance-growth idea | No current global or boss mechanic | projectile state and boss pattern owners | Siege Battery only; arm at 360, cap at 880, speed `0.75x->1.35x`, radius `1.0x->1.5x`, damage `1.0x->1.6x` | 4.4 |
+| Distance-growth idea | No current global or boss mechanic | projectile state and boss pattern owners | Stage 6 Boss only; arm at 360, cap at 880, speed `0.75x->1.35x`, radius `1.0x->1.5x`, damage `1.0x->1.6x` | 4.4 |
 | Boss death presentation | Exactly one explosion overlay grows/fades for two seconds | death runtime, renderer, manifest/workbench/spec | Remove explosion; keep body tint/dim/fade and exact safe cleanup | 4.5 |
 | Authority drift | Specs/tests disagree on eight-cycle HUD, quota, facility blocking, shield form, explosion, and difficulty curve | product/visual specs and validators | Eight-cycle `Boss N/8` plus quota; pass-through facilities; directional boss defense; no explosion; eight-value runtime curve | 0.1 |
 | Performance | Earlier native evidence is not current 72-count Web qualification | active performance policy/audit and prior plan | Capture controlled before state, then qualify exact clean 72-count native and Web workloads | 5.1-5.3 |
@@ -293,18 +293,18 @@ Preconditions:
 Source owners: boss phase catalog/runtime/shield/death/pattern owners, attack telegraph
 builder, projectile state/runtime, combat renderer, stage difficulty, focused boss validators
 
-- [x] **4.1** Implement directional Drydock and Crown defenses.
-  - Change: Drydock blocks 90% damage inside a body-facing frontal 110-degree arc and feeds
-    blocked damage into its counterburst charge. Crown owns three 120-degree body-attached
+- [x] **4.1** Implement directional Stage 3 boss and Stage 5 boss defenses.
+  - Change: Stage 3 boss blocks 90% damage inside a body-facing frontal 110-degree arc and feeds
+    blocked damage into its counterburst charge. Stage 5 boss owns three 120-degree body-attached
     sector integrity values; only the hit sector intercepts damage and depleted sectors
     stay open. Publish exact arc/sector state for one retained segmented boundary.
   - Accept: front/rear/edge hits, facing lock, sector depletion, bypass, and defense-to-
     offense coupling pass deterministic tests and match rendered boundaries.
-- [x] **4.2** Restore missing boss attack cues and Archive Cross geometry.
+- [x] **4.2** Restore missing boss attack cues and Cross Beam geometry.
   - Change: broad barrage publishes startup/offscreen descriptors without a visible
     projectile route; projectile startup and live shots rely on muzzle anticipation,
     authored projectile bodies, and off-screen threat-radar direction. `wedge_ring`
-    renders its exact damage footprint; Archive Cross uses two committed X corridors
+    renders its exact damage footprint; Cross Beam uses two committed X corridors
     rather than four generic projectiles. Only beam attacks expose an exact corridor.
   - Accept: every boss attack kind has a startup descriptor and radar policy; projectile
     descriptors never render predicted paths even if stale input contains `show_path`;
@@ -317,7 +317,7 @@ builder, projectile state/runtime, combat renderer, stage difficulty, focused bo
     old maximum.
   - Accept: boss balance fixtures assert exact transformed values, monotonic progression,
     minimum warning, and escape corridor.
-- [x] **4.4** Add Siege Battery distance-accelerating ammunition.
+- [x] **4.4** Add Stage 6 Boss distance-accelerating ammunition.
   - Change: one authored boss projectile kind arms at 360 traveled units and interpolates
     monotonically to its hard cap at 880: speed `0.75x->1.35x`, radius `1.0x->1.5x`, damage
     `1.0x->1.6x`. Size/trail state changes before damage; walls terminate it; threat radar
@@ -336,7 +336,7 @@ Batch gate:
 
 - Boss patterns, exams, shields, campaign, renderer, semantic provider, asset coverage,
   workbench, visual authority, import, and focused run validators pass; rendered captures
-  cover Drydock front/back, Crown sectors, broad barrage, wedge ring, Archive Cross, Siege
+  cover Stage 3 boss front/back, Stage 5 boss sectors, broad barrage, wedge ring, Cross Beam, Siege
   acceleration stages, and body-only death.
 
 ### Phase 5: Production integration and 72-count qualification

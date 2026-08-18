@@ -11,13 +11,13 @@ var failures: Array[String] = []
 
 func _initialize() -> void:
 	var boss := _boss()
-	Telegraphs.refresh_boss(boss, "archive_cross", Callable(self, "_resolve_path"), Callable(), 1)
+	Telegraphs.refresh_boss(boss, "cross_corridors", Callable(self, "_resolve_path"), Callable(), 1)
 	var cross_contract := boss.attack_telegraphs.size() == 2
 	for cue in boss.attack_telegraphs:
 		cross_contract = cross_contract and (
 			StringName(cue["shape"]) == &"corridor"
 			and StringName(cue["delivery"]) == &"beam"
-			and is_equal_approx(float(cue["active_width"]), Patterns.width("archive_cross", 1))
+			and is_equal_approx(float(cue["active_width"]), Patterns.width("cross_corridors", 1))
 			and is_equal_approx(
 				float(cue["beam_growth_seconds"]),
 				AttackContract.EMITTED_BEAM_GROWTH_SECONDS
@@ -27,12 +27,12 @@ func _initialize() -> void:
 		)
 	_expect(
 		cross_contract,
-		"Archive Cross publishes two bidirectionally emitted X-beam axes"
+		"Cross Beam publishes two bidirectionally emitted X-beam axes"
 	)
 	if boss.attack_telegraphs.size() == 2:
 		var first_axis := (Vector2(boss.attack_telegraphs[0]["to"]) - Vector2(boss.attack_telegraphs[0]["from"])).normalized()
 		var second_axis := (Vector2(boss.attack_telegraphs[1]["to"]) - Vector2(boss.attack_telegraphs[1]["from"])).normalized()
-		_expect(absf(first_axis.dot(second_axis)) <= 0.001, "Archive Cross corridors are perpendicular and form one X")
+		_expect(absf(first_axis.dot(second_axis)) <= 0.001, "Cross Beam corridors are perpendicular and form one X")
 	boss = _boss()
 	Telegraphs.refresh_boss(boss, "common_broad_barrage", Callable(self, "_resolve_path"), Callable(), 0)
 	var barrage_contract := boss.attack_telegraphs.size() == 12
@@ -67,7 +67,7 @@ func _initialize() -> void:
 			and run_source.contains("\"single_hit\":true")
 			and run_source.contains("AttackContract.EMITTED_BEAM_BIDIRECTIONAL")
 			and run_source.contains("BossPatterns.BEAM_RANGE"),
-		"Archive Cross gameplay creates two clipped, growing, one-hit beam axes"
+		"Cross Beam gameplay creates two clipped, growing, one-hit beam axes"
 	)
 	_expect(Patterns.startup_seconds("common_broad_barrage") >= 1.30, "broad barrage keeps the high-threat minimum warning")
 	_finish()
@@ -76,8 +76,8 @@ func _initialize() -> void:
 func _boss() -> EnemyState:
 	var boss := EnemyState.new()
 	boss.id = "cue_boss"
-	boss.role = &"stage_boss"
-	boss.archetype = &"stage_boss"
+	boss.role = &"boss"
+	boss.archetype = &"boss_actor"
 	boss.pos = Vector2.ZERO
 	boss.visual_radius = 88.0
 	boss.phase = &"boss_startup"

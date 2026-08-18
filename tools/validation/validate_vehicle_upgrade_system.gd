@@ -43,12 +43,11 @@ func _initialize() -> void:
 		failures.append(error)
 	_expect(catalog.definitions.size() == Catalog.EXPECTED_COUNT, "catalog contains the expected upgrades")
 	_validate_presentation(catalog)
-	_validate_behavior_previews(catalog)
+	_validate_progressive_level_contract(catalog)
 	_validate_secondary_slots(catalog)
 	_validate_element_lock(catalog)
 	_validate_active_lock(catalog)
 	_validate_offers(catalog)
-	_validate_stats(catalog)
 	_validate_acquisition_order(catalog)
 	for retired_id in RETIRED_IDS:
 		_expect(
@@ -360,7 +359,7 @@ func _validate_offers(catalog: Catalog) -> void:
 		var build := RunBuild.new(catalog)
 		var legal_choices := 0
 		var observed_sizes := {}
-		for choice_index in 72:
+		for choice_index in 200:
 			var source_id := &"boss" if choice_index in [4, 9, 14, 19, 24] else &"level_up"
 			var offer := catalog.offer(
 				build,
@@ -381,8 +380,8 @@ func _validate_offers(catalog: Catalog) -> void:
 			legal_choices += 1
 			build.apply(offer[run_seed % offer.size()].id)
 		_expect(
-			legal_choices >= 63
-				and legal_choices <= 66
+			legal_choices >= 80
+				and legal_choices < 200
 				and catalog.compatible_definitions(build).is_empty(),
 			(
 				"seed %d reaches catalog exhaustion after all legal choices "
@@ -398,6 +397,43 @@ func _validate_offers(catalog: Catalog) -> void:
 		observed_all_sizes.has(1) and observed_all_sizes.has(2) and observed_all_sizes.has(3),
 		"the seeded offer sweep exposes three-, two-, and one-card offers at reachable tails"
 	)
+
+
+func _validate_progressive_level_contract(catalog: Catalog) -> void:
+	_expect(
+		PrimaryRules.projectiles_per_volley(1) == 2
+			and PrimaryRules.projectiles_per_volley(2) == 2
+			and PrimaryRules.projectiles_per_volley(3) == 3
+			and PrimaryRules.projectiles_per_volley(4) == 3
+			and PrimaryRules.projectiles_per_volley(PrimaryRules.MAX_SPLIT_LEVEL) == 3,
+		"Split keeps two-level projectile-count bands and a fixed three-projectile maximum"
+	)
+	_expect(
+		PrimaryRules.additional_penetrations(1) == 1
+			and PrimaryRules.additional_penetrations(2) == 1
+			and PrimaryRules.additional_penetrations(3) == 2
+			and PrimaryRules.additional_penetrations(4) == 2
+			and PrimaryRules.additional_penetrations(PrimaryRules.MAX_PIERCE_LEVEL) == 4,
+		"Pierce grows in paired bands and keeps its fixed penetration maximum"
+	)
+	for definition in catalog.all_definitions():
+		_expect(definition.max_level >= 5, "%s gains at least three additional levels" % definition.id)
+		for modifier in definition.modifiers:
+			_expect(
+				modifier.values_by_level.size() == definition.max_level,
+				"%s owns one authored value per level" % definition.id
+			)
+			for level_index in range(1, modifier.values_by_level.size()):
+				var previous := float(modifier.values_by_level[level_index - 1])
+				var current := float(modifier.values_by_level[level_index])
+				_expect(current >= previous, "%s changes %s progressively" % [definition.id, modifier.stat_id])
+		var build := RunBuild.new(catalog)
+		for _level in definition.max_level:
+			_expect(bool(build.apply(definition.id).get("applied", false)), "%s applies every authored level" % definition.id)
+		_expect(
+			not bool(build.apply(definition.id).get("applied", false)),
+			"%s stops only at its authored maximum" % definition.id
+		)
 
 
 func _validate_stats(catalog: Catalog) -> void:

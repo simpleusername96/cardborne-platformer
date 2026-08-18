@@ -90,48 +90,48 @@ func _initialize() -> void:
 			"%s applies its exact boss-health profile" % stage_id
 		)
 	_expect(
-		Patterns.sequence(&"stage_7").count("loom_crossing_weave") == 1
-			and Patterns.sequence(&"stage_7").count("loom_reverse_weave") == 1
-			and "archive_cross" not in Patterns.sequence(&"stage_7"),
-		"Vector Loom owns two crossing-weave identity selections without Archive Cross"
+		Patterns.sequence(&"stage_7").count("crossing_weave_a") == 1
+			and Patterns.sequence(&"stage_7").count("crossing_weave_b") == 1
+			and "cross_beam" not in Patterns.sequence(&"stage_7"),
+		"Stage 7 Boss owns two crossing-weave identity selections without Cross Beam"
 	)
 	_expect(
-		Patterns.sequence(&"stage_8").count("pulse_alternating_sectors") == 1
-			and Patterns.sequence(&"stage_8").count("pulse_sector_inversion") == 1
+		Patterns.sequence(&"stage_8").count("alternating_sectors_a") == 1
+			and Patterns.sequence(&"stage_8").count("alternating_sectors_b") == 1
 			and "mirror_cross" not in Patterns.sequence(&"stage_8"),
-		"Pulse Core owns two alternating-pulse identity selections without Mirror Cross"
+		"Stage 8 Boss owns two alternating-pulse identity selections without Mirror Cross"
 	)
 	_expect(
-		Difficulty.BOSS_HEALTH_MULTIPLIERS.size() == 8
-			and Difficulty.BOSS_DAMAGE_MULTIPLIERS.size() == 8
-			and Difficulty.BOSS_SHIELDED_DAMAGE_MULTIPLIERS.size() == 8
-			and Difficulty.BOSS_CADENCE_SCALES.size() == 8
-			and Difficulty.BOSS_COVERAGE_SCALES.size() == 8
-		and is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIERS[-1], 2.05)
-		and is_equal_approx(Difficulty.BOSS_DAMAGE_MULTIPLIERS[-1], 1.46)
-		and is_equal_approx(Difficulty.BOSS_COVERAGE_SCALES[-1], 1.28),
-		"boss profile exposes eight explicit strengthening curves"
+		Difficulty.BOSS_HEALTH_MULTIPLIERS.size() == 12
+			and Difficulty.BOSS_DAMAGE_MULTIPLIERS.size() == 12
+			and Difficulty.BOSS_SHIELDED_DAMAGE_MULTIPLIERS.size() == 12
+			and Difficulty.BOSS_CADENCE_SCALES.size() == 12
+			and Difficulty.BOSS_COVERAGE_SCALES.size() == 12
+		and is_equal_approx(Difficulty.BOSS_HEALTH_MULTIPLIERS[-1], 3.510)
+		and is_equal_approx(Difficulty.BOSS_DAMAGE_MULTIPLIERS[-1], 1.78)
+		and is_equal_approx(Difficulty.BOSS_COVERAGE_SCALES[-1], 1.36),
+		"boss profile exposes twelve explicit strengthening curves"
 	)
 	_expect(
 		is_equal_approx(
-				float(Patterns.definition("furnace_gates")["damage"]), 22.0
+				float(Patterns.definition("thermal_gates")["damage"]), 22.0
 			)
-			and is_equal_approx(Patterns.damage("furnace_gates", 1), 22.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[1])
-			and is_equal_approx(Patterns.damage("furnace_gates", 7), 22.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[7])
+			and is_equal_approx(Patterns.damage("thermal_gates", 1), 22.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[1])
+			and is_equal_approx(Patterns.damage("thermal_gates", 7), 22.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[7])
 			and is_equal_approx(Patterns.damage("breaker_charge", 7), 36.0 * Difficulty.BOSS_DAMAGE_MULTIPLIERS[7]),
 		"boss patterns preserve authored base damage and apply the stage-owned multiplier"
 	)
 	_expect(
-		is_equal_approx(Patterns.radius("furnace_ring", 1), 230.0 * Difficulty.BOSS_COVERAGE_SCALES[1] * Patterns.BOSS_AREA_RADIUS_SCALE)
-			and is_equal_approx(Patterns.radius("archive_depth", 3), 185.0 * Difficulty.BOSS_COVERAGE_SCALES[3] * Patterns.BOSS_AREA_RADIUS_SCALE)
-			and is_equal_approx(Patterns.radius("titan_pulse", 5), 235.0 * Difficulty.BOSS_COVERAGE_SCALES[5] * Patterns.BOSS_AREA_RADIUS_SCALE)
+		is_equal_approx(Patterns.radius("thermal_ring", 1), 230.0 * Difficulty.BOSS_COVERAGE_SCALES[1] * Patterns.BOSS_AREA_RADIUS_SCALE)
+			and is_equal_approx(Patterns.radius("depth_area", 3), 185.0 * Difficulty.BOSS_COVERAGE_SCALES[3] * Patterns.BOSS_AREA_RADIUS_SCALE)
+			and is_equal_approx(Patterns.radius("radial_pulse", 5), 235.0 * Difficulty.BOSS_COVERAGE_SCALES[5] * Patterns.BOSS_AREA_RADIUS_SCALE)
 			and is_equal_approx(Patterns.radius("gate_shockwave", 7), 240.0 * Difficulty.BOSS_COVERAGE_SCALES[7] * Patterns.BOSS_AREA_RADIUS_SCALE)
 			and is_equal_approx(Patterns.width("switch_sweep", 7), 78.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
-			and is_equal_approx(Patterns.width("crown_beam", 7), 82.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
+			and is_equal_approx(Patterns.width("focused_beam", 7), 82.0 * Difficulty.BOSS_COVERAGE_SCALES[7])
 			and is_equal_approx(Patterns.radius("relay_pulse_rings", 7), 225.0 * Difficulty.BOSS_COVERAGE_SCALES[7] * Patterns.BOSS_AREA_RADIUS_SCALE),
 		"representative boss attacks apply exact stage coverage"
 	)
-	for stage_index in 7:
+	for stage_index in 11:
 		_expect(
 			Difficulty.boss_health(stage_index + 1) > Difficulty.boss_health(stage_index)
 				and Difficulty.boss_damage_multiplier(stage_index + 1)
@@ -154,9 +154,9 @@ func _initialize() -> void:
 		"boss circular attacks keep their committed center close to the player"
 	)
 	_expect(
-		Patterns.affinity("furnace_gates") == AttackContract.THERMAL
-			and Patterns.affinity("foundry_ram") == AttackContract.KINETIC
-			and Patterns.affinity("furnace_ring") == AttackContract.THERMAL
+		Patterns.affinity("thermal_gates") == AttackContract.THERMAL
+			and Patterns.affinity("direct_charge") == AttackContract.KINETIC
+			and Patterns.affinity("thermal_ring") == AttackContract.THERMAL
 			and Patterns.affinity("forge_vent") == AttackContract.ARC,
 		"stage-one boss patterns expose distinct thermal, kinetic, and arc families"
 	)

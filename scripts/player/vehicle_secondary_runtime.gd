@@ -543,7 +543,7 @@ func _resolve_storm_barrage(
 
 
 func _storm_candidate_is_eligible(enemy: EnemyState, origin: Vector2) -> bool:
-	if not _eligible(enemy) or enemy.role == &"stage_boss":
+	if not _eligible(enemy) or enemy.role == &"boss":
 		return false
 	var distance := origin.distance_to(enemy.pos)
 	return distance >= STORM_MIN_DISTANCE and distance <= STORM_MAX_DISTANCE
@@ -552,7 +552,7 @@ func _storm_candidate_is_eligible(enemy: EnemyState, origin: Vector2) -> bool:
 func _storm_impact_target_is_eligible(enemy: EnemyState, center: Vector2) -> bool:
 	return (
 		_eligible(enemy)
-		and enemy.role != &"stage_boss"
+		and enemy.role != &"boss"
 		and enemy.pos.distance_to(center) <= STORM_RADIUS + enemy.radius
 	)
 
@@ -590,11 +590,11 @@ func _storm_candidate_score(
 
 func _storm_role_priority(role: StringName) -> float:
 	match role:
-		&"controller", &"artillery_spotter", &"shooter":
+		&"ordinary_gap_01", &"ordinary_growth_01", &"ordinary_lane_01":
 			return 4.0
-		&"repair_tender", &"drone_carrier":
+		&"ordinary_support_01", &"ordinary_support_03":
 			return 3.0
-		&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel":
+		&"ordinary_fixed_support_01", &"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01":
 			return 2.0
 	return 1.0
 

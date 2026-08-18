@@ -67,7 +67,7 @@ func _run() -> void:
 			and renderer.get_node_or_null("Player_primary_mount") == null,
 		"one integrated player craft batch replaces fixed sub-parts while thrust reuses the overlay beam"
 	)
-	for variant in [&"colossus", &"leviathan", &"titan", &"behemoth", &"crown"]:
+	for variant in [&"boss_stage_01", &"boss_stage_02", &"boss_stage_03", &"boss_stage_04", &"boss_stage_05"]:
 		_expect(
 			renderer.get_node_or_null("Boss_%s" % String(variant)) != null,
 			"%s boss owns a semantic texture batch" % variant
@@ -78,11 +78,11 @@ func _run() -> void:
 		"the shared and affinity-specific legacy projectile batches are retired"
 	)
 	for pair in [
-		[&"shooter", &"artillery_spotter"],
-		[&"shooter", &"beam_sentinel"],
-		[&"controller", &"shield_escort"],
-		[&"controller", &"repair_tender"],
-		[&"turret", &"interceptor_tower"],
+		[&"ordinary_lane_01", &"ordinary_growth_01"],
+		[&"ordinary_lane_01", &"ordinary_fixed_beam_01"],
+		[&"ordinary_gap_01", &"ordinary_support_02"],
+		[&"ordinary_gap_01", &"ordinary_support_01"],
+		[&"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02"],
 	]:
 		_expect(
 			AssetProvider.texture(StringName("actor/%s" % String(pair[0])))
@@ -96,8 +96,8 @@ func _run() -> void:
 		)
 	var enemy := EnemyState.new()
 	enemy.id = "renderer_enemy"
-	enemy.role = &"chaser"
-	enemy.archetype = &"chaser"
+	enemy.role = &"ordinary_edge_01"
+	enemy.archetype = &"ordinary_edge_01"
 	enemy.pos = Vector2(300.0, 300.0)
 	enemy.alive = true
 	enemy.active = true
@@ -255,8 +255,8 @@ func _run() -> void:
 		"Thermal primitive keeps its complete gameplay radius through the hold point"
 	)
 	snapshot = renderer.debug_snapshot()
-	var status_enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
-	var peer_enemy_batch := renderer.get_node("Enemy_shooter") as MultiMeshInstance2D
+	var status_enemy_batch := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
+	var peer_enemy_batch := renderer.get_node("Enemy_ordinary_lane_01") as MultiMeshInstance2D
 	_expect(
 		status_enemy_batch.multimesh.is_using_custom_data()
 			and status_enemy_batch.material is ShaderMaterial
@@ -396,7 +396,7 @@ func _run() -> void:
 			and corridor_boundaries.multimesh.visible_instance_count == 0,
 		"ordinary startup corridors add no area geometry beyond active effect bodies"
 	)
-	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
+	var enemy_batch := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
 	_expect(
 		enemy_batch.material is ShaderMaterial
@@ -511,8 +511,8 @@ func _run() -> void:
 	for index in 110:
 		var crowd_enemy := EnemyState.new()
 		crowd_enemy.id = "crowd_%02d" % index
-		crowd_enemy.role = &"chaser"
-		crowd_enemy.archetype = &"chaser"
+		crowd_enemy.role = &"ordinary_edge_01"
+		crowd_enemy.archetype = &"ordinary_edge_01"
 		crowd_enemy.pos = Vector2(
 			120.0 + float(index % 10) * 92.0,
 			80.0 + float(index / 10) * 52.0
@@ -547,7 +547,7 @@ func _run() -> void:
 		int(snapshot["priority_marker_count"]) == 0,
 		"ordinary priority-target markers are removed"
 	)
-	var crowd_body := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
+	var crowd_body := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
 	_expect(
 		crowd_body.multimesh.visible_instance_count == 110
 			and crowd_body.multimesh.instance_count >= 110,
@@ -587,8 +587,8 @@ func _run() -> void:
 	)
 	var projectile_attacker := EnemyState.new()
 	projectile_attacker.id = "projectile_attacker"
-	projectile_attacker.role = &"shooter"
-	projectile_attacker.archetype = &"shooter"
+	projectile_attacker.role = &"ordinary_lane_01"
+	projectile_attacker.archetype = &"ordinary_lane_01"
 	projectile_attacker.pos = Vector2(300.0, 360.0)
 	projectile_attacker.visual_radius = 26.0
 	projectile_attacker.alive = true
@@ -644,9 +644,9 @@ func _run() -> void:
 	)
 	var open_boss := EnemyState.new()
 	open_boss.id = "open_boss"
-	open_boss.role = &"stage_boss"
-	open_boss.archetype = &"stage_boss"
-	open_boss.boss_variant = &"colossus"
+	open_boss.role = &"boss"
+	open_boss.archetype = &"boss_actor"
+	open_boss.boss_variant = &"boss_stage_01"
 	open_boss.boss_shield_state = &"shield_up"
 	open_boss.pos = Vector2(700.0, 360.0)
 	open_boss.visual_radius = Art.STAGE_BOSS_RADIUS
@@ -689,7 +689,7 @@ func _run() -> void:
 	_expect(
 		boss_ring_batch.multimesh.visible_instance_count == 0
 			and beam_batch.multimesh.visible_instance_count == 10,
-		"Drydock renders only its body-facing 70-degree shield boundary"
+		"Stage 3 boss renders only its body-facing 70-degree shield boundary"
 	)
 	var destruction_presentation := _player_presentation(Vector2.ZERO, false)
 	destruction_presentation["dying_boss_id"] = open_boss.id
@@ -705,7 +705,7 @@ func _run() -> void:
 	var death_explosions := renderer.debug_semantic_texture_draws(
 		&"effect/boss_death_explosion"
 	)
-	var dying_boss_batch := renderer.get_node("Boss_colossus") as MultiMeshInstance2D
+	var dying_boss_batch := renderer.get_node("Boss_boss_stage_01") as MultiMeshInstance2D
 	_expect(
 		death_explosions.is_empty()
 			and is_equal_approx(float(dying_boss_batch.multimesh.buffer[11]), 0.75)
@@ -730,8 +730,8 @@ func _run() -> void:
 	)
 	var offscreen_enemy := EnemyState.new()
 	offscreen_enemy.id = "offscreen_attacker"
-	offscreen_enemy.role = &"controller"
-	offscreen_enemy.archetype = &"controller"
+	offscreen_enemy.role = &"ordinary_gap_01"
+	offscreen_enemy.archetype = &"ordinary_gap_01"
 	offscreen_enemy.pos = Vector2(1800.0, 300.0)
 	offscreen_enemy.alive = true
 	offscreen_enemy.active = true
@@ -764,8 +764,8 @@ func _run() -> void:
 	)
 	var armed_mine := EnemyState.new()
 	armed_mine.id = "armed_mine"
-	armed_mine.role = &"mine"
-	armed_mine.archetype = &"mine"
+	armed_mine.role = &"ordinary_fixed_area_01"
+	armed_mine.archetype = &"ordinary_fixed_area_01"
 	armed_mine.pos = Vector2(640.0, 360.0)
 	armed_mine.visual_radius = 42.0
 	armed_mine.alive = true
@@ -780,7 +780,7 @@ func _run() -> void:
 		area_ring.multimesh.visible_instance_count == 0,
 		"armed mines use their body state without a proximity or damage ring"
 	)
-	offscreen_enemy.role = &"stage_boss"
+	offscreen_enemy.role = &"boss"
 	offscreen_enemy.phase = &"boss_startup"
 	renderer.sync(
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
@@ -847,7 +847,7 @@ func _run() -> void:
 		"boss area body and boundary stay visible for the complete damaging window"
 	)
 	offscreen_enemy.phase = &"active"
-	offscreen_enemy.role = &"controller"
+	offscreen_enemy.role = &"ordinary_gap_01"
 	offscreen_enemy.pos = Vector2(180.0, 360.0)
 	offscreen_enemy.visual_radius = 50.0
 	offscreen_enemy.attack_telegraphs = [{
@@ -1064,8 +1064,8 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 	var no_shards: Array[ExperienceShard] = []
 	var moving := EnemyState.new()
 	moving.id = "interpolation_probe"
-	moving.role = &"chaser"
-	moving.archetype = &"chaser"
+	moving.role = &"ordinary_edge_01"
+	moving.archetype = &"ordinary_edge_01"
 	moving.pos = Vector2(100.0, 240.0)
 	moving.visual_radius = 26.0
 	moving.speed = 190.0
@@ -1086,7 +1086,7 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 0.0, true, "", {},
 		1.0 / 60.0
 	)
-	var enemy_batch := renderer.get_node("Enemy_chaser") as MultiMeshInstance2D
+	var enemy_batch := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
 	var body_position := Vector2(
 		enemy_batch.multimesh.buffer[3], enemy_batch.multimesh.buffer[7]
 	)
@@ -1138,8 +1138,8 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 	)
 	var repairer := EnemyState.new()
 	repairer.id = "repairer"
-	repairer.role = &"repair_tender"
-	repairer.archetype = &"repair_tender"
+	repairer.role = &"ordinary_support_01"
+	repairer.archetype = &"ordinary_support_01"
 	repairer.pos = Vector2(300.0, 300.0)
 	repairer.visual_radius = 32.0
 	repairer.spatial_slot = 1
@@ -1149,8 +1149,8 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 	repairer.repair_target_id = "recipient"
 	var recipient := EnemyState.new()
 	recipient.id = "recipient"
-	recipient.role = &"chaser"
-	recipient.archetype = &"chaser"
+	recipient.role = &"ordinary_edge_01"
+	recipient.archetype = &"ordinary_edge_01"
 	recipient.pos = Vector2(500.0, 300.0)
 	recipient.visual_radius = 26.0
 	recipient.spatial_slot = 2
@@ -1168,7 +1168,7 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 		beam_batch.multimesh.visible_instance_count
 			== Renderer.REPAIR_LINK_SEGMENTS + 2
 			and int(renderer.debug_snapshot()["repair_link_count"]) == 1,
-		"Repair Tender uses five directional packets plus one open recipient chevron"
+		"Support Ordinary Enemy Lv.1 uses five directional packets plus one open recipient chevron"
 	)
 	recipient.active = false
 	renderer.sync(

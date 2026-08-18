@@ -10,7 +10,7 @@ const PICKUP_TYPES: Array[StringName] = [&"experience_recall"]
 
 static func experience_for_enemy(enemy: EnemyState) -> int:
 	var role := enemy.role
-	if role == &"stage_boss":
+	if role == &"boss":
 		return 24
 	var base := 5
 	match enemy.health_class:

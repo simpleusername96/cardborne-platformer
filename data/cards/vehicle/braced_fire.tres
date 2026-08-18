@@ -9,4 +9,4 @@ title_key = "UPGRADE_BRACED_FIRE_TITLE"
 description_key = "UPGRADE_BRACED_FIRE_DESC"
 category = &"combat"
 artwork_asset_id = &"upgrade/braced_fire"
-max_level = 3
+max_level = 6

@@ -9,19 +9,25 @@ const Catalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 
 const EXPOSED_DAMAGE_MULTIPLIER := 1.00
-const SHIELD_DOWN_SECONDS := 4.0
+const SHIELD_UP_SECONDS := 8.0
+const SHIELD_DOWN_SECONDS := 2.0
 const HINT_REPEAT_COOLDOWN := 2.0
-const BLOCKED_DAMAGE_MULTIPLIER := 0.50
-const DRYDOCK_FRONTAL_HALF_ANGLE := deg_to_rad(35.0)
-const DRYDOCK_COUNTERBURST_CHARGE_DAMAGE := 180.0
-const DRYDOCK_COUNTERBURST_MAX_MULTIPLIER := 1.75
+const BLOCKED_DAMAGE_MULTIPLIER := 0.15
+const SHIELD_SEGMENT_COUNT := 3
+const SHIELD_SEGMENT_ARC := deg_to_rad(80.0)
+const SHIELD_GAP_ARC := deg_to_rad(40.0)
+const SHIELD_ROTATION_SPEED := deg_to_rad(18.0)
+const COUNTERBURST_CHARGE_DAMAGE := 180.0
+const COUNTERBURST_MAX_MULTIPLIER := 1.75
 
 var stage_id: StringName = &"stage_1"
 var stage_index := 0
 var phase := 1
 var shield_up := true
 var shield_down_remaining := 0.0
-var drydock_counterburst_charge := 0.0
+var shield_cycle_remaining := 0.0
+var shield_rotation := 0.0
+var counterburst_charge := 0.0
 
 var _phase_history := PackedInt32Array()
 var _phase_skip_count := 0
@@ -41,7 +47,9 @@ func configure(next_stage_id: StringName, starting_phase: int = 1) -> void:
 	phase = clampi(starting_phase, 1, 3)
 	shield_up = Catalog.uses_shield(stage_id)
 	shield_down_remaining = 0.0
-	drydock_counterburst_charge = 0.0
+	shield_cycle_remaining = SHIELD_UP_SECONDS if shield_up else 0.0
+	shield_rotation = 0.0
+	counterburst_charge = 0.0
 	_phase_history = PackedInt32Array([phase])
 	_phase_skip_count = 0
 	_shield_down_windows = 0
@@ -63,6 +71,7 @@ func begin_phase(requested_phase: int = -1) -> Dictionary:
 			_phase_history.append(phase)
 	shield_up = Catalog.uses_shield(stage_id)
 	shield_down_remaining = 0.0
+	shield_cycle_remaining = SHIELD_UP_SECONDS if shield_up else 0.0
 	if shield_up:
 		_queue_state_hint("BOSS_SHIELD_UP_HINT")
 	return {
@@ -77,19 +86,29 @@ func advance(delta: float) -> void:
 	_last_hint_elapsed += bounded_delta
 	if not Catalog.uses_shield(stage_id):
 		return
+	shield_rotation = fposmod(shield_rotation + SHIELD_ROTATION_SPEED * bounded_delta, TAU)
+	shield_cycle_remaining = maxf(0.0, shield_cycle_remaining - bounded_delta)
 	if shield_up:
 		_shielded_time += bounded_delta
+		if shield_cycle_remaining <= 0.0:
+			shield_up = false
+			shield_down_remaining = SHIELD_DOWN_SECONDS
+			shield_cycle_remaining = SHIELD_DOWN_SECONDS
+			_shield_down_windows += 1
+			_queue_state_hint("BOSS_SHIELD_DOWN_HINT")
 		return
 	_exposed_time += bounded_delta
-	shield_down_remaining = maxf(0.0, shield_down_remaining - bounded_delta)
-	if shield_down_remaining <= 0.0:
+	shield_down_remaining = shield_cycle_remaining
+	if shield_cycle_remaining <= 0.0:
 		shield_up = true
+		shield_down_remaining = 0.0
+		shield_cycle_remaining = SHIELD_UP_SECONDS
 		_queue_state_hint("BOSS_SHIELD_UP_HINT")
 
 
 func boss_damage_multiplier(
 	hit_direction: Vector2 = Vector2.ZERO,
-	boss_facing: Vector2 = Vector2.RIGHT,
+	_boss_facing: Vector2 = Vector2.RIGHT,
 	incoming_damage: float = 0.0
 ) -> float:
 	if not Catalog.uses_shield(stage_id) or not shield_up:
@@ -97,16 +116,14 @@ func boss_damage_multiplier(
 	var shield_kind := Catalog.shield_kind(stage_id)
 	if hit_direction.is_zero_approx():
 		return EXPOSED_DAMAGE_MULTIPLIER
-	var facing := boss_facing.normalized()
-	if facing.is_zero_approx():
-		facing = Vector2.RIGHT
 	var incoming := hit_direction.normalized()
 	if shield_kind == &"frontal_intercept":
-		if absf(facing.angle_to(incoming)) > DRYDOCK_FRONTAL_HALF_ANGLE:
+		var sector_angle := fposmod(incoming.angle() - shield_rotation, TAU / float(SHIELD_SEGMENT_COUNT))
+		if sector_angle < SHIELD_GAP_ARC:
 			return EXPOSED_DAMAGE_MULTIPLIER
-		drydock_counterburst_charge = minf(
-			DRYDOCK_COUNTERBURST_CHARGE_DAMAGE,
-			drydock_counterburst_charge + maxf(0.0, incoming_damage) * (1.0 - BLOCKED_DAMAGE_MULTIPLIER)
+		counterburst_charge = minf(
+			COUNTERBURST_CHARGE_DAMAGE,
+			counterburst_charge + maxf(0.0, incoming_damage) * (1.0 - BLOCKED_DAMAGE_MULTIPLIER)
 		)
 		return BLOCKED_DAMAGE_MULTIPLIER
 	return EXPOSED_DAMAGE_MULTIPLIER
@@ -115,9 +132,9 @@ func boss_damage_multiplier(
 func consume_counterburst_multiplier() -> float:
 	if Catalog.shield_kind(stage_id) != &"frontal_intercept":
 		return 1.0
-	var ratio := drydock_counterburst_charge / DRYDOCK_COUNTERBURST_CHARGE_DAMAGE
-	drydock_counterburst_charge = 0.0
-	return lerpf(1.0, DRYDOCK_COUNTERBURST_MAX_MULTIPLIER, clampf(ratio, 0.0, 1.0))
+	var ratio := counterburst_charge / COUNTERBURST_CHARGE_DAMAGE
+	counterburst_charge = 0.0
+	return lerpf(1.0, COUNTERBURST_MAX_MULTIPLIER, clampf(ratio, 0.0, 1.0))
 
 
 func state() -> StringName:
@@ -170,7 +187,8 @@ func snapshot() -> Dictionary:
 		"damage_multiplier":boss_damage_multiplier(),
 		"shield_down_remaining":shield_down_remaining,
 		"shield_down_windows":_shield_down_windows,
-		"drydock_counterburst_charge":drydock_counterburst_charge,
+		"counterburst_charge":counterburst_charge,
+		"shield_rotation":shield_rotation,
 		"shielded_time":_shielded_time,
 		"exposed_time":_exposed_time,
 		"adds_spawned":_adds_spawned,
@@ -184,7 +202,10 @@ func fill_presentation_snapshot(output: Dictionary) -> void:
 	output.clear()
 	output["shield_kind"] = Catalog.shield_kind(stage_id)
 	output["state"] = state()
-	output["frontal_half_angle"] = DRYDOCK_FRONTAL_HALF_ANGLE
+	output["segment_count"] = SHIELD_SEGMENT_COUNT
+	output["segment_arc"] = SHIELD_SEGMENT_ARC
+	output["gap_arc"] = SHIELD_GAP_ARC
+	output["rotation"] = shield_rotation
 
 
 func presentation_snapshot() -> Dictionary:

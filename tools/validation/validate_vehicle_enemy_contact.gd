@@ -74,33 +74,33 @@ func _validate_relative_sweep() -> void:
 func _validate_role_and_repeat_contracts() -> void:
 	var runtime := _configured_runtime()
 	var active: Array[EnemyState] = []
-	var chaser := _enemy(&"chaser", Vector2(120.0, 0.0), Vector2(-120.0, 0.0))
-	chaser.contact_attack = ContactRuntime.ATTACK_CHASER
-	active.append(chaser)
+	var edge_enemy := _enemy(&"ordinary_edge_01", Vector2(120.0, 0.0), Vector2(-120.0, 0.0))
+	edge_enemy.contact_attack = ContactRuntime.ATTACK_EDGE_CONTACT
+	active.append(edge_enemy)
 	_probe_accept = false
 	_reset_probe()
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0 / 60.0)
 	_expect(
-		_probe_calls == 1 and chaser.hit_committed,
+		_probe_calls == 1 and edge_enemy.hit_committed,
 		"Chaser contact is consumed once even when protection rejects damage"
 	)
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0 / 60.0)
 	_expect(_probe_calls == 1, "consumed Chaser lunge cannot hit twice")
 
-	var rammer := _enemy(&"rammer", Vector2(160.0, 0.0), Vector2(-160.0, 0.0))
-	rammer.contact_attack = ContactRuntime.ATTACK_RAMMER
-	active.assign([rammer])
+	var pull_enemy := _enemy(&"ordinary_pull_01", Vector2(160.0, 0.0), Vector2(-160.0, 0.0))
+	pull_enemy.contact_attack = ContactRuntime.ATTACK_PULL_CHARGE
+	active.assign([pull_enemy])
 	_probe_accept = true
 	_reset_probe()
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0 / 60.0)
 	_expect(
 		_probe_calls == 1
-			and rammer.hit_committed
+			and pull_enemy.hit_committed
 			and _probe_last_source == "Rammer charge",
 		"Rammer charge uses the one-shot swept contact owner"
 	)
 
-	var collective := _enemy(&"chaser", Vector2(150.0, 0.0), Vector2(-150.0, 0.0))
+	var collective := _enemy(&"ordinary_edge_01", Vector2(150.0, 0.0), Vector2(-150.0, 0.0))
 	collective.contact_attack = ContactRuntime.ATTACK_COLLECTIVE
 	active.assign([collective])
 	_reset_probe()
@@ -112,7 +112,7 @@ func _validate_role_and_repeat_contracts() -> void:
 		"collective execute charge/fuse contact is committed once"
 	)
 
-	var guard := _enemy(&"bulkhead_guard", Vector2.ZERO, Vector2.ZERO)
+	var guard := _enemy(&"ordinary_shield_01", Vector2.ZERO, Vector2.ZERO)
 	active.assign([guard])
 	_probe_accept = false
 	_reset_probe()
@@ -134,9 +134,9 @@ func _validate_role_and_repeat_contracts() -> void:
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.02)
 	_expect(_probe_calls == 3, "guard persistent contact retries after its cooldown expires")
 
-	var shooter := _enemy(&"shooter", Vector2.ZERO, Vector2.ZERO)
-	var controller := _enemy(&"controller", Vector2.ZERO, Vector2.ZERO)
-	var artillery := _enemy(&"artillery_spotter", Vector2.ZERO, Vector2.ZERO)
+	var shooter := _enemy(&"ordinary_lane_01", Vector2.ZERO, Vector2.ZERO)
+	var controller := _enemy(&"ordinary_gap_01", Vector2.ZERO, Vector2.ZERO)
+	var artillery := _enemy(&"ordinary_growth_01", Vector2.ZERO, Vector2.ZERO)
 	active.assign([shooter, controller, artillery])
 	_probe_accept = false
 	_reset_probe()
@@ -166,12 +166,12 @@ func _validate_role_and_repeat_contracts() -> void:
 		"continued mobile ranged overlap retries when accepted-contact cooldown expires"
 	)
 
-	var ordinary_chaser := _enemy(&"chaser", Vector2.ZERO, Vector2.ZERO)
-	var ordinary_rammer := _enemy(&"rammer", Vector2.ZERO, Vector2.ZERO)
-	var mine := _enemy(&"mine", Vector2.ZERO, Vector2.ZERO)
-	var support := _enemy(&"repair_tender", Vector2.ZERO, Vector2.ZERO)
-	var fixed := _enemy(&"turret", Vector2.ZERO, Vector2.ZERO)
-	active.assign([ordinary_chaser, ordinary_rammer, mine, support, fixed])
+	var ordinary_edge_enemy := _enemy(&"ordinary_edge_01", Vector2.ZERO, Vector2.ZERO)
+	var ordinary_pull_enemy := _enemy(&"ordinary_pull_01", Vector2.ZERO, Vector2.ZERO)
+	var mine := _enemy(&"ordinary_fixed_area_01", Vector2.ZERO, Vector2.ZERO)
+	var support := _enemy(&"ordinary_support_01", Vector2.ZERO, Vector2.ZERO)
+	var fixed := _enemy(&"ordinary_fixed_ranged_01", Vector2.ZERO, Vector2.ZERO)
+	active.assign([ordinary_edge_enemy, ordinary_pull_enemy, mine, support, fixed])
 	_reset_probe()
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0)
 	_expect(
@@ -189,7 +189,7 @@ func _validate_pool_reuse_and_fixed_worklist() -> void:
 	pooled.pos = Vector2(12.0, 8.0)
 	pooled.contact_previous_position = Vector2(99.0, 99.0)
 	pooled.contact_cooldown = 0.6
-	pooled.contact_attack = ContactRuntime.ATTACK_RAMMER
+	pooled.contact_attack = ContactRuntime.ATTACK_PULL_CHARGE
 	_expect(store.add(pooled), "contact pool probe enters the live store")
 	pooled.alive = false
 	store.queue_defeat(pooled)
@@ -206,7 +206,7 @@ func _validate_pool_reuse_and_fixed_worklist() -> void:
 	var runtime := _configured_runtime()
 	var fixed: Array[EnemyState] = []
 	for index in 32:
-		fixed.append(_enemy(&"shooter", Vector2(float(index), 80.0), Vector2(float(index), 80.0)))
+		fixed.append(_enemy(&"ordinary_lane_01", Vector2(float(index), 80.0), Vector2(float(index), 80.0)))
 	var first_identity := fixed[0]
 	for tick in 240:
 		runtime.advance(fixed, Vector2.ZERO, Vector2.ZERO, 1.0 / 60.0)
@@ -296,27 +296,27 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	run.capture_set_mode(&"playing")
 	run.call("_clear_enemies")
 	var player_center: Vector2 = run.player_position
-	var chaser: EnemyState = run.call("_make_enemy", {
-		"id": "contact_integration_chaser",
-		"role": &"chaser",
+	var edge_enemy: EnemyState = run.call("_make_enemy", {
+		"id": "contact_integration_edge_enemy",
+		"role": &"ordinary_edge_01",
 		"pos": player_center + Vector2(140.0, 0.0),
 		"active": true,
 	})
-	chaser.phase = &"active"
-	chaser.phase_time = 0.1
-	chaser.committed_dir = Vector2.LEFT
-	chaser.hit_committed = false
-	_expect(run.call("_append_enemy", chaser), "integration Chaser enters runtime")
+	edge_enemy.phase = &"active"
+	edge_enemy.phase_time = 0.1
+	edge_enemy.committed_dir = Vector2.LEFT
+	edge_enemy.hit_committed = false
+	_expect(run.call("_append_enemy", edge_enemy), "integration Chaser enters runtime")
 	var health_before: float = run.player_health
 	run.call("_update_enemies", 0.32, player_center)
 	var combined_radius := (
 		Rules.PLAYER_RADIUS
-		+ chaser.radius
-		+ float(AttackContract.ORDINARY_ATTACKS[&"chaser"]["contact_padding"])
+		+ edge_enemy.radius
+		+ float(AttackContract.ORDINARY_ATTACKS[&"ordinary_edge_01"]["contact_padding"])
 	)
 	_expect(
-		chaser.pos.distance_to(player_center) > combined_radius
-			and chaser.hit_committed
+		edge_enemy.pos.distance_to(player_center) > combined_radius
+			and edge_enemy.hit_committed
 			and run.player_health < health_before
 			and run.player_hit_flash > 0.0,
 		"60 Hz integrated relative sweep catches a Chaser that tunnels past both endpoints"
@@ -330,23 +330,23 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	)
 
 	run.call("_clear_enemies")
-	var rammer: EnemyState = run.call("_make_enemy", {
-		"id": "contact_integration_rammer",
-		"role": &"rammer",
+	var pull_enemy: EnemyState = run.call("_make_enemy", {
+		"id": "contact_integration_pull_enemy",
+		"role": &"ordinary_pull_01",
 		"pos": player_center + Vector2(220.0, 0.0),
 		"active": true,
 	})
-	rammer.phase = &"active"
-	rammer.phase_time = 0.1
-	rammer.committed_dir = Vector2.LEFT
-	rammer.hit_committed = false
-	_expect(run.call("_append_enemy", rammer), "integration Rammer enters runtime")
+	pull_enemy.phase = &"active"
+	pull_enemy.phase_time = 0.1
+	pull_enemy.committed_dir = Vector2.LEFT
+	pull_enemy.hit_committed = false
+	_expect(run.call("_append_enemy", pull_enemy), "integration Rammer enters runtime")
 	run.player_invulnerable = 0.0
 	run.player_hit_flash = 0.0
 	health_before = run.player_health
 	run.call("_update_enemies", 0.40, player_center)
 	_expect(
-		rammer.hit_committed
+		pull_enemy.hit_committed
 			and run.player_health < health_before
 			and run.player_hit_flash > 0.0,
 		"integrated Rammer sweep damages once and publishes normal hit feedback"
@@ -357,7 +357,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	run.call("_clear_enemies")
 	var shooter: EnemyState = run.call("_make_enemy", {
 		"id": "contact_integration_ranged_control",
-		"role": &"shooter",
+		"role": &"ordinary_lane_01",
 		"pos": player_center,
 		"active": true,
 	})
@@ -384,7 +384,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	run.call("_clear_enemies")
 	var guard: EnemyState = run.call("_make_enemy", {
 		"id": "contact_integration_guard",
-		"role": &"bulkhead_guard",
+		"role": &"ordinary_shield_01",
 		"pos": player_center,
 		"active": true,
 	})

@@ -58,7 +58,7 @@ func _validate_attack_target() -> void:
 	var focus := Vector2(500.0, 0.0)
 	var velocity := Vector2(0.0, 220.0)
 	var shooter := Policy.attack_target(
-		&"shooter", origin, focus, velocity, 0.62, 410.0
+		&"ordinary_lane_01", origin, focus, velocity, 0.62, 410.0
 	)
 	_expect(shooter.y > 0.0, "projectile commitment leads a moving player")
 	_expect(
@@ -66,7 +66,7 @@ func _validate_attack_target() -> void:
 		"direct projectile lead remains capped"
 	)
 	var artillery := Policy.attack_target(
-		&"artillery_spotter", origin, focus, velocity, 1.15, 295.0
+		&"ordinary_growth_01", origin, focus, velocity, 1.15, 295.0
 	)
 	_expect(
 		artillery.distance_to(focus) <= 320.001
@@ -74,14 +74,14 @@ func _validate_attack_target() -> void:
 		"artillery uses its larger but bounded commitment envelope"
 	)
 	var beam := Policy.attack_target(
-		&"beam_sentinel", origin, focus, velocity, 1.2, 0.0
+		&"ordinary_fixed_beam_01", origin, focus, velocity, 1.2, 0.0
 	)
 	_expect(
 		beam.distance_to(focus) <= 220.001 and beam.y > 0.0,
 		"beam prediction includes startup and remains capped"
 	)
 	var impossible := Policy.attack_target(
-		&"shooter", origin, focus, Vector2(900.0, 0.0), 0.62, 410.0
+		&"ordinary_lane_01", origin, focus, Vector2(900.0, 0.0), 0.62, 410.0
 	)
 	_expect(
 		impossible.is_finite()
@@ -93,10 +93,10 @@ func _validate_attack_target() -> void:
 func _validate_deterministic_focus() -> void:
 	var focus := Vector2(420.0, 170.0)
 	var first := Policy.attack_target(
-		&"shooter", Vector2.ZERO, focus, Vector2(120.0, -40.0), 0.62, 410.0
+		&"ordinary_lane_01", Vector2.ZERO, focus, Vector2(120.0, -40.0), 0.62, 410.0
 	)
 	var replay := Policy.attack_target(
-		&"shooter", Vector2.ZERO, focus, Vector2(120.0, -40.0), 0.62, 410.0
+		&"ordinary_lane_01", Vector2.ZERO, focus, Vector2(120.0, -40.0), 0.62, 410.0
 	)
 	_expect(first == replay, "target prediction is deterministic")
 

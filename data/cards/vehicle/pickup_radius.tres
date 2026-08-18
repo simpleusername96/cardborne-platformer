@@ -7,7 +7,7 @@
 script = ExtResource("2_mod")
 stat_id = &"pickup_radius_bonus"
 operation = "add"
-values_by_level = Array[float]([70, 140, 210])
+values_by_level = Array[float]([42, 84, 126, 168, 210, 252])
 
 [resource]
 script = ExtResource("1_def")
@@ -16,5 +16,5 @@ title_key = "UPGRADE_PICKUP_RADIUS_TITLE"
 description_key = "UPGRADE_PICKUP_RADIUS_DESC"
 category = &"chassis"
 artwork_asset_id = &"upgrade/pickup_radius"
-max_level = 3
+max_level = 6
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1")])

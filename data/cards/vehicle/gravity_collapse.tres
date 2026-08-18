@@ -9,4 +9,4 @@ title_key = "UPGRADE_GRAVITY_COLLAPSE_TITLE"
 description_key = "UPGRADE_GRAVITY_COLLAPSE_DESC"
 category = &"activated"
 artwork_asset_id = &"upgrade/gravity_collapse"
-max_level = 4
+max_level = 7

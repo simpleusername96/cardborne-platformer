@@ -27,16 +27,16 @@ static func refresh_ordinary(
 	var attack := AttackContract.ordinary_attack(enemy.role)
 	if not attack.is_empty():
 		_append_ordinary_attack(enemy, attack, resolve_path, charge_path)
-	elif enemy.role == &"rammer":
+	elif enemy.role == &"ordinary_pull_01":
 		_append_charge(
 			enemy,
-			SpecialistRuntime.RAMMER_SPEED * SpecialistRuntime.RAMMER_ACTIVE,
-			SpecialistRuntime.RAMMER_CONTACT_PADDING,
-			SpecialistRuntime.RAMMER_DAMAGE,
+			SpecialistRuntime.PULL_CHARGE_SPEED * SpecialistRuntime.PULL_CHARGE_ACTIVE,
+			SpecialistRuntime.PULL_CHARGE_CONTACT_PADDING,
+			SpecialistRuntime.PULL_CHARGE_DAMAGE,
 			AttackContract.KINETIC,
 			charge_path
 		)
-	elif enemy.role == &"beam_sentinel":
+	elif enemy.role == &"ordinary_fixed_beam_01":
 		var to := _resolve_path(
 			resolve_path,
 			enemy.pos,
@@ -286,7 +286,7 @@ static func _append_ordinary_attack(
 			resolve_charge_path
 		)
 	elif kind == &"area":
-		var center := enemy.pos if enemy.role == &"mine" else enemy.committed_target
+		var center := enemy.pos if enemy.role == &"ordinary_fixed_area_01" else enemy.committed_target
 		enemy.attack_telegraphs.append(_area(
 			center,
 			float(attack["radius"]),
@@ -433,9 +433,9 @@ static func _ordinary_startup_seconds(enemy: EnemyState) -> float:
 	var attack := AttackContract.ordinary_attack(enemy.role)
 	if not attack.is_empty():
 		return float(attack["startup"])
-	if enemy.role == &"rammer":
-		return SpecialistRuntime.RAMMER_STARTUP
-	if enemy.role == &"beam_sentinel":
+	if enemy.role == &"ordinary_pull_01":
+		return SpecialistRuntime.PULL_CHARGE_STARTUP
+	if enemy.role == &"ordinary_fixed_beam_01":
 		return SpecialistRuntime.BEAM_STARTUP
 	return 0.0
 

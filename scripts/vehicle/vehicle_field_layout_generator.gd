@@ -12,8 +12,8 @@ const GRID_SIZE := 96.0
 const ORDINARY_RADIUS := 36.0
 const BOSS_RADIUS := 76.0
 const INNER_WALL_GROUP_COUNT := 5
-const MYSTERY_DEVICE_COUNT := 3
-const EXPERIENCE_RECALL_COUNT := 2
+const MYSTERY_DEVICE_COUNT := 6
+const EXPERIENCE_RECALL_COUNT := 4
 const EXPERIENCE_SHARD_COUNT := 10
 const PICKUPS_PER_GROUP := (EXPERIENCE_RECALL_COUNT + EXPERIENCE_SHARD_COUNT) / 2
 const WALL_CLEARANCE := 384.0
@@ -330,15 +330,15 @@ static func _try_build_stage_objects(
 	for index in PICKUPS_PER_GROUP:
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + 1],
-			"kind":&"experience_recall" if index == 0 else &"experience_shard",
-			"experience":0 if index == 0 else 5,
+			"kind":&"experience_recall" if index < EXPERIENCE_RECALL_COUNT / 2 else &"experience_shard",
+			"experience":0 if index < EXPERIENCE_RECALL_COUNT / 2 else 5,
 			"pos":pickup_positions[index],
 		})
 	for index in PICKUPS_PER_GROUP:
 		pickups.append({
 			"id":"%s_pickup_%02d" % [String(stage_id), index + PICKUPS_PER_GROUP + 1],
-			"kind":&"experience_recall" if index == 0 else &"experience_shard",
-			"experience":0 if index == 0 else 5,
+			"kind":&"experience_recall" if index < EXPERIENCE_RECALL_COUNT / 2 else &"experience_shard",
+			"experience":0 if index < EXPERIENCE_RECALL_COUNT / 2 else 5,
 			"pos":reward_pickup_positions[index],
 		})
 	return {"mystery_devices":devices, "pickups":pickups}

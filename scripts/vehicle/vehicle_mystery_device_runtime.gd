@@ -4,7 +4,7 @@ extends RefCounted
 ## Dormant neutral facilities activate their symmetric area effect when broken.
 ## The bounded active timer is advanced here; VehicleRun only applies modifiers.
 
-const DEVICE_COUNT := 3
+const DEVICE_COUNT := 6
 const DEVICE_HEALTH := 360.0
 const DEVICE_RADIUS := 84.0
 const ACTIVE_DURATION_SECONDS := 12.0
@@ -172,7 +172,10 @@ func _rotation(layout_seed: int, stage_id: StringName) -> Array[StringName]:
 		var held: StringName = pool[index]
 		pool[index] = pool[swap]
 		pool[swap] = held
-	return [pool[0], pool[1], pool[2]]
+	var result: Array[StringName] = []
+	for index in DEVICE_COUNT:
+		result.append(pool[index % pool.size()])
+	return result
 
 func _device_by_id(device_id: StringName) -> Dictionary:
 	for device in devices:

@@ -12,9 +12,9 @@ const BRACED_STILL_SPEED := 20.0
 const BRACED_BREAK_SPEED := 60.0
 const BRACED_STILL_SECONDS := 0.60
 const BRACED_WINDOW_SECONDS := 4.0
-const MISS_BONUS := [0.08, 0.11, 0.14]
-const HIT_BONUS := [0.03, 0.04, 0.05]
-const BRACED_BONUS := [0.06, 0.08, 0.10]
+const MISS_BONUS := [0.05, 0.08, 0.10, 0.13, 0.16, 0.18]
+const HIT_BONUS := [0.02, 0.03, 0.04, 0.05, 0.06, 0.065]
+const BRACED_BONUS := [0.04, 0.06, 0.08, 0.09, 0.11, 0.13]
 
 var miss_stacks := 0
 var hit_stacks := 0
@@ -36,20 +36,20 @@ func reset() -> void:
 func next_hit_multiplier(miss_level: int, hit_level: int) -> float:
 	var multiplier := 1.0
 	if miss_stacks > 0 and miss_level > 0:
-		multiplier += float(miss_stacks) * MISS_BONUS[clampi(miss_level - 1, 0, 2)]
+		multiplier += float(miss_stacks) * MISS_BONUS[clampi(miss_level - 1, 0, MISS_BONUS.size() - 1)]
 	if hit_level > 0:
-		multiplier += float(mini(HIT_MAX, hit_stacks + 1)) * HIT_BONUS[clampi(hit_level - 1, 0, 2)]
+		multiplier += float(mini(HIT_MAX, hit_stacks + 1)) * HIT_BONUS[clampi(hit_level - 1, 0, HIT_BONUS.size() - 1)]
 	return multiplier
 
 func record_shot_group(hostile_hit: bool, miss_level: int, hit_level: int) -> Dictionary:
 	var multiplier := 1.0
 	if hostile_hit:
 		if miss_stacks > 0 and miss_level > 0:
-			multiplier += float(miss_stacks) * MISS_BONUS[clampi(miss_level - 1, 0, 2)]
+			multiplier += float(miss_stacks) * MISS_BONUS[clampi(miss_level - 1, 0, MISS_BONUS.size() - 1)]
 			miss_stacks = 0
 		if hit_level > 0:
 			hit_stacks = mini(HIT_MAX, hit_stacks + 1)
-			multiplier += float(hit_stacks) * HIT_BONUS[clampi(hit_level - 1, 0, 2)]
+			multiplier += float(hit_stacks) * HIT_BONUS[clampi(hit_level - 1, 0, HIT_BONUS.size() - 1)]
 	else:
 		if miss_level > 0:
 			miss_stacks = mini(MISS_MAX, miss_stacks + 1)
@@ -89,7 +89,7 @@ func advance_motion(delta: float, moved_distance: float, speed: float, braced_le
 func braced_multiplier(braced_level: int, _consumed_segments: int = 0) -> float:
 	if braced_seconds <= 0.0 or braced_level <= 0:
 		return 1.0
-	return 1.0 + float(braced_active_segments) * BRACED_BONUS[clampi(braced_level - 1, 0, 2)]
+	return 1.0 + float(braced_active_segments) * BRACED_BONUS[clampi(braced_level - 1, 0, BRACED_BONUS.size() - 1)]
 
 func snapshot() -> Dictionary:
 	return {"miss_stacks": miss_stacks, "hit_stacks": hit_stacks, "braced_segments": braced_segments, "braced_active_segments": braced_active_segments, "braced_distance": braced_distance, "braced_seconds": braced_seconds}

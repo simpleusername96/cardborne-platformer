@@ -34,7 +34,7 @@ func _run() -> void:
 	var profile := PrimaryPayload.from_build(run.run_build)
 	var enemy: EnemyState = run.call("_make_enemy", {
 		"id":"cryo_shatter_target",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(180.0, 0.0),
 		"active":true,
 	})

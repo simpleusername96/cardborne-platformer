@@ -30,14 +30,14 @@ func _run() -> void:
 	_validate_crossing_weave(run)
 	_validate_alternating_pulse(run)
 	_validate_direct_preparation(run)
-	run.call("_retire_denied_zones_by_owner", &"stage_boss")
+	run.call("_retire_denied_zones_by_owner", &"boss_actor")
 	_expect(run.denied_zones.is_empty(), "boss-owned identity zones retire as one bounded owner")
 	_finish()
 
 
 func _validate_crossing_weave(run) -> void:
 	run.denied_zones.clear()
-	var event := _event("loom_crossing_weave", 6)
+	var event := _event("crossing_weave_a", 6)
 	run.call("_execute_boss_autonomous", event)
 	var primary := 0
 	var orthogonal := 0
@@ -46,7 +46,7 @@ func _validate_crossing_weave(run) -> void:
 		orthogonal += 1 if StringName(zone["weave_pass"]) == &"orthogonal" else 0
 	_expect(
 		run.denied_zones.size() == 8 and primary == 4 and orthogonal == 4,
-		"Vector Loom creates paired primary and orthogonal wall passes"
+		"Stage 7 Boss creates paired primary and orthogonal wall passes"
 	)
 	var valid_wall_zones := true
 	for zone in run.denied_zones:
@@ -58,26 +58,26 @@ func _validate_crossing_weave(run) -> void:
 		)
 	_expect(
 		valid_wall_zones,
-		"Vector Loom walls expose collision-true moving gaps without beam semantics"
+		"Stage 7 Boss walls expose collision-true moving gaps without beam semantics"
 	)
 	_expect(
 		float(run.denied_zones[4]["warning"])
 			> float(run.denied_zones[0]["warning"]),
-		"Vector Loom warns the orthogonal pass after the primary pass"
+		"Stage 7 Boss warns the orthogonal pass after the primary pass"
 	)
 
 
 func _validate_alternating_pulse(run) -> void:
 	run.denied_zones.clear()
 	run.projectile_store.clear()
-	var event := _event("pulse_alternating_sectors", 7)
+	var event := _event("alternating_sectors_a", 7)
 	run.call("_execute_boss_autonomous", event)
 	_expect(
 		run.denied_zones.size() == 2
 			and run.denied_zones.all(
 				func(zone): return StringName(zone["shape"]) == &"wedge_ring"
 			),
-		"Pulse Core creates two collision-owned safe-sector pulses"
+		"Stage 8 Boss creates two collision-owned safe-sector pulses"
 	)
 	if run.denied_zones.size() != 2:
 		return
@@ -85,25 +85,25 @@ func _validate_alternating_pulse(run) -> void:
 		Vector2(run.denied_zones[0]["safe_axis"]).dot(
 			Vector2(run.denied_zones[1]["safe_axis"])
 		) < 0.0,
-		"Pulse Core alternates the safe sector between pulses"
+		"Stage 8 Boss alternates the safe sector between pulses"
 	)
 	var projectile_count: int = run.projectile_store.hostile_count()
 	run.call("_activate_denied_zone_once", run.denied_zones[1])
 	_expect(
 		run.projectile_store.hostile_count() == projectile_count + 12,
-		"Pulse Core's second pulse emits one bounded sparse radial volley"
+		"Stage 8 Boss's second pulse emits one bounded sparse radial volley"
 	)
 	run.call("_activate_denied_zone_once", run.denied_zones[1])
 	_expect(
 		run.projectile_store.hostile_count() == projectile_count + 12,
-		"Pulse Core's radial volley cannot fire twice"
+		"Stage 8 Boss's radial volley cannot fire twice"
 	)
 
 
 func _validate_direct_preparation(run) -> void:
 	for case in [
-		{&"stage_index":6, &"pattern":"loom_reverse_weave", &"zone_count":8},
-		{&"stage_index":7, &"pattern":"pulse_sector_inversion", &"zone_count":2},
+		{&"stage_index":6, &"pattern":"crossing_weave_b", &"zone_count":8},
+		{&"stage_index":7, &"pattern":"alternating_sectors_b", &"zone_count":2},
 	]:
 		run.denied_zones.clear()
 		run.current_stage_index = int(case[&"stage_index"])

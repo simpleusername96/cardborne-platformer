@@ -142,7 +142,7 @@ func _start_boss_overlap_fixture(run: Node, elapsed: float) -> void:
 	for index in 8:
 		var enemy = run.call("_make_enemy", {
 			"id":"pacing_overlap_%02d" % index,
-			"role":&"chaser",
+			"role":&"ordinary_edge_01",
 			"pos":run.player_position + Vector2(300.0 + float(index) * 12.0, 0.0),
 			"active":true,
 		})
@@ -163,7 +163,7 @@ func _start_boss_overlap_fixture(run: Node, elapsed: float) -> void:
 
 func _defeat_fixture_boss(run: Node) -> void:
 	for enemy in run.enemies:
-		if enemy.alive and enemy.role == &"stage_boss":
+		if enemy.alive and enemy.role == &"boss":
 			run.call(
 				"_damage_enemy", enemy, enemy.max_health + 1.0,
 				"pacing_capture", &"kinetic", true, true, false

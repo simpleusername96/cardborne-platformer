@@ -77,7 +77,7 @@ func _initialize() -> void:
 	toxin_build.apply(&"bio_toxin")
 	var toxin_profile := PrimaryPayload.from_build(toxin_build)
 	var enemy := EnemyState.new()
-	enemy.role = &"chaser"
+	enemy.role = &"ordinary_edge_01"
 	for _hit in 3:
 		StatusRuntime.apply(enemy, toxin_profile)
 	_expect(StatusRuntime.stack_count(enemy, &"poison") == 3, "selected toxin stacks to three")
@@ -118,11 +118,11 @@ func _initialize() -> void:
 		"the next Chill application starts a new bounded stack cycle"
 	)
 	var boss := EnemyState.new()
-	boss.role = &"stage_boss"
+	boss.role = &"boss"
 	StatusRuntime.apply(boss, chill_profile)
 	var boss_chill: Dictionary = boss.statuses[&"chill"]
-	_expect(is_equal_approx(float(boss_chill["magnitude_per_stack"]), 0.03), "boss chill magnitude is halved")
-	_expect(is_equal_approx(float(boss_chill["time"]), 1.0), "boss chill duration is halved")
+	_expect(is_equal_approx(float(boss_chill["magnitude_per_stack"]), 0.02), "boss chill magnitude is halved")
+	_expect(is_equal_approx(float(boss_chill["time"]), 0.9), "boss chill duration is halved")
 	_expect(
 		is_equal_approx(boss.cryo_stack_ratio, 1.0 / 3.0)
 			and is_equal_approx(boss.cryo_application_pulse, 1.0),
@@ -176,14 +176,14 @@ func _initialize() -> void:
 
 
 func _validate_level_progression(catalog: Catalog) -> void:
-	var thermal_radius := [72.0, 84.0, 96.0]
-	var thermal_damage := [4.0, 5.75, 8.0]
-	var poison_dps := [2.0, 2.85, 4.0]
-	var poison_duration := [5.0, 6.0, 7.0]
-	var chill_magnitude := [0.06, 0.08, 0.10]
-	var chill_duration := [2.0, 2.5, 3.0]
-	var chill_shatter_damage := [18.0, 28.0, 42.0]
-	for level_index in 3:
+	var thermal_radius := [72.0, 79.0, 86.0, 93.0, 100.0, 108.0]
+	var thermal_damage := [4.0, 6.0, 8.0, 9.0, 11.0, 12.0]
+	var poison_dps := [2.0, 2.8, 3.6, 4.4, 5.2, 6.1]
+	var poison_duration := [5.0, 5.6, 6.2, 6.8, 7.4, 8.0]
+	var chill_magnitude := [0.04, 0.06, 0.08, 0.09, 0.11, 0.12]
+	var chill_duration := [1.8, 2.2, 2.6, 3.0, 3.3, 3.6]
+	var chill_shatter_damage := [18.0, 25.0, 32.0, 39.0, 47.0, 55.0]
+	for level_index in 6:
 		var thermal_build := RunBuild.new(catalog)
 		var toxin_build := RunBuild.new(catalog)
 		var cryo_build := RunBuild.new(catalog)

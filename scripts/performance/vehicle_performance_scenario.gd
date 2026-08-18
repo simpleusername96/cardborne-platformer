@@ -39,9 +39,9 @@ const PERFORMANCE_EFFECT_IDS: Array[StringName] = [
 	&"player_emp_release",
 ]
 const MOBILE_ARCHETYPES: Array[StringName] = [
-	&"scrap_drone", &"needle_drone", &"chaser", &"shooter", &"controller",
-	&"shield_escort", &"artillery_spotter", &"rammer", &"repair_tender",
-	&"drone_carrier",
+	&"ordinary_melee_01", &"ordinary_ranged_01", &"ordinary_edge_01", &"ordinary_lane_01", &"ordinary_gap_01",
+	&"ordinary_support_02", &"ordinary_growth_01", &"ordinary_pull_01", &"ordinary_support_01",
+	&"ordinary_support_03",
 ]
 var scenario_id: StringName
 var diagnostic_enemy_count := -1
@@ -211,7 +211,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 	var ordinary_count := 0
 	var boss_count := 0
 	for enemy in run.enemies:
-		if enemy.role == &"stage_boss":
+		if enemy.role == &"boss":
 			boss_count += 1
 		else:
 			ordinary_count += 1
@@ -324,7 +324,7 @@ func desired_aim_direction(run: Node) -> Vector2:
 	for enemy in run.enemies:
 		if enemy == null or not enemy.alive or not enemy.active:
 			continue
-		var priority: bool = enemy.threat_kind != &"pursuit" or enemy.role == &"stage_boss"
+		var priority: bool = enemy.threat_kind != &"pursuit" or enemy.role == &"boss"
 		if found_priority and not priority:
 			continue
 		var distance_squared: float = enemy.pos.distance_squared_to(run.player_position)
@@ -348,7 +348,7 @@ func _fill_enemies(run: Node) -> void:
 		enemy.counts_active_cap = bool(descriptor["counts_active_cap"])
 		enemy.health = PERFORMANCE_ENEMY_HEALTH
 		enemy.max_health = PERFORMANCE_ENEMY_HEALTH
-		if enemy.role == &"stage_boss":
+		if enemy.role == &"boss":
 			enemy.phase = &"boss_read"
 			enemy.phase_time = 0.0
 		run.call("_append_enemy", enemy)
@@ -412,7 +412,7 @@ func _run_lifecycle_cycles(run: Node, count: int) -> void:
 func _churn_one_enemy(run: Node) -> void:
 	var retired: EnemyState
 	for enemy in run.enemies:
-		if enemy.role != &"stage_boss":
+		if enemy.role != &"boss":
 			retired = enemy
 			break
 	if retired == null:

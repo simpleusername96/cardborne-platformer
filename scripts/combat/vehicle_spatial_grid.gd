@@ -216,11 +216,11 @@ func update_actor(enemy: EnemyState) -> void:
 		flags |= FLAG_ACTIVE
 	_positions[slot] = enemy.pos
 	_radii[slot] = maxf(enemy.radius, enemy.projectile_hit_radius)
-	if enemy.role == &"interceptor_tower":
+	if enemy.role == &"ordinary_fixed_ranged_02":
 		_radii[slot] = maxf(
 			_radii[slot], AttackContract.INTERCEPTOR_PROJECTILE_RADIUS
 		)
-	if enemy.role != &"stage_boss":
+	if enemy.role != &"boss":
 		_maximum_local_body_radius = maxf(
 			_maximum_local_body_radius, enemy.radius
 		)
@@ -254,7 +254,7 @@ func update_actor_position(enemy: EnemyState) -> void:
 		return
 	var generation := maxi(1, enemy.runtime_generation)
 	var cached_radius := maxf(enemy.radius, enemy.projectile_hit_radius)
-	if enemy.role == &"interceptor_tower":
+	if enemy.role == &"ordinary_fixed_ranged_02":
 		cached_radius = maxf(
 			cached_radius, AttackContract.INTERCEPTOR_PROJECTILE_RADIUS
 		)
@@ -329,7 +329,7 @@ func query_nearest_overlaps_into(
 					or candidate == owner
 					or not candidate.alive
 					or not candidate.active
-					or candidate.role == &"stage_boss"
+					or candidate.role == &"boss"
 					or _member_generations[slot] != maxi(1, candidate.runtime_generation)
 				):
 					continue
@@ -818,7 +818,7 @@ func _local_cache_actor_is_valid(slot: int, enemy: EnemyState) -> bool:
 		and enemy != null
 		and enemy.alive
 		and enemy.active
-		and enemy.role != &"stage_boss"
+		and enemy.role != &"boss"
 		and _local_member_active[slot] != 0
 		and _member_generations[slot] == maxi(1, enemy.runtime_generation)
 	)
@@ -948,7 +948,7 @@ func _remove_membership(slot: int) -> void:
 
 
 func _update_local_membership(slot: int, enemy: EnemyState) -> void:
-	if enemy.role == &"stage_boss":
+	if enemy.role == &"boss":
 		_remove_local_membership(slot)
 		return
 	var next_cell := _local_cell_for(enemy.pos)

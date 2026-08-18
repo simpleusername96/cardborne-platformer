@@ -7,18 +7,18 @@ extends RefCounted
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 
-const RAMMER_STARTUP := 0.9
-const RAMMER_ACTIVE := 0.85
-const RAMMER_RECOVERY := 1.2
-const RAMMER_SPEED := 760.0
-const RAMMER_CONTACT_PADDING := 8.0
-const RAMMER_DAMAGE := 20.0
+const PULL_CHARGE_STARTUP := 0.9
+const PULL_CHARGE_ACTIVE := 0.85
+const PULL_CHARGE_RECOVERY := 1.2
+const PULL_CHARGE_SPEED := 760.0
+const PULL_CHARGE_CONTACT_PADDING := 8.0
+const PULL_CHARGE_DAMAGE := 20.0
 const REPAIR_RANGE := 360.0
 const REPAIR_PER_SECOND := 8.0
-const GENERATOR_HEAL_PER_TICK := 8.0
-const CARRIER_CHILD_CAP := 3
-const CARRIER_RELEASE_SPACING := 0.65
-const CARRIER_RECOVERY := 8.0
+const FIXED_SUPPORT_HEAL_PER_TICK := 8.0
+const MOBILE_SUPPORT_CHILD_CAP := 3
+const MOBILE_SUPPORT_RELEASE_SPACING := 0.65
+const MOBILE_SUPPORT_RECOVERY := 8.0
 const BEAM_STARTUP := 1.2
 const BEAM_ACTIVE := 0.6
 const BEAM_RECOVERY := 2.4
@@ -26,26 +26,26 @@ const BEAM_RANGE := 920.0
 const BEAM_WIDTH := 54.0
 const BEAM_COVER_PADDING := 5.0
 const BEAM_DAMAGE := 18.0
-const SHIELD_ESCORT_RANGE := 300.0
-const GENERATOR_RANGE := 390.0
+const SHIELD_SUPPORT_RANGE := 300.0
+const FIXED_SUPPORT_RANGE := 390.0
 const SHIELDED_RECEIVED_DAMAGE_MULTIPLIER := 0.45
-const GENERATOR_TICK_SECONDS := 0.75
+const FIXED_SUPPORT_TICK_SECONDS := 0.75
 const GUARD_PLATE_STRUCTURE := 72.0
 const MOBILE_MINE_RADIUS := 100.0
 const MOBILE_MINE_DAMAGE := 14.0
 const STATIC_MINE_RADIUS := 160.0
 const STATIC_MINE_DAMAGE := 26.0
 
-# Wreck Scavenger observes nearby valid enemy deaths. VehicleRun owns the
+# Melee Ordinary Enemy Lv.2 observes nearby valid enemy deaths. VehicleRun owns the
 # bounded per-actor stack storage; this module owns eligibility and arithmetic.
-const WRECK_SCAVENGER_RANGE := 360.0
-const WRECK_SCAVENGER_MAX_STACKS := 5
-const WRECK_SCAVENGER_DAMAGE_PER_STACK := 0.12
-const WRECK_SCAVENGER_SPEED_PER_STACK := 0.05
-const WRECK_SCAVENGER_INTERVAL_REDUCTION_PER_STACK := 0.04
-const WRECK_SCAVENGER_EXCLUDED_ROLES: Array[StringName] = [
-	&"stage_boss", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel",
-	&"generator", &"wreck_scavenger",
+const MELEE_GROWTH_RANGE := 360.0
+const MELEE_GROWTH_MAX_STACKS := 5
+const MELEE_GROWTH_DAMAGE_PER_STACK := 0.12
+const MELEE_GROWTH_SPEED_PER_STACK := 0.05
+const MELEE_GROWTH_INTERVAL_REDUCTION_PER_STACK := 0.04
+const MELEE_GROWTH_EXCLUDED_ROLES: Array[StringName] = [
+	&"boss", &"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01",
+	&"ordinary_fixed_support_01", &"ordinary_melee_02",
 ]
 
 
@@ -57,7 +57,7 @@ static func repair_target_id(tender: EnemyState, enemies: Array[EnemyState], sta
 		if target == tender or not target.alive or not target.active:
 			continue
 		var role := target.role
-		if role in [&"repair_tender", &"stage_boss"]:
+		if role in [&"ordinary_support_01", &"boss"]:
 			continue
 		var maximum := target.max_health
 		if maximum <= 0.0 or target.health >= maximum:
@@ -75,54 +75,54 @@ static func repair_target_id(tender: EnemyState, enemies: Array[EnemyState], sta
 
 
 static func is_support_or_installation(role: StringName) -> bool:
-	return role in [&"generator", &"shield_escort", &"repair_tender", &"drone_carrier", &"turret", &"interceptor_tower", &"beam_sentinel"]
+	return role in [&"ordinary_fixed_support_01", &"ordinary_support_02", &"ordinary_support_01", &"ordinary_support_03", &"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01"]
 
 
-static func wreck_scavenger_defeat_receipt(
-	scavenger: EnemyState,
+static func ordinary_melee_02_defeat_receipt(
+	growth_enemy: EnemyState,
 	defeated: EnemyState,
 	current_stacks: int
 ) -> Dictionary:
-	var bounded_stacks := clampi(current_stacks, 0, WRECK_SCAVENGER_MAX_STACKS)
-	if not _wreck_scavenger_can_claim(scavenger, defeated):
+	var bounded_stacks := clampi(current_stacks, 0, MELEE_GROWTH_MAX_STACKS)
+	if not _ordinary_melee_02_can_claim(growth_enemy, defeated):
 		return {
 			"claimed":false,
 			"stacks":bounded_stacks,
-			"modifiers":wreck_scavenger_modifiers(bounded_stacks),
+			"modifiers":ordinary_melee_02_modifiers(bounded_stacks),
 		}
-	var next_stacks := mini(WRECK_SCAVENGER_MAX_STACKS, bounded_stacks + 1)
+	var next_stacks := mini(MELEE_GROWTH_MAX_STACKS, bounded_stacks + 1)
 	return {
 		"claimed":next_stacks != bounded_stacks,
 		"stacks":next_stacks,
-		"modifiers":wreck_scavenger_modifiers(next_stacks),
+		"modifiers":ordinary_melee_02_modifiers(next_stacks),
 	}
 
 
-static func wreck_scavenger_modifiers(stacks: int) -> Dictionary:
-	var bounded_stacks := clampi(stacks, 0, WRECK_SCAVENGER_MAX_STACKS)
+static func ordinary_melee_02_modifiers(stacks: int) -> Dictionary:
+	var bounded_stacks := clampi(stacks, 0, MELEE_GROWTH_MAX_STACKS)
 	return {
-		"damage_multiplier":1.0 + WRECK_SCAVENGER_DAMAGE_PER_STACK * bounded_stacks,
-		"speed_multiplier":1.0 + WRECK_SCAVENGER_SPEED_PER_STACK * bounded_stacks,
+		"damage_multiplier":1.0 + MELEE_GROWTH_DAMAGE_PER_STACK * bounded_stacks,
+		"speed_multiplier":1.0 + MELEE_GROWTH_SPEED_PER_STACK * bounded_stacks,
 		"attack_interval_multiplier":maxf(
 			0.0,
-			1.0 - WRECK_SCAVENGER_INTERVAL_REDUCTION_PER_STACK * bounded_stacks
+			1.0 - MELEE_GROWTH_INTERVAL_REDUCTION_PER_STACK * bounded_stacks
 		),
 	}
 
 
-static func _wreck_scavenger_can_claim(
-	scavenger: EnemyState,
+static func _ordinary_melee_02_can_claim(
+	growth_enemy: EnemyState,
 	defeated: EnemyState
 ) -> bool:
 	return (
-		scavenger != null
+		growth_enemy != null
 		and defeated != null
-		and scavenger != defeated
-		and scavenger.alive
-		and scavenger.active
-		and scavenger.archetype == &"wreck_scavenger"
+		and growth_enemy != defeated
+		and growth_enemy.alive
+		and growth_enemy.active
+		and growth_enemy.archetype == &"ordinary_melee_02"
 		and not defeated.summoned
-		and defeated.role not in WRECK_SCAVENGER_EXCLUDED_ROLES
-		and scavenger.pos.distance_squared_to(defeated.pos)
-			<= WRECK_SCAVENGER_RANGE * WRECK_SCAVENGER_RANGE
+		and defeated.role not in MELEE_GROWTH_EXCLUDED_ROLES
+		and growth_enemy.pos.distance_squared_to(defeated.pos)
+			<= MELEE_GROWTH_RANGE * MELEE_GROWTH_RANGE
 	)

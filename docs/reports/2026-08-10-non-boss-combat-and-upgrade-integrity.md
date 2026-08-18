@@ -69,7 +69,7 @@ outward-only EMP wavefront and its decorative raster are removed from runtime.
   outgoing-damage multiplier are already implemented and validated. Increasing them again
   would hide the separate contact-detection defect and compound balance without evidence.
 - Player movement is updated before enemies. Chaser and Rammer contact checks compare only
-  the final positions of an active step; Bulkhead Guard and Splitter Barge check contact
+  the final positions of an active step; Shield Ordinary Enemy Lv.1 and Pulse Ordinary Enemy Lv.1 check contact
   only on their scheduled decision path. Relative movement can cross between those checks,
   so visible overlap often causes no damage.
 - Electric Field already draws a radius-scaled mesh, but its `0.10` interior alpha is too
@@ -348,10 +348,10 @@ with the exact combined contact radius and authored padding.
 
 | Enemy/state | Contact rule | Repeat rule |
 | --- | --- | --- |
-| Chaser, including Scrap Drone, during warned `active` lunge | Swept contact only during the committed active step | Set `hit_committed` before damage; at most once per lunge, even if dash/hit protection rejects damage |
+| Chaser, including Melee Ordinary Enemy Lv.1, during warned `active` lunge | Swept contact only during the committed active step | Set `hit_committed` before damage; at most once per lunge, even if dash/hit protection rejects damage |
 | Rammer during warned `active` charge | Same relative sweep using Rammer padding | At most once per charge, same rejection semantics |
 | Collective `execute` charge/fuse movement | Same relative sweep while the collective attack is committed | At most once per collective execution |
-| Bulkhead Guard and Splitter Barge hull overlap | Persistent swept body contact in move/recovery/holding states | Start per-enemy `0.8s` cooldown only when barrier or hull accepts the contact; invulnerability rejection keeps it armed so continued overlap can hit after protection expires |
+| Shield Ordinary Enemy Lv.1 and Pulse Ordinary Enemy Lv.1 hull overlap | Persistent swept body contact in move/recovery/holding states | Start per-enemy `0.8s` cooldown only when barrier or hull accepts the contact; invulnerability rejection keeps it armed so continued overlap can hit after protection expires |
 | Ranged, support, fixed structure, ordinary mine | No hull-contact damage | Existing projectiles, beams, mine fuse, and explosion remain the only damage paths |
 | Boss | Unchanged | Excluded from this contract |
 

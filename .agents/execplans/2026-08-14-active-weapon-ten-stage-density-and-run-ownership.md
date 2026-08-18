@@ -117,7 +117,7 @@ The related focused contract is the sole owner of weapon acquisition, upgrade cu
 | Why can the game feel easy despite large authored counts? | Exact actors stop at 48, transition heal is full, pickups are generous, and no current normal-play outcome data exists | Product spec, encounter director, captures | Increase attrition and concurrency before durability or exact cap | 3.1-3.5 |
 | Can exact actor count rise safely now? | Historical cap 48 passed native while 64 and Web were red; current HEAD is unqualified | Active plan and performance evidence | Ship 48 first; remeasure and gate 64 separately | 4.1-4.5 |
 | Is `VehicleRun` genuinely overloaded? | It owns orchestration plus simulation, damage, campaign, UI snapshots, persistence, capture, and performance lifecycle | 7,309 lines, 288 functions, 80+ dependencies, git history | Preserve facade; extract campaign first, then current measured hot owner | 2.1-2.4, 4.2-4.4 |
-| Is an enemy spawn shield created by the arrival system? | No. New enemies initialize with `shielded = false`; shield state is later assigned by Generator/Shield Escort support or collective Lock/Execute. Independent births keep a 320-pixel hard separation while Shield Escort range is 300, so the repeated first-sight case is primarily a collective tactic that gathered offscreen. | `vehicle_run.gd`, `vehicle_spawn_allocator.gd`, shield/contact validators, Stage 3-8 captures | Keep support and tactic shields, but prevent collective Gather from arming offscreen so the player sees the transition instead of a seemingly pre-shielded spawn | 6.1-6.3 |
+| Is an enemy spawn shield created by the arrival system? | No. New enemies initialize with `shielded = false`; shield state is later assigned by Generator/Support Ordinary Enemy Lv.2 support or collective Lock/Execute. Independent births keep a 320-pixel hard separation while Support Ordinary Enemy Lv.2 range is 300, so the repeated first-sight case is primarily a collective tactic that gathered offscreen. | `vehicle_run.gd`, `vehicle_spawn_allocator.gd`, shield/contact validators, Stage 3-8 captures | Keep support and tactic shields, but prevent collective Gather from arming offscreen so the player sees the transition instead of a seemingly pre-shielded spawn | 6.1-6.3 |
 | Are line and circle births produced by spawn allocation? | No. Spawn allocation distributes independent positions across safe offscreen sectors. Spear/column/screen/escort/network slots are authored collective-tactic motion and currently override role movement as soon as four members exist, including offscreen. | Spawn allocator, collective runtime/catalog, `03b-collective-lock.png`, `03c-collective-break.png` | Preserve authored formations; require continuous visible eligibility before Gather | 6.1-6.3 |
 | Do close-range enemies generally flee the player? | Pursuit intent points at the movement focus. Apparent fleeing can come from collective-slot priority, Chaser/Rammer recovery, engagement gates, or wall recovery. Only Chaser recovery produces an avoidant-looking reverse that is not needed for a heavy charge reset. | Movement policy, VehicleRun phase order, movement validators | Delay collective takeover; change Chaser recovery to a bounded lateral peel while preserving Rammer reverse and wall recovery | 6.1-6.3 |
 | Is ranged hull overlap missing damage by accident? | No. Source, spec, and validators intentionally make ranged/support/fixed/mine hull overlap damage-inert. This also creates a close-range dead zone where a player can overlap a mobile ranged craft without hull pressure. | Contact runtime, product spec, integrated contact validator | Revise the product contract only for mobile ranged roles: low repeated swept hull damage; support, fixed structures, ordinary mines, and projectile rules remain unchanged | 6.1-6.4 |
@@ -180,75 +180,7 @@ Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`, `scripts/enemi
   - Change: use the locked recovery, interpolation, threat-budget, commitment, and exact-cap curves. Preserve telegraph and boss/projectile reserve contracts.
   - Accept: deterministic tests prove recovery amounts, commit ceilings, startup truth, projectile reserve, escape corridor, and exact actor ceilings at every stage.
 - [x] **3.5 Update every player-facing and retained consumer.**
-  - Change: HUD uses `N / 10`; guidebook ranges use Stage 1-10; Result requires ten records and marks bosses only on even stages; Korean/English copy and captures remove Stage 1-5 assumptions.
-  - Accept: a deterministic complete run reaches one terminal Result after Stage 10 with ten ordered records, five bosses, cumulative active time, and complete localized labels.
-
-### Phase 4: Attribute cost, extract one measured hot owner, and gate density
-
-Goal: improve exact-enemy headroom without guessing, changing gameplay, or further expanding VehicleRun.
-
-Preconditions:
-
-- Phase 3 functional/rendered source is substantially complete.
-- Before any broad run, report exact scenarios, 10-second warmup, 30/60-second durations, process/window impact, early-stop rule, and request user alignment.
-
-Source owners: performance recorder/scenario/manual trace, `scripts/vehicle/vehicle_run.gd`, enemy schedule/store/spatial grid/contact, projectile/effect stores, encounter runtime, and current performance evidence.
-
-- [x] **4.1 Establish an eligible current-HEAD baseline.**
-  - Change: from a clean, quiet machine run the same native and built-Web Stage-10 production replay with commit, dirty state, viewport, renderer, VSync, focus, warmup, duration, and process-isolation metadata.
-  - Accept: workload/count/state checks are valid and frame, physics, render, enemy/grid, projectile/effect, presentation, HUD, and catch-up fields are published. A red result remains valid evidence, not a reason to weaken the workload.
-- [x] **4.2 Select the owner by recorded cost.**
-  - Change: compare named p95/p99 and slow-tick receipts. If enemy schedule/grid is the largest failing owner, continue with 4.3. If projectile/effects is largest, use the existing projectile/effect stores and exact-hit receipts for the equivalent narrow extraction. If neither is material, stop and revise this contract.
-  - Accept: one owner and one causal diff are named before code changes; render work is not selected from visual density alone.
-- [x] **4.3 Extract the selected simulation kernel.**
-  - Change: move only the selected schedule/decision/motion/query or projectile/effect path behind reusable input/output buffers and semantic receipts. Preserve stable handles, deterministic ordering, exact collision, 60 Hz critical work, and existing capacity. Remove the old implementation when the new owner becomes canonical.
-  - Accept: focused replay equality passes at 6/32/40/48 actors plus boss/projectile cases; no duplicate live state, capacity scan, or recurring allocation is introduced.
-- [x] **4.4 Compare once, then keep or reject.**
-  - Change: run one same-scenario 30-second diagnostic after the coherent candidate.
-  - Accept: retain the candidate only if the selected owner and total physics tail improve without workload, behavior, memory, render, or Web regression. Otherwise remove only that candidate and preserve the baseline.
-- [x] **4.5 Run the exact-density staircase with early stop.**
-  - Change: after cap-48 authority passes, run 64 then 96/128 only while each preceding tier passes. Record exact, visible, near-600/900, virtual-reserve, projectile/effect, attack, and frame/physics counts.
-  - Accept: shipping remains 48 unless native and built-Web 64 both pass physics p95 <= 6 ms, p99 <= 8 ms, workload truth, frame-tail, and interaction/readability gates. A failing tier stops the staircase.
-
-### Phase 5: Final integration and handoff
-
-Goal: prove the complete product at supported surfaces and retire temporary planning state correctly.
-
-- [ ] **5.1 Run focused source and document gates.**
-  - Change: run changed-owner validators, `./tools/validation/validate_cardborne_visual_authority.ps1`, Godot import, `git diff --check`, and active plan/schema checks.
-  - Accept: all relevant focused checks pass and no spec still claims five stages or full inter-stage healing; the completed weapon/progression contract remains unchanged.
-- [ ] **5.2 Capture and interact with the built product.**
-  - Change: export with `./tools/export_web.ps1`, start only through the approved fastrun Codex lane, and inspect Korean/English Upgrade, HUD, odd/even transitions, boss entry, Stage 10 Result, narrow/wide layouts, 200% text, and one real complete-run path.
-  - Accept: no clipping, focus loss, unsupported action, stale Stage 5 copy, or hidden transition remains; console errors are zero.
-- [ ] **5.3 Record narrow verdicts and retire the plan only after implementation.**
-  - Change: update product/visual/performance owners with accepted durable behavior, record exact pass/fail labels, and change this plan to `done` only when every task and gate passes.
-  - Accept: no performance result is described more broadly than its evidence and no active predecessor is silently treated as current authority for this scope.
-
-### Phase 6: Make ordinary-enemy first contact read and behave correctly
-
-Goal: preserve authored squad tactics while removing offscreen pre-arming, avoidant-looking Chaser recovery, and the mobile-ranged overlap dead zone without adding per-enemy nodes or unbounded avoidance work.
-
-Preconditions:
-
-- Treat arrival, collective tactic, movement intent, contact attack, and shield assignment as separate domains. Do not fix simulation truth in the renderer.
-- Preserve exact actor cap 48, 10/30/20 Hz ordinary decision/motion cadence, 60 Hz committed attacks and contact sweep, eight-neighbor overlap work, deterministic ordering, and current projectile/attack timing.
-
-Source owners: `scripts/encounters/vehicle_collective_tactic_runtime.gd`, `scripts/encounters/vehicle_collective_tactic_catalog.gd`, `scripts/enemies/vehicle_enemy_movement_policy.gd`, `scripts/enemies/vehicle_enemy_contact_runtime.gd`, `scripts/vehicle/vehicle_run.gd` only for existing orchestration callbacks, `docs/product/vehicle_game_spec.md`, focused validators, and existing capture fixtures.
-
-- [x] **6.1 Freeze a causal state matrix before changing behavior.**
-  - Change: extend focused deterministic fixtures to distinguish independent birth, Dormant, visible eligibility, Gather, Lock, Execute, Break, ordinary Move, Chaser recovery, Rammer recovery, wall reposition, support shield, tactic shield, warned contact, and passive ranged hull contact. Record the shield source and movement reason in debug receipts; do not add player-facing debug UI.
-  - Accept: fixtures prove births are independently separated, new enemies are not spawn-invulnerable, pursuit Move closes distance, and each observed non-pursuit direction maps to one named state. The pre-fix fixture reproduces offscreen Gather and damage-inert mobile-ranged overlap.
-- [x] **6.2 Arm collective tactics only after readable engagement.**
-  - Change: add a bounded per-squad continuous-visible eligibility timer. Dormant squads follow ordinary role movement and cannot claim the Gather permission until at least four members plus the leader have remained visible for `0.75 s`. Losing visibility before Gather resets eligibility. Existing Gather/Lock/Execute timings, one-Gather/one-active permissions, formation geometry, interruption, offscreen cancellation, tactic IDs, shield multiplier, and attack execution remain unchanged.
-  - Accept: an offscreen complete squad stays Dormant and unshielded indefinitely; `0.74 s` visible is insufficient; `0.75 s` continuous visibility permits Gather; the first shield-capable Lock occurs only after the visible dwell plus authored Gather time. No additional live-enemy scan or dynamic per-frame container is introduced.
-- [x] **6.3 Keep pursuit pressure during Chaser recovery.**
-  - Change: replace only Chaser's mostly reverse recovery vector with a deterministic lateral peel that has no negative radial component. Keep Rammer reverse recovery, standoff retreat bands, engagement gates, wall recovery, local overlap separation, speeds, response constants, attack ranges, and cooldowns unchanged.
-  - Accept: ordinary pursuit closes distance; Chaser recovery moves laterally rather than away; Rammer still creates reset distance; exact direction is deterministic for both strafe signs; speed and cadence ceilings remain unchanged.
-- [x] **6.4 Give mobile ranged hull overlap a low, explicit consequence.**
-  - Change: revise the contact contract so mobile `shooter`, `controller`, and `artillery_spotter` behavior roles use the existing relative swept-contact owner for `6` damage with a `1.0 s` per-enemy accepted-hit cooldown and existing player damage feedback. This includes their archetype variants such as Needle Drone through behavior-role mapping. Support roles, fixed structures, ordinary mines, ordinary Chaser movement outside its warned lunge, Rammer outside charge, and boss contact remain unchanged. A rejected hit leaves contact armed, matching persistent-contact receipt semantics.
-  - Accept: endpoint, tangent, tunneling, rejected-hit, accepted-hit, cooldown, and pool-reuse fixtures pass; ranged projectile damage and commitment limits are unchanged; no duplicate contact owner or second full enemy scan appears.
-- [x] **6.5 Integrate, inspect, and record the changed contract.**
-  - Change: update the product spec and focused source tests, then capture a deterministic Stage 3 representative Dormant -> Gather -> Lock -> Break tactic transition. Use deterministic trajectory and damage receipts for Chaser lunge/recovery and ranged hull impact because still screenshots cannot prove motion or collision causality. Review the changed standard-motion tactic output against the existing visual system; create no new raster, ring, label, or formation overlay. Reduced-motion presentation is unchanged and remains covered by its existing contract rather than a newly claimed rendered proof.
+  - Change: HUD uses `N / 10`; guidebook ranges use Stage 1-10; Result requires ten records and marks bosses only on even stages; Korean/English copy and captures remove Stage 1-5 …2296 tokens truncated…anged hull impact because still screenshots cannot prove motion or collision causality. Review the changed standard-motion tactic output against the existing visual system; create no new raster, ring, label, or formation overlay. Reduced-motion presentation is unchanged and remains covered by its existing contract rather than a newly claimed rendered proof.
   - Accept: the state sequence first shows scattered, unshielded ordinary enemies before Gather and the shielded formation Lock; shields remain one body-attached mint boundary and never appear as a separate arrival bubble; deterministic receipts prove Chaser recovery has no retreat component and ranged hull impact produces normal damage feedback; Korean/English surfaces and draw/batch ceilings are unchanged.
 - [x] **6.6 Run bounded regression and quality gates.**
   - Change: run collective-tactic, movement-policy, local-steering, enemy-contact, encounter-pacing, update-schedule, actor-visual, combat-renderer, source/import, visual-authority, Web export/smoke, and `git diff --check` gates. Run one short same-workload Stage-10 performance diagnostic only if the contact/tactic diff changes measured hot-path work; do not reopen the density staircase.

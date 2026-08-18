@@ -595,7 +595,7 @@ nonstandard detail stride.
 - 2026-08-08: The separately authorized combat-readability pass removed obsolete crate
   health-overlay staging, reduced the shared world-health batch ceiling from 50 to 28,
   doubled hostile projectile presentation thickness through its existing transform, and
-  changed Beam Sentinel presentation to two startup planes and three active planes. The
+  changed Fixed Beam Ordinary Enemy Lv.1 presentation to two startup planes and three active planes. The
   quiescence preflight found 16 pre-existing Godot processes, so no contaminated native
   performance run was started. These changes do not alter scenario counts or thresholds,
   but the clean baseline must use the resulting committed workload.

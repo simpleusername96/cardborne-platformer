@@ -63,6 +63,7 @@ const EngagementRelevancePolicy = preload(
 )
 const SecondaryRuntime = preload("res://scripts/player/vehicle_secondary_runtime.gd")
 const ActiveWeaponRuntime = preload("res://scripts/player/vehicle_active_weapon_runtime.gd")
+const RecallReplenishmentRuntime = preload("res://scripts/rewards/vehicle_recall_replenishment_runtime.gd")
 const ActiveRechargeRuntime = preload(
 	"res://scripts/player/vehicle_active_recharge_runtime.gd"
 )
@@ -161,7 +162,7 @@ const MINIMAP_ROWS := 12
 const MINIMAP_FRAME_COUNT := 2
 const MINIMAP_MARKER_CAPACITY := EnemyStore.MAX_LIVE_HOSTILES + 24
 const MINIMAP_PRIORITY_ENEMY_ROLES: Array[StringName] = [
-	&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
+	&"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01", &"ordinary_fixed_support_01",
 ]
 const MINIMAP_STATIC_KEYS: Array[StringName] = [
 	&"floor_polygons", &"void_polygons", &"blocker_polygons",
@@ -277,6 +278,7 @@ var upgrade_selection_applied := false
 var reward_runtime := RewardRuntime.new()
 var completed_group_rewards: Dictionary = {}
 var experience_recall_timer := 0.0
+var recall_replenishment_runtime := RecallReplenishmentRuntime.new()
 var completed_stage_reports: Array[Dictionary] = []
 
 var enemy_store := EnemyStore.new()
@@ -368,9 +370,9 @@ var visited_cells: Dictionary = {}
 var discovered_markers: Dictionary = {}
 var _threat_sample_timer := 0.0
 var _enemy_local_steering := EnemyLocalSteering.new()
-## Per-actor Wreck Scavenger stacks stay here rather than on pooled enemy state.
+## Per-actor Melee Ordinary Enemy Lv.2 stacks stay here rather than on pooled enemy state.
 ## The specialist runtime owns eligibility and modifier arithmetic.
-var _wreck_scavenger_stacks: Dictionary = {}
+var _ordinary_melee_02_stacks: Dictionary = {}
 var _enemy_overlap_refresh_mask := PackedByteArray()
 var _shielded_enemy_ids: Dictionary = {}
 var _pending_shielded_enemy_ids: Dictionary = {}
@@ -617,6 +619,7 @@ func _physics_process(delta: float) -> void:
 		var pickup_motion_end := player_position
 		_update_terrain(delta, pickup_motion_start)
 		_update_pickups(delta, pickup_motion_start, pickup_motion_end)
+		recall_replenishment_runtime.advance(delta, active_run_elapsed_seconds, pickups)
 		if experience_recall_timer > 0.0:
 			_update_experience(delta)
 		elif _simulation_lod_bucket == 0:
@@ -1205,12 +1208,13 @@ func _reset_run(
 	active_recharge_runtime.reset()
 	dash_upgrade_runtime.reset()
 	experience_recall_timer = 0.0
+	recall_replenishment_runtime.reset()
 	player_health = _player_max_health()
 	current_card_offer.clear()
 	upgrade_offer_error.clear()
 	upgrade_selection_applied = false
 	_clear_enemies()
-	_wreck_scavenger_stacks.clear()
+	_ordinary_melee_02_stacks.clear()
 	_clear_projectiles()
 	pickups.clear()
 	denied_zones.clear()
@@ -1348,11 +1352,12 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	var difficulty_profile := RunDifficulty.profile(selected_run_difficulty)
 	if health_class in [&"swarm", &"standard"]:
 		health *= EncounterDirector.ENEMY_HEALTH_MULTIPLIER
-	if archetype == &"stage_boss":
+	if archetype == &"boss_actor":
 		health = StageDifficulty.boss_health(current_stage_index) * float(difficulty_profile["boss_health"])
 	else:
 		health *= (
 			StageDifficulty.ordinary_health_multiplier(current_stage_index)
+			* float(stage_curve["ordinary_health_pressure"])
 			* float(difficulty_profile["health"])
 			* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
 			* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER
@@ -1400,7 +1405,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.shield_source = &"none"
 	enemy.support_tick = 0.0
 	enemy.repair_target_id = ""
-	enemy.intercept_charges = 3 if role == &"interceptor_tower" else 0
+	enemy.intercept_charges = 3 if role == &"ordinary_fixed_ranged_02" else 0
 	enemy.intercept_recharge = 0.0
 	enemy.strafe_sign = -1.0 if String(spec.get("id", "")).hash() % 2 == 0 else 1.0
 	enemy.stuck_time = 0.0
@@ -1436,7 +1441,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.ram_cooldown = 0.0
 	enemy.pattern_index = 0
 	enemy.boss_phase = 1
-	enemy.boss_variant = StringName(spec.get("boss_variant", &"colossus"))
+	enemy.boss_variant = StringName(spec.get("boss_variant", &"boss_stage_01"))
 	enemy.boss_shield_state = StringName(spec.get("boss_shield_state", &""))
 	enemy.boss_attack_damage_multiplier = 1.0
 	enemy.pattern = &""
@@ -1449,7 +1454,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.armor_structure = 0.0
 	enemy.guard_plate_structure = (
 		SpecialistRuntime.GUARD_PLATE_STRUCTURE
-		if archetype == &"bulkhead_guard" else 0.0
+		if archetype == &"ordinary_shield_01" else 0.0
 	)
 	enemy.mine_armed_by_player = false
 	enemy.mine_fast_cue_played = false
@@ -1521,7 +1526,7 @@ func _release_enemy_engagement(enemy: EnemyState, outcome: StringName = &"releas
 func _clear_enemies() -> void:
 	_enemy_frame_aggregate_valid = false
 	collective_tactics.reset()
-	_wreck_scavenger_stacks.clear()
+	_ordinary_melee_02_stacks.clear()
 	for enemy in enemies:
 		_release_enemy_engagement(enemy)
 	enemy_store.clear()
@@ -1679,11 +1684,11 @@ func _live_elite_count() -> int:
 
 
 func _bounded_spawn_spec(spec: Dictionary) -> Dictionary:
-	var archetype := StringName(spec.get("role", &"chaser"))
+	var archetype := StringName(spec.get("role", &"ordinary_edge_01"))
 	var cap: int = int({
-		&"spark_minelet":12,
-		&"bulkhead_guard":8,
-		&"splitter_barge":6,
+		&"ordinary_area_01":12,
+		&"ordinary_shield_01":8,
+		&"ordinary_pulse_01":6,
 	}.get(archetype, -1))
 	if cap < 0:
 		return spec
@@ -1694,7 +1699,7 @@ func _bounded_spawn_spec(spec: Dictionary) -> Dictionary:
 	if live_count < cap:
 		return spec
 	var substitute := spec.duplicate(true)
-	substitute["role"] = &"chaser"
+	substitute["role"] = &"ordinary_edge_01"
 	return substitute
 
 
@@ -2427,7 +2432,7 @@ func _find_seeker_targets(max_targets: int) -> Array[EnemyState]:
 			continue
 		var priority := 0.0
 		var role := enemy.role
-		if role in [&"chaser", &"shooter", &"controller"]:
+		if role in [&"ordinary_edge_01", &"ordinary_lane_01", &"ordinary_gap_01"]:
 			priority -= 60.0
 		enemy.target_score = priority + distance
 		candidates.append(enemy)
@@ -2542,7 +2547,7 @@ func _apply_black_hole_pull() -> void:
 		StatusRuntime.apply_active_slow(
 			enemy, active_weapon_runtime.strength, active_weapon_runtime.duration
 		)
-		if enemy.role == &"stage_boss" or _is_fixed_structure_enemy(enemy):
+		if enemy.role == &"boss" or _is_fixed_structure_enemy(enemy):
 			continue
 		enemy.pos = _move_actor(
 			enemy.pos,
@@ -2569,7 +2574,7 @@ func _release_shockwave() -> void:
 		_apply_active_stagger(enemy, active_weapon_runtime.duration)
 		if (
 			offset.length_squared() <= 0.01
-			or enemy.role == &"stage_boss"
+			or enemy.role == &"boss"
 			or _is_fixed_structure_enemy(enemy)
 		):
 			continue
@@ -2601,7 +2606,7 @@ func _release_cross_beam() -> void:
 
 
 func _apply_active_stagger(enemy: EnemyState, duration: float) -> void:
-	var duration_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
+	var duration_scale := 0.5 if enemy.role == &"boss" else 1.0
 	enemy.stun = maxf(float(enemy.stun), maxf(0.0, duration) * duration_scale)
 
 
@@ -2869,7 +2874,7 @@ func _update_enemies(
 				if not enemy.alive:
 					continue
 		var role := enemy.role
-		if role == &"stage_boss":
+		if role == &"boss":
 			if enemy.stun > 0.0:
 				enemy.velocity = Vector2.ZERO
 				enemy_grid.update_actor(enemy)
@@ -2879,7 +2884,7 @@ func _update_enemies(
 			_refresh_enemy_presentation_facing(enemy)
 			enemy_grid.update_actor(enemy)
 			continue
-		if role == &"generator":
+		if role == &"ordinary_fixed_support_01":
 			_update_generator(enemy, delta)
 			continue
 		if enemy.stun > 0.0:
@@ -3081,12 +3086,12 @@ func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
 	## Directional actors publish simulation-owned facing. Controller spin and
 	## nondirectional mine/generator bodies remain explicit renderer exceptions.
 	if (
-		enemy.role == &"stage_boss"
+		enemy.role == &"boss"
 		and boss_death_runtime.active()
 		and enemy.id == _dying_boss_id
 	):
 		return
-	if enemy.role in [&"controller", &"mine", &"generator"]:
+	if enemy.role in [&"ordinary_gap_01", &"ordinary_fixed_area_01", &"ordinary_fixed_support_01"]:
 		return
 	var facing := Vector2.ZERO
 	if enemy.phase in [&"startup", &"active", &"boss_startup", &"boss_active"]:
@@ -3121,18 +3126,18 @@ func _update_motion_only_ordinary_enemy(
 		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
 		return
 	if enemy.role in [
-		&"turret", &"interceptor_tower", &"beam_sentinel", &"generator",
+		&"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01", &"ordinary_fixed_support_01",
 	]:
 		enemy.movement_reason = &"stationary_role"
 		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
 		return
-	if enemy.role == &"mine":
+	if enemy.role == &"ordinary_fixed_area_01":
 		enemy.movement_reason = &"mine_role"
-		if enemy.archetype == &"spark_minelet" and enemy.phase != &"mine_armed":
+		if enemy.archetype == &"ordinary_area_01" and enemy.phase != &"mine_armed":
 			_move_cached_enemy_role(enemy, motion_delta)
 		_record_motion_only_enemy_change(enemy, previous_position, previous_active)
 		return
-	if enemy.phase == &"move" or enemy.role in [&"repair_tender", &"bulkhead_guard", &"splitter_barge"]:
+	if enemy.phase == &"move" or enemy.role in [&"ordinary_support_01", &"ordinary_shield_01", &"ordinary_pulse_01"]:
 		_move_cached_enemy_role(enemy, motion_delta)
 	_record_motion_only_enemy_change(enemy, previous_position, previous_active)
 
@@ -3199,9 +3204,9 @@ func _append_enemy_shield_assignments(
 			continue
 		var support_position := support.pos
 		var support_radius := (
-			SpecialistRuntime.GENERATOR_RANGE
-			if support.role == &"generator"
-			else SpecialistRuntime.SHIELD_ESCORT_RANGE
+			SpecialistRuntime.FIXED_SUPPORT_RANGE
+			if support.role == &"ordinary_fixed_support_01"
+			else SpecialistRuntime.SHIELD_SUPPORT_RANGE
 		)
 		enemy_grid.query_radius_into(
 			support_position,
@@ -3209,20 +3214,20 @@ func _append_enemy_shield_assignments(
 			enemies,
 			_support_query_buffer
 		)
-		if support.role == &"generator":
+		if support.role == &"ordinary_fixed_support_01":
 			for candidate in _support_query_buffer:
 				var candidate_role := candidate.role
-				if candidate != support and candidate_role not in [&"generator", &"shield_escort", &"stage_boss"] and support_position.distance_squared_to(candidate.pos) <= SpecialistRuntime.GENERATOR_RANGE * SpecialistRuntime.GENERATOR_RANGE:
-					shielded_ids[candidate.id] = &"generator"
+				if candidate != support and candidate_role not in [&"ordinary_fixed_support_01", &"ordinary_support_02", &"boss"] and support_position.distance_squared_to(candidate.pos) <= SpecialistRuntime.FIXED_SUPPORT_RANGE * SpecialistRuntime.FIXED_SUPPORT_RANGE:
+					shielded_ids[candidate.id] = &"ordinary_fixed_support_01"
 			continue
 		var closest_id := ""
 		var closest_distance_squared := (
-			SpecialistRuntime.SHIELD_ESCORT_RANGE
-			* SpecialistRuntime.SHIELD_ESCORT_RANGE
+			SpecialistRuntime.SHIELD_SUPPORT_RANGE
+			* SpecialistRuntime.SHIELD_SUPPORT_RANGE
 		)
 		for candidate in _support_query_buffer:
 			var candidate_role := candidate.role
-			if candidate == support or candidate_role in [&"generator", &"shield_escort", &"stage_boss"]:
+			if candidate == support or candidate_role in [&"ordinary_fixed_support_01", &"ordinary_support_02", &"boss"]:
 				continue
 			var distance_squared := support_position.distance_squared_to(candidate.pos)
 			if distance_squared <= closest_distance_squared:
@@ -3231,7 +3236,7 @@ func _append_enemy_shield_assignments(
 		if not closest_id.is_empty():
 			# Generator protection keeps precedence if both support types overlap.
 			if not shielded_ids.has(closest_id):
-				shielded_ids[closest_id] = &"shield_escort"
+				shielded_ids[closest_id] = &"ordinary_support_02"
 
 
 func _apply_enemy_shield(enemy: EnemyState, shielded_ids: Dictionary) -> void:
@@ -3259,24 +3264,24 @@ func _update_generator(enemy: EnemyState, delta: float) -> void:
 	enemy.support_tick -= delta
 	if enemy.support_tick > 0.0:
 		return
-	enemy.support_tick = SpecialistRuntime.GENERATOR_TICK_SECONDS
+	enemy.support_tick = SpecialistRuntime.FIXED_SUPPORT_TICK_SECONDS
 	enemy_grid.query_radius_into(
 		enemy.pos,
-		SpecialistRuntime.GENERATOR_RANGE,
+		SpecialistRuntime.FIXED_SUPPORT_RANGE,
 		enemies,
 		_support_query_buffer
 	)
 	for target in _support_query_buffer:
 		if target == enemy:
 			continue
-		if target.pos.distance_to(enemy.pos) <= SpecialistRuntime.GENERATOR_RANGE:
+		if target.pos.distance_to(enemy.pos) <= SpecialistRuntime.FIXED_SUPPORT_RANGE:
 			target.health = minf(
 				target.max_health,
-				target.health + SpecialistRuntime.GENERATOR_HEAL_PER_TICK
+				target.health + SpecialistRuntime.FIXED_SUPPORT_HEAL_PER_TICK
 			)
 
 
-func _update_repair_tender(enemy: EnemyState, delta: float, refresh_target: bool) -> void:
+func _update_ordinary_support_01(enemy: EnemyState, delta: float, refresh_target: bool) -> void:
 	if refresh_target:
 		enemy_grid.query_radius_into(
 			enemy.pos,
@@ -3309,9 +3314,9 @@ func _spawn_carrier_child(carrier: EnemyState) -> void:
 		encounter_runtime.available_active_slots(_active_mobile_count()) <= 0
 		or
 		_enemy_update_schedule.carrier_child_count(carrier.id)
-		>= SpecialistRuntime.CARRIER_CHILD_CAP
+		>= SpecialistRuntime.MOBILE_SUPPORT_CHILD_CAP
 		or (
-			carrier.role == &"stage_boss"
+			carrier.role == &"boss"
 			and _live_boss_add_count()
 				>= BossPhaseCatalog.MAX_LIVE_ADDS
 		)
@@ -3323,7 +3328,7 @@ func _spawn_carrier_child(carrier: EnemyState) -> void:
 	var spawn_position := _move_actor(carrier.pos, offset, 12.0, false)
 	var child := _make_enemy({
 		"id":"%s_child_%02d" % [carrier.id, serial],
-		"role":&"scrap_drone",
+		"role":&"ordinary_melee_01",
 		"pos":spawn_position,
 		"active":true,
 		"carrier_id":carrier.id,
@@ -3358,22 +3363,22 @@ func _update_ordinary_enemy(
 		else:
 			_move_enemy_with_recovery(enemy, to_home.normalized() * _effective_enemy_speed(enemy), motion_delta)
 		return false
-	if enemy.role == &"repair_tender":
+	if enemy.role == &"ordinary_support_01":
 		enemy.movement_reason = &"repair_role"
-		_update_repair_tender(enemy, delta, decision_due)
+		_update_ordinary_support_01(enemy, delta, decision_due)
 		_move_enemy_role(enemy, motion_delta, false, decision_due)
 		return false
-	if enemy.role == &"mine":
+	if enemy.role == &"ordinary_fixed_area_01":
 		enemy.movement_reason = &"mine_role"
 		_update_mine(enemy, delta, motion_delta, decision_due)
 		return false
-	if enemy.role == &"interceptor_tower":
+	if enemy.role == &"ordinary_fixed_ranged_02":
 		enemy.intercept_recharge = maxf(0.0, enemy.intercept_recharge - delta)
 		if enemy.intercept_charges < 3 and enemy.intercept_recharge <= 0.0:
 			enemy.intercept_charges += 1
 			enemy.intercept_recharge = 4.0
 	enemy.attack_cooldown = maxf(0.0, enemy.attack_cooldown - delta * StatusRuntime.speed_multiplier(enemy))
-	if enemy.role in [&"bulkhead_guard", &"splitter_barge"]:
+	if enemy.role in [&"ordinary_shield_01", &"ordinary_pulse_01"]:
 		_move_enemy_role(enemy, motion_delta, false, decision_due)
 		return false
 	var phase := enemy.phase
@@ -3388,7 +3393,7 @@ func _update_ordinary_enemy(
 	if phase == &"startup":
 		enemy.movement_reason = &"attack_startup"
 		if (
-			enemy.role == &"artillery_spotter"
+			enemy.role == &"ordinary_growth_01"
 			and not _runtime_has_line_of_sight(
 				enemy.pos, enemy.committed_target, 5.0
 			)
@@ -3516,31 +3521,31 @@ func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
 	var role := enemy.role
 	var cooldown := 0.8
 	match role:
-		&"chaser":
+		&"ordinary_edge_01":
 			cooldown = 0.55
-		&"shooter":
+		&"ordinary_lane_01":
 			cooldown = 0.78
-		&"controller":
+		&"ordinary_gap_01":
 			cooldown = 1.15
-		&"turret":
+		&"ordinary_fixed_ranged_01":
 			cooldown = 1.05
-		&"mine":
+		&"ordinary_fixed_area_01":
 			cooldown = 1.8
-		&"artillery_spotter":
+		&"ordinary_growth_01":
 			cooldown = 1.65
-		&"interceptor_tower":
+		&"ordinary_fixed_ranged_02":
 			cooldown = 1.25
-		&"rammer":
-			cooldown = SpecialistRuntime.RAMMER_RECOVERY
-		&"drone_carrier":
-			cooldown = SpecialistRuntime.CARRIER_RECOVERY
-		&"beam_sentinel":
+		&"ordinary_pull_01":
+			cooldown = SpecialistRuntime.PULL_CHARGE_RECOVERY
+		&"ordinary_support_03":
+			cooldown = SpecialistRuntime.MOBILE_SUPPORT_RECOVERY
+		&"ordinary_fixed_beam_01":
 			cooldown = SpecialistRuntime.BEAM_RECOVERY
-		&"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger":
+		&"ordinary_beam_01", &"ordinary_range_01", &"ordinary_sweep_01", &"ordinary_melee_02":
 			cooldown = float(AttackContract.ordinary_attack(role).get("recovery", cooldown))
-	var scavenger_interval := _wreck_scavenger_attack_interval_multiplier(enemy)
+	var growth_enemy_interval := _ordinary_melee_02_attack_interval_multiplier(enemy)
 	var elite_scale := 0.85 if enemy.elite_trait == &"overclocked" else 1.0
-	return cooldown * scavenger_interval * elite_scale / (
+	return cooldown * growth_enemy_interval * elite_scale / (
 		EncounterDirector.ENEMY_RECOVERY_RATE
 		* maxf(0.01, enemy.facility_cadence_multiplier)
 	)
@@ -3551,41 +3556,41 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 	var target := player_position
 	var distance := enemy.pos.distance_to(target)
 	match role:
-		&"chaser":
+		&"ordinary_edge_01":
 			return distance <= 175.0
-		&"shooter":
+		&"ordinary_lane_01":
 			return distance <= 620.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
-		&"controller":
+		&"ordinary_gap_01":
 			return distance <= 590.0 and _runtime_has_line_of_sight(enemy.pos, target, 4.0)
-		&"turret":
+		&"ordinary_fixed_ranged_01":
 			return distance <= 760.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
-		&"mine":
+		&"ordinary_fixed_area_01":
 			return distance <= 190.0
-		&"artillery_spotter":
+		&"ordinary_growth_01":
 			return (
 				distance <= 650.0
 				and distance >= 250.0
 				and _runtime_has_line_of_sight(enemy.pos, target, 5.0)
 			)
-		&"interceptor_tower":
+		&"ordinary_fixed_ranged_02":
 			return distance <= 700.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
-		&"rammer":
+		&"ordinary_pull_01":
 			return distance <= 640.0 and distance >= 130.0 and _runtime_has_line_of_sight(enemy.pos, target, 12.0)
-		&"drone_carrier":
+		&"ordinary_support_03":
 			return (
 				distance <= 760.0
 				and _enemy_update_schedule.carrier_child_count(enemy.id)
-					< SpecialistRuntime.CARRIER_CHILD_CAP
+					< SpecialistRuntime.MOBILE_SUPPORT_CHILD_CAP
 			)
-		&"beam_sentinel":
+		&"ordinary_fixed_beam_01":
 			return distance <= SpecialistRuntime.BEAM_RANGE and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
-		&"rail_sniper":
+		&"ordinary_beam_01":
 			return distance <= 900.0 and distance >= 300.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
-		&"orbit_gunner":
+		&"ordinary_range_01":
 			return distance <= 620.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
-		&"bombing_runner":
+		&"ordinary_sweep_01":
 			return distance <= 700.0 and distance >= 120.0
-		&"wreck_scavenger":
+		&"ordinary_melee_02":
 			return distance <= 470.0 and distance >= 90.0
 	return false
 
@@ -3608,10 +3613,10 @@ func _start_enemy_attack(enemy: EnemyState) -> void:
 					float(attack.get("speed", 0.0))
 					* EncounterDirector.ENEMY_SPEED_MULTIPLIER
 				)
-	elif role == &"rammer":
-		startup = SpecialistRuntime.RAMMER_STARTUP
-		attack_speed = SpecialistRuntime.RAMMER_SPEED
-	elif role == &"beam_sentinel":
+	elif role == &"ordinary_pull_01":
+		startup = SpecialistRuntime.PULL_CHARGE_STARTUP
+		attack_speed = SpecialistRuntime.PULL_CHARGE_SPEED
+	elif role == &"ordinary_fixed_beam_01":
 		startup = SpecialistRuntime.BEAM_STARTUP
 	var target := EnemyTargetingPolicy.attack_target(
 		role,
@@ -3647,9 +3652,9 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 	var role := enemy.role
 	enemy.phase = &"active"
 	match role:
-		&"chaser":
+		&"ordinary_edge_01":
 			enemy.phase_time = float(AttackContract.ORDINARY_ATTACKS[role]["active"])
-		&"shooter":
+		&"ordinary_lane_01":
 			var shooter_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
 				enemy.pos + enemy.committed_dir * float(shooter_attack["origin_offset"]),
@@ -3664,7 +3669,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.72
-		&"controller":
+		&"ordinary_gap_01":
 			var controller_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
 				enemy.pos + enemy.committed_dir * float(controller_attack["origin_offset"]),
@@ -3679,11 +3684,11 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.88
-		&"turret":
+		&"ordinary_fixed_ranged_01":
 			enemy.burst_left = 3
 			enemy.burst_timer = 0.0
 			enemy.phase_time = 0.55
-		&"mine":
+		&"ordinary_fixed_area_01":
 			var mine_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			enemy.phase_time = 0.15
 			var mine_distance := player_position.distance_to(enemy.pos)
@@ -3694,7 +3699,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			)
 			if mine_damage > 0.0:
 				_damage_player(mine_damage, "Arc proximity burst", true)
-		&"artillery_spotter":
+		&"ordinary_growth_01":
 			var artillery_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
 				enemy.pos + enemy.committed_dir * float(artillery_attack["origin_offset"]),
@@ -3709,14 +3714,14 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 1.05
-		&"rail_sniper":
+		&"ordinary_beam_01":
 			var rail_attack := AttackContract.ordinary_attack(role)
 			_spawn_hostile_projectile(
 				enemy.pos + enemy.committed_dir * float(rail_attack["origin_offset"]),
 				enemy.committed_dir,
 				float(rail_attack["damage"]),
 				float(rail_attack["speed"]),
-				"Rail Sniper shot",
+				"Beam Ordinary Enemy Lv.1 shot",
 				StringName(rail_attack["affinity"]), false, false,
 				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
 			)
@@ -3725,12 +3730,12 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			enemy.reposition_dir = enemy.committed_dir.rotated(enemy.strafe_sign * PI * 0.5)
 			enemy.phase = &"recovery"
 			enemy.phase_time = float(rail_attack["recovery"])
-		&"orbit_gunner":
+		&"ordinary_range_01":
 			var orbit_attack := AttackContract.ordinary_attack(role)
 			enemy.burst_left = int(orbit_attack["burst_count"])
 			enemy.burst_timer = 0.0
 			enemy.phase_time = float(orbit_attack["burst_count"]) * float(orbit_attack["burst_spacing"]) + 0.08
-		&"bombing_runner":
+		&"ordinary_sweep_01":
 			var bombing_attack := AttackContract.ordinary_attack(role)
 			for blast_index in int(bombing_attack["blast_count"]):
 				var blast_position := enemy.committed_target + enemy.committed_dir * float(blast_index) * 64.0
@@ -3738,12 +3743,12 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 					"id":"%s_bomb_%d" % [enemy.id, blast_index], "owner_kind":&"ordinary",
 					"shape":&"area", "pos":blast_position, "radius":float(bombing_attack["radius"]),
 					"damage":float(bombing_attack["damage"]), "warning":float(bombing_attack["blast_delay"]) + float(blast_index) * float(bombing_attack["blast_spacing"]),
-					"duration":0.22, "tick":0.0, "source":"Bombing Runner ground burst", "final_damage":false,
+					"duration":0.22, "tick":0.0, "source":"Sweep Ordinary Enemy Lv.1 ground burst", "final_damage":false,
 				})
 			enemy.phase_time = float(bombing_attack["pass_seconds"])
-		&"wreck_scavenger":
+		&"ordinary_melee_02":
 			enemy.phase_time = float(AttackContract.ordinary_attack(role)["active"])
-		&"interceptor_tower":
+		&"ordinary_fixed_ranged_02":
 			var interceptor_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
 				enemy.pos + enemy.committed_dir * float(interceptor_attack["origin_offset"]),
@@ -3758,17 +3763,17 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.9
-		&"rammer":
-			enemy.phase_time = SpecialistRuntime.RAMMER_ACTIVE
-		&"drone_carrier":
+		&"ordinary_pull_01":
+			enemy.phase_time = SpecialistRuntime.PULL_CHARGE_ACTIVE
+		&"ordinary_support_03":
 			enemy.burst_left = mini(
 				3,
-				SpecialistRuntime.CARRIER_CHILD_CAP
+				SpecialistRuntime.MOBILE_SUPPORT_CHILD_CAP
 					- _enemy_update_schedule.carrier_child_count(enemy.id)
 			)
 			enemy.burst_timer = 0.0
 			enemy.phase_time = 2.2
-		&"beam_sentinel":
+		&"ordinary_fixed_beam_01":
 			enemy.phase_time = SpecialistRuntime.BEAM_ACTIVE
 			enemy.hit_committed = false
 			enemy.beam_end = _runtime_attack_path_end(
@@ -3783,14 +3788,14 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 	var role := enemy.role
 	enemy.phase_time = maxf(0.0, enemy.phase_time - delta)
 	match role:
-		&"chaser":
-			enemy.contact_attack = EnemyContactRuntime.ATTACK_CHASER
-			var chaser_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
+		&"ordinary_edge_01":
+			enemy.contact_attack = EnemyContactRuntime.ATTACK_EDGE_CONTACT
+			var edge_enemy_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			var before := enemy.pos
 			enemy.pos = _runtime_charge_path_end(
 				before,
 				enemy.committed_dir,
-				float(chaser_attack["speed"])
+				float(edge_enemy_attack["speed"])
 					* EncounterDirector.ENEMY_SPEED_MULTIPLIER
 					* delta,
 				enemy.radius
@@ -3798,7 +3803,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 0.52
-		&"turret":
+		&"ordinary_fixed_ranged_01":
 			var turret_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			enemy.burst_timer -= delta
 			if enemy.burst_left > 0 and enemy.burst_timer <= 0.0:
@@ -3819,7 +3824,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			if enemy.burst_left <= 0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 0.95
-		&"orbit_gunner":
+		&"ordinary_range_01":
 			var orbit_attack := AttackContract.ordinary_attack(role)
 			enemy.burst_timer -= delta
 			if enemy.burst_left > 0 and enemy.burst_timer <= 0.0:
@@ -3828,13 +3833,13 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				_spawn_hostile_projectile(
 					enemy.pos + enemy.committed_dir * float(orbit_attack["origin_offset"]),
 					enemy.committed_dir, float(orbit_attack["damage"]), float(orbit_attack["speed"]),
-					"Orbit Gunner burst", StringName(orbit_attack["affinity"]), false, false,
+					"Range Ordinary Enemy Lv.1 burst", StringName(orbit_attack["affinity"]), false, false,
 					AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
 				)
 			if enemy.burst_left <= 0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = float(orbit_attack["recovery"])
-		&"bombing_runner":
+		&"ordinary_sweep_01":
 			var bombing_attack := AttackContract.ordinary_attack(role)
 			var before := enemy.pos
 			enemy.pos = _runtime_charge_path_end(
@@ -3845,23 +3850,23 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = float(bombing_attack["recovery"])
-		&"wreck_scavenger":
-			enemy.contact_attack = EnemyContactRuntime.ATTACK_CHASER
-			var scavenger_attack := AttackContract.ordinary_attack(role)
+		&"ordinary_melee_02":
+			enemy.contact_attack = EnemyContactRuntime.ATTACK_EDGE_CONTACT
+			var growth_enemy_attack := AttackContract.ordinary_attack(role)
 			var before := enemy.pos
-			var scavenger_speed := float(scavenger_attack["speed"]) * EncounterDirector.ENEMY_SPEED_MULTIPLIER * _wreck_scavenger_speed_multiplier(enemy)
-			enemy.pos = _runtime_charge_path_end(before, enemy.committed_dir, scavenger_speed * delta, enemy.radius)
+			var growth_enemy_speed := float(growth_enemy_attack["speed"]) * EncounterDirector.ENEMY_SPEED_MULTIPLIER * _ordinary_melee_02_speed_multiplier(enemy)
+			enemy.pos = _runtime_charge_path_end(before, enemy.committed_dir, growth_enemy_speed * delta, enemy.radius)
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = _enemy_recovery_cooldown(enemy)
-		&"mine":
+		&"ordinary_fixed_area_01":
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 1.2
-		&"rammer":
-			enemy.contact_attack = EnemyContactRuntime.ATTACK_RAMMER
+		&"ordinary_pull_01":
+			enemy.contact_attack = EnemyContactRuntime.ATTACK_PULL_CHARGE
 			var before := enemy.pos
-			var requested := enemy.committed_dir * SpecialistRuntime.RAMMER_SPEED * delta
+			var requested := enemy.committed_dir * SpecialistRuntime.PULL_CHARGE_SPEED * delta
 			var after := _runtime_charge_path_end(
 				before,
 				enemy.committed_dir,
@@ -3872,18 +3877,18 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			var struck_cover := before.distance_to(after) + 1.0 < requested.length()
 			if struck_cover or enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
-				enemy.phase_time = SpecialistRuntime.RAMMER_RECOVERY
-				enemy.vulnerable = SpecialistRuntime.RAMMER_RECOVERY
-		&"drone_carrier":
+				enemy.phase_time = SpecialistRuntime.PULL_CHARGE_RECOVERY
+				enemy.vulnerable = SpecialistRuntime.PULL_CHARGE_RECOVERY
+		&"ordinary_support_03":
 			enemy.burst_timer -= delta
 			if enemy.burst_left > 0 and enemy.burst_timer <= 0.0:
-				enemy.burst_timer = SpecialistRuntime.CARRIER_RELEASE_SPACING
+				enemy.burst_timer = SpecialistRuntime.MOBILE_SUPPORT_RELEASE_SPACING
 				enemy.burst_left -= 1
 				_spawn_carrier_child(enemy)
 			if enemy.burst_left <= 0:
 				enemy.phase = &"recovery"
-				enemy.phase_time = SpecialistRuntime.CARRIER_RECOVERY
-		&"beam_sentinel":
+				enemy.phase_time = SpecialistRuntime.MOBILE_SUPPORT_RECOVERY
+		&"ordinary_fixed_beam_01":
 			var beam_end := enemy.beam_end
 			var growth_ratio := AttackContract.emitted_beam_growth_ratio(
 				enemy.phase_time,
@@ -3899,7 +3904,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				) <= Rules.PLAYER_RADIUS + SpecialistRuntime.BEAM_WIDTH * 0.5
 			):
 				enemy.hit_committed = true
-				_damage_player(SpecialistRuntime.BEAM_DAMAGE, "Beam Sentinel sweep", true)
+				_damage_player(SpecialistRuntime.BEAM_DAMAGE, "Fixed Beam Ordinary Enemy Lv.1 sweep", true)
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = SpecialistRuntime.BEAM_RECOVERY
@@ -3910,8 +3915,8 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 func _move_enemy_role(enemy: EnemyState, delta: float, recovering: bool, decision_due: bool = true) -> void:
 	var role := enemy.role
 	if (
-		role in [&"turret", &"interceptor_tower", &"beam_sentinel", &"generator"]
-		or (role == &"mine" and enemy.archetype != &"spark_minelet")
+		role in [&"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01", &"ordinary_fixed_support_01"]
+		or (role == &"ordinary_fixed_area_01" and enemy.archetype != &"ordinary_area_01")
 	):
 		return
 	var refresh_overlap := false
@@ -4060,7 +4065,7 @@ func _desired_enemy_velocity(
 		enemy.movement_reason = &"pursuit_route"
 	elif recovering:
 		enemy.movement_reason = &"recovery"
-	elif enemy.role == &"repair_tender":
+	elif enemy.role == &"ordinary_support_01":
 		enemy.movement_reason = &"repair_role"
 	elif movement_family == EnemyMovementPolicy.PURSUIT:
 		enemy.movement_reason = &"pursuit_role"
@@ -4137,7 +4142,7 @@ func _update_mine(
 	motion_delta: float,
 	decision_due: bool
 ) -> void:
-	var mobile := enemy.archetype == &"spark_minelet"
+	var mobile := enemy.archetype == &"ordinary_area_01"
 	var trigger_radius := 160.0 if mobile else 230.0
 	if enemy.phase != &"mine_armed":
 		if mobile:
@@ -4161,7 +4166,7 @@ func _armed_minelet_count() -> int:
 	for enemy in enemies:
 		if (
 			enemy.alive
-			and enemy.archetype == &"spark_minelet"
+			and enemy.archetype == &"ordinary_area_01"
 			and enemy.phase == &"mine_armed"
 		):
 			count += 1
@@ -4186,7 +4191,7 @@ func _arm_mine(enemy: EnemyState, fuse: float, player_owned: bool) -> void:
 func _explode_mine(enemy: EnemyState) -> void:
 	if enemy == null or not enemy.alive:
 		return
-	var mobile := enemy.archetype == &"spark_minelet"
+	var mobile := enemy.archetype == &"ordinary_area_01"
 	var radius := (
 		SpecialistRuntime.MOBILE_MINE_RADIUS
 		if mobile else SpecialistRuntime.STATIC_MINE_RADIUS
@@ -4196,7 +4201,7 @@ func _explode_mine(enemy: EnemyState) -> void:
 		if mobile else SpecialistRuntime.STATIC_MINE_DAMAGE
 	)
 	var origin := enemy.pos
-	var source := "player_spark_minelet" if mobile else "player_arc_mine"
+	var source := "player_ordinary_area_01" if mobile else "player_arc_mine"
 	if (
 		_runtime_has_line_of_sight(origin, player_position, 2.0)
 		and origin.distance_to(player_position) <= radius
@@ -4205,7 +4210,7 @@ func _explode_mine(enemy: EnemyState) -> void:
 			center_damage, origin.distance_to(player_position), radius
 		)
 		if player_damage > 0.0:
-			_damage_player(player_damage, "Spark Minelet" if mobile else "Arc Mine", true)
+			_damage_player(player_damage, "Area Ordinary Enemy Lv.1" if mobile else "Arc Mine", true)
 	var nearby: Array[EnemyState] = []
 	enemy_grid.query_radius_into(origin, radius, enemies, nearby)
 	for target in nearby:
@@ -4219,7 +4224,7 @@ func _explode_mine(enemy: EnemyState) -> void:
 		var damage := AttackContract.radial_damage(
 			center_damage, origin.distance_to(target.pos), radius
 		)
-		if target.role == &"stage_boss":
+		if target.role == &"boss":
 			damage *= 0.25
 		if damage > 0.0:
 			_damage_enemy(
@@ -4248,7 +4253,7 @@ func _arm_chain_mines(source_mine: EnemyState, origin: Vector2, mobile: bool) ->
 			return (
 				target != source_mine
 				and target.alive
-				and target.role == &"mine"
+				and target.role == &"ordinary_fixed_area_01"
 				and target.phase != &"mine_armed"
 			)
 	)
@@ -4265,47 +4270,47 @@ func _arm_chain_mines(source_mine: EnemyState, origin: Vector2, mobile: bool) ->
 
 func _enemy_contact_damage(enemy: EnemyState, base_damage: float) -> float:
 	var damage := base_damage
-	if enemy.role == &"wreck_scavenger":
-		damage = float(AttackContract.ordinary_attack(&"wreck_scavenger").get("damage", base_damage))
-		damage *= _wreck_scavenger_damage_multiplier(enemy)
+	if enemy.role == &"ordinary_melee_02":
+		damage = float(AttackContract.ordinary_attack(&"ordinary_melee_02").get("damage", base_damage))
+		damage *= _ordinary_melee_02_damage_multiplier(enemy)
 	return damage * (1.15 if enemy.elite_trait == &"heavy" else 1.0)
 
 
-func _wreck_scavenger_stack_count(enemy: EnemyState) -> int:
-	return clampi(int(_wreck_scavenger_stacks.get(enemy.id, 0)), 0, SpecialistRuntime.WRECK_SCAVENGER_MAX_STACKS)
+func _ordinary_melee_02_stack_count(enemy: EnemyState) -> int:
+	return clampi(int(_ordinary_melee_02_stacks.get(enemy.id, 0)), 0, SpecialistRuntime.MELEE_GROWTH_MAX_STACKS)
 
 
-func _wreck_scavenger_damage_multiplier(enemy: EnemyState) -> float:
-	return float(SpecialistRuntime.wreck_scavenger_modifiers(_wreck_scavenger_stack_count(enemy)).get("damage_multiplier", 1.0))
+func _ordinary_melee_02_damage_multiplier(enemy: EnemyState) -> float:
+	return float(SpecialistRuntime.ordinary_melee_02_modifiers(_ordinary_melee_02_stack_count(enemy)).get("damage_multiplier", 1.0))
 
 
-func _wreck_scavenger_speed_multiplier(enemy: EnemyState) -> float:
-	return float(SpecialistRuntime.wreck_scavenger_modifiers(_wreck_scavenger_stack_count(enemy)).get("speed_multiplier", 1.0))
+func _ordinary_melee_02_speed_multiplier(enemy: EnemyState) -> float:
+	return float(SpecialistRuntime.ordinary_melee_02_modifiers(_ordinary_melee_02_stack_count(enemy)).get("speed_multiplier", 1.0))
 
 
-func _wreck_scavenger_attack_interval_multiplier(enemy: EnemyState) -> float:
-	return float(SpecialistRuntime.wreck_scavenger_modifiers(_wreck_scavenger_stack_count(enemy)).get("attack_interval_multiplier", 1.0))
+func _ordinary_melee_02_attack_interval_multiplier(enemy: EnemyState) -> float:
+	return float(SpecialistRuntime.ordinary_melee_02_modifiers(_ordinary_melee_02_stack_count(enemy)).get("attack_interval_multiplier", 1.0))
 
 
 func _effective_enemy_speed(enemy: EnemyState) -> float:
 	return (
 		enemy.speed
-		* (_wreck_scavenger_speed_multiplier(enemy) if enemy.role == &"wreck_scavenger" else 1.0)
+		* (_ordinary_melee_02_speed_multiplier(enemy) if enemy.role == &"ordinary_melee_02" else 1.0)
 		* enemy.facility_movement_multiplier
 	)
 
 
-func _notify_wreck_scavengers_of_defeat(defeated: EnemyState) -> void:
+func _notify_ordinary_melee_02s_of_defeat(defeated: EnemyState) -> void:
 	for candidate in enemies:
 		if candidate == defeated or not candidate.alive or not candidate.active:
 			continue
-		if candidate.archetype != &"wreck_scavenger":
+		if candidate.archetype != &"ordinary_melee_02":
 			continue
-		var receipt := SpecialistRuntime.wreck_scavenger_defeat_receipt(
-			candidate, defeated, _wreck_scavenger_stack_count(candidate)
+		var receipt := SpecialistRuntime.ordinary_melee_02_defeat_receipt(
+			candidate, defeated, _ordinary_melee_02_stack_count(candidate)
 		)
 		if bool(receipt.get("claimed", false)):
-			_wreck_scavenger_stacks[candidate.id] = int(receipt["stacks"])
+			_ordinary_melee_02_stacks[candidate.id] = int(receipt["stacks"])
 
 
 func _move_actor(position: Vector2, motion: Vector2, radius: float, is_player: bool) -> Vector2:
@@ -4578,7 +4583,7 @@ func _update_projectile_buffer(
 					index += 1
 					continue
 				var enemy_damage := projectile.damage
-				if hit_enemy.role in [&"turret", &"mine", &"generator", &"interceptor_tower", &"beam_sentinel"]:
+				if hit_enemy.role in [&"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_support_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01"]:
 					enemy_damage = projectile.structure_damage
 				var damage_source := "reflected_%s" % projectile.owner if projectile.reflected else projectile.owner
 				var direct_attribute := (
@@ -4754,7 +4759,7 @@ func _player_projectile_contact(
 			var enemy := candidates[candidate_index]
 			if not _is_player_targetable_enemy(enemy):
 				continue
-			if enemy.role == &"interceptor_tower" and enemy.intercept_charges > 0:
+			if enemy.role == &"ordinary_fixed_ranged_02" and enemy.intercept_charges > 0:
 				var intercept_t := AttackContract.segment_circle_first_t(
 					from,
 					to,
@@ -4992,7 +4997,7 @@ func _damage_enemy(
 		return 0.0
 	# The body remains renderable during the destruction receipt, but it no
 	# longer participates in combat, score, or life-steal resolution.
-	if enemy.role == &"stage_boss" and boss_death_runtime.active() and enemy.id == _dying_boss_id:
+	if enemy.role == &"boss" and boss_death_runtime.active() and enemy.id == _dying_boss_id:
 		return 0.0
 	if player_owned:
 		if attack_serial <= 0:
@@ -5017,10 +5022,10 @@ func _damage_enemy(
 		multiplier *= enemy.facility_received_damage_multiplier
 	if not final_effective and enemy.shielded:
 		multiplier *= SpecialistRuntime.SHIELDED_RECEIVED_DAMAGE_MULTIPLIER
-	if not final_effective and role == &"rammer" and enemy.vulnerable > 0.0:
+	if not final_effective and role == &"ordinary_pull_01" and enemy.vulnerable > 0.0:
 		multiplier *= 1.50
 	var boss_damage_multiplier := 1.0
-	if role == &"stage_boss" and not final_effective:
+	if role == &"boss" and not final_effective:
 		var hit_direction := (
 			(player_position - enemy.pos).normalized()
 			if player_owned and (damage_flags & OutgoingDamagePolicy.DAMAGE_DIRECT) != 0
@@ -5035,7 +5040,7 @@ func _damage_enemy(
 	var health_before := enemy.health
 	if (
 		not final_effective
-		and role == &"mine"
+		and role == &"ordinary_fixed_area_01"
 		and amount * multiplier >= health_before
 	):
 		var mine_applied := maxf(0.0, health_before - 1.0)
@@ -5074,7 +5079,7 @@ func _damage_enemy(
 	_credit_active_recharge_for_outgoing(
 		applied_damage, combat_action_family, attack_serial, damage_flags
 	)
-	if role == &"stage_boss" and enemy.health > 0.0:
+	if role == &"boss" and enemy.health > 0.0:
 		var transition := boss_shield_runtime.try_advance_phase(
 			enemy.health,
 			enemy.max_health
@@ -5140,11 +5145,11 @@ func _apply_player_recovery(gross_recovery: float) -> float:
 
 func _enemy_attack_line_padding(enemy: EnemyState) -> float:
 	match enemy.role:
-		&"controller":
+		&"ordinary_gap_01":
 			return 4.0
-		&"artillery_spotter":
+		&"ordinary_growth_01":
 			return 5.0
-		&"rammer":
+		&"ordinary_pull_01":
 			return 12.0
 	return 7.0
 
@@ -5152,12 +5157,12 @@ func _enemy_attack_line_padding(enemy: EnemyState) -> float:
 func _is_fixed_structure_enemy(enemy: EnemyState) -> bool:
 	return (
 		enemy.role in [
-			&"generator", &"turret",
-			&"interceptor_tower", &"beam_sentinel",
+			&"ordinary_fixed_support_01", &"ordinary_fixed_ranged_01",
+			&"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01",
 		]
 		or (
-			enemy.role == &"mine"
-			and enemy.archetype != &"spark_minelet"
+			enemy.role == &"ordinary_fixed_area_01"
+			and enemy.archetype != &"ordinary_area_01"
 		)
 	)
 
@@ -5191,16 +5196,16 @@ func _defeat_enemy(
 ) -> void:
 	if not enemy.alive:
 		return
-	if enemy.role == &"stage_boss":
+	if enemy.role == &"boss":
 		_begin_boss_destruction(enemy, source)
 		return
 	# Claim before retirement so nearby Scavengers observe a valid live wreck.
-	_notify_wreck_scavengers_of_defeat(enemy)
+	_notify_ordinary_melee_02s_of_defeat(enemy)
 	_release_enemy_engagement(enemy)
 	collective_tactics.unregister_enemy(enemy.id, enemy.squad_id)
 	var role := enemy.role
 	var split_on_defeat := (
-		enemy.archetype == &"splitter_barge"
+		enemy.archetype == &"ordinary_pulse_01"
 		and not enemy.summoned
 		and not enemy.splitter_spawned
 	)
@@ -5209,7 +5214,7 @@ func _defeat_enemy(
 		_spawn_splitter_children(enemy)
 	enemy.alive = false
 	enemy.active = false
-	_wreck_scavenger_stacks.erase(enemy.id)
+	_ordinary_melee_02_stacks.erase(enemy.id)
 	enemy_grid.update_actor(enemy)
 	enemy_store.queue_defeat(enemy)
 	if grant_defeat_credit:
@@ -5243,7 +5248,7 @@ func _defeat_enemy(
 			_complete_stage(StageTransitionRuntime.COMPLETION_WITHOUT_BOSS)
 	if (
 		grant_defeat_credit
-		and role in [&"generator", &"turret", &"mine", &"interceptor_tower", &"beam_sentinel"]
+		and role in [&"ordinary_fixed_support_01", &"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01"]
 	):
 		stats_installations += 1
 	var defeated_group := enemy.group_id
@@ -5251,7 +5256,7 @@ func _defeat_enemy(
 		_try_group_completion_reward(defeated_group, enemy.pos)
 	_play_sound(
 		&"destroy_priority"
-		if role in [&"generator", &"interceptor_tower", &"repair_tender", &"drone_carrier", &"beam_sentinel"]
+		if role in [&"ordinary_fixed_support_01", &"ordinary_fixed_ranged_02", &"ordinary_support_01", &"ordinary_support_03", &"ordinary_fixed_beam_01"]
 		else &"destroy",
 		1.0
 	)
@@ -5275,7 +5280,7 @@ func _begin_boss_destruction(boss: EnemyState, source: String) -> void:
 	# receipts while this boss body remains alive for the presentation snapshot.
 	encounter_runtime.stop_boss_maintenance()
 	projectile_store.retire_boss_hostiles()
-	_retire_denied_zones_by_owner(&"stage_boss")
+	_retire_denied_zones_by_owner(&"boss_actor")
 	_pending_boss_barrage_rows.clear()
 	var owned_ids: Array[StringName] = []
 	for enemy in enemies:
@@ -5388,7 +5393,7 @@ func _spawn_splitter_children(parent: EnemyState) -> void:
 		)
 		var child := _make_enemy({
 			"id":"%s_split_%d" % [parent.id, child_index],
-			"role":&"scrap_drone",
+			"role":&"ordinary_melee_01",
 			"pos":_move_actor(parent.pos, direction * 44.0, 12.0, false),
 			"active":true,
 			"summoned":true,
@@ -5402,7 +5407,7 @@ func _spawn_splitter_children(parent: EnemyState) -> void:
 func _is_countable_stage_enemy(enemy: EnemyState) -> bool:
 	if enemy.summoned:
 		return false
-	return enemy.role != &"stage_boss"
+	return enemy.role != &"boss"
 
 
 func _try_group_completion_reward(group_id: String, _position: Vector2) -> void:
@@ -5415,8 +5420,8 @@ func _try_group_completion_reward(group_id: String, _position: Vector2) -> void:
 
 
 func _clear_zones_owned_by_defeated_role(role: StringName) -> void:
-	if role == &"stage_boss":
-		_retire_denied_zones_by_owner(&"stage_boss")
+	if role == &"boss":
+		_retire_denied_zones_by_owner(&"boss_actor")
 
 
 func _damage_player(
@@ -5960,13 +5965,13 @@ func _start_stage_boss() -> void:
 	):
 		return
 	boss_started = true
-	discovered_markers["stage_boss"] = true
+	discovered_markers["boss_actor"] = true
 	boss_shield_runtime.configure(current_stage_id)
 	if boss_arrival_position.is_zero_approx():
 		boss_arrival_position = _choose_boss_arrival_anchor()
 	var boss := _make_enemy({
-		"id": "stage_boss",
-		"role": "stage_boss",
+		"id": "boss_actor",
+		"role": "boss_actor",
 		"pos": boss_arrival_position,
 		"zone": "boss",
 		"name_key": StageCatalog.profile(current_stage_id)["boss_name_key"],
@@ -6108,7 +6113,7 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 func _boss_begin_active(boss: EnemyState) -> void:
 	boss.boss_attack_damage_multiplier = (
 		boss_shield_runtime.consume_counterburst_multiplier()
-		if String(boss.pattern) == "drydock_counterburst"
+		if String(boss.pattern) == "shield_counterburst"
 		else 1.0
 	)
 	boss_runtime.begin_active(boss, self)
@@ -6222,7 +6227,7 @@ func _append_boss_cross_corridors(
 			"tick":0.0,
 			"damage":damage,
 			"source":pattern,
-			"owner_kind":&"stage_boss",
+			"owner_kind":&"boss_actor",
 			"affinity":BossPatterns.affinity(pattern),
 			"commit_mode":&"committed",
 			"final_damage":true,
@@ -6281,12 +6286,12 @@ func _fire_boss_barrage_row(row: Dictionary) -> void:
 func _execute_boss_autonomous(event: Dictionary) -> void:
 	var pattern := String(event["pattern"])
 	var kind := StringName(event.get("kind", BossPatterns.kind(pattern)))
-	if kind == &"summon" and pattern == "beam_sentinel_call":
+	if kind == &"summon" and pattern == "ordinary_fixed_beam_01_call":
 		if _live_boss_add_count() >= BossPhaseCatalog.MAX_LIVE_ADDS:
 			return
 		var sentinel := _make_enemy({
 			"id":String(event["id"]),
-			"role":&"beam_sentinel",
+			"role":&"ordinary_fixed_beam_01",
 			"pos":_move_actor(Vector2(event["target"]), Vector2.ZERO, 34.0, false),
 			"active":true,
 			"summoned":true,
@@ -6335,7 +6340,7 @@ func _spawn_boss_long_banks(event: Dictionary) -> void:
 				position, axis, float(event["damage"]), 520.0,
 				String(event["pattern"]), StringName(event["affinity"]), true, false,
 				AttackContract.THREAT_BOSS,
-				ProjectileState.SIEGE_GROWTH_KIND
+				ProjectileState.DISTANCE_GROWTH_GROWTH_KIND
 			)
 
 
@@ -6344,7 +6349,7 @@ func _append_boss_crossing_weave(event: Dictionary) -> void:
 	var axis := (Vector2(event["target"]) - origin).normalized()
 	if axis.is_zero_approx():
 		axis = Vector2.RIGHT
-	var reverse := String(event["pattern"]) == "loom_reverse_weave"
+	var reverse := String(event["pattern"]) == "crossing_weave_b"
 	if reverse:
 		axis = -axis
 	_append_boss_weave_pass(event, axis, 0.0, 120.0, "primary")
@@ -6381,7 +6386,7 @@ func _append_boss_weave_pass(
 				"tick":0.0,
 				"damage":float(event["damage"]),
 				"source":String(event["pattern"]),
-				"owner_kind":&"stage_boss",
+				"owner_kind":&"boss_actor",
 				"affinity":StringName(event["affinity"]),
 				"commit_mode":StringName(event.get("commit_mode", &"autonomous")),
 				"final_damage":true,
@@ -6398,7 +6403,7 @@ func _append_boss_alternating_pulse(event: Dictionary) -> void:
 	var safe_axis := (Vector2(event["target"]) - origin).normalized()
 	if safe_axis.is_zero_approx():
 		safe_axis = Vector2.RIGHT
-	var inverted := String(event["pattern"]) == "pulse_sector_inversion"
+	var inverted := String(event["pattern"]) == "alternating_sectors_b"
 	var turn := -1.0 if inverted else 1.0
 	for pulse_index in 2:
 		var pulse_axis := safe_axis.rotated(turn * float(pulse_index) * PI * 0.75)
@@ -6417,7 +6422,7 @@ func _append_boss_alternating_pulse(event: Dictionary) -> void:
 			"tick":0.0,
 			"damage":float(event["damage"]),
 			"source":String(event["pattern"]),
-			"owner_kind":&"stage_boss",
+			"owner_kind":&"boss_actor",
 			"affinity":StringName(event["affinity"]),
 			"commit_mode":StringName(event.get("commit_mode", &"autonomous")),
 			"final_damage":true,
@@ -6444,7 +6449,7 @@ func _append_boss_area_zone(event: Dictionary) -> void:
 		"tick":0.0,
 		"damage":float(event["damage"]),
 		"source":String(event["pattern"]),
-		"owner_kind":&"stage_boss",
+		"owner_kind":&"boss_actor",
 		"affinity":StringName(event["affinity"]),
 		"commit_mode":&"autonomous",
 		"final_damage":true,
@@ -6514,7 +6519,7 @@ func _append_boss_corridor_zone(
 		"tick":0.0,
 		"damage":float(event["damage"]),
 		"source":String(event["pattern"]),
-		"owner_kind":&"stage_boss",
+		"owner_kind":&"boss_actor",
 		"affinity":StringName(event["affinity"]),
 		"commit_mode":&"autonomous",
 		"final_damage":true,
@@ -6671,7 +6676,7 @@ func _complete_stage(
 	encounter_runtime.stop_spawning()
 	_retire_boss_owned_enemies()
 	projectile_store.retire_boss_hostiles()
-	_retire_denied_zones_by_owner(&"stage_boss")
+	_retire_denied_zones_by_owner(&"boss_actor")
 	if diagnostics_active:
 		_session_diagnostics.emit_event("stage_transition_boss_teardown", {
 			"elapsed_ms":float(Time.get_ticks_usec() - teardown_started) / 1000.0,
@@ -6744,9 +6749,9 @@ func _retire_boss_owned_enemies() -> void:
 
 func _is_boss_owned_enemy(enemy: EnemyState) -> bool:
 	return (
-		enemy.role == &"stage_boss"
+		enemy.role == &"boss"
 		or enemy.zone in ["boss_wave", "boss_system"]
-		or enemy.carrier_id == "stage_boss"
+		or enemy.carrier_id == "boss_actor"
 	)
 
 
@@ -7123,7 +7128,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 			"position":boss_arrival_position,
 			"discovered":true,
 		})
-	var stage_boss := _find_enemy_by_id("stage_boss")
+	var stage_boss := _find_enemy_by_id("boss_actor")
 	if stage_boss != null and stage_boss.alive:
 		markers.append({
 			"kind":&"boss",
@@ -7131,7 +7136,7 @@ func _minimap_snapshot(include_static_geometry: bool = true) -> Dictionary:
 			"discovered":true,
 		})
 	for enemy in enemies:
-		if not enemy.alive or not enemy.active or enemy.role == &"stage_boss":
+		if not enemy.alive or not enemy.active or enemy.role == &"boss":
 			continue
 		markers.append({
 			"kind":_minimap_role_for_enemy(enemy),
@@ -7189,13 +7194,13 @@ func _runtime_minimap_snapshot(
 		_append_runtime_minimap_marker(
 			frame_index, markers, &"boss", boss_arrival_position
 		)
-	var stage_boss := _find_enemy_by_id("stage_boss")
+	var stage_boss := _find_enemy_by_id("boss_actor")
 	if stage_boss != null and stage_boss.alive:
 		_append_runtime_minimap_marker(
 			frame_index, markers, &"boss", stage_boss.pos
 		)
 	for enemy in enemies:
-		if not enemy.alive or not enemy.active or enemy.role == &"stage_boss":
+		if not enemy.alive or not enemy.active or enemy.role == &"boss":
 			continue
 		_append_runtime_minimap_marker(
 			frame_index, markers, _minimap_role_for_enemy(enemy), enemy.pos
@@ -7425,7 +7430,7 @@ func _update_threat_contacts(delta: float) -> void:
 			continue
 		var enemy_screen := canvas_transform * Vector2(enemy.pos)
 		if (
-			(enemy.counts_active_cap or enemy.role == &"stage_boss")
+			(enemy.counts_active_cap or enemy.role == &"boss")
 			and visible_world.has_point(enemy.pos)
 		):
 			diagnostic_visible_threat = true
@@ -7453,7 +7458,7 @@ func _update_threat_contacts(delta: float) -> void:
 				offset, CombatCuePolicy.CONTACT_INCOMING_ATTACK, readiness
 			)
 		elif (
-			enemy.role != &"stage_boss"
+			enemy.role != &"boss"
 			and CombatCuePolicy.nearby_enemy_is_eligible(
 				enemy.pos,
 				enemy.visual_radius,
@@ -7466,7 +7471,7 @@ func _update_threat_contacts(delta: float) -> void:
 				offset, CombatCuePolicy.CONTACT_NEARBY_ENEMY, 0.0
 			)
 	for projectile in hostile_projectiles:
-		if projectile.distance_growth_kind != ProjectileState.SIEGE_GROWTH_KIND:
+		if projectile.distance_growth_kind != ProjectileState.DISTANCE_GROWTH_GROWTH_KIND:
 			continue
 		var projectile_offset := projectile.pos - player_position
 		if (
@@ -7635,13 +7640,13 @@ func _draw_semantic_asset_fitted(
 
 func _enemy_color(role: StringName) -> Color:
 	match role:
-		&"chaser", &"shooter", &"mine", &"artillery_spotter", &"rammer":
+		&"ordinary_edge_01", &"ordinary_lane_01", &"ordinary_fixed_area_01", &"ordinary_growth_01", &"ordinary_pull_01":
 			return Art.CORAL
-		&"turret", &"interceptor_tower", &"beam_sentinel":
+		&"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01":
 			return Art.CORAL_DARK
-		&"generator", &"shield_escort", &"repair_tender":
+		&"ordinary_fixed_support_01", &"ordinary_support_02", &"ordinary_support_01":
 			return Art.MINT
-		&"controller", &"drone_carrier", &"stage_boss":
+		&"ordinary_gap_01", &"ordinary_support_03", &"boss":
 			return Art.BOSS_MAGENTA
 	return Art.CORAL
 

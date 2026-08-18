@@ -98,9 +98,9 @@ const MAP_INNER_WALL_FILL := RAISED
 
 static func enemy_visual_radius(role: StringName) -> float:
 	match role:
-		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator":
+		&"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01", &"ordinary_fixed_support_01":
 			return INSTALLATION_RADIUS
-		&"stage_boss":
+		&"boss_actor":
 			return STAGE_BOSS_RADIUS
 	return ORDINARY_ENEMY_RADIUS
 

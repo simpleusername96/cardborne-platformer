@@ -12,61 +12,62 @@ const TacticCatalog = preload(
 const STAGE_IDS: Array[StringName] = [
 	&"stage_1", &"stage_2", &"stage_3", &"stage_4",
 	&"stage_5", &"stage_6", &"stage_7", &"stage_8",
+	&"stage_9", &"stage_10", &"stage_11", &"stage_12",
 ]
 # A stage ID is now an internal cycle key. Every cycle has a quota and boss.
-const QUOTAS := [60, 66, 72, 78, 84, 90, 96, 102]
-const AUTHORED_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630]
+const QUOTAS := [90, 99, 108, 117, 126, 135, 144, 153, 162, 171, 180, 189]
+const AUTHORED_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630, 700, 770, 840, 910]
 const ARRIVAL_WINDOWS := 3
 const SQUADS_PER_WINDOW := 4
 const SURGE_SQUADS := ARRIVAL_WINDOWS * SQUADS_PER_WINDOW
 const MIN_SQUAD_SIZE := 4
 const MAX_SQUAD_SIZE := 8
 const MAX_SURGE_UNITS := SURGE_SQUADS * MAX_SQUAD_SIZE
-# Standard-to-total pursuit ratios preserve the pre-density quota-path XP
-# cadence without spending the new body count on ranged or support roles.
-const PURSUIT_STANDARD_RATIOS := [
-	Vector2i(27, 53),
-	Vector2i(27, 53),
-	Vector2i(77, 127),
-	Vector2i(77, 127),
-	Vector2i(119, 188),
-	Vector2i(119, 188),
-	Vector2i(85, 96),
-	Vector2i(85, 96),
-]
 const TITLE_KEYS_BY_FIELD := {
-	&"drowned_ruin_field":[
-		"STAGE_DROWNED_RUINS_1", "STAGE_DROWNED_RUINS_2", "STAGE_DROWNED_RUINS_3",
-		"STAGE_DROWNED_RUINS_4", "STAGE_DROWNED_RUINS_5", "STAGE_DROWNED_RUINS_6", "STAGE_DROWNED_RUINS_7",
-		"STAGE_DROWNED_RUINS_8",
+	&"field_01":[
+		"STAGE_FIELD_01_01", "STAGE_FIELD_01_02", "STAGE_FIELD_01_03", "STAGE_FIELD_01_04",
+		"STAGE_FIELD_01_05", "STAGE_FIELD_01_06", "STAGE_FIELD_01_07", "STAGE_FIELD_01_08",
+		"STAGE_FIELD_01_09", "STAGE_FIELD_01_10", "STAGE_FIELD_01_11", "STAGE_FIELD_01_12",
 	],
-	&"tidal_archive_field":[
-		"STAGE_TIDAL_ARCHIVE_1", "STAGE_TIDAL_ARCHIVE_2", "STAGE_TIDAL_ARCHIVE_3",
-		"STAGE_TIDAL_ARCHIVE_4", "STAGE_TIDAL_ARCHIVE_5", "STAGE_TIDAL_ARCHIVE_6", "STAGE_TIDAL_ARCHIVE_7",
-		"STAGE_TIDAL_ARCHIVE_8",
+	&"field_02":[
+		"STAGE_FIELD_02_01", "STAGE_FIELD_02_02", "STAGE_FIELD_02_03", "STAGE_FIELD_02_04",
+		"STAGE_FIELD_02_05", "STAGE_FIELD_02_06", "STAGE_FIELD_02_07", "STAGE_FIELD_02_08",
+		"STAGE_FIELD_02_09", "STAGE_FIELD_02_10", "STAGE_FIELD_02_11", "STAGE_FIELD_02_12",
 	],
-	&"storm_drydock_field":[
-		"STAGE_STORM_DRYDOCK_1", "STAGE_STORM_DRYDOCK_2", "STAGE_STORM_DRYDOCK_3",
-		"STAGE_STORM_DRYDOCK_4", "STAGE_STORM_DRYDOCK_5", "STAGE_STORM_DRYDOCK_6", "STAGE_STORM_DRYDOCK_7",
-		"STAGE_STORM_DRYDOCK_8",
+	&"field_03":[
+		"STAGE_FIELD_03_01", "STAGE_FIELD_03_02", "STAGE_FIELD_03_03", "STAGE_FIELD_03_04",
+		"STAGE_FIELD_03_05", "STAGE_FIELD_03_06", "STAGE_FIELD_03_07", "STAGE_FIELD_03_08",
+		"STAGE_FIELD_03_09", "STAGE_FIELD_03_10", "STAGE_FIELD_03_11", "STAGE_FIELD_03_12",
 	],
 }
 const BOSS_PROFILE_IDS: Array[StringName] = [
 	&"stage_1", &"stage_2", &"stage_3", &"stage_4",
 	&"stage_5", &"stage_6", &"stage_7", &"stage_8",
+	&"stage_9", &"stage_10", &"stage_11", &"stage_12",
 ]
 const BOSS_NAME_KEYS := [
-	"ENEMY_FOUNDRY_COLOSSUS", "ENEMY_ARCHIVE_LEVIATHAN", "ENEMY_DRYDOCK_TITAN", "ENEMY_SWITCHYARD_BEHEMOTH", "ENEMY_CROWN_ENGINE", "ENEMY_SIEGE_BATTERY", "ENEMY_VECTOR_LOOM", "ENEMY_PULSE_CORE",
+	"BOSS_STAGE_01", "BOSS_STAGE_02", "BOSS_STAGE_03", "BOSS_STAGE_04",
+	"BOSS_STAGE_05", "BOSS_STAGE_06", "BOSS_STAGE_07", "BOSS_STAGE_08",
+	"BOSS_STAGE_09", "BOSS_STAGE_10", "BOSS_STAGE_11", "BOSS_STAGE_12",
 ]
 const MOBILE_ROLES := [
-	[&"scrap_drone", &"needle_drone", &"chaser", &"shooter"],
-	[&"scrap_drone", &"spark_minelet", &"controller", &"shield_escort", &"shooter", &"chaser", &"rail_sniper"],
-	[&"spark_minelet", &"chaser", &"artillery_spotter", &"rammer", &"bulkhead_guard", &"scrap_drone", &"rail_sniper", &"orbit_gunner"],
-	[&"chaser", &"rammer", &"bulkhead_guard", &"repair_tender", &"spark_minelet", &"needle_drone", &"orbit_gunner", &"bombing_runner"],
-	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone", &"rail_sniper", &"bombing_runner", &"wreck_scavenger"],
-	[&"chaser", &"rammer", &"bulkhead_guard", &"repair_tender", &"spark_minelet", &"needle_drone", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger"],
-	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone", &"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger"],
-	[&"scrap_drone", &"spark_minelet", &"controller", &"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender", &"needle_drone", &"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger"],
+	[&"ordinary_melee_01", &"ordinary_ranged_01", &"ordinary_area_01"],
+	[&"ordinary_ranged_01", &"ordinary_area_01", &"ordinary_lane_01"],
+	[&"ordinary_area_01", &"ordinary_lane_01", &"ordinary_shield_01"],
+	[&"ordinary_lane_01", &"ordinary_shield_01", &"ordinary_sweep_01"],
+	[&"ordinary_shield_01", &"ordinary_sweep_01", &"ordinary_beam_01"],
+	[&"ordinary_sweep_01", &"ordinary_beam_01", &"ordinary_growth_01"],
+	[&"ordinary_beam_01", &"ordinary_growth_01", &"ordinary_gap_01"],
+	[&"ordinary_growth_01", &"ordinary_gap_01", &"ordinary_pulse_01"],
+	[&"ordinary_gap_01", &"ordinary_pulse_01", &"ordinary_edge_01"],
+	[&"ordinary_pulse_01", &"ordinary_edge_01", &"ordinary_pull_01"],
+	[&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_range_01"],
+	[&"ordinary_pull_01", &"ordinary_range_01", &"ordinary_support_01"],
+]
+const BOSS_TUTOR_ROLES := [
+	&"ordinary_area_01", &"ordinary_lane_01", &"ordinary_shield_01", &"ordinary_sweep_01",
+	&"ordinary_beam_01", &"ordinary_growth_01", &"ordinary_gap_01", &"ordinary_pulse_01",
+	&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_range_01", &"ordinary_support_01",
 ]
 
 static func normalized_id(stage_id: StringName) -> StringName:
@@ -87,14 +88,14 @@ static func boss_profile_id(stage_id: StringName) -> StringName:
 	return BOSS_PROFILE_IDS[index] if index >= 0 else &""
 
 
-static func profile(stage_id: StringName, field_id: StringName = &"drowned_ruin_field") -> Dictionary:
+static func profile(stage_id: StringName, field_id: StringName = &"field_01") -> Dictionary:
 	var index := index_of(stage_id)
 	if index < 0:
 		return {}
 	var normalized_field := FieldRegistry.normalized_id(field_id)
 	var title_keys: Array = TITLE_KEYS_BY_FIELD.get(
 		normalized_field,
-		TITLE_KEYS_BY_FIELD[&"drowned_ruin_field"]
+		TITLE_KEYS_BY_FIELD[&"field_01"]
 	)
 	return {
 		"id": STAGE_IDS[index],
@@ -112,7 +113,7 @@ static func profile(stage_id: StringName, field_id: StringName = &"drowned_ruin_
 
 static func definition(
 	stage_id: StringName,
-	field_definition: Dictionary = FieldRegistry.definition(&"drowned_ruin_field")
+	field_definition: Dictionary = FieldRegistry.definition(&"field_01")
 ) -> Dictionary:
 	var result := field_definition.duplicate(true)
 	var stage := profile(stage_id, StringName(field_definition["id"]))
@@ -196,74 +197,20 @@ static func _role_sequence(stage_index: int, target_count: int) -> Array[StringN
 
 
 static func _role_sequence_for_arc(stage_index: int, target_count: int) -> Array[StringName]:
-	var families := {
-		&"pursuit":[],
-		&"ranged":[],
-		&"denial":[],
-		&"support":[],
-	}
-	for role_variant in MOBILE_ROLES[stage_index]:
-		var role := StringName(role_variant)
-		var definition := EnemyArchetypes.definition(role)
-		var family := StringName(definition["threat_kind"])
-		if EnemyArchetypes.fires_projectiles(role):
-			family = &"ranged"
-		if not families.has(family):
-			family = &"pursuit"
-		families[family].append(role)
-	var counters := {&"pursuit":0, &"ranged":0, &"denial":0, &"support":0}
+	var roles: Array = MOBILE_ROLES[stage_index]
+	var teaching_role := StringName(roles[2])
+	var teaching_share := 0.12 if stage_index == 11 else 0.25
+	var teaching_count := maxi(4, roundi(float(target_count) * teaching_share))
+	var teaching_stride := maxi(1, floori(float(target_count) / float(teaching_count)))
 	var result: Array[StringName] = []
 	for index in target_count:
-		var roll := index % 100
-		var family := &"pursuit"
-		if roll >= 88:
-			family = &"support"
-		elif roll >= 80:
-			family = &"denial"
-		elif roll >= 65:
-			family = &"ranged"
-		var roles: Array = families[family]
-		if roles.is_empty():
-			family = &"pursuit"
-			roles = families[family]
-		var ordinal := int(counters[family])
-		var selected_role := (
-			_pursuit_role(roles, stage_index, ordinal)
-			if family == &"pursuit"
-			else StringName(roles[ordinal % roles.size()])
-		)
-		result.append(selected_role)
-		counters[family] = int(counters[family]) + 1
-	result[0] = &"scrap_drone"
-	return result
-
-
-static func _pursuit_role(
-	roles: Array,
-	stage_index: int,
-	ordinal: int
-) -> StringName:
-	var standard: Array[StringName] = []
-	var swarm: Array[StringName] = []
-	for role_variant in roles:
-		var role := StringName(role_variant)
-		if StringName(EnemyArchetypes.definition(role)["health_class"]) == &"swarm":
-			swarm.append(role)
+		if index % teaching_stride == 0 and teaching_count > 0:
+			result.append(teaching_role)
+			teaching_count -= 1
 		else:
-			standard.append(role)
-	if standard.is_empty() or swarm.is_empty():
-		return StringName(roles[ordinal % roles.size()])
-	var ratio: Vector2i = PURSUIT_STANDARD_RATIOS[stage_index]
-	var standard_before := floori(
-		float(ordinal * ratio.x) / float(ratio.y)
-	)
-	var standard_after := floori(
-		float((ordinal + 1) * ratio.x) / float(ratio.y)
-	)
-	if standard_after > standard_before:
-		return standard[standard_before % standard.size()]
-	var swarm_before := ordinal - standard_before
-	return swarm[swarm_before % swarm.size()]
+			result.append(StringName(roles[index % 2]))
+	result[0] = StringName(roles[0])
+	return result
 
 
 static func _surge_squads(

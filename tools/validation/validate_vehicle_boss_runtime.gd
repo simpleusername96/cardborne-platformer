@@ -199,7 +199,7 @@ func _validate_phase_receipts(runtime: BossRuntime) -> void:
 
 func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
 	runtime.configure(&"stage_8")
-	var pattern := "furnace_ring"
+	var pattern := "thermal_ring"
 	var default_radius := BossPatterns.radius(pattern)
 	var stage_radius := BossPatterns.radius(pattern, 7)
 	var services := BossServiceStub.new()
@@ -222,7 +222,7 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 	runtime.configure(&"stage_2")
 	var services := BossServiceStub.new()
 	var boss := _boss()
-	boss.pattern = &"furnace_ring"
+	boss.pattern = &"thermal_ring"
 	boss.phase = &"boss_active"
 	boss.phase_time = 0.01
 	boss.pattern_volleys = 1
@@ -233,7 +233,7 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 		boss.phase == &"boss_recovery"
 			and is_equal_approx(
 				boss.phase_time,
-				BossPatterns.recovery_seconds("furnace_ring")
+				BossPatterns.recovery_seconds("thermal_ring")
 					* 0.80
 					* StageDifficulty.boss_cadence_scale(1)
 			),
@@ -243,8 +243,8 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 
 func _validate_direct_identity_activation(runtime: BossRuntime) -> void:
 	for case in [
-		{&"stage_id":&"stage_7", &"pattern":&"loom_crossing_weave"},
-		{&"stage_id":&"stage_8", &"pattern":&"pulse_alternating_sectors"},
+		{&"stage_id":&"stage_7", &"pattern":&"crossing_weave_a"},
+		{&"stage_id":&"stage_8", &"pattern":&"alternating_sectors_a"},
 	]:
 		runtime.configure(StringName(case[&"stage_id"]))
 		var services := BossServiceStub.new()

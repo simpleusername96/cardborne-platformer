@@ -16,7 +16,7 @@ func _initialize() -> void:
 
 
 func _validate_catalog() -> void:
-	_expect(Catalog.validate_contract().is_empty(), "eight boss phase definitions satisfy the authored contract")
+	_expect(Catalog.validate_contract().is_empty(), "twelve boss phase definitions satisfy the authored contract")
 	var variants := {}
 	for stage_id in CombatStages.STAGE_IDS:
 		var variant := Catalog.variant(stage_id)
@@ -28,7 +28,7 @@ func _validate_catalog() -> void:
 				Catalog.add_roles(stage_id, phase).size() <= Catalog.MAX_LIVE_ADDS,
 				"%s phase %d add packet stays at or below twelve" % [stage_id, phase]
 			)
-	_expect(variants.size() == 8, "all eight cycles own distinct boss identities")
+	_expect(variants.size() == 12, "all twelve cycles own distinct boss identities")
 	_expect(
 		Catalog.BOSS_ENTRY_SLOT_RESERVE == 1 + Catalog.MAX_LIVE_ADDS,
 		"boss entry reserves only the boss body and bounded add budget"
@@ -58,27 +58,32 @@ func _validate_shield_owners() -> void:
 			"%s starts with boss-attached directional defense while non-directional damage bypasses it" % stage_id
 		)
 		if stage_id == &"stage_3":
-			_validate_drydock_direction(runtime)
+			_validate_segmented_shield_direction(runtime)
 	var shield_owners := CombatStages.STAGE_IDS.filter(Catalog.uses_shield)
-	_expect(shield_owners == [&"stage_3"], "only Drydock owns a restrained directional defense")
+	_expect(shield_owners == [&"stage_3"], "only Stage 3 boss owns a restrained directional defense")
 
 
-func _validate_drydock_direction(runtime) -> void:
+func _validate_segmented_shield_direction(runtime) -> void:
 	var facing := Vector2.RIGHT
-	_expect(
-		is_equal_approx(runtime.boss_damage_multiplier(Vector2.RIGHT, facing, 100.0), Runtime.BLOCKED_DAMAGE_MULTIPLIER)
-			and is_equal_approx(runtime.boss_damage_multiplier(Vector2.LEFT, facing, 100.0), 1.0),
-		"Drydock intercepts only its body-facing frontal arc"
+	var gap_direction := Vector2.RIGHT.rotated(Runtime.SHIELD_GAP_ARC * 0.5)
+	var segment_direction := Vector2.RIGHT.rotated(
+		Runtime.SHIELD_GAP_ARC + Runtime.SHIELD_SEGMENT_ARC * 0.5
 	)
-	var edge := Vector2.RIGHT.rotated(Runtime.DRYDOCK_FRONTAL_HALF_ANGLE)
-	var outside := Vector2.RIGHT.rotated(Runtime.DRYDOCK_FRONTAL_HALF_ANGLE + 0.01)
 	_expect(
-		is_equal_approx(runtime.boss_damage_multiplier(edge, facing, 10.0), Runtime.BLOCKED_DAMAGE_MULTIPLIER)
-			and is_equal_approx(runtime.boss_damage_multiplier(outside, facing, 10.0), 1.0),
-		"Drydock frontal edge is inclusive and the rear side stays exposed"
+		is_equal_approx(runtime.boss_damage_multiplier(gap_direction, facing, 100.0), 1.0)
+			and is_equal_approx(runtime.boss_damage_multiplier(segment_direction, facing, 100.0), Runtime.BLOCKED_DAMAGE_MULTIPLIER),
+		"stage 3 boss exposes each authored gap and reduces segment hits to fifteen percent"
 	)
-	_expect(runtime.consume_counterburst_multiplier() > 1.0, "Drydock blocked damage charges its next counterburst")
-	_expect(StringName(runtime.presentation_snapshot()["shield_kind"]) == &"frontal_intercept", "Drydock publishes its exact renderer-facing defense kind")
+	runtime.advance(Runtime.SHIELD_UP_SECONDS)
+	_expect(
+		runtime.state() == &"shield_down"
+			and is_equal_approx(runtime.boss_damage_multiplier(segment_direction, facing, 10.0), 1.0),
+		"stage 3 boss becomes fully exposed after eight protected seconds"
+	)
+	runtime.advance(Runtime.SHIELD_DOWN_SECONDS)
+	_expect(runtime.state() == &"shield_up", "stage 3 boss restores its segmented shield after two exposed seconds")
+	_expect(runtime.consume_counterburst_multiplier() > 1.0, "Stage 3 boss blocked damage charges its next counterburst")
+	_expect(StringName(runtime.presentation_snapshot()["shield_kind"]) == &"frontal_intercept", "Stage 3 boss publishes its exact renderer-facing defense kind")
 
 
 func _validate_source_boundaries() -> void:

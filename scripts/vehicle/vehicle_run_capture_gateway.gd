@@ -135,8 +135,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_ordinary_projectile_evidence()
 		&"arc_area_telegraphs":
 			await _capture_arc_area_telegraph_evidence()
-		&"beam_sentinel":
-			await _capture_beam_sentinel_evidence()
+		&"ordinary_fixed_beam_01":
+			await _capture_ordinary_fixed_beam_01_evidence()
 		&"damage_feedback":
 			await _capture_damage_feedback_evidence()
 		&"elemental_status_feedback":
@@ -191,7 +191,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 					{"active_stage_index":_run.current_stage_index}
 				),
 				&"enemies",
-				&"mobile_chaser"
+				&"mobile_ordinary_edge_01"
 			)
 		&"guidebook_elite_stats":
 			var all_known := GuidebookCatalog.valid_ids()
@@ -216,7 +216,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 			_run._ui.debug_guide_entry(
 				GuidebookCatalog.snapshot(all_known, _run._build_snapshot()),
 				&"enemies",
-				&"mobile_chaser"
+				&"mobile_ordinary_edge_01"
 			)
 		&"ship_status_active":
 			var active_build: Dictionary = _run._build_snapshot()
@@ -327,9 +327,9 @@ func _show_stage_report(failed: bool) -> void:
 		_report_fixture.record_status_application(&"chill")
 		_report_fixture.record_incoming(&"projectile", 32.0)
 		_report_fixture.record_incoming(&"contact", 18.0)
-		_report_fixture.record_defeat(&"scrap_drone")
-		_report_fixture.record_defeat(&"scrap_drone")
-		_report_fixture.record_defeat(&"needle_drone", &"armored")
+		_report_fixture.record_defeat(&"ordinary_melee_01")
+		_report_fixture.record_defeat(&"ordinary_melee_01")
+		_report_fixture.record_defeat(&"ordinary_ranged_01", &"armored")
 	var report_data := {
 		"number":1,
 		"title_key":_stage_title_key(0),
@@ -353,9 +353,9 @@ func _final_result_fixture() -> Dictionary:
 		telemetry.record_outgoing(&"seeker", &"kinetic", 72.0 + stage_index * 12.0)
 		telemetry.record_outgoing(&"thermal_burst", &"thermal", 24.0 + stage_index * 6.0)
 		telemetry.record_status_application(&"chill")
-		telemetry.record_defeat(&"scrap_drone")
-		telemetry.record_defeat(&"scrap_drone")
-		telemetry.record_defeat(&"needle_drone", &"armored" if stage_index % 2 == 0 else &"")
+		telemetry.record_defeat(&"ordinary_melee_01")
+		telemetry.record_defeat(&"ordinary_melee_01")
+		telemetry.record_defeat(&"ordinary_ranged_01", &"armored" if stage_index % 2 == 0 else &"")
 		stage_records.append(StageReportBuilder.build(telemetry.freeze_stage(), {
 			"number":stage_index + 1,
 			"title_key":_stage_title_key(stage_index),
@@ -474,7 +474,7 @@ func _capture_collective_tactic_evidence() -> void:
 		)
 		var enemy: VehicleEnemyState = _run._make_enemy({
 			"id":"capture_tactic_%02d" % index,
-			"role":&"rammer" if index == 0 else &"chaser",
+			"role":&"ordinary_pull_01" if index == 0 else &"ordinary_edge_01",
 			"pos":position,
 			"active":true,
 			"squad_id":"capture_tactic",
@@ -554,77 +554,77 @@ func _capture_movement_policy_evidence() -> void:
 	var player_end := Vector2(fixture["player_end"])
 	_run.player_position = player_start
 	_run.player_invulnerable = 99.0
-	var chaser: VehicleEnemyState = _run._make_enemy({
-		"id":"capture_movement_chaser",
-		"role":&"chaser",
-		"pos":Vector2(fixture["chaser_start"]),
+	var ordinary_edge_01: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_movement_ordinary_edge_01",
+		"role":&"ordinary_edge_01",
+		"pos":Vector2(fixture["ordinary_edge_01_start"]),
 		"active":true,
 	})
-	var shooter: VehicleEnemyState = _run._make_enemy({
-		"id":"capture_movement_shooter",
-		"role":&"shooter",
-		"pos":Vector2(fixture["shooter_start"]),
+	var ordinary_lane_01: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_movement_ordinary_lane_01",
+		"role":&"ordinary_lane_01",
+		"pos":Vector2(fixture["ordinary_lane_01_start"]),
 		"active":true,
 	})
-	if chaser == null or shooter == null:
+	if ordinary_edge_01 == null or ordinary_lane_01 == null:
 		push_error("movement capture fixture could not acquire both enemies")
 		return
-	for enemy in [chaser, shooter]:
+	for enemy in [ordinary_edge_01, ordinary_lane_01]:
 		enemy.attack_cooldown = 99.0
 		enemy.decision_elapsed = 0.10
 		enemy.motion_elapsed = 1.0 / 30.0
-	chaser.strafe_sign = -1.0
-	shooter.strafe_sign = 1.0
-	var chaser_added: bool = _run._append_enemy(chaser)
-	var shooter_added: bool = _run._append_enemy(shooter)
-	if not chaser_added or not shooter_added:
+	ordinary_edge_01.strafe_sign = -1.0
+	ordinary_lane_01.strafe_sign = 1.0
+	var ordinary_edge_01_added: bool = _run._append_enemy(ordinary_edge_01)
+	var ordinary_lane_01_added: bool = _run._append_enemy(ordinary_lane_01)
+	if not ordinary_edge_01_added or not ordinary_lane_01_added:
 		push_error("movement capture fixture could not register both enemies")
 		return
 	var metrics := {
-		"initial_chaser_distance":chaser.pos.distance_to(player_start),
-		"chaser_travel":0.0,
-		"shooter_travel":0.0,
-		"shooter_max_desired_speed":0.0,
-		"shooter_max_velocity":0.0,
-		"shooter_min_distance":shooter.pos.distance_to(player_start),
-		"shooter_max_distance":shooter.pos.distance_to(player_start),
-		"chaser_intercept_samples":0,
-		"shooter_runtime_slot":shooter.runtime_slot,
-		"shooter_decision_bucket":shooter.decision_bucket,
+		"initial_ordinary_edge_01_distance":ordinary_edge_01.pos.distance_to(player_start),
+		"ordinary_edge_01_travel":0.0,
+		"ordinary_lane_01_travel":0.0,
+		"ordinary_lane_01_max_desired_speed":0.0,
+		"ordinary_lane_01_max_velocity":0.0,
+		"ordinary_lane_01_min_distance":ordinary_lane_01.pos.distance_to(player_start),
+		"ordinary_lane_01_max_distance":ordinary_lane_01.pos.distance_to(player_start),
+		"ordinary_edge_01_intercept_samples":0,
+		"ordinary_lane_01_runtime_slot":ordinary_lane_01.runtime_slot,
+		"ordinary_lane_01_decision_bucket":ordinary_lane_01.decision_bucket,
 	}
-	_run.player_aim_direction = (shooter.pos - _run.player_position).normalized()
+	_run.player_aim_direction = (ordinary_lane_01.pos - _run.player_position).normalized()
 	_run.set_physics_process(false)
-	_focus_movement_capture(shooter)
+	_focus_movement_capture(ordinary_lane_01)
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("03d-movement-cover-approach.png")
 	_advance_movement_capture_segment(
-		player_start, player_turn, 1.25, chaser, shooter, metrics
+		player_start, player_turn, 1.25, ordinary_edge_01, ordinary_lane_01, metrics
 	)
-	_focus_movement_capture(shooter)
+	_focus_movement_capture(ordinary_lane_01)
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("03e-movement-cover-turn.png")
 	_advance_movement_capture_segment(
-		player_turn, player_end, 1.25, chaser, shooter, metrics
+		player_turn, player_end, 1.25, ordinary_edge_01, ordinary_lane_01, metrics
 	)
-	_focus_movement_capture(shooter)
+	_focus_movement_capture(ordinary_lane_01)
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("03f-movement-cover-standoff.png")
 	_run.set_physics_process(true)
-	metrics["final_chaser_distance"] = chaser.pos.distance_to(player_end)
-	metrics["final_shooter_distance"] = shooter.pos.distance_to(player_end)
-	metrics["final_shooter_active"] = shooter.active
-	metrics["final_shooter_alive"] = shooter.alive
-	metrics["final_shooter_phase"] = String(shooter.phase)
+	metrics["final_ordinary_edge_01_distance"] = ordinary_edge_01.pos.distance_to(player_end)
+	metrics["final_ordinary_lane_01_distance"] = ordinary_lane_01.pos.distance_to(player_end)
+	metrics["final_ordinary_lane_01_active"] = ordinary_lane_01.active
+	metrics["final_ordinary_lane_01_alive"] = ordinary_lane_01.alive
+	metrics["final_ordinary_lane_01_phase"] = String(ordinary_lane_01.phase)
 	var passed := (
-		float(metrics["chaser_travel"]) >= 120.0
-		and float(metrics["shooter_travel"]) >= 60.0
-		and float(metrics["final_chaser_distance"])
-			< float(metrics["initial_chaser_distance"]) - 80.0
-		and float(metrics["shooter_min_distance"]) >= 250.0
-		and float(metrics["shooter_max_distance"]) <= 650.0
+		float(metrics["ordinary_edge_01_travel"]) >= 120.0
+		and float(metrics["ordinary_lane_01_travel"]) >= 60.0
+		and float(metrics["final_ordinary_edge_01_distance"])
+			< float(metrics["initial_ordinary_edge_01_distance"]) - 80.0
+		and float(metrics["ordinary_lane_01_min_distance"]) >= 250.0
+		and float(metrics["ordinary_lane_01_max_distance"]) <= 650.0
 	)
 	metrics["passed"] = passed
 	print(JSON.stringify({"capture":"movement_policy", "metrics":metrics}))
@@ -647,8 +647,8 @@ func _movement_capture_fixture() -> Dictionary:
 			var player_start: Vector2 = endpoint + outward * 120.0 - tangent * 220.0
 			var player_turn: Vector2 = endpoint + outward * 220.0
 			var player_end: Vector2 = endpoint + outward * 120.0 + tangent * 220.0
-			var shooter_start: Vector2 = endpoint + outward * 620.0
-			var points := [player_start, player_turn, player_end, shooter_start]
+			var ordinary_lane_01_start: Vector2 = endpoint + outward * 620.0
+			var points := [player_start, player_turn, player_end, ordinary_lane_01_start]
 			var clear := true
 			for point in points:
 				if not geometry.is_spawnable_disc(Vector2(point), 48.0):
@@ -660,14 +660,14 @@ func _movement_capture_fixture() -> Dictionary:
 				"player_start":player_start,
 				"player_turn":player_turn,
 				"player_end":player_end,
-				"chaser_start":player_end,
-				"shooter_start":shooter_start,
+				"ordinary_edge_01_start":player_end,
+				"ordinary_lane_01_start":ordinary_lane_01_start,
 			}
 	return {}
 
 
-func _focus_movement_capture(shooter: VehicleEnemyState) -> void:
-	_run._camera.position = (_run.player_position + shooter.pos) * 0.5
+func _focus_movement_capture(ordinary_lane_01: VehicleEnemyState) -> void:
+	_run._camera.position = (_run.player_position + ordinary_lane_01.pos) * 0.5
 	_run._camera.zoom = Vector2.ONE * 0.75
 
 
@@ -675,8 +675,8 @@ func _advance_movement_capture_segment(
 	from: Vector2,
 	to: Vector2,
 	duration: float,
-	chaser: VehicleEnemyState,
-	shooter: VehicleEnemyState,
+	ordinary_edge_01: VehicleEnemyState,
+	ordinary_lane_01: VehicleEnemyState,
 	metrics: Dictionary
 ) -> void:
 	const DELTA := 1.0 / 60.0
@@ -684,11 +684,11 @@ func _advance_movement_capture_segment(
 	_run.player_velocity = (to - from) / maxf(duration, DELTA)
 	_run.capture_set_mode(&"playing")
 	for step in steps:
-		var previous_chaser := chaser.pos
-		var previous_shooter := shooter.pos
+		var previous_ordinary_edge_01 := ordinary_edge_01.pos
+		var previous_ordinary_lane_01 := ordinary_lane_01.pos
 		_run.player_position = from.lerp(to, float(step + 1) / float(steps))
 		_run.player_aim_direction = (
-			shooter.pos - _run.player_position
+			ordinary_lane_01.pos - _run.player_position
 		).normalized()
 		_run.pursuit_field.update(DELTA, _run.player_position)
 		_run._simulation_lod_bucket = 1 - _run._simulation_lod_bucket
@@ -697,39 +697,39 @@ func _advance_movement_capture_segment(
 			% _run.FAR_ENEMY_SIMULATION_BUCKET_COUNT
 		)
 		_run._update_enemies(DELTA, _run.player_position)
-		metrics["chaser_travel"] = (
-			float(metrics["chaser_travel"])
-			+ previous_chaser.distance_to(chaser.pos)
+		metrics["ordinary_edge_01_travel"] = (
+			float(metrics["ordinary_edge_01_travel"])
+			+ previous_ordinary_edge_01.distance_to(ordinary_edge_01.pos)
 		)
-		metrics["shooter_travel"] = (
-			float(metrics["shooter_travel"])
-			+ previous_shooter.distance_to(shooter.pos)
+		metrics["ordinary_lane_01_travel"] = (
+			float(metrics["ordinary_lane_01_travel"])
+			+ previous_ordinary_lane_01.distance_to(ordinary_lane_01.pos)
 		)
-		metrics["shooter_max_desired_speed"] = maxf(
-			float(metrics["shooter_max_desired_speed"]),
-			shooter.desired_velocity.length()
+		metrics["ordinary_lane_01_max_desired_speed"] = maxf(
+			float(metrics["ordinary_lane_01_max_desired_speed"]),
+			ordinary_lane_01.desired_velocity.length()
 		)
-		metrics["shooter_max_velocity"] = maxf(
-			float(metrics["shooter_max_velocity"]), shooter.velocity.length()
+		metrics["ordinary_lane_01_max_velocity"] = maxf(
+			float(metrics["ordinary_lane_01_max_velocity"]), ordinary_lane_01.velocity.length()
 		)
-		var direct_chaser_direction: Vector2 = (
-			_run.player_position - chaser.pos
+		var direct_ordinary_edge_01_direction: Vector2 = (
+			_run.player_position - ordinary_edge_01.pos
 		).normalized()
 		if (
-			not chaser.desired_velocity.is_zero_approx()
-			and chaser.desired_velocity.normalized().dot(direct_chaser_direction)
+			not ordinary_edge_01.desired_velocity.is_zero_approx()
+			and ordinary_edge_01.desired_velocity.normalized().dot(direct_ordinary_edge_01_direction)
 				< 0.995
-			and chaser.desired_velocity.dot(_run.player_velocity) > 0.0
+			and ordinary_edge_01.desired_velocity.dot(_run.player_velocity) > 0.0
 		):
-			metrics["chaser_intercept_samples"] = (
-				int(metrics["chaser_intercept_samples"]) + 1
+			metrics["ordinary_edge_01_intercept_samples"] = (
+				int(metrics["ordinary_edge_01_intercept_samples"]) + 1
 			)
-		var shooter_distance := shooter.pos.distance_to(_run.player_position)
-		metrics["shooter_min_distance"] = minf(
-			float(metrics["shooter_min_distance"]), shooter_distance
+		var ordinary_lane_01_distance := ordinary_lane_01.pos.distance_to(_run.player_position)
+		metrics["ordinary_lane_01_min_distance"] = minf(
+			float(metrics["ordinary_lane_01_min_distance"]), ordinary_lane_01_distance
 		)
-		metrics["shooter_max_distance"] = maxf(
-			float(metrics["shooter_max_distance"]), shooter_distance
+		metrics["ordinary_lane_01_max_distance"] = maxf(
+			float(metrics["ordinary_lane_01_max_distance"]), ordinary_lane_01_distance
 		)
 	_run.player_velocity = Vector2.ZERO
 
@@ -744,7 +744,7 @@ func _capture_build_state_evidence() -> void:
 			_run.player_position
 			+ Vector2.RIGHT.rotated(angle) * (260.0 + float(index) * 35.0)
 		)
-		var role: StringName = &"controller" if index == 0 else &"chaser"
+		var role: StringName = &"ordinary_gap_01" if index == 0 else &"ordinary_edge_01"
 		var enemy: VehicleEnemyState = _run._make_enemy({
 			"id":"capture_build_state_%d" % index,
 			"role":role,
@@ -940,7 +940,7 @@ func _capture_structural_health_bar_evidence() -> void:
 	_run.pickups.clear()
 	var mobile: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_mobile_without_health_bar",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":_run.player_position + Vector2(-280.0, 90.0),
 		"active":true,
 	})
@@ -950,7 +950,7 @@ func _capture_structural_health_bar_evidence() -> void:
 		_run._append_enemy(mobile)
 	var repairer: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_repair_link",
-		"role":&"repair_tender",
+		"role":&"ordinary_support_01",
 		"pos":_run.player_position + Vector2(-440.0, 90.0),
 		"active":true,
 	})
@@ -959,7 +959,7 @@ func _capture_structural_health_bar_evidence() -> void:
 		_run._append_enemy(repairer)
 	var installation: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_structural_health_bar",
-		"role":&"beam_sentinel",
+		"role":&"ordinary_fixed_beam_01",
 		"pos":_run.player_position + Vector2(290.0, -70.0),
 		"active":true,
 	})
@@ -968,10 +968,10 @@ func _capture_structural_health_bar_evidence() -> void:
 		_run._append_enemy(installation)
 	var boss: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_boss_health_bar",
-		"role":&"stage_boss",
+		"role":&"boss_actor",
 		"pos":_run.player_position + Vector2(-300.0, -245.0),
 		"active":true,
-		"boss_variant":&"titan",
+		"boss_variant":&"boss_stage_03",
 		"boss_shield_state":&"shield_down",
 	})
 	if boss != null:
@@ -1131,7 +1131,7 @@ func _capture_elemental_status_evidence() -> void:
 		for stack_index in 3:
 			var enemy: EnemyState = _run._make_enemy({
 				"id":"capture_status_%d_%d" % [row, stack_index],
-				"role":&"chaser",
+				"role":&"ordinary_edge_01",
 				"pos":_run.player_position + Vector2(
 					165.0 + float(stack_index) * 105.0,
 					-105.0 if row == 0 else 105.0
@@ -1216,7 +1216,7 @@ func _capture_electric_field_evidence() -> void:
 	for index in 2:
 		var enemy: EnemyState = _run._make_enemy({
 			"id":"capture_field_target_%d" % index,
-			"role":&"chaser",
+			"role":&"ordinary_edge_01",
 			"pos":_run.player_position + Vector2(
 				130.0 if index == 0 else -145.0,
 				0.0
@@ -1253,7 +1253,7 @@ func _capture_thermal_burst_evidence() -> void:
 		var center: Vector2 = _run.player_position + Vector2(290.0, 0.0)
 		var direct: EnemyState = _run._make_enemy({
 			"id":"capture_thermal_direct_%d" % (level_index + 1),
-			"role":&"chaser",
+			"role":&"ordinary_edge_01",
 			"pos":center,
 			"active":true,
 		})
@@ -1518,7 +1518,7 @@ func _add_exact_area_reference_markers(
 	for index in actor_distances.size():
 		var enemy: EnemyState = _run._make_enemy({
 			"id":"exact_area_actor_%d" % index,
-			"role":&"chaser",
+			"role":&"ordinary_edge_01",
 			"pos":center + Vector2.LEFT.rotated(float(index) * 0.48)
 				* float(actor_distances[index]),
 			"active":true,
@@ -1613,7 +1613,7 @@ func _capture_visual_event_evidence() -> void:
 
 
 func _capture_ordinary_projectile_evidence() -> void:
-	## Drive an ordinary shooter through its authored startup, fire, flight,
+	## Drive an ordinary ordinary_lane_01 through its authored startup, fire, flight,
 	## and collision path. This fixture must never call the spawn helper
 	## directly: the scheduling regression is what the capture is proving.
 	prepare_stage(0, true)
@@ -1624,26 +1624,26 @@ func _capture_ordinary_projectile_evidence() -> void:
 	_run.player_hit_flash = 0.0
 	_run.player_barrier_strength = 0.0
 	_run.player_barrier_timer = 0.0
-	var shooter: VehicleEnemyState = _run._make_enemy({
-		"id":"capture_ordinary_shooter",
-		"role":&"shooter",
+	var ordinary_lane_01: VehicleEnemyState = _run._make_enemy({
+		"id":"capture_ordinary_ordinary_lane_01",
+		"role":&"ordinary_lane_01",
 		"pos":_run.player_position + Vector2(-260.0, 0.0),
 		"active":true,
 	})
-	if shooter == null:
-		push_error("ordinary projectile capture fixture could not create shooter")
+	if ordinary_lane_01 == null:
+		push_error("ordinary projectile capture fixture could not create ordinary_lane_01")
 		return
-	_run._append_enemy(shooter)
-	_run._start_enemy_attack(shooter)
-	if shooter.phase != &"startup":
+	_run._append_enemy(ordinary_lane_01)
+	_run._start_enemy_attack(ordinary_lane_01)
+	if ordinary_lane_01.phase != &"startup":
 		push_error("ordinary projectile capture fixture did not enter startup")
 	_run.capture_set_mode(&"paused")
 	await _settle_capture()
 	_save_capture("09-effects-projectile-hostile-startup.png")
 	_run.capture_set_mode(&"playing")
-	shooter.phase_time = 0.0
-	_run._update_scheduled_ordinary_enemy(shooter, 1.0 / 60.0)
-	if shooter.phase != &"recovery" or _run.projectile_store.hostile_count() != 1:
+	ordinary_lane_01.phase_time = 0.0
+	_run._update_scheduled_ordinary_enemy(ordinary_lane_01, 1.0 / 60.0)
+	if ordinary_lane_01.phase != &"recovery" or _run.projectile_store.hostile_count() != 1:
 		push_error("ordinary projectile capture fixture did not produce a scheduled hostile shot")
 	_run._update_projectiles(0.10)
 	_run.capture_set_mode(&"paused")
@@ -1659,18 +1659,18 @@ func _capture_ordinary_projectile_evidence() -> void:
 	_save_capture("09-effects-projectile-hostile-hit.png")
 
 
-func _capture_beam_sentinel_evidence() -> void:
+func _capture_ordinary_fixed_beam_01_evidence() -> void:
 	prepare_stage(2, true)
 	_run._clear_enemies()
 	_run._clear_projectiles()
 	var sentinel: VehicleEnemyState = _run._make_enemy({
-		"id":"capture_beam_sentinel",
-		"role":&"beam_sentinel",
+		"id":"capture_ordinary_fixed_beam_01",
+		"role":&"ordinary_fixed_beam_01",
 		"pos":_run.player_position + Vector2(-360.0, 0.0),
 		"active":true,
 	})
 	if sentinel == null:
-		push_error("beam sentinel capture fixture could not create the installation")
+		push_error("Fixed Beam Ordinary Enemy Lv.1 capture fixture could not create the installation")
 		return
 	_run._append_enemy(sentinel)
 	_run._start_enemy_attack(sentinel)
@@ -1696,7 +1696,7 @@ func _capture_arc_area_telegraph_evidence() -> void:
 	_run.denied_zones.clear()
 	var mine: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_arc_mine",
-		"role":&"mine",
+		"role":&"ordinary_fixed_area_01",
 		"pos":_run.player_position + Vector2(250.0, 0.0),
 		"active":true,
 	})
@@ -1711,13 +1711,13 @@ func _capture_arc_area_telegraph_evidence() -> void:
 		push_error("arc area telegraph capture fixture could not create stage boss")
 		return
 	boss.phase = &"boss_startup"
-	boss.pattern = &"furnace_ring"
-	boss.phase_time = BossPatterns.startup_seconds("furnace_ring")
+	boss.pattern = &"thermal_ring"
+	boss.phase_time = BossPatterns.startup_seconds("thermal_ring")
 	boss.committed_target = _run.player_position
 	boss.committed_dir = (_run.player_position - boss.pos).normalized()
 	AttackTelegraphs.refresh_boss(
 		boss,
-		"furnace_ring",
+		"thermal_ring",
 		_run._runtime_attack_path_callable,
 		_run._runtime_charge_path_callable
 	)
@@ -1800,27 +1800,27 @@ func _capture_all_boss_evidence() -> void:
 		if stage_index == 0:
 			boss.pos = _run.player_position + Vector2(920.0, 0.0)
 			boss.phase = &"boss_startup"
-			boss.phase_time = BossPatterns.startup_seconds("furnace_ring")
-			boss.pattern = "furnace_ring"
+			boss.phase_time = BossPatterns.startup_seconds("thermal_ring")
+			boss.pattern = "thermal_ring"
 			boss.committed_target = _run.player_position
 			boss.committed_dir = (_run.player_position - Vector2(boss.pos)).normalized()
 			AttackTelegraphs.refresh_boss(
 				boss,
-				"furnace_ring",
+				"thermal_ring",
 				_run._runtime_attack_path_callable,
 				_run._runtime_charge_path_callable
 			)
 			_run._camera.position = _run.player_position
 			await _settle_capture()
 			_save_capture("30-boss-01-stage-1-offscreen-furnace.png")
-			boss.phase_time = BossPatterns.startup_seconds("furnace_ring") * 0.12
-			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
+			boss.phase_time = BossPatterns.startup_seconds("thermal_ring") * 0.12
+			AttackTelegraphs.update_boss_readiness(boss, "thermal_ring")
 			await _settle_capture()
 			_save_capture(
 				"30-boss-01-stage-1-offscreen-furnace-imminent.png"
 			)
 			boss.phase_time = 0.0
-			AttackTelegraphs.update_boss_readiness(boss, "furnace_ring")
+			AttackTelegraphs.update_boss_readiness(boss, "thermal_ring")
 			_run._boss_begin_active(boss)
 			_run._boss_update_active(boss, 0.05)
 			await _settle_capture()
@@ -1830,25 +1830,25 @@ func _capture_all_boss_evidence() -> void:
 		elif stage_index == 4:
 			boss.pos = _run.player_position + Vector2(420.0, 0.0)
 			boss.phase = &"boss_startup"
-			boss.phase_time = BossPatterns.startup_seconds("crown_beam") * 0.5
-			boss.pattern = "crown_beam"
+			boss.phase_time = BossPatterns.startup_seconds("focused_beam") * 0.5
+			boss.pattern = "focused_beam"
 			boss.committed_target = _run.player_position
 			boss.committed_dir = (_run.player_position - Vector2(boss.pos)).normalized()
 			AttackTelegraphs.refresh_boss(
 				boss,
-				"crown_beam",
+				"focused_beam",
 				_run._runtime_attack_path_callable,
 				_run._runtime_charge_path_callable
 			)
 			_run._camera.position = _run.player_position
 			await _settle_capture()
-			_save_capture("30-boss-05-stage-5-crown-beam-startup.png")
+			_save_capture("30-boss-05-radial-beam-startup.png")
 			boss.phase_time = 0.0
-			AttackTelegraphs.update_boss_readiness(boss, "crown_beam")
+			AttackTelegraphs.update_boss_readiness(boss, "focused_beam")
 			_run._boss_begin_active(boss)
 			_run._boss_update_active(boss, 0.05)
 			await _settle_capture()
-			_save_capture("30-boss-05-stage-5-crown-beam-active.png")
+			_save_capture("30-boss-05-radial-beam-active.png")
 
 
 func prepare_boss(stage_index: int) -> EnemyState:

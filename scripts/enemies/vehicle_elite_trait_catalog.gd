@@ -6,8 +6,8 @@ extends RefCounted
 
 const TRAITS: Array[StringName] = [&"armored", &"overclocked", &"heavy"]
 const ELIGIBLE: Array[StringName] = [
-	&"chaser", &"shooter", &"controller", &"shield_escort",
-	&"artillery_spotter", &"rammer",
+	&"ordinary_edge_01", &"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_support_02",
+	&"ordinary_growth_01", &"ordinary_pull_01",
 ]
 const THRESHOLDS := [
 	[0.55],
@@ -20,6 +20,8 @@ const THRESHOLDS := [
 	[0.30, 0.48, 0.66, 0.84],
 	[0.24, 0.39, 0.54, 0.69, 0.84],
 	[0.24, 0.39, 0.54, 0.69, 0.84],
+	[0.20, 0.32, 0.44, 0.56, 0.68, 0.82],
+	[0.20, 0.32, 0.44, 0.56, 0.68, 0.82],
 ]
 const ARMORED_SHELL := 72.0
 

@@ -15,7 +15,7 @@ func _init() -> void:
 	telemetry.record_outgoing(&"thermal_burst", &"thermal", 2.0)
 	telemetry.record_status_application(&"chill")
 	telemetry.record_incoming(&"projectile", 7.0)
-	telemetry.record_defeat(&"needle_drone", &"armored")
+	telemetry.record_defeat(&"ordinary_ranged_01", &"armored")
 	var frozen := telemetry.freeze_stage()
 	_expect(is_equal_approx(float(frozen["outgoing"][&"primary"]), 24.5), "applied outgoing damage accumulates exactly")
 	_expect(
@@ -40,9 +40,9 @@ func _init() -> void:
 		):
 			control_only_chill = true
 	_expect(control_only_chill, "control-only chill remains visible without invented damage")
-	_expect(int(frozen["defeats"][&"needle_drone"]) == 1, "base archetype defeat is counted")
+	_expect(int(frozen["defeats"][&"ordinary_ranged_01"]) == 1, "base archetype defeat is counted")
 	_expect(
-		int(frozen["elites"][&"needle_drone:armored"]) == 1,
+		int(frozen["elites"][&"ordinary_ranged_01:armored"]) == 1,
 		"elite trait remains nested under its base archetype"
 	)
 	_expect(StringName(frozen["last_incoming_source"]) == &"projectile", "last incoming source is retained")
@@ -54,7 +54,7 @@ func _init() -> void:
 	_expect(Sources.outgoing_id("player_primary") == &"primary", "primary source ID is stable")
 	_expect(Sources.outgoing_id("thermal_burst") == &"thermal_burst", "Thermal Burst source ID is stable")
 	_expect(Sources.outgoing_id("unknown-runtime-copy") == &"other", "unknown outgoing source is visible Other")
-	_expect(Sources.incoming_id("Titan beam", true) == &"boss", "boss incoming source is stable")
+	_expect(Sources.incoming_id("Stage 3 boss beam", true) == &"boss", "boss incoming source is stable")
 	_finish()
 
 

@@ -124,7 +124,7 @@ otherwise sourced coherently.
 ### 5. Raise difficulty without another global speed multiplier
 
 The current ordinary movement multiplier is already `1.40`. As a result,
-`scrap_drone` moves at `315 px/s` in Stage 1 and `chaser` at `287 px/s`, both
+`ordinary_melee_01` moves at `315 px/s` in Stage 1 and `edge_enemy` at `287 px/s`, both
 above the player's base `280 px/s`. Another global increase would violate the
 requested constraint. Replace the global speed result with role-family targets:
 raise the slow ranged, support, and heavy roles, but cap common continuous
@@ -180,7 +180,7 @@ Required invariants:
 | Boss shield | Boss damage reduction while shield-up | Command-magenta body-attached ring | Correct family, although it competes spatially with the oversized boss health bar |
 | Beam/laser startup | Future damage corridor with exact width and end | Low-alpha filled corridor plus a narrow bright filament | Strongest current example of correct grammar |
 | Beam/laser active | Current damage corridor with exact width and end | Saturated filled corridor, inner plane, and bright core | Correct; the complete corridor remains visible |
-| Repair Tender heal | Relationship from healer to current recipient | Continuous `14 px` mint line drawn outside the retained combat renderer | Ambiguous with a beam, has no direction/readout, and splits visual ownership |
+| Support Ordinary Enemy Lv.1 heal | Relationship from healer to current recipient | Continuous `14 px` mint line drawn outside the retained combat renderer | Ambiguous with a beam, has no direction/readout, and splits visual ownership |
 | Health bars | Current/max health for approved structures and boss | Backing and fill use shared code-native geometry | Correct owner and capacity, but partial-fill anchoring and edge placement are wrong |
 
 Relevant implementation locations:
@@ -191,7 +191,7 @@ Relevant implementation locations:
   own beam startup, active beam, and area footprints.
 - `scripts/presentation/vehicle_combat_renderer.gd:1167–1257` owns buffered
   EMP, Thermal Burst, Drop Mine, and purge effects.
-- `scripts/vehicle/vehicle_run.gd:5994–6006` draws the Repair Tender link in a
+- `scripts/vehicle/vehicle_run.gd:5994–6006` draws the Support Ordinary Enemy Lv.1 link in a
   second presentation path.
 - `scripts/presentation/vehicle_combat_renderer.gd:741–819` selects boss,
   facility, and installation health bars; `935–964` builds their geometry.
@@ -247,7 +247,7 @@ brief recipient-attached repair tick. In reduced-motion mode, keep static
 segments plus the recipient marker. If a future heal affects a region rather
 than one target, that separate mechanic must use a filled support footprint.
 
-The Repair Tender visual should move into the retained combat renderer. Keeping
+The Support Ordinary Enemy Lv.1 visual should move into the retained combat renderer. Keeping
 it in `VehicleRun._draw_enemy_overlay()` creates two competing owners for combat
 effect grammar.
 
@@ -338,50 +338,7 @@ must also use that center.
 - `30 Hz` near motion;
 - `20 Hz` far motion outside `820 px`.
 
-See `scripts/enemies/vehicle_enemy_update_schedule.gd:13–15` and `143–169`.
-The renderer receives the latest `enemy.pos` in
-`scripts/vehicle/vehicle_run.gd:585–647` and directly writes that position in
-`scripts/presentation/vehicle_combat_renderer.gd:741–819`. There is no stored
-previous presentation position and no interpolation fraction in this path.
-
-At 60 FPS, near enemies can visibly hold for one frame and far enemies for two,
-then jump by their accumulated motion. This is movement stair-stepping, not a
-frame-rate collapse.
-
-Godot's official physics-interpolation documentation describes the same
-low-tick/high-render-rate stair-step and recommends interpolation between the
-previous and current transform. Cardborne uses pooled RefCounted enemy state
-and a retained MultiMesh rather than per-enemy Nodes, so this path needs manual
-presentation interpolation rather than merely enabling Node interpolation.
-
-### Secondary movement risks
-
-These are plausible contributors that need a deterministic fixture before they
-are called root causes:
-
-1. Local separation is a strong `45%` of final velocity and can reuse cached
-   overlap direction. Dense same-origin spawns can alternate between pursuit
-   intent and separation intent (`vehicle_enemy_local_steering.gd:9–10`,
-   `24–99`).
-2. Collision recovery can side-step and later flip strafe direction after a
-   blocked interval (`vehicle_run.gd:3130–3170`). This is correct recovery in
-   isolation but can look like local oscillation in a dense pack.
-3. Collective `gather` and `lock` intentionally stop an enemy. A player should
-   see a readable tactic state rather than infer lag.
-4. The manual trace has aggregate pressure but no per-enemy motion history, so
-   it cannot prove whether a specific freshly spawned mobile enemy remained at
-   zero velocity too long.
-
-### Recommended movement fix
-
-1. Keep collision, damage, decision, and scheduled motion truth unchanged.
-2. Give each visible mobile enemy presentation-owned previous/current
-   positions and the duration of its scheduled motion interval.
-3. Interpolate the MultiMesh transform between those samples in `_process()`.
-   Use previous=current on spawn, teleport, reactivation, knockback, or other
-   discontinuities.
-4. Do not interpolate fixed structures, armed stationary mines, explicit
-   collective locks, or startup states intended to hold still.
+See `scr…597 tokens truncated…
 5. Add a spawn-motion fixture that records zero-velocity duration, visible
    repeated-position frames, direction reversals, overlap count, collective
    phase, and collision recovery state.
@@ -397,8 +354,8 @@ stress gate is red.
 There is a separate deterministic bug that can make a run appear stuck rather
 than merely visually unsmooth. When the warning timer ends,
 `VehicleStageFlow.tick()` changes state from `BOSS_WARNING` to `BOSS_ACTIVE`
-and `_update_stage_progression()` calls `_start_stage_boss()` once. If more than
-`307` enemies are live, `_start_stage_boss()` returns to preserve the boss plus
+and `_update_stage_progression()` calls `_start_boss_actor()` once. If more than
+`307` enemies are live, `_start_boss_actor()` returns to preserve the boss plus
 twelve add slots. The flow is already `BOSS_ACTIVE`, so the warning-tick branch
 never calls it again. The stage can remain boss-active without a boss.
 
@@ -413,7 +370,7 @@ Approved bars are currently limited to:
 
 - one stage boss;
 - up to twelve fixed installations with roles `turret`,
-  `interceptor_tower`, `beam_sentinel`, and `generator`.
+  `ordinary_fixed_ranged_02`, `ordinary_fixed_beam_01`, and `generator`.
 
 Mobile ordinary enemies, mines, Mystery Devices, and crates receive no bars.
 The shared capacity is exactly sufficient: fourteen possible bars times two
@@ -469,19 +426,19 @@ times the global `1.40` movement multiplier and the stage speed curve
 
 | Role | Stage 1 | Stage 5 | Stage 5 / player | Result |
 | --- | ---: | ---: | ---: | --- |
-| scrap_drone | `315.0` | `327.6` | `1.17` | already too fast for an ordinary pursuer |
-| chaser | `287.0` | `298.5` | `1.07` | already too fast for an ordinary pursuer |
-| rammer cruise | `259.0` | `269.4` | `0.96` | appropriate cruise; explicit charge may exceed player |
-| needle_drone | `238.0` | `247.5` | `0.88` | reasonable |
-| shield_escort | `231.0` | `240.2` | `0.86` | reasonable |
+| ordinary_melee_01 | `315.0` | `327.6` | `1.17` | already too fast for an ordinary pursuer |
+| edge_enemy | `287.0` | `298.5` | `1.07` | already too fast for an ordinary pursuer |
+| pull_enemy cruise | `259.0` | `269.4` | `0.96` | appropriate cruise; explicit charge may exceed player |
+| ordinary_ranged_01 | `238.0` | `247.5` | `0.88` | reasonable |
+| ordinary_support_02 | `231.0` | `240.2` | `0.86` | reasonable |
 | shooter | `217.0` | `225.7` | `0.81` | can rise slightly |
-| repair_tender | `203.0` | `211.1` | `0.75` | can rise |
-| bulkhead_guard | `196.0` | `203.8` | `0.73` | can rise |
+| ordinary_support_01 | `203.0` | `211.1` | `0.75` | can rise |
+| ordinary_shield_01 | `196.0` | `203.8` | `0.73` | can rise |
 | controller | `189.0` | `196.6` | `0.70` | can rise |
-| splitter_barge | `168.0` | `174.7` | `0.62` | too passive |
-| artillery_spotter | `161.0` | `167.4` | `0.60` | too passive during relocation |
-| drone_carrier | `147.0` | `152.9` | `0.55` | too passive |
-| spark_minelet | `126.0` | `131.0` | `0.47` | special deploy/arm role |
+| ordinary_pulse_01 | `168.0` | `174.7` | `0.62` | too passive |
+| ordinary_growth_01 | `161.0` | `167.4` | `0.60` | too passive during relocation |
+| ordinary_support_03 | `147.0` | `152.9` | `0.55` | too passive |
+| ordinary_area_01 | `126.0` | `131.0` | `0.47` | special deploy/arm role |
 
 This explains why another scalar is the wrong tool: the two fastest ordinary
 roles already violate the constraint while the slow half of the roster still
@@ -495,19 +452,19 @@ guarantees:
 
 | Role/family | Stage 1 target | Stage 5 target | Intent |
 | --- | ---: | ---: | --- |
-| scrap_drone | `266` | `277` | fast ordinary ceiling, always below base player |
-| chaser | `266` | `277` | same readable pursuit ceiling |
-| rammer cruise | `266` | `277` | charge remains the explicit faster exception |
-| needle_drone | `246` | `258` | slightly faster ranged repositioning |
-| shield_escort | `238` | `250` | keeps pace with supported pack |
+| ordinary_melee_01 | `266` | `277` | fast ordinary ceiling, always below base player |
+| edge_enemy | `266` | `277` | same readable pursuit ceiling |
+| pull_enemy cruise | `266` | `277` | charge remains the explicit faster exception |
+| ordinary_ranged_01 | `246` | `258` | slightly faster ranged repositioning |
+| ordinary_support_02 | `238` | `250` | keeps pace with supported pack |
 | shooter | `232` | `244` | closes dead space faster |
-| repair_tender | `222` | `234` | support remains reachable but active |
-| bulkhead_guard | `230` | `244` | heavier approach without outrunning player |
+| ordinary_support_01 | `222` | `234` | support remains reachable but active |
+| ordinary_shield_01 | `230` | `244` | heavier approach without outrunning player |
 | controller | `210` | `224` | stronger denial positioning |
-| splitter_barge | `220` | `234` | removes excessively passive heavy motion |
-| artillery_spotter | `196` | `210` | relocates without becoming a pursuer |
-| drone_carrier | `190` | `204` | improves pressure while preserving support identity |
-| spark_minelet | `140` | `150` | modest approach increase before arming |
+| ordinary_pulse_01 | `220` | `234` | removes excessively passive heavy motion |
+| ordinary_growth_01 | `196` | `210` | relocates without becoming a pursuer |
+| ordinary_support_03 | `190` | `204` | improves pressure while preserving support identity |
+| ordinary_area_01 | `140` | `150` | modest approach increase before arming |
 
 The apparent speed improvement should be judged after presentation
 interpolation. Smooth `232 px/s` motion can feel more intentional than a
@@ -611,7 +568,7 @@ The next implementation should remain responsibility-shaped:
   a code-native exact-footprint effect, and the old wording can incorrectly
   suggest that a raster or radial-blade asset remains authoritative.
 - `vehicle_run.gd` and combat runtimes continue to own actual footprints and
-  state transitions. The Repair Tender link should be published as presentation
+  state transitions. The Support Ordinary Enemy Lv.1 link should be published as presentation
   state and removed from the separate immediate `_draw` path.
 - Explosive Seeker must publish the same instant-impact family receipt as other
   exact-radius detonations instead of remaining visually silent.
@@ -652,7 +609,7 @@ Avoid the following changes:
    collision truth.
 6. Capture player, enemy, and boss shields at stable, hit, break, and restored
    states.
-7. Capture Repair Tender source/target, accepted repair, target change, target
+7. Capture Support Ordinary Enemy Lv.1 source/target, accepted repair, target change, target
    loss, and reduced-motion state.
 8. Review the full matrix in grayscale and against the lightest/darkest stage
    backgrounds. Color may reinforce but not define the family.
@@ -676,7 +633,7 @@ Avoid the following changes:
 
 1. Pixel/transform assertions at ratios `0`, `0.25`, `0.5`, `0.75`, and `1`
    prove an invariant left edge and exact fill ratio.
-2. One fixture covers boss, facility, turret, interceptor tower, beam sentinel,
+2. One fixture covers boss, facility, turret, Fixed Ranged Ordinary Enemy Lv.2, Fixed Beam Ordinary Enemy Lv.1,
    and generator, and proves zero bars for excluded entities.
 3. Edge fixtures cover top, bottom, left, and right safe-area placement without
    clipping or body detachment.

@@ -24,10 +24,10 @@ func _init() -> void:
 		},
 		"status_applications":{&"chill":3},
 		"incoming":{&"projectile":20.0, &"contact":5.0},
-		"defeats":{&"scrap_drone":12, &"needle_drone":4},
-		"elites":{&"needle_drone:armored":1},
+		"defeats":{&"ordinary_melee_01":12, &"ordinary_ranged_01":4},
+		"elites":{&"ordinary_ranged_01:armored":1},
 		"boss":{
-			"id":&"ENEMY_ARCHIVE_LEVIATHAN",
+			"id":&"BOSS_STAGE_02",
 			"cleanup_started":true,
 			"cleanup_completed":true,
 			"owned_count":3,
@@ -41,7 +41,7 @@ func _init() -> void:
 		telemetry,
 		{
 			"number":2,
-			"title_key":"STAGE_DROWNED_RUINS_2",
+			"title_key":"STAGE_FIELD_01_2",
 			"has_next_stage":true,
 			"run_time_seconds":183.0,
 			"hull":72.0,
@@ -58,12 +58,12 @@ func _init() -> void:
 	var partial_build_rows: Array[Dictionary] = [frozen_build_rows[0].duplicate(true)]
 	var partial_failure_build_report := Builder.build(
 		{},
-		{"number":2, "title_key":"STAGE_DROWNED_RUINS_2", "build_rows":partial_build_rows},
+		{"number":2, "title_key":"STAGE_FIELD_01_2", "build_rows":partial_build_rows},
 		true
 	)
 	var failure_build_report := Builder.build(
 		{},
-		{"number":2, "title_key":"STAGE_DROWNED_RUINS_2", "build_rows":frozen_build_rows},
+		{"number":2, "title_key":"STAGE_FIELD_01_2", "build_rows":frozen_build_rows},
 		true
 	)
 	frozen_build_rows[0]["value"] = "Lv. 9"
@@ -74,8 +74,8 @@ func _init() -> void:
 		"failure report preserves gameplay-frozen build rows"
 	)
 	var premature_boss_report := Builder.build(
-		{"boss":{"id":&"ENEMY_ARCHIVE_LEVIATHAN", "cleanup_started":true, "cleanup_completed":false}},
-		{"number":2, "title_key":"STAGE_DROWNED_RUINS_2", "has_boss":true}
+		{"boss":{"id":&"BOSS_STAGE_02", "cleanup_started":true, "cleanup_completed":false}},
+		{"number":2, "title_key":"STAGE_FIELD_01_2", "has_boss":true}
 	)
 	_expect(
 		String(Dictionary(Array(premature_boss_report["boss_rows"])[1]).get("value_key", "")) == "REPORT_VALUE_CLEANUP_IN_PROGRESS"
@@ -111,7 +111,7 @@ func _init() -> void:
 	_expect(report["incoming"].size() == 2, "incoming recap is bounded and present")
 	_expect(
 		Array(report["boss_rows"]).size() >= 4
-			and String(Dictionary(Array(report["boss_rows"])[1]).get("name_key", "")) == "ENEMY_ARCHIVE_LEVIATHAN"
+			and String(Dictionary(Array(report["boss_rows"])[1]).get("name_key", "")) == "BOSS_STAGE_02"
 			and Array(report["pacing_rows"]).size() == 5
 			and String(Dictionary(Array(report["pacing_rows"])[3]).get("value", "")) == "5.25s"
 			and Array(report["diagnostic_limitations"]).size() == 4,
@@ -129,7 +129,7 @@ func _init() -> void:
 		failure_telemetry,
 		{
 			"number":2,
-			"title_key":"STAGE_DROWNED_RUINS_2",
+			"title_key":"STAGE_FIELD_01_2",
 			"has_next_stage":false,
 			"run_time_seconds":183.0,
 			"hull":0.0,
@@ -146,7 +146,7 @@ func _init() -> void:
 		crowded[StringName("source_%02d" % index)] = float(index + 1)
 	var crowded_report := Builder.build(
 		{"outgoing":crowded},
-		{"number":1, "title_key":"STAGE_DROWNED_RUINS_1", "has_next_stage":true}
+		{"number":1, "title_key":"STAGE_FIELD_01_1", "has_next_stage":true}
 	)
 	_expect(crowded_report["outgoing"].size() == 8, "more than eight sources collapse to seven plus Other")
 	_expect(StringName(crowded_report["outgoing"][-1]["id"]) == &"other", "collapsed row uses stable Other ID")
@@ -206,11 +206,11 @@ func _init() -> void:
 	var deployment_requested := [0]
 	result.deployment_requested.connect(func() -> void: deployment_requested[0] += 1)
 	var final_records: Array = []
-	for stage_index in 8:
+	for stage_index in 12:
 		var stage_record := report.duplicate(true)
 		stage_record["stage_number"] = stage_index + 1
 		stage_record["has_boss"] = true
-		stage_record["has_next_stage"] = stage_index < 7
+		stage_record["has_next_stage"] = stage_index < 11
 		final_records.append(stage_record)
 	var result_catalog := UpgradeCatalog.new()
 	var result_build := RunBuild.new(result_catalog)

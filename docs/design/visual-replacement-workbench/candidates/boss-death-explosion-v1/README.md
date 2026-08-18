@@ -3,7 +3,7 @@ type: evidence
 status: active
 created: 2026-08-15
 topic: Shared boss-death explosion overlay candidate
-source: Grounded ImageGen generation and mechanical compositing over the approved Colossus body
+source: Grounded ImageGen generation and mechanical compositing over the approved Stage 1 boss body
 related:
   - ../../../../../.agents/evidence/reports/2026-08-15-eight-boss-combat-approval-ko.md
   - ../../../../../.agents/research/reports/2026-08-15-eight-boss-combat-design-analysis.md
@@ -44,7 +44,7 @@ intact; this asset does not replace, slice, or redraw it.
 - Selected storyboard SHA-256:
   `a5e60c1295df6dfa03b5139b370be8bce49551a0293e91bda50c5d5cd94aee42`.
 - The storyboard uses only mechanical resize, alpha, placement, and plain labels over
-  the existing approved `actor_boss_colossus_base.png` body.
+  the existing approved `actor_boss_stage_01_base.png` body.
 - Runtime intent is exactly one centered instance: scale 0.20 to 1.20, then synchronize
   its fade with the unchanged boss body. It is one shared overlay, not a sprite sheet or
   per-boss death asset.

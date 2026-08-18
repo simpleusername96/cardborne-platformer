@@ -13,7 +13,7 @@ const MovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_pol
 const TargetingPolicy = preload("res://scripts/enemies/vehicle_enemy_targeting_policy.gd")
 const SpeedProfile = preload("res://scripts/enemies/vehicle_enemy_speed_profile.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
-const Field = preload("res://scripts/vehicle/stages/drowned_ruin_field.gd")
+const Field = preload("res://scripts/vehicle/stages/field_01.gd")
 
 const CUE_LEAD := 0.9
 const WINDOW_GAP := 1.20

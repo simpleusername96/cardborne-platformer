@@ -150,8 +150,8 @@ static func rows(
 				),
 				_row(
 					"UPGRADE_EFFECT_BARRIER_CAP",
-					RecoveryPolicy.BARRIER_CAP_RATIOS[clampi(current_level, 0, 3)] * 100.0,
-					RecoveryPolicy.BARRIER_CAP_RATIOS[clampi(current_level + 1, 0, 3)] * 100.0,
+					RecoveryPolicy.BARRIER_CAP_RATIOS[clampi(current_level, 0, RecoveryPolicy.BARRIER_CAP_RATIOS.size() - 1)] * 100.0,
+					RecoveryPolicy.BARRIER_CAP_RATIOS[clampi(current_level + 1, 0, RecoveryPolicy.BARRIER_CAP_RATIOS.size() - 1)] * 100.0,
 					"percent"
 				),
 			]

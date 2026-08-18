@@ -16,39 +16,39 @@ func _initialize() -> void:
 		enemy.alive = true
 		enemy.active = index < 300
 		enemy.counts_active_cap = index < 276
-		enemy.role = &"chaser"
+		enemy.role = &"ordinary_edge_01"
 		enemy.threat_kind = &"pursuit"
 		enemy.pos = Vector2(2800.0 + float(index % 20) * 8.0, 1700.0)
 		enemy.decision_bucket = index % 6
 		_expect(store.add(enemy), "schedule fixture adds state %d" % index)
-	var rammer_a := store.live[0]
-	rammer_a.role = &"rammer"
-	rammer_a.phase = &"startup"
-	rammer_a.squad_id = "alpha"
-	rammer_a.threat_cost = 1.5
-	var rammer_b := store.live[1]
-	rammer_b.role = &"rammer"
-	rammer_b.phase = &"active"
-	rammer_b.squad_id = "beta"
-	rammer_b.threat_cost = 1.5
+	var pull_enemy_a := store.live[0]
+	pull_enemy_a.role = &"ordinary_pull_01"
+	pull_enemy_a.phase = &"startup"
+	pull_enemy_a.squad_id = "alpha"
+	pull_enemy_a.threat_cost = 1.5
+	var pull_enemy_b := store.live[1]
+	pull_enemy_b.role = &"ordinary_pull_01"
+	pull_enemy_b.phase = &"active"
+	pull_enemy_b.squad_id = "beta"
+	pull_enemy_b.threat_cost = 1.5
 	var carrier := store.live[2]
-	carrier.role = &"drone_carrier"
+	carrier.role = &"ordinary_support_03"
 	carrier.id = "carrier"
 	for index in range(3, 6):
 		store.live[index].carrier_id = carrier.id
 	var support := store.live[6]
-	support.role = &"shield_escort"
+	support.role = &"ordinary_support_02"
 	var other_squad := store.live[7]
-	other_squad.role = &"rammer"
+	other_squad.role = &"ordinary_pull_01"
 	other_squad.squad_id = "gamma"
-	var stage_boss := store.live[8]
-	stage_boss.role = &"stage_boss"
-	stage_boss.phase = &"startup"
+	var boss_actor := store.live[8]
+	boss_actor.role = &"boss"
+	boss_actor.phase = &"startup"
 	var generator := store.live[9]
-	generator.role = &"generator"
+	generator.role = &"ordinary_fixed_support_01"
 	generator.phase = &"active"
 	var shielded_boss := store.live[10]
-	shielded_boss.role = &"stage_boss"
+	shielded_boss.role = &"boss"
 	shielded_boss.phase = &"interrupted_recovery"
 
 	var schedule := Schedule.new()
@@ -58,13 +58,13 @@ func _initialize() -> void:
 	_expect(int(first["active"]) == 300, "schedule filters inactive states once")
 	_expect(int(first["active_cap_count"]) == 276, "schedule snapshots the active-cap count")
 	_expect(int(first["critical"]) == 2, "startup and active ordinary actors stay critical")
-	_expect(int(first["committed_rammers"]) == 2, "schedule snapshots committed rammers")
+	_expect(int(first["committed_pull_enemys"]) == 2, "schedule snapshots committed pull_enemys")
 	_expect(
-		is_zero_approx(schedule.motion_delta(rammer_a)),
+		is_zero_approx(schedule.motion_delta(pull_enemy_a)),
 		"critical ordinary actors remain on the independent 60 Hz lane"
 	)
 	_expect(
-		stage_boss not in schedule.critical
+		boss_actor not in schedule.critical
 		and generator not in schedule.critical
 		and shielded_boss not in schedule.critical,
 		"special roles stay out of ordinary behavior worklists"
@@ -72,7 +72,7 @@ func _initialize() -> void:
 	_expect(schedule.carrier_child_count(carrier.id) == 3, "carrier child count is precomputed")
 	_expect(
 		not schedule.can_commit(other_squad, 100.0, 100, 100),
-		"global rammer cap blocks another commit"
+		"global pull_enemy cap blocks another commit"
 	)
 	_expect(
 		schedule.supports.size() == 2
@@ -81,21 +81,21 @@ func _initialize() -> void:
 		"support worklist preserves store order"
 	)
 
-	rammer_b.phase = &"move"
+	pull_enemy_b.phase = &"move"
 	schedule.rebuild(store.live, 1.0 / 60.0, Vector2(2800.0, 1700.0), 820.0 * 820.0, 1, 1, 1)
 	_expect(
-		not schedule.can_commit(rammer_a, 100.0, 100, 100),
-		"same-squad rammer cannot overlap"
+		not schedule.can_commit(pull_enemy_a, 100.0, 100, 100),
+		"same-squad pull_enemy cannot overlap"
 	)
 	_expect(
 		schedule.can_commit(other_squad, 100.0, 100, 100),
-		"different squad can use the second global rammer slot"
+		"different squad can use the second global pull_enemy slot"
 	)
 	var committed_points_before := schedule.committed_points
 	schedule.note_commit(other_squad)
-	var blocked_rammer := store.live[11]
-	blocked_rammer.role = &"rammer"
-	blocked_rammer.squad_id = "delta"
+	var blocked_pull_enemy := store.live[11]
+	blocked_pull_enemy.role = &"ordinary_pull_01"
+	blocked_pull_enemy.squad_id = "delta"
 	_expect(
 		is_equal_approx(
 			schedule.committed_points,
@@ -104,11 +104,11 @@ func _initialize() -> void:
 		"local commit update accounts for threat points"
 	)
 	_expect(
-		not schedule.can_commit(blocked_rammer, 100.0, 100, 100),
-		"local commit update closes the global rammer cap"
+		not schedule.can_commit(blocked_pull_enemy, 100.0, 100, 100),
+		"local commit update closes the global pull_enemy cap"
 	)
 	var ranged_candidate := store.live[12]
-	ranged_candidate.role = &"shooter"
+	ranged_candidate.role = &"ordinary_lane_01"
 	ranged_candidate.threat_kind = &"ranged"
 	ranged_candidate.threat_cost = 2.0
 	_expect(
@@ -117,7 +117,7 @@ func _initialize() -> void:
 	)
 	schedule.note_commit(ranged_candidate)
 	var blocked_ranged := store.live[13]
-	blocked_ranged.role = &"shooter"
+	blocked_ranged.role = &"ordinary_lane_01"
 	blocked_ranged.threat_kind = &"ranged"
 	_expect(
 		schedule.committed_ranged == 1
@@ -125,7 +125,7 @@ func _initialize() -> void:
 		"local commit update closes the ranged cap"
 	)
 	var denial_candidate := store.live[14]
-	denial_candidate.role = &"mine"
+	denial_candidate.role = &"ordinary_fixed_area_01"
 	denial_candidate.threat_kind = &"denial"
 	denial_candidate.threat_cost = 1.0
 	_expect(
@@ -134,7 +134,7 @@ func _initialize() -> void:
 	)
 	schedule.note_commit(denial_candidate)
 	var blocked_denial := store.live[15]
-	blocked_denial.role = &"mine"
+	blocked_denial.role = &"ordinary_fixed_area_01"
 	blocked_denial.threat_kind = &"denial"
 	_expect(
 		schedule.committed_denial == 1
@@ -150,7 +150,7 @@ func _initialize() -> void:
 	var due_snapshot := schedule.debug_snapshot()
 	_expect(int(due_snapshot["ordinary_due"]) > 0, "10 Hz decision work becomes due")
 	_expect(
-		stage_boss not in schedule.ordinary_due
+		boss_actor not in schedule.ordinary_due
 		and generator not in schedule.ordinary_due
 		and shielded_boss not in schedule.ordinary_due,
 		"special roles never enter deferred ordinary behavior work"
@@ -335,7 +335,7 @@ func _check_membership_revision() -> void:
 	carrier.id = "revision_carrier"
 	carrier.alive = true
 	carrier.active = true
-	carrier.role = &"drone_carrier"
+	carrier.role = &"ordinary_support_03"
 	_expect(store.add(carrier), "revision fixture adds carrier")
 	var schedule := Schedule.new()
 	schedule.rebuild(
@@ -369,7 +369,7 @@ func _check_overlap_refresh_mask() -> void:
 		enemy.id = "refresh_%02d" % index
 		enemy.alive = true
 		enemy.active = true
-		enemy.role = &"chaser"
+		enemy.role = &"ordinary_edge_01"
 		enemy.pos = Vector2(400.0 + float(index % 8) * 6.0, 400.0)
 		enemy.radius = 20.0
 		enemy.projectile_hit_radius = 20.0

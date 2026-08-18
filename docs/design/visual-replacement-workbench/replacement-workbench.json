@@ -575,7 +575,7 @@
       "status": "retired",
       "current_paths": [
         "art/visuals/production/gameplay/states/enemy_generator_shield_source.png",
-        "art/visuals/production/gameplay/states/enemy_shield_escort_plate.png",
+        "art/visuals/production/gameplay/states/enemy_ordinary_support_02_plate.png",
         "art/visuals/production/gameplay/states/player_barrier_plate.png",
         "art/visuals/production/gameplay/states/player_ion_emitter.png",
         "art/visuals/production/gameplay/states/status_burn.png",
@@ -591,7 +591,7 @@
         "state/burn",
         "state/chill",
         "state/enemy_generator_shield_source",
-        "state/enemy_shield_escort_plate",
+        "state/enemy_ordinary_support_02_plate",
         "state/player_barrier_plate",
         "state/player_ion_emitter",
         "state/poison"
@@ -604,8 +604,8 @@
       "retire_paths": [
         "art/visuals/production/gameplay/states/enemy_generator_shield_source.png",
         "art/visuals/production/gameplay/states/enemy_generator_shield_source.png.import",
-        "art/visuals/production/gameplay/states/enemy_shield_escort_plate.png",
-        "art/visuals/production/gameplay/states/enemy_shield_escort_plate.png.import",
+        "art/visuals/production/gameplay/states/enemy_ordinary_support_02_plate.png",
+        "art/visuals/production/gameplay/states/enemy_ordinary_support_02_plate.png.import",
         "art/visuals/production/gameplay/states/player_barrier_plate.png",
         "art/visuals/production/gameplay/states/player_barrier_plate.png.import",
         "art/visuals/production/gameplay/states/player_ion_emitter.png",
@@ -641,8 +641,8 @@
         "retire_paths": [
           "art/visuals/production/gameplay/states/enemy_generator_shield_source.png",
           "art/visuals/production/gameplay/states/enemy_generator_shield_source.png.import",
-          "art/visuals/production/gameplay/states/enemy_shield_escort_plate.png",
-          "art/visuals/production/gameplay/states/enemy_shield_escort_plate.png.import",
+          "art/visuals/production/gameplay/states/enemy_ordinary_support_02_plate.png",
+          "art/visuals/production/gameplay/states/enemy_ordinary_support_02_plate.png.import",
           "art/visuals/production/gameplay/states/player_barrier_plate.png",
           "art/visuals/production/gameplay/states/player_barrier_plate.png.import",
           "art/visuals/production/gameplay/states/player_ion_emitter.png",
@@ -896,25 +896,25 @@
       "switch_kind": "replace",
       "status": "applied",
       "current_paths": [
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_growth_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_beam_01_base.png",
         "art/visuals/production/gameplay/actors/enemies/actor_enemy_boss_pylon_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_bulkhead_guard_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_chaser_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_controller_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_drone_carrier_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_generator_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_interceptor_tower_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_mine_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_needle_drone_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_rammer_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_repair_tender_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_scrap_drone_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_shield_escort_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_shooter_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_spark_minelet_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_splitter_barge_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_turret_base.png"
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_shield_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_edge_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_03_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_support_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_02_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_area_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_ranged_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_pull_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_02_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_lane_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_area_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_pulse_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_01_base.png"
       ],
       "consumer_paths": [
         "art/visuals/production/gameplay/asset-manifest.json",
@@ -922,30 +922,30 @@
         "scripts/presentation/vehicle_combat_renderer.gd"
       ],
       "consumer_asset_ids": [
-        "actor/artillery_spotter",
-        "actor/beam_sentinel",
+        "actor/ordinary_growth_01",
+        "actor/ordinary_fixed_beam_01",
         "actor/boss_pylon",
-        "actor/bulkhead_guard",
-        "actor/chaser",
+        "actor/ordinary_shield_01",
+        "actor/edge_enemy",
         "actor/controller",
-        "actor/drone_carrier",
+        "actor/ordinary_support_03",
         "actor/generator",
-        "actor/interceptor_tower",
+        "actor/ordinary_fixed_ranged_02",
         "actor/mine",
-        "actor/needle_drone",
-        "actor/rammer",
-        "actor/repair_tender",
-        "actor/scrap_drone",
-        "actor/shield_escort",
+        "actor/ordinary_ranged_01",
+        "actor/pull_enemy",
+        "actor/ordinary_support_01",
+        "actor/ordinary_melee_01",
+        "actor/ordinary_support_02",
         "actor/shooter",
-        "actor/spark_minelet",
-        "actor/splitter_barge",
+        "actor/ordinary_area_01",
+        "actor/ordinary_pulse_01",
         "actor/turret"
       ],
       "direction_en": "Replace all 19 ordinary-enemy bodies in place without changing semantic IDs, canvases, pivots, anchors, movement, attacks, or encounter roles.",
       "deliverables": [
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_growth_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -958,11 +958,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_artillery_spotter_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_growth_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_beam_01_base.png",
           "width": 160,
           "height": 160,
           "pivot": [
@@ -975,11 +975,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_beam_sentinel_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_fixed_beam_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_bulkhead_guard_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_shield_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -992,11 +992,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_bulkhead_guard_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_shield_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_chaser_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_edge_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1009,11 +1009,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_chaser_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_edge_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_controller_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1026,11 +1026,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_controller_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_gap_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_drone_carrier_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_03_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1043,11 +1043,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_drone_carrier_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_support_03_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_generator_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_support_01_base.png",
           "width": 160,
           "height": 160,
           "pivot": [
@@ -1060,11 +1060,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_generator_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_fixed_support_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_interceptor_tower_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_02_base.png",
           "width": 160,
           "height": 160,
           "pivot": [
@@ -1077,11 +1077,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_interceptor_tower_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_fixed_ranged_02_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_mine_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_area_01_base.png",
           "width": 160,
           "height": 160,
           "pivot": [
@@ -1094,11 +1094,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_mine_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_fixed_area_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_needle_drone_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_ranged_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1111,11 +1111,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_needle_drone_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_ranged_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_rammer_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_pull_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1128,11 +1128,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_rammer_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_pull_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_repair_tender_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1145,11 +1145,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_repair_tender_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_support_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_scrap_drone_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1162,11 +1162,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_scrap_drone_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_melee_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_shield_escort_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_02_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1179,11 +1179,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_shield_escort_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_support_02_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_shooter_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_lane_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1196,11 +1196,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_shooter_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_lane_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_spark_minelet_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_area_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1213,11 +1213,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_spark_minelet_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_area_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_splitter_barge_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_pulse_01_base.png",
           "width": 112,
           "height": 112,
           "pivot": [
@@ -1230,11 +1230,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_splitter_barge_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_pulse_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_turret_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_01_base.png",
           "width": 160,
           "height": 160,
           "pivot": [
@@ -1247,29 +1247,29 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_enemy_turret_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
+          "brief_en": "Redraw actor_enemy_ordinary_fixed_ranged_01_base.png as one complete ordinary-enemy body preserving role, canvas, pivot, facing, and anchors, using one dominant silhouette and 3-5 large planes.",
           "external_source_ids": []
         }
       ],
       "final_paths": [
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_bulkhead_guard_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_chaser_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_controller_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_drone_carrier_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_generator_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_interceptor_tower_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_mine_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_needle_drone_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_rammer_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_repair_tender_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_scrap_drone_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_shield_escort_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_shooter_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_spark_minelet_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_splitter_barge_base.png",
-        "art/visuals/production/gameplay/actors/enemies/actor_enemy_turret_base.png"
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_growth_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_beam_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_shield_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_edge_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_03_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_support_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_02_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_area_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_ranged_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_pull_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_02_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_lane_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_area_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_pulse_01_base.png",
+        "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_01_base.png"
       ],
       "reuse_paths": [],
       "preview_paths": [
@@ -1286,24 +1286,24 @@
         "approved_at": "2026-08-04T13:43:54+09:00",
         "baseline_commit": "d7ccf4646b99b4ce8d06ddd68600ec41c295c0b5",
         "deliverable_sha256": {
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_artillery_spotter_base.png": "4907d7488987ef30da64c97a0ad0077d734c2b07894149b0aa4189790e31e657",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_beam_sentinel_base.png": "bf361c070bc71382415299b5fce6ff04eba8592d64fb49b06181f139927d6bb0",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_bulkhead_guard_base.png": "58a3077452305a75cb61baadcc9533ce28a2ead5270fc34c3fe2ddeb17625813",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_chaser_base.png": "c5eb6f0d0c476c7aecbe541d61295183d14c3fd9d68734de4e562d3297a7c3da",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_controller_base.png": "98c6a54dbd8377ee25167a7ad2b36664b75f3839d15d8f844e52b5496a1615ca",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_drone_carrier_base.png": "fd59cb348bcab022dd6f9b17e8c57856e9fe33c6d2ff358388b2687bbd1a1a86",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_generator_base.png": "2a0f568d80b2ca1fc3b746c5f86d792ad0c58269533cccd02f072f9a103f1b66",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_interceptor_tower_base.png": "d4bba20f218e63e47a8219ba6e69dcdfe9a6c05fbcfb688548109eecc7becc5c",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_mine_base.png": "053c14ba0f8bf38fba9a89c6cf052cda933238b5f581ce0a6e004034c1d2ff74",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_needle_drone_base.png": "9df3d090b32642ba0d2ffc32f48f797b6a90e4eb40795db59129d1f9fc7bbeea",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_rammer_base.png": "496d93c74193866f759335ce38085a95b296877d572bebdbaf8e53baae913431",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_repair_tender_base.png": "c999247de9c58b43a78c542f9e8c16966a393f31dcb5ded231b909de0eecbac5",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_scrap_drone_base.png": "8a0e4695206692562c6bd21e47d97b3bcb6fa1a58ac0d3c2f7213e17485289a4",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_shield_escort_base.png": "f02e139dade6e381692e536ccb91fad8a5568dff022bdaa4e8d700de51aa9281",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_shooter_base.png": "ecef1729e610420fab1ec59a4fe6a34f72460b11cf466bdd355173a2bee9e846",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_spark_minelet_base.png": "fb7eb852aede6b9d7aeffb89b54d9d0291e9663c355250df7afa7babbad0e1b7",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_splitter_barge_base.png": "cfabe57276bfcf27baf1f3dc7f274eb931a0e829ad357c962708c227ac8a873c",
-          "art/visuals/production/gameplay/actors/enemies/actor_enemy_turret_base.png": "8a3c96214750a32326884ef817864f5bb6307def59e7da66c89b8ebbeeb02414"
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_growth_01_base.png": "4907d7488987ef30da64c97a0ad0077d734c2b07894149b0aa4189790e31e657",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_beam_01_base.png": "bf361c070bc71382415299b5fce6ff04eba8592d64fb49b06181f139927d6bb0",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_shield_01_base.png": "58a3077452305a75cb61baadcc9533ce28a2ead5270fc34c3fe2ddeb17625813",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_edge_01_base.png": "c5eb6f0d0c476c7aecbe541d61295183d14c3fd9d68734de4e562d3297a7c3da",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png": "98c6a54dbd8377ee25167a7ad2b36664b75f3839d15d8f844e52b5496a1615ca",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_03_base.png": "fd59cb348bcab022dd6f9b17e8c57856e9fe33c6d2ff358388b2687bbd1a1a86",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_support_01_base.png": "2a0f568d80b2ca1fc3b746c5f86d792ad0c58269533cccd02f072f9a103f1b66",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_02_base.png": "d4bba20f218e63e47a8219ba6e69dcdfe9a6c05fbcfb688548109eecc7becc5c",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_area_01_base.png": "053c14ba0f8bf38fba9a89c6cf052cda933238b5f581ce0a6e004034c1d2ff74",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_ranged_01_base.png": "9df3d090b32642ba0d2ffc32f48f797b6a90e4eb40795db59129d1f9fc7bbeea",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_pull_01_base.png": "496d93c74193866f759335ce38085a95b296877d572bebdbaf8e53baae913431",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_01_base.png": "c999247de9c58b43a78c542f9e8c16966a393f31dcb5ded231b909de0eecbac5",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_01_base.png": "8a0e4695206692562c6bd21e47d97b3bcb6fa1a58ac0d3c2f7213e17485289a4",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_02_base.png": "f02e139dade6e381692e536ccb91fad8a5568dff022bdaa4e8d700de51aa9281",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_lane_01_base.png": "ecef1729e610420fab1ec59a4fe6a34f72460b11cf466bdd355173a2bee9e846",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_area_01_base.png": "fb7eb852aede6b9d7aeffb89b54d9d0291e9663c355250df7afa7babbad0e1b7",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_pulse_01_base.png": "cfabe57276bfcf27baf1f3dc7f274eb931a0e829ad357c962708c227ac8a873c",
+          "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_01_base.png": "8a3c96214750a32326884ef817864f5bb6307def59e7da66c89b8ebbeeb02414"
         },
         "retire_paths": []
       },
@@ -2280,14 +2280,14 @@
       "switch_kind": "consolidate",
       "status": "applied",
       "current_paths": [
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_04_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_01_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_05_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_02_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_03_base.png",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png",
-        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_lattice.png",
-        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_pylon.png",
+        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_radial_lattice.png",
+        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_stage_05_pylon.png",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_active.png",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_disabled.png",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_relay_negative.png",
@@ -2302,16 +2302,16 @@
         "scripts/presentation/vehicle_combat_renderer.gd"
       ],
       "consumer_asset_ids": [
-        "boss/behemoth",
-        "boss/colossus",
-        "boss/crown",
-        "boss/leviathan",
-        "boss/titan"
+        "boss/boss_stage_04",
+        "boss/boss_stage_01",
+        "boss/boss_stage_05",
+        "boss/boss_stage_02",
+        "boss/boss_stage_03"
       ],
       "direction_en": "Keep five distinct boss bodies and retire every external objective-module and shared-node PNG. The current shield is a body-attached runtime state with no separate actor or raster asset.",
       "deliverables": [
         {
-          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_04_base.png",
           "width": 352,
           "height": 352,
           "pivot": [
@@ -2324,11 +2324,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_boss_behemoth_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
+          "brief_en": "Redraw actor_boss_stage_04_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_01_base.png",
           "width": 352,
           "height": 352,
           "pivot": [
@@ -2341,11 +2341,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_boss_colossus_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
+          "brief_en": "Redraw actor_boss_stage_01_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_05_base.png",
           "width": 352,
           "height": 352,
           "pivot": [
@@ -2358,11 +2358,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_boss_crown_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
+          "brief_en": "Redraw actor_boss_stage_05_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_02_base.png",
           "width": 352,
           "height": 352,
           "pivot": [
@@ -2375,11 +2375,11 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_boss_leviathan_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
+          "brief_en": "Redraw actor_boss_stage_02_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
           "external_source_ids": []
         },
         {
-          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png",
+          "target_path": "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_03_base.png",
           "width": 352,
           "height": 352,
           "pivot": [
@@ -2392,16 +2392,16 @@
           "fps": null,
           "loop": null,
           "blend": null,
-          "brief_en": "Redraw actor_boss_titan_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
+          "brief_en": "Redraw actor_boss_stage_03_base.png as one complete boss body preserving canvas, pivot, anchors, and identity, with one dominant silhouette and 4-6 large planes.",
           "external_source_ids": []
         }
       ],
       "final_paths": [
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png",
-        "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png"
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_04_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_01_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_05_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_02_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_03_base.png"
       ],
       "reuse_paths": [],
       "preview_paths": [
@@ -2410,10 +2410,10 @@
       "retire_paths": [
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png.import",
-        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_lattice.png",
-        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_lattice.png.import",
-        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_pylon.png",
-        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_pylon.png.import",
+        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_radial_lattice.png",
+        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_radial_lattice.png.import",
+        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_stage_05_pylon.png",
+        "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_stage_05_pylon.png.import",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_active.png",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_active.png.import",
         "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_disabled.png",
@@ -2446,19 +2446,19 @@
         "approved_at": "2026-08-04T13:43:54+09:00",
         "baseline_commit": "d7ccf4646b99b4ce8d06ddd68600ec41c295c0b5",
         "deliverable_sha256": {
-          "art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png": "aa4fc967885a8cb4d34aefc2c5c24b37898f12a2ffabc19e8cb225b7240fa89b",
-          "art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png": "75d653ba6e31bb3485b8bd721689aacc79fec1c0abe91bad59d0bec8c551f6de",
-          "art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png": "8e830d6e1544e89b5d7b9fa292769dc0e63fd56b8a342827f24747bc0f49569e",
-          "art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png": "dea5e220c7308fab723f0efb7053293f86c2ec16121cb292f435905bcfa99ce9",
-          "art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png": "638999a200879dfabbc17718d1291dd86143ab1872c1ae9a2020d9e201bb5492"
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_04_base.png": "aa4fc967885a8cb4d34aefc2c5c24b37898f12a2ffabc19e8cb225b7240fa89b",
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_01_base.png": "75d653ba6e31bb3485b8bd721689aacc79fec1c0abe91bad59d0bec8c551f6de",
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_05_base.png": "8e830d6e1544e89b5d7b9fa292769dc0e63fd56b8a342827f24747bc0f49569e",
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_02_base.png": "dea5e220c7308fab723f0efb7053293f86c2ec16121cb292f435905bcfa99ce9",
+          "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_03_base.png": "638999a200879dfabbc17718d1291dd86143ab1872c1ae9a2020d9e201bb5492"
         },
         "retire_paths": [
           "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png",
           "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_armor_car.png.import",
-          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_lattice.png",
-          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_lattice.png.import",
-          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_pylon.png",
-          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_crown_pylon.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_radial_lattice.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_radial_lattice.png.import",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_stage_05_pylon.png",
+          "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_stage_05_pylon.png.import",
           "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_active.png",
           "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_active.png.import",
           "art/visuals/production/gameplay/actors/bosses/modules/actor_boss_module_forge_plate_disabled.png",
@@ -4146,7 +4146,7 @@
       "consumer_asset_ids": [
         "cue/beam_strip_9"
       ],
-      "direction_en": "Replace the awkward dark-framed straight beam with one borderless tintable flat alpha plane. Preserve the exact 128x32 canvas, center pivot, semantic ID, import settings, retained overlay batch, collision corridor, length, timing, and Beam Sentinel/boss sharing. User feedback: the current nested framed bars look visually awkward.",
+      "direction_en": "Replace the awkward dark-framed straight beam with one borderless tintable flat alpha plane. Preserve the exact 128x32 canvas, center pivot, semantic ID, import settings, retained overlay batch, collision corridor, length, timing, and Fixed Beam Ordinary Enemy Lv.1/boss sharing. User feedback: the current nested framed bars look visually awkward.",
       "deliverables": [
         {
           "target_path": "art/visuals/production/gameplay/effects/cues/cue_beam_strip_9.png",
@@ -4170,15 +4170,15 @@
       "preview_paths": [
         "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-beam-sentinel-startup.png",
         "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-beam-sentinel-active.png",
-        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-crown-beam-startup.png",
-        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-crown-beam-active.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-radial-beam-startup.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/to-be-radial-beam-active.png",
         "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/comparison.png"
       ],
       "rendered_as_is_paths": [
         "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-beam-sentinel-startup.png",
         "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-beam-sentinel-active.png",
-        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-crown-beam-startup.png",
-        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-crown-beam-active.png"
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-radial-beam-startup.png",
+        "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-radial-beam-active.png"
       ],
       "retire_paths": [],
       "runtime_change_paths": [
@@ -4617,12 +4617,12 @@
         "docs/design/visual-replacement-workbench/previews/final-batch/gameplay-code-asset-rasterization.png",
         "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-final/07-stage-boss-startup.png",
         "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-final/09-effects-player.png",
-        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-final/10-field-drowned-ruin-field.png"
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-final/10-field-01.png"
       ],
       "rendered_as_is_paths": [
         "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/07-stage-boss-startup.png",
         "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/09-effects-player.png",
-        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/10-field-drowned-ruin-field.png"
+        "docs/design/visual-replacement-workbench/previews/rasterized-gameplay-as-is/10-field-01.png"
       ],
       "retire_paths": [
         "scripts/presentation/components/vehicle_actor_mesh_recipes.gd",
@@ -4733,24 +4733,24 @@
       "owner": "gameplay_manifest",
       "switch_kind": "add",
       "status": "applied",
-      "current_paths": ["art/visuals/production/gameplay/actors/enemies/actor_enemy_bombing_runner_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_mobile_rail_sniper_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_orbit_gunner_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_wreck_scavenger_base.png"],
+      "current_paths": ["art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_sweep_01_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_beam_01_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_range_01_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_02_base.png"],
       "consumer_paths": ["art/visuals/production/gameplay/asset-manifest.json", "scripts/presentation/components/vehicle_actor_visual_catalog.gd", "scripts/presentation/components/vehicle_semantic_asset_provider.gd", "scripts/presentation/vehicle_combat_renderer.gd"],
-      "consumer_asset_ids": ["actor/mobile_rail_sniper", "actor/orbit_gunner", "actor/bombing_runner", "actor/wreck_scavenger"],
+      "consumer_asset_ids": ["actor/ordinary_beam_01", "actor/ordinary_range_01", "actor/ordinary_sweep_01", "actor/ordinary_melee_02"],
       "direction_en": "BK approved these exact four grounded ImageGen enemy PNGs for the eight-boss combat expansion. They are persistent ordinary-enemy bodies; runtime owns only transform, state, collision, attacks, and encounter use.",
       "deliverables": [
-        {"target_path":"art/visuals/production/gameplay/actors/enemies/actor_enemy_mobile_rail_sniper_base.png","width":112,"height":112,"pivot":[56,56],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved mobile rail sniper body with a readable long-range firing silhouette.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/actors/enemies/actor_enemy_orbit_gunner_base.png","width":112,"height":112,"pivot":[56,56],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved orbit gunner body with a readable moving-fire silhouette.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/actors/enemies/actor_enemy_bombing_runner_base.png","width":112,"height":112,"pivot":[56,56],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved bombing runner body with a readable fast bombardment silhouette.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/actors/enemies/actor_enemy_wreck_scavenger_base.png","width":112,"height":112,"pivot":[56,56],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved wreck scavenger body with a readable salvage-growth silhouette.","external_source_ids":[]}
+        {"target_path":"art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_beam_01_base.png","width":112,"height":112,"pivot":[56,56],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved mobile Beam Ordinary Enemy Lv.1 body with a readable long-range firing silhouette.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_range_01_base.png","width":112,"height":112,"pivot":[56,56],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Range Ordinary Enemy Lv.1 body with a readable moving-fire silhouette.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_sweep_01_base.png","width":112,"height":112,"pivot":[56,56],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Sweep Ordinary Enemy Lv.1 body with a readable fast bombardment silhouette.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_02_base.png","width":112,"height":112,"pivot":[56,56],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Melee Ordinary Enemy Lv.2 body with a readable salvage-growth silhouette.","external_source_ids":[]}
       ],
-      "final_paths": ["art/visuals/production/gameplay/actors/enemies/actor_enemy_bombing_runner_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_mobile_rail_sniper_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_orbit_gunner_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_wreck_scavenger_base.png"],
+      "final_paths": ["art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_sweep_01_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_beam_01_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_range_01_base.png", "art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_02_base.png"],
       "reuse_paths": [],
       "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": ["art/visuals/production/gameplay/asset-manifest.json", "scripts/presentation/components/vehicle_actor_visual_catalog.gd", "scripts/presentation/vehicle_combat_renderer.gd"],
       "acceptance_commands": [".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check", ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"],
       "visual_authority_evidence": {"spec_path":"docs/design/VISUAL_SYSTEM.md","sheet_path":"docs/design/cardborne-universal-art-style-reference.png","sheet_sha256":"96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889","document_read_complete":true,"sheet_inspected_original":true,"actual_image_reference_used":true,"reference_input_method":"image_gen.referenced_image_paths"},
-      "approval": {"approved_by":"BK","approved_at":"2026-08-15T20:01:18+09:00","baseline_commit":"25724c9e16349f267f3e63f70c45ae5eec2ffa34","deliverable_sha256":{"art/visuals/production/gameplay/actors/enemies/actor_enemy_bombing_runner_base.png":"90423e781d86330345fe1c4ad9c29ece4f22b8bbbc069cc1d946c4cd5028d1b1","art/visuals/production/gameplay/actors/enemies/actor_enemy_mobile_rail_sniper_base.png":"4ee8d491a432fa6eeda907eb32bd9b023e7114737daa8f3386543df3795d0a81","art/visuals/production/gameplay/actors/enemies/actor_enemy_orbit_gunner_base.png":"25fec951ea0714062feb9ff6d4177c5e3da200b4a5d070be4878c3b6a96cdef7","art/visuals/production/gameplay/actors/enemies/actor_enemy_wreck_scavenger_base.png":"6b7be8946dd5af03c5f785dfbec6e6b3500f44587d88b400e36508ff9361cee1"},"retire_paths":[]},
+      "approval": {"approved_by":"BK","approved_at":"2026-08-15T20:01:18+09:00","baseline_commit":"25724c9e16349f267f3e63f70c45ae5eec2ffa34","deliverable_sha256":{"art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_sweep_01_base.png":"90423e781d86330345fe1c4ad9c29ece4f22b8bbbc069cc1d946c4cd5028d1b1","art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_beam_01_base.png":"4ee8d491a432fa6eeda907eb32bd9b023e7114737daa8f3386543df3795d0a81","art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_range_01_base.png":"25fec951ea0714062feb9ff6d4177c5e3da200b4a5d070be4878c3b6a96cdef7","art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_02_base.png":"6b7be8946dd5af03c5f785dfbec6e6b3500f44587d88b400e36508ff9361cee1"},"retire_paths":[]},
       "application": {"commit":"069a7aa475a768036e841452ae91cea48c10b0e0","applied_at":"2026-08-15T20:11:35+09:00","validation_evidence":[".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply","approved asset hashes: 13 exact matches","production gameplay manifest: 90 images",".\\tools\\validation\\validate_visual_replacement_workbench.ps1"]}
     },
     {
@@ -4762,24 +4762,63 @@
       "owner": "gameplay_manifest",
       "switch_kind": "add",
       "status": "applied",
-      "current_paths": ["art/visuals/production/gameplay/actors/bosses/actor_boss_pulse_core_base.png", "art/visuals/production/gameplay/actors/bosses/actor_boss_siege_battery_base.png", "art/visuals/production/gameplay/actors/bosses/actor_boss_vector_loom_base.png"],
+      "current_paths": ["art/visuals/production/gameplay/actors/bosses/actor_boss_stage_08_base.png", "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_06_base.png", "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_07_base.png"],
       "consumer_paths": ["art/visuals/production/gameplay/asset-manifest.json", "scripts/presentation/components/vehicle_actor_visual_catalog.gd", "scripts/presentation/components/vehicle_semantic_asset_provider.gd", "scripts/presentation/vehicle_combat_renderer.gd"],
-      "consumer_asset_ids": ["boss/siege_battery", "boss/vector_loom", "boss/pulse_core"],
+      "consumer_asset_ids": ["boss/boss_stage_06", "boss/boss_stage_07", "boss/boss_stage_08"],
       "direction_en": "BK approved these exact three grounded ImageGen boss PNGs for the eight-boss cycle. Each remains one body-owned silhouette with runtime-owned shield boundary and attack state.",
       "deliverables": [
-        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_siege_battery_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Siege Battery boss body with large readable firing masses.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_vector_loom_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Vector Loom boss body with large readable beam-control masses.","external_source_ids":[]},
-        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_pulse_core_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Pulse Core boss body with large readable radial-fire masses.","external_source_ids":[]}
+        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_06_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Stage 6 Boss body with large readable firing masses.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_07_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Stage 7 Boss body with large readable beam-control masses.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_08_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved Stage 8 Boss body with large readable radial-fire masses.","external_source_ids":[]}
       ],
-      "final_paths": ["art/visuals/production/gameplay/actors/bosses/actor_boss_pulse_core_base.png", "art/visuals/production/gameplay/actors/bosses/actor_boss_siege_battery_base.png", "art/visuals/production/gameplay/actors/bosses/actor_boss_vector_loom_base.png"],
+      "final_paths": ["art/visuals/production/gameplay/actors/bosses/actor_boss_stage_08_base.png", "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_06_base.png", "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_07_base.png"],
       "reuse_paths": [],
       "preview_paths": [],
       "retire_paths": [],
       "runtime_change_paths": ["art/visuals/production/gameplay/asset-manifest.json", "scripts/presentation/components/vehicle_actor_visual_catalog.gd", "scripts/presentation/vehicle_combat_renderer.gd"],
       "acceptance_commands": [".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check", ".\\tools\\validation\\validate_visual_replacement_workbench.ps1"],
       "visual_authority_evidence": {"spec_path":"docs/design/VISUAL_SYSTEM.md","sheet_path":"docs/design/cardborne-universal-art-style-reference.png","sheet_sha256":"96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889","document_read_complete":true,"sheet_inspected_original":true,"actual_image_reference_used":true,"reference_input_method":"image_gen.referenced_image_paths"},
-      "approval": {"approved_by":"BK","approved_at":"2026-08-15T20:01:18+09:00","baseline_commit":"25724c9e16349f267f3e63f70c45ae5eec2ffa34","deliverable_sha256":{"art/visuals/production/gameplay/actors/bosses/actor_boss_pulse_core_base.png":"ca71f170b1b527559a758540eb5dc10aef7fd6babd1c4f51af1801d8a139a21a","art/visuals/production/gameplay/actors/bosses/actor_boss_siege_battery_base.png":"78a8740c37176e1150e135388835e83ad66cf698269a0771e0de76dde0ecd4fe","art/visuals/production/gameplay/actors/bosses/actor_boss_vector_loom_base.png":"6a14321073406be7c3b3778b1155fa27031fa2144a3fe2342e49e58bc41be26e"},"retire_paths":[]},
+      "approval": {"approved_by":"BK","approved_at":"2026-08-15T20:01:18+09:00","baseline_commit":"25724c9e16349f267f3e63f70c45ae5eec2ffa34","deliverable_sha256":{"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_08_base.png":"ca71f170b1b527559a758540eb5dc10aef7fd6babd1c4f51af1801d8a139a21a","art/visuals/production/gameplay/actors/bosses/actor_boss_stage_06_base.png":"78a8740c37176e1150e135388835e83ad66cf698269a0771e0de76dde0ecd4fe","art/visuals/production/gameplay/actors/bosses/actor_boss_stage_07_base.png":"6a14321073406be7c3b3778b1155fa27031fa2144a3fe2342e49e58bc41be26e"},"retire_paths":[]},
       "application": {"commit":"069a7aa475a768036e841452ae91cea48c10b0e0","applied_at":"2026-08-15T20:11:35+09:00","validation_evidence":[".\\tools\\design\\promote_visual_replacement_unit.ps1 -AllApproved -Apply","approved asset hashes: 13 exact matches","production gameplay manifest: 90 images",".\\tools\\validation\\validate_visual_replacement_workbench.ps1"]}
+    },
+    {
+      "id": "twelve_boss_actor_extension",
+      "category_id": "boss",
+      "order": 4,
+      "title_en": "Stage 9-12 Boss Actors",
+      "title_ko": "9~12단계 보스 기체",
+      "owner": "gameplay_manifest",
+      "switch_kind": "add",
+      "status": "approved_for_switch",
+      "current_paths": [
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_09_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_10_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_11_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_12_base.png"
+      ],
+      "consumer_paths": ["art/visuals/production/gameplay/asset-manifest.json", "scripts/presentation/components/vehicle_actor_visual_catalog.gd", "scripts/presentation/components/vehicle_semantic_asset_provider.gd", "scripts/presentation/vehicle_combat_renderer.gd"],
+      "consumer_asset_ids": ["boss/stage_09", "boss/stage_10", "boss/stage_11", "boss/stage_12"],
+      "direction_en": "Use the four user-selected ImageGen boss PNGs as minimal general-science-fiction silhouettes. Runtime owns every pattern, cue, collision, and state change.",
+      "deliverables": [
+        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_09_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved generic Stage 9 Boss body with an edge-pressure silhouette.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_10_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved generic Stage 10 Boss body with a pull-pressure silhouette.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_11_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved generic Stage 11 Boss body with a range-switch silhouette.","external_source_ids":[]},
+        {"target_path":"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_12_base.png","width":352,"height":352,"pivot":[176,176],"patch_margin":null,"safe_inset":null,"frame_count":null,"fps":null,"loop":null,"blend":null,"brief_en":"Approved generic Stage 12 Boss body with a combined-pattern silhouette.","external_source_ids":[]}
+      ],
+      "final_paths": [
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_09_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_10_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_11_base.png",
+        "art/visuals/production/gameplay/actors/bosses/actor_boss_stage_12_base.png"
+      ],
+      "reuse_paths": [],
+      "preview_paths": [],
+      "retire_paths": [],
+      "runtime_change_paths": ["art/visuals/production/gameplay/asset-manifest.json", "scripts/presentation/components/vehicle_actor_visual_catalog.gd", "scripts/presentation/vehicle_combat_renderer.gd"],
+      "acceptance_commands": [".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check", ".\\tools\\validation\\validate_visual_replacement_workbench.ps1", ".\\tools\\validation\\validate_cardborne_visual_authority.ps1"],
+      "visual_authority_evidence": {"spec_path":"docs/design/VISUAL_SYSTEM.md","sheet_path":"docs/design/cardborne-universal-art-style-reference.png","sheet_sha256":"96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889","document_read_complete":true,"sheet_inspected_original":true,"actual_image_reference_used":true,"reference_input_method":"image_gen.referenced_image_paths"},
+      "approval": {"approved_by":"BK","approved_at":"2026-08-18T14:43:13+09:00","baseline_commit":"3c05422c09a72ea3756f7bc7dfed892c62454ec9","deliverable_sha256":{"art/visuals/production/gameplay/actors/bosses/actor_boss_stage_09_base.png":"c267ece032f20ba57c976c109f6003f8b555c8805fcd07d99618a3905d23961b","art/visuals/production/gameplay/actors/bosses/actor_boss_stage_10_base.png":"3e4917d96447c268cb864bb2cfd5af92270e9b2e37580eb43f925ef8559c0245","art/visuals/production/gameplay/actors/bosses/actor_boss_stage_11_base.png":"49d86641eea41b9696f2ddcea9f4fa4d81b4add2d8a5950652cc7c3a12d1e20a","art/visuals/production/gameplay/actors/bosses/actor_boss_stage_12_base.png":"9eabe4a8ed67ce93219bfd161c8766dc71e805c07b7d422532229a04b912bfca"},"retire_paths":[]},
+      "application": null
     },
     {
       "id": "eight_boss_shared_death_explosion",

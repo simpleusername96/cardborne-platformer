@@ -6,17 +6,21 @@ const AssetProvider = preload(
 
 const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"attachment/player_craft_body",
-	&"actor/scrap_drone",
-	&"actor/mine",
-	&"boss/colossus",
-	&"boss/crown",
-	&"boss/battery",
-	&"boss/loom",
-	&"boss/pulse_core",
-	&"actor/rail_sniper",
-	&"actor/orbit_gunner",
-	&"actor/bombing_runner",
-	&"actor/wreck_scavenger",
+	&"actor/ordinary_melee_01",
+	&"actor/ordinary_fixed_area_01",
+	&"boss/stage_01",
+	&"boss/stage_05",
+	&"boss/stage_06",
+	&"boss/stage_07",
+	&"boss/stage_08",
+	&"boss/stage_09",
+	&"boss/stage_10",
+	&"boss/stage_11",
+	&"boss/stage_12",
+	&"actor/ordinary_beam_01",
+	&"actor/ordinary_range_01",
+	&"actor/ordinary_sweep_01",
+	&"actor/ordinary_melee_02",
 	&"secondary/seeker",
 	&"secondary/escort_drone",
 	&"secondary/orbit_blade",
@@ -125,7 +129,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 88, "all 85 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 92, "all 89 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in REQUIRED_UPGRADE_IDS:
@@ -173,9 +177,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 88
+		int(manifest.get("final_asset_count", 0)) == 92
 			and not manifest.has("animations"),
-		"manifest declares 88 static semantic images and no frame animations"
+		"manifest declares 92 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	for error in AssetProvider.validate_pack():

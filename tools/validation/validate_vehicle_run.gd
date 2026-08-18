@@ -33,8 +33,8 @@ func _initialize() -> void:
 func _run() -> void:
 	var run_source := FileAccess.get_file_as_string(RUN_SOURCE)
 	_expect(
-		run_source.contains('_ui.notify_immediate(\n\t\t\t\ttr("NOTIFY_BOSS_INBOUND")')
-			and run_source.contains('_ui.notify_immediate(\n\t\t\t\ttr("NOTIFY_BARRIER_DEPLETED")'),
+		run_source.contains('tr("NOTIFY_BOSS_INBOUND"), 1.5')
+			and run_source.contains('tr("NOTIFY_BARRIER_DEPLETED"),'),
 		"live boss-inbound and barrier-depleted danger messages interrupt lower-priority text"
 	)
 	var packed := load(MAIN_SCENE) as PackedScene
@@ -79,8 +79,8 @@ func _run() -> void:
 		)
 		_expect(
 			is_equal_approx(SpecialistRuntime.REPAIR_PER_SECOND, 8.0)
-				and is_equal_approx(SpecialistRuntime.GENERATOR_HEAL_PER_TICK, 8.0),
-			"repair tender and generator healing are doubled"
+				and is_equal_approx(SpecialistRuntime.FIXED_SUPPORT_HEAL_PER_TICK, 8.0),
+			"Support Ordinary Enemy Lv.1 and generator healing are doubled"
 		)
 		_expect(run.PICKUP_BODY_RADIUS == 42.0, "pickup body radius is 42 px")
 		_expect(run.MINIMAP_COLS == 20 and run.MINIMAP_ROWS == 12, "run uses 20x12 explored minimap")
@@ -303,7 +303,7 @@ func _check_lifesteal_contract(run) -> void:
 	run.player_health = 50.0
 	var baseline_target: EnemyState = run.call("_make_enemy", {
 		"id":"lifesteal_baseline_probe",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(380.0, 0.0),
 		"active":true,
 	})
@@ -331,7 +331,7 @@ func _check_lifesteal_contract(run) -> void:
 	run.player_health = 50.0
 	var overkill_target: EnemyState = run.call("_make_enemy", {
 		"id":"lifesteal_overkill_probe",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(420.0, 0.0),
 		"active":true,
 	})
@@ -346,7 +346,7 @@ func _check_lifesteal_contract(run) -> void:
 		true
 	)
 	_expect(
-		is_equal_approx(float(run.player_health), 51.0),
+		is_equal_approx(float(run.player_health), 50.75),
 		"Lifesteal uses actual applied damage after enemy overkill clamping"
 	)
 	run.enemy_store.release_untracked(overkill_target)
@@ -354,7 +354,7 @@ func _check_lifesteal_contract(run) -> void:
 	var excluded_health := float(run.player_health)
 	var excluded_target: EnemyState = run.call("_make_enemy", {
 		"id":"lifesteal_excluded_probe",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(460.0, 0.0),
 		"active":true,
 	})
@@ -389,7 +389,7 @@ func _check_lifesteal_contract(run) -> void:
 	)
 	var level_two_target: EnemyState = run.call("_make_enemy", {
 		"id":"lifesteal_level_two_probe",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(500.0, 0.0),
 		"active":true,
 	})
@@ -404,8 +404,8 @@ func _check_lifesteal_contract(run) -> void:
 		true
 	)
 	_expect(
-		is_equal_approx(float(run.player_health), excluded_health + 6.0),
-		"Lifesteal level two remains bounded by the six-Hull recovery budget"
+		is_equal_approx(float(run.player_health), excluded_health + 4.4),
+		"Lifesteal level two applies its gradual 2.2-percent recovery"
 	)
 	run.enemy_store.release_untracked(level_two_target)
 
@@ -415,7 +415,7 @@ func _check_lifesteal_contract(run) -> void:
 	run.player_health = run.call("_player_max_health") - 1.0
 	var hull_limit_target: EnemyState = run.call("_make_enemy", {
 		"id":"lifesteal_hull_limit_probe",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(540.0, 0.0),
 		"active":true,
 	})
@@ -440,7 +440,7 @@ func _check_lifesteal_contract(run) -> void:
 func _check_status_damage_feedback(run) -> void:
 	var enemy: EnemyState = run.call("_make_enemy", {
 		"id":"status_feedback_enemy",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(180.0, 0.0),
 		"active":true,
 	})
@@ -474,9 +474,9 @@ func _check_status_damage_feedback(run) -> void:
 
 func _check_visual_collision_separation(run) -> void:
 	for fixture in [
-		[&"chaser", 18.0, 48.0],
-		[&"turret", 30.0, 62.0],
-		[&"stage_boss", 76.0, 146.0],
+		[&"ordinary_edge_01", 18.0, 48.0],
+		[&"ordinary_fixed_ranged_01", 30.0, 62.0],
+		[&"boss_actor", 76.0, 146.0],
 	]:
 		var enemy = run.call("_make_enemy", {
 			"id":"visual_probe_%s" % String(fixture[0]),
@@ -494,8 +494,8 @@ func _check_visual_collision_separation(run) -> void:
 		run.enemy_store.release_untracked(enemy)
 	var ordering_enemy := EnemyState.new()
 	ordering_enemy.id = "structure_limit_probe"
-	ordering_enemy.role = &"chaser"
-	ordering_enemy.archetype = &"chaser"
+	ordering_enemy.role = &"ordinary_edge_01"
+	ordering_enemy.archetype = &"ordinary_edge_01"
 	ordering_enemy.alive = true
 	ordering_enemy.active = true
 	ordering_enemy.pos = Vector2(70.0, 0.0)
@@ -597,29 +597,29 @@ func _check_simulation_lod_contract(run) -> void:
 func _check_critical_enemy_attack_progression(run) -> void:
 	var projectile_store: RefCounted = run.get("projectile_store")
 	projectile_store.call("clear")
-	var shooter: EnemyState = run.call("_make_enemy", {
+	var ordinary_lane_01: EnemyState = run.call("_make_enemy", {
 		"id":"critical_attack_progression",
-		"role":&"shooter",
+		"role":&"ordinary_lane_01",
 		"pos":run.player_position + Vector2(-320.0, 0.0),
 		"active":true,
 	})
-	shooter.phase = &"startup"
-	shooter.phase_time = 0.0
-	shooter.committed_dir = Vector2.RIGHT
-	shooter.committed_target = run.player_position
-	var phase_time_before := shooter.phase_time
-	run.call("_update_scheduled_ordinary_enemy", shooter, 1.0 / 60.0)
+	ordinary_lane_01.phase = &"startup"
+	ordinary_lane_01.phase_time = 0.0
+	ordinary_lane_01.committed_dir = Vector2.RIGHT
+	ordinary_lane_01.committed_target = run.player_position
+	var phase_time_before := ordinary_lane_01.phase_time
+	run.call("_update_scheduled_ordinary_enemy", ordinary_lane_01, 1.0 / 60.0)
 	_expect(
-		shooter.phase_time < phase_time_before
-			or shooter.phase in [&"recovery", &"active"],
+		ordinary_lane_01.phase_time < phase_time_before
+			or ordinary_lane_01.phase in [&"recovery", &"active"],
 		"critical ordinary startup advances on the 60 Hz path"
 	)
 	_expect(
-		shooter.phase == &"recovery" and projectile_store.call("hostile_count") == 1,
-		"critical ordinary shooter reaches its real fire path instead of freezing"
+		ordinary_lane_01.phase == &"recovery" and projectile_store.call("hostile_count") == 1,
+		"critical ordinary ordinary_lane_01 reaches its real fire path instead of freezing"
 	)
 	projectile_store.call("clear")
-	run.enemy_store.release_untracked(shooter)
+	run.enemy_store.release_untracked(ordinary_lane_01)
 
 
 func _check_ordinary_predicted_commitment(run) -> void:
@@ -635,17 +635,17 @@ func _check_ordinary_predicted_commitment(run) -> void:
 			found_clear_focus_line = true
 			break
 	_expect(found_clear_focus_line, "ordinary attack fixture finds a clear focus line")
-	var shooter: EnemyState = run.call("_make_enemy", {
+	var ordinary_lane_01: EnemyState = run.call("_make_enemy", {
 		"id":"ordinary_predicted_commitment",
-		"role":&"shooter",
+		"role":&"ordinary_lane_01",
 		"pos":origin,
 		"active":true,
 	})
 	var original_velocity: Vector2 = run.player_velocity
 	run.player_velocity = Vector2(0.0, 220.0)
-	var attack := AttackContract.ordinary_attack(&"shooter")
+	var attack := AttackContract.ordinary_attack(&"ordinary_lane_01")
 	var predicted := EnemyTargetingPolicy.attack_target(
-		&"shooter",
+		&"ordinary_lane_01",
 		origin,
 		pressure_focus,
 		run.player_velocity,
@@ -655,8 +655,8 @@ func _check_ordinary_predicted_commitment(run) -> void:
 	var expected := predicted
 	if not bool(run.call("_runtime_has_line_of_sight", origin, predicted, 7.0)):
 		expected = pressure_focus
-	run.call("_start_enemy_attack", shooter)
-	var committed := shooter.committed_target
+	run.call("_start_enemy_attack", ordinary_lane_01)
+	var committed := ordinary_lane_01.committed_target
 	_expect(
 		committed.is_equal_approx(expected)
 			and committed.distance_to(pressure_focus) <= 260.001,
@@ -664,12 +664,12 @@ func _check_ordinary_predicted_commitment(run) -> void:
 	)
 	run.player_position += Vector2(0.0, 90.0)
 	_expect(
-		shooter.committed_target == committed,
+		ordinary_lane_01.committed_target == committed,
 		"ordinary predicted aim remains frozen after startup commitment"
 	)
 	run.player_position = pressure_focus
 	run.player_velocity = original_velocity
-	run.enemy_store.release_untracked(shooter)
+	run.enemy_store.release_untracked(ordinary_lane_01)
 
 
 func _check_primary_action_identity(run) -> void:
@@ -699,13 +699,13 @@ func _check_active_recharge_integration(run) -> void:
 	run.active_weapon_runtime.cooldown_remaining = 5.0
 	var first: EnemyState = run.call("_make_enemy", {
 		"id":"recharge_direct_first",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(300.0, 0.0),
 		"active":true,
 	})
 	var second: EnemyState = run.call("_make_enemy", {
 		"id":"recharge_direct_second",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(340.0, 0.0),
 		"active":true,
 	})
@@ -733,13 +733,13 @@ func _check_active_recharge_integration(run) -> void:
 
 func _check_boss_progression_gate(run) -> void:
 	run.call("_start_stage_boss")
-	_expect(run.call("_find_enemy_by_id", "stage_boss") == null, "boss cannot spawn before ordinary defeats")
+	_expect(run.call("_find_enemy_by_id", "boss_actor") == null, "boss cannot spawn before ordinary defeats")
 	run.stage_flow.defeats = run.stage_flow.quota - 1
 	run.call("_start_stage_boss")
-	_expect(run.call("_find_enemy_by_id", "stage_boss") == null, "boss remains blocked one defeat before quota")
+	_expect(run.call("_find_enemy_by_id", "boss_actor") == null, "boss remains blocked one defeat before quota")
 	var quota_enemy: EnemyState = run.call("_make_enemy", {
 		"id":"quota_transition_probe",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(600.0, 0.0),
 		"active":true,
 	})
@@ -765,7 +765,7 @@ func _check_boss_progression_gate(run) -> void:
 		var filler_id := "boss_capacity_filler_%03d" % filler_ids.size()
 		var filler: EnemyState = run.call("_make_enemy", {
 			"id":filler_id,
-			"role":&"scrap_drone",
+			"role":&"ordinary_melee_01",
 			"pos":run.player_position + Vector2(float(filler_ids.size()), 500.0),
 			"active":true,
 		})
@@ -775,7 +775,7 @@ func _check_boss_progression_gate(run) -> void:
 	run.call("_update_stage_progression", 1.5)
 	_expect(
 		run.stage_flow.boss_entry_ready()
-			and run.call("_find_enemy_by_id", "stage_boss") == null
+			and run.call("_find_enemy_by_id", "boss_actor") == null
 			and run.enemy_store.live_count() == blocked_live_count,
 		"boss entry remains pending when the reserved capacity is unavailable"
 	)
@@ -788,7 +788,7 @@ func _check_boss_progression_gate(run) -> void:
 	run.enemy_store.flush_defeated()
 	run.call("_update_stage_progression", 0.0)
 	_expect(
-		run.call("_find_enemy_by_id", "stage_boss") != null
+		run.call("_find_enemy_by_id", "boss_actor") != null
 			and run.enemy_store.live_count() <= EnemyStore.MAX_LIVE_HOSTILES,
 		"pending boss entry retries after one slot clears and never exceeds capacity"
 	)
@@ -807,7 +807,7 @@ func _check_boss_progression_gate(run) -> void:
 
 
 func _check_boss_damage_and_guidance(run, ui) -> void:
-	var boss: EnemyState = run.call("_find_enemy_by_id", "stage_boss")
+	var boss: EnemyState = run.call("_find_enemy_by_id", "boss_actor")
 	_expect(boss != null, "boss guidance fixture has a live boss")
 	if boss == null:
 		return
@@ -892,7 +892,7 @@ func _check_boss_damage_and_guidance(run, ui) -> void:
 
 func _check_boss_committed_recovery(run) -> void:
 	var boss: EnemyState = run.call("_make_enemy", {
-		"id":"validation_boss", "role":&"stage_boss",
+		"id":"validation_boss", "role":&"boss_actor",
 		"pos":run.player_position + Vector2(760.0, 0.0), "active":true,
 	})
 	boss["active"] = true
@@ -1102,7 +1102,7 @@ func _check_boss_emitted_cross(run) -> void:
 	run.denied_zones.clear()
 	var boss: EnemyState = run.call("_make_enemy", {
 		"id":"validation_cross_boss",
-		"role":&"stage_boss",
+		"role":&"boss_actor",
 		"pos":run.player_position + Vector2(-480.0, 0.0),
 		"active":true,
 	})
@@ -1111,8 +1111,8 @@ func _check_boss_emitted_cross(run) -> void:
 	run.call(
 		"_append_boss_cross_corridors",
 		boss,
-		"archive_cross",
-		BossPatterns.damage("archive_cross", run.current_stage_index)
+		"cross_beam",
+		BossPatterns.damage("cross_beam", run.current_stage_index)
 	)
 	_expect(
 		run.denied_zones.size() == 2
@@ -1127,7 +1127,7 @@ func _check_boss_emitted_cross(run) -> void:
 				)
 			))
 			and boss.attack_telegraphs.is_empty(),
-		"Archive Cross transfers two bidirectional emitted-beam axes to collision zones"
+		"Cross Beam transfers two bidirectional emitted-beam axes to collision zones"
 	)
 	run.denied_zones.clear()
 	run.enemy_store.release_untracked(boss)
@@ -1152,7 +1152,7 @@ func _check_enemy_expansion(run) -> void:
 	_expect(not mine.alive, "stationary mine retires after one explosion")
 
 	var guard: EnemyState = run.call("_make_enemy", {
-		"id":"validation_guard", "role":&"bulkhead_guard",
+		"id":"validation_guard", "role":&"ordinary_shield_01",
 		"pos":run.player_position + Vector2(300.0, 0.0), "active":true,
 	})
 	var primary_round := ProjectileState.new()
@@ -1167,7 +1167,7 @@ func _check_enemy_expansion(run) -> void:
 	run.enemy_store.release_untracked(guard)
 
 	var splitter: EnemyState = run.call("_make_enemy", {
-		"id":"validation_splitter", "role":&"splitter_barge",
+		"id":"validation_splitter", "role":&"ordinary_pulse_01",
 		"pos":run.player_position + Vector2(-300.0, 0.0), "active":true,
 	})
 	run.encounter_runtime.current_beat = 4
@@ -1177,7 +1177,7 @@ func _check_enemy_expansion(run) -> void:
 	for enemy in run.enemies:
 		if enemy.alive and enemy.carrier_id == "splitter:validation_splitter":
 			children += 1
-	_expect(children == 2, "Splitter Barge emits exactly two summon-only children when capacity permits")
+	_expect(children == 2, "Pulse Ordinary Enemy Lv.1 emits exactly two summon-only children when capacity permits")
 
 
 func _check_primary_collision_at_horde_capacity(run) -> void:
@@ -1186,7 +1186,7 @@ func _check_primary_collision_at_horde_capacity(run) -> void:
 	for index in EnemyStore.MAX_LIVE_HOSTILES - 2:
 		var filler: EnemyState = run.call("_make_enemy", {
 			"id":"collision_filler_%d" % index,
-			"role":&"chaser",
+			"role":&"ordinary_edge_01",
 			"pos":run.player_position + Vector2(-500.0, 400.0),
 			"active":true,
 		})
@@ -1196,13 +1196,13 @@ func _check_primary_collision_at_horde_capacity(run) -> void:
 		)
 	var first_target: EnemyState = run.call("_make_enemy", {
 		"id":"collision_first_target",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(240.0, 38.0),
 		"active":true,
 	})
 	var rear_target: EnemyState = run.call("_make_enemy", {
 		"id":"collision_rear_target",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(310.0, 0.0),
 		"active":true,
 	})
@@ -1441,15 +1441,15 @@ func _check_nearby_radar_contacts(run) -> void:
 	nearby_offset = minf(nearby_offset, run._runtime_threat_scan_distance - 80.0)
 	var distant_offset: float = run._runtime_threat_scan_distance + 200.0
 	var visible_enemy: EnemyState = run.call("_make_enemy", {
-		"id":"radar_visible", "role":&"chaser",
+		"id":"radar_visible", "role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(200.0, 0.0), "active":true,
 	})
 	var nearby_enemy: EnemyState = run.call("_make_enemy", {
-		"id":"radar_nearby", "role":&"chaser",
+		"id":"radar_nearby", "role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(nearby_offset, 0.0), "active":true,
 	})
 	var distant_enemy: EnemyState = run.call("_make_enemy", {
-		"id":"radar_distant", "role":&"chaser",
+		"id":"radar_distant", "role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(distant_offset, 0.0), "active":true,
 	})
 	for enemy in [visible_enemy, nearby_enemy, distant_enemy]:
@@ -1647,13 +1647,13 @@ func _check_hot_path_guards(run) -> void:
 		_expect(false, "stage fixture exposes a structural wall")
 	var device_rows: Array = run.mystery_device_runtime.snapshot()["devices"]
 	_expect(
-		device_rows.size() == 3
+		device_rows.size() == 6
 		and not bool(run.call(
 			"_position_clear_of_stage_objects",
 			Vector2(device_rows[0]["position"]),
 			24.0
 		)),
-		"three intact mystery devices participate in exact actor collision"
+		"six intact mystery devices participate in exact actor collision"
 	)
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")

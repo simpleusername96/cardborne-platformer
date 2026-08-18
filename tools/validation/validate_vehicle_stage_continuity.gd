@@ -37,9 +37,9 @@ func _initialize() -> void:
 			var command := transition.advance(cycle_index * 100 + serial_offset)
 			if StringName(command.get("command", &"")) == &"show_final_result":
 				saw_terminal_result = true
-		_expect(saw_terminal_result == (cycle_index == Stages.STAGE_IDS.size() - 1), "only cycle 8 reaches the terminal result")
+		_expect(saw_terminal_result == (cycle_index == Stages.STAGE_IDS.size() - 1), "only cycle 12 reaches the terminal result")
 		completed_cycles += 1
-	_expect(completed_cycles == 8, "deterministic fixture completes exactly eight cycles")
+	_expect(completed_cycles == 12, "deterministic fixture completes exactly twelve cycles")
 	_finish()
 
 

@@ -8,20 +8,20 @@ script = ExtResource("2_mod")
 stat_id = &"cryo_slow_per_stack"
 operation = "add"
 display_unit = "percent"
-values_by_level = Array[float]([6.0, 8.0, 10.0])
+values_by_level = Array[float]([4.0, 6.0, 8.0, 9.0, 11.0, 12.0])
 
 [sub_resource type="Resource" id="Modifier_duration"]
 script = ExtResource("2_mod")
 stat_id = &"cryo_duration"
 operation = "add"
 display_unit = "seconds"
-values_by_level = Array[float]([2.0, 2.5, 3.0])
+values_by_level = Array[float]([1.8, 2.2, 2.6, 3.0, 3.3, 3.6])
 
 [sub_resource type="Resource" id="Modifier_shatter"]
 script = ExtResource("2_mod")
 stat_id = &"cryo_shatter_damage"
 operation = "add"
-values_by_level = Array[float]([18.0, 28.0, 42.0])
+values_by_level = Array[float]([18.0, 25.0, 32.0, 39.0, 47.0, 55.0])
 
 [resource]
 script = ExtResource("1_def")
@@ -31,5 +31,5 @@ description_key = "UPGRADE_CRYO_SLOW_DESC"
 enhance_description_key = "UPGRADE_CRYO_SLOW_ENHANCE_DESC"
 category = &"element"
 artwork_asset_id = &"upgrade/cryo_slow"
-max_level = 3
+max_level = 6
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_slow"), SubResource("Modifier_duration"), SubResource("Modifier_shatter")])

@@ -50,7 +50,7 @@ after the automated contract is complete.
   also uses a stale stored center while drawing at the moving player center.
 - Thermal Burst and Drop Mine already publish exact-radius impulses, while Explosive
   Seeker applies a `95 px` burst without publishing any effect receipt.
-- Repair Tender draws one thick undirected line from `VehicleRun`, splitting presentation
+- Support Ordinary Enemy Lv.1 draws one thick undirected line from `VehicleRun`, splitting presentation
   ownership and reading too much like a damaging beam.
 - Scheduled enemy movement runs at `30 Hz` near and `20 Hz` far, but MultiMesh positions
   copy simulation samples directly. The observed manual trace held about `59.88 FPS`; the
@@ -70,7 +70,7 @@ after the automated contract is complete.
 In scope:
 
 - Electric Field, EMP charge/release, Thermal Burst, Drop Mine, Explosive Seeker,
-  Mystery purge, shields, beam corridors, and Repair Tender link presentation.
+  Mystery purge, shields, beam corridors, and Support Ordinary Enemy Lv.1 link presentation.
 - Exact area footprints and unified short impulse envelopes.
 - Renderer-owned, fixed-capacity enemy transform interpolation keyed by pool slot and
   generation, including spawn/reuse/discontinuity resets.
@@ -125,7 +125,7 @@ Out of scope:
   inner disk independently.
 - Keep shield protection as one body-attached closed line. Keep existing beam startup and
   active states as exact filled corridors.
-- Move Repair Tender feedback into `VehicleCombatRenderer`. Draw repeated source-to-target
+- Move Support Ordinary Enemy Lv.1 feedback into `VehicleCombatRenderer`. Draw repeated source-to-target
   packets and an open recipient chevron; reduced motion keeps the same segmented link but
   removes packet travel.
 
@@ -157,7 +157,7 @@ Out of scope:
 
 ### Runtime reliability and difficulty
 
-- Retry `_start_stage_boss()` every progression tick while boss entry is ready and the
+- Retry `_start_boss_actor()` every progression tick while boss entry is ready and the
   boss has not started. Preserve the reserve guard and never exceed `320` enemies.
 - Retune ordinary archetype base speeds so the global `1.40` and stage `1.00..1.04` curves
   yield bounded role targets. Stage 1/5 target pairs are: Scrap/Chaser/Rammer `266/277`,
@@ -202,7 +202,7 @@ Out of scope:
   outer utility fringe for charge and release.
 - [x] 1.3 Add a bounded Explosive Seeker impact receipt at the exact `95 px` gameplay
   radius and share the unified short impulse lifecycle with Thermal Burst and Drop Mine.
-- [x] 1.4 Move Repair Tender feedback into the retained renderer as a segmented,
+- [x] 1.4 Move Support Ordinary Enemy Lv.1 feedback into the retained renderer as a segmented,
   directional support link and remove the direct `VehicleRun` line.
 - [x] 1.5 Remove stale authored-EMP wording and stale Mystery Device health-bar state.
 
@@ -310,7 +310,7 @@ substitute for automated correctness gates.
 - Interpolation lag may make collision appear offset. Keep duration bounded, snap large
   discontinuities, and test contact-adjacent motion.
 - Heal segments may consume too many overlay instances. Use a fixed small segment count
-  per active Repair Tender and retain the existing batch capacity guard.
+  per active Support Ordinary Enemy Lv.1 and retain the existing batch capacity guard.
 - Health bars may overlap large bodies near corners. Prefer above/below placement and then
   clamp the complete backing, verified at all four edges.
 - Combined health and damage increases may overshoot. Preserve telegraphs and role speed
@@ -348,7 +348,7 @@ deferred to the user after all deterministic and production-build gates pass.
 - Captures: `build/captures/execplan-2026-08-11-combat-clarity/` contains the complete
   `116`-file capture set and manifest. Direct original-detail review covered Electric
   Field levels, standard/reduced-motion EMP charge and release, Explosive Seeker impact,
-  semantic health bars and Repair Tender link, beam corridor, essential transients, and
+  semantic health bars and Support Ordinary Enemy Lv.1 link, beam corridor, essential transients, and
   Stage 5 boss active state. The images preserve the approved shape grammar, exact-area
   hierarchy, safe bar placement, and readable overlap.
 - Quality audit: responsibilities remain with the effect store, renderer, archetype,

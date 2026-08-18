@@ -124,6 +124,8 @@ const STAGE_ROLLOUT := [
 	{"teach": &"repair_network", "combine": &"crossfire_convoy"},
 	{"teach": &"learned_remix", "combine": &"learned_remix"},
 	{"teach": &"learned_remix", "combine": &"learned_remix"},
+	{"teach": &"crossfire_convoy", "combine": &"learned_remix"},
+	{"teach": &"learned_remix", "combine": &"crossfire_convoy"},
 ]
 
 

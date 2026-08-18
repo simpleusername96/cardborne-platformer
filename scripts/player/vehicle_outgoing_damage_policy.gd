@@ -7,9 +7,9 @@ extends RefCounted
 const DAMAGE_DIRECT := 1
 const DAMAGE_PERIODIC := 2
 
-const CRITICAL_CHANCES := [0.0, 0.08, 0.12, 0.16]
-const DASH_BONUSES := [0.0, 0.15, 0.25, 0.35]
-const CRISIS_MAX_BONUSES := [0.0, 0.05, 0.10, 0.20]
+const CRITICAL_CHANCES := [0.0, 0.04, 0.07, 0.11, 0.14, 0.18, 0.21]
+const DASH_BONUSES := [0.0, 0.08, 0.15, 0.23, 0.31, 0.38, 0.46]
+const CRISIS_MAX_BONUSES := [0.0, 0.04, 0.08, 0.13, 0.17, 0.22, 0.26]
 const CRITICAL_MULTIPLIER := 2.0
 const CONDITIONAL_BONUS_CAP := 1.0
 const CRISIS_START_RATIO := 0.60
@@ -17,15 +17,15 @@ const CRISIS_FULL_RATIO := 0.25
 
 
 static func critical_chance(level: int) -> float:
-	return float(CRITICAL_CHANCES[clampi(level, 0, 3)])
+	return float(CRITICAL_CHANCES[clampi(level, 0, CRITICAL_CHANCES.size() - 1)])
 
 
 static func dash_bonus(level: int) -> float:
-	return float(DASH_BONUSES[clampi(level, 0, 3)])
+	return float(DASH_BONUSES[clampi(level, 0, DASH_BONUSES.size() - 1)])
 
 
 static func crisis_max_bonus(level: int) -> float:
-	return float(CRISIS_MAX_BONUSES[clampi(level, 0, 3)])
+	return float(CRISIS_MAX_BONUSES[clampi(level, 0, CRISIS_MAX_BONUSES.size() - 1)])
 
 
 static func crisis_bonus(level: int, hull_ratio: float) -> float:

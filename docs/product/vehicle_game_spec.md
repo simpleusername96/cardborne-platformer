@@ -5,7 +5,7 @@ owner: BK
 created: 2026-07-21
 last_reviewed: 2026-08-15
 canonical_for: Cardborne gameplay and product behavior
-scope: Current run-selected-field eight-boss-cycle vehicle campaign
+scope: Current run-selected-field twelve-boss-cycle vehicle campaign
 related:
   - ../design/VISUAL_SYSTEM.md
   - ./vehicle_upgrade_catalog.md
@@ -22,10 +22,10 @@ run-selected field while manually aiming a held primary weapon, dashing through 
 and building a compact set of automatic and active weapons. A new run selects one of
 three registered macro fields, one authored tactical arrangement, three neutral
 facilities, and direct experience placements, then keeps that complete physical field
-through eight deterministic boss cycles. A boss-cycle boundary advances only the future
+through twelve deterministic boss cycles. A boss-cycle boundary advances only the future
 ordinary-enemy composition and the next boss profile.
 
-This is the canonical product contract for the current executable eight-boss-cycle run.
+This is the canonical product contract for the current executable twelve-boss-cycle run.
 
 ## Scope
 
@@ -42,7 +42,7 @@ room, or an absolute completion-time target.
 - The repository is the source of truth. A generated Web export is a release
   artifact and must not become a separately hand-maintained version of the game.
 - A browser release is not qualified by a successful boot alone. The complete
-  eight-boss-cycle loop, keyboard and mouse input, pause and pointer behavior, audio
+  twelve-boss-cycle loop, keyboard and mouse input, pause and pointer behavior, audio
   startup, persistence, Korean and English surfaces, and browser runtime
   performance must pass release validation.
 - Mobile-browser controls, responsive touch play, hosting provider selection,
@@ -74,7 +74,7 @@ room, or an absolute completion-time target.
 
 - Every run uses the existing Hard combat profile. Deployment exposes no
   difficulty selector, description, lock explanation, or saved preference.
-- Confirming deployment starts the complete eight-boss-cycle run with that fixed
+- Confirming deployment starts the complete twelve-boss-cycle run with that fixed
   profile. Cycle transitions preserve it internally.
 - The fixed profile composes with the shallow stage curve. It does not alter
   attack cadence, telegraph duration, hostile projectile speed, threat budgets,
@@ -85,20 +85,20 @@ room, or an absolute completion-time target.
 | Hard | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
 All non-boss enemy archetypes receive the existing `2.60` health multiplier
-after the fixed profile and eight-cycle ordinary-health curve, then the eight-cycle pressure
+after the fixed profile and twelve-cycle ordinary-health curve, then the twelve-cycle pressure
 curves defined in the campaign section, followed by one final ordinary-durability
 multiplier of `1.20` before elite modifiers. The ordinary health curve is
-`[1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00]`, and the ordinary
-movement-speed curve is `[1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30]`.
+`[1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00, 2.00, 2.00, 2.00, 2.00]`, and the ordinary
+movement-speed curve is `[1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30, 1.30, 1.30, 1.30, 1.30]`.
 Existing actors keep the values captured at spawn when a later cycle begins.
 Boss health uses
 the separate stage profile defined below and never receives the `1.20`
 ordinary-durability multiplier.
 Ordinary enemy-sourced damage applies the shared `1.755` multiplier, the stage
-curve `[1.00, 1.017, 1.034, 1.051, 1.069, 1.086, 1.103, 1.12]`, and the additional stage pressure defined below. Boss `final-effective` attacks
+curve `[1.00, 1.03, 1.06, 1.09, 1.12, 1.15, 1.18, 1.21, 1.24, 1.27, 1.30, 1.33]`, and the additional stage pressure defined below. Boss `final-effective` attacks
 use their separate stage profile and bypass the ordinary multiplier and ordinary
 stage pressure. Friendly or environmental damage bypasses both.
-Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` every
+Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks restore `8 HP` every
 `0.75 s`; both healing outputs are twice their previous values.
 
 ### Damage readability and hostile projectiles
@@ -136,12 +136,12 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   visible body.
 - Ordinary hull contact uses the relative swept path between the player's and
   enemy's physics-start and physics-end positions, so two moving bodies cannot
-  cross between endpoint checks. Chaser, Scrap Drone, Rammer, and committed
+  cross between endpoint checks. Chaser, Melee Ordinary Enemy Lv.1, Rammer, and committed
   collective execution contact can damage at most once per warned active
-  attack. Bulkhead Guard and Splitter Barge use persistent hull contact with a
+  attack. Shield Ordinary Enemy Lv.1 and Pulse Ordinary Enemy Lv.1 use persistent hull contact with a
   `0.8 s` per-enemy retry cooldown that starts only when barrier or hull accepts
   damage; an invulnerability rejection leaves the contact armed. Mobile Shooter,
-  Controller, and Artillery Spotter behavior roles, including their swarm
+  Controller, and Growth Ordinary Enemy Lv.1 behavior roles, including their swarm
   archetype variants, use low hull-scrape contact for `6` damage with a `1.0 s`
   per-enemy accepted-hit cooldown. A rejected scrape remains armed. Support,
   fixed-structure, ordinary-mine, and ordinary Chaser/Rammer hull overlap outside
@@ -166,7 +166,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   create no warning.
 - All hostile circles, wedges, shockwaves, and damaging corridors use a danger-red full
   footprint, one thin near-black perimeter, and four inward boundary notches, regardless
-  of affinity. Controller and Artillery Spotter attacks are projectiles; ordinary
+  of affinity. Controller and Growth Ordinary Enemy Lv.1 attacks are projectiles; ordinary
   mine proximity damage draws no world range ring. Affinity-specific inner rings,
   diamonds, center lines, tick bars, endpoint caps, and commit markers are absent.
   Circular damage falls linearly from 100% at the center to 45% at the boundary
@@ -193,8 +193,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 ### One run-selected field
 
-- A new run deterministically selects `drowned_ruin_field`,
-  `tidal_archive_field`, or `storm_drydock_field`. The run resolves one immutable
+- A new run deterministically selects `field_01_field`,
+  `field_02_field`, or `field_03_field`. The run resolves one immutable
   tactical child and every boss cycle and exact retry keeps it.
   Every cycle-facing title derives from the selected field in both Korean and
   English rather than reusing another field's label.
@@ -216,8 +216,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   enemy and boss attacks can create hostile damage areas on the field.
 - Rendering, movement, projectile collision, line of sight, pursuit, minimap,
   and validation consume the same active tactical layout. Exact retries
-  reproduce it, and the inner-wall geometry remains fixed through all eight
-  cycles so a run reads as one continuous field rather than eight reset maps.
+  reproduce it, and the inner-wall geometry remains fixed through all twelve
+  cycles so a run reads as one continuous field rather than twelve reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
   least thirty-two content candidates are reusable authored sources. A new run
   selects three dormant neutral facilities, two experience-recall pickups, and ten XP shards with explicit
@@ -241,8 +241,8 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 - Run-selected inner walls and paired Transit Gates preserve their geometry, collision,
   line-of-sight, dwell, cooldown, and deterministic layout owners.
-- The persistent field places three distinct neutral facilities from a run-seeded rotation.
-  Across eight cycles Repair, Cryo, Weakpoint, and Lava each appear at least once.
+- The persistent field places six distinct neutral facilities from a run-seeded rotation.
+  Across twelve cycles Repair, Cryo, Weakpoint, and Lava each appear at least once.
 - Facilities have 360 health, begin dormant, accept player and hostile damage, and all
   projectiles pass through them. Destruction activates the assigned effect for exactly 12 seconds;
   the facility then expires at the end of that timer or at cycle cleanup.
@@ -263,10 +263,10 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 1. Each cycle executes `ORDINARY_COMBAT -> BOSS_WARNING -> BOSS_COMBAT ->
    BOSS_DEATH_CLEANUP -> CYCLE_TRANSITION`.
-2. Ordinary quotas are `60/66/72/78/84/90/96/102`; authored mobile populations are
-   `260/300/340/390/440/500/560/630`. Exact materialized ordinary caps are
-   `32/44/56/64/72/72/72/72`, and engaged-visible refill floors are
-   `12/16/20/24/28/32/36/40`. Reserve scheduling preserves authored populations instead
+2. Ordinary quotas are `90/99/108/117/126/135/144/153/162/171/180/189`; authored mobile populations are
+   `260/300/340/390/440/500/560/630/700/770/840/910`. Exact materialized ordinary caps are
+   `32/44/56/64/72/72/72/72/72/72/72/72`, and engaged-visible refill floors are
+   `12/16/20/24/28/32/36/40/44/48/52/56`. Reserve scheduling preserves authored populations instead
    of deleting excess work.
 3. First visible hostile is due within 4.0 seconds, first meaningful attack preparation
    within 8.0 seconds, and no empty or off-screen-only combat gap may exceed 3.0 seconds.
@@ -274,42 +274,47 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
    existing paths. It may not teleport them or lower counts, cadence, or collision work.
 4. Every ordinary role attacks the player. Ordinary defeats advance quota; summons,
    facilities, and boss-cleanup retirement do not. Living ordinary enemies never block
-   the quota-triggered boss.
-5. Quota completion starts a 1.5-second boss warning. The eight bosses appear in order:
-   Foundry Colossus, Archive Leviathan, Drydock Titan, Switchyard Behemoth, Crown Engine,
-   Siege Battery, Vector Loom, and Pulse Core.
+   the quota-triggered boss. Each cycle admits a rolling three-role roster: two retained
+   roles plus one teaching role that previews one essential response for that cycle's boss.
+   The teaching role is at least four admissions and 25% of normal admissions; stage 12's
+   support role is limited to 12%. A cycle change affects future admissions only and never
+   deletes already-living ordinary enemies.
+5. Quota completion starts a 1.5-second boss warning. Twelve bosses appear in stage order
+   under generic labels from Stage 1 Boss through Stage 12 Boss.
 6. All bosses share a committed charge and a broad three-row projectile barrage. Common
    patterns occupy at most two of any five direct selections. Every barrage emits three
    rows at 0.38-second intervals, with 4/5/6 simultaneous projectiles per row in cycles
-   1-3/4-6/7-8 and either a 42-degree spread or 22.5-degree row-axis rotation.
-7. Drydock alone uses directional defense, and it directly charges an attack. Its
-   body-attached frontal arc blocks 50% inside a 70-degree arc and converts blocked
-   damage into its counterburst. Crown has no shield. No boss is defense-only and no
+   1-3/4-6/7-12 and either a 42-degree spread or 22.5-degree row-axis rotation.
+7. Stage 3 boss alone uses directional defense, and it directly charges an attack. Its
+   body-attached shield has three rotating 80-degree segments separated by three 40-degree
+   gaps. Segment hits deal 15% damage. The shield stays up for eight seconds, then disappears
+   for two seconds, and blocked damage charges its counterburst. Stage 5 boss has no shield. No boss is defense-only and no
    global shield-down rule exists.
 8. High-threat attacks deal 60-85 damage once per execution, warn for at least 1.30
    seconds, use collision-matching committed geometry, and leave an escape corridor at
    least player diameter + 80 units. Pressure damage is 10-18 and normal damage is 22-38.
    No true instant-kill attack exists.
 9. Boss base health is 26000. Health scales are
-   `1.00/1.12/1.25/1.39/1.54/1.70/1.87/2.05`; damage scales
-   `1.00/1.06/1.12/1.18/1.24/1.31/1.38/1.46`; move speeds
-   `380/395/410/425/440/455/470/485`; cadence scales
-   `.67/.65/.63/.61/.59/.57/.55/.53`; coverage scales
-   `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28`. Bosses approach above 240 pixels,
+   `1.30/1.456/1.625/1.807/2.002/2.210/2.431/2.665/2.860/3.055/3.250/3.510`; damage scales
+   `1.00/1.06/1.12/1.18/1.24/1.31/1.38/1.46/1.54/1.62/1.70/1.78`; move speeds
+   `380/395/410/425/440/455/470/485/495/505/515/525`; cadence scales
+   `.67/.65/.63/.61/.59/.57/.55/.53/.52/.51/.50/.49`; coverage scales
+   `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28/1.30/1.32/1.34/1.36`. Bosses approach above 240 pixels,
    strafe from 140 through 240 pixels, and retreat only below 140 pixels. Movement slow
    affects boss movement but not attack timers.
    Cadence scales apply to direct read gaps, direct recovery, and autonomous intervals;
    startup warnings and active windows remain authored and unshortened. Boss projectile
    speed uses `1.40x`, beam reach `1.45x`, committed charge speed
    `1.30x`, and circular or wedge radius `1.25x`; warning time is never reduced.
-   Archive Cross commits two clipped perpendicular X corridors. Siege Battery alone
+   Cross Beam commits two clipped perpendicular X corridors. Stage 6 Boss alone
    uses ammunition that arms at 360 traveled units and caps at 880, interpolating speed
    `0.75x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`.
-   Vector Loom commits paired translating walls with one collision-true opening, then
+   Stage 7 Boss commits paired translating walls with one collision-true opening, then
    crosses the field with a delayed orthogonal pass whose opening moves to a different
-   axis. Pulse Core commits two warned ring pulses whose safe sector alternates, then
+   axis. Stage 8 Boss commits two warned ring pulses whose safe sector alternates, then
    emits one bounded twelve-shot radial volley from the second pulse. These mechanics
-   execute in both direct and autonomous selections and retain the existing boss images.
+   execute in both direct and autonomous selections. Stages 9-12 add edge-bar, pull-pulse,
+   range-switch, and three-beat remix exams while retaining the approved boss images.
 10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
     immediately. The boss body receives a restrained hit tint, dim/desaturation, and
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
@@ -319,31 +324,38 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
     pickups, living ordinary enemies, player position, velocity, aim, projectiles, XP,
     build, cooldowns, fixed Hard state, exploration, and terrain. It changes only the
     profile used for future ordinary admissions, the next quota, and the next boss.
-    Cycle 8 opens Result; failure opens Failure Report.
+    Cycle 12 opens Result; failure opens Failure Report.
 
 | Boss cycle | Quota | Authored mobile population | Boss |
 | ---: | ---: | ---: | --- |
-| 1 | 60 | 260 | Foundry Colossus |
-| 2 | 66 | 300 | Archive Leviathan |
-| 3 | 72 | 340 | Drydock Titan |
-| 4 | 78 | 390 | Switchyard Behemoth |
-| 5 | 84 | 440 | Crown Engine |
-| 6 | 90 | 500 | Siege Battery |
-| 7 | 96 | 560 | Vector Loom |
-| 8 | 102 | 630 | Pulse Core |
+| 1 | 90 | 260 | Stage 1 Boss |
+| 2 | 99 | 300 | Stage 2 Boss |
+| 3 | 108 | 340 | Stage 3 Boss |
+| 4 | 117 | 390 | Stage 4 Boss |
+| 5 | 126 | 440 | Stage 5 Boss |
+| 6 | 135 | 500 | Stage 6 Boss |
+| 7 | 144 | 560 | Stage 7 Boss |
+| 8 | 153 | 630 | Stage 8 Boss |
+| 9 | 162 | 700 | Stage 9 Boss |
+| 10 | 171 | 770 | Stage 10 Boss |
+| 11 | 180 | 840 | Stage 11 Boss |
+| 12 | 189 | 910 | Stage 12 Boss |
 
 ### Items, experience, and upgrades
 
 - Enemy defeats leave collectible XP shards; boss-cleanup retirement never grants XP.
   A new run adds exactly ten visible XP shards to authored placements; cycle advancement
   does not repopulate them.
+- A new run places four experience-recall pickups. After 90 active seconds, if fewer than
+  two remain active, one consumed recall returns every 30 seconds, never above four.
 - Repair pickups are removed. Their former sockets produce XP shards and Repair facilities
   own high-rate recovery.
-- `vehicle_upgrade_catalog.md` is canonical for 27 cards and 91 nominal level states.
+- The upgrade data resources and generated Korean report are canonical for 27 cards and
+  172 nominal level states.
   Thermal Burst, Bio Toxin, and Cryo have no damage/utility slot distinction. A run may
   own any two distinct attributes in acquisition order and may keep leveling either one;
   a third distinct attribute is incompatible. Cryo consumes its third Chill stack for
-  `18/28/42` shatter damage at levels 1-3. Shock and replacement attributes do not exist.
+  `18/25/32/39/47/55` shatter damage at levels 1-6. Shock and replacement attributes do not exist.
 - Miss Compensation stores up to five missed shot groups and consumes them on the next
   hostile hit for +8/11/14% damage per stack. Hit Chain stores up to eight consecutive
   hit groups for +3/4/5% primary damage per stack and clears on a miss. Braced Fire charges
@@ -373,7 +385,7 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
   in Ship Status. No
   player-facing `Stage N/10`, odd/even pairing, transition banner, boss room, or
   difficulty selector remains.
-- Guidebook categories remain Ship, Enemies, Bosses, and Field Objects. It lists all eight
+- Guidebook categories remain Ship, Enemies, Bosses, and Field Objects. It lists all twelve
   bosses and active ordinary roles from gameplay data; facilities are Field Objects.
 - Victory, defeat, and Settings Ship Status reuse one report view model and report body:
   one left-aligned vertical stack, exactly one outer scroll, no report tabs, metric
@@ -426,16 +438,16 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 ## Acceptance Criteria
 
-- Exactly eight boss cycles complete in order; every boss follows its quota and safe
+- Exactly twelve boss cycles complete in order; every boss follows its quota and safe
   cleanup, and no player-facing ten-stage/paired language remains.
 - Every boss charges, fires simultaneous multi-projectile rows, and emphasizes its
   identity patterns. Base stats strengthen monotonically.
-- Drydock alone uses defense and links it to offense. No global shield rule,
+- Stage 3 boss alone uses defense and links it to offense. No global shield rule,
   defense-only boss, true instant kill, or mismatched high-threat warning remains.
 - Boss death lasts exactly 2.00 seconds and permits no boss-owned damage, reward, quota,
   or early transition. Reduced motion preserves state/timing while removing growth,
   impulse, and hit-stop.
-- The four new ordinary roles attack. Wreck Scavenger uses eligible radius-360 death
+- The four new ordinary roles attack. Melee Ordinary Enemy Lv.2 uses eligible radius-360 death
   events, caps at five stacks, and creates no corpse.
 - Shock has no reachable data, runtime, status, offer, copy, telemetry, or image. Thermal,
   Toxin, and Cryo may occupy either of two acquisition-order attribute slots; Cryo's third

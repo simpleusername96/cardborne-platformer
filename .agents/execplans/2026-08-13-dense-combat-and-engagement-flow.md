@@ -112,7 +112,7 @@ Constraints and invariants:
 - Preserve off-screen birth distance 900-2400 pixels, deterministic 2800-pixel relaxation,
   220-pixel visible margin, 320-pixel hard separation, and balanced use of all eight birth sectors.
 - Preserve 60-Hz critical phases, 30-Hz near motion, 20-Hz far motion, and 10-Hz ordinary decisions.
-- Preserve exact attack startup/active/recovery timing, threat budgets, ranged/denial/rammer limits,
+- Preserve exact attack startup/active/recovery timing, threat budgets, ranged/denial/pull_enemy limits,
   earliest swept-hit ordering, contact truth, damage/shield/status order, XP, kill credit, and boss
   reserve behavior.
 - Ordinary engagement distribution must never seek a perfect surround. A pattern reserves at least

@@ -16,7 +16,7 @@ func _run() -> void:
 	stage.player_position = Vector2(3600.0, 2160.0)
 	var enemy = stage.call("_make_enemy", {
 		"id":"gap_probe",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":stage.player_position + Vector2(1500.0, 0.0),
 		"active":true,
 	})

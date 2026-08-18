@@ -42,8 +42,8 @@ func _run() -> void:
 	_expect(stage.selected_run_difficulty == RunDifficulty.HARD, "deployment starts the fixed Hard run")
 	_expect(stage.encounter_runtime.difficulty == RunDifficulty.HARD, "encounter runtime starts at fixed Hard")
 	_expect(stage.stage_flow.quota == StageCatalog.quota(&"stage_1"), "active stage quota preserves the previous Hard value")
-	var hard_enemy = stage.call("_make_enemy", {"id":"hard_probe", "role":&"chaser", "pos":Vector2.ZERO})
-	var hard_boss = stage.call("_make_enemy", {"id":"hard_boss_probe", "role":&"stage_boss", "pos":Vector2.ZERO})
+	var hard_enemy = stage.call("_make_enemy", {"id":"hard_probe", "role":&"ordinary_edge_01", "pos":Vector2.ZERO})
+	var hard_boss = stage.call("_make_enemy", {"id":"hard_boss_probe", "role":&"boss_actor", "pos":Vector2.ZERO})
 	_expect(
 		_near(
 			hard_enemy.speed,
@@ -60,37 +60,37 @@ func _run() -> void:
 		),
 		"boss movement uses the cycle-owned base speed"
 	)
-	var health_curve := [1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00]
-	var speed_curve := [1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30]
-	var health_pressure := [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-	var boss_bases := [26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0, 26000.0]
-	var boss_health_multipliers := [1.00, 1.12, 1.25, 1.39, 1.54, 1.70, 1.87, 2.05]
-	_expect(StageDifficulty.HEALTH == health_curve, "ordinary health stays near baseline early and reaches exactly 2.00x in cycle 8")
+	var health_curve := [1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00, 2.00, 2.00, 2.00, 2.00]
+	var speed_curve := [1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30, 1.30, 1.30, 1.30, 1.30]
+	var health_pressure := [1.00, 1.00, 1.00, 1.06, 1.12, 1.19, 1.25, 1.31, 1.38, 1.44, 1.47, 1.50]
+	var boss_bases := StageDifficulty.BOSS_BASE_HEALTH
+	var boss_health_multipliers := StageDifficulty.BOSS_HEALTH_MULTIPLIERS
+	_expect(StageDifficulty.HEALTH == health_curve, "ordinary base health stays near baseline early and reaches exactly 2.00x")
 	_expect(StageDifficulty.SPEED == speed_curve, "ordinary movement stays bounded by the exact 1.30x cycle curve")
 	_expect(
 		StageDifficulty.ORDINARY_HEALTH_PRESSURE == health_pressure,
-		"ordinary health has no second hidden pressure curve"
+		"ordinary late health pressure starts at cycle 4 and reaches 1.50x"
 	)
 	_expect(
 		is_equal_approx(StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER, 1.20),
 		"all non-boss hostiles use one final 20 percent durability policy"
 	)
-	_expect(health_curve[2] <= 1.20 and health_curve[-1] == 2.00, "early ordinary health stays within 20 percent and cycle 8 reaches 200 percent")
+	_expect(health_curve[2] <= 1.20 and health_curve[-1] == 2.00, "early ordinary health stays within 20 percent and the late run reaches 200 percent base health")
 	for stage_index in health_curve.size():
 		stage.current_stage_index = stage_index
 		var standard_enemy = stage.call("_make_enemy", {
 			"id":"standard_health_%d" % stage_index,
-			"role":&"chaser",
+			"role":&"ordinary_edge_01",
 			"pos":Vector2.ZERO,
 		})
 		var priority_enemy = stage.call("_make_enemy", {
 			"id":"priority_health_%d" % stage_index,
-			"role":&"repair_tender",
+			"role":&"ordinary_support_01",
 			"pos":Vector2.ZERO,
 		})
-		var stage_boss = stage.call("_make_enemy", {
+		var boss_actor = stage.call("_make_enemy", {
 			"id":"boss_health_%d" % stage_index,
-			"role":&"stage_boss",
+			"role":&"boss_actor",
 			"pos":Vector2.ZERO,
 		})
 		_expect(
@@ -98,6 +98,7 @@ func _run() -> void:
 				standard_enemy.health,
 				48.0 * EncounterDirector.ENEMY_HEALTH_MULTIPLIER
 					* health_curve[stage_index]
+					* health_pressure[stage_index]
 					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
 					* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER,
 				0.001
@@ -109,6 +110,7 @@ func _run() -> void:
 			_near(
 				priority_enemy.health,
 				74.0 * health_curve[stage_index]
+					* health_pressure[stage_index]
 					* StageDifficulty.ORDINARY_HEALTH_MULTIPLIER
 					* StageDifficulty.ORDINARY_DURABILITY_MULTIPLIER,
 				0.001
@@ -118,7 +120,7 @@ func _run() -> void:
 		)
 		_expect(
 			_near(
-				stage_boss.health,
+				boss_actor.health,
 				boss_bases[stage_index]
 					* boss_health_multipliers[stage_index],
 				0.001
@@ -126,11 +128,11 @@ func _run() -> void:
 			"Stage %d applies the exact monotonic boss-health profile"
 				% (stage_index + 1)
 		)
-	var damage_curve := [1.00, 1.03, 1.06, 1.09, 1.12, 1.15, 1.18, 1.21]
-	var damage_pressure := [0.98, 1.08, 1.18, 1.28, 1.38, 1.48, 1.57, 1.66]
+	var damage_curve := [1.00, 1.03, 1.06, 1.09, 1.12, 1.15, 1.18, 1.21, 1.24, 1.27, 1.30, 1.33]
+	var damage_pressure := [0.98, 1.08, 1.18, 1.28, 1.38, 1.48, 1.57, 1.66, 1.72, 1.78, 1.84, 1.90]
 	_expect(
 		StageDifficulty.ORDINARY_DAMAGE_PRESSURE == damage_pressure,
-		"ordinary damage applies the eight-cycle pressure curve"
+		"ordinary damage applies the twelve-cycle pressure curve"
 	)
 	for stage_index in damage_curve.size():
 		stage.current_stage_index = stage_index
@@ -154,27 +156,27 @@ func _run() -> void:
 	_expect(_near(hard_final_damage, 10.0, 0.001), "final-effective boss damage bypass remains unchanged")
 	_expect(_near(environmental_damage, 10.0, 0.001), "friendly and environmental damage bypass remains unchanged")
 	stage.selected_run_difficulty = &"easy"
-	var compatibility_enemy = stage.call("_make_enemy", {"id":"compatibility_probe", "role":&"chaser", "pos":Vector2.ZERO})
-	var compatibility_boss = stage.call("_make_enemy", {"id":"compatibility_boss_probe", "role":&"stage_boss", "pos":Vector2.ZERO})
+	var compatibility_enemy = stage.call("_make_enemy", {"id":"compatibility_probe", "role":&"ordinary_edge_01", "pos":Vector2.ZERO})
+	var compatibility_boss = stage.call("_make_enemy", {"id":"compatibility_boss_probe", "role":&"boss_actor", "pos":Vector2.ZERO})
 	_expect(_near(compatibility_enemy.health, hard_enemy.health, 0.001), "retired identifiers cannot alter ordinary health")
 	_expect(_near(compatibility_enemy.speed, hard_enemy.speed, 0.001), "retired identifiers cannot alter movement speed")
 	_expect(_near(compatibility_boss.health, hard_boss.health, 0.001), "retired identifiers cannot alter boss health")
 	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true)), hard_damage, 0.001), "retired identifiers cannot alter ordinary damage")
 	_expect(_near(float(stage.call("_scaled_incoming_damage", 10.0, true, true)), hard_final_damage, 0.001), "retired identifiers cannot alter authored boss damage")
 	var tuned_mobile_bases := {
-		&"scrap_drone":190.0,
-		&"needle_drone":176.0,
-		&"spark_minelet":100.0,
-		&"chaser":190.0,
-		&"shooter":166.0,
-		&"controller":150.0,
-		&"shield_escort":170.0,
-		&"artillery_spotter":140.0,
-		&"rammer":190.0,
-		&"bulkhead_guard":164.0,
-		&"splitter_barge":157.0,
-		&"repair_tender":159.0,
-		&"drone_carrier":136.0,
+		&"ordinary_melee_01":190.0,
+		&"ordinary_ranged_01":176.0,
+		&"ordinary_area_01":100.0,
+		&"ordinary_edge_01":190.0,
+		&"ordinary_lane_01":166.0,
+		&"ordinary_gap_01":150.0,
+		&"ordinary_support_02":165.0,
+		&"ordinary_growth_01":140.0,
+		&"ordinary_pull_01":190.0,
+		&"ordinary_shield_01":164.0,
+		&"ordinary_pulse_01":157.0,
+		&"ordinary_support_01":159.0,
+		&"ordinary_support_03":150.0,
 	}
 	for archetype in tuned_mobile_bases:
 		var base_speed := float(
@@ -183,7 +185,7 @@ func _run() -> void:
 		var final_cycle_speed := (
 			base_speed
 			* EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER
-			* float(StageDifficulty.SPEED[7])
+			* float(StageDifficulty.SPEED[11])
 		)
 		_expect(
 			_near(base_speed, float(tuned_mobile_bases[archetype]), 0.001)
@@ -192,7 +194,7 @@ func _run() -> void:
 				base_speed * EncounterDirector.ORDINARY_MOVEMENT_SPEED_MULTIPLIER * 1.30,
 				0.001
 			),
-			"%s keeps its tuned base and uses the exact cycle-8 speed ceiling"
+			"%s keeps its tuned base and uses the exact late-run speed ceiling"
 			% String(archetype)
 		)
 	stage.call("_reset_run", false, true, true)

@@ -9,4 +9,4 @@ title_key = "UPGRADE_HIT_CHAIN_TITLE"
 description_key = "UPGRADE_HIT_CHAIN_DESC"
 category = &"combat"
 artwork_asset_id = &"upgrade/hit_chain"
-max_level = 3
+max_level = 6

@@ -124,7 +124,7 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
   filled plane과 한 겹의 외곽선으로 제한한다. 미세 panel, 반복 lamp,
   nested outline과 greeble로 boss 등급을 표현하지 않는다.
 - 보스 방어막은 외부 objective나 별도 actor가 아니라 boss body에 붙은 한 겹의
-  command-color directional boundary다. Drydock만 전방 arc를 사용하며 collision
+  command-color directional boundary다. Stage 3 boss만 전방 arc를 사용하며 collision
   truth도 그 방향을 따른다. `shield_up`과
   `shield_down` 두 상태만 사용하며, 별도 node, pylon, module, objective marker를 만들지 않는다.
 - 짧은 한 방향 shadow, hard edge highlight와 얕은 inset은 승인 시안의
@@ -467,11 +467,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
   표시한다. charge startup도 이동 경로, endpoint cap, corridor boundary를 표시하지
   않는다.
-- Beam Sentinel과 모든 hostile boss-emitted beam은 gameplay가 committed direction,
+- Fixed Beam Ordinary Enemy Lv.1과 모든 hostile boss-emitted beam은 gameplay가 committed direction,
   endpoint, width와 active timing을 소유한다. 여기에는 단방향 `switch_sweep`,
-  `switch_sweeps`, `crown_beam`, 보스 중심에서 네 방향으로 발사되는
-  `archive_cross`, 보스 주변 두 발사점에서 나가는 `undertow_lanes`와
-  `crown_lattice`가 포함된다. Startup은 전체 경로를 표시하지 않고 각 committed
+  `switch_sweeps`, `radial_beam`, 보스 중심에서 네 방향으로 발사되는
+  `cross_beam`, 보스 주변 두 발사점에서 나가는 `opposing_lanes`와
+  `radial_lattice`가 포함된다. Startup은 전체 경로를 표시하지 않고 각 committed
   muzzle 바로 앞에 붙은 danger-red 충전 구체만 표시한다.
   predicted line, corridor fill, floor tint, endpoint와 target marker는 startup 동안
   모두 금지한다. Active 첫 `0.30s`에는 같은 구체에서 borderless filled beam이 실제
@@ -485,9 +485,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   사용하지 않고, collision-true gap과 이동 경로를 startup부터 표시한다. 탄환으로
   구현된 committed `lanes/cross`와 player-owned Auto Laser/Cross Beam도 이 hostile
   emission 계약의 대상이 아니다.
-- Vector Loom의 crossing weave는 같은 placed moving hazard 계약을 사용한다. 첫 paired
+- Stage 7 Boss의 crossing weave는 같은 placed moving hazard 계약을 사용한다. 첫 paired
   wall pass와 지연된 orthogonal pass는 각각 실제 `200`-unit gap과 이동 방향을 startup
-  footprint로 그대로 표시하며 boss muzzle beam으로 그리지 않는다. Pulse Core의 두
+  footprint로 그대로 표시하며 boss muzzle beam으로 그리지 않는다. Stage 8 Boss의 두
   alternating pulse는 각 warning에서 실제 wedge-ring 피해 영역과 서로 다른 safe sector를
   표시한다. 두 번째 pulse가 발동할 때만 12발 radial projectile body가 생성되며, warning
   단계에서 탄환 경로나 미래 위치를 미리 그리지 않는다. 두 보스의 기존 raster identity는
@@ -523,7 +523,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   authored body, HUD와 체력 정보로 전달하고 player-reward overlay를 사용하지 않는다.
 - boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 방어막은
   body에 붙은 한 겹의 directional boundary로만 표시하며 별도 actor나 asset family를
-  사용하지 않는다. Drydock만 frontal arc를 보여 주며 alpha `0.38`, body radius
+  사용하지 않는다. Stage 3 boss만 frontal arc를 보여 주며 alpha `0.38`, body radius
   `+8`를 사용한다. `shield_down`에는 표시하지 않는다.
 - Thermal Burst impact는 direct player-primary hit 위치와 gameplay radius
   `72/84/96`에 alpha `0.16`의 full thermal disk를 첫 frame부터 최종 크기로
@@ -711,7 +711,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   `mobile_enemy`, `priority_enemy`, `boss` 정확히 여섯
   역할만 사용한다. pickup은 lozenge, 중립 시설은 role과 무관한 neutral cut
   role marker, mobile enemy는 wedge/round mass, 고정 `turret`,
-  `interceptor_tower`, `beam_sentinel`, `generator`는 square/cut priority mass,
+  `ordinary_fixed_ranged_02`, `ordinary_fixed_beam_01`, `generator`는 square/cut priority mass,
   boss는 command-magenta notched mass다. resolved/retired
   device는 사라지고 elite, stage별 boss color, world outcome과 그 밖의 subtype은
   표시하지 않는다. marker capacity, borrowed buffer, explored static geometry와 fog,
@@ -733,7 +733,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   facility activation, expiry warning, shutdown event만 허용한다.
   stage transition banner는 사용하지 않는다.
 - stage boss와 고정 전투 설치물 `turret`,
-  `interceptor_tower`, `beam_sentinel`, `generator`만 world body 위에 항상 backed
+  `ordinary_fixed_ranged_02`, `ordinary_fixed_beam_01`, `generator`만 world body 위에 항상 backed
   health bar를 둔다. mobile enemy, mine, 중립 시설에는 표시하지
   않는다. installation bar는 최대 12개이며 fill 높이는 16 world unit, boss fill 높이는
   18 world unit이다. installation half-width는 `42–72`, boss는 `96–120`
@@ -853,7 +853,7 @@ Web export만으로 interactive built-Web smoke나 release performance를
   fills without legacy patterned floor or shared-wall rasters. The three approved
   `SurfaceDetail` SVGs are production-integrated as deterministic presentation-only
   72/72/48 retained instances with no collision, navigation, or per-frame update owner.
-- Beam Sentinel and all hostile boss-emitted beams share the retained code-native beam and
+- Fixed Beam Ordinary Enemy Lv.1 and all hostile boss-emitted beams share the retained code-native beam and
   disk batches. Runtime tint, per-muzzle charge-orb scale, forward/bidirectional emission
   mode, rounded active planes and the gameplay-owned `0.30s` grown segments remain
   presentation inputs; startup publishes no path geometry. Translating laser walls remain
@@ -872,9 +872,9 @@ Web export만으로 interactive built-Web smoke나 release performance를
   player-seeker, or hostile-bolt identities; runtime owns scale, rotation,
   player-primary affinity tint, collision, speed, and homing.
 - The integrated player craft, XP master, four secondary bodies, three
-  projectile roles, pickups, five approved facility roles, all eight bosses, three
+  projectile roles, pickups, approved facility roles, all twelve bosses, three
   shared boss-node states and four map assets remain the applied authored set until the active
-  eight-boss visual promotion completes. EMP, boss death, and other transient area effects
+  twelve-boss visual promotion completes. EMP, boss death, and other transient area effects
   have no authored image identity.
 - Manual aim remains readable through independent cursor, muzzle, projectile,
   and hit feedback. The player rear anchor is used only by transient dash

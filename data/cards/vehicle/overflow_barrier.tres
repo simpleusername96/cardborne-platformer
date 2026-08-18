@@ -9,4 +9,4 @@ title_key = "UPGRADE_OVERFLOW_BARRIER_TITLE"
 description_key = "UPGRADE_OVERFLOW_BARRIER_DESC"
 category = &"chassis"
 artwork_asset_id = &"upgrade/overflow_barrier"
-max_level = 3
+max_level = 6

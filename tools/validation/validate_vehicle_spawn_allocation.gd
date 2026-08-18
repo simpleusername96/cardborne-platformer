@@ -154,11 +154,11 @@ func _validate_role_distances(allocations: Array[Dictionary], player_position: V
 		_expect(lanes.size() == roles.size(), "%s records every role-aware distance lane" % context)
 		for index in roles.size():
 			var behavior := StringName(EnemyArchetypes.definition(StringName(roles[index]))["behavior"])
-			if behavior in [&"chaser", &"rammer", &"mine"]:
+			if behavior in [&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_fixed_area_01"]:
 				_expect(int(lanes[index]) in [1, 2], "%s pursuit selects 1650/2100 role lanes" % context)
-			elif behavior in [&"shooter", &"controller", &"artillery_spotter"]:
+			elif behavior in [&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01"]:
 				_expect(int(lanes[index]) in [0, 1], "%s standoff selects 1200/1650 role lanes" % context)
-			elif behavior in [&"shield_escort", &"repair_tender", &"drone_carrier"]:
+			elif behavior in [&"ordinary_support_02", &"ordinary_support_01", &"ordinary_support_03"]:
 				_expect(int(lanes[index]) == 0, "%s standoff/support selects 1200 role lane" % context)
 
 

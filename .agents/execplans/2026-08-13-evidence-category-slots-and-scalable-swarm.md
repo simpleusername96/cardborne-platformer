@@ -784,7 +784,7 @@ capture/workbench, and focused validators
     `VehicleEnemyState.mystery_weakpoint_remaining`; refresh it from current field membership and
     decrement it with the other scalar enemy timers. In `_damage_enemy`, multiply non-final,
     player-owned damage to an affected ordinary mobile enemy by `1.25`; preserve existing shield and
-    rammer multipliers, boss damage rules, telemetry, lifesteal, recharge, and mine behavior. Remove
+    pull_enemy multipliers, boss damage rules, telemetry, lifesteal, recharge, and mine behavior. Remove
     Decoy-only pressure-focus, movement-focus, route-bypass, attack-target, facing, capture,
     localization, guidebook, and validator branches. Add Korean `약점 노출` and English
     `Weakpoint Expose` strings and describe `받는 피해 +25% / Damage taken +25%`.

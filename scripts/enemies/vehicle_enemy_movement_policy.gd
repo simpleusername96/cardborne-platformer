@@ -11,27 +11,27 @@ const SUPPORT: StringName = &"support"
 const STATIONARY: StringName = &"stationary"
 
 const PURSUIT_ARCHETYPES: Array[StringName] = [
-	&"scrap_drone", &"chaser", &"rammer", &"bulkhead_guard",
-	&"splitter_barge", &"spark_minelet", &"bombing_runner", &"wreck_scavenger",
+	&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_shield_01",
+	&"ordinary_pulse_01", &"ordinary_area_01", &"ordinary_sweep_01", &"ordinary_melee_02",
 ]
 const STANDOFF_ARCHETYPES: Array[StringName] = [
-	&"needle_drone", &"shooter", &"controller", &"artillery_spotter",
-	&"rail_sniper", &"orbit_gunner",
+	&"ordinary_ranged_01", &"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01",
+	&"ordinary_beam_01", &"ordinary_range_01",
 ]
-const ESCORT_ARCHETYPES: Array[StringName] = [&"shield_escort"]
-const SUPPORT_ARCHETYPES: Array[StringName] = [&"repair_tender", &"drone_carrier"]
+const ESCORT_ARCHETYPES: Array[StringName] = [&"ordinary_support_02"]
+const SUPPORT_ARCHETYPES: Array[StringName] = [&"ordinary_support_01", &"ordinary_support_03"]
 
 const DISTANCE_BANDS := {
-	&"shooter":Vector2(330.0, 500.0),
-	&"controller":Vector2(390.0, 540.0),
-	&"shield_escort":Vector2(300.0, 470.0),
-	&"artillery_spotter":Vector2(440.0, 600.0),
-	# Rail Sniper keeps its full warning line outside ordinary brawl range.
-	&"rail_sniper":Vector2(520.0, 680.0),
-	# Orbit Gunner deliberately remains in its tangential pressure band.
-	&"orbit_gunner":Vector2(320.0, 460.0),
-	&"repair_tender":Vector2(430.0, 620.0),
-	&"drone_carrier":Vector2(430.0, 620.0),
+	&"ordinary_lane_01":Vector2(330.0, 500.0),
+	&"ordinary_gap_01":Vector2(390.0, 540.0),
+	&"ordinary_support_02":Vector2(300.0, 470.0),
+	&"ordinary_growth_01":Vector2(440.0, 600.0),
+	# Beam Ordinary Enemy Lv.1 keeps its full warning line outside ordinary brawl range.
+	&"ordinary_beam_01":Vector2(520.0, 680.0),
+	# Range Ordinary Enemy Lv.1 deliberately remains in its tangential pressure band.
+	&"ordinary_range_01":Vector2(320.0, 460.0),
+	&"ordinary_support_01":Vector2(430.0, 620.0),
+	&"ordinary_support_03":Vector2(430.0, 620.0),
 }
 
 const PURSUIT_RESPONSE := 9.0
@@ -49,13 +49,13 @@ static func family(archetype: StringName, role: StringName) -> StringName:
 	if archetype in SUPPORT_ARCHETYPES:
 		return SUPPORT
 	# Compatibility fixtures can specify a behavior without an archetype.
-	if role in [&"chaser", &"rammer", &"bulkhead_guard", &"splitter_barge", &"bombing_runner", &"wreck_scavenger"]:
+	if role in [&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_sweep_01", &"ordinary_melee_02"]:
 		return PURSUIT
-	if role in [&"shooter", &"controller", &"artillery_spotter", &"rail_sniper", &"orbit_gunner"]:
+	if role in [&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01", &"ordinary_beam_01", &"ordinary_range_01"]:
 		return STANDOFF
-	if role == &"shield_escort":
+	if role == &"ordinary_support_02":
 		return ESCORT
-	if role in [&"repair_tender", &"drone_carrier"]:
+	if role in [&"ordinary_support_01", &"ordinary_support_03"]:
 		return SUPPORT
 	return STATIONARY
 
@@ -139,11 +139,11 @@ static func direction_for_profile(
 	if movement_family == STATIONARY:
 		return Vector2.ZERO
 	if movement_family == PURSUIT:
-		if recovering and role == &"chaser":
+		if recovering and role == &"ordinary_edge_01":
 			# A recovering Chaser peels sideways. It must not keep backing away,
 			# because recovery is a short reposition rather than a retreat order.
 			return radial.rotated(signf(strafe_sign) * PI * 0.5)
-		if recovering and role == &"rammer":
+		if recovering and role == &"ordinary_pull_01":
 			return -radial
 		return radial
 
@@ -192,7 +192,7 @@ static func requests_approach_for_profile(
 	if movement_family == STATIONARY:
 		return false
 	if movement_family == PURSUIT:
-		if recovering and role in [&"chaser", &"rammer"]:
+		if recovering and role in [&"ordinary_edge_01", &"ordinary_pull_01"]:
 			return false
 		return true
 	if band == Vector2.ZERO:
@@ -210,7 +210,7 @@ static func movement_mode(
 	var movement_family := family(archetype, role)
 	if movement_family == STATIONARY:
 		return &"hold"
-	if recovering and role in [&"chaser", &"rammer"]:
+	if recovering and role in [&"ordinary_edge_01", &"ordinary_pull_01"]:
 		return &"recover"
 	if movement_family == PURSUIT or distance_band(role) == Vector2.ZERO:
 		return &"approach"

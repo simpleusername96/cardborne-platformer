@@ -26,7 +26,7 @@ static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> D
 			enemy.flash
 		)
 	if profile.chill_enabled:
-		var boss_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
+		var boss_scale := 0.5 if enemy.role == &"boss" else 1.0
 		var status: Dictionary = enemy.statuses.get(&"chill", {
 			"magnitude_per_stack":profile.chill_magnitude_per_stack * boss_scale,
 			"time":0.0,
@@ -53,7 +53,7 @@ static func apply(enemy: EnemyState, profile: VehiclePrimaryPayloadProfile) -> D
 
 
 static func apply_active_slow(enemy: EnemyState, magnitude: float, duration: float) -> void:
-	var duration_scale := 0.5 if enemy.role == &"stage_boss" else 1.0
+	var duration_scale := 0.5 if enemy.role == &"boss" else 1.0
 	enemy.statuses[&"active_slow"] = {
 		"magnitude":clampf(magnitude, 0.0, 0.50),
 		"time":maxf(0.0, duration) * duration_scale,

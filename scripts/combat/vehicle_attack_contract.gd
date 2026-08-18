@@ -42,56 +42,56 @@ const STANDARD_PROJECTILE_RADIUS := 6.0
 const HEAVY_PROJECTILE_RADIUS := 7.0
 const RADIAL_EDGE_DAMAGE_SCALE := 0.45
 const ORDINARY_ATTACKS := {
-	&"chaser":{
+	&"ordinary_edge_01":{
 		"kind":&"charge", "affinity":KINETIC, "startup":0.42, "active":0.24,
 		"damage":14.0, "speed":570.0, "contact_padding":8.0,
 	},
-	&"shooter":{
+	&"ordinary_lane_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":0.62,
 		"damage":10.0, "speed":500.0, "origin_offset":30.0,
 	},
-	&"controller":{
+	&"ordinary_gap_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":0.82,
 		"damage":9.0, "speed":440.0, "origin_offset":34.0,
 	},
-	&"turret":{
+	&"ordinary_fixed_ranged_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":0.68,
 		"damage":9.0, "speed":590.0, "origin_offset":38.0,
 	},
-	&"mine":{
+	&"ordinary_fixed_area_01":{
 		"kind":&"area", "affinity":ARC, "startup":0.62,
 		"damage":16.0, "radius":205.0,
 	},
-	&"artillery_spotter":{
+	&"ordinary_growth_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":1.15,
 		"damage":15.0, "speed":360.0, "origin_offset":36.0,
 	},
-	&"rail_sniper":{
+	&"ordinary_beam_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":1.40,
 		"damage":30.0, "speed":720.0, "origin_offset":38.0,
 		"recovery":2.20, "relocates_after_attack":true,
 	},
-	&"orbit_gunner":{
+	&"ordinary_range_01":{
 		"kind":&"burst", "affinity":KINETIC, "startup":0.72,
 		"damage":12.0, "speed":520.0, "origin_offset":30.0,
 		"burst_count":3, "burst_spacing":0.12, "recovery":0.92,
 	},
-	&"bombing_runner":{
+	&"ordinary_sweep_01":{
 		"kind":&"ground_burst", "affinity":KINETIC, "startup":0.76,
 		"damage":24.0, "radius":90.0, "blast_count":3, "blast_delay":0.48,
 		"blast_spacing":0.34, "pass_speed":520.0, "pass_seconds":0.72,
 		"recovery":1.15,
 	},
-	&"wreck_scavenger":{
+	&"ordinary_melee_02":{
 		"kind":&"charge", "affinity":KINETIC, "startup":0.55, "active":0.30,
 		"damage":16.0, "speed":540.0, "contact_padding":10.0,
 		"recovery":0.68,
 	},
-	&"interceptor_tower":{
+	&"ordinary_fixed_ranged_02":{
 		"kind":&"projectile", "affinity":ARC, "startup":0.78,
 		"damage":12.0, "speed":470.0, "origin_offset":40.0,
 	},
-	&"drone_carrier":{
+	&"ordinary_support_03":{
 		"kind":&"support", "affinity":SUPPORT, "startup":0.82,
 		"damage":0.0, "radius":86.0,
 	},
@@ -110,7 +110,7 @@ static func threat_tier_for(
 	source_role: StringName,
 	elite_trait: StringName = &""
 ) -> StringName:
-	if source_role == &"stage_boss":
+	if source_role == &"boss":
 		return THREAT_BOSS
 	return THREAT_ELITE if not elite_trait.is_empty() else THREAT_ORDINARY
 
@@ -279,24 +279,24 @@ static func validate_contract() -> PackedStringArray:
 			errors.append("ordinary attack has an unknown affinity: %s" % role)
 		if float(attack.get("startup", 0.0)) < 0.4:
 			errors.append("ordinary attack lacks readable startup: %s" % role)
-	var rail: Dictionary = ordinary_attack(&"rail_sniper")
+	var rail: Dictionary = ordinary_attack(&"ordinary_beam_01")
 	if not (
 		is_equal_approx(float(rail.get("startup", 0.0)), 1.40)
 		and is_equal_approx(float(rail.get("recovery", 0.0)), 2.20)
 		and bool(rail.get("relocates_after_attack", false))
 	):
-		errors.append("rail sniper must expose its exact warning, recovery, and relocation contract")
-	var orbit: Dictionary = ordinary_attack(&"orbit_gunner")
+		errors.append("Beam Ordinary Enemy Lv.1 must expose its exact warning, recovery, and relocation contract")
+	var orbit: Dictionary = ordinary_attack(&"ordinary_range_01")
 	if not (
 		StringName(orbit.get("kind", &"")) == &"burst"
 		and int(orbit.get("burst_count", 0)) == 3
 	):
-		errors.append("orbit gunner must expose one three-shot pressure burst")
-	var bombing: Dictionary = ordinary_attack(&"bombing_runner")
+		errors.append("Range Ordinary Enemy Lv.1 must expose one three-shot pressure burst")
+	var bombing: Dictionary = ordinary_attack(&"ordinary_sweep_01")
 	if not (
 		StringName(bombing.get("kind", &"")) == &"ground_burst"
 		and int(bombing.get("blast_count", 0)) == 3
 		and float(bombing.get("blast_delay", 0.0)) > 0.0
 	):
-		errors.append("bombing runner must expose three delayed ground blasts")
+		errors.append("Sweep Ordinary Enemy Lv.1 must expose three delayed ground blasts")
 	return errors

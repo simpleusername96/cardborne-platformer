@@ -182,8 +182,8 @@ func _initialize() -> void:
 		"09y-facility-weakpoint.png",
 		"20-collision-08-stage-8-default.png",
 		"30-boss-01-stage-1-arc-area-startup.png",
-		"30-boss-05-stage-5-crown-beam-startup.png",
-		"30-boss-05-stage-5-crown-beam-active.png",
+		"30-boss-05-radial-beam-startup.png",
+		"30-boss-05-radial-beam-active.png",
 		"30-boss-03-stage-3-shield-up-hit.png",
 		"30-boss-08-stage-8-startup.png",
 		"30-boss-08-stage-8-phase-two.png",
@@ -197,9 +197,9 @@ func _initialize() -> void:
 		gateway_source.contains("for stage_index in StageCatalog.STAGE_IDS.size():")
 			and gateway_source.contains("var boss_number := stage_index + 1")
 			and not gateway_source.contains("if (stage_index + 1) % 2 != 0:"),
-		"boss capture enumerates all eight campaign cycles in catalog order"
+		"boss capture enumerates all twelve campaign cycles in catalog order"
 	)
-	for boss_number in [1, 2, 3, 4, 5, 6, 7, 8]:
+	for boss_number in range(1, 13):
 		var stage_slug := "stage-%d" % boss_number
 		_expect(
 			"30-boss-%02d-%s-shield-restored.png" % [boss_number, stage_slug]

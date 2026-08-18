@@ -84,7 +84,7 @@ const ACTION_RECIPES := {
 		],
 	},
 	&"emp":{
-		"shape":&"radial_pulse_core",
+		"shape":&"radial_boss_stage_08",
 		"commands":[
 			{
 				"tone":&"primary",

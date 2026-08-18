@@ -54,9 +54,9 @@ func _initialize() -> void:
 	_expect(
 		seeker != null
 			and seeker.upgrade_id == &"homing_missiles"
-			and seeker.values_by_level == [25.0, 31.36, 40.0, 53.2]
-			and seeker.cap_by_level == [2, 3, 4, 4],
-		"Seeker definition owns four acquired card states"
+			and seeker.values_by_level == [25.0, 31.0, 37.0, 43.0, 50.0, 57.0, 64.0]
+			and seeker.cap_by_level == [2, 2, 3, 3, 4, 4, 4],
+		"Seeker definition owns seven progressive states with paired projectile-count bands"
 	)
 	_expect(build.active_automatic_weapons() == 3, "three automatic weapons fill the slot cap")
 	var automatic_ids: Array[StringName] = []
@@ -132,7 +132,7 @@ func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 	target.active = true
 	target.radius = 18.0
 
-	var seeker_build := _leveled_build(catalog, &"homing_missiles", 4)
+	var seeker_build := _leveled_build(catalog, &"homing_missiles", 7)
 	var seeker_runtime := Runtime.new()
 	_seeker_targets.assign([target])
 	target.pos = Vector2(120.0, 0.0)
@@ -143,13 +143,13 @@ func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 	)
 	var seeker_projectile := Dictionary(Array(result["projectiles"])[0])
 	_expect(
-		is_equal_approx(float(seeker_projectile["damage"]), 53.2)
-			and is_equal_approx(seeker_runtime.seeker_cooldown, 1.0125)
+		is_equal_approx(float(seeker_projectile["damage"]), 64.0)
+			and is_equal_approx(seeker_runtime.seeker_cooldown, 1.01)
 			and is_equal_approx(float(seeker_projectile["structure_damage"]), 35.0),
-		"Seeker Level 4 owns damage, cadence, and structure damage"
+		"Seeker maximum level owns raised damage, cadence, and structure damage"
 	)
 
-	var field_build := _leveled_build(catalog, &"electric_field", 4)
+	var field_build := _leveled_build(catalog, &"electric_field", 7)
 	var field_runtime := Runtime.new()
 	target.pos = Vector2(100.0, 0.0)
 	result = field_runtime.update(
@@ -157,12 +157,12 @@ func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 		field_build, [target], Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 7.7)
-			and is_equal_approx(float(field_runtime.timers[&"electric_field"]), 0.1875),
-		"Electric Field Level 4 owns damage and cadence"
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 10.0)
+			and is_equal_approx(float(field_runtime.timers[&"electric_field"]), 0.188),
+		"Electric Field maximum level owns raised damage and cadence"
 	)
 
-	var orbit_build := _leveled_build(catalog, &"orbiting_blades", 4)
+	var orbit_build := _leveled_build(catalog, &"orbiting_blades", 7)
 	var orbit_runtime := Runtime.new()
 	target.pos = Vector2(Runtime.ORBIT_RADIUS, 0.0)
 	result = orbit_runtime.update(
@@ -170,11 +170,11 @@ func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 		orbit_build, [target], Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 39.2)
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 51.0)
 			and is_equal_approx(
-				float(orbit_runtime.orbit_target_cooldowns[target.id]), 0.4125
+				float(orbit_runtime.orbit_target_cooldowns[target.id]), 0.41
 			),
-		"Orbiting Blades Level 4 owns damage and cadence"
+		"Orbiting Blades maximum level owns raised damage and cadence"
 	)
 	orbit_runtime.update(
 		0.5, Vector2.ZERO, Vector2.RIGHT, Vector2.RIGHT,
@@ -187,7 +187,7 @@ func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 		"Orbiting Blades uses the authored 3.4 rad/s wide orbit and fixed geometry"
 	)
 
-	var mine_build := _leveled_build(catalog, &"drop_mines", 4)
+	var mine_build := _leveled_build(catalog, &"drop_mines", 7)
 	var mine_runtime := Runtime.new()
 	target.pos = Vector2(-48.0, 0.0)
 	result = mine_runtime.update(
@@ -195,12 +195,12 @@ func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 		mine_build, [target], Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 123.2)
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 160.0)
 			and is_equal_approx(float(mine_runtime.timers[&"drop_mines"]), 1.8),
-		"Drop Mine Level 4 owns damage and cadence"
+		"Drop Mine maximum level owns raised damage and cadence"
 	)
 
-	var laser_build := _leveled_build(catalog, &"auto_laser", 3)
+	var laser_build := _leveled_build(catalog, &"auto_laser", 6)
 	var laser_runtime := Runtime.new()
 	target.pos = Vector2(120.0, 0.0)
 	laser_runtime.record_primary_success(Vector2.ZERO, Vector2.RIGHT)
@@ -209,12 +209,12 @@ func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 		laser_build, [target], Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 120.4)
-			and is_equal_approx(laser_runtime.auto_laser_cooldown, 0.675),
-		"Auto Laser Level 3 owns damage and cooldown"
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 157.0)
+			and is_equal_approx(laser_runtime.auto_laser_cooldown, 0.60),
+		"Auto Laser maximum level owns raised damage and cooldown"
 	)
 
-	var storm_build := _leveled_build(catalog, &"storm_barrage", 3)
+	var storm_build := _leveled_build(catalog, &"storm_barrage", 6)
 	var storm_runtime := Runtime.new()
 	target.pos = Vector2(600.0, 0.0)
 	storm_runtime.update(
@@ -227,9 +227,9 @@ func _validate_weapon_owned_endpoints(catalog: Catalog) -> void:
 		Callable(self, "_los")
 	)
 	_expect(
-		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 175.0)
-			and is_equal_approx(storm_runtime.storm_cooldown, 2.825),
-		"Storm Barrage Level 3 owns damage and cooldown"
+		is_equal_approx(float(Dictionary(Array(result["damage"])[0])["damage"]), 228.0)
+			and is_equal_approx(storm_runtime.storm_cooldown, 2.15),
+		"Storm Barrage maximum level owns raised damage and cooldown"
 	)
 
 
@@ -245,11 +245,11 @@ func _leveled_build(
 
 
 func _validate_electric_field_radius(catalog: Catalog) -> void:
-	var expected_radii := [240.0, 280.0, 320.0, 320.0]
+	var expected_radii := [240.0, 253.0, 267.0, 280.0, 293.0, 307.0, 320.0]
 	var build := RunBuild.new(catalog)
 	var runtime := Runtime.new()
 	var frame: Dictionary = {}
-	for level_index in 4:
+	for level_index in expected_radii.size():
 		build.apply(&"electric_field")
 		runtime.fill_presentation_snapshot(frame, build)
 		_expect(
@@ -297,8 +297,9 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 		target.active = true
 		target.pos = Vector2(120.0 + float(index) * 40.0, 20.0 * float(index))
 		_seeker_targets.append(target)
-	var expected_damage := [25.0, 31.36, 40.0, 53.2]
-	for upgrade_level in 5:
+	var expected_damage := [25.0, 31.0, 37.0, 43.0, 50.0, 57.0, 64.0]
+	var expected_counts := [2, 2, 3, 3, 4, 4, 4]
+	for upgrade_level in 8:
 		var build := RunBuild.new(catalog)
 		for _level in upgrade_level:
 			build.apply(&"homing_missiles")
@@ -317,7 +318,7 @@ func _validate_homing_progression(catalog: Catalog) -> void:
 			Callable(self, "_find_seeker_targets")
 		)
 		var projectiles: Array = result["projectiles"]
-		var expected_count: int = 0 if upgrade_level == 0 else int([2, 3, 4, 4][upgrade_level - 1])
+		var expected_count: int = 0 if upgrade_level == 0 else int(expected_counts[upgrade_level - 1])
 		_expect(
 			_requested_seeker_count == expected_count
 				and projectiles.size() == expected_count,
@@ -401,9 +402,9 @@ func _validate_mine_direction(catalog: Catalog) -> void:
 
 
 func _validate_mine_detonation_receipts(catalog: Catalog) -> void:
-	var expected_damage := [48.0, 67.2, 90.0, 123.2]
-	var expected_radius := [192.0, 216.0, 240.0, 240.0]
-	for level_index in 4:
+	var expected_damage := [48.0, 67.0, 86.0, 104.0, 123.0, 142.0, 160.0]
+	var expected_radius := [192.0, 204.0, 216.0, 228.0, 240.0, 240.0, 240.0]
+	for level_index in expected_damage.size():
 		var build := RunBuild.new(catalog)
 		for _level in level_index + 1:
 			build.apply(&"drop_mines")
@@ -678,7 +679,7 @@ func _validate_storm_barrage(catalog: Catalog) -> void:
 	)
 
 
-func _make_target(target_id: String, position: Vector2, role: StringName = &"chaser") -> EnemyState:
+func _make_target(target_id: String, position: Vector2, role: StringName = &"ordinary_edge_01") -> EnemyState:
 	var target := EnemyState.new()
 	target.id = target_id
 	target.role = role

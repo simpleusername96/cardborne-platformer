@@ -9,4 +9,4 @@ title_key = "UPGRADE_DASH_OVERDRIVE_TITLE"
 description_key = "UPGRADE_DASH_OVERDRIVE_DESC"
 category = &"combat"
 artwork_asset_id = &"upgrade/dash_overdrive"
-max_level = 3
+max_level = 6

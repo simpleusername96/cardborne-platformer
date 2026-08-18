@@ -118,7 +118,7 @@ func _validate_facility_authority(run) -> void:
 	run.player_health = 60.0
 	run.call("_apply_player_facility_recovery", 0.5)
 	_expect(run.player_health > 60.0, "repair restores player Hull inside its retained radius")
-	var enemy = run.call("_make_enemy", {"role":&"chaser", "id":"facility_target", "pos":Vector2(modifier_device["position"]), "active":true})
+	var enemy = run.call("_make_enemy", {"role":&"ordinary_edge_01", "id":"facility_target", "pos":Vector2(modifier_device["position"]), "active":true})
 	run.call("_append_enemy", enemy)
 	enemy.health = enemy.max_health - 10.0
 	run.call("_apply_enemy_facility_modifiers", enemy, 0.5)
@@ -149,10 +149,10 @@ func _validate_facility_authority(run) -> void:
 	run.player_position = center
 	run.player_health = 100.0
 	run.player_invulnerable = 1.0
-	var inside_enemy = run.call("_make_enemy", {"role":&"chaser", "id":"lava_inside", "pos":center + Vector2(200.0, 0.0), "active":true})
-	var lethal_enemy = run.call("_make_enemy", {"role":&"chaser", "id":"lava_lethal", "pos":center + Vector2(300.0, 0.0), "active":true})
-	var boss = run.call("_make_enemy", {"role":&"stage_boss", "id":"lava_boss", "pos":center + Vector2(400.0, 0.0), "active":true})
-	var outside_enemy = run.call("_make_enemy", {"role":&"chaser", "id":"lava_outside", "pos":center + Vector2(1200.0, 0.0), "active":true})
+	var inside_enemy = run.call("_make_enemy", {"role":&"ordinary_edge_01", "id":"lava_inside", "pos":center + Vector2(200.0, 0.0), "active":true})
+	var lethal_enemy = run.call("_make_enemy", {"role":&"ordinary_edge_01", "id":"lava_lethal", "pos":center + Vector2(300.0, 0.0), "active":true})
+	var boss = run.call("_make_enemy", {"role":&"boss_actor", "id":"lava_boss", "pos":center + Vector2(400.0, 0.0), "active":true})
+	var outside_enemy = run.call("_make_enemy", {"role":&"ordinary_edge_01", "id":"lava_outside", "pos":center + Vector2(1200.0, 0.0), "active":true})
 	for target in [inside_enemy, lethal_enemy, boss, outside_enemy]:
 		run.call("_append_enemy", target)
 	inside_enemy.health = 100.0

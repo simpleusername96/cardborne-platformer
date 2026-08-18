@@ -96,7 +96,7 @@ static func enemy_rows(
 				roundi(_enemy_speed(base_speed, final_stage)),
 			], &"speed"
 		))
-	if archetype == &"bulkhead_guard":
+	if archetype == &"ordinary_shield_01":
 		rows.append(_row(
 			"GUIDE_STAT_PROTECTION", "GUIDE_VALUE_FRONT_PLATE",
 			[roundi(SpecialistRuntime.GUARD_PLATE_STRUCTURE)], &"protection"
@@ -277,41 +277,41 @@ static func _enemy_attack(
 	definition: Dictionary
 ) -> Dictionary:
 	match archetype:
-		&"spark_minelet":
+		&"ordinary_area_01":
 			return {
 				"damage":SpecialistRuntime.MOBILE_MINE_DAMAGE,
 				"range":SpecialistRuntime.MOBILE_MINE_RADIUS,
 			}
-		&"mine":
+		&"ordinary_fixed_area_01":
 			return {
 				"damage":SpecialistRuntime.STATIC_MINE_DAMAGE,
 				"range":SpecialistRuntime.STATIC_MINE_RADIUS,
 			}
-		&"rammer":
+		&"ordinary_pull_01":
 			return {
-				"damage":SpecialistRuntime.RAMMER_DAMAGE,
-				"range":SpecialistRuntime.RAMMER_SPEED * SpecialistRuntime.RAMMER_ACTIVE,
+				"damage":SpecialistRuntime.PULL_CHARGE_DAMAGE,
+				"range":SpecialistRuntime.PULL_CHARGE_SPEED * SpecialistRuntime.PULL_CHARGE_ACTIVE,
 			}
-		&"beam_sentinel":
+		&"ordinary_fixed_beam_01":
 			return {
 				"damage":SpecialistRuntime.BEAM_DAMAGE,
 				"range":SpecialistRuntime.BEAM_RANGE,
 			}
-		&"bulkhead_guard", &"splitter_barge":
+		&"ordinary_shield_01", &"ordinary_pulse_01":
 			return {
 				"damage":ContactRuntime.PERSISTENT_CONTACT_DAMAGE,
 				"range":0.0,
 			}
-		&"shield_escort":
+		&"ordinary_support_02":
 			return {
 				"support":true,
 				"value_key":"GUIDE_VALUE_SHIELD_SUPPORT",
 				"value_args":[
 					roundi((1.0 - SpecialistRuntime.SHIELDED_RECEIVED_DAMAGE_MULTIPLIER) * 100.0),
-					roundi(SpecialistRuntime.SHIELD_ESCORT_RANGE),
+					roundi(SpecialistRuntime.SHIELD_SUPPORT_RANGE),
 				],
 			}
-		&"repair_tender":
+		&"ordinary_support_01":
 			return {
 				"support":true,
 				"value_key":"GUIDE_VALUE_REPAIR_SUPPORT",
@@ -320,20 +320,20 @@ static func _enemy_attack(
 					roundi(SpecialistRuntime.REPAIR_RANGE),
 				],
 			}
-		&"generator":
+		&"ordinary_fixed_support_01":
 			return {
 				"support":true,
-				"value_key":"GUIDE_VALUE_GENERATOR_SUPPORT",
+				"value_key":"GUIDE_VALUE_FIXED_SUPPORT_SUPPORT",
 				"value_args":[
-					roundi(SpecialistRuntime.GENERATOR_HEAL_PER_TICK),
-					roundi(SpecialistRuntime.GENERATOR_RANGE),
+					roundi(SpecialistRuntime.FIXED_SUPPORT_HEAL_PER_TICK),
+					roundi(SpecialistRuntime.FIXED_SUPPORT_RANGE),
 				],
 			}
-		&"drone_carrier":
+		&"ordinary_support_03":
 			return {
 				"support":true,
-				"value_key":"GUIDE_VALUE_CARRIER_SUPPORT",
-				"value_args":[SpecialistRuntime.CARRIER_CHILD_CAP],
+				"value_key":"GUIDE_VALUE_MOBILE_SUPPORT_SUPPORT",
+				"value_args":[SpecialistRuntime.MOBILE_SUPPORT_CHILD_CAP],
 			}
 	var attack := AttackContract.ordinary_attack(StringName(definition["behavior"]))
 	if attack.is_empty() or float(attack.get("damage", 0.0)) <= 0.0:

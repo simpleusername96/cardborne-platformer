@@ -226,7 +226,7 @@ Discovery remains closed; no material product or architecture choice remains ope
 - Visual authority validation passes with canonical sheet SHA-256
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
 - Full Korean `1280x720` native capture completes. The movement fixture reports
-  `chaser_intercept_samples=10`, chaser travel `529.33 px`, shooter distance
+  `edge_enemy_intercept_samples=10`, edge_enemy travel `529.33 px`, shooter distance
   `399.88–546.26 px`, and `passed=true`. Movement and dash-radar frames were inspected at
   original detail; actor silhouettes remain readable and the radar remains centered.
 - Godot import and Web release export pass with `index.html`, `index.js`, `index.pck`, and

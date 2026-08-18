@@ -17,10 +17,10 @@ const CRITICAL_PHASES: Array[StringName] = [
 	&"startup", &"active", &"interrupted_recovery",
 ]
 const SPECIAL_ROLES: Array[StringName] = [
-	&"stage_boss", &"generator",
+	&"boss", &"ordinary_fixed_support_01",
 ]
 const SUPPORT_ROLES: Array[StringName] = [
-	&"generator", &"shield_escort",
+	&"ordinary_fixed_support_01", &"ordinary_support_02",
 ]
 const WORK_DECISION_DUE := 1
 const WORK_MOTION_DUE := 2
@@ -39,7 +39,7 @@ var active_cap_count := 0
 var committed_points := 0.0
 var committed_ranged := 0
 var committed_denial := 0
-var committed_rammers := 0
+var committed_pull_enemys := 0
 
 var _decision_due := PackedByteArray()
 var _motion_due := PackedByteArray()
@@ -51,7 +51,7 @@ var _due_stamps := PackedInt32Array()
 var _schedule_id := 0
 var _alive_count := 0
 var _carrier_membership_revision := -1
-var _rammers_by_squad: Dictionary = {}
+var _pull_enemys_by_squad: Dictionary = {}
 var _carrier_children: Dictionary = {}
 
 
@@ -87,12 +87,12 @@ func rebuild(
 	if _schedule_id >= 0x7ffffffe:
 		_due_stamps.fill(0)
 		_schedule_id = 1
-	_rammers_by_squad.clear()
+	_pull_enemys_by_squad.clear()
 	active_cap_count = 0
 	committed_points = 0.0
 	committed_ranged = 0
 	committed_denial = 0
-	committed_rammers = 0
+	committed_pull_enemys = 0
 	_alive_count = 0
 	var rebuild_carrier_counts := (
 		membership_revision < 0
@@ -125,8 +125,8 @@ func rebuild(
 					committed_ranged += 1
 				&"denial":
 					committed_denial += 1
-			if enemy.role == &"rammer":
-				_note_rammer_commit(enemy)
+			if enemy.role == &"ordinary_pull_01":
+				_note_pull_enemy_commit(enemy)
 		var slot := enemy.runtime_slot
 		if slot >= 0 and slot < EnemyStore.MAX_LIVE_HOSTILES:
 			_motion_starts[slot] = enemy.pos
@@ -272,10 +272,10 @@ func can_commit(
 			denial_cap
 		)
 		and (
-			enemy.role != &"rammer"
+			enemy.role != &"ordinary_pull_01"
 			or (
-				committed_rammers < 2
-				and int(_rammers_by_squad.get(enemy.squad_id, 0)) < 1
+				committed_pull_enemys < 2
+				and int(_pull_enemys_by_squad.get(enemy.squad_id, 0)) < 1
 			)
 		)
 	)
@@ -288,8 +288,8 @@ func note_commit(enemy: EnemyState) -> void:
 			committed_ranged += 1
 		&"denial":
 			committed_denial += 1
-	if enemy.role == &"rammer":
-		_note_rammer_commit(enemy)
+	if enemy.role == &"ordinary_pull_01":
+		_note_pull_enemy_commit(enemy)
 
 
 func carrier_child_count(carrier_id: String) -> int:
@@ -310,8 +310,8 @@ func prune_inactive() -> void:
 	committed_points = 0.0
 	committed_ranged = 0
 	committed_denial = 0
-	committed_rammers = 0
-	_rammers_by_squad.clear()
+	committed_pull_enemys = 0
+	_pull_enemys_by_squad.clear()
 	for enemy in active:
 		if enemy.counts_active_cap:
 			active_cap_count += 1
@@ -322,8 +322,8 @@ func prune_inactive() -> void:
 					committed_ranged += 1
 				&"denial":
 					committed_denial += 1
-			if enemy.role == &"rammer":
-				_note_rammer_commit(enemy)
+			if enemy.role == &"ordinary_pull_01":
+				_note_pull_enemy_commit(enemy)
 
 
 func debug_snapshot() -> Dictionary:
@@ -337,15 +337,15 @@ func debug_snapshot() -> Dictionary:
 		"committed_points":committed_points,
 		"committed_ranged":committed_ranged,
 		"committed_denial":committed_denial,
-		"committed_rammers":committed_rammers,
+		"committed_pull_enemys":committed_pull_enemys,
 		"carrier_count":_carrier_children.size(),
 	}
 
 
-func _note_rammer_commit(enemy: EnemyState) -> void:
-	committed_rammers += 1
-	_rammers_by_squad[enemy.squad_id] = int(
-		_rammers_by_squad.get(enemy.squad_id, 0)
+func _note_pull_enemy_commit(enemy: EnemyState) -> void:
+	committed_pull_enemys += 1
+	_pull_enemys_by_squad[enemy.squad_id] = int(
+		_pull_enemys_by_squad.get(enemy.squad_id, 0)
 	) + 1
 
 

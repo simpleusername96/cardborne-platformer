@@ -9,33 +9,35 @@ var _failures: Array[String] = []
 
 
 func _init() -> void:
-	_expect(Archetypes.DEFINITIONS.has(&"bulkhead_guard"), "Bulkhead Guard is registered")
-	_expect(Archetypes.DEFINITIONS.has(&"splitter_barge"), "Splitter Barge is registered")
-	for specialist in [&"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger"]:
+	_expect(Archetypes.DEFINITIONS.has(&"ordinary_shield_01"), "Shield Ordinary Enemy Lv.1 is registered")
+	_expect(Archetypes.DEFINITIONS.has(&"ordinary_pulse_01"), "Pulse Ordinary Enemy Lv.1 is registered")
+	for specialist in [&"ordinary_beam_01", &"ordinary_range_01", &"ordinary_sweep_01", &"ordinary_melee_02"]:
 		_expect(Archetypes.DEFINITIONS.has(specialist), "%s is registered" % specialist)
 	_expect(
-		Archetypes.fires_projectiles(&"rail_sniper")
-			and Archetypes.fires_projectiles(&"orbit_gunner")
-			and not Archetypes.fires_projectiles(&"bombing_runner"),
+		Archetypes.fires_projectiles(&"ordinary_beam_01")
+			and Archetypes.fires_projectiles(&"ordinary_range_01")
+			and not Archetypes.fires_projectiles(&"ordinary_sweep_01"),
 		"ordinary firing roles distinguish direct bolts from delayed ground blasts"
 	)
-	_expect(&"spark_minelet" in Stages.MOBILE_ROLES[2], "Spark Minelet starts in Stage 3")
-	_expect(&"bulkhead_guard" in Stages.MOBILE_ROLES[4], "Bulkhead Guard starts in Stage 5")
-	_expect(&"splitter_barge" in Stages.MOBILE_ROLES[6], "Splitter Barge starts in Cycle 7")
+	_expect(&"ordinary_area_01" in Stages.MOBILE_ROLES[0], "Stage 1 includes its boss-intro ordinary role")
+	_expect(&"ordinary_shield_01" in Stages.MOBILE_ROLES[2], "Stage 3 introduces its shield tutor")
+	_expect(&"ordinary_pulse_01" in Stages.MOBILE_ROLES[7], "Stage 8 introduces its pulse tutor")
 	for stage_index in Stages.MOBILE_ROLES.size():
 		_expect(
-			EliteTraits.thresholds(stage_index).size() == stage_index / 2 + 1,
+			EliteTraits.thresholds(stage_index).size() == mini(stage_index / 2 + 1, 6),
 			"Stage %d has an exact elite reservation schedule" % (stage_index + 1)
 		)
 		var roles: Array = Stages.MOBILE_ROLES[stage_index]
-		var projectile_roles := 0
-		for archetype in roles:
-			if Archetypes.fires_projectiles(StringName(archetype)):
-				projectile_roles += 1
 		_expect(
-			float(projectile_roles) / float(roles.size()) <= 0.5,
-			"Stage %d keeps ordinary projectile roles at or below half" % (stage_index + 1)
+			roles.size() == 3 and roles[2] == Stages.BOSS_TUTOR_ROLES[stage_index],
+			"Stage %d keeps a three-role roster ending in its boss tutor" % (stage_index + 1)
 		)
+		if stage_index > 0:
+			_expect(
+				roles[0] == Stages.MOBILE_ROLES[stage_index - 1][1]
+					and roles[1] == Stages.MOBILE_ROLES[stage_index - 1][2],
+				"Stage %d retires only the oldest role" % (stage_index + 1)
+			)
 	var armored := _enemy()
 	EliteTraits.apply(armored, &"armored")
 	_expect(armored.armor_structure == 72.0, "Armored shell remains fixed at 72 structure")

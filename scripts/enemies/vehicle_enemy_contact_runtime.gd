@@ -13,8 +13,8 @@ const SpecialistRuntime = preload(
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 
-const ATTACK_CHASER: StringName = &"chaser"
-const ATTACK_RAMMER: StringName = &"rammer"
+const ATTACK_EDGE_CONTACT: StringName = &"ordinary_edge_01"
+const ATTACK_PULL_CHARGE: StringName = &"ordinary_pull_01"
 const ATTACK_COLLECTIVE: StringName = &"collective"
 const PERSISTENT_CONTACT_COOLDOWN := 0.8
 const PERSISTENT_CONTACT_PADDING := 12.0
@@ -25,10 +25,10 @@ const MOBILE_RANGED_CONTACT_DAMAGE := 6.0
 const COLLECTIVE_CONTACT_PADDING := 10.0
 const COLLECTIVE_CONTACT_DAMAGE := 12.0
 const PERSISTENT_ROLES: Array[StringName] = [
-	&"bulkhead_guard", &"splitter_barge",
+	&"ordinary_shield_01", &"ordinary_pulse_01",
 ]
 const MOBILE_RANGED_CONTACT_ROLES: Array[StringName] = [
-	&"shooter", &"controller", &"artillery_spotter",
+	&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01",
 ]
 
 var _damage_player: Callable
@@ -60,22 +60,22 @@ func advance(
 			0.0, enemy.contact_cooldown - maxf(0.0, delta)
 		)
 		match enemy.contact_attack:
-			ATTACK_CHASER:
+			ATTACK_EDGE_CONTACT:
 				_resolve_one_shot(
 					enemy,
 					player_from,
 					player_to,
-					float(AttackContract.ORDINARY_ATTACKS[&"chaser"]["contact_padding"]),
-					float(AttackContract.ORDINARY_ATTACKS[&"chaser"]["damage"]),
+					float(AttackContract.ORDINARY_ATTACKS[&"ordinary_edge_01"]["contact_padding"]),
+					float(AttackContract.ORDINARY_ATTACKS[&"ordinary_edge_01"]["damage"]),
 					"Rivet Chaser lunge"
 				)
-			ATTACK_RAMMER:
+			ATTACK_PULL_CHARGE:
 				_resolve_one_shot(
 					enemy,
 					player_from,
 					player_to,
-					SpecialistRuntime.RAMMER_CONTACT_PADDING,
-					SpecialistRuntime.RAMMER_DAMAGE,
+					SpecialistRuntime.PULL_CHARGE_CONTACT_PADDING,
+					SpecialistRuntime.PULL_CHARGE_DAMAGE,
 					"Rammer charge"
 				)
 			ATTACK_COLLECTIVE:

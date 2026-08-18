@@ -7,7 +7,7 @@
 script = ExtResource("2_mod")
 stat_id = &"move_speed_multiplier"
 operation = "multiply"
-values_by_level = Array[float]([1.08, 1.16, 1.24])
+values_by_level = Array[float]([1.05, 1.10, 1.15, 1.20, 1.25, 1.29])
 
 [resource]
 script = ExtResource("1_def")
@@ -16,5 +16,5 @@ title_key = "UPGRADE_CHASSIS_SPEED_TITLE"
 description_key = "UPGRADE_CHASSIS_SPEED_DESC"
 category = &"chassis"
 artwork_asset_id = &"upgrade/chassis_speed"
-max_level = 3
+max_level = 6
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1")])

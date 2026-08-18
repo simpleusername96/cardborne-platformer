@@ -24,7 +24,7 @@ func _validate_state_reset_contract() -> void:
 	enemy.alive = true
 	enemy.active = true
 	enemy.shielded = true
-	enemy.shield_source = &"generator"
+	enemy.shield_source = &"ordinary_fixed_support_01"
 	enemy.movement_reason = &"pursuit_role"
 	_expect(store.add(enemy), "diagnostic enemy enters store")
 	enemy.alive = false
@@ -39,14 +39,14 @@ func _validate_state_reset_contract() -> void:
 func _validate_shield_sources() -> void:
 	var run := VehicleRun.new()
 	var enemy := EnemyState.new()
-	var assignments := {"generator_target": &"generator"}
+	var assignments := {"generator_target": &"ordinary_fixed_support_01"}
 	enemy.id = "generator_target"
 	run.call("_apply_enemy_shield", enemy, assignments)
-	_expect(enemy.shielded and enemy.shield_source == &"generator", "generator assignment reports generator")
-	assignments = {"escort_target": &"shield_escort"}
+	_expect(enemy.shielded and enemy.shield_source == &"ordinary_fixed_support_01", "generator assignment reports generator")
+	assignments = {"escort_target": &"ordinary_support_02"}
 	enemy.id = "escort_target"
 	run.call("_apply_enemy_shield", enemy, assignments)
-	_expect(enemy.shielded and enemy.shield_source == &"shield_escort", "escort assignment reports shield escort")
+	_expect(enemy.shielded and enemy.shield_source == &"ordinary_support_02", "escort assignment reports Support Ordinary Enemy Lv.2")
 	enemy.collective_mode = &"shield"
 	enemy.collective_phase = &"execute"
 	run.call("_apply_enemy_shield", enemy, {})
@@ -74,7 +74,7 @@ func _validate_movement_reasons() -> void:
 	_expect(enemy.movement_reason == &"collective_execute", "execute reason is exposed")
 	enemy.collective_phase = &"dormant"
 	enemy.movement_family = &"pursuit"
-	enemy.role = &"chaser"
+	enemy.role = &"ordinary_edge_01"
 	run.player_position = Vector2(300.0, 0.0)
 	run.call("_desired_enemy_velocity", enemy, false)
 	_expect(enemy.movement_reason == &"pursuit_role", "pursuit role reason is exposed")

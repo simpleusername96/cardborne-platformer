@@ -21,7 +21,7 @@
     "style_reference_inspected_at_original_detail": true,
     "actual_image_reference_used": true,
     "reference_input_method": "image_gen referenced_image_paths",
-    "runtime_snapshot_reference": "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-crown-beam-startup.png",
+    "runtime_snapshot_reference": "docs/design/visual-replacement-workbench/previews/beam-strip-borderless-v1/as-is-radial-beam-startup.png",
     "original_artifact_provenance": "C:/Users/BK/.codex/generated_images/01a0058c-ed4e-79b1-b7cd-72c3406cb965/exec-88fde1e9-3402-4d45-ae61-dca0b64c8c43.png"
   },
   "contract_resolution": "User approved this direction on 2026-08-16. VISUAL_SYSTEM.md and runtime now require orb-only startup plus collision-synchronized straight-beam growth; non-straight corridor patterns retain their separate grammar."

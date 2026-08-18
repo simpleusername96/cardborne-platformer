@@ -130,7 +130,7 @@ func _brute_adjusted_velocity(
 			candidate == owner
 			or not candidate.alive
 			or not candidate.active
-			or candidate.role == &"stage_boss"
+			or candidate.role == &"boss"
 		):
 			continue
 		var distance_squared := owner.pos.distance_squared_to(candidate.pos)
@@ -206,7 +206,7 @@ func _brute_separation_direction(
 func _enemy(enemy_id: String, slot: int, position: Vector2) -> EnemyState:
 	var enemy := EnemyState.new()
 	enemy.id = enemy_id
-	enemy.role = &"chaser"
+	enemy.role = &"ordinary_edge_01"
 	enemy.pos = position
 	enemy.radius = 20.0
 	enemy.projectile_hit_radius = 20.0

@@ -10,7 +10,7 @@ operation = "add"
 display_unit = "percent"
 level_zero_display_override_enabled = true
 level_zero_display_value = 0.5
-values_by_level = Array[float]([2.0, 3.5])
+values_by_level = Array[float]([1.5, 2.2, 2.9, 3.6, 4.2])
 
 [resource]
 script = ExtResource("1_def")
@@ -19,5 +19,5 @@ title_key = "UPGRADE_LIFESTEAL_TITLE"
 description_key = "UPGRADE_LIFESTEAL_DESC"
 category = &"chassis"
 artwork_asset_id = &"upgrade/lifesteal"
-max_level = 2
+max_level = 5
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1")])

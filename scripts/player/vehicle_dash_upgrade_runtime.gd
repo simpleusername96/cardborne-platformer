@@ -13,7 +13,7 @@ const TRAIL_HALF_WIDTH := 72.0
 const TRAIL_DURATION := 3.0
 const TRAIL_TICK := 0.5
 const MAX_TRAILS := 2
-const TRAIL_DAMAGE := [0.0, 10.0, 15.0, 20.0]
+const TRAIL_DAMAGE := [0.0, 5.0, 9.0, 13.0, 17.0, 22.0, 26.0]
 
 class TrailState:
 	var start := Vector2.ZERO
@@ -65,7 +65,7 @@ func complete_dash(
 	trail.remaining = TRAIL_DURATION
 	trail.tick_remaining = TRAIL_TICK
 	trail.tick_index = 0
-	trail.level = clampi(trail_level, 1, 3)
+	trail.level = clampi(trail_level, 1, TRAIL_DAMAGE.size() - 1)
 	trail.serial = _next_serial
 	_next_serial += 1
 	trails.append(trail)
@@ -102,7 +102,7 @@ func overdrive_bonus(level: int) -> float:
 
 
 static func damage_per_tick(level: int) -> float:
-	return float(TRAIL_DAMAGE[clampi(level, 0, 3)])
+	return float(TRAIL_DAMAGE[clampi(level, 0, TRAIL_DAMAGE.size() - 1)])
 
 
 static func contains(trail: TrailState, point: Vector2, radius: float = 0.0) -> bool:

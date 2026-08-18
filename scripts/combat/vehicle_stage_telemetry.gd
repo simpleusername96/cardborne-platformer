@@ -17,7 +17,7 @@ var stage_incoming: Dictionary = {}
 var stage_defeats: Dictionary = {}
 var stage_elites: Dictionary = {}
 var stage_tactics: Dictionary = {}
-var stage_boss: Dictionary = {}
+var boss_actor: Dictionary = {}
 var run_outgoing: Dictionary = {}
 var run_attributes: Dictionary = {}
 var run_status_applications: Dictionary = {}
@@ -47,7 +47,7 @@ func reset_stage() -> void:
 	stage_defeats.clear()
 	stage_elites.clear()
 	stage_tactics.clear()
-	stage_boss.clear()
+	boss_actor.clear()
 	last_incoming_source = &""
 	last_incoming_damage = 0.0
 	_frozen_stage.clear()
@@ -114,12 +114,12 @@ func record_boss_lifecycle(
 ) -> void:
 	if boss_id.is_empty():
 		return
-	stage_boss["id"] = boss_id
-	stage_boss["cleanup_started"] = bool(stage_boss.get("cleanup_started", false)) or cleanup_started
-	stage_boss["cleanup_completed"] = bool(stage_boss.get("cleanup_completed", false)) or cleanup_completed
-	stage_boss["owned_count"] = maxi(int(stage_boss.get("owned_count", 0)), owned_count)
+	boss_actor["id"] = boss_id
+	boss_actor["cleanup_started"] = bool(boss_actor.get("cleanup_started", false)) or cleanup_started
+	boss_actor["cleanup_completed"] = bool(boss_actor.get("cleanup_completed", false)) or cleanup_completed
+	boss_actor["owned_count"] = maxi(int(boss_actor.get("owned_count", 0)), owned_count)
 	if cleanup_seconds > 0.0:
-		stage_boss["cleanup_seconds"] = cleanup_seconds
+		boss_actor["cleanup_seconds"] = cleanup_seconds
 
 
 func freeze_stage() -> Dictionary:
@@ -153,7 +153,7 @@ func _stage_snapshot() -> Dictionary:
 		"defeats":stage_defeats.duplicate(),
 		"elites":stage_elites.duplicate(),
 		"tactics":stage_tactics.duplicate(),
-		"boss":stage_boss.duplicate(),
+		"boss":boss_actor.duplicate(),
 		"last_incoming_source":last_incoming_source,
 		"last_incoming_damage":last_incoming_damage,
 	}

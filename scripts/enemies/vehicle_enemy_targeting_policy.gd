@@ -22,14 +22,14 @@ const MOVEMENT_MAX_DISTANCE := {
 	MovementPolicy.SUPPORT:140.0,
 }
 const ATTACK_MAX_LEAD_DISTANCE := {
-	&"chaser":260.0,
-	&"shooter":260.0,
-	&"controller":260.0,
-	&"turret":260.0,
-	&"artillery_spotter":320.0,
-	&"interceptor_tower":260.0,
-	&"rammer":260.0,
-	&"beam_sentinel":220.0,
+	&"ordinary_edge_01":260.0,
+	&"ordinary_lane_01":260.0,
+	&"ordinary_gap_01":260.0,
+	&"ordinary_fixed_ranged_01":260.0,
+	&"ordinary_growth_01":320.0,
+	&"ordinary_fixed_ranged_02":260.0,
+	&"ordinary_pull_01":260.0,
+	&"ordinary_fixed_beam_01":220.0,
 }
 
 

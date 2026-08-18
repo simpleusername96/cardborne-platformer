@@ -108,16 +108,16 @@ The barrage is not a sequence of bullets aimed down one line. One activation emi
 three rows, and each row contains at least four simultaneous projectiles distributed
 across the playfield. The selected variants match the two user-sketched motions:
 `SPREAD` opens the projectile headings into a fixed fan, and `ROTATE` turns the emission
-axis between complete rows to sweep an arc. Foundry Colossus, Drydock Titan, Crown
-Engine, and Siege Battery use `SPREAD`; Archive Leviathan, Switchyard Behemoth, Vector
-Loom, and Pulse Core use `ROTATE`. A selection cap keeps these common attacks from
+axis between complete rows to sweep an arc. Stage 1 Boss, Stage 3 Boss, Stage 5 boss
+Engine, and Stage 6 Boss use `SPREAD`; Stage 2 Boss, Stage 4 Boss, Vector
+Loom, and Stage 8 Boss use `ROTATE`. A selection cap keeps these common attacks from
 displacing identity patterns. The first five bosses are revisions of the existing five;
-Siege Battery, Vector Loom, and Pulse Core are the three new bosses.
+Stage 6 Boss, Stage 7 Boss, and Stage 8 Boss are the three new bosses.
 
 ### Defense and damage fairness
 
-Uniform shields were rejected. Only Drydock Titan and Crown Engine use meaningful
-defense. Titan converts frontal interception into a warned counterburst. Crown's attached
+Uniform shields were rejected. Only Stage 3 Boss and Stage 5 Boss use meaningful
+defense. Stage 3 boss converts frontal interception into a warned counterburst. Stage 5 boss's attached
 relay hardpoints each own both a shield sector and a firing lane. Destroying defense
 therefore changes incoming attacks.
 
@@ -148,11 +148,11 @@ the final explosion scale and preserves the synchronized fade.
 ### Ordinary enemy candidates
 
 Shield Breaker was rejected because it depends on a player shield state and does not
-add a durable movement or aiming problem. Mobile Rail Sniper, Orbit Gunner, and Bombing
+add a durable movement or aiming problem. Beam Ordinary Enemy Lv.1, Range Ordinary Enemy Lv.1, and Bombing
 Runner create three distinct routes: exact line escape, tangential pressure, and delayed
 ground-route planning.
 
-Wreck Scavenger was changed from corpse collection to a local death-event rule. It gains
+Melee Ordinary Enemy Lv.2 was changed from corpse collection to a local death-event rule. It gains
 up to five permanent stacks when eligible ordinary enemies die within 360 units. This
 needs no corpse lifetime, scan, or pickup object and makes target priority immediate.
 It keeps a direct attack at zero stacks, so it never idles.
@@ -200,8 +200,8 @@ The first nine actor/facility candidates now exist in the visual workbench:
 
 The [candidate evidence](../../../docs/design/visual-replacement-workbench/candidates/eight-boss-enemy-facility-assets-v1/README.md)
 records exact hashes, prompt provenance, transparent target-size files, actual-size and
-grayscale inspection, and approval state. Focused revisions simplified Siege Battery,
-Mobile Rail Sniper, Bombing Runner, and Wreck Scavenger. All nine selected files are now
+grayscale inspection, and approval state. Focused revisions simplified Stage 6 Boss,
+Beam Ordinary Enemy Lv.1, Sweep Ordinary Enemy Lv.1, and Melee Ordinary Enemy Lv.2. All nine selected files are now
 direction-clear for user review; none is production-approved or manifest-integrated.
 
 ## Recommendations

@@ -17,11 +17,11 @@ func _run() -> void:
 	run.call("_reset_run", false)
 	run.call("_clear_enemies")
 	var center := Vector2(3600.0, 2160.0)
-	var direct = _append(run, &"chaser", "burst_direct", center)
-	var nearby = _append(run, &"shooter", "burst_nearby", center + Vector2(70.0, 0.0))
-	var boss = _append(run, &"stage_boss", "burst_boss", center - Vector2(60.0, 0.0))
-	var structure = _append(run, &"turret", "burst_structure", center + Vector2(40.0, 0.0))
-	var far = _append(run, &"controller", "burst_far", center + Vector2(120.0, 0.0))
+	var direct = _append(run, &"ordinary_edge_01", "burst_direct", center)
+	var nearby = _append(run, &"ordinary_lane_01", "burst_nearby", center + Vector2(70.0, 0.0))
+	var boss = _append(run, &"boss_actor", "burst_boss", center - Vector2(60.0, 0.0))
+	var structure = _append(run, &"ordinary_fixed_ranged_01", "burst_structure", center + Vector2(40.0, 0.0))
+	var far = _append(run, &"ordinary_gap_01", "burst_far", center + Vector2(120.0, 0.0))
 	var profile := PrimaryPayload.new()
 	profile.thermal_enabled = true
 	profile.thermal_burst_radius = 72.0
@@ -33,10 +33,11 @@ func _run() -> void:
 	var far_before: float = far.health
 	var effect_count_before: int = run.effects.size()
 	run.boss_shield_runtime.configure(&"stage_3")
+	run.player_position = boss.pos + Vector2.RIGHT.rotated(deg_to_rad(60.0)) * 100.0
 	run.call("_apply_thermal_burst", direct, center, profile)
 	_expect(direct.health == direct_before, "burst excludes its direct target")
 	_expect(is_equal_approx(nearby_before - nearby.health, 4.0), "level-one burst deals four nearby damage")
-	_expect(is_equal_approx(boss_before - boss.health, 2.0), "burst respects the Drydock frontal shield mitigation")
+	_expect(is_equal_approx(boss_before - boss.health, 0.6), "burst respects the Stage 3 boss frontal shield mitigation")
 	_expect(structure.health == structure_before, "burst excludes fixed structures")
 	_expect(far.health == far_before, "burst stops outside its radius")
 	_expect(
@@ -47,18 +48,18 @@ func _run() -> void:
 		and is_equal_approx(run.effects[-1].radius, 72.0),
 		"burst adds one bounded radius-scaled receipt at the direct contact"
 	)
-	boss.presentation_facing = Vector2.LEFT
+	run.player_position = boss.pos + Vector2.RIGHT * 100.0
 	boss_before = boss.health
 	run.call("_apply_thermal_burst", direct, center, profile)
-	_expect(is_equal_approx(boss_before - boss.health, 4.0), "a rear-side hit bypasses the Drydock frontal shield")
+	_expect(is_equal_approx(boss_before - boss.health, 4.0), "a hit through a Stage 3 shield gap bypasses mitigation")
 	_expect(
 		run.effects.size() == effect_count_before + 2,
 		"each eligible direct contact adds one receipt without adding splash receipts"
 	)
 	var telemetry: Dictionary = run.stage_telemetry.stage_snapshot()
 	_expect(
-		is_equal_approx(float(telemetry["outgoing"][&"thermal_burst"]), 14.0)
-			and is_equal_approx(float(telemetry["attributes"][&"thermal"]), 14.0),
+		is_equal_approx(float(telemetry["outgoing"][&"thermal_burst"]), 12.6)
+			and is_equal_approx(float(telemetry["attributes"][&"thermal"]), 12.6),
 		"only applied splash damage is reported as thermal_burst/thermal"
 	)
 	_expect(

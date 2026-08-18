@@ -100,7 +100,7 @@ Exact actions requiring user approval:
 | Progression | `vehicle_combat_stages.gd`, `vehicle_stage_catalog.gd`, `vehicle_stage_transition_runtime.gd`, and `vehicle_run.gd` expose ten odd/even stages and only five bosses | Current source and product spec | Replace player-facing stages with eight quota-gated boss cycles; every cycle has a boss | 1.1, 2.1 |
 | Boss combat | `scripts/bosses/` owns patterns, phases, shields, and runtime; `VehicleRun` orchestrates enemy state and receipts | Current boss owners and validators | All bosses keep common charge and broad barrage; identity patterns own at least three of five selections; only bosses 3 and 5 use defense | 2.2-2.4 |
 | Boss death | Current transition advances after boss defeat without the approved cleanup | Transition/runtime source and report evidence | Add `VehicleBossDeathRuntime` with the exact 2.00-second state/timing contract | 2.5 |
-| Ordinary enemies | Archetypes and specialist runtime own existing active roles; no four proposed identities exist | `vehicle_enemy_archetypes.gd`, `vehicle_enemy_specialist_runtime.gd` | Add Rail Sniper, Orbit Gunner, Bombing Runner, and Wreck Scavenger; no Shield Breaker or corpse system | 3.1 |
+| Ordinary enemies | Archetypes and specialist runtime own existing active roles; no four proposed identities exist | `vehicle_enemy_archetypes.gd`, `vehicle_enemy_specialist_runtime.gd` | Add Beam Ordinary Enemy Lv.1, Range Ordinary Enemy Lv.1, Sweep Ordinary Enemy Lv.1, and Melee Ordinary Enemy Lv.2; no Shield Breaker or corpse system | 3.1 |
 | Primary attributes | Build has damage IDs Thermal/Toxin and utility IDs Cryo/Shock; payload/status/validators still reach Shock | Build, payload, status, card resource, manifest, and grep evidence | Delete Shock with no replacement; utility slot contains Cryo only | 1.2 |
 | New upgrades | Shot groups and movement are orchestrated in combat/run code, while definitions and offers are card-owned | Card/runtime owners | Implement the three exact bounded card contracts and reserve missing weapon categories | 3.2, 3.3 |
 | Neutral facilities | `VehicleMysteryDeviceRuntime` owns three destroy-to-trigger outcomes; repair remains a pickup | Runtime, visual spec, and product spec | Five dormant, attackable, pass-through facilities activate symmetric effects for 12 seconds when destroyed | 3.4 |
@@ -138,14 +138,14 @@ Readiness statement:
 
 | # | Boss | Barrage | Identity contract |
 | ---: | --- | --- | --- |
-| 1 | Foundry Colossus | SPREAD | Furnace Gates closes two warned lanes; wall collision after charge gives 1.4 s vulnerability; no shield |
-| 2 | Archive Leviathan | ROTATE | Fixed X-cross laser alternates orientation by 45 degrees; no shield |
-| 3 | Drydock Titan | SPREAD | Permanent 110-degree frontal 90% interception; facing locks during attacks; blocked damage charges a visible frontal counterburst |
-| 4 | Switchyard Behemoth | ROTATE | One moving beam sweep; below 45% health a sweep follows from the opposite side; no shield |
-| 5 | Crown Engine | SPREAD | Three attached destructible relay hardpoints each own one shield sector and bolt lane; losing one removes both and accelerates remaining relays |
-| 6 | Siege Battery | SPREAD | Alternating banks fire 8-10 long-lived projectiles into different lanes; no shield |
-| 7 | Vector Loom | ROTATE | Translating parallel laser walls followed by an orthogonal pass; each wall has one explicit moving gap; no shield |
-| 8 | Pulse Core | ROTATE | Expanding/contracting rings with a missing wedge followed by sparse spiral shots; no shield |
+| 1 | Stage 1 Boss | SPREAD | Furnace Gates closes two warned lanes; wall collision after charge gives 1.4 s vulnerability; no shield |
+| 2 | Stage 2 Boss | ROTATE | Fixed X-cross laser alternates orientation by 45 degrees; no shield |
+| 3 | Stage 3 Boss | SPREAD | Permanent 110-degree frontal 90% interception; facing locks during attacks; blocked damage charges a visible frontal counterburst |
+| 4 | Stage 4 Boss | ROTATE | One moving beam sweep; below 45% health a sweep follows from the opposite side; no shield |
+| 5 | Stage 5 Boss | SPREAD | Three attached destructible relay hardpoints each own one shield sector and bolt lane; losing one removes both and accelerates remaining relays |
+| 6 | Stage 6 Boss | SPREAD | Alternating banks fire 8-10 long-lived projectiles into different lanes; no shield |
+| 7 | Stage 7 Boss | ROTATE | Translating parallel laser walls followed by an orthogonal pass; each wall has one explicit moving gap; no shield |
+| 8 | Stage 8 Boss | ROTATE | Expanding/contracting rings with a missing wedge followed by sparse spiral shots; no shield |
 
 ### Boss-death cleanup
 
@@ -213,7 +213,7 @@ and focused validators.
   - Guard: names `Shockwave`/`kinetic_shockwave` remain because they are unrelated active-
     weapon identities.
 - [x] **1.3** Update the visual contract for the approved scope and final count.
-  - Change: authorize eight boss bodies, profile-owned shields, attached Crown hardpoints,
+  - Change: authorize eight boss bodies, profile-owned shields, attached Stage 5 boss hardpoints,
     four enemy silhouettes, five facility roles, three new card images, and exactly one
     shared boss explosion raster exception; set final manifest target to 90.
   - Accept: `validate_cardborne_visual_authority.ps1` passes and all numeric/category
@@ -243,9 +243,9 @@ Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`,
   - Accept: validators assert simultaneous row counts/spacing/timing/motion, monotonic
     profiles, at most two common selections per five, and exact hit locks.
 - [x] **2.3** Implement bosses 1-5 with their revised identity and defense contracts.
-  - Accept: each identity geometry and state validator passes; only Drydock and Crown have
+  - Accept: each identity geometry and state validator passes; only Stage 3 boss and Stage 5 boss have
     shields and their defenses directly emit the locked offense.
-- [x] **2.4** Implement Siege Battery, Vector Loom, and Pulse Core.
+- [x] **2.4** Implement Stage 6 Boss, Stage 7 Boss, and Stage 8 Boss.
   - Accept: each can charge, barrage, and complete its unique pattern; warning geometry
     equals collision and high-threat escape checks pass.
 - [x] **2.5** Add `scripts/bosses/vehicle_boss_death_runtime.gd` and bounded explosion state.
@@ -253,10 +253,10 @@ Source owners: `scripts/vehicle/stages/vehicle_combat_stages.gd`,
     no cleanup rewards/quota, one cosmetic receipt maximum, reduced-motion behavior, and
     transition only at 2.00 seconds.
 - [x] **2.6** Unify every hostile emitted laser under the charge-orb growth contract.
-  - Change: apply the shared forward/bidirectional emission metadata to Beam Sentinel,
-    `switch_sweep`, `switch_sweeps`, `crown_beam`, the four-direction `archive_cross`, and
-    the two-muzzle `undertow_lanes`/`crown_lattice`. Startup exposes no path; active visual
-    and collision segments grow together for `0.30 s`. Keep Vector Loom translating laser
+  - Change: apply the shared forward/bidirectional emission metadata to Fixed Beam Ordinary Enemy Lv.1,
+    `switch_sweep`, `switch_sweeps`, `radial_beam`, the four-direction `cross_beam`, and
+    the two-muzzle `opposing_lanes`/`radial_lattice`. Startup exposes no path; active visual
+    and collision segments grow together for `0.30 s`. Keep Stage 7 Boss translating laser
     walls classified as placed moving hazards, and keep projectile/player laser contracts
     outside this hostile-emission change.
   - Accept: focused attack, identity, renderer, boss-runtime, and VehicleRun validators prove
@@ -281,7 +281,7 @@ owners, `scripts/vehicle/vehicle_mystery_device_runtime.gd`, progression/pickup 
 and `VehicleRun` orchestration hooks.
 
 - [x] **3.1** Add the four ordinary enemy roles and engagement-gap correction.
-  - Accept: role-specific fixtures prove attack cadence/geometry and Wreck Scavenger's
+  - Accept: role-specific fixtures prove attack cadence/geometry and Melee Ordinary Enemy Lv.2's
     radius-360 death-event stacks, exclusions, maximum five, exact multipliers, and active
     attack at zero stacks; 4/8/3 pacing capture passes without teleport or count reduction.
 - [x] **3.2** Add the three primary-fire upgrade runtimes and definitions.
@@ -463,9 +463,9 @@ Execution evidence recorded on 2026-08-15:
   `build/captures/facility-activation-xp-health-fix-muted/05-two-field-items.png`; visual-
   authority validation and Web export also pass.
 - BK clarified that "all lasers" means every hostile laser emitted from an enemy or boss,
-  not every corridor-shaped hazard. The shared emission contract now covers Beam Sentinel,
-  the three one-direction boss beam patterns, Archive Cross's four directions, and the two
-  autonomous parallel-beam patterns. Vector Loom walls remain placed moving hazards.
+  not every corridor-shaped hazard. The shared emission contract now covers Fixed Beam Ordinary Enemy Lv.1,
+  the three one-direction boss beam patterns, Cross Beam's four directions, and the two
+  autonomous parallel-beam patterns. Stage 7 Boss walls remain placed moving hazards.
 
 ## Completion and Stop Conditions
 

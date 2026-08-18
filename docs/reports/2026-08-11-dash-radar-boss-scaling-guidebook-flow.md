@@ -90,7 +90,7 @@ qualification; they are not a reason to leave known contract failures unresolved
   areas, lanes, beams, charges, fans, crosses, and summons.
 - `VehicleRun._execute_boss_autonomous()` special-cases the sentinel summon and converts
   every other autonomous event into a circular denied zone. Consequently autonomous
-  `undertow_lanes`, `switch_sweeps`, and `crown_lattice` lose their authored lane or beam
+  `opposing_lanes`, `switch_sweeps`, and `radial_lattice` lose their authored lane or beam
   geometry. Size-only tuning would amplify the wrong shape.
 - The precise answer to "are later bosses stronger?" is therefore: boss HP is reliably
   higher and encounter composition differs, but damage, shield mitigation, cadence, and
@@ -195,7 +195,7 @@ Out of scope:
 | Locked discovery | A count of undiscovered entries, not a fake selectable object | Guidebook catalog/store | Does not reveal name, preview, or stats |
 | Garage | Current read-only intermediate modal | removed | Persistent progression remains independently owned |
 
-Stable storage IDs such as `mobile_chaser`, `object_elite_armored`, and
+Stable storage IDs such as `mobile_edge_enemy`, `object_elite_armored`, and
 `object_mystery_device` may remain for save compatibility even when their visible category
 or label changes. Legacy storage names must not dictate user-facing domain language.
 
@@ -369,8 +369,8 @@ Replace `_execute_boss_autonomous()`'s catch-all circle with kind-specific dispa
 - any unknown kind: a validator failure and explicit diagnostic, never a silent circle.
 
 Coverage scales resolve to these representative values before rounding: Stage 1
-`furnace_ring 241.5`, Stage 2 `archive_depth 203.5`, Stage 3 `titan_pulse 270.25`, Stage 4
-`gate_shockwave 288`, Stage 4 `switch_sweep width 93.6`, Stage 5 `crown_beam width 102.5`,
+`thermal_ring 241.5`, Stage 2 `archive_depth 203.5`, Stage 3 `pulse_burst 270.25`, Stage 4
+`gate_shockwave 288`, Stage 4 `switch_sweep width 93.6`, Stage 5 `radial_beam width 102.5`,
 and Stage 5 `relay_pulse_rings 281.25`. Because attack shapes differ, raw radius is not a
 valid cross-stage strength score. The stage profile, effective shape, frequency, and
 damage together define escalation.
@@ -431,7 +431,7 @@ Change visible categories to:
 The `enemies` category contains all non-boss hostiles, both mobile and stationary, and the
 three elite modifiers. Existing persisted entry IDs remain stable. Add stable catalog
 entries and discovery mapping for currently omitted stationary roles: turret, mine,
-interceptor tower, beam sentinel, and generator, plus any other active non-boss role found
+Fixed Ranged Ordinary Enemy Lv.2, Fixed Beam Ordinary Enemy Lv.1, and generator, plus any other active non-boss role found
 by the final catalog parity validator. Field Objects contain only experience, repair,
 recall, reward crates, the renamed Mystery Device, and transit/traversal objects.
 

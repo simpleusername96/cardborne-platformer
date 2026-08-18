@@ -20,7 +20,7 @@ func _ready() -> void:
 func set_enemy(archetype: StringName) -> void:
 	_asset_id = StringName("actor/%s" % archetype)
 	if not SemanticAssets.has_asset(_asset_id):
-		_asset_id = &"boss/crown"
+		_asset_id = &"boss/stage_01"
 	if not is_instance_valid(_view):
 		_view = TextureRect.new()
 		_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

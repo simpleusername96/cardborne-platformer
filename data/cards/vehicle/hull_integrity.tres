@@ -7,7 +7,7 @@
 script = ExtResource("2_mod")
 stat_id = &"max_health_bonus"
 operation = "add"
-values_by_level = Array[float]([15, 30, 45])
+values_by_level = Array[float]([10, 20, 30, 40, 50, 59])
 
 [resource]
 script = ExtResource("1_def")
@@ -16,5 +16,5 @@ title_key = "UPGRADE_HULL_INTEGRITY_TITLE"
 description_key = "UPGRADE_HULL_INTEGRITY_DESC"
 category = &"chassis"
 artwork_asset_id = &"upgrade/hull_integrity"
-max_level = 3
+max_level = 6
 modifiers = Array[ExtResource("2_mod")]([SubResource("Modifier_1")])

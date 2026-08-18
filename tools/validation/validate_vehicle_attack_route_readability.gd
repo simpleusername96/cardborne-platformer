@@ -42,8 +42,8 @@ func _run() -> void:
 
 func _validate_ordinary(resolve_path: Callable, resolve_charge: Callable, player: Vector2) -> void:
 	for role in [
-		&"shooter", &"chaser", &"controller", &"turret", &"mine",
-		&"artillery_spotter", &"beam_sentinel",
+		&"ordinary_lane_01", &"ordinary_edge_01", &"ordinary_gap_01", &"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01",
+		&"ordinary_growth_01", &"ordinary_fixed_beam_01",
 	]:
 		var enemy := EnemyState.new()
 		enemy.role = role
@@ -65,28 +65,28 @@ func _validate_ordinary(resolve_path: Callable, resolve_charge: Callable, player
 					expected_origin += enemy.committed_dir * float(attack.get("origin_offset", 0.0))
 				_expect(Vector2(descriptor["from"]) == expected_origin, "%s route origin remains committed" % role)
 				_expect(float(descriptor["half_width"]) > 0.0, "%s route exposes a nonzero danger half-width" % role)
-				if role == &"beam_sentinel":
+				if role == &"ordinary_fixed_beam_01":
 					_expect(
 						is_equal_approx(
 							float(descriptor["beam_growth_seconds"]),
 							AttackContract.EMITTED_BEAM_GROWTH_SECONDS
 						),
-						"Beam Sentinel publishes collision-owned emitted-beam growth timing"
+						"Fixed Beam Ordinary Enemy Lv.1 publishes collision-owned emitted-beam growth timing"
 					)
 
 
 func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Vector2) -> void:
 	var examples := {
-		&"projectile": &"foundry_burst",
-		&"charge": &"foundry_ram",
+		&"projectile": &"heated_fan",
+		&"charge": &"direct_charge",
 		&"beam": &"switch_sweep",
-		&"area": &"furnace_ring",
+		&"area": &"thermal_ring",
 	}
 	for delivery_variant in examples:
 		var delivery := StringName(delivery_variant)
 		var pattern := String(examples[delivery_variant])
 		var enemy := EnemyState.new()
-		enemy.role = &"stage_boss"
+		enemy.role = &"boss"
 		enemy.phase = &"boss_startup"
 		# Keep the fixture inside the shared field's walkable center so route
 		# resolution tests the authored blocker instead of the outer boundary.
@@ -168,7 +168,7 @@ func _validate_offscreen_intersection() -> void:
 		CombatCuePolicy.telegraph_mode(
 			Vector2(300.0, 360.0), 50.0, &"startup", beam, visible
 		) == CombatCuePolicy.MODE_BEAM_STARTUP,
-		"visible Beam Sentinel startup selects its source-attached orb mode"
+		"visible Fixed Beam Ordinary Enemy Lv.1 startup selects its source-attached orb mode"
 	)
 	var unseen_beam_descriptors: Array[Dictionary] = [beam]
 	_expect(

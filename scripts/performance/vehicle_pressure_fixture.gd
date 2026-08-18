@@ -74,7 +74,7 @@ static func build(
 	if include_boss:
 		descriptors.append({
 			"id":"performance_boss",
-			"role":&"stage_boss",
+			"role":&"boss_actor",
 			"pos":positions[-1],
 			"active":true,
 			"counts_active_cap":false,
@@ -154,7 +154,7 @@ static func _allocator_sector_directions(
 ) -> Array[Vector2]:
 	var squads: Array[Array] = []
 	for _index in 8:
-		squads.append([&"scrap_drone"])
+		squads.append([&"ordinary_melee_01"])
 	var allocations := allocator.allocate({
 		"id":"performance_peak_sector_probe",
 		"beat":4,

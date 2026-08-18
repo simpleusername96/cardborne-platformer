@@ -283,12 +283,12 @@ arrival cue는 stage advance와 같은 시각 `t=0.0`에 시작하고, birth는 
 ### C. 선택적 combat-state 정리
 
 보스 종속 actor는 기존 `zone in ["boss_wave", "boss_system"]` 또는
-`carrier_id == "stage_boss"`를 하나의 helper로 판정한다. 보스 defeat 시 이 actor만
+`carrier_id == "boss_actor"`를 하나의 helper로 판정한다. 보스 defeat 시 이 actor만
 retire하고 `collective_tactics`, `enemy_grid`, `enemy_store`를 정상 갱신한다.
 
 `VehicleProjectileStore`에는 pool/counter를 보존하는 `retire_boss_hostiles()`를 추가해
 `uses_boss_reserve` projectile만 swap-remove한다. `denied_zones`에는 문자열 pattern 검사가
-아닌 명시적 `owner_kind: &"stage_boss"`를 기록하고 그 값만 제거한다. 일반 hostile과
+아닌 명시적 `owner_kind: &"boss_actor"`를 기록하고 그 값만 제거한다. 일반 hostile과
 player projectile/effect는 보존한다. 짧은 presentation-only effect는 damage를 소유하지
 않으므로 자연 만료시킨다.
 

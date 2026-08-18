@@ -17,7 +17,7 @@ Make every active weapon a zero-damage crowd-control tool whose upgrades improve
 - Active weapon upgrades improve range, cooldown, and control duration or strength.
 - Boss health becomes exactly five times the current authored baseline.
 - Bosses move faster than a fully upgraded non-dashing player and actively close distance.
-- Boss shields remain restrained. Crown loses the relay-sector shield whose player-facing sector becomes permanently irrelevant after breaking. Drydock keeps a narrower, weaker frontal intercept.
+- Boss shields remain restrained. Stage 5 boss loses the relay-sector shield whose player-facing sector becomes permanently irrelevant after breaking. Stage 3 boss keeps a narrower, weaker frontal intercept.
 - Do not change enemy quotas again in this task.
 - Do not perform run-duration or result measurement. Functional, contract, visual, and export validation remain in scope.
 - Preserve active weapon IDs, names, art, input, and four-level ownership. Preserve boss attack cadence, damage, warnings, encounter caps, and authored role identities.
@@ -26,8 +26,8 @@ Make every active weapon a zero-damage crowd-control tool whose upgrades improve
 
 - `VehicleRun._boss_combat_move()` currently approaches only beyond 560 px and retreats below 340 px. Bosses therefore maintain ranged standoff through their dedicated boss path; ordinary ranged-enemy classification is not the cause.
 - Current boss speeds are 181.25–230 while the player reaches 347.2 without dash. The boss cannot catch a continuously moving upgraded player.
-- Crown uses three 120-degree shield sectors, and boss presentation normally faces the player. After the front sector breaks, the remaining side/rear sectors rarely affect incoming player fire.
-- Drydock currently blocks 90% damage across a 110-degree frontal arc without a normal shield-down window, which explains its disproportionate difficulty.
+- Stage 5 boss uses three 120-degree shield sectors, and boss presentation normally faces the player. After the front sector breaks, the remaining side/rear sectors rarely affect incoming player fire.
+- Stage 3 boss currently blocks 90% damage across a 110-degree frontal arc without a normal shield-down window, which explains its disproportionate difficulty.
 - Active weapon resources and previews currently encode damage as a first-class upgrade axis. The damage field and damage calls must be removed, not retained at zero.
 - `VehicleStatusRuntime` already owns enemy slow state. Extend that owner for active-weapon slow instead of adding a competing status system.
 - `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`, and their validation scripts are canonical consumers that must change with the runtime contract.
@@ -48,13 +48,13 @@ Make every active weapon a zero-damage crowd-control tool whose upgrades improve
 - Boss base health changes from 5,200 to 26,000 while existing stage multipliers remain.
 - Boss speeds become 380 / 395 / 410 / 425 / 440 / 455 / 470 / 485.
 - Boss movement approaches above 240 px, strafes from 140–240 px, and retreats only below 140 px.
-- Drydock frontal intercept changes from a 55-degree half-angle and 90% block to a 35-degree half-angle and 50% block. Crown shield kind becomes `none`.
+- Stage 3 boss frontal intercept changes from a 55-degree half-angle and 90% block to a 35-degree half-angle and 50% block. Stage 5 boss shield kind becomes `none`.
 
 ## Execution Checklist
 
 - [x] Update canonical product/design contracts and active-weapon resource schema; migrate all four resources and runtime snapshots to range, duration, strength, and cooldown.
 - [x] Replace every active-weapon damage path with bounded CC application, including boss resistance and boss stun/slow integration.
-- [x] Increase boss health/speed, change its close-pressure movement band, weaken Drydock shielding, and remove Crown relay shielding.
+- [x] Increase boss health/speed, change its close-pressure movement band, weaken Stage 3 boss shielding, and remove Stage 5 boss relay shielding.
 - [x] Update Korean/English descriptions, upgrade previews, and Ship Status rows so all visible claims match the CC-only contract.
 - [x] Update focused validators and validate imports, runtime contracts, affected rendered UI in Korean and English, visual authority, and Web export without run-result measurement.
 
@@ -72,7 +72,7 @@ Make every active weapon a zero-damage crowd-control tool whose upgrades improve
 - 2026-08-18: Created from current code, product spec, design authority, and the user's revised combat direction. Existing quotas are explicitly outside this implementation.
 - 2026-08-18: Canonical specs, four active resources, and the active definition/runtime contract now contain no active-weapon damage axis. Godot 4.7.1 imports the migrated resources and scripts successfully.
 - 2026-08-18: EMP, Black Hole, Shockwave, and Cross Beam now mutate only bounded control state or projectile clearance. Boss slow/stagger resistance is integrated, boss behavior pauses during stagger, and no active-weapon enemy/facility damage call remains. Focused active, status, and balance validators pass.
-- 2026-08-18: Boss health is five times the prior baseline, movement exceeds maximum non-dash player speed, and the dedicated movement band now closes to 140–240 px. Drydock alone retains a 70-degree, 50% frontal intercept; Crown relay state is removed. Shield, campaign, difficulty, and boss-pattern validators pass.
+- 2026-08-18: Boss health is five times the prior baseline, movement exceeds maximum non-dash player speed, and the dedicated movement band now closes to 140–240 px. Stage 3 boss alone retains a 70-degree, 50% frontal intercept; Stage 5 boss relay state is removed. Shield, campaign, difficulty, and boss-pattern validators pass.
 - 2026-08-18: Active offers now show range, control duration, and cooldown as three compact values; Ship Status replaces active damage with range and duration while retaining cooldown. Korean and English layout/localization validators pass. Final 1280x720 captures are retained under `.agents/evidence/2026-08-18-control-active-weapons/{ko-final-1280,en-final-1280}` and show all three offer values without clipping.
 - 2026-08-18: Final focused combat, boss, UI, localization, capture-driver, visual-authority, import, and Web export gates pass. The built Web index returned HTTP 200 on the fastrun-manager Codex port and the task-owned server was stopped. No run-duration, defeat-count, or performance qualification measurement was performed.
 - 2026-08-18: The diff-scoped quality audit found no competing owner or responsibility creep. It corrected center-overlap Shockwave stagger handling and removed obsolete shield-restored capture paths before final validation.

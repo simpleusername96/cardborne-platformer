@@ -13,16 +13,17 @@ const BossCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd"
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 
 const ORDINARY_ARCHETYPES: Array[StringName] = [
-	&"scrap_drone", &"needle_drone", &"spark_minelet", &"chaser",
-	&"shooter", &"controller", &"turret", &"mine", &"generator",
-	&"shield_escort", &"artillery_spotter", &"interceptor_tower",
-	&"rammer", &"bulkhead_guard", &"splitter_barge", &"repair_tender",
-	&"drone_carrier", &"beam_sentinel", &"rail_sniper", &"orbit_gunner",
-	&"bombing_runner", &"wreck_scavenger",
+	&"ordinary_melee_01", &"ordinary_ranged_01", &"ordinary_area_01", &"ordinary_edge_01",
+	&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_support_01",
+	&"ordinary_support_02", &"ordinary_growth_01", &"ordinary_fixed_ranged_02",
+	&"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_support_01",
+	&"ordinary_support_03", &"ordinary_fixed_beam_01", &"ordinary_beam_01", &"ordinary_range_01",
+	&"ordinary_sweep_01", &"ordinary_melee_02",
 ]
 const PRODUCTION_BOSS_VARIANTS: Array[StringName] = [
-	&"colossus", &"leviathan", &"titan", &"behemoth", &"crown",
-	&"battery", &"loom", &"pulse_core",
+	&"boss_stage_01", &"boss_stage_02", &"boss_stage_03", &"boss_stage_04", &"boss_stage_05",
+	&"boss_stage_06", &"boss_stage_07", &"boss_stage_08", &"boss_stage_09", &"boss_stage_10",
+	&"boss_stage_11", &"boss_stage_12",
 ]
 var _failures: Array[String] = []
 
@@ -77,17 +78,18 @@ func _validate_actor_images() -> void:
 	)
 	signatures.clear()
 	for boss in PRODUCTION_BOSS_VARIANTS:
+		var descriptor := ActorCatalog.descriptor(boss)
 		_validate_unique_alpha_signature(
-			StringName("boss/%s" % boss),
+			StringName(descriptor.get("asset", &"")),
 			signatures
 		)
-	_expect(signatures.size() == 8, "the eight approved boss body silhouettes remain distinct")
+	_expect(signatures.size() == 12, "the twelve approved boss body silhouettes remain distinct")
 	var authored_variants := {}
 	for stage_id in CombatStages.STAGE_IDS:
 		authored_variants[BossCatalog.variant(stage_id)] = true
 	_expect(
-		authored_variants.size() == 8,
-		"all eight gameplay-authored boss identities have approved production silhouettes"
+		authored_variants.size() == 12,
+		"all twelve gameplay-authored boss identities have approved production silhouettes"
 	)
 
 

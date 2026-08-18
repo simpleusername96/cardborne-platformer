@@ -9,4 +9,4 @@ title_key = "UPGRADE_DROP_MINES_TITLE"
 description_key = "UPGRADE_DROP_MINES_DESC"
 category = &"secondary"
 artwork_asset_id = &"upgrade/drop_mines"
-max_level = 4
+max_level = 7

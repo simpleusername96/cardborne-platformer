@@ -23,21 +23,21 @@ func _run() -> void:
 	var store := Store.new()
 	store.save_path = TEST_PATH
 	store.known.clear()
-	_expect(store.discover(&"mobile_chaser"), "first encounter unlocks one entry")
-	_expect(not store.discover(&"mobile_chaser"), "discovery is idempotent")
+	_expect(store.discover(&"enemy_ordinary_edge_01"), "first encounter unlocks one entry")
+	_expect(not store.discover(&"enemy_ordinary_edge_01"), "discovery is idempotent")
 	_expect(not store.discover(&""), "empty discovery IDs are discarded")
 	_expect(not store.discover(&"unknown_entry"), "unknown IDs are discarded")
 	for stationary in [
-		&"turret", &"mine", &"interceptor_tower", &"beam_sentinel", &"generator",
+		&"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01", &"ordinary_fixed_support_01",
 	]:
 		var entry_id := Catalog.entry_id_for_enemy(stationary, stationary)
 		_expect(
-			entry_id == StringName("mobile_%s" % String(stationary))
+			entry_id == StringName("enemy_%s" % String(stationary))
 				and store.discover(entry_id),
 			"%s has a discoverable stable enemy entry" % stationary
 		)
 	for entry_id in [
-		&"boss_stage_1", &"object_transit_gate", &"object_mystery_device",
+		&"boss_stage_01", &"object_transit_gate", &"object_mystery_device",
 		&"object_elite_armored",
 	]:
 		_expect(store.discover(entry_id), "%s unlocks" % entry_id)
@@ -105,7 +105,7 @@ func _run() -> void:
 	loaded.save_path = TEST_PATH
 	loaded.load_discovery()
 	_expect(
-		loaded.known.has(&"mobile_chaser")
+		loaded.known.has(&"enemy_ordinary_edge_01")
 			and not loaded.known.has(&"object_crate")
 			and loaded.known.size() == 10,
 		"schema-v1 load ignores the retired crate ID and preserves live IDs"
@@ -146,7 +146,7 @@ func _run() -> void:
 			and int(build_contract["text_row_count"]) >= 5,
 		"active ship summary keeps its useful build rows"
 	)
-	_expect(panel.debug_select_entry(&"bosses", &"boss_stage_1"), "discovered boss detail is selectable")
+	_expect(panel.debug_select_entry(&"bosses", &"boss_stage_01"), "discovered boss detail is selectable")
 	contract = panel.debug_contract()
 	_expect(
 		bool(contract["entry_column_visible"])
@@ -156,7 +156,7 @@ func _run() -> void:
 			and bool(Dictionary(contract["preview"])["semantic_provider"]),
 		"unshielded boss detail renders four canonical stat rows without generic prose"
 	)
-	_expect(panel.debug_select_entry(&"enemies", &"mobile_chaser"), "enemy detail is selectable")
+	_expect(panel.debug_select_entry(&"enemies", &"enemy_ordinary_edge_01"), "enemy detail is selectable")
 	contract = panel.debug_contract()
 	_expect(
 		int(contract["stat_rows"]) == 3
@@ -181,7 +181,7 @@ func _run() -> void:
 	get_root().add_child(preview)
 	await process_frame
 	for archetype in [
-		&"rail_sniper", &"orbit_gunner", &"bombing_runner", &"wreck_scavenger",
+		&"ordinary_beam_01", &"ordinary_range_01", &"ordinary_sweep_01", &"ordinary_melee_02",
 	]:
 		preview.show_preview({"kind":&"enemy", "id":archetype})
 		_expect(
@@ -194,7 +194,7 @@ func _run() -> void:
 	panel.set_compact_mode(true)
 	panel.open(active)
 	await process_frame
-	_expect(panel.debug_select_entry(&"enemies", &"mobile_chaser"), "compact list selects a discovered enemy")
+	_expect(panel.debug_select_entry(&"enemies", &"enemy_ordinary_edge_01"), "compact list selects a discovered enemy")
 	contract = panel.debug_contract()
 	var ratios := Array(contract["entry_detail_ratios"])
 	_expect(
@@ -238,7 +238,7 @@ func _validate_catalog_partition() -> void:
 				"Field Objects contains only non-hostile world objects"
 			)
 	for archetype in Archetypes.DEFINITIONS:
-		if archetype == &"stage_boss":
+		if archetype == &"boss_actor":
 			continue
 		var entry_id := Catalog.entry_id_for_enemy(archetype, archetype)
 		_expect(
@@ -256,8 +256,8 @@ func _validate_catalog_partition() -> void:
 		if StringName(entry["entry_kind"]) == &"boss":
 			boss_stage_indices.append(int(entry["boss_stage_index"]))
 	_expect(
-		boss_stage_indices == [0, 1, 2, 3, 4, 5, 6, 7],
-		"eight guidebook bosses map to all eight campaign cycles"
+		boss_stage_indices == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+		"twelve guidebook bosses map to all twelve campaign cycles"
 	)
 	_expect(
 		not entries_by_id.has(&"object_crate")
@@ -274,11 +274,11 @@ func _validate_catalog_partition() -> void:
 
 
 func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
-	var outside_chaser := _entry(outside, &"enemies", &"mobile_chaser")
-	var active_chaser := _entry(active, &"enemies", &"mobile_chaser")
-	var outside_health := Dictionary(Array(outside_chaser["stat_rows"])[0])
-	var active_health := Dictionary(Array(active_chaser["stat_rows"])[0])
-	var definition := Archetypes.definition(&"chaser")
+	var outside_edge_enemy := _entry(outside, &"enemies", &"enemy_ordinary_edge_01")
+	var active_edge_enemy := _entry(active, &"enemies", &"enemy_ordinary_edge_01")
+	var outside_health := Dictionary(Array(outside_edge_enemy["stat_rows"])[0])
+	var active_health := Dictionary(Array(active_edge_enemy["stat_rows"])[0])
+	var definition := Archetypes.definition(&"ordinary_edge_01")
 	var expected_stage_two_health := (
 		float(definition["health"])
 		* EncounterDirector.ENEMY_HEALTH_MULTIPLIER
@@ -294,7 +294,7 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 				== roundi(expected_stage_two_health),
 		"enemy health row derives the Cycle 2 exact value and outside-run Cycle 1–8 range"
 	)
-	var boss := _entry(active, &"bosses", &"boss_stage_1")
+	var boss := _entry(active, &"bosses", &"boss_stage_01")
 	var boss_rows := Array(boss["stat_rows"])
 	_expect(
 		boss_rows.size() == 4
@@ -307,13 +307,13 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 	var shielded_rows := StatAdapter.boss_rows(2)
 	_expect(
 		shielded_rows.size() == 6
-			and int(Array(Dictionary(shielded_rows[2])["value_args"])[0]) == 50,
+			and int(Array(Dictionary(shielded_rows[2])["value_args"])[0]) == 85,
 		"shield-owning Cycle 3 alone includes shield reduction and exposure rows"
 	)
 	_expect(
 		StatAdapter.boss_rows(-1).is_empty()
-			and StatAdapter.boss_rows(8).is_empty(),
-		"boss rows fail closed outside the eight-cycle campaign"
+			and StatAdapter.boss_rows(12).is_empty(),
+		"boss rows fail closed outside the twelve-cycle campaign"
 	)
 	var anomaly := _entry(active, &"objects", &"object_mystery_device")
 	_expect(

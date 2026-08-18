@@ -3,7 +3,7 @@ extends RefCounted
 
 const CARD_PATH := "res://data/cards/vehicle"
 const EXPECTED_COUNT := 27
-const EXPECTED_LEVEL_STATES := 91
+const EXPECTED_LEVEL_STATES := 172
 const AUTOMATIC_WEAPON_SLOTS := 3
 const CATEGORIES: Array[StringName] = [
 	&"primary", &"secondary", &"element", &"activated", &"chassis", &"combat",

@@ -21,65 +21,78 @@ const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 
 const PATTERNS := {
-	&"furnace_gates":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.90, "recovery":0.90, "damage":22.0},
-	&"foundry_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.65, "recovery":1.30, "damage":34.0},
-	&"foundry_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"thermal", "startup":0.85, "active":0.70, "recovery":0.90, "damage":20.0},
-	&"furnace_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.20, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
+	&"thermal_gates":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.00, "active":0.90, "recovery":0.90, "damage":22.0},
+	&"direct_charge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.65, "recovery":1.30, "damage":34.0},
+	&"heated_fan":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"thermal", "startup":0.85, "active":0.70, "recovery":0.90, "damage":20.0},
+	&"thermal_ring":{"kind":&"area", "commit_mode":&"committed", "affinity":&"thermal", "startup":1.20, "active":0.60, "recovery":1.00, "damage":28.0, "radius":230.0},
 	&"slag_ring":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"thermal", "startup":1.15, "active":0.70, "recovery":0.0, "damage":20.0, "radius":210.0},
 	&"forge_vent":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.00, "active":2.4, "recovery":0.0, "damage":20.0, "radius":190.0},
 
 	&"current_fan":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":0.90, "active":0.70, "recovery":0.90, "damage":20.0},
-	&"archive_lunge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.65, "recovery":1.25, "damage":34.0},
-	&"archive_cross":{"kind":&"cross_corridors", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.70, "recovery":0.95, "damage":26.0, "width":84.0},
-	&"archive_depth":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.55, "recovery":1.10, "damage":32.0, "radius":185.0},
-	&"undertow_lanes":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.10, "active":1.4, "recovery":0.0, "damage":20.0},
+	&"lunge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.65, "recovery":1.25, "damage":34.0},
+	&"cross_corridors":{"kind":&"cross_corridors", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.70, "recovery":0.95, "damage":26.0, "width":84.0},
+	&"depth_area":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.10, "active":0.55, "recovery":1.10, "damage":32.0, "radius":185.0},
+	&"opposing_lanes":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.10, "active":1.4, "recovery":0.0, "damage":20.0},
 	&"depth_charges":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"kinetic", "startup":1.15, "active":0.60, "recovery":0.0, "damage":30.0, "radius":175.0},
 
 	&"grounding_grid":{"kind":&"lanes", "commit_mode":&"committed", "affinity":&"arc", "startup":1.00, "active":0.85, "recovery":0.95, "damage":22.0},
-	&"titan_pulse":{"kind":&"area", "commit_mode":&"committed", "affinity":&"arc", "startup":1.30, "active":0.60, "recovery":1.20, "damage":30.0, "radius":235.0},
-	&"titan_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
-	&"titan_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.62, "recovery":1.20, "damage":34.0},
+	&"radial_pulse":{"kind":&"area", "commit_mode":&"committed", "affinity":&"arc", "startup":1.30, "active":0.60, "recovery":1.20, "damage":30.0, "radius":235.0},
+	&"shield_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
+	&"shield_ram":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.62, "recovery":1.20, "damage":34.0},
 	&"thunder_chain":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":0.55, "recovery":0.0, "damage":32.0, "radius":170.0},
-	&"beam_sentinel_call":{"kind":&"summon", "commit_mode":&"autonomous", "affinity":&"support", "startup":1.00, "active":2.5, "recovery":0.0, "damage":0.0},
+	&"ordinary_fixed_beam_01_call":{"kind":&"summon", "commit_mode":&"autonomous", "affinity":&"support", "startup":1.00, "active":2.5, "recovery":0.0, "damage":0.0},
 
 	&"breaker_charge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.70, "recovery":1.20, "damage":36.0},
 	&"ricochet_volley":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.00, "active":0.75, "recovery":1.05, "damage":22.0},
-	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.45, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
+	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.75, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
 	&"switch_sweep":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.05, "active":0.80, "recovery":1.15, "damage":30.0, "width":78.0},
 	&"switchyard_mines":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":0.0, "damage":26.0, "radius":145.0},
 	&"switch_sweeps":{"kind":&"beam", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.75, "recovery":0.0, "damage":28.0, "width":72.0},
 
 	&"mirror_cross":{"kind":&"cross", "commit_mode":&"committed", "affinity":&"arc", "startup":0.95, "active":0.65, "recovery":1.00, "damage":28.0},
 	&"carrier_wave":{"kind":&"summon", "commit_mode":&"committed", "affinity":&"support", "startup":1.10, "active":0.85, "recovery":1.25, "damage":0.0},
-	&"crown_beam":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.15, "active":0.80, "recovery":1.25, "damage":34.0, "width":82.0},
-	&"crown_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
-	&"crown_lattice":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":1.4, "recovery":0.0, "damage":22.0},
+	&"focused_beam":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.15, "active":0.80, "recovery":1.25, "damage":34.0, "width":82.0},
+	&"focused_burst":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"arc", "startup":0.90, "active":0.70, "recovery":0.90, "damage":22.0},
+	&"parallel_beams":{"kind":&"lanes", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.20, "active":1.4, "recovery":0.0, "damage":22.0},
 	&"relay_pulse_rings":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.35, "active":0.60, "recovery":0.0, "damage":30.0, "radius":225.0},
 }
 
 const EXTRA_PATTERNS := {
 	&"common_charge": {"kind": &"charge", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 0.65, "recovery": 1.00, "damage": 30.0},
 	&"common_broad_barrage": {"kind": &"broad_barrage", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 1.14, "recovery": 0.90, "damage": 14.0},
-	&"drydock_counterburst": {"kind": &"fan", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 0.70, "recovery": 1.00, "damage": 32.0},
-	&"battery_long_banks": {"kind": &"long_banks", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.30, "active": 1.30, "recovery": 0.0, "damage": 16.0},
-	&"loom_crossing_weave": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.55, "recovery": 1.00, "damage": 68.0},
-	&"loom_reverse_weave": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.55, "recovery": 1.00, "damage": 72.0},
-	&"pulse_alternating_sectors": {"kind": &"alternating_pulse", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 18.0, "radius": 300.0},
-	&"pulse_sector_inversion": {"kind": &"alternating_pulse", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 20.0, "radius": 320.0},
+	&"shield_counterburst": {"kind": &"fan", "commit_mode": &"committed", "affinity": &"kinetic", "startup": 1.30, "active": 0.70, "recovery": 1.00, "damage": 32.0},
+	&"long_bank_barrage": {"kind": &"long_banks", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.30, "active": 1.30, "recovery": 0.0, "damage": 16.0},
+	&"crossing_weave_a": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.55, "recovery": 1.00, "damage": 68.0},
+	&"crossing_weave_b": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.55, "recovery": 1.00, "damage": 72.0},
+	&"alternating_sectors_a": {"kind": &"alternating_pulse", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 18.0, "radius": 300.0},
+	&"alternating_sectors_b": {"kind": &"alternating_pulse", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 20.0, "radius": 320.0},
+	&"edge_bars_a": {"kind": &"long_banks", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.10, "active": 1.20, "recovery": 0.0, "damage": 18.0},
+	&"edge_bars_b": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.15, "active": 1.35, "recovery": 0.90, "damage": 60.0},
+	&"pull_pulse_a": {"kind": &"area", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.55, "active": 0.75, "recovery": 0.0, "damage": 24.0, "radius": 220.0},
+	&"pull_pulse_b": {"kind": &"lanes", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.05, "active": 0.85, "recovery": 0.0, "damage": 30.0, "width": 76.0},
+	&"range_pulse_near": {"kind": &"area", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.45, "active": 0.70, "recovery": 0.0, "damage": 26.0, "radius": 180.0},
+	&"range_pulse_far": {"kind": &"lanes", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.10, "active": 1.15, "recovery": 0.90, "damage": 22.0},
+	&"remix_three_beat_a": {"kind": &"lanes", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 0.95, "active": 0.75, "recovery": 0.0, "damage": 24.0},
+	&"remix_three_beat_b": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.10, "active": 1.25, "recovery": 0.90, "damage": 64.0},
 }
 const STAGE_SEQUENCES := {
-	&"stage_1": [&"common_charge", &"furnace_gates", &"common_broad_barrage", &"foundry_burst", &"furnace_ring"],
-	&"stage_2": [&"common_charge", &"archive_cross", &"common_broad_barrage", &"archive_depth", &"current_fan"],
-	&"stage_3": [&"common_charge", &"grounding_grid", &"common_broad_barrage", &"drydock_counterburst", &"titan_pulse"],
+	&"stage_1": [&"common_charge", &"thermal_gates", &"common_broad_barrage", &"heated_fan", &"thermal_ring"],
+	&"stage_2": [&"common_charge", &"cross_corridors", &"common_broad_barrage", &"depth_area", &"current_fan"],
+	&"stage_3": [&"common_charge", &"grounding_grid", &"common_broad_barrage", &"shield_counterburst", &"radial_pulse"],
 	&"stage_4": [&"common_charge", &"switch_sweep", &"common_broad_barrage", &"gate_shockwave", &"ricochet_volley"],
-	&"stage_5": [&"common_charge", &"crown_beam", &"common_broad_barrage", &"mirror_cross", &"carrier_wave"],
-	&"stage_6": [&"common_charge", &"battery_long_banks", &"common_broad_barrage", &"ricochet_volley", &"gate_shockwave"],
-	&"stage_7": [&"common_charge", &"loom_crossing_weave", &"common_broad_barrage", &"loom_reverse_weave", &"ricochet_volley"],
-	&"stage_8": [&"common_charge", &"pulse_alternating_sectors", &"common_broad_barrage", &"pulse_sector_inversion", &"crown_beam"],
+	&"stage_5": [&"common_charge", &"focused_beam", &"common_broad_barrage", &"mirror_cross", &"carrier_wave"],
+	&"stage_6": [&"common_charge", &"long_bank_barrage", &"common_broad_barrage", &"ricochet_volley", &"gate_shockwave"],
+	&"stage_7": [&"common_charge", &"crossing_weave_a", &"common_broad_barrage", &"crossing_weave_b", &"ricochet_volley"],
+	&"stage_8": [&"common_charge", &"alternating_sectors_a", &"common_broad_barrage", &"alternating_sectors_b", &"focused_beam"],
+	&"stage_9": [&"common_charge", &"edge_bars_a", &"common_broad_barrage", &"edge_bars_b", &"gate_shockwave"],
+	&"stage_10": [&"common_charge", &"pull_pulse_a", &"common_broad_barrage", &"pull_pulse_b", &"focused_beam"],
+	&"stage_11": [&"common_charge", &"range_pulse_near", &"common_broad_barrage", &"range_pulse_far", &"cross_corridors"],
+	&"stage_12": [&"common_charge", &"remix_three_beat_a", &"common_broad_barrage", &"remix_three_beat_b", &"alternating_sectors_b"],
 }
 const AUTONOMOUS_SEQUENCES := {
-	&"stage_1": [&"slag_ring", &"forge_vent"], &"stage_2": [&"undertow_lanes", &"depth_charges"], &"stage_3": [&"thunder_chain", &"beam_sentinel_call"], &"stage_4": [&"switchyard_mines", &"switch_sweeps"], &"stage_5": [&"crown_lattice", &"relay_pulse_rings"],
-	&"stage_6": [&"battery_long_banks", &"battery_long_banks"], &"stage_7": [&"loom_crossing_weave", &"loom_reverse_weave"], &"stage_8": [&"pulse_alternating_sectors", &"pulse_sector_inversion"],
+	&"stage_1": [&"slag_ring", &"forge_vent"], &"stage_2": [&"opposing_lanes", &"depth_charges"], &"stage_3": [&"thunder_chain", &"ordinary_fixed_beam_01_call"], &"stage_4": [&"switchyard_mines", &"switch_sweeps"], &"stage_5": [&"parallel_beams", &"relay_pulse_rings"],
+	&"stage_6": [&"long_bank_barrage", &"long_bank_barrage"], &"stage_7": [&"crossing_weave_a", &"crossing_weave_b"], &"stage_8": [&"alternating_sectors_a", &"alternating_sectors_b"],
+	&"stage_9": [&"edge_bars_a", &"edge_bars_b"], &"stage_10": [&"pull_pulse_a", &"pull_pulse_b"], &"stage_11": [&"range_pulse_near", &"range_pulse_far"], &"stage_12": [&"remix_three_beat_a", &"remix_three_beat_b"],
 }
 
 static func sequence(stage_id: StringName, phase_value: Variant = 1) -> Array[String]:
@@ -110,7 +123,7 @@ static func autonomous_sequence(stage_id: StringName) -> Array[StringName]:
 
 static func definition(pattern: String) -> Dictionary:
 	var pattern_id := StringName(pattern)
-	return Dictionary(EXTRA_PATTERNS.get(pattern_id, PATTERNS.get(pattern_id, PATTERNS[&"furnace_gates"])))
+	return Dictionary(EXTRA_PATTERNS.get(pattern_id, PATTERNS.get(pattern_id, PATTERNS[&"thermal_gates"])))
 
 
 static func is_common(pattern: String) -> bool:

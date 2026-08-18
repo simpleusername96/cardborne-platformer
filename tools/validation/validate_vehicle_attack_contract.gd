@@ -21,9 +21,9 @@ func _initialize() -> void:
 		"threat tier contract exposes exactly ordinary, elite, and boss"
 	)
 	_expect(
-		AttackContract.threat_tier_for(&"shooter") == AttackContract.THREAT_ORDINARY
-		and AttackContract.threat_tier_for(&"shooter", &"heavy") == AttackContract.THREAT_ELITE
-		and AttackContract.threat_tier_for(&"stage_boss", &"heavy") == AttackContract.THREAT_BOSS,
+		AttackContract.threat_tier_for(&"ordinary_lane_01") == AttackContract.THREAT_ORDINARY
+		and AttackContract.threat_tier_for(&"ordinary_lane_01", &"heavy") == AttackContract.THREAT_ELITE
+		and AttackContract.threat_tier_for(&"boss", &"heavy") == AttackContract.THREAT_BOSS,
 		"source role and elite trait map to one deterministic threat tier"
 	)
 	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(4.0), 5.0), "light hostile projectile radius is five")
@@ -85,31 +85,31 @@ func _initialize() -> void:
 		"projectile startup keeps a bounded radar-readiness horizon"
 	)
 	_expect(
-		StringName(AttackContract.ORDINARY_ATTACKS[&"controller"]["kind"])
+		StringName(AttackContract.ORDINARY_ATTACKS[&"ordinary_gap_01"]["kind"])
 			== &"projectile"
-			and StringName(AttackContract.ORDINARY_ATTACKS[&"artillery_spotter"]["kind"])
+			and StringName(AttackContract.ORDINARY_ATTACKS[&"ordinary_growth_01"]["kind"])
 				== &"projectile",
 		"ordinary controller and artillery roles never create ranged area bombardments"
 	)
-	var rail: Dictionary = AttackContract.ordinary_attack(&"rail_sniper")
-	var orbit: Dictionary = AttackContract.ordinary_attack(&"orbit_gunner")
-	var bombing: Dictionary = AttackContract.ordinary_attack(&"bombing_runner")
+	var rail: Dictionary = AttackContract.ordinary_attack(&"ordinary_beam_01")
+	var orbit: Dictionary = AttackContract.ordinary_attack(&"ordinary_range_01")
+	var bombing: Dictionary = AttackContract.ordinary_attack(&"ordinary_sweep_01")
 	_expect(
 		is_equal_approx(float(rail["startup"]), 1.40)
 			and is_equal_approx(float(rail["recovery"]), 2.20)
 			and bool(rail["relocates_after_attack"]),
-		"Mobile Rail Sniper exposes its exact line warning and relocation recovery"
+		"Beam Ordinary Enemy Lv.1 exposes its exact line warning and relocation recovery"
 	)
 	_expect(
 		StringName(orbit["kind"]) == &"burst"
 			and int(orbit["burst_count"]) == 3,
-		"Orbit Gunner exposes a three-shot inward pressure burst"
+		"Range Ordinary Enemy Lv.1 exposes a three-shot inward pressure burst"
 	)
 	_expect(
 		StringName(bombing["kind"]) == &"ground_burst"
 			and int(bombing["blast_count"]) == 3
 			and float(bombing["blast_delay"]) > 0.0,
-		"Bombing Runner exposes three delayed normal-damage ground blasts"
+		"Sweep Ordinary Enemy Lv.1 exposes three delayed normal-damage ground blasts"
 	)
 	_expect(
 		is_zero_approx(AttackContract.warning_readiness(0.8, 0.8))
@@ -190,7 +190,7 @@ func _validate_telegraph_threat_tiers() -> void:
 	) -> Vector2:
 		return origin + direction * distance
 	var enemy := EnemyState.new()
-	enemy.role = &"shooter"
+	enemy.role = &"ordinary_lane_01"
 	enemy.phase = &"startup"
 	enemy.phase_time = 0.62
 	enemy.pos = Vector2(100.0, 100.0)
@@ -211,11 +211,11 @@ func _validate_telegraph_threat_tiers() -> void:
 		),
 		"elite telegraphs retain their source threat tier"
 	)
-	enemy.role = &"stage_boss"
+	enemy.role = &"boss"
 	enemy.elite_trait = &""
 	enemy.phase = &"boss_startup"
 	enemy.phase_time = 0.85
-	AttackTelegraphs.refresh_boss(enemy, "foundry_burst", resolve_path)
+	AttackTelegraphs.refresh_boss(enemy, "slag_ring", resolve_path)
 	_expect(
 		not enemy.attack_telegraphs.is_empty()
 		and enemy.attack_telegraphs.all(
@@ -223,7 +223,7 @@ func _validate_telegraph_threat_tiers() -> void:
 		),
 		"boss telegraphs retain the boss threat tier"
 	)
-	AttackTelegraphs.refresh_boss(enemy, "beam_sentinel_call", resolve_path)
+	AttackTelegraphs.refresh_boss(enemy, "ordinary_fixed_beam_01_call", resolve_path)
 	_expect(
 		enemy.attack_telegraphs.size() == 1
 		and enemy.attack_telegraphs[0]["delivery"] == &"support"

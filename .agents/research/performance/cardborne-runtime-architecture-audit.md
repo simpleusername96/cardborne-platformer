@@ -298,7 +298,7 @@ bars, so `VehicleRun` no longer builds or retains `crate_health_overlays` on eve
 presentation snapshot. This removes obsolete recurring dictionary writes. It is a code-
 contract cleanup, not evidence that the visible stutter is fixed. The visual workload also
 changed: the world-health batch ceiling fell from 50 to 26 instances, hostile projectile
-thickness changed only through the existing transform, and a visible Beam Sentinel now
+thickness changed only through the existing transform, and a visible Fixed Beam Ordinary Enemy Lv.1 now
 uses two startup planes and three active planes. These bounded changes require the same
 clean requalification as any other current workload; historical timing cannot qualify them.
 

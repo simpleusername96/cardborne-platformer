@@ -40,12 +40,12 @@ var distance_growth_base_speed := 0.0
 var distance_growth_base_radius := 0.0
 var distance_growth_base_damage := 0.0
 
-const SIEGE_GROWTH_KIND: StringName = &"siege_battery"
-const SIEGE_ARM_DISTANCE := 360.0
-const SIEGE_CAP_DISTANCE := 880.0
-const SIEGE_SPEED_SCALE := Vector2(0.75, 1.35)
-const SIEGE_RADIUS_SCALE := Vector2(1.0, 1.5)
-const SIEGE_DAMAGE_SCALE := Vector2(1.0, 1.6)
+const DISTANCE_GROWTH_GROWTH_KIND: StringName = &"distance_growth"
+const DISTANCE_GROWTH_ARM_DISTANCE := 360.0
+const DISTANCE_GROWTH_CAP_DISTANCE := 880.0
+const DISTANCE_GROWTH_SPEED_SCALE := Vector2(0.75, 1.35)
+const DISTANCE_GROWTH_RADIUS_SCALE := Vector2(1.0, 1.5)
+const DISTANCE_GROWTH_DAMAGE_SCALE := Vector2(1.0, 1.6)
 
 
 func configure(
@@ -93,18 +93,18 @@ func configure(
 
 
 func advance_distance_growth(step_distance: float) -> void:
-	if distance_growth_kind != SIEGE_GROWTH_KIND:
+	if distance_growth_kind != DISTANCE_GROWTH_GROWTH_KIND:
 		return
 	distance_traveled = maxf(0.0, distance_traveled + maxf(0.0, step_distance))
 	_apply_distance_growth()
 
 
 func _apply_distance_growth() -> void:
-	if distance_growth_kind != SIEGE_GROWTH_KIND:
+	if distance_growth_kind != DISTANCE_GROWTH_GROWTH_KIND:
 		return
 	distance_growth_ratio = clampf(
-		(distance_traveled - SIEGE_ARM_DISTANCE)
-			/ (SIEGE_CAP_DISTANCE - SIEGE_ARM_DISTANCE),
+		(distance_traveled - DISTANCE_GROWTH_ARM_DISTANCE)
+			/ (DISTANCE_GROWTH_CAP_DISTANCE - DISTANCE_GROWTH_ARM_DISTANCE),
 		0.0,
 		1.0
 	)
@@ -112,11 +112,11 @@ func _apply_distance_growth() -> void:
 	if direction.is_zero_approx():
 		direction = Vector2.RIGHT
 	velocity = direction * distance_growth_base_speed * lerpf(
-		SIEGE_SPEED_SCALE.x, SIEGE_SPEED_SCALE.y, distance_growth_ratio
+		DISTANCE_GROWTH_SPEED_SCALE.x, DISTANCE_GROWTH_SPEED_SCALE.y, distance_growth_ratio
 	)
 	radius = distance_growth_base_radius * lerpf(
-		SIEGE_RADIUS_SCALE.x, SIEGE_RADIUS_SCALE.y, distance_growth_ratio
+		DISTANCE_GROWTH_RADIUS_SCALE.x, DISTANCE_GROWTH_RADIUS_SCALE.y, distance_growth_ratio
 	)
 	damage = distance_growth_base_damage * lerpf(
-		SIEGE_DAMAGE_SCALE.x, SIEGE_DAMAGE_SCALE.y, distance_growth_ratio
+		DISTANCE_GROWTH_DAMAGE_SCALE.x, DISTANCE_GROWTH_DAMAGE_SCALE.y, distance_growth_ratio
 	)

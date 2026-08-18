@@ -79,8 +79,12 @@ func _validate_catalog_and_stage_rollout() -> void:
 		_expect(beat_kinds.has(&"teach"), "%s includes a Teach beat" % stage_id)
 		_expect(beat_kinds.has(&"combine"), "%s includes a Combine beat" % stage_id)
 		_expect(beat_kinds.has(&"power_test"), "%s includes a Power Test beat" % stage_id)
+		var rollout: Dictionary = Catalog.STAGE_ROLLOUT[stage_index]
+		var expected_tactic_families := (
+			1 if rollout["teach"] == rollout["combine"] else 2
+		)
 		_expect(
-			tactic_ids.size() == (1 if stage_index >= 8 else 2),
+			tactic_ids.size() == expected_tactic_families,
 			"%s exposes the planned tactic family count" % stage_id
 		)
 
@@ -88,7 +92,7 @@ func _validate_catalog_and_stage_rollout() -> void:
 func _validate_role_signatures() -> void:
 	var signatures := {}
 	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
-		if archetype == &"stage_boss":
+		if archetype == &"boss_actor":
 			continue
 		var signature := String(archetype)
 		_expect(

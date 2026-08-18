@@ -207,11 +207,11 @@ func _check_emp_footprint_results(stage: Node) -> void:
 	stage.set("player_position", center)
 	stage.call("_clear_enemies")
 	var inside_enemy = stage.call("_make_enemy", {
-		"id":"emp_inside", "role":&"chaser",
+		"id":"emp_inside", "role":&"ordinary_edge_01",
 		"pos":center + Vector2.RIGHT * 284.0, "active":true,
 	})
 	var outside_enemy = stage.call("_make_enemy", {
-		"id":"emp_outside", "role":&"chaser",
+		"id":"emp_outside", "role":&"ordinary_edge_01",
 		"pos":center + Vector2.RIGHT * 286.0, "active":true,
 	})
 	stage.call("_append_enemy", inside_enemy)
@@ -270,7 +270,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 	var resolve_charge_path := Callable(stage, "_runtime_charge_path_end")
 	var boss = stage.call("_make_enemy", {
 		"id":"telegraph_boss",
-		"role":&"stage_boss",
+		"role":&"boss_actor",
 		"pos":stage.player_position + Vector2(-520.0, 0.0),
 		"active":true,
 	})
@@ -281,7 +281,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	AttackTelegraphs.refresh_boss(
 		boss,
-		"furnace_ring",
+		"thermal_ring",
 		resolve_path,
 		resolve_charge_path
 	)
@@ -290,7 +290,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 		StringName(boss.attack_telegraphs[0]["shape"]) == &"area"
 			and is_equal_approx(
 				float(boss.attack_telegraphs[0]["radius"]),
-				BossPatterns.radius("furnace_ring", 0)
+				BossPatterns.radius("thermal_ring", 0)
 			),
 		"furnace warning uses the exact direct-damage radius"
 	)
@@ -310,7 +310,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	AttackTelegraphs.refresh_boss(
 		boss,
-		"foundry_ram",
+		"direct_charge",
 		resolve_path,
 		resolve_charge_path
 	)
@@ -334,7 +334,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 		boss.committed_dir,
 		BossPatterns.BOSS_CHARGE_SPEED
 			* EncounterDirector.ENEMY_SPEED_MULTIPLIER
-			* BossPatterns.active_seconds("foundry_ram"),
+			* BossPatterns.active_seconds("direct_charge"),
 		boss.radius
 	))
 	_expect(
@@ -358,7 +358,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	var beam = stage.call("_make_enemy", {
 		"id":"telegraph_beam",
-		"role":&"beam_sentinel",
+		"role":&"ordinary_fixed_beam_01",
 		"pos":stage.player_position + Vector2(-400.0, 0.0),
 		"active":true,
 	})
@@ -393,7 +393,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	var mine = stage.call("_make_enemy", {
 		"id":"telegraph_mine",
-		"role":&"mine",
+		"role":&"ordinary_fixed_area_01",
 		"pos":stage.player_position + Vector2(280.0, 0.0),
 		"active":true,
 	})
@@ -409,14 +409,14 @@ func _check_attack_telegraphs(stage: Node) -> void:
 			and StringName(mine.attack_telegraphs[0]["delivery"]) == &"area"
 			and is_equal_approx(
 				float(mine.attack_telegraphs[0]["radius"]),
-				float(AttackContract.ORDINARY_ATTACKS[&"mine"]["radius"])
+				float(AttackContract.ORDINARY_ATTACKS[&"ordinary_fixed_area_01"]["radius"])
 			),
 		"mine simulation descriptor retains its exact proximity damage radius"
 	)
 
 	var controller = stage.call("_make_enemy", {
 		"id":"telegraph_controller",
-		"role":&"controller",
+		"role":&"ordinary_gap_01",
 		"pos":stage.player_position + Vector2(300.0, 0.0),
 		"active":true,
 	})

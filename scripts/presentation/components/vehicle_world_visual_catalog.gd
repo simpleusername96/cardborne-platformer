@@ -5,9 +5,9 @@ extends RefCounted
 ## navigation, placement, schedules, and deterministic layout stay authoritative.
 
 const FIELD_DESCRIPTORS := {
-	&"drowned_ruin_field": {"rhythm": &"central_court", "decoration_budget": 192},
-	&"tidal_archive_field": {"rhythm": &"parallel_bays", "decoration_budget": 192},
-	&"storm_drydock_field": {"rhythm": &"basin_modules", "decoration_budget": 192},
+	&"field_01": {"rhythm": &"central_court", "decoration_budget": 192},
+	&"field_02": {"rhythm": &"parallel_bays", "decoration_budget": 192},
+	&"field_03": {"rhythm": &"basin_modules", "decoration_budget": 192},
 }
 
 const WORLD_OBJECT_DESCRIPTORS := {

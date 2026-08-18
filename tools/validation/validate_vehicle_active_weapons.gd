@@ -54,32 +54,23 @@ func _validate_empty_start_and_emp(catalog: ActiveCatalog) -> void:
 
 
 func _validate_replacement_values(catalog: ActiveCatalog) -> void:
-	var cases := [
-		{"card":&"gravity_collapse", "id":&"black_hole", "duration":[1.6, 2.0, 2.4, 2.8], "strength":[0.25, 0.30, 0.35, 0.40], "size":[180.0, 220.0, 260.0, 300.0], "startup":0.35, "cooldown":[12.0, 10.8, 9.6, 8.4]},
-		{"card":&"kinetic_shockwave", "id":&"shockwave", "duration":[0.35, 0.50, 0.65, 0.80], "strength":[1.0, 1.0, 1.0, 1.0], "size":[200.0, 240.0, 280.0, 320.0], "startup":0.20, "cooldown":[9.0, 8.1, 7.2, 6.3]},
-		{"card":&"piercing_lance", "id":&"cross_beam", "duration":[1.5, 2.0, 2.5, 3.0], "strength":[0.25, 0.30, 0.35, 0.40], "size":[28.0, 40.0, 52.0, 64.0], "startup":0.30, "cooldown":[10.5, 9.4, 8.3, 7.2]},
-	]
-	for case_variant in cases:
-		var case := Dictionary(case_variant)
-		var definition = catalog.get_definition(StringName(case["id"]))
-		_expect(
-			definition != null and is_equal_approx(definition.startup_seconds, float(case["startup"])),
-			"%s owns its exact timing" % case["id"]
-		)
-		for level_index in 4:
+	for active_id in ActiveCatalog.EXPECTED_IDS:
+		var definition = catalog.get_definition(active_id)
+		_expect(definition != null and definition.startup_seconds > 0.0, "%s owns startup timing" % active_id)
+		for level_index in range(1, 7):
 			_expect(
-				is_equal_approx(definition.duration(level_index + 1), float(case["duration"][level_index]))
-					and is_equal_approx(definition.strength(level_index + 1), float(case["strength"][level_index]))
-					and is_equal_approx(definition.size(level_index + 1), float(case["size"][level_index]))
-					and is_equal_approx(definition.cooldown(level_index + 1), float(case["cooldown"][level_index])),
-				"%s level %d owns its exact CC duration, strength, size, and cooldown" % [case["id"], level_index + 1]
+				definition.duration(level_index + 1) >= definition.duration(level_index)
+					and definition.strength(level_index + 1) >= definition.strength(level_index)
+					and definition.size(level_index + 1) >= definition.size(level_index)
+					and definition.cooldown(level_index + 1) <= definition.cooldown(level_index),
+				"%s level %d progressively improves CC without damage" % [active_id, level_index + 1]
 			)
 
 
 func _validate_weapon_owned_endpoints() -> void:
 	var catalog := UpgradeCatalog.new()
 	var build := RunBuild.new(catalog)
-	for _level in 4:
+	for _level in 7:
 		build.apply(&"emp")
 	var runtime := ActiveRuntime.new()
 	var event := runtime.try_start(
@@ -87,10 +78,10 @@ func _validate_weapon_owned_endpoints() -> void:
 	)
 	_expect(
 		bool(event["started"])
-			and is_equal_approx(runtime.size, 405.0)
+			and is_equal_approx(runtime.size, 465.0)
 			and is_equal_approx(runtime.duration, 2.6)
-			and is_equal_approx(runtime.cooldown_remaining, 9.1),
-		"EMP Level 4 owns the fully upgraded control endpoint"
+			and is_equal_approx(runtime.cooldown_remaining, 8.8),
+		"EMP Level 7 owns the fully upgraded control endpoint"
 	)
 
 

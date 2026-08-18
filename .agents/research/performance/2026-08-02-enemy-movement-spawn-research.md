@@ -114,8 +114,8 @@ related:
 
 ### 2. 느린 체감은 base speed와 도착 거리의 합성 결과다
 
-Hard Stage 1에서 현재 ordinary multiplier 1.20을 적용하면 `scrap_drone`은
-270px/s, `chaser`는 246px/s로 base player 280px/s보다 느리다. spawn ring은
+Hard Stage 1에서 현재 ordinary multiplier 1.20을 적용하면 `ordinary_melee_01`은
+270px/s, `edge_enemy`는 246px/s로 base player 280px/s보다 느리다. spawn ring은
 900~2400px라 cover routing까지 겹치면 첫 유효 압력까지 오래 걸린다. 단순히
 trigger 빈도를 올리면 접근 지연 동안 reserve만 쌓였다가 뒤늦게 한꺼번에
 도착한다.

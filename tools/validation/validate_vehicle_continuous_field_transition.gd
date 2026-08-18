@@ -34,7 +34,7 @@ func _run() -> void:
 	run.capture_set_mode(&"playing")
 	var survivor = run.call("_make_enemy", {
 		"id":"continuous_field_survivor",
-		"role":&"chaser",
+		"role":&"ordinary_edge_01",
 		"pos":run.player_position + Vector2(480.0, 0.0),
 		"active":true,
 	})

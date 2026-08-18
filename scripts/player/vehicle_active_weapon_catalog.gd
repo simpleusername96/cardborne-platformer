@@ -54,7 +54,7 @@ func validate_contract() -> PackedStringArray:
 		var definition := definition_variant as VehicleActiveWeaponDefinition
 		if definition == null:
 			continue
-		var expected_states := 4
+		var expected_states := 7
 		if (
 			definition.size_by_level.size() != expected_states
 			or definition.cooldown_by_level.size() != expected_states

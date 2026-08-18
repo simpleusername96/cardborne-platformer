@@ -24,29 +24,29 @@ func _initialize() -> void:
 
 func _validate_family_coverage() -> void:
 	var expected := {
-		&"scrap_drone":Policy.PURSUIT,
-		&"chaser":Policy.PURSUIT,
-		&"rammer":Policy.PURSUIT,
-		&"bulkhead_guard":Policy.PURSUIT,
-		&"splitter_barge":Policy.PURSUIT,
-		&"spark_minelet":Policy.PURSUIT,
-		&"needle_drone":Policy.STANDOFF,
-		&"shooter":Policy.STANDOFF,
-		&"controller":Policy.STANDOFF,
-		&"artillery_spotter":Policy.STANDOFF,
-		&"rail_sniper":Policy.STANDOFF,
-		&"orbit_gunner":Policy.STANDOFF,
-		&"bombing_runner":Policy.PURSUIT,
-		&"wreck_scavenger":Policy.PURSUIT,
-		&"shield_escort":Policy.ESCORT,
-		&"repair_tender":Policy.SUPPORT,
-		&"drone_carrier":Policy.SUPPORT,
-		&"turret":Policy.STATIONARY,
-		&"mine":Policy.STATIONARY,
-		&"interceptor_tower":Policy.STATIONARY,
-		&"beam_sentinel":Policy.STATIONARY,
-		&"generator":Policy.STATIONARY,
-		&"stage_boss":Policy.STATIONARY,
+		&"ordinary_melee_01":Policy.PURSUIT,
+		&"ordinary_edge_01":Policy.PURSUIT,
+		&"ordinary_pull_01":Policy.PURSUIT,
+		&"ordinary_shield_01":Policy.PURSUIT,
+		&"ordinary_pulse_01":Policy.PURSUIT,
+		&"ordinary_area_01":Policy.PURSUIT,
+		&"ordinary_ranged_01":Policy.STANDOFF,
+		&"ordinary_lane_01":Policy.STANDOFF,
+		&"ordinary_gap_01":Policy.STANDOFF,
+		&"ordinary_growth_01":Policy.STANDOFF,
+		&"ordinary_beam_01":Policy.STANDOFF,
+		&"ordinary_range_01":Policy.STANDOFF,
+		&"ordinary_sweep_01":Policy.PURSUIT,
+		&"ordinary_melee_02":Policy.PURSUIT,
+		&"ordinary_support_02":Policy.ESCORT,
+		&"ordinary_support_01":Policy.SUPPORT,
+		&"ordinary_support_03":Policy.SUPPORT,
+		&"ordinary_fixed_ranged_01":Policy.STATIONARY,
+		&"ordinary_fixed_area_01":Policy.STATIONARY,
+		&"ordinary_fixed_ranged_02":Policy.STATIONARY,
+		&"ordinary_fixed_beam_01":Policy.STATIONARY,
+		&"ordinary_fixed_support_01":Policy.STATIONARY,
+		&"boss_actor":Policy.STATIONARY,
 	}
 	for archetype in Archetypes.DEFINITIONS:
 		var definition: Dictionary = Archetypes.DEFINITIONS[archetype]
@@ -106,32 +106,32 @@ func _validate_continuity_and_recovery() -> void:
 				before.dot(after) > 0.99,
 				"%s crosses a band edge without an intent flip" % role
 			)
-	var positive := Vector2(_intent(&"controller", 465.0, 1.0)["direction"])
-	var replay := Vector2(_intent(&"controller", 465.0, 1.0)["direction"])
-	var negative := Vector2(_intent(&"controller", 465.0, -1.0)["direction"])
+	var positive := Vector2(_intent(&"ordinary_gap_01", 465.0, 1.0)["direction"])
+	var replay := Vector2(_intent(&"ordinary_gap_01", 465.0, 1.0)["direction"])
+	var negative := Vector2(_intent(&"ordinary_gap_01", 465.0, -1.0)["direction"])
 	_expect(
 		positive == replay and positive.y > 0.99 and negative.y < -0.99,
 		"strafe sign is deterministic"
 	)
 	for strafe_sign in [-1.0, 1.0]:
-		var chaser_recovery := Policy.intent(
-			&"chaser", &"chaser", Vector2.ZERO, Vector2(200.0, 0.0), strafe_sign, true
+		var edge_enemy_recovery := Policy.intent(
+			&"ordinary_edge_01", &"ordinary_edge_01", Vector2.ZERO, Vector2(200.0, 0.0), strafe_sign, true
 		)
-		var chaser_direction := Vector2(chaser_recovery["direction"])
+		var edge_enemy_direction := Vector2(edge_enemy_recovery["direction"])
 		_expect(
-			absf(chaser_direction.x) <= 0.001
-				and absf(chaser_direction.y) > 0.99
-				and chaser_direction.y * strafe_sign > 0.99
-				and not bool(chaser_recovery["requests_approach"]),
+			absf(edge_enemy_direction.x) <= 0.001
+				and absf(edge_enemy_direction.y) > 0.99
+				and edge_enemy_direction.y * strafe_sign > 0.99
+				and not bool(edge_enemy_recovery["requests_approach"]),
 			"Chaser recovery peels laterally without negative radial motion for either strafe sign"
 		)
-	var rammer_recovery := Policy.intent(
-		&"rammer", &"rammer", Vector2.ZERO, Vector2(200.0, 0.0), -1.0, true
+	var pull_enemy_recovery := Policy.intent(
+		&"ordinary_pull_01", &"ordinary_pull_01", Vector2.ZERO, Vector2(200.0, 0.0), -1.0, true
 	)
 	_expect(
-		Vector2(rammer_recovery["direction"]).x < -0.99
-			and not bool(rammer_recovery["requests_approach"]),
-		"rammer recovery reverses without requesting a route"
+		Vector2(pull_enemy_recovery["direction"]).x < -0.99
+			and not bool(pull_enemy_recovery["requests_approach"]),
+		"pull_enemy recovery reverses without requesting a route"
 	)
 	var smoothed := Policy.smooth_velocity(
 		Vector2(-155.0, 0.0), Vector2(155.0, 0.0), Policy.STANDOFF_RESPONSE,
@@ -141,8 +141,8 @@ func _validate_continuity_and_recovery() -> void:
 
 
 func _validate_route_and_speed_contracts() -> void:
-	var hold := _intent(&"shooter", 415.0, 1.0)
-	var approach := _intent(&"shooter", 620.0, 1.0)
+	var hold := _intent(&"ordinary_lane_01", 415.0, 1.0)
+	var approach := _intent(&"ordinary_lane_01", 620.0, 1.0)
 	_expect(
 		not Policy.route_guidance_requested(hold, true)
 			and not Policy.route_guidance_requested(approach, false)
@@ -150,8 +150,8 @@ func _validate_route_and_speed_contracts() -> void:
 		"route guidance requires both approach intent and a blocked direct path"
 	)
 	var blocked_direction := Policy.direction(
-		&"shooter",
-		&"shooter",
+		&"ordinary_lane_01",
+		&"ordinary_lane_01",
 		Vector2.ZERO,
 		Vector2(415.0, 0.0),
 		1.0,
@@ -159,8 +159,8 @@ func _validate_route_and_speed_contracts() -> void:
 		true
 	)
 	var recovery_requested := Policy.line_of_fire_recovery_requested(
-		&"shooter",
-		&"shooter",
+		&"ordinary_lane_01",
+		&"ordinary_lane_01",
 		Vector2.ZERO,
 		Vector2(415.0, 0.0),
 		true
@@ -175,8 +175,8 @@ func _validate_route_and_speed_contracts() -> void:
 	)
 	_expect(
 		not Policy.line_of_fire_recovery_requested(
-			&"shooter",
-			&"shooter",
+			&"ordinary_lane_01",
+			&"ordinary_lane_01",
 			Vector2.ZERO,
 			Vector2(200.0, 0.0),
 			true
@@ -184,9 +184,9 @@ func _validate_route_and_speed_contracts() -> void:
 		"a ranged enemy that is too close retreats before lane recovery"
 	)
 	var artillery_attack: Dictionary = (
-		AttackContract.ORDINARY_ATTACKS[&"artillery_spotter"]
+		AttackContract.ORDINARY_ATTACKS[&"ordinary_growth_01"]
 	)
-	var artillery_band := Policy.distance_band(&"artillery_spotter")
+	var artillery_band := Policy.distance_band(&"ordinary_growth_01")
 	var artillery_reach := (
 		EncounterDirector.effective_hostile_projectile_speed(
 			float(artillery_attack["speed"])

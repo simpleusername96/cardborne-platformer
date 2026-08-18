@@ -72,7 +72,7 @@ static func outgoing_id(source: String) -> StringName:
 			return &"shockwave"
 		"cross beam":
 			return &"cross_beam"
-		"enemy_mine", "arc proximity burst", "player_arc_mine", "player_spark_minelet":
+		"enemy_mine", "arc proximity burst", "player_arc_mine", "player_ordinary_area_01":
 			return &"arc_mine"
 		"seeker burst":
 			return &"seeker"
@@ -85,18 +85,14 @@ static func incoming_id(source: String, enemy_source: bool) -> StringName:
 	var normalized := source.to_lower()
 	if (
 		"boss" in normalized
-		or "colossus" in normalized
-		or "furnace" in normalized
-		or "archive" in normalized
-		or "titan" in normalized
-		or "crown" in normalized
-		or "breaker" in normalized
-		or "mirror" in normalized
+		or "stage_" in normalized
+		or "common_charge" in normalized
+		or "broad_barrage" in normalized
 	):
 		return &"boss"
 	if "bolt" in normalized or "shot" in normalized or "volley" in normalized or "beam" in normalized:
 		return &"projectile"
-	if "mine" in normalized or "burst" in normalized or "zone" in normalized or "impact" in normalized:
+	if "ordinary_fixed_area_01" in normalized or "burst" in normalized or "zone" in normalized or "impact" in normalized:
 		return &"denial"
 	if "contact" in normalized or "charge" in normalized or "lunge" in normalized:
 		return &"contact"

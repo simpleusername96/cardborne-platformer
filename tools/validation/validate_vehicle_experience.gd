@@ -27,20 +27,20 @@ func _initialize() -> void:
 
 
 func _validate_drop_values() -> void:
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser")) == 3, "swarm XP is 3")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"standard", &"chaser")) == 5, "standard XP is 5")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"turret")) == 10, "priority XP is 10")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"boss", &"stage_boss")) == 24, "stage boss XP is 24")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"chaser", "carrier")) == 3, "summoned carrier children grant their normal XP")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"ordinary_edge_01")) == 3, "swarm XP is 3")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"standard", &"ordinary_edge_01")) == 5, "standard XP is 5")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"ordinary_fixed_ranged_01")) == 10, "priority XP is 10")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"boss", &"boss")) == 24, "stage boss XP is 24")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"ordinary_edge_01", "carrier")) == 3, "summoned carrier children grant their normal XP")
 
 
 func _validate_stage_items() -> void:
 	var layout := LayoutGenerator.generate(0xC4A2B0, Catalog.STAGE_IDS)
 	for stage_id in Catalog.STAGE_IDS:
 		var pickups := layout.pickup_blueprint(stage_id)
-		_expect(pickups.size() == 12, "%s has two recalls and ten authored XP shards" % stage_id)
+		_expect(pickups.size() == 14, "%s has four recalls and ten authored XP shards" % stage_id)
 		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"repair").is_empty(), "%s has no repair pickups" % stage_id)
-		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 2, "%s keeps two direct recall pickups" % stage_id)
+		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_recall").size() == 4, "%s keeps four direct recall pickups" % stage_id)
 		_expect(pickups.filter(func(item): return StringName(item["kind"]) == &"experience_shard").size() == 10, "%s adds ten visible XP shards" % stage_id)
 
 
@@ -187,9 +187,9 @@ func _validate_route_level_cadence() -> void:
 		total_levels += levels_gained
 		while runtime.consume_pending_level():
 			pass
-	_expect(Catalog.STAGE_IDS.size() == 8, "the campaign exposes eight boss cycles")
-	_expect(total_experience == 3445, "the enlarged eight-cycle minimum quota path yields 3445 total XP (actual %d)" % total_experience)
-	_expect(total_levels == 44 and runtime.run_level == 45, "the enlarged quota path ends at run level forty-five with 44 upgrades (actual %d / level %d)" % [total_levels, runtime.run_level])
+	_expect(Catalog.STAGE_IDS.size() == 12, "the campaign exposes twelve boss cycles")
+	_expect(total_experience == 9062, "the twelve-cycle minimum quota path yields 9062 total XP (actual %d)" % total_experience)
+	_expect(total_levels == 102 and runtime.run_level == 103, "the twelve-cycle quota path reaches level 103 with 102 upgrades (actual %d / level %d)" % [total_levels, runtime.run_level])
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:
@@ -205,13 +205,13 @@ func _validate_level_up_cards() -> void:
 	var build := RunBuild.new(catalog)
 	var offer := catalog.offer(build, 0, 0, &"level_up", 0)
 	_expect(offer.size() == 3, "level-up source produces three choices")
-	for _level in 3:
+	for _level in 6:
 		_expect(
 			bool(build.apply(&"pickup_radius").get("applied", false)),
 			"Pickup Radius preserves three collection levels"
 		)
 	_expect(
-		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 210.0),
+		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 252.0),
 		"Pickup Magnet reaches its exact final collection bonus"
 	)
 

@@ -13,7 +13,7 @@ const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.
 static func effective_speed(archetype: StringName, stage_index: int, difficulty: StringName) -> float:
 	var definition := Archetypes.definition(archetype)
 	var difficulty_speed := float(RunDifficulty.profile(difficulty)["speed"])
-	if archetype == &"stage_boss":
+	if archetype == &"boss_actor":
 		return StageDifficulty.boss_move_speed(stage_index) * difficulty_speed
 	return (
 		float(definition["speed"])
