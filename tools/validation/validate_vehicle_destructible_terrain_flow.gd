@@ -49,7 +49,14 @@ func _validate_field(field_id: StringName) -> void:
 	)
 	for stage_id in Catalog.STAGE_IDS:
 		var pickups := layout.pickup_blueprint(stage_id)
-		_expect(pickups.size() == 12, "%s/%s exposes twelve authored pickups" % [field_id, stage_id])
+		var recall_count := 0
+		for pickup in pickups:
+			if StringName(Dictionary(pickup).get("kind", &"")) == &"experience_recall":
+				recall_count += 1
+		_expect(
+			pickups.size() == 14 and recall_count == 4,
+			"%s/%s exposes fourteen pickups including four recalls" % [field_id, stage_id]
+		)
 		for pickup in pickups:
 			_expect(not Dictionary(pickup).has("guarded_by"), "%s/%s pickup has no terrain guard" % [field_id, stage_id])
 
