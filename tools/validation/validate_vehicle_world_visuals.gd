@@ -59,10 +59,9 @@ func _validate_catalog() -> void:
 	var expected_objects := {
 		&"transit_gate": [ &"world/facility_transit_gate", &"round_portal" ],
 		&"repair_beacon": [ &"world/facility_repair_beacon", &"service_cross" ],
-		&"barrier_projector": [ &"world/facility_barrier_projector", &"opposed_vanes" ],
-		&"mystery_device_gravity": [ &"world/mystery_device_gravity", &"inward_arrows" ],
 		&"mystery_device_cryo": [ &"world/mystery_device_cryo", &"broad_snowflake" ],
 		&"mystery_device_weakpoint": [ &"world/mystery_device_weakpoint", &"opened_armor" ],
+		&"mystery_device_lava": [ &"world/mystery_device_lava", &"thermal_vent" ],
 	}
 	_expect(
 		WorldCatalog.WORLD_OBJECT_DESCRIPTORS.size() == expected_objects.size(),

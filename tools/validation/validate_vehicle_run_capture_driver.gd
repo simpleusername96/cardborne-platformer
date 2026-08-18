@@ -176,7 +176,7 @@ func _initialize() -> void:
 		"09t-emp-release-standard.png",
 		"09u-emp-release-reduced.png",
 		"09z-explosive-seeker-impact.png",
-		"09v-facility-gravity.png",
+		"09v-facility-lava.png",
 		"09w-facility-cryo.png",
 		"09x-mystery-device-ready.png",
 		"09y-facility-weakpoint.png",

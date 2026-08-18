@@ -1485,8 +1485,8 @@ func _validate_mystery_device_presentation(
 			"id":"device-a",
 			"state":&"dormant",
 			"position":device_position,
-			"outcome":&"gravity",
-			"effect_radius":480.0,
+			"outcome":&"lava",
+			"effect_radius":360.0,
 		},
 		{"id":"device-b", "state":&"active", "visible":true, "position":resolved_position, "outcome":&"cryo", "effect_radius":360.0, "active_ratio":0.5},
 		{"id":"device-c", "state":&"active", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint", "effect_radius":420.0, "active_ratio":0.25},
@@ -1496,8 +1496,8 @@ func _validate_mystery_device_presentation(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
-	var gravity_contour := renderer.get_node(
-		"MysteryDeviceContour_gravity"
+	var lava_contour := renderer.get_node(
+		"MysteryDeviceContour_lava"
 	) as MultiMeshInstance2D
 	var cryo_contour := renderer.get_node(
 		"MysteryDeviceContour_cryo"
@@ -1508,45 +1508,42 @@ func _validate_mystery_device_presentation(
 	var repair_contour := renderer.get_node(
 		"MysteryDeviceContour_repair"
 	) as MultiMeshInstance2D
-	var barrier_contour := renderer.get_node(
-		"MysteryDeviceContour_barrier"
-	) as MultiMeshInstance2D
 	var rings := renderer.get_node("FacilityEffect_ring") as MultiMeshInstance2D
 	var disks := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
-	var gravity_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
+	var lava_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_lava")
 	var cryo_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_cryo")
 	var weakpoint_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_weakpoint")
 	_expect(
-		gravity_contour.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
+		lava_contour.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
 			and cryo_contour.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
 			and weakpoint_contour.multimesh.instance_count == Renderer.MYSTERY_DEVICE_CAPACITY
-			and gravity_contour.multimesh.visible_instance_count == 1
+			and lava_contour.multimesh.visible_instance_count == 1
 			and cryo_contour.multimesh.visible_instance_count == 1
 			and weakpoint_contour.multimesh.visible_instance_count == 1,
 		"each visible Anomaly outcome uses one bounded breathing contour"
 	)
 	_expect(
-		gravity_symbols.size() == 1
+		lava_symbols.size() == 1
 			and cryo_symbols.size() == 1
 			and weakpoint_symbols.size() == 1
-			and Vector2(gravity_symbols[0]["position"]).is_equal_approx(device_position)
+			and Vector2(lava_symbols[0]["position"]).is_equal_approx(device_position)
 			and Vector2(cryo_symbols[0]["position"]).is_equal_approx(resolved_position)
 			and Vector2(weakpoint_symbols[0]["position"]).is_equal_approx(weakpoint_position),
 		"assigned outcome symbols are visible before damage and remain visible after resolution"
 	)
 	_expect(
-		is_equal_approx(gravity_contour.multimesh.buffer[12], 1.0)
-		and is_equal_approx(gravity_contour.multimesh.buffer[13], 0.0)
+		is_equal_approx(lava_contour.multimesh.buffer[12], 1.0)
+		and is_equal_approx(lava_contour.multimesh.buffer[13], 0.0)
 		and is_equal_approx(cryo_contour.multimesh.buffer[12], 0.5)
 		and is_equal_approx(cryo_contour.multimesh.buffer[13], 1.0)
 		and is_equal_approx(
-			gravity_contour.multimesh.buffer[15],
+			lava_contour.multimesh.buffer[15],
 			Renderer.INTERACTION_EDGE_ALPHA_REDUCED
 		)
 		and is_equal_approx(
 			Vector2(
-				gravity_contour.multimesh.buffer[0],
-				gravity_contour.multimesh.buffer[4]
+				lava_contour.multimesh.buffer[0],
+				lava_contour.multimesh.buffer[4]
 			).length(),
 			Renderer.MYSTERY_DEVICE_SYMBOL_RADIUS
 				+ Renderer.INTERACTION_CONTOUR_WORLD_UNITS
@@ -1590,27 +1587,27 @@ func _validate_mystery_device_presentation(
 		)
 	presentation["mystery_devices"] = [
 		{"id":"device-repair", "state":&"active", "visible":true, "position":device_position, "outcome":&"repair", "effect_radius":420.0, "active_ratio":1.0},
-		{"id":"device-barrier", "state":&"active", "visible":true, "position":resolved_position, "outcome":&"barrier", "effect_radius":420.0, "active_ratio":0.5},
+		{"id":"device-lava", "state":&"active", "visible":true, "position":resolved_position, "outcome":&"lava", "effect_radius":360.0, "active_ratio":0.5},
 	]
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
 	var repair_symbols := renderer.debug_semantic_texture_draws(&"world/facility_repair_beacon")
-	var barrier_symbols := renderer.debug_semantic_texture_draws(&"world/facility_barrier_projector")
+	var active_lava_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_lava")
 	_expect(
 		repair_contour.multimesh.visible_instance_count == 1
-			and barrier_contour.multimesh.visible_instance_count == 1
+			and lava_contour.multimesh.visible_instance_count == 1
 			and repair_symbols.size() == 1
-			and barrier_symbols.size() == 1
+			and active_lava_symbols.size() == 1
 			and Vector2(repair_symbols[0]["position"]).is_equal_approx(device_position)
-			and Vector2(barrier_symbols[0]["position"]).is_equal_approx(resolved_position)
+			and Vector2(active_lava_symbols[0]["position"]).is_equal_approx(resolved_position)
 			and rings.multimesh.visible_instance_count == 2
 			and disks.multimesh.visible_instance_count == 2,
-		"repair and barrier facilities use bounded semantic bodies, contours, and full-area support footprints"
+		"repair and Lava facilities use bounded semantic bodies, contours, and full-area footprints"
 	)
 	presentation["mystery_devices"] = [
-		{"id":"device-a", "state":&"dormant", "visible":true, "position":device_position, "outcome":&"gravity", "effect_radius":480.0},
+		{"id":"device-a", "state":&"dormant", "visible":true, "position":device_position, "outcome":&"lava", "effect_radius":360.0},
 		{"id":"device-b", "state":&"dormant", "visible":true, "position":resolved_position, "outcome":&"cryo", "effect_radius":360.0},
 		{"id":"device-c", "state":&"dormant", "visible":true, "position":weakpoint_position, "outcome":&"weakpoint", "effect_radius":420.0},
 	]
@@ -1692,15 +1689,15 @@ func _validate_mystery_device_presentation(
 			"state":&"dormant",
 			"visible":true,
 			"position":Vector2(-120.0, 260.0),
-			"outcome":&"gravity",
-			"effect_radius":480.0,
+			"outcome":&"lava",
+			"effect_radius":360.0,
 		},
 	]
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
-	var edge_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_gravity")
+	var edge_symbols := renderer.debug_semantic_texture_draws(&"world/mystery_device_lava")
 	_expect(
 		edge_symbols.size() == 1
 			and Vector2(edge_symbols[0]["position"]).is_equal_approx(Vector2(-120.0, 260.0)),
@@ -1712,7 +1709,7 @@ func _validate_mystery_device_presentation(
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
 	_expect(
-		gravity_contour.multimesh.visible_instance_count == 0
+		lava_contour.multimesh.visible_instance_count == 0
 			and cryo_contour.multimesh.visible_instance_count == 0
 			and weakpoint_contour.multimesh.visible_instance_count == 0
 			and rings.multimesh.visible_instance_count == 0

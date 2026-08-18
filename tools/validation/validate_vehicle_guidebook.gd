@@ -171,12 +171,11 @@ func _run() -> void:
 	_expect(
 		Array(Dictionary(contract["preview"])["asset_ids"]) == [
 			&"world/facility_repair_beacon",
-			&"world/facility_barrier_projector",
-			&"world/mystery_device_gravity",
 			&"world/mystery_device_cryo",
 			&"world/mystery_device_weakpoint",
+			&"world/mystery_device_lava",
 		],
-		"Anomaly Device preview exposes all five reachable facility identities without a casing"
+		"Anomaly Device preview exposes all four reachable facility identities without a casing"
 	)
 	var preview := GuidePreview.new()
 	get_root().add_child(preview)
@@ -319,10 +318,10 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 	var anomaly := _entry(active, &"objects", &"object_mystery_device")
 	_expect(
 		String(anomaly["name_key"]) == "GUIDE_OBJECT_MYSTERY_DEVICE_NAME"
-			and Array(anomaly["stat_rows"]).size() == 6
+			and Array(anomaly["stat_rows"]).size() == 5
 			and String(Dictionary(Array(anomaly["stat_rows"])[0])["value_key"])
 				== "GUIDE_VALUE_HP",
-		"Anomaly Device exposes HP and all five timed activation outcomes"
+		"Anomaly Device exposes HP and all four timed activation outcomes"
 	)
 
 

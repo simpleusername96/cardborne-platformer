@@ -70,14 +70,13 @@ const MYSTERY_DEVICE_CAPACITY := 3
 const MAP_PICKUP_CAPACITY := 14
 const MYSTERY_DEVICE_SYMBOL_RADIUS := 144.0
 const MYSTERY_OUTCOME_IDS: Array[StringName] = [
-	&"repair", &"barrier", &"gravity", &"cryo", &"weakpoint",
+	&"repair", &"cryo", &"weakpoint", &"lava",
 ]
 const MYSTERY_SYMBOL_DESCRIPTORS := {
 	&"repair": &"repair_beacon",
-	&"barrier": &"barrier_projector",
-	&"gravity": &"mystery_device_gravity",
 	&"cryo": &"mystery_device_cryo",
 	&"weakpoint": &"mystery_device_weakpoint",
+	&"lava": &"mystery_device_lava",
 }
 const INTERACTION_CONTOUR_WORLD_UNITS := 2.0
 const INTERACTION_EDGE_ALPHA_MIN := 0.32
@@ -2188,15 +2187,14 @@ func _sync_facility_effects(state: Dictionary, visible_world: Rect2) -> void:
 static func _facility_effect_color(effect_id: StringName) -> Color:
 	match effect_id:
 		&"repair": return Art.SUPPORT
-		&"barrier": return Art.SYSTEM
-		&"gravity": return Art.SPACE_BLACK
 		&"cryo": return Art.CRYO
 		&"weakpoint": return Art.DANGER
+		&"lava": return Art.THERMAL
 	return Art.LINE
 
 
 static func _facility_effect_edge_color(effect_id: StringName) -> Color:
-	return Art.TEXT_PRIMARY if effect_id == &"gravity" else _facility_effect_color(effect_id)
+	return _facility_effect_color(effect_id)
 
 
 func _write_hostile_area_notches(center: Vector2, radius: float, readiness: float) -> void:

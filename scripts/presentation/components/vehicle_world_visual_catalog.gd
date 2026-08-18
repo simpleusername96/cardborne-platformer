@@ -23,20 +23,14 @@ const WORLD_OBJECT_DESCRIPTORS := {
 		"shape": &"service_cross",
 		"color": &"support",
 	},
-	&"barrier_projector": {
-		"asset": &"world/facility_barrier_projector",
-		"kind": &"neutral_facility",
-		"shape": &"opposed_vanes",
-		"color": &"support",
-	},
-	&"mystery_device_gravity": {
-		"asset": &"world/mystery_device_gravity", "kind": &"mystery_device_symbol", "shape": &"inward_arrows",
-	},
 	&"mystery_device_cryo": {
 		"asset": &"world/mystery_device_cryo", "kind": &"mystery_device_symbol", "shape": &"broad_snowflake",
 	},
 	&"mystery_device_weakpoint": {
 		"asset": &"world/mystery_device_weakpoint", "kind": &"mystery_device_symbol", "shape": &"opened_armor",
+	},
+	&"mystery_device_lava": {
+		"asset": &"world/mystery_device_lava", "kind": &"mystery_device_symbol", "shape": &"thermal_vent",
 	},
 }
 

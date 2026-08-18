@@ -241,19 +241,19 @@ Repair Tenders restore `8 HP/s`, and Generator support ticks restore `8 HP` ever
 
 - Run-selected inner walls and paired Transit Gates preserve their geometry, collision,
   line-of-sight, dwell, cooldown, and deterministic layout owners.
-- Every cycle places three distinct neutral facilities from a run-seeded rotation. Across
-  eight cycles Repair, Barrier, Gravity, Cryo, and Weakpoint each appear at least once.
+- The persistent field places three distinct neutral facilities from a run-seeded rotation.
+  Across eight cycles Repair, Cryo, Weakpoint, and Lava each appear at least once.
 - Facilities have 360 health, begin dormant, accept player and hostile damage, and all
   projectiles pass through them. Destruction activates the assigned effect for exactly 12 seconds;
   the facility then expires at the end of that timer or at cycle cleanup.
 - Dormant facilities apply no modifier. While active, every facility applies one symmetric
   center-in-radius rule to the player and eligible enemies. Leaving the radius or expiry
   ends its effect immediately.
-- Repair and Barrier use radius 1260; Repair restores one sixth of maximum hull per
-  second and Barrier caps shield at maximum hull. Gravity uses radius 1440 and multiplies
-  acceleration and maximum speed by 0.70 without positional pull. Cryo uses radius 1080
-  and multiplies movement and attack cadence by 0.82. Weakpoint uses radius 1260 and
-  multiplies received damage by 1.15. The actual effect-radius perimeter carries the
+- Repair uses radius 1260 and restores one sixth of maximum hull per second. Cryo uses
+  radius 1080 and multiplies movement and attack cadence by 0.82. Weakpoint uses radius
+  1260 and multiplies received damage by 1.15. Lava uses radius 1080 and deals 8 neutral
+  damage to the player and every targetable enemy inside every 0.50 seconds without
+  granting quota, XP, defeat credit, or player-damage credit. The actual effect-radius perimeter carries the
   12-second countdown: its colored arc starts at 12 o'clock and drains clockwise over a
   thin muted spent perimeter; the facility body has no countdown ring.
 - Facilities are neutral tactical priorities, not allies, enemies, pickups, cover, or

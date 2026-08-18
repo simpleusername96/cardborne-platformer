@@ -19,10 +19,11 @@ const DISTINCT_GROUPS := {
 		&"pickup/repair",
 		&"pickup/experience_recall",
 	],
-	"mystery_device_states":[
-		&"world/mystery_device_gravity",
+	"neutral_facility_roles":[
+		&"world/facility_repair_beacon",
 		&"world/mystery_device_cryo",
 		&"world/mystery_device_weakpoint",
+		&"world/mystery_device_lava",
 	],
 }
 
@@ -42,12 +43,11 @@ func _initialize() -> void:
 
 func _validate_active_world_roles() -> void:
 	var expected := [
-		&"mystery_device_gravity",
+		&"repair_beacon",
 		&"mystery_device_cryo",
 		&"mystery_device_weakpoint",
+		&"mystery_device_lava",
 		&"transit_gate",
-		&"repair_beacon",
-		&"barrier_projector",
 	]
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
 	var matches := active_ids.size() == expected.size()
@@ -55,7 +55,7 @@ func _validate_active_world_roles() -> void:
 		matches = matches and active_ids.has(expected_id)
 	_expect(
 		matches,
-		"active world visual roles include five facilities and exclude retired identities"
+		"active world visual roles include four facilities and exclude retired identities"
 	)
 
 

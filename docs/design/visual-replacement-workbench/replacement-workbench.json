@@ -3097,11 +3097,11 @@
         "scripts/vehicle/vehicle_run.gd"
       ],
       "consumer_asset_ids": [
-        "world/mystery_device_gravity",
         "world/mystery_device_cryo",
-        "world/mystery_device_weakpoint"
+        "world/mystery_device_weakpoint",
+        "world/mystery_device_lava"
       ],
-      "direction_en": "Show exactly one assigned Gravity, Cryo, or Weakpoint symbol from initial placement through effect retirement. The symbol itself is the attackable facility at 288 world units, with a bounded bob and thin breathing contour. Never add a black casing, neutral body, damaged body, wreck, or first-hit reveal. Destruction alone activates the already visible effect; gameplay collision, health, radii, and effect duration remain code-owned.",
+      "direction_en": "Show exactly one assigned Cryo, Weakpoint, or Lava symbol from initial placement through effect retirement; Repair remains owned by the approved facility-identity unit. The symbol itself is the attackable facility at 288 world units, with a bounded bob and thin breathing contour. Never add a separate casing, neutral body, damaged body, wreck, or first-hit reveal. Destruction alone activates the already visible effect; gameplay collision, health, radii, and effect duration remain code-owned. The prior Gravity PNG remains file-retained as inactive history and has no runtime semantic ID.",
       "deliverables": [
         {
           "target_path": "art/visuals/production/gameplay/world/mystery_device_gravity.png",
@@ -3144,12 +3144,27 @@
           "blend": null,
           "brief_en": "Approved Weakpoint Expose facility symbol; render from initial placement through effect retirement at 288 world units.",
           "external_source_ids": []
+        },
+        {
+          "target_path": "art/visuals/production/gameplay/world/mystery_device_lava.png",
+          "width": 192,
+          "height": 192,
+          "pivot": [96, 96],
+          "patch_margin": null,
+          "safe_inset": null,
+          "frame_count": null,
+          "fps": null,
+          "loop": null,
+          "blend": null,
+          "brief_en": "BK-approved Lava facility symbol with one broad dark body and a central split thermal vent; render from initial placement through effect retirement at 288 world units.",
+          "external_source_ids": []
         }
       ],
       "final_paths": [
         "art/visuals/production/gameplay/world/mystery_device_gravity.png",
         "art/visuals/production/gameplay/world/mystery_device_cryo.png",
-        "art/visuals/production/gameplay/world/mystery_device_weakpoint.png"
+        "art/visuals/production/gameplay/world/mystery_device_weakpoint.png",
+        "art/visuals/production/gameplay/world/mystery_device_lava.png"
       ],
       "reuse_paths": [],
       "preview_paths": [
@@ -3188,12 +3203,13 @@
       ],
       "approval": {
         "approved_by": "BK",
-        "approved_at": "2026-08-14T18:03:25+09:00",
-        "baseline_commit": "6df9006a171383f399d4c12dfd6fec5b7d7c4128",
+        "approved_at": "2026-08-18T10:19:42+09:00",
+        "baseline_commit": "457a5d27e55b5f07e3ee3ec9de19bbee97cecb38",
         "deliverable_sha256": {
           "art/visuals/production/gameplay/world/mystery_device_gravity.png": "171afbb022e322e2c5630394079fb167637b819d3da3e114a38d376f15f40a34",
           "art/visuals/production/gameplay/world/mystery_device_cryo.png": "7262d3ba378e18c734fbdcb82122595749ab481802fc37fc7e1993cf6bce0dd9",
-          "art/visuals/production/gameplay/world/mystery_device_weakpoint.png": "15e585cd55fdfc423d1addc20c89c69c7e5cc079b1d288c364dafc7b20a153ff"
+          "art/visuals/production/gameplay/world/mystery_device_weakpoint.png": "15e585cd55fdfc423d1addc20c89c69c7e5cc079b1d288c364dafc7b20a153ff",
+          "art/visuals/production/gameplay/world/mystery_device_lava.png": "8cbf4661d5154f3c7a76bfe07d5273e5742748a6e96f045588a9080fe6ce40e6"
         },
         "retire_paths": [
           "art/visuals/production/gameplay/world/mystery_device_intact.png",

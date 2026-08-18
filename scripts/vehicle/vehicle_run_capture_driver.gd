@@ -124,7 +124,7 @@ const FULL_CAPTURE_FILES := [
 	"09s-emp-charge-reduced.png",
 	"09t-emp-release-standard.png",
 	"09u-emp-release-reduced.png",
-	"09v-facility-gravity.png",
+	"09v-facility-lava.png",
 	"09w-facility-cryo.png",
 	"09x-mystery-device-ready.png",
 	"09y-facility-weakpoint.png",

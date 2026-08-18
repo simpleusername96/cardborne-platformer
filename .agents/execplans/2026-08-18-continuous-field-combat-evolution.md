@@ -228,13 +228,13 @@ Source owners: `scripts/vehicle/vehicle_mystery_device_runtime.gd`, `scripts/veh
 - [x] **5.2** Generate one grounded Lava facility raster candidate.
   - Change: use ImageGen with the canonical sheet as the actual image reference and the binding facility constraints; create a 192x192 transparent authored industrial-SF heat-vent symbol with one dominant silhouette, 3-5 broad planes, dark perimeter, thermal accent, and no ring/text/scene.
   - Accept: intended-size and grayscale inspection show a unique heat-vent role distinct from Repair/Cryo/Weakpoint; provenance and reference-input evidence are recorded in this plan.
-- [ ] **5.3** Obtain exact BK approval and integrate only those bytes.
+- [x] **5.3** Obtain exact BK approval and integrate only those bytes.
   - Change: present the candidate inline with its hash; after explicit approval, register `world/mystery_device_lava` in the manifest/provider/catalog/renderer/guidebook and retire old runtime semantic references without deleting unrelated source files.
   - Accept: the approved hash is recorded and every runtime consumer resolves the one asset ID.
 - [x] **5.4** Implement bounded Lava ticks.
   - Change: the facility runtime emits a fixed-capacity tick receipt every 0.50 seconds while active; `VehicleRun` applies 8 neutral damage to the player and every targetable enemy within radius 1080.
   - Accept: player, ordinary enemy, and boss are hit; actors outside the radius, facilities, pickups, structures excluded by targetability, and expired Lava are not; no quota/XP/player damage credit is granted.
-- [ ] **5.5** Update visual/product contracts, copy, fixtures, and focused tests.
+- [x] **5.5** Update visual/product contracts, copy, fixtures, and focused tests.
   - Change: replace five-facility/Barrier/Gravity wording and imagery with the four-role persistent-field contract and Lava countdown/tick feedback.
   - Accept: visual authority, manifest/provider/world visuals, facility runtime/integration, guidebook, capture, and localization validators pass.
 
@@ -253,7 +253,7 @@ Preconditions:
 
 Source owners: task diff, `tools/validation/`, `tools/export_web.ps1`, `.github/workflows/vehicle-run-validation.yml`, Git history, GitHub Actions
 
-- [ ] **6.1** Run the task-owned code quality audit.
+- [x] **6.1** Run the task-owned code quality audit.
   - Change: apply `$codebase-quality-auditor` to multi-file/shared contracts and make only small safe task-scoped corrections.
   - Accept: no competing owner, stale typed-attribute/facility path, catch-all expansion, unbounded collection, or reachable unsupported boss kind remains.
 - [ ] **6.2** Run the final local functional and visual gate once.
@@ -309,11 +309,13 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 5 exact-asset approval gate.
-- Next task: 5.3 Obtain BK's approval for `mystery_device_lava-candidate-v3.png`; integrate no production bytes before that approval.
+- Current phase: Phase 6 final local validation.
+- Next task: 6.2 Run the one declared full validator/capture/Web release gate from the settled integrated bytes.
 - Last completed gate: Phase 5 behavior pre-gate passed: mystery-device runtime and live map-mechanics integration validators. The deterministic roster is exactly Repair/Cryo/Weakpoint/Lava at three placements. Active Lava emits at most one fixed receipt per facility per simulation step with a bounded catch-up count, deals exact 8-damage half-second ticks to the player and targetable ordinary/boss actors inside radius 1080, bypasses transient player invulnerability without granting a new protection window, and grants no ordinary quota, XP, defeat statistic, outgoing telemetry, or player damage credit.
-- Lava candidate evidence: built-in ImageGen used the canonical sheet as the actual reference input; observed reference SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. BK rejected candidate v1 as too SVG-like and requested that v2 be regenerated from the game's art style with minimal detail; both remain evidence only and are ineligible for production integration. Candidate v3 retains one broad dark mechanical mass, one upper light plane, one lower shadow plane, and a central two-plane thermal vent with no separate modules or microdetail. Only the skill's chroma removal with despill/edge contraction and non-creative Lanczos resize to 192x192 followed generation. Candidate path `.agents/evidence/visual/lava-facility-candidate/mystery_device_lava-candidate-v3.png`; SHA-256 `8cbf4661d5154f3c7a76bfe07d5273e5742748a6e96f045588a9080fe6ce40e6`. Approval: pending; production manifest/runtime integration: prohibited until approved.
-- Visual authority evidence: `docs/design/VISUAL_SYSTEM.md` read completely; canonical sheet visually inspected at original detail; expected and observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`; original provenance is recorded by `$cardborne-visual-authority`. Candidate v3 is awaiting exact BK approval.
+- Phase 5 integration gate: Godot 4.7.1 import passed; semantic provider, visual asset coverage, world visuals, semantic separation, visual replacement coverage, combat renderer, mystery-device runtime, live map mechanics, Guidebook, UI localization, and capture-driver validators all passed. The workbench deterministic build/check and validation report `current=87`, `final=96`, `authored=94`; visual-authority validation passed with the canonical sheet hash. The production PNG and its workbench TO-BE byte both match approved SHA-256 `8cbf4661d5154f3c7a76bfe07d5273e5742748a6e96f045588a9080fe6ce40e6`.
+- Phase 6.1 audit: the task diff keeps cycle continuity in transition owners, difficulty curves in difficulty owners, primary attributes/statuses in build/payload/status owners, facility timers in `VehicleMysteryDeviceRuntime`, and presentation in manifest/catalog/renderer owners. `VehicleRun` adds only orchestration and collision-owned boss/facility application hooks. Late-boss receipts remain fixed at eight weave zones, two pulse zones, and one 12-projectile activation; Lava catch-up is bounded by the 12-second active lifetime and a 24-tick application clamp. No reachable Barrier/Gravity facility semantic ID, typed damage/utility attribute slot, unsupported boss identity kind, competing rule owner, or unbounded task-owned collection remains.
+- Lava candidate evidence: built-in ImageGen used the canonical sheet as the actual reference input; observed reference SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. BK rejected candidate v1 as too SVG-like and requested that v2 be regenerated from the game's art style with minimal detail; both remain evidence only and are ineligible for production integration. Candidate v3 retains one broad dark mechanical mass, one upper light plane, one lower shadow plane, and a central two-plane thermal vent with no separate modules or microdetail. Only the skill's chroma removal with despill/edge contraction and non-creative Lanczos resize to 192x192 followed generation. BK explicitly authorized using v3 to finish the plan on 2026-08-18 despite noting it was not the preferred final art direction. Candidate and production path SHA-256 are both `8cbf4661d5154f3c7a76bfe07d5273e5742748a6e96f045588a9080fe6ce40e6`; the 192x192 canvas, `[96,96]` pivot, semantic ID `world/mystery_device_lava`, and 288-world-unit footprint are unchanged from the facility contract.
+- Visual authority evidence: `docs/design/VISUAL_SYSTEM.md` read completely; canonical sheet visually inspected at original detail; expected and observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`; original provenance is recorded by `$cardborne-visual-authority`. The canonical PNG was supplied through built-in ImageGen's actual `referenced_image_paths` input and v3 now has exact BK approval for this release.
 - Update rule: after a checkpoint passes, record its concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

@@ -216,7 +216,7 @@ grayscale에서도 외곽선과 negative space만으로 주요 역할을 구분�
 | projectile catalog | separate authored player-primary, player-seeker, and hostile-bolt identities with pivots | damage, range, hit rule, affinity tint, and scale |
 | reward catalog | authored direct-pickup and shard visual ID plus value-scale mapping | spawn, value, collection |
 | effect catalog | buffered dash afterimage plus code-native EMP charge/release, Thermal Burst, Drop Mine, Dash Afterburn, Storm Barrage, and Mystery outcome presentation within fixed capacity | timer, damage, protection rule, persistent actor status, direct HUD/audio feedback, authored effect raster |
-| world catalog | authored Transit Gate, five visible attackable neutral-facility role symbols, SurfaceDetail, and state descriptor | topology, collision, health, facility role |
+| world catalog | authored Transit Gate, four visible attackable neutral-facility role symbols, SurfaceDetail, and state descriptor | topology, collision, health, facility role |
 | secondary catalog | authored seeker, field, blade, mine presentation identity plus code-native rear-beam and storm-footprint state | targeting, cadence, damage |
 | defense catalog | shared code-native support boundary plus Toxin/Cryo/Weakpoint actor-overlay recipe | protection, Electric Field damage area, damage, slow, received-damage multiplier, stack, timer |
 | UI glyph catalog | code-native action, minimap, and preview glyph | layout, localization, focus |
@@ -284,10 +284,10 @@ collision.
   각각 표시 반지름 `17/20/23`으로 scale/value를 표현한다. 이는 이전 표시
   크기에서 약 30% 줄인 값이다. repair pickup과 experience recall은 gameplay
   역할과 silhouette가 다르므로 각각의 PNG를 유지한다.
-- 중립 시설은 배치될 때부터 할당된 Repair/Barrier/Gravity/Cryo/Weakpoint authored
+- 중립 시설은 배치될 때부터 할당된 Repair/Cryo/Weakpoint/Lava authored
   symbol 한 개를 `288` world-unit optical size로 표시한다. Repair는 넓은 service
-  cross, Barrier는 서로 마주 보는 projector vane으로 읽혀야 하며, 나머지 세 종류는
-  아래의 기존 shape verb를 유지한다. 검은 외피, damaged body, wreck 또는 enclosing
+  cross, Cryo는 broad snowflake, Weakpoint는 opened armor와 exposed core,
+  Lava는 central split thermal vent로 읽혀야 한다. 검은 외피, damaged body, wreck 또는 enclosing
   badge를 symbol 위나 아래에 합성하지 않는다. 이 symbol 자체가 health와 collision을
   가진 공격 가능한 시설이며, 타격 중에도 visual identity를 바꾸지 않는다. 파괴되면
   같은 symbol이 12초 활성 상태의 effect source로 남고, 시간이 끝나면 effect와 함께
@@ -381,20 +381,21 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - neutral 또는 traversable damage-zone surface는 사용하지 않는다. 바닥 detail은
   presentation-only이며 damage, collision, danger telegraph 또는 objective 의미를
   가질 수 없다.
-- 중립 시설은 배치 즉시 Repair의 service cross, Barrier의 opposed projector vanes,
-  Gravity의 inward arrows, Cryo의 broad snowflake, Weakpoint의 opened armor와 exposed
-  core 중 하나만 `288` world-unit로 단독 표시한다. 검은 외피, neutral/damaged body,
-  resolved wreck와 다른 authored body는 사용하지 않는다. 다섯 symbol은 facility
+- 중립 시설은 배치 즉시 Repair의 service cross, Cryo의 broad snowflake,
+  Weakpoint의 opened armor와 exposed core, Lava의 split thermal vent 중 하나만
+  `288` world-unit로 단독 표시한다. 검은 외피, neutral/damaged body,
+  resolved wreck와 다른 authored body는 사용하지 않는다. 네 symbol은 facility
   health `360`과 collision radius를 가진 공격 가능한 시설이며, 타격 중에도 같은
-  identity를 유지한다. 색이 없어도 다섯 shape verb가 달라야 하며 enclosing badge,
-  text, number, target ring과 nested ornament를 넣지 않는다. 다섯 결과는 모두
+  identity를 유지한다. 색이 없어도 네 shape verb가 달라야 하며 enclosing badge,
+  text, number, target ring과 nested ornament를 넣지 않는다. 네 결과는 모두
   dormant 상태에서는 effect area를 표시하지 않는다. 파괴로 활성화된 12초 동안만
   facility position과 gameplay radius가 일치하는 full-area body를 표시한다.
-  Repair/Barrier/Weakpoint는 radius `1260`, Gravity는 `1440`, Cryo는
-  `1080`을 사용한다. effect-radius perimeter의 colored arc는 12시에서 시작해
+  Repair/Weakpoint는 radius `1260`, Cryo/Lava는 `1080`을 사용한다. Lava는
+  범위 안의 player와 targetable enemy에 `0.50s`마다 neutral damage `8`을 적용한다.
+  effect-radius perimeter의 colored arc는 12시에서 시작해
   시계 방향으로 남은 12초를 표시하고 spent perimeter는 얇은 muted line으로 남는다.
   facility body에는 countdown ring을 두지 않는다. Existing shared ring은 boundary
-  accent로만 사용하며, Repair와 Barrier의 approved role symbol 외에 effect raster를
+  accent로만 사용하며, 네 approved role symbol 외에 effect raster를
   추가하지 않는다.
 - Transit Gate는 antialiased outer contour, uniform radial thickness, one dark
   body ring, one broad system-cyan active plane과 one short live highlight를 가진
@@ -561,9 +562,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   Shockwave는 release frame의 full disk와 단일 boundary, Cross Beam은 실제 반폭의
   두 map-spanning corridor를 사용한다. startup은 같은 geometry의 낮은 alpha 예고만
   허용한다. 새 raster asset, particle node, 별도 collision geometry를 만들지 않는다.
-- 활성화된 Gravity는 radius `1440`에 alpha `0.10` full system disk를, Cryo는 radius
-  `1080`에 alpha `0.12` full cryo disk를, Weakpoint는 radius `1260`에 alpha `0.10`
-  full danger disk를 공통 `12s` 동안 유지한다. 세 effect 모두
+- 활성화된 Cryo는 radius `1080`에 alpha `0.12` full cryo disk를, Weakpoint는
+  radius `1260`에 alpha `0.10` full danger disk를, Lava는 radius `1080`에 alpha
+  `0.10` full thermal disk를 공통 `12s` 동안 유지한다. 세 effect 모두
   device position을 중심으로 하고 existing perimeter는 boundary accent일 뿐 영향
   범위의 유일한 표현이 아니다. Weakpoint는 movement나 targeting을 바꾸지 않고
   affected ordinary mobile enemy의 player-owned received damage를 `1.25x`로 만든다.
@@ -857,9 +858,9 @@ Web export만으로 interactive built-Web smoke나 release performance를
   mode, rounded active planes and the gameplay-owned `0.30s` grown segments remain
   presentation inputs; startup publishes no path geometry. Translating laser walls remain
   placed moving hazards and do not claim a boss muzzle.
-- The five neutral-facility roles are production-integrated. Repair and Barrier use their
-  approved role rasters; Gravity, Cryo, and Weakpoint retain their existing authored
-  symbols. One assigned symbol is visible alone at 288 world units with a bounded bob and
+- The four neutral-facility roles are production-integrated. Repair, Cryo, Weakpoint, and
+  Lava use their approved authored role rasters. One assigned symbol is visible alone at
+  288 world units with a bounded bob and
   thin muted breathing contour. Dormant facilities publish no effect. Destruction activates the
   symmetric full-area effect for twelve seconds, uses the actual effect-radius perimeter
   for a 12-o'clock clockwise remaining-time arc over a thin muted spent line, and expiry
