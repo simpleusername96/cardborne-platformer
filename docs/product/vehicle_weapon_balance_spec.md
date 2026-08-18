@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-08-12
-last_reviewed: 2026-08-14
+last_reviewed: 2026-08-18
 scope: Primary fire, two unrestricted attributes, automatic weapons, and active weapons
 related:
   - ./vehicle_game_spec.md
@@ -52,7 +52,7 @@ must match.
 | Family | Levels | Damage or control | Coverage or count |
 | --- | --- | --- | --- |
 | Split Muzzle | L1-L3 | Total volley damage 140% / 165% / 180% | 2 / 3 / 3 projectiles, side angle ±7° |
-| Piercing Rounds | L1-L4 | Base projectile damage is unchanged | 1 / 2 / 3 / 4 additional penetrations |
+| Piercing Rounds | L1-L7 | Base projectile damage 105% / 111% / 118% / 126% / 135% / 145% / 156% | 1 / 1 / 2 / 2 / 3 / 3 / 4 additional penetrations |
 | Thermal Burst | L1-L4 | 4 / 5.75 / 8 / 11 damage per affected target | Radius 72 / 84 / 96 / 96 |
 | Bio Toxin | L1-L4 | 2 / 2.85 / 4 / 5.5 DPS per stack | Three stacks; duration 5 / 6 / 7 / 7 seconds |
 | Cryo Slow | L1-L3 | 6% / 8% / 10% slow per stack; 18 / 28 / 42 damage on third-stack shatter | Duration 2 / 2.5 / 3 seconds |
@@ -80,7 +80,8 @@ attribute is blocked, while either equipped attribute remains levelable.
 | Shockwave | L1-L4 | 45 / 74.75 / 117 / 180 | Radius 180 / 210 / 240 / 270 | 0.20 | 9 / 8.1 / 7.38 / 6.75 | Close knockback and frequent defensive use |
 | Cross Beam | L1-L4 | 80 / 126.5 / 188.5 / 277.5 | Half-width 24 / 32 / 40 / 48 | 0.30 | 10.5 / 9.45 / 8.61 / 7.875 | Map-spanning, cover-piercing, one hit per target |
 
-Cross Beam uses its exact half-width for both the startup cue and collision. Its
+Cross Beam uses its exact half-width for collision and active presentation. Startup
+shows only source state and does not expose the future map-spanning corridors. Its
 greater damage and shorter cooldown compensate for manual alignment, while its
 wider level progression raises multi-target reliability without removing that
 aiming requirement.

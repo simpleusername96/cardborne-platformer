@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-16
+last_reviewed: 2026-08-18
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -124,8 +124,8 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
   filled plane과 한 겹의 외곽선으로 제한한다. 미세 panel, 반복 lamp,
   nested outline과 greeble로 boss 등급을 표현하지 않는다.
 - 보스 방어막은 외부 objective나 별도 actor가 아니라 boss body에 붙은 한 겹의
-  command-color directional boundary다. Stage 3 boss만 전방 arc를 사용하며 collision
-  truth도 그 방향을 따른다. `shield_up`과
+  command-color directional boundary다. Stage 3 boss만 세 개의 독립된 두꺼운 arc
+  segment를 사용하며 collision truth도 각 segment의 각도와 gap을 따른다. `shield_up`과
   `shield_down` 두 상태만 사용하며, 별도 node, pylon, module, objective marker를 만들지 않는다.
 - 짧은 한 방향 shadow, hard edge highlight와 얕은 inset은 승인 시안의
   기계적 깊이를 설명할 때 사용한다. soft glow, photoreal material,
@@ -471,7 +471,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   endpoint, width와 active timing을 소유한다. 여기에는 단방향 `switch_sweep`,
   `switch_sweeps`, `radial_beam`, 보스 중심에서 네 방향으로 발사되는
   `cross_beam`, 보스 주변 두 발사점에서 나가는 `opposing_lanes`와
-  `radial_lattice`가 포함된다. Startup은 전체 경로를 표시하지 않고 각 committed
+  `radial_lattice`가 포함된다. 기본 hostile beam은 선택될 때마다 `parallel -> X -> plus`
+  topology를 순환한다. Startup은 전체 경로를 표시하지 않고 각 committed
   muzzle 바로 앞에 붙은 danger-red 충전 구체만 표시한다.
   predicted line, corridor fill, floor tint, endpoint와 target marker는 startup 동안
   모두 금지한다. Active 첫 `0.30s`에는 같은 구체에서 borderless filled beam이 실제
@@ -480,16 +481,17 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   energy plane, hot core 최대 세 겹은 모두 같은 성장 비율을 사용한다. 별도 dark
   perimeter, side outline, raster beam, glow, particle와 future-path ghost를 만들지
   않는다. 양방향 X beam은 반대쪽 두 endpoint가 같은 비율로 동시에 자라며, 병렬 beam은
-  각 muzzle이 독립된 한 방향 branch를 발사한다. Translating laser wall은 보스에서
-  발사되는 beam이 아니라 맵에 배치되어 이동하는 hazard이므로 이 emission 계약을
-  사용하지 않고, collision-true gap과 이동 경로를 startup부터 표시한다. 탄환으로
+  각 muzzle이 독립된 한 방향 branch를 발사한다. Translating laser wall과 compression
+  slab은 보스에서 발사되는 beam이 아니라 맵 edge에서 이동하는 hazard다. Startup에는
+  `0.75s` short edge marker만 표시하고 전체 corridor, gap 이동 경로와 다음 위치는
+  표시하지 않는다. Active가 시작되면 현재 collision-true slab과 gap만 표시한다. 탄환으로
   구현된 committed `lanes/cross`와 player-owned Auto Laser/Cross Beam도 이 hostile
   emission 계약의 대상이 아니다.
 - Stage 7 Boss의 crossing weave는 같은 placed moving hazard 계약을 사용한다. 첫 paired
-  wall pass와 지연된 orthogonal pass는 각각 실제 `200`-unit gap과 이동 방향을 startup
-  footprint로 그대로 표시하며 boss muzzle beam으로 그리지 않는다. Stage 8 Boss의 두
-  alternating pulse는 각 warning에서 실제 wedge-ring 피해 영역과 서로 다른 safe sector를
-  표시한다. 두 번째 pulse가 발동할 때만 12발 radial projectile body가 생성되며, warning
+  wall pass와 지연된 orthogonal pass는 startup에 각 entry edge의 짧은 marker만 보이고,
+  active부터 현재 collision과 gap을 표시한다. Stage 8 Boss의 두 alternating pulse는
+  startup에 body/source state만 표시하고 active가 시작될 때 실제 wedge-ring 피해 영역과
+  safe sector를 표시한다. 두 번째 pulse가 발동할 때만 12발 radial projectile body가 생성되며, warning
   단계에서 탄환 경로나 미래 위치를 미리 그리지 않는다. 두 보스의 기존 raster identity는
   그대로 유지한다.
 - hostile circle, wedge, shockwave와 non-emitted-beam damaging corridor는 affinity와 무관하게 exact
@@ -522,9 +524,16 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   적 상태와 독립된 system-color cue이며, 보스 `shield_down` 상태도
   authored body, HUD와 체력 정보로 전달하고 player-reward overlay를 사용하지 않는다.
 - boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 방어막은
-  body에 붙은 한 겹의 directional boundary로만 표시하며 별도 actor나 asset family를
-  사용하지 않는다. Stage 3 boss만 frontal arc를 보여 주며 alpha `0.38`, body radius
-  `+8`를 사용한다. `shield_down`에는 표시하지 않는다.
+  body에 붙은 세 개의 독립된 두꺼운 directional segment로만 표시하며 별도 actor나
+  asset family를 사용하지 않는다. Stage 3 boss만 80-degree segment 세 개와 40-degree
+  gap 세 개를 보여 주며 alpha `0.38`, body radius `+8`를 사용한다. 각 segment의
+  radial thickness는 body silhouette와 분리되어 1x에서 읽혀야 한다. `shield_down`에는
+  표시하지 않는다.
+- Stage 9 compression uses a 180-world-unit matte danger slab, one dark mass separator,
+  and one large directional edge cut. It never uses a bright laser core. Stage 10 reflection
+  uses one body-attached frontal plate boundary. Stage 11 shows exactly one filled annulus and
+  its two boundaries, with no decorative repeated circles. Stage 12 overload preserves the
+  authored silhouette and facing while the body becomes near-black with one coral hot edge.
 - Thermal Burst impact는 direct player-primary hit 위치와 gameplay radius
   `72/84/96`에 alpha `0.16`의 full thermal disk를 첫 frame부터 최종 크기로
   표시하고 `0.18s` 동안 fade한다. 별도 impact raster나 accent를 사용하지 않는다.
@@ -694,8 +703,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   `16/18/20 px`다. invisible status slot은 `34×36/36×40/40×44 px`, action slot은
   `46×36/50×40/54×44 px`, item gap은 `4/6/8 px`다.
   200% text는 `20 px` icon, `72×64 px` status slot, `92×64 px` action slot,
-  `6 px` gap을 사용한다. conditional status slot은 meaningful current timer 또는
-  stack이 있을 때만 표시하고 full upgrade name은 paused Ship Status만 소유한다. 각 item 내부의
+  `6 px` gap을 사용한다. owned conditional status는 inactive라도 compact phase/value를
+  표시한다. gameplay owner는 `id`, `phase`, `current_stacks`, `max_stacks`,
+  `bonus_percent`, `remaining_seconds`, `next_hit_bonus_percent` 구조를 제공하며 UI는 이를
+  다시 계산하지 않는다. full upgrade name은 paused Ship Status만 소유한다. 각 item 내부의
   icon과 값만 중앙 정렬하고 cluster 자체는 좌측 정렬한다. stage_progress는 `보스 N/8` / `Boss N/8` plus remaining ordinary quota, 누적 격파는
   숫자, Dash는 `READY` 또는 `N.Ns`, Active는 미획득 시 `LOCKED`이고 획득 뒤
   `READY` 또는 `N.Ns`를 표시한다. generic Active glyph는 획득 뒤 해당 무기 glyph로
@@ -732,17 +743,23 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   inbound, barrier depleted, boss shield-down, progression complete와 verified neutral
   facility activation, expiry warning, shutdown event만 허용한다.
   stage transition banner는 사용하지 않는다.
-- stage boss와 고정 전투 설치물 `turret`,
-  `ordinary_fixed_ranged_02`, `ordinary_fixed_beam_01`, `generator`만 world body 위에 항상 backed
-  health bar를 둔다. mobile enemy, mine, 중립 시설에는 표시하지
-  않는다. installation bar는 최대 12개이며 fill 높이는 16 world unit, boss fill 높이는
-  18 world unit이다. installation half-width는 `42–72`, boss는 `96–120`
+- 화면에 보이는 모든 살아 있는 hostile `EnemyState`는 최대 체력이어도 world body 위에
+  backed health bar를 둔다. 이동 일반 적, 고정 적, boss add/summon과 boss를 포함한다.
+  중립 시설, 아이템, 투사체, 아직 생성되지 않은 적, 화면 밖 적과 boss death body는
+  제외한다. 이동 일반 적은 body radius `x1.20`의 폭을 `28–48` half-width로 clamp하고
+  fill 높이 `10`, body gap `12`를 쓴다. 고정 적은 fill 높이 `16`, gap `16`, half-width
+  `42–72`, boss는 fill 높이 `18`, gap `18`, half-width `96–120`
   world unit로 제한한다. fill은 모든 비율에서 왼쪽 edge를
   고정하고 backing은 fill보다 상하좌우 2 world unit씩 크다. body 위 공간이
   viewport top을 넘으면 아래로 옮기고, complete backing을 visible world 안에
   clamp한다. 모두 기존
-  `Overlay_health` retained batch를 공유하며 backing/fill을 합친 fixed capacity는
-  26 instance다. screen edge에는 boss/target health를 중복 표시하지 않는다.
+  `Overlay_health` retained MultiMesh 하나를 공유하며 backing/fill을 합친 fixed capacity는
+  `EnemyStore.MAX_LIVE_HOSTILES * 2 = 640` instance다. visible-enemy loop가 backing과 fill을
+  즉시 기록하며 정렬·12개 제한·per-enemy node/material/draw owner를 만들지 않는다.
+  일반·고정 적 fill은 danger coral, boss fill은 boss-command color다. 진단은
+  `ordinary_health_bar_count`, `fixed_health_bar_count`, `boss_health_bar_count`,
+  `health_bar_count`, `health_bar_capacity`, `health_bar_overflow`를 제공한다. screen edge에는
+  boss/target health를 중복 표시하지 않는다.
 - shield와 barrier는 보호받는 body에 붙은 하나의 closed boundary만 사용한다.
   hostile emitted damaging beam은 startup에는 source-attached charge orb만 사용하고 active
   첫 `0.30s`에는 collision-owned 길이와 함께 자라는 borderless filled capsule을 사용한다. Repair

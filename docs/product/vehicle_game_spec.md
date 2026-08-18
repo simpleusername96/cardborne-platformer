@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-15
+last_reviewed: 2026-08-18
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field twelve-boss-cycle vehicle campaign
 related:
@@ -159,11 +159,11 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
 - Projectile attacks use muzzle/cadence and the actual projectile without a
   predicted route, including off-screen sources and live shots approaching the
   viewport. The threat radar owns the directional warning for an off-screen
-  source. Charge startup routes remain hidden. Beam startup shows the exact
-  committed damage corridor at low intensity; the active beam fills that same
-  rectangle with a body, inner energy plane, and hot core. Neither state adds
-  endpoint caps or a larger predicted route. Non-damaging support descriptors
-  create no warning.
+  source. Every startup hides the complete future corridor, pulse location, and
+  moving-hazard route. Startup may show only the muzzle/source orb, attached
+  body or module state, and a short entry-edge marker. Active geometry begins
+  only when its collision becomes active and matches that collision exactly.
+  Non-damaging support descriptors create no warning.
 - All hostile circles, wedges, shockwaves, and damaging corridors use a danger-red full
   footprint, one thin near-black perimeter, and four inward boundary notches, regardless
   of affinity. Controller and Growth Ordinary Enemy Lv.1 attacks are projectiles; ordinary
@@ -281,12 +281,11 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
    deletes already-living ordinary enemies.
 5. Quota completion starts a 1.5-second boss warning. Twelve bosses appear in stage order
    under generic labels from Stage 1 Boss through Stage 12 Boss.
-6. All bosses share a committed charge and a broad three-row projectile barrage. Common
-   patterns occupy at most two of any five direct selections. Every barrage emits three
-   rows at 0.38-second intervals, with 4/5/6 simultaneous projectiles per row in cycles
-   1-3/4-6/7-12 and either a 42-degree spread or 22.5-degree row-axis rotation.
+6. Bosses in stages 1-8 may use the shared committed charge and broad three-row projectile
+   barrage. Stages 9-12 do not select `common_charge` or `common_broad_barrage`; each uses
+   only its dedicated mechanic and state rules.
 7. Stage 3 boss alone uses directional defense, and it directly charges an attack. Its
-   body-attached shield has three rotating 80-degree segments separated by three 40-degree
+   body-attached shield has three thick rotating 80-degree segments separated by three 40-degree
    gaps. Segment hits deal 15% damage. The shield stays up for eight seconds, then disappears
    for two seconds, and blocked damage charges its counterburst. Stage 5 boss has no shield. No boss is defense-only and no
    global shield-down rule exists.
@@ -294,8 +293,8 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
    seconds, use collision-matching committed geometry, and leave an escape corridor at
    least player diameter + 80 units. Pressure damage is 10-18 and normal damage is 22-38.
    No true instant-kill attack exists.
-9. Boss base health is 26000. Health scales are
-   `1.30/1.456/1.625/1.807/2.002/2.210/2.431/2.665/2.860/3.055/3.250/3.510`; damage scales
+9. Boss maximum health is directly authored as
+   `16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890`; damage scales
    `1.00/1.06/1.12/1.18/1.24/1.31/1.38/1.46/1.54/1.62/1.70/1.78`; move speeds
    `380/395/410/425/440/455/470/485/495/505/515/525`; cadence scales
    `.67/.65/.63/.61/.59/.57/.55/.53/.52/.51/.50/.49`; coverage scales
@@ -303,7 +302,10 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
    strafe from 140 through 240 pixels, and retreat only below 140 pixels. Movement slow
    affects boss movement but not attack timers.
    Cadence scales apply to direct read gaps, direct recovery, and autonomous intervals;
-   startup warnings and active windows remain authored and unshortened. Boss projectile
+   startup/active scales are
+   `1.00/.98/.96/.94/.92/.90/.88/.86/.85/.84/.83/.82`, with minimum startup `0.65s`
+   and minimum active `0.45s`. Attack movement scales are
+   `.62/.64/.66/.68/.70/.72/.74/.76/.78/.80/.81/.82`. Boss projectile
    speed uses `1.40x`, beam reach `1.45x`, committed charge speed
    `1.30x`, and circular or wedge radius `1.25x`; warning time is never reduced.
    Cross Beam commits two clipped perpendicular X corridors. Stage 6 Boss alone
@@ -311,10 +313,22 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
    `0.75x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`.
    Stage 7 Boss commits paired translating walls with one collision-true opening, then
    crosses the field with a delayed orthogonal pass whose opening moves to a different
-   axis. Stage 8 Boss commits two warned ring pulses whose safe sector alternates, then
+   axis. Startup shows only short entry-edge markers rather than the complete routes.
+   Stage 8 Boss commits two ring pulses whose safe sector alternates, then
    emits one bounded twelve-shot radial volley from the second pulse. These mechanics
-   execute in both direct and autonomous selections. Stages 9-12 add edge-bar, pull-pulse,
-   range-switch, and three-beat remix exams while retaining the approved boss images.
+   execute in both direct and autonomous selections. Stage 9 uses 180-unit-deep moving
+   compression slabs with a 360-unit gap that can shift by at most 280 units; paired slabs
+   enter at least 0.45 seconds apart and never close every route together. Stage 10 carries
+   a body-attached 100-degree frontal reflection plate for six seconds followed by two
+   seconds exposed. It reflects only direct player projectiles, preserving speed and life;
+   reflected damage is 35% capped at 24, cannot reflect again, and a full hostile store
+   absorbs the shot without boss damage. Stage 11 takes full damage only at radius 420-760
+   and 20% inside or outside; every eight seconds a one-second module cue shifts the band
+   to 520-880 for the next interval, then back. Stage 12 first overloads 12 seconds after
+   arrival and then every 18 seconds for six seconds: movement `1.35x`, cadence `0.75x`,
+   dealt damage `1.30x`, and received damage `1.50x`. Their teaching roles are
+   `ordinary_compression_01`, `ordinary_reflect_01`, `ordinary_resonance_01`, and
+   `ordinary_overload_01`, each admitted at least four times before its quota.
 10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
     immediately. The boss body receives a restrained hit tint, dim/desaturation, and
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
@@ -348,6 +362,14 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
   does not repopulate them.
 - A new run places four experience-recall pickups. After 90 active seconds, if fewer than
   two remain active, one consumed recall returns every 30 seconds, never above four.
+- The actual viewport publishes at most one placed direct item and one dormant neutral
+  facility. XP dropped by defeated enemies is exempt. `visible_world.grow(240)` is the
+  activation safety region: an already visible object stays published and any conflicting
+  second object has rendering and collision disabled until the nearest validated off-screen
+  anchor becomes eligible. An uncollected direct item may retire only after 60 published
+  seconds and only while outside that expanded viewport; it moves to another validated
+  off-screen anchor and resets its timer. Facilities never relocate, and reserve/uncollected
+  counts remain separate from viewport publication.
 - Repair pickups are removed. Their former sockets produce XP shards and Repair facilities
   own high-rate recovery.
 - The upgrade data resources and generated Korean report are canonical for 27 cards and
@@ -362,11 +384,21 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
   one segment per 220 movement units up to five; after 0.60 seconds below speed 20 it
   grants +6/8/10% primary damage per segment for 4.0 seconds and ends above speed 60.
   Split children share one shot-group outcome.
+- When no compatible card remains, leveling offers three catalog-independent fallback choices.
+  `fallback_firepower` adds 3% base primary-projectile damage per rank;
+  `fallback_chassis` alternates +3 maximum Hull on odd ranks and +1.5% movement speed on
+  even ranks; `fallback_operations` alternates +18 pickup radius on odd ranks and -1.5%
+  dash cooldown on even ranks. Each caps at rank 20 and previews the next exact effect.
+  Card acquisition order and build rail exclude fallback ranks. `EXP MAX` is legal only
+  when all cards and all three fallback tracks are maxed. Boss rewards use the same fallback
+  choices after card exhaustion but consume pending XP levels only for XP-earned choices.
 - If active and secondary weapons are both absent, one offer slot is reserved for each.
   If one is absent, one slot is reserved for it. Each reservation ends immediately after
   that category's first acquisition.
 - Dash remains the only innate action. Automatic and active weapons require card
   acquisition and preserve their balance/resource owners.
+- Piercing Rounds levels 1-7 preserve additional penetrations `1/1/2/2/3/3/4` and also
+  multiply base primary-projectile damage by `105/111/118/126/135/145/156%`.
 - Active weapons deal zero damage to enemies, bosses, facilities, and structures.
   EMP stuns and clears hostile projectiles; Black Hole pulls ordinary mobile enemies
   and slows all targetable enemies; Shockwave pushes ordinary mobile enemies and

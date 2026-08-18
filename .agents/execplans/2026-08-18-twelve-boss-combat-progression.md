@@ -214,7 +214,10 @@ only during active play and is not reset by boss death, upgrade modal, or pause.
 | Counterburst | retain current charge behavior; prevented damage supplies charge |
 | Presentation | one retained code-native segmented shield; no new shield raster |
 
-### Twelve-cycle scaling
+### Twelve-cycle scaling (superseded historical decision)
+
+The following 30% boss-health table is retained only as completed-history evidence. Phase 9
+supersedes every boss-health value in its two boss-health columns; ordinary curves remain active.
 
 | Cycle | Base ordinary HP curve | Extra late HP | Ordinary speed curve | Boss pre-30% HP | Boss final HP | Boss move speed |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -234,6 +237,9 @@ only during active play and is not reset by boss death, upgrade modal, or pause.
 Boss damage multipliers for cycles 9-12 are `1.54/1.62/1.70/1.78`, cadence scales are
 `0.52/0.51/0.50/0.49`, and coverage scales are `1.30/1.32/1.34/1.36`. Existing cycles 1-8
 retain their damage, cadence, and coverage values.
+
+The active authored boss maximum-health sequence is
+`16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890`.
 
 Boss-entry ordinary defeat quotas are exactly
 `90/99/108/117/126/135/144/153/162/171/180/189`. These are the previous six-defeat
@@ -292,10 +298,10 @@ other pressure. Existing live actors never change identity or disappear at trans
 | 6 | sweep 01, beam 01, growth 01 | `ordinary_growth_01`: avoid a projectile that becomes stronger with travel |
 | 7 | beam 01, growth 01, gap 01 | `ordinary_gap_01`: follow a moving opening in a placed hazard |
 | 8 | growth 01, gap 01, pulse 01 | `ordinary_pulse_01`: alternate near/far safe positioning |
-| 9 | gap 01, pulse 01, edge 01 | `ordinary_edge_01`: react to a local edge-entry signal |
-| 10 | pulse 01, edge 01, pull 01 | `ordinary_pull_01`: escape a bounded pull before impact |
-| 11 | edge 01, pull 01, range 01 | `ordinary_range_01`: read alternating near/far core state |
-| 12 | pull 01, range 01, support 01 | `ordinary_support_01`: prioritize a visible ally-support source |
+| 9 | gap 01, pulse 01, compression 01 | `ordinary_compression_01`: react to the entry edge and cross the current gap |
+| 10 | pulse 01, compression 01, reflect 01 | `ordinary_reflect_01`: avoid the frontal plate and attack from the side |
+| 11 | compression 01, reflect 01, resonance 01 | `ordinary_resonance_01`: remain in the effective damage band |
+| 12 | reflect 01, resonance 01, overload 01 | `ordinary_overload_01`: focus the stronger but vulnerable overload window |
 
 The boss keeps its full multi-pattern exam. A teaching role shares only the stated response,
 uses lower coverage and damage, and cannot combine the boss's other phases or autonomous pattern.
@@ -526,12 +532,111 @@ itch.io HTML5 channel.
 - [x] **7.2** Run the one deferred heavy performance and Web gate.
   - Accept: fixed-cap/capacity checks, production Web export, built-Web smoke, and the existing
     Cardborne performance evidence contract pass or record a truthful blocked verdict.
-- [ ] **7.3** Commit task-owned changes, push `master`, and publish itch.io.
-  - Accept: local and `origin/master` SHAs match, release workflow succeeds, and the itch.io
-    HTML5 build reports the same payload SHA.
+- [x] **7.3 (superseded)** Hold the previous release while combat-feedback correction is active.
+  - Evidence: the 2026-08-18 feedback audit invalidated the prior health, late-boss, route-warning,
+    progression-exhaustion, and health-bar decisions. Publication is deferred to Task 15.3.
 
 Checkpoint: record final SHAs, release run, itch.io payload, and close this contract only after
 all acceptance checks pass.
+
+### Phase 8: Combat-feedback authority correction
+
+Goal: replace the conflicting decisions without duplicating this active contract.
+
+- [x] **8.1** Supersede the uniform 30% boss-health increase, reused cycle-9-12 mechanics,
+  fixed-distance supply publication, card-exhaustion completion, and fixed/boss-only health bars.
+  - Accept: this contract and the four canonical specs contain the locked correction values and
+    no active section still presents a superseded rule as current truth.
+- [x] **8.2** Record visual-authority evidence for the correction.
+  - Accept: the canonical document was read completely, the reference was inspected at original
+    detail, and its observed SHA-256 is
+    `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+
+### Phase 9: Boss and ordinary durability truth
+
+- [x] **9.1** Author boss maximum health as
+  `16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890`.
+  - Accept: stages 1 and 12 equal the endpoints and all twelve values increase monotonically.
+- [x] **9.2** Add startup/active scale
+  `1.00/.98/.96/.94/.92/.90/.88/.86/.85/.84/.83/.82`, attack-movement scale
+  `.62/.64/.66/.68/.70/.72/.74/.76/.78/.80/.81/.82`, and `0.65s/0.45s` minima.
+  - Accept: boss runtime applies the authored scales without producing an instant attack.
+- [x] **9.3** Publish final effective ordinary HP in Guidebook and validation snapshots.
+  - Accept: output includes role base health plus all active cycle pressure and durability factors.
+
+### Phase 10: Distinct cycle-9-12 mechanics and teaching roles
+
+- [x] **10.1** Implement moving compression slabs with `compression_single`,
+  `compression_shift`, and `compression_pair`.
+- [x] **10.2** Implement the 100-degree, `6s` on/`2s` off direct-projectile reflection plate.
+- [x] **10.3** Implement the alternating `420-760` and `520-880` resonance damage bands.
+- [x] **10.4** Implement the delayed, periodic six-second overload exchange and its three attacks.
+- [x] **10.5** Replace the final four teaching roles with
+  `ordinary_compression_01`, `ordinary_reflect_01`, `ordinary_resonance_01`, and
+  `ordinary_overload_01` and verify at least four pre-quota admissions each.
+  - Accept: each fixture proves the corresponding response through real damage, reflection,
+    distance, or overload state rather than names or roster counts alone.
+
+### Phase 11: Combat presentation correction
+
+- [x] **11.1** Hide every complete future route during startup and keep active geometry equal to
+  collision truth.
+- [x] **11.2** Cycle hostile beam topology `parallel -> X -> plus`, with source orbs in startup and
+  `0.30s` collision-owned growth in active.
+- [x] **11.3** Render the stage-3 shield as three independent thick body-attached segments.
+- [x] **11.4** Render compression, reflection, resonance, and overload states with the locked
+  code-native visual grammar.
+- [x] **11.5** Publish always-visible health bars for every visible living hostile through one
+  `Overlay_health` MultiMesh of at most `EnemyStore.MAX_LIVE_HOSTILES * 2 = 640` instances.
+  - Accept: a 320-hostile structural fixture emits at most 640 backing/fill instances with no
+    missing bar or overflow and correct ordinary/fixed/boss diagnostics.
+
+### Phase 12: Viewport-aware field supply
+
+- [x] **12.1** Keep all four recall pickups, ten placed shards, and six facilities in run state,
+  while publishing at most one direct item and one dormant facility in the actual viewport.
+- [x] **12.2** Use `visible_world.grow(240)` as the activation safety region and preserve already
+  visible objects before admitting the nearest waiting anchor.
+- [x] **12.3** Retire an uncollected direct item only after 60 published seconds and only while it
+  is outside the expanded viewport; relocate it to a validated off-screen anchor without
+  teleporting on screen. Facilities never relocate.
+  - Accept: supported viewport fixtures preserve state, counts, collision, and the two one-visible
+    caps while recall reserve remains separate from viewport publication.
+
+### Phase 13: Progression and conditional-state correction
+
+- [x] **13.1** Add catalog-independent `fallback_firepower`, `fallback_chassis`, and
+  `fallback_operations` ranks, previews, application, stats, and snapshots with 20 ranks each.
+- [x] **13.2** Offer fallback choices only when compatible cards are exhausted; consume XP pending
+  levels only for XP rewards, and show `EXP MAX` only when cards and all fallback ranks are maxed.
+- [x] **13.3** Add Piercing Rounds primary-damage multipliers
+  `105/111/118/126/135/145/156%` while preserving additional penetration
+  `1/1/2/2/3/3/4`.
+- [x] **13.4** Replace formatted gameplay-owned conditional strings with structured status and
+  keep owned inactive states visible; show all statuses in paused Ship Status.
+  - Accept: Korean/English HUD and Pause output agrees with live stacks, bonus, next-hit bonus,
+    and remaining time; activation uses only a 0.18-second edge accent and respects reduced motion.
+
+### Phase 14: Sustained boss combat and synchronized truth
+
+- [x] **14.1** Continue bounded maintenance packets from the active three-role roster after
+  authored reserve exhaustion; refresh nearest pursuit instead when capacity is full.
+- [x] **14.2** Stop maintenance on boss death/cleanup and preserve the existing low/high watermarks,
+  packet size, normal interval, and `0.75s` emergency interval.
+- [x] **14.3** Synchronize Guidebook, product specs, localization, diagnostics, and validation.
+  - Accept: a headless 180-second stage-1 boss fixture records no visible ordinary-threat gap over
+    three seconds without using a synthetic maximum-load benchmark.
+
+### Phase 15: Final verification and corrected release
+
+- [x] **15.1** Run the task-focused validators, full Godot import, and `git diff --check`.
+- [x] **15.2** Run production Web export and built-Web functional smoke. Do not run synthetic
+  maximum-load, profiler, frame-time, or long performance benchmarks and do not claim performance
+  qualification.
+- [ ] **15.3** Commit only task-owned changes in coherent stages, push `master`, and publish the
+  corrected itch.io Web build under the previously approved release scope.
+  - Accept: local and remote SHAs agree, release succeeds, and the published payload matches the
+    validated build.
 
 ## Validation and Rework Controls
 
@@ -632,15 +737,47 @@ change scope, visible behavior, ownership, architecture, safety, or acceptance.
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 7 release handoff.
-- Next task: 7.3 remains open only for the itch.io publication job. GitHub `master` contains the
-  complete implementation at `783ebf118cdb979438bfe57d15f3d8aeb8acc9ea`.
-- Last completed gate: local Web export and itch.io static release validation passed. The user
-  explicitly stopped the synthetic maximum-load performance run on 2026-08-18 because its
-  workload is not representative of actual play; it is not used as acceptance evidence.
-- Release note: GitHub Actions run `32108482311` was in progress when execution stopped. Earlier
-  runs exposed and led to repairs for stale generic asset links and obsolete renderer, upgrade,
-  and pickup fixture expectations. Publication remains unclaimed until that job succeeds.
+- Current phase: Phase 15 corrected release.
+- Next task: 15.3 commits task-owned changes, pushes `master`, and waits for the release workflow.
+- Phase 15.1-15.2 checkpoint: final focused boss, route, renderer-capacity, viewport-supply,
+  progression, maintenance, localization, Guidebook, UI, and visual validators passed with a full
+  Godot 4.7.1 import and `git diff --check`. The production Web export passed the itch.io static
+  contract at 9 files and 22,917,785 gzip bytes. The guarded `13029` smoke returned HTTP 200 for
+  `index.html` and `index.pck`, Chrome exited zero, and a 1280x720 Godot loading frame rendered.
+  The authored XP shards were separated from enemy-drop shards during this gate so the former now
+  share the single direct-item viewport slot with recalls. No performance benchmark was run.
+- Phase 14 checkpoint: `validate_vehicle_boss_maintenance_180s.gd` passed a simulated 180-second
+  living-boss fixture with no visible ordinary-threat gap over three seconds; the existing arrival
+  scheduler also passed. Maintenance now cycles a bounded three-role roster after reserve exhaustion.
+- Phase 13 checkpoint: `validate_vehicle_progression_correction.gd`, upgrade-system/UI,
+  conditional-upgrade, experience, localization, and Guidebook validators passed. They prove three
+  20-rank fallback paths, the seven piercing damage/penetration steps, and structured inactive/live
+  conditional state in Korean and English.
+- Phase 12 checkpoint: `validate_vehicle_viewport_supply_policy.gd` passed one-item and one-dormant-
+  facility publication, visible-item retention, off-screen-only 60-second relocation, and fixed
+  facility anchors.
+- Phase 11 checkpoint: `validate_vehicle_health_bar_capacity.gd` passed 320 visible enemies as
+  exactly 640 retained instances with no overflow and correct ordinary/fixed/boss diagnostics.
+  Attack-route, boss-runtime, boss-pattern, and visual-authority focused validators passed. The
+  legacy monolithic combat-renderer validator exceeded its 120-second process limit; focused
+  renderer fixtures replace that non-performance evidence for this correction.
+- Phase 10 checkpoint: `validate_vehicle_late_boss_mechanics_correction.gd` passed under Godot
+  4.7.1. It proves dedicated common-free sequences, exact compression slab/gap/pair timing,
+  frontal reflection transfer with preserved speed/life and capped damage, live resonance damage,
+  live overload received damage, and at least four admissions for each new teaching role.
+- Phase 9 checkpoint: `validate_vehicle_boss_difficulty_correction.gd` and
+  `validate_vehicle_guidebook.gd` passed under Godot 4.7.1. The difficulty owner now publishes
+  direct boss health, attack-time/movement curves, fairness floors, and final effective ordinary
+  HP through the existing Guidebook adapter.
+- Phase 8 checkpoint: the active ExecPlan and four canonical specs now contain the correction;
+  `validate_cardborne_visual_authority.ps1` passed with the required PNG hash and
+  `git diff --check` passed. No raster asset was created or edited.
+- Last completed gate: the prior local Web export and itch.io static release validation passed,
+  but the user feedback summarized in the 2026-08-18 gap report superseded material combat and
+  progression decisions before publication. That earlier build is not the corrected release.
+- Release note: GitHub Actions run `32108482311` belonged to the superseded release attempt.
+  Corrected publication is owned only by Task 15.3. Synthetic maximum-load, profiler, frame-time,
+  and long-duration performance benchmarks remain explicitly outside this correction.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance
   this pointer in the same edit.
 
