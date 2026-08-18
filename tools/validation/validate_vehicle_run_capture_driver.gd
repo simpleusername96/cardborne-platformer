@@ -128,7 +128,7 @@ func _initialize() -> void:
 		"field capture filenames remove the registry prefix before manifest matching"
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 43, "core manifest has 43 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 136, "full manifest has 136 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 160, "full manifest has 160 captures")
 	for required_capture in [
 		"01i-guidebook-elite-stats.png",
 		"01j-guidebook-field-objects.png",
