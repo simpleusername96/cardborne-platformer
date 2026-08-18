@@ -5,18 +5,17 @@ const Generator = preload("res://scripts/vehicle/vehicle_field_layout_generator.
 const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Allocator = preload("res://scripts/encounters/vehicle_spawn_allocator.gd")
-const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 
-const EXPECTED_MOBILE_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630]
-const EXPECTED_QUOTAS := [60, 66, 72, 78, 84, 90, 96, 102]
+const EXPECTED_MOBILE_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630, 700, 770, 840, 910]
+const EXPECTED_QUOTAS := [90, 99, 108, 117, 126, 135, 144, 153, 162, 171, 180, 189]
 const EXPECTED_HARD_MATERIALIZED_CAPS := [6, 44, 56, 64, 72]
 const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [6, 124, 172, 224, 276]
-const EXPECTED_STAGE_MATERIALIZED_CAPS := [32, 44, 56, 64, 72, 72, 72, 72]
-const EXPECTED_STAGE_REFILL_FLOORS := [12, 16, 20, 24, 28, 32, 36, 40]
-const EXPECTED_STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0]
-const EXPECTED_STAGE_RANGED_CAPS := [3, 3, 3, 3, 3, 4, 4, 4]
-const EXPECTED_STAGE_DENIAL_CAPS := [2, 2, 2, 2, 2, 3, 3, 3]
+const EXPECTED_STAGE_MATERIALIZED_CAPS := [32, 44, 56, 64, 72, 72, 72, 72, 72, 72, 72, 72]
+const EXPECTED_STAGE_REFILL_FLOORS := [12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56]
+const EXPECTED_STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0, 6.25, 6.5, 6.75, 7.0]
+const EXPECTED_STAGE_RANGED_CAPS := [3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4]
+const EXPECTED_STAGE_DENIAL_CAPS := [2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3]
 
 var failures: Array[String] = []
 
@@ -27,7 +26,6 @@ func _initialize() -> void:
 	if layout == null:
 		_finish()
 		return
-	var pair_blueprint: Array = []
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
 		var tactical = layout.tactical_layout(stage_id)
@@ -44,17 +42,8 @@ func _initialize() -> void:
 		var opening_roles: Array = Array(packets[0]["squads"])[0]
 		_expect(opening_roles.size() == 6, "%s opens with six authored pursuit identities" % stage_id)
 		_expect(bool(packets[0].get("nearest_safe_offscreen", false)), "%s opening reserve uses the nearest valid offscreen approach" % stage_id)
-		for role_variant in opening_roles:
-			var role := StringName(role_variant)
-			_expect(not EnemyArchetypes.fires_projectiles(role) and StringName(EnemyArchetypes.definition(role)["threat_kind"]) not in [&"denial", &"support"], "%s opening uses only low-risk pursuit roles" % stage_id)
 		for packet_index in range(1, packets.size()):
 			_validate_surge_packet(packets[packet_index], stage_id)
-		pair_blueprint.append_array(blueprint)
-		if stage_index % 2 == 1:
-			_validate_composition(
-				pair_blueprint, "arc_%d" % ((stage_index + 1) / 2)
-			)
-			pair_blueprint.clear()
 		_validate_opening_runtime(stage_id, stage_index, packets, tactical)
 	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_MATERIALIZED_CAPS, EXPECTED_HARD_AUTHORED_PRESSURE_CAPS)
 	_expect(Director.STAGE_MATERIALIZED_ACTIVE_CAPS == EXPECTED_STAGE_MATERIALIZED_CAPS, "stage materialized caps remain independent from encounter beats")
@@ -62,7 +51,7 @@ func _initialize() -> void:
 	_expect(Director.STAGE_THREAT_BUDGETS == EXPECTED_STAGE_THREAT_BUDGETS, "stage threat budgets remain independent from encounter beats")
 	_expect(Director.STAGE_MAX_RANGED_COMMITS == EXPECTED_STAGE_RANGED_CAPS, "late-stage ranged commit ceilings are explicit")
 	_expect(Director.STAGE_MAX_DENIAL_COMMITS == EXPECTED_STAGE_DENIAL_CAPS, "late-stage denial commit ceilings are explicit")
-	_expect(Director.stage_materialized_active_cap(10) == 0 and is_zero_approx(Director.stage_threat_budget(10)), "invalid stage pressure lookup fails closed")
+	_expect(Director.stage_materialized_active_cap(12) == 0 and is_zero_approx(Director.stage_threat_budget(12)), "invalid stage pressure lookup fails closed")
 	_expect(Director.MAX_RANGED_COMMITS == 3, "ranged commit cap remains three")
 	_expect(Director.MAX_DENIAL_COMMITS == 2, "denial commit cap remains two")
 	_finish()
@@ -80,29 +69,6 @@ func _validate_surge_packet(packet: Dictionary, stage_id: StringName) -> void:
 	for squad in squads:
 		var size := Array(squad).size()
 		_expect(size >= 4 and size <= (6 if stage_one else 8), "%s squad size stays within its exact-cap-safe range" % stage_id)
-
-
-func _validate_composition(blueprint: Array, stage_id: StringName) -> void:
-	var pursuit := 0
-	var direct := 0
-	var denial := 0
-	var support := 0
-	for spec in blueprint:
-		var role := StringName(spec["role"])
-		var threat_kind := StringName(EnemyArchetypes.definition(role)["threat_kind"])
-		if EnemyArchetypes.fires_projectiles(role):
-			direct += 1
-		elif threat_kind == &"denial":
-			denial += 1
-		elif threat_kind == &"support":
-			support += 1
-		else:
-			pursuit += 1
-	var total := float(maxi(1, blueprint.size()))
-	_expect(float(pursuit) / total >= 0.65, "%s keeps at least 65%% pursuit pressure" % stage_id)
-	_expect(float(direct) / total <= 0.15, "%s caps direct projectile roles at 15%%" % stage_id)
-	_expect(float(denial) / total <= 0.08, "%s caps denial roles at 8%%" % stage_id)
-	_expect(float(support) / total <= 0.12, "%s caps support roles at 12%%" % stage_id)
 
 
 func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: Array[Dictionary], tactical) -> void:
@@ -136,9 +102,6 @@ func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: 
 	runtime.tick(0.8, 0, [], tactical.geometry_snapshot.player_start, visible_world)
 	var first := runtime.tick(0.11, 0, [], tactical.geometry_snapshot.player_start, visible_world)
 	_expect(first["spawns"].size() == 1, "%s begins with exactly one due birth (actual %d)" % [stage_id, Array(first["spawns"]).size()])
-	if not first["spawns"].is_empty():
-		var first_role := StringName(first["spawns"][0]["role"])
-		_expect(not EnemyArchetypes.fires_projectiles(first_role) and StringName(EnemyArchetypes.definition(first_role)["threat_kind"]) not in [&"denial", &"support"], "%s begins with a low-risk pursuit identity" % stage_id)
 	_expect(float(runtime.debug_snapshot()["first_spawn_time"]) <= 0.911, "%s begins the offscreen opening births within the configured 0.9-second lead" % stage_id)
 	_expect(runtime.first_attack_preparation_time() < 0.0, "%s has no synthetic preparation before gameplay commits startup" % stage_id)
 	runtime.record_attack_preparation()

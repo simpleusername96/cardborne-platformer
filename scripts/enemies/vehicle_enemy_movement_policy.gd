@@ -13,10 +13,12 @@ const STATIONARY: StringName = &"stationary"
 const PURSUIT_ARCHETYPES: Array[StringName] = [
 	&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_shield_01",
 	&"ordinary_pulse_01", &"ordinary_area_01", &"ordinary_sweep_01", &"ordinary_melee_02",
+	&"ordinary_reflect_01", &"ordinary_overload_01",
 ]
 const STANDOFF_ARCHETYPES: Array[StringName] = [
 	&"ordinary_ranged_01", &"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01",
-	&"ordinary_beam_01", &"ordinary_range_01",
+	&"ordinary_beam_01", &"ordinary_range_01", &"ordinary_compression_01",
+	&"ordinary_resonance_01",
 ]
 const ESCORT_ARCHETYPES: Array[StringName] = [&"ordinary_support_02"]
 const SUPPORT_ARCHETYPES: Array[StringName] = [&"ordinary_support_01", &"ordinary_support_03"]
@@ -30,6 +32,8 @@ const DISTANCE_BANDS := {
 	&"ordinary_beam_01":Vector2(520.0, 680.0),
 	# Range Ordinary Enemy Lv.1 deliberately remains in its tangential pressure band.
 	&"ordinary_range_01":Vector2(320.0, 460.0),
+	&"ordinary_compression_01":Vector2(390.0, 540.0),
+	&"ordinary_resonance_01":Vector2(420.0, 760.0),
 	&"ordinary_support_01":Vector2(430.0, 620.0),
 	&"ordinary_support_03":Vector2(430.0, 620.0),
 }
