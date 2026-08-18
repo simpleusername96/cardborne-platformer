@@ -153,10 +153,15 @@ Readiness statement:
 - Original artifact provenance remains
   `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`, timestamp
   `2026-08-02 12:13:44 KST`.
-- No raster was created or edited in this batch. The HTML report reuses already approved current
-  production actor images, so `actual_image_reference_used=false` and
-  `reference_input_method=not_applicable`. Future Task 6.1 requires the actual canonical sheet in
-  every ImageGen call.
+- The user-directed Task 6.1 candidate batch now exists at
+  `docs/design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/`.
+  All eight ImageGen calls used the canonical sheet as the actual referenced image, so
+  `actual_image_reference_used=true` and `reference_input_method=built_in_image_gen`.
+- `candidate-manifest.json` records the shared prompt contract, per-actor subject prompt, generated
+  source hash, normalized candidate hash, expected/observed authority hash, alpha-removal command,
+  and `pending_user_approval` / `not_integrated` state. The Korean report owns color, actual-canvas,
+  and grayscale review presentation. No SVG or ImageMagick geometry authoring occurred; local
+  processing was limited to chroma alpha removal, proportional resize, and centered canvas extent.
 
 ## Locked Behavior Tables
 
@@ -428,7 +433,7 @@ Source owners: `docs/design/VISUAL_SYSTEM.md`, canonical style sheet, visual wor
 `art/visuals/production/`, semantic manifest/provider, actor visual catalog, Guidebook previews,
 and localization catalogs.
 
-- [ ] **6.1** Generate one ImageGen candidate batch for the eight new actors.
+- [x] **6.1** Generate one ImageGen candidate batch for the eight new actors.
   - Change: pass the canonical sheet as an actual reference and state that it is style grammar
     only; require one dominant silhouette, 3-5 planes for ordinary enemies, 4-6 planes for
     bosses, dark perimeter, restrained accents, and actual-size readability.

@@ -96,6 +96,16 @@
     .boss-card dd { margin: 0; font-variant-numeric: tabular-nums; }
     .boss-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
     .boss-title span { color: var(--muted); font-size: 13px; }
+    .future-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .future-card { min-width: 0; border: 1px solid var(--line); background: var(--surface); padding: 16px; }
+    .actor-pair { display: grid; grid-template-columns: minmax(0, 1fr) 128px; gap: 12px; align-items: center; margin: 12px 0; }
+    .actor-pair figure { min-width: 0; margin: 0; text-align: center; }
+    .actor-pair img { display: block; margin: 0 auto 6px; object-fit: contain; background: #0a1520; }
+    .actor-pair .boss-candidate { width: 180px; height: 180px; max-width: 100%; }
+    .actor-pair .enemy-candidate { width: 96px; height: 96px; }
+    .actor-pair figcaption { color: var(--muted); font-size: 12px; }
+    .gray-check { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; color: var(--muted); font-size: 12px; }
+    .gray-check img { width: 48px; height: 48px; object-fit: contain; filter: grayscale(1); background: #0a1520; }
     .upgrade-section { margin-top: 18px; }
     .upgrade-section h3 { display: flex; justify-content: space-between; gap: 16px; }
     .upgrade-section h3 span { color: var(--muted); font-size: 13px; font-weight: 500; }
@@ -104,6 +114,7 @@
     @media (max-width: 940px) {
       .card, .card.wide { grid-column: span 6; }
       .boss-grid { grid-template-columns: 1fr; }
+      .future-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 640px) {
       .wrap { width: calc(100% - 20px); }
@@ -111,6 +122,9 @@
       .card, .card.wide { grid-column: 1 / -1; }
       .boss-card { grid-template-columns: 80px 1fr; gap: 12px; }
       .boss-card img { width: 80px; height: 80px; }
+      .actor-pair { grid-template-columns: minmax(0, 1fr) 96px; }
+      .actor-pair .boss-candidate { width: 144px; height: 144px; }
+      .actor-pair .enemy-candidate { width: 80px; height: 80px; }
       th { top: 58px; }
     }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
@@ -217,7 +231,41 @@
           <tr><td class="num">12</td><td><strong>지휘 코어</strong><br><code>Command Core</code></td><td>본체 모듈 3개가 가장자리 진입, 파동, 집중 포격을 고정 3박자로 조합한다. 활성 모듈만 공격 종류를 알린다.</td><td><strong>지휘 중계기</strong><br>HP 98 · 속도 150 · 반경 320 아군 피해 +10%, 회복시간 -15%</td><td class="num">91,260</td></tr>
         </tbody>
       </table></div>
-      <p class="note"><strong>이미지 제작:</strong> 네 보스와 네 일반 적은 canonical 스타일 시트를 실제 참조 이미지로 넣어 ImageGen으로 만든다. 보고서 후보와 해시를 먼저 승인받은 뒤에만 production manifest에 연결한다.</p>
+      <div class="future-grid">
+        <article class="future-card">
+          <div class="boss-title"><h3>9. 위상 절단기</h3><span>Phase Cutter</span></div>
+          <div class="actor-pair">
+            <figure><img class="boss-candidate" src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/boss_phase_cutter.png" alt="위상 절단기 이미지 후보"><figcaption>보스 · 절단 날개와 이동 틈</figcaption></figure>
+            <figure><img class="enemy-candidate" src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/enemy_phase_skirmisher.png" alt="위상 척후기 이미지 후보"><figcaption>일반 적 · 측면 3연사</figcaption></figure>
+          </div>
+          <div class="gray-check"><img src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/boss_phase_cutter.png" alt="위상 절단기 흑백 판독 확인"><img src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/enemy_phase_skirmisher.png" alt="위상 척후기 흑백 판독 확인">흑백에서도 절단형 보스와 뾰족한 척후기 외곽이 분리된다.</div>
+        </article>
+        <article class="future-card">
+          <div class="boss-title"><h3>10. 중력 닻</h3><span>Gravity Anchor</span></div>
+          <div class="actor-pair">
+            <figure><img class="boss-candidate" src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/boss_gravity_anchor.png" alt="중력 닻 이미지 후보"><figcaption>보스 · 세 방향 닻 질량</figcaption></figure>
+            <figure><img class="enemy-candidate" src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/enemy_anchor_drone.png" alt="닻 드론 이미지 후보"><figcaption>일반 적 · 당김 후 근접 압박</figcaption></figure>
+          </div>
+          <div class="gray-check"><img src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/boss_gravity_anchor.png" alt="중력 닻 흑백 판독 확인"><img src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/enemy_anchor_drone.png" alt="닻 드론 흑백 판독 확인">세 덩어리 보스와 U자 전면 틈을 가진 드론이 구분된다.</div>
+        </article>
+        <article class="future-card">
+          <div class="boss-title"><h3>11. 공명 반응로</h3><span>Resonance Reactor</span></div>
+          <div class="actor-pair">
+            <figure><img class="boss-candidate" src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/boss_resonance_reactor.png" alt="공명 반응로 이미지 후보"><figcaption>보스 · 네 셔터와 개폐 코어</figcaption></figure>
+            <figure><img class="enemy-candidate" src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/enemy_pulse_guard.png" alt="펄스 수호기 이미지 후보"><figcaption>일반 적 · 근거리/원거리 교대</figcaption></figure>
+          </div>
+          <div class="gray-check"><img src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/boss_resonance_reactor.png" alt="공명 반응로 흑백 판독 확인"><img src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/enemy_pulse_guard.png" alt="펄스 수호기 흑백 판독 확인">사각 셔터형 보스와 넓은 방패형 일반 적이 분리된다.</div>
+        </article>
+        <article class="future-card">
+          <div class="boss-title"><h3>12. 지휘 코어</h3><span>Command Core</span></div>
+          <div class="actor-pair">
+            <figure><img class="boss-candidate" src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/boss_command_core.png" alt="지휘 코어 이미지 후보"><figcaption>보스 · 서로 다른 3개 지휘 모듈</figcaption></figure>
+            <figure><img class="enemy-candidate" src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/enemy_command_relay.png" alt="지휘 중계기 이미지 후보"><figcaption>일반 적 · 우선 제거 지원기</figcaption></figure>
+          </div>
+          <div class="gray-check"><img src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/boss_command_core.png" alt="지휘 코어 흑백 판독 확인"><img src="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/assets/enemy_command_relay.png" alt="지휘 중계기 흑백 판독 확인">비대칭 모듈 보스와 양쪽 빈 공간이 큰 중계기가 구분된다.</div>
+        </article>
+      </div>
+      <p class="note"><strong>이미지 상태:</strong> canonical 스타일 시트를 실제 참조 이미지로 넣어 ImageGen으로 만든 1차 후보다. 투명 배경과 실제 캔버스 크기만 기계적으로 정리했다. 아직 승인 전이며 production manifest와 런타임에는 연결하지 않았다. 정확한 파일 해시는 <a href="../design/visual-replacement-workbench/candidates/twelve-boss-actor-assets-v1/candidate-manifest.json">후보 manifest</a>에 기록했다.</p>
     </section>
 
     <section id="sources">

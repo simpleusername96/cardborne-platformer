@@ -1,0 +1,95 @@
+{
+  "batch_id": "twelve-boss-actor-assets-v1",
+  "created_at": "2026-08-18T12:14:07+09:00",
+  "generator": "OpenAI built-in image_gen",
+  "approval_status": "pending_user_approval",
+  "runtime_status": "not_integrated",
+  "authority": {
+    "binding_document": "docs/design/VISUAL_SYSTEM.md",
+    "style_reference": "docs/design/cardborne-universal-art-style-reference.png",
+    "expected_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "observed_sha256": "96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889",
+    "actual_image_reference_used": true,
+    "reference_role": "Style grammar only; no depicted object, silhouette, module, glyph, UI, or layout was approved for copying."
+  },
+  "prompt_contract": "Isolated orthographic top-down Cardborne actor on a perfectly flat #00ff00 chroma background. Familiar general industrial science fiction; dominant silhouette; matte broad planes; dark perimeter; one restrained semantic accent; no text, UI, attack path, telegraph, ring, tiny circles, rivets, repeated lamps, decorative seams, nested outlines, microtexture, greeble, or detached objective. Ordinary actors target 3-5 broad planes and a 112x112 canvas with a 96px visible footprint. Bosses target 4-6 broad planes and a 352x352 canvas with a 292px visible footprint.",
+  "postprocess": {
+    "authorship": "No geometry or painted content was added or repaired after generation.",
+    "alpha": "remove_chroma_key.py --auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill",
+    "normalization": "Mechanical alpha trim, proportional resize, and centered transparent canvas extent only."
+  },
+  "assets": [
+    {
+      "id": "enemy/phase_skirmisher",
+      "name_ko": "위상 척후기",
+      "subject_prompt": "Fast lateral attacker: narrow forward body, broad swept side blades, zigzag negative space, short rear drive block, one danger-red state accent.",
+      "generated_source_external": "C:/Users/BK/.codex/generated_images/01a00fa0-c14b-7e50-af7d-533fec941e61/exec-056b5d7d-d8b9-4503-82fb-673649bb6f9e.png",
+      "generated_source_sha256": "7d7d429147c8a10806c80ae213c95bbb194cfff8617a7d62dad10e7be5cd2c05",
+      "candidate": "assets/enemy_phase_skirmisher.png",
+      "candidate_sha256": "a30a59b733d4cd8028d5077460a5b6ce09ceffbc62067e95f1c437e5948ed1d7"
+    },
+    {
+      "id": "enemy/anchor_drone",
+      "name_ko": "닻 드론",
+      "subject_prompt": "Slow pull-pressure unit: blunt anchor-jaw silhouette, two inward shoulders, deep open U-shaped front notch, short rear stabilizer.",
+      "generated_source_external": "C:/Users/BK/.codex/generated_images/01a00fa0-c14b-7e50-af7d-533fec941e61/exec-6df86871-dcd6-4c69-aac5-170fbbcb5630.png",
+      "generated_source_sha256": "9ba85548835ddda8d70989778369fb5652f00860b843c1caf9afdb352333e096",
+      "candidate": "assets/enemy_anchor_drone.png",
+      "candidate_sha256": "8334ae57adfe443b826e6c27141cd36eb106be2a92332f5f2388f7f6256dc864"
+    },
+    {
+      "id": "enemy/pulse_guard",
+      "name_ko": "펄스 수호기",
+      "subject_prompt": "Durable alternating-pulse unit: wide stepped shield silhouette, forward central wedge, two broad offset shoulder plates, one danger-red slit.",
+      "generated_source_external": "C:/Users/BK/.codex/generated_images/01a00fa0-c14b-7e50-af7d-533fec941e61/exec-252fd1b5-4aff-463d-b24e-294bbe3e3e2a.png",
+      "generated_source_sha256": "991c86e129e4e11b3daf2b96703732bab90efc5ac9ecc40fe0163b95a16dce18",
+      "candidate": "assets/enemy_pulse_guard.png",
+      "candidate_sha256": "b8071a9be1af231a78ce95fbc4aa781ee6906e8fbb08b166cb8b9325ed713eb3"
+    },
+    {
+      "id": "enemy/command_relay",
+      "name_ko": "지휘 중계기",
+      "subject_prompt": "Priority support unit: forward signal-fin integrated into the body, two broad rear relay wings with large rectangular negative-space cuts.",
+      "generated_source_external": "C:/Users/BK/.codex/generated_images/01a00fa0-c14b-7e50-af7d-533fec941e61/exec-1c62be02-272b-4902-bb1f-dbfae68e8be1.png",
+      "generated_source_sha256": "d0fa2ca8e58f175e75fbb7cea44b22da9b774a0a9b62d6f6b04130c4d122c3d3",
+      "candidate": "assets/enemy_command_relay.png",
+      "candidate_sha256": "5e9be7a847869fc58bb6c82d68077617048bd0aff010605c33754910d797340d"
+    },
+    {
+      "id": "boss/phase_cutter",
+      "name_ko": "위상 절단기",
+      "subject_prompt": "Long forward cleaver hull with two enormous body-attached lateral cutter fins, broken-chevron outer silhouette, and two large negative-space channels.",
+      "generated_source_external": "C:/Users/BK/.codex/generated_images/01a00fa0-c14b-7e50-af7d-533fec941e61/exec-5f577441-f5c0-47c5-880e-390fdf69894c.png",
+      "generated_source_sha256": "16eb9fe959e6ee74eada23e9e91514ab5210ef909d09f3d2d44583762cf0f237",
+      "candidate": "assets/boss_phase_cutter.png",
+      "candidate_sha256": "c267ece032f20ba57c976c109f6003f8b555c8805fcd07d99618a3905d23961b"
+    },
+    {
+      "id": "boss/gravity_anchor",
+      "name_ko": "중력 닻",
+      "subject_prompt": "Broad heavy mass with three countable body-attached anchor lobes at front-left, front-right, and rear around one dense central hull.",
+      "generated_source_external": "C:/Users/BK/.codex/generated_images/01a00fa0-c14b-7e50-af7d-533fec941e61/exec-ea03af86-b369-4bc2-afb4-1d8cf791cf00.png",
+      "generated_source_sha256": "728f7aaa5c4918393c0764d8641df5bdc52d311a097de6e57c2c9406bfb15921",
+      "candidate": "assets/boss_gravity_anchor.png",
+      "candidate_sha256": "3e4917d96447c268cb864bb2cfd5af92270e9b2e37580eb43f925ef8559c0245"
+    },
+    {
+      "id": "boss/resonance_reactor",
+      "name_ko": "공명 반응로",
+      "subject_prompt": "Square-diamond heavy hull with four huge interlocking shutter plates around one non-circular command aperture.",
+      "generated_source_external": "C:/Users/BK/.codex/generated_images/01a00fa0-c14b-7e50-af7d-533fec941e61/exec-4fda8d3d-67f6-4374-a3b4-b7c1e8b48912.png",
+      "generated_source_sha256": "76d6a59eef35161dd72c2939804920ae43d4b8370cc939a44dda8235f77cfedb",
+      "candidate": "assets/boss_resonance_reactor.png",
+      "candidate_sha256": "49d86641eea41b9696f2ddcea9f4fa4d81b4add2d8a5950652cc7c3a12d1e20a"
+    },
+    {
+      "id": "boss/command_core",
+      "name_ko": "지휘 코어",
+      "subject_prompt": "Arrowhead command hull with three distinct body-attached functional modules at left shoulder, right shoulder, and rear keel.",
+      "generated_source_external": "C:/Users/BK/.codex/generated_images/01a00fa0-c14b-7e50-af7d-533fec941e61/exec-d66b53e4-5c31-4c7d-84a4-1c22cff38765.png",
+      "generated_source_sha256": "e91682faf19cb67c31474cc5e646d5dfd837bd5e94d378dd1fd9b61c08b079ac",
+      "candidate": "assets/boss_command_core.png",
+      "candidate_sha256": "9eabe4a8ed67ce93219bfd161c8766dc71e805c07b7d422532229a04b912bfca"
+    }
+  ]
+}
