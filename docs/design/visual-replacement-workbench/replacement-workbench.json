@@ -3219,12 +3219,15 @@
         ]
       },
       "application": {
-        "commit": "90d3beb6de78f65f849725ee75fe57ee0f904b8a",
-        "applied_at": "2026-08-14T18:10:12+09:00",
+        "commit": "15fcbe58bcfaf0660615356df1afa1d554d9ba58",
+        "applied_at": "2026-08-18T10:26:08+09:00",
         "validation_evidence": [
+          ".\\tools\\design\\build_visual_replacement_workbench.ps1 -Check",
+          ".\\tools\\validation\\validate_visual_replacement_workbench.ps1",
           ".\\tools\\validation\\validate_cardborne_visual_authority.ps1",
           ".\\tools\\godot.ps1 --path . --headless --import",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd",
+          ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_asset_coverage.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_semantic_visual_separation.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_visual_replacement_coverage.gd",
           ".\\tools\\godot.ps1 --path . --headless --script res://tools/validation/validate_vehicle_world_visuals.gd",
