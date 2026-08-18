@@ -248,8 +248,11 @@ func _validate_offscreen_intersection() -> void:
 		) == CombatCuePolicy.MODE_NONE
 			and CombatCuePolicy.telegraph_mode(
 				Vector2(300.0, 360.0), 112.0, &"boss_startup", ordinary_area, visible
+			) == CombatCuePolicy.MODE_NONE
+			and CombatCuePolicy.telegraph_mode(
+				Vector2(300.0, 360.0), 112.0, &"boss_active", ordinary_area, visible
 			) == CombatCuePolicy.MODE_AREA_FOOTPRINT,
-		"only boss startup exposes a circular bombardment footprint"
+		"area attacks hide the future pulse location and expose truth only while active"
 	)
 	var unseen_descriptors: Array[Dictionary] = [projectile]
 	_expect(

@@ -69,8 +69,6 @@ static func telegraph_mode(
 		):
 			return MODE_NONE
 		return MODE_BEAM_STARTUP
-	if phase == &"boss_startup" and shape == &"area":
-		return MODE_AREA_FOOTPRINT
 	if (
 		phase in [&"active", &"boss_active"]
 		and shape == &"corridor"

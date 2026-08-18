@@ -796,21 +796,13 @@ func _run() -> void:
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
-	var early_disk_buffer := area_disk.multimesh.buffer
-	var early_disk_color := Color(
-		early_disk_buffer[8],
-		early_disk_buffer[9],
-		early_disk_buffer[10],
-		early_disk_buffer[11]
-	)
-	var early_area_buffer := area_ring.multimesh.buffer
-	var early_area_color := Color(
-		early_area_buffer[8],
-		early_area_buffer[9],
-		early_area_buffer[10],
-		early_area_buffer[11]
+	_expect(
+		area_disk.multimesh.visible_instance_count == 0
+			and area_ring.multimesh.visible_instance_count == 0,
+		"boss startup hides the future circular pulse location"
 	)
 	offscreen_enemy.attack_telegraphs[0]["readiness"] = 1.0
+	offscreen_enemy.phase = &"boss_active"
 	renderer.sync(
 		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
@@ -832,29 +824,17 @@ func _run() -> void:
 	_expect(
 		area_disk.multimesh.visible_instance_count == 1
 			and area_ring.multimesh.visible_instance_count == 1
-			and Vector2(early_disk_buffer[3], early_disk_buffer[7])
+			and Vector2(late_disk_buffer[3], late_disk_buffer[7])
 				.is_equal_approx(Vector2(640.0, 360.0))
 			and is_equal_approx(
-				Vector2(early_disk_buffer[0], early_disk_buffer[4]).length(),
+				Vector2(late_disk_buffer[0], late_disk_buffer[4]).length(),
 				175.0
 			)
-			and is_equal_approx(early_disk_color.a, 0.10)
 			and is_equal_approx(late_disk_color.a, 0.20)
-			and Color(early_disk_color, 1.0).is_equal_approx(Color(Art.DANGER, 1.0))
-			and Color(early_area_color, 1.0).is_equal_approx(Color(Art.SPACE_BLACK, 1.0))
+			and Color(late_disk_color, 1.0).is_equal_approx(Color(Art.DANGER, 1.0))
 			and Color(late_area_color, 1.0).is_equal_approx(Color(Art.SPACE_BLACK, 1.0))
-			and late_area_color.a > early_area_color.a,
-		"hostile startup fills the exact area and strengthens its danger-red body and boundary"
-	)
-	offscreen_enemy.phase = &"boss_active"
-	renderer.sync(
-		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
-		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
-	)
-	_expect(
-		area_disk.multimesh.visible_instance_count == 1
-			and area_ring.multimesh.visible_instance_count == 1,
-		"boss area body and boundary stay visible for the complete damaging window"
+			and is_equal_approx(late_area_color.a, 0.82),
+		"boss active area draws one exact damage body and one boundary"
 	)
 	offscreen_enemy.phase = &"active"
 	offscreen_enemy.role = &"ordinary_gap_01"
