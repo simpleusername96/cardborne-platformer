@@ -32,44 +32,44 @@ func _initialize() -> void:
 
 func _validate_primary_final_levels() -> void:
 	_expect(
-		PrimaryRules.projectiles_per_volley(3) == 3
+		PrimaryRules.projectiles_per_volley(6) == 3
 			and is_equal_approx(
-				PrimaryRules.total_volley_damage_percent(3), 180.0
+				PrimaryRules.total_volley_damage_percent(6), 234.0
 			)
-			and PrimaryRules.additional_penetrations(4) == 4,
-		"final Split keeps three shots at 180 percent and Pierce reaches four"
+			and PrimaryRules.additional_penetrations(7) == 4,
+		"final Split keeps three shots at 234 percent and Pierce remains capped at four"
 	)
 
 
 func _validate_conditional_damage() -> void:
 	_expect(
-		is_zero_approx(DamagePolicy.crisis_bonus(3, 0.60))
-			and is_equal_approx(DamagePolicy.crisis_bonus(3, 0.25), 0.20)
-			and is_equal_approx(DamagePolicy.crisis_bonus(3, 0.425), 0.10),
+		is_zero_approx(DamagePolicy.crisis_bonus(6, 0.60))
+			and is_equal_approx(DamagePolicy.crisis_bonus(6, 0.25), 0.26)
+			and is_equal_approx(DamagePolicy.crisis_bonus(6, 0.425), 0.13),
 		"crisis bonus follows the exact 60-to-25-percent linear curve"
 	)
 	var combined := DamagePolicy.resolve_damage(
-		100.0, 0, 3, 3, 0.25, true,
+		100.0, 0, 6, 6, 0.25, true,
 		DamagePolicy.DAMAGE_DIRECT,
 		7, 9, 11, 13
 	)
 	_expect(
-		is_equal_approx(combined, 155.0),
+		is_equal_approx(combined, 172.0),
 		"dash and low-hull bonuses add before damage resolution"
 	)
 	var critical_serial := 0
 	for serial in range(1, 512):
-		if DamagePolicy.deterministic_unit(17, serial, 23, 29) < 0.16:
+		if DamagePolicy.deterministic_unit(17, serial, 23, 29) < DamagePolicy.critical_chance(6):
 			critical_serial = serial
 			break
 	_expect(critical_serial > 0, "deterministic fixture finds a critical receipt")
 	if critical_serial > 0:
 		var direct := DamagePolicy.resolve_damage(
-			10.0, 3, 0, 0, 1.0, false,
+			10.0, 6, 0, 0, 1.0, false,
 			DamagePolicy.DAMAGE_DIRECT, 17, critical_serial, 23, 29
 		)
 		var periodic := DamagePolicy.resolve_damage(
-			10.0, 3, 0, 0, 1.0, false,
+			10.0, 6, 0, 0, 1.0, false,
 			DamagePolicy.DAMAGE_PERIODIC, 17, critical_serial, 23, 29
 		)
 		_expect(
@@ -83,22 +83,22 @@ func _validate_recovery_split() -> void:
 	var full_hull := RecoveryPolicy.split(50.0, 1, 120.0, 120.0, 0.0)
 	_expect(
 		is_zero_approx(full_hull.x)
-			and is_equal_approx(full_hull.y, 18.0)
-			and is_equal_approx(full_hull.z, 36.0),
-		"level-one overflow converts accepted gross recovery at 50 percent"
+			and is_equal_approx(full_hull.y, 8.4)
+			and is_equal_approx(full_hull.z, 14.0),
+		"level-one overflow converts accepted gross recovery at 60 percent"
 	)
 	var mixed := RecoveryPolicy.split(50.0, 2, 100.0, 120.0, 0.0)
 	_expect(
 		is_equal_approx(mixed.x, 20.0)
-			and is_equal_approx(mixed.y, 22.5)
-			and is_equal_approx(mixed.z, 50.0),
+			and is_equal_approx(mixed.y, 16.8)
+			and is_equal_approx(mixed.z, 44.0),
 		"recovery fills Hull before converting the accepted overflow"
 	)
-	var capped := RecoveryPolicy.split(100.0, 3, 120.0, 120.0, 0.0)
+	var capped := RecoveryPolicy.split(100.0, 6, 120.0, 120.0, 0.0)
 	_expect(
-		is_equal_approx(capped.y, 42.0)
-			and is_equal_approx(capped.z, 42.0),
-		"level-three overflow barrier stops at 35 percent of max Hull"
+		is_equal_approx(capped.y, 50.4)
+			and is_equal_approx(capped.z, 50.4),
+		"final overflow barrier stops at 42 percent of max Hull"
 	)
 
 
