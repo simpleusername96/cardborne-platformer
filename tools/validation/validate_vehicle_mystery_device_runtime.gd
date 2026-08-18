@@ -28,7 +28,7 @@ func _initialize() -> void:
 		{"id":&"c", "pos":Vector2(1800.0, 0.0)},
 	]
 	var seen := {}
-	for cycle_index in 8:
+	for cycle_index in 12:
 		var runtime := Runtime.new()
 		runtime.configure(blueprint, 7100, StringName("stage_%d" % (cycle_index + 1)))
 		var devices: Array = runtime.snapshot()["devices"]
@@ -38,7 +38,7 @@ func _initialize() -> void:
 			cycle_roles[StringName(device["outcome"])] = true
 			seen[StringName(device["outcome"])] = true
 		_expect(cycle_roles.size() == 3, "cycle %d facilities have distinct roles" % (cycle_index + 1))
-	_expect(seen.size() == 4, "the deterministic eight-cycle fixture covers every facility role")
+	_expect(seen.size() == 4, "the deterministic twelve-cycle fixture covers every facility role")
 
 	var runtime := Runtime.new()
 	runtime.configure(blueprint, 77, &"stage_1")
@@ -53,7 +53,14 @@ func _initialize() -> void:
 	_expect(runtime.modifiers_at(Vector2(first["position"]) + Vector2(0.0, 600.0)).is_empty(), "facility effects stop outside their radius")
 	var hit := {}
 	_expect(not runtime.first_intact_segment_hit(Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit), "facilities never block projectiles")
-	_expect(runtime.first_damageable_segment_hit(Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit), "passing projectiles still acquire a facility damage target")
+	_expect(
+		not runtime.first_damageable_segment_hit(
+			Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit
+		),
+		"unpublished dormant facilities cannot acquire damage"
+	)
+	runtime.refresh_publication(Rect2(-640.0, -360.0, 1280.0, 720.0), Vector2.ZERO)
+	_expect(runtime.first_damageable_segment_hit(Vector2(-100.0, 0.0), Vector2(100.0, 0.0), 0.0, hit), "passing projectiles acquire the one published facility damage target")
 	_expect(bool(runtime.receive_damage(device_id, 120.0, &"hostile", &"area")["accepted"]), "hostile area damage affects facilities")
 	var broken := runtime.receive_damage(device_id, Runtime.DEVICE_HEALTH, &"player", &"projectile")
 	_expect(float(Dictionary(runtime.snapshot()["devices"][0]).get("hit_flash_remaining", 0.0)) > 0.0, "accepted projectile damage publishes a visible hit receipt")

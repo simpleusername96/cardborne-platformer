@@ -181,15 +181,6 @@ jobs:
               2>&1 | tee "$EVIDENCE_DIR/logs/$(basename "${validator%.gd}").log"
           done
 
-      - name: Run nonblocking pressure subsystem diagnostic
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -euo pipefail
-          "$GODOT_BIN" --path . --headless \
-            --script res://tools/validation/profile_vehicle_pressure.gd \
-            2>&1 | tee "$EVIDENCE_DIR/logs/profile_vehicle_pressure.log"
-
       - name: Capture native rendered evidence
         shell: bash
         run: |

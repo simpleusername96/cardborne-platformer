@@ -58,7 +58,21 @@ func _validate_facility_authority(run) -> void:
 	_expect(devices.size() == 3, "live run configures three dormant facilities")
 	var first := Dictionary(devices[0])
 	var position := Vector2(first["position"])
-	_expect(not bool(run.call("_position_clear_of_stage_objects", position, 24.0)), "a dormant facility blocks actor movement")
+	_expect(
+		bool(run.call("_position_clear_of_stage_objects", position, 24.0)),
+		"an unpublished dormant facility has no collision"
+	)
+	run.mystery_device_runtime.refresh_publication(
+		Rect2(position - Vector2(640.0, 360.0), Vector2(1280.0, 720.0)),
+		position
+	)
+	devices = run.mystery_device_runtime.snapshot()["devices"]
+	first = Dictionary(devices[0])
+	_expect(
+		bool(first.get("published", false))
+			and not bool(run.call("_position_clear_of_stage_objects", position, 24.0)),
+		"the one published dormant facility blocks actor movement"
+	)
 	run.call("_clear_projectiles")
 	run.projectile_store.add_hostile({"pos":position - Vector2(120.0, 0.0), "velocity":Vector2.RIGHT * 600.0, "radius":4.0, "damage":10.0, "life":2.0, "wall_piercing":true})
 	run.call("_update_projectiles", 0.25)
