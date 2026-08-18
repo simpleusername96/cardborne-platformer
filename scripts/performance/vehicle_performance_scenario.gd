@@ -238,13 +238,19 @@ func validation_snapshot(run: Node) -> Dictionary:
 		run.call("_visible_world_rect", 0.0),
 		run.projectile_store.hostile_count()
 	)
+	var ranged_commit_cap := EncounterDirector.stage_ranged_commit_cap(
+		run.current_stage_index
+	)
+	var denial_commit_cap := EncounterDirector.stage_denial_commit_cap(
+		run.current_stage_index
+	)
 	var peak_valid := (
 		true
 		if scenario_id != &"peak_horde"
 		else (
 			PressureFixture.peak_qualification_passes(_fixture_qualification)
-			and int(pressure["ranged_commits"]) <= EncounterDirector.MAX_RANGED_COMMITS
-			and int(pressure["denial_commits"]) <= EncounterDirector.MAX_DENIAL_COMMITS
+			and int(pressure["ranged_commits"]) <= ranged_commit_cap
+			and int(pressure["denial_commits"]) <= denial_commit_cap
 		)
 	)
 	var valid: bool = (
