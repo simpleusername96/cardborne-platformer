@@ -14,10 +14,28 @@ func _run() -> void:
 	root.add_child(stage)
 	await process_frame
 	stage.player_position = Vector2(3600.0, 2160.0)
+	var probe_position := Vector2.ZERO
+	for direction_index in 16:
+		var candidate: Vector2 = (
+			Vector2(stage.player_position)
+			+ Vector2.RIGHT.rotated(TAU * float(direction_index) / 16.0) * 1500.0
+		)
+		var inward_step: Vector2 = (
+			Vector2(stage.player_position) - candidate
+		).normalized() * 64.0
+		var visible_world: Rect2 = stage.call("_visible_world_rect", 64.0)
+		if (
+			not visible_world.has_point(candidate)
+			and Vector2(stage.call("_move_actor", candidate, inward_step, 32.0, false))
+				!= candidate
+		):
+			probe_position = candidate
+			break
+	_expect(not probe_position.is_zero_approx(), "fixture finds one collision-clear off-screen regroup lane")
 	var enemy = stage.call("_make_enemy", {
 		"id":"gap_probe",
 		"role":&"ordinary_edge_01",
-		"pos":stage.player_position + Vector2(1500.0, 0.0),
+		"pos":probe_position,
 		"active":true,
 	})
 	enemy.active = true
