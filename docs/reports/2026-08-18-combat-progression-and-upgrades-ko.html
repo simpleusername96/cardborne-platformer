@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne 전투 진행·보스·업그레이드 현황</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --void: #07111b;
+      --surface: #101e2d;
+      --surface-2: #17283a;
+      --line: #31475a;
+      --text: #f2eee5;
+      --muted: #aebdca;
+      --cyan: #79e7e5;
+      --amber: #ffb62e;
+      --danger: #ff5b55;
+      --ok: #78d39a;
+      --planned: #b9a2ff;
+      --max: 1320px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--void);
+      color: var(--text);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      line-height: 1.58;
+    }
+    a { color: var(--cyan); }
+    code { color: #cce9f2; font-family: Consolas, monospace; overflow-wrap: anywhere; word-break: break-word; }
+    .wrap { width: calc(100% - 32px); max-width: var(--max); min-width: 0; margin: 0 auto; }
+    header {
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, #0b1724 0%, #12283a 62%, #183144 100%);
+    }
+    .hero { padding: 48px 0 36px; }
+    .eyebrow { margin: 0 0 8px; color: var(--cyan); font-weight: 800; letter-spacing: .08em; }
+    h1 { margin: 0; max-width: 900px; font-size: clamp(30px, 5vw, 58px); line-height: 1.08; }
+    .hero p { max-width: 860px; margin: 18px 0 0; color: var(--muted); font-size: 17px; }
+    .stamp { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+    .pill {
+      display: inline-flex; min-height: 32px; align-items: center; padding: 5px 10px;
+      border: 1px solid var(--line); background: rgba(7, 17, 27, .55); color: var(--muted);
+      font-size: 13px; font-weight: 700;
+    }
+    .pill.current { border-color: #397b77; color: var(--cyan); }
+    .pill.plan { border-color: #6f5ca8; color: var(--planned); }
+    nav { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--line); background: rgba(7,17,27,.95); }
+    nav .wrap { display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-inline: contain; padding-block: 9px; }
+    nav a { min-height: 40px; display: inline-flex; align-items: center; padding: 7px 12px; color: var(--muted); text-decoration: none; white-space: nowrap; }
+    nav a:focus-visible, nav a:hover { color: var(--text); outline: 2px solid var(--cyan); outline-offset: -2px; }
+    main { padding: 28px 0 64px; }
+    section { scroll-margin-top: 70px; padding: 30px 0; }
+    h2 { margin: 0 0 10px; font-size: clamp(24px, 3vw, 36px); }
+    h3 { margin: 0 0 8px; font-size: 20px; }
+    .lede { max-width: 920px; margin: 0 0 20px; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+    .card {
+      grid-column: span 4; min-width: 0; padding: 18px;
+      border: 1px solid var(--line); background: var(--surface);
+    }
+    .card.wide { grid-column: span 6; }
+    .card.full { grid-column: 1 / -1; }
+    .metric { color: var(--amber); font-size: 28px; font-weight: 900; }
+    .label { color: var(--muted); font-size: 13px; }
+    .decision { border-left: 3px solid var(--cyan); }
+    .warning { border-left: 3px solid var(--danger); }
+    .planned { border-left: 3px solid var(--planned); }
+    .note { padding: 14px 16px; border: 1px solid var(--line); background: #0d1a27; color: var(--muted); }
+    .note strong { color: var(--text); }
+    .table-wrap { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; border: 1px solid var(--line); background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid #263b4d; text-align: left; vertical-align: top; }
+    th { position: sticky; top: 58px; background: #16293b; color: var(--cyan); font-size: 13px; z-index: 2; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: rgba(121, 231, 229, .04); }
+    .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .tag { display: inline-block; padding: 2px 6px; border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 800; }
+    .tag.summon { border-color: #7a5f38; color: var(--amber); }
+    .tag.issue { border-color: #8d4444; color: #ff8b85; }
+    .tag.plan { border-color: #6f5ca8; color: var(--planned); }
+    details { border: 1px solid var(--line); background: var(--surface); margin-top: 10px; }
+    summary { cursor: pointer; min-height: 48px; padding: 12px 14px; font-weight: 800; }
+    details[open] summary { border-bottom: 1px solid var(--line); color: var(--cyan); }
+    .details-body { padding: 14px; }
+    .boss-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .boss-card { display: grid; grid-template-columns: 116px 1fr; gap: 16px; border: 1px solid var(--line); background: var(--surface); padding: 16px; }
+    .boss-card img { width: 116px; height: 116px; object-fit: contain; background: #0a1520; }
+    .boss-card dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 10px; margin: 10px 0 0; font-size: 13px; }
+    .boss-card dt { color: var(--muted); }
+    .boss-card dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .boss-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+    .boss-title span { color: var(--muted); font-size: 13px; }
+    .upgrade-section { margin-top: 18px; }
+    .upgrade-section h3 { display: flex; justify-content: space-between; gap: 16px; }
+    .upgrade-section h3 span { color: var(--muted); font-size: 13px; font-weight: 500; }
+    .sources li { margin-block: 8px; }
+    footer { border-top: 1px solid var(--line); color: var(--muted); padding: 24px 0 40px; font-size: 13px; }
+    @media (max-width: 940px) {
+      .card, .card.wide { grid-column: span 6; }
+      .boss-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .wrap { width: calc(100% - 20px); }
+      .hero { padding-top: 34px; }
+      .card, .card.wide { grid-column: 1 / -1; }
+      .boss-card { grid-template-columns: 80px 1fr; gap: 12px; }
+      .boss-card img { width: 80px; height: 80px; }
+      th { top: 58px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <p class="eyebrow">CARDBORNE · CURRENT CODE AUDIT + LOCKED PLAN</p>
+      <h1>전투 진행, 보스, 일반 적, 업그레이드 현황</h1>
+      <p>현재 <code>master</code>의 실제 수치와 12보스 확장 계획을 한 문서에 정리했다. “현재”와 “계획”은 섞지 않았으며, 일반 적 수치는 런타임과 같은 배율식으로 계산한다.</p>
+      <div class="stamp">
+        <span class="pill current">현재 기준: a0e519f7</span>
+        <span class="pill current">현재 8보스 · 카드 27장 · 91레벨</span>
+        <span class="pill plan">계획 12보스 · 카드 172레벨</span>
+        <span class="pill plan">방어막 피해 통과 15%</span>
+      </div>
+    </div>
+  </header>
+
+  <nav aria-label="보고서 목차">
+    <div class="wrap">
+      <a href="#summary">결론</a>
+      <a href="#supply">필드 공급</a>
+      <a href="#shield">3보스 방어막</a>
+      <a href="#bosses">현재 보스</a>
+      <a href="#enemies">단계별 일반 적</a>
+      <a href="#upgrades">업그레이드</a>
+      <a href="#future">9~12보스</a>
+      <a href="#sources">근거</a>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <section id="summary">
+      <h2>먼저 고칠 것</h2>
+      <p class="lede">문제는 단순 드롭 운이 아니라 지속 전장 전환 뒤 공급·방어·성장 규칙이 이전 구조와 어긋난 데서 생겼다.</p>
+      <div class="grid">
+        <article class="card warning"><div class="metric">2 / 3</div><div class="label">전체 런에서 실질적으로 보이는 경험치 회수 아이템 / 중립시설</div><p>스테이지별 배치 데이터는 존재하지만 현재 전장은 시작할 때 한 번만 채운다.</p></article>
+        <article class="card warning"><div class="metric">50%</div><div class="label">현재 3보스 방어막 피격 시 들어가는 피해</div><p>방향을 따라오는 전방 방어막이고 해제 분기가 사실상 도달하지 않아 공략이 오래 때리기로 수렴한다.</p></article>
+        <article class="card warning"><div class="metric">+140%</div><div class="label">일부 카드의 한 단계 실효 화력 최대 급등</div><p>피해, 개수, 쿨다운이 같은 단계에서 함께 좋아지는 것이 원인이다.</p></article>
+        <article class="card decision"><div class="metric">4 / 6</div><div class="label">계획: 시작 회수 아이템 / 중립시설</div><p>회수 아이템만 시간 기반으로 제한 보충한다. 보스 사망과는 연결하지 않는다.</p></article>
+        <article class="card decision"><div class="metric">15%</div><div class="label">계획: 방어 구간을 때렸을 때 통과 피해</div><p>3개의 틈과 2초 완전 해제 시간을 노리는 것이 명확한 정답이 된다.</p></article>
+        <article class="card planned"><div class="metric">12</div><div class="label">계획: 연속 보스 사이클</div><p>기존 적을 지우거나 맵을 바꾸지 않고, 보스 사망 뒤 새로 생성되는 일반 적 구성만 바뀐다.</p></article>
+      </div>
+    </section>
+
+    <section id="supply">
+      <h2>경험치 회수 아이템과 중립시설</h2>
+      <p class="lede">현재 생성기는 스테이지마다 회수 아이템 2개와 시설 3개를 만들지만, 지속 전장에서는 첫 배치만 실제 월드에 들어간다.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>항목</th><th class="num">현재</th><th class="num">계획</th><th>규칙</th></tr></thead>
+        <tbody>
+          <tr><td>시작 경험치 회수 아이템</td><td class="num">2</td><td class="num">4</td><td>서로 떨어진 기존 배치 후보 사용</td></tr>
+          <tr><td>회수 아이템 보충</td><td class="num">없음</td><td class="num">90초</td><td>활성 수가 2개 미만일 때 1개, 최대 4개. 플레이 중에만 시간 진행</td></tr>
+          <tr><td>시작 중립시설</td><td class="num">3</td><td class="num">6</td><td>회복·취약·둔화·용암 역할을 결정론적으로 배분</td></tr>
+          <tr><td>시설 보충</td><td class="num">없음</td><td class="num">없음</td><td>보스 사망이나 스테이지 전환으로 다시 만들지 않음</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="shield">
+      <h2>3보스 방어막 확정안</h2>
+      <p class="lede">스케치는 자산이 아니라 동작 참고다. 실제 방어막은 충돌 구간과 같은 코드 기반 3분할 호로 표시한다.</p>
+      <div class="grid">
+        <article class="card decision"><h3>분할</h3><div class="metric">80° × 3</div><p>방어 구간 3개와 40° 틈 3개가 번갈아 배치된다.</p></article>
+        <article class="card decision"><h3>회전</h3><div class="metric">18°/초</div><p>보스가 플레이어를 바라보는 방향과 별개로 천천히 회전한다.</p></article>
+        <article class="card decision"><h3>주기</h3><div class="metric">8초 + 2초</div><p>8초 분할 방어 뒤 2초 동안 모든 방어막이 사라진다.</p></article>
+        <article class="card warning"><h3>방어 구간 피격</h3><div class="metric">15%</div><p>85%를 막는다. 막힌 피해는 기존 반격 충전 규칙에 계속 들어간다.</p></article>
+        <article class="card decision"><h3>틈 피격</h3><div class="metric">100%</div><p>방어막이 켜져 있어도 틈으로 들어간 공격은 전부 적용된다.</p></article>
+        <article class="card decision"><h3>완전 해제</h3><div class="metric">100%</div><p>2초 동안 모든 방향에서 전부 적용된다.</p></article>
+      </div>
+    </section>
+
+    <section id="bosses">
+      <h2>현재 보스 스탯</h2>
+      <p class="lede">피해 범위는 해당 보스가 실제로 선택하는 직접·자동 패턴의 최소/최대 1회 피해다. 계획 체력은 현재 체력에 정확히 30%를 더한 값이다.</p>
+      <div id="boss-grid" class="boss-grid"></div>
+    </section>
+
+    <section id="enemies">
+      <h2>보스 단계별 일반 적 스탯</h2>
+      <p class="lede">각 표는 해당 단계의 일반 출현 목록과 보스 페이즈 소환 목록을 합친 것이다. HP·이동속도·피해는 현재 Hard 런의 실효값이다. 엘리트 변형과 시설 효과는 제외했다.</p>
+      <div class="note"><strong>계산식:</strong> 일반 HP = 기본 HP × 등급 보정(군집/표준 1.12) × 단계 HP × 2.60 × 1.20. 이동속도 = 기본 속도 × 1.40 × 단계 속도. 공격 피해 = 기본 피해 × 1.755 × 단계 피해 × 후반 피해 압력.</div>
+      <div id="stage-enemy-details"></div>
+    </section>
+
+    <section id="upgrades">
+      <h2>업그레이드 카드 27장</h2>
+      <p class="lede">현재 레벨별 실제 효과와 계획 최대 레벨을 카테고리별로 표시한다. 피해·방어 곡선은 현재 L1과 현재 최대 출력을 끝점으로 보존하면서 중간 단계를 늘린다. 피해가 없는 발동무기는 아래 표의 확정 7레벨 CC 확장 곡선을 사용한다.</p>
+      <div class="note"><strong>수치 처리:</strong> 피해·체력·반경·개수·정수 퍼센트는 정수로 작성하고, 쿨다운·지속시간은 0.1초 단위로 작성한다. Godot 내부 계산은 실수를 유지하며 화면 표시만 반올림한다.</div>
+      <div id="upgrade-sections"></div>
+    </section>
+
+    <section id="future">
+      <h2>9~12보스와 신규 일반 적</h2>
+      <p class="lede">전체 공격 경로를 미리 그리지 않는다. 보스 본체·모듈 충전, 음향, 공격이 들어오는 지점의 짧은 신호로 공격 종류를 알리고, 실제 위험물은 발동 뒤에만 보인다.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>단계</th><th>보스</th><th>핵심 패턴과 대응</th><th>신규 일반 적</th><th>계획 보스 HP</th></tr></thead>
+        <tbody>
+          <tr><td class="num">9</td><td><strong>위상 절단기</strong><br><code>Phase Cutter</code></td><td>양쪽 가장자리에서 절단 막대가 시차 진입한다. 가장자리 점멸만 보여주고 경로선은 표시하지 않는다. 발동한 막대 사이의 이동 틈을 따라간다.</td><td><strong>위상 척후기</strong><br>HP 76 · 속도 188 · 11피해 3연사</td><td class="num">74,360</td></tr>
+          <tr><td class="num">10</td><td><strong>중력 닻</strong><br><code>Gravity Anchor</code></td><td>본체 모듈 3개가 순서대로 켜지고 제한된 당김 파동을 낸다. 켜진 모듈이 파동 시작점이며, 발동 전 최종 범위는 그리지 않는다.</td><td><strong>닻 드론</strong><br>HP 92 · 속도 154 · 반경 180 당김 후 18피해</td><td class="num">79,430</td></tr>
+          <tr><td class="num">11</td><td><strong>공명 반응로</strong><br><code>Resonance Reactor</code></td><td>코어 상태가 근거리/원거리 파동을 교대한다. 색과 코어 개방 상태로 다음 종류를 구별하고 완성된 링 경로는 미리 그리지 않는다.</td><td><strong>펄스 수호기</strong><br>HP 108 · 속도 168 · 근/원거리 18피해</td><td class="num">84,500</td></tr>
+          <tr><td class="num">12</td><td><strong>지휘 코어</strong><br><code>Command Core</code></td><td>본체 모듈 3개가 가장자리 진입, 파동, 집중 포격을 고정 3박자로 조합한다. 활성 모듈만 공격 종류를 알린다.</td><td><strong>지휘 중계기</strong><br>HP 98 · 속도 150 · 반경 320 아군 피해 +10%, 회복시간 -15%</td><td class="num">91,260</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note"><strong>이미지 제작:</strong> 네 보스와 네 일반 적은 canonical 스타일 시트를 실제 참조 이미지로 넣어 ImageGen으로 만든다. 보고서 후보와 해시를 먼저 승인받은 뒤에만 production manifest에 연결한다.</p>
+    </section>
+
+    <section id="sources">
+      <h2>근거와 적용 범위</h2>
+      <ul class="sources">
+        <li><strong>현재 보스·단계:</strong> <code>scripts/vehicle/stages/vehicle_combat_stages.gd</code>, <code>scripts/enemies/vehicle_stage_difficulty.gd</code>, <code>scripts/bosses/vehicle_boss_patterns.gd</code>.</li>
+        <li><strong>현재 일반 적:</strong> <code>scripts/enemies/vehicle_enemy_archetypes.gd</code>, <code>scripts/combat/vehicle_attack_contract.gd</code>, <code>scripts/progression/vehicle_guidebook_stat_adapter.gd</code>.</li>
+        <li><strong>현재 카드:</strong> <code>data/cards/vehicle/</code>, <code>data/weapons/vehicle/</code>, <a href="../product/vehicle_upgrade_catalog.md">업그레이드 정본</a>.</li>
+        <li><strong>시각 기준:</strong> <a href="../design/VISUAL_SYSTEM.md">Cardborne Visual System</a>과 canonical style sheet. 시트 SHA-256은 <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>로 검증했다.</li>
+        <li><strong>공격 신호 참고:</strong> <a href="https://blog.playstation.com/2021/05/11/unpacking-returnals-ux-design-gameplay-first-ui-retro-futuristic-tech-and-accessibility/">Returnal gameplay-first UI/UX</a> — 핵심 신호를 플레이어·공격원 근처에 두고 화면 방해를 줄이는 접근.</li>
+        <li><strong>패턴 구성 참고:</strong> <a href="https://arxiv.org/abs/1806.04718">Talakat 탄막 패턴 연구</a> — 제한된 생성기 조합으로 전략·기량 요구를 조절하는 방법.</li>
+        <li><strong>보스 전투 참고:</strong> <a href="https://www.thegamebakers.com/furi/">Furi 공식 사이트</a> — 학습 가능한 규칙과 보스별 시험의 분리.</li>
+      </ul>
+      <p class="note">이 문서는 현재 구현 스냅샷과 승인 전 계획을 함께 보여주는 의사결정 보고서다. 계획 수치는 구현 전까지 gameplay 정본이 아니며, 활성 ExecPlan이 실행 순서와 승인 경계를 소유한다.</p>
+    </section>
+  </main>
+
+  <footer><div class="wrap">Cardborne internal report · 2026-08-18 · Korean</div></footer>
+
+  <script>
+    const stages = [
+      {n:1,h:1.00,d:1.00,s:1.00,p:0.98,roles:['scrap_drone','needle_drone','chaser','shooter'],adds:[]},
+      {n:2,h:1.10,d:1.03,s:1.04,p:1.08,roles:['scrap_drone','spark_minelet','controller','shield_escort','shooter','chaser','rail_sniper'],adds:[]},
+      {n:3,h:1.20,d:1.06,s:1.08,p:1.18,roles:['spark_minelet','chaser','artillery_spotter','rammer','bulkhead_guard','scrap_drone','rail_sniper','orbit_gunner'],adds:[]},
+      {n:4,h:1.35,d:1.09,s:1.12,p:1.28,roles:['chaser','rammer','bulkhead_guard','repair_tender','spark_minelet','needle_drone','orbit_gunner','bombing_runner'],adds:['shooter']},
+      {n:5,h:1.50,d:1.12,s:1.17,p:1.38,roles:['scrap_drone','spark_minelet','controller','rammer','bulkhead_guard','splitter_barge','repair_tender','needle_drone','rail_sniper','bombing_runner','wreck_scavenger'],adds:['drone_carrier','chaser']},
+      {n:6,h:1.65,d:1.15,s:1.21,p:1.48,roles:['chaser','rammer','bulkhead_guard','repair_tender','spark_minelet','needle_drone','orbit_gunner','bombing_runner','wreck_scavenger'],adds:['artillery_spotter','shooter']},
+      {n:7,h:1.82,d:1.18,s:1.26,p:1.57,roles:['scrap_drone','spark_minelet','controller','rammer','bulkhead_guard','splitter_barge','repair_tender','needle_drone','rail_sniper','orbit_gunner','bombing_runner','wreck_scavenger'],adds:[]},
+      {n:8,h:2.00,d:1.21,s:1.30,p:1.66,roles:['scrap_drone','spark_minelet','controller','rammer','bulkhead_guard','splitter_barge','repair_tender','needle_drone','rail_sniper','orbit_gunner','bombing_runner','wreck_scavenger'],adds:['drone_carrier']},
+    ];
+
+    const enemies = {
+      scrap_drone:{ko:'고철 드론',en:'Scrap Drone',hp:18,speed:190,cls:'swarm',attack:14,attackText:'충각 14'},
+      needle_drone:{ko:'니들 드론',en:'Needle Drone',hp:14,speed:176,cls:'swarm',attack:10,attackText:'탄환 10'},
+      spark_minelet:{ko:'스파크 소형 지뢰',en:'Spark Minelet',hp:12,speed:100,cls:'swarm',attack:14,attackText:'반경 100 폭발 14'},
+      chaser:{ko:'리벳 추격자',en:'Rivet Chaser',hp:48,speed:190,cls:'standard',attack:14,attackText:'충각 14'},
+      shooter:{ko:'통로 척후병',en:'Lane Skirmisher',hp:40,speed:166,cls:'standard',attack:10,attackText:'탄환 10'},
+      controller:{ko:'침수 제어기',en:'Flood Controller',hp:60,speed:150,cls:'standard',attack:9,attackText:'제어탄 9'},
+      shield_escort:{ko:'방벽 호위기',en:'Shield Escort',hp:68,speed:170,cls:'standard',support:'반경 300, 받는 피해 55% 감소'},
+      artillery_spotter:{ko:'포격 관측기',en:'Artillery Spotter',hp:62,speed:140,cls:'standard',attack:15,attackText:'포격탄 15'},
+      rammer:{ko:'충각기',en:'Rammer',hp:82,speed:190,cls:'standard',attack:20,attackText:'돌진 20'},
+      bulkhead_guard:{ko:'격벽 수호기',en:'Bulkhead Guard',hp:90,speed:164,cls:'standard',attack:12,attackText:'접촉 12 · 전면판 72'},
+      splitter_barge:{ko:'분열 바지선',en:'Splitter Barge',hp:96,speed:157,cls:'standard',attack:12,attackText:'접촉 12 · 분열'},
+      repair_tender:{ko:'수리 지원기',en:'Repair Tender',hp:74,speed:159,cls:'priority',support:'반경 360, 초당 8 회복'},
+      drone_carrier:{ko:'드론 모함',en:'Drone Carrier',hp:126,speed:136,cls:'priority',support:'자식 드론 최대 3'},
+      rail_sniper:{ko:'기동 레일 저격기',en:'Mobile Rail Sniper',hp:72,speed:148,cls:'priority',attack:30,attackText:'레일탄 30 · 예고 1.4초'},
+      orbit_gunner:{ko:'궤도 연사기',en:'Orbit Gunner',hp:56,speed:172,cls:'standard',attack:12,attackText:'12피해 × 3연사'},
+      bombing_runner:{ko:'폭격 돌파기',en:'Bombing Runner',hp:66,speed:238,cls:'standard',attack:24,attackText:'24피해 × 지상폭발 3'},
+      wreck_scavenger:{ko:'잔해 회수기',en:'Wreck Scavenger',hp:84,speed:164,cls:'priority',attack:16,attackText:'충각 16 · 5중첩 시 피해 +60%'},
+    };
+
+    const bosses = [
+      {n:1,ko:'공방 콜로서스',en:'Foundry Colossus',hp:26000,after:33800,speed:380,damage:'14.0–34.0',cadence:'2.3–3.6초',coverage:'반경 288',identity:'닫히는 용광로 통로와 돌진',img:'../../art/visuals/production/gameplay/actors/bosses/actor_boss_colossus_base.png'},
+      {n:2,ko:'기록고 리바이어던',en:'Archive Leviathan',hp:29120,after:37856,speed:395,damage:'14.8–36.0',cadence:'2.3–3.5초',coverage:'반경 241',identity:'회전 X 교차선과 수심 폭발',img:'../../art/visuals/production/gameplay/actors/bosses/actor_boss_leviathan_base.png'},
+      {n:3,ko:'건선거 타이탄',en:'Drydock Titan',hp:32500,after:42250,speed:410,damage:'15.7–35.8',cadence:'2.2–3.4초',coverage:'반경 317',identity:'현재 전방 50% 방어 · 계획 3분할 85% 방어',shield:true,img:'../../art/visuals/production/gameplay/actors/bosses/actor_boss_titan_base.png'},
+      {n:4,ko:'분기장 베헤모스',en:'Switchyard Behemoth',hp:36140,after:46982,speed:425,damage:'16.5–35.4',cadence:'2.1–3.3초',coverage:'반경 336',identity:'성장 광선과 충격파',img:'../../art/visuals/production/gameplay/actors/bosses/actor_boss_behemoth_base.png'},
+      {n:5,ko:'왕관 엔진',en:'Crown Engine',hp:40040,after:52052,speed:440,damage:'17.4–42.2',cadence:'2.1–3.2초',coverage:'반경 326',identity:'광선·격자·지원기 호출',img:'../../art/visuals/production/gameplay/actors/bosses/actor_boss_crown_base.png'},
+      {n:6,ko:'공성 포대',en:'Siege Battery',hp:44200,after:57460,speed:455,damage:'18.3–39.3',cadence:'2.0–3.1초',coverage:'반경 360',identity:'교대 장거리 포대열',img:'../../art/visuals/production/gameplay/actors/bosses/actor_boss_siege_battery_base.png'},
+      {n:7,ko:'벡터 직조기',en:'Vector Loom',hp:48620,after:63206,speed:470,damage:'19.3–99.4',cadence:'1.9–3.0초',coverage:'이동 벽',identity:'교차 이동 벽 · 현재 전체 경로 예고 문제',issue:true,img:'../../art/visuals/production/gameplay/actors/bosses/actor_boss_vector_loom_base.png'},
+      {n:8,ko:'펄스 코어',en:'Pulse Core',hp:53300,after:69290,speed:485,damage:'20.4–49.6',cadence:'1.9–2.9초',coverage:'반경 512',identity:'교대 펄스 · 현재 전체 부채꼴/링 예고 문제',issue:true,img:'../../art/visuals/production/gameplay/actors/bosses/actor_boss_pulse_core_base.png'},
+    ];
+
+    const upgrades = [
+      {cat:'주무기 개조',id:'split_muzzle',ko:'확산 총구',max:3,next:6,current:'L1~L3 총 일제 피해 140% / 165% / 180%. L1은 40% 측면탄을 좌우 교대, L2는 좌우 32.5%, L3는 좌우 40%. 각도 ±7°.',plan:'총 일제 피해를 기준으로 단계 간격을 분할하고 투사체 수 해금 단계와 피해 증가 단계를 분리.'},
+      {cat:'주무기 개조',id:'piercing_rounds',ko:'관통 탄환',max:4,next:7,current:'L1~L4 추가 관통 1 / 2 / 3 / 4명.',plan:'L1~L7 추가 관통 1~7명. 엄폐물 차단 유지.'},
+      {cat:'보조 무기',id:'homing_missiles',ko:'추적 미사일',max:4,next:7,current:'L1~L4: 2/3/4/4발, 발당 피해 25/31.36/40/53.2, 간격 1.35/1.215/1.107/1.0125초.',issue:'실효 출력 37.0 → 77.4(+109%) → 144.5(+87%) → 210.2(+45%).',plan:'총 일제 피해를 예산으로 사용하고 개수 해금 단계에는 큰 피해·쿨다운 증가를 함께 두지 않음.'},
+      {cat:'보조 무기',id:'electric_field',ko:'전기장',max:4,next:7,current:'L1~L4 실효 DPS 8 / 14.31 / 24.39 / 41.07, 반경 240/280/320/320, 판정 0.25/0.225/0.205/0.1875초.',issue:'단계 상승 +79% / +70% / +68%.',plan:'현재 L1과 최대 DPS를 끝점으로 보존하고 7단계에 단조 분산. 반경 증가와 DPS 증가를 같은 큰 단계에 겹치지 않음.'},
+      {cat:'보조 무기',id:'orbiting_blades',ko:'회전 날개',max:4,next:7,current:'L1~L4: 2/3/4/4개, 날개당 피해 14/20.16/27.5/39.2, 재타격 0.55/0.495/0.451/0.4125초.',issue:'실효 출력 약 50.9 → 122.2(+140%) → 243.9(+100%) → 380.1(+56%).',plan:'날개 수 해금과 피해/재타격 개선을 서로 다른 레벨에 배치.'},
+      {cat:'보조 무기',id:'drop_mines',ko:'후방 기뢰',max:4,next:7,current:'L1~L4 피해 48/67.2/90/123.2, 간격 3.2/2.52/1.968/1.8초, 최대 3/4/5/5개, 반경 192/216/240/240.',issue:'피해÷간격 기준 약 +78% / +71% / +50%.',plan:'피해·설치 간격·활성 개수·반경의 큰 변화를 각각 다른 단계에 배치.'},
+      {cat:'보조 무기',id:'auto_laser',ko:'자동 레이저',max:3,next:6,current:'L1~L3 피해 48/79.2/120.4, 간격 0.9/0.774/0.675초.',issue:'실효 DPS 53.3 → 102.3(+92%) → 178.4(+74%).',plan:'현재 L1과 최대 DPS를 6단계 끝점으로 두고 균등한 출력 곡선으로 재작성.'},
+      {cat:'보조 무기',id:'storm_barrage',ko:'원거리 전격포',max:3,next:6,current:'L1~L3 피해 70/114/175, 간격 4.5/3.87/3.375초, 반경 280, 최대 12대상.',issue:'실효 출력 약 15.6 → 29.5(+90%) → 51.9(+76%).',plan:'피해와 간격 개선을 6단계에 교차 배치.'},
+      {cat:'공격 속성',id:'thermal_burst',ko:'열폭발',max:4,next:7,current:'L1~L4 반경 72/84/96/96, 피해 4/5.75/8/11.',issue:'피해 단계 상승 약 +44% / +39% / +38%.',plan:'정수 피해와 반경을 7단계에 분산. 반경 최대 96 유지.'},
+      {cat:'공격 속성',id:'bio_toxin',ko:'독 부여',max:4,next:7,current:'L1~L4 중첩당 DPS 2/2.85/4/5.5, 지속 5/6/7/7초, 최대 3중첩.',issue:'중첩당 DPS 단계 상승 약 +43% / +40% / +38%.',plan:'정수 중첩 피해와 지속시간을 번갈아 강화하고 최대 3중첩 유지.'},
+      {cat:'공격 속성',id:'cryo_slow',ko:'냉기 부여',max:3,next:6,current:'L1~L3 중첩당 감속 6/8/10%, 지속 2/2.5/3초. 3중첩 파쇄 피해 18/28/42.',issue:'파쇄 피해 +56% / +50%.',plan:'감속·지속·파쇄 피해의 큰 증가를 다른 단계로 분리하고 정수 피해 사용.'},
+      {cat:'발동무기',id:'emp',ko:'EMP',max:4,next:7,current:'반경 285/325/365/405, 제거 반경 325/365/405/445, 기절 1.4/1.8/2.2/2.6초, 쿨다운 13/11.7/10.4/9.1초. 피해 0.',plan:'반경 285~465, 제거 325~505, 기절 1.4~2.6초, 쿨다운 13.0~8.8초의 확정 7단계.'},
+      {cat:'발동무기',id:'gravity_collapse',ko:'블랙홀',max:4,next:7,current:'반경 180/220/260/300, 지속 1.6/2/2.4/2.8초, 둔화 25/30/35/40%, 쿨다운 12/10.8/9.6/8.4초. 피해 0.',plan:'반경 20, 지속 0.2초 단위로 분할. 둔화 25~40%, 쿨다운 12.0~8.4초.'},
+      {cat:'발동무기',id:'kinetic_shockwave',ko:'충격파',max:4,next:7,current:'반경 200/240/280/320, 경직 0.35/0.5/0.65/0.8초, 밀치기 180/220/260/300, 쿨다운 9/8.1/7.2/6.3초. 피해 0.',plan:'반경 200~320, 경직 0.4~1.0초, 밀치기 180~300, 쿨다운 9.0~6.3초.'},
+      {cat:'발동무기',id:'piercing_lance',ko:'십자 광선',max:4,next:7,current:'반폭 28/40/52/64, 둔화 1.5/2/2.5/3초, 둔화 25/30/35/40%, 쿨다운 10.5/9.4/8.3/7.2초. 피해 0.',plan:'반폭 28~64, 지속 1.5~3.0초, 둔화 25~40%, 쿨다운 10.5~7.2초.'},
+      {cat:'차체 및 지원',id:'chassis_speed',ko:'주행 속도',max:3,next:6,current:'기본 280에 ×1.08/1.16/1.24 = 302.4/324.8/347.2.',plan:'1.08~1.24를 6단계 정수 퍼센트로 분할. 최종 속도 유지.'},
+      {cat:'차체 및 지원',id:'pickup_radius',ko:'수거 범위',max:3,next:6,current:'끌어당김 반경 +70/+140/+210.',plan:'정수 반경 6단계. 현재 최대 +210 유지.'},
+      {cat:'차체 및 지원',id:'hull_integrity',ko:'장갑 내구도',max:3,next:6,current:'최대 내구도 +15/+30/+45. 획득할 때마다 15 즉시 회복.',plan:'정수 HP 6단계. 현재 최대 +45 유지, 획득 회복은 단계 증가량과 일치.'},
+      {cat:'차체 및 지원',id:'lifesteal',ko:'흡혈',max:2,next:5,current:'기본 0.5%를 총 2%/3.5%로 증가.',plan:'총 흡혈 2.0~3.5%를 5단계에 분할. 공통 회복 예산 유지.'},
+      {cat:'차체 및 지원',id:'overflow_barrier',ko:'초과 회복막',max:3,next:6,current:'초과 회복 전환 50/75/100%, 8초. 실드 상한 최대 선체 15/25/35%.',plan:'전환율과 상한의 큰 증가를 다른 단계에 배치. 8초 유지.'},
+      {cat:'전투 조건',id:'critical_targeting',ko:'치명타',max:3,next:6,current:'직접 피해가 8/12/16% 확률로 2배.',plan:'정수 확률 6단계. 최종 16%와 2배 유지.'},
+      {cat:'전투 조건',id:'dash_overdrive',ko:'대시 강화',max:3,next:6,current:'대시 뒤 2초간 모든 적격 피해 +15/+25/+35%.',plan:'정수 보너스 6단계. 2초와 최종 +35% 유지.'},
+      {cat:'전투 조건',id:'dash_afterburn_field',ko:'잔류 열흔',max:3,next:6,current:'대시 전체 경로, 반폭 72, 3초, 0.5초마다 10/15/20 피해, 최대 2개.',plan:'정수 틱 피해 6단계. 지형·지속·간격·개수 유지.'},
+      {cat:'전투 조건',id:'last_stand_amplifier',ko:'저체력 피해',max:3,next:6,current:'선체 60% 미만부터 증가, 25% 이하에서 최대 +5/+10/+20%.',issue:'L2→L3 최대 보너스가 2배.',plan:'정수 최대 보너스 6단계. 60%/25% 경계와 최종 +20% 유지.'},
+      {cat:'전투 조건',id:'miss_compensation',ko:'실수 보정',max:3,next:6,current:'최대 5중첩, 다음 명중에 중첩당 +8/+11/+14%.',plan:'정수 중첩당 보너스 6단계. 최대 5중첩 유지.'},
+      {cat:'전투 조건',id:'hit_chain',ko:'명중 연쇄',max:3,next:6,current:'최대 8중첩, 중첩당 주무기 피해 +3/+4/+5%.',plan:'6단계 정수 퍼센트. 같은 수치가 반복되는 단계에는 중첩 유지 보조값을 명시.'},
+      {cat:'전투 조건',id:'braced_fire',ko:'고정 사격',max:3,next:6,current:'220 이동마다 최대 5구간. 정지 0.6초 후 4초간 구간당 +6/+8/+10%.',plan:'정수 보너스 6단계. 거리·정지·지속·최대 구간 유지.'},
+    ];
+
+    const fmt = new Intl.NumberFormat('ko-KR', {maximumFractionDigits: 1});
+    const bossGrid = document.querySelector('#boss-grid');
+    bosses.forEach((boss) => {
+      const article = document.createElement('article');
+      article.className = 'boss-card';
+      article.innerHTML = `
+        <img src="${boss.img}" alt="${boss.ko} 현재 게임 이미지">
+        <div>
+          <div class="boss-title"><h3>${boss.n}. ${boss.ko}</h3><span>${boss.en}</span>${boss.issue ? '<span class="tag issue">경로 예고 수정</span>' : ''}</div>
+          <p>${boss.identity}</p>
+          <dl>
+            <dt>현재 HP</dt><dd>${fmt.format(boss.hp)}</dd>
+            <dt>계획 HP</dt><dd>${fmt.format(boss.after)} <span class="tag plan">+30%</span></dd>
+            <dt>이동속도</dt><dd>${boss.speed}</dd>
+            <dt>1회 피해</dt><dd>${boss.damage}</dd>
+            <dt>자동 패턴 간격</dt><dd>${boss.cadence}</dd>
+            <dt>최대 범위</dt><dd>${boss.coverage}</dd>
+          </dl>
+        </div>`;
+      bossGrid.append(article);
+    });
+
+    const stageDetails = document.querySelector('#stage-enemy-details');
+    const bossNames = bosses.map((b) => b.ko);
+    stages.forEach((stage, stageIndex) => {
+      const details = document.createElement('details');
+      if (stage.n === 1) details.open = true;
+      const all = [...stage.roles];
+      stage.adds.forEach((id) => { if (!all.includes(id)) all.push(id); });
+      const rows = all.map((id) => {
+        const enemy = enemies[id];
+        const classScale = ['swarm','standard'].includes(enemy.cls) ? 1.12 : 1.0;
+        const hp = Math.round(enemy.hp * classScale * stage.h * 2.60 * 1.20);
+        const speed = Math.round(enemy.speed * 1.40 * stage.s);
+        const damage = enemy.attack ? enemy.attack * 1.755 * stage.d * stage.p : null;
+        const summon = stage.adds.includes(id) && !stage.roles.includes(id);
+        return `<tr>
+          <td><strong>${enemy.ko}</strong><br><code>${id}</code> ${summon ? '<span class="tag summon">보스 소환</span>' : ''}</td>
+          <td>${enemy.cls}</td><td class="num">${hp}</td><td class="num">${speed}</td>
+          <td>${enemy.support || `${enemy.attackText}<br><span class="label">이 단계 실효 1회 ${fmt.format(damage)}</span>`}</td>
+        </tr>`;
+      }).join('');
+      details.innerHTML = `<summary>${stage.n}단계 · ${bossNames[stageIndex]} · ${all.length}종</summary>
+        <div class="details-body"><div class="table-wrap"><table>
+          <thead><tr><th>일반 적</th><th>등급</th><th class="num">실효 HP</th><th class="num">실효 속도</th><th>공격·지원</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div></div>`;
+      stageDetails.append(details);
+    });
+
+    const upgradeRoot = document.querySelector('#upgrade-sections');
+    [...new Set(upgrades.map((u) => u.cat))].forEach((category) => {
+      const list = upgrades.filter((u) => u.cat === category);
+      const section = document.createElement('div');
+      section.className = 'upgrade-section';
+      section.innerHTML = `<h3>${category}<span>${list.length}장</span></h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>카드</th><th class="num">현재 → 계획</th><th>현재 레벨별 효과</th><th>급등 분석·확장 규칙</th></tr></thead>
+          <tbody>${list.map((u) => `<tr>
+            <td><strong>${u.ko}</strong><br><code>${u.id}</code></td>
+            <td class="num">Lv.${u.max} → Lv.${u.next}</td>
+            <td>${u.current}</td>
+            <td>${u.issue ? `<span class="tag issue">${u.issue}</span><br>` : ''}${u.plan}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>`;
+      upgradeRoot.append(section);
+    });
+  </script>
+</body>
+</html>
