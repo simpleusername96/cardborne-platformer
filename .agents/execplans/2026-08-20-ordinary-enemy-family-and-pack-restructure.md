@@ -3,651 +3,403 @@ type: plan
 status: active
 owner: BK
 created: 2026-08-20
-last_reviewed: 2026-08-20
-topic: Ordinary-enemy family, trait, pack, and remote pursuit-branch restructuring
-scope: Research and decision checklist for replacing fragmented ordinary-enemy IDs with five readable families, two traits per family, and pack-owned coordination
+last_reviewed: 2026-08-21
+scope: Five-family ordinary-enemy catalog, tier scaling, pack composition, family traits, production visuals, migration, and performance-safe validation
 related:
-  - ../../docs/reports/2026-08-20-ordinary-enemy-branch-and-restructure-review-ko.html
-  - ../../docs/reports/2026-08-20-ordinary-enemy-five-family-revision-en.html
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../../docs/design/visual-replacement-workbench/README.md
   - ../cardborne-performance-engineering-policy.md
   - ../research/performance/cardborne-runtime-architecture-audit.md
+  - ../../docs/reports/2026-08-20-ordinary-enemy-branch-and-restructure-review-ko.html
+  - ../../docs/reports/2026-08-20-ordinary-enemy-five-family-revision-en.html
 ---
 
-# Ordinary Enemy Family and Pack Restructure
+# Ordinary Enemy Family and Pack Restructure - Execution Contract
 
-Mode: research and decision checklist. This is not yet an execution contract. It records
-verified current state, proposed decisions, unresolved product choices, and the work needed
-before implementation can be safely authorized.
+Replace the 26-ID ordinary-enemy catalog with fifteen playable family-tier actors,
+make every authored squad a persistent semantic pack, enforce Defender membership in
+every Gunner pack, ship the ten approved family traits, and integrate the approved
+five-family art without exceeding the retained renderer's 50-batch ceiling. The starting
+point is `master` after visual staging commit `d64eb57a`; the remote pursuit branch is a
+behavior reference only and is not merged.
 
-## Outcome
+## Purpose
 
-Prepare a merge-safe ordinary-enemy restructure that:
+- Objective: make ordinary enemies readable as five families with three tiers, two traits
+  per family, and stable pack ownership while removing unreachable and duplicate enemy
+  identities.
+- Deliverable: a playable twelve-cycle implementation, production assets and semantic
+  descriptors, updated Korean/English Guidebook data, canonical product/design updates,
+  focused validation, and a committed migration.
+- Completion state: every normal-cycle ordinary spawn uses one of fifteen family-tier IDs;
+  every ordinary actor belongs to one validated pack; no retired ordinary archetype remains
+  in runtime catalogs, stage rosters, Guidebook data, or production semantic assets.
 
-- replaces the earlier nine-family proposal with five player-facing families;
-- limits the initial active pool to two family-exclusive traits per family;
-- makes every ordinary enemy a member of a persistent pack;
-- guarantees at least one Defender in every pack containing a long-range ordinary enemy;
-- reuses the current bounded squad coordinator instead of adding a second coordination owner;
-- migrates useful behavior before deleting campaign-unreachable or duplicate archetype IDs;
-- makes mobile tier size grow through the integer 100 / 125 / 150 percentage ladder while
-  keeping visual, projectile-hit, and body-collision contracts separate; and
-- creates and approves the complete five-family base-and-trait visual set before any
-  runtime enemy schema, behavior, roster, or production-asset switch; and
-- adapts the useful parts of `origin/agent/simplify-ordinary-enemy-ai` without merging its
-  universal direct-pursuit decision as-is.
+## Scope and Boundaries
 
-## Fixed user constraints
+In scope:
 
-- Work on ordinary enemies only. Map exploration and tower-defense expansion are out of
-  scope for this plan.
-- The report must show the remote branch, its validity, current categories, and deletion
-  candidates.
-- Each family starts with no more than two active traits. Other candidates remain future
-  notes only.
-- Traits must not duplicate another family's core identity. In particular, Pursuer must not
-  receive Armored or Heavy behavior that belongs to Defender/durability space.
-- Coordinator keeps Blink in the initial pair.
-- Long-range ordinary enemies never spawn without a Defender in the same pack.
-- User-provided concept PNGs may illustrate the revision report. Concept images are evidence
-  only and are not approved production assets.
-- The revision report uses the newer user-provided concept sheets only. It does not use the
-  current production ordinary-enemy PNGs as family examples.
-- This ExecPlan is the source for every derived ordinary-enemy report. Update and commit the
-  ExecPlan before changing a report. Each report names the exact plan commit it follows.
-- Each family section shows exactly three PNG files: one T1 image, one T2 image, and one T3
-  image. Do not show trait thumbnails, a full nine-cell matrix, or extra actor images inside
-  a family section.
-- Tier size uses integer percentages relative to the family T1 visual: T1 `100%`, T2 `125%`,
-  and T3 `150%`. Do not store or present the tier contract as absolute pixel radii.
-- Replace the previous orange triangular Coordinator concepts with the simpler circular
-  three-tier concept formerly placed in the removed Bomber cell. This is a visual reuse
-  decision only; it does not carry Bomber or Self-Destruct behavior into Coordinator.
-- Controller and Sustainer are removed from the ordinary-enemy family set.
-- Bomber is removed as a family. Self-Destruct replaces Overload as one Charger trait.
-- Gunner and Artillery are one Gunner family. Its two traits are Artillery and Slow.
-- Defender Bulwark periodically grows and projects a large shield over nearby enemies.
-- Defender Reflector normally uses a standard shield and reflects only during a periodic,
-  clearly warned active window.
-- Every Gunner pack includes a Defender, including packs whose Gunner has the Artillery
-  trait.
-- The report-only concept crops are not the target art. Generate a new, simpler visual set
-  under the canonical visual authority pair before changing the enemy implementation.
-- A trait-applied actor must be identifiable from its own body at combat scale. Do not use
-  floating labels, trait badges, permanent halos, detached icons, or color alone.
-- Complete and approve all 45 staged actor images first: five families × three tiers ×
-  (`base` + two family traits). Runtime and production integration starts only after this
-  visual gate is complete.
+- Families: Pursuer, Charger, Gunner, Defender, Coordinator.
+- Tiers: T1/T2/T3 with integer `size_percent` values `100/125/150`.
+- Traits: Pursuer `splitter/frenzy`; Charger `double/self_destruct`; Gunner
+  `artillery/slow`; Defender `bulwark/reflector`; Coordinator `blink/pack_feed`.
+- Authored pack blueprints, atomic pack admission, pack-owned shared timers/state, and the
+  Gunner-plus-Defender invariant.
+- Migration of useful current behavior primitives, removal of obsolete player-facing IDs,
+  production integration of fifteen approved base PNGs, and retained code-native trait
+  cues.
+- Reclassification of the Stage 3 fixed beam summon as a boss-owned pattern actor.
 
-## Verified local evidence
+Out of scope:
 
-### Runtime reachability
+- Map-exploration incentives, neutral-facility competition, enemy gem growth, and
+  tower-defense bases.
+- New engine dependencies, threads, GDExtension, renderer rewrite, texture atlas work, or
+  changes to actor/projectile/effect capacities and performance thresholds.
+- A generic release-performance claim. This contract may establish focused validators,
+  scenario validity, and the unchanged batch ceiling; native/Web release qualification
+  remains a separately labelled final gate.
 
-- `VehicleEnemyArchetypes` defines 26 ordinary archetypes.
-- Normal 12-cycle packets directly use 14 archetypes.
-- Boss add rosters add `ordinary_edge_01`, `ordinary_pull_01`,
-  `ordinary_range_01`, and `ordinary_support_01`, for 18 campaign-reachable mobile
-  archetypes.
-- `ordinary_fixed_beam_01` is additionally reachable only as the Stage 3 boss's autonomous
-  summon.
-- Seven definitions do not spawn in the normal campaign:
+Constraints and invariants:
 
-  - `ordinary_support_02`
-  - `ordinary_support_03`
-  - `ordinary_melee_02`
-  - `ordinary_fixed_ranged_01`
-  - `ordinary_fixed_area_01`
-  - `ordinary_fixed_ranged_02`
-  - `ordinary_fixed_support_01`
+- All normal ordinary actors are mobile family-tier actors. Controller, Sustainer, Bomber,
+  separate Artillery, global Armored, global Overclocked, and global Heavy are removed.
+- A pack contains four to eight actors and has one primary family, one tier, and at most one
+  pack trait. A required Defender replaces a filler; it never raises authored population,
+  threat budget, or active capacity.
+- Every Gunner pack contains at least one Defender. A pack with more than four Gunners
+  contains two Defenders.
+- Actor collision radius and projectile target radius remain gameplay-owned and do not
+  scale with tier presentation. T1 uses the new shared ordinary presentation baseline;
+  T2/T3 render at `125%/150%` of that family body's T1 presentation size.
+- The existing `VehicleEnemyStore`, update schedule, spatial grid, projectile/effect pools,
+  and retained renderer remain the capacity owners. No Node is added per actor or pack.
+- Shared objective, formation, trait cadence, Blink phase, and Pack Feed stacks are stored
+  once per registered pack. Health, collision, attack commitment, damage, and status remain
+  per actor.
+- The useful remote-branch behavior is adapted: movement focus uses the current pack
+  objective, route guidance is requested only when the direct approach is blocked, and
+  local separation, smoothing, speed caps, and attack-owned prediction remain. Universal
+  direct pursuit and removal of long-range positioning are rejected.
+- The visual authority pair is
+  `docs/design/VISUAL_SYSTEM.md` SHA-256
+  `2e5cf7e3f156629bcbe956da0e6cb30f6d3b608d9c20122ec5285fa1562aa006`
+  and `docs/design/cardborne-universal-art-style-reference.png` SHA-256
+  `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`,
+  inspected at `1448x1086` original detail for this implementation scope.
+- General SVG trait effects are prohibited by the canonical visual system. Trait cues use
+  existing retained code-native disk/ring/beam/diamond primitives and actor-alpha tint
+  composition; they add no raster effect, per-enemy material, per-enemy node, floating
+  label, badge, or permanent detached halo.
+- The user approved the staged five-family set on 2026-08-20 for temporary use. Production
+  uses only its fifteen `base` row PNGs (five families x three tiers). The extra thirty
+  trait-body PNGs remain review/reference material and are not indexed at runtime because
+  45 actor textures would violate the 50 retained combat-batch ceiling. This preserves the
+  user's intended durable model: three body assets per family plus trait presentation.
 
-The seven IDs are not safe one-line deletions. They are referenced by Guidebook entries,
-presentation descriptors, semantic assets, combat branches, fixtures, or validators.
-`ordinary_fixed_area_01` is also used as the behavior role of the reachable mobile
-`ordinary_area_01` minelet.
+Destructive or irreversible actions:
 
-### Current Controller and Coordinator truth
+- After every old semantic consumer is migrated, delete the twenty-one obsolete ordinary
+  production PNGs and their tracked import metadata. Move the retained fixed-beam body to a
+  boss-pattern path before deleting its old ordinary path. Git history remains recovery.
+- Remove obsolete archetype, Guidebook, localization, fixture, renderer, and manifest
+  records only in the same coherent migration that replaces their live consumers.
 
-- No `controller` family or `coordinator` actor ID exists.
-- `ordinary_gap_01` is presented as command-like, but its live attack is only a slow,
-  low-damage projectile. It does not itself control a corridor or coordinate allies.
-- `ordinary_compression_01` reuses Gap movement and art, but it replaces the projectile
-  with a moving compression corridor. It is the only current ordinary archetype that
-  clearly realizes the proposed Controller response.
-- `ordinary_support_03` is an unreachable carrier prototype that spawns up to three
-  `ordinary_melee_01` children. It is not a pack Coordinator.
-- `VehicleCollectiveTacticRuntime` is a global bounded squad coordinator, not an enemy.
-  It already owns member IDs, leaders, formations, and the Dormant → Gather → Lock →
-  Execute → Break → Cooldown lifecycle.
-- Blink, Invisible, Shrink, Like Rock, and pack-wide 몰아주기 are not currently implemented.
-- `ordinary_melee_02` contains the closest existing primitive to 몰아주기: it gains bounded
-  stacks when nearby enemies die. The current behavior buffs only itself and does not heal
-  or buff surviving pack members.
+Exact actions requiring owner or user approval:
 
-Decision update: this evidence does not justify a Controller family. Remove the Controller
-label and its dedicated actor IDs. Reuse only generic impact or warning primitives when an
-approved Gunner Artillery attack needs them. Sustainer is also removed; ordinary repair
-actors and their unused prototypes do not survive as a separate family.
+- The production use of the fifteen staged base PNGs and the five-family contract are
+  explicitly approved by the user's 2026-08-20 instruction. No additional visual approval
+  gate remains for those exact bytes.
+- Any future promotion of the thirty staged trait-body PNGs, change to the 50-batch ceiling,
+  product workload, collision size, native/dependency work, or weakening of a validation
+  threshold requires a new explicit user decision.
 
-### Existing pack boundary
+## Discovery Closure
 
-- Every scheduled squad already receives `group_id`, `squad_id`, `squad_leader`,
-  `formation_slot`, and `formation_size`.
-- The current allocator redistributes all packet roles among squads. It tries to give each
-  squad a pursuit member and limits projectile users, but it does not preserve authored
-  family composition or guarantee a Defender.
-- Only one squad per packet currently receives `collective_tactic_id`.
-- The collective runtime registers at most 32 squads and grants Lock/Execute permission to
-  only one squad at a time.
-
-### Current trait and visual boundary
-
-- The current global elite traits are `armored`, `overclocked`, and `heavy`. They apply to
-  individual actors and are not family-exclusive.
-- All mobile ordinary enemies currently share a 48 px visible/projectile target radius;
-  installations use 62 px and bosses 146 px.
-- Production ordinary-enemy PNGs use 112×112 mobile canvases and 160×160 installation
-  canvases. Late aliases reuse earlier assets instead of owning tier art.
-- Visual radius currently contributes to projectile hit radius. Tier-size implementation
-  must separate those contracts before changing the visual footprint.
-
-## Remote branch review
-
-Candidate: `origin/agent/simplify-ordinary-enemy-ai` at `bd9f72f7`
-
-PR: `#4 Simplify ordinary enemy pursuit`
-
-Base: `origin/master` at `4d6bb2dc`
-
-The branch is three commits ahead of its base. Local `master` has separately diverged from
-the same base; its exact ahead count changes whenever this plan or its derived report is
-committed. A merge-tree inspection found no structural conflict signal, and GitHub reports
-the PR as mechanically mergeable. The PR is still a draft and its merge state is
-`UNSTABLE`.
-
-The branch makes every mobile ordinary archetype resolve to one pursuit family. It targets
-the player's current position for movement, removes movement prediction, standoff bands,
-retreat, orbit, escort, and support positioning, and keeps blocked-route guidance, local
-separation, velocity smoothing, speed caps, and attack-owned targeting prediction.
-
-The recorded workflow failed at `Capture native rendered evidence`; later Web checks were
-skipped and the expired log no longer exposes a useful root cause. This branch therefore
-has neither a green workflow nor current evidence for the requested pack design.
-
-### Merge decision
-
-Do not merge the branch as-is. Its universal per-actor direct pursuit conflicts with:
-
-- pack-owned anchor movement;
-- long-range formation slots behind a Defender;
-- support and Coordinator positioning;
-- authored attack ranges that require room for warning and counterplay; and
-- the requested family-specific response vocabulary.
-
-Adapt these parts after the pack contract exists:
-
-- movement focus uses the current objective/anchor position, not predictive movement;
-- route guidance is requested only when the direct approach is blocked;
-- local separation, velocity smoothing, and speed caps remain;
-- attack commitment keeps its independent prediction and telegraph contract.
-
-Reject or rewrite these branch parts:
-
-- every member directly pursues the player;
-- standoff, escort, and support ownership is removed;
-- `docs/product/ordinary_enemy_behavior.md` records universal pursuit as the accepted
-  product decision; and
-- compatibility constants survive while their live meaning is removed.
-
-## Approved five-family contract
-
-Each pack has one primary family, one tier, and at most one active trait. A required
-Defender slot uses base Defender behavior unless the authored pack explicitly assigns one
-of the two Defender traits. A Coordinator-primary pack may apply its trait to the whole
-pack.
-
-| # | Family | Core response | Initial active traits | Current behavior seeds |
+| Requirement or concern | Verified current owner and behavior | Evidence | Locked decision | Task IDs |
 | --- | --- | --- | --- | --- |
-| 01 | Pursuer | Maintain movement and escape space | Splitter, Frenzy | `melee_01`, `pulse_01` |
-| 02 | Charger | Read the locked lane, dodge sideways, then clear the fuse area when needed | Double, Self-Destruct | `edge_01`, `pull_01`; mobile `area_01` explosion seed |
-| 03 | Gunner | Break direct fire lanes or leave a marked impact area | Artillery, Slow | `ranged_01`, `lane_01`, `range_01`, `beam_01`, `growth_01`, ground-burst primitives |
-| 04 | Defender | Change firing angle and target order | Bulwark, Reflector | `shield_01`, `reflect_01`, `support_02` prototype |
-| 05 | Coordinator | Break the pack-level tactic source | Blink, 몰아주기 | collective runtime; `support_03`/`melee_02` prototypes |
+| Enemy identity | `VehicleEnemyArchetypes` owns 26 definitions; 18 mobile IDs are campaign-reachable and seven definitions are unreachable | `scripts/enemies/vehicle_enemy_archetypes.gd`; stage/boss roster trace | Replace normal ordinary identity with fifteen family-tier IDs; remove old player-facing identities | 1.1, 4.1 |
+| Tier size | `VehicleStageVisualProfile` publishes one 48-unit mobile visual radius; projectile target radius is separately 48 | visual profile, archetype catalog, renderer | Raise the shared T1 presentation baseline to 56, then apply integer 100/125/150 at the render boundary; keep collision and hit radius unchanged | 1.1, 3.2 |
+| Pack ownership | Every scheduled actor already has squad fields, but allocator redistributes a global role bag and only one squad per packet receives collective state | encounter runtime, spawn allocator, collective runtime | Preserve authored pack blueprints, register every normal pack, and admit a complete window atomically | 1.2, 2.1 |
+| Gunner defense | Current allocator limits shooters but does not guarantee a shield actor | spawn allocator | Every Gunner pack replaces filler slots with one/two base Defenders according to Gunner count | 1.2 |
+| Shared work and performance | Enemy store, update schedule, grid, and collective runtime are bounded; renderer currently allocates one batch per actor descriptor with a hard ceiling of 50 | performance policy/audit, renderer, performance scenarios | Extend the existing bounded pack runtime; use fifteen body textures and shared overlays; do not add per-pack Nodes or 45 actor batches | 2.1, 3.1, 5.2 |
+| Trait ownership | Current elite traits are per actor and globally shared; requested traits are family-exclusive and some are pack-wide | elite catalog, user decisions | Replace the global elite catalog with one family-trait catalog and pack metadata; Coordinator traits affect its complete pack | 1.1, 2.2 |
+| Trait behavior | Splitter, current mine, artillery, shield support, reflect, and death-stack prototypes contain reusable behavior seeds | specialist runtime and `VehicleRun` branches | Migrate seeds behind new family/trait terms; do not preserve their former actors | 2.2, 4.1 |
+| Stage 3 fixed beam | `ordinary_fixed_beam_01` appears only as a Stage 3 boss-owned autonomous summon | boss patterns/runtime trace | Rename/reclassify it as `boss_pattern_fixed_beam_01`; it is not an ordinary family member and has no Defender requirement | 1.1, 4.1 |
+| Remote branch | `origin/agent/simplify-ordinary-enemy-ai` at `bd9f72f7` is mechanically mergeable but draft/unstable and failed rendered evidence | merge-tree and branch diff recorded by prior plan revision | Do not merge; manually adapt current-objective targeting and blocked-route guidance only | 2.3 |
+| Visual media | 45 approved staged PNG variants exist; renderer batch count is the total retained batch allocation | staged provenance, renderer snapshot contract, 50-batch validators | Promote fifteen base PNGs only; express traits with shared code-native cues; retain extra variants outside production | 3.1, 3.2 |
+| Canonical documentation | Product spec still names rolling legacy roles, current elite modifiers, 48-unit shared visuals, and late teaching aliases | `docs/product/vehicle_game_spec.md`; `docs/design/VISUAL_SYSTEM.md` | Update both canonical documents in the migration commit before reports are regenerated | 4.2 |
 
-The initial pair is an implementation cap, not a promise that both traits ship in one
-slice. Controller, Sustainer, and Bomber are not future launch families. Separate
-Artillery is also removed; Artillery is a Gunner trait.
+Readiness statement:
 
-### Trait behavior contract
+- Every material product, architecture, data, visual, ownership, safety, and validation
+  decision is closed.
+- Godot 4.7.1 is available through `./tools/godot.ps1`; no dependency bootstrap is needed.
+- External research is not repeated in this implementation turn because the active plan
+  already records the relevant Godot, GDC, Riot, and local performance evidence, and the
+  current code plus pinned engine are authoritative for implementation mechanics.
+- Remaining unknowns are implementation-local and cannot change this contract.
 
-- Charger / Double: execute a readable second charge after the first recovery window.
-- Charger / Self-Destruct: replace Overload. After a normal charge ends, show a short fuse,
-  then explode and retire the Charger. A kill before fuse commitment prevents the
-  explosion unless playtesting proves that counter too easy.
-- Gunner / Artillery: replace direct fire with a clearly marked lobbed or ground-impact
-  shot. It remains a Gunner and therefore still requires a Defender in its pack.
-- Gunner / Slow: a hit applies one bounded slow. Later hits refresh the same effect instead
-  of stacking it into a movement lock. The projectile needs a distinct warning color or
-  trail before this trait can ship.
-- Defender / Bulwark: on an `M`-second cadence, the Defender visibly grows for `N` seconds
-  and projects a larger shield that also protects nearby pack members. The growth and
-  shield boundary must be readable before protection starts.
-- Defender / Reflector: the normal state is a standard shield. On an `M`-second cadence, a
-  warned `N`-second window changes it into a reflective shield. Reflection is never always
-  active.
-- Coordinator / Blink: relocate the pack only after a warning and collision-safe
-  destination check.
-- Coordinator / 몰아주기: an eligible pack-member death heals and strengthens the
-  survivors within a strict cap. Coordinator death stops future gains.
+## Tasks
 
-Invisible and Shrink remain future experiments because they weaken silhouette and hitbox
-readability. Like Rock remains excluded because it duplicates Defender's defense space.
+### Phase 1: Canonical family data and authored packs
 
-## Pre-integration visual asset gate
+Goal: make fifteen family-tier actors and valid pack blueprints the only normal ordinary
+spawn contract before changing live behavior.
 
-This gate must finish before implementation workstream A. It creates reviewable final
-candidates, not production-integrated files. The existing `ordinary_enemy_family`
-workbench unit is an already-applied 19-ID replacement and must not be overwritten. A new
-switch unit and exact production target paths can be authored only after the five-family
-runtime schema names its stable semantic IDs.
+Preconditions:
 
-### Authority and staging
+- Capture the pre-change focused validator results and renderer batch count from current
+  `master`; do not interpret them as release performance.
 
-- Mandatory authority:
-  `docs/design/VISUAL_SYSTEM.md` plus
-  `docs/design/cardborne-universal-art-style-reference.png`.
-- The canonical sheet is style grammar only. Do not reproduce its example objects or
-  layout.
-- The user-provided lineup is a role-and-progression concept reference only. Do not copy
-  its white report background, labels, shadows, rejected Coordinator design, or exact
-  object rendering.
-- Save generated review material under
-  `docs/design/visual-replacement-workbench/previews/ordinary-enemy-five-family-v1/`.
-  Do not write to `to-be/assets/`, the production visual root, the gameplay manifest, or a
-  runtime provider in this gate.
-- Use five family master sheets. Each sheet is a strict 3×3 transparent grid with equal
-  cell bounds: columns T1/T2/T3; rows base/trait A/trait B. Mechanically extract the grid
-  into 45 individual transparent PNG candidates after inspecting each sheet.
-- Normalize every extracted actor to the same family canvas and pivot convention. The PNG
-  itself does not encode the 100/125/150 tier size. A non-creative comparison sheet renders
-  the normalized files at those three percentages; runtime will later own the percentage
-  scale.
+Source owners: `scripts/enemies/vehicle_enemy_archetypes.gd`, new
+`scripts/enemies/vehicle_enemy_family_trait_catalog.gd`,
+`scripts/vehicle/stages/vehicle_combat_stages.gd`,
+`scripts/encounters/vehicle_spawn_allocator.gd`,
+`scripts/encounters/vehicle_encounter_runtime.gd`,
+`scripts/enemies/vehicle_enemy_state.gd`
 
-### Shared actor grammar
+- [ ] **1.1** Fifteen family-tier definitions replace the legacy ordinary catalog.
+  - Change: define family, tier, integer size percent, base combat role, stats, threat
+    kind, and semantic asset ID for `ordinary_<family>_t1..t3`; add
+    `boss_pattern_fixed_beam_01`; add family/trait scalar state; replace the global elite
+    catalog with two allowed traits per family.
+  - Accept: catalog validation reports exactly fifteen normal ordinary IDs, the
+    100/125/150 ladder, two unique traits per family, no cross-family trait, explicit 48
+    projectile target radius, and no legacy definition.
+- [ ] **1.2** Stage packets contain validated semantic pack blueprints.
+  - Change: author deterministic stage family/tier/trait rollout; preserve exact authored
+    counts and 4-8 pack sizes; derive squad role arrays without allocator role-bag
+    redistribution; attach family/tier/trait metadata to every spawn spec.
+  - Accept: all twelve stage definitions preserve population and quota; every pack is
+    valid; every Gunner pack contains the required Defender count; no pack exceeds the
+    active-cap or threat-budget contract.
+  - Guard: opening and reserve admission remain whole-window atomic and a failed geometry
+    allocation emits no orphan actor.
 
-- Exact top-down view and right-facing forward direction.
-- One dominant silhouette, three to five large filled planes, a dark perimeter, matte main
-  mass, one light plane, one shadow plane, and at most two large functional modules.
-- Danger coral owns the ordinary-hostile main semantic plane. Cyan or mint may appear only
-  as one restrained state/function accent when the trait needs it.
-- Use broad cuts, plates, prongs, barrels, and negative space that survive grayscale and
-  combat-scale inspection.
-- Do not use decorative rivets, tiny circles, clusters of lamps, random panel seams,
-  concentric rings, nested frames, text, labels, badges, logos, watermarks, bloom, or a
-  scene background.
-- Keep transparent padding around the complete body. No shadow, glow, trail, shield ring,
-  explosion radius, projectile path, or blink afterimage may extend beyond the actor
-  footprint.
+Batch gate:
 
-### Trait-owned body cues
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_twelve_cycle_catalog.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_spawn_allocation.gd`
 
-Each trait owns one permanent body cue so the player can identify the applied trait even
-while its timed behavior is inactive. Later runtime presentation may animate or tint that
-same cue, but gameplay radius and timing remain code-owned.
+### Phase 2: Pack runtime and ten trait behaviors
 
-| Family | State | Required permanent body cue | Later code-owned cue |
+Goal: make every pack share bounded coordination state and make all ten traits functional
+without adding per-actor discovery or new unbounded collections.
+
+Preconditions:
+
+- Phase 1 acceptance checks pass.
+
+Source owners: `scripts/encounters/vehicle_collective_tactic_catalog.gd`,
+`scripts/encounters/vehicle_collective_tactic_runtime.gd`,
+`scripts/enemies/vehicle_enemy_specialist_runtime.gd`,
+`scripts/enemies/vehicle_enemy_movement_policy.gd`,
+`scripts/enemies/vehicle_enemy_targeting_policy.gd`,
+`scripts/combat/vehicle_projectile_state.gd`, `scripts/vehicle/vehicle_run.gd`
+
+- [ ] **2.1** Every ordinary pack uses the existing bounded collective runtime.
+  - Change: register all normal packs; store objective, formation, trait phase/timer, Blink
+    receipt, and Pack Feed stacks once per pack; publish fixed scalar member state; keep the
+    existing one-Execute/one-Gather global permissions and 32-pack bound.
+  - Accept: 4-8 member packs remain deterministic; stale IDs are removed; pack state ends
+    when empty; no actor or pack Node is created; debug snapshot exposes family, tier,
+    trait, member count, and bounded trait state.
+- [ ] **2.2** The ten family traits implement their locked counterplay.
+  - Change: Splitter spawns bounded traitless T1 children; Frenzy applies bounded speed and
+    cadence pressure; Double performs one warned second charge; Self-Destruct enters a
+    kill-interruptible fuse then retires; Artillery substitutes the marked-impact attack;
+    Slow applies one non-stacking player slow that refreshes; Bulwark periodically grows
+    presentation and shields nearby same-pack members; Reflector has a normal shield and
+    only reflects during a warned window; Blink warns then relocates the formation only to
+    collision-safe positions; Pack Feed heals and strengthens surviving same-pack members
+    with a cap, excludes summons/duplicates, and stops when the Coordinator leader dies.
+  - Accept: focused trait fixtures prove timing, caps, exclusions, interruption, and
+    collision-safe failure behavior; no removed trait remains reachable.
+- [ ] **2.3** Pack anchors use the accepted remote-branch simplification.
+  - Change: movement targets the current pack objective rather than a predicted movement
+    destination; blocked direct approach may use the existing pursuit field; family attack
+    standoff, formation slots, local separation, smoothing, and speed caps remain.
+  - Accept: movement/targeting validators prove no movement prediction, no route request on
+    a clear path, preserved attack prediction, and protected rear placement for Gunners.
+
+Batch gate:
+
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_collective_tactics.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_enemy_family_traits.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_enemy_movement_policy.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_enemy_targeting_policy.gd`
+
+### Phase 3: Production visuals and performance-safe presentation
+
+Goal: show the five families, tiers, and active trait states with fifteen body textures and
+shared retained cues.
+
+Preconditions:
+
+- Phase 2 acceptance checks pass and stable semantic IDs exist.
+
+Source owners: `docs/design/visual-replacement-workbench/replacement-workbench.json`,
+`docs/design/visual-replacement-workbench/to-be/assets/...`,
+`art/visuals/production/gameplay/asset-manifest.json`,
+`scripts/presentation/components/vehicle_actor_visual_catalog.gd`,
+`scripts/presentation/vehicle_combat_renderer.gd`,
+`scripts/vehicle/vehicle_stage_visual_profile.gd`
+
+- [ ] **3.1** Promote exactly fifteen approved base PNGs through one new workbench unit.
+  - Change: map staged `base` PNGs to exact 256x256 family-tier production targets, record
+    hashes and authority evidence, add the boss-pattern beam move, and declare old ordinary
+    assets as retirement targets after consumer migration.
+  - Accept: exact workbench ledger and preview pass; manifest has fifteen ordinary family
+    semantic IDs and one boss-pattern beam ID; no extra trait PNG is indexed.
+- [ ] **3.2** Renderer consumes catalog asset IDs and integer tier scale.
+  - Change: use actor-catalog `asset` rather than synthesized IDs; compute
+    `visual_scale = size_percent / 100.0`; raise the shared T1 ordinary presentation radius
+    to 56 while keeping projectile hit radius 48 and movement radius unchanged; add
+    within-footprint trait marks and timing cues using existing retained overlay batches.
+  - Accept: renderer snapshot stays at or below 50 batches; fifteen actor body batches are
+    allocated; trait cues add no batch, node, raster effect, or collision owner; T1/T2/T3
+    render at exact 100/125/150 ratios.
+
+Batch gate:
+
+- `./tools/design/build_visual_replacement_workbench.ps1 -Check`
+- `./tools/validation/validate_visual_replacement_workbench.ps1`
+- `./tools/validation/validate_cardborne_visual_authority.ps1`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_semantic_asset_provider.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_combat_renderer.gd`
+
+### Phase 4: Retire legacy identities and update canonical surfaces
+
+Goal: remove the duplicate/unreachable system after all live consumers use the family
+contract.
+
+Preconditions:
+
+- Phase 3 acceptance checks pass and the workbench ledger proves exact retirement targets.
+
+Source owners: `scripts/progression/vehicle_guidebook_catalog.gd`,
+`scripts/progression/vehicle_guidebook_stat_adapter.gd`,
+`localization/vehicle_stage.csv`, boss add/summon owners, affected validators,
+`docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`
+
+- [ ] **4.1** Remove all legacy ordinary identity consumers and files.
+  - Change: migrate boss adds to family-tier packs; reclassify fixed beam under the boss
+    owner; replace Guidebook entries and localization with five families, three tiers, and
+    ten traits; remove old archetype/elite entries, branches, fixtures, manifest records,
+    PNGs, and tracked import files after `rg` proves no live consumer.
+  - Accept: `rg` finds no legacy ordinary archetype ID outside archived reports, historical
+    plans/evidence, and intentionally retained migration prose; runtime catalogs and
+    production assets contain only the new ordinary identities.
+- [ ] **4.2** Canonical specs describe the shipped family and visual contracts.
+  - Change: replace legacy rolling-role/elite/teaching text in the product spec; record pack
+    composition, traits, boss-owned fixed beam, tier scale, 56-unit T1 presentation
+    baseline, code-native trait cues, and the unchanged gameplay radii/batch ceiling in the
+    product and visual specs.
+  - Accept: code, product spec, visual spec, Guidebook, and manifest use the same terms and
+    values; reports remain derived views and are not silently regenerated in this task.
+
+Batch gate:
+
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_specialist_enemy_integration.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_enemy_expansion.gd`
+
+### Phase 5: Integration, performance boundary, and handoff
+
+Goal: prove the coherent migration at the strongest proportionate evidence level and
+record exact limitations.
+
+Preconditions:
+
+- Phases 1-4 pass and the implementation diff is substantially complete.
+
+Source owners: project validation scripts, Web export preset, this execution contract
+
+- [ ] **5.1** Run the complete focused ordinary-enemy integration set once.
+  - Change: run import/parse, family/pack/trait/stage/Guidebook/semantic/renderer validators,
+    then the twelve-cycle integration validator; fix only task-owned regressions.
+  - Accept: every named focused check exits zero with no Godot parse/runtime error.
+- [ ] **5.2** Validate the preserved performance contract without overstating it.
+  - Change: run the existing performance workload-fingerprint validator and scenario
+    validity checks; compare the renderer batch count with the pre-change focused baseline.
+    Run native/Web release scenarios only if the environment is quiet and the active
+    performance plan permits an eligible clean checkpoint.
+  - Accept: workload/capacity/cadence/collision thresholds are unchanged, combat batches
+    are `<=50`, and results use precise labels (`focused validator passed`, `scenario
+    valid`, or exact native/Web release label). A contaminated or unavailable release run
+    is recorded as unqualified, not passed or failed.
+- [ ] **5.3** Audit and commit the completed migration.
+  - Change: run the codebase quality audit, apply only small task-scoped corrections, mark
+    this plan `done` with concise evidence, and commit only task-owned files with a body.
+  - Accept: no unrelated untracked file is staged; plan status and checkboxes match actual
+    evidence; `git status --short` shows only the three pre-existing unrelated untracked
+    files or is cleaner.
+
+## Validation and Rework Controls
+
+| Cadence | Exact check | Run when | Do not rerun until |
 | --- | --- | --- | --- |
-| Pursuer | Splitter | One deep forward cleft that divides the main nose into two broad lobes | split timing and child placement |
-| Pursuer | Frenzy | Two long swept side blades that make the silhouette visibly more aggressive | speed/attack pulse within actor alpha |
-| Charger | Double | Two parallel forward charge prongs with one clear gap | second-charge warning and lane |
-| Charger | Self-Destruct | One large exposed central core held by two broad shutters | fuse pulse, blast area, and retirement |
-| Gunner | Artillery | One short, wide mortar-like barrel and enlarged breech instead of the direct-fire barrel | impact marker and lob trajectory |
-| Gunner | Slow | One broad forked muzzle plus one cyan chamber plane | projectile trail/hit slow state |
-| Defender | Bulwark | Two folded outer shield shoulders around one broad front plate | timed body growth and shared closed shield boundary |
-| Defender | Reflector | One angular mirror-like inset across the normal front shield | warned reflective-window material state |
-| Coordinator | Blink | One large offset cut through the round body and one transverse cyan slit | destination warning and relocation |
-| Coordinator | 몰아주기 | One thick Y-shaped receiver plate inside the body, without small nodes | bounded pack-feed pulse within actor alpha |
+| Inner loop | `./tools/godot.ps1 --headless --path . --script res://tools/validation/<phase-owner>.gd` | A phase-owned script/catalog changes | Relevant implementation input changes |
+| Asset gate | Workbench build/check, visual-authority validator, semantic provider validator | Exact asset/workbench/manifest batch is complete | An asset, hash, target, manifest, or authority input changes |
+| Phase gate | Commands listed under each phase | All phase tasks pass | A phase-owned input changes |
+| Final focused gate | Import/parse plus the union of named family/pack/stage/Guidebook/renderer validators | All implementation phases pass | A final-gate input changes |
+| Final performance boundary | Workload fingerprint and scenario-validity validators; eligible native/Web only in a quiet environment | Focused final gate passes | Runtime workload, checkpoint, instrumentation, or environment eligibility changes |
 
-The transient shield boundary, artillery impact area, Self-Destruct blast area, Blink
-destination, projectile trails, and other timing geometry are not raster deliverables.
-They remain retained code-native presentation tied to gameplay truth during later
-implementation.
+Validation rules:
 
-### Required review deliverables
+- Run the narrowest check that proves the current task.
+- Do not run tests solely because a report changed. This task changes runtime and production
+  visuals, so only the named owner checks are authorized.
+- Preserve a passing result until a relevant input changes. Rerun a failure only after a
+  relevant correction or a new hypothesis.
+- Keep visual promotion, gameplay migration, and performance claims in distinct commits or
+  explicitly distinct evidence labels.
 
-- Five transparent family master sheets.
-- Forty-five extracted transparent actor PNGs using
-  `<family>/<state>/<family>-<state>-t<tier>.png` naming.
-- Five non-creative family comparison sheets that render every state row at T1 `100%`, T2
-  `125%`, and T3 `150%`.
-- One prompt/provenance record containing the exact prompt for each family, reference image
-  paths, authority hashes, generation method, output hashes, and the AS-IS/TO-BE judgment.
-- One grayscale contact sheet proving that family, tier, and trait cues are not color-only.
+## Predetermined Contingencies and Change Control
 
-No candidate is called production-ready merely because it was generated or cropped. The
-user must approve the five family comparisons before a new workbench switch unit can move
-the selected files toward `to-be/assets/`.
-
-## Report image derivation contract
-
-The report is a view of this ExecPlan, not a second design authority. The plan must be
-updated and committed first. The report then records that exact plan commit as its basis.
-
-Use only non-creative crops from
-`docs/reports/assets/2026-08-20-game-structure-ordinary-enemies/enemy-tier-family-lineup.png`
-(SHA-256 `47dc723c6349336725dece97e672d5a1c3949e17be355bce9e0b17895151fe18`).
-Store the derived report-only files under
-`docs/reports/assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/`.
-
-| Family | Source trio in the provided lineup | Required report files |
+| Trigger | Required response | Boundary or escalation point |
 | --- | --- | --- |
-| Pursuer | upper-left trio | `pursuer-t1.png`, `pursuer-t2.png`, `pursuer-t3.png` |
-| Charger | upper-center trio | `charger-t1.png`, `charger-t2.png`, `charger-t3.png` |
-| Gunner | middle-left trio | `gunner-t1.png`, `gunner-t2.png`, `gunner-t3.png` |
-| Defender | lower-left trio | `defender-t1.png`, `defender-t2.png`, `defender-t3.png` |
-| Coordinator | upper-right simple circular trio, formerly the removed Bomber visual cell | `coordinator-t1.png`, `coordinator-t2.png`, `coordinator-t3.png` |
+| Fifteen actor batches plus current retained batches exceed 50 | Stop promotion; keep approved files staged and use fewer runtime semantic textures through the locked three-assets-per-family model | Do not raise the threshold or add an atlas without user approval and render evidence |
+| A complete Gunner pack cannot be placed | Delay the complete pack and retry at the existing bounded interval | Never spawn an orphan Gunner or expand geometry/capacity |
+| Blink destination is invalid | Cancel that Blink cycle, keep the pack in place, and enter cooldown | Never clip, teleport into the player, or bypass collision |
+| Pack runtime reaches 32 registered packs | Leave the new pack in base formation state and record the bounded rejection | Do not grow the collection during combat; replan only if normal validated workload reaches the bound |
+| A legacy ID still has a live consumer | Keep its file/definition until that exact consumer migrates, then update this task's evidence | Do not delete first or retain a second player-facing authority |
+| A verified material fact contradicts this contract | Stop the affected branch, update this same contract, and obtain required approval | Do not invent a new product, architecture, asset, or performance contract |
 
-The orange triangular lower-right trio is rejected for Coordinator because its T2/T3
-silhouettes add too many competing modules compared with the other families. Reusing the
-upper-right circular trio does not reuse Bomber behavior, color meaning, fuse effects, or
-trait thumbnails. The later production-art task must still approve or replace all concept
-assets under the visual-authority workflow.
+Implementation-local discoveries may be handled inside the locked contract when they do
+not change scope, visible behavior, ownership, architecture, safety, or acceptance.
 
-Each family card contains exactly the three listed `<img>` elements in T1 → T2 → T3 order.
-Trait effects remain text-only in this report. The source lineup and nine-cell matrix may be
-named in provenance text but are not displayed as extra report images.
+## Progress and Next Steps
 
-## Tier and percentage-size contract
+- Canonical progress: the task checkboxes in this contract.
+- Current phase: Phase 1.
+- Next task: 1.1 — fifteen family-tier definitions and the family-trait catalog.
+- Last completed gate: Discovery Closure Gate.
+- Update rule: after a checkpoint passes, record concise evidence, check the task, and
+  advance this pointer in the same edit.
 
-Tier changes durability, threat budget, visual scale, and at most one large family module.
-It does not introduce a second behavior stack.
+## Completion and Stop Conditions
 
-| Tier | Integer `size_percent` | Meaning |
-| --- | ---: | --- |
-| T1 | `100` | Family baseline visual size |
-| T2 | `125` | 25% larger than the same family's T1 baseline |
-| T3 | `150` | 50% larger than the same family's T1 baseline |
+Complete when:
 
-Runtime data stores the integer percentage. Presentation derives a scale factor only at the
-render boundary: `visual_scale = size_percent / 100.0`. Do not place absolute pixel radii in
-family/tier product data or the report.
+- Every task acceptance check and named batch/final gate passes or is truthfully recorded
+  as an explicitly allowed unqualified release layer.
+- No placeholder or unresolved material decision remains.
+- Canonical product/design documentation, Guidebook, semantic assets, and runtime use the
+  same five-family vocabulary.
+- Frontmatter status is `done`, all checkboxes reflect evidence, and the task-owned changes
+  are committed.
 
-Before implementation:
+Replan when:
 
-- separate visual scale, `projectile_hit_radius`, and body collision radius;
-- keep collision and projectile hitboxes unchanged until separately approved;
-- treat Bulwark's temporary growth as a separate timed percentage modifier, not a fourth
-  tier;
-- verify mixed 4–8 member packs for overlap and threat readability; and
-- update `docs/design/VISUAL_SYSTEM.md` only after a rendered production-art comparison is
-  approved.
+- A material discovery invalidates the locked family, pack, visual, ownership, or
+  performance contract.
 
-Defender may receive a family-specific baseline offset only after the shared 100/125/150
-ladder is validated. Do not create separate tier curves for every family.
+Do not replan or stop for:
 
-## Pack composition contract
-
-### Atomic admission
-
-- Every ordinary actor belongs to exactly one persistent pack from cue to retirement.
-- The default pack size remains 4–8 because the current scheduler and tactic runtime are
-  already authored around that range.
-- Admit, delay, substitute, or cancel the pack atomically. Do not materialize an orphan
-  ranged actor while waiting for its Defender.
-- Preserve authored population and threat budget. A mandatory Defender replaces a filler
-  slot; it is not added above the current count or cap.
-
-### Long-range Defender invariant
-
-- Every pack containing a Gunner contains at least one Defender. This includes direct-fire,
-  Artillery-trait, and Slow-trait Gunners without exception.
-- A pack with more than four long-range members requires a second Defender unless playtest
-  evidence approves another ratio.
-- The allocator consumes an authored pack blueprint. It must not rebuild all packet roles
-  from one global bag after composition validation.
-- The Defender occupies a front or flank formation slot; ranged units occupy protected
-  rear slots. The protection must remain directional and breakable.
-- Boss-summoned ordinary long-range installations must satisfy the same invariant or be
-  reclassified as a boss pattern with its own explicit defense/counterplay contract.
-
-### Pack trait state
-
-- Store objective, family, tier, trait, leader, membership, formation, and shared cooldown
-  once per pack.
-- Keep health, collision, attack commitment, damage, status effects, and rendering per
-  actor.
-- Blink requires a readable warning, a collision-safe destination, and formation-preserving
-  relocation. It must not place a member inside the player, cover, or another actor.
-- 몰아주기 receives one bounded stack when an eligible, non-summoned member of the same pack
-  dies. It heals and strengthens survivors within a cap. Child summons and repeated
-  retirement receipts cannot create stacks. Killing the Coordinator disables future stacks.
-
-## Deletion and migration matrix
-
-No production enemy file is deleted during research. Use this order during implementation.
-
-| Current item | Reachability | Target | Deletion condition |
-| --- | --- | --- | --- |
-| `ordinary_gap_01` | Reachable | Delete with Controller family | Stage roster and Guidebook use a five-family replacement |
-| `ordinary_compression_01` | Reachable alias | Delete with Controller family | Corridor code and all presentation/test consumers are removed or explicitly reused by an approved Gunner attack |
-| `ordinary_sweep_01` | Reachable | Delete Controller-style actor ID; reuse only generic ground-impact code for Gunner Artillery | Stage roster and Guidebook migrate to Gunner family data |
-| `ordinary_support_01` | Campaign-reachable in boss add rosters | Delete with Sustainer family | Boss add rosters and support branches use an approved five-family replacement |
-| `ordinary_support_02` | Unreachable | Migrate only the useful shield primitive to Defender, then delete | Defender Bulwark tests replace prototype tests |
-| `ordinary_fixed_support_01` | Unreachable | Delete with Sustainer family | Repair/support branches, fixtures, Guidebook, and assets have no remaining consumers |
-| `ordinary_support_03` | Unreachable | Delete the carrier actor; keep coordination in pack state | Coordinator pack tests no longer depend on carrier spawning |
-| `ordinary_melee_02` | Unreachable | Move bounded death-stack primitive into 몰아주기 pack state, then delete | Pack trait tests replace actor tests |
-| `ordinary_area_01` | Reachable | Move the readable fuse/explosion into Charger Self-Destruct, then delete the Bomber-style actor ID | Charger trait and stage migration pass |
-| `ordinary_fixed_area_01` archetype | Unreachable directly | Remove after `ordinary_area_01` no longer depends on its role name | Area-role consumers are migrated or deleted |
-| `ordinary_growth_01` | Reachable | Move marked impact behavior into Gunner Artillery, then delete the separate Artillery actor ID | Gunner Artillery tests and stage migration pass |
-| `ordinary_reflect_01` | Reachable alias | Convert to periodic Defender Reflector state, then delete the alias ID | Stage roster and reflection tests use family/trait data |
-| `ordinary_resonance_01` | Reachable alias | Delete under the two-trait Gunner cap | Stage roster has a Gunner Artillery or Slow replacement |
-| `ordinary_overload_01` | Reachable alias | Delete; Self-Destruct replaces Overload | Stage 12 roster and vulnerability logic migrate |
-| `ordinary_fixed_ranged_01` | Unreachable | Delete from ordinary-enemy code unless a later installation expansion explicitly adopts it | Guidebook, combat, visual, fixture, and asset consumers removed |
-| `ordinary_fixed_ranged_02` | Unreachable | Delete from ordinary-enemy code unless a later installation expansion explicitly adopts it | Interceptor branches and fixtures retired or relocated |
-| global `armored`, `overclocked`, `heavy` | Reachable elite system | Replace with family-owned two-trait pools | Guidebook, thresholds, visuals, and deterministic selection migrate |
-
-When an ID is retired, remove or update all of its archetype data, stage/boss references,
-movement/attack branches, Guidebook entries, localization keys, visual descriptors,
-semantic manifest records, renderer branches, validation fixtures, and tests in the same
-coherent migration. Production PNG deletion is a separate visual-authority step and must
-follow an explicit asset-use audit.
-
-## Responsibility boundaries
-
-- `VehicleCombatStages`: authored family/tier/pack blueprints and rollout.
-- `VehicleSpawnAllocator`: geometry-safe placement of already-valid pack blueprints; no
-  family bag reshuffle.
-- `VehicleCollectiveTacticCatalog`: formation/tactic recipes only.
-- `VehicleCollectiveTacticRuntime`: persistent pack membership, shared phase, objective,
-  trait timer/stacks, and formation slots.
-- New or existing enemy catalogs: family, tier, trait, and base behavior data.
-- `VehicleEnemyMovementPolicy`: member movement toward a pack anchor/slot plus local
-  recovery; not universal player pursuit.
-- Attack contracts and specialist runtimes: attack startup, commitment, projectile, area,
-  defense, repair, and collision truth.
-- `VehicleRun`: orchestration only. Do not add another family/pack switch table to the
-  existing large script.
-- Presentation catalogs/renderers: family/tier/trait appearance and telegraph state only;
-  visuals never own damage, collision, AI, or trait eligibility.
-
-## Performance claim boundary
-
-### Provenance of performance-related decisions
-
-`origin/agent/simplify-ordinary-enemy-ai` is not a game-wide performance branch. Its own
-ExecPlan limits scope to ordinary-enemy movement policy, movement targeting, and two focused
-validators, and explicitly excludes performance claims that require profiling or a
-full-load benchmark. Therefore this plan does not attribute any general performance
-improvement to that branch.
-
-The branch contributes only behavior-simplification candidates:
-
-- target the current pack objective rather than predict movement destination;
-- request existing route guidance only when the direct approach is blocked;
-- preserve local separation, velocity smoothing, speed caps, and attack-owned prediction.
-
-The performance safeguards in this plan come from
-`.agents/cardborne-performance-engineering-policy.md` and
-`.agents/research/performance/cardborne-runtime-architecture-audit.md`:
-
-- reuse the existing bounded pack/squad runtime instead of adding a Node per pack;
-- move only invariant objective, formation, and trait-timer work from members to pack state;
-- keep actor count, projectile count, collision, cadence, attack activity, visual quality,
-  and thresholds unchanged during a behavior-preserving comparison;
-- keep visual scale separate from projectile-hit and body-collision ownership; and
-- require a clean comparable baseline and named subsystem timings before claiming any
-  performance improvement.
-
-Game-wide performance architecture, renderer batching, projectile collision, HUD staging,
-and `VehicleRun` extraction remain outside this ordinary-enemy restructure. They stay under
-their separate performance policy, evidence, and active performance plans.
-
-Pack IDs already exist. Therefore pack spawning alone is not an optimization. Actor count,
-collision, projectile checks, health, XP, and rendering remain per actor. The only plausible
-saving is moving shared objective selection, formation decisions, and trait timers out of
-per-actor loops.
-
-Before claiming improvement:
-
-- capture a comparable clean baseline at the exact pre-change commit;
-- preserve actor, projectile, effect, cadence, collision, and threat workloads;
-- add or reuse named timing for pack coordination versus ordinary member updates;
-- run focused functional validators during implementation;
-- run the active plan's authoritative native and built-Web scenarios only at the declared
-  clean checkpoint; and
-- report exact labels such as `focused validator passed` or `native release performance
-  passed`, never a generic performance pass.
-
-## External evidence and applicability
-
-- Godot 4.7 performance guidance supports profiling the named bottleneck, compact/reused
-  data, and moving invariant work out of loops. It does not prove that pack state will
-  improve this project's frame time.
-- GDC's *Squad Coordination in Days Gone* supports a virtual squad representation that
-  analyzes shared friendly/enemy space and positions members as a group. Cardborne can use
-  the same ownership idea without copying an open-world combat model.
-- GDC's *Three States and a Plan: The AI of F.E.A.R.* supports readable squad cooperation
-  emerging from coordinated roles instead of many unrelated individual behaviors.
-- Riot's *Clarity in League* supports unique silhouettes, visual hierarchy, and matching
-  visible effects to gameplay impact. This conflicts with shipping true invisibility,
-  frequent shrinking, or hidden defense spikes without strong warning.
-
-## Rejected alternatives
-
-- Merge the remote branch unchanged: rejected because universal direct pursuit removes
-  necessary pack and long-range positioning.
-- Keep all 26 IDs and add family metadata on top: rejected because duplicate aliases and
-  unreachable prototypes would remain competing authorities.
-- Delete the seven unreachable definitions immediately: rejected because three contain
-  useful migration seeds and the fixed-area role currently owns reachable mobile-mine
-  behavior.
-- Give every family five traits at launch: rejected by the explicit two-trait cap and
-  readability budget.
-- Add a Node per pack: rejected until profiling proves the current bounded RefCounted
-  runtime inadequate.
-- Claim a performance win from grouped spawning: rejected without a comparable baseline and
-  named owner evidence.
-
-## Open product decisions
-
-- [x] Approve the revised five-family, two-trait table.
-- [x] Confirm that Coordinator uses Blink + 몰아주기 for the first implementation.
-- [x] Confirm that Invisible and Shrink are future-only, and Like Rock is excluded from
-  Coordinator.
-- [x] Replace absolute tier radii with the integer 100 / 125 / 150 percentage ladder.
-- [x] Delete the four unreachable fixed installations from ordinary-enemy code after their
-  consumers are audited. A later tower-defense expansion must define new installation data
-  instead of preserving inactive ordinary-enemy IDs.
-- [ ] Decide whether `ordinary_fixed_beam_01` remains an ordinary enemy with a mandatory
-  Defender or becomes a boss-owned pattern object.
-- [x] Approve replacing a filler slot with Defender so pack admission does not increase
-  authored counts or threat budget.
-
-## Implementation workstreams after approval
-
-### V. Complete the visual gate before project changes
-
-- [x] Generate five authority-grounded 3×3 family master sheets.
-- [x] Inspect and reject any sheet with non-transparent background, perspective drift,
-  duplicated/missing cells, tiny decorative noise, or trait cues outside the body.
-- [x] Extract and normalize all 45 actor candidates without creative repainting.
-- [x] Build percentage-scale and grayscale comparison sheets.
-- [x] Record prompt, reference, authority, and output provenance.
-- [ ] Obtain explicit user approval for the five family comparisons.
-
-Do not begin workstream A, edit the current `ordinary_enemy_family` switch unit, or change
-runtime/production files while any item in workstream V remains incomplete.
-
-Checkpoint: the review set is staged under
-`docs/design/visual-replacement-workbench/previews/ordinary-enemy-five-family-v1/` with five
-masters, 45 normalized transparent actors, five family comparisons, color/grayscale
-overviews, and prompt/hash provenance. User approval remains the only incomplete item in
-this gate. No production or runtime file changed.
-
-### A. Lock data and compatibility contracts
-
-- [ ] Create the family/tier/trait schema and migration map.
-- [ ] Add validators for family-exclusive traits, two-trait caps, one active pack trait,
-  and long-range Defender membership.
-- [ ] Store integer `size_percent` values 100 / 125 / 150 and derive presentation scale at
-  the render boundary.
-- [ ] Separate visual scale, projectile-hit radius, and body-collision radius ownership.
-
-### B. Make every squad a semantic pack
-
-- [ ] Replace role-bag redistribution with authored pack blueprints.
-- [ ] Assign collective state to every pack while preserving bounded permissions.
-- [ ] Move objective and formation decisions to pack state; keep fairness-critical actor
-  state per member.
-- [ ] Add atomic delay/substitution/cancel behavior when a full pack cannot materialize.
-
-### C. Implement the first family slice
-
-- [ ] Implement one Gunner pack with one Defender and verify the invariant for direct-fire,
-  Artillery, and Slow variants.
-- [ ] Implement Artillery as a Gunner trait and migrate the approved marked-impact
-  primitives from `ordinary_growth_01` or `ordinary_sweep_01` without retaining a separate
-  Artillery family.
-- [ ] Implement Slow as a non-stacking, bounded on-hit state with a distinct projectile cue.
-- [ ] Implement periodic Bulwark growth/shared protection and periodic Reflector activation
-  over a normal shield baseline.
-- [ ] Adapt current-position anchor movement, blocked-route guidance, separation,
-  smoothing, and speed caps from the remote branch.
-- [ ] Verify attack prediction, standoff room, telegraphs, collision, and pack break rules.
-
-### D. Implement Coordinator traits
-
-- [ ] Add Blink with warning, safe destination validation, and formation preservation.
-- [ ] Migrate the bounded `ordinary_melee_02` death receipt into pack-owned 몰아주기.
-- [ ] Add Coordinator-death shutdown, summon exclusions, stack cap, and duplicate-receipt
-  tests.
-
-### E. Migrate and retire old IDs
-
-- [ ] Remove Controller and Sustainer family IDs and migrate only approved generic attack or
-  shield primitives.
-- [ ] Move the Bomber fuse/explosion into Charger Self-Destruct, delete the Bomber-style
-  actor ID, and remove Overload.
-- [ ] Merge Artillery into Gunner and retire separate Artillery actor IDs after stage and
-  Guidebook migration.
-- [ ] Convert Reflect into the periodic Defender Reflector trait and retire its alias ID.
-- [ ] Retire Resonance under the two-trait Gunner cap.
-- [ ] Migrate useful unreachable prototypes, then remove their old IDs and all consumers.
-- [ ] Replace the global elite catalog and Guidebook entries with family-owned traits.
-
-### F. Visual and runtime validation
-
-- [ ] Promote only the user-approved workstream-V files through a new exact workbench switch
-  unit after stable semantic IDs and production target paths exist.
-- [ ] Validate family, tier, facing, trait, and telegraph recognition at combat scale.
-- [ ] Run targeted family, pack, spawn-allocation, collective-tactic, Guidebook, semantic
-  asset, and twelve-cycle validators.
-- [ ] Run native and built-Web smoke/qualification only at the clean plan checkpoint.
-
-## Exit criteria for converting this to an execution contract
-
-The plan may move to implementation mode only when all open product decisions are resolved,
-the first family slice is named, the fixed-installation disposition is explicit, the
-compatibility/deletion map is accepted, and the validation checkpoint names exact focused,
-native, and Web gates.
+- Implementation-local mechanics already contained by this contract.
+- A passing check whose relevant inputs have not changed.
+- An unavailable quiet release-performance window; record that layer as unqualified and
+  complete the behavior/asset migration if every required focused gate passes.
