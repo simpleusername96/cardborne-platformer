@@ -31,8 +31,8 @@ Prepare a merge-safe ordinary-enemy restructure that:
 - guarantees at least one Defender in every pack containing a long-range ordinary enemy;
 - reuses the current bounded squad coordinator instead of adding a second coordination owner;
 - migrates useful behavior before deleting campaign-unreachable or duplicate archetype IDs;
-- makes mobile tier size visibly larger than the current 48 px radius while keeping visual,
-  projectile-hit, and body-collision contracts separate; and
+- makes mobile tier size grow through the integer 100 / 125 / 150 percentage ladder while
+  keeping visual, projectile-hit, and body-collision contracts separate; and
 - adapts the useful parts of `origin/agent/simplify-ordinary-enemy-ai` without merging its
   universal direct-pursuit decision as-is.
 
@@ -52,6 +52,16 @@ Prepare a merge-safe ordinary-enemy restructure that:
   only and are not approved production assets.
 - The revision report uses the newer user-provided concept sheets only. It does not use the
   current production ordinary-enemy PNGs as family examples.
+- This ExecPlan is the source for every derived ordinary-enemy report. Update and commit the
+  ExecPlan before changing a report. Each report names the exact plan commit it follows.
+- Each family section shows exactly three PNG files: one T1 image, one T2 image, and one T3
+  image. Do not show trait thumbnails, a full nine-cell matrix, or extra actor images inside
+  a family section.
+- Tier size uses integer percentages relative to the family T1 visual: T1 `100%`, T2 `125%`,
+  and T3 `150%`. Do not store or present the tier contract as absolute pixel radii.
+- Replace the previous orange triangular Coordinator concepts with the simpler circular
+  three-tier concept formerly placed in the removed Bomber cell. This is a visual reuse
+  decision only; it does not carry Bomber or Self-Destruct behavior into Coordinator.
 - Controller and Sustainer are removed from the ordinary-enemy family set.
 - Bomber is removed as a family. Self-Destruct replaces Overload as one Charger trait.
 - Gunner and Artillery are one Gunner family. Its two traits are Artillery and Slow.
@@ -223,26 +233,62 @@ Artillery is also removed; Artillery is a Gunner trait.
 Invisible and Shrink remain future experiments because they weaken silhouette and hitbox
 readability. Like Rock remains excluded because it duplicates Defender's defense space.
 
-## Tier and size proposal
+## Report image derivation contract
 
-Tier changes durability, threat budget, footprint, and at most one large family module. It
-does not introduce a second behavior stack.
+The report is a view of this ExecPlan, not a second design authority. The plan must be
+updated and committed first. The report then records that exact plan commit as its basis.
 
-- T1: 52 px visible radius
-- T2: 60 px visible radius
-- T3: 68 px visible radius
+Use only non-creative crops from
+`docs/reports/assets/2026-08-20-game-structure-ordinary-enemies/enemy-tier-family-lineup.png`
+(SHA-256 `47dc723c6349336725dece97e672d5a1c3949e17be355bce9e0b17895151fe18`).
+Store the derived report-only files under
+`docs/reports/assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/`.
 
-These are prototype targets, not current visual authority. Before implementation:
+| Family | Source trio in the provided lineup | Required report files |
+| --- | --- | --- |
+| Pursuer | upper-left trio | `pursuer-t1.png`, `pursuer-t2.png`, `pursuer-t3.png` |
+| Charger | upper-center trio | `charger-t1.png`, `charger-t2.png`, `charger-t3.png` |
+| Gunner | middle-left trio | `gunner-t1.png`, `gunner-t2.png`, `gunner-t3.png` |
+| Defender | lower-left trio | `defender-t1.png`, `defender-t2.png`, `defender-t3.png` |
+| Coordinator | upper-right simple circular trio, formerly the removed Bomber visual cell | `coordinator-t1.png`, `coordinator-t2.png`, `coordinator-t3.png` |
 
-- separate `visual_radius`, `projectile_hit_radius`, and body collision radius;
-- verify that the 112×112 mobile sources remain acceptable at the proposed on-screen size;
+The orange triangular lower-right trio is rejected for Coordinator because its T2/T3
+silhouettes add too many competing modules compared with the other families. Reusing the
+upper-right circular trio does not reuse Bomber behavior, color meaning, fuse effects, or
+trait thumbnails. The later production-art task must still approve or replace all concept
+assets under the visual-authority workflow.
+
+Each family card contains exactly the three listed `<img>` elements in T1 → T2 → T3 order.
+Trait effects remain text-only in this report. The source lineup and nine-cell matrix may be
+named in provenance text but are not displayed as extra report images.
+
+## Tier and percentage-size contract
+
+Tier changes durability, threat budget, visual scale, and at most one large family module.
+It does not introduce a second behavior stack.
+
+| Tier | Integer `size_percent` | Meaning |
+| --- | ---: | --- |
+| T1 | `100` | Family baseline visual size |
+| T2 | `125` | 25% larger than the same family's T1 baseline |
+| T3 | `150` | 50% larger than the same family's T1 baseline |
+
+Runtime data stores the integer percentage. Presentation derives a scale factor only at the
+render boundary: `visual_scale = size_percent / 100.0`. Do not place absolute pixel radii in
+family/tier product data or the report.
+
+Before implementation:
+
+- separate visual scale, `projectile_hit_radius`, and body collision radius;
 - keep collision and projectile hitboxes unchanged until separately approved;
-- test mixed 4–8 member packs at 16:9 and narrow Web viewports for overlap and threat
-  readability; and
-- update `docs/design/VISUAL_SYSTEM.md` only after the rendered comparison is approved.
+- treat Bulwark's temporary growth as a separate timed percentage modifier, not a fourth
+  tier;
+- verify mixed 4–8 member packs for overlap and threat readability; and
+- update `docs/design/VISUAL_SYSTEM.md` only after a rendered production-art comparison is
+  approved.
 
-Defender may use a larger family offset after the common tier step is validated. Do not
-start with separate size curves for every family.
+Defender may receive a family-specific baseline offset only after the shared 100/125/150
+ladder is validated. Do not create separate tier curves for every family.
 
 ## Pack composition contract
 
@@ -331,6 +377,36 @@ follow an explicit asset-use audit.
 
 ## Performance claim boundary
 
+### Provenance of performance-related decisions
+
+`origin/agent/simplify-ordinary-enemy-ai` is not a game-wide performance branch. Its own
+ExecPlan limits scope to ordinary-enemy movement policy, movement targeting, and two focused
+validators, and explicitly excludes performance claims that require profiling or a
+full-load benchmark. Therefore this plan does not attribute any general performance
+improvement to that branch.
+
+The branch contributes only behavior-simplification candidates:
+
+- target the current pack objective rather than predict movement destination;
+- request existing route guidance only when the direct approach is blocked;
+- preserve local separation, velocity smoothing, speed caps, and attack-owned prediction.
+
+The performance safeguards in this plan come from
+`.agents/cardborne-performance-engineering-policy.md` and
+`.agents/research/performance/cardborne-runtime-architecture-audit.md`:
+
+- reuse the existing bounded pack/squad runtime instead of adding a Node per pack;
+- move only invariant objective, formation, and trait-timer work from members to pack state;
+- keep actor count, projectile count, collision, cadence, attack activity, visual quality,
+  and thresholds unchanged during a behavior-preserving comparison;
+- keep visual scale separate from projectile-hit and body-collision ownership; and
+- require a clean comparable baseline and named subsystem timings before claiming any
+  performance improvement.
+
+Game-wide performance architecture, renderer batching, projectile collision, HUD staging,
+and `VehicleRun` extraction remain outside this ordinary-enemy restructure. They stay under
+their separate performance policy, evidence, and active performance plans.
+
 Pack IDs already exist. Therefore pack spawning alone is not an optimization. Actor count,
 collision, projectile checks, health, XP, and rendering remain per actor. The only plausible
 saving is moving shared objective selection, formation decisions, and trait timers out of
@@ -383,7 +459,7 @@ Before claiming improvement:
 - [x] Confirm that Coordinator uses Blink + 몰아주기 for the first implementation.
 - [x] Confirm that Invisible and Shrink are future-only, and Like Rock is excluded from
   Coordinator.
-- [ ] Confirm the common 52 / 60 / 68 prototype size ladder before visual production.
+- [x] Replace absolute tier radii with the integer 100 / 125 / 150 percentage ladder.
 - [x] Delete the four unreachable fixed installations from ordinary-enemy code after their
   consumers are audited. A later tower-defense expansion must define new installation data
   instead of preserving inactive ordinary-enemy IDs.
@@ -399,7 +475,9 @@ Before claiming improvement:
 - [ ] Create the family/tier/trait schema and migration map.
 - [ ] Add validators for family-exclusive traits, two-trait caps, one active pack trait,
   and long-range Defender membership.
-- [ ] Separate visual, projectile-hit, and body-collision radius ownership.
+- [ ] Store integer `size_percent` values 100 / 125 / 150 and derive presentation scale at
+  the render boundary.
+- [ ] Separate visual scale, projectile-hit radius, and body-collision radius ownership.
 
 ### B. Make every squad a semantic pack
 
@@ -445,7 +523,8 @@ Before claiming improvement:
 
 ### F. Visual and runtime validation
 
-- [ ] Produce actual-size T1/T2/T3 comparisons under the visual-authority workflow.
+- [ ] Produce T1/T2/T3 comparisons using the 100 / 125 / 150 percentage ladder under the
+  visual-authority workflow.
 - [ ] Validate family, tier, facing, trait, and telegraph recognition at combat scale.
 - [ ] Run targeted family, pack, spawn-allocation, collective-tactic, Guidebook, semantic
   asset, and twelve-cycle validators.
