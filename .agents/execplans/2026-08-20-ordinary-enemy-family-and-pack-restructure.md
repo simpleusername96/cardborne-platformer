@@ -568,16 +568,22 @@ Before claiming improvement:
 
 ### V. Complete the visual gate before project changes
 
-- [ ] Generate five authority-grounded 3×3 family master sheets.
-- [ ] Inspect and reject any sheet with non-transparent background, perspective drift,
+- [x] Generate five authority-grounded 3×3 family master sheets.
+- [x] Inspect and reject any sheet with non-transparent background, perspective drift,
   duplicated/missing cells, tiny decorative noise, or trait cues outside the body.
-- [ ] Extract and normalize all 45 actor candidates without creative repainting.
-- [ ] Build percentage-scale and grayscale comparison sheets.
-- [ ] Record prompt, reference, authority, and output provenance.
+- [x] Extract and normalize all 45 actor candidates without creative repainting.
+- [x] Build percentage-scale and grayscale comparison sheets.
+- [x] Record prompt, reference, authority, and output provenance.
 - [ ] Obtain explicit user approval for the five family comparisons.
 
 Do not begin workstream A, edit the current `ordinary_enemy_family` switch unit, or change
 runtime/production files while any item in workstream V remains incomplete.
+
+Checkpoint: the review set is staged under
+`docs/design/visual-replacement-workbench/previews/ordinary-enemy-five-family-v1/` with five
+masters, 45 normalized transparent actors, five family comparisons, color/grayscale
+overviews, and prompt/hash provenance. User approval remains the only incomplete item in
+this gate. No production or runtime file changed.
 
 ### A. Lock data and compatibility contracts
 
