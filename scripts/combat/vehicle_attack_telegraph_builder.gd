@@ -63,7 +63,7 @@ static func refresh_ordinary(
 		enemy.attack_telegraphs[-1]["active_seconds"] = SpecialistRuntime.BEAM_ACTIVE
 	_stamp_threat_tier(
 		enemy,
-		AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+		AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 	)
 	update_ordinary_readiness(enemy)
 

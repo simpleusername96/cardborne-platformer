@@ -15,7 +15,7 @@ var stage_attributes: Dictionary = {}
 var stage_status_applications: Dictionary = {}
 var stage_incoming: Dictionary = {}
 var stage_defeats: Dictionary = {}
-var stage_elites: Dictionary = {}
+var stage_traits: Dictionary = {}
 var stage_tactics: Dictionary = {}
 var boss_actor: Dictionary = {}
 var run_outgoing: Dictionary = {}
@@ -45,7 +45,7 @@ func reset_stage() -> void:
 	stage_status_applications.clear()
 	stage_incoming.clear()
 	stage_defeats.clear()
-	stage_elites.clear()
+	stage_traits.clear()
 	stage_tactics.clear()
 	boss_actor.clear()
 	last_incoming_source = &""
@@ -85,16 +85,16 @@ func record_incoming(source_id: StringName, applied_damage: float) -> void:
 	last_incoming_damage = applied_damage
 
 
-func record_defeat(archetype_id: StringName, elite_trait: StringName = &"") -> void:
+func record_defeat(archetype_id: StringName, family_trait: StringName = &"") -> void:
 	if archetype_id == &"":
 		archetype_id = &"other"
 	_add_bounded(stage_defeats, archetype_id, 1, MAX_ARCHETYPES)
 	_add_bounded(run_defeats, archetype_id, 1, MAX_ARCHETYPES)
-	if elite_trait != &"":
-		var elite_key := StringName(
-			"%s:%s" % [String(archetype_id), String(elite_trait)]
+	if family_trait != &"":
+		var trait_key := StringName(
+			"%s:%s" % [String(archetype_id), String(family_trait)]
 		)
-		_add_bounded(stage_elites, elite_key, 1, MAX_ARCHETYPES)
+		_add_bounded(stage_traits, trait_key, 1, MAX_ARCHETYPES)
 
 
 func record_tactic_event(tactic_id: StringName, phase: StringName) -> void:
@@ -151,7 +151,7 @@ func _stage_snapshot() -> Dictionary:
 		"status_applications":stage_status_applications.duplicate(),
 		"incoming":stage_incoming.duplicate(),
 		"defeats":stage_defeats.duplicate(),
-		"elites":stage_elites.duplicate(),
+		"traits":stage_traits.duplicate(),
 		"tactics":stage_tactics.duplicate(),
 		"boss":boss_actor.duplicate(),
 		"last_incoming_source":last_incoming_source,

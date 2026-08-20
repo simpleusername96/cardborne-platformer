@@ -9,13 +9,13 @@ func _init() -> void:
 	var records: Array = [
 		{
 			"stage_number":1, "has_boss":true, "has_next_stage":true,
-			"defeats":[{"id":&"ordinary_melee_01", "name_key":"ORDINARY_MELEE_01", "count":3, "elite_count":1}],
+			"defeats":[{"id":&"ordinary_pursuer_t1", "name_key":"ORDINARY_PURSUER_T1", "count":3, "trait_count":1}],
 			"outgoing":[{"id":&"primary", "title_key":"REPORT_SOURCE_PRIMARY", "damage":30.0}],
 			"attributes":[{"id":&"kinetic", "title_key":"REPORT_ATTRIBUTE_KINETIC", "damage":30.0, "applications":0}],
 		},
 		{
 			"stage_number":2, "has_boss":true, "has_next_stage":true,
-			"defeats":[{"id":&"ordinary_melee_01", "name_key":"ORDINARY_MELEE_01", "count":2, "elite_count":0}],
+			"defeats":[{"id":&"ordinary_pursuer_t1", "name_key":"ORDINARY_PURSUER_T1", "count":2, "trait_count":0}],
 			"outgoing":[{"id":&"seeker", "title_key":"REPORT_SOURCE_SEEKER", "damage":10.0}],
 			"attributes":[{"id":&"cryo", "title_key":"REPORT_ATTRIBUTE_CRYO", "damage":10.0, "applications":2}],
 		},
@@ -36,7 +36,7 @@ func _init() -> void:
 	_expect(bool(result.get("complete_run", false)) and int(result.get("final_stage_number", 0)) == 12, "final result requires an ordered terminal twelve-cycle record")
 	_expect(int(result.get("boss_stage_count", 0)) == 12, "final result records all twelve bosses")
 	_expect(int(result["total_defeats"]) == 5, "final result sums defeats")
-	_expect(int(result["defeats"][0]["elite_count"]) == 1, "final result sums elite defeats")
+	_expect(int(result["defeats"][0]["trait_count"]) == 1, "final result sums trait defeats")
 	_expect(is_equal_approx(float(result["total_outgoing"]), 40.0), "final result preserves outgoing total")
 	_expect(is_equal_approx(float(result["total_attributes"]), 40.0), "final result preserves attribute total")
 	_expect(int(result["outgoing"][0]["percentage_tenths"]) + int(result["outgoing"][1]["percentage_tenths"]) == 1000, "final result percentages are deterministic")

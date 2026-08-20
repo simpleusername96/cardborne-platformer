@@ -48,13 +48,13 @@ func _initialize() -> void:
 	)
 
 	var reuse_store := ProjectileStore.new()
-	var elite_projectile := _projectile(Vector2(10.0, 10.0))
-	elite_projectile["threat_tier"] = AttackContract.THREAT_ELITE
-	elite_projectile["combat_action_family"] = &"primary"
-	elite_projectile["combat_action_serial"] = 77
-	reuse_store.add_hostile(elite_projectile)
+	var trait_projectile := _projectile(Vector2(10.0, 10.0))
+	trait_projectile["threat_tier"] = AttackContract.THREAT_TRAIT
+	trait_projectile["combat_action_family"] = &"primary"
+	trait_projectile["combat_action_serial"] = 77
+	reuse_store.add_hostile(trait_projectile)
 	_expect(
-		reuse_store.hostile_live[0].threat_tier == AttackContract.THREAT_ELITE
+		reuse_store.hostile_live[0].threat_tier == AttackContract.THREAT_TRAIT
 			and reuse_store.hostile_live[0].combat_action_family == &"primary"
 			and reuse_store.hostile_live[0].combat_action_serial == 77,
 		"a projectile retains its configured threat tier and combat-action identity"

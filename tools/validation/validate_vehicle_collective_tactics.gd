@@ -13,6 +13,7 @@ const CombatStages = preload(
 const ActorCatalog = preload(
 	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
 )
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
 var _failures: Array[String] = []
 var _lookup: Dictionary = {}
@@ -90,34 +91,23 @@ func _validate_catalog_and_stage_rollout() -> void:
 
 
 func _validate_role_signatures() -> void:
-	var teaching_assets := {
-		&"ordinary_compression_01": &"actor/ordinary_gap_01",
-		&"ordinary_reflect_01": &"actor/ordinary_shield_01",
-		&"ordinary_resonance_01": &"actor/ordinary_range_01",
-		&"ordinary_overload_01": &"actor/ordinary_pull_01",
-	}
-	var legacy_assets := {}
-	var ordinary_count := 0
-	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
-		if archetype == &"boss_actor":
-			continue
-		ordinary_count += 1
+	var family_assets := {}
+	for archetype in EnemyArchetypes.ORDINARY_ARCHETYPES:
 		var descriptor := ActorCatalog.descriptor(archetype)
 		var asset := StringName(descriptor.get("asset", &""))
-		if teaching_assets.has(archetype):
-			_expect(
-				asset == StringName(teaching_assets[archetype]),
-				"%s reuses only its approved actor body beneath the mechanic module" % archetype
-			)
-			continue
 		_expect(
-			not legacy_assets.has(asset),
-			"%s has a unique grayscale outer contour" % archetype
+			not asset.is_empty() and not family_assets.has(asset),
+			"%s owns one unique family-tier semantic asset" % archetype
 		)
-		legacy_assets[asset] = archetype
+		family_assets[asset] = archetype
 	_expect(
-		ordinary_count == 26 and legacy_assets.size() == 22,
-		"22 approved bodies plus four module-distinguished teaching roles are registered"
+		family_assets.size() == 15,
+		"five families each register one T1, T2, and T3 body"
+	)
+	_expect(
+		StringName(ActorCatalog.descriptor(&"boss_pattern_fixed_beam_01").get("asset", &""))
+			== &"actor/boss_pattern_fixed_beam_01",
+		"boss-owned fixed beam stays outside the ordinary family catalog"
 	)
 
 

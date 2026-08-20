@@ -23,22 +23,13 @@ func _run() -> void:
 	var store := Store.new()
 	store.save_path = TEST_PATH
 	store.known.clear()
-	_expect(store.discover(&"enemy_ordinary_edge_01"), "first encounter unlocks one entry")
-	_expect(not store.discover(&"enemy_ordinary_edge_01"), "discovery is idempotent")
+	_expect(store.discover(&"enemy_ordinary_pursuer_t1"), "first encounter unlocks one entry")
+	_expect(not store.discover(&"enemy_ordinary_pursuer_t1"), "discovery is idempotent")
 	_expect(not store.discover(&""), "empty discovery IDs are discarded")
 	_expect(not store.discover(&"unknown_entry"), "unknown IDs are discarded")
-	for stationary in [
-		&"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01", &"ordinary_fixed_support_01",
-	]:
-		var entry_id := Catalog.entry_id_for_enemy(stationary, stationary)
-		_expect(
-			entry_id == StringName("enemy_%s" % String(stationary))
-				and store.discover(entry_id),
-			"%s has a discoverable stable enemy entry" % stationary
-		)
 	for entry_id in [
 		&"boss_stage_01", &"object_transit_gate", &"object_mystery_device",
-		&"object_elite_armored",
+		&"object_trait_splitter",
 	]:
 		_expect(store.discover(entry_id), "%s unlocks" % entry_id)
 	_validate_catalog_partition()
@@ -105,9 +96,9 @@ func _run() -> void:
 	loaded.save_path = TEST_PATH
 	loaded.load_discovery()
 	_expect(
-		loaded.known.has(&"enemy_ordinary_edge_01")
+		loaded.known.has(&"enemy_ordinary_pursuer_t1")
 			and not loaded.known.has(&"object_crate")
-			and loaded.known.size() == 10,
+			and loaded.known.size() == 5,
 		"schema-v1 load ignores the retired crate ID and preserves live IDs"
 	)
 
@@ -156,7 +147,7 @@ func _run() -> void:
 			and bool(Dictionary(contract["preview"])["semantic_provider"]),
 		"unshielded boss detail renders four canonical stat rows without generic prose"
 	)
-	_expect(panel.debug_select_entry(&"enemies", &"enemy_ordinary_edge_01"), "enemy detail is selectable")
+	_expect(panel.debug_select_entry(&"enemies", &"enemy_ordinary_pursuer_t1"), "enemy detail is selectable")
 	contract = panel.debug_contract()
 	_expect(
 		int(contract["stat_rows"]) == 3
@@ -181,7 +172,8 @@ func _run() -> void:
 	get_root().add_child(preview)
 	await process_frame
 	for archetype in [
-		&"ordinary_beam_01", &"ordinary_range_01", &"ordinary_sweep_01", &"ordinary_melee_02",
+		&"ordinary_pursuer_t1", &"ordinary_charger_t2", &"ordinary_gunner_t3",
+		&"ordinary_defender_t1", &"ordinary_coordinator_t2",
 	]:
 		preview.show_preview({"kind":&"enemy", "id":archetype})
 		_expect(
@@ -194,7 +186,7 @@ func _run() -> void:
 	panel.set_compact_mode(true)
 	panel.open(active)
 	await process_frame
-	_expect(panel.debug_select_entry(&"enemies", &"enemy_ordinary_edge_01"), "compact list selects a discovered enemy")
+	_expect(panel.debug_select_entry(&"enemies", &"enemy_ordinary_pursuer_t1"), "compact list selects a discovered enemy")
 	contract = panel.debug_contract()
 	var ratios := Array(contract["entry_detail_ratios"])
 	_expect(
@@ -202,7 +194,7 @@ func _run() -> void:
 			and not bool(contract["wide_rail_visible"])
 			and int(contract["compact_selector_count"]) == 4
 			and bool(contract["category_has_focus"])
-			and int(contract["entry_focusables"]) == 7
+			and int(contract["entry_focusables"]) == 2
 			and is_equal_approx(float(ratios[0]), 0.34)
 			and is_equal_approx(float(ratios[1]), 0.66)
 			and bool(contract["independent_scroll"]),
@@ -237,9 +229,7 @@ func _validate_catalog_partition() -> void:
 				StringName(entry["entry_kind"]) == &"object",
 				"Field Objects contains only non-hostile world objects"
 			)
-	for archetype in Archetypes.DEFINITIONS:
-		if archetype == &"boss_actor":
-			continue
+	for archetype in Archetypes.ORDINARY_ARCHETYPES:
 		var entry_id := Catalog.entry_id_for_enemy(archetype, archetype)
 		_expect(
 			not entry_id.is_empty()
@@ -248,8 +238,12 @@ func _validate_catalog_partition() -> void:
 			"%s appears under Enemies" % archetype
 		)
 	_expect(
-		Catalog.ENEMY_ENTRY_IDS.size() == Archetypes.DEFINITIONS.size() - 1,
-		"constant enemy discovery mapping covers every non-boss archetype"
+		Catalog.ENEMY_ENTRY_IDS.size() == Archetypes.ORDINARY_ARCHETYPES.size(),
+		"constant enemy discovery mapping covers every ordinary family tier"
+	)
+	_expect(
+		Catalog.entry_id_for_enemy(&"boss_pattern_fixed_beam_01", &"boss_pattern_fixed_beam_01").is_empty(),
+		"boss-owned fixed beam does not leak into ordinary enemy discovery"
 	)
 	var boss_stage_indices: Array[int] = []
 	for entry in Catalog.ENTRIES:
@@ -264,21 +258,25 @@ func _validate_catalog_partition() -> void:
 			and not Catalog.valid_ids().has(&"object_crate"),
 		"retired crates stay absent from active catalog and discovery"
 	)
-	for elite_id in [
-		&"object_elite_armored", &"object_elite_overclocked", &"object_elite_heavy",
+	for trait_id in [
+		&"object_trait_splitter", &"object_trait_frenzy", &"object_trait_double",
+		&"object_trait_self_destruct", &"object_trait_artillery", &"object_trait_slow",
+		&"object_trait_bulwark", &"object_trait_reflector", &"object_trait_blink",
+		&"object_trait_pack_feed",
 	]:
 		_expect(
-			StringName(entries_by_id[elite_id]["category"]) == &"enemies",
-			"%s modifier appears under Enemies" % elite_id
+			StringName(entries_by_id[trait_id]["category"]) == &"enemies"
+				and StringName(entries_by_id[trait_id]["entry_kind"]) == &"trait",
+			"%s family trait appears under Enemies" % trait_id
 		)
 
 
 func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
-	var outside_edge_enemy := _entry(outside, &"enemies", &"enemy_ordinary_edge_01")
-	var active_edge_enemy := _entry(active, &"enemies", &"enemy_ordinary_edge_01")
-	var outside_health := Dictionary(Array(outside_edge_enemy["stat_rows"])[0])
-	var active_health := Dictionary(Array(active_edge_enemy["stat_rows"])[0])
-	var definition := Archetypes.definition(&"ordinary_edge_01")
+	var outside_pursuer := _entry(outside, &"enemies", &"enemy_ordinary_pursuer_t1")
+	var active_pursuer := _entry(active, &"enemies", &"enemy_ordinary_pursuer_t1")
+	var outside_health := Dictionary(Array(outside_pursuer["stat_rows"])[0])
+	var active_health := Dictionary(Array(active_pursuer["stat_rows"])[0])
+	var definition := Archetypes.definition(&"ordinary_pursuer_t1")
 	var expected_stage_two_health := (
 		float(definition["health"])
 		* EncounterDirector.ENEMY_HEALTH_MULTIPLIER

@@ -16,10 +16,10 @@ const HYBRID: StringName = &"hybrid"
 const SUPPORT: StringName = &"support"
 
 const THREAT_ORDINARY: StringName = &"ordinary"
-const THREAT_ELITE: StringName = &"elite"
+const THREAT_TRAIT: StringName = &"trait"
 const THREAT_BOSS: StringName = &"boss"
 const THREAT_TIERS: Array[StringName] = [
-	THREAT_ORDINARY, THREAT_ELITE, THREAT_BOSS,
+	THREAT_ORDINARY, THREAT_TRAIT, THREAT_BOSS,
 ]
 
 const AFFINITIES: Array[StringName] = [
@@ -114,11 +114,11 @@ static func normalize_threat_tier(value: StringName) -> StringName:
 
 static func threat_tier_for(
 	source_role: StringName,
-	elite_trait: StringName = &""
+	family_trait: StringName = &""
 ) -> StringName:
 	if source_role == &"boss":
 		return THREAT_BOSS
-	return THREAT_ELITE if not elite_trait.is_empty() else THREAT_ORDINARY
+	return THREAT_TRAIT if not family_trait.is_empty() else THREAT_ORDINARY
 
 
 static func power_tier(damage: float) -> StringName:

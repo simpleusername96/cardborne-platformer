@@ -17,14 +17,14 @@ func _initialize() -> void:
 	_expect(AttackContract.power_tier(10.1) == &"standard", "damage above ten enters the standard power tier")
 	_expect(AttackContract.power_tier(20.0) == &"heavy", "twenty damage enters the heavy power tier")
 	_expect(
-		AttackContract.THREAT_TIERS == [&"ordinary", &"elite", &"boss"],
-		"threat tier contract exposes exactly ordinary, elite, and boss"
+		AttackContract.THREAT_TIERS == [&"ordinary", &"trait", &"boss"],
+		"threat tier contract exposes exactly ordinary, trait, and boss"
 	)
 	_expect(
 		AttackContract.threat_tier_for(&"ordinary_lane_01") == AttackContract.THREAT_ORDINARY
-		and AttackContract.threat_tier_for(&"ordinary_lane_01", &"heavy") == AttackContract.THREAT_ELITE
-		and AttackContract.threat_tier_for(&"boss", &"heavy") == AttackContract.THREAT_BOSS,
-		"source role and elite trait map to one deterministic threat tier"
+		and AttackContract.threat_tier_for(&"ordinary_lane_01", &"slow") == AttackContract.THREAT_TRAIT
+		and AttackContract.threat_tier_for(&"boss", &"slow") == AttackContract.THREAT_BOSS,
+		"source role and family trait map to one deterministic threat tier"
 	)
 	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(4.0), 5.0), "light hostile projectile radius is five")
 	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(12.0), 6.0), "standard hostile projectile radius is six")
@@ -203,16 +203,16 @@ func _validate_telegraph_threat_tiers() -> void:
 		),
 		"ordinary telegraphs retain their source threat tier"
 	)
-	enemy.elite_trait = &"overclocked"
+	enemy.family_trait = &"slow"
 	AttackTelegraphs.refresh_ordinary(enemy, resolve_path)
 	_expect(
 		enemy.attack_telegraphs.all(
-			func(item): return item["threat_tier"] == AttackContract.THREAT_ELITE
+			func(item): return item["threat_tier"] == AttackContract.THREAT_TRAIT
 		),
-		"elite telegraphs retain their source threat tier"
+		"family-trait telegraphs retain their source threat tier"
 	)
 	enemy.role = &"boss"
-	enemy.elite_trait = &""
+	enemy.family_trait = &""
 	enemy.phase = &"boss_startup"
 	enemy.phase_time = 0.85
 	AttackTelegraphs.refresh_boss(enemy, "slag_ring", resolve_path)
@@ -223,7 +223,7 @@ func _validate_telegraph_threat_tiers() -> void:
 		),
 		"boss telegraphs retain the boss threat tier"
 	)
-	AttackTelegraphs.refresh_boss(enemy, "ordinary_fixed_beam_01_call", resolve_path)
+	AttackTelegraphs.refresh_boss(enemy, "boss_pattern_fixed_beam_01_call", resolve_path)
 	_expect(
 		enemy.attack_telegraphs.size() == 1
 		and enemy.attack_telegraphs[0]["delivery"] == &"support"

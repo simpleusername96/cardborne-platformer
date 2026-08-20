@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-18
+last_reviewed: 2026-08-21
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -441,16 +441,26 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - hull hit는 actor tint, barrier hit는 기존 support ring의 짧은 밝기 변화,
   arrival과 transit는 actor/world state가 직접 표현한다. 이 항목을 transient
   effect event로 복제하지 않는다.
-- ordinary enemy role은 외곽선과 negative space로 먼저 구분한다. command와
+- ordinary enemy family는 외곽선과 negative space로 먼저 구분한다. command와
   boss는 boss color만으로 ordinary enemy를 재도색하지 않는다.
-- moving non-boss ordinary body는 shared visible radius `48`을 사용한다. installation은
-  `62`, boss는 `146`을 유지한다. 이 값은 presentation scale이며 compact movement/contact
-  radius와 분리된다. projectile target radius는 같은 `48` 값을 별도 gameplay owner에서
-  명시한다.
+- moving non-boss ordinary T1 body는 shared presentation radius `56`을 사용한다.
+  T2/T3는 각 family의 T1 body를 기준으로 정확한 integer `125%/150%` scale을 적용한다.
+  installation은 `62`, boss는 `146`을 유지한다. 이 값은 presentation scale이며 compact
+  movement/contact radius와 분리된다. 모든 ordinary tier의 projectile target radius는
+  `48` 값을 별도 gameplay owner에서 명시한다.
+- runtime ordinary body asset은 Pursuer, Charger, Gunner, Defender, Coordinator의
+  T1/T2/T3에 해당하는 PNG 15개만 사용한다. trait-body variant PNG는 review material이며
+  runtime manifest와 retained batch에 넣지 않는다.
+- family trait는 기존 retained disk/ring/diamond/danger-ring batch 안에서 body footprint
+  또는 실제 active range에 cue를 쓴다. Splitter는 paired diamond, Frenzy는 inner danger
+  ring, Double은 paired dot, Self-Destruct는 base diamond와 fuse ring, Artillery는 rear
+  thermal diamond, Slow는 inner cryo ring, Bulwark는 base shield와 active `250` range,
+  Reflector는 active-window ring, Blink는 base diamond와 warning ring, Pack Feed는 inner
+  ring과 최대 다섯 stack dot을 쓴다. cue는 raster, SVG, 새 batch, per-enemy material,
+  per-enemy/per-pack Node, label 또는 badge를 추가하지 않는다.
 - directional enemy는 simulation이 publish한 effective facing을 사용한다. startup/
-  active에서는 committed direction, 그 밖에는 player를 향한다. Controller spin과
-  nondirectional mine/generator는 예외이며 renderer는
-  target이나 AI phase를 추론하지 않는다.
+  active에서는 committed direction, 그 밖에는 player를 향한다. boss-owned installation과
+  nondirectional world hazard는 예외이며 renderer는 target이나 AI phase를 추론하지 않는다.
 - 비-beam projectile은 player primary energy teardrop, card-acquired Seeker, hostile
   barbed bolt 세 identity를 사용한다. 세 identity는 서로 재사용하지 않으며,
   불투명 core와 authored contour가 small runtime scale에서도 역할을 구분한다.
@@ -475,7 +485,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
   표시한다. charge startup도 이동 경로, endpoint cap, corridor boundary를 표시하지
   않는다.
-- Fixed Beam Ordinary Enemy Lv.1과 모든 hostile boss-emitted beam은 gameplay가 committed direction,
+- boss-owned Fixed Beam Pattern과 모든 hostile boss-emitted beam은 gameplay가 committed direction,
   endpoint, width와 active timing을 소유한다. 여기에는 단방향 `switch_sweep`,
   `switch_sweeps`, `radial_beam`, 보스 중심에서 네 방향으로 발사되는
   `cross_beam`, 보스 주변 두 발사점에서 나가는 `opposing_lanes`와
@@ -505,9 +515,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - hostile circle, wedge, shockwave와 non-emitted-beam damaging corridor는 affinity와 무관하게 exact
   committed footprint를 danger-red full area로 채우고 thin near-black perimeter와
   four inward boundary notches를 사용한다. startup body alpha는 readiness에 따라
-  `0.10 -> 0.20`, damaging window는 `0.20`을 유지한다. ordinary controller와
-  artillery는 projectile을 발사하며 ordinary mine의 근접 폭발 범위도 world ring으로
-  표시하지 않는다. affinity별 inner ring, diamond, center line, tick bar, commit
+  `0.10 -> 0.20`, damaging window는 `0.20`을 유지한다. Coordinator와 Gunner는
+  projectile을 발사하며 Self-Destruct는 fuse 중에만 실제 위험 범위를 표시한다.
+  affinity별 inner ring, diamond, center line, tick bar, commit
   marker는 만들지 않는다.
 - threat radar는 기존 5 Hz hostile scan을 유지하며 sampled player origin,
   generation과 12개 이하 sector record를 한 frame으로 교체한다. HUD는 매 render
@@ -729,10 +739,10 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - minimap의 dynamic marker는 player, `field_pickup`, `mystery_device`,
   `mobile_enemy`, `priority_enemy`, `boss` 정확히 여섯
   역할만 사용한다. pickup은 lozenge, 중립 시설은 role과 무관한 neutral cut
-  role marker, mobile enemy는 wedge/round mass, 고정 `turret`,
-  `ordinary_fixed_ranged_02`, `ordinary_fixed_beam_01`, `generator`는 square/cut priority mass,
+  role marker, mobile enemy는 wedge/round mass, boss-owned fixed-beam pattern은
+  square/cut priority mass,
   boss는 command-magenta notched mass다. resolved/retired
-  device는 사라지고 elite, stage별 boss color, world outcome과 그 밖의 subtype은
+  device는 사라지고 family trait, stage별 boss color, world outcome과 그 밖의 subtype은
   표시하지 않는다. marker capacity, borrowed buffer, explored static geometry와 fog,
   player facing, 한 retained minimap Surface를 유지한다. pickup outer size는
   `12×7.6`이다. 중립 시설 outer point는 기존 neutral cut silhouette의 `1.20×`다.
@@ -800,7 +810,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   motion, language 순서를 유지한다.
 - Guidebook은 wide에서 category/list/detail 세 column, compact에서 category
   tab + list/detail 두 pane다. category는 Ship, Enemies, Bosses, Field Objects이며
-  stationary hostile와 elite modifier도 Enemies에 둔다. 발견된 enemy/boss detail은
+  15개 family-tier ordinary actor와 10개 family trait를 Enemies에 둔다. boss-owned
+  fixed-beam pattern은 ordinary entry를 만들지 않는다. 발견된 enemy/boss detail은
   canonical gameplay owner에서 읽은 ordered stat row를 사용하고 generic
   Movement/Attack/Counter 설명은 사용하지 않는다. 잠금 항목은 category별 count 한
   줄로만 요약하며 selectable `???` preview를 만들지 않는다. Back은 localized
@@ -810,7 +821,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   metric sub-scrolls, narrow build rail, or multi-column metric body. Section order is
   outcome, cycle progress, build, damage, defense, enemies, bosses, pacing, and diagnostic
   limitations. At 200% text scale the same order remains and only the outer content scrolls.
-- Result는 여덟 boss-cycle record의 실제 격파/elite, outgoing damage, damage attribute,
+- Result는 열두 boss-cycle record의 실제 격파/family trait, outgoing damage, damage attribute,
   누적 active run time, final Hull, 주요 action counter와 전체 image build/loadout를
   요약하고 하나의 고정 Deployment action을 제공한다.
   Result와 Failure Report의 시간 metric은 stage-local time이 아니라 run 시작부터
@@ -878,11 +889,16 @@ Web export만으로 interactive built-Web smoke나 release performance를
   fills without legacy patterned floor or shared-wall rasters. The three approved
   `SurfaceDetail` SVGs are production-integrated as deterministic presentation-only
   72/72/48 retained instances with no collision, navigation, or per-frame update owner.
-- Fixed Beam Ordinary Enemy Lv.1 and all hostile boss-emitted beams share the retained code-native beam and
+- The boss-owned Fixed Beam Pattern and all hostile boss-emitted beams share the retained code-native beam and
   disk batches. Runtime tint, per-muzzle charge-orb scale, forward/bidirectional emission
   mode, rounded active planes and the gameplay-owned `0.30s` grown segments remain
   presentation inputs; startup publishes no path geometry. Translating laser walls remain
   placed moving hazards and do not claim a boss muzzle.
+- Five ordinary families use exactly fifteen production body PNGs: T1/T2/T3 for Pursuer,
+  Charger, Gunner, Defender, and Coordinator. Their integer presentation scale is
+  `100/125/150`, measured from the shared T1 radius `56`; projectile target radius remains
+  `48`. Ten family traits use the shared code-native cues defined above, so the retained
+  combat renderer stays at or below its 50-batch ceiling without a trait texture batch.
 - The four neutral-facility roles are production-integrated. Repair, Cryo, Weakpoint, and
   Lava use their approved authored role rasters. One assigned symbol is visible alone at
   288 world units with a bounded bob and

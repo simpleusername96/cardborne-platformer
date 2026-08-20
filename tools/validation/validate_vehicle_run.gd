@@ -495,9 +495,11 @@ func _check_status_damage_feedback(run) -> void:
 
 func _check_visual_collision_separation(run) -> void:
 	for fixture in [
-		[&"ordinary_edge_01", 18.0, 48.0],
-		[&"ordinary_fixed_ranged_01", 30.0, 62.0],
-		[&"boss_actor", 76.0, 146.0],
+		[&"ordinary_pursuer_t1", 18.0, 48.0, 56.0],
+		[&"ordinary_pursuer_t2", 18.0, 48.0, 70.0],
+		[&"ordinary_pursuer_t3", 18.0, 48.0, 84.0],
+		[&"boss_pattern_fixed_beam_01", 34.0, 62.0, 62.0],
+		[&"boss_actor", 76.0, 146.0, 146.0],
 	]:
 		var enemy = run.call("_make_enemy", {
 			"id":"visual_probe_%s" % String(fixture[0]),
@@ -509,7 +511,7 @@ func _check_visual_collision_separation(run) -> void:
 			enemy != null
 				and is_equal_approx(enemy.radius, float(fixture[1]))
 				and is_equal_approx(enemy.projectile_hit_radius, float(fixture[2]))
-				and is_equal_approx(enemy.visual_radius, float(fixture[2])),
+				and is_equal_approx(enemy.visual_radius, float(fixture[3])),
 			"%s keeps compact movement plus explicit visual and projectile target radii" % fixture[0]
 		)
 		run.enemy_store.release_untracked(enemy)
@@ -618,29 +620,29 @@ func _check_simulation_lod_contract(run) -> void:
 func _check_critical_enemy_attack_progression(run) -> void:
 	var projectile_store: RefCounted = run.get("projectile_store")
 	projectile_store.call("clear")
-	var ordinary_lane_01: EnemyState = run.call("_make_enemy", {
+	var gunner: EnemyState = run.call("_make_enemy", {
 		"id":"critical_attack_progression",
-		"role":&"ordinary_lane_01",
+		"role":&"ordinary_gunner_t1",
 		"pos":run.player_position + Vector2(-320.0, 0.0),
 		"active":true,
 	})
-	ordinary_lane_01.phase = &"startup"
-	ordinary_lane_01.phase_time = 0.0
-	ordinary_lane_01.committed_dir = Vector2.RIGHT
-	ordinary_lane_01.committed_target = run.player_position
-	var phase_time_before := ordinary_lane_01.phase_time
-	run.call("_update_scheduled_ordinary_enemy", ordinary_lane_01, 1.0 / 60.0)
+	gunner.phase = &"startup"
+	gunner.phase_time = 0.0
+	gunner.committed_dir = Vector2.RIGHT
+	gunner.committed_target = run.player_position
+	var phase_time_before := gunner.phase_time
+	run.call("_update_scheduled_ordinary_enemy", gunner, 1.0 / 60.0)
 	_expect(
-		ordinary_lane_01.phase_time < phase_time_before
-			or ordinary_lane_01.phase in [&"recovery", &"active"],
+		gunner.phase_time < phase_time_before
+			or gunner.phase in [&"recovery", &"active"],
 		"critical ordinary startup advances on the 60 Hz path"
 	)
 	_expect(
-		ordinary_lane_01.phase == &"recovery" and projectile_store.call("hostile_count") == 1,
-		"critical ordinary ordinary_lane_01 reaches its real fire path instead of freezing"
+		gunner.phase == &"recovery" and projectile_store.call("hostile_count") == 1,
+		"critical Gunner reaches its real fire path instead of freezing"
 	)
 	projectile_store.call("clear")
-	run.enemy_store.release_untracked(ordinary_lane_01)
+	run.enemy_store.release_untracked(gunner)
 
 
 func _check_ordinary_predicted_commitment(run) -> void:
@@ -1148,25 +1150,8 @@ func _check_boss_emitted_cross(run) -> void:
 
 
 func _check_enemy_expansion(run) -> void:
-	var mine: EnemyState = run.call("_make_enemy", {
-		"id":"validation_mine", "role":&"mine",
-		"pos":run.player_position + Vector2(229.0, 0.0), "active":true,
-	})
-	run.call("_append_enemy", mine)
-	var health_before := float(run.player_health)
-	run.call("_update_mine", mine, 0.0, 0.0, true)
-	_expect(
-		mine.phase == &"mine_armed"
-			and is_equal_approx(mine.phase_time, 1.25)
-			and is_equal_approx(float(run.player_health), health_before),
-		"stationary mine arms outside its separate damage ring"
-	)
-	run.player_position += Vector2(800.0, 0.0)
-	run.call("_update_mine", mine, 1.26, 0.0, true)
-	_expect(not mine.alive, "stationary mine retires after one explosion")
-
 	var guard: EnemyState = run.call("_make_enemy", {
-		"id":"validation_guard", "role":&"ordinary_shield_01",
+		"id":"validation_guard", "role":&"ordinary_defender_t1",
 		"pos":run.player_position + Vector2(300.0, 0.0), "active":true,
 	})
 	var primary_round := ProjectileState.new()
@@ -1176,12 +1161,13 @@ func _check_enemy_expansion(run) -> void:
 		_expect(
 			bool(run.call("_try_absorb_protective_structure", guard, primary_round))
 				and is_equal_approx(guard.guard_plate_structure, expected_structure),
-			"sustained primary fire chips the Guard plate by one uniform hit"
+			"sustained primary fire chips the Defender plate by one uniform hit"
 		)
 	run.enemy_store.release_untracked(guard)
 
 	var splitter: EnemyState = run.call("_make_enemy", {
-		"id":"validation_splitter", "role":&"ordinary_pulse_01",
+		"id":"validation_splitter", "role":&"ordinary_pursuer_t1",
+		"pack_family":&"pursuer", "pack_trait":&"splitter",
 		"pos":run.player_position + Vector2(-300.0, 0.0), "active":true,
 	})
 	run.encounter_runtime.current_beat = 4
@@ -1191,7 +1177,7 @@ func _check_enemy_expansion(run) -> void:
 	for enemy in run.enemies:
 		if enemy.alive and enemy.carrier_id == "splitter:validation_splitter":
 			children += 1
-	_expect(children == 2, "Pulse Ordinary Enemy Lv.1 emits exactly two summon-only children when capacity permits")
+	_expect(children == 2, "Splitter emits exactly two bounded traitless T1 children when capacity permits")
 
 
 func _check_primary_collision_at_horde_capacity(run) -> void:

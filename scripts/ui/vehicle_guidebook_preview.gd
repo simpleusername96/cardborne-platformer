@@ -26,7 +26,7 @@ func show_preview(preview: Dictionary) -> void:
 		return
 	visible = true
 	var kind := StringName(preview.get("kind", &"enemy"))
-	var preview_id := StringName(preview.get("id", &"ordinary_edge_01"))
+	var preview_id := StringName(preview.get("id", &"ordinary_pursuer_t1"))
 	match kind:
 		&"ship":
 			_add_asset(
@@ -38,7 +38,7 @@ func show_preview(preview: Dictionary) -> void:
 			)
 		&"locked":
 			_add_asset(
-				&"actor/edge_enemy",
+				&"actor/ordinary_pursuer_t1",
 				72.0,
 				Vector2.ZERO,
 				Color(0.58, 0.64, 0.70, 0.62)
@@ -54,8 +54,6 @@ func show_preview(preview: Dictionary) -> void:
 			_add_terrain(preview_id)
 		&"facility":
 			_add_facility(preview_id)
-		&"elite":
-			_add_asset(&"actor/edge_enemy", 106.0)
 		&"pickup":
 			_add_pickup(preview_id)
 		_:

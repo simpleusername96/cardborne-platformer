@@ -15,7 +15,7 @@ func _init() -> void:
 	telemetry.record_outgoing(&"thermal_burst", &"thermal", 2.0)
 	telemetry.record_status_application(&"chill")
 	telemetry.record_incoming(&"projectile", 7.0)
-	telemetry.record_defeat(&"ordinary_ranged_01", &"armored")
+	telemetry.record_defeat(&"ordinary_gunner_t1", &"slow")
 	var frozen := telemetry.freeze_stage()
 	_expect(is_equal_approx(float(frozen["outgoing"][&"primary"]), 24.5), "applied outgoing damage accumulates exactly")
 	_expect(
@@ -40,10 +40,10 @@ func _init() -> void:
 		):
 			control_only_chill = true
 	_expect(control_only_chill, "control-only chill remains visible without invented damage")
-	_expect(int(frozen["defeats"][&"ordinary_ranged_01"]) == 1, "base archetype defeat is counted")
+	_expect(int(frozen["defeats"][&"ordinary_gunner_t1"]) == 1, "base archetype defeat is counted")
 	_expect(
-		int(frozen["elites"][&"ordinary_ranged_01:armored"]) == 1,
-		"elite trait remains nested under its base archetype"
+		int(frozen["traits"][&"ordinary_gunner_t1:slow"]) == 1,
+		"family trait remains nested under its base archetype"
 	)
 	_expect(StringName(frozen["last_incoming_source"]) == &"projectile", "last incoming source is retained")
 	telemetry.record_outgoing(&"primary", &"kinetic", 99.0)

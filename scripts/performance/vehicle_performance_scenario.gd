@@ -39,9 +39,11 @@ const PERFORMANCE_EFFECT_IDS: Array[StringName] = [
 	&"player_emp_release",
 ]
 const MOBILE_ARCHETYPES: Array[StringName] = [
-	&"ordinary_melee_01", &"ordinary_ranged_01", &"ordinary_edge_01", &"ordinary_lane_01", &"ordinary_gap_01",
-	&"ordinary_support_02", &"ordinary_growth_01", &"ordinary_pull_01", &"ordinary_support_01",
-	&"ordinary_support_03",
+	&"ordinary_pursuer_t1", &"ordinary_pursuer_t2", &"ordinary_pursuer_t3",
+	&"ordinary_charger_t1", &"ordinary_charger_t2", &"ordinary_charger_t3",
+	&"ordinary_gunner_t1", &"ordinary_gunner_t2", &"ordinary_gunner_t3",
+	&"ordinary_defender_t1", &"ordinary_defender_t2", &"ordinary_defender_t3",
+	&"ordinary_coordinator_t1", &"ordinary_coordinator_t2", &"ordinary_coordinator_t3",
 ]
 var scenario_id: StringName
 var diagnostic_enemy_count := -1
@@ -267,9 +269,8 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and bool(effect_store_snapshot["valid"])
 		and run.denied_zones.size() <= 16
 		and int(renderer_snapshot["batches"]) <= 50
-		and int(Dictionary(renderer_snapshot["batch_allocations"]).get(
-			"Overlay_health", 0
-		)) == 26
+		and int(renderer_snapshot.get("health_bar_capacity", 0))
+			== EnemyStore.MAX_LIVE_HOSTILES * 2
 		and int(enemy_snapshot["rejected_capacity"]) == 0
 		and int(renderer_snapshot["enemy_capacity"]) == EnemyStore.MAX_LIVE_HOSTILES
 		and boss_valid
@@ -308,9 +309,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		"boss_active": boss_valid,
 		"pressure": pressure,
 		"health_overlay_capacity":int(
-			Dictionary(renderer_snapshot["batch_allocations"]).get(
-				"Overlay_health", 0
-			)
+			renderer_snapshot.get("health_bar_capacity", 0)
 		),
 	}
 
@@ -423,7 +422,7 @@ func _churn_one_enemy(run: Node) -> void:
 			break
 	if retired == null:
 		return
-	var role := retired.role
+	var archetype := retired.archetype
 	var position := retired.pos
 	var counts_active_cap := retired.counts_active_cap
 	retired.alive = false
@@ -432,7 +431,7 @@ func _churn_one_enemy(run: Node) -> void:
 		return
 	var replacement: EnemyState = run.call("_make_enemy", {
 		"id": "performance_churn_%06d" % _lifecycle_serial,
-		"role": role,
+		"role": archetype,
 		"pos": position,
 		"active": true,
 	})
@@ -853,9 +852,8 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		and run.projectile_store.validate_counts()
 		and bool(effect_store_snapshot["valid"])
 		and int(renderer_snapshot["batches"]) <= 50
-		and int(Dictionary(renderer_snapshot["batch_allocations"]).get(
-			"Overlay_health", 0
-		)) == 26
+		and int(renderer_snapshot.get("health_bar_capacity", 0))
+			== EnemyStore.MAX_LIVE_HOSTILES * 2
 		and scheduler_spawned
 		and pressure_qualified
 	)
@@ -887,9 +885,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		"population":population,
 		"pressure":scheduler.get("pressure", {}),
 		"health_overlay_capacity":int(
-			Dictionary(renderer_snapshot["batch_allocations"]).get(
-				"Overlay_health", 0
-			)
+			renderer_snapshot.get("health_bar_capacity", 0)
 		),
 		"production_qualification":{
 			"valid":pressure_qualified,

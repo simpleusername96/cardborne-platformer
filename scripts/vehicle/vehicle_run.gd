@@ -16,7 +16,6 @@ const SemanticAssets = preload(
 const PrimaryWeapon = preload("res://scripts/player/vehicle_primary_weapon.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
-const EliteTraits = preload("res://scripts/enemies/vehicle_elite_trait_catalog.gd")
 const FamilyTraits = preload("res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
@@ -348,9 +347,6 @@ var _runtime_attack_path_callable: Callable
 var _runtime_charge_path_callable: Callable
 var _damage_player_callable: Callable
 var _enemy_contact_damage_callable: Callable
-var _elite_pending := 0
-var _elite_spawned := 0
-var _elite_threshold_cursor := 0
 
 var tutorial_move := false
 var tutorial_aim := false
@@ -1191,9 +1187,6 @@ func _reset_run(
 	player_barrier_timer = 0.0
 	_aim_target_id = ""
 	_last_damage_source = ""
-	_elite_pending = 0
-	_elite_spawned = 0
-	_elite_threshold_cursor = 0
 
 	if not preserve_upgrades:
 		run_build.reset()
@@ -1478,7 +1471,6 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.pattern_tick = 0.0
 	enemy.pattern_volleys = 0
 	enemy.vulnerable = 0.0
-	enemy.elite_trait = &""
 	enemy.armor_structure = 0.0
 	enemy.guard_plate_structure = (
 		SpecialistRuntime.GUARD_PLATE_STRUCTURE
@@ -1692,41 +1684,6 @@ func _advance_ordinary_arrival_cues(delta: float) -> void:
 
 func _clear_ordinary_arrival_cues() -> void:
 	_ordinary_arrival_cue_count = 0
-
-
-func _refresh_elite_reservations() -> void:
-	var thresholds: Array = EliteTraits.thresholds(current_stage_index)
-	var progress := float(stage_flow.defeats) / maxf(1.0, float(stage_flow.quota))
-	while (
-		_elite_threshold_cursor < thresholds.size()
-		and progress >= float(thresholds[_elite_threshold_cursor])
-	):
-		_elite_pending += 1
-		_elite_threshold_cursor += 1
-
-
-func _apply_pending_elite(enemy: EnemyState) -> void:
-	if (
-		enemy == null
-		or _elite_pending <= 0
-		or not EliteTraits.eligible(enemy.archetype)
-		or _live_elite_count() >= 2
-	):
-		return
-	var elite_kind: StringName = EliteTraits.trait_for(
-		current_stage_index, _elite_spawned, field_layout.seed
-	)
-	EliteTraits.apply(enemy, elite_kind)
-	_elite_pending -= 1
-	_elite_spawned += 1
-
-
-func _live_elite_count() -> int:
-	var count := 0
-	for enemy in enemies:
-		if enemy.alive and not enemy.elite_trait.is_empty():
-			count += 1
-	return count
 
 
 func _bounded_spawn_spec(spec: Dictionary) -> Dictionary:
@@ -3841,7 +3798,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				StringName(controller_attack["affinity"]),
 				false,
 				false,
-				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+				AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.88
@@ -3884,7 +3841,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				float(rail_attack["speed"]),
 				"Beam Ordinary Enemy Lv.1 shot",
 				StringName(rail_attack["affinity"]), false, false,
-				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+				AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 			)
 			# The recovery relocation breaks the next rail lane without teleporting.
 			enemy.reposition_time = 0.72
@@ -3920,7 +3877,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				StringName(interceptor_attack["affinity"]),
 				false,
 				false,
-				AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+				AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 			)
 			enemy.phase = &"recovery"
 			enemy.phase_time = 0.9
@@ -3980,7 +3937,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 					StringName(turret_attack["affinity"]),
 					false,
 					false,
-					AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+					AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 				)
 			if enemy.burst_left <= 0:
 				enemy.phase = &"recovery"
@@ -3995,7 +3952,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 					enemy.pos + enemy.committed_dir * float(orbit_attack["origin_offset"]),
 					enemy.committed_dir, float(orbit_attack["damage"]), float(orbit_attack["speed"]),
 					"Range Ordinary Enemy Lv.1 burst", StringName(orbit_attack["affinity"]), false, false,
-					AttackContract.threat_tier_for(enemy.role, enemy.elite_trait)
+					AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 				)
 			if enemy.burst_left <= 0:
 				enemy.phase = &"recovery"
@@ -5496,7 +5453,7 @@ func _defeat_enemy(
 	enemy_store.queue_defeat(enemy)
 	if grant_defeat_credit:
 		stats_enemies_defeated += 1
-		stage_telemetry.record_defeat(enemy.archetype, enemy.elite_trait)
+		stage_telemetry.record_defeat(enemy.archetype, enemy.family_trait)
 		experience_runtime.spawn_shard(
 			enemy.pos,
 			FieldDropRules.experience_for_enemy(enemy),
@@ -5632,7 +5589,7 @@ func _finalize_boss_destruction(cleanup_receipt: Dictionary) -> void:
 		# The boss remains a truthful combat defeat in reports, but its cleanup
 		# receipt cannot advance the ordinary quota or grant progression rewards.
 		stats_enemies_defeated += 1
-		stage_telemetry.record_defeat(boss.archetype, boss.elite_trait)
+		stage_telemetry.record_defeat(boss.archetype, boss.family_trait)
 	_session_diagnostics.emit_event("boss_ended", {"stage_index":current_stage_index})
 	stage_telemetry.record_boss_lifecycle(
 		StringName(StageCatalog.profile(current_stage_id).get("boss_name_key", "")),
@@ -7359,9 +7316,6 @@ func _finalize_next_stage_continuation() -> void:
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
 	stage_complete = false
-	_elite_pending = 0
-	_elite_spawned = 0
-	_elite_threshold_cursor = 0
 	stage_started_at_active_run_seconds = active_run_elapsed_seconds
 	mode = RunMode.PLAYING
 	_session_diagnostics.emit_event("stage_started", {
@@ -7981,8 +7935,8 @@ func _update_threat_contacts(delta: float) -> void:
 			diagnostic_ordinary_commit = true
 		if safe_viewport.has_point(enemy_screen):
 			_discover_guide(GuidebookCatalog.entry_id_for_enemy(enemy.archetype, enemy.role))
-			if enemy.elite_trait != &"":
-				_discover_guide(StringName("object_elite_%s" % String(enemy.elite_trait)))
+			if enemy.family_trait != &"":
+				_discover_guide(StringName("object_trait_%s" % String(enemy.family_trait)))
 		var offset := Vector2(enemy.pos) - player_position
 		var readiness := CombatCuePolicy.unseen_committed_attack_readiness(
 			enemy.pos,

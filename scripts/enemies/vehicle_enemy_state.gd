@@ -108,7 +108,6 @@ var mechanic_state: StringName = &""
 var mechanic_cue_active := false
 var mechanic_inner_radius := 0.0
 var mechanic_outer_radius := 0.0
-var elite_trait: StringName = &""
 var armor_structure := 0.0
 var guard_plate_structure := 0.0
 var mine_armed_by_player := false

@@ -142,7 +142,7 @@ func _start_boss_overlap_fixture(run: Node, elapsed: float) -> void:
 	for index in 8:
 		var enemy = run.call("_make_enemy", {
 			"id":"pacing_overlap_%02d" % index,
-			"role":&"ordinary_edge_01",
+			"role":&"ordinary_pursuer_t1",
 			"pos":run.player_position + Vector2(300.0 + float(index) * 12.0, 0.0),
 			"active":true,
 		})

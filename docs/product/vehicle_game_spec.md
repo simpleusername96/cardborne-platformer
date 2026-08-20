@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-18
+last_reviewed: 2026-08-21
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field twelve-boss-cycle vehicle campaign
 related:
@@ -87,7 +87,7 @@ room, or an absolute completion-time target.
 All non-boss enemy archetypes receive the existing `2.60` health multiplier
 after the fixed profile and twelve-cycle ordinary-health curve, then the twelve-cycle pressure
 curves defined in the campaign section, followed by one final ordinary-durability
-multiplier of `1.20` before elite modifiers. The ordinary health curve is
+multiplier of `1.20` before family-trait modifiers. The ordinary health curve is
 `[1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00, 2.00, 2.00, 2.00, 2.00]`, and the ordinary
 movement-speed curve is `[1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30, 1.30, 1.30, 1.30, 1.30]`.
 Existing actors keep the values captured at spawn when a later cycle begins.
@@ -98,8 +98,8 @@ Ordinary enemy-sourced damage applies the shared `1.755` multiplier, the stage
 curve `[1.00, 1.03, 1.06, 1.09, 1.12, 1.15, 1.18, 1.21, 1.24, 1.27, 1.30, 1.33]`, and the additional stage pressure defined below. Boss `final-effective` attacks
 use their separate stage profile and bypass the ordinary multiplier and ordinary
 stage pressure. Friendly or environmental damage bypasses both.
-Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks restore `8 HP` every
-`0.75 s`; both healing outputs are twice their previous values.
+Ordinary family traits apply only through their owning pack. They do not add a
+second global elite-stat layer.
 
 ### Damage readability and hostile projectiles
 
@@ -128,25 +128,22 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
   Cannon's unmodified projectile uses a seven-pixel collision radius, and
   upgrades scale from that base.
 - An enemy's compact movement/contact radius remains independent from its
-  player-projectile hit radius. Moving non-boss ordinary enemies use an explicit
-  `48`-pixel visible radius and a separately owned `48`-pixel projectile target
+  player-projectile hit radius. T1 moving non-boss ordinary enemies use an explicit
+  `56`-pixel presentation radius; T2 and T3 render at integer `125%` and `150%`
+  of that family body's T1 size. All tiers use the separately owned `48`-pixel projectile target
   radius. Fixed installations remain `62` and bosses remain `146`; movement,
   contact, crowd, and wall radii do not change. Swept collision chooses the earliest intersected enemy. A round without
   explicit pierce is retired at that first enemy instead of crossing the
   visible body.
 - Ordinary hull contact uses the relative swept path between the player's and
   enemy's physics-start and physics-end positions, so two moving bodies cannot
-  cross between endpoint checks. Chaser, Melee Ordinary Enemy Lv.1, Rammer, and committed
-  collective execution contact can damage at most once per warned active
-  attack. Shield Ordinary Enemy Lv.1 and Pulse Ordinary Enemy Lv.1 use persistent hull contact with a
-  `0.8 s` per-enemy retry cooldown that starts only when barrier or hull accepts
-  damage; an invulnerability rejection leaves the contact armed. Mobile Shooter,
-  Controller, and Growth Ordinary Enemy Lv.1 behavior roles, including their swarm
-  archetype variants, use low hull-scrape contact for `6` damage with a `1.0 s`
-  per-enemy accepted-hit cooldown. A rejected scrape remains armed. Support,
-  fixed-structure, ordinary-mine, and ordinary Chaser/Rammer hull overlap outside
-  their warned contact attacks remains damage-inert. Boss contact remains
-  independently authored.
+  cross between endpoint checks. Pursuer and committed Charger contact can damage
+  at most once per warned active attack. Defender and Coordinator use persistent
+  hull contact with a `0.8 s` per-enemy retry cooldown that starts only when barrier
+  or hull accepts damage; an invulnerability rejection leaves the contact armed.
+  Gunner uses low hull-scrape contact for `6` damage with a `1.0 s` per-enemy
+  accepted-hit cooldown. Overlap outside a family's authored contact attack remains
+  damage-inert. Boss contact remains independently authored.
 - Every hostile attack has a startup descriptor produced from simulation
   values. Its `danger footprint` is the exact set of player-center positions
   that can receive damage: projectile radius plus player radius, contact
@@ -166,8 +163,8 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
   Non-damaging support descriptors create no warning.
 - All hostile circles, wedges, shockwaves, and damaging corridors use a danger-red full
   footprint, one thin near-black perimeter, and four inward boundary notches, regardless
-  of affinity. Controller and Growth Ordinary Enemy Lv.1 attacks are projectiles; ordinary
-  mine proximity damage draws no world range ring. Affinity-specific inner rings,
+  of affinity. Coordinator and Gunner attacks are projectiles. Self-Destruct uses its
+  warned fuse footprint and no permanent world range ring. Affinity-specific inner rings,
   diamonds, center lines, tick bars, endpoint caps, and commit markers are absent.
   Circular damage falls linearly from 100% at the center to 45% at the boundary
   and stops outside it.
@@ -234,7 +231,7 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
   Dynamic markers expose exactly six tactical roles: player craft, field
   pickup, intact Anomaly Device, mobile enemy, priority enemy, boss, and
   no separate objective marker. The pickup marker is `12 x 7.6`. The Anomaly Device silhouette scales every outer
-  point by `1.20`. Elite distinctions, stage-specific boss identity, and the
+  point by `1.20`. Family-trait distinctions, stage-specific boss identity, and the
   Mystery outcome are not separate minimap markers.
 
 ### Inner walls, Transit Gates, and neutral facilities
@@ -272,13 +269,15 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
    within 8.0 seconds, and no empty or off-screen-only combat gap may exceed 3.0 seconds.
    The scheduler may expedite eligible reserves and redirect nearby mobile hostiles along
    existing paths. It may not teleport them or lower counts, cadence, or collision work.
-4. Every ordinary role attacks the player. Ordinary defeats advance quota; summons,
+4. Every ordinary family attacks the player. Ordinary defeats advance quota; summons,
    facilities, and boss-cleanup retirement do not. Living ordinary enemies never block
-   the quota-triggered boss. Each cycle admits a rolling three-role roster: two retained
-   roles plus one teaching role that previews one essential response for that cycle's boss.
-   The teaching role is at least four admissions and 25% of normal admissions; stage 12's
-   support role is limited to 12%. A cycle change affects future admissions only and never
-   deletes already-living ordinary enemies.
+   the quota-triggered boss. Every authored ordinary squad is one persistent semantic pack
+   of four to eight actors with one primary family, one tier, and at most one family trait.
+   A Gunner pack contains at least one Defender; packs with more than four Gunners contain
+   two. The required Defender replaces a filler and never raises population or capacity.
+   Cycle 1 establishes base silhouettes. Later cycles apply a family trait to one third of
+   packs. A cycle change affects future admissions only and never deletes already-living
+   ordinary enemies.
 5. Quota completion starts a 1.5-second boss warning. Twelve bosses appear in stage order
    under generic labels from Stage 1 Boss through Stage 12 Boss.
 6. Bosses in stages 1-8 may use the shared committed charge and broad three-row projectile
@@ -326,9 +325,8 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
    and 20% inside or outside; every eight seconds a one-second module cue shifts the band
    to 520-880 for the next interval, then back. Stage 12 first overloads 12 seconds after
    arrival and then every 18 seconds for six seconds: movement `1.35x`, cadence `0.75x`,
-   dealt damage `1.30x`, and received damage `1.50x`. Their teaching roles are
-   `ordinary_compression_01`, `ordinary_reflect_01`, `ordinary_resonance_01`, and
-   `ordinary_overload_01`, each admitted at least four times before its quota.
+   dealt damage `1.30x`, and received damage `1.50x`. Their ordinary teaching families are
+   Gunner T3, Defender T3, Coordinator T3, and Pursuer T3, respectively.
 10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
     immediately. The boss body receives a restrained hit tint, dim/desaturation, and
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
@@ -354,6 +352,36 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
 | 10 | 171 | 770 | Stage 10 Boss |
 | 11 | 180 | 840 | Stage 11 Boss |
 | 12 | 189 | 910 | Stage 12 Boss |
+
+### Ordinary enemy families, tiers, packs, and traits
+
+- The complete player-facing ordinary catalog is five families multiplied by three tiers:
+  Pursuer, Charger, Gunner, Defender, and Coordinator at T1, T2, and T3. Controller,
+  Sustainer, Bomber, separate Artillery, and global Armored/Overclocked/Heavy identities
+  do not exist. The Stage 3 fixed-beam summon is the boss-owned
+  `boss_pattern_fixed_beam_01`, not an ordinary family.
+- Tiers own family stats and presentation scale. They do not create a new behavior family.
+  All actors in one pack share the authored tier. Pack admission is atomic: a failed
+  four-to-eight-member placement delays the complete pack and never creates an orphan.
+- Pursuer owns Splitter and Frenzy. Splitter creates bounded traitless T1 children;
+  Frenzy increases speed to `1.15x` and attack cadence to `0.85x` of the base interval.
+- Charger owns Double and Self-Destruct. Double performs one additional warned charge;
+  Self-Destruct enters a visible fuse that the player can interrupt by killing it.
+- Gunner owns Artillery and Slow. Artillery substitutes a marked-impact attack; Slow
+  applies one non-stacking `0.65x` player movement modifier for `1.5 s` and refreshes it.
+- Defender owns Bulwark and Reflector. Bulwark activates for `2.5 s` every `8 s`, grows
+  its presentation to `135%`, and protects same-pack actors within `250` units. Reflector
+  keeps a normal shield and reflects only during a warned `2 s` window every `7 s`.
+- Coordinator owns Blink and Pack Feed. Blink warns for `0.9 s` before a collision-safe
+  pack relocation on a `9 s` cadence; an invalid destination cancels the relocation.
+  Pack Feed converts eligible same-pack deaths into a `10%` heal and capped survivor
+  pressure: up to five stacks, `+8%` damage and `+4%` speed per stack. It stops when the
+  Coordinator leader dies and excludes summons and duplicate death receipts.
+- Pack objective, formation, trait cadence, Blink state, and Pack Feed stacks are stored
+  once in the existing bounded collective runtime. Actors keep only per-actor combat
+  state. Movement follows the current pack objective; route guidance runs only when a
+  direct approach is blocked. Family standoff, local separation, smoothing, speed caps,
+  and attack-owned prediction remain.
 
 ### Items, experience, and upgrades
 
@@ -418,7 +446,8 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
   player-facing `Stage N/10`, odd/even pairing, transition banner, boss room, or
   difficulty selector remains.
 - Guidebook categories remain Ship, Enemies, Bosses, and Field Objects. It lists all twelve
-  bosses and active ordinary roles from gameplay data; facilities are Field Objects.
+  bosses, fifteen family-tier ordinary actors, and ten family traits from gameplay data;
+  facilities are Field Objects.
 - Victory, defeat, and Settings Ship Status reuse one report view model and report body:
   one left-aligned vertical stack, exactly one outer scroll, no report tabs, metric
   sub-scroll, narrow build rail, or multi-column metric body.
@@ -458,6 +487,9 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
 - Combat presentation coalesces mobile enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained
   batches. The hard ceiling remains 50 combat batches.
+- The collective runtime stores at most 32 pack records and creates no per-pack or
+  per-actor Node. Fifteen ordinary body textures plus shared code-native trait cues
+  remain inside the retained renderer; trait cues add no texture batch or material.
 - Dynamic enemy broadphase uses stable runtime slots, reuse generations and
   incremental membership updates. Ordered projectile traversal stops a
   non-piercing shot after its first contact; reusable query, support-assignment,
@@ -479,8 +511,10 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
 - Boss death lasts exactly 2.00 seconds and permits no boss-owned damage, reward, quota,
   or early transition. Reduced motion preserves state/timing while removing growth,
   impulse, and hit-stop.
-- The four new ordinary roles attack. Melee Ordinary Enemy Lv.2 uses eligible radius-360 death
-  events, caps at five stacks, and creates no corpse.
+- Exactly fifteen family-tier ordinary identities are reachable. Every actor belongs to
+  one valid four-to-eight-member pack; every Gunner pack contains its required Defender.
+  The ten traits remain family-exclusive, bounded, and readable through shared retained
+  cues without a global elite layer.
 - Shock has no reachable data, runtime, status, offer, copy, telemetry, or image. Thermal,
   Toxin, and Cryo may occupy either of two acquisition-order attribute slots; Cryo's third
   Chill application clears Chill and routes its level-owned shatter damage once.
@@ -507,7 +541,7 @@ Support Ordinary Enemy Lv.1s restore `8 HP/s`, and Generator support ticks resto
   and four active weapon types require an explicit product-spec revision.
 - A selectable, adaptive, or meta-progression difficulty model is inactive and
   requires an explicit product-spec revision.
-- Additional map-generation systems or coordinated-enemy tactic families require an
-  explicit product-spec revision and a separate ExecPlan before implementation.
+- A sixth ordinary family, a third trait for any family, map-generation expansion, or a
+  new coordination runtime requires an explicit product-spec revision and separate ExecPlan.
 - A named cultural, marine, ritual, or material motif is not part of the current
   product identity.

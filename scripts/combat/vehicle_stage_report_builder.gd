@@ -22,9 +22,9 @@ static func build(
 	var defeat_rows := _defeat_rows(Dictionary(telemetry.get("defeats", {})))
 	var outgoing_values := Dictionary(telemetry.get("outgoing", {}))
 	var attribute_values := Dictionary(telemetry.get("attributes", {}))
-	_attach_elite_counts(
+	_attach_trait_counts(
 		defeat_rows,
-		Dictionary(telemetry.get("elites", {}))
+		Dictionary(telemetry.get("traits", {}))
 	)
 	var incoming_rows := _damage_rows(Dictionary(telemetry.get("incoming", {})), true, 3)
 	var damage_rows: Array[Dictionary] = _damage_rows(outgoing_values, false, 8)
@@ -199,7 +199,7 @@ static func _defeat_rows(values: Dictionary) -> Array[Dictionary]:
 	return rows
 
 
-static func _attach_elite_counts(
+static func _attach_trait_counts(
 	rows: Array[Dictionary],
 	values: Dictionary
 ) -> void:
@@ -214,7 +214,7 @@ static func _attach_elite_counts(
 			values[composite_value]
 		)
 	for row in rows:
-		row["elite_count"] = int(counts.get(StringName(row["id"]), 0))
+		row["trait_count"] = int(counts.get(StringName(row["id"]), 0))
 
 
 static func _damage_rows(

@@ -11,7 +11,9 @@ const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalo
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const BossShieldRuntime = preload("res://scripts/bosses/vehicle_boss_shield_runtime.gd")
 const ContactRuntime = preload("res://scripts/enemies/vehicle_enemy_contact_runtime.gd")
-const EliteTraits = preload("res://scripts/enemies/vehicle_elite_trait_catalog.gd")
+const FamilyTraits = preload(
+	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
+)
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const MysteryDeviceRuntime = preload("res://scripts/vehicle/vehicle_mystery_device_runtime.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
@@ -23,8 +25,8 @@ static func rows_for(entry: Dictionary, context: Dictionary = {}) -> Array[Dicti
 	match StringName(entry.get("entry_kind", &"")):
 		&"enemy":
 			return enemy_rows(StringName(entry["archetype"]), context)
-		&"elite":
-			return elite_rows(StringName(entry["elite_trait"]))
+		&"trait":
+			return trait_rows(StringName(entry["family_trait"]))
 		&"boss":
 			return boss_rows(int(entry["boss_stage_index"]))
 		&"object":
@@ -96,7 +98,7 @@ static func enemy_rows(
 				roundi(_enemy_speed(base_speed, final_stage)),
 			], &"speed"
 		))
-	if archetype == &"ordinary_shield_01":
+	if StringName(definition.get("family", &"")) == &"defender":
 		rows.append(_row(
 			"GUIDE_STAT_PROTECTION", "GUIDE_VALUE_FRONT_PLATE",
 			[roundi(SpecialistRuntime.GUARD_PLATE_STRUCTURE)], &"protection"
@@ -104,25 +106,45 @@ static func enemy_rows(
 	return rows
 
 
-static func elite_rows(elite_trait: StringName) -> Array[Dictionary]:
-	match elite_trait:
-		&"armored":
-			return [_row(
-				"GUIDE_STAT_PROTECTION", "GUIDE_VALUE_ARMOR_SHELL",
-				[roundi(EliteTraits.ARMORED_SHELL)], &"protection"
-			)]
-		&"overclocked":
-			return [
-				_row("GUIDE_STAT_SPEED", "GUIDE_VALUE_PERCENT_UP", [15], &"speed"),
-				_row("GUIDE_STAT_CADENCE", "GUIDE_VALUE_COOLDOWN_DOWN", [15], &"cadence"),
+static func trait_rows(family_trait: StringName) -> Array[Dictionary]:
+	var value_key := "GUIDE_VALUE_TRAIT_%s" % String(family_trait).to_upper()
+	var value_args: Array = []
+	match family_trait:
+		&"frenzy":
+			value_args = [
+				roundi((FamilyTraits.FRENZY_SPEED_MULTIPLIER - 1.0) * 100.0),
+				roundi((1.0 - FamilyTraits.FRENZY_CADENCE_MULTIPLIER) * 100.0),
 			]
-		&"heavy":
-			return [
-				_row("GUIDE_STAT_HEALTH", "GUIDE_VALUE_PERCENT_UP", [35], &"health"),
-				_row("GUIDE_STAT_SIZE", "GUIDE_VALUE_PERCENT_UP", [15], &"coverage"),
-				_row("GUIDE_STAT_SPEED", "GUIDE_VALUE_PERCENT_DOWN", [10], &"speed"),
+		&"slow":
+			value_args = [
+				roundi((1.0 - FamilyTraits.SLOW_MOVEMENT_MULTIPLIER) * 100.0),
+				FamilyTraits.SLOW_DURATION,
 			]
-	return []
+		&"bulwark":
+			value_args = [
+				FamilyTraits.BULWARK_INTERVAL,
+				FamilyTraits.BULWARK_ACTIVE_DURATION,
+				roundi(FamilyTraits.BULWARK_RADIUS),
+				FamilyTraits.BULWARK_VISUAL_PERCENT,
+			]
+		&"reflector":
+			value_args = [
+				FamilyTraits.REFLECTOR_INTERVAL,
+				FamilyTraits.REFLECTOR_ACTIVE_DURATION,
+			]
+		&"blink":
+			value_args = [
+				FamilyTraits.BLINK_INTERVAL,
+				FamilyTraits.BLINK_WARNING_DURATION,
+			]
+		&"pack_feed":
+			value_args = [
+				roundi(FamilyTraits.PACK_FEED_HEAL_RATIO * 100.0),
+				roundi(FamilyTraits.PACK_FEED_DAMAGE_PER_STACK * 100.0),
+				roundi(FamilyTraits.PACK_FEED_SPEED_PER_STACK * 100.0),
+				FamilyTraits.PACK_FEED_MAX_STACKS,
+			]
+	return [_row("GUIDE_STAT_EFFECT", value_key, value_args, &"effect")]
 
 
 static func boss_rows(stage_index: int) -> Array[Dictionary]:
@@ -276,17 +298,8 @@ static func _enemy_attack(
 	archetype: StringName,
 	definition: Dictionary
 ) -> Dictionary:
-	match archetype:
-		&"ordinary_area_01":
-			return {
-				"damage":SpecialistRuntime.MOBILE_MINE_DAMAGE,
-				"range":SpecialistRuntime.MOBILE_MINE_RADIUS,
-			}
-		&"ordinary_fixed_area_01":
-			return {
-				"damage":SpecialistRuntime.STATIC_MINE_DAMAGE,
-				"range":SpecialistRuntime.STATIC_MINE_RADIUS,
-			}
+	var behavior := StringName(definition.get("behavior", &""))
+	match behavior:
 		&"ordinary_pull_01":
 			return {
 				"damage":SpecialistRuntime.PULL_CHARGE_DAMAGE,
@@ -302,40 +315,7 @@ static func _enemy_attack(
 				"damage":ContactRuntime.PERSISTENT_CONTACT_DAMAGE,
 				"range":0.0,
 			}
-		&"ordinary_support_02":
-			return {
-				"support":true,
-				"value_key":"GUIDE_VALUE_SHIELD_SUPPORT",
-				"value_args":[
-					roundi((1.0 - SpecialistRuntime.SHIELDED_RECEIVED_DAMAGE_MULTIPLIER) * 100.0),
-					roundi(SpecialistRuntime.SHIELD_SUPPORT_RANGE),
-				],
-			}
-		&"ordinary_support_01":
-			return {
-				"support":true,
-				"value_key":"GUIDE_VALUE_REPAIR_SUPPORT",
-				"value_args":[
-					roundi(SpecialistRuntime.REPAIR_PER_SECOND),
-					roundi(SpecialistRuntime.REPAIR_RANGE),
-				],
-			}
-		&"ordinary_fixed_support_01":
-			return {
-				"support":true,
-				"value_key":"GUIDE_VALUE_FIXED_SUPPORT_SUPPORT",
-				"value_args":[
-					roundi(SpecialistRuntime.FIXED_SUPPORT_HEAL_PER_TICK),
-					roundi(SpecialistRuntime.FIXED_SUPPORT_RANGE),
-				],
-			}
-		&"ordinary_support_03":
-			return {
-				"support":true,
-				"value_key":"GUIDE_VALUE_MOBILE_SUPPORT_SUPPORT",
-				"value_args":[SpecialistRuntime.MOBILE_SUPPORT_CHILD_CAP],
-			}
-	var attack := AttackContract.ordinary_attack(StringName(definition["behavior"]))
+	var attack := AttackContract.ordinary_attack(behavior)
 	if attack.is_empty() or float(attack.get("damage", 0.0)) <= 0.0:
 		return {"support":true, "value_key":"GUIDE_VALUE_SUPPORT", "value_args":[]}
 	var attack_range := 0.0

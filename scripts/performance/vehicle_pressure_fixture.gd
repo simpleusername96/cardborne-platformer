@@ -154,7 +154,7 @@ static func _allocator_sector_directions(
 ) -> Array[Vector2]:
 	var squads: Array[Array] = []
 	for _index in 8:
-		squads.append([&"ordinary_melee_01"])
+		squads.append([&"ordinary_pursuer_t1"])
 	var allocations := allocator.allocate({
 		"id":"performance_peak_sector_probe",
 		"beat":4,

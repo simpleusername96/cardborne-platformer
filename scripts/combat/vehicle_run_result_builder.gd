@@ -171,10 +171,10 @@ static func _merge_defeats(records: Array) -> Array[Dictionary]:
 				"id": id,
 				"name_key": String(row.get("name_key", "REPORT_SOURCE_OTHER")),
 				"count": 0,
-				"elite_count": 0,
+				"trait_count": 0,
 			})
 			current["count"] = int(current["count"]) + maxi(0, int(row.get("count", 0)))
-			current["elite_count"] = int(current["elite_count"]) + maxi(0, int(row.get("elite_count", 0)))
+			current["trait_count"] = int(current["trait_count"]) + maxi(0, int(row.get("trait_count", 0)))
 			merged[id] = current
 	var rows: Array[Dictionary] = []
 	for value in merged.values():

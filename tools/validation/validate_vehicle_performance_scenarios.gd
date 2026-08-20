@@ -6,6 +6,7 @@ const PressureFixture = preload("res://scripts/performance/vehicle_pressure_fixt
 const InputProfile = preload("res://scripts/input/vehicle_input_profile.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
+const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const RUN_SCENE := "res://scenes/run/VehicleRun.tscn"
 
 var failures: Array[String] = []
@@ -140,7 +141,8 @@ func _run() -> void:
 			"%s uses its locked actor load" % String(scenario_id)
 		)
 		_expect(
-			int(snapshot["health_overlay_capacity"]) == 26,
+			int(snapshot["health_overlay_capacity"])
+				== EnemyStore.MAX_LIVE_HOSTILES * 2,
 			"%s keeps the fixed world-health overlay capacity" % String(scenario_id)
 		)
 		_expect(

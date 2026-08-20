@@ -191,7 +191,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 					{"active_stage_index":_run.current_stage_index}
 				),
 				&"enemies",
-				&"mobile_ordinary_edge_01"
+				&"enemy_ordinary_pursuer_t1"
 			)
 		&"guidebook_elite_stats":
 			var all_known := GuidebookCatalog.valid_ids()
@@ -202,7 +202,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 					{"active_stage_index":_run.current_stage_index}
 				),
 				&"enemies",
-				&"object_elite_armored"
+				&"object_trait_splitter"
 			)
 		&"guidebook_field_objects":
 			var all_known := GuidebookCatalog.valid_ids()
@@ -216,7 +216,7 @@ func show_ui_fixture(fixture: Dictionary) -> void:
 			_run._ui.debug_guide_entry(
 				GuidebookCatalog.snapshot(all_known, _run._build_snapshot()),
 				&"enemies",
-				&"mobile_ordinary_edge_01"
+				&"enemy_ordinary_pursuer_t1"
 			)
 		&"ship_status_active":
 			var active_build: Dictionary = _run._build_snapshot()
@@ -327,9 +327,9 @@ func _show_stage_report(failed: bool) -> void:
 		_report_fixture.record_status_application(&"chill")
 		_report_fixture.record_incoming(&"projectile", 32.0)
 		_report_fixture.record_incoming(&"contact", 18.0)
-		_report_fixture.record_defeat(&"ordinary_melee_01")
-		_report_fixture.record_defeat(&"ordinary_melee_01")
-		_report_fixture.record_defeat(&"ordinary_ranged_01", &"armored")
+		_report_fixture.record_defeat(&"ordinary_pursuer_t1")
+		_report_fixture.record_defeat(&"ordinary_pursuer_t1")
+		_report_fixture.record_defeat(&"ordinary_gunner_t1", &"slow")
 	var report_data := {
 		"number":1,
 		"title_key":_stage_title_key(0),
@@ -353,9 +353,9 @@ func _final_result_fixture() -> Dictionary:
 		telemetry.record_outgoing(&"seeker", &"kinetic", 72.0 + stage_index * 12.0)
 		telemetry.record_outgoing(&"thermal_burst", &"thermal", 24.0 + stage_index * 6.0)
 		telemetry.record_status_application(&"chill")
-		telemetry.record_defeat(&"ordinary_melee_01")
-		telemetry.record_defeat(&"ordinary_melee_01")
-		telemetry.record_defeat(&"ordinary_ranged_01", &"armored" if stage_index % 2 == 0 else &"")
+		telemetry.record_defeat(&"ordinary_pursuer_t1")
+		telemetry.record_defeat(&"ordinary_pursuer_t1")
+		telemetry.record_defeat(&"ordinary_gunner_t1", &"slow" if stage_index % 2 == 0 else &"")
 		stage_records.append(StageReportBuilder.build(telemetry.freeze_stage(), {
 			"number":stage_index + 1,
 			"title_key":_stage_title_key(stage_index),
@@ -474,7 +474,7 @@ func _capture_collective_tactic_evidence() -> void:
 		)
 		var enemy: VehicleEnemyState = _run._make_enemy({
 			"id":"capture_tactic_%02d" % index,
-			"role":&"ordinary_pull_01" if index == 0 else &"ordinary_edge_01",
+			"role":&"ordinary_charger_t1" if index == 0 else &"ordinary_pursuer_t1",
 			"pos":position,
 			"active":true,
 			"squad_id":"capture_tactic",
@@ -556,13 +556,13 @@ func _capture_movement_policy_evidence() -> void:
 	_run.player_invulnerable = 99.0
 	var ordinary_edge_01: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_movement_ordinary_edge_01",
-		"role":&"ordinary_edge_01",
+		"role":&"ordinary_pursuer_t1",
 		"pos":Vector2(fixture["ordinary_edge_01_start"]),
 		"active":true,
 	})
 	var ordinary_lane_01: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_movement_ordinary_lane_01",
-		"role":&"ordinary_lane_01",
+		"role":&"ordinary_gunner_t1",
 		"pos":Vector2(fixture["ordinary_lane_01_start"]),
 		"active":true,
 	})
@@ -940,7 +940,7 @@ func _capture_structural_health_bar_evidence() -> void:
 	_run.pickups.clear()
 	var mobile: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_mobile_without_health_bar",
-		"role":&"ordinary_edge_01",
+		"role":&"ordinary_pursuer_t1",
 		"pos":_run.player_position + Vector2(-280.0, 90.0),
 		"active":true,
 	})
@@ -950,7 +950,7 @@ func _capture_structural_health_bar_evidence() -> void:
 		_run._append_enemy(mobile)
 	var repairer: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_repair_link",
-		"role":&"ordinary_support_01",
+		"role":&"ordinary_defender_t1",
 		"pos":_run.player_position + Vector2(-440.0, 90.0),
 		"active":true,
 	})
@@ -959,7 +959,7 @@ func _capture_structural_health_bar_evidence() -> void:
 		_run._append_enemy(repairer)
 	var installation: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_structural_health_bar",
-		"role":&"ordinary_fixed_beam_01",
+		"role":&"boss_pattern_fixed_beam_01",
 		"pos":_run.player_position + Vector2(290.0, -70.0),
 		"active":true,
 	})
@@ -1134,7 +1134,7 @@ func _capture_elemental_status_evidence() -> void:
 		for stack_index in 3:
 			var enemy: EnemyState = _run._make_enemy({
 				"id":"capture_status_%d_%d" % [row, stack_index],
-				"role":&"ordinary_edge_01",
+				"role":&"ordinary_pursuer_t1",
 				"pos":_run.player_position + Vector2(
 					165.0 + float(stack_index) * 105.0,
 					-105.0 if row == 0 else 105.0
@@ -1219,7 +1219,7 @@ func _capture_electric_field_evidence() -> void:
 	for index in 2:
 		var enemy: EnemyState = _run._make_enemy({
 			"id":"capture_field_target_%d" % index,
-			"role":&"ordinary_edge_01",
+			"role":&"ordinary_pursuer_t1",
 			"pos":_run.player_position + Vector2(
 				130.0 if index == 0 else -145.0,
 				0.0
@@ -1256,7 +1256,7 @@ func _capture_thermal_burst_evidence() -> void:
 		var center: Vector2 = _run.player_position + Vector2(290.0, 0.0)
 		var direct: EnemyState = _run._make_enemy({
 			"id":"capture_thermal_direct_%d" % (level_index + 1),
-			"role":&"ordinary_edge_01",
+			"role":&"ordinary_pursuer_t1",
 			"pos":center,
 			"active":true,
 		})
@@ -1521,7 +1521,7 @@ func _add_exact_area_reference_markers(
 	for index in actor_distances.size():
 		var enemy: EnemyState = _run._make_enemy({
 			"id":"exact_area_actor_%d" % index,
-			"role":&"ordinary_edge_01",
+			"role":&"ordinary_pursuer_t1",
 			"pos":center + Vector2.LEFT.rotated(float(index) * 0.48)
 				* float(actor_distances[index]),
 			"active":true,
@@ -1629,7 +1629,7 @@ func _capture_ordinary_projectile_evidence() -> void:
 	_run.player_barrier_timer = 0.0
 	var ordinary_lane_01: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_ordinary_ordinary_lane_01",
-		"role":&"ordinary_lane_01",
+		"role":&"ordinary_gunner_t1",
 		"pos":_run.player_position + Vector2(-260.0, 0.0),
 		"active":true,
 	})
@@ -1668,7 +1668,7 @@ func _capture_ordinary_fixed_beam_01_evidence() -> void:
 	_run._clear_projectiles()
 	var sentinel: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_ordinary_fixed_beam_01",
-		"role":&"ordinary_fixed_beam_01",
+		"role":&"boss_pattern_fixed_beam_01",
 		"pos":_run.player_position + Vector2(-360.0, 0.0),
 		"active":true,
 	})
@@ -1699,7 +1699,8 @@ func _capture_arc_area_telegraph_evidence() -> void:
 	_run.denied_zones.clear()
 	var mine: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_arc_mine",
-		"role":&"ordinary_fixed_area_01",
+		"role":&"ordinary_charger_t1",
+		"family_trait":&"self_destruct",
 		"pos":_run.player_position + Vector2(250.0, 0.0),
 		"active":true,
 	})

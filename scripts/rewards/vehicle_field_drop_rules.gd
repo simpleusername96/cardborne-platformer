@@ -16,7 +16,7 @@ static func experience_for_enemy(enemy: EnemyState) -> int:
 	match enemy.health_class:
 		&"swarm": base = 3
 		&"priority": base = 10
-	return ceili(float(base) * (1.5 if not enemy.elite_trait.is_empty() else 1.0))
+	return ceili(float(base) * (1.5 if enemy.family_trait.is_empty() else 1.0))
 
 
 static func pickup_is_valid(kind: StringName) -> bool:

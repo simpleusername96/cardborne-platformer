@@ -24,8 +24,8 @@ func _init() -> void:
 		},
 		"status_applications":{&"chill":3},
 		"incoming":{&"projectile":20.0, &"contact":5.0},
-		"defeats":{&"ordinary_melee_01":12, &"ordinary_ranged_01":4},
-		"elites":{&"ordinary_ranged_01:armored":1},
+		"defeats":{&"ordinary_pursuer_t1":12, &"ordinary_gunner_t1":4},
+		"traits":{&"ordinary_gunner_t1:slow":1},
 		"boss":{
 			"id":&"BOSS_STAGE_02",
 			"cleanup_started":true,
@@ -100,8 +100,8 @@ func _init() -> void:
 	)
 	_expect(report["defeats"].size() == 2, "defeat rows preserve base archetypes")
 	_expect(
-		int(report["defeats"][1]["elite_count"]) == 1,
-		"elite count is nested under the defeated base archetype"
+		int(report["defeats"][1]["trait_count"]) == 1,
+		"trait count is nested under the defeated base archetype"
 	)
 	_expect(
 		is_equal_approx(float(report["run_time_seconds"]), 183.0)
