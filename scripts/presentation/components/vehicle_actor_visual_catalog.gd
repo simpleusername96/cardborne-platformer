@@ -62,3 +62,20 @@ static func descriptor_ids() -> Array[StringName]:
 
 static func descriptor(visual_id: StringName) -> Dictionary:
 	return Dictionary(DESCRIPTORS.get(visual_id, {})).duplicate(true)
+
+
+static func asset_id_for_enemy(
+	archetype: StringName,
+	family_trait: StringName = &""
+) -> StringName:
+	var actor := descriptor(archetype)
+	var base_asset := StringName(actor.get("asset", &""))
+	if family_trait.is_empty() or base_asset.is_empty():
+		return base_asset
+	var family := StringName(actor.get("role", &""))
+	var tier_text := String(archetype).get_slice("_t", 1)
+	if family.is_empty() or tier_text.is_empty():
+		return base_asset
+	return StringName(
+		"actor/ordinary_%s_%s_t%s" % [family, family_trait, tier_text]
+	)

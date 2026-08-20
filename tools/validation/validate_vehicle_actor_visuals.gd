@@ -12,6 +12,7 @@ const SecondaryCatalog = preload(
 const BossCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const FamilyTraits = preload("res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd")
 
 const PRODUCTION_BOSS_VARIANTS: Array[StringName] = [
 	&"boss_stage_01", &"boss_stage_02", &"boss_stage_03", &"boss_stage_04", &"boss_stage_05",
@@ -62,16 +63,23 @@ func _validate_player_attachments() -> void:
 
 func _validate_actor_images() -> void:
 	var signatures := {}
-	for archetype in EnemyArchetypes.ORDINARY_ARCHETYPES:
-		var asset_id := StringName("actor/%s" % archetype)
-		_validate_unique_file_hash(asset_id, signatures)
+	for family in FamilyTraits.FAMILIES:
+		for tier in [1, 2, 3]:
+			var archetype := FamilyTraits.archetype(family, tier)
+			_validate_unique_file_hash(
+				ActorCatalog.asset_id_for_enemy(archetype), signatures
+			)
+			for trait_id in FamilyTraits.traits(family):
+				_validate_unique_file_hash(
+					ActorCatalog.asset_id_for_enemy(archetype, trait_id), signatures
+				)
 	_expect(
-		signatures.size() == EnemyArchetypes.ORDINARY_ARCHETYPES.size(),
-		"all fifteen family-tier ordinary actor images remain distinct"
+		signatures.size() == EnemyArchetypes.ORDINARY_ARCHETYPES.size() * 3,
+		"all forty-five family-tier and trait ordinary actor images remain distinct"
 	)
 	_validate_unique_file_hash(&"actor/boss_pattern_fixed_beam_01", signatures)
 	_expect(
-		signatures.size() == EnemyArchetypes.ORDINARY_ARCHETYPES.size() + 1,
+		signatures.size() == EnemyArchetypes.ORDINARY_ARCHETYPES.size() * 3 + 1,
 		"boss-owned fixed beam keeps a distinct non-ordinary image"
 	)
 	signatures.clear()

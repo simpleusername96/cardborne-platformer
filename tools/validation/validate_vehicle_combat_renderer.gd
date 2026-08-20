@@ -28,8 +28,8 @@ func _run() -> void:
 	var snapshot: Dictionary = renderer.debug_snapshot()
 	_expect(int(snapshot["enemy_capacity"]) == 320, "renderer shares the 320-hostile store capacity")
 	_expect(
-		int(snapshot["batches"]) <= 50,
-		"combat presentation remains inside the retained fifty-batch ceiling (actual %d)"
+		int(snapshot["batches"]) <= 80,
+		"combat presentation remains inside the retained eighty-batch ceiling (actual %d)"
 		% int(snapshot["batches"])
 	)
 	_expect(
@@ -505,6 +505,23 @@ func _run() -> void:
 		no_enemies,
 		no_projectiles,
 		no_shards
+	)
+	enemy.family_trait = &"splitter"
+	renderer.sync(
+		enemies, projectiles, hostile_projectiles, shards, effect_store.live,
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 1.0, true,
+		"renderer_enemy", presentation
+	)
+	var base_pursuer_batch := renderer.get_node("Enemy_ordinary_pursuer_t1") as MultiMeshInstance2D
+	var splitter_pursuer_batch := renderer.get_node("Enemy_ordinary_pursuer_t1_splitter") as MultiMeshInstance2D
+	_expect(
+		base_pursuer_batch.multimesh.visible_instance_count == 0
+			and splitter_pursuer_batch.multimesh.visible_instance_count == 1
+			and splitter_pursuer_batch.texture == AssetProvider.texture(
+				&"actor/ordinary_pursuer_splitter_t1"
+			)
+			and splitter_pursuer_batch.texture != base_pursuer_batch.texture,
+		"a family trait resolves its own authored body batch instead of the base-family image"
 	)
 	var crowd: Array[EnemyState] = []
 	for index in 320:

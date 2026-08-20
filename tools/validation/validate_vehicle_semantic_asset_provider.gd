@@ -3,6 +3,9 @@ extends SceneTree
 const AssetProvider = preload(
 	"res://scripts/presentation/components/vehicle_semantic_asset_provider.gd"
 )
+const FamilyTraits = preload(
+	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
+)
 
 const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"attachment/player_craft_body",
@@ -139,9 +142,20 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 86, "all 83 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 116, "all 113 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
+	for family in FamilyTraits.FAMILIES:
+		for tier in [1, 2, 3]:
+			var archetype := FamilyTraits.archetype(family, tier)
+			for trait_id in FamilyTraits.traits(family):
+				var trait_asset := StringName(
+					"actor/ordinary_%s_%s_t%d" % [family, trait_id, tier]
+				)
+				_expect(
+					AssetProvider.has_asset(trait_asset),
+					"%s is indexed for %s" % [trait_asset, archetype]
+				)
 	for asset_id in REQUIRED_UPGRADE_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in RETIRED_SHARED_UPGRADE_IDS:
@@ -187,9 +201,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 86
+		int(manifest.get("final_asset_count", 0)) == 116
 			and not manifest.has("animations"),
-		"manifest declares 86 static semantic images and no frame animations"
+		"manifest declares 116 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	for error in AssetProvider.validate_pack():

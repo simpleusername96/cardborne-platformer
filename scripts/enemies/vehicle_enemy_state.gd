@@ -66,6 +66,7 @@ var reposition_dir := Vector2.ZERO
 var zone := ""
 var group_id := ""
 var squad_id := ""
+var escort_target_id := ""
 var squad_leader := false
 var formation_slot := 0
 var formation_size := 1
@@ -194,6 +195,7 @@ func reset_runtime_collections() -> void:
 	engagement_started_at = 0.0
 	engagement_last_player_distance = -1.0
 	engagement_divergence_started_at = -1.0
+	escort_target_id = ""
 
 
 func behavior_diagnostics() -> Dictionary:

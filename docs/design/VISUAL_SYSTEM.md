@@ -449,8 +449,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   movement/contact radius와 분리된다. 모든 ordinary tier의 projectile target radius는
   `48` 값을 별도 gameplay owner에서 명시한다.
 - runtime ordinary body asset은 Pursuer, Charger, Gunner, Defender, Coordinator의
-  T1/T2/T3에 해당하는 PNG 15개만 사용한다. trait-body variant PNG는 review material이며
-  runtime manifest와 retained batch에 넣지 않는다.
+  T1/T2/T3 base body와 각 family의 trait body 두 개를 포함한 PNG 45개를 사용한다.
+  `family_trait`가 비어 있으면 base body를, 아니면 같은 family/tier의 trait body를
+  선택한다. 이 선택은 collision, movement, attack, active range의 truth를 바꾸지 않는다.
 - family trait는 기존 retained disk/ring/diamond/danger-ring batch 안에서 body footprint
   또는 실제 active range에 cue를 쓴다. Splitter는 paired diamond, Frenzy는 inner danger
   ring, Double은 paired dot, Self-Destruct는 base diamond와 fuse ring, Artillery는 rear
@@ -872,7 +873,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - 8 hull direction × 8 aim direction에서 craft-body transform drift 0,
   independent cursor/muzzle/projectile cue mismatch 0
 - dash danger/radial instance 0
-- combat batch ≤50, world batch ≤12, draw-call p95 ≤200
+- combat batch ≤80, world batch ≤12, draw-call p95 ≤200
 - full Godot import, focused validator, native/Web production smoke
 
 현재 semantic-v2 runtime acceptance와 미통과 performance gate는
@@ -894,11 +895,12 @@ Web export만으로 interactive built-Web smoke나 release performance를
   mode, rounded active planes and the gameplay-owned `0.30s` grown segments remain
   presentation inputs; startup publishes no path geometry. Translating laser walls remain
   placed moving hazards and do not claim a boss muzzle.
-- Five ordinary families use exactly fifteen production body PNGs: T1/T2/T3 for Pursuer,
-  Charger, Gunner, Defender, and Coordinator. Their integer presentation scale is
-  `100/125/150`, measured from the shared T1 radius `56`; projectile target radius remains
-  `48`. Ten family traits use the shared code-native cues defined above, so the retained
-  combat renderer stays at or below its 50-batch ceiling without a trait texture batch.
+- Five ordinary families use forty-five production body PNGs: each T1/T2/T3 body for
+  Pursuer, Charger, Gunner, Defender, and Coordinator has a base, trait A, and trait B
+  variant. Their integer presentation scale is `100/125/150`, measured from the shared T1
+  radius `56`; projectile target radius remains `48`. Ten family traits retain the shared
+  code-native cues defined above and select their matching texture batch, keeping the combat
+  renderer at or below its 80-batch ceiling.
 - The four neutral-facility roles are production-integrated. Repair, Cryo, Weakpoint, and
   Lava use their approved authored role rasters. One assigned symbol is visible alone at
   288 world units with a bounded bob and

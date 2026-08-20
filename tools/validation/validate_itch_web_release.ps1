@@ -2,14 +2,15 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$ReleaseDirectory,
-    [long]$BaselineGzipBytes = 22151773
+    [long]$BaselineGzipBytes = 24499711
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# The baseline is the accepted Cardborne Web export measured on 2026-08-11.
-# Keep it explicit so CI cannot silently redefine the download-size budget.
+# The baseline is the accepted Web export after the user-approved 30 trait-body
+# PNG promotion measured on 2026-08-21. Keep it explicit so CI cannot silently
+# redefine the download-size budget.
 [long]$MaxInitialPayloadGzipBytes = 30MB
 [int]$MaxItchFileCount = 1000
 [long]$MaxItchExtractedBytes = 500MB

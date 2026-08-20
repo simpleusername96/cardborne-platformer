@@ -42,6 +42,7 @@ func _initialize() -> void:
 func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactical) -> void:
 	var runtime := _runtime(stage_id, [packet], tactical)
 	var cue_positions := {}
+	var spawned_specs := {}
 	var cue_times: Array[float] = []
 	var total_cues := 0
 	var total_spawns := 0
@@ -59,6 +60,7 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 			cue_positions[String(cue["squad_id"])] = Vector2(cue["birth_position"])
 		for spec in spawns:
 			total_spawns += 1
+			spawned_specs[String(spec["id"])] = spec
 			var archetype := StringName(spec["role"])
 			var definition := EnemyArchetypes.definition(archetype)
 			if MovementPolicy.family(archetype, StringName(definition["behavior"])) == MovementPolicy.PURSUIT:
@@ -77,6 +79,23 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 		authored_units += Array(squad).size()
 	_expect(total_spawns == authored_units, "scheduler emits the complete authored packet")
 	_expect(gated_spawns > 0, "multi-window packet attaches live engagement reservations")
+	var escort_count := 0
+	for spec_value in spawned_specs.values():
+		var spec := Dictionary(spec_value)
+		var escort_target_id := String(spec.get("escort_target_id", ""))
+		if escort_target_id.is_empty():
+			continue
+		escort_count += 1
+		var target := Dictionary(spawned_specs.get(escort_target_id, {}))
+		var target_definition := EnemyArchetypes.definition(StringName(target.get("role", &"")))
+		var defender_definition := EnemyArchetypes.definition(StringName(spec["role"]))
+		_expect(
+			StringName(defender_definition.get("family", &"")) == &"defender"
+				and StringName(target_definition.get("family", &"")) == &"gunner"
+				and String(spec["squad_id"]) == String(target.get("squad_id", "")),
+			"a defender in a gunner squad is linked to a live same-squad gunner target"
+		)
+	_expect(escort_count > 0, "the mixed-family packet assigns defenders to protect gunners")
 	for index in range(1, cue_times.size()):
 		_expect(cue_times[index] - cue_times[index - 1] >= 1.20 - 0.001, "actual cue windows stay at least 1.20 seconds apart")
 	var snapshot := runtime.debug_snapshot()

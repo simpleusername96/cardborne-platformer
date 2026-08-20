@@ -489,21 +489,12 @@ func _build_batches() -> void:
 	for archetype in ActorCatalog.ENEMY_ARCHETYPES:
 		if archetype == &"boss_actor":
 			continue
-		var actor_descriptor := ActorCatalog.descriptor(archetype)
-		var actor_asset_id := StringName(actor_descriptor.get(
-			"asset", StringName("actor/%s" % archetype)
-		))
-		_enemy_batches[archetype] = _create_asset_batch(
-			"Enemy_%s" % String(archetype),
-			actor_asset_id,
-			ENEMY_CAPACITY,
-			0,
-			archetype,
-			ENEMY_BATCH_INITIAL_CAPACITY,
-			true,
-			_enemy_status_material,
-			true
-		)
+		_create_enemy_asset_batch(archetype, &"")
+		if archetype in EnemyArchetypes.ORDINARY_ARCHETYPES:
+			var family := StringName(EnemyArchetypes.definition(archetype).get("family", &""))
+			for trait_id in FamilyTraits.traits(family):
+				_create_enemy_asset_batch(archetype, trait_id)
+
 	_boss_batch = _create_asset_batch(
 		"Boss_active",
 		&"boss/stage_01",
@@ -632,6 +623,29 @@ func _build_batches() -> void:
 	)
 	_reset_counts()
 	_apply_visible_counts()
+
+
+func _create_enemy_asset_batch(
+	archetype: StringName,
+	family_trait: StringName
+) -> void:
+	var actor_asset_id := ActorCatalog.asset_id_for_enemy(archetype, family_trait)
+	var family_batches: Dictionary = _enemy_batches.get(archetype, {})
+	family_batches[family_trait] = _create_asset_batch(
+		"Enemy_%s%s" % [
+			String(archetype),
+			"" if family_trait.is_empty() else "_%s" % String(family_trait),
+		],
+		actor_asset_id,
+		ENEMY_CAPACITY,
+		0,
+		archetype,
+		16 if not family_trait.is_empty() else ENEMY_BATCH_INITIAL_CAPACITY,
+		true,
+		_enemy_status_material,
+		true
+	)
+	_enemy_batches[archetype] = family_batches
 
 
 func _create_batch(
@@ -884,7 +898,8 @@ func _sync_enemies(
 			_set_active_boss_variant(enemy.boss_variant)
 			batch = _boss_batch
 		else:
-			batch = _enemy_batches.get(archetype)
+			var family_batches: Dictionary = _enemy_batches.get(archetype, {})
+			batch = family_batches.get(enemy.family_trait)
 		if batch == null:
 			continue
 		var body_modulate := _enemy_body_modulate(enemy)

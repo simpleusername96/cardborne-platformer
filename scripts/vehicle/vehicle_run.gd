@@ -1480,6 +1480,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.mine_fast_cue_played = false
 	enemy.splitter_spawned = false
 	enemy.reset_runtime_collections()
+	enemy.escort_target_id = String(spec.get("escort_target_id", ""))
 	var engagement_handle: Dictionary = spec.get("engagement_handle", {})
 	if not engagement_handle.is_empty():
 		enemy.engagement_slot = int(engagement_handle.get("slot", -1))
@@ -4119,6 +4120,19 @@ func _desired_enemy_velocity(
 		player_velocity,
 		enemy.speed
 	)
+	if movement_family == EnemyMovementPolicy.ESCORT and not recovering:
+		var protected_gunner := _find_enemy_by_id(enemy.escort_target_id)
+		if (
+			protected_gunner != null
+			and protected_gunner.alive
+			and protected_gunner.active
+			and protected_gunner.family == &"gunner"
+		):
+			var screen_direction := (pressure_focus - protected_gunner.pos).normalized()
+			if not screen_direction.is_zero_approx():
+				movement_focus = protected_gunner.pos + screen_direction * (
+					protected_gunner.radius + enemy.radius + 18.0
+				)
 	var engagement_focus := false
 	if enemy.engagement_active and enemy.phase == &"move" and not recovering:
 		var relevance := EngagementRelevancePolicy.sample(
