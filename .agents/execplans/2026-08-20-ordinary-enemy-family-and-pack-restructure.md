@@ -11,6 +11,7 @@ related:
   - ../../docs/reports/2026-08-20-ordinary-enemy-five-family-revision-en.html
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
+  - ../../docs/design/visual-replacement-workbench/README.md
   - ../cardborne-performance-engineering-policy.md
   - ../research/performance/cardborne-runtime-architecture-audit.md
 ---
@@ -33,6 +34,8 @@ Prepare a merge-safe ordinary-enemy restructure that:
 - migrates useful behavior before deleting campaign-unreachable or duplicate archetype IDs;
 - makes mobile tier size grow through the integer 100 / 125 / 150 percentage ladder while
   keeping visual, projectile-hit, and body-collision contracts separate; and
+- creates and approves the complete five-family base-and-trait visual set before any
+  runtime enemy schema, behavior, roster, or production-asset switch; and
 - adapts the useful parts of `origin/agent/simplify-ordinary-enemy-ai` without merging its
   universal direct-pursuit decision as-is.
 
@@ -70,6 +73,13 @@ Prepare a merge-safe ordinary-enemy restructure that:
   clearly warned active window.
 - Every Gunner pack includes a Defender, including packs whose Gunner has the Artillery
   trait.
+- The report-only concept crops are not the target art. Generate a new, simpler visual set
+  under the canonical visual authority pair before changing the enemy implementation.
+- A trait-applied actor must be identifiable from its own body at combat scale. Do not use
+  floating labels, trait badges, permanent halos, detached icons, or color alone.
+- Complete and approve all 45 staged actor images first: five families × three tiers ×
+  (`base` + two family traits). Runtime and production integration starts only after this
+  visual gate is complete.
 
 ## Verified local evidence
 
@@ -233,6 +243,91 @@ Artillery is also removed; Artillery is a Gunner trait.
 
 Invisible and Shrink remain future experiments because they weaken silhouette and hitbox
 readability. Like Rock remains excluded because it duplicates Defender's defense space.
+
+## Pre-integration visual asset gate
+
+This gate must finish before implementation workstream A. It creates reviewable final
+candidates, not production-integrated files. The existing `ordinary_enemy_family`
+workbench unit is an already-applied 19-ID replacement and must not be overwritten. A new
+switch unit and exact production target paths can be authored only after the five-family
+runtime schema names its stable semantic IDs.
+
+### Authority and staging
+
+- Mandatory authority:
+  `docs/design/VISUAL_SYSTEM.md` plus
+  `docs/design/cardborne-universal-art-style-reference.png`.
+- The canonical sheet is style grammar only. Do not reproduce its example objects or
+  layout.
+- The user-provided lineup is a role-and-progression concept reference only. Do not copy
+  its white report background, labels, shadows, rejected Coordinator design, or exact
+  object rendering.
+- Save generated review material under
+  `docs/design/visual-replacement-workbench/previews/ordinary-enemy-five-family-v1/`.
+  Do not write to `to-be/assets/`, the production visual root, the gameplay manifest, or a
+  runtime provider in this gate.
+- Use five family master sheets. Each sheet is a strict 3×3 transparent grid with equal
+  cell bounds: columns T1/T2/T3; rows base/trait A/trait B. Mechanically extract the grid
+  into 45 individual transparent PNG candidates after inspecting each sheet.
+- Normalize every extracted actor to the same family canvas and pivot convention. The PNG
+  itself does not encode the 100/125/150 tier size. A non-creative comparison sheet renders
+  the normalized files at those three percentages; runtime will later own the percentage
+  scale.
+
+### Shared actor grammar
+
+- Exact top-down view and right-facing forward direction.
+- One dominant silhouette, three to five large filled planes, a dark perimeter, matte main
+  mass, one light plane, one shadow plane, and at most two large functional modules.
+- Danger coral owns the ordinary-hostile main semantic plane. Cyan or mint may appear only
+  as one restrained state/function accent when the trait needs it.
+- Use broad cuts, plates, prongs, barrels, and negative space that survive grayscale and
+  combat-scale inspection.
+- Do not use decorative rivets, tiny circles, clusters of lamps, random panel seams,
+  concentric rings, nested frames, text, labels, badges, logos, watermarks, bloom, or a
+  scene background.
+- Keep transparent padding around the complete body. No shadow, glow, trail, shield ring,
+  explosion radius, projectile path, or blink afterimage may extend beyond the actor
+  footprint.
+
+### Trait-owned body cues
+
+Each trait owns one permanent body cue so the player can identify the applied trait even
+while its timed behavior is inactive. Later runtime presentation may animate or tint that
+same cue, but gameplay radius and timing remain code-owned.
+
+| Family | State | Required permanent body cue | Later code-owned cue |
+| --- | --- | --- | --- |
+| Pursuer | Splitter | One deep forward cleft that divides the main nose into two broad lobes | split timing and child placement |
+| Pursuer | Frenzy | Two long swept side blades that make the silhouette visibly more aggressive | speed/attack pulse within actor alpha |
+| Charger | Double | Two parallel forward charge prongs with one clear gap | second-charge warning and lane |
+| Charger | Self-Destruct | One large exposed central core held by two broad shutters | fuse pulse, blast area, and retirement |
+| Gunner | Artillery | One short, wide mortar-like barrel and enlarged breech instead of the direct-fire barrel | impact marker and lob trajectory |
+| Gunner | Slow | One broad forked muzzle plus one cyan chamber plane | projectile trail/hit slow state |
+| Defender | Bulwark | Two folded outer shield shoulders around one broad front plate | timed body growth and shared closed shield boundary |
+| Defender | Reflector | One angular mirror-like inset across the normal front shield | warned reflective-window material state |
+| Coordinator | Blink | One large offset cut through the round body and one transverse cyan slit | destination warning and relocation |
+| Coordinator | 몰아주기 | One thick Y-shaped receiver plate inside the body, without small nodes | bounded pack-feed pulse within actor alpha |
+
+The transient shield boundary, artillery impact area, Self-Destruct blast area, Blink
+destination, projectile trails, and other timing geometry are not raster deliverables.
+They remain retained code-native presentation tied to gameplay truth during later
+implementation.
+
+### Required review deliverables
+
+- Five transparent family master sheets.
+- Forty-five extracted transparent actor PNGs using
+  `<family>/<state>/<family>-<state>-t<tier>.png` naming.
+- Five non-creative family comparison sheets that render every state row at T1 `100%`, T2
+  `125%`, and T3 `150%`.
+- One prompt/provenance record containing the exact prompt for each family, reference image
+  paths, authority hashes, generation method, output hashes, and the AS-IS/TO-BE judgment.
+- One grayscale contact sheet proving that family, tier, and trait cues are not color-only.
+
+No candidate is called production-ready merely because it was generated or cropped. The
+user must approve the five family comparisons before a new workbench switch unit can move
+the selected files toward `to-be/assets/`.
 
 ## Report image derivation contract
 
@@ -471,6 +566,19 @@ Before claiming improvement:
 
 ## Implementation workstreams after approval
 
+### V. Complete the visual gate before project changes
+
+- [ ] Generate five authority-grounded 3×3 family master sheets.
+- [ ] Inspect and reject any sheet with non-transparent background, perspective drift,
+  duplicated/missing cells, tiny decorative noise, or trait cues outside the body.
+- [ ] Extract and normalize all 45 actor candidates without creative repainting.
+- [ ] Build percentage-scale and grayscale comparison sheets.
+- [ ] Record prompt, reference, authority, and output provenance.
+- [ ] Obtain explicit user approval for the five family comparisons.
+
+Do not begin workstream A, edit the current `ordinary_enemy_family` switch unit, or change
+runtime/production files while any item in workstream V remains incomplete.
+
 ### A. Lock data and compatibility contracts
 
 - [ ] Create the family/tier/trait schema and migration map.
@@ -524,8 +632,8 @@ Before claiming improvement:
 
 ### F. Visual and runtime validation
 
-- [ ] Produce T1/T2/T3 comparisons using the 100 / 125 / 150 percentage ladder under the
-  visual-authority workflow.
+- [ ] Promote only the user-approved workstream-V files through a new exact workbench switch
+  unit after stable semantic IDs and production target paths exist.
 - [ ] Validate family, tier, facing, trait, and telegraph recognition at combat scale.
 - [ ] Run targeted family, pack, spawn-allocation, collective-tactic, Guidebook, semantic
   asset, and twelve-cycle validators.
