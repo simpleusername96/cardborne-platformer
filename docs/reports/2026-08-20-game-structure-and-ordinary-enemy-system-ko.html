@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne 게임 구조 · 맵 성장 경쟁 · 일반 적 시스템 통합 설계</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f6f3ed;
+      --panel: #fffdf8;
+      --ink: #1c2730;
+      --muted: #61707a;
+      --line: #d4d9d8;
+      --navy: #273b48;
+      --coral: #e2584f;
+      --cyan: #22aaa5;
+      --amber: #d99a31;
+      --green: #3e8769;
+      --red-wash: #fff0ed;
+      --cyan-wash: #eaf8f6;
+      --amber-wash: #fff7e5;
+      --shadow: 0 14px 38px rgba(33, 48, 57, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        linear-gradient(90deg, rgba(226, 88, 79, .035) 1px, transparent 1px) 0 0 / 42px 42px,
+        linear-gradient(rgba(39, 59, 72, .028) 1px, transparent 1px) 0 0 / 42px 42px,
+        var(--paper);
+      color: var(--ink);
+      font: 15px/1.68 "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      word-break: keep-all;
+      overflow-x: hidden;
+    }
+    a { color: #167b79; text-underline-offset: 3px; }
+    a:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+    img { display: block; max-width: 100%; }
+    code {
+      padding: .12rem .34rem;
+      border-radius: 5px;
+      background: #edf0ef;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: .88em;
+      overflow-wrap: anywhere;
+    }
+    main { width: min(1240px, calc(100% - 32px)); margin: 0 auto 72px; }
+    header {
+      margin: 28px 0 20px;
+      padding: clamp(28px, 5vw, 58px);
+      border: 1px solid var(--line);
+      border-top: 7px solid var(--coral);
+      border-radius: 18px;
+      background: rgba(255, 253, 248, .94);
+      box-shadow: var(--shadow);
+    }
+    .eyebrow, .kicker {
+      margin: 0 0 8px;
+      color: var(--coral);
+      font-weight: 800;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      font-size: .78rem;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.25; letter-spacing: -.025em; }
+    h1 { max-width: 900px; font-size: clamp(2rem, 5vw, 4rem); }
+    h2 { font-size: clamp(1.45rem, 3vw, 2.25rem); }
+    h3 { font-size: 1.08rem; }
+    p { margin: .55rem 0 0; }
+    .lead { max-width: 950px; margin-top: 18px; color: #394954; font-size: 1.08rem; }
+    .hero-rule {
+      margin-top: 24px;
+      padding: 18px 20px;
+      border-left: 5px solid var(--cyan);
+      background: var(--cyan-wash);
+      font-size: 1.06rem;
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .meta div, .stat {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+    .meta span, .stat span { display: block; color: var(--muted); font-size: .78rem; }
+    .meta strong, .stat strong { display: block; margin-top: 3px; font-size: 1rem; }
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 0 0 18px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      background: rgba(246, 243, 237, .96);
+      backdrop-filter: blur(10px);
+    }
+    nav a {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: var(--navy);
+      background: #fff;
+      text-decoration: none;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    section {
+      margin-top: 18px;
+      padding: clamp(22px, 4vw, 38px);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 253, 248, .96);
+      box-shadow: var(--shadow);
+      scroll-margin-top: 70px;
+    }
+    section > h2 + p { margin-top: 10px; }
+    .muted { color: var(--muted); }
+    .small { font-size: .82rem; }
+    .grid-2, .grid-3, .grid-4, .family-grid, .trait-grid, .figure-grid, .stats {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .grid-2, .family-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3, .trait-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4, .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .figure-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card, .trait, .objective, .rule, .source {
+      min-width: 0;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .card p, .trait p, .objective p, .rule p { margin-top: 7px; }
+    .callout {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-left: 5px solid var(--amber);
+      background: var(--amber-wash);
+    }
+    .callout.good { border-left-color: var(--green); background: #edf8f2; }
+    .callout.danger { border-left-color: var(--coral); background: var(--red-wash); }
+    .table-wrap { overflow-x: auto; margin-top: 18px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: 11px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #eaf0f0; color: var(--navy); font-size: .84rem; }
+    td { font-size: .9rem; }
+    ul, ol { margin: 10px 0 0; padding-left: 1.25rem; }
+    li + li { margin-top: 5px; }
+    .compact li + li { margin-top: 3px; }
+    figure {
+      margin: 18px 0 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    figure > img { width: 100%; height: auto; }
+    figcaption { padding: 11px 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: .82rem; }
+    .source-note { padding: 13px 15px; border: 1px dashed #a7b2b2; background: #f7f9f8; color: var(--muted); }
+    .loop {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 18px;
+    }
+    .loop div {
+      position: relative;
+      padding: 14px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      text-align: center;
+      font-size: .86rem;
+      font-weight: 750;
+    }
+    .loop div:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      z-index: 2;
+      color: var(--coral);
+      transform: translateY(-50%);
+    }
+    .objective { border-top: 5px solid var(--cyan); }
+    .objective.enemy { border-top-color: var(--coral); }
+    .score {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(90deg, var(--cyan-wash), #fff 48%, var(--red-wash));
+      text-align: center;
+    }
+    .score strong { font-size: 1.25rem; }
+    .token {
+      display: inline-block;
+      min-width: 33px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--navy);
+      color: #fff;
+      text-align: center;
+      font-weight: 800;
+    }
+    .family-card {
+      margin-top: 18px;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+    .family-head {
+      display: grid;
+      grid-template-columns: minmax(280px, .85fr) minmax(0, 1.6fr);
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .family-copy { padding: 22px; }
+    .family-id {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--navy);
+      color: #fff;
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .05em;
+    }
+    .matrix-crop {
+      position: relative;
+      min-height: 280px;
+      overflow: hidden;
+      background: #101a20;
+    }
+    .matrix-crop img {
+      position: absolute;
+      width: 300%;
+      height: 300%;
+      max-width: none;
+      object-fit: fill;
+    }
+    .matrix-crop.c0 img { left: 0; }
+    .matrix-crop.c1 img { left: -100%; }
+    .matrix-crop.c2 img { left: -200%; }
+    .matrix-crop.r0 img { top: 0; }
+    .matrix-crop.r1 img { top: -100%; }
+    .matrix-crop.r2 img { top: -200%; }
+    .family-body { padding: 20px; }
+    .tiers {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .tier {
+      padding: 13px;
+      border-radius: 10px;
+      background: #f3f6f5;
+      border-top: 4px solid var(--cyan);
+    }
+    .tier:nth-child(2) { border-top-color: var(--amber); }
+    .tier:nth-child(3) { border-top-color: var(--coral); }
+    .tier b { display: block; }
+    .trait-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .trait { padding: 13px; background: #fbfcfb; }
+    .trait strong { color: var(--navy); }
+    .trait em { display: block; margin-top: 5px; color: var(--coral); font-style: normal; font-size: .8rem; font-weight: 750; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .legend span { padding: 5px 8px; border-radius: 999px; background: #edf1f0; font-size: .78rem; }
+    .yes { color: #246e55; font-weight: 750; }
+    .later { color: #9c6b13; font-weight: 750; }
+    .no { color: #b43c36; font-weight: 750; }
+    footer { padding: 26px 8px; color: var(--muted); font-size: .82rem; }
+
+    @media (max-width: 980px) {
+      .meta, .grid-4, .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3, .trait-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .loop { grid-template-columns: 1fr; }
+      .loop div:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -17px; transform: translateX(50%); }
+      .family-head { grid-template-columns: 1fr; }
+      .matrix-crop { min-height: 350px; order: -1; }
+    }
+    @media (max-width: 680px) {
+      main { width: min(100% - 18px, 1240px); }
+      header, section { border-radius: 12px; }
+      .meta, .grid-2, .grid-3, .grid-4, .family-grid, .trait-grid, .figure-grid, .stats, .tiers { grid-template-columns: 1fr; }
+      .matrix-crop { min-height: 225px; }
+      .score { align-items: stretch; flex-direction: column; }
+      th, td { min-width: 150px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; margin: 0; }
+      nav { display: none; }
+      header, section { box-shadow: none; break-inside: avoid; }
+      .family-card { break-inside: avoid; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Integrated design report · 2026-08-20</p>
+    <h1>게임 구조 · 맵 성장 경쟁 · 일반 적 시스템</h1>
+    <p class="lead">Cardborne의 큰 단일 필드를 단순한 전투 배경이 아니라 <strong>플레이어와 적이 성장 기회를 두고 경쟁하는 장소</strong>로 바꾼다. 동시에 일반 적은 9개 기능 패밀리, T1–T3, 패밀리별 5개 트레잇으로 정리해 행동·크기·실루엣이 한눈에 이어지게 한다.</p>
+    <div class="hero-rule"><strong>한 줄 구조:</strong> 전투하며 섹터를 탐색한다 → 보석·시설·집결지 중 2곳을 먼저 확보한다 → 승자가 다음 보스 구간의 성장 주도권을 얻는다 → 적의 패밀리·티어·트레잇이 그 결과를 눈에 보이게 반영한다.</div>
+    <div class="meta">
+      <div><span>현재 런</span><strong>고정 필드 · 12 보스 사이클</strong></div>
+      <div><span>일반 적 문법</span><strong>9 패밀리 · T1–T3</strong></div>
+      <div><span>변형 문법</span><strong>패밀리별 5 트레잇</strong></div>
+      <div><span>핵심 지도 목표</span><strong>한 런 1회 2/3 성장 경쟁</strong></div>
+    </div>
+  </header>
+
+  <nav aria-label="문서 목차">
+    <a href="#verdict">결론</a>
+    <a href="#current">현재 구조</a>
+    <a href="#sources-merge">두 보고서 통합</a>
+    <a href="#visuals">제공 이미지</a>
+    <a href="#map-loop">맵 성장 경쟁</a>
+    <a href="#enemy-system">적 시스템</a>
+    <a href="#families">9개 패밀리</a>
+    <a href="#packs">팩·성장 규칙</a>
+    <a href="#rollout">검증 순서</a>
+    <a href="#future">추후 확장</a>
+    <a href="#references">근거</a>
+  </nav>
+
+  <section id="verdict">
+    <p class="kicker">Design decision</p>
+    <h2>최종 구조</h2>
+    <div class="grid-3">
+      <article class="card">
+        <h3>맵은 성장 경쟁판</h3>
+        <p class="muted">보석을 줍기만 하는 수집전이 아니다. 플레이어와 적이 같은 세 목표를 서로 다른 방식으로 선점한다. 이동하지 않으면 적이 실제로 강해진다.</p>
+      </article>
+      <article class="card">
+        <h3>적은 패밀리로 읽힌다</h3>
+        <p class="muted">추격·돌진·자폭·사격·포격·제어·방어·유지·지휘의 9개 대응 행동을 유지한다. 고정형은 열 번째 패밀리가 아니라 배치 방식이다.</p>
+      </article>
+      <article class="card">
+        <h3>성장은 세 층만 사용</h3>
+        <p class="muted"><strong>티어</strong>는 자연 성장, <strong>트레잇</strong>은 행동 변형, <strong>각성</strong>은 적이 맵 경쟁에서 이겼을 때만 생기는 임시 보상이다. 셋을 섞지 않는다.</p>
+      </article>
+    </div>
+    <div class="callout good"><strong>핵심 효과:</strong> 플레이어는 단순히 적에게서 도망치지 않는다. “지금 전투를 계속해 쿼터를 채울지, 멀리 있는 성장 목표로 우회해 적의 강화를 막을지”를 계속 판단한다. 이동 자체가 빌드 성장과 적 압력에 연결된다.</div>
+  </section>
+
+  <section id="current">
+    <p class="kicker">As-is audit</p>
+    <h2>1. 현재 게임 구조와 해결할 문제</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>현재 계약</th><th>의미</th><th>통합안에서의 처리</th></tr></thead>
+        <tbody>
+          <tr><td><strong>7200×4320 단일 필드</strong>, 중앙 스폰, 탐사형 20×12 미니맵</td><td>한 화면보다 큰 공간과 고정 지형은 이미 존재한다.</td><td>새 맵을 만들지 않고, 멀리 떨어진 성장 신호가 기존 필드를 가로지르게 한다.</td></tr>
+          <tr><td><code>ORDINARY_COMBAT → BOSS_WARNING → BOSS_COMBAT → CLEANUP → TRANSITION</code></td><td>12개 보스 사이클의 전투 리듬이 제품 핵심이다.</td><td>성장 경쟁은 일반 전투 안에서만 진행하고, 보스 경고 때 닫는다. 별도 방·모달·기지 페이즈를 만들지 않는다.</td></tr>
+          <tr><td>Transit Gate, 중립시설, 직접 배치 XP·리콜 픽업</td><td>월드 상호작용은 있지만 서로 하나의 장기 목표로 연결되지 않는다.</td><td>전이문은 경로 단축, 시설은 경쟁 지점, 코어는 성장 보상으로 역할을 분담한다.</td></tr>
+          <tr><td>시설은 파괴 후 반경 안에서 12초간 대칭 효과</td><td>발견해도 효과가 짧고, 당장 근처에 전투가 없으면 우회할 이유가 약하다.</td><td>시설 선점 결과를 성장 경쟁 점수와 연결하되, 기존 12초 효과는 그대로 남긴다.</td></tr>
+          <tr><td>일반 적 26 정의, production PNG 22개, 캠페인 순환 역할 14개, 엘리트 트레잇 3개</td><td>행동 콘텐츠는 많지만 플레이어가 기억할 시각 문법이 분산돼 있다.</td><td>런타임 ID를 지우지 않고 9패밀리·3티어·1트레잇 표기로 분류한다.</td></tr>
+          <tr><td>이동형 일반 적 가시 반지름 <strong>48</strong>, 고정형 62, 보스 146</td><td>일반 적 사이의 역할·티어 체급 차이가 약하다. 작은 세부가 실제 크기에서 사라진다.</td><td>모든 T1을 48 이상으로 키우고, T2·T3가 약 8–12px씩 커지는 후보 계약을 검증한다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout danger"><strong>사양 불일치:</strong> 현행 제품 문서의 필드 선택 문단은 시설 3개를, 시설 전용 문단은 6개를 적고 있다. 기존 맵 검토에서는 런타임·검증기가 6개를 기준으로 사용했다. 구현 전 숫자를 하나로 고쳐야 하지만, 이 보고서의 구조는 3개와 6개 어느 쪽에서도 동작한다.</div>
+    <div class="grid-2">
+      <article class="card">
+        <h3>공유 대화에서 확인한 시각 문제</h3>
+        <ul class="compact">
+          <li>공통 48px 틀 안에서도 실제 채움 면적이 달라 얇은 적은 탄환처럼 보인다.</li>
+          <li>작은 총열·패널 선·램프에 의존한 차이는 런타임 거리에서 사라진다.</li>
+          <li>후반 역할 일부는 기존 몸체를 공유해 새 행동과 외형의 연결이 약하다.</li>
+          <li>해법은 <strong>큰 몸체 하나 + 큰 기능 부품 하나 + 보조색 하나</strong>다.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>이번 문서의 경계</h3>
+        <ul class="compact">
+          <li>게임·런타임·production 자산은 변경하지 않는다.</li>
+          <li>제공 PNG는 분류와 형태를 설명하는 콘셉트 증거로 사용한다.</li>
+          <li>새 이미지를 생성하거나 기존 PNG를 편집하지 않는다.</li>
+          <li>크기 수치는 승인된 변경이 아니라 구현 전 검증할 후보값이다.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section id="sources-merge">
+    <p class="kicker">Concatenated source model</p>
+    <h2>2. 두 일반 적 보고서를 하나로 합친 규칙</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>주제</th><th><code>(1)</code> 초기 보고서</th><th>확장 보고서</th><th>통합 결과</th></tr></thead>
+        <tbody>
+          <tr><td>기본 분류</td><td>8패밀리 · 4티어 · 32트레잇</td><td>9패밀리 · 3티어 · 패밀리별 5트레잇</td><td><strong>9패밀리 · T1–T3 · 45트레잇</strong>을 본체로 사용한다.</td></tr>
+          <tr><td>초기안의 T4</td><td>가장 높은 자연 티어</td><td>T3에서 자연 성장이 끝남</td><td>T4를 버리지 않고 <strong>맵 경쟁 승리로 얻는 임시 각성</strong>으로 바꾼다. 평상시 스폰 티어에는 넣지 않는다.</td></tr>
+          <tr><td>팩</td><td>같은 패밀리·티어·공유 트레잇, 셔플백 추첨</td><td>3–8기 소집단, 혼성은 지휘형 + 최대 2개 하위군</td><td>단일 팩 3–6기, 혼성 팩은 지휘형 1기 + 최대 2개 하위군. 셔플백으로 최근 트레잇 반복을 낮춘다.</td></tr>
+          <tr><td>실루엣 비율</td><td>패밀리 70% · 티어 20% · 트레잇 10%</td><td>패밀리 코어 70–80%, 한 적에 트레잇 하나</td><td>패밀리 몸체를 70–80% 유지한다. 티어는 몸체 크기·부품 수, 트레잇은 큰 부품 하나와 발동 효과만 더한다.</td></tr>
+          <tr><td>고정형</td><td>별도 포탑 패밀리</td><td>기능 패밀리와 분리된 배치 축</td><td><strong>고정은 배치 방식</strong>이다. Gunner·Artillery·Controller·Sustainer가 고정 배치될 수 있다.</td></tr>
+          <tr><td>지휘형</td><td>단독 금지, 드물게 이중 트레잇</td><td>사망 시 팩 전술만 해제</td><td>단독 금지와 전술 해제를 모두 유지한다. 이중 트레잇은 랜덤이 아니라 적의 성장 경쟁 승리 보상으로만 허용한다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><strong>중요한 통합 원칙:</strong> 패밀리는 행동, 티어는 자연 체급, 트레잇은 대응법 변화, 각성은 월드 경쟁의 결과다. 같은 수치 변화를 여러 이름으로 중복하지 않는다.</div>
+  </section>
+
+  <section id="visuals">
+    <p class="kicker">Provided visual evidence</p>
+    <h2>3. 제공 PNG 전체 배치</h2>
+    <p class="source-note">세 이미지는 사용자가 제공한 외부 콘셉트다. 보고서 설명과 CSS 크롭에만 사용하며, Cardborne의 production 승인이나 시각 정본을 뜻하지 않는다. 실제 제작 시에는 <code>VISUAL_SYSTEM.md</code>와 정본 스타일 시트를 다시 따라야 한다.</p>
+    <figure>
+      <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-design-concepts.png" alt="추격, 돌진, 사격, 제어, 방어, 지원, 포탑의 단순한 적 디자인 콘셉트">
+      <figcaption><strong>제공 이미지 A.</strong> 7개 기초 역할을 큰 몸체와 큰 기능 부품으로 구분한 단순화 기준. 아래의 9패밀리 최종 분류에서 “실루엣 먼저, 세부 나중” 원칙을 뒷받침한다.</figcaption>
+    </figure>
+    <div class="figure-grid">
+      <figure>
+        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-tier-family-lineup.png" alt="아홉 역할의 티어별 크기와 형태 변화 콘셉트">
+        <figcaption><strong>제공 이미지 B.</strong> 패밀리마다 작은 개체에서 큰 개체로 진행하는 체급 연구. 광원과 세부는 그대로 채택하지 않고, 비례·덩어리·기능 부품 변화만 참고한다.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="아홉 적 패밀리의 T1, T2, T3와 트레잇 효과를 배열한 3x3 매트릭스">
+        <figcaption><strong>제공 이미지 C.</strong> 3×3 패밀리 매트릭스. 각 칸의 위쪽은 T1–T3, 아래쪽은 트레잇 효과 예시다. 뒤의 패밀리 사양에서 이 원본을 CSS로만 잘라 반복 배치한다.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="map-loop">
+    <p class="kicker">Core loop</p>
+    <h2>4. 맵을 돌아다니게 만드는 “2/3 성장 경쟁”</h2>
+    <p>한 런에 한 번, 일반 전투 중 서로 먼 세 섹터에 성장 신호가 열린다. 플레이어와 적은 각 신호를 먼저 확보할 수 있다. 먼저 두 점을 얻는 쪽이 성장 경쟁에서 승리한다.</p>
+    <div class="loop" aria-label="통합 게임 루프">
+      <div>일반 전투·쿼터 진행</div>
+      <div>대략적 성장 신호 3개 발견</div>
+      <div>전투·경로·시설 중 우선순위 선택</div>
+      <div>플레이어 또는 적이 2/3 선점</div>
+      <div>다음 보스 구간에 성장 결과 반영</div>
+    </div>
+    <div class="score">
+      <div><span class="token">P</span> 플레이어 점수</div>
+      <strong>먼저 2점</strong>
+      <div><span class="token" style="background:var(--coral)">E</span> 적 점수</div>
+    </div>
+
+    <div class="grid-3">
+      <article class="objective">
+        <p class="kicker">Signal A · 회수</p>
+        <h3>진화 코어 / 성장 보석</h3>
+        <p><strong>플레이어:</strong> 접촉 후 1.5초 회수하면 1점.</p>
+        <p><strong>적:</strong> 지정된 수확 팩이 2.5초 채널링하면 1점. 채널 중에는 코어와 적을 굵은 연결선으로 표시한다.</p>
+        <p class="muted">적 드롭과 섞지 않는 맵 고정 자원이다. 어느 쪽이 먹어도 소리·미니맵·HUD로 즉시 결과를 알린다.</p>
+      </article>
+      <article class="objective enemy">
+        <p class="kicker">Signal B · 시설</p>
+        <h3>중립시설 선점</h3>
+        <p><strong>플레이어:</strong> 시설을 파괴해 기존 12초 효과를 켜면 1점.</p>
+        <p><strong>적:</strong> 수호 팩이 시설 반경 안에 5기 이상 모여 6초 유지하면 시설을 과부하하고 1점.</p>
+        <p class="muted">기존 시설의 전술 효과는 유지한다. 적은 시설을 공격해 우연히 점수를 얻지 않고, 명시적인 집결 행동으로만 선점한다.</p>
+      </article>
+      <article class="objective">
+        <p class="kicker">Signal C · 이동</p>
+        <h3>전이 릴레이</h3>
+        <p><strong>플레이어:</strong> 지정 Transit Gate를 통과하고 반대편 릴레이를 2초 가동하면 1점.</p>
+        <p><strong>적:</strong> 집결 팩이 릴레이에 5기 이상 도달해 6초 유지하면 1점.</p>
+        <p class="muted">기존 전이문을 단순 지름길이 아니라 경로 경쟁 도구로 사용한다. 정확한 위치는 해당 섹터를 탐사한 뒤 드러난다.</p>
+      </article>
+    </div>
+
+    <div class="grid-2">
+      <article class="card">
+        <h3>플레이어가 2/3 승리</h3>
+        <ul class="compact">
+          <li>다음 보스 보상에 <strong>보유·적격 카드 진화 선택 1회</strong>를 예약한다.</li>
+          <li>즉시 모달을 열지 않는다. 이동·조준·사격 흐름을 끊지 않는다.</li>
+          <li>적이 먼저 얻은 1점의 해당 팩 강화는 남지만, 전역 각성은 막는다.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>적이 2/3 승리</h3>
+        <ul class="compact">
+          <li>두 번째 점수를 얻은 패밀리를 공개하고, 미래 스폰 티어를 1단계 올린다.</li>
+          <li>이미 T3이면 해당 팩만 <strong>각성</strong>해 두 번째 트레잇을 얻는다.</li>
+          <li>첫 프로토타입에서는 다음 보스 사망까지만 유지한다. 영구 누적은 검증 뒤 논의한다.</li>
+        </ul>
+      </article>
+    </div>
+
+    <h3 style="margin-top:24px">탐사를 만들기 위한 정보 규칙</h3>
+    <div class="grid-3">
+      <article class="rule"><strong>처음에는 종류 + 섹터</strong><p class="muted">정확한 좌표를 처음부터 주면 탐사가 최단 경로 체크리스트가 된다.</p></article>
+      <article class="rule"><strong>한 번에 활성 경쟁지 1곳</strong><p class="muted">세 지점이 동시에 점멸하지 않는다. 가장 임박한 적 행동 한 곳만 강하게 경고한다.</p></article>
+      <article class="rule"><strong>적의 점수는 항상 채널링</strong><p class="muted">화면 밖에서 즉시 먹지 못한다. 최소 2.5–6초의 차단 가능한 창을 보장한다.</p></article>
+      <article class="rule"><strong>보스 경고 때 종료</strong><p class="muted">쿼터 완료는 막지 않는다. 미해결 신호는 비활성화하고 보스 흐름으로 복귀한다.</p></article>
+      <article class="rule"><strong>전담 팩만 우회</strong><p class="muted">전체 적이 목표로 몰리지 않는다. 한 수확·수호·집결 팩만 현재 지점에 배정한다.</p></article>
+      <article class="rule"><strong>목표는 충돌·엄폐가 아님</strong><p class="muted">새 장식이 이동이나 발사체 판정의 진실을 바꾸지 않는다.</p></article>
+    </div>
+    <div class="callout danger"><strong>금지:</strong> 적 처치 보석 N개만 모으기, 세 지점 전부 강제 완주, 화면 밖 즉시 적 획득, 매 사이클 동일 반복, 패배 시 영구적인 전역 수치 폭증. 이 조합은 탐사를 파밍·청소·눈덩이 효과로 바꾼다.</div>
+  </section>
+
+  <section id="enemy-system">
+    <p class="kicker">Enemy grammar</p>
+    <h2>5. 일반 적 시스템의 공통 계약</h2>
+    <div class="grid-4">
+      <article class="card"><p class="kicker">Family</p><h3>무엇을 하게 만드는가</h3><p class="muted">추격·회피·측면 이동·우선 처치 등 플레이어의 대응 행동을 정한다.</p></article>
+      <article class="card"><p class="kicker">Tier</p><h3>얼마나 크고 강한가</h3><p class="muted">같은 행동의 자연 성장이다. 크기·체력·기능 부품이 증가한다.</p></article>
+      <article class="card"><p class="kicker">Trait</p><h3>대응법이 어떻게 비트는가</h3><p class="muted">한 적에 하나. 큰 부품 하나와 발동 효과 하나로 읽힌다.</p></article>
+      <article class="card"><p class="kicker">Deployment</p><h3>움직이는가 고정됐는가</h3><p class="muted">모바일/고정 축이다. 공격 기능과 배치 상태를 별도 패밀리로 중복하지 않는다.</p></article>
+    </div>
+
+    <h3 style="margin-top:24px">T1–T3 공통 성장</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>티어</th><th>형태 계약</th><th>게임플레이 계약</th><th>금지</th></tr></thead>
+        <tbody>
+          <tr><td><strong>T1 · 학습</strong></td><td>지배적 몸체 1 + 기능 부품 1, 큰 면 3개 안팎</td><td>패밀리의 가장 순수한 행동. 보정 없는 기준 체력·피해.</td><td>작은 센서·램프·패널선으로 역할 설명</td></tr>
+          <tr><td><strong>T2 · 압박</strong></td><td>T1보다 8–10px 큰 몸체, 보조 기능 부품 1, 큰 면 4개 안팎</td><td>후딜 또는 범위가 개선된 같은 행동. 후보 체력 ×1.45, 피해 ×1.15.</td><td>새 패밀리처럼 행동을 갈아끼우기</td></tr>
+          <tr><td><strong>T3 · 우선 표적</strong></td><td>T1보다 16–22px 큰 몸체, 기능 부품 최대 2개, 큰 면 5개 안팎</td><td>행동의 완성형. 후보 체력 ×2.05, 피해 ×1.30. 미니맵 우선 표적 가능.</td><td>보스급 광원·동심원·잔부품 밀도</td></tr>
+          <tr><td><strong>각성 · 경쟁 결과</strong></td><td>티어 몸체는 그대로, 두 번째 큰 모듈 또는 발동 상태만 추가</td><td>적의 2/3 승리 때만 임시 부여. T3에 한해 두 트레잇을 조합.</td><td>평상시 랜덤 등장, 영구 T4 스폰, 작은 배지 추가</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:24px">크기 후보 <span class="small">가시 반지름 px · 승인 전 검증값</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>패밀리</th><th>T1</th><th>T2</th><th>T3</th><th>체급 이유</th></tr></thead>
+        <tbody>
+          <tr><td>추격형</td><td>50</td><td>58</td><td>66</td><td>다수 압박이므로 가장 작지만 현행 48보다 크게 시작</td></tr>
+          <tr><td>돌진형</td><td>54</td><td>62</td><td>70</td><td>충돌 방향과 충각 길이가 보여야 함</td></tr>
+          <tr><td>자폭형</td><td>52</td><td>60</td><td>68</td><td>위험 코어와 외곽 폭발부를 구분</td></tr>
+          <tr><td>사격형</td><td>52</td><td>60</td><td>68</td><td>총열이 탄환이 아니라 차체에 붙은 기능으로 보여야 함</td></tr>
+          <tr><td>포격형</td><td>56</td><td>64</td><td>72</td><td>후방 우선 표적이므로 사격형보다 무거움</td></tr>
+          <tr><td>제어형</td><td>56</td><td>64</td><td>72</td><td>반경·통로 제어 장치가 큰 면으로 읽혀야 함</td></tr>
+          <tr><td>방어형</td><td>58</td><td>68</td><td>78</td><td>차단 역할과 방패 면적을 가장 크게 강조</td></tr>
+          <tr><td>유지형</td><td>56</td><td>66</td><td>76</td><td>수리 팔·축전기를 명확히 보이는 우선 표적</td></tr>
+          <tr><td>지휘형</td><td>56</td><td>66</td><td>76</td><td>팩 중앙의 전략 표적으로 읽혀야 함</td></tr>
+          <tr><td>고정 배치</td><td>66</td><td>74</td><td>82</td><td>현행 62보다 커지고, 패밀리 기능 모듈을 상부에 얹음</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="source-note"><strong>현재 승인 계약은 여전히 48 / 62 / 146이다.</strong> 위 수치를 구현하려면 시각 시스템 계약을 먼저 갱신하고, 16:9 실제 크기에서 혼잡도·투사체 피격·접촉 판정의 정직성을 검증해야 한다. 첫 시도에서는 충돌 반지름을 자동으로 키우지 않는다.</p>
+  </section>
+
+  <section id="families">
+    <p class="kicker">Nine family specifications</p>
+    <h2>6. 9개 패밀리 · T1–T3 · 45 트레잇</h2>
+    <p class="muted">각 이미지 칸은 제공한 3×3 원본의 해당 구역을 CSS로 보여준다. 위쪽은 T1–T3, 아래쪽은 트레잇 효과 예시다. 시각 효과는 작은 아이콘 대신 큰 형태 변화와 짧은 발동 상태로 정의한다.</p>
+
+    <article class="family-card" id="pursuer">
+      <div class="family-head">
+        <div class="matrix-crop r0 c0"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="추격형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">01 · PURSUER</span><h3 style="margin-top:10px">추격형 · 멈추지 말고 간격을 관리하게 한다</h3><p>가장 단순한 근접 압박. 수가 많아도 개별 기능은 하나뿐이다. 현재 <code>ordinary_melee_01</code> 계열의 기본 반응을 묶는다.</p><div class="legend"><span>핵심 대응: 이동 유지</span><span>후방 탈출로 확보</span><span>크기 50 / 58 / 66</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 쐐기 추격자</b>기본 쐐기형 몸체. 전면 접촉부 하나.</div><div class="tier"><b>T2 · 이중 추진 추격자</b>넓어진 충돌부와 이중 추진기.</div><div class="tier"><b>T3 · 중장 추격자</b>큰 전면 충돌판과 보조 안정 핀.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Armored · 장갑</strong><p>전면 피해를 줄여 측면 사격을 요구한다.</p><em>두꺼운 전면판 1개</em></div>
+          <div class="trait"><strong>Splitter · 분열</strong><p>처치 시 더 작은 T1 둘로 갈라진다.</p><em>중앙 갈라짐 + 두 큰 엽</em></div>
+          <div class="trait"><strong>Frenzy · 광분</strong><p>체력이 낮을수록 추격 속도가 오른다.</p><em>후방 열면이 크게 확장</em></div>
+          <div class="trait"><strong>Leech · 흡수</strong><p>접촉 피해 일부로 체력을 회복한다.</p><em>오목한 전면 턱 + 회수 펄스</em></div>
+          <div class="trait"><strong>Heavy · 중량</strong><p>넉백에 강하고 느리지만 접촉 압력이 높다.</p><em>낮고 넓은 후방 질량</em></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="family-card" id="charger">
+      <div class="family-head">
+        <div class="matrix-crop r0 c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="돌진형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">02 · CHARGER</span><h3 style="margin-top:10px">돌진형 · 예고선을 읽고 옆으로 피하게 한다</h3><p>방향을 잠그고 직선으로 돌진한다. 전면 충각과 후방 추진기가 진행 방향을 설명한다. 현재 <code>edge</code>, <code>pull</code>, <code>overload</code> 행동의 가족이다.</p><div class="legend"><span>핵심 대응: 측면 회피</span><span>돌진 후 반격</span><span>크기 54 / 62 / 70</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 단발 충각</b>짧은 충각과 단일 추진기.</div><div class="tier"><b>T2 · 장거리 충각</b>긴 충각과 이중 추진기.</div><div class="tier"><b>T3 · 공성 충각</b>대형 충각과 좌우 안정 핀.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Overload · 과부하</strong><p>더 오래 예고한 뒤 더 빠르게 돌진하고 충돌 후 취약해진다.</p><em>노출 코어의 굵은 열 테두리</em></div>
+          <div class="trait"><strong>Double · 연속</strong><p>첫 돌진 뒤 짧게 재조준해 한 번 더 돌진한다.</p><em>쌍둥이 후방 엔진 블록</em></div>
+          <div class="trait"><strong>Rebound · 반동</strong><p>벽 충돌 후 한 번 반사해 새 경로를 만든다.</p><em>한쪽 큰 범퍼</em></div>
+          <div class="trait"><strong>Dragline · 견인</strong><p>예고선 안의 플레이어를 약하게 끌어당긴 뒤 돌진한다.</p><em>U자형 전면 갈고리</em></div>
+          <div class="trait"><strong>Shockwave · 충격파</strong><p>돌진 종료 지점에 짧은 원형 밀치기를 만든다.</p><em>넓은 충각 + 충돌 시 코드 원판</em></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="family-card" id="bomber">
+      <div class="family-head">
+        <div class="matrix-crop r0 c2"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="자폭형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">03 · BOMBER</span><h3 style="margin-top:10px">자폭형 · 접근 전에 공간을 비우게 한다</h3><p>몸체 자체가 탄두다. 코어의 커짐과 외곽 장갑의 벌어짐이 폭발 임박을 설명한다. 현재 지역 압박과 <code>sweep</code> 계열을 흡수한다.</p><div class="legend"><span>핵심 대응: 우선 처치</span><span>폭발 반경 이탈</span><span>크기 52 / 60 / 68</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 단일 코어</b>소형 코어와 한 겹 외피.</div><div class="tier"><b>T2 · 폭발 링</b>넓은 외곽 폭발 링.</div><div class="tier"><b>T3 · 분절 탄두</b>분절 장갑과 큰 중심 코어.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Cluster · 집속</strong><p>폭발 후 작은 보조 폭발 3개를 남긴다.</p><em>외곽의 큰 탄두 포드 3개</em></div>
+          <div class="trait"><strong>Chain · 연쇄</strong><p>근처 자폭형을 순서대로 기폭한다.</p><em>한쪽 굵은 연결 레일</em></div>
+          <div class="trait"><strong>Vacuum · 진공</strong><p>폭발 직전 짧게 안쪽으로 끌어당긴다.</p><em>오목한 흡입 절개</em></div>
+          <div class="trait"><strong>Trail · 잔류 궤적</strong><p>이동 경로에 짧은 위험 흔적을 남긴다.</p><em>넓은 후방 배출면</em></div>
+          <div class="trait"><strong>Delayed · 지연</strong><p>처치된 외피가 잠시 남아 지연 폭발한다.</p><em>분리되는 외곽 껍질</em></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="family-card" id="gunner">
+      <div class="family-head">
+        <div class="matrix-crop r1 c0"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="사격형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">04 · GUNNER</span><h3 style="margin-top:10px">사격형 · 탄선을 읽고 계속 위치를 바꾸게 한다</h3><p>중거리 직접 사격. 큰 총열 방향이 조준 방향과 일치해야 한다. 현재 <code>ranged</code>, <code>lane</code>, <code>range</code>, <code>beam</code>, <code>resonance</code>를 묶는다.</p><div class="legend"><span>핵심 대응: 탄선 회피</span><span>총열 방향 읽기</span><span>크기 52 / 60 / 68</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 단총열</b>짧고 굵은 단일 총열.</div><div class="tier"><b>T2 · 이중총열</b>이중 총열과 안정판.</div><div class="tier"><b>T3 · 중장포신</b>대형 차체와 긴 중장 총열.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Burst · 점사</strong><p>짧은 간격으로 3발을 묶어 쏜다.</p><em>큰 3슬릿 총구 블록</em></div>
+          <div class="trait"><strong>Spread · 산탄</strong><p>넓은 부채꼴 탄으로 측면 공간을 줄인다.</p><em>부채형 총구 덮개</em></div>
+          <div class="trait"><strong>Piercing · 관통</strong><p>한 발이 플레이어 뒤까지 이어지는 긴 위험선을 만든다.</p><em>단일 장포신</em></div>
+          <div class="trait"><strong>Tracking · 추적</strong><p>예고 중 조준 보정이 오래 지속된다.</p><em>큰 비대칭 센서 핀</em></div>
+          <div class="trait"><strong>Suppressor · 제압</strong><p>연속 사격으로 통로를 잠시 막는다.</p><em>총열 뒤 넓은 냉각 블록</em></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="family-card" id="artillery">
+      <div class="family-head">
+        <div class="matrix-crop r1 c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="포격형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">05 · ARTILLERY</span><h3 style="margin-top:10px">포격형 · 먼 우선 표적을 찾아 진지를 바꾸게 한다</h3><p>장거리 예측 포격. 직접 탄선이 아니라 착탄 지점을 먼저 읽는다. 현재 <code>growth</code>의 원거리 지역 압박을 확장한다.</p><div class="legend"><span>핵심 대응: 후방 우선 처치</span><span>착탄지 이탈</span><span>크기 56 / 64 / 72</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 소형 박격포</b>짧은 상부 포와 둥근 차체.</div><div class="tier"><b>T2 · 안정 포대</b>긴 포신과 측면 안정판.</div><div class="tier"><b>T3 · 공성포</b>대형 포신과 보조 탄약 포드.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Cluster Shell · 집속탄</strong><p>주 착탄 뒤 작은 착탄 3개가 갈라진다.</p><em>넓게 분할된 포구 왕관</em></div>
+          <div class="trait"><strong>Heavy Shell · 중탄</strong><p>느리지만 큰 착탄 반경과 강한 밀치기를 준다.</p><em>굵은 포신 + 후방 균형추</em></div>
+          <div class="trait"><strong>Lingering · 잔류탄</strong><p>착탄 지역이 짧은 지속 위험이 된다.</p><em>대형 하부 탄두 통</em></div>
+          <div class="trait"><strong>Seeker · 유도탄</strong><p>착탄 예고가 한 번 제한적으로 보정된다.</p><em>큰 유도 핀 하나</em></div>
+          <div class="trait"><strong>Salvo · 일제사격</strong><p>서로 다른 두 착탄점을 연속으로 예고한다.</p><em>굵은 평행 포신 2개</em></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="family-card" id="controller">
+      <div class="family-head">
+        <div class="matrix-crop r1 c2"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="제어형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">06 · CONTROLLER</span><h3 style="margin-top:10px">제어형 · 안전 통로를 찾아 이동 경로를 바꾸게 한다</h3><p>피해보다 공간 배치가 핵심이다. 방출기 방향과 경고 면이 실제 충돌 영역을 정직하게 보여야 한다. 현재 <code>gap</code>과 <code>compression</code>을 묶는다.</p><div class="legend"><span>핵심 대응: 통로 탐색</span><span>발동 전 우선 처치</span><span>크기 56 / 64 / 72</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 단일 방출기</b>하나의 제어 코어와 한 방향 방출면.</div><div class="tier"><b>T2 · 양측 방출기</b>좌우 큰 방출기.</div><div class="tier"><b>T3 · 십자 제어기</b>대형 십자 방출 구조.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Compression · 압축</strong><p>서로 마주보는 두 면이 안전 폭을 줄인다.</p><em>대향하는 큰 판 2개</em></div>
+          <div class="trait"><strong>Link Beam · 연결광선</strong><p>다른 제어형과 선을 만들어 통로를 나눈다.</p><em>좌우 연결 기둥</em></div>
+          <div class="trait"><strong>Snare · 속박</strong><p>밟으면 짧게 둔화되는 한 영역을 놓는다.</p><em>넓은 하부 방출판</em></div>
+          <div class="trait"><strong>Sweep · 휩쓸기</strong><p>한 방향 경고선이 회전하며 공간을 쓸어낸다.</p><em>긴 방사형 팔 하나</em></div>
+          <div class="trait"><strong>Gate · 관문</strong><p>서로 마주보는 두 방출구 사이만 위험해진다.</p><em>갈라진 전면 턱 2개</em></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="family-card" id="defender">
+      <div class="family-head">
+        <div class="matrix-crop r2 c0"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="방어형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">07 · DEFENDER</span><h3 style="margin-top:10px">방어형 · 사격 각도와 처치 순서를 바꾸게 한다</h3><p>자기 방어 또는 아군 차단을 담당한다. 방패 면은 발사체가 막히는 실제 방향과 같아야 한다. 현재 <code>shield</code>와 <code>reflect</code>를 묶는다.</p><div class="legend"><span>핵심 대응: 측후면 공격</span><span>지원 적 분리</span><span>크기 58 / 68 / 78</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 정면 방패</b>작은 정면 방패 한 장.</div><div class="tier"><b>T2 · 측면 방패</b>넓어진 측면 보호판.</div><div class="tier"><b>T3 · 전개 방벽</b>대형 방패 날개가 좌우로 전개.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Bulwark · 보루</strong><p>인접 아군까지 덮는 넓은 정면 차단을 만든다.</p><em>감싸는 한 장의 큰 방패</em></div>
+          <div class="trait"><strong>Reflector · 반사</strong><p>정면 직사 탄을 제한적으로 되돌린다.</p><em>평평한 중앙 반사면</em></div>
+          <div class="trait"><strong>Anchor · 고정</strong><p>전개 중 이동하지 않지만 넉백과 제어에 강하다.</p><em>굵은 지면 지지대 2개</em></div>
+          <div class="trait"><strong>Retaliator · 반격</strong><p>막은 피해가 임계치에 닿으면 짧은 반격탄을 쏜다.</p><em>방패 중앙의 큰 개폐선</em></div>
+          <div class="trait"><strong>Interceptor · 요격</strong><p>근처의 제한된 플레이어 발사체를 요격한다.</p><em>상부 방어 포탑 하나</em></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="family-card" id="sustainer">
+      <div class="family-head">
+        <div class="matrix-crop r2 c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="유지형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">08 · SUSTAINER</span><h3 style="margin-top:10px">유지형 · 전투를 길게 만드는 원인을 먼저 끊게 한다</h3><p>회복·정화·보호 충전을 제공하는 전략 표적. 공격력보다 생존 시간을 바꾼다. 현재 <code>support_01</code>과 고정 지원 행동을 묶는다.</p><div class="legend"><span>핵심 대응: 최우선 처치</span><span>연결선 차단</span><span>크기 56 / 66 / 76</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 수리 팔</b>단일 큰 수리 팔.</div><div class="tier"><b>T2 · 이중 수리기</b>이중 수리 팔과 축전기.</div><div class="tier"><b>T3 · 회복 링</b>대형 회복 링과 보조 드론.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Repair Beam · 수리광선</strong><p>한 대상에게 지속 회복을 보낸다.</p><em>큰 수리 팔 하나</em></div>
+          <div class="trait"><strong>Pulse Repair · 수리파</strong><p>주기적으로 주변 여러 적을 소량 회복한다.</p><em>넓은 십자 방출기</em></div>
+          <div class="trait"><strong>Cleanse · 정화</strong><p>주변 적의 둔화·중독 같은 상태를 제거한다.</p><em>갈라진 서비스 안테나</em></div>
+          <div class="trait"><strong>Shield Charge · 방벽 충전</strong><p>방어형의 방패 재사용을 앞당긴다.</p><em>큰 후방 축전기</em></div>
+          <div class="trait"><strong>Sacrifice · 희생</strong><p>사망 시 주변 적에게 한 번의 회복을 남긴다.</p><em>중앙 파손선 + 경고 코어</em></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="family-card" id="coordinator">
+      <div class="family-head">
+        <div class="matrix-crop r2 c2"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="지휘형의 T1부터 T3와 트레잇 콘셉트"></div>
+        <div class="family-copy"><span class="family-id">09 · COORDINATOR</span><h3 style="margin-top:10px">지휘형 · 팩 전술의 중심을 찾아 무너뜨리게 한다</h3><p>혼성 팩의 이동과 성장 목표 수행을 조율한다. 혼자 스폰하지 않는다. 현재 <code>support_03</code> 운반·지휘 행동을 프로토타입 기준으로 삼을 수 있다.</p><div class="legend"><span>핵심 대응: 지휘 연결 끊기</span><span>팩 우선순위 재정렬</span><span>크기 56 / 66 / 76</span></div></div>
+      </div>
+      <div class="family-body">
+        <div class="tiers"><div class="tier"><b>T1 · 신호 비콘</b>소형 비콘과 단일 신호면.</div><div class="tier"><b>T2 · 삼중 노드</b>삼중 신호 노드와 넓은 차체.</div><div class="tier"><b>T3 · 지휘 프레임</b>대형 프레임과 두 방향 연결부.</div></div>
+        <div class="trait-grid">
+          <div class="trait"><strong>Blink · 점멸</strong><p>팩이 짧은 예고 후 함께 재배치한다.</p><em>쌍둥이 측면 관문 핀</em></div>
+          <div class="trait"><strong>Pair Link · 쌍연결</strong><p>두 하위군의 간격을 유지해 협공한다.</p><em>서로 마주보는 연결 노드 2개</em></div>
+          <div class="trait"><strong>Rally · 집결</strong><p>주변 적을 성장 목표로 빠르게 모은다.</p><em>전방 지휘 쐐기</em></div>
+          <div class="trait"><strong>Relay · 중계</strong><p>멀리 있는 팩 하나에 목표 명령을 전달한다.</p><em>큰 전방 센서판</em></div>
+          <div class="trait"><strong>Recall · 귀환</strong><p>위험해진 하위군을 자신 쪽으로 후퇴시킨다.</p><em>열린 후방 포획 포크</em></div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section id="packs">
+    <p class="kicker">Composition and growth</p>
+    <h2>7. 팩·트레잇·적 성장 운영 규칙</h2>
+    <div class="grid-3">
+      <article class="card"><h3>단일 팩</h3><p class="muted">같은 패밀리·티어·트레잇의 3–6기. 하나의 큰 행동을 학습시킨다. 팩 내부에서 트레잇을 섞지 않는다.</p></article>
+      <article class="card"><h3>혼성 팩</h3><p class="muted">Coordinator 1기 + 최대 2개의 같은 성격 하위군. 지휘형 사망 시 집결·협공만 풀리고 생존자는 본래 행동을 계속한다.</p></article>
+      <article class="card"><h3>고정 배치</h3><p class="muted">Gunner·Artillery·Controller·Sustainer 중 하나를 설치물로 배치한다. 가족 행동은 유지하고 이동만 제거한다.</p></article>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>규칙</th><th>정의</th><th>이유</th></tr></thead>
+        <tbody>
+          <tr><td>한 적 한 트레잇</td><td>평상시에는 패밀리 전용 트레잇 하나만 가진다.</td><td>시각과 대응법을 1:1로 유지한다.</td></tr>
+          <tr><td>셔플백</td><td>활성 풀의 트레잇을 가방처럼 한 번씩 뽑고 다시 채운다. 방금 많이 나온 트레잇은 다음 가중치를 낮춘다.</td><td>같은 변형의 연속 출현을 줄이되 이전 학습을 폐기하지 않는다.</td></tr>
+          <tr><td>티어 중첩 구간</td><td>초반 T1 중심 → 중반 T1/T2 → 후반 T2/T3. 경계를 겹친다.</td><td>한 사이클에 실루엣이 갑자기 전부 교체되는 느낌을 막는다.</td></tr>
+          <tr><td>점수별 국소 성장</td><td>적이 성장 신호 1점을 얻으면 그 점수를 낸 팩만 즉시 티어 +1, T3는 체력 일부 회복.</td><td>한 점도 실제 결과가 있지만 전역 눈덩이는 만들지 않는다.</td></tr>
+          <tr><td>2/3 적 승리</td><td>공개된 한 패밀리의 미래 스폰을 +1티어. T3 팩은 두 번째 트레잇을 얻어 각성.</td><td>플레이어가 경쟁을 무시한 대가를 분명히 보이게 한다.</td></tr>
+          <tr><td>각성 종료</td><td>프로토타입에서는 다음 보스 사망 시 해제한다.</td><td>패배가 남은 런 전체를 망치는 것을 막고 학습 가능한 창을 만든다.</td></tr>
+          <tr><td>지휘형 제한</td><td>단독 스폰 금지, 한 혼성 팩에 1기, 성장 목표 전담 팩에 우선 배정.</td><td>팩 전술과 맵 경쟁의 의도를 한 표적으로 모은다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:24px">적 성장 결과의 시각 순서</h3>
+    <ol>
+      <li><strong>목표 예고:</strong> 대략적 섹터와 목표 종류만 미니맵에 표시한다.</li>
+      <li><strong>적 참여:</strong> 지휘형 또는 전담 팩과 목표 사이에 굵은 단일 연결선이 생긴다.</li>
+      <li><strong>채널링:</strong> 목표의 큰 면 하나가 0→100%로 채워진다. 적 몸체에 별도 작은 게이지를 붙이지 않는다.</li>
+      <li><strong>점수 획득:</strong> 0.45초 색 전환과 짧은 코드 파동, HUD <code>적 성장 1/2</code> 한 줄로 알린다.</li>
+      <li><strong>티어 상승:</strong> 다음 안전한 스폰에서 더 큰 실루엣을 사용한다. 살아 있는 적을 갑자기 확대해 충돌 혼란을 만들지 않는다.</li>
+      <li><strong>각성:</strong> T3의 두 번째 큰 모듈이 전개되고, 발동 시에만 의미색을 밝힌다.</li>
+    </ol>
+    <div class="callout"><strong>시각 예산:</strong> 기본 몸체는 매트 대형 면 3–5개, 어두운 외곽선, 기능 모듈 최대 2개, 의미색 1개만 사용한다. 작은 원·리벳·반복 램프·패널 이음선·동심 링·다중 외곽선·상시 광원은 금지한다.</div>
+  </section>
+
+  <section id="rollout">
+    <p class="kicker">Implementation-ready rollout</p>
+    <h2>8. 가장 작은 구현·검증 순서</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>단계</th><th>범위</th><th>성공 기준</th><th>중단 기준</th></tr></thead>
+        <tbody>
+          <tr><td><strong>0 · 기준선</strong></td><td>현재 런의 방문 섹터, 시설 발견·파괴 수, Transit Gate 사용 수, 첫 상호작용 시간, 보스 도달 시간을 기록</td><td>변경 전 이동 패턴을 재현 가능</td><td>측정이 런마다 비교 불가</td></tr>
+          <tr><td><strong>1 · 무보상 2/3</strong></td><td>코어·시설 집결·릴레이 신호와 P/E 점수만 구현. 보상은 임시 토큰</td><td>플레이어가 기존보다 다른 섹터를 방문하고 목표를 차단</td><td>항상 같은 두 목표만 고르거나 전투를 완전히 피함</td></tr>
+          <tr><td><strong>2 · 적 성장 연결</strong></td><td>기존 역할 1패밀리에만 티어 +1과 트레잇 1개 연결</td><td>패배 결과를 설명 없이 외형과 행동으로 식별</td><td>강화 원인을 모르거나 다음 보스 구간이 과도하게 어려워짐</td></tr>
+          <tr><td><strong>3 · 플레이어 진화</strong></td><td>보유 카드 중 소수의 적격 진화만 다음 보스 보상에 추가</td><td>모달 없이 탐사 동기와 빌드 선택이 연결</td><td>진화가 없으면 목표를 전혀 하지 않거나 필수 노동화</td></tr>
+          <tr><td><strong>4 · 9패밀리 확장</strong></td><td>패밀리별 T1–T3와 트레잇을 한 가족씩 실제 크기로 검증</td><td>1초 노출에서 가족·티어·발동 트레잇을 구분</td><td>작은 세부·상시 광원·화면 혼잡으로 구분해야 함</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>탐사</span><strong>방문 미니맵 섹터 수 ↑</strong></div>
+      <div class="stat"><span>시설</span><strong>발견·기동률 ↑</strong></div>
+      <div class="stat"><span>선택</span><strong>3목표 선택 편향 &lt; 70%</strong></div>
+      <div class="stat"><span>전투</span><strong>3초 이상 공백 증가 없음</strong></div>
+      <div class="stat"><span>가독성</span><strong>패밀리 오인 감소</strong></div>
+      <div class="stat"><span>공정성</span><strong>화면 밖 무대응 점수 0건</strong></div>
+      <div class="stat"><span>진행</span><strong>보스 도달 시간 급증 없음</strong></div>
+      <div class="stat"><span>성능</span><strong>현행 프레임 예산 유지</strong></div>
+    </div>
+    <div class="callout good"><strong>최초 프로토타입 권장:</strong> 한 런 1회, 성장 신호 3개, 승리 조건 2점, 적 전담 팩 1개, 패밀리 1개, 트레잇 1개, 플레이어 진화 1개만 사용한다. 이 범위에서 이동이 생기지 않으면 콘텐츠 수를 늘리지 말고 신호·거리·시간부터 조정한다.</div>
+  </section>
+
+  <section id="future">
+    <p class="kicker">Future expansion only</p>
+    <h2>9. 타워 디펜스 혼합안은 문서로만 보존</h2>
+    <p>여러 기지를 방어하기 위해 맵을 왕복하는 구조는 이동 동기를 강하게 만들지만, 현재의 “플레이어 생존 + 쿼터 보스”를 “기지 생존 + 웨이브 방어”로 바꿀 위험이 크다. 본편 통합안에는 넣지 않는다.</p>
+    <div class="grid-3">
+      <article class="card"><h3>A개 기지</h3><p class="muted">필드에 2–4개 기지가 있고 공격 예고에 맞춰 이동한다. 기지마다 수리·탄막·정찰 같은 기능을 맡는다.</p></article>
+      <article class="card"><h3>탐사와 귀환</h3><p class="muted">공격 사이에 자원을 모으되, 다음 습격 전에 어느 기지로 돌아갈지 선택한다. Transit Gate가 방어망의 핵심이 된다.</p></article>
+      <article class="card"><h3>확장 전제</h3><p class="muted">별도 모드, 별도 런 목표, 기지 체력·공격 예고·패배 조건·웨이브 스케줄을 새로 설계해야 한다.</p></article>
+    </div>
+    <div class="callout danger"><strong>현재 금지:</strong> 기지를 현행 12보스 런의 필수 패배 조건으로 추가하기, 일반 적 쿼터와 기지 웨이브를 동시에 독립 운영하기, 맵 성장 경쟁 검증 전에 건설·수리·업그레이드 경제까지 확장하기.</div>
+  </section>
+
+  <section id="references">
+    <p class="kicker">Sources and provenance</p>
+    <h2>10. 근거와 출처</h2>
+    <div class="grid-2">
+      <article class="source">
+        <h3>로컬 정본·현재 구현</h3>
+        <ul>
+          <li><a href="../product/vehicle_game_spec.md">차량 게임 제품 사양</a> — 단일 필드, 12사이클, 쿼터, 시설, 픽업, 현재 크기 계약.</li>
+          <li><a href="../design/VISUAL_SYSTEM.md">시각 시스템</a> — 단순한 대형 면, 역할 실루엣, 가시 반지름, 시각/충돌 책임 분리.</li>
+          <li><a href="../design/cardborne-universal-art-style-reference.png">정본 스타일 시트</a> — 플레이어·일반 적·보스·발사체·시설의 공통 시각 기준.</li>
+          <li><a href="../../scripts/vehicle/vehicle_field_layout_generator.gd">필드 배치</a>, <a href="../../scripts/vehicle/vehicle_mystery_device_runtime.gd">시설 런타임</a>, <a href="../../scripts/vehicle/vehicle_run.gd">런 진행</a>.</li>
+        </ul>
+      </article>
+      <article class="source">
+        <h3>사용자 제공 설계 자료</h3>
+        <ul>
+          <li><code>cardborne_enemy_family_trait_report_ko (1).html</code> — SHA-256 <span class="small">80f4…a1a</span>; 8패밀리·4티어·셔플백·팩 규칙.</li>
+          <li><code>cardborne_enemy_family_trait_report_ko.html</code> — SHA-256 <span class="small">b87f…ba6</span>; 9패밀리·T1–T3·45트레잇·고정 배치 축.</li>
+          <li><a href="https://chatgpt.com/share/6a86ca9f-15b8-83ee-8fe6-eb272800f2e4">공유 대화</a> — “그리고 지금 일반적/보스 이미지를 분석하고 개선하고 싶어.” 이후의 일반 적 크기·단순화·역할 가독성 분석.</li>
+          <li>제공 PNG A/B/C — 이 문서의 전체 이미지 및 패밀리별 CSS 크롭.</li>
+        </ul>
+      </article>
+    </div>
+    <h3 style="margin-top:24px">외부 구조 레퍼런스와 Cardborne 전이</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>레퍼런스</th><th>가져오는 구조</th><th>가져오지 않는 것</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://vampire-survivors.fandom.com/wiki/Weapons">Vampire Survivors · 진화</a></td><td>빌드 조건과 월드 획득을 결합해 행동 변화를 연다.</td><td>모든 카드의 대규모 진화 제작을 먼저 하지 않는다.</td></tr>
+          <tr><td><a href="https://hades.fandom.com/wiki/Chambers_and_Encounters">Hades · 보상 예고</a></td><td>우회 전에 보상 종류를 알리고 선택하게 한다.</td><td>방 단위 분기와 전투 중단을 가져오지 않는다.</td></tr>
+          <tr><td><a href="https://riskofrain2.wiki.gg/wiki/Shrine_of_the_Mountain">Risk of Rain 2 · 위험 선택</a></td><td>플레이어가 더 큰 보상을 위해 위험을 자발적으로 키운다.</td><td>무료 상호작용이나 무제한 중첩을 가져오지 않는다.</td></tr>
+          <tr><td><a href="https://blog.playstation.com/2023/11/30/unravel-the-gameplay-loop-of-pacific-drive-launching-on-ps5-feb-22/">Pacific Drive · 임계치와 탈출</a></td><td>자원 임계치가 다음 게임 상태를 연다.</td><td>별도 탈출 페이즈를 만들지 않는다.</td></tr>
+          <tr><td><a href="https://store.steampowered.com/app/1637320/Dome_Keeper/">Dome Keeper · 탐사/귀환/방어</a></td><td>멀리 갈수록 귀환 비용이 생기는 이동 긴장.</td><td>기지 방어는 추후 별도 확장안으로만 보존한다.</td></tr>
+          <tr><td><a href="https://deeprockgalactic.wiki.gg/wiki/How_to_Play_Guide_for_Deep_Rock_Galactic">Deep Rock Galactic · 부목표</a></td><td>주 목표와 별개인 선택적 수집이 탐사 범위를 넓힌다.</td><td>런 완료를 막는 필수 청소 목표를 만들지 않는다.</td></tr>
+          <tr><td><a href="https://wiki.hoodedhorse.com/Against_the_Storm/Glades">Against the Storm · 위험 예고</a></td><td>위험 종류는 먼저 알리고 상세 결과는 현장에서 드러낸다.</td><td>복잡한 자원 해결식과 이벤트 콘텐츠 양을 가져오지 않는다.</td></tr>
+          <tr><td><a href="https://news.xbox.com/en-us/2019/05/30/outer-wilds-available-today-xbox-game-pass/">Outer Wilds · 발견 단서</a></td><td>한 발견이 다음 목적지를 만든다.</td><td>모든 장소에 전투력 보상을 붙이지 않는다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="source-note" style="margin-top:18px">
+      <strong>시각 정본 preflight:</strong> <code>VISUAL_SYSTEM.md</code> SHA-256 <span class="small">2e5c…006</span>; 정본 스타일 시트 SHA-256 <span class="small">96cc…889</span> 확인. 제공 PNG 해시: A <span class="small">6fa4…edc</span>, B <span class="small">47dc…e18</span>, C <span class="small">7341…791</span>. 세 PNG는 원본과 동일한 바이트로 복사했다.
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>문서 성격:</strong> 맵 탐사와 일반 적 분류를 하나의 성장 경쟁 루프로 연결한 구현 전 설계 보고서다. 현행 ID 삭제·production 자산 교체·타워 디펜스 전환을 승인하지 않는다.</p>
+    <p><strong>다음 결정:</strong> 시설 개수의 사양 불일치를 해소한 뒤, 무보상 2/3 경쟁 한 번과 기존 한 패밀리의 T1→T2 성장만 프로토타입한다.</p>
+  </footer>
+</main>
+</body>
+</html>
