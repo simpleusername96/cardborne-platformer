@@ -1,8 +1,8 @@
 class_name VehicleSpawnAllocator
 extends RefCounted
 
-## Deterministically assigns independent offscreen birth positions. Authored
-## squads keep role/tactic meaning but never own a shared spatial anchor.
+## Deterministically assigns independent offscreen birth positions while
+## preserving each authored semantic pack without role-bag redistribution.
 
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
@@ -27,16 +27,6 @@ const RELAXATION_TIERS: Array[Dictionary] = [
 	{"id":&"T2", "maximum":MAX_PLAYER_DISTANCE, "clearance":320.0},
 	{"id":&"T3", "maximum":RELAXED_MAX_PLAYER_DISTANCE, "clearance":320.0},
 ]
-const PURSUIT_ROLES: Array[StringName] = [
-	&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_area_01",
-	&"ordinary_gap_01", &"ordinary_support_02", &"ordinary_growth_01",
-	&"ordinary_support_01", &"ordinary_support_03", &"ordinary_reflect_01",
-	&"ordinary_overload_01",
-]
-const LATE_PURSUIT_ROLES: Array[StringName] = [&"ordinary_reflect_01", &"ordinary_overload_01"]
-const LATE_STANDOFF_ROLES: Array[StringName] = [&"ordinary_compression_01", &"ordinary_resonance_01"]
-const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = EnemyArchetypes.PROJECTILE_FIRING_ARCHETYPES
-
 var _seed := 0
 var _candidate_points: Array[Vector2] = []
 var _geometry_snapshot: Variant
@@ -112,7 +102,12 @@ func allocate_window(
 	player_velocity: Vector2 = Vector2.ZERO
 ) -> Array[Dictionary]:
 	var squads: Array = packet["squads"]
-	var reordered := _reorder_roles(squads, String(packet["id"]))
+	var authored_squads: Array[Array] = []
+	for squad in squads:
+		var authored: Array[StringName] = []
+		for role in Array(squad):
+			authored.append(StringName(role))
+		authored_squads.append(authored)
 	var squads_per_window := int(packet.get("squads_per_window", SQUADS_PER_WINDOW))
 	var first_squad := arrival_window * squads_per_window
 	if first_squad >= squads.size():
@@ -121,16 +116,16 @@ func allocate_window(
 	var requests: Array[Dictionary] = []
 	var maximum_size := 0
 	for squad_index in range(first_squad, last_squad):
-		maximum_size = maxi(maximum_size, reordered[squad_index].size())
+		maximum_size = maxi(maximum_size, authored_squads[squad_index].size())
 	for unit_index in maximum_size:
 		for squad_index in range(first_squad, last_squad):
-			if unit_index >= reordered[squad_index].size():
+			if unit_index >= authored_squads[squad_index].size():
 				continue
 			requests.append({
 				"squad_index":squad_index,
 				"window_slot":squad_index - first_squad,
 				"unit_index":unit_index,
-				"role":StringName(reordered[squad_index][unit_index]),
+				"role":StringName(authored_squads[squad_index][unit_index]),
 				"nearest_safe_offscreen":bool(packet.get("nearest_safe_offscreen", false)),
 			})
 	var separation_truth := reserved_positions.duplicate()
@@ -152,7 +147,7 @@ func allocate_window(
 		if positions.is_empty():
 			continue
 		return _build_window_allocations(
-			reordered,
+			authored_squads,
 			requests,
 			positions,
 			first_squad,
@@ -243,7 +238,7 @@ func _try_allocate_requests(
 
 
 func _build_window_allocations(
-	reordered: Array[Array],
+	authored_squads: Array[Array],
 	requests: Array[Dictionary],
 	positions: Array[Dictionary],
 	first_squad: int,
@@ -257,7 +252,7 @@ func _build_window_allocations(
 	var result: Array[Dictionary] = []
 	for squad_index in range(first_squad, last_squad):
 		result.append({
-			"roles":reordered[squad_index].duplicate(),
+			"roles":authored_squads[squad_index].duplicate(),
 			"arrival_window":arrival_window,
 			"window_slot":squad_index - first_squad,
 			"unit_positions":[],
@@ -492,13 +487,13 @@ func _role_distance_lane(score_identity: String, role: StringName) -> int:
 	## Allocation chooses only an existing role-appropriate distance lane; the
 	## runtime remains the sole owner of effective speed scaling.
 	var definition := EnemyArchetypes.definition(role)
-	var behavior := StringName(definition.get("behavior", &""))
-	if role in [&"ordinary_melee_01", &"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_area_01"] or role in LATE_PURSUIT_ROLES:
+	var family := StringName(definition.get("family", &""))
+	if family in [&"pursuer", &"charger", &"defender"]:
 		return 1 + posmod(hash(score_identity + ":pursuit-distance"), 2)
-	if behavior in [&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01"] or role in LATE_STANDOFF_ROLES:
+	if family == &"gunner":
 		return posmod(hash(score_identity + ":standoff-distance"), 2)
-	if behavior in [&"ordinary_support_02", &"ordinary_support_01", &"ordinary_support_03"]:
-		return 0 # escort/support prefers 1200px.
+	if family == &"coordinator":
+		return 0
 	# Stationary and specialist births retain the previous all-lane choice.
 	return posmod(hash(score_identity + ":distance"), TARGET_DISTANCES.size())
 
@@ -530,76 +525,6 @@ func _append_candidate(point: Vector2, seen: Dictionary) -> void:
 		return
 	seen[key] = true
 	_candidate_points.append(point)
-
-
-func _reorder_roles(squads: Array, packet_id: String) -> Array[Array]:
-	if squads.size() == 1 and Array(squads[0]).size() == 1:
-		return [[StringName(squads[0][0])]]
-	var sizes: Array[int] = []
-	var bag: Array[StringName] = []
-	var result: Array[Array] = []
-	for squad in squads:
-		sizes.append(Array(squad).size())
-		result.append([])
-		for role in squad:
-			bag.append(StringName(role))
-	_seeded_sort_roles(bag, packet_id)
-	for squad_index in sizes.size():
-		var pursuit_index := _find_role_index(bag, PURSUIT_ROLES)
-		if pursuit_index >= 0:
-			result[squad_index].append(bag.pop_at(pursuit_index))
-	var direct_index := _find_role_index(bag, PROJECTILE_FIRING_ARCHETYPES)
-	var direct_cursor := 0
-	while direct_index >= 0:
-		var squad_index := _next_available_squad(result, sizes, direct_cursor, true)
-		if squad_index < 0:
-			break
-		result[squad_index].append(bag.pop_at(direct_index))
-		direct_cursor = squad_index + 1
-		direct_index = _find_role_index(bag, PROJECTILE_FIRING_ARCHETYPES)
-	var fill_cursor := 0
-	while not bag.is_empty():
-		var squad_index := _next_available_squad(result, sizes, fill_cursor, false)
-		if squad_index < 0:
-			break
-		result[squad_index].append(bag.pop_front())
-		fill_cursor = squad_index + 1
-	return result
-
-
-func _next_available_squad(
-	squads: Array[Array],
-	sizes: Array[int],
-	cursor: int,
-	direct_role: bool
-) -> int:
-	for offset in squads.size():
-		var index := (cursor + offset) % squads.size()
-		if squads[index].size() >= sizes[index]:
-			continue
-		if direct_role and squads[index].filter(
-			func(role: StringName) -> bool: return role in PROJECTILE_FIRING_ARCHETYPES
-		).size() >= 2:
-			continue
-		return index
-	return -1
-
-
-func _find_role_index(bag: Array[StringName], accepted: Array[StringName]) -> int:
-	for index in bag.size():
-		if bag[index] in accepted:
-			return index
-	return -1
-
-
-func _seeded_sort_roles(roles: Array[StringName], packet_id: String) -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash("%d:%s:roles" % [_seed, packet_id])
-	for index in range(roles.size() - 1, 0, -1):
-		var swap_index := rng.randi_range(0, index)
-		var held := roles[index]
-		roles[index] = roles[swap_index]
-		roles[swap_index] = held
 
 
 func _sector_for(offset: Vector2) -> int:

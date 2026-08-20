@@ -5,6 +5,9 @@ extends RefCounted
 
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const FamilyTraits = preload(
+	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
+)
 const TacticCatalog = preload(
 	"res://scripts/encounters/vehicle_collective_tactic_catalog.gd"
 )
@@ -51,23 +54,23 @@ const BOSS_NAME_KEYS := [
 	"BOSS_STAGE_09", "BOSS_STAGE_10", "BOSS_STAGE_11", "BOSS_STAGE_12",
 ]
 const MOBILE_ROLES := [
-	[&"ordinary_melee_01", &"ordinary_ranged_01", &"ordinary_area_01"],
-	[&"ordinary_ranged_01", &"ordinary_area_01", &"ordinary_lane_01"],
-	[&"ordinary_area_01", &"ordinary_lane_01", &"ordinary_shield_01"],
-	[&"ordinary_lane_01", &"ordinary_shield_01", &"ordinary_sweep_01"],
-	[&"ordinary_shield_01", &"ordinary_sweep_01", &"ordinary_beam_01"],
-	[&"ordinary_sweep_01", &"ordinary_beam_01", &"ordinary_growth_01"],
-	[&"ordinary_beam_01", &"ordinary_growth_01", &"ordinary_gap_01"],
-	[&"ordinary_growth_01", &"ordinary_gap_01", &"ordinary_pulse_01"],
-	[&"ordinary_gap_01", &"ordinary_pulse_01", &"ordinary_compression_01"],
-	[&"ordinary_pulse_01", &"ordinary_compression_01", &"ordinary_reflect_01"],
-	[&"ordinary_compression_01", &"ordinary_reflect_01", &"ordinary_resonance_01"],
-	[&"ordinary_reflect_01", &"ordinary_resonance_01", &"ordinary_overload_01"],
+	[&"ordinary_pursuer_t1", &"ordinary_charger_t1", &"ordinary_gunner_t1"],
+	[&"ordinary_charger_t1", &"ordinary_gunner_t1", &"ordinary_defender_t1"],
+	[&"ordinary_gunner_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1"],
+	[&"ordinary_defender_t1", &"ordinary_coordinator_t1", &"ordinary_pursuer_t1"],
+	[&"ordinary_pursuer_t2", &"ordinary_charger_t2", &"ordinary_gunner_t2"],
+	[&"ordinary_charger_t2", &"ordinary_gunner_t2", &"ordinary_defender_t2"],
+	[&"ordinary_gunner_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2"],
+	[&"ordinary_defender_t2", &"ordinary_coordinator_t2", &"ordinary_pursuer_t2"],
+	[&"ordinary_pursuer_t3", &"ordinary_charger_t3", &"ordinary_gunner_t3"],
+	[&"ordinary_charger_t3", &"ordinary_gunner_t3", &"ordinary_defender_t3"],
+	[&"ordinary_gunner_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3"],
+	[&"ordinary_defender_t3", &"ordinary_coordinator_t3", &"ordinary_pursuer_t3"],
 ]
 const BOSS_TUTOR_ROLES := [
-	&"ordinary_area_01", &"ordinary_lane_01", &"ordinary_shield_01", &"ordinary_sweep_01",
-	&"ordinary_beam_01", &"ordinary_growth_01", &"ordinary_gap_01", &"ordinary_pulse_01",
-	&"ordinary_compression_01", &"ordinary_reflect_01", &"ordinary_resonance_01", &"ordinary_overload_01",
+	&"ordinary_gunner_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1", &"ordinary_pursuer_t1",
+	&"ordinary_gunner_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2", &"ordinary_pursuer_t2",
+	&"ordinary_gunner_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3", &"ordinary_pursuer_t3",
 ]
 
 static func normalized_id(stage_id: StringName) -> StringName:
@@ -134,13 +137,16 @@ static func definition(
 static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var target_count: int = int(AUTHORED_COUNTS[stage_index])
-	var sequence := _role_sequence(stage_index, target_count)
-	var opening_roles: Array[StringName] = sequence.slice(0, 6)
+	var opening_pack := _pack_blueprint(stage_index, 0, 6)
+	var opening_roles: Array[StringName] = []
+	for role in Array(opening_pack["roles"]):
+		opening_roles.append(StringName(role))
 	result.append({
 		"id":"stage_%d_packet_01" % [stage_index + 1],
 		"beat":0,
 		"trigger":{"kind":&"time", "at":0.0},
 		"squads":[opening_roles],
+		"packs":[opening_pack],
 		"unit_spacing":0.16,
 		"cue_lead":0.9,
 		"nearest_safe_offscreen":true,
@@ -162,16 +168,20 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 	var surge_count := ceili(float(remaining) / float(maximum_surge_units))
 	var base_surge_size := remaining / surge_count
 	var extra_surges := remaining % surge_count
-	var cursor := opening_roles.size()
+	var pack_ordinal := 1
 	for surge_index in surge_count:
 		var surge_size := base_surge_size + (1 if surge_index < extra_surges else 0)
 		var beat := mini(4, 1 + floori(4.0 * float(surge_index) / float(surge_count)))
-		var squads := _surge_squads(sequence, cursor, surge_size)
+		var packs := _surge_packs(stage_index, pack_ordinal, surge_size)
+		var squads: Array[Array] = []
+		for pack in packs:
+			squads.append(Array(Dictionary(pack)["roles"]).duplicate())
 		result.append({
 			"id":"stage_%d_packet_%02d" % [stage_index + 1, surge_index + 2],
 			"beat":beat,
 			"trigger":{"kind":&"time", "at":4.0 + float(surge_index) * 2.4},
 			"squads":squads,
+			"packs":packs,
 			"collective_tactic":TacticCatalog.assignment_for(
 				stage_index,
 				surge_index,
@@ -188,45 +198,40 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 			"zone":"field",
 			"leash":Rect2(field_definition["world_rect"]),
 		})
-		cursor += surge_size
+		pack_ordinal += packs.size()
 	return result
 
 
-static func _role_sequence(stage_index: int, target_count: int) -> Array[StringName]:
-	return _role_sequence_for_arc(stage_index, target_count)
-
-
-static func _role_sequence_for_arc(stage_index: int, target_count: int) -> Array[StringName]:
-	var roles: Array = MOBILE_ROLES[stage_index]
-	var teaching_role := StringName(roles[2])
-	var teaching_share := 0.12 if stage_index == 11 else 0.25
-	var teaching_count := maxi(4, roundi(float(target_count) * teaching_share))
-	var teaching_stride := maxi(1, floori(float(target_count) / float(teaching_count)))
-	var result: Array[StringName] = []
-	for index in target_count:
-		if index % teaching_stride == 0 and teaching_count > 0:
-			result.append(teaching_role)
-			teaching_count -= 1
-		else:
-			result.append(StringName(roles[index % 2]))
-	result[0] = StringName(roles[0])
-	return result
-
-
-static func _surge_squads(
-	sequence: Array[StringName],
-	start_index: int,
+static func _surge_packs(
+	stage_index: int,
+	start_pack_ordinal: int,
 	unit_count: int
-) -> Array[Array]:
-	var result: Array[Array] = []
+) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
 	var base_size := unit_count / SURGE_SQUADS
 	var extra := unit_count % SURGE_SQUADS
-	var cursor := start_index
 	for squad_index in SURGE_SQUADS:
 		var squad_size := base_size + (1 if squad_index < extra else 0)
-		var squad: Array[StringName] = []
-		for _unit_index in squad_size:
-			squad.append(sequence[cursor])
-			cursor += 1
-		result.append(squad)
+		result.append(_pack_blueprint(stage_index, start_pack_ordinal + squad_index, squad_size))
 	return result
+
+
+static func _pack_blueprint(stage_index: int, pack_ordinal: int, pack_size: int) -> Dictionary:
+	var tier := FamilyTraits.tier_for_stage(stage_index)
+	var primary_archetype := StringName(MOBILE_ROLES[stage_index][pack_ordinal % 3])
+	var family := StringName(EnemyArchetypes.definition(primary_archetype)["family"])
+	var roles: Array[StringName] = []
+	var defender_count := 0
+	if family == &"gunner":
+		defender_count = 2 if pack_size >= 6 else 1
+	for _index in pack_size - defender_count:
+		roles.append(FamilyTraits.archetype(family, tier))
+	for _index in defender_count:
+		roles.append(FamilyTraits.archetype(&"defender", tier))
+	return {
+		"family":family,
+		"tier":tier,
+		"trait":FamilyTraits.trait_for_pack(family, stage_index, pack_ordinal),
+		"tactic_id":FamilyTraits.tactic_for_family(family),
+		"roles":roles,
+	}

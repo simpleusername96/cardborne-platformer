@@ -8,6 +8,9 @@ const Catalog = preload(
 	"res://scripts/encounters/vehicle_collective_tactic_catalog.gd"
 )
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const FamilyTraits = preload(
+	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
+)
 
 const MAX_REGISTERED_SQUADS := 32
 const DORMANT_VISIBLE_DWELL_SECONDS := 0.75
@@ -67,6 +70,15 @@ func register_enemy(enemy: EnemyState) -> void:
 			"centroid": enemy.pos,
 			"cycle": 0,
 			"beat_kind": enemy.collective_beat_kind,
+			"family": enemy.family,
+			"tier": enemy.tier,
+			"trait": enemy.family_trait,
+			"trait_phase": &"idle",
+			"trait_timer": _trait_interval(enemy.family_trait),
+			"trait_ratio": 0.0,
+			"feed_stacks": 0,
+			"feed_enabled": true,
+			"defeat_receipts": PackedStringArray(),
 		}
 	var state: Dictionary = _squads[squad_id]
 	var member_ids := PackedStringArray(state["member_ids"])
@@ -129,6 +141,7 @@ func advance(
 			interrupted = interrupted or member.stun > 0.01
 		centroid /= float(members.size())
 		state["centroid"] = centroid
+		_advance_trait_state(state, delta)
 		var visible := (
 			visible_world.has_point(centroid)
 			and visible_members >= minimum_members
@@ -225,9 +238,46 @@ func break_squad(squad_id: String, reason: StringName) -> void:
 	_squads[squad_id] = state
 
 
+func record_member_defeat(enemy: EnemyState) -> Dictionary:
+	if enemy == null or enemy.squad_id.is_empty() or not _squads.has(enemy.squad_id):
+		return {}
+	var state: Dictionary = _squads[enemy.squad_id]
+	if StringName(state.get("trait", &"")) != &"pack_feed":
+		return {}
+	var receipts := PackedStringArray(state.get("defeat_receipts", PackedStringArray()))
+	if enemy.id in receipts:
+		return {}
+	receipts.append(enemy.id)
+	state["defeat_receipts"] = receipts
+	if enemy.id == String(state.get("leader_id", "")):
+		state["feed_enabled"] = false
+		_squads[enemy.squad_id] = state
+		return {"leader_lost":true, "squad_id":enemy.squad_id}
+	if enemy.summoned or not bool(state.get("feed_enabled", true)):
+		_squads[enemy.squad_id] = state
+		return {}
+	var stacks := mini(
+		FamilyTraits.PACK_FEED_MAX_STACKS,
+		int(state.get("feed_stacks", 0)) + 1
+	)
+	state["feed_stacks"] = stacks
+	_squads[enemy.squad_id] = state
+	var survivor_ids := PackedStringArray()
+	for member_id in PackedStringArray(state.get("member_ids", PackedStringArray())):
+		if member_id != enemy.id:
+			survivor_ids.append(member_id)
+	return {
+		"squad_id":enemy.squad_id,
+		"stacks":stacks,
+		"survivor_ids":survivor_ids,
+		"heal_ratio":FamilyTraits.PACK_FEED_HEAL_RATIO,
+	}
+
+
 func debug_snapshot() -> Dictionary:
 	var phases := {}
 	var eligibility := {}
+	var packs := {}
 	var member_count := 0
 	for state_variant in _squads.values():
 		var state := Dictionary(state_variant)
@@ -239,6 +289,15 @@ func debug_snapshot() -> Dictionary:
 			"visible_eligible": bool(state["visible_eligible"]),
 			"visible_dwell": float(state["visible_dwell"]),
 			"visible_dwell_ready": float(state["visible_dwell"]) >= DORMANT_VISIBLE_DWELL_SECONDS,
+		}
+		packs[String(state["id"])] = {
+			"family":StringName(state.get("family", &"")),
+			"tier":int(state.get("tier", 0)),
+			"trait":StringName(state.get("trait", &"")),
+			"trait_phase":StringName(state.get("trait_phase", &"idle")),
+			"trait_ratio":float(state.get("trait_ratio", 0.0)),
+			"feed_stacks":int(state.get("feed_stacks", 0)),
+			"member_count":PackedStringArray(state["member_ids"]).size(),
 		}
 	return {
 		"squad_count": _squads.size(),
@@ -254,6 +313,7 @@ func debug_snapshot() -> Dictionary:
 		"stale_members_removed": _stale_members_removed,
 		"dormant_visible_dwell_seconds": DORMANT_VISIBLE_DWELL_SECONDS,
 		"eligibility": eligibility,
+		"packs":packs,
 		"phases": phases,
 		"phase_counts": _phase_counts.duplicate(true),
 		"break_reasons": _break_reasons.duplicate(true),
@@ -292,6 +352,10 @@ func _apply_member_state(
 	var phase := StringName(state["phase"])
 	var recipe: Dictionary = state["recipe"]
 	var direction := _safe_direction(Vector2(state["direction"]))
+	var trait_id := StringName(state.get("trait", &""))
+	var trait_phase := StringName(state.get("trait_phase", &"idle"))
+	var trait_active := trait_phase == &"active"
+	var feed_stacks := int(state.get("feed_stacks", 0))
 	for index in members.size():
 		var member := members[index]
 		var phase_changed := member.collective_phase != phase
@@ -308,6 +372,18 @@ func _apply_member_state(
 			)
 		)
 		member.collective_slot = index
+		member.pack_trait_active = trait_active
+		member.pack_trait_phase = trait_phase
+		member.pack_trait_ratio = float(state.get("trait_ratio", 0.0))
+		member.pack_feed_stacks = feed_stacks
+		member.pack_damage_multiplier = (
+			1.0 + float(feed_stacks) * FamilyTraits.PACK_FEED_DAMAGE_PER_STACK
+			if trait_id == &"pack_feed" else 1.0
+		)
+		member.pack_speed_multiplier = (
+			1.0 + float(feed_stacks) * FamilyTraits.PACK_FEED_SPEED_PER_STACK
+			if trait_id == &"pack_feed" else 1.0
+		)
 		if phase == Catalog.PHASE_EXECUTE:
 			if phase_changed:
 				member.hit_committed = false
@@ -323,6 +399,74 @@ func _apply_member_state(
 				member.vulnerable,
 				float(recipe["break"])
 			)
+
+
+func _advance_trait_state(state: Dictionary, delta: float) -> void:
+	var trait_id := StringName(state.get("trait", &""))
+	if trait_id not in [&"bulwark", &"reflector", &"blink"]:
+		state["trait_phase"] = &"idle"
+		state["trait_ratio"] = 0.0
+		return
+	var phase := StringName(state.get("trait_phase", &"idle"))
+	var timer := maxf(0.0, float(state.get("trait_timer", 0.0)) - delta)
+	if timer > 0.0:
+		state["trait_timer"] = timer
+		state["trait_ratio"] = _trait_phase_ratio(trait_id, phase, timer)
+		return
+	if phase == &"idle":
+		var next_phase := &"warning" if trait_id == &"blink" else &"active"
+		state["trait_phase"] = next_phase
+		state["trait_timer"] = (
+			FamilyTraits.BLINK_WARNING_DURATION
+			if next_phase == &"warning" else _trait_active_duration(trait_id)
+		)
+		state["trait_ratio"] = 0.0
+		_events.append({
+			"kind":&"pack_trait",
+			"action":next_phase,
+			"squad_id":state["id"],
+			"trait":trait_id,
+			"position":state["centroid"],
+		})
+		return
+	if phase == &"warning" and trait_id == &"blink":
+		_events.append({
+			"kind":&"pack_trait",
+			"action":&"blink_request",
+			"squad_id":state["id"],
+			"trait":trait_id,
+			"position":state["centroid"],
+		})
+	state["trait_phase"] = &"idle"
+	state["trait_timer"] = _trait_interval(trait_id)
+	state["trait_ratio"] = 0.0
+
+
+func _trait_phase_ratio(trait_id: StringName, phase: StringName, timer: float) -> float:
+	if phase == &"warning":
+		return 1.0 - timer / maxf(0.001, FamilyTraits.BLINK_WARNING_DURATION)
+	if phase == &"active":
+		return 1.0 - timer / maxf(0.001, _trait_active_duration(trait_id))
+	return 0.0
+
+
+func _trait_interval(trait_id: StringName) -> float:
+	match trait_id:
+		&"bulwark":
+			return FamilyTraits.BULWARK_INTERVAL
+		&"reflector":
+			return FamilyTraits.REFLECTOR_INTERVAL
+		&"blink":
+			return FamilyTraits.BLINK_INTERVAL
+	return 0.0
+
+
+func _trait_active_duration(trait_id: StringName) -> float:
+	return (
+		FamilyTraits.BULWARK_ACTIVE_DURATION
+		if trait_id == &"bulwark"
+		else FamilyTraits.REFLECTOR_ACTIVE_DURATION
+	)
 
 
 func _clear_member_state(state: Dictionary) -> void:

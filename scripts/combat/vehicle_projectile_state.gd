@@ -39,6 +39,8 @@ var distance_growth_ratio := 0.0
 var distance_growth_base_speed := 0.0
 var distance_growth_base_radius := 0.0
 var distance_growth_base_damage := 0.0
+var applies_player_slow := false
+var player_slow_duration := 0.0
 
 const DISTANCE_GROWTH_GROWTH_KIND: StringName = &"distance_growth"
 const DISTANCE_GROWTH_ARM_DISTANCE := 360.0
@@ -89,6 +91,8 @@ func configure(
 	distance_growth_base_speed = velocity.length()
 	distance_growth_base_radius = radius
 	distance_growth_base_damage = damage
+	applies_player_slow = bool(spec.get("applies_player_slow", false))
+	player_slow_duration = maxf(0.0, float(spec.get("player_slow_duration", 0.0)))
 	_apply_distance_growth()
 
 

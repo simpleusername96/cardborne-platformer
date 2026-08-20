@@ -13,6 +13,9 @@ const MovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_pol
 const TargetingPolicy = preload("res://scripts/enemies/vehicle_enemy_targeting_policy.gd")
 const SpeedProfile = preload("res://scripts/enemies/vehicle_enemy_speed_profile.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const FamilyTraits = preload(
+	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
+)
 const Field = preload("res://scripts/vehicle/stages/field_01.gd")
 
 const CUE_LEAD := 0.9
@@ -833,6 +836,7 @@ func _admit_due_window(
 		maximum_size = maxi(maximum_size, Array(allocation["roles"]).size())
 		var squad_index := int(request["arrival_window"]) * int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)) + int(allocation["window_slot"])
 		var squad_id := "%s_s%02d" % [String(packet["id"]), squad_index + 1]
+		var pack := _pack_metadata(packet, squad_index, Array(allocation["roles"]))
 		var cue := {
 			"cue_id":"%s_w%02d_s%02d" % [String(packet["id"]), int(request["arrival_window"]) + 1, int(allocation["window_slot"]) + 1],
 			"anchor":Vector2(allocation["unit_positions"][0]),
@@ -850,6 +854,9 @@ func _admit_due_window(
 			"birth_sector":int(allocation["birth_sector"]),
 			"relaxation_tier":StringName(allocation["relaxation_tier"]),
 			"roles":Array(allocation["roles"]).duplicate(),
+			"pack_family":StringName(pack["family"]),
+			"pack_tier":int(pack["tier"]),
+			"pack_trait":StringName(pack["trait"]),
 		}
 		cues.append(cue)
 		_allocation_debug.append(cue.duplicate(true))
@@ -864,8 +871,8 @@ func _admit_due_window(
 				continue
 			var squad_index := int(request["arrival_window"]) * int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)) + int(allocation["window_slot"])
 			var squad_id := "%s_s%02d" % [String(packet["id"]), squad_index + 1]
+			var pack := _pack_metadata(packet, squad_index, roles)
 			var collective_tactic := Dictionary(packet.get("collective_tactic", {}))
-			var tactic_squad_index := int(collective_tactic.get("squad_index", -1))
 			var spec := {
 				"id":"%s_u%02d" % [squad_id, unit_index + 1],
 				"role":StringName(roles[unit_index]),
@@ -882,11 +889,14 @@ func _admit_due_window(
 				"squad_leader":unit_index == 0,
 				"formation_slot":unit_index,
 				"formation_size":roles.size(),
+				"pack_family":StringName(pack["family"]),
+				"pack_tier":int(pack["tier"]),
+				"pack_trait":StringName(pack["trait"]),
 				"leash_rect":Rect2(packet["leash"]),
 				"active":true,
 				"packet_beat":int(packet["beat"]),
-				"collective_tactic_id":StringName(collective_tactic.get("id", &"")) if squad_index == tactic_squad_index else &"",
-				"collective_beat_kind":StringName(collective_tactic.get("beat_kind", &"")) if squad_index == tactic_squad_index else &"",
+				"collective_tactic_id":StringName(pack["tactic_id"]),
+				"collective_beat_kind":StringName(collective_tactic.get("beat_kind", &"teach")),
 			}
 			_attach_engagement_reservation(
 				spec, packet, int(request["arrival_window"]), player_position, player_velocity,
@@ -904,6 +914,22 @@ func _admit_due_window(
 	_spawn_queue.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return _round_sort_key(a) < _round_sort_key(b)
 	)
+
+
+func _pack_metadata(packet: Dictionary, squad_index: int, roles: Array) -> Dictionary:
+	var packs: Array = packet.get("packs", [])
+	if squad_index >= 0 and squad_index < packs.size():
+		return Dictionary(packs[squad_index])
+	var first_role := StringName(roles[0]) if not roles.is_empty() else &"ordinary_pursuer_t1"
+	var definition := EnemyArchetypes.definition(first_role)
+	var family := StringName(definition.get("family", &"pursuer"))
+	return {
+		"family":family,
+		"tier":int(definition.get("tier", 1)),
+		"trait":&"",
+		"tactic_id":FamilyTraits.tactic_for_family(family),
+		"roles":roles.duplicate(),
+	}
 
 
 func _attach_engagement_reservation(

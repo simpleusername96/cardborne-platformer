@@ -36,20 +36,14 @@ func _validate_movement_focus() -> void:
 		MovementPolicy.SUPPORT, origin, focus, Vector2(280.0, 0.0), 180.0
 	)
 	_expect(
-		pursuit.x > standoff.x and standoff.x > support.x,
-		"movement families receive ordered forward pressure bounds"
-	)
-	_expect(
-		pursuit.distance_to(focus) <= 280.001
-			and standoff.distance_to(focus) <= 200.001
-			and support.distance_to(focus) <= 140.001,
-		"movement prediction remains inside every family distance clamp"
+		pursuit == focus and standoff == focus and support == focus,
+		"every movement family uses the current pack objective without prediction"
 	)
 	_expect(
 		Policy.movement_focus(
 			MovementPolicy.PURSUIT, origin, focus, Vector2(79.0, 0.0), 180.0
 		) == focus,
-		"slow player movement does not jitter the pressure focus"
+		"slow player movement does not alter the pressure focus"
 	)
 
 

@@ -34,21 +34,15 @@ const ATTACK_MAX_LEAD_DISTANCE := {
 
 
 static func movement_focus(
-	movement_family: StringName,
-	origin: Vector2,
+	_movement_family: StringName,
+	_origin: Vector2,
 	pressure_focus: Vector2,
-	target_velocity: Vector2,
-	movement_speed: float
+	_target_velocity: Vector2,
+	_movement_speed: float
 ) -> Vector2:
-	if target_velocity.length() < MIN_TARGET_SPEED:
-		return pressure_focus
-	var maximum_seconds := float(MOVEMENT_MAX_SECONDS.get(movement_family, 0.0))
-	var maximum_distance := float(MOVEMENT_MAX_DISTANCE.get(movement_family, 0.0))
-	if maximum_seconds <= 0.0 or maximum_distance <= 0.0:
-		return pressure_focus
-	var travel_seconds := origin.distance_to(pressure_focus) / maxf(1.0, movement_speed)
-	var lead_seconds := minf(maximum_seconds, travel_seconds)
-	return pressure_focus + (target_velocity * lead_seconds).limit_length(maximum_distance)
+	# Movement follows the current pack objective. Prediction remains attack-owned,
+	# which avoids every member chasing a different future player position.
+	return pressure_focus
 
 
 static func attack_target(

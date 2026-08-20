@@ -57,6 +57,7 @@ func _initialize() -> void:
 				allocations = prewarmed
 		_validate_unit_allocation(allocations, packet, tactical.geometry_snapshot, player_position, visible_world, String(stage_id))
 		_validate_role_multiset(allocations, packet, String(stage_id))
+		_validate_pack_order(allocations, packet, String(stage_id))
 		_validate_role_distances(allocations, player_position, String(stage_id))
 	_finish()
 
@@ -75,7 +76,7 @@ func _validate_unit_allocation(
 	var sectors_by_window := {}
 	var first_sectors_by_window := {}
 	for allocation in allocations:
-		_expect(not allocation.has("pack_index"), "%s retires pack ownership" % context)
+		_expect(allocation.has("window_slot"), "%s allocation preserves its authored pack slot" % context)
 		var roles: Array = allocation.get("roles", [])
 		var positions: Array = allocation.get("unit_positions", [])
 		var sectors: Array = allocation.get("unit_sectors", [])
@@ -147,6 +148,15 @@ func _validate_role_multiset(allocations: Array[Dictionary], packet: Dictionary,
 	_expect(authored == allocated, "%s preserves the authored role multiset" % context)
 
 
+func _validate_pack_order(allocations: Array[Dictionary], packet: Dictionary, context: String) -> void:
+	for allocation in allocations:
+		var squad_index := int(allocation.get("arrival_window", 0)) * int(packet.get("squads_per_window", 4)) + int(allocation.get("window_slot", 0))
+		_expect(
+			Array(allocation.get("roles", [])) == Array(packet["squads"][squad_index]),
+			"%s allocation does not redistribute authored pack members" % context
+		)
+
+
 func _validate_role_distances(allocations: Array[Dictionary], player_position: Vector2, context: String) -> void:
 	for allocation in allocations:
 		var roles: Array = allocation.get("roles", [])
@@ -154,12 +164,12 @@ func _validate_role_distances(allocations: Array[Dictionary], player_position: V
 		_expect(lanes.size() == roles.size(), "%s records every role-aware distance lane" % context)
 		for index in roles.size():
 			var role := StringName(roles[index])
-			var behavior := StringName(EnemyArchetypes.definition(role)["behavior"])
-			if behavior in [&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_fixed_area_01"] or role in Allocator.LATE_PURSUIT_ROLES:
+			var family := StringName(EnemyArchetypes.definition(role).get("family", &""))
+			if family in [&"pursuer", &"charger", &"defender"]:
 				_expect(int(lanes[index]) in [1, 2], "%s pursuit selects 1650/2100 role lanes" % context)
-			elif behavior in [&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01"] or role in Allocator.LATE_STANDOFF_ROLES:
+			elif family == &"gunner":
 				_expect(int(lanes[index]) in [0, 1], "%s standoff selects 1200/1650 role lanes" % context)
-			elif behavior in [&"ordinary_support_02", &"ordinary_support_01", &"ordinary_support_03"]:
+			elif family == &"coordinator":
 				_expect(int(lanes[index]) == 0, "%s standoff/support selects 1200 role lane" % context)
 
 
