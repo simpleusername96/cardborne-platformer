@@ -40,13 +40,21 @@ action:
    original `1448 x 1086` detail and verify SHA-256
    `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
 
+A completed preflight may be reused across substeps, candidates, validators, and
+tool calls only within the same root task while both authority-file hashes still
+match and the task receipt retains the constraints needed for the current visual
+scope. A new root thread, authority hash change, material scope expansion, or
+missing constraint requires a fresh complete read and original-detail inspection.
+An unverified inspection from another task or prior-session memory is not a valid
+receipt.
+
 This preflight applies to assets, UI, HUD, world art, actors, projectiles, effects,
 themes, layouts, mockups, screenshots, component/system sheets, ImageGen prompts
 and outputs, workbench candidates, previews, reviews, approvals, and runtime
 integration. For raster creation, editing, adaptation, or ImageGen, the canonical
 PNG must be supplied to the tool as an actual image reference. A filename, text
-description, palette transcription, previous inspection, or recovered copy is not
-a substitute.
+description, palette transcription, unverified inspection from another root task,
+or recovered copy is not a substitute.
 
 The sheet is **style reference only, never asset approval**. Do not crop, trace,
 extract, copy, or inherit its specific objects, silhouettes, modules, glyphs, UI

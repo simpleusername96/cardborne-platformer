@@ -24,13 +24,43 @@ approval:
    `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
    Stop on any mismatch. Do not silently accept a replacement, update the expected
    hash, or fall back to another copy.
-3. Read `VISUAL_SYSTEM.md` completely in its current form. Do not rely on a summary,
-   excerpt, prior-session memory, or the reference sheet's labels.
+3. Compute and record the current `VISUAL_SYSTEM.md` SHA-256, then read the document
+   completely in its current form. Do not rely on a summary, excerpt, prior-session
+   memory, or the reference sheet's labels for a new root task.
 4. Visually inspect the reference PNG at original or sufficient detail with an
    image-viewing tool. Reading metadata, OCR, filenames, or alt text is not visual
    inspection.
 5. Extract the task-specific constraints from both sources before doing the visual
    work.
+
+## Reuse one root-task receipt
+
+The authority-pair preflight is required once per root task before its first material
+visual action, not once per turn, candidate, validator, generation, or review step.
+After the preflight, keep one task receipt in the task's existing plan/evidence owner
+or active context. It must contain both canonical paths, the expected and observed
+sheet hash, the observed `VISUAL_SYSTEM.md` hash, confirmation of the complete read
+and visual inspection, and the extracted constraints relevant to the task.
+
+Reuse the receipt only while all of these remain true:
+
+- the work remains in the same root task;
+- both current file hashes match the receipt;
+- the visual scope does not require a constraint omitted from the receipt;
+- the receipt and extracted constraints remain available after any handoff or
+  compaction.
+
+Rechecking the two hashes is sufficient to establish that the authority files did
+not change; do not reread the complete document or reopen the full reference merely
+for reassurance. Start a fresh preflight for a new root thread, a hash change, a
+material scope expansion, or a receipt that no longer carries the needed constraints.
+Do not create a child agent solely to repeat the preflight. A child that genuinely
+makes an independent visual judgment must inspect the visual evidence it judges, but
+may reuse the root task's unchanged document/hash receipt and extracted constraints.
+
+This reuse rule does not weaken the raster/ImageGen input rule below: every creation
+or edit call must still receive the canonical repository PNG as an actual image
+reference.
 
 The reference's recorded provenance is:
 
@@ -134,6 +164,7 @@ check.
 
 - Both canonical paths and confirmation that the document was read completely
 - Expected and observed reference SHA-256
+- Observed `VISUAL_SYSTEM.md` SHA-256
 - The original artifact provenance recorded above
 - Confirmation of visual inspection
 - For raster or ImageGen work, confirmation that the canonical PNG was supplied as
