@@ -150,10 +150,11 @@ PR: `#4 Simplify ordinary enemy pursuit`
 
 Base: `origin/master` at `4d6bb2dc`
 
-The branch is three commits ahead of its base. Local `master` is five commits ahead of the
-same base. A merge-tree inspection against local `master` found no conflict markers, and
-GitHub reports the PR as mechanically mergeable. The PR is still a draft and its merge
-state is `UNSTABLE`.
+The branch is three commits ahead of its base. Local `master` has separately diverged from
+the same base; its exact ahead count changes whenever this plan or its derived report is
+committed. A merge-tree inspection found no structural conflict signal, and GitHub reports
+the PR as mechanically mergeable. The PR is still a draft and its merge state is
+`UNSTABLE`.
 
 The branch makes every mobile ordinary archetype resolve to one pursuit family. It targets
 the player's current position for movement, removes movement prediction, standoff bands,
