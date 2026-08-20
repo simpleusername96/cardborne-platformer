@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Cardborne의 현재 일반 적을 행동 보존, 반응 문법, 기존 PNG 재사용 기준으로 개선하는 종합 제안">
+  <title>Cardborne 일반 적 개선 종합안</title>
+  <style>
+    @font-face {
+      font-family: "Noto Sans KR";
+      src: url("../../art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    :root {
+      --space: #080d13;
+      --canvas: #101923;
+      --surface: #17232e;
+      --raised: #213140;
+      --line: #3c5062;
+      --line-soft: #293a49;
+      --text: #eef4f7;
+      --muted: #adbdc8;
+      --faint: #8193a0;
+      --support: #72d6c4;
+      --system: #58bfea;
+      --reward: #f2b735;
+      --danger: #f05a5f;
+      --arc: #d56ee7;
+      --max-width: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 86% -6%, rgba(240, 90, 95, 0.10), transparent 30rem),
+        radial-gradient(circle at 12% 16%, rgba(88, 191, 234, 0.08), transparent 26rem),
+        var(--space);
+      color: var(--text);
+      font-family: "Noto Sans KR", system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.64;
+    }
+
+    a { color: #91dcf8; text-underline-offset: 0.2em; }
+    a:hover { color: var(--text); }
+    a:focus-visible { outline: 2px solid var(--system); outline-offset: 4px; }
+    code {
+      color: #bceafa;
+      font: 700 0.91em ui-monospace, SFMono-Regular, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+    strong { color: #ffffff; }
+
+    .page {
+      width: min(calc(100% - 40px), var(--max-width));
+      margin: 0 auto;
+      padding: 48px 0 80px;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3, .lead, .verdict { word-break: keep-all; overflow-wrap: break-word; }
+    h1 {
+      max-width: 900px;
+      margin-bottom: 18px;
+      font-size: clamp(36px, 5.2vw, 64px);
+      font-weight: 880;
+      letter-spacing: -0.045em;
+      line-height: 1.08;
+    }
+    h2 {
+      margin: 48px 0 18px;
+      font-size: clamp(26px, 3.2vw, 36px);
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    h3 { margin-bottom: 8px; font-size: 18px; line-height: 1.35; }
+    p:last-child { margin-bottom: 0; }
+    .lead {
+      max-width: 920px;
+      margin-bottom: 28px;
+      color: #d0dae1;
+      font-size: clamp(18px, 2.2vw, 23px);
+      line-height: 1.55;
+    }
+    .muted { color: var(--muted); }
+    .small { color: var(--faint); font-size: 13px; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+    .verdict, .meta-card, .card, .callout, .asset-card, .decision {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(23, 35, 46, 0.92);
+    }
+    .verdict {
+      padding: 24px;
+      border-left: 5px solid var(--support);
+      color: #dbe6eb;
+      font-size: 19px;
+    }
+    .verdict strong { color: var(--support); }
+    .meta-card { display: grid; gap: 15px; padding: 22px; }
+    .meta-card span {
+      display: block;
+      color: var(--faint);
+      font-size: 12px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    .meta-card strong { display: block; margin-top: 3px; font-size: 16px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .chip {
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #c9d5dc;
+      background: #111c25;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .chip.good { border-color: #407e75; color: #a9eadf; }
+    .chip.warn { border-color: #8b6d2d; color: #ffd983; }
+    .chip.stop { border-color: #87454b; color: #ffb8ba; }
+
+    .grid-2, .grid-3, .grid-4 { display: grid; gap: 14px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: 18px; }
+    .number {
+      display: inline-grid;
+      width: 29px;
+      height: 29px;
+      margin-bottom: 12px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--raised);
+      color: var(--support);
+      font-weight: 900;
+    }
+    .kicker {
+      margin-bottom: 6px;
+      color: var(--system);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    table { width: 100%; min-width: 820px; border-collapse: collapse; }
+    th, td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line-soft);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: #c7d5dd;
+      background: #111c25;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+    }
+    tr:last-child td { border-bottom: 0; }
+    td { color: #c6d2d9; }
+    td:first-child { color: var(--text); font-weight: 800; }
+    .yes { color: #a9eadf; }
+    .later { color: #ffd983; }
+    .no { color: #ffb8ba; }
+
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .asset-card {
+      min-width: 0;
+      padding: 14px;
+    }
+    .asset-stage {
+      display: grid;
+      min-height: 132px;
+      margin-bottom: 12px;
+      place-items: center;
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      background:
+        linear-gradient(45deg, #101820 25%, transparent 25%, transparent 75%, #101820 75%),
+        linear-gradient(45deg, #101820 25%, #13202a 25%, #13202a 75%, #101820 75%);
+      background-position: 0 0, 8px 8px;
+      background-size: 16px 16px;
+    }
+    .asset-stage img {
+      width: 112px;
+      height: 112px;
+      object-fit: contain;
+      image-rendering: auto;
+    }
+    .asset-stage.installation img { width: 124px; height: 124px; }
+    .asset-card h3 { margin-bottom: 4px; }
+    .asset-card p { margin-bottom: 8px; color: var(--muted); font-size: 14px; }
+    .asset-card code { display: block; color: var(--faint); font-size: 11px; }
+
+    .grammar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .grammar > div {
+      min-height: 94px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #111c25;
+    }
+    .grammar .label { color: var(--faint); font-size: 12px; font-weight: 850; }
+    .grammar strong { display: block; margin: 4px 0; color: var(--support); font-size: 18px; }
+
+    .callout { margin-top: 16px; padding: 18px 20px; }
+    .callout.good { border-left: 4px solid var(--support); }
+    .callout.warn { border-left: 4px solid var(--reward); }
+    .callout.stop { border-left: 4px solid var(--danger); }
+
+    .decision-list { display: grid; gap: 10px; }
+    .decision {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 18px;
+      padding: 16px 18px;
+    }
+    .decision .state { font-weight: 900; }
+    .decision.keep .state { color: var(--support); }
+    .decision.test .state { color: var(--reward); }
+    .decision.stop .state { color: var(--danger); }
+
+    ol, ul { padding-left: 1.25rem; }
+    li + li { margin-top: 6px; }
+    .steps { counter-reset: step; display: grid; gap: 12px; padding: 0; list-style: none; }
+    .steps li {
+      position: relative;
+      min-height: 72px;
+      padding: 15px 18px 15px 62px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .steps li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 17px;
+      top: 16px;
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--raised);
+      color: var(--system);
+      font-weight: 900;
+    }
+    .steps strong { display: block; margin-bottom: 3px; }
+
+    .source-list {
+      display: grid;
+      gap: 10px;
+      padding: 0;
+      list-style: none;
+    }
+    .source-list li {
+      padding: 14px 16px;
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      background: #111c25;
+    }
+
+    footer {
+      margin-top: 52px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--faint);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid, .grid-3, .grid-4, .asset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grammar { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .page { width: min(calc(100% - 24px), var(--max-width)); padding-top: 30px; }
+      .hero-grid, .grid-2, .grid-3, .grid-4, .asset-grid { grid-template-columns: 1fr; }
+      .decision { grid-template-columns: 1fr; gap: 4px; }
+      h2 { margin-top: 38px; }
+      .asset-stage { min-height: 122px; }
+    }
+    @media print {
+      :root { color-scheme: light; }
+      body { background: #fff; color: #17232e; }
+      .page { width: 100%; padding: 0; }
+      .verdict, .meta-card, .card, .callout, .asset-card, .decision,
+      .table-wrap, .grammar > div, .steps li, .source-list li {
+        color: #17232e;
+        background: #fff;
+        break-inside: avoid;
+      }
+      h1, h2, h3, strong, td:first-child { color: #101923; }
+      .muted, td, .asset-card p { color: #435665; }
+      .asset-stage { background: #e9eef1; }
+      a { color: #146b91; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <p class="eyebrow">CARD BORNE · ORDINARY ENEMY SYNTHESIS · 2026-08-20</p>
+      <h1>일반 적은 더 많아질 필요보다<br>더 빨리 읽힐 필요가 있다</h1>
+      <p class="lead">두 설계 보고서와 세 장의 외부 콘셉트 PNG를 현재 코드·production 자산과 대조했다. 결론은 <strong>행동 역할은 보존하고, 플레이어가 취할 반응을 7개 문법으로 묶으며, 현행의 간단한 PNG를 기준점으로 재사용</strong>하는 것이다.</p>
+
+      <div class="hero-grid">
+        <div class="verdict">
+          <strong>권고:</strong> 9패밀리 × 3티어 × 5트레잇을 한꺼번에 만들지 않는다. 현재의 26개 일반 적 정의와 22개 production PNG를 유지한 채, <strong>가족은 분류·조합 규칙</strong>으로, <strong>티어는 압력 곡선</strong>으로, <strong>트레잇은 한 번에 하나의 큰 상태 변화</strong>로 다룬다.
+          <div class="chips">
+            <span class="chip good">행동·ID 보존</span>
+            <span class="chip good">기존 PNG 재사용</span>
+            <span class="chip good">한 적 = 한 변형</span>
+            <span class="chip warn">팩 전술은 소규모 실험</span>
+            <span class="chip stop">새 이미지 없음</span>
+          </div>
+        </div>
+        <aside class="meta-card" aria-label="보고서 범위">
+          <div><span>현재 코드</span><strong>일반 적 26종 · PNG 22개</strong></div>
+          <div><span>캠페인 로스터</span><strong>14개 역할의 순차 투입</strong></div>
+          <div><span>현재 엘리트</span><strong>3특성 · 대상 6역할</strong></div>
+          <div><span>이번 산출물</span><strong>분석·설계 보고서만</strong></div>
+        </aside>
+      </div>
+    </header>
+
+    <section id="merge">
+      <h2>1. 두 보고서를 합치면 무엇이 남는가</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>항목</th><th><code>(1)</code> 초기안</th><th>확장안</th><th>종합 판단</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>분류</td>
+              <td>8패밀리, 4티어, 32트레잇</td>
+              <td>유지형을 더한 9패밀리, 3티어, 패밀리별 5트레잇</td>
+              <td class="later">반응 문법만 채택. 콘텐츠 수량은 축소</td>
+            </tr>
+            <tr>
+              <td>공통 핵심</td>
+              <td>패밀리 실루엣 70%, 티어 20%, 특성 10%</td>
+              <td>패밀리 코어 70–80%, 한 적에 특성 하나</td>
+              <td class="yes">실루엣 우선·한 변형 원칙 채택</td>
+            </tr>
+            <tr>
+              <td>팩 구성</td>
+              <td>한 패밀리·한 티어·공유 특성, 셔플백 추첨</td>
+              <td>3–8기 소집단, 혼성은 지휘형과 최대 두 하위군</td>
+              <td class="later">3–6기, 공유 특성 1개로 작은 실험</td>
+            </tr>
+            <tr>
+              <td>고정 시설</td>
+              <td>포탑을 별도 패밀리로 취급</td>
+              <td>고정은 패밀리가 아니라 배치 방식</td>
+              <td class="yes">확장안 채택: <strong>고정은 축</strong></td>
+            </tr>
+            <tr>
+              <td>지휘형</td>
+              <td>단독 출현 금지, 드문 이중 특성 허용</td>
+              <td>사망 시 팩 전술만 해제, 생존자는 원래 행동 유지</td>
+              <td class="later">후자만 프로토타입. 이중 특성은 보류</td>
+            </tr>
+            <tr>
+              <td>현재 ID 처리</td>
+              <td>개념 중심</td>
+              <td>대규모 이름 변경·미사용 삭제 제안</td>
+              <td class="no">현재 런타임 참조와 충돌하므로 채택 금지</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout good">
+        <strong>합칠 가치가 있는 고유 내용</strong><br>
+        초기안의 셔플백은 같은 특성의 연속 출현을 막는 데 유용하다. 확장안의 “고정은 배치 방식”, “지휘형 사망은 전술만 중단”, “학습 뒤에도 이전 특성을 폐기하지 않는다”는 규칙도 유지할 가치가 있다. 단, 이 규칙들은 새 적 수십 종이 아니라 <strong>현재 역할의 조합기</strong>로 구현해야 한다.
+      </div>
+    </section>
+
+    <section id="truth">
+      <h2>2. 현재 구현이 이미 가진 좋은 재료</h2>
+      <div class="grid-3">
+        <article class="card">
+          <span class="number">1</span>
+          <h3>행동은 이미 충분히 다르다</h3>
+          <p>돌진, 직선 사격, 광선 저격, 횡단 폭격, 성장 투사체, 틈 제어, 분열, 반사, 공명, 과부하가 실제 전투 계약으로 분리되어 있다. 부족한 것은 수량보다 <strong>관계의 설명</strong>이다.</p>
+        </article>
+        <article class="card">
+          <span class="number">2</span>
+          <h3>후기 변형은 이미 가족 구조다</h3>
+          <p><code>compression→gap</code>, <code>reflect→shield</code>, <code>resonance→range</code>, <code>overload→pull</code>은 같은 PNG를 공유한다. 새 시스템을 만들기 전에 이 관계를 이름·도감·조합에 드러내면 된다.</p>
+        </article>
+        <article class="card">
+          <span class="number">3</span>
+          <h3>범용 특성의 최소 골격이 있다</h3>
+          <p><code>armored</code>, <code>overclocked</code>, <code>heavy</code>가 한 적에 하나씩 적용된다. 45개 새 특성보다 이 3개의 인지성과 조합 품질을 먼저 증명할 수 있다.</p>
+        </article>
+      </div>
+
+      <div class="callout warn">
+        <strong>현재 병목:</strong> 플레이어-facing 이름은 “근거리 일반 적 Lv.1”, “지원 일반 적 Lv.3”처럼 구현 분류를 그대로 노출한다. 반면 실제 행동은 훨씬 구체적이다. 또 22개 PNG는 각각 비교적 단순하지만, 서로가 어떤 가족인지 알려 주는 공통 문법이 약하다. 이 때문에 적을 더 추가할수록 학습 부담이 먼저 늘어난다.
+      </div>
+    </section>
+
+    <section id="grammar">
+      <h2>3. 권장 구조: 7개 반응 문법 + 고정 배치 축</h2>
+      <p class="muted">패밀리 이름은 내부 상속 계층이 아니라 플레이어가 즉시 선택할 행동을 뜻한다. 정확한 공격은 큰 텔레그래프와 개별 역할이 설명한다.</p>
+
+      <div class="grammar" aria-label="일반 적 판독 순서">
+        <div><span class="label">0–0.25초 · 실루엣</span><strong>어떻게 움직이는가</strong><span class="muted">접근 / 거리 유지 / 고정</span></div>
+        <div><span class="label">0.25–0.75초 · 큰 부품</span><strong>무엇을 강요하는가</strong><span class="muted">선 / 지면 / 진로 / 방벽</span></div>
+        <div><span class="label">공격 직전 · 상태</span><strong>이번에 무엇이 달라졌는가</strong><span class="muted">기본 / 특성 1개 / 팩 전술</span></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>반응 문법</th><th>플레이어가 읽을 동사</th><th>현재 역할 예시</th><th>형태 규칙</th><th>권장 기준 PNG</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>접근 압박</td><td>거리를 벌린다</td><td>melee, edge, pull, melee_02, overload</td><td>전방 쐐기·턱·압축된 세로 질량</td><td><code>ordinary_edge_01</code></td></tr>
+            <tr><td>원거리 사격</td><td>사선을 끊는다</td><td>ranged, lane, beam, range, resonance</td><td>몸체보다 긴 한 개의 사격 축</td><td><code>ordinary_beam_01</code></td></tr>
+            <tr><td>지역 거부</td><td>표시된 바닥을 떠난다</td><td>area, sweep, growth</td><td>넓은 적재부·투하 방향·큰 포구</td><td><code>ordinary_sweep_01</code></td></tr>
+            <tr><td>진로 제어</td><td>안전한 틈을 고른다</td><td>gap, compression</td><td>열린 중심·분리된 큰 패널</td><td><code>ordinary_gap_01</code></td></tr>
+            <tr><td>방어·반사</td><td>측후면으로 돈다</td><td>shield, reflect</td><td>한쪽을 지배하는 연속 방벽</td><td><code>ordinary_shield_01</code></td></tr>
+            <tr><td>유지 지원</td><td>지원원을 먼저 끊는다</td><td>support_01, support_02</td><td>넓은 안정형 몸체 + 코드 소유 링크</td><td><code>ordinary_support_01</code></td></tr>
+            <tr><td>증원·지휘</td><td>불어나기 전에 제거한다</td><td>pulse, support_03</td><td>수용 공간·방출구·분리 가능한 덩어리</td><td><code>ordinary_support_03</code></td></tr>
+            <tr><td>고정 배치 축</td><td>엄폐와 우선순위를 다시 잡는다</td><td>fixed ranged/area/beam/support</td><td>큰 기반부·무이동 중심·기능별 한 부품</td><td><code>ordinary_fixed_ranged_01</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">“고정”은 위 7개 중 하나에 붙는 배치 속성이다. 예: 고정 사격, 고정 지역 거부, 고정 유지 지원. 이를 별도 생물군처럼 늘리지 않는다.</p>
+    </section>
+
+    <section id="assets">
+      <h2>4. 새 이미지 없이 쓸 기준 자산</h2>
+      <p class="muted">아래 이미지는 모두 현재 저장소의 production PNG다. 새로 생성하거나 편집하지 않았다. 이 보고서에서는 <strong>각 가족의 단순한 형태 기준</strong>으로만 재사용하며, 다른 역할의 production 매핑을 자동 변경하지 않는다.</p>
+
+      <div class="asset-grid">
+        <article class="asset-card">
+          <div class="asset-stage"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_edge_01_base.png" alt="접근 압박 기준 적"></div>
+          <h3>접근 압박</h3>
+          <p>한 덩어리의 전방 쐐기와 강한 세로축. 작은 장식 없이 돌진 방향을 읽힌다.</p>
+          <code>actor_enemy_ordinary_edge_01_base.png</code>
+        </article>
+        <article class="asset-card">
+          <div class="asset-stage"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_beam_01_base.png" alt="원거리 사격 기준 적"></div>
+          <h3>원거리 사격</h3>
+          <p>몸체와 한 개의 긴 레일만으로 사선 위협을 설명한다.</p>
+          <code>actor_enemy_ordinary_beam_01_base.png</code>
+        </article>
+        <article class="asset-card">
+          <div class="asset-stage"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_sweep_01_base.png" alt="지역 거부 기준 적"></div>
+          <h3>지역 거부</h3>
+          <p>넓은 적재부와 뾰족한 진행 방향이 횡단 폭격 역할에 맞는다.</p>
+          <code>actor_enemy_ordinary_sweep_01_base.png</code>
+        </article>
+        <article class="asset-card">
+          <div class="asset-stage"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png" alt="진로 제어 기준 적"></div>
+          <h3>진로 제어</h3>
+          <p>열린 중심과 세 개의 큰 분리 패널이 “틈을 고른다”는 행동을 보조한다.</p>
+          <code>actor_enemy_ordinary_gap_01_base.png</code>
+        </article>
+        <article class="asset-card">
+          <div class="asset-stage"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_shield_01_base.png" alt="방어 반사 기준 적"></div>
+          <h3>방어·반사</h3>
+          <p>연속된 전면 방벽 하나가 몸체보다 먼저 보인다.</p>
+          <code>actor_enemy_ordinary_shield_01_base.png</code>
+        </article>
+        <article class="asset-card">
+          <div class="asset-stage"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_01_base.png" alt="유지 지원 기준 적"></div>
+          <h3>유지 지원</h3>
+          <p>넓고 안정적인 몸체를 유지하고, 정확한 지원 대상은 현재의 수리 링크가 설명한다.</p>
+          <code>actor_enemy_ordinary_support_01_base.png</code>
+        </article>
+        <article class="asset-card">
+          <div class="asset-stage"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_03_base.png" alt="증원 지휘 기준 적"></div>
+          <h3>증원·지휘</h3>
+          <p>큰 수용 몸체와 전방 방출부가 다른 지원형과 구분된다.</p>
+          <code>actor_enemy_ordinary_support_03_base.png</code>
+        </article>
+        <article class="asset-card">
+          <div class="asset-stage installation"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_fixed_ranged_01_base.png" alt="고정 배치 기준 적"></div>
+          <h3>고정 배치 축</h3>
+          <p>원형 기반부와 단일 포신이 이동 적과 즉시 분리된다.</p>
+          <code>actor_enemy_ordinary_fixed_ranged_01_base.png</code>
+        </article>
+      </div>
+
+      <div class="callout stop">
+        <strong>제공된 세 PNG의 사용 범위:</strong> 흰 배경 7역할 시트는 “큰 실루엣 한 개로 역할을 말한다”는 구조가 가장 유용하다. 두 ChatGPT 매트릭스는 티어·특성의 체계적 분리를 보여 주지만, 작은 램프·동심원·부드러운 광택·반복 패널이 많아 실제 크기에서는 복잡하다. 세 파일 모두 Cardborne 정본 이미지를 실제 참조로 사용했다는 근거가 없으므로 <strong>형태 탐색 자료이며 production 승인 후보가 아니다.</strong>
+      </div>
+    </section>
+
+    <section id="traits">
+      <h2>5. 티어·트레잇·팩을 작게 만드는 법</h2>
+      <div class="grid-3">
+        <article class="card">
+          <p class="kicker">Tier</p>
+          <h3>티어는 새 몸체가 아니다</h3>
+          <p>초·중·후반 압력은 체력, 빈도, 팩 구성, 공격 계약으로 조절한다. 별도 T1/T2/T3 PNG 27장은 만들지 않는다. 크기 변화도 충돌 반경과 시각 반경 계약 안에서만 쓴다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">Trait</p>
+          <h3>한 적에는 한 특성</h3>
+          <p>먼저 기존 <code>armored</code>, <code>overclocked</code>, <code>heavy</code>만 사용한다. 작은 배지 대신 외피, 속도 리듬, 큰 체적처럼 몸 전체에서 읽히는 한 변화로 보강한다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">Pack</p>
+          <h3>한 팩에는 한 문장</h3>
+          <p>3–6기, 주 역할 하나, 보조 역할 최대 하나, 공유 특성 하나를 기본으로 한다. 같은 조합의 연속 출현은 초기안의 셔플백으로 막는다.</p>
+        </article>
+      </div>
+
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <thead><tr><th>제안</th><th>판단</th><th>이유</th></tr></thead>
+          <tbody>
+            <tr><td>기존 범용 3특성</td><td class="yes">즉시 유지</td><td>이미 코드·상태·대상 역할이 있고 한 적 한 특성 규칙과 맞는다.</td></tr>
+            <tr><td>패밀리별 5특성</td><td class="later">1개씩만 검증 후 확대</td><td>제안 대부분이 현재 고유 역할과 중복된다. 예: 저격, 끌어당김, 반사, 지뢰는 이미 별도 적이다.</td></tr>
+            <tr><td>희귀 이중 특성</td><td class="no">보류</td><td>실루엣·상태·텔레그래프의 주목 경쟁이 커지고, 공정한 첫 판독을 해친다.</td></tr>
+            <tr><td>지휘형 사망 시 전술 해제</td><td class="later">소규모 프로토타입</td><td>현재 <code>support_03</code> 자산을 재사용할 수 있고 목표 우선순위를 만든다. 생존자의 기본 행동은 유지한다.</td></tr>
+            <tr><td>고정형 별도 패밀리</td><td class="no">통합하지 않음</td><td>고정은 이동 상태다. 사격·지역·지원 기능이 서로 다르므로 기능 가족에 배치 축으로 붙인다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="encounter">
+      <h2>6. 실제 전투에서 달라져야 할 것</h2>
+      <div class="grid-2">
+        <article class="card">
+          <p class="kicker">이름과 도감</p>
+          <h3>“Lv.1” 대신 행동을 말한다</h3>
+          <p>내부 ID는 그대로 둔다. 한국어 표기만 “레일 저격기”, “횡단 폭격기”, “틈 유도기”, “반사 방벽기”처럼 <strong>핵심 동사·대응법</strong>을 담는다. 도감은 7개 반응 가족으로 묶고, 변형 관계를 한 줄로 보여 준다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">조합</p>
+          <h3>복잡함은 개체가 아니라 관계에서 만든다</h3>
+          <p>예: 방벽 1 + 레일 2, 진로 제어 1 + 돌진 3처럼 서로 다른 대응을 두 개만 겹친다. 한 팩에 지역 거부·제어·광선·반사를 모두 넣어 읽기 시험으로 만들지 않는다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">상태 전달</p>
+          <h3>몸체는 가족, 효과는 현재 상태</h3>
+          <p>PNG는 정체성만 담당한다. 공격 방향, 위험 면적, 지원 링크, 반사 가능 시간, 지휘 연결은 코드 소유 텔레그래프로 전달한다. 그림이 공격 판정이나 충돌 진실을 소유하지 않는다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">진행</p>
+          <h3>가족을 먼저, 변형을 나중에</h3>
+          <p>처음에는 한 가족의 기본 역할을 단독으로 충분히 가르친다. 이후 같은 PNG를 공유하는 후기 변형을 넣어 “아는 몸체, 달라진 규칙”으로 읽히게 한다. 이전 역할은 완전히 폐기하지 않는다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="decisions">
+      <h2>7. 채택·실험·보류 결정</h2>
+      <div class="decision-list">
+        <div class="decision keep"><div class="state">지금 채택</div><div>7개 반응 문법, 고정 배치 축, 한 적 한 특성, 패밀리 코어 70–80%, 현재 ID·행동·PNG 보존, 플레이어-facing 이름 개선.</div></div>
+        <div class="decision keep"><div class="state">지금 재사용</div><div>위 8개의 단순 production PNG를 가족 기준점과 도감 묶음 표지로 사용. 다른 역할의 개별 자산은 그대로 유지.</div></div>
+        <div class="decision test"><div class="state">작게 실험</div><div>3–6기 팩, 공유 특성 하나, 셔플백, <code>support_03</code>를 이용한 지휘 팩. 한 스테이지 또는 캡처 픽스처에서만 먼저 검증.</div></div>
+        <div class="decision test"><div class="state">증거 후 확대</div><div>패밀리별 전용 특성은 한 가족에 하나만 추가하고, 현재 고유 역할과 중복되지 않는지 확인한 뒤 확대.</div></div>
+        <div class="decision stop"><div class="state">보류·거절</div><div>27개 티어 몸체, 45개 특성 일괄 제작, 희귀 이중 특성, 외부 PNG production 승격, “미사용” 추정에 따른 현재 ID 삭제.</div></div>
+      </div>
+    </section>
+
+    <section id="implementation">
+      <h2>8. 가장 작은 실행 순서</h2>
+      <ol class="steps">
+        <li><strong>분류만 추가한다.</strong><span class="muted">현재 26개 아키타입을 7개 반응 가족 + 고정 축에 매핑한다. 행동, 공격, 충돌, 스테이지 로스터는 바꾸지 않는다.</span></li>
+        <li><strong>이름과 도감을 고친다.</strong><span class="muted">내부 ID를 보존하고 한국어·영어 이름을 함께 완성한다. 공유 PNG 변형은 도감에서 부모 역할과 달라진 규칙을 나란히 표시한다.</span></li>
+        <li><strong>기존 3특성을 읽히게 한다.</strong><span class="muted">실제 크기에서 외피·속도·체적 차이를 검증한다. 작은 아이콘이나 반복 램프는 추가하지 않는다.</span></li>
+        <li><strong>팩 조합을 한 장면에서 검증한다.</strong><span class="muted">주 역할 1 + 보조 역할 0–1 + 공유 특성 1의 조합만 만든다. 지휘형 제거 전후의 목표 우선순위가 달라지는지 측정한다.</span></li>
+        <li><strong>통과한 뒤에만 전용 특성을 하나 추가한다.</strong><span class="muted">현재 공격 역할과 중복하지 않고, 독립 대응을 만들며, 시각 주목 경쟁을 늘리지 않는 후보만 허용한다.</span></li>
+      </ol>
+    </section>
+
+    <section id="acceptance">
+      <h2>9. 완료 기준</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h3>첫 판독</h3>
+          <ul>
+            <li>실제 크기와 회색조에서 7개 반응 가족을 구분한다.</li>
+            <li>몸체만 보고 이동 의도, 텔레그래프를 보고 정확한 공격을 읽는다.</li>
+            <li>방벽·포신·적재부·분리 패널 등 큰 부품 하나가 먼저 보인다.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>전투 공정성</h3>
+          <ul>
+            <li>한 적에 특성은 하나뿐이며 공격 경고를 가리지 않는다.</li>
+            <li>한 팩은 최대 두 대응을 동시에 요구한다.</li>
+            <li>지휘형 사망 뒤 생존 적의 기본 역할과 특성은 유지된다.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>기술 계약</h3>
+          <ul>
+            <li>이동 일반 적은 presentation 반경 48, 고정형은 62 계약을 유지한다.</li>
+            <li>시각 자산은 회전·틴트·상태만 받고 AI·체력·공격·충돌을 소유하지 않는다.</li>
+            <li>한국어와 영어의 모든 플레이어-facing 이름이 함께 완성된다.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>범위 통제</h3>
+          <ul>
+            <li>이번 단계에는 새 PNG, 새 production 승인, 대규모 ID 변경이 없다.</li>
+            <li>새 전용 특성은 기존 역할과 겹치지 않는다는 테스트가 있어야 한다.</li>
+            <li>기존 스테이지의 가르치기 순서와 quota-gated boss 흐름을 보존한다.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="sources">
+      <h2>10. 근거와 provenance</h2>
+      <ul class="source-list">
+        <li><strong>초기 보고서</strong><br><code>C:\Users\BK\Downloads\cardborne_enemy_family_trait_report_ko (1).html</code><br><span class="small">SHA-256 80f4d9b76f6bb0074d4a68debfa10155fbf81488843f90a24ee87b08867e9a1a · 8패밀리/4티어/32트레잇 및 팩·셔플백 고유 내용</span></li>
+        <li><strong>확장 보고서</strong><br><code>C:\Users\BK\Downloads\cardborne_enemy_family_trait_report_ko.html</code><br><span class="small">SHA-256 b87f4ec9344bdbe11821eda4a709ede252e9fe3c3c9bf5220a4de152c49b1ba6 · 9패밀리/3티어/45트레잇, 유지형·고정 축·마이그레이션 제안</span></li>
+        <li><strong>제공 이미지 3개</strong><br><code>art style.png</code>, <code>ChatGPT Image … 06_09_10 (2).png</code>, <code>ChatGPT Image … 06_09_10 (1).png</code><br><span class="small">각 SHA-256: <code>6fa4dc17efc6aa2c6a799384bebe01f2f471e53d4b4e9590479f677341dc5edc</code> / <code>47dc723c6349336725dece97e672d5a1c3949e17be355bce9e0b17895151fe18</code> / <code>73417b23ed42c96efaf8c146e68ff66d3ea6c55601a51ca921c2edfa3c708791</code> · 모두 탐색 자료로만 사용</span></li>
+        <li><strong>현재 구현</strong><br><code>vehicle_enemy_archetypes.gd</code>, <code>vehicle_enemy_movement_policy.gd</code>, <code>vehicle_attack_contract.gd</code>, <code>vehicle_elite_trait_catalog.gd</code>, <code>vehicle_combat_stages.gd</code>, <code>vehicle_actor_visual_catalog.gd</code>, production asset manifest와 PNG</li>
+        <li><strong>Cardborne 시각 정본 preflight</strong><br><code>docs/design/VISUAL_SYSTEM.md</code> SHA-256 <code>2e5cf7e3f156629bcbe956da0e6cb30f6d3b608d9c20122ec5285fa1562aa006</code><br><code>docs/design/cardborne-universal-art-style-reference.png</code> 기대·관측 SHA-256 <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code><br><span class="small">문서 전체 읽기와 원본 크기 시각 검토 완료. 이번 작업은 래스터 생성·편집·승격이 없으므로 실제 이미지 참조 입력은 해당 없음.</span></li>
+      </ul>
+      <p class="small">외부 웹 검색은 생략했다. 이 판단은 제공 보고서·이미지와 현재 저장소의 행동·자산 계약 비교로 범위가 닫히며, 일반 레퍼런스를 더 모으는 것보다 최신 로컬 구현과의 충돌 확인이 더 중요했다.</p>
+    </section>
+
+    <footer>
+      이 문서는 설계 판단용 보고서다. production 자산 교체나 게임플레이 변경을 승인하지 않는다. 다음 단계는 “분류·이름·도감”의 비파괴 변경과 한 장면짜리 팩 프로토타입을 별도 범위로 검토하는 것이다.
+    </footer>
+  </main>
+</body>
+</html>
