@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Cardborne 원격 추격 단순화 브랜치와 현재 일반 적 구조를 검증하고, 9개 패밀리·2개 트레잇·팩 생성·삭제 순서를 제안하는 의견 작성형 보고서">
+  <title>Cardborne 일반 적 구조 재편 검토</title>
+  <style>
+    @font-face {
+      font-family: "Noto Sans KR";
+      src: url("../../art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    :root {
+      --space: #080d13;
+      --canvas: #101923;
+      --surface: #17232e;
+      --raised: #213140;
+      --line: #3c5062;
+      --line-soft: #293a49;
+      --text: #eef4f7;
+      --muted: #b5c4cd;
+      --faint: #879aa7;
+      --support: #72d6c4;
+      --system: #58bfea;
+      --reward: #f2b735;
+      --danger: #f05a5f;
+      --arc: #d56ee7;
+      --max: 1240px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 88% -8%, rgba(240, 90, 95, .12), transparent 34rem),
+        radial-gradient(circle at 8% 17%, rgba(88, 191, 234, .08), transparent 30rem),
+        var(--space);
+      font-family: "Noto Sans KR", system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 590;
+      line-height: 1.66;
+    }
+
+    a { color: #96ddf8; text-underline-offset: .2em; }
+    a:hover { color: #fff; }
+    a:focus-visible, button:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--system);
+      outline-offset: 3px;
+    }
+    code {
+      color: #bceafa;
+      font: 700 .9em ui-monospace, SFMono-Regular, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+    strong { color: #fff; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3, .lead, .verdict { word-break: keep-all; overflow-wrap: break-word; }
+    h1 {
+      max-width: 940px;
+      margin-bottom: 18px;
+      font-size: clamp(38px, 5.4vw, 68px);
+      font-weight: 890;
+      letter-spacing: -.05em;
+      line-height: 1.06;
+    }
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(28px, 3.2vw, 38px);
+      letter-spacing: -.035em;
+      line-height: 1.18;
+    }
+    h3 { margin-bottom: 8px; font-size: 19px; line-height: 1.35; }
+    p:last-child { margin-bottom: 0; }
+    ul { padding-left: 1.2rem; }
+    li + li { margin-top: 7px; }
+
+    .page {
+      width: min(calc(100% - 40px), var(--max));
+      margin: 0 auto;
+      padding: 46px 0 90px;
+    }
+    .eyebrow {
+      margin-bottom: 10px;
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 860;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .lead {
+      max-width: 980px;
+      margin-bottom: 28px;
+      color: #d5dfe5;
+      font-size: clamp(18px, 2.1vw, 23px);
+      line-height: 1.52;
+    }
+    .small { color: var(--faint); font-size: 13px; }
+    .muted { color: var(--muted); }
+    .kicker {
+      margin-bottom: 7px;
+      color: var(--system);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+      gap: 18px;
+    }
+    .verdict, .meta-card, section, .card, .family, .callout, .comment-box, figure {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(23, 35, 46, .94);
+    }
+    .verdict {
+      padding: 24px;
+      border-left: 5px solid var(--reward);
+      color: #dbe5ea;
+      font-size: 19px;
+    }
+    .meta-card { display: grid; gap: 15px; padding: 22px; }
+    .meta-card span, .stat span {
+      display: block;
+      color: var(--faint);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .meta-card strong, .stat strong { display: block; margin-top: 3px; }
+
+    .review-toolbar {
+      position: sticky;
+      z-index: 5;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 24px 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(8, 13, 19, .94);
+      backdrop-filter: blur(12px);
+    }
+    .review-toolbar p { margin: 0; color: var(--muted); font-size: 13px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      min-height: 44px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--raised);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 820;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--system); background: #263b4c; }
+    button.danger:hover { border-color: var(--danger); color: #ffc5c7; }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 20px 0 34px;
+    }
+    nav a {
+      padding: 6px 10px;
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      color: #c7d5dd;
+      background: #111c25;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    nav a:hover { border-color: var(--system); color: #fff; }
+
+    section { margin-top: 18px; padding: clamp(22px, 4vw, 38px); scroll-margin-top: 84px; }
+    .grid-2, .grid-3, .grid-4, .stats, .figures { display: grid; gap: 13px; }
+    .grid-2, .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4, .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card, .stat { min-width: 0; padding: 17px; }
+    .card { border-radius: 13px; }
+    .stat {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      background: #111c25;
+    }
+    .stat strong { font-size: 23px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+    .chip {
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #cbd7de;
+      background: #111c25;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .chip.good { border-color: #407e75; color: #a9eadf; }
+    .chip.warn { border-color: #8b6d2d; color: #ffd983; }
+    .chip.stop { border-color: #87454b; color: #ffb8ba; }
+
+    .callout { margin-top: 16px; padding: 18px 20px; }
+    .callout.good { border-left: 4px solid var(--support); }
+    .callout.warn { border-left: 4px solid var(--reward); }
+    .callout.stop { border-left: 4px solid var(--danger); }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #111c25;
+    }
+    table { width: 100%; min-width: 860px; border-collapse: collapse; }
+    th, td {
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line-soft);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: #d4e0e6;
+      background: #0e171f;
+      font-size: 12px;
+      font-weight: 860;
+      letter-spacing: .03em;
+    }
+    td { color: #c7d3da; }
+    td:first-child { color: var(--text); font-weight: 790; }
+    tr:last-child td { border-bottom: 0; }
+    .good-text { color: #a9eadf; }
+    .warn-text { color: #ffd983; }
+    .stop-text { color: #ffb8ba; }
+
+    figure { min-width: 0; margin: 0; padding: 13px; }
+    figure img { display: block; width: 100%; border-radius: 10px; background: #eef0f1; }
+    figcaption { margin-top: 10px; color: var(--muted); font-size: 13px; }
+
+    .family-list { display: grid; gap: 16px; }
+    .family { padding: 20px; scroll-margin-top: 86px; }
+    .family-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, .72fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .family-id { color: var(--danger); font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+    .family h3 { margin-top: 7px; font-size: 24px; }
+    .tier-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .tier-sample {
+      display: grid;
+      min-height: 164px;
+      padding: 8px;
+      place-items: center;
+      border: 1px solid var(--line-soft);
+      border-radius: 11px;
+      background:
+        linear-gradient(45deg, #101820 25%, transparent 25%, transparent 75%, #101820 75%),
+        linear-gradient(45deg, #101820 25%, #13202a 25%, #13202a 75%, #101820 75%);
+      background-position: 0 0, 8px 8px;
+      background-size: 16px 16px;
+    }
+    .tier-sample img { width: var(--tier-size); height: var(--tier-size); object-fit: contain; }
+    .tier-sample span { align-self: end; color: var(--muted); font-size: 12px; font-weight: 780; }
+    .trait-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+    .trait {
+      padding: 14px;
+      border: 1px solid var(--line-soft);
+      border-radius: 11px;
+      background: #111c25;
+    }
+    .trait strong { color: var(--support); }
+    .trait p { margin: 5px 0 0; color: var(--muted); font-size: 14px; }
+    .seed-list { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+    .status-line { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line-soft); }
+
+    .comment-box { margin-top: 22px; padding: 16px; background: #0f1820; }
+    .comment-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 9px;
+    }
+    .comment-head label { color: #fff; font-weight: 840; }
+    .save-state { color: var(--faint); font-size: 12px; }
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 108px;
+      resize: vertical;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: #080f15;
+      font: inherit;
+      line-height: 1.55;
+    }
+    textarea::placeholder { color: #6f828e; }
+    .comment-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+    .privacy-note { margin: 8px 0 0; color: var(--faint); font-size: 12px; }
+
+    .source-list { display: grid; gap: 10px; padding: 0; list-style: none; }
+    .source-list li {
+      padding: 14px;
+      border: 1px solid var(--line-soft);
+      border-radius: 11px;
+      background: #111c25;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid, .family-head, .grid-4, .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      body { font-size: 15px; }
+      .page { width: min(calc(100% - 20px), var(--max)); padding-top: 28px; }
+      .hero-grid, .family-head, .grid-2, .grid-3, .grid-4, .stats, .figures, .trait-pair { grid-template-columns: 1fr; }
+      .review-toolbar { position: static; align-items: stretch; flex-direction: column; }
+      .review-toolbar .actions, .review-toolbar button { width: 100%; }
+      section { padding: 21px 16px; }
+      .family { padding: 16px; }
+      .tier-strip { gap: 5px; }
+      .tier-sample { min-height: 138px; padding: 5px; }
+      .tier-sample:nth-child(1) img { max-width: 82px; max-height: 82px; }
+      .tier-sample:nth-child(2) img { max-width: 94px; max-height: 94px; }
+      .tier-sample:nth-child(3) img { max-width: 104px; max-height: 104px; }
+      .comment-head { flex-direction: column; gap: 3px; }
+      .comment-actions button { flex: 1 1 100%; }
+      nav { margin-bottom: 22px; }
+    }
+    @media print {
+      body { color: #14222c; background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .review-toolbar, .comment-box, nav { display: none; }
+      section, .family, .card, .callout, figure { break-inside: avoid; color: #14222c; background: #fff; border-color: #aebbc3; }
+      h1, h2, h3, strong { color: #0c1720; }
+      .muted, td, figcaption { color: #415563; }
+    }
+  </style>
+</head>
+<body>
+<main class="page">
+  <header>
+    <p class="eyebrow">Ordinary enemy review · 2026-08-20</p>
+    <h1>일반 적을 더 추가하기 전에<br>팩과 패밀리부터 하나로 묶는다</h1>
+    <p class="lead">원격 브랜치는 이동을 단순하게 만들지만, 모든 적을 플레이어에게 바로 달려들게 한다. 이 보고서는 그 브랜치를 그대로 합치지 않고 <strong>9개 패밀리 · 패밀리별 활성 트레잇 2개 · 모든 적의 팩 소속 · 원거리 팩의 방어형 의무 편성</strong>으로 다시 조립하는 기준을 제안한다.</p>
+
+    <div class="hero-grid">
+      <div class="verdict">
+        <strong>결론: PR #4는 그대로 병합하지 않는다.</strong><br>
+        충돌 없이 합칠 수는 있지만, 모든 이동형 적을 개별 추격자로 만드는 결정은 팩 진형·원거리 보호·지원 위치를 없앤다. 현재 위치 추적, 막힌 경로에서만 우회, 로컬 분리, 속도 완화는 팩 이동에 맞게 선별 이식한다.
+        <div class="chips">
+          <span class="chip warn">기계적 병합 가능</span>
+          <span class="chip stop">의미적 병합 불가</span>
+          <span class="chip stop">CI 렌더 단계 실패</span>
+          <span class="chip good">선별 이식 가능</span>
+        </div>
+      </div>
+      <aside class="meta-card">
+        <div><span>현재 정의</span><strong>일반 적 26개</strong></div>
+        <div><span>정상 캠페인 도달</span><strong>19개</strong></div>
+        <div><span>정상 캠페인 미도달</span><strong>7개</strong></div>
+        <div><span>제안 구조</span><strong>9패밀리 × 활성 2트레잇</strong></div>
+      </aside>
+    </div>
+  </header>
+
+  <div class="review-toolbar" aria-label="보고서 의견 도구">
+    <p><strong>의견은 이 브라우저에만 저장됩니다.</strong> 저장된 내용은 저장소나 서버로 전송되지 않습니다.</p>
+    <div class="actions">
+      <button type="button" id="copy-all">모든 의견 복사</button>
+      <button type="button" class="danger" id="clear-all">모든 의견 지우기</button>
+    </div>
+  </div>
+  <p id="global-status" class="small" role="status" aria-live="polite"></p>
+
+  <nav aria-label="보고서 목차">
+    <a href="#scope">범위</a>
+    <a href="#branch">원격 브랜치</a>
+    <a href="#inventory">현재 적</a>
+    <a href="#controller">Controller</a>
+    <a href="#coordinator">Coordinator</a>
+    <a href="#packs">팩 규칙</a>
+    <a href="#families">9개 패밀리</a>
+    <a href="#deletion">삭제·이관</a>
+    <a href="#visuals">크기·PNG</a>
+    <a href="#rollout">실행 순서</a>
+    <a href="#sources">근거</a>
+  </nav>
+
+  <section id="scope" data-section-title="1. 이번 문서가 정하는 범위">
+    <p class="kicker">Scope</p>
+    <h2>1. 이번 문서는 일반 적만 정리한다</h2>
+    <div class="grid-3">
+      <article class="card">
+        <h3>이번에 결정할 것</h3>
+        <p class="muted">현재 등장 여부, 원격 브랜치의 채택 범위, 9개 패밀리, 패밀리별 활성 트레잇 2개, 팩 편성, 삭제·이관 순서.</p>
+      </article>
+      <article class="card">
+        <h3>이번에 구현하지 않을 것</h3>
+        <p class="muted">적 코드 삭제, 브랜치 병합, 새 적 이미지 제작, 티어별 최종 아트, 맵 보석 경쟁, 기지 방어 확장.</p>
+      </article>
+      <article class="card">
+        <h3>의견이 필요한 것</h3>
+        <p class="muted">2트레잇 표, Coordinator의 두 번째 트레잇, 52/60/68 크기 후보, 고정 설치물 4종의 완전 삭제 여부.</p>
+      </article>
+    </div>
+    <div class="callout good"><strong>읽는 법:</strong> “현재”는 코드와 정상 캠페인에서 확인된 사실이다. “제안”은 아직 승인되지 않은 방향이다. “미래”는 활성 2트레잇 범위 밖에 남기는 아이디어다.</div>
+    <div class="comment-box" data-review="scope">
+      <div class="comment-head"><label for="comment-scope">이 섹션에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-scope" placeholder="범위에서 빼거나 추가할 내용을 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+      <p class="privacy-note">로컬 저장소에만 보관됩니다.</p>
+    </div>
+  </section>
+
+  <section id="branch" data-section-title="2. 원격 브랜치 분석과 병합 판단">
+    <p class="kicker">Remote branch</p>
+    <h2>2. 부드러운 이동 브랜치는 ‘재료’로만 사용한다</h2>
+    <div class="stats">
+      <div class="stat"><span>브랜치</span><strong><code>agent/simplify-ordinary-enemy-ai</code></strong></div>
+      <div class="stat"><span>HEAD</span><strong><code>bd9f72f7</code></strong></div>
+      <div class="stat"><span>PR</span><strong><a href="https://github.com/simpleusername96/cardborne-platformer/pull/4">#4 · Draft</a></strong></div>
+      <div class="stat"><span>상태</span><strong class="warn-text">Mergeable · Unstable</strong></div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>브랜치 변경</th><th>판단</th><th>새 구조에서의 처리</th></tr></thead>
+        <tbody>
+          <tr><td>이동 목표를 플레이어의 현재 위치로 변경</td><td class="good-text">채택</td><td>개별 적이 아니라 팩의 목표·진형 앵커가 현재 위치를 기준으로 삼는다.</td></tr>
+          <tr><td>이동 예측 제거</td><td class="good-text">채택</td><td>이동은 단순화하되, 공격 조준의 예측은 유지한다.</td></tr>
+          <tr><td>모든 이동형을 직접 추격으로 통합</td><td class="stop-text">거절</td><td>원거리·지원·방어형은 팩 슬롯과 공격 거리 때문에 서로 다른 위치 규칙이 필요하다.</td></tr>
+          <tr><td>거리대·후퇴·궤도·호위·지원 위치 제거</td><td class="stop-text">거절</td><td>개별 거리대 난립은 줄이되, 팩 전열·후열·지원 슬롯은 남긴다.</td></tr>
+          <tr><td>직선 경로가 막힐 때만 우회 안내</td><td class="good-text">채택</td><td>팩 앵커 이동에 적용한다.</td></tr>
+          <tr><td>로컬 분리·속도 완화·속도 상한 유지</td><td class="good-text">채택</td><td>멤버 충돌과 떨림을 줄이는 기존 안전장치로 유지한다.</td></tr>
+          <tr><td>직접 추격을 제품 결정 문서로 확정</td><td class="stop-text">거절</td><td>팩 구조가 승인된 뒤 제품 문서를 새 결정으로 작성한다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout stop"><strong>지금 병합하면 안 되는 이유:</strong> 코드는 충돌 없이 들어올 가능성이 높지만, 새 설계의 핵심인 “원거리 팩 + 방어형 전열”을 만든 직후 다시 이동 정책을 뜯어고쳐야 한다. 또한 PR의 <code>Capture native rendered evidence</code> 단계가 실패했고 이후 Web 검증은 실행되지 않았다.</div>
+    <div class="comment-box" data-review="branch">
+      <div class="comment-head"><label for="comment-branch">브랜치 판단에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-branch" placeholder="그대로 가져올 부분, 버릴 부분, 병합 시점에 대한 의견을 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+
+  <section id="inventory" data-section-title="3. 현재 일반 적의 실제 도달성">
+    <p class="kicker">Current inventory</p>
+    <h2>3. 정의 26개 중 정상 캠페인에서 직접 만들어지는 것은 19개다</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>구분</th><th>수</th><th>정확한 ID</th><th>처리 원칙</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>일반 웨이브</td><td>14</td>
+            <td><code>melee_01</code>, <code>ranged_01</code>, <code>area_01</code>, <code>lane_01</code>, <code>shield_01</code>, <code>sweep_01</code>, <code>beam_01</code>, <code>growth_01</code>, <code>gap_01</code>, <code>pulse_01</code>, <code>compression_01</code>, <code>reflect_01</code>, <code>resonance_01</code>, <code>overload_01</code></td>
+            <td class="good-text">가족·티어·트레잇으로 이관</td>
+          </tr>
+          <tr>
+            <td>보스 add만</td><td>4</td>
+            <td><code>edge_01</code>, <code>pull_01</code>, <code>range_01</code>, <code>support_01</code></td>
+            <td class="warn-text">현재 플레이에는 있으나 일반 웨이브에는 없음</td>
+          </tr>
+          <tr>
+            <td>보스 소환 설치물</td><td>1</td>
+            <td><code>fixed_beam_01</code></td>
+            <td class="warn-text">Stage 3 보스 패턴으로 분리 검토</td>
+          </tr>
+          <tr>
+            <td>정상 캠페인 미도달</td><td>7</td>
+            <td><code>support_02</code>, <code>support_03</code>, <code>melee_02</code>, <code>fixed_ranged_01</code>, <code>fixed_area_01</code>, <code>fixed_ranged_02</code>, <code>fixed_support_01</code></td>
+            <td class="stop-text">행동 이관 후 ID·Guidebook·아트 연결 제거</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-3" style="margin-top:16px">
+      <article class="card"><h3>후기 4종은 완전한 새 적이 아니다</h3><p class="muted"><code>compression</code>, <code>reflect</code>, <code>resonance</code>, <code>overload</code>는 앞선 몸체·행동·PNG를 재사용하고 일부 예외만 더한다. 가족 트레잇으로 옮길 수 있는 중복 ID다.</p></article>
+      <article class="card"><h3>미도달 7종도 즉시 삭제하면 안 된다</h3><p class="muted"><code>support_02</code>는 Defender, <code>support_03</code>은 Coordinator 시각 후보, <code>melee_02</code>는 몰아주기 로직의 재료가 될 수 있다.</p></article>
+      <article class="card"><h3>고정형은 별도 배치 축이다</h3><p class="muted">고정 여부는 패밀리가 아니라 배치 방식이다. 정상 플레이에 없는 고정 4종은 일반 적 카탈로그에서 빼되, 미래 확장으로 남길지는 별도 결정한다.</p></article>
+    </div>
+    <div class="comment-box" data-review="inventory">
+      <div class="comment-head"><label for="comment-inventory">현재 적 목록에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-inventory" placeholder="유지하거나 반드시 지워야 할 ID, 실제 플레이에서 본 적이 있는 개체를 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+
+  <section id="controller" data-section-title="4. 06 Controller의 현재 동작">
+    <p class="kicker">06 · Controller</p>
+    <h2>4. Controller는 ‘부분적으로’ 존재한다</h2>
+    <div class="grid-2">
+      <article class="card">
+        <h3><code>ordinary_gap_01</code> · 이름보다 약한 제어</h3>
+        <p class="muted">Stage 7–9 일반 웨이브와 보스 add에 등장한다. 390–540 거리대를 유지하며 0.82초 준비 후 피해 9, 속도 440의 단발 <code>Controller bolt</code>를 쏜다. 현재 동작은 사실상 느린 Gunner에 가깝다.</p>
+        <div class="chips"><span class="chip good">실제 등장</span><span class="chip warn">공간 제어 약함</span></div>
+      </article>
+      <article class="card">
+        <h3><code>ordinary_compression_01</code> · 실제 통로 제어</h3>
+        <p class="muted">Stage 9–12에 등장한다. Gap의 이동·몸체·PNG를 재사용하지만 일반 탄환 대신 화면을 지나는 압축 통로를 만든다. 현재 Controller의 핵심 행동으로 남길 가치가 있다.</p>
+        <div class="chips"><span class="chip good">실제 등장</span><span class="chip good">분명한 대응</span><span class="chip warn">별도 ID 중복</span></div>
+      </article>
+    </div>
+    <div class="callout warn"><strong>정리:</strong> 현재 게임에는 완성된 Controller 패밀리가 없다. Compression 하나는 유효하지만 Gap은 역할 이름과 실제 공격이 어긋난다. 첫 Controller는 <strong>Compression + Sweep</strong> 두 트레잇만 사용하고, Link Beam·Snare·Gate는 미래 문서로 내린다.</div>
+    <div class="comment-box" data-review="controller">
+      <div class="comment-head"><label for="comment-controller">Controller에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-controller" placeholder="Compression과 Sweep이 제어형으로 충분한지, Gap을 어디로 옮길지 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+
+  <section id="coordinator" data-section-title="5. 09 Coordinator의 경계와 두 트레잇">
+    <p class="kicker">09 · Coordinator</p>
+    <h2>5. Coordinator 적은 아직 없고, 팩 조정 코드만 있다</h2>
+    <div class="grid-3">
+      <article class="card"><h3>현재 없는 것</h3><p class="muted"><code>ordinary_coordinator_01</code> 같은 적 ID, Blink, Invisible, Shrink, Like Rock, 팩 전체 몰아주기는 구현되어 있지 않다.</p></article>
+      <article class="card"><h3>현재 있는 프로토타입</h3><p class="muted"><code>support_03</code>은 자식을 3기까지 낳는 Carrier지만 정상 캠페인에 나오지 않는다. <code>melee_02</code>는 주변 사망으로 자신만 강화되며 역시 나오지 않는다.</p></article>
+      <article class="card"><h3>현재 있는 공용 런타임</h3><p class="muted"><code>VehicleCollectiveTacticRuntime</code>은 팩의 리더·멤버·진형·단계를 관리한다. 화면에 보이는 적이 아니라 새 Coordinator의 기반 코드다.</p></article>
+    </div>
+
+    <div class="trait-pair">
+      <div class="trait"><strong>Blink · 점멸</strong><p>짧고 큰 예고 뒤 팩 전체를 충돌 없는 위치로 재배치한다. 진형을 보존하며 플레이어·엄폐물·다른 적 안으로 이동할 수 없다.</p></div>
+      <div class="trait"><strong>몰아주기 · Concentrate</strong><p>같은 팩의 소환물이 아닌 멤버가 죽을 때 생존자를 회복하고 제한된 강화 스택을 준다. Coordinator가 죽으면 이후 스택 획득이 멈춘다.</p></div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>후보</th><th>초기 처리</th><th>이유</th></tr></thead>
+        <tbody>
+          <tr><td>Blink</td><td class="good-text">활성</td><td>팩 단위 위치 변화가 분명하고, 큰 예고와 안전한 도착 규칙을 만들 수 있다.</td></tr>
+          <tr><td>몰아주기</td><td class="good-text">활성</td><td>팩의 사망 순서를 전략으로 바꾸며, 미도달 <code>melee_02</code> 로직을 이관할 수 있다.</td></tr>
+          <tr><td>Invisible</td><td class="warn-text">미래</td><td>진짜 투명화는 적·탄선·피격 판독을 약하게 한다. 재검토 시에도 실루엣과 발동 예고는 남겨야 한다.</td></tr>
+          <tr><td>Shrink</td><td class="warn-text">미래</td><td>작아진 외형과 기존 충돌 크기가 어긋나기 쉽고, 충돌까지 줄이면 별도 밸런스 변경이 된다.</td></tr>
+          <tr><td>Like Rock</td><td class="stop-text">Coordinator에서 제외</td><td>극단적 방어·감속은 Defender와 현재 Armored/Heavy의 역할을 반복한다. 필요하면 미래 Defender의 자세로 옮긴다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="comment-box" data-review="coordinator">
+      <div class="comment-head"><label for="comment-coordinator">Coordinator에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-coordinator" placeholder="Blink + 몰아주기 조합, 보류한 세 후보, Coordinator가 실제 몸체를 가져야 하는지 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+
+  <section id="packs" data-section-title="6. 모든 적의 팩 생성 규칙">
+    <p class="kicker">Pack contract</p>
+    <h2>6. 모든 적은 이미 팩 ID를 받는다. 이제 편성과 행동을 실제 팩으로 만든다</h2>
+    <div class="grid-4">
+      <article class="card"><h3>현재 충족</h3><p class="muted">모든 스케줄 squad에 <code>squad_id</code>, 리더, 진형 슬롯, 진형 크기가 있다.</p></article>
+      <article class="card"><h3>현재 미충족</h3><p class="muted">팩별 역할 보존, 모든 팩의 전술 상태, 원거리 팩의 Defender 의무 편성.</p></article>
+      <article class="card"><h3>새 기본 크기</h3><p class="muted">현행 스케줄과 전술 최소 인원을 활용해 기본 4–8기. 같은 팩을 한 단위로 예고·입장·취소한다.</p></article>
+      <article class="card"><h3>성능의 정직한 경계</h3><p class="muted">팩 ID만으로 적 수·충돌·렌더 비용은 줄지 않는다. 공용 목표·진형·트레잇 타이머만 팩당 1회 계산할 수 있다.</p></article>
+    </div>
+
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>불변 규칙</th><th>정의</th><th>실패 시 처리</th></tr></thead>
+        <tbody>
+          <tr><td>전원 팩 소속</td><td>일반 적은 예고부터 사망까지 정확히 한 팩에 속한다.</td><td>팩 ID 없는 일반 적 생성 거부.</td></tr>
+          <tr><td>원거리 + Defender</td><td>Gunner·Artillery·장거리 Controller가 있는 팩에는 Defender가 최소 1기 있다.</td><td>원거리만 먼저 만들지 않고 팩 전체를 지연·대체·취소.</td></tr>
+          <tr><td>인원 수 보존</td><td>Defender는 기존 filler 한 자리를 교체한다. 적 수와 위협 예산 위에 추가하지 않는다.</td><td>예산에 맞는 다른 팩 청사진 사용.</td></tr>
+          <tr><td>전열·후열</td><td>Defender는 전방/측면, 원거리 적은 보호받는 후방 슬롯을 사용한다.</td><td>진형이 깨지면 보호도 깨지고 각 유닛은 기본 행동으로 복귀.</td></tr>
+          <tr><td>한 팩 한 트레잇</td><td>주 패밀리의 활성 트레잇 하나만 보인다. 필수 Defender는 기본 행동만 사용한다.</td><td>두 번째 트레잇 요청은 거부하거나 다음 팩으로 미룬다.</td></tr>
+          <tr><td>개체 판정 유지</td><td>체력·충돌·공격·피해·상태·렌더는 각 적이 계속 소유한다.</td><td>팩 사망/피격 공유로 단순화하지 않는다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn"><strong>중요:</strong> 현재 allocator는 packet의 모든 역할을 한 가방에 합친 뒤 squad로 다시 나눈다. 이 방식으로는 Defender 포함을 보장할 수 없다. 먼저 유효한 <strong>pack blueprint</strong>를 만들고 allocator는 그 구성을 유지한 채 안전한 위치만 찾아야 한다.</div>
+    <div class="comment-box" data-review="packs">
+      <div class="comment-head"><label for="comment-packs">팩 규칙에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-packs" placeholder="팩 크기, Defender 비율, 혼성 팩 구성, 예외가 필요한 적을 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+
+  <section id="families" data-section-title="7. 9개 패밀리와 활성 트레잇">
+    <p class="kicker">Nine families</p>
+    <h2>7. 패밀리는 9개를 유지하되, 활성 트레잇은 정확히 2개로 줄인다</h2>
+    <p class="muted">아래 T1–T3 이미지는 <strong>현재 production PNG 하나를 세 크기로 반복한 비교</strong>다. 최종 티어 아트가 아니며, 새 이미지를 만들지 않고 크기 차이만 검토하기 위한 자리표시자다. 제안 공통 가시 반지름은 T1 52 / T2 60 / T3 68이다.</p>
+
+    <div class="family-list">
+      <article class="family" id="family-pursuer" data-section-title="7-1. Pursuer">
+        <div class="family-head">
+          <div>
+            <span class="family-id">01 · PURSUER</span>
+            <h3>추격형 · 이동을 멈추지 못하게 한다</h3>
+            <p class="muted">단순 접촉 압박. 방어·흡혈·중량을 얹지 않고, 숫자와 추격 리듬만 읽게 한다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Splitter · 분열</strong><p>처치 시 더 작은 T1 둘로 갈라진다.</p></div><div class="trait"><strong>Frenzy · 광분</strong><p>낮은 체력에서만 추격 속도가 오른다.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> <code>melee_01</code>, <code>pulse_01</code>. <strong>제외:</strong> Armored, Leech, Heavy.</p>
+          </div>
+          <div class="tier-strip" aria-label="추격형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_01_base.png" alt="현재 추격형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_01_base.png" alt="현재 추격형 PNG T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_melee_01_base.png" alt="현재 추격형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-pursuer"><div class="comment-head"><label for="comment-family-pursuer">Pursuer 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-pursuer" placeholder="역할·트레잇·현재 ID 이관에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+
+      <article class="family" id="family-charger" data-section-title="7-2. Charger">
+        <div class="family-head">
+          <div>
+            <span class="family-id">02 · CHARGER</span>
+            <h3>돌진형 · 잠긴 직선을 옆으로 피하게 한다</h3>
+            <p class="muted">큰 충각과 준비선, 돌진 뒤 취약 시간을 하나의 반응으로 묶는다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Overload · 과부하</strong><p>더 오래 예고하고 더 세게 돌진한 뒤 더 크게 취약해진다.</p></div><div class="trait"><strong>Double · 연속</strong><p>첫 돌진 뒤 짧게 재조준해 한 번 더 돌진한다.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> <code>edge_01</code>, <code>pull_01</code>, <code>overload_01</code>. <strong>미래:</strong> Rebound, Dragline, Shockwave.</p>
+          </div>
+          <div class="tier-strip" aria-label="돌진형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_edge_01_base.png" alt="현재 돌진형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_edge_01_base.png" alt="현재 돌진형 PNG T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_edge_01_base.png" alt="현재 돌진형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-charger"><div class="comment-head"><label for="comment-family-charger">Charger 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-charger" placeholder="역할·트레잇·현재 ID 이관에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+
+      <article class="family" id="family-bomber" data-section-title="7-3. Bomber">
+        <div class="family-head">
+          <div>
+            <span class="family-id">03 · BOMBER</span>
+            <h3>자폭형 · 폭발 전에 반경을 비우게 한다</h3>
+            <p class="muted">현재 <code>area_01</code>은 플레이어 근처에서 멈추고 1초 뒤 폭발하는 이동형 minelet이다. 이 행동을 패밀리 본체로 사용한다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Chain · 연쇄</strong><p>근처 Bomber를 순서대로 기폭한다.</p></div><div class="trait"><strong>Delayed · 지연</strong><p>처치된 외피가 잠시 남아 한 번 지연 폭발한다.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> <code>area_01</code>. Cluster는 Artillery와 겹치므로 사용하지 않는다.</p>
+          </div>
+          <div class="tier-strip" aria-label="자폭형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_area_01_base.png" alt="현재 자폭형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_area_01_base.png" alt="현재 자폭형 PNG T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_area_01_base.png" alt="현재 자폭형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-bomber"><div class="comment-head"><label for="comment-family-bomber">Bomber 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-bomber" placeholder="역할·트레잇·현재 ID 이관에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+
+      <article class="family" id="family-gunner" data-section-title="7-4. Gunner">
+        <div class="family-head">
+          <div>
+            <span class="family-id">04 · GUNNER</span>
+            <h3>사격형 · 총열과 탄선을 읽고 자리를 바꾸게 한다</h3>
+            <p class="muted">중·장거리 직접 사격. 모든 Gunner 팩에는 기본 Defender가 최소 1기 포함된다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Burst · 점사</strong><p>짧은 간격으로 3발을 한 묶음으로 쏜다.</p></div><div class="trait"><strong>Piercing · 관통</strong><p>긴 단일 위험선으로 뒤 공간까지 압박한다.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> <code>ranged_01</code>, <code>lane_01</code>, <code>range_01</code>, <code>beam_01</code>. <strong>미래:</strong> Spread, Tracking, Suppressor.</p>
+          </div>
+          <div class="tier-strip" aria-label="사격형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_lane_01_base.png" alt="현재 사격형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_lane_01_base.png" alt="현재 사격형 PNG T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_lane_01_base.png" alt="현재 사격형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-gunner"><div class="comment-head"><label for="comment-family-gunner">Gunner 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-gunner" placeholder="역할·트레잇·Defender 편성에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+
+      <article class="family" id="family-artillery" data-section-title="7-5. Artillery">
+        <div class="family-head">
+          <div>
+            <span class="family-id">05 · ARTILLERY</span>
+            <h3>포격형 · 착탄지를 보고 후방 표적까지 파고들게 한다</h3>
+            <p class="muted">장거리 예측 포격과 지면 위험을 담당한다. 모든 Artillery 팩에는 기본 Defender가 최소 1기 포함된다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Cluster Shell · 집속탄</strong><p>주 착탄 뒤 작은 착탄이 여러 방향으로 갈라진다.</p></div><div class="trait"><strong>Lingering · 잔류탄</strong><p>착탄 지역이 짧은 지속 위험으로 남는다.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> <code>growth_01</code>의 포탄, <code>sweep_01</code>의 지연 지면 폭발. <strong>미래:</strong> Heavy Shell, Seeker, Salvo.</p>
+          </div>
+          <div class="tier-strip" aria-label="포격형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_growth_01_base.png" alt="현재 포격형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_growth_01_base.png" alt="현재 포격형 PNG T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_growth_01_base.png" alt="현재 포격형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-artillery"><div class="comment-head"><label for="comment-family-artillery">Artillery 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-artillery" placeholder="역할·트레잇·Defender 편성에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+
+      <article class="family" id="family-controller" data-section-title="7-6. Controller">
+        <div class="family-head">
+          <div>
+            <span class="family-id">06 · CONTROLLER</span>
+            <h3>제어형 · 안전 통로를 새로 찾게 한다</h3>
+            <p class="muted">피해량보다 공간 배치가 핵심이다. 장거리로 배치되는 Controller 팩에는 Defender가 필요하다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Compression · 압축</strong><p>움직이는 두 경계가 안전 폭을 줄인다.</p></div><div class="trait"><strong>Sweep · 휩쓸기</strong><p>예고된 방향을 따라 지면 위험이 순서대로 이동한다.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> <code>compression_01</code>, <code>sweep_01</code>. <code>gap_01</code> 단발 탄환은 재설계 또는 Gunner 이관.</p>
+          </div>
+          <div class="tier-strip" aria-label="제어형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png" alt="현재 제어형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png" alt="현재 제어형 PNG T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png" alt="현재 제어형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-controller"><div class="comment-head"><label for="comment-family-controller">Controller 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-controller" placeholder="역할·트레잇·Gap 처리에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+
+      <article class="family" id="family-defender" data-section-title="7-7. Defender">
+        <div class="family-head">
+          <div>
+            <span class="family-id">07 · DEFENDER</span>
+            <h3>방어형 · 사격 각도와 처치 순서를 바꾸게 한다</h3>
+            <p class="muted">원거리 팩의 전열을 맡는다. 방패 면과 실제 차단 방향이 반드시 일치해야 한다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Bulwark · 보루</strong><p>인접 후열까지 덮는 넓은 정면 차단을 만든다.</p></div><div class="trait"><strong>Reflector · 반사</strong><p>정면 직사 탄을 제한적으로 되돌린다.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> <code>shield_01</code>, <code>reflect_01</code>, 미도달 <code>support_02</code>. Armored와 Heavy의 정체성은 여기로 흡수하거나 삭제.</p>
+          </div>
+          <div class="tier-strip" aria-label="방어형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_shield_01_base.png" alt="현재 방어형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_shield_01_base.png" alt="현재 방어형 PNG T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_shield_01_base.png" alt="현재 방어형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-defender"><div class="comment-head"><label for="comment-family-defender">Defender 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-defender" placeholder="역할·트레잇·원거리 팩 비율에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+
+      <article class="family" id="family-sustainer" data-section-title="7-8. Sustainer">
+        <div class="family-head">
+          <div>
+            <span class="family-id">08 · SUSTAINER</span>
+            <h3>유지형 · 전투를 길게 만드는 연결을 먼저 끊게 한다</h3>
+            <p class="muted">공격보다 회복과 유지가 핵심인 우선 표적이다. 혼자보다 다른 패밀리 팩의 후열에 배치한다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Repair Beam · 수리광선</strong><p>한 대상에게 지속 회복을 보낸다.</p></div><div class="trait"><strong>Pulse Repair · 수리파</strong><p>주기적으로 주변 여러 적을 소량 회복한다.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> 보스 add의 <code>support_01</code>, 미도달 <code>fixed_support_01</code>. <strong>미래:</strong> Cleanse, Shield Charge, Sacrifice.</p>
+          </div>
+          <div class="tier-strip" aria-label="유지형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_01_base.png" alt="현재 유지형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_01_base.png" alt="현재 유지형 PNG T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_01_base.png" alt="현재 유지형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-sustainer"><div class="comment-head"><label for="comment-family-sustainer">Sustainer 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-sustainer" placeholder="역할·트레잇·현재 ID 이관에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+
+      <article class="family" id="family-coordinator" data-section-title="7-9. Coordinator">
+        <div class="family-head">
+          <div>
+            <span class="family-id">09 · COORDINATOR</span>
+            <h3>지휘형 · 팩 전술의 원인을 먼저 무너뜨리게 한다</h3>
+            <p class="muted">현재는 미구현이다. 단독 스폰하지 않고 특수 혼성 팩에 1기만 둔다. 이 적이 죽어도 생존자는 사라지지 않고 팩 트레잇만 더 이상 갱신되지 않는다.</p>
+            <div class="trait-pair"><div class="trait"><strong>Blink · 점멸</strong><p>팩 전체의 예고된 재배치.</p></div><div class="trait"><strong>몰아주기</strong><p>같은 팩의 사망을 생존자의 제한된 회복·강화로 전환.</p></div></div>
+            <p class="seed-list"><strong>현재 씨앗:</strong> 미도달 <code>support_03</code> PNG는 시각 자리표시자로만 사용. 실제 조정은 공용 collective runtime이 담당.</p>
+          </div>
+          <div class="tier-strip" aria-label="지휘형 T1에서 T3 크기 비교">
+            <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_03_base.png" alt="현재 Carrier PNG를 사용한 지휘형 T1 크기 샘플"><span>T1 · 52</span></div>
+            <div class="tier-sample" style="--tier-size:120px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_03_base.png" alt="현재 Carrier PNG를 사용한 지휘형 T2 크기 샘플"><span>T2 · 60</span></div>
+            <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_support_03_base.png" alt="현재 Carrier PNG를 사용한 지휘형 T3 크기 샘플"><span>T3 · 68</span></div>
+          </div>
+        </div>
+        <div class="comment-box" data-review="family-coordinator"><div class="comment-head"><label for="comment-family-coordinator">Coordinator 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-coordinator" placeholder="역할·트레잇·실제 몸체 필요 여부에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="deletion" data-section-title="8. 삭제와 이관 대상">
+    <p class="kicker">Delete after migration</p>
+    <h2>8. 지울 것은 ‘행동을 옮긴 뒤’ 지운다</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>현재 항목</th><th>현재 상태</th><th>목표</th><th>삭제 조건</th></tr></thead>
+        <tbody>
+          <tr><td><code>support_02</code></td><td>미도달</td><td>Defender escort 씨앗으로 이관</td><td>원거리 팩 Defender 불변식과 검증 완료</td></tr>
+          <tr><td><code>support_03</code></td><td>미도달 Carrier</td><td>Coordinator 시각·소환 아이디어만 선택 이관</td><td>Coordinator 몸체 여부 결정</td></tr>
+          <tr><td><code>melee_02</code></td><td>미도달 개인 성장형</td><td>사망 스택을 팩의 몰아주기로 이관</td><td>팩 단위 회복·강화·상한·중복 방지 테스트 완료</td></tr>
+          <tr><td><code>fixed_ranged_01</code></td><td>미도달 포탑</td><td>삭제 또는 미래 설치물 카탈로그</td><td>Guidebook·공격·렌더·fixture·PNG 연결 정리</td></tr>
+          <tr><td><code>fixed_area_01</code> 정의</td><td>직접 미도달, 이름은 mobile mine 행동이 사용</td><td>mobile mine 행동과 fixed 배치를 분리</td><td><code>area_01</code>이 fixed role 이름에 의존하지 않음</td></tr>
+          <tr><td><code>fixed_ranged_02</code></td><td>미도달 Interceptor</td><td>삭제 또는 미래 설치물 카탈로그</td><td>요격 분기·검증·PNG 연결 정리</td></tr>
+          <tr><td><code>fixed_support_01</code></td><td>미도달 Generator</td><td>수리 원리만 Sustainer에 필요하면 이관</td><td>회복·방벽 분기와 소비자 정리</td></tr>
+          <tr><td><code>compression_01</code></td><td>도달 중복 ID</td><td>Controller의 Compression 트레잇</td><td>Stage 9–12·Guidebook·테스트 이관</td></tr>
+          <tr><td><code>reflect_01</code></td><td>도달 중복 ID</td><td>Defender의 Reflector 트레잇</td><td>Stage 10–12·반사 테스트 이관</td></tr>
+          <tr><td><code>resonance_01</code></td><td>도달 중복 ID</td><td>미래 Gunner 후보 또는 제거</td><td>활성 2트레잇 유지와 Stage 11–12 대체</td></tr>
+          <tr><td><code>overload_01</code></td><td>도달 중복 ID</td><td>Charger의 Overload 트레잇</td><td>Stage 12·취약 판정 테스트 이관</td></tr>
+          <tr><td><code>armored / overclocked / heavy</code></td><td>현재 전역 elite</td><td>패밀리 전용 2트레잇으로 교체</td><td>선정·Guidebook·시각·통계 소비자 이관</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout stop"><strong>삭제 범위:</strong> ID 하나만 지우는 작업이 아니다. archetype, stage/boss roster, movement/attack 분기, Guidebook, 한·영 localization, visual descriptor, semantic manifest, renderer, fixture, validator를 같은 이관 단위에서 함께 정리해야 한다. PNG 삭제는 별도의 시각 자산 사용 감사 뒤에 한다.</div>
+    <div class="comment-box" data-review="deletion">
+      <div class="comment-head"><label for="comment-deletion">삭제·이관 표에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-deletion" placeholder="완전 삭제, 보존, 이름 변경, 미래 설치물로 이동할 항목을 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+
+  <section id="visuals" data-section-title="9. 일반 적 크기와 제공 PNG 사용">
+    <p class="kicker">Visual evidence</p>
+    <h2>9. 일반 적은 커져야 하지만, 충돌 판정까지 자동으로 키우지 않는다</h2>
+    <div class="stats">
+      <div class="stat"><span>현재 이동형</span><strong>가시 반지름 48</strong></div>
+      <div class="stat"><span>제안 T1</span><strong>52</strong></div>
+      <div class="stat"><span>제안 T2</span><strong>60</strong></div>
+      <div class="stat"><span>제안 T3</span><strong>68</strong></div>
+    </div>
+    <p class="muted" style="margin-top:14px">52/60/68은 공통 첫 실험값이다. 지금부터 9개 패밀리에 서로 다른 크기 곡선을 주면 시각·충돌·팩 간격 문제가 동시에 커진다. 먼저 공통 계단을 검증하고, Defender처럼 정말 체급 차이가 필요한 패밀리만 후속 보정한다.</p>
+
+    <div class="figures">
+      <figure>
+        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-design-concepts.png" alt="사용자가 제공한 7종 적 역할 콘셉트 시트">
+        <figcaption><strong>제공 PNG A.</strong> Swarm, Charger, Gunner, Controller, Guard, Support, Turret의 큰 실루엣 차이를 보여 주는 탐색 자료. 현재 production 승인 자산은 아니다.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-tier-family-lineup.png" alt="사용자가 제공한 적 패밀리와 티어 라인업">
+        <figcaption><strong>제공 PNG B.</strong> 패밀리 안에서 T1–T3 체급을 키우는 방향의 탐색 자료. 실제 티어 PNG는 아직 제작되지 않았다.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="사용자가 제공한 9개 패밀리와 티어, 트레잇 효과 매트릭스">
+        <figcaption><strong>제공 PNG C.</strong> 9패밀리 전체 구조를 보여 주지만 45트레잇은 폐기한다. 이번 제안은 패밀리별 2개만 활성화한다.</figcaption>
+      </figure>
+      <figure>
+        <img src="../../docs/design/cardborne-universal-art-style-reference.png" alt="Cardborne 공식 범용 아트 스타일 기준 시트">
+        <figcaption><strong>시각 정본.</strong> 큰 실루엣, 3–5개의 넓은 면, 무광 질량, 어두운 외곽, 기능 모듈 최대 2개, 의미가 하나인 강조색을 유지한다.</figcaption>
+      </figure>
+    </div>
+
+    <div class="callout warn"><strong>구현 전 필수 분리:</strong> 현재 <code>visual_radius</code>가 발사체 피격 반지름에도 연결된다. 몸이 커 보이게 하는 일, 탄이 맞는 범위, 접촉 충돌 범위는 각각 별도 계약으로 분리한 뒤 검토해야 한다. 112×112 PNG를 T3로 확대했을 때 선명도가 충분한지도 실제 16:9 전투 화면에서 확인한다.</div>
+    <div class="comment-box" data-review="visuals">
+      <div class="comment-head"><label for="comment-visuals">크기·PNG에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-visuals" placeholder="52/60/68 크기, 더 크게 보여야 할 패밀리, 제공 PNG 중 유지할 실루엣을 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+
+  <section id="rollout" data-section-title="10. 가장 안전한 실행 순서">
+    <p class="kicker">Implementation order</p>
+    <h2>10. 첫 구현은 Gunner + Defender 한 팩으로 닫는다</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>단계</th><th>변경</th><th>완료 증거</th><th>중단 조건</th></tr></thead>
+        <tbody>
+          <tr><td>0 · 승인</td><td>2트레잇 표, Coordinator 두 트레잇, 크기, 고정 4종 처리 승인</td><td>활성 plan의 open decision 종료</td><td>가족 역할이나 삭제 범위가 계속 바뀜</td></tr>
+          <tr><td>1 · 데이터 계약</td><td>family/tier/trait/pack schema와 시각·피격·충돌 반지름 분리</td><td>중복 trait, 2개 초과, 팩 없는 적을 검출하는 validator</td><td>기존 행동의 소유자가 불명확함</td></tr>
+          <tr><td>2 · 첫 팩</td><td>Gunner 2–3 + Defender 1 + filler로 4–8기 팩 구성</td><td>팩 단위 예고·입장·진형·해체, 원거리 고아 스폰 없음</td><td>인원·위협 예산이 늘어나거나 공격 예고가 가려짐</td></tr>
+          <tr><td>3 · 이동 이식</td><td>원격 브랜치의 현재 위치 목표·막힌 경로 우회·완화만 팩 앵커에 적용</td><td>원거리 후열 유지, Defender 전열 유지, 공격 예측 보존</td><td>모든 멤버가 다시 플레이어에게 겹쳐 달려듦</td></tr>
+          <tr><td>4 · Coordinator</td><td>Blink와 몰아주기만 구현</td><td>예고·안전 도착·스택 상한·소환 제외·Coordinator 사망 해제 테스트</td><td>투명화·축소·방어 자세가 초기 범위로 섞임</td></tr>
+          <tr><td>5 · ID 이관</td><td>Compression·Reflect·Overload를 trait으로 이동하고 미도달 prototype 정리</td><td>12-cycle·Guidebook·한/영·semantic asset·fixture 검증</td><td>기존 플레이에 등장하는 ID를 대체 없이 삭제</td></tr>
+          <tr><td>6 · 시각 검증</td><td>T1/T2/T3 실제 크기 비교 후 승인된 패밀리만 아트 제작</td><td>가족·티어·방향·트레잇을 전투 크기에서 판독</td><td>작은 조명·아이콘·외곽 glow로만 구분</td></tr>
+          <tr><td>7 · 성능 검증</td><td>같은 적 수·탄·효과·충돌·cadence로 전후 비교</td><td>정확한 focused/native/Web pass label</td><td>팩 수를 줄여 통과하거나 깨끗한 baseline이 없음</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout good"><strong>권장 첫 슬라이스:</strong> 새 적을 만들지 않고 <code>ordinary_lane_01</code> 계열 Gunner와 <code>ordinary_shield_01</code> Defender를 한 팩으로 묶는다. 여기서 진형·스폰·공격 가독성·비용이 맞지 않으면 9개 패밀리 전체로 확장하지 않는다.</div>
+    <div class="comment-box" data-review="rollout">
+      <div class="comment-head"><label for="comment-rollout">실행 순서에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-rollout" placeholder="첫 구현 패밀리, 반드시 먼저 확인할 테스트, 삭제 시점을 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+
+  <section id="sources" data-section-title="11. 근거와 한계">
+    <p class="kicker">Evidence</p>
+    <h2>11. 근거와 한계</h2>
+    <ul class="source-list">
+      <li><strong>현재 구현</strong><br><code>vehicle_enemy_archetypes.gd</code>, <code>vehicle_combat_stages.gd</code>, <code>vehicle_boss_phase_catalog.gd</code>, <code>vehicle_boss_patterns.gd</code>, <code>vehicle_spawn_allocator.gd</code>, <code>vehicle_encounter_runtime.gd</code>, <code>vehicle_collective_tactic_catalog.gd</code>, <code>vehicle_collective_tactic_runtime.gd</code>, <code>vehicle_enemy_movement_policy.gd</code>, <code>vehicle_enemy_specialist_runtime.gd</code>, <code>vehicle_elite_trait_catalog.gd</code>, <code>vehicle_attack_contract.gd</code>, <code>vehicle_actor_visual_catalog.gd</code>, production asset manifest와 PNG.</li>
+      <li><strong>원격 브랜치·PR</strong><br><a href="https://github.com/simpleusername96/cardborne-platformer/pull/4">PR #4 · Simplify ordinary enemy pursuit</a>. 2026-08-20 확인 당시 Draft, Mergeable, Unstable. 브랜치 <code>bd9f72f7</code>, 공통 기준 <code>4d6bb2dc</code>.</li>
+      <li><strong>성능 방법</strong><br><a href="https://docs.godotengine.org/en/4.7/tutorials/performance/general_optimization.html">Godot 4.7 · General optimization tips</a>, <a href="https://docs.godotengine.org/en/4.7/tutorials/performance/cpu_optimization.html">Godot 4.7 · CPU optimization</a>. 팩 구조가 실제로 빨라진다는 증거가 아니라, 같은 workload에서 병목을 측정하고 불변 계산만 공용화해야 한다는 근거다.</li>
+      <li><strong>팩 AI 참고</strong><br><a href="https://gdcvault.com/play/1027237/AI-Summit-Squad-Coordination-in">GDC · Squad Coordination in Days Gone</a>, <a href="https://gdcvault.com/play/1013459/Three-States-and-a-Plan">GDC · Three States and a Plan: The AI of F.E.A.R.</a>. 개별 행동을 늘리는 대신 그룹 상태·역할·진형을 별도 소유하는 참고다.</li>
+      <li><strong>판독성 참고</strong><br><a href="https://www.leagueoflegends.com/en-us/news/dev/clarity-in-league/">Riot · Clarity in League</a>. 실루엣, 시각 계층, 효과 크기와 실제 영향의 일치가 중요하다는 근거다.</li>
+      <li><strong>제공 설계 자료</strong><br><code>cardborne_enemy_family_trait_report_ko (1).html</code>, <code>cardborne_enemy_family_trait_report_ko.html</code>, 사용자가 제공한 PNG 3개. 이 보고서는 두 문서의 고유 내용을 합치되 5개 트레잇 구조와 맵 확장을 채택하지 않았다.</li>
+      <li><strong>시각 정본 preflight</strong><br><code>docs/design/VISUAL_SYSTEM.md</code> SHA-256 <code>2e5cf7e3f156629bcbe956da0e6cb30f6d3b608d9c20122ec5285fa1562aa006</code>. 범용 스타일 시트 기대·관측 SHA-256 <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>. 새 래스터 생성·편집·승격은 하지 않았다.</li>
+    </ul>
+    <div class="callout warn"><strong>한계:</strong> 이 작업은 코드·문서·Git·PR 정적 분석이다. 게임을 플레이해 체감 이동을 평가하거나, 현재 HEAD의 native/Web 성능을 새로 측정하지 않았다. 따라서 “팩이 더 재미있다” 또는 “팩이 더 빠르다”는 결과를 확정하지 않는다.</div>
+    <div class="comment-box" data-review="sources">
+      <div class="comment-head"><label for="comment-sources">근거·누락 사항에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
+      <textarea id="comment-sources" placeholder="추가로 확인할 코드, 레퍼런스, 실제 플레이 사례를 적어 주세요."></textarea>
+      <div class="comment-actions"><button type="button" data-save>브라우저에 저장</button><button type="button" data-copy>이 의견 복사</button><button type="button" data-clear>비우기</button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  (() => {
+    const STORAGE_KEY = "cardborne-ordinary-enemy-review-v1";
+    const boxes = [...document.querySelectorAll("[data-review]")];
+    const globalStatus = document.getElementById("global-status");
+
+    const readStore = () => {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+      catch (_) { return {}; }
+    };
+
+    const writeStore = (value) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+        return true;
+      } catch (_) {
+        globalStatus.textContent = "브라우저 저장을 사용할 수 없습니다. 의견 복사 기능을 이용해 주세요.";
+        return false;
+      }
+    };
+
+    const sectionTitle = (box) => {
+      const owner = box.closest("[data-section-title]");
+      return owner ? owner.dataset.sectionTitle : box.dataset.review;
+    };
+
+    const setStatus = (box, message) => {
+      const node = box.querySelector("[data-status]");
+      if (node) node.textContent = message;
+    };
+
+    const saveBox = (box) => {
+      const id = box.dataset.review;
+      const textarea = box.querySelector("textarea");
+      const store = readStore();
+      const value = textarea.value.trim();
+      if (value) store[id] = value;
+      else delete store[id];
+      if (writeStore(store)) setStatus(box, value ? "저장됨" : "저장된 의견 없음");
+    };
+
+    const copyText = async (value) => {
+      try {
+        await navigator.clipboard.writeText(value);
+        return true;
+      } catch (_) {
+        const helper = document.createElement("textarea");
+        helper.value = value;
+        helper.style.position = "fixed";
+        helper.style.opacity = "0";
+        document.body.appendChild(helper);
+        helper.select();
+        const ok = document.execCommand("copy");
+        helper.remove();
+        return ok;
+      }
+    };
+
+    const store = readStore();
+    boxes.forEach((box) => {
+      const id = box.dataset.review;
+      const textarea = box.querySelector("textarea");
+      if (store[id]) {
+        textarea.value = store[id];
+        setStatus(box, "저장된 의견 불러옴");
+      }
+      textarea.addEventListener("input", () => setStatus(box, "저장되지 않은 변경"));
+      box.querySelector("[data-save]").addEventListener("click", () => saveBox(box));
+      box.querySelector("[data-copy]").addEventListener("click", async () => {
+        const value = textarea.value.trim();
+        if (!value) {
+          setStatus(box, "복사할 의견 없음");
+          return;
+        }
+        const ok = await copyText(`## ${sectionTitle(box)}\n\n${value}`);
+        setStatus(box, ok ? "복사됨" : "복사 실패");
+      });
+      box.querySelector("[data-clear]").addEventListener("click", () => {
+        textarea.value = "";
+        saveBox(box);
+        textarea.focus();
+      });
+    });
+
+    document.getElementById("copy-all").addEventListener("click", async () => {
+      boxes.forEach(saveBox);
+      const entries = boxes
+        .map((box) => ({ title: sectionTitle(box), value: box.querySelector("textarea").value.trim() }))
+        .filter((entry) => entry.value);
+      if (!entries.length) {
+        globalStatus.textContent = "복사할 의견이 없습니다.";
+        return;
+      }
+      const text = ["# Cardborne 일반 적 보고서 의견", "", ...entries.flatMap((entry) => [`## ${entry.title}`, "", entry.value, ""])].join("\n");
+      const ok = await copyText(text);
+      globalStatus.textContent = ok ? `${entries.length}개 섹션의 의견을 복사했습니다.` : "의견 복사에 실패했습니다.";
+    });
+
+    document.getElementById("clear-all").addEventListener("click", () => {
+      if (!confirm("이 브라우저에 저장된 모든 보고서 의견을 지울까요?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      boxes.forEach((box) => {
+        box.querySelector("textarea").value = "";
+        setStatus(box, "저장된 의견 없음");
+      });
+      globalStatus.textContent = "저장된 모든 의견을 지웠습니다.";
+    });
+  })();
+</script>
+</body>
+</html>
