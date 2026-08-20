@@ -30,6 +30,9 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const FamilyTraits = preload(
+	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
+)
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
@@ -852,6 +855,8 @@ func _sync_enemies(
 			continue
 		var position := _advance_enemy_presentation(enemy, frame_delta)
 		var radius := enemy.visual_radius
+		if enemy.family_trait == &"bulwark" and enemy.pack_trait_active:
+			radius *= float(FamilyTraits.BULWARK_VISUAL_PERCENT) / 100.0
 		if (
 			not enemy.attack_telegraphs.is_empty()
 			and enemy.phase in [
@@ -1265,18 +1270,68 @@ func _sync_enemy_semantic_overlays(
 	if enemy.role == &"boss":
 		_sync_boss_core_overlay(enemy, position, radius, forward, presentation)
 	_sync_late_mechanic_overlay(enemy, position, radius, forward)
-	if (
-		enemy.elite_trait != &""
-		and (
-			enemy.elite_trait != &"armored"
-			or enemy.armor_structure > 0.0
-		)
-	):
-		_write_diamond(
-			position - forward.rotated(-PI * 0.5) * (radius + 15.0),
-			8.0,
-			Art.BOSS_COMMAND
-		)
+	_sync_family_trait_overlay(enemy, position, radius, forward)
+
+
+func _sync_family_trait_overlay(
+	enemy: EnemyState,
+	position: Vector2,
+	radius: float,
+	forward: Vector2
+) -> void:
+	var trait_id := enemy.family_trait
+	if trait_id.is_empty():
+		return
+	var lateral := forward.rotated(PI * 0.5)
+	match trait_id:
+		&"splitter":
+			_write_diamond(position + lateral * radius * 0.30, radius * 0.11, Art.DANGER)
+			_write_diamond(position - lateral * radius * 0.30, radius * 0.11, Art.DANGER)
+		&"frenzy":
+			_write_ring(position, radius * 0.66, Color(Art.DANGER, 0.82))
+		&"double":
+			_write_disk(position + lateral * radius * 0.28, radius * 0.10, Art.TEXT_PRIMARY)
+			_write_disk(position - lateral * radius * 0.28, radius * 0.10, Art.TEXT_PRIMARY)
+		&"self_destruct":
+			if enemy.phase == &"self_destruct_fuse":
+				_write_danger_ring(position, radius * 1.28, Color(Art.DANGER, 0.90))
+			else:
+				_write_diamond(position, radius * 0.13, Art.DANGER)
+		&"artillery":
+			_write_diamond(position - forward * radius * 0.34, radius * 0.13, Art.THERMAL)
+		&"slow":
+			_write_ring(position, radius * 0.72, Color(Art.CRYO, 0.84))
+		&"bulwark":
+			if enemy.pack_trait_active:
+				_write_ring(
+					position,
+					FamilyTraits.BULWARK_RADIUS,
+					Color(Art.SUPPORT, 0.34)
+				)
+			else:
+				_write_ring(position, radius * 0.82, Color(Art.SUPPORT, 0.58))
+		&"reflector":
+			if enemy.pack_trait_active:
+				_write_ring(position, radius + 14.0, Color(Art.SYSTEM, 0.90))
+		&"blink":
+			if enemy.pack_trait_phase == &"warning":
+				_write_danger_ring(
+					position,
+					radius * (1.10 + enemy.pack_trait_ratio * 0.25),
+					Color(Art.BOSS_COMMAND, 0.82)
+				)
+			else:
+				_write_diamond(position, radius * 0.12, Art.SYSTEM)
+		&"pack_feed":
+			_write_ring(position, radius * 0.70, Color(Art.BOSS_COMMAND, 0.52))
+			var dot_count := mini(enemy.pack_feed_stacks, FamilyTraits.PACK_FEED_MAX_STACKS)
+			for index in dot_count:
+				var dot_angle := TAU * float(index) / float(maxi(1, dot_count))
+				_write_disk(
+					position + Vector2.from_angle(dot_angle) * radius * 0.52,
+					radius * 0.065,
+					Art.BOSS_COMMAND
+				)
 
 
 func _sync_boss_core_overlay(

@@ -6,8 +6,22 @@ const AssetProvider = preload(
 
 const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"attachment/player_craft_body",
-	&"actor/ordinary_melee_01",
-	&"actor/ordinary_fixed_area_01",
+	&"actor/ordinary_pursuer_t1",
+	&"actor/ordinary_pursuer_t2",
+	&"actor/ordinary_pursuer_t3",
+	&"actor/ordinary_charger_t1",
+	&"actor/ordinary_charger_t2",
+	&"actor/ordinary_charger_t3",
+	&"actor/ordinary_gunner_t1",
+	&"actor/ordinary_gunner_t2",
+	&"actor/ordinary_gunner_t3",
+	&"actor/ordinary_defender_t1",
+	&"actor/ordinary_defender_t2",
+	&"actor/ordinary_defender_t3",
+	&"actor/ordinary_coordinator_t1",
+	&"actor/ordinary_coordinator_t2",
+	&"actor/ordinary_coordinator_t3",
+	&"actor/boss_pattern_fixed_beam_01",
 	&"boss/stage_01",
 	&"boss/stage_05",
 	&"boss/stage_06",
@@ -17,10 +31,6 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"boss/stage_10",
 	&"boss/stage_11",
 	&"boss/stage_12",
-	&"actor/ordinary_beam_01",
-	&"actor/ordinary_range_01",
-	&"actor/ordinary_sweep_01",
-	&"actor/ordinary_melee_02",
 	&"secondary/seeker",
 	&"secondary/escort_drone",
 	&"secondary/orbit_blade",
@@ -129,7 +139,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 92, "all 89 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 86, "all 83 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for asset_id in REQUIRED_UPGRADE_IDS:
@@ -177,9 +187,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 92
+		int(manifest.get("final_asset_count", 0)) == 86
 			and not manifest.has("animations"),
-		"manifest declares 92 static semantic images and no frame animations"
+		"manifest declares 86 static semantic images and no frame animations"
 	)
 	_validate_surface_details()
 	for error in AssetProvider.validate_pack():

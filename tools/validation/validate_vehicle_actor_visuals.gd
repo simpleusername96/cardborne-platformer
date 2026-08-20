@@ -11,15 +11,8 @@ const SecondaryCatalog = preload(
 )
 const BossCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
-const ORDINARY_ARCHETYPES: Array[StringName] = [
-	&"ordinary_melee_01", &"ordinary_ranged_01", &"ordinary_area_01", &"ordinary_edge_01",
-	&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_support_01",
-	&"ordinary_support_02", &"ordinary_growth_01", &"ordinary_fixed_ranged_02",
-	&"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_support_01",
-	&"ordinary_support_03", &"ordinary_fixed_beam_01", &"ordinary_beam_01", &"ordinary_range_01",
-	&"ordinary_sweep_01", &"ordinary_melee_02",
-]
 const PRODUCTION_BOSS_VARIANTS: Array[StringName] = [
 	&"boss_stage_01", &"boss_stage_02", &"boss_stage_03", &"boss_stage_04", &"boss_stage_05",
 	&"boss_stage_06", &"boss_stage_07", &"boss_stage_08", &"boss_stage_09", &"boss_stage_10",
@@ -69,12 +62,17 @@ func _validate_player_attachments() -> void:
 
 func _validate_actor_images() -> void:
 	var signatures := {}
-	for archetype in ORDINARY_ARCHETYPES:
+	for archetype in EnemyArchetypes.ORDINARY_ARCHETYPES:
 		var asset_id := StringName("actor/%s" % archetype)
-		_validate_unique_alpha_signature(asset_id, signatures)
+		_validate_unique_file_hash(asset_id, signatures)
 	_expect(
-		signatures.size() == ORDINARY_ARCHETYPES.size(),
-		"all 22 ordinary actor silhouettes remain distinct"
+		signatures.size() == EnemyArchetypes.ORDINARY_ARCHETYPES.size(),
+		"all fifteen family-tier ordinary actor images remain distinct"
+	)
+	_validate_unique_file_hash(&"actor/boss_pattern_fixed_beam_01", signatures)
+	_expect(
+		signatures.size() == EnemyArchetypes.ORDINARY_ARCHETYPES.size() + 1,
+		"boss-owned fixed beam keeps a distinct non-ordinary image"
 	)
 	signatures.clear()
 	for boss in PRODUCTION_BOSS_VARIANTS:
@@ -141,6 +139,25 @@ func _validate_unique_alpha_signature(
 		% [asset_id, signatures.get(signature, &"")]
 	)
 	signatures[signature] = asset_id
+
+
+func _validate_unique_file_hash(
+	asset_id: StringName,
+	signatures: Dictionary
+) -> void:
+	var descriptor := AssetProvider.descriptor(asset_id)
+	var path := String(descriptor.get("path", ""))
+	_expect(not path.is_empty(), "%s has a runtime path" % asset_id)
+	if path.is_empty():
+		return
+	var hash_value := FileAccess.get_sha256(ProjectSettings.globalize_path(path))
+	_expect(not hash_value.is_empty(), "%s has readable image bytes" % asset_id)
+	_expect(
+		not signatures.has(hash_value),
+		"%s keeps unique image bytes from %s"
+		% [asset_id, signatures.get(hash_value, &"")]
+	)
+	signatures[hash_value] = asset_id
 
 
 func _expect(condition: bool, message: String) -> void:

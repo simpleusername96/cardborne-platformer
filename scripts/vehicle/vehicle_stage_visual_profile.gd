@@ -62,7 +62,7 @@ const FOCUS_WIDTH := 2
 const SELECTED_RAIL_WIDTH := 3
 
 const PLAYER_VISUAL_RADIUS := 35.0
-const ORDINARY_ENEMY_RADIUS := 48.0
+const ORDINARY_ENEMY_RADIUS := 56.0
 const INSTALLATION_RADIUS := 62.0
 const STAGE_BOSS_RADIUS := 146.0
 const PICKUP_PLINTH_RADIUS := 42.0
@@ -98,7 +98,7 @@ const MAP_INNER_WALL_FILL := RAISED
 
 static func enemy_visual_radius(role: StringName) -> float:
 	match role:
-		&"ordinary_fixed_ranged_01", &"ordinary_fixed_area_01", &"ordinary_fixed_ranged_02", &"ordinary_fixed_beam_01", &"ordinary_fixed_support_01":
+		&"boss_pattern_fixed_beam_01":
 			return INSTALLATION_RADIUS
 		&"boss_actor":
 			return STAGE_BOSS_RADIUS
@@ -212,8 +212,8 @@ static func validate_contract() -> PackedStringArray:
 			errors.append("attack affinity color must remain opaque: %s" % affinity)
 	if not is_equal_approx(PLAYER_VISUAL_RADIUS, 35.0):
 		errors.append("player visual radius must remain 35 px")
-	if not is_equal_approx(ORDINARY_ENEMY_RADIUS, 48.0):
-		errors.append("ordinary enemy visual radius must remain 48 px")
+	if not is_equal_approx(ORDINARY_ENEMY_RADIUS, 56.0):
+		errors.append("ordinary enemy T1 visual radius must remain 56 px")
 	if not is_equal_approx(INSTALLATION_RADIUS, 62.0):
 		errors.append("installation visual radius must remain 62 px")
 	if not is_equal_approx(PICKUP_PLINTH_RADIUS, 42.0):

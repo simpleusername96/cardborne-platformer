@@ -77,11 +77,11 @@ func _run() -> void:
 		"the shared and affinity-specific legacy projectile batches are retired"
 	)
 	for pair in [
-		[&"ordinary_lane_01", &"ordinary_growth_01"],
-		[&"ordinary_lane_01", &"ordinary_fixed_beam_01"],
-		[&"ordinary_gap_01", &"ordinary_support_02"],
-		[&"ordinary_gap_01", &"ordinary_support_01"],
-		[&"ordinary_fixed_ranged_01", &"ordinary_fixed_ranged_02"],
+		[&"ordinary_pursuer_t1", &"ordinary_pursuer_t2"],
+		[&"ordinary_charger_t1", &"ordinary_charger_t2"],
+		[&"ordinary_gunner_t1", &"ordinary_defender_t1"],
+		[&"ordinary_coordinator_t1", &"ordinary_pursuer_t1"],
+		[&"boss_pattern_fixed_beam_01", &"ordinary_gunner_t1"],
 	]:
 		_expect(
 			AssetProvider.texture(StringName("actor/%s" % String(pair[0])))
@@ -96,7 +96,7 @@ func _run() -> void:
 	var enemy := EnemyState.new()
 	enemy.id = "renderer_enemy"
 	enemy.role = &"ordinary_edge_01"
-	enemy.archetype = &"ordinary_edge_01"
+	enemy.archetype = &"ordinary_pursuer_t1"
 	enemy.pos = Vector2(300.0, 300.0)
 	enemy.alive = true
 	enemy.active = true
@@ -254,8 +254,8 @@ func _run() -> void:
 		"Thermal primitive keeps its complete gameplay radius through the hold point"
 	)
 	snapshot = renderer.debug_snapshot()
-	var status_enemy_batch := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
-	var peer_enemy_batch := renderer.get_node("Enemy_ordinary_lane_01") as MultiMeshInstance2D
+	var status_enemy_batch := renderer.get_node("Enemy_ordinary_pursuer_t1") as MultiMeshInstance2D
+	var peer_enemy_batch := renderer.get_node("Enemy_ordinary_gunner_t1") as MultiMeshInstance2D
 	_expect(
 		status_enemy_batch.multimesh.is_using_custom_data()
 			and status_enemy_batch.material is ShaderMaterial
@@ -395,7 +395,7 @@ func _run() -> void:
 			and corridor_boundaries.multimesh.visible_instance_count == 0,
 		"ordinary startup corridors add no area geometry beyond active effect bodies"
 	)
-	var enemy_batch := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
+	var enemy_batch := renderer.get_node("Enemy_ordinary_pursuer_t1") as MultiMeshInstance2D
 	var enemy_buffer := enemy_batch.multimesh.buffer
 	_expect(
 		enemy_batch.material is ShaderMaterial
@@ -511,7 +511,7 @@ func _run() -> void:
 		var crowd_enemy := EnemyState.new()
 		crowd_enemy.id = "crowd_%02d" % index
 		crowd_enemy.role = &"ordinary_edge_01"
-		crowd_enemy.archetype = &"ordinary_edge_01"
+		crowd_enemy.archetype = &"ordinary_pursuer_t1"
 		crowd_enemy.pos = Vector2(
 			40.0 + float(index % 20) * 62.0,
 			40.0 + float(index / 20) * 40.0
@@ -552,18 +552,14 @@ func _run() -> void:
 		int(snapshot["priority_marker_count"]) == 0,
 		"ordinary priority-target markers are removed"
 	)
-	var crowd_body := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
+	var crowd_body := renderer.get_node("Enemy_ordinary_pursuer_t1") as MultiMeshInstance2D
 	_expect(
 		crowd_body.multimesh.visible_instance_count == 320
 			and crowd_body.multimesh.instance_count >= 320,
 		"adaptive component buffers grow without hiding ordinary enemy bodies"
 	)
 	var installations: Array[EnemyState] = []
-	var installation_roles: Array[StringName] = [
-		&"ordinary_fixed_beam_01",
-		&"ordinary_fixed_area_01",
-		&"ordinary_fixed_support_01",
-	]
+	var installation_roles: Array[StringName] = [&"ordinary_fixed_beam_01"]
 	for index in 16:
 		var installation := EnemyState.new()
 		var role: StringName = installation_roles[
@@ -571,7 +567,7 @@ func _run() -> void:
 		]
 		installation.id = "installation_%02d" % index
 		installation.role = role
-		installation.archetype = role
+		installation.archetype = &"boss_pattern_fixed_beam_01"
 		installation.runtime_slot = index
 		installation.pos = Vector2(
 			100.0 + float(index % 8) * 140.0,
@@ -597,7 +593,7 @@ func _run() -> void:
 	var projectile_attacker := EnemyState.new()
 	projectile_attacker.id = "projectile_attacker"
 	projectile_attacker.role = &"ordinary_lane_01"
-	projectile_attacker.archetype = &"ordinary_lane_01"
+	projectile_attacker.archetype = &"ordinary_gunner_t1"
 	projectile_attacker.pos = Vector2(300.0, 360.0)
 	projectile_attacker.visual_radius = 26.0
 	projectile_attacker.alive = true
@@ -741,7 +737,7 @@ func _run() -> void:
 	var offscreen_enemy := EnemyState.new()
 	offscreen_enemy.id = "offscreen_attacker"
 	offscreen_enemy.role = &"ordinary_gap_01"
-	offscreen_enemy.archetype = &"ordinary_gap_01"
+	offscreen_enemy.archetype = &"ordinary_coordinator_t1"
 	offscreen_enemy.pos = Vector2(1800.0, 300.0)
 	offscreen_enemy.alive = true
 	offscreen_enemy.active = true
@@ -759,7 +755,7 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	var offscreen_enemy_batch := renderer.get_node(
-		"Enemy_ordinary_gap_01"
+		"Enemy_ordinary_coordinator_t1"
 	) as MultiMeshInstance2D
 	var area_disk := renderer.get_node("Overlay_disk") as MultiMeshInstance2D
 	var area_ring := renderer.get_node("Overlay_danger_ring") as MultiMeshInstance2D
@@ -775,7 +771,7 @@ func _run() -> void:
 	var armed_mine := EnemyState.new()
 	armed_mine.id = "armed_mine"
 	armed_mine.role = &"ordinary_fixed_area_01"
-	armed_mine.archetype = &"ordinary_fixed_area_01"
+	armed_mine.archetype = &"ordinary_charger_t1"
 	armed_mine.pos = Vector2(640.0, 360.0)
 	armed_mine.visual_radius = 42.0
 	armed_mine.alive = true
@@ -1055,7 +1051,7 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 	var moving := EnemyState.new()
 	moving.id = "interpolation_probe"
 	moving.role = &"ordinary_edge_01"
-	moving.archetype = &"ordinary_edge_01"
+	moving.archetype = &"ordinary_pursuer_t1"
 	moving.pos = Vector2(100.0, 240.0)
 	moving.visual_radius = 26.0
 	moving.speed = 190.0
@@ -1076,7 +1072,7 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 		Rect2(0, 0, 1280, 720), Vector2(640.0, 360.0), 0.0, true, "", {},
 		1.0 / 60.0
 	)
-	var enemy_batch := renderer.get_node("Enemy_ordinary_edge_01") as MultiMeshInstance2D
+	var enemy_batch := renderer.get_node("Enemy_ordinary_pursuer_t1") as MultiMeshInstance2D
 	var body_position := Vector2(
 		enemy_batch.multimesh.buffer[3], enemy_batch.multimesh.buffer[7]
 	)
@@ -1129,7 +1125,7 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 	var repairer := EnemyState.new()
 	repairer.id = "repairer"
 	repairer.role = &"ordinary_support_01"
-	repairer.archetype = &"ordinary_support_01"
+	repairer.archetype = &"ordinary_coordinator_t1"
 	repairer.pos = Vector2(300.0, 300.0)
 	repairer.visual_radius = 32.0
 	repairer.spatial_slot = 1
@@ -1140,7 +1136,7 @@ func _validate_enemy_presentation(renderer: Renderer) -> void:
 	var recipient := EnemyState.new()
 	recipient.id = "recipient"
 	recipient.role = &"ordinary_edge_01"
-	recipient.archetype = &"ordinary_edge_01"
+	recipient.archetype = &"ordinary_pursuer_t1"
 	recipient.pos = Vector2(500.0, 300.0)
 	recipient.visual_radius = 26.0
 	recipient.spatial_slot = 2
