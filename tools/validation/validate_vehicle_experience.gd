@@ -27,11 +27,11 @@ func _initialize() -> void:
 
 
 func _validate_drop_values() -> void:
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"ordinary_edge_01")) == 3, "swarm XP is 3")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"standard", &"ordinary_edge_01")) == 5, "standard XP is 5")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"ordinary_fixed_ranged_01")) == 10, "priority XP is 10")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"ordinary_edge_01")) == 5, "base swarm XP includes the 1.5x no-trait reward")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"standard", &"ordinary_edge_01")) == 8, "base standard XP includes the 1.5x no-trait reward")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"priority", &"ordinary_fixed_ranged_01")) == 15, "base priority XP includes the 1.5x no-trait reward")
 	_expect(FieldDropRules.experience_for_enemy(_enemy(&"boss", &"boss")) == 24, "stage boss XP is 24")
-	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"ordinary_edge_01", "carrier")) == 3, "summoned carrier children grant their normal XP")
+	_expect(FieldDropRules.experience_for_enemy(_enemy(&"swarm", &"ordinary_edge_01", "carrier")) == 5, "summoned carrier children grant their normal XP")
 
 
 func _validate_stage_items() -> void:
@@ -47,8 +47,8 @@ func _validate_stage_items() -> void:
 func _validate_experience_runtime() -> void:
 	var runtime := ExperienceRuntime.new()
 	var expected_requirements := [
-		14, 16, 18, 21, 25, 30, 35, 40, 46, 53,
-		53, 61, 70, 80, 90, 96, 96, 96, 96, 96,
+		14, 16, 18, 21, 25, 45, 53, 60, 69, 80,
+		106, 122, 140, 160, 180, 192, 192, 192, 192, 192,
 	]
 	for level_index in expected_requirements.size():
 		runtime.run_level = level_index + 1
@@ -94,7 +94,7 @@ func _validate_experience_runtime() -> void:
 	_expect(runtime.pending_level_ups == 1 and int(result["levels"]) == 1, "collected XP queues a level")
 	_expect(&"boss" in result["reward_sources"], "boss reward source survives shard collection")
 	_expect(runtime.consume_pending_level() and runtime.pending_level_ups == 0, "one confirmed card consumes one queued level")
-	_expect(runtime.required_experience() == 16, "level two requirement follows the locked curve")
+	_expect(runtime.required_experience() == 16, "level two requirement follows the early locked curve")
 	runtime.reset()
 	runtime.spawn_shard(Vector2(900.0, 0.0), 2)
 	_expect(int(runtime.advance(0.1, Vector2.ZERO, 92.0, 0.0)["experience"]) == 0, "distant XP is not awarded before collection")
@@ -188,8 +188,8 @@ func _validate_route_level_cadence() -> void:
 		while runtime.consume_pending_level():
 			pass
 	_expect(Catalog.STAGE_IDS.size() == 12, "the campaign exposes twelve boss cycles")
-	_expect(total_experience == 8947, "the corrected twelve-cycle minimum quota path yields 8947 total XP (actual %d)" % total_experience)
-	_expect(total_levels == 101 and runtime.run_level == 102, "the corrected twelve-cycle quota path reaches level 102 with 101 rewards (actual %d / level %d)" % [total_levels, runtime.run_level])
+	_expect(total_experience == 20218, "the current twelve-cycle minimum quota path yields 20218 total XP (actual %d)" % total_experience)
+	_expect(total_levels == 114 and runtime.run_level == 115, "the tiered XP curve reaches level 115 with 114 rewards (actual %d / level %d)" % [total_levels, runtime.run_level])
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:

@@ -6,6 +6,8 @@ const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EngagementDirector = preload("res://scripts/encounters/vehicle_engagement_director.gd")
+const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
+const MovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
 
 const FIXED_SEED := 0xC4A2B0
 
@@ -57,6 +59,10 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 			cue_positions[String(cue["squad_id"])] = Vector2(cue["birth_position"])
 		for spec in spawns:
 			total_spawns += 1
+			var archetype := StringName(spec["role"])
+			var definition := EnemyArchetypes.definition(archetype)
+			if MovementPolicy.family(archetype, StringName(definition["behavior"])) == MovementPolicy.PURSUIT:
+				_expect(not spec.has("engagement_handle"), "pursuit spawns keep direct player pressure without a formation gate")
 			if spec.has("engagement_handle"):
 				gated_spawns += 1
 				_expect(not Vector2(spec.get("engagement_gate", Vector2.INF)).is_equal_approx(Vector2.INF), "reserved spawn carries a fixed gate")

@@ -949,7 +949,9 @@ func _attach_engagement_reservation(
 	var definition := EnemyArchetypes.definition(archetype)
 	var role := StringName(definition["behavior"])
 	var family := MovementPolicy.family(archetype, role)
-	if family == MovementPolicy.STATIONARY:
+	if family in [MovementPolicy.STATIONARY, MovementPolicy.PURSUIT]:
+		# Pursuers own direct pressure on the player. They do not reserve a
+		# formation gate that could make a melee unit peel away to a position.
 		return
 	var speed := SpeedProfile.effective_speed(archetype, _stage_index, difficulty)
 	if speed <= 0.001:

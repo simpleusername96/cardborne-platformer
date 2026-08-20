@@ -1,7 +1,7 @@
 class_name VehicleEnemyFamilyTraitCatalog
 extends RefCounted
 
-## Canonical five-family, two-trait vocabulary and deterministic pack rollout.
+## Canonical five-family, two-trait vocabulary and weighted pack rollout.
 ## Shared trait cadence belongs to the pack runtime; this catalog owns no live state.
 
 const FAMILIES: Array[StringName] = [
@@ -14,6 +14,9 @@ const TRAITS_BY_FAMILY := {
 	&"defender": [&"bulwark", &"reflector"],
 	&"coordinator": [&"blink", &"pack_feed"],
 }
+const BASE_TRAIT_WEIGHT := 4
+const SPECIAL_TRAIT_WEIGHT := 3
+const TRAIT_WEIGHT_TOTAL := BASE_TRAIT_WEIGHT + SPECIAL_TRAIT_WEIGHT * 2
 const SIZE_PERCENT_BY_TIER := {1: 100, 2: 125, 3: 150}
 const PACK_MIN_SIZE := 4
 const PACK_MAX_SIZE := 8
@@ -66,12 +69,18 @@ static func trait_belongs_to_family(family: StringName, trait_id: StringName) ->
 
 
 static func trait_for_pack(family: StringName, stage_index: int, pack_ordinal: int) -> StringName:
-	# Stage 1 establishes silhouettes. Later stages trait one third of packs so the
-	# cue remains readable and does not turn every unit into a specialist.
-	if stage_index <= 0 or posmod(stage_index + pack_ordinal, 3) != 0:
-		return &""
+	# Preserve the stage-owned family mix, then choose base/trait 1/trait 2 as
+	# a deterministic weighted draw (4:3:3). The seed keeps authored packets
+	# reproducible while allowing every stage, including stage 1, to show traits.
 	var family_traits := traits(family)
-	return family_traits[posmod(stage_index + pack_ordinal, family_traits.size())]
+	if family_traits.size() != 2:
+		return &""
+	var roll := posmod(hash("%s:%d:%d" % [String(family), stage_index, pack_ordinal]), TRAIT_WEIGHT_TOTAL)
+	if roll < BASE_TRAIT_WEIGHT:
+		return &""
+	if roll < BASE_TRAIT_WEIGHT + SPECIAL_TRAIT_WEIGHT:
+		return family_traits[0]
+	return family_traits[1]
 
 
 static func tactic_for_family(family: StringName) -> StringName:
@@ -95,6 +104,10 @@ static func validate_contract() -> PackedStringArray:
 			if seen_traits.has(trait_id):
 				errors.append("trait must belong to only one family: %s" % trait_id)
 			seen_traits[trait_id] = family
+	if TRAIT_WEIGHT_TOTAL != 10:
+		errors.append("ordinary trait weights must total ten")
+	if BASE_TRAIT_WEIGHT != 4 or SPECIAL_TRAIT_WEIGHT != 3:
+		errors.append("ordinary trait weights must remain base/trait1/trait2 = 4/3/3")
 	for tier in SIZE_PERCENT_BY_TIER:
 		if int(SIZE_PERCENT_BY_TIER[tier]) != [100, 125, 150][int(tier) - 1]:
 			errors.append("tier size ladder must remain 100/125/150")
