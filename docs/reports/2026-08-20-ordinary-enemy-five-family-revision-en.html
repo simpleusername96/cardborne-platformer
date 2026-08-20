@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="description" content="An easy-English Cardborne report that reduces ordinary enemies to five families, defines two traits per family, reviews the remote pursuit branch, and lists safe code migration and deletion work.">
+  <meta name="description" content="An easy-English Cardborne report derived from ExecPlan 21f0d3f9, with five enemy families, exactly three tier PNGs per family, integer percentage scaling, remote-branch provenance, and migration work.">
   <title>Cardborne Ordinary Enemies — Five-Family Revision</title>
   <style>
     @font-face {
@@ -258,25 +258,27 @@
     .trait strong { color: var(--mint); }
     .trait p { margin: 5px 0 0; color: var(--muted); font-size: 14px; }
     .rule-list { margin: 13px 0 0; color: var(--muted); font-size: 14px; }
-    .art-crop {
-      position: relative;
-      aspect-ratio: 3 / 2;
+    .tier-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .tier-card {
+      min-width: 0;
       overflow: hidden;
       border: 1px solid var(--line-soft);
       border-radius: 12px;
       background: #111820;
     }
-    .art-crop img {
-      position: absolute;
-      width: 300%;
-      height: 300%;
-      max-width: none;
+    .tier-frame {
+      display: flex;
+      height: 210px;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #0d141b;
     }
-    .r1c1 img { left: 0; top: 0; }
-    .r1c2 img { left: -100%; top: 0; }
-    .r2c1 img { left: 0; top: -100%; }
-    .r3c1 img { left: 0; top: -200%; }
-    .r3c3 img { left: -200%; top: -200%; }
+    .tier-frame img { display: block; width: auto; max-width: 96%; object-fit: contain; }
+    .tier-card.t1 .tier-frame img { height: 50%; }
+    .tier-card.t2 .tier-frame img { height: 62.5%; }
+    .tier-card.t3 .tier-frame img { height: 75%; }
+    .tier-card strong { display: block; padding: 9px 8px; text-align: center; font-size: 13px; }
     .concept-label {
       margin-top: 8px;
       color: var(--faint);
@@ -319,6 +321,7 @@
       body { font-size: 15px; }
       .page { width: min(calc(100% - 20px), var(--max)); padding-top: 28px; }
       .hero-grid, .family-grid, .grid-2, .grid-3, .stats, .visual-grid, .trait-pair { grid-template-columns: 1fr; }
+      .tier-frame { height: 150px; }
       .review-toolbar { position: static; align-items: stretch; flex-direction: column; }
       .review-toolbar .actions, .review-toolbar button { width: 100%; }
       section { padding: 21px 16px; }
@@ -342,17 +345,17 @@
   <header>
     <p class="eyebrow">Cardborne · ordinary enemy design revision</p>
     <h1>Use five clear enemy families.</h1>
-    <p class="lead">Remove families that do not earn their own player response. Put self-destruction inside Charger. Put artillery and slowing shots inside Gunner. Make Defender protect every ranged pack.</p>
+    <p class="lead">Remove families that do not earn their own player response. Put self-destruction inside Charger. Put artillery and slowing shots inside Gunner. Show only three tier images per family and scale tiers with integer percentages.</p>
 
     <div class="hero-grid">
       <div class="decision">
-        <strong>Decision:</strong> use <strong>Pursuer, Charger, Gunner, Defender, and Coordinator</strong>. Give each family only two launch traits. Do not merge the remote pursuit branch as-is. First build one Gunner + Defender pack and prove that it is clear and stable.
+        <strong>Decision:</strong> use <strong>Pursuer, Charger, Gunner, Defender, and Coordinator</strong>. Give each family only two launch traits. Show T1, T2, and T3 only. Use <strong>100%, 125%, and 150%</strong> visual scale. Do not merge the remote pursuit branch as-is.
       </div>
       <div class="meta" aria-label="Report status">
         <div><span>Family count</span><strong>5, down from 9</strong></div>
         <div><span>Trait limit</span><strong>2 per family</strong></div>
-        <div><span>Visual source</span><strong>New concept PNGs only</strong></div>
-        <div><span>Status</span><strong>Plan, not implementation</strong></div>
+        <div><span>Visual source</span><strong>3 tier PNGs per family</strong></div>
+        <div><span>Plan basis</span><strong>Commit 21f0d3f9</strong></div>
       </div>
     </div>
   </header>
@@ -368,7 +371,7 @@
   <nav aria-label="Report sections">
     <a href="#summary">Final structure</a>
     <a href="#branch">Remote branch</a>
-    <a href="#visuals">New PNGs</a>
+    <a href="#visuals">Tier PNG rule</a>
     <a href="#families">Five families</a>
     <a href="#packs">Pack rules</a>
     <a href="#deletion">Delete and migrate</a>
@@ -418,9 +421,21 @@
       </div>
       <div class="card">
         <h3>Current merge state</h3>
-        <p class="muted">The remote-tracking branch is three commits ahead of its base. Local <code>master</code> is five commits ahead of that base. A merge-tree check found no structural conflict signal, but the product design still conflicts.</p>
+        <p class="muted">The remote-tracking branch is three commits ahead of its base. Local <code>master</code> has separately diverged from that base. A merge-tree check found no structural conflict signal, but the product design still conflicts.</p>
         <div class="chips"><span class="chip move">Text merge looks possible</span><span class="chip delete">Design merge is not valid</span></div>
       </div>
+    </div>
+    <div class="note warn"><strong>Performance answer:</strong> no, this remote branch did not propose game-wide performance work. Its own ExecPlan says profiler and full-load performance claims are out of scope. This ordinary-enemy ExecPlan uses only its movement ideas. The performance rules below come from Cardborne's separate performance policy and runtime architecture audit.</div>
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Decision</th><th>Source</th><th>How this plan uses it</th></tr></thead>
+        <tbody>
+          <tr><td>Current-position target, blocked-route fallback, separation, smoothing, speed caps</td><td>Remote pursuit branch</td><td>Possible pack-anchor behavior. No speed claim.</td></tr>
+          <tr><td>Reuse bounded pack state; move only invariant work out of member loops</td><td>Performance policy and architecture audit</td><td>Allowed only with the same actor, projectile, collision, cadence, and attack workload.</td></tr>
+          <tr><td>Clean baseline and named subsystem timing before a performance claim</td><td>Performance policy</td><td>Required before saying the restructure is faster.</td></tr>
+          <tr><td>Renderer, projectile collision, HUD staging, and <code>VehicleRun</code> extraction</td><td>Separate performance plans</td><td>Out of scope for this ordinary-enemy restructure.</td></tr>
+        </tbody>
+      </table>
     </div>
     <div class="grid-2" style="margin-top:13px">
       <div class="note good">
@@ -449,21 +464,17 @@
     </div>
   </section>
 
-  <section id="visuals" data-section-title="3. New PNGs">
+  <section id="visuals" data-section-title="3. Tier PNG rule">
     <p class="kicker">Visual input</p>
-    <h2>3. This report uses the newer concept PNGs</h2>
-    <p class="muted">The old report used current in-game enemy PNGs for tier examples. This revision does not. It uses the two newer 1536×1024 concept sheets below. The family cards use CSS crops from the second sheet. No PNG was created or edited.</p>
-    <div class="visual-grid">
-      <figure>
-        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-tier-family-lineup.png" alt="New enemy tier and family concept lineup with several three-step enemy size groups">
-        <figcaption><strong>New tier lineup.</strong> Use it to compare broad shape and tier growth. It is not approved production art.</figcaption>
-      </figure>
-      <figure>
-        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="New three by three enemy family, tier, and trait concept matrix">
-        <figcaption><strong>New family matrix.</strong> Only five cells remain in the final structure. The other cells are visual history, not active family decisions.</figcaption>
-      </figure>
+    <h2>3. Every family shows exactly three tier PNGs</h2>
+    <p class="muted">This report follows ExecPlan commit <code>21f0d3f9</code>. Each family card contains one T1 PNG, one T2 PNG, and one T3 PNG. It does not show trait thumbnails, current production enemies, the full lineup sheet, or the old nine-cell matrix.</p>
+    <div class="grid-3">
+      <div class="card"><h3>T1 · 100%</h3><p class="muted">The family baseline. This is the source for relative size.</p></div>
+      <div class="card"><h3>T2 · 125%</h3><p class="muted">The same family reads 25% larger than T1.</p></div>
+      <div class="card"><h3>T3 · 150%</h3><p class="muted">The same family reads 50% larger than T1.</p></div>
     </div>
-    <div class="note warn"><strong>Visual status:</strong> these are concept references only. They still need combat-scale review against Cardborne's approved visual system before any asset becomes production art.</div>
+    <div class="note good"><strong>Coordinator change:</strong> the orange triangular trio is removed. Coordinator now uses the simpler circular trio from the removed Bomber visual cell. This reuses only the simple shape. It does not give Coordinator a fuse, explosion, or Bomber behavior.</div>
+    <div class="note warn"><strong>Visual status:</strong> the 15 displayed files are exact report-only crops from <code>enemy-tier-family-lineup.png</code>. No silhouette was redrawn. They are concept evidence, not approved production assets.</div>
     <div class="comment-box" data-review="visuals">
       <div class="comment-head"><label for="comment-visuals">Comment on the new PNGs</label><span class="save-state" data-status>No saved comment</span></div>
       <textarea id="comment-visuals" placeholder="Write which shapes should stay, change, or be ignored."></textarea>
@@ -490,8 +501,12 @@
             <ul class="rule-list"><li>Current seeds: <code>ordinary_melee_01</code>, <code>ordinary_pulse_01</code>.</li><li>No Armored, Heavy, Leech, or hidden defense state.</li></ul>
           </div>
           <div>
-            <div class="art-crop r1c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Pursuer concept cell showing three size tiers and small trait examples"></div>
-            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+            <div class="tier-row" aria-label="Pursuer tier PNGs">
+              <div class="tier-card t1"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/pursuer-t1.png" alt="Pursuer T1 concept PNG"></div><strong>T1 · 100%</strong></div>
+              <div class="tier-card t2"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/pursuer-t2.png" alt="Pursuer T2 concept PNG"></div><strong>T2 · 125%</strong></div>
+              <div class="tier-card t3"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/pursuer-t3.png" alt="Pursuer T3 concept PNG"></div><strong>T3 · 150%</strong></div>
+            </div>
+            <p class="concept-label">Three report-only tier crops. No trait image.</p>
           </div>
         </div>
         <div class="comment-box" data-review="pursuer"><div class="comment-head"><label for="comment-pursuer">Comment on Pursuer</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-pursuer" placeholder="Comment on the base role, Splitter, or Frenzy."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
@@ -510,8 +525,12 @@
             <ul class="rule-list"><li>Current seeds: <code>ordinary_edge_01</code>, <code>ordinary_pull_01</code>, and the fuse/explosion from <code>ordinary_area_01</code>.</li><li><code>ordinary_overload_01</code> is deleted after roster migration.</li></ul>
           </div>
           <div>
-            <div class="art-crop r1c2"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Charger concept cell showing three size tiers and small trait examples"></div>
-            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+            <div class="tier-row" aria-label="Charger tier PNGs">
+              <div class="tier-card t1"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/charger-t1.png" alt="Charger T1 concept PNG"></div><strong>T1 · 100%</strong></div>
+              <div class="tier-card t2"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/charger-t2.png" alt="Charger T2 concept PNG"></div><strong>T2 · 125%</strong></div>
+              <div class="tier-card t3"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/charger-t3.png" alt="Charger T3 concept PNG"></div><strong>T3 · 150%</strong></div>
+            </div>
+            <p class="concept-label">Three report-only tier crops. No trait image.</p>
           </div>
         </div>
         <div class="comment-box" data-review="charger"><div class="comment-head"><label for="comment-charger">Comment on Charger</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-charger" placeholder="Comment on Double, Self-Destruct, the fuse, or counterplay."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
@@ -530,8 +549,12 @@
             <ul class="rule-list"><li>Current seeds: ranged, lane, range, beam, growth, and ground-impact attack code.</li><li>The Slow projectile needs a distinct cue before it can ship.</li></ul>
           </div>
           <div>
-            <div class="art-crop r2c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Gunner concept cell showing three size tiers and small trait examples"></div>
-            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+            <div class="tier-row" aria-label="Gunner tier PNGs">
+              <div class="tier-card t1"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/gunner-t1.png" alt="Gunner T1 concept PNG"></div><strong>T1 · 100%</strong></div>
+              <div class="tier-card t2"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/gunner-t2.png" alt="Gunner T2 concept PNG"></div><strong>T2 · 125%</strong></div>
+              <div class="tier-card t3"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/gunner-t3.png" alt="Gunner T3 concept PNG"></div><strong>T3 · 150%</strong></div>
+            </div>
+            <p class="concept-label">Three report-only tier crops. No trait image.</p>
           </div>
         </div>
         <div class="comment-box" data-review="gunner"><div class="comment-head"><label for="comment-gunner">Comment on Gunner</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-gunner" placeholder="Comment on Artillery, Slow, bullet cues, or Defender support."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
@@ -550,8 +573,12 @@
             <ul class="rule-list"><li>Current seeds: <code>ordinary_shield_01</code>, <code>ordinary_reflect_01</code>, and useful shield parts from <code>ordinary_support_02</code>.</li><li>Reflection must have a different edge, pulse, or color state. It cannot be hidden.</li></ul>
           </div>
           <div>
-            <div class="art-crop r3c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Defender concept cell showing three size tiers and small trait examples"></div>
-            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+            <div class="tier-row" aria-label="Defender tier PNGs">
+              <div class="tier-card t1"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/defender-t1.png" alt="Defender T1 concept PNG"></div><strong>T1 · 100%</strong></div>
+              <div class="tier-card t2"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/defender-t2.png" alt="Defender T2 concept PNG"></div><strong>T2 · 125%</strong></div>
+              <div class="tier-card t3"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/defender-t3.png" alt="Defender T3 concept PNG"></div><strong>T3 · 150%</strong></div>
+            </div>
+            <p class="concept-label">Three report-only tier crops. No trait image.</p>
           </div>
         </div>
         <div class="comment-box" data-review="defender"><div class="comment-head"><label for="comment-defender">Comment on Defender</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-defender" placeholder="Comment on Bulwark size, shield range, Reflector timing, or normal shield rules."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
@@ -570,8 +597,12 @@
             <ul class="rule-list"><li>Current seeds: the shared collective tactic runtime and the bounded death stack in <code>ordinary_melee_02</code>.</li><li>Invisible and Shrink stay future-only. Like Rock is excluded because Defender owns defense.</li></ul>
           </div>
           <div>
-            <div class="art-crop r3c3"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Coordinator concept cell showing three size tiers and small trait examples"></div>
-            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+            <div class="tier-row" aria-label="Coordinator tier PNGs">
+              <div class="tier-card t1"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/coordinator-t1.png" alt="Simple circular Coordinator T1 concept PNG"></div><strong>T1 · 100%</strong></div>
+              <div class="tier-card t2"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/coordinator-t2.png" alt="Simple circular Coordinator T2 concept PNG"></div><strong>T2 · 125%</strong></div>
+              <div class="tier-card t3"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/coordinator-t3.png" alt="Simple circular Coordinator T3 concept PNG"></div><strong>T3 · 150%</strong></div>
+            </div>
+            <p class="concept-label">Simpler circular trio. The old orange triangular trio is rejected.</p>
           </div>
         </div>
         <div class="comment-box" data-review="coordinator"><div class="comment-head"><label for="comment-coordinator">Comment on Coordinator</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-coordinator" placeholder="Comment on Blink, Pack Feed, caps, or how the trait stops."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
@@ -639,22 +670,23 @@
 
   <section id="size" data-section-title="7. Size and tiers">
     <p class="kicker">Readability</p>
-    <h2>7. Make ordinary enemies larger, with a clear tier step</h2>
+    <h2>7. Grow ordinary enemies with integer percentages</h2>
     <div class="grid-3">
-      <div class="card"><h3>T1 · 52 px</h3><p class="muted">Larger than the current 48 px mobile visual radius. Keep the base family shape simple.</p></div>
-      <div class="card"><h3>T2 · 60 px</h3><p class="muted">Add one large family module or stronger broad plane. Do not add many small lights.</p></div>
-      <div class="card"><h3>T3 · 68 px</h3><p class="muted">Use the clearest silhouette and mass increase. Keep facing and trait state readable.</p></div>
+      <div class="card"><h3>T1 · 100%</h3><p class="muted">The family baseline visual size. Keep the base family shape simple.</p></div>
+      <div class="card"><h3>T2 · 125%</h3><p class="muted">Exactly 25% larger than that family's T1 visual. Add at most one large module.</p></div>
+      <div class="card"><h3>T3 · 150%</h3><p class="muted">Exactly 50% larger than T1. Keep facing and trait state readable.</p></div>
     </div>
-    <div class="note warn"><strong>Prototype numbers:</strong> 52 / 60 / 68 is still an approval item, not a final art rule. First separate visual size, projectile hit size, and body collision size. Do not make all three grow together by accident.</div>
+    <div class="note warn"><strong>Data rule:</strong> store the integer values <code>100</code>, <code>125</code>, and <code>150</code> as <code>size_percent</code>. Convert to a render scale only at the presentation boundary. Do not store absolute tier pixels.</div>
     <ul>
       <li>Tier changes size, health, and threat budget. It does not add a second active trait.</li>
       <li>Family shape must remain clear at T1, T2, and T3.</li>
-      <li>Bulwark's short growth state is separate from its normal tier size.</li>
+      <li>Visual scale, projectile-hit radius, and body collision remain separate owners.</li>
+      <li>Bulwark's short growth state is a separate timed percentage modifier, not T4.</li>
       <li>Test mixed 4–8 member packs at desktop and narrow Web sizes before art approval.</li>
     </ul>
     <div class="comment-box" data-review="size">
       <div class="comment-head"><label for="comment-size">Comment on size and tiers</label><span class="save-state" data-status>No saved comment</span></div>
-      <textarea id="comment-size" placeholder="Comment on 52 / 60 / 68, family offsets, or collision rules."></textarea>
+      <textarea id="comment-size" placeholder="Comment on 100 / 125 / 150, family offsets, or collision rules."></textarea>
       <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
     </div>
   </section>
@@ -666,7 +698,7 @@
       <table>
         <thead><tr><th>Step</th><th>Change</th><th>Proof</th><th>Stop if</th></tr></thead>
         <tbody>
-          <tr><td>1 · Data</td><td>Add family, tier, trait, and pack data. Separate visual and collision sizes.</td><td>Validators reject unknown families, more than two family traits, two active traits, or a Gunner without Defender.</td><td>Old actor IDs still control the new rules.</td></tr>
+          <tr><td>1 · Data</td><td>Add family, tier, trait, and pack data. Store integer <code>size_percent</code> values 100 / 125 / 150. Separate visual and collision size ownership.</td><td>Validators reject unknown families, invalid percentages, more than two family traits, two active traits, or a Gunner without Defender.</td><td>Old actor IDs or absolute tier pixels still control the new rules.</td></tr>
           <tr><td>2 · First pack</td><td>Build direct-fire Gunner + Defender as one complete pack.</td><td>No orphan Gunner, stable formation, clear firing and shield cues.</td><td>Actor count or threat budget grows.</td></tr>
           <tr><td>3 · Gunner traits</td><td>Add Artillery, then Slow.</td><td>Marked impact is fair; Slow does not stack; both packs include Defender.</td><td>The player cannot tell the projectile or impact type.</td></tr>
           <tr><td>4 · Defender traits</td><td>Add timed Bulwark growth and timed Reflector state.</td><td>Normal, large-shield, and reflection states are easy to tell apart.</td><td>Protection begins before its warning or hides the Gunner attack.</td></tr>
@@ -689,13 +721,14 @@
     <p class="kicker">Trust boundary</p>
     <h2>9. Evidence and limits</h2>
     <ul class="source-list">
+      <li><strong>Plan basis:</strong> <code>.agents/execplans/2026-08-20-ordinary-enemy-family-and-pack-restructure.md</code> at commit <code>21f0d3f9</code>. The plan was updated and committed before this report revision.</li>
       <li><strong>Current code:</strong> enemy archetypes, combat stages, boss add rosters, spawn allocation, collective tactic runtime, movement policy, specialist behavior, attack contracts, Guidebook data, visual catalog, assets, fixtures, and validators were traced in the earlier branch review.</li>
       <li><strong>Remote branch:</strong> <a href="https://github.com/simpleusername96/cardborne-platformer/pull/4">PR #4 · Simplify ordinary enemy pursuit</a>. Remote-tracking tip <code>bd9f72f7</code>; common base <code>4d6bb2dc</code>. Rechecked on 2026-08-20.</li>
       <li><strong>Performance method:</strong> <a href="https://docs.godotengine.org/en/4.7/tutorials/performance/general_optimization.html">Godot 4.7 general optimization</a> and <a href="https://docs.godotengine.org/en/4.7/tutorials/performance/cpu_optimization.html">Godot 4.7 CPU optimization</a>. These support measurement and shared invariant work. They do not prove that packs are faster.</li>
       <li><strong>Group AI references:</strong> <a href="https://gdcvault.com/play/1027237/AI-Summit-Squad-Coordination-in">GDC · Squad Coordination in Days Gone</a> and <a href="https://gdcvault.com/play/1013459/Three-States-and-a-Plan">GDC · Three States and a Plan: The AI of F.E.A.R.</a>. They support a group owner for shared space, roles, and state.</li>
       <li><strong>Readability reference:</strong> <a href="https://www.leagueoflegends.com/en-us/news/dev/clarity-in-league/">Riot · Clarity in League</a>. It supports distinct shapes, clear visual priority, and effects that match gameplay impact.</li>
       <li><strong>Visual authority:</strong> <code>docs/design/VISUAL_SYSTEM.md</code> SHA-256 <code>2e5cf7e3f156629bcbe956da0e6cb30f6d3b608d9c20122ec5285fa1562aa006</code>; universal style reference SHA-256 <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>. The hashes were unchanged for this revision.</li>
-      <li><strong>New concept PNGs:</strong> <code>enemy-tier-family-lineup.png</code> and <code>enemy-family-tier-trait-matrix.png</code>. They are embedded as concept evidence only. No new raster image was made.</li>
+      <li><strong>Tier PNG provenance:</strong> the 15 family images are exact, non-creative crops from <code>enemy-tier-family-lineup.png</code>, SHA-256 <code>47dc723c6349336725dece97e672d5a1c3949e17be355bce9e0b17895151fe18</code>. The crop operation also loaded and hash-checked the canonical visual reference. No silhouette, color, lighting, module, or effect was drawn or repaired.</li>
     </ul>
     <div class="note warn"><strong>Limits:</strong> this is a code, document, Git, and visual-reference report. It does not change game code. It does not prove that the pack design is more fun or faster. Those claims need a playable slice and a matching runtime baseline.</div>
     <div class="comment-box" data-review="evidence">
