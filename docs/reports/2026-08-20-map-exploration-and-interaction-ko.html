@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Cardborne의 맵 이동과 상호작용을 강화하기 위한 레퍼런스 기반 설계 제안">
+  <title>Cardborne 맵 탐사·상호작용 제안</title>
+  <style>
+    @font-face {
+      font-family: "Noto Sans KR";
+      src: url("../../art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    :root {
+      --space: #080d13;
+      --canvas: #101923;
+      --surface: #17232e;
+      --raised: #213140;
+      --line: #3c5062;
+      --text: #eef4f7;
+      --muted: #adbdc8;
+      --faint: #8193a0;
+      --support: #72d6c4;
+      --system: #58bfea;
+      --reward: #f2b735;
+      --danger: #f05a5f;
+      --max-width: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 82% -10%, rgba(88, 191, 234, 0.11), transparent 32rem),
+        var(--space);
+      color: var(--text);
+      font-family: "Noto Sans KR", system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.65;
+    }
+
+    a { color: #91dcf8; text-underline-offset: 0.2em; }
+    a:hover { color: var(--text); }
+    a:focus-visible { outline: 2px solid var(--system); outline-offset: 4px; }
+    code {
+      color: #bceafa;
+      font: 700 0.92em ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .page {
+      width: min(calc(100% - 40px), var(--max-width));
+      margin: 0 auto;
+      padding: 48px 0 80px;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--system);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3, .lead, .verdict {
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    h1 {
+      max-width: 880px;
+      margin-bottom: 18px;
+      font-size: clamp(36px, 5.2vw, 66px);
+      font-weight: 880;
+      letter-spacing: -0.045em;
+      line-height: 1.08;
+    }
+    h2 {
+      margin: 48px 0 18px;
+      font-size: clamp(26px, 3.2vw, 36px);
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    h3 {
+      margin-bottom: 8px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+    .lead {
+      max-width: 900px;
+      margin-bottom: 28px;
+      color: #d0dae1;
+      font-size: clamp(18px, 2.2vw, 23px);
+      line-height: 1.55;
+    }
+    .muted { color: var(--muted); }
+    .small { color: var(--faint); font-size: 13px; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+    .verdict,
+    .meta-card,
+    .card,
+    .flow,
+    .callout {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(23, 35, 46, 0.92);
+    }
+    .verdict {
+      padding: 24px;
+      border-left: 5px solid var(--support);
+      color: #dbe6eb;
+      font-size: 19px;
+    }
+    .verdict strong { color: var(--support); }
+    .meta-card {
+      display: grid;
+      gap: 15px;
+      padding: 22px;
+    }
+    .meta-card span {
+      display: block;
+      color: var(--faint);
+      font-size: 12px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    .meta-card strong { display: block; margin-top: 3px; font-size: 16px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .chip {
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #c9d5dc;
+      background: #111c25;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .chip.good { border-color: #407e75; color: #a9eadf; }
+    .chip.warn { border-color: #8b6d2d; color: #ffd983; }
+
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: 14px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { padding: 18px; }
+    .card p:last-child { margin-bottom: 0; }
+    .number {
+      display: inline-grid;
+      width: 29px;
+      height: 29px;
+      margin-bottom: 12px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--raised);
+      color: var(--support);
+      font-weight: 900;
+    }
+    .kicker {
+      margin-bottom: 6px;
+      color: var(--system);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .flow { padding: 18px; overflow: hidden; }
+    .flow-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      align-items: center;
+    }
+    .flow-row + .flow-row { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .flow-label { color: var(--faint); font-size: 12px; font-weight: 850; }
+    .flow-node {
+      position: relative;
+      min-height: 60px;
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #111c25;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .flow-node:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -16px;
+      z-index: 2;
+      color: var(--faint);
+    }
+    .flow-node.target { border-color: #468f83; color: #b6efe6; }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    table { width: 100%; min-width: 820px; border-collapse: collapse; }
+    th, td {
+      padding: 13px 14px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      color: var(--support);
+      background: var(--raised);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: 0; }
+    td:first-child { width: 18%; color: var(--text); font-weight: 820; }
+    td { color: #c4d0d8; }
+
+    .callout {
+      margin-top: 18px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--reward);
+    }
+    .callout strong { color: #ffdc85; }
+    .callout p:last-child { margin-bottom: 0; }
+    .guardrail { border-left-color: var(--danger); }
+    .guardrail strong { color: #ff989c; }
+
+    ol.compact,
+    ul.compact { margin: 0; padding-left: 1.25rem; color: #c7d3da; }
+    ol.compact li + li,
+    ul.compact li + li { margin-top: 7px; }
+    .source-list { counter-reset: source; }
+    .source {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .source:last-child { border-bottom: 0; }
+    .source::before {
+      counter-increment: source;
+      content: counter(source, decimal-leading-zero);
+      color: var(--faint);
+      font: 800 12px/1.8 ui-monospace, Consolas, monospace;
+    }
+    .source p { margin: 3px 0 0; color: var(--muted); font-size: 14px; }
+
+    footer {
+      margin-top: 52px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--faint);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      .hero-grid,
+      .grid-2,
+      .grid-3 { grid-template-columns: 1fr; }
+      .flow-row { grid-template-columns: 1fr; }
+      .flow-label { margin-top: 4px; }
+      .flow-node:not(:last-child)::after {
+        content: "↓";
+        right: auto;
+        bottom: -18px;
+      }
+    }
+    @media (max-width: 560px) {
+      .page { width: min(calc(100% - 28px), var(--max-width)); padding-top: 30px; }
+      h1 { font-size: 36px; }
+      h2 { margin-top: 40px; }
+      .verdict, .meta-card, .card { padding: 16px; }
+      body { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <p class="eyebrow">Cardborne · Design Research Brief · 2026-08-20</p>
+      <h1>맵을 “지나가는 공간”에서<br>“선택하는 전장”으로</h1>
+      <p class="lead">중립시설, 픽업, 전이문을 한 탐사 회로로 묶고, 이동의 보상을 전투로 대체할 수 없는 <strong>1회 진화 선택</strong>으로 바꾸는 제안입니다.</p>
+
+      <div class="hero-grid">
+        <div class="verdict">
+          <strong>결론:</strong> 보석 N개 수집은 가능하지만, 새 XP처럼 만들면 다시 외면받습니다. 한 런에 흩어진 세 종류의 탐사 신호 중 <strong>아무 두 개</strong>를 해결하면 다음 보스 보상에서 보유 카드 하나를 진화시키는 <strong>2/3 탐사 회로</strong>가 더 적합합니다.
+          <div class="chips">
+            <span class="chip good">기존 맵 재사용</span>
+            <span class="chip good">새 상호작용 키 불필요</span>
+            <span class="chip good">강제 완주 방지</span>
+            <span class="chip warn">진화 콘텐츠는 소수부터</span>
+          </div>
+        </div>
+        <aside class="meta-card" aria-label="보고서 범위">
+          <div><span>판단 기준</span><strong>이동 유도 · 첫눈 가독성 · 전투 유지</strong></div>
+          <div><span>보존 조건</span><strong>수동 조준 · 연속 전장 · 할당량 보스</strong></div>
+          <div><span>우선 실험</span><strong>2/3 탐사 회로 + 진화 1회</strong></div>
+        </aside>
+      </div>
+    </header>
+
+    <section>
+      <h2>1. 왜 지금 시설이 잘 안 쓰이는가</h2>
+      <div class="grid-3">
+        <article class="card">
+          <span class="number">1</span>
+          <h3>보상이 국소적이고 짧다</h3>
+          <p class="muted">시설은 360 체력을 깎아야 켜지고, 효과는 12초 뒤 사라집니다. 이동 비용과 사격 시간을 써도 런 전체에 남는 결과가 없습니다.</p>
+        </article>
+        <article class="card">
+          <span class="number">2</span>
+          <h3>대체재가 너무 강하다</h3>
+          <p class="muted">맵 XP 조각은 적 처치 XP로 대체됩니다. 경험치 회수도 이미 흩어진 XP를 당겨올 뿐, 특정 장소를 찾아갈 고유 이유가 되기 어렵습니다.</p>
+        </article>
+        <article class="card">
+          <span class="number">3</span>
+          <h3>목적지를 미리 약속하지 않는다</h3>
+          <p class="muted">20×12 탐사 미니맵은 방문 전 지형을 숨기고, 화면에는 직접 아이템 하나와 휴면 시설 하나만 게시됩니다. 우회 전에 얻을 가치가 충분히 보이지 않습니다.</p>
+        </article>
+      </div>
+
+      <div class="callout">
+        <p><strong>진단:</strong> 현재 루프는 <em>발견 → 비용 지불 → 임시 효과</em>에서 끝납니다. 필요한 것은 <em>신호 → 이동 → 서로 다른 행동 → 누적 상태 → 영구적인 런 변화</em>입니다.</p>
+      </div>
+      <p class="small">로컬 근거: 7200×4320 고정 필드, 시설 6개, 경험치 회수 4개, 맵 XP 10개, 시설 효과 12초. <code>vehicle_game_spec.md</code>의 한 문단에는 시설 3개라는 오래된 문장이 남아 있으나, 뒤의 시설 계약·런타임·검증기는 6개로 일치합니다. 구현 전에 이 문서 불일치를 정리해야 합니다.</p>
+    </section>
+
+    <section>
+      <h2>2. 제안 루프: 2/3 탐사 회로</h2>
+      <div class="flow" role="img" aria-label="현재 루프와 제안 루프 비교">
+        <div class="flow-row">
+          <div class="flow-label">현재</div>
+          <div class="flow-node">우연히 발견</div>
+          <div class="flow-node">시설에 사격</div>
+          <div class="flow-node">12초 효과</div>
+          <div class="flow-node">종료</div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-label">제안</div>
+          <div class="flow-node target">세 종류 신호</div>
+          <div class="flow-node target">경로 선택</div>
+          <div class="flow-node target">아무 2개 해결</div>
+          <div class="flow-node target">다음 보스 보상에서 진화</div>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top:14px">
+        <article class="card">
+          <p class="kicker">신호 A · 회수</p>
+          <h3>진화 코어</h3>
+          <p class="muted">멀리 떨어진 한 섹터의 직접 픽업입니다. 접촉만 하면 완료됩니다. 적이 떨어뜨리지 않으므로 처치 XP와 역할이 겹치지 않습니다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">신호 B · 전투</p>
+          <h3>중립시설 기동</h3>
+          <p class="muted">기존 시설 하나를 파괴해 12초 효과를 켜면 완료됩니다. 시설은 진화의 필수 관문이 아니라 세 선택지 중 하나가 됩니다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">신호 C · 이동</p>
+          <h3>전이 릴레이</h3>
+          <p class="muted">지정된 Transit Gate를 통과해 반대편 릴레이에 닿으면 완료됩니다. 이미 있는 이동 장치를 실제 경로 결정에 사용합니다.</p>
+        </article>
+      </div>
+
+      <div class="grid-2" style="margin-top:14px">
+        <article class="card">
+          <h3>표시 규칙</h3>
+          <ul class="compact">
+            <li>미니맵에는 정확한 점이 아니라 <strong>종류와 대략적 섹터</strong>를 먼저 표시합니다.</li>
+            <li>해당 섹터를 탐사하면 정확한 위치를 확정합니다.</li>
+            <li>HUD는 <code>탐사 회로 1/2</code> 한 줄만 유지합니다.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>보상 규칙</h3>
+          <ul class="compact">
+            <li>두 번째 신호 완료 즉시 전투를 멈추거나 모달을 열지 않습니다.</li>
+            <li><strong>다음 보스 보상</strong>에 보유·적격 카드의 진화 선택을 한 번 추가합니다.</li>
+            <li>남은 신호는 강조만 꺼지고, 원래 시설·픽업·전이문 기능은 유지합니다.</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="callout guardrail">
+        <p><strong>중요:</strong> 처음부터 27개 카드 전부에 진화를 만들지 않습니다. 이동 행동이 실제로 달라지는지 먼저 가짜 보상 또는 소수의 적격 카드로 검증하고, 성공한 뒤 진화 콘텐츠를 확장합니다.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. 보석 N개만 놓는 안이 실패하는 조건</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>실패 조건</th><th>왜 문제인가</th><th>보정 규칙</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>적도 같은 보석을 드롭</td><td>플레이어는 맵보다 적 밀집 지역을 돕니다.</td><td>진화 코어는 맵 고정 출처로만 제공합니다.</td></tr>
+            <tr><td>정확한 위치를 처음부터 공개</td><td>탐사는 사라지고 최단 경로 체크리스트가 됩니다.</td><td>종류와 섹터만 예고하고, 근접 탐사로 위치를 확정합니다.</td></tr>
+            <tr><td>모두 모아야만 보상</td><td>마지막 하나가 지루한 맵 청소가 됩니다.</td><td>세 활동 중 아무 두 개로 완료합니다.</td></tr>
+            <tr><td>즉시 진화 모달</td><td>위험한 전투 중 입력 흐름이 끊깁니다.</td><td>다음 보스 보상까지 선택을 예약합니다.</td></tr>
+            <tr><td>단순 수치 +10%</td><td>경로 선택의 기억이 남지 않습니다.</td><td>행동이 바뀌는 진화만 사용하고, 첫 실험은 소수 카드로 제한합니다.</td></tr>
+            <tr><td>매 스테이지 반복</td><td>12단계에서 탐사가 의무 노동으로 바뀝니다.</td><td>한 런 1회로 시작하고 실제 행동 데이터를 본 뒤 확장합니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. 구조가 다른 아이디어 포트폴리오</h2>
+      <p class="muted">아래 후보는 표현만 바꾼 변형이 아니라 보상 단위, 행동, 위험, 경로 구조가 서로 다른 안입니다. 우선순위 판단 전의 전체 후보를 보존합니다.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>후보</th><th>핵심 메커니즘</th><th>얻는 것</th><th>주요 위험·검증점</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>진화 코어 N개</td><td>멀리 떨어진 고정 코어를 접촉 수집</td><td>명확한 수집 목표와 영구 성장</td><td>XP와 구분하지 못하면 단순 청소가 됨</td></tr>
+            <tr><td>시설 양자택일</td><td>시설을 사격해 12초 효과를 켜거나, 접촉 유지로 진화 재료를 회수</td><td>즉시 전술 효과와 장기 성장 사이의 선택</td><td>새 상호작용 문법이 첫눈에 읽혀야 함</td></tr>
+            <tr><td>보상 예고 갈림길</td><td>서로 먼 두 목적지의 보상 종류를 먼저 공개하고, 하나를 얻으면 다른 하나는 닫힘</td><td>빌드에 따른 경로 선택</td><td>되돌아가 확인하는 낭비를 막아야 함</td></tr>
+            <tr><td>2/3 탐사 회로</td><td>회수·시설·전이문 중 아무 두 활동으로 회로 완성</td><td>다양한 행동과 선택적 완주</td><td>세 활동의 시간 비용이 지나치게 다르면 고정 답이 생김</td></tr>
+            <tr><td>불안정 코어 운반</td><td>코어를 얻은 뒤 Transit Gate 릴레이까지 운반; 피격 시 충전 일부 손실</td><td>가는 길과 돌아오는 길 모두에 긴장</td><td>피격 손실이 억울하거나 이동을 느리게 만들 수 있음</td></tr>
+            <tr><td>시설 과부하 계약</td><td>시설이 짧은 강화 적 전투를 만들고, 버티면 진화 조각 지급</td><td>명시적 위험 대 보상</td><td>기존 일반 적 할당량·스폰 압력과 이중 계산 금지</td></tr>
+            <tr><td>신호 연쇄</td><td>한 신호를 스캔하면 다음 신호의 섹터가 드러나는 3단 경로</td><td>자연스러운 탐사 방향과 연속 발견</td><td>매 런 같은 순서로 느껴지지 않게 경로 조합 필요</td></tr>
+            <tr><td>위험 유적</td><td>위험 등급만 보이는 지점을 열고, 두 해결안 중 하나를 제한 시간 안에 실행</td><td>장소마다 다른 사건과 선택</td><td>콘텐츠 제작량이 크고 전투 가독성을 침범할 수 있음</td></tr>
+            <tr><td>정찰 비콘</td><td>맵 지점을 스캔하면 다음 보스의 규칙·약점 또는 미발견 경로 단서를 기록</td><td>전투력이 아닌 지식 보상</td><td>재도전에서 정보 가치가 급감할 수 있음</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:22px">우선 살펴볼 세 방향 <span class="small">— 명시적 기준에 따른 잠정 판단</span></h3>
+      <div class="grid-3">
+        <article class="card">
+          <p class="kicker">기본 실험</p>
+          <h3>2/3 탐사 회로</h3>
+          <p class="muted">기존 시설·전이문·픽업을 모두 재사용하면서 강제 완주를 피합니다. 이동과 상호작용이 실제로 늘어나는지 가장 작은 범위에서 볼 수 있습니다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">가장 싼 대안</p>
+          <h3>진화 코어 N개</h3>
+          <p class="muted">빠르게 검증할 수 있지만 시설 문제를 직접 해결하지 않습니다. 탐사 가치만 먼저 확인할 때 적합합니다.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">시스템 확장안</p>
+          <h3>시설 양자택일</h3>
+          <p class="muted">시설을 가장 깊게 살리지만 새 상호작용 상태와 표현이 필요합니다. 기본 회로가 검증된 뒤의 두 번째 단계가 안전합니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. 레퍼런스에서 가져올 구조, 버릴 표면</h2>
+      <div class="source-list card">
+        <div class="source">
+          <div><a href="https://vampire-survivors.fandom.com/wiki/Weapons">Vampire Survivors — Weapon Evolution</a><p>최대 레벨 무기, 대응 패시브, 보스 상자를 결합해 진화를 확정합니다. <strong>전이:</strong> 진화는 원석 개수 하나가 아니라 빌드 조건과 월드 획득의 결합점이어야 합니다.</p></div>
+        </div>
+        <div class="source">
+          <div><a href="https://hades.fandom.com/wiki/Chambers_and_Encounters">Hades — Chambers &amp; Encounters</a><p>입구에서 다음 방의 보상 종류를 보여준 뒤 경로를 선택하게 합니다. <strong>전이:</strong> 우회하기 전에 보상 종류를 알리고 정확한 위치만 탐사로 남깁니다.</p></div>
+        </div>
+        <div class="source">
+          <div><a href="https://riskofrain2.wiki.gg/wiki/Shrine_of_the_Mountain">Risk of Rain 2 — Shrine of the Mountain</a><p>플레이어가 보상을 위해 Teleporter Event의 보스 위험을 스스로 높입니다. <strong>전이:</strong> 시설 상호작용은 무료 보너스보다 명확한 위험·대가가 있을 때 선택이 됩니다.</p></div>
+        </div>
+        <div class="source">
+          <div><a href="https://blog.playstation.com/2023/11/30/unravel-the-gameplay-loop-of-pacific-drive-launching-on-ps5-feb-22/">Pacific Drive — Anchors &amp; Exit</a><p>Anchor 에너지는 업그레이드와 탈출을 가능하게 하고, 충분히 모아 출구를 고르면 폭풍 추격이 시작됩니다. <strong>전이:</strong> 임계치 달성은 숫자 완료가 아니라 다음 상태와 행동을 열어야 합니다.</p></div>
+        </div>
+        <div class="source">
+          <div><a href="https://store.steampowered.com/app/1637320/Dome_Keeper/">Dome Keeper — Explore / Return / Defend</a><p>공격 사이에 더 깊이 탐사할지 기지로 돌아갈지 선택하고, 자원을 운반해 업그레이드합니다. <strong>전이:</strong> 이동에는 되돌아올 이유와 시간 압력이 필요합니다. 단, Cardborne의 연속 전투는 끊지 않습니다.</p></div>
+        </div>
+        <div class="source">
+          <div><a href="https://deeprockgalactic.wiki.gg/wiki/How_to_Play_Guide_for_Deep_Rock_Galactic">Deep Rock Galactic — Secondary Objectives</a><p>주 목표와 별개인 수집 목표가 동굴 탐사를 선택적으로 확장합니다. <strong>전이:</strong> 탐사 보상은 강하지만 런 완료의 필수 조건이 아니어야 합니다.</p></div>
+        </div>
+        <div class="source">
+          <div><a href="https://wiki.hoodedhorse.com/Against_the_Storm/Glades">Against the Storm — Glade Events</a><p>위험 등급을 먼저 보여주고, 발견 후 요구 자원·보상·시간 제한이 다른 해결안을 제공합니다. <strong>전이:</strong> 위험의 종류는 사전에 알리고 세부 결과만 현장에서 드러냅니다.</p></div>
+        </div>
+        <div class="source">
+          <div><a href="https://news.xbox.com/en-us/2019/05/30/outer-wilds-available-today-xbox-game-pass/">Outer Wilds — Curiosity &amp; Ship Log</a><p>발견한 지식과 기록이 다음 탐사 방향을 만듭니다. <strong>전이:</strong> 모든 장소가 전투력을 줄 필요는 없으며, 좋은 단서도 다음 목적지가 될 수 있습니다.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>6. 가장 작은 검증 순서</h2>
+      <div class="grid-3">
+        <article class="card">
+          <span class="number">1</span>
+          <h3>기준선 기록</h3>
+          <p class="muted">런당 시설 발견·기동 수, 첫 맵 상호작용까지의 시간, 방문한 미니맵 섹터 수, 이동 중 3초 이상 전투 공백을 기록합니다.</p>
+        </article>
+        <article class="card">
+          <span class="number">2</span>
+          <h3>보상 없이 회로 검증</h3>
+          <p class="muted">세 신호와 2/3 진행만 넣고, 완료 보상은 임시 토큰으로 둡니다. 플레이어가 실제로 경로를 바꾸는지 먼저 봅니다.</p>
+        </article>
+        <article class="card">
+          <span class="number">3</span>
+          <h3>진화 하나 연결</h3>
+          <p class="muted">검증된 회로에 적격 카드 소수의 진화만 연결합니다. 진화 때문에 움직인 것인지, 신호 자체가 재미있는지 분리해 확인합니다.</p>
+        </article>
+      </div>
+
+      <div class="callout">
+        <p><strong>성공 신호:</strong> 플레이어가 적 추격만 따라다니지 않고 서로 다른 섹터를 방문하며, 시설 기동률이 오르고, 탐사 중 전투 가독성·보스 도달 시간·사망률이 악화되지 않습니다.</p>
+        <p><strong>중단 신호:</strong> 항상 같은 두 활동만 고르거나, 정확한 위치를 외운 뒤 탐사가 최단 경로 반복으로 굳거나, 세 번째 신호가 불필요한 화면 소음이 됩니다.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>최종 제안</h2>
+      <div class="verdict">
+        <strong>“보석을 더 놓자”가 아니라 “맵 행동 두 개가 진화를 예약한다”로 정의하십시오.</strong><br>
+        첫 버전은 회수 코어·중립시설·전이 릴레이의 <strong>2/3 회로</strong>, 한 런 <strong>진화 1회</strong>, 다음 보스 보상에서 선택으로 제한합니다. 이 구조가 이동을 만들지 못하면 새 시설이나 아이템 종류를 더 늘리지 말고, 신호·경로·대가부터 다시 조정하는 편이 맞습니다.
+      </div>
+    </section>
+
+    <footer>
+      <p>로컬 검토: <a href="../product/vehicle_game_spec.md">제품 사양</a> · <a href="../../scripts/vehicle/vehicle_field_layout_generator.gd">필드 배치</a> · <a href="../../scripts/vehicle/vehicle_mystery_device_runtime.gd">중립시설 런타임</a> · <a href="../../scripts/vehicle/vehicle_run.gd">런 진행·픽업</a> · <a href="../../tools/validation/validate_vehicle_field_layout_generation.gd">필드 검증기</a></p>
+      <p>성격: 구현 결정 전 탐사 시스템 연구 보고서. 후보 우선순위는 로컬 제약과 공개 메커니즘을 바탕으로 한 잠정 판단이며, 실제 플레이 데이터로 교체해야 합니다.</p>
+    </footer>
+  </main>
+</body>
+</html>
