@@ -5,9 +5,10 @@ owner: BK
 created: 2026-08-20
 last_reviewed: 2026-08-20
 topic: Ordinary-enemy family, trait, pack, and remote pursuit-branch restructuring
-scope: Research and decision checklist for replacing fragmented ordinary-enemy IDs with nine readable families, two traits per family, and pack-owned coordination
+scope: Research and decision checklist for replacing fragmented ordinary-enemy IDs with five readable families, two traits per family, and pack-owned coordination
 related:
   - ../../docs/reports/2026-08-20-ordinary-enemy-branch-and-restructure-review-ko.html
+  - ../../docs/reports/2026-08-20-ordinary-enemy-five-family-revision-en.html
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
   - ../cardborne-performance-engineering-policy.md
@@ -24,7 +25,7 @@ before implementation can be safely authorized.
 
 Prepare a merge-safe ordinary-enemy restructure that:
 
-- keeps the nine-family taxonomy as the player-facing vocabulary;
+- replaces the earlier nine-family proposal with five player-facing families;
 - limits the initial active pool to two family-exclusive traits per family;
 - makes every ordinary enemy a member of a persistent pack;
 - guarantees at least one Defender in every pack containing a long-range ordinary enemy;
@@ -47,8 +48,18 @@ Prepare a merge-safe ordinary-enemy restructure that:
   receive Armored or Heavy behavior that belongs to Defender/durability space.
 - Coordinator keeps Blink in the initial pair.
 - Long-range ordinary enemies never spawn without a Defender in the same pack.
-- Existing user PNGs and current production PNGs may illustrate the report. Concept images
-  are evidence only and are not approved production assets.
+- User-provided concept PNGs may illustrate the revision report. Concept images are evidence
+  only and are not approved production assets.
+- The revision report uses the newer user-provided concept sheets only. It does not use the
+  current production ordinary-enemy PNGs as family examples.
+- Controller and Sustainer are removed from the ordinary-enemy family set.
+- Bomber is removed as a family. Self-Destruct replaces Overload as one Charger trait.
+- Gunner and Artillery are one Gunner family. Its two traits are Artillery and Slow.
+- Defender Bulwark periodically grows and projects a large shield over nearby enemies.
+- Defender Reflector normally uses a standard shield and reflects only during a periodic,
+  clearly warned active window.
+- Every Gunner pack includes a Defender, including packs whose Gunner has the Artillery
+  trait.
 
 ## Verified local evidence
 
@@ -94,6 +105,11 @@ presentation descriptors, semantic assets, combat branches, fixtures, or validat
   stacks when nearby enemies die. The current behavior buffs only itself and does not heal
   or buff surviving pack members.
 
+Decision update: this evidence does not justify a Controller family. Remove the Controller
+label and its dedicated actor IDs. Reuse only generic impact or warning primitives when an
+approved Gunner Artillery attack needs them. Sustainer is also removed; ordinary repair
+actors and their unused prototypes do not survive as a separate family.
+
 ### Existing pack boundary
 
 - Every scheduled squad already receives `group_id`, `squad_id`, `squad_leader`,
@@ -124,7 +140,7 @@ PR: `#4 Simplify ordinary enemy pursuit`
 
 Base: `origin/master` at `4d6bb2dc`
 
-The branch is three commits ahead of its base. Local `master` is four commits ahead of the
+The branch is three commits ahead of its base. Local `master` is five commits ahead of the
 same base. A merge-tree inspection against local `master` found no conflict markers, and
 GitHub reports the PR as mechanically mergeable. The PR is still a draft and its merge
 state is `UNSTABLE`.
@@ -163,29 +179,49 @@ Reject or rewrite these branch parts:
   product decision; and
 - compatibility constants survive while their live meaning is removed.
 
-## Proposed family contract
+## Approved five-family contract
 
-Each pack has one primary family, one tier, and at most one active trait. Required support
-slots such as Defender use their base family behavior and do not add a second visible
-trait. A Coordinator-primary pack may apply its trait to the whole pack.
+Each pack has one primary family, one tier, and at most one active trait. A required
+Defender slot uses base Defender behavior unless the authored pack explicitly assigns one
+of the two Defender traits. A Coordinator-primary pack may apply its trait to the whole
+pack.
 
 | # | Family | Core response | Initial active traits | Current behavior seeds |
 | --- | --- | --- | --- | --- |
 | 01 | Pursuer | Maintain movement and escape space | Splitter, Frenzy | `melee_01`, `pulse_01` |
-| 02 | Charger | Read the locked lane, dodge sideways, punish recovery | Overload, Double | `edge_01`, `pull_01`, `overload_01` |
-| 03 | Bomber | Clear the fuse radius before detonation | Chain, Delayed | mobile `area_01` minelet |
-| 04 | Gunner | Read the firing direction and break the lane | Burst, Piercing | `ranged_01`, `lane_01`, `range_01`, `beam_01` |
-| 05 | Artillery | Leave the marked impact area and reach the backline | Cluster Shell, Lingering | `growth_01`, ground-burst primitives |
-| 06 | Controller | Find or create a safe corridor | Compression, Sweep | `compression_01`; `sweep_01` denial zones |
-| 07 | Defender | Change firing angle and target order | Bulwark, Reflector | `shield_01`, `reflect_01`, `support_02` prototype |
-| 08 | Sustainer | Break repair links before attrition compounds | Repair Beam, Pulse Repair | `support_01`, fixed-support prototype |
-| 09 | Coordinator | Break the pack-level tactic source | Blink, 몰아주기 | collective runtime; `support_03`/`melee_02` prototypes |
+| 02 | Charger | Read the locked lane, dodge sideways, then clear the fuse area when needed | Double, Self-Destruct | `edge_01`, `pull_01`; mobile `area_01` explosion seed |
+| 03 | Gunner | Break direct fire lanes or leave a marked impact area | Artillery, Slow | `ranged_01`, `lane_01`, `range_01`, `beam_01`, `growth_01`, ground-burst primitives |
+| 04 | Defender | Change firing angle and target order | Bulwark, Reflector | `shield_01`, `reflect_01`, `support_02` prototype |
+| 05 | Coordinator | Break the pack-level tactic source | Blink, 몰아주기 | collective runtime; `support_03`/`melee_02` prototypes |
 
-The initial pair is an implementation cap, not a promise that both ship immediately.
+The initial pair is an implementation cap, not a promise that both traits ship in one
+slice. Controller, Sustainer, and Bomber are not future launch families. Separate
+Artillery is also removed; Artillery is a Gunner trait.
+
+### Trait behavior contract
+
+- Charger / Double: execute a readable second charge after the first recovery window.
+- Charger / Self-Destruct: replace Overload. After a normal charge ends, show a short fuse,
+  then explode and retire the Charger. A kill before fuse commitment prevents the
+  explosion unless playtesting proves that counter too easy.
+- Gunner / Artillery: replace direct fire with a clearly marked lobbed or ground-impact
+  shot. It remains a Gunner and therefore still requires a Defender in its pack.
+- Gunner / Slow: a hit applies one bounded slow. Later hits refresh the same effect instead
+  of stacking it into a movement lock. The projectile needs a distinct warning color or
+  trail before this trait can ship.
+- Defender / Bulwark: on an `M`-second cadence, the Defender visibly grows for `N` seconds
+  and projects a larger shield that also protects nearby pack members. The growth and
+  shield boundary must be readable before protection starts.
+- Defender / Reflector: the normal state is a standard shield. On an `M`-second cadence, a
+  warned `N`-second window changes it into a reflective shield. Reflection is never always
+  active.
+- Coordinator / Blink: relocate the pack only after a warning and collision-safe
+  destination check.
+- Coordinator / 몰아주기: an eligible pack-member death heals and strengthens the
+  survivors within a strict cap. Coordinator death stops future gains.
+
 Invisible and Shrink remain future experiments because they weaken silhouette and hitbox
-readability. Like Rock is not a Coordinator trait because extreme defense and slow movement
-duplicate Defender and the current Armored/Heavy space. It may be reconsidered only as a
-future Defender stance with explicit telegraph and collision rules.
+readability. Like Rock remains excluded because it duplicates Defender's defense space.
 
 ## Tier and size proposal
 
@@ -206,7 +242,7 @@ These are prototype targets, not current visual authority. Before implementation
 - update `docs/design/VISUAL_SYSTEM.md` only after the rendered comparison is approved.
 
 Defender may use a larger family offset after the common tier step is validated. Do not
-start with nine unrelated size curves.
+start with separate size curves for every family.
 
 ## Pack composition contract
 
@@ -222,8 +258,8 @@ start with nine unrelated size curves.
 
 ### Long-range Defender invariant
 
-- Any pack containing Gunner, Artillery, or a long-range Controller contains at least one
-  Defender.
+- Every pack containing a Gunner contains at least one Defender. This includes direct-fire,
+  Artillery-trait, and Slow-trait Gunners without exception.
 - A pack with more than four long-range members requires a second Defender unless playtest
   evidence approves another ratio.
 - The allocator consumes an authored pack blueprint. It must not rebuild all packet roles
@@ -251,17 +287,22 @@ No production enemy file is deleted during research. Use this order during imple
 
 | Current item | Reachability | Target | Deletion condition |
 | --- | --- | --- | --- |
-| `ordinary_support_02` | Unreachable | Reuse behavior/art as Defender escort seed | New Defender family and pack invariant pass |
-| `ordinary_support_03` | Unreachable | Reuse visual/ carrier ideas only if Coordinator needs an actor | Coordinator decision and migration complete |
-| `ordinary_melee_02` | Unreachable | Move bounded death-stack primitive into 몰아주기 pack state | Pack trait tests replace actor tests |
-| `ordinary_fixed_ranged_01` | Unreachable | Remove or move to a future installation catalog | Guidebook, combat, visual, fixture, and asset consumers removed |
-| `ordinary_fixed_area_01` archetype | Unreachable directly | Split reachable mobile mine behavior from fixed deployment | `ordinary_area_01` no longer depends on the fixed role name |
-| `ordinary_fixed_ranged_02` | Unreachable | Remove or move to future installation catalog | Interceptor branches and fixtures retired or relocated |
-| `ordinary_fixed_support_01` | Unreachable | Retain repair primitive only if Sustainer uses it | Support/shield branches migrated |
-| `ordinary_compression_01` | Reachable alias | Controller Compression trait | Stage 9–12 roster and Guidebook migrate to family/tier/trait data |
-| `ordinary_reflect_01` | Reachable alias | Defender Reflector trait | Stage 10–12 roster and reflection tests migrate |
-| `ordinary_resonance_01` | Reachable alias | Future Gunner candidate or delete | Two-trait decision remains fixed and stage roster has replacement |
-| `ordinary_overload_01` | Reachable alias | Charger Overload trait | Stage 12 roster and vulnerability logic migrate |
+| `ordinary_gap_01` | Reachable | Delete with Controller family | Stage roster and Guidebook use a five-family replacement |
+| `ordinary_compression_01` | Reachable alias | Delete with Controller family | Corridor code and all presentation/test consumers are removed or explicitly reused by an approved Gunner attack |
+| `ordinary_sweep_01` | Reachable | Delete Controller-style actor ID; reuse only generic ground-impact code for Gunner Artillery | Stage roster and Guidebook migrate to Gunner family data |
+| `ordinary_support_01` | Campaign-reachable in boss add rosters | Delete with Sustainer family | Boss add rosters and support branches use an approved five-family replacement |
+| `ordinary_support_02` | Unreachable | Migrate only the useful shield primitive to Defender, then delete | Defender Bulwark tests replace prototype tests |
+| `ordinary_fixed_support_01` | Unreachable | Delete with Sustainer family | Repair/support branches, fixtures, Guidebook, and assets have no remaining consumers |
+| `ordinary_support_03` | Unreachable | Delete the carrier actor; keep coordination in pack state | Coordinator pack tests no longer depend on carrier spawning |
+| `ordinary_melee_02` | Unreachable | Move bounded death-stack primitive into 몰아주기 pack state, then delete | Pack trait tests replace actor tests |
+| `ordinary_area_01` | Reachable | Move the readable fuse/explosion into Charger Self-Destruct, then delete the Bomber-style actor ID | Charger trait and stage migration pass |
+| `ordinary_fixed_area_01` archetype | Unreachable directly | Remove after `ordinary_area_01` no longer depends on its role name | Area-role consumers are migrated or deleted |
+| `ordinary_growth_01` | Reachable | Move marked impact behavior into Gunner Artillery, then delete the separate Artillery actor ID | Gunner Artillery tests and stage migration pass |
+| `ordinary_reflect_01` | Reachable alias | Convert to periodic Defender Reflector state, then delete the alias ID | Stage roster and reflection tests use family/trait data |
+| `ordinary_resonance_01` | Reachable alias | Delete under the two-trait Gunner cap | Stage roster has a Gunner Artillery or Slow replacement |
+| `ordinary_overload_01` | Reachable alias | Delete; Self-Destruct replaces Overload | Stage 12 roster and vulnerability logic migrate |
+| `ordinary_fixed_ranged_01` | Unreachable | Delete from ordinary-enemy code unless a later installation expansion explicitly adopts it | Guidebook, combat, visual, fixture, and asset consumers removed |
+| `ordinary_fixed_ranged_02` | Unreachable | Delete from ordinary-enemy code unless a later installation expansion explicitly adopts it | Interceptor branches and fixtures retired or relocated |
 | global `armored`, `overclocked`, `heavy` | Reachable elite system | Replace with family-owned two-trait pools | Guidebook, thresholds, visuals, and deterministic selection migrate |
 
 When an ID is retired, remove or update all of its archetype data, stage/boss references,
@@ -338,16 +379,17 @@ Before claiming improvement:
 
 ## Open product decisions
 
-- [ ] Approve or revise the two-trait family table.
-- [ ] Confirm that Coordinator uses Blink + 몰아주기 for the first implementation.
-- [ ] Confirm that Invisible and Shrink are future-only, and Like Rock is excluded from
+- [x] Approve the revised five-family, two-trait table.
+- [x] Confirm that Coordinator uses Blink + 몰아주기 for the first implementation.
+- [x] Confirm that Invisible and Shrink are future-only, and Like Rock is excluded from
   Coordinator.
 - [ ] Confirm the common 52 / 60 / 68 prototype size ladder before visual production.
-- [ ] Decide whether the four unreachable fixed installations are deleted or retained in a
-  separate future-expansion catalog.
+- [x] Delete the four unreachable fixed installations from ordinary-enemy code after their
+  consumers are audited. A later tower-defense expansion must define new installation data
+  instead of preserving inactive ordinary-enemy IDs.
 - [ ] Decide whether `ordinary_fixed_beam_01` remains an ordinary enemy with a mandatory
   Defender or becomes a boss-owned pattern object.
-- [ ] Approve replacing a filler slot with Defender so pack admission does not increase
+- [x] Approve replacing a filler slot with Defender so pack admission does not increase
   authored counts or threat budget.
 
 ## Implementation workstreams after approval
@@ -369,7 +411,14 @@ Before claiming improvement:
 
 ### C. Implement the first family slice
 
-- [ ] Implement one long-range Gunner pack with one Defender.
+- [ ] Implement one Gunner pack with one Defender and verify the invariant for direct-fire,
+  Artillery, and Slow variants.
+- [ ] Implement Artillery as a Gunner trait and migrate the approved marked-impact
+  primitives from `ordinary_growth_01` or `ordinary_sweep_01` without retaining a separate
+  Artillery family.
+- [ ] Implement Slow as a non-stacking, bounded on-hit state with a distinct projectile cue.
+- [ ] Implement periodic Bulwark growth/shared protection and periodic Reflector activation
+  over a normal shield baseline.
 - [ ] Adapt current-position anchor movement, blocked-route guidance, separation,
   smoothing, and speed caps from the remote branch.
 - [ ] Verify attack prediction, standoff room, telegraphs, collision, and pack break rules.
@@ -383,8 +432,14 @@ Before claiming improvement:
 
 ### E. Migrate and retire old IDs
 
-- [ ] Convert Compression, Reflect, and Overload aliases to family traits.
-- [ ] Replace or retire Resonance under the two-trait cap.
+- [ ] Remove Controller and Sustainer family IDs and migrate only approved generic attack or
+  shield primitives.
+- [ ] Move the Bomber fuse/explosion into Charger Self-Destruct, delete the Bomber-style
+  actor ID, and remove Overload.
+- [ ] Merge Artillery into Gunner and retire separate Artillery actor IDs after stage and
+  Guidebook migration.
+- [ ] Convert Reflect into the periodic Defender Reflector trait and retire its alias ID.
+- [ ] Retire Resonance under the two-trait Gunner cap.
 - [ ] Migrate useful unreachable prototypes, then remove their old IDs and all consumers.
 - [ ] Replace the global elite catalog and Guidebook entries with family-owned traits.
 

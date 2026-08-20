@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="An easy-English Cardborne report that reduces ordinary enemies to five families, defines two traits per family, reviews the remote pursuit branch, and lists safe code migration and deletion work.">
+  <title>Cardborne Ordinary Enemies — Five-Family Revision</title>
+  <style>
+    @font-face {
+      font-family: "Noto Sans KR";
+      src: url("../../art/visuals/production/ui/fonts/NotoSansKR-Variable.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    :root {
+      --space: #080d13;
+      --canvas: #101923;
+      --surface: #17232e;
+      --raised: #213140;
+      --line: #3c5062;
+      --line-soft: #293a49;
+      --text: #eef4f7;
+      --muted: #b5c4cd;
+      --faint: #879aa7;
+      --cyan: #58bfea;
+      --mint: #72d6c4;
+      --amber: #f2b735;
+      --red: #f05a5f;
+      --purple: #d56ee7;
+      --max: 1220px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 88% -10%, rgba(240, 90, 95, .13), transparent 32rem),
+        radial-gradient(circle at 8% 18%, rgba(88, 191, 234, .08), transparent 30rem),
+        var(--space);
+      font-family: "Noto Sans KR", Inter, system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 570;
+      line-height: 1.62;
+    }
+
+    a { color: #9be0fa; text-underline-offset: .2em; }
+    a:hover { color: #fff; }
+    a:focus-visible, button:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--cyan);
+      outline-offset: 3px;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3, .lead, .decision { overflow-wrap: break-word; }
+    h1 {
+      max-width: 920px;
+      margin-bottom: 18px;
+      font-size: clamp(38px, 5.4vw, 66px);
+      font-weight: 890;
+      letter-spacing: -.05em;
+      line-height: 1.04;
+    }
+    h2 {
+      margin: 0 0 17px;
+      font-size: clamp(27px, 3.1vw, 38px);
+      font-weight: 860;
+      letter-spacing: -.035em;
+      line-height: 1.17;
+    }
+    h3 { margin-bottom: 8px; font-size: 20px; line-height: 1.3; }
+    p:last-child { margin-bottom: 0; }
+    ul { padding-left: 1.2rem; }
+    li + li { margin-top: 7px; }
+    code {
+      color: #c3edfb;
+      font: 700 .9em ui-monospace, SFMono-Regular, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .page {
+      width: min(calc(100% - 40px), var(--max));
+      margin: 0 auto;
+      padding: 46px 0 92px;
+    }
+    .eyebrow, .kicker {
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 880;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .eyebrow { margin-bottom: 10px; }
+    .kicker { margin-bottom: 7px; color: var(--cyan); }
+    .lead {
+      max-width: 920px;
+      margin-bottom: 28px;
+      color: #d6e0e6;
+      font-size: clamp(18px, 2.1vw, 23px);
+      line-height: 1.5;
+    }
+    .muted { color: var(--muted); }
+    .small { color: var(--faint); font-size: 13px; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+      gap: 18px;
+    }
+    .decision, .meta, section, .card, .family, .note, .comment-box, figure {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(23, 35, 46, .95);
+    }
+    .decision {
+      padding: 24px;
+      border-left: 5px solid var(--amber);
+      color: #dfe8ed;
+      font-size: 19px;
+    }
+    .meta { display: grid; gap: 14px; padding: 22px; }
+    .meta span, .stat span {
+      display: block;
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .meta strong, .stat strong { display: block; margin-top: 3px; }
+
+    .review-toolbar {
+      position: sticky;
+      z-index: 5;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 24px 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(8, 13, 19, .95);
+      backdrop-filter: blur(12px);
+    }
+    .review-toolbar p { margin: 0; color: var(--muted); font-size: 13px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      min-height: 44px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--raised);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 820;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--cyan); background: #263b4c; }
+    button.danger:hover { border-color: var(--red); color: #ffc5c7; }
+
+    nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 34px; }
+    nav a {
+      padding: 6px 10px;
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      color: #c7d5dd;
+      background: #111c25;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    nav a:hover { border-color: var(--cyan); color: #fff; }
+
+    section { margin-top: 18px; padding: clamp(22px, 4vw, 38px); scroll-margin-top: 84px; }
+    .grid-2, .grid-3, .stats, .visual-grid { display: grid; gap: 13px; }
+    .grid-2, .visual-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card, .stat { min-width: 0; padding: 17px; }
+    .card { border-radius: 13px; }
+    .stat {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      background: #111c25;
+    }
+    .stat strong { font-size: 23px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+    .chip {
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #cedae1;
+      background: #111c25;
+      font-size: 12px;
+      font-weight: 820;
+    }
+    .chip.keep { border-color: #407e75; color: #a9eadf; }
+    .chip.move { border-color: #8b6d2d; color: #ffdb89; }
+    .chip.delete { border-color: #87454b; color: #ffb8ba; }
+
+    .note { margin-top: 16px; padding: 18px 20px; }
+    .note.good { border-left: 4px solid var(--mint); }
+    .note.warn { border-left: 4px solid var(--amber); }
+    .note.stop { border-left: 4px solid var(--red); }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #111c25;
+    }
+    table { width: 100%; min-width: 850px; border-collapse: collapse; }
+    th, td {
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line-soft);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: #d9e4e9;
+      background: #0e171f;
+      font-size: 12px;
+      font-weight: 860;
+      letter-spacing: .03em;
+    }
+    td { color: #c8d4db; }
+    td:first-child { color: var(--text); font-weight: 790; }
+    tr:last-child td { border-bottom: 0; }
+
+    figure { min-width: 0; margin: 0; padding: 13px; }
+    figure > img { display: block; width: 100%; border-radius: 10px; background: #161b21; }
+    figcaption { margin-top: 10px; color: var(--muted); font-size: 13px; }
+
+    .family-list { display: grid; gap: 16px; }
+    .family { padding: 20px; }
+    .family-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(310px, .72fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .family-id { color: var(--red); font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+    .family h3 { margin-top: 7px; font-size: 25px; }
+    .trait-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+    .trait {
+      padding: 14px;
+      border: 1px solid var(--line-soft);
+      border-radius: 11px;
+      background: #111c25;
+    }
+    .trait strong { color: var(--mint); }
+    .trait p { margin: 5px 0 0; color: var(--muted); font-size: 14px; }
+    .rule-list { margin: 13px 0 0; color: var(--muted); font-size: 14px; }
+    .art-crop {
+      position: relative;
+      aspect-ratio: 3 / 2;
+      overflow: hidden;
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      background: #111820;
+    }
+    .art-crop img {
+      position: absolute;
+      width: 300%;
+      height: 300%;
+      max-width: none;
+    }
+    .r1c1 img { left: 0; top: 0; }
+    .r1c2 img { left: -100%; top: 0; }
+    .r2c1 img { left: 0; top: -100%; }
+    .r3c1 img { left: 0; top: -200%; }
+    .r3c3 img { left: -200%; top: -200%; }
+    .concept-label {
+      margin-top: 8px;
+      color: var(--faint);
+      font-size: 12px;
+    }
+
+    .comment-box { margin-top: 22px; padding: 16px; background: #0f1820; }
+    .comment-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
+    .comment-head label { color: #fff; font-weight: 840; }
+    .save-state { color: var(--faint); font-size: 12px; }
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 102px;
+      resize: vertical;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: #080f15;
+      font: inherit;
+      line-height: 1.52;
+    }
+    textarea::placeholder { color: #718490; }
+    .comment-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+    .privacy-note { margin: 8px 0 0; color: var(--faint); font-size: 12px; }
+    .source-list { display: grid; gap: 10px; padding: 0; list-style: none; }
+    .source-list li {
+      padding: 14px;
+      border: 1px solid var(--line-soft);
+      border-radius: 11px;
+      background: #111c25;
+    }
+
+    @media (max-width: 960px) {
+      .hero-grid, .family-grid, .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      body { font-size: 15px; }
+      .page { width: min(calc(100% - 20px), var(--max)); padding-top: 28px; }
+      .hero-grid, .family-grid, .grid-2, .grid-3, .stats, .visual-grid, .trait-pair { grid-template-columns: 1fr; }
+      .review-toolbar { position: static; align-items: stretch; flex-direction: column; }
+      .review-toolbar .actions, .review-toolbar button { width: 100%; }
+      section { padding: 21px 16px; }
+      .family { padding: 16px; }
+      .comment-head { flex-direction: column; gap: 3px; }
+      .comment-actions button { flex: 1 1 100%; }
+      nav { margin-bottom: 22px; }
+    }
+    @media print {
+      body { color: #14222c; background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .review-toolbar, .comment-box, nav { display: none; }
+      section, .family, .card, .note, figure { break-inside: avoid; color: #14222c; background: #fff; border-color: #aebbc3; }
+      h1, h2, h3, strong { color: #0c1720; }
+      .muted, td, figcaption { color: #415563; }
+    }
+  </style>
+</head>
+<body>
+<main class="page">
+  <header>
+    <p class="eyebrow">Cardborne · ordinary enemy design revision</p>
+    <h1>Use five clear enemy families.</h1>
+    <p class="lead">Remove families that do not earn their own player response. Put self-destruction inside Charger. Put artillery and slowing shots inside Gunner. Make Defender protect every ranged pack.</p>
+
+    <div class="hero-grid">
+      <div class="decision">
+        <strong>Decision:</strong> use <strong>Pursuer, Charger, Gunner, Defender, and Coordinator</strong>. Give each family only two launch traits. Do not merge the remote pursuit branch as-is. First build one Gunner + Defender pack and prove that it is clear and stable.
+      </div>
+      <div class="meta" aria-label="Report status">
+        <div><span>Family count</span><strong>5, down from 9</strong></div>
+        <div><span>Trait limit</span><strong>2 per family</strong></div>
+        <div><span>Visual source</span><strong>New concept PNGs only</strong></div>
+        <div><span>Status</span><strong>Plan, not implementation</strong></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="review-toolbar" aria-label="Comment tools">
+    <p id="global-status">Comments stay in this browser until you copy or clear them.</p>
+    <div class="actions">
+      <button type="button" id="copy-all">Copy all comments</button>
+      <button type="button" class="danger" id="clear-all">Clear all comments</button>
+    </div>
+  </div>
+
+  <nav aria-label="Report sections">
+    <a href="#summary">Final structure</a>
+    <a href="#branch">Remote branch</a>
+    <a href="#visuals">New PNGs</a>
+    <a href="#families">Five families</a>
+    <a href="#packs">Pack rules</a>
+    <a href="#deletion">Delete and migrate</a>
+    <a href="#size">Size and tiers</a>
+    <a href="#rollout">Build order</a>
+    <a href="#evidence">Evidence</a>
+  </nav>
+
+  <section id="summary" data-section-title="1. Final structure">
+    <p class="kicker">Answer first</p>
+    <h2>1. The old nine-family plan becomes five families</h2>
+    <div class="stats">
+      <div class="stat"><span>Keep</span><strong>5 families</strong></div>
+      <div class="stat"><span>Remove</span><strong>3 families</strong></div>
+      <div class="stat"><span>Merge</span><strong>1 family</strong></div>
+      <div class="stat"><span>Launch traits</span><strong>10 total</strong></div>
+    </div>
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Old idea</th><th>New decision</th><th>Reason</th><th>Code effect</th></tr></thead>
+        <tbody>
+          <tr><td>Controller family</td><td><span class="chip delete">Remove</span></td><td>Its current units do not form a strong, clear family.</td><td>Delete Controller actor IDs after stage and Guidebook replacement.</td></tr>
+          <tr><td>Sustainer family</td><td><span class="chip delete">Remove</span></td><td>There are already many families. Repair units do not need a full launch family.</td><td>Delete repair/support actor IDs and unused fixed support data.</td></tr>
+          <tr><td>Bomber family</td><td><span class="chip move">Move</span></td><td>Self-destruction works better as a Charger variation.</td><td>Move the fuse and explosion to Charger. Delete the Bomber-style ID.</td></tr>
+          <tr><td>Artillery family</td><td><span class="chip move">Merge</span></td><td>It is still a ranged unit. The shot pattern is the main difference.</td><td>Make Artillery one Gunner trait. Delete the separate Artillery ID.</td></tr>
+          <tr><td>Overload trait</td><td><span class="chip delete">Replace</span></td><td>Self-Destruct gives Charger a clearer danger and response.</td><td>Remove <code>ordinary_overload_01</code> after roster migration.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note good"><strong>Simple rule:</strong> a family changes how the player moves or chooses a target. A trait changes one part of that family. If an idea only changes one attack, it should be a trait, not a new family.</div>
+    <div class="comment-box" data-review="summary">
+      <div class="comment-head"><label for="comment-summary">Comment on the final structure</label><span class="save-state" data-status>No saved comment</span></div>
+      <textarea id="comment-summary" placeholder="Write any family that should be added, removed, or renamed."></textarea>
+      <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
+      <p class="privacy-note">This file does not send comments to a server.</p>
+    </div>
+  </section>
+
+  <section id="branch" data-section-title="2. Remote branch">
+    <p class="kicker">Remote code review</p>
+    <h2>2. The pursuit branch should not be merged as one block</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>What the branch does</h3>
+        <p class="muted">The branch makes each mobile enemy chase the player's current position. It removes prediction from movement. It also removes many range, orbit, retreat, escort, and support rules.</p>
+        <div class="chips"><span class="chip">3 commits</span><span class="chip">tip: bd9f72f7</span><span class="chip">base: 4d6bb2dc</span></div>
+      </div>
+      <div class="card">
+        <h3>Current merge state</h3>
+        <p class="muted">The remote-tracking branch is three commits ahead of its base. Local <code>master</code> is five commits ahead of that base. A merge-tree check found no structural conflict signal, but the product design still conflicts.</p>
+        <div class="chips"><span class="chip move">Text merge looks possible</span><span class="chip delete">Design merge is not valid</span></div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:13px">
+      <div class="note good">
+        <h3>Reuse later</h3>
+        <ul>
+          <li>Move a pack anchor toward the player's current position.</li>
+          <li>Ask for route guidance only when the direct path is blocked.</li>
+          <li>Keep local separation, speed limits, and smooth velocity.</li>
+          <li>Keep attack prediction separate from movement.</li>
+        </ul>
+      </div>
+      <div class="note stop">
+        <h3>Do not reuse</h3>
+        <ul>
+          <li>Do not make every member chase the player alone.</li>
+          <li>Do not remove Gunner distance and Defender formation space.</li>
+          <li>Do not remove escort and support position ownership before packs replace it.</li>
+          <li>Do not accept the branch document as the new product rule.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="comment-box" data-review="branch">
+      <div class="comment-head"><label for="comment-branch">Comment on the branch decision</label><span class="save-state" data-status>No saved comment</span></div>
+      <textarea id="comment-branch" placeholder="Write which movement parts should be reused or rejected."></textarea>
+      <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
+    </div>
+  </section>
+
+  <section id="visuals" data-section-title="3. New PNGs">
+    <p class="kicker">Visual input</p>
+    <h2>3. This report uses the newer concept PNGs</h2>
+    <p class="muted">The old report used current in-game enemy PNGs for tier examples. This revision does not. It uses the two newer 1536×1024 concept sheets below. The family cards use CSS crops from the second sheet. No PNG was created or edited.</p>
+    <div class="visual-grid">
+      <figure>
+        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-tier-family-lineup.png" alt="New enemy tier and family concept lineup with several three-step enemy size groups">
+        <figcaption><strong>New tier lineup.</strong> Use it to compare broad shape and tier growth. It is not approved production art.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="New three by three enemy family, tier, and trait concept matrix">
+        <figcaption><strong>New family matrix.</strong> Only five cells remain in the final structure. The other cells are visual history, not active family decisions.</figcaption>
+      </figure>
+    </div>
+    <div class="note warn"><strong>Visual status:</strong> these are concept references only. They still need combat-scale review against Cardborne's approved visual system before any asset becomes production art.</div>
+    <div class="comment-box" data-review="visuals">
+      <div class="comment-head"><label for="comment-visuals">Comment on the new PNGs</label><span class="save-state" data-status>No saved comment</span></div>
+      <textarea id="comment-visuals" placeholder="Write which shapes should stay, change, or be ignored."></textarea>
+      <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
+    </div>
+  </section>
+
+  <section id="families" data-section-title="4. Five families">
+    <p class="kicker">Family contract</p>
+    <h2>4. Each family has one base job and two traits</h2>
+    <p class="muted">A pack gets one main family and one tier. A unit has at most one active trait. The two names below are the full launch pool, not two traits that run at the same time.</p>
+
+    <div class="family-list">
+      <article class="family" data-section-title="4.1 Pursuer">
+        <div class="family-grid">
+          <div>
+            <div class="family-id">01 · PURSUER</div>
+            <h3>Keep moving and protect escape space</h3>
+            <p class="muted">Pursuer is the simple close-range pressure family. It follows the pack target and tries to close space. It must not receive armor or heavy-defense traits because Defender owns that job.</p>
+            <div class="trait-pair">
+              <div class="trait"><strong>Splitter</strong><p>On its approved trigger, it creates a small number of weaker Pursuers. Child units cannot create an endless split chain.</p></div>
+              <div class="trait"><strong>Frenzy</strong><p>It gains a short, readable speed or attack boost after commitment. The boost has a cap and a clear end.</p></div>
+            </div>
+            <ul class="rule-list"><li>Current seeds: <code>ordinary_melee_01</code>, <code>ordinary_pulse_01</code>.</li><li>No Armored, Heavy, Leech, or hidden defense state.</li></ul>
+          </div>
+          <div>
+            <div class="art-crop r1c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Pursuer concept cell showing three size tiers and small trait examples"></div>
+            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+          </div>
+        </div>
+        <div class="comment-box" data-review="pursuer"><div class="comment-head"><label for="comment-pursuer">Comment on Pursuer</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-pursuer" placeholder="Comment on the base role, Splitter, or Frenzy."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
+      </article>
+
+      <article class="family" data-section-title="4.2 Charger">
+        <div class="family-grid">
+          <div>
+            <div class="family-id">02 · CHARGER</div>
+            <h3>Read the lane, dodge sideways, then punish recovery</h3>
+            <p class="muted">Charger warns, locks a lane, and rushes through it. Self-destruction now belongs here. Bomber is no longer a family. Overload is removed.</p>
+            <div class="trait-pair">
+              <div class="trait"><strong>Double</strong><p>After the first charge and its recovery, it can make one second warned charge. It cannot loop forever.</p></div>
+              <div class="trait"><strong>Self-Destruct</strong><p>After its charge ends, it starts a short visible fuse. It then explodes and dies. A kill before fuse commitment should stop the explosion.</p></div>
+            </div>
+            <ul class="rule-list"><li>Current seeds: <code>ordinary_edge_01</code>, <code>ordinary_pull_01</code>, and the fuse/explosion from <code>ordinary_area_01</code>.</li><li><code>ordinary_overload_01</code> is deleted after roster migration.</li></ul>
+          </div>
+          <div>
+            <div class="art-crop r1c2"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Charger concept cell showing three size tiers and small trait examples"></div>
+            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+          </div>
+        </div>
+        <div class="comment-box" data-review="charger"><div class="comment-head"><label for="comment-charger">Comment on Charger</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-charger" placeholder="Comment on Double, Self-Destruct, the fuse, or counterplay."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
+      </article>
+
+      <article class="family" data-section-title="4.3 Gunner">
+        <div class="family-grid">
+          <div>
+            <div class="family-id">03 · GUNNER</div>
+            <h3>Break a fire lane or leave a marked impact area</h3>
+            <p class="muted">Gunner includes normal shooting and artillery. Artillery is not a separate family. Every Gunner pack has a Defender, including Artillery and Slow variants.</p>
+            <div class="trait-pair">
+              <div class="trait"><strong>Artillery</strong><p>Replace direct fire with a marked lobbed or ground-impact shot. The mark must appear before damage.</p></div>
+              <div class="trait"><strong>Slow</strong><p>A bullet hit slows the player for a short time. More hits refresh one bounded slow. They do not stack into a movement lock.</p></div>
+            </div>
+            <ul class="rule-list"><li>Current seeds: ranged, lane, range, beam, growth, and ground-impact attack code.</li><li>The Slow projectile needs a distinct cue before it can ship.</li></ul>
+          </div>
+          <div>
+            <div class="art-crop r2c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Gunner concept cell showing three size tiers and small trait examples"></div>
+            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+          </div>
+        </div>
+        <div class="comment-box" data-review="gunner"><div class="comment-head"><label for="comment-gunner">Comment on Gunner</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-gunner" placeholder="Comment on Artillery, Slow, bullet cues, or Defender support."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
+      </article>
+
+      <article class="family" data-section-title="4.4 Defender">
+        <div class="family-grid">
+          <div>
+            <div class="family-id">04 · DEFENDER</div>
+            <h3>Change the player's firing angle and target order</h3>
+            <p class="muted">Defender has a normal, breakable shield as its base state. Its traits are timed power windows. Neither trait stays at full power all the time.</p>
+            <div class="trait-pair">
+              <div class="trait"><strong>Bulwark</strong><p>Every <em>M</em> seconds, it grows for <em>N</em> seconds. Its large shield also protects nearby pack members. Growth and shield range appear before protection starts.</p></div>
+              <div class="trait"><strong>Reflector</strong><p>It uses a normal shield most of the time. Every <em>M</em> seconds, a warned <em>N</em>-second window makes that shield reflect shots.</p></div>
+            </div>
+            <ul class="rule-list"><li>Current seeds: <code>ordinary_shield_01</code>, <code>ordinary_reflect_01</code>, and useful shield parts from <code>ordinary_support_02</code>.</li><li>Reflection must have a different edge, pulse, or color state. It cannot be hidden.</li></ul>
+          </div>
+          <div>
+            <div class="art-crop r3c1"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Defender concept cell showing three size tiers and small trait examples"></div>
+            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+          </div>
+        </div>
+        <div class="comment-box" data-review="defender"><div class="comment-head"><label for="comment-defender">Comment on Defender</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-defender" placeholder="Comment on Bulwark size, shield range, Reflector timing, or normal shield rules."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
+      </article>
+
+      <article class="family" data-section-title="4.5 Coordinator">
+        <div class="family-grid">
+          <div>
+            <div class="family-id">05 · COORDINATOR</div>
+            <h3>Break the pack-level tactic source</h3>
+            <p class="muted">Coordinator changes the pack, not only itself. Keep the launch pool small. Blink stays. Pack Feed (몰아주기) uses the bounded death-stack idea, but the pack owns the state.</p>
+            <div class="trait-pair">
+              <div class="trait"><strong>Blink</strong><p>Warn, check a safe destination, then move the pack while keeping its formation. Never blink into the player, cover, or another unit.</p></div>
+              <div class="trait"><strong>Pack Feed (몰아주기)</strong><p>When an eligible pack member dies, survivors heal and gain a bounded boost. Summons do not feed it. Killing the Coordinator stops future gains.</p></div>
+            </div>
+            <ul class="rule-list"><li>Current seeds: the shared collective tactic runtime and the bounded death stack in <code>ordinary_melee_02</code>.</li><li>Invisible and Shrink stay future-only. Like Rock is excluded because Defender owns defense.</li></ul>
+          </div>
+          <div>
+            <div class="art-crop r3c3"><img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-family-tier-trait-matrix.png" alt="Cropped Coordinator concept cell showing three size tiers and small trait examples"></div>
+            <p class="concept-label">Concept crop from the new matrix. Not production art.</p>
+          </div>
+        </div>
+        <div class="comment-box" data-review="coordinator"><div class="comment-head"><label for="comment-coordinator">Comment on Coordinator</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-coordinator" placeholder="Comment on Blink, Pack Feed, caps, or how the trait stops."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="packs" data-section-title="5. Pack rules">
+    <p class="kicker">Spawn and formation</p>
+    <h2>5. Build and admit enemies as complete packs</h2>
+    <div class="grid-3">
+      <div class="card"><h3>One pack, one contract</h3><p class="muted">A pack owns its family, tier, active trait, leader, members, formation, target, and shared cooldown. Each actor still owns health, collision, damage, and rendering.</p></div>
+      <div class="card"><h3>Atomic spawn</h3><p class="muted">Spawn, delay, replace, or cancel the full pack. Do not create a Gunner first and wait for its Defender later.</p></div>
+      <div class="card"><h3>Same threat budget</h3><p class="muted">A required Defender replaces a filler slot. It does not increase the actor count or the authored threat budget.</p></div>
+    </div>
+    <div class="note good"><strong>Hard rule:</strong> every pack with a Gunner has at least one Defender. This includes a direct-fire Gunner, an Artillery-trait Gunner, and a Slow-trait Gunner. There is no Artillery exception.</div>
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Example pack</th><th>Front or flank</th><th>Rear</th><th>Why it works</th></tr></thead>
+        <tbody>
+          <tr><td>Direct fire</td><td>Defender + Pursuer filler</td><td>Direct-fire Gunners</td><td>Player can break the shield angle, then attack the firing line.</td></tr>
+          <tr><td>Artillery</td><td>Defender</td><td>Artillery-trait Gunners</td><td>The Defender buys time, but marked impact zones still give movement counterplay.</td></tr>
+          <tr><td>Slow fire</td><td>Defender + close-range filler</td><td>Slow-trait Gunners</td><td>Slow cannot stack. The Defender is the first target-priority problem.</td></tr>
+          <tr><td>Coordinator</td><td>Family-safe fillers</td><td>Coordinator in a readable slot</td><td>Player can find and kill the source before Blink or Pack Feed grows the threat.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="comment-box" data-review="packs">
+      <div class="comment-head"><label for="comment-packs">Comment on pack rules</label><span class="save-state" data-status>No saved comment</span></div>
+      <textarea id="comment-packs" placeholder="Comment on Defender count, pack size, formation, or spawn rules."></textarea>
+      <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
+    </div>
+  </section>
+
+  <section id="deletion" data-section-title="6. Delete and migrate">
+    <p class="kicker">Code cleanup</p>
+    <h2>6. Move useful behavior, then delete old IDs and all consumers</h2>
+    <p class="muted">The current code defines 26 ordinary enemy archetypes. Eighteen mobile IDs can appear in the campaign. One fixed beam can appear only as a boss summon. Seven definitions do not appear in the normal campaign. These IDs still have Guidebook, visual, combat, fixture, or test references, so deletion must happen as a complete migration.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Current item</th><th>Action</th><th>What may survive</th><th>Safe delete condition</th></tr></thead>
+        <tbody>
+          <tr><td><code>gap_01</code>, <code>compression_01</code></td><td><span class="chip delete">Delete Controller IDs</span></td><td>No family state. Only a generic warning or impact helper if Gunner needs it.</td><td>Stages, Guidebook, visuals, localization, tests, and fixtures use five-family replacements.</td></tr>
+          <tr><td><code>sweep_01</code></td><td><span class="chip move">Move then delete</span></td><td>Generic marked ground-impact code may support Gunner Artillery.</td><td>The actor ID and Controller-style presentation have no consumers.</td></tr>
+          <tr><td><code>support_01</code>, <code>fixed_support_01</code></td><td><span class="chip delete">Delete Sustainer IDs</span></td><td>No ordinary repair family.</td><td>Boss add rosters and support branches use approved replacements.</td></tr>
+          <tr><td><code>support_02</code></td><td><span class="chip move">Move then delete</span></td><td>Only useful shield logic moves to Defender Bulwark.</td><td>Bulwark tests replace prototype tests.</td></tr>
+          <tr><td><code>support_03</code></td><td><span class="chip delete">Delete carrier actor</span></td><td>Pack coordination stays in the shared pack runtime.</td><td>Coordinator no longer needs child-spawn behavior.</td></tr>
+          <tr><td><code>melee_02</code></td><td><span class="chip move">Move then delete</span></td><td>Bounded death-stack receipt moves to Pack Feed.</td><td>Pack-level cap, summon exclusion, and duplicate-receipt tests pass.</td></tr>
+          <tr><td><code>area_01</code>, <code>fixed_area_01</code></td><td><span class="chip move">Move then delete</span></td><td>Readable fuse and explosion move to Charger Self-Destruct.</td><td>Charger trait and all stage migrations pass.</td></tr>
+          <tr><td><code>growth_01</code></td><td><span class="chip move">Merge into Gunner</span></td><td>Marked impact behavior becomes Artillery trait data.</td><td>No separate Artillery family or actor ID remains.</td></tr>
+          <tr><td><code>reflect_01</code></td><td><span class="chip move">Convert then delete alias</span></td><td>Periodic reflection window becomes Defender trait data.</td><td>Normal shield and timed reflection tests pass.</td></tr>
+          <tr><td><code>overload_01</code></td><td><span class="chip delete">Delete</span></td><td>Nothing. Self-Destruct replaces it.</td><td>Stage 12 and vulnerability logic use Charger trait data.</td></tr>
+          <tr><td><code>resonance_01</code></td><td><span class="chip delete">Delete</span></td><td>Nothing in the two-trait Gunner launch pool.</td><td>Its stage slots have Artillery or Slow replacements.</td></tr>
+          <tr><td><code>fixed_ranged_01</code>, <code>fixed_ranged_02</code></td><td><span class="chip delete">Delete inactive ordinary IDs</span></td><td>Nothing unless a later tower-defense expansion creates a new, separate installation catalog.</td><td>All current consumers are audited and removed.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note stop"><strong>Do not delete only the catalog row.</strong> Each retired ID also needs stage and boss references, movement and attack branches, Guidebook entries, Korean and English keys, visual descriptors, semantic asset records, fixtures, validators, and tests removed or migrated in the same change.</div>
+    <div class="comment-box" data-review="deletion">
+      <div class="comment-head"><label for="comment-deletion">Comment on deletion and migration</label><span class="save-state" data-status>No saved comment</span></div>
+      <textarea id="comment-deletion" placeholder="Write any ID that should be deleted, moved, or kept."></textarea>
+      <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
+    </div>
+  </section>
+
+  <section id="size" data-section-title="7. Size and tiers">
+    <p class="kicker">Readability</p>
+    <h2>7. Make ordinary enemies larger, with a clear tier step</h2>
+    <div class="grid-3">
+      <div class="card"><h3>T1 · 52 px</h3><p class="muted">Larger than the current 48 px mobile visual radius. Keep the base family shape simple.</p></div>
+      <div class="card"><h3>T2 · 60 px</h3><p class="muted">Add one large family module or stronger broad plane. Do not add many small lights.</p></div>
+      <div class="card"><h3>T3 · 68 px</h3><p class="muted">Use the clearest silhouette and mass increase. Keep facing and trait state readable.</p></div>
+    </div>
+    <div class="note warn"><strong>Prototype numbers:</strong> 52 / 60 / 68 is still an approval item, not a final art rule. First separate visual size, projectile hit size, and body collision size. Do not make all three grow together by accident.</div>
+    <ul>
+      <li>Tier changes size, health, and threat budget. It does not add a second active trait.</li>
+      <li>Family shape must remain clear at T1, T2, and T3.</li>
+      <li>Bulwark's short growth state is separate from its normal tier size.</li>
+      <li>Test mixed 4–8 member packs at desktop and narrow Web sizes before art approval.</li>
+    </ul>
+    <div class="comment-box" data-review="size">
+      <div class="comment-head"><label for="comment-size">Comment on size and tiers</label><span class="save-state" data-status>No saved comment</span></div>
+      <textarea id="comment-size" placeholder="Comment on 52 / 60 / 68, family offsets, or collision rules."></textarea>
+      <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
+    </div>
+  </section>
+
+  <section id="rollout" data-section-title="8. Build order">
+    <p class="kicker">Implementation path</p>
+    <h2>8. Prove one ranged pack before the full rewrite</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Step</th><th>Change</th><th>Proof</th><th>Stop if</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Data</td><td>Add family, tier, trait, and pack data. Separate visual and collision sizes.</td><td>Validators reject unknown families, more than two family traits, two active traits, or a Gunner without Defender.</td><td>Old actor IDs still control the new rules.</td></tr>
+          <tr><td>2 · First pack</td><td>Build direct-fire Gunner + Defender as one complete pack.</td><td>No orphan Gunner, stable formation, clear firing and shield cues.</td><td>Actor count or threat budget grows.</td></tr>
+          <tr><td>3 · Gunner traits</td><td>Add Artillery, then Slow.</td><td>Marked impact is fair; Slow does not stack; both packs include Defender.</td><td>The player cannot tell the projectile or impact type.</td></tr>
+          <tr><td>4 · Defender traits</td><td>Add timed Bulwark growth and timed Reflector state.</td><td>Normal, large-shield, and reflection states are easy to tell apart.</td><td>Protection begins before its warning or hides the Gunner attack.</td></tr>
+          <tr><td>5 · Charger</td><td>Move fuse/explosion to Self-Destruct and remove Overload.</td><td>Charge, fuse, blast, death, and early-kill counterplay are deterministic.</td><td>The blast can happen without a clear fuse.</td></tr>
+          <tr><td>6 · Coordinator</td><td>Add Blink and Pack Feed only.</td><td>Safe destination, formation, cap, summon exclusion, and source-death tests pass.</td><td>Invisible, Shrink, or Like Rock enters the launch scope.</td></tr>
+          <tr><td>7 · Cleanup</td><td>Migrate stages and delete old IDs plus every consumer.</td><td>Twelve-cycle, boss add, Guidebook, localization, semantic asset, fixture, and spawn tests pass.</td><td>A reachable encounter loses an enemy without replacement.</td></tr>
+          <tr><td>8 · Runtime proof</td><td>Compare the same actor, projectile, effect, collision, and cadence workload.</td><td>Named native and built-Web checks pass at the clean checkpoint.</td><td>The test reduces workload or has no clean baseline.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note good"><strong>First implementation slice:</strong> one Gunner pack with one Defender. Add Artillery and Slow only after the base formation and shield rules work. This is the smallest slice that proves the most important new contract.</div>
+    <div class="comment-box" data-review="rollout">
+      <div class="comment-head"><label for="comment-rollout">Comment on the build order</label><span class="save-state" data-status>No saved comment</span></div>
+      <textarea id="comment-rollout" placeholder="Comment on the first slice, order, tests, or stop conditions."></textarea>
+      <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
+    </div>
+  </section>
+
+  <section id="evidence" data-section-title="9. Evidence and limits">
+    <p class="kicker">Trust boundary</p>
+    <h2>9. Evidence and limits</h2>
+    <ul class="source-list">
+      <li><strong>Current code:</strong> enemy archetypes, combat stages, boss add rosters, spawn allocation, collective tactic runtime, movement policy, specialist behavior, attack contracts, Guidebook data, visual catalog, assets, fixtures, and validators were traced in the earlier branch review.</li>
+      <li><strong>Remote branch:</strong> <a href="https://github.com/simpleusername96/cardborne-platformer/pull/4">PR #4 · Simplify ordinary enemy pursuit</a>. Remote-tracking tip <code>bd9f72f7</code>; common base <code>4d6bb2dc</code>. Rechecked on 2026-08-20.</li>
+      <li><strong>Performance method:</strong> <a href="https://docs.godotengine.org/en/4.7/tutorials/performance/general_optimization.html">Godot 4.7 general optimization</a> and <a href="https://docs.godotengine.org/en/4.7/tutorials/performance/cpu_optimization.html">Godot 4.7 CPU optimization</a>. These support measurement and shared invariant work. They do not prove that packs are faster.</li>
+      <li><strong>Group AI references:</strong> <a href="https://gdcvault.com/play/1027237/AI-Summit-Squad-Coordination-in">GDC · Squad Coordination in Days Gone</a> and <a href="https://gdcvault.com/play/1013459/Three-States-and-a-Plan">GDC · Three States and a Plan: The AI of F.E.A.R.</a>. They support a group owner for shared space, roles, and state.</li>
+      <li><strong>Readability reference:</strong> <a href="https://www.leagueoflegends.com/en-us/news/dev/clarity-in-league/">Riot · Clarity in League</a>. It supports distinct shapes, clear visual priority, and effects that match gameplay impact.</li>
+      <li><strong>Visual authority:</strong> <code>docs/design/VISUAL_SYSTEM.md</code> SHA-256 <code>2e5cf7e3f156629bcbe956da0e6cb30f6d3b608d9c20122ec5285fa1562aa006</code>; universal style reference SHA-256 <code>96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889</code>. The hashes were unchanged for this revision.</li>
+      <li><strong>New concept PNGs:</strong> <code>enemy-tier-family-lineup.png</code> and <code>enemy-family-tier-trait-matrix.png</code>. They are embedded as concept evidence only. No new raster image was made.</li>
+    </ul>
+    <div class="note warn"><strong>Limits:</strong> this is a code, document, Git, and visual-reference report. It does not change game code. It does not prove that the pack design is more fun or faster. Those claims need a playable slice and a matching runtime baseline.</div>
+    <div class="comment-box" data-review="evidence">
+      <div class="comment-head"><label for="comment-evidence">Comment on evidence or missing work</label><span class="save-state" data-status>No saved comment</span></div>
+      <textarea id="comment-evidence" placeholder="Write any missing code path, test, reference, or play example."></textarea>
+      <div class="comment-actions"><button type="button" data-save>Save in browser</button><button type="button" data-copy>Copy this comment</button><button type="button" data-clear>Clear</button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  (() => {
+    const STORAGE_KEY = "cardborne-ordinary-enemy-five-family-review-v1";
+    const boxes = [...document.querySelectorAll("[data-review]")];
+    const globalStatus = document.getElementById("global-status");
+
+    const readStore = () => {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+      catch (_) { return {}; }
+    };
+
+    const writeStore = (value) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+        return true;
+      } catch (_) {
+        globalStatus.textContent = "Browser storage is not available. Copy comments instead.";
+        return false;
+      }
+    };
+
+    const sectionTitle = (box) => {
+      const owner = box.closest("[data-section-title]");
+      return owner ? owner.dataset.sectionTitle : box.dataset.review;
+    };
+
+    const setStatus = (box, message) => {
+      const node = box.querySelector("[data-status]");
+      if (node) node.textContent = message;
+    };
+
+    const copyText = async (value) => {
+      if (!value) return false;
+      try {
+        await navigator.clipboard.writeText(value);
+        return true;
+      } catch (_) {
+        const helper = document.createElement("textarea");
+        helper.value = value;
+        helper.setAttribute("readonly", "");
+        helper.style.position = "fixed";
+        helper.style.opacity = "0";
+        document.body.appendChild(helper);
+        helper.select();
+        const copied = document.execCommand("copy");
+        helper.remove();
+        return copied;
+      }
+    };
+
+    const updateGlobalStatus = () => {
+      const count = boxes.filter((box) => box.querySelector("textarea").value.trim()).length;
+      globalStatus.textContent = count
+        ? `${count} section comment${count === 1 ? "" : "s"} saved in this browser.`
+        : "Comments stay in this browser until you copy or clear them.";
+    };
+
+    const store = readStore();
+    boxes.forEach((box) => {
+      const key = box.dataset.review;
+      const textarea = box.querySelector("textarea");
+      if (store[key]) {
+        textarea.value = store[key];
+        setStatus(box, "Saved in browser");
+      }
+
+      box.querySelector("[data-save]").addEventListener("click", () => {
+        const next = readStore();
+        const value = textarea.value.trim();
+        if (value) next[key] = value;
+        else delete next[key];
+        if (writeStore(next)) setStatus(box, value ? "Saved in browser" : "No saved comment");
+        updateGlobalStatus();
+      });
+
+      box.querySelector("[data-copy]").addEventListener("click", async () => {
+        const value = textarea.value.trim();
+        const copied = await copyText(value ? `${sectionTitle(box)}\n${value}` : "");
+        setStatus(box, copied ? "Copied" : "Write a comment first");
+      });
+
+      box.querySelector("[data-clear]").addEventListener("click", () => {
+        textarea.value = "";
+        const next = readStore();
+        delete next[key];
+        writeStore(next);
+        setStatus(box, "No saved comment");
+        updateGlobalStatus();
+      });
+    });
+
+    document.getElementById("copy-all").addEventListener("click", async () => {
+      const parts = boxes
+        .map((box) => ({ title: sectionTitle(box), value: box.querySelector("textarea").value.trim() }))
+        .filter((item) => item.value)
+        .map((item) => `## ${item.title}\n${item.value}`);
+      const copied = await copyText(parts.join("\n\n"));
+      globalStatus.textContent = copied ? "All comments copied." : "Write at least one comment first.";
+    });
+
+    document.getElementById("clear-all").addEventListener("click", () => {
+      if (!window.confirm("Clear every saved comment in this report?")) return;
+      boxes.forEach((box) => {
+        box.querySelector("textarea").value = "";
+        setStatus(box, "No saved comment");
+      });
+      localStorage.removeItem(STORAGE_KEY);
+      updateGlobalStatus();
+    });
+
+    updateGlobalStatus();
+  })();
+</script>
+</body>
+</html>
