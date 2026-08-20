@@ -100,9 +100,12 @@ Constraints and invariants:
 
 Destructive or irreversible actions:
 
-- After every old semantic consumer is migrated, delete the twenty-one obsolete ordinary
-  production PNGs and their tracked import metadata. Move the retained fixed-beam body to a
-  boss-pattern path before deleting its old ordinary path. Git history remains recovery.
+- Do not delete or claim the twenty-one obsolete ordinary production PNGs in the new
+  workbench unit. The ledger gives those files to earlier applied units and rejects a
+  second owner. Remove every live manifest/catalog/runtime consumer, retain the bytes as
+  inactive historical media under their original applied units, and copy the retained
+  fixed-beam body to a new boss-pattern path. A later repository-wide media cleanup may
+  retire the historical owner units as a separate reviewed migration.
 - Remove obsolete archetype, Guidebook, localization, fixture, renderer, and manifest
   records only in the same coherent migration that replaces their live consumers.
 
@@ -128,7 +131,7 @@ Exact actions requiring owner or user approval:
 | Trait behavior | Splitter, current mine, artillery, shield support, reflect, and death-stack prototypes contain reusable behavior seeds | specialist runtime and `VehicleRun` branches | Migrate seeds behind new family/trait terms; do not preserve their former actors | 2.2, 4.1 |
 | Stage 3 fixed beam | `ordinary_fixed_beam_01` appears only as a Stage 3 boss-owned autonomous summon | boss patterns/runtime trace | Rename/reclassify it as `boss_pattern_fixed_beam_01`; it is not an ordinary family member and has no Defender requirement | 1.1, 4.1 |
 | Remote branch | `origin/agent/simplify-ordinary-enemy-ai` at `bd9f72f7` is mechanically mergeable but draft/unstable and failed rendered evidence | merge-tree and branch diff recorded by prior plan revision | Do not merge; manually adapt current-objective targeting and blocked-route guidance only | 2.3 |
-| Visual media | 45 approved staged PNG variants exist; renderer batch count is the total retained batch allocation | staged provenance, renderer snapshot contract, 50-batch validators | Promote fifteen base PNGs only; express traits with shared code-native cues; retain extra variants outside production | 3.1, 3.2 |
+| Visual media | 45 approved staged PNG variants exist; renderer batch count is the total retained batch allocation; the workbench enforces one historical owner per production path | staged provenance, renderer snapshot contract, 50-batch validators, failed duplicate-owner ledger check | Promote fifteen base PNGs only through an additive unit; express traits with shared code-native cues; retain extra variants outside production and old unreferenced bytes under their original ledger owners | 3.1, 3.2 |
 | Canonical documentation | Product spec still names rolling legacy roles, current elite modifiers, 48-unit shared visuals, and late teaching aliases | `docs/product/vehicle_game_spec.md`; `docs/design/VISUAL_SYSTEM.md` | Update both canonical documents in the migration commit before reports are regenerated | 4.2 |
 
 Readiness statement:
@@ -249,10 +252,12 @@ Source owners: `docs/design/visual-replacement-workbench/replacement-workbench.j
 
 - [ ] **3.1** Promote exactly fifteen approved base PNGs through one new workbench unit.
   - Change: map staged `base` PNGs to exact 256x256 family-tier production targets, record
-    hashes and authority evidence, add the boss-pattern beam move, and declare old ordinary
-    assets as retirement targets after consumer migration.
+    hashes and authority evidence, and add the boss-pattern beam copy. Register the unit as
+    additive because earlier applied workbench units retain ledger ownership of the old
+    paths; do not create duplicate current/retirement ownership.
   - Accept: exact workbench ledger and preview pass; manifest has fifteen ordinary family
-    semantic IDs and one boss-pattern beam ID; no extra trait PNG is indexed.
+    semantic IDs and one boss-pattern beam ID; no extra trait PNG or old ordinary PNG is
+    indexed by a live runtime consumer.
 - [ ] **3.2** Renderer consumes catalog asset IDs and integer tier scale.
   - Change: use actor-catalog `asset` rather than synthesized IDs; compute
     `visual_scale = size_percent / 100.0`; raise the shared T1 ordinary presentation radius
@@ -284,14 +289,16 @@ Source owners: `scripts/progression/vehicle_guidebook_catalog.gd`,
 `localization/vehicle_stage.csv`, boss add/summon owners, affected validators,
 `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`
 
-- [ ] **4.1** Remove all legacy ordinary identity consumers and files.
+- [ ] **4.1** Remove all legacy ordinary identity consumers.
   - Change: migrate boss adds to family-tier packs; reclassify fixed beam under the boss
     owner; replace Guidebook entries and localization with five families, three tiers, and
     ten traits; remove old archetype/elite entries, branches, fixtures, manifest records,
-    PNGs, and tracked import files after `rg` proves no live consumer.
+    semantic manifest records, and active asset references after `rg` proves no live
+    consumer. Retain old PNG bytes as inactive workbench-owned history.
   - Accept: `rg` finds no legacy ordinary archetype ID outside archived reports, historical
-    plans/evidence, and intentionally retained migration prose; runtime catalogs and
-    production assets contain only the new ordinary identities.
+    plans/evidence, intentionally retained internal behavior-primitive keys, and migration
+    prose; runtime catalogs and the production manifest contain only the new ordinary
+    identities.
 - [ ] **4.2** Canonical specs describe the shipped family and visual contracts.
   - Change: replace legacy rolling-role/elite/teaching text in the product spec; record pack
     composition, traits, boss-owned fixed beam, tier scale, 56-unit T1 presentation
