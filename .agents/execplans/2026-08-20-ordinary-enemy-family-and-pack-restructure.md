@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 owner: BK
 created: 2026-08-20
 last_reviewed: 2026-08-21
@@ -84,7 +84,7 @@ Constraints and invariants:
   direct pursuit and removal of long-range positioning are rejected.
 - The visual authority pair is
   `docs/design/VISUAL_SYSTEM.md` SHA-256
-  `2e5cf7e3f156629bcbe956da0e6cb30f6d3b608d9c20122ec5285fa1562aa006`
+  `9c48e97e3aa74ea2e9d8316ecf2f6ae8552b9c92a8b924bf7b8945008ed1e4c3`
   and `docs/design/cardborne-universal-art-style-reference.png` SHA-256
   `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`,
   inspected at `1448x1086` original detail for this implementation scope.
@@ -163,7 +163,7 @@ Source owners: `scripts/enemies/vehicle_enemy_archetypes.gd`, new
 `scripts/encounters/vehicle_encounter_runtime.gd`,
 `scripts/enemies/vehicle_enemy_state.gd`
 
-- [ ] **1.1** Fifteen family-tier definitions replace the legacy ordinary catalog.
+- [x] **1.1** Fifteen family-tier definitions replace the legacy ordinary catalog.
   - Change: define family, tier, integer size percent, base combat role, stats, threat
     kind, and semantic asset ID for `ordinary_<family>_t1..t3`; add
     `boss_pattern_fixed_beam_01`; add family/trait scalar state; replace the global elite
@@ -171,7 +171,7 @@ Source owners: `scripts/enemies/vehicle_enemy_archetypes.gd`, new
   - Accept: catalog validation reports exactly fifteen normal ordinary IDs, the
     100/125/150 ladder, two unique traits per family, no cross-family trait, explicit 48
     projectile target radius, and no legacy definition.
-- [ ] **1.2** Stage packets contain validated semantic pack blueprints.
+- [x] **1.2** Stage packets contain validated semantic pack blueprints.
   - Change: author deterministic stage family/tier/trait rollout; preserve exact authored
     counts and 4-8 pack sizes; derive squad role arrays without allocator role-bag
     redistribution; attach family/tier/trait metadata to every spawn spec.
@@ -202,14 +202,14 @@ Source owners: `scripts/encounters/vehicle_collective_tactic_catalog.gd`,
 `scripts/enemies/vehicle_enemy_targeting_policy.gd`,
 `scripts/combat/vehicle_projectile_state.gd`, `scripts/vehicle/vehicle_run.gd`
 
-- [ ] **2.1** Every ordinary pack uses the existing bounded collective runtime.
+- [x] **2.1** Every ordinary pack uses the existing bounded collective runtime.
   - Change: register all normal packs; store objective, formation, trait phase/timer, Blink
     receipt, and Pack Feed stacks once per pack; publish fixed scalar member state; keep the
     existing one-Execute/one-Gather global permissions and 32-pack bound.
   - Accept: 4-8 member packs remain deterministic; stale IDs are removed; pack state ends
     when empty; no actor or pack Node is created; debug snapshot exposes family, tier,
     trait, member count, and bounded trait state.
-- [ ] **2.2** The ten family traits implement their locked counterplay.
+- [x] **2.2** The ten family traits implement their locked counterplay.
   - Change: Splitter spawns bounded traitless T1 children; Frenzy applies bounded speed and
     cadence pressure; Double performs one warned second charge; Self-Destruct enters a
     kill-interruptible fuse then retires; Artillery substitutes the marked-impact attack;
@@ -220,7 +220,7 @@ Source owners: `scripts/encounters/vehicle_collective_tactic_catalog.gd`,
     with a cap, excludes summons/duplicates, and stops when the Coordinator leader dies.
   - Accept: focused trait fixtures prove timing, caps, exclusions, interruption, and
     collision-safe failure behavior; no removed trait remains reachable.
-- [ ] **2.3** Pack anchors use the accepted remote-branch simplification.
+- [x] **2.3** Pack anchors use the accepted remote-branch simplification.
   - Change: movement targets the current pack objective rather than a predicted movement
     destination; blocked direct approach may use the existing pursuit field; family attack
     standoff, formation slots, local separation, smoothing, and speed caps remain.
@@ -250,7 +250,7 @@ Source owners: `docs/design/visual-replacement-workbench/replacement-workbench.j
 `scripts/presentation/vehicle_combat_renderer.gd`,
 `scripts/vehicle/vehicle_stage_visual_profile.gd`
 
-- [ ] **3.1** Promote exactly fifteen approved base PNGs through one new workbench unit.
+- [x] **3.1** Promote exactly fifteen approved base PNGs through one new workbench unit.
   - Change: map staged `base` PNGs to exact 256x256 family-tier production targets, record
     hashes and authority evidence, and add the boss-pattern beam copy. Register the unit as
     additive because earlier applied workbench units retain ledger ownership of the old
@@ -258,7 +258,7 @@ Source owners: `docs/design/visual-replacement-workbench/replacement-workbench.j
   - Accept: exact workbench ledger and preview pass; manifest has fifteen ordinary family
     semantic IDs and one boss-pattern beam ID; no extra trait PNG or old ordinary PNG is
     indexed by a live runtime consumer.
-- [ ] **3.2** Renderer consumes catalog asset IDs and integer tier scale.
+- [x] **3.2** Renderer consumes catalog asset IDs and integer tier scale.
   - Change: use actor-catalog `asset` rather than synthesized IDs; compute
     `visual_scale = size_percent / 100.0`; raise the shared T1 ordinary presentation radius
     to 56 while keeping projectile hit radius 48 and movement radius unchanged; add
@@ -289,7 +289,7 @@ Source owners: `scripts/progression/vehicle_guidebook_catalog.gd`,
 `localization/vehicle_stage.csv`, boss add/summon owners, affected validators,
 `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`
 
-- [ ] **4.1** Remove all legacy ordinary identity consumers.
+- [x] **4.1** Remove all legacy ordinary identity consumers.
   - Change: migrate boss adds to family-tier packs; reclassify fixed beam under the boss
     owner; replace Guidebook entries and localization with five families, three tiers, and
     ten traits; remove old archetype/elite entries, branches, fixtures, manifest records,
@@ -299,7 +299,7 @@ Source owners: `scripts/progression/vehicle_guidebook_catalog.gd`,
     plans/evidence, intentionally retained internal behavior-primitive keys, and migration
     prose; runtime catalogs and the production manifest contain only the new ordinary
     identities.
-- [ ] **4.2** Canonical specs describe the shipped family and visual contracts.
+- [x] **4.2** Canonical specs describe the shipped family and visual contracts.
   - Change: replace legacy rolling-role/elite/teaching text in the product spec; record pack
     composition, traits, boss-owned fixed beam, tier scale, 56-unit T1 presentation
     baseline, code-native trait cues, and the unchanged gameplay radii/batch ceiling in the
@@ -310,8 +310,9 @@ Source owners: `scripts/progression/vehicle_guidebook_catalog.gd`,
 Batch gate:
 
 - `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_guidebook.gd`
-- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_specialist_enemy_integration.gd`
-- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_enemy_expansion.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_actor_visuals.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_attack_contract.gd`
+- `./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_enemy_family_traits.gd`
 
 ### Phase 5: Integration, performance boundary, and handoff
 
@@ -324,11 +325,11 @@ Preconditions:
 
 Source owners: project validation scripts, Web export preset, this execution contract
 
-- [ ] **5.1** Run the complete focused ordinary-enemy integration set once.
+- [x] **5.1** Run the complete focused ordinary-enemy integration set once.
   - Change: run import/parse, family/pack/trait/stage/Guidebook/semantic/renderer validators,
     then the twelve-cycle integration validator; fix only task-owned regressions.
   - Accept: every named focused check exits zero with no Godot parse/runtime error.
-- [ ] **5.2** Validate the preserved performance contract without overstating it.
+- [x] **5.2** Validate the preserved performance contract without overstating it.
   - Change: run the existing performance workload-fingerprint validator and scenario
     validity checks; compare the renderer batch count with the pre-change focused baseline.
     Run native/Web release scenarios only if the environment is quiet and the active
@@ -337,7 +338,7 @@ Source owners: project validation scripts, Web export preset, this execution con
     are `<=50`, and results use precise labels (`focused validator passed`, `scenario
     valid`, or exact native/Web release label). A contaminated or unavailable release run
     is recorded as unqualified, not passed or failed.
-- [ ] **5.3** Audit and commit the completed migration.
+- [x] **5.3** Audit and commit the completed migration.
   - Change: run the codebase quality audit, apply only small task-scoped corrections, mark
     this plan `done` with concise evidence, and commit only task-owned files with a body.
   - Accept: no unrelated untracked file is staged; plan status and checkboxes match actual
@@ -380,12 +381,19 @@ not change scope, visible behavior, ownership, architecture, safety, or acceptan
 
 ## Progress and Next Steps
 
-- Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: 1.1 — fifteen family-tier definitions and the family-trait catalog.
-- Last completed gate: Discovery Closure Gate.
-- Update rule: after a checkpoint passes, record concise evidence, check the task, and
-  advance this pointer in the same edit.
+- Canonical progress: all five phases and every task in this contract are complete.
+- Current phase: complete.
+- Next task: none. Any sixth family, extra trait, new trait-body runtime texture, capacity
+  change, or release-performance qualification requires a new user decision or plan.
+- Validation evidence: Godot import/parse; twelve-cycle catalog; spawn allocation;
+  collective tactics; ten family traits; movement and targeting; boss exams; Guidebook;
+  telemetry, stage report, and run result; broad VehicleRun integration; semantic assets;
+  actor images; retained renderer; visual workbench and authority; performance workload
+  fingerprint and scenario validity all passed on 2026-08-21.
+- Performance label: focused scenario validity passed. Native/Web release performance was
+  not run and is not claimed by this plan.
+- Implementation commits: `584f8982`, `5343744d`, `d8bc718f`, and `cd0673cd`, with the
+  earlier plan/workbench commits retained in history.
 
 ## Completion and Stop Conditions
 
