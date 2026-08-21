@@ -5,16 +5,13 @@ extends RefCounted
 ## Semantic phase floors and objectives belong to VehicleBossExamRuntime.
 
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
-const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 
-const PHASE_GAPS := [0.40, 0.30, 0.24]
-const AUTONOMOUS_INTERVALS := [4.8, 3.9, 3.1]
-const DIRECT_RECOVERY_SCALE := 0.72
 const MAX_PENDING_RADIAL_VOLLEYS := 4
 const ACTION_NONE: StringName = &""
 const ACTION_REPOSITION: StringName = &"reposition"
@@ -43,10 +40,10 @@ var _pending_radial_volleys: Array[Dictionary] = []
 func configure(next_stage_id: StringName) -> void:
 	stage_id = next_stage_id
 	stage_index = (
-		StageDifficulty.stage_index_from_id(stage_id)
+		BossProfiles.stage_index_from_id(stage_id)
 		if CombatStages.has_boss(stage_id) else -1
 	)
-	autonomous_timer = 3.2 * StageDifficulty.boss_cadence_scale(stage_index)
+	autonomous_timer = float(BossProfiles.profile(stage_index).get("initial_autonomous_delay", 0.0))
 	autonomous_index = 0
 	autonomous_serial = 0
 	finite_summons_remaining = 6
@@ -89,10 +86,7 @@ func pending_radial_volley_count() -> int:
 
 
 func read_gap(phase: int) -> float:
-	return (
-		float(PHASE_GAPS[clampi(phase - 1, 0, PHASE_GAPS.size() - 1)])
-		* StageDifficulty.boss_cadence_scale(stage_index)
-	)
+	return BossProfiles.read_gap(stage_index, phase)
 
 
 func select_direct(boss: VehicleEnemyState) -> String:
@@ -161,7 +155,7 @@ func begin_active(boss: VehicleEnemyState, services: Variant) -> void:
 	boss.phase = &"boss_active"
 	boss.pattern_tick = 0.0
 	var pattern := String(boss.pattern)
-	boss.phase_time = Patterns.scaled_active_seconds(pattern, stage_index)
+	boss.phase_time = Patterns.active_seconds(pattern, stage_index)
 	boss.pattern_volleys = 0
 	var kind := Patterns.kind(pattern)
 	if kind == &"summon":
@@ -187,7 +181,7 @@ func update_active(
 			"_boss_combat_move",
 			boss,
 			delta,
-			StageDifficulty.boss_attack_move_scale(stage_index)
+			BossProfiles.attack_move_speed(stage_index)
 		)
 	if (
 		kind in [&"lanes", &"fan", &"cross"]
@@ -289,7 +283,7 @@ func update_active(
 	elif kind == &"beam":
 		var growth_ratio := AttackContract.emitted_beam_growth_ratio(
 			boss.phase_time,
-			Patterns.scaled_active_seconds(pattern, stage_index)
+			Patterns.active_seconds(pattern, stage_index)
 		)
 		for telegraph in boss.attack_telegraphs:
 			if StringName(telegraph.get("delivery", &"")) != &"beam":
@@ -330,11 +324,7 @@ func update_active(
 	if boss.phase_time <= 0.0:
 		services.call("_on_boss_direct_attack_complete", boss)
 		boss.phase = &"boss_recovery"
-		boss.phase_time = (
-			Patterns.recovery_seconds(pattern)
-			* DIRECT_RECOVERY_SCALE
-			* StageDifficulty.boss_cadence_scale(stage_index)
-		)
+		boss.phase_time = Patterns.recovery_seconds(pattern, stage_index)
 		boss.vulnerable = 1.55 if kind in [&"charge", &"area"] else 0.65
 		boss.last_pattern = pattern
 		boss.pattern = &"recovery_window"
@@ -355,9 +345,7 @@ func advance_autonomous(
 	var pattern := String(sequence[autonomous_index % sequence.size()])
 	autonomous_index += 1
 	autonomous_serial += 1
-	autonomous_timer = float(
-		AUTONOMOUS_INTERVALS[clampi(boss.boss_phase - 1, 0, 2)]
-	) * StageDifficulty.boss_cadence_scale(stage_index)
+	autonomous_timer = BossProfiles.autonomous_interval(stage_index, boss.boss_phase)
 	if Patterns.kind(pattern) == &"summon":
 		if finite_summons_remaining <= 0:
 			return events
@@ -371,8 +359,8 @@ func advance_autonomous(
 		"kind":Patterns.kind(pattern),
 		"origin":boss.pos,
 		"target":player_position + offset,
-		"startup":Patterns.scaled_startup_seconds(pattern, stage_index),
-		"duration":Patterns.scaled_active_seconds(pattern, stage_index),
+		"startup":Patterns.startup_seconds(pattern, stage_index),
+		"duration":Patterns.active_seconds(pattern, stage_index),
 		"damage":Patterns.damage(pattern, stage_index) * (
 			LateBossMechanics.OVERLOAD_DEALT_DAMAGE_SCALE
 			if stage_index == 11 and LateBossMechanics.overload_active(boss.pattern_timer)
@@ -395,9 +383,7 @@ func snapshot() -> Dictionary:
 	return {
 		"stage_id":stage_id,
 		"stage_index":stage_index,
-		"cadence_scale":StageDifficulty.boss_cadence_scale(stage_index),
-		"attack_time_scale":StageDifficulty.boss_attack_time_scale(stage_index),
-		"attack_move_scale":StageDifficulty.boss_attack_move_scale(stage_index),
+		"profile":BossProfiles.profile(stage_index).duplicate(true),
 		"autonomous_timer":autonomous_timer,
 		"autonomous_index":autonomous_index,
 		"finite_summons_remaining":finite_summons_remaining,

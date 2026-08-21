@@ -1,23 +1,19 @@
 class_name VehicleBossPatterns
 extends RefCounted
 
-## Data-owned boss exams. PATTERNS store authored base Standard damage. The
-## public damage contract applies one boss-only multiplier before VehicleRun
-## bypasses ordinary enemy and stage multipliers.
+## Data-owned boss exams. Pattern IDs describe authored selections while the
+## resolved stage table stores absolute values for the one boss that uses them.
 
-const ACTIVE_MOVE_SCALE := 0.62
 const AREA_TARGET_MAX_LEAD := 96.0
 const MIN_BASE_WALK_ESCAPE_MARGIN := 40.0
 const BOSS_CHARGE_SPEED := 1027.0
 const BOSS_CONTACT_PADDING := 10.0
 const BEAM_RANGE := 1334.0
 const BEAM_COVER_PADDING := 5.0
-const BASE_LANE_SPACING := 135.0
 const BASE_FAN_OFFSETS := [-0.34, -0.17, 0.0, 0.17, 0.34]
 const BOSS_PROJECTILE_SPEED_SCALE := 1.40
-const BOSS_AREA_RADIUS_SCALE := 1.25
 
-const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 
 const PATTERNS := {
@@ -115,6 +111,97 @@ const AUTONOMOUS_SEQUENCES := {
 	&"stage_9": [&"compression_single", &"compression_pair"], &"stage_10": [&"reflect_lance", &"reflect_break"], &"stage_11": [&"resonance_lanes", &"resonance_pulse"], &"stage_12": [&"overload_crossfire_shift", &"overload_break"],
 }
 
+# [startup, active, recovery, damage, optional radius, optional width]. Values
+# are the preserved pre-migration effective results, not stage multipliers.
+const RESOLVED_STAGE_STATS: Array[Dictionary] = [
+	{
+		&"common_charge":[1.3, .65, .4824, 30.0], &"thermal_gates":[1.0, .9, .43416, 22.0],
+		&"common_broad_barrage":[1.3, 1.14, .43416, 14.0], &"heated_fan":[.85, .7, .43416, 20.0],
+		&"thermal_ring":[1.2, .6, .4824, 28.0, 287.5], &"slag_ring":[1.15, .7, 0.0, 20.0],
+		&"forge_vent":[1.0, 2.4, 0.0, 20.0, 237.5],
+	},
+	{
+		&"common_charge":[1.274, .637, .468, 31.8], &"cross_corridors":[1.274, .686, .4446, 27.56, 0.0, 87.36],
+		&"common_broad_barrage":[1.274, 1.1172, .4212, 14.84], &"depth_area":[1.078, .539, .5148, 33.92, 240.5],
+		&"current_fan":[.882, .686, .4212, 21.2], &"opposing_lanes":[1.078, 1.372, 0.0, 21.2],
+		&"depth_charges":[1.127, .588, 0.0, 31.8, 227.5],
+	},
+	{
+		&"common_charge":[1.248, .624, .4536, 33.6], &"grounding_grid":[.96, .816, .43092, 24.64],
+		&"common_broad_barrage":[1.248, 1.0944, .40824, 15.68], &"shield_counterburst":[1.248, .672, .4536, 35.84],
+		&"radial_pulse":[1.28, .576, .54432, 33.6, 317.25], &"thunder_chain":[1.152, .528, 0.0, 35.84, 229.5],
+		&"boss_pattern_fixed_beam_01_call":[.96, 2.4, 0.0, 0.0],
+	},
+	{
+		&"common_charge":[1.222, .611, .4392, 35.4], &"switch_sweep":[.987, .752, .50508, 35.4, 0.0, 87.36],
+		&"common_broad_barrage":[1.222, 1.0716, .39528, 16.52], &"gate_shockwave":[1.645, .517, .46116, 33.04, 336.0],
+		&"ricochet_volley":[.94, .705, .46116, 25.96], &"switchyard_mines":[1.081, .564, 0.0, 30.68, 203.0],
+		&"switch_sweeps":[1.081, .705, 0.0, 33.04, 0.0, 80.64],
+	},
+	{
+		&"common_charge":[1.196, .598, .4248, 37.2], &"focused_beam":[1.058, .736, .531, 42.16, 0.0, 95.12],
+		&"common_broad_barrage":[1.196, 1.0488, .38232, 17.36], &"mirror_cross":[.874, .598, .4248, 34.72],
+		&"carrier_wave":[1.012, .782, .531, 0.0], &"parallel_beams":[1.104, 1.288, 0.0, 27.28],
+		&"relay_pulse_rings":[1.31, .552, 0.0, 37.2, 326.25],
+	},
+	{
+		&"common_charge":[1.17, .585, .4104, 39.3], &"long_bank_barrage":[1.17, 1.17, 0.0, 20.96],
+		&"common_broad_barrage":[1.17, 1.026, .36936, 18.34], &"ricochet_volley":[.9, .675, .43092, 28.82],
+		&"gate_shockwave":[1.575, .495, .43092, 36.68, 360.0],
+	},
+	{
+		&"common_charge":[1.144, .572, .396, 41.4], &"crossing_weave_a":[1.144, 1.364, .396, 93.84],
+		&"common_broad_barrage":[1.144, 1.0032, .3564, 19.32], &"crossing_weave_b":[1.144, 1.364, .396, 99.36],
+		&"ricochet_volley":[.88, .66, .4158, 30.36],
+	},
+	{
+		&"common_charge":[1.118, .559, .3816, 43.8], &"radial_volley_a":[1.118, 1.247, .3816, 26.28],
+		&"common_broad_barrage":[1.118, .9804, .34344, 20.44], &"radial_volley_b":[1.118, 1.247, .3816, 29.2],
+		&"focused_beam":[.989, .688, .477, 49.64, 0.0, 104.96],
+	},
+	{
+		&"compression_single":[.65, 1.02, .35568, 86.24], &"compression_shift":[.697, 1.105, .3744, 92.4],
+		&"compression_pair":[.765, 1.2325, .41184, 101.64], &"compression_reverse":[.68, 1.0625, .35568, 89.32],
+		&"compression_break":[.697, .527, .35568, 36.96],
+	},
+	{
+		&"reflect_lance":[.7392, .6048, .34884, 55.08, 0.0, 110.88], &"reflect_fan":[.672, .5208, .33048, 40.5],
+		&"reflect_break":[.84, .462, .3672, 58.32], &"reflect_crossfire":[.7224, .5376, .337824, 43.74],
+		&"reflect_reposition":[.6888, .5544, .33048, 37.26],
+	},
+	{
+		&"resonance_lanes":[.6806, .5644, .3312, 42.5], &"resonance_pulse":[.7968, .4565, .342, 59.5, 385.25],
+		&"resonance_fan":[.664, .5146, .324, 40.8], &"resonance_cross":[.7138, .5312, .3312, 45.9],
+		&"resonance_break":[.747, .5976, .36, 61.2, 0.0, 115.24],
+	},
+	{
+		&"overload_rush":[.6724, .4756, .31752, 71.2], &"overload_crossfire":[.65, .5084, .310464, 53.4],
+		&"overload_break":[.7544, .45, .324576, 67.64, 416.5], &"overload_crossfire_shift":[.656, .5248, .31752, 49.84],
+		&"overload_rush_return":[.7052, .492, .331632, 74.76],
+	},
+]
+
+# Pattern IDs are authored selections. Behavior families describe the runtime
+# algorithm that actually executes them, so aliases with different tuning or
+# affinity do not masquerade as different mechanics.
+const BEHAVIOR_FAMILY_BY_KIND := {
+	&"charge": &"charge",
+	&"lanes": &"lane_volley",
+	&"fan": &"fan_volley",
+	&"cross": &"cross_volley",
+	&"beam": &"emitted_beam",
+	&"broad_barrage": &"broad_barrage",
+	&"cross_corridors": &"cross_corridor_beam",
+	&"long_banks": &"distance_growth_banks",
+	&"crossing_weave": &"crossing_weave",
+	&"radial_volley": &"radial_volley",
+	&"compression": &"compression_slabs",
+}
+const BEHAVIOR_FAMILY_OVERRIDES := {
+	&"carrier_wave": &"carrier_summon",
+	&"boss_pattern_fixed_beam_01_call": &"fixed_beam_summon",
+}
+
 static func sequence(stage_id: StringName, phase_value: Variant = 1) -> Array[String]:
 	var profile_id := CombatStages.boss_profile_id(stage_id)
 	var base: Array = STAGE_SEQUENCES.get(profile_id, [])
@@ -150,11 +237,42 @@ static func is_common(pattern: String) -> bool:
 	return StringName(pattern) in [&"common_charge", &"common_broad_barrage"]
 
 
+static func behavior_family(pattern: String) -> StringName:
+	var pattern_id := StringName(pattern)
+	if BEHAVIOR_FAMILY_OVERRIDES.has(pattern_id):
+		return StringName(BEHAVIOR_FAMILY_OVERRIDES[pattern_id])
+	var pattern_kind := kind(pattern)
+	if pattern_kind == &"area":
+		return (
+			&"autonomous_radial_zone"
+			if commit_mode(pattern) == &"autonomous"
+			else &"committed_radial_bombardment"
+		)
+	return StringName(BEHAVIOR_FAMILY_BY_KIND.get(pattern_kind, pattern_kind))
+
+
+static func stages_using_behavior(family: StringName) -> Array[StringName]:
+	var result: Array[StringName] = []
+	for stage_id in STAGE_SEQUENCES:
+		var selected: Array = Array(STAGE_SEQUENCES[stage_id]).duplicate()
+		selected.append_array(Array(AUTONOMOUS_SEQUENCES.get(stage_id, [])))
+		for pattern in selected:
+			if behavior_family(String(pattern)) != family:
+				continue
+			result.append(StringName(stage_id))
+			break
+	return result
+
+
+static func is_shared_behavior(pattern: String) -> bool:
+	return stages_using_behavior(behavior_family(pattern)).size() >= 2
+
+
 static func broad_barrage_rows(cycle_index: int, axis: Vector2, mode: StringName) -> Array[Dictionary]:
 	var count := 4 if cycle_index <= 2 else (5 if cycle_index <= 5 else 6)
 	var rows: Array[Dictionary] = []
 	for row_index in 3:
-		rows.append({"row": row_index, "at": float(row_index) * 0.38, "count": count, "spacing": 96.0, "warning": 0.65, "damage": 14.0 * StageDifficulty.boss_damage_multiplier(cycle_index), "axis": axis.rotated(float(row_index) * deg_to_rad(22.5) if mode == &"rotate" else 0.0), "mode": mode, "per_target_hit_lock": 0.80})
+		rows.append({"row": row_index, "at": float(row_index) * 0.38, "count": count, "spacing": 96.0, "warning": 0.65, "damage": damage("common_broad_barrage", cycle_index), "axis": axis.rotated(float(row_index) * deg_to_rad(22.5) if mode == &"rotate" else 0.0), "mode": mode, "per_target_hit_lock": 0.80})
 	return rows
 
 
@@ -172,31 +290,30 @@ static func kind(pattern: String) -> StringName:
 	return StringName(definition(pattern)["kind"])
 
 
-static func startup_seconds(pattern: String) -> float:
-	return float(definition(pattern)["startup"])
+static func resolved_stats(pattern: String, stage_index: int) -> Array:
+	if stage_index < 0 or stage_index >= RESOLVED_STAGE_STATS.size():
+		return []
+	return Array(RESOLVED_STAGE_STATS[stage_index].get(StringName(pattern), []))
 
 
-static func active_seconds(pattern: String) -> float:
-	return float(definition(pattern)["active"])
+static func startup_seconds(pattern: String, stage_index: int = -1) -> float:
+	var stats := resolved_stats(pattern, stage_index)
+	return float(stats[0]) if not stats.is_empty() else float(definition(pattern)["startup"])
 
 
-static func scaled_startup_seconds(pattern: String, stage_index: int) -> float:
-	return StageDifficulty.boss_startup_seconds(startup_seconds(pattern), stage_index)
+static func active_seconds(pattern: String, stage_index: int = -1) -> float:
+	var stats := resolved_stats(pattern, stage_index)
+	return float(stats[1]) if not stats.is_empty() else float(definition(pattern)["active"])
 
 
-static func scaled_active_seconds(pattern: String, stage_index: int) -> float:
-	return StageDifficulty.boss_active_seconds(active_seconds(pattern), stage_index)
-
-
-static func recovery_seconds(pattern: String) -> float:
-	return float(definition(pattern)["recovery"])
+static func recovery_seconds(pattern: String, stage_index: int = -1) -> float:
+	var stats := resolved_stats(pattern, stage_index)
+	return float(stats[2]) if not stats.is_empty() else float(definition(pattern)["recovery"])
 
 
 static func damage(pattern: String, stage_index: int = 0) -> float:
-	return (
-		float(definition(pattern)["damage"])
-		* StageDifficulty.boss_damage_multiplier(stage_index)
-	)
+	var stats := resolved_stats(pattern, stage_index)
+	return float(stats[3]) if not stats.is_empty() else float(definition(pattern)["damage"])
 
 
 static func affinity(pattern: String) -> StringName:
@@ -208,29 +325,27 @@ static func commit_mode(pattern: String) -> StringName:
 
 
 static func radius(pattern: String, stage_index: int = 0) -> float:
-	return (
-		float(definition(pattern).get("radius", 210.0))
-		* StageDifficulty.boss_coverage_scale(stage_index)
-		* BOSS_AREA_RADIUS_SCALE
-	)
+	var stats := resolved_stats(pattern, stage_index)
+	if stats.size() >= 5 and float(stats[4]) > 0.0:
+		return float(stats[4])
+	return float(BossProfiles.profile(stage_index).get("default_radius", 262.5))
 
 
 static func width(pattern: String, stage_index: int = 0) -> float:
-	return (
-		float(definition(pattern).get("width", 68.0))
-		* StageDifficulty.boss_coverage_scale(stage_index)
-	)
+	var stats := resolved_stats(pattern, stage_index)
+	if stats.size() >= 6 and float(stats[5]) > 0.0:
+		return float(stats[5])
+	return float(BossProfiles.profile(stage_index).get("default_width", 68.0))
 
 
 static func lane_spacing(stage_index: int = 0) -> float:
-	return BASE_LANE_SPACING * StageDifficulty.boss_coverage_scale(stage_index)
+	return float(BossProfiles.profile(stage_index).get("lane_spacing", 135.0))
 
 
 static func fan_offsets(stage_index: int = 0) -> Array[float]:
-	var scale := StageDifficulty.boss_coverage_scale(stage_index)
 	var result: Array[float] = []
-	for value in BASE_FAN_OFFSETS:
-		result.append(float(value) * scale)
+	for value in Array(BossProfiles.profile(stage_index).get("fan_offsets", BASE_FAN_OFFSETS)):
+		result.append(float(value))
 	return result
 
 

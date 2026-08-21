@@ -18,6 +18,7 @@ const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_di
 const MysteryDeviceRuntime = preload("res://scripts/vehicle/vehicle_mystery_device_runtime.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const TerrainRuntime = preload("res://scripts/vehicle/vehicle_terrain_runtime.gd")
 
 
@@ -148,7 +149,7 @@ static func trait_rows(family_trait: StringName) -> Array[Dictionary]:
 
 
 static func boss_rows(stage_index: int) -> Array[Dictionary]:
-	if stage_index < 0 or stage_index >= StageDifficulty.BOSS_BASE_HEALTH.size():
+	if stage_index < 0 or stage_index >= BossProfiles.PROFILES.size():
 		return []
 	var index := stage_index
 	var stage_id := StringName("stage_%d" % (index + 1))
@@ -169,11 +170,12 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 			maximum_radius = maxf(
 				maximum_radius, BossPatterns.radius(pattern, index)
 			)
-	var cadence_scale := StageDifficulty.boss_cadence_scale(index)
+	var profile := BossProfiles.profile(index)
+	var intervals: Array = profile["autonomous_intervals"]
 	var rows: Array[Dictionary] = [
 		_row(
 			"GUIDE_STAT_HEALTH", "GUIDE_VALUE_HP",
-			[roundi(StageDifficulty.boss_health(index))], &"health"
+			[roundi(float(profile["health"]))], &"health"
 		),
 		_row(
 			"GUIDE_STAT_ATTACK_DAMAGE", "GUIDE_VALUE_DAMAGE_RANGE",
@@ -182,8 +184,8 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 		_row(
 			"GUIDE_STAT_AUTONOMOUS_CADENCE", "GUIDE_VALUE_SECONDS_RANGE",
 			[
-				_one_decimal(BossRuntime.AUTONOMOUS_INTERVALS[-1] * cadence_scale),
-				_one_decimal(BossRuntime.AUTONOMOUS_INTERVALS[0] * cadence_scale),
+				_one_decimal(float(intervals[-1])),
+				_one_decimal(float(intervals[0])),
 			], &"cadence"
 		),
 	]

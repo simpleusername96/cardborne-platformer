@@ -3,28 +3,28 @@ extends SceneTree
 const Archetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Difficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const GuidebookStats = preload("res://scripts/progression/vehicle_guidebook_stat_adapter.gd")
 
 const EXPECTED_BOSS_HEALTH := [16900.0, 21300.0, 28300.0, 36800.0, 46700.0, 57500.0, 69200.0, 81600.0, 94600.0, 108200.0, 122300.0, 136890.0]
-const EXPECTED_TIME_SCALES := [1.00, 0.98, 0.96, 0.94, 0.92, 0.90, 0.88, 0.86, 0.85, 0.84, 0.83, 0.82]
-const EXPECTED_MOVE_SCALES := [0.62, 0.64, 0.66, 0.68, 0.70, 0.72, 0.74, 0.76, 0.78, 0.80, 0.81, 0.82]
 
 var failures: Array[String] = []
 
 
 func _initialize() -> void:
-	_expect(Difficulty.BOSS_MAX_HEALTH == EXPECTED_BOSS_HEALTH, "boss maximum health uses the direct authored curve")
-	_expect(Difficulty.BOSS_ATTACK_TIME_SCALES == EXPECTED_TIME_SCALES, "boss startup and active time use the authored curve")
-	_expect(Difficulty.BOSS_ATTACK_MOVE_SCALES == EXPECTED_MOVE_SCALES, "boss attack movement uses the authored curve")
+	_expect(BossProfiles.PROFILES.size() == 12, "boss catalog owns twelve independent profiles")
 	for index in EXPECTED_BOSS_HEALTH.size():
-		_expect(is_equal_approx(Difficulty.boss_health(index), EXPECTED_BOSS_HEALTH[index]), "stage %d boss health is exact" % (index + 1))
+		var profile := BossProfiles.profile(index)
+		_expect(is_equal_approx(float(profile["health"]), EXPECTED_BOSS_HEALTH[index]), "stage %d boss health is exact" % (index + 1))
 		if index > 0:
-			_expect(Difficulty.boss_health(index) > Difficulty.boss_health(index - 1), "boss health increases at stage %d" % (index + 1))
-		_expect(BossPatterns.scaled_startup_seconds("heated_fan", index) >= Difficulty.MIN_BOSS_STARTUP_SECONDS, "stage %d startup keeps its fairness floor" % (index + 1))
-		_expect(BossPatterns.scaled_active_seconds("thermal_ring", index) >= Difficulty.MIN_BOSS_ACTIVE_SECONDS, "stage %d active window keeps its fairness floor" % (index + 1))
-	_expect(is_equal_approx(BossPatterns.scaled_startup_seconds("heated_fan", 11), 0.697), "stage 12 scales authored startup")
-	_expect(is_equal_approx(BossPatterns.scaled_active_seconds("focused_beam", 11), 0.656), "stage 12 scales authored active time")
+			_expect(float(profile["health"]) > float(BossProfiles.profile(index - 1)["health"]), "boss health increases at stage %d" % (index + 1))
+		_expect(float(profile["move_speed"]) > 0.0 and float(profile["attack_move_speed"]) > 0.0, "stage %d owns absolute movement speeds" % (index + 1))
+		_expect(Array(profile["read_gaps"]).size() == 3 and Array(profile["autonomous_intervals"]).size() == 3, "stage %d owns absolute cadence values" % (index + 1))
+	_expect(is_equal_approx(BossPatterns.startup_seconds("heated_fan", 0), 0.85), "stage 1 attack startup is absolute")
+	_expect(is_equal_approx(BossPatterns.active_seconds("focused_beam", 7), 0.688), "stage 8 attack duration is absolute")
+	_expect(is_equal_approx(BossPatterns.recovery_seconds("resonance_break", 10), 0.36), "stage 11 recovery is absolute")
+	_expect(is_equal_approx(BossProfiles.attack_move_speed(11), 455.1), "stage 12 active movement is absolute")
 
 	var role: StringName = &"ordinary_melee_01"
 	var definition := Archetypes.definition(role)

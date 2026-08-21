@@ -1367,7 +1367,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	if health_class in [&"swarm", &"standard"]:
 		health *= EncounterDirector.ENEMY_HEALTH_MULTIPLIER
 	if archetype == &"boss_actor":
-		health = StageDifficulty.boss_health(current_stage_index) * float(difficulty_profile["boss_health"])
+		health = StageDifficulty.boss_health(current_stage_index)
 	else:
 		health *= (
 			StageDifficulty.ordinary_health_multiplier(current_stage_index)
@@ -6448,7 +6448,7 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	boss.pattern = pattern
 	boss.phase = "boss_startup"
 	boss.phase_time = AttackContract.warned_startup_seconds(
-		BossPatterns.scaled_startup_seconds(pattern, current_stage_index),
+		BossPatterns.startup_seconds(pattern, current_stage_index),
 		kind
 	)
 	boss.hit_committed = false
@@ -6507,8 +6507,8 @@ func _prepare_boss_identity_pattern(boss: EnemyState, pattern: String) -> void:
 		"kind":BossPatterns.kind(pattern),
 		"origin":Vector2(boss.pos),
 		"target":Vector2(boss.committed_target),
-		"startup":BossPatterns.scaled_startup_seconds(pattern, current_stage_index),
-		"duration":BossPatterns.scaled_active_seconds(pattern, current_stage_index),
+		"startup":BossPatterns.startup_seconds(pattern, current_stage_index),
+		"duration":BossPatterns.active_seconds(pattern, current_stage_index),
 		"damage":BossPatterns.damage(pattern, current_stage_index),
 		"radius":BossPatterns.radius(pattern, current_stage_index),
 		"width":BossPatterns.width(pattern, current_stage_index),
@@ -6597,8 +6597,8 @@ func _append_boss_cross_corridors(
 			"to":to,
 			"width":half_width * 2.0,
 			"warning":0.0,
-			"warning_total":BossPatterns.scaled_startup_seconds(pattern, current_stage_index),
-			"duration":BossPatterns.scaled_active_seconds(pattern, current_stage_index),
+			"warning_total":BossPatterns.startup_seconds(pattern, current_stage_index),
+			"duration":BossPatterns.active_seconds(pattern, current_stage_index),
 			"tick":0.0,
 			"damage":damage,
 			"source":pattern,
@@ -6612,7 +6612,7 @@ func _append_boss_cross_corridors(
 			"beam_emission_mode":AttackContract.EMITTED_BEAM_BIDIRECTIONAL,
 			"beam_emitter":Vector2(boss.pos),
 			"emitter_radius":boss.visual_radius,
-			"duration_total":BossPatterns.scaled_active_seconds(pattern, current_stage_index),
+			"duration_total":BossPatterns.active_seconds(pattern, current_stage_index),
 		})
 	# Collision and active presentation transfer to the zones above. Retiring the
 	# startup descriptors prevents the same X beams from being submitted twice.
@@ -7009,12 +7009,12 @@ func _append_boss_corridor_zone(
 
 
 func _boss_reposition(boss: EnemyState, delta: float) -> void:
-	_boss_combat_move(boss, delta, 1.0)
+	_boss_combat_move(boss, delta, float(boss.speed))
 
 
-func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> void:
+func _boss_combat_move(boss: EnemyState, delta: float, requested_speed: float) -> void:
 	if current_stage_index == 11 and LateBossMechanics.overload_active(boss.pattern_timer):
-		speed_scale *= LateBossMechanics.OVERLOAD_MOVE_SCALE
+		requested_speed *= LateBossMechanics.OVERLOAD_MOVE_SCALE
 	var position := Vector2(boss.pos)
 	var to_player := player_position - position
 	var distance := maxf(1.0, to_player.length())
@@ -7033,7 +7033,7 @@ func _boss_combat_move(boss: EnemyState, delta: float, speed_scale: float) -> vo
 		direction = direction_to_player
 	boss.pos = _move_actor(
 		position,
-		direction * float(boss.speed) * speed_scale * StatusRuntime.speed_multiplier(boss) * delta,
+		direction * requested_speed * StatusRuntime.speed_multiplier(boss) * delta,
 		float(boss.radius),
 		false
 	)

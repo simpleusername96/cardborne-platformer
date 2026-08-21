@@ -143,7 +143,7 @@ static func refresh_boss(
 				AttackContract.EMITTED_BEAM_BIDIRECTIONAL
 			)
 			enemy.attack_telegraphs[-1]["active_seconds"] = (
-				BossPatterns.scaled_active_seconds(pattern, stage_index)
+				BossPatterns.active_seconds(pattern, stage_index)
 			)
 	elif kind == &"broad_barrage":
 		for row in BossPatterns.broad_barrage_rows(
@@ -170,7 +170,7 @@ static func refresh_boss(
 			enemy,
 			BossPatterns.BOSS_CHARGE_SPEED
 				* EncounterDirector.ENEMY_SPEED_MULTIPLIER
-				* BossPatterns.scaled_active_seconds(pattern, stage_index),
+				* BossPatterns.active_seconds(pattern, stage_index),
 			BossPatterns.BOSS_CONTACT_PADDING,
 			damage,
 			affinity,
@@ -381,7 +381,7 @@ static func _append_hostile_beam_topology(
 		descriptor["beam_emission_mode"] = emission_mode
 		descriptor["beam_emitter"] = emitter
 		descriptor["beam_topology"] = topology
-		descriptor["active_seconds"] = BossPatterns.scaled_active_seconds(pattern, stage_index)
+		descriptor["active_seconds"] = BossPatterns.active_seconds(pattern, stage_index)
 		enemy.attack_telegraphs.append(descriptor)
 
 
@@ -475,7 +475,7 @@ static func _ordinary_startup_seconds(enemy: EnemyState) -> float:
 
 static func _boss_startup_seconds(pattern: String, stage_index: int) -> float:
 	return AttackContract.warned_startup_seconds(
-		BossPatterns.scaled_startup_seconds(pattern, stage_index),
+		BossPatterns.startup_seconds(pattern, stage_index),
 		BossPatterns.kind(pattern)
 	)
 
