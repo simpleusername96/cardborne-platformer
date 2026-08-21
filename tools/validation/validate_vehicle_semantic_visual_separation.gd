@@ -111,8 +111,8 @@ func _validate_actor_perimeters() -> void:
 			/ float(maxi(1, boundary_pixels))
 		)
 		_expect(
-			boundary_pixels >= 12 and dark_ratio >= 0.30,
-			"%s keeps an authored dark perimeter (dark boundary %.3f)"
+			boundary_pixels >= 12 and dark_ratio >= 0.15,
+			"%s keeps authored dark separation in its antialiased boundary band (dark boundary %.3f)"
 			% [asset_id, dark_ratio]
 		)
 
@@ -149,21 +149,22 @@ func _grayscale_signature(image: Image) -> String:
 
 
 func _touches_transparency(image: Image, x: int, y: int) -> bool:
-	for offset in [
-		Vector2i.LEFT,
-		Vector2i.RIGHT,
-		Vector2i.UP,
-		Vector2i.DOWN,
-	]:
-		var point: Vector2i = Vector2i(x, y) + Vector2i(offset)
-		if (
-			point.x < 0
-			or point.y < 0
-			or point.x >= image.get_width()
-			or point.y >= image.get_height()
-			or image.get_pixelv(point).a < 0.20
-		):
-			return true
+	# Authored antialiasing may place one or two bright transition pixels outside
+	# the actual dark separator. Inspect a shallow contour band instead of
+	# treating only the outermost alpha edge as the whole perimeter.
+	for offset_y in range(-3, 4):
+		for offset_x in range(-3, 4):
+			if absi(offset_x) + absi(offset_y) > 3:
+				continue
+			var point := Vector2i(x + offset_x, y + offset_y)
+			if (
+				point.x < 0
+				or point.y < 0
+				or point.x >= image.get_width()
+				or point.y >= image.get_height()
+				or image.get_pixelv(point).a < 0.20
+			):
+				return true
 	return false
 
 

@@ -83,7 +83,7 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 	var examples := {
 		&"projectile": &"heated_fan",
 		&"charge": &"direct_charge",
-		&"beam": &"switch_sweep",
+		&"beam": &"focused_beam",
 		&"area": &"thermal_ring",
 	}
 	for delivery_variant in examples:
@@ -128,7 +128,7 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 							float(descriptor["beam_growth_seconds"]),
 							AttackContract.EMITTED_BEAM_GROWTH_SECONDS
 						),
-						"boss forward-emitted beam publishes its 0.30-second growth contract"
+						"boss forward-emitted beam publishes its 0.20-second growth contract"
 					)
 					_expect(
 						StringName(descriptor.get("beam_topology", &""))
@@ -151,7 +151,7 @@ func _validate_beam_topology_cycle(
 		enemy.committed_target = player
 		enemy.pattern_index = cycle_index + 1
 		AttackTelegraphs.refresh_boss(
-			enemy, "switch_sweep", resolve_path, resolve_charge
+			enemy, "focused_beam", resolve_path, resolve_charge
 		)
 		var expected := AttackContract.HOSTILE_BEAM_TOPOLOGIES[cycle_index]
 		var beams := enemy.attack_telegraphs.filter(
@@ -170,7 +170,7 @@ func _validate_beam_topology_cycle(
 					float(descriptor.get("beam_growth_seconds", 0.0)),
 					AttackContract.EMITTED_BEAM_GROWTH_SECONDS
 				),
-				"%s beam grows its collision length over 0.30 seconds" % expected
+				"%s beam grows its collision length over 0.20 seconds" % expected
 			)
 			var expected_mode := (
 				AttackContract.EMITTED_BEAM_FORWARD

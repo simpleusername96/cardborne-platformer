@@ -19,7 +19,7 @@ func _run() -> void:
 		var enemy := EnemyState.new()
 		enemy.id = "health_fixture_%03d" % index
 		enemy.role = &"ordinary_edge_01"
-		enemy.archetype = &"ordinary_edge_01"
+		enemy.archetype = &"ordinary_pursuer_t1"
 		enemy.pos = Vector2(32.0 + float(index % 20) * 62.0, 30.0 + float(index / 20) * 42.0)
 		enemy.visual_radius = 18.0
 		enemy.health = float((index % 10) + 1)
@@ -38,7 +38,7 @@ func _run() -> void:
 	_expect(int(snapshot["health_bar_overflow"]) == 0, "320 enemies do not overflow the retained batch")
 	var batch := renderer.get_node("Overlay_health") as MultiMeshInstance2D
 	_expect(batch.multimesh.visible_instance_count == 640, "backing and fill use exactly two instances per enemy")
-	var fixed_enemy := _enemy(&"ordinary_fixed_beam_01", &"ordinary_fixed_beam_01", Vector2(300.0, 300.0))
+	var fixed_enemy := _enemy(&"ordinary_fixed_beam_01", &"boss_pattern_fixed_beam_01", Vector2(300.0, 300.0))
 	var boss := _enemy(&"boss", &"boss_actor", Vector2(640.0, 360.0))
 	boss.boss_variant = &"boss_stage_01"
 	var classification: Array[EnemyState] = [enemies[0], fixed_enemy, boss]

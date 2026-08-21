@@ -61,19 +61,19 @@ func _initialize() -> void:
 func _validate_scale_contract() -> void:
 	var collision_radius := AttackContract.hostile_projectile_radius(12.0)
 	_expect(
-		is_equal_approx(collision_radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE, 23.1),
+		is_equal_approx(collision_radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE, 31.5),
 		"hostile visual envelope uses the profile multiplier"
 	)
 	_expect(
-		is_equal_approx(collision_radius * Art.PLAYER_PRIMARY_PROJECTILE_SCALE, 26.25),
+		is_equal_approx(collision_radius * Art.PLAYER_PRIMARY_PROJECTILE_SCALE, 32.8125),
 		"primary visual envelope uses the profile multiplier"
 	)
 	_expect(
-		is_equal_approx(collision_radius * Art.PLAYER_SEEKER_PROJECTILE_SCALE, 30.0),
+		is_equal_approx(collision_radius * Art.PLAYER_SEEKER_PROJECTILE_SCALE, 37.5),
 		"seeker visual envelope uses the profile multiplier"
 	)
 	_expect(
-		is_equal_approx(collision_radius * Art.PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 27.3),
+		is_equal_approx(collision_radius * Art.PLAYER_OPENING_BREACH_PROJECTILE_SCALE, 34.125),
 		"opening-breach visual envelope uses the profile multiplier"
 	)
 	_expect(

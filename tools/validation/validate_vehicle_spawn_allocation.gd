@@ -19,7 +19,7 @@ func _initialize() -> void:
 	for stage_id in Catalog.STAGE_IDS:
 		var tactical = layout.tactical_layout(stage_id)
 		var packets := Catalog.packets(stage_id)
-		var packet: Dictionary = packets[1]
+		var packet := _first_multi_sector_packet(packets)
 		var player_position: Vector2 = tactical.geometry_snapshot.player_start
 		var visible_world := Rect2(player_position - Vector2(640.0, 360.0), Vector2(1280.0, 720.0))
 		var direct_allocator := Allocator.new()
@@ -53,13 +53,21 @@ func _initialize() -> void:
 				"%s packet %d prewarmed allocation matches direct geometry truth"
 				% [stage_id, packet_index]
 			)
-			if packet_index == 1:
+			if comparison_packet == packet:
 				allocations = prewarmed
 		_validate_unit_allocation(allocations, packet, tactical.geometry_snapshot, player_position, visible_world, String(stage_id))
 		_validate_role_multiset(allocations, packet, String(stage_id))
 		_validate_pack_order(allocations, packet, String(stage_id))
 		_validate_role_distances(allocations, player_position, String(stage_id))
 	_finish()
+
+
+func _first_multi_sector_packet(packets: Array) -> Dictionary:
+	for packet_variant in packets:
+		var packet := Dictionary(packet_variant)
+		if int(packet.get("arrival_windows", 0)) > 3:
+			return packet
+	return Dictionary(packets[1])
 
 
 func _validate_unit_allocation(

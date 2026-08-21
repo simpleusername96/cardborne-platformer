@@ -28,15 +28,27 @@ func _validate_field(field_id: StringName) -> void:
 			continue
 		for stage_id in CombatStages.STAGE_IDS:
 			var tactical = layout.tactical_layout(stage_id)
-			var packet: Dictionary = CombatStages.definition(stage_id, definition)["packets"][1]
+			var packets: Array = CombatStages.definition(stage_id, definition)["packets"]
+			var packet := _first_multi_sector_packet(packets)
 			var context := "%s %s seed %d" % [field_id, stage_id, seed_offset]
 			_validate_packet(packet, tactical, canonical_player, visible, context)
-			_validate_patterns(CombatStages.definition(stage_id, definition)["packets"], String(stage_id))
+			_validate_patterns(packets, String(stage_id))
 			if seed_offset == 0:
 				_validate_field_edges(packet, tactical, context)
 
 
+func _first_multi_sector_packet(packets: Array) -> Dictionary:
+	for packet_variant in packets:
+		var packet := Dictionary(packet_variant)
+		if int(packet.get("arrival_windows", 0)) > 3:
+			return packet
+	return Dictionary(packets[1])
+
+
 func _validate_patterns(packets: Array, context: String) -> void:
+	if context == "stage_1":
+		_validate_onboarding_patterns(packets, context)
+		return
 	_expect(StringName(packets[0].get("engagement_pattern", &"")) == &"none", "%s opening singleton has no gate pattern" % context)
 	for packet in packets.slice(1):
 		_expect(StringName(packet.get("engagement_pattern", &"")) == &"broad_crescent", "%s multi-window packet declares its first pattern" % context)
@@ -46,6 +58,34 @@ func _validate_patterns(packets: Array, context: String) -> void:
 				&"two_offset_streams" if window_index % 3 == 1 else &"broad_crescent"
 			)
 		_expect(Array(packet.get("engagement_patterns", [])) == expected_patterns, "%s keeps the locked window pattern sequence" % context)
+
+
+func _validate_onboarding_patterns(packets: Array, context: String) -> void:
+	for packet_variant in packets:
+		var packet := Dictionary(packet_variant)
+		var packet_id := String(packet.get("id", ""))
+		if packet_id == "stage_1_onboarding_bridge":
+			_expect(
+				Array(packet.get("engagement_patterns", [])) == [&"broad_crescent"],
+				"%s onboarding bridge keeps one broad arrival pattern" % context
+			)
+			continue
+		var expected_patterns: Array[StringName] = []
+		var arrival_windows := int(packet.get("arrival_windows", 0))
+		for window_index in arrival_windows:
+			expected_patterns.append(
+				&"broad_crescent"
+				if packet_id.begins_with("stage_1_onboarding_")
+				else (&"two_offset_streams" if window_index % 3 == 1 else &"broad_crescent")
+			)
+		_expect(
+			StringName(packet.get("engagement_pattern", &"")) == &"broad_crescent",
+			"%s staged onboarding and post-bridge packets start with a broad crescent" % context
+		)
+		_expect(
+			Array(packet.get("engagement_patterns", [])) == expected_patterns,
+			"%s keeps its onboarding-aware window pattern sequence" % context
+		)
 
 
 func _validate_packet(packet: Dictionary, tactical, player_position: Vector2, visible_world: Rect2, context: String) -> void:

@@ -21,7 +21,28 @@ func _initialize() -> void:
 		_expect(Catalog.player_start(stage_id) == Vector2(3600,2160), "%s center spawn" % stage_id)
 		_expect(layout.mystery_device_blueprint(stage_id).size() == 6, "%s retains six mystery devices" % stage_id)
 		_expect(layout.pickup_blueprint(stage_id).size() == 14, "%s retains four recalls and ten XP shards" % stage_id)
-		_expect(Catalog.packets(stage_id).all(func(packet: Dictionary) -> bool: return StringName(packet["trigger"]["kind"]) == &"time"), "%s uses only timed arrivals" % stage_id)
+		var trigger_kinds: Array[StringName] = []
+		for packet in Catalog.packets(stage_id):
+			trigger_kinds.append(StringName(packet["trigger"]["kind"]))
+		if stage_index == 0:
+			var valid_onboarding_triggers := true
+			for trigger_kind in trigger_kinds:
+				if trigger_kind not in [
+					&"time", &"ordinary_defeats", &"onboarding_bridge_admitted",
+				]:
+					valid_onboarding_triggers = false
+			_expect(
+				trigger_kinds[0] == &"time"
+					and trigger_kinds.has(&"ordinary_defeats")
+					and trigger_kinds.has(&"onboarding_bridge_admitted")
+					and valid_onboarding_triggers,
+				"stage_1 gates onboarding phases by defeats before post-bridge arrivals"
+			)
+		else:
+			_expect(
+				trigger_kinds.all(func(kind: StringName) -> bool: return kind == &"time"),
+				"%s uses only timed arrivals" % stage_id
+			)
 	var center := Catalog.player_start()
 	_expect(Rules.is_position_walkable(center, Rules.PLAYER_RADIUS, &"stage_1"), "center is walkable")
 	for stage_id in Catalog.STAGE_IDS:

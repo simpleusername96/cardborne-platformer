@@ -39,10 +39,16 @@ func _validate_catalog_and_stage_rollout() -> void:
 		var packets: Array = definition["packets"]
 		var unit_count := 0
 		var tactic_packets := 0
+		var expected_tactic_packets := 0
 		var beat_kinds := {}
 		var tactic_ids := {}
 		for packet_variant in packets:
 			var packet := Dictionary(packet_variant)
+			if (
+				(stage_index == 0 and String(packet.get("id", "")).begins_with("stage_1_packet_"))
+				or (stage_index > 0 and packet != packets[0])
+			):
+				expected_tactic_packets += 1
 			var squads: Array = packet["squads"]
 			for squad in squads:
 				unit_count += Array(squad).size()
@@ -76,7 +82,10 @@ func _validate_catalog_and_stage_rollout() -> void:
 			unit_count == int(CombatStages.AUTHORED_COUNTS[stage_index]),
 			"%s authored unit count is unchanged" % stage_id
 		)
-		_expect(tactic_packets == packets.size() - 1, "%s tags one squad per surge" % stage_id)
+		_expect(
+			tactic_packets == expected_tactic_packets,
+			"%s tags one squad per post-opening surge" % stage_id
+		)
 		_expect(beat_kinds.has(&"teach"), "%s includes a Teach beat" % stage_id)
 		_expect(beat_kinds.has(&"combine"), "%s includes a Combine beat" % stage_id)
 		_expect(beat_kinds.has(&"power_test"), "%s includes a Power Test beat" % stage_id)

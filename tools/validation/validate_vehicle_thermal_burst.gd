@@ -17,11 +17,11 @@ func _run() -> void:
 	run.call("_reset_run", false)
 	run.call("_clear_enemies")
 	var center := Vector2(3600.0, 2160.0)
-	var direct = _append(run, &"ordinary_edge_01", "burst_direct", center)
-	var nearby = _append(run, &"ordinary_lane_01", "burst_nearby", center + Vector2(70.0, 0.0))
+	var direct = _append(run, &"ordinary_pursuer_t1", "burst_direct", center)
+	var nearby = _append(run, &"ordinary_emitter_t1", "burst_nearby", center + Vector2(70.0, 0.0))
 	var boss = _append(run, &"boss_actor", "burst_boss", center - Vector2(60.0, 0.0))
-	var structure = _append(run, &"ordinary_fixed_ranged_01", "burst_structure", center + Vector2(40.0, 0.0))
-	var far = _append(run, &"ordinary_gap_01", "burst_far", center + Vector2(120.0, 0.0))
+	var structure = _append(run, &"boss_pattern_fixed_beam_01", "burst_structure", center + Vector2(40.0, 0.0))
+	var far = _append(run, &"ordinary_defender_t1", "burst_far", center + Vector2(120.0, 0.0))
 	var profile := PrimaryPayload.new()
 	profile.thermal_enabled = true
 	profile.thermal_burst_radius = 72.0

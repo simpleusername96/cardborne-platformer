@@ -51,17 +51,17 @@ func _initialize() -> void:
 		"beam danger corridor exactly expands by the player radius"
 	)
 	_expect(
-		is_equal_approx(AttackContract.EMITTED_BEAM_GROWTH_SECONDS, 0.30)
+		is_equal_approx(AttackContract.EMITTED_BEAM_GROWTH_SECONDS, 0.20)
 			and is_zero_approx(
 				AttackContract.emitted_beam_growth_ratio(0.80, 0.80)
 			)
 			and is_equal_approx(
-				AttackContract.emitted_beam_growth_ratio(0.65, 0.80), 0.50
+				AttackContract.emitted_beam_growth_ratio(0.70, 0.80), 0.50
 			)
 			and is_equal_approx(
-				AttackContract.emitted_beam_growth_ratio(0.50, 0.80), 1.0
+				AttackContract.emitted_beam_growth_ratio(0.60, 0.80), 1.0
 			),
-		"emitted beams grow from zero to full collision length over exactly 0.30 seconds"
+		"emitted beams grow from zero to full collision length over exactly 0.20 seconds"
 	)
 	_expect(
 		AttackContract.emitted_beam_live_origin(
