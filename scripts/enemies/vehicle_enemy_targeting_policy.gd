@@ -27,6 +27,8 @@ const ATTACK_MAX_LEAD_DISTANCE := {
 	&"ordinary_gap_01":260.0,
 	&"ordinary_fixed_ranged_01":260.0,
 	&"ordinary_growth_01":320.0,
+	&"ordinary_shield_01":260.0,
+	&"ordinary_pulse_01":260.0,
 	&"ordinary_fixed_ranged_02":260.0,
 	&"ordinary_pull_01":260.0,
 	&"ordinary_fixed_beam_01":220.0,

@@ -6,6 +6,9 @@ const AssetProvider = preload(
 const FamilyTraits = preload(
 	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
 )
+const ActorCatalog = preload(
+	"res://scripts/presentation/components/vehicle_actor_visual_catalog.gd"
+)
 
 const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"attachment/player_craft_body",
@@ -205,6 +208,7 @@ func _initialize() -> void:
 			and not manifest.has("animations"),
 		"manifest declares 116 static semantic images and no frame animations"
 	)
+	_validate_ordinary_family_identity_assets()
 	_validate_surface_details()
 	for error in AssetProvider.validate_pack():
 		_failures.append(error)
@@ -219,6 +223,45 @@ func _initialize() -> void:
 			"%s keeps a transparent raster exterior" % upgrade_id
 		)
 	_finish()
+
+
+func _validate_ordinary_family_identity_assets() -> void:
+	var resolved_paths := {}
+	var identity_count := 0
+	for family in FamilyTraits.FAMILIES:
+		for tier in [1, 2, 3]:
+			var archetype := FamilyTraits.archetype(family, tier)
+			var group_hashes := {}
+			var identities: Array[StringName] = [&""]
+			identities.append_array(FamilyTraits.traits(family))
+			for trait_id in identities:
+				identity_count += 1
+				var asset_id := ActorCatalog.asset_id_for_enemy(
+					archetype, trait_id
+				)
+				var expected_id := StringName(
+					"actor/ordinary_%s%s_t%d" % [
+						String(family),
+						"" if trait_id.is_empty() else "_%s" % String(trait_id),
+						tier,
+					]
+				)
+				_expect(asset_id == expected_id, "%s resolves its exact identity asset" % expected_id)
+				var descriptor := AssetProvider.descriptor(asset_id)
+				var path := String(descriptor.get("path", ""))
+				var texture := AssetProvider.texture(asset_id)
+				_expect(
+					Vector2i(descriptor.get("canvas", Vector2i.ZERO)) == Vector2i(256, 256)
+						and texture != null
+						and Vector2i(texture.get_size()) == Vector2i(256, 256),
+					"%s keeps its approved 256x256 texture" % asset_id
+				)
+				_expect(not path.is_empty() and not resolved_paths.has(path), "%s owns a distinct PNG path" % asset_id)
+				resolved_paths[path] = asset_id
+				var content_hash := FileAccess.get_sha256(path)
+				_expect(not content_hash.is_empty() and not group_hashes.has(content_hash), "%s differs from base and sibling trait pixels" % asset_id)
+				group_hashes[content_hash] = asset_id
+	_expect(identity_count == 45 and resolved_paths.size() == 45, "all 45 ordinary family-tier-trait identities resolve uniquely")
 
 
 func _validate_surface_details() -> void:

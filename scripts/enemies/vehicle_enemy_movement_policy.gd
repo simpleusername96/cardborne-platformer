@@ -32,6 +32,7 @@ const DISTANCE_BANDS := {
 	&"ordinary_gap_01":Vector2(390.0, 540.0),
 	&"ordinary_support_02":Vector2(300.0, 470.0),
 	&"ordinary_growth_01":Vector2(440.0, 600.0),
+	&"ordinary_pulse_01":Vector2(300.0, 470.0),
 	# Beam Ordinary Enemy Lv.1 keeps its full warning line outside ordinary brawl range.
 	&"ordinary_beam_01":Vector2(520.0, 680.0),
 	# Range Ordinary Enemy Lv.1 deliberately remains in its tangential pressure band.
@@ -43,6 +44,8 @@ const DISTANCE_BANDS := {
 const PURSUIT_RESPONSE := 9.0
 const STANDOFF_RESPONSE := 6.0
 const SUPPORT_RESPONSE := 5.0
+const PURSUER_RECOVERY_FORWARD_WEIGHT := 0.65
+const CHARGER_RECOVERY_FORWARD_WEIGHT := 0.55
 
 
 static func family(archetype: StringName, role: StringName) -> StringName:
@@ -57,13 +60,15 @@ static func family(archetype: StringName, role: StringName) -> StringName:
 	if archetype in STATIONARY_ARCHETYPES:
 		return STATIONARY
 	# Compatibility fixtures can specify a behavior without an archetype.
-	if role in [&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_shield_01", &"ordinary_pulse_01", &"ordinary_sweep_01", &"ordinary_melee_02"]:
+	if role in [&"ordinary_edge_01", &"ordinary_pull_01", &"ordinary_sweep_01", &"ordinary_melee_02"]:
 		return PURSUIT
 	if role in [&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01", &"ordinary_beam_01", &"ordinary_range_01"]:
 		return STANDOFF
 	if role == &"ordinary_support_02":
 		return ESCORT
-	if role in [&"ordinary_support_01", &"ordinary_support_03"]:
+	if role == &"ordinary_shield_01":
+		return ESCORT
+	if role in [&"ordinary_pulse_01", &"ordinary_support_01", &"ordinary_support_03"]:
 		return SUPPORT
 	return STATIONARY
 
@@ -148,11 +153,13 @@ static func direction_for_profile(
 		return Vector2.ZERO
 	if movement_family == PURSUIT:
 		if recovering and role == &"ordinary_edge_01":
-			# A recovering Chaser peels sideways. It must not keep backing away,
-			# because recovery is a short reposition rather than a retreat order.
-			return radial.rotated(signf(strafe_sign) * PI * 0.5)
+			return _forward_tangent_direction(
+				radial, strafe_sign, PURSUER_RECOVERY_FORWARD_WEIGHT
+			)
 		if recovering and role == &"ordinary_pull_01":
-			return -radial
+			return _forward_tangent_direction(
+				radial, strafe_sign, CHARGER_RECOVERY_FORWARD_WEIGHT
+			)
 		return radial
 
 	if band == Vector2.ZERO:
@@ -200,8 +207,6 @@ static func requests_approach_for_profile(
 	if movement_family == STATIONARY:
 		return false
 	if movement_family == PURSUIT:
-		if recovering and role in [&"ordinary_edge_01", &"ordinary_pull_01"]:
-			return false
 		return true
 	if band == Vector2.ZERO:
 		return true
@@ -320,3 +325,15 @@ static func _signed_band_error(distance: float, band: Vector2) -> float:
 	var midpoint := (band.x + band.y) * 0.5
 	var half_width := maxf(1.0, (band.y - band.x) * 0.5)
 	return clampf((maxf(1.0, distance) - midpoint) / half_width, -1.0, 1.0)
+
+
+static func _forward_tangent_direction(
+	radial: Vector2,
+	strafe_sign: float,
+	forward_weight: float
+) -> Vector2:
+	var tangent := radial.rotated(signf(strafe_sign) * PI * 0.5)
+	return (
+		radial * forward_weight
+		+ tangent * (1.0 - forward_weight)
+	).normalized()

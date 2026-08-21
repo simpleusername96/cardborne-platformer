@@ -113,19 +113,42 @@ func _validate_continuity_and_recovery() -> void:
 		)
 		var edge_enemy_direction := Vector2(edge_enemy_recovery["direction"])
 		_expect(
-			absf(edge_enemy_direction.x) <= 0.001
-				and absf(edge_enemy_direction.y) > 0.99
-				and edge_enemy_direction.y * strafe_sign > 0.99
-				and not bool(edge_enemy_recovery["requests_approach"]),
-			"Chaser recovery peels laterally without negative radial motion for either strafe sign"
+			edge_enemy_direction.x > 0.0
+				and edge_enemy_direction.y * strafe_sign > 0.0
+				and bool(edge_enemy_recovery["requests_approach"]),
+			"pursuer recovery keeps its locked forward-tangent approach for either strafe sign"
 		)
 	var pull_enemy_recovery := Policy.intent(
 		&"ordinary_pull_01", &"ordinary_pull_01", Vector2.ZERO, Vector2(200.0, 0.0), -1.0, true
 	)
+	var edge_enemy_recovery := Policy.intent(
+		&"ordinary_edge_01", &"ordinary_edge_01", Vector2.ZERO,
+		Vector2(200.0, 0.0), 1.0, true
+	)
 	_expect(
-		Vector2(pull_enemy_recovery["direction"]).x < -0.99
-			and not bool(pull_enemy_recovery["requests_approach"]),
-		"pull_enemy recovery reverses without requesting a route"
+		Vector2(pull_enemy_recovery["direction"]).x > 0.0
+			and Vector2(pull_enemy_recovery["direction"]).y < 0.0
+			and bool(pull_enemy_recovery["requests_approach"]),
+		"charger recovery keeps its locked forward-tangent approach"
+	)
+	_expect(
+		is_equal_approx(
+			Vector2(edge_enemy_recovery["direction"]).dot(Vector2.RIGHT),
+			Policy.PURSUER_RECOVERY_FORWARD_WEIGHT
+				/ Vector2(
+					Policy.PURSUER_RECOVERY_FORWARD_WEIGHT,
+					1.0 - Policy.PURSUER_RECOVERY_FORWARD_WEIGHT
+				).length()
+		)
+		and is_equal_approx(
+			Vector2(pull_enemy_recovery["direction"]).dot(Vector2.RIGHT),
+			Policy.CHARGER_RECOVERY_FORWARD_WEIGHT
+				/ Vector2(
+					Policy.CHARGER_RECOVERY_FORWARD_WEIGHT,
+					1.0 - Policy.CHARGER_RECOVERY_FORWARD_WEIGHT
+				).length()
+		),
+		"pursuer and charger recovery preserve the exact 65/35 and 55/45 vectors"
 	)
 	var smoothed := Policy.smooth_velocity(
 		Vector2(-155.0, 0.0), Vector2(155.0, 0.0), Policy.STANDOFF_RESPONSE,
@@ -181,17 +204,11 @@ func _validate_route_and_speed_contracts() -> void:
 		AttackContract.ORDINARY_ATTACKS[&"ordinary_growth_01"]
 	)
 	var artillery_band := Policy.distance_band(&"ordinary_growth_01")
-	var artillery_reach := (
-		EncounterDirector.effective_hostile_projectile_speed(
-			float(artillery_attack["speed"])
-		)
-		* AttackContract.HOSTILE_PROJECTILE_LIFETIME
-		+ float(artillery_attack["origin_offset"])
-	)
 	_expect(
 		artillery_band == Vector2(440.0, 600.0)
-			and artillery_reach + 0.001 >= artillery_band.y,
-		"artillery holds inside the stationary-target reach of its real shell"
+			and StringName(artillery_attack["kind"]) == &"ground_impact"
+			and float(artillery_attack["radius"]) > 0.0,
+		"artillery holds its distance for a marked ground impact"
 	)
 
 

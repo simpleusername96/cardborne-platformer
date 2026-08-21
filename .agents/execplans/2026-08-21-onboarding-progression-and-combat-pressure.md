@@ -35,11 +35,13 @@ The canonical neutral name for the ranged ordinary family is emitter. The Korean
 - [ ] Implement onboarding, post-onboarding composition, family behavior, progression, pressure, and bombardment changes.
 - [ ] Capture valid gameplay telemetry and performance evidence, then update accepted product documentation.
 
-The projectile-route correction, XP curve, and terminology migration are implemented. The broader encounter, pressure, bombardment, and performance phases remain the decision-complete execution contract below.
+The projectile-route correction, XP curve, terminology migration, encounter composition, and family behavior are implemented. Combat pressure, full-run telemetry, bombardment readability, integrated validation, and performance proof remain in the decision-complete execution contract below.
 
 Phase 0 checkpoint (2026-08-21): all tracked runtime IDs, localization stems, semantic asset IDs, PNG paths, reports, workbench references, and validators now use emitter / 방출형. Nine runtime PNG files and eighteen retained report/workbench PNG files kept identical SHA-256 content across their path rename. Godot 4.7.1 reimported the runtime textures without error. The guidebook store now migrates schema-v1 discovery IDs and rewrites them as schema v2. The tracked text/path scan returned zero legacy-token matches; guidebook, semantic-asset, combat-renderer, and visual-authority validators passed.
 
 Phase 1–2 checkpoint (2026-08-21): VehicleEnemySpawnComposition now owns the five base-only onboarding templates, seed-driven 4:3:3 normal pack bags, one eligible coordinator overlay, per-family 4:3:3 trait bags, exact emitter-defender members, and maintenance-safe atomic splitting. VehicleEncounterRuntime owns typed run-global defeat and bridge progress, per-enemy spawn metadata, bounded emitted-pack evidence, invariant failures, and attack-family counts. Stage/session reports retain family/trait defeats, attack commits, XP, level, upgrade-modal count and duration, and pack composition. The first 65 stage-1 slots are kill-gated at 15/30/45/60; normal admission follows the bridge. Focused composition, family, catalog, arrival, maintenance, pacing, engagement replay, telemetry, and report validators pass without changing quota, authored counts, caps, or cadence.
+
+Phase 3 checkpoint (2026-08-21): Pursuers and chargers retain individual approach ownership during collective gather and lock, and their recovery vectors keep the locked 65/35 and 55/45 forward-to-tangent weights with positive playerward motion. Defenders bind to an exact same-squad emitter, hold its player-facing screen point, and gain the 0.60/0.24-second, 14-damage, 500-speed bash only after that emitter is gone. Coordinators now commit a 0.80-second warned, 12-damage, 420-speed direct projectile with 1.50-second recovery. Artillery creates a delayed marked ground impact rather than a moving shell. Normal and boss-add spawns retain per-enemy family, tier, trait, and escort identity. All 45 family-tier-trait mappings resolve unique approved 256x256 PNG paths, and base/trait sibling hashes differ. Focused movement, attack, contact, specialist integration, semantic asset, renderer, and visual-authority validators pass.
 
 ## Evidence Inspected
 
@@ -329,13 +331,13 @@ Acceptance: repeated seeded simulations show the exact tutorial order, 4:3:3 pac
 
 ### Phase 3 — Family behavior and trait visual identity
 
-- [ ] Remove collective-position preemption from pursuer and charger approach paths.
-- [ ] Apply the locked forward recovery vectors and add direction-invariant tests.
-- [ ] Make defenders bind to the paired emitter, hold the player-facing front position, and switch to bash only after losing that target.
-- [ ] Add the coordinator direct projectile attack.
-- [ ] Convert emitter artillery to marked bombardment.
-- [ ] Correct per-enemy family and trait metadata from spawn through rendering.
-- [ ] Validate all 45 ordinary family-tier-trait PNG resolutions and hashes.
+- [x] Remove collective-position preemption from pursuer and charger approach paths.
+- [x] Apply the locked forward recovery vectors and add direction-invariant tests.
+- [x] Make defenders bind to the paired emitter, hold the player-facing front position, and switch to bash only after losing that target.
+- [x] Add the coordinator direct projectile attack.
+- [x] Convert emitter artillery to marked bombardment.
+- [x] Correct per-enemy family and trait metadata from spawn through rendering.
+- [x] Validate all 45 ordinary family-tier-trait PNG resolutions and hashes.
 
 Acceptance: pursuit units continuously close, protected emitters remain behind their defender, unpaired defenders visibly attack, coordinators visibly attack, and every trait variant selects its distinct approved PNG.
 

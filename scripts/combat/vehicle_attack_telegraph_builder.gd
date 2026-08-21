@@ -268,7 +268,7 @@ static func _append_ordinary_attack(
 			affinity,
 			resolve_charge_path
 		)
-	elif kind == &"area":
+	elif kind in [&"area", &"ground_impact"]:
 		var center := enemy.pos if enemy.role == &"ordinary_fixed_area_01" else enemy.committed_target
 		enemy.attack_telegraphs.append(_area(
 			center,

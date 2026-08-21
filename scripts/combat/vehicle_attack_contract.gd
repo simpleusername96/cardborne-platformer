@@ -69,8 +69,18 @@ const ORDINARY_ATTACKS := {
 		"damage":16.0, "radius":205.0,
 	},
 	&"ordinary_growth_01":{
-		"kind":&"projectile", "affinity":KINETIC, "startup":1.15,
-		"damage":15.0, "speed":360.0, "origin_offset":36.0,
+		"kind":&"ground_impact", "affinity":KINETIC, "startup":1.15,
+		"damage":15.0, "radius":105.0, "warning":0.48, "recovery":1.05,
+	},
+	&"ordinary_shield_01":{
+		"kind":&"charge", "affinity":KINETIC, "startup":0.60,
+		"active":0.24, "damage":14.0, "speed":500.0,
+		"contact_padding":10.0, "recovery":1.40,
+	},
+	&"ordinary_pulse_01":{
+		"kind":&"projectile", "affinity":ARC, "startup":0.80,
+		"damage":12.0, "speed":420.0, "origin_offset":34.0,
+		"recovery":1.50,
 	},
 	&"ordinary_beam_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":1.40,

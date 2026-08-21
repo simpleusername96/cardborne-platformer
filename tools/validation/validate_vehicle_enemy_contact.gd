@@ -298,7 +298,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	var player_center: Vector2 = run.player_position
 	var edge_enemy: EnemyState = run.call("_make_enemy", {
 		"id": "contact_integration_edge_enemy",
-		"role": &"ordinary_edge_01",
+		"role": &"ordinary_pursuer_t1",
 		"pos": player_center + Vector2(140.0, 0.0),
 		"active": true,
 	})
@@ -332,7 +332,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	run.call("_clear_enemies")
 	var pull_enemy: EnemyState = run.call("_make_enemy", {
 		"id": "contact_integration_pull_enemy",
-		"role": &"ordinary_pull_01",
+		"role": &"ordinary_charger_t1",
 		"pos": player_center + Vector2(220.0, 0.0),
 		"active": true,
 	})
@@ -357,7 +357,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	run.call("_clear_enemies")
 	var shooter: EnemyState = run.call("_make_enemy", {
 		"id": "contact_integration_ranged_control",
-		"role": &"ordinary_lane_01",
+		"role": &"ordinary_emitter_t1",
 		"pos": player_center,
 		"active": true,
 	})
@@ -384,7 +384,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 	run.call("_clear_enemies")
 	var guard: EnemyState = run.call("_make_enemy", {
 		"id": "contact_integration_guard",
-		"role": &"ordinary_shield_01",
+		"role": &"ordinary_defender_t1",
 		"pos": player_center,
 		"active": true,
 	})

@@ -88,8 +88,28 @@ func _initialize() -> void:
 		StringName(AttackContract.ORDINARY_ATTACKS[&"ordinary_gap_01"]["kind"])
 			== &"projectile"
 			and StringName(AttackContract.ORDINARY_ATTACKS[&"ordinary_growth_01"]["kind"])
-				== &"projectile",
-		"ordinary controller and artillery roles never create ranged area bombardments"
+				== &"ground_impact",
+		"ordinary controller stays projectile-based while artillery owns a marked ground impact"
+	)
+	var defender_bash := AttackContract.ordinary_attack(&"ordinary_shield_01")
+	var coordinator_bolt := AttackContract.ordinary_attack(&"ordinary_pulse_01")
+	_expect(
+		StringName(defender_bash.get("kind", &"")) == &"charge"
+			and is_equal_approx(float(defender_bash.get("startup", 0.0)), 0.60)
+			and is_equal_approx(float(defender_bash.get("active", 0.0)), 0.24)
+			and is_equal_approx(float(defender_bash.get("damage", 0.0)), 14.0)
+			and is_equal_approx(float(defender_bash.get("speed", 0.0)), 500.0)
+			and is_equal_approx(float(defender_bash.get("recovery", 0.0)), 1.40),
+		"unpaired defender exposes the exact shield-bash contract"
+	)
+	_expect(
+		StringName(coordinator_bolt.get("kind", &"")) == &"projectile"
+			and is_equal_approx(float(coordinator_bolt.get("startup", 0.0)), 0.80)
+			and is_equal_approx(float(coordinator_bolt.get("damage", 0.0)), 12.0)
+			and is_equal_approx(float(coordinator_bolt.get("speed", 0.0)), 420.0)
+			and is_equal_approx(float(coordinator_bolt.get("origin_offset", 0.0)), 34.0)
+			and is_equal_approx(float(coordinator_bolt.get("recovery", 0.0)), 1.50),
+		"coordinator exposes the exact direct-projectile contract"
 	)
 	var rail: Dictionary = AttackContract.ordinary_attack(&"ordinary_beam_01")
 	var orbit: Dictionary = AttackContract.ordinary_attack(&"ordinary_range_01")

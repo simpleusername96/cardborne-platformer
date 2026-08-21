@@ -3,6 +3,8 @@ extends SceneTree
 const Run = preload("res://scripts/vehicle/vehicle_run.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
+const ContactRuntime = preload("res://scripts/enemies/vehicle_enemy_contact_runtime.gd")
+const MovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
 
 var failures: Array[String] = []
 
@@ -12,6 +14,10 @@ func _initialize() -> void:
 	run.player_position = Vector2(600.0, 0.0)
 	_validate_ranged_specialists(run)
 	_validate_ordinary_sweep_01(run)
+	_validate_family_direct_attacks(run)
+	_validate_paired_defender_priority(run)
+	_validate_pursuit_collective_ownership(run)
+	_validate_boss_add_metadata(run)
 	_validate_growth_enemy(run)
 	_finish()
 
@@ -52,6 +58,110 @@ func _validate_ordinary_sweep_01(run) -> void:
 	_expect(run.denied_zones.all(func(zone): return StringName(zone["owner_kind"]) == &"ordinary" and float(zone["warning"]) > 0.0), "bombing ground bursts remain ordinary-owned warning zones")
 	run.call("_update_enemy_active", bomber, 0.8)
 	_expect(bomber.phase == &"recovery", "Sweep Ordinary Enemy Lv.1 completes its forward pass before recovering")
+
+
+func _validate_family_direct_attacks(run) -> void:
+	var projectile_count: int = run.hostile_projectiles.size()
+	var coordinator := _enemy("coordinator", &"ordinary_pulse_01", Vector2.ZERO)
+	coordinator.family = &"coordinator"
+	run.call("_begin_enemy_active", coordinator)
+	_expect(
+		run.hostile_projectiles.size() == projectile_count + 1
+			and coordinator.phase == &"recovery"
+			and is_equal_approx(coordinator.phase_time, 1.50),
+		"coordinator commits one visible direct projectile and exact recovery"
+	)
+
+	var defender := _enemy("defender", &"ordinary_shield_01", Vector2.ZERO)
+	defender.family = &"defender"
+	run.call("_begin_enemy_active", defender)
+	run.call("_update_enemy_active", defender, 0.25)
+	_expect(
+		defender.contact_attack == ContactRuntime.ATTACK_SHIELD_BASH
+			and defender.phase == &"recovery"
+			and is_equal_approx(defender.phase_time, 1.40),
+		"unpaired defender commits the warned shield bash and exact recovery"
+	)
+
+	var zone_count: int = run.denied_zones.size()
+	var artillery := _enemy("artillery", &"ordinary_growth_01", Vector2.ZERO)
+	artillery.family = &"emitter"
+	artillery.family_trait = &"artillery"
+	artillery.committed_target = Vector2(420.0, 0.0)
+	run.call("_begin_enemy_active", artillery)
+	_expect(
+		run.denied_zones.size() == zone_count + 1
+			and Vector2(run.denied_zones[-1]["pos"]) == artillery.committed_target
+			and float(run.denied_zones[-1]["warning"]) > 0.0,
+		"artillery creates a delayed marked ground impact instead of a moving shell"
+	)
+
+
+func _validate_paired_defender_priority(run) -> void:
+	run.call("_clear_enemies")
+	run.player_position = Vector2(600.0, 0.0)
+	var emitter = run.call("_make_enemy", {
+		"id":"paired_emitter", "role":&"ordinary_emitter_t1",
+		"family":&"emitter", "pos":Vector2(400.0, 0.0), "active":true,
+		"squad_id":"paired_squad",
+	})
+	var defender = run.call("_make_enemy", {
+		"id":"paired_defender", "role":&"ordinary_defender_t1",
+		"family":&"defender", "pos":Vector2(500.0, 0.0), "active":true,
+		"squad_id":"paired_squad", "escort_target_id":"paired_emitter",
+	})
+	_expect(run.call("_append_enemy", emitter), "paired emitter enters the runtime store")
+	_expect(run.call("_append_enemy", defender), "paired defender enters the runtime store")
+	var escort_velocity: Vector2 = run.call("_desired_enemy_velocity", defender, false)
+	_expect(
+		escort_velocity.x < 0.0 and not bool(run.call("_enemy_can_attack", defender)),
+		"paired defender returns to the player-facing screen point and does not attack"
+	)
+	emitter.alive = false
+	var pursuit_velocity: Vector2 = run.call("_desired_enemy_velocity", defender, false)
+	_expect(
+		pursuit_velocity.x > 0.0 and bool(run.call("_enemy_can_attack", defender)),
+		"defender pursues and gains bash permission only after its paired emitter is gone"
+	)
+	run.call("_clear_enemies")
+
+
+func _validate_pursuit_collective_ownership(run) -> void:
+	var pursuer := _enemy("pursuer", &"ordinary_edge_01", Vector2.ZERO)
+	pursuer.family = &"pursuer"
+	pursuer.movement_family = MovementPolicy.PURSUIT
+	pursuer.collective_phase = &"gather"
+	pursuer.collective_mode = &"screen"
+	_expect(
+		not bool(run.call("_update_collective_enemy", pursuer, 0.0)),
+		"collective gather cannot preempt pursuer approach"
+	)
+	pursuer.collective_phase = &"execute"
+	pursuer.collective_mode = &"charge"
+	_expect(
+		bool(run.call("_update_collective_enemy", pursuer, 0.0)),
+		"committed collective charge can temporarily own pursuer motion"
+	)
+
+
+func _validate_boss_add_metadata(run) -> void:
+	run.call("_clear_enemies")
+	run.current_stage_index = 1
+	var boss := _enemy("boss", &"boss", Vector2(900.0, 500.0))
+	boss.boss_phase = 2
+	run.call("_spawn_boss_phase_adds", boss, [
+		&"ordinary_emitter_t1", &"ordinary_defender_t1",
+	], &"shielded_column")
+	var emitter = run.call("_find_enemy_by_id", "boss_wave_p2_00")
+	var defender = run.call("_find_enemy_by_id", "boss_wave_p2_01")
+	_expect(
+		emitter != null and defender != null
+			and emitter.family == &"emitter"
+			and defender.family == &"defender"
+			and defender.escort_target_id == emitter.id,
+		"boss adds retain per-enemy family identity and exact emitter escort binding"
+	)
+	run.call("_clear_enemies")
 
 
 func _validate_growth_enemy(run) -> void:

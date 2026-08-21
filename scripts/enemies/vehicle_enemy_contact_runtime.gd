@@ -15,6 +15,7 @@ const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
 
 const ATTACK_EDGE_CONTACT: StringName = &"ordinary_edge_01"
 const ATTACK_PULL_CHARGE: StringName = &"ordinary_pull_01"
+const ATTACK_SHIELD_BASH: StringName = &"ordinary_shield_01"
 const ATTACK_COLLECTIVE: StringName = &"collective"
 const PERSISTENT_CONTACT_COOLDOWN := 0.8
 const PERSISTENT_CONTACT_PADDING := 12.0
@@ -77,6 +78,16 @@ func advance(
 					SpecialistRuntime.PULL_CHARGE_CONTACT_PADDING,
 					SpecialistRuntime.PULL_CHARGE_DAMAGE,
 					"Rammer charge"
+				)
+			ATTACK_SHIELD_BASH:
+				var bash: Dictionary = AttackContract.ORDINARY_ATTACKS[&"ordinary_shield_01"]
+				_resolve_one_shot(
+					enemy,
+					player_from,
+					player_to,
+					float(bash["contact_padding"]),
+					float(bash["damage"]),
+					"Defender shield bash"
 				)
 			ATTACK_COLLECTIVE:
 				_resolve_one_shot(

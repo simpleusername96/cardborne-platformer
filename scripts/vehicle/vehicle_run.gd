@@ -3406,9 +3406,6 @@ func _update_ordinary_enemy(
 			enemy.intercept_charges += 1
 			enemy.intercept_recharge = 4.0
 	enemy.attack_cooldown = maxf(0.0, enemy.attack_cooldown - delta * StatusRuntime.speed_multiplier(enemy))
-	if enemy.role in [&"ordinary_shield_01", &"ordinary_pulse_01"]:
-		_move_enemy_role(enemy, motion_delta, false, decision_due)
-		return false
 	var phase := enemy.phase
 	if phase == &"self_destruct_fuse":
 		enemy.movement_reason = &"self_destruct_fuse"
@@ -3434,15 +3431,6 @@ func _update_ordinary_enemy(
 		return false
 	if phase == &"startup":
 		enemy.movement_reason = &"attack_startup"
-		if (
-			enemy.role == &"ordinary_growth_01"
-			and not _runtime_has_line_of_sight(
-				enemy.pos, enemy.committed_target, 5.0
-			)
-		):
-			enemy.phase = &"recovery"
-			enemy.phase_time = 0.65
-			return false
 		enemy.phase_time = maxf(0.0, enemy.phase_time - delta)
 		AttackTelegraphs.update_ordinary_readiness(enemy)
 		if enemy.phase_time <= 0.0:
@@ -3486,6 +3474,17 @@ func _update_collective_enemy(
 	enemy: EnemyState,
 	delta: float
 ) -> bool:
+	# Individual commitments always finish. Pursuit families also retain normal
+	# approach ownership until a collective charge/fuse actually executes.
+	if enemy.phase in [&"startup", &"active"]:
+		return false
+	if enemy.movement_family == EnemyMovementPolicy.PURSUIT and not (
+		enemy.collective_phase == &"execute"
+		and enemy.collective_mode in [&"charge", &"fuse"]
+	):
+		return false
+	if enemy.family == &"defender" and _protected_emitter(enemy) != null:
+		return false
 	match enemy.collective_phase:
 		&"gather":
 			enemy.movement_reason = &"collective_gather"
@@ -3641,6 +3640,9 @@ func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
 			cooldown = 1.8
 		&"ordinary_growth_01":
 			cooldown = 1.65
+		&"ordinary_shield_01", &"ordinary_pulse_01":
+			# These roles express their complete post-active recovery in phase_time.
+			cooldown = 0.0
 		&"ordinary_fixed_ranged_02":
 			cooldown = 1.25
 		&"ordinary_pull_01":
@@ -3678,11 +3680,11 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 		&"ordinary_fixed_area_01":
 			return distance <= 190.0
 		&"ordinary_growth_01":
-			return (
-				distance <= 650.0
-				and distance >= 250.0
-				and _runtime_has_line_of_sight(enemy.pos, target, 5.0)
-			)
+			return distance <= 650.0 and distance >= 250.0
+		&"ordinary_shield_01":
+			return _protected_emitter(enemy) == null and distance <= 190.0
+		&"ordinary_pulse_01":
+			return distance <= 620.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
 		&"ordinary_fixed_ranged_02":
 			return distance <= 700.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
 		&"ordinary_pull_01":
@@ -3783,7 +3785,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				enemy.committed_dir,
 				float(shooter_attack["damage"]) * enemy.pack_damage_multiplier,
 				float(shooter_attack["speed"]),
-				"Mobile shooter bolt",
+				"Emitter bolt",
 				StringName(shooter_attack["affinity"]),
 				false,
 				false,
@@ -3830,19 +3832,37 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				_damage_player(mine_damage, "Arc proximity burst", true)
 		&"ordinary_growth_01":
 			var artillery_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
+			var warning := float(artillery_attack["warning"])
+			denied_zones.append({
+				"id":"%s_artillery" % enemy.id,
+				"owner_kind":&"ordinary", "owner":&"hostile",
+				"shape":&"area", "pos":enemy.committed_target,
+				"radius":float(artillery_attack["radius"]),
+				"damage":float(artillery_attack["damage"])
+					* enemy.pack_damage_multiplier,
+				"affinity":StringName(artillery_attack["affinity"]),
+				"warning":warning, "warning_total":warning,
+				"duration":0.22, "tick":0.0,
+				"single_hit":true, "hit_committed":false,
+				"source":"Emitter artillery impact", "final_damage":false,
+			})
+			enemy.phase = &"recovery"
+			enemy.phase_time = float(artillery_attack["recovery"])
+		&"ordinary_shield_01":
+			enemy.phase_time = float(AttackContract.ORDINARY_ATTACKS[role]["active"])
+		&"ordinary_pulse_01":
+			var coordinator_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
-				enemy.pos + enemy.committed_dir * float(artillery_attack["origin_offset"]),
+				enemy.pos + enemy.committed_dir * float(coordinator_attack["origin_offset"]),
 				enemy.committed_dir,
-				float(artillery_attack["damage"]) * enemy.pack_damage_multiplier,
-				float(artillery_attack["speed"]),
-				"Artillery shell",
-				StringName(artillery_attack["affinity"]),
-				false,
-				false,
+				float(coordinator_attack["damage"]) * enemy.pack_damage_multiplier,
+				float(coordinator_attack["speed"]),
+				"Coordinator pulse bolt",
+				StringName(coordinator_attack["affinity"]), false, false,
 				AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 			)
 			enemy.phase = &"recovery"
-			enemy.phase_time = 1.05
+			enemy.phase_time = float(coordinator_attack["recovery"])
 		&"ordinary_beam_01":
 			var rail_attack := AttackContract.ordinary_attack(role)
 			_spawn_hostile_projectile(
@@ -3932,6 +3952,21 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			if enemy.phase_time <= 0.0:
 				enemy.phase = &"recovery"
 				enemy.phase_time = 0.52
+		&"ordinary_shield_01":
+			enemy.contact_attack = EnemyContactRuntime.ATTACK_SHIELD_BASH
+			var bash := AttackContract.ordinary_attack(role)
+			var before := enemy.pos
+			enemy.pos = _runtime_charge_path_end(
+				before,
+				enemy.committed_dir,
+				float(bash["speed"])
+					* EncounterDirector.ENEMY_SPEED_MULTIPLIER
+					* delta,
+				enemy.radius
+			)
+			if enemy.phase_time <= 0.0:
+				enemy.phase = &"recovery"
+				enemy.phase_time = float(bash["recovery"])
 		&"ordinary_fixed_ranged_01":
 			var turret_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			enemy.burst_timer -= delta
@@ -4131,13 +4166,8 @@ func _desired_enemy_velocity(
 		enemy.speed
 	)
 	if movement_family == EnemyMovementPolicy.ESCORT and not recovering:
-		var protected_emitter := _find_enemy_by_id(enemy.escort_target_id)
-		if (
-			protected_emitter != null
-			and protected_emitter.alive
-			and protected_emitter.active
-			and protected_emitter.family == &"emitter"
-		):
+		var protected_emitter := _protected_emitter(enemy)
+		if protected_emitter != null:
 			var screen_direction := (pressure_focus - protected_emitter.pos).normalized()
 			if not screen_direction.is_zero_approx():
 				movement_focus = protected_emitter.pos + screen_direction * (
@@ -4239,6 +4269,21 @@ func _desired_enemy_velocity(
 	return desired.normalized() * _effective_enemy_speed(enemy) * StatusRuntime.speed_multiplier(enemy)
 
 
+func _protected_emitter(enemy: EnemyState) -> EnemyState:
+	if enemy == null or enemy.escort_target_id.is_empty():
+		return null
+	var candidate := _find_enemy_by_id(enemy.escort_target_id)
+	if (
+		candidate == null
+		or not candidate.alive
+		or not candidate.active
+		or candidate.family != &"emitter"
+		or candidate.squad_id != enemy.squad_id
+	):
+		return null
+	return candidate
+
+
 func _smoothed_enemy_velocity(
 	enemy: EnemyState,
 	delta: float,
@@ -4256,9 +4301,19 @@ func _smoothed_enemy_velocity(
 		delta,
 		speed_cap
 	)
-	return _enemy_local_steering.adjusted_velocity(
+	var adjusted := _enemy_local_steering.adjusted_velocity(
 		enemy, role_velocity, enemy_grid, enemies, refresh_overlap
 	)
+	if (
+		enemy.movement_family == EnemyMovementPolicy.PURSUIT
+		and enemy.phase in [&"move", &"recovery"]
+		and enemy.reposition_time <= 0.0
+	):
+		var toward_player := (player_position - enemy.pos).normalized()
+		if not toward_player.is_zero_approx() and adjusted.dot(toward_player) <= 0.0:
+			var lateral := adjusted - toward_player * adjusted.dot(toward_player)
+			adjusted = (lateral + toward_player * speed_cap * 0.05).limit_length(speed_cap)
+	return adjusted
 
 
 func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: float) -> void:
@@ -7084,18 +7139,33 @@ func _spawn_boss_phase_adds(
 	var spawn_count := mini(available, roles.size())
 	var spawned := 0
 	var squad_id := "boss_wave_p%d" % boss.boss_phase
-	var pack_family := &""
-	var pack_tier := 0
-	if not roles.is_empty():
-		var pack_definition := EnemyArchetypes.definition(StringName(roles[0]))
-		pack_family = StringName(pack_definition.get("family", &""))
-		pack_tier = int(pack_definition.get("tier", 0))
-	var pack_trait := FamilyTraits.trait_for_pack(
-		pack_family,
-		current_stage_index,
-		boss.boss_phase
-	)
+	var emitter_indices: Array[int] = []
+	for role_index in spawn_count:
+		var role_definition := EnemyArchetypes.definition(StringName(roles[role_index]))
+		if StringName(role_definition.get("family", &"")) == &"emitter":
+			emitter_indices.append(role_index)
+	var defender_escort_ids := {}
+	var next_emitter := 0
+	for role_index in spawn_count:
+		var role_definition := EnemyArchetypes.definition(StringName(roles[role_index]))
+		if (
+			StringName(role_definition.get("family", &"")) == &"defender"
+			and next_emitter < emitter_indices.size()
+		):
+			defender_escort_ids[role_index] = "%s_%02d" % [
+				squad_id, emitter_indices[next_emitter]
+			]
+			next_emitter += 1
 	for index in spawn_count:
+		var role_id := StringName(roles[index])
+		var role_definition := EnemyArchetypes.definition(role_id)
+		var member_family := StringName(role_definition.get("family", &""))
+		var member_tier := int(role_definition.get("tier", 0))
+		var member_trait := FamilyTraits.trait_for_pack(
+			member_family,
+			current_stage_index,
+			boss.boss_phase * BossPhaseCatalog.MAX_LIVE_ADDS + index
+		)
 		var direction := Vector2.RIGHT.rotated(
 			TAU * float(index) / float(maxi(1, spawn_count))
 			+ float(current_stage_index) * 0.31
@@ -7108,7 +7178,7 @@ func _spawn_boss_phase_adds(
 		)
 		var add := _make_enemy({
 			"id":"%s_%02d" % [squad_id, index],
-			"role":StringName(roles[index]),
+			"role":role_id,
 			"pos":position,
 			"zone":"boss_wave",
 			"active":true,
@@ -7118,9 +7188,10 @@ func _spawn_boss_phase_adds(
 			"squad_leader":index == 0,
 			"formation_slot":index,
 			"formation_size":spawn_count,
-			"pack_family":pack_family,
-			"pack_tier":pack_tier,
-			"pack_trait":pack_trait,
+			"family":member_family,
+			"tier":member_tier,
+			"family_trait":member_trait,
+			"escort_target_id":String(defender_escort_ids.get(index, "")),
 			"collective_tactic_id":tactic_id,
 			"collective_beat_kind":&"power_test",
 		})
