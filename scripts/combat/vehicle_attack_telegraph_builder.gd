@@ -234,7 +234,7 @@ static func update_boss_readiness(
 		enemy,
 		AttackContract.warning_readiness(
 			enemy.phase_time,
-			BossPatterns.scaled_startup_seconds(pattern, stage_index)
+			_boss_startup_seconds(pattern, stage_index)
 		)
 	)
 
@@ -462,12 +462,22 @@ static func _area(
 static func _ordinary_startup_seconds(enemy: EnemyState) -> float:
 	var attack := AttackContract.ordinary_attack(enemy.role)
 	if not attack.is_empty():
-		return float(attack["startup"])
+		return AttackContract.warned_startup_seconds(
+			float(attack["startup"]),
+			StringName(attack.get("kind", &""))
+		)
 	if enemy.role == &"ordinary_pull_01":
 		return SpecialistRuntime.PULL_CHARGE_STARTUP
 	if enemy.role == &"ordinary_fixed_beam_01":
 		return SpecialistRuntime.BEAM_STARTUP
 	return 0.0
+
+
+static func _boss_startup_seconds(pattern: String, stage_index: int) -> float:
+	return AttackContract.warned_startup_seconds(
+		BossPatterns.scaled_startup_seconds(pattern, stage_index),
+		BossPatterns.kind(pattern)
+	)
 
 
 static func _stamp_readiness(enemy: EnemyState, readiness: float) -> void:

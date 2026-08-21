@@ -49,9 +49,9 @@ class BossServiceStub:
 func _init() -> void:
 	var runtime := BossRuntime.new()
 	_expect(
-		BossRuntime.PHASE_GAPS == [0.45, 0.34, 0.26]
-			and BossRuntime.AUTONOMOUS_INTERVALS == [5.4, 4.4, 3.5]
-			and is_equal_approx(BossRuntime.DIRECT_RECOVERY_SCALE, 0.80),
+		BossRuntime.PHASE_GAPS == [0.40, 0.30, 0.24]
+			and BossRuntime.AUTONOMOUS_INTERVALS == [4.8, 3.9, 3.1]
+			and is_equal_approx(BossRuntime.DIRECT_RECOVERY_SCALE, 0.72),
 		"boss offense owns the exact read gaps, autonomous intervals, and recovery scale"
 	)
 	var previous_gap := INF
@@ -235,7 +235,7 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 			and is_equal_approx(
 				boss.phase_time,
 				BossPatterns.recovery_seconds("thermal_ring")
-					* 0.80
+					* 0.72
 					* StageDifficulty.boss_cadence_scale(1)
 			),
 		"direct recovery applies both its offense scale and the cycle cadence scale"

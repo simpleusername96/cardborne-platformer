@@ -5,6 +5,7 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const ContactRuntime = preload("res://scripts/enemies/vehicle_enemy_contact_runtime.gd")
 const MovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 
 var failures: Array[String] = []
 
@@ -56,6 +57,27 @@ func _validate_ordinary_sweep_01(run) -> void:
 	run.call("_begin_enemy_active", bomber)
 	_expect(run.denied_zones.size() == 3, "Sweep Ordinary Enemy Lv.1 schedules exactly three delayed ground bursts")
 	_expect(run.denied_zones.all(func(zone): return StringName(zone["owner_kind"]) == &"ordinary" and float(zone["warning"]) > 0.0), "bombing ground bursts remain ordinary-owned warning zones")
+	var first_zone: Dictionary = run.denied_zones[0]
+	var expected_warning := AttackContract.bombardment_warning(0.48)
+	_expect(
+		is_equal_approx(float(first_zone["warning"]), expected_warning),
+		"the first sweep burst exposes the shared 1.23-second warning"
+	)
+	run.call("_update_denied_zones", expected_warning - 0.01)
+	_expect(
+		not bool(first_zone.get("hit_committed", false)),
+		"the sweep cannot damage during its visible warning"
+	)
+	run.call("_update_denied_zones", 0.02)
+	_expect(
+		not bool(first_zone.get("hit_committed", false)),
+		"warning expiry activates the sweep without same-frame damage"
+	)
+	run.call("_update_denied_zones", 0.01)
+	_expect(
+		bool(first_zone.get("hit_committed", false)),
+		"the sweep can commit damage only after the warning has expired"
+	)
 	run.call("_update_enemy_active", bomber, 0.8)
 	_expect(bomber.phase == &"recovery", "Sweep Ordinary Enemy Lv.1 completes its forward pass before recovering")
 
@@ -68,8 +90,8 @@ func _validate_family_direct_attacks(run) -> void:
 	_expect(
 		run.hostile_projectiles.size() == projectile_count + 1
 			and coordinator.phase == &"recovery"
-			and is_equal_approx(coordinator.phase_time, 1.50),
-		"coordinator commits one visible direct projectile and exact recovery"
+			and is_equal_approx(coordinator.phase_time, 1.50 * 0.90),
+		"coordinator commits one visible direct projectile and scaled recovery"
 	)
 
 	var defender := _enemy("defender", &"ordinary_shield_01", Vector2.ZERO)
@@ -79,21 +101,32 @@ func _validate_family_direct_attacks(run) -> void:
 	_expect(
 		defender.contact_attack == ContactRuntime.ATTACK_SHIELD_BASH
 			and defender.phase == &"recovery"
-			and is_equal_approx(defender.phase_time, 1.40),
-		"unpaired defender commits the warned shield bash and exact recovery"
+			and is_equal_approx(defender.phase_time, 1.40 * 0.90),
+		"unpaired defender commits the warned shield bash and scaled recovery"
 	)
 
 	var zone_count: int = run.denied_zones.size()
+	var projectile_count_before_artillery: int = run.hostile_projectiles.size()
 	var artillery := _enemy("artillery", &"ordinary_growth_01", Vector2.ZERO)
 	artillery.family = &"emitter"
 	artillery.family_trait = &"artillery"
+	artillery.committed_target = Vector2(420.0, 0.0)
+	run.call("_start_enemy_attack", artillery)
+	_expect(
+		artillery.phase == &"startup"
+			and is_equal_approx(artillery.phase_time, 1.90)
+			and artillery.attack_telegraphs.size() == 1
+			and StringName(artillery.attack_telegraphs[0]["shape"]) == &"area",
+		"artillery publishes its exact footprint for the added warning interval"
+	)
 	artillery.committed_target = Vector2(420.0, 0.0)
 	run.call("_begin_enemy_active", artillery)
 	_expect(
 		run.denied_zones.size() == zone_count + 1
 			and Vector2(run.denied_zones[-1]["pos"]) == artillery.committed_target
-			and float(run.denied_zones[-1]["warning"]) > 0.0,
-		"artillery creates a delayed marked ground impact instead of a moving shell"
+			and is_zero_approx(float(run.denied_zones[-1]["warning"]))
+			and run.hostile_projectiles.size() == projectile_count_before_artillery,
+		"artillery activates its committed ground mark instead of a moving shell"
 	)
 
 

@@ -467,7 +467,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   불투명 core와 authored contour가 small runtime scale에서도 역할을 구분한다.
 - 모든 기체 탄환의 presentation length는 이전 기준의 `0.70`을 적용한다. player
   primary와 Seeker thickness는 `0.50`, hostile bolt thickness는 이전 `0.50`의
-  두 배인 `1.00`을 적용한다. 이 transform은 collision truth를 바꾸지 않는다.
+  두 배인 `1.00`을 적용한다. hostile bolt의 collision radius는 damage tier별
+  `6/7.5/9`이며 approved raster의 collision-derived presentation envelope는
+  `4.20`을 적용한다. 이 transform은 collision truth를 바꾸지 않는다.
   player primary는 선택한 단일 element affinity tint를 사용하고 Seeker와 hostile
   bolt는 authored identity를 유지한다. cadence, speed, homing, collision과 damage는
   gameplay code가 소유한다.
@@ -509,8 +511,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - Stage 7 Boss의 crossing weave는 같은 placed moving hazard 계약을 사용한다. 첫 paired
   wall pass와 지연된 orthogonal pass는 startup에 각 entry edge의 짧은 marker만 보이고,
   active부터 현재 collision과 gap을 표시한다. Stage 8 Boss의 두 alternating pulse는
-  startup에 body/source state만 표시하고 active가 시작될 때 실제 wedge-ring 피해 영역과
-  safe sector를 표시한다. 두 번째 pulse가 발동할 때만 12발 radial projectile body가 생성되며, warning
+  warning 동안 실제 wedge-ring 피해 영역과 safe sector를 표시한다. 두 번째 pulse가
+  발동할 때만 12발 radial projectile body가 생성되며, warning
   단계에서 탄환 경로나 미래 위치를 미리 그리지 않는다. 두 보스의 기존 raster identity는
   그대로 유지한다.
 - hostile circle, wedge, shockwave와 non-emitted-beam damaging corridor는 affinity와 무관하게 exact
@@ -518,8 +520,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   four inward boundary notches를 사용한다. startup body alpha는 readiness에 따라
   `0.10 -> 0.20`, damaging window는 `0.20`을 유지한다. Coordinator와 Emitter는
   projectile을 발사하며 Self-Destruct는 fuse 중에만 실제 위험 범위를 표시한다.
-  affinity별 inner ring, diamond, center line, tick bar, commit
-  marker는 만들지 않는다.
+  affinity별 inner ring, diamond, center line, tick bar, commit marker는 만들지 않는다.
+  단, gameplay-owned radial damage boundary는 예외다. radius `120` 미만은 `50%`
+  boundary 하나, radius `120` 이상은 `33%/67%` boundary 두 개를 near-black ring으로
+  표시하고, warning 전 구간에 exact outer footprint와 함께 유지한다. 이 ring은 장식이
+  아니라 `100/45%` 또는 `100/70/40%` damage band의 직접 표시다.
 - threat radar는 기존 5 Hz hostile scan을 유지하며 sampled player origin,
   generation과 12개 이하 sector record를 한 frame으로 교체한다. HUD는 매 render
   frame 현재 player world position으로 이 bounded record를 rebase하고, 같은 frame의

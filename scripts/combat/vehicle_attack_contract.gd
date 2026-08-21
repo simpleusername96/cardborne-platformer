@@ -43,10 +43,14 @@ const HOSTILE_BEAM_TOPOLOGIES: Array[StringName] = [
 ]
 const LIGHT_DAMAGE_MAX := 10.0
 const HEAVY_DAMAGE_MIN := 20.0
-const LIGHT_PROJECTILE_RADIUS := 5.0
-const STANDARD_PROJECTILE_RADIUS := 6.0
-const HEAVY_PROJECTILE_RADIUS := 7.0
-const RADIAL_EDGE_DAMAGE_SCALE := 0.45
+const LIGHT_PROJECTILE_RADIUS := 6.0
+const STANDARD_PROJECTILE_RADIUS := 7.5
+const HEAVY_PROJECTILE_RADIUS := 9.0
+const BOMBARDMENT_WARNING_ADDITION := 0.75
+const SMALL_RADIAL_THRESHOLD := 120.0
+const SMALL_RADIAL_EDGE_DAMAGE_SCALE := 0.45
+const LARGE_RADIAL_MIDDLE_DAMAGE_SCALE := 0.70
+const LARGE_RADIAL_EDGE_DAMAGE_SCALE := 0.40
 const ORDINARY_ATTACKS := {
 	&"ordinary_edge_01":{
 		"kind":&"charge", "affinity":KINETIC, "startup":0.42, "active":0.24,
@@ -70,7 +74,7 @@ const ORDINARY_ATTACKS := {
 	},
 	&"ordinary_growth_01":{
 		"kind":&"ground_impact", "affinity":KINETIC, "startup":1.15,
-		"damage":15.0, "radius":105.0, "warning":0.48, "recovery":1.05,
+		"damage":15.0, "radius":105.0, "recovery":1.05,
 	},
 	&"ordinary_shield_01":{
 		"kind":&"charge", "affinity":KINETIC, "startup":0.60,
@@ -202,11 +206,42 @@ static func warning_readiness(remaining: float, total: float) -> float:
 	return 1.0 - clampf(remaining / total, 0.0, 1.0)
 
 
+static func bombardment_warning(base_warning: float) -> float:
+	return maxf(0.0, base_warning) + BOMBARDMENT_WARNING_ADDITION
+
+
+static func warned_startup_seconds(
+	base_startup: float, attack_kind: StringName
+) -> float:
+	return (
+		bombardment_warning(base_startup)
+		if attack_kind in [&"area", &"ground_impact"]
+		else maxf(0.0, base_startup)
+	)
+
+
+static func radial_band_boundaries(radius: float) -> PackedFloat32Array:
+	return (
+		PackedFloat32Array([0.5])
+		if radius < SMALL_RADIAL_THRESHOLD
+		else PackedFloat32Array([1.0 / 3.0, 2.0 / 3.0])
+	)
+
+
 static func radial_damage(base_damage: float, distance: float, radius: float) -> float:
 	if base_damage <= 0.0 or radius <= 0.0 or distance > radius:
 		return 0.0
 	var normalized_distance := clampf(distance / radius, 0.0, 1.0)
-	return base_damage * lerpf(1.0, RADIAL_EDGE_DAMAGE_SCALE, normalized_distance)
+	if radius < SMALL_RADIAL_THRESHOLD:
+		return base_damage * (
+			1.0 if normalized_distance <= 0.5
+			else SMALL_RADIAL_EDGE_DAMAGE_SCALE
+		)
+	if normalized_distance <= 1.0 / 3.0:
+		return base_damage
+	if normalized_distance <= 2.0 / 3.0:
+		return base_damage * LARGE_RADIAL_MIDDLE_DAMAGE_SCALE
+	return base_damage * LARGE_RADIAL_EDGE_DAMAGE_SCALE
 
 
 static func segment_circle_first_t(
@@ -284,7 +319,7 @@ static func validate_contract() -> PackedStringArray:
 		is_equal_approx(radial_damage(20.0, 0.0, 100.0), 20.0)
 		and is_equal_approx(
 			radial_damage(20.0, 100.0, 100.0),
-			20.0 * RADIAL_EDGE_DAMAGE_SCALE
+			20.0 * SMALL_RADIAL_EDGE_DAMAGE_SCALE
 		)
 		and is_zero_approx(radial_damage(20.0, 100.1, 100.0))
 	):

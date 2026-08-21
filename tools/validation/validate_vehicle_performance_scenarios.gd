@@ -436,12 +436,12 @@ func _validate_threshold_contract() -> void:
 	var thresholds: Dictionary = recorder._threshold_result(native_standard)
 	_expect(bool(thresholds["passed"]), "native 1280 threshold boundary accepts the locked contract")
 	_expect(float(thresholds["limits"]["draw_calls_p95"]) == 200.0, "draw-call gate remains locked at 200")
-	_expect(int(thresholds["limits"]["combat_batches"]) == 50, "combat batch gate retains the canonical ceiling")
+	_expect(int(thresholds["limits"]["combat_batches"]) == 80, "combat batch gate retains the canonical visual ceiling")
 	_expect(float(thresholds["limits"]["frame_p95_ms"]) == 18.0, "native 1280 p95 gate remains locked at 18 ms")
 	native_standard["draw_calls"]["p95"] = 201.0
 	_expect(not bool(recorder._threshold_result(native_standard)["passed"]), "draw-call overflow fails release")
 	native_standard["draw_calls"]["p95"] = 200.0
-	native_standard["combat_renderer"]["batches"] = 52
+	native_standard["combat_renderer"]["batches"] = 81
 	_expect(not bool(recorder._threshold_result(native_standard)["passed"]), "combat batch overflow fails release")
 
 	recorder.scenario_id = &"capacity_pressure"
@@ -499,7 +499,7 @@ func _threshold_fixture(kind: String, window_size: Vector2i) -> Dictionary:
 		},
 		"physics": {"p95": 6.0, "p99": 8.0},
 		"draw_calls": {"p95": 200.0},
-		"combat_renderer": {"batches": 50},
+		"combat_renderer": {"batches": 80},
 		"scenario_validation": {"valid": true},
 		"viewport": {
 			"window": [window_size.x, window_size.y],

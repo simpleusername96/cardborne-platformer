@@ -140,7 +140,7 @@ func _run() -> void:
 	var hostile_projectiles: Array = projectile_store.get("hostile_live")
 	_expect(hostile_projectiles.size() == 1, "ordinary hostile projectile enters the retained store")
 	if hostile_projectiles.size() == 1:
-		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 5.0), "ordinary hostile projectile uses a five-unit collision radius")
+		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 6.0), "light hostile projectile uses a six-unit collision radius")
 		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 410.0), "ordinary hostile projectile uses the reduced effective speed contract")
 		_expect(not bool(hostile_projectiles[0].wall_piercing), "ordinary hostile projectile cannot cross solid blockers")
 	projectile_store.call("clear")
@@ -156,7 +156,7 @@ func _run() -> void:
 	)
 	hostile_projectiles = projectile_store.get("hostile_live")
 	if hostile_projectiles.size() == 1:
-		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 6.0), "standard hostile damage uses a six-unit collision radius")
+		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 7.5), "standard hostile damage uses a 7.5-unit collision radius")
 		_expect(is_equal_approx(Vector2(hostile_projectiles[0].velocity).length(), 410.0), "boss prediction and motion share the reduced speed contract")
 		_expect(hostile_projectiles[0].affinity == AttackContract.THERMAL, "hostile projectile retains its authored affinity")
 
@@ -173,7 +173,7 @@ func _run() -> void:
 	)
 	hostile_projectiles = projectile_store.get("hostile_live")
 	if hostile_projectiles.size() == 1:
-		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 7.0), "heavy hostile damage uses a seven-unit collision radius")
+		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 9.0), "heavy hostile damage uses a nine-unit collision radius")
 		_expect(hostile_projectiles[0].affinity == AttackContract.ARC, "heavy projectile retains its distinct affinity")
 
 	projectile_store.call("clear")
@@ -358,7 +358,7 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	var beam = stage.call("_make_enemy", {
 		"id":"telegraph_beam",
-		"role":&"ordinary_fixed_beam_01",
+		"role":&"boss_pattern_fixed_beam_01",
 		"pos":stage.player_position + Vector2(-400.0, 0.0),
 		"active":true,
 	})
@@ -393,10 +393,11 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	var mine = stage.call("_make_enemy", {
 		"id":"telegraph_mine",
-		"role":&"ordinary_fixed_area_01",
+		"role":&"ordinary_charger_t1",
 		"pos":stage.player_position + Vector2(280.0, 0.0),
 		"active":true,
 	})
+	mine.role = &"ordinary_fixed_area_01"
 	mine.phase = &"startup"
 	mine.committed_dir = Vector2.LEFT
 	AttackTelegraphs.refresh_ordinary(
@@ -416,10 +417,11 @@ func _check_attack_telegraphs(stage: Node) -> void:
 
 	var controller = stage.call("_make_enemy", {
 		"id":"telegraph_controller",
-		"role":&"ordinary_gap_01",
+		"role":&"ordinary_coordinator_t1",
 		"pos":stage.player_position + Vector2(300.0, 0.0),
 		"active":true,
 	})
+	controller.role = &"ordinary_gap_01"
 	controller.phase = &"startup"
 	controller.committed_dir = Vector2.LEFT
 	controller.committed_target = stage.player_position

@@ -256,14 +256,14 @@ func _validate_offscreen_intersection() -> void:
 	_expect(
 		CombatCuePolicy.telegraph_mode(
 			Vector2(300.0, 360.0), 26.0, &"startup", ordinary_area, visible
-		) == CombatCuePolicy.MODE_NONE
+		) == CombatCuePolicy.MODE_AREA_FOOTPRINT
 			and CombatCuePolicy.telegraph_mode(
 				Vector2(300.0, 360.0), 112.0, &"boss_startup", ordinary_area, visible
-			) == CombatCuePolicy.MODE_NONE
+			) == CombatCuePolicy.MODE_AREA_FOOTPRINT
 			and CombatCuePolicy.telegraph_mode(
 				Vector2(300.0, 360.0), 112.0, &"boss_active", ordinary_area, visible
 			) == CombatCuePolicy.MODE_AREA_FOOTPRINT,
-		"area attacks hide the future pulse location and expose truth only while active"
+		"area attacks expose the exact impact footprint throughout warning and active phases"
 	)
 	var unseen_descriptors: Array[Dictionary] = [projectile]
 	_expect(

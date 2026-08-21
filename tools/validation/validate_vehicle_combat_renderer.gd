@@ -48,10 +48,10 @@ func _run() -> void:
 	_validate_health_bar_geometry(renderer)
 	_validate_enemy_presentation(renderer)
 	_expect(
-		AttackContract.LIGHT_PROJECTILE_RADIUS == 5.0
-			and AttackContract.STANDARD_PROJECTILE_RADIUS == 6.0
-			and AttackContract.HEAVY_PROJECTILE_RADIUS == 7.0,
-		"hostile projectile collision radii remain 5/6/7 world units"
+		AttackContract.LIGHT_PROJECTILE_RADIUS == 6.0
+			and AttackContract.STANDARD_PROJECTILE_RADIUS == 7.5
+			and AttackContract.HEAVY_PROJECTILE_RADIUS == 9.0,
+		"hostile projectile collision radii remain 6/7.5/9 world units"
 	)
 	_expect(
 		renderer.get_node_or_null("Projectile_player_primary") != null
@@ -459,9 +459,10 @@ func _run() -> void:
 		"func _sync_area_telegraph", 1
 	).get_slice("func _sync_experience", 0)
 	_expect(
-		arc_area_section.count("_write_danger_ring(") == 1
+		arc_area_section.count("_write_danger_ring(") == 2
+			and arc_area_section.contains("radial_band_boundaries")
 			and not arc_area_section.contains("_write_diamond("),
-		"every damaging area uses one exact outer ring without affinity ornaments"
+		"every damaging area uses gameplay-owned concentric bands and one exact outer ring"
 	)
 	var hostile_visual := renderer.get_node(
 		"Projectile_hostile_barbed_bolt"
@@ -778,9 +779,9 @@ func _run() -> void:
 		"off-screen attacker body remains culled"
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 0
-			and area_ring.multimesh.visible_instance_count == 0,
-		"ordinary enemies do not draw circular ranged bombardment footprints"
+		area_disk.multimesh.visible_instance_count == 3
+			and area_ring.multimesh.visible_instance_count == 3,
+		"off-screen artillery sources still draw the exact three-band warning footprint"
 	)
 	var armed_mine := EnemyState.new()
 	armed_mine.id = "armed_mine"
@@ -807,9 +808,9 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 0
-			and area_ring.multimesh.visible_instance_count == 0,
-		"boss startup hides the future circular pulse location"
+		area_disk.multimesh.visible_instance_count == 3
+			and area_ring.multimesh.visible_instance_count == 3,
+		"boss bombardment startup exposes its exact three-band impact footprint"
 	)
 	offscreen_enemy.attack_telegraphs[0]["readiness"] = 1.0
 	offscreen_enemy.phase = &"boss_active"
@@ -832,8 +833,8 @@ func _run() -> void:
 		late_area_buffer[11]
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 1
-			and area_ring.multimesh.visible_instance_count == 1
+		area_disk.multimesh.visible_instance_count == 3
+			and area_ring.multimesh.visible_instance_count == 3
 			and Vector2(late_disk_buffer[3], late_disk_buffer[7])
 				.is_equal_approx(Vector2(640.0, 360.0))
 			and is_equal_approx(
@@ -844,7 +845,7 @@ func _run() -> void:
 			and Color(late_disk_color, 1.0).is_equal_approx(Color(Art.DANGER, 1.0))
 			and Color(late_area_color, 1.0).is_equal_approx(Color(Art.SPACE_BLACK, 1.0))
 			and is_equal_approx(late_area_color.a, 0.82),
-		"boss active area draws one exact damage body and one boundary"
+		"boss active area preserves its exact three-band damage footprint"
 	)
 	offscreen_enemy.phase = &"active"
 	offscreen_enemy.role = &"ordinary_gap_01"

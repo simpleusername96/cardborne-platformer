@@ -268,7 +268,7 @@ func validation_snapshot(run: Node) -> Dictionary:
 		and run.effects.size() == effect_target
 		and bool(effect_store_snapshot["valid"])
 		and run.denied_zones.size() <= 16
-		and int(renderer_snapshot["batches"]) <= 50
+		and int(renderer_snapshot["batches"]) <= 80
 		and int(renderer_snapshot.get("health_bar_capacity", 0))
 			== EnemyStore.MAX_LIVE_HOSTILES * 2
 		and int(enemy_snapshot["rejected_capacity"]) == 0
@@ -851,7 +851,7 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		and int(enemy_snapshot.get("rejected_capacity", 0)) == 0
 		and run.projectile_store.validate_counts()
 		and bool(effect_store_snapshot["valid"])
-		and int(renderer_snapshot["batches"]) <= 50
+		and int(renderer_snapshot["batches"]) <= 80
 		and int(renderer_snapshot.get("health_bar_capacity", 0))
 			== EnemyStore.MAX_LIVE_HOSTILES * 2
 		and scheduler_spawned

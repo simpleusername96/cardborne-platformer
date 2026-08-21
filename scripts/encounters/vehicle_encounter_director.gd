@@ -9,11 +9,13 @@ const MAX_RANGED_COMMITS := 3
 const MAX_DENIAL_COMMITS := 2
 const ENEMY_HEALTH_MULTIPLIER := 1.12
 # Ordinary navigation pace is tuned independently from committed attacks and bosses.
-const ORDINARY_MOVEMENT_SPEED_MULTIPLIER := 1.40
+const ORDINARY_MOVEMENT_SPEED_MULTIPLIER := 1.48
 const ENEMY_SPEED_MULTIPLIER := 1.20
 const HOSTILE_PROJECTILE_SPEED_MULTIPLIER := 0.82
 const ENEMY_DAMAGE_MULTIPLIER := 1.755
 const ENEMY_RECOVERY_RATE := 1.28
+const ORDINARY_POST_ACTIVE_RECOVERY_SCALE := 0.90
+const EMITTER_RECOVERY_SCALE := 0.85
 const PLAYER_PROJECTILE_CAP := 240
 const HOSTILE_PROJECTILE_CAP := 120
 const BOSS_PROJECTILE_RESERVE := 24
@@ -109,6 +111,12 @@ static func effective_hostile_projectile_speed(base_speed: float) -> float:
 	return maxf(0.0, base_speed) * HOSTILE_PROJECTILE_SPEED_MULTIPLIER
 
 
+static func ordinary_recovery_scale(family: StringName) -> float:
+	return ORDINARY_POST_ACTIVE_RECOVERY_SCALE * (
+		EMITTER_RECOVERY_SCALE if family == &"emitter" else 1.0
+	)
+
+
 static func can_commit(current_points: float, ranged_count: int, denial_count: int, enemy: EnemyState, budget: float = THREAT_BUDGET, ranged_cap: int = MAX_RANGED_COMMITS, denial_cap: int = MAX_DENIAL_COMMITS) -> bool:
 	var cost := enemy.threat_cost
 	var kind := enemy.threat_kind
@@ -142,5 +150,7 @@ static func tuning_contract() -> Dictionary:
 		"boss_projectile_reserve": BOSS_PROJECTILE_RESERVE,
 		"enemy_damage_multiplier": ENEMY_DAMAGE_MULTIPLIER,
 		"enemy_recovery_rate": ENEMY_RECOVERY_RATE,
+		"ordinary_post_active_recovery_scale": ORDINARY_POST_ACTIVE_RECOVERY_SCALE,
+		"emitter_recovery_scale": EMITTER_RECOVERY_SCALE,
 		"spawn_pace": spawn_pace_multiplier(1),
 	}

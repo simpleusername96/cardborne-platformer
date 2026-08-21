@@ -76,7 +76,10 @@ static func telegraph_mode(
 		and float(telegraph.get("active_width", 0.0)) > 0.0
 	):
 		return MODE_ACTIVE_BEAM
-	if phase == &"boss_active" and shape == &"area":
+	if (
+		phase in [&"startup", &"boss_startup", &"active", &"boss_active"]
+		and shape == &"area"
+	):
 		return MODE_AREA_FOOTPRINT
 	return MODE_NONE
 

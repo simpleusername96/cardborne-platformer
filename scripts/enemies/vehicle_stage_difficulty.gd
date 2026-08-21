@@ -18,7 +18,7 @@ const BOSS_MAX_HEALTH := [16900.0, 21300.0, 28300.0, 36800.0, 46700.0, 57500.0, 
 const BOSS_BASE_HEALTH := BOSS_MAX_HEALTH
 const BOSS_HEALTH_MULTIPLIERS := [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 const BOSS_DAMAGE_MULTIPLIERS := [1.00, 1.06, 1.12, 1.18, 1.24, 1.31, 1.38, 1.46, 1.54, 1.62, 1.70, 1.78]
-const BOSS_MOVE_SPEEDS := [380.0, 395.0, 410.0, 425.0, 440.0, 455.0, 470.0, 485.0, 495.0, 505.0, 515.0, 525.0]
+const BOSS_MOVE_SPEEDS := [405.0, 420.0, 435.0, 450.0, 465.0, 480.0, 500.0, 515.0, 525.0, 535.0, 545.0, 555.0]
 # Existing cycle cadence arc with every downtime owner reduced to roughly
 # two-thirds of its previous value. Startup and active windows do not consume it.
 const BOSS_CADENCE_SCALES := [0.67, 0.65, 0.63, 0.61, 0.59, 0.57, 0.55, 0.53, 0.52, 0.51, 0.50, 0.49]

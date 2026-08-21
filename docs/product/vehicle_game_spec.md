@@ -122,9 +122,10 @@ second global elite-stat layer.
 - Hostile projectile motion and predictive aim share one effective-speed
   calculation with a multiplier of `0.82`. Authored damage determines both
   collision and rendered head size: light damage at or below `10` uses a
-  five-pixel radius, standard damage below `20` uses six pixels, and heavy
-  damage uses seven pixels. The head boundary is the collision boundary; the
-  36-pixel trail is a non-damaging direction and affinity cue. The Pulse
+  six-pixel radius, standard damage below `20` uses `7.5` pixels, and heavy
+  damage uses nine pixels. The approved hostile bolt uses a `4.20`
+  collision-derived presentation envelope, while its trail remains a
+  non-damaging direction and affinity cue. The Pulse
   Cannon's unmodified projectile uses a seven-pixel collision radius, and
   upgrades scale from that base.
 - An enemy's compact movement/contact radius remains independent from its
@@ -156,18 +157,22 @@ second global elite-stat layer.
 - Projectile attacks use muzzle/cadence and the actual projectile without a
   predicted route, including off-screen sources and live shots approaching the
   viewport. The threat radar owns the directional warning for an off-screen
-  source. Every startup hides the complete future corridor, pulse location, and
-  moving-hazard route. Startup may show only the muzzle/source orb, attached
-  body or module state, and a short entry-edge marker. Active geometry begins
-  only when its collision becomes active and matches that collision exactly.
+  source. Projectile startup hides the complete future corridor and moving-hazard
+  route. Startup may show only the muzzle/source orb, attached body or module
+  state, and a short entry-edge marker. A marked bombardment instead exposes its
+  exact impact footprint for the complete warning, with `0.75 s` added by the
+  shared bombardment owner; damage cannot apply until that warning expires.
   Non-damaging support descriptors create no warning.
 - All hostile circles, wedges, shockwaves, and damaging corridors use a danger-red full
-  footprint, one thin near-black perimeter, and four inward boundary notches, regardless
-  of affinity. Coordinator and Emitter attacks are projectiles. Self-Destruct uses its
-  warned fuse footprint and no permanent world range ring. Affinity-specific inner rings,
-  diamonds, center lines, tick bars, endpoint caps, and commit markers are absent.
-  Circular damage falls linearly from 100% at the center to 45% at the boundary
-  and stops outside it.
+  footprint, one thin near-black outer perimeter, and four inward boundary notches,
+  regardless of affinity. Coordinator and Emitter direct attacks are projectiles.
+  Self-Destruct uses its warned fuse footprint and no permanent world range ring.
+  Affinity-specific inner rings, diamonds, center lines, tick bars, endpoint caps,
+  and commit markers are absent. Gameplay-owned bombardment damage boundaries are
+  the only required inner rings: radii below `120` deal `100%` damage through `50%`
+  of the radius and `45%` through the edge; radii at least `120` deal `100%` through
+  `33%`, `70%` through `67%`, and `40%` through the edge. Damage stops outside the
+  authored radius.
 - `Affinity` is an attack's impact family and controls large color and trail
   shape cues: kinetic, thermal, toxin, cryo, arc, hybrid, or support.
   `Condition` means a real persistent poison or chill payload. Thermal Burst is
@@ -295,7 +300,7 @@ second global elite-stat layer.
 9. Boss maximum health is directly authored as
    `16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890`; damage scales
    `1.00/1.06/1.12/1.18/1.24/1.31/1.38/1.46/1.54/1.62/1.70/1.78`; move speeds
-   `380/395/410/425/440/455/470/485/495/505/515/525`; cadence scales
+   `405/420/435/450/465/480/500/515/525/535/545/555`; cadence scales
    `.67/.65/.63/.61/.59/.57/.55/.53/.52/.51/.50/.49`; coverage scales
    `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28/1.30/1.32/1.34/1.36`. Bosses approach above 240 pixels,
    strafe from 140 through 240 pixels, and retreat only below 140 pixels. Movement slow
@@ -307,6 +312,8 @@ second global elite-stat layer.
    `.62/.64/.66/.68/.70/.72/.74/.76/.78/.80/.81/.82`. Boss projectile
    speed uses `1.40x`, beam reach `1.45x`, committed charge speed
    `1.30x`, and circular or wedge radius `1.25x`; warning time is never reduced.
+   Direct recovery uses `0.72x`; phase gaps are `0.40/0.30/0.24 s` and autonomous
+   gaps are `4.8/3.9/3.1 s` across the three boss phases.
    Cross Beam commits two clipped perpendicular X corridors. Stage 6 Boss alone
    uses ammunition that arms at 360 traveled units and caps at 880, interpolating speed
    `0.75x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`.
@@ -360,6 +367,9 @@ second global elite-stat layer.
   Sustainer, Bomber, separate Artillery, and global Armored/Overclocked/Heavy identities
   do not exist. The Stage 3 fixed-beam summon is the boss-owned
   `boss_pattern_fixed_beam_01`, not an ordinary family.
+- Ordinary movement uses the global `1.48x` multiplier. Post-active recovery uses
+  `0.90x`; Emitter recovery applies an additional `0.85x`. Startup warnings are
+  not shortened by either cadence adjustment.
 - Tiers own family stats and presentation scale. They do not create a new behavior family.
   All actors in one pack share the authored tier. Pack admission is atomic: a failed
   four-to-eight-member placement delays the complete pack and never creates an orphan.
@@ -486,7 +496,7 @@ second global elite-stat layer.
   world batches and create no per-actor canvas draws or per-field scene nodes.
 - Combat presentation coalesces mobile enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained
-  batches. The hard ceiling remains 50 combat batches.
+  batches. The hard ceiling remains 80 combat batches.
 - The collective runtime stores at most 32 pack records and creates no per-pack or
   per-actor Node. Fifteen ordinary body textures plus shared code-native trait cues
   remain inside the retained renderer; trait cues add no texture batch or material.

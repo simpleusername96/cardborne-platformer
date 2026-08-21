@@ -73,7 +73,7 @@ const EXPERIENCE_RADII := {
 }
 ## Visual envelopes are intentionally larger than collision truth. They are
 ## presentation-only and keep the shared teardrop readable at live speed.
-const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 3.85
+const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 4.20
 const PLAYER_PRIMARY_PROJECTILE_SCALE := 4.375
 const PLAYER_SEEKER_PROJECTILE_SCALE := 5.0
 const PLAYER_OPENING_BREACH_PROJECTILE_SCALE := 4.55
@@ -235,8 +235,8 @@ static func validate_contract() -> PackedStringArray:
 	]:
 		if map_color.a < 1.0:
 			errors.append("flat map role colors must remain opaque")
-	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 3.85):
-		errors.append("hostile projectile envelope must remain 3.85x collision radius")
+	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 4.20):
+		errors.append("hostile projectile envelope must remain 4.20x collision radius")
 	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 4.375):
 		errors.append("player primary projectile visual must remain 4.375x collision radius")
 	if not is_equal_approx(PLAYER_SEEKER_PROJECTILE_SCALE, 5.0):

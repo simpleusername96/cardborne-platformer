@@ -32,16 +32,18 @@ The canonical neutral name for the ranged ordinary family is emitter. The Korean
 - [x] Removed predicted route geometry from hostile projectile startup descriptors, including the stage-8 broad barrage, while preserving source readiness and active damage truth.
 - [x] Replaced the capped tier multipliers with a smooth XP curve that projects level 50 after stage 10 and level 55 after stage 12 on the current quota-and-map path.
 - [x] Implement the terminology migration and semantic validators.
-- [ ] Implement onboarding, post-onboarding composition, family behavior, progression, pressure, and bombardment changes.
+- [x] Implement onboarding, post-onboarding composition, family behavior, progression, pressure, and bombardment changes.
 - [ ] Capture valid gameplay telemetry and performance evidence, then update accepted product documentation.
 
-The projectile-route correction, XP curve, terminology migration, encounter composition, and family behavior are implemented. Combat pressure, full-run telemetry, bombardment readability, integrated validation, and performance proof remain in the decision-complete execution contract below.
+The projectile-route correction, XP curve, terminology migration, encounter composition, family behavior, combat pressure, and bombardment readability are implemented. Full-run telemetry, integrated validation, and performance proof remain in the decision-complete execution contract below.
 
 Phase 0 checkpoint (2026-08-21): all tracked runtime IDs, localization stems, semantic asset IDs, PNG paths, reports, workbench references, and validators now use emitter / 방출형. Nine runtime PNG files and eighteen retained report/workbench PNG files kept identical SHA-256 content across their path rename. Godot 4.7.1 reimported the runtime textures without error. The guidebook store now migrates schema-v1 discovery IDs and rewrites them as schema v2. The tracked text/path scan returned zero legacy-token matches; guidebook, semantic-asset, combat-renderer, and visual-authority validators passed.
 
 Phase 1–2 checkpoint (2026-08-21): VehicleEnemySpawnComposition now owns the five base-only onboarding templates, seed-driven 4:3:3 normal pack bags, one eligible coordinator overlay, per-family 4:3:3 trait bags, exact emitter-defender members, and maintenance-safe atomic splitting. VehicleEncounterRuntime owns typed run-global defeat and bridge progress, per-enemy spawn metadata, bounded emitted-pack evidence, invariant failures, and attack-family counts. Stage/session reports retain family/trait defeats, attack commits, XP, level, upgrade-modal count and duration, and pack composition. The first 65 stage-1 slots are kill-gated at 15/30/45/60; normal admission follows the bridge. Focused composition, family, catalog, arrival, maintenance, pacing, engagement replay, telemetry, and report validators pass without changing quota, authored counts, caps, or cadence.
 
 Phase 3 checkpoint (2026-08-21): Pursuers and chargers retain individual approach ownership during collective gather and lock, and their recovery vectors keep the locked 65/35 and 55/45 forward-to-tangent weights with positive playerward motion. Defenders bind to an exact same-squad emitter, hold its player-facing screen point, and gain the 0.60/0.24-second, 14-damage, 500-speed bash only after that emitter is gone. Coordinators now commit a 0.80-second warned, 12-damage, 420-speed direct projectile with 1.50-second recovery. Artillery creates a delayed marked ground impact rather than a moving shell. Normal and boss-add spawns retain per-enemy family, tier, trait, and escort identity. All 45 family-tier-trait mappings resolve unique approved 256x256 PNG paths, and base/trait sibling hashes differ. Focused movement, attack, contact, specialist integration, semantic asset, renderer, and visual-authority validators pass.
+
+Phase 5 checkpoint (2026-08-21): Ordinary movement is 1.48x; ordinary post-active downtime uses 0.90x and emitter downtime an additional 0.85x. Boss speeds, phase gaps, autonomous gaps, and direct recovery use the locked values. Hostile projectile collision radii are 6/7.5/9 with a 4.20 visual envelope. VehicleAttackContract now owns the shared 0.75-second bombardment addition, warned startup transformation, and exact two-band or three-band radial damage. Warning areas render from the first warning frame and cannot commit damage until a later active update; retained concentric disks and boundaries match gameplay radii. Projectile startup remains source-only, including stage 8. Combat performance fixtures now use the canonical 80-batch visual ceiling. Attack, specialist, boss, route-readability, difficulty, renderer, damage-feedback, performance-scenario, and visual-authority validators pass. A diff-scoped responsibility audit consolidated startup-warning policy into the attack contract and found no remaining competing owner in the task-owned surface.
 
 ## Evidence Inspected
 
@@ -115,7 +117,7 @@ VehicleCombatStages continues to own stage quota, tier, authored population, and
 
 - Specification: docs/design/VISUAL_SYSTEM.md
 - Reference sheet: docs/design/cardborne-universal-art-style-reference.png
-- Specification SHA-256: 91a23cd1b098f133e59aefada427f12d2269e77fb2f6c961ecb89873b3c94482
+- Specification SHA-256: ff4e626c98a72e16caf975199af1dd5895951e885cf6e2e910dd0a24e75994ab
 - Reference sheet SHA-256: 96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889
 - Inspected scope: original 1448 by 1086 reference sheet and the full visual specification relevant to actors, hostile projectiles, hostile circular areas, warning timing, batches, and asset provenance.
 
@@ -352,14 +354,14 @@ Acceptance: threshold tests match every locked checkpoint, the deterministic cur
 
 ### Phase 5 — Combat pressure, projectile scale, and bombardment readability
 
-- [ ] Apply ordinary and boss movement values and recovery/cadence values.
-- [ ] Apply projectile collision and visual scale together.
+- [x] Apply ordinary and boss movement values and recovery/cadence values.
+- [x] Apply projectile collision and visual scale together.
 - [x] Make every hostile projectile startup descriptor source-only: retain origin, committed direction, damage, affinity, lead time, and readiness, but never publish a predicted endpoint, corridor width, or future path. This includes the stage-8 broad barrage and alternating-sector projectile release.
-- [ ] Render hostile-area warning geometry before damage.
-- [ ] Apply the 0.75-second bombardment warning addition through one shared owner.
-- [ ] Implement two-band and three-band radial damage falloff and matching retained visual geometry.
-- [ ] Keep startup warnings and collision truth separate from effect pixels.
-- [ ] Validate warning-to-hit time, radial damage samples, visual footprint, and combat batch count.
+- [x] Render hostile-area warning geometry before damage.
+- [x] Apply the 0.75-second bombardment warning addition through one shared owner.
+- [x] Implement two-band and three-band radial damage falloff and matching retained visual geometry.
+- [x] Keep startup warnings and collision truth separate from effect pixels.
+- [x] Validate warning-to-hit time, radial damage samples, visual footprint, and combat batch count.
 
 Acceptance: no bombardment can damage during warning; sampled center, middle, and edge points receive the exact locked scales; projectile visuals cover collision truth; no hostile projectile startup descriptor or renderer exposes predicted route geometry; off-screen source readiness remains available; actual active beams and damage areas remain visible; ordinary and boss attack commits increase without reducing source readability.
 

@@ -12,9 +12,9 @@ const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 
-const PHASE_GAPS := [0.45, 0.34, 0.26]
-const AUTONOMOUS_INTERVALS := [5.4, 4.4, 3.5]
-const DIRECT_RECOVERY_SCALE := 0.80
+const PHASE_GAPS := [0.40, 0.30, 0.24]
+const AUTONOMOUS_INTERVALS := [4.8, 3.9, 3.1]
+const DIRECT_RECOVERY_SCALE := 0.72
 const ACTION_NONE: StringName = &""
 const ACTION_REPOSITION: StringName = &"reposition"
 const ACTION_SELECT_DIRECT: StringName = &"select_direct"

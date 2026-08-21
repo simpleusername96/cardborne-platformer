@@ -26,13 +26,13 @@ func _initialize() -> void:
 		and AttackContract.threat_tier_for(&"boss", &"slow") == AttackContract.THREAT_BOSS,
 		"source role and family trait map to one deterministic threat tier"
 	)
-	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(4.0), 5.0), "light hostile projectile radius is five")
-	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(12.0), 6.0), "standard hostile projectile radius is six")
-	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(24.0), 7.0), "heavy hostile projectile radius is seven")
+	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(4.0), 6.0), "light hostile projectile radius is six")
+	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(12.0), 7.5), "standard hostile projectile radius is seven and a half")
+	_expect(is_equal_approx(AttackContract.hostile_projectile_radius(24.0), 9.0), "heavy hostile projectile radius is nine")
 	_expect(
 		is_equal_approx(
-			AttackContract.projectile_danger_half_width(7.0),
-			Rules.PLAYER_RADIUS + 7.0
+			AttackContract.projectile_danger_half_width(9.0),
+			Rules.PLAYER_RADIUS + 9.0
 		),
 		"projectile danger corridor exactly expands by the player radius"
 	)
@@ -138,16 +138,36 @@ func _initialize() -> void:
 		"warning readiness advances monotonically from startup to impact"
 	)
 	_expect(
+		is_equal_approx(AttackContract.bombardment_warning(0.48), 1.23)
+			and is_equal_approx(
+				AttackContract.warned_startup_seconds(1.15, &"ground_impact"),
+				1.90
+			)
+			and is_equal_approx(
+				AttackContract.warned_startup_seconds(0.62, &"projectile"),
+				0.62
+			)
+			and AttackContract.radial_band_boundaries(100.0) == PackedFloat32Array([0.5])
+			and AttackContract.radial_band_boundaries(180.0) == PackedFloat32Array([1.0 / 3.0, 2.0 / 3.0]),
+		"one combat owner exposes the warning addition and matching radial boundaries"
+	)
+	_expect(
 		is_equal_approx(AttackContract.radial_damage(20.0, 0.0, 100.0), 20.0),
-		"radial damage is full strength at its center"
+		"small radial damage is full strength at its center"
 	)
 	_expect(
-		is_equal_approx(AttackContract.radial_damage(20.0, 50.0, 100.0), 14.5),
-		"radial damage falls linearly at its midpoint"
+		is_equal_approx(AttackContract.radial_damage(20.0, 50.0, 100.0), 20.0)
+			and is_equal_approx(AttackContract.radial_damage(20.0, 50.1, 100.0), 9.0)
+			and is_equal_approx(AttackContract.radial_damage(20.0, 100.0, 100.0), 9.0),
+		"small bombardment uses exact full and 45-percent radial bands"
 	)
 	_expect(
-		is_equal_approx(AttackContract.radial_damage(20.0, 100.0, 100.0), 9.0),
-		"radial damage retains forty-five percent strength at its visible edge"
+		is_equal_approx(AttackContract.radial_damage(20.0, 60.0, 180.0), 20.0)
+			and is_equal_approx(AttackContract.radial_damage(20.0, 60.1, 180.0), 14.0)
+			and is_equal_approx(AttackContract.radial_damage(20.0, 120.0, 180.0), 14.0)
+			and is_equal_approx(AttackContract.radial_damage(20.0, 120.1, 180.0), 8.0)
+			and is_equal_approx(AttackContract.radial_damage(20.0, 180.0, 180.0), 8.0),
+		"large bombardment uses exact full, 70-percent, and 40-percent radial bands"
 	)
 	_expect(
 		is_zero_approx(AttackContract.radial_damage(20.0, 100.1, 100.0)),

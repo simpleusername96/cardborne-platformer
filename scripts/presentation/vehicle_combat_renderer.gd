@@ -1535,11 +1535,6 @@ func _sync_enemy_attack_telegraphs(
 			telegraph,
 			visible_world
 		)
-		if (
-			mode == CombatCuePolicy.MODE_AREA_FOOTPRINT
-			and enemy.phase in [&"startup", &"boss_startup"]
-		):
-			continue
 		var source_position := Vector2(telegraph.get("beam_emitter", enemy.pos))
 		match mode:
 			CombatCuePolicy.MODE_BEAM_STARTUP:
@@ -1670,7 +1665,23 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
 	var fill_color := Art.DANGER if hostile else Art.THERMAL
 	_write_disk(center, radius, Color(fill_color, lerpf(0.10, 0.20, readiness)))
+	var boundaries := AttackContract.radial_band_boundaries(radius)
+	for reverse_index in boundaries.size():
+		var boundary_index := boundaries.size() - reverse_index - 1
+		var ratio := float(boundaries[boundary_index])
+		var depth := float(reverse_index + 1) / float(boundaries.size())
+		_write_disk(
+			center,
+			radius * ratio,
+			Color(fill_color, lerpf(0.035, 0.10, intensity) * depth)
+		)
 	_write_danger_ring(center, radius, Color(Art.SPACE_BLACK, boundary_alpha))
+	for ratio in boundaries:
+		_write_danger_ring(
+			center,
+			radius * float(ratio),
+			Color(Art.SPACE_BLACK, lerpf(0.42, 0.72, intensity))
+		)
 	if hostile:
 		_write_hostile_area_notches(center, radius, readiness)
 
@@ -1961,8 +1972,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 						)
 				continue
 			if shape == &"wedge_ring":
-				if warning <= 0.0:
-					_sync_wedge_ring_zone(zone, readiness)
+				_sync_wedge_ring_zone(zone, readiness)
 				continue
 			if shape != &"area":
 				continue
@@ -1982,8 +1992,7 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 				"readiness": readiness,
 				"owner": StringName(zone.get("owner", &"hostile")),
 			}
-			if warning <= 0.0 or StringName(descriptor["owner"]) != &"hostile":
-				_sync_area_telegraph(descriptor)
+			_sync_area_telegraph(descriptor)
 	var dash_trails_variant: Variant = state.get("dash_afterburn_trails")
 	if dash_trails_variant is Array:
 		for trail_variant in dash_trails_variant:

@@ -3658,9 +3658,22 @@ func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
 		FamilyTraits.FRENZY_CADENCE_MULTIPLIER
 		if enemy.family_trait == &"frenzy" else 1.0
 	)
-	return cooldown * growth_enemy_interval * trait_scale / (
+	return (
+		cooldown
+		* growth_enemy_interval
+		* trait_scale
+		* EncounterDirector.ordinary_recovery_scale(enemy.family)
+	) / (
 		EncounterDirector.ENEMY_RECOVERY_RATE
 		* maxf(0.01, enemy.facility_cadence_multiplier)
+	)
+
+
+func _enter_ordinary_recovery(enemy: EnemyState, authored_seconds: float) -> void:
+	enemy.phase = &"recovery"
+	enemy.phase_time = (
+		maxf(0.0, authored_seconds)
+		* EncounterDirector.ordinary_recovery_scale(enemy.family)
 	)
 
 
@@ -3715,7 +3728,9 @@ func _start_enemy_attack(enemy: EnemyState) -> void:
 	var startup := 0.0
 	var attack_speed := 0.0
 	if not attack.is_empty():
-		startup = float(attack["startup"])
+		startup = AttackContract.warned_startup_seconds(
+			float(attack["startup"]), StringName(attack.get("kind", &""))
+		)
 		match StringName(attack.get("kind", &"")):
 			&"projectile":
 				attack_speed = EncounterDirector.effective_hostile_projectile_speed(
@@ -3794,12 +3809,10 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				enemy.family_trait == &"slow",
 				FamilyTraits.SLOW_DURATION
 			)
-			enemy.phase = &"recovery"
-			enemy.phase_time = 0.72
+			_enter_ordinary_recovery(enemy, 0.72)
 		&"ordinary_gap_01":
 			if enemy.archetype == &"ordinary_compression_01":
-				enemy.phase = &"recovery"
-				enemy.phase_time = 1.0
+				_enter_ordinary_recovery(enemy, 1.0)
 				return
 			var controller_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			_spawn_hostile_projectile(
@@ -3813,8 +3826,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				false,
 				AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 			)
-			enemy.phase = &"recovery"
-			enemy.phase_time = 0.88
+			_enter_ordinary_recovery(enemy, 0.88)
 		&"ordinary_fixed_ranged_01":
 			enemy.burst_left = 3
 			enemy.burst_timer = 0.0
@@ -3832,7 +3844,6 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				_damage_player(mine_damage, "Arc proximity burst", true)
 		&"ordinary_growth_01":
 			var artillery_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
-			var warning := float(artillery_attack["warning"])
 			denied_zones.append({
 				"id":"%s_artillery" % enemy.id,
 				"owner_kind":&"ordinary", "owner":&"hostile",
@@ -3841,13 +3852,12 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				"damage":float(artillery_attack["damage"])
 					* enemy.pack_damage_multiplier,
 				"affinity":StringName(artillery_attack["affinity"]),
-				"warning":warning, "warning_total":warning,
+				"warning":0.0, "warning_total":0.0,
 				"duration":0.22, "tick":0.0,
 				"single_hit":true, "hit_committed":false,
 				"source":"Emitter artillery impact", "final_damage":false,
 			})
-			enemy.phase = &"recovery"
-			enemy.phase_time = float(artillery_attack["recovery"])
+			_enter_ordinary_recovery(enemy, float(artillery_attack["recovery"]))
 		&"ordinary_shield_01":
 			enemy.phase_time = float(AttackContract.ORDINARY_ATTACKS[role]["active"])
 		&"ordinary_pulse_01":
@@ -3861,8 +3871,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				StringName(coordinator_attack["affinity"]), false, false,
 				AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 			)
-			enemy.phase = &"recovery"
-			enemy.phase_time = float(coordinator_attack["recovery"])
+			_enter_ordinary_recovery(enemy, float(coordinator_attack["recovery"]))
 		&"ordinary_beam_01":
 			var rail_attack := AttackContract.ordinary_attack(role)
 			_spawn_hostile_projectile(
@@ -3877,8 +3886,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			# The recovery relocation breaks the next rail lane without teleporting.
 			enemy.reposition_time = 0.72
 			enemy.reposition_dir = enemy.committed_dir.rotated(enemy.strafe_sign * PI * 0.5)
-			enemy.phase = &"recovery"
-			enemy.phase_time = float(rail_attack["recovery"])
+			_enter_ordinary_recovery(enemy, float(rail_attack["recovery"]))
 		&"ordinary_range_01":
 			var orbit_attack := AttackContract.ordinary_attack(role)
 			enemy.burst_left = int(orbit_attack["burst_count"])
@@ -3888,10 +3896,16 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 			var bombing_attack := AttackContract.ordinary_attack(role)
 			for blast_index in int(bombing_attack["blast_count"]):
 				var blast_position := enemy.committed_target + enemy.committed_dir * float(blast_index) * 64.0
+				var warning := AttackContract.bombardment_warning(
+					float(bombing_attack["blast_delay"])
+					+ float(blast_index) * float(bombing_attack["blast_spacing"])
+				)
 				denied_zones.append({
 					"id":"%s_bomb_%d" % [enemy.id, blast_index], "owner_kind":&"ordinary",
-					"shape":&"area", "pos":blast_position, "radius":float(bombing_attack["radius"]),
-					"damage":float(bombing_attack["damage"]), "warning":float(bombing_attack["blast_delay"]) + float(blast_index) * float(bombing_attack["blast_spacing"]),
+					"owner":&"hostile", "shape":&"area", "pos":blast_position,
+					"radius":float(bombing_attack["radius"]),
+					"damage":float(bombing_attack["damage"]),
+					"warning":warning, "warning_total":warning,
 					"duration":0.22, "tick":0.0, "source":"Sweep Ordinary Enemy Lv.1 ground burst", "final_damage":false,
 				})
 			enemy.phase_time = float(bombing_attack["pass_seconds"])
@@ -3910,8 +3924,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				false,
 				AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 			)
-			enemy.phase = &"recovery"
-			enemy.phase_time = 0.9
+			_enter_ordinary_recovery(enemy, 0.9)
 		&"ordinary_pull_01":
 			enemy.phase_time = SpecialistRuntime.PULL_CHARGE_ACTIVE
 		&"ordinary_support_03":
@@ -3950,8 +3963,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.radius
 			)
 			if enemy.phase_time <= 0.0:
-				enemy.phase = &"recovery"
-				enemy.phase_time = 0.52
+				_enter_ordinary_recovery(enemy, 0.52)
 		&"ordinary_shield_01":
 			enemy.contact_attack = EnemyContactRuntime.ATTACK_SHIELD_BASH
 			var bash := AttackContract.ordinary_attack(role)
@@ -3965,8 +3977,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.radius
 			)
 			if enemy.phase_time <= 0.0:
-				enemy.phase = &"recovery"
-				enemy.phase_time = float(bash["recovery"])
+				_enter_ordinary_recovery(enemy, float(bash["recovery"]))
 		&"ordinary_fixed_ranged_01":
 			var turret_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			enemy.burst_timer -= delta
@@ -3986,8 +3997,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 					AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 				)
 			if enemy.burst_left <= 0:
-				enemy.phase = &"recovery"
-				enemy.phase_time = 0.95
+				_enter_ordinary_recovery(enemy, 0.95)
 		&"ordinary_range_01":
 			var orbit_attack := AttackContract.ordinary_attack(role)
 			enemy.burst_timer -= delta
@@ -4001,8 +4011,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 					AttackContract.threat_tier_for(enemy.role, enemy.family_trait)
 				)
 			if enemy.burst_left <= 0:
-				enemy.phase = &"recovery"
-				enemy.phase_time = float(orbit_attack["recovery"])
+				_enter_ordinary_recovery(enemy, float(orbit_attack["recovery"]))
 		&"ordinary_sweep_01":
 			var bombing_attack := AttackContract.ordinary_attack(role)
 			var before := enemy.pos
@@ -4012,8 +4021,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.radius
 			)
 			if enemy.phase_time <= 0.0:
-				enemy.phase = &"recovery"
-				enemy.phase_time = float(bombing_attack["recovery"])
+				_enter_ordinary_recovery(enemy, float(bombing_attack["recovery"]))
 		&"ordinary_melee_02":
 			enemy.contact_attack = EnemyContactRuntime.ATTACK_EDGE_CONTACT
 			var growth_enemy_attack := AttackContract.ordinary_attack(role)
@@ -4025,8 +4033,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.phase_time = _enemy_recovery_cooldown(enemy)
 		&"ordinary_fixed_area_01":
 			if enemy.phase_time <= 0.0:
-				enemy.phase = &"recovery"
-				enemy.phase_time = 1.2
+				_enter_ordinary_recovery(enemy, 1.2)
 		&"ordinary_pull_01":
 			enemy.contact_attack = EnemyContactRuntime.ATTACK_PULL_CHARGE
 			var before := enemy.pos
@@ -4048,8 +4055,7 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.burst_left -= 1
 				_spawn_carrier_child(enemy)
 			if enemy.burst_left <= 0:
-				enemy.phase = &"recovery"
-				enemy.phase_time = SpecialistRuntime.MOBILE_SUPPORT_RECOVERY
+				_enter_ordinary_recovery(enemy, SpecialistRuntime.MOBILE_SUPPORT_RECOVERY)
 		&"ordinary_fixed_beam_01":
 			var beam_end := enemy.beam_end
 			var growth_ratio := AttackContract.emitted_beam_growth_ratio(
@@ -4068,11 +4074,9 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 				enemy.hit_committed = true
 				_damage_player(SpecialistRuntime.BEAM_DAMAGE, "Fixed Beam Ordinary Enemy Lv.1 sweep", true)
 			if enemy.phase_time <= 0.0:
-				enemy.phase = &"recovery"
-				enemy.phase_time = SpecialistRuntime.BEAM_RECOVERY
+				_enter_ordinary_recovery(enemy, SpecialistRuntime.BEAM_RECOVERY)
 		_:
-			enemy.phase = &"recovery"
-			enemy.phase_time = 0.6
+			_enter_ordinary_recovery(enemy, 0.6)
 
 func _finish_charger_charge(enemy: EnemyState) -> void:
 	if enemy.family_trait == &"double" and enemy.pattern_index == 0:
@@ -4094,8 +4098,7 @@ func _finish_charger_charge(enemy: EnemyState) -> void:
 		enemy.mechanic_state = &"self_destruct_fuse"
 		enemy.mechanic_cue_active = true
 		return
-	enemy.phase = &"recovery"
-	enemy.phase_time = SpecialistRuntime.PULL_CHARGE_RECOVERY
+	_enter_ordinary_recovery(enemy, SpecialistRuntime.PULL_CHARGE_RECOVERY)
 	enemy.vulnerable = SpecialistRuntime.PULL_CHARGE_RECOVERY
 
 
@@ -6474,11 +6477,14 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 
 func _boss_select_pattern(boss: EnemyState) -> void:
 	var pattern := boss_runtime.select_direct(boss)
+	var kind := BossPatterns.kind(pattern)
 	boss.pattern = pattern
 	boss.phase = "boss_startup"
-	boss.phase_time = BossPatterns.scaled_startup_seconds(pattern, current_stage_index)
+	boss.phase_time = AttackContract.warned_startup_seconds(
+		BossPatterns.scaled_startup_seconds(pattern, current_stage_index),
+		kind
+	)
 	boss.hit_committed = false
-	var kind := BossPatterns.kind(pattern)
 	var predicted_target := _boss_predicted_target(
 		Vector2(boss.pos),
 		BossPatterns.projectile_speed(pattern)
@@ -6931,13 +6937,16 @@ func _append_boss_alternating_pulse(event: Dictionary) -> void:
 
 
 func _append_boss_area_zone(event: Dictionary) -> void:
+	var warning := AttackContract.warned_startup_seconds(
+		float(event["startup"]), &"area"
+	)
 	denied_zones.append({
 		"id":event["id"],
 		"shape":&"area",
 		"pos":Vector2(event["target"]),
 		"radius":float(event["radius"]),
-		"warning":float(event["startup"]),
-		"warning_total":float(event["startup"]),
+		"warning":warning,
+		"warning_total":warning,
 		"duration":maxf(0.62, float(event["duration"])),
 		"tick":0.0,
 		"damage":float(event["damage"]),
