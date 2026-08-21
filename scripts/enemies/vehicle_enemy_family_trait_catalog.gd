@@ -20,7 +20,7 @@ const TRAIT_WEIGHT_TOTAL := BASE_TRAIT_WEIGHT + SPECIAL_TRAIT_WEIGHT * 2
 const SIZE_PERCENT_BY_TIER := {1: 100, 2: 125, 3: 150}
 const PACK_MIN_SIZE := 4
 const PACK_MAX_SIZE := 8
-const EMITTERS_PER_DEFENDER := 4
+const EMITTERS_PER_DEFENDER := 1
 const TACTIC_BY_FAMILY := {
 	&"pursuer": &"swarm_screen",
 	&"charger": &"spearhead",

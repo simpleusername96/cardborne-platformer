@@ -6,6 +6,7 @@ const Difficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const Tactics = preload("res://scripts/encounters/vehicle_collective_tactic_catalog.gd")
 const Archetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const FamilyTraits = preload("res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd")
+const SpawnComposition = preload("res://scripts/encounters/vehicle_enemy_spawn_composition.gd")
 const BossPhases = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 
@@ -64,14 +65,10 @@ func _validate_stage_packs(stage_id: StringName, stage_index: int) -> void:
 			var trait_id := StringName(pack.get("trait", &""))
 			_expect(tier == FamilyTraits.tier_for_stage(stage_index), "%s pack tier follows the four-stage ladder" % stage_id)
 			_expect(FamilyTraits.trait_belongs_to_family(family, trait_id), "%s pack trait is family-exclusive" % stage_id)
-			if family == &"emitter":
-				var emitter_count := 0
-				var defender_count := 0
-				for role in roles:
-					var role_family := StringName(Archetypes.definition(StringName(role)).get("family", &""))
-					emitter_count += 1 if role_family == &"emitter" else 0
-					defender_count += 1 if role_family == &"defender" else 0
-				_expect(defender_count >= FamilyTraits.required_defenders(emitter_count), "%s Emitter pack has its Defender slots" % stage_id)
+			_expect(
+				SpawnComposition.validate_pack(pack).is_empty(),
+				"%s pack preserves legal per-enemy family and trait metadata" % stage_id
+			)
 	_expect(authored_count == int(CombatStages.AUTHORED_COUNTS[stage_index]), "%s family packs preserve authored population" % stage_id)
 
 

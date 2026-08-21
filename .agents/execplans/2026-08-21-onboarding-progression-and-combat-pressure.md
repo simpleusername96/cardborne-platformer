@@ -39,6 +39,8 @@ The projectile-route correction, XP curve, and terminology migration are impleme
 
 Phase 0 checkpoint (2026-08-21): all tracked runtime IDs, localization stems, semantic asset IDs, PNG paths, reports, workbench references, and validators now use emitter / 방출형. Nine runtime PNG files and eighteen retained report/workbench PNG files kept identical SHA-256 content across their path rename. Godot 4.7.1 reimported the runtime textures without error. The guidebook store now migrates schema-v1 discovery IDs and rewrites them as schema v2. The tracked text/path scan returned zero legacy-token matches; guidebook, semantic-asset, combat-renderer, and visual-authority validators passed.
 
+Phase 1–2 checkpoint (2026-08-21): VehicleEnemySpawnComposition now owns the five base-only onboarding templates, seed-driven 4:3:3 normal pack bags, one eligible coordinator overlay, per-family 4:3:3 trait bags, exact emitter-defender members, and maintenance-safe atomic splitting. VehicleEncounterRuntime owns typed run-global defeat and bridge progress, per-enemy spawn metadata, bounded emitted-pack evidence, invariant failures, and attack-family counts. Stage/session reports retain family/trait defeats, attack commits, XP, level, upgrade-modal count and duration, and pack composition. The first 65 stage-1 slots are kill-gated at 15/30/45/60; normal admission follows the bridge. Focused composition, family, catalog, arrival, maintenance, pacing, engagement replay, telemetry, and report validators pass without changing quota, authored counts, caps, or cadence.
+
 ## Evidence Inspected
 
 ### Local implementation facts
@@ -307,21 +309,21 @@ Acceptance: all tracked repository content, semantic paths, new release artifact
 
 ### Phase 1 — Telemetry and composition owner
 
-- [ ] Add scripts/encounters/vehicle_enemy_spawn_composition.gd as the pure owner of onboarding templates, post-onboarding pack bags, trait bags, pair construction, and coordinator eligibility.
-- [ ] Add typed encounter-runtime progress for run-global ordinary defeats and bridge admission.
-- [ ] Extend stage/session telemetry with kills by family and trait, emitted pack contents, pair and coordinator invariants, XP collected, level, upgrades, modal opens, modal duration, and attack commits by family.
-- [ ] Extend the deterministic capture format without making UI code a gameplay owner.
+- [x] Add scripts/encounters/vehicle_enemy_spawn_composition.gd as the pure owner of onboarding templates, post-onboarding pack bags, trait bags, pair construction, and coordinator eligibility.
+- [x] Add typed encounter-runtime progress for run-global ordinary defeats and bridge admission.
+- [x] Extend stage/session telemetry with kills by family and trait, emitted pack contents, pair and coordinator invariants, XP collected, level, upgrades, modal opens, modal duration, and attack commits by family.
+- [x] Extend the deterministic capture format without making UI code a gameplay owner.
 
 Acceptance: a headless deterministic capture can reconstruct every onboarding transition, pack membership, family-trait identity, level-up interruption, and family attack count.
 
 ### Phase 2 — Onboarding and normal spawn composition
 
-- [ ] Replace the first 65 authored slots with the locked onboarding templates.
-- [ ] Gate phases at 15, 30, 45, and 60 ordinary defeats and gate normal admission on the bridge squad.
-- [ ] Replace post-onboarding stage family rotation with the locked ten-pack shuffle bag.
-- [ ] Enforce exact emitter-defender pairs and coordinator overlay eligibility, including quota-seal maintenance rosters.
-- [ ] Preserve stage quota, tier, active cap, admission cadence, and authored population.
-- [ ] Store family and trait per enemy rather than only per pack.
+- [x] Replace the first 65 authored slots with the locked onboarding templates.
+- [x] Gate phases at 15, 30, 45, and 60 ordinary defeats and gate normal admission on the bridge squad.
+- [x] Replace post-onboarding stage family rotation with the locked ten-pack shuffle bag.
+- [x] Enforce exact emitter-defender pairs and coordinator overlay eligibility, including quota-seal maintenance rosters.
+- [x] Preserve stage quota, tier, active cap, admission cadence, and authored population.
+- [x] Store family and trait per enemy rather than only per pack.
 
 Acceptance: repeated seeded simulations show the exact tutorial order, 4:3:3 pack bag, one eligible coordinator overlay, exact emitter-defender equality, no standalone coordinator, no coordinator paired pack, and no quota or population drift.
 

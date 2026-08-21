@@ -39,14 +39,26 @@ func _validate_seed(seed: int) -> void:
 	_expect(layout != null, "seed %d creates representative geometry" % seed)
 	if layout == null:
 		return
-	var stage_id := CombatStages.STAGE_IDS[0]
+	var stage_id := CombatStages.STAGE_IDS[1]
 	var tactical = layout.tactical_layout(stage_id)
 	var packet: Dictionary = CombatStages.definition(stage_id)["packets"][1].duplicate(true)
 	packet["trigger"] = {"kind":&"time", "at":0.0}
+	packet["spawn_composition"] = false
+	packet.erase("packs")
+	var fixture_squads: Array[Array] = []
+	for squad_variant in Array(packet["squads"]):
+		var fixture_roles: Array[StringName] = []
+		for _unit_index in Array(squad_variant).size():
+			fixture_roles.append(&"ordinary_emitter_t1")
+		fixture_squads.append(fixture_roles)
+	packet["squads"] = fixture_squads
 	var first := _run(stage_id, packet, tactical)
 	var second := _run(stage_id, packet, tactical)
 	_expect(var_to_str(first["fingerprint"]) == var_to_str(second["fingerprint"]), "seed %d has exact birth/cue/role replay fingerprint" % seed)
-	_expect(int(first["spawns"]) <= int(first["cap"]), "seed %d never materializes beyond the active cap" % seed)
+	_expect(
+		int(first["maximum_tick_spawns"]) <= Runtime.MAX_SPAWNS_PER_TICK,
+		"seed %d never materializes beyond the bounded birth round" % seed
+	)
 	_expect(
 		int(first["spawns"]) + int(first["virtual_reserve"]) == int(first["authored"]),
 		"seed %d preserves authored units between materialized actors and virtual reserve" % seed
@@ -61,7 +73,11 @@ func _validate_seed(seed: int) -> void:
 
 func _run(stage_id: StringName, packet: Dictionary, tactical) -> Dictionary:
 	var runtime := Runtime.new()
-	runtime.configure(stage_id, [packet], RunDifficulty.HARD, tactical.ordinary_spawn_anchors, tactical.encounter_seed, tactical.geometry_snapshot, 0)
+	runtime.configure(
+		stage_id, [packet], RunDifficulty.HARD,
+		tactical.ordinary_spawn_anchors, tactical.encounter_seed,
+		tactical.geometry_snapshot, CombatStages.index_of(stage_id)
+	)
 	var visible := Rect2(tactical.geometry_snapshot.player_start - Vector2(640.0, 360.0), Vector2(1280.0, 720.0))
 	var fingerprint := []
 	var completed := {}
@@ -69,12 +85,16 @@ func _run(stage_id: StringName, packet: Dictionary, tactical) -> Dictionary:
 	var rear := false
 	var rear_arc := true
 	var spawns := 0
+	var maximum_tick_spawns := 0
 	var virtual_reserve := 0
 	var max_burst := 0
 	var schedule := Schedule.new()
 	var next_slot := 0
 	for _step in 240:
-		var result := runtime.tick(0.05, spawns, [], tactical.geometry_snapshot.player_start, visible, [], 0, Vector2(240.0, 0.0))
+		var result := runtime.tick(0.05, 0, [], tactical.geometry_snapshot.player_start, visible, [], 0, Vector2(240.0, 0.0))
+		maximum_tick_spawns = maxi(
+			maximum_tick_spawns, Array(result["spawns"]).size()
+		)
 		var engagement := Dictionary(runtime.debug_snapshot()["engagement"])
 		for count in PackedInt32Array(engagement["eta_load"]):
 			max_burst = maxi(max_burst, int(count))
@@ -107,7 +127,7 @@ func _run(stage_id: StringName, packet: Dictionary, tactical) -> Dictionary:
 	for squad in packet["squads"]:
 		authored += Array(squad).size()
 	virtual_reserve = int(runtime.debug_snapshot()["virtual_reserve"])
-	return {"fingerprint":fingerprint, "completed":completed, "max_burst":max_burst, "patterns":patterns, "rear":rear, "rear_arc":rear_arc, "spawns":spawns, "authored":authored, "cap":runtime.active_cap(), "virtual_reserve":virtual_reserve}
+	return {"fingerprint":fingerprint, "completed":completed, "max_burst":max_burst, "patterns":patterns, "rear":rear, "rear_arc":rear_arc, "spawns":spawns, "authored":authored, "cap":runtime.active_cap(), "maximum_tick_spawns":maximum_tick_spawns, "virtual_reserve":virtual_reserve}
 
 
 func _advance_gate(spec: Dictionary, runtime, schedule, slot: int) -> bool:

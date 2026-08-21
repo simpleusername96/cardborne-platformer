@@ -50,7 +50,11 @@ func _initialize() -> void:
 	_expect(maximum_empty_seconds <= 3.0, "a living stage-1 boss never has more than a three-second visible ordinary-threat gap")
 	var snapshot := runtime.debug_snapshot()
 	_expect(bool(snapshot["boss_maintenance_active"]), "maintenance remains active while the boss is alive")
-	_expect(Array(snapshot["boss_maintenance_roster"]).size() == 3, "maintenance cycles the stage three-role roster")
+	_expect(Array(snapshot["boss_maintenance_roster"]).size() == 3, "maintenance cycles three legal authored pack rosters")
+	_expect(
+		Array(snapshot["composition_invariant_failures"]).is_empty(),
+		"maintenance never separates emitter-defender pairs or coordinator companions"
+	)
 	if failures.is_empty():
 		print("VEHICLE_BOSS_MAINTENANCE_180S_VALIDATION_OK")
 		quit(0)

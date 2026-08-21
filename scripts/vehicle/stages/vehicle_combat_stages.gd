@@ -4,9 +4,11 @@ extends RefCounted
 ## Stage pressure data. Geometry is supplied by the run-selected field.
 
 const FieldRegistry = preload("res://scripts/vehicle/vehicle_field_registry.gd")
-const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const FamilyTraits = preload(
 	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
+)
+const SpawnComposition = preload(
+	"res://scripts/encounters/vehicle_enemy_spawn_composition.gd"
 )
 const TacticCatalog = preload(
 	"res://scripts/encounters/vehicle_collective_tactic_catalog.gd"
@@ -54,18 +56,18 @@ const BOSS_NAME_KEYS := [
 	"BOSS_STAGE_09", "BOSS_STAGE_10", "BOSS_STAGE_11", "BOSS_STAGE_12",
 ]
 const MOBILE_ROLES := [
-	[&"ordinary_pursuer_t1", &"ordinary_charger_t1", &"ordinary_emitter_t1"],
-	[&"ordinary_charger_t1", &"ordinary_emitter_t1", &"ordinary_defender_t1"],
-	[&"ordinary_emitter_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1"],
-	[&"ordinary_defender_t1", &"ordinary_coordinator_t1", &"ordinary_pursuer_t1"],
-	[&"ordinary_pursuer_t2", &"ordinary_charger_t2", &"ordinary_emitter_t2"],
-	[&"ordinary_charger_t2", &"ordinary_emitter_t2", &"ordinary_defender_t2"],
-	[&"ordinary_emitter_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2"],
-	[&"ordinary_defender_t2", &"ordinary_coordinator_t2", &"ordinary_pursuer_t2"],
-	[&"ordinary_pursuer_t3", &"ordinary_charger_t3", &"ordinary_emitter_t3"],
-	[&"ordinary_charger_t3", &"ordinary_emitter_t3", &"ordinary_defender_t3"],
-	[&"ordinary_emitter_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3"],
-	[&"ordinary_defender_t3", &"ordinary_coordinator_t3", &"ordinary_pursuer_t3"],
+	[&"ordinary_pursuer_t1", &"ordinary_charger_t1", &"ordinary_emitter_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1"],
+	[&"ordinary_pursuer_t1", &"ordinary_charger_t1", &"ordinary_emitter_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1"],
+	[&"ordinary_pursuer_t1", &"ordinary_charger_t1", &"ordinary_emitter_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1"],
+	[&"ordinary_pursuer_t1", &"ordinary_charger_t1", &"ordinary_emitter_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1"],
+	[&"ordinary_pursuer_t2", &"ordinary_charger_t2", &"ordinary_emitter_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2"],
+	[&"ordinary_pursuer_t2", &"ordinary_charger_t2", &"ordinary_emitter_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2"],
+	[&"ordinary_pursuer_t2", &"ordinary_charger_t2", &"ordinary_emitter_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2"],
+	[&"ordinary_pursuer_t2", &"ordinary_charger_t2", &"ordinary_emitter_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2"],
+	[&"ordinary_pursuer_t3", &"ordinary_charger_t3", &"ordinary_emitter_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3"],
+	[&"ordinary_pursuer_t3", &"ordinary_charger_t3", &"ordinary_emitter_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3"],
+	[&"ordinary_pursuer_t3", &"ordinary_charger_t3", &"ordinary_emitter_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3"],
+	[&"ordinary_pursuer_t3", &"ordinary_charger_t3", &"ordinary_emitter_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3"],
 ]
 const BOSS_TUTOR_ROLES := [
 	&"ordinary_emitter_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1", &"ordinary_pursuer_t1",
@@ -135,6 +137,8 @@ static func definition(
 
 
 static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Dictionary]:
+	if stage_index == 0:
+		return _opening_onboarding_packets(field_definition)
 	var result: Array[Dictionary] = []
 	var target_count: int = int(AUTHORED_COUNTS[stage_index])
 	var opening_pack := _pack_blueprint(stage_index, 0, 6)
@@ -147,6 +151,7 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 		"trigger":{"kind":&"time", "at":0.0},
 		"squads":[opening_roles],
 		"packs":[opening_pack],
+		"spawn_composition":true,
 		"unit_spacing":0.16,
 		"cue_lead":0.9,
 		"nearest_safe_offscreen":true,
@@ -182,6 +187,7 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 			"trigger":{"kind":&"time", "at":4.0 + float(surge_index) * 2.4},
 			"squads":squads,
 			"packs":packs,
+			"spawn_composition":true,
 			"collective_tactic":TacticCatalog.assignment_for(
 				stage_index,
 				surge_index,
@@ -199,7 +205,109 @@ static func _packets(stage_index: int, field_definition: Dictionary) -> Array[Di
 			"leash":Rect2(field_definition["world_rect"]),
 		})
 		pack_ordinal += packs.size()
-	return result
+	return SpawnComposition.compose_packets(result, stage_index, stage_index + 1)
+
+
+static func _opening_onboarding_packets(
+	field_definition: Dictionary
+) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var tier := FamilyTraits.tier_for_stage(0)
+	var phase_kinds: Array[StringName] = [
+		SpawnComposition.ONBOARDING_PURSUER,
+		SpawnComposition.ONBOARDING_EMITTER,
+		SpawnComposition.ONBOARDING_CHARGER,
+		SpawnComposition.ONBOARDING_DEFENDER,
+	]
+	var ordinal := 0
+	for phase_index in phase_kinds.size():
+		var packs: Array[Dictionary] = []
+		var squads: Array[Array] = []
+		for _squad_index in 3:
+			var pack := SpawnComposition.placeholder_pack(
+				phase_kinds[phase_index], tier, 5, ordinal
+			)
+			packs.append(pack)
+			squads.append(Array(pack["roles"]).duplicate())
+			ordinal += 1
+		result.append({
+			"id":"stage_1_onboarding_%02d" % [phase_index + 1],
+			"beat":phase_index,
+			"trigger":(
+				{"kind":&"time", "at":0.0}
+				if phase_index == 0
+				else {"kind":&"ordinary_defeats", "at":phase_index * 15}
+			),
+			"squads":squads,
+			"packs":packs,
+			"spawn_composition":true,
+			"arrival_windows":3,
+			"squads_per_window":1,
+			"window_gap":1.20,
+			"unit_spacing":0.16,
+			"cue_lead":0.9,
+			"nearest_safe_offscreen":phase_index == 0,
+			"engagement_pattern":&"broad_crescent",
+			"engagement_patterns":[&"broad_crescent", &"broad_crescent", &"broad_crescent"],
+			"zone":"field",
+			"leash":Rect2(field_definition["world_rect"]),
+		})
+	var bridge_pack := SpawnComposition.placeholder_pack(
+		SpawnComposition.ONBOARDING_BRIDGE, tier, 5, ordinal
+	)
+	result.append({
+		"id":"stage_1_onboarding_bridge",
+		"beat":4,
+		"trigger":{"kind":&"ordinary_defeats", "at":60},
+		"squads":[Array(bridge_pack["roles"]).duplicate()],
+		"packs":[bridge_pack],
+		"spawn_composition":true,
+		"unit_spacing":0.16,
+		"cue_lead":0.9,
+		"engagement_patterns":[&"broad_crescent"],
+		"onboarding_bridge":true,
+		"zone":"field",
+		"leash":Rect2(field_definition["world_rect"]),
+	})
+
+	var remaining := int(AUTHORED_COUNTS[0]) - 65
+	var surge_count := ceili(float(remaining) / 72.0)
+	var base_surge_size := remaining / surge_count
+	var extra_surges := remaining % surge_count
+	var normal_ordinal := 0
+	for surge_index in surge_count:
+		var surge_size := base_surge_size + (1 if surge_index < extra_surges else 0)
+		var packs := _surge_packs(0, normal_ordinal, surge_size)
+		var squads: Array[Array] = []
+		for pack in packs:
+			squads.append(Array(Dictionary(pack)["roles"]).duplicate())
+		result.append({
+			"id":"stage_1_packet_%02d" % [surge_index + 6],
+			"beat":4,
+			"trigger":{"kind":&"onboarding_bridge_admitted"},
+			"squads":squads,
+			"packs":packs,
+			"spawn_composition":true,
+			"collective_tactic":TacticCatalog.assignment_for(
+				0, surge_index, surge_count, squads.size()
+			),
+			"arrival_windows":12,
+			"squads_per_window":1,
+			"window_gap":1.20,
+			"unit_spacing":0.16,
+			"cue_lead":0.9,
+			"engagement_pattern":&"broad_crescent",
+			"engagement_patterns":[
+				&"broad_crescent", &"two_offset_streams", &"broad_crescent",
+				&"broad_crescent", &"two_offset_streams", &"broad_crescent",
+				&"broad_crescent", &"two_offset_streams", &"broad_crescent",
+				&"broad_crescent", &"two_offset_streams", &"broad_crescent",
+			],
+			"zone":"field",
+			"leash":Rect2(field_definition["world_rect"]),
+		})
+		normal_ordinal += packs.size()
+	return SpawnComposition.compose_packets(result, 0, 1)
 
 
 static func _surge_packs(
@@ -218,20 +326,6 @@ static func _surge_packs(
 
 static func _pack_blueprint(stage_index: int, pack_ordinal: int, pack_size: int) -> Dictionary:
 	var tier := FamilyTraits.tier_for_stage(stage_index)
-	var primary_archetype := StringName(MOBILE_ROLES[stage_index][pack_ordinal % 3])
-	var family := StringName(EnemyArchetypes.definition(primary_archetype)["family"])
-	var roles: Array[StringName] = []
-	var defender_count := 0
-	if family == &"emitter":
-		defender_count = 2 if pack_size >= 6 else 1
-	for _index in pack_size - defender_count:
-		roles.append(FamilyTraits.archetype(family, tier))
-	for _index in defender_count:
-		roles.append(FamilyTraits.archetype(&"defender", tier))
-	return {
-		"family":family,
-		"tier":tier,
-		"trait":FamilyTraits.trait_for_pack(family, stage_index, pack_ordinal),
-		"tactic_id":FamilyTraits.tactic_for_family(family),
-		"roles":roles,
-	}
+	return SpawnComposition.placeholder_pack(
+		SpawnComposition.NORMAL, tier, pack_size, pack_ordinal
+	)

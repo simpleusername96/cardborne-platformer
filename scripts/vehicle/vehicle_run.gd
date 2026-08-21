@@ -1191,6 +1191,7 @@ func _reset_run(
 	if not preserve_upgrades:
 		run_build.reset()
 		stage_telemetry.reset_run()
+		encounter_runtime.reset_run()
 		experience_runtime.reset()
 		reward_runtime.reset_run()
 		completed_stage_reports.clear()
@@ -1348,8 +1349,12 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 		return null
 	var archetype := StringName(spec["role"])
 	var definition := EnemyArchetypes.definition(archetype)
-	var family := StringName(spec.get("pack_family", definition.get("family", &"")))
-	var family_trait := StringName(spec.get("pack_trait", &""))
+	var family := StringName(spec.get(
+		"family", spec.get("pack_family", definition.get("family", &""))
+	))
+	var family_trait := StringName(spec.get(
+		"family_trait", spec.get("pack_trait", &"")
+	))
 	var role := StringName(definition["behavior"])
 	if family == &"emitter" and family_trait == &"artillery":
 		role = &"ordinary_growth_01"
@@ -1379,7 +1384,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.role = role
 	enemy.archetype = archetype
 	enemy.family = family
-	enemy.tier = int(spec.get("pack_tier", definition.get("tier", 0)))
+	enemy.tier = int(spec.get("tier", spec.get("pack_tier", definition.get("tier", 0))))
 	enemy.size_percent = int(definition.get("size_percent", 100))
 	enemy.family_trait = family_trait
 	enemy.movement_family = EnemyMovementPolicy.family(archetype, role)
@@ -1777,6 +1782,7 @@ func _on_upgrade_selected(upgrade_id: StringName) -> void:
 		"upgrade_id":upgrade_id,
 		"stage_index":current_stage_index,
 	})
+	stage_telemetry.record_upgrade_confirmed(active_run_elapsed_seconds)
 	_ui.update_hud({"build_snapshot":_build_snapshot()})
 	_resolve_reward_transaction()
 	mode = RunMode.PLAYING
@@ -2757,6 +2763,9 @@ func _update_experience(delta: float) -> void:
 		experience_recall_timer
 	)
 	experience_recall_timer = maxf(0.0, experience_recall_timer - delta)
+	stage_telemetry.record_experience(
+		int(result["experience"]), experience_runtime.run_level
+	)
 	if int(result["experience"]) > 0:
 		_discover_guide(&"object_experience")
 		_play_sound(&"pickup", 1.22)
@@ -3738,7 +3747,8 @@ func _start_enemy_attack(enemy: EnemyState) -> void:
 	):
 		target = pressure_focus
 	enemy.phase = &"startup"
-	encounter_runtime.record_attack_preparation()
+	encounter_runtime.record_attack_preparation(enemy.family)
+	stage_telemetry.record_attack_commit(enemy.family)
 	enemy.hit_committed = false
 	enemy.committed_dir = (target - enemy.pos).normalized()
 	enemy.committed_target = target
@@ -5467,13 +5477,18 @@ func _defeat_enemy(
 	enemy_store.queue_defeat(enemy)
 	if grant_defeat_credit:
 		stats_enemies_defeated += 1
-		stage_telemetry.record_defeat(enemy.archetype, enemy.family_trait)
+		stage_telemetry.record_defeat(
+			enemy.archetype, enemy.family, enemy.family_trait
+		)
 		experience_runtime.spawn_shard(
 			enemy.pos,
 			FieldDropRules.experience_for_enemy(enemy),
 			&""
 		)
 	if grant_defeat_credit and _is_countable_stage_enemy(enemy):
+		encounter_runtime.record_ordinary_defeat(
+			enemy.family, enemy.family_trait
+		)
 		var stage_receipt := stage_flow.record_countable_defeat()
 		var stage_command := StringName(stage_receipt.get("command", &""))
 		if stage_command == StageFlow.COMMAND_BEGIN_BOSS_WARNING:
@@ -5603,7 +5618,9 @@ func _finalize_boss_destruction(cleanup_receipt: Dictionary) -> void:
 		# The boss remains a truthful combat defeat in reports, but its cleanup
 		# receipt cannot advance the ordinary quota or grant progression rewards.
 		stats_enemies_defeated += 1
-		stage_telemetry.record_defeat(boss.archetype, boss.family_trait)
+		stage_telemetry.record_defeat(
+			boss.archetype, boss.family, boss.family_trait
+		)
 	_session_diagnostics.emit_event("boss_ended", {"stage_index":current_stage_index})
 	stage_telemetry.record_boss_lifecycle(
 		StringName(StageCatalog.profile(current_stage_id).get("boss_name_key", "")),
@@ -6112,6 +6129,7 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 		if not current_card_offer.is_empty():
 			mode = RunMode.UPGRADE
 			upgrade_selection_applied = false
+			stage_telemetry.record_upgrade_opened(active_run_elapsed_seconds)
 			_ui.show_upgrade(current_card_offer, _build_snapshot())
 			_play_sound(&"card", 0.9)
 			_set_mouse_for_mode()
@@ -6129,6 +6147,7 @@ func _open_upgrade_reward(source_id: StringName) -> void:
 	upgrade_offer_error.clear()
 	mode = RunMode.UPGRADE
 	upgrade_selection_applied = false
+	stage_telemetry.record_upgrade_opened(active_run_elapsed_seconds)
 	_session_diagnostics.emit_event("upgrade_opened", {
 		"source_id":source_id,
 		"stage_index":current_stage_index,
@@ -7247,6 +7266,7 @@ func _retire_denied_zones_by_owner(owner_kind: StringName) -> void:
 func _stage_report_context(has_next_stage: bool) -> Dictionary:
 	var profile := StageCatalog.profile(current_stage_id)
 	var build_rows := StageReportBuilder.build_rows(_build_snapshot())
+	var encounter_snapshot := encounter_runtime.debug_snapshot()
 	return {
 		"number":int(profile["number"]),
 		"title_key":String(profile["title_key"]),
@@ -7262,6 +7282,20 @@ func _stage_report_context(has_next_stage: bool) -> Dictionary:
 			"first_attack_preparation_seconds":encounter_runtime.first_attack_preparation_time(),
 		},
 		"diagnostics":_session_diagnostics.summary(),
+		"spawn_composition":{
+			"emitted_packs":Array(
+				encounter_snapshot.get("stage_emitted_packs", [])
+			).duplicate(true),
+			"invariant_failures":Array(
+				encounter_snapshot.get("composition_invariant_failures", [])
+			).duplicate(),
+			"run_ordinary_defeats":int(
+				encounter_snapshot.get("run_ordinary_defeats", 0)
+			),
+			"bridge_admitted":bool(
+				encounter_snapshot.get("onboarding_bridge_admitted", false)
+			),
+		},
 	}
 
 
@@ -7359,15 +7393,26 @@ func _continuation_packets(stage_id: StringName, opening_slots: int = 6) -> Arra
 		return result
 	var opening: Dictionary = authored[0].duplicate(true)
 	var opening_roles: Array = Array(opening["squads"])[0]
+	var opening_pack := (
+		Dictionary(Array(opening.get("packs", []))[0]).duplicate(true)
+		if not Array(opening.get("packs", [])).is_empty()
+		else {}
+	)
 	var admitted_roles: Array = opening_roles.slice(0, clampi(opening_slots, 0, opening_roles.size()))
 	var reserve_roles: Array = opening_roles.slice(admitted_roles.size())
 	if not admitted_roles.is_empty():
 		opening["squads"] = [admitted_roles]
+		if not opening_pack.is_empty():
+			var admitted_pack := opening_pack.duplicate(true)
+			admitted_pack["pack_size"] = admitted_roles.size()
+			opening["packs"] = [admitted_pack]
 		opening["trigger"] = {"kind":&"time", "at":CONTINUATION_FIRST_CUE_AT}
 		opening["cue_lead"] = CONTINUATION_FIRST_SPAWN_AT - CONTINUATION_FIRST_CUE_AT
 		result.append(opening)
 	if not reserve_roles.is_empty():
-		result.append({"id":"%s_continuation_reserve" % stage_id, "beat":1, "trigger":{"kind":&"time", "at":4.0}, "squads":[reserve_roles], "unit_spacing":0.16, "cue_lead":0.9, "engagement_patterns":[&"none"], "zone":"field", "leash":Rect2(Rules.world_rect(stage_id))})
+		var reserve_pack := opening_pack.duplicate(true)
+		reserve_pack["pack_size"] = reserve_roles.size()
+		result.append({"id":"%s_continuation_reserve" % stage_id, "beat":1, "trigger":{"kind":&"time", "at":4.0}, "squads":[reserve_roles], "packs":[reserve_pack], "spawn_composition":true, "unit_spacing":0.16, "cue_lead":0.9, "engagement_patterns":[&"none"], "zone":"field", "leash":Rect2(Rules.world_rect(stage_id))})
 	var authored_first_time := float(authored[1]["trigger"]["at"]) if authored.size() > 1 else 4.0
 	for packet_index in range(1, authored.size()):
 		var packet := authored[packet_index].duplicate(true)

@@ -327,9 +327,9 @@ func _show_stage_report(failed: bool) -> void:
 		_report_fixture.record_status_application(&"chill")
 		_report_fixture.record_incoming(&"projectile", 32.0)
 		_report_fixture.record_incoming(&"contact", 18.0)
-		_report_fixture.record_defeat(&"ordinary_pursuer_t1")
-		_report_fixture.record_defeat(&"ordinary_pursuer_t1")
-		_report_fixture.record_defeat(&"ordinary_emitter_t1", &"slow")
+		_report_fixture.record_defeat(&"ordinary_pursuer_t1", &"pursuer")
+		_report_fixture.record_defeat(&"ordinary_pursuer_t1", &"pursuer")
+		_report_fixture.record_defeat(&"ordinary_emitter_t1", &"emitter", &"slow")
 	var report_data := {
 		"number":1,
 		"title_key":_stage_title_key(0),
@@ -353,9 +353,12 @@ func _final_result_fixture() -> Dictionary:
 		telemetry.record_outgoing(&"seeker", &"kinetic", 72.0 + stage_index * 12.0)
 		telemetry.record_outgoing(&"thermal_burst", &"thermal", 24.0 + stage_index * 6.0)
 		telemetry.record_status_application(&"chill")
-		telemetry.record_defeat(&"ordinary_pursuer_t1")
-		telemetry.record_defeat(&"ordinary_pursuer_t1")
-		telemetry.record_defeat(&"ordinary_emitter_t1", &"slow" if stage_index % 2 == 0 else &"")
+		telemetry.record_defeat(&"ordinary_pursuer_t1", &"pursuer")
+		telemetry.record_defeat(&"ordinary_pursuer_t1", &"pursuer")
+		telemetry.record_defeat(
+			&"ordinary_emitter_t1", &"emitter",
+			&"slow" if stage_index % 2 == 0 else &""
+		)
 		stage_records.append(StageReportBuilder.build(telemetry.freeze_stage(), {
 			"number":stage_index + 1,
 			"title_key":_stage_title_key(stage_index),

@@ -16,6 +16,9 @@ const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.
 const FamilyTraits = preload(
 	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
 )
+const SpawnComposition = preload(
+	"res://scripts/encounters/vehicle_enemy_spawn_composition.gd"
+)
 const Field = preload("res://scripts/vehicle/stages/field_01.gd")
 
 const CUE_LEAD := 0.9
@@ -26,6 +29,7 @@ const RECENT_BIRTH_SECONDS := 2.0
 const METRIC_SAMPLE_INTERVAL := 0.10
 const MAX_ACTIVE_COUNT_SAMPLES := 4096
 const MAX_SPAWNS_PER_TICK := 4
+const MAX_EMITTED_PACK_RECORDS := 2048
 const BOSS_MAINTENANCE_LOW_WATERMARK := 8
 const BOSS_MAINTENANCE_HIGH_WATERMARK := 12
 const BOSS_MAINTENANCE_MAX_GROUP := 4
@@ -70,8 +74,9 @@ var _quota_sealed := false
 var _quota_canceled_reserve := 0
 var _boss_maintenance_active := false
 var _last_boss_maintenance_cue_at := -INF
-var _maintenance_roles: Array[StringName] = []
-var _maintenance_roster: Array[StringName] = []
+var _maintenance_packs: Array[Dictionary] = []
+var _maintenance_roster_packs: Array[Dictionary] = []
+var _maintenance_roster_cursor := 0
 var _spawn_allocator := SpawnAllocator.new()
 var _engagement_director := EngagementDirector.new()
 var _geometry_snapshot: Variant
@@ -88,6 +93,27 @@ var _telemetry_cancellations := 0
 var _telemetry_director_cpu_us := 0
 var _diagnostic_gap_reason: StringName = &"none"
 var _diagnostic_gap_started_at := -1.0
+var _run_ordinary_defeats := 0
+var _onboarding_bridge_admitted := false
+var _defeats_by_family: Dictionary = {}
+var _defeats_by_trait: Dictionary = {}
+var _stage_emitted_packs: Array[Dictionary] = []
+var _run_emitted_packs: Array[Dictionary] = []
+var _composition_invariant_failures: Array[String] = []
+var _stage_attack_commits_by_family: Dictionary = {}
+var _run_attack_commits_by_family: Dictionary = {}
+
+
+func reset_run() -> void:
+	_run_ordinary_defeats = 0
+	_onboarding_bridge_admitted = false
+	_defeats_by_family.clear()
+	_defeats_by_trait.clear()
+	_stage_emitted_packs.clear()
+	_run_emitted_packs.clear()
+	_composition_invariant_failures.clear()
+	_stage_attack_commits_by_family.clear()
+	_run_attack_commits_by_family.clear()
 
 
 func configure(
@@ -100,14 +126,18 @@ func configure(
 	stage_index: int = -1
 ) -> void:
 	stage_id = next_stage_id
+	_stage_index = CombatStages.index_of(next_stage_id) if stage_index < 0 else stage_index
 	# The argument is retained temporarily for fixture compatibility; encounters
 	# always use the single fixed Hard profile.
 	difficulty = RunDifficulty.HARD
 	elapsed = 0.0
 	current_beat = 0
 	_packets.clear()
-	for packet_index in packets.size():
-		var packet := packets[packet_index].duplicate(true)
+	var composed_packets := SpawnComposition.compose_packets(
+		packets, _stage_index, encounter_seed
+	)
+	for packet_index in composed_packets.size():
+		var packet := composed_packets[packet_index].duplicate(true)
 		packet["_packet_index"] = packet_index
 		# Every stage entry uses the first authored packet as its real opening
 		# reserve. Continuations supply a derived opening packet through the same
@@ -138,6 +168,8 @@ func configure(
 	_active_count_samples.clear()
 	_max_attack_family_overlap = 0
 	_damage_source_families.clear()
+	_stage_emitted_packs.clear()
+	_stage_attack_commits_by_family.clear()
 	_capacity_blocked_seconds = 0.0
 	_packet_fence_blocked_seconds = 0.0
 	_birth_capacity_blocked = 0
@@ -150,14 +182,14 @@ func configure(
 	_quota_canceled_reserve = 0
 	_boss_maintenance_active = false
 	_last_boss_maintenance_cue_at = -INF
-	_maintenance_roles.clear()
-	_maintenance_roster.clear()
+	_maintenance_packs.clear()
+	_maintenance_roster_packs.clear()
+	_maintenance_roster_cursor = 0
 	_allocation_debug.clear()
 	_pressure_snapshot = _empty_pressure_snapshot()
 	_pressure_observation_enabled = false
 	_pressure_scan_happened = false
 	_geometry_snapshot = geometry_snapshot
-	_stage_index = CombatStages.index_of(next_stage_id) if stage_index < 0 else stage_index
 	_telemetry_births = 0
 	_telemetry_gate_completions = 0
 	_telemetry_expiries = 0
@@ -190,7 +222,7 @@ func seal_for_quota() -> void:
 		return
 	_quota_sealed = true
 	for request_variant in _window_queue:
-		_append_maintenance_window_roles(Dictionary(request_variant))
+		_append_maintenance_window_packs(Dictionary(request_variant))
 	_window_queue.clear()
 	_boss_maintenance_active = true
 	# The authored reserve is already available at quota seal. Let the first
@@ -198,13 +230,20 @@ func seal_for_quota() -> void:
 	# full maintenance interval while the boss is entering.
 	_last_boss_maintenance_cue_at = elapsed - BOSS_MAINTENANCE_INTERVAL
 	for packet in _packets:
-		for squad in Array(packet.get("squads", [])):
-			for role in Array(squad):
-				var role_id := StringName(role)
-				if role_id not in _maintenance_roster and _maintenance_roster.size() < 3:
-					_maintenance_roster.append(role_id)
-				if not _activated_packets.has(String(packet["id"])):
-					_maintenance_roles.append(role_id)
+		var squads: Array = packet.get("squads", [])
+		for squad_index in squads.size():
+			var pack := _pack_metadata(packet, squad_index, Array(squads[squad_index]))
+			var maintenance_eligible := _maintenance_pack_is_eligible(pack)
+			if (
+				_maintenance_roster_packs.size() < 3
+				and maintenance_eligible
+			):
+				_maintenance_roster_packs.append(pack.duplicate(true))
+			if (
+				maintenance_eligible
+				and not _activated_packets.has(String(packet["id"]))
+			):
+				_maintenance_packs.append(pack.duplicate(true))
 	_packet_inflight = not _spawn_queue.is_empty()
 	_timeline.append({
 		"kind":&"quota_seal",
@@ -216,19 +255,21 @@ func seal_for_quota() -> void:
 
 func stop_boss_maintenance() -> void:
 	_boss_maintenance_active = false
-	_maintenance_roles.clear()
-	_maintenance_roster.clear()
+	_maintenance_packs.clear()
+	_maintenance_roster_packs.clear()
+	_maintenance_roster_cursor = 0
 
 
-func _append_maintenance_window_roles(request: Dictionary) -> void:
+func _append_maintenance_window_packs(request: Dictionary) -> void:
 	var packet := Dictionary(request.get("packet", {}))
 	var squads: Array = packet.get("squads", [])
 	var squads_per_window := int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW))
 	var first := int(request.get("arrival_window", 0)) * squads_per_window
 	var end := mini(first + squads_per_window, squads.size())
 	for squad_index in range(first, end):
-		for role in Array(squads[squad_index]):
-			_maintenance_roles.append(StringName(role))
+		var pack := _pack_metadata(packet, squad_index, Array(squads[squad_index]))
+		if _maintenance_pack_is_eligible(pack):
+			_maintenance_packs.append(pack.duplicate(true))
 
 
 func quota_sealed() -> bool:
@@ -315,6 +356,26 @@ func signal_event(event_id: StringName) -> void:
 		return
 	_events[event_id] = elapsed
 	_timeline.append({"kind":&"event", "id":event_id, "time":elapsed})
+
+
+func record_ordinary_defeat(
+	family: StringName, family_trait: StringName = &""
+) -> void:
+	## Typed run-global onboarding progress. String events never unlock teaching.
+	_run_ordinary_defeats += 1
+	if not family.is_empty():
+		_defeats_by_family[family] = int(_defeats_by_family.get(family, 0)) + 1
+	if not family_trait.is_empty():
+		_defeats_by_trait[family_trait] = int(
+			_defeats_by_trait.get(family_trait, 0)
+		) + 1
+	_timeline.append({
+		"kind":&"ordinary_defeat",
+		"time":elapsed,
+		"run_defeats":_run_ordinary_defeats,
+		"family":family,
+		"trait":family_trait,
+	})
 
 
 func has_event(event_id: StringName) -> bool:
@@ -430,10 +491,16 @@ func record_player_damage(source_family: StringName = &"unknown") -> void:
 	_damage_source_families[source_family] = int(_damage_source_families.get(source_family, 0)) + 1
 
 
-func record_attack_preparation() -> void:
+func record_attack_preparation(family: StringName = &"unknown") -> void:
 	## The ordinary attack owner calls this when startup commits its target and geometry.
 	if _first_attack_preparation_time < 0.0:
 		_first_attack_preparation_time = elapsed
+	_stage_attack_commits_by_family[family] = int(
+		_stage_attack_commits_by_family.get(family, 0)
+	) + 1
+	_run_attack_commits_by_family[family] = int(
+		_run_attack_commits_by_family.get(family, 0)
+	) + 1
 
 
 func first_attack_preparation_time() -> float:
@@ -463,8 +530,8 @@ func debug_snapshot() -> Dictionary:
 		"quota_sealed":_quota_sealed,
 		"quota_canceled_reserve":_quota_canceled_reserve,
 		"boss_maintenance_active":_boss_maintenance_active,
-		"boss_maintenance_reserve":_maintenance_roles.size(),
-		"boss_maintenance_roster":_maintenance_roster.duplicate(),
+		"boss_maintenance_reserve":_maintenance_member_count(_maintenance_packs),
+		"boss_maintenance_roster":_maintenance_roster_packs.duplicate(true),
 		"last_boss_maintenance_cue_at":_last_boss_maintenance_cue_at,
 		"materialized_active_count":int(_pressure_snapshot.get("active", 0)),
 		"authored_reserve_units":_authored_reserve_count(),
@@ -490,6 +557,15 @@ func debug_snapshot() -> Dictionary:
 		"active_count_p90":_active_count_percentile(0.90),
 		"max_attack_family_overlap":_max_attack_family_overlap,
 		"damage_source_families":_damage_source_families.duplicate(true),
+		"run_ordinary_defeats":_run_ordinary_defeats,
+		"onboarding_bridge_admitted":_onboarding_bridge_admitted,
+		"defeats_by_family":_defeats_by_family.duplicate(true),
+		"defeats_by_trait":_defeats_by_trait.duplicate(true),
+		"stage_emitted_packs":_stage_emitted_packs.duplicate(true),
+		"run_emitted_packs":_run_emitted_packs.duplicate(true),
+		"composition_invariant_failures":_composition_invariant_failures.duplicate(),
+		"stage_attack_commits_by_family":_stage_attack_commits_by_family.duplicate(true),
+		"run_attack_commits_by_family":_run_attack_commits_by_family.duplicate(true),
 		"spawned_by_squad":_spawned_by_squad.duplicate(true),
 		"timeline":_timeline.duplicate(true),
 		"schedule_delay":_capacity_blocked_seconds,
@@ -674,6 +750,10 @@ func _trigger_ready(trigger: Dictionary) -> bool:
 	match StringName(trigger.get("kind", &"event")):
 		&"time":
 			return elapsed >= float(trigger.get("at", INF))
+		&"ordinary_defeats":
+			return _run_ordinary_defeats >= int(trigger.get("at", 0))
+		&"onboarding_bridge_admitted":
+			return _onboarding_bridge_admitted
 		&"event":
 			return _events.has(StringName(trigger.get("id", &"")))
 	return false
@@ -708,7 +788,7 @@ func _update_diagnostic_gap_reason(active_mobile_count: int) -> void:
 		else:
 			next_reason = &"awaiting_cue"
 	elif _boss_maintenance_active:
-		if _maintenance_roles.is_empty() and _maintenance_roster.is_empty():
+		if _maintenance_packs.is_empty() and _maintenance_roster_packs.is_empty():
 			next_reason = &"authored_reserve_exhausted"
 		elif active_mobile_count >= BOSS_MAINTENANCE_LOW_WATERMARK:
 			next_reason = &"maintenance_low_watermark"
@@ -746,9 +826,14 @@ func _admit_boss_maintenance(
 		return
 	if active_mobile_count >= BOSS_MAINTENANCE_HIGH_WATERMARK:
 		return
-	if _maintenance_roles.is_empty():
-		_maintenance_roles.append_array(_maintenance_roster)
-	if _maintenance_roles.is_empty():
+	if _maintenance_packs.is_empty() and not _maintenance_roster_packs.is_empty():
+		_maintenance_packs.append(
+			_maintenance_roster_packs[
+				_maintenance_roster_cursor % _maintenance_roster_packs.size()
+			].duplicate(true)
+		)
+		_maintenance_roster_cursor += 1
+	if _maintenance_packs.is_empty():
 		return
 	if visible_ordinary_threat and active_mobile_count >= BOSS_MAINTENANCE_LOW_WATERMARK:
 		return
@@ -759,16 +844,26 @@ func _admit_boss_maintenance(
 	)
 	if elapsed + 0.0001 < _last_boss_maintenance_cue_at + interval:
 		return
-	var count := mini(
+	var maximum_members := mini(
 		BOSS_MAINTENANCE_MAX_GROUP,
-		mini(BOSS_MAINTENANCE_HIGH_WATERMARK - active_mobile_count, _maintenance_roles.size())
+		BOSS_MAINTENANCE_HIGH_WATERMARK - active_mobile_count
 	)
-	var roles: Array[StringName] = []
-	for _index in count:
-		roles.append(_maintenance_roles.pop_front())
+	var split := SpawnComposition.split_for_maintenance(
+		_maintenance_packs[0], maximum_members
+	)
+	if split.is_empty():
+		return
+	var pack := Dictionary(split["group"])
+	var remainder := Dictionary(split.get("remainder", {}))
+	if remainder.is_empty():
+		_maintenance_packs.pop_front()
+	else:
+		_maintenance_packs[0] = remainder
+	var roles: Array = pack["roles"]
 	var packet := {
 		"id":"%s_boss_maintenance_%03d" % [String(stage_id), floori(elapsed)],
-		"_packet_index":_packets.size(), "beat":current_beat, "squads":[roles],
+		"_packet_index":_packets.size(), "beat":current_beat,
+		"squads":[roles], "packs":[pack],
 		"cue_lead":CUE_LEAD, "unit_spacing":0.16, "nearest_safe_offscreen":true,
 		"zone":"field", "leash":Rect2(Field.WORLD_RECT),
 	}
@@ -827,6 +922,13 @@ func _admit_due_window(
 	var cue_at := elapsed
 	var cue_lead := float(packet.get("cue_lead", CUE_LEAD))
 	var unit_spacing := float(packet.get("unit_spacing", 0.16))
+	if bool(packet.get("onboarding_bridge", false)):
+		_onboarding_bridge_admitted = true
+		_timeline.append({
+			"kind":&"onboarding_bridge_admitted",
+			"time":elapsed,
+			"run_defeats":_run_ordinary_defeats,
+		})
 	_last_cue_at = cue_at
 	# A cue promises this entire window. Reserve every future birth now so no
 	# later round waits for capacity after the player has seen that warning.
@@ -837,6 +939,7 @@ func _admit_due_window(
 		var squad_index := int(request["arrival_window"]) * int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)) + int(allocation["window_slot"])
 		var squad_id := "%s_s%02d" % [String(packet["id"]), squad_index + 1]
 		var pack := _pack_metadata(packet, squad_index, Array(allocation["roles"]))
+		_record_emitted_pack(squad_id, pack)
 		var cue := {
 			"cue_id":"%s_w%02d_s%02d" % [String(packet["id"]), int(request["arrival_window"]) + 1, int(allocation["window_slot"]) + 1],
 			"anchor":Vector2(allocation["unit_positions"][0]),
@@ -854,6 +957,7 @@ func _admit_due_window(
 			"birth_sector":int(allocation["birth_sector"]),
 			"relaxation_tier":StringName(allocation["relaxation_tier"]),
 			"roles":Array(allocation["roles"]).duplicate(),
+			"unit_count":Array(allocation["roles"]).size(),
 			"pack_family":StringName(pack["family"]),
 			"pack_tier":int(pack["tier"]),
 			"pack_trait":StringName(pack["trait"]),
@@ -867,17 +971,15 @@ func _admit_due_window(
 		var specs: Array[Dictionary] = []
 		for allocation in allocations:
 			var roles: Array = allocation["roles"]
-			var protected_emitter_index := -1
-			for role_index in roles.size():
-				var role_definition := EnemyArchetypes.definition(StringName(roles[role_index]))
-				if StringName(role_definition.get("family", &"")) == &"emitter":
-					protected_emitter_index = role_index
-					break
 			if unit_index >= roles.size():
 				continue
 			var squad_index := int(request["arrival_window"]) * int(packet.get("squads_per_window", SpawnAllocator.SQUADS_PER_WINDOW)) + int(allocation["window_slot"])
 			var squad_id := "%s_s%02d" % [String(packet["id"]), squad_index + 1]
 			var pack := _pack_metadata(packet, squad_index, roles)
+			var member := SpawnComposition.member(
+				pack, unit_index, StringName(roles[unit_index])
+			)
+			var escort_member_index := int(member.get("escort_member_index", -1))
 			var collective_tactic := Dictionary(packet.get("collective_tactic", {}))
 			var spec := {
 				"id":"%s_u%02d" % [squad_id, unit_index + 1],
@@ -896,11 +998,13 @@ func _admit_due_window(
 				"formation_slot":unit_index,
 				"formation_size":roles.size(),
 				"escort_target_id":(
-					"%s_u%02d" % [squad_id, protected_emitter_index + 1]
-					if protected_emitter_index >= 0
-					and StringName(EnemyArchetypes.definition(StringName(roles[unit_index])).get("family", &"")) == &"defender"
+					"%s_u%02d" % [squad_id, escort_member_index + 1]
+					if escort_member_index >= 0
 					else ""
 				),
+				"family":StringName(member["family"]),
+				"tier":int(member["tier"]),
+				"family_trait":StringName(member["trait"]),
 				"pack_family":StringName(pack["family"]),
 				"pack_tier":int(pack["tier"]),
 				"pack_trait":StringName(pack["trait"]),
@@ -935,13 +1039,52 @@ func _pack_metadata(packet: Dictionary, squad_index: int, roles: Array) -> Dicti
 	var first_role := StringName(roles[0]) if not roles.is_empty() else &"ordinary_pursuer_t1"
 	var definition := EnemyArchetypes.definition(first_role)
 	var family := StringName(definition.get("family", &"pursuer"))
+	var tier := int(definition.get("tier", 1))
+	var members: Array[Dictionary] = []
+	for role in roles:
+		var role_definition := EnemyArchetypes.definition(StringName(role))
+		members.append({
+			"role":StringName(role),
+			"family":StringName(role_definition.get("family", family)),
+			"tier":int(role_definition.get("tier", tier)),
+			"trait":&"",
+			"escort_member_index":-1,
+		})
 	return {
 		"family":family,
-		"tier":int(definition.get("tier", 1)),
+		"tier":tier,
 		"trait":&"",
 		"tactic_id":FamilyTraits.tactic_for_family(family),
 		"roles":roles.duplicate(),
+		"members":members,
 	}
+
+
+func _record_emitted_pack(squad_id: String, pack: Dictionary) -> void:
+	var errors := SpawnComposition.validate_pack(pack)
+	for error in errors:
+		if _composition_invariant_failures.size() < 64:
+			_composition_invariant_failures.append("%s: %s" % [squad_id, error])
+	var identities: Array[String] = []
+	for member_variant in Array(pack.get("members", [])):
+		var entry := Dictionary(member_variant)
+		identities.append("%s:%s" % [
+			String(entry.get("family", &"")),
+			String(entry.get("trait", &"")),
+		])
+	var record := {
+		"stage_id":stage_id,
+		"squad_id":squad_id,
+		"composition_kind":StringName(pack.get("composition_kind", &"unknown")),
+		"composition_ordinal":int(pack.get("composition_ordinal", -1)),
+		"identities":identities,
+		"roles":Array(pack.get("roles", [])).duplicate(),
+		"time":elapsed,
+	}
+	if _stage_emitted_packs.size() < MAX_EMITTED_PACK_RECORDS:
+		_stage_emitted_packs.append(record)
+	if _run_emitted_packs.size() < MAX_EMITTED_PACK_RECORDS:
+		_run_emitted_packs.append(record.duplicate(true))
 
 
 func _attach_engagement_reservation(
@@ -1170,6 +1313,20 @@ static func _window_unit_count(request: Dictionary) -> int:
 	for squad_index in range(first_squad, end_squad):
 		total += Array(squads[squad_index]).size()
 	return total
+
+
+static func _maintenance_member_count(packs: Array[Dictionary]) -> int:
+	var total := 0
+	for pack in packs:
+		total += Array(pack.get("members", [])).size()
+	return total
+
+
+static func _maintenance_pack_is_eligible(pack: Dictionary) -> bool:
+	return (
+		StringName(pack.get("composition_kind", &"")) == SpawnComposition.NORMAL
+		and SpawnComposition.validate_pack(pack).is_empty()
+	)
 
 
 func _round_sort_key(round: Dictionary) -> String:

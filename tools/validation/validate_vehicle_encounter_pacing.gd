@@ -40,9 +40,13 @@ func _initialize() -> void:
 			"%s preserves the defeat quota" % stage_id
 		)
 		var opening_roles: Array = Array(packets[0]["squads"])[0]
-		_expect(opening_roles.size() == 6, "%s opens with six authored pursuit identities" % stage_id)
+		_expect(
+			opening_roles.size() == (5 if stage_index == 0 else 6),
+			"%s opens with its authored teaching or continuation-safe reserve" % stage_id
+		)
 		_expect(bool(packets[0].get("nearest_safe_offscreen", false)), "%s opening reserve uses the nearest valid offscreen approach" % stage_id)
-		for packet_index in range(1, packets.size()):
+		var surge_start := 5 if stage_index == 0 else 1
+		for packet_index in range(surge_start, packets.size()):
 			_validate_surge_packet(packets[packet_index], stage_id)
 		_validate_opening_runtime(stage_id, stage_index, packets, tactical)
 	_validate_cap_curve(RunDifficulty.HARD, EXPECTED_HARD_MATERIALIZED_CAPS, EXPECTED_HARD_AUTHORED_PRESSURE_CAPS)
@@ -96,7 +100,7 @@ func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: 
 	runtime.current_beat = 0
 	var visible_world := Rect2(tactical.geometry_snapshot.player_start - Vector2(640.0, 360.0), Vector2(1280.0, 720.0))
 	var opening_cue := runtime.tick(0.0, 0, [], tactical.geometry_snapshot.player_start, visible_world)
-	_expect(opening_cue["cues"].size() == 1 and opening_cue["spawns"].is_empty(), "%s cues the six-unit opening immediately" % stage_id)
+	_expect(opening_cue["cues"].size() == 1 and opening_cue["spawns"].is_empty(), "%s cues its opening lesson or reserve immediately" % stage_id)
 	if not Array(opening_cue["cues"]).is_empty():
 		_expect(bool(Dictionary(Array(opening_cue["cues"])[0]).get("outside_visible_margin", false)), "%s opening reserve remains outside the visible margin" % stage_id)
 	runtime.tick(0.8, 0, [], tactical.geometry_snapshot.player_start, visible_world)
@@ -106,12 +110,24 @@ func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: 
 	_expect(runtime.first_attack_preparation_time() < 0.0, "%s has no synthetic preparation before gameplay commits startup" % stage_id)
 	runtime.record_attack_preparation()
 	_expect(runtime.first_attack_preparation_time() <= 0.911, "%s records the first meaningful attack preparation on encounter time" % stage_id)
+	var expected_opening_spawns := 15 if stage_index == 0 else 6
 	var opening_spawns := Array(first["spawns"]).size()
-	for _opening_step in 20:
+	for _opening_step in 120:
 		opening_spawns += Array(runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, visible_world)["spawns"]).size()
-		if opening_spawns == 6:
+		if opening_spawns == expected_opening_spawns:
 			break
-	_expect(opening_spawns == 6, "%s emits all six opening identities before the normal surge" % stage_id)
+	_expect(opening_spawns == expected_opening_spawns, "%s emits its complete opening packet before the next gate" % stage_id)
+	if stage_index == 0:
+		var emitted_before_gate := Array(runtime.debug_snapshot()["stage_emitted_packs"]).size()
+		for _blocked_step in 30:
+			runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, visible_world)
+		_expect(
+			emitted_before_gate == 3
+				and Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() == 3,
+			"stage_1 holds the next lesson until the 15-defeat gate"
+		)
+		runtime.stop_spawning()
+		return
 	var cue_count := 0
 	var maximum_tick_spawns := 0
 	var first_surge_prefix := String(packets[1]["id"])

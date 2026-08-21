@@ -15,7 +15,11 @@ func _init() -> void:
 	telemetry.record_outgoing(&"thermal_burst", &"thermal", 2.0)
 	telemetry.record_status_application(&"chill")
 	telemetry.record_incoming(&"projectile", 7.0)
-	telemetry.record_defeat(&"ordinary_emitter_t1", &"slow")
+	telemetry.record_defeat(&"ordinary_emitter_t1", &"emitter", &"slow")
+	telemetry.record_attack_commit(&"emitter")
+	telemetry.record_experience(42, 4)
+	telemetry.record_upgrade_opened(10.0)
+	telemetry.record_upgrade_confirmed(12.5)
 	var frozen := telemetry.freeze_stage()
 	_expect(is_equal_approx(float(frozen["outgoing"][&"primary"]), 24.5), "applied outgoing damage accumulates exactly")
 	_expect(
@@ -42,8 +46,18 @@ func _init() -> void:
 	_expect(control_only_chill, "control-only chill remains visible without invented damage")
 	_expect(int(frozen["defeats"][&"ordinary_emitter_t1"]) == 1, "base archetype defeat is counted")
 	_expect(
-		int(frozen["traits"][&"ordinary_emitter_t1:slow"]) == 1,
-		"family trait remains nested under its base archetype"
+		int(frozen["traits"][&"ordinary_emitter_t1:slow"]) == 1
+			and int(frozen["family_traits"][&"emitter:slow"]) == 1
+			and int(frozen["family_defeats"][&"emitter"]) == 1,
+		"family and trait defeat telemetry preserve semantic identity"
+	)
+	_expect(
+		int(frozen["attack_commits"][&"emitter"]) == 1
+			and int(frozen["progression"]["xp_collected"]) == 42
+			and int(frozen["progression"]["level_reached"]) == 4
+			and int(frozen["progression"]["modal_opens"]) == 1
+			and is_equal_approx(float(frozen["progression"]["modal_seconds"]), 2.5),
+		"stage telemetry records family attacks and level-up interruption cost"
 	)
 	_expect(StringName(frozen["last_incoming_source"]) == &"projectile", "last incoming source is retained")
 	telemetry.record_outgoing(&"primary", &"kinetic", 99.0)

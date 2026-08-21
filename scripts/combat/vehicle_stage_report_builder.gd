@@ -50,6 +50,10 @@ static func build(
 		"hull":hull,
 		"max_hull":max_hull,
 		"defeats":defeat_rows,
+		"family_defeats":Dictionary(telemetry.get("family_defeats", {})).duplicate(),
+		"family_traits":Dictionary(telemetry.get("family_traits", {})).duplicate(),
+		"attack_commits":Dictionary(telemetry.get("attack_commits", {})).duplicate(),
+		"progression":Dictionary(telemetry.get("progression", {})).duplicate(true),
 		"outgoing":_damage_rows(outgoing_values, false, 8),
 		"total_outgoing":_sum_damage(outgoing_values),
 		"attributes":_attribute_rows(
@@ -83,6 +87,9 @@ static func build(
 			"tactic_count":Dictionary(telemetry.get("tactics", {})).size(),
 		},
 		"diagnostic_metrics":diagnostics.duplicate(true),
+		"spawn_composition":Dictionary(
+			stage_data.get("spawn_composition", {})
+		).duplicate(true),
 }
 
 
